@@ -110,8 +110,9 @@ export interface GameState {
   hasSeenOnboarding?: boolean;
   pinnedGoals: string[]; // IDs from STRATEGY_DATABASE
   userNotes: Record<string, string>; // ID -> Note Content
-  gameModeId?: string; // selected game mode; locked once the run has history
+  gameModeId?: string; // selected game mode
   customMode?: GameModeRules; // ruleset when gameModeId === 'custom'
+  gameModeLocked?: boolean; // true once a mode has been chosen — permanent for the account
 }
 
 // --- Profile System ---

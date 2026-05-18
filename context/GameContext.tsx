@@ -96,6 +96,7 @@ const initialState: GameState = {
   pinnedGoals: [],
   userNotes: {},
   gameModeId: DEFAULT_MODE_ID,
+  gameModeLocked: false,
 };
 
 // --- Save Validation ---
@@ -261,12 +262,14 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       return { ...state, hasSeenOnboarding: true };
 
     case 'SET_GAME_MODE': {
-      // The mode is locked once the run has begun (any logged history).
-      if (state.history.length > 0) return state;
+      // The mode is permanent once chosen — or if the run already has history
+      // (defensive, covers saves predating the lock flag).
+      if (state.gameModeLocked || state.history.length > 0) return state;
       return {
         ...state,
         gameModeId: action.payload.modeId,
         customMode: action.payload.customRules,
+        gameModeLocked: true,
       };
     }
 

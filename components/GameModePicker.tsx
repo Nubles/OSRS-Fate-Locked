@@ -19,8 +19,8 @@ export const GameModePicker: React.FC<Props> = ({ onClose }) => {
   useFocusTrap(dialogRef);
   useEscapeKey(onClose);
 
-  const { gameModeId, customMode, history, setGameMode } = useGame();
-  const locked = history.length > 0;
+  const { gameModeId, customMode, history, gameModeLocked, setGameMode } = useGame();
+  const locked = gameModeLocked || history.length > 0;
 
   const [selectedId, setSelectedId] = useState(gameModeId ?? 'vanilla');
   const [customDraft, setCustomDraft] = useState<GameModeRules>(
@@ -64,7 +64,7 @@ export const GameModePicker: React.FC<Props> = ({ onClose }) => {
         {locked && (
           <div className="px-5 py-2 bg-amber-950/40 border-b border-amber-500/30 flex items-center gap-2 text-[11px] text-amber-300 shrink-0">
             <Lock size={12} />
-            This run has begun — the mode is locked. Start a new profile to play a different mode.
+            The game mode is locked in — it can't be changed once chosen. Start a new profile to play a different mode.
           </div>
         )}
 
