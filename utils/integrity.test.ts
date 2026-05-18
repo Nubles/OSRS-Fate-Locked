@@ -1,0 +1,281 @@
+import { describe, it, expect } from 'vitest';
+import {
+  simpleHash, hashEntry, ensureChain, verifyChain,
+  replayInvariants, computeRunId, buildVerifiedBundle, sha256Hex,
+} from './integrity';
+import { LogEntry } from '../types';
+
+// --- fixtures ---------------------------------------------------------------
+
+let seq = 0;
+const mk = (over: Partial<LogEntry> = {}): LogEntry => ({
+  id: `e${seq++}`,
+  timestamp: 1_700_000_000_000 + seq,
+  type: 'ROLL_FAIL',
+  message: 'No Key.',
+  ...over,
+});
+
+const fail = (o: Partial<LogEntry> = {}) => mk({ type: 'ROLL_FAIL', message: 'No Key.', ...o });
+const success = (o: Partial<LogEntry> = {}) => mk({ type: 'ROLL_SUCCESS', message: 'Key Found!', ...o });
+
+// --- simpleHash -------------------------------------------------------------
+
+describe('simpleHash', () => {
+  it('is deterministic', () => {
+    expect(simpleHash('hello world')).toBe(simpleHash('hello world'));
+  });
+  it('differs for different input', () => {
+    expect(simpleHash('abc')).not.toBe(simpleHash('abd'));
+  });
+  it('returns 8-char zero-padded hex', () => {
+    expect(simpleHash('')).toMatch(/^[0-9a-f]{8}$/);
+    expect(simpleHash('x')).toMatch(/^[0-9a-f]{8}$/);
+  });
+});
+
+// --- hashEntry / canonicalize ----------------------------------------------
+
+describe('hashEntry', () => {
+  it('is deterministic for the same entry + prevHash', () => {
+    const e = fail();
+    expect(hashEntry(e, 'PREV')).toBe(hashEntry(e, 'PREV'));
+  });
+  it('changes when prevHash changes', () => {
+    const e = fail();
+    expect(hashEntry(e, 'A')).not.toBe(hashEntry(e, 'B'));
+  });
+  it('changes when the entry body changes', () => {
+    const a = fail({ message: 'No Key.' });
+    const b = { ...a, message: 'EDITED' };
+    expect(hashEntry(a, 'P')).not.toBe(hashEntry(b, 'P'));
+  });
+  it('ignores existing hash/prevHash fields on the entry', () => {
+    const e = fail();
+    const withChainFields = { ...e, hash: 'deadbeef', prevHash: 'cafebabe' };
+    expect(hashEntry(withChainFields, 'P')).toBe(hashEntry(e, 'P'));
+  });
+  it('is independent of key insertion order', () => {
+    const a = { id: 'x', timestamp: 1, type: 'ROLL_FAIL', message: 'm' } as LogEntry;
+    const b = { message: 'm', type: 'ROLL_FAIL', timestamp: 1, id: 'x' } as LogEntry;
+    expect(hashEntry(a, 'P')).toBe(hashEntry(b, 'P'));
+  });
+  it('is independent of nested meta key order', () => {
+    const a = fail({ id: 'm1', timestamp: 1, meta: { roll: 5, threshold: 10 } });
+    const b = fail({ id: 'm1', timestamp: 1, meta: { threshold: 10, roll: 5 } });
+    expect(hashEntry(a, 'P')).toBe(hashEntry(b, 'P'));
+  });
+});
+
+// --- ensureChain ------------------------------------------------------------
+
+describe('ensureChain', () => {
+  it('returns empty for empty input', () => {
+    expect(ensureChain([])).toEqual([]);
+  });
+  it('links the first entry to GENESIS', () => {
+    const [first] = ensureChain([fail()]);
+    expect(first.prevHash).toBe('GENESIS');
+    expect(first.hash).toBeTruthy();
+  });
+  it('chains each entry prevHash to the previous hash', () => {
+    const chained = ensureChain([fail(), fail(), fail()]);
+    expect(chained[1].prevHash).toBe(chained[0].hash);
+    expect(chained[2].prevHash).toBe(chained[1].hash);
+  });
+  it('does not mutate the input entries', () => {
+    const input = [fail(), fail()];
+    const snapshot = JSON.stringify(input);
+    ensureChain(input);
+    expect(JSON.stringify(input)).toBe(snapshot);
+  });
+  it('is idempotent', () => {
+    const once = ensureChain([fail(), success(), fail()]);
+    const twice = ensureChain(once);
+    expect(twice).toEqual(once);
+  });
+  it('returns the same reference when already fully chained', () => {
+    const once = ensureChain([fail(), fail()]);
+    expect(ensureChain(once)).toBe(once);
+  });
+});
+
+// --- verifyChain ------------------------------------------------------------
+
+describe('verifyChain', () => {
+  it('reports ok for an empty history', () => {
+    expect(verifyChain([])).toEqual({ ok: true, brokenAt: [], firstBreak: null });
+  });
+  it('reports ok for an untampered chain', () => {
+    const report = verifyChain(ensureChain([fail(), success(), fail()]));
+    expect(report.ok).toBe(true);
+    expect(report.brokenAt).toEqual([]);
+  });
+  it('flags an entry whose body was edited after chaining', () => {
+    const chained = ensureChain([fail(), fail(), fail()]);
+    const tampered = chained.map((e, i) => i === 1 ? { ...e, message: 'EDITED' } : e);
+    const report = verifyChain(tampered);
+    expect(report.ok).toBe(false);
+    expect(report.brokenAt).toContain(1);
+    expect(report.firstBreak).toBe(1);
+  });
+  it('flags a severed prevHash link', () => {
+    const chained = ensureChain([fail(), fail()]);
+    const broken = chained.map((e, i) => i === 1 ? { ...e, prevHash: 'WRONGHASH' } : e);
+    expect(verifyChain(broken).brokenAt).toContain(1);
+  });
+});
+
+// --- replayInvariants -------------------------------------------------------
+
+describe('replayInvariants', () => {
+  it('starts from the given key count with no violations', () => {
+    const { violations, final } = replayInvariants([], 3);
+    expect(violations).toEqual([]);
+    expect(final.keys).toBe(3);
+    expect(final.rolls).toBe(0);
+  });
+
+  it('counts a successful roll', () => {
+    const { final } = replayInvariants([success()], 0);
+    expect(final.keys).toBe(1);
+    expect(final.successes).toBe(1);
+    expect(final.rolls).toBe(1);
+    expect(final.fatePoints).toBe(0);
+  });
+
+  it('awards two keys for a doubled (Greed) success', () => {
+    const { final } = replayInvariants(
+      [success({ message: 'Key Found! (Doubled)', details: 'greed' })], 0,
+    );
+    expect(final.keys).toBe(2);
+  });
+
+  it('counts an Omni roll', () => {
+    const { final } = replayInvariants([mk({ type: 'ROLL_OMNI', message: 'Omni!' })], 0);
+    expect(final.specialKeys).toBe(1);
+    expect(final.keys).toBe(1);
+    expect(final.omnis).toBe(1);
+  });
+
+  it('counts a pity key', () => {
+    const { final } = replayInvariants([mk({ type: 'PITY', message: 'Pity Key' })], 0);
+    expect(final.keys).toBe(1);
+    expect(final.pities).toBe(1);
+  });
+
+  it('accumulates fate on failed rolls', () => {
+    const { final } = replayInvariants([fail(), fail(), fail()], 0);
+    expect(final.fatePoints).toBe(3);
+    expect(final.rolls).toBe(3);
+    expect(final.successes).toBe(0);
+  });
+
+  it('spends keys on an unlock', () => {
+    const { final } = replayInvariants(
+      [mk({ type: 'UNLOCK', message: 'Unlocked', meta: { cost: 1, costType: 'key' } })], 3,
+    );
+    expect(final.keys).toBe(2);
+    expect(final.unlocks).toBe(1);
+  });
+
+  it('spends a special key on a specialKey unlock', () => {
+    const { final } = replayInvariants(
+      [mk({ type: 'UNLOCK', message: 'Unlocked', meta: { costType: 'specialKey' } })], 0,
+    );
+    expect(final.specialKeys).toBe(-1); // drives the SPECIAL_NEGATIVE check
+  });
+
+  it('applies Void Altar rituals', () => {
+    const chaos = replayInvariants(
+      [mk({ type: 'ALTAR', message: 'Ritual of Chaos' })], 0,
+    ).final;
+    expect(chaos.chaosKeys).toBe(1);
+    expect(chaos.fatePoints).toBe(-25);
+
+    const transmute = replayInvariants(
+      [mk({ type: 'ALTAR', message: 'Ritual of Transmutation' })], 10,
+    ).final;
+    expect(transmute.keys).toBe(5);
+    expect(transmute.specialKeys).toBe(1);
+  });
+
+  it('flags negative keys when over-spending', () => {
+    const { violations } = replayInvariants(
+      [mk({ type: 'UNLOCK', message: 'Unlocked', meta: { cost: 5, costType: 'key' } })], 0,
+    );
+    expect(violations.some(v => v.kind === 'KEYS_NEGATIVE')).toBe(true);
+  });
+
+  it('flags fate overflow above the cap', () => {
+    const fails = Array.from({ length: 51 }, () => fail());
+    const { violations } = replayInvariants(fails, 0);
+    expect(violations.some(v => v.kind === 'FATE_OVERFLOW')).toBe(true);
+  });
+
+  it('flags a roll value outside 1-100', () => {
+    const low = replayInvariants([fail({ rollValue: 0 })], 0).violations;
+    const high = replayInvariants([fail({ rollValue: 101 })], 0).violations;
+    expect(low.some(v => v.kind === 'ROLL_OUT_OF_RANGE')).toBe(true);
+    expect(high.some(v => v.kind === 'ROLL_OUT_OF_RANGE')).toBe(true);
+  });
+
+  it('accepts an in-range roll value', () => {
+    const { violations } = replayInvariants([fail({ rollValue: 100 }), success({ rollValue: 1 })], 0);
+    expect(violations.some(v => v.kind === 'ROLL_OUT_OF_RANGE')).toBe(false);
+  });
+});
+
+// --- computeRunId -----------------------------------------------------------
+
+describe('computeRunId', () => {
+  it('returns null for empty history', () => {
+    expect(computeRunId([])).toBeNull();
+  });
+  it('returns a deterministic run-<hash> id', () => {
+    const history = [fail({ id: 'fixed', timestamp: 123 })];
+    const a = computeRunId(history);
+    const b = computeRunId(history);
+    expect(a).toBe(b);
+    expect(a).toMatch(/^run-/);
+  });
+  it('derives the id from the first entry only', () => {
+    const first = fail({ id: 'first', timestamp: 1 });
+    const idAlone = computeRunId([first]);
+    const idWithMore = computeRunId([first, success(), fail()]);
+    expect(idWithMore).toBe(idAlone);
+  });
+});
+
+// --- sha256Hex --------------------------------------------------------------
+
+describe('sha256Hex', () => {
+  it('matches the known SHA-256 vector for "abc"', async () => {
+    expect(await sha256Hex('abc')).toBe(
+      'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad',
+    );
+  });
+  it('returns 64 hex chars', async () => {
+    expect(await sha256Hex('anything')).toMatch(/^[0-9a-f]{64}$/);
+  });
+});
+
+// --- buildVerifiedBundle ----------------------------------------------------
+
+describe('buildVerifiedBundle', () => {
+  it('produces a complete, internally-consistent bundle', async () => {
+    const bundle = await buildVerifiedBundle([fail(), success(), fail()]);
+    expect(bundle.version).toBe(1);
+    expect(bundle.runId).toMatch(/^run-/);
+    expect(bundle.history).toHaveLength(3);
+    expect(bundle.chainReport.ok).toBe(true);
+    expect(bundle.commitmentHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(bundle.finalState.rolls).toBe(3);
+  });
+  it('carries a broken chain report through when history was tampered', async () => {
+    const chained = ensureChain([fail(), fail()]);
+    const tampered = chained.map((e, i) => i === 1 ? { ...e, message: 'EDITED' } : e);
+    const bundle = await buildVerifiedBundle(tampered);
+    expect(bundle.chainReport.ok).toBe(false);
+  });
+});

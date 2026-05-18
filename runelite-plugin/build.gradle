@@ -1,0 +1,56 @@
+/*
+ * Fate Locked Ironman — RuneLite external plugin.
+ *
+ * Build with:   ./gradlew shadowJar
+ * Sideload:     copy build/libs/fatelocked-*-all.jar into ~/.runelite/sideloaded-plugins/
+ *
+ * Hub submission: replace the `id 'com.gradleup.shadow'` step with the standard
+ * runelite-plugin-hub build template — the plugin source itself is hub-compliant
+ * (no external network calls, purely local JSON loading).
+ */
+
+plugins {
+    id 'java'
+    id 'com.gradleup.shadow' version '8.3.5'
+}
+
+group 'com.fatelocked'
+version '0.1.0'
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://repo.runelite.net' }
+}
+
+def runeLiteVersion = 'latest.release'
+
+dependencies {
+    compileOnly group: 'net.runelite', name: 'client', version: runeLiteVersion
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+    compileOnly 'com.google.inject:guice:5.1.0'
+    compileOnly 'com.google.code.gson:gson:2.10.1'
+    compileOnly 'org.slf4j:slf4j-api:1.7.36'
+
+    testImplementation group: 'net.runelite', name: 'client', version: runeLiteVersion
+    testImplementation 'junit:junit:4.13.2'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+shadowJar {
+    archiveClassifier.set('all')
+}
+
+jar {
+    manifest {
+        attributes(
+            'Plugin-Class': 'com.fatelocked.FateLockedPlugin',
+            'Implementation-Version': project.version
+        )
+    }
+}
