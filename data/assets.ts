@@ -499,5 +499,12 @@ export const WIKI_OVERRIDES: Record<string, string> = {
   'Scurrius': 'Scurrius',
   'Araxxor': 'Araxxor',
   'The Hueycoatl': 'The_Hueycoatl',
-  'Hespori Patch': 'Hespori'
+  'Hespori Patch': 'Hespori',
+  // App display names that differ from the wiki article title
+  'Mor Ul Rek (TzHaar City)': 'Mor_Ul_Rek',
+  'Duel Arena / PvP Arena': 'PvP_Arena',
+  'Miscellania & Etceteria': 'Miscellania',
+  "Scorpia's Cave": 'Scorpia',
+  'Isle of Souls (Expanded)': 'Isle_of_Souls',
+  'Archery Competition': 'Archery_competition'
 };
