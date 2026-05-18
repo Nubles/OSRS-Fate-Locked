@@ -326,6 +326,12 @@ export const UTILITY_ITEM_IDS: Record<string, number> = {
 };
 
 export const SPECIAL_ICONS: Record<string, string> = {
+  // Recently-added bosses
+  'Amoxliatl': 'Amoxliatl.png',
+  'The Royal Titans': 'Fighting_Royal_Titans.png',
+  'Yama': 'Yama.png',
+  'Doom of Mokhaiotl': 'Doom_of_Mokhaiotl.png',
+  'Gemstone Crab': 'Gemstone_Crab.png',
   // Minigames
   'Shooting Stars': 'Celestial_ring.png',
   'Barbarian Assault': 'Barbarian_Assault_logo.jpg',
