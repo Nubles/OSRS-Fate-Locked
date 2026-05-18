@@ -82,7 +82,7 @@ const getInitialUnlocks = (): UnlockState => ({
   collectionLog: {}
 });
 
-const initialState: GameState = {
+export const initialState: GameState = {
   version: CURRENT_VERSION,
   keys: 3,
   specialKeys: 0,
@@ -174,7 +174,7 @@ const migrateSave = (saveData: Partial<GameState>): GameState => {
 };
 
 // --- Reducer ---
-type Action =
+export type Action =
   | { type: 'LOAD_SAVE'; payload: Partial<GameState> }
   | { type: 'RESET' }
   | { type: 'TOGGLE_ANIMATIONS' }
@@ -554,7 +554,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
   }
 };
 
-const gameReducer = (state: GameState & { lastEvent: GameEvent | null }, action: Action): GameState & { lastEvent: GameEvent | null } => {
+export const gameReducer = (state: GameState & { lastEvent: GameEvent | null }, action: Action): GameState & { lastEvent: GameEvent | null } => {
   const next = rawReducer(state, action);
   if (next.history === state.history) return next;
   return { ...next, history: chainAppendedHistory(state.history, next.history) };
