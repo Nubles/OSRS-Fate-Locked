@@ -73,6 +73,7 @@ export const ACTIVITY_REGIONS: Record<string, string> = {
   'Yama': 'Varlamore',
   'Doom of Mokhaiotl': 'Varlamore',
   'Gemstone Crab': 'Varlamore',
+  'Shellbane Gryphon': 'The Open Seas',
 
   // ---- Minigames -----------------------------------------------------------
   'Barbarian Assault': 'Kandarin',
@@ -111,6 +112,7 @@ export const ACTIVITY_REGIONS: Record<string, string> = {
   'Tears of Guthix': 'Misthalin',
   'Brimhaven Agility Arena': 'Karamja',
   'Hallowed Sepulchre': 'Morytania',
+  'Barracuda Trials': 'The Open Seas',
 
   // ---- Guilds --------------------------------------------------------------
   "Champions' Guild": 'Misthalin',

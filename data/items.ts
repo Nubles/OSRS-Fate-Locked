@@ -109,7 +109,8 @@ export const BOSSES_LIST = [
   'Giant Mole', 'Hespori', 'Kalphite Queen', 'King Black Dragon', 'Mimic', 'Obor', 
   'Phantom Muspah', 'Sarachnis', 'Scurrius', 'Zulrah', 'Wintertodt', 'Tempoross', 
   'Zalcano', 'TzHaar Fight Cave', 'Inferno', 'TzHaar-Ket-Rak\'s Challenges', 'Tormented Demons',
-  'Amoxliatl', 'The Royal Titans', 'Yama', 'Doom of Mokhaiotl', 'Gemstone Crab'
+  'Amoxliatl', 'The Royal Titans', 'Yama', 'Doom of Mokhaiotl', 'Gemstone Crab',
+  'Shellbane Gryphon'
 ];
 
 export const MINIGAMES_LIST = [
@@ -122,7 +123,7 @@ export const MINIGAMES_LIST = [
   'Sorceress\'s Garden', 'Stealing Artefacts', 'Tithe Farm', 'Trouble Brewing', 
   'Vale Totems', 'Volcanic Mine', 'Shades of Mort\'ton', 'Tai Bwo Wannai Cleanup', 
   'Warriors\' Guild', 'Burthorpe Games Room', 'Forestry', 'Rat Pits', 'Tears of Guthix',
-  'Brimhaven Agility Arena', 'Hallowed Sepulchre'
+  'Brimhaven Agility Arena', 'Hallowed Sepulchre', 'Barracuda Trials'
 ];
 
 export const MISTHALIN_AREAS = [
