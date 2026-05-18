@@ -505,6 +505,5 @@ export const WIKI_OVERRIDES: Record<string, string> = {
   'Duel Arena / PvP Arena': 'PvP_Arena',
   'Miscellania & Etceteria': 'Miscellania',
   "Scorpia's Cave": 'Scorpia',
-  'Isle of Souls (Expanded)': 'Isle_of_Souls',
   'Archery Competition': 'Archery_competition'
 };
