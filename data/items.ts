@@ -184,9 +184,9 @@ export const REGION_GROUPS: Record<string, string[]> = {
     'Fossil Island', 'Ape Atoll', 'Zanaris', 'Tutorial Island'
   ],
   'The Open Seas': [
-    'Pandemonium', 'The Great Conch', 'The Little Pearl', 'Drumstick Isle', 'Ledger Island', 
-    'Brittle Island', 'Vatricos Island', 'Laguna Auror', 'Chin Champa Island', 'Doggos Island', 
-    'Splinter Island', 'Chard Island', 'Grimstone', 'Isle of Bones', 'Minotaur\'s Rest', 
+    'Pandemonium', 'The Great Conch', 'The Little Pearl', 'Drumstick Isle', 'Lledrith Island',
+    'Brittle Isle', 'Vatrachos Island', 'Laguna Aurorae', 'Chinchompa Island', 'Dognose Island',
+    'Splinter Island', 'Charred Island', 'Grimstone', 'Isle of Bones', 'Minotaur\'s Rest',
     'The Pincers', 'Barracuda Trials', 'Crabclaw Isle', 'Isle of Souls (Expanded)'
   ]
 };
