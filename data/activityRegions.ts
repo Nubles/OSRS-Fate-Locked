@@ -68,6 +68,11 @@ export const ACTIVITY_REGIONS: Record<string, string> = {
   'Inferno': 'Karamja',
   "TzHaar-Ket-Rak's Challenges": 'Karamja',
   'Tormented Demons': 'Islands & Others',
+  'Amoxliatl': 'Varlamore',
+  'The Royal Titans': 'Asgarnia',
+  'Yama': 'Varlamore',
+  'Doom of Mokhaiotl': 'Varlamore',
+  'Gemstone Crab': 'Varlamore',
 
   // ---- Minigames -----------------------------------------------------------
   'Barbarian Assault': 'Kandarin',
