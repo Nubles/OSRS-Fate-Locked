@@ -121,7 +121,8 @@ export const MINIGAMES_LIST = [
   'Mahogany Homes', 'Mastering Mixology', 'Mess', 'Pyramid Plunder', 'Rogues\' Den', 
   'Sorceress\'s Garden', 'Stealing Artefacts', 'Tithe Farm', 'Trouble Brewing', 
   'Vale Totems', 'Volcanic Mine', 'Shades of Mort\'ton', 'Tai Bwo Wannai Cleanup', 
-  'Warriors\' Guild', 'Burthorpe Games Room', 'Forestry', 'Rat Pits', 'Tears of Guthix'
+  'Warriors\' Guild', 'Burthorpe Games Room', 'Forestry', 'Rat Pits', 'Tears of Guthix',
+  'Brimhaven Agility Arena', 'Hallowed Sepulchre'
 ];
 
 export const MISTHALIN_AREAS = [

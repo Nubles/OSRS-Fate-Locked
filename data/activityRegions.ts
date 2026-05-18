@@ -109,6 +109,8 @@ export const ACTIVITY_REGIONS: Record<string, string> = {
   "Warriors' Guild": 'Asgarnia',
   'Burthorpe Games Room': 'Asgarnia',
   'Tears of Guthix': 'Misthalin',
+  'Brimhaven Agility Arena': 'Karamja',
+  'Hallowed Sepulchre': 'Morytania',
 
   // ---- Guilds --------------------------------------------------------------
   "Champions' Guild": 'Misthalin',
