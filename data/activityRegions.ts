@@ -123,7 +123,7 @@ export const ACTIVITY_REGIONS: Record<string, string> = {
   'Farming Guild': 'Kourend & Kebos',
   'Fishing Guild': 'Kandarin',
   "Heroes' Guild": 'Asgarnia',
-  "Hunters' Guild": 'Varlamore',
+  'Hunter Guild': 'Varlamore',
   "Legends' Guild": 'Kandarin',
   "Myths' Guild": 'Kandarin',
   'Ranging Guild': 'Kandarin',
@@ -159,6 +159,8 @@ export const ACTIVITY_REGIONS: Record<string, string> = {
   'Redwood': 'Kourend & Kebos',
   'Crystal Tree': 'Tirannwn',
   'Hespori Patch': 'Kourend & Kebos',
+  'Anima': 'Kourend & Kebos',
+  'Vinery': 'Kourend & Kebos',
 };
 
 export const getActivityRegion = (item: string): string | undefined =>

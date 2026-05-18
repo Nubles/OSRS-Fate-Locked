@@ -64,8 +64,8 @@ export const STORAGE_LIST = [
 
 export const GUILDS_LIST = [
   'Champions\' Guild', 'Cooks\' Guild', 'Crafting Guild', 'Mining Guild', 'Prayer Guild', 
-  'Farming Guild', 'Fishing Guild', 'Heroes\' Guild', 'Hunters\' Guild', 'Legends\' Guild', 
-  'Myths\' Guild', 'Ranging Guild', 'Rogues\' Den', 'Servants\' Guild', 'Warriors\' Guild', 
+  'Farming Guild', 'Fishing Guild', 'Heroes\' Guild', 'Hunter Guild', 'Legends\' Guild',
+  'Myths\' Guild', 'Ranging Guild', 'Rogues\' Den', 'Servants\' Guild', 'Warriors\' Guild',
   'Wizards\' Guild', 'Woodcutting Guild'
 ];
 
@@ -73,7 +73,7 @@ export const FARMING_PATCH_LIST = [
   'Allotment', 'Herb', 'Flower', 'Hops', 'Bush', 'Wood Tree', 
   'Fruit Tree', 'Hardwood Tree', 'Cactus', 'Mushroom', 'Belladonna', 
   'Seaweed', 'Calquat', 'Spirit Tree', 'Celastrus', 'Redwood', 
-  'Crystal Tree', 'Hespori Patch'
+  'Crystal Tree', 'Hespori Patch', 'Anima', 'Vinery'
 ];
 
 export const FARMING_UNLOCK_DETAILS: Record<string, string> = {
@@ -94,7 +94,9 @@ export const FARMING_UNLOCK_DETAILS: Record<string, string> = {
   'Celastrus': "Celastrus Bark",
   'Redwood': "Redwood Logs",
   'Crystal Tree': "Crystal Shards",
-  'Hespori Patch': "Bottomless Bucket, Anima Seeds"
+  'Hespori Patch': "Bottomless Bucket, Anima Seeds",
+  'Anima': "Attas, Iasor, Kronos",
+  'Vinery': "Grapes (for wine)"
 };
 
 export const BOSSES_LIST = [
