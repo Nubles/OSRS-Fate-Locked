@@ -6,6 +6,9 @@
 import { execFileSync } from 'child_process';
 import { writeFileSync } from 'fs';
 import { RESOURCE_MAP } from '../data/resourceData';
+import { ENRICHED_SOURCES } from '../data/resourceEnrichment';
+import { BOSSES_LIST, MINIGAMES_LIST } from '../data/items';
+import { ACTIVITY_REGIONS } from '../data/activityRegions';
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)';
 const API = 'https://oldschool.runescape.wiki/api.php';
@@ -119,6 +122,28 @@ const rarityRank = (r: string): number => {
   return 5;
 };
 
+// --- unlock resolution ------------------------------------------------------
+// Maps a drop-source name to a boss/minigame unlock id so the lock analysis
+// can gate enriched drops on whether the player has that unlock.
+const UNLOCK_BY_NAME = new Map<string, string>();
+for (const u of [...BOSSES_LIST, ...MINIGAMES_LIST]) UNLOCK_BY_NAME.set(u.toLowerCase(), u);
+const UNLOCK_ALIAS: Record<string, string> = {
+  barrows: 'Barrows Brothers',
+  "barrows chest": 'Barrows Brothers',
+  'dagannoth kings': 'Dagannoth Kings',
+};
+const resolveUnlock = (name: string): string | undefined => {
+  const l = name.toLowerCase();
+  if (UNLOCK_BY_NAME.has(l)) return UNLOCK_BY_NAME.get(l);
+  if (UNLOCK_ALIAS[l]) return UNLOCK_ALIAS[l];
+  // Reward-chest style names, e.g. "Rewards Chest (Fortis Colosseum)".
+  const paren = name.match(/\(([^)]+)\)/);
+  if (paren && UNLOCK_BY_NAME.has(paren[1].toLowerCase())) {
+    return UNLOCK_BY_NAME.get(paren[1].toLowerCase());
+  }
+  return undefined;
+};
+
 // --- build enrichment -------------------------------------------------------
 const lowerToKey = new Map<string, string>();
 for (const key of Object.keys(RESOURCE_MAP)) lowerToKey.set(key.toLowerCase(), key);
@@ -128,7 +153,11 @@ let shopCount = 0;
 let dropCount = 0;
 
 for (const [lower, key] of lowerToKey) {
-  const existing = RESOURCE_MAP[key];
+  // resourceData merges ENRICHED_SOURCES into RESOURCE_MAP at load, so strip
+  // that trailing slice off to dedup against the curated sources only.
+  const merged = RESOURCE_MAP[key];
+  const enrichedLen = ENRICHED_SOURCES[key]?.length || 0;
+  const existing = merged.slice(0, merged.length - enrichedLen);
   const haveShop = new Set(existing.filter((s) => s.type === 'SHOP' || s.type === 'MERCHANT').map((s) => s.name.toLowerCase()));
   const haveDrop = new Set(existing.filter((s) => s.type === 'DROP').map((s) => s.name.toLowerCase()));
   const added: any[] = [];
@@ -161,6 +190,13 @@ for (const [lower, key] of lowerToKey) {
     .slice(0, 6);
   for (const d of picked) {
     const src: any = { type: d.isClue ? 'CLUE' : 'DROP', name: d.monster, regions: [d.region] };
+    const unlock = d.isClue ? undefined : resolveUnlock(d.monster);
+    if (unlock) {
+      src.unlockId = unlock;
+      // Use the activity's authoritative region when known so the source
+      // stays consistent with ACTIVITY_REGIONS.
+      if (ACTIVITY_REGIONS[unlock]) src.regions = [ACTIVITY_REGIONS[unlock]];
+    }
     if (d.rarity && !/^varies$/i.test(d.rarity)) src.rarity = d.rarity;
     added.push(src);
     dropCount++;
@@ -173,6 +209,7 @@ for (const [lower, key] of lowerToKey) {
 const esc = (s: string) => s.replace(/'/g, "\\'");
 const fmt = (s: any) => {
   const parts = [`type: '${s.type}'`, `name: '${esc(s.name)}'`, `regions: ['${esc(s.regions[0])}']`];
+  if (s.unlockId) parts.push(`unlockId: '${esc(s.unlockId)}'`);
   if (s.rarity) parts.push(`rarity: '${esc(s.rarity)}'`);
   if (s.notes) parts.push(`notes: '${esc(s.notes)}'`);
   return `{ ${parts.join(', ')} }`;

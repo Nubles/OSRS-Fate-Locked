@@ -17,7 +17,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Warrior Guild Armoury', regions: ['Any'] },
     { type: 'SHOP', name: 'Gaius\' Two Handed Shop', regions: ['Any'] },
     { type: 'SHOP', name: 'Gulluck and Sons', regions: ['Any'] },
-    { type: 'DROP', name: 'Coffin (Hallowed Sepulchre)', regions: ['Any'], rarity: '1/10' },
+    { type: 'DROP', name: 'Coffin (Hallowed Sepulchre)', regions: ['Morytania'], unlockId: 'Hallowed Sepulchre', rarity: '1/10' },
     { type: 'DROP', name: 'Hallowed Sack', regions: ['Morytania'], rarity: '1/10' },
     { type: 'DROP', name: 'Cyclops', regions: ['Any'], rarity: '1/100' },
     { type: 'DROP', name: 'Cyclops (God Wars Dungeon)', regions: ['Any'], rarity: '1/100' },
@@ -57,7 +57,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   ],
   'Adamant Bolts(unf)': [
     { type: 'DROP', name: 'Adamant Dragon', regions: ['Any'], rarity: '11/110' },
-    { type: 'DROP', name: 'The Hueycoatl', regions: ['Any'], rarity: '3/68' },
+    { type: 'DROP', name: 'The Hueycoatl', regions: ['Varlamore'], unlockId: 'The Hueycoatl', rarity: '3/68' },
     { type: 'DROP', name: 'Martial Salvage', regions: ['Any'], rarity: '100/2,440' }
   ],
   'Adamant Chainbody': [
@@ -65,7 +65,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Wayne\'s Chains! - Chainmail Specialist', regions: ['Any'] },
     { type: 'SHOP', name: 'Armour Store', regions: ['Any'] },
     { type: 'DROP', name: 'Lesser Demon', regions: ['Any'], rarity: '1/39' },
-    { type: 'DROP', name: 'Duke Sucellus', regions: ['Any'], rarity: '1/100' },
+    { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus', rarity: '1/100' },
     { type: 'DROP', name: 'Brutal Green Dragon', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Waterfiend', regions: ['Any'], rarity: '2/128' },
     { type: 'DROP', name: 'Spiritual Warrior', regions: ['Any'], rarity: '7/128' },
@@ -75,7 +75,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Varrock Swordshop', regions: ['Any'] },
     { type: 'SHOP', name: 'Blades By Urbi', regions: ['Any'] },
     { type: 'SHOP', name: 'Warrior Guild Armoury', regions: ['Any'] },
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: '1/27' },
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/27' },
     { type: 'DROP', name: 'Lesser Demon', regions: ['Any'], rarity: '1/39' },
     { type: 'DROP', name: 'Ice Giant', regions: ['Any'], rarity: '1/62' },
     { type: 'DROP', name: 'Green Dragon', regions: ['Any'], rarity: '1/128' },
@@ -94,7 +94,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Aneirin\'s Armour', regions: ['Any'] },
     { type: 'DROP', name: 'Animated Adamant Armour', regions: ['Asgarnia'], rarity: 'Always' },
     { type: 'DROP', name: 'Agility Dispenser', regions: ['Wilderness'], rarity: '1/9' },
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: '1/27' },
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/27' },
     { type: 'DROP', name: 'Green Dragon', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Blue Dragon', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Turoth', regions: ['Any'], rarity: '1/128' }
@@ -126,17 +126,17 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Warrior Guild Armoury', regions: ['Any'] },
     { type: 'SHOP', name: 'Briget\'s Weapons', regions: ['Any'] },
     { type: 'DROP', name: 'Zamorak Warrior', regions: ['Any'], rarity: '1/50' },
-    { type: 'DROP', name: 'The Whisperer', regions: ['Any'], rarity: '1/100' },
+    { type: 'DROP', name: 'The Whisperer', regions: ['Fremennik'], unlockId: 'The Whisperer', rarity: '1/100' },
     { type: 'DROP', name: 'Mutated Bloodveld', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Insatiable Mutated Bloodveld', regions: ['Any'], rarity: '1/128' },
-    { type: 'DROP', name: 'Giant Mole', regions: ['Any'], rarity: '10/131' },
+    { type: 'DROP', name: 'Giant Mole', regions: ['Asgarnia'], unlockId: 'Giant Mole', rarity: '10/131' },
     { type: 'CLUE', name: 'Reward Casket (medium)', regions: ['Any'], rarity: '10/341' }
   ],
   'Adamant Mace': [
     { type: 'SHOP', name: 'Warrior Guild Armoury', regions: ['Any'] },
     { type: 'SHOP', name: 'Flynn\'s Mace Market', regions: ['Any'] },
     { type: 'SHOP', name: 'Briget\'s Weapons', regions: ['Any'] },
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: '1/27' },
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/27' },
     { type: 'DROP', name: 'Ice Giant', regions: ['Any'], rarity: '1/62' },
     { type: 'DROP', name: 'Cyclops', regions: ['Any'], rarity: '1/100' },
     { type: 'DROP', name: 'Cyclops (God Wars Dungeon)', regions: ['Any'], rarity: '1/100' },
@@ -158,7 +158,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Pickaxe-Is-Mine', regions: ['Any'] },
     { type: 'SHOP', name: 'Toothy\'s Pickaxes', regions: ['Any'] },
     { type: 'SHOP', name: 'Yarsul\'s Prodigious Pickaxes', regions: ['Any'] },
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: '1/27' },
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/27' },
     { type: 'DROP', name: 'Possessed Pickaxe', regions: ['Kourend & Kebos'], rarity: '4/500' },
     { type: 'CLUE', name: 'Reward Casket (medium)', regions: ['Any'], rarity: '10/341' }
   ],
@@ -168,9 +168,9 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Aneirin\'s Armour', regions: ['Any'] },
     { type: 'DROP', name: 'Animated Adamant Armour', regions: ['Asgarnia'], rarity: 'Always' },
     { type: 'DROP', name: 'Agility Dispenser', regions: ['Wilderness'], rarity: '1/9' },
-    { type: 'DROP', name: 'Coffin (Hallowed Sepulchre)', regions: ['Any'], rarity: '1/10' },
+    { type: 'DROP', name: 'Coffin (Hallowed Sepulchre)', regions: ['Morytania'], unlockId: 'Hallowed Sepulchre', rarity: '1/10' },
     { type: 'DROP', name: 'Hallowed Sack', regions: ['Morytania'], rarity: '1/10' },
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: '1/27' },
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/27' },
     { type: 'DROP', name: 'Lesser Demon', regions: ['Any'], rarity: '1/39' }
   ],
   'Adamant Platelegs': [
@@ -179,7 +179,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Aneirin\'s Armour', regions: ['Any'] },
     { type: 'DROP', name: 'Animated Adamant Armour', regions: ['Asgarnia'], rarity: 'Always' },
     { type: 'DROP', name: 'Agility Dispenser', regions: ['Wilderness'], rarity: '1/9' },
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: '1/27' },
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/27' },
     { type: 'DROP', name: 'Greater Demon', regions: ['Any'], rarity: '1/41' },
     { type: 'DROP', name: 'Basilisk Knight', regions: ['Any'], rarity: '1/52' },
     { type: 'DROP', name: 'Basilisk Sentinel', regions: ['Fremennik'], rarity: '1/52' }
@@ -188,7 +188,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Ranael\'s Super Skirt Store', regions: ['Any'] },
     { type: 'SHOP', name: 'Armour Store', regions: ['Any'] },
     { type: 'SHOP', name: 'Aneirin\'s Armour', regions: ['Any'] },
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: '1/27' },
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/27' },
     { type: 'DROP', name: 'Zombie (Tarn\'s Lair)', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Ornate Lockbox', regions: ['Asgarnia'], rarity: '3/2,450' },
     { type: 'DROP', name: 'Silver Chest (red)', regions: ['Any'], rarity: '3/152.39' },
@@ -200,7 +200,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Fortis Blacksmith', regions: ['Any'] },
     { type: 'DROP', name: 'Bandit Champion', regions: ['Kharidian Desert'], rarity: 'Always' },
     { type: 'DROP', name: 'Lost Teak Crate', regions: ['Any'], rarity: '1/8' },
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: '1/27' },
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/27' },
     { type: 'DROP', name: 'Scimitar Stall', regions: ['Any'], rarity: '1/40' },
     { type: 'DROP', name: 'Bandit', regions: ['Any'], rarity: '4/143' },
     { type: 'DROP', name: 'Vampyre Juvinate', regions: ['Any'], rarity: '2/256' }
@@ -209,7 +209,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Armour Store', regions: ['Any'] },
     { type: 'SHOP', name: 'Cam Torum Blacksmith', regions: ['Any'] },
     { type: 'SHOP', name: 'Shields of Mistrock', regions: ['Any'] },
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
     { type: 'DROP', name: 'Ice Giant', regions: ['Any'], rarity: '1/62' },
     { type: 'DROP', name: 'Cyclops', regions: ['Any'], rarity: '1/100' },
     { type: 'DROP', name: 'Dark Beast', regions: ['Any'], rarity: '1/128' },
@@ -255,7 +255,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Extra Supply Crate', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Reward Cart', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Monumental Chest', regions: ['Morytania'], rarity: '1/30' },
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' }
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' }
   ],
   'Air Rune': [
     { type: 'SHOP', name: 'Aubury\'s Rune Shop', regions: ['Any'] },
@@ -303,14 +303,14 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Crystal Impling Jar', regions: ['Tirannwn'], rarity: '1/18' },
     { type: 'DROP', name: 'Crystal Impling', regions: ['Tirannwn'], rarity: '1/18' },
     { type: 'DROP', name: 'Magpie Impling Jar', regions: ['Any'], rarity: '1/21' },
-    { type: 'DROP', name: 'King Black Dragon', regions: ['Any'], rarity: '7/128' },
+    { type: 'DROP', name: 'King Black Dragon', regions: ['Wilderness'], unlockId: 'King Black Dragon', rarity: '7/128' },
     { type: 'CLUE', name: 'Reward Casket (medium)', regions: ['Any'], rarity: '90/3,410' },
-    { type: 'DROP', name: 'Crazy Archaeologist', regions: ['Any'], rarity: '7/128' }
+    { type: 'DROP', name: 'Crazy Archaeologist', regions: ['Wilderness'], unlockId: 'Crazy Archaeologist', rarity: '7/128' }
   ],
   'Amulet of Strength': [
     { type: 'SHOP', name: 'Davon\'s Amulet Store', regions: ['Any'] },
     { type: 'DROP', name: 'Adventurer Jon', regions: ['Any'], rarity: 'Always' },
-    { type: 'DROP', name: 'Giant Mole', regions: ['Any'], rarity: '7/131' },
+    { type: 'DROP', name: 'Giant Mole', regions: ['Asgarnia'], unlockId: 'Giant Mole', rarity: '7/131' },
     { type: 'DROP', name: 'Undead Druid', regions: ['Any'], rarity: '5/100' },
     { type: 'DROP', name: 'Steel Chest (red)', regions: ['Any'], rarity: '6/134.35' },
     { type: 'DROP', name: 'Steel Chest (brown)', regions: ['Any'], rarity: '6/134.39' },
@@ -330,7 +330,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   ],
   'Anglerfish': [
     { type: 'DROP', name: 'Brutal Black Dragon', regions: ['Any'], rarity: '8/128' },
-    { type: 'DROP', name: 'The Leviathan', regions: ['Any'], rarity: '8/100' }
+    { type: 'DROP', name: 'The Leviathan', regions: ['Morytania'], unlockId: 'The Leviathan', rarity: '8/100' }
   ],
   'Anti-Dragon Shield': [
     { type: 'SHOP', name: 'Slayer Equipment', regions: ['Any'] }
@@ -354,14 +354,14 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Baba Yaga\'s Magic Shop', regions: ['Any'] },
     { type: 'DROP', name: 'Spiritual Mage', regions: ['Any'], rarity: '9/128' },
     { type: 'DROP', name: 'Skeleton (Tarn\'s Lair)', regions: ['Any'], rarity: '3/128' },
-    { type: 'DROP', name: 'Alchemical Hydra', regions: ['Any'], rarity: '6/101' },
+    { type: 'DROP', name: 'Alchemical Hydra', regions: ['Kourend & Kebos'], unlockId: 'Alchemical Hydra', rarity: '6/101' },
     { type: 'DROP', name: 'Grubby Chest', regions: ['Kourend & Kebos'], rarity: '10/100' },
     { type: 'DROP', name: 'Basilisk Knight', regions: ['Any'], rarity: '6/52' },
     { type: 'DROP', name: 'Basilisk Sentinel', regions: ['Fremennik'], rarity: '6/52' }
   ],
   'Avantoe': [
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
-    { type: 'DROP', name: 'Sorceress\'s Garden', regions: ['Kharidian Desert'], rarity: '9/75' }
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
+    { type: 'DROP', name: 'Sorceress\'s Garden', regions: ['Kharidian Desert'], unlockId: 'Sorceress\'s Garden', rarity: '9/75' }
   ],
   'Avernic Defender Hilt': [
     { type: 'DROP', name: 'Monumental Chest', regions: ['Morytania'], rarity: '8/19' }
@@ -399,7 +399,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Basilisk Sentinel', regions: ['Fremennik'], rarity: '1/1,000' }
   ],
   'Big Bones': [
-    { type: 'DROP', name: 'Giant Mole', regions: ['Any'], rarity: 'Always' },
+    { type: 'DROP', name: 'Giant Mole', regions: ['Asgarnia'], unlockId: 'Giant Mole', rarity: 'Always' },
     { type: 'DROP', name: 'Ogre', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Cyclops', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Dark Beast', regions: ['Any'], rarity: 'Always' },
@@ -417,15 +417,15 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Abyssal Leech', regions: ['Any'], rarity: '3/256' },
     { type: 'DROP', name: 'Abyssal Guardian', regions: ['Any'], rarity: '3/256' },
     { type: 'DROP', name: 'Abyssal Walker', regions: ['Any'], rarity: '3/256' },
-    { type: 'DROP', name: 'Abyssal Sire', regions: ['Any'], rarity: '4/139' }
+    { type: 'DROP', name: 'Abyssal Sire', regions: ['Wilderness'], unlockId: 'Abyssal Sire', rarity: '4/139' }
   ],
   'Black D\'hide Body': [
     { type: 'CLUE', name: 'Reward Casket (hard)', regions: ['Any'], rarity: '1/27.1' },
-    { type: 'DROP', name: 'Kree\'arra', regions: ['Any'], rarity: '8/127' },
-    { type: 'DROP', name: 'Cerberus', regions: ['Any'], rarity: '3/130' },
+    { type: 'DROP', name: 'Kree\'arra', regions: ['Fremennik'], unlockId: 'Kree\'arra', rarity: '8/127' },
+    { type: 'DROP', name: 'Cerberus', regions: ['Asgarnia'], unlockId: 'Cerberus', rarity: '3/130' },
     { type: 'DROP', name: 'Brutal Black Dragon', regions: ['Any'], rarity: '2/128' },
-    { type: 'DROP', name: 'Deranged Archaeologist', regions: ['Any'], rarity: '6/131' },
-    { type: 'DROP', name: 'Alchemical Hydra', regions: ['Any'], rarity: '5/101' }
+    { type: 'DROP', name: 'Deranged Archaeologist', regions: ['Islands & Others'], unlockId: 'Deranged Archaeologist', rarity: '6/131' },
+    { type: 'DROP', name: 'Alchemical Hydra', regions: ['Kourend & Kebos'], unlockId: 'Alchemical Hydra', rarity: '5/101' }
   ],
   'Black D\'hide Chaps': [
     { type: 'CLUE', name: 'Reward Casket (hard)', regions: ['Any'], rarity: '1/27.1' },
@@ -448,7 +448,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Dark Chest', regions: ['Any'], rarity: '20/600' }
   ],
   'Black Dragonhide': [
-    { type: 'DROP', name: 'King Black Dragon', regions: ['Any'], rarity: 'Always' },
+    { type: 'DROP', name: 'King Black Dragon', regions: ['Wilderness'], unlockId: 'King Black Dragon', rarity: 'Always' },
     { type: 'DROP', name: 'Lava Dragon', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Ninja Impling', regions: ['Any'], rarity: '1/19' },
     { type: 'DROP', name: 'Ninja Impling Jar', regions: ['Any'], rarity: '1/19' },
@@ -464,10 +464,10 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Baba Yaga\'s Magic Shop', regions: ['Any'] },
     { type: 'SHOP', name: 'Ali\'s Discount Wares', regions: ['Any'] },
     { type: 'DROP', name: 'Chest (Chaos Druid Tower)', regions: ['Kandarin'], rarity: 'Always' },
-    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], rarity: 'Common' },
+    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex', rarity: 'Common' },
     { type: 'DROP', name: 'Chest (Ancient Vault)', regions: ['Any'], rarity: '1/5' },
     { type: 'DROP', name: 'Lost Camphor Crate', regions: ['Any'], rarity: '1/8' },
-    { type: 'DROP', name: 'Coffin (Hallowed Sepulchre)', regions: ['Any'], rarity: '1/10' },
+    { type: 'DROP', name: 'Coffin (Hallowed Sepulchre)', regions: ['Morytania'], unlockId: 'Hallowed Sepulchre', rarity: '1/10' },
     { type: 'DROP', name: 'Grand Hallowed Coffin', regions: ['Morytania'], rarity: '1/10' }
   ],
   'Blue D\'hide Body': [
@@ -492,7 +492,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   ],
   'Blue Dragonhide': [
     { type: 'DROP', name: 'Brutal Blue Dragon', regions: ['Any'], rarity: 'Always' },
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' }
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' }
   ],
   'Bones': [
     { type: 'DROP', name: 'Thug', regions: ['Any'], rarity: 'Always' },
@@ -523,7 +523,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Combat Path Starter Kit', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Adventurer Jon', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Chest (Maze)', regions: ['Any'], rarity: '1/10' },
-    { type: 'DROP', name: 'The Leviathan', regions: ['Any'], rarity: '1/100' },
+    { type: 'DROP', name: 'The Leviathan', regions: ['Morytania'], unlockId: 'The Leviathan', rarity: '1/100' },
     { type: 'CLUE', name: 'Reward Casket (beginner)', regions: ['Any'], rarity: '11/492' },
     { type: 'DROP', name: 'Goblin', regions: ['Any'], rarity: '3/128' }
   ],
@@ -536,9 +536,9 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Bob\'s Brilliant Axes', regions: ['Any'] },
     { type: 'SHOP', name: 'Aurel\'s Supplies', regions: ['Any'] },
     { type: 'SHOP', name: 'Obli\'s General Store', regions: ['Any'] },
-    { type: 'DROP', name: 'Zombie (Temple Trekking)', regions: ['Any'], rarity: 'Always' },
+    { type: 'DROP', name: 'Zombie (Temple Trekking)', regions: ['Morytania'], unlockId: 'Temple Trekking', rarity: 'Always' },
     { type: 'DROP', name: 'Workbench (Trouble Brewing, Tools)', regions: ['Morytania'], rarity: 'Always' },
-    { type: 'DROP', name: 'Bronze Axe (Chambers of Xeric)', regions: ['Any'], rarity: 'Always' },
+    { type: 'DROP', name: 'Bronze Axe (Chambers of Xeric)', regions: ['Kourend & Kebos'], unlockId: 'Chambers of Xeric', rarity: 'Always' },
     { type: 'DROP', name: 'Logs (bronze Axe)', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Goblin', regions: ['Any'], rarity: '3/128' },
     { type: 'DROP', name: 'H.A.M. Member', regions: ['Misthalin'], rarity: '3/102' }
@@ -550,7 +550,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Bronze Dragon', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Bookcase (Twilight Temple)', regions: ['Varlamore'], rarity: '1/6' },
     { type: 'DROP', name: 'Barrel (Twilight Temple)', regions: ['Varlamore'], rarity: '1/8' },
-    { type: 'DROP', name: 'Duke Sucellus', regions: ['Any'], rarity: '1/100' },
+    { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus', rarity: '1/100' },
     { type: 'DROP', name: 'Rockslug', regions: ['Any'], rarity: '2/128' },
     { type: 'DROP', name: 'Skeleton', regions: ['Any'], rarity: '5/128' }
   ],
@@ -568,7 +568,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Horvik\'s Armour Shop', regions: ['Any'] },
     { type: 'SHOP', name: 'Warrior Guild Armoury', regions: ['Any'] },
     { type: 'SHOP', name: 'Wayne\'s Chains! - Chainmail Specialist', regions: ['Any'] },
-    { type: 'DROP', name: 'Duke Sucellus', regions: ['Any'], rarity: '1/100' },
+    { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus', rarity: '1/100' },
     { type: 'DROP', name: 'Zombie (Tarn\'s Lair)', regions: ['Any'], rarity: '1/128' }
   ],
   'Bronze Claws': [
@@ -619,7 +619,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Varrock Swordshop', regions: ['Any'] },
     { type: 'SHOP', name: 'Warrior Guild Armoury', regions: ['Any'] },
     { type: 'SHOP', name: 'Briget\'s Weapons', regions: ['Any'] },
-    { type: 'DROP', name: 'The Whisperer', regions: ['Any'], rarity: '1/100' },
+    { type: 'DROP', name: 'The Whisperer', regions: ['Fremennik'], unlockId: 'The Whisperer', rarity: '1/100' },
     { type: 'DROP', name: 'Chaos Druid', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Zombie', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Zombie (Entrana Dungeon)', regions: ['Any'], rarity: '1/128' },
@@ -728,12 +728,12 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Sandworm Castings', regions: ['Any'] },
     { type: 'DROP', name: 'Earth Impling', regions: ['Any'], rarity: '1/10' },
     { type: 'DROP', name: 'Earth Impling Jar', regions: ['Any'], rarity: '1/10' },
-    { type: 'DROP', name: 'Kalphite Queen', regions: ['Any'], rarity: '4/126' },
+    { type: 'DROP', name: 'Kalphite Queen', regions: ['Kharidian Desert'], unlockId: 'Kalphite Queen', rarity: '4/126' },
     { type: 'DROP', name: 'Sand Crab', regions: ['Any'], rarity: '6/128' },
     { type: 'DROP', name: 'Stingray', regions: ['Any'], rarity: '3/100' }
   ],
   'Cadantine': [
-    { type: 'DROP', name: 'Sorceress\'s Garden', regions: ['Kharidian Desert'], rarity: '6/99' }
+    { type: 'DROP', name: 'Sorceress\'s Garden', regions: ['Kharidian Desert'], unlockId: 'Sorceress\'s Garden', rarity: '6/99' }
   ],
   'Chaos Rune': [
     { type: 'SHOP', name: 'Aubury\'s Rune Shop', regions: ['Any'] },
@@ -769,7 +769,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Funch\'s Fine Groceries', regions: ['Any'] },
     { type: 'SHOP', name: 'Grand Tree Groceries', regions: ['Any'] },
     { type: 'DROP', name: 'Dessourt', regions: ['Any'], rarity: 'Always' },
-    { type: 'DROP', name: 'Dessourt (Nightmare Zone)', regions: ['Any'], rarity: 'Always' }
+    { type: 'DROP', name: 'Dessourt (Nightmare Zone)', regions: ['Kandarin'], unlockId: 'Nightmare Zone', rarity: 'Always' }
   ],
   'Clay': [
     { type: 'DROP', name: 'Soil', regions: ['Misthalin'], rarity: '1/16' },
@@ -789,7 +789,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Reward Token', regions: ['Morytania'], rarity: 'Always' },
     { type: 'DROP', name: 'Void Knights\' Reward Options', regions: ['Asgarnia'], rarity: 'Always' },
     { type: 'DROP', name: 'Coal Pile', regions: ['Kandarin'], rarity: 'Always' },
-    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], rarity: 'Uncommon' },
+    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex', rarity: 'Uncommon' },
     { type: 'DROP', name: 'Extra Supply Crate', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Reward Cart', regions: ['Kourend & Kebos'] }
   ],
@@ -802,12 +802,12 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Nature Impling', regions: ['Any'], rarity: '1/10' },
     { type: 'DROP', name: 'Nature Impling Jar', regions: ['Any'], rarity: '1/10' },
     { type: 'DROP', name: 'Kurask', regions: ['Any'], rarity: '4/124' },
-    { type: 'DROP', name: 'Callisto', regions: ['Any'], rarity: '2/126' },
-    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], rarity: '6/249' },
+    { type: 'DROP', name: 'Callisto', regions: ['Wilderness'], unlockId: 'Callisto', rarity: '2/126' },
+    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', rarity: '6/249' },
     { type: 'DROP', name: 'King Kurask', regions: ['Any'], rarity: '4/124' }
   ],
   'Coconut Milk': [
-    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Any'], rarity: '1/27' }
+    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut', rarity: '1/27' }
   ],
   'Coif': [
     { type: 'SHOP', name: 'Scavvo\'s Rune Store', regions: ['Any'] },
@@ -840,7 +840,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Lundail', regions: ['Wilderness'], rarity: '1/7' },
     { type: 'DROP', name: 'Essence Impling', regions: ['Any'], rarity: '1/10' },
     { type: 'DROP', name: 'Essence Impling Jar', regions: ['Any'], rarity: '1/10' },
-    { type: 'DROP', name: 'Coffin (Hallowed Sepulchre)', regions: ['Any'], rarity: '1/10' },
+    { type: 'DROP', name: 'Coffin (Hallowed Sepulchre)', regions: ['Morytania'], unlockId: 'Hallowed Sepulchre', rarity: '1/10' },
     { type: 'DROP', name: 'Hallowed Sack', regions: ['Morytania'], rarity: '1/10' }
   ],
   'Cowhide': [
@@ -861,26 +861,26 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Flockleader Geerin', regions: ['Any'], rarity: '8/127' }
   ],
   'Crystal Armour Seed': [
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: '1/50' }
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/50' }
   ],
   'Crystal Shard': [
     { type: 'DROP', name: 'Night Beast', regions: ['Tirannwn'], rarity: 'Always' },
     { type: 'DROP', name: 'King Kurask', regions: ['Tirannwn'], rarity: 'Always' },
     { type: 'DROP', name: 'Nechryarch', regions: ['Tirannwn'], rarity: 'Always' },
     { type: 'DROP', name: 'Insatiable Mutated Bloodveld', regions: ['Tirannwn'], rarity: 'Always' },
-    { type: 'DROP', name: 'Zalcano', regions: ['Any'], rarity: 'Always' },
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: 'Always' }
+    { type: 'DROP', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', rarity: 'Always' },
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: 'Always' }
   ],
   'Crystal Tool Seed': [
-    { type: 'DROP', name: 'Zalcano', regions: ['Any'], rarity: '39/8,000' }
+    { type: 'DROP', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', rarity: '39/8,000' }
   ],
   'Dark Bow': [
     { type: 'DROP', name: 'Night Beast', regions: ['Tirannwn'], rarity: '1/512' }
   ],
   'Dark Fishing Bait': [
-    { type: 'DROP', name: 'Artio', regions: ['Any'], rarity: '1/128' },
-    { type: 'DROP', name: 'Calvar\'ion', regions: ['Wilderness'], rarity: '1/128' },
-    { type: 'DROP', name: 'Spindel', regions: ['Wilderness'], rarity: '1/128' },
+    { type: 'DROP', name: 'Artio', regions: ['Wilderness'], unlockId: 'Artio', rarity: '1/128' },
+    { type: 'DROP', name: 'Calvar\'ion', regions: ['Wilderness'], unlockId: 'Calvar\'ion', rarity: '1/128' },
+    { type: 'DROP', name: 'Spindel', regions: ['Wilderness'], unlockId: 'Spindel', rarity: '1/128' },
     { type: 'DROP', name: 'Dark Warrior', regions: ['Any'], rarity: '2/128' },
     { type: 'DROP', name: 'Bandit', regions: ['Any'], rarity: '2/143' },
     { type: 'DROP', name: 'Mammoth', regions: ['Any'], rarity: '2/128' }
@@ -891,9 +891,9 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Magic Guild Store (Runes and Staves)', regions: ['Any'] },
     { type: 'DROP', name: 'Muddy Chest', regions: ['Wilderness'], rarity: 'Always' },
     { type: 'DROP', name: 'Death Rune Pile', regions: ['Any'], rarity: 'Always' },
-    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], rarity: 'Common' },
+    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex', rarity: 'Common' },
     { type: 'DROP', name: 'Lundail', regions: ['Wilderness'], rarity: '1/7' },
-    { type: 'DROP', name: 'Rewards Chest (Fortis Colosseum)', regions: ['Varlamore'], rarity: '1/7' },
+    { type: 'DROP', name: 'Rewards Chest (Fortis Colosseum)', regions: ['Varlamore'], unlockId: 'Fortis Colosseum', rarity: '1/7' },
     { type: 'DROP', name: 'Strange Shrine', regions: ['Any'], rarity: '1/9' }
   ],
   'Dense Essence Block': [
@@ -902,10 +902,10 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   'Desert Goat Horn': [
     { type: 'DROP', name: 'Goat', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Billy Goat', regions: ['Any'], rarity: 'Always' },
-    { type: 'DROP', name: 'Thermonuclear Smoke Devil', regions: ['Any'], rarity: '2/107' },
+    { type: 'DROP', name: 'Thermonuclear Smoke Devil', regions: ['Kandarin'], unlockId: 'Thermonuclear Smoke Devil', rarity: '2/107' },
     { type: 'DROP', name: 'Locust Rider', regions: ['Any'], rarity: '2/128' },
     { type: 'DROP', name: 'Scarab Mage', regions: ['Any'], rarity: '2/128' },
-    { type: 'DROP', name: 'Corporeal Beast', regions: ['Any'], rarity: '17/512' }
+    { type: 'DROP', name: 'Corporeal Beast', regions: ['Wilderness'], unlockId: 'Corporeal Beast', rarity: '17/512' }
   ],
   'Diamond': [
     { type: 'SHOP', name: 'Herquin\'s Gems', regions: ['Any'] },
@@ -915,7 +915,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Pinball', regions: ['Any'], rarity: '1/10' },
     { type: 'DROP', name: 'Magpie Impling', regions: ['Any'], rarity: '1/21' },
     { type: 'DROP', name: 'Magpie Impling Jar', regions: ['Any'], rarity: '1/21' },
-    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Any'], rarity: '1/27' },
+    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut', rarity: '1/27' },
     { type: 'DROP', name: 'Eclectic Impling Jar', regions: ['Any'], rarity: '1/100' }
   ],
   'Diamond Amulet': [
@@ -973,17 +973,17 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Ancient Chest', regions: ['Any'], rarity: '3/69' }
   ],
   'Dragon Pickaxe': [
-    { type: 'DROP', name: 'Callisto', regions: ['Any'], rarity: '1/256' },
-    { type: 'DROP', name: 'Vet\'ion', regions: ['Any'], rarity: '1/256' },
-    { type: 'DROP', name: 'Venenatis', regions: ['Any'], rarity: '1/256' },
-    { type: 'DROP', name: 'Artio', regions: ['Any'], rarity: '1/358' },
-    { type: 'DROP', name: 'Calvar\'ion', regions: ['Wilderness'], rarity: '1/358' },
-    { type: 'DROP', name: 'Spindel', regions: ['Wilderness'], rarity: '1/358' }
+    { type: 'DROP', name: 'Callisto', regions: ['Wilderness'], unlockId: 'Callisto', rarity: '1/256' },
+    { type: 'DROP', name: 'Vet\'ion', regions: ['Wilderness'], unlockId: 'Vet\'ion', rarity: '1/256' },
+    { type: 'DROP', name: 'Venenatis', regions: ['Wilderness'], unlockId: 'Venenatis', rarity: '1/256' },
+    { type: 'DROP', name: 'Artio', regions: ['Wilderness'], unlockId: 'Artio', rarity: '1/358' },
+    { type: 'DROP', name: 'Calvar\'ion', regions: ['Wilderness'], unlockId: 'Calvar\'ion', rarity: '1/358' },
+    { type: 'DROP', name: 'Spindel', regions: ['Wilderness'], unlockId: 'Spindel', rarity: '1/358' }
   ],
   'Dragon Scimitar': [
     { type: 'CLUE', name: 'Reward Casket (master)', regions: ['Any'], rarity: '1/30.3' },
-    { type: 'DROP', name: 'Thermonuclear Smoke Devil', regions: ['Any'], rarity: '1/107' },
-    { type: 'DROP', name: 'Scorpia', regions: ['Any'], rarity: '1/128' },
+    { type: 'DROP', name: 'Thermonuclear Smoke Devil', regions: ['Kandarin'], unlockId: 'Thermonuclear Smoke Devil', rarity: '1/107' },
+    { type: 'DROP', name: 'Scorpia', regions: ['Wilderness'], unlockId: 'Scorpia', rarity: '1/128' },
     { type: 'DROP', name: 'Zombie Pirate\'s Locker', regions: ['Wilderness'], rarity: '1/173' },
     { type: 'DROP', name: 'Zombie Pirate', regions: ['Wilderness'], rarity: '1/378' },
     { type: 'DROP', name: 'Demonic Gorilla', regions: ['Any'], rarity: '10/500' }
@@ -993,7 +993,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Crystal Impling', regions: ['Tirannwn'], rarity: '1/18' },
     { type: 'DROP', name: 'Dragon Impling Jar', regions: ['Any'], rarity: '1/19' },
     { type: 'DROP', name: 'Dragon Impling', regions: ['Any'], rarity: '1/19' },
-    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Any'], rarity: '1/27' },
+    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut', rarity: '1/27' },
     { type: 'DROP', name: 'Chest (Rogues\' Castle)', regions: ['Wilderness'], rarity: '1/66' }
   ],
   'Dragonstone Amulet': [
@@ -1007,16 +1007,16 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   ],
   'Dragonstone Ring': [
     { type: 'CLUE', name: 'Reward Casket (elite)', regions: ['Any'], rarity: '1/32.3' },
-    { type: 'DROP', name: 'Thermonuclear Smoke Devil', regions: ['Any'], rarity: '1/107' },
+    { type: 'DROP', name: 'Thermonuclear Smoke Devil', regions: ['Kandarin'], unlockId: 'Thermonuclear Smoke Devil', rarity: '1/107' },
     { type: 'DROP', name: 'Elite Black Knight', regions: ['Any'], rarity: '1/122' },
-    { type: 'DROP', name: 'Kraken', regions: ['Any'], rarity: '1/128' },
+    { type: 'DROP', name: 'Kraken', regions: ['Kandarin'], unlockId: 'Kraken', rarity: '1/128' },
     { type: 'DROP', name: 'Gold Chest (red)', regions: ['Any'], rarity: '3/143.91' },
     { type: 'DROP', name: 'Gold Chest (crimson)', regions: ['Any'], rarity: '3/144.08' }
   ],
   'Dwarf Weed': [
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
-    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], rarity: '2/249' },
-    { type: 'DROP', name: 'Sorceress\'s Garden', regions: ['Kharidian Desert'], rarity: '5/111' }
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
+    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', rarity: '2/249' },
+    { type: 'DROP', name: 'Sorceress\'s Garden', regions: ['Kharidian Desert'], unlockId: 'Sorceress\'s Garden', rarity: '5/111' }
   ],
   'Earth Rune': [
     { type: 'SHOP', name: 'Aubury\'s Rune Shop', regions: ['Any'] },
@@ -1036,7 +1036,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Earth Elemental', regions: ['Any'], rarity: 'Always' }
   ],
   'Elidinis\' Ward': [
-    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Any'], rarity: '3/24' }
+    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut', rarity: '3/24' }
   ],
   'Emerald': [
     { type: 'SHOP', name: 'Herquin\'s Gems', regions: ['Any'] },
@@ -1044,10 +1044,10 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Ardougne Gem Stall', regions: ['Any'] },
     { type: 'CLUE', name: 'Casket (Pirate\'s Treasure)', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Chest (Gu\'Tanoth)', regions: ['Kandarin'], rarity: '1/8' },
-    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Any'], rarity: '1/27' },
+    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut', rarity: '1/27' },
     { type: 'DROP', name: 'Earth Impling', regions: ['Any'], rarity: '1/100' },
     { type: 'DROP', name: 'Earth Impling Jar', regions: ['Any'], rarity: '1/100' },
-    { type: 'DROP', name: 'Vardorvis', regions: ['Any'], rarity: '1/100' }
+    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore'], unlockId: 'Vardorvis', rarity: '1/100' }
   ],
   'Emerald Amulet': [
     { type: 'SHOP', name: 'Grum\'s Gold Exchange', regions: ['Any'] },
@@ -1093,7 +1093,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Grud\'s Herblore Stall', regions: ['Any'] },
     { type: 'DROP', name: 'Newtroost', regions: ['Kandarin'], rarity: 'Always' },
     { type: 'DROP', name: 'Eye of Newt Pack', regions: ['Any'], rarity: 'Always' },
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: '1/27' },
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/27' },
     { type: 'DROP', name: 'Banshee', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Cave Crawler', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Wall Beast', regions: ['Any'], rarity: '1/128' }
@@ -1105,7 +1105,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Evil Chicken', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Chompy Bird', regions: ['Kandarin'], rarity: 'Always' },
     { type: 'DROP', name: 'Aviansie', regions: ['Any'], rarity: 'Always' },
-    { type: 'DROP', name: 'Kree\'arra', regions: ['Any'], rarity: 'Always' },
+    { type: 'DROP', name: 'Kree\'arra', regions: ['Fremennik'], unlockId: 'Kree\'arra', rarity: 'Always' },
     { type: 'DROP', name: 'Jubbly Bird', regions: ['Kandarin'], rarity: 'Always' },
     { type: 'DROP', name: 'Feather Pack', regions: ['Any'], rarity: 'Always' }
   ],
@@ -1118,7 +1118,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Fire Rune Pile', regions: ['Kandarin'], rarity: 'Always' },
     { type: 'DROP', name: 'Barrel (Shaman Caves)', regions: ['Any'], rarity: 'Common' },
     { type: 'DROP', name: 'Wise Old Man Tasks', regions: ['Misthalin'], rarity: 'Common' },
-    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], rarity: 'Uncommon' }
+    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex', rarity: 'Uncommon' }
   ],
   'Fish Barrel': [
     { type: 'DROP', name: 'Reward Pool', regions: ['Any'], rarity: '1/400' }
@@ -1150,7 +1150,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Beekeeper (Random Event)', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Flax (plant)', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Bale of Flax', regions: ['Varlamore'], rarity: 'Always' },
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
     { type: 'DROP', name: 'Baby Impling', regions: ['Any'], rarity: '1/100' },
     { type: 'DROP', name: 'Baby Impling Jar', regions: ['Any'], rarity: '1/100' }
   ],
@@ -1240,7 +1240,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Crushing Hand', regions: ['Morytania'], rarity: '3/128' }
   ],
   'Granite Maul': [
-    { type: 'DROP', name: 'Grotesque Guardians', regions: ['Morytania'], rarity: '1/250' },
+    { type: 'DROP', name: 'Grotesque Guardians', regions: ['Morytania'], unlockId: 'Grotesque Guardians', rarity: '1/250' },
     { type: 'DROP', name: 'Marble Gargoyle', regions: ['Morytania'], rarity: '1/256' }
   ],
   'Green D\'hide Body': [
@@ -1272,11 +1272,11 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Dark Chest', regions: ['Any'], rarity: '20/600' }
   ],
   'Green Dragonhide': [
-    { type: 'DROP', name: 'Corporeal Beast', regions: ['Any'], rarity: '18/512' },
-    { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], rarity: '7/150' }
+    { type: 'DROP', name: 'Corporeal Beast', regions: ['Wilderness'], unlockId: 'Corporeal Beast', rarity: '18/512' },
+    { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath', rarity: '7/150' }
   ],
   'Guam Leaf': [
-    { type: 'DROP', name: 'Sorceress\'s Garden', regions: ['Kharidian Desert'], rarity: '16/75' }
+    { type: 'DROP', name: 'Sorceress\'s Garden', regions: ['Kharidian Desert'], unlockId: 'Sorceress\'s Garden', rarity: '16/75' }
   ],
   'Hammer': [
     { type: 'SHOP', name: 'Drogo\'s Mining Emporium', regions: ['Any'] },
@@ -1285,7 +1285,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Tool Store 1', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Hammers (Tempoross Cove)', regions: ['Kharidian Desert'], rarity: 'Always' },
     { type: 'DROP', name: 'Wrecked Boat', regions: ['Fremennik'], rarity: 'Always' },
-    { type: 'DROP', name: 'Hammer (Chambers of Xeric)', regions: ['Any'], rarity: 'Always' },
+    { type: 'DROP', name: 'Hammer (Chambers of Xeric)', regions: ['Kourend & Kebos'], unlockId: 'Chambers of Xeric', rarity: 'Always' },
     { type: 'DROP', name: 'Skeletal Remains', regions: ['Misthalin'], rarity: 'Always' },
     { type: 'DROP', name: 'Crate of Hammers', regions: ['Any'], rarity: 'Always' }
   ],
@@ -1304,13 +1304,13 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Harry\'s Fishing Shop', regions: ['Any'] },
     { type: 'SHOP', name: 'Fremennik Fish Monger', regions: ['Any'] },
     { type: 'DROP', name: 'Harpoons (Tempoross Cove)', regions: ['Kharidian Desert'], rarity: 'Always' },
-    { type: 'DROP', name: 'Kraken', regions: ['Any'], rarity: '1/128' },
+    { type: 'DROP', name: 'Kraken', regions: ['Kandarin'], unlockId: 'Kraken', rarity: '1/128' },
     { type: 'DROP', name: 'Dagannoth', regions: ['Any'], rarity: '3/128' },
     { type: 'DROP', name: 'Fishy Salvage', regions: ['Any'], rarity: '2/467' }
   ],
   'Harralander': [
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
-    { type: 'DROP', name: 'Sorceress\'s Garden', regions: ['Kharidian Desert'], rarity: '11/54' }
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
+    { type: 'DROP', name: 'Sorceress\'s Garden', regions: ['Kharidian Desert'], unlockId: 'Sorceress\'s Garden', rarity: '11/54' }
   ],
   'Headless Arrow': [
     { type: 'DROP', name: 'Broken Arrow', regions: ['Any'], rarity: '5/100' },
@@ -1333,20 +1333,20 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Rod Fishing Spot (infernal Eel)', regions: ['Any'], rarity: 'Always' }
   ],
   'Inquisitor\'s Great Helm': [
-    { type: 'DROP', name: 'Phosani\'s Nightmare', regions: ['Morytania'], rarity: '1/700' }
+    { type: 'DROP', name: 'Phosani\'s Nightmare', regions: ['Morytania'], unlockId: 'Phosani\'s Nightmare', rarity: '1/700' }
   ],
   'Inquisitor\'s Hauberk': [
-    { type: 'DROP', name: 'Phosani\'s Nightmare', regions: ['Morytania'], rarity: '1/700' }
+    { type: 'DROP', name: 'Phosani\'s Nightmare', regions: ['Morytania'], unlockId: 'Phosani\'s Nightmare', rarity: '1/700' }
   ],
   'Inquisitor\'s Mace': [
-    { type: 'DROP', name: 'Phosani\'s Nightmare', regions: ['Morytania'], rarity: '31/35,000' }
+    { type: 'DROP', name: 'Phosani\'s Nightmare', regions: ['Morytania'], unlockId: 'Phosani\'s Nightmare', rarity: '31/35,000' }
   ],
   'Inquisitor\'s Plateskirt': [
-    { type: 'DROP', name: 'Phosani\'s Nightmare', regions: ['Morytania'], rarity: '1/700' }
+    { type: 'DROP', name: 'Phosani\'s Nightmare', regions: ['Morytania'], unlockId: 'Phosani\'s Nightmare', rarity: '1/700' }
   ],
   'Irit Leaf': [
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
-    { type: 'DROP', name: 'Sorceress\'s Garden', regions: ['Kharidian Desert'], rarity: '11/75' }
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
+    { type: 'DROP', name: 'Sorceress\'s Garden', regions: ['Kharidian Desert'], unlockId: 'Sorceress\'s Garden', rarity: '11/75' }
   ],
   'Iron 2h Sword': [
     { type: 'SHOP', name: 'Warrior Guild Armoury', regions: ['Any'] },
@@ -1430,7 +1430,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Black Knight Titan', regions: ['Any'], rarity: '5/128' },
     { type: 'DROP', name: 'Hill Giant', regions: ['Any'], rarity: '5/128' },
     { type: 'DROP', name: 'Black Knight', regions: ['Any'], rarity: '2/128' },
-    { type: 'DROP', name: 'Obor', regions: ['Any'], rarity: '5/135' },
+    { type: 'DROP', name: 'Obor', regions: ['Any'], unlockId: 'Obor', rarity: '5/135' },
     { type: 'DROP', name: 'Cyclops (Ardougne Zoo)', regions: ['Any'], rarity: '5/128' }
   ],
   'Iron Kiteshield': [
@@ -1516,7 +1516,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Gwyn\'s Mining Emporium', regions: ['Any'] },
     { type: 'DROP', name: 'Possessed Pickaxe', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Adventurer Jon', regions: ['Any'], rarity: 'Always' },
-    { type: 'DROP', name: 'Iron Pickaxe (Chambers of Xeric)', regions: ['Any'], rarity: 'Always' },
+    { type: 'DROP', name: 'Iron Pickaxe (Chambers of Xeric)', regions: ['Kourend & Kebos'], unlockId: 'Chambers of Xeric', rarity: 'Always' },
     { type: 'DROP', name: 'Scavenger Beast', regions: ['Kourend & Kebos'], rarity: '1/18' },
     { type: 'CLUE', name: 'Reward Casket (beginner)', regions: ['Any'], rarity: '11/492' },
     { type: 'DROP', name: 'H.A.M. Member', regions: ['Misthalin'], rarity: '3/102' }
@@ -1644,11 +1644,11 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Table (Misthalin Mystery)', regions: ['Misthalin'], rarity: 'Always' }
   ],
   'Kwuarm': [
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
-    { type: 'DROP', name: 'Sorceress\'s Garden', regions: ['Kharidian Desert'], rarity: '8/99' }
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
+    { type: 'DROP', name: 'Sorceress\'s Garden', regions: ['Kharidian Desert'], unlockId: 'Sorceress\'s Garden', rarity: '8/99' }
   ],
   'Lantadyme': [
-    { type: 'DROP', name: 'Sorceress\'s Garden', regions: ['Kharidian Desert'], rarity: '6/111' }
+    { type: 'DROP', name: 'Sorceress\'s Garden', regions: ['Kharidian Desert'], unlockId: 'Sorceress\'s Garden', rarity: '6/111' }
   ],
   'Lava Scale': [
     { type: 'DROP', name: 'Lava Dragon', regions: ['Any'], rarity: 'Always' },
@@ -1666,7 +1666,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Wise Old Man Tasks', regions: ['Misthalin'], rarity: 'Common' },
     { type: 'DROP', name: 'Lundail', regions: ['Wilderness'], rarity: '1/7' },
     { type: 'DROP', name: 'Lost Oak Crate', regions: ['Any'], rarity: '1/8' },
-    { type: 'DROP', name: 'Coffin (Hallowed Sepulchre)', regions: ['Any'], rarity: '1/10' }
+    { type: 'DROP', name: 'Coffin (Hallowed Sepulchre)', regions: ['Morytania'], unlockId: 'Hallowed Sepulchre', rarity: '1/10' }
   ],
   'Leaf-Bladed Battleaxe': [
     { type: 'DROP', name: 'King Kurask', regions: ['Any'], rarity: '1/1,026' }
@@ -1729,7 +1729,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Skeleton (Tarn\'s Lair)', regions: ['Any'], rarity: '2/128' }
   ],
   'Lightbearer': [
-    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Any'], rarity: '7/24' }
+    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut', rarity: '7/24' }
   ],
   'Limestone': [
     { type: 'SHOP', name: 'Razmire Builders Merchants', regions: ['Any'] },
@@ -1739,7 +1739,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   'Limpwurt Root': [
     { type: 'DROP', name: 'Limpwurt Plant', regions: ['Any'], rarity: 'Always' },
     { type: 'CLUE', name: 'Reward Casket (master)', regions: ['Any'], rarity: '1/30.3' },
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
     { type: 'DROP', name: 'Cockatrice', regions: ['Any'], rarity: '21/128' },
     { type: 'DROP', name: 'Black Knight Titan', regions: ['Any'], rarity: '11/128' },
     { type: 'DROP', name: 'Cave Bug', regions: ['Any'], rarity: '1/128' }
@@ -1799,9 +1799,9 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Reward Cart', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Dragon Impling Jar', regions: ['Any'], rarity: '1/19' },
     { type: 'DROP', name: 'Dragon Impling', regions: ['Any'], rarity: '1/19' },
-    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Any'], rarity: '1/27' },
+    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut', rarity: '1/27' },
     { type: 'DROP', name: 'Monumental Chest', regions: ['Morytania'], rarity: '1/30' },
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' }
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' }
   ],
   'Mahogany Logs': [
     { type: 'DROP', name: 'Extra Supply Crate', regions: ['Kourend & Kebos'] },
@@ -1814,14 +1814,14 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   'Mahogany Plank': [
     { type: 'DROP', name: 'The Mimic', regions: ['Kourend & Kebos'], rarity: 'Always' },
     { type: 'DROP', name: 'Lost Mahogany Crate', regions: ['Any'], rarity: '1/8' },
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
     { type: 'CLUE', name: 'Reward Casket (elite)', regions: ['Any'], rarity: '1/32.3' },
     { type: 'DROP', name: 'Ancient Chest', regions: ['Any'], rarity: '1/33' },
     { type: 'DROP', name: 'Revenant Dragon', regions: ['Any'], rarity: '1/33.17' }
   ],
   'Manta Ray': [
     { type: 'SHOP', name: 'Chest (Theatre of Blood)', regions: ['Any'], notes: 'Bought with Points' },
-    { type: 'DROP', name: 'The Whisperer', regions: ['Any'], rarity: '1/5.5' },
+    { type: 'DROP', name: 'The Whisperer', regions: ['Fremennik'], unlockId: 'The Whisperer', rarity: '1/5.5' },
     { type: 'CLUE', name: 'Reward Casket (master)', regions: ['Any'], rarity: '1/30.3' },
     { type: 'DROP', name: 'Flight Kilisa', regions: ['Any'], rarity: '8/127' },
     { type: 'DROP', name: 'Wingman Skree', regions: ['Any'], rarity: '8/127' },
@@ -1837,16 +1837,16 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Hunters\' Loot Sack (master)', regions: ['Varlamore'] }
   ],
   'Marrentill': [
-    { type: 'DROP', name: 'Sorceress\'s Garden', regions: ['Kharidian Desert'], rarity: '14/75' }
+    { type: 'DROP', name: 'Sorceress\'s Garden', regions: ['Kharidian Desert'], unlockId: 'Sorceress\'s Garden', rarity: '14/75' }
   ],
   'Masori Body': [
-    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Any'], rarity: '2/24' }
+    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut', rarity: '2/24' }
   ],
   'Masori Chaps': [
-    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Any'], rarity: '2/24' }
+    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut', rarity: '2/24' }
   ],
   'Masori Mask': [
-    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Any'], rarity: '2/24' }
+    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut', rarity: '2/24' }
   ],
   'Mind Rune': [
     { type: 'SHOP', name: 'Aubury\'s Rune Shop', regions: ['Any'] },
@@ -1890,7 +1890,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Bandit', regions: ['Any'], rarity: '1/143' },
     { type: 'DROP', name: 'Green Dragon', regions: ['Any'], rarity: '3/128' },
     { type: 'DROP', name: 'Lesser Demon', regions: ['Any'], rarity: '4/39' },
-    { type: 'DROP', name: 'Giant Mole', regions: ['Any'], rarity: '2/131' },
+    { type: 'DROP', name: 'Giant Mole', regions: ['Asgarnia'], unlockId: 'Giant Mole', rarity: '2/131' },
     { type: 'DROP', name: 'Kalphite Guardian', regions: ['Any'], rarity: '2/128' },
     { type: 'DROP', name: 'Blue Dragon', regions: ['Any'], rarity: '3/128' }
   ],
@@ -1898,7 +1898,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Muddy Chest', regions: ['Wilderness'], rarity: 'Always' },
     { type: 'DROP', name: 'Lost Teak Crate', regions: ['Any'], rarity: '1/8' },
     { type: 'DROP', name: 'Mystery Box', regions: ['Asgarnia'], rarity: '1/15' },
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
     { type: 'DROP', name: 'Young Impling', regions: ['Any'], rarity: '1/100' },
     { type: 'DROP', name: 'Young Impling Jar', regions: ['Any'], rarity: '1/100' }
   ],
@@ -1907,7 +1907,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Brian\'s Battleaxe Bazaar', regions: ['Any'] },
     { type: 'SHOP', name: 'Warrior Guild Armoury', regions: ['Any'] },
     { type: 'DROP', name: 'Green Dragon', regions: ['Any'], rarity: '1/128' },
-    { type: 'DROP', name: 'Giant Mole', regions: ['Any'], rarity: '1/131' },
+    { type: 'DROP', name: 'Giant Mole', regions: ['Asgarnia'], unlockId: 'Giant Mole', rarity: '1/131' },
     { type: 'DROP', name: 'Bronze Dragon', regions: ['Any'], rarity: '3/128' },
     { type: 'DROP', name: 'Black Dragon', regions: ['Any'], rarity: '3/128' },
     { type: 'DROP', name: 'Red Dragon', regions: ['Any'], rarity: '3/128' },
@@ -1919,7 +1919,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Quality Armour Shop', regions: ['Any'] },
     { type: 'DROP', name: 'Adventurer Jon', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Agility Dispenser', regions: ['Wilderness'], rarity: '1/9' },
-    { type: 'DROP', name: 'Duke Sucellus', regions: ['Any'], rarity: '1/100' },
+    { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus', rarity: '1/100' },
     { type: 'DROP', name: 'Lesser Demon', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Kalphite Soldier', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Bloodveld', regions: ['Any'], rarity: '1/128' }
@@ -1947,7 +1947,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Armour Store', regions: ['Any'] },
     { type: 'DROP', name: 'Animated Mithril Armour', regions: ['Asgarnia'], rarity: 'Always' },
     { type: 'DROP', name: 'Adventurer Jon', regions: ['Any'], rarity: 'Always' },
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: '1/27' },
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/27' },
     { type: 'DROP', name: 'Wall Beast', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Guard (Burthorpe)', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Zombie (Tarn\'s Lair)', regions: ['Any'], rarity: '1/128' }
@@ -1983,7 +1983,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Adventurer Jon', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Cyclops', regions: ['Any'], rarity: '1/100' },
     { type: 'DROP', name: 'Rusty Sword', regions: ['Kandarin'], rarity: '1/100' },
-    { type: 'DROP', name: 'The Whisperer', regions: ['Any'], rarity: '1/100' },
+    { type: 'DROP', name: 'The Whisperer', regions: ['Fremennik'], unlockId: 'The Whisperer', rarity: '1/100' },
     { type: 'DROP', name: 'Cyclops (God Wars Dungeon)', regions: ['Any'], rarity: '1/100' },
     { type: 'DROP', name: 'Cyclops (Catacombs of Kourend)', regions: ['Any'], rarity: '1/100' }
   ],
@@ -1991,7 +1991,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Warrior Guild Armoury', regions: ['Any'] },
     { type: 'SHOP', name: 'Flynn\'s Mace Market', regions: ['Any'] },
     { type: 'SHOP', name: 'Briget\'s Weapons', regions: ['Any'] },
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: '1/27' },
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/27' },
     { type: 'DROP', name: 'Ice Warrior', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Otherworldly Being', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Ice Giant', regions: ['Any'], rarity: '1/128' },
@@ -2043,7 +2043,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Armour Shop (Jatizso)', regions: ['Any'] },
     { type: 'SHOP', name: 'Zenesha\'s Plate Mail Body Shop', regions: ['Any'] },
     { type: 'DROP', name: 'Animated Mithril Armour', regions: ['Asgarnia'], rarity: 'Always' },
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: '1/27' },
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/27' },
     { type: 'DROP', name: 'Ice Troll', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Troll General', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Kraka', regions: ['Any'], rarity: '1/128' },
@@ -2056,7 +2056,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Animated Mithril Armour', regions: ['Asgarnia'], rarity: 'Always' },
     { type: 'DROP', name: 'Adventurer Jon', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Agility Dispenser', regions: ['Wilderness'], rarity: '1/9' },
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: '1/27' },
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/27' },
     { type: 'DROP', name: 'Ice Giant', regions: ['Any'], rarity: '1/62' },
     { type: 'DROP', name: 'Spiritual Warrior', regions: ['Any'], rarity: '11/127' }
   ],
@@ -2065,7 +2065,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Armour Shop (Jatizso)', regions: ['Any'] },
     { type: 'SHOP', name: 'Armour Store', regions: ['Any'] },
     { type: 'DROP', name: 'Agility Dispenser', regions: ['Wilderness'], rarity: '1/9' },
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: '1/27' },
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/27' },
     { type: 'DROP', name: 'Smoke Devil', regions: ['Any'], rarity: '2/128' },
     { type: 'DROP', name: 'Broken Armour', regions: ['Misthalin'], rarity: '4/200' },
     { type: 'DROP', name: 'Nuclear Smoke Devil', regions: ['Kandarin'], rarity: '2/128' },
@@ -2101,7 +2101,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Zombie (Tarn\'s Lair)', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Moss Giant', regions: ['Any'], rarity: '2/128' },
     { type: 'DROP', name: 'Kalphite Guardian', regions: ['Any'], rarity: '4/128' },
-    { type: 'DROP', name: 'Bryophyta', regions: ['Any'], rarity: '2/128' },
+    { type: 'DROP', name: 'Bryophyta', regions: ['Misthalin'], unlockId: 'Bryophyta', rarity: '2/128' },
     { type: 'DROP', name: 'Simple Lockbox', regions: ['Asgarnia'], rarity: '6/10,850' }
   ],
   'Mithril Warhammer': [
@@ -2118,13 +2118,13 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   'Molten Glass': [
     { type: 'SHOP', name: 'Fritz the Glassblower', regions: ['Any'] },
     { type: 'DROP', name: 'Monumental Chest', regions: ['Morytania'], rarity: '1/30' },
-    { type: 'DROP', name: 'Thermonuclear Smoke Devil', regions: ['Any'], rarity: '2/107' },
-    { type: 'DROP', name: 'Phantom Muspah', regions: ['Any'], rarity: '15/235' }
+    { type: 'DROP', name: 'Thermonuclear Smoke Devil', regions: ['Kandarin'], unlockId: 'Thermonuclear Smoke Devil', rarity: '2/107' },
+    { type: 'DROP', name: 'Phantom Muspah', regions: ['Fremennik'], unlockId: 'Phantom Muspah', rarity: '15/235' }
   ],
   'Monkfish': [
     { type: 'SHOP', name: 'Arnold\'s Eclectic Supplies', regions: ['Any'] },
-    { type: 'DROP', name: 'Kalphite Queen', regions: ['Any'], rarity: '1/9' },
-    { type: 'DROP', name: 'Coffin (Hallowed Sepulchre)', regions: ['Any'], rarity: '1/10' },
+    { type: 'DROP', name: 'Kalphite Queen', regions: ['Kharidian Desert'], unlockId: 'Kalphite Queen', rarity: '1/9' },
+    { type: 'DROP', name: 'Coffin (Hallowed Sepulchre)', regions: ['Morytania'], unlockId: 'Hallowed Sepulchre', rarity: '1/10' },
     { type: 'DROP', name: 'Grand Hallowed Coffin', regions: ['Morytania'], rarity: '1/10' },
     { type: 'DROP', name: 'Hallowed Sack', regions: ['Morytania'], rarity: '1/10' },
     { type: 'DROP', name: 'Hydra', regions: ['Any'], rarity: '11/128' },
@@ -2135,7 +2135,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Swamp Crab', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Zygomite', regions: ['Any'], rarity: '8/429' },
     { type: 'DROP', name: 'Vyrewatch', regions: ['Any'], rarity: '2/96' },
-    { type: 'DROP', name: 'Vet\'ion', regions: ['Any'], rarity: '2/126' },
+    { type: 'DROP', name: 'Vet\'ion', regions: ['Wilderness'], unlockId: 'Vet\'ion', rarity: '2/126' },
     { type: 'DROP', name: 'Sulliuscep', regions: ['Misthalin'], rarity: '9/100' }
   ],
   'Nature Rune': [
@@ -2147,7 +2147,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Lundail', regions: ['Wilderness'], rarity: '1/7' },
     { type: 'DROP', name: 'Lost Mahogany Crate', regions: ['Any'], rarity: '1/8' },
     { type: 'DROP', name: 'Strange Shrine', regions: ['Any'], rarity: '1/9' },
-    { type: 'DROP', name: 'Coffin (Hallowed Sepulchre)', regions: ['Any'], rarity: '1/10' }
+    { type: 'DROP', name: 'Coffin (Hallowed Sepulchre)', regions: ['Morytania'], unlockId: 'Hallowed Sepulchre', rarity: '1/10' }
   ],
   'Needle': [
     { type: 'SHOP', name: 'Dommik\'s Crafting Store', regions: ['Any'] },
@@ -2156,12 +2156,12 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Tool Store 3', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Crate (Elemental Workshop)', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Crate (Elemental Workshop I, Needle)', regions: ['Kandarin'], rarity: 'Always' },
-    { type: 'DROP', name: 'Sack (Tombs of Amascut)', regions: ['Any'], rarity: '1/2' },
+    { type: 'DROP', name: 'Sack (Tombs of Amascut)', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut', rarity: '1/2' },
     { type: 'DROP', name: 'Boxes (witch\'s House)', regions: ['Asgarnia'], rarity: '1/7' },
     { type: 'DROP', name: 'Baby Impling', regions: ['Any'], rarity: '1/10' }
   ],
   'Nightmare Staff': [
-    { type: 'DROP', name: 'Phosani\'s Nightmare', regions: ['Morytania'], rarity: '69/35,000' }
+    { type: 'DROP', name: 'Phosani\'s Nightmare', regions: ['Morytania'], unlockId: 'Phosani\'s Nightmare', rarity: '69/35,000' }
   ],
   'Oak Logs': [
     { type: 'DROP', name: 'Ent', regions: ['Any'] },
@@ -2175,7 +2175,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Marlo\'s Crate', regions: ['Misthalin'], rarity: 'Always' },
     { type: 'DROP', name: 'Eclectic Impling Jar', regions: ['Any'], rarity: '1/10' },
     { type: 'DROP', name: 'Eclectic Impling', regions: ['Any'], rarity: '1/10' },
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
     { type: 'DROP', name: 'Reward Pool', regions: ['Any'], rarity: '1/32' },
     { type: 'CLUE', name: 'Reward Casket (elite)', regions: ['Any'], rarity: '1/32.3' }
   ],
@@ -2190,7 +2190,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Elite Black Knight', regions: ['Any'], rarity: '7/122' }
   ],
   'Osmumten\'s Fang': [
-    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Any'], rarity: '7/24' }
+    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut', rarity: '7/24' }
   ],
   'Pearl Fishing Rod': [
     { type: 'SHOP', name: 'Alry the Angler\'s Angling Accessories', regions: ['Any'], notes: 'Bought with Molch pearl' }
@@ -2201,16 +2201,16 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Trader Stan\'s Trading Post', regions: ['Any'] },
     { type: 'DROP', name: 'Teak Shelves 1', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Teak Shelves 2', regions: ['Any'], rarity: 'Always' },
-    { type: 'DROP', name: 'Fishing Trawler', regions: ['Kandarin'] },
+    { type: 'DROP', name: 'Fishing Trawler', regions: ['Kandarin'], unlockId: 'Fishing Trawler' },
     { type: 'DROP', name: 'General Stall', regions: ['Any'], rarity: '1/3' },
     { type: 'DROP', name: 'Soil', regions: ['Misthalin'], rarity: '1/16' },
     { type: 'DROP', name: 'Storage Crate', regions: ['Misthalin'], rarity: '21/195' }
   ],
   'Potato Cactus': [
     { type: 'DROP', name: 'Potato Cactus (plant)', regions: ['Any'], rarity: 'Always' },
-    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Any'], rarity: '1/27' },
+    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut', rarity: '1/27' },
     { type: 'DROP', name: 'Monumental Chest', regions: ['Morytania'], rarity: '1/30' },
-    { type: 'DROP', name: 'Kalphite Queen', regions: ['Any'], rarity: '8/126' },
+    { type: 'DROP', name: 'Kalphite Queen', regions: ['Kharidian Desert'], unlockId: 'Kalphite Queen', rarity: '8/126' },
     { type: 'DROP', name: 'Spiritual Warrior', regions: ['Any'], rarity: '7/128' },
     { type: 'DROP', name: 'Undead Druid', regions: ['Any'], rarity: '2/100' }
   ],
@@ -2228,13 +2228,13 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Extra Supply Crate', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Reward Cart', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Lost Teak Crate', regions: ['Any'], rarity: '1/8' },
-    { type: 'DROP', name: 'Coffin (Hallowed Sepulchre)', regions: ['Any'], rarity: '1/10' },
+    { type: 'DROP', name: 'Coffin (Hallowed Sepulchre)', regions: ['Morytania'], unlockId: 'Hallowed Sepulchre', rarity: '1/10' },
     { type: 'DROP', name: 'Grand Hallowed Coffin', regions: ['Morytania'], rarity: '1/10' },
     { type: 'DROP', name: 'Hallowed Sack', regions: ['Morytania'], rarity: '1/10' }
   ],
   'Ranarr Weed': [
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
-    { type: 'DROP', name: 'Sorceress\'s Garden', regions: ['Kharidian Desert'], rarity: '9/99' }
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
+    { type: 'DROP', name: 'Sorceress\'s Garden', regions: ['Kharidian Desert'], unlockId: 'Sorceress\'s Garden', rarity: '9/99' }
   ],
   'Ranger Boots': [
     { type: 'CLUE', name: 'Reward Casket (medium)', regions: ['Any'], rarity: '1/1,133' }
@@ -2244,7 +2244,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Harry\'s Fishing Shop', regions: ['Any'] },
     { type: 'SHOP', name: 'Fremennik Fish Monger', regions: ['Any'] },
     { type: 'DROP', name: 'Fishing Spot (small Net, Bait)', regions: ['Any'], rarity: 'Common' },
-    { type: 'DROP', name: 'Fishing Trawler', regions: ['Kandarin'] },
+    { type: 'DROP', name: 'Fishing Trawler', regions: ['Kandarin'], unlockId: 'Fishing Trawler' },
     { type: 'DROP', name: 'Extra Supply Crate', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Reward Cart', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Drift Net Fishing', regions: ['Any'], rarity: '1/5' },
@@ -2254,7 +2254,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Rod Fishing Spot (anglerfish)', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Drake', regions: ['Any'], rarity: '1/93' },
     { type: 'DROP', name: 'Guardian Drake', regions: ['Kourend & Kebos'], rarity: '1/93' },
-    { type: 'DROP', name: 'Skotizo', regions: ['Any'], rarity: '7/100' }
+    { type: 'DROP', name: 'Skotizo', regions: ['Kourend & Kebos'], unlockId: 'Skotizo', rarity: '7/100' }
   ],
   'Raw Bass': [
     { type: 'SHOP', name: 'Harry\'s Fishing Shop', regions: ['Any'] },
@@ -2305,11 +2305,11 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Lobstrosity', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Fishing Spot (cage, Harpoon)', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Fishing Spot (dark Crab)', regions: ['Wilderness'], rarity: 'Always' },
-    { type: 'DROP', name: 'Fishing Trawler', regions: ['Kandarin'] },
+    { type: 'DROP', name: 'Fishing Trawler', regions: ['Kandarin'], unlockId: 'Fishing Trawler' },
     { type: 'DROP', name: 'Extra Supply Crate', regions: ['Kourend & Kebos'] }
   ],
   'Raw Manta Ray': [
-    { type: 'DROP', name: 'Fishing Trawler', regions: ['Kandarin'] },
+    { type: 'DROP', name: 'Fishing Trawler', regions: ['Kandarin'], unlockId: 'Fishing Trawler' },
     { type: 'DROP', name: 'Brimstone Chest', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Larran\'s Big Chest', regions: ['Wilderness'] },
     { type: 'DROP', name: 'Larran\'s Small Chest', regions: ['Wilderness'] },
@@ -2323,7 +2323,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Larran\'s Big Chest', regions: ['Wilderness'] },
     { type: 'DROP', name: 'Larran\'s Small Chest', regions: ['Wilderness'] },
     { type: 'DROP', name: 'Chest (Ancient Vault)', regions: ['Any'], rarity: '1/5' },
-    { type: 'DROP', name: 'The Whisperer', regions: ['Any'], rarity: '1/100' }
+    { type: 'DROP', name: 'The Whisperer', regions: ['Fremennik'], unlockId: 'The Whisperer', rarity: '1/100' }
   ],
   'Raw Pike': [
     { type: 'SHOP', name: 'Gerrant\'s Fishy Business', regions: ['Any'] },
@@ -2352,14 +2352,14 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Harry\'s Fishing Shop', regions: ['Any'] },
     { type: 'SHOP', name: 'Fremennik Fish Monger', regions: ['Any'] },
     { type: 'DROP', name: 'Fishing Spot (small Net, Bait)', regions: ['Any'], rarity: 'Common' },
-    { type: 'DROP', name: 'Fishing Trawler', regions: ['Kandarin'] },
+    { type: 'DROP', name: 'Fishing Trawler', regions: ['Kandarin'], unlockId: 'Fishing Trawler' },
     { type: 'DROP', name: 'Drift Net Fishing', regions: ['Any'], rarity: '1/5' },
     { type: 'DROP', name: 'Warrior (Rellekka)', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Market Guard', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Dagannoth', regions: ['Any'], rarity: '4/128' }
   ],
   'Raw Sea Turtle': [
-    { type: 'DROP', name: 'Fishing Trawler', regions: ['Kandarin'] },
+    { type: 'DROP', name: 'Fishing Trawler', regions: ['Kandarin'], unlockId: 'Fishing Trawler' },
     { type: 'DROP', name: 'Brimstone Chest', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Larran\'s Big Chest', regions: ['Wilderness'] },
     { type: 'DROP', name: 'Larran\'s Small Chest', regions: ['Wilderness'] },
@@ -2371,7 +2371,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Fremennik Fish Monger', regions: ['Any'] },
     { type: 'SHOP', name: 'Flosi\'s Fishmongers', regions: ['Any'] },
     { type: 'DROP', name: 'Chest (Ardougne Castle)', regions: ['Kandarin'], rarity: 'Always' },
-    { type: 'DROP', name: 'Fishing Trawler', regions: ['Kandarin'] },
+    { type: 'DROP', name: 'Fishing Trawler', regions: ['Kandarin'], unlockId: 'Fishing Trawler' },
     { type: 'DROP', name: 'Extra Supply Crate', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Brimstone Chest', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Larran\'s Big Chest', regions: ['Wilderness'] },
@@ -2383,7 +2383,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Fremennik Fish Monger', regions: ['Any'] },
     { type: 'DROP', name: 'Fishing Spot (small Net, Bait)', regions: ['Any'], rarity: 'Common' },
     { type: 'DROP', name: 'Fishing Spot (karambwanji)', regions: ['Any'], rarity: 'Uncommon' },
-    { type: 'DROP', name: 'Fishing Trawler', regions: ['Kandarin'] },
+    { type: 'DROP', name: 'Fishing Trawler', regions: ['Kandarin'], unlockId: 'Fishing Trawler' },
     { type: 'DROP', name: 'Bowl of Fish', regions: ['Any'], rarity: '2/3' },
     { type: 'DROP', name: 'Hermit Crab', regions: ['Any'], rarity: '6/128' }
   ],
@@ -2397,7 +2397,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Fremennik Fish Monger', regions: ['Any'] },
     { type: 'DROP', name: 'Fishing Spot (cage, Harpoon)', regions: ['Any'], rarity: 'Common' },
     { type: 'DROP', name: 'Fishing Spot (Piscatoris Fishing Colony)', regions: ['Kandarin'], rarity: 'Common' },
-    { type: 'DROP', name: 'Fishing Trawler', regions: ['Kandarin'] },
+    { type: 'DROP', name: 'Fishing Trawler', regions: ['Kandarin'], unlockId: 'Fishing Trawler' },
     { type: 'DROP', name: 'Extra Supply Crate', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Brimstone Chest', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Larran\'s Big Chest', regions: ['Wilderness'] }
@@ -2416,7 +2416,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Fremennik Fish Monger', regions: ['Any'] },
     { type: 'DROP', name: 'Fishing Spot (cage, Harpoon)', regions: ['Any'], rarity: 'Common' },
     { type: 'DROP', name: 'Fishing Spot (Piscatoris Fishing Colony)', regions: ['Kandarin'], rarity: 'Common' },
-    { type: 'DROP', name: 'Fishing Trawler', regions: ['Kandarin'] },
+    { type: 'DROP', name: 'Fishing Trawler', regions: ['Kandarin'], unlockId: 'Fishing Trawler' },
     { type: 'DROP', name: 'Extra Supply Crate', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Brimstone Chest', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Larran\'s Big Chest', regions: ['Wilderness'] }
@@ -2424,9 +2424,9 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   'Red D\'hide Body': [
     { type: 'DROP', name: 'Smoke Devil', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Nuclear Smoke Devil', regions: ['Kandarin'], rarity: '1/128' },
-    { type: 'DROP', name: 'Kalphite Queen', regions: ['Any'], rarity: '4/126' },
-    { type: 'DROP', name: 'Crazy Archaeologist', regions: ['Any'], rarity: '4/128' },
-    { type: 'DROP', name: 'Thermonuclear Smoke Devil', regions: ['Any'], rarity: '3/107' },
+    { type: 'DROP', name: 'Kalphite Queen', regions: ['Kharidian Desert'], unlockId: 'Kalphite Queen', rarity: '4/126' },
+    { type: 'DROP', name: 'Crazy Archaeologist', regions: ['Wilderness'], unlockId: 'Crazy Archaeologist', rarity: '4/128' },
+    { type: 'DROP', name: 'Thermonuclear Smoke Devil', regions: ['Kandarin'], unlockId: 'Thermonuclear Smoke Devil', rarity: '3/107' },
     { type: 'DROP', name: 'Brutal Red Dragon', regions: ['Any'], rarity: '2/128' }
   ],
   'Red D\'hide Chaps': [
@@ -2446,11 +2446,11 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Dark Chest', regions: ['Any'], rarity: '20/600' }
   ],
   'Red Dragonhide': [
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
-    { type: 'DROP', name: 'Callisto', regions: ['Any'], rarity: '3/126' },
-    { type: 'DROP', name: 'Crazy Archaeologist', regions: ['Any'], rarity: '5/128' },
-    { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], rarity: '7/150' },
-    { type: 'DROP', name: 'Sarachnis', regions: ['Any'], rarity: '5/100' },
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
+    { type: 'DROP', name: 'Callisto', regions: ['Wilderness'], unlockId: 'Callisto', rarity: '3/126' },
+    { type: 'DROP', name: 'Crazy Archaeologist', regions: ['Wilderness'], unlockId: 'Crazy Archaeologist', rarity: '5/128' },
+    { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath', rarity: '7/150' },
+    { type: 'DROP', name: 'Sarachnis', regions: ['Kourend & Kebos'], unlockId: 'Sarachnis', rarity: '5/100' },
     { type: 'DROP', name: 'Grubby Chest', regions: ['Kourend & Kebos'], rarity: '6/100' }
   ],
   'Red Spiders\' Eggs': [
@@ -2458,7 +2458,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Cave Crawler', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Chasm Crawler', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Cave Bug', regions: ['Any'], rarity: '2/128' },
-    { type: 'DROP', name: 'Venenatis', regions: ['Any'], rarity: '3/126' },
+    { type: 'DROP', name: 'Venenatis', regions: ['Wilderness'], unlockId: 'Venenatis', rarity: '3/126' },
     { type: 'DROP', name: 'Chest (Rogues\' Castle)', regions: ['Wilderness'], rarity: '10/66' }
   ],
   'Red Topaz': [
@@ -2482,7 +2482,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Magpie Impling Jar', regions: ['Any'], rarity: '1/21' },
     { type: 'DROP', name: 'Dagannoth Rex', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Gorak', regions: ['Any'], rarity: '1/128' },
-    { type: 'DROP', name: 'Chaos Fanatic', regions: ['Any'], rarity: '7/128' }
+    { type: 'DROP', name: 'Chaos Fanatic', regions: ['Wilderness'], unlockId: 'Chaos Fanatic', rarity: '7/128' }
   ],
   'Ring of Recoil': [
     { type: 'DROP', name: 'Magpie Impling', regions: ['Any'], rarity: '1/21' },
@@ -2495,12 +2495,12 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Herquin\'s Gems', regions: ['Any'] },
     { type: 'SHOP', name: 'Gem Trader', regions: ['Any'] },
     { type: 'SHOP', name: 'Ardougne Gem Stall', regions: ['Any'] },
-    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Any'], rarity: '1/27' },
+    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut', rarity: '1/27' },
     { type: 'DROP', name: 'Earth Impling', regions: ['Any'], rarity: '1/100' },
     { type: 'DROP', name: 'Earth Impling Jar', regions: ['Any'], rarity: '1/100' },
-    { type: 'DROP', name: 'Vardorvis', regions: ['Any'], rarity: '1/100' },
-    { type: 'DROP', name: 'Duke Sucellus', regions: ['Any'], rarity: '1/100' },
-    { type: 'DROP', name: 'The Whisperer', regions: ['Any'], rarity: '1/100' }
+    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore'], unlockId: 'Vardorvis', rarity: '1/100' },
+    { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus', rarity: '1/100' },
+    { type: 'DROP', name: 'The Whisperer', regions: ['Fremennik'], unlockId: 'The Whisperer', rarity: '1/100' }
   ],
   'Ruby Amulet': [
     { type: 'SHOP', name: 'Grum\'s Gold Exchange', regions: ['Any'] },
@@ -2539,11 +2539,11 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Verak', regions: ['Morytania'], rarity: '9/256' }
   ],
   'Rune 2h Sword': [
-    { type: 'DROP', name: 'Coffin (Hallowed Sepulchre)', regions: ['Any'], rarity: '1/10' },
+    { type: 'DROP', name: 'Coffin (Hallowed Sepulchre)', regions: ['Morytania'], unlockId: 'Hallowed Sepulchre', rarity: '1/10' },
     { type: 'DROP', name: 'Grand Hallowed Coffin', regions: ['Morytania'], rarity: '1/10' },
     { type: 'DROP', name: 'Hallowed Sack', regions: ['Morytania'], rarity: '1/10' },
-    { type: 'DROP', name: 'Rewards Chest (Fortis Colosseum)', regions: ['Varlamore'], rarity: '1/70' },
-    { type: 'DROP', name: 'Araxxor', regions: ['Any'], rarity: '1/115' },
+    { type: 'DROP', name: 'Rewards Chest (Fortis Colosseum)', regions: ['Varlamore'], unlockId: 'Fortis Colosseum', rarity: '1/70' },
+    { type: 'DROP', name: 'Araxxor', regions: ['Morytania'], unlockId: 'Araxxor', rarity: '1/115' },
     { type: 'DROP', name: 'Dark Beast', regions: ['Any'], rarity: '1/128' }
   ],
   'Rune Arrow': [
@@ -2570,7 +2570,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   'Rune Axe': [
     { type: 'SHOP', name: 'Perry\'s Chop-chop Shop', regions: ['Any'] },
     { type: 'CLUE', name: 'Reward Casket (hard)', regions: ['Any'], rarity: '1/27.1' },
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
     { type: 'DROP', name: 'Dagannoth Rex', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Kurask', regions: ['Any'], rarity: '3/124' },
     { type: 'DROP', name: 'Skeletal Wyvern', regions: ['Any'], rarity: '3/128' },
@@ -2580,7 +2580,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Lost Camphor Crate', regions: ['Any'], rarity: '1/8' },
     { type: 'CLUE', name: 'Reward Casket (hard)', regions: ['Any'], rarity: '1/27.1' },
     { type: 'DROP', name: 'Monumental Chest', regions: ['Morytania'], rarity: '1/30' },
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
     { type: 'DROP', name: 'Basilisk Knight', regions: ['Any'], rarity: '1/52' },
     { type: 'DROP', name: 'Basilisk Sentinel', regions: ['Fremennik'], rarity: '1/52' }
   ],
@@ -2588,24 +2588,24 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Scavvo\'s Rune Store', regions: ['Any'] },
     { type: 'SHOP', name: 'Seddu\'s Adventurer\'s Store', regions: ['Any'] },
     { type: 'SHOP', name: 'Armour Store', regions: ['Any'] },
-    { type: 'DROP', name: 'Rewards Chest (Fortis Colosseum)', regions: ['Varlamore'], rarity: '1/7' },
+    { type: 'DROP', name: 'Rewards Chest (Fortis Colosseum)', regions: ['Varlamore'], unlockId: 'Fortis Colosseum', rarity: '1/7' },
     { type: 'DROP', name: 'Agility Dispenser', regions: ['Wilderness'], rarity: '1/9' },
     { type: 'DROP', name: 'Ninja Impling', regions: ['Any'], rarity: '1/19' },
     { type: 'DROP', name: 'Ninja Impling Jar', regions: ['Any'], rarity: '1/19' },
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: '1/24' },
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/24' },
     { type: 'DROP', name: 'Monumental Chest', regions: ['Morytania'], rarity: '1/30' }
   ],
   'Rune Claws': [
     { type: 'DROP', name: 'Ninja Impling', regions: ['Any'], rarity: '1/19' },
     { type: 'DROP', name: 'Ninja Impling Jar', regions: ['Any'], rarity: '1/19' },
-    { type: 'DROP', name: 'Shellbane Gryphon', regions: ['Any'], rarity: '10/128' }
+    { type: 'DROP', name: 'Shellbane Gryphon', regions: ['The Open Seas'], unlockId: 'Shellbane Gryphon', rarity: '10/128' }
   ],
   'Rune Crossbow': [
     { type: 'SHOP', name: 'Crossbow Shop (Dwarven Mine)', regions: ['Any'] },
     { type: 'SHOP', name: 'Crossbow Shop (White Wolf Mountain)', regions: ['Any'] },
     { type: 'SHOP', name: 'Crossbow Shop (Keldagrim)', regions: ['Any'] },
     { type: 'CLUE', name: 'Reward Casket (elite)', regions: ['Any'], rarity: '1/32.3' },
-    { type: 'DROP', name: 'Kree\'arra', regions: ['Any'], rarity: '8/127' }
+    { type: 'DROP', name: 'Kree\'arra', regions: ['Fremennik'], unlockId: 'Kree\'arra', rarity: '8/127' }
   ],
   'Rune Dagger': [
     { type: 'SHOP', name: 'Blades By Urbi', regions: ['Any'] },
@@ -2620,8 +2620,8 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   'Rune Dart Tip': [
     { type: 'DROP', name: 'Crystal Impling Jar', regions: ['Tirannwn'], rarity: '1/18' },
     { type: 'DROP', name: 'Crystal Impling', regions: ['Tirannwn'], rarity: '1/18' },
-    { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], rarity: '3/150' },
-    { type: 'DROP', name: 'The Hueycoatl', regions: ['Any'], rarity: '2/68' }
+    { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath', rarity: '3/150' },
+    { type: 'DROP', name: 'The Hueycoatl', regions: ['Varlamore'], unlockId: 'The Hueycoatl', rarity: '2/68' }
   ],
   'Rune Essence': [
     { type: 'SHOP', name: 'Dom Onion\'s Reward Shop', regions: ['Any'], notes: 'Bought with NMZ' },
@@ -2636,9 +2636,9 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Armour Store', regions: ['Any'] },
     { type: 'SHOP', name: 'Aneirin\'s Armour', regions: ['Any'] },
     { type: 'DROP', name: 'Animated Rune Armour', regions: ['Asgarnia'], rarity: 'Always' },
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: '1/24' },
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/24' },
     { type: 'CLUE', name: 'Reward Casket (hard)', regions: ['Any'], rarity: '1/27.1' },
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
     { type: 'DROP', name: 'Greater Demon', regions: ['Any'], rarity: '1/41' },
     { type: 'DROP', name: 'Revenant Dragon', regions: ['Any'], rarity: '1/49.75' }
   ],
@@ -2648,14 +2648,14 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Tortured Gorilla', regions: ['Any'], rarity: '46/1,000' },
     { type: 'DROP', name: 'Demonic Gorilla', regions: ['Any'], rarity: '25/500' },
     { type: 'DROP', name: 'Rune Dragon', regions: ['Any'], rarity: '15/127' },
-    { type: 'DROP', name: 'Vardorvis', regions: ['Any'], rarity: '8/100' }
+    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore'], unlockId: 'Vardorvis', rarity: '8/100' }
   ],
   'Rune Kiteshield': [
     { type: 'SHOP', name: 'Armour Store', regions: ['Any'] },
-    { type: 'DROP', name: 'Rewards Chest (Fortis Colosseum)', regions: ['Varlamore'], rarity: '1/7' },
+    { type: 'DROP', name: 'Rewards Chest (Fortis Colosseum)', regions: ['Varlamore'], unlockId: 'Fortis Colosseum', rarity: '1/7' },
     { type: 'DROP', name: 'Agility Dispenser', regions: ['Wilderness'], rarity: '1/9' },
     { type: 'CLUE', name: 'Reward Casket (hard)', regions: ['Any'], rarity: '1/27.1' },
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
     { type: 'CLUE', name: 'Reward Casket (elite)', regions: ['Any'], rarity: '1/32.3' },
     { type: 'DROP', name: 'Revenant Dragon', regions: ['Any'], rarity: '1/49.75' }
   ],
@@ -2691,7 +2691,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   'Rune Med Helm': [
     { type: 'SHOP', name: 'Armour Store', regions: ['Any'] },
     { type: 'DROP', name: 'Agility Dispenser', regions: ['Wilderness'], rarity: '1/9' },
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
     { type: 'DROP', name: 'Lesser Demon', regions: ['Any'], rarity: '1/39' },
     { type: 'DROP', name: 'Ogress Shaman', regions: ['Any'], rarity: '1/40' },
     { type: 'DROP', name: 'Ogress Warrior', regions: ['Any'], rarity: '1/40' },
@@ -2705,7 +2705,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Nurmof\'s Pickaxe Shop', regions: ['Any'] },
     { type: 'SHOP', name: 'Pickaxe-Is-Mine', regions: ['Any'] },
     { type: 'SHOP', name: 'Toothy\'s Pickaxes', regions: ['Any'] },
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: '1/24' },
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/24' },
     { type: 'CLUE', name: 'Reward Casket (hard)', regions: ['Any'], rarity: '1/27.1' },
     { type: 'DROP', name: 'Eldric the Ice King', regions: ['Asgarnia'], rarity: '1/56' },
     { type: 'DROP', name: 'Mutated Tortoise', regions: ['Kandarin'], rarity: '1/64' },
@@ -2716,18 +2716,18 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Oziach', regions: ['Any'] },
     { type: 'SHOP', name: 'Armour Store', regions: ['Any'] },
     { type: 'DROP', name: 'Animated Rune Armour', regions: ['Asgarnia'], rarity: 'Always' },
-    { type: 'DROP', name: 'Rewards Chest (Fortis Colosseum)', regions: ['Varlamore'], rarity: '1/7' },
-    { type: 'DROP', name: 'Coffin (Hallowed Sepulchre)', regions: ['Any'], rarity: '1/10' },
+    { type: 'DROP', name: 'Rewards Chest (Fortis Colosseum)', regions: ['Varlamore'], unlockId: 'Fortis Colosseum', rarity: '1/7' },
+    { type: 'DROP', name: 'Coffin (Hallowed Sepulchre)', regions: ['Morytania'], unlockId: 'Hallowed Sepulchre', rarity: '1/10' },
     { type: 'DROP', name: 'Grand Hallowed Coffin', regions: ['Morytania'], rarity: '1/10' },
     { type: 'DROP', name: 'Hallowed Sack', regions: ['Morytania'], rarity: '1/10' },
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: '1/24' }
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/24' }
   ],
   'Rune Platelegs': [
     { type: 'SHOP', name: 'Scavvo\'s Rune Store', regions: ['Any'] },
     { type: 'SHOP', name: 'Seddu\'s Adventurer\'s Store', regions: ['Any'] },
     { type: 'SHOP', name: 'Armour Store', regions: ['Any'] },
     { type: 'DROP', name: 'Animated Rune Armour', regions: ['Asgarnia'], rarity: 'Always' },
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: '1/24' },
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/24' },
     { type: 'CLUE', name: 'Reward Casket (hard)', regions: ['Any'], rarity: '1/27.1' },
     { type: 'CLUE', name: 'Reward Casket (elite)', regions: ['Any'], rarity: '1/32.3' },
     { type: 'DROP', name: 'Revenant Dragon', regions: ['Any'], rarity: '1/49.75' },
@@ -2737,12 +2737,12 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Scavvo\'s Rune Store', regions: ['Any'] },
     { type: 'SHOP', name: 'Seddu\'s Adventurer\'s Store', regions: ['Any'] },
     { type: 'SHOP', name: 'Armour Store', regions: ['Any'] },
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: '1/24' },
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/24' },
     { type: 'CLUE', name: 'Reward Casket (hard)', regions: ['Any'], rarity: '1/27.1' },
     { type: 'CLUE', name: 'Reward Casket (elite)', regions: ['Any'], rarity: '1/32.3' },
     { type: 'CLUE', name: 'Casket (Reward Pool)', regions: ['Kharidian Desert'], rarity: '1/230' },
     { type: 'DROP', name: 'Crystal Chest', regions: ['Asgarnia'], rarity: '1/256' },
-    { type: 'DROP', name: 'Chaos Elemental', regions: ['Any'], rarity: '4/128' }
+    { type: 'DROP', name: 'Chaos Elemental', regions: ['Wilderness'], unlockId: 'Chaos Elemental', rarity: '4/128' }
   ],
   'Rune Pouch': [
     { type: 'SHOP', name: 'Justine\'s Stuff For the Last Shopper Standing', regions: ['Any'], notes: 'Bought with Points' },
@@ -2761,7 +2761,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Armour Store', regions: ['Any'] },
     { type: 'DROP', name: 'Magpie Impling', regions: ['Any'], rarity: '1/21' },
     { type: 'DROP', name: 'Magpie Impling Jar', regions: ['Any'], rarity: '1/21' },
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
     { type: 'DROP', name: 'Locust Rider', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Scarab Mage', regions: ['Any'], rarity: '1/128' },
     { type: 'CLUE', name: 'Casket (Reward Pool)', regions: ['Kharidian Desert'], rarity: '1/230' }
@@ -2770,10 +2770,10 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Scavvo\'s Rune Store', regions: ['Any'] },
     { type: 'DROP', name: 'Narwhal', regions: ['Any'], rarity: '1/60' },
     { type: 'DROP', name: 'Frozen Cache', regions: ['Fremennik'], rarity: '1/80' },
-    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], rarity: '1/209' },
-    { type: 'DROP', name: 'Phantom Muspah', regions: ['Any'], rarity: '1/235' },
-    { type: 'DROP', name: 'K\'ril Tsutsaroth', regions: ['Any'], rarity: '1/406.4' },
-    { type: 'DROP', name: 'Commander Zilyana', regions: ['Any'], rarity: '1/406.4' }
+    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex', rarity: '1/209' },
+    { type: 'DROP', name: 'Phantom Muspah', regions: ['Fremennik'], unlockId: 'Phantom Muspah', rarity: '1/235' },
+    { type: 'DROP', name: 'K\'ril Tsutsaroth', regions: ['Fremennik'], unlockId: 'K\'ril Tsutsaroth', rarity: '1/406.4' },
+    { type: 'DROP', name: 'Commander Zilyana', regions: ['Fremennik'], unlockId: 'Commander Zilyana', rarity: '1/406.4' }
   ],
   'Rune Warhammer': [
     { type: 'SHOP', name: 'Skulgrimen\'s Battle Gear', regions: ['Any'] },
@@ -2789,15 +2789,15 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Crossbow Shop (Dwarven Mine)', regions: ['Any'] },
     { type: 'SHOP', name: 'Crossbow Shop (White Wolf Mountain)', regions: ['Any'] },
     { type: 'SHOP', name: 'Crossbow Shop (Keldagrim)', regions: ['Any'] },
-    { type: 'DROP', name: 'King Black Dragon', regions: ['Any'], rarity: '4/128' },
+    { type: 'DROP', name: 'King Black Dragon', regions: ['Wilderness'], unlockId: 'King Black Dragon', rarity: '4/128' },
     { type: 'DROP', name: 'Dagannoth Supreme', regions: ['Any'], rarity: '2/128' },
-    { type: 'DROP', name: 'Deranged Archaeologist', regions: ['Any'], rarity: '5/131' }
+    { type: 'DROP', name: 'Deranged Archaeologist', regions: ['Islands & Others'], unlockId: 'Deranged Archaeologist', rarity: '5/131' }
   ],
   'Runite Ore': [
     { type: 'SHOP', name: 'TzHaar-Hur-Lek\'s Ore and Gem Store', regions: ['Karamja'], notes: 'Bought with Tokkul' },
     { type: 'SHOP', name: 'TzHaar-Hur-Rin\'s Ore and Gem Store', regions: ['Any'], notes: 'Bought with Tokkul' },
     { type: 'SHOP', name: 'Hendor\'s Awesome Ores', regions: ['Any'] },
-    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], rarity: 'Uncommon' },
+    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex', rarity: 'Uncommon' },
     { type: 'DROP', name: 'Extra Supply Crate', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Reward Cart', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Chest (Ancient Vault)', regions: ['Any'], rarity: '1/5' },
@@ -2824,12 +2824,12 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Herquin\'s Gems', regions: ['Any'] },
     { type: 'SHOP', name: 'Gem Trader', regions: ['Any'] },
     { type: 'SHOP', name: 'Ardougne Gem Stall', regions: ['Any'] },
-    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Any'], rarity: '1/27' },
+    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut', rarity: '1/27' },
     { type: 'DROP', name: 'Baby Impling', regions: ['Any'], rarity: '1/100' },
     { type: 'DROP', name: 'Baby Impling Jar', regions: ['Any'], rarity: '1/100' },
-    { type: 'DROP', name: 'Vardorvis', regions: ['Any'], rarity: '1/100' },
-    { type: 'DROP', name: 'Duke Sucellus', regions: ['Any'], rarity: '1/100' },
-    { type: 'DROP', name: 'The Whisperer', regions: ['Any'], rarity: '1/100' }
+    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore'], unlockId: 'Vardorvis', rarity: '1/100' },
+    { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus', rarity: '1/100' },
+    { type: 'DROP', name: 'The Whisperer', regions: ['Fremennik'], unlockId: 'The Whisperer', rarity: '1/100' }
   ],
   'Sapphire Amulet': [
     { type: 'SHOP', name: 'Grum\'s Gold Exchange', regions: ['Any'] },
@@ -2869,11 +2869,11 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   'Shark': [
     { type: 'SHOP', name: 'Keepa Kettilon\'s Store', regions: ['Any'] },
     { type: 'SHOP', name: 'Chest (Theatre of Blood)', regions: ['Any'], notes: 'Bought with Points' },
-    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], rarity: 'Common' },
+    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex', rarity: 'Common' },
     { type: 'DROP', name: 'Barrel (Shaman Caves)', regions: ['Any'], rarity: 'Rare' },
-    { type: 'DROP', name: 'Kalphite Queen', regions: ['Any'], rarity: '1/9' },
-    { type: 'DROP', name: 'Phantom Muspah', regions: ['Any'], rarity: '1/9' },
-    { type: 'DROP', name: 'Araxxor', regions: ['Any'], rarity: '1/16' },
+    { type: 'DROP', name: 'Kalphite Queen', regions: ['Kharidian Desert'], unlockId: 'Kalphite Queen', rarity: '1/9' },
+    { type: 'DROP', name: 'Phantom Muspah', regions: ['Fremennik'], unlockId: 'Phantom Muspah', rarity: '1/9' },
+    { type: 'DROP', name: 'Araxxor', regions: ['Morytania'], unlockId: 'Araxxor', rarity: '1/16' },
     { type: 'CLUE', name: 'Reward Casket (hard)', regions: ['Any'], rarity: '1/27.1' }
   ],
   'Shrimps': [
@@ -2887,8 +2887,8 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Reward Cart', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Barrel (Shaman Caves)', regions: ['Any'], rarity: 'Rare' },
     { type: 'DROP', name: 'Ancient Chest', regions: ['Any'], rarity: '1/33' },
-    { type: 'DROP', name: 'Vardorvis', regions: ['Any'], rarity: '1/100' },
-    { type: 'DROP', name: 'The Leviathan', regions: ['Any'], rarity: '1/100' }
+    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore'], unlockId: 'Vardorvis', rarity: '1/100' },
+    { type: 'DROP', name: 'The Leviathan', regions: ['Morytania'], unlockId: 'The Leviathan', rarity: '1/100' }
   ],
   'Small Fishing Net': [
     { type: 'SHOP', name: 'Gerrant\'s Fishy Business', regions: ['Any'] },
@@ -2907,7 +2907,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   ],
   'Snapdragon': [
     { type: 'SHOP', name: 'Agility Arena Store', regions: ['Any'], notes: 'Bought with Brimhaven voucher' },
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
     { type: 'DROP', name: 'Nature Impling', regions: ['Any'], rarity: '1/100' },
     { type: 'DROP', name: 'Nature Impling Jar', regions: ['Any'], rarity: '1/100' },
     { type: 'DROP', name: 'Hazelmere', regions: ['Kandarin'], rarity: '10/128' },
@@ -2938,12 +2938,12 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Magic Guild Store (Runes and Staves)', regions: ['Any'] },
     { type: 'SHOP', name: 'Baba Yaga\'s Magic Shop', regions: ['Any'] },
     { type: 'SHOP', name: 'Ali\'s Discount Wares', regions: ['Any'] },
-    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], rarity: 'Common' },
+    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex', rarity: 'Common' },
     { type: 'DROP', name: 'Chest (Ancient Vault)', regions: ['Any'], rarity: '1/5' },
-    { type: 'DROP', name: 'Coffin (Hallowed Sepulchre)', regions: ['Any'], rarity: '1/10' },
+    { type: 'DROP', name: 'Coffin (Hallowed Sepulchre)', regions: ['Morytania'], unlockId: 'Hallowed Sepulchre', rarity: '1/10' },
     { type: 'DROP', name: 'Grand Hallowed Coffin', regions: ['Morytania'], rarity: '1/10' },
     { type: 'DROP', name: 'Hallowed Sack', regions: ['Morytania'], rarity: '1/10' },
-    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Any'], rarity: '1/27' }
+    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut', rarity: '1/27' }
   ],
   'Spade': [
     { type: 'SHOP', name: 'Vanessa\'s Farming Shop', regions: ['Any'] },
@@ -3243,7 +3243,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Legends Guild General Store', regions: ['Any'] },
     { type: 'DROP', name: 'Barrel (Shaman Caves)', regions: ['Any'], rarity: 'Rare' },
     { type: 'CLUE', name: 'Reward Casket (medium)', regions: ['Any'], rarity: '1/17' },
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
     { type: 'DROP', name: 'Gourmet Impling', regions: ['Any'], rarity: '1/100' },
     { type: 'DROP', name: 'Gourmet Impling Jar', regions: ['Any'], rarity: '1/100' },
     { type: 'DROP', name: 'Bronze Dragon', regions: ['Any'], rarity: '1/128' }
@@ -3254,7 +3254,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   'Tarromin': [
     { type: 'DROP', name: 'Nature Impling', regions: ['Any'], rarity: '1/10' },
     { type: 'DROP', name: 'Nature Impling Jar', regions: ['Any'], rarity: '1/10' },
-    { type: 'DROP', name: 'Sorceress\'s Garden', regions: ['Kharidian Desert'], rarity: '13/75' }
+    { type: 'DROP', name: 'Sorceress\'s Garden', regions: ['Kharidian Desert'], unlockId: 'Sorceress\'s Garden', rarity: '13/75' }
   ],
   'Teak Logs': [
     { type: 'DROP', name: 'Extra Supply Crate', regions: ['Kourend & Kebos'] },
@@ -3266,10 +3266,10 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   ],
   'Teak Plank': [
     { type: 'DROP', name: 'Lost Teak Crate', regions: ['Any'], rarity: '1/8' },
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
     { type: 'CLUE', name: 'Reward Casket (elite)', regions: ['Any'], rarity: '1/32.3' },
     { type: 'DROP', name: 'Ancient Chest', regions: ['Any'], rarity: '1/33' },
-    { type: 'DROP', name: 'Corporeal Beast', regions: ['Any'], rarity: '12/512' },
+    { type: 'DROP', name: 'Corporeal Beast', regions: ['Wilderness'], unlockId: 'Corporeal Beast', rarity: '12/512' },
     { type: 'DROP', name: 'Gangster', regions: ['Kourend & Kebos'], rarity: '30/256' }
   ],
   'Thread': [
@@ -3299,7 +3299,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   ],
   'Toadflax': [
     { type: 'SHOP', name: 'Agility Arena Store', regions: ['Any'], notes: 'Bought with Brimhaven voucher' },
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
     { type: 'DROP', name: 'Hazelmere', regions: ['Kandarin'], rarity: '10/128' },
     { type: 'DROP', name: 'King Bolren', regions: ['Kandarin'], rarity: '10/128' },
     { type: 'DROP', name: 'G.L.O. Caranock', regions: ['Any'], rarity: '10/128' },
@@ -3310,16 +3310,16 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Elite Black Knight', regions: ['Any'], rarity: '2/122' }
   ],
   'Torstol': [
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
     { type: 'DROP', name: 'Nature Impling', regions: ['Any'], rarity: '1/100' },
     { type: 'DROP', name: 'Nature Impling Jar', regions: ['Any'], rarity: '1/100' },
-    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], rarity: '2/249' },
+    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', rarity: '2/249' },
     { type: 'CLUE', name: 'Reward Casket (master)', regions: ['Any'], rarity: '1/13,616' }
   ],
   'Torstol Seed': [
     { type: 'DROP', name: 'Reward Cart', regions: ['Kourend & Kebos'] },
-    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Any'], rarity: '1/27' },
-    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], rarity: '1/32' },
+    { type: 'DROP', name: 'Chest (Tombs of Amascut)', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut', rarity: '1/27' },
+    { type: 'DROP', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', rarity: '1/32' },
     { type: 'DROP', name: 'Brimstone Chest', regions: ['Kourend & Kebos'], rarity: '1/60' },
     { type: 'DROP', name: 'Larran\'s Big Chest', regions: ['Wilderness'], rarity: '1/60' },
     { type: 'DROP', name: 'Larran\'s Small Chest', regions: ['Wilderness'], rarity: '1/60' }
@@ -3329,9 +3329,9 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Prifddinas Foodstuffs', regions: ['Any'] },
     { type: 'DROP', name: 'Adventurer Jon', regions: ['Any'], rarity: 'Always' },
     { type: 'CLUE', name: 'Reward Casket (easy)', regions: ['Any'], rarity: '1/17' },
-    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], rarity: '1/27' },
+    { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/27' },
     { type: 'DROP', name: 'Catablepon', regions: ['Any'], rarity: '2/101' },
-    { type: 'DROP', name: 'Scurrius', regions: ['Any'], rarity: '6/100' }
+    { type: 'DROP', name: 'Scurrius', regions: ['Misthalin'], unlockId: 'Scurrius', rarity: '6/100' }
   ],
   'Twisted Bow': [
     { type: 'DROP', name: 'Ancient Chest', regions: ['Any'], rarity: '2/69' }
@@ -3341,7 +3341,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Herquin\'s Gems', regions: ['Any'] },
     { type: 'SHOP', name: 'Gem Trader', regions: ['Any'] },
     { type: 'DROP', name: 'Slagilith', regions: ['Any'], rarity: 'Always' },
-    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], rarity: 'Common' },
+    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex', rarity: 'Common' },
     { type: 'DROP', name: 'Extra Supply Crate', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Reward Cart', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Wise Old Man Tasks', regions: ['Misthalin'], rarity: 'Rare' },
@@ -3371,10 +3371,10 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   'Uncut Onyx': [
     { type: 'SHOP', name: 'TzHaar-Hur-Lek\'s Ore and Gem Store', regions: ['Karamja'], notes: 'Bought with Tokkul' },
     { type: 'SHOP', name: 'TzHaar-Hur-Rin\'s Ore and Gem Store', regions: ['Any'], notes: 'Bought with Tokkul' },
-    { type: 'DROP', name: 'Skotizo', regions: ['Any'], rarity: '1/1,000' },
-    { type: 'DROP', name: 'Rewards Chest (Fortis Colosseum)', regions: ['Varlamore'], rarity: '110/4,800' },
+    { type: 'DROP', name: 'Skotizo', regions: ['Kourend & Kebos'], unlockId: 'Skotizo', rarity: '1/1,000' },
+    { type: 'DROP', name: 'Rewards Chest (Fortis Colosseum)', regions: ['Varlamore'], unlockId: 'Fortis Colosseum', rarity: '110/4,800' },
     { type: 'DROP', name: 'Bag Full of Gems', regions: ['Asgarnia'], rarity: '1/100,000,000' },
-    { type: 'DROP', name: 'Zalcano', regions: ['Any'], rarity: '1/8,000' },
+    { type: 'DROP', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', rarity: '1/8,000' },
     { type: 'DROP', name: 'Elven Crystal Chest', regions: ['Tirannwn'], rarity: '1/10,000' },
     { type: 'DROP', name: 'Shop Counter (gems)', regions: ['Any'], rarity: '1/75,000' }
   ],
@@ -3404,7 +3404,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Slagilith', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Glod', regions: ['Asgarnia'], rarity: 'Always' },
     { type: 'DROP', name: 'Chest (Laguna Aurorae)', regions: ['Any'], rarity: 'Always' },
-    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], rarity: 'Common' },
+    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex', rarity: 'Common' },
     { type: 'DROP', name: 'Wise Old Man Tasks', regions: ['Misthalin'], rarity: 'Uncommon' }
   ],
   'Uncut Sapphire': [
@@ -3488,7 +3488,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Lev', regions: ['Any'], rarity: '2/512' },
     { type: 'DROP', name: 'Cave Crawler', regions: ['Any'], rarity: '5/128' },
     { type: 'DROP', name: 'Salarin the Twisted', regions: ['Any'], rarity: '5/128' },
-    { type: 'DROP', name: 'Crazy Archaeologist', regions: ['Any'], rarity: '6/128' },
+    { type: 'DROP', name: 'Crazy Archaeologist', regions: ['Wilderness'], unlockId: 'Crazy Archaeologist', rarity: '6/128' },
     { type: 'DROP', name: 'Chaos Druid Warrior', regions: ['Any'], rarity: '5/128' }
   ],
   'Willow Logs': [
@@ -3500,7 +3500,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Vampyre Juvinate', regions: ['Any'], rarity: '16/256' }
   ],
   'Wine of Zamorak': [
-    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], rarity: 'Common' },
+    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex', rarity: 'Common' },
     { type: 'DROP', name: 'Monumental Chest', regions: ['Morytania'], rarity: '1/30' },
     { type: 'CLUE', name: 'Reward Casket (master)', regions: ['Any'], rarity: '1/30.3' },
     { type: 'DROP', name: 'The Mimic', regions: ['Kourend & Kebos'], rarity: '221/1,140' },
