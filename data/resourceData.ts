@@ -1,7 +1,16 @@
 
 import { DropSource, TableType } from '../types';
 
-export type SourceType = 'DROP' | 'SHOP' | 'SPAWN' | 'SKILL' | 'MINIGAME' | 'MERCHANT' | 'QUEST';
+export type SourceType =
+  | 'DROP'
+  | 'SHOP'
+  | 'SPAWN'
+  | 'SKILL'
+  | 'MINIGAME'
+  | 'MERCHANT'
+  | 'QUEST'
+  | 'PICKPOCKET' // Thieving NPCs / stalls
+  | 'CLUE';      // Treasure Trail rewards
 
 export interface ResourceSource {
   type: SourceType;
@@ -13,6 +22,7 @@ export interface ResourceSource {
   notes?: string; // e.g. "Edgeville Dungeon"
   inputs?: Record<string, number>; // Ingredients -> Quantity
   outputYield?: number; // How many items are produced per operation (default 1)
+  rarity?: string; // Drop rate / acquisition odds, e.g. "1/512", "Common", "Always"
 }
 
 export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
@@ -1209,3 +1219,131 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'QUEST', name: 'Beneath Cursed Sands', regions: ['Kharidian Desert'], notes: 'Quest Reward' }
   ]
 };
+
+// --- CATEGORY GROUPING -------------------------------------------------------
+// Explicit mapping of items to their browsing category. Mirrors the comment
+// sections within RESOURCE_MAP above. Kept as an explicit list (rather than
+// parsed from comments) so the category browser has a stable, ordered source.
+export const RESOURCE_CATEGORIES: Record<string, string[]> = {
+  'Herbs': [
+    'Ranarr Weed', 'Snapdragon', 'Torstol', 'Irit Leaf', 'Kwuarm', 'Cadantine',
+    'Dwarf Weed', 'Toadflax', 'Avantoe', 'Lantadyme', 'Harralander',
+  ],
+  'Potions': [
+    'Prayer Potion', 'Super Attack', 'Super Strength', 'Super Defence',
+    'Super Restore', 'Stamina Potion', 'Ranging Potion', 'Saradomin Brew',
+    'Super Combat Potion', 'Anti-venom', 'Energy Potion', 'Super Energy(4)',
+  ],
+  'Secondaries': [
+    'Snape Grass', "Red Spiders' Eggs", 'Mort Myre Fungus', 'Blue Dragon Scale',
+    'Wine of Zamorak', 'Limpwurt Root', 'White Berries', 'Crushed Nest',
+    'Eye of Newt', 'Vial of Water', 'Amylase Crystal', 'Chocolate Dust',
+    'Chocolate Bar',
+  ],
+  'Logs': [
+    'Logs', 'Oak Logs', 'Willow Logs', 'Teak Logs', 'Maple Logs',
+    'Mahogany Logs', 'Yew Logs', 'Magic Logs', 'Redwood Logs',
+  ],
+  'Construction': ['Oak Plank', 'Teak Plank', 'Mahogany Plank'],
+  'Crafting & Processing': [
+    'Bucket of Sand', 'Soda Ash', 'Giant Seaweed', 'Flax', 'Molten Glass',
+    "Black D'hide Body", 'Black Dragon Leather', 'Black Dragonhide',
+    'Red Dragonhide', 'Blue Dragonhide', 'Green Dragonhide', 'Uncut Dragonstone',
+  ],
+  'Mining & Ores': [
+    'Copper Ore', 'Tin Ore', 'Clay', 'Rune Essence', 'Blurite Ore', 'Limestone',
+    'Barronite Shards', 'Iron Ore', 'Silver Ore', 'Volcanic Ash', 'Coal',
+    'Sandstone', 'Dense Essence Block', 'Gem Rock', 'Gold Ore',
+    'Calcified Shards', 'Volcanic Sulphur', 'Granite', 'Mithril Ore',
+    'Daeyalt Essence', 'Lovakite Ore', 'Adamantite Ore', 'Runite Ore',
+    'Amethyst', 'Pure Essence',
+  ],
+  'Pickaxes': [
+    'Iron Pickaxe', 'Steel Pickaxe', 'Black Pickaxe', 'Mithril Pickaxe',
+    'Adamant Pickaxe', 'Rune Pickaxe', 'Dragon Pickaxe', 'Crystal Pickaxe',
+    'Infernal Pickaxe',
+  ],
+  'Bars & Smithing': [
+    'Bronze Bar', 'Iron Bar', 'Steel Bar', 'Gold Bar', 'Mithril Bar',
+    'Adamantite Bar', 'Rune Bar', 'Blurite Bar', 'Elemental Bar',
+    'Elemental Ore', 'Lovakite Bar', 'Cannonball', 'Hammer', 'Ammo Mould',
+    'Bar Mould', 'Goldsmith Gauntlets', 'Ice Gloves', 'Smithing Catalyst',
+    'Imcando Hammer',
+  ],
+  'Fishing & Food': [
+    'Raw Shrimps', 'Raw Sardine', 'Raw Herring', 'Raw Anchovies', 'Raw Trout',
+    'Raw Pike', 'Raw Slimy Eel', 'Raw Salmon', 'Raw Tuna', 'Raw Cave Eel',
+    'Raw Lobster', 'Raw Bass', 'Raw Swordfish', 'Raw Lava Eel', 'Raw Monkfish',
+    'Raw Karambwan', 'Raw Shark', 'Raw Sea Turtle', 'Infernal Eel',
+    'Raw Manta Ray', 'Minnow', 'Raw Anglerfish', 'Raw Dark Crab', 'Sacred Eel',
+  ],
+  'Fishing Supplies': [
+    'Small Fishing Net', 'Big Fishing Net', 'Fishing Rod', 'Fly Fishing Rod',
+    'Harpoon', 'Lobster Pot', 'Karambwan Vessel', 'Oily Fishing Rod',
+    'Barbarian Rod', 'Pearl Fishing Rod', 'Fishing Bait', 'Feather',
+    'Sandworms', 'Dark Fishing Bait', 'Raw Karambwanji',
+  ],
+  'Runes': [
+    'Air Rune', 'Water Rune', 'Earth Rune', 'Fire Rune', 'Mind Rune',
+    'Chaos Rune', 'Nature Rune', 'Law Rune', 'Cosmic Rune', 'Blood Rune',
+    'Soul Rune', 'Death Rune', 'Astral Rune',
+  ],
+  'Gear & Bones': [
+    'Dragon Bones', 'Wyvern Bones', 'Abyssal Whip', 'Dark Bow', 'Black Mask',
+    'Trident of the Seas', 'Occult Necklace', 'Granite Maul',
+    'Leaf-Bladed Sword', 'Leaf-Bladed Battleaxe', 'Dragon Boots',
+    'Rune Scimitar', 'Dragon Scimitar', 'Rune Crossbow', 'Runite Limbs',
+    'Yew Stock', 'Crossbow String', 'Anti-Dragon Shield', 'Barrows Gloves',
+    'Climbing Boots', 'Amulet of Glory', 'Dragonstone Amulet', 'Dragonstone',
+    'Amulet of Power', 'Diamond Amulet', 'Diamond', 'Uncut Diamond',
+    'Zenyte Shard', 'Uncut Zenyte', 'Uncut Onyx', 'Zenyte Amulet', 'Zenyte',
+    'Amulet of Torture', 'Necklace of Anguish', 'Tormented Bracelet',
+    'Elysian Spirit Shield', 'Elysian Sigil', 'Blessed Spirit Shield',
+    'Spirit Shield', 'Holy Elixir', 'Godsword Blade', 'Armadyl Godsword',
+    'Armadyl Hilt', 'Bandos Godsword', 'Bandos Hilt', 'Saradomin Godsword',
+    'Saradomin Hilt', 'Zamorak Godsword', 'Zamorak Hilt',
+  ],
+  'Raids & Endgame': [
+    'Twisted Bow', 'Kodai Wand', 'Elder Maul', 'Dragon Claws',
+    'Ancestral Robe Top', 'Ancestral Robe Bottom', 'Ancestral Hat',
+    'Scythe of Vitur', 'Ghrazi Rapier', 'Sanguinesti Staff',
+    'Justiciar Faceguard', 'Justiciar Chestguard', 'Justiciar Legguards',
+    'Avernic Defender Hilt', "Tumeken's Shadow", "Osmumten's Fang",
+    'Masori Body', 'Masori Chaps', 'Masori Mask', "Elidinis' Ward",
+    'Lightbearer', 'Zaryte Crossbow', 'Torva Full Helm', 'Torva Platebody',
+    'Torva Platelegs', "Inquisitor's Mace", "Inquisitor's Great Helm",
+    "Inquisitor's Hauberk", "Inquisitor's Plateskirt", 'Nightmare Staff',
+    'Soulreaper Axe', 'Virtus Mask', 'Virtus Robe Top', 'Virtus Robe Bottom',
+    'Voidwaker', 'Voidwaker Blade', 'Voidwaker Hilt', 'Voidwaker Gem',
+    'Blade of Saeldor', 'Bow of Faerdhinen', 'Crystal Armour Seed',
+  ],
+  'Slayer & Boss Uniques': [
+    'Abyssal Bludgeon', 'Abyssal Dagger', 'Primordial Boots', 'Pegasian Boots',
+    'Eternal Boots', 'Primordial Crystal', 'Pegasian Crystal',
+    'Eternal Crystal', 'Ferocious Gloves', 'Hydra Leather', "Hydra's Claw",
+    'Dragon Hunter Lance', 'Neitiznot Faceguard', 'Basilisk Jaw',
+    'Dragonfire Shield', 'Dragonfire Ward', 'Draconic Visage',
+    'Skeletal Visage', 'Toxic Blowpipe', 'Trident of the Swamp',
+    'Serpentine Helm', 'Magic Fang', 'Tanzanite Fang', 'Serpentine Visage',
+  ],
+  'Minigame & Skilling Uniques': [
+    'Void Knight Top', 'Void Knight Robe', 'Void Knight Gloves',
+    'Void Knight Helm', 'Fighter Torso', 'Rune Pouch', 'Looting Bag',
+    'Herb Sack', 'Seed Box', 'Gem Bag', 'Coal Bag', 'Fish Barrel',
+    'Tackle Box', 'Log Basket', 'Bottomless Compost Bucket', 'Crystal Axe',
+    'Crystal Harpoon', 'Infernal Axe', 'Infernal Harpoon', 'Smouldering Stone',
+    'Crystal Tool Seed',
+  ],
+  'Quest Items': [
+    'Silverlight', 'Darklight', 'Arclight', 'Wolfbane', 'Excalibur',
+    'Ancient Mace', 'Barrelchest Anchor', 'Keris Partisan',
+  ],
+};
+
+// Reverse lookup: item name -> category name.
+export const ITEM_CATEGORY: Record<string, string> = Object.entries(
+  RESOURCE_CATEGORIES,
+).reduce((acc, [category, items]) => {
+  for (const item of items) acc[item] = category;
+  return acc;
+}, {} as Record<string, string>);

@@ -149,3 +149,71 @@ export const calculateSupplyChain = (itemName: string, gameState: GameState): Su
     sources: analyzedSources.sort((a, b) => (a.status.isAvailable === b.status.isAvailable) ? 0 : a.status.isAvailable ? -1 : 1)
   };
 };
+
+/**
+ * Quick check: is an item obtainable through at least one source right now?
+ * Lighter than building the full result when only the boolean is needed.
+ */
+export const isItemAvailable = (itemName: string, gameState: GameState): boolean => {
+  const result = calculateSupplyChain(itemName, gameState);
+  return !!result && result.sources.some(s => s.status.isAvailable);
+};
+
+// --- Recursive Material Breakdown -------------------------------------------
+
+export interface MaterialNode {
+  item: string;
+  qty: number;            // total quantity of this item needed
+  isRaw: boolean;         // true = no further recipe (gathered / bought / dropped)
+  children: MaterialNode[];
+}
+
+const MAX_BREAKDOWN_DEPTH = 10;
+
+/**
+ * Recursively expand an item into the raw materials needed to craft `qty` of it.
+ *
+ * Walks the first recipe-style source (one with `inputs`) for each item,
+ * scaling input quantities by the number of crafting operations required.
+ * `path` guards against circular recipes (e.g. A needs B needs A).
+ */
+export const computeFullBreakdown = (
+  itemName: string,
+  qty: number,
+  path: string[] = [],
+): MaterialNode => {
+  const sources = RESOURCE_MAP[itemName];
+  const recipe = sources?.find(s => s.inputs && Object.keys(s.inputs).length > 0);
+
+  // Leaf node: no recipe, cycle detected, or depth exceeded.
+  if (!recipe || !recipe.inputs || path.includes(itemName) || path.length >= MAX_BREAKDOWN_DEPTH) {
+    return { item: itemName, qty, isRaw: true, children: [] };
+  }
+
+  const yieldPerAction = recipe.outputYield || 1;
+  const opsRequired = Math.ceil(qty / yieldPerAction);
+  const nextPath = [...path, itemName];
+
+  const children = Object.entries(recipe.inputs)
+    // Skip tool-style inputs (qty 0, e.g. "Knife": 0) and free-form coins.
+    .filter(([name, n]) => (n as number) > 0 && name !== 'Coins')
+    .map(([name, n]) => computeFullBreakdown(name, (n as number) * opsRequired, nextPath));
+
+  return { item: itemName, qty, isRaw: false, children };
+};
+
+/** Flatten a breakdown tree into a summed list of raw materials. */
+export const flattenRawMaterials = (node: MaterialNode): { item: string; qty: number }[] => {
+  const totals: Record<string, number> = {};
+  const walk = (n: MaterialNode) => {
+    if (n.isRaw) {
+      totals[n.item] = (totals[n.item] || 0) + n.qty;
+    } else {
+      n.children.forEach(walk);
+    }
+  };
+  node.children.forEach(walk);
+  return Object.entries(totals)
+    .map(([item, qty]) => ({ item, qty }))
+    .sort((a, b) => a.item.localeCompare(b.item));
+};

@@ -1,11 +1,14 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
-import { RESOURCE_MAP } from '../data/resourceData';
-import { calculateSupplyChain } from '../utils/supplyChain';
+import { RESOURCE_MAP, RESOURCE_CATEGORIES, ITEM_CATEGORY } from '../data/resourceData';
+import { calculateSupplyChain, isItemAvailable, computeFullBreakdown, flattenRawMaterials } from '../utils/supplyChain';
 import { wikiService } from '../services/WikiService';
 import { useFocusTrap } from '../hooks/useFocusTrap';
-import { X, Search, CheckCircle2, Lock, Box, ShoppingBag, Sword, Sprout, MapPin, Database, ExternalLink, RefreshCw, ArrowLeft, ArrowRight, Hammer, HelpCircle, Layers, Coins, Calculator, ListFilter } from 'lucide-react';
+import { X, Search, CheckCircle2, Lock, Box, ShoppingBag, Sword, Sprout, MapPin, Database, ExternalLink, RefreshCw, ArrowLeft, ArrowRight, Hammer, HelpCircle, Layers, Coins, Calculator, ListFilter, Star, ChevronDown, ChevronRight, Hand, ScrollText, Percent } from 'lucide-react';
+
+const FAVORITES_KEY = 'FATE_RESOURCE_FAVORITES';
+const MAX_FAVORITES = 20;
 
 interface SupplyChainCalculatorProps {
   onClose: () => void;
@@ -18,6 +21,9 @@ const SourceIcon = ({ type }: { type: string }) => {
         case 'SKILL': return <Sprout size={14} className="text-green-400" />;
         case 'SPAWN': return <MapPin size={14} className="text-blue-400" />;
         case 'MERCHANT': return <ShoppingBag size={14} className="text-amber-400" />;
+        case 'PICKPOCKET': return <Hand size={14} className="text-purple-400" />;
+        case 'CLUE': return <ScrollText size={14} className="text-orange-400" />;
+        case 'QUEST': return <HelpCircle size={14} className="text-cyan-400" />;
         default: return <Box size={14} className="text-gray-400" />;
     }
 };
@@ -59,16 +65,57 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
   const [query, setQuery] = useState('');
   const [targetQty, setTargetQty] = useState(1);
   const [history, setHistory] = useState<string[]>([]);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [availableOnly, setAvailableOnly] = useState(false);
+  const [showBreakdown, setShowBreakdown] = useState(false);
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem(FAVORITES_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.filter(x => typeof x === 'string' && RESOURCE_MAP[x]) : [];
+    } catch {
+      return [];
+    }
+  });
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (inputRef.current) inputRef.current.focus();
   }, []);
 
-  // Filter available items from database based on query
+  useEffect(() => {
+    try {
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+    } catch {
+      /* localStorage unavailable — favorites stay in-memory only */
+    }
+  }, [favorites]);
+
+  const toggleFavorite = (item: string) => {
+    setFavorites(prev => {
+      if (prev.includes(item)) return prev.filter(f => f !== item);
+      return [item, ...prev].slice(0, MAX_FAVORITES);
+    });
+  };
+
+  // Availability of every item, recomputed only when game state changes.
+  const availabilityMap = useMemo(() => {
+    const map: Record<string, boolean> = {};
+    for (const key of Object.keys(RESOURCE_MAP)) {
+      map[key] = isItemAvailable(key, gameState);
+    }
+    return map;
+  }, [gameState]);
+
+  // Filter the database index by query, category, and availability toggle.
   const availableItems = useMemo(() => {
-      return Object.keys(RESOURCE_MAP).filter(key => key.toLowerCase().includes(query.toLowerCase())).sort();
-  }, [query]);
+    const q = query.toLowerCase();
+    return Object.keys(RESOURCE_MAP)
+      .filter(key => key.toLowerCase().includes(q))
+      .filter(key => !activeCategory || ITEM_CATEGORY[key] === activeCategory)
+      .filter(key => !availableOnly || availabilityMap[key])
+      .sort();
+  }, [query, activeCategory, availableOnly, availabilityMap]);
 
   // If query matches an item exactly (or user clicks one), show detail
   const selectedResult = useMemo(() => {
@@ -94,6 +141,16 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
       return uses.sort();
   }, [selectedResult]);
 
+  // Recursive raw-material breakdown for the selected item (if it has a recipe).
+  const rawMaterials = useMemo(() => {
+      if (!selectedResult) return null;
+      const hasRecipe = selectedResult.sources.some(
+          s => s.source.inputs && Object.keys(s.source.inputs).length > 0,
+      );
+      if (!hasRecipe) return null;
+      return flattenRawMaterials(computeFullBreakdown(selectedResult.itemName, targetQty));
+  }, [selectedResult, targetQty]);
+
   const handleWikiOpen = (e: React.MouseEvent, name: string) => {
       e.stopPropagation();
       const url = `https://oldschool.runescape.wiki/w/${encodeURIComponent(name.replace(/ /g, '_'))}`;
@@ -105,6 +162,7 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
       setHistory(prev => [...prev, query]); // Push current query to history
       setQuery(newItem);
       setTargetQty(1); // Reset qty on nav
+      setShowBreakdown(false);
   };
 
   const handleBack = () => {
@@ -205,12 +263,28 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
                                         {selectedResult.sources.filter(s => s.status.isAvailable).length} Available Sources
                                     </span>
                                     <span className="text-xs text-gray-500">•</span>
-                                    <button 
+                                    <button
                                         onClick={(e) => handleWikiOpen(e, selectedResult.itemName)}
                                         className="text-xs text-gray-500 hover:text-white transition-colors flex items-center gap-1 group"
                                     >
                                         Wiki <ExternalLink size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
                                     </button>
+                                    <span className="text-xs text-gray-500">•</span>
+                                    <button
+                                        onClick={() => toggleFavorite(selectedResult.itemName)}
+                                        aria-pressed={favorites.includes(selectedResult.itemName)}
+                                        title={favorites.includes(selectedResult.itemName) ? 'Remove from favorites' : 'Add to favorites'}
+                                        className={`text-xs transition-colors flex items-center gap-1 ${favorites.includes(selectedResult.itemName) ? 'text-yellow-400 hover:text-yellow-300' : 'text-gray-500 hover:text-yellow-400'}`}
+                                    >
+                                        <Star size={12} className={favorites.includes(selectedResult.itemName) ? 'fill-yellow-400' : ''} />
+                                        {favorites.includes(selectedResult.itemName) ? 'Favorited' : 'Favorite'}
+                                    </button>
+                                    {ITEM_CATEGORY[selectedResult.itemName] && (
+                                        <>
+                                            <span className="text-xs text-gray-500">•</span>
+                                            <span className="text-xs text-gray-500">{ITEM_CATEGORY[selectedResult.itemName]}</span>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -290,6 +364,12 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
                                                     <div className="flex items-center gap-2 col-span-2 md:col-span-1">
                                                         <RefreshCw size={12} className="text-yellow-400 shrink-0" />
                                                         <span className="italic text-gray-500">{entry.source.notes}</span>
+                                                    </div>
+                                                )}
+                                                {entry.source.rarity && (
+                                                    <div className="flex items-center gap-2 col-span-2 md:col-span-1">
+                                                        <Percent size={12} className="text-pink-400 shrink-0" />
+                                                        <span className="font-mono text-gray-400">{entry.source.rarity}</span>
                                                     </div>
                                                 )}
                                                 {entry.source.skills && (
@@ -382,6 +462,53 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
                         })}
                     </div>
 
+                    {/* --- FULL BREAKDOWN SECTION --- */}
+                    {rawMaterials && rawMaterials.length > 0 && (
+                        <div className="mb-8">
+                            <button
+                                onClick={() => setShowBreakdown(v => !v)}
+                                className="w-full flex items-center gap-2 mb-3 group"
+                            >
+                                {showBreakdown ? <ChevronDown size={14} className="text-gray-500" /> : <ChevronRight size={14} className="text-gray-500" />}
+                                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest group-hover:text-gray-300 transition-colors">
+                                    Full Breakdown — Raw Materials for {targetQty}
+                                </span>
+                                <div className="flex-1 h-px bg-white/10"></div>
+                            </button>
+                            {showBreakdown && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 animate-in fade-in duration-200">
+                                    {rawMaterials.map(({ item, qty }) => {
+                                        const isLinkable = !!RESOURCE_MAP[item];
+                                        return (
+                                            <button
+                                                key={item}
+                                                onClick={isLinkable ? () => handleNavigate(item) : undefined}
+                                                disabled={!isLinkable}
+                                                className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${isLinkable ? 'bg-[#1a1a1a] border-white/5 hover:bg-[#252525] hover:border-white/10 cursor-pointer group' : 'bg-transparent border-transparent cursor-default'}`}
+                                            >
+                                                {item === 'Coins' ? (
+                                                    <div className="w-10 h-10 flex items-center justify-center bg-yellow-900/20 rounded border border-yellow-500/20 shrink-0"><Coins size={18} className="text-yellow-400" /></div>
+                                                ) : (
+                                                    <ItemImage name={item} size="md" />
+                                                )}
+                                                <div className="flex-1 min-w-0">
+                                                    <span className="text-sm font-bold text-gray-300 group-hover:text-white truncate block">{item}</span>
+                                                    <span className="text-[10px] text-gray-500 font-mono">x{formatQty(qty)}</span>
+                                                </div>
+                                                {isLinkable && (
+                                                    <span
+                                                        className={`w-2 h-2 rounded-full shrink-0 ${availabilityMap[item] ? 'bg-emerald-500' : 'bg-red-500'}`}
+                                                        title={availabilityMap[item] ? 'Available' : 'Locked'}
+                                                    />
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {/* --- USED IN SECTION --- */}
                     {usedIn.length > 0 && (
                         <div className="space-y-4">
@@ -413,34 +540,98 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
             ) : (
                 // Suggestion / Empty State
                 <div className="flex flex-col h-full">
-                    {query && availableItems.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full text-gray-500 space-y-4 opacity-50">
-                            <Search size={48} />
-                            <p className="text-sm">No items found matching "{query}"</p>
-                        </div>
-                    ) : (
-                        <>
-                            <div className="flex items-center justify-between gap-2 mb-4 px-2">
-                                <div className="flex items-center gap-2">
-                                    <ListFilter size={14} className="text-gray-500" />
-                                    <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Database Index ({availableItems.length})</span>
-                                </div>
+                    {/* Favorites */}
+                    {favorites.length > 0 && (
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2 px-2">
+                                <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Favorites ({favorites.length})</span>
                             </div>
-                            
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {availableItems.map(item => (
-                                    <button
+                                {favorites.filter(f => RESOURCE_MAP[f]).map(item => (
+                                    <div
                                         key={item}
-                                        onClick={() => handleNavigate(item)}
-                                        className="text-left px-3 py-3 bg-[#1a1a1a] hover:bg-[#252525] border border-white/5 rounded-xl text-sm text-gray-300 hover:text-white transition-all flex items-center gap-3 group"
+                                        className="flex items-center gap-2 px-3 py-2 bg-[#1a1a1a] border border-yellow-500/10 rounded-lg text-sm group"
                                     >
-                                        <ItemImage name={item} />
-                                        <span className="flex-1 truncate font-medium">{item}</span>
-                                        <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 text-gray-500 transition-opacity" />
-                                    </button>
+                                        <span
+                                            className={`w-2 h-2 rounded-full shrink-0 ${availabilityMap[item] ? 'bg-emerald-500' : 'bg-red-500'}`}
+                                            title={availabilityMap[item] ? 'Available' : 'Locked'}
+                                        />
+                                        <button onClick={() => handleNavigate(item)} className="flex-1 truncate text-left text-gray-300 hover:text-white transition-colors">
+                                            {item}
+                                        </button>
+                                        <button
+                                            onClick={() => toggleFavorite(item)}
+                                            title="Remove from favorites"
+                                            className="text-yellow-400 hover:text-red-400 transition-colors shrink-0"
+                                        >
+                                            <Star size={12} className="fill-yellow-400" />
+                                        </button>
+                                    </div>
                                 ))}
                             </div>
-                        </>
+                        </div>
+                    )}
+
+                    {/* Category browser */}
+                    <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-2 mb-3 -mx-1 px-1">
+                        <button
+                            onClick={() => setActiveCategory(null)}
+                            className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition-colors ${activeCategory === null ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' : 'bg-[#1a1a1a] border-white/5 text-gray-400 hover:text-white'}`}
+                        >
+                            All ({Object.keys(RESOURCE_MAP).length})
+                        </button>
+                        {Object.keys(RESOURCE_CATEGORIES).map(cat => (
+                            <button
+                                key={cat}
+                                onClick={() => setActiveCategory(c => c === cat ? null : cat)}
+                                className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition-colors whitespace-nowrap ${activeCategory === cat ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' : 'bg-[#1a1a1a] border-white/5 text-gray-400 hover:text-white'}`}
+                            >
+                                {cat} ({RESOURCE_CATEGORIES[cat].length})
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Index header + availability filter */}
+                    <div className="flex items-center justify-between gap-2 mb-4 px-2">
+                        <div className="flex items-center gap-2">
+                            <ListFilter size={14} className="text-gray-500" />
+                            <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Database Index ({availableItems.length})</span>
+                        </div>
+                        <button
+                            onClick={() => setAvailableOnly(v => !v)}
+                            aria-pressed={availableOnly}
+                            className={`text-xs px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 ${availableOnly ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' : 'bg-[#1a1a1a] border-white/5 text-gray-400 hover:text-white'}`}
+                        >
+                            <CheckCircle2 size={12} /> Available only
+                        </button>
+                    </div>
+
+                    {availableItems.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center flex-1 text-gray-500 space-y-4 opacity-50 py-10">
+                            <Search size={48} />
+                            <p className="text-sm">
+                                {query ? `No items found matching "${query}"` : 'No items match the current filters'}
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {availableItems.map(item => (
+                                <button
+                                    key={item}
+                                    onClick={() => handleNavigate(item)}
+                                    className="text-left px-3 py-3 bg-[#1a1a1a] hover:bg-[#252525] border border-white/5 rounded-xl text-sm text-gray-300 hover:text-white transition-all flex items-center gap-3 group"
+                                >
+                                    <ItemImage name={item} />
+                                    <span className="flex-1 truncate font-medium">{item}</span>
+                                    <span
+                                        className={`w-2 h-2 rounded-full shrink-0 ${availabilityMap[item] ? 'bg-emerald-500' : 'bg-red-500'}`}
+                                        title={availabilityMap[item] ? 'Available' : 'Locked'}
+                                    />
+                                    <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 text-gray-500 transition-opacity" />
+                                </button>
+                            ))}
+                        </div>
                     )}
                 </div>
             )}
