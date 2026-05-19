@@ -363,7 +363,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Asgarnia', 'Karamja', 'Kharidian Desert', 'Fremennik', 'Tirannwn'], skills: { 'Mining': 40 }, notes: 'Crafting Guild / Brimhaven / Arzinian / TzHaar' },
     { type: 'DROP', name: 'Gargoyle', regions: ['Morytania'], skills: {'Slayer': 75} }
   ],
-  'Calcified Shards': [
+  'Calcified Deposit': [
     { type: 'SKILL', name: 'Calcified Rocks', regions: ['Varlamore'], skills: {'Mining': 41}, notes: 'Cam Torum' }
   ],
   'Volcanic Sulphur': [
@@ -2243,7 +2243,7 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
     'Copper Ore', 'Tin Ore', 'Clay', 'Rune Essence', 'Blurite Ore', 'Limestone',
     'Barronite Shards', 'Iron Ore', 'Silver Ore', 'Volcanic Ash', 'Coal',
     'Sandstone', 'Dense Essence Block', 'Gem Rock', 'Gold Ore',
-    'Calcified Shards', 'Volcanic Sulphur', 'Granite', 'Mithril Ore',
+    'Calcified Deposit', 'Volcanic Sulphur', 'Granite', 'Mithril Ore',
     'Daeyalt Essence', 'Lovakite Ore', 'Adamantite Ore', 'Runite Ore',
     'Amethyst', 'Pure Essence',
   ],

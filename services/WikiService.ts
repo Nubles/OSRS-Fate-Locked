@@ -6,7 +6,9 @@ interface WikiCacheEntry {
   timestamp: number;
 }
 
-const CACHE_KEY = 'fate_uim_wiki_cache_v2';
+// Bump the version when image resolution logic changes so stale negative
+// (null) cache entries from older logic are discarded.
+const CACHE_KEY = 'fate_uim_wiki_cache_v3';
 const CACHE_TTL = 1000 * 60 * 60 * 24 * 7; // 7 Days
 const BASE_API = 'https://oldschool.runescape.wiki/api.php';
 
@@ -62,6 +64,18 @@ class WikiService {
     return formatted.trim().replace(/ /g, '_');
   }
 
+  /**
+   * OSRS Wiki item articles use sentence case ("Barronite shards"), but the
+   * app stores many names in title case ("Barronite Shards"). This produces
+   * the sentence-cased variant so we can fall back to it when the title-cased
+   * page doesn't exist. Proper-noun pages (e.g. "King_Black_Dragon") are tried
+   * first, so this never overrides a working title-cased lookup.
+   */
+  private sentenceCaseVariant(term: string): string {
+    if (!term) return term;
+    return term.charAt(0) + term.slice(1).toLowerCase();
+  }
+
   public async fetchImage(itemName: string): Promise<string | null> {
     const term = this.normalize(itemName);
     if (!term) return null;
@@ -95,8 +109,9 @@ class WikiService {
 
     if (queue.length === 0) return;
 
-    // Chunk into batches of 50 (MediaWiki API limit for non-bots)
-    const CHUNK_SIZE = 50;
+    // Chunk into batches of 25 requested names. Each name may add a
+    // sentence-cased variant, so the query stays within the 50-title API limit.
+    const CHUNK_SIZE = 25;
     for (let i = 0; i < queue.length; i += CHUNK_SIZE) {
       const chunk = queue.slice(i, i + CHUNK_SIZE);
       await this.fetchBatch(chunk);
@@ -104,12 +119,20 @@ class WikiService {
   }
 
   private async fetchBatch(titles: string[]) {
+    // Query each requested title plus its sentence-cased variant so that
+    // title-cased app names still resolve to sentence-cased wiki articles.
+    const queryTitles = new Set<string>();
+    for (const t of titles) {
+      queryTitles.add(t);
+      queryTitles.add(this.sentenceCaseVariant(t));
+    }
+
     const params = new URLSearchParams({
       action: 'query',
       prop: 'pageimages',
       piprop: 'thumbnail',
       pithumbsize: '300',
-      titles: titles.join('|'),
+      titles: Array.from(queryTitles).join('|'),
       format: 'json',
       origin: '*',
       redirects: '1'
@@ -139,22 +162,26 @@ class WikiService {
         urlMap[p.title] = p.thumbnail?.source || null;
       });
 
-      // Resolve original requested titles
-      titles.forEach(requestedTitle => {
-        let finalTitle = requestedTitle;
-
-        // Check normalization
-        const norm = normalized.find((n: any) => n.from === requestedTitle);
+      // Follow normalization + redirects for a given title to its image URL.
+      const resolveTitle = (title: string): string | null => {
+        let finalTitle = title;
+        const norm = normalized.find((n: any) => n.from === finalTitle);
         if (norm) finalTitle = norm.to;
-
-        // Check redirects
         const red = redirects.find((r: any) => r.from === finalTitle);
         if (red) finalTitle = red.to;
+        return urlMap[finalTitle] || null;
+      };
 
-        const url = urlMap[finalTitle] || null;
+      // Resolve original requested titles, falling back to the sentence-cased
+      // variant when the title-cased page has no image.
+      titles.forEach(requestedTitle => {
+        let url = resolveTitle(requestedTitle);
+        if (!url) {
+          const variant = this.sentenceCaseVariant(requestedTitle);
+          if (variant !== requestedTitle) url = resolveTitle(variant);
+        }
 
         this.memoryCache.set(requestedTitle, url);
-
         this.resolvePending(requestedTitle, url);
       });
 
