@@ -2375,6 +2375,102 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Zamorak Brew': [
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 78 }, inputs: { 'Torstol': 1, 'Vial of Water': 1, 'Jangerberries': 1 } }
   ],
+
+  // --- LOW-LEVEL HERBS ---
+  'Guam Leaf': [
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: { 'Farming': 9 }, notes: 'Clean a Grimy guam leaf', outputYield: 8 },
+    { type: 'PICKPOCKET', name: 'Master Farmer', regions: ['Misthalin', 'Kandarin'], skills: { 'Thieving': 38 }, rarity: 'Common' },
+    { type: 'DROP', name: 'Common Monster', regions: ['Any'], notes: 'Low-level humanoids' }
+  ],
+  'Marrentill': [
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: { 'Farming': 14 }, notes: 'Clean a Grimy marrentill', outputYield: 8 },
+    { type: 'PICKPOCKET', name: 'Master Farmer', regions: ['Misthalin', 'Kandarin'], skills: { 'Thieving': 38 }, rarity: 'Common' },
+    { type: 'DROP', name: 'Common Monster', regions: ['Any'] }
+  ],
+  'Tarromin': [
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: { 'Farming': 19 }, notes: 'Clean a Grimy tarromin', outputYield: 8 },
+    { type: 'PICKPOCKET', name: 'Master Farmer', regions: ['Misthalin', 'Kandarin'], skills: { 'Thieving': 38 }, rarity: 'Uncommon' },
+    { type: 'DROP', name: 'Common Monster', regions: ['Any'] }
+  ],
+
+  // --- HERBLORE SECONDARIES ---
+  'Dragon Scale Dust': [
+    { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Blue Dragon Scale': 1 }, notes: 'Grind with a Pestle and mortar' }
+  ],
+  'Garlic': [
+    { type: 'SHOP', name: "Wydin's Food Store", regions: ['Asgarnia'], notes: 'Port Sarim' },
+    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Misthalin'], notes: 'Draynor Manor kitchen' }
+  ],
+  'Desert Goat Horn': [
+    { type: 'DROP', name: 'Desert Goat', regions: ['Kharidian Desert'], rarity: 'Common' }
+  ],
+  'Goat Horn Dust': [
+    { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Desert Goat Horn': 1 }, notes: 'Grind with a Pestle and mortar' }
+  ],
+  'Unicorn Horn': [
+    { type: 'DROP', name: 'Unicorn', regions: ['Misthalin', 'Kandarin', 'Asgarnia'], rarity: 'Always' }
+  ],
+  'Unicorn Horn Dust': [
+    { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Unicorn Horn': 1 }, notes: 'Grind with a Pestle and mortar' }
+  ],
+  'Snake Weed': [
+    { type: 'SKILL', name: 'Marshy Jungle Vines', regions: ['Karamja'], quests: ['Jungle Potion'], notes: 'Tai Bwo Wannai jungle' }
+  ],
+  'Coconut Milk': [
+    { type: 'SKILL', name: 'Crush Coconut', regions: ['Any'], inputs: { 'Coconut': 1, 'Vial': 1 }, notes: 'Hammer a coconut, then fill vials' }
+  ],
+  'Coconut': [
+    { type: 'SHOP', name: 'Grand Tree Groceries', regions: ['Kandarin'], notes: 'Tree Gnome Stronghold' },
+    { type: 'SKILL', name: 'Palm Tree Patch', regions: ['Any'], skills: { 'Farming': 68 }, outputYield: 6 }
+  ],
+  'Potato Cactus': [
+    { type: 'SKILL', name: 'Cactus Patch', regions: ['Kharidian Desert'], skills: { 'Farming': 64 }, outputYield: 3 },
+    { type: 'DROP', name: 'Dust Devil', regions: ['Kharidian Desert', 'Kourend & Kebos'], skills: { 'Slayer': 65 } }
+  ],
+  'Magic Roots': [
+    { type: 'SKILL', name: 'Farming', regions: ['Any'], skills: { 'Farming': 75 }, notes: 'Dig up a Magic tree stump after harvest' }
+  ],
+  'Yew Roots': [
+    { type: 'SKILL', name: 'Farming', regions: ['Any'], skills: { 'Farming': 60 }, notes: 'Dig up a Yew tree stump after harvest' }
+  ],
+  'Jangerberries': [
+    { type: 'SKILL', name: 'Bush Patch', regions: ['Any'], skills: { 'Farming': 48 }, outputYield: 4 },
+    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Islands & Others'], notes: 'Ape Atoll' }
+  ],
+  "Toad's Legs": [
+    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Islands & Others'], notes: 'Zanaris' },
+    { type: 'DROP', name: 'Giant Frog', regions: ['Misthalin'], notes: 'Lumbridge Swamp Caves' }
+  ],
+  'Star Flower': [
+    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Islands & Others'], notes: 'Zanaris' }
+  ],
+  "Zulrah's Scales": [
+    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', rarity: 'Always', notes: 'Large quantities', outputYield: 600 }
+  ],
+  'Crushed Superior Dragon Bones': [
+    { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Superior Dragon Bones': 1 }, notes: 'Grind with a Pestle and mortar' }
+  ],
+  'Crystal Shard': [
+    { type: 'MINIGAME', name: 'The Gauntlet', regions: ['Tirannwn'], unlockId: 'The Gauntlet' },
+    { type: 'SKILL', name: 'Prifddinas Activities', regions: ['Tirannwn'], quests: ['Song of the Elves'], notes: 'Crystal Maths, mining, etc.' }
+  ],
+  'Crystal Dust': [
+    { type: 'SKILL', name: 'Crush Crystal Shard', regions: ['Tirannwn'], inputs: { 'Crystal Shard': 1 }, notes: 'Grind with a Pestle and mortar' }
+  ],
+  'Lava Scale': [
+    { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath', rarity: 'Common' }
+  ],
+  'Lava Scale Shard': [
+    { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Lava Scale': 1 }, notes: 'Grind with a Pestle and mortar', outputYield: 4 }
+  ],
+  'Ashes': [
+    { type: 'DROP', name: 'Imp', regions: ['Any'], rarity: 'Always' },
+    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Any'], notes: 'Various fires / locations' }
+  ],
+  'Vial': [
+    { type: 'SKILL', name: 'Glassblowing', regions: ['Any'], skills: { 'Crafting': 33 }, inputs: { 'Molten Glass': 1 } },
+    { type: 'SHOP', name: 'Herblore Shop', regions: ['Asgarnia', 'Kandarin', 'Misthalin'], notes: 'Sold empty in packs' }
+  ],
 };
 
 // --- CATEGORY GROUPING -------------------------------------------------------
@@ -2383,8 +2479,9 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
 // parsed from comments) so the category browser has a stable, ordered source.
 export const RESOURCE_CATEGORIES: Record<string, string[]> = {
   'Herbs': [
-    'Ranarr Weed', 'Snapdragon', 'Torstol', 'Irit Leaf', 'Kwuarm', 'Cadantine',
-    'Dwarf Weed', 'Toadflax', 'Avantoe', 'Lantadyme', 'Harralander',
+    'Guam Leaf', 'Marrentill', 'Tarromin', 'Harralander', 'Ranarr Weed',
+    'Toadflax', 'Irit Leaf', 'Avantoe', 'Kwuarm', 'Snapdragon', 'Cadantine',
+    'Lantadyme', 'Dwarf Weed', 'Torstol',
   ],
   'Potions': [
     'Prayer Potion', 'Super Attack', 'Super Strength', 'Super Defence',
@@ -2446,8 +2543,13 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
   'Secondaries': [
     'Snape Grass', "Red Spiders' Eggs", 'Mort Myre Fungus', 'Blue Dragon Scale',
     'Wine of Zamorak', 'Limpwurt Root', 'White Berries', 'Crushed Nest',
-    'Eye of Newt', 'Vial of Water', 'Amylase Crystal', 'Chocolate Dust',
-    'Chocolate Bar',
+    'Eye of Newt', 'Vial of Water', 'Vial', 'Amylase Crystal', 'Chocolate Dust',
+    'Chocolate Bar', 'Dragon Scale Dust', 'Garlic', 'Desert Goat Horn',
+    'Goat Horn Dust', 'Unicorn Horn', 'Unicorn Horn Dust', 'Snake Weed',
+    'Coconut Milk', 'Coconut', 'Potato Cactus', 'Magic Roots', 'Yew Roots',
+    'Jangerberries', "Toad's Legs", 'Star Flower', "Zulrah's Scales",
+    'Crushed Superior Dragon Bones', 'Crystal Shard', 'Crystal Dust',
+    'Lava Scale', 'Lava Scale Shard', 'Ashes',
   ],
   'Logs': [
     'Logs', 'Oak Logs', 'Willow Logs', 'Teak Logs', 'Maple Logs',
