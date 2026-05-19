@@ -1217,6 +1217,239 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Keris Partisan': [
     { type: 'QUEST', name: 'Beneath Cursed Sands', regions: ['Kharidian Desert'], notes: 'Quest Reward' }
+  ],
+
+  // --- GEMS ---
+  'Uncut Sapphire': [
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['Any'], skills: { 'Mining': 1 }, notes: 'Gem rocks / rare from any rock' },
+    { type: 'DROP', name: 'Gem Drop Table', regions: ['Any'], rarity: 'Common', notes: 'Shared gem drop table' }
+  ],
+  'Uncut Emerald': [
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['Any'], skills: { 'Mining': 1 }, notes: 'Gem rocks / rare from any rock' },
+    { type: 'DROP', name: 'Gem Drop Table', regions: ['Any'], rarity: 'Uncommon', notes: 'Shared gem drop table' }
+  ],
+  'Uncut Ruby': [
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['Any'], skills: { 'Mining': 1 }, notes: 'Gem rocks / rare from any rock' },
+    { type: 'DROP', name: 'Gem Drop Table', regions: ['Any'], rarity: 'Rare', notes: 'Shared gem drop table' }
+  ],
+  'Sapphire': [
+    { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: { 'Crafting': 20 }, inputs: { 'Uncut Sapphire': 1, 'Chisel': 0 } }
+  ],
+  'Emerald': [
+    { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: { 'Crafting': 27 }, inputs: { 'Uncut Emerald': 1, 'Chisel': 0 } }
+  ],
+  'Ruby': [
+    { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: { 'Crafting': 34 }, inputs: { 'Uncut Ruby': 1, 'Chisel': 0 } }
+  ],
+  'Opal': [
+    { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: { 'Crafting': 1 }, inputs: { 'Uncut Opal': 1, 'Chisel': 0 }, notes: 'May crush at low level' }
+  ],
+  'Uncut Opal': [
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['Karamja', 'Fremennik'], skills: { 'Mining': 40 }, notes: 'Gem rocks (Shilo / Lunar Isle)' }
+  ],
+  'Red Topaz': [
+    { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: { 'Crafting': 16 }, inputs: { 'Uncut Red Topaz': 1, 'Chisel': 0 } }
+  ],
+  'Uncut Red Topaz': [
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['Karamja', 'Fremennik'], skills: { 'Mining': 40 }, notes: 'Gem rocks (Shilo / Lunar Isle)' }
+  ],
+
+  // --- COOKED FOOD ---
+  'Shrimps': [
+    { type: 'SKILL', name: 'Cooking', regions: ['Any'], skills: { 'Cooking': 1 }, inputs: { 'Raw Shrimps': 1 } }
+  ],
+  'Trout': [
+    { type: 'SKILL', name: 'Cooking', regions: ['Any'], skills: { 'Cooking': 15 }, inputs: { 'Raw Trout': 1 } }
+  ],
+  'Salmon': [
+    { type: 'SKILL', name: 'Cooking', regions: ['Any'], skills: { 'Cooking': 25 }, inputs: { 'Raw Salmon': 1 } }
+  ],
+  'Lobster': [
+    { type: 'SKILL', name: 'Cooking', regions: ['Any'], skills: { 'Cooking': 40 }, inputs: { 'Raw Lobster': 1 } }
+  ],
+  'Swordfish': [
+    { type: 'SKILL', name: 'Cooking', regions: ['Any'], skills: { 'Cooking': 45 }, inputs: { 'Raw Swordfish': 1 } }
+  ],
+  'Monkfish': [
+    { type: 'SKILL', name: 'Cooking', regions: ['Any'], skills: { 'Cooking': 62 }, inputs: { 'Raw Monkfish': 1 }, quests: ['Swan Song'] }
+  ],
+  'Shark': [
+    { type: 'SKILL', name: 'Cooking', regions: ['Any'], skills: { 'Cooking': 80 }, inputs: { 'Raw Shark': 1 } }
+  ],
+  'Cooked Karambwan': [
+    { type: 'SKILL', name: 'Cooking', regions: ['Any'], skills: { 'Cooking': 30 }, inputs: { 'Raw Karambwan': 1 }, quests: ['Tai Bwo Wannai Trio'], notes: 'Poisonous if cooked wrong' }
+  ],
+  'Anglerfish': [
+    { type: 'SKILL', name: 'Cooking', regions: ['Any'], skills: { 'Cooking': 84 }, inputs: { 'Raw Anglerfish': 1 } }
+  ],
+  'Manta Ray': [
+    { type: 'SKILL', name: 'Cooking', regions: ['Any'], skills: { 'Cooking': 91 }, inputs: { 'Raw Manta Ray': 1 } }
+  ],
+
+  // --- BONES ---
+  'Bones': [
+    { type: 'DROP', name: 'Chicken', regions: ['Any'], rarity: 'Always' },
+    { type: 'DROP', name: 'Common Monster', regions: ['Any'], notes: 'Most low-level humanoids/animals' }
+  ],
+  'Big Bones': [
+    { type: 'DROP', name: 'Hill Giant', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Wilderness'], rarity: 'Always' },
+    { type: 'DROP', name: 'Moss Giant', regions: ['Any'], rarity: 'Always' },
+    { type: 'DROP', name: 'Fire Giant', regions: ['Kandarin', 'Wilderness', 'Kourend & Kebos'], rarity: 'Always' }
+  ],
+  'Babydragon Bones': [
+    { type: 'DROP', name: 'Baby Blue Dragon', regions: ['Asgarnia', 'Kandarin'], rarity: 'Always', notes: 'Taverley / Ogre Enclave' }
+  ],
+  'Lava Dragon Bones': [
+    { type: 'DROP', name: 'Lava Dragon', regions: ['Wilderness'], rarity: 'Always', notes: 'Lava Dragon Isle' }
+  ],
+  'Superior Dragon Bones': [
+    { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath', rarity: 'Always' },
+    { type: 'DROP', name: 'Adamant Dragon', regions: ['Kandarin'], quests: ['Dragon Slayer II'], rarity: 'Always' },
+    { type: 'DROP', name: 'Rune Dragon', regions: ['Kandarin', 'Fremennik'], quests: ['Dragon Slayer II'], rarity: 'Always' }
+  ],
+  'Hydra Bones': [
+    { type: 'DROP', name: 'Alchemical Hydra', regions: ['Kourend & Kebos'], unlockId: 'Alchemical Hydra', rarity: 'Always' }
+  ],
+
+  // --- TANNING & TEXTILES ---
+  'Cowhide': [
+    { type: 'DROP', name: 'Cow', regions: ['Any'], rarity: 'Always', notes: 'Lumbridge / Crafting Guild pen' }
+  ],
+  'Leather': [
+    { type: 'SKILL', name: 'Tan Leather', regions: ['Any'], inputs: { 'Cowhide': 1, 'Coins': 1 }, notes: 'Use a Tanner' }
+  ],
+  'Hard Leather': [
+    { type: 'SKILL', name: 'Tan Leather', regions: ['Any'], inputs: { 'Cowhide': 1, 'Coins': 3 }, notes: 'Use a Tanner' }
+  ],
+  'Green Dragon Leather': [
+    { type: 'SKILL', name: 'Tan Leather', regions: ['Any'], inputs: { 'Green Dragonhide': 1, 'Coins': 20 } }
+  ],
+  'Blue Dragon Leather': [
+    { type: 'SKILL', name: 'Tan Leather', regions: ['Any'], inputs: { 'Blue Dragonhide': 1, 'Coins': 20 } }
+  ],
+  'Red Dragon Leather': [
+    { type: 'SKILL', name: 'Tan Leather', regions: ['Any'], inputs: { 'Red Dragonhide': 1, 'Coins': 20 } }
+  ],
+  'Wool': [
+    { type: 'SKILL', name: 'Shear Sheep', regions: ['Any'], notes: 'Sheep pens (e.g. Lumbridge / Farming Guild)' }
+  ],
+  'Ball of Wool': [
+    { type: 'SKILL', name: 'Spinning Wheel', regions: ['Any'], inputs: { 'Wool': 1 } },
+    { type: 'SHOP', name: 'Crafting Shop', regions: ['Misthalin', 'Asgarnia'], notes: "Wyson / Crafting Guild" }
+  ],
+  'Thread': [
+    { type: 'SHOP', name: 'Crafting Shop', regions: ['Misthalin', 'Asgarnia', 'Kandarin'], notes: 'Stocked widely' }
+  ],
+  'Needle': [
+    { type: 'SHOP', name: 'Crafting Shop', regions: ['Misthalin', 'Asgarnia', 'Kandarin'] },
+    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Misthalin'], notes: 'Various buildings' }
+  ],
+
+  // --- TOOLS & CONTAINERS ---
+  'Chisel': [
+    { type: 'SHOP', name: 'General Store', regions: ['Any'] },
+    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Any'], notes: 'Crafting areas' }
+  ],
+  'Knife': [
+    { type: 'SHOP', name: 'General Store', regions: ['Any'] },
+    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Any'] }
+  ],
+  'Spade': [
+    { type: 'SHOP', name: 'General Store', regions: ['Any'] },
+    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Any'], notes: 'Farming areas' }
+  ],
+  'Pot': [
+    { type: 'SHOP', name: 'General Store', regions: ['Any'] },
+    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Any'], notes: 'Kitchens' }
+  ],
+  'Jug': [
+    { type: 'SHOP', name: 'General Store', regions: ['Any'] },
+    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Any'], notes: 'Kitchens / bars' }
+  ],
+  'Bucket': [
+    { type: 'SHOP', name: 'General Store', regions: ['Any'] },
+    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Any'] }
+  ],
+  'Empty Vial': [
+    { type: 'SHOP', name: 'General Store', regions: ['Any'], notes: 'Sold in packs' },
+    { type: 'SHOP', name: 'Herblore Shop', regions: ['Asgarnia', 'Kandarin', 'Misthalin'] }
+  ],
+
+  // --- SEEDS ---
+  'Ranarr Seed': [
+    { type: 'PICKPOCKET', name: 'Master Farmer', regions: ['Misthalin', 'Kandarin'], skills: { 'Thieving': 38 }, rarity: 'Uncommon', notes: 'Draynor / Ardougne' },
+    { type: 'DROP', name: 'Bird Nest', regions: ['Any'], rarity: 'Rare' }
+  ],
+  'Snapdragon Seed': [
+    { type: 'PICKPOCKET', name: 'Master Farmer', regions: ['Misthalin', 'Kandarin'], skills: { 'Thieving': 38 }, rarity: 'Rare' },
+    { type: 'DROP', name: 'Bird Nest', regions: ['Any'], rarity: 'Rare' }
+  ],
+  'Torstol Seed': [
+    { type: 'PICKPOCKET', name: 'Master Farmer', regions: ['Misthalin', 'Kandarin'], skills: { 'Thieving': 38 }, rarity: 'Rare' },
+    { type: 'DROP', name: 'Bird Nest', regions: ['Any'], rarity: 'Very rare' }
+  ],
+  'Yew Seed': [
+    { type: 'DROP', name: 'Bird Nest', regions: ['Any'], rarity: 'Rare' },
+    { type: 'PICKPOCKET', name: 'Master Farmer', regions: ['Misthalin', 'Kandarin'], skills: { 'Thieving': 38 }, rarity: 'Very rare' }
+  ],
+  'Magic Seed': [
+    { type: 'DROP', name: 'Bird Nest', regions: ['Any'], rarity: 'Very rare' },
+    { type: 'MINIGAME', name: 'Kingdom of Miscellania', regions: ['Fremennik'], unlockId: 'Managing Miscellania', notes: 'Hardwood/herb allocation' }
+  ],
+  'Bird Nest': [
+    { type: 'SKILL', name: 'Woodcutting', regions: ['Any'], skills: { 'Woodcutting': 1 }, rarity: 'Random while chopping' },
+    { type: 'SKILL', name: 'Bird Houses', regions: ['Islands & Others'], skills: { 'Hunter': 5 }, quests: ['Bone Voyage'], notes: 'Fossil Island runs' }
+  ],
+
+  // --- AMMUNITION ---
+  'Arrow Shaft': [
+    { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 1 }, inputs: { 'Logs': 1, 'Knife': 0 }, outputYield: 15 }
+  ],
+  'Headless Arrow': [
+    { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 1 }, inputs: { 'Arrow Shaft': 1, 'Feather': 1 }, outputYield: 1 }
+  ],
+  'Bronze Arrow': [
+    { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 1 }, inputs: { 'Headless Arrow': 1, 'Bronze Arrowtips': 1 } },
+    { type: 'SHOP', name: 'Archery Shop', regions: ['Misthalin', 'Kandarin'] }
+  ],
+  'Steel Arrow': [
+    { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 30 }, inputs: { 'Headless Arrow': 1, 'Steel Arrowtips': 1 } }
+  ],
+  'Rune Arrow': [
+    { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 75 }, inputs: { 'Headless Arrow': 1, 'Rune Arrowtips': 1 } },
+    { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath', notes: 'Dragon arrows variant also drops' }
+  ],
+  'Bronze Arrowtips': [
+    { type: 'SKILL', name: 'Smithing', regions: ['Any'], skills: { 'Smithing': 1 }, inputs: { 'Bronze Bar': 1 }, outputYield: 15 }
+  ],
+  'Steel Arrowtips': [
+    { type: 'SKILL', name: 'Smithing', regions: ['Any'], skills: { 'Smithing': 35 }, inputs: { 'Steel Bar': 1 }, outputYield: 15 }
+  ],
+  'Rune Arrowtips': [
+    { type: 'SKILL', name: 'Smithing', regions: ['Any'], skills: { 'Smithing': 90 }, inputs: { 'Rune Bar': 1 }, outputYield: 15 }
+  ],
+  'Broad Arrows': [
+    { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 52 }, inputs: { 'Headless Arrow': 1, 'Broad Arrowheads': 1 }, notes: 'Requires Slayer unlock' },
+    { type: 'MERCHANT', name: 'Slayer Master', regions: ['Any'], notes: 'Buy with Slayer Points/coins' }
+  ],
+  'Amethyst Arrow': [
+    { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 82 }, inputs: { 'Headless Arrow': 1, 'Amethyst Arrowtips': 1 } }
+  ],
+  'Amethyst Arrowtips': [
+    { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: { 'Crafting': 85 }, inputs: { 'Amethyst': 1, 'Chisel': 0 }, outputYield: 15 }
+  ],
+
+  // --- TREASURE TRAIL REWARDS ---
+  'Ranger Boots': [
+    { type: 'CLUE', name: 'Clue Scroll (Elite)', regions: ['Any'], rarity: '1/1133', notes: 'Reward casket' },
+    { type: 'CLUE', name: 'Clue Scroll (Hard)', regions: ['Any'], rarity: '1/1625', notes: 'Reward casket' }
+  ],
+  'Robin Hood Hat': [
+    { type: 'CLUE', name: 'Clue Scroll (Hard)', regions: ['Any'], rarity: '1/1133', notes: 'Reward casket' },
+    { type: 'CLUE', name: 'Clue Scroll (Elite)', regions: ['Any'], rarity: '1/1133' }
+  ],
+  'Holy Sandals': [
+    { type: 'CLUE', name: 'Clue Scroll (Elite)', regions: ['Any'], rarity: '1/1625', notes: 'Reward casket' }
   ]
 };
 
@@ -1337,6 +1570,38 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
   'Quest Items': [
     'Silverlight', 'Darklight', 'Arclight', 'Wolfbane', 'Excalibur',
     'Ancient Mace', 'Barrelchest Anchor', 'Keris Partisan',
+  ],
+  'Gems': [
+    'Uncut Sapphire', 'Uncut Emerald', 'Uncut Ruby', 'Sapphire', 'Emerald',
+    'Ruby', 'Opal', 'Uncut Opal', 'Red Topaz', 'Uncut Red Topaz',
+  ],
+  'Cooked Food': [
+    'Shrimps', 'Trout', 'Salmon', 'Lobster', 'Swordfish', 'Monkfish', 'Shark',
+    'Cooked Karambwan', 'Anglerfish', 'Manta Ray',
+  ],
+  'Bones': [
+    'Bones', 'Big Bones', 'Babydragon Bones', 'Lava Dragon Bones',
+    'Superior Dragon Bones', 'Hydra Bones',
+  ],
+  'Tanning & Textiles': [
+    'Cowhide', 'Leather', 'Hard Leather', 'Green Dragon Leather',
+    'Blue Dragon Leather', 'Red Dragon Leather', 'Wool', 'Ball of Wool',
+    'Thread', 'Needle',
+  ],
+  'Tools & Containers': [
+    'Chisel', 'Knife', 'Spade', 'Pot', 'Jug', 'Bucket', 'Empty Vial',
+  ],
+  'Seeds': [
+    'Ranarr Seed', 'Snapdragon Seed', 'Torstol Seed', 'Yew Seed', 'Magic Seed',
+    'Bird Nest',
+  ],
+  'Ammunition': [
+    'Arrow Shaft', 'Headless Arrow', 'Bronze Arrow', 'Steel Arrow',
+    'Rune Arrow', 'Bronze Arrowtips', 'Steel Arrowtips', 'Rune Arrowtips',
+    'Broad Arrows', 'Amethyst Arrow', 'Amethyst Arrowtips',
+  ],
+  'Treasure Trail Rewards': [
+    'Ranger Boots', 'Robin Hood Hat', 'Holy Sandals',
   ],
 };
 
