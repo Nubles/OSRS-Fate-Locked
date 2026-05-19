@@ -1,5 +1,6 @@
 
 import { DropSource, TableType } from '../types';
+import { ENRICHED_SOURCES } from './resourceEnrichment';
 
 export type SourceType =
   | 'DROP'
@@ -2472,6 +2473,13 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Herblore Shop', regions: ['Asgarnia', 'Kandarin', 'Misthalin'], notes: 'Sold empty in packs' }
   ],
 };
+
+// Merge auto-generated SHOP/DROP sources from the OSRS Wiki (see
+// scripts/buildSourceEnrichment.ts) into the curated map above.
+for (const [item, extra] of Object.entries(ENRICHED_SOURCES)) {
+  const target = RESOURCE_MAP[item];
+  if (target) target.push(...extra);
+}
 
 // --- CATEGORY GROUPING -------------------------------------------------------
 // Explicit mapping of items to their browsing category. Mirrors the comment
