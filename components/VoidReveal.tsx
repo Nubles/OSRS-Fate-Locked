@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { Sparkles, Map, Box, Copy, Shield, BookOpen, Footprints, Zap, Home, Store, Gamepad2, Skull, Package, Dna, ExternalLink, Flag, Check, Loader2 } from 'lucide-react';
-import { WIKI_OVERRIDES } from '../constants';
+import { wikiUrlFor } from '../constants';
 
 interface VoidRevealProps {
   itemName: string;
@@ -14,12 +14,7 @@ interface VoidRevealProps {
 
 type Phase = 'idle' | 'imploding' | 'singularity' | 'roulette' | 'flash' | 'reveal';
 
-const getWikiUrl = (name: string) => {
-  if (WIKI_OVERRIDES[name]) {
-    return `https://oldschool.runescape.wiki/w/${WIKI_OVERRIDES[name]}`;
-  }
-  return `https://oldschool.runescape.wiki/w/${encodeURIComponent(name.replace(/ /g, '_'))}`;
-};
+const getWikiUrl = wikiUrlFor;
 
 const getItemDescription = (type: string, name: string): string => {
     const t = type.toLowerCase();

@@ -4,7 +4,7 @@ import {
   MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, POH_LIST, 
   MERCHANTS_LIST, STORAGE_LIST, GUILDS_LIST, 
   FARMING_PATCH_LIST, FARMING_UNLOCK_DETAILS, EQUIPMENT_TIER_MAX, 
-  REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, WIKI_OVERRIDES, UTILITY_ITEM_IDS,
+  REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, wikiUrlFor, UTILITY_ITEM_IDS,
   SKILL_UNLOCK_DATA
 } from '../constants';
 import { useGame } from '../context/GameContext';
@@ -56,10 +56,7 @@ const TIER_COLORS = [
   'bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.8)]', // Tier 10: Gilded/Max
 ];
 
-const getWikiUrl = (name: string) => {
-  if (WIKI_OVERRIDES[name]) return `https://oldschool.runescape.wiki/w/${WIKI_OVERRIDES[name]}`;
-  return `https://oldschool.runescape.wiki/w/${encodeURIComponent(name.replace(/ /g, '_'))}`;
-};
+const getWikiUrl = wikiUrlFor;
 
 const getSkillIcon = (skillName: string) => `https://oldschool.runescape.wiki/images/${skillName}_icon.png`;
 

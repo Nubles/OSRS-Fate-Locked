@@ -508,3 +508,33 @@ export const WIKI_OVERRIDES: Record<string, string> = {
   'Archery Competition': 'Archery_competition',
   'Anima': 'Anima_patch'
 };
+
+// App-design category names (transport groupings, POH facilities, shop types)
+// that have no single OSRS Wiki article. getWikiUrl routes these to a wiki
+// search instead of producing a dead /w/ link.
+export const NO_WIKI_PAGE = new Set<string>([
+  // Mobility
+  'Spirit Trees', 'Gnome Gliders', 'Charter Ships', 'Teleport Tablets', 'Jewelry Teleports',
+  'Balloon Transport', 'Mine Carts', 'Magic Carpets', 'Wilderness Obelisks', 'Minigame Teleports',
+  'Quetzal Network', 'Mycelium Transport', 'Eagle Transport', 'Crystal Teleport Seed',
+  // Player-owned house facilities
+  'Chapel Altar', 'Restoration Pools', 'Jewellery Box', 'Workshop Tools', 'Mounted Glory',
+  'Combat Dummy', 'Fairy Ring (POH)', 'Spirit Tree (POH)', 'Mounted Mythical Cape',
+  "Mounted Xeric's Talisman", 'Mounted Digsite Pendant', 'Spellbook Altars', 'Magic Wardrobe',
+  'Cape Rack', 'Treasure Chest (Clues)', 'Toy Box', 'Armour Repair Stand', 'Bedroom (Servant)',
+  'Achievement Cape Hanger', 'Dining Table', 'Boss Lair', 'Garden Theme',
+  // Merchant / shop types
+  'General Stores', 'Archery Shops', 'Sword Shops', 'Food Shops', 'Fishing Shops', 'Clothes Shops',
+  'Farming Shops', 'Crafting Shops', 'Mining Shops', 'Gem Shops', 'Herblore Shops', 'Dye Shops',
+  'Axe Shops', 'Platebody Shops', 'Bars & Inns', 'Cooking Shops', 'Shield Shops', 'Scimitar Shops',
+  'Helmet Shops', 'Platelegs Shops', 'Plateskirt Shops', 'Chainbody Shops', 'Mace Shops',
+  'Staff Shops', 'Crossbow Shops', 'Hunter Shops', 'Candle Shops', 'Fur Traders', 'Jewellery Shops',
+  'Kebab Sellers', 'Silk Shops',
+]);
+
+/** Wiki link for any content name — a direct article, or a search fallback. */
+export const wikiUrlFor = (name: string): string => {
+  if (WIKI_OVERRIDES[name]) return `https://oldschool.runescape.wiki/w/${WIKI_OVERRIDES[name]}`;
+  if (NO_WIKI_PAGE.has(name)) return `https://oldschool.runescape.wiki/w/Special:Search?search=${encodeURIComponent(name)}`;
+  return `https://oldschool.runescape.wiki/w/${encodeURIComponent(name.replace(/ /g, '_'))}`;
+};

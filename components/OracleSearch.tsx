@@ -6,7 +6,7 @@ import { useGame } from '../context/GameContext';
 import { 
   SKILLS_LIST, REGIONS_LIST, BOSSES_LIST, MINIGAMES_LIST, FARMING_PATCH_LIST, 
   MOBILITY_LIST, ARCANA_LIST, POH_LIST, EQUIPMENT_SLOTS, MERCHANTS_LIST, 
-  STORAGE_LIST, GUILDS_LIST, MISTHALIN_AREAS, WIKI_OVERRIDES 
+  STORAGE_LIST, GUILDS_LIST, MISTHALIN_AREAS, wikiUrlFor
 } from '../constants';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
@@ -29,10 +29,7 @@ type SearchItem = {
 };
 
 // Helper to generate Wiki URLs
-const getWikiUrl = (name: string) => {
-  if (WIKI_OVERRIDES[name]) return `https://oldschool.runescape.wiki/w/${WIKI_OVERRIDES[name]}`;
-  return `https://oldschool.runescape.wiki/w/${encodeURIComponent(name.replace(/ /g, '_'))}`;
-};
+const getWikiUrl = wikiUrlFor;
 
 export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
   const { unlocks } = useGame();
