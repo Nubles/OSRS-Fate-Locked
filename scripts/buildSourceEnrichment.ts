@@ -7,7 +7,7 @@ import { execFileSync } from 'child_process';
 import { writeFileSync } from 'fs';
 import { RESOURCE_MAP } from '../data/resourceData';
 import { ENRICHED_SOURCES } from '../data/resourceEnrichment';
-import { BOSSES_LIST, MINIGAMES_LIST } from '../data/items';
+import { BOSSES_LIST, MINIGAMES_LIST, REGION_GROUPS, MISTHALIN_AREAS } from '../data/items';
 import { ACTIVITY_REGIONS } from '../data/activityRegions';
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)';
@@ -71,6 +71,43 @@ console.log(`  ${storeRows.length} store rows`);
 console.log('Fetching dropsline…');
 const dropRows = fetchAll('dropsline', ['item_name', 'drop_json']);
 console.log(`  ${dropRows.length} drop rows`);
+console.log('Fetching infobox_monster…');
+const monsterRows = fetchAll('infobox_monster', ['name', 'league_region']);
+console.log(`  ${monsterRows.length} monster rows`);
+console.log('Fetching infobox_shop…');
+const shopRows = fetchAll('infobox_shop', ['page_name', 'location']);
+console.log(`  ${shopRows.length} shop rows`);
+
+// place name (e.g. "Varrock", "Dwarven Mine") -> app region. Built from
+// REGION_GROUPS and MISTHALIN_AREAS so any shop/monster located in a known
+// place can be region-tagged automatically.
+const placeToRegion = new Map<string, string>();
+for (const p of MISTHALIN_AREAS) placeToRegion.set(p.toLowerCase(), 'Misthalin');
+for (const [region, places] of Object.entries(REGION_GROUPS)) {
+  for (const p of places) placeToRegion.set(p.toLowerCase(), region);
+}
+
+// monster name (lowercased) -> app region from the wiki's infobox_monster
+// `league_region`, used when a drop's own League region was empty.
+const monsterRegion = new Map<string, string>();
+for (const r of monsterRows) {
+  if (!r.name || !r.league_region) continue;
+  const mapped = REGION_MAP[r.league_region];
+  if (mapped) monsterRegion.set(r.name.toLowerCase(), mapped);
+}
+
+// shop page-name (lowercased, period-stripped) -> app region from
+// infobox_shop.location, parsed out of wiki "[[Place]]" markup.
+const shopRegion = new Map<string, string>();
+for (const r of shopRows) {
+  if (!r.page_name || !r.location) continue;
+  const m = String(r.location).match(/\[\[([^\]|]+)/);
+  if (!m) continue;
+  const region = placeToRegion.get(m[1].toLowerCase());
+  if (!region) continue;
+  const key = String(r.page_name).replace(/\.$/, '').toLowerCase();
+  shopRegion.set(key, region);
+}
 
 // item (lowercase) -> shops
 const itemShops = new Map<string, { shop: string; currency: string }[]>();
@@ -170,7 +207,8 @@ for (const [lower, key] of lowerToKey) {
     if (haveShop.has(sl) || seenShop.has(sl)) continue;
     seenShop.add(sl);
     if ([...seenShop].length > 3) break;
-    const src: any = { type: 'SHOP', name: shop, regions: [SHOP_REGION[shop] || 'Any'] };
+    const region = SHOP_REGION[shop] || shopRegion.get(sl) || 'Any';
+    const src: any = { type: 'SHOP', name: shop, regions: [region] };
     if (currency && currency !== 'Coins') src.notes = `Bought with ${currency}`;
     added.push(src);
     shopCount++;
@@ -189,7 +227,14 @@ for (const [lower, key] of lowerToKey) {
     .sort((a, b) => rarityRank(a.rarity) - rarityRank(b.rarity))
     .slice(0, 6);
   for (const d of picked) {
-    const src: any = { type: d.isClue ? 'CLUE' : 'DROP', name: d.monster, regions: [d.region] };
+    // If the drop's own League region was missing ('Any'), fall back to the
+    // monster's infobox_monster league_region.
+    let region = d.region;
+    if (region === 'Any') {
+      const m = monsterRegion.get(d.monster.toLowerCase());
+      if (m) region = m;
+    }
+    const src: any = { type: d.isClue ? 'CLUE' : 'DROP', name: d.monster, regions: [region] };
     const unlock = d.isClue ? undefined : resolveUnlock(d.monster);
     if (unlock) {
       src.unlockId = unlock;
