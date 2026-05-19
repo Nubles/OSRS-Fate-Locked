@@ -33,7 +33,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Chaos Druid', regions: ['Misthalin', 'Kandarin', 'Wilderness'], notes: 'Edgeville Dungeon / Yanille / Wildy' },
     { type: 'DROP', name: 'Aberrant Spectre', regions: ['Morytania', 'Kandarin', 'Kourend & Kebos'], skills: { 'Slayer': 60 }, notes: 'Slayer Tower / Catacombs' },
     { type: 'DROP', name: 'Flesh Crawler', regions: ['Misthalin'], notes: 'Stronghold of Security' },
-    { type: 'MINIGAME', name: 'Sinister Chest', regions: ['Kandarin'], skills: {'Agility': 40}, unlockId: 'Sinister Chest', notes: 'Requires Sinister Key' }
+    { type: 'MINIGAME', name: 'Sinister Chest', regions: ['Kandarin'], skills: {'Agility': 40}, notes: 'Requires Sinister Key' }
   ],
   'Snapdragon': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Misthalin', 'Kandarin', 'Morytania', 'Kourend & Kebos', 'Tirannwn', 'Fremennik', 'Varlamore'], skills: { 'Farming': 62 }, notes: 'Requires Seeds', outputYield: 8 },
@@ -43,7 +43,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Torstol': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Misthalin', 'Kandarin', 'Morytania', 'Kourend & Kebos', 'Tirannwn', 'Fremennik', 'Varlamore'], skills: { 'Farming': 85 }, notes: 'Requires Seeds', outputYield: 8 },
-    { type: 'MINIGAME', name: 'Sinister Chest', regions: ['Kandarin'], skills: {'Agility': 40}, unlockId: 'Sinister Chest', notes: 'Guaranteed Drop' },
+    { type: 'MINIGAME', name: 'Sinister Chest', regions: ['Kandarin'], skills: {'Agility': 40}, notes: 'Guaranteed Drop' },
     { type: 'DROP', name: 'Commander Zilyana', regions: ['Fremennik'], unlockId: 'Commander Zilyana' },
     { type: 'DROP', name: 'Thermonuclear Smoke Devil', regions: ['Kandarin'], skills: {'Slayer': 93}, unlockId: 'Thermonuclear Smoke Devil' }
   ],
@@ -139,7 +139,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Kourend & Kebos'], notes: 'Hosidius Shore' }
   ],
   'Red Spiders\' Eggs': [
-    { type: 'DROP', name: 'Spidine', regions: ['Kandarin'], unlockId: 'Tower of Life (Spidines)', notes: 'Tower of Life (Fastest)', outputYield: 3 },
+    { type: 'DROP', name: 'Spidine', regions: ['Kandarin'], quests: ['Tower of Life'], notes: 'Tower of Life (Fastest)', outputYield: 3 },
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Misthalin', 'Wilderness'], notes: 'Edgeville Dungeon / Forthos / Wildy' },
     { type: 'DROP', name: 'Sarachnis', regions: ['Kourend & Kebos'], unlockId: 'Sarachnis', notes: 'Common Drop' },
     { type: 'DROP', name: 'Spidines/Red Spiders', regions: ['Misthalin', 'Karamja'], notes: 'Varrock Sewers/Brimhaven' }
@@ -208,12 +208,12 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Maple Logs': [
     { type: 'SKILL', name: 'Woodcutting', regions: ['Kandarin', 'Misthalin', 'Fremennik'], skills: {'Woodcutting': 45}, notes: 'Seers / Misc' },
-    { type: 'MINIGAME', name: 'Kingdom of Miscellania', regions: ['Fremennik'], unlockId: 'Managing Miscellania' }
+    { type: 'MINIGAME', name: 'Kingdom of Miscellania', regions: ['Fremennik'], quests: ['Throne of Miscellania'] }
   ],
   'Mahogany Logs': [
     { type: 'SKILL', name: 'Woodcutting', regions: ['Karamja', 'Islands & Others', 'Kourend & Kebos'], skills: {'Woodcutting': 50} },
     { type: 'SKILL', name: 'Hardwood Patch', regions: ['Islands & Others'], skills: {'Farming': 55}, outputYield: 20 },
-    { type: 'MINIGAME', name: 'Kingdom of Miscellania', regions: ['Fremennik'], unlockId: 'Managing Miscellania' }
+    { type: 'MINIGAME', name: 'Kingdom of Miscellania', regions: ['Fremennik'], quests: ['Throne of Miscellania'] }
   ],
   'Yew Logs': [
     { type: 'SKILL', name: 'Woodcutting', regions: ['Any'], skills: {'Woodcutting': 60} },
@@ -343,7 +343,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Ash Pile', regions: ['Islands & Others'], skills: {'Mining': 22}, quests: ['Bone Voyage'], notes: 'Fossil Island' }
   ],
   'Coal': [
-    { type: 'MINIGAME', name: 'Kingdom of Miscellania', regions: ['Fremennik'], unlockId: 'Managing Miscellania', notes: 'Passive Gathering', outputYield: 400 },
+    { type: 'MINIGAME', name: 'Kingdom of Miscellania', regions: ['Fremennik'], quests: ['Throne of Miscellania'], notes: 'Passive Gathering', outputYield: 400 },
     { type: 'SHOP', name: 'Blast Furnace Shop', regions: ['Fremennik'], unlockId: 'Blast Furnace' },
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Fremennik', 'Kourend & Kebos', 'Karamja', 'Wilderness', 'Morytania'], skills: {'Mining': 30}, notes: 'Motherlode Mine / Guild' },
     { type: 'DROP', name: 'Gargoyle', regions: ['Morytania'], skills: {'Slayer': 75} },
@@ -1395,7 +1395,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Magic Seed': [
     { type: 'DROP', name: 'Bird Nest', regions: ['Any'], rarity: 'Very rare' },
-    { type: 'MINIGAME', name: 'Kingdom of Miscellania', regions: ['Fremennik'], unlockId: 'Managing Miscellania', notes: 'Hardwood/herb allocation' }
+    { type: 'MINIGAME', name: 'Kingdom of Miscellania', regions: ['Fremennik'], quests: ['Throne of Miscellania'], notes: 'Hardwood/herb allocation' }
   ],
   'Bird Nest': [
     { type: 'SKILL', name: 'Woodcutting', regions: ['Any'], skills: { 'Woodcutting': 1 }, rarity: 'Random while chopping' },
