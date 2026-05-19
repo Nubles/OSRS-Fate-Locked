@@ -468,8 +468,9 @@ export const WIKI_OVERRIDES: Record<string, string> = {
   'Tombs of Amascut': 'Tombs_of_Amascut',
   'Commander Zilyana': 'Commander_Zilyana',
   'General Graardor': 'General_Graardor',
-  'Kree\'arra': 'Kree%27arra',
-  'K\'ril Tsutsaroth': 'K%27ril_Tsutsaroth',
+  // Kree'arra / K'ril Tsutsaroth used to be pre-URL-encoded here; that
+  // caused double-encoding (% -> %25) when the value was fed through
+  // URLSearchParams. The default normalization handles them correctly.
   'Dagannoth Kings': 'Dagannoth_Kings',
   'TzHaar Fight Cave': 'TzHaar_Fight_Cave',
   'TzHaar Fight Pit': 'TzHaar_Fight_Pit',
@@ -500,6 +501,11 @@ export const WIKI_OVERRIDES: Record<string, string> = {
   'Araxxor': 'Araxxor',
   'The Hueycoatl': 'The_Hueycoatl',
   'Hespori Patch': 'Hespori',
+  // Region/area display names whose default lookup hits a disambig page
+  // with no image; redirect to the specific wiki article.
+  'Gnome Village': 'Tree_Gnome_Village',
+  'Bandit Camp': 'Bandit_Camp_(Kharidian_Desert)',
+  'Chaos Temple': 'Chaos_Temple_(Wilderness)',
   // App display names that differ from the wiki article title
   'Mor Ul Rek (TzHaar City)': 'Mor_Ul_Rek',
   'Duel Arena / PvP Arena': 'PvP_Arena',
