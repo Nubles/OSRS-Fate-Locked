@@ -1091,10 +1091,10 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Basilisk Knight', regions: ['Fremennik'], skills: {'Slayer': 60} }
   ],
   'Dragonfire Shield': [
-    { type: 'SKILL', name: 'Smithing', regions: ['Any'], skills: {'Smithing': 90}, inputs: {'Draconic Visage': 1, 'Anti-dragon Shield': 1}, notes: 'Or pay Oziach 1.25m' }
+    { type: 'SKILL', name: 'Smithing', regions: ['Any'], skills: {'Smithing': 90}, inputs: {'Draconic Visage': 1, 'Anti-Dragon Shield': 1}, notes: 'Or pay Oziach 1.25m' }
   ],
   'Dragonfire Ward': [
-    { type: 'SKILL', name: 'Smithing', regions: ['Any'], skills: {'Smithing': 90}, inputs: {'Skeletal Visage': 1, 'Anti-dragon Shield': 1}, notes: 'Or pay Oziach 1.25m' }
+    { type: 'SKILL', name: 'Smithing', regions: ['Any'], skills: {'Smithing': 90}, inputs: {'Skeletal Visage': 1, 'Anti-Dragon Shield': 1}, notes: 'Or pay Oziach 1.25m' }
   ],
   'Draconic Visage': [
     { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath' },
@@ -2472,6 +2472,201 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Glassblowing', regions: ['Any'], skills: { 'Crafting': 33 }, inputs: { 'Molten Glass': 1 } },
     { type: 'SHOP', name: 'Herblore Shop', regions: ['Asgarnia', 'Kandarin', 'Misthalin'], notes: 'Sold empty in packs' }
   ],
+
+  // --- BOSS & RAID UNIQUE INTERMEDIATES ---
+  'Bludgeon Axon': [
+    { type: 'DROP', name: 'Abyssal Sire', regions: ['Wilderness'], unlockId: 'Abyssal Sire', rarity: '1/258' }
+  ],
+  'Bludgeon Claw': [
+    { type: 'DROP', name: 'Abyssal Sire', regions: ['Wilderness'], unlockId: 'Abyssal Sire', rarity: '1/258' }
+  ],
+  'Bludgeon Spine': [
+    { type: 'DROP', name: 'Abyssal Sire', regions: ['Wilderness'], unlockId: 'Abyssal Sire', rarity: '1/258' }
+  ],
+  'Godsword Shard 1': [
+    { type: 'DROP', name: 'General Graardor', regions: ['Fremennik'], unlockId: 'General Graardor' },
+    { type: 'DROP', name: 'Commander Zilyana', regions: ['Fremennik'], unlockId: 'Commander Zilyana' },
+    { type: 'DROP', name: "Kree'arra", regions: ['Fremennik'], unlockId: "Kree'arra" },
+    { type: 'DROP', name: "K'ril Tsutsaroth", regions: ['Fremennik'], unlockId: "K'ril Tsutsaroth" },
+    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex' }
+  ],
+  'Godsword Shard 2': [
+    { type: 'DROP', name: 'General Graardor', regions: ['Fremennik'], unlockId: 'General Graardor' },
+    { type: 'DROP', name: 'Commander Zilyana', regions: ['Fremennik'], unlockId: 'Commander Zilyana' },
+    { type: 'DROP', name: "Kree'arra", regions: ['Fremennik'], unlockId: "Kree'arra" },
+    { type: 'DROP', name: "K'ril Tsutsaroth", regions: ['Fremennik'], unlockId: "K'ril Tsutsaroth" },
+    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex' }
+  ],
+  'Godsword Shard 3': [
+    { type: 'DROP', name: 'General Graardor', regions: ['Fremennik'], unlockId: 'General Graardor' },
+    { type: 'DROP', name: 'Commander Zilyana', regions: ['Fremennik'], unlockId: 'Commander Zilyana' },
+    { type: 'DROP', name: "Kree'arra", regions: ['Fremennik'], unlockId: "Kree'arra" },
+    { type: 'DROP', name: "K'ril Tsutsaroth", regions: ['Fremennik'], unlockId: "K'ril Tsutsaroth" },
+    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex' }
+  ],
+  "Executioner's Axe Head": [
+    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore'], unlockId: 'Vardorvis', rarity: '1/96' }
+  ],
+  'Eye of the Duke': [
+    { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus', rarity: '1/96' }
+  ],
+  'Leviathan Lure': [
+    { type: 'DROP', name: 'The Leviathan', regions: ['Morytania'], unlockId: 'The Leviathan', rarity: '1/96' }
+  ],
+  "Siren's Staff": [
+    { type: 'DROP', name: 'The Whisperer', regions: ['Fremennik'], unlockId: 'The Whisperer', rarity: '1/96' }
+  ],
+  'Araxyte Venom Sack': [
+    { type: 'DROP', name: 'Araxxor', regions: ['Morytania'], unlockId: 'Araxxor' }
+  ],
+  'Ancient Essence': [
+    { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus', notes: 'DT2 awakened bosses (any)' },
+    { type: 'DROP', name: 'The Leviathan', regions: ['Morytania'], unlockId: 'The Leviathan' },
+    { type: 'DROP', name: 'The Whisperer', regions: ['Fremennik'], unlockId: 'The Whisperer' },
+    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore'], unlockId: 'Vardorvis' }
+  ],
+  'Ancient Shard': [
+    { type: 'DROP', name: 'Catacombs of Kourend Monsters', regions: ['Kourend & Kebos'], rarity: 'Common' }
+  ],
+  'Vial of Blood': [
+    { type: 'DROP', name: 'Vyrewatch Sentinel', regions: ['Morytania'], quests: ['Sins of the Father'], rarity: 'Common' }
+  ],
+  'Nail Beast Nails': [
+    { type: 'MINIGAME', name: 'Temple Trekking', regions: ['Morytania'], unlockId: 'Temple Trekking', rarity: 'Common' }
+  ],
+  'Nihil Dust': [
+    { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Nihil Shard': 1 }, notes: 'Grind with a Pestle and mortar' }
+  ],
+  'Nihil Shard': [
+    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex' },
+    { type: 'DROP', name: 'Tombs of Amascut', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut' }
+  ],
+  'Helm of Neitiznot': [
+    { type: 'QUEST', name: 'The Fremennik Isles', regions: ['Fremennik'], notes: 'Quest Reward' }
+  ],
+  'Infinity Boots': [
+    { type: 'MINIGAME', name: 'Mage Training Arena', regions: ['Kharidian Desert'], unlockId: 'Mage Training Arena', notes: 'Reward Shop' }
+  ],
+  'Broad Arrowheads': [
+    { type: 'MERCHANT', name: 'Slayer Master', regions: ['Any'], notes: 'Requires Broader Fletching unlock (300 Slayer points)' }
+  ],
+  'Dragon Axe': [
+    { type: 'DROP', name: 'Dagannoth Kings', regions: ['Fremennik'], unlockId: 'Dagannoth Kings', rarity: '1/128' },
+    { type: 'MINIGAME', name: 'Volcanic Mine', regions: ['Islands & Others'], unlockId: 'Volcanic Mine', notes: 'Broken from Ore Pack' }
+  ],
+  'Dragon Harpoon': [
+    { type: 'DROP', name: 'Wyrm', regions: ['Kourend & Kebos'], skills: { 'Slayer': 62 }, rarity: '1/5000' },
+    { type: 'MINIGAME', name: 'Tempoross', regions: ['Kharidian Desert'], unlockId: 'Tempoross' }
+  ],
+  'Zamorakian Hasta': [
+    { type: 'SKILL', name: 'Otto Godblessed', regions: ['Kandarin'], inputs: { 'Zamorakian Spear': 1, 'Coins': 300000 }, notes: "Otto's Grotto conversion" }
+  ],
+  'Zamorakian Spear': [
+    { type: 'DROP', name: "K'ril Tsutsaroth", regions: ['Fremennik'], unlockId: "K'ril Tsutsaroth", rarity: '1/127' }
+  ],
+
+  // --- SMITHING / FLETCHING INTERMEDIATES ---
+  'Adamantite Nails': [
+    { type: 'SKILL', name: 'Smithing', regions: ['Any'], skills: { 'Smithing': 74 }, inputs: { 'Adamantite Bar': 1 }, outputYield: 15 }
+  ],
+  'Silver Bar': [
+    { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: { 'Smithing': 20 }, inputs: { 'Silver Ore': 1 } },
+    { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: { 'Smithing': 20 }, inputs: { 'Silver Ore': 1 }, unlockId: 'Blast Furnace' }
+  ],
+  'Sinew': [
+    { type: 'SKILL', name: 'Cooking', regions: ['Any'], inputs: { 'Cowhide': 1 }, notes: 'Use cowhide on a range' }
+  ],
+  'Oak Shield': [
+    { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 27 }, inputs: { 'Oak Logs': 2 } }
+  ],
+  'Maple Shield': [
+    { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 62 }, inputs: { 'Maple Logs': 2 } }
+  ],
+  'Yew Shield': [
+    { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 77 }, inputs: { 'Yew Logs': 2 } }
+  ],
+  'Magic Shield': [
+    { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 87 }, inputs: { 'Magic Logs': 2 } }
+  ],
+  'Redwood Shield': [
+    { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 92 }, inputs: { 'Redwood Logs': 2 } }
+  ],
+
+  // --- JEWELLERY (ONYX / ZENYTE / DRAGON NECKLACE / JADE) ---
+  'Onyx Ring': [
+    { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: { 'Crafting': 67 }, inputs: { 'Gold Bar': 1, 'Onyx': 1, 'Ring Mould': 0 } }
+  ],
+  'Onyx Necklace': [
+    { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: { 'Crafting': 82 }, inputs: { 'Gold Bar': 1, 'Onyx': 1, 'Necklace Mould': 0 } }
+  ],
+  'Onyx Bracelet': [
+    { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: { 'Crafting': 84 }, inputs: { 'Gold Bar': 1, 'Onyx': 1, 'Bracelet Mould': 0 } }
+  ],
+  'Onyx Amulet (u)': [
+    { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: { 'Crafting': 90 }, inputs: { 'Gold Bar': 1, 'Onyx': 1, 'Amulet Mould': 0 } }
+  ],
+  'Onyx': [
+    { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: { 'Crafting': 67 }, inputs: { 'Uncut Onyx': 1, 'Chisel': 0 } }
+  ],
+  'Zenyte Ring': [
+    { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: { 'Crafting': 89 }, inputs: { 'Gold Bar': 1, 'Zenyte': 1, 'Ring Mould': 0 } }
+  ],
+  'Zenyte Necklace': [
+    { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: { 'Crafting': 92 }, inputs: { 'Gold Bar': 1, 'Zenyte': 1, 'Necklace Mould': 0 } }
+  ],
+  'Zenyte Bracelet': [
+    { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: { 'Crafting': 95 }, inputs: { 'Gold Bar': 1, 'Zenyte': 1, 'Bracelet Mould': 0 } }
+  ],
+  'Dragon Necklace': [
+    { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: { 'Crafting': 72 }, inputs: { 'Gold Bar': 1, 'Dragonstone': 1, 'Necklace Mould': 0 } }
+  ],
+  'Jade': [
+    { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: { 'Crafting': 13 }, inputs: { 'Uncut Jade': 1, 'Chisel': 0 } }
+  ],
+  'Uncut Jade': [
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['Karamja', 'Fremennik'], skills: { 'Mining': 40 }, notes: 'Gem rocks (Shilo / Lunar Isle)' }
+  ],
+  'Amulet Mould': [
+    { type: 'SHOP', name: 'Crafting Shop', regions: ['Asgarnia', 'Kharidian Desert'], notes: 'Falador / Al Kharid' }
+  ],
+  'Ring Mould': [
+    { type: 'SHOP', name: 'Crafting Shop', regions: ['Asgarnia', 'Kharidian Desert'], notes: 'Falador / Al Kharid' }
+  ],
+  'Necklace Mould': [
+    { type: 'SHOP', name: 'Crafting Shop', regions: ['Asgarnia', 'Kharidian Desert'], notes: 'Falador / Al Kharid' }
+  ],
+  'Bracelet Mould': [
+    { type: 'SHOP', name: 'Crafting Shop', regions: ['Asgarnia', 'Kharidian Desert'], notes: 'Falador / Al Kharid' }
+  ],
+
+  // --- ADDITIONAL SECONDARIES ---
+  'Kebbit Teeth': [
+    { type: 'SKILL', name: 'Hunter', regions: ['Kandarin'], skills: { 'Hunter': 51 }, notes: 'Sabre-toothed kebbit (Rellekka Hunter area)' }
+  ],
+  'Kebbit Teeth Dust': [
+    { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Kebbit Teeth': 1 }, notes: 'Grind with a Pestle and mortar' }
+  ],
+  'Gorak Claw': [
+    { type: 'DROP', name: 'Gorak', regions: ['Islands & Others'], notes: 'Zanaris / Gorak Plane' }
+  ],
+  'Gorak Claw Powder': [
+    { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Gorak Claw': 1 }, notes: 'Grind with a Pestle and mortar' }
+  ],
+  'Lily of the Sands': [
+    { type: 'SKILL', name: 'Civitas Garden', regions: ['Varlamore'], skills: { 'Farming': 73 }, notes: 'Civitas illa Fortis special patch' }
+  ],
+  'Olive Oil': [
+    { type: 'SKILL', name: 'Make Olive Oil', regions: ['Morytania'], skills: { 'Cooking': 32 }, inputs: { 'Olive': 1, 'Empty Vial': 1 }, quests: ["Shades of Mort'ton"] }
+  ],
+  'Olive': [
+    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Morytania'], notes: "Mort'ton" }
+  ],
+  'Tree Roots': [
+    { type: 'SKILL', name: 'Farming', regions: ['Any'], skills: { 'Farming': 15 }, notes: 'Dig up any tree stump after harvest' }
+  ],
+  "Rogue's Purse": [
+    { type: 'SKILL', name: 'Picking', regions: ['Morytania'], skills: { 'Farming': 4 }, quests: ['Nature Spirit'], notes: "Mort Myre Swamp mushrooms" }
+  ],
 };
 
 // Merge auto-generated SHOP/DROP sources from the OSRS Wiki (see
@@ -2558,6 +2753,8 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
     'Jangerberries', "Toad's Legs", 'Star Flower', "Zulrah's Scales",
     'Crushed Superior Dragon Bones', 'Crystal Shard', 'Crystal Dust',
     'Lava Scale', 'Lava Scale Shard', 'Ashes',
+    'Kebbit Teeth', 'Kebbit Teeth Dust', 'Gorak Claw', 'Gorak Claw Powder',
+    'Lily of the Sands', 'Olive Oil', 'Olive', 'Tree Roots', "Rogue's Purse",
   ],
   'Logs': [
     'Logs', 'Oak Logs', 'Willow Logs', 'Teak Logs', 'Maple Logs',
@@ -2585,9 +2782,9 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
   'Bars & Smithing': [
     'Bronze Bar', 'Iron Bar', 'Steel Bar', 'Gold Bar', 'Mithril Bar',
     'Adamantite Bar', 'Rune Bar', 'Blurite Bar', 'Elemental Bar',
-    'Elemental Ore', 'Lovakite Bar', 'Cannonball', 'Hammer', 'Ammo Mould',
-    'Bar Mould', 'Goldsmith Gauntlets', 'Ice Gloves', 'Smithing Catalyst',
-    'Imcando Hammer',
+    'Elemental Ore', 'Lovakite Bar', 'Silver Bar', 'Cannonball', 'Hammer',
+    'Ammo Mould', 'Bar Mould', 'Goldsmith Gauntlets', 'Ice Gloves',
+    'Smithing Catalyst', 'Imcando Hammer', 'Adamantite Nails', 'Sinew',
   ],
   'Fishing & Food': [
     'Raw Shrimps', 'Raw Sardine', 'Raw Herring', 'Raw Anchovies', 'Raw Trout',
@@ -2621,6 +2818,7 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
     'Spirit Shield', 'Holy Elixir', 'Godsword Blade', 'Armadyl Godsword',
     'Armadyl Hilt', 'Bandos Godsword', 'Bandos Hilt', 'Saradomin Godsword',
     'Saradomin Hilt', 'Zamorak Godsword', 'Zamorak Hilt',
+    'Oak Shield', 'Maple Shield', 'Yew Shield', 'Magic Shield', 'Redwood Shield',
   ],
   'Raids & Endgame': [
     'Twisted Bow', 'Kodai Wand', 'Elder Maul', 'Dragon Claws',
@@ -2644,6 +2842,12 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
     'Dragonfire Shield', 'Dragonfire Ward', 'Draconic Visage',
     'Skeletal Visage', 'Toxic Blowpipe', 'Trident of the Swamp',
     'Serpentine Helm', 'Magic Fang', 'Tanzanite Fang', 'Serpentine Visage',
+    'Bludgeon Axon', 'Bludgeon Claw', 'Bludgeon Spine',
+    'Godsword Shard 1', 'Godsword Shard 2', 'Godsword Shard 3',
+    "Executioner's Axe Head", 'Eye of the Duke', 'Leviathan Lure',
+    "Siren's Staff", 'Araxyte Venom Sack', 'Ancient Essence', 'Ancient Shard',
+    'Vial of Blood', 'Nail Beast Nails', 'Nihil Dust', 'Nihil Shard',
+    'Helm of Neitiznot', 'Zamorakian Hasta', 'Zamorakian Spear',
   ],
   'Minigame & Skilling Uniques': [
     'Void Knight Top', 'Void Knight Robe', 'Void Knight Gloves',
@@ -2651,7 +2855,7 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
     'Herb Sack', 'Seed Box', 'Gem Bag', 'Coal Bag', 'Fish Barrel',
     'Tackle Box', 'Log Basket', 'Bottomless Compost Bucket', 'Crystal Axe',
     'Crystal Harpoon', 'Infernal Axe', 'Infernal Harpoon', 'Smouldering Stone',
-    'Crystal Tool Seed',
+    'Crystal Tool Seed', 'Infinity Boots',
   ],
   'Quest Items': [
     'Silverlight', 'Darklight', 'Arclight', 'Wolfbane', 'Excalibur',
@@ -2660,6 +2864,7 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
   'Gems': [
     'Uncut Sapphire', 'Uncut Emerald', 'Uncut Ruby', 'Sapphire', 'Emerald',
     'Ruby', 'Opal', 'Uncut Opal', 'Red Topaz', 'Uncut Red Topaz',
+    'Jade', 'Uncut Jade',
   ],
   'Cooked Food': [
     'Shrimps', 'Trout', 'Salmon', 'Lobster', 'Swordfish', 'Monkfish', 'Shark',
@@ -2676,6 +2881,8 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
   ],
   'Tools & Containers': [
     'Chisel', 'Knife', 'Spade', 'Pot', 'Jug', 'Bucket', 'Empty Vial',
+    'Dragon Axe', 'Dragon Harpoon', 'Amulet Mould', 'Ring Mould',
+    'Necklace Mould', 'Bracelet Mould',
   ],
   'Seeds': [
     'Ranarr Seed', 'Snapdragon Seed', 'Torstol Seed', 'Yew Seed', 'Magic Seed',
@@ -2684,7 +2891,7 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
   'Ammunition': [
     'Arrow Shaft', 'Headless Arrow', 'Bronze Arrow', 'Steel Arrow',
     'Rune Arrow', 'Bronze Arrowtips', 'Steel Arrowtips', 'Rune Arrowtips',
-    'Broad Arrows', 'Amethyst Arrow', 'Amethyst Arrowtips',
+    'Broad Arrows', 'Broad Arrowheads', 'Amethyst Arrow', 'Amethyst Arrowtips',
   ],
   'Treasure Trail Rewards': [
     'Ranger Boots', 'Robin Hood Hat', 'Holy Sandals',
@@ -2862,6 +3069,8 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
     'Topaz Bracelet',
     'Topaz Necklace',
     'Topaz Ring',
+    'Onyx', 'Onyx Ring', 'Onyx Necklace', 'Onyx Bracelet', 'Onyx Amulet (u)',
+    'Zenyte Ring', 'Zenyte Necklace', 'Zenyte Bracelet', 'Dragon Necklace',
   ],
   'Leather Armour': [
     'Coif',
