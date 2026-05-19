@@ -16,13 +16,16 @@ import { VoidReveal } from './VoidReveal';
 import { TableType } from '../types';
 import { wikiService } from '../services/WikiService';
 import { NoteTrigger } from './NoteTrigger';
-import { GoalTracker } from './GoalTracker';
-import { QuestLog } from './QuestLog';
-import { DiaryLog } from './DiaryLog';
-import { CALog } from './CALog';
-import { CollectionLog } from './CollectionLog';
 import { RegionMap } from './RegionMap';
-import { SkillDetailModal } from './SkillDetailModal';
+// Heavy tab/modal contents — code-split so their large data dependencies
+// (questData, diaryTasks, caTasks, collectionLogData, requirements, etc.)
+// stay out of the initial dashboard bundle.
+const GoalTracker = lazy(() => import('./GoalTracker').then(m => ({ default: m.GoalTracker })));
+const QuestLog = lazy(() => import('./QuestLog').then(m => ({ default: m.QuestLog })));
+const DiaryLog = lazy(() => import('./DiaryLog').then(m => ({ default: m.DiaryLog })));
+const CALog = lazy(() => import('./CALog').then(m => ({ default: m.CALog })));
+const CollectionLog = lazy(() => import('./CollectionLog').then(m => ({ default: m.CollectionLog })));
+const SkillDetailModal = lazy(() => import('./SkillDetailModal').then(m => ({ default: m.SkillDetailModal })));
 import { PanelErrorBoundary } from './PanelErrorBoundary';
 import { ModalFallback } from './LoadingFallback';
 import { useEscapeKey } from '../hooks/useEscapeKey';
@@ -711,9 +714,11 @@ export const Dashboard: React.FC = () => {
               </button>
           </div>
           <div className="flex-1 overflow-hidden p-2">
-              {journalSubTab === 'QUESTS' && <QuestLog searchTerm={searchQuery} />}
-              {journalSubTab === 'DIARIES' && <DiaryLog searchTerm={searchQuery} />}
-              {journalSubTab === 'CA' && <CALog searchTerm={searchQuery} />}
+              <Suspense fallback={<ModalFallback />}>
+                  {journalSubTab === 'QUESTS' && <QuestLog searchTerm={searchQuery} />}
+                  {journalSubTab === 'DIARIES' && <DiaryLog searchTerm={searchQuery} />}
+                  {journalSubTab === 'CA' && <CALog searchTerm={searchQuery} />}
+              </Suspense>
           </div>
       </div>
   );
@@ -726,11 +731,13 @@ export const Dashboard: React.FC = () => {
       )}
 
       {selectedSkillForDetails && (
-          <SkillDetailModal 
-              skill={selectedSkillForDetails.name} 
-              currentTier={selectedSkillForDetails.tier} 
-              onClose={() => setSelectedSkillForDetails(null)} 
-          />
+          <Suspense fallback={<ModalFallback />}>
+              <SkillDetailModal
+                  skill={selectedSkillForDetails.name}
+                  currentTier={selectedSkillForDetails.tier}
+                  onClose={() => setSelectedSkillForDetails(null)}
+              />
+          </Suspense>
       )}
 
       {/* Confirmation Modal */}
@@ -844,14 +851,18 @@ export const Dashboard: React.FC = () => {
 
       {/* Content Area */}
       <div className="flex-1 overflow-hidden p-4 bg-[#111]">
-          <GoalTracker />
+          <Suspense fallback={<ModalFallback />}>
+              <GoalTracker />
+          </Suspense>
           {activeTab === 'CHARACTER' && renderCharacterTab()}
           {activeTab === 'WORLD' && renderWorldTab()}
           {activeTab === 'ACTIVITIES' && renderActivitiesTab()}
           {activeTab === 'JOURNAL' && renderJournalTab()}
           {activeTab === 'COLLECTION' && (
               <div className="h-full p-2">
-                  <CollectionLog searchTerm={searchQuery} />
+                  <Suspense fallback={<ModalFallback />}>
+                      <CollectionLog searchTerm={searchQuery} />
+                  </Suspense>
               </div>
           )}
       </div>
