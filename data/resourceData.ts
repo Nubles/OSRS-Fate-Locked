@@ -43,7 +43,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Torstol': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Misthalin', 'Kandarin', 'Morytania', 'Kourend & Kebos', 'Tirannwn', 'Fremennik', 'Varlamore'], skills: { 'Farming': 85 }, notes: 'Requires Seeds', outputYield: 8 },
     { type: 'MINIGAME', name: 'Sinister Chest', regions: ['Kandarin'], skills: {'Agility': 40}, unlockId: 'Sinister Chest', notes: 'Guaranteed Drop' },
-    { type: 'DROP', name: 'Commander Zilyana', regions: ['Asgarnia'], unlockId: 'Commander Zilyana' },
+    { type: 'DROP', name: 'Commander Zilyana', regions: ['Fremennik'], unlockId: 'Commander Zilyana' },
     { type: 'DROP', name: 'Thermonuclear Smoke Devil', regions: ['Kandarin'], skills: {'Slayer': 93}, unlockId: 'Thermonuclear Smoke Devil' }
   ],
   'Irit Leaf': [
@@ -115,7 +115,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Saradomin Brew': [
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 81 }, inputs: {'Toadflax': 1, 'Crushed Nest': 1, 'Vial of Water': 1} },
     { type: 'DROP', name: 'Giant Mole', regions: ['Asgarnia'], unlockId: 'Giant Mole', notes: 'Common drop (2-dose)' },
-    { type: 'DROP', name: 'Demonic Gorilla', regions: ['Kandarin'], skills: {'Slayer': 69}, quests: ['Monkey Madness II'] }
+    { type: 'DROP', name: 'Demonic Gorilla', regions: ['Kandarin'], quests: ['Monkey Madness II'], notes: 'No Slayer level required' }
   ],
   'Super Combat Potion': [
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: {'Herblore': 90}, inputs: {'Super Attack': 1, 'Super Strength': 1, 'Super Defence': 1, 'Torstol': 1}, notes: 'Combine 4-dose potions' }
@@ -288,7 +288,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Red Dragonhide': [
     { type: 'DROP', name: 'Red Dragon', regions: ['Karamja'], notes: 'Brimhaven Dungeon' },
     { type: 'DROP', name: 'Red Dragon', regions: ['Kourend & Kebos'], notes: 'Forthos Dungeon' },
-    { type: 'DROP', name: 'Brutal Red Dragon', regions: ['Kourend & Kebos'], skills: {'Slayer': 57} }
+    { type: 'DROP', name: 'Brutal Red Dragon', regions: ['Kourend & Kebos'], notes: 'Forthos Dungeon — no Slayer level required' }
   ],
   'Blue Dragonhide': [
     { type: 'DROP', name: 'Blue Dragon', regions: ['Asgarnia'], notes: 'Taverley Dungeon / Heroes Guild' },
@@ -386,7 +386,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Adamantite Ore': [
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Karamja', 'Wilderness', 'Tirannwn', 'Fremennik'], skills: {'Mining': 70}, notes: 'Mining Guild / Motherlode' },
     { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 15 },
-    { type: 'DROP', name: 'Aviansie', regions: ['Asgarnia'], skills: {'Agility': 70}, notes: 'Noted (Fremennik Hard)' },
+    { type: 'DROP', name: 'Aviansie', regions: ['Fremennik'], skills: {'Agility': 70}, notes: 'Noted (Fremennik Hard)' },
     { type: 'DROP', name: 'Skeletal Wyvern', regions: ['Asgarnia'], skills: {'Slayer': 72} }
   ],
   'Runite Ore': [
@@ -465,7 +465,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 40}, inputs: {'Gold Ore': 1}, notes: 'Instant with Goldsmith Gauntlets' },
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: {'Smithing': 40}, inputs: {'Gold Ore': 1} },
     { type: 'DROP', name: 'Gargoyle', regions: ['Morytania'], skills: {'Slayer': 75} },
-    { type: 'DROP', name: 'Spiritual Mage', regions: ['Asgarnia', 'Wilderness'], skills: {'Slayer': 83} },
+    { type: 'DROP', name: 'Spiritual Mage', regions: ['Fremennik', 'Wilderness'], skills: {'Slayer': 83} },
     { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 15 }
   ],
   'Mithril Bar': [
@@ -475,7 +475,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Adamantite Bar': [
     { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 70}, inputs: {'Adamantite Ore': 1, 'Coal': 3}, notes: 'Requires 3 Coal at BF' },
-    { type: 'DROP', name: 'Aviansie', regions: ['Asgarnia'], skills: {'Agility': 70} },
+    { type: 'DROP', name: 'Aviansie', regions: ['Fremennik'], skills: {'Agility': 70} },
     { type: 'DROP', name: 'Rune Dragon', regions: ['Kandarin'], quests: ['Dragon Slayer II'] }
   ],
   'Rune Bar': [
@@ -710,7 +710,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Soul Rune': [
     { type: 'SKILL', name: 'Runecraft Altar', regions: ['Kourend & Kebos'], skills: { 'Runecraft': 90 }, notes: 'Arceuus (Zeah)' },
     { type: 'SHOP', name: 'Mage Arena Shop', regions: ['Wilderness'], notes: 'Lundail' },
-    { type: 'DROP', name: 'Spiritual Mage', regions: ['Asgarnia', 'Wilderness'], skills: {'Slayer': 83} },
+    { type: 'DROP', name: 'Spiritual Mage', regions: ['Fremennik', 'Wilderness'], skills: {'Slayer': 83} },
     { type: 'DROP', name: 'Cerberus', regions: ['Asgarnia'], skills: {'Slayer': 91}, unlockId: 'Cerberus' },
     { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath' }
   ],
@@ -772,7 +772,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Kurask', regions: ['Fremennik', 'Tirannwn'], skills: {'Slayer': 70} }
   ],
   'Dragon Boots': [
-    { type: 'DROP', name: 'Spiritual Mage', regions: ['Asgarnia', 'Wilderness'], skills: {'Slayer': 83}, notes: 'God Wars Dungeon' }
+    { type: 'DROP', name: 'Spiritual Mage', regions: ['Fremennik', 'Wilderness'], skills: {'Slayer': 83}, notes: 'God Wars Dungeon' }
   ],
   'Rune Scimitar': [
     { type: 'DROP', name: 'Fire Giant', regions: ['Kandarin', 'Wilderness', 'Kourend & Kebos'], notes: 'Waterfall / Deep Wildy / Catacombs' },
@@ -793,7 +793,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Iron Dragon', regions: ['Karamja', 'Kourend & Kebos'] },
     { type: 'DROP', name: 'Steel Dragon', regions: ['Karamja', 'Kourend & Kebos'] },
     { type: 'SKILL', name: 'Smithing', regions: ['Any'], skills: {'Smithing': 91}, inputs: {'Rune Bar': 1} },
-    { type: 'DROP', name: 'Aviansie', regions: ['Asgarnia'], skills: {'Agility': 70} }
+    { type: 'DROP', name: 'Aviansie', regions: ['Fremennik'], skills: {'Agility': 70} }
   ],
   'Yew Stock': [
     { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: {'Fletching': 69}, inputs: {'Yew Logs': 1, 'Knife': 0} }
@@ -840,7 +840,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Monster Drop', regions: ['Any'], notes: 'Rare drop table' }
   ],
   'Zenyte Shard': [
-    { type: 'DROP', name: 'Demonic Gorilla', regions: ['Kandarin'], skills: {'Slayer': 69}, quests: ['Monkey Madness II'], notes: '1/300 Drop' }
+    { type: 'DROP', name: 'Demonic Gorilla', regions: ['Kandarin'], quests: ['Monkey Madness II'], notes: '1/300 Drop — no Slayer level required' }
   ],
   'Uncut Zenyte': [
     { type: 'SKILL', name: 'Fusion', regions: ['Any'], skills: {'Crafting': 89}, inputs: {'Zenyte Shard': 1, 'Uncut Onyx': 1}, notes: 'Fools gold?' }
@@ -887,25 +887,25 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Assembly', regions: ['Any'], inputs: {'Godsword Blade': 1, 'Armadyl Hilt': 1} }
   ],
   'Armadyl Hilt': [
-    { type: 'DROP', name: 'Kree\'arra', regions: ['Asgarnia'], unlockId: 'Kree\'arra' }
+    { type: 'DROP', name: 'Kree\'arra', regions: ['Fremennik'], unlockId: 'Kree\'arra' }
   ],
   'Bandos Godsword': [
     { type: 'SKILL', name: 'Assembly', regions: ['Any'], inputs: {'Godsword Blade': 1, 'Bandos Hilt': 1} }
   ],
   'Bandos Hilt': [
-    { type: 'DROP', name: 'General Graardor', regions: ['Asgarnia'], unlockId: 'General Graardor' }
+    { type: 'DROP', name: 'General Graardor', regions: ['Fremennik'], unlockId: 'General Graardor' }
   ],
   'Saradomin Godsword': [
     { type: 'SKILL', name: 'Assembly', regions: ['Any'], inputs: {'Godsword Blade': 1, 'Saradomin Hilt': 1} }
   ],
   'Saradomin Hilt': [
-    { type: 'DROP', name: 'Commander Zilyana', regions: ['Asgarnia'], unlockId: 'Commander Zilyana' }
+    { type: 'DROP', name: 'Commander Zilyana', regions: ['Fremennik'], unlockId: 'Commander Zilyana' }
   ],
   'Zamorak Godsword': [
     { type: 'SKILL', name: 'Assembly', regions: ['Any'], inputs: {'Godsword Blade': 1, 'Zamorak Hilt': 1} }
   ],
   'Zamorak Hilt': [
-    { type: 'DROP', name: 'K\'ril Tsutsaroth', regions: ['Asgarnia'], unlockId: 'K\'ril Tsutsaroth' }
+    { type: 'DROP', name: 'K\'ril Tsutsaroth', regions: ['Fremennik'], unlockId: 'K\'ril Tsutsaroth' }
   ],
 
   // --- RAIDS & ENDGAME ---
@@ -974,16 +974,16 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Tombs of Amascut', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut' }
   ],
   'Zaryte Crossbow': [
-    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], unlockId: 'Nex' }
+    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex' }
   ],
   'Torva Full Helm': [
-    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], unlockId: 'Nex' }
+    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex' }
   ],
   'Torva Platebody': [
-    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], unlockId: 'Nex' }
+    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex' }
   ],
   'Torva Platelegs': [
-    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], unlockId: 'Nex' }
+    { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex' }
   ],
   'Inquisitor\'s Mace': [
     { type: 'DROP', name: 'The Nightmare', regions: ['Morytania'], unlockId: 'The Nightmare' }
@@ -1004,22 +1004,22 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Assembly', regions: ['Any'], inputs: {'Leviathan Lure': 1, 'Siren\'s Staff': 1, 'Executioner\'s Axe Head': 1, 'Eye of the Duke': 1} }
   ],
   'Virtus Mask': [
-    { type: 'DROP', name: 'Duke Sucellus', regions: ['Kourend & Kebos'], unlockId: 'Duke Sucellus' },
-    { type: 'DROP', name: 'The Leviathan', regions: ['Kourend & Kebos'], unlockId: 'The Leviathan' },
-    { type: 'DROP', name: 'The Whisperer', regions: ['Kourend & Kebos'], unlockId: 'The Whisperer' },
-    { type: 'DROP', name: 'Vardorvis', regions: ['Kourend & Kebos'], unlockId: 'Vardorvis' }
+    { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus' },
+    { type: 'DROP', name: 'The Leviathan', regions: ['Morytania'], unlockId: 'The Leviathan' },
+    { type: 'DROP', name: 'The Whisperer', regions: ['Fremennik'], unlockId: 'The Whisperer' },
+    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore'], unlockId: 'Vardorvis' }
   ],
   'Virtus Robe Top': [
-    { type: 'DROP', name: 'Duke Sucellus', regions: ['Kourend & Kebos'], unlockId: 'Duke Sucellus' },
-    { type: 'DROP', name: 'The Leviathan', regions: ['Kourend & Kebos'], unlockId: 'The Leviathan' },
-    { type: 'DROP', name: 'The Whisperer', regions: ['Kourend & Kebos'], unlockId: 'The Whisperer' },
-    { type: 'DROP', name: 'Vardorvis', regions: ['Kourend & Kebos'], unlockId: 'Vardorvis' }
+    { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus' },
+    { type: 'DROP', name: 'The Leviathan', regions: ['Morytania'], unlockId: 'The Leviathan' },
+    { type: 'DROP', name: 'The Whisperer', regions: ['Fremennik'], unlockId: 'The Whisperer' },
+    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore'], unlockId: 'Vardorvis' }
   ],
   'Virtus Robe Bottom': [
-    { type: 'DROP', name: 'Duke Sucellus', regions: ['Kourend & Kebos'], unlockId: 'Duke Sucellus' },
-    { type: 'DROP', name: 'The Leviathan', regions: ['Kourend & Kebos'], unlockId: 'The Leviathan' },
-    { type: 'DROP', name: 'The Whisperer', regions: ['Kourend & Kebos'], unlockId: 'The Whisperer' },
-    { type: 'DROP', name: 'Vardorvis', regions: ['Kourend & Kebos'], unlockId: 'Vardorvis' }
+    { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus' },
+    { type: 'DROP', name: 'The Leviathan', regions: ['Morytania'], unlockId: 'The Leviathan' },
+    { type: 'DROP', name: 'The Whisperer', regions: ['Fremennik'], unlockId: 'The Whisperer' },
+    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore'], unlockId: 'Vardorvis' }
   ],
   'Voidwaker': [
     { type: 'SKILL', name: 'Assembly', regions: ['Wilderness'], inputs: {'Voidwaker Blade': 1, 'Voidwaker Hilt': 1, 'Voidwaker Gem': 1} }
@@ -1051,7 +1051,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Overseer', regions: ['Kourend & Kebos'], inputs: {'Bludgeon Claw': 1, 'Bludgeon Spine': 1, 'Bludgeon Axon': 1}, notes: 'Combine at Overseer' }
   ],
   'Abyssal Dagger': [
-    { type: 'DROP', name: 'Abyssal Sire', regions: ['Kourend & Kebos'], unlockId: 'Abyssal Sire' }
+    { type: 'DROP', name: 'Abyssal Sire', regions: ['Wilderness'], unlockId: 'Abyssal Sire' }
   ],
   'Primordial Boots': [
     { type: 'SKILL', name: 'Runecrafting', regions: ['Asgarnia'], inputs: {'Primordial Crystal': 1, 'Dragon Boots': 1}, skills: {'Runecraft': 60, 'Magic': 60} }

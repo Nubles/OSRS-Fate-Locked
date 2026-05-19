@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { RESOURCE_MAP, RESOURCE_CATEGORIES, ITEM_CATEGORY } from './resourceData';
+import { ACTIVITY_REGIONS } from './activityRegions';
 import { computeFullBreakdown, flattenRawMaterials } from '../utils/supplyChain';
 
 /**
@@ -38,6 +39,21 @@ describe('RESOURCE_MAP sources are well-formed', () => {
       }
     }
     expect(bad, 'sources with no regions').toEqual([]);
+  });
+});
+
+describe('boss-drop regions agree with ACTIVITY_REGIONS', () => {
+  it('every unlock-gated source sits in the activity\'s region', () => {
+    const mismatches: string[] = [];
+    for (const [item, sources] of Object.entries(RESOURCE_MAP)) {
+      for (const s of sources) {
+        const expected = s.unlockId ? ACTIVITY_REGIONS[s.unlockId] : undefined;
+        if (expected && !s.regions.includes(expected) && !s.regions.includes('Any')) {
+          mismatches.push(`${item} / ${s.name}: [${s.regions}] != "${expected}"`);
+        }
+      }
+    }
+    expect(mismatches, 'RESOURCE_MAP regions out of sync with ACTIVITY_REGIONS').toEqual([]);
   });
 });
 
