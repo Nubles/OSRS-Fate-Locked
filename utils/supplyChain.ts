@@ -30,133 +30,164 @@ const PLURAL_MAPPINGS: Record<string, string> = {
     'charter ships': 'Charter Ships'
 };
 
+// Lookup tables built once from constants (independent of game state) so the
+// hot path doesn't repeatedly scan MISTHALIN_AREAS / MERCHANTS_LIST arrays.
+const MISTHALIN_AREA_SET: Set<string> = new Set(MISTHALIN_AREAS);
+const MERCHANT_BY_NORM_NAME: Map<string, string> = new Map(
+  MERCHANTS_LIST.map((m) => [normalize(m), m]),
+);
+
+/**
+ * Precomputed view of the game state for fast availability checks.
+ * Arrays from GameState are turned into Sets so the inner-loop `.includes`
+ * calls (~10 per source check × 754 items) become O(1) lookups instead of
+ * O(n) array scans.
+ */
+export interface AvailabilityContext {
+  regions: Set<string>;
+  quests: Set<string>;
+  bosses: Set<string>;
+  minigames: Set<string>;
+  farming: Set<string>;
+  merchants: Set<string>;
+  guilds: Set<string>;
+  mobility: Set<string>;
+  arcana: Set<string>;
+  storage: Set<string>;
+  housing: Set<string>;
+  levels: Record<string, number>;
+  skillsUnlocked: Set<string>;
+}
+
+export const buildAvailabilityContext = (gs: GameState): AvailabilityContext => {
+  const u = gs.unlocks;
+  const skillsUnlocked = new Set<string>();
+  for (const [k, v] of Object.entries(u.skills || {})) if ((v as number) > 0) skillsUnlocked.add(k);
+  return {
+    regions: new Set(u.regions),
+    quests: new Set(u.quests),
+    bosses: new Set(u.bosses),
+    minigames: new Set(u.minigames),
+    farming: new Set(u.farming),
+    merchants: new Set(u.merchants),
+    guilds: new Set(u.guilds),
+    mobility: new Set(u.mobility),
+    arcana: new Set(u.arcana),
+    storage: new Set(u.storage),
+    housing: new Set(u.housing),
+    levels: u.levels || {},
+    skillsUnlocked,
+  };
+};
+
+/**
+ * Analyze a single source against the context. Returns {isAvailable, missing}
+ * for the detail UI; the missing array is only populated when needed (short-
+ * circuited by `isSourceAvailable` for the boolean-only hot path).
+ */
+const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collectMissing: boolean): RouteStatus => {
+  const missing: string[] = [];
+  const fail = (reason: string) => {
+    if (collectMissing) missing.push(reason);
+    return collectMissing; // keep going to collect all reasons when asked
+  };
+
+  // 1. Region
+  let hasRegion = false;
+  for (const r of source.regions) {
+    if (r === 'Any' || r === 'Misthalin' || MISTHALIN_AREA_SET.has(r) || ctx.regions.has(r)) {
+      hasRegion = true; break;
+    }
+    const children = REGION_GROUPS[r];
+    if (children) {
+      for (const c of children) if (ctx.regions.has(c)) { hasRegion = true; break; }
+      if (hasRegion) break;
+    }
+  }
+  if (!hasRegion && !fail(`Region: ${source.regions.join(' or ')}`)) return { isAvailable: false, missing };
+
+  // 2. Skills
+  if (source.skills) {
+    for (const [skill, req] of Object.entries(source.skills)) {
+      if (!ctx.skillsUnlocked.has(skill)) {
+        if (!fail(`Skill Locked: ${skill}`)) return { isAvailable: false, missing };
+      } else {
+        const lvl = ctx.levels[skill] || 1;
+        if (lvl < (req as number) && !fail(`${skill} ${lvl}/${req}`)) return { isAvailable: false, missing };
+      }
+    }
+  }
+
+  // 3. Quests
+  if (source.quests) {
+    for (const q of source.quests) {
+      if (!ctx.quests.has(q) && !fail(`Quest: ${q}`)) return { isAvailable: false, missing };
+    }
+  }
+
+  // 4. Specific unlock
+  if (source.unlockId) {
+    const u = source.unlockId;
+    const ok = ctx.bosses.has(u) || ctx.minigames.has(u) || ctx.farming.has(u) || ctx.merchants.has(u)
+      || ctx.guilds.has(u) || ctx.mobility.has(u) || ctx.arcana.has(u) || ctx.storage.has(u) || ctx.housing.has(u);
+    if (!ok && !fail(`Unlock: ${u}`)) return { isAvailable: false, missing };
+  }
+
+  // 5. Implicit merchant
+  if ((source.type === 'SHOP' || source.type === 'MERCHANT') && !source.unlockId) {
+    const lower = source.name.toLowerCase();
+    let cat: string | undefined = PLURAL_MAPPINGS[lower] || MERCHANT_BY_NORM_NAME.get(normalize(source.name));
+    if (cat === 'Charter Ships') {
+      if (!ctx.mobility.has('Charter Ships') && !fail('Mobility: Charter Ships')) return { isAvailable: false, missing };
+    } else if (cat) {
+      if (!ctx.merchants.has(cat) && !fail(`Merchant: ${cat}`)) return { isAvailable: false, missing };
+    }
+  }
+
+  return { isAvailable: missing.length === 0, missing };
+};
+
+/** Short-circuiting boolean check; allocates no missing-reasons array. */
+const isSourceAvailable = (source: ResourceSource, ctx: AvailabilityContext): boolean =>
+  analyzeSource(source, ctx, false).isAvailable;
+
 export const calculateSupplyChain = (itemName: string, gameState: GameState): SupplyChainResult | null => {
   const sources = RESOURCE_MAP[itemName];
   if (!sources) return null;
+  const ctx = buildAvailabilityContext(gameState);
 
-  const analyzedSources = sources.map(source => {
-    const missing: string[] = [];
-    
-    // 1. Check Region Availability
-    const hasRegion = source.regions.some(r => {
-        if (r === 'Any') return true;
-        if (r === 'Misthalin' || MISTHALIN_AREAS.includes(r)) return true;
-        
-        // Direct Unlock (Matches exact chunk name e.g. "Catherby")
-        if (gameState.unlocks.regions.includes(r)) return true;
-
-        // Group Unlock Reverse Check:
-        // If source says 'Asgarnia' (Group), and user has 'Falador' (Child of Asgarnia).
-        // We consider the resource available if *any* part of that region group is unlocked,
-        // as resourceData often uses broad region names.
-        if (REGION_GROUPS[r]) {
-             const children = REGION_GROUPS[r];
-             if (children.some(child => gameState.unlocks.regions.includes(child))) {
-                 return true; 
-             }
-        }
-        
-        return false;
-    });
-
-    if (!hasRegion) {
-        missing.push(`Region: ${source.regions.join(' or ')}`);
-    }
-
-    // 2. Check Skills
-    if (source.skills) {
-        Object.entries(source.skills).forEach(([skill, reqLevel]) => {
-            const currentLevel = gameState.unlocks.levels[skill] || 1;
-            const isUnlocked = (gameState.unlocks.skills[skill] || 0) > 0;
-            if (!isUnlocked) {
-                missing.push(`Skill Locked: ${skill}`);
-            } else if (currentLevel < reqLevel) {
-                missing.push(`${skill} ${currentLevel}/${reqLevel}`);
-            }
-        });
-    }
-
-    // 3. Check Quests
-    if (source.quests) {
-        source.quests.forEach(q => {
-            if (!gameState.unlocks.quests.includes(q)) {
-                missing.push(`Quest: ${q}`);
-            }
-        });
-    }
-
-    // 4. Check Specific Unlock (Boss/Minigame/etc)
-    if (source.unlockId) {
-        let isUnlocked = false;
-        if (gameState.unlocks.bosses.includes(source.unlockId)) isUnlocked = true;
-        else if (gameState.unlocks.minigames.includes(source.unlockId)) isUnlocked = true;
-        else if (gameState.unlocks.farming.includes(source.unlockId)) isUnlocked = true;
-        else if (gameState.unlocks.merchants.includes(source.unlockId)) isUnlocked = true;
-        else if (gameState.unlocks.guilds.includes(source.unlockId)) isUnlocked = true;
-        else if (gameState.unlocks.mobility.includes(source.unlockId)) isUnlocked = true;
-        else if (gameState.unlocks.arcana.includes(source.unlockId)) isUnlocked = true;
-        else if (gameState.unlocks.storage.includes(source.unlockId)) isUnlocked = true;
-        else if (gameState.unlocks.housing.includes(source.unlockId)) isUnlocked = true;
-
-        if (!isUnlocked) {
-            missing.push(`Unlock: ${source.unlockId}`);
-        }
-    }
-
-    // 5. Implicit Merchant Check
-    // If it's a shop/merchant and DOESN'T have a specific unlockId, we check if the name matches a Merchant Category.
-    if ((source.type === 'SHOP' || source.type === 'MERCHANT') && !source.unlockId) {
-        let matchedCategory: string | undefined;
-        
-        // Check manual mappings first
-        const lowerName = source.name.toLowerCase();
-        if (PLURAL_MAPPINGS[lowerName]) {
-            matchedCategory = PLURAL_MAPPINGS[lowerName];
-        } 
-        
-        // If not found, fuzzy match against MERCHANTS_LIST
-        if (!matchedCategory) {
-            const normName = normalize(source.name);
-            matchedCategory = MERCHANTS_LIST.find(m => normalize(m) === normName);
-        }
-
-        if (matchedCategory) {
-            // Special Case: Charter Ships are in Mobility, not Merchants
-            if (matchedCategory === 'Charter Ships') {
-                if (!gameState.unlocks.mobility.includes('Charter Ships')) {
-                    missing.push('Mobility: Charter Ships');
-                }
-            } else {
-                // Standard Merchant Check
-                if (!gameState.unlocks.merchants.includes(matchedCategory)) {
-                    missing.push(`Merchant: ${matchedCategory}`);
-                }
-            }
-        }
-    }
-
-    return {
-        source,
-        status: {
-            isAvailable: missing.length === 0,
-            missing
-        }
-    };
-  });
+  const analyzedSources = sources.map((source) => ({
+    source,
+    status: analyzeSource(source, ctx, true),
+  }));
 
   return {
     itemName,
-    sources: analyzedSources.sort((a, b) => (a.status.isAvailable === b.status.isAvailable) ? 0 : a.status.isAvailable ? -1 : 1)
+    sources: analyzedSources.sort((a, b) => (a.status.isAvailable === b.status.isAvailable) ? 0 : a.status.isAvailable ? -1 : 1),
   };
 };
 
 /**
  * Quick check: is an item obtainable through at least one source right now?
- * Lighter than building the full result when only the boolean is needed.
+ * Short-circuits on the first available source and skips missing-reason
+ * allocation entirely.
  */
 export const isItemAvailable = (itemName: string, gameState: GameState): boolean => {
-  const result = calculateSupplyChain(itemName, gameState);
-  return !!result && result.sources.some(s => s.status.isAvailable);
+  const sources = RESOURCE_MAP[itemName];
+  if (!sources) return false;
+  const ctx = buildAvailabilityContext(gameState);
+  return sources.some((s) => isSourceAvailable(s, ctx));
+};
+
+/**
+ * Batch-friendly variant: caller builds the context once and reuses it across
+ * many item checks (e.g. the Resource Engine's availability map over all 750+
+ * items). Avoids rebuilding the Sets per item.
+ */
+export const isItemAvailableWithCtx = (itemName: string, ctx: AvailabilityContext): boolean => {
+  const sources = RESOURCE_MAP[itemName];
+  if (!sources) return false;
+  return sources.some((s) => isSourceAvailable(s, ctx));
 };
 
 // --- Recursive Material Breakdown -------------------------------------------

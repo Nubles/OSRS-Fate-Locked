@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { RESOURCE_MAP, RESOURCE_CATEGORIES, ITEM_CATEGORY } from '../data/resourceData';
-import { calculateSupplyChain, isItemAvailable, computeFullBreakdown, flattenRawMaterials } from '../utils/supplyChain';
+import { calculateSupplyChain, isItemAvailableWithCtx, buildAvailabilityContext, computeFullBreakdown, flattenRawMaterials } from '../utils/supplyChain';
 import { wikiService } from '../services/WikiService';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { X, Search, CheckCircle2, Lock, Box, ShoppingBag, Sword, Sprout, MapPin, Database, ExternalLink, RefreshCw, ArrowLeft, ArrowRight, Hammer, HelpCircle, Layers, Coins, Calculator, ListFilter, Star, ChevronDown, ChevronRight, Hand, ScrollText, Percent } from 'lucide-react';
@@ -99,10 +99,14 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
   };
 
   // Availability of every item, recomputed only when game state changes.
+  // Building the AvailabilityContext once (Sets from the gameState's arrays)
+  // makes each per-item check O(1) lookups instead of repeatedly scanning
+  // arrays — far cheaper across 750+ items.
   const availabilityMap = useMemo(() => {
+    const ctx = buildAvailabilityContext(gameState);
     const map: Record<string, boolean> = {};
     for (const key of Object.keys(RESOURCE_MAP)) {
-      map[key] = isItemAvailable(key, gameState);
+      map[key] = isItemAvailableWithCtx(key, ctx);
     }
     return map;
   }, [gameState]);
