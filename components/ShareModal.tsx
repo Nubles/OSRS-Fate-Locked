@@ -209,7 +209,12 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
       // Specifics
       if (unlocks.bosses.includes('Inferno')) feats.push({ label: 'Inferno Unlocked', icon: Zap, color: 'text-orange-500' });
       if (unlocks.regions.includes('Prifddinas')) feats.push({ label: 'Prifddinas Access', icon: Map, color: 'text-teal-400' });
-      if (unlocks.regions.includes('Wilderness')) feats.push({ label: 'Brave Wanderer', icon: Skull, color: 'text-gray-400' });
+      // 'Wilderness' is a REGION_GROUPS continent key, not an unlockable area —
+      // unlocks.regions only ever contains children (Ferox Enclave, Lava Maze,
+      // etc.). Check any Wilderness area is unlocked instead.
+      if ((REGION_GROUPS['Wilderness'] || []).some(a => unlocks.regions.includes(a))) {
+          feats.push({ label: 'Brave Wanderer', icon: Skull, color: 'text-gray-400' });
+      }
 
       return feats.slice(0, 4);
   }, [unlocks]);
