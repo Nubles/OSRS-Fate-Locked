@@ -30,6 +30,8 @@ import { PanelErrorBoundary } from './PanelErrorBoundary';
 import { ModalFallback } from './LoadingFallback';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useUnlockReveal } from '../hooks/useUnlockReveal';
+import { UnlockReveal } from './UnlockReveal';
 import { getGameMode } from '../config/gameModes';
 import { getActivityRegion } from '../data/activityRegions';
 
@@ -221,6 +223,8 @@ export const Dashboard: React.FC = () => {
   const [pendingSpecial, setPendingSpecial] = useState<{table: TableType, item: string, image?: string} | null>(null);
   const [confirmOmni, setConfirmOmni] = useState<{table: TableType, item: string} | null>(null);
   const [selectedSkillForDetails, setSelectedSkillForDetails] = useState<{name: string, tier: number} | null>(null);
+
+  const [unlockReveal, dismissReveal] = useUnlockReveal(unlocks);
 
   useEscapeKey(() => setShowRunCard(false), showRunCard);
   useEscapeKey(() => setSelectedSkillForDetails(null), selectedSkillForDetails !== null);
@@ -873,6 +877,19 @@ export const Dashboard: React.FC = () => {
       <Suspense fallback={<ModalFallback label="Building run card…" />}>
         <RunCardModal onClose={() => setShowRunCard(false)} />
       </Suspense>
+    )}
+
+    {/* Unlock reveal — slides in from the right when a quest or region
+        unlocks and shows what new content just became available. */}
+    {unlockReveal && (
+      <UnlockReveal
+        data={unlockReveal}
+        onDismiss={dismissReveal}
+        onViewJournal={(tab) => {
+          setActiveTab('JOURNAL');
+          setJournalSubTab(tab);
+        }}
+      />
     )}
     </>
   );
