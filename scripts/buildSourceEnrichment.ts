@@ -164,10 +164,40 @@ const rarityRank = (r: string): number => {
 // can gate enriched drops on whether the player has that unlock.
 const UNLOCK_BY_NAME = new Map<string, string>();
 for (const u of [...BOSSES_LIST, ...MINIGAMES_LIST]) UNLOCK_BY_NAME.set(u.toLowerCase(), u);
+// Activity-rewards drop sources whose bare names don't match a boss/minigame
+// list entry. Without these the lock analysis treated their drops as
+// unconditionally available (e.g. Twisted Bow's "Ancient Chest" source had
+// no unlockId, so the engine showed it unlockable from a fresh state).
 const UNLOCK_ALIAS: Record<string, string> = {
   barrows: 'Barrows Brothers',
   "barrows chest": 'Barrows Brothers',
   'dagannoth kings': 'Dagannoth Kings',
+  // Chambers of Xeric
+  'ancient chest': 'Chambers of Xeric',
+  'great olm': 'Chambers of Xeric',
+  // Tombs of Amascut
+  'monumental chest': 'Tombs of Amascut',
+  // Pest Control
+  'extra supply crate': 'Pest Control',
+  // Wintertodt
+  'reward cart': 'Wintertodt',
+  // Hallowed Sepulchre — the "Coffin (...)" naming is caught by the paren
+  // rule below, but the standalone "Grand Hallowed Coffin" / "Casket" need
+  // an explicit alias.
+  'grand hallowed coffin': 'Hallowed Sepulchre',
+  // Theatre of Blood — final-boss / chamber-chest names that aren't in
+  // BOSSES_LIST/MINIGAMES_LIST as such.
+  'verzik vitur': 'Theatre of Blood',
+  'pestilent bloat': 'Theatre of Blood',
+  'sotetseg': 'Theatre of Blood',
+  'xarpus': 'Theatre of Blood',
+  'nylocas vasilias': 'Theatre of Blood',
+  'maiden of sugadinti': 'Theatre of Blood',
+  // ToA per-room bosses (Wardens (...) is paren-rule, but bare names need this)
+  'akkha': 'Tombs of Amascut',
+  'ba-ba': 'Tombs of Amascut',
+  'kephri': 'Tombs of Amascut',
+  'zebak': 'Tombs of Amascut',
 };
 const resolveUnlock = (name: string): string | undefined => {
   const l = name.toLowerCase();
