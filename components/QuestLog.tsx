@@ -3,12 +3,13 @@ import React, { useState, useMemo } from 'react';
 import { useGame } from '../context/GameContext';
 import { QUEST_DATA, QuestData } from '../data/questData';
 import { MISTHALIN_AREAS, WIKI_OVERRIDES } from '../constants';
-import { CheckCircle2, Lock, Map, BookOpen, Sparkles, Scroll, Bookmark, Layers, List, ExternalLink, ArrowUpRight } from 'lucide-react';
+import { CheckCircle2, Lock, Map, BookOpen, Sparkles, Scroll, Bookmark, Layers, List, ExternalLink, ArrowUpRight, TrendingUp } from 'lucide-react';
 import { DROP_RATES } from '../config/rules';
 import { DropSource } from '../types';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { JournalNextUpStrip, NextUpItem } from './JournalNextUpStrip';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { SkillTrainingPopover, SkillPopoverState } from './SkillTrainingPopover';
 
 interface QuestLogProps {
   searchTerm?: string;
@@ -45,9 +46,11 @@ interface QuestCardProps {
     highlight?: boolean;
     /** Called when the player clicks a missing prereq quest chip — parent scrolls to it. */
     onPrereqClick?: (questId: string) => void;
+    /** Called when the player clicks an unmet skill chip — parent shows the training popover. */
+    onSkillClick?: (skill: string, required: number, current: number, rect: DOMRect) => void;
 }
 
-const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, currentQP, onToggle, highlight, onPrereqClick }) => {
+const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, currentQP, onToggle, highlight, onPrereqClick, onSkillClick }) => {
     const isCompleted = quest.status === 'COMPLETED';
     const isAvailable = quest.status === 'AVAILABLE';
     const diffStyle = getDifficultyColor(quest.difficulty);
@@ -128,25 +131,42 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, currentQP, onTogg
                           const reqLevel = lvl as number;
                           let met = false;
                           let isLocked = false;
+                          let currentLevel = 1;
 
                           if (skill === 'Quest Points') {
                               met = currentQP >= reqLevel;
+                              currentLevel = currentQP;
                           } else {
-                              const currentLevel = unlocks.levels[skill] || 1;
+                              currentLevel = unlocks.levels[skill] || 1;
                               const skillUnlocked = (unlocks.skills[skill] || 0) > 0;
                               isLocked = !skillUnlocked;
                               met = skillUnlocked && currentLevel >= reqLevel;
                           }
 
-                          const cls = (isCompleted || met)
-                              ? 'bg-black/30 text-gray-500 border-white/5'
-                              : 'bg-red-900/10 text-red-400 border-red-500/20';
+                          if (isCompleted || met) {
+                              return (
+                                  <span key={skill} className="text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1 border bg-black/30 text-gray-500 border-white/5">
+                                      {skill === 'Quest Points' ? <Sparkles size={8} /> : <BookOpen size={8} />}
+                                      {skill === 'Quest Points' ? 'QP' : skill} {reqLevel}
+                                  </span>
+                              );
+                          }
+                          // Unmet skill → clickable button that opens the training popover
                           return (
-                              <span key={skill} className={`text-[10px] px-1.5 rounded flex items-center gap-1 border ${cls}`}>
+                              <button
+                                  key={skill}
+                                  onClick={(e) => {
+                                      e.stopPropagation();
+                                      onSkillClick?.(skill, reqLevel, currentLevel, e.currentTarget.getBoundingClientRect());
+                                  }}
+                                  className="text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1 border bg-red-900/10 text-red-400 border-red-500/20 hover:bg-red-900/20 hover:border-red-400/40 transition-colors cursor-pointer"
+                                  title={`Training guide: ${skill}`}
+                              >
                                   {skill === 'Quest Points' ? <Sparkles size={8} /> : <BookOpen size={8} />}
                                   {skill === 'Quest Points' ? 'QP' : skill} {reqLevel}
-                                  {isLocked && !isCompleted && <Lock size={8} className="ml-0.5" />}
-                              </span>
+                                  {isLocked && <Lock size={8} className="ml-0.5" />}
+                                  <TrendingUp size={7} className="ml-0.5 opacity-60" />
+                              </button>
                           );
                       })}
                       {/* Prereq quest chips. Completed prereqs are dim-gray; missing
@@ -229,6 +249,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
   const [localSearch, setLocalSearch] = useState('');
   const [regionFilter, setRegionFilter] = useLocalStorage<string>('jrnl:quest:region', 'ALL');
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
+  const [skillPopover, setSkillPopover] = useState<SkillPopoverState | null>(null);
 
   // focusCard is called from:
   //   • the "Next up" strip (same-tab, no filter clearing needed)
@@ -434,6 +455,9 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
                                     onToggle={handleQuestToggle}
                                     highlight={highlightedId === quest.id}
                                     onPrereqClick={focusCard}
+                                    onSkillClick={(skill, req, cur, rect) =>
+                                        setSkillPopover({ skill, requiredLevel: req, currentLevel: cur, anchorRect: rect })
+                                    }
                                 />
                             ))}
                         </div>
@@ -463,6 +487,9 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
                                     onToggle={handleQuestToggle}
                                     highlight={highlightedId === quest.id}
                                     onPrereqClick={focusCard}
+                                    onSkillClick={(skill, req, cur, rect) =>
+                                        setSkillPopover({ skill, requiredLevel: req, currentLevel: cur, anchorRect: rect })
+                                    }
                                 />
                             ))}
                         </div>
@@ -484,6 +511,9 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
                                     onToggle={handleQuestToggle}
                                     highlight={highlightedId === quest.id}
                                     onPrereqClick={focusCard}
+                                    onSkillClick={(skill, req, cur, rect) =>
+                                        setSkillPopover({ skill, requiredLevel: req, currentLevel: cur, anchorRect: rect })
+                                    }
                                 />
                             ))}
                         </div>
@@ -499,6 +529,13 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
         )}
 
       </div>
+
+      {skillPopover && (
+        <SkillTrainingPopover
+          {...skillPopover}
+          onClose={() => setSkillPopover(null)}
+        />
+      )}
     </div>
   );
 };

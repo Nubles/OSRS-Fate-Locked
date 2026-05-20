@@ -3,12 +3,13 @@ import React, { useMemo, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS, DiaryTask } from '../data/diaryTasks';
-import { Map, CheckCircle2, Lock, Sparkles, BookOpen, ChevronDown, CheckSquare, Square, ExternalLink, ArrowUpRight } from 'lucide-react';
+import { Map, CheckCircle2, Lock, Sparkles, BookOpen, ChevronDown, CheckSquare, Square, ExternalLink, ArrowUpRight, TrendingUp } from 'lucide-react';
 import { DROP_RATES } from '../config/rules';
 import { MISTHALIN_AREAS } from '../constants';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { JournalNextUpStrip, NextUpItem } from './JournalNextUpStrip';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { SkillTrainingPopover, SkillPopoverState } from './SkillTrainingPopover';
 
 interface DiaryLogProps {
   searchTerm?: string;
@@ -23,6 +24,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
   const [filterTier, setFilterTier] = useLocalStorage<string>('jrnl:diary:tier', 'ALL');
   const [localSearch, setLocalSearch] = useState('');
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
+  const [skillPopover, setSkillPopover] = useState<SkillPopoverState | null>(null);
   const searchTerm = externalSearch || localSearch;
 
   const focusCard = (id: string) => {
@@ -394,14 +396,31 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                               {task.skills && Object.entries(task.skills).map(([skill, level]) => {
                                                   const current = unlocks.levels[skill] || 1;
                                                   const unlocked = (unlocks.skills[skill] || 0) > 0;
-                                                  const met = unlocked && current >= level;
-                                                  const cls = met
-                                                      ? 'border-white/5 text-gray-500 bg-black/30'
-                                                      : 'border-red-500/30 text-red-400 bg-red-900/10';
+                                                  const met = unlocked && current >= (level as number);
+                                                  if (met) {
+                                                      return (
+                                                          <span key={skill} className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-white/5 text-gray-500 bg-black/30">
+                                                              <BookOpen size={8} /> {skill} {level as number}
+                                                          </span>
+                                                      );
+                                                  }
                                                   return (
-                                                      <span key={skill} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${cls}`}>
-                                                          <BookOpen size={8} /> {skill} {level}
-                                                      </span>
+                                                      <button
+                                                          key={skill}
+                                                          onClick={(e) => {
+                                                              e.stopPropagation();
+                                                              setSkillPopover({
+                                                                  skill,
+                                                                  requiredLevel: level as number,
+                                                                  currentLevel: current,
+                                                                  anchorRect: e.currentTarget.getBoundingClientRect(),
+                                                              });
+                                                          }}
+                                                          className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-red-500/30 text-red-400 bg-red-900/10 hover:bg-red-900/20 hover:border-red-400/40 transition-colors cursor-pointer"
+                                                          title={`Training guide: ${skill}`}
+                                                      >
+                                                          <BookOpen size={8} /> {skill} {level as number} <TrendingUp size={7} className="opacity-60" />
+                                                      </button>
                                                   );
                                               })}
                                               {task.quests && task.quests.map(q => {
@@ -439,6 +458,13 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
           );
         })}
       </div>
+
+      {skillPopover && (
+        <SkillTrainingPopover
+          {...skillPopover}
+          onClose={() => setSkillPopover(null)}
+        />
+      )}
     </div>
   );
 };
