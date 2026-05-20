@@ -181,7 +181,7 @@ export const ALL_CA_TASKS: CATask[] = [
   { id: 'ca_elite_20', tierId: 'Elite', monster: 'Commander Zilyana', description: 'Kill Commander Zilyana 50 times.' },
   { id: 'ca_elite_21', tierId: 'Elite', monster: 'K\'ril Tsutsaroth', description: 'Kill K\'ril Tsutsaroth 50 times.' },
   { id: 'ca_elite_22', tierId: 'Elite', monster: 'Kree\'arra', description: 'Kill Kree\'arra 50 times.' },
-  { id: 'ca_elite_23', tierId: 'Elite', monster: 'Muspah', description: 'Kill Phantom Muspah in under 2:30.' },
+  { id: 'ca_elite_23', tierId: 'Elite', monster: 'Phantom Muspah', description: 'Kill Phantom Muspah in under 2:30.' },
   { id: 'ca_elite_24', tierId: 'Elite', monster: 'General', description: 'Complete 25 Master Clue Scrolls.' },
   { id: 'ca_elite_25', tierId: 'Elite', monster: 'General', description: 'Reach Wave 63 in the Inferno.' },
 

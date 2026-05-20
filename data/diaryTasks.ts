@@ -28,8 +28,8 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'ard_med_2', tierId: 'Ardougne Medium', description: 'Grapple over Yanille\'s south wall.', skills: { 'Agility': 39, 'Strength': 38, 'Ranged': 21 }, regions: ['Yanille'] },
   { id: 'ard_med_3', tierId: 'Ardougne Medium', description: 'Harvest some strawberries from the Ardougne farming patch.', skills: { 'Farming': 31 }, regions: ['East Ardougne'] },
   { id: 'ard_med_4', tierId: 'Ardougne Medium', description: 'Cast the Ardougne Teleport spell.', skills: { 'Magic': 51 }, quests: ['Plague City'], regions: ['East Ardougne'] },
-  { id: 'ard_med_5', tierId: 'Ardougne Medium', description: 'Travel to Castle Wars by Hot Air Balloon.', skills: { 'Firemaking': 50 }, quests: ['Enlightened Journey'], regions: ['Castle Wars'] },
-  { id: 'ard_med_6', tierId: 'Ardougne Medium', description: 'Claim buckets of sand from Bert in Yanille.', quests: ['Hand in the Sand'], regions: ['Yanille'] },
+  { id: 'ard_med_5', tierId: 'Ardougne Medium', description: 'Travel to Castle Wars by Hot Air Balloon.', skills: { 'Firemaking': 50 }, quests: ['Enlightened Journey'], regions: ['Kandarin'] },
+  { id: 'ard_med_6', tierId: 'Ardougne Medium', description: 'Claim buckets of sand from Bert in Yanille.', quests: ['The Hand in the Sand'], regions: ['Yanille'] },
   { id: 'ard_med_7', tierId: 'Ardougne Medium', description: 'Catch any fish on the Fishing Platform.', quests: ['Sea Slug'], regions: ['Witchaven'] },
   { id: 'ard_med_8', tierId: 'Ardougne Medium', description: 'Pickpocket the master farmer north of Ardougne.', skills: { 'Thieving': 38 }, regions: ['East Ardougne'] },
   { id: 'ard_med_9', tierId: 'Ardougne Medium', description: 'Collect some Nightshade from the Skavid Caves.', quests: ['Watchtower'], regions: ['Yanille'] },
@@ -43,7 +43,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'ard_hard_4', tierId: 'Ardougne Hard', description: 'Have a zookeeper put you in Ardougne Zoo\'s monkey cage.', quests: ['Monkey Madness I'], regions: ['East Ardougne'] },
   { id: 'ard_hard_5', tierId: 'Ardougne Hard', description: 'Teleport to the Watchtower.', skills: { 'Magic': 58 }, quests: ['Watchtower'], regions: ['Yanille'] },
   { id: 'ard_hard_6', tierId: 'Ardougne Hard', description: 'Catch a Red Salamander.', skills: { 'Hunter': 59 }, regions: ['West Ardougne'] },
-  { id: 'ard_hard_7', tierId: 'Ardougne Hard', description: 'Check the health of a Palm tree near tree gnome village.', skills: { 'Farming': 68 }, regions: ['Tree Gnome Village'] },
+  { id: 'ard_hard_7', tierId: 'Ardougne Hard', description: 'Check the health of a Palm tree near tree gnome village.', skills: { 'Farming': 68 }, regions: ['Kandarin'] },
   { id: 'ard_hard_8', tierId: 'Ardougne Hard', description: 'Pick some Poison Ivy berries from the patch south of Ardougne.', skills: { 'Farming': 70 }, regions: ['East Ardougne'] },
   { id: 'ard_hard_9', tierId: 'Ardougne Hard', description: 'Smith a Mithril platebody near Ardougne.', skills: { 'Smithing': 68 }, regions: ['West Ardougne'] },
   { id: 'ard_hard_10', tierId: 'Ardougne Hard', description: 'Enter your POH from Yanille.', skills: { 'Construction': 50 }, regions: ['Yanille'] },
@@ -57,7 +57,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'ard_elite_5', tierId: 'Ardougne Elite', description: 'Imbue a Salve amulet at Nightmare Zone.', quests: ['Haunted Mine'], regions: ['Yanille'] },
   { id: 'ard_elite_6', tierId: 'Ardougne Elite', description: 'Pick some Torstol from the patch north of Ardougne.', skills: { 'Farming': 85 }, regions: ['East Ardougne'] },
   { id: 'ard_elite_7', tierId: 'Ardougne Elite', description: 'Complete a lap of Ardougne\'s rooftop agility course.', skills: { 'Agility': 90 }, regions: ['East Ardougne'] },
-  { id: 'ard_elite_8', tierId: 'Ardougne Elite', description: 'Cast Ice Barrage on another player within Castle Wars.', skills: { 'Magic': 94 }, quests: ['Desert Treasure I'], regions: ['Castle Wars'] },
+  { id: 'ard_elite_8', tierId: 'Ardougne Elite', description: 'Cast Ice Barrage on another player within Castle Wars.', skills: { 'Magic': 94 }, quests: ['Desert Treasure I'], regions: ['Kandarin'] },
 
   // ============================================================================
   // DESERT
@@ -168,7 +168,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'frem_easy_6', tierId: 'Fremennik Easy', description: 'Collect 5 Snape grass on Waterbirth Island.', regions: ['Waterbirth Island'] },
   { id: 'frem_easy_7', tierId: 'Fremennik Easy', description: 'Steal from the Keldagrim crafting or baker\'s stall.', skills: { 'Thieving': 5 }, quests: ['The Giant Dwarf'], regions: ['Keldagrim'] },
   { id: 'frem_easy_8', tierId: 'Fremennik Easy', description: 'Fill a bucket with water at the Rellekka well.', regions: ['Rellekka'] },
-  { id: 'frem_easy_9', tierId: 'Fremennik Easy', description: 'Enter the Troll Stronghold.', quests: ['Troll Stronghold'], regions: ['Trollheim'] },
+  { id: 'frem_easy_9', tierId: 'Fremennik Easy', description: 'Enter the Troll Stronghold.', quests: ['Troll Stronghold'], regions: ['Burthorpe'] },
   { id: 'frem_easy_10', tierId: 'Fremennik Easy', description: 'Chop and burn some oak logs in the Fremennik Province.', skills: { 'Woodcutting': 15, 'Firemaking': 15 }, regions: ['Rellekka'] },
   // Medium
   { id: 'frem_med_1', tierId: 'Fremennik Medium', description: 'Slay a Brine rat.', skills: { 'Slayer': 47 }, quests: ['Olaf\'s Quest'], regions: ['Rellekka'] },
@@ -181,7 +181,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'frem_med_8', tierId: 'Fremennik Medium', description: 'Visit the Lighthouse from Waterbirth Island.', quests: ['Horror from the Deep'], regions: ['Lighthouse'] },
   { id: 'frem_med_9', tierId: 'Fremennik Medium', description: 'Mine some gold at the Arzinian mine.', skills: { 'Mining': 40 }, quests: ['Between a Rock...'], regions: ['Keldagrim'] },
   // Hard
-  { id: 'frem_hard_1', tierId: 'Fremennik Hard', description: 'Teleport to Trollheim.', skills: { 'Magic': 61 }, quests: ['Eadgar\'s Ruse'], regions: ['Trollheim'] },
+  { id: 'frem_hard_1', tierId: 'Fremennik Hard', description: 'Teleport to Trollheim.', skills: { 'Magic': 61 }, quests: ['Eadgar\'s Ruse'], regions: ['Burthorpe'] },
   { id: 'frem_hard_2', tierId: 'Fremennik Hard', description: 'Catch a Sabre-toothed Kyatt.', skills: { 'Hunter': 55 }, regions: ['Rellekka'] },
   { id: 'frem_hard_3', tierId: 'Fremennik Hard', description: 'Mix a super defence potion in the Fremennik Province.', skills: { 'Herblore': 66 }, regions: ['Rellekka'] },
   { id: 'frem_hard_4', tierId: 'Fremennik Hard', description: 'Steal from the Keldagrim Gem Stall.', skills: { 'Thieving': 75 }, quests: ['The Giant Dwarf'], regions: ['Keldagrim'] },
@@ -195,8 +195,8 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'frem_elite_2', tierId: 'Fremennik Elite', description: 'Craft 56 astral runes simultaneously.', skills: { 'Runecraft': 82 }, quests: ['Lunar Diplomacy'], regions: ['Lunar Isle'] },
   { id: 'frem_elite_3', tierId: 'Fremennik Elite', description: 'Create a dragonstone amulet in the Neitiznot furnace.', skills: { 'Crafting': 80 }, quests: ['The Fremennik Isles'], regions: ['Neitiznot'] },
   { id: 'frem_elite_4', tierId: 'Fremennik Elite', description: 'Complete a lap of the Rellekka agility course.', skills: { 'Agility': 80 }, regions: ['Rellekka'] },
-  { id: 'frem_elite_5', tierId: 'Fremennik Elite', description: 'Kill the generals of Armadyl, Bandos, Saradomin and Zamorak in the God Wars Dungeon.', skills: { 'Agility': 70, 'Strength': 70, 'Ranged': 70 }, quests: ['Troll Stronghold'], regions: ['Trollheim'] },
-  { id: 'frem_elite_6', tierId: 'Fremennik Elite', description: 'Slay a Spiritual mage within the Godwars Dungeon.', skills: { 'Slayer': 83 }, quests: ['Troll Stronghold'], regions: ['Trollheim'] },
+  { id: 'frem_elite_5', tierId: 'Fremennik Elite', description: 'Kill the generals of Armadyl, Bandos, Saradomin and Zamorak in the God Wars Dungeon.', skills: { 'Agility': 70, 'Strength': 70, 'Ranged': 70 }, quests: ['Troll Stronghold'], regions: ['Burthorpe'] },
+  { id: 'frem_elite_6', tierId: 'Fremennik Elite', description: 'Slay a Spiritual mage within the Godwars Dungeon.', skills: { 'Slayer': 83 }, quests: ['Troll Stronghold'], regions: ['Burthorpe'] },
 
   // ============================================================================
   // KANDARIN
@@ -292,7 +292,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'kar_hard_6', tierId: 'Karamja Hard', description: 'Kill a deathwing in the dungeon under the Kharazi Jungle.', quests: ['Legends\' Quest'], regions: ['Kharazi Jungle'] },
   { id: 'kar_hard_7', tierId: 'Karamja Hard', description: 'Use the crossbow shortcut south of the volcano.', skills: { 'Agility': 53, 'Ranged': 42, 'Strength': 21 }, regions: ['Musa Point'] },
   { id: 'kar_hard_8', tierId: 'Karamja Hard', description: 'Collect 5 palm leaves.', quests: ['Legends\' Quest'], regions: ['Kharazi Jungle'] },
-  { id: 'kar_hard_9', tierId: 'Karamja Hard', description: 'Be assigned a Slayer task by the Slayer Master in Shilo Village.', skills: { 'Slayer': 50, 'Combat': 100 }, quests: ['Shilo Village'], regions: ['Shilo Village'] },
+  { id: 'kar_hard_9', tierId: 'Karamja Hard', description: 'Be assigned a Slayer task by the Slayer Master in Shilo Village.', skills: { 'Slayer': 50 }, quests: ['Shilo Village'], regions: ['Shilo Village'] },
   { id: 'kar_hard_10', tierId: 'Karamja Hard', description: 'Kill a metal dragon in Brimhaven Dungeon.', skills: { 'Woodcutting': 10 }, regions: ['Brimhaven'] },
   // Elite
   { id: 'kar_elite_1', tierId: 'Karamja Elite', description: 'Craft 56 nature runes simultaneously from Essence without the use of Extracts.', skills: { 'Runecraft': 91 }, regions: ['Tai Bwo Wannai'] },
@@ -378,7 +378,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'lum_med_7', tierId: 'Lumbridge Medium', description: 'Craft a coif in the Lumbridge cow pen.', skills: { 'Crafting': 38 }, regions: ['Lumbridge'] },
   { id: 'lum_med_8', tierId: 'Lumbridge Medium', description: 'Chop some willow logs in Draynor Village.', skills: { 'Woodcutting': 30 }, regions: ['Draynor Village'] },
   { id: 'lum_med_9', tierId: 'Lumbridge Medium', description: 'Pickpocket Martin the Master Gardener.', skills: { 'Thieving': 38 }, regions: ['Draynor Village'] },
-  { id: 'lum_med_10', tierId: 'Lumbridge Medium', description: 'Get a slayer task from Chaeldar.', skills: { 'Combat': 70 }, quests: ['Lost City'], regions: ['Zanaris'] },
+  { id: 'lum_med_10', tierId: 'Lumbridge Medium', description: 'Get a slayer task from Chaeldar.', quests: ['Lost City'], regions: ['Zanaris'] },
   { id: 'lum_med_11', tierId: 'Lumbridge Medium', description: 'Catch an Essence or Eclectic impling in Puro-Puro.', skills: { 'Hunter': 42 }, quests: ['Lost City'], regions: ['Zanaris'] },
   { id: 'lum_med_12', tierId: 'Lumbridge Medium', description: 'Craft some Lava runes at the fire altar in Al Kharid.', skills: { 'Runecraft': 23 }, regions: ['Al Kharid'] },
   // Hard
@@ -387,19 +387,19 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'lum_hard_3', tierId: 'Lumbridge Hard', description: 'Craft 56 Cosmic runes simultaneously.', skills: { 'Runecraft': 59 }, quests: ['Lost City'], regions: ['Zanaris'] },
   { id: 'lum_hard_4', tierId: 'Lumbridge Hard', description: 'Travel from Lumbridge to Edgeville on a Waka Canoe.', skills: { 'Woodcutting': 57 }, regions: ['Lumbridge'] },
   { id: 'lum_hard_5', tierId: 'Lumbridge Hard', description: 'Collect at least 100 Tears of Guthix in one visit.', quests: ['Tears of Guthix'], regions: ['Lumbridge'] },
-  { id: 'lum_hard_6', tierId: 'Lumbridge Hard', description: 'Take the train from Dorgesh-Kaan to Keldagrim.', quests: ['Another Slice of H.A.M.'], regions: ['Dorgesh-Kaan'] },
-  { id: 'lum_hard_7', tierId: 'Lumbridge Hard', description: 'Purchase some Barrows gloves from the Lumbridge bank chest.', quests: ['Recipe for Disaster'], regions: ['Lumbridge'] },
+  { id: 'lum_hard_6', tierId: 'Lumbridge Hard', description: 'Take the train from Dorgesh-Kaan to Keldagrim.', quests: ['Another Slice of H.A.M.'], regions: ['Lumbridge'] },
+  { id: 'lum_hard_7', tierId: 'Lumbridge Hard', description: 'Purchase some Barrows gloves from the Lumbridge bank chest.', regions: ['Lumbridge'] },
   { id: 'lum_hard_8', tierId: 'Lumbridge Hard', description: 'Pick some Belladonna from the farming patch at Draynor Manor.', skills: { 'Farming': 63 }, regions: ['Draynor Village'] },
   { id: 'lum_hard_9', tierId: 'Lumbridge Hard', description: 'Light your mining helmet in the Lumbridge castle basement.', skills: { 'Firemaking': 65 }, regions: ['Lumbridge'] },
   { id: 'lum_hard_10', tierId: 'Lumbridge Hard', description: 'Recharge your prayer at Emir\'s Arena with Smite activated.', skills: { 'Prayer': 52 }, regions: ['Al Kharid'] },
   { id: 'lum_hard_11', tierId: 'Lumbridge Hard', description: 'Craft, string and enchant an Amulet of Power in Lumbridge.', skills: { 'Crafting': 70, 'Magic': 57 }, regions: ['Lumbridge'] },
   // Elite
-  { id: 'lum_elite_1', tierId: 'Lumbridge Elite', description: 'Steal from a Dorgesh-Kaan rich chest.', skills: { 'Thieving': 78 }, quests: ['Death to the Dorgeshuun'], regions: ['Dorgesh-Kaan'] },
-  { id: 'lum_elite_2', tierId: 'Lumbridge Elite', description: 'Grapple across a pylon on the Dorgesh-Kaan Agility Course.', skills: { 'Agility': 70, 'Ranged': 70, 'Strength': 70 }, quests: ['Death to the Dorgeshuun'], regions: ['Dorgesh-Kaan'] },
+  { id: 'lum_elite_1', tierId: 'Lumbridge Elite', description: 'Steal from a Dorgesh-Kaan rich chest.', skills: { 'Thieving': 78 }, quests: ['Death to the Dorgeshuun'], regions: ['Lumbridge'] },
+  { id: 'lum_elite_2', tierId: 'Lumbridge Elite', description: 'Grapple across a pylon on the Dorgesh-Kaan Agility Course.', skills: { 'Agility': 70, 'Ranged': 70, 'Strength': 70 }, quests: ['Death to the Dorgeshuun'], regions: ['Lumbridge'] },
   { id: 'lum_elite_3', tierId: 'Lumbridge Elite', description: 'Chop some magic logs at the Mage Training Arena.', skills: { 'Woodcutting': 75 }, regions: ['Mage Training Arena'] },
   { id: 'lum_elite_4', tierId: 'Lumbridge Elite', description: 'Smith an Adamant platebody down Draynor sewer.', skills: { 'Smithing': 88 }, regions: ['Draynor Village'] },
   { id: 'lum_elite_5', tierId: 'Lumbridge Elite', description: 'Craft 140 or more Water runes simultaneously.', skills: { 'Runecraft': 76 }, regions: ['Lumbridge'] },
-  { id: 'lum_elite_6', tierId: 'Lumbridge Elite', description: 'Perform the Quest cape emote in the Wise Old Man\'s house.', quests: ['Quest Point Cape'], regions: ['Draynor Village'] },
+  { id: 'lum_elite_6', tierId: 'Lumbridge Elite', description: 'Perform the Quest cape emote in the Wise Old Man\'s house.', regions: ['Draynor Village'] },
 
   // ============================================================================
   // MORYTANIA
@@ -407,7 +407,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   // Easy
   { id: 'mor_easy_1', tierId: 'Morytania Easy', description: 'Craft any Snelm from scratch in Morytania.', skills: { 'Crafting': 15 }, regions: ['Canifis'] },
   { id: 'mor_easy_2', tierId: 'Morytania Easy', description: 'Cook a thin Snail on the Port Phasmatys range.', skills: { 'Cooking': 12 }, regions: ['Port Phasmatys'] },
-  { id: 'mor_easy_3', tierId: 'Morytania Easy', description: 'Get a slayer task from the Slayer Master in Canifis.', skills: { 'Combat': 20 }, regions: ['Canifis'] },
+  { id: 'mor_easy_3', tierId: 'Morytania Easy', description: 'Get a slayer task from the Slayer Master in Canifis.', regions: ['Canifis'] },
   { id: 'mor_easy_4', tierId: 'Morytania Easy', description: 'Kill a Banshee in the Slayer Tower.', skills: { 'Slayer': 15 }, regions: ['Slayer Tower'] },
   { id: 'mor_easy_5', tierId: 'Morytania Easy', description: 'Have Sbott in Canifis tan something for you.', regions: ['Canifis'] },
   { id: 'mor_easy_6', tierId: 'Morytania Easy', description: 'Enter Mort Myre Swamp.', regions: ['Mort Myre Swamp'] },
@@ -467,14 +467,14 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'var_easy_14', tierId: 'Varrock Easy', description: 'Steal from the Tea stall in Varrock.', skills: { 'Thieving': 5 }, regions: ['Varrock'] },
   // Medium
   { id: 'var_med_1', tierId: 'Varrock Medium', description: 'Have the Apothecary in Varrock make you a strength potion.', regions: ['Varrock'] },
-  { id: 'var_med_2', tierId: 'Varrock Medium', description: 'Enter the Champions\' Guild.', quests: ['Dragon Slayer I'], regions: ['Champions\' Guild'] },
+  { id: 'var_med_2', tierId: 'Varrock Medium', description: 'Enter the Champions\' Guild.', quests: ['Dragon Slayer I'], regions: ['Varrock'] },
   { id: 'var_med_3', tierId: 'Varrock Medium', description: 'Select a colour for your kitten.', quests: ['Gertrude\'s Cat', 'Garden of Tranquillity'], regions: ['Varrock'] },
   { id: 'var_med_4', tierId: 'Varrock Medium', description: 'Use the spirit tree north of Varrock.', quests: ['Tree Gnome Village'], regions: ['Varrock'] },
   { id: 'var_med_5', tierId: 'Varrock Medium', description: 'Perform the 4 emotes from the Stronghold of Security.', regions: ['Barbarian Village'] },
   { id: 'var_med_6', tierId: 'Varrock Medium', description: 'Enter the Tolna dungeon after completing A Soul\'s Bane.', quests: ['A Soul\'s Bane'], regions: ['Varrock'] },
   { id: 'var_med_7', tierId: 'Varrock Medium', description: 'Teleport to the digsite using a Digsite pendant.', skills: { 'Magic': 49 }, quests: ['The Dig Site'], regions: ['Digsite'] },
   { id: 'var_med_8', tierId: 'Varrock Medium', description: 'Cast the teleport to Varrock spell.', skills: { 'Magic': 25 }, regions: ['Varrock'] },
-  { id: 'var_med_9', tierId: 'Varrock Medium', description: 'Get a Slayer task from Vannaka.', skills: { 'Combat': 40 }, regions: ['Edgeville'] },
+  { id: 'var_med_9', tierId: 'Varrock Medium', description: 'Get a Slayer task from Vannaka.', regions: ['Edgeville'] },
   { id: 'var_med_10', tierId: 'Varrock Medium', description: 'Make 20 Mahogany Planks in one go.', regions: ['Varrock'] },
   { id: 'var_med_11', tierId: 'Varrock Medium', description: 'Pick a White tree fruit.', skills: { 'Farming': 25 }, quests: ['Garden of Tranquillity'], regions: ['Varrock'] },
   { id: 'var_med_12', tierId: 'Varrock Medium', description: 'Use the balloon to travel from Varrock.', skills: { 'Farming': 30, 'Firemaking': 40 }, quests: ['Enlightened Journey'], regions: ['Varrock'] },
@@ -493,7 +493,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   // Elite
   { id: 'var_elite_1', tierId: 'Varrock Elite', description: 'Create a super combat potion in Varrock west bank.', skills: { 'Herblore': 90 }, quests: ['Druidic Ritual'], regions: ['Varrock'] },
   { id: 'var_elite_2', tierId: 'Varrock Elite', description: 'Use Lunar magic to make 20 mahogany planks at the Lumberyard.', skills: { 'Magic': 86 }, quests: ['Dream Mentor'], regions: ['Varrock'] },
-  { id: 'var_elite_3', tierId: 'Varrock Elite', description: 'Bake a summer pie in the Cooking Guild.', skills: { 'Cooking': 95 }, regions: ['Cooks\' Guild'] },
+  { id: 'var_elite_3', tierId: 'Varrock Elite', description: 'Bake a summer pie in the Cooking Guild.', skills: { 'Cooking': 95 }, regions: ['Varrock'] },
   { id: 'var_elite_4', tierId: 'Varrock Elite', description: 'Smith and fletch ten rune darts within Varrock.', skills: { 'Smithing': 89, 'Fletching': 81 }, quests: ['The Tourist Trap'], regions: ['Varrock'] },
   { id: 'var_elite_5', tierId: 'Varrock Elite', description: 'Craft 100 or more earth runes simultaneously.', skills: { 'Runecraft': 78 }, regions: ['Varrock'] },
 
@@ -502,7 +502,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   // ============================================================================
   // Easy
   { id: 'west_easy_1', tierId: 'Western Easy', description: 'Catch a Copper Longtail.', skills: { 'Hunter': 9 }, regions: ['Feldip Hills'] },
-  { id: 'west_easy_2', tierId: 'Western Easy', description: 'Complete a novice game of Pest Control.', skills: { 'Combat': 40 }, regions: ['Void Knights\' Outpost'] },
+  { id: 'west_easy_2', tierId: 'Western Easy', description: 'Complete a novice game of Pest Control.', regions: ['Void Knights\' Outpost'] },
   { id: 'west_easy_3', tierId: 'Western Easy', description: 'Mine some Iron Ore near Piscatoris.', skills: { 'Mining': 15 }, regions: ['Piscatoris Fishing Colony'] },
   { id: 'west_easy_4', tierId: 'Western Easy', description: 'Claim a Chompy bird hat from Rantz.', quests: ['Big Chompy Bird Hunting'], regions: ['Feldip Hills'] },
   { id: 'west_easy_5', tierId: 'Western Easy', description: 'Have Brimstail teleport you to the Essence mine.', quests: ['Rune Mysteries'], regions: ['Tree Gnome Stronghold'] },
@@ -527,7 +527,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   // Hard
   { id: 'west_hard_1', tierId: 'Western Hard', description: 'Kill an Elf with a Crystal bow.', skills: { 'Ranged': 70 }, quests: ['Roving Elves'], regions: ['Isafdar'] },
   { id: 'west_hard_2', tierId: 'Western Hard', description: 'Catch and cook a Monkfish in Piscatoris.', skills: { 'Fishing': 62, 'Cooking': 62 }, quests: ['Swan Song'], regions: ['Piscatoris Fishing Colony'] },
-  { id: 'west_hard_3', tierId: 'Western Hard', description: 'Complete a Veteran game of Pest Control.', skills: { 'Combat': 100 }, regions: ['Void Knights\' Outpost'] },
+  { id: 'west_hard_3', tierId: 'Western Hard', description: 'Complete a Veteran game of Pest Control.', regions: ['Void Knights\' Outpost'] },
   { id: 'west_hard_4', tierId: 'Western Hard', description: 'Catch a Dashing Kebbit.', skills: { 'Hunter': 69 }, regions: ['Piscatoris Fishing Colony'] },
   { id: 'west_hard_5', tierId: 'Western Hard', description: 'Complete a lap of the Ape Atoll agility course.', skills: { 'Agility': 48 }, quests: ['Monkey Madness I'], regions: ['Ape Atoll'] },
   { id: 'west_hard_6', tierId: 'Western Hard', description: 'Chop and burn some Mahogany logs on Ape Atoll.', skills: { 'Woodcutting': 50, 'Firemaking': 50 }, quests: ['Monkey Madness I'], regions: ['Ape Atoll'] },
@@ -536,14 +536,14 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'west_hard_9', tierId: 'Western Hard', description: 'Claim a Chompy bird hat from Rantz after registering at least 300 kills.', quests: ['Big Chompy Bird Hunting'], regions: ['Feldip Hills'] },
   { id: 'west_hard_10', tierId: 'Western Hard', description: 'Build an Isafdar painting in your POH Quest hall.', skills: { 'Construction': 65 }, quests: ['Roving Elves'], regions: ['Yanille'] }, // POH
   { id: 'west_hard_11', tierId: 'Western Hard', description: 'Kill Zulrah.', quests: ['Regicide'], regions: ['Zul-Andra'] },
-  { id: 'west_hard_12', tierId: 'Western Hard', description: 'Teleport to Ape Atoll.', skills: { 'Magic': 64 }, quests: ['Recipe for Disaster'], regions: ['Ape Atoll'] },
+  { id: 'west_hard_12', tierId: 'Western Hard', description: 'Teleport to Ape Atoll.', skills: { 'Magic': 64 }, regions: ['Ape Atoll'] },
   { id: 'west_hard_13', tierId: 'Western Hard', description: 'Pickpocket a Gnome.', skills: { 'Thieving': 75 }, regions: ['Tree Gnome Stronghold'] },
   // Elite
   { id: 'west_elite_1', tierId: 'Western Elite', description: 'Fletch a Magic Longbow in Tirannwn.', skills: { 'Fletching': 85 }, quests: ['Regicide'], regions: ['Tirannwn'] },
   { id: 'west_elite_2', tierId: 'Western Elite', description: 'Kill the Thermonuclear Smoke Devil.', skills: { 'Slayer': 93 }, regions: ['Tree Gnome Stronghold'] },
   { id: 'west_elite_3', tierId: 'Western Elite', description: 'Have Prissy Scilla protect your Magic tree.', skills: { 'Farming': 75 }, regions: ['Tree Gnome Stronghold'] },
   { id: 'west_elite_4', tierId: 'Western Elite', description: 'Use the Elven overpass advanced cliffside shortcut.', skills: { 'Agility': 85 }, quests: ['Underground Pass'], regions: ['Isafdar'] },
-  { id: 'west_elite_5', tierId: 'Western Elite', description: 'Equip any complete void set.', skills: { 'Combat': 42, 'Prayer': 22 }, regions: ['Void Knights\' Outpost'] },
+  { id: 'west_elite_5', tierId: 'Western Elite', description: 'Equip any complete void set.', skills: { 'Prayer': 22 }, regions: ['Void Knights\' Outpost'] },
   { id: 'west_elite_6', tierId: 'Western Elite', description: 'Claim a Chompy bird hat from Rantz after registering at least 1,000 kills.', quests: ['Big Chompy Bird Hunting'], regions: ['Feldip Hills'] },
   { id: 'west_elite_7', tierId: 'Western Elite', description: 'Pickpocket an Elf.', skills: { 'Thieving': 85 }, quests: ['Mourning\'s End Part I'], regions: ['Lletya'] },
 
@@ -556,7 +556,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'wild_easy_3', tierId: 'Wilderness Easy', description: 'Kill a Mammoth.', regions: ['Ferox Enclave'] },
   { id: 'wild_easy_4', tierId: 'Wilderness Easy', description: 'Kill an Earth Warrior.', regions: ['Edgeville'] },
   { id: 'wild_easy_5', tierId: 'Wilderness Easy', description: 'Restore points at the Chaos Altar.', regions: ['Chaos Temple'] },
-  { id: 'wild_easy_6', tierId: 'Wilderness Easy', description: 'Enter the Deep Wilderness Dungeon.', regions: ['Deep Wilderness Dungeon'] },
+  { id: 'wild_easy_6', tierId: 'Wilderness Easy', description: 'Enter the Deep Wilderness Dungeon.', regions: ['Lava Maze'] },
   { id: 'wild_easy_7', tierId: 'Wilderness Easy', description: 'Enter the Wilderness Resource Area.', regions: ['Resource Area'] },
   { id: 'wild_easy_8', tierId: 'Wilderness Easy', description: 'Equip a Team Cape.', regions: ['Wilderness'] },
   { id: 'wild_easy_9', tierId: 'Wilderness Easy', description: 'Open a loot chest at the chaos temple (Level 13).', regions: ['Chaos Temple'] },
