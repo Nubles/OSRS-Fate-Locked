@@ -186,6 +186,36 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
       return next;
     });
   };
+  const addFavoritesToPlan = () => {
+    setPlanTargets((prev) => {
+      const next = { ...prev };
+      for (const f of favorites) {
+        if (RESOURCE_MAP[f] && !next[f]) next[f] = 1;
+      }
+      return next;
+    });
+  };
+
+  const [planCopied, setPlanCopied] = useState(false);
+  const copyPlanToClipboard = async () => {
+    const lines: string[] = ['Crafting Plan', '-------------'];
+    for (const [item, qty] of Object.entries(planTargets)) lines.push(`  ${item} × ${qty}`);
+    lines.push('', 'Raw materials needed:');
+    for (const { item, qty } of planRawMaterials) {
+      const have = inventory[item] || 0;
+      const stillNeed = Math.max(0, qty - have);
+      lines.push(stillNeed === 0
+        ? `  [✓] ${item} × ${qty}  (covered)`
+        : `  ${item} × ${qty}${have ? ` (have ${have}, need ${stillNeed} more)` : ''}`);
+    }
+    try {
+      await navigator.clipboard.writeText(lines.join('\n'));
+      setPlanCopied(true);
+      setTimeout(() => setPlanCopied(false), 1500);
+    } catch {
+      /* clipboard unavailable */
+    }
+  };
 
   // Combined raw materials across every planTargets entry. Sorted, summed,
   // identical to the single-item breakdown but spanning the whole plan.
@@ -792,6 +822,17 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
                         </div>
                     )}
 
+                    {/* Empty-plan nudge: when favorites exist but the plan is empty,
+                        offer a one-click shortcut to add them all. */}
+                    {Object.keys(planTargets).length === 0 && favorites.length > 0 && (
+                        <button
+                            onClick={addFavoritesToPlan}
+                            className="mb-3 w-full px-3 py-2 text-xs text-cyan-300 hover:text-cyan-200 bg-cyan-900/10 hover:bg-cyan-900/20 border border-cyan-500/15 hover:border-cyan-400/30 rounded-lg transition-all flex items-center justify-center gap-2"
+                        >
+                            <Layers size={12} /> Add all {favorites.length} favorites to a crafting plan
+                        </button>
+                    )}
+
                     {/* Crafting Plan — multi-target combined raw-material breakdown. */}
                     {Object.keys(planTargets).length > 0 && (
                         <div className="mb-5 rounded-xl border border-cyan-500/20 bg-gradient-to-r from-cyan-900/10 to-transparent p-4">
@@ -810,6 +851,13 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
                                     </span>
                                 </button>
                                 <div className="flex-1 h-px bg-cyan-500/10"></div>
+                                <button
+                                    onClick={copyPlanToClipboard}
+                                    className="text-[10px] text-gray-600 hover:text-cyan-300 font-mono uppercase tracking-wide transition-colors shrink-0"
+                                    title="Copy a text summary of the plan to the clipboard"
+                                >
+                                    {planCopied ? 'copied ✓' : 'copy'}
+                                </button>
                                 <button
                                     onClick={() => setPlanTargets({})}
                                     className="text-[10px] text-gray-600 hover:text-red-400 font-mono uppercase tracking-wide transition-colors shrink-0"
