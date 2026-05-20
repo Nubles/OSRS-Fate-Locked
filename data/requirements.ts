@@ -5,9 +5,10 @@ export interface ContentRequirement {
   category: TableType;
   regions: string[];
   skills: Record<string, number>;
-  quests?: string[]; // Optional specific quest locks
+  quests?: string[];     // Specific quest prerequisites — must match QUEST_DATA entries.
+  diaries?: string[];    // Specific Achievement Diary tier IDs — must match DIARY_DATA entries.
   description?: string;
-  items?: string[]; // Optional specific item requirements
+  items?: string[];      // Optional specific item requirements
 }
 
 export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
@@ -118,7 +119,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.QUESTS,
     regions: ['Kourend & Kebos'],
     skills: { 'Agility': 54, 'Thieving': 52, 'Woodcutting': 52, 'Herblore': 50, 'Mining': 42, 'Crafting': 38, 'Magic': 35 },
-    quests: ['The Depths of Despair', 'Queen of Thieves', 'Tale of the Righteous', 'The Forsaken Tower', 'The Ascent of Arceuus'], // Xeric's questline
+    quests: ['The Depths of Despair', 'The Queen of Thieves', 'Tale of the Righteous', 'The Forsaken Tower', 'The Ascent of Arceuus'], // Xeric's questline
     description: 'Unlocks Arceuus Spellbook and Thralls.'
   },
   'Beneath Cursed Sands': {
@@ -391,7 +392,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES, // Activity
     regions: ['Wilderness'],
     skills: { 'Mining': 1, 'Fishing': 1, 'Woodcutting': 1 },
-    quests: ['Wilderness Diary'], // Elite for free entry, otherwise coins
+    diaries: ['Wilderness Elite'], // Elite for free entry, otherwise coins
     description: 'Dark Crabs, Runite Ore, Magic Logs. Note: Pker Hotspot.'
   },
   'Fountain of Rune': {
@@ -771,7 +772,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES, // Activity Reward
     regions: ['Morytania'],
     skills: { 'Prayer': 70 },
-    quests: ['Morytania Diary'], // Hard
+    diaries: ['Morytania Hard'], // Hard
     description: 'Auto-buries bones for Prayer XP. Morytania Hard Diary.'
   },
   'Ash Sanctifier': {
@@ -779,7 +780,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'],
     skills: { 'Prayer': 4 },
-    quests: ['Kourend Diary'], // Hard
+    diaries: ['Kourend Hard'], // Hard
     description: 'Auto-scatters ashes for Prayer XP. Kourend Hard Diary.'
   },
   'Seedicide': {
@@ -909,7 +910,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MOBILITY,
     regions: ['Kandarin'],
     skills: {},
-    quests: ['Ardougne Diary'], // Medium
+    diaries: ['Ardougne Medium'], // Medium
     description: 'Teleport to Ardougne Farm (Medium Diary).'
   },
   'Explorer\'s Ring (Alchemy)': {
@@ -917,7 +918,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.ARCANA,
     regions: ['Misthalin'],
     skills: {},
-    quests: ['Lumbridge Diary'], // Medium/Hard
+    diaries: ['Lumbridge Medium'], // Medium/Hard
     description: 'Free High Alchemy charges daily.'
   },
   'Morytania Legs (Burgh de Rott)': {
@@ -925,7 +926,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MOBILITY,
     regions: ['Morytania'],
     skills: {},
-    quests: ['Morytania Diary'], // Hard
+    diaries: ['Morytania Hard'], // Hard
     description: 'Teleport to Burgh de Rott (Hard Diary).'
   },
   'Morytania Legs (Bone/Rune)': {
@@ -933,7 +934,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Morytania'],
     skills: {},
-    quests: ['Morytania Diary'], // Hard
+    diaries: ['Morytania Hard'], // Hard
     description: '50% more runes from Barrows.'
   },
   'Seers\' Headband (Bolts)': {
@@ -941,7 +942,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kandarin'],
     skills: { 'Fletching': 1 },
-    quests: ['Kandarin Diary'], // Hard
+    diaries: ['Kandarin Hard'], // Hard
     description: 'Higher chance of saving enchanted bolt specials.'
   },
   'Fremennik Sea Boots (Notes)': {
@@ -949,7 +950,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Fremennik'],
     skills: {},
-    quests: ['Fremennik Diary'], // Elite
+    diaries: ['Fremennik Elite'], // Elite
     description: 'Noted Dagannoth Bones.'
   },
   'Desert Amulet (Nardah)': {
@@ -957,7 +958,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MOBILITY,
     regions: ['Kharidian Desert'],
     skills: {},
-    quests: ['Desert Diary'], // Hard
+    diaries: ['Desert Hard'], // Hard
     description: 'Teleport to Nardah Statue (Elidinis Statuette).'
   },
   'Kourend Blessing (Mount)': {
@@ -965,7 +966,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MOBILITY,
     regions: ['Kourend & Kebos'],
     skills: {},
-    quests: ['Kourend Diary'], // Hard
+    diaries: ['Kourend Hard'], // Hard
     description: 'Teleport to Mount Karuulm (Slayer).'
   },
   'Wilderness Sword (Webs)': {
@@ -973,7 +974,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Wilderness'],
     skills: {},
-    quests: ['Wilderness Diary'], // Easy
+    diaries: ['Wilderness Easy'], // Easy
     description: '100% success slashing webs.'
   },
   'Varrock Armor (Mining)': {
@@ -981,7 +982,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Misthalin', 'Asgarnia'],
     skills: { 'Mining': 1 },
-    quests: ['Varrock Diary'],
+    diaries: ['Varrock Easy'],
     description: 'Chance to mine double ores (up to Amethyst at Elite).'
   },
 
@@ -993,7 +994,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.GUILDS,
     regions: ['Asgarnia'],
     skills: { 'Crafting': 99 }, // Or hard diary? Usually max cape or hard diary
-    quests: ['Falador Diary'], // Hard
+    diaries: ['Falador Hard'], // Hard
     description: 'Closest bank to teleport (Crafting Cape/Diary).'
   },
   'Farming Guild Bank': {
@@ -1115,7 +1116,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS, // Service
     regions: ['Kandarin'], // Yanille
     skills: { 'Crafting': 49 },
-    quests: ['Hand in the Sand'],
+    quests: ['The Hand in the Sand'],
     description: '84 Buckets of Sand daily (Yanille).'
   },
   'Daily Essence (Wizard Cromperty)': {
@@ -1123,7 +1124,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Kandarin'], // Ardougne
     skills: {},
-    quests: ['Ardougne Diary'], // Medium+
+    diaries: ['Ardougne Medium'], // Medium+
     description: 'Free Pure Essence daily.'
   },
   'Daily Dynamite (Thirus)': {
@@ -1131,7 +1132,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Kourend & Kebos'], // Lovakengj
     skills: {},
-    quests: ['Kourend Diary'], // Medium+
+    diaries: ['Kourend Medium'], // Medium+
     description: 'Free Dynamite daily for Blast Mine.'
   },
   'Daily Bowstrings (Kandarin)': {
@@ -1139,7 +1140,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Kandarin'], // Seers
     skills: { 'Fletching': 1 },
-    quests: ['Kandarin Diary'], // Easy+
+    diaries: ['Kandarin Easy'], // Easy+
     description: 'Free Flax to Bowstring conversion.'
   },
 
@@ -1530,7 +1531,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kandarin'], // North of Ardougne
     skills: { 'Hunter': 63 }, // Red Chins
-    quests: ['Western Provinces Diary'], // Hard
+    diaries: ['Western Hard'], // Hard
     description: 'Non-competed Red Chinchompa area.'
   },
   'Red Dragon Isle': {
@@ -1538,7 +1539,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Karamja'], // Brimhaven Dungeon
     skills: {},
-    quests: ['Karamja Diary'], // Hard
+    diaries: ['Karamja Hard'], // Hard
     description: 'Shortcut to Red Dragons in Brimhaven Dungeon.'
   },
   'Mos Le\'Harmless Cave': {
@@ -1546,7 +1547,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Islands & Others'],
     skills: {},
-    quests: ['Morytania Diary'], // Hard? Or just Trouble Brewing reqs
+    diaries: ['Morytania Hard'], // Hard? Or just Trouble Brewing reqs
     description: 'Cave Horrors access.'
   },
   'Champions\' Challenge': {
@@ -1570,7 +1571,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: [], // Global
     skills: { 'Slayer': 1 },
-    quests: ['Rag and Bone Man I/II'],
+    quests: ['Rag and Bone Man I', 'Rag and Bone Man II'],
     description: 'Collecting bones for XP.'
   },
   'Zanaris (Lost City)': {
@@ -1722,7 +1723,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'], // Molch
     skills: { 'Thieving': 64 },
-    quests: ['Xeric\'s Talisman'], // Access to Lizardman Temple
+    // Xeric's Talisman is the teleport item (Mobility unlock), not a quest;
+    // dropping the quest gate. Region check still requires Kourend & Kebos.
     description: 'Source of Medium Clues and Xeric\'s Talisman.'
   },
   'Dorgesh-Kaan Chests': {
@@ -2125,7 +2127,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kandarin'],
     skills: {},
-    quests: ['Hand in the Sand'],
+    quests: ['The Hand in the Sand'],
     description: 'Daily sand collection from Bert.'
   },
   'Soda Ash (Charter Ships)': {
@@ -2156,7 +2158,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Karamja'], // Shilo Underground
     skills: { 'Mining': 40 },
-    quests: ['Karamja Diary'], // Hard
+    diaries: ['Karamja Hard'], // Hard
     description: 'Better gem rocks inside Shilo mine.'
   },
   'Essence Mine (Varrock)': {
@@ -2207,7 +2209,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.FARMING_LAYERS,
     regions: ['Morytania'],
     skills: { 'Farming': 1 }, // Elite Diary usually
-    quests: ['The Great Brain Robbery', 'Morytania Diary'], // Elite
+    quests: ['The Great Brain Robbery'], diaries: ['Morytania Elite'], // Elite
     description: 'Disease-free herb patch (Elite Diary).'
   },
   'Sophanem Dungeon': {
@@ -2633,7 +2635,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.ARCANA,
     regions: ['Fremennik'],
     skills: { 'Magic': 78 },
-    quests: ['Fremennik Diary'], // Hard (Req for spell)
+    diaries: ['Fremennik Hard'], // Hard (Req for spell)
     description: 'Instant leather tanning for Crafting/Cash.'
   },
   'Magic Imbue': {

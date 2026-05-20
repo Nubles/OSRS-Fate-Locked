@@ -50,15 +50,26 @@ export const calculateGoalProgress = (req: ContentRequirement, unlocks: UnlockSt
     }
   });
 
-  // 3. Check Quests (Placeholder: currently we don't track completed quests in state explicitly)
-  // We check if the quest ID is in the unlocks.quests list
+  // 3. Check Quests (matched against unlocks.quests, which stores quest IDs)
   if (req.quests) {
     req.quests.forEach(q => {
       total++;
       if (unlocks.quests.includes(q)) {
           completed++;
       } else {
-          missing.push(`Quest: ${q}`); 
+          missing.push(`Quest: ${q}`);
+      }
+    });
+  }
+
+  // 3b. Check Achievement Diary tiers (matched against unlocks.diaries).
+  if (req.diaries) {
+    req.diaries.forEach(d => {
+      total++;
+      if (unlocks.diaries.includes(d)) {
+          completed++;
+      } else {
+          missing.push(`Diary: ${d}`);
       }
     });
   }
