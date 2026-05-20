@@ -7,21 +7,32 @@ import { DIARY_DATA } from '../data/diaryData';
 import { RESOURCE_MAP } from '../data/resourceData';
 import { TableType } from '../types';
 import { calculateGoalProgress, GoalProgress } from '../utils/goalLogic';
-import { calculateEngineItemProgress } from '../utils/supplyChain';
-import { Pin, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { calculateEngineItemProgress, getNextAchievableItems } from '../utils/supplyChain';
+import { Pin, Trash2, CheckCircle2, AlertCircle, Compass, ArrowRight } from 'lucide-react';
 
 export const GoalTracker: React.FC = () => {
   const gameState = useGame();
   const { pinnedGoals, togglePin, unlocks } = gameState;
 
-  if (pinnedGoals.length === 0) return null;
+  // Top closest-to-unlocking items — surfaced inline so a dashboard glance
+  // shows progress hints without opening the Resource Engine. Memoised; the
+  // gate-cost ranking already lives in supplyChain.ts.
+  const closest = React.useMemo(() => getNextAchievableItems(gameState, 3), [gameState]);
+
+  const openEngineOn = (item: string) => {
+    window.dispatchEvent(new CustomEvent('open-resource-engine', { detail: { item } }));
+  };
+
+  if (pinnedGoals.length === 0 && closest.length === 0) return null;
 
   return (
     <div className="mb-4 space-y-2 animate-in slide-in-from-top-2 duration-300">
-      <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-widest px-1 border-b border-white/5 pb-2">
-        <Pin size={12} /> Active Goals
-      </div>
-      
+      {pinnedGoals.length > 0 && (
+        <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-widest px-1 border-b border-white/5 pb-2">
+          <Pin size={12} /> Active Goals
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
         {pinnedGoals.map(id => {
           let req: ContentRequirement | undefined = STRATEGY_DATABASE[id];
@@ -111,6 +122,35 @@ export const GoalTracker: React.FC = () => {
           );
         })}
       </div>
+
+      {/* Top 3 closest Resource Engine items — surfaces the same list the
+          engine's "Closest to unlocking" panel shows, but inline on the
+          dashboard. Click opens the engine on that item. */}
+      {closest.length > 0 && (
+        <div className={pinnedGoals.length > 0 ? 'pt-3 mt-1 border-t border-white/5' : ''}>
+          <div className={`flex items-center gap-2 px-1 mb-2 ${pinnedGoals.length > 0 ? 'text-[10px] font-bold text-gray-600' : 'text-xs font-bold text-gray-500 border-b border-white/5 pb-2'} uppercase tracking-widest`}>
+            <Compass size={pinnedGoals.length > 0 ? 10 : 12} className="text-amber-400" />
+            Closest Unlocks
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            {closest.map(({ item, missing }) => (
+              <button
+                key={item}
+                onClick={() => openEngineOn(item)}
+                className="flex items-center gap-2 px-2.5 py-1.5 bg-[#1a1a1a] border border-amber-500/15 rounded-lg text-xs hover:bg-amber-900/10 hover:border-amber-500/30 transition-all text-left group"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="text-gray-200 truncate font-medium">{item}</div>
+                  <div className="text-[10px] text-amber-400/70 truncate font-mono" title={missing.join(' · ')}>
+                    {missing.length === 1 ? missing[0] : `${missing[0]} · +${missing.length - 1} more`}
+                  </div>
+                </div>
+                <ArrowRight size={11} className="text-gray-600 group-hover:text-amber-400 transition-colors shrink-0" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

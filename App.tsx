@@ -338,6 +338,21 @@ const GameLayout = () => {
   const [showOracle, setShowOracle] = useState(false);
   const [showStrategy, setShowStrategy] = useState(false);
   const [showSupplyChain, setShowSupplyChain] = useState(false);
+  const [supplyChainPreset, setSupplyChainPreset] = useState<string | undefined>(undefined);
+
+  // Cross-component shortcut: any child can dispatch `open-resource-engine`
+  // with `{ detail: { item: 'Vorkath' } }` to open the modal pre-populated.
+  // Used by the GoalTracker's Closest-unlocks chips so the dashboard can deep-
+  // link into the engine without prop-drilling a callback through every layer.
+  React.useEffect(() => {
+    const onOpen = (e: Event) => {
+      const detail = (e as CustomEvent<{ item?: string }>).detail;
+      setSupplyChainPreset(detail?.item);
+      setShowSupplyChain(true);
+    };
+    window.addEventListener('open-resource-engine', onOpen);
+    return () => window.removeEventListener('open-resource-engine', onOpen);
+  }, []);
   const [showGameMode, setShowGameMode] = useState(false);
   const [activeRitualAnim, setActiveRitualAnim] = useState<'NONE' | 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE'>('NONE');
 
@@ -412,7 +427,7 @@ const GameLayout = () => {
         {showShare && <ShareModal onClose={() => setShowShare(false)} />}
         {showOracle && <OracleSearch onClose={() => setShowOracle(false)} />}
         {showStrategy && <StrategyGuide onClose={() => setShowStrategy(false)} />}
-        {showSupplyChain && <SupplyChainCalculator onClose={() => setShowSupplyChain(false)} />}
+        {showSupplyChain && <SupplyChainCalculator initialQuery={supplyChainPreset} onClose={() => { setShowSupplyChain(false); setSupplyChainPreset(undefined); }} />}
         {showGameMode && <GameModePicker onClose={() => setShowGameMode(false)} />}
       </Suspense>
 

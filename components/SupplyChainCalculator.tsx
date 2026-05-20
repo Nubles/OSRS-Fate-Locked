@@ -16,6 +16,9 @@ const MAX_RECENT = 10;
 
 interface SupplyChainCalculatorProps {
   onClose: () => void;
+  /** Optional item name to pre-populate the search with — used by the
+   *  dashboard's "Closest unlocks" deep-links. */
+  initialQuery?: string;
 }
 
 const SourceIcon = ({ type }: { type: string }) => {
@@ -62,12 +65,12 @@ const ItemImage = ({ name, size = 'md', qty }: { name: string, size?: 'sm' | 'md
     );
 };
 
-export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClose }) => {
+export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClose, initialQuery }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
   const gameState = useGame();
   const { togglePin, pinnedGoals } = gameState;
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery || '');
   const [targetQty, setTargetQty] = useState(1);
   const [history, setHistory] = useState<string[]>([]);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
