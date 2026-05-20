@@ -9,7 +9,9 @@ import { X, Search, CheckCircle2, Lock, Box, ShoppingBag, Sword, Sprout, MapPin,
 
 const FAVORITES_KEY = 'FATE_RESOURCE_FAVORITES';
 const INVENTORY_KEY = 'FATE_RESOURCE_INVENTORY';
+const RECENT_KEY = 'FATE_RESOURCE_RECENT';
 const MAX_FAVORITES = 20;
+const MAX_RECENT = 10;
 
 interface SupplyChainCalculatorProps {
   onClose: () => void;
@@ -98,6 +100,19 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
       return {};
     }
   });
+  // Auto-tracked recently-viewed items (most recent first). Like Favorites
+  // but no manual curation — every navigate-to-item prepends here.
+  const [recent, setRecent] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem(RECENT_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed)
+        ? parsed.filter((x) => typeof x === 'string' && RESOURCE_MAP[x]).slice(0, MAX_RECENT)
+        : [];
+    } catch {
+      return [];
+    }
+  });
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -119,6 +134,17 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
       /* localStorage unavailable — inventory stays in-memory only */
     }
   }, [inventory]);
+
+  useEffect(() => {
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(recent)); } catch {}
+  }, [recent]);
+
+  const trackRecent = (item: string) => {
+    if (!RESOURCE_MAP[item]) return;
+    setRecent((prev) => [item, ...prev.filter((x) => x !== item)].slice(0, MAX_RECENT));
+  };
+
+  const clearInventory = () => setInventory({});
 
   const setInventoryFor = (item: string, n: number) => {
     setInventory(prev => {
@@ -221,6 +247,7 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
       setQuery(newItem);
       setTargetQty(1); // Reset qty on nav
       setShowBreakdown(false);
+      trackRecent(newItem);
   };
 
   const handleBack = () => {
@@ -569,16 +596,27 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
                     {/* --- FULL BREAKDOWN SECTION --- */}
                     {rawMaterials && rawMaterials.length > 0 && (
                         <div className="mb-8">
-                            <button
-                                onClick={() => setShowBreakdown(v => !v)}
-                                className="w-full flex items-center gap-2 mb-3 group"
-                            >
-                                {showBreakdown ? <ChevronDown size={14} className="text-gray-500" /> : <ChevronRight size={14} className="text-gray-500" />}
-                                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest group-hover:text-gray-300 transition-colors">
-                                    Full Breakdown — Raw Materials for {targetQty}
-                                </span>
+                            <div className="w-full flex items-center gap-2 mb-3">
+                                <button
+                                    onClick={() => setShowBreakdown(v => !v)}
+                                    className="flex items-center gap-2 group flex-1 text-left"
+                                >
+                                    {showBreakdown ? <ChevronDown size={14} className="text-gray-500" /> : <ChevronRight size={14} className="text-gray-500" />}
+                                    <span className="text-xs font-bold text-gray-500 uppercase tracking-widest group-hover:text-gray-300 transition-colors">
+                                        Full Breakdown — Raw Materials for {targetQty}
+                                    </span>
+                                </button>
+                                {showBreakdown && Object.keys(inventory).length > 0 && (
+                                    <button
+                                        onClick={clearInventory}
+                                        className="text-[10px] text-gray-600 hover:text-red-400 font-mono uppercase tracking-wide transition-colors"
+                                        title="Clear saved inventory counts for every material"
+                                    >
+                                        reset inventory
+                                    </button>
+                                )}
                                 <div className="flex-1 h-px bg-white/10"></div>
-                            </button>
+                            </div>
                             {showBreakdown && (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 animate-in fade-in duration-200">
                                     {rawMaterials.map(({ item, qty }) => {
@@ -691,6 +729,41 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
                                             <Star size={12} className="fill-yellow-400" />
                                         </button>
                                     </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Recently viewed — auto-tracked, complements the curated Favorites list. */}
+                    {recent.length > 0 && (
+                        <div className="mb-5">
+                            <div className="flex items-center justify-between gap-2 mb-2 px-2">
+                                <div className="flex items-center gap-2">
+                                    <RefreshCw size={14} className="text-gray-500" />
+                                    <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Recently viewed</span>
+                                </div>
+                                <button
+                                    onClick={() => setRecent([])}
+                                    className="text-[10px] text-gray-600 hover:text-gray-300 font-mono uppercase tracking-wide transition-colors"
+                                    title="Clear recent history"
+                                >
+                                    clear
+                                </button>
+                            </div>
+                            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
+                                {recent.map((item) => (
+                                    <button
+                                        key={item}
+                                        onClick={() => handleNavigate(item)}
+                                        className="shrink-0 flex items-center gap-2 px-2.5 py-1.5 bg-[#1a1a1a] border border-white/5 rounded-lg text-xs hover:bg-[#252525] hover:border-white/10 transition-all"
+                                        title={item}
+                                    >
+                                        <ItemImage name={item} size="sm" />
+                                        <span className="text-gray-300 max-w-[140px] truncate">{item}</span>
+                                        <span
+                                            className={`w-1.5 h-1.5 rounded-full ${availabilityMap[item] ? 'bg-emerald-500' : 'bg-red-500'}`}
+                                        />
+                                    </button>
                                 ))}
                             </div>
                         </div>
