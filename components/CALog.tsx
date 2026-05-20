@@ -7,6 +7,7 @@ import { Swords, CheckCircle2, Sparkles, Skull, Info, ChevronDown, CheckSquare, 
 import { DROP_RATES } from '../config/rules';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { JournalNextUpStrip, NextUpItem } from './JournalNextUpStrip';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 interface CALogProps {
   searchTerm?: string;
@@ -15,18 +16,24 @@ interface CALogProps {
 export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' }) => {
   const { unlocks, toggleCA, rollForKey, toggleTask } = useGame();
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [filterStatus, setFilterStatus] = useState<JournalStatus>('ALL');
-  const [filterTier, setFilterTier] = useState('ALL');
+  // Filter state persisted across sessions.
+  const [filterStatus, setFilterStatus] = useLocalStorage<JournalStatus>('jrnl:ca:status', 'ALL');
+  const [filterTier, setFilterTier] = useLocalStorage<string>('jrnl:ca:tier', 'ALL');
   const [localSearch, setLocalSearch] = useState('');
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const searchTerm = externalSearch || localSearch;
 
   const focusCard = (id: string) => {
     setExpandedId(id);
-    const el = document.querySelector<HTMLElement>(`[data-journal-id="${id}"]`);
-    if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    // Clear filters so the target tier is guaranteed to be in the list.
+    setFilterStatus('ALL');
+    setFilterTier('ALL');
     setHighlightedId(id);
-    window.setTimeout(() => setHighlightedId(null), 1800);
+    window.setTimeout(() => {
+      const el = document.querySelector<HTMLElement>(`[data-journal-id="${id}"]`);
+      if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      window.setTimeout(() => setHighlightedId(null), 1800);
+    }, 50);
   };
 
   const getWikiUrl = (monster: string) => {

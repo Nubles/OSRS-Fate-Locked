@@ -3,11 +3,12 @@ import React, { useMemo, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS, DiaryTask } from '../data/diaryTasks';
-import { Map, CheckCircle2, Lock, Sparkles, BookOpen, ChevronDown, CheckSquare, Square, ExternalLink } from 'lucide-react';
+import { Map, CheckCircle2, Lock, Sparkles, BookOpen, ChevronDown, CheckSquare, Square, ExternalLink, ArrowUpRight } from 'lucide-react';
 import { DROP_RATES } from '../config/rules';
 import { MISTHALIN_AREAS } from '../constants';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { JournalNextUpStrip, NextUpItem } from './JournalNextUpStrip';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 interface DiaryLogProps {
   searchTerm?: string;
@@ -15,20 +16,27 @@ interface DiaryLogProps {
 
 export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch = '' }) => {
   const { unlocks, toggleDiary, rollForKey, toggleTask } = useGame();
-  const [filterRegion, setFilterRegion] = useState('ALL');
+  // Filter state persisted across sessions.
+  const [filterRegion, setFilterRegion] = useLocalStorage<string>('jrnl:diary:region', 'ALL');
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [filterStatus, setFilterStatus] = useState<JournalStatus>('ALL');
-  const [filterTier, setFilterTier] = useState('ALL');
+  const [filterStatus, setFilterStatus] = useLocalStorage<JournalStatus>('jrnl:diary:status', 'ALL');
+  const [filterTier, setFilterTier] = useLocalStorage<string>('jrnl:diary:tier', 'ALL');
   const [localSearch, setLocalSearch] = useState('');
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const searchTerm = externalSearch || localSearch;
 
   const focusCard = (id: string) => {
     setExpandedId(id);
-    const el = document.querySelector<HTMLElement>(`[data-journal-id="${id}"]`);
-    if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    // Clear filters so the target card is guaranteed to be visible.
+    setFilterStatus('ALL');
+    setFilterRegion('ALL');
+    setFilterTier('ALL');
     setHighlightedId(id);
-    window.setTimeout(() => setHighlightedId(null), 1800);
+    window.setTimeout(() => {
+      const el = document.querySelector<HTMLElement>(`[data-journal-id="${id}"]`);
+      if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      window.setTimeout(() => setHighlightedId(null), 1800);
+    }, 50);
   };
 
   const getStatus = (diary: DiaryTier) => {
@@ -243,13 +251,29 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
           const isSearching = searchTerm.length > 0;
           const isExpanded = expandedId === diary.id || isSearching;
           const color = diary.tier === 'Elite' ? 'text-purple-400' : diary.tier === 'Hard' ? 'text-red-400' : diary.tier === 'Medium' ? 'text-blue-400' : 'text-green-400';
-          
+
           const tasks = ALL_DIARY_TASKS.filter(t => t.tierId === diary.id);
           const hasTasks = tasks.length > 0;
           const tasksCompletedCount = tasks.filter(t => unlocks.completedTasks.includes(t.id)).length;
-          
+
           const allTasksDone = !hasTasks || tasksCompletedCount === tasks.length;
           const isActionable = isCompleted || allTasksDone;
+
+          // Req progress for LOCKED diary cards: count diary-level gates met
+          // (required regions + prerequisite quests + skill requirements).
+          const gatedRegions = diary.requiredRegions.filter(
+            r => r !== 'Misthalin' && !MISTHALIN_AREAS.includes(r),
+          );
+          const metRegionCount = gatedRegions.filter(r => unlocks.regions.includes(r)).length;
+          const diarySkillReqs = Object.entries(diary.skills);
+          const metSkillCount = diarySkillReqs.filter(
+            ([skill, lvl]) => (unlocks.skills[skill] || 0) > 0 && (unlocks.levels[skill] || 1) >= (lvl as number),
+          ).length;
+          const metQuestCount = diary.quests.filter(q => unlocks.quests.includes(q)).length;
+          const dTotalReqs = gatedRegions.length + diarySkillReqs.length + diary.quests.length;
+          const dTotalMet = metRegionCount + metSkillCount + metQuestCount;
+          const dReqPct = dTotalReqs === 0 ? 100 : Math.round((dTotalMet / dTotalReqs) * 100);
+          const missingDiaryQuests = diary.quests.filter(q => !unlocks.quests.includes(q));
 
           return (
             <div
@@ -276,11 +300,39 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                     )}
                   </div>
                   
-                  {!isCompleted && !isExpanded && (
-                    <div className="flex flex-wrap gap-2 mt-1.5 text-[10px] text-gray-500">
-                        {diary.status === 'LOCKED_REGION' && <span className="text-red-400 flex items-center gap-1"><Map size={8}/> Region Locked</span>}
-                        {diary.status === 'LOCKED_SKILL' && <span className="text-red-400 flex items-center gap-1"><Lock size={8}/> Skills Locked</span>}
-                        {diary.status === 'LOCKED_QUEST' && <span className="text-red-400 flex items-center gap-1"><BookOpen size={8}/> Quests Locked</span>}
+                  {/* Locked summary: req progress bar + missing quest chips.
+                      Replaces the old plain-text "Region/Skill/Quest Locked" labels
+                      with an at-a-glance % bar and clickable prereq chips. */}
+                  {!isCompleted && !isAvailable && !isExpanded && dTotalReqs > 0 && (
+                    <div className="mt-1.5 space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-1 bg-black/40 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-amber-500/50 transition-all duration-500"
+                            style={{ width: `${dReqPct}%` }}
+                          />
+                        </div>
+                        <span className="text-[9px] text-gray-600 font-mono whitespace-nowrap shrink-0">
+                          {dTotalMet}/{dTotalReqs} reqs
+                        </span>
+                      </div>
+                      {missingDiaryQuests.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {missingDiaryQuests.map(q => (
+                            <a
+                              key={q}
+                              href={`https://oldschool.runescape.wiki/w/${encodeURIComponent(q.replace(/ /g, '_'))}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-[9px] px-1.5 py-0.5 rounded flex items-center gap-1 border bg-amber-900/10 text-amber-400 border-amber-500/30 hover:bg-amber-900/25 transition-colors"
+                              title={`Wiki: ${q}`}
+                            >
+                              <BookOpen size={7} /> {q} <ArrowUpRight size={7} />
+                            </a>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

@@ -3,11 +3,12 @@ import React, { useState, useMemo } from 'react';
 import { useGame } from '../context/GameContext';
 import { QUEST_DATA, QuestData } from '../data/questData';
 import { MISTHALIN_AREAS, WIKI_OVERRIDES } from '../constants';
-import { CheckCircle2, Lock, Map, BookOpen, Sparkles, Scroll, Bookmark, Layers, List, ExternalLink } from 'lucide-react';
+import { CheckCircle2, Lock, Map, BookOpen, Sparkles, Scroll, Bookmark, Layers, List, ExternalLink, ArrowUpRight } from 'lucide-react';
 import { DROP_RATES } from '../config/rules';
 import { DropSource } from '../types';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { JournalNextUpStrip, NextUpItem } from './JournalNextUpStrip';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 interface QuestLogProps {
   searchTerm?: string;
@@ -42,13 +43,32 @@ interface QuestCardProps {
     currentQP: number;
     onToggle: (e: React.MouseEvent, quest: any) => void;
     highlight?: boolean;
+    /** Called when the player clicks a missing prereq quest chip — parent scrolls to it. */
+    onPrereqClick?: (questId: string) => void;
 }
 
-const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, currentQP, onToggle, highlight }) => {
+const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, currentQP, onToggle, highlight, onPrereqClick }) => {
     const isCompleted = quest.status === 'COMPLETED';
     const isAvailable = quest.status === 'AVAILABLE';
     const diffStyle = getDifficultyColor(quest.difficulty);
-    
+
+    // Req-met accounting — drives the progress bar shown on LOCKED cards so
+    // players can see at a glance how close they are without counting chips.
+    const gatedRegions: string[] = quest.regions.filter(
+      (r: string) => !MISTHALIN_AREAS.includes(r) && r !== 'Misthalin',
+    );
+    const metRegions = gatedRegions.filter((r: string) => unlocks.regions.includes(r));
+    const skillReqs = Object.entries(quest.skills as Record<string, number>);
+    const metSkills = skillReqs.filter(([skill, lvl]) => {
+      if (skill === 'Quest Points') return currentQP >= lvl;
+      return (unlocks.skills[skill] || 0) > 0 && (unlocks.levels[skill] || 1) >= lvl;
+    });
+    const prereqReqs: string[] = quest.prereqs || [];
+    const metPrereqs = prereqReqs.filter((qid: string) => unlocks.quests.includes(qid));
+    const totalReqs = gatedRegions.length + skillReqs.length + prereqReqs.length;
+    const totalMet = metRegions.length + metSkills.length + metPrereqs.length;
+    const reqPct = totalReqs === 0 ? 100 : Math.round((totalMet / totalReqs) * 100);
+
     return (
       <div
           data-journal-id={quest.id}
@@ -66,9 +86,9 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, currentQP, onTogg
                       <h3 className={`font-bold text-sm truncate ${isCompleted ? 'text-green-400 line-through' : isAvailable ? 'text-blue-300' : 'text-gray-400'}`}>
                           {quest.name}
                       </h3>
-                      <a 
-                          href={getWikiUrl(quest.name)} 
-                          target="_blank" 
+                      <a
+                          href={getWikiUrl(quest.name)}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="text-gray-500 hover:text-white transition-colors p-0.5"
                           onClick={(e) => e.stopPropagation()}
@@ -80,12 +100,13 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, currentQP, onTogg
                           {getDifficultyLabel(quest.difficulty)}
                       </span>
                   </div>
-                  
+
                   {/*
-                    Card chip strategy: when the quest is AVAILABLE/COMPLETED we
-                    don't need to scream about met requirements — render them in
-                    dim gray. Only failing requirements stay highlighted in red
-                    so the eye lands on what's actually blocking progress.
+                    Chip strategy: met requirements render in dim gray (bg-black/30
+                    text-gray-500) so the eye ignores them. Failing requirements stay
+                    red so the actual blockers stand out immediately.
+                    Missing prereq quest chips are amber + clickable → scroll to that
+                    quest in the list (onPrereqClick).
                   */}
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
                       {quest.regions.map((r: string) => {
@@ -128,36 +149,68 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, currentQP, onTogg
                               </span>
                           );
                       })}
+                      {/* Prereq quest chips. Completed prereqs are dim-gray; missing
+                          ones are amber + clickable so the player can jump straight to
+                          that quest in the list without manually searching. */}
+                      {prereqReqs.map((qid: string) => {
+                          const met = isCompleted || unlocks.quests.includes(qid);
+                          if (met) {
+                              return (
+                                  <span key={qid} className="text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1 border bg-black/30 text-gray-500 border-white/5">
+                                      <Scroll size={8} /> {qid}
+                                  </span>
+                              );
+                          }
+                          return (
+                              <button
+                                  key={qid}
+                                  onClick={(e) => { e.stopPropagation(); onPrereqClick?.(qid); }}
+                                  className="text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1 border bg-amber-900/10 text-amber-400 border-amber-500/30 hover:bg-amber-900/25 transition-colors cursor-pointer"
+                                  title={`Jump to prerequisite: ${qid}`}
+                              >
+                                  <Scroll size={8} /> {qid} <ArrowUpRight size={7} />
+                              </button>
+                          );
+                      })}
                   </div>
               </div>
-              
-              <button 
+
+              <button
                   onClick={(e) => onToggle(e, quest)}
                   disabled={isCompleted}
                   className={`
                       w-8 h-8 flex items-center justify-center rounded-full border transition-all shrink-0
-                      ${isCompleted 
-                          ? 'bg-green-500 border-green-400 shadow-[0_0_10px_rgba(34,197,94,0.4)] cursor-default' 
+                      ${isCompleted
+                          ? 'bg-green-500 border-green-400 shadow-[0_0_10px_rgba(34,197,94,0.4)] cursor-default'
                           : 'bg-black/40 border-gray-700 hover:border-gray-500 hover:text-gray-400 cursor-pointer'}
                   `}
                   title={isCompleted ? "Completed" : "Complete & Roll"}
               >
-                  <img 
-                      src="https://oldschool.runescape.wiki/images/Quests.png" 
-                      alt="Quest Icon" 
-                      className={`w-5 h-5 object-contain transition-all ${isCompleted ? '' : 'grayscale opacity-40'}`} 
+                  <img
+                      src="https://oldschool.runescape.wiki/images/Quests.png"
+                      alt="Quest Icon"
+                      className={`w-5 h-5 object-contain transition-all ${isCompleted ? '' : 'grayscale opacity-40'}`}
                   />
               </button>
           </div>
 
-          {!isCompleted && !isAvailable && (
-              <div className="mt-2 pt-2 border-t border-white/5 text-[10px] text-red-400/80 font-mono flex flex-col gap-0.5">
-                  {quest.status === 'LOCKED_REGION' && <span className="flex items-center gap-1"><Lock size={8}/> Locked by Region</span>}
-                  {quest.status === 'LOCKED_SKILL' && <span className="flex items-center gap-1"><Lock size={8}/> Skill requirements not met</span>}
-                  {quest.status === 'LOCKED_QUEST' && <span className="flex items-center gap-1"><Lock size={8}/> Missing prerequisite quests</span>}
+          {/* LOCKED card footer: req progress bar replaces the old plain-text
+              status labels. The coloured chips above already communicate the
+              specific blockers; the bar gives an at-a-glance % completion. */}
+          {!isCompleted && !isAvailable && totalReqs > 0 && (
+              <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2">
+                  <div className="flex-1 h-1 bg-black/40 rounded-full overflow-hidden">
+                      <div
+                          className="h-full bg-amber-500/60 transition-all duration-500"
+                          style={{ width: `${reqPct}%` }}
+                      />
+                  </div>
+                  <span className="text-[9px] text-gray-500 font-mono whitespace-nowrap shrink-0">
+                      {totalMet}/{totalReqs} reqs
+                  </span>
               </div>
           )}
-          
+
           {!isCompleted && isAvailable && (
               <div className="mt-2 pt-2 border-t border-white/5 text-[10px] text-blue-400/60 font-mono flex items-center gap-1">
                   <Sparkles size={8} /> Ready to complete! Click to roll.
@@ -169,20 +222,29 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, currentQP, onTogg
 
 export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch = '' }) => {
   const { unlocks, toggleQuest, rollForKey } = useGame();
-  const [filter, setFilter] = useState<JournalStatus>('ALL');
-  const [groupBySeries, setGroupBySeries] = useState(false);
+  // Filter state is persisted in localStorage so returning players don't have
+  // to re-apply their preferred view every session.
+  const [filter, setFilter] = useLocalStorage<JournalStatus>('jrnl:quest:filter', 'ALL');
+  const [groupBySeries, setGroupBySeries] = useLocalStorage<boolean>('jrnl:quest:group', false);
   const [localSearch, setLocalSearch] = useState('');
-  const [regionFilter, setRegionFilter] = useState('ALL');
+  const [regionFilter, setRegionFilter] = useLocalStorage<string>('jrnl:quest:region', 'ALL');
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
 
-  // Bridge between the "Next up" strip and the card list. Scrolls the
-  // matching card into view and adds a brief highlight so the player's
-  // attention lands on it.
+  // focusCard is called from:
+  //   • the "Next up" strip (same-tab, no filter clearing needed)
+  //   • prereq quest chip clicks (may need to clear filters so the target is visible)
+  // We clear all filters first, then schedule the scroll after React re-renders.
   const focusCard = (id: string) => {
-    const el = document.querySelector<HTMLElement>(`[data-journal-id="${id}"]`);
-    if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    setFilter('ALL');
+    setRegionFilter('ALL');
     setHighlightedId(id);
-    window.setTimeout(() => setHighlightedId(null), 1800);
+    // Brief timeout lets the state change flush + React re-render before we
+    // query the DOM — ensures the card exists when we try to scroll to it.
+    window.setTimeout(() => {
+      const el = document.querySelector<HTMLElement>(`[data-journal-id="${id}"]`);
+      if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      window.setTimeout(() => setHighlightedId(null), 1800);
+    }, 50);
   };
   // External search (from the dashboard's global search box) takes precedence
   // when set so cross-tab search still works; otherwise the bar's own search
@@ -371,6 +433,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
                                     currentQP={currentQP}
                                     onToggle={handleQuestToggle}
                                     highlight={highlightedId === quest.id}
+                                    onPrereqClick={focusCard}
                                 />
                             ))}
                         </div>
@@ -399,6 +462,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
                                     currentQP={currentQP}
                                     onToggle={handleQuestToggle}
                                     highlight={highlightedId === quest.id}
+                                    onPrereqClick={focusCard}
                                 />
                             ))}
                         </div>
@@ -419,6 +483,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
                                     currentQP={currentQP}
                                     onToggle={handleQuestToggle}
                                     highlight={highlightedId === quest.id}
+                                    onPrereqClick={focusCard}
                                 />
                             ))}
                         </div>
