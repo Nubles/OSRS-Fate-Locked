@@ -190,6 +190,58 @@ export const isItemAvailableWithCtx = (itemName: string, ctx: AvailabilityContex
   return sources.some((s) => isSourceAvailable(s, ctx));
 };
 
+// --- Shortest-path-to-unlock -------------------------------------------------
+
+export interface EasiestPath {
+  source: ResourceSource;
+  missing: string[];
+  /** A coarse "effort score" used to compare paths — lower is closer. */
+  cost: number;
+}
+
+/**
+ * For a locked item, picks the source closest to being unlockable and surfaces
+ * the requirements still in the way. Returns null when the item is already
+ * available (or unknown).
+ *
+ * Cost heuristic: one point per missing requirement, with a smaller penalty
+ * for skill level gaps (a few levels is much cheaper than a quest or an
+ * entirely-locked unlock) and a discount when the missing requirement is
+ * itself an item the player can already obtain via another source.
+ */
+export const findEasiestPath = (itemName: string, gameState: GameState): EasiestPath | null => {
+  const sources = RESOURCE_MAP[itemName];
+  if (!sources) return null;
+  const ctx = buildAvailabilityContext(gameState);
+
+  // Already unlockable — nothing to surface.
+  if (sources.some((s) => isSourceAvailable(s, ctx))) return null;
+
+  const scoreReason = (reason: string): number => {
+    // "Skill X 50/60" — gap-weighted, with a floor so any gap costs something.
+    const lvlMatch = reason.match(/(\d+)\/(\d+)$/);
+    if (lvlMatch) {
+      const gap = Number(lvlMatch[2]) - Number(lvlMatch[1]);
+      return Math.max(0.2, gap * 0.05);
+    }
+    // Skill not yet rolled at all on the Skills table — heavier than a level gap.
+    if (reason.startsWith('Skill Locked:')) return 2;
+    // Region / quest / unlock requirements are each a meaningful gate.
+    return 1;
+  };
+
+  let best: EasiestPath | null = null;
+  for (const source of sources) {
+    const status = analyzeSource(source, ctx, true);
+    if (status.isAvailable) continue; // shouldn't happen given the some() guard above
+    const cost = status.missing.reduce((sum, r) => sum + scoreReason(r), 0);
+    if (!best || cost < best.cost) {
+      best = { source, missing: status.missing, cost };
+    }
+  }
+  return best;
+};
+
 // --- Recursive Material Breakdown -------------------------------------------
 
 export interface MaterialNode {

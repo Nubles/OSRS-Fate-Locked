@@ -2,10 +2,10 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { RESOURCE_MAP, RESOURCE_CATEGORIES, ITEM_CATEGORY } from '../data/resourceData';
-import { calculateSupplyChain, isItemAvailableWithCtx, buildAvailabilityContext, computeFullBreakdown, flattenRawMaterials } from '../utils/supplyChain';
+import { calculateSupplyChain, isItemAvailableWithCtx, buildAvailabilityContext, computeFullBreakdown, flattenRawMaterials, findEasiestPath } from '../utils/supplyChain';
 import { wikiService } from '../services/WikiService';
 import { useFocusTrap } from '../hooks/useFocusTrap';
-import { X, Search, CheckCircle2, Lock, Box, ShoppingBag, Sword, Sprout, MapPin, Database, ExternalLink, RefreshCw, ArrowLeft, ArrowRight, Hammer, HelpCircle, Layers, Coins, Calculator, ListFilter, Star, ChevronDown, ChevronRight, Hand, ScrollText, Percent } from 'lucide-react';
+import { X, Search, CheckCircle2, Lock, Box, ShoppingBag, Sword, Sprout, MapPin, Database, ExternalLink, RefreshCw, ArrowLeft, ArrowRight, Hammer, HelpCircle, Layers, Coins, Calculator, ListFilter, Star, ChevronDown, ChevronRight, Hand, ScrollText, Percent, Compass } from 'lucide-react';
 
 const FAVORITES_KEY = 'FATE_RESOURCE_FAVORITES';
 const MAX_FAVORITES = 20;
@@ -154,6 +154,14 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
       if (!hasRecipe) return null;
       return flattenRawMaterials(computeFullBreakdown(selectedResult.itemName, targetQty));
   }, [selectedResult, targetQty]);
+
+  // When the selected item is fully locked, surface the source closest to
+  // being unlockable so the player has a clear next-step list rather than a
+  // wall of red "missing X" chips spread across every source card.
+  const easiestPath = useMemo(() => {
+      if (!selectedResult) return null;
+      return findEasiestPath(selectedResult.itemName, gameState);
+  }, [selectedResult, gameState]);
 
   const handleWikiOpen = (e: React.MouseEvent, name: string) => {
       e.stopPropagation();
@@ -308,6 +316,42 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
                              <div className="text-gray-600 px-2"><Calculator size={14} /></div>
                         </div>
                     </div>
+
+                    {/* --- SHORTEST PATH PANEL (only when fully locked) --- */}
+                    {easiestPath && (
+                        <div className="mb-6 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-900/15 to-transparent p-5">
+                            <div className="flex items-center gap-2 mb-3">
+                                <Compass size={16} className="text-amber-400" />
+                                <span className="text-xs font-bold text-amber-300 uppercase tracking-widest">
+                                    Shortest path to unlock
+                                </span>
+                                <div className="flex-1 h-px bg-amber-500/10"></div>
+                                <span className="text-[10px] text-amber-400/60 font-mono">
+                                    via {easiestPath.source.type === 'SKILL' ? easiestPath.source.name : `${easiestPath.source.type.toLowerCase()}: ${easiestPath.source.name}`}
+                                </span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {easiestPath.missing.map((reason, i) => {
+                                    // If the missing line names an item that's in RESOURCE_MAP,
+                                    // make it clickable so the player can drill into it.
+                                    const itemMatch = /^(?:Quest|Unlock):\s*(.+)$/.exec(reason);
+                                    const linkTo = itemMatch && RESOURCE_MAP[itemMatch[1]] ? itemMatch[1] : null;
+                                    return (
+                                        <button
+                                            key={i}
+                                            onClick={linkTo ? () => handleNavigate(linkTo) : undefined}
+                                            disabled={!linkTo}
+                                            className={`text-xs px-3 py-1.5 rounded-lg border flex items-center gap-2 ${linkTo ? 'bg-amber-900/20 border-amber-500/30 text-amber-200 hover:bg-amber-900/40 hover:border-amber-400 cursor-pointer' : 'bg-black/30 border-amber-500/15 text-amber-200/80 cursor-default'}`}
+                                        >
+                                            <Lock size={11} />
+                                            {reason}
+                                            {linkTo && <ArrowRight size={11} className="opacity-60" />}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
 
                     {/* --- SOURCES SECTION --- */}
                     <div className="space-y-4 mb-8">

@@ -6,7 +6,8 @@ import {
   POH_LIST, MERCHANTS_LIST, STORAGE_LIST, FARMING_PATCH_LIST, SKILLS_LIST,
   REGION_GROUPS, MISTHALIN_AREAS,
 } from './items';
-import { computeFullBreakdown, flattenRawMaterials } from '../utils/supplyChain';
+import { computeFullBreakdown, flattenRawMaterials, findEasiestPath, calculateSupplyChain } from '../utils/supplyChain';
+import type { GameState } from '../types';
 
 /**
  * Resource Engine data-consistency tests.
@@ -145,6 +146,54 @@ describe('skill and region references are valid', () => {
       }
     }
     expect(bad, 'sources with unknown region tags').toEqual([]);
+  });
+});
+
+describe('findEasiestPath surfaces the closest unlock route', () => {
+  // Minimal GameState skeleton with everything locked except Misthalin areas
+  // (which are always unlocked by the engine). Just enough shape to satisfy
+  // buildAvailabilityContext.
+  const emptyState: GameState = {
+    keys: 0, specialKeys: 0, chaosKeys: 0, fatePoints: 0,
+    unlocks: {
+      equipment: {}, skills: {}, levels: {},
+      regions: [], mobility: [], arcana: [], housing: [], merchants: [],
+      minigames: [], bosses: [], storage: [], guilds: [], farming: [],
+      quests: [], diaries: [], cas: [], completedTasks: [], collectionLog: {},
+    },
+    history: [], pinnedGoals: [], userNotes: {},
+    activeBuff: 'NONE', animationsEnabled: true, hasSeenOnboarding: true,
+    gameModeId: 'vanilla', gameModeLocked: false, customMode: undefined,
+    version: 1,
+  } as any;
+
+  it('returns null when the item is already obtainable', () => {
+    // Logs are 'Any' region with Woodcutting 1 — available out of the box.
+    expect(findEasiestPath('Logs', emptyState)).toBeNull();
+  });
+
+  it('returns null for an unknown item', () => {
+    expect(findEasiestPath('Definitely Not An Item', emptyState)).toBeNull();
+  });
+
+  it('returns a path whose missing list is no longer than any locked source', () => {
+    // Property check across a sample of items: whenever findEasiestPath
+    // returns a path, its missing[] must be at least as small as the
+    // missing[] on every locked source for that item.
+    let checked = 0;
+    for (const item of Object.keys(RESOURCE_MAP)) {
+      const path = findEasiestPath(item, emptyState);
+      if (!path) continue;
+      checked++;
+      const full = calculateSupplyChain(item, emptyState)!;
+      for (const s of full.sources.filter((x) => !x.status.isAvailable)) {
+        expect(path.missing.length,
+          `${item}: easiest path missing=${path.missing.length} > locked source ${s.source.name} missing=${s.status.missing.length}`,
+        ).toBeLessThanOrEqual(s.status.missing.length);
+      }
+    }
+    // Sanity: at least *some* items should be locked on an empty state.
+    expect(checked).toBeGreaterThan(0);
   });
 });
 
