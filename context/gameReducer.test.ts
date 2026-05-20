@@ -72,6 +72,29 @@ describe('UNLOCK', () => {
     const s = gameReducer(base(), { type: 'UNLOCK', payload: { table: TableType.EQUIPMENT, item: 'Head', costType: 'key', cost: 1 } });
     expect(s.unlocks.equipment['Head']).toBe(1);
   });
+
+  it('does not duplicate an array unlock when the same item is unlocked twice', () => {
+    const once = gameReducer(base(), { type: 'UNLOCK', payload: { table: TableType.REGIONS, item: 'Karamja', costType: 'key', cost: 1 } });
+    const twice = gameReducer(once, { type: 'UNLOCK', payload: { table: TableType.REGIONS, item: 'Karamja', costType: 'key', cost: 1 } });
+    expect(twice.unlocks.regions.filter((r) => r === 'Karamja')).toHaveLength(1);
+  });
+
+  it('caps the skill tier at 10 even if dispatched past the cap', () => {
+    let s = base();
+    for (let i = 0; i < 15; i++) {
+      s = gameReducer(s, { type: 'UNLOCK', payload: { table: TableType.SKILLS, item: 'Mining', costType: 'key', cost: 1 } });
+    }
+    expect(s.unlocks.skills['Mining']).toBe(10);
+  });
+
+  it('caps the equipment tier at EQUIPMENT_TIER_MAX', () => {
+    let s = base();
+    for (let i = 0; i < 20; i++) {
+      s = gameReducer(s, { type: 'UNLOCK', payload: { table: TableType.EQUIPMENT, item: 'Head', costType: 'key', cost: 1 } });
+    }
+    // EQUIPMENT_TIER_MAX is 9 (see config/rules.ts); the reducer must not exceed it.
+    expect(s.unlocks.equipment['Head']).toBeLessThanOrEqual(9);
+  });
 });
 
 // --- Void Altar rituals -----------------------------------------------------
@@ -121,6 +144,12 @@ describe('LEVEL_UP', () => {
     expect(s.chaosKeys).toBe(initialState.chaosKeys);
   });
 
+  it('caps the skill level at 99 and is idempotent past the cap', () => {
+    const at99 = { ...base(), unlocks: { ...initialState.unlocks, levels: { ...initialState.unlocks.levels, 'Mining': 99 } } };
+    const s = gameReducer(at99, { type: 'LEVEL_UP', payload: { skill: 'Mining', chaosRoll: 0.99 } });
+    expect(s.unlocks.levels['Mining']).toBe(99);
+  });
+
   it('awards a chaos key when the roll lands under 2%', () => {
     const s = gameReducer(base(), { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.01 } });
     expect(s.chaosKeys).toBe(initialState.chaosKeys + 1);
@@ -128,6 +157,21 @@ describe('LEVEL_UP', () => {
 });
 
 // --- SET_GAME_MODE ----------------------------------------------------------
+
+describe('LOAD_SAVE migration', () => {
+  it('dedupes unlock arrays from a corrupted save', () => {
+    const corrupted: any = {
+      keys: 0,
+      unlocks: {
+        regions: ['Karamja', 'Karamja', 'Falador'],
+        bosses: ['Zulrah', 'Zulrah'],
+      },
+    };
+    const s = gameReducer(base(), { type: 'LOAD_SAVE', payload: corrupted });
+    expect(s.unlocks.regions).toEqual(['Karamja', 'Falador']);
+    expect(s.unlocks.bosses).toEqual(['Zulrah']);
+  });
+});
 
 describe('SET_GAME_MODE', () => {
   it('applies the chosen mode and locks it', () => {

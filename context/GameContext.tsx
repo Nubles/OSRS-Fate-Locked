@@ -162,6 +162,16 @@ const migrateSave = (saveData: Partial<GameState>): GameState => {
       collectionLog: { ...defaultUnlocks.collectionLog, ...(loadedUnlocks.collectionLog || {}) }
   };
 
+  // Defensive: dedupe unlock arrays so a corrupted import can't load the
+  // same region/boss/etc. twice.
+  const ARRAY_KEYS = ['regions', 'mobility', 'arcana', 'housing', 'merchants',
+    'minigames', 'bosses', 'storage', 'guilds', 'farming', 'quests', 'diaries',
+    'cas', 'completedTasks'] as const;
+  for (const k of ARRAY_KEYS) {
+    const arr = (mergedState.unlocks as any)[k];
+    if (Array.isArray(arr)) (mergedState.unlocks as any)[k] = Array.from(new Set(arr));
+  }
+
   // 6. Ensure logical consistency
   if (mergedState.hasSeenOnboarding === undefined) {
        mergedState.hasSeenOnboarding = (mergedState.history && mergedState.history.length > 0);
@@ -357,19 +367,25 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       const { table, item, costType, cost } = action.payload;
 
       const newUnlocks = { ...state.unlocks };
+      // Defensive helpers: pushing into an array category dedupes against the
+      // existing list so a corrupted save or duplicate dispatch can't end up
+      // with the same item unlocked twice. Tier categories clamp at the cap
+      // so an over-unlock can't exceed the rules.
+      const pushOnce = (list: string[]): string[] => list.includes(item) ? list : [...list, item];
+      const bumpTier = (current: number, max: number): number => Math.min(current + 1, max);
 
-      if (table === TableType.SKILLS) newUnlocks.skills = { ...newUnlocks.skills, [item]: (newUnlocks.skills[item] || 0) + 1 };
-      else if (table === TableType.EQUIPMENT) newUnlocks.equipment = { ...newUnlocks.equipment, [item]: (newUnlocks.equipment[item] || 0) + 1 };
-      else if (table === TableType.REGIONS) newUnlocks.regions = [...newUnlocks.regions, item];
-      else if (table === TableType.MOBILITY) newUnlocks.mobility = [...newUnlocks.mobility, item];
-      else if (table === TableType.ARCANA) newUnlocks.arcana = [...newUnlocks.arcana, item];
-      else if (table === TableType.POH) newUnlocks.housing = [...newUnlocks.housing, item];
-      else if (table === TableType.MERCHANTS) newUnlocks.merchants = [...newUnlocks.merchants, item];
-      else if (table === TableType.MINIGAMES) newUnlocks.minigames = [...newUnlocks.minigames, item];
-      else if (table === TableType.BOSSES) newUnlocks.bosses = [...newUnlocks.bosses, item];
-      else if (table === TableType.STORAGE) newUnlocks.storage = [...newUnlocks.storage, item];
-      else if (table === TableType.GUILDS) newUnlocks.guilds = [...newUnlocks.guilds, item];
-      else if (table === TableType.FARMING_LAYERS) newUnlocks.farming = [...newUnlocks.farming, item];
+      if (table === TableType.SKILLS) newUnlocks.skills = { ...newUnlocks.skills, [item]: bumpTier(newUnlocks.skills[item] || 0, 10) };
+      else if (table === TableType.EQUIPMENT) newUnlocks.equipment = { ...newUnlocks.equipment, [item]: bumpTier(newUnlocks.equipment[item] || 0, EQUIPMENT_TIER_MAX) };
+      else if (table === TableType.REGIONS) newUnlocks.regions = pushOnce(newUnlocks.regions);
+      else if (table === TableType.MOBILITY) newUnlocks.mobility = pushOnce(newUnlocks.mobility);
+      else if (table === TableType.ARCANA) newUnlocks.arcana = pushOnce(newUnlocks.arcana);
+      else if (table === TableType.POH) newUnlocks.housing = pushOnce(newUnlocks.housing);
+      else if (table === TableType.MERCHANTS) newUnlocks.merchants = pushOnce(newUnlocks.merchants);
+      else if (table === TableType.MINIGAMES) newUnlocks.minigames = pushOnce(newUnlocks.minigames);
+      else if (table === TableType.BOSSES) newUnlocks.bosses = pushOnce(newUnlocks.bosses);
+      else if (table === TableType.STORAGE) newUnlocks.storage = pushOnce(newUnlocks.storage);
+      else if (table === TableType.GUILDS) newUnlocks.guilds = pushOnce(newUnlocks.guilds);
+      else if (table === TableType.FARMING_LAYERS) newUnlocks.farming = pushOnce(newUnlocks.farming);
 
       let newState = { ...state, unlocks: newUnlocks };
       if (costType === 'key') newState.keys -= cost;
@@ -431,7 +447,11 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     case 'LEVEL_UP': {
       const { skill, chaosRoll } = action.payload;
 
-      const newLevel = (state.unlocks.levels[skill] || 1) + 1;
+      // The UI gates leveling at level < 99, but defend the reducer too so a
+      // stray dispatch can't push the skill past the OSRS level cap.
+      const currentLevel = state.unlocks.levels[skill] || 1;
+      const newLevel = Math.min(currentLevel + 1, 99);
+      if (newLevel === currentLevel) return state; // already capped
       const newLevels = { ...state.unlocks.levels, [skill]: newLevel };
       const newUnlocks = { ...state.unlocks, levels: newLevels };
 
