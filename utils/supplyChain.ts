@@ -209,18 +209,47 @@ export interface EasiestPath {
  * entirely-locked unlock) and a discount when the missing requirement is
  * itself an item the player can already obtain via another source.
  */
-const scoreReason = (reason: string): number => {
-  // "Skill X 50/60" — gap-weighted, with a floor so any gap costs something.
-  const lvlMatch = reason.match(/(\d+)\/(\d+)$/);
-  if (lvlMatch) {
-    const gap = Number(lvlMatch[2]) - Number(lvlMatch[1]);
-    return Math.max(0.2, gap * 0.05);
-  }
-  // Skill not yet rolled at all on the Skills table — heavier than a level gap.
-  if (reason.startsWith('Skill Locked:')) return 2;
-  // Region / quest / unlock requirements are each a meaningful gate.
-  return 1;
+/**
+ * Classifies a missing-requirement string by gate type so the sort can rank
+ * by real-world friction rather than a flat sum:
+ *
+ *   gacha  - region/unlock/merchant/mobility/etc. unlocks AND a skill the
+ *            player hasn't rolled yet. All require landing the right Key on
+ *            the right gacha table — the dominant gate in Fate Locked.
+ *   quest  - just play the quest; no luck involved.
+ *   level  - just train the skill; gap-weighted but treated as the cheapest
+ *            category overall.
+ */
+type GateKind = 'gacha' | 'quest' | 'level';
+const classifyReason = (reason: string): { kind: GateKind; gap: number } => {
+  const lvl = reason.match(/(\d+)\/(\d+)$/);
+  if (lvl) return { kind: 'level', gap: Number(lvl[2]) - Number(lvl[1]) };
+  if (reason.startsWith('Quest:')) return { kind: 'quest', gap: 0 };
+  // Region:, Unlock:, Merchant:, Mobility:, Skill Locked: — all gacha.
+  return { kind: 'gacha', gap: 0 };
 };
+
+interface GateCost { gacha: number; quest: number; levelGap: number }
+const tallyGates = (missing: string[]): GateCost => {
+  let gacha = 0, quest = 0, levelGap = 0;
+  for (const r of missing) {
+    const c = classifyReason(r);
+    if (c.kind === 'gacha') gacha++;
+    else if (c.kind === 'quest') quest++;
+    else levelGap += c.gap;
+  }
+  return { gacha, quest, levelGap };
+};
+
+/** Single scalar for backwards compat (Resource Engine detail panel uses it). */
+const scalarCost = (missing: string[]): number => {
+  const g = tallyGates(missing);
+  // Heavy weight on gacha (the actual hard part), light on level gaps.
+  return g.gacha * 10 + g.quest * 3 + g.levelGap * 0.1;
+};
+
+const compareGateCost = (a: GateCost, b: GateCost): number =>
+  a.gacha - b.gacha || a.quest - b.quest || a.levelGap - b.levelGap;
 
 /**
  * Batch-friendly: caller builds the context once and reuses it across all
@@ -232,16 +261,25 @@ export const findEasiestPathWithCtx = (itemName: string, ctx: AvailabilityContex
   if (!sources) return null;
   if (sources.some((s) => isSourceAvailable(s, ctx))) return null;
 
-  let best: EasiestPath | null = null;
+  let best: { source: ResourceSource; missing: string[]; gates: GateCost } | null = null;
   for (const source of sources) {
     const status = analyzeSource(source, ctx, true);
     if (status.isAvailable) continue;
-    const cost = status.missing.reduce((sum, r) => sum + scoreReason(r), 0);
-    if (!best || cost < best.cost) {
-      best = { source, missing: status.missing, cost };
+    const gates = tallyGates(status.missing);
+    if (!best || compareGateCost(gates, best.gates) < 0) {
+      best = { source, missing: status.missing, gates };
     }
   }
-  return best;
+  if (!best) return null;
+  // Sort the missing array so the chip surfaces the hardest gate first (gacha
+  // > quest > level), then by ascending level gap. Makes the "closest to
+  // unlocking" panel's preview line genuinely informative.
+  best.missing = [...best.missing].sort((a, b) => {
+    const ca = classifyReason(a); const cb = classifyReason(b);
+    const order = { gacha: 0, quest: 1, level: 2 } as const;
+    return order[ca.kind] - order[cb.kind] || ca.gap - cb.gap;
+  });
+  return { source: best.source, missing: best.missing, cost: scalarCost(best.missing) };
 };
 
 export const findEasiestPath = (itemName: string, gameState: GameState): EasiestPath | null =>
@@ -299,13 +337,19 @@ export interface AchievableItem {
 }
 export const getNextAchievableItems = (gameState: GameState, limit: number = 8): AchievableItem[] => {
   const ctx = buildAvailabilityContext(gameState);
-  const candidates: AchievableItem[] = [];
+  const candidates: Array<AchievableItem & { gates: GateCost }> = [];
   for (const item of Object.keys(RESOURCE_MAP)) {
     const path = findEasiestPathWithCtx(item, ctx);
-    if (path) candidates.push({ item, cost: path.cost, missing: path.missing, source: path.source });
+    if (path) candidates.push({
+      item, cost: path.cost, missing: path.missing, source: path.source,
+      gates: tallyGates(path.missing),
+    });
   }
-  candidates.sort((a, b) => a.cost - b.cost || a.item.localeCompare(b.item));
-  return candidates.slice(0, limit);
+  // Lexicographic: fewer gacha gates first, then fewer quests, then smaller
+  // level gaps. Mirrors the actual friction order in Fate Locked — a single
+  // gacha unlock is much harder than several skill levels to grind.
+  candidates.sort((a, b) => compareGateCost(a.gates, b.gates) || a.item.localeCompare(b.item));
+  return candidates.slice(0, limit).map(({ gates, ...rest }) => rest);
 };
 
 // --- Recursive Material Breakdown -------------------------------------------
