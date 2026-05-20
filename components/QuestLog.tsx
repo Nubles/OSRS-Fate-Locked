@@ -8,6 +8,8 @@ import { DROP_RATES } from '../config/rules';
 import { DropSource } from '../types';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { JournalNextUpStrip, NextUpItem } from './JournalNextUpStrip';
+import { QuestAdvisorPanel } from './QuestAdvisorPanel';
+import { rankAvailableQuests } from '../utils/questAdvisor';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SkillTrainingPopover, SkillPopoverState } from './SkillTrainingPopover';
 
@@ -246,6 +248,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
   // to re-apply their preferred view every session.
   const [filter, setFilter] = useLocalStorage<JournalStatus>('jrnl:quest:filter', 'ALL');
   const [groupBySeries, setGroupBySeries] = useLocalStorage<boolean>('jrnl:quest:group', false);
+  const [advisorMode, setAdvisorMode] = useLocalStorage<boolean>('jrnl:quest:advisor', false);
   const [localSearch, setLocalSearch] = useState('');
   const [regionFilter, setRegionFilter] = useLocalStorage<string>('jrnl:quest:region', 'ALL');
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
@@ -354,9 +357,19 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
       }));
   }, [allQuests]);
 
+  // Quest Impact Advisor — ranked by unlock score. Only computed when the
+  // panel is visible (advisor mode + not filtering) to avoid running O(n²)
+  // simulations on every keystroke while the player is searching.
+  const showAdvisorStrip = !searchTerm && filter === 'ALL' && regionFilter === 'ALL' && advisorMode;
+  const rankedQuests = useMemo(
+    () => (showAdvisorStrip ? rankAvailableQuests(unlocks) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [showAdvisorStrip, unlocks],
+  );
+
   // Only show the strip when the player is browsing (not searching / filtering),
   // otherwise it duplicates whatever they're already trying to see.
-  const showNextUpStrip = !searchTerm && filter === 'ALL' && regionFilter === 'ALL';
+  const showNextUpStrip = !searchTerm && filter === 'ALL' && regionFilter === 'ALL' && !advisorMode;
 
   const mainQuests = filteredQuests.filter(q => q.points > 0);
   const miniquests = filteredQuests.filter(q => q.points === 0);
@@ -415,6 +428,13 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-[10px] text-blue-300 font-mono font-bold whitespace-nowrap">QP {currentQP}</span>
             <button
+              onClick={() => setAdvisorMode(!advisorMode)}
+              className={`p-1 rounded border text-[10px] flex items-center gap-1 ${advisorMode ? 'bg-violet-900/40 border-violet-500/40 text-violet-300' : 'bg-black/40 border-white/10 text-gray-500 hover:text-white'}`}
+              title={advisorMode ? 'Switch to Quick Wins (by difficulty)' : 'Switch to High Impact (by unlock count)'}
+            >
+              <TrendingUp size={12} />
+            </button>
+            <button
               onClick={() => setGroupBySeries(!groupBySeries)}
               className={`p-1 rounded border text-[10px] flex items-center gap-1 ${groupBySeries ? 'bg-purple-900/40 border-purple-500/40 text-purple-300' : 'bg-black/40 border-white/10 text-gray-500 hover:text-white'}`}
               title={groupBySeries ? 'Group by Type (Main/Mini)' : 'Group by Series'}
@@ -430,6 +450,13 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
           items={nextUpItems}
           noun="quests"
           accent="bg-blue-900/40 text-blue-300"
+          onItemClick={focusCard}
+        />
+      )}
+
+      {showAdvisorStrip && (
+        <QuestAdvisorPanel
+          ranked={rankedQuests}
           onItemClick={focusCard}
         />
       )}
