@@ -15,9 +15,13 @@ export const GoalTracker: React.FC = () => {
   const { pinnedGoals, togglePin, unlocks } = gameState;
 
   // Top closest-to-unlocking items — surfaced inline so a dashboard glance
-  // shows progress hints without opening the Resource Engine. Memoised; the
-  // gate-cost ranking already lives in supplyChain.ts.
-  const closest = React.useMemo(() => getNextAchievableItems(gameState, 3), [gameState]);
+  // shows progress hints without opening the Resource Engine. Memoised on
+  // unlocks specifically (rather than the whole gameState) so a roll or
+  // history-append doesn't re-scan all 786 items.
+  const closest = React.useMemo(
+    () => getNextAchievableItems(gameState, 3),
+    [unlocks], // eslint-disable-line react-hooks/exhaustive-deps -- getNext... only reads gameState.unlocks
+  );
 
   const openEngineOn = (item: string) => {
     window.dispatchEvent(new CustomEvent('open-resource-engine', { detail: { item } }));
