@@ -6,7 +6,7 @@ import {
   POH_LIST, MERCHANTS_LIST, STORAGE_LIST, FARMING_PATCH_LIST, SKILLS_LIST,
   REGION_GROUPS, MISTHALIN_AREAS,
 } from './items';
-import { computeFullBreakdown, flattenRawMaterials, findEasiestPath, calculateSupplyChain, getNextAchievableItems, calculateEngineItemProgress } from '../utils/supplyChain';
+import { computeFullBreakdown, flattenRawMaterials, flattenMultiBreakdown, findEasiestPath, calculateSupplyChain, getNextAchievableItems, calculateEngineItemProgress } from '../utils/supplyChain';
 import type { GameState } from '../types';
 
 /**
@@ -265,6 +265,37 @@ describe('calculateEngineItemProgress mirrors the GoalProgress shape', () => {
     expect(p.missing.length).toBeGreaterThan(0);
     expect(p.percentage).toBeLessThan(100);
     expect(p.totalSteps).toBeGreaterThanOrEqual(p.completedSteps);
+  });
+});
+
+describe('flattenMultiBreakdown sums across targets', () => {
+  it('returns the same total as a single target when only one target is set', () => {
+    const single = flattenRawMaterials(computeFullBreakdown('Prayer Potion', 5));
+    const multi = flattenMultiBreakdown({ 'Prayer Potion': 5 });
+    expect(multi).toEqual(single);
+  });
+
+  it('sums identical raw materials across multiple targets', () => {
+    // Both Super Attack and Super Strength have Vial of Water in their
+    // breakdown. The combined plan must merge the totals, not duplicate.
+    const plan = flattenMultiBreakdown({ 'Super Attack': 2, 'Super Strength': 3 });
+    const names = plan.map((m) => m.item);
+    expect(new Set(names).size).toBe(names.length); // no duplicates
+    const vial = plan.find((m) => m.item === 'Vial of Water');
+    if (vial) expect(vial.qty).toBe(2 + 3);
+  });
+
+  it('skips invalid / zero / non-existent targets', () => {
+    const plan = flattenMultiBreakdown({
+      'Prayer Potion': 1,
+      'Not An Item': 5,
+      'Logs': 0,
+      'Logs ': 1,
+    });
+    // 'Not An Item' and the two zero/whitespace forms shouldn't crash or
+    // contribute anything; the prayer potion materials still come through.
+    expect(plan.length).toBeGreaterThan(0);
+    expect(plan.every((m) => m.qty > 0)).toBe(true);
   });
 });
 

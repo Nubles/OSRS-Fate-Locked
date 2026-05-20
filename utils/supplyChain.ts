@@ -410,3 +410,23 @@ export const flattenRawMaterials = (node: MaterialNode): { item: string; qty: nu
     .map(([item, qty]) => ({ item, qty }))
     .sort((a, b) => a.item.localeCompare(b.item));
 };
+
+/**
+ * Combine the raw-material breakdowns of multiple targets into a single
+ * deduplicated list. Used by the Bulk Planner: a player picks a basket of
+ * items to craft (e.g. 100 Prayer Potions + 50 Super Combats) and gets the
+ * consolidated shopping list across all of them.
+ */
+export const flattenMultiBreakdown = (targets: Record<string, number>): { item: string; qty: number }[] => {
+  const totals: Record<string, number> = {};
+  for (const [item, qty] of Object.entries(targets)) {
+    if (!qty || qty <= 0 || !RESOURCE_MAP[item]) continue;
+    const leaves = flattenRawMaterials(computeFullBreakdown(item, qty));
+    for (const { item: leaf, qty: q } of leaves) {
+      totals[leaf] = (totals[leaf] || 0) + q;
+    }
+  }
+  return Object.entries(totals)
+    .map(([item, qty]) => ({ item, qty }))
+    .sort((a, b) => a.item.localeCompare(b.item));
+};

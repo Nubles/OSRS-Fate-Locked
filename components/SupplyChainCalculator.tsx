@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { RESOURCE_MAP, RESOURCE_CATEGORIES, ITEM_CATEGORY } from '../data/resourceData';
-import { calculateSupplyChain, isItemAvailableWithCtx, buildAvailabilityContext, computeFullBreakdown, flattenRawMaterials, findEasiestPath, getNextAchievableItems } from '../utils/supplyChain';
+import { calculateSupplyChain, isItemAvailableWithCtx, buildAvailabilityContext, computeFullBreakdown, flattenRawMaterials, flattenMultiBreakdown, findEasiestPath, getNextAchievableItems } from '../utils/supplyChain';
 import { wikiService } from '../services/WikiService';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { X, Search, CheckCircle2, Lock, Box, ShoppingBag, Sword, Sprout, MapPin, Database, ExternalLink, RefreshCw, ArrowLeft, ArrowRight, Hammer, HelpCircle, Layers, Coins, Calculator, ListFilter, Star, ChevronDown, ChevronRight, Hand, ScrollText, Percent, Compass, Pin } from 'lucide-react';
@@ -10,6 +10,7 @@ import { X, Search, CheckCircle2, Lock, Box, ShoppingBag, Sword, Sprout, MapPin,
 const FAVORITES_KEY = 'FATE_RESOURCE_FAVORITES';
 const INVENTORY_KEY = 'FATE_RESOURCE_INVENTORY';
 const RECENT_KEY = 'FATE_RESOURCE_RECENT';
+const PLAN_KEY = 'FATE_RESOURCE_PLAN';
 const MAX_FAVORITES = 20;
 const MAX_RECENT = 10;
 
@@ -113,6 +114,25 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
       return [];
     }
   });
+  // Bulk Planner: item -> target qty. Combined raw-material breakdown is
+  // computed via flattenMultiBreakdown across every entry > 0.
+  const [planTargets, setPlanTargets] = useState<Record<string, number>>(() => {
+    try {
+      const raw = localStorage.getItem(PLAN_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        const cleaned: Record<string, number> = {};
+        for (const [k, v] of Object.entries(parsed)) {
+          if (typeof v === 'number' && v > 0 && Number.isFinite(v) && RESOURCE_MAP[k]) cleaned[k] = v;
+        }
+        return cleaned;
+      }
+      return {};
+    } catch {
+      return {};
+    }
+  });
+  const [showPlan, setShowPlan] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -139,12 +159,40 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
     try { localStorage.setItem(RECENT_KEY, JSON.stringify(recent)); } catch {}
   }, [recent]);
 
+  useEffect(() => {
+    try { localStorage.setItem(PLAN_KEY, JSON.stringify(planTargets)); } catch {}
+  }, [planTargets]);
+
   const trackRecent = (item: string) => {
     if (!RESOURCE_MAP[item]) return;
     setRecent((prev) => [item, ...prev.filter((x) => x !== item)].slice(0, MAX_RECENT));
   };
 
   const clearInventory = () => setInventory({});
+
+  const setPlanTarget = (item: string, qty: number) => {
+    setPlanTargets((prev) => {
+      const next = { ...prev };
+      if (qty > 0 && RESOURCE_MAP[item]) next[item] = qty;
+      else delete next[item];
+      return next;
+    });
+  };
+  const togglePlanItem = (item: string) => {
+    setPlanTargets((prev) => {
+      const next = { ...prev };
+      if (next[item]) delete next[item];
+      else next[item] = 1;
+      return next;
+    });
+  };
+
+  // Combined raw materials across every planTargets entry. Sorted, summed,
+  // identical to the single-item breakdown but spanning the whole plan.
+  const planRawMaterials = useMemo(
+    () => flattenMultiBreakdown(planTargets),
+    [planTargets],
+  );
 
   const setInventoryFor = (item: string, n: number) => {
     setInventory(prev => {
@@ -373,6 +421,16 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
                                     >
                                         <Pin size={12} className={pinnedGoals.includes(selectedResult.itemName) ? 'fill-purple-400' : ''} />
                                         {pinnedGoals.includes(selectedResult.itemName) ? 'Pinned Goal' : 'Pin as Goal'}
+                                    </button>
+                                    <span className="text-xs text-gray-500">•</span>
+                                    <button
+                                        onClick={() => togglePlanItem(selectedResult.itemName)}
+                                        aria-pressed={!!planTargets[selectedResult.itemName]}
+                                        title={planTargets[selectedResult.itemName] ? 'Remove from crafting plan' : 'Add to crafting plan'}
+                                        className={`text-xs transition-colors flex items-center gap-1 ${planTargets[selectedResult.itemName] ? 'text-cyan-300 hover:text-cyan-200' : 'text-gray-500 hover:text-cyan-400'}`}
+                                    >
+                                        <Layers size={12} className={planTargets[selectedResult.itemName] ? 'fill-cyan-400/40' : ''} />
+                                        {planTargets[selectedResult.itemName] ? `In Plan (×${planTargets[selectedResult.itemName]})` : 'Add to Plan'}
                                     </button>
                                     {ITEM_CATEGORY[selectedResult.itemName] && (
                                         <>
@@ -731,6 +789,110 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
                                     </div>
                                 ))}
                             </div>
+                        </div>
+                    )}
+
+                    {/* Crafting Plan — multi-target combined raw-material breakdown. */}
+                    {Object.keys(planTargets).length > 0 && (
+                        <div className="mb-5 rounded-xl border border-cyan-500/20 bg-gradient-to-r from-cyan-900/10 to-transparent p-4">
+                            <div className="w-full flex items-center gap-2 mb-3">
+                                <button
+                                    onClick={() => setShowPlan(v => !v)}
+                                    className="flex items-center gap-2 group flex-1 text-left"
+                                >
+                                    {showPlan ? <ChevronDown size={14} className="text-cyan-400" /> : <ChevronRight size={14} className="text-cyan-400" />}
+                                    <Layers size={14} className="text-cyan-400" />
+                                    <span className="text-xs font-bold text-cyan-300 uppercase tracking-widest group-hover:text-cyan-200 transition-colors">
+                                        Crafting Plan — {Object.keys(planTargets).length} item{Object.keys(planTargets).length !== 1 ? 's' : ''}
+                                    </span>
+                                    <span className="text-[10px] text-cyan-400/60 font-mono">
+                                        {planRawMaterials.length} raw material{planRawMaterials.length !== 1 ? 's' : ''} combined
+                                    </span>
+                                </button>
+                                <div className="flex-1 h-px bg-cyan-500/10"></div>
+                                <button
+                                    onClick={() => setPlanTargets({})}
+                                    className="text-[10px] text-gray-600 hover:text-red-400 font-mono uppercase tracking-wide transition-colors shrink-0"
+                                    title="Empty the plan"
+                                >
+                                    clear plan
+                                </button>
+                            </div>
+
+                            {/* Target list — always shown so the player can edit qty without expanding the breakdown. */}
+                            <div className="flex flex-wrap gap-2 mb-3">
+                                {Object.entries(planTargets).map(([item, qty]) => (
+                                    <div key={item} className="flex items-center gap-2 px-2.5 py-1.5 bg-[#1a1a1a] border border-cyan-500/15 rounded-lg text-xs">
+                                        <button onClick={() => handleNavigate(item)} className="flex items-center gap-2 text-cyan-100 hover:text-white transition-colors">
+                                            <ItemImage name={item} size="sm" />
+                                            <span className="font-medium max-w-[160px] truncate" title={item}>{item}</span>
+                                        </button>
+                                        <input
+                                            type="number"
+                                            min={1}
+                                            value={qty}
+                                            onChange={(e) => setPlanTarget(item, Math.max(1, parseInt(e.target.value, 10) || 1))}
+                                            className="w-14 text-[11px] font-mono bg-black/40 border border-white/10 rounded px-1.5 py-0.5 text-center text-gray-200 focus:outline-none focus:border-cyan-500/50"
+                                        />
+                                        <button
+                                            onClick={() => togglePlanItem(item)}
+                                            title="Remove from plan"
+                                            className="text-gray-600 hover:text-red-400 transition-colors"
+                                        >
+                                            <X size={12} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {showPlan && planRawMaterials.length > 0 && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 animate-in fade-in duration-200">
+                                    {planRawMaterials.map(({ item, qty }) => {
+                                        const isLinkable = !!RESOURCE_MAP[item];
+                                        const have = inventory[item] || 0;
+                                        const stillNeed = Math.max(0, qty - have);
+                                        const isCovered = stillNeed === 0;
+                                        return (
+                                            <div
+                                                key={item}
+                                                className={`flex items-center gap-3 p-2.5 rounded-lg border transition-all ${isCovered ? 'bg-emerald-900/10 border-emerald-500/20' : 'bg-[#1a1a1a] border-white/5'}`}
+                                            >
+                                                {item === 'Coins' ? (
+                                                    <div className="w-8 h-8 flex items-center justify-center bg-yellow-900/20 rounded border border-yellow-500/20 shrink-0"><Coins size={14} className="text-yellow-400" /></div>
+                                                ) : (
+                                                    <ItemImage name={item} size="sm" />
+                                                )}
+                                                <div className="flex-1 min-w-0">
+                                                    {isLinkable ? (
+                                                        <button onClick={() => handleNavigate(item)} className="text-xs font-bold text-gray-300 hover:text-white truncate block text-left">
+                                                            {item}
+                                                        </button>
+                                                    ) : (
+                                                        <span className="text-xs font-bold text-gray-300 truncate block">{item}</span>
+                                                    )}
+                                                    <span className={`text-[10px] font-mono ${isCovered ? 'text-emerald-400' : 'text-gray-500'}`}>
+                                                        {isCovered ? `Covered (need ${formatQty(qty)})` : `Need x${formatQty(stillNeed)}${have > 0 ? ` of ${formatQty(qty)}` : ''}`}
+                                                    </span>
+                                                </div>
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    placeholder="have"
+                                                    value={have || ''}
+                                                    onChange={(e) => setInventoryFor(item, Math.max(0, parseInt(e.target.value, 10) || 0))}
+                                                    className="w-14 text-[10px] font-mono bg-black/40 border border-white/10 rounded px-1 py-0.5 text-gray-200 focus:outline-none focus:border-emerald-500/50 shrink-0"
+                                                />
+                                                {isLinkable && (
+                                                    <span
+                                                        className={`w-1.5 h-1.5 rounded-full shrink-0 ${availabilityMap[item] ? 'bg-emerald-500' : 'bg-red-500'}`}
+                                                        title={availabilityMap[item] ? 'Available' : 'Locked'}
+                                                    />
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
                     )}
 
