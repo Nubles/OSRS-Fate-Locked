@@ -6,7 +6,7 @@ import {
   POH_LIST, MERCHANTS_LIST, STORAGE_LIST, FARMING_PATCH_LIST, SKILLS_LIST,
   REGION_GROUPS, MISTHALIN_AREAS,
 } from './items';
-import { computeFullBreakdown, flattenRawMaterials, findEasiestPath, calculateSupplyChain, getNextAchievableItems } from '../utils/supplyChain';
+import { computeFullBreakdown, flattenRawMaterials, findEasiestPath, calculateSupplyChain, getNextAchievableItems, calculateEngineItemProgress } from '../utils/supplyChain';
 import type { GameState } from '../types';
 
 /**
@@ -230,6 +230,41 @@ describe('getNextAchievableItems returns a useful ranked list', () => {
         `${item} was returned by getNextAchievableItems but already has an available source`,
       ).toBe(false);
     }
+  });
+});
+
+describe('calculateEngineItemProgress mirrors the GoalProgress shape', () => {
+  const emptyState: GameState = {
+    keys: 0, specialKeys: 0, chaosKeys: 0, fatePoints: 0,
+    unlocks: {
+      equipment: {}, skills: {}, levels: {},
+      regions: [], mobility: [], arcana: [], housing: [], merchants: [],
+      minigames: [], bosses: [], storage: [], guilds: [], farming: [],
+      quests: [], diaries: [], cas: [], completedTasks: [], collectionLog: {},
+    },
+    history: [], pinnedGoals: [], userNotes: {},
+    activeBuff: 'NONE', animationsEnabled: true, hasSeenOnboarding: true,
+    gameModeId: 'vanilla', gameModeLocked: false, customMode: undefined,
+    version: 1,
+  } as any;
+
+  it('returns null for an unknown item', () => {
+    expect(calculateEngineItemProgress('Definitely Not An Item', emptyState)).toBeNull();
+  });
+
+  it('returns 100% for an already-obtainable item', () => {
+    // Logs are 'Any' region with Woodcutting 1 — obtainable on a fresh state.
+    const p = calculateEngineItemProgress('Logs', emptyState)!;
+    expect(p.percentage).toBe(100);
+    expect(p.missing).toEqual([]);
+  });
+
+  it('clamps to 99% when anything is missing', () => {
+    // Twisted Bow's CoX route is fully locked on an empty state.
+    const p = calculateEngineItemProgress('Twisted Bow', emptyState)!;
+    expect(p.missing.length).toBeGreaterThan(0);
+    expect(p.percentage).toBeLessThan(100);
+    expect(p.totalSteps).toBeGreaterThanOrEqual(p.completedSteps);
   });
 });
 

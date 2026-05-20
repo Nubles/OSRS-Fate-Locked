@@ -4,12 +4,15 @@ import { useGame } from '../context/GameContext';
 import { STRATEGY_DATABASE, ContentRequirement } from '../data/requirements';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
+import { RESOURCE_MAP } from '../data/resourceData';
 import { TableType } from '../types';
-import { calculateGoalProgress } from '../utils/goalLogic';
+import { calculateGoalProgress, GoalProgress } from '../utils/goalLogic';
+import { calculateEngineItemProgress } from '../utils/supplyChain';
 import { Pin, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export const GoalTracker: React.FC = () => {
-  const { pinnedGoals, togglePin, unlocks } = useGame();
+  const gameState = useGame();
+  const { pinnedGoals, togglePin, unlocks } = gameState;
 
   if (pinnedGoals.length === 0) return null;
 
@@ -50,9 +53,24 @@ export const GoalTracker: React.FC = () => {
              }
           }
 
-          if (!req) return null; 
+          // Final fallback: a Resource Engine item. Engine items don't fit
+          // ContentRequirement (they're gated by per-source unlock IDs the
+          // strategy schema doesn't model), so we compute progress via the
+          // engine's own analyzer and feed the same GoalProgress shape back.
+          let progress: GoalProgress;
+          let description: string | undefined;
+          if (req) {
+            progress = calculateGoalProgress(req, unlocks);
+            description = req.description;
+          } else if (RESOURCE_MAP[id]) {
+            const engineProgress = calculateEngineItemProgress(id, gameState);
+            if (!engineProgress) return null;
+            progress = engineProgress;
+            description = 'Resource Engine item';
+          } else {
+            return null;
+          }
 
-          const progress = calculateGoalProgress(req, unlocks);
           const isComplete = progress.percentage === 100;
 
           return (

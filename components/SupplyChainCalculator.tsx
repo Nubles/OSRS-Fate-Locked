@@ -5,7 +5,7 @@ import { RESOURCE_MAP, RESOURCE_CATEGORIES, ITEM_CATEGORY } from '../data/resour
 import { calculateSupplyChain, isItemAvailableWithCtx, buildAvailabilityContext, computeFullBreakdown, flattenRawMaterials, findEasiestPath, getNextAchievableItems } from '../utils/supplyChain';
 import { wikiService } from '../services/WikiService';
 import { useFocusTrap } from '../hooks/useFocusTrap';
-import { X, Search, CheckCircle2, Lock, Box, ShoppingBag, Sword, Sprout, MapPin, Database, ExternalLink, RefreshCw, ArrowLeft, ArrowRight, Hammer, HelpCircle, Layers, Coins, Calculator, ListFilter, Star, ChevronDown, ChevronRight, Hand, ScrollText, Percent, Compass } from 'lucide-react';
+import { X, Search, CheckCircle2, Lock, Box, ShoppingBag, Sword, Sprout, MapPin, Database, ExternalLink, RefreshCw, ArrowLeft, ArrowRight, Hammer, HelpCircle, Layers, Coins, Calculator, ListFilter, Star, ChevronDown, ChevronRight, Hand, ScrollText, Percent, Compass, Pin } from 'lucide-react';
 
 const FAVORITES_KEY = 'FATE_RESOURCE_FAVORITES';
 const MAX_FAVORITES = 20;
@@ -62,6 +62,7 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
   const gameState = useGame();
+  const { togglePin, pinnedGoals } = gameState;
   const [query, setQuery] = useState('');
   const [targetQty, setTargetQty] = useState(1);
   const [history, setHistory] = useState<string[]>([]);
@@ -298,6 +299,16 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
                                     >
                                         <Star size={12} className={favorites.includes(selectedResult.itemName) ? 'fill-yellow-400' : ''} />
                                         {favorites.includes(selectedResult.itemName) ? 'Favorited' : 'Favorite'}
+                                    </button>
+                                    <span className="text-xs text-gray-500">•</span>
+                                    <button
+                                        onClick={() => togglePin(selectedResult.itemName)}
+                                        aria-pressed={pinnedGoals.includes(selectedResult.itemName)}
+                                        title={pinnedGoals.includes(selectedResult.itemName) ? 'Remove from Active Goals' : 'Track in Active Goals (Dashboard)'}
+                                        className={`text-xs transition-colors flex items-center gap-1 ${pinnedGoals.includes(selectedResult.itemName) ? 'text-purple-300 hover:text-purple-200' : 'text-gray-500 hover:text-purple-400'}`}
+                                    >
+                                        <Pin size={12} className={pinnedGoals.includes(selectedResult.itemName) ? 'fill-purple-400' : ''} />
+                                        {pinnedGoals.includes(selectedResult.itemName) ? 'Pinned Goal' : 'Pin as Goal'}
                                     </button>
                                     {ITEM_CATEGORY[selectedResult.itemName] && (
                                         <>

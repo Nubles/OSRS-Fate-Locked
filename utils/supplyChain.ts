@@ -248,6 +248,45 @@ export const findEasiestPath = (itemName: string, gameState: GameState): Easiest
   findEasiestPathWithCtx(itemName, buildAvailabilityContext(gameState));
 
 /**
+ * Goal-tracker-compatible progress for a Resource Engine item. Same shape as
+ * GoalProgress in goalLogic, so the GoalTracker UI can render engine-item
+ * goals next to strategy-database goals without special-casing.
+ *
+ * "Total steps" is the count of requirements on the easiest source: regions
+ * + skills + quests + (1 for an unlockId, if set). "Completed" is total -
+ * missing. We clamp the displayed percentage to 99 when anything is missing,
+ * matching calculateGoalProgress's behaviour.
+ */
+export interface EngineItemProgress {
+  percentage: number;
+  missing: string[];
+  totalSteps: number;
+  completedSteps: number;
+}
+export const calculateEngineItemProgress = (itemName: string, gameState: GameState): EngineItemProgress | null => {
+  const sources = RESOURCE_MAP[itemName];
+  if (!sources) return null;
+  const ctx = buildAvailabilityContext(gameState);
+
+  // Already obtainable — show 100% and an empty missing list.
+  if (sources.some((s) => isSourceAvailable(s, ctx))) {
+    return { percentage: 100, missing: [], totalSteps: 1, completedSteps: 1 };
+  }
+
+  const path = findEasiestPathWithCtx(itemName, ctx)!;
+  const s = path.source;
+  const total =
+    s.regions.length +
+    Object.keys(s.skills || {}).length +
+    (s.quests?.length || 0) +
+    (s.unlockId ? 1 : 0);
+  const completed = Math.max(0, total - path.missing.length);
+  let percentage = total === 0 ? 100 : Math.round((completed / total) * 100);
+  if (percentage === 100 && path.missing.length > 0) percentage = 99;
+  return { percentage, missing: path.missing, totalSteps: total, completedSteps: completed };
+};
+
+/**
  * Scans every locked item in RESOURCE_MAP and ranks them by the effort of
  * their easiest unlock route. Used for the "Closest to unlocking" panel —
  * a top-down view that complements the search-driven drill-down.
