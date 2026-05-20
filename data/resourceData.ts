@@ -2667,6 +2667,112 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   "Rogue's Purse": [
     { type: 'SKILL', name: 'Picking', regions: ['Morytania'], skills: { 'Farming': 4 }, quests: ['Nature Spirit'], notes: "Mort Myre Swamp mushrooms" }
   ],
+
+  // --- MASTERING MIXOLOGY HERBS / INGREDIENTS ---
+  // The MM minigame in Morytania produces its own herb line + a "water-filled
+  // gourd vial" used in every MM-only potion. Each is gated on the minigame
+  // unlock so locked players' breakdowns show MM as the prereq.
+  'Noxifer': [
+    { type: 'MINIGAME', name: 'Mastering Mixology', regions: ['Morytania'], unlockId: 'Mastering Mixology', notes: 'Aga-paste herb' }
+  ],
+  'Golpar': [
+    { type: 'MINIGAME', name: 'Mastering Mixology', regions: ['Morytania'], unlockId: 'Mastering Mixology', notes: 'Mox-paste herb' }
+  ],
+  'Buchu Leaf': [
+    { type: 'MINIGAME', name: 'Mastering Mixology', regions: ['Morytania'], unlockId: 'Mastering Mixology', notes: 'Lye-paste herb' }
+  ],
+  'Cicely': [
+    { type: 'MINIGAME', name: 'Mastering Mixology', regions: ['Morytania'], unlockId: 'Mastering Mixology' }
+  ],
+  'Stinkhorn Mushroom': [
+    { type: 'MINIGAME', name: 'Mastering Mixology', regions: ['Morytania'], unlockId: 'Mastering Mixology' }
+  ],
+  'Endarkened Juice': [
+    { type: 'MINIGAME', name: 'Mastering Mixology', regions: ['Morytania'], unlockId: 'Mastering Mixology' }
+  ],
+  'Aldarium': [
+    { type: 'MINIGAME', name: 'Mastering Mixology', regions: ['Morytania'], unlockId: 'Mastering Mixology', notes: 'Crafted intermediate' }
+  ],
+  'Huasca': [
+    { type: 'MINIGAME', name: 'Mastering Mixology', regions: ['Morytania'], unlockId: 'Mastering Mixology' }
+  ],
+  'Water-filled Gourd Vial': [
+    { type: 'MINIGAME', name: 'Mastering Mixology', regions: ['Morytania'], unlockId: 'Mastering Mixology' }
+  ],
+
+  // --- MASTERING MIXOLOGY POTIONS ---
+  // Each potion has both the MM minigame source (with the unlock gate) and
+  // its real Herblore level so the existing skill check still applies.
+  // Mixing happens at the Lab in Morytania.
+  'Elder Potion': [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 59 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Stinkhorn Mushroom': 1 } }
+  ],
+  'Elder (+)': [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 70 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Stinkhorn Mushroom': 1 } }
+  ],
+  'Elder (-)': [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 47 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Stinkhorn Mushroom': 1 } }
+  ],
+  'Kodai Potion': [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 59 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Endarkened Juice': 1 } }
+  ],
+  'Kodai (+)': [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 70 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Endarkened Juice': 1 } }
+  ],
+  'Kodai (-)': [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 47 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Endarkened Juice': 1 } }
+  ],
+  'Twisted Potion': [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 59 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Cicely': 1 } }
+  ],
+  'Twisted (+)': [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 70 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Cicely': 1 } }
+  ],
+  'Twisted (-)': [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 47 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Golpar': 1, 'Cicely': 1 } }
+  ],
+  'Prayer Enhance': [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 65 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Cicely': 1 } }
+  ],
+  'Prayer Enhance (+)': [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 78 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Cicely': 1 } }
+  ],
+  'Prayer Enhance (-)': [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 52 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Cicely': 1 } }
+  ],
+  'Revitalisation Potion': [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 65 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Stinkhorn Mushroom': 1 } }
+  ],
+  'Revitalisation (+)': [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 78 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Stinkhorn Mushroom': 1 } }
+  ],
+  'Revitalisation (-)': [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 52 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Stinkhorn Mushroom': 1 } }
+  ],
+  "Xeric's Aid": [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 65 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Endarkened Juice': 1 } }
+  ],
+  "Xeric's Aid (+)": [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 78 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Endarkened Juice': 1 } }
+  ],
+  "Xeric's Aid (-)": [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 52 }, unlockId: 'Mastering Mixology', inputs: { 'Water-filled Gourd Vial': 1, 'Buchu Leaf': 1, 'Endarkened Juice': 1 } }
+  ],
+  'Overload (+)': [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 90 }, unlockId: 'Mastering Mixology', inputs: { 'Noxifer': 1, 'Elder (+)': 1, 'Twisted (+)': 1, 'Kodai (+)': 1 } }
+  ],
+  'Overload (-)': [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 60 }, unlockId: 'Mastering Mixology', inputs: { 'Noxifer': 1, 'Elder (-)': 1, 'Twisted (-)': 1, 'Kodai (-)': 1 } }
+  ],
+  'Overload (Chambers of Xeric)': [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 75 }, unlockId: 'Mastering Mixology', inputs: { 'Noxifer': 1, 'Elder Potion': 1, 'Twisted Potion': 1, 'Kodai Potion': 1 } }
+  ],
+  'Goading Potion': [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 54 }, unlockId: 'Mastering Mixology', inputs: { 'Harralander': 1, 'Vial of Water': 1, 'Aldarium': 1 } }
+  ],
+  'Prayer Regeneration Potion': [
+    { type: 'SKILL', name: 'Mastering Mixology', regions: ['Morytania'], skills: { 'Herblore': 58 }, unlockId: 'Mastering Mixology', inputs: { 'Huasca': 1, 'Vial of Water': 1, 'Aldarium': 1 } }
+  ],
 };
 
 // Merge auto-generated SHOP/DROP sources from the OSRS Wiki (see
@@ -2895,6 +3001,18 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
   ],
   'Treasure Trail Rewards': [
     'Ranger Boots', 'Robin Hood Hat', 'Holy Sandals',
+  ],
+  'Mastering Mixology': [
+    'Noxifer', 'Golpar', 'Buchu Leaf', 'Cicely', 'Stinkhorn Mushroom',
+    'Endarkened Juice', 'Aldarium', 'Huasca', 'Water-filled Gourd Vial',
+    'Elder Potion', 'Elder (+)', 'Elder (-)',
+    'Kodai Potion', 'Kodai (+)', 'Kodai (-)',
+    'Twisted Potion', 'Twisted (+)', 'Twisted (-)',
+    'Prayer Enhance', 'Prayer Enhance (+)', 'Prayer Enhance (-)',
+    'Revitalisation Potion', 'Revitalisation (+)', 'Revitalisation (-)',
+    "Xeric's Aid", "Xeric's Aid (+)", "Xeric's Aid (-)",
+    'Overload (+)', 'Overload (-)', 'Overload (Chambers of Xeric)',
+    'Goading Potion', 'Prayer Regeneration Potion',
   ],
   'Adamant Smithing': [
     'Adamant 2h Sword',

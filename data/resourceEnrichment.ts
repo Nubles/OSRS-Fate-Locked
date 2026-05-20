@@ -272,6 +272,10 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Wise Old Man Tasks', regions: ['Misthalin'], rarity: 'Common' },
     { type: 'DROP', name: 'Barrel (Shaman Caves)', regions: ['Any'], rarity: 'Uncommon' }
   ],
+  'Aldarium': [
+    { type: 'SHOP', name: 'Mixology Rewards', regions: ['Any'] },
+    { type: 'DROP', name: 'Chest (alchemist\'s Signet)', regions: ['Varlamore'], rarity: 'Always' }
+  ],
   'Amethyst': [
     { type: 'DROP', name: 'Amethyst Crystals', regions: ['Any'], rarity: 'Always' }
   ],
@@ -823,6 +827,10 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Dessourt', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Dessourt (Nightmare Zone)', regions: ['Kandarin'], unlockId: 'Nightmare Zone', rarity: 'Always' }
   ],
+  'Cicely': [
+    { type: 'DROP', name: 'Ice Demon', regions: ['Kourend & Kebos'], rarity: 'Always' },
+    { type: 'DROP', name: 'Scavenger Beast', regions: ['Kourend & Kebos'], rarity: '2/18' }
+  ],
   'Clay': [
     { type: 'DROP', name: 'Soil', regions: ['Misthalin'], rarity: '1/16' },
     { type: 'DROP', name: 'Imp', regions: ['Any'], rarity: '4/128' },
@@ -1152,6 +1160,11 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Mummy (Ancient Pyramid)', regions: ['Any'], rarity: '10/513' },
     { type: 'DROP', name: 'Crushing Hand', regions: ['Morytania'], rarity: '2/128' },
     { type: 'DROP', name: 'Small Chest', regions: ['Misthalin'], rarity: '4/150' }
+  ],
+  'Endarkened Juice': [
+    { type: 'DROP', name: 'Vasa Nistirio', regions: ['Kourend & Kebos'], rarity: 'Always' },
+    { type: 'DROP', name: 'Ice Demon', regions: ['Kourend & Kebos'], rarity: 'Always' },
+    { type: 'DROP', name: 'Scavenger Beast', regions: ['Kourend & Kebos'], rarity: '2/18' }
   ],
   'Eye of Newt': [
     { type: 'SHOP', name: 'Betty\'s Magic Emporium', regions: ['Asgarnia'] },
@@ -3361,6 +3374,12 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Market Guard', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Mountain Troll', regions: ['Any'], rarity: '3/128' },
     { type: 'DROP', name: 'Troll General', regions: ['Any'], rarity: '3/128' }
+  ],
+  'Stinkhorn Mushroom': [
+    { type: 'DROP', name: 'Tekton', regions: ['Kourend & Kebos'], rarity: 'Always' },
+    { type: 'DROP', name: 'Ice Demon', regions: ['Kourend & Kebos'], rarity: 'Always' },
+    { type: 'DROP', name: 'Muttadile', regions: ['Kourend & Kebos'], rarity: 'Always' },
+    { type: 'DROP', name: 'Scavenger Beast', regions: ['Kourend & Kebos'], rarity: '2/18' }
   ],
   'Studded Body': [
     { type: 'SHOP', name: 'Horvik\'s Armour Shop', regions: ['Misthalin'] },
