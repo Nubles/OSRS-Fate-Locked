@@ -5,6 +5,7 @@ import { Scroll, Search, Filter, Dices, Lock, Unlock, Zap, TrendingUp, AlertCirc
 import { FixedSizeList as List, ListChildComponentProps } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { LogEntry } from '../types';
+import { isRollEntry } from '../utils/logEntry';
 import { ModalFallback } from './LoadingFallback';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 
@@ -83,8 +84,8 @@ const LogRow = ({ index, style, data }: ListChildComponentProps<{ entries: LogEn
   const Icon = styles.icon;
   const date = new Date(entry.timestamp);
   
-  // Format specific data for rolls
-  const isRoll = entry.type.includes('ROLL');
+  // Format specific data for rolls (includes PITY — it's a roll outcome too).
+  const isRoll = isRollEntry(entry);
   const rollVal = entry.rollValue;
   const threshold = entry.threshold;
 
@@ -150,7 +151,7 @@ export const LogViewer: React.FC = () => {
     // 1. Category Filter
     if (filterType !== 'ALL') {
       filtered = filtered.filter(entry => {
-        if (filterType === 'ROLLS') return entry.type.includes('ROLL');
+        if (filterType === 'ROLLS') return isRollEntry(entry);
         if (filterType === 'UNLOCKS') return entry.type === 'UNLOCK';
         if (filterType === 'RITUALS') return entry.type === 'ALTAR';
         if (filterType === 'PROGRESS') return entry.type === 'LEVEL_UP';
@@ -257,6 +258,7 @@ export const LogViewer: React.FC = () => {
              <FilterButton type="ALL" label="All" icon={Filter} />
              <FilterButton type="ROLLS" label="Rolls" icon={Dices} />
              <FilterButton type="UNLOCKS" label="Unlocks" icon={Unlock} />
+             <FilterButton type="RITUALS" label="Rituals" icon={Zap} />
              <FilterButton type="PROGRESS" label="Level" icon={TrendingUp} />
           </div>
         </div>
