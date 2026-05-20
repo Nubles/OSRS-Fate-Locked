@@ -6,15 +6,20 @@ import { ALL_DIARY_TASKS, DiaryTask } from '../data/diaryTasks';
 import { Map, CheckCircle2, Lock, Sparkles, BookOpen, ChevronDown, CheckSquare, Square, ExternalLink } from 'lucide-react';
 import { DROP_RATES } from '../config/rules';
 import { MISTHALIN_AREAS } from '../constants';
+import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 
 interface DiaryLogProps {
   searchTerm?: string;
 }
 
-export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm = '' }) => {
+export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch = '' }) => {
   const { unlocks, toggleDiary, rollForKey, toggleTask } = useGame();
   const [filterRegion, setFilterRegion] = useState('ALL');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<JournalStatus>('ALL');
+  const [filterTier, setFilterTier] = useState('ALL');
+  const [localSearch, setLocalSearch] = useState('');
+  const searchTerm = externalSearch || localSearch;
 
   const getStatus = (diary: DiaryTier) => {
     if (unlocks.diaries.includes(diary.id)) return 'COMPLETED';
@@ -91,18 +96,29 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm = '' }) => {
 
   const filteredDiaries = diaries.filter(d => {
       const matchesRegion = filterRegion === 'ALL' || d.region === filterRegion;
-      
       if (!matchesRegion) return false;
-      if (!searchTerm) return true;
+      if (filterTier !== 'ALL' && d.tier !== filterTier) return false;
+      if (filterStatus !== 'ALL') {
+        if (filterStatus === 'COMPLETED' && d.status !== 'COMPLETED') return false;
+        if (filterStatus === 'AVAILABLE' && d.status !== 'AVAILABLE') return false;
+        if (filterStatus === 'LOCKED' && !d.status.includes('LOCKED')) return false;
+      }
 
+      if (!searchTerm) return true;
       const lowerSearch = searchTerm.toLowerCase();
       if (d.id.toLowerCase().includes(lowerSearch)) return true;
-      
       const tasks = ALL_DIARY_TASKS.filter(t => t.tierId === d.id);
       return tasks.some(t => t.description.toLowerCase().includes(lowerSearch));
   });
 
   const regions = Array.from(new Set(Object.values(DIARY_DATA).map(d => d.region))).sort();
+
+  const statusCounts = useMemo(() => ({
+    ALL: diaries.length,
+    AVAILABLE: diaries.filter((d) => d.status === 'AVAILABLE').length,
+    LOCKED: diaries.filter((d) => d.status.includes('LOCKED')).length,
+    COMPLETED: diaries.filter((d) => d.status === 'COMPLETED').length,
+  }), [diaries]);
 
   const handleToggle = (e: React.MouseEvent, diary: DiaryTier) => {
       e.stopPropagation();
@@ -150,19 +166,30 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm = '' }) => {
 
   return (
     <div className="flex flex-col h-full bg-[#121212] border border-white/10 rounded-lg overflow-hidden">
-      <div className="p-4 border-b border-white/10 bg-[#1a1a1a] shrink-0 flex gap-2 overflow-x-auto">
-          <select 
-            className="bg-[#222] border border-white/10 rounded px-2 py-1 text-xs text-gray-300 focus:border-green-500/50 outline-none"
-            value={filterRegion}
-            onChange={(e) => setFilterRegion(e.target.value)}
-          >
-              <option value="ALL" className="bg-[#222]">All Regions</option>
-              {regions.map(r => <option key={r} value={r} className="bg-[#222]">{r}</option>)}
-          </select>
-          <div className="text-xs text-gray-500 ml-auto flex items-center">
-              {unlocks.diaries.length} Completed
-          </div>
-      </div>
+      <JournalFilterBar
+        title="Diaries"
+        icon={<Map size={14} />}
+        accent="bg-green-900/40 text-green-300"
+        searchValue={externalSearch || localSearch}
+        onSearchChange={setLocalSearch}
+        searchPlaceholder="Search diaries or tasks..."
+        status={filterStatus}
+        onStatusChange={setFilterStatus}
+        statusCounts={statusCounts}
+        completed={unlocks.diaries.length}
+        total={Object.keys(DIARY_DATA).length}
+        regions={regions}
+        activeRegion={filterRegion}
+        onRegionChange={setFilterRegion}
+        tiers={[
+          { id: 'Easy', colorClass: 'bg-green-900/40 text-green-300' },
+          { id: 'Medium', colorClass: 'bg-blue-900/40 text-blue-300' },
+          { id: 'Hard', colorClass: 'bg-red-900/40 text-red-300' },
+          { id: 'Elite', colorClass: 'bg-purple-900/40 text-purple-300' },
+        ]}
+        activeTier={filterTier}
+        onTierChange={setFilterTier}
+      />
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
         {filteredDiaries.map(diary => {
@@ -261,34 +288,43 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm = '' }) => {
                                           </a>
                                       </div>
                                       
+                                      {/* Requirement chips. Met chips render in dim
+                                          gray so failing ones (red) stand out as the
+                                          actual blockers. */}
                                       {hasReqs && !isTaskDone && (
-                                          <div className="flex flex-wrap gap-2 mt-1.5">
-                                              {/* Skills */}
+                                          <div className="flex flex-wrap gap-1.5 mt-1.5">
                                               {task.skills && Object.entries(task.skills).map(([skill, level]) => {
                                                   const current = unlocks.levels[skill] || 1;
                                                   const unlocked = (unlocks.skills[skill] || 0) > 0;
                                                   const met = unlocked && current >= level;
+                                                  const cls = met
+                                                      ? 'border-white/5 text-gray-500 bg-black/30'
+                                                      : 'border-red-500/30 text-red-400 bg-red-900/10';
                                                   return (
-                                                      <span key={skill} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${met ? 'border-green-500/30 text-green-500 bg-green-900/10' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}>
+                                                      <span key={skill} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${cls}`}>
                                                           <BookOpen size={8} /> {skill} {level}
                                                       </span>
                                                   );
                                               })}
-                                              {/* Quests */}
                                               {task.quests && task.quests.map(q => {
                                                   const met = unlocks.quests.includes(q);
+                                                  const cls = met
+                                                      ? 'border-white/5 text-gray-500 bg-black/30'
+                                                      : 'border-red-500/30 text-red-400 bg-red-900/10';
                                                   return (
-                                                      <span key={q} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${met ? 'border-green-500/30 text-green-500 bg-green-900/10' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}>
+                                                      <span key={q} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${cls}`}>
                                                           <BookOpen size={8} /> {q}
                                                       </span>
                                                   );
                                               })}
-                                              {/* Regions */}
                                               {task.regions && task.regions.map(r => {
                                                   const isMisthalin = r === 'Misthalin' || MISTHALIN_AREAS.includes(r);
                                                   const isUnlocked = isMisthalin || unlocks.regions.includes(r);
+                                                  const cls = isUnlocked
+                                                      ? 'border-white/5 text-gray-500 bg-black/30'
+                                                      : 'border-red-500/30 text-red-400 bg-red-900/10';
                                                   return (
-                                                      <span key={r} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${isUnlocked ? 'border-green-500/30 text-green-500 bg-green-900/10' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}>
+                                                      <span key={r} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${cls}`}>
                                                           <Map size={8} /> {r}
                                                       </span>
                                                   );

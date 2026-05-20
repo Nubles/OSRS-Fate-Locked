@@ -1,18 +1,23 @@
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { CA_DATA, CATier } from '../data/caData';
 import { ALL_CA_TASKS, CATask } from '../data/caTasks';
 import { Swords, CheckCircle2, Sparkles, Skull, Info, ChevronDown, CheckSquare, Square, Lock, ExternalLink } from 'lucide-react';
 import { DROP_RATES } from '../config/rules';
+import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 
 interface CALogProps {
   searchTerm?: string;
 }
 
-export const CALog: React.FC<CALogProps> = ({ searchTerm = '' }) => {
+export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' }) => {
   const { unlocks, toggleCA, rollForKey, toggleTask } = useGame();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<JournalStatus>('ALL');
+  const [filterTier, setFilterTier] = useState('ALL');
+  const [localSearch, setLocalSearch] = useState('');
+  const searchTerm = externalSearch || localSearch;
 
   const getWikiUrl = (monster: string) => {
     if (monster === 'General') return 'https://oldschool.runescape.wiki/w/Combat_Achievements';
@@ -89,22 +94,50 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm = '' }) => {
   };
 
   const filteredCAs = Object.values(CA_DATA).filter(ca => {
+      const isCompleted = unlocks.cas.includes(ca.id);
+      if (filterTier !== 'ALL' && ca.id !== filterTier) return false;
+      if (filterStatus === 'COMPLETED' && !isCompleted) return false;
+      if (filterStatus === 'AVAILABLE' && isCompleted) return false;
+      if (filterStatus === 'LOCKED' && isCompleted) return false;
+
       if (!searchTerm) return true;
       const lowerSearch = searchTerm.toLowerCase();
-      // Match Tier ID
       if (ca.id.toLowerCase().includes(lowerSearch)) return true;
-      // Match Tasks inside
       const tasks = ALL_CA_TASKS.filter(t => t.tierId === ca.id);
       return tasks.some(t => t.monster.toLowerCase().includes(lowerSearch) || t.description.toLowerCase().includes(lowerSearch));
   });
 
+  const statusCounts = useMemo(() => {
+    const all = Object.values(CA_DATA);
+    const completed = all.filter((c) => unlocks.cas.includes(c.id)).length;
+    return { ALL: all.length, AVAILABLE: all.length - completed, LOCKED: all.length - completed, COMPLETED: completed };
+  }, [unlocks.cas]);
+
   return (
     <div className="flex flex-col h-full bg-[#121212] border border-white/10 rounded-lg overflow-hidden">
-      <div className="p-4 border-b border-white/10 bg-[#1a1a1a] shrink-0">
-          <h2 className="text-lg font-bold text-red-400 flex items-center gap-2">
-              <Swords size={18} /> Combat Achievements
-          </h2>
-      </div>
+      <JournalFilterBar
+        title="Combat Achievements"
+        icon={<Swords size={14} />}
+        accent="bg-red-900/40 text-red-300"
+        searchValue={externalSearch || localSearch}
+        onSearchChange={setLocalSearch}
+        searchPlaceholder="Search tiers or tasks..."
+        status={filterStatus}
+        onStatusChange={setFilterStatus}
+        statusCounts={statusCounts}
+        completed={unlocks.cas.length}
+        total={Object.keys(CA_DATA).length}
+        tiers={[
+          { id: 'Easy', colorClass: 'bg-green-900/40 text-green-300' },
+          { id: 'Medium', colorClass: 'bg-blue-900/40 text-blue-300' },
+          { id: 'Hard', colorClass: 'bg-red-900/40 text-red-300' },
+          { id: 'Elite', colorClass: 'bg-purple-900/40 text-purple-300' },
+          { id: 'Master', colorClass: 'bg-amber-900/40 text-amber-300' },
+          { id: 'Grandmaster', label: 'GM', colorClass: 'bg-yellow-900/40 text-yellow-300' },
+        ]}
+        activeTier={filterTier}
+        onTierChange={setFilterTier}
+      />
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
         {filteredCAs.map(ca => {

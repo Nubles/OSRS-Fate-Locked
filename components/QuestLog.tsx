@@ -6,6 +6,7 @@ import { MISTHALIN_AREAS, WIKI_OVERRIDES } from '../constants';
 import { CheckCircle2, Lock, Map, BookOpen, Sparkles, Scroll, Bookmark, Layers, List, ExternalLink } from 'lucide-react';
 import { DROP_RATES } from '../config/rules';
 import { DropSource } from '../types';
+import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 
 interface QuestLogProps {
   searchTerm?: string;
@@ -76,43 +77,54 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, currentQP, onTogg
                       </span>
                   </div>
                   
-                  <div className="flex flex-wrap gap-2 mt-1.5">
+                  {/*
+                    Card chip strategy: when the quest is AVAILABLE/COMPLETED we
+                    don't need to scream about met requirements — render them in
+                    dim gray. Only failing requirements stay highlighted in red
+                    so the eye lands on what's actually blocking progress.
+                  */}
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
                       {quest.regions.map((r: string) => {
                           const unlocked = unlocks.regions.includes(r) || MISTHALIN_AREAS.includes(r) || r === 'Misthalin';
+                          if (isCompleted || unlocked) {
+                              return (
+                                  <span key={r} className="text-[10px] px-1.5 rounded flex items-center gap-1 border bg-black/30 text-gray-500 border-white/5">
+                                      <Map size={8} /> {r}
+                                  </span>
+                              );
+                          }
                           return (
-                              <span key={r} className={`text-[10px] px-1.5 rounded flex items-center gap-1 border ${unlocked ? 'bg-emerald-900/20 text-emerald-400 border-emerald-500/20' : 'bg-red-900/10 text-red-400 border-red-500/20'}`}>
+                              <span key={r} className="text-[10px] px-1.5 rounded flex items-center gap-1 border bg-red-900/10 text-red-400 border-red-500/20">
                                   <Map size={8} /> {r}
                               </span>
                           );
                       })}
+                      {Object.entries(quest.skills).map(([skill, lvl]) => {
+                          const reqLevel = lvl as number;
+                          let met = false;
+                          let isLocked = false;
+
+                          if (skill === 'Quest Points') {
+                              met = currentQP >= reqLevel;
+                          } else {
+                              const currentLevel = unlocks.levels[skill] || 1;
+                              const skillUnlocked = (unlocks.skills[skill] || 0) > 0;
+                              isLocked = !skillUnlocked;
+                              met = skillUnlocked && currentLevel >= reqLevel;
+                          }
+
+                          const cls = (isCompleted || met)
+                              ? 'bg-black/30 text-gray-500 border-white/5'
+                              : 'bg-red-900/10 text-red-400 border-red-500/20';
+                          return (
+                              <span key={skill} className={`text-[10px] px-1.5 rounded flex items-center gap-1 border ${cls}`}>
+                                  {skill === 'Quest Points' ? <Sparkles size={8} /> : <BookOpen size={8} />}
+                                  {skill === 'Quest Points' ? 'QP' : skill} {reqLevel}
+                                  {isLocked && !isCompleted && <Lock size={8} className="ml-0.5" />}
+                              </span>
+                          );
+                      })}
                   </div>
-
-                  {Object.keys(quest.skills).length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-1.5">
-                          {Object.entries(quest.skills).map(([skill, lvl]) => {
-                              const reqLevel = lvl as number;
-                              let met = false;
-                              let isLocked = false;
-
-                              if (skill === 'Quest Points') {
-                                  met = currentQP >= reqLevel;
-                              } else {
-                                  const currentLevel = unlocks.levels[skill] || 1;
-                                  const skillUnlocked = (unlocks.skills[skill] || 0) > 0;
-                                  isLocked = !skillUnlocked;
-                                  met = skillUnlocked && currentLevel >= reqLevel;
-                              }
-
-                              return (
-                                  <span key={skill} className={`text-[10px] px-1.5 rounded flex items-center gap-1 border ${met ? 'bg-amber-900/20 text-amber-400 border-amber-500/20' : 'bg-red-900/10 text-red-400 border-red-500/20'}`}>
-                                      {skill === 'Quest Points' ? <Sparkles size={8} /> : <BookOpen size={8} />}
-                                      {skill === 'Quest Points' ? 'QP' : skill} {reqLevel}
-                                      {isLocked && <Lock size={8} className="ml-0.5" />}
-                                  </span>
-                              );
-                          })}
-                      </div>
-                  )}
               </div>
               
               <button 
@@ -151,10 +163,16 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, currentQP, onTogg
     );
 };
 
-export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm = '' }) => {
+export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch = '' }) => {
   const { unlocks, toggleQuest, rollForKey } = useGame();
-  const [filter, setFilter] = useState<'ALL' | 'AVAILABLE' | 'COMPLETED' | 'LOCKED'>('ALL');
+  const [filter, setFilter] = useState<JournalStatus>('ALL');
   const [groupBySeries, setGroupBySeries] = useState(false);
+  const [localSearch, setLocalSearch] = useState('');
+  const [regionFilter, setRegionFilter] = useState('ALL');
+  // External search (from the dashboard's global search box) takes precedence
+  // when set so cross-tab search still works; otherwise the bar's own search
+  // input drives.
+  const searchTerm = externalSearch || localSearch;
 
   const getStatus = (quest: QuestData) => {
     if (unlocks.quests.includes(quest.id)) return 'COMPLETED';
@@ -193,12 +211,27 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm = '' }) => {
   const filteredQuests = allQuests.filter(q => {
     const matchesSearch = q.name.toLowerCase().includes(searchTerm.toLowerCase());
     if (!matchesSearch) return false;
+    if (regionFilter !== 'ALL' && !q.regions.includes(regionFilter)) return false;
     if (filter === 'ALL') return true;
     if (filter === 'COMPLETED') return q.status === 'COMPLETED';
     if (filter === 'AVAILABLE') return q.status === 'AVAILABLE';
     if (filter === 'LOCKED') return q.status.includes('LOCKED');
     return true;
   });
+
+  // Region pills built from the regions actually used by quests, sorted.
+  const questRegions = useMemo(
+    () => Array.from(new Set(allQuests.flatMap((q) => q.regions))).sort(),
+    [allQuests],
+  );
+
+  // Counts per status for the bar's pills.
+  const statusCounts = useMemo(() => ({
+    ALL: allQuests.length,
+    AVAILABLE: allQuests.filter((q) => q.status === 'AVAILABLE').length,
+    LOCKED: allQuests.filter((q) => q.status.includes('LOCKED')).length,
+    COMPLETED: allQuests.filter((q) => q.status === 'COMPLETED').length,
+  }), [allQuests]);
 
   const mainQuests = filteredQuests.filter(q => q.points > 0);
   const miniquests = filteredQuests.filter(q => q.points === 0);
@@ -238,47 +271,34 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm = '' }) => {
 
   return (
     <div className="bg-[#121212] flex flex-col h-full rounded-lg border border-white/10 overflow-hidden">
-      
-      {/* Header */}
-      <div className="p-4 border-b border-white/10 bg-[#1a1a1a] shrink-0">
-        <div className="flex justify-between items-center mb-3">
-            <h2 className="text-lg font-bold text-blue-200 flex items-center gap-2">
-                <BookOpen size={18} /> Quest Journal
-            </h2>
-            <div className="flex flex-col items-end">
-                <span className="text-xs text-blue-400 font-mono font-bold">
-                    QP: {currentQP}
-                </span>
-                <span className="text-[10px] text-gray-500 font-mono">
-                    {completedMain}/{totalQuests} Quests
-                </span>
-                <span className="text-[10px] text-gray-500 font-mono">
-                    {completedMinis}/{totalMinis} Minis
-                </span>
-            </div>
-        </div>
-        
-        <div className="flex gap-2 justify-between">
+      <JournalFilterBar
+        title="Quest Journal"
+        icon={<BookOpen size={14} />}
+        accent="bg-blue-900/40 text-blue-300"
+        searchValue={externalSearch || localSearch}
+        onSearchChange={setLocalSearch}
+        searchPlaceholder="Search quests..."
+        status={filter}
+        onStatusChange={setFilter}
+        statusCounts={statusCounts}
+        completed={completedMain + completedMinis}
+        total={totalQuests + totalMinis}
+        regions={questRegions}
+        activeRegion={regionFilter}
+        onRegionChange={setRegionFilter}
+        rightExtras={
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[10px] text-blue-300 font-mono font-bold whitespace-nowrap">QP {currentQP}</span>
             <button
-                onClick={() => setGroupBySeries(!groupBySeries)}
-                className={`flex-1 flex items-center justify-center p-1.5 rounded border ${groupBySeries ? 'bg-purple-900/40 border-purple-500 text-purple-300' : 'bg-black/40 border-white/10 text-gray-400 hover:text-white'}`}
-                title={groupBySeries ? "Group by Type (Main/Mini)" : "Group by Series"}
+              onClick={() => setGroupBySeries(!groupBySeries)}
+              className={`p-1 rounded border text-[10px] flex items-center gap-1 ${groupBySeries ? 'bg-purple-900/40 border-purple-500/40 text-purple-300' : 'bg-black/40 border-white/10 text-gray-500 hover:text-white'}`}
+              title={groupBySeries ? 'Group by Type (Main/Mini)' : 'Group by Series'}
             >
-                {groupBySeries ? <><Layers size={16} className="mr-2" /> Series</> : <><List size={16} className="mr-2" /> List</>}
+              {groupBySeries ? <Layers size={12} /> : <List size={12} />}
             </button>
-
-            <select 
-                className="flex-1 bg-[#222] border border-white/10 rounded px-2 text-xs text-gray-300 focus:border-blue-500/50 outline-none"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value as any)}
-            >
-                <option value="ALL" className="bg-[#222]">All Status</option>
-                <option value="AVAILABLE" className="bg-[#222]">Available</option>
-                <option value="LOCKED" className="bg-[#222]">Locked</option>
-                <option value="COMPLETED" className="bg-[#222]">Completed</option>
-            </select>
-        </div>
-      </div>
+          </div>
+        }
+      />
 
       {/* List */}
       <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-4">
