@@ -258,8 +258,9 @@ export const Dashboard: React.FC = () => {
       if (UTILITY_ITEM_IDS[item]) {
          imageUrl = `https://chisel.weirdgloop.org/static/img/osrs-sprite/${UTILITY_ITEM_IDS[item]}.png`;
       } 
-      // Fetch image from wiki for specific tables if no ID or as fallback
-      else if (['region', 'boss', 'minigame', 'storage', 'guild', 'mobility', 'arcana', 'housing'].some(s => table.toLowerCase().includes(s))) {
+      // Fetch image from wiki for specific tables if no ID or as fallback.
+      // Keep this list in sync with GachaSection.tsx's WIKI_FETCH_TYPES.
+      else if (['region', 'boss', 'minigame', 'storage', 'guild', 'mobility', 'arcana', 'housing', 'merchants', 'farming'].some(s => table.toLowerCase().includes(s))) {
          const wikiUrl = await wikiService.fetchImage(item);
          if (wikiUrl) imageUrl = wikiUrl;
       } else {

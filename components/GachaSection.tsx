@@ -117,9 +117,11 @@ export const GachaSection: React.FC = () => {
     return SPECIAL_ICONS[item] ? `${baseUrl}${SPECIAL_ICONS[item]}` : undefined;
   };
   
+  // Categories whose unlock items have wiki pages with images we can fetch.
+  // Keep this list in sync with the equivalent list in Dashboard.tsx.
   const WIKI_FETCH_TYPES = [
-      'region', 'boss', 'minigame', 'storage', 'guild', 
-      'mobility', 'housing', 'arcana', 'merchants'
+      'region', 'boss', 'minigame', 'storage', 'guild',
+      'mobility', 'housing', 'arcana', 'merchants', 'farming',
   ];
 
   // Calculate Total Level for Display
@@ -151,7 +153,7 @@ export const GachaSection: React.FC = () => {
     setPendingReveal({ item, tableType: table, image: imageUrl, isChaos: false, costType: 'key', cost });
   };
 
-  const handleChaosUnlock = () => {
+  const handleChaosUnlock = async () => {
       if (pendingReveal) return; // Guard: Do not allow another roll while reveal is pending
       if (chaosKeys <= 0) return;
 
@@ -184,14 +186,14 @@ export const GachaSection: React.FC = () => {
       
       let imageUrl = getUnlockImage(selection.stateKey, selection.item);
 
-      // Async fetch for chaos unlock if no ID found
+      // Resolve the wiki image BEFORE opening the reveal (same as handleUnlock)
+      // so the modal doesn't flash a missing icon and then pop in.
       if (!UTILITY_ITEM_IDS[selection.item] && WIKI_FETCH_TYPES.some(t => selection.stateKey.toLowerCase().includes(t))) {
-          wikiService.fetchImage(selection.item).then(url => {
-              if (url) setPendingReveal(prev => prev ? { ...prev, image: url } : prev);
-          });
+          const url = await wikiService.fetchImage(selection.item);
+          if (url) imageUrl = url;
       }
 
-      setPendingReveal({ 
+      setPendingReveal({
           item: selection.item, 
           tableType: selection.tableType, 
           image: imageUrl, 

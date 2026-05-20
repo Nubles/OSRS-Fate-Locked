@@ -119,14 +119,29 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
     return items;
   }, []);
 
-  // Filter Results
+  // Filter + rank results. Without ranking, an alphabetical slice of "rune"
+  // would surface "Ancient Mace" before "Rune Platebody" purely on title
+  // order. Rank by relevance: exact > prefix > word-start > substring.
   const results = useMemo(() => {
     if (!query) return [];
     const lowerQuery = query.toLowerCase();
-    
-    // Limit results for performance if query is short
-    const matches = searchIndex.filter(item => item.name.toLowerCase().includes(lowerQuery));
-    return matches.slice(0, 50); // Cap at 50 results to prevent rendering lag
+
+    const score = (name: string): number => {
+      const lower = name.toLowerCase();
+      if (lower === lowerQuery) return 0;
+      if (lower.startsWith(lowerQuery)) return 1;
+      if (lower.includes(' ' + lowerQuery)) return 2;
+      if (lower.includes(lowerQuery)) return 3;
+      return Infinity;
+    };
+
+    const scored: { item: SearchItem; rank: number }[] = [];
+    for (const item of searchIndex) {
+      const r = score(item.name);
+      if (r !== Infinity) scored.push({ item, rank: r });
+    }
+    scored.sort((a, b) => a.rank - b.rank || a.item.name.localeCompare(b.item.name));
+    return scored.slice(0, 50).map((s) => s.item);
   }, [query, searchIndex]);
 
   // Check Unlock Status
