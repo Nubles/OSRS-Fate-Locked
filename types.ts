@@ -62,7 +62,11 @@ export enum TableType {
 export interface LogEntry {
   id: string;
   timestamp: number;
-  type: 'ROLL' | 'UNLOCK' | 'PITY' | 'ALTAR' | 'ROLL_SUCCESS' | 'ROLL_FAIL' | 'ROLL_OMNI' | 'LEVEL_UP';
+  // The reducer emits ROLL_SUCCESS / ROLL_OMNI / ROLL_FAIL / PITY for roll
+  // outcomes; the bare 'ROLL' literal was a footgun (consumers filtered for
+  // it expecting all rolls and got nothing). Use isRollEntry() in utils
+  // instead of comparing to 'ROLL'.
+  type: 'UNLOCK' | 'PITY' | 'ALTAR' | 'ROLL_SUCCESS' | 'ROLL_FAIL' | 'ROLL_OMNI' | 'LEVEL_UP';
   source?: string;
   result?: 'SUCCESS' | 'FAIL';
   rollValue?: number;

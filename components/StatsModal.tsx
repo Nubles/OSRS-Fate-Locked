@@ -3,6 +3,7 @@ import React, { useMemo, useState, useRef } from 'react';
 import { useGame } from '../context/GameContext';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { X, TrendingUp, TrendingDown, Skull, Key, Shield, Activity, BarChart3, LineChart as LineChartIcon, PieChart, List, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { isRollEntry } from '../utils/logEntry';
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, ReferenceLine, Cell, CartesianGrid, AreaChart, Area
@@ -23,7 +24,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({ onClose }) => {
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'asc' | 'desc' }>({ key: 'attempts', direction: 'desc' });
 
   const stats = useMemo(() => {
-    const rolls = history.filter(h => h.type === 'ROLL').sort((a, b) => a.timestamp - b.timestamp);
+    const rolls = history.filter(isRollEntry).sort((a, b) => a.timestamp - b.timestamp);
     const totalRolls = rolls.length;
     const actualSuccesses = rolls.filter(h => h.result === 'SUCCESS').length;
     const pityKeys = history.filter(h => h.type === 'PITY').length;
@@ -260,7 +261,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({ onClose }) => {
                             
                             <div className="text-gray-500">Average Roll Value:</div>
                             <div className="text-right text-white">
-                                {(history.filter(h => h.type === 'ROLL').reduce((a, b) => a + (b.rollValue || 0), 0) / (stats.totalRolls || 1)).toFixed(1)}
+                                {(history.filter(isRollEntry).reduce((a, b) => a + (b.rollValue || 0), 0) / (stats.totalRolls || 1)).toFixed(1)}
                             </div>
                         </div>
                     </div>

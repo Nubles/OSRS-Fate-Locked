@@ -339,7 +339,9 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
                 details: `Rolled ${roll} but Fate intervened.`,
                 meta: { roll, threshold, source },
                 result: 'SUCCESS',
-                source
+                source,
+                rollValue: roll,
+                threshold
             });
             newState.lastEvent = { id: generateId(), type: 'ROLL_PITY', x, y, meta: { roll, threshold } };
          } else {

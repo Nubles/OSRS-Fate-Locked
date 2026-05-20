@@ -1,5 +1,6 @@
 
 import { LogEntry } from '../types';
+import { isRollEntry } from './logEntry';
 
 export interface ChronicleSummary {
   title: string;
@@ -35,7 +36,7 @@ export const generateChronicle = (history: LogEntry[]): ChronicleSummary => {
   const startDate = new Date(history[0].timestamp).toLocaleDateString();
   const daysActive = Math.ceil((Date.now() - history[0].timestamp) / (1000 * 60 * 60 * 24));
   
-  const rolls = history.filter(h => h.type === 'ROLL');
+  const rolls = history.filter(isRollEntry);
   const unlocks = history.filter(h => h.message.includes('Unlocked') || h.type === 'UNLOCK');
   const rituals = history.filter(h => h.type === 'ALTAR');
   const pity = history.filter(h => h.type === 'PITY');

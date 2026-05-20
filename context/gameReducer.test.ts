@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { gameReducer, initialState } from './GameContext';
 import { TableType, LogEntry } from '../types';
+import { isRollEntry } from '../utils/logEntry';
 
 /**
  * Tests for the core game reducer — every roll, unlock, ritual, level-up and
@@ -45,6 +46,25 @@ describe('ROLL_RESULT', () => {
   it('a Greed-buffed success grants two keys', () => {
     const s = gameReducer({ ...base(), activeBuff: 'GREED' as const }, roll({ success: true }));
     expect(s.keys).toBe(initialState.keys + 2);
+  });
+
+  it('every roll branch produces a log entry that isRollEntry recognises', () => {
+    // Regression test: StatsModal and scribe.ts used to filter for type === 'ROLL'
+    // (which the reducer never emitted) and silently computed everything from an
+    // empty array. isRollEntry is the new canonical check.
+    const ok = gameReducer(base(), roll({ success: true })).history.at(-1)!;
+    const omni = gameReducer(base(), roll({ success: true, omni: true })).history.at(-1)!;
+    const fail = gameReducer(base(), roll({ success: false })).history.at(-1)!;
+    const pity = gameReducer({ ...base(), fatePoints: 49 }, roll({ success: false, pity: true })).history.at(-1)!;
+    expect(isRollEntry(ok)).toBe(true);
+    expect(isRollEntry(omni)).toBe(true);
+    expect(isRollEntry(fail)).toBe(true);
+    expect(isRollEntry(pity)).toBe(true);
+    // All four shapes must carry rollValue + threshold so stats can read them.
+    for (const e of [ok, omni, fail, pity]) {
+      expect(e.rollValue).toBeDefined();
+      expect(e.threshold).toBeDefined();
+    }
   });
 
   it('clears the LUCK / GREED buff after a roll', () => {
