@@ -57,6 +57,10 @@ The app deploys to **GitHub Pages** automatically via `.github/workflows/deploy.
 
 To enable it on a fresh fork: **Settings → Pages → Build and deployment → Source → "GitHub Actions"**.
 
+## Maintainer docs
+
+- [`docs/RESOURCE_ENGINE.md`](./docs/RESOURCE_ENGINE.md) — the Resource Engine: data shape, the supply-chain analyzer, the three wiki-sourced generator scripts (`scripts/buildCraftables.mjs`, `scripts/buildPotions.mjs`, `scripts/buildSourceEnrichment.ts`), the enrichment merge pattern, the integrity-test contract, and the workflow for adding curated items.
+
 ## RuneLite plugin
 
 `runelite-plugin/` contains a Java RuneLite plugin that renders your authored Fate Locked chunks on the in-game world map and minimap, and warns when you enter a locked region. Build it with `./gradlew shadowJar` and sideload the JAR — see [`runelite-plugin/README.md`](./runelite-plugin/README.md).
