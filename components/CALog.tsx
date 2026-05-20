@@ -6,6 +6,7 @@ import { ALL_CA_TASKS, CATask } from '../data/caTasks';
 import { Swords, CheckCircle2, Sparkles, Skull, Info, ChevronDown, CheckSquare, Square, Lock, ExternalLink } from 'lucide-react';
 import { DROP_RATES } from '../config/rules';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
+import { JournalNextUpStrip, NextUpItem } from './JournalNextUpStrip';
 
 interface CALogProps {
   searchTerm?: string;
@@ -17,7 +18,16 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
   const [filterStatus, setFilterStatus] = useState<JournalStatus>('ALL');
   const [filterTier, setFilterTier] = useState('ALL');
   const [localSearch, setLocalSearch] = useState('');
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const searchTerm = externalSearch || localSearch;
+
+  const focusCard = (id: string) => {
+    setExpandedId(id);
+    const el = document.querySelector<HTMLElement>(`[data-journal-id="${id}"]`);
+    if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    setHighlightedId(id);
+    window.setTimeout(() => setHighlightedId(null), 1800);
+  };
 
   const getWikiUrl = (monster: string) => {
     if (monster === 'General') return 'https://oldschool.runescape.wiki/w/Combat_Achievements';
@@ -113,6 +123,36 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
     return { ALL: all.length, AVAILABLE: all.length - completed, LOCKED: all.length - completed, COMPLETED: completed };
   }, [unlocks.cas]);
 
+  // Lowest incomplete tiers — these are the player's next combat-achievement
+  // grind targets. Easy first, etc.
+  const tierRank: Record<string, number> = { Easy: 1, Medium: 2, Hard: 3, Elite: 4, Master: 5, Grandmaster: 6 };
+  const nextUpItems = useMemo<NextUpItem[]>(() => {
+    return Object.values(CA_DATA)
+      .filter((c) => !unlocks.cas.includes(c.id))
+      .sort((a, b) => (tierRank[a.id] || 99) - (tierRank[b.id] || 99))
+      .slice(0, 3)
+      .map((c) => {
+        const tasks = ALL_CA_TASKS.filter((t) => t.tierId === c.id);
+        const done = tasks.filter((t) => unlocks.completedTasks.includes(t.id)).length;
+        const colorClass =
+          c.id === 'Easy' ? 'text-green-300' :
+          c.id === 'Medium' ? 'text-blue-300' :
+          c.id === 'Hard' ? 'text-red-300' :
+          c.id === 'Elite' ? 'text-purple-300' :
+          c.id === 'Master' ? 'text-amber-300' :
+          'text-yellow-300';
+        return {
+          id: c.id,
+          title: `${c.id} Tier`,
+          subtitle: tasks.length > 0 ? `${done}/${tasks.length} tasks done` : `${c.pointsRequired} pts`,
+          tierLabel: c.id === 'Grandmaster' ? 'GM' : c.id,
+          tierColorClass: colorClass,
+        };
+      });
+  }, [unlocks.cas, unlocks.completedTasks]);
+
+  const showNextUpStrip = !searchTerm && filterStatus === 'ALL' && filterTier === 'ALL';
+
   return (
     <div className="flex flex-col h-full bg-[#121212] border border-white/10 rounded-lg overflow-hidden">
       <JournalFilterBar
@@ -139,6 +179,15 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
         onTierChange={setFilterTier}
       />
 
+      {showNextUpStrip && (
+        <JournalNextUpStrip
+          items={nextUpItems}
+          noun="combat-achievement tiers"
+          accent="bg-red-900/40 text-red-300"
+          onItemClick={focusCard}
+        />
+      )}
+
       <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
         {filteredCAs.map(ca => {
             const isCompleted = unlocks.cas.includes(ca.id);
@@ -156,7 +205,11 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
             const isActionable = isCompleted || allTasksDone; 
 
             return (
-                <div key={ca.id} className={`relative border rounded-lg transition-all group ${isCompleted ? 'bg-green-900/10 border-green-500/30 opacity-60' : `bg-[#1a1a1a] ${style}`}`}>
+                <div
+                  key={ca.id}
+                  data-journal-id={ca.id}
+                  className={`relative border rounded-lg transition-all group ${isCompleted ? 'bg-green-900/10 border-green-500/30 opacity-60' : `bg-[#1a1a1a] ${style}`} ${highlightedId === ca.id ? 'ring-2 ring-amber-400/70 shadow-[0_0_20px_rgba(251,191,36,0.25)]' : ''}`}
+                >
                     <div 
                         className="p-4 flex justify-between items-start cursor-pointer"
                         onClick={() => setExpandedId(isExpanded && !isSearching ? null : ca.id)}

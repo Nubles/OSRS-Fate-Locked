@@ -7,6 +7,7 @@ import { Map, CheckCircle2, Lock, Sparkles, BookOpen, ChevronDown, CheckSquare, 
 import { DROP_RATES } from '../config/rules';
 import { MISTHALIN_AREAS } from '../constants';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
+import { JournalNextUpStrip, NextUpItem } from './JournalNextUpStrip';
 
 interface DiaryLogProps {
   searchTerm?: string;
@@ -19,7 +20,16 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
   const [filterStatus, setFilterStatus] = useState<JournalStatus>('ALL');
   const [filterTier, setFilterTier] = useState('ALL');
   const [localSearch, setLocalSearch] = useState('');
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const searchTerm = externalSearch || localSearch;
+
+  const focusCard = (id: string) => {
+    setExpandedId(id);
+    const el = document.querySelector<HTMLElement>(`[data-journal-id="${id}"]`);
+    if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    setHighlightedId(id);
+    window.setTimeout(() => setHighlightedId(null), 1800);
+  };
 
   const getStatus = (diary: DiaryTier) => {
     if (unlocks.diaries.includes(diary.id)) return 'COMPLETED';
@@ -120,6 +130,32 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
     COMPLETED: diaries.filter((d) => d.status === 'COMPLETED').length,
   }), [diaries]);
 
+  // Top 3 actionable diary tiers — prefer Easy first to skew toward quick wins.
+  const tierRank: Record<string, number> = { Easy: 1, Medium: 2, Hard: 3, Elite: 4 };
+  const nextUpItems = useMemo<NextUpItem[]>(() => {
+    return diaries
+      .filter((d) => d.status === 'AVAILABLE')
+      .sort((a, b) => (tierRank[a.tier] || 5) - (tierRank[b.tier] || 5) || a.id.localeCompare(b.id))
+      .slice(0, 3)
+      .map((d) => {
+        const tasks = ALL_DIARY_TASKS.filter((t) => t.tierId === d.id);
+        const doneCount = tasks.filter((t) => unlocks.completedTasks.includes(t.id)).length;
+        const tierColor =
+          d.tier === 'Elite' ? 'text-purple-300' :
+          d.tier === 'Hard' ? 'text-red-300' :
+          d.tier === 'Medium' ? 'text-blue-300' : 'text-green-300';
+        return {
+          id: d.id,
+          title: d.id,
+          subtitle: tasks.length > 0 ? `${doneCount}/${tasks.length} tasks done` : `${d.region} · ${d.tier}`,
+          tierLabel: d.tier,
+          tierColorClass: tierColor,
+        };
+      });
+  }, [diaries, unlocks.completedTasks]);
+
+  const showNextUpStrip = !searchTerm && filterStatus === 'ALL' && filterRegion === 'ALL' && filterTier === 'ALL';
+
   const handleToggle = (e: React.MouseEvent, diary: DiaryTier) => {
       e.stopPropagation();
       const isCompleting = !unlocks.diaries.includes(diary.id);
@@ -191,6 +227,15 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
         onTierChange={setFilterTier}
       />
 
+      {showNextUpStrip && (
+        <JournalNextUpStrip
+          items={nextUpItems}
+          noun="diaries"
+          accent="bg-green-900/40 text-green-300"
+          onItemClick={focusCard}
+        />
+      )}
+
       <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
         {filteredDiaries.map(diary => {
           const isCompleted = diary.status === 'COMPLETED';
@@ -207,9 +252,10 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
           const isActionable = isCompleted || allTasksDone;
 
           return (
-            <div 
-              key={diary.id} 
-              className={`relative border rounded-lg transition-all ${isCompleted ? 'bg-green-900/10 border-green-500/20 opacity-60' : isAvailable ? 'bg-green-900/10 border-green-500/40' : 'bg-[#1a1a1a] border-white/5 opacity-80'}`}
+            <div
+              key={diary.id}
+              data-journal-id={diary.id}
+              className={`relative border rounded-lg transition-all ${isCompleted ? 'bg-green-900/10 border-green-500/20 opacity-60' : isAvailable ? 'bg-green-900/10 border-green-500/40' : 'bg-[#1a1a1a] border-white/5 opacity-80'} ${highlightedId === diary.id ? 'ring-2 ring-amber-400/70 shadow-[0_0_20px_rgba(251,191,36,0.25)]' : ''}`}
             >
               <div 
                 className="p-3 flex justify-between items-start gap-4 cursor-pointer hover:bg-white/5"

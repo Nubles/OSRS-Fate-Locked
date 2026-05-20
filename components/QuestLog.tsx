@@ -7,6 +7,7 @@ import { CheckCircle2, Lock, Map, BookOpen, Sparkles, Scroll, Bookmark, Layers, 
 import { DROP_RATES } from '../config/rules';
 import { DropSource } from '../types';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
+import { JournalNextUpStrip, NextUpItem } from './JournalNextUpStrip';
 
 interface QuestLogProps {
   searchTerm?: string;
@@ -40,20 +41,23 @@ interface QuestCardProps {
     unlocks: any;
     currentQP: number;
     onToggle: (e: React.MouseEvent, quest: any) => void;
+    highlight?: boolean;
 }
 
-const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, currentQP, onToggle }) => {
+const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, currentQP, onToggle, highlight }) => {
     const isCompleted = quest.status === 'COMPLETED';
     const isAvailable = quest.status === 'AVAILABLE';
     const diffStyle = getDifficultyColor(quest.difficulty);
     
     return (
-      <div 
+      <div
+          data-journal-id={quest.id}
           className={`
               relative border rounded-lg p-3 transition-all
-              ${isCompleted ? 'bg-green-900/10 border-green-500/20 opacity-60 hover:opacity-100' : 
-                isAvailable ? 'bg-blue-900/10 border-blue-500/40 hover:bg-blue-900/20' : 
+              ${isCompleted ? 'bg-green-900/10 border-green-500/20 opacity-60 hover:opacity-100' :
+                isAvailable ? 'bg-blue-900/10 border-blue-500/40 hover:bg-blue-900/20' :
                 'bg-[#1a1a1a] border-white/5 opacity-80'}
+              ${highlight ? 'ring-2 ring-amber-400/70 shadow-[0_0_20px_rgba(251,191,36,0.25)]' : ''}
           `}
       >
           <div className="flex justify-between items-start gap-4">
@@ -169,6 +173,17 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
   const [groupBySeries, setGroupBySeries] = useState(false);
   const [localSearch, setLocalSearch] = useState('');
   const [regionFilter, setRegionFilter] = useState('ALL');
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+
+  // Bridge between the "Next up" strip and the card list. Scrolls the
+  // matching card into view and adds a brief highlight so the player's
+  // attention lands on it.
+  const focusCard = (id: string) => {
+    const el = document.querySelector<HTMLElement>(`[data-journal-id="${id}"]`);
+    if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    setHighlightedId(id);
+    window.setTimeout(() => setHighlightedId(null), 1800);
+  };
   // External search (from the dashboard's global search box) takes precedence
   // when set so cross-tab search still works; otherwise the bar's own search
   // input drives.
@@ -232,6 +247,33 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
     LOCKED: allQuests.filter((q) => q.status.includes('LOCKED')).length,
     COMPLETED: allQuests.filter((q) => q.status === 'COMPLETED').length,
   }), [allQuests]);
+
+  // Top 3 actionable quests for the "Next up" strip. Prefer Novice difficulty
+  // first (quickest to clear) so the strip skews toward easy wins.
+  const nextUpItems = useMemo<NextUpItem[]>(() => {
+    const difficultyRank = (d: DropSource) => {
+      if (d === DropSource.QUEST_GRANDMASTER) return 5;
+      if (d === DropSource.QUEST_MASTER) return 4;
+      if (d === DropSource.QUEST_EXPERIENCED) return 3;
+      if (d === DropSource.QUEST_INTERMEDIATE) return 2;
+      return 1; // Novice
+    };
+    return allQuests
+      .filter((q) => q.status === 'AVAILABLE')
+      .sort((a, b) => difficultyRank(a.difficulty) - difficultyRank(b.difficulty) || a.name.localeCompare(b.name))
+      .slice(0, 3)
+      .map((q) => ({
+        id: q.id,
+        title: q.name,
+        subtitle: q.points > 0 ? `${q.points} QP · ${getDifficultyLabel(q.difficulty)}` : `Miniquest · ${getDifficultyLabel(q.difficulty)}`,
+        tierLabel: getDifficultyLabel(q.difficulty),
+        tierColorClass: getDifficultyColor(q.difficulty).split(' ').find((c) => c.startsWith('text-')),
+      }));
+  }, [allQuests]);
+
+  // Only show the strip when the player is browsing (not searching / filtering),
+  // otherwise it duplicates whatever they're already trying to see.
+  const showNextUpStrip = !searchTerm && filter === 'ALL' && regionFilter === 'ALL';
 
   const mainQuests = filteredQuests.filter(q => q.points > 0);
   const miniquests = filteredQuests.filter(q => q.points === 0);
@@ -300,6 +342,15 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
         }
       />
 
+      {showNextUpStrip && (
+        <JournalNextUpStrip
+          items={nextUpItems}
+          noun="quests"
+          accent="bg-blue-900/40 text-blue-300"
+          onItemClick={focusCard}
+        />
+      )}
+
       {/* List */}
       <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-4">
         
@@ -313,12 +364,13 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
                         </h3>
                         <div className="space-y-2">
                             {quests.map(quest => (
-                                <QuestCard 
-                                    key={quest.id} 
-                                    quest={quest} 
-                                    unlocks={unlocks} 
-                                    currentQP={currentQP} 
-                                    onToggle={handleQuestToggle} 
+                                <QuestCard
+                                    key={quest.id}
+                                    quest={quest}
+                                    unlocks={unlocks}
+                                    currentQP={currentQP}
+                                    onToggle={handleQuestToggle}
+                                    highlight={highlightedId === quest.id}
                                 />
                             ))}
                         </div>
@@ -340,12 +392,13 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
                         </h3>
                         <div className="space-y-2">
                             {mainQuests.map(quest => (
-                                <QuestCard 
-                                    key={quest.id} 
-                                    quest={quest} 
-                                    unlocks={unlocks} 
-                                    currentQP={currentQP} 
-                                    onToggle={handleQuestToggle} 
+                                <QuestCard
+                                    key={quest.id}
+                                    quest={quest}
+                                    unlocks={unlocks}
+                                    currentQP={currentQP}
+                                    onToggle={handleQuestToggle}
+                                    highlight={highlightedId === quest.id}
                                 />
                             ))}
                         </div>
@@ -359,12 +412,13 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
                         </h3>
                         <div className="space-y-2">
                             {miniquests.map(quest => (
-                                <QuestCard 
-                                    key={quest.id} 
-                                    quest={quest} 
-                                    unlocks={unlocks} 
-                                    currentQP={currentQP} 
-                                    onToggle={handleQuestToggle} 
+                                <QuestCard
+                                    key={quest.id}
+                                    quest={quest}
+                                    unlocks={unlocks}
+                                    currentQP={currentQP}
+                                    onToggle={handleQuestToggle}
+                                    highlight={highlightedId === quest.id}
                                 />
                             ))}
                         </div>
