@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { RESOURCE_MAP, RESOURCE_CATEGORIES, ITEM_CATEGORY } from '../data/resourceData';
-import { calculateSupplyChain, isItemAvailableWithCtx, buildAvailabilityContext, computeFullBreakdown, flattenRawMaterials, findEasiestPath } from '../utils/supplyChain';
+import { calculateSupplyChain, isItemAvailableWithCtx, buildAvailabilityContext, computeFullBreakdown, flattenRawMaterials, findEasiestPath, getNextAchievableItems } from '../utils/supplyChain';
 import { wikiService } from '../services/WikiService';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { X, Search, CheckCircle2, Lock, Box, ShoppingBag, Sword, Sprout, MapPin, Database, ExternalLink, RefreshCw, ArrowLeft, ArrowRight, Hammer, HelpCircle, Layers, Coins, Calculator, ListFilter, Star, ChevronDown, ChevronRight, Hand, ScrollText, Percent, Compass } from 'lucide-react';
@@ -162,6 +162,14 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
       if (!selectedResult) return null;
       return findEasiestPath(selectedResult.itemName, gameState);
   }, [selectedResult, gameState]);
+
+  // Top-down recommendations: locked items the player is closest to unlocking,
+  // ranked by the effort heuristic. Shown only in the empty/index state so it
+  // doesn't compete with the detail view when an item is selected.
+  const nextAchievable = useMemo(
+      () => getNextAchievableItems(gameState, 8),
+      [gameState],
+  );
 
   const handleWikiOpen = (e: React.MouseEvent, name: string) => {
       e.stopPropagation();
@@ -616,6 +624,35 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
                                             <Star size={12} className="fill-yellow-400" />
                                         </button>
                                     </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Closest to unlocking — top-down recommendations */}
+                    {nextAchievable.length > 0 && (
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2 px-2">
+                                <Compass size={14} className="text-amber-400" />
+                                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Closest to unlocking</span>
+                                <span className="text-[10px] text-gray-600 font-mono">items the engine knows you're nearly there on</span>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {nextAchievable.map(({ item, missing }) => (
+                                    <button
+                                        key={item}
+                                        onClick={() => handleNavigate(item)}
+                                        className="flex items-center gap-3 px-3 py-2 bg-[#1a1a1a] border border-amber-500/15 rounded-lg text-sm hover:bg-amber-900/10 hover:border-amber-500/30 transition-all group"
+                                    >
+                                        <ItemImage name={item} size="sm" />
+                                        <div className="flex-1 min-w-0 text-left">
+                                            <div className="text-gray-200 truncate font-medium">{item}</div>
+                                            <div className="text-[10px] text-amber-400/70 truncate font-mono" title={missing.join(' · ')}>
+                                                {missing.length === 1 ? missing[0] : `${missing[0]} · +${missing.length - 1} more`}
+                                            </div>
+                                        </div>
+                                        <ArrowRight size={12} className="text-gray-600 group-hover:text-amber-400 transition-colors shrink-0" />
+                                    </button>
                                 ))}
                             </div>
                         </div>

@@ -209,37 +209,64 @@ export interface EasiestPath {
  * entirely-locked unlock) and a discount when the missing requirement is
  * itself an item the player can already obtain via another source.
  */
-export const findEasiestPath = (itemName: string, gameState: GameState): EasiestPath | null => {
+const scoreReason = (reason: string): number => {
+  // "Skill X 50/60" — gap-weighted, with a floor so any gap costs something.
+  const lvlMatch = reason.match(/(\d+)\/(\d+)$/);
+  if (lvlMatch) {
+    const gap = Number(lvlMatch[2]) - Number(lvlMatch[1]);
+    return Math.max(0.2, gap * 0.05);
+  }
+  // Skill not yet rolled at all on the Skills table — heavier than a level gap.
+  if (reason.startsWith('Skill Locked:')) return 2;
+  // Region / quest / unlock requirements are each a meaningful gate.
+  return 1;
+};
+
+/**
+ * Batch-friendly: caller builds the context once and reuses it across all
+ * items (the "next achievable items" recommendation walks every RESOURCE_MAP
+ * entry and would otherwise rebuild the Sets ~750 times).
+ */
+export const findEasiestPathWithCtx = (itemName: string, ctx: AvailabilityContext): EasiestPath | null => {
   const sources = RESOURCE_MAP[itemName];
   if (!sources) return null;
-  const ctx = buildAvailabilityContext(gameState);
-
-  // Already unlockable — nothing to surface.
   if (sources.some((s) => isSourceAvailable(s, ctx))) return null;
-
-  const scoreReason = (reason: string): number => {
-    // "Skill X 50/60" — gap-weighted, with a floor so any gap costs something.
-    const lvlMatch = reason.match(/(\d+)\/(\d+)$/);
-    if (lvlMatch) {
-      const gap = Number(lvlMatch[2]) - Number(lvlMatch[1]);
-      return Math.max(0.2, gap * 0.05);
-    }
-    // Skill not yet rolled at all on the Skills table — heavier than a level gap.
-    if (reason.startsWith('Skill Locked:')) return 2;
-    // Region / quest / unlock requirements are each a meaningful gate.
-    return 1;
-  };
 
   let best: EasiestPath | null = null;
   for (const source of sources) {
     const status = analyzeSource(source, ctx, true);
-    if (status.isAvailable) continue; // shouldn't happen given the some() guard above
+    if (status.isAvailable) continue;
     const cost = status.missing.reduce((sum, r) => sum + scoreReason(r), 0);
     if (!best || cost < best.cost) {
       best = { source, missing: status.missing, cost };
     }
   }
   return best;
+};
+
+export const findEasiestPath = (itemName: string, gameState: GameState): EasiestPath | null =>
+  findEasiestPathWithCtx(itemName, buildAvailabilityContext(gameState));
+
+/**
+ * Scans every locked item in RESOURCE_MAP and ranks them by the effort of
+ * their easiest unlock route. Used for the "Closest to unlocking" panel —
+ * a top-down view that complements the search-driven drill-down.
+ */
+export interface AchievableItem {
+  item: string;
+  cost: number;
+  missing: string[];
+  source: ResourceSource;
+}
+export const getNextAchievableItems = (gameState: GameState, limit: number = 8): AchievableItem[] => {
+  const ctx = buildAvailabilityContext(gameState);
+  const candidates: AchievableItem[] = [];
+  for (const item of Object.keys(RESOURCE_MAP)) {
+    const path = findEasiestPathWithCtx(item, ctx);
+    if (path) candidates.push({ item, cost: path.cost, missing: path.missing, source: path.source });
+  }
+  candidates.sort((a, b) => a.cost - b.cost || a.item.localeCompare(b.item));
+  return candidates.slice(0, limit);
 };
 
 // --- Recursive Material Breakdown -------------------------------------------

@@ -6,7 +6,7 @@ import {
   POH_LIST, MERCHANTS_LIST, STORAGE_LIST, FARMING_PATCH_LIST, SKILLS_LIST,
   REGION_GROUPS, MISTHALIN_AREAS,
 } from './items';
-import { computeFullBreakdown, flattenRawMaterials, findEasiestPath, calculateSupplyChain } from '../utils/supplyChain';
+import { computeFullBreakdown, flattenRawMaterials, findEasiestPath, calculateSupplyChain, getNextAchievableItems } from '../utils/supplyChain';
 import type { GameState } from '../types';
 
 /**
@@ -194,6 +194,42 @@ describe('findEasiestPath surfaces the closest unlock route', () => {
     }
     // Sanity: at least *some* items should be locked on an empty state.
     expect(checked).toBeGreaterThan(0);
+  });
+});
+
+describe('getNextAchievableItems returns a useful ranked list', () => {
+  const emptyState: GameState = {
+    keys: 0, specialKeys: 0, chaosKeys: 0, fatePoints: 0,
+    unlocks: {
+      equipment: {}, skills: {}, levels: {},
+      regions: [], mobility: [], arcana: [], housing: [], merchants: [],
+      minigames: [], bosses: [], storage: [], guilds: [], farming: [],
+      quests: [], diaries: [], cas: [], completedTasks: [], collectionLog: {},
+    },
+    history: [], pinnedGoals: [], userNotes: {},
+    activeBuff: 'NONE', animationsEnabled: true, hasSeenOnboarding: true,
+    gameModeId: 'vanilla', gameModeLocked: false, customMode: undefined,
+    version: 1,
+  } as any;
+
+  it('returns at most `limit` items, sorted ascending by cost', () => {
+    const items = getNextAchievableItems(emptyState, 8);
+    expect(items.length).toBeGreaterThan(0);
+    expect(items.length).toBeLessThanOrEqual(8);
+    for (let i = 1; i < items.length; i++) {
+      expect(items[i].cost).toBeGreaterThanOrEqual(items[i - 1].cost);
+    }
+  });
+
+  it('never returns items that are already obtainable', () => {
+    const items = getNextAchievableItems(emptyState, 50);
+    // Spot-check: every returned item must have no available source on this state.
+    for (const { item } of items) {
+      const full = calculateSupplyChain(item, emptyState)!;
+      expect(full.sources.some((s) => s.status.isAvailable),
+        `${item} was returned by getNextAchievableItems but already has an available source`,
+      ).toBe(false);
+    }
   });
 });
 
