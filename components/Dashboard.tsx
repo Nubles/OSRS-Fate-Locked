@@ -34,6 +34,8 @@ import { useUnlockReveal } from '../hooks/useUnlockReveal';
 import { UnlockReveal } from './UnlockReveal';
 import { getGameMode } from '../config/gameModes';
 import { getActivityRegion } from '../data/activityRegions';
+import { JournalSummaryCard } from './JournalSummaryCard';
+import { RegionAdvisorPanel } from './RegionAdvisorPanel';
 
 // Code-split: the run card pulls in html2canvas only when actually opened.
 const RunCardModal = lazy(() => import('./RunCard').then(m => ({ default: m.RunCardModal })));
@@ -339,6 +341,16 @@ export const Dashboard: React.FC = () => {
                 <h3 className="text-blue-400 font-bold text-sm">Skills</h3>
                 <span className="text-xs text-blue-400/60 font-mono">{totalSkillTiers}/{SKILLS_LIST.length * 10} Tiers</span>
             </div>
+
+            {/* Journal Summary — quick cross-tab overview so players can see
+                what's actionable right now without leaving the main tab.
+                Clicking a row navigates straight to the relevant journal sub-tab. */}
+            <JournalSummaryCard
+              onNavClick={(tab) => {
+                setActiveTab('JOURNAL');
+                setJournalSubTab(tab);
+              }}
+            />
             
             <div className="grid grid-cols-3 gap-2">
                 {SKILLS_LIST.map(skill => {
@@ -514,6 +526,10 @@ export const Dashboard: React.FC = () => {
               </div>
           ) : (
               <div className="space-y-6 h-full overflow-y-auto pr-2 custom-scrollbar pb-10">
+                  {/* Region Advisor — shows which locked regions would unlock the most
+                      quests + diary tiers, helping ironmen pick the next unlock target. */}
+                  <RegionAdvisorPanel />
+
                   {/* Misthalin Special Card */}
                   <div className="bg-[#1a1a1a] rounded border border-emerald-500/30 p-3 relative overflow-hidden group">
                       <div className="absolute inset-0 bg-emerald-900/5 pointer-events-none"></div>
