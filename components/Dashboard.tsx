@@ -29,6 +29,7 @@ const SkillDetailModal = lazy(() => import('./SkillDetailModal').then(m => ({ de
 import { PanelErrorBoundary } from './PanelErrorBoundary';
 import { ModalFallback } from './LoadingFallback';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 import { getGameMode } from '../config/gameModes';
 import { getActivityRegion } from '../data/activityRegions';
 
@@ -211,7 +212,7 @@ export const Dashboard: React.FC = () => {
   const activeMode = getGameMode(gameModeId);
   const [activeTab, setActiveTab] = useState('CHARACTER');
   const [activityCategory, setActivityCategory] = useState('BOSSES');
-  const [journalSubTab, setJournalSubTab] = useState<'QUESTS' | 'DIARIES' | 'CA'>('QUESTS');
+  const [journalSubTab, setJournalSubTab] = useLocalStorage<'QUESTS' | 'DIARIES' | 'CA'>('jrnl:subtab', 'QUESTS');
   const [worldView, setWorldView] = useState<'LIST' | 'MAP'>('MAP');
   const [showRunCard, setShowRunCard] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
