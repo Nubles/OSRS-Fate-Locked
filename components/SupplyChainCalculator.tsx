@@ -8,6 +8,7 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 import { X, Search, CheckCircle2, Lock, Box, ShoppingBag, Sword, Sprout, MapPin, Database, ExternalLink, RefreshCw, ArrowLeft, ArrowRight, Hammer, HelpCircle, Layers, Coins, Calculator, ListFilter, Star, ChevronDown, ChevronRight, Hand, ScrollText, Percent, Compass, Pin } from 'lucide-react';
 
 const FAVORITES_KEY = 'FATE_RESOURCE_FAVORITES';
+const INVENTORY_KEY = 'FATE_RESOURCE_INVENTORY';
 const MAX_FAVORITES = 20;
 
 interface SupplyChainCalculatorProps {
@@ -78,6 +79,25 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
       return [];
     }
   });
+  // Persistent "I already have N of this" map for the recipe breakdown. Lets
+  // the player subtract their inventory from the totalRequired so the panel
+  // shows what's still to gather rather than what the raw recipe demands.
+  const [inventory, setInventory] = useState<Record<string, number>>(() => {
+    try {
+      const raw = localStorage.getItem(INVENTORY_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        const cleaned: Record<string, number> = {};
+        for (const [k, v] of Object.entries(parsed)) {
+          if (typeof v === 'number' && v > 0 && Number.isFinite(v)) cleaned[k] = v;
+        }
+        return cleaned;
+      }
+      return {};
+    } catch {
+      return {};
+    }
+  });
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -91,6 +111,23 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
       /* localStorage unavailable — favorites stay in-memory only */
     }
   }, [favorites]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(INVENTORY_KEY, JSON.stringify(inventory));
+    } catch {
+      /* localStorage unavailable — inventory stays in-memory only */
+    }
+  }, [inventory]);
+
+  const setInventoryFor = (item: string, n: number) => {
+    setInventory(prev => {
+      const next = { ...prev };
+      if (n > 0) next[item] = n;
+      else delete next[item];
+      return next;
+    });
+  };
 
   const toggleFavorite = (item: string) => {
     setFavorites(prev => {
@@ -546,12 +583,13 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 animate-in fade-in duration-200">
                                     {rawMaterials.map(({ item, qty }) => {
                                         const isLinkable = !!RESOURCE_MAP[item];
+                                        const have = inventory[item] || 0;
+                                        const stillNeed = Math.max(0, qty - have);
+                                        const isCovered = stillNeed === 0;
                                         return (
-                                            <button
+                                            <div
                                                 key={item}
-                                                onClick={isLinkable ? () => handleNavigate(item) : undefined}
-                                                disabled={!isLinkable}
-                                                className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${isLinkable ? 'bg-[#1a1a1a] border-white/5 hover:bg-[#252525] hover:border-white/10 cursor-pointer group' : 'bg-transparent border-transparent cursor-default'}`}
+                                                className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${isCovered ? 'bg-emerald-900/10 border-emerald-500/20' : 'bg-[#1a1a1a] border-white/5'}`}
                                             >
                                                 {item === 'Coins' ? (
                                                     <div className="w-10 h-10 flex items-center justify-center bg-yellow-900/20 rounded border border-yellow-500/20 shrink-0"><Coins size={18} className="text-yellow-400" /></div>
@@ -559,16 +597,34 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
                                                     <ItemImage name={item} size="md" />
                                                 )}
                                                 <div className="flex-1 min-w-0">
-                                                    <span className="text-sm font-bold text-gray-300 group-hover:text-white truncate block">{item}</span>
-                                                    <span className="text-[10px] text-gray-500 font-mono">x{formatQty(qty)}</span>
+                                                    {isLinkable ? (
+                                                        <button onClick={() => handleNavigate(item)} className="text-sm font-bold text-gray-300 hover:text-white truncate block text-left">
+                                                            {item}
+                                                        </button>
+                                                    ) : (
+                                                        <span className="text-sm font-bold text-gray-300 truncate block">{item}</span>
+                                                    )}
+                                                    <span className={`text-[10px] font-mono ${isCovered ? 'text-emerald-400' : 'text-gray-500'}`}>
+                                                        {isCovered ? `Covered (need ${formatQty(qty)})` : `Need x${formatQty(stillNeed)}${have > 0 ? ` of ${formatQty(qty)}` : ''}`}
+                                                    </span>
                                                 </div>
+                                                {/* Persistent "have" input — left blank until used, value 0 not stored */}
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    placeholder="have"
+                                                    title={`How many ${item} you already have`}
+                                                    value={have || ''}
+                                                    onChange={(e) => setInventoryFor(item, Math.max(0, parseInt(e.target.value, 10) || 0))}
+                                                    className="w-16 text-[11px] font-mono bg-black/40 border border-white/10 rounded px-1.5 py-1 text-gray-200 focus:outline-none focus:border-emerald-500/50 shrink-0"
+                                                />
                                                 {isLinkable && (
                                                     <span
                                                         className={`w-2 h-2 rounded-full shrink-0 ${availabilityMap[item] ? 'bg-emerald-500' : 'bg-red-500'}`}
                                                         title={availabilityMap[item] ? 'Available' : 'Locked'}
                                                     />
                                                 )}
-                                            </button>
+                                            </div>
                                         );
                                     })}
                                 </div>
