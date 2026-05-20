@@ -230,6 +230,14 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                                         {tasksCompletedCount}/{tasks.length}
                                     </span>
                                 )}
+                                {/* Remaining task count — only when the tier isn't done and
+                                    there's something still to chase. Amber tint to signal
+                                    "action needed" without being as strong as green "do now". */}
+                                {hasTasks && !isCompleted && tasksCompletedCount < tasks.length && (
+                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-900/20 text-amber-500/80 border border-amber-600/25">
+                                        {tasks.length - tasksCompletedCount} left
+                                    </span>
+                                )}
                             </div>
                             
                             {!isExpanded && (

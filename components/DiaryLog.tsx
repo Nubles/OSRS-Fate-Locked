@@ -11,6 +11,27 @@ import { JournalNextUpStrip, NextUpItem } from './JournalNextUpStrip';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SkillTrainingPopover, SkillPopoverState } from './SkillTrainingPopover';
 
+/**
+ * Counts how many tasks in `tasks` the player can complete right now:
+ *   • not yet done
+ *   • all skill reqs met
+ *   • all quest reqs met
+ *   • all region reqs unlocked (Misthalin is always free)
+ */
+function countDoableTasks(tasks: DiaryTask[], unlocks: any): number {
+  return tasks.filter(task => {
+    if (unlocks.completedTasks.includes(task.id)) return false;
+    if (task.skills && !Object.entries(task.skills).every(
+      ([skill, lvl]) => (unlocks.skills[skill] || 0) > 0 && (unlocks.levels[skill] || 1) >= (lvl as number),
+    )) return false;
+    if (task.quests && !task.quests.every(q => unlocks.quests.includes(q))) return false;
+    if (task.regions && !task.regions.every(
+      r => r === 'Misthalin' || MISTHALIN_AREAS.includes(r) || unlocks.regions.includes(r),
+    )) return false;
+    return true;
+  }).length;
+}
+
 interface DiaryLogProps {
   searchTerm?: string;
 }
@@ -150,14 +171,20 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
       .map((d) => {
         const tasks = ALL_DIARY_TASKS.filter((t) => t.tierId === d.id);
         const doneCount = tasks.filter((t) => unlocks.completedTasks.includes(t.id)).length;
+        const doable = countDoableTasks(tasks, unlocks);
         const tierColor =
           d.tier === 'Elite' ? 'text-purple-300' :
           d.tier === 'Hard' ? 'text-red-300' :
           d.tier === 'Medium' ? 'text-blue-300' : 'text-green-300';
+        const subtitle = tasks.length === 0
+          ? `${d.region} · ${d.tier}`
+          : doable > 0
+            ? `${doable} task${doable !== 1 ? 's' : ''} doable now · ${doneCount}/${tasks.length} done`
+            : `${doneCount}/${tasks.length} tasks done`;
         return {
           id: d.id,
           title: d.id,
-          subtitle: tasks.length > 0 ? `${doneCount}/${tasks.length} tasks done` : `${d.region} · ${d.tier}`,
+          subtitle,
           tierLabel: d.tier,
           tierColorClass: tierColor,
         };
@@ -261,6 +288,9 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
           const allTasksDone = !hasTasks || tasksCompletedCount === tasks.length;
           const isActionable = isCompleted || allTasksDone;
 
+          // Tasks the player can tick off right now — drives the green badge.
+          const doableNow = isCompleted ? 0 : countDoableTasks(tasks, unlocks);
+
           // Req progress for LOCKED diary cards: count diary-level gates met
           // (required regions + prerequisite quests + skill requirements).
           const gatedRegions = diary.requiredRegions.filter(
@@ -298,6 +328,13 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                     {hasTasks && (
                         <span className="text-[9px] text-gray-500 font-mono ml-2">
                             {tasksCompletedCount}/{tasks.length}
+                        </span>
+                    )}
+                    {/* Green "X now" pill — only shown when the tier has
+                        tasks the player can actually complete right now. */}
+                    {hasTasks && !isCompleted && doableNow > 0 && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-900/25 text-emerald-400 border border-emerald-500/30">
+                            {doableNow} now
                         </span>
                     )}
                   </div>
