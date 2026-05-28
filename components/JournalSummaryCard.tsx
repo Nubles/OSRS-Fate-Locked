@@ -1,19 +1,20 @@
 import React, { useMemo } from 'react';
-import { BookOpen, Map, Swords, ChevronRight, Sparkles } from 'lucide-react';
+import { BookOpen, Map as MapIcon, Swords, ChevronRight, Sparkles, Target, PartyPopper } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS, DiaryTask } from '../data/diaryTasks';
 import { CA_DATA } from '../data/caData';
 import { ALL_CA_TASKS } from '../data/caTasks';
-import { getQuestStatus } from '../utils/journalStatus';
+import { getQuestStatus, getDiaryStatus } from '../utils/journalStatus';
 import { MISTHALIN_AREAS } from '../data/items';
 
 /**
  * Compact "what can I do right now?" summary card for the Dashboard CHARACTER
- * tab.  Three rows — Quests / Diaries / Combat Achievements — each showing a
- * quick count and a coloured progress bar.  Clicking a row fires onNavClick
- * so the parent can switch the Journal tab directly.
+ * tab.  A "recommended next action" headline picks the single highest-value
+ * thing to do, followed by three rows — Quests / Diaries / Combat Achievements
+ * — each showing a count and progress bar.  Clicking anything navigates
+ * straight to the relevant Journal sub-tab.
  */
 
 interface Props {
@@ -37,6 +38,65 @@ function countDoableDiaryTasks(unlocks: any): number {
     if (unlocks.diaries.includes(task.tierId)) return false;
     return true;
   }).length;
+}
+
+interface Recommendation {
+  tab: 'QUESTS' | 'DIARIES' | 'CA' | null;
+  headline: string;
+  detail: string;
+}
+
+/**
+ * Picks the single best next action. Prefers the available quest with the
+ * highest DIRECT unlock impact (cheap 1-step simulation), then doable diary
+ * tasks, then any available quest, then CA grind. Returns a celebratory state
+ * when nothing is left.
+ */
+function recommendNextAction(unlocks: any, diaryDoable: number, caLeft: number): Recommendation {
+  const allQuests = Object.values(QUEST_DATA);
+  const allDiaries = Object.values(DIARY_DATA);
+
+  // Base statuses once — reused across the candidate loop.
+  const baseQ = new Map(allQuests.map((q) => [q.id, getQuestStatus(q, unlocks)]));
+  const baseD = new Map(allDiaries.map((d) => [d.id, getDiaryStatus(d, unlocks)]));
+  const wasOpen = (s: string | undefined) => s === 'AVAILABLE' || s === 'COMPLETED';
+
+  const available = allQuests.filter((q) => baseQ.get(q.id) === 'AVAILABLE');
+
+  let best: { name: string; nq: number; nd: number; impact: number } | null = null;
+  for (const q of available) {
+    const sim = { ...unlocks, quests: [...unlocks.quests, q.id] };
+    let nq = 0;
+    for (const oq of allQuests) {
+      if (oq.id === q.id) continue;
+      if (wasOpen(baseQ.get(oq.id))) continue;
+      if (getQuestStatus(oq, sim) === 'AVAILABLE') nq++;
+    }
+    let nd = 0;
+    for (const d of allDiaries) {
+      if (wasOpen(baseD.get(d.id))) continue;
+      if (getDiaryStatus(d, sim) === 'AVAILABLE') nd++;
+    }
+    const impact = nq * 2 + nd;
+    if (!best || impact > best.impact) best = { name: q.name, nq, nd, impact };
+  }
+
+  if (best && best.impact > 0) {
+    const parts: string[] = [];
+    if (best.nq > 0) parts.push(`${best.nq} quest${best.nq !== 1 ? 's' : ''}`);
+    if (best.nd > 0) parts.push(`${best.nd} diary tier${best.nd !== 1 ? 's' : ''}`);
+    return { tab: 'QUESTS', headline: `Complete ${best.name}`, detail: `unlocks ${parts.join(' · ')}` };
+  }
+  if (diaryDoable > 0) {
+    return { tab: 'DIARIES', headline: `Knock out diary tasks`, detail: `${diaryDoable} doable right now` };
+  }
+  if (best) {
+    return { tab: 'QUESTS', headline: `Complete ${best.name}`, detail: `available now` };
+  }
+  if (caLeft > 0) {
+    return { tab: 'CA', headline: `Grind combat achievements`, detail: `${caLeft} tasks remaining` };
+  }
+  return { tab: null, headline: `Everything's done!`, detail: `No actionable journal content left` };
 }
 
 export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
@@ -74,6 +134,12 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
     };
   }, [unlocks]);
 
+  // The single best next action — computed once per unlocks change.
+  const recommendation = useMemo(
+    () => recommendNextAction(unlocks, stats.diaries.doable, stats.ca.left),
+    [unlocks, stats.diaries.doable, stats.ca.left],
+  );
+
   const rows: Array<{
     key: 'QUESTS' | 'DIARIES' | 'CA';
     icon: React.ReactNode;
@@ -102,7 +168,7 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
     },
     {
       key: 'DIARIES',
-      icon: <Map size={12} />,
+      icon: <MapIcon size={12} />,
       label: 'Diary Tasks',
       accent: 'text-green-300',
       barColor: 'bg-green-500/50',
@@ -130,23 +196,53 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
     },
   ];
 
+  const noneLeft = recommendation.tab === null;
+
   return (
-    <div className="bg-[#151515] border border-white/10 rounded-xl p-4">
+    <section className="bg-[#151515] border border-white/10 rounded-xl p-4" aria-label="Journal summary">
       <div className="flex items-center gap-2 mb-3">
-        <Sparkles size={13} className="text-amber-400" />
+        <Sparkles size={13} className="text-amber-400" aria-hidden />
         <h3 className="text-xs font-bold text-amber-300 uppercase tracking-widest">Journal Summary</h3>
         <span className="ml-auto text-[10px] text-gray-600">click to jump</span>
       </div>
 
-      <div className="space-y-2">
-        {rows.map((row) => (
+      {/* ── Recommended next action ───────────────────────────────────────── */}
+      {noneLeft ? (
+        <div className="mb-3 rounded-lg border border-emerald-500/25 bg-emerald-900/15 px-3 py-2.5 flex items-center gap-2.5">
+          <PartyPopper size={15} className="text-emerald-400 shrink-0" aria-hidden />
+          <div>
+            <p className="text-[11px] font-bold text-emerald-300">{recommendation.headline}</p>
+            <p className="text-[10px] text-emerald-500/70">{recommendation.detail}</p>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={() => recommendation.tab && onNavClick(recommendation.tab)}
+          aria-label={`Recommended: ${recommendation.headline} — ${recommendation.detail}`}
+          className="mb-3 w-full text-left rounded-lg border border-amber-500/30 bg-gradient-to-r from-amber-900/20 to-transparent px-3 py-2.5 flex items-center gap-2.5 hover:from-amber-900/35 hover:border-amber-400/50 transition-all group outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
+        >
+          <Target size={15} className="text-amber-400 shrink-0 group-hover:scale-110 transition-transform" aria-hidden />
+          <div className="flex-1 min-w-0">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-amber-500/70 mb-0.5">Do this next</p>
+            <p className="text-[12px] font-bold text-amber-200 truncate">{recommendation.headline}</p>
+            <p className="text-[10px] text-amber-400/70 truncate">{recommendation.detail}</p>
+          </div>
+          <ChevronRight size={13} className="text-amber-600 group-hover:text-amber-300 transition-colors shrink-0" aria-hidden />
+        </button>
+      )}
+
+      <div className="space-y-2" role="list">
+        {rows.map((row, idx) => (
           <button
             key={row.key}
+            role="listitem"
             onClick={() => onNavClick(row.key)}
-            className="w-full text-left bg-[#1a1a1a] border border-white/5 rounded-lg px-3 py-2 hover:bg-white/5 hover:border-white/10 transition-all group"
+            aria-label={`${row.label}: ${row.headline}, ${row.sub}`}
+            style={{ animationDelay: `${idx * 40}ms` }}
+            className="w-full text-left bg-[#1a1a1a] border border-white/5 rounded-lg px-3 py-2 hover:bg-white/5 hover:border-white/10 transition-all group outline-none focus-visible:ring-2 focus-visible:ring-white/30 animate-in fade-in slide-in-from-bottom-1 duration-300 fill-mode-both"
           >
             <div className="flex items-center gap-2 mb-1.5">
-              <span className={row.accent}>{row.icon}</span>
+              <span className={row.accent} aria-hidden>{row.icon}</span>
               <span className={`text-[11px] font-semibold ${row.accent}`}>{row.label}</span>
               {row.badgeValue > 0 && (
                 <span className={`ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${row.badgeColor}`}>
@@ -155,12 +251,16 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
               )}
               <ChevronRight
                 size={10}
+                aria-hidden
                 className={`text-gray-700 group-hover:text-gray-400 transition-colors ${row.badgeValue > 0 ? '' : 'ml-auto'}`}
               />
             </div>
 
             {/* Progress bar */}
-            <div className="h-[3px] bg-black/40 rounded-full overflow-hidden mb-1">
+            <div
+              className="h-[3px] bg-black/40 rounded-full overflow-hidden mb-1"
+              title={`${row.pct}% complete`}
+            >
               <div
                 className={`h-full ${row.barColor} rounded-full transition-all duration-500`}
                 style={{ width: `${row.pct}%` }}
@@ -176,6 +276,6 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
           </button>
         ))}
       </div>
-    </div>
+    </section>
   );
 };

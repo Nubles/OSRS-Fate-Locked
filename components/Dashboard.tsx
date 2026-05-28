@@ -575,7 +575,7 @@ export const Dashboard: React.FC = () => {
                           if (showOnlyActionable && !hasAnyUnlocked && !canUnlockAny) return null;
 
                           return (
-                              <div key={group} className="bg-[#1a1a1a] rounded border border-white/5 p-3 h-full relative">
+                              <div key={group} data-region-card={group} className="bg-[#1a1a1a] rounded border border-white/5 p-3 h-full relative transition-shadow duration-300">
                                   <div className="absolute top-1 right-1 z-20">
                                         <NoteTrigger id={group} title={group} />
                                   </div>

@@ -1,16 +1,15 @@
 /**
  * Region Unlock Advisor
  *
- * For every region the player has NOT yet unlocked, simulates unlocking it
- * and counts how many currently-locked quests + diary tiers would become
- * AVAILABLE as a direct result.  Score = questsUnlocked×2 + diaryTiersUnlocked.
+ * For every region the player has NOT yet unlocked, computes how many quests +
+ * diary tiers unlocking it would open up — both DIRECTLY and across the full
+ * downstream CASCADE (the quest chains the region's quests unblock). Regions
+ * are ranked by cascade score.
  *
  * Pure function — no side-effects, no React, safe to call inside useMemo.
  */
 
-import { QUEST_DATA } from '../data/questData';
-import { DIARY_DATA } from '../data/diaryData';
-import { getQuestStatus, getDiaryStatus } from './journalStatus';
+import { computeUnlockImpact } from './unlockImpact';
 import { REGION_GROUPS } from '../data/items';
 
 /** All unlock-able region names (the continent keys, not sub-area strings). */
@@ -18,63 +17,48 @@ export const UNLOCKABLE_REGIONS = Object.keys(REGION_GROUPS);
 
 export interface RankedRegion {
   id: string;
-  /** Quests that go LOCKED → AVAILABLE after this region is unlocked. */
+  /** Quests that go LOCKED → AVAILABLE immediately. */
   newQuestNames: string[];
-  /** Diary tier IDs that go LOCKED → AVAILABLE after this region is unlocked. */
+  /** Diary tier IDs that go LOCKED → AVAILABLE immediately. */
   newDiaryIds: string[];
-  /** Composite score: questsUnlocked×2 + diaryTiersUnlocked */
+  /** Quests reachable through the full prereq chain (includes direct). */
+  cascadeQuestNames: string[];
+  /** Diary tiers reachable once the chain is complete (includes direct). */
+  cascadeDiaryIds: string[];
+  /** Immediate payoff: directQuests×2 + directDiaries. */
   score: number;
+  /** Full downstream potential: cascadeQuests×2 + cascadeDiaries. */
+  cascadeScore: number;
 }
 
 /**
- * Returns all locked regions ranked by unlock impact (highest score first).
- * Ties are broken alphabetically.
+ * Returns all locked regions ranked by cascade impact (highest first).
+ * Ties broken by direct score, then alphabetically.
  *
  * @param unlocks  Current unlocks snapshot (same shape as GameContext unlocks)
  */
 export function rankLockedRegions(unlocks: any): RankedRegion[] {
-  const allQuests = Object.values(QUEST_DATA);
-  const allDiaries = Object.values(DIARY_DATA);
-
-  // Pre-compute current status once — O(n) baseline.
-  const currentQuestStatus = new Map<string, string>(
-    allQuests.map((q) => [q.id, getQuestStatus(q, unlocks)]),
-  );
-  const currentDiaryStatus = new Map<string, string>(
-    allDiaries.map((d) => [d.id, getDiaryStatus(d, unlocks)]),
-  );
-
-  // Only consider regions not yet unlocked (and not Misthalin which is free).
-  const locked = UNLOCKABLE_REGIONS.filter(
-    (r) => !unlocks.regions.includes(r),
-  );
+  const locked = UNLOCKABLE_REGIONS.filter((r) => !unlocks.regions.includes(r));
 
   return locked
     .map((region): RankedRegion => {
-      const simulatedUnlocks = {
-        ...unlocks,
-        regions: [...unlocks.regions, region],
+      const simulated = { ...unlocks, regions: [...unlocks.regions, region] };
+      const impact = computeUnlockImpact(unlocks, simulated);
+
+      return {
+        id: region,
+        newQuestNames: impact.directQuestNames,
+        newDiaryIds: impact.directDiaryIds,
+        cascadeQuestNames: impact.cascadeQuestNames,
+        cascadeDiaryIds: impact.cascadeDiaryIds,
+        score: impact.directScore,
+        cascadeScore: impact.cascadeScore,
       };
-
-      const newQuestNames = allQuests
-        .filter((q) => {
-          if (currentQuestStatus.get(q.id) === 'AVAILABLE') return false;
-          if (currentQuestStatus.get(q.id) === 'COMPLETED') return false;
-          return getQuestStatus(q, simulatedUnlocks) === 'AVAILABLE';
-        })
-        .map((q) => q.name);
-
-      const newDiaryIds = allDiaries
-        .filter((d) => {
-          if (currentDiaryStatus.get(d.id) === 'AVAILABLE') return false;
-          if (currentDiaryStatus.get(d.id) === 'COMPLETED') return false;
-          return getDiaryStatus(d, simulatedUnlocks) === 'AVAILABLE';
-        })
-        .map((d) => d.id);
-
-      const score = newQuestNames.length * 2 + newDiaryIds.length;
-
-      return { id: region, newQuestNames, newDiaryIds, score };
     })
-    .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
+    .sort(
+      (a, b) =>
+        b.cascadeScore - a.cascadeScore ||
+        b.score - a.score ||
+        a.id.localeCompare(b.id),
+    );
 }
