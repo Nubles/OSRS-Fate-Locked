@@ -133,8 +133,7 @@ export const GoalPlannerModal: React.FC<Props> = ({ onClose }) => {
         // Ready-to-start first, then locked, then done; alpha within.
         const rank = (s: TargetState) => (s === 'ready' ? 0 : s === 'locked' ? 1 : 2);
         return rank(a.state) - rank(b.state) || a.t.label.localeCompare(b.t.label);
-      })
-      .slice(0, 60);
+      });
   }, [targets, query, unlocks]);
 
   const plan: GoalPlan | null = useMemo(
