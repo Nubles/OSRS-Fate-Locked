@@ -1,4 +1,4 @@
-import React, { useState, useMemo, lazy, Suspense } from 'react';
+import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { 
   EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, REGION_GROUPS, MISTHALIN_AREAS, 
   MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, POH_LIST, 
@@ -42,6 +42,9 @@ import { SkillAdvisorPanel } from './SkillAdvisorPanel';
 const RunCardModal = lazy(() => import('./RunCard').then(m => ({ default: m.RunCardModal })));
 // Goal Planner modal — pulls in the full quest/diary datasets, so load on demand.
 const GoalPlannerModal = lazy(() => import('./GoalPlannerModal').then(m => ({ default: m.GoalPlannerModal })));
+// Command palette — indexes every dataset, so load on first Ctrl-K.
+const CommandPalette = lazy(() => import('./CommandPalette').then(m => ({ default: m.CommandPalette })));
+import type { PaletteCommand } from './CommandPalette';
 
 // --- Constants & Helpers ---
 
@@ -223,6 +226,7 @@ export const Dashboard: React.FC = () => {
   const [worldView, setWorldView] = useState<'LIST' | 'MAP'>('MAP');
   const [showRunCard, setShowRunCard] = useState(false);
   const [showGoalPlanner, setShowGoalPlanner] = useState(false);
+  const [showPalette, setShowPalette] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showOnlyActionable, setShowOnlyActionable] = useState(false);
   const [levelingSkill, setLevelingSkill] = useState<string | null>(null);
@@ -231,6 +235,27 @@ export const Dashboard: React.FC = () => {
   const [selectedSkillForDetails, setSelectedSkillForDetails] = useState<{name: string, tier: number} | null>(null);
 
   const [unlockReveal, dismissReveal] = useUnlockReveal(unlocks);
+
+  // Global Ctrl/Cmd-K toggles the command palette.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setShowPalette((p) => !p);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  // Route a chosen palette command to the right tab and let the destination's
+  // own search filter narrow down to the selected item.
+  const handlePaletteNavigate = (cmd: PaletteCommand) => {
+    setActiveTab(cmd.tab);
+    if (cmd.subTab) setJournalSubTab(cmd.subTab);
+    if (cmd.worldView) setWorldView(cmd.worldView);
+    setSearchQuery(cmd.search ?? cmd.label);
+  };
 
   useEscapeKey(() => setShowRunCard(false), showRunCard);
   useEscapeKey(() => setSelectedSkillForDetails(null), selectedSkillForDetails !== null);
@@ -827,6 +852,15 @@ export const Dashboard: React.FC = () => {
              </h2>
              <div className="flex items-center gap-3">
                <button
+                 onClick={() => setShowPalette(true)}
+                 className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-white/10 bg-black/30 hover:bg-white/5 text-gray-400 hover:text-white text-[11px] font-medium transition-colors"
+                 title="Search everything (Ctrl-K)"
+               >
+                 <Search size={12} />
+                 Search
+                 <kbd className="ml-0.5 text-[9px] font-mono text-gray-600 border border-white/10 rounded px-1">⌘K</kbd>
+               </button>
+               <button
                  onClick={() => setShowGoalPlanner(true)}
                  className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-cyan-500/30 bg-cyan-950/30 hover:bg-cyan-900/40 text-cyan-300 text-[11px] font-medium transition-colors"
                  title="Plan the route to any quest, diary, or region"
@@ -916,6 +950,15 @@ export const Dashboard: React.FC = () => {
     {showGoalPlanner && (
       <Suspense fallback={<ModalFallback label="Loading planner…" />}>
         <GoalPlannerModal onClose={() => setShowGoalPlanner(false)} />
+      </Suspense>
+    )}
+
+    {showPalette && (
+      <Suspense fallback={null}>
+        <CommandPalette
+          onClose={() => setShowPalette(false)}
+          onNavigate={handlePaletteNavigate}
+        />
       </Suspense>
     )}
 
