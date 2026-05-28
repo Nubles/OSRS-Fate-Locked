@@ -10,7 +10,7 @@ import {
 import { useGame } from '../context/GameContext';
 import {
   Sparkles, Search, User, Map, Swords, Package,
-  ExternalLink, Unlock, Lock, Compass, ChevronDown, ChevronsUp, AlertCircle, BookOpen, ScrollText, Globe, List, Filter, Info, Share2, MapPin
+  ExternalLink, Unlock, Lock, Compass, ChevronDown, ChevronsUp, AlertCircle, BookOpen, ScrollText, Globe, List, Filter, Info, Share2, MapPin, Route
 } from 'lucide-react';
 import { VoidReveal } from './VoidReveal';
 import { TableType } from '../types';
@@ -39,6 +39,8 @@ import { RegionAdvisorPanel } from './RegionAdvisorPanel';
 
 // Code-split: the run card pulls in html2canvas only when actually opened.
 const RunCardModal = lazy(() => import('./RunCard').then(m => ({ default: m.RunCardModal })));
+// Goal Planner modal — pulls in the full quest/diary datasets, so load on demand.
+const GoalPlannerModal = lazy(() => import('./GoalPlannerModal').then(m => ({ default: m.GoalPlannerModal })));
 
 // --- Constants & Helpers ---
 
@@ -219,6 +221,7 @@ export const Dashboard: React.FC = () => {
   const [journalSubTab, setJournalSubTab] = useLocalStorage<'QUESTS' | 'DIARIES' | 'CA'>('jrnl:subtab', 'QUESTS');
   const [worldView, setWorldView] = useState<'LIST' | 'MAP'>('MAP');
   const [showRunCard, setShowRunCard] = useState(false);
+  const [showGoalPlanner, setShowGoalPlanner] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showOnlyActionable, setShowOnlyActionable] = useState(false);
   const [levelingSkill, setLevelingSkill] = useState<string | null>(null);
@@ -817,6 +820,14 @@ export const Dashboard: React.FC = () => {
              </h2>
              <div className="flex items-center gap-3">
                <button
+                 onClick={() => setShowGoalPlanner(true)}
+                 className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-cyan-500/30 bg-cyan-950/30 hover:bg-cyan-900/40 text-cyan-300 text-[11px] font-medium transition-colors"
+                 title="Plan the route to any quest, diary, or region"
+               >
+                 <Route size={12} />
+                 Goal Planner
+               </button>
+               <button
                  onClick={() => setShowRunCard(true)}
                  className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-amber-500/30 bg-amber-950/30 hover:bg-amber-900/40 text-amber-300 text-[11px] font-medium transition-colors"
                  title="Generate shareable run card"
@@ -892,6 +903,12 @@ export const Dashboard: React.FC = () => {
     {showRunCard && (
       <Suspense fallback={<ModalFallback label="Building run card…" />}>
         <RunCardModal onClose={() => setShowRunCard(false)} />
+      </Suspense>
+    )}
+
+    {showGoalPlanner && (
+      <Suspense fallback={<ModalFallback label="Loading planner…" />}>
+        <GoalPlannerModal onClose={() => setShowGoalPlanner(false)} />
       </Suspense>
     )}
 
