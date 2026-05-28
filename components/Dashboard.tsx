@@ -10,7 +10,7 @@ import {
 import { useGame } from '../context/GameContext';
 import {
   Sparkles, Search, User, Map, Swords, Package,
-  ExternalLink, Unlock, Lock, Compass, ChevronDown, ChevronsUp, AlertCircle, BookOpen, ScrollText, Globe, List, Filter, Info, Share2, MapPin, Route
+  ExternalLink, Unlock, Lock, Compass, ChevronDown, ChevronsUp, AlertCircle, BookOpen, ScrollText, Globe, List, Filter, Info, Share2, MapPin, Route, Trophy
 } from 'lucide-react';
 import { VoidReveal } from './VoidReveal';
 import { TableType } from '../types';
@@ -32,6 +32,8 @@ import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useUnlockReveal } from '../hooks/useUnlockReveal';
 import { UnlockReveal } from './UnlockReveal';
+import { useAchievementReveal } from '../hooks/useAchievementReveal';
+import { AchievementReveal } from './AchievementReveal';
 import { getGameMode } from '../config/gameModes';
 import { getActivityRegion } from '../data/activityRegions';
 import { RegionAdvisorPanel } from './RegionAdvisorPanel';
@@ -41,6 +43,8 @@ import { SkillAdvisorPanel } from './SkillAdvisorPanel';
 const RunCardModal = lazy(() => import('./RunCard').then(m => ({ default: m.RunCardModal })));
 // Goal Planner modal — pulls in the full quest/diary datasets, so load on demand.
 const GoalPlannerModal = lazy(() => import('./GoalPlannerModal').then(m => ({ default: m.GoalPlannerModal })));
+// Achievements modal — pulls in the quest/diary/CA datasets via the engine.
+const AchievementsModal = lazy(() => import('./AchievementsModal').then(m => ({ default: m.AchievementsModal })));
 
 // --- Constants & Helpers ---
 
@@ -239,6 +243,7 @@ export const Dashboard: React.FC = () => {
   const [worldView, setWorldView] = useState<'LIST' | 'MAP'>('MAP');
   const [showRunCard, setShowRunCard] = useState(false);
   const [showGoalPlanner, setShowGoalPlanner] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showOnlyActionable, setShowOnlyActionable] = useState(false);
   const [levelingSkill, setLevelingSkill] = useState<string | null>(null);
@@ -247,6 +252,7 @@ export const Dashboard: React.FC = () => {
   const [selectedSkillForDetails, setSelectedSkillForDetails] = useState<{name: string, tier: number} | null>(null);
 
   const [unlockReveal, dismissReveal] = useUnlockReveal(unlocks);
+  const [achievementReveal, dismissAchievementReveal] = useAchievementReveal(unlocks);
 
   useEscapeKey(() => setShowRunCard(false), showRunCard);
   useEscapeKey(() => setSelectedSkillForDetails(null), selectedSkillForDetails !== null);
@@ -937,6 +943,14 @@ export const Dashboard: React.FC = () => {
                  Goal Planner
                </button>
                <button
+                 onClick={() => setShowAchievements(true)}
+                 className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-amber-500/30 bg-amber-950/30 hover:bg-amber-900/40 text-amber-300 text-[11px] font-medium transition-colors"
+                 title="View achievements & milestones"
+               >
+                 <Trophy size={12} />
+                 Achievements
+               </button>
+               <button
                  onClick={() => setShowRunCard(true)}
                  className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-amber-500/30 bg-amber-950/30 hover:bg-amber-900/40 text-amber-300 text-[11px] font-medium transition-colors"
                  title="Generate shareable run card"
@@ -1019,6 +1033,21 @@ export const Dashboard: React.FC = () => {
       <Suspense fallback={<ModalFallback label="Loading planner…" />}>
         <GoalPlannerModal onClose={() => setShowGoalPlanner(false)} />
       </Suspense>
+    )}
+
+    {showAchievements && (
+      <Suspense fallback={<ModalFallback label="Loading achievements…" />}>
+        <AchievementsModal onClose={() => setShowAchievements(false)} />
+      </Suspense>
+    )}
+
+    {/* Celebratory reveal when a milestone is newly earned. */}
+    {achievementReveal && (
+      <AchievementReveal
+        data={achievementReveal}
+        onDismiss={dismissAchievementReveal}
+        onView={() => setShowAchievements(true)}
+      />
     )}
 
     {/* Unlock reveal — slides in from the right when a quest or region
