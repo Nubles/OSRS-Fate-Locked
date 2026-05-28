@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import {
   Target, Search, X, MapPin, BookOpen, Award, Dumbbell,
-  CheckCircle2, Circle, ArrowRight, Star, Compass, Route,
+  CheckCircle2, Circle, ArrowRight, Star, Compass, Route, ExternalLink,
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
+import { wikiUrlFor } from '../constants';
 import {
   listGoalTargets, planForTarget, GoalTarget, GoalPlan, PlanStep, GoalKind,
 } from '../utils/goalPlanner';
@@ -60,6 +61,12 @@ const STEP_ICON: Record<PlanStep['kind'], React.ReactNode> = {
   quest: <BookOpen size={12} />,
 };
 
+/** OSRS Wiki article for a step. Quest/skill/region labels map directly; the
+ *  QP step links to the Quest points overview. Quest articles surface their
+ *  quick-guide link at the top, so this doubles as a "how do I do this" jump. */
+const stepWikiHref = (step: PlanStep): string =>
+  wikiUrlFor(step.kind === 'qp' ? 'Quest points' : step.label);
+
 const StepRow: React.FC<{ step: PlanStep; index?: number }> = ({ step, index }) => (
   <div
     className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md border text-left transition-colors ${
@@ -85,6 +92,17 @@ const StepRow: React.FC<{ step: PlanStep; index?: number }> = ({ step, index }) 
     {step.detail && (
       <span className="text-[9px] text-gray-500 font-mono shrink-0">{step.detail}</span>
     )}
+    <a
+      href={stepWikiHref(step)}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      className="shrink-0 text-gray-600 hover:text-cyan-400 transition-colors p-0.5 rounded hover:bg-white/5"
+      title={`Open ${step.label} on the OSRS Wiki`}
+      aria-label={`Open ${step.label} on the OSRS Wiki`}
+    >
+      <ExternalLink size={11} aria-hidden />
+    </a>
   </div>
 );
 
