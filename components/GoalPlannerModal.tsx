@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import {
   Target, Search, X, MapPin, BookOpen, Award, Dumbbell,
-  CheckCircle2, Circle, ArrowRight, Star, Compass, Route, ExternalLink,
+  CheckCircle2, Circle, ArrowRight, Star, Compass, Route,
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { wikiUrlFor } from '../constants';
@@ -86,23 +86,21 @@ const StepRow: React.FC<{ step: PlanStep; index?: number }> = ({ step, index }) 
       </span>
     )}
     <span className="text-gray-500 shrink-0" aria-hidden>{STEP_ICON[step.kind]}</span>
-    <span className={`text-[11px] font-semibold truncate flex-1 ${step.done ? 'text-gray-500 line-through' : 'text-gray-200'}`}>
-      {step.label}
-    </span>
-    {step.detail && (
-      <span className="text-[9px] text-gray-500 font-mono shrink-0">{step.detail}</span>
-    )}
     <a
       href={stepWikiHref(step)}
       target="_blank"
       rel="noopener noreferrer"
       onClick={(e) => e.stopPropagation()}
-      className="shrink-0 text-gray-600 hover:text-cyan-400 transition-colors p-0.5 rounded hover:bg-white/5"
       title={`Open ${step.label} on the OSRS Wiki`}
-      aria-label={`Open ${step.label} on the OSRS Wiki`}
+      className={`text-[11px] font-semibold truncate flex-1 hover:underline transition-colors ${
+        step.done ? 'text-gray-500 line-through hover:text-gray-400' : 'text-gray-200 hover:text-cyan-300'
+      }`}
     >
-      <ExternalLink size={11} aria-hidden />
+      {step.label}
     </a>
+    {step.detail && (
+      <span className="text-[9px] text-gray-500 font-mono shrink-0">{step.detail}</span>
+    )}
   </div>
 );
 
