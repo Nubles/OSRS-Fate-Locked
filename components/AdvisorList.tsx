@@ -30,7 +30,7 @@ export interface AdvisorItem {
   cascadeScore: number;
 }
 
-type Accent = 'violet' | 'amber';
+type Accent = 'violet' | 'amber' | 'cyan';
 
 const ACCENTS: Record<Accent, {
   icon: string; title: string; bar: string; grad: string;
@@ -45,6 +45,11 @@ const ACCENTS: Record<Accent, {
     icon: 'text-amber-400', title: 'text-amber-300', bar: 'bg-amber-500/55',
     grad: 'from-amber-900/8', arrowHover: 'group-hover:text-amber-400',
     rowTitle: 'text-amber-200', ring: 'focus-visible:ring-amber-400/60',
+  },
+  cyan: {
+    icon: 'text-cyan-400', title: 'text-cyan-300', bar: 'bg-cyan-500/55',
+    grad: 'from-cyan-900/8', arrowHover: 'group-hover:text-cyan-400',
+    rowTitle: 'text-cyan-100', ring: 'focus-visible:ring-cyan-400/60',
   },
 };
 

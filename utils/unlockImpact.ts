@@ -34,6 +34,12 @@ export interface UnlockImpact {
   directScore: number;
   /** cascadeQuests×2 + cascadeDiaries — the full downstream potential. */
   cascadeScore: number;
+  /**
+   * Every quest id completed in the final cascade snapshot (base completions +
+   * the whole chain the candidate unblocks). Lets callers run their own
+   * skill-aware diary checks, which `getDiaryStatus` deliberately skips.
+   */
+  finalQuestIds: string[];
 }
 
 const isOpen = (status: string | undefined) =>
@@ -124,5 +130,6 @@ export function computeUnlockImpact(
     cascadeDiaryIds,
     directScore,
     cascadeScore,
+    finalQuestIds: Array.from(completed),
   };
 }

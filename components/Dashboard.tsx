@@ -36,6 +36,7 @@ import { getGameMode } from '../config/gameModes';
 import { getActivityRegion } from '../data/activityRegions';
 import { JournalSummaryCard } from './JournalSummaryCard';
 import { RegionAdvisorPanel } from './RegionAdvisorPanel';
+import { SkillAdvisorPanel } from './SkillAdvisorPanel';
 
 // Code-split: the run card pulls in html2canvas only when actually opened.
 const RunCardModal = lazy(() => import('./RunCard').then(m => ({ default: m.RunCardModal })));
@@ -354,7 +355,12 @@ export const Dashboard: React.FC = () => {
                 setJournalSubTab(tab);
               }}
             />
-            
+
+            {/* Skill Advisor — ranks which skill to train next (and to what
+                level) by how much quest + diary content the threshold unlocks.
+                Clicking a row flashes the matching skill card below. */}
+            <SkillAdvisorPanel />
+
             <div className="grid grid-cols-3 gap-2">
                 {SKILLS_LIST.map(skill => {
                     const tier = unlocks.skills[skill] || 0;
@@ -385,6 +391,7 @@ export const Dashboard: React.FC = () => {
                     return (
                         <div
                            key={skill}
+                           data-skill-card={skill}
                            onClick={isMainActionable ? handleMainClick : undefined}
                            className={`
                                 flex flex-col p-2 rounded bg-[#1f1f1f] border border-white/5 text-left transition-all relative overflow-hidden group min-h-[60px]
