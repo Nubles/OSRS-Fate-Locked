@@ -14,6 +14,7 @@ import { OnboardingWizard } from './components/OnboardingWizard';
 import { ProfileSwitcher } from './components/ProfileSwitcher';
 import { PanelErrorBoundary } from './components/PanelErrorBoundary';
 import { ModalFallback } from './components/LoadingFallback';
+import { JournalSummaryCard } from './components/JournalSummaryCard';
 import { useEscapeKey } from './hooks/useEscapeKey';
 import { resolveModeRules } from './config/gameModes';
 
@@ -446,11 +447,25 @@ const GameLayout = () => {
       <main className="max-w-[1600px] mx-auto px-4 py-4 h-[calc(100vh-80px)]">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
 
-          {/* LEFT: Interaction & Control (35%) */}
-          <div className="lg:col-span-4 h-full min-h-[500px]">
-            <PanelErrorBoundary name="Control panel">
-              <ControlPanel />
-            </PanelErrorBoundary>
+          {/* LEFT: Journal summary + Interaction & Control (35%).
+              The journal summary lives here (rather than inside a Dashboard tab)
+              so it stays visible across every tab switch. Clicking a row fires a
+              `navigate-journal` event the Dashboard listens for. */}
+          <div className="lg:col-span-4 h-full min-h-[500px] flex flex-col gap-4">
+            <div className="shrink-0">
+              <PanelErrorBoundary name="Journal summary">
+                <JournalSummaryCard
+                  onNavClick={(tab) =>
+                    window.dispatchEvent(new CustomEvent('navigate-journal', { detail: { tab } }))
+                  }
+                />
+              </PanelErrorBoundary>
+            </div>
+            <div className="flex-1 min-h-0">
+              <PanelErrorBoundary name="Control panel">
+                <ControlPanel />
+              </PanelErrorBoundary>
+            </div>
           </div>
 
           {/* RIGHT: Dashboard Visualization (65%) */}

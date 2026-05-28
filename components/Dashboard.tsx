@@ -1,4 +1,4 @@
-import React, { useState, useMemo, lazy, Suspense } from 'react';
+import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { 
   EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, REGION_GROUPS, MISTHALIN_AREAS, 
   MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, POH_LIST, 
@@ -34,7 +34,6 @@ import { useUnlockReveal } from '../hooks/useUnlockReveal';
 import { UnlockReveal } from './UnlockReveal';
 import { getGameMode } from '../config/gameModes';
 import { getActivityRegion } from '../data/activityRegions';
-import { JournalSummaryCard } from './JournalSummaryCard';
 import { RegionAdvisorPanel } from './RegionAdvisorPanel';
 import { SkillAdvisorPanel } from './SkillAdvisorPanel';
 
@@ -235,6 +234,20 @@ export const Dashboard: React.FC = () => {
   useEscapeKey(() => setShowRunCard(false), showRunCard);
   useEscapeKey(() => setSelectedSkillForDetails(null), selectedSkillForDetails !== null);
 
+  // The Journal summary card lives in the persistent left sidebar (App.tsx), so
+  // it can't set this component's tab state directly. It dispatches a
+  // `navigate-journal` event instead; we open the Journal tab + matching sub-tab.
+  useEffect(() => {
+    const onNavigate = (e: Event) => {
+      const tab = (e as CustomEvent<{ tab?: 'QUESTS' | 'DIARIES' | 'CA' }>).detail?.tab;
+      if (!tab) return;
+      setActiveTab('JOURNAL');
+      setJournalSubTab(tab);
+    };
+    window.addEventListener('navigate-journal', onNavigate);
+    return () => window.removeEventListener('navigate-journal', onNavigate);
+  }, [setJournalSubTab]);
+
   // --- Calculations ---
   const totalSkillTiers = useMemo(() => (Object.values(unlocks.skills) as number[]).reduce((a, b) => a + b, 0), [unlocks.skills]);
   const totalEquipTiers = useMemo(() => (Object.values(unlocks.equipment) as number[]).reduce((a, b) => a + b, 0), [unlocks.equipment]);
@@ -336,18 +349,6 @@ export const Dashboard: React.FC = () => {
                         );
                     })}
                 </div>
-             </div>
-
-             {/* Journal Summary — quick cross-tab overview of what's actionable
-                 right now. Lives under the equipment slots so the skills column
-                 fits without scrolling. Clicking a row jumps to that sub-tab. */}
-             <div className="mt-4 shrink-0">
-               <JournalSummaryCard
-                 onNavClick={(tab) => {
-                   setActiveTab('JOURNAL');
-                   setJournalSubTab(tab);
-                 }}
-               />
              </div>
         </div>
 
