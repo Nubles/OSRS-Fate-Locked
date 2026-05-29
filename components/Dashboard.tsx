@@ -18,6 +18,8 @@ import { wikiService } from '../services/WikiService';
 import { NoteTrigger } from './NoteTrigger';
 import { RegionMap } from './RegionMap';
 import { EquipmentLab } from './EquipmentLab';
+import { completionPercent as runCompletion } from '../utils/completion';
+import { rivalCompletion, standing as rivalStanding } from '../utils/rival';
 // Heavy tab/modal contents — code-split so their large data dependencies
 // (questData, diaryTasks, caTasks, collectionLogData, requirements, etc.)
 // stay out of the initial dashboard bundle.
@@ -48,6 +50,8 @@ const GoalPlannerModal = lazy(() => import('./GoalPlannerModal').then(m => ({ de
 const AchievementsModal = lazy(() => import('./AchievementsModal').then(m => ({ default: m.AchievementsModal })));
 // Fate Forecast modal — projects keys/time to a chosen locked unlock.
 const FateForecastModal = lazy(() => import('./FateForecastModal').then(m => ({ default: m.FateForecastModal })));
+// Rival Ghost modal — race a simulated nemesis or a friend's run.
+const RivalModal = lazy(() => import('./RivalModal').then(m => ({ default: m.RivalModal })));
 
 // --- Constants & Helpers ---
 
@@ -76,6 +80,38 @@ const TIER_COLORS = [
 const getWikiUrl = wikiUrlFor;
 
 const getSkillIcon = (skillName: string) => `https://oldschool.runescape.wiki/images/${skillName}_icon.png`;
+
+// Header control: opens the Rival modal, and when a rival is set shows the live
+// standing (▲ you ahead / ▼ behind) — the ambient "pulse" of the race.
+const RivalHeaderButton: React.FC<{ onClick: () => void }> = ({ onClick }) => {
+  const { rival, unlocks } = useGame();
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    if (!rival || rival.mode === 'friend') return;
+    const t = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(t);
+  }, [rival]);
+
+  if (!rival) {
+    return (
+      <button onClick={onClick} title="Race a Rival Ghost" className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-fuchsia-500/30 bg-fuchsia-950/30 hover:bg-fuchsia-900/40 text-fuchsia-300 text-[11px] font-medium transition-colors">
+        <Swords size={12} /> Rival
+      </button>
+    );
+  }
+  const st = rivalStanding(runCompletion(unlocks), rivalCompletion(rival, now));
+  const ahead = st.lead > 0, tie = st.lead === 0;
+  return (
+    <button
+      onClick={onClick}
+      title={`${rival.name}: ${st.lead > 0 ? `you +${st.lead}%` : st.lead < 0 ? `rival +${-st.lead}%` : 'tied'}`}
+      className={`flex items-center gap-1.5 px-2.5 py-1 rounded border text-[11px] font-bold transition-colors ${tie ? 'border-white/15 bg-white/5 text-gray-300' : ahead ? 'border-emerald-500/40 bg-emerald-950/30 text-emerald-300' : 'border-red-500/40 bg-red-950/30 text-red-300'}`}
+    >
+      <span>{rival.emoji}</span>
+      <span>{tie ? 'TIE' : `${ahead ? '▲' : '▼'} ${Math.abs(st.lead)}%`}</span>
+    </button>
+  );
+};
 
 // --- Sub-Components ---
 
@@ -231,6 +267,7 @@ export const Dashboard: React.FC = () => {
   const [showGoalPlanner, setShowGoalPlanner] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showForecast, setShowForecast] = useState(false);
+  const [showRival, setShowRival] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showOnlyActionable, setShowOnlyActionable] = useState(false);
   const [levelingSkill, setLevelingSkill] = useState<string | null>(null);
@@ -819,6 +856,7 @@ export const Dashboard: React.FC = () => {
                  <Sparkles size={12} />
                  Forecast
                </button>
+               <RivalHeaderButton onClick={() => setShowRival(true)} />
                <button
                  onClick={() => setShowRunCard(true)}
                  className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-amber-500/30 bg-amber-950/30 hover:bg-amber-900/40 text-amber-300 text-[11px] font-medium transition-colors"
@@ -934,6 +972,12 @@ export const Dashboard: React.FC = () => {
     {showForecast && (
       <Suspense fallback={<ModalFallback label="Consulting Fate…" />}>
         <FateForecastModal onClose={() => setShowForecast(false)} />
+      </Suspense>
+    )}
+
+    {showRival && (
+      <Suspense fallback={<ModalFallback label="Summoning your rival…" />}>
+        <RivalModal onClose={() => setShowRival(false)} />
       </Suspense>
     )}
 

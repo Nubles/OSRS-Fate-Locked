@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef } from 'react';
-import { GameState, LogEntry, UnlockState, DropSource, TableType } from '../types';
+import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState } from '../types';
 import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST } from '../data/items';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
@@ -64,6 +64,10 @@ interface GameContextType extends GameState {
   getExportData: () => string | null;
   /** Equip (or clear, with itemId=null) a real item in a slot; optionally clear other slots (2h handling). */
   setLoadoutSlot: (slot: string, itemId: number | null, clearSlots?: string[]) => void;
+  /** Rival Ghost controls. */
+  setRival: (rival: RivalState) => void;
+  clearRival: () => void;
+  ackRival: (lead: number) => void;
 }
 
 // --- Initial State ---
@@ -215,6 +219,9 @@ export type Action =
   | { type: 'TOGGLE_TASK'; payload: string }
   | { type: 'SET_GAME_MODE'; payload: { modeId: string; customRules?: GameModeRules } }
   | { type: 'SET_LOADOUT_SLOT'; payload: { slot: string; itemId: number | null; clearSlots?: string[] } }
+  | { type: 'SET_RIVAL'; payload: RivalState }
+  | { type: 'CLEAR_RIVAL' }
+  | { type: 'ACK_RIVAL'; payload: number }
   | { type: 'LOG_ITEM'; payload: number };
 
 // Wrap the raw reducer so any history entries appended during a dispatch
@@ -564,6 +571,13 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       return { ...state, unlocks: { ...state.unlocks, completedTasks: newTasks } };
     }
 
+    case 'SET_RIVAL':
+      return { ...state, rival: action.payload };
+    case 'CLEAR_RIVAL':
+      return { ...state, rival: undefined };
+    case 'ACK_RIVAL':
+      return state.rival ? { ...state, rival: { ...state.rival, lastSeenLead: action.payload } } : state;
+
     case 'SET_LOADOUT_SLOT': {
       const { slot, itemId, clearSlots } = action.payload;
       const loadout = { ...(state.loadout || {}) };
@@ -723,6 +737,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     dispatch({ type: 'SET_LOADOUT_SLOT', payload: { slot, itemId, clearSlots } });
   }, []);
 
+  const setRival = useCallback((rival: RivalState) => dispatch({ type: 'SET_RIVAL', payload: rival }), []);
+  const clearRival = useCallback(() => dispatch({ type: 'CLEAR_RIVAL' }), []);
+  const ackRival = useCallback((lead: number) => dispatch({ type: 'ACK_RIVAL', payload: lead }), []);
+
   const completeOnboarding = useCallback(() => dispatch({ type: 'COMPLETE_ONBOARDING' }), []);
   const setGameMode = useCallback((modeId: string, customRules?: GameModeRules) =>
     dispatch({ type: 'SET_GAME_MODE', payload: { modeId, customRules } }), []);
@@ -791,7 +809,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     toggleTask,
     logCollectionItem,
     getExportData,
-    setLoadoutSlot
+    setLoadoutSlot,
+    setRival,
+    clearRival,
+    ackRival
   }), [
     state,
     rollForKey,
@@ -814,7 +835,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     toggleTask,
     logCollectionItem,
     getExportData,
-    setLoadoutSlot
+    setLoadoutSlot,
+    setRival,
+    clearRival,
+    ackRival
   ]);
 
   return (
