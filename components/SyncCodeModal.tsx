@@ -1,19 +1,37 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   X, Link2, Copy, Check, ClipboardPaste, ShieldCheck, ShieldAlert,
-  AlertTriangle, Loader2, ArrowDownToLine, Upload,
+  AlertTriangle, Loader2, ArrowDownToLine, Upload, QrCode, History, RotateCcw,
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { encodeSyncCode, decodeSyncCode } from '../utils/syncCode';
+import { makeQrSvg } from '../utils/qr';
 import { auditHistory, RunVerdict } from '../utils/integrity';
+import { BackupMeta } from '../utils/backups';
 import { GameState, LogEntry } from '../types';
 
 interface Props {
   onClose: () => void;
+  /** When set (e.g. opened from a #sync= link) start on Import, pre-filled. */
+  initialImportCode?: string;
 }
 
-type Tab = 'EXPORT' | 'IMPORT';
+type Tab = 'EXPORT' | 'IMPORT' | 'BACKUPS';
+
+const SYNC_HASH_PREFIX = '#sync=';
+const shareUrlFor = (code: string): string =>
+  `${window.location.origin}${window.location.pathname}${SYNC_HASH_PREFIX}${code}`;
+
+const relativeTime = (ts: number): string => {
+  const s = Math.max(0, Math.round((Date.now() - ts) / 1000));
+  if (s < 60) return 'just now';
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.round(h / 24)}d ago`;
+};
 
 /** Defensive summary of a decoded run for the import preview. */
 interface RunPreview {
@@ -65,16 +83,18 @@ const VERDICT_UI: Record<RunVerdict, { label: string; sub: string; cls: string; 
   },
 };
 
-export const SyncCodeModal: React.FC<Props> = ({ onClose }) => {
-  const { getExportData, importSave } = useGame();
+export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) => {
+  const { getExportData, importSave, createBackup, listBackups, restoreBackup } = useGame();
   useEscapeKey(onClose, true);
 
-  const [tab, setTab] = useState<Tab>('EXPORT');
+  const [tab, setTab] = useState<Tab>(initialImportCode ? 'IMPORT' : 'EXPORT');
 
   // ── Export ──────────────────────────────────────────────────────────────
   const [code, setCode] = useState<string>('');
   const [encoding, setEncoding] = useState(true);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<'none' | 'code' | 'link'>('none');
+
+  const qr = useMemo(() => (code ? makeQrSvg(shareUrlFor(code)) : null), [code]);
 
   useEffect(() => {
     let cancelled = false;
@@ -94,19 +114,19 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose }) => {
     return () => { cancelled = true; };
   }, [getExportData]);
 
-  const handleCopy = useCallback(async () => {
-    if (!code) return;
+  const copyText = useCallback(async (text: string, which: 'code' | 'link') => {
+    if (!text) return;
     try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      await navigator.clipboard.writeText(text);
+      setCopied(which);
+      setTimeout(() => setCopied('none'), 2000);
     } catch {
       /* clipboard blocked — the user can still select the text manually */
     }
-  }, [code]);
+  }, []);
 
   // ── Import ──────────────────────────────────────────────────────────────
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState(initialImportCode ?? '');
   const [decoding, setDecoding] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [decoded, setDecoded] = useState<Record<string, unknown> | null>(null);
@@ -127,11 +147,11 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose }) => {
     }
   }, []);
 
-  const handleVerify = useCallback(async () => {
+  const handleVerify = useCallback(async (codeToVerify?: string) => {
     setDecoding(true);
     setError(null);
     setDecoded(null);
-    const result = await decodeSyncCode(input);
+    const result = await decodeSyncCode(codeToVerify ?? input);
     setDecoding(false);
     if (!result.ok) {
       setError(result.error ?? 'Could not read that code.');
@@ -139,6 +159,12 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose }) => {
     }
     setDecoded(result.state ?? null);
   }, [input]);
+
+  // Opened from a #sync= link → verify the pre-filled code immediately.
+  useEffect(() => {
+    if (initialImportCode) handleVerify(initialImportCode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialImportCode]);
 
   const handleImport = useCallback(() => {
     if (!decoded) return;
@@ -148,9 +174,25 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose }) => {
     if (!window.confirm(`${warn}Import this run? It will OVERWRITE the current profile's save. This cannot be undone.`)) {
       return;
     }
+    // Snapshot the run we're about to replace so the import is recoverable.
+    createBackup('Before sync import');
     importSave(decoded as Partial<GameState>);
     onClose();
-  }, [decoded, audit, importSave, onClose]);
+  }, [decoded, audit, importSave, createBackup, onClose]);
+
+  // ── Backups ───────────────────────────────────────────────────────────────
+  const [backups, setBackups] = useState<BackupMeta[]>([]);
+  useEffect(() => {
+    if (tab === 'BACKUPS') setBackups(listBackups());
+  }, [tab, listBackups]);
+
+  const handleRestore = useCallback((b: BackupMeta) => {
+    if (!window.confirm(`Restore this backup (${b.summary})? It will OVERWRITE the current profile's save.`)) {
+      return;
+    }
+    restoreBackup(b.ts);
+    onClose();
+  }, [restoreBackup, onClose]);
 
   const TabBtn: React.FC<{ id: Tab; label: string; Icon: typeof Link2 }> = ({ id, label, Icon }) => (
     <button
@@ -201,11 +243,12 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose }) => {
         <div className="flex border-b border-white/10 bg-[#141414] shrink-0">
           <TabBtn id="EXPORT" label="Export" Icon={Upload} />
           <TabBtn id="IMPORT" label="Import" Icon={ArrowDownToLine} />
+          <TabBtn id="BACKUPS" label="Backups" Icon={History} />
         </div>
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
-          {tab === 'EXPORT' ? (
+          {tab === 'EXPORT' && (
             <div className="space-y-3">
               <p className="text-[12px] text-gray-400 leading-relaxed">
                 This code contains your entire current run, including verification data.
@@ -216,26 +259,57 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose }) => {
                   readOnly
                   value={encoding ? 'Generating sync code…' : (code || 'Nothing to export yet.')}
                   onClick={(e) => (e.target as HTMLTextAreaElement).select()}
-                  className="w-full h-40 resize-none rounded-lg bg-black/40 border border-white/10 p-3 font-mono text-[11px] text-cyan-200/90 leading-relaxed break-all focus:outline-none focus:border-cyan-500/40"
+                  className="w-full h-32 resize-none rounded-lg bg-black/40 border border-white/10 p-3 font-mono text-[11px] text-cyan-200/90 leading-relaxed break-all focus:outline-none focus:border-cyan-500/40"
                 />
                 {encoding && (
                   <Loader2 size={16} className="absolute top-3 right-3 text-cyan-400 animate-spin" />
                 )}
               </div>
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center justify-between gap-2">
                 <span className="text-[10px] text-gray-600 font-mono">
                   {code ? `${code.length.toLocaleString()} chars` : '—'}
                 </span>
-                <button
-                  onClick={handleCopy}
-                  disabled={!code || encoding}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-[12px] font-bold transition-colors"
-                >
-                  {copied ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy code</>}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => copyText(shareUrlFor(code), 'link')}
+                    disabled={!code || encoding}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#252525] border border-white/10 hover:bg-[#2d2d2d] disabled:opacity-40 disabled:cursor-not-allowed text-gray-200 text-[12px] font-bold transition-colors"
+                  >
+                    {copied === 'link' ? <><Check size={14} /> Link!</> : <><Link2 size={14} /> Copy link</>}
+                  </button>
+                  <button
+                    onClick={() => copyText(code, 'code')}
+                    disabled={!code || encoding}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-[12px] font-bold transition-colors"
+                  >
+                    {copied === 'code' ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy code</>}
+                  </button>
+                </div>
               </div>
+
+              {/* QR of the share link */}
+              {code && !encoding && (
+                <div className="rounded-lg bg-[#1a1a1a] border border-white/5 p-4 flex flex-col items-center gap-2">
+                  <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-gray-500">
+                    <QrCode size={12} /> Scan to load on another device
+                  </div>
+                  {qr?.ok ? (
+                    <div
+                      className="w-44 h-44 rounded-md bg-white p-2"
+                      // eslint-disable-next-line react/no-danger
+                      dangerouslySetInnerHTML={{ __html: qr.svg! }}
+                    />
+                  ) : (
+                    <p className="text-[11px] text-gray-500 text-center max-w-[16rem] leading-relaxed py-3">
+                      {qr?.error ?? 'QR unavailable.'} Use <span className="text-cyan-300">Copy link</span> instead.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
-          ) : (
+          )}
+
+          {tab === 'IMPORT' && (
             <div className="space-y-3">
               <p className="text-[12px] text-gray-400 leading-relaxed">
                 Paste a sync code below and verify it before importing. Importing
@@ -257,7 +331,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose }) => {
                   <ClipboardPaste size={13} /> Paste
                 </button>
                 <button
-                  onClick={handleVerify}
+                  onClick={() => handleVerify()}
                   disabled={!input.trim() || decoding}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-[11px] font-bold transition-colors"
                 >
@@ -312,6 +386,47 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose }) => {
                   </div>
                 );
               })()}
+            </div>
+          )}
+
+          {tab === 'BACKUPS' && (
+            <div className="space-y-3">
+              <p className="text-[12px] text-gray-400 leading-relaxed">
+                A snapshot is saved automatically before any import or reset. Restore one
+                to roll back. Only the most recent few are kept, per profile.
+              </p>
+              {backups.length === 0 ? (
+                <div className="rounded-lg border border-white/5 bg-[#1a1a1a] p-6 text-center">
+                  <History size={20} className="mx-auto text-gray-600 mb-2" />
+                  <p className="text-[11px] text-gray-500">No backups yet.</p>
+                  <p className="text-[10px] text-gray-600 mt-1">
+                    One will appear here the next time you import a run or reset.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {backups.map((b) => (
+                    <div
+                      key={b.ts}
+                      className="flex items-center gap-3 rounded-lg border border-white/5 bg-[#1a1a1a] px-3 py-2.5"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[12px] font-bold text-gray-200 truncate">{b.reason}</span>
+                          <span className="text-[10px] text-gray-600 font-mono shrink-0">{relativeTime(b.ts)}</span>
+                        </div>
+                        <p className="text-[10px] text-gray-500 font-mono truncate">{b.summary}</p>
+                      </div>
+                      <button
+                        onClick={() => handleRestore(b)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#252525] border border-white/10 hover:border-cyan-500/40 hover:text-cyan-300 text-gray-300 text-[11px] font-bold transition-colors shrink-0"
+                      >
+                        <RotateCcw size={12} /> Restore
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -137,7 +137,7 @@ interface HeaderProps {
 }
 
 const Header = ({ setShowAltar, setShowShare, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode }: HeaderProps) => {
-  const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, importSave, resetGame, getExportData, gameModeId, customMode } = useGame();
+  const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, importSave, resetGame, getExportData, createBackup, gameModeId, customMode } = useGame();
   const pityRules = resolveModeRules(gameModeId, customMode);
   const pityCap = pityRules.pityEnabled ? pityRules.pityThreshold : 50; // 50 = visual-only fallback
   const nearPity = pityRules.pityEnabled && fatePoints >= pityRules.pityThreshold * 0.8;
@@ -154,6 +154,7 @@ const Header = ({ setShowAltar, setShowShare, setShowStats, setShowReference, se
         const imported = deobfuscateFateSave(fileContent);
 
         if (imported) {
+            createBackup('Before file import');
             importSave(imported as Partial<GameState>);
             alert("Fate restored successfully.");
         } else {
@@ -360,7 +361,24 @@ const GameLayout = () => {
   }, []);
   const [showGameMode, setShowGameMode] = useState(false);
   const [showSyncCode, setShowSyncCode] = useState(false);
+  const [syncImportCode, setSyncImportCode] = useState<string | undefined>(undefined);
   const [activeRitualAnim, setActiveRitualAnim] = useState<'NONE' | 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE'>('NONE');
+
+  // Deep link: a `#sync=<code>` fragment (from a shared link or scanned QR)
+  // opens the Sync Code modal pre-filled on the Import tab, then clears the
+  // hash so a refresh doesn't re-trigger it and the URL stays tidy.
+  useEffect(() => {
+    const hash = window.location.hash;
+    const marker = '#sync=';
+    if (hash.startsWith(marker)) {
+      const code = hash.slice(marker.length);
+      if (code) {
+        setSyncImportCode(code);
+        setShowSyncCode(true);
+      }
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+  }, []);
 
   // Watch for ritual events to trigger animations
   React.useEffect(() => {
@@ -436,7 +454,7 @@ const GameLayout = () => {
         {showStrategy && <StrategyGuide onClose={() => setShowStrategy(false)} />}
         {showSupplyChain && <SupplyChainCalculator initialQuery={supplyChainPreset} onClose={() => { setShowSupplyChain(false); setSupplyChainPreset(undefined); }} />}
         {showGameMode && <GameModePicker onClose={() => setShowGameMode(false)} />}
-        {showSyncCode && <SyncCodeModal onClose={() => setShowSyncCode(false)} />}
+        {showSyncCode && <SyncCodeModal onClose={() => { setShowSyncCode(false); setSyncImportCode(undefined); }} initialImportCode={syncImportCode} />}
       </Suspense>
 
       <Header

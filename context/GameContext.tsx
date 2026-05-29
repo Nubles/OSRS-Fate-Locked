@@ -8,6 +8,7 @@ import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { rollDice, UNLOCK_COST } from '../utils/gameEngine';
 import { hashEntry, ensureChain } from '../utils/integrity';
+import { pushBackup, listBackups as readBackups, getBackupData, BackupMeta } from '../utils/backups';
 
 // --- Types ---
 const CURRENT_VERSION = 1;
@@ -47,6 +48,12 @@ interface GameContextType extends GameState {
   setGameMode: (modeId: string, customRules?: GameModeRules) => void;
   importSave: (data: Partial<GameState>) => void;
   resetGame: () => void;
+  /** Snapshot the current run before something overwrites it. */
+  createBackup: (reason: string) => void;
+  /** Backups for the active profile, newest first. */
+  listBackups: () => BackupMeta[];
+  /** Restore a backup by timestamp (snapshots the current run first). */
+  restoreBackup: (ts: number) => void;
   togglePin: (id: string) => void;
   saveNote: (id: string, text: string) => void;
   toggleQuest: (id: string) => void;
@@ -589,6 +596,15 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
   const [state, dispatch] = useReducer(gameReducer, { ...initialState, lastEvent: null });
   const saveTimeoutRef = useRef<number | null>(null);
 
+  // Always-current snapshot of state so backup/reset callbacks can read the
+  // latest persisted shape without re-creating on every state change.
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  const serializeCurrent = useCallback((): string => {
+    const { lastEvent, ...persist } = stateRef.current;
+    return JSON.stringify(persist);
+  }, []);
+
   // Load save on mount
   useEffect(() => {
     try {
@@ -698,7 +714,29 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
       alert('Failed to import: save data is malformed.');
     }
   }, []);
-  const resetGame = useCallback(() => dispatch({ type: 'RESET' }), []);
+  const createBackup = useCallback((reason: string) => {
+    pushBackup(storageKey, serializeCurrent(), reason);
+  }, [storageKey, serializeCurrent]);
+
+  const listBackups = useCallback(() => readBackups(storageKey), [storageKey]);
+
+  const restoreBackup = useCallback((ts: number) => {
+    const data = getBackupData(storageKey, ts);
+    if (!data) return;
+    // Snapshot the run we're about to replace so a restore is itself undoable.
+    pushBackup(storageKey, serializeCurrent(), 'Before restore');
+    try {
+      dispatch({ type: 'LOAD_SAVE', payload: JSON.parse(data) });
+    } catch {
+      console.error('Restore failed: backup data was unreadable');
+    }
+  }, [storageKey, serializeCurrent]);
+
+  const resetGame = useCallback(() => {
+    // Auto-snapshot so an accidental reset is recoverable.
+    pushBackup(storageKey, serializeCurrent(), 'Before reset');
+    dispatch({ type: 'RESET' });
+  }, [storageKey, serializeCurrent]);
   const togglePin = useCallback((id: string) => dispatch({ type: 'TOGGLE_PIN', payload: id }), []);
   const saveNote = useCallback((id: string, text: string) => dispatch({ type: 'UPDATE_NOTE', payload: { id, text } }), []);
   const toggleQuest = useCallback((id: string) => dispatch({ type: 'TOGGLE_QUEST', payload: id }), []);
@@ -721,6 +759,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     setGameMode,
     importSave,
     resetGame,
+    createBackup,
+    listBackups,
+    restoreBackup,
     togglePin,
     saveNote,
     toggleQuest,
@@ -740,6 +781,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     setGameMode,
     importSave,
     resetGame,
+    createBackup,
+    listBackups,
+    restoreBackup,
     togglePin,
     saveNote,
     toggleQuest,
