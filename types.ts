@@ -117,6 +117,7 @@ export interface GameState {
   gameModeId?: string; // selected game mode
   customMode?: GameModeRules; // ruleset when gameModeId === 'custom'
   gameModeLocked?: boolean; // true once a mode has been chosen — permanent for the account
+  loadout?: Record<string, number>; // equipment slot -> real item id (Gear mode)
 }
 
 // --- Profile System ---

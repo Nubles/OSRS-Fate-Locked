@@ -62,6 +62,8 @@ interface GameContextType extends GameState {
   toggleTask: (id: string) => void;
   logCollectionItem: (itemId: number) => void;
   getExportData: () => string | null;
+  /** Equip (or clear, with itemId=null) a real item in a slot; optionally clear other slots (2h handling). */
+  setLoadoutSlot: (slot: string, itemId: number | null, clearSlots?: string[]) => void;
 }
 
 // --- Initial State ---
@@ -104,6 +106,7 @@ export const initialState: GameState = {
   userNotes: {},
   gameModeId: DEFAULT_MODE_ID,
   gameModeLocked: false,
+  loadout: {},
 };
 
 // --- Save Validation ---
@@ -211,6 +214,7 @@ export type Action =
   | { type: 'TOGGLE_CA'; payload: string }
   | { type: 'TOGGLE_TASK'; payload: string }
   | { type: 'SET_GAME_MODE'; payload: { modeId: string; customRules?: GameModeRules } }
+  | { type: 'SET_LOADOUT_SLOT'; payload: { slot: string; itemId: number | null; clearSlots?: string[] } }
   | { type: 'LOG_ITEM'; payload: number };
 
 // Wrap the raw reducer so any history entries appended during a dispatch
@@ -560,6 +564,15 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       return { ...state, unlocks: { ...state.unlocks, completedTasks: newTasks } };
     }
 
+    case 'SET_LOADOUT_SLOT': {
+      const { slot, itemId, clearSlots } = action.payload;
+      const loadout = { ...(state.loadout || {}) };
+      if (itemId == null) delete loadout[slot];
+      else loadout[slot] = itemId;
+      if (clearSlots) for (const s of clearSlots) delete loadout[s];
+      return { ...state, loadout };
+    }
+
     case 'LOG_ITEM': {
       const itemId = action.payload;
       const currentCount = state.unlocks.collectionLog[itemId] || 0;
@@ -706,6 +719,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     dispatch({ type: 'LOG_ITEM', payload: itemId });
   }, []);
 
+  const setLoadoutSlot = useCallback((slot: string, itemId: number | null, clearSlots?: string[]) => {
+    dispatch({ type: 'SET_LOADOUT_SLOT', payload: { slot, itemId, clearSlots } });
+  }, []);
+
   const completeOnboarding = useCallback(() => dispatch({ type: 'COMPLETE_ONBOARDING' }), []);
   const setGameMode = useCallback((modeId: string, customRules?: GameModeRules) =>
     dispatch({ type: 'SET_GAME_MODE', payload: { modeId, customRules } }), []);
@@ -773,7 +790,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     toggleCA,
     toggleTask,
     logCollectionItem,
-    getExportData
+    getExportData,
+    setLoadoutSlot
   }), [
     state,
     rollForKey,
@@ -795,7 +813,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     toggleCA,
     toggleTask,
     logCollectionItem,
-    getExportData
+    getExportData,
+    setLoadoutSlot
   ]);
 
   return (

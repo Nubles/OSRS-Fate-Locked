@@ -9,6 +9,7 @@ import { NoteTrigger } from './NoteTrigger';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { computeCombatPower, overallCombatPower, TIER_LABELS, PowerAxisKey } from '../utils/combatPower';
 import { EQUIP_TIER_COLORS, equipTierColor } from '../utils/equipTiers';
+import { GearView } from './GearView';
 
 const slotImg = (slot: string) =>
   `https://oldschool.runescape.wiki/images/${SLOT_CONFIG[slot]?.file ?? 'Globe_icon.png'}`;
@@ -30,6 +31,7 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade }) => {
   const { unlocks, specialKeys } = useGame();
   const equipment = unlocks.equipment;
 
+  const [mode, setMode] = useState<'tiers' | 'gear'>('tiers');
   const [selected, setSelected] = useState<string | null>(null);
   const [planMode, setPlanMode] = useState(false);
   const [targets, setTargets] = useState<Record<string, number>>({});
@@ -73,23 +75,47 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade }) => {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex justify-between items-center bg-[#151515] p-2 rounded border border-white/5 mb-4 shrink-0">
-        <h3 className="text-gray-300 font-bold text-sm">Equipment Lab</h3>
+        <div className="flex items-center gap-3">
+          <h3 className="text-gray-300 font-bold text-sm">Equipment Lab</h3>
+          {/* Tiers / Gear mode toggle */}
+          <div className="flex items-center rounded-lg border border-white/10 bg-[#1f1f1f] p-0.5">
+            {(['tiers', 'gear'] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => setMode(m)}
+                className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-colors ${
+                  mode === m ? 'bg-[#322a1e] text-amber-300' : 'text-gray-500 hover:text-gray-300'
+                }`}
+              >
+                {m === 'tiers' ? 'Tiers' : 'Gear'}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500 font-mono">{totalEquipTiers}/{maxPossible} Tiers</span>
-          <button
-            onClick={() => (planMode ? setPlanMode(false) : enterPlan())}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded border text-[10px] font-bold uppercase tracking-wide transition-colors ${
-              planMode
-                ? 'border-cyan-500/50 bg-cyan-950/40 text-cyan-300'
-                : 'border-white/10 bg-[#1f1f1f] text-gray-400 hover:text-gray-200'
-            }`}
-            title="Plan a target loadout and see the Omni-Key cost"
-          >
-            <SlidersHorizontal size={11} /> {planMode ? 'Done' : 'Plan'}
-          </button>
+          {mode === 'tiers' && (
+            <>
+              <span className="text-xs text-gray-500 font-mono">{totalEquipTiers}/{maxPossible} Tiers</span>
+              <button
+                onClick={() => (planMode ? setPlanMode(false) : enterPlan())}
+                className={`flex items-center gap-1.5 px-2 py-1 rounded border text-[10px] font-bold uppercase tracking-wide transition-colors ${
+                  planMode
+                    ? 'border-cyan-500/50 bg-cyan-950/40 text-cyan-300'
+                    : 'border-white/10 bg-[#1f1f1f] text-gray-400 hover:text-gray-200'
+                }`}
+                title="Plan a target loadout and see the Omni-Key cost"
+              >
+                <SlidersHorizontal size={11} /> {planMode ? 'Done' : 'Plan'}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
+      {mode === 'gear' && <GearView />}
+
+      {mode === 'tiers' && (
+      <>
       {/* Paper-doll */}
       <div className="shrink-0 flex items-center justify-center bg-[#1a1814] rounded-lg border border-[#3a352e] shadow-inner relative min-h-[420px] py-6 overflow-hidden">
         <div
@@ -270,6 +296,8 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade }) => {
           onClose={() => setSelected(null)}
           onUpgrade={() => { onUpgrade(selected); setSelected(null); }}
         />
+      )}
+      </>
       )}
     </div>
   );
