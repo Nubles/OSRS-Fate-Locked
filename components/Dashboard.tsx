@@ -10,8 +10,7 @@ import {
 import { useGame } from '../context/GameContext';
 import {
   Sparkles, Search, User, Map, Swords, Package,
-  ExternalLink, Unlock, Lock, Compass, ChevronDown, ChevronsUp, AlertCircle, BookOpen, ScrollText, Globe, List, Filter, Info, Share2, MapPin, Route, Trophy,
-  Shield, Gauge, Crown
+  ExternalLink, Unlock, Lock, Compass, ChevronDown, ChevronsUp, AlertCircle, BookOpen, ScrollText, Globe, List, Filter, Info, Share2, MapPin, Route, Trophy
 } from 'lucide-react';
 import { VoidReveal } from './VoidReveal';
 import { TableType } from '../types';
@@ -395,40 +394,38 @@ export const Dashboard: React.FC = () => {
                             </div>
                         );
                     })}
-
-                    {/* Corner plaques — the paper-doll's four empty cells become an
-                        at-a-glance gear summary that frames the character. */}
-                    {([
-                      { area: 'col-start-1 row-start-1', Icon: Shield, value: `${equipStats.pct}%`, label: 'Gear', color: 'text-amber-300', title: 'Overall gear progress' },
-                      { area: 'col-start-3 row-start-1', Icon: Gauge, value: equipStats.avg.toFixed(1), label: 'Avg Tier', color: 'text-sky-300', title: 'Average tier across used slots' },
-                      { area: 'col-start-1 row-start-4', Icon: Crown, value: `${equipStats.maxed}`, label: 'Maxed', color: 'text-yellow-400', title: `Slots at Tier ${EQUIPMENT_TIER_MAX}` },
-                      { area: 'col-start-3 row-start-4', Icon: AlertCircle, value: `T${equipStats.weakest.tier}`, label: equipStats.weakest.slot, color: 'text-red-300', title: `Weakest slot: ${equipStats.weakest.slot} (Tier ${equipStats.weakest.tier})` },
-                    ] as const).map(({ area, Icon, value, label, color, title }) => (
-                      <div key={area} className={`${area} flex items-center justify-center`}>
-                        <div
-                          className="w-20 h-20 rounded-lg bg-[#211d15]/70 border border-[#3a352e] flex flex-col items-center justify-center gap-1 shadow-inner hover-lift px-1"
-                          title={title}
-                        >
-                          <Icon size={13} className={color} />
-                          <span className="text-base font-bold text-gray-100 leading-none">{value}</span>
-                          <span className="text-[8px] uppercase tracking-widest text-gray-500 leading-none truncate max-w-full text-center">{label}</span>
-                        </div>
-                      </div>
-                    ))}
                 </div>
              </div>
 
-             {/* Equipment Overview — the at-a-glance summary now lives in the
-                 paper-doll corners; this card carries the tier legend and the
-                 detailed per-slot breakdown. */}
+             {/* Equipment Overview — summary stats, tier legend, and a per-slot
+                 tier breakdown. Fills the space under the paper-doll and gives a
+                 quick read on overall gear progress + the weakest slot. */}
              <div className="mt-4 bg-[#151515] border border-white/10 rounded-xl p-4 space-y-4">
-                {/* Used-slots count + tier legend */}
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                   <span className="text-[10px] uppercase tracking-widest text-gray-500">
-                      {equipStats.unlocked}<span className="text-gray-600">/{EQUIPMENT_SLOTS.length}</span> slots used
-                   </span>
-                   <span className="text-[10px] font-mono text-gray-600">{totalEquipTiers}/{EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX} tiers</span>
+                {/* Summary stat tiles */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                   <div className="bg-[#1a1a1a] border border-white/5 rounded-lg px-3 py-2 hover-lift">
+                      <div className="text-[9px] uppercase tracking-widest text-gray-500 mb-0.5">Tiers</div>
+                      <div className="text-sm font-bold text-amber-300">{equipStats.pct}%</div>
+                      <div className="text-[9px] text-gray-600 font-mono">{totalEquipTiers}/{EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX}</div>
+                   </div>
+                   <div className="bg-[#1a1a1a] border border-white/5 rounded-lg px-3 py-2 hover-lift">
+                      <div className="text-[9px] uppercase tracking-widest text-gray-500 mb-0.5">Avg Tier</div>
+                      <div className="text-sm font-bold text-gray-200">{equipStats.avg.toFixed(1)}</div>
+                      <div className="text-[9px] text-gray-600 font-mono">{equipStats.unlocked}/{EQUIPMENT_SLOTS.length} used</div>
+                   </div>
+                   <div className="bg-[#1a1a1a] border border-white/5 rounded-lg px-3 py-2 hover-lift">
+                      <div className="text-[9px] uppercase tracking-widest text-gray-500 mb-0.5">Maxed</div>
+                      <div className="text-sm font-bold text-yellow-400">{equipStats.maxed}</div>
+                      <div className="text-[9px] text-gray-600 font-mono">at T{EQUIPMENT_TIER_MAX}</div>
+                   </div>
+                   <div className="bg-[#1a1a1a] border border-white/5 rounded-lg px-3 py-2 hover-lift">
+                      <div className="text-[9px] uppercase tracking-widest text-gray-500 mb-0.5">Weakest</div>
+                      <div className="text-sm font-bold text-red-300 truncate" title={equipStats.weakest.slot}>{equipStats.weakest.slot}</div>
+                      <div className="text-[9px] text-gray-600 font-mono">T{equipStats.weakest.tier}</div>
+                   </div>
                 </div>
+
+                {/* Tier legend */}
                 <div className="flex items-center gap-1.5 flex-wrap">
                    <span className="text-[9px] uppercase tracking-widest text-gray-500 mr-1">Low</span>
                    {EQUIP_TIER_COLORS.map((c, i) => (
