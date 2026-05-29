@@ -189,6 +189,39 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3): { violatio
   return { violations, final: s };
 };
 
+// --- Run audit (import verdict) -----------------------------------------
+
+export type RunVerdict = 'verified' | 'warning' | 'tampered';
+
+export interface RunAudit {
+  /**
+   * 'verified'  — hash chain intact AND no impossible states.
+   * 'warning'   — chain intact but the replay hit an invariant violation
+   *               (e.g. legacy data, or a partial edit).
+   * 'tampered'  — the hash chain is broken; entries were added/edited/removed.
+   */
+  verdict: RunVerdict;
+  chain: ChainReport;
+  violations: InvariantViolation[];
+  final: ReplayState;
+}
+
+/**
+ * Classify a run's history for display at import time. Combines the hash-chain
+ * check with the invariant replay into a single traffic-light verdict.
+ * A history with no hash links at all (very old saves) chains cleanly from
+ * GENESIS and reads as intact — we only flag links that are actually broken.
+ */
+export const auditHistory = (history: LogEntry[]): RunAudit => {
+  const chained = ensureChain(history);
+  const chain = verifyChain(chained);
+  const { violations, final } = replayInvariants(chained);
+  let verdict: RunVerdict = 'verified';
+  if (!chain.ok) verdict = 'tampered';
+  else if (violations.length > 0) verdict = 'warning';
+  return { verdict, chain, violations, final };
+};
+
 // --- Run ID & SHA-256 commitment ----------------------------------------
 
 // Browser-native SHA-256. Async, but only needed at export/verify time.

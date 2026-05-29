@@ -27,9 +27,10 @@ const OracleSearch = lazy(() => import('./components/OracleSearch').then(m => ({
 const StrategyGuide = lazy(() => import('./components/StrategyGuide').then(m => ({ default: m.StrategyGuide })));
 const SupplyChainCalculator = lazy(() => import('./components/SupplyChainCalculator').then(m => ({ default: m.SupplyChainCalculator })));
 const GameModePicker = lazy(() => import('./components/GameModePicker').then(m => ({ default: m.GameModePicker })));
+const SyncCodeModal = lazy(() => import('./components/SyncCodeModal').then(m => ({ default: m.SyncCodeModal })));
 import { obfuscateFateSave, deobfuscateFateSave } from './utils/encryption';
 import { GameState } from './types';
-import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, Share2, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal } from 'lucide-react';
+import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, Share2, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2 } from 'lucide-react';
 
 // --- Error Boundary ---
 interface ErrorBoundaryState {
@@ -132,9 +133,10 @@ interface HeaderProps {
   setShowStrategy: (show: boolean) => void;
   setShowSupplyChain: (show: boolean) => void;
   setShowGameMode: (show: boolean) => void;
+  setShowSyncCode: (show: boolean) => void;
 }
 
-const Header = ({ setShowAltar, setShowShare, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode }: HeaderProps) => {
+const Header = ({ setShowAltar, setShowShare, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode }: HeaderProps) => {
   const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, importSave, resetGame, getExportData, gameModeId, customMode } = useGame();
   const pityRules = resolveModeRules(gameModeId, customMode);
   const pityCap = pityRules.pityEnabled ? pityRules.pityThreshold : 50; // 50 = visual-only fallback
@@ -275,6 +277,8 @@ const Header = ({ setShowAltar, setShowShare, setShowStats, setShowReference, se
                  <div className="w-px h-4 bg-white/10"></div>
                  <button onClick={handleExport} className="w-7 h-full flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/5 rounded" title="Export Encrypted Save"><Download size={14} /></button>
                  <div className="w-px h-4 bg-white/10"></div>
+                 <button onClick={() => setShowSyncCode(true)} className="w-7 h-full flex items-center justify-center text-gray-500 hover:text-cyan-400 hover:bg-white/5 rounded" title="Sync Code (move run between devices)"><Link2 size={14} /></button>
+                 <div className="w-px h-4 bg-white/10"></div>
                  <button onClick={() => { if(window.confirm("Are you sure you want to reset ALL progress? This cannot be undone.")) resetGame(); }} className="w-7 h-full flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-white/5 rounded" title="Reset"><RotateCcw size={14} /></button>
              </div>
           </div>
@@ -355,6 +359,7 @@ const GameLayout = () => {
     return () => window.removeEventListener('open-resource-engine', onOpen);
   }, []);
   const [showGameMode, setShowGameMode] = useState(false);
+  const [showSyncCode, setShowSyncCode] = useState(false);
   const [activeRitualAnim, setActiveRitualAnim] = useState<'NONE' | 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE'>('NONE');
 
   // Watch for ritual events to trigger animations
@@ -397,7 +402,7 @@ const GameLayout = () => {
 
   // Escape closes whichever top-level modal is open.
   const anyModalOpen = showStats || showReference || showAltar || showShare
-    || showOracle || showStrategy || showSupplyChain || showGameMode;
+    || showOracle || showStrategy || showSupplyChain || showGameMode || showSyncCode;
   useEscapeKey(() => {
     setShowStats(false);
     setShowReference(false);
@@ -407,6 +412,7 @@ const GameLayout = () => {
     setShowStrategy(false);
     setShowSupplyChain(false);
     setShowGameMode(false);
+    setShowSyncCode(false);
   }, anyModalOpen);
 
   return (
@@ -430,6 +436,7 @@ const GameLayout = () => {
         {showStrategy && <StrategyGuide onClose={() => setShowStrategy(false)} />}
         {showSupplyChain && <SupplyChainCalculator initialQuery={supplyChainPreset} onClose={() => { setShowSupplyChain(false); setSupplyChainPreset(undefined); }} />}
         {showGameMode && <GameModePicker onClose={() => setShowGameMode(false)} />}
+        {showSyncCode && <SyncCodeModal onClose={() => setShowSyncCode(false)} />}
       </Suspense>
 
       <Header
@@ -441,6 +448,7 @@ const GameLayout = () => {
         setShowStrategy={setShowStrategy}
         setShowSupplyChain={setShowSupplyChain}
         setShowGameMode={setShowGameMode}
+        setShowSyncCode={setShowSyncCode}
       />
 
       {/* Main Command Center Layout */}
