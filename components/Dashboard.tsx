@@ -353,7 +353,12 @@ export const Dashboard: React.FC = () => {
              </div>
              
              {/* Visual Equipment Layout */}
-             <div className="shrink-0 flex items-center justify-center bg-[#1a1814] rounded-lg border border-[#3a352e] shadow-inner relative min-h-[420px] py-6">
+             <div className="shrink-0 flex items-center justify-center bg-[#1a1814] rounded-lg border border-[#3a352e] shadow-inner relative min-h-[420px] py-6 overflow-hidden">
+                {/* Soft radial glow for depth behind the paper-doll. */}
+                <div
+                  className="absolute inset-0 pointer-events-none z-0"
+                  style={{ background: 'radial-gradient(ellipse 55% 60% at 50% 45%, rgba(133,112,72,0.16), transparent 70%)' }}
+                />
                 <div className="grid grid-cols-3 gap-6 w-max relative z-10">
                     {EQUIPMENT_SLOTS.map(slot => {
                         const tier = unlocks.equipment[slot] || 0;
@@ -372,8 +377,8 @@ export const Dashboard: React.FC = () => {
                                     onClick={() => canUnlock && handleSpecialUnlock(TableType.EQUIPMENT, slot)} 
                                     disabled={!canUnlock} 
                                     className={`
-                                        w-20 h-20 relative flex items-center justify-center rounded-lg bg-[#28241d] border-2 border-[#453f36] shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] transition-all
-                                        ${canUnlock ? 'ring-2 ring-purple-500 hover:scale-105 z-20 cursor-pointer hover:border-purple-400 hover:bg-[#322d25]' : 'cursor-default'}
+                                        w-20 h-20 relative flex items-center justify-center rounded-lg bg-[#28241d] border-2 border-[#453f36] shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] transition-all duration-150
+                                        ${canUnlock ? 'ring-1 ring-purple-400/50 hover:ring-2 hover:ring-purple-400/80 hover:scale-105 z-20 cursor-pointer hover:border-purple-400/70 hover:bg-[#322d25]' : 'cursor-default'}
                                         ${isUnlocked ? 'border-[#857048] bg-[#322a1e]' : ''}
                                     `}
                                     title={`${slot}: Tier ${tier}`}
@@ -398,22 +403,22 @@ export const Dashboard: React.FC = () => {
              <div className="mt-4 bg-[#151515] border border-white/10 rounded-xl p-4 space-y-4">
                 {/* Summary stat tiles */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                   <div className="bg-[#1a1a1a] border border-white/5 rounded-lg px-3 py-2">
+                   <div className="bg-[#1a1a1a] border border-white/5 rounded-lg px-3 py-2 hover-lift">
                       <div className="text-[9px] uppercase tracking-widest text-gray-500 mb-0.5">Tiers</div>
                       <div className="text-sm font-bold text-amber-300">{equipStats.pct}%</div>
                       <div className="text-[9px] text-gray-600 font-mono">{totalEquipTiers}/{EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX}</div>
                    </div>
-                   <div className="bg-[#1a1a1a] border border-white/5 rounded-lg px-3 py-2">
+                   <div className="bg-[#1a1a1a] border border-white/5 rounded-lg px-3 py-2 hover-lift">
                       <div className="text-[9px] uppercase tracking-widest text-gray-500 mb-0.5">Avg Tier</div>
                       <div className="text-sm font-bold text-gray-200">{equipStats.avg.toFixed(1)}</div>
                       <div className="text-[9px] text-gray-600 font-mono">{equipStats.unlocked}/{EQUIPMENT_SLOTS.length} used</div>
                    </div>
-                   <div className="bg-[#1a1a1a] border border-white/5 rounded-lg px-3 py-2">
+                   <div className="bg-[#1a1a1a] border border-white/5 rounded-lg px-3 py-2 hover-lift">
                       <div className="text-[9px] uppercase tracking-widest text-gray-500 mb-0.5">Maxed</div>
                       <div className="text-sm font-bold text-yellow-400">{equipStats.maxed}</div>
                       <div className="text-[9px] text-gray-600 font-mono">at T{EQUIPMENT_TIER_MAX}</div>
                    </div>
-                   <div className="bg-[#1a1a1a] border border-white/5 rounded-lg px-3 py-2">
+                   <div className="bg-[#1a1a1a] border border-white/5 rounded-lg px-3 py-2 hover-lift">
                       <div className="text-[9px] uppercase tracking-widest text-gray-500 mb-0.5">Weakest</div>
                       <div className="text-sm font-bold text-red-300 truncate" title={equipStats.weakest.slot}>{equipStats.weakest.slot}</div>
                       <div className="text-[9px] text-gray-600 font-mono">T{equipStats.weakest.tier}</div>
@@ -502,9 +507,9 @@ export const Dashboard: React.FC = () => {
                            data-skill-card={skill}
                            onClick={isMainActionable ? handleMainClick : undefined}
                            className={`
-                                flex flex-col p-2 rounded bg-[#1f1f1f] border border-white/5 text-left transition-all relative overflow-hidden group min-h-[60px]
-                                ${canLevel ? 'hover:bg-[#2a2a2a] cursor-pointer ring-1 ring-green-500/20' : ''}
-                                ${canUnlockStart ? 'ring-1 ring-purple-500 hover:bg-purple-900/10 cursor-pointer' : ''}
+                                flex flex-col p-2 rounded bg-[#1f1f1f] border border-white/5 text-left transition-all duration-150 relative overflow-hidden group min-h-[60px]
+                                ${canLevel ? 'hover:bg-[#2a2a2a] cursor-pointer ring-1 ring-green-500/20 hover:ring-green-500/40' : ''}
+                                ${canUnlockStart ? 'ring-1 ring-purple-400/40 hover:ring-purple-400/70 hover:bg-purple-900/10 cursor-pointer' : ''}
                                 ${levelingSkill === skill ? 'animate-pulse bg-green-900/40' : ''}
                                 ${!isMainActionable ? 'opacity-90' : ''}
                            `}
@@ -958,7 +963,28 @@ export const Dashboard: React.FC = () => {
                  <Share2 size={12} />
                  Share Run
                </button>
-               <span className="text-xs font-mono text-gray-500">{completionPercent}% COMPLETE</span>
+               <div className="flex items-center gap-2 pl-1" title={`${completionPercent}% complete`}>
+                 <div className="relative w-9 h-9 shrink-0">
+                   <svg viewBox="0 0 36 36" className="w-9 h-9 -rotate-90">
+                     <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3" />
+                     <circle
+                       cx="18" cy="18" r="15" fill="none" stroke="url(#compGrad)" strokeWidth="3" strokeLinecap="round"
+                       strokeDasharray={2 * Math.PI * 15}
+                       strokeDashoffset={(1 - completionPercent / 100) * 2 * Math.PI * 15}
+                       className="transition-all duration-700 ease-out"
+                     />
+                     <defs>
+                       <linearGradient id="compGrad" x1="0" y1="0" x2="1" y2="1">
+                         <stop offset="0%" stopColor="#3b82f6" />
+                         <stop offset="50%" stopColor="#a855f7" />
+                         <stop offset="100%" stopColor="#f59e0b" />
+                       </linearGradient>
+                     </defs>
+                   </svg>
+                   <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-gray-100">{completionPercent}%</span>
+                 </div>
+                 <span className="text-[10px] font-mono uppercase tracking-wider text-gray-500 hidden lg:block">Complete</span>
+               </div>
              </div>
          </div>
          <ProgressBar current={completionPercent} total={100} colorClass="bg-gradient-to-r from-blue-500 via-purple-500 to-amber-500" />

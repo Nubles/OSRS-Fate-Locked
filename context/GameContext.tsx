@@ -593,7 +593,26 @@ export const gameReducer = (state: GameState & { lastEvent: GameEvent | null }, 
 const GameContext = createContext<GameContextType | null>(null);
 
 export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: string }> = ({ children, storageKey }) => {
-  const [state, dispatch] = useReducer(gameReducer, { ...initialState, lastEvent: null });
+  // Load the save synchronously in the reducer initializer so the very first
+  // render already reflects the persisted run. This matters for the reveal
+  // hooks (useUnlockReveal / useAchievementReveal), which capture their
+  // baseline on mount — if the save arrived later via an effect, every page
+  // reload would diff against an empty baseline and spam "unlocked!" reveals.
+  const [state, dispatch] = useReducer(
+    gameReducer,
+    storageKey,
+    (key): GameState & { lastEvent: GameEvent | null } => {
+      try {
+        const saved = localStorage.getItem(key);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (isValidSaveData(parsed)) return { ...migrateSave(parsed), lastEvent: null };
+          console.warn('Save data failed validation, starting fresh');
+        }
+      } catch (e) { console.error('Failed to load save', e); }
+      return { ...initialState, lastEvent: null };
+    },
+  );
   const saveTimeoutRef = useRef<number | null>(null);
 
   // Always-current snapshot of state so backup/reset callbacks can read the
@@ -604,21 +623,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     const { lastEvent, ...persist } = stateRef.current;
     return JSON.stringify(persist);
   }, []);
-
-  // Load save on mount
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (isValidSaveData(parsed)) {
-          dispatch({ type: 'LOAD_SAVE', payload: parsed });
-        } else {
-          console.warn('Save data failed validation, starting fresh');
-        }
-      }
-    } catch (e) { console.error("Failed to load save", e); }
-  }, [storageKey]);
 
   // Debounced persistence - saves all persistent state fields
   useEffect(() => {

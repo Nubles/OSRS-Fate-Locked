@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Trophy, X } from 'lucide-react';
 import { Achievement } from '../utils/achievements';
 import { ACHIEVEMENT_ICON } from './AchievementsModal';
+import { usePortalHost } from '../hooks/usePortalHost';
 
 /**
  * Celebratory slide-in (top-right) fired when one or more achievements are
@@ -33,6 +35,8 @@ export const AchievementReveal: React.FC<Props> = ({ data, onDismiss, onView }) 
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, []);
 
+  const host = usePortalHost('reveal-top');
+
   function handleDismiss() {
     if (timerRef.current) clearTimeout(timerRef.current);
     setVisible(false);
@@ -42,10 +46,12 @@ export const AchievementReveal: React.FC<Props> = ({ data, onDismiss, onView }) 
   const headline =
     data.length === 1 ? 'Achievement unlocked!' : `${data.length} achievements unlocked!`;
 
-  return (
+  if (!host) return null;
+
+  return createPortal(
     <div
       className={`
-        fixed top-24 right-5 z-[9998] w-[20rem]
+        pointer-events-auto w-[20rem]
         transition-transform duration-[280ms] ease-out
         ${visible ? 'translate-x-0' : 'translate-x-[120%]'}
       `}
@@ -108,6 +114,7 @@ export const AchievementReveal: React.FC<Props> = ({ data, onDismiss, onView }) 
       </div>
 
       <style>{`@keyframes shrink-width { from { width: 100%; } to { width: 0%; } }`}</style>
-    </div>
+    </div>,
+    host,
   );
 };

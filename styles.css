@@ -22,3 +22,42 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #6b7280;
 }
+
+/* ── Keyboard accessibility ──────────────────────────────────────────────
+   A consistent, visible focus ring for keyboard users only (focus-visible),
+   so mouse clicks stay clean but tabbing is always legible. */
+:focus-visible {
+  outline: 2px solid rgba(251, 191, 36, 0.7); /* osrs-gold */
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+[role="button"]:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ── Micro-interactions ─────────────────────────────────────────────────
+   Subtle, consistent hover lift for cards/tiles. Opt-in via .hover-lift. */
+.hover-lift {
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* Honor users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .hover-lift:hover {
+    transform: none;
+  }
+}

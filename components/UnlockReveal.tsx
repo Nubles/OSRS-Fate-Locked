@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   CheckCircle2, X, ChevronRight,
   BookOpen, Map, Sparkles, Swords,
 } from 'lucide-react';
 import { UnlockRevealData } from '../hooks/useUnlockReveal';
+import { usePortalHost } from '../hooks/usePortalHost';
 
 /**
  * Slide-in panel (bottom-right, fixed) that appears after a quest
@@ -41,6 +43,8 @@ export const UnlockReveal: React.FC<Props> = ({ data, onDismiss, onViewJournal }
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, []);
 
+  const host = usePortalHost('reveal-bottom');
+
   function handleDismiss() {
     if (timerRef.current) clearTimeout(timerRef.current);
     setVisible(false);
@@ -68,10 +72,12 @@ export const UnlockReveal: React.FC<Props> = ({ data, onDismiss, onViewJournal }
     : data.newRegions.length > 0    ? ' unlocked!'
     : '';
 
-  return (
+  if (!host) return null;
+
+  return createPortal(
     <div
       className={`
-        fixed bottom-5 right-5 z-[9997] w-[22rem]
+        pointer-events-auto w-[22rem]
         transition-transform duration-[280ms] ease-out
         ${visible ? 'translate-x-0' : 'translate-x-[115%]'}
       `}
@@ -211,7 +217,8 @@ export const UnlockReveal: React.FC<Props> = ({ data, onDismiss, onViewJournal }
       <style>{`
         @keyframes shrink-width { from { width: 100%; } to { width: 0%; } }
       `}</style>
-    </div>
+    </div>,
+    host,
   );
 };
 

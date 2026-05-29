@@ -1,6 +1,8 @@
 
 import React, { useState, useRef, useEffect, Component, ErrorInfo, ReactNode, lazy, Suspense } from 'react';
+import { createPortal } from 'react-dom';
 import { GameProvider, useGame } from './context/GameContext';
+import { usePortalHost } from './hooks/usePortalHost';
 import { ProfileProvider, useProfiles } from './context/ProfileContext';
 import { ActionSection } from './components/ActionSection';
 import { GachaSection } from './components/GachaSection';
@@ -115,12 +117,15 @@ const ToastNotification = () => {
     }
   }, [lastEvent]);
 
-  if (!visible) return null;
+  const host = usePortalHost('reveal-bottom');
 
-  return (
-    <div className="fixed bottom-6 right-6 z-[300] bg-[#222] border border-white/20 shadow-2xl rounded-lg p-3 flex items-center gap-4 animate-in slide-in-from-bottom-5 fade-in duration-300">
+  if (!visible || !host) return null;
+
+  return createPortal(
+    <div className="pointer-events-auto bg-[#222] border border-white/20 shadow-2xl rounded-lg p-3 flex items-center gap-4 animate-in slide-in-from-bottom-5 fade-in duration-300">
        <span className="text-sm font-bold text-gray-200">{message}</span>
-    </div>
+    </div>,
+    host,
   );
 };
 
@@ -436,6 +441,11 @@ const GameLayout = () => {
   return (
     <div className="min-h-screen bg-osrs-bg text-osrs-text pb-6 font-sans selection:bg-osrs-gold selection:text-black relative">
       <EffectsLayer />
+
+      {/* Shared notification stacks: every toast/reveal portals into one of
+          these so they queue cleanly instead of overlapping in a corner. */}
+      <div id="reveal-top" className="fixed top-24 right-5 z-[9998] flex flex-col gap-3 items-end pointer-events-none" />
+      <div id="reveal-bottom" className="fixed bottom-5 right-5 z-[9997] flex flex-col-reverse gap-3 items-end pointer-events-none" />
       <ToastNotification />
 
       {!hasSeenOnboarding && <OnboardingWizard />}
