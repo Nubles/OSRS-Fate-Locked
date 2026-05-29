@@ -60,6 +60,15 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
     [selected, remaining, keys, velocity],
   );
 
+  // "Complete the whole category": clearing a table takes exactly R spends
+  // (each draw reveals a new locked item, no replacement).
+  const completeAll = useMemo(() => {
+    if (!selected) return null;
+    const keysToEarn = Math.max(0, remaining - Math.max(0, keys));
+    const days = velocity.ok && velocity.keysPerDay > 0 ? keysToEarn / velocity.keysPerDay : null;
+    return { totalKeys: remaining, keysToEarn, days };
+  }, [selected, remaining, keys, velocity]);
+
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
@@ -155,10 +164,18 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
                   </p>
                 </div>
 
-                {/* Keys to unlock */}
+                {/* Equal-likelihood note — explains why every item in a table reads the same. */}
+                <div className="flex items-start gap-2 rounded-lg border border-fuchsia-500/20 bg-fuchsia-950/20 px-3 py-2 text-fuchsia-200/80">
+                  <Dices size={13} className="shrink-0 mt-0.5 text-fuchsia-400" />
+                  <p className="text-[10px] leading-relaxed">
+                    Fate draws at random, so <span className="font-semibold text-fuchsia-200">every locked {selected.table.toLowerCase().replace(/s$/, '')}</span> is equally likely — the estimate below is the same whichever one you pick. Each key has a <span className="font-semibold text-fuchsia-200">1 in {forecast.keys.remaining}</span> chance of being this one.
+                  </p>
+                </div>
+
+                {/* Keys for one specific item */}
                 <div className="rounded-xl bg-[#1a1a1a] border border-white/10 p-4">
                   <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-gray-500 mb-2">
-                    <Key size={12} className="text-amber-400" /> Keys to unlock
+                    <Key size={12} className="text-amber-400" /> Keys for this {selected.table.toLowerCase().replace(/s$/, '')}
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-black text-amber-300 leading-none">{forecast.keys.p50}</span>
@@ -205,6 +222,22 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
                     </p>
                   )}
                 </div>
+
+                {/* Complete the whole category — varies by table size, gives a "big goal" number. */}
+                {completeAll && completeAll.totalKeys > 1 && (
+                  <div className="rounded-xl bg-[#1a1a1a] border border-white/10 p-4">
+                    <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-gray-500 mb-2">
+                      <Sparkles size={12} className="text-fuchsia-400" /> Complete all {completeAll.totalKeys} {selected.table.toLowerCase()}
+                    </div>
+                    <div className="flex items-baseline gap-2 flex-wrap">
+                      <span className="text-xl font-black text-fuchsia-300 leading-none">{completeAll.totalKeys} keys</span>
+                      {completeAll.days != null && (
+                        <span className="text-[11px] text-gray-500">· ≈ {fmtDays(completeAll.days)} at your pace</span>
+                      )}
+                    </div>
+                    <div className="text-[10px] text-gray-600 mt-1">Spend every key here to clear the category (no luck involved — it just takes {completeAll.totalKeys}).</div>
+                  </div>
+                )}
 
                 <p className="text-[9px] text-gray-600 leading-relaxed flex items-start gap-1.5">
                   <TrendingUp size={11} className="shrink-0 mt-0.5" />
