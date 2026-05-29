@@ -21,14 +21,18 @@ export const MAP_IMAGE = {
 
 // Calibrate against the image. tileMinX/tileMinY = game tile at the image's
 // BOTTOM-LEFT pixel; tileMaxX/tileMaxY = game tile at the TOP-RIGHT pixel.
-// Initial values preserve the 6145x4353 aspect ratio (3072x2176 tiles @ ~2
-// px/tile). Nudge once you sight-check against known landmarks —
-// e.g. Lumbridge castle is roughly (3222, 3218), Varrock square (3213, 3424).
+// Span is 3072x2176 tiles over the 9216x6528 image = a clean 3.0 px/tile.
+//
+// Calibrated against live hover readings on the wiki map: the pre-calibration
+// bounds reported coordinates offset by (+53 E, +451 N), confirmed across three
+// landmarks (Lumbridge 3222,3218 · Seers' Bank ~2725,3491 · McGrubor's Woods
+// ~2660,3500) — a pure translation, no scale error. The offset is folded in
+// below so the hover readout / chunk grid / RuneLite export report true tiles.
 export const MAP_BOUNDS = {
-  tileMinX: 1024,
-  tileMinY: 2496,
-  tileMaxX: 4096,
-  tileMaxY: 4672,
+  tileMinX: 971,
+  tileMinY: 2045,
+  tileMaxX: 4043,
+  tileMaxY: 4221,
 } as const;
 
 const TILE_WIDTH = MAP_BOUNDS.tileMaxX - MAP_BOUNDS.tileMinX;
