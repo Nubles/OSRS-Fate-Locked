@@ -17,6 +17,7 @@ import { TableType } from '../types';
 import { wikiService } from '../services/WikiService';
 import { NoteTrigger } from './NoteTrigger';
 import { RegionMap } from './RegionMap';
+import { EquipmentLab } from './EquipmentLab';
 // Heavy tab/modal contents — code-split so their large data dependencies
 // (questData, diaryTasks, caTasks, collectionLogData, requirements, etc.)
 // stay out of the initial dashboard bundle.
@@ -71,23 +72,6 @@ const TIER_COLORS = [
 ];
 
 const getWikiUrl = wikiUrlFor;
-
-// Equipment tiers run 1..9 (EQUIPMENT_TIER_MAX). A stone→gold ramp mirrors the
-// skill tier palette so the slot badges, breakdown bars, and legend all read
-// consistently. Index 0 = Tier 1.
-const EQUIP_TIER_COLORS = [
-  'bg-stone-600',   // T1
-  'bg-orange-900',  // T2
-  'bg-slate-500',   // T3
-  'bg-slate-300',   // T4
-  'bg-emerald-700', // T5
-  'bg-cyan-600',    // T6
-  'bg-red-700',     // T7
-  'bg-purple-600',  // T8
-  'bg-yellow-400 shadow-[0_0_6px_rgba(250,204,21,0.7)]', // T9 (max)
-];
-const equipTierColor = (tier: number) =>
-  EQUIP_TIER_COLORS[Math.min(Math.max(tier - 1, 0), EQUIP_TIER_COLORS.length - 1)];
 
 const getSkillIcon = (skillName: string) => `https://oldschool.runescape.wiki/images/${skillName}_icon.png`;
 
@@ -275,24 +259,6 @@ export const Dashboard: React.FC = () => {
   const totalSkillTiers = useMemo(() => (Object.values(unlocks.skills) as number[]).reduce((a, b) => a + b, 0), [unlocks.skills]);
   const totalEquipTiers = useMemo(() => (Object.values(unlocks.equipment) as number[]).reduce((a, b) => a + b, 0), [unlocks.equipment]);
 
-  // Aggregate stats for the equipment overview panel (summary + per-slot bars).
-  const equipStats = useMemo(() => {
-    const entries = EQUIPMENT_SLOTS.map((slot) => ({ slot, tier: unlocks.equipment[slot] || 0 }));
-    const maxPossible = EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX;
-    const maxed = entries.filter((e) => e.tier >= EQUIPMENT_TIER_MAX).length;
-    const unlocked = entries.filter((e) => e.tier > 0).length;
-    // Weakest = lowest-tier slot (first one wins on ties) — your upgrade priority.
-    const weakest = entries.reduce((lo, e) => (e.tier < lo.tier ? e : lo), entries[0]);
-    return {
-      entries,
-      maxed,
-      unlocked,
-      weakest,
-      avg: totalEquipTiers / EQUIPMENT_SLOTS.length,
-      pct: Math.round((totalEquipTiers / maxPossible) * 100),
-    };
-  }, [unlocks.equipment, totalEquipTiers]);
-  
   const completionPercent = useMemo(() => {
     const totalUnlocked = totalSkillTiers + unlocks.regions.length + totalEquipTiers + unlocks.mobility.length + unlocks.arcana.length + unlocks.housing.length + unlocks.merchants.length + unlocks.minigames.length + unlocks.bosses.length + unlocks.storage.length + unlocks.guilds.length + unlocks.farming.length;
     const totalAvailable = (SKILLS_LIST.length * 10) + REGIONS_LIST.length + (EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX) + MOBILITY_LIST.length + ARCANA_LIST.length + POH_LIST.length + MERCHANTS_LIST.length + MINIGAMES_LIST.length + BOSSES_LIST.length + STORAGE_LIST.length + GUILDS_LIST.length + FARMING_PATCH_LIST.length;
@@ -345,122 +311,9 @@ export const Dashboard: React.FC = () => {
 
   const renderCharacterTab = () => (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-full overflow-y-auto pr-2 custom-scrollbar pb-10">
-        {/* Equipment Section */}
-        <div className="flex flex-col h-full">
-             <div className="flex justify-between items-center bg-[#151515] p-2 rounded border border-white/5 mb-4 shrink-0">
-                <h3 className="text-gray-300 font-bold text-sm">Equipment Slots</h3>
-                <span className="text-xs text-gray-500 font-mono">{totalEquipTiers}/{EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX} Tiers</span>
-             </div>
-             
-             {/* Visual Equipment Layout */}
-             <div className="shrink-0 flex items-center justify-center bg-[#1a1814] rounded-lg border border-[#3a352e] shadow-inner relative min-h-[420px] py-6 overflow-hidden">
-                {/* Soft radial glow for depth behind the paper-doll. */}
-                <div
-                  className="absolute inset-0 pointer-events-none z-0"
-                  style={{ background: 'radial-gradient(ellipse 55% 60% at 50% 45%, rgba(133,112,72,0.16), transparent 70%)' }}
-                />
-                <div className="grid grid-cols-3 gap-6 w-max relative z-10">
-                    {EQUIPMENT_SLOTS.map(slot => {
-                        const tier = unlocks.equipment[slot] || 0;
-                        const isUnlocked = tier > 0;
-                        const canUnlock = tier < EQUIPMENT_TIER_MAX && specialKeys > 0;
-                        
-                        // Filter logic: Show if unlocked OR if can be unlocked
-                        if (showOnlyActionable && !isUnlocked && !canUnlock) return null;
-
-                        const config = SLOT_CONFIG[slot];
-                        if (!config) return null;
-
-                        return (
-                            <div key={slot} className={`${config.gridArea} relative group`}>
-                                <button 
-                                    onClick={() => canUnlock && handleSpecialUnlock(TableType.EQUIPMENT, slot)} 
-                                    disabled={!canUnlock} 
-                                    className={`
-                                        w-20 h-20 relative flex items-center justify-center rounded-lg bg-[#28241d] border-2 border-[#453f36] shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] transition-all duration-150
-                                        ${canUnlock ? 'ring-1 ring-purple-400/50 hover:ring-2 hover:ring-purple-400/80 hover:scale-105 z-20 cursor-pointer hover:border-purple-400/70 hover:bg-[#322d25]' : 'cursor-default'}
-                                        ${isUnlocked ? 'border-[#857048] bg-[#322a1e]' : ''}
-                                    `}
-                                    title={`${slot}: Tier ${tier}`}
-                                >
-                                    <img src={`https://oldschool.runescape.wiki/images/${config.file}`} className={`w-10 h-10 object-contain drop-shadow-md transition-all duration-300 ${isUnlocked ? 'opacity-100 brightness-110 scale-110' : 'opacity-20 grayscale scale-90 group-hover:opacity-40'}`} />
-                                    <div className={`absolute -bottom-3 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border shadow-md transition-colors ${isUnlocked ? 'bg-[#3d3322] text-[#fbbf24] border-[#fbbf24]/30' : 'bg-[#151515] text-gray-600 border-gray-700'}`}>
-                                        T{tier}
-                                    </div>
-                                </button>
-                                <div className="absolute top-0 right-0 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <NoteTrigger id={`Equip_${slot}`} title={slot} />
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-             </div>
-
-             {/* Equipment Overview — summary stats, tier legend, and a per-slot
-                 tier breakdown. Fills the space under the paper-doll and gives a
-                 quick read on overall gear progress + the weakest slot. */}
-             <div className="mt-4 bg-[#151515] border border-white/10 rounded-xl p-4 space-y-4">
-                {/* Summary stat tiles */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                   <div className="bg-[#1a1a1a] border border-white/5 rounded-lg px-3 py-2 hover-lift">
-                      <div className="text-[9px] uppercase tracking-widest text-gray-500 mb-0.5">Tiers</div>
-                      <div className="text-sm font-bold text-amber-300">{equipStats.pct}%</div>
-                      <div className="text-[9px] text-gray-600 font-mono">{totalEquipTiers}/{EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX}</div>
-                   </div>
-                   <div className="bg-[#1a1a1a] border border-white/5 rounded-lg px-3 py-2 hover-lift">
-                      <div className="text-[9px] uppercase tracking-widest text-gray-500 mb-0.5">Avg Tier</div>
-                      <div className="text-sm font-bold text-gray-200">{equipStats.avg.toFixed(1)}</div>
-                      <div className="text-[9px] text-gray-600 font-mono">{equipStats.unlocked}/{EQUIPMENT_SLOTS.length} used</div>
-                   </div>
-                   <div className="bg-[#1a1a1a] border border-white/5 rounded-lg px-3 py-2 hover-lift">
-                      <div className="text-[9px] uppercase tracking-widest text-gray-500 mb-0.5">Maxed</div>
-                      <div className="text-sm font-bold text-yellow-400">{equipStats.maxed}</div>
-                      <div className="text-[9px] text-gray-600 font-mono">at T{EQUIPMENT_TIER_MAX}</div>
-                   </div>
-                   <div className="bg-[#1a1a1a] border border-white/5 rounded-lg px-3 py-2 hover-lift">
-                      <div className="text-[9px] uppercase tracking-widest text-gray-500 mb-0.5">Weakest</div>
-                      <div className="text-sm font-bold text-red-300 truncate" title={equipStats.weakest.slot}>{equipStats.weakest.slot}</div>
-                      <div className="text-[9px] text-gray-600 font-mono">T{equipStats.weakest.tier}</div>
-                   </div>
-                </div>
-
-                {/* Tier legend */}
-                <div className="flex items-center gap-1.5 flex-wrap">
-                   <span className="text-[9px] uppercase tracking-widest text-gray-500 mr-1">Low</span>
-                   {EQUIP_TIER_COLORS.map((c, i) => (
-                      <div key={i} className="flex flex-col items-center gap-0.5" title={`Tier ${i + 1}`}>
-                         <div className={`w-4 h-2.5 rounded-sm ${c}`} />
-                         <span className="text-[8px] text-gray-600 font-mono leading-none">{i + 1}</span>
-                      </div>
-                   ))}
-                   <span className="text-[9px] uppercase tracking-widest text-gray-500 ml-1">Max</span>
-                </div>
-
-                {/* Per-slot breakdown */}
-                <div className="space-y-1.5">
-                   {equipStats.entries.map(({ slot, tier }) => {
-                      const config = SLOT_CONFIG[slot];
-                      return (
-                         <div key={slot} className="flex items-center gap-2.5">
-                            <img
-                               src={`https://oldschool.runescape.wiki/images/${config?.file ?? 'Globe_icon.png'}`}
-                               alt=""
-                               className={`w-4 h-4 object-contain shrink-0 ${tier > 0 ? '' : 'grayscale opacity-40'}`}
-                            />
-                            <span className={`text-[10px] font-semibold w-14 shrink-0 ${tier > 0 ? 'text-gray-300' : 'text-gray-600'}`}>{slot}</span>
-                            <div className="flex gap-px flex-1 h-1.5 bg-black/50 rounded-sm overflow-hidden border border-white/5">
-                               {Array.from({ length: EQUIPMENT_TIER_MAX }).map((_, i) => (
-                                  <div key={i} className={`flex-1 transition-all duration-500 ${tier > i ? equipTierColor(tier) : 'bg-[#1a1a1a]'}`} />
-                               ))}
-                            </div>
-                            <span className={`text-[9px] font-mono font-bold w-7 text-right shrink-0 ${tier >= EQUIPMENT_TIER_MAX ? 'text-yellow-400' : tier > 0 ? 'text-amber-300/80' : 'text-gray-600'}`}>T{tier}</span>
-                         </div>
-                      );
-                   })}
-                </div>
-             </div>
-        </div>
+        {/* Equipment Lab — interactive paper-doll (click a slot for its tier
+            ladder + upgrade), derived Combat Power, and a target-loadout planner. */}
+        <EquipmentLab onUpgrade={(slot) => handleSpecialUnlock(TableType.EQUIPMENT, slot)} />
 
         {/* Skills Section */}
         <div className="space-y-4">
