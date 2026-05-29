@@ -11,9 +11,12 @@
 export const CHUNK_TILES = 64;
 
 export const MAP_IMAGE = {
-  src: `${import.meta.env.BASE_URL}osrs_world_map.jpg`,
-  width: 6145,
-  height: 4353,
+  // Official OSRS Wiki world map (Old_School_RuneScape_world_map.png), re-encoded
+  // to WebP. Same crop of Gielinor as the previous JPG (matching aspect ratio),
+  // so MAP_BOUNDS below carries over unchanged — only the resolution differs.
+  src: `${import.meta.env.BASE_URL}osrs_world_map.webp`,
+  width: 9216,
+  height: 6528,
 } as const;
 
 // Calibrate against the image. tileMinX/tileMinY = game tile at the image's
