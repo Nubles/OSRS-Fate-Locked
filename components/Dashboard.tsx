@@ -46,6 +46,8 @@ const RunCardModal = lazy(() => import('./RunCard').then(m => ({ default: m.RunC
 const GoalPlannerModal = lazy(() => import('./GoalPlannerModal').then(m => ({ default: m.GoalPlannerModal })));
 // Achievements modal — pulls in the quest/diary/CA datasets via the engine.
 const AchievementsModal = lazy(() => import('./AchievementsModal').then(m => ({ default: m.AchievementsModal })));
+// Fate Forecast modal — projects keys/time to a chosen locked unlock.
+const FateForecastModal = lazy(() => import('./FateForecastModal').then(m => ({ default: m.FateForecastModal })));
 
 // --- Constants & Helpers ---
 
@@ -228,6 +230,7 @@ export const Dashboard: React.FC = () => {
   const [showRunCard, setShowRunCard] = useState(false);
   const [showGoalPlanner, setShowGoalPlanner] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [showForecast, setShowForecast] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showOnlyActionable, setShowOnlyActionable] = useState(false);
   const [levelingSkill, setLevelingSkill] = useState<string | null>(null);
@@ -809,6 +812,14 @@ export const Dashboard: React.FC = () => {
                  Achievements
                </button>
                <button
+                 onClick={() => setShowForecast(true)}
+                 className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-fuchsia-500/30 bg-fuchsia-950/30 hover:bg-fuchsia-900/40 text-fuchsia-300 text-[11px] font-medium transition-colors"
+                 title="Forecast how long Fate will take to unlock something"
+               >
+                 <Sparkles size={12} />
+                 Forecast
+               </button>
+               <button
                  onClick={() => setShowRunCard(true)}
                  className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-amber-500/30 bg-amber-950/30 hover:bg-amber-900/40 text-amber-300 text-[11px] font-medium transition-colors"
                  title="Generate shareable run card"
@@ -917,6 +928,12 @@ export const Dashboard: React.FC = () => {
     {showAchievements && (
       <Suspense fallback={<ModalFallback label="Loading achievements…" />}>
         <AchievementsModal onClose={() => setShowAchievements(false)} />
+      </Suspense>
+    )}
+
+    {showForecast && (
+      <Suspense fallback={<ModalFallback label="Consulting Fate…" />}>
+        <FateForecastModal onClose={() => setShowForecast(false)} />
       </Suspense>
     )}
 
