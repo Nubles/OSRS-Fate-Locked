@@ -229,20 +229,22 @@ const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
               whiteSpace: 'nowrap',
             }}
           >
-            <span
-              style={{
-                display: 'inline-block',
-                width: 8, height: 8, borderRadius: '50%',
-                verticalAlign: 'middle',
-                marginRight: 7,
-                background: integrityOk ? '#34d399' : '#f87171',
-                boxShadow: integrityOk ? '0 0 6px rgba(52,211,153,0.7)' : '0 0 6px rgba(248,113,113,0.7)',
-                position: 'relative',
-                top: -1,
-              }}
-            />
-            <span style={{ verticalAlign: 'middle' }}>
-              {integrityOk ? 'VERIFIED' : 'UNVERIFIED'}
+            {/* html2canvas pins text to the baseline (bottom of the box), so a
+                relative upward shift — which it DOES honor — re-centers it. */}
+            <span style={{ display: 'inline-block', position: 'relative', top: -8 }}>
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 8, height: 8, borderRadius: '50%',
+                  verticalAlign: 'middle',
+                  marginRight: 7,
+                  background: integrityOk ? '#34d399' : '#f87171',
+                  boxShadow: integrityOk ? '0 0 6px rgba(52,211,153,0.7)' : '0 0 6px rgba(248,113,113,0.7)',
+                }}
+              />
+              <span style={{ verticalAlign: 'middle' }}>
+                {integrityOk ? 'VERIFIED' : 'UNVERIFIED'}
+              </span>
             </span>
           </div>
           <div className="text-[10px] text-gray-500 font-mono" style={{ lineHeight: 1 }}>
