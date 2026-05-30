@@ -47,17 +47,17 @@ a:focus:not(:focus-visible),
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
-/* Honor users who prefer reduced motion. */
+/* Reduced-motion: only suppress the decorative hover-lift. The app's core
+   animations (rolls, reveals, rituals) are controlled by the in-app
+   animations toggle, so we deliberately do NOT blanket-disable them here —
+   a global `* { animation: none !important }` override made everything static
+   for anyone with the OS "reduce motion" setting on. */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
+  .hover-lift {
+    transition: none;
   }
   .hover-lift:hover {
     transform: none;
+    box-shadow: none;
   }
 }
