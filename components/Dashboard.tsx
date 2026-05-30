@@ -18,6 +18,7 @@ import { wikiService } from '../services/WikiService';
 import { NoteTrigger } from './NoteTrigger';
 import { RegionMap } from './RegionMap';
 import { EquipmentLab } from './EquipmentLab';
+import { WikiIcon } from './WikiIcon';
 import { completionPercent as runCompletion } from '../utils/completion';
 import { rivalCompletion, standing as rivalStanding } from '../utils/rival';
 // Heavy tab/modal contents — code-split so their large data dependencies
@@ -56,11 +57,11 @@ const RivalModal = lazy(() => import('./RivalModal').then(m => ({ default: m.Riv
 // --- Constants & Helpers ---
 
 const TABS = [
-  { id: 'CHARACTER', label: 'Character', icon: User, color: 'text-blue-400', border: 'border-blue-500' },
-  { id: 'WORLD', label: 'World', icon: Globe, color: 'text-emerald-400', border: 'border-emerald-500' },
-  { id: 'ACTIVITIES', label: 'Activities & Utility', icon: Swords, color: 'text-red-400', border: 'border-red-500' },
-  { id: 'JOURNAL', label: 'Journal', icon: ScrollText, color: 'text-cyan-400', border: 'border-cyan-500' },
-  { id: 'COLLECTION', label: 'Collection Log', icon: BookOpen, color: 'text-amber-600', border: 'border-amber-600' },
+  { id: 'CHARACTER', label: 'Character', icon: User, img: 'Worn_Equipment.png', color: 'text-blue-400', border: 'border-blue-500' },
+  { id: 'WORLD', label: 'World', icon: Globe, img: 'World_map_icon.png', color: 'text-emerald-400', border: 'border-emerald-500' },
+  { id: 'ACTIVITIES', label: 'Activities & Utility', icon: Swords, img: 'Combat_icon.png', color: 'text-red-400', border: 'border-red-500' },
+  { id: 'JOURNAL', label: 'Journal', icon: ScrollText, img: 'Quest_point_icon.png', color: 'text-cyan-400', border: 'border-cyan-500' },
+  { id: 'COLLECTION', label: 'Collection Log', icon: BookOpen, img: 'Collection_log.png', color: 'text-amber-600', border: 'border-amber-600' },
 ];
 
 // Define the 10-tier progression colors
@@ -894,7 +895,6 @@ export const Dashboard: React.FC = () => {
       <div className="flex flex-col md:flex-row border-b border-white/5 bg-[#161616] shrink-0">
           <div className="flex flex-1 overflow-x-auto no-scrollbar">
               {TABS.map(tab => {
-                  const Icon = tab.icon;
                   const isActive = activeTab === tab.id;
                   return (
                       <button
@@ -905,7 +905,7 @@ export const Dashboard: React.FC = () => {
                             ${isActive ? `${tab.color} ${tab.border} bg-white/5` : 'text-gray-500 border-transparent hover:text-gray-300 hover:text-gray-300 hover:bg-white/5'}
                         `}
                       >
-                          <Icon size={14} /> {tab.label}
+                          <WikiIcon file={tab.img} alt={tab.label} Fallback={tab.icon} size={15} className={isActive ? '' : 'opacity-70 grayscale'} /> {tab.label}
                       </button>
                   )
               })}
