@@ -10,6 +10,7 @@ import { useEscapeKey } from '../hooks/useEscapeKey';
 import { computeCombatPower, overallCombatPower, TIER_LABELS, PowerAxisKey } from '../utils/combatPower';
 import { EQUIP_TIER_COLORS, equipTierColor } from '../utils/equipTiers';
 import { GearView } from './GearView';
+import { DpsCalc } from './DpsCalc';
 
 const slotImg = (slot: string) =>
   `https://oldschool.runescape.wiki/images/${SLOT_CONFIG[slot]?.file ?? 'Globe_icon.png'}`;
@@ -31,7 +32,7 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade }) => {
   const { unlocks, specialKeys } = useGame();
   const equipment = unlocks.equipment;
 
-  const [mode, setMode] = useState<'tiers' | 'gear'>('tiers');
+  const [mode, setMode] = useState<'tiers' | 'gear' | 'dps'>('tiers');
   const [selected, setSelected] = useState<string | null>(null);
   const [planMode, setPlanMode] = useState(false);
   const [targets, setTargets] = useState<Record<string, number>>({});
@@ -79,7 +80,7 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade }) => {
           <h3 className="text-gray-300 font-bold text-sm">Equipment Lab</h3>
           {/* Tiers / Gear mode toggle */}
           <div className="flex items-center rounded-lg border border-white/10 bg-[#1f1f1f] p-0.5">
-            {(['tiers', 'gear'] as const).map((m) => (
+            {(['tiers', 'gear', 'dps'] as const).map((m) => (
               <button
                 key={m}
                 onClick={() => setMode(m)}
@@ -87,7 +88,7 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade }) => {
                   mode === m ? 'bg-[#322a1e] text-amber-300' : 'text-gray-500 hover:text-gray-300'
                 }`}
               >
-                {m === 'tiers' ? 'Tiers' : 'Gear'}
+                {m === 'tiers' ? 'Tiers' : m === 'gear' ? 'Gear' : 'DPS'}
               </button>
             ))}
           </div>
@@ -113,6 +114,8 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade }) => {
       </div>
 
       {mode === 'gear' && <GearView />}
+
+      {mode === 'dps' && <DpsCalc />}
 
       {mode === 'tiers' && (
       <>
