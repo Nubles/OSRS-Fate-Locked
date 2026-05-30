@@ -212,12 +212,13 @@ const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
             child aligns to the middle of the x-height, which html2canvas
             reproduces faithfully.
           */}
+          {/* Vertical padding (not fixed height + line-height) centers the
+              text reliably in html2canvas, which ignores half-leading. */}
           <div
             style={{
               display: 'inline-block',
-              height: 24,
-              lineHeight: '24px',
-              padding: '0 10px',
+              padding: '4px 11px',
+              lineHeight: 1,
               borderRadius: 999,
               border: `1px solid ${integrityOk ? 'rgba(16,185,129,0.5)' : 'rgba(239,68,68,0.5)'}`,
               background: integrityOk ? 'rgba(6,44,34,0.8)' : 'rgba(60,8,8,0.8)',
@@ -236,11 +237,8 @@ const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
                 marginRight: 7,
                 background: integrityOk ? '#34d399' : '#f87171',
                 boxShadow: integrityOk ? '0 0 6px rgba(52,211,153,0.7)' : '0 0 6px rgba(248,113,113,0.7)',
-                // Small upward nudge — vertical-align: middle aligns to the
-                // font's x-height midpoint which is slightly above the visual
-                // middle of an uppercase word. 1px down matches the cap line.
                 position: 'relative',
-                top: 1,
+                top: -1,
               }}
             />
             <span style={{ verticalAlign: 'middle' }}>
