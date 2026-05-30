@@ -24,7 +24,6 @@ import { resolveModeRules } from './config/gameModes';
 // e.g. recharts in StatsModal) stay out of the initial bundle.
 const StatsModal = lazy(() => import('./components/StatsModal').then(m => ({ default: m.StatsModal })));
 const ReferenceModal = lazy(() => import('./components/ReferenceModal').then(m => ({ default: m.ReferenceModal })));
-const ShareModal = lazy(() => import('./components/ShareModal').then(m => ({ default: m.ShareModal })));
 const OracleSearch = lazy(() => import('./components/OracleSearch').then(m => ({ default: m.OracleSearch })));
 const StrategyGuide = lazy(() => import('./components/StrategyGuide').then(m => ({ default: m.StrategyGuide })));
 const SupplyChainCalculator = lazy(() => import('./components/SupplyChainCalculator').then(m => ({ default: m.SupplyChainCalculator })));
@@ -32,7 +31,7 @@ const GameModePicker = lazy(() => import('./components/GameModePicker').then(m =
 const SyncCodeModal = lazy(() => import('./components/SyncCodeModal').then(m => ({ default: m.SyncCodeModal })));
 import { obfuscateFateSave, deobfuscateFateSave } from './utils/encryption';
 import { GameState } from './types';
-import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, Share2, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2 } from 'lucide-react';
+import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2 } from 'lucide-react';
 
 // --- Error Boundary ---
 interface ErrorBoundaryState {
@@ -131,7 +130,6 @@ const ToastNotification = () => {
 
 interface HeaderProps {
   setShowAltar: (show: boolean) => void;
-  setShowShare: (show: boolean) => void;
   setShowStats: (show: boolean) => void;
   setShowReference: (show: boolean) => void;
   setShowOracle: (show: boolean) => void;
@@ -141,7 +139,7 @@ interface HeaderProps {
   setShowSyncCode: (show: boolean) => void;
 }
 
-const Header = ({ setShowAltar, setShowShare, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode }: HeaderProps) => {
+const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode }: HeaderProps) => {
   const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, importSave, resetGame, getExportData, createBackup, gameModeId, customMode } = useGame();
   const pityRules = resolveModeRules(gameModeId, customMode);
   const pityCap = pityRules.pityEnabled ? pityRules.pityThreshold : 50; // 50 = visual-only fallback
@@ -265,8 +263,6 @@ const Header = ({ setShowAltar, setShowShare, setShowStats, setShowReference, se
                  <div className="w-px h-4 bg-white/10"></div>
                  <button onClick={() => setShowSupplyChain(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-cyan-400 hover:bg-white/5 rounded transition-colors" title="Resource Engine"><Database size={14} /></button>
                  <div className="w-px h-4 bg-white/10"></div>
-                 <button onClick={() => setShowShare(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-pink-400 hover:bg-white/5 rounded transition-colors" title="Share"><Share2 size={14} /></button>
-                 <div className="w-px h-4 bg-white/10"></div>
                  <button onClick={() => setShowStats(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-blue-400 hover:bg-white/5 rounded transition-colors" title="Stats"><BarChart3 size={14} /></button>
                  <div className="w-px h-4 bg-white/10"></div>
                  <button onClick={() => setShowReference(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-yellow-400 hover:bg-white/5 rounded transition-colors" title="Rules"><HelpCircle size={14} /></button>
@@ -345,7 +341,6 @@ const GameLayout = () => {
   const [showStats, setShowStats] = useState(false);
   const [showReference, setShowReference] = useState(false);
   const [showAltar, setShowAltar] = useState(false);
-  const [showShare, setShowShare] = useState(false);
   const [showOracle, setShowOracle] = useState(false);
   const [showStrategy, setShowStrategy] = useState(false);
   const [showSupplyChain, setShowSupplyChain] = useState(false);
@@ -424,13 +419,12 @@ const GameLayout = () => {
   }, [hasSeenOnboarding, history.length]);
 
   // Escape closes whichever top-level modal is open.
-  const anyModalOpen = showStats || showReference || showAltar || showShare
+  const anyModalOpen = showStats || showReference || showAltar
     || showOracle || showStrategy || showSupplyChain || showGameMode || showSyncCode;
   useEscapeKey(() => {
     setShowStats(false);
     setShowReference(false);
     setShowAltar(false);
-    setShowShare(false);
     setShowOracle(false);
     setShowStrategy(false);
     setShowSupplyChain(false);
@@ -459,7 +453,6 @@ const GameLayout = () => {
       <Suspense fallback={<ModalFallback />}>
         {showStats && <StatsModal onClose={() => setShowStats(false)} />}
         {showReference && <ReferenceModal onClose={() => setShowReference(false)} />}
-        {showShare && <ShareModal onClose={() => setShowShare(false)} />}
         {showOracle && <OracleSearch onClose={() => setShowOracle(false)} />}
         {showStrategy && <StrategyGuide onClose={() => setShowStrategy(false)} />}
         {showSupplyChain && <SupplyChainCalculator initialQuery={supplyChainPreset} onClose={() => { setShowSupplyChain(false); setSupplyChainPreset(undefined); }} />}
@@ -469,7 +462,6 @@ const GameLayout = () => {
 
       <Header
         setShowAltar={setShowAltar}
-        setShowShare={setShowShare}
         setShowStats={setShowStats}
         setShowReference={setShowReference}
         setShowOracle={setShowOracle}

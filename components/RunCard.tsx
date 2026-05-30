@@ -365,7 +365,7 @@ const KeyChip: React.FC<{ label: string; count: number; color: 'amber' | 'purple
 
 // ---- modal / trigger --------------------------------------------------------
 
-export const RunCardModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }> = ({ onClose, embedded }) => {
   const { history, unlocks, keys, specialKeys, chaosKeys, fatePoints, gameModeId } = useGame();
   const { activeProfileName } = useProfiles();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -441,63 +441,69 @@ export const RunCardModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     }
   };
 
-  return (
-    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Run card" tabIndex={-1} className="fixed inset-0 z-[110] bg-black/80 flex items-center justify-center p-6">
-      <div className="bg-[#0f1115] border border-white/10 rounded-xl shadow-2xl w-full max-w-3xl flex flex-col overflow-hidden">
-        {/* Modal header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
-          <div className="flex items-center gap-2 text-sm font-semibold text-gray-200">
-            <Share2 size={16} className="text-amber-400" />
-            Run Card
+  const body = (
+    <>
+      {/* Preview */}
+      <div className="p-5 flex flex-col items-center gap-4">
+        {captured ? (
+          <img src={captured} alt="Run card preview" className="rounded-lg shadow-xl w-full max-w-2xl border border-white/10" />
+        ) : (
+          <div className="w-full max-w-2xl h-[225px] bg-[#0a0c0f] rounded-lg border border-white/10 flex items-center justify-center">
+            <div className="text-gray-500 text-sm animate-pulse">Rendering card…</div>
           </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-white"><X size={18} /></button>
+        )}
+
+        <div className="flex gap-3">
+          <button
+            onClick={download}
+            disabled={!captured}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-medium disabled:opacity-40 transition-colors"
+          >
+            <Download size={15} />
+            Download PNG
+          </button>
+          <button
+            onClick={copyToClipboard}
+            disabled={!captured}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-medium disabled:opacity-40 transition-colors border border-white/10"
+          >
+            <Copy size={15} />
+            Copy to Clipboard
+          </button>
+          <button
+            onClick={capture}
+            disabled={capturing}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 text-sm disabled:opacity-40 transition-colors border border-white/10"
+          >
+            {capturing ? 'Rendering…' : 'Re-render'}
+          </button>
         </div>
 
-        {/* Preview */}
-        <div className="p-5 flex flex-col items-center gap-4">
-          {captured ? (
-            <img src={captured} alt="Run card preview" className="rounded-lg shadow-xl w-full max-w-2xl border border-white/10" />
-          ) : (
-            <div className="w-full max-w-2xl h-[225px] bg-[#0a0c0f] rounded-lg border border-white/10 flex items-center justify-center">
-              <div className="text-gray-500 text-sm animate-pulse">Rendering card…</div>
-            </div>
-          )}
-
-          <div className="flex gap-3">
-            <button
-              onClick={download}
-              disabled={!captured}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-medium disabled:opacity-40 transition-colors"
-            >
-              <Download size={15} />
-              Download PNG
-            </button>
-            <button
-              onClick={copyToClipboard}
-              disabled={!captured}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-medium disabled:opacity-40 transition-colors border border-white/10"
-            >
-              <Copy size={15} />
-              Copy to Clipboard
-            </button>
-            <button
-              onClick={capture}
-              disabled={capturing}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 text-sm disabled:opacity-40 transition-colors border border-white/10"
-            >
-              {capturing ? 'Rendering…' : 'Re-render'}
-            </button>
-          </div>
-
-          <div className="text-[10px] font-mono text-gray-600 text-center">
-            {runId ?? '—'} · {chainReport.ok ? '✓ chain verified' : `⚠ ${chainReport.brokenAt.length} broken links`}
-          </div>
+        <div className="text-[10px] font-mono text-gray-600 text-center">
+          {runId ?? '—'} · {chainReport.ok ? '✓ chain verified' : `⚠ ${chainReport.brokenAt.length} broken links`}
         </div>
       </div>
 
       {/* Off-screen card (source for html2canvas) */}
       <div style={{ position: 'absolute', left: -9999, top: -9999, pointerEvents: 'none' }}>
         <CardInner ref={cardRef} {...cardProps} />
+      </div>
+    </>
+  );
+
+  // Embedded: host (merged ShareModal) provides the overlay + header.
+  if (embedded) return body;
+
+  return (
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Run card" tabIndex={-1} className="fixed inset-0 z-[110] bg-black/80 flex items-center justify-center p-6">
+      <div className="bg-[#0f1115] border border-white/10 rounded-xl shadow-2xl w-full max-w-3xl flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
+          <div className="flex items-center gap-2 text-sm font-semibold text-gray-200">
+            <Share2 size={16} className="text-amber-400" /> Run Card
+          </div>
+          <button onClick={onClose} className="text-gray-500 hover:text-white"><X size={18} /></button>
+        </div>
+        {body}
       </div>
     </div>
   );

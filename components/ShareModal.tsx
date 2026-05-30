@@ -3,6 +3,8 @@ import React, { useRef, useState, useMemo, useEffect } from 'react';
 import { X, Copy, Download, Trophy, Map, Shield, Sparkles, Skull, Crown, Hash, Activity, Zap, Home, Store, Gamepad2, Package, BookOpen, Dna, Calendar, Star } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useEscapeKey } from '../hooks/useEscapeKey';
+import { RunCardModal } from './RunCard';
 import { getGameMode } from '../config/gameModes';
 import { EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, SKILLS_LIST, REGIONS_LIST, REGION_GROUPS, SLOT_CONFIG } from '../constants';
 
@@ -25,7 +27,7 @@ const TIER_COLORS = [
   'bg-[#facc15]', // T10 Gilded
 ];
 
-export const ShareModal: React.FC<ShareModalProps> = ({ onClose }) => {
+const StatsShareCard: React.FC<ShareModalProps & { embedded?: boolean }> = ({ onClose, embedded }) => {
   const gameState = useGame();
   const activeMode = getGameMode(gameState.gameModeId);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -219,10 +221,9 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
       return feats.slice(0, 4);
   }, [unlocks]);
 
-  return (
-    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Share run" tabIndex={-1} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 animate-in fade-in duration-200 overflow-y-auto">
+  const inner = (
       <div className="flex flex-col gap-6 items-center w-full max-w-5xl my-auto">
-        
+
         {/* Theme Selectors */}
         <div className="flex gap-2 p-1.5 bg-[#1a1a1a] rounded-full border border-white/10 shadow-xl overflow-x-auto max-w-full">
             {(['VOID', 'GILDED', 'IRON', 'BLOOD', 'NATURE'] as CardTheme[]).map(t => (
@@ -464,7 +465,46 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
             </button>
         </div>
         
-        <button onClick={onClose} className="text-gray-500 hover:text-white text-sm underline pb-4">Close</button>
+        {!embedded && <button onClick={onClose} className="text-gray-500 hover:text-white text-sm underline pb-4">Close</button>}
+      </div>
+  );
+
+  if (embedded) return inner;
+  return (
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Share run" tabIndex={-1} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 animate-in fade-in duration-200 overflow-y-auto">
+      {inner}
+    </div>
+  );
+};
+
+// ── Merged Share modal: one entry point, toggle between card styles. ──────────
+export const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const [style, setStyle] = useState<'stats' | 'map'>('stats');
+  useEscapeKey(onClose, true);
+  return (
+    <div
+      className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Share run"
+    >
+      <div className="min-h-full flex flex-col items-center justify-center gap-4 py-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-1.5 p-1.5 bg-[#1a1a1a] rounded-full border border-white/10 shadow-xl">
+          {(['stats', 'map'] as const).map((s) => (
+            <button
+              key={s}
+              onClick={() => setStyle(s)}
+              className={`px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all ${style === s ? 'bg-white text-black shadow' : 'text-gray-400 hover:text-white'}`}
+            >
+              {s === 'stats' ? 'Stats card' : 'Map card'}
+            </button>
+          ))}
+        </div>
+        {style === 'stats'
+          ? <StatsShareCard embedded onClose={onClose} />
+          : <RunCardModal embedded onClose={onClose} />}
+        <button onClick={onClose} className="text-gray-500 hover:text-white text-sm underline pb-2">Close</button>
       </div>
     </div>
   );

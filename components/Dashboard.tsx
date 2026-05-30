@@ -43,7 +43,7 @@ import { RegionAdvisorPanel } from './RegionAdvisorPanel';
 import { SkillAdvisorPanel } from './SkillAdvisorPanel';
 
 // Code-split: the run card pulls in html2canvas only when actually opened.
-const RunCardModal = lazy(() => import('./RunCard').then(m => ({ default: m.RunCardModal })));
+const ShareModal = lazy(() => import('./ShareModal').then(m => ({ default: m.ShareModal })));
 // Goal Planner modal — pulls in the full quest/diary datasets, so load on demand.
 const GoalPlannerModal = lazy(() => import('./GoalPlannerModal').then(m => ({ default: m.GoalPlannerModal })));
 // Achievements modal — pulls in the quest/diary/CA datasets via the engine.
@@ -950,8 +950,8 @@ export const Dashboard: React.FC = () => {
       </div>
     </div>
     {showRunCard && (
-      <Suspense fallback={<ModalFallback label="Building run card…" />}>
-        <RunCardModal onClose={() => setShowRunCard(false)} />
+      <Suspense fallback={<ModalFallback label="Building share card…" />}>
+        <ShareModal onClose={() => setShowRunCard(false)} />
       </Suspense>
     )}
 
