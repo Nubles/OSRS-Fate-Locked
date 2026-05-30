@@ -240,6 +240,11 @@ const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
                   marginRight: 7,
                   background: integrityOk ? '#34d399' : '#f87171',
                   boxShadow: integrityOk ? '0 0 6px rgba(52,211,153,0.7)' : '0 0 6px rgba(248,113,113,0.7)',
+                  // The dot is an inline-block box (not baseline-pinned like the
+                  // text), so it didn't need the wrapper's upward shift — push it
+                  // back down to sit level with the VERIFIED caps.
+                  position: 'relative',
+                  top: 7,
                 }}
               />
               <span style={{ verticalAlign: 'middle' }}>
