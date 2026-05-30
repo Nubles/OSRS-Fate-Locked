@@ -13,9 +13,8 @@
 import { UnlockState } from '../types';
 import {
   SKILLS_LIST, REGIONS_LIST, EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX,
-  MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST,
-  BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST,
 } from '../constants';
+import { completionPercent } from './completion';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { CA_DATA } from '../data/caData';
@@ -73,21 +72,8 @@ const equipMaxed = (u: UnlockState) =>
 const collectionItems = (u: UnlockState) =>
   Object.values(u.collectionLog || {}).filter((c) => c > 0).length;
 
-/** Overall completion %, mirroring the Dashboard header metric. */
-export function completionPercent(u: UnlockState): number {
-  const totalUnlocked =
-    skillTiers(u) + u.regions.length + sum(Object.values(u.equipment)) +
-    u.mobility.length + u.arcana.length + u.housing.length + u.merchants.length +
-    u.minigames.length + u.bosses.length + u.storage.length + u.guilds.length +
-    u.farming.length;
-  const totalAvailable =
-    SKILLS_LIST.length * 10 + REGIONS_LIST.length +
-    EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX +
-    MOBILITY_LIST.length + ARCANA_LIST.length + POH_LIST.length +
-    MERCHANTS_LIST.length + MINIGAMES_LIST.length + BOSSES_LIST.length +
-    STORAGE_LIST.length + GUILDS_LIST.length + FARMING_PATCH_LIST.length;
-  return Math.round((totalUnlocked / totalAvailable) * 100);
-}
+/** Overall completion % — the single shared metric (utils/completion), re-exported. */
+export { completionPercent };
 
 // ── Tiered-achievement builder ─────────────────────────────────────────────
 function tiers(

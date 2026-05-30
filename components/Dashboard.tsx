@@ -299,11 +299,9 @@ export const Dashboard: React.FC = () => {
   const totalSkillTiers = useMemo(() => (Object.values(unlocks.skills) as number[]).reduce((a, b) => a + b, 0), [unlocks.skills]);
   const totalEquipTiers = useMemo(() => (Object.values(unlocks.equipment) as number[]).reduce((a, b) => a + b, 0), [unlocks.equipment]);
 
-  const completionPercent = useMemo(() => {
-    const totalUnlocked = totalSkillTiers + unlocks.regions.length + totalEquipTiers + unlocks.mobility.length + unlocks.arcana.length + unlocks.housing.length + unlocks.merchants.length + unlocks.minigames.length + unlocks.bosses.length + unlocks.storage.length + unlocks.guilds.length + unlocks.farming.length;
-    const totalAvailable = (SKILLS_LIST.length * 10) + REGIONS_LIST.length + (EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX) + MOBILITY_LIST.length + ARCANA_LIST.length + POH_LIST.length + MERCHANTS_LIST.length + MINIGAMES_LIST.length + BOSSES_LIST.length + STORAGE_LIST.length + GUILDS_LIST.length + FARMING_PATCH_LIST.length;
-    return Math.round((totalUnlocked / totalAvailable) * 100);
-  }, [totalSkillTiers, totalEquipTiers, unlocks]);
+  // Shared metric (utils/completion) so the header %, achievements, and the
+  // Rival Ghost all measure progress identically.
+  const completionPercent = useMemo(() => runCompletion(unlocks), [unlocks]);
 
   // --- Handlers ---
   const handleLevelUp = (skill: string) => {
