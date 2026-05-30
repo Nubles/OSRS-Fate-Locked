@@ -263,10 +263,14 @@ const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
             height={CARD_MAP_H * MAP_OVERSAMPLE}
             style={{ display: 'block', width: CARD_MAP_W, height: CARD_MAP_H }}
           />
-          {/* Regions overlay on map */}
-          <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-black/70 px-2.5 py-1 rounded text-[10px] font-mono text-white/80">
-            <span className="w-2 h-2 rounded-sm bg-emerald-500 inline-block" />
-            {regionsUnlocked}/{regionsTotal} regions
+          {/* Regions overlay on map (inline-block + vertical-align so
+              html2canvas renders the dot/text aligned, not flex). */}
+          <div
+            className="absolute bottom-2 left-2 bg-black/70 px-2.5 py-1 rounded font-mono text-white/80"
+            style={{ fontSize: 10, lineHeight: '14px', whiteSpace: 'nowrap' }}
+          >
+            <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: '#10b981', verticalAlign: 'middle', marginRight: 6, position: 'relative', top: -1 }} />
+            <span style={{ verticalAlign: 'middle' }}>{regionsUnlocked}/{regionsTotal} regions</span>
           </div>
         </div>
 
@@ -325,10 +329,13 @@ const KeyChip: React.FC<{ label: string; count: number; color: 'amber' | 'purple
     purple: { border: 'rgba(168,85,247,0.35)',  text: '#d8b4fe', bg: 'rgba(46,16,101,0.45)', dot: '#a855f7' },
     rose:   { border: 'rgba(244,63,94,0.35)',   text: '#fda4af', bg: 'rgba(76,5,25,0.45)',   dot: '#f43f5e' },
   }[color];
+  // Center with text-align (not flex items-center): html2canvas mis-renders
+  // flexbox centering, leaving the number/label hugging the left edge.
   return (
     <div
-      className="flex flex-col items-center font-mono"
       style={{
+        fontFamily: 'ui-monospace, monospace',
+        textAlign: 'center',
         border: `1px solid ${palette.border}`,
         background: palette.bg,
         borderRadius: 6,
@@ -337,28 +344,28 @@ const KeyChip: React.FC<{ label: string; count: number; color: 'amber' | 'purple
         color: palette.text,
       }}
     >
-      <span
+      <div
         style={{
           fontSize: 18,
           fontWeight: 700,
-          lineHeight: 1,
+          lineHeight: 1.15,
           fontVariantNumeric: 'tabular-nums',
         }}
       >
         {count}
-      </span>
-      <span
+      </div>
+      <div
         style={{
           fontSize: 9,
-          marginTop: 4,
+          marginTop: 3,
           letterSpacing: '0.15em',
           textTransform: 'uppercase',
           color: '#9ca3af',
-          lineHeight: 1,
+          lineHeight: 1.15,
         }}
       >
         {label}
-      </span>
+      </div>
     </div>
   );
 };
