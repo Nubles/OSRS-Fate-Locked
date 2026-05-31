@@ -5,7 +5,7 @@
  */
 
 const DATA_URL = 'https://raw.githubusercontent.com/weirdgloop/osrs-dps-calc/main/cdn/json/monsters.json';
-const CACHE_KEY = 'fate_osrs_monsters_v1';
+const CACHE_KEY = 'fate_osrs_monsters_v2';
 const CACHE_TTL = 1000 * 60 * 60 * 24 * 30; // 30 days
 
 export interface MonsterStats {
@@ -15,6 +15,8 @@ export interface MonsterStats {
   imageFile: string;
   level: number;
   hp: number;
+  /** Highest single hit the monster can deal (parsed; 0 if unknown). */
+  maxHit: number;
   defLevel: number;
   magicLevel: number;
   /** Defensive bonuses by attack type. */
@@ -30,6 +32,7 @@ interface RawMonster {
   image?: string;
   level?: number;
   size?: number;
+  max_hit?: string | number;
   skills?: { def?: number; hp?: number; magic?: number };
   defensive?: { stab?: number; slash?: number; crush?: number; magic?: number; ranged?: number };
   attributes?: string[];
@@ -101,6 +104,7 @@ class MonsterService {
         imageFile: r.image ?? '',
         level: r.level ?? 0,
         hp,
+        maxHit: parseInt(String(r.max_hit ?? '0'), 10) || 0,
         defLevel: r.skills?.def ?? 1,
         magicLevel: r.skills?.magic ?? 1,
         def: {
@@ -156,6 +160,16 @@ class MonsterService {
 
   byId(id: number | undefined): MonsterStats | undefined {
     return id == null ? undefined : this.byIdMap.get(id);
+  }
+
+  /** Best monster for an exact (case-insensitive) name; prefers the highest-HP version. */
+  byName(name: string): MonsterStats | undefined {
+    const q = name.trim().toLowerCase();
+    let best: MonsterStats | undefined;
+    for (const m of this.list) {
+      if (m.name.toLowerCase() === q && (!best || m.hp > best.hp)) best = m;
+    }
+    return best;
   }
 }
 

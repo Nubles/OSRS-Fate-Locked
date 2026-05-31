@@ -10,7 +10,7 @@ import {
 import { useGame } from '../context/GameContext';
 import {
   Sparkles, Search, User, Map, Swords, Package,
-  ExternalLink, Unlock, Lock, Compass, ChevronDown, ChevronsUp, AlertCircle, BookOpen, ScrollText, Globe, List, Filter, Info, Share2, MapPin, Route, Trophy
+  ExternalLink, Unlock, Lock, Compass, ChevronDown, ChevronsUp, AlertCircle, BookOpen, ScrollText, Globe, List, Filter, Info, Share2, MapPin, Route, Trophy, Skull
 } from 'lucide-react';
 import { VoidReveal } from './VoidReveal';
 import { TableType } from '../types';
@@ -53,6 +53,8 @@ const AchievementsModal = lazy(() => import('./AchievementsModal').then(m => ({ 
 const FateForecastModal = lazy(() => import('./FateForecastModal').then(m => ({ default: m.FateForecastModal })));
 // Rival Ghost modal — race a simulated nemesis or a friend's run.
 const RivalModal = lazy(() => import('./RivalModal').then(m => ({ default: m.RivalModal })));
+// Boss Kill Planner — DPS/TTK/readiness vs your unlocked bosses.
+const BossKillPlanner = lazy(() => import('./BossKillPlanner').then(m => ({ default: m.BossKillPlanner })));
 
 // --- Constants & Helpers ---
 
@@ -269,6 +271,7 @@ export const Dashboard: React.FC = () => {
   const [showAchievements, setShowAchievements] = useState(false);
   const [showForecast, setShowForecast] = useState(false);
   const [showRival, setShowRival] = useState(false);
+  const [showBossPlanner, setShowBossPlanner] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showOnlyActionable, setShowOnlyActionable] = useState(false);
   const [levelingSkill, setLevelingSkill] = useState<string | null>(null);
@@ -857,6 +860,14 @@ export const Dashboard: React.FC = () => {
                </button>
                <RivalHeaderButton onClick={() => setShowRival(true)} />
                <button
+                 onClick={() => setShowBossPlanner(true)}
+                 className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-red-500/30 bg-red-950/30 hover:bg-red-900/40 text-red-300 text-[11px] font-medium transition-colors"
+                 title="Plan boss kills: DPS, time-to-kill and readiness"
+               >
+                 <Skull size={12} />
+                 Kill Planner
+               </button>
+               <button
                  onClick={() => setShowRunCard(true)}
                  className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-amber-500/30 bg-amber-950/30 hover:bg-amber-900/40 text-amber-300 text-[11px] font-medium transition-colors"
                  title="Generate shareable run card"
@@ -976,6 +987,12 @@ export const Dashboard: React.FC = () => {
     {showRival && (
       <Suspense fallback={<ModalFallback label="Summoning your rival…" />}>
         <RivalModal onClose={() => setShowRival(false)} />
+      </Suspense>
+    )}
+
+    {showBossPlanner && (
+      <Suspense fallback={<ModalFallback label="Loading kill planner…" />}>
+        <BossKillPlanner onClose={() => setShowBossPlanner(false)} />
       </Suspense>
     )}
 
