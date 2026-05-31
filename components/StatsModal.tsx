@@ -1,6 +1,7 @@
 
 import React, { useMemo, useState, useRef } from 'react';
 import { useGame } from '../context/GameContext';
+import { SectionGuide } from './SectionGuide';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { X, TrendingUp, TrendingDown, Skull, Key, Shield, Activity, BarChart3, LineChart as LineChartIcon, PieChart, List, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { isRollEntry } from '../utils/logEntry';
@@ -174,7 +175,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({ onClose }) => {
             <div className="p-2 bg-blue-900/30 rounded border border-blue-500/30">
                 <Activity className="w-5 h-5 text-blue-400" />
             </div>
-            <h2 className="text-xl font-bold text-gray-100">Fate Analytics</h2>
+            <h2 className="text-xl font-bold text-gray-100 flex items-center gap-2">Fate Analytics <SectionGuide id="STATS" /></h2>
           </div>
           <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-full transition-colors">
             <X className="w-6 h-6 text-gray-400" />

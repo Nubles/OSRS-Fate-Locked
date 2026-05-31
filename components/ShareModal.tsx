@@ -5,6 +5,7 @@ import { useGame } from '../context/GameContext';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { RunCardModal } from './RunCard';
+import { SectionGuide } from './SectionGuide';
 import { getGameMode } from '../config/gameModes';
 import { EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, SKILLS_LIST, REGIONS_LIST, REGION_GROUPS, SLOT_CONFIG } from '../constants';
 
@@ -500,6 +501,7 @@ export const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               {s === 'stats' ? 'Stats card' : 'Map card'}
             </button>
           ))}
+          <SectionGuide id="SHARE" className="px-1" />
         </div>
         {style === 'stats'
           ? <StatsShareCard embedded onClose={onClose} />

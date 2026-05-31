@@ -6,6 +6,7 @@ import {
 import { useGame } from '../context/GameContext';
 import { EQUIPMENT_SLOTS } from '../constants';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { SectionGuide } from './SectionGuide';
 import { gearService } from '../services/GearService';
 import { monsterService, MonsterStats } from '../services/MonsterService';
 import { sumBonuses, GearItem, ZERO_BONUSES } from '../utils/gearStats';
@@ -95,7 +96,7 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
         <div className="flex items-center gap-3 p-4 border-b border-white/10 bg-[#1b1b1b] shrink-0">
           <div className="p-2 bg-red-900/20 rounded-lg border border-red-500/30 text-red-300"><Skull size={18} /></div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-base font-bold text-white leading-none">Boss Kill Planner</h2>
+            <h2 className="text-base font-bold text-white leading-none flex items-center gap-1.5">Boss Kill Planner <SectionGuide id="KILL_PLANNER" /></h2>
             <p className="text-[11px] text-gray-500 mt-1">Your DPS, kill times and readiness against the bosses you've unlocked.</p>
           </div>
           <button onClick={() => setBoostsOn((b) => !b)} title="Toggle prayers + potions" className={`flex items-center gap-1.5 px-2.5 py-1 rounded border text-[10px] font-bold uppercase tracking-wide transition-colors ${boostsOn ? 'border-emerald-500/40 bg-emerald-950/30 text-emerald-300' : 'border-white/10 bg-[#1f1f1f] text-gray-400'}`}>

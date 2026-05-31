@@ -3,6 +3,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { X, Search, Map, BookOpen, Skull, Gamepad2, Sprout, Footprints, Zap, Home, Store, Package, Flag, Shield, Lock, Unlock, ExternalLink, ScrollText, Swords, Box, Trophy } from 'lucide-react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
+import { SectionGuide } from './SectionGuide';
 import { 
   SKILLS_LIST, REGIONS_LIST, BOSSES_LIST, MINIGAMES_LIST, FARMING_PATCH_LIST, 
   MOBILITY_LIST, ARCANA_LIST, POH_LIST, EQUIPMENT_SLOTS, MERCHANTS_LIST, 
@@ -252,6 +253,7 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
           />
+          <SectionGuide id="ORACLE" />
           <button onClick={onClose} className="p-1 hover:bg-[#333] rounded text-gray-500 hover:text-white transition-colors">
             <X className="w-5 h-5" />
           </button>

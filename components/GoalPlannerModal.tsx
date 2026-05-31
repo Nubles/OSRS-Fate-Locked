@@ -12,6 +12,7 @@ import { getQuestStatus, getDiaryStatus } from '../utils/journalStatus';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { SectionGuide } from './SectionGuide';
 
 /**
  * Goal Planner — the reverse of the advisors.
@@ -179,8 +180,8 @@ export const GoalPlannerModal: React.FC<Props> = ({ onClose }) => {
             <Route size={18} />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-base font-bold text-white leading-none flex items-center gap-2">
-              Goal Planner
+            <h2 className="text-base font-bold text-white leading-none flex items-center gap-1.5">
+              Goal Planner <SectionGuide id="GOAL_PLANNER" />
             </h2>
             <p className="text-[11px] text-gray-500 mt-1">
               Pick a target — get the full ordered roadmap to unlock it.

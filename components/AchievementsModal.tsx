@@ -9,6 +9,7 @@ import {
   evaluateAchievements, EvaluatedAchievement, AchievementIcon, AchievementCategory,
 } from '../utils/achievements';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { SectionGuide } from './SectionGuide';
 
 interface Props {
   onClose: () => void;
@@ -75,7 +76,7 @@ export const AchievementsModal: React.FC<Props> = ({ onClose }) => {
             <Trophy size={18} />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-base font-bold text-white leading-none">Achievements</h2>
+            <h2 className="text-base font-bold text-white leading-none flex items-center gap-1.5">Achievements <SectionGuide id="ACHIEVEMENTS" /></h2>
             <p className="text-[11px] text-gray-500 mt-1">
               {earnedCount} of {all.length} earned · {pct}% complete
             </p>

@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
+import { SectionGuide } from './SectionGuide';
 import { RESOURCE_MAP, RESOURCE_CATEGORIES, ITEM_CATEGORY } from '../data/resourceData';
 import { calculateSupplyChain, isItemAvailableWithCtx, buildAvailabilityContext, computeFullBreakdown, flattenRawMaterials, flattenMultiBreakdown, findEasiestPath, getNextAchievableItems } from '../utils/supplyChain';
 import { wikiService } from '../services/WikiService';
@@ -355,7 +356,7 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
                 <Database className="w-5 h-5 text-emerald-400" />
             </div>
             <div>
-                <h2 className="text-lg font-bold text-gray-100">The Resource Engine</h2>
+                <h2 className="text-lg font-bold text-gray-100 flex items-center gap-2">The Resource Engine <SectionGuide id="SUPPLY" /></h2>
                 <p className="text-xs text-gray-500">Supply Chain Solver</p>
             </div>
           </div>

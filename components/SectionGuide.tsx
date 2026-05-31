@@ -99,6 +99,125 @@ export const GUIDES: Record<string, Guide> = {
     ],
   },
 
+  SKILLS: {
+    title: 'Skills',
+    blurb: 'Your 23 skills — each unlocked and levelled through fate.',
+    bullets: [
+      'Spend an Omni-key on a locked skill to unlock it, then upgrade its tier (caps your trainable level).',
+      'Level unlocked skills toward 99 as you train them in-game.',
+      'The Skill Advisor ranks which skill to train next by how much quest + diary content it unlocks.',
+    ],
+  },
+  VOID_ALTAR: {
+    title: 'The Void Altar',
+    blurb: 'Spend Fate Points on high-risk, high-reward rituals.',
+    bullets: [
+      'Each ritual costs Fate Points (earned from failed key rolls) for a powerful effect.',
+      'Transmute, gamble for bonus keys, reroll outcomes, or convert resources.',
+      'Effects are permanent once performed — weigh the cost before committing.',
+    ],
+  },
+  ACHIEVEMENTS: {
+    title: 'Achievements',
+    blurb: 'Milestones that reward you for how your run unfolds.',
+    bullets: [
+      'Browse locked and unlocked achievements across categories.',
+      'They unlock automatically as you hit gear, skill, region and luck milestones.',
+      'Track your overall completion at a glance.',
+    ],
+  },
+  FORECAST: {
+    title: 'Fate Forecast',
+    blurb: 'See the odds before you spend — what each key could unlock.',
+    bullets: [
+      'For every category, preview what’s still locked and your draw chances.',
+      'Compare which spend gives the best shot at the content you want.',
+      'Plan your next key around real probabilities, not guesswork.',
+    ],
+  },
+  RIVAL: {
+    title: 'Rival',
+    blurb: 'A simulated rival account racing you through the same fate.',
+    bullets: [
+      'See the rival’s progress alongside yours and who’s ahead.',
+      'The rival rolls on the same tables, so it’s a fair pace benchmark.',
+      'Use the gap to push your completion higher.',
+    ],
+  },
+  SYNC: {
+    title: 'Sync Code',
+    blurb: 'Move or back up your run with a single shareable code.',
+    bullets: [
+      'Export your full run to a compact, integrity-checked code.',
+      'Import a code on another device to restore that run.',
+      'A pre-overwrite snapshot is kept so an import can be undone.',
+    ],
+  },
+  GOAL_PLANNER: {
+    title: 'Goal Planner',
+    blurb: 'Set a target unlock and get the path to reach it.',
+    bullets: [
+      'Pick a goal (a boss, region, gear tier…) and see what it requires.',
+      'Track the keys and prerequisites still needed.',
+      'Pin goals to your dashboard to stay focused.',
+    ],
+  },
+  STATS: {
+    title: 'Fate Analytics',
+    blurb: 'The numbers behind your run — luck, pace and distribution.',
+    bullets: [
+      'See your luck deviation vs expected key rates.',
+      'Dig into per-category roll stats and a statistical deep dive.',
+      'Spot whether fate has been kind or cruel.',
+    ],
+  },
+  STRATEGY: {
+    title: 'Fate Strategy Guide',
+    blurb: 'Curated advice on how to approach each unlock and table.',
+    bullets: [
+      'Read strategy notes for content you’ve unlocked or are chasing.',
+      'Learn the most efficient order to spend keys and train.',
+      'Reference recommended setups per activity.',
+    ],
+  },
+  SUPPLY: {
+    title: 'The Resource Engine',
+    blurb: 'Work out the supplies a given activity or goal needs.',
+    bullets: [
+      'Pick a target and see the resources required to get there.',
+      'Break a goal down into its underlying material costs.',
+      'Plan gathering/buying before you commit.',
+    ],
+  },
+  ORACLE: {
+    title: 'The Oracle',
+    blurb: 'Search every unlockable to find anything fast.',
+    bullets: [
+      'Type to search across all content — gear, regions, bosses, skills and more.',
+      'See at a glance what’s unlocked vs still locked.',
+      'Jump straight to the item you’re looking for.',
+    ],
+  },
+  KILL_PLANNER: {
+    title: 'Boss Kill Planner',
+    blurb: 'Score your DPS and readiness against every boss you’ve unlocked.',
+    bullets: [
+      'Bosses are ranked by readiness, using your equipped gear and levels.',
+      'See best DPS, time-to-kill, kills/hour, danger and a gear-gap %.',
+      'Toggle prayers + potions to compare boosted vs unboosted.',
+    ],
+  },
+
+  SHARE: {
+    title: 'Share Run',
+    blurb: 'Turn your run into a shareable, verifiable card.',
+    bullets: [
+      'Switch between a Stats card and a Map card.',
+      'Download the image to share your progress.',
+      'The card embeds a verification hash so others can confirm it’s genuine.',
+    ],
+  },
+
   JOURNAL_SUMMARY: {
     title: 'Journal Summary',
     blurb: 'A glance at your key-earning progress and what to do next.',

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { useGame } from '../context/GameContext';
+import { SectionGuide } from './SectionGuide';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { STRATEGY_DATABASE, ContentRequirement } from '../data/requirements';
 import { QUEST_DATA } from '../data/questData';
@@ -197,7 +198,7 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                             <Compass className="w-5 h-5 text-emerald-400" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-gray-100">Fate Strategy Guide</h2>
+                            <h2 className="text-lg font-bold text-gray-100 flex items-center gap-2">Fate Strategy Guide <SectionGuide id="STRATEGY" /></h2>
                             <p className="text-xs text-gray-500">Analyze timeline capabilities & bottlenecks.</p>
                         </div>
                     </div>

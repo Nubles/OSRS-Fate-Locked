@@ -1,6 +1,7 @@
 
 import React, { useRef } from 'react';
 import { useGame } from '../context/GameContext';
+import { SectionGuide } from './SectionGuide';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { resolveModeRules } from '../config/gameModes';
 import { X, Sparkles, Key, Shield, Dices, ArrowRight, Dna, Coins } from 'lucide-react';
@@ -95,7 +96,7 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
                 <Sparkles className={`w-6 h-6 text-purple-400 ${animationsEnabled ? 'animate-spin-slow' : ''}`} />
             </div>
             <div>
-                <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-blue-300 uppercase tracking-widest">The Void Altar</h2>
+                <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-blue-300 uppercase tracking-widest flex items-center gap-2">The Void Altar <SectionGuide id="VOID_ALTAR" /></h2>
                 <p className="text-xs text-purple-400/60 font-mono mt-1">Alter your destiny through sacrifice.</p>
             </div>
           </div>

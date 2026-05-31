@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { SectionGuide } from './SectionGuide';
 import { completionPercent } from '../utils/completion';
 import { decodeSyncCode } from '../utils/syncCode';
 import { UnlockState } from '../types';
@@ -147,7 +148,7 @@ const Shell: React.FC<{ onClose: () => void; title: string; subtitle: string; ch
       <div className="flex items-center gap-3 p-4 border-b border-white/10 bg-[#1b1b1b] shrink-0">
         <div className="p-2 bg-fuchsia-900/20 rounded-lg border border-fuchsia-500/30 text-fuchsia-300"><Swords size={18} /></div>
         <div className="flex-1 min-w-0">
-          <h2 className="text-base font-bold text-white leading-none truncate">{title}</h2>
+          <h2 className="text-base font-bold text-white leading-none truncate flex items-center gap-1.5">{title} <SectionGuide id="RIVAL" /></h2>
           <p className="text-[11px] text-gray-500 mt-1">{subtitle}</p>
         </div>
         <button onClick={onClose} className="p-1.5 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors" aria-label="Close"><X size={18} /></button>

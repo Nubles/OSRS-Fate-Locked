@@ -361,7 +361,7 @@ export const Dashboard: React.FC = () => {
         {/* Skills Section */}
         <div className="space-y-4">
             <div className="flex justify-between items-center bg-[#151515] p-2 rounded border border-white/5">
-                <h3 className="text-blue-400 font-bold text-sm">Skills</h3>
+                <h3 className="text-blue-400 font-bold text-sm flex items-center gap-1.5">Skills <SectionGuide id="SKILLS" /></h3>
                 <span className="text-xs text-blue-400/60 font-mono">{totalSkillTiers}/{SKILLS_LIST.length * 10} Tiers</span>
             </div>
 

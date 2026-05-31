@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { SectionGuide } from './SectionGuide';
 import { encodeSyncCode, decodeSyncCode } from '../utils/syncCode';
 import { makeQrSvg } from '../utils/qr';
 import { auditHistory, RunVerdict } from '../utils/integrity';
@@ -225,7 +226,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
             <Link2 size={18} />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-base font-bold text-white leading-none">Sync Code</h2>
+            <h2 className="text-base font-bold text-white leading-none flex items-center gap-1.5">Sync Code <SectionGuide id="SYNC" /></h2>
             <p className="text-[11px] text-gray-500 mt-1">
               Move a run between devices — copy a code, paste it elsewhere. No account needed.
             </p>

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { X, Sparkles, Key, Clock, Dices, Gauge, TrendingUp, ChevronRight } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { SectionGuide } from './SectionGuide';
 import { TableType } from '../types';
 import { getPoolAndStateKey, isValidUnlock } from '../utils/gameEngine';
 import { keyVelocity, forecastTarget, keysToTarget } from '../utils/fateForecast';
@@ -84,7 +85,7 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
             <Sparkles size={18} />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-base font-bold text-white leading-none">Fate Forecast</h2>
+            <h2 className="text-base font-bold text-white leading-none flex items-center gap-1.5">Fate Forecast <SectionGuide id="FORECAST" /></h2>
             <p className="text-[11px] text-gray-500 mt-1">How long until Fate hands you something from each category.</p>
           </div>
           <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#1a1a1a] border border-white/10" title="Keys earned per day, from your history">
