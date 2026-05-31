@@ -8,6 +8,7 @@ import { ActionSection } from './components/ActionSection';
 import { GachaSection } from './components/GachaSection';
 import { Dashboard } from './components/Dashboard';
 import { LogViewer } from './components/LogViewer';
+import { SectionGuide, GUIDES } from './components/SectionGuide';
 import { VoidAltar } from './components/VoidAltar';
 import { TransmutationEffect } from './components/TransmutationEffect';
 import { ClarityEffect, GreedEffect, ChaosEffect } from './components/RitualEffects';
@@ -315,6 +316,12 @@ const ControlPanel = () => {
         >
           <ScrollText size={14} /> History
         </button>
+      </div>
+
+      {/* Contextual guide for the active panel */}
+      <div className="flex items-center justify-end gap-1.5 px-3 py-1 bg-[#141414] border-b border-[#2a2a2a] shrink-0 text-[10px] text-gray-500">
+        <span>{GUIDES[activeTab]?.title}</span>
+        <SectionGuide id={activeTab} />
       </div>
 
       {/* Content */}

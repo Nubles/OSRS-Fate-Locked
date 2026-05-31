@@ -19,6 +19,7 @@ import { NoteTrigger } from './NoteTrigger';
 import { RegionMap } from './RegionMap';
 import { EquipmentLab } from './EquipmentLab';
 import { WikiIcon } from './WikiIcon';
+import { SectionGuide } from './SectionGuide';
 import { completionPercent as runCompletion } from '../utils/completion';
 import { rivalCompletion, standing as rivalStanding } from '../utils/rival';
 // Heavy tab/modal contents — code-split so their large data dependencies
@@ -932,13 +933,14 @@ export const Dashboard: React.FC = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
               </div>
-              <button 
+              <button
                 onClick={() => setShowOnlyActionable(!showOnlyActionable)}
                 className={`p-1.5 rounded-full transition-all ${showOnlyActionable ? 'bg-green-600 text-white shadow-lg' : 'bg-black/30 text-gray-500 border border-white/10 hover:text-white'}`}
                 title={showOnlyActionable ? "Showing Actionable Only" : "Show Actionable Content"}
               >
                   <Filter size={14} />
               </button>
+              <SectionGuide id={activeTab} className="p-1" />
           </div>
       </div>
 

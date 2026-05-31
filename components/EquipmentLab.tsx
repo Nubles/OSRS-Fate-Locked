@@ -10,6 +10,7 @@ import { useEscapeKey } from '../hooks/useEscapeKey';
 import { computeCombatPower, overallCombatPower, TIER_LABELS, PowerAxisKey } from '../utils/combatPower';
 import { EQUIP_TIER_COLORS, equipTierColor } from '../utils/equipTiers';
 import { GearView } from './GearView';
+import { SectionGuide } from './SectionGuide';
 import { DpsCalc } from './DpsCalc';
 
 const slotImg = (slot: string) =>
@@ -77,7 +78,7 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade }) => {
       {/* Header */}
       <div className="flex justify-between items-center bg-[#151515] p-2 rounded border border-white/5 mb-4 shrink-0">
         <div className="flex items-center gap-3">
-          <h3 className="text-gray-300 font-bold text-sm">Equipment Lab</h3>
+          <h3 className="text-gray-300 font-bold text-sm flex items-center gap-1.5">Equipment Lab <SectionGuide id="EQUIPMENT_LAB" /></h3>
           {/* Tiers / Gear mode toggle */}
           <div className="flex items-center rounded-lg border border-white/10 bg-[#1f1f1f] p-0.5">
             {(['tiers', 'gear', 'dps'] as const).map((m) => (
