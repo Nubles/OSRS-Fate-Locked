@@ -12,7 +12,7 @@
  * content; nothing here ships a game asset. Ships DORMANT (no model files →
  * everything falls back to the existing 2D sprites).
  */
-import { MODEL_SLUGS } from './modelManifest';
+import { MODEL_FILES } from './modelManifest';
 
 /** Our own trivial generated model (a gold cube) to test the pipeline. */
 export const PLACEHOLDER_MODEL = '/models/placeholder.glb';
@@ -33,11 +33,9 @@ export const slugify = (name: string): string =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-const AVAILABLE = new Set(MODEL_SLUGS);
-
 /** The model URL for an unlock name, or undefined to fall back to its sprite. */
 export const modelFor = (name: string): string | undefined => {
   if (MODEL_REGISTRY[name]) return MODEL_REGISTRY[name];
-  const slug = slugify(name);
-  return AVAILABLE.has(slug) ? `/models/${slug}.glb` : undefined;
+  const file = MODEL_FILES[slugify(name)];
+  return file ? `/models/${file}` : undefined;
 };

@@ -19,10 +19,26 @@ That's it — any unlock whose slug has a file here renders in 3D, with its 2D
 sprite as the instant poster + fallback. Names that don't slugify cleanly can be
 mapped explicitly in `MODEL_REGISTRY` in `data/entityModels.ts`.
 
-## Where to get models
+## Batch export from a cache (recommended)
 
-Export them yourself from a cache viewer such as RuneMonk or RuneApps (both have
-a GLTF export). Convert `.gltf` → `.glb` if needed.
+`scripts/export-models.mjs` generates these files for you from a local OSRS cache
+using the open-source [osrscachereader](https://github.com/Dezinater/osrscachereader):
+
+```bash
+npm install -D osrscachereader                 # cache reader (pulls `canvas`)
+# get a cache (e.g. an OpenRS2 archive) — a folder with main_file_cache.*
+npm run models:export -- --cache "C:/path/to/cache" --names
+npm run models:manifest
+```
+
+It reads the entities in `scripts/models.config.json` (`names` are auto-resolved
+by scanning the cache; `aliases` map raids/multi-boss names to a representative
+NPC; `npcIds` pin an explicit id) and writes `<slug>.gltf` here.
+
+## Or export one at a time
+
+Use a cache viewer such as RuneMonk or RuneApps (both have a glTF export) and drop
+the file in named by slug.
 
 ## Important — intellectual property
 
