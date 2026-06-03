@@ -41,6 +41,7 @@ export default {
         'fade-in-up': 'fade-in-up 0.4s ease-out both',
         'pop-in': 'pop-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both',
         'pulse-glow': 'pulse-glow 2.2s ease-in-out infinite',
+        'bloom': 'bloom 0.9s ease-in-out forwards',
       },
       keyframes: {
         'void-spin': {
@@ -109,6 +110,14 @@ export default {
         'pulse-glow': {
           '0%, 100%': { boxShadow: '0 0 0 0 rgba(251,191,36,0)' },
           '50%': { boxShadow: '0 0 14px 1px rgba(251,191,36,0.45)' },
+        },
+        // A soft, single light "bloom" — a gentle fade up to a capped opacity
+        // and back, instead of a hard full-screen strobe. ~1.1Hz, well under the
+        // photosensitivity flash threshold, and never reaches full luminance.
+        'bloom': {
+          '0%': { opacity: '0' },
+          '45%': { opacity: '0.4' },
+          '100%': { opacity: '0' },
         },
       }
     }

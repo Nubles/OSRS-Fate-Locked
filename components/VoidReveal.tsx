@@ -381,9 +381,9 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
         </div>
       )}
 
-      {/* PHASE 3: THE FLASH */}
+      {/* PHASE 3: THE BLOOM (soft light surge, not a strobe — photosensitivity-safe) */}
       {phase === 'flash' && (
-        <div className={`absolute inset-0 ${isChaos ? 'bg-red-500/40' : 'bg-white/25'} animate-flash z-[110]`} />
+        <div className={`absolute inset-0 ${isChaos ? 'bg-red-500/40' : 'bg-white/25'} animate-bloom z-[110]`} />
       )}
 
       {/* PHASE 4: THE REVEAL */}

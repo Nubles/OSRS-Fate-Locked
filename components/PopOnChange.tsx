@@ -2,45 +2,57 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useGame } from '../context/GameContext';
 
 /**
- * Wraps a numeric value and gives it a little "pop" (and a brief colour flash on
- * increase) whenever it changes — so earning a key or fate point feels tactile.
- * Re-triggers cleanly via a key bump, and respects the in-app animations toggle.
+ * An odometer-style counter: when the value changes it rolls the old number out
+ * and the new one in (up for an increase, down for a decrease) — so earning a
+ * key feels tactile without any flashing. Deliberately avoids colour/opacity
+ * flashes, which can affect photosensitive users; pure positional motion only.
+ * Honours the in-app animations toggle and the OS reduce-motion setting.
  */
 export const PopOnChange: React.FC<{
   value: number;
-  /** Tailwind colour class flashed briefly when the value goes up. */
-  flashClass?: string;
   className?: string;
+  /** Accepted for API compatibility; no longer used (flashing was removed). */
+  flashClass?: string;
   children?: React.ReactNode;
-}> = ({ value, flashClass = 'text-white', className, children }) => {
+}> = ({ value, className }) => {
   const { animationsEnabled } = useGame();
+  const [settled, setSettled] = useState(value);
+  const [rolling, setRolling] = useState<{ from: number; to: number; dir: 'up' | 'down'; key: number } | null>(null);
   const prev = useRef(value);
-  const [tick, setTick] = useState(0);
-  const [up, setUp] = useState(false);
+  const keyRef = useRef(0);
 
   useEffect(() => {
-    if (value !== prev.current) {
-      setUp(value > prev.current);
-      setTick((t) => t + 1);
-      prev.current = value;
+    if (value === prev.current) return;
+    const from = prev.current;
+    prev.current = value;
+    if (!animationsEnabled) {
+      setSettled(value);
+      return;
     }
-  }, [value]);
+    keyRef.current += 1;
+    setRolling({ from, to: value, dir: value > from ? 'up' : 'down', key: keyRef.current });
+  }, [value, animationsEnabled]);
 
-  // Clear the flash colour shortly after a bump.
-  useEffect(() => {
-    if (!tick) return;
-    const t = setTimeout(() => setUp(false), 450);
-    return () => clearTimeout(t);
-  }, [tick]);
+  if (!rolling) {
+    return <span className={className}>{settled}</span>;
+  }
 
-  const animate = animationsEnabled && tick > 0;
+  // Order the two lines so the visible one settles on the new value.
+  const lines = rolling.dir === 'up' ? [rolling.from, rolling.to] : [rolling.to, rolling.from];
 
   return (
-    <span
-      key={animate ? tick : 'static'}
-      className={`inline-block ${animate ? 'animate-count-pop' : ''} ${animate && up ? flashClass : ''} transition-colors ${className ?? ''}`}
-    >
-      {children ?? value}
+    <span className={`roll-box ${className ?? ''}`}>
+      <span
+        key={rolling.key}
+        className={`roll-track roll-${rolling.dir}`}
+        onAnimationEnd={() => {
+          setSettled(rolling.to);
+          setRolling(null);
+        }}
+      >
+        <span>{lines[0]}</span>
+        <span>{lines[1]}</span>
+      </span>
     </span>
   );
 };

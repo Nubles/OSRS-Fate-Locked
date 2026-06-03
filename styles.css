@@ -68,6 +68,40 @@ a:focus:not(:focus-visible),
   60%, 100% { transform: translateX(100%); }
 }
 
+/* ── Odometer counter roll ──────────────────────────────────────────────
+   A value change rolls the old number out and the new one in (like a counter
+   reel) instead of flashing — distinctive and safe for photosensitive users. */
+.roll-box {
+  display: inline-flex;
+  overflow: hidden;
+  height: 1em;
+  line-height: 1em;
+  vertical-align: baseline;
+}
+.roll-track {
+  display: flex;
+  flex-direction: column;
+}
+.roll-track > span {
+  height: 1em;
+  line-height: 1em;
+  display: block;
+}
+.roll-up {
+  animation: roll-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.roll-down {
+  animation: roll-down 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes roll-up {
+  from { transform: translateY(0); }
+  to { transform: translateY(-1em); }
+}
+@keyframes roll-down {
+  from { transform: translateY(-1em); }
+  to { transform: translateY(0); }
+}
+
 /* Reduced-motion: only suppress the decorative hover-lift. The app's core
    animations (rolls, reveals, rituals) are controlled by the in-app
    animations toggle, so we deliberately do NOT blanket-disable them here —
@@ -86,5 +120,10 @@ a:focus:not(:focus-visible),
   .progress-sheen::after {
     animation: none;
     display: none;
+  }
+  /* Snap the counter to its value rather than rolling. */
+  .roll-up,
+  .roll-down {
+    animation: none;
   }
 }

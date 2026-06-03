@@ -71,9 +71,9 @@ export const TransmutationEffect: React.FC<TransmutationEffectProps> = ({ onComp
             <div className={`absolute w-8 h-8 bg-purple-500 rounded-full blur-md transition-all duration-1000 ease-in ${phase === 'converge' ? 'scale-[3] opacity-100 bg-white' : 'scale-0 opacity-0'}`}></div>
         )}
 
-        {/* Explosion Flash */}
+        {/* Explosion bloom (soft light surge, not a strobe — photosensitivity-safe) */}
         {phase === 'explode' && (
-            <div className="absolute inset-0 bg-white animate-flash z-50 mix-blend-screen"></div>
+            <div className="absolute inset-0 bg-white animate-bloom z-50 mix-blend-screen"></div>
         )}
 
         {/* Reveal Omni-Key */}
