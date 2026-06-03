@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { EQUIPMENT_TIER_MAX } from '../constants';
-import { powerScore, assignTiersForSlot, canonicalTierFromName } from './gearTiers';
+import {
+  powerScore, assignTiersForSlot, canonicalTierFromName,
+  itemStyle, buildTierAnchors, anchoredTier,
+} from './gearTiers';
 import { ZERO_BONUSES, GearBonuses } from './gearStats';
 
 const b = (over: Partial<GearBonuses>): GearBonuses => ({ ...ZERO_BONUSES, ...over });
@@ -53,10 +56,51 @@ describe('gear tiers', () => {
     expect(canonicalTierFromName('Yew longbow')).toBe(5);
   });
 
-  it('returns null for unrecognised items (caller falls back to power score)', () => {
-    expect(canonicalTierFromName('Abyssal whip')).toBeNull();
-    expect(canonicalTierFromName('Fire cape')).toBeNull();
-    expect(canonicalTierFromName('Amulet of glory')).toBeNull();
+  it('pins iconic non-material items to sensible tiers', () => {
+    expect(canonicalTierFromName('Fire cape')).toBe(8);
+    expect(canonicalTierFromName('Infernal cape')).toBe(9);
+    expect(canonicalTierFromName('Barrows gloves')).toBe(7);
+    expect(canonicalTierFromName('Helm of neitiznot')).toBe(7);
+    expect(canonicalTierFromName('Dragon boots')).toBe(6);
+    expect(canonicalTierFromName('Amulet of glory')).toBe(4);
+    expect(canonicalTierFromName('Dragon defender')).toBe(7); // beats generic "Dragon" (T6)
+    expect(canonicalTierFromName('Rune defender')).toBe(5);
+    expect(canonicalTierFromName('Berserker ring (i)')).toBe(8);
+    expect(canonicalTierFromName('Berserker ring')).toBe(7);
+    expect(canonicalTierFromName('Void knight top')).toBe(7);
+    expect(canonicalTierFromName('Elite void top')).toBe(8);
+    // weapons whose strength is mechanical, not in their raw bonuses
+    expect(canonicalTierFromName('Abyssal whip')).toBe(7);
+    expect(canonicalTierFromName('Toxic blowpipe')).toBe(8);
+    expect(canonicalTierFromName('Abyssal tentacle')).toBe(8);
+  });
+
+  it('returns null only for genuinely unclassifiable items', () => {
+    expect(canonicalTierFromName('Cabbage')).toBeNull();
+    expect(canonicalTierFromName('Spinning plate')).toBeNull();
+  });
+
+  it('detects an item\'s combat style', () => {
+    expect(itemStyle(b({ slash: 80, meleeStr: 80 }))).toBe('melee');
+    expect(itemStyle(b({ ranged: 60, rangedStr: 30 }))).toBe('ranged');
+    expect(itemStyle(b({ magic: 30, magicStr: 15 }))).toBe('magic');
+    expect(itemStyle(b({ defStab: 100 }))).toBe('armour');
+  });
+
+  it('anchored fallback places unknown gear against the canonical ladder, per style', () => {
+    // Canonical melee anchors: a weak T2 and a strong T8.
+    const known = [
+      { tier: 2, bonuses: b({ slash: 20, meleeStr: 20 }) },
+      { tier: 8, bonuses: b({ slash: 120, meleeStr: 120 }) },
+    ];
+    const anchors = buildTierAnchors(known);
+    // A whip-like melee item (strong) lands at/above the strong anchor.
+    expect(anchoredTier(b({ slash: 110, meleeStr: 100 }), anchors)).toBeGreaterThanOrEqual(7);
+    // A weak melee item lands at the low anchor.
+    expect(anchoredTier(b({ slash: 25, meleeStr: 15 }), anchors)).toBeLessThanOrEqual(3);
+    // Stronger never tiers below weaker.
+    expect(anchoredTier(b({ slash: 120, meleeStr: 120 }), anchors))
+      .toBeGreaterThanOrEqual(anchoredTier(b({ slash: 40, meleeStr: 40 }), anchors));
   });
 
   it('handles empty and tiny slots without crashing', () => {

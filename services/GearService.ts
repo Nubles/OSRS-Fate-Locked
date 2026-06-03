@@ -8,7 +8,7 @@
  */
 
 import { GearItem, GearBonuses, hasNoBonuses } from '../utils/gearStats';
-import { powerScore, assignTiersForSlot, canonicalTierFromName } from '../utils/gearTiers';
+import { canonicalTierFromName, buildTierAnchors, anchoredTier } from '../utils/gearTiers';
 
 const DATA_URL = 'https://raw.githubusercontent.com/weirdgloop/osrs-dps-calc/main/cdn/json/equipment.json';
 const CACHE_KEY = 'fate_osrs_gear_v1';
@@ -135,15 +135,25 @@ class GearService {
       this.bySlotMap.get(it.slot)!.push(it);
     }
 
-    for (const [, list] of this.bySlotMap) {
-      // Canonical material tier (matches the Codex) where we recognise the item;
-      // power-score quantile estimate as a fallback for unrecognised uniques.
-      const fallback = assignTiersForSlot(list.map((it) => ({ id: it.id, score: powerScore(it.bonuses) })));
-      for (const it of list) {
-        const canon = canonicalTierFromName(it.name);
-        this.tierMap.set(it.id, canon ?? fallback.get(it.id) ?? 1);
+    // Pass 1: assign the canonical material/named tier (matches the Codex) to
+    // every item we recognise, and collect them as anchors.
+    const known: { tier: number; bonuses: GearBonuses }[] = [];
+    for (const it of items) {
+      const canon = canonicalTierFromName(it.name);
+      if (canon != null) {
+        this.tierMap.set(it.id, canon);
+        known.push({ tier: canon, bonuses: it.bonuses });
       }
-      // Strongest first, then alphabetical — a sensible default picker order.
+    }
+    // Pass 2: place every unrecognised item against the canonical ladder, by its
+    // own combat style, so the fallback reflects real strength (not slot rank).
+    const anchors = buildTierAnchors(known);
+    for (const it of items) {
+      if (!this.tierMap.has(it.id)) this.tierMap.set(it.id, anchoredTier(it.bonuses, anchors));
+    }
+
+    // Strongest first, then alphabetical — a sensible default picker order.
+    for (const [, list] of this.bySlotMap) {
       list.sort((a, b) => (this.tierMap.get(b.id)! - this.tierMap.get(a.id)!) || a.name.localeCompare(b.name));
     }
   }
