@@ -29,3 +29,8 @@ runelite-plugin/.gradle/
 
 # Claude Code local preview config
 .claude/
+
+# Local OSRS cache for the model exporter — never commit game cache data
+osrs-cache/
+*.dat2
+main_file_cache.*
