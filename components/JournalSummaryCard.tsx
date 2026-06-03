@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { BookOpen, Map as MapIcon, Swords, ChevronRight, Sparkles, Target, PartyPopper } from 'lucide-react';
+import { WikiIcon } from './WikiIcon';
 import { useGame } from '../context/GameContext';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
@@ -154,7 +155,7 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
   }> = [
     {
       key: 'QUESTS',
-      icon: <BookOpen size={12} />,
+      icon: <WikiIcon file="Quest_point_icon.png" alt="Quests" Fallback={BookOpen} size={13} />,
       label: 'Quests',
       accent: 'text-blue-300',
       barColor: 'bg-blue-500/50',
@@ -168,7 +169,7 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
     },
     {
       key: 'DIARIES',
-      icon: <MapIcon size={12} />,
+      icon: <WikiIcon file="Achievement_Diaries_icon.png" alt="Diary Tasks" Fallback={MapIcon} size={13} />,
       label: 'Diary Tasks',
       accent: 'text-green-300',
       barColor: 'bg-green-500/50',
@@ -182,7 +183,7 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
     },
     {
       key: 'CA',
-      icon: <Swords size={12} />,
+      icon: <WikiIcon file="Combat_Achievements_icon.png" alt="Combat Achievements" Fallback={Swords} size={13} />,
       label: 'Combat Achievements',
       accent: 'text-red-300',
       barColor: 'bg-red-500/50',
@@ -201,7 +202,7 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
   return (
     <section className="bg-[#151515] border border-white/10 rounded-xl p-4" aria-label="Journal summary">
       <div className="flex items-center gap-2 mb-3">
-        <Sparkles size={13} className="text-amber-400" aria-hidden />
+        <WikiIcon file="Quest_list_icon.png" alt="" Fallback={Sparkles} size={14} />
         <h3 className="text-xs font-bold text-amber-300 uppercase tracking-widest">Journal Summary</h3>
         <span className="ml-auto text-[10px] text-gray-600">click to jump</span>
       </div>
