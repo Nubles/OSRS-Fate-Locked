@@ -157,12 +157,31 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
   subText,
   region
 }) => {
-  const wikiIcon = icon || SPECIAL_ICONS[item] || 'Globe_icon.png';
+  // Image priority: a hand-picked sprite/icon → the item's real OSRS wiki image
+  // (fetched + cached via WikiService) → the globe placeholder. Self-heals: if a
+  // source 404s it advances to the next, so a stale curated filename still ends
+  // up showing the correct artwork rather than a generic globe.
+  const GLOBE = 'https://oldschool.runescape.wiki/images/Globe_icon.png';
+  const curated = icon || SPECIAL_ICONS[item];
   const itemId = UTILITY_ITEM_IDS[item];
-  const imageUrl = itemId 
-    ? `https://chisel.weirdgloop.org/static/img/osrs-sprite/${itemId}.png`
-    : `https://oldschool.runescape.wiki/images/${wikiIcon}`;
-  
+  const spriteUrl = itemId ? `https://chisel.weirdgloop.org/static/img/osrs-sprite/${itemId}.png` : null;
+  const curatedUrl = curated ? `https://oldschool.runescape.wiki/images/${curated}` : null;
+  const [wikiUrl, setWikiUrl] = useState<string | null>(null);
+  const [failed, setFailed] = useState<Record<string, true>>({});
+
+  const spriteDead = !spriteUrl || failed[spriteUrl];
+  const curatedDead = !curatedUrl || failed[curatedUrl];
+  const needWiki = spriteDead && curatedDead;
+  useEffect(() => {
+    if (!needWiki) return;
+    let mounted = true;
+    wikiService.fetchImage(item).then((url) => { if (mounted) setWikiUrl(url); });
+    return () => { mounted = false; };
+  }, [item, needWiki]);
+
+  const candidates = [spriteUrl, curatedUrl, wikiUrl, GLOBE].filter(Boolean) as string[];
+  const imageUrl = candidates.find((c) => !failed[c]) ?? GLOBE;
+
   return (
     <div 
         onClick={!isUnlocked && canUnlock ? onClick : undefined}
@@ -180,19 +199,11 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
         </div>
 
         <div className={`w-10 h-10 rounded flex items-center justify-center shrink-0 ${isUnlocked ? 'bg-black/30' : 'bg-black/20'}`}>
-             <img 
-                src={imageUrl} 
-                alt={item} 
-                className={`w-7 h-7 object-contain ${isUnlocked ? 'drop-shadow-md' : 'grayscale opacity-50'}`} 
-                onError={(e) => { 
-                   const target = e.target as HTMLImageElement;
-                   if (itemId && !target.src.includes('wiki')) {
-                       // Fallback to wiki if ID fails
-                       target.src = `https://oldschool.runescape.wiki/images/${wikiIcon}`;
-                   } else {
-                       target.src = 'https://oldschool.runescape.wiki/images/Globe_icon.png';
-                   }
-                }} 
+             <img
+                src={imageUrl}
+                alt={item}
+                className={`w-7 h-7 object-contain ${isUnlocked ? 'drop-shadow-md' : 'grayscale opacity-50'}`}
+                onError={() => setFailed((f) => ({ ...f, [imageUrl]: true }))}
              />
         </div>
         <div className="flex-1 min-w-0 flex flex-col justify-center pr-6">

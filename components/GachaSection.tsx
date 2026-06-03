@@ -66,6 +66,7 @@ const OSRS_GACHA_ICONS = {
   MERCHANTS: 'https://oldschool.runescape.wiki/images/General_store_icon.png',
   STORAGE: 'https://oldschool.runescape.wiki/images/Looting_bag.png',
   GUILDS: 'https://oldschool.runescape.wiki/images/Achievement_Diaries_icon.png',
+  FARMING: 'https://oldschool.runescape.wiki/images/Farming_icon.png',
 };
 
 const SpendCard: React.FC<SpendCardProps> = ({
@@ -272,7 +273,7 @@ export const GachaSection: React.FC = () => {
     { type: TableType.MINIGAMES, label: 'Minigames', subLabel: 'Activities & Fun', iconSrc: OSRS_GACHA_ICONS.MINIGAMES, unlocked: (unlocks.minigames ?? []).length, total: MINIGAMES_LIST.length, can: canUnlock.minigames },
     { type: TableType.BOSSES, label: 'Bosses', subLabel: 'Major Encounters', iconSrc: OSRS_GACHA_ICONS.BOSSES, unlocked: (unlocks.bosses ?? []).length, total: BOSSES_LIST.length, can: canUnlock.bosses },
     { type: TableType.GUILDS, label: 'Guilds', subLabel: 'Professional Societies', iconSrc: OSRS_GACHA_ICONS.GUILDS, unlocked: (unlocks.guilds ?? []).length, total: GUILDS_LIST.length, can: canUnlock.guilds },
-    { type: TableType.FARMING_LAYERS, label: 'Farming', subLabel: 'Patches', icon: Sprout, unlocked: (unlocks.farming ?? []).length, total: FARMING_PATCH_LIST.length, can: canUnlock.farming },
+    { type: TableType.FARMING_LAYERS, label: 'Farming', subLabel: 'Patches', iconSrc: OSRS_GACHA_ICONS.FARMING, unlocked: (unlocks.farming ?? []).length, total: FARMING_PATCH_LIST.length, can: canUnlock.farming },
   ];
 
   return (
