@@ -303,7 +303,7 @@ const InfoChip: React.FC<{
 type FarmSubTab = 'SLAYER' | 'CLUES';
 
 export const ActionSection: React.FC = () => {
-  const { rollForKey, unlocks, gameModeId, customMode } = useGame();
+  const { rollForKey, unlocks, gameModeId, customMode, animationsEnabled } = useGame();
   const [subTab, setSubTab] = useState<FarmSubTab>('SLAYER');
 
   // When the run's mode enables region passives, rolls are boosted. rollForKey
@@ -431,31 +431,41 @@ export const ActionSection: React.FC = () => {
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar -mr-1 pr-1">
         {subTab === 'SLAYER' && (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-            {slayers.map((master) => (
-              <SlayerMasterCard
+            {slayers.map((master, i) => (
+              <div
                 key={master.name}
-                name={master.name}
-                subText={master.subText}
-                displayRate={effectiveRate(master.source)}
-                bonus={regionBonus}
-                image={master.image}
-                style={master.style}
-                onClick={(e) => handleRoll(master.source, DROP_RATES[master.source], e)}
-              />
+                className={animationsEnabled ? 'animate-fade-in-up' : ''}
+                style={animationsEnabled ? { animationDelay: `${i * 35}ms` } : undefined}
+              >
+                <SlayerMasterCard
+                  name={master.name}
+                  subText={master.subText}
+                  displayRate={effectiveRate(master.source)}
+                  bonus={regionBonus}
+                  image={master.image}
+                  style={master.style}
+                  onClick={(e) => handleRoll(master.source, DROP_RATES[master.source], e)}
+                />
+              </div>
             ))}
           </div>
         )}
         {subTab === 'CLUES' && (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-            {CLUE_SCROLLS.map((clue) => (
-              <ClueScrollCard
+            {CLUE_SCROLLS.map((clue, i) => (
+              <div
                 key={clue.tier}
-                tier={clue.tier}
-                displayRate={effectiveRate(clue.source)}
-                bonus={regionBonus}
-                itemId={clue.itemId}
-                onClick={(e) => handleRoll(clue.source, DROP_RATES[clue.source], e)}
-              />
+                className={animationsEnabled ? 'animate-fade-in-up' : ''}
+                style={animationsEnabled ? { animationDelay: `${i * 35}ms` } : undefined}
+              >
+                <ClueScrollCard
+                  tier={clue.tier}
+                  displayRate={effectiveRate(clue.source)}
+                  bonus={regionBonus}
+                  itemId={clue.itemId}
+                  onClick={(e) => handleRoll(clue.source, DROP_RATES[clue.source], e)}
+                />
+              </div>
             ))}
           </div>
         )}

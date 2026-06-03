@@ -126,10 +126,11 @@ interface ProgressBarProps {
 }
 
 const ProgressBar: React.FC<ProgressBarProps> = ({ current, total, colorClass }) => {
+  const { animationsEnabled } = useGame();
   const percent = Math.round((current / total) * 100);
   return (
     <div className="w-full bg-black/50 rounded-full h-2 mt-1 border border-white/5 relative overflow-hidden group">
-      <div className={`h-full rounded-full transition-all duration-500 ${colorClass}`} style={{ width: `${percent}%` }} />
+      <div className={`relative h-full rounded-full overflow-hidden transition-all duration-700 ease-out ${colorClass} ${animationsEnabled && percent > 0 ? 'progress-sheen' : ''}`} style={{ width: `${percent}%` }} />
       <div className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white drop-shadow opacity-0 group-hover:opacity-100 transition-opacity">
         {percent}%
       </div>
@@ -884,7 +885,7 @@ export const Dashboard: React.FC = () => {
                        cx="18" cy="18" r="15" fill="none" stroke="url(#compGrad)" strokeWidth="3" strokeLinecap="round"
                        strokeDasharray={2 * Math.PI * 15}
                        strokeDashoffset={(1 - completionPercent / 100) * 2 * Math.PI * 15}
-                       className="transition-all duration-700 ease-out"
+                       className="transition-all duration-700 ease-out [filter:drop-shadow(0_0_3px_rgba(168,85,247,0.55))]"
                      />
                      <defs>
                        <linearGradient id="compGrad" x1="0" y1="0" x2="1" y2="1">
@@ -949,17 +950,20 @@ export const Dashboard: React.FC = () => {
           <Suspense fallback={<ModalFallback />}>
               <GoalTracker />
           </Suspense>
-          {activeTab === 'CHARACTER' && renderCharacterTab()}
-          {activeTab === 'WORLD' && renderWorldTab()}
-          {activeTab === 'ACTIVITIES' && renderActivitiesTab()}
-          {activeTab === 'JOURNAL' && renderJournalTab()}
-          {activeTab === 'COLLECTION' && (
-              <div className="h-full p-2">
-                  <Suspense fallback={<ModalFallback />}>
-                      <CollectionLog searchTerm={searchQuery} />
-                  </Suspense>
-              </div>
-          )}
+          {/* Keyed by tab so the content gently slides in when you switch. */}
+          <div key={activeTab} className={`h-full ${animationsEnabled ? 'animate-fade-in-up' : ''}`}>
+            {activeTab === 'CHARACTER' && renderCharacterTab()}
+            {activeTab === 'WORLD' && renderWorldTab()}
+            {activeTab === 'ACTIVITIES' && renderActivitiesTab()}
+            {activeTab === 'JOURNAL' && renderJournalTab()}
+            {activeTab === 'COLLECTION' && (
+                <div className="h-full p-2">
+                    <Suspense fallback={<ModalFallback />}>
+                        <CollectionLog searchTerm={searchQuery} />
+                    </Suspense>
+                </div>
+            )}
+          </div>
       </div>
     </div>
     {showRunCard && (

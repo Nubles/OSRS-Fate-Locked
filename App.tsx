@@ -9,6 +9,7 @@ import { GachaSection } from './components/GachaSection';
 import { Dashboard } from './components/Dashboard';
 import { LogViewer } from './components/LogViewer';
 import { SectionGuide, GUIDES } from './components/SectionGuide';
+import { PopOnChange } from './components/PopOnChange';
 import { VoidAltar } from './components/VoidAltar';
 import { TransmutationEffect } from './components/TransmutationEffect';
 import { ClarityEffect, GreedEffect, ChaosEffect } from './components/RitualEffects';
@@ -222,23 +223,23 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                   <span className="text-gray-400">{pityRules.pityEnabled ? `${fatePoints}/${pityRules.pityThreshold}` : `${fatePoints} Fate`}</span>
                </div>
                <div className="h-2 bg-black/50 rounded-full overflow-hidden border border-white/10 relative">
-                 <div className={`h-full transition-all duration-300 ${nearPity ? 'bg-red-500 shadow-[0_0_10px_#ef4444]' : 'bg-amber-600'}`} style={{ width: `${Math.min(100, (fatePoints / pityCap) * 100)}%` }} />
+                 <div className={`relative h-full overflow-hidden transition-all duration-500 ${animationsEnabled ? 'progress-sheen' : ''} ${nearPity ? 'bg-red-500 shadow-[0_0_10px_#ef4444]' : 'bg-amber-600'}`} style={{ width: `${Math.min(100, (fatePoints / pityCap) * 100)}%` }} />
                       </div>
             </div>
             <div className="hidden md:block w-px h-8 bg-white/5"></div>
             <div className="flex items-center gap-3 justify-center">
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg min-w-[60px] justify-center">
                    <Key className="w-4 h-4 text-amber-400" />
-                   <span className="font-bold text-amber-100 text-lg leading-none">{keys}</span>
+                   <span className="font-bold text-amber-100 text-lg leading-none"><PopOnChange value={keys} flashClass="text-white" /></span>
                 </div>
                 <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors min-w-[60px] justify-center ${specialKeys > 0 ? 'bg-purple-500/20 border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.2)]' : 'bg-white/5 border-white/10 opacity-50'}`}>
                    <Sparkles className={`w-4 h-4 ${specialKeys > 0 ? 'text-purple-400 animate-pulse' : 'text-gray-500'}`} />
-                   <span className={`font-bold text-lg leading-none ${specialKeys > 0 ? 'text-purple-200' : 'text-gray-500'}`}>{specialKeys}</span>
+                   <span className={`font-bold text-lg leading-none ${specialKeys > 0 ? 'text-purple-200' : 'text-gray-500'}`}><PopOnChange value={specialKeys} flashClass="text-white" /></span>
                 </div>
                 {chaosKeys > 0 && (
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 border border-red-500/40 rounded-lg animate-in fade-in slide-in-from-right-4 min-w-[60px] justify-center">
                      <Dna className="w-4 h-4 text-red-400 animate-pulse" />
-                     <span className="font-bold text-red-100 text-lg leading-none">{chaosKeys}</span>
+                     <span className="font-bold text-red-100 text-lg leading-none"><PopOnChange value={chaosKeys} flashClass="text-white" /></span>
                   </div>
                 )}
             </div>

@@ -47,6 +47,27 @@ a:focus:not(:focus-visible),
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
+/* ── Progress-bar sheen ─────────────────────────────────────────────────
+   A periodic light sweep over a filled bar for a premium feel. Opt-in via
+   .progress-sheen on the (position:relative, overflow:hidden) fill element. */
+.progress-sheen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 80%
+  );
+  transform: translateX(-100%);
+  animation: sheen 2.8s ease-in-out infinite;
+}
+@keyframes sheen {
+  0% { transform: translateX(-100%); }
+  60%, 100% { transform: translateX(100%); }
+}
+
 /* Reduced-motion: only suppress the decorative hover-lift. The app's core
    animations (rolls, reveals, rituals) are controlled by the in-app
    animations toggle, so we deliberately do NOT blanket-disable them here —
@@ -59,5 +80,11 @@ a:focus:not(:focus-visible),
   .hover-lift:hover {
     transform: none;
     box-shadow: none;
+  }
+  /* The continuous decorative sheen is purely ornamental — stop it for users
+     who ask the OS to reduce motion. */
+  .progress-sheen::after {
+    animation: none;
+    display: none;
   }
 }
