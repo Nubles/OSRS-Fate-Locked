@@ -8,7 +8,7 @@
  */
 
 import { GearItem, GearBonuses, hasNoBonuses } from '../utils/gearStats';
-import { powerScore, assignTiersForSlot } from '../utils/gearTiers';
+import { powerScore, assignTiersForSlot, canonicalTierFromName } from '../utils/gearTiers';
 
 const DATA_URL = 'https://raw.githubusercontent.com/weirdgloop/osrs-dps-calc/main/cdn/json/equipment.json';
 const CACHE_KEY = 'fate_osrs_gear_v1';
@@ -136,8 +136,13 @@ class GearService {
     }
 
     for (const [, list] of this.bySlotMap) {
-      const tiers = assignTiersForSlot(list.map((it) => ({ id: it.id, score: powerScore(it.bonuses) })));
-      tiers.forEach((tier, id) => this.tierMap.set(id, tier));
+      // Canonical material tier (matches the Codex) where we recognise the item;
+      // power-score quantile estimate as a fallback for unrecognised uniques.
+      const fallback = assignTiersForSlot(list.map((it) => ({ id: it.id, score: powerScore(it.bonuses) })));
+      for (const it of list) {
+        const canon = canonicalTierFromName(it.name);
+        this.tierMap.set(it.id, canon ?? fallback.get(it.id) ?? 1);
+      }
       // Strongest first, then alphabetical — a sensible default picker order.
       list.sort((a, b) => (this.tierMap.get(b.id)! - this.tierMap.get(a.id)!) || a.name.localeCompare(b.name));
     }

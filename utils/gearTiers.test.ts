@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { EQUIPMENT_TIER_MAX } from '../constants';
-import { powerScore, assignTiersForSlot } from './gearTiers';
+import { powerScore, assignTiersForSlot, canonicalTierFromName } from './gearTiers';
 import { ZERO_BONUSES, GearBonuses } from './gearStats';
 
 const b = (over: Partial<GearBonuses>): GearBonuses => ({ ...ZERO_BONUSES, ...over });
@@ -27,6 +27,36 @@ describe('gear tiers', () => {
     for (let i = 1; i < items.length; i++) {
       expect(tiers.get(items[i].id)!).toBeGreaterThanOrEqual(tiers.get(items[i - 1].id)!);
     }
+  });
+
+  it('canonical tiers match the Codex material table', () => {
+    // The reported bug: rune helm must be T5, not T7.
+    expect(canonicalTierFromName('Rune full helm')).toBe(5);
+    expect(canonicalTierFromName('Rune platebody')).toBe(5);
+    expect(canonicalTierFromName('Bronze med helm')).toBe(1);
+    expect(canonicalTierFromName('Steel scimitar')).toBe(2);
+    expect(canonicalTierFromName('Mithril chainbody')).toBe(3);
+    expect(canonicalTierFromName('Adamant kiteshield')).toBe(4);
+    expect(canonicalTierFromName('Dragon scimitar')).toBe(6);
+    expect(canonicalTierFromName("Ahrim's robetop")).toBe(7);
+    expect(canonicalTierFromName('Bandos chestplate')).toBe(8);
+    expect(canonicalTierFromName('Torva platebody')).toBe(9);
+  });
+
+  it('resolves ambiguous material words by specificity', () => {
+    expect(canonicalTierFromName("Black d'hide body")).toBe(7); // not Black metal (T2)
+    expect(canonicalTierFromName('Black platebody')).toBe(2);
+    expect(canonicalTierFromName("Green d'hide chaps")).toBe(4);
+    expect(canonicalTierFromName("Blue d'hide vambraces")).toBe(5);
+    expect(canonicalTierFromName('Dragon hunter crossbow')).toBe(9); // not plain Dragon (T6)
+    expect(canonicalTierFromName('Magic shortbow')).toBe(6);
+    expect(canonicalTierFromName('Yew longbow')).toBe(5);
+  });
+
+  it('returns null for unrecognised items (caller falls back to power score)', () => {
+    expect(canonicalTierFromName('Abyssal whip')).toBeNull();
+    expect(canonicalTierFromName('Fire cape')).toBeNull();
+    expect(canonicalTierFromName('Amulet of glory')).toBeNull();
   });
 
   it('handles empty and tiny slots without crashing', () => {
