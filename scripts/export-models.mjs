@@ -80,7 +80,11 @@ if (DO_NAMES && names.length) {
   if (want.size) console.warn('Unresolved names (add to npcIds manually):', [...want.values()]);
 }
 
-if (!jobs.length) {
+// Dedupe by slug — an explicit npcId (pushed first) wins over a resolved name.
+const seen = new Set();
+const uniqueJobs = jobs.filter((j) => (seen.has(j.slug) ? false : (seen.add(j.slug), true)));
+
+if (!uniqueJobs.length) {
   console.error('Nothing to export. Populate scripts/models.config.json (npcIds or names).');
   process.exit(1);
 }
@@ -101,7 +105,7 @@ const newestGlbSince = (since) => {
 };
 
 let ok = 0;
-for (const job of jobs.slice(0, LIMIT)) {
+for (const job of uniqueJobs.slice(0, LIMIT)) {
   const t0 = Date.now() - 1000;
   try {
     // ── EXPORT (confirmed CLI) ─────────────────────────────────────────────
@@ -119,4 +123,4 @@ for (const job of jobs.slice(0, LIMIT)) {
   }
 }
 
-console.log(`\nDone: ${ok}/${jobs.length} model(s) → public/models/. Now run: npm run models:manifest`);
+console.log(`\nDone: ${ok}/${uniqueJobs.length} model(s) → public/models/. Now run: npm run models:manifest`);
