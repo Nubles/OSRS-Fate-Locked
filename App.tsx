@@ -209,7 +209,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
           {/* Logo Section */}
           <div className="flex items-center gap-3 shrink-0">
             <div className="w-10 h-10 bg-gradient-to-br from-amber-600 to-amber-900 rounded-lg flex items-center justify-center border border-amber-500/50 shadow-inner">
-              <WikiIcon file="Ironman_helm.png" alt="Ironman" Fallback={Key} size={24} className="drop-shadow-md" />
+              <WikiIcon file="Crystal_key.png" alt="Fate Locked" Fallback={Key} size={24} className="drop-shadow-md" />
             </div>
             <div>
               <h1 className="text-lg font-black text-gray-100 tracking-tight uppercase leading-none">Fate Locked Ironman</h1>
