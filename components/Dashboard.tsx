@@ -819,22 +819,22 @@ export const Dashboard: React.FC = () => {
       
       {/* Header */}
       <div className="p-4 border-b border-white/5 bg-[#1b1b1b] shrink-0">
-         <div className="flex justify-between items-center mb-3">
-             <h2 className="text-lg font-bold text-osrs-gold flex items-center gap-2">
-                 Progression Dashboard
+         <div className="flex flex-wrap justify-between items-center gap-y-2 mb-3">
+             <h2 className="text-lg font-bold text-osrs-gold flex flex-wrap items-center gap-2 min-w-0">
+                 <span className="whitespace-nowrap">Progression Dashboard</span>
                  <span
-                   className="text-[10px] font-normal text-amber-200 bg-amber-900/40 px-2 py-0.5 rounded border border-amber-500/30 whitespace-nowrap"
+                   className="text-[10px] font-normal text-amber-200 bg-amber-900/40 px-2 py-0.5 rounded border border-amber-500/30 whitespace-nowrap shrink-0"
                    title={activeMode.description}
                  >
                     {activeMode.name} Mode
                  </span>
                  {specialKeys > 0 && (
-                    <span className={`text-[10px] font-normal text-purple-200 bg-purple-900/50 px-2 py-0.5 rounded border border-purple-500/30 flex items-center gap-1 whitespace-nowrap ${animationsEnabled ? 'animate-pulse' : ''}`}>
+                    <span className={`text-[10px] font-normal text-purple-200 bg-purple-900/50 px-2 py-0.5 rounded border border-purple-500/30 flex items-center gap-1 whitespace-nowrap shrink-0 ${animationsEnabled ? 'animate-pulse' : ''}`}>
                         <Sparkles size={10} /> Omni-Key Active
                     </span>
                  )}
              </h2>
-             <div className="flex items-center gap-3">
+             <div className="flex flex-wrap items-center justify-end gap-3">
                <button
                  onClick={() => setShowGoalPlanner(true)}
                  className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-cyan-500/30 bg-cyan-950/30 hover:bg-cyan-900/40 text-cyan-300 text-[11px] font-medium whitespace-nowrap transition-colors"
