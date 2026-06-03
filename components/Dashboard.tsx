@@ -926,7 +926,7 @@ export const Dashboard: React.FC = () => {
 
       {/* Tabs & Search */}
       <div className="flex flex-col md:flex-row border-b border-white/5 bg-[#161616] shrink-0">
-          <div className="flex flex-1 overflow-x-auto no-scrollbar">
+          <div data-tour="dashtabs" className="flex flex-1 overflow-x-auto no-scrollbar">
               {TABS.map(tab => {
                   const isActive = activeTab === tab.id;
                   return (

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import {
   Search, CornerDownLeft, ArrowUp, ArrowDown, User, Globe, Swords, BookOpen,
   Library, Coins, ShoppingBag, ScrollText, Route, Trophy, Sparkles, Skull,
-  BarChart3, Map, Wand2, Share2, RefreshCw, Settings2, Gauge, Film, Zap,
+  BarChart3, Map, Wand2, Share2, RefreshCw, Settings2, Gauge, Film, Zap, Compass,
   type LucideIcon,
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
@@ -67,6 +67,7 @@ export const CommandPalette: React.FC = () => {
       { id: 'open-mode', title: 'Game Mode', subtitle: 'Vanilla, Hardcore, Custom…', group: 'Account', icon: Settings2, keywords: 'game mode ruleset difficulty hardcore custom', run: go('open:gamemode') },
       { id: 'open-oracle', title: 'Search all content…', subtitle: 'Find any unlockable via the Oracle', group: 'Navigate', icon: Search, keywords: 'oracle search content items find anything lookup', run: go('open:oracle') },
       // Actions
+      { id: 'act-tour', title: 'Take the guided tour', subtitle: 'A 60-second walkthrough of the app', group: 'Action', icon: Compass, keywords: 'tour guide walkthrough help onboarding learn how', run: () => { setOpen(false); setTimeout(() => window.dispatchEvent(new CustomEvent('fate:start-tour')), 60); } },
       { id: 'act-anim', title: animationsEnabled ? 'Turn animations off' : 'Turn animations on', subtitle: 'Toggle motion & effects', group: 'Action', icon: Zap, keywords: 'animations motion effects toggle reduce', run: () => { toggleAnimations(); setOpen(false); } },
     ];
   }, [animationsEnabled, toggleAnimations]);

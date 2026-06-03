@@ -11,6 +11,7 @@ import { LogViewer } from './components/LogViewer';
 import { SectionGuide, GUIDES } from './components/SectionGuide';
 import { PopOnChange } from './components/PopOnChange';
 import { CommandPalette } from './components/CommandPalette';
+import { GuidedTour } from './components/GuidedTour';
 import { VoidAltar } from './components/VoidAltar';
 import { TransmutationEffect } from './components/TransmutationEffect';
 import { ClarityEffect, GreedEffect, ChaosEffect } from './components/RitualEffects';
@@ -228,7 +229,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                       </div>
             </div>
             <div className="hidden md:block w-px h-8 bg-white/5"></div>
-            <div className="flex items-center gap-3 justify-center">
+            <div data-tour="keys" className="flex items-center gap-3 justify-center">
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg min-w-[60px] justify-center">
                    <Key className="w-4 h-4 text-amber-400" />
                    <span className="font-bold text-amber-100 text-lg leading-none"><PopOnChange value={keys} /></span>
@@ -252,6 +253,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
              <input type="file" ref={fileInputRef} className="hidden" accept=".json,.fate" onChange={handleFileChange} />
 
              <button
+                data-tour="altar"
                 onClick={() => setShowAltar(true)}
                 className={`h-8 group px-3 rounded-lg border font-bold text-[10px] uppercase tracking-wider flex items-center gap-2 transition-all shadow-lg ${activeBuff !== 'NONE' ? activeBuff === 'GREED' ? 'bg-amber-900/40 border-amber-500 text-amber-300' : 'bg-blue-900/40 border-blue-500 text-blue-300' : 'bg-[#252525] border-purple-500/30 text-purple-300 hover:bg-purple-900/20'}`}
              >
@@ -260,6 +262,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
              </button>
 
              <button
+               data-tour="palette"
                onClick={() => window.dispatchEvent(new CustomEvent('fate:open-palette'))}
                className="h-8 px-2.5 rounded-lg border border-white/10 bg-[#252525] hover:bg-white/5 hover:border-white/20 text-gray-400 hover:text-white flex items-center gap-2 transition-colors group"
                title="Command palette — jump to anything"
@@ -321,12 +324,14 @@ const ControlPanel = () => {
       {/* Tabs */}
       <div className="flex border-b border-[#333] bg-[#161616] shrink-0">
         <button
+          data-tour="farm"
           onClick={() => setActiveTab('FARM')}
           className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'FARM' ? 'bg-[#252525] text-green-400 border-b-2 border-green-400' : 'text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1a]'}`}
         >
           <Swords size={14} /> Farm Keys
         </button>
         <button
+          data-tour="spend"
           onClick={() => setActiveTab('SPEND')}
           className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'SPEND' ? 'bg-[#252525] text-osrs-gold border-b-2 border-osrs-gold' : 'text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1a]'}`}
         >
@@ -514,6 +519,8 @@ const GameLayout = () => {
 
       {/* Global ⌘K command palette — navigates via fate:nav events. */}
       <CommandPalette />
+      {/* Replayable spotlight tour — start via fate:start-tour. */}
+      <GuidedTour />
 
       {/* Main Command Center Layout */}
       <main className="max-w-[1600px] mx-auto px-4 py-4 h-[calc(100vh-80px)]">
