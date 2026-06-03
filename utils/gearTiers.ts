@@ -55,6 +55,14 @@ const NAMED_TIERS: [RegExp, number][] = [
   [/(blood|blue|eclipse) moon/, 7],
   [/eclipse atlatl/, 7],
   [/dual macuahuitl/, 7],
+  [/hueycoatl hide/, 7],
+  // prestige / mid items the stat fallback over-rates (high raw defence/accuracy
+  // that doesn't reflect real strength), pinned to sensible tiers
+  [/3rd age/, 8],
+  [/staff of (light|balance)/, 7],
+  [/purging staff/, 8],
+  // junk Tourist Trap arrows with bogus dataset bonuses (really unusable)
+  [/(barbed|blunt|bullet|field) arrow/, 1],
   // capes
   [/infernal cape|tzhaar.?ket.?om/, 9],
   [/fire (max )?cape/, 8],

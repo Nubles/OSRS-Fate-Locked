@@ -79,6 +79,11 @@ describe('gear tiers', () => {
     expect(canonicalTierFromName('Eclipse moon helm')).toBe(7);
     expect(canonicalTierFromName('Blood moon tassets')).toBe(7);
     expect(canonicalTierFromName('Sunfire fanatic helm')).toBe(8);
+    // over-rated by the stat fallback → pinned down
+    expect(canonicalTierFromName('3rd age platebody')).toBe(8);
+    expect(canonicalTierFromName('3rd age range top')).toBe(8);
+    expect(canonicalTierFromName('Staff of light')).toBe(7);
+    expect(canonicalTierFromName('Barbed arrow')).toBe(1); // bogus dataset stats
   });
 
   it('tiers god-themed clue cosmetics by their base material, not the god', () => {
