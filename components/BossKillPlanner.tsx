@@ -11,6 +11,8 @@ import { gearService } from '../services/GearService';
 import { monsterService, MonsterStats } from '../services/MonsterService';
 import { sumBonuses, GearItem, ZERO_BONUSES } from '../utils/gearStats';
 import { planBoss, BossPlan, BOSS_ALIASES, PlayerCombat, Readiness, Danger } from '../utils/bossPlanner';
+import { EntityModel } from './EntityModel';
+import { modelFor } from '../data/entityModels';
 
 interface Props { onClose: () => void }
 type Status = 'loading' | 'ready' | 'error';
@@ -168,7 +170,11 @@ const Detail: React.FC<{ boss: string; monster: MonsterStats; plan: BossPlan; we
   return (
     <div className="space-y-4 animate-in fade-in duration-200">
       <div className="flex items-center gap-3">
-        <img src={monsterImg(monster.imageFile)} alt="" className="w-12 h-12 object-contain shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.visibility = 'hidden'; }} />
+        {modelFor(boss) ? (
+          <EntityModel src={modelFor(boss)} poster={monsterImg(monster.imageFile)} alt={boss} size={56} className="shrink-0" />
+        ) : (
+          <img src={monsterImg(monster.imageFile)} alt="" className="w-12 h-12 object-contain shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.visibility = 'hidden'; }} />
+        )}
         <div className="min-w-0">
           <h3 className="text-lg font-bold text-white leading-tight truncate">{boss}</h3>
           <p className="text-[11px] text-gray-500">{monster.version ? `${monster.version} · ` : ''}Lvl {monster.level} · HP {monster.hp}</p>

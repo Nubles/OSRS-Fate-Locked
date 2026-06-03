@@ -4,20 +4,22 @@
  *
  * IP: OSRS models are Jagex's intellectual property — we do NOT bundle them.
  * To wire up a real entity, export its model yourself (e.g. via RuneMonk /
- * RuneApps), drop the `.glb` into /public/models/<slug>.glb, and point its entry
- * at `/models/<slug>.glb`. The single entry below uses a royalty-free PLACEHOLDER
- * model (Google's <model-viewer> sample asset) purely to demonstrate the
- * pipeline end-to-end; replace or remove it.
+ * RuneApps), drop the `.glb` into /public/models/<slug>.glb, and add its entry
+ * below pointing at `/models/<slug>.glb`.
+ *
+ * Ships DORMANT: the registry is empty, so the app behaves exactly as before
+ * (2D sprites) until you add models. No game assets are bundled.
  */
 
-/** Our own trivial generated model (a gold cube) so the pipeline is visible
+/** Our own trivial generated model (a gold cube) so the pipeline can be tested
  *  without any game asset. See scripts/gen-placeholder-glb.mjs. */
 export const PLACEHOLDER_MODEL = '/models/placeholder.glb';
 
 export const MODEL_REGISTRY: Record<string, string> = {
-  // DEMO ONLY — placeholder model. Replace with '/models/vorkath.glb' once you
-  // drop a real export into /public/models, or delete this entry.
-  Vorkath: PLACEHOLDER_MODEL,
+  // Add one line per entity once a real export is in /public/models, e.g.:
+  //   Vorkath: '/models/vorkath.glb',
+  // To preview the pipeline with the bundled placeholder cube, temporarily add:
+  //   Vorkath: PLACEHOLDER_MODEL,
 };
 
 /** The model URL for an unlock name, or undefined to fall back to its sprite. */
