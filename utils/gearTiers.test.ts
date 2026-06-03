@@ -75,6 +75,23 @@ describe('gear tiers', () => {
     expect(canonicalTierFromName('Abyssal tentacle')).toBe(8);
   });
 
+  it('tiers god-themed clue cosmetics by their base material, not the god', () => {
+    // The reported bug: cosmetic god armour was reading as God Wars (T8).
+    expect(canonicalTierFromName('Armadyl rune helmet')).toBe(5);
+    expect(canonicalTierFromName('Bandos rune platebody')).toBe(5);
+    expect(canonicalTierFromName('Guthix adamant kiteshield')).toBe(4);
+    // god blessed dragonhide → standard d'hide tier (uncoloured = T5), and all
+    // gods agree with each other instead of being scattered.
+    expect(canonicalTierFromName("Armadyl d'hide body")).toBe(5);
+    expect(canonicalTierFromName("Ancient d'hide body")).toBe(5);
+    expect(canonicalTierFromName("Saradomin d'hide body")).toBe(5);
+    expect(canonicalTierFromName('Gilded platebody')).toBe(5);
+    // ...but the real God Wars armour (no material word) is still T8.
+    expect(canonicalTierFromName('Bandos chestplate')).toBe(8);
+    expect(canonicalTierFromName('Armadyl helmet')).toBe(8);
+    expect(canonicalTierFromName('Armadyl godsword')).toBe(8);
+  });
+
   it('returns null only for genuinely unclassifiable items', () => {
     expect(canonicalTierFromName('Cabbage')).toBeNull();
     expect(canonicalTierFromName('Spinning plate')).toBeNull();

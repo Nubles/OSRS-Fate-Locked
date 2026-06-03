@@ -82,15 +82,65 @@ const NAMED_TIERS: [RegExp, number][] = [
   [/slayer helmet \(i\)|black mask \(i\)/, 7],
   [/slayer helmet|black mask/, 6],
   [/proselyte/, 5],
+  [/gilded/, 5], // gilded armour = rune stats
 ];
+
+/** God-name / decorative prefixes used by clue-scroll cosmetics. */
+const COSMETIC_PREFIX = /(armadyl|bandos|saradomin|zamorak|guthix|ancient|gilded)/;
+
+/**
+ * Tier purely from a base material word (metal / dragonhide / bow wood / robe),
+ * or null. Used both for the main ladder and to re-tier god-themed clue
+ * cosmetics by what they actually are (e.g. "Armadyl d'hide" → standard d'hide,
+ * not God Wars). Dragonhide without a colour (blessed / gilded sets) → T5.
+ */
+const materialTier = (s: string): number | null => {
+  const dh = '(d.?hide|dragonhide|dragon\\s*leather)';
+  const bow = '(short|long|comp(osite)?)?\\s*bow';
+  // dragonhide by colour; uncoloured (blessed/god/gilded) → standard T5
+  if (new RegExp(`black\\s*${dh}`).test(s)) return 7;
+  if (new RegExp(`red\\s*${dh}`).test(s)) return 6;
+  if (new RegExp(`blue\\s*${dh}`).test(s)) return 5;
+  if (new RegExp(`green\\s*${dh}`).test(s)) return 4;
+  if (new RegExp(dh).test(s)) return 5;
+  // bows by wood
+  if (new RegExp(`magic\\s*${bow}`).test(s)) return 6;
+  if (new RegExp(`yew\\s*${bow}`).test(s)) return 5;
+  if (new RegExp(`maple\\s*${bow}`).test(s)) return 4;
+  if (new RegExp(`willow\\s*${bow}`).test(s)) return 3;
+  if (new RegExp(`oak\\s*${bow}`).test(s)) return 2;
+  // robes / staves
+  if (/ancient staff/.test(s)) return 6;
+  if (/iban/.test(s)) return 5;
+  if (/mystic/.test(s)) return 4;
+  if (/xerician/.test(s)) return 3;
+  if (/initiate/.test(s)) return 3;
+  // metals
+  if (/\bdragon\b/.test(s)) return 6;
+  if (/\brun(e|ite)\b/.test(s)) return 5;
+  if (/adamant(ite)?/.test(s)) return 4;
+  if (/mithril/.test(s)) return 3;
+  if (/steel/.test(s)) return 2;
+  if (/\bblack\b/.test(s)) return 2;
+  if (/studded/.test(s)) return 2;
+  if (/bronze|\biron\b|wooden|\bleather\b|hard leather|training/.test(s)) return 1;
+  return null;
+};
 
 export const canonicalTierFromName = (name: string): number | null => {
   const s = name.toLowerCase();
-  const dhide = '(d.?hide|dragonhide|dragon\\s*leather)';
-  const bow = '(short|long|comp(osite)?)?\\s*bow';
 
   // Named uniques first (so e.g. "Dragon defender" beats the generic "Dragon").
   for (const [re, tier] of NAMED_TIERS) if (re.test(s)) return tier;
+
+  // God-themed / decorative clue-scroll cosmetics (e.g. "Armadyl rune helmet",
+  // "Bandos d'hide body") reskin a base material set — tier by the material, not
+  // the god, so they read as normal gear instead of God Wars (T8). Real GWD
+  // armour ("Bandos chestplate") has no material word, so it falls through.
+  if (COSMETIC_PREFIX.test(s)) {
+    const m = materialTier(s);
+    if (m != null) return m;
+  }
 
   // T9 — raids / endgame
   if (/(ancestral|torva|masori|twisted bow|scythe of vitur|sanguinesti|tumeken|justiciar|avernic|primordial|pegasian|eternal boot|dragon hunter|inquisitor|harmonised|volatile|eldritch|nightmare staff|venator|ultor|magus|bellator|lightbearer|elidinis|osmumten|virtus|zaryte)/.test(s)) return 9;
@@ -98,44 +148,11 @@ export const canonicalTierFromName = (name: string): number | null => {
   // T8 — God Wars / Zenyte / high-end
   if (/(bandos|armadyl|saradomin sword|saradomin's blessed|zamorakian|godsword|zenyte|amulet of anguish|necklace of anguish|amulet of torture|ring of suffering|tormented bracelet|occult|trident|staff of the dead|toxic staff|dragonfire|dragon warhammer|dragon claws|crystal (helm|body|legs|armour|bow|shield|halberd)|faerdhinen|brimstone ring)/.test(s)) return 8;
 
-  // T7 — Barrows / Black d'hide / Obsidian
+  // T7 — Barrows / Obsidian
   if (/(ahrim|karil|dharok|guthan|torag|verac|obsidian|tzhaar|toktz|tztok)/.test(s)) return 7;
-  if (new RegExp(`black\\s*${dhide}`).test(s)) return 7;
 
-  // T6 — Dragon (metal) / Red d'hide / Magic bow / Ancient staff
-  if (new RegExp(`red\\s*${dhide}`).test(s)) return 6;
-  if (new RegExp(`magic\\s*${bow}`).test(s)) return 6;
-  if (/ancient staff/.test(s)) return 6;
-  if (/\bdragon\b/.test(s)) return 6;
-
-  // T5 — Rune / Blue d'hide / Yew bow / Iban
-  if (new RegExp(`blue\\s*${dhide}`).test(s)) return 5;
-  if (/\brun(e|ite)\b/.test(s)) return 5;
-  if (new RegExp(`yew\\s*${bow}`).test(s)) return 5;
-  if (/iban/.test(s)) return 5;
-
-  // T4 — Adamant / Green d'hide / Maple bow / Mystic
-  if (new RegExp(`green\\s*${dhide}`).test(s)) return 4;
-  if (/adamant(ite)?/.test(s)) return 4;
-  if (new RegExp(`maple\\s*${bow}`).test(s)) return 4;
-  if (/mystic/.test(s)) return 4;
-
-  // T3 — Mithril / Initiate / Willow bow / Xerician
-  if (/mithril/.test(s)) return 3;
-  if (/initiate/.test(s)) return 3;
-  if (new RegExp(`willow\\s*${bow}`).test(s)) return 3;
-  if (/xerician/.test(s)) return 3;
-
-  // T2 — Steel / Black (metal) / Studded / Oak bow
-  if (/steel/.test(s)) return 2;
-  if (/\bblack\b/.test(s)) return 2;
-  if (/studded/.test(s)) return 2;
-  if (new RegExp(`oak\\s*${bow}`).test(s)) return 2;
-
-  // T1 — Bronze / Iron / Leather / Wooden
-  if (/bronze|\biron\b|wooden|\bleather\b|hard leather|training/.test(s)) return 1;
-
-  return null;
+  // Everything else by base material (metal / dragonhide / bow / robe).
+  return materialTier(s);
 };
 
 /** The combat style an item is built for (or 'armour' if it has no offence). */
