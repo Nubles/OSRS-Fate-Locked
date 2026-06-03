@@ -12,6 +12,7 @@ import { SectionGuide, GUIDES } from './components/SectionGuide';
 import { PopOnChange } from './components/PopOnChange';
 import { CommandPalette } from './components/CommandPalette';
 import { GuidedTour } from './components/GuidedTour';
+import { WikiIcon } from './components/WikiIcon';
 import { VoidAltar } from './components/VoidAltar';
 import { TransmutationEffect } from './components/TransmutationEffect';
 import { ClarityEffect, GreedEffect, ChaosEffect } from './components/RitualEffects';
@@ -208,7 +209,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
           {/* Logo Section */}
           <div className="flex items-center gap-3 shrink-0">
             <div className="w-10 h-10 bg-gradient-to-br from-amber-600 to-amber-900 rounded-lg flex items-center justify-center border border-amber-500/50 shadow-inner">
-              <span className="text-2xl drop-shadow-md">🗝️</span>
+              <WikiIcon file="Ironman_helm.png" alt="Ironman" Fallback={Key} size={24} className="drop-shadow-md" />
             </div>
             <div>
               <h1 className="text-lg font-black text-gray-100 tracking-tight uppercase leading-none">Fate Locked Ironman</h1>
@@ -328,20 +329,20 @@ const ControlPanel = () => {
           onClick={() => setActiveTab('FARM')}
           className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'FARM' ? 'bg-[#252525] text-green-400 border-b-2 border-green-400' : 'text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1a]'}`}
         >
-          <Swords size={14} /> Farm Keys
+          <WikiIcon file="Slayer_icon.png" alt="Farm Keys" Fallback={Swords} size={15} className={activeTab === 'FARM' ? '' : 'opacity-60 grayscale'} /> Farm Keys
         </button>
         <button
           data-tour="spend"
           onClick={() => setActiveTab('SPEND')}
           className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'SPEND' ? 'bg-[#252525] text-osrs-gold border-b-2 border-osrs-gold' : 'text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1a]'}`}
         >
-          <ShoppingBag size={14} /> Spend Keys
+          <WikiIcon file="Mystery_box.png" alt="Spend Keys" Fallback={ShoppingBag} size={15} className={activeTab === 'SPEND' ? '' : 'opacity-60 grayscale'} /> Spend Keys
         </button>
         <button
           onClick={() => setActiveTab('LOG')}
           className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'LOG' ? 'bg-[#252525] text-blue-400 border-b-2 border-blue-400' : 'text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1a]'}`}
         >
-          <ScrollText size={14} /> History
+          <WikiIcon file="Watch.png" alt="History" Fallback={ScrollText} size={15} className={activeTab === 'LOG' ? '' : 'opacity-60 grayscale'} /> History
         </button>
       </div>
 
