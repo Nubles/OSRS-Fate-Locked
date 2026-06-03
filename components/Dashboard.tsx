@@ -98,7 +98,7 @@ const RivalHeaderButton: React.FC<{ onClick: () => void }> = ({ onClick }) => {
 
   if (!rival) {
     return (
-      <button onClick={onClick} title="Race a Rival Ghost" className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-fuchsia-500/30 bg-fuchsia-950/30 hover:bg-fuchsia-900/40 text-fuchsia-300 text-[11px] font-medium transition-colors">
+      <button onClick={onClick} title="Race a Rival Ghost" className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-fuchsia-500/30 bg-fuchsia-950/30 hover:bg-fuchsia-900/40 text-fuchsia-300 text-[11px] font-medium whitespace-nowrap transition-colors">
         <Swords size={12} /> Rival
       </button>
     );
@@ -109,7 +109,7 @@ const RivalHeaderButton: React.FC<{ onClick: () => void }> = ({ onClick }) => {
     <button
       onClick={onClick}
       title={`${rival.name}: ${st.lead > 0 ? `you +${st.lead}%` : st.lead < 0 ? `rival +${-st.lead}%` : 'tied'}`}
-      className={`flex items-center gap-1.5 px-2.5 py-1 rounded border text-[11px] font-bold transition-colors ${tie ? 'border-white/15 bg-white/5 text-gray-300' : ahead ? 'border-emerald-500/40 bg-emerald-950/30 text-emerald-300' : 'border-red-500/40 bg-red-950/30 text-red-300'}`}
+      className={`flex items-center gap-1.5 px-2.5 py-1 rounded border text-[11px] font-bold whitespace-nowrap transition-colors ${tie ? 'border-white/15 bg-white/5 text-gray-300' : ahead ? 'border-emerald-500/40 bg-emerald-950/30 text-emerald-300' : 'border-red-500/40 bg-red-950/30 text-red-300'}`}
     >
       <span>{rival.emoji}</span>
       <span>{tie ? 'TIE' : `${ahead ? '▲' : '▼'} ${Math.abs(st.lead)}%`}</span>
@@ -823,13 +823,13 @@ export const Dashboard: React.FC = () => {
              <h2 className="text-lg font-bold text-osrs-gold flex items-center gap-2">
                  Progression Dashboard
                  <span
-                   className="text-[10px] font-normal text-amber-200 bg-amber-900/40 px-2 py-0.5 rounded border border-amber-500/30"
+                   className="text-[10px] font-normal text-amber-200 bg-amber-900/40 px-2 py-0.5 rounded border border-amber-500/30 whitespace-nowrap"
                    title={activeMode.description}
                  >
                     {activeMode.name} Mode
                  </span>
                  {specialKeys > 0 && (
-                    <span className={`text-[10px] font-normal text-purple-200 bg-purple-900/50 px-2 py-0.5 rounded border border-purple-500/30 flex items-center gap-1 ${animationsEnabled ? 'animate-pulse' : ''}`}>
+                    <span className={`text-[10px] font-normal text-purple-200 bg-purple-900/50 px-2 py-0.5 rounded border border-purple-500/30 flex items-center gap-1 whitespace-nowrap ${animationsEnabled ? 'animate-pulse' : ''}`}>
                         <Sparkles size={10} /> Omni-Key Active
                     </span>
                  )}
@@ -837,7 +837,7 @@ export const Dashboard: React.FC = () => {
              <div className="flex items-center gap-3">
                <button
                  onClick={() => setShowGoalPlanner(true)}
-                 className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-cyan-500/30 bg-cyan-950/30 hover:bg-cyan-900/40 text-cyan-300 text-[11px] font-medium transition-colors"
+                 className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-cyan-500/30 bg-cyan-950/30 hover:bg-cyan-900/40 text-cyan-300 text-[11px] font-medium whitespace-nowrap transition-colors"
                  title="Plan the route to any quest, diary, or region"
                >
                  <Route size={12} />
@@ -845,7 +845,7 @@ export const Dashboard: React.FC = () => {
                </button>
                <button
                  onClick={() => setShowAchievements(true)}
-                 className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-amber-500/30 bg-amber-950/30 hover:bg-amber-900/40 text-amber-300 text-[11px] font-medium transition-colors"
+                 className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-amber-500/30 bg-amber-950/30 hover:bg-amber-900/40 text-amber-300 text-[11px] font-medium whitespace-nowrap transition-colors"
                  title="View achievements & milestones"
                >
                  <Trophy size={12} />
@@ -853,7 +853,7 @@ export const Dashboard: React.FC = () => {
                </button>
                <button
                  onClick={() => setShowForecast(true)}
-                 className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-fuchsia-500/30 bg-fuchsia-950/30 hover:bg-fuchsia-900/40 text-fuchsia-300 text-[11px] font-medium transition-colors"
+                 className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-fuchsia-500/30 bg-fuchsia-950/30 hover:bg-fuchsia-900/40 text-fuchsia-300 text-[11px] font-medium whitespace-nowrap transition-colors"
                  title="Forecast how long Fate will take to unlock something"
                >
                  <Sparkles size={12} />
@@ -862,7 +862,7 @@ export const Dashboard: React.FC = () => {
                <RivalHeaderButton onClick={() => setShowRival(true)} />
                <button
                  onClick={() => setShowBossPlanner(true)}
-                 className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-red-500/30 bg-red-950/30 hover:bg-red-900/40 text-red-300 text-[11px] font-medium transition-colors"
+                 className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-red-500/30 bg-red-950/30 hover:bg-red-900/40 text-red-300 text-[11px] font-medium whitespace-nowrap transition-colors"
                  title="Plan boss kills: DPS, time-to-kill and readiness"
                >
                  <Skull size={12} />
@@ -870,7 +870,7 @@ export const Dashboard: React.FC = () => {
                </button>
                <button
                  onClick={() => setShowRunCard(true)}
-                 className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-amber-500/30 bg-amber-950/30 hover:bg-amber-900/40 text-amber-300 text-[11px] font-medium transition-colors"
+                 className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-amber-500/30 bg-amber-950/30 hover:bg-amber-900/40 text-amber-300 text-[11px] font-medium whitespace-nowrap transition-colors"
                  title="Generate shareable run card"
                >
                  <Share2 size={12} />
