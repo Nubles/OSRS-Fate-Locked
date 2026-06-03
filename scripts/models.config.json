@@ -1,0 +1,10 @@
+{
+  "_comment": "Entities to export with scripts/export-models.mjs. 'npcIds' is most reliable (find an NPC's id on its OSRS Wiki page). 'names' is auto-resolved by scanning the cache when you pass --names. Slugs must match the file convention (lowercase, dashes), e.g. king-black-dragon.",
+  "npcIds": {
+    "zulrah": 2042
+  },
+  "names": [
+    "Vorkath",
+    "King Black Dragon"
+  ]
+}

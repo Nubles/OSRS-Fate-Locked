@@ -6,6 +6,7 @@
   "homepage": "https://nubles.github.io/OSRS-Fate-Locked",
   "scripts": {
     "models:manifest": "node scripts/gen-model-manifest.mjs",
+    "models:export": "node scripts/export-models.mjs",
     "dev": "node scripts/gen-model-manifest.mjs && vite",
     "build": "node scripts/gen-model-manifest.mjs && vite build",
     "preview": "vite preview",
