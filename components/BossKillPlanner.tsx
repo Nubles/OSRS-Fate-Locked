@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   X, Swords, Loader2, AlertCircle, RefreshCw, Crosshair, Shield, Zap, Clock,
-  Skull, Crown, Gauge, Heart, Info, ChevronRight, FlaskConical,
+  Skull, Crown, Gauge, Heart, Info, ChevronRight, FlaskConical, Box,
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { EQUIPMENT_SLOTS } from '../constants';
@@ -167,11 +167,13 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
 const Detail: React.FC<{ boss: string; monster: MonsterStats; plan: BossPlan; weaponName?: string }> = ({ boss, monster, plan, weaponName }) => {
   const r = READINESS[plan.readiness];
   const d = DANGER[plan.danger];
+  const model = modelFor(boss);
+  const [show3D, setShow3D] = useState(true);
   return (
     <div className="space-y-4 animate-in fade-in duration-200">
       <div className="flex items-center gap-3">
-        {modelFor(boss) ? (
-          <EntityModel src={modelFor(boss)} poster={monsterImg(monster.imageFile)} alt={boss} size={56} className="shrink-0" />
+        {model && show3D ? (
+          <EntityModel src={model} poster={monsterImg(monster.imageFile)} alt={boss} size={64} interactive className="shrink-0" />
         ) : (
           <img src={monsterImg(monster.imageFile)} alt="" className="w-12 h-12 object-contain shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.visibility = 'hidden'; }} />
         )}
@@ -179,6 +181,15 @@ const Detail: React.FC<{ boss: string; monster: MonsterStats; plan: BossPlan; we
           <h3 className="text-lg font-bold text-white leading-tight truncate">{boss}</h3>
           <p className="text-[11px] text-gray-500">{monster.version ? `${monster.version} · ` : ''}Lvl {monster.level} · HP {monster.hp}</p>
         </div>
+        {model && (
+          <button
+            onClick={() => setShow3D((s) => !s)}
+            title={show3D ? 'Show 2D sprite' : 'Show 3D model'}
+            className="ml-auto shrink-0 flex items-center gap-1 px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[10px] font-bold text-gray-400 hover:text-white hover:border-white/20 transition-colors"
+          >
+            <Box size={11} /> {show3D ? '3D' : '2D'}
+          </button>
+        )}
       </div>
 
       {/* Readiness banner */}
