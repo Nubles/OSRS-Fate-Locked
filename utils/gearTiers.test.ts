@@ -73,6 +73,12 @@ describe('gear tiers', () => {
     expect(canonicalTierFromName('Abyssal whip')).toBe(7);
     expect(canonicalTierFromName('Toxic blowpipe')).toBe(8);
     expect(canonicalTierFromName('Abyssal tentacle')).toBe(8);
+    // modern sets are pinned so a set reads consistently (raw bonuses scatter it)
+    expect(canonicalTierFromName('Calamity chest')).toBe(8);
+    expect(canonicalTierFromName('Elite calamity breeches')).toBe(9);
+    expect(canonicalTierFromName('Eclipse moon helm')).toBe(7);
+    expect(canonicalTierFromName('Blood moon tassets')).toBe(7);
+    expect(canonicalTierFromName('Sunfire fanatic helm')).toBe(8);
   });
 
   it('tiers god-themed clue cosmetics by their base material, not the god', () => {

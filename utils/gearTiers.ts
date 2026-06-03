@@ -44,6 +44,17 @@ const NAMED_TIERS: [RegExp, number][] = [
   [/granite maul/, 6],
   [/(light|heavy) ballista/, 8],
   [/craw's bow|webweaver|crystal bow/, 8],
+  // modern / Colosseum / Varlamore sets whose strength is a set effect or
+  // mechanic, not raw bonuses (so a set isn't scattered across tiers).
+  [/elite calamity/, 9],
+  [/calamity/, 8],
+  [/sunfire fanatic/, 8],
+  [/echo boots/, 8],
+  [/radiant oathplate/, 9],
+  [/oathplate/, 8],
+  [/(blood|blue|eclipse) moon/, 7],
+  [/eclipse atlatl/, 7],
+  [/dual macuahuitl/, 7],
   // capes
   [/infernal cape|tzhaar.?ket.?om/, 9],
   [/fire (max )?cape/, 8],
