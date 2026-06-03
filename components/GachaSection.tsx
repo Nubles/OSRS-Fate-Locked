@@ -82,7 +82,7 @@ const SpendCard: React.FC<SpendCardProps> = ({
       onClick={onClick}
       disabled={!isClickable}
       style={animate ? { animationDelay: `${index * 30}ms` } : undefined}
-      className={`relative overflow-hidden rounded-lg border-2 w-full text-left group flex flex-col p-3 h-full min-h-[140px] transition-all duration-200 ${animate ? 'animate-fade-in-up' : ''} active:scale-[0.98]
+      className={`relative overflow-hidden rounded-lg border-2 w-full text-left group flex flex-col p-2.5 h-full min-h-[104px] transition-all duration-200 ${animate ? 'animate-fade-in-up' : ''} active:scale-[0.98]
         ${isClickable
           ? `bg-[#1f1c17] border-[#3a352c] ${a.hoverBorder} ${a.hoverShadow} hover:-translate-y-1`
           : complete
@@ -96,42 +96,39 @@ const SpendCard: React.FC<SpendCardProps> = ({
 
       {/* Top: icon + price / done */}
       <div className={`flex justify-between items-start w-full relative z-10 transition-opacity duration-300 ${dim}`}>
-        <div className={`w-9 h-9 rounded-lg bg-black/40 border border-white/10 shadow-inner flex items-center justify-center shrink-0 ${a.icon} group-hover:scale-110 transition-transform duration-300`}>
-           {iconSrc ? <img src={iconSrc} alt={label} className="w-5 h-5 object-contain drop-shadow-md" /> : (Icon && <Icon size={20} strokeWidth={1.6} />)}
+        <div className={`w-8 h-8 rounded-lg bg-black/40 border border-white/10 shadow-inner flex items-center justify-center shrink-0 ${a.icon} group-hover:scale-110 transition-transform duration-300`}>
+           {iconSrc ? <img src={iconSrc} alt={label} className="w-[18px] h-[18px] object-contain drop-shadow-md" /> : (Icon && <Icon size={18} strokeWidth={1.6} />)}
         </div>
         {complete ? (
-           <span className="flex items-center gap-1 px-2 py-1 bg-emerald-900/40 text-emerald-300 text-[9px] font-bold uppercase rounded-md border border-emerald-700/50 tracking-wider"><Check size={10} strokeWidth={3} />Done</span>
+           <span className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-900/40 text-emerald-300 text-[9px] font-bold uppercase rounded border border-emerald-700/50 tracking-wider"><Check size={10} strokeWidth={3} />Done</span>
         ) : (
-           <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-black/40 border border-white/10 shadow-sm">
-              <Key size={11} className="text-osrs-gold" />
+           <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/40 border border-white/10 shadow-sm">
+              <Key size={10} className="text-osrs-gold" />
               <span className="text-osrs-gold font-bold text-sm leading-none text-shadow-osrs">{priceDisplay}</span>
            </div>
         )}
       </div>
 
       {/* Title */}
-      <div className={`relative z-10 mt-2.5 flex-1 transition-opacity duration-300 ${dim}`}>
+      <div className={`relative z-10 mt-1.5 flex-1 transition-opacity duration-300 ${dim}`}>
           <h3 className={`text-sm font-bold text-gray-100 ${a.titleHover} transition-colors leading-tight break-words`}>{label}</h3>
-          <p className="text-[10px] text-gray-500 font-mono mt-0.5 uppercase break-words leading-tight">{subLabel}</p>
+          <p className="text-[9px] text-gray-500 font-mono mt-0.5 uppercase break-words leading-tight">{subLabel}</p>
       </div>
 
-      {/* Progress */}
-      <div className={`relative z-10 mt-2 transition-opacity duration-300 ${dim}`}>
-        <div className="flex justify-between items-baseline text-[9px] font-mono mb-1">
-          <span className="text-gray-600 uppercase tracking-wider">Unlocked</span>
-          <span className="text-gray-300 font-bold">{unlocked}<span className="text-gray-600">/{total}</span></span>
+      {/* Progress + Roll affordance (one compact row) */}
+      <div className={`relative z-10 mt-1.5 flex items-center gap-2 transition-opacity duration-300 ${dim}`}>
+        <div className="flex-1 min-w-0">
+          <div className="h-1.5 bg-black/50 rounded-full overflow-hidden border border-white/5">
+            <div className={`h-full ${complete ? 'bg-emerald-400' : a.bar} rounded-full transition-all duration-700 ease-out`} style={{ width: `${complete ? 100 : pct}%` }} />
+          </div>
         </div>
-        <div className="h-1.5 bg-black/50 rounded-full overflow-hidden border border-white/5">
-          <div className={`h-full ${complete ? 'bg-emerald-400' : a.bar} rounded-full transition-all duration-700 ease-out`} style={{ width: `${complete ? 100 : pct}%` }} />
-        </div>
+        <span className="text-[9px] font-mono text-gray-400 font-bold shrink-0 leading-none">{unlocked}<span className="text-gray-600">/{total}</span></span>
+        {isClickable && (
+          <span className={`flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider shrink-0 ${a.ctaText} ${a.titleHover} transition-colors`}>
+            Roll <Dices size={11} className="group-hover:rotate-[24deg] transition-transform duration-300" />
+          </span>
+        )}
       </div>
-
-      {/* Roll CTA */}
-      {isClickable && (
-        <div className={`relative z-10 mt-2.5 flex items-center justify-center gap-1.5 py-1.5 rounded-md border bg-black/20 transition-all text-[11px] font-bold uppercase tracking-wider ${a.ctaBorder} ${a.ctaText} ${a.ctaHover}`}>
-          Roll <Dices size={13} className="group-hover:rotate-[24deg] transition-transform duration-300" />
-        </div>
-      )}
 
       {isLocked && (
            <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-black/40 backdrop-blur-[1px]">
@@ -292,7 +289,7 @@ export const GachaSection: React.FC = () => {
       )}
 
       {/* Chaos Key Section */}
-      <div className="pb-4">
+      <div className="pb-3">
         {chaosKeys > 0 ? (
             <button
                 onClick={handleChaosUnlock}
@@ -333,7 +330,7 @@ export const GachaSection: React.FC = () => {
       </div>
 
       {/* Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 custom-scrollbar content-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2.5 custom-scrollbar content-start">
         {SPEND_CATEGORIES.map((c, i) => (
           <SpendCard
             key={c.label}
