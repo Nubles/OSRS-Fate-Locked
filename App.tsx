@@ -10,6 +10,7 @@ import { Dashboard } from './components/Dashboard';
 import { LogViewer } from './components/LogViewer';
 import { SectionGuide, GUIDES } from './components/SectionGuide';
 import { PopOnChange } from './components/PopOnChange';
+import { CommandPalette } from './components/CommandPalette';
 import { VoidAltar } from './components/VoidAltar';
 import { TransmutationEffect } from './components/TransmutationEffect';
 import { ClarityEffect, GreedEffect, ChaosEffect } from './components/RitualEffects';
@@ -258,8 +259,18 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                 <span>{activeBuff === 'NONE' ? 'Altar' : activeBuff}</span>
              </button>
 
+             <button
+               onClick={() => window.dispatchEvent(new CustomEvent('fate:open-palette'))}
+               className="h-8 px-2.5 rounded-lg border border-white/10 bg-[#252525] hover:bg-white/5 hover:border-white/20 text-gray-400 hover:text-white flex items-center gap-2 transition-colors group"
+               title="Command palette — jump to anything"
+             >
+                <Search size={13} />
+                <span className="text-[11px] font-medium hidden sm:inline">Jump to…</span>
+                <kbd className="text-[9px] font-mono text-gray-500 border border-white/15 rounded px-1 py-0.5 hidden sm:inline group-hover:border-white/25">⌘K</kbd>
+             </button>
+
              <div className="flex items-center bg-[#252525] border border-white/10 rounded-lg p-0.5 gap-0.5 h-8">
-                 <button onClick={() => setShowOracle(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/5 rounded transition-colors" title="Oracle (Ctrl+K)"><Search size={14} /></button>
+                 <button onClick={() => setShowOracle(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/5 rounded transition-colors" title="Oracle — search content"><Search size={14} /></button>
                  <div className="w-px h-4 bg-white/10"></div>
                  <button onClick={() => setShowStrategy(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-emerald-400 hover:bg-white/5 rounded transition-colors" title="Strategy Guide"><Compass size={14} /></button>
                  <div className="w-px h-4 bg-white/10"></div>
@@ -294,6 +305,16 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
 // --- New Control Panel Component ---
 const ControlPanel = () => {
   const [activeTab, setActiveTab] = useState<'FARM' | 'SPEND' | 'LOG'>('FARM');
+
+  // Command-palette navigation to a control tab.
+  useEffect(() => {
+    const onNav = (e: Event) => {
+      const target = (e as CustomEvent<{ target?: string }>).detail?.target ?? '';
+      if (target.startsWith('ctrl:')) setActiveTab(target.slice(5) as 'FARM' | 'SPEND' | 'LOG');
+    };
+    window.addEventListener('fate:nav', onNav);
+    return () => window.removeEventListener('fate:nav', onNav);
+  }, []);
 
   return (
     <div className="flex flex-col h-full bg-[#1b1b1b] border border-[#333] rounded-lg overflow-hidden shadow-xl">
@@ -367,6 +388,26 @@ const GameLayout = () => {
     window.addEventListener('open-resource-engine', onOpen);
     return () => window.removeEventListener('open-resource-engine', onOpen);
   }, []);
+
+  // Command-palette navigation: open the modals this layout owns.
+  React.useEffect(() => {
+    const onNav = (e: Event) => {
+      const target = (e as CustomEvent<{ target?: string }>).detail?.target ?? '';
+      const map: Record<string, (v: boolean) => void> = {
+        'open:altar': setShowAltar,
+        'open:stats': setShowStats,
+        'open:reference': setShowReference,
+        'open:oracle': setShowOracle,
+        'open:strategy': setShowStrategy,
+        'open:supply': setShowSupplyChain,
+        'open:gamemode': setShowGameMode,
+        'open:sync': setShowSyncCode,
+      };
+      map[target]?.(true);
+    };
+    window.addEventListener('fate:nav', onNav);
+    return () => window.removeEventListener('fate:nav', onNav);
+  }, []);
   const [showGameMode, setShowGameMode] = useState(false);
   const [showSyncCode, setShowSyncCode] = useState(false);
   const [syncImportCode, setSyncImportCode] = useState<string | undefined>(undefined);
@@ -395,16 +436,8 @@ const GameLayout = () => {
     }
   }, [lastEvent, animationsEnabled]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        setShowOracle(prev => !prev);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  // Ctrl/⌘+K now opens the command palette (which can jump to the Oracle and
+  // everything else); the CommandPalette component owns that key handler.
 
   // A freshly-created profile prompts the player to choose a game mode while
   // the run is still empty (and the mode therefore still unlocked).
@@ -478,6 +511,9 @@ const GameLayout = () => {
         setShowGameMode={setShowGameMode}
         setShowSyncCode={setShowSyncCode}
       />
+
+      {/* Global ⌘K command palette — navigates via fate:nav events. */}
+      <CommandPalette />
 
       {/* Main Command Center Layout */}
       <main className="max-w-[1600px] mx-auto px-4 py-4 h-[calc(100vh-80px)]">

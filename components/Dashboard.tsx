@@ -301,6 +301,26 @@ export const Dashboard: React.FC = () => {
     return () => window.removeEventListener('navigate-journal', onNavigate);
   }, [setJournalSubTab]);
 
+  // Command-palette navigation: switch dashboard tabs and open the modals this
+  // component owns (fired as `fate:nav` window events by the ⌘K palette).
+  useEffect(() => {
+    const onNav = (e: Event) => {
+      const target = (e as CustomEvent<{ target?: string }>).detail?.target ?? '';
+      if (target.startsWith('tab:')) { setActiveTab(target.slice(4)); return; }
+      const opens: Record<string, (v: boolean) => void> = {
+        'open:goal': setShowGoalPlanner,
+        'open:achievements': setShowAchievements,
+        'open:forecast': setShowForecast,
+        'open:rival': setShowRival,
+        'open:killplanner': setShowBossPlanner,
+        'open:share': setShowRunCard,
+      };
+      opens[target]?.(true);
+    };
+    window.addEventListener('fate:nav', onNav);
+    return () => window.removeEventListener('fate:nav', onNav);
+  }, []);
+
   // --- Calculations ---
   const totalSkillTiers = useMemo(() => (Object.values(unlocks.skills) as number[]).reduce((a, b) => a + b, 0), [unlocks.skills]);
   const totalEquipTiers = useMemo(() => (Object.values(unlocks.equipment) as number[]).reduce((a, b) => a + b, 0), [unlocks.equipment]);
