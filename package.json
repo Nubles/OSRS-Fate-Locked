@@ -12,6 +12,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@google/model-viewer": "^4.3.0",
     "html2canvas": "^1.4.1",
     "lucide-react": "^0.344.0",
     "qrcode-generator": "^1.4.4",

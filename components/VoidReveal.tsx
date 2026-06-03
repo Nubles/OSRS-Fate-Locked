@@ -2,6 +2,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Sparkles, Map, Box, Copy, Shield, BookOpen, Footprints, Zap, Home, Store, Gamepad2, Skull, Package, Dna, ExternalLink, Flag, Check, Loader2 } from 'lucide-react';
 import { wikiUrlFor } from '../constants';
+import { EntityModel } from './EntityModel';
+import { modelFor } from '../data/entityModels';
 
 interface VoidRevealProps {
   itemName: string;
@@ -283,6 +285,7 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
   const isRegion = itemType.toLowerCase().includes('regions') || itemType.toLowerCase().includes('area');
   const RouletteIcon = rouletteIcons[rouletteIndex].icon;
   const description = getItemDescription(itemType, itemName);
+  const entityModel = modelFor(itemName);
 
   return (
     <div 
@@ -411,21 +414,31 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
                   {isChaos ? 'CHAOS UNLOCK' : `${itemType} UNLOCKED`}
               </h3>
               
-              {itemImage && !imageError ? (
+              {entityModel ? (
+                 // 3D model reveal — falls back to the sprite poster automatically.
+                 <div className="flex justify-center my-6 relative items-center">
+                    {animationsEnabled && (
+                        <div className={`absolute inset-0 bg-gradient-to-t ${theme.bgGradient} blur-xl opacity-50 animate-pulse`}></div>
+                    )}
+                    <div className="relative z-10 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                       <EntityModel src={entityModel} poster={itemImage} alt={itemName} size={200} interactive autoRotate={animationsEnabled} />
+                    </div>
+                 </div>
+              ) : itemImage && !imageError ? (
                  <div className="flex justify-center my-6 relative min-h-[6rem] items-center">
                     {animationsEnabled && (
                         <div className={`absolute inset-0 bg-gradient-to-t ${theme.bgGradient} blur-xl opacity-50 animate-pulse`}></div>
                     )}
-                    
+
                     {!imgLoaded && (
                         <div className="absolute inset-0 flex items-center justify-center z-20">
                             <Loader2 className={`w-8 h-8 animate-spin ${theme.text}`} />
                         </div>
                     )}
 
-                    <img 
-                        src={itemImage} 
-                        alt={itemName} 
+                    <img
+                        src={itemImage}
+                        alt={itemName}
                         className={`${isRegion ? 'w-auto h-auto max-h-[70vh] max-w-full rounded-lg border border-white/10 shadow-2xl' : 'w-24 h-24'} object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] relative z-10 transition-opacity duration-500 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
                         onError={() => {
                             setImageError(true);
