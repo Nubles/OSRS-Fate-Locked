@@ -5,7 +5,7 @@ import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useGame } from '../context/GameContext';
 import { EntityModel } from './EntityModel';
 import { MODEL_FILES } from '../data/modelManifest';
-import { modelUrlBySlug } from '../data/entityModels';
+import { modelUrlBySlug, orientationForSlug } from '../data/entityModels';
 
 /**
  * A review gallery for every generated 3D model. A list of all models on the
@@ -82,7 +82,7 @@ export const ModelGallery: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           <div className="flex-1 min-w-0 flex flex-col p-4">
             <div className="flex-1 min-h-0 rounded-xl bg-gradient-to-b from-white/[0.05] to-black/30 border border-white/10 overflow-hidden">
               {url ? (
-                <EntityModel key={sel} src={url} alt={prettify(sel)} interactive autoRotate={animationsEnabled} fill />
+                <EntityModel key={sel} src={url} alt={prettify(sel)} interactive autoRotate={animationsEnabled} orientation={orientationForSlug(sel)} fill />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-600 text-sm">No model selected</div>
               )}

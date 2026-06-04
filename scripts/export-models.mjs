@@ -52,6 +52,8 @@ const cfg = (() => {
 const npcIds = cfg.npcIds ?? {};        // { "<slug>": <npcId> } — explicit, wins
 const names = cfg.names ?? [];          // ["Zulrah", ...] — resolved by cache scan
 const aliases = cfg.aliases ?? {};      // { "Display Name": "Resolvable NPC name" }
+const excludes = cfg.exclude ?? {};     // { "<slug>": [modelId, …] } — skip junk sub-models
+                                        // (arena boxes / shadow planes / minions an NPC def bundles in)
 
 // ── load cache (confirmed API: new RSCache(dir) + await cache.onload) ─────────
 const { RSCache, IndexType, ConfigType, GLTFExporter, ModelGroup } = await import('osrscachereader');
@@ -94,14 +96,17 @@ async function exportNpc(id, slug) {
   const def = await getNpc(id);
   const entry = def?.models ?? [];
   const modelIds = Array.isArray(entry) ? entry : [entry];
+  const ban = new Set((excludes[slug] ?? []).map(Number)); // junk sub-models to drop
   const group = new ModelGroup();
-  let n = 0;
+  let n = 0, skipped = 0;
   for (const mid of modelIds) {
     if (mid == null || mid < 0) continue;
+    if (ban.has(Number(mid))) { skipped++; continue; }
     const model = await cache.getDef(IndexType.MODELS, mid);
     if (model) { group.addModel(model); n++; }
   }
   if (!n) throw new Error('no models on this NPC def');
+  if (skipped) exportNpc._lastSkipped = skipped; // surfaced in the per-job log line
   const merged = group.getMergedModel();
   const exporter = new GLTFExporter(merged);
   exporter.addColors(merged);
@@ -112,7 +117,12 @@ async function exportNpc(id, slug) {
 mkdirSync(OUT_DIR, { recursive: true });
 let ok = 0;
 for (const job of uniqueJobs.slice(0, LIMIT)) {
-  try { await exportNpc(job.id, job.slug); console.log(`✓ ${job.slug}.gltf (npc ${job.id})`); ok++; }
+  try {
+    exportNpc._lastSkipped = 0;
+    await exportNpc(job.id, job.slug);
+    const sk = exportNpc._lastSkipped ? `  (excluded ${exportNpc._lastSkipped} junk model${exportNpc._lastSkipped > 1 ? 's' : ''})` : '';
+    console.log(`✓ ${job.slug}.gltf (npc ${job.id})${sk}`); ok++;
+  }
   catch (e) { console.warn(`  ! ${job.slug} (npc ${job.id}): ${e?.message ?? e}`); }
 }
 

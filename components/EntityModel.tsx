@@ -40,11 +40,17 @@ interface Props {
   autoRotate?: boolean;
   /** Fill the parent container (width/height 100%) instead of a fixed `size`. */
   fill?: boolean;
+  /**
+   * Per-model render rotation "roll pitch yaw" (e.g. "0deg -90deg 0deg") for the
+   * handful of NPC models authored standing on end. Non-destructive — fixes the
+   * pose at view time without touching the exported geometry.
+   */
+  orientation?: string;
   className?: string;
 }
 
 export const EntityModel: React.FC<Props> = ({
-  src, poster, alt, size = 160, interactive = false, autoRotate = true, fill = false, className,
+  src, poster, alt, size = 160, interactive = false, autoRotate = true, fill = false, orientation, className,
 }) => {
   const dims = fill ? { width: '100%', height: '100%' } : { width: `${size}px`, height: `${size}px` };
   const [ready, setReady] = useState(scriptState === 'ready');
@@ -73,6 +79,7 @@ export const EntityModel: React.FC<Props> = ({
     alt,
     ...(interactive ? { 'camera-controls': true } : {}),
     ...(autoRotate ? { 'auto-rotate': true, 'auto-rotate-delay': 0, 'rotation-per-second': '24deg' } : {}),
+    ...(orientation ? { orientation } : {}),
     'interaction-prompt': 'none',
     'shadow-intensity': '0.6',
     exposure: '1.1',

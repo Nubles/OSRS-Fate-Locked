@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Sparkles, Map, Box, Copy, Shield, BookOpen, Footprints, Zap, Home, Store, Gamepad2, Skull, Package, Dna, ExternalLink, Flag, Check, Loader2 } from 'lucide-react';
 import { wikiUrlFor } from '../constants';
 import { EntityModel } from './EntityModel';
-import { modelFor } from '../data/entityModels';
+import { modelFor, orientationFor } from '../data/entityModels';
 
 interface VoidRevealProps {
   itemName: string;
@@ -421,7 +421,7 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
                         <div className={`absolute inset-0 bg-gradient-to-t ${theme.bgGradient} blur-xl opacity-50 animate-pulse`}></div>
                     )}
                     <div className="relative z-10 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-                       <EntityModel src={entityModel} poster={itemImage} alt={itemName} size={200} interactive autoRotate={animationsEnabled} />
+                       <EntityModel src={entityModel} poster={itemImage} alt={itemName} size={200} interactive autoRotate={animationsEnabled} orientation={orientationFor(itemName)} />
                     </div>
                  </div>
               ) : itemImage && !imageError ? (

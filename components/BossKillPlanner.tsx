@@ -12,7 +12,7 @@ import { monsterService, MonsterStats } from '../services/MonsterService';
 import { sumBonuses, GearItem, ZERO_BONUSES } from '../utils/gearStats';
 import { planBoss, BossPlan, BOSS_ALIASES, PlayerCombat, Readiness, Danger } from '../utils/bossPlanner';
 import { EntityModel } from './EntityModel';
-import { modelFor } from '../data/entityModels';
+import { modelFor, orientationFor } from '../data/entityModels';
 
 interface Props { onClose: () => void }
 type Status = 'loading' | 'ready' | 'error';
@@ -187,7 +187,7 @@ const Detail: React.FC<{ boss: string; monster: MonsterStats; plan: BossPlan; we
       {/* Large 3D model viewer (drag to rotate, scroll to zoom) */}
       {model && show3D && (
         <div className="relative w-full h-60 rounded-xl bg-gradient-to-b from-white/[0.05] to-black/30 border border-white/10 overflow-hidden">
-          <EntityModel src={model} poster={monsterImg(monster.imageFile)} alt={boss} interactive autoRotate={animationsEnabled} fill />
+          <EntityModel src={model} poster={monsterImg(monster.imageFile)} alt={boss} interactive autoRotate={animationsEnabled} orientation={orientationFor(boss)} fill />
           {toggleBtn('absolute top-2 right-2 z-10')}
         </div>
       )}
