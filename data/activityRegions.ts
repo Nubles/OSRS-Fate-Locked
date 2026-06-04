@@ -57,6 +57,7 @@ export const ACTIVITY_REGIONS: Record<string, string> = {
   'Hespori': 'Kourend & Kebos',
   'Kalphite Queen': 'Kharidian Desert',
   'King Black Dragon': 'Wilderness',
+  'Obor': 'Misthalin',                 // Edgeville Dungeon (Giant Key)
   'Phantom Muspah': 'Fremennik',
   'Sarachnis': 'Kourend & Kebos',
   'Scurrius': 'Misthalin',
@@ -67,10 +68,11 @@ export const ACTIVITY_REGIONS: Record<string, string> = {
   'TzHaar Fight Cave': 'Karamja',
   'Inferno': 'Karamja',
   "TzHaar-Ket-Rak's Challenges": 'Karamja',
-  'Tormented Demons': 'Islands & Others',
+  'Tormented Demons': 'Misthalin',     // 2024 rework: Ancient Guthixian Temple (was Lithkren)
   'Amoxliatl': 'Varlamore',
   'The Royal Titans': 'Asgarnia',
-  'Yama': 'Varlamore',
+  'Yama': 'Kourend & Kebos',           // Chasm of Fire, Kebos Lowlands
+
   'Doom of Mokhaiotl': 'Varlamore',
   'Gemstone Crab': 'Varlamore',
   'Shellbane Gryphon': 'The Open Seas',
@@ -113,6 +115,8 @@ export const ACTIVITY_REGIONS: Record<string, string> = {
   'Brimhaven Agility Arena': 'Karamja',
   'Hallowed Sepulchre': 'Morytania',
   'Barracuda Trials': 'The Open Seas',
+  'Intelligence Gathering': 'Kourend & Kebos',
+  'Archery Competition': 'Kandarin',
 
   // ---- Guilds --------------------------------------------------------------
   "Champions' Guild": 'Misthalin',

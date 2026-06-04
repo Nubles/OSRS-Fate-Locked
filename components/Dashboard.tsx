@@ -41,6 +41,7 @@ import { useAchievementReveal } from '../hooks/useAchievementReveal';
 import { AchievementReveal } from './AchievementReveal';
 import { getGameMode } from '../config/gameModes';
 import { getActivityRegion } from '../data/activityRegions';
+import { getActivityReq, ActivityReq } from '../data/activityRequirements';
 import { RegionAdvisorPanel } from './RegionAdvisorPanel';
 import { SkillAdvisorPanel } from './SkillAdvisorPanel';
 
@@ -146,6 +147,7 @@ interface UnlockCardProps {
   onClick: () => void;
   subText?: string;
   region?: string;
+  req?: ActivityReq;
 }
 
 const UnlockCard: React.FC<UnlockCardProps> = ({
@@ -155,7 +157,8 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
   icon,
   onClick,
   subText,
-  region
+  region,
+  req
 }) => {
   // Image priority: a hand-picked sprite/icon → the item's real OSRS wiki image
   // (fetched + cached via WikiService) → the globe placeholder. Self-heals: if a
@@ -223,6 +226,21 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
                     <MapPin size={9} className="shrink-0" />
                     <span className="truncate">{region}</span>
                 </div>
+            )}
+            {req && (req.skills || req.quests) && (
+                <div className="flex flex-wrap items-center gap-1 mt-1">
+                    {req.skills && Object.entries(req.skills).map(([sk, lvl]) => (
+                        <span key={sk} className="text-[9px] px-1 py-0.5 rounded bg-amber-900/20 border border-amber-500/20 text-amber-300/90 leading-none font-mono" title={`Requires ${lvl} ${sk}`}>{sk} {lvl}</span>
+                    ))}
+                    {req.quests && req.quests.map(q => (
+                        <span key={q} className="text-[9px] px-1 py-0.5 rounded bg-violet-900/20 border border-violet-500/20 text-violet-300/90 leading-none flex items-center gap-0.5" title={`Quest: ${q}`}>
+                            <ScrollText size={8} className="shrink-0" />{q}
+                        </span>
+                    ))}
+                </div>
+            )}
+            {req?.note && (
+                <div className="text-[9px] text-gray-500 italic leading-tight mt-0.5">{req.note}</div>
             )}
         </div>
         
@@ -541,6 +559,7 @@ export const Dashboard: React.FC = () => {
                     onClick={() => handleSpecialUnlock(type, item)}
                     subText={sub}
                     region={getActivityRegion(item)}
+                    req={getActivityReq(item)}
                 />
             );
         })}
