@@ -3,15 +3,24 @@ import React, { useState, useRef } from 'react';
 import { X, Shield, Package, ArrowUp, BookOpen, Dices, Sparkles, Map, Zap, Scroll, Skull, Activity, Lock, Key, Dna, Coins, HelpCircle, GraduationCap, SlidersHorizontal, Compass } from 'lucide-react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
-import { DROP_RATES } from '../constants';
 import { GAME_MODES, getGameMode, resolveModeRules } from '../config/gameModes';
 import { REGION_MODIFIERS } from '../config/regionModifiers';
+import { EARN_METHODS, KEY_TYPES, RITUALS, SPEND_TABLES, UNLOCK_KEY_COST } from '../config/economy';
 
 interface ReferenceModalProps {
   onClose: () => void;
 }
 
-type TabId = 'core' | 'modes' | 'drops' | 'altar' | 'region' | 'unlocks' | 'equipment' | 'storage';
+type TabId = 'core' | 'economy' | 'modes' | 'drops' | 'altar' | 'region' | 'unlocks' | 'equipment' | 'storage';
+
+// Colour a roll rate along the OSRS difficulty gradient (rare → guaranteed).
+const rateColor = (rate: number): string =>
+  rate >= 100 ? 'text-yellow-400'
+  : rate >= 75 ? 'text-purple-400'
+  : rate >= 50 ? 'text-red-400'
+  : rate >= 25 ? 'text-blue-400'
+  : rate >= 11 ? 'text-green-400'
+  : 'text-[#a8a29a]';
 
 export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -27,6 +36,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose }) => {
 
   const tabs: { id: TabId; label: string; icon: any }[] = [
     { id: 'core', label: 'Core Rules', icon: BookOpen },
+    { id: 'economy', label: 'Key Economy', icon: Coins },
     { id: 'modes', label: 'Game Modes', icon: SlidersHorizontal },
     { id: 'drops', label: 'RNG & Drop Rates', icon: Dices },
     { id: 'altar', label: 'The Void Altar', icon: Zap },
@@ -183,6 +193,100 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose }) => {
                         </div>
                     )}
 
+                    {/* --- KEY ECONOMY --- */}
+                    {activeTab === 'economy' && (
+                        <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
+                            <div>
+                                <h1 className="text-3xl font-black text-white mb-2">The Key Economy</h1>
+                                <p className="text-gray-400 text-lg">Every action feeds one loop: earn Keys, spend Keys, unlock more ways to earn.</p>
+                            </div>
+
+                            {/* The loop */}
+                            <div className="bg-[#222] p-6 rounded-xl border border-white/5">
+                                <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider">
+                                    <span className="px-3 py-2 rounded-lg bg-green-900/30 text-green-300 border border-green-500/20">Do a task</span>
+                                    <ArrowUp className="rotate-90 text-gray-600 shrink-0" size={14} />
+                                    <span className="px-3 py-2 rounded-lg bg-blue-900/30 text-blue-300 border border-blue-500/20">Roll for a Key</span>
+                                    <ArrowUp className="rotate-90 text-gray-600 shrink-0" size={14} />
+                                    <span className="px-3 py-2 rounded-lg bg-osrs-gold/15 text-osrs-gold border border-osrs-gold/20">Spend on a table</span>
+                                    <ArrowUp className="rotate-90 text-gray-600 shrink-0" size={14} />
+                                    <span className="px-3 py-2 rounded-lg bg-purple-900/30 text-purple-300 border border-purple-500/20">Unlock content</span>
+                                    <ArrowUp className="rotate-90 text-gray-600 shrink-0" size={14} />
+                                    <span className="px-3 py-2 rounded-lg bg-emerald-900/30 text-emerald-300 border border-emerald-500/20">New tasks open</span>
+                                </div>
+                                <p className="text-center text-xs text-gray-500 mt-4">Every unlock widens the funnel — more skills, regions and bosses mean more tasks to roll on. That snowball <i>is</i> the game.</p>
+                            </div>
+
+                            {/* The three keys */}
+                            <div>
+                                <h3 className="text-osrs-gold font-bold uppercase tracking-widest mb-4 flex items-center gap-2"><Key size={18}/> The Three Keys</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {KEY_TYPES.map(k => (
+                                        <div key={k.id} className="bg-[#222] rounded-xl border border-white/5 p-5 flex flex-col">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <img src={k.icon} alt="" className="w-6 h-6 object-contain" />
+                                                <h4 className={`font-bold text-lg ${k.accent}`}>{k.name}</h4>
+                                            </div>
+                                            <p className="text-[11px] text-gray-500 italic mb-3">{k.tagline}</p>
+                                            <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-1">How you earn it</div>
+                                            <ul className="space-y-1 mb-3">
+                                                {k.earn.map((e, i) => (
+                                                    <li key={i} className="text-xs text-gray-400 flex gap-1.5"><span className={`${k.accent} font-bold`}>+</span><span>{e}</span></li>
+                                                ))}
+                                            </ul>
+                                            <div className="mt-auto pt-2 border-t border-white/5">
+                                                <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-1">What it spends on</div>
+                                                <p className="text-xs text-gray-300">{k.spend}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Worked example */}
+                            <div className="bg-gradient-to-br from-[#1d2230] to-[#222] p-6 rounded-xl border border-blue-500/20">
+                                <h3 className="text-blue-300 font-bold uppercase tracking-widest mb-4 flex items-center gap-2"><Dices size={18}/> A single roll, start to finish</h3>
+                                <ol className="space-y-3 text-sm text-gray-300">
+                                    <li><b className="text-white">1.</b> You finish <b>Dragon Slayer II</b> — a <b className="text-purple-400">Master</b> quest — and tick it off in the Journal.</li>
+                                    <li><b className="text-white">2.</b> The app rolls <span className="font-mono">1–100</span> against its <b className="text-purple-400">95%</b> threshold. You roll <span className="font-mono text-green-400">42</span> → a Key!</li>
+                                    <li><b className="text-white">3.</b> Every success then rolls for an upgrade. In {activeMode.name} mode that's a <b className="text-purple-400">{rules.omniChanceBase}%</b> Omni chance (up to 20% on this very quest). Miss it and you bank a Standard Key; hit it and you <i>also</i> pocket an <b className="text-purple-400">Omni-Key</b>.</li>
+                                    <li><b className="text-white">4.</b> Take the Key to <b className="text-osrs-gold">Spend Keys</b>, choose the <b>Skills</b> table, and unlock a random skill tier — say Slayer. Those new Slayer levels open fresh tasks to roll on.</li>
+                                    <li className="text-gray-500 text-xs pt-1">Roll <span className="font-mono">96–100</span> instead and you'd get no Key — but you'd gain a Fate Point{rules.pityEnabled ? <>, inching toward a guaranteed Key at <b>{rules.pityThreshold}</b></> : ''}.</li>
+                                </ol>
+                            </div>
+
+                            {/* Fate + altar quick ref */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="bg-[#222] p-5 rounded-xl border border-white/5">
+                                    <h4 className="font-bold text-gray-200 mb-2 flex items-center gap-2"><Shield size={16} className="text-osrs-pity"/> Fate Points</h4>
+                                    <p className="text-xs text-gray-400 leading-relaxed">
+                                        Earned <b>+1 per failed roll</b>, reset to 0 the moment you get any Key.
+                                        {rules.pityEnabled
+                                            ? <> At <b className="text-white">{rules.pityThreshold}</b> they convert a failure into a guaranteed <b>Pity Key</b>.</>
+                                            : <> Pity is <b className="text-red-400">off</b> in {activeMode.name} mode.</>}
+                                        {' '}Either way, they're the fuel for the Void Altar.
+                                    </p>
+                                </div>
+                                <div className="bg-[#222] p-5 rounded-xl border border-white/5">
+                                    <h4 className="font-bold text-gray-200 mb-2 flex items-center gap-2"><Zap size={16} className="text-purple-400"/> Spend Fate at the Altar</h4>
+                                    <ul className="space-y-1.5 text-xs text-gray-400">
+                                        {RITUALS.map(r => (
+                                            <li key={r.id} className="flex justify-between gap-2">
+                                                <span>{r.name}</span>
+                                                <span className="font-mono text-gray-300 shrink-0">{r.fateCost ? `${ritualCost(r.fateCost)} Fate` : `${r.keyCost} Keys`}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    <p className="text-[10px] text-gray-600 mt-2 italic">Full effects on the Void Altar tab.</p>
+                                </div>
+                            </div>
+
+                            <p className="text-xs text-gray-500">
+                                Standard Keys cash in across <b className="text-gray-300">{SPEND_TABLES.length} tables</b> — {SPEND_TABLES.map(t => t.label).join(', ')} — at a flat <b className="text-osrs-gold">{UNLOCK_KEY_COST} Key</b> each. The Unlock Systems tab breaks down what every table does.
+                            </p>
+                        </div>
+                    )}
+
                     {/* --- GAME MODES --- */}
                     {activeTab === 'modes' && (
                         <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
@@ -263,77 +367,35 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose }) => {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-800 text-gray-300">
-                                        <tr>
-                                            <td className="p-4 font-bold text-white">Quests</td>
-                                            <td className="p-4">
-                                                <div className="flex flex-col gap-1 text-xs">
-                                                    <span className="text-green-400">Novice: 25%</span>
-                                                    <span className="text-blue-400">Intermediate: 50%</span>
-                                                    <span className="text-red-400">Experienced: 75%</span>
-                                                    <span className="text-purple-400">Master: 95%</span>
-                                                    <span className="text-yellow-400">Grandmaster: 100%</span>
-                                                </div>
-                                            </td>
-                                            <td className="p-4 text-gray-500">Based on difficulty. GM Quests have bonus Omni chance.</td>
-                                        </tr>
-                                        <tr>
-                                            <td className="p-4 font-bold text-white">Diaries</td>
-                                            <td className="p-4">
-                                                <div className="flex flex-col gap-1 text-xs">
-                                                    <span className="text-green-400">Easy: 33%</span>
-                                                    <span className="text-blue-400">Medium: 66%</span>
-                                                    <span className="text-red-400">Hard: 99%</span>
-                                                    <span className="text-purple-400">Elite: 100%</span>
-                                                </div>
-                                            </td>
-                                            <td className="p-4 text-gray-500">Rolls per individual task completed.</td>
-                                        </tr>
-                                        <tr>
-                                            <td className="p-4 font-bold text-white">Combat Achievements</td>
-                                            <td className="p-4">
-                                                <div className="flex flex-col gap-1 text-xs">
-                                                    <span className="text-green-400">Easy: 10%</span>
-                                                    <span className="text-blue-400">Medium: 20%</span>
-                                                    <span className="text-red-400">Hard: 35%</span>
-                                                    <span className="text-purple-400">Elite: 50%</span>
-                                                    <span className="text-amber-400">Master: 75%</span>
-                                                    <span className="text-yellow-400">GM: 100%</span>
-                                                </div>
-                                            </td>
-                                            <td className="p-4 text-gray-500">Per individual task completed.</td>
-                                        </tr>
-                                        <tr>
-                                            <td className="p-4 font-bold text-white">Clue Scrolls</td>
-                                            <td className="p-4">
-                                                <div className="flex flex-col gap-1 text-xs">
-                                                    <span className="text-[#a8a29a]">Beginner: 5%</span>
-                                                    <span className="text-green-400">Easy: 10%</span>
-                                                    <span className="text-blue-400">Medium: 20%</span>
-                                                    <span className="text-red-400">Hard: 35%</span>
-                                                    <span className="text-purple-400">Elite: 65%</span>
-                                                    <span className="text-amber-400">Master: 80%</span>
-                                                </div>
-                                            </td>
-                                            <td className="p-4 text-gray-500">Based on Clue tier.</td>
-                                        </tr>
-                                        <tr>
-                                            <td className="p-4 font-bold text-white">Level Ups</td>
-                                            <td className="p-4">Variable</td>
-                                            <td className="p-4 text-gray-500">
-                                                Chance = Level / 3. (e.g. Level 30 = 10%, Level 99 = 33%).
-                                                <br/><span className="text-red-400 font-bold mt-1 block">Bonus: 2% Chance for Chaos Key.</span>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td className="p-4 font-bold text-white">Slayer Tasks</td>
-                                            <td className="p-4">5% - 50%</td>
-                                            <td className="p-4 text-gray-500">Scales with Slayer Master tier (Turael to Duradel/Bosses).</td>
-                                        </tr>
-                                        <tr>
-                                            <td className="p-4 font-bold text-white">Collection Log</td>
-                                            <td className="p-4">20%</td>
-                                            <td className="p-4 text-gray-500">Per unique log slot filled.</td>
-                                        </tr>
+                                        {EARN_METHODS.map(method => (
+                                            <tr key={method.category}>
+                                                <td className="p-4 align-top">
+                                                    <div className="flex items-center gap-2">
+                                                        <img src={method.icon} alt="" className="w-5 h-5 object-contain shrink-0" />
+                                                        <span className="font-bold text-white">{method.category}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="p-4 align-top">
+                                                    <div className="flex flex-col gap-1 text-xs">
+                                                        {method.tiers.map(t => (
+                                                            <span key={t.tier} className={rateColor(t.rate)}>
+                                                                {t.tier}: <span className="font-mono">{t.rateLabel ?? `${t.rate}%`}</span>
+                                                                {t.omni ? <span className="text-purple-400/70"> · Omni {t.omni}%</span> : null}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </td>
+                                                <td className="p-4 align-top text-gray-500 text-xs">
+                                                    {method.blurb}
+                                                    {method.tiers.some(t => t.bonus) && (
+                                                        <span className="block mt-1.5 text-amber-300/60">
+                                                            {method.tiers.filter(t => t.bonus).map(t => t.bonus).join(' ')}
+                                                        </span>
+                                                    )}
+                                                    <span className="block mt-1.5 text-gray-600 italic">{method.where}</span>
+                                                </td>
+                                            </tr>
+                                        ))}
                                     </tbody>
                                 </table>
                             </div>
