@@ -196,7 +196,7 @@ export const KEY_TYPES: KeyTypeInfo[] = [
       'A lucky upgrade on a successful roll (mode base %, up to 20% on Grandmaster quests, 10% on Elite diaries & full CA/Diary sections).',
       'Ritual of Transmutation — fuse 5 standard Keys into 1.',
     ],
-    spend: 'Cash in on a table you choose to PICK EXACTLY the entry you want — no RNG.',
+    spend: 'Hold one and the Dashboard lights up — click any locked skill, gear slot, region or boss to unlock EXACTLY it. No RNG, no table roll.',
   },
   {
     id: 'chaos',

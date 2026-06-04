@@ -142,7 +142,7 @@ const SpendCard: React.FC<SpendCardProps> = ({
 };
 
 export const GachaSection: React.FC = () => {
-  const { keys, chaosKeys, unlocks, unlockContent, animationsEnabled } = useGame();
+  const { keys, specialKeys, chaosKeys, unlocks, unlockContent, animationsEnabled } = useGame();
   const [pendingReveal, setPendingReveal] = useState<{ 
       item: string, 
       tableType: TableType, 
@@ -287,6 +287,24 @@ export const GachaSection: React.FC = () => {
              isChaos={pendingReveal.isChaos} 
              animationsEnabled={animationsEnabled} 
           />
+      )}
+
+      {/* Omni-Key hint — these aren't rolled here; they're spent by clicking a
+          locked item directly in the Progression Dashboard. */}
+      {specialKeys > 0 && (
+        <div className="mb-3 w-full p-3 rounded-lg border border-purple-500/50 bg-gradient-to-r from-purple-900/25 to-fuchsia-900/15 flex items-center gap-3 shadow-[0_0_15px_rgba(168,85,247,0.12)]">
+          <div className="p-2 bg-purple-500/20 rounded-full border border-purple-500/50 shrink-0">
+            <Sparkles className={`text-purple-300 w-5 h-5 ${animationsEnabled ? 'animate-pulse' : ''}`} />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-purple-300 font-bold uppercase tracking-widest text-sm">
+              {specialKeys} Omni-Key{specialKeys > 1 ? 's' : ''} Ready
+            </h3>
+            <p className="text-[11px] text-purple-300/70 font-mono leading-snug">
+              Omni-Keys aren't rolled here — click any locked skill, gear slot, region or boss in the <span className="text-purple-200">Progression Dashboard</span> to pick exactly what to unlock.
+            </p>
+          </div>
+        </div>
       )}
 
       {/* Chaos Key Section */}
