@@ -38,12 +38,15 @@ interface Props {
   interactive?: boolean;
   /** Gentle auto-spin (respect the app's animations toggle). */
   autoRotate?: boolean;
+  /** Fill the parent container (width/height 100%) instead of a fixed `size`. */
+  fill?: boolean;
   className?: string;
 }
 
 export const EntityModel: React.FC<Props> = ({
-  src, poster, alt, size = 160, interactive = false, autoRotate = true, className,
+  src, poster, alt, size = 160, interactive = false, autoRotate = true, fill = false, className,
 }) => {
+  const dims = fill ? { width: '100%', height: '100%' } : { width: `${size}px`, height: `${size}px` };
   const [ready, setReady] = useState(scriptState === 'ready');
   const [failed, setFailed] = useState(false);
 
@@ -58,7 +61,7 @@ export const EntityModel: React.FC<Props> = ({
   }, [src]);
 
   const fallback = poster
-    ? <img src={poster} alt={alt} style={{ width: size, height: size, objectFit: 'contain' }} className={className} />
+    ? <img src={poster} alt={alt} style={{ ...dims, objectFit: 'contain' }} className={className} />
     : null;
 
   // No model, the loader failed, or the viewer isn't ready yet → show the sprite.
@@ -76,7 +79,7 @@ export const EntityModel: React.FC<Props> = ({
     'environment-image': 'neutral',
     'touch-action': 'pan-y',
     loading: 'eager',
-    style: { width: `${size}px`, height: `${size}px`, background: 'transparent' },
+    style: { ...dims, background: 'transparent' },
     className,
   });
 };

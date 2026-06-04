@@ -168,28 +168,36 @@ const Detail: React.FC<{ boss: string; monster: MonsterStats; plan: BossPlan; we
   const r = READINESS[plan.readiness];
   const d = DANGER[plan.danger];
   const model = modelFor(boss);
+  const { animationsEnabled } = useGame();
   const [show3D, setShow3D] = useState(true);
+  const toggleBtn = (cls: string) => (
+    <button
+      onClick={() => setShow3D((s) => !s)}
+      title={show3D ? 'Show 2D sprite' : 'Show 3D model'}
+      className={`flex items-center gap-1 px-2 py-1 rounded-md border border-white/10 bg-black/40 text-[10px] font-bold text-gray-300 hover:text-white hover:border-white/20 transition-colors ${cls}`}
+    >
+      <Box size={11} /> {show3D ? '3D' : '2D'}
+    </button>
+  );
   return (
     <div className="space-y-4 animate-in fade-in duration-200">
+      {/* Large 3D model viewer (drag to rotate, scroll to zoom) */}
+      {model && show3D && (
+        <div className="relative w-full h-60 rounded-xl bg-gradient-to-b from-white/[0.05] to-black/30 border border-white/10 overflow-hidden">
+          <EntityModel src={model} poster={monsterImg(monster.imageFile)} alt={boss} interactive autoRotate={animationsEnabled} fill />
+          {toggleBtn('absolute top-2 right-2 z-10')}
+        </div>
+      )}
+
       <div className="flex items-center gap-3">
-        {model && show3D ? (
-          <EntityModel src={model} poster={monsterImg(monster.imageFile)} alt={boss} size={64} interactive className="shrink-0" />
-        ) : (
+        {(!model || !show3D) && (
           <img src={monsterImg(monster.imageFile)} alt="" className="w-12 h-12 object-contain shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.visibility = 'hidden'; }} />
         )}
         <div className="min-w-0">
           <h3 className="text-lg font-bold text-white leading-tight truncate">{boss}</h3>
           <p className="text-[11px] text-gray-500">{monster.version ? `${monster.version} · ` : ''}Lvl {monster.level} · HP {monster.hp}</p>
         </div>
-        {model && (
-          <button
-            onClick={() => setShow3D((s) => !s)}
-            title={show3D ? 'Show 2D sprite' : 'Show 3D model'}
-            className="ml-auto shrink-0 flex items-center gap-1 px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[10px] font-bold text-gray-400 hover:text-white hover:border-white/20 transition-colors"
-          >
-            <Box size={11} /> {show3D ? '3D' : '2D'}
-          </button>
-        )}
+        {model && !show3D && toggleBtn('ml-auto shrink-0')}
       </div>
 
       {/* Readiness banner */}
