@@ -73,10 +73,10 @@ const RollVisual: React.FC = () => {
       `}>
         {/* Content */}
         <div className="absolute inset-0 flex flex-col justify-center items-start pl-4 z-10">
-          <h3 className="font-black text-base uppercase tracking-wider text-[#4ade80]">Turael</h3>
-          <p className="text-[10px] text-gray-400 font-mono mb-1.5">Burthorpe (Easy)</p>
+          <h3 className="font-black text-base uppercase tracking-wider text-[#4ade80]">Mazchna</h3>
+          <p className="text-[10px] text-gray-400 font-mono mb-1.5">Canifis (Easy)</p>
           <div className="px-2 py-0.5 rounded text-[10px] font-bold border bg-[#0a150c] border-[#1f3823] text-[#4ade80] flex items-center gap-1.5">
-             <Skull size={10} /> 25% Chance
+             <Skull size={10} /> 10% Chance
           </div>
         </div>
         
@@ -334,7 +334,7 @@ export const OnboardingWizard: React.FC = () => {
     {
       title: "The Altar",
       subtitle: "Bending Luck",
-      desc: "Spend Fate Points at the Void Altar to perform Rituals. Buff your next roll with Advantage or Gamble for double loot.",
+      desc: "Spend Fate Points at the Void Altar to perform Rituals — roll with Advantage, gamble for double loot, or forge rare keys. And whenever you want every rate, key and ritual in one place, open the Codex from the top bar.",
       visual: <AltarVisual />,
       color: "text-blue-400",
       bg: "from-blue-900/20"
