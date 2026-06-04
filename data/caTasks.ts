@@ -48,12 +48,12 @@ export const ALL_CA_TASKS: CATask[] = [
   { id: 'ca_easy_26', tierId: 'Easy', monster: 'Barrows', description: 'Kill all 6 brothers and loot the chest.' },
   { id: 'ca_easy_27', tierId: 'Easy', monster: 'Barrows', description: 'Kill a brother using only Magic.' },
   // --- GENERAL / SLAYER ---
-  { id: 'ca_easy_28', tierId: 'Easy', monster: 'General', description: 'Equip a Slayer Helmet.' },
-  { id: 'ca_easy_29', tierId: 'Easy', monster: 'General', description: 'Defeat a Superior Slayer Creature.' },
-  { id: 'ca_easy_30', tierId: 'Easy', monster: 'General', description: 'Complete a Slayer Task.' },
-  { id: 'ca_easy_31', tierId: 'Easy', monster: 'General', description: 'Kill a Lizardman Shaman.' },
-  { id: 'ca_easy_32', tierId: 'Easy', monster: 'General', description: 'Defeat the Mimic.' },
-  { id: 'ca_easy_33', tierId: 'Easy', monster: 'General', description: 'Equip a Fire Cape.' },
+  { id: 'ca_easy_28', tierId: 'Easy', monster: 'Miscellaneous', description: 'Equip a Slayer Helmet.' },
+  { id: 'ca_easy_29', tierId: 'Easy', monster: 'Miscellaneous', description: 'Defeat a Superior Slayer Creature.' },
+  { id: 'ca_easy_30', tierId: 'Easy', monster: 'Miscellaneous', description: 'Complete a Slayer Task.' },
+  { id: 'ca_easy_31', tierId: 'Easy', monster: 'Miscellaneous', description: 'Kill a Lizardman Shaman.' },
+  { id: 'ca_easy_32', tierId: 'Easy', monster: 'Mimic', description: 'Defeat the Mimic.' },
+  { id: 'ca_easy_33', tierId: 'Easy', monster: 'TzHaar Fight Cave', description: 'Equip a Fire Cape.' },
 
   // ============================================================================
   // MEDIUM TIER
@@ -104,9 +104,9 @@ export const ALL_CA_TASKS: CATask[] = [
   { id: 'ca_med_30', tierId: 'Medium', monster: 'Wintertodt', description: 'Subdue Wintertodt 25 times.' },
   { id: 'ca_med_31', tierId: 'Medium', monster: 'Wintertodt', description: 'Subdue Wintertodt taking no damage from the cold or braziers.' },
   // --- GENERAL ---
-  { id: 'ca_med_32', tierId: 'Medium', monster: 'General', description: 'Complete 25 Slayer Tasks.' },
-  { id: 'ca_med_33', tierId: 'Medium', monster: 'General', description: 'Defeat a Superior Slayer Creature 10 times.' },
-  { id: 'ca_med_34', tierId: 'Medium', monster: 'General', description: 'Complete a Hard Clue Scroll.' },
+  { id: 'ca_med_32', tierId: 'Medium', monster: 'Miscellaneous', description: 'Complete 25 Slayer Tasks.' },
+  { id: 'ca_med_33', tierId: 'Medium', monster: 'Miscellaneous', description: 'Defeat a Superior Slayer Creature 10 times.' },
+  { id: 'ca_med_34', tierId: 'Medium', monster: 'Miscellaneous', description: 'Complete a Hard Clue Scroll.' },
 
   // ============================================================================
   // HARD TIER
@@ -151,10 +151,10 @@ export const ALL_CA_TASKS: CATask[] = [
   { id: 'ca_hard_28', tierId: 'Hard', monster: 'Spindel', description: 'Kill Spindel 10 times.' },
   { id: 'ca_hard_29', tierId: 'Hard', monster: 'Artio', description: 'Kill Artio 10 times.' },
   // --- GENERAL ---
-  { id: 'ca_hard_30', tierId: 'Hard', monster: 'General', description: 'Complete the Fight Caves (Kill Jad).' },
-  { id: 'ca_hard_31', tierId: 'Hard', monster: 'General', description: 'Complete a Hard Temple Trek.' },
-  { id: 'ca_hard_32', tierId: 'Hard', monster: 'General', description: 'Kill 50 Superior Slayer Creatures.' },
-  { id: 'ca_hard_33', tierId: 'Hard', monster: 'General', description: 'Complete 10 Elite Clue Scrolls.' },
+  { id: 'ca_hard_30', tierId: 'Hard', monster: 'TzHaar Fight Cave', description: 'Complete the Fight Caves (Kill Jad).' },
+  { id: 'ca_hard_31', tierId: 'Hard', monster: 'Miscellaneous', description: 'Complete a Hard Temple Trek.' },
+  { id: 'ca_hard_32', tierId: 'Hard', monster: 'Miscellaneous', description: 'Kill 50 Superior Slayer Creatures.' },
+  { id: 'ca_hard_33', tierId: 'Hard', monster: 'Miscellaneous', description: 'Complete 10 Elite Clue Scrolls.' },
 
   // ============================================================================
   // ELITE TIER
@@ -182,8 +182,8 @@ export const ALL_CA_TASKS: CATask[] = [
   { id: 'ca_elite_21', tierId: 'Elite', monster: 'K\'ril Tsutsaroth', description: 'Kill K\'ril Tsutsaroth 50 times.' },
   { id: 'ca_elite_22', tierId: 'Elite', monster: 'Kree\'arra', description: 'Kill Kree\'arra 50 times.' },
   { id: 'ca_elite_23', tierId: 'Elite', monster: 'Phantom Muspah', description: 'Kill Phantom Muspah in under 2:30.' },
-  { id: 'ca_elite_24', tierId: 'Elite', monster: 'General', description: 'Complete 25 Master Clue Scrolls.' },
-  { id: 'ca_elite_25', tierId: 'Elite', monster: 'General', description: 'Reach Wave 63 in the Inferno.' },
+  { id: 'ca_elite_24', tierId: 'Elite', monster: 'Miscellaneous', description: 'Complete 25 Master Clue Scrolls.' },
+  { id: 'ca_elite_25', tierId: 'Elite', monster: 'The Inferno', description: 'Reach Wave 63 in the Inferno.' },
 
   // ============================================================================
   // MASTER TIER
@@ -230,10 +230,10 @@ export const ALL_CA_TASKS: CATask[] = [
   { id: 'ca_master_30', tierId: 'Master', monster: 'The Whisperer', description: 'Kill Awakened Whisperer.' },
   { id: 'ca_master_31', tierId: 'Master', monster: 'Duke Sucellus', description: 'Kill Awakened Duke Sucellus.' },
   // --- GENERAL / OTHER BOSSES ---
-  { id: 'ca_master_32', tierId: 'Master', monster: 'General', description: 'Kill all 6 Jad challenges (TzHaar-Ket-Rak).' },
-  { id: 'ca_master_33', tierId: 'Master', monster: 'General', description: 'Kill the Corporeal Beast 50 times.' },
-  { id: 'ca_master_34', tierId: 'Master', monster: 'General', description: 'Complete a Solo Corporeal Beast kill.' },
-  { id: 'ca_master_35', tierId: 'Master', monster: 'General', description: 'Complete 50 Master Clue Scrolls.' },
+  { id: 'ca_master_32', tierId: 'Master', monster: 'TzHaar-Ket-Rak\'s Challenges', description: 'Kill all 6 Jad challenges (TzHaar-Ket-Rak).' },
+  { id: 'ca_master_33', tierId: 'Master', monster: 'Corporeal Beast', description: 'Kill the Corporeal Beast 50 times.' },
+  { id: 'ca_master_34', tierId: 'Master', monster: 'Corporeal Beast', description: 'Complete a Solo Corporeal Beast kill.' },
+  { id: 'ca_master_35', tierId: 'Master', monster: 'Miscellaneous', description: 'Complete 50 Master Clue Scrolls.' },
 
   // ============================================================================
   // GRANDMASTER TIER
@@ -276,5 +276,38 @@ export const ALL_CA_TASKS: CATask[] = [
   { id: 'ca_gm_28', tierId: 'Grandmaster', monster: 'The Leviathan', description: 'Kill Awakened Leviathan perfectly.' },
   { id: 'ca_gm_29', tierId: 'Grandmaster', monster: 'The Whisperer', description: 'Kill Awakened Whisperer perfectly.' },
   { id: 'ca_gm_30', tierId: 'Grandmaster', monster: 'Duke Sucellus', description: 'Kill Awakened Duke Sucellus perfectly.' },
-  { id: 'ca_gm_31', tierId: 'Grandmaster', monster: 'General', description: 'Kill 6 Jads without taking damage.' }
+  { id: 'ca_gm_31', tierId: 'Grandmaster', monster: 'TzHaar-Ket-Rak\'s Challenges', description: 'Kill 6 Jads without taking damage.' },
+  // ---- Added: bosses previously missing CA coverage ----
+  { id: 'ca_x_1', tierId: 'Easy', monster: 'Kraken', description: 'Kill the Kraken.' },
+  { id: 'ca_x_2', tierId: 'Medium', monster: 'Kraken', description: 'Kill the Kraken 50 times.' },
+  { id: 'ca_x_3', tierId: 'Easy', monster: 'Amoxliatl', description: 'Kill Amoxliatl.' },
+  { id: 'ca_x_4', tierId: 'Medium', monster: 'Amoxliatl', description: 'Kill Amoxliatl 25 times.' },
+  { id: 'ca_x_5', tierId: 'Medium', monster: 'Thermonuclear Smoke Devil', description: 'Kill the Thermonuclear Smoke Devil.' },
+  { id: 'ca_x_6', tierId: 'Hard', monster: 'Thermonuclear Smoke Devil', description: 'Kill the Thermonuclear Smoke Devil 50 times.' },
+  { id: 'ca_x_7', tierId: 'Medium', monster: 'Scorpia', description: 'Kill Scorpia.' },
+  { id: 'ca_x_8', tierId: 'Hard', monster: 'Corporeal Beast', description: 'Kill the Corporeal Beast.' },
+  { id: 'ca_x_9', tierId: 'Hard', monster: 'Callisto', description: 'Kill Callisto.' },
+  { id: 'ca_x_10', tierId: 'Elite', monster: 'Callisto', description: 'Kill Callisto 50 times.' },
+  { id: 'ca_x_11', tierId: 'Hard', monster: 'Venenatis', description: 'Kill Venenatis.' },
+  { id: 'ca_x_12', tierId: 'Elite', monster: 'Venenatis', description: 'Kill Venenatis 50 times.' },
+  { id: 'ca_x_13', tierId: 'Hard', monster: 'Vet\'ion', description: 'Kill Vet\'ion.' },
+  { id: 'ca_x_14', tierId: 'Elite', monster: 'Vet\'ion', description: 'Kill Vet\'ion 50 times.' },
+  { id: 'ca_x_15', tierId: 'Hard', monster: 'Araxxor', description: 'Kill Araxxor.' },
+  { id: 'ca_x_16', tierId: 'Elite', monster: 'Araxxor', description: 'Kill Araxxor 50 times.' },
+  { id: 'ca_x_17', tierId: 'Hard', monster: 'Tormented Demons', description: 'Kill a Tormented Demon.' },
+  { id: 'ca_x_18', tierId: 'Elite', monster: 'Tormented Demons', description: 'Kill 50 Tormented Demons.' },
+  { id: 'ca_x_19', tierId: 'Hard', monster: 'The Hueycoatl', description: 'Kill the Hueycoatl.' },
+  { id: 'ca_x_20', tierId: 'Elite', monster: 'The Hueycoatl', description: 'Kill the Hueycoatl 25 times.' },
+  { id: 'ca_x_21', tierId: 'Medium', monster: 'Moons of Peril', description: 'Defeat the Blood, Blue and Eclipse Moons.' },
+  { id: 'ca_x_22', tierId: 'Hard', monster: 'Moons of Peril', description: 'Complete the Perilous Moons 25 times.' },
+  { id: 'ca_x_23', tierId: 'Medium', monster: 'The Royal Titans', description: 'Defeat the Royal Titans.' },
+  { id: 'ca_x_24', tierId: 'Hard', monster: 'The Royal Titans', description: 'Defeat the Royal Titans 25 times.' },
+  { id: 'ca_x_25', tierId: 'Elite', monster: 'Yama', description: 'Kill Yama.' },
+  { id: 'ca_x_26', tierId: 'Master', monster: 'Yama', description: 'Kill Yama 25 times.' },
+  { id: 'ca_x_27', tierId: 'Elite', monster: 'Doom of Mokhaiotl', description: 'Defeat the Doom of Mokhaiotl.' },
+  { id: 'ca_x_28', tierId: 'Master', monster: 'Doom of Mokhaiotl', description: 'Defeat the Doom of Mokhaiotl 10 times.' },
+  { id: 'ca_x_29', tierId: 'Master', monster: 'Phosani\'s Nightmare', description: 'Kill Phosani\'s Nightmare.' },
+  { id: 'ca_x_30', tierId: 'Grandmaster', monster: 'Phosani\'s Nightmare', description: 'Kill Phosani\'s Nightmare 50 times.' },
+  { id: 'ca_x_31', tierId: 'Master', monster: 'Fortis Colosseum', description: 'Defeat Sol Heredit in the Fortis Colosseum.' },
+  { id: 'ca_x_32', tierId: 'Grandmaster', monster: 'Fortis Colosseum', description: 'Complete the Fortis Colosseum 10 times.' },
 ];
