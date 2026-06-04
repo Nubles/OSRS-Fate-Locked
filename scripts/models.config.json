@@ -1,7 +1,9 @@
 {
   "_comment": "Entities to export with `npm run models:export -- --cache <dir> --names`. 'names' is auto-resolved by scanning the cache (this list = the app's BOSSES_LIST). 'aliases' maps a display name to a representative NPC name so raids/multi-boss entries still resolve (the file is still saved under the display slug, so the app finds it). 'npcIds' pins a slug to an explicit id (from the entity's OSRS Wiki page) and wins over everything. A few entries (Tombs of Amascut, The Royal Titans, Doom of Mokhaiotl, Gemstone Crab, Shellbane Gryphon, TzHaar-Ket-Rak's Challenges) have no obvious single NPC — pin those via npcIds if you want them.",
   "npcIds": {
-    "zulrah": 2042
+    "zulrah": 2042,
+    "vorkath": 8061,
+    "kalphite-queen": 6500
   },
   "aliases": {
     "Chambers of Xeric": "Great Olm",
