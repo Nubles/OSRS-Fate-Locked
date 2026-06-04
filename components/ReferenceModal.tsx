@@ -605,6 +605,25 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose }) => {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Every spend table */}
+                            <div>
+                                <h3 className="text-osrs-gold font-bold uppercase tracking-widest mb-3 flex items-center gap-2"><Coins size={16}/> Every Spend Table</h3>
+                                <p className="text-xs text-gray-500 mb-4">A Standard Key cashes in on whichever table you choose, for a random entry from it. Equipment and Skills are tiered — repeat unlocks deepen them (slots × tiers); the rest are one-and-done.</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    {SPEND_TABLES.map(t => (
+                                        <div key={t.label} className="bg-[#222] rounded-lg border border-white/5 p-3 flex items-start gap-3">
+                                            <div className="text-[11px] font-mono font-bold text-osrs-gold bg-black/30 rounded px-2 py-1 shrink-0 mt-0.5" title={t.tiers ? `${t.count} entries × ${t.tiers} tiers` : `${t.count} entries`}>
+                                                {t.count}{t.tiers ? `×${t.tiers}` : ''}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <h4 className="text-sm font-bold text-gray-200">{t.label}</h4>
+                                                <p className="text-[11px] text-gray-500 leading-snug">{t.blurb}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     )}
 

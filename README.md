@@ -16,6 +16,7 @@ Bad luck is cushioned by **Fate Points** (a pity timer) and the **Void Altar**, 
 
 ## Features
 
+- **In-app Codex** — a full rulebook covering the Key Economy (every way to earn and spend keys, with a worked example), drop rates, game modes, the Void Altar, region bonuses, and equipment tiers. It renders from one typed source (`config/economy.ts`) that a consistency test pins to the engine's drop rates, so the rules you read always match the rules the game runs.
 - **Farm Keys** — Slayer master & Clue scroll roll cards with animated rolls, plus pointers to skill/journal/collection-log rolling.
 - **Spend Keys** — gacha-style unlock tables with reveal animations.
 - **Progression Dashboard** — Character (equipment tiers, skills), World (interactive region map), Activities & Utility (bosses, minigames, guilds… with region tags), Journal (quests, diaries, combat achievements), and Collection Log.
