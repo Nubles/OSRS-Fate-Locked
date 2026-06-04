@@ -18,6 +18,8 @@
     "vardorvis": [49299],
     "scurrius": [50145, 50144, 50147]
   },
+  "_animate_comment": "Slugs whose idle (standingAnimation) is baked into the .gltf as a looping morph animation. Opt-in because animation frames multiply file size ~4-9x. Start small (showcase) and expand once you're happy with the look + page weight.",
+  "animate": ["vorkath", "kalphite-queen", "commander-zilyana"],
   "aliases": {
     "Chambers of Xeric": "Great Olm",
     "Theatre of Blood": "Verzik Vitur",

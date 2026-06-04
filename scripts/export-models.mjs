@@ -54,6 +54,10 @@ const names = cfg.names ?? [];          // ["Zulrah", ...] — resolved by cache
 const aliases = cfg.aliases ?? {};      // { "Display Name": "Resolvable NPC name" }
 const excludes = cfg.exclude ?? {};     // { "<slug>": [modelId, …] } — skip junk sub-models
                                         // (arena boxes / shadow planes / minions an NPC def bundles in)
+const animate = new Set((cfg.animate ?? []).map((s) => slugify(s))); // slugs to bake the
+                                        // NPC's idle (standingAnimation) into as a looping
+                                        // glTF morph animation. Off by default — animation
+                                        // frames multiply file size ~4-9x, so opt in per slug.
 
 // ── load cache (confirmed API: new RSCache(dir) + await cache.onload) ─────────
 const { RSCache, IndexType, ConfigType, GLTFExporter, ModelGroup } = await import('osrscachereader');
@@ -110,6 +114,14 @@ async function exportNpc(id, slug) {
   const merged = group.getMergedModel();
   const exporter = new GLTFExporter(merged);
   exporter.addColors(merged);
+
+  // Optional: bake the idle (standing) animation as a looping morph animation.
+  exportNpc._lastAnim = 0;
+  if (animate.has(slug) && def.standingAnimation != null && def.standingAnimation !== -1) {
+    const seq = await cache.getDef(IndexType.CONFIGS, ConfigType.SEQUENCE, def.standingAnimation);
+    if (seq) { await exporter.addSequence(cache, seq); exportNpc._lastAnim = seq.frameIDs?.length ?? 0; }
+  }
+
   const gltf = exporter.export();
   writeFileSync(path.join(OUT_DIR, `${slug}.gltf`), gltf);
 }
@@ -118,10 +130,11 @@ mkdirSync(OUT_DIR, { recursive: true });
 let ok = 0;
 for (const job of uniqueJobs.slice(0, LIMIT)) {
   try {
-    exportNpc._lastSkipped = 0;
+    exportNpc._lastSkipped = 0; exportNpc._lastAnim = 0;
     await exportNpc(job.id, job.slug);
     const sk = exportNpc._lastSkipped ? `  (excluded ${exportNpc._lastSkipped} junk model${exportNpc._lastSkipped > 1 ? 's' : ''})` : '';
-    console.log(`✓ ${job.slug}.gltf (npc ${job.id})${sk}`); ok++;
+    const an = exportNpc._lastAnim ? `  (idle: ${exportNpc._lastAnim} frames)` : '';
+    console.log(`✓ ${job.slug}.gltf (npc ${job.id})${sk}${an}`); ok++;
   }
   catch (e) { console.warn(`  ! ${job.slug} (npc ${job.id}): ${e?.message ?? e}`); }
 }

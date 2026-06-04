@@ -78,7 +78,9 @@ export const EntityModel: React.FC<Props> = ({
     poster,
     alt,
     ...(interactive ? { 'camera-controls': true } : {}),
-    ...(autoRotate ? { 'auto-rotate': true, 'auto-rotate-delay': 0, 'rotation-per-second': '24deg' } : {}),
+    // `autoplay` loops any baked-in animation (e.g. a boss's idle). Tied to the
+    // same toggle as the spin so "animations off" leaves the model fully still.
+    ...(autoRotate ? { 'auto-rotate': true, 'auto-rotate-delay': 0, 'rotation-per-second': '24deg', autoplay: true } : {}),
     ...(orientation ? { orientation } : {}),
     'interaction-prompt': 'none',
     'shadow-intensity': '0.6',
