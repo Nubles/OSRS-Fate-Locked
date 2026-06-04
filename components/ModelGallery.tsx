@@ -46,7 +46,7 @@ export const ModelGallery: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           <div className="p-2 bg-amber-900/20 rounded-lg border border-amber-500/30 text-amber-300"><Boxes size={18} /></div>
           <div className="flex-1 min-w-0">
             <h2 className="text-base font-bold text-white leading-none">3D Model Gallery</h2>
-            <p className="text-[11px] text-gray-500 mt-1">{slugs.length} models — review them all and tell me which look wrong.</p>
+            <p className="text-[11px] text-gray-500 mt-1">{slugs.length} boss models · drag to rotate, scroll to zoom</p>
           </div>
           <button onClick={onClose} className="text-gray-500 hover:text-white p-1" aria-label="Close"><X size={18} /></button>
         </div>
@@ -91,7 +91,7 @@ export const ModelGallery: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               <h3 className="text-lg font-bold text-white">{prettify(sel)}</h3>
               <span className="text-[11px] font-mono text-gray-600">{MODEL_FILES[sel]}</span>
             </div>
-            <p className="text-[11px] text-gray-500 mt-1">Drag to rotate · scroll to zoom. If one looks wrong, note its name.</p>
+            <p className="text-[11px] text-gray-500 mt-1">Unlocked bosses render as rotatable 3D models.</p>
           </div>
         </div>
       </div>
