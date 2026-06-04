@@ -114,6 +114,22 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Stealing Artefacts': { note: 'Piscarilius access (Kourend & Kebos).' },
   'Mess': { note: "Hosidius kitchen — a cook's duties in Great Kourend." },
 
+  // ===== Player-Owned House (Construction room-build levels) ================
+  // Only the standard room-build levels and Superior Garden features, which are
+  // well-established. Individual furniture upgrade tiers are deliberately omitted.
+  'Kitchen': { skills: { Construction: 5 } },
+  'Menagerie': { skills: { Construction: 37 } },
+  'Costume Room': { skills: { Construction: 42 } },
+  'Chapel Altar': { skills: { Construction: 45 }, note: 'Chapel room; better altars need higher Construction.' },
+  'Portal Chamber': { skills: { Construction: 50 } },
+  'Throne Room': { skills: { Construction: 60 } },
+  'Dungeon': { skills: { Construction: 70 } },
+  'Portal Nexus': { skills: { Construction: 72 } },
+  'Mounted Glory': { skills: { Construction: 47 } },
+  'Spirit Tree (POH)': { skills: { Construction: 75 }, note: 'Superior Garden.' },
+  'Wilderness Obelisk': { skills: { Construction: 80 }, note: 'Superior Garden.' },
+  'Fairy Ring (POH)': { skills: { Construction: 85 }, note: 'Superior Garden.' },
+
   // ===== Mobility (quest-gated transport networks) ==========================
   'Spirit Trees': { quests: ['Tree Gnome Village'] },
   'Fairy Rings': { quests: ['Fairytale II - Cure a Queen'] },
