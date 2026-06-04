@@ -22,6 +22,14 @@ const rateColor = (rate: number): string =>
   : rate >= 11 ? 'text-green-400'
   : 'text-[#a8a29a]';
 
+// Visual identity for each Void Altar ritual (data comes from economy.RITUALS).
+const ALTAR_UI: Record<string, { icon: any; color: string; border: string }> = {
+  LUCK:      { icon: Dices,    color: 'text-blue-400',   border: 'border-blue-500/30' },
+  GREED:     { icon: Coins,    color: 'text-yellow-400', border: 'border-yellow-500/30' },
+  CHAOS:     { icon: Dna,      color: 'text-red-400',    border: 'border-red-500/30' },
+  TRANSMUTE: { icon: Sparkles, color: 'text-purple-400', border: 'border-purple-500/30' },
+};
+
 export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
@@ -450,49 +458,22 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose }) => {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="bg-[#222] p-6 rounded-xl border border-blue-500/30 relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 p-4 opacity-10"><Dices size={64} /></div>
-                                    <h3 className="text-blue-400 font-bold text-lg mb-2">Ritual of Clarity</h3>
-                                    <p className="text-sm text-gray-300 mb-4">Roll with Advantage.</p>
-                                    <div className="text-xs font-mono bg-black/40 p-3 rounded border border-white/5 text-gray-400">
-                                        Cost: <span className="text-white font-bold">{ritualCost(15)} Fate Points</span>
-                                        <br/>
-                                        Effect: Your next roll is rolled twice, taking the better result.
-                                    </div>
-                                </div>
-
-                                <div className="bg-[#222] p-6 rounded-xl border border-yellow-500/30 relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 p-4 opacity-10"><Coins size={64} /></div>
-                                    <h3 className="text-yellow-400 font-bold text-lg mb-2">Ritual of Greed</h3>
-                                    <p className="text-sm text-gray-300 mb-4">Double or Nothing.</p>
-                                    <div className="text-xs font-mono bg-black/40 p-3 rounded border border-white/5 text-gray-400">
-                                        Cost: <span className="text-white font-bold">{ritualCost(30)} Fate Points</span>
-                                        <br/>
-                                        Effect: If your NEXT roll succeeds, you get 2 Keys. If it fails, points are wasted.
-                                    </div>
-                                </div>
-
-                                <div className="bg-[#222] p-6 rounded-xl border border-red-500/30 relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 p-4 opacity-10"><Dna size={64} /></div>
-                                    <h3 className="text-red-400 font-bold text-lg mb-2">Ritual of Chaos</h3>
-                                    <p className="text-sm text-gray-300 mb-4">Embrace entropy.</p>
-                                    <div className="text-xs font-mono bg-black/40 p-3 rounded border border-white/5 text-gray-400">
-                                        Cost: <span className="text-white font-bold">{ritualCost(25)} Fate Points</span>
-                                        <br/>
-                                        Effect: Immediately grants 1 Chaos Key. (Unlocks random content from ANY table).
-                                    </div>
-                                </div>
-
-                                <div className="bg-[#222] p-6 rounded-xl border border-purple-500/30 relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 p-4 opacity-10"><Sparkles size={64} /></div>
-                                    <h3 className="text-purple-400 font-bold text-lg mb-2">Ritual of Transmutation</h3>
-                                    <p className="text-sm text-gray-300 mb-4">Equivalent Exchange.</p>
-                                    <div className="text-xs font-mono bg-black/40 p-3 rounded border border-white/5 text-gray-400">
-                                        Cost: <span className="text-white font-bold">5 Keys</span>
-                                        <br/>
-                                        Effect: Converts 5 standard Keys into 1 Omni-Key.
-                                    </div>
-                                </div>
+                                {RITUALS.map(r => {
+                                    const ui = ALTAR_UI[r.id];
+                                    const Icon = ui.icon;
+                                    return (
+                                        <div key={r.id} className={`bg-[#222] p-6 rounded-xl border ${ui.border} relative overflow-hidden`}>
+                                            <div className="absolute top-0 right-0 p-4 opacity-10"><Icon size={64} /></div>
+                                            <h3 className={`${ui.color} font-bold text-lg mb-2`}>{r.name}</h3>
+                                            <p className="text-sm text-gray-300 mb-4">{r.tagline}</p>
+                                            <div className="text-xs font-mono bg-black/40 p-3 rounded border border-white/5 text-gray-400">
+                                                Cost: <span className="text-white font-bold">{r.fateCost ? `${ritualCost(r.fateCost)} Fate Points` : `${r.keyCost} Keys`}</span>
+                                                <br/>
+                                                Effect: {r.effect}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}

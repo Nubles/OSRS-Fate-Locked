@@ -6,6 +6,7 @@ import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
+import { getRitual } from '../config/economy';
 import { rollDice, UNLOCK_COST } from '../utils/gameEngine';
 import { hashEntry, ensureChain } from '../utils/integrity';
 import { pushBackup, listBackups as readBackups, getBackupData, BackupMeta } from '../utils/backups';
@@ -267,6 +268,12 @@ const chainAppendedHistory = (prev: GameState['history'], next: GameState['histo
   return out;
 };
 
+// Fate cost of a ritual after the run's mode multiplier. Costs live in
+// config/economy.ts (RITUALS) — the single source the Codex and Void Altar
+// also read, so the three can never disagree.
+const ritualFateCost = (id: 'LUCK' | 'GREED' | 'CHAOS', mult: number): number =>
+  Math.round((getRitual(id).fateCost ?? 0) * mult);
+
 const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: Action): GameState & { lastEvent: GameEvent | null } => {
   const now = Date.now();
 
@@ -431,7 +438,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     case 'RITUAL_LUCK':
       return {
         ...state,
-        fatePoints: state.fatePoints - Math.round(15 * resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
+        fatePoints: state.fatePoints - ritualFateCost('LUCK', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
         activeBuff: 'LUCK',
         history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Clarity', details: 'Next roll has Advantage.' }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'LUCK' } }
@@ -440,7 +447,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     case 'RITUAL_GREED':
       return {
         ...state,
-        fatePoints: state.fatePoints - Math.round(30 * resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
+        fatePoints: state.fatePoints - ritualFateCost('GREED', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
         activeBuff: 'GREED',
         history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Greed', details: 'Next success gives 2 Keys.' }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'GREED' } }
@@ -449,7 +456,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     case 'RITUAL_CHAOS':
       return {
         ...state,
-        fatePoints: state.fatePoints - Math.round(25 * resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
+        fatePoints: state.fatePoints - ritualFateCost('CHAOS', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier),
         chaosKeys: state.chaosKeys + 1,
         history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Chaos', details: 'Fate converted to Chaos Key.' }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'CHAOS' } }
@@ -458,7 +465,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     case 'RITUAL_TRANSMUTE':
       return {
         ...state,
-        keys: state.keys - 5,
+        keys: state.keys - (getRitual('TRANSMUTE').keyCost ?? 5),
         specialKeys: state.specialKeys + 1,
         history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Transmutation', details: '5 Keys fused into 1 Omni-Key.' }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'TRANSMUTE' } }

@@ -4,6 +4,7 @@ import { useGame } from '../context/GameContext';
 import { SectionGuide } from './SectionGuide';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { resolveModeRules } from '../config/gameModes';
+import { RITUALS } from '../config/economy';
 import { X, Sparkles, Key, Shield, Dices, ArrowRight, Dna, Coins } from 'lucide-react';
 
 interface VoidAltarProps {
@@ -18,64 +19,28 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
   // Ritual fate costs scale with the run's game mode (see GameContext reducer).
   const rules = resolveModeRules(gameModeId, customMode);
   const ritualCost = (base: number) => Math.round(base * rules.ritualCostMultiplier);
-  const luckCost = ritualCost(15);
-  const greedCost = ritualCost(30);
-  const chaosCost = ritualCost(25);
 
-  const rituals = [
-    {
-      id: 'LUCK',
-      name: 'Ritual of Clarity',
-      cost: `${luckCost} Fate Points`,
-      desc: 'Your next roll will be rolled twice. The best result is chosen automatically.',
-      canAfford: fatePoints >= luckCost,
-      active: activeBuff === 'LUCK',
-      icon: Dices,
-      color: 'text-blue-400',
-      border: 'border-blue-500/30',
-      bg: 'bg-blue-900/20',
-      costColor: 'text-osrs-pity'
-    },
-    {
-      id: 'GREED',
-      name: 'Ritual of Greed',
-      cost: `${greedCost} Fate Points`,
-      desc: `Gamble ${greedCost} Fate Points. If your NEXT roll is successful, receive 2 Keys instead of 1.`,
-      canAfford: fatePoints >= greedCost,
-      active: activeBuff === 'GREED',
-      icon: Coins,
-      color: 'text-yellow-400',
-      border: 'border-yellow-500/30',
-      bg: 'bg-yellow-900/20',
-      costColor: 'text-osrs-pity'
-    },
-    {
-      id: 'CHAOS',
-      name: 'Ritual of Chaos',
-      cost: `${chaosCost} Fate Points`,
-      desc: 'Manifest your accumulated misfortune into a single Chaos Key.',
-      canAfford: fatePoints >= chaosCost,
-      active: false,
-      icon: Dna,
-      color: 'text-red-500',
-      border: 'border-red-500/30',
-      bg: 'bg-red-900/20',
-      costColor: 'text-osrs-pity'
-    },
-    {
-      id: 'TRANSMUTE',
-      name: 'Ritual of Transmutation',
-      cost: '5 Keys',
-      desc: 'Fuse five standard Keys to forge a single Omni-Key.',
-      canAfford: keys >= 5,
-      active: false,
-      icon: Sparkles,
-      color: 'text-purple-400',
-      border: 'border-purple-500/30',
-      bg: 'bg-purple-900/20',
-      costColor: 'text-osrs-gold'
-    }
-  ];
+  // Visual identity per ritual — name, effect and cost all come from
+  // config/economy.ts (RITUALS), the same source the reducer and Codex use.
+  const RITUAL_UI: Record<string, { icon: any; color: string; border: string; bg: string; costColor: string }> = {
+    LUCK:      { icon: Dices,    color: 'text-blue-400',   border: 'border-blue-500/30',   bg: 'bg-blue-900/20',   costColor: 'text-osrs-pity' },
+    GREED:     { icon: Coins,    color: 'text-yellow-400', border: 'border-yellow-500/30', bg: 'bg-yellow-900/20', costColor: 'text-osrs-pity' },
+    CHAOS:     { icon: Dna,      color: 'text-red-500',    border: 'border-red-500/30',    bg: 'bg-red-900/20',    costColor: 'text-osrs-pity' },
+    TRANSMUTE: { icon: Sparkles, color: 'text-purple-400', border: 'border-purple-500/30', bg: 'bg-purple-900/20', costColor: 'text-osrs-gold' },
+  };
+
+  const rituals = RITUALS.map((r) => {
+    const fate = r.fateCost ? ritualCost(r.fateCost) : 0;
+    return {
+      id: r.id,
+      name: r.name,
+      desc: r.effect,
+      cost: r.fateCost ? `${fate} Fate Points` : `${r.keyCost} Keys`,
+      canAfford: r.fateCost ? fatePoints >= fate : keys >= (r.keyCost ?? 0),
+      active: (r.id === 'LUCK' && activeBuff === 'LUCK') || (r.id === 'GREED' && activeBuff === 'GREED'),
+      ...RITUAL_UI[r.id],
+    };
+  });
 
   return (
     <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Void altar" tabIndex={-1} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-300">
