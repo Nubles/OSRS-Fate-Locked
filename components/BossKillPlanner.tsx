@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   X, Swords, Loader2, AlertCircle, RefreshCw, Crosshair, Shield, Zap, Clock,
-  Skull, Crown, Gauge, Heart, Info, ChevronRight, FlaskConical, Box,
+  Skull, Crown, Gauge, Heart, Info, ChevronRight, FlaskConical, Box, Boxes,
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { EQUIPMENT_SLOTS } from '../constants';
@@ -101,6 +101,9 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
             <h2 className="text-base font-bold text-white leading-none flex items-center gap-1.5">Boss Kill Planner <SectionGuide id="KILL_PLANNER" /></h2>
             <p className="text-[11px] text-gray-500 mt-1">Your DPS, kill times and readiness against the bosses you've unlocked.</p>
           </div>
+          <button onClick={() => window.dispatchEvent(new CustomEvent('fate:nav', { detail: { target: 'open:gallery' } }))} title="Review all 3D models" className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-white/10 bg-[#1f1f1f] text-gray-400 hover:text-white hover:border-white/20 text-[10px] font-bold uppercase tracking-wide transition-colors">
+            <Boxes size={11} /> Gallery
+          </button>
           <button onClick={() => setBoostsOn((b) => !b)} title="Toggle prayers + potions" className={`flex items-center gap-1.5 px-2.5 py-1 rounded border text-[10px] font-bold uppercase tracking-wide transition-colors ${boostsOn ? 'border-emerald-500/40 bg-emerald-950/30 text-emerald-300' : 'border-white/10 bg-[#1f1f1f] text-gray-400'}`}>
             <FlaskConical size={11} /> Boosts {boostsOn ? 'on' : 'off'}
           </button>

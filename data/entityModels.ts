@@ -48,3 +48,9 @@ export const modelFor = (name: string): string | undefined => {
   const file = MODEL_FILES[slugify(name)];
   return file ? asset(`models/${file}`) : undefined;
 };
+
+/** Model URL for a manifest slug directly (used by the review gallery). */
+export const modelUrlBySlug = (slug: string): string | undefined => {
+  const file = MODEL_FILES[slug];
+  return file ? asset(`models/${file}`) : undefined;
+};

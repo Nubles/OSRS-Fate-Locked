@@ -34,6 +34,7 @@ const StrategyGuide = lazy(() => import('./components/StrategyGuide').then(m => 
 const SupplyChainCalculator = lazy(() => import('./components/SupplyChainCalculator').then(m => ({ default: m.SupplyChainCalculator })));
 const GameModePicker = lazy(() => import('./components/GameModePicker').then(m => ({ default: m.GameModePicker })));
 const SyncCodeModal = lazy(() => import('./components/SyncCodeModal').then(m => ({ default: m.SyncCodeModal })));
+const ModelGallery = lazy(() => import('./components/ModelGallery').then(m => ({ default: m.ModelGallery })));
 import { obfuscateFateSave, deobfuscateFateSave } from './utils/encryption';
 import { GameState } from './types';
 import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2 } from 'lucide-react';
@@ -408,6 +409,7 @@ const GameLayout = () => {
         'open:supply': setShowSupplyChain,
         'open:gamemode': setShowGameMode,
         'open:sync': setShowSyncCode,
+        'open:gallery': setShowGallery,
       };
       map[target]?.(true);
     };
@@ -415,6 +417,7 @@ const GameLayout = () => {
     return () => window.removeEventListener('fate:nav', onNav);
   }, []);
   const [showGameMode, setShowGameMode] = useState(false);
+  const [showGallery, setShowGallery] = useState(false);
   const [showSyncCode, setShowSyncCode] = useState(false);
   const [syncImportCode, setSyncImportCode] = useState<string | undefined>(undefined);
   const [activeRitualAnim, setActiveRitualAnim] = useState<'NONE' | 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE'>('NONE');
@@ -505,6 +508,7 @@ const GameLayout = () => {
         {showSupplyChain && <SupplyChainCalculator initialQuery={supplyChainPreset} onClose={() => { setShowSupplyChain(false); setSupplyChainPreset(undefined); }} />}
         {showGameMode && <GameModePicker onClose={() => setShowGameMode(false)} />}
         {showSyncCode && <SyncCodeModal onClose={() => { setShowSyncCode(false); setSyncImportCode(undefined); }} initialImportCode={syncImportCode} />}
+        {showGallery && <ModelGallery onClose={() => setShowGallery(false)} />}
       </Suspense>
 
       <Header
