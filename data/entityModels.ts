@@ -14,8 +14,17 @@
  */
 import { MODEL_FILES } from './modelManifest';
 
+/**
+ * Prefix a /public path with the app's base URL so it resolves under a project
+ * subpath (e.g. GitHub Pages serves the app at /OSRS-Fate-Locked/). Without this
+ * a hardcoded "/models/x.gltf" 404s on the live site and the model silently
+ * falls back to its 2D sprite (which then doesn't rotate).
+ */
+const base = (import.meta.env.BASE_URL || '/');
+const asset = (p: string) => `${base}${p.replace(/^\/+/, '')}`;
+
 /** Our own trivial generated model (a gold cube) to test the pipeline. */
-export const PLACEHOLDER_MODEL = '/models/placeholder.glb';
+export const PLACEHOLDER_MODEL = asset('models/placeholder.glb');
 
 /**
  * Optional explicit overrides — only needed when an entity's name doesn't
@@ -37,5 +46,5 @@ export const slugify = (name: string): string =>
 export const modelFor = (name: string): string | undefined => {
   if (MODEL_REGISTRY[name]) return MODEL_REGISTRY[name];
   const file = MODEL_FILES[slugify(name)];
-  return file ? `/models/${file}` : undefined;
+  return file ? asset(`models/${file}`) : undefined;
 };
