@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 /**
  * Renders a 3D entity model with Google's <model-viewer> web component, falling
@@ -55,6 +55,7 @@ export const EntityModel: React.FC<Props> = ({
   const dims = fill ? { width: '100%', height: '100%' } : { width: `${size}px`, height: `${size}px` };
   const [ready, setReady] = useState(scriptState === 'ready');
   const [failed, setFailed] = useState(false);
+  const mvRef = useRef<any>(null);
 
   useEffect(() => {
     if (!src) return;
@@ -66,6 +67,25 @@ export const EntityModel: React.FC<Props> = ({
     return () => { mounted = false; };
   }, [src]);
 
+  // Explicitly loop any baked-in clip (e.g. a boss's idle) once the model
+  // loads. We don't rely on the `autoplay` attribute — model-viewer's auto
+  // play can no-op on a clip with no name, and it wouldn't loop reliably.
+  useEffect(() => {
+    if (!src || !ready || !autoRotate) return;
+    const el = mvRef.current;
+    if (!el) return;
+    const play = () => {
+      try {
+        if (el.availableAnimations && el.availableAnimations.length) {
+          el.play({ repetitions: Infinity });
+        }
+      } catch { /* viewer not ready / no animations — ignore */ }
+    };
+    el.addEventListener('load', play);
+    if (el.loaded) play();
+    return () => el.removeEventListener('load', play);
+  }, [src, ready, autoRotate]);
+
   const fallback = poster
     ? <img src={poster} alt={alt} style={{ ...dims, objectFit: 'contain' }} className={className} />
     : null;
@@ -74,12 +94,14 @@ export const EntityModel: React.FC<Props> = ({
   if (!src || failed || !ready) return fallback;
 
   return React.createElement('model-viewer', {
+    ref: mvRef,
     src,
     poster,
     alt,
     ...(interactive ? { 'camera-controls': true } : {}),
-    // `autoplay` loops any baked-in animation (e.g. a boss's idle). Tied to the
-    // same toggle as the spin so "animations off" leaves the model fully still.
+    // Spin + animation are both tied to the app's animations toggle (passed as
+    // autoRotate) so "animations off" leaves the model fully still. `autoplay`
+    // is a best-effort fallback; the real driver is the play() effect above.
     ...(autoRotate ? { 'auto-rotate': true, 'auto-rotate-delay': 0, 'rotation-per-second': '24deg', autoplay: true } : {}),
     ...(orientation ? { orientation } : {}),
     'interaction-prompt': 'none',
