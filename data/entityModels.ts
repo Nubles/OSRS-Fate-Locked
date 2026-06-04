@@ -63,8 +63,7 @@ export const modelUrlBySlug = (slug: string): string | undefined => {
  * axis flat. Tune here if one still looks off (try +90deg, or a yaw, to taste).
  */
 export const MODEL_ORIENTATION: Record<string, string> = {
-  galvek: '0deg -90deg 0deg',
-  'the-leviathan': '0deg -90deg 0deg',
+  // (none active — Galvek/Leviathan reverted; their raw export pose is kept)
 };
 
 /** Render orientation for an unlock name, or undefined (no rotation). */
