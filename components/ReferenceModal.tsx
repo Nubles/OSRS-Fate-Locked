@@ -292,6 +292,17 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose }) => {
                             <p className="text-xs text-gray-500">
                                 Standard Keys cash in across <b className="text-gray-300">{SPEND_TABLES.length} tables</b> — {SPEND_TABLES.map(t => t.label).join(', ')} — at a flat <b className="text-osrs-gold">{UNLOCK_KEY_COST} Key</b> each. The Unlock Systems tab breaks down what every table does.
                             </p>
+
+                            {/* Smart play */}
+                            <div className="bg-gradient-to-br from-emerald-950/40 to-[#222] p-6 rounded-xl border border-emerald-500/20">
+                                <h3 className="text-emerald-300 font-bold uppercase tracking-widest mb-3 flex items-center gap-2"><Compass size={18}/> Smart Play</h3>
+                                <ul className="space-y-2 text-sm text-gray-300">
+                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Slayer is your engine.</b> It's the most repeatable roll — climb to higher masters (Konar 35%, Duradel 70%, Boss tasks 80%) as soon as you can survive them.</span></li>
+                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Save Omni-Keys for the big wishes.</b> Pick a must-have — a key region, a raid boss, a gear slot — rather than spending them where the table is tiny.</span></li>
+                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Bad luck still pays.</b> Every failed roll banks Fate. Spend it on Clarity before a high-stakes roll, or save toward a Chaos Key.</span></li>
+                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Grandmaster quests &amp; Elite diaries are golden.</b> A guaranteed Key and the best Omni odds in the game.</span></li>
+                                </ul>
+                            </div>
                         </div>
                     )}
 
