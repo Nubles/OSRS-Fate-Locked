@@ -18,8 +18,17 @@ import {
  * every CI run.
  */
 
-const VALID_QUEST = new Set(Object.values(QUEST_DATA).map((q) => q.name));
+// Quests are referenced by their key/id in most places (prereqs, requirements)
+// but a few have a long display `name` (e.g. "Desert Treasure II - The Fallen
+// Empire"), so accept either form.
+const VALID_QUEST = new Set<string>([
+  ...Object.keys(QUEST_DATA),
+  ...Object.values(QUEST_DATA).map((q) => q.name),
+]);
 const VALID_SKILL = new Set(SKILLS_LIST);
+// Non-skill gates that appear in a quest's `skills` map and are resolved
+// specially by journalStatus / goalPlanner (computed, not a trainable skill).
+const META_SKILL = new Set(['Quest Points', 'Combat']);
 const VALID_REGION = new Set<string>([
   'Misthalin', ...MISTHALIN_AREAS, ...Object.keys(REGION_GROUPS),
   ...Object.values(REGION_GROUPS).flat(),
@@ -70,5 +79,36 @@ describe('Diary task list references resolve', () => {
       }
     }
     expect(bad, 'diary tasks with unknown region tags').toEqual([]);
+  });
+});
+
+describe('Quest data integrity', () => {
+  const keys = new Set(Object.keys(QUEST_DATA));
+
+  it('every prereq references a real quest', () => {
+    const bad: string[] = [];
+    for (const [k, q] of Object.entries(QUEST_DATA))
+      for (const p of q.prereqs || []) if (!keys.has(p)) bad.push(`${k} -> "${p}"`);
+    expect(bad, 'quests with broken prereq references').toEqual([]);
+  });
+
+  it('every quest skill is a real skill or a known meta-gate', () => {
+    const bad: string[] = [];
+    for (const [k, q] of Object.entries(QUEST_DATA))
+      for (const s of Object.keys(q.skills || {}))
+        if (!VALID_SKILL.has(s) && !META_SKILL.has(s)) bad.push(`${k} -> "${s}"`);
+    expect(bad, 'quests with unknown skill keys').toEqual([]);
+  });
+
+  it('every quest region is a known area', () => {
+    const bad: string[] = [];
+    for (const [k, q] of Object.entries(QUEST_DATA))
+      for (const r of q.regions || []) if (!VALID_REGION.has(r)) bad.push(`${k} -> "${r}"`);
+    expect(bad, 'quests with unknown region tags').toEqual([]);
+  });
+
+  it('every quest id matches its key', () => {
+    const bad = Object.entries(QUEST_DATA).filter(([k, q]) => q.id !== k).map(([k, q]) => `${k} (id=${q.id})`);
+    expect(bad, 'quests whose id !== key').toEqual([]);
   });
 });

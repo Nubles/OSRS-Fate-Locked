@@ -144,7 +144,7 @@ export const DIARY_DATA: Record<string, DiaryTier> = {
   'Kourend Medium': {
     id: 'Kourend Medium', region: 'Kourend & Kebos', tier: 'Medium', difficulty: DropSource.DIARY_MEDIUM,
     skills: { 'Agility': 49, 'Crafting': 30, 'Farming': 45, 'Firemaking': 50, 'Fishing': 43, 'Hunter': 35, 'Magic': 25, 'Mining': 42, 'Slayer': 50, 'Woodcutting': 50 }, 
-    quests: ['The Depths of Despair', 'Queen of Thieves', 'Tale of the Righteous', 'The Forsaken Tower', 'The Ascent of Arceuus'], requiredRegions: ['Kourend & Kebos']
+    quests: ['The Depths of Despair', 'The Queen of Thieves', 'Tale of the Righteous', 'The Forsaken Tower', 'The Ascent of Arceuus'], requiredRegions: ['Kourend & Kebos']
   },
   'Kourend Hard': {
     id: 'Kourend Hard', region: 'Kourend & Kebos', tier: 'Hard', difficulty: DropSource.DIARY_HARD,

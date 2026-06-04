@@ -971,7 +971,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'A Kingdom Divided': {
     id: 'A Kingdom Divided', name: 'A Kingdom Divided',
     regions: ['Kourend & Kebos'],
-    skills: { 'Agility': 54, 'Thieving': 52, 'Woodcutting': 52, 'Herblore': 50, 'Mining': 42, 'Crafting': 38, 'Magic': 35 }, prereqs: ['The Depths of Despair', 'Queen of Thieves', 'Tale of the Righteous', 'The Forsaken Tower', 'The Ascent of Arceuus'], points: 2, series: 'Great Kourend',
+    skills: { 'Agility': 54, 'Thieving': 52, 'Woodcutting': 52, 'Herblore': 50, 'Mining': 42, 'Crafting': 38, 'Magic': 35 }, prereqs: ['The Depths of Despair', 'The Queen of Thieves', 'Tale of the Righteous', 'The Forsaken Tower', 'The Ascent of Arceuus'], points: 2, series: 'Great Kourend',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Land of the Goblins': {
