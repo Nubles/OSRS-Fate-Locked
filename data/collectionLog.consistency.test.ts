@@ -58,4 +58,25 @@ describe('collection log data integrity', () => {
     }
     expect(bad.slice(0, 30), 'items whose id tab-prefix is wrong').toEqual([]);
   });
+
+  // Coverage regression floor. Audited against the live OSRS wiki (2026-06),
+  // which lists 1,906 collection-log slots; this app curates 1,900 (the small
+  // delta is post-authoring in-game additions). This floor catches accidental
+  // bulk item/page deletion — adding items only ever raises the number.
+  it('retains full collection-log coverage (>= 1900 slots)', () => {
+    let slots = 0;
+    for (const tab of Object.values(COLLECTION_LOG_DATA))
+      for (const page of Object.values(tab.pages)) slots += page.items.length;
+    expect(slots).toBeGreaterThanOrEqual(1900);
+  });
+
+  // Page structure verified page-for-page against the live wiki: Bosses 55
+  // (incl. Brutus), Raids 3, Minigames 22, Other 31 all match exactly; Clues 11
+  // is this app's finer split (common/rare/scroll-cases) of the wiki's 7.
+  it('has the audited page count in each tab', () => {
+    const counts = Object.fromEntries(
+      Object.entries(COLLECTION_LOG_DATA).map(([k, t]) => [k, Object.keys(t.pages).length])
+    );
+    expect(counts).toEqual({ Bosses: 55, Raids: 3, Clues: 11, Minigames: 22, Other: 31 });
+  });
 });
