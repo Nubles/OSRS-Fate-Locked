@@ -8,6 +8,7 @@ import { DROP_RATES } from '../constants';
 import { FixedSizeGrid as Grid } from 'react-window';
 import { wikiService } from '../services/WikiService';
 import { priceService } from '../services/PriceService';
+import { collectionLogSync } from '../services/CollectionLogSyncService';
 
 interface CollectionLogProps {
   searchTerm?: string;
@@ -105,6 +106,15 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
   
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+
+  // Runtime self-update: pull any newly-tracked wiki items into the live log.
+  // `syncVersion` bumps when additions land so the memos below recompute.
+  const [syncVersion, setSyncVersion] = useState(0);
+  useEffect(() => {
+    const unsub = collectionLogSync.subscribe(() => setSyncVersion(v => v + 1));
+    collectionLogSync.init();
+    return unsub;
+  }, []);
 
   // Init Prices and Calculate Wealth
   useEffect(() => {
@@ -206,7 +216,7 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
     }
     if (!currentTabContent) return [];
     return Object.entries(currentTabContent.pages).map(([key, data]) => ({ tab: activeTab, key, data }));
-  }, [activeTab, currentTabContent, searchTerm]);
+  }, [activeTab, currentTabContent, searchTerm, syncVersion]);
 
   // 2. Gather ALL matching items for "All Results" view
   const allSearchItems = useMemo(() => {
@@ -231,7 +241,7 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
         });
       });
       return results;
-  }, [searchTerm]);
+  }, [searchTerm, syncVersion]);
 
   // 3. Determine which items to show in the Grid
   const activeItems = useMemo(() => {
@@ -239,7 +249,7 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
           return allSearchItems;
       }
       return currentTabContent?.pages[activePage]?.items || [];
-  }, [viewMode, searchTerm, allSearchItems, currentTabContent, activePage]);
+  }, [viewMode, searchTerm, allSearchItems, currentTabContent, activePage, syncVersion]);
 
   const itemData = useMemo(() => ({
     items: activeItems,
@@ -255,7 +265,7 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
         if (unlocks.collectionLog[item.id]) obtained++;
     })));
     return { obtained, total };
-  }, [unlocks.collectionLog]);
+  }, [unlocks.collectionLog, syncVersion]);
 
   return (
     <div className="flex flex-col h-full bg-[#3e3529] border-2 border-[#5a5245] rounded-lg overflow-hidden font-sans shadow-2xl relative text-[#ff981f]">
