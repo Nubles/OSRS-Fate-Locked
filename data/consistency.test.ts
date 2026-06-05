@@ -29,6 +29,11 @@ const BOSS_PAGE_ALIASES: Record<string, string[]> = {
   "Vet'ion and Calvar'ion": ["Vet'ion", "Calvar'ion"],
 };
 
+// Collection-log pages that exist in the wiki log but are intentionally NOT
+// unlockable bosses in this app (novelty/joke content kept for log parity).
+// These are allowed to have a CL page without a BOSSES_LIST entry.
+const COLLOG_ONLY_BOSS_PAGES = new Set<string>(['Brutus']);
+
 const NAMED_LISTS: Record<string, string[]> = {
   BOSSES_LIST, MINIGAMES_LIST, GUILDS_LIST, MOBILITY_LIST, ARCANA_LIST,
   POH_LIST, MERCHANTS_LIST, STORAGE_LIST, FARMING_PATCH_LIST, SKILLS_LIST,
@@ -119,7 +124,7 @@ describe('collection log pages map to unlock tables', () => {
   it('every Bosses-tab page is unlockable in BOSSES_LIST', () => {
     const bossSet = new Set(BOSSES_LIST);
     const unmapped = Object.keys(COLLECTION_LOG_DATA['Bosses']?.pages ?? {})
-      .filter(page => !bossSet.has(page) && !(page in BOSS_PAGE_ALIASES));
+      .filter(page => !bossSet.has(page) && !(page in BOSS_PAGE_ALIASES) && !COLLOG_ONLY_BOSS_PAGES.has(page));
     expect(
       unmapped,
       'collection-log boss pages with no BOSSES_LIST entry — add them to BOSSES_LIST or BOSS_PAGE_ALIASES',

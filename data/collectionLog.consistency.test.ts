@@ -59,28 +59,25 @@ describe('collection log data integrity', () => {
     expect(bad.slice(0, 30), 'items whose id tab-prefix is wrong').toEqual([]);
   });
 
-  // Coverage regression floor. Audited against the live OSRS wiki (2026-06),
-  // which lists 1,906 collection-log slots; this app curates 1,895. The delta is
-  // recent in-game additions plus a little novelty/unimplemented content the app
-  // deliberately omits (e.g. the Brutus page — see data/consistency.test.ts,
-  // which requires every Bosses page to be an unlockable boss). This floor
-  // catches accidental bulk item/page deletion — adding items only raises it.
-  it('retains full collection-log coverage (>= 1895 slots)', () => {
+  // Coverage regression floor. The data is a faithful mirror of the live wiki
+  // log (synced from Module:Collection_log/data.json + its display overrides),
+  // which totals 1,905 item-slots. This floor catches accidental bulk item/page
+  // deletion; a future wiki re-sync that adds items only raises the number.
+  it('retains full collection-log coverage (>= 1905 slots)', () => {
     let slots = 0;
     for (const tab of Object.values(COLLECTION_LOG_DATA))
       for (const page of Object.values(tab.pages)) slots += page.items.length;
-    expect(slots).toBeGreaterThanOrEqual(1895);
+    expect(slots).toBeGreaterThanOrEqual(1905);
   });
 
-  // Page structure verified page-for-page against the live wiki: Raids 3,
-  // Minigames 22, Other 31 match exactly; Clues 11 is this app's finer split
-  // (common/rare/scroll-cases) of the wiki's 7. Bosses is 54 by design — the app
-  // scopes its Bosses log to bosses unlockable in BOSSES_LIST, so the wiki's
-  // novelty Brutus page is intentionally excluded (enforced by consistency.test).
+  // Page structure mirrors the live wiki: every wiki collection-log page is
+  // present (incl. Brutus, kept for log parity though it isn't an unlockable
+  // boss — see consistency.test). Bosses 55, Raids 3, Minigames 22, Other 31;
+  // Clues 11 = the 10 Treasure-Trail tiers + Scroll Cases.
   it('has the audited page count in each tab', () => {
     const counts = Object.fromEntries(
       Object.entries(COLLECTION_LOG_DATA).map(([k, t]) => [k, Object.keys(t.pages).length])
     );
-    expect(counts).toEqual({ Bosses: 54, Raids: 3, Clues: 11, Minigames: 22, Other: 31 });
+    expect(counts).toEqual({ Bosses: 55, Raids: 3, Clues: 11, Minigames: 22, Other: 31 });
   });
 });
