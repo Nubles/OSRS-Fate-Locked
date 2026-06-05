@@ -42,6 +42,13 @@ describe('CA task list references resolve', () => {
       .map((t) => `${t.id} -> "${t.tierId}"`);
     expect(bad, 'CA tasks with unknown tier IDs').toEqual([]);
   });
+
+  it('every CA task id is unique', () => {
+    const seen = new Set<string>();
+    const dups: string[] = [];
+    for (const t of ALL_CA_TASKS) { if (seen.has(t.id)) dups.push(t.id); else seen.add(t.id); }
+    expect(dups, 'duplicate CA task ids').toEqual([]);
+  });
 });
 
 describe('Diary task list references resolve', () => {

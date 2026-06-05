@@ -58,7 +58,7 @@ npm run clog:sync     # or: npm run content:sync
 | **Collection log items** | ✅ **Auto, live** (runtime sync) + baked in by CI | ⚠️ Detected; page added by `clog:sync` once a tab is chosen |
 | **Bosses** | ✅ new drops auto-add to the boss's log | ⚠️ **Detected** (new log page) → curate: model, drop-rate, key cost, gacha tier, `BOSSES_LIST` |
 | **Quests** | — | ✅ **Detected** by `content:check` (wiki `{{Globals\|quests}}` count) → curate: skill reqs, prereqs, region, QP, difficulty tier |
-| **Combat Achievements** | — | ✅ **Detected** by `content:check` (per-tier `data-ca-task-id` counts) → curate: monster, tier, description |
+| **Combat Achievements** | ✅ **Auto-synced** by `ca:sync` — a CA task is fully wiki-defined (monster, official name, requirement, tier) with stable in-game ids, so the whole list regenerates from the wiki | ✅ same sync |
 | **Diaries** | — | ⚠️ App-side self-audit (no clean wiki marker; diary content changes very rarely) |
 
 The curation gate is **intentional**, not a limitation:
@@ -88,8 +88,11 @@ wiki's own authoritative numbers next to the app's in **`docs/SYNC_STATUS.md`**:
   count variables (rendered via the API). The app tracks *more* entries than the
   wiki's quest count because it also includes miniquests/sub-quests, so the
   signal to watch is a **change** in the wiki number.
-- **Combat Achievements** — counts the `data-ca-task-id` rows on each of the six
-  tier pages (`Combat Achievements/Easy` … `/Grandmaster`), per tier.
+- **Combat Achievements** — fully **auto-synced** (`npm run ca:sync`,
+  `scripts/sync-combat-achievements.mjs`): regenerates `data/caTasks.ts` from the
+  six tier pages, keying each task by its stable in-game `data-ca-task-id` so
+  re-runs are idempotent and preserve progress. `content:check` then just
+  verifies the per-tier counts match.
 - **Diaries** — app-side self-audit (per region/tier counts); the wiki exposes no
   stable per-task marker and diary content changes very rarely.
 
@@ -99,7 +102,8 @@ quest/CA shipped" into a reviewable PR (`docs/SYNC_STATUS.md` is in its
 `add-paths`). A human then curates the real entry in `data/questData.ts` /
 `data/caTasks.ts`.
 
-> First run already found the app's CA list is behind the live game
-> (223 vs ~637 tasks) — that backlog now lives in `SYNC_STATUS.md` as a visible
-> TODO. Adding a content type later follows the same pattern: extend
-> `check-content-sync.mjs`, and it joins the same PR automatically.
+> The detector originally surfaced that the app tracked only 223 of the wiki's
+> 637 combat achievements; `ca:sync` then backfilled the full set (now 637/637 in
+> `SYNC_STATUS.md`). Adding another content type later follows the same pattern:
+> a `sync-*` script (if fully wiki-defined) or a detector entry, joining the same
+> weekly PR automatically.

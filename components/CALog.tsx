@@ -296,8 +296,9 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2 mb-0.5">
                                                 <span className="text-[10px] uppercase font-bold text-gray-500 bg-white/5 px-1.5 rounded">{task.monster}</span>
-                                                <a 
-                                                    href={getWikiUrl(task.monster)} 
+                                                {task.name && <span className="text-[11px] font-semibold text-gray-300">{task.name}</span>}
+                                                <a
+                                                    href={getWikiUrl(task.monster)}
                                                     target="_blank" 
                                                     rel="noopener noreferrer" 
                                                     className="text-gray-500 hover:text-white transition-colors opacity-0 group-hover:opacity-100"

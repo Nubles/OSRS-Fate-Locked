@@ -14,13 +14,13 @@
 
 | Tier | Wiki | App | Δ |
 | --- | --- | --- | --- |
-| Easy | 41 | 35 | -6 |
-| Medium | 60 | 40 | -20 |
-| Hard | 85 | 43 | -42 |
-| Elite | 162 | 33 | -129 |
-| Master | 168 | 39 | -129 |
-| Grandmaster | 121 | 33 | -88 |
-| **Total** | **637** | **223** | -414 |
+| Easy | 41 | 41 | — |
+| Medium | 60 | 60 | — |
+| Hard | 85 | 85 | — |
+| Elite | 162 | 162 | — |
+| Master | 168 | 168 | — |
+| Grandmaster | 121 | 121 | — |
+| **Total** | **637** | **637** | — |
 
 ## Achievement Diaries
 
@@ -32,9 +32,4 @@ _diary content is flagged on manual review._
 
 ## Action needed
 
-- ⚠️ Combat Achievements · Easy: wiki 41, app 35 (app behind — new tasks to add).
-- ⚠️ Combat Achievements · Medium: wiki 60, app 40 (app behind — new tasks to add).
-- ⚠️ Combat Achievements · Hard: wiki 85, app 43 (app behind — new tasks to add).
-- ⚠️ Combat Achievements · Elite: wiki 162, app 33 (app behind — new tasks to add).
-- ⚠️ Combat Achievements · Master: wiki 168, app 39 (app behind — new tasks to add).
-- ⚠️ Combat Achievements · Grandmaster: wiki 121, app 33 (app behind — new tasks to add).
+- ✅ Nothing — all tracked counts are consistent.

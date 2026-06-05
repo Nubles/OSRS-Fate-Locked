@@ -72,6 +72,7 @@ jobs:
           # Only ever commit the generated data/report — never the scratch logs above.
           add-paths: |
             data/collectionLogData.ts
+            data/caTasks.ts
             docs/SYNC_STATUS.md
           commit-message: "chore(data): sync collection log from the OSRS Wiki"
           title: "🔄 Sync game data from the OSRS Wiki"
