@@ -461,6 +461,13 @@ export const SPECIAL_ICONS: Record<string, string> = {
 };
 
 export const WIKI_OVERRIDES: Record<string, string> = {
+  // Collection-log items whose page is a disambiguation/redirect or whose
+  // cosmetic has no inventory icon — point at a page that has an image.
+  'Ore pack': 'Ore_pack_(Volcanic_Mine)',
+  'Golden armadyl special attack': 'Armadyl_godsword',
+  'Golden bandos special attack': 'Bandos_godsword',
+  'Golden saradomin special attack': 'Saradomin_godsword',
+  'Golden zamorak special attack': 'Zamorak_godsword',
   'Barrows Brothers': 'Barrows',
   'The Nightmare': 'The_Nightmare',
   'Theatre of Blood': 'Theatre_of_Blood',

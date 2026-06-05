@@ -174,15 +174,30 @@ class WikiService {
 
       // Resolve original requested titles, falling back to the sentence-cased
       // variant when the title-cased page has no image.
+      const resolved: Record<string, string | null> = {};
+      const stillNull: string[] = [];
       titles.forEach(requestedTitle => {
         let url = resolveTitle(requestedTitle);
         if (!url) {
           const variant = this.sentenceCaseVariant(requestedTitle);
           if (variant !== requestedTitle) url = resolveTitle(variant);
         }
+        resolved[requestedTitle] = url;
+        if (!url) stillNull.push(requestedTitle);
+      });
 
-        this.memoryCache.set(requestedTitle, url);
-        this.resolvePending(requestedTitle, url);
+      // Fallback: a handful of item pages have no lead "pageimage" set (e.g.
+      // currency/cosmetic pages like the house scarves or the Wintertodt supply
+      // crate) but DO have an inventory icon file named after the item. Look
+      // those up directly so they show an icon instead of a "?".
+      if (stillNull.length) {
+        const fileUrls = await this.fetchFileUrls(stillNull);
+        for (const t of stillNull) if (fileUrls[t]) resolved[t] = fileUrls[t];
+      }
+
+      titles.forEach(t => {
+        this.memoryCache.set(t, resolved[t]);
+        this.resolvePending(t, resolved[t]);
       });
 
       this.saveCache();
@@ -194,6 +209,41 @@ class WikiService {
       // Do not cache network errors, allowing retry on refresh.
       titles.forEach(t => this.resolvePending(t, null));
     }
+  }
+
+  /**
+   * Direct-icon fallback. For normalized item titles whose wiki page had no
+   * `pageimage`, ask for the inventory-icon file (item name + ".png") and use
+   * its URL. The API treats spaces/underscores in titles as equivalent.
+   */
+  private async fetchFileUrls(titles: string[]): Promise<Record<string, string | null>> {
+    const out: Record<string, string | null> = {};
+    const fileTitles = titles.map(t => `File:${t}.png`);
+    const params = new URLSearchParams({
+      action: 'query', prop: 'imageinfo', iiprop: 'url',
+      titles: fileTitles.join('|'), format: 'json', origin: '*',
+    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    try {
+      const res = await fetch(`${BASE_API}?${params.toString()}`, {
+        signal: controller.signal,
+        headers: { 'Api-User-Agent': 'FateLockedUIM/1.0 (https://github.com/Nubles/flitest)' },
+      });
+      clearTimeout(timeoutId);
+      if (!res.ok) return out;
+      const data = await res.json();
+      const pages = data.query?.pages || {};
+      const byFile: Record<string, string> = {};
+      Object.values(pages).forEach((p: any) => {
+        const url = p.imageinfo?.[0]?.url;
+        if (url) byFile[String(p.title).replace(/ /g, '_')] = url;
+      });
+      for (const t of titles) out[t] = byFile[`File:${t}.png`] || null;
+    } catch {
+      clearTimeout(timeoutId);
+    }
+    return out;
   }
 
   /** Resolve and clean up all pending promises for a given title */
