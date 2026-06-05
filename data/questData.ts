@@ -313,7 +313,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Watchtower': {
     id: 'Watchtower', name: 'Watchtower',
     regions: ['Kandarin'],
-    skills: { 'Magic': 15, 'Thieving': 15, 'Agility': 25, 'Herblore': 14, 'Mining': 40 }, prereqs: [], points: 4,
+    skills: { 'Magic': 14, 'Thieving': 15, 'Agility': 25, 'Herblore': 14, 'Mining': 40 }, prereqs: [], points: 4,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Dwarf Cannon': {
@@ -803,7 +803,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Cold War': {
     id: 'Cold War', name: 'Cold War',
     regions: ['Fremennik'],
-    skills: { 'Hunter': 10, 'Agility': 30, 'Crafting': 30, 'Construction': 34 }, prereqs: [], points: 1, series: 'Penguin',
+    skills: { 'Hunter': 10, 'Agility': 30, 'Crafting': 30, 'Construction': 34, 'Thieving': 15 }, prereqs: [], points: 1, series: 'Penguin',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'The Fremennik Isles': {
