@@ -57,8 +57,9 @@ npm run clog:sync     # or: npm run content:sync
 |---|---|---|
 | **Collection log items** | ✅ **Auto, live** (runtime sync) + baked in by CI | ⚠️ Detected; page added by `clog:sync` once a tab is chosen |
 | **Bosses** | ✅ new drops auto-add to the boss's log | ⚠️ **Detected** (new log page) → curate: model, drop-rate, key cost, gacha tier, `BOSSES_LIST` |
-| **Quests** | — | ⚠️ Detected by diffing names → curate: skill reqs, prereqs, region, QP, difficulty tier |
-| **Diaries / Combat Achievements** | — | ⚠️ Same pattern: detect → curate the per-task requirements |
+| **Quests** | — | ✅ **Detected** by `content:check` (wiki `{{Globals\|quests}}` count) → curate: skill reqs, prereqs, region, QP, difficulty tier |
+| **Combat Achievements** | — | ✅ **Detected** by `content:check` (per-tier `data-ca-task-id` counts) → curate: monster, tier, description |
+| **Diaries** | — | ⚠️ App-side self-audit (no clean wiki marker; diary content changes very rarely) |
 
 The curation gate is **intentional**, not a limitation:
 
@@ -75,18 +76,30 @@ The curation gate is **intentional**, not a limitation:
 So: **fully hands-off where the data is self-describing (collection-log items),
 and detected-then-reviewed where real game-design curation is required.**
 
-## Extending the sync to quests / diaries / CAs
+## Detecting new quests / CAs (implemented)
 
-The collection log is the working template. To add another content type:
+Unlike the collection log, quests/CAs/diaries have **no clean machine-readable
+wiki source** (no public Cargo API, and their on-wiki tables are generated). So
+instead of a blind importer, `scripts/check-content-sync.mjs` (`npm run
+content:check`, also part of `content:sync`) is a **detector**. It records the
+wiki's own authoritative numbers next to the app's in **`docs/SYNC_STATUS.md`**:
 
-1. Add `scripts/sync-<type>.mjs` (mirror `scripts/sync-collection-log.mjs`):
-   fetch the wiki's source, diff against the app's data, **append/rename
-   preserving IDs**, and **report** anything new that needs curation.
-2. Chain it into the `content:sync` script in `package.json`.
-3. The weekly workflow then includes it in the same reviewed PR automatically.
+- **Quests** — the wiki's `{{Globals|quests}}` / `quests p2p` / `quests f2p`
+  count variables (rendered via the API). The app tracks *more* entries than the
+  wiki's quest count because it also includes miniquests/sub-quests, so the
+  signal to watch is a **change** in the wiki number.
+- **Combat Achievements** — counts the `data-ca-task-id` rows on each of the six
+  tier pages (`Combat Achievements/Easy` … `/Grandmaster`), per tier.
+- **Diaries** — app-side self-audit (per region/tier counts); the wiki exposes no
+  stable per-task marker and diary content changes very rarely.
 
-Note on sources: the collection log has a clean JSON module
-(`Module:Collection_log/data.json`). Quests/diaries/CAs don't expose an
-equivalent (the wiki has no public Cargo API here), so a quest sync would diff
-against the **category/list** pages and is best scoped as a *detector* that flags
-new quest names for curation — not a blind importer of half-specified quests.
+Because the report is **deterministic** (no timestamps), git only shows a diff
+when an upstream number actually moves — so the weekly workflow turns "a new
+quest/CA shipped" into a reviewable PR (`docs/SYNC_STATUS.md` is in its
+`add-paths`). A human then curates the real entry in `data/questData.ts` /
+`data/caTasks.ts`.
+
+> First run already found the app's CA list is behind the live game
+> (223 vs ~637 tasks) — that backlog now lives in `SYNC_STATUS.md` as a visible
+> TODO. Adding a content type later follows the same pattern: extend
+> `check-content-sync.mjs`, and it joins the same PR automatically.

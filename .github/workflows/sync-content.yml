@@ -69,9 +69,10 @@ jobs:
         with:
           branch: bot/wiki-content-sync
           delete-branch: true
-          # Only ever commit the generated data — never the scratch logs above.
+          # Only ever commit the generated data/report — never the scratch logs above.
           add-paths: |
             data/collectionLogData.ts
+            docs/SYNC_STATUS.md
           commit-message: "chore(data): sync collection log from the OSRS Wiki"
           title: "🔄 Sync game data from the OSRS Wiki"
           body-path: pr-body.md
