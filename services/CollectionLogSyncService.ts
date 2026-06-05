@@ -23,7 +23,10 @@ import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
 
 const API = 'https://oldschool.runescape.wiki/api.php';
 const DATA_TITLE = 'Module:Collection_log/data.json';
-const CACHE_KEY = 'fate_clog_sync_v1';
+const LUA_TITLE = 'Module:Collection_log'; // holds the display-override table
+// v2: v1 compared raw data.json names against the app's override-rendered names
+// and cached spurious duplicate additions — bumped to discard that stale cache.
+const CACHE_KEY = 'fate_clog_sync_v2';
 const CACHE_TTL = 1000 * 60 * 60 * 24 * 7; // 7 days
 
 // App page-name (normalised) -> wiki page name, only where they differ.
@@ -43,13 +46,22 @@ const norm = (s: string) => s.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0
  * Pure diff: given the wiki's flat item list and the app's log data, return the
  * items to APPEND to existing pages (with freshly-minted, collision-free IDs)
  * and any brand-new wiki pages the app doesn't have. Exported for testing.
+ *
+ * `overrides` maps a wiki item id -> the display name the wiki actually RENDERS
+ * (its Module:Collection_log override table). The bundled data already uses
+ * those rendered names, so applying them here is essential: comparing the raw
+ * data.json name ("Chompy bird hat") against the app's rendered name ("Chompy
+ * bird hat (ogre bowman)") would otherwise treat it as new and add a duplicate.
  */
-export function computeSync(wiki: WikiItem[], data: LogData): SyncResult {
-  // wiki page name -> ordered item names
+export function computeSync(wiki: WikiItem[], data: LogData, overrides: Record<number, string> = {}): SyncResult {
+  // wiki page name -> ordered item names (rendered with overrides, as the app stores them)
   const wikiPages = new Map<string, string[]>();
-  for (const it of wiki) for (const pg of it.tabs) {
-    if (!wikiPages.has(pg)) wikiPages.set(pg, []);
-    wikiPages.get(pg)!.push(it.name);
+  for (const it of wiki) {
+    const name = overrides[it.id] !== undefined ? overrides[it.id] : it.name;
+    for (const pg of it.tabs) {
+      if (!wikiPages.has(pg)) wikiPages.set(pg, []);
+      wikiPages.get(pg)!.push(name);
+    }
   }
 
   // index app pages by normalised display name -> { tab, pageObj }
@@ -111,7 +123,13 @@ class CollectionLogSyncService {
     try {
       this.error = null;
       const cached = this.loadCache();
-      const result = cached ?? this.diff(await this.fetchData());
+      let result = cached;
+      if (!result) {
+        // Both sources are required: without the overrides we'd mis-read raw
+        // names as new and add duplicates, so a failure here aborts the sync.
+        const [items, overrides] = await Promise.all([this.fetchData(), this.fetchOverrides()]);
+        result = computeSync(items, COLLECTION_LOG_DATA, overrides);
+      }
       this.apply(result);
       if (!cached) this.saveCache(result);
       this.initialized = true;
@@ -126,8 +144,9 @@ class CollectionLogSyncService {
     }
   }
 
-  private async fetchData(): Promise<WikiItem[]> {
-    const url = `${API}?action=query&prop=revisions&titles=${encodeURIComponent(DATA_TITLE)}` +
+  /** Fetch the raw text content of a wiki page via the CORS-enabled API. */
+  private async fetchPageContent(title: string): Promise<string> {
+    const url = `${API}?action=query&prop=revisions&titles=${encodeURIComponent(title)}` +
       `&rvslots=main&rvprop=content&format=json&origin=*`;
     let lastErr: unknown;
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -139,18 +158,27 @@ class CollectionLogSyncService {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
         const page: any = Object.values(json.query.pages)[0];
-        const content = page.revisions[0].slots.main['*'];
-        const data = JSON.parse(content);
-        if (!Array.isArray(data)) throw new Error('unexpected shape');
-        return data as WikiItem[];
+        return page.revisions[0].slots.main['*'];
       } catch (e) { lastErr = e; }
     }
     throw lastErr ?? new Error('fetch failed');
   }
 
-  /** Compute additions (new items on existing pages) + brand-new pages. */
-  private diff(wiki: WikiItem[]): SyncResult {
-    return computeSync(wiki, COLLECTION_LOG_DATA);
+  private async fetchData(): Promise<WikiItem[]> {
+    const data = JSON.parse(await this.fetchPageContent(DATA_TITLE));
+    if (!Array.isArray(data)) throw new Error('unexpected data.json shape');
+    return data as WikiItem[];
+  }
+
+  /** Parse the wiki's `overrides = { [id] = { name = "..." } }` table. */
+  private async fetchOverrides(): Promise<Record<number, string>> {
+    const lua = await this.fetchPageContent(LUA_TITLE);
+    const out: Record<number, string> = {};
+    const re = /\[(\d+)\]\s*=\s*\{[^}]*name\s*=\s*"((?:[^"\\]|\\.)*)"[^}]*\}/g;
+    let m;
+    while ((m = re.exec(lua)) !== null) out[Number(m[1])] = m[2].replace(/\\"/g, '"');
+    if (Object.keys(out).length === 0) throw new Error('no overrides parsed');
+    return out;
   }
 
   /** Mutate COLLECTION_LOG_DATA in place (idempotent: skips items already present). */

@@ -74,3 +74,27 @@ describe('collection log runtime sync diff', () => {
     expect(again.additions).toEqual([]);
   });
 });
+
+// Regression: the bundled data uses the wiki's override-RENDERED names, so the
+// runtime sync must apply the same overrides — otherwise the raw data.json name
+// looks new and a duplicate is appended (this inflated the slot count > 1906).
+describe('collection log sync applies wiki display overrides', () => {
+  const app: Record<string, CollectionLogTab> = {
+    Other: { name: 'Other', pages: {
+      'Chompy Bird Hunting': { name: 'Chompy Bird Hunting', items: [
+        { id: 501001, name: 'Chompy bird hat (ogre bowman)' },
+      ] },
+    } },
+  };
+  // data.json carries the RAW name; the override renames it for display.
+  const wiki = [{ id: 2978, name: 'Chompy bird hat', tabs: ['Chompy Bird Hunting'] }];
+  const overrides = { 2978: 'Chompy bird hat (ogre bowman)' };
+
+  it('adds a duplicate WITHOUT overrides (demonstrates the bug)', () => {
+    expect(computeSync(wiki, app).additions).toHaveLength(1);
+  });
+
+  it('adds nothing WITH overrides applied (the fix)', () => {
+    expect(computeSync(wiki, app, overrides).additions).toEqual([]);
+  });
+});
