@@ -7,6 +7,7 @@
   "scripts": {
     "models:manifest": "node scripts/gen-model-manifest.mjs",
     "models:export": "node scripts/export-models.mjs",
+    "clog:sync": "node scripts/sync-collection-log.mjs",
     "dev": "node scripts/gen-model-manifest.mjs && vite",
     "build": "node scripts/gen-model-manifest.mjs && vite build",
     "preview": "vite preview",
