@@ -301,7 +301,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Observatory Quest': {
     id: 'Observatory Quest', name: 'Observatory Quest',
     regions: ['Kandarin'],
-    skills: { 'Crafting': 10 }, prereqs: [], points: 2,
+    skills: {}, prereqs: [], points: 2,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'The Tourist Trap': {
@@ -434,7 +434,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Haunted Mine': {
     id: 'Haunted Mine', name: 'Haunted Mine',
     regions: ['Morytania'],
-    skills: { 'Agility': 15, 'Runecraft': 35 }, prereqs: ['Priest in Peril'], points: 2,
+    skills: { 'Crafting': 35 }, prereqs: ['Priest in Peril'], points: 2,
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Troll Romance': {
@@ -566,7 +566,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Wanted!': {
     id: 'Wanted!', name: 'Wanted!',
     regions: ['Asgarnia'],
-    skills: { 'Quest Points': 32, 'Slayer': 33 }, prereqs: ['Recruitment Drive', 'The Lost Tribe', 'Priest in Peril'], points: 1, series: 'Temple Knight',
+    skills: { 'Quest Points': 32 }, prereqs: ['Recruitment Drive', 'The Lost Tribe', 'Priest in Peril'], points: 1, series: 'Temple Knight',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Mourning\'s End Part II': {
@@ -650,7 +650,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'RFD: Goblins': {
     id: 'RFD: Goblins', name: 'RFD: Goblins',
     regions: ['Asgarnia'],
-    skills: { 'Cooking': 48 }, prereqs: ['Goblin Diplomacy'], points: 1, series: 'Recipe for Disaster',
+    skills: {}, prereqs: ['Goblin Diplomacy'], points: 1, series: 'Recipe for Disaster',
     difficulty: DropSource.QUEST_NOVICE
   },
   'RFD: Pirate Pete': {
@@ -668,7 +668,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'RFD: Evil Dave': {
     id: 'RFD: Evil Dave', name: 'RFD: Evil Dave',
     regions: ['Misthalin'],
-    skills: { 'Cooking': 25, 'Magic': 25 }, prereqs: ['Gertrude\'s Cat', 'Shadow of the Storm'], points: 1, series: 'Recipe for Disaster',
+    skills: { 'Cooking': 25 }, prereqs: ['Gertrude\'s Cat', 'Shadow of the Storm'], points: 1, series: 'Recipe for Disaster',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'RFD: Skrach Uglogwee': {
@@ -680,7 +680,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'RFD: Sir Amik Varze': {
     id: 'RFD: Sir Amik Varze', name: 'RFD: Sir Amik Varze',
     regions: ['Asgarnia', 'Karamja', 'Misthalin', 'Islands & Others'],
-    skills: { 'Cooking': 70, 'Quest Points': 107 }, prereqs: ['Legends\' Quest'], points: 1, series: 'Recipe for Disaster',
+    skills: { 'Quest Points': 107 }, prereqs: ['Legends\' Quest'], points: 1, series: 'Recipe for Disaster',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'RFD: King Awowogei': {
@@ -959,7 +959,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Getting Ahead': {
     id: 'Getting Ahead', name: 'Getting Ahead',
     regions: ['Kourend & Kebos'],
-    skills: { 'Construction': 30, 'Crafting': 26 }, prereqs: [], points: 1, series: 'Twisted Tales',
+    skills: { 'Construction': 26, 'Crafting': 30 }, prereqs: [], points: 1, series: 'Twisted Tales',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'A Night at the Theatre': {
@@ -1079,7 +1079,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Meat and Greet': {
     id: 'Meat and Greet', name: 'Meat and Greet',
     regions: ['Varlamore'],
-    skills: { 'Cooking': 50 }, prereqs: ['Children of the Sun'], points: 1,
+    skills: {}, prereqs: ['Children of the Sun'], points: 1,
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Ethically Acquired Antiquities': {
@@ -1204,7 +1204,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'His Faithful Servants': {
     id: 'His Faithful Servants', name: 'His Faithful Servants',
     regions: ['Morytania'], // Barrows
-    skills: { 'Prayer': 50 }, prereqs: ['Priest in Peril'], points: 0, series: 'Mahjarrat',
+    skills: {}, prereqs: ['Priest in Peril'], points: 0, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Hopespear\'s Will': {
