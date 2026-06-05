@@ -1,0 +1,78 @@
+# Keeps the DEPLOYED app's bundled game data current with the OSRS Wiki.
+#
+# The collection log also self-updates live in the browser (additive only — see
+# services/CollectionLogSyncService.ts). This workflow is the other half: it
+# bakes wiki changes into the committed data (so first-load is correct and names
+# get the wiki's polished/override forms) and — because it runs the full test
+# suite, including the cross-data invariants — it's where a brand-new boss/quest
+# that needs human curation (model, gacha tier, economy, requirements) shows up
+# as a reviewable PR rather than silently shipping.
+#
+# Flow: weekly (or manual) -> sync from wiki -> test -> open/refresh a PR.
+# A maintainer reviews + merges; the merge pushes to main and the existing
+# Deploy workflow publishes it. Nothing ships unreviewed.
+name: Sync content from the OSRS Wiki
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # Mondays 06:00 UTC
+  workflow_dispatch: {}  # manual run from the Actions tab
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: wiki-content-sync
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Sync data from the wiki
+        run: npm run content:sync | tee sync-output.txt
+
+      - name: Run tests (gates the sync — must stay green to open a PR)
+        run: npm test
+
+      - name: Build the PR description from the sync log
+        if: success()
+        run: |
+          {
+            echo "Automated sync of game data from the **OSRS Wiki** (\`npm run content:sync\`)."
+            echo ""
+            echo "Review the data diff below, then merge to deploy. If the sync reports a"
+            echo "brand-new page (e.g. a new boss), it needs manual curation — add it to the"
+            echo "relevant unlock list / model / economy before or after merging."
+            echo ""
+            echo '```'
+            cat sync-output.txt
+            echo '```'
+          } > pr-body.md
+
+      - name: Open or update the sync PR
+        if: success()
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: bot/wiki-content-sync
+          delete-branch: true
+          # Only ever commit the generated data — never the scratch logs above.
+          add-paths: |
+            data/collectionLogData.ts
+          commit-message: "chore(data): sync collection log from the OSRS Wiki"
+          title: "🔄 Sync game data from the OSRS Wiki"
+          body-path: pr-body.md
+          labels: data-sync

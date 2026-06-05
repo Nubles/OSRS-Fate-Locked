@@ -1,6 +1,11 @@
 # Dependencies
 node_modules/
 
+# Content-sync scratch artifacts (CI writes these; never commit them)
+sync-output.txt
+pr-body.md
+clog_*
+
 # Build output
 dist/
 dist-ssr/
