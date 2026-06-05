@@ -947,7 +947,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Sins of the Father': {
     id: 'Sins of the Father', name: 'Sins of the Father',
     regions: ['Morytania'],
-    skills: { 'Woodcutting': 62, 'Fletching': 60, 'Crafting': 56, 'Agility': 52, 'Slayer': 50 }, prereqs: ['A Taste of Hope', 'Vampyre Slayer'], points: 2, series: 'Myreque',
+    skills: { 'Woodcutting': 62, 'Fletching': 60, 'Crafting': 56, 'Agility': 52, 'Slayer': 50, 'Attack': 50, 'Firemaking': 66, 'Magic': 49 }, prereqs: ['A Taste of Hope', 'Vampyre Slayer'], points: 2, series: 'Myreque',
     difficulty: DropSource.QUEST_MASTER
   },
   'A Porcine of Interest': {
@@ -1007,7 +1007,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Secrets of the North': {
     id: 'Secrets of the North', name: 'Secrets of the North',
     regions: ['Fremennik', 'Kharidian Desert'],
-    skills: { 'Thieving': 64, 'Agility': 56 }, prereqs: ['Hazeel Cult', 'The General\'s Shadow', 'Making Friends with My Arm'], points: 2, series: 'Mahjarrat',
+    skills: { 'Thieving': 64, 'Agility': 69, 'Hunter': 56 }, prereqs: ['Hazeel Cult', 'The General\'s Shadow', 'Making Friends with My Arm'], points: 2, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_MASTER
   },
   'Desert Treasure II': {
@@ -1091,7 +1091,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'The Curse of Arrav': {
     id: 'The Curse of Arrav', name: 'The Curse of Arrav',
     regions: ['Misthalin'],
-    skills: { 'Agility': 64, 'Ranged': 64, 'Strength': 64, 'Thieving': 64, 'Mining': 64, 'Farming': 64 }, prereqs: ['Defender of Varrock', 'While Guthix Sleeps'], points: 2, series: 'Mahjarrat',
+    skills: { 'Agility': 61, 'Ranged': 62, 'Strength': 58, 'Thieving': 62, 'Mining': 64, 'Slayer': 37 }, prereqs: ['Defender of Varrock', 'While Guthix Sleeps'], points: 2, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_MASTER
   },
   'The Final Dawn': {
