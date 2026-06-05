@@ -899,7 +899,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Dragon Slayer II': {
     id: 'Dragon Slayer II', name: 'Dragon Slayer II',
     regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Fremennik', 'Kourend & Kebos'],
-    skills: { 'Magic': 75, 'Smithing': 70, 'Mining': 68, 'Crafting': 62, 'Agility': 60, 'Thieving': 60, 'Construction': 50, 'Hunter': 50 }, prereqs: ['Legends\' Quest', 'Dream Mentor', 'A Tail of Two Cats', 'Animal Magnetism', 'Ghosts Ahoy', 'Bone Voyage', 'Client of Kourend'], points: 5, series: 'Dragonkin',
+    skills: { 'Magic': 75, 'Smithing': 70, 'Mining': 68, 'Crafting': 62, 'Agility': 60, 'Thieving': 60, 'Construction': 50, 'Hitpoints': 50, 'Quest Points': 200 }, prereqs: ['Legends\' Quest', 'Dream Mentor', 'A Tail of Two Cats', 'Animal Magnetism', 'Ghosts Ahoy', 'Bone Voyage', 'Client of Kourend'], points: 5, series: 'Dragonkin',
     difficulty: DropSource.QUEST_GRANDMASTER
   },
   'Tale of the Righteous': {
@@ -1013,7 +1013,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Desert Treasure II': {
     id: 'Desert Treasure II', name: 'Desert Treasure II - The Fallen Empire',
     regions: ['Kharidian Desert', 'Asgarnia', 'Fremennik', 'Kourend & Kebos', 'Morytania'],
-    skills: { 'Magic': 75, 'Firemaking': 75, 'Thieving': 70, 'Herblore': 62, 'Runecraft': 60, 'Construction': 60, 'Prayer': 60 }, prereqs: ['Desert Treasure I', 'Secrets of the North', 'Enakhra\'s Lament', 'Temple of the Eye', 'The Garden of Death', 'Below Ice Mountain'], points: 5, series: 'Mahjarrat',
+    skills: { 'Magic': 75, 'Firemaking': 75, 'Thieving': 70, 'Herblore': 62, 'Runecraft': 60, 'Construction': 60 }, prereqs: ['Desert Treasure I', 'Secrets of the North', 'Enakhra\'s Lament', 'Temple of the Eye', 'The Garden of Death', 'Below Ice Mountain'], points: 5, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_GRANDMASTER
   },
   'The Path of Glouphrie': {
@@ -1061,7 +1061,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'While Guthix Sleeps': {
     id: 'While Guthix Sleeps', name: 'While Guthix Sleeps',
     regions: ['Misthalin', 'Asgarnia', 'Kandarin'],
-    skills: { 'Thieving': 72, 'Magic': 65, 'Herblore': 57, 'Agility': 56, 'Farming': 65, 'Hunter': 55 }, prereqs: ['Dream Mentor', 'Legends\' Quest', 'The Path of Glouphrie', 'Defender of Varrock'], points: 5, series: 'Mahjarrat',
+    skills: { 'Thieving': 72, 'Agility': 66, 'Farming': 65, 'Hunter': 62, 'Quest Points': 180 }, prereqs: ['Dream Mentor', 'Legends\' Quest', 'The Path of Glouphrie', 'Defender of Varrock'], points: 5, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_GRANDMASTER
   },
   'The Heart of Darkness': {

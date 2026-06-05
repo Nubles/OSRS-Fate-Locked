@@ -20,8 +20,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.QUESTS,
     regions: ['Misthalin', 'Kandarin', 'Fremennik', 'Kourend & Kebos'], // Starts Myths Guild but involves many
     skills: { 
-      'Magic': 75, 'Smithing': 70, 'Mining': 68, 'Crafting': 62, 
-      'Agility': 60, 'Thieving': 60, 'Construction': 50, 'Hunter': 50 
+      'Magic': 75, 'Smithing': 70, 'Mining': 68, 'Crafting': 62,
+      'Agility': 60, 'Thieving': 60, 'Construction': 50, 'Hitpoints': 50
     },
     quests: ['Legends\' Quest', 'Dream Mentor', 'A Tail of Two Cats', 'Animal Magnetism', 'Ghosts Ahoy', 'Bone Voyage', 'Client of Kourend'],
     description: 'Unlocks Vorkath, Rune Dragons, Myths\' Guild, Ava\'s Assembler.'
