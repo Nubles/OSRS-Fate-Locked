@@ -620,13 +620,13 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Enakhra\'s Lament': {
     id: 'Enakhra\'s Lament', name: 'Enakhra\'s Lament',
     regions: ['Kharidian Desert'],
-    skills: { 'Crafting': 50, 'Firemaking': 45, 'Magic': 39, 'Mining': 45 }, prereqs: [], points: 2, series: 'Mahjarrat',
+    skills: { 'Crafting': 50, 'Firemaking': 45, 'Magic': 39, 'Prayer': 43 }, prereqs: [], points: 2, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Cabin Fever': {
     id: 'Cabin Fever', name: 'Cabin Fever',
     regions: ['Islands & Others'],
-    skills: { 'Ranged': 40, 'Smithing': 50, 'Crafting': 45 }, prereqs: ['Pirate\'s Treasure', 'Rum Deal'], points: 2, series: 'Pirate',
+    skills: { 'Ranged': 40, 'Smithing': 50, 'Crafting': 45, 'Agility': 42 }, prereqs: ['Pirate\'s Treasure', 'Rum Deal'], points: 2, series: 'Pirate',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Fairytale I - Growing Pains': {
@@ -977,7 +977,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Land of the Goblins': {
     id: 'Land of the Goblins', name: 'Land of the Goblins',
     regions: ['Kandarin'],
-    skills: { 'Agility': 48, 'Thieving': 48, 'Fishing': 40, 'Herblore': 40 }, prereqs: ['Another Slice of H.A.M.', 'Fishing Contest'], points: 2, series: 'Dorgeshuun',
+    skills: { 'Agility': 38, 'Thieving': 45, 'Fishing': 40, 'Herblore': 48 }, prereqs: ['Another Slice of H.A.M.', 'Fishing Contest'], points: 2, series: 'Dorgeshuun',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Temple of the Eye': {
@@ -1147,7 +1147,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Barbarian Training': {
     id: 'Barbarian Training', name: 'Barbarian Training',
     regions: ['Kandarin'], // Otto's Grotto
-    skills: { 'Fishing': 48, 'Crafting': 11, 'Smithing': 35, 'Firemaking': 35, 'Strength': 15, 'Agility': 15, 'Herblore': 4 },
+    skills: { 'Fishing': 55, 'Firemaking': 35, 'Strength': 35, 'Agility': 15, 'Farming': 15, 'Crafting': 11, 'Smithing': 5, 'Herblore': 4 },
     prereqs: ['Tai Bwo Wannai Trio'], points: 0,
     difficulty: DropSource.QUEST_EXPERIENCED
   },
