@@ -165,6 +165,7 @@ export const ACTIVITY_REGIONS: Record<string, string> = {
   'Hespori Patch': 'Kourend & Kebos',
   'Anima': 'Kourend & Kebos',
   'Vinery': 'Kourend & Kebos',
+  'Coral Nursery': 'Islands & Others', // underwater, beneath The Great Conch
 };
 
 export const getActivityRegion = (item: string): string | undefined =>

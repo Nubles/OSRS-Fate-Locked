@@ -45,6 +45,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Barrows Brothers': { quests: ['Priest in Peril'] },
   'Deranged Archaeologist': { quests: ['Bone Voyage'] },
   'Hespori': { skills: { Farming: 65 } },
+  'Coral Nursery': { note: 'Complete Troubled Tortugans; requires diving apparatus + fishbowl helmet, or a Medallion of the deep.' },
   'Phantom Muspah': { quests: ['Secrets of the North'] },
   'Zulrah': { quests: ['Regicide'] },
   'Wintertodt': { skills: { Firemaking: 50 } },

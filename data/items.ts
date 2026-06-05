@@ -73,7 +73,7 @@ export const FARMING_PATCH_LIST = [
   'Allotment', 'Herb', 'Flower', 'Hops', 'Bush', 'Wood Tree', 
   'Fruit Tree', 'Hardwood Tree', 'Cactus', 'Mushroom', 'Belladonna', 
   'Seaweed', 'Calquat', 'Spirit Tree', 'Celastrus', 'Redwood', 
-  'Crystal Tree', 'Hespori Patch', 'Anima', 'Vinery'
+  'Crystal Tree', 'Hespori Patch', 'Anima', 'Vinery', 'Coral Nursery'
 ];
 
 export const FARMING_UNLOCK_DETAILS: Record<string, string> = {
@@ -96,7 +96,8 @@ export const FARMING_UNLOCK_DETAILS: Record<string, string> = {
   'Crystal Tree': "Crystal Shards",
   'Hespori Patch': "Bottomless Bucket, Anima Seeds",
   'Anima': "Attas, Iasor, Kronos",
-  'Vinery': "Grapes (for wine)"
+  'Vinery': "Grapes (for wine)",
+  'Coral Nursery': "Coral (potion ingredients)"
 };
 
 export const BOSSES_LIST = [
