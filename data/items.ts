@@ -19,14 +19,16 @@ export const MOBILITY_LIST = [
   'Spirit Trees', 'Fairy Rings', 'Gnome Gliders', 'Charter Ships', 'Teleport Tablets', 
   'Jewelry Teleports', 'Canoes', 'Balloon Transport', 'Mine Carts', 'Magic Carpets', 
   'Wilderness Obelisks', 'Minigame Teleports', 'Quetzal Network',
-  'Mycelium Transport', 'Eagle Transport', 'Slayer Ring', 'Xeric\'s Talisman', 
-  'Drakan\'s Medallion', 'Pharaoh\'s Sceptre', 'Crystal Teleport Seed', 'Royal Seed Pod'
+  'Mycelium Transport', 'Eagle Transport', 'Slayer Ring', 'Xeric\'s Talisman',
+  'Drakan\'s Medallion', 'Pharaoh\'s Sceptre', 'Crystal Teleport Seed', 'Royal Seed Pod',
+  'Ectophial', 'Kharedst\'s Memoirs', 'Enchanted Lyre', 'Ring of the Elements',
+  'Digsite Pendant', 'Camulet'
 ];
 
 export const ARCANA_LIST = [
   'Ancient Magicks', 'Lunar Spellbook', 'Arceuus Spellbook', 
-  'Piety', 'Rigour', 'Augury', 'Preserve', 'Bones to Peaches', 
-  'Dwarf Cannon', 'Chivalry'
+  'Piety', 'Rigour', 'Augury', 'Preserve', 'Bones to Peaches',
+  'Dwarf Cannon', 'Chivalry', 'God Spells', 'Mage Arena II'
 ];
 
 export const POH_LIST = [
@@ -37,7 +39,8 @@ export const POH_LIST = [
   'Spellbook Altars', 'Armour Case', 'Magic Wardrobe', 'Cape Rack', 'Treasure Chest (Clues)', 
   'Toy Box', 'Armour Repair Stand', 'Telescope', 'Dungeon', 'Aquarium',
   'Bedroom (Servant)', 'Servant\'s Moneybag', 'Achievement Cape Hanger', 
-  'Dining Table', 'Boss Lair', 'Throne Room', 'Garden Theme'
+  'Dining Table', 'Boss Lair', 'Throne Room', 'Garden Theme',
+  'Mounted Coins'
 ];
 
 export const MERCHANTS_LIST = [
@@ -59,7 +62,8 @@ export const STORAGE_LIST = [
   'Tackle Box', 'Bolt Pouch', 'Plank Sack', 'Huntsman\'s Kit', 'Log Basket', 'Beginner STASH', 
   'Easy STASH', 'Medium STASH', 'Hard STASH', 'Elite STASH', 'Master STASH', 'Tool Leprechauns',
   'Meat Pouch', 'Essence Pouches', 'Master Scroll Book', 'Steel Key Ring', 'Bottomless Bucket',
-  'Spice Pouch', 'Flamtaer Bag', 'Seed Vault', 'Fossil Storage'
+  'Spice Pouch', 'Flamtaer Bag', 'Seed Vault', 'Fossil Storage',
+  'Colossal Pouch', 'Dizana\'s Quiver', 'Forestry Kit', 'Gricoller\'s Can'
 ];
 
 export const GUILDS_LIST = [
