@@ -24,7 +24,7 @@ const generateId = (): string => {
 };
 
 type RollEventMeta = { roll: number; threshold: number };
-type UnlockEventMeta = { item: string; cost: number };
+type UnlockEventMeta = { item: string; cost: number; category?: TableType };
 type RitualEventMeta = { type: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE' };
 type LevelUpEventMeta = { skill: string; level: number; totalLevel: number; chaosKeyAwarded: boolean };
 
@@ -431,7 +431,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       return {
         ...newState,
         history: [...state.history, log],
-        lastEvent: { id: generateId(), type: 'UNLOCK', meta: { item, cost } }
+        lastEvent: { id: generateId(), type: 'UNLOCK', meta: { item, cost, category: table } }
       };
     }
 

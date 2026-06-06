@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { Key, Sparkles } from 'lucide-react';
+import { LootBeam } from './LootBeam';
+import { eventRarity, rarityColor, rarityRank } from '../utils/rarity';
 
 interface Particle {
   id: string;
@@ -19,15 +21,37 @@ interface RollFeedback {
   type: 'SUCCESS' | 'FAIL' | 'OMNI' | 'PITY';
 }
 
+interface Beam {
+  id: string;
+  x: number;
+  y: number;
+  color: string;
+  intense: boolean;
+}
+
 export const EffectsLayer: React.FC = () => {
   const { lastEvent, animationsEnabled } = useGame();
   const [particles, setParticles] = useState<Particle[]>([]);
   const [rollFeedback, setRollFeedback] = useState<RollFeedback[]>([]);
+  const [beams, setBeams] = useState<Beam[]>([]);
 
   useEffect(() => {
     if (!lastEvent || !animationsEnabled) return;
     const { type, x, y, meta } = lastEvent;
-    if (!x || !y) return; // Only spawn if coordinates provided
+
+    // Loot beam — fired for any significant event. Unlocks carry no click
+    // coordinates, so they beam from just below screen-centre like a loot pile.
+    const rarity = eventRarity(type, meta as Record<string, any> | undefined);
+    if (rarity) {
+      // Events without a click point (unlocks, or rolls that pass 0,0) beam from
+      // just below screen-centre like a loot pile.
+      const hasCoords = !!x && !!y;
+      const bx = hasCoords ? x! : window.innerWidth / 2;
+      const by = hasCoords ? y! : Math.round(window.innerHeight * 0.6);
+      spawnBeam(bx, by, rarityColor(rarity), rarityRank(rarity) >= rarityRank('epic'));
+    }
+
+    if (!x || !y) return; // the particle/feedback need a click point
 
     // All ROLL_* events carry RollEventMeta; narrow the union here.
     const roll = meta as { roll: number; threshold: number } | undefined;
@@ -45,6 +69,14 @@ export const EffectsLayer: React.FC = () => {
       spawnFeedback(x, y, roll?.roll ?? 0, roll?.threshold ?? 0, 'PITY');
     }
   }, [lastEvent, animationsEnabled]);
+
+  const spawnBeam = (x: number, y: number, color: string, intense: boolean) => {
+    const id = Math.random().toString();
+    setBeams(prev => [...prev, { id, x, y, color, intense }]);
+    setTimeout(() => {
+      setBeams(prev => prev.filter(b => b.id !== id));
+    }, 1700);
+  };
 
   const spawnParticle = (x: number, y: number, type: 'key' | 'omni') => {
     const id = Math.random().toString();
@@ -64,12 +96,16 @@ export const EffectsLayer: React.FC = () => {
 
   return (
     <>
+      {beams.map(b => (
+        <LootBeam key={b.id} x={b.x} y={b.y} color={b.color} intense={b.intense} />
+      ))}
+
       {particles.map(p => (
-        <div 
+        <div
           key={p.id}
           className="fixed z-[200] pointer-events-none transition-all duration-1000 ease-in-out"
-          style={{ 
-            left: p.x, 
+          style={{
+            left: p.x,
             top: p.y,
             animation: 'key-fly 1s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275)'
           }}
@@ -83,12 +119,12 @@ export const EffectsLayer: React.FC = () => {
       ))}
 
       {rollFeedback.map(f => (
-        <div key={f.id} 
+        <div key={f.id}
              className="fixed z-[200] pointer-events-none font-bold text-sm flex flex-col items-center justify-center text-shadow-osrs whitespace-nowrap"
-             style={{ 
-                 left: f.x, 
-                 top: f.y, 
-                 animation: f.type === 'FAIL' ? 'float-fade-down 1.5s forwards' : 'float-fade-up 2s forwards' 
+             style={{
+                 left: f.x,
+                 top: f.y,
+                 animation: f.type === 'FAIL' ? 'float-fade-down 1.5s forwards' : 'float-fade-up 2s forwards'
              }}>
              <span className={`text-2xl font-black tracking-wide ${f.type === 'OMNI' ? 'text-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.8)]' : f.type === 'SUCCESS' ? 'text-green-400 drop-shadow-[0_0_5px_rgba(34,197,94,0.8)]' : f.type === 'PITY' ? 'text-amber-400 drop-shadow-[0_0_5px_rgba(251,191,36,0.8)]' : 'text-red-400 drop-shadow-[0_0_2px_rgba(239,68,68,0.5)]'}`}>
                  {f.type === 'OMNI' ? 'OMNI-KEY!' : f.type === 'PITY' ? 'PITY KEY!' : f.type === 'SUCCESS' ? 'SUCCESS!' : 'MISS'}

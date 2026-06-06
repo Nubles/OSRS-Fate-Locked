@@ -58,6 +58,7 @@ export const CommandPalette: React.FC = () => {
       // Track
       { id: 'open-ach', title: 'Achievements', subtitle: 'Milestones & completion', group: 'Track', icon: Trophy, keywords: 'achievements milestones trophies', run: go('open:achievements') },
       { id: 'open-stats', title: 'Fate Analytics', subtitle: 'Luck, pace & distribution', group: 'Track', icon: BarChart3, keywords: 'analytics stats luck numbers graphs', run: go('open:stats') },
+      { id: 'open-fatethread', title: 'Fate Thread', subtitle: 'Your run as a living tapestry', group: 'Track', icon: Sparkles, keywords: 'fate thread tapestry constellation web graph map visual unlocks destiny', run: go('open:fatethread') },
       { id: 'open-rival', title: 'Rival', subtitle: 'Race a rival ghost', group: 'Track', icon: Swords, keywords: 'rival ghost race compare pace', run: go('open:rival') },
       // Account
       { id: 'open-altar', title: 'Void Altar', subtitle: 'Spend Fate Points on rituals', group: 'Account', icon: Wand2, keywords: 'void altar ritual fate points sacrifice', run: go('open:altar') },

@@ -102,6 +102,40 @@ a:focus:not(:focus-visible),
   to { transform: translateY(0); }
 }
 
+/* --- Loot beam (OSRS-style pillar of light fired on an unlock/roll) --- */
+@keyframes loot-beam {
+  0%   { opacity: 0; transform: scaleY(0.35); }
+  18%  { opacity: 1; transform: scaleY(1.04); }
+  72%  { opacity: 0.92; transform: scaleY(1); }
+  100% { opacity: 0; transform: scaleY(1); }
+}
+@keyframes loot-beam-glow {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 0.8; }
+}
+@keyframes loot-spark {
+  0%   { opacity: 0; transform: translateY(0) scale(0.6); }
+  25%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-90px) scale(1); }
+}
+
+/* --- Fate Thread tapestry --- */
+@keyframes fate-twinkle {
+  0%, 100% { opacity: 0.85; }
+  50%      { opacity: 1; filter: brightness(1.35); }
+}
+@keyframes fate-core {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50%      { transform: scale(1.08); opacity: 1; }
+}
+@keyframes thread-flow {
+  to { stroke-dashoffset: -24; }
+}
+@keyframes fate-node-in {
+  from { opacity: 0; transform: scale(0); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
 /* Reduced-motion: only suppress the decorative hover-lift. The app's core
    animations (rolls, reveals, rituals) are controlled by the in-app
    animations toggle, so we deliberately do NOT blanket-disable them here —

@@ -28,6 +28,7 @@ import { resolveModeRules } from './config/gameModes';
 // Heavy, conditionally-rendered modals — code-split so they (and their deps,
 // e.g. recharts in StatsModal) stay out of the initial bundle.
 const StatsModal = lazy(() => import('./components/StatsModal').then(m => ({ default: m.StatsModal })));
+const FateThread = lazy(() => import('./components/FateThread').then(m => ({ default: m.FateThread })));
 const ReferenceModal = lazy(() => import('./components/ReferenceModal').then(m => ({ default: m.ReferenceModal })));
 const OracleSearch = lazy(() => import('./components/OracleSearch').then(m => ({ default: m.OracleSearch })));
 const StrategyGuide = lazy(() => import('./components/StrategyGuide').then(m => ({ default: m.StrategyGuide })));
@@ -375,6 +376,7 @@ const GameLayout = () => {
 
   // UI States
   const [showStats, setShowStats] = useState(false);
+  const [showFateThread, setShowFateThread] = useState(false);
   const [showReference, setShowReference] = useState(false);
   const [showAltar, setShowAltar] = useState(false);
   const [showOracle, setShowOracle] = useState(false);
@@ -403,6 +405,7 @@ const GameLayout = () => {
       const map: Record<string, (v: boolean) => void> = {
         'open:altar': setShowAltar,
         'open:stats': setShowStats,
+        'open:fatethread': setShowFateThread,
         'open:reference': setShowReference,
         'open:oracle': setShowOracle,
         'open:strategy': setShowStrategy,
@@ -502,6 +505,7 @@ const GameLayout = () => {
       {showAltar && <VoidAltar onClose={() => setShowAltar(false)} />}
       <Suspense fallback={<ModalFallback />}>
         {showStats && <StatsModal onClose={() => setShowStats(false)} />}
+        {showFateThread && <FateThread onClose={() => setShowFateThread(false)} />}
         {showReference && <ReferenceModal onClose={() => setShowReference(false)} />}
         {showOracle && <OracleSearch onClose={() => setShowOracle(false)} />}
         {showStrategy && <StrategyGuide onClose={() => setShowStrategy(false)} />}
