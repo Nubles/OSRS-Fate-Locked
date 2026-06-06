@@ -1,8 +1,8 @@
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useGame } from '../context/GameContext';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
-import { Lock, Unlock, ZoomIn, ZoomOut, Move, Loader2, Download, Grid3x3, Paintbrush, Eye, EyeOff, ClipboardCopy, Trash2, FileDown, FileUp, Radio } from 'lucide-react';
+import { Lock, Unlock, ZoomIn, ZoomOut, Move, Loader2, Download, Grid3x3, Paintbrush, Eye, EyeOff, ClipboardCopy, Trash2, FileDown, FileUp, Radio, Undo2, Redo2 } from 'lucide-react';
 import { RegionProgressPanel } from './RegionProgressPanel';
 import {
   MAP_IMAGE,
@@ -274,6 +274,35 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
   const paintMode = useRef<'add' | 'remove' | null>(null);
   const importFileRef = useRef<HTMLInputElement>(null);
 
+  // ── Undo / redo — one snapshot per gesture (so a whole drag undoes at once) ──
+  const [undoStack, setUndoStack] = useState<Record<string, ChunkCoord[]>[]>([]);
+  const [redoStack, setRedoStack] = useState<Record<string, ChunkCoord[]>[]>([]);
+  const draftRef = useRef(draftChunks);
+  const undoRef = useRef(undoStack);
+  const redoRef = useRef(redoStack);
+  useEffect(() => { draftRef.current = draftChunks; }, [draftChunks]);
+  useEffect(() => { undoRef.current = undoStack; }, [undoStack]);
+  useEffect(() => { redoRef.current = redoStack; }, [redoStack]);
+  const pushHistory = () => { setUndoStack(s => [...s.slice(-49), draftRef.current]); setRedoStack([]); };
+  const undo = useCallback(() => {
+    const s = undoRef.current; if (!s.length) return;
+    setRedoStack(r => [...r, draftRef.current]);
+    setUndoStack(s.slice(0, -1));
+    setDraftChunks(s[s.length - 1]);
+  }, []);
+  const redo = useCallback(() => {
+    const r = redoRef.current; if (!r.length) return;
+    setUndoStack(u => [...u, draftRef.current]);
+    setRedoStack(r.slice(0, -1));
+    setDraftChunks(r[r.length - 1]);
+  }, []);
+
+  // ── Rectangle fill (Alt+drag a box) ─────────────────────────────────────────
+  const rectStart = useRef<ChunkCoord | null>(null);
+  const rectEnd = useRef<ChunkCoord | null>(null);
+  const rectMode = useRef<'add' | 'remove' | null>(null);
+  const [rectBox, setRectBox] = useState<{ cx0: number; cy0: number; cx1: number; cy1: number } | null>(null);
+
   useEffect(() => {
     try {
       const serialized = JSON.stringify(draftChunks);
@@ -309,6 +338,19 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
     container.addEventListener('wheel', onWheel, { passive: false });
     return () => container.removeEventListener('wheel', onWheel);
   }, []);
+
+  // Undo / redo keyboard shortcuts (authoring only).
+  useEffect(() => {
+    if (!authoring) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const k = e.key.toLowerCase();
+      if (k === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+      else if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); redo(); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [authoring, undo, redo]);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -349,13 +391,48 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
     });
   };
 
+  // Fill (or clear) every chunk inside the dragged box for the active region.
+  const applyRect = (mode: 'add' | 'remove') => {
+    const a = rectStart.current, b = rectEnd.current;
+    if (!a || !b) return;
+    if (mode === 'add' && !activeRegion) return;
+    const minCx = Math.min(a.cx, b.cx), maxCx = Math.max(a.cx, b.cx);
+    const minCy = Math.min(a.cy, b.cy), maxCy = Math.max(a.cy, b.cy);
+    const inBox = (c: ChunkCoord) => c.cx >= minCx && c.cx <= maxCx && c.cy >= minCy && c.cy <= maxCy;
+    setDraftChunks(prev => {
+      const next: Record<string, ChunkCoord[]> = {};
+      // Clear the box from every region first (keeps single-assignment).
+      for (const [name, list] of Object.entries(prev)) {
+        const filtered = list.filter(c => !inBox(c));
+        if (filtered.length) next[name] = filtered;
+      }
+      if (mode === 'add') {
+        const add: ChunkCoord[] = [];
+        for (let cx = minCx; cx <= maxCx; cx++) for (let cy = minCy; cy <= maxCy; cy++) add.push({ cx, cy });
+        next[activeRegion] = [...(next[activeRegion] ?? []), ...add];
+      }
+      return next;
+    });
+  };
+
   const onMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     if (e.button !== 0 && e.button !== 2) return;
     didDrag.current = false;
     lastMouse.current = { x: e.clientX, y: e.clientY };
 
+    // Alt+drag = rectangle fill (Alt+right-drag = rectangle erase).
+    if (authoring && e.altKey) {
+      didDrag.current = true; // so the trailing onClick bails
+      pushHistory();
+      rectMode.current = e.button === 2 ? 'remove' : 'add';
+      const c = chunkAtEvent(e.clientX, e.clientY);
+      rectStart.current = c; rectEnd.current = c;
+      setRectBox(c ? { cx0: c.cx, cy0: c.cy, cx1: c.cx, cy1: c.cy } : null);
+      return;
+    }
     if (authoring && e.shiftKey) {
+      pushHistory();
       paintMode.current = e.button === 2 ? 'remove' : 'add';
       const chunk = chunkAtEvent(e.clientX, e.clientY);
       if (chunk) {
@@ -367,7 +444,13 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
   };
 
   const onMouseMove = (e: React.MouseEvent) => {
-    if (paintMode.current) {
+    if (rectMode.current) {
+      const c = chunkAtEvent(e.clientX, e.clientY);
+      if (c && rectStart.current) {
+        rectEnd.current = c;
+        setRectBox({ cx0: rectStart.current.cx, cy0: rectStart.current.cy, cx1: c.cx, cy1: c.cy });
+      }
+    } else if (paintMode.current) {
       const chunk = chunkAtEvent(e.clientX, e.clientY);
       if (chunk) {
         paintMode.current === 'add' ? addChunkToActive(chunk) : removeChunk(chunk);
@@ -393,6 +476,13 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
 
   const onMouseUp = () => {
     isDragging.current = false;
+    if (rectMode.current) {
+      applyRect(rectMode.current);
+      rectMode.current = null;
+      rectStart.current = null;
+      rectEnd.current = null;
+      setRectBox(null);
+    }
     // Defer clearing paintMode so onClick (which fires after mouseup) can still bail.
     window.setTimeout(() => { paintMode.current = null; }, 0);
   };
@@ -402,6 +492,7 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
     const chunk = chunkAtEvent(e.clientX, e.clientY);
     if (!chunk) return;
     if (authoring) {
+      pushHistory();
       addChunkToActive(chunk);
     } else {
       const text = `{ cx: ${chunk.cx}, cy: ${chunk.cy} },`;
@@ -413,9 +504,9 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
   const onContextMenu = (e: React.MouseEvent) => {
     if (!authoring) return;
     e.preventDefault();
-    if (e.shiftKey) return; // shift+right-click handled by mousedown as paint-erase
+    if (e.shiftKey || e.altKey) return; // shift = paint-erase, alt = rect-erase (handled in mousedown)
     const chunk = chunkAtEvent(e.clientX, e.clientY);
-    if (chunk) removeChunk(chunk);
+    if (chunk) { pushHistory(); removeChunk(chunk); }
   };
 
   const handleExport = async () => {
@@ -527,6 +618,7 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
       const regionCount = Object.values(cleaned).filter(arr => arr.length > 0).length;
       const chunkCount = Object.values(cleaned).reduce((a, arr) => a + arr.length, 0);
       if (!window.confirm(`Replace current draft with ${regionCount} regions / ${chunkCount} chunks from "${file.name}"?`)) return;
+      pushHistory();
       setDraftChunks(cleaned);
       showToast(`imported ${regionCount} regions`);
     } catch (err) {
@@ -545,6 +637,7 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
   const clearActiveRegion = () => {
     if (!activeRegion) return;
     if (!window.confirm(`Clear all chunks for "${activeRegion}"?`)) return;
+    pushHistory();
     setDraftChunks(prev => {
       const next = { ...prev };
       delete next[activeRegion];
@@ -645,6 +738,20 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
               ))}
             </g>
 
+            {rectBox && (() => {
+              const minCx = Math.min(rectBox.cx0, rectBox.cx1), maxCx = Math.max(rectBox.cx0, rectBox.cx1);
+              const minCy = Math.min(rectBox.cy0, rectBox.cy1), maxCy = Math.max(rectBox.cy0, rectBox.cy1);
+              const tl = tileToPixel({ tx: minCx * CHUNK_TILES, ty: (maxCy + 1) * CHUNK_TILES });
+              const br = tileToPixel({ tx: (maxCx + 1) * CHUNK_TILES, ty: minCy * CHUNK_TILES });
+              return (
+                <rect
+                  x={tl.px} y={tl.py} width={br.px - tl.px} height={br.py - tl.py}
+                  fill={rectMode.current === 'remove' ? 'rgba(239,68,68,0.25)' : 'rgba(250,204,21,0.25)'}
+                  stroke={ACTIVE_STROKE} strokeWidth={3} strokeDasharray="10 7"
+                />
+              );
+            })()}
+
             {showGrid && (
               <g stroke={GRID_LINE_COLOR} strokeWidth={1}>
                 {gridLines.verticals.map(v => (
@@ -715,7 +822,26 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
             </select>
 
             <div className="text-[10px] text-gray-400 leading-relaxed mt-1">
-              click = add · right-click = remove · shift+drag = paint · shift+right-drag = erase
+              click = add · right-click = remove · shift+drag = paint · <b className="text-amber-300/80">alt+drag = box fill</b> · alt+right-drag = box erase · <b className="text-amber-300/80">⌘/Ctrl+Z undo</b>
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={undo}
+                disabled={undoStack.length === 0}
+                className="flex-1 px-2 py-1 rounded text-[11px] border bg-black/60 border-white/20 text-gray-300 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-black/60 flex items-center justify-center gap-1"
+                title="Undo (⌘/Ctrl+Z)"
+              >
+                <Undo2 size={12} /> Undo{undoStack.length ? ` (${undoStack.length})` : ''}
+              </button>
+              <button
+                onClick={redo}
+                disabled={redoStack.length === 0}
+                className="flex-1 px-2 py-1 rounded text-[11px] border bg-black/60 border-white/20 text-gray-300 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-black/60 flex items-center justify-center gap-1"
+                title="Redo (⌘/Ctrl+Y)"
+              >
+                <Redo2 size={12} /> Redo
+              </button>
             </div>
 
             <div className="flex gap-2 pt-1">
