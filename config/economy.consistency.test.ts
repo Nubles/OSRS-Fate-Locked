@@ -36,10 +36,10 @@ describe('economy ↔ engine consistency', () => {
     expect(new Set(sources).size).toBe(sources.length);
   });
 
-  it('represents Level Ups as the dynamic Level ÷ 3 curve', () => {
+  it('represents Level Ups as the dynamic Level ÷ 5 curve', () => {
     const lvl = EARN_METHODS.find(m => m.category === 'Level Ups');
     expect(lvl?.dynamic).toBe(true);
-    expect(LEVEL_ROLL_MAX).toBe(Math.ceil(99 / 3));
+    expect(LEVEL_ROLL_MAX).toBe(Math.ceil(99 / 5));
   });
 
   it('earnRange returns the min/max of a method’s fixed tiers', () => {

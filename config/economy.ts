@@ -22,7 +22,7 @@ const WIKI = 'https://oldschool.runescape.wiki/images/';
 
 // ── Skill levelling is the one dynamic rate (computed per attempt) ───────────
 export const SKILLS_TIER_CAP = 10;     // tiers per skill (1 Key each)
-export const LEVEL_ROLL_MAX = 33;      // ceil(99/3) — the cap of the Level ÷ 3 curve
+export const LEVEL_ROLL_MAX = 20;      // ceil(99/5) — the cap of the Level ÷ 5 curve
 export const LEVEL_CHAOS_CHANCE = 2;   // % chance of a Chaos Key on any level up
 
 // ── Earning ──────────────────────────────────────────────────────────────────
@@ -80,7 +80,7 @@ export const EARN_METHODS: EarnMethod[] = [
       { tier: 'Easy',   source: DropSource.DIARY_EASY,   rate: DROP_RATES[DropSource.DIARY_EASY] },
       { tier: 'Medium', source: DropSource.DIARY_MEDIUM, rate: DROP_RATES[DropSource.DIARY_MEDIUM] },
       { tier: 'Hard',   source: DropSource.DIARY_HARD,   rate: DROP_RATES[DropSource.DIARY_HARD] },
-      { tier: 'Elite',  source: DropSource.DIARY_ELITE,  rate: DROP_RATES[DropSource.DIARY_ELITE], omni: 10, bonus: 'Guaranteed Key, elevated Omni chance.' },
+      { tier: 'Elite',  source: DropSource.DIARY_ELITE,  rate: DROP_RATES[DropSource.DIARY_ELITE], omni: 10, bonus: 'The best diary rate, with an elevated Omni chance.' },
     ],
   },
   {
@@ -94,7 +94,7 @@ export const EARN_METHODS: EarnMethod[] = [
       { tier: 'Hard',        source: DropSource.CA_HARD,        rate: DROP_RATES[DropSource.CA_HARD] },
       { tier: 'Elite',       source: DropSource.CA_ELITE,       rate: DROP_RATES[DropSource.CA_ELITE] },
       { tier: 'Master',      source: DropSource.CA_MASTER,      rate: DROP_RATES[DropSource.CA_MASTER] },
-      { tier: 'Grandmaster', source: DropSource.CA_GRANDMASTER, rate: DROP_RATES[DropSource.CA_GRANDMASTER], bonus: 'Guaranteed Key.' },
+      { tier: 'Grandmaster', source: DropSource.CA_GRANDMASTER, rate: DROP_RATES[DropSource.CA_GRANDMASTER], bonus: 'The biggest CA payout.' },
     ],
   },
   {
@@ -147,7 +147,7 @@ export const EARN_METHODS: EarnMethod[] = [
       {
         tier: 'Per level gained',
         rate: LEVEL_ROLL_MAX,
-        rateLabel: `Level ÷ 3 (max ${LEVEL_ROLL_MAX}%)`,
+        rateLabel: `Level ÷ 5 (max ${LEVEL_ROLL_MAX}%)`,
         bonus: `${LEVEL_CHAOS_CHANCE}% chance of a Chaos Key on every level, at any level.`,
       },
     ],

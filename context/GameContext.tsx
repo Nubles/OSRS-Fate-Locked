@@ -732,7 +732,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     dispatch({ type: 'LEVEL_UP', payload: { skill, chaosRoll } });
 
     const newLevel = (state.unlocks.levels[skill] || 1) + 1;
-    const rollChance = Math.ceil(newLevel / 3);
+    const rollChance = Math.ceil(newLevel / 5); // Level ÷ 5 curve (max 20% at 99) — rebalanced 2026
+
     rollForKey(`${skill} Level ${newLevel}`, rollChance);
   }, [state.unlocks.levels, rollForKey]);
 

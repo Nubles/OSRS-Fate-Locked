@@ -10,19 +10,23 @@ export const DROP_RATES: Record<string, number> = {
   [DropSource.QUEST_MASTER]: 95,
   [DropSource.QUEST_GRANDMASTER]: 100,
   
-  [DropSource.CA_EASY]: 10,
-  [DropSource.CA_MEDIUM]: 20,
-  [DropSource.CA_HARD]: 35,
-  [DropSource.CA_ELITE]: 50,
-  [DropSource.CA_MASTER]: 75,
-  [DropSource.CA_GRANDMASTER]: 100,
-  
-  [DropSource.COLLECTION_LOG]: 20,
-  
-  [DropSource.DIARY_EASY]: 33,
-  [DropSource.DIARY_MEDIUM]: 66,
-  [DropSource.DIARY_HARD]: 99,
-  [DropSource.DIARY_ELITE]: 100,
+  // Rebalanced 2026: the bulk repeatable sources (CAs 637 tasks, diaries 485,
+  // collection log 1,905 slots, level-ups) were ~2x over-funding the 805-key
+  // sink. Trimmed so total one-time earn ≈ 1.2x the sink — keys stay scarce, and
+  // slayer & clues remain the flexible top-up income. See config/economy.ts.
+  [DropSource.CA_EASY]: 8,
+  [DropSource.CA_MEDIUM]: 15,
+  [DropSource.CA_HARD]: 25,
+  [DropSource.CA_ELITE]: 30,
+  [DropSource.CA_MASTER]: 40,
+  [DropSource.CA_GRANDMASTER]: 55,
+
+  [DropSource.COLLECTION_LOG]: 8,
+
+  [DropSource.DIARY_EASY]: 20,
+  [DropSource.DIARY_MEDIUM]: 40,
+  [DropSource.DIARY_HARD]: 65,
+  [DropSource.DIARY_ELITE]: 85,
   
   // Specific Slayer Master Rates
   [DropSource.SLAYER_BEGINNER]: 5,
