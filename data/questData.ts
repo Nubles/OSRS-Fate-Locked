@@ -1136,6 +1136,18 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skills: {}, prereqs: [], points: 1, series: 'Tortugan',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
+  'The Red Reef': {
+    id: 'The Red Reef', name: 'The Red Reef',
+    regions: ['The Open Seas'],
+    skills: { Sailing: 52, Smithing: 48 }, prereqs: ['Troubled Tortugans'], points: 2, series: 'Tortugan',
+    difficulty: DropSource.QUEST_EXPERIENCED
+  },
+  'The Ides of Milk': {
+    id: 'The Ides of Milk', name: 'The Ides of Milk',
+    regions: ['Misthalin'],
+    skills: {}, prereqs: [], points: 1,
+    difficulty: DropSource.QUEST_NOVICE
+  },
 
   // --- Miniquests ---
   'Alfred Grimhand\'s Barcrawl': {
