@@ -242,6 +242,9 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
             {req?.note && (
                 <div className="text-[9px] text-gray-500 italic leading-tight mt-0.5">{req.note}</div>
             )}
+            {(!req || (!req.skills && !req.quests && !req.note)) && (
+                <div className="text-[9px] text-gray-600 italic leading-tight mt-0.5">No unlock requirement</div>
+            )}
         </div>
         
         <div className="absolute bottom-1 right-1.5 flex items-center justify-center pointer-events-none">
