@@ -75,7 +75,7 @@ export const EARN_METHODS: EarnMethod[] = [
     category: 'Achievement Diaries',
     icon: `${WIKI}Achievement_Diaries_icon.png`,
     where: 'Journal → Diaries — tick each diary task.',
-    blurb: 'Rolls per individual task, climbing to a guaranteed Key at Elite.',
+    blurb: 'Rolls per individual task, with the rate climbing steeply toward Elite.',
     tiers: [
       { tier: 'Easy',   source: DropSource.DIARY_EASY,   rate: DROP_RATES[DropSource.DIARY_EASY] },
       { tier: 'Medium', source: DropSource.DIARY_MEDIUM, rate: DROP_RATES[DropSource.DIARY_MEDIUM] },

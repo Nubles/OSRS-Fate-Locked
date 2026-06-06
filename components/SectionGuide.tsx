@@ -55,7 +55,7 @@ export const GUIDES: Record<string, Guide> = {
     blurb: 'Your unique drops — each new one is a chance at a key.',
     bullets: [
       'Log new unique items as you obtain them.',
-      'Every newly-logged item rolls for a key (20% chance).',
+      'Every newly-logged item rolls for a key (8% chance).',
       'Track collection progress across bosses and activities.',
     ],
   },

@@ -300,7 +300,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose }) => {
                                     <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Slayer is your engine.</b> It's the most repeatable roll — climb to higher masters (Konar 35%, Duradel 70%, Boss tasks 80%) as soon as you can survive them.</span></li>
                                     <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Save Omni-Keys for the big wishes.</b> Pick a must-have — a key region, a raid boss, a gear slot — rather than spending them where the table is tiny.</span></li>
                                     <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Bad luck still pays.</b> Every failed roll banks Fate. Spend it on Clarity before a high-stakes roll, or save toward a Chaos Key.</span></li>
-                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Grandmaster quests &amp; Elite diaries are golden.</b> A guaranteed Key and the best Omni odds in the game.</span></li>
+                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Grandmaster quests are the single best roll.</b> A guaranteed Key and the best Omni odds in the game — with Elite diaries and the top CA tiers close behind.</span></li>
                                 </ul>
                             </div>
                         </div>
