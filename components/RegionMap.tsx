@@ -956,6 +956,30 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
             rectKind={rectMode.current}
             regionUnlocks={regionUnlocks}
           />
+
+          {/* Gold spotlight on the selected chunk (panel open / deep link) —
+              lives inside the transformed layer so it pans & zooms with the
+              map. Sibling of MapSurface so selection never re-renders the
+              memoized 700-element surface. */}
+          {selectedChunk && !authoring && (() => {
+            const { px, py } = tileToPixel({
+              tx: selectedChunk.cx * CHUNK_TILES,
+              ty: (selectedChunk.cy + 1) * CHUNK_TILES,
+            });
+            const size = CHUNK_TILES * (MAP_IMAGE.width / (MAP_BOUNDS.tileMaxX - MAP_BOUNDS.tileMinX));
+            return (
+              <div
+                className="absolute pointer-events-none rounded-sm border-[5px] border-yellow-400 animate-pulse"
+                style={{
+                  left: px,
+                  top: py,
+                  width: size,
+                  height: size,
+                  boxShadow: '0 0 28px 6px rgba(250, 204, 21, 0.55), inset 0 0 22px rgba(250, 204, 21, 0.35)',
+                }}
+              />
+            );
+          })()}
         </div>
       </div>
 
