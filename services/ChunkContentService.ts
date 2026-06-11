@@ -199,6 +199,15 @@ class ChunkContentService {
     return null;
   }
 
+  /** Every indexed entity of one kind (e.g. all shops in Gielinor). */
+  entitiesOfKind(kind: EntityKind): EntityHit[] {
+    const index = this.getIndex();
+    if (!index) return [];
+    const out: EntityHit[] = [];
+    for (const hit of index.values()) if (hit.kind === kind) out.push(hit);
+    return out;
+  }
+
   /** Ranked substring search across every entity in Gielinor. */
   searchEntities(query: string, limit = 8): EntityHit[] {
     const index = this.getIndex();

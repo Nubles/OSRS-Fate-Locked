@@ -32,6 +32,7 @@ const CALog = lazy(() => import('./CALog').then(m => ({ default: m.CALog })));
 const CollectionLog = lazy(() => import('./CollectionLog').then(m => ({ default: m.CollectionLog })));
 const SkillDetailModal = lazy(() => import('./SkillDetailModal').then(m => ({ default: m.SkillDetailModal })));
 import { PanelErrorBoundary } from './PanelErrorBoundary';
+import { MerchantShopsPanel } from './MerchantShopsPanel';
 import { ModalFallback } from './LoadingFallback';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -781,6 +782,9 @@ export const Dashboard: React.FC = () => {
               </span>
             </h3>
             {renderGridSection(selected.list, selected.unlocked, selected.type, SPECIAL_ICONS, selected.details)}
+            {/* Merchants only: the real shops behind each category, from the
+                chunk dataset, with per-location lock state. */}
+            {selected.id === 'MERCHANTS' && <MerchantShopsPanel />}
           </div>
         </div>
       );
