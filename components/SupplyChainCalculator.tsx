@@ -7,6 +7,7 @@ import { calculateSupplyChain, isItemAvailableWithCtx, buildAvailabilityContext,
 import { wikiService } from '../services/WikiService';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { X, Search, CheckCircle2, Lock, Box, ShoppingBag, Sword, Sprout, MapPin, Database, ExternalLink, RefreshCw, ArrowLeft, ArrowRight, Hammer, HelpCircle, Layers, Coins, Calculator, ListFilter, Star, ChevronDown, ChevronRight, Hand, ScrollText, Percent, Compass, Pin } from 'lucide-react';
+import { WikiLink } from './WikiLink';
 
 const FAVORITES_KEY = 'FATE_RESOURCE_FAVORITES';
 const INVENTORY_KEY = 'FATE_RESOURCE_INVENTORY';
@@ -567,7 +568,7 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
                                                     <div>
                                                         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-0.5">{entry.source.type}</span>
                                                         <div className="flex items-center gap-2">
-                                                            <h4 className={`font-bold text-base leading-none ${entry.status.isAvailable ? 'text-white' : 'text-gray-400'}`}>{entry.source.name}</h4>
+                                                            <h4 className={`font-bold text-base leading-none ${entry.status.isAvailable ? 'text-white' : 'text-gray-400'}`}><WikiLink name={entry.source.name} /></h4>
                                                             {yieldPerAction > 1 && (
                                                                 <span className="text-[9px] bg-yellow-900/30 text-yellow-400 px-1.5 py-0.5 rounded border border-yellow-500/20">
                                                                     x{yieldPerAction} per action

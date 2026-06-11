@@ -6,6 +6,7 @@ import { checkUnlockAvailability, getPoolAndStateKey, isValidUnlock, UNLOCK_COST
 import { REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, POH_LIST, MERCHANTS_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST, UTILITY_ITEM_IDS } from '../constants';
 import { VoidReveal } from './VoidReveal';
 import { wikiService } from '../services/WikiService';
+import { showToast } from '../utils/toast';
 import { Sparkles, Dices, HelpCircle, Dna, Lock, Sprout, TrendingUp, AlertTriangle, Check, Key } from 'lucide-react';
 
 // --- Inner Components ---
@@ -184,7 +185,7 @@ export const GachaSection: React.FC = () => {
     const validPool = pool.filter(item => isValidUnlock(table, item, unlocks));
     
     if (validPool.length === 0) {
-        alert("Nothing left to unlock in this category!");
+        showToast('Nothing left to unlock in this category!');
         return;
     }
 
@@ -225,7 +226,7 @@ export const GachaSection: React.FC = () => {
       });
 
       if (globalPool.length === 0) {
-          alert("Fate has nothing left to offer you. (All content unlocked!)");
+          showToast('Fate has nothing left to offer you — all content unlocked!');
           return;
       }
 

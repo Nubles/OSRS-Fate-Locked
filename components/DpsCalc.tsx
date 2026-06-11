@@ -11,6 +11,7 @@ import { sumBonuses, GearItem, ZERO_BONUSES } from '../utils/gearStats';
 import {
   computeDps, STANCES, PRAYERS, POTIONS, Style, AttackType, DpsInput,
 } from '../utils/dps';
+import { WikiLink } from './WikiLink';
 
 type Status = 'loading' | 'ready' | 'error';
 
@@ -172,7 +173,7 @@ export const DpsCalc: React.FC = () => {
         <div className="flex-1 min-w-0">
           {monster ? (
             <>
-              <div className="text-[12px] font-semibold text-gray-200 truncate">{monster.name}{monster.version ? <span className="text-gray-500"> · {monster.version}</span> : ''}</div>
+              <div className="text-[12px] font-semibold text-gray-200 truncate"><WikiLink name={monster.name} />{monster.version ? <span className="text-gray-500"> · {monster.version}</span> : ''}</div>
               <div className="text-[10px] text-gray-500 font-mono">HP {monster.hp} · Def {monster.defLevel} · Mage {monster.magicLevel}</div>
             </>
           ) : <div className="text-[12px] text-gray-400">Choose a target monster…</div>}

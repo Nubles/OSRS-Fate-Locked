@@ -10,27 +10,12 @@ import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { JournalNextUpStrip, NextUpItem } from './JournalNextUpStrip';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SkillTrainingPopover, SkillPopoverState } from './SkillTrainingPopover';
+import { showToast } from '../utils/toast';
+import { DiaryInsights } from './JournalInsights';
+import { countDoableTasks } from '../utils/journalStatus';
 
-/**
- * Counts how many tasks in `tasks` the player can complete right now:
- *   • not yet done
- *   • all skill reqs met
- *   • all quest reqs met
- *   • all region reqs unlocked (Misthalin is always free)
- */
-function countDoableTasks(tasks: DiaryTask[], unlocks: any): number {
-  return tasks.filter(task => {
-    if (unlocks.completedTasks.includes(task.id)) return false;
-    if (task.skills && !Object.entries(task.skills).every(
-      ([skill, lvl]) => (unlocks.skills[skill] || 0) > 0 && (unlocks.levels[skill] || 1) >= (lvl as number),
-    )) return false;
-    if (task.quests && !task.quests.every(q => unlocks.quests.includes(q))) return false;
-    if (task.regions && !task.regions.every(
-      r => r === 'Misthalin' || MISTHALIN_AREAS.includes(r) || unlocks.regions.includes(r),
-    )) return false;
-    return true;
-  }).length;
-}
+// Doable-now counting lives in utils/journalStatus (shared with the
+// insights band) — see countDoableTasks there.
 
 interface DiaryLogProps {
   searchTerm?: string;
@@ -43,6 +28,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useLocalStorage<JournalStatus>('jrnl:diary:status', 'ALL');
   const [filterTier, setFilterTier] = useLocalStorage<string>('jrnl:diary:tier', 'ALL');
+  const [sortMode, setSortMode] = useLocalStorage<string>('jrnl:diary:sort', 'AREA');
   const [localSearch, setLocalSearch] = useState('');
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [skillPopover, setSkillPopover] = useState<SkillPopoverState | null>(null);
@@ -154,6 +140,27 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
 
   const regions = Array.from(new Set(Object.values(DIARY_DATA).map(d => d.region))).sort();
 
+  // "Closest first": ranked by how *finishable* a tier actually is given the
+  // player's levels / quests / regions. Tiers with at least one doable-now
+  // task come first (you can make progress today), ordered by fewest tasks
+  // remaining, then by most doable. Fully-blocked tiers — however few tasks
+  // they have left — sink below every actionable one. Completed sink last.
+  const sortedDiaries = useMemo(() => {
+    if (sortMode !== 'PROGRESS') return filteredDiaries;
+    const key = (d: { id: string; status: string }): [number, number, number] => {
+      if (d.status === 'COMPLETED') return [2, Infinity, 0];
+      const tasks = ALL_DIARY_TASKS.filter(t => t.tierId === d.id);
+      const remaining = tasks.filter(t => !unlocks.completedTasks.includes(t.id)).length;
+      if (!tasks.length || remaining === 0) return [2, Infinity, 0];
+      const doable = countDoableTasks(tasks, unlocks);
+      return [doable > 0 ? 0 : 1, remaining, -doable];
+    };
+    return [...filteredDiaries].sort((a, b) => {
+      const ka = key(a), kb = key(b);
+      return ka[0] - kb[0] || ka[1] - kb[1] || ka[2] - kb[2];
+    });
+  }, [filteredDiaries, sortMode, unlocks]);
+
   const statusCounts = useMemo(() => ({
     ALL: diaries.length,
     AVAILABLE: diaries.filter((d) => d.status === 'AVAILABLE').length,
@@ -204,7 +211,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
           if (tasks.length > 0) {
               const allDone = tasks.every(t => unlocks.completedTasks.includes(t.id));
               if (!allDone) {
-                  alert("You must complete all individual tasks in this section first.");
+                  showToast('Complete all individual tasks in this section first');
                   return;
               }
           }
@@ -262,7 +269,21 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
         ]}
         activeTier={filterTier}
         onTierChange={setFilterTier}
+        rightExtras={
+          <select
+            value={sortMode}
+            onChange={(e) => setSortMode(e.target.value)}
+            className="bg-black/40 border border-white/10 rounded text-[10px] text-gray-300 px-1 py-1 focus:outline-none focus:border-white/30 shrink-0"
+            title="Sort diaries"
+            aria-label="Sort diaries"
+          >
+            <option value="AREA">By area</option>
+            <option value="PROGRESS">Closest first</option>
+          </select>
+        }
       />
+
+      <DiaryInsights />
 
       {showNextUpStrip && (
         <JournalNextUpStrip
@@ -274,7 +295,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
       )}
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
-        {filteredDiaries.map(diary => {
+        {sortedDiaries.map(diary => {
           const isCompleted = diary.status === 'COMPLETED';
           const isAvailable = diary.status === 'AVAILABLE';
           const isSearching = searchTerm.length > 0;

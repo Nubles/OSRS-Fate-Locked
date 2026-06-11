@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { UnlockRevealData } from '../hooks/useUnlockReveal';
 import { usePortalHost } from '../hooks/usePortalHost';
+import { WikiLink } from './WikiLink';
 
 /**
  * Slide-in panel (bottom-right, fixed) that appears after a quest
@@ -243,7 +244,7 @@ const Section: React.FC<SectionProps> = ({ icon, label, labelColor, items, chevr
       {items.slice(0, MAX_LIST).map((name, i) => (
         <div key={i} className="flex items-center gap-1.5 text-[11px] text-gray-300">
           <ChevronRight size={9} className={`${chevronColor} shrink-0`} />
-          <span className="truncate">{name}</span>
+          <WikiLink name={name} className="truncate hover:underline decoration-dotted underline-offset-2 hover:text-amber-200" />
         </div>
       ))}
       {items.length > MAX_LIST && (

@@ -10,6 +10,7 @@
     "clog:sync": "node scripts/sync-collection-log.mjs",
     "ca:sync": "node scripts/sync-combat-achievements.mjs",
     "content:check": "node scripts/check-content-sync.mjs",
+    "chunks:sync": "node scripts/sync-chunk-content.mjs",
     "content:sync": "node scripts/sync-collection-log.mjs && node scripts/sync-combat-achievements.mjs && node scripts/check-content-sync.mjs",
     "dev": "node scripts/gen-model-manifest.mjs && vite",
     "build": "node scripts/gen-model-manifest.mjs && vite build",

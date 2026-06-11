@@ -2,33 +2,46 @@
 
 Companion plugin for the [Fate Locked Ironman tracker](../). Renders the chunks
 you've authored in the web app's region map directly onto RuneLite's world map
-and main game view, and warns you when you step into a region you haven't
-unlocked yet.
+and main game view, shows your live run state in-game, and warns you — by
+chat, sound, screen flash, and right-click tags — before you touch content you
+haven't unlocked yet.
 
 ## What it does
 
-- **World map overlay.** Every authored chunk shows on the full RuneLite world
-  map, tinted green (unlocked), red (authored but not yet unlocked), or grey
-  (unauthored empty space).
-- **Scene overlay.** The 64×64 chunk you're currently standing in is outlined
-  on the main game view with the same color coding.
-- **Minimap overlay.** The current chunk is also tinted on the minimap.
-- **Side panel.** A toolbar panel shows live run stats (profile, run ID,
-  authored region/chunk counts, unlocked count), your current chunk + region +
-  status, and a paste-box to load a bundle without editing the config path.
-- **Chat on chunk entry.** Every time you cross a chunk boundary the plugin
-  prints a one-liner in chat: current chunk coord, owning region, and status.
-- **Locked-chunk warning.** Entering a region you haven't unlocked plays an
-  audio cue (death squelch, 2277) and flags the chat message red.
-- **Hot reload.** If the bundle file changes on disk, the plugin re-reads it
-  without a restart — useful while authoring regions.
+- **In-game HUD.** Always-visible overlay with your keys (standard · Omni ·
+  Chaos), fate points, active ritual buff, first pinned goal, and the chunk
+  you're standing in with its lock status.
+- **Sub-area-aware lock state.** v2 bundles carry the app's named sub-areas
+  (Falador, Port Sarim, …) and region hierarchy, so a Falador chunk reflects
+  *Falador's* unlock — not all of Asgarnia's. Mirrors the web app's map
+  exactly, including always-free Misthalin.
+- **World map overlay.** Every authored chunk tinted green (unlocked), red
+  (locked), per chunk, on the full world map.
+- **Scene + minimap overlays.** The 64×64 chunk you're in is outlined in the
+  game view and tinted on the minimap with the same color coding.
+- **Locked right-click tags.** Menu entries for NPCs, objects, ground items and
+  walks that target a locked chunk get a red **(LOCKED)** tag appended — the
+  warning arrives *before* you click, where feasible.
+- **Locked-entry alarm.** Crossing into locked territory plays an audio cue
+  and pulses a red border around the entire viewport for ~1.6s.
+- **Side panel.** Run stats (keys/fate/buff/goal), current location, and an
+  **Allowed / Forbidden / Unknown** breakdown: every unlocked area, every
+  authored-but-locked area, and how many map chunks sit in unnamed terrain.
+- **Chat on chunk entry.** One-liner per chunk boundary: coords, area
+  ("Falador · Asgarnia"), and status.
+- **Hot reload.** The bundle file is watched and re-read on change.
+
+Every behavior has a config toggle (HUD, flash, menu tags, chat, sound, each
+overlay, all three colors).
 
 ## Two ways to load a bundle
 
-1. **Config file path** — paste an absolute path; the file is watched and
-   hot-reloaded on change.
-2. **Side panel paste-box** — paste the bundle JSON directly and click
-   *Import pasted JSON*. Good for a quick one-off without saving a file.
+1. **Clipboard → side panel** — the web app's **RL** button now copies the
+   bundle to your clipboard *and* downloads it. Paste into the panel's box and
+   click *Import pasted JSON*. Fastest loop.
+2. **Config file path** — point **Bundle file path** at the downloaded
+   `fate-locked-bundle-YYYY-MM-DD.json`; the file is watched and hot-reloaded,
+   so re-exporting over it updates the plugin automatically.
 
 ## Install (sideload for development)
 
@@ -39,47 +52,40 @@ unlocked yet.
 4. Launch RuneLite. The plugin appears in the plugin panel as **Fate Locked
    Ironman**.
 
-## Setup
-
-1. In the Fate Locked web app, click the **RL** button in the Region Authoring
-   toolbar. It downloads a `fate-locked-bundle-YYYY-MM-DD.json` file.
-2. In the RuneLite plugin config, paste the absolute path to that file into
-   **Bundle file path**.
-3. Overlay should render immediately. Re-export and save over the file any time
-   you unlock a new region; the plugin hot-reloads.
-
-## Bundle format
+## Bundle format (v2)
 
 ```json
 {
-  "version": 1,
-  "runId": "run-389c62bb",
-  "profileName": "Main Account",
-  "chunkOffset": { "cx": 1, "cy": 7 },
-  "chunks": {
-    "Lumbridge": [{ "cx": 51, "cy": 57 }]
-  },
-  "unlockedRegions": ["Lumbridge"]
+  "version": 2,
+  "chunkOffset": { "cx": 0, "cy": 0 },
+  "chunks":        { "Asgarnia": [{ "cx": 46, "cy": 52 }] },
+  "subAreaChunks": { "Falador":  [{ "cx": 46, "cy": 52 }] },
+  "regionGroups":  { "Asgarnia": ["Falador", "Port Sarim"] },
+  "unlockedRegions": ["Falador"],
+  "state": {
+    "keys": 3, "specialKeys": 0, "chaosKeys": 0,
+    "fatePoints": 12, "activeBuff": "NONE", "pinnedGoals": []
+  }
 }
 ```
 
-Chunks in `chunks` are stored in the web app's shifted coordinate space. The
-plugin subtracts `chunkOffset` on load to return to canonical OSRS chunks —
-the same space `WorldPoint.getX() >> 6` gives you.
+- `chunks` — continent blocks; `subAreaChunks` — the named areas inside them.
+- `regionGroups` — hierarchy so the plugin can resolve continent unlocks the
+  same way the app does (Misthalin + its starter areas are always free).
+- `state` — live run stats for the HUD and side panel.
+- v1 bundles (no `subAreaChunks` / `regionGroups` / `state`) still load; lock
+  state then falls back to continent-level.
 
-## Coordinate transform
-
-The web app's map image uses tile coords offset by **(+64 X, +448 Y)** from
-canonical OSRS runescript — i.e. **+1 chunk east, +7 chunks north**. The
-`chunkOffset` field in the bundle encodes that so the plugin never guesses.
-
-If you recalibrate the web app's `MAP_BOUNDS` and the offset changes, the
-next bundle export carries the new offset and the plugin Just Works.
+The app's map is calibrated to canonical OSRS chunk coordinates, so
+`chunkOffset` is `{0,0}` in current exports; the plugin still honors non-zero
+offsets from old bundles.
 
 ## Limits
 
 - The plugin cannot actually stop you walking into a locked chunk. Movement is
-  server-authoritative; all we can do is mark and warn.
+  server-authoritative; all we can do is mark, tag, and warn.
+- Right-click tagging resolves NPC/object/ground-item/walk targets; widget and
+  spell menu entries have no world tile, so they can't be tagged.
 - Rendering on the world map uses the currently-public `RenderOverview` API.
   If RuneLite changes that API, the overlay's pixel math may need a touch-up.
 - Plugin-hub submission requires removing any external network calls. This
@@ -88,5 +94,7 @@ next bundle export carries the new offset and the plugin Just Works.
 ## Future work
 
 - Auto-log rolls from in-game item drops into the tracker's history.
+- Per-chunk "what's here" tooltip on the world map, fed by the app's
+  chunk-content dataset.
 - Emit a hash-chained audit log of chunk transitions + events so the web app's
   integrity layer can be verified against actual gameplay.

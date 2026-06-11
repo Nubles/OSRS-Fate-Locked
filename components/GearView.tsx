@@ -6,6 +6,7 @@ import { useEscapeKey } from '../hooks/useEscapeKey';
 import { gearService } from '../services/GearService';
 import { GearItem, sumBonuses, BONUS_GROUPS, GearBonuses } from '../utils/gearStats';
 import { equipTierColor } from '../utils/equipTiers';
+import { WikiLink } from './WikiLink';
 
 const emptySlotImg = (slot: string) =>
   `https://oldschool.runescape.wiki/images/${SLOT_CONFIG[slot]?.file ?? 'Globe_icon.png'}`;
@@ -261,7 +262,7 @@ const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlock
                   >
                     <img src={itemImg(item.imageFile)} alt="" className="w-7 h-7 object-contain shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.visibility = 'hidden'; }} />
                     <div className="min-w-0 flex-1">
-                      <div className="text-[12px] font-semibold text-gray-200 truncate">{item.name}</div>
+                      <div className="text-[12px] font-semibold text-gray-200 truncate"><WikiLink name={item.name} /></div>
                       <div className="text-[9px] text-gray-500 truncate">{topBonus(item.bonuses)}{item.twoHanded ? ' · 2H' : ''}</div>
                     </div>
                     <span className={`shrink-0 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${locked ? 'bg-[#1a1a1a] text-gray-500 border border-white/5' : `${equipTierColor(tier)} text-black/80`}`}>

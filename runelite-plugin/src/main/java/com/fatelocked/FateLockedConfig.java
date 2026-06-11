@@ -72,6 +72,39 @@ public interface FateLockedConfig extends Config
         return true;
     }
 
+    @ConfigItem(
+        keyName = "flashOnLocked",
+        name = "Screen flash on locked entry",
+        description = "Pulse a red border around the viewport when crossing into locked territory",
+        section = warningsSection
+    )
+    default boolean flashOnLocked()
+    {
+        return true;
+    }
+
+    @ConfigItem(
+        keyName = "tagLockedMenus",
+        name = "Tag locked right-click targets",
+        description = "Append a red (LOCKED) tag to menu entries for NPCs/objects standing in locked chunks",
+        section = warningsSection
+    )
+    default boolean tagLockedMenus()
+    {
+        return true;
+    }
+
+    @ConfigItem(
+        keyName = "showHud",
+        name = "Show in-game HUD",
+        description = "Overlay with keys, fate points, active buff, next goal and current chunk status",
+        section = warningsSection
+    )
+    default boolean showHud()
+    {
+        return true;
+    }
+
     @ConfigSection(
         name = "Rendering",
         description = "How chunks are drawn on the map and in-world",

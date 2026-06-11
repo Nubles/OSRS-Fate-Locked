@@ -22,6 +22,21 @@ export default defineConfig({
         manualChunks: {
           // Stable vendor code — split out so it caches across app deploys.
           'react-vendor': ['react', 'react-dom'],
+          // Eagerly-loaded game data (quests, CAs, diaries, items). It loads at
+          // startup either way, but in its own chunk it fetches in parallel
+          // with the app code and — since the weekly content sync touches data
+          // while features touch code — one changing no longer busts the
+          // other's cache. Lazy-only data (requirements, collectionLogData,
+          // resource*) must stay OUT of this list or it would become eager.
+          'game-data': [
+            './data/questData.ts',
+            './data/caTasks.ts',
+            './data/diaryTasks.ts',
+            './data/diaryData.ts',
+            './data/items.ts',
+            './data/activityRequirements.ts',
+            './data/assets.ts',
+          ],
         },
       },
     },

@@ -13,6 +13,7 @@ import { sumBonuses, GearItem, ZERO_BONUSES } from '../utils/gearStats';
 import { planBoss, BossPlan, BOSS_ALIASES, PlayerCombat, Readiness, Danger } from '../utils/bossPlanner';
 import { EntityModel } from './EntityModel';
 import { modelFor, orientationFor } from '../data/entityModels';
+import { WikiLink } from './WikiLink';
 
 interface Props { onClose: () => void }
 type Status = 'loading' | 'ready' | 'error';
@@ -197,7 +198,7 @@ const Detail: React.FC<{ boss: string; monster: MonsterStats; plan: BossPlan; we
           <img src={monsterImg(monster.imageFile)} alt="" className="w-12 h-12 object-contain shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.visibility = 'hidden'; }} />
         )}
         <div className="min-w-0">
-          <h3 className="text-lg font-bold text-white leading-tight truncate">{boss}</h3>
+          <h3 className="text-lg font-bold text-white leading-tight truncate"><WikiLink name={boss} icon /></h3>
           <p className="text-[11px] text-gray-500">{monster.version ? `${monster.version} · ` : ''}Lvl {monster.level} · HP {monster.hp}</p>
         </div>
         {model && !show3D && toggleBtn('ml-auto shrink-0')}

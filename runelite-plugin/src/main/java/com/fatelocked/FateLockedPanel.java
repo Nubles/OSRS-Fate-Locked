@@ -19,25 +19,42 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Consumer;
 
 /**
  * Side panel for the Fate Locked plugin: live run stats, the player's current
- * chunk + region status, and a paste-box for loading a bundle without touching
- * the config file path.
+ * chunk + status, an Allowed / Forbidden / Unknown content breakdown, and a
+ * paste-box for loading a bundle without touching the config file path.
  */
 class FateLockedPanel extends PluginPanel
 {
+    private static final Color GREEN = new Color(52, 211, 153);
+    private static final Color RED = new Color(248, 113, 113);
+    private static final Color GOLD = new Color(245, 158, 11);
+
     private final JLabel profileVal = value();
     private final JLabel runIdVal = value();
-    private final JLabel regionsVal = value();
-    private final JLabel chunksVal = value();
-    private final JLabel unlockedVal = value();
+    private final JLabel keysVal = value();
+    private final JLabel fateVal = value();
+    private final JLabel buffVal = value();
+    private final JLabel goalVal = value();
 
     private final JLabel chunkVal = value();
     private final JLabel regionVal = value();
     private final JLabel statusVal = value();
+
+    private final JLabel allowedHead = section("ALLOWED (0)");
+    private final JLabel forbiddenHead = section("FORBIDDEN (0)");
+    private final JLabel unknownHead = section("UNKNOWN");
+    private final JTextArea allowedList = list();
+    private final JTextArea forbiddenList = list();
+    private final JLabel unknownNote = value();
 
     private final JTextArea pasteArea = new JTextArea(6, 10);
 
@@ -58,13 +75,24 @@ class FateLockedPanel extends PluginPanel
         col.add(Box.createVerticalStrut(10));
 
         col.add(section("RUN"));
-        col.add(stats(new String[]{ "Profile", "Run ID", "Regions", "Chunks", "Unlocked" },
-            new JLabel[]{ profileVal, runIdVal, regionsVal, chunksVal, unlockedVal }));
+        col.add(stats(new String[]{ "Profile", "Run ID", "Keys", "Fate", "Buff", "Goal" },
+            new JLabel[]{ profileVal, runIdVal, keysVal, fateVal, buffVal, goalVal }));
         col.add(Box.createVerticalStrut(12));
 
         col.add(section("CURRENT LOCATION"));
-        col.add(stats(new String[]{ "Chunk", "Region", "Status" },
+        col.add(stats(new String[]{ "Chunk", "Area", "Status" },
             new JLabel[]{ chunkVal, regionVal, statusVal }));
+        col.add(Box.createVerticalStrut(12));
+
+        col.add(allowedHead);
+        col.add(wrap(allowedList));
+        col.add(Box.createVerticalStrut(8));
+        col.add(forbiddenHead);
+        col.add(wrap(forbiddenList));
+        col.add(Box.createVerticalStrut(8));
+        col.add(unknownHead);
+        unknownNote.setAlignmentX(Component.LEFT_ALIGNMENT);
+        col.add(unknownNote);
         col.add(Box.createVerticalStrut(12));
 
         col.add(section("LOAD BUNDLE"));
@@ -75,7 +103,7 @@ class FateLockedPanel extends PluginPanel
         pasteArea.setForeground(Color.LIGHT_GRAY);
         pasteArea.setCaretColor(Color.LIGHT_GRAY);
         pasteArea.setBorder(new EmptyBorder(4, 4, 4, 4));
-        pasteArea.setToolTipText("Paste the JSON from the web app's RL export button");
+        pasteArea.setToolTipText("Paste the JSON from the web app's RL export button (it's already on your clipboard)");
         JScrollPane scroll = new JScrollPane(pasteArea);
         scroll.setAlignmentX(Component.LEFT_ALIGNMENT);
         scroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 110));
@@ -106,27 +134,66 @@ class FateLockedPanel extends PluginPanel
     }
 
     /** Push fresh state into the panel. Safe to call from the client thread. */
-    void update(FateLockedBundle bundle, CanonicalChunk current, String region, boolean unlocked)
+    void update(FateLockedBundle bundle, CanonicalChunk current, String label, boolean unlocked)
     {
-        int chunkCount = 0;
-        for (Set<CanonicalChunk> set : bundle.getRegionChunks().values())
+        // ── compute the Allowed / Forbidden / Unknown breakdown ────────────────
+        // Allowed: always-free areas + everything the player has unlocked.
+        // Forbidden: authored sub-areas (and continents) that are still locked.
+        // Unknown: chunks not claimed by any named sub-area.
+        Set<String> allowed = new TreeSet<>(bundle.getAlwaysUnlocked());
+        allowed.addAll(bundle.getUnlockedRegions());
+
+        Set<String> forbidden = new TreeSet<>();
+        for (Map.Entry<String, List<String>> group : bundle.getRegionGroups().entrySet())
         {
-            chunkCount += set.size();
+            for (String child : group.getValue())
+            {
+                if (!bundle.isUnlocked(child)) forbidden.add(child);
+            }
         }
-        final int chunks = chunkCount;
+        // v1 bundles have no hierarchy — fall back to authored continents.
+        if (bundle.getRegionGroups().isEmpty())
+        {
+            for (String region : bundle.getRegionChunks().keySet())
+            {
+                if (!bundle.isUnlocked(region)) forbidden.add(region);
+            }
+        }
+
+        int totalChunks = 0;
+        for (Set<CanonicalChunk> set : bundle.getRegionChunks().values()) totalChunks += set.size();
+        int namedChunks = 0;
+        for (Set<CanonicalChunk> set : bundle.getSubAreaChunks().values()) namedChunks += set.size();
+        final int unnamed = Math.max(0, totalChunks - namedChunks);
+
+        FateLockedBundle.RunState st = bundle.getState();
+        List<String> goals = st == null || st.getPinnedGoals() == null
+            ? Collections.<String>emptyList() : st.getPinnedGoals();
 
         SwingUtilities.invokeLater(() -> {
             profileVal.setText(orDash(bundle.getProfileName()));
             runIdVal.setText(orDash(bundle.getRunId()));
-            regionsVal.setText(String.valueOf(bundle.getRegionChunks().size()));
-            chunksVal.setText(String.valueOf(chunks));
-            unlockedVal.setText(String.valueOf(bundle.getUnlockedRegions().size()));
+            if (st != null)
+            {
+                keysVal.setText(st.getKeys() + " · O " + st.getSpecialKeys() + " · C " + st.getChaosKeys());
+                keysVal.setForeground(GOLD);
+                fateVal.setText(String.valueOf(st.getFatePoints()));
+                buffVal.setText(st.getActiveBuff() == null ? "—" : st.getActiveBuff());
+                goalVal.setText(goals.isEmpty() ? "—" : goals.get(0));
+            }
+            else
+            {
+                keysVal.setText("—");
+                fateVal.setText("—");
+                buffVal.setText("—");
+                goalVal.setText("—");
+            }
 
             chunkVal.setText(current == null ? "—"
                 : "(" + current.getCx() + ", " + current.getCy() + ")");
-            regionVal.setText(region == null ? "Unauthored" : region);
+            regionVal.setText(label == null ? "Unauthored" : label);
 
-            if (region == null)
+            if (label == null)
             {
                 statusVal.setText("—");
                 statusVal.setForeground(Color.GRAY);
@@ -134,13 +201,22 @@ class FateLockedPanel extends PluginPanel
             else if (unlocked)
             {
                 statusVal.setText("Unlocked");
-                statusVal.setForeground(new Color(52, 211, 153));
+                statusVal.setForeground(GREEN);
             }
             else
             {
                 statusVal.setText("LOCKED");
-                statusVal.setForeground(new Color(248, 113, 113));
+                statusVal.setForeground(RED);
             }
+
+            allowedHead.setText("ALLOWED (" + allowed.size() + ")");
+            forbiddenHead.setText("FORBIDDEN (" + forbidden.size() + ")");
+            allowedList.setText(allowed.isEmpty() ? "—" : String.join(", ", allowed));
+            allowedList.setForeground(GREEN);
+            forbiddenList.setText(forbidden.isEmpty() ? "—" : String.join(", ", forbidden));
+            forbiddenList.setForeground(RED);
+            unknownNote.setText(unnamed + " map chunks in unnamed terrain");
+            unknownNote.setForeground(Color.GRAY);
         });
     }
 
@@ -149,7 +225,7 @@ class FateLockedPanel extends PluginPanel
     {
         SwingUtilities.invokeLater(() -> {
             runIdVal.setText(message);
-            runIdVal.setForeground(ok ? new Color(52, 211, 153) : new Color(248, 113, 113));
+            runIdVal.setForeground(ok ? GREEN : RED);
         });
     }
 
@@ -158,7 +234,7 @@ class FateLockedPanel extends PluginPanel
     private static JLabel title(String text)
     {
         JLabel l = new JLabel(text);
-        l.setForeground(new Color(245, 158, 11));
+        l.setForeground(GOLD);
         l.setFont(l.getFont().deriveFont(Font.BOLD, 13f));
         l.setAlignmentX(Component.LEFT_ALIGNMENT);
         return l;
@@ -179,6 +255,28 @@ class FateLockedPanel extends PluginPanel
         JLabel l = new JLabel("—");
         l.setForeground(Color.WHITE);
         return l;
+    }
+
+    private static JTextArea list()
+    {
+        JTextArea a = new JTextArea(2, 10);
+        a.setLineWrap(true);
+        a.setWrapStyleWord(true);
+        a.setEditable(false);
+        a.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        a.setBorder(new EmptyBorder(4, 4, 4, 4));
+        a.setFont(a.getFont().deriveFont(11f));
+        return a;
+    }
+
+    private static JScrollPane wrap(JTextArea area)
+    {
+        JScrollPane s = new JScrollPane(area,
+            JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        s.setAlignmentX(Component.LEFT_ALIGNMENT);
+        s.setMaximumSize(new Dimension(Integer.MAX_VALUE, 96));
+        s.setBorder(null);
+        return s;
     }
 
     private static JPanel stats(String[] labels, JLabel[] values)

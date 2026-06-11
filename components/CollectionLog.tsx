@@ -9,6 +9,7 @@ import { FixedSizeGrid as Grid } from 'react-window';
 import { wikiService } from '../services/WikiService';
 import { priceService } from '../services/PriceService';
 import { collectionLogSync } from '../services/CollectionLogSyncService';
+import { WikiLink } from './WikiLink';
 
 interface CollectionLogProps {
   searchTerm?: string;
@@ -82,7 +83,7 @@ const Cell = ({ columnIndex, rowIndex, style, data }: any) => {
            )}
          </div>
          <span className={`text-[8px] mt-1 text-center leading-tight line-clamp-2 w-full ${isUnlocked ? 'text-green-400' : 'text-[#887]'} ${isHighlighted ? 'text-white font-bold' : ''}`}>
-           {item.name}
+           <WikiLink name={item.name} className="hover:underline decoration-dotted underline-offset-2" />
          </span>
          {item.sourcePage && (
              <span className="text-[7px] text-[#ff981f]/60 mt-0.5 text-center leading-none w-full truncate px-1">

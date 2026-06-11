@@ -4,6 +4,8 @@ import { useGame } from '../context/GameContext';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
 import { Lock, Unlock, ZoomIn, ZoomOut, Move, Loader2, Download, Grid3x3, Paintbrush, Eye, EyeOff, ClipboardCopy, Trash2, FileDown, FileUp, Radio, Undo2, Redo2 } from 'lucide-react';
 import { RegionProgressPanel } from './RegionProgressPanel';
+import { ChunkActivityPanel } from './ChunkActivityPanel';
+import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import {
   MAP_IMAGE,
   MAP_BOUNDS,
@@ -31,128 +33,127 @@ const REGION_COORDS: Record<string, { x: number; y: number }> = {
   'The Open Seas': { x: 61.81, y: 74.35 }
 };
 
-// Baseline chunk assignments. The authoring tool starts from this and stores
-// its working copy in localStorage — hit Export in the toolbar to dump the
-// draft back here as a pasteable literal.
-// ROUGH SCAFFOLD: approximate rectangular region blocks (real game-tile chunk
-// coords, post-calibration) so the map isn't blank. These are deliberately
-// coarse — they bleed across borders and over some ocean, and the scattered
-// regions (Islands & Others, The Open Seas) are intentionally left empty.
-// Refine with the authoring tool, then Export to overwrite this literal.
+// Per-region chunk assignments used to colour the world map.
+// Source of truth: the One Chunk Man "Chunk Picker" (source-chunk/chunk-picker-v2,
+// gh-pages — chunkpicker-chunkinfo-export.json). Each canonical OSRS region ID is
+// converted to our chunk coords (cx = id >> 8, cy = id & 255 — i.e. regionX,
+// regionY), so they line up 1:1 with our calibrated map (see utils/mapCoords.ts).
+//  - Mainlands: the picker's `rollingChunks` kingdom grouping (border chunks
+//    shared by two kingdoms assigned once, by a fixed priority). Islands the
+//    picker counts as part of a kingdom (Lunar Isle -> Fremennik, Crandor ->
+//    Karamja, Mos Le'Harmless -> Morytania, Void Knights' Outpost -> Asgarnia,
+//    Feldip Hills -> Kandarin, ...) are included.
+//  - Islands & Others: Fossil Island + Ape Atoll, which the picker buckets into a
+//    mainland by access route -> moved here to match our region model.
+//  - The Open Seas: Sailing islands, found by matching each island name against
+//    the picker's per-chunk content and keeping only offshore chunks.
+// A few access-only anomalies (e.g. the Isle of Souls block the picker files under
+// Misthalin) are dropped. Refine any of this with the authoring tool, then Export.
 const REGION_CHUNKS: Record<string, ChunkCoord[]> = {
   'Asgarnia': [
-    { cx: 44, cy: 49 }, { cx: 45, cy: 49 }, { cx: 46, cy: 49 }, { cx: 47, cy: 49 }, { cx: 44, cy: 50 }, { cx: 45, cy: 50 },
-    { cx: 46, cy: 50 }, { cx: 47, cy: 50 }, { cx: 44, cy: 51 }, { cx: 45, cy: 51 }, { cx: 46, cy: 51 }, { cx: 47, cy: 51 },
-    { cx: 44, cy: 52 }, { cx: 45, cy: 52 }, { cx: 46, cy: 52 }, { cx: 47, cy: 52 }, { cx: 44, cy: 53 }, { cx: 45, cy: 53 },
-    { cx: 46, cy: 53 }, { cx: 47, cy: 53 }, { cx: 44, cy: 54 }, { cx: 45, cy: 54 }, { cx: 46, cy: 54 }, { cx: 47, cy: 54 },
-    { cx: 44, cy: 55 }, { cx: 45, cy: 55 },
+    { cx: 41, cy: 40 }, { cx: 41, cy: 41 }, { cx: 46, cy: 48 }, { cx: 47, cy: 49 }, { cx: 45, cy: 50 }, { cx: 46, cy: 50 }, { cx: 45, cy: 51 }, { cx: 46, cy: 51 },
+    { cx: 43, cy: 52 }, { cx: 44, cy: 52 }, { cx: 45, cy: 52 }, { cx: 46, cy: 52 }, { cx: 44, cy: 53 }, { cx: 45, cy: 53 }, { cx: 46, cy: 53 }, { cx: 43, cy: 54 },
+    { cx: 44, cy: 54 }, { cx: 45, cy: 54 }, { cx: 46, cy: 54 }, { cx: 43, cy: 55 }, { cx: 44, cy: 55 }, { cx: 45, cy: 55 }, { cx: 46, cy: 55 }, { cx: 44, cy: 56 },
+    { cx: 45, cy: 56 }, { cx: 44, cy: 57 }, { cx: 45, cy: 57 }, { cx: 45, cy: 58 },
   ],
   'Fremennik': [
-    { cx: 39, cy: 56 }, { cx: 40, cy: 56 }, { cx: 41, cy: 56 }, { cx: 42, cy: 56 }, { cx: 43, cy: 56 }, { cx: 39, cy: 57 },
-    { cx: 40, cy: 57 }, { cx: 41, cy: 57 }, { cx: 42, cy: 57 }, { cx: 43, cy: 57 }, { cx: 39, cy: 58 }, { cx: 40, cy: 58 },
-    { cx: 41, cy: 58 }, { cx: 42, cy: 58 }, { cx: 43, cy: 58 }, { cx: 39, cy: 59 }, { cx: 40, cy: 59 }, { cx: 41, cy: 59 },
-    { cx: 42, cy: 59 }, { cx: 43, cy: 59 }, { cx: 39, cy: 60 }, { cx: 40, cy: 60 }, { cx: 41, cy: 60 }, { cx: 42, cy: 60 },
-    { cx: 43, cy: 60 },
+    { cx: 40, cy: 56 }, { cx: 40, cy: 57 }, { cx: 41, cy: 57 }, { cx: 42, cy: 57 }, { cx: 43, cy: 57 }, { cx: 39, cy: 58 }, { cx: 41, cy: 58 }, { cx: 42, cy: 58 },
+    { cx: 43, cy: 58 }, { cx: 44, cy: 58 }, { cx: 34, cy: 59 }, { cx: 36, cy: 59 }, { cx: 37, cy: 59 }, { cx: 39, cy: 59 }, { cx: 42, cy: 59 }, { cx: 43, cy: 59 },
+    { cx: 44, cy: 59 }, { cx: 45, cy: 59 }, { cx: 32, cy: 60 }, { cx: 33, cy: 60 }, { cx: 36, cy: 60 }, { cx: 37, cy: 60 }, { cx: 39, cy: 60 }, { cx: 40, cy: 60 },
+    { cx: 41, cy: 60 }, { cx: 43, cy: 60 }, { cx: 44, cy: 60 }, { cx: 32, cy: 61 }, { cx: 33, cy: 61 }, { cx: 44, cy: 61 }, { cx: 45, cy: 61 }, { cx: 38, cy: 62 },
+    { cx: 41, cy: 62 }, { cx: 44, cy: 62 }, { cx: 35, cy: 63 }, { cx: 41, cy: 63 },
   ],
   'Kandarin': [
-    { cx: 38, cy: 47 }, { cx: 39, cy: 47 }, { cx: 40, cy: 47 }, { cx: 41, cy: 47 }, { cx: 38, cy: 48 }, { cx: 39, cy: 48 },
-    { cx: 40, cy: 48 }, { cx: 41, cy: 48 }, { cx: 38, cy: 49 }, { cx: 39, cy: 49 }, { cx: 40, cy: 49 }, { cx: 41, cy: 49 },
-    { cx: 42, cy: 49 }, { cx: 43, cy: 49 }, { cx: 38, cy: 50 }, { cx: 39, cy: 50 }, { cx: 40, cy: 50 }, { cx: 41, cy: 50 },
-    { cx: 42, cy: 50 }, { cx: 43, cy: 50 }, { cx: 38, cy: 51 }, { cx: 39, cy: 51 }, { cx: 40, cy: 51 }, { cx: 41, cy: 51 },
-    { cx: 42, cy: 51 }, { cx: 43, cy: 51 }, { cx: 38, cy: 52 }, { cx: 39, cy: 52 }, { cx: 40, cy: 52 }, { cx: 41, cy: 52 },
-    { cx: 42, cy: 52 }, { cx: 43, cy: 52 }, { cx: 38, cy: 53 }, { cx: 39, cy: 53 }, { cx: 40, cy: 53 }, { cx: 41, cy: 53 },
-    { cx: 42, cy: 53 }, { cx: 43, cy: 53 }, { cx: 37, cy: 54 }, { cx: 38, cy: 54 }, { cx: 39, cy: 54 }, { cx: 40, cy: 54 },
-    { cx: 41, cy: 54 }, { cx: 42, cy: 54 }, { cx: 43, cy: 54 }, { cx: 37, cy: 55 }, { cx: 38, cy: 55 }, { cx: 39, cy: 55 },
-    { cx: 40, cy: 55 }, { cx: 41, cy: 55 }, { cx: 42, cy: 55 }, { cx: 43, cy: 55 },
+    { cx: 38, cy: 44 }, { cx: 39, cy: 44 }, { cx: 40, cy: 44 }, { cx: 38, cy: 45 }, { cx: 39, cy: 45 }, { cx: 40, cy: 45 }, { cx: 38, cy: 46 }, { cx: 39, cy: 46 },
+    { cx: 40, cy: 46 }, { cx: 41, cy: 46 }, { cx: 36, cy: 47 }, { cx: 37, cy: 47 }, { cx: 38, cy: 47 }, { cx: 39, cy: 47 }, { cx: 40, cy: 47 }, { cx: 41, cy: 47 },
+    { cx: 36, cy: 48 }, { cx: 37, cy: 48 }, { cx: 38, cy: 48 }, { cx: 39, cy: 48 }, { cx: 40, cy: 48 }, { cx: 41, cy: 48 }, { cx: 37, cy: 49 }, { cx: 38, cy: 49 },
+    { cx: 39, cy: 49 }, { cx: 40, cy: 49 }, { cx: 41, cy: 49 }, { cx: 38, cy: 50 }, { cx: 39, cy: 50 }, { cx: 40, cy: 50 }, { cx: 41, cy: 50 }, { cx: 38, cy: 51 },
+    { cx: 39, cy: 51 }, { cx: 40, cy: 51 }, { cx: 41, cy: 51 }, { cx: 42, cy: 51 }, { cx: 36, cy: 52 }, { cx: 37, cy: 52 }, { cx: 38, cy: 52 }, { cx: 39, cy: 52 },
+    { cx: 40, cy: 52 }, { cx: 41, cy: 52 }, { cx: 42, cy: 52 }, { cx: 36, cy: 53 }, { cx: 37, cy: 53 }, { cx: 38, cy: 53 }, { cx: 39, cy: 53 }, { cx: 40, cy: 53 },
+    { cx: 41, cy: 53 }, { cx: 42, cy: 53 }, { cx: 43, cy: 53 }, { cx: 35, cy: 54 }, { cx: 36, cy: 54 }, { cx: 37, cy: 54 }, { cx: 38, cy: 54 }, { cx: 39, cy: 54 },
+    { cx: 40, cy: 54 }, { cx: 41, cy: 54 }, { cx: 42, cy: 54 }, { cx: 35, cy: 55 }, { cx: 36, cy: 55 }, { cx: 37, cy: 55 }, { cx: 38, cy: 55 }, { cx: 39, cy: 55 },
+    { cx: 41, cy: 55 }, { cx: 42, cy: 55 }, { cx: 35, cy: 56 }, { cx: 36, cy: 56 }, { cx: 37, cy: 56 }, { cx: 39, cy: 56 }, { cx: 41, cy: 56 }, { cx: 42, cy: 56 },
+    { cx: 43, cy: 56 }, { cx: 36, cy: 57 },
   ],
   'Karamja': [
-    { cx: 42, cy: 44 }, { cx: 43, cy: 44 }, { cx: 44, cy: 44 }, { cx: 45, cy: 44 }, { cx: 46, cy: 44 }, { cx: 42, cy: 45 },
-    { cx: 43, cy: 45 }, { cx: 44, cy: 45 }, { cx: 45, cy: 45 }, { cx: 46, cy: 45 }, { cx: 42, cy: 46 }, { cx: 43, cy: 46 },
-    { cx: 44, cy: 46 }, { cx: 45, cy: 46 }, { cx: 46, cy: 46 }, { cx: 42, cy: 47 }, { cx: 43, cy: 47 }, { cx: 44, cy: 47 },
-    { cx: 45, cy: 47 }, { cx: 46, cy: 47 }, { cx: 42, cy: 48 }, { cx: 43, cy: 48 }, { cx: 44, cy: 48 }, { cx: 45, cy: 48 },
-    { cx: 46, cy: 48 },
+    { cx: 43, cy: 45 }, { cx: 44, cy: 45 }, { cx: 45, cy: 45 }, { cx: 46, cy: 45 }, { cx: 43, cy: 46 }, { cx: 44, cy: 46 }, { cx: 45, cy: 46 }, { cx: 46, cy: 46 },
+    { cx: 43, cy: 47 }, { cx: 44, cy: 47 }, { cx: 45, cy: 47 }, { cx: 46, cy: 47 }, { cx: 43, cy: 48 }, { cx: 44, cy: 48 }, { cx: 45, cy: 48 }, { cx: 42, cy: 49 },
+    { cx: 43, cy: 49 }, { cx: 44, cy: 49 }, { cx: 45, cy: 49 }, { cx: 46, cy: 49 }, { cx: 42, cy: 50 }, { cx: 43, cy: 50 }, { cx: 44, cy: 50 }, { cx: 43, cy: 51 },
+    { cx: 44, cy: 51 },
   ],
   'Kharidian Desert': [
-    { cx: 49, cy: 42 }, { cx: 50, cy: 42 }, { cx: 51, cy: 42 }, { cx: 52, cy: 42 }, { cx: 53, cy: 42 }, { cx: 54, cy: 42 },
-    { cx: 55, cy: 42 }, { cx: 56, cy: 42 }, { cx: 49, cy: 43 }, { cx: 50, cy: 43 }, { cx: 51, cy: 43 }, { cx: 52, cy: 43 },
-    { cx: 53, cy: 43 }, { cx: 54, cy: 43 }, { cx: 55, cy: 43 }, { cx: 56, cy: 43 }, { cx: 49, cy: 44 }, { cx: 50, cy: 44 },
-    { cx: 51, cy: 44 }, { cx: 52, cy: 44 }, { cx: 53, cy: 44 }, { cx: 54, cy: 44 }, { cx: 55, cy: 44 }, { cx: 56, cy: 44 },
-    { cx: 49, cy: 45 }, { cx: 50, cy: 45 }, { cx: 51, cy: 45 }, { cx: 52, cy: 45 }, { cx: 53, cy: 45 }, { cx: 54, cy: 45 },
-    { cx: 55, cy: 45 }, { cx: 56, cy: 45 }, { cx: 49, cy: 46 }, { cx: 50, cy: 46 }, { cx: 51, cy: 46 }, { cx: 52, cy: 46 },
-    { cx: 53, cy: 46 }, { cx: 54, cy: 46 }, { cx: 55, cy: 46 }, { cx: 56, cy: 46 }, { cx: 49, cy: 47 }, { cx: 50, cy: 47 },
-    { cx: 51, cy: 47 }, { cx: 52, cy: 47 }, { cx: 53, cy: 47 }, { cx: 54, cy: 47 }, { cx: 55, cy: 47 }, { cx: 56, cy: 47 },
-    { cx: 49, cy: 48 }, { cx: 50, cy: 48 }, { cx: 51, cy: 48 }, { cx: 52, cy: 48 }, { cx: 53, cy: 48 }, { cx: 54, cy: 48 },
-    { cx: 55, cy: 48 }, { cx: 56, cy: 48 },
+    { cx: 51, cy: 42 }, { cx: 52, cy: 42 }, { cx: 49, cy: 43 }, { cx: 50, cy: 43 }, { cx: 51, cy: 43 }, { cx: 52, cy: 43 }, { cx: 53, cy: 43 }, { cx: 47, cy: 44 },
+    { cx: 48, cy: 44 }, { cx: 49, cy: 44 }, { cx: 50, cy: 44 }, { cx: 51, cy: 44 }, { cx: 52, cy: 44 }, { cx: 53, cy: 44 }, { cx: 49, cy: 45 }, { cx: 50, cy: 45 },
+    { cx: 51, cy: 45 }, { cx: 52, cy: 45 }, { cx: 53, cy: 45 }, { cx: 54, cy: 45 }, { cx: 49, cy: 46 }, { cx: 50, cy: 46 }, { cx: 51, cy: 46 }, { cx: 52, cy: 46 },
+    { cx: 53, cy: 46 }, { cx: 54, cy: 46 }, { cx: 49, cy: 47 }, { cx: 50, cy: 47 }, { cx: 51, cy: 47 }, { cx: 52, cy: 47 }, { cx: 53, cy: 47 }, { cx: 54, cy: 47 },
+    { cx: 50, cy: 48 }, { cx: 51, cy: 48 }, { cx: 52, cy: 48 }, { cx: 53, cy: 48 }, { cx: 54, cy: 48 }, { cx: 51, cy: 49 }, { cx: 52, cy: 49 }, { cx: 53, cy: 49 },
+    { cx: 54, cy: 49 }, { cx: 52, cy: 50 }, { cx: 53, cy: 50 }, { cx: 52, cy: 51 }, { cx: 53, cy: 51 },
   ],
   'Kourend & Kebos': [
-    { cx: 17, cy: 52 }, { cx: 18, cy: 52 }, { cx: 19, cy: 52 }, { cx: 20, cy: 52 }, { cx: 21, cy: 52 }, { cx: 22, cy: 52 },
-    { cx: 23, cy: 52 }, { cx: 24, cy: 52 }, { cx: 25, cy: 52 }, { cx: 26, cy: 52 }, { cx: 27, cy: 52 }, { cx: 28, cy: 52 },
-    { cx: 17, cy: 53 }, { cx: 18, cy: 53 }, { cx: 19, cy: 53 }, { cx: 20, cy: 53 }, { cx: 21, cy: 53 }, { cx: 22, cy: 53 },
-    { cx: 23, cy: 53 }, { cx: 24, cy: 53 }, { cx: 25, cy: 53 }, { cx: 26, cy: 53 }, { cx: 27, cy: 53 }, { cx: 28, cy: 53 },
-    { cx: 17, cy: 54 }, { cx: 18, cy: 54 }, { cx: 19, cy: 54 }, { cx: 20, cy: 54 }, { cx: 21, cy: 54 }, { cx: 22, cy: 54 },
-    { cx: 23, cy: 54 }, { cx: 24, cy: 54 }, { cx: 25, cy: 54 }, { cx: 26, cy: 54 }, { cx: 27, cy: 54 }, { cx: 28, cy: 54 },
-    { cx: 17, cy: 55 }, { cx: 18, cy: 55 }, { cx: 19, cy: 55 }, { cx: 20, cy: 55 }, { cx: 21, cy: 55 }, { cx: 22, cy: 55 },
-    { cx: 23, cy: 55 }, { cx: 24, cy: 55 }, { cx: 25, cy: 55 }, { cx: 26, cy: 55 }, { cx: 27, cy: 55 }, { cx: 28, cy: 55 },
-    { cx: 17, cy: 56 }, { cx: 18, cy: 56 }, { cx: 19, cy: 56 }, { cx: 20, cy: 56 }, { cx: 21, cy: 56 }, { cx: 22, cy: 56 },
-    { cx: 23, cy: 56 }, { cx: 24, cy: 56 }, { cx: 25, cy: 56 }, { cx: 26, cy: 56 }, { cx: 27, cy: 56 }, { cx: 28, cy: 56 },
-    { cx: 17, cy: 57 }, { cx: 18, cy: 57 }, { cx: 19, cy: 57 }, { cx: 20, cy: 57 }, { cx: 21, cy: 57 }, { cx: 22, cy: 57 },
-    { cx: 23, cy: 57 }, { cx: 24, cy: 57 }, { cx: 25, cy: 57 }, { cx: 26, cy: 57 }, { cx: 27, cy: 57 }, { cx: 28, cy: 57 },
-    { cx: 17, cy: 58 }, { cx: 18, cy: 58 }, { cx: 19, cy: 58 }, { cx: 20, cy: 58 }, { cx: 21, cy: 58 }, { cx: 22, cy: 58 },
-    { cx: 23, cy: 58 }, { cx: 24, cy: 58 }, { cx: 25, cy: 58 }, { cx: 26, cy: 58 }, { cx: 27, cy: 58 }, { cx: 28, cy: 58 },
+    { cx: 17, cy: 51 }, { cx: 18, cy: 51 }, { cx: 17, cy: 52 }, { cx: 18, cy: 52 }, { cx: 19, cy: 52 }, { cx: 17, cy: 53 }, { cx: 18, cy: 53 }, { cx: 19, cy: 53 },
+    { cx: 23, cy: 53 }, { cx: 24, cy: 53 }, { cx: 25, cy: 53 }, { cx: 27, cy: 53 }, { cx: 28, cy: 53 }, { cx: 18, cy: 54 }, { cx: 19, cy: 54 }, { cx: 20, cy: 54 },
+    { cx: 21, cy: 54 }, { cx: 22, cy: 54 }, { cx: 23, cy: 54 }, { cx: 24, cy: 54 }, { cx: 25, cy: 54 }, { cx: 26, cy: 54 }, { cx: 27, cy: 54 }, { cx: 28, cy: 54 },
+    { cx: 29, cy: 54 }, { cx: 18, cy: 55 }, { cx: 19, cy: 55 }, { cx: 20, cy: 55 }, { cx: 21, cy: 55 }, { cx: 22, cy: 55 }, { cx: 23, cy: 55 }, { cx: 24, cy: 55 },
+    { cx: 25, cy: 55 }, { cx: 26, cy: 55 }, { cx: 27, cy: 55 }, { cx: 28, cy: 55 }, { cx: 29, cy: 55 }, { cx: 18, cy: 56 }, { cx: 19, cy: 56 }, { cx: 20, cy: 56 },
+    { cx: 21, cy: 56 }, { cx: 22, cy: 56 }, { cx: 23, cy: 56 }, { cx: 24, cy: 56 }, { cx: 25, cy: 56 }, { cx: 26, cy: 56 }, { cx: 27, cy: 56 }, { cx: 28, cy: 56 },
+    { cx: 18, cy: 57 }, { cx: 19, cy: 57 }, { cx: 20, cy: 57 }, { cx: 21, cy: 57 }, { cx: 22, cy: 57 }, { cx: 23, cy: 57 }, { cx: 24, cy: 57 }, { cx: 25, cy: 57 },
+    { cx: 26, cy: 57 }, { cx: 27, cy: 57 }, { cx: 28, cy: 57 }, { cx: 18, cy: 58 }, { cx: 19, cy: 58 }, { cx: 20, cy: 58 }, { cx: 21, cy: 58 }, { cx: 22, cy: 58 },
+    { cx: 23, cy: 58 }, { cx: 24, cy: 58 }, { cx: 25, cy: 58 }, { cx: 26, cy: 58 }, { cx: 27, cy: 58 }, { cx: 28, cy: 58 }, { cx: 18, cy: 59 }, { cx: 19, cy: 59 },
+    { cx: 20, cy: 59 }, { cx: 21, cy: 59 }, { cx: 22, cy: 59 }, { cx: 23, cy: 59 }, { cx: 24, cy: 59 }, { cx: 25, cy: 59 }, { cx: 26, cy: 59 }, { cx: 27, cy: 59 },
+    { cx: 28, cy: 59 }, { cx: 20, cy: 60 }, { cx: 22, cy: 60 }, { cx: 23, cy: 60 }, { cx: 24, cy: 60 }, { cx: 25, cy: 60 }, { cx: 26, cy: 60 }, { cx: 27, cy: 60 },
+    { cx: 28, cy: 60 }, { cx: 23, cy: 61 }, { cx: 24, cy: 61 }, { cx: 25, cy: 61 }, { cx: 26, cy: 61 }, { cx: 27, cy: 61 }, { cx: 25, cy: 62 },
   ],
   'Misthalin': [
-    { cx: 48, cy: 49 }, { cx: 49, cy: 49 }, { cx: 50, cy: 49 }, { cx: 51, cy: 49 }, { cx: 52, cy: 49 }, { cx: 48, cy: 50 },
-    { cx: 49, cy: 50 }, { cx: 50, cy: 50 }, { cx: 51, cy: 50 }, { cx: 52, cy: 50 }, { cx: 48, cy: 51 }, { cx: 49, cy: 51 },
-    { cx: 50, cy: 51 }, { cx: 51, cy: 51 }, { cx: 52, cy: 51 }, { cx: 48, cy: 52 }, { cx: 49, cy: 52 }, { cx: 50, cy: 52 },
-    { cx: 51, cy: 52 }, { cx: 52, cy: 52 }, { cx: 48, cy: 53 }, { cx: 49, cy: 53 }, { cx: 50, cy: 53 }, { cx: 51, cy: 53 },
-    { cx: 52, cy: 53 }, { cx: 48, cy: 54 }, { cx: 49, cy: 54 }, { cx: 50, cy: 54 }, { cx: 51, cy: 54 }, { cx: 52, cy: 54 },
+    { cx: 48, cy: 49 }, { cx: 49, cy: 49 }, { cx: 50, cy: 49 }, { cx: 47, cy: 50 }, { cx: 48, cy: 50 }, { cx: 49, cy: 50 }, { cx: 50, cy: 50 }, { cx: 51, cy: 50 },
+    { cx: 47, cy: 51 }, { cx: 48, cy: 51 }, { cx: 49, cy: 51 }, { cx: 50, cy: 51 }, { cx: 51, cy: 51 }, { cx: 47, cy: 52 }, { cx: 48, cy: 52 }, { cx: 49, cy: 52 },
+    { cx: 50, cy: 52 }, { cx: 51, cy: 52 }, { cx: 52, cy: 52 }, { cx: 53, cy: 52 }, { cx: 47, cy: 53 }, { cx: 48, cy: 53 }, { cx: 49, cy: 53 }, { cx: 50, cy: 53 },
+    { cx: 51, cy: 53 }, { cx: 52, cy: 53 }, { cx: 53, cy: 53 }, { cx: 47, cy: 54 }, { cx: 48, cy: 54 }, { cx: 49, cy: 54 }, { cx: 50, cy: 54 }, { cx: 51, cy: 54 },
+    { cx: 52, cy: 54 }, { cx: 53, cy: 54 }, { cx: 47, cy: 55 }, { cx: 48, cy: 55 }, { cx: 49, cy: 55 }, { cx: 50, cy: 55 }, { cx: 51, cy: 55 }, { cx: 52, cy: 55 },
   ],
   'Morytania': [
-    { cx: 53, cy: 49 }, { cx: 54, cy: 49 }, { cx: 55, cy: 49 }, { cx: 56, cy: 49 }, { cx: 57, cy: 49 }, { cx: 58, cy: 49 },
-    { cx: 59, cy: 49 }, { cx: 60, cy: 49 }, { cx: 53, cy: 50 }, { cx: 54, cy: 50 }, { cx: 55, cy: 50 }, { cx: 56, cy: 50 },
-    { cx: 57, cy: 50 }, { cx: 58, cy: 50 }, { cx: 59, cy: 50 }, { cx: 60, cy: 50 }, { cx: 53, cy: 51 }, { cx: 54, cy: 51 },
-    { cx: 55, cy: 51 }, { cx: 56, cy: 51 }, { cx: 57, cy: 51 }, { cx: 58, cy: 51 }, { cx: 59, cy: 51 }, { cx: 60, cy: 51 },
-    { cx: 53, cy: 52 }, { cx: 54, cy: 52 }, { cx: 55, cy: 52 }, { cx: 56, cy: 52 }, { cx: 57, cy: 52 }, { cx: 58, cy: 52 },
-    { cx: 59, cy: 52 }, { cx: 60, cy: 52 }, { cx: 53, cy: 53 }, { cx: 54, cy: 53 }, { cx: 55, cy: 53 }, { cx: 56, cy: 53 },
-    { cx: 57, cy: 53 }, { cx: 58, cy: 53 }, { cx: 59, cy: 53 }, { cx: 60, cy: 53 }, { cx: 53, cy: 54 }, { cx: 54, cy: 54 },
-    { cx: 55, cy: 54 }, { cx: 56, cy: 54 }, { cx: 57, cy: 54 }, { cx: 58, cy: 54 }, { cx: 59, cy: 54 }, { cx: 60, cy: 54 },
-    { cx: 54, cy: 55 }, { cx: 55, cy: 55 }, { cx: 56, cy: 55 }, { cx: 57, cy: 55 }, { cx: 58, cy: 55 }, { cx: 59, cy: 55 },
-    { cx: 60, cy: 55 }, { cx: 54, cy: 56 }, { cx: 55, cy: 56 }, { cx: 56, cy: 56 }, { cx: 57, cy: 56 }, { cx: 58, cy: 56 },
-    { cx: 59, cy: 56 }, { cx: 60, cy: 56 },
+    { cx: 59, cy: 44 }, { cx: 57, cy: 45 }, { cx: 57, cy: 46 }, { cx: 58, cy: 46 }, { cx: 59, cy: 46 }, { cx: 60, cy: 46 }, { cx: 57, cy: 47 }, { cx: 58, cy: 47 },
+    { cx: 59, cy: 47 }, { cx: 60, cy: 47 }, { cx: 55, cy: 49 }, { cx: 56, cy: 49 }, { cx: 57, cy: 49 }, { cx: 54, cy: 50 }, { cx: 55, cy: 50 }, { cx: 56, cy: 50 },
+    { cx: 57, cy: 50 }, { cx: 58, cy: 50 }, { cx: 54, cy: 51 }, { cx: 55, cy: 51 }, { cx: 56, cy: 51 }, { cx: 57, cy: 51 }, { cx: 58, cy: 51 }, { cx: 54, cy: 52 },
+    { cx: 55, cy: 52 }, { cx: 56, cy: 52 }, { cx: 57, cy: 52 }, { cx: 58, cy: 52 }, { cx: 54, cy: 53 }, { cx: 55, cy: 53 }, { cx: 56, cy: 53 }, { cx: 57, cy: 53 },
+    { cx: 58, cy: 53 }, { cx: 54, cy: 54 }, { cx: 55, cy: 54 }, { cx: 56, cy: 54 }, { cx: 57, cy: 54 }, { cx: 58, cy: 54 }, { cx: 53, cy: 55 }, { cx: 54, cy: 55 },
+    { cx: 55, cy: 55 }, { cx: 56, cy: 55 }, { cx: 57, cy: 55 }, { cx: 59, cy: 55 },
   ],
   'Tirannwn': [
-    { cx: 33, cy: 47 }, { cx: 34, cy: 47 }, { cx: 35, cy: 47 }, { cx: 36, cy: 47 }, { cx: 37, cy: 47 }, { cx: 33, cy: 48 },
-    { cx: 34, cy: 48 }, { cx: 35, cy: 48 }, { cx: 36, cy: 48 }, { cx: 37, cy: 48 }, { cx: 33, cy: 49 }, { cx: 34, cy: 49 },
-    { cx: 35, cy: 49 }, { cx: 36, cy: 49 }, { cx: 37, cy: 49 }, { cx: 33, cy: 50 }, { cx: 34, cy: 50 }, { cx: 35, cy: 50 },
-    { cx: 36, cy: 50 }, { cx: 37, cy: 50 }, { cx: 33, cy: 51 }, { cx: 34, cy: 51 }, { cx: 35, cy: 51 }, { cx: 36, cy: 51 },
-    { cx: 37, cy: 51 }, { cx: 33, cy: 52 }, { cx: 34, cy: 52 }, { cx: 35, cy: 52 }, { cx: 36, cy: 52 }, { cx: 37, cy: 52 },
-    { cx: 33, cy: 53 }, { cx: 34, cy: 53 }, { cx: 35, cy: 53 }, { cx: 36, cy: 53 }, { cx: 37, cy: 53 },
+    { cx: 33, cy: 47 }, { cx: 34, cy: 47 }, { cx: 35, cy: 47 }, { cx: 33, cy: 48 }, { cx: 34, cy: 48 }, { cx: 35, cy: 48 }, { cx: 33, cy: 49 }, { cx: 34, cy: 49 },
+    { cx: 35, cy: 49 }, { cx: 36, cy: 49 }, { cx: 33, cy: 50 }, { cx: 34, cy: 50 }, { cx: 35, cy: 50 }, { cx: 36, cy: 50 }, { cx: 33, cy: 51 }, { cx: 34, cy: 51 },
+    { cx: 35, cy: 51 }, { cx: 36, cy: 51 }, { cx: 37, cy: 51 }, { cx: 33, cy: 52 }, { cx: 34, cy: 52 }, { cx: 35, cy: 52 }, { cx: 33, cy: 53 }, { cx: 34, cy: 53 },
+    { cx: 35, cy: 53 },
   ],
   'Varlamore': [
-    { cx: 22, cy: 44 }, { cx: 23, cy: 44 }, { cx: 24, cy: 44 }, { cx: 25, cy: 44 }, { cx: 26, cy: 44 }, { cx: 27, cy: 44 },
-    { cx: 28, cy: 44 }, { cx: 29, cy: 44 }, { cx: 30, cy: 44 }, { cx: 22, cy: 45 }, { cx: 23, cy: 45 }, { cx: 24, cy: 45 },
-    { cx: 25, cy: 45 }, { cx: 26, cy: 45 }, { cx: 27, cy: 45 }, { cx: 28, cy: 45 }, { cx: 29, cy: 45 }, { cx: 30, cy: 45 },
-    { cx: 22, cy: 46 }, { cx: 23, cy: 46 }, { cx: 24, cy: 46 }, { cx: 25, cy: 46 }, { cx: 26, cy: 46 }, { cx: 27, cy: 46 },
-    { cx: 28, cy: 46 }, { cx: 29, cy: 46 }, { cx: 30, cy: 46 }, { cx: 22, cy: 47 }, { cx: 23, cy: 47 }, { cx: 24, cy: 47 },
-    { cx: 25, cy: 47 }, { cx: 26, cy: 47 }, { cx: 27, cy: 47 }, { cx: 28, cy: 47 }, { cx: 29, cy: 47 }, { cx: 30, cy: 47 },
-    { cx: 22, cy: 48 }, { cx: 23, cy: 48 }, { cx: 24, cy: 48 }, { cx: 25, cy: 48 }, { cx: 26, cy: 48 }, { cx: 27, cy: 48 },
-    { cx: 28, cy: 48 }, { cx: 29, cy: 48 }, { cx: 30, cy: 48 }, { cx: 22, cy: 49 }, { cx: 23, cy: 49 }, { cx: 24, cy: 49 },
-    { cx: 25, cy: 49 }, { cx: 26, cy: 49 }, { cx: 27, cy: 49 }, { cx: 28, cy: 49 }, { cx: 29, cy: 49 }, { cx: 30, cy: 49 },
-    { cx: 22, cy: 50 }, { cx: 23, cy: 50 }, { cx: 24, cy: 50 }, { cx: 25, cy: 50 }, { cx: 26, cy: 50 }, { cx: 27, cy: 50 },
-    { cx: 28, cy: 50 }, { cx: 29, cy: 50 }, { cx: 30, cy: 50 }, { cx: 22, cy: 51 }, { cx: 23, cy: 51 }, { cx: 24, cy: 51 },
-    { cx: 25, cy: 51 }, { cx: 26, cy: 51 }, { cx: 27, cy: 51 }, { cx: 28, cy: 51 }, { cx: 29, cy: 51 }, { cx: 30, cy: 51 },
+    { cx: 21, cy: 44 }, { cx: 22, cy: 44 }, { cx: 20, cy: 45 }, { cx: 21, cy: 45 }, { cx: 22, cy: 45 }, { cx: 23, cy: 45 }, { cx: 24, cy: 45 }, { cx: 25, cy: 45 },
+    { cx: 26, cy: 45 }, { cx: 27, cy: 45 }, { cx: 19, cy: 46 }, { cx: 20, cy: 46 }, { cx: 21, cy: 46 }, { cx: 22, cy: 46 }, { cx: 23, cy: 46 }, { cx: 24, cy: 46 },
+    { cx: 25, cy: 46 }, { cx: 26, cy: 46 }, { cx: 27, cy: 46 }, { cx: 19, cy: 47 }, { cx: 20, cy: 47 }, { cx: 21, cy: 47 }, { cx: 22, cy: 47 }, { cx: 23, cy: 47 },
+    { cx: 24, cy: 47 }, { cx: 25, cy: 47 }, { cx: 26, cy: 47 }, { cx: 27, cy: 47 }, { cx: 28, cy: 47 }, { cx: 18, cy: 48 }, { cx: 19, cy: 48 }, { cx: 20, cy: 48 },
+    { cx: 21, cy: 48 }, { cx: 22, cy: 48 }, { cx: 23, cy: 48 }, { cx: 24, cy: 48 }, { cx: 25, cy: 48 }, { cx: 26, cy: 48 }, { cx: 27, cy: 48 }, { cx: 28, cy: 48 },
+    { cx: 29, cy: 48 }, { cx: 19, cy: 49 }, { cx: 20, cy: 49 }, { cx: 21, cy: 49 }, { cx: 22, cy: 49 }, { cx: 23, cy: 49 }, { cx: 24, cy: 49 }, { cx: 25, cy: 49 },
+    { cx: 26, cy: 49 }, { cx: 27, cy: 49 }, { cx: 28, cy: 49 }, { cx: 21, cy: 50 }, { cx: 22, cy: 50 }, { cx: 23, cy: 50 }, { cx: 24, cy: 50 }, { cx: 25, cy: 50 },
+    { cx: 26, cy: 50 }, { cx: 19, cy: 51 }, { cx: 20, cy: 51 }, { cx: 21, cy: 51 }, { cx: 22, cy: 51 }, { cx: 23, cy: 51 }, { cx: 24, cy: 51 }, { cx: 25, cy: 51 },
+    { cx: 26, cy: 51 }, { cx: 20, cy: 52 }, { cx: 21, cy: 52 }, { cx: 22, cy: 52 }, { cx: 23, cy: 52 }, { cx: 24, cy: 52 }, { cx: 20, cy: 53 }, { cx: 21, cy: 53 },
   ],
   'Wilderness': [
-    { cx: 46, cy: 55 }, { cx: 47, cy: 55 }, { cx: 48, cy: 55 }, { cx: 49, cy: 55 }, { cx: 50, cy: 55 }, { cx: 51, cy: 55 },
-    { cx: 52, cy: 55 }, { cx: 53, cy: 55 }, { cx: 46, cy: 56 }, { cx: 47, cy: 56 }, { cx: 48, cy: 56 }, { cx: 49, cy: 56 },
-    { cx: 50, cy: 56 }, { cx: 51, cy: 56 }, { cx: 52, cy: 56 }, { cx: 53, cy: 56 }, { cx: 46, cy: 57 }, { cx: 47, cy: 57 },
-    { cx: 48, cy: 57 }, { cx: 49, cy: 57 }, { cx: 50, cy: 57 }, { cx: 51, cy: 57 }, { cx: 52, cy: 57 }, { cx: 53, cy: 57 },
-    { cx: 46, cy: 58 }, { cx: 47, cy: 58 }, { cx: 48, cy: 58 }, { cx: 49, cy: 58 }, { cx: 50, cy: 58 }, { cx: 51, cy: 58 },
-    { cx: 52, cy: 58 }, { cx: 53, cy: 58 }, { cx: 46, cy: 59 }, { cx: 47, cy: 59 }, { cx: 48, cy: 59 }, { cx: 49, cy: 59 },
-    { cx: 50, cy: 59 }, { cx: 51, cy: 59 }, { cx: 52, cy: 59 }, { cx: 53, cy: 59 }, { cx: 46, cy: 60 }, { cx: 47, cy: 60 },
-    { cx: 48, cy: 60 }, { cx: 49, cy: 60 }, { cx: 50, cy: 60 }, { cx: 51, cy: 60 }, { cx: 52, cy: 60 }, { cx: 53, cy: 60 },
-    { cx: 46, cy: 61 }, { cx: 47, cy: 61 }, { cx: 48, cy: 61 }, { cx: 49, cy: 61 }, { cx: 50, cy: 61 }, { cx: 51, cy: 61 },
-    { cx: 52, cy: 61 }, { cx: 53, cy: 61 },
+    { cx: 46, cy: 56 }, { cx: 47, cy: 56 }, { cx: 48, cy: 56 }, { cx: 49, cy: 56 }, { cx: 50, cy: 56 }, { cx: 51, cy: 56 }, { cx: 52, cy: 56 }, { cx: 46, cy: 57 },
+    { cx: 47, cy: 57 }, { cx: 48, cy: 57 }, { cx: 49, cy: 57 }, { cx: 50, cy: 57 }, { cx: 51, cy: 57 }, { cx: 52, cy: 57 }, { cx: 46, cy: 58 }, { cx: 47, cy: 58 },
+    { cx: 48, cy: 58 }, { cx: 49, cy: 58 }, { cx: 50, cy: 58 }, { cx: 51, cy: 58 }, { cx: 52, cy: 58 }, { cx: 46, cy: 59 }, { cx: 47, cy: 59 }, { cx: 48, cy: 59 },
+    { cx: 49, cy: 59 }, { cx: 50, cy: 59 }, { cx: 51, cy: 59 }, { cx: 52, cy: 59 }, { cx: 46, cy: 60 }, { cx: 47, cy: 60 }, { cx: 48, cy: 60 }, { cx: 49, cy: 60 },
+    { cx: 50, cy: 60 }, { cx: 51, cy: 60 }, { cx: 52, cy: 60 }, { cx: 46, cy: 61 }, { cx: 47, cy: 61 }, { cx: 48, cy: 61 }, { cx: 49, cy: 61 }, { cx: 50, cy: 61 },
+    { cx: 51, cy: 61 }, { cx: 52, cy: 61 }, { cx: 52, cy: 62 }, { cx: 53, cy: 62 }, { cx: 54, cy: 62 }, { cx: 52, cy: 63 }, { cx: 53, cy: 63 }, { cx: 54, cy: 63 },
+    { cx: 52, cy: 64 }, { cx: 53, cy: 64 }, { cx: 54, cy: 64 },
+  ],
+  'Islands & Others': [
+    { cx: 42, cy: 42 }, { cx: 43, cy: 42 }, { cx: 45, cy: 42 }, { cx: 42, cy: 43 }, { cx: 43, cy: 43 }, { cx: 57, cy: 57 }, { cx: 57, cy: 58 }, { cx: 58, cy: 58 },
+    { cx: 59, cy: 58 }, { cx: 57, cy: 59 }, { cx: 58, cy: 59 }, { cx: 59, cy: 59 }, { cx: 57, cy: 60 }, { cx: 58, cy: 60 }, { cx: 59, cy: 60 },
+  ],
+  'The Open Seas': [
+    { cx: 52, cy: 34 }, { cx: 36, cy: 35 }, { cx: 46, cy: 35 }, { cx: 34, cy: 36 }, { cx: 41, cy: 37 }, { cx: 50, cy: 37 }, { cx: 51, cy: 37 }, { cx: 48, cy: 38 },
+    { cx: 49, cy: 38 }, { cx: 39, cy: 39 }, { cx: 49, cy: 39 }, { cx: 50, cy: 39 }, { cx: 32, cy: 40 }, { cx: 46, cy: 40 }, { cx: 27, cy: 41 }, { cx: 47, cy: 41 },
+    { cx: 18, cy: 42 }, { cx: 38, cy: 42 }, { cx: 17, cy: 43 }, { cx: 18, cy: 43 }, { cx: 19, cy: 43 }, { cx: 24, cy: 43 }, { cx: 30, cy: 43 }, { cx: 36, cy: 43 },
+    { cx: 29, cy: 46 }, { cx: 47, cy: 46 }, { cx: 30, cy: 48 }, { cx: 32, cy: 49 }, { cx: 29, cy: 51 }, { cx: 29, cy: 53 }, { cx: 34, cy: 54 }, { cx: 33, cy: 55 },
+    { cx: 32, cy: 57 }, { cx: 30, cy: 63 }, { cx: 45, cy: 63 },
   ],
 };
 
@@ -196,14 +197,6 @@ const isRegionUnlocked = (region: string, unlocks: string[]): boolean => {
 // Every unlockable/assignable region name, deduped + alphabetised. Pulled
 // from the existing unlock data so the authoring dropdown can't introduce
 // typos that would fail to match unlocks.regions at runtime.
-const ALL_REGION_NAMES: string[] = (() => {
-  const names = new Set<string>(['Misthalin']);
-  for (const g of Object.keys(REGION_GROUPS)) names.add(g);
-  for (const arr of Object.values(REGION_GROUPS)) arr.forEach(n => names.add(n));
-  for (const n of MISTHALIN_AREAS) names.add(n);
-  return [...names].sort();
-})();
-
 const AUTHORING_STORAGE_KEY = 'fate-region-chunks-draft-v1';
 // Rolling backup that only advances when the draft is MORE substantial than
 // what it currently holds. Protects against accidental seed-overwrites if
@@ -233,6 +226,33 @@ const UNLOCKED_FILL = 'rgba(16, 185, 129, 0.35)';
 const LOCKED_FILL = 'rgba(239, 68, 68, 0.30)';
 const ACTIVE_STROKE = 'rgba(250, 204, 21, 0.9)';
 
+// ── Sub-area authoring layer ───────────────────────────────────────────────
+// The map has two paintable layers: continents (REGION_CHUNKS, the broad
+// landmass blocks) and named sub-areas within them (SUB_AREA_CHUNKS —
+// Falador, Port Sarim, …, the granularity the unlock system tracks).
+const CONTINENT_NAMES: string[] = ['Misthalin', ...Object.keys(REGION_GROUPS)].sort();
+const SUB_AREA_NAMES: string[] = [...new Set([...MISTHALIN_AREAS, ...Object.values(REGION_GROUPS).flat()])].sort();
+const SUBAREA_STORAGE_KEY = 'fate-subarea-chunks-draft-v1';
+
+const loadInitialSubDraft = (): Record<string, ChunkCoord[]> => {
+  try {
+    const raw = localStorage.getItem(SUBAREA_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch { /* fall through */ }
+  return SUB_AREA_CHUNKS;
+};
+
+const serializeSubDraft = (data: Record<string, ChunkCoord[]>) => {
+  const entries = Object.entries(data)
+    .filter(([, list]) => list.length > 0)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([name, list]) => {
+      const sorted = [...list].sort((a, b) => a.cy - b.cy || a.cx - b.cx);
+      return `  '${name.replace(/'/g, "\\'")}': [${sorted.map(c => `{ cx: ${c.cx}, cy: ${c.cy} }`).join(', ')}],`;
+    });
+  return `export const SUB_AREA_CHUNKS: Record<string, ChunkCoord[]> = {\n${entries.join('\n')}\n};`;
+};
+
 const chunkKey = (c: ChunkCoord) => `${c.cx},${c.cy}`;
 
 const serializeDraft = (data: Record<string, ChunkCoord[]>) => {
@@ -249,24 +269,157 @@ const serializeDraft = (data: Record<string, ChunkCoord[]>) => {
 
 // Chunk-space offset between the web app's map coordinates and canonical OSRS
 // runescript coordinates (what RuneLite reports as `WorldPoint.getX() >> 6`).
-// Derived empirically against 6 landmarks (Lumbridge, Varrock, Falador,
-// Ardougne, Port Sarim, Canifis) — all agreed exactly on +1 chunk east,
-// +7 chunks north. Encoded in RuneLite bundles so the plugin never guesses.
-const RUNELITE_CHUNK_OFFSET = { cx: 1, cy: 7 } as const;
+// MAP_BOUNDS is now calibrated exactly to the canonical chunk grid (see
+// utils/mapCoords.ts), so our cx/cy already equal canonical region coords and
+// no offset is required. Kept as an explicit field in RuneLite exports so the
+// plugin never has to guess.
+const RUNELITE_CHUNK_OFFSET = { cx: 0, cy: 0 } as const;
 
-const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) => {
+// The heavy, rarely-changing part of the map: the 9216x6528 image, ~600 chunk
+// rects, the chunk grid and the region markers. Memoized so per-frame hover
+// state updates in MapContent never reconcile this subtree — pans/zooms don't
+// even reach React (they write the transform straight to the wrapper node).
+interface MapSurfaceProps {
+  chunkRects: { key: string; region: string; x: number; y: number; w: number; h: number; fill: string; isActive: boolean }[];
+  gridLines: { verticals: { x: number; y1: number; y2: number }[]; horizontals: { y: number; x1: number; x2: number }[] };
+  showGrid: boolean;
+  rectBox: { cx0: number; cy0: number; cx1: number; cy1: number } | null;
+  rectKind: 'add' | 'remove' | null;
+  regionUnlocks: string[];
+}
+
+const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectKind, regionUnlocks }: MapSurfaceProps) => (
+  <>
+    <img
+      src={MAP_IMAGE.src}
+      alt="OSRS World Map"
+      className="w-full h-full object-fill pointer-events-none opacity-60 grayscale-[0.2]"
+      draggable={false}
+    />
+
+    <svg
+      className="absolute inset-0 pointer-events-none"
+      width={MAP_IMAGE.width}
+      height={MAP_IMAGE.height}
+      viewBox={`0 0 ${MAP_IMAGE.width} ${MAP_IMAGE.height}`}
+    >
+      <g>
+        {chunkRects.map(r => (
+          <rect
+            key={r.key}
+            x={r.x}
+            y={r.y}
+            width={r.w}
+            height={r.h}
+            fill={r.fill}
+            stroke={r.isActive ? ACTIVE_STROKE : 'none'}
+            strokeWidth={r.isActive ? 2 : 0}
+          />
+        ))}
+      </g>
+
+      {rectBox && (() => {
+        const minCx = Math.min(rectBox.cx0, rectBox.cx1), maxCx = Math.max(rectBox.cx0, rectBox.cx1);
+        const minCy = Math.min(rectBox.cy0, rectBox.cy1), maxCy = Math.max(rectBox.cy0, rectBox.cy1);
+        const tl = tileToPixel({ tx: minCx * CHUNK_TILES, ty: (maxCy + 1) * CHUNK_TILES });
+        const br = tileToPixel({ tx: (maxCx + 1) * CHUNK_TILES, ty: minCy * CHUNK_TILES });
+        return (
+          <rect
+            x={tl.px} y={tl.py} width={br.px - tl.px} height={br.py - tl.py}
+            fill={rectKind === 'remove' ? 'rgba(239,68,68,0.25)' : 'rgba(250,204,21,0.25)'}
+            stroke={ACTIVE_STROKE} strokeWidth={3} strokeDasharray="10 7"
+          />
+        );
+      })()}
+
+      {showGrid && (
+        <g stroke={GRID_LINE_COLOR} strokeWidth={1}>
+          {gridLines.verticals.map(v => (
+            <line key={`v${v.x}`} x1={v.x} x2={v.x} y1={v.y1} y2={v.y2} />
+          ))}
+          {gridLines.horizontals.map(h => (
+            <line key={`h${h.y}`} x1={h.x1} x2={h.x2} y1={h.y} y2={h.y} />
+          ))}
+        </g>
+      )}
+    </svg>
+
+    {Object.entries(REGION_COORDS).map(([region, coords]) => {
+      const isMisthalin = region === 'Misthalin';
+      const isUnlocked = isMisthalin || regionUnlocks.includes(region);
+      const subRegions = isMisthalin ? MISTHALIN_AREAS : REGION_GROUPS[region] || [];
+      return (
+        <div
+          key={region}
+          className="absolute transform -translate-x-1/2 -translate-y-1/2 group/marker z-10"
+          style={{ left: `${coords.x}%`, top: `${coords.y}%` }}
+        >
+          <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full border-2 shadow-[0_0_15px_black] flex items-center justify-center transition-all duration-300 ${isUnlocked ? 'bg-emerald-900/90 border-emerald-400 text-emerald-400 hover:scale-125 hover:bg-emerald-800' : 'bg-red-900/90 border-red-500 text-red-500 hover:scale-110 grayscale-[0.5]'}`}>
+            {isUnlocked ? <Unlock size={14} /> : <Lock size={14} />}
+          </div>
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-48 bg-black/95 border border-white/20 rounded p-3 opacity-0 group-hover/marker:opacity-100 transition-opacity pointer-events-none z-50 flex flex-col gap-2 scale-90 group-hover/marker:scale-100 origin-bottom duration-200">
+            <h4 className={`font-bold text-sm border-b pb-1 ${isUnlocked ? 'text-emerald-400 border-emerald-500/30' : 'text-red-400 border-red-500/30'}`}>{region}</h4>
+            <div className="flex flex-wrap gap-1">
+              {subRegions.slice(0, 8).map(area => (
+                <span key={area} className={`text-[9px] px-1.5 py-0.5 rounded text-gray-300 ${regionUnlocks.includes(area) ? 'bg-emerald-900/40 text-emerald-300' : 'bg-white/10'}`}>{area}</span>
+              ))}
+              {subRegions.length > 8 && <span className="text-[9px] text-gray-500">+{subRegions.length - 8} more...</span>}
+            </div>
+          </div>
+        </div>
+      );
+    })}
+  </>
+));
+
+interface GameSnapshot {
+  keys: number; specialKeys: number; chaosKeys: number;
+  fatePoints: number; activeBuff: string; pinnedGoals: string[];
+}
+
+const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnlocks: string[]; getGameSnapshot: () => GameSnapshot }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapContentRef = useRef<HTMLDivElement>(null);
-  const [transform, setTransform] = useState({ x: -470, y: -288, scale: 0.2 });
+
+  /** Write the pan/zoom transform straight to the surface node (no render). */
+  const applyTransform = useCallback((t: { x: number; y: number; scale: number }) => {
+    transformRef.current = t;
+    const node = mapContentRef.current;
+    if (node) node.style.transform = `translate(${t.x}px, ${t.y}px) scale(${t.scale})`;
+  }, []);
+  // Pan/zoom lives in a ref and is applied straight to the DOM node — going
+  // through React state re-rendered the whole 600-element map surface on every
+  // mousemove frame, which is what made dragging laggy.
+  const transformRef = useRef({ x: -470, y: -288, scale: 0.2 });
   const [isExporting, setIsExporting] = useState(false);
   const [showGrid, setShowGrid] = useState(true);
   const [hoverTile, setHoverTile] = useState<TileCoord | null>(null);
+  // Coalesce hover updates to one state set per animation frame — mousemove
+  // can fire far more often than the readout needs to repaint.
+  const hoverRaf = useRef<number | null>(null);
+  const pendingHover = useRef<TileCoord | null>(null);
+  const queueHover = (t: TileCoord | null) => {
+    pendingHover.current = t;
+    if (hoverRaf.current == null) {
+      hoverRaf.current = requestAnimationFrame(() => {
+        hoverRaf.current = null;
+        setHoverTile(pendingHover.current);
+      });
+    }
+  };
+  useEffect(() => () => { if (hoverRaf.current != null) cancelAnimationFrame(hoverRaf.current); }, []);
 
   const [authoring, setAuthoring] = useState(false);
-  const [activeRegion, setActiveRegion] = useState<string>(ALL_REGION_NAMES[0] ?? '');
+  const [activeRegion, setActiveRegion] = useState<string>(CONTINENT_NAMES[0] ?? '');
   const [soloView, setSoloView] = useState(false);
   const [draftChunks, setDraftChunks] = useState<Record<string, ChunkCoord[]>>(loadInitialDraft);
+  // Sub-area layer: which authoring level is active, the sub-area being
+  // painted, and its own draft (seeded from data/subAreaChunks.ts).
+  const [authorLevel, setAuthorLevel] = useState<'REGION' | 'SUBAREA'>('REGION');
+  const [activeSubArea, setActiveSubArea] = useState<string>(SUB_AREA_NAMES[0] ?? '');
+  const [subDraft, setSubDraft] = useState<Record<string, ChunkCoord[]>>(loadInitialSubDraft);
   const [toast, setToast] = useState<string | null>(null);
+  const [selectedChunk, setSelectedChunk] = useState<ChunkCoord | null>(null);
 
   const isDragging = useRef(false);
   const didDrag = useRef(false);
@@ -274,27 +427,34 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
   const paintMode = useRef<'add' | 'remove' | null>(null);
   const importFileRef = useRef<HTMLInputElement>(null);
 
-  // ── Undo / redo — one snapshot per gesture (so a whole drag undoes at once) ──
-  const [undoStack, setUndoStack] = useState<Record<string, ChunkCoord[]>[]>([]);
-  const [redoStack, setRedoStack] = useState<Record<string, ChunkCoord[]>[]>([]);
+  // ── Undo / redo — one snapshot per gesture (so a whole drag undoes at once).
+  // Snapshots capture BOTH layers so undo works regardless of which level the
+  // gesture edited.
+  type LayerSnapshot = { r: Record<string, ChunkCoord[]>; s: Record<string, ChunkCoord[]> };
+  const [undoStack, setUndoStack] = useState<LayerSnapshot[]>([]);
+  const [redoStack, setRedoStack] = useState<LayerSnapshot[]>([]);
   const draftRef = useRef(draftChunks);
+  const subRef = useRef(subDraft);
   const undoRef = useRef(undoStack);
   const redoRef = useRef(redoStack);
   useEffect(() => { draftRef.current = draftChunks; }, [draftChunks]);
+  useEffect(() => { subRef.current = subDraft; }, [subDraft]);
   useEffect(() => { undoRef.current = undoStack; }, [undoStack]);
   useEffect(() => { redoRef.current = redoStack; }, [redoStack]);
-  const pushHistory = () => { setUndoStack(s => [...s.slice(-49), draftRef.current]); setRedoStack([]); };
+  const snapshot = (): LayerSnapshot => ({ r: draftRef.current, s: subRef.current });
+  const restore = (snap: LayerSnapshot) => { setDraftChunks(snap.r); setSubDraft(snap.s); };
+  const pushHistory = () => { setUndoStack(s => [...s.slice(-49), snapshot()]); setRedoStack([]); };
   const undo = useCallback(() => {
     const s = undoRef.current; if (!s.length) return;
-    setRedoStack(r => [...r, draftRef.current]);
+    setRedoStack(r => [...r, snapshot()]);
     setUndoStack(s.slice(0, -1));
-    setDraftChunks(s[s.length - 1]);
+    restore(s[s.length - 1]);
   }, []);
   const redo = useCallback(() => {
     const r = redoRef.current; if (!r.length) return;
-    setUndoStack(u => [...u, draftRef.current]);
+    setUndoStack(u => [...u, snapshot()]);
     setRedoStack(r.slice(0, -1));
-    setDraftChunks(r[r.length - 1]);
+    restore(r[r.length - 1]);
   }, []);
 
   // ── Rectangle fill (Alt+drag a box) ─────────────────────────────────────────
@@ -319,6 +479,19 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
     } catch { /* quota or parse error — ignore */ }
   }, [draftChunks]);
 
+  // Persist the sub-area layer + derive the chunk -> sub-area lookup that
+  // drives per-chunk unlock colouring and the activity panel's header.
+  useEffect(() => {
+    try { localStorage.setItem(SUBAREA_STORAGE_KEY, JSON.stringify(subDraft)); } catch { /* ignore */ }
+  }, [subDraft]);
+  const chunkSubArea = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const [sub, chunks] of Object.entries(subDraft)) for (const c of chunks) m[chunkKey(c)] = sub;
+    return m;
+  }, [subDraft]);
+  const chunkOnMap = (chunk: ChunkCoord) =>
+    Object.values(draftChunks).some(list => list.some(c => c.cx === chunk.cx && c.cy === chunk.cy));
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -327,13 +500,12 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
       const rect = container.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
-      setTransform(prev => {
-        const factor = Math.exp(-e.deltaY * 0.001);
-        const newScale = Math.min(Math.max(0.2, prev.scale * factor), 5);
-        const newX = mouseX - (mouseX - prev.x) * (newScale / prev.scale);
-        const newY = mouseY - (mouseY - prev.y) * (newScale / prev.scale);
-        return { x: newX, y: newY, scale: newScale };
-      });
+      const prev = transformRef.current;
+      const factor = Math.exp(-e.deltaY * 0.001);
+      const newScale = Math.min(Math.max(0.2, prev.scale * factor), 5);
+      const newX = mouseX - (mouseX - prev.x) * (newScale / prev.scale);
+      const newY = mouseY - (mouseY - prev.y) * (newScale / prev.scale);
+      applyTransform({ x: newX, y: newY, scale: newScale });
     };
     container.addEventListener('wheel', onWheel, { passive: false });
     return () => container.removeEventListener('wheel', onWheel);
@@ -360,13 +532,29 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
   const chunkAtEvent = (clientX: number, clientY: number): ChunkCoord | null => {
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return null;
-    const localX = (clientX - rect.left - transform.x) / transform.scale;
-    const localY = (clientY - rect.top - transform.y) / transform.scale;
+    const t = transformRef.current;
+    const localX = (clientX - rect.left - t.x) / t.scale;
+    const localY = (clientY - rect.top - t.y) / t.scale;
     if (localX < 0 || localY < 0 || localX > MAP_IMAGE.width || localY > MAP_IMAGE.height) return null;
     return tileToChunk(pixelToTile({ px: localX, py: localY }));
   };
 
+  /** Single-assignment add into whichever layer is active. */
   const addChunkToActive = (chunk: ChunkCoord) => {
+    if (authorLevel === 'SUBAREA') {
+      if (!activeSubArea) return;
+      if (!chunkOnMap(chunk)) { showToast('not on the map — paint it at Region level first'); return; }
+      setSubDraft(prev => {
+        const next: Record<string, ChunkCoord[]> = {};
+        for (const [name, list] of Object.entries(prev)) {
+          const filtered = list.filter(c => c.cx !== chunk.cx || c.cy !== chunk.cy);
+          if (filtered.length) next[name] = filtered;
+        }
+        next[activeSubArea] = [...(next[activeSubArea] ?? []), chunk];
+        return next;
+      });
+      return;
+    }
     if (!activeRegion) return;
     setDraftChunks(prev => {
       const next: Record<string, ChunkCoord[]> = {};
@@ -381,38 +569,48 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
   };
 
   const removeChunk = (chunk: ChunkCoord) => {
-    setDraftChunks(prev => {
+    const strip = (prev: Record<string, ChunkCoord[]>) => {
       const next: Record<string, ChunkCoord[]> = {};
       for (const [name, list] of Object.entries(prev)) {
         const filtered = list.filter(c => c.cx !== chunk.cx || c.cy !== chunk.cy);
         if (filtered.length) next[name] = filtered;
       }
       return next;
-    });
+    };
+    if (authorLevel === 'SUBAREA') setSubDraft(strip);
+    else setDraftChunks(strip);
   };
 
-  // Fill (or clear) every chunk inside the dragged box for the active region.
+  // Fill (or clear) every chunk inside the dragged box for the active layer.
   const applyRect = (mode: 'add' | 'remove') => {
     const a = rectStart.current, b = rectEnd.current;
     if (!a || !b) return;
-    if (mode === 'add' && !activeRegion) return;
+    const activeName = authorLevel === 'SUBAREA' ? activeSubArea : activeRegion;
+    if (mode === 'add' && !activeName) return;
     const minCx = Math.min(a.cx, b.cx), maxCx = Math.max(a.cx, b.cx);
     const minCy = Math.min(a.cy, b.cy), maxCy = Math.max(a.cy, b.cy);
     const inBox = (c: ChunkCoord) => c.cx >= minCx && c.cx <= maxCx && c.cy >= minCy && c.cy <= maxCy;
-    setDraftChunks(prev => {
+    const apply = (prev: Record<string, ChunkCoord[]>) => {
       const next: Record<string, ChunkCoord[]> = {};
-      // Clear the box from every region first (keeps single-assignment).
+      // Clear the box from every entry first (keeps single-assignment).
       for (const [name, list] of Object.entries(prev)) {
         const filtered = list.filter(c => !inBox(c));
         if (filtered.length) next[name] = filtered;
       }
       if (mode === 'add') {
         const add: ChunkCoord[] = [];
-        for (let cx = minCx; cx <= maxCx; cx++) for (let cy = minCy; cy <= maxCy; cy++) add.push({ cx, cy });
-        next[activeRegion] = [...(next[activeRegion] ?? []), ...add];
+        for (let cx = minCx; cx <= maxCx; cx++) for (let cy = minCy; cy <= maxCy; cy++) {
+          const c = { cx, cy };
+          // Sub-areas can only cover chunks that exist on the map.
+          if (authorLevel === 'SUBAREA' && !chunkOnMap(c)) continue;
+          add.push(c);
+        }
+        next[activeName] = [...(next[activeName] ?? []), ...add];
       }
       return next;
-    });
+    };
+    if (authorLevel === 'SUBAREA') setSubDraft(apply);
+    else setDraftChunks(apply);
   };
 
   const onMouseDown = (e: React.MouseEvent) => {
@@ -460,17 +658,19 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
       const dy = e.clientY - lastMouse.current.y;
       if (Math.abs(dx) + Math.abs(dy) > 2) didDrag.current = true;
       lastMouse.current = { x: e.clientX, y: e.clientY };
-      setTransform(prev => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
+      const prev = transformRef.current;
+      applyTransform({ ...prev, x: prev.x + dx, y: prev.y + dy });
     }
 
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const localX = (e.clientX - rect.left - transform.x) / transform.scale;
-    const localY = (e.clientY - rect.top - transform.y) / transform.scale;
+    const t = transformRef.current;
+    const localX = (e.clientX - rect.left - t.x) / t.scale;
+    const localY = (e.clientY - rect.top - t.y) / t.scale;
     if (localX < 0 || localY < 0 || localX > MAP_IMAGE.width || localY > MAP_IMAGE.height) {
-      setHoverTile(null);
+      queueHover(null);
     } else {
-      setHoverTile(pixelToTile({ px: localX, py: localY }));
+      queueHover(pixelToTile({ px: localX, py: localY }));
     }
   };
 
@@ -495,9 +695,8 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
       pushHistory();
       addChunkToActive(chunk);
     } else {
-      const text = `{ cx: ${chunk.cx}, cy: ${chunk.cy} },`;
-      navigator.clipboard?.writeText(text).catch(() => {});
-      showToast(`copied { cx: ${chunk.cx}, cy: ${chunk.cy} }`);
+      // Open the activity panel for the clicked chunk ("what can I play here?").
+      setSelectedChunk(prev => (prev && prev.cx === chunk.cx && prev.cy === chunk.cy ? null : chunk));
     }
   };
 
@@ -537,31 +736,42 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
       link.click();
     } catch (err) {
       console.error("Map export failed:", err);
-      alert("Failed to export map image.");
+      showToast('map image export failed');
     } finally {
       setIsExporting(false);
     }
   };
 
   const exportDraftToClipboard = async () => {
-    const code = serializeDraft(draftChunks);
+    const isSub = authorLevel === 'SUBAREA';
+    const code = isSub ? serializeSubDraft(subDraft) : serializeDraft(draftChunks);
+    const target = isSub ? 'SUB_AREA_CHUNKS (data/subAreaChunks.ts)' : 'REGION_CHUNKS';
     try {
       await navigator.clipboard.writeText(code);
-      showToast('REGION_CHUNKS copied to clipboard');
+      showToast(`${isSub ? 'SUB_AREA_CHUNKS' : 'REGION_CHUNKS'} copied to clipboard`);
     } catch {
-      window.prompt('Copy this into REGION_CHUNKS:', code);
+      window.prompt(`Copy this into ${target}:`, code);
     }
   };
 
   const exportRuneLiteBundle = () => {
+    // v2 bundle: adds the sub-area layer, the region hierarchy (so the plugin
+    // resolves lock state exactly like the app), and live run state for the
+    // in-game HUD. The plugin still accepts v1 bundles.
     const payload = {
-      version: 1,
+      version: 2,
       exportedAt: new Date().toISOString(),
       chunkOffset: RUNELITE_CHUNK_OFFSET,
       chunks: draftChunks,
+      subAreaChunks: subDraft,
+      regionGroups: { Misthalin: MISTHALIN_AREAS, ...REGION_GROUPS },
       unlockedRegions: regionUnlocks,
+      state: getGameSnapshot(),
     };
     const json = JSON.stringify(payload, null, 2);
+    // Clipboard first (paste straight into the plugin's side panel)…
+    navigator.clipboard?.writeText(json).catch(() => {});
+    // …and the file download for the watch-this-path workflow.
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -571,7 +781,7 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast(`RuneLite bundle · ${regionUnlocks.length} unlocked regions`);
+    showToast('RuneLite bundle copied + downloaded');
   };
 
   const exportDraftJson = () => {
@@ -623,11 +833,18 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
       showToast(`imported ${regionCount} regions`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      window.alert(`Import failed: ${msg}`);
+      showToast(`import failed: ${msg}`);
     }
   };
 
   const clearDraft = () => {
+    if (authorLevel === 'SUBAREA') {
+      if (!window.confirm('Clear ALL sub-area chunk assignments?\n\n(The shipped data/subAreaChunks.ts is untouched — reload after clearing localStorage to reseed.)')) return;
+      pushHistory();
+      setSubDraft({});
+      showToast('sub-area draft cleared');
+      return;
+    }
     if (!window.confirm('Clear ALL draft chunks for every region?\n\nThis wipes the primary draft AND the safety backup — gone for good.')) return;
     setDraftChunks({});
     try { localStorage.removeItem(AUTHORING_BACKUP_KEY); } catch { /* ignore */ }
@@ -635,15 +852,19 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
   };
 
   const clearActiveRegion = () => {
-    if (!activeRegion) return;
-    if (!window.confirm(`Clear all chunks for "${activeRegion}"?`)) return;
+    const isSub = authorLevel === 'SUBAREA';
+    const name = isSub ? activeSubArea : activeRegion;
+    if (!name) return;
+    if (!window.confirm(`Clear all chunks for "${name}"?`)) return;
     pushHistory();
-    setDraftChunks(prev => {
+    const drop = (prev: Record<string, ChunkCoord[]>) => {
       const next = { ...prev };
-      delete next[activeRegion];
+      delete next[name];
       return next;
-    });
-    showToast(`cleared "${activeRegion}"`);
+    };
+    if (isSub) setSubDraft(drop);
+    else setDraftChunks(drop);
+    showToast(`cleared "${name}"`);
   };
 
   const gridLines = useMemo(() => {
@@ -668,21 +889,35 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
     const chunkPx = CHUNK_TILES * (MAP_IMAGE.width / (MAP_BOUNDS.tileMaxX - MAP_BOUNDS.tileMinX));
     const chunkPy = CHUNK_TILES * (MAP_IMAGE.height / (MAP_BOUNDS.tileMaxY - MAP_BOUNDS.tileMinY));
     const rects: { key: string; region: string; x: number; y: number; w: number; h: number; fill: string; isActive: boolean }[] = [];
+    const subLevel = authoring && authorLevel === 'SUBAREA';
     for (const [region, chunks] of Object.entries(draftChunks)) {
-      const isActive = authoring && region === activeRegion;
-      if (soloView && authoring && !isActive) continue;
-      const unlocked = isRegionUnlocked(region, regionUnlocks);
-      const fill = unlocked ? UNLOCKED_FILL : LOCKED_FILL;
+      const regionActive = authoring && !subLevel && region === activeRegion;
+      if (soloView && authoring && !subLevel && !regionActive) continue;
+      const continentUnlocked = isRegionUnlocked(region, regionUnlocks);
       for (const { cx, cy } of chunks) {
+        // Sub-area-aware colouring: a chunk inside a named sub-area (e.g. the
+        // Falador chunks) reflects THAT area's unlock state, not the whole
+        // continent's. Unnamed in-between chunks fall back to the continent.
+        const subArea = chunkSubArea[`${cx},${cy}`];
+        // At the sub-area authoring level the yellow "active" stroke marks the
+        // chunks of the selected sub-area, and Solo hides everything else.
+        const isActive = subLevel ? subArea === activeSubArea : regionActive;
+        if (soloView && subLevel && !isActive) continue;
+        const unlocked = subArea ? isRegionUnlocked(subArea, regionUnlocks) : continentUnlocked;
+        const fill = unlocked ? UNLOCKED_FILL : LOCKED_FILL;
         const { px, py } = tileToPixel({ tx: cx * CHUNK_TILES, ty: (cy + 1) * CHUNK_TILES });
         rects.push({ key: `${region}:${cx},${cy}`, region, x: px, y: py, w: chunkPx, h: chunkPy, fill, isActive });
       }
     }
     return rects;
-  }, [draftChunks, regionUnlocks, authoring, activeRegion, soloView]);
+  }, [draftChunks, chunkSubArea, regionUnlocks, authoring, authorLevel, activeRegion, activeSubArea, soloView]);
 
-  const activeChunkCount = draftChunks[activeRegion]?.length ?? 0;
-  const totalRegionsWithChunks = Object.values(draftChunks).filter(arr => arr.length > 0).length;
+  const activeChunkCount = authorLevel === 'SUBAREA'
+    ? (subDraft[activeSubArea]?.length ?? 0)
+    : (draftChunks[activeRegion]?.length ?? 0);
+  const totalRegionsWithChunks = authorLevel === 'SUBAREA'
+    ? Object.values(subDraft).filter(arr => arr.length > 0).length
+    : Object.values(draftChunks).filter(arr => arr.length > 0).length;
   const hoverChunk = hoverTile ? tileToChunk(hoverTile) : null;
 
   return (
@@ -701,94 +936,26 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
           ref={mapContentRef}
           id="map-content-inner"
           style={{
-            transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
+            // Initial value only — drags/zooms write to the node directly
+            // via applyTransform (see transformRef above).
+            transform: `translate(${transformRef.current.x}px, ${transformRef.current.y}px) scale(${transformRef.current.scale})`,
             transformOrigin: '0 0',
             width: `${MAP_IMAGE.width}px`,
             height: `${MAP_IMAGE.height}px`,
             position: 'absolute',
             top: 0,
-            left: 0
+            left: 0,
+            willChange: 'transform',
           }}
         >
-          <img
-            src={MAP_IMAGE.src}
-            alt="OSRS World Map"
-            className="w-full h-full object-fill pointer-events-none opacity-60 grayscale-[0.2]"
-            draggable={false}
+          <MapSurface
+            chunkRects={chunkRects}
+            gridLines={gridLines}
+            showGrid={showGrid}
+            rectBox={rectBox}
+            rectKind={rectMode.current}
+            regionUnlocks={regionUnlocks}
           />
-
-          <svg
-            className="absolute inset-0 pointer-events-none"
-            width={MAP_IMAGE.width}
-            height={MAP_IMAGE.height}
-            viewBox={`0 0 ${MAP_IMAGE.width} ${MAP_IMAGE.height}`}
-          >
-            <g>
-              {chunkRects.map(r => (
-                <rect
-                  key={r.key}
-                  x={r.x}
-                  y={r.y}
-                  width={r.w}
-                  height={r.h}
-                  fill={r.fill}
-                  stroke={r.isActive ? ACTIVE_STROKE : 'none'}
-                  strokeWidth={r.isActive ? 2 : 0}
-                />
-              ))}
-            </g>
-
-            {rectBox && (() => {
-              const minCx = Math.min(rectBox.cx0, rectBox.cx1), maxCx = Math.max(rectBox.cx0, rectBox.cx1);
-              const minCy = Math.min(rectBox.cy0, rectBox.cy1), maxCy = Math.max(rectBox.cy0, rectBox.cy1);
-              const tl = tileToPixel({ tx: minCx * CHUNK_TILES, ty: (maxCy + 1) * CHUNK_TILES });
-              const br = tileToPixel({ tx: (maxCx + 1) * CHUNK_TILES, ty: minCy * CHUNK_TILES });
-              return (
-                <rect
-                  x={tl.px} y={tl.py} width={br.px - tl.px} height={br.py - tl.py}
-                  fill={rectMode.current === 'remove' ? 'rgba(239,68,68,0.25)' : 'rgba(250,204,21,0.25)'}
-                  stroke={ACTIVE_STROKE} strokeWidth={3} strokeDasharray="10 7"
-                />
-              );
-            })()}
-
-            {showGrid && (
-              <g stroke={GRID_LINE_COLOR} strokeWidth={1}>
-                {gridLines.verticals.map(v => (
-                  <line key={`v${v.x}`} x1={v.x} x2={v.x} y1={v.y1} y2={v.y2} />
-                ))}
-                {gridLines.horizontals.map(h => (
-                  <line key={`h${h.y}`} x1={h.x1} x2={h.x2} y1={h.y} y2={h.y} />
-                ))}
-              </g>
-            )}
-          </svg>
-
-          {Object.entries(REGION_COORDS).map(([region, coords]) => {
-            const isMisthalin = region === 'Misthalin';
-            const isUnlocked = isMisthalin || regionUnlocks.includes(region);
-            const subRegions = isMisthalin ? MISTHALIN_AREAS : REGION_GROUPS[region] || [];
-            return (
-              <div
-                key={region}
-                className="absolute transform -translate-x-1/2 -translate-y-1/2 group/marker z-10"
-                style={{ left: `${coords.x}%`, top: `${coords.y}%` }}
-              >
-                <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full border-2 shadow-[0_0_15px_black] flex items-center justify-center transition-all duration-300 ${isUnlocked ? 'bg-emerald-900/90 border-emerald-400 text-emerald-400 hover:scale-125 hover:bg-emerald-800' : 'bg-red-900/90 border-red-500 text-red-500 hover:scale-110 grayscale-[0.5]'}`}>
-                  {isUnlocked ? <Unlock size={14} /> : <Lock size={14} />}
-                </div>
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-48 bg-black/95 border border-white/20 rounded p-3 opacity-0 group-hover/marker:opacity-100 transition-opacity pointer-events-none z-50 flex flex-col gap-2 scale-90 group-hover/marker:scale-100 origin-bottom duration-200">
-                  <h4 className={`font-bold text-sm border-b pb-1 ${isUnlocked ? 'text-emerald-400 border-emerald-500/30' : 'text-red-400 border-red-500/30'}`}>{region}</h4>
-                  <div className="flex flex-wrap gap-1">
-                    {subRegions.slice(0, 8).map(area => (
-                      <span key={area} className={`text-[9px] px-1.5 py-0.5 rounded text-gray-300 ${regionUnlocks.includes(area) ? 'bg-emerald-900/40 text-emerald-300' : 'bg-white/10'}`}>{area}</span>
-                    ))}
-                    {subRegions.length > 8 && <span className="text-[9px] text-gray-500">+{subRegions.length - 8} more...</span>}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
         </div>
       </div>
 
@@ -805,21 +972,59 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
 
         {authoring && (
           <div className="bg-black/90 border border-white/20 rounded-md shadow-lg p-3 flex flex-col gap-2 w-[260px]">
-            <label className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Active Region</label>
-            <select
-              value={activeRegion}
-              onChange={e => setActiveRegion(e.target.value)}
-              className="bg-[#0b0d10] border border-white/20 rounded px-2 py-1 text-xs text-white"
-            >
-              {ALL_REGION_NAMES.map(name => {
-                const count = draftChunks[name]?.length ?? 0;
-                return (
-                  <option key={name} value={name}>
-                    {name}{count ? ` (${count})` : ''}
-                  </option>
-                );
-              })}
-            </select>
+            {/* Layer toggle: paint broad continent blocks, or the named
+                sub-areas inside them (Falador, Port Sarim, …). */}
+            <div className="flex bg-[#0b0d10] border border-white/20 rounded p-0.5 gap-0.5">
+              {(['REGION', 'SUBAREA'] as const).map(lvl => (
+                <button
+                  key={lvl}
+                  onClick={() => setAuthorLevel(lvl)}
+                  className={`flex-1 py-1 rounded text-[10px] font-bold uppercase tracking-wide transition-colors ${authorLevel === lvl ? 'bg-amber-600/80 text-black' : 'text-gray-400 hover:text-gray-200'}`}
+                  title={lvl === 'REGION' ? 'Paint continent blocks (REGION_CHUNKS)' : 'Paint named sub-areas like Falador (SUB_AREA_CHUNKS)'}
+                >
+                  {lvl === 'REGION' ? 'Regions' : 'Sub-areas'}
+                </button>
+              ))}
+            </div>
+
+            <label className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">
+              Active {authorLevel === 'SUBAREA' ? 'Sub-area' : 'Region'}
+            </label>
+            {authorLevel === 'SUBAREA' ? (
+              <select
+                value={activeSubArea}
+                onChange={e => setActiveSubArea(e.target.value)}
+                className="bg-[#0b0d10] border border-white/20 rounded px-2 py-1 text-xs text-white"
+              >
+                {['Misthalin', ...Object.keys(REGION_GROUPS)].map(cont => (
+                  <optgroup key={cont} label={cont}>
+                    {(cont === 'Misthalin' ? MISTHALIN_AREAS : REGION_GROUPS[cont]).map(name => {
+                      const count = subDraft[name]?.length ?? 0;
+                      return (
+                        <option key={name} value={name}>
+                          {name}{count ? ` (${count})` : ''}
+                        </option>
+                      );
+                    })}
+                  </optgroup>
+                ))}
+              </select>
+            ) : (
+              <select
+                value={activeRegion}
+                onChange={e => setActiveRegion(e.target.value)}
+                className="bg-[#0b0d10] border border-white/20 rounded px-2 py-1 text-xs text-white"
+              >
+                {CONTINENT_NAMES.map(name => {
+                  const count = draftChunks[name]?.length ?? 0;
+                  return (
+                    <option key={name} value={name}>
+                      {name}{count ? ` (${count})` : ''}
+                    </option>
+                  );
+                })}
+              </select>
+            )}
 
             <div className="text-[10px] text-gray-400 leading-relaxed mt-1">
               click = add · right-click = remove · shift+drag = paint · <b className="text-amber-300/80">alt+drag = box fill</b> · alt+right-drag = box erase · <b className="text-amber-300/80">⌘/Ctrl+Z undo</b>
@@ -868,31 +1073,34 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
               <button
                 onClick={exportDraftToClipboard}
                 className="flex-1 px-2 py-1 rounded text-[11px] border bg-emerald-900/70 border-emerald-500/50 text-emerald-100 hover:bg-emerald-800/80 flex items-center justify-center gap-1"
-                title="Copy REGION_CHUNKS as TS literal"
+                title={authorLevel === 'SUBAREA' ? 'Copy SUB_AREA_CHUNKS as TS literal (paste into data/subAreaChunks.ts)' : 'Copy REGION_CHUNKS as TS literal'}
               >
                 <ClipboardCopy size={12} />
                 TS
               </button>
               <button
                 onClick={exportDraftJson}
-                className="flex-1 px-2 py-1 rounded text-[11px] border bg-sky-900/70 border-sky-500/50 text-sky-100 hover:bg-sky-800/80 flex items-center justify-center gap-1"
-                title="Download draft as JSON file"
+                disabled={authorLevel === 'SUBAREA'}
+                className="flex-1 px-2 py-1 rounded text-[11px] border bg-sky-900/70 border-sky-500/50 text-sky-100 hover:bg-sky-800/80 disabled:opacity-40 flex items-center justify-center gap-1"
+                title={authorLevel === 'SUBAREA' ? 'JSON export works at the Regions level' : 'Download draft as JSON file'}
               >
                 <FileDown size={12} />
                 JSON
               </button>
               <button
                 onClick={exportRuneLiteBundle}
-                className="flex-1 px-2 py-1 rounded text-[11px] border bg-amber-900/70 border-amber-500/50 text-amber-100 hover:bg-amber-800/80 flex items-center justify-center gap-1"
-                title="Export bundle for RuneLite plugin (chunks + unlocks + offset)"
+                disabled={authorLevel === 'SUBAREA'}
+                className="flex-1 px-2 py-1 rounded text-[11px] border bg-amber-900/70 border-amber-500/50 text-amber-100 hover:bg-amber-800/80 disabled:opacity-40 flex items-center justify-center gap-1"
+                title={authorLevel === 'SUBAREA' ? 'RuneLite export works at the Regions level' : 'Export bundle for RuneLite plugin (chunks + unlocks + offset)'}
               >
                 <Radio size={12} />
                 RL
               </button>
               <button
                 onClick={() => importFileRef.current?.click()}
-                className="flex-1 px-2 py-1 rounded text-[11px] border bg-indigo-900/70 border-indigo-500/50 text-indigo-100 hover:bg-indigo-800/80 flex items-center justify-center gap-1"
-                title="Import draft from JSON file"
+                disabled={authorLevel === 'SUBAREA'}
+                className="flex-1 px-2 py-1 rounded text-[11px] border bg-indigo-900/70 border-indigo-500/50 text-indigo-100 hover:bg-indigo-800/80 disabled:opacity-40 flex items-center justify-center gap-1"
+                title={authorLevel === 'SUBAREA' ? 'JSON import works at the Regions level' : 'Import draft from JSON file'}
               >
                 <FileUp size={12} />
                 Load
@@ -914,7 +1122,7 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
             />
 
             <div className="text-[10px] text-gray-500 pt-1 border-t border-white/10">
-              {activeChunkCount} chunks in "{activeRegion}" · {totalRegionsWithChunks} regions total
+              {activeChunkCount} chunks in "{authorLevel === 'SUBAREA' ? activeSubArea : activeRegion}" · {totalRegionsWithChunks} {authorLevel === 'SUBAREA' ? 'sub-areas' : 'regions'} total
             </div>
           </div>
         )}
@@ -938,13 +1146,13 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
           <Grid3x3 size={20} />
         </button>
         <button
-          onClick={() => setTransform(prev => ({ ...prev, scale: Math.min(prev.scale + 0.5, 5) }))}
+          onClick={() => applyTransform({ ...transformRef.current, scale: Math.min(transformRef.current.scale + 0.5, 5) })}
           className="p-2 bg-black/80 border border-white/20 rounded hover:bg-white/10 text-white shadow-lg active:scale-95 transition-transform"
         >
           <ZoomIn size={20} />
         </button>
         <button
-          onClick={() => setTransform(prev => ({ ...prev, scale: Math.max(prev.scale - 0.5, 0.2) }))}
+          onClick={() => applyTransform({ ...transformRef.current, scale: Math.max(transformRef.current.scale - 0.5, 0.2) })}
           className="p-2 bg-black/80 border border-white/20 rounded hover:bg-white/10 text-white shadow-lg active:scale-95 transition-transform"
         >
           <ZoomOut size={20} />
@@ -974,11 +1182,38 @@ const MapContent = React.memo(({ regionUnlocks }: { regionUnlocks: string[] }) =
       <div className="absolute top-20 left-4 z-20">
         <RegionProgressPanel regionUnlocks={regionUnlocks} />
       </div>
+
+      {/* Chunk activity panel: click any chunk (outside authoring) to see what
+          that chunk — or its whole area — offers, gated by the run's unlocks. */}
+      {selectedChunk && !authoring && (() => {
+        const region = Object.entries(draftChunks).find(([, list]) =>
+          list.some(c => c.cx === selectedChunk.cx && c.cy === selectedChunk.cy),
+        )?.[0] ?? null;
+        const subArea = chunkSubArea[`${selectedChunk.cx},${selectedChunk.cy}`] ?? null;
+        const unlocked = subArea
+          ? isRegionUnlocked(subArea, regionUnlocks)
+          : region ? isRegionUnlocked(region, regionUnlocks) : false;
+        return (
+          <ChunkActivityPanel
+            chunk={selectedChunk}
+            region={region}
+            subArea={subArea}
+            regionChunks={region ? draftChunks[region] : []}
+            unlocked={unlocked}
+            onClose={() => setSelectedChunk(null)}
+          />
+        );
+      })()}
     </div>
   );
 }, (prev, next) => prev.regionUnlocks === next.regionUnlocks);
 
 export const RegionMap: React.FC = () => {
-  const { unlocks } = useGame();
-  return <MapContent regionUnlocks={unlocks.regions} />;
+  const { unlocks, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals } = useGame();
+  // Live run state for the RuneLite bundle, read lazily at export time via a
+  // stable getter so MapContent's memoization (regionUnlocks-only) holds.
+  const snapRef = useRef({ keys: 0, specialKeys: 0, chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', pinnedGoals: [] as string[] });
+  snapRef.current = { keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals: pinnedGoals ?? [] };
+  const getGameSnapshot = useCallback(() => snapRef.current, []);
+  return <MapContent regionUnlocks={unlocks.regions} getGameSnapshot={getGameSnapshot} />;
 };

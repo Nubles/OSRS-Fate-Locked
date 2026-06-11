@@ -10,6 +10,7 @@ import { getRitual } from '../config/economy';
 import { rollDice, UNLOCK_COST } from '../utils/gameEngine';
 import { hashEntry, ensureChain } from '../utils/integrity';
 import { pushBackup, listBackups as readBackups, getBackupData, BackupMeta } from '../utils/backups';
+import { showToast } from '../utils/toast';
 
 // --- Types ---
 const CURRENT_VERSION = 1;
@@ -758,7 +759,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
       dispatch({ type: 'LOAD_SAVE', payload: data });
     } else {
       console.error('Import rejected: invalid save data');
-      alert('Failed to import: save data is malformed.');
+      showToast('Import failed — save data is malformed');
     }
   }, []);
   const createBackup = useCallback((reason: string) => {

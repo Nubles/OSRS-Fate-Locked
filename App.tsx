@@ -24,6 +24,7 @@ import { ModalFallback } from './components/LoadingFallback';
 import { JournalSummaryCard } from './components/JournalSummaryCard';
 import { useEscapeKey } from './hooks/useEscapeKey';
 import { resolveModeRules } from './config/gameModes';
+import { showToast } from './utils/toast';
 
 // Heavy, conditionally-rendered modals — code-split so they (and their deps,
 // e.g. recharts in StatsModal) stay out of the initial bundle.
@@ -87,11 +88,26 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
 }
 
 // --- Toast Component ---
+
 const ToastNotification = () => {
   const { lastEvent } = useGame();
   const [visible, setVisible] = useState(false);
   const [message, setMessage] = useState('');
   const timeoutRef = useRef<number | null>(null);
+
+  // Imperative channel (import/export feedback, etc.).
+  useEffect(() => {
+    const onToast = (e: Event) => {
+      const msg = (e as CustomEvent<{ message?: string }>).detail?.message;
+      if (!msg) return;
+      setMessage(msg);
+      setVisible(true);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = window.setTimeout(() => setVisible(false), 5000);
+    };
+    window.addEventListener('fate:toast', onToast);
+    return () => window.removeEventListener('fate:toast', onToast);
+  }, []);
 
   useEffect(() => {
     if (!lastEvent) return;
@@ -166,17 +182,17 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
         if (imported) {
             createBackup('Before file import');
             importSave(imported as Partial<GameState>);
-            alert("Fate restored successfully.");
+            showToast('Fate restored successfully');
         } else {
-            alert("Failed to read the ancient texts. (Invalid save file)");
+            showToast('Import failed — invalid save file');
         }
       } catch (err) {
-          alert("Failed to import save data.");
+          showToast('Import failed — could not read save data');
           console.error(err);
       }
     };
     reader.onerror = () => {
-      alert("Failed to read the file.");
+      showToast('Import failed — could not read the file');
     };
     reader.readAsText(file);
     // Reset input
@@ -198,9 +214,10 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
           a.download = `fate_locked_${Date.now()}.fate`;
           a.click();
           URL.revokeObjectURL(url);
+          showToast('Save exported');
       } catch (e) {
           console.error("Export failed", e);
-          alert("Failed to export fate data.");
+          showToast('Export failed');
       }
   };
 
@@ -276,31 +293,31 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
              </button>
 
              <div className="flex items-center bg-[#252525] border border-white/10 rounded-lg p-0.5 gap-0.5 h-8">
-                 <button onClick={() => setShowOracle(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/5 rounded transition-colors" title="Oracle — search content"><Search size={14} /></button>
+                 <button onClick={() => setShowOracle(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/5 rounded transition-colors" title="Oracle — search content" aria-label="Oracle — search content"><Search size={14} /></button>
                  <div className="w-px h-4 bg-white/10"></div>
-                 <button onClick={() => setShowStrategy(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-emerald-400 hover:bg-white/5 rounded transition-colors" title="Strategy Guide"><Compass size={14} /></button>
+                 <button onClick={() => setShowStrategy(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-emerald-400 hover:bg-white/5 rounded transition-colors" title="Strategy Guide" aria-label="Strategy Guide"><Compass size={14} /></button>
                  <div className="w-px h-4 bg-white/10"></div>
-                 <button onClick={() => setShowSupplyChain(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-cyan-400 hover:bg-white/5 rounded transition-colors" title="Resource Engine"><Database size={14} /></button>
+                 <button onClick={() => setShowSupplyChain(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-cyan-400 hover:bg-white/5 rounded transition-colors" title="Resource Engine" aria-label="Resource Engine"><Database size={14} /></button>
                  <div className="w-px h-4 bg-white/10"></div>
-                 <button onClick={() => setShowStats(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-blue-400 hover:bg-white/5 rounded transition-colors" title="Stats"><BarChart3 size={14} /></button>
+                 <button onClick={() => setShowStats(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-blue-400 hover:bg-white/5 rounded transition-colors" title="Stats" aria-label="Stats"><BarChart3 size={14} /></button>
                  <div className="w-px h-4 bg-white/10"></div>
-                 <button onClick={() => setShowReference(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-yellow-400 hover:bg-white/5 rounded transition-colors" title="Rules"><HelpCircle size={14} /></button>
+                 <button onClick={() => setShowReference(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-yellow-400 hover:bg-white/5 rounded transition-colors" title="Rules" aria-label="Rules"><HelpCircle size={14} /></button>
                  <div className="w-px h-4 bg-white/10"></div>
-                 <button onClick={() => setShowGameMode(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-amber-400 hover:bg-white/5 rounded transition-colors" title="Game Mode"><SlidersHorizontal size={14} /></button>
+                 <button onClick={() => setShowGameMode(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-amber-400 hover:bg-white/5 rounded transition-colors" title="Game Mode" aria-label="Game Mode"><SlidersHorizontal size={14} /></button>
              </div>
 
              <div className="flex items-center bg-[#252525] border border-white/10 rounded-lg p-0.5 gap-0.5 h-8">
-                 <button onClick={toggleAnimations} className={`w-7 h-full flex items-center justify-center rounded transition-colors ${animationsEnabled ? 'text-green-400' : 'text-gray-500'}`} title="Animations">
+                 <button onClick={toggleAnimations} className={`w-7 h-full flex items-center justify-center rounded transition-colors ${animationsEnabled ? 'text-green-400' : 'text-gray-500'}`} title="Animations" aria-label="Toggle animations" aria-pressed={animationsEnabled}>
                     {animationsEnabled ? <PlayCircle size={14} /> : <PauseCircle size={14} />}
                  </button>
                  <div className="w-px h-4 bg-white/10"></div>
-                 <button onClick={() => fileInputRef.current?.click()} className="w-7 h-full flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/5 rounded" title="Import Save"><Upload size={14} /></button>
+                 <button onClick={() => fileInputRef.current?.click()} className="w-7 h-full flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/5 rounded" title="Import Save" aria-label="Import Save"><Upload size={14} /></button>
                  <div className="w-px h-4 bg-white/10"></div>
-                 <button onClick={handleExport} className="w-7 h-full flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/5 rounded" title="Export Encrypted Save"><Download size={14} /></button>
+                 <button onClick={handleExport} className="w-7 h-full flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/5 rounded" title="Export Encrypted Save" aria-label="Export Encrypted Save"><Download size={14} /></button>
                  <div className="w-px h-4 bg-white/10"></div>
-                 <button onClick={() => setShowSyncCode(true)} className="w-7 h-full flex items-center justify-center text-gray-500 hover:text-cyan-400 hover:bg-white/5 rounded" title="Sync Code (move run between devices)"><Link2 size={14} /></button>
+                 <button onClick={() => setShowSyncCode(true)} className="w-7 h-full flex items-center justify-center text-gray-500 hover:text-cyan-400 hover:bg-white/5 rounded" title="Sync Code (move run between devices)" aria-label="Sync Code"><Link2 size={14} /></button>
                  <div className="w-px h-4 bg-white/10"></div>
-                 <button onClick={() => { if(window.confirm("Are you sure you want to reset ALL progress? This cannot be undone.")) resetGame(); }} className="w-7 h-full flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-white/5 rounded" title="Reset"><RotateCcw size={14} /></button>
+                 <button onClick={() => { if(window.confirm("Are you sure you want to reset ALL progress? This cannot be undone.")) resetGame(); }} className="w-7 h-full flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-white/5 rounded" title="Reset" aria-label="Reset all progress"><RotateCcw size={14} /></button>
              </div>
           </div>
         </div>

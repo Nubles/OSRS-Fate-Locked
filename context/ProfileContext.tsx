@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { Profile, ProfileMetadata } from '../types';
+import { showToast } from '../utils/toast';
 
 const PROFILES_KEY = 'FATE_PROFILES';
 const LEGACY_SAVE_KEY = 'FATE_UIM_SAVE_V1';
@@ -85,7 +86,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
     setMetadata(prev => {
       if (prev.profiles.length >= MAX_PROFILES) {
-        alert(`Maximum of ${MAX_PROFILES} profiles reached.`);
+        showToast(`Maximum of ${MAX_PROFILES} profiles reached`);
         return prev;
       }
       const updated = {
@@ -124,7 +125,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const deleteProfile = useCallback((id: string) => {
     setMetadata(prev => {
       if (prev.profiles.length <= 1) {
-        alert('Cannot delete the last profile.');
+        showToast('Cannot delete the last profile');
         return prev;
       }
       const remaining = prev.profiles.filter(p => p.id !== id);

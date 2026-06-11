@@ -12,27 +12,30 @@ export const CHUNK_TILES = 64;
 
 export const MAP_IMAGE = {
   // Official OSRS Wiki world map (Old_School_RuneScape_world_map.png), re-encoded
-  // to WebP. Same crop of Gielinor as the previous JPG (matching aspect ratio),
-  // so MAP_BOUNDS below carries over unchanged — only the resolution differs.
+  // to WebP. Cropped to a whole number of OSRS chunks (see MAP_BOUNDS below),
+  // so the chunk grid lines up exactly with the canonical region grid.
   src: `${import.meta.env.BASE_URL}osrs_world_map.webp`,
   width: 9216,
   height: 6528,
 } as const;
 
-// Calibrate against the image. tileMinX/tileMinY = game tile at the image's
-// BOTTOM-LEFT pixel; tileMaxX/tileMaxY = game tile at the TOP-RIGHT pixel.
-// Span is 3072x2176 tiles over the 9216x6528 image = a clean 3.0 px/tile.
+// tileMinX/tileMinY = game tile at the image's BOTTOM-LEFT pixel;
+// tileMaxX/tileMaxY = game tile at the TOP-RIGHT pixel.
 //
-// Calibrated against live hover readings on the wiki map: the pre-calibration
-// bounds reported coordinates offset by (+53 E, +451 N), confirmed across three
-// landmarks (Lumbridge 3222,3218 · Seers' Bank ~2725,3491 · McGrubor's Woods
-// ~2660,3500) — a pure translation, no scale error. The offset is folded in
-// below so the hover readout / chunk grid / RuneLite export report true tiles.
+// Calibrated to the canonical OSRS region grid. The image is the wiki world map
+// cropped to a whole number of 64x64-tile chunks — 48 columns x 34 rows =
+// 3072x2176 tiles, at 192 px/chunk = a clean 3.0 px/tile on the 9216x6528 image.
+// So every bound lands on a chunk boundary (a multiple of 64):
+//   X: tiles 960..4032  (chunks 15..62)    Y: tiles 2048..4224  (chunks 32..65)
+// These match the Chunk Picker (source-chunk.github.io/chunk-picker-v2), whose
+// own code clamps the identical 9216x6528 crop to x in [960,4031], y in
+// [2048,4223]. Result: our chunk coords equal canonical OSRS region coords
+// (regionX = x >> 6, regionY = y >> 6) and align 1:1 with the picker.
 export const MAP_BOUNDS = {
-  tileMinX: 971,
-  tileMinY: 2045,
-  tileMaxX: 4043,
-  tileMaxY: 4221,
+  tileMinX: 960,
+  tileMinY: 2048,
+  tileMaxX: 4032,
+  tileMaxY: 4224,
 } as const;
 
 const TILE_WIDTH = MAP_BOUNDS.tileMaxX - MAP_BOUNDS.tileMinX;

@@ -12,6 +12,7 @@ import { QuestAdvisorPanel } from './QuestAdvisorPanel';
 import { rankAvailableQuests } from '../utils/questAdvisor';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SkillTrainingPopover, SkillPopoverState } from './SkillTrainingPopover';
+import { QuestInsights } from './JournalInsights';
 
 interface QuestLogProps {
   searchTerm?: string;
@@ -251,6 +252,8 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
   const [advisorMode, setAdvisorMode] = useLocalStorage<boolean>('jrnl:quest:advisor', false);
   const [localSearch, setLocalSearch] = useState('');
   const [regionFilter, setRegionFilter] = useLocalStorage<string>('jrnl:quest:region', 'ALL');
+  const [diffFilter, setDiffFilter] = useLocalStorage<string>('jrnl:quest:diff', 'ALL');
+  const [sortMode, setSortMode] = useLocalStorage<string>('jrnl:quest:sort', 'SMART');
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [skillPopover, setSkillPopover] = useState<SkillPopoverState | null>(null);
 
@@ -309,16 +312,25 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
     });
   }, [unlocks]);
 
-  const filteredQuests = allQuests.filter(q => {
-    const matchesSearch = q.name.toLowerCase().includes(searchTerm.toLowerCase());
-    if (!matchesSearch) return false;
-    if (regionFilter !== 'ALL' && !q.regions.includes(regionFilter)) return false;
-    if (filter === 'ALL') return true;
-    if (filter === 'COMPLETED') return q.status === 'COMPLETED';
-    if (filter === 'AVAILABLE') return q.status === 'AVAILABLE';
-    if (filter === 'LOCKED') return q.status.includes('LOCKED');
-    return true;
-  });
+  const filteredQuests = useMemo(() => {
+    const diffRank = (d: DropSource) =>
+      d === DropSource.QUEST_GRANDMASTER ? 5 : d === DropSource.QUEST_MASTER ? 4
+        : d === DropSource.QUEST_EXPERIENCED ? 3 : d === DropSource.QUEST_INTERMEDIATE ? 2 : 1;
+    const list = allQuests.filter(q => {
+      const matchesSearch = q.name.toLowerCase().includes(searchTerm.toLowerCase());
+      if (!matchesSearch) return false;
+      if (regionFilter !== 'ALL' && !q.regions.includes(regionFilter)) return false;
+      if (diffFilter !== 'ALL' && getDifficultyLabel(q.difficulty) !== diffFilter) return false;
+      if (filter === 'COMPLETED') return q.status === 'COMPLETED';
+      if (filter === 'AVAILABLE') return q.status === 'AVAILABLE';
+      if (filter === 'LOCKED') return q.status.includes('LOCKED');
+      return true;
+    });
+    if (sortMode === 'NAME') return [...list].sort((a, b) => a.name.localeCompare(b.name));
+    if (sortMode === 'QP') return [...list].sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
+    if (sortMode === 'DIFFICULTY') return [...list].sort((a, b) => diffRank(a.difficulty) - diffRank(b.difficulty) || a.name.localeCompare(b.name));
+    return list; // SMART: status-major order from allQuests
+  }, [allQuests, searchTerm, regionFilter, diffFilter, filter, sortMode]);
 
   // Region pills built from the regions actually used by quests, sorted.
   const questRegions = useMemo(
@@ -424,9 +436,30 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
         regions={questRegions}
         activeRegion={regionFilter}
         onRegionChange={setRegionFilter}
+        tiers={[
+          { id: 'Novice', colorClass: 'bg-green-900/40 text-green-300' },
+          { id: 'Intermediate', colorClass: 'bg-cyan-900/40 text-cyan-300' },
+          { id: 'Experienced', colorClass: 'bg-blue-900/40 text-blue-300' },
+          { id: 'Master', colorClass: 'bg-purple-900/40 text-purple-300' },
+          { id: 'Grandmaster', colorClass: 'bg-amber-900/40 text-amber-300' },
+        ]}
+        activeTier={diffFilter}
+        onTierChange={setDiffFilter}
         rightExtras={
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-[10px] text-blue-300 font-mono font-bold whitespace-nowrap">QP {currentQP}</span>
+            <select
+              value={sortMode}
+              onChange={(e) => setSortMode(e.target.value)}
+              className="bg-black/40 border border-white/10 rounded text-[10px] text-gray-300 px-1 py-1 focus:outline-none focus:border-white/30"
+              title="Sort quests"
+              aria-label="Sort quests"
+            >
+              <option value="SMART">Smart</option>
+              <option value="NAME">A–Z</option>
+              <option value="QP">Quest Points</option>
+              <option value="DIFFICULTY">Difficulty</option>
+            </select>
             <button
               onClick={() => setAdvisorMode(!advisorMode)}
               className={`p-1 rounded border text-[10px] flex items-center gap-1 ${advisorMode ? 'bg-violet-900/40 border-violet-500/40 text-violet-300' : 'bg-black/40 border-white/10 text-gray-500 hover:text-white'}`}
@@ -444,6 +477,8 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
           </div>
         }
       />
+
+      <QuestInsights />
 
       {showNextUpStrip && (
         <JournalNextUpStrip

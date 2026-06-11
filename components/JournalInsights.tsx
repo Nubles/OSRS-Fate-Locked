@@ -1,0 +1,178 @@
+import React, { useMemo } from 'react';
+import { ChevronDown, ChevronRight, Award, BookOpen, Map as MapIcon } from 'lucide-react';
+import { useGame } from '../context/GameContext';
+import { useLocalStorage } from '../hooks/useLocalStorage';
+import { QUEST_DATA } from '../data/questData';
+import { DIARY_DATA } from '../data/diaryData';
+import { ALL_DIARY_TASKS } from '../data/diaryTasks';
+import { CA_DATA } from '../data/caData';
+import { ALL_CA_TASKS } from '../data/caTasks';
+import { DropSource } from '../types';
+import { countDoableTasks } from '../utils/journalStatus';
+
+/**
+ * Collapsible "insights" band for each Journal sub-tab: the at-a-glance
+ * numbers the flat lists can't show — quest points and per-difficulty
+ * completion, per-area diary progress with the closest finishable tier,
+ * and CA points with per-tier breakdowns.
+ */
+
+const Bar: React.FC<{ label: string; done: number; total: number; color: string; suffix?: string }> =
+  ({ label, done, total, color, suffix }) => {
+    const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+    return (
+      <div className="min-w-0">
+        <div className="flex justify-between text-[9px] mb-0.5">
+          <span className="text-gray-400 font-semibold truncate">{label}</span>
+          <span className="text-gray-600 font-mono shrink-0">{done}/{total}{suffix ?? ''}</span>
+        </div>
+        <div className="h-1 bg-black/50 rounded-full overflow-hidden">
+          <div className={`h-full ${pct === 100 ? 'bg-green-500' : color}`} style={{ width: `${pct}%` }} />
+        </div>
+      </div>
+    );
+  };
+
+const Shell: React.FC<{ storageKey: string; title: string; icon: React.ReactNode; summary: string; children: React.ReactNode }> =
+  ({ storageKey, title, icon, summary, children }) => {
+    const [open, setOpen] = useLocalStorage<boolean>(storageKey, true);
+    return (
+      <div className="border-b border-white/10 bg-[#171717] shrink-0">
+        <button
+          onClick={() => setOpen(o => !o)}
+          className="w-full px-3 py-1.5 flex items-center gap-2 text-left hover:bg-white/[0.03] transition-colors"
+        >
+          {open ? <ChevronDown size={12} className="text-gray-500" /> : <ChevronRight size={12} className="text-gray-500" />}
+          <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">{icon}{title}</span>
+          <span className="ml-auto text-[10px] text-gray-500 font-mono truncate">{summary}</span>
+        </button>
+        {open && <div className="px-3 pb-2.5">{children}</div>}
+      </div>
+    );
+  };
+
+// ── Quests ────────────────────────────────────────────────────────────────
+const QUEST_DIFFS: { label: string; src: DropSource; color: string }[] = [
+  { label: 'Novice', src: DropSource.QUEST_NOVICE, color: 'bg-green-600' },
+  { label: 'Intermediate', src: DropSource.QUEST_INTERMEDIATE, color: 'bg-cyan-600' },
+  { label: 'Experienced', src: DropSource.QUEST_EXPERIENCED, color: 'bg-blue-600' },
+  { label: 'Master', src: DropSource.QUEST_MASTER, color: 'bg-purple-600' },
+  { label: 'Grandmaster', src: DropSource.QUEST_GRANDMASTER, color: 'bg-amber-500' },
+];
+
+export const QuestInsights: React.FC = () => {
+  const { unlocks } = useGame();
+  const stats = useMemo(() => {
+    const done = new Set(unlocks.quests);
+    let qpEarned = 0, qpTotal = 0;
+    const byDiff = QUEST_DIFFS.map(d => ({ ...d, done: 0, total: 0 }));
+    for (const q of Object.values(QUEST_DATA)) {
+      qpTotal += q.points;
+      if (done.has(q.id)) qpEarned += q.points;
+      const bucket = byDiff.find(d => d.src === q.difficulty);
+      if (bucket) { bucket.total++; if (done.has(q.id)) bucket.done++; }
+    }
+    return { qpEarned, qpTotal, byDiff };
+  }, [unlocks.quests]);
+
+  return (
+    <Shell storageKey="jrnl:insights:quests" title="Quest insights" icon={<BookOpen size={11} />}
+      summary={`${stats.qpEarned}/${stats.qpTotal} QP`}>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1.5">
+        <Bar label="Quest Points" done={stats.qpEarned} total={stats.qpTotal} color="bg-yellow-500" suffix=" QP" />
+        {stats.byDiff.map(d => (
+          <Bar key={d.label} label={d.label} done={d.done} total={d.total} color={d.color} />
+        ))}
+      </div>
+    </Shell>
+  );
+};
+
+// ── Diaries ───────────────────────────────────────────────────────────────
+export const DiaryInsights: React.FC = () => {
+  const { unlocks } = useGame();
+  const stats = useMemo(() => {
+    const doneTasks = new Set(unlocks.completedTasks);
+    const tasksByTier = new Map<string, typeof ALL_DIARY_TASKS>();
+    for (const t of ALL_DIARY_TASKS) {
+      if (!tasksByTier.has(t.tierId)) tasksByTier.set(t.tierId, []);
+      tasksByTier.get(t.tierId)!.push(t);
+    }
+    // Area = tier id minus its trailing tier word ("Ardougne Easy" → "Ardougne").
+    // "Closest tier" weighs what the player can actually do: tiers with at
+    // least one doable-now task (levels / quests / regions met) rank above
+    // fully-blocked ones, then fewest remaining wins — so 5 tasks stuck
+    // behind level-90 reqs never beat a tier that's finishable today.
+    const areas = new Map<string, { done: number; total: number }>();
+    let closest: { tier: string; left: number; doable: number; key: [number, number, number] } | null = null;
+    for (const tier of Object.keys(DIARY_DATA)) {
+      const area = tier.replace(/ (Easy|Medium|Hard|Elite)$/, '');
+      const tasks = tasksByTier.get(tier) ?? [];
+      const done = tasks.filter(t => doneTasks.has(t.id)).length;
+      const a = areas.get(area) ?? { done: 0, total: 0 };
+      a.done += done; a.total += tasks.length;
+      areas.set(area, a);
+      const left = tasks.length - done;
+      if (left === 0) continue;
+      const doable = countDoableTasks(tasks, unlocks);
+      const key: [number, number, number] = [doable > 0 ? 0 : 1, left, -doable];
+      if (!closest
+        || key[0] < closest.key[0]
+        || (key[0] === closest.key[0] && (key[1] < closest.key[1] || (key[1] === closest.key[1] && key[2] < closest.key[2])))) {
+        closest = { tier, left, doable, key };
+      }
+    }
+    const sorted = [...areas.entries()].sort((x, y) => (y[1].done / Math.max(1, y[1].total)) - (x[1].done / Math.max(1, x[1].total)));
+    return { sorted, closest };
+  }, [unlocks]);
+
+  return (
+    <Shell storageKey="jrnl:insights:diaries" title="Diary insights" icon={<MapIcon size={11} />}
+      summary={stats.closest ? `closest: ${stats.closest.tier} (${stats.closest.doable}/${stats.closest.left} doable)` : 'all tasks complete'}>
+      {stats.closest && (
+        <div className="mb-2 text-[10px] text-emerald-300/90">
+          Closest tier: <span className="font-bold">{stats.closest.tier}</span> — {stats.closest.doable} of {stats.closest.left} remaining task{stats.closest.left === 1 ? '' : 's'} doable now
+        </div>
+      )}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1.5">
+        {stats.sorted.map(([area, v]) => (
+          <Bar key={area} label={area} done={v.done} total={v.total} color="bg-emerald-600" />
+        ))}
+      </div>
+    </Shell>
+  );
+};
+
+// ── Combat Achievements ───────────────────────────────────────────────────
+const CA_POINTS: Record<string, number> = { Easy: 1, Medium: 2, Hard: 3, Elite: 4, Master: 5, Grandmaster: 6 };
+const CA_COLORS: Record<string, string> = {
+  Easy: 'bg-green-600', Medium: 'bg-cyan-600', Hard: 'bg-blue-600',
+  Elite: 'bg-purple-600', Master: 'bg-rose-600', Grandmaster: 'bg-amber-500',
+};
+
+export const CAInsights: React.FC = () => {
+  const { unlocks } = useGame();
+  const stats = useMemo(() => {
+    const done = new Set(unlocks.completedTasks);
+    const tiers = Object.keys(CA_DATA).map(tier => {
+      let d = 0, t = 0;
+      for (const task of ALL_CA_TASKS) if (task.tierId === tier) { t++; if (done.has(task.id)) d++; }
+      return { tier, done: d, total: t, pts: CA_POINTS[tier] ?? 1 };
+    });
+    const ptsEarned = tiers.reduce((a, x) => a + x.done * x.pts, 0);
+    const ptsTotal = tiers.reduce((a, x) => a + x.total * x.pts, 0);
+    return { tiers, ptsEarned, ptsTotal };
+  }, [unlocks.completedTasks]);
+
+  return (
+    <Shell storageKey="jrnl:insights:ca" title="CA insights" icon={<Award size={11} />}
+      summary={`${stats.ptsEarned}/${stats.ptsTotal} points`}>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1.5">
+        <Bar label="CA Points" done={stats.ptsEarned} total={stats.ptsTotal} color="bg-yellow-500" suffix=" pts" />
+        {stats.tiers.map(t => (
+          <Bar key={t.tier} label={`${t.tier} (${t.pts}pt)`} done={t.done} total={t.total} color={CA_COLORS[t.tier] ?? 'bg-gray-600'} />
+        ))}
+      </div>
+    </Shell>
+  );
+};

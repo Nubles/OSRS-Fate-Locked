@@ -6,10 +6,13 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
+import net.runelite.api.MenuAction;
+import net.runelite.api.NPC;
 import net.runelite.api.Player;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
+import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.chat.ChatColorType;
 import net.runelite.client.chat.ChatMessageBuilder;
@@ -52,13 +55,20 @@ public class FateLockedPlugin extends Plugin
     @Inject private FateLockedWorldMapOverlay worldMapOverlay;
     @Inject private FateLockedSceneOverlay sceneOverlay;
     @Inject private FateLockedMinimapOverlay minimapOverlay;
+    @Inject private FateLockedHudOverlay hudOverlay;
+    @Inject private FateLockedFlashOverlay flashOverlay;
     @Inject private ChatMessageManager chatMessageManager;
     @Inject private ClientToolbar clientToolbar;
     @Inject private FateLockedPanel panel;
 
     @Getter private volatile FateLockedBundle bundle = FateLockedBundle.empty();
 
+    /** How long the locked-entry screen flash lasts. */
+    public static final long LOCKED_FLASH_MS = 1600;
+    @Getter private volatile long lockedFlashUntil;
+
     private CanonicalChunk lastChunk;
+    private FateLockedBundle.LockState lastLockState;
     private NavigationButton navButton;
     private Thread watcherThread;
     private volatile boolean watcherStop;
@@ -75,6 +85,8 @@ public class FateLockedPlugin extends Plugin
         overlayManager.add(worldMapOverlay);
         overlayManager.add(sceneOverlay);
         overlayManager.add(minimapOverlay);
+        overlayManager.add(hudOverlay);
+        overlayManager.add(flashOverlay);
 
         panel.setCallbacks(this::applyPastedBundle, () -> clientThread.invoke(this::reloadBundle));
         navButton = NavigationButton.builder()
@@ -95,6 +107,8 @@ public class FateLockedPlugin extends Plugin
         overlayManager.remove(worldMapOverlay);
         overlayManager.remove(sceneOverlay);
         overlayManager.remove(minimapOverlay);
+        overlayManager.remove(hudOverlay);
+        overlayManager.remove(flashOverlay);
         if (navButton != null)
         {
             clientToolbar.removeNavigation(navButton);
@@ -136,18 +150,90 @@ public class FateLockedPlugin extends Plugin
 
         CanonicalChunk current = CanonicalChunk.of(wp);
         FateLockedBundle b = bundle;
-        String region = b.regionAt(current);
-        boolean unlocked = b.isUnlocked(region);
+        FateLockedBundle.LockState lock = b.lockStateAt(current);
+        String label = b.labelAt(current);
+        boolean unlocked = lock == FateLockedBundle.LockState.UNLOCKED;
 
         boolean changed = !current.equals(lastChunk);
         if (changed)
         {
-            panel.update(b, current, region, unlocked);
+            panel.update(b, current, label, unlocked);
             if (config.chatOnEnter())
             {
-                announceEntry(current, region, unlocked);
+                announceEntry(current, label, unlocked);
+            }
+            // Visual flash only on the transition INTO locked territory.
+            if (lock == FateLockedBundle.LockState.LOCKED
+                && lastLockState != FateLockedBundle.LockState.LOCKED)
+            {
+                lockedFlashUntil = System.currentTimeMillis() + LOCKED_FLASH_MS;
             }
             lastChunk = current;
+            lastLockState = lock;
+        }
+    }
+
+    /**
+     * Tag right-click menu entries whose target stands in a locked chunk with a
+     * red (LOCKED) marker — the "are you sure?" before you ever click.
+     */
+    @Subscribe
+    public void onMenuEntryAdded(MenuEntryAdded event)
+    {
+        if (!config.tagLockedMenus()) return;
+        FateLockedBundle b = bundle;
+        if (b.getRegionChunks().isEmpty()) return;
+
+        WorldPoint target = menuTargetWorldPoint(event);
+        if (target == null) return;
+
+        if (b.lockStateAt(CanonicalChunk.of(target)) == FateLockedBundle.LockState.LOCKED)
+        {
+            String t = event.getTarget();
+            if (t != null && !t.contains("(LOCKED)"))
+            {
+                event.getMenuEntry().setTarget(t + " <col=ef4444>(LOCKED)</col>");
+            }
+        }
+    }
+
+    /** Resolve the world tile a menu entry points at, where feasible. */
+    private WorldPoint menuTargetWorldPoint(MenuEntryAdded event)
+    {
+        MenuAction action = MenuAction.of(event.getType());
+        switch (action)
+        {
+            case NPC_FIRST_OPTION:
+            case NPC_SECOND_OPTION:
+            case NPC_THIRD_OPTION:
+            case NPC_FOURTH_OPTION:
+            case NPC_FIFTH_OPTION:
+            case EXAMINE_NPC:
+            {
+                NPC npc = event.getMenuEntry().getNpc();
+                return npc == null ? null : npc.getWorldLocation();
+            }
+            case GAME_OBJECT_FIRST_OPTION:
+            case GAME_OBJECT_SECOND_OPTION:
+            case GAME_OBJECT_THIRD_OPTION:
+            case GAME_OBJECT_FOURTH_OPTION:
+            case GAME_OBJECT_FIFTH_OPTION:
+            case EXAMINE_OBJECT:
+            case GROUND_ITEM_FIRST_OPTION:
+            case GROUND_ITEM_SECOND_OPTION:
+            case GROUND_ITEM_THIRD_OPTION:
+            case GROUND_ITEM_FOURTH_OPTION:
+            case GROUND_ITEM_FIFTH_OPTION:
+            case EXAMINE_ITEM_GROUND:
+            case WALK:
+            {
+                int sceneX = event.getActionParam0();
+                int sceneY = event.getActionParam1();
+                if (sceneX < 0 || sceneY < 0) return null;
+                return WorldPoint.fromScene(client, sceneX, sceneY, client.getPlane());
+            }
+            default:
+                return null;
         }
     }
 
@@ -236,8 +322,10 @@ public class FateLockedPlugin extends Plugin
         {
             current = CanonicalChunk.of(local.getWorldLocation());
         }
-        String region = current == null ? null : bundle.regionAt(current);
-        panel.update(bundle, current, region, bundle.isUnlocked(region));
+        String label = current == null ? null : bundle.labelAt(current);
+        boolean unlocked = current != null
+            && bundle.lockStateAt(current) == FateLockedBundle.LockState.UNLOCKED;
+        panel.update(bundle, current, label, unlocked);
     }
 
     private static BufferedImage createIcon()

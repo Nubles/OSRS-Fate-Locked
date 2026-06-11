@@ -52,3 +52,33 @@ export function getDiaryStatus(diary: DiaryTier, unlocks: any): DiaryStatus {
 
   return 'AVAILABLE';
 }
+
+/**
+ * Counts how many of `tasks` the player can complete right now:
+ *   • not yet done
+ *   • all skill reqs met (skill unlocked AND level reached)
+ *   • all quest reqs met
+ *   • all region reqs unlocked (Misthalin is always free)
+ * "Closest first" ranking and the diary insights both use this, so a tier
+ * with few-but-blocked tasks never outranks one the player can finish today.
+ */
+export interface DoableTask {
+  id: string;
+  skills?: Record<string, number>;
+  quests?: string[];
+  regions?: string[];
+}
+
+export function countDoableTasks(tasks: DoableTask[], unlocks: any): number {
+  return tasks.filter(task => {
+    if (unlocks.completedTasks.includes(task.id)) return false;
+    if (task.skills && !Object.entries(task.skills).every(
+      ([skill, lvl]) => (unlocks.skills[skill] || 0) > 0 && (unlocks.levels[skill] || 1) >= (lvl as number),
+    )) return false;
+    if (task.quests && !task.quests.every(q => unlocks.quests.includes(q))) return false;
+    if (task.regions && !task.regions.every(
+      r => r === 'Misthalin' || MISTHALIN_AREAS.includes(r) || unlocks.regions.includes(r),
+    )) return false;
+    return true;
+  }).length;
+}

@@ -7,6 +7,7 @@ import { useEscapeKey } from '../hooks/useEscapeKey';
 import { RunCardModal } from './RunCard';
 import { SectionGuide } from './SectionGuide';
 import { getGameMode } from '../config/gameModes';
+import { showToast } from '../utils/toast';
 import { EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, SKILLS_LIST, REGIONS_LIST, REGION_GROUPS, SLOT_CONFIG } from '../constants';
 
 interface ShareModalProps {
@@ -176,7 +177,7 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
       link.click();
     } catch (err) {
       console.error('Screenshot failed', err);
-      alert('Image generation failed. Try using your browser screenshot tool.');
+      showToast('Image generation failed — try your browser screenshot tool');
     } finally {
       setIsCapturing(false);
     }

@@ -73,12 +73,12 @@ public class FateLockedWorldMapOverlay extends Overlay
 
         for (Map.Entry<String, Set<CanonicalChunk>> entry : bundle.getRegionChunks().entrySet())
         {
-            String region = entry.getKey();
-            boolean unlocked = bundle.isUnlocked(region);
-            Color fill = unlocked ? config.unlockedColor() : config.lockedColor();
-
             for (CanonicalChunk chunk : entry.getValue())
             {
+                // Sub-area-aware per-chunk colouring (Falador vs the rest of
+                // Asgarnia), matching the web app's map exactly.
+                Color fill = bundle.lockStateAt(chunk) == FateLockedBundle.LockState.UNLOCKED
+                    ? config.unlockedColor() : config.lockedColor();
                 Rectangle2D rect = worldMapRectForChunk(chunk, bounds, ro);
                 if (rect == null) continue;
                 if (!clip.intersects(rect)) continue;

@@ -30,7 +30,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   // --- HERBS ---
   'Ranarr Weed': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Misthalin', 'Kandarin', 'Morytania', 'Kourend & Kebos', 'Tirannwn', 'Fremennik', 'Varlamore'], skills: { 'Farming': 32 }, notes: 'Requires Seeds', outputYield: 8 }, 
-    { type: 'DROP', name: 'Chaos Druid', regions: ['Misthalin', 'Kandarin', 'Wilderness'], notes: 'Edgeville Dungeon / Yanille / Wildy' },
+    { type: 'DROP', name: 'Chaos Druid', regions: ['Misthalin', 'Kandarin', 'Wilderness', 'Morytania'], notes: 'Edgeville Dungeon / Yanille / Wildy' },
     { type: 'DROP', name: 'Aberrant Spectre', regions: ['Morytania', 'Kandarin', 'Kourend & Kebos'], skills: { 'Slayer': 60 }, notes: 'Slayer Tower / Catacombs' },
     { type: 'DROP', name: 'Flesh Crawler', regions: ['Misthalin'], notes: 'Stronghold of Security' },
     { type: 'MINIGAME', name: 'Sinister Chest', regions: ['Kandarin'], skills: {'Agility': 40}, notes: 'Requires Sinister Key' }
@@ -49,7 +49,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Irit Leaf': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 44}, notes: 'Seed required', outputYield: 8 },
-    { type: 'DROP', name: 'Chaos Druid', regions: ['Misthalin', 'Kandarin'] },
+    { type: 'DROP', name: 'Chaos Druid', regions: ['Misthalin', 'Kandarin', 'Morytania'] },
     { type: 'DROP', name: 'Moss Giant', regions: ['Any'], notes: 'Common drop' }
   ],
   'Kwuarm': [
@@ -74,7 +74,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Avantoe': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 50}, notes: 'Seed required', outputYield: 8 },
-    { type: 'DROP', name: 'Chaos Druid', regions: ['Misthalin', 'Kandarin'] },
+    { type: 'DROP', name: 'Chaos Druid', regions: ['Misthalin', 'Kandarin', 'Morytania'] },
     { type: 'DROP', name: 'Turoth', regions: ['Fremennik'], skills: {'Slayer': 55} }
   ],
   'Lantadyme': [
@@ -84,7 +84,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Harralander': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 26}, notes: 'Seed required', outputYield: 8 },
-    { type: 'DROP', name: 'Chaos Druid', regions: ['Misthalin', 'Kandarin'] }
+    { type: 'DROP', name: 'Chaos Druid', regions: ['Misthalin', 'Kandarin', 'Morytania'] }
   ],
 
   // --- POTIONS ---
@@ -161,7 +161,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Limpwurt Root': [
     { type: 'SKILL', name: 'Flower Patch', regions: ['Misthalin', 'Kandarin', 'Kourend & Kebos', 'Fremennik'], skills: {'Farming': 26}, notes: 'Reliable yield', outputYield: 3 },
     { type: 'DROP', name: 'Kurask', regions: ['Fremennik', 'Tirannwn'], skills: {'Slayer': 70} },
-    { type: 'DROP', name: 'Hill Giant', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Wilderness'], notes: 'Common drop' }
+    { type: 'DROP', name: 'Hill Giant', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Wilderness', 'Kharidian Desert', 'Kourend & Kebos', 'Varlamore'], notes: 'Common drop' }
   ],
   'White Berries': [
     { type: 'SKILL', name: 'Bush Patch', regions: ['Misthalin', 'Kandarin', 'Kourend & Kebos', 'Morytania'], skills: {'Farming': 59}, notes: 'Requires Seeds', outputYield: 4 },
@@ -175,7 +175,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Eye of Newt': [
     { type: 'SHOP', name: 'Herblore Shop', regions: ['Asgarnia', 'Kandarin', 'Misthalin'], notes: 'Taverley / Catherby / Port Sarim' },
-    { type: 'DROP', name: 'Chaos Druid', regions: ['Misthalin', 'Kandarin'] }
+    { type: 'DROP', name: 'Chaos Druid', regions: ['Misthalin', 'Kandarin', 'Morytania'] }
   ],
   'Vial of Water': [
     { type: 'SHOP', name: 'General Store', regions: ['Any'], notes: 'Most general stores stock packs' },
@@ -280,8 +280,8 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Tan Leather', regions: ['Any'], inputs: {'Black Dragonhide': 1, 'Coins': 20}, notes: 'Use Tanner or Lunar Spell' }
   ],
   'Black Dragonhide': [
-    { type: 'DROP', name: 'Black Dragon', regions: ['Asgarnia'], notes: 'Taverley Dungeon' },
-    { type: 'DROP', name: 'Black Dragon', regions: ['Kandarin'], quests: ['Dragon Slayer II'], notes: 'Myths\' Guild' },
+    { type: 'DROP', name: 'Black Dragon', regions: ['Asgarnia', 'Tirannwn'], notes: 'Taverley Dungeon' },
+    { type: 'DROP', name: 'Black Dragon', regions: ['Kandarin', 'Tirannwn'], quests: ['Dragon Slayer II'], notes: 'Myths\' Guild' },
     { type: 'DROP', name: 'KBD', regions: ['Wilderness'], unlockId: 'King Black Dragon' },
     { type: 'DROP', name: 'Brutal Black Dragon', regions: ['Kourend & Kebos'], skills: {'Slayer': 77}, notes: 'Catacombs' },
     { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath' }
@@ -298,7 +298,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Green Dragonhide': [
     { type: 'DROP', name: 'Green Dragon', regions: ['Wilderness'], notes: 'Revs/Graveyard/East Wildy' },
-    { type: 'DROP', name: 'Green Dragon', regions: ['Kandarin'], quests: ['Dragon Slayer II'], notes: 'Myths Guild' },
+    { type: 'DROP', name: 'Green Dragon', regions: ['Kandarin', 'Wilderness'], quests: ['Dragon Slayer II'], notes: 'Myths Guild' },
     { type: 'DROP', name: 'Brutal Green Dragon', regions: ['Kandarin'], notes: 'Ancient Cavern' }
   ],
   'Uncut Dragonstone': [
@@ -653,7 +653,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Dark Fishing Bait': [
     { type: 'DROP', name: 'Ankou', regions: ['Wilderness', 'Kourend & Kebos', 'Misthalin'] },
-    { type: 'DROP', name: 'Zombie', regions: ['Wilderness'] }
+    { type: 'DROP', name: 'Zombie', regions: ['Wilderness', 'Kandarin'] }
   ],
   'Raw Karambwanji': [
     { type: 'SKILL', name: 'Net Fishing', regions: ['Karamja'], skills: {'Fishing': 5}, notes: 'Tai Bwo Wannai Lake' }
@@ -684,7 +684,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Nature Rune': [
     { type: 'SKILL', name: 'Runecraft Altar', regions: ['Karamja'], skills: { 'Runecraft': 44 }, notes: 'Nature Altar' },
-    { type: 'DROP', name: 'Moss Giant', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Karamja', 'Wilderness', 'Kourend & Kebos'] },
+    { type: 'DROP', name: 'Moss Giant', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Karamja', 'Wilderness', 'Kourend & Kebos', 'Fremennik', 'Varlamore', 'The Open Seas'] },
     { type: 'SHOP', name: 'Mage Arena Shop', regions: ['Wilderness'], notes: 'Lundail' },
     { type: 'SHOP', name: 'Magic Guild Store', regions: ['Kandarin'], skills: {'Magic': 66} },
     { type: 'DROP', name: 'Kurask', regions: ['Fremennik', 'Tirannwn'], skills: {'Slayer': 70} },
@@ -693,13 +693,13 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Law Rune': [
     { type: 'SKILL', name: 'Runecraft Altar', regions: ['Asgarnia'], skills: { 'Runecraft': 54 }, notes: 'Entrana (No weapons allowed)' },
     { type: 'SHOP', name: 'Mage Arena Shop', regions: ['Wilderness'], notes: 'Lundail' },
-    { type: 'DROP', name: 'Hill Giant', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Kourend & Kebos', 'Wilderness'] },
+    { type: 'DROP', name: 'Hill Giant', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Kourend & Kebos', 'Wilderness', 'Kharidian Desert', 'Varlamore'] },
     { type: 'DROP', name: 'Cockatrice', regions: ['Fremennik'], skills: {'Slayer': 25} }
   ],
   'Cosmic Rune': [
     { type: 'SKILL', name: 'Runecraft Altar', regions: ['Misthalin'], skills: { 'Runecraft': 27 }, notes: 'Zanaris (Lost City)' },
     { type: 'SHOP', name: 'Mage Arena Shop', regions: ['Wilderness'], notes: 'Lundail' },
-    { type: 'SHOP', name: 'Ali\'s Discount Wares', regions: ['Kharidian Desert'], quests: ['The Feud'], notes: 'Pollnivneach' }
+    { type: 'SHOP', name: 'Ali\'s Discount Wares', regions: ['Kharidian Desert', 'Misthalin'], quests: ['The Feud'], notes: 'Pollnivneach' }
   ],
   'Blood Rune': [
     { type: 'SKILL', name: 'True Blood Altar', regions: ['Morytania'], skills: { 'Runecraft': 77 }, quests: ['Sins of the Father'] },
@@ -730,14 +730,14 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   // --- GEAR & BONES ---
   'Dragon Bones': [
     { type: 'DROP', name: 'Green Dragon', regions: ['Wilderness'], notes: 'Wilderness (various locations)' },
-    { type: 'DROP', name: 'Green Dragon', regions: ['Kandarin'], quests: ['Dragon Slayer II'], notes: 'Myths\' Guild' },
+    { type: 'DROP', name: 'Green Dragon', regions: ['Kandarin', 'Wilderness'], quests: ['Dragon Slayer II'], notes: 'Myths\' Guild' },
     { type: 'DROP', name: 'Blue Dragon', regions: ['Asgarnia'], notes: 'Taverley Dungeon / Heroes Guild' },
     { type: 'DROP', name: 'Blue Dragon', regions: ['Kandarin'], notes: 'Ogre Enclave' },
     { type: 'DROP', name: 'Red Dragon', regions: ['Karamja'], notes: 'Brimhaven Dungeon' },
     { type: 'DROP', name: 'Red Dragon', regions: ['Kourend & Kebos'], notes: 'Forthos Dungeon' },
-    { type: 'DROP', name: 'Black Dragon', regions: ['Asgarnia'], notes: 'Taverley Dungeon' },
-    { type: 'DROP', name: 'Black Dragon', regions: ['Kandarin'], quests: ['Dragon Slayer II'], notes: 'Myths\' Guild' },
-    { type: 'DROP', name: 'Black Dragon', regions: ['Kourend & Kebos'], notes: 'Catacombs' },
+    { type: 'DROP', name: 'Black Dragon', regions: ['Asgarnia', 'Tirannwn'], notes: 'Taverley Dungeon' },
+    { type: 'DROP', name: 'Black Dragon', regions: ['Kandarin', 'Tirannwn'], quests: ['Dragon Slayer II'], notes: 'Myths\' Guild' },
+    { type: 'DROP', name: 'Black Dragon', regions: ['Kourend & Kebos', 'Tirannwn'], notes: 'Catacombs' },
     { type: 'DROP', name: 'King Black Dragon', regions: ['Wilderness'], unlockId: 'King Black Dragon' },
     { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath', notes: 'Superior Dragon Bones' }
   ],
@@ -1008,19 +1008,19 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus' },
     { type: 'DROP', name: 'The Leviathan', regions: ['Morytania'], unlockId: 'The Leviathan' },
     { type: 'DROP', name: 'The Whisperer', regions: ['Fremennik'], unlockId: 'The Whisperer' },
-    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore'], unlockId: 'Vardorvis' }
+    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore', 'Kourend & Kebos'], unlockId: 'Vardorvis' }
   ],
   'Virtus Robe Top': [
     { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus' },
     { type: 'DROP', name: 'The Leviathan', regions: ['Morytania'], unlockId: 'The Leviathan' },
     { type: 'DROP', name: 'The Whisperer', regions: ['Fremennik'], unlockId: 'The Whisperer' },
-    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore'], unlockId: 'Vardorvis' }
+    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore', 'Kourend & Kebos'], unlockId: 'Vardorvis' }
   ],
   'Virtus Robe Bottom': [
     { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus' },
     { type: 'DROP', name: 'The Leviathan', regions: ['Morytania'], unlockId: 'The Leviathan' },
     { type: 'DROP', name: 'The Whisperer', regions: ['Fremennik'], unlockId: 'The Whisperer' },
-    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore'], unlockId: 'Vardorvis' }
+    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore', 'Kourend & Kebos'], unlockId: 'Vardorvis' }
   ],
   'Voidwaker': [
     { type: 'SKILL', name: 'Assembly', regions: ['Wilderness'], inputs: {'Voidwaker Blade': 1, 'Voidwaker Hilt': 1, 'Voidwaker Gem': 1} }
@@ -1293,7 +1293,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Common Monster', regions: ['Any'], notes: 'Most low-level humanoids/animals' }
   ],
   'Big Bones': [
-    { type: 'DROP', name: 'Hill Giant', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Wilderness'], rarity: 'Always' },
+    { type: 'DROP', name: 'Hill Giant', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Wilderness', 'Kharidian Desert', 'Kourend & Kebos', 'Varlamore'], rarity: 'Always' },
     { type: 'DROP', name: 'Moss Giant', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Fire Giant', regions: ['Kandarin', 'Wilderness', 'Kourend & Kebos'], rarity: 'Always' }
   ],
@@ -2409,7 +2409,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Desert Goat Horn': 1 }, notes: 'Grind with a Pestle and mortar' }
   ],
   'Unicorn Horn': [
-    { type: 'DROP', name: 'Unicorn', regions: ['Misthalin', 'Kandarin', 'Asgarnia'], rarity: 'Always' }
+    { type: 'DROP', name: 'Unicorn', regions: ['Misthalin', 'Kandarin', 'Asgarnia', 'Kourend & Kebos', 'Varlamore', 'The Open Seas'], rarity: 'Always' }
   ],
   'Unicorn Horn Dust': [
     { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Unicorn Horn': 1 }, notes: 'Grind with a Pestle and mortar' }
@@ -2440,7 +2440,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   "Toad's Legs": [
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Islands & Others'], notes: 'Zanaris' },
-    { type: 'DROP', name: 'Giant Frog', regions: ['Misthalin'], notes: 'Lumbridge Swamp Caves' }
+    { type: 'DROP', name: 'Giant Frog', regions: ['Misthalin', 'The Open Seas'], notes: 'Lumbridge Swamp Caves' }
   ],
   'Star Flower': [
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Islands & Others'], notes: 'Zanaris' }
@@ -2505,7 +2505,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Nex', regions: ['Fremennik'], unlockId: 'Nex' }
   ],
   "Executioner's Axe Head": [
-    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore'], unlockId: 'Vardorvis', rarity: '1/96' }
+    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore', 'Kourend & Kebos'], unlockId: 'Vardorvis', rarity: '1/96' }
   ],
   'Eye of the Duke': [
     { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus', rarity: '1/96' }
@@ -2523,7 +2523,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus', notes: 'DT2 awakened bosses (any)' },
     { type: 'DROP', name: 'The Leviathan', regions: ['Morytania'], unlockId: 'The Leviathan' },
     { type: 'DROP', name: 'The Whisperer', regions: ['Fremennik'], unlockId: 'The Whisperer' },
-    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore'], unlockId: 'Vardorvis' }
+    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore', 'Kourend & Kebos'], unlockId: 'Vardorvis' }
   ],
   'Ancient Shard': [
     { type: 'DROP', name: 'Catacombs of Kourend Monsters', regions: ['Kourend & Kebos'], rarity: 'Common' }

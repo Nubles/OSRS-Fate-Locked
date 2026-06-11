@@ -48,20 +48,14 @@ public class FateLockedSceneOverlay extends Overlay
 
         FateLockedBundle bundle = plugin.getBundle();
         CanonicalChunk chunk = CanonicalChunk.of(wp);
-        String region = bundle.regionAt(chunk);
-
+        // Sub-area-aware: a Falador chunk reflects Falador's lock state, not
+        // all of Asgarnia's.
         Color color;
-        if (region == null)
+        switch (bundle.lockStateAt(chunk))
         {
-            color = config.unauthoredColor();
-        }
-        else if (bundle.isUnlocked(region))
-        {
-            color = config.unlockedColor();
-        }
-        else
-        {
-            color = config.lockedColor();
+            case UNLOCKED: color = config.unlockedColor(); break;
+            case LOCKED: color = config.lockedColor(); break;
+            default: color = config.unauthoredColor(); break;
         }
 
         drawChunkOutline(graphics, chunk, wp.getPlane(), color);

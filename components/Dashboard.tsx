@@ -214,7 +214,7 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
                 <span className={`text-xs font-bold leading-tight break-words ${isUnlocked ? 'text-gray-200' : canUnlock ? 'text-purple-300' : 'text-gray-500'}`}>
                     {item}
                 </span>
-                {isUnlocked && (
+                {(
                     <a href={getWikiUrl(item)} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors p-0.5 shrink-0" onClick={e => e.stopPropagation()} title="Open Wiki">
                         <ExternalLink size={12} />
                     </a>

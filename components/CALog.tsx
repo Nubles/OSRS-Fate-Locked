@@ -8,6 +8,9 @@ import { DROP_RATES } from '../config/rules';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { JournalNextUpStrip, NextUpItem } from './JournalNextUpStrip';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { showToast } from '../utils/toast';
+import { CAInsights } from './JournalInsights';
+import { WikiLink } from './WikiLink';
 
 interface CALogProps {
   searchTerm?: string;
@@ -53,7 +56,7 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
           if (tasks.length > 0) {
               const allDone = tasks.every(t => unlocks.completedTasks.includes(t.id));
               if (!allDone) {
-                  alert("You must complete all individual tasks in this tier first.");
+                  showToast('Complete all individual tasks in this tier first');
                   return;
               }
           }
@@ -186,6 +189,8 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
         onTierChange={setFilterTier}
       />
 
+      <CAInsights />
+
       {showNextUpStrip && (
         <JournalNextUpStrip
           items={nextUpItems}
@@ -296,7 +301,7 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2 mb-0.5">
                                                 <span className="text-[10px] uppercase font-bold text-gray-500 bg-white/5 px-1.5 rounded">{task.monster}</span>
-                                                {task.name && <span className="text-[11px] font-semibold text-gray-300">{task.name}</span>}
+                                                {task.name && <WikiLink name={task.name} className="text-[11px] font-semibold text-gray-300 hover:underline decoration-dotted underline-offset-2 hover:text-amber-200" />}
                                                 <a
                                                     href={getWikiUrl(task.monster)}
                                                     target="_blank" 
