@@ -22,11 +22,14 @@ interface Cmd {
   id: string;
   title: string;
   subtitle: string;
-  group: 'Navigate' | 'Earn & Spend' | 'Plan' | 'Track' | 'Account' | 'Action';
+  group: 'Navigate' | 'Earn & Spend' | 'Plan' | 'Track' | 'Account' | 'Action' | 'World';
   icon: LucideIcon;
   keywords: string;
   run: () => void;
 }
+
+import { chunkContentService } from '../services/ChunkContentService';
+import { placeOf, showChunkOnMap } from '../utils/chunkLocations';
 
 export const CommandPalette: React.FC = () => {
   const { toggleAnimations, animationsEnabled } = useGame();
@@ -74,11 +77,20 @@ export const CommandPalette: React.FC = () => {
     ];
   }, [animationsEnabled, toggleAnimations]);
 
+  // World-entity lookups ("where is X") from the chunk dataset — lazy-loaded
+  // the first time the palette opens so startup stays untouched.
+  const [worldReady, setWorldReady] = useState(chunkContentService.ready);
+  useEffect(() => {
+    if (!open || worldReady) return;
+    if (chunkContentService.ready) setWorldReady(true);
+    else chunkContentService.init().then(ok => ok && setWorldReady(true));
+  }, [open, worldReady]);
+
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return commands;
     const terms = q.split(/\s+/);
-    return commands
+    const matched = commands
       .map((c) => {
         const hay = `${c.title} ${c.subtitle} ${c.keywords}`.toLowerCase();
         const titleL = c.title.toLowerCase();
@@ -94,7 +106,26 @@ export const CommandPalette: React.FC = () => {
       .filter((x): x is { c: Cmd; score: number } => x !== null)
       .sort((a, b) => b.score - a.score)
       .map((x) => x.c);
-  }, [query, commands]);
+
+    // Append "find on map" entries for matching world entities.
+    if (worldReady && q.length >= 3) {
+      for (const hit of chunkContentService.searchEntities(q, 3)) {
+        const top = hit.locations[0];
+        if (!top) continue;
+        const place = placeOf(top.cx, top.cy);
+        matched.push({
+          id: `world|${hit.kind}|${hit.name}`,
+          title: `Find on map: ${hit.name}`,
+          subtitle: `${hit.kind} · ${place.label}${hit.locations.length > 1 ? ` +${hit.locations.length - 1} more` : ''}`,
+          group: 'World',
+          icon: Globe,
+          keywords: '',
+          run: () => { showChunkOnMap(top.cx, top.cy); setOpen(false); },
+        });
+      }
+    }
+    return matched;
+  }, [query, commands, worldReady]);
 
   // ⌘K / Ctrl-K toggles; also listen for an explicit open request from the header.
   useEffect(() => {

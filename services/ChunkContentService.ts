@@ -101,9 +101,26 @@ export function aggregateContent(entries: ChunkContent[]): ChunkContent {
   };
 }
 
+export type EntityKind = 'monster' | 'object' | 'npc' | 'spawn' | 'shop' | 'quest';
+
+export interface EntityLocation {
+  cx: number;
+  cy: number;
+  count?: number;
+  /** Quest entries only: does the quest start here or just have a step? */
+  role?: 'first' | 'step';
+}
+
+export interface EntityHit {
+  name: string;
+  kind: EntityKind;
+  locations: EntityLocation[];
+}
+
 class ChunkContentService {
   private doc: RawDoc | null = null;
   private promise: Promise<boolean> | null = null;
+  private index: Map<string, EntityHit> | null = null;
   error: string | null = null;
 
   get ready() { return this.doc != null; }
@@ -138,6 +155,68 @@ class ChunkContentService {
       if (c) entries.push(c);
     }
     return aggregateContent(entries);
+  }
+
+  // ── Entity → locations index ────────────────────────────────────────────
+  // "Where can I find a Yew tree / Chaos Druid / Cook's Assistant?" — built
+  // once, lazily, from the loaded dataset. ~3k entities; fine in memory.
+
+  private buildIndex(): Map<string, EntityHit> {
+    const index = new Map<string, EntityHit>();
+    const add = (kind: EntityKind, name: string, loc: EntityLocation) => {
+      const k = `${kind}|${name.toLowerCase()}`;
+      const hit = index.get(k);
+      if (hit) hit.locations.push(loc);
+      else index.set(k, { name, kind, locations: [loc] });
+    };
+    for (const [id, e] of Object.entries(this.doc?.chunks ?? {})) {
+      const cx = Math.floor(+id / 256), cy = +id % 256;
+      for (const [name, count] of (e.m ?? [])) add('monster', name, { cx, cy, count });
+      for (const [name, count] of (e.o ?? [])) add('object', name, { cx, cy, count });
+      for (const name of (e.p ?? [])) add('npc', name, { cx, cy });
+      for (const name of (e.i ?? [])) add('spawn', name, { cx, cy });
+      for (const name of (e.s ?? [])) add('shop', name, { cx, cy });
+      for (const [name, role] of Object.entries(e.q ?? {})) add('quest', name, { cx, cy, role });
+    }
+    return index;
+  }
+
+  private getIndex(): Map<string, EntityHit> | null {
+    if (!this.doc) return null;
+    if (!this.index) this.index = this.buildIndex();
+    return this.index;
+  }
+
+  /** Exact (case-insensitive) lookup, first matching kind wins. */
+  entityLocations(name: string, kinds: EntityKind[] = ['monster', 'object', 'npc', 'spawn', 'shop', 'quest']): EntityHit | null {
+    const index = this.getIndex();
+    if (!index) return null;
+    const lower = name.toLowerCase();
+    for (const kind of kinds) {
+      const hit = index.get(`${kind}|${lower}`);
+      if (hit) return hit;
+    }
+    return null;
+  }
+
+  /** Ranked substring search across every entity in Gielinor. */
+  searchEntities(query: string, limit = 8): EntityHit[] {
+    const index = this.getIndex();
+    const q = query.trim().toLowerCase();
+    if (!index || q.length < 2) return [];
+    const scored: { hit: EntityHit; score: number }[] = [];
+    for (const hit of index.values()) {
+      const n = hit.name.toLowerCase();
+      let score = 0;
+      if (n === q) score = 3;
+      else if (n.startsWith(q)) score = 2;
+      else if (n.includes(q)) score = 1;
+      if (score) scored.push({ hit, score });
+    }
+    return scored
+      .sort((a, b) => b.score - a.score || b.hit.locations.length - a.hit.locations.length || a.hit.name.localeCompare(b.hit.name))
+      .slice(0, limit)
+      .map(s => s.hit);
   }
 }
 

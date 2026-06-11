@@ -8,6 +8,8 @@ import { wikiService } from '../services/WikiService';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { X, Search, CheckCircle2, Lock, Box, ShoppingBag, Sword, Sprout, MapPin, Database, ExternalLink, RefreshCw, ArrowLeft, ArrowRight, Hammer, HelpCircle, Layers, Coins, Calculator, ListFilter, Star, ChevronDown, ChevronRight, Hand, ScrollText, Percent, Compass, Pin } from 'lucide-react';
 import { WikiLink } from './WikiLink';
+import { EntityLocations } from './EntityLocations';
+import { SOURCE_TYPE_KINDS as SOURCE_KINDS } from '../utils/chunkLocations';
 
 const FAVORITES_KEY = 'FATE_RESOURCE_FAVORITES';
 const INVENTORY_KEY = 'FATE_RESOURCE_INVENTORY';
@@ -575,6 +577,8 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
                                                                 </span>
                                                             )}
                                                         </div>
+                                                        {/* Chunk-data locations: where this source actually exists, with unlock state. */}
+                                                        <EntityLocations name={entry.source.name} kinds={SOURCE_KINDS[entry.source.type]} className="mt-1" />
                                                     </div>
                                                 </div>
                                             </div>

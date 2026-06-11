@@ -3,6 +3,8 @@ import { CheckCircle2, Circle, Route, Dices, Map as MapIcon, BookOpen, Swords, P
 import { useGame } from '../context/GameContext';
 import { buildGoalRoute } from '../utils/goalRoute';
 import { WikiLink } from './WikiLink';
+import { EntityLocations } from './EntityLocations';
+import { SOURCE_TYPE_KINDS } from '../utils/chunkLocations';
 
 /**
  * "Route to goal" — the expanded planning view for a pinned goal: the full
@@ -118,13 +120,16 @@ export const GoalRouteView: React.FC<{ goalId: string }> = ({ goalId }) => {
           <div className="md:col-span-2">
             <Head icon={<Package size={11} />} label="Item sources" done={route.sources.filter(s => s.available).length} total={route.sources.length} />
             {route.sources.map(s => (
-              <div key={`${s.type}:${s.name}`} className="flex items-center gap-1.5 py-px">
-                <Tick met={s.available} />
-                <span className="text-[9px] font-bold uppercase text-gray-600 bg-white/5 px-1 rounded shrink-0">{s.type}</span>
-                <WikiLink name={s.name} className={`hover:underline decoration-dotted underline-offset-2 ${s.available ? 'text-green-300/80' : 'text-gray-300'}`} />
-                {!s.available && s.missing.length > 0 && (
-                  <span className="text-gray-600 text-[9px] truncate" title={s.missing.join('\n')}>— {s.missing[0]}{s.missing.length > 1 ? ` +${s.missing.length - 1}` : ''}</span>
-                )}
+              <div key={`${s.type}:${s.name}`} className="py-px">
+                <div className="flex items-center gap-1.5">
+                  <Tick met={s.available} />
+                  <span className="text-[9px] font-bold uppercase text-gray-600 bg-white/5 px-1 rounded shrink-0">{s.type}</span>
+                  <WikiLink name={s.name} className={`hover:underline decoration-dotted underline-offset-2 ${s.available ? 'text-green-300/80' : 'text-gray-300'}`} />
+                  {!s.available && s.missing.length > 0 && (
+                    <span className="text-gray-600 text-[9px] truncate" title={s.missing.join('\n')}>— {s.missing[0]}{s.missing.length > 1 ? ` +${s.missing.length - 1}` : ''}</span>
+                  )}
+                </div>
+                <EntityLocations name={s.name} kinds={SOURCE_TYPE_KINDS[s.type]} cap={3} className="ml-5" />
               </div>
             ))}
           </div>

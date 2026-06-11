@@ -16,9 +16,21 @@ import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
 import { TableType } from '../types';
 import { TestSuiteRunner } from './TestSuiteRunner';
 
+import { chunkContentService, EntityHit, EntityKind } from '../services/ChunkContentService';
+import { EntityLocations } from './EntityLocations';
+
 interface OracleSearchProps {
   onClose: () => void;
 }
+
+const ENTITY_KIND_LABEL: Record<EntityKind, string> = {
+  monster: 'Monster',
+  object: 'Object / Resource',
+  npc: 'NPC',
+  spawn: 'Item Spawn',
+  shop: 'Shop',
+  quest: 'Quest Location',
+};
 
 type SearchItem = {
   name: string;
@@ -36,6 +48,12 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
   const { unlocks } = useGame();
   const [query, setQuery] = useState('');
   const [isRunningTest, setIsRunningTest] = useState(false);
+  // World-entity search (monsters / objects / NPCs / spawns / shops / quest
+  // locations from the chunk dataset) — loaded lazily on first open.
+  const [worldReady, setWorldReady] = useState(chunkContentService.ready);
+  useEffect(() => {
+    if (!chunkContentService.ready) chunkContentService.init().then(ok => ok && setWorldReady(true));
+  }, []);
   const inputRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
@@ -144,6 +162,11 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
     scored.sort((a, b) => a.rank - b.rank || a.item.name.localeCompare(b.item.name));
     return scored.slice(0, 50).map((s) => s.item);
   }, [query, searchIndex]);
+
+  const worldHits = useMemo<EntityHit[]>(
+    () => (worldReady && query.length >= 2 ? chunkContentService.searchEntities(query, 6) : []),
+    [query, worldReady],
+  );
 
   // Check Unlock Status
   const getStatus = (item: SearchItem) => {
@@ -261,10 +284,40 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
 
         {/* Results List */}
         <div className="overflow-y-auto custom-scrollbar p-2 space-y-1">
-          {results.length === 0 && query && (
+          {results.length === 0 && worldHits.length === 0 && query && (
             <div className="text-center py-12 text-gray-600">
               <p className="text-sm font-mono">No fate found matching "{query}"...</p>
               {query.toLowerCase() === 'test' && <p className="text-xs text-green-800 mt-2 animate-pulse">[Press Enter to run Diagnostics]</p>}
+            </div>
+          )}
+
+          {/* World locations — entities from the chunk dataset. Clicking a
+              location chip jumps to that chunk on the map; close on the way. */}
+          {worldHits.length > 0 && (
+            <div className="pb-1">
+              <div className="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-cyan-400/80">
+                World locations
+              </div>
+              {worldHits.map(hit => (
+                <div
+                  key={`${hit.kind}|${hit.name}`}
+                  onClickCapture={() => window.setTimeout(onClose, 60)}
+                  className="flex items-start gap-3 px-3 py-2 hover:bg-[#252525] rounded-lg transition-colors"
+                >
+                  <div className="p-2 rounded-lg shrink-0 bg-cyan-950/40 text-cyan-300">
+                    <Map size={18} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-sm text-white truncate">{hit.name}</h3>
+                      <span className="text-[9px] px-1.5 rounded bg-white/5 text-gray-500 uppercase shrink-0">
+                        {ENTITY_KIND_LABEL[hit.kind]}
+                      </span>
+                    </div>
+                    <EntityLocations name={hit.name} kinds={[hit.kind]} cap={5} className="mt-1" />
+                  </div>
+                </div>
+              ))}
             </div>
           )}
           

@@ -1,13 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { SUB_AREA_CHUNKS } from './subAreaChunks';
+import { REGION_CHUNKS } from './regionChunks';
 import { REGIONS_LIST, MISTHALIN_AREAS } from './items';
-import regionMapSrc from '../components/RegionMap.tsx?raw';
 
-/** Chunks listed in the map's REGION_CHUNKS literal, as "cx,cy" keys. */
+/** Chunks on the map, as "cx,cy" keys. */
 function mapChunkKeys(): Set<string> {
-  const block = regionMapSrc.match(/const REGION_CHUNKS: Record<string, ChunkCoord\[\]> = \{([\s\S]*?)\n\};/)![1];
   const keys = new Set<string>();
-  for (const m of block.matchAll(/\{ cx: (\d+), cy: (\d+) \}/g)) keys.add(`${m[1]},${m[2]}`);
+  for (const chunks of Object.values(REGION_CHUNKS)) {
+    for (const c of chunks) keys.add(`${c.cx},${c.cy}`);
+  }
   return keys;
 }
 

@@ -1,10 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { RESOURCE_MAP } from './resourceData';
 import { REGION_GROUPS, MISTHALIN_AREAS } from './items';
-// Vite-native imports (no node:fs needed): the chunk dataset as JSON, and the
-// RegionMap source as a raw string so we can parse its REGION_CHUNKS literal.
+import { REGION_CHUNKS } from './regionChunks';
 import chunkDoc from '../public/chunk-content.json';
-import regionMapSrc from '../components/RegionMap.tsx?raw';
 
 /**
  * Chunk-truth invariant for the Resource Engine.
@@ -21,15 +19,11 @@ import regionMapSrc from '../components/RegionMap.tsx?raw';
  * engine data is updated — keeping the Resource Engine current with the map.
  */
 
-// chunk (cx,cy) -> our region, parsed from the REGION_CHUNKS literal
+// chunk (cx,cy) -> our region, straight from the shipped data
 function loadChunkRegions(): Record<string, string> {
-  const block = regionMapSrc.match(/const REGION_CHUNKS: Record<string, ChunkCoord\[\]> = \{([\s\S]*?)\n\};/)![1];
   const out: Record<string, string> = {};
-  let cur = '';
-  for (const line of block.split('\n')) {
-    const head = line.match(/^\s*'((?:[^'\\]|\\.)+)': \[/);
-    if (head) { cur = head[1].replace(/\\'/g, "'"); continue; }
-    for (const m of line.matchAll(/\{ cx: (\d+), cy: (\d+) \}/g)) out[`${m[1]},${m[2]}`] = cur;
+  for (const [region, chunks] of Object.entries(REGION_CHUNKS)) {
+    for (const c of chunks) out[`${c.cx},${c.cy}`] = region;
   }
   return out;
 }
