@@ -745,13 +745,29 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
   const exportDraftToClipboard = async () => {
     const isSub = authorLevel === 'SUBAREA';
     const code = isSub ? serializeSubDraft(subDraft) : serializeDraft(draftChunks);
-    const target = isSub ? 'SUB_AREA_CHUNKS (data/subAreaChunks.ts)' : 'REGION_CHUNKS';
-    try {
-      await navigator.clipboard.writeText(code);
-      showToast(`${isSub ? 'SUB_AREA_CHUNKS' : 'REGION_CHUNKS'} copied to clipboard`);
-    } catch {
-      window.prompt(`Copy this into ${target}:`, code);
+    const label = isSub ? 'SUB_AREA_CHUNKS' : 'REGION_CHUNKS';
+    // navigator.clipboard silently rejects on non-HTTPS origins and when the
+    // document isn't focused, so fall back to the execCommand textarea trick,
+    // then to a manual prompt — and surface the char count so a successful
+    // (or empty) copy is never ambiguous.
+    let copied = false;
+    try { await navigator.clipboard.writeText(code); copied = true; } catch { /* fall through */ }
+    if (!copied) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = code;
+        ta.style.position = 'fixed';
+        ta.style.top = '0';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        copied = document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch { /* fall through */ }
     }
+    if (copied) showToast(`${label} copied (${code.length} chars)`);
+    else window.prompt(`Copy this into ${isSub ? 'data/subAreaChunks.ts' : 'REGION_CHUNKS'}:`, code);
   };
 
   const exportRuneLiteBundle = () => {
