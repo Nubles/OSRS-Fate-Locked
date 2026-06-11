@@ -200,26 +200,66 @@ const isRegionUnlocked = (region: string, unlocks: string[]): boolean => {
 const AUTHORING_STORAGE_KEY = 'fate-region-chunks-draft-v1';
 // Rolling backup that only advances when the draft is MORE substantial than
 // what it currently holds. Protects against accidental seed-overwrites if
-// the primary key is wiped or reset — load falls through to this.
+// the primary key is wiped or reset. Recovery-only — never auto-loaded.
 const AUTHORING_BACKUP_KEY = 'fate-region-chunks-backup-v1';
+// Pre-versioning drafts are stashed here once, in case an author needs them.
+const LEGACY_RESCUE_KEY = 'fate-chunks-legacy-rescue-v1';
 
 const countChunks = (d: Record<string, ChunkCoord[]>) =>
   Object.values(d).reduce((a, arr) => a + (Array.isArray(arr) ? arr.length : 0), 0);
 
-const loadInitialDraft = (): Record<string, ChunkCoord[]> => {
-  try {
-    const primaryRaw = localStorage.getItem(AUTHORING_STORAGE_KEY);
-    const backupRaw = localStorage.getItem(AUTHORING_BACKUP_KEY);
-    const primary = primaryRaw ? JSON.parse(primaryRaw) : null;
-    const backup = backupRaw ? JSON.parse(backupRaw) : null;
-    // If backup is strictly larger than primary, the primary was probably
-    // clobbered (e.g. seed overwrite). Prefer the backup.
-    if (primary && backup && countChunks(backup) > countChunks(primary)) return backup;
-    if (primary) return primary;
-    if (backup) return backup;
-  } catch { /* fall through */ }
-  return REGION_CHUNKS;
+// ── Seed-versioned drafts ───────────────────────────────────────────────────
+// The authoring draft must not permanently shadow shipped data: when a new
+// deploy changes REGION_CHUNKS / SUB_AREA_CHUNKS, viewers who never touched
+// the authoring tool should see the update automatically. So each stored
+// draft remembers (a) the hash of the shipped seed it came from and (b)
+// whether the user actually edited it. Untouched drafts re-seed on a seed
+// change; hand-edited drafts are kept (Wipe resets to the shipped baseline).
+const hashStr = (s: string): string => {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
 };
+const SEED_HASH = hashStr(JSON.stringify(REGION_CHUNKS) + '|' + JSON.stringify(SUB_AREA_CHUNKS));
+
+interface StoredDraft {
+  v: 2;
+  seed: string;
+  dirty: boolean;
+  data: Record<string, ChunkCoord[]>;
+}
+interface LoadedDraft {
+  data: Record<string, ChunkCoord[]>;
+  dirty: boolean;
+  /** True when stale user edits were preserved over a newer shipped seed. */
+  keptStaleEdits: boolean;
+}
+
+const loadVersionedDraft = (key: string, shipped: Record<string, ChunkCoord[]>): LoadedDraft => {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.v === 2 && parsed.data) {
+        const stored = parsed as StoredDraft;
+        if (stored.seed === SEED_HASH) return { data: stored.data, dirty: stored.dirty, keptStaleEdits: false };
+        if (!stored.dirty) return { data: shipped, dirty: false, keptStaleEdits: false }; // stale seed, no edits → resync
+        return { data: stored.data, dirty: true, keptStaleEdits: true };                   // keep real edits
+      }
+      // Legacy (pre-versioning) draft: can't tell edits from stale seed.
+      // Resync to shipped — viewers get current data — but stash the old
+      // draft once so an author can recover it.
+      if (parsed && typeof parsed === 'object') {
+        try {
+          if (!localStorage.getItem(LEGACY_RESCUE_KEY)) localStorage.setItem(LEGACY_RESCUE_KEY, raw);
+        } catch { /* ignore */ }
+      }
+    }
+  } catch { /* fall through */ }
+  return { data: shipped, dirty: false, keptStaleEdits: false };
+};
+
+const loadInitialDraft = (): LoadedDraft => loadVersionedDraft(AUTHORING_STORAGE_KEY, REGION_CHUNKS);
 
 const GRID_LINE_COLOR = 'rgba(255,255,255,0.12)';
 const UNLOCKED_FILL = 'rgba(16, 185, 129, 0.35)';
@@ -234,13 +274,7 @@ const CONTINENT_NAMES: string[] = ['Misthalin', ...Object.keys(REGION_GROUPS)].s
 const SUB_AREA_NAMES: string[] = [...new Set([...MISTHALIN_AREAS, ...Object.values(REGION_GROUPS).flat()])].sort();
 const SUBAREA_STORAGE_KEY = 'fate-subarea-chunks-draft-v1';
 
-const loadInitialSubDraft = (): Record<string, ChunkCoord[]> => {
-  try {
-    const raw = localStorage.getItem(SUBAREA_STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch { /* fall through */ }
-  return SUB_AREA_CHUNKS;
-};
+const loadInitialSubDraft = (): LoadedDraft => loadVersionedDraft(SUBAREA_STORAGE_KEY, SUB_AREA_CHUNKS);
 
 const serializeSubDraft = (data: Record<string, ChunkCoord[]>) => {
   const entries = Object.entries(data)
@@ -412,12 +446,18 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
   const [authoring, setAuthoring] = useState(false);
   const [activeRegion, setActiveRegion] = useState<string>(CONTINENT_NAMES[0] ?? '');
   const [soloView, setSoloView] = useState(false);
-  const [draftChunks, setDraftChunks] = useState<Record<string, ChunkCoord[]>>(loadInitialDraft);
+  // Seed-versioned drafts: untouched drafts auto-resync to new shipped data;
+  // hand-edited ones are kept (and flagged so we can tell the author below).
+  const [initialRegionLoad] = useState(loadInitialDraft);
+  const [initialSubLoad] = useState(loadInitialSubDraft);
+  const [draftChunks, setDraftChunks] = useState<Record<string, ChunkCoord[]>>(initialRegionLoad.data);
+  const [regionDirty, setRegionDirty] = useState(initialRegionLoad.dirty);
   // Sub-area layer: which authoring level is active, the sub-area being
   // painted, and its own draft (seeded from data/subAreaChunks.ts).
   const [authorLevel, setAuthorLevel] = useState<'REGION' | 'SUBAREA'>('REGION');
   const [activeSubArea, setActiveSubArea] = useState<string>(SUB_AREA_NAMES[0] ?? '');
-  const [subDraft, setSubDraft] = useState<Record<string, ChunkCoord[]>>(loadInitialSubDraft);
+  const [subDraft, setSubDraft] = useState<Record<string, ChunkCoord[]>>(initialSubLoad.data);
+  const [subDirty, setSubDirty] = useState(initialSubLoad.dirty);
   const [toast, setToast] = useState<string | null>(null);
   const [selectedChunk, setSelectedChunk] = useState<ChunkCoord | null>(null);
 
@@ -443,18 +483,26 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
   useEffect(() => { redoRef.current = redoStack; }, [redoStack]);
   const snapshot = (): LayerSnapshot => ({ r: draftRef.current, s: subRef.current });
   const restore = (snap: LayerSnapshot) => { setDraftChunks(snap.r); setSubDraft(snap.s); };
-  const pushHistory = () => { setUndoStack(s => [...s.slice(-49), snapshot()]); setRedoStack([]); };
+  // Every editing gesture calls pushHistory first, so it doubles as the
+  // dirty-marker: only hand-edited drafts survive a shipped-seed change.
+  const pushHistory = () => {
+    if (authorLevel === 'SUBAREA') setSubDirty(true); else setRegionDirty(true);
+    setUndoStack(s => [...s.slice(-49), snapshot()]);
+    setRedoStack([]);
+  };
   const undo = useCallback(() => {
     const s = undoRef.current; if (!s.length) return;
     setRedoStack(r => [...r, snapshot()]);
     setUndoStack(s.slice(0, -1));
     restore(s[s.length - 1]);
+    setRegionDirty(true); setSubDirty(true); // restore touches both layers
   }, []);
   const redo = useCallback(() => {
     const r = redoRef.current; if (!r.length) return;
     setUndoStack(u => [...u, snapshot()]);
     setRedoStack(r.slice(0, -1));
     restore(r[r.length - 1]);
+    setRegionDirty(true); setSubDirty(true);
   }, []);
 
   // ── Rectangle fill (Alt+drag a box) ─────────────────────────────────────────
@@ -465,25 +513,41 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
 
   useEffect(() => {
     try {
-      const serialized = JSON.stringify(draftChunks);
+      const envelope: StoredDraft = { v: 2, seed: SEED_HASH, dirty: regionDirty, data: draftChunks };
+      const serialized = JSON.stringify(envelope);
       localStorage.setItem(AUTHORING_STORAGE_KEY, serialized);
       // Only advance the backup when current state is at least as big as
       // whatever the backup holds. A shrinking draft (wipe, clear, refresh
-      // race, etc.) never overwrites the backup — worst case the user can
-      // recover the previous "high-water" state on next load.
+      // race, etc.) never overwrites the backup — recovery-only, never
+      // auto-loaded.
       const backupRaw = localStorage.getItem(AUTHORING_BACKUP_KEY);
-      const backupCount = backupRaw ? countChunks(JSON.parse(backupRaw)) : 0;
+      let backupCount = 0;
+      if (backupRaw) {
+        const parsed = JSON.parse(backupRaw);
+        backupCount = countChunks(parsed?.v === 2 ? parsed.data : parsed);
+      }
       if (countChunks(draftChunks) >= backupCount) {
         localStorage.setItem(AUTHORING_BACKUP_KEY, serialized);
       }
     } catch { /* quota or parse error — ignore */ }
-  }, [draftChunks]);
+  }, [draftChunks, regionDirty]);
 
   // Persist the sub-area layer + derive the chunk -> sub-area lookup that
   // drives per-chunk unlock colouring and the activity panel's header.
   useEffect(() => {
-    try { localStorage.setItem(SUBAREA_STORAGE_KEY, JSON.stringify(subDraft)); } catch { /* ignore */ }
-  }, [subDraft]);
+    try {
+      const envelope: StoredDraft = { v: 2, seed: SEED_HASH, dirty: subDirty, data: subDraft };
+      localStorage.setItem(SUBAREA_STORAGE_KEY, JSON.stringify(envelope));
+    } catch { /* ignore */ }
+  }, [subDraft, subDirty]);
+
+  // Tell an author once when their hand-edits were kept over a newer seed.
+  useEffect(() => {
+    if (initialRegionLoad.keptStaleEdits || initialSubLoad.keptStaleEdits) {
+      showToast('map data updated — your local edits kept (Wipe to sync)');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const chunkSubArea = useMemo(() => {
     const m: Record<string, string> = {};
     for (const [sub, chunks] of Object.entries(subDraft)) for (const c of chunks) m[chunkKey(c)] = sub;
@@ -853,18 +917,22 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
     }
   };
 
+  // "Wipe" = sync back to the shipped baseline (discard local edits). The
+  // draft becomes non-dirty again, so future deploys auto-resync it too.
   const clearDraft = () => {
     if (authorLevel === 'SUBAREA') {
-      if (!window.confirm('Clear ALL sub-area chunk assignments?\n\n(The shipped data/subAreaChunks.ts is untouched — reload after clearing localStorage to reseed.)')) return;
+      if (!window.confirm('Reset sub-area assignments to the shipped baseline?\n\nYour local sub-area edits are discarded (undo can bring them back this session).')) return;
       pushHistory();
-      setSubDraft({});
-      showToast('sub-area draft cleared');
+      setSubDraft(SUB_AREA_CHUNKS);
+      setSubDirty(false);
+      showToast('sub-areas reset to shipped baseline');
       return;
     }
-    if (!window.confirm('Clear ALL draft chunks for every region?\n\nThis wipes the primary draft AND the safety backup — gone for good.')) return;
-    setDraftChunks({});
-    try { localStorage.removeItem(AUTHORING_BACKUP_KEY); } catch { /* ignore */ }
-    showToast('draft + backup cleared');
+    if (!window.confirm('Reset region chunks to the shipped baseline?\n\nYour local region edits are discarded (undo can bring them back this session).')) return;
+    pushHistory();
+    setDraftChunks(REGION_CHUNKS);
+    setRegionDirty(false);
+    showToast('regions reset to shipped baseline');
   };
 
   const clearActiveRegion = () => {
@@ -1124,7 +1192,7 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
               <button
                 onClick={clearDraft}
                 className="px-2 py-1 rounded text-[11px] border bg-black/60 border-white/20 text-gray-400 hover:bg-red-900/40 hover:text-red-200"
-                title="Wipe ALL draft chunks"
+                title="Reset this layer to the shipped baseline"
               >
                 Wipe
               </button>
