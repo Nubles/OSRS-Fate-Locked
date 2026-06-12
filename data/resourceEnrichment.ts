@@ -1899,7 +1899,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Green Dragon', regions: ['Wilderness'], rarity: '1/3' },
     { type: 'DROP', name: 'Jelly', regions: ['Wilderness'], rarity: '1/3' },
     { type: 'DROP', name: 'Fire Giant', regions: ['Wilderness'], rarity: '1/3' },
-    { type: 'DROP', name: 'Moss Giant', regions: ['Wilderness', 'Karamja', 'Kandarin', 'Fremennik', 'Kourend & Kebos', 'Varlamore', 'The Open Seas'], rarity: '1/3' }
+    { type: 'DROP', name: 'Moss Giant', regions: ['Wilderness', 'Karamja', 'Kandarin', 'Fremennik', 'Kourend & Kebos', 'Varlamore', 'The Open Seas', 'Islands & Others'], rarity: '1/3' }
   ],
   'Magic Logs': [
     { type: 'DROP', name: 'Magic Logs Pile', regions: ['Kandarin'], rarity: 'Always' },
@@ -2216,7 +2216,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Quality Weapons Shop', regions: ['Fremennik'] },
     { type: 'DROP', name: 'Rusty Sword', regions: ['Kandarin'], rarity: '1/100' },
     { type: 'DROP', name: 'Zombie (Tarn\'s Lair)', regions: ['Any'], rarity: '1/128' },
-    { type: 'DROP', name: 'Moss Giant', regions: ['Fremennik', 'Karamja', 'Kandarin', 'Wilderness', 'Kourend & Kebos', 'Varlamore', 'The Open Seas'], rarity: '2/128' },
+    { type: 'DROP', name: 'Moss Giant', regions: ['Fremennik', 'Karamja', 'Kandarin', 'Wilderness', 'Kourend & Kebos', 'Varlamore', 'The Open Seas', 'Islands & Others'], rarity: '2/128' },
     { type: 'DROP', name: 'Kalphite Guardian', regions: ['Any'], rarity: '4/128' },
     { type: 'DROP', name: 'Bryophyta', regions: ['Misthalin'], unlockId: 'Bryophyta', rarity: '2/128' },
     { type: 'DROP', name: 'Simple Lockbox', regions: ['Asgarnia'], rarity: '6/10,850' }
@@ -3135,7 +3135,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Brian\'s Archery Supplies', regions: ['Asgarnia'] },
     { type: 'DROP', name: 'Lost Wooden Crate', regions: ['Any'], rarity: '1/8' },
     { type: 'DROP', name: 'Strange Shrine', regions: ['Any'], rarity: '1/9' },
-    { type: 'DROP', name: 'Moss Giant', regions: ['Fremennik', 'Karamja', 'Kandarin', 'Wilderness', 'Kourend & Kebos', 'Varlamore', 'The Open Seas'], rarity: '1/128' },
+    { type: 'DROP', name: 'Moss Giant', regions: ['Fremennik', 'Karamja', 'Kandarin', 'Wilderness', 'Kourend & Kebos', 'Varlamore', 'The Open Seas', 'Islands & Others'], rarity: '1/128' },
     { type: 'DROP', name: 'Guard', regions: ['Varlamore', 'Misthalin', 'Asgarnia', 'Kandarin', 'The Open Seas'], rarity: '1/128' },
     { type: 'DROP', name: 'Skeleton', regions: ['Kandarin', 'Misthalin', 'Karamja', 'Wilderness', 'Kourend & Kebos', 'The Open Seas'], rarity: '1/128' },
     { type: 'DROP', name: 'Giant Frog', regions: ['Any'], rarity: '1/128' }
@@ -3221,7 +3221,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Seddu\'s Adventurer\'s Store', regions: ['Kharidian Desert'] },
     { type: 'SHOP', name: 'Shields of Mistrock', regions: ['Any'] },
     { type: 'DROP', name: 'Adventurer Jon', regions: ['Any'], rarity: 'Always' },
-    { type: 'DROP', name: 'Moss Giant', regions: ['Fremennik', 'Karamja', 'Kandarin', 'Wilderness', 'Kourend & Kebos', 'Varlamore', 'The Open Seas'], rarity: '1/128' },
+    { type: 'DROP', name: 'Moss Giant', regions: ['Fremennik', 'Karamja', 'Kandarin', 'Wilderness', 'Kourend & Kebos', 'Varlamore', 'The Open Seas', 'Islands & Others'], rarity: '1/128' },
     { type: 'DROP', name: 'Skeleton Brute', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Angry Barbarian Spirit', regions: ['Any'], rarity: '1/128' },
     { type: 'DROP', name: 'Berserk Barbarian Spirit', regions: ['Any'], rarity: '1/128' },

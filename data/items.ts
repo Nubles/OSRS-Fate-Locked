@@ -154,6 +154,7 @@ export const REGION_GROUPS: Record<string, string[]> = {
   'Karamja': [
     'Musa Point', 'Brimhaven', 'Tai Bwo Wannai', 'Shilo Village', 'Kharazi Jungle', 
     'Mor Ul Rek (TzHaar City)', 'Crandor'
+  , 'Ship Yard'
   ],
   'Kharidian Desert': [
     'Al Kharid', 'Duel Arena / PvP Arena', 'Shantay Pass', 'Pollnivneach', 'Nardah', 
@@ -196,6 +197,7 @@ export const REGION_GROUPS: Record<string, string[]> = {
   ],
   'Islands & Others': [
     'Fossil Island', 'Ape Atoll', 'Zanaris', 'Tutorial Island'
+  , 'Isle of Souls', 'Lithkren'
   ],
   'The Open Seas': [
     'The Pandemonium', 'Dognose Island', 'Chinchompa Island', 'Remote Island', 'The Great Conch',
@@ -204,6 +206,7 @@ export const REGION_GROUPS: Record<string, string[]> = {
     'Tear of the Soul', 'Wintumber Island', 'The Crown Jewel', 'Lledrith Island', 'Deepfin Point',
     'Rainbow\'s End', 'Sunbleak Island', 'Ynysdail', 'Buccaneers\' Haven', 'Drumstick Isle',
     'Brittle Isle', 'Grimstone'
+  , 'Red Rock', 'Last Light', 'The Summer Shore'
   ]
 };
 

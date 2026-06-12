@@ -684,7 +684,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Nature Rune': [
     { type: 'SKILL', name: 'Runecraft Altar', regions: ['Karamja'], skills: { 'Runecraft': 44 }, notes: 'Nature Altar' },
-    { type: 'DROP', name: 'Moss Giant', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Karamja', 'Wilderness', 'Kourend & Kebos', 'Fremennik', 'Varlamore', 'The Open Seas'] },
+    { type: 'DROP', name: 'Moss Giant', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Karamja', 'Wilderness', 'Kourend & Kebos', 'Fremennik', 'Varlamore', 'The Open Seas', 'Islands & Others'] },
     { type: 'SHOP', name: 'Mage Arena Shop', regions: ['Wilderness'], notes: 'Lundail' },
     { type: 'SHOP', name: 'Magic Guild Store', regions: ['Kandarin'], skills: {'Magic': 66} },
     { type: 'DROP', name: 'Kurask', regions: ['Fremennik', 'Tirannwn'], skills: {'Slayer': 70} },
@@ -2409,7 +2409,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Desert Goat Horn': 1 }, notes: 'Grind with a Pestle and mortar' }
   ],
   'Unicorn Horn': [
-    { type: 'DROP', name: 'Unicorn', regions: ['Misthalin', 'Kandarin', 'Asgarnia', 'Kourend & Kebos', 'Varlamore', 'The Open Seas'], rarity: 'Always' }
+    { type: 'DROP', name: 'Unicorn', regions: ['Misthalin', 'Kandarin', 'Asgarnia', 'Kourend & Kebos', 'Varlamore', 'The Open Seas', 'Islands & Others'], rarity: 'Always' }
   ],
   'Unicorn Horn Dust': [
     { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Unicorn Horn': 1 }, notes: 'Grind with a Pestle and mortar' }
