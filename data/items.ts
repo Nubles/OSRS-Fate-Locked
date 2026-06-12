@@ -149,6 +149,7 @@ export const REGION_GROUPS: Record<string, string[]> = {
     'Port Khazard', 'Hemenster', 'Fishing Guild', 'Ranging Guild', 'Legends\' Guild', 
     'Tree Gnome Stronghold', 'Gnome Village', 'Witchaven', 'Piscatoris Fishing Colony', 
     'Feldip Hills', 'Baxtorian Falls', 'Otto\'s Grotto', 'Barbarian Outpost', 'Fight Arena'
+  , 'Castle Wars', 'Corsair Cove', 'Eagles\' Peak', 'Observatory', 'Ourania Altar'
   ],
   'Karamja': [
     'Musa Point', 'Brimhaven', 'Tai Bwo Wannai', 'Shilo Village', 'Kharazi Jungle', 
@@ -158,25 +159,30 @@ export const REGION_GROUPS: Record<string, string[]> = {
     'Al Kharid', 'Duel Arena / PvP Arena', 'Shantay Pass', 'Pollnivneach', 'Nardah', 
     'Sophanem', 'Menaphos', 'Bandit Camp', 'Bedabin Camp', 'Ruins of Uzer', 
     'Mage Training Arena', 'Agility Pyramid', 'Giants\' Plateau', 'Kalphite Lair'
+  , 'Ruins of Unkah'
   ],
   'Morytania': [
     'Canifis', 'Port Phasmatys', 'Mort\'ton', 'Barrows', 'Burgh de Rott', 'Meiyerditch', 
     'Darkmeyer', 'Slepe', 'Ver Sinhaza', 'Fenkenstrain\'s Castle', 'Slayer Tower', 
     'Mort Myre Swamp', 'Haunted Mine', 'Haunted Woods', 'Harmony Island', 
     'Mos Le\'Harmless', 'Braindeath Island', 'Dragontooth Island'
+  , 'Icyene Graveyard'
   ],
   'Fremennik': [
     'Rellekka', 'Neitiznot', 'Jatizso', 'Miscellania & Etceteria', 'Waterbirth Island', 
     'Lunar Isle', 'Mountain Camp', 'Lighthouse', 'Keldagrim'
+  , 'Weiss', 'Pirates\' Cove'
   ],
   'Tirannwn': [
     'Prifddinas', 'Lletya', 'Tyras Camp', 'Elf Camp', 'Isafdar', 'Zul-Andra', 
     'Arandar', 'Gwenith', 'Iorwerth Camp'
+  , 'Poison Waste'
   ],
   'Wilderness': [
     'Ferox Enclave', 'Wilderness Volcano', 'Chaos Temple', 'Rogues\' Castle', 'Lava Maze', 
     'Wilderness Bandit Camp', 'Dark Warriors\' Fortress', 'Graveyard of Shadows', 'Forgotten Cemetery',
     'Resource Area', 'Mage Arena', 'Scorpia\'s Cave', 'Fountain of Rune', 'Wilderness God Wars Dungeon'
+  , 'Daimon\'s Crater'
   ],
   'Kourend & Kebos': [
     'Kourend Castle', 'Hosidius', 'Piscarilius', 'Shayzien', 'Lovakengj', 'Arceuus', 
@@ -186,6 +192,7 @@ export const REGION_GROUPS: Record<string, string[]> = {
   'Varlamore': [
     'Civitas illa Fortis', 'Avium Savannah', 'Cam Torum', 'Ralos\' Rise', 'Darkfrost', 
     'Hunter\'s Guild', 'Aldarin', 'The Stranglewood'
+  , 'Tlati Rainforest', 'Auburnvale', 'Mistrock', 'Sunset Coast'
   ],
   'Islands & Others': [
     'Fossil Island', 'Ape Atoll', 'Zanaris', 'Tutorial Island'

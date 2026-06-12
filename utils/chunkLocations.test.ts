@@ -12,8 +12,8 @@ describe('placeOf', () => {
   });
 
   it('falls back to the continent for unnamed terrain', () => {
-    // 47,53 = "Asgarnian Road" — painted Misthalin, no sub-area
-    const p = placeOf(47, 53);
+    // 49,55 = "Center Wildy Ditch" — painted Misthalin, no sub-area
+    const p = placeOf(49, 55);
     expect(p.subArea).toBeNull();
     expect(p.region).toBe('Misthalin');
     expect(p.label).toBe('Misthalin');
