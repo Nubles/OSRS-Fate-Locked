@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { X, Lock, Check, Swords, Store, Users, Scroll, Package, BookOpen, MapPin, Sparkles } from 'lucide-react';
+import { X, Lock, Check, Swords, Store, Users, Scroll, Package, BookOpen, MapPin, Sparkles, Sprout, Flag, Gamepad2, ChevronDown, ChevronRight } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { chunkContentService, ChunkContent } from '../services/ChunkContentService';
 import { QUEST_DATA } from '../data/questData';
 import { getQuestStatus, QuestStatus } from '../utils/journalStatus';
+import { classifyShop } from '../utils/merchantShops';
+import { FARMING_PATCH_LIST, GUILDS_LIST, MINIGAMES_LIST } from '../constants';
 import type { ChunkCoord } from '../utils/mapCoords';
 import { WikiLink } from './WikiLink';
 
@@ -11,9 +13,11 @@ import { WikiLink } from './WikiLink';
  * "What can I play here?" — the OneChunkMan-style content readout for a
  * clicked map chunk, or aggregated across its whole region (since this mode
  * unlocks areas, not single chunks). Every activity is checked against the
- * run's actual unlocks: quests via getQuestStatus (regions + skills + QP +
- * prereqs), monsters via the Slayer requirement vs the player's level.
- * Content data: ChunkContentService (credit: source-chunk/chunk-picker-v2).
+ * run's actual unlocks — quests via getQuestStatus, monsters via Slayer,
+ * shops via their merchant category, farming patches / guilds / minigames
+ * via their own unlock tables — and rendered green (usable) or red with a
+ * strike-through (locked). A collapsible Can-do / Locked overview tops the
+ * panel. Content data: ChunkContentService (credit: source-chunk/chunk-picker-v2).
  */
 
 interface Props {
@@ -32,6 +36,52 @@ const QUEST_BADGE: Record<QuestStatus, { cls: string; label: string }> = {
   LOCKED_REGION: { cls: 'text-gray-500', label: 'locked: region not unlocked' },
   LOCKED_SKILL: { cls: 'text-gray-500', label: 'locked: skill requirements not met' },
   LOCKED_QUEST: { cls: 'text-gray-500', label: 'locked: prerequisite quest missing' },
+};
+
+/** Green when usable, red + strike-through when locked. */
+const stateCls = (usable: boolean) =>
+  usable ? 'text-green-300' : 'text-red-400/80 line-through decoration-red-500/60';
+
+// ── Farming patches: chunk object name → FARMING_PATCH_LIST unlock ─────────
+const PATCH_RULES: [RegExp, string][] = [
+  [/fruit tree patch/i, 'Fruit Tree'],
+  [/hardwood (tree )?patch/i, 'Hardwood Tree'],
+  [/spirit tree patch/i, 'Spirit Tree'],
+  [/crystal tree patch/i, 'Crystal Tree'],
+  [/celastrus/i, 'Celastrus'],
+  [/redwood (tree )?patch/i, 'Redwood'],
+  [/calquat/i, 'Calquat'],
+  [/tree patch/i, 'Wood Tree'],
+  [/herb patch/i, 'Herb'],
+  [/flower patch/i, 'Flower'],
+  [/hops patch/i, 'Hops'],
+  [/bush patch/i, 'Bush'],
+  [/cactus patch/i, 'Cactus'],
+  [/mushroom patch/i, 'Mushroom'],
+  [/belladonna/i, 'Belladonna'],
+  [/seaweed patch/i, 'Seaweed'],
+  [/hespori/i, 'Hespori Patch'],
+  [/anima patch/i, 'Anima'],
+  [/grape ?vine|vine patch/i, 'Vinery'],
+  [/coral nursery|coral patch/i, 'Coral Nursery'],
+  [/allotment/i, 'Allotment'],
+];
+const farmingPatchFor = (objectName: string): string | null => {
+  for (const [re, patch] of PATCH_RULES) if (re.test(objectName)) return patch;
+  return null;
+};
+
+const norm = (s: string) => s.toLowerCase().replace(/[’]/g, "'");
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** List entries (guilds / minigames) present in this chunk's content text. */
+const matchListInText = (list: string[], haystack: string): string[] => {
+  const out: string[] = [];
+  for (const name of list) {
+    const re = new RegExp(`\\b${escapeRe(norm(name))}\\b`, 'i');
+    if (re.test(haystack)) out.push(name);
+  }
+  return out;
 };
 
 const SectionHead: React.FC<{ icon: React.ReactNode; label: string; count?: number }> = ({ icon, label, count }) => (
@@ -56,6 +106,33 @@ const CappedList: React.FC<{ items: React.ReactNode[]; cap: number }> = ({ items
         </button>
       )}
     </>
+  );
+};
+
+/** Collapsible overview block: header with count, comma-list body. */
+const Overview: React.FC<{ kind: 'can' | 'cant'; items: string[] }> = ({ kind, items }) => {
+  const [open, setOpen] = useState(false);
+  if (items.length === 0) return null;
+  const can = kind === 'can';
+  return (
+    <div className={`mt-2 rounded border ${can ? 'border-emerald-700/40 bg-emerald-950/30' : 'border-red-800/40 bg-red-950/20'}`}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-1.5 px-2 py-1.5 text-left"
+      >
+        {open ? <ChevronDown size={11} className="text-gray-500 shrink-0" /> : <ChevronRight size={11} className="text-gray-500 shrink-0" />}
+        {can ? <Check size={11} className="text-green-400 shrink-0" /> : <Lock size={11} className="text-red-400/80 shrink-0" />}
+        <span className={`text-[10px] font-bold uppercase tracking-wide ${can ? 'text-emerald-300' : 'text-red-300/90'}`}>
+          {can ? 'Can do here' : 'Locked for now'}
+        </span>
+        <span className="text-[10px] font-mono text-gray-500">({items.length})</span>
+      </button>
+      {open && (
+        <div className={`px-2 pb-2 text-[10px] leading-relaxed ${can ? 'text-emerald-200/90' : 'text-red-200/70'}`}>
+          {items.join(' · ')}
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -88,6 +165,66 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       })
       .sort((a, b) => (a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === 'first' ? -1 : 1));
   }, [content, unlocks]);
+
+  // ── Derived sections with their own unlock gates ──────────────────────────
+  const derived = useMemo(() => {
+    if (!content) return null;
+
+    // Shops → merchant category gate.
+    const shops = content.shops.map(name => {
+      const category = classifyShop(name);
+      const catUnlocked = category != null && unlocks.merchants.includes(category);
+      return { name, category, usable: catUnlocked };
+    });
+
+    // Farming patches pulled OUT of objects, mapped to their patch unlock.
+    const farming: { name: string; count: number; patch: string; usable: boolean }[] = [];
+    const objects: [string, number][] = [];
+    for (const [name, count] of content.objects) {
+      const patch = farmingPatchFor(name);
+      if (patch && FARMING_PATCH_LIST.includes(patch)) {
+        farming.push({ name, count, patch, usable: unlocks.farming.includes(patch) });
+      } else {
+        objects.push([name, count]);
+      }
+    }
+
+    // Guilds & minigames detected from the chunk's own text.
+    const haystack = norm([
+      content.name ?? '', subArea ?? '',
+      ...content.npcs, ...content.objects.map(o => o[0]),
+      ...content.shops, ...Object.keys(content.quests), ...content.spawns,
+    ].join(' | '));
+    const guilds = matchListInText(GUILDS_LIST, haystack)
+      .map(name => ({ name, usable: unlocks.guilds.includes(name) }));
+    const minigames = matchListInText(MINIGAMES_LIST, haystack)
+      .map(name => ({ name, usable: unlocks.minigames.includes(name) }));
+
+    return { shops, farming, objects, guilds, minigames };
+  }, [content, subArea, unlocks]);
+
+  // ── Can-do / Locked overview ───────────────────────────────────────────────
+  const overview = useMemo(() => {
+    if (!content || !derived) return { can: [] as string[], cant: [] as string[] };
+    const can: string[] = [];
+    const cant: string[] = [];
+    const push = (ok: boolean, label: string) => (ok ? can : cant).push(label);
+
+    for (const q of questRows) {
+      if (q.status === 'COMPLETED') continue;
+      if (q.status === 'AVAILABLE') push(unlocked, `Quest: ${q.name}`);
+      else if (q.status) cant.push(`Quest: ${q.name}`);
+    }
+    for (const m of content.monsters.slice(0, 12)) {
+      const met = m.slayer == null || (slayerUnlocked && slayerLevel >= m.slayer);
+      push(unlocked && met, `Kill ${m.name}`);
+    }
+    for (const s of derived.shops) push(unlocked && s.usable, `Shop: ${s.name}`);
+    for (const f of derived.farming) push(unlocked && f.usable, `Farm: ${f.name}`);
+    for (const g of derived.guilds) push(unlocked && g.usable, g.name);
+    for (const mg of derived.minigames) push(unlocked && mg.usable, mg.name);
+    return { can, cant };
+  }, [content, derived, questRows, unlocked, slayerLevel, slayerUnlocked]);
 
   const title = mode === 'region' && region
     ? region
@@ -138,9 +275,13 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
           </div>
         )}
 
+        {/* Brief can / can't overview — collapsed by default. */}
+        <Overview kind="can" items={overview.can} />
+        <Overview kind="cant" items={overview.cant} />
+
         {failed && <div className="mt-3 text-gray-500">Chunk content unavailable (failed to load).</div>}
         {!failed && !content && <div className="mt-3 text-gray-500 animate-pulse">Loading chunk content…</div>}
-        {content && (
+        {content && derived && (
           <>
             {questRows.length > 0 && (
               <>
@@ -165,8 +306,8 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
                   const met = m.slayer == null || (slayerUnlocked && slayerLevel >= m.slayer);
                   return (
                     <div key={m.name} className="flex items-center justify-between gap-2 py-px">
-                      <span className={`truncate ${met ? 'text-gray-300' : 'text-gray-500'}`}>
-                        <WikiLink name={m.name} className="hover:underline decoration-dotted underline-offset-2 hover:text-amber-200" /> <span className="text-gray-600">×{m.count}</span>
+                      <span className={`truncate ${stateCls(met)}`}>
+                        <WikiLink name={m.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">×{m.count}</span>
                       </span>
                       {m.slayer != null && (
                         <span
@@ -182,19 +323,67 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
               </>
             )}
 
-            {content.objects.length > 0 && (
+            {derived.farming.length > 0 && (
               <>
-                <SectionHead icon={<Package size={11} />} label="Objects & Resources" count={content.objects.length} />
-                <CappedList cap={10} items={content.objects.map(([name, count]) => (
-                  <div key={name} className="text-gray-300 py-px truncate"><WikiLink name={name} /> <span className="text-gray-600">×{count}</span></div>
-                ))} />
+                <SectionHead icon={<Sprout size={11} />} label="Farming" count={derived.farming.length} />
+                {derived.farming.map(f => (
+                  <div key={f.name} className="flex items-center justify-between gap-2 py-px" title={f.usable ? `${f.patch} patches unlocked` : `Needs the "${f.patch}" unlock in the Farming table`}>
+                    <span className={`truncate ${stateCls(f.usable)}`}>
+                      <WikiLink name={f.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">×{f.count}</span>
+                    </span>
+                    <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${f.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>{f.patch}</span>
+                  </div>
+                ))}
               </>
             )}
 
-            {content.shops.length > 0 && (
+            {derived.guilds.length > 0 && (
               <>
-                <SectionHead icon={<Store size={11} />} label="Shops" count={content.shops.length} />
-                {content.shops.map(s => <div key={s} className="text-gray-300 py-px truncate"><WikiLink name={s} /></div>)}
+                <SectionHead icon={<Flag size={11} />} label="Guilds" count={derived.guilds.length} />
+                {derived.guilds.map(g => (
+                  <div key={g.name} className="flex items-center gap-1.5 py-px" title={g.usable ? 'Guild unlocked' : 'Needs the Guilds-table unlock'}>
+                    {g.usable ? <Check size={10} className="text-green-400 shrink-0" /> : <Lock size={10} className="text-red-400/70 shrink-0" />}
+                    <WikiLink name={g.name} className={`hover:underline decoration-dotted underline-offset-2 ${stateCls(g.usable)}`} />
+                  </div>
+                ))}
+              </>
+            )}
+
+            {derived.minigames.length > 0 && (
+              <>
+                <SectionHead icon={<Gamepad2 size={11} />} label="Minigames" count={derived.minigames.length} />
+                {derived.minigames.map(mg => (
+                  <div key={mg.name} className="flex items-center gap-1.5 py-px" title={mg.usable ? 'Minigame unlocked' : 'Needs the Minigames-table unlock'}>
+                    {mg.usable ? <Check size={10} className="text-green-400 shrink-0" /> : <Lock size={10} className="text-red-400/70 shrink-0" />}
+                    <WikiLink name={mg.name} className={`hover:underline decoration-dotted underline-offset-2 ${stateCls(mg.usable)}`} />
+                  </div>
+                ))}
+              </>
+            )}
+
+            {derived.shops.length > 0 && (
+              <>
+                <SectionHead icon={<Store size={11} />} label="Shops" count={derived.shops.length} />
+                {derived.shops.map(s => (
+                  <div key={s.name} className="flex items-center justify-between gap-2 py-px"
+                    title={s.usable ? `${s.category} unlocked` : s.category ? `Needs the "${s.category}" merchant unlock` : 'Unclassified shop — no merchant category gate'}>
+                    <WikiLink name={s.name} className={`truncate hover:underline decoration-dotted underline-offset-2 ${s.category ? stateCls(s.usable) : 'text-gray-300'}`} />
+                    {s.category && (
+                      <span className={`text-[9px] px-1 rounded shrink-0 ${s.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
+                        {s.category.replace(/ Shops?$/, '')}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </>
+            )}
+
+            {derived.objects.length > 0 && (
+              <>
+                <SectionHead icon={<Package size={11} />} label="Objects & Resources" count={derived.objects.length} />
+                <CappedList cap={10} items={derived.objects.map(([name, count]) => (
+                  <div key={name} className="text-gray-300 py-px truncate"><WikiLink name={name} /> <span className="text-gray-600">×{count}</span></div>
+                ))} />
               </>
             )}
 
