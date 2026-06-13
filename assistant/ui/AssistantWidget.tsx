@@ -57,7 +57,7 @@ export const AssistantWidget: React.FC = () => {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 right-4 z-40 flex items-center gap-2 px-3 py-2 rounded-full bg-violet-900/80 border border-violet-500/40 text-violet-100 text-xs font-bold shadow-xl hover:bg-violet-800 backdrop-blur-sm"
+        className="fixed bottom-4 right-4 z-[9999] flex items-center gap-2 px-3 py-2 rounded-full bg-violet-900/80 border border-violet-500/40 text-violet-100 text-xs font-bold shadow-xl hover:bg-violet-800 backdrop-blur-sm"
         title="Open the Fate Assistant (prototype)"
       >
         <Sparkles size={14} /> Assistant
@@ -67,7 +67,7 @@ export const AssistantWidget: React.FC = () => {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 w-[340px] max-w-[calc(100vw-2rem)] h-[460px] max-h-[calc(100vh-6rem)] flex flex-col bg-[#161616]/97 border border-violet-500/30 rounded-xl shadow-2xl backdrop-blur-sm overflow-hidden">
+    <div className="fixed bottom-4 right-4 z-[9999] w-[340px] max-w-[calc(100vw-2rem)] h-[460px] max-h-[calc(100vh-6rem)] flex flex-col bg-[#161616]/97 border border-violet-500/30 rounded-xl shadow-2xl backdrop-blur-sm overflow-hidden">
       {/* Header */}
       <div className="shrink-0 p-2.5 border-b border-white/10 flex items-center gap-2">
         <Sparkles size={14} className="text-violet-300 shrink-0" />

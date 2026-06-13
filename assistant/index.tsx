@@ -7,6 +7,7 @@
  * widget (kept out of the main bundle). The user can toggle it on/off any time.
  */
 import React, { Suspense, lazy, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Sparkles, X } from 'lucide-react';
 import { useAssistantEnabled, setAssistantEnabled, ASSISTANT_PROTOTYPE_LABEL } from './config';
 
@@ -17,7 +18,7 @@ const OptInPill: React.FC = () => {
   const [card, setCard] = useState(false);
   if (card) {
     return (
-      <div className="fixed bottom-4 right-4 z-40 w-[280px] max-w-[calc(100vw-2rem)] bg-[#161616]/97 border border-violet-500/30 rounded-xl shadow-2xl backdrop-blur-sm p-3 text-[11px] text-gray-300">
+      <div className="fixed bottom-4 right-4 z-[9999] w-[280px] max-w-[calc(100vw-2rem)] bg-[#161616]/97 border border-violet-500/30 rounded-xl shadow-2xl backdrop-blur-sm p-3 text-[11px] text-gray-300">
         <div className="flex items-center gap-1.5 mb-1.5">
           <Sparkles size={13} className="text-violet-300" />
           <span className="font-bold text-white text-[12px]">Fate Assistant</span>
@@ -42,7 +43,7 @@ const OptInPill: React.FC = () => {
   return (
     <button
       onClick={() => setCard(true)}
-      className="fixed bottom-4 right-4 z-40 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-black/50 border border-violet-500/25 text-violet-300/80 text-[10px] font-bold shadow-lg hover:text-violet-200 hover:border-violet-400/40 backdrop-blur-sm"
+      className="fixed bottom-4 right-4 z-[9999] flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-black/50 border border-violet-500/25 text-violet-300/80 text-[10px] font-bold shadow-lg hover:text-violet-200 hover:border-violet-400/40 backdrop-blur-sm"
       title="Try the experimental assistant"
     >
       <Sparkles size={12} /> Assistant
@@ -53,10 +54,18 @@ const OptInPill: React.FC = () => {
 
 export const AssistantMount: React.FC = () => {
   const enabled = useAssistantEnabled();
-  if (!enabled) return <OptInPill />;
-  return (
-    <Suspense fallback={null}>
-      <AssistantWidget />
-    </Suspense>
+  if (typeof document === 'undefined') return null;
+  // Portal to <body> so the fixed launcher/panel escapes any transformed
+  // ancestor (which would otherwise re-anchor `fixed` and trap it behind
+  // borders) and sits above the app's stacking contexts.
+  return createPortal(
+    enabled ? (
+      <Suspense fallback={null}>
+        <AssistantWidget />
+      </Suspense>
+    ) : (
+      <OptInPill />
+    ),
+    document.body,
   );
 };
