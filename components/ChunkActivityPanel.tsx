@@ -1,14 +1,24 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { X, Lock, Check, Swords, Store, Users, Scroll, Package, BookOpen, MapPin, Sparkles, Sprout, Flag, Gamepad2, Pickaxe, ChevronDown, ChevronRight } from 'lucide-react';
+import { X, Lock, Check, Swords, Store, Users, Scroll, Package, BookOpen, MapPin, Sparkles, Sprout, Flag, Gamepad2, Pickaxe, Skull, Route, ChevronDown, ChevronRight } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { chunkContentService, ChunkContent } from '../services/ChunkContentService';
 import { QUEST_DATA } from '../data/questData';
+import { DIARY_DATA } from '../data/diaryData';
 import { getQuestStatus, QuestStatus } from '../utils/journalStatus';
 import { classifyShop } from '../utils/merchantShops';
 import { resourceReqFor, resourceUsable } from '../utils/chunkResources';
-import { FARMING_PATCH_LIST, GUILDS_LIST, MINIGAMES_LIST } from '../constants';
+import { mobilityFor } from '../utils/chunkMobility';
+import { FARMING_PATCH_LIST, GUILDS_LIST, MINIGAMES_LIST, MOBILITY_LIST, BOSSES_LIST, MISTHALIN_AREAS } from '../constants';
 import type { ChunkCoord } from '../utils/mapCoords';
 import { WikiLink } from './WikiLink';
+
+// Boss name → set for O(1) lookup; diary area → home region for the diary gate.
+const BOSS_SET = new Set(BOSSES_LIST.map(b => b.toLowerCase()));
+const DIARY_AREA_REGION: Record<string, string> = {};
+for (const d of Object.values(DIARY_DATA)) {
+  const area = d.id.replace(/ (Easy|Medium|Hard|Elite)$/, '');
+  DIARY_AREA_REGION[area] = d.region;
+}
 
 /**
  * "What can I play here?" — the OneChunkMan-style content readout for a
@@ -178,15 +188,31 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       return { name, category, usable: catUnlocked };
     });
 
-    // Objects split three ways: Farming patches (own unlock table), gatherable
-    // Resources (skill tier + level gate), and inert scenery/stations (ungated).
+    // Monsters split: world bosses (gated by the Bosses table) vs the rest
+    // (gated per-monster on Slayer, handled at render time).
+    const bosses: { name: string; count: number; usable: boolean }[] = [];
+    const monsters: typeof content.monsters = [];
+    for (const m of content.monsters) {
+      if (BOSS_SET.has(m.name.toLowerCase())) {
+        bosses.push({ name: m.name, count: m.count, usable: unlocks.bosses.includes(m.name) });
+      } else {
+        monsters.push(m);
+      }
+    }
+
+    // Objects split four ways: Transport nodes (mobility gate), Farming patches
+    // (own table), gatherable Resources (skill tier + level), and inert scenery.
+    const transport: { name: string; count: number; network: string; usable: boolean }[] = [];
     const farming: { name: string; count: number; patch: string; usable: boolean }[] = [];
     const resources: { name: string; count: number; skill: string; level: number; usable: boolean }[] = [];
     const objects: [string, number][] = [];
     for (const [name, count] of content.objects) {
+      const network = mobilityFor(name);
       const patch = farmingPatchFor(name);
       const req = resourceReqFor(name);
-      if (patch && FARMING_PATCH_LIST.includes(patch)) {
+      if (network && MOBILITY_LIST.includes(network)) {
+        transport.push({ name, count, network, usable: unlocks.mobility.includes(network) });
+      } else if (patch && FARMING_PATCH_LIST.includes(patch)) {
         farming.push({ name, count, patch, usable: unlocks.farming.includes(patch) });
       } else if (req) {
         resources.push({ name, count, skill: req.skill, level: req.level, usable: resourceUsable(req, unlocks) });
@@ -196,6 +222,13 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     }
     // Group like nodes within a skill first, then by required level.
     resources.sort((a, b) => a.skill.localeCompare(b.skill) || a.level - b.level || a.name.localeCompare(b.name));
+
+    // Diary tasks → reachable when the diary's home region is unlocked.
+    const diaries = Object.entries(content.diaries).map(([area, refs]) => {
+      const region = DIARY_AREA_REGION[area];
+      const reachable = !region || region === 'Misthalin' || MISTHALIN_AREAS.includes(region) || unlocks.regions.includes(region);
+      return { area, refs, region, reachable };
+    });
 
     // Guilds & minigames detected from the chunk's own text.
     const haystack = norm([
@@ -208,7 +241,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     const minigames = matchListInText(MINIGAMES_LIST, haystack)
       .map(name => ({ name, usable: unlocks.minigames.includes(name) }));
 
-    return { shops, farming, resources, objects, guilds, minigames };
+    return { shops, bosses, monsters, transport, farming, resources, objects, guilds, minigames, diaries };
   }, [content, subArea, unlocks]);
 
   // ── Can-do / Locked overview ───────────────────────────────────────────────
@@ -223,11 +256,13 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       if (q.status === 'AVAILABLE') push(unlocked, `Quest: ${q.name}`);
       else if (q.status) cant.push(`Quest: ${q.name}`);
     }
-    for (const m of content.monsters.slice(0, 12)) {
+    for (const b of derived.bosses) push(unlocked && b.usable, `Boss: ${b.name}`);
+    for (const m of derived.monsters.slice(0, 12)) {
       const met = m.slayer == null || (slayerUnlocked && slayerLevel >= m.slayer);
       push(unlocked && met, `Kill ${m.name}`);
     }
     for (const s of derived.shops) push(unlocked && s.usable, `Shop: ${s.name}`);
+    for (const t of derived.transport) push(unlocked && t.usable, `Travel: ${t.name}`);
     for (const f of derived.farming) push(unlocked && f.usable, `Farm: ${f.name}`);
     for (const r of derived.resources) push(unlocked && r.usable, `Gather: ${r.name}`);
     for (const g of derived.guilds) push(unlocked && g.usable, g.name);
@@ -308,10 +343,27 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
               </>
             )}
 
-            {content.monsters.length > 0 && (
+            {derived.bosses.length > 0 && (
               <>
-                <SectionHead icon={<Swords size={11} />} label="Monsters" count={content.monsters.length} />
-                <CappedList cap={8} items={content.monsters.map(m => {
+                <SectionHead icon={<Skull size={11} />} label="Bosses" count={derived.bosses.length} />
+                {derived.bosses.map(b => (
+                  <div key={b.name} className="flex items-center justify-between gap-2 py-px"
+                    title={b.usable ? `${b.name} unlocked` : `Needs the "${b.name}" boss unlock`}>
+                    <span className={`truncate ${stateCls(b.usable)}`}>
+                      <WikiLink name={b.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">×{b.count}</span>
+                    </span>
+                    <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${b.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
+                      {b.usable ? 'Unlocked' : 'Locked'}
+                    </span>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {derived.monsters.length > 0 && (
+              <>
+                <SectionHead icon={<Swords size={11} />} label="Monsters" count={derived.monsters.length} />
+                <CappedList cap={8} items={derived.monsters.map(m => {
                   const met = m.slayer == null || (slayerUnlocked && slayerLevel >= m.slayer);
                   return (
                     <div key={m.name} className="flex items-center justify-between gap-2 py-px">
@@ -341,6 +393,23 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
                       <WikiLink name={f.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">×{f.count}</span>
                     </span>
                     <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${f.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>{f.patch}</span>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {derived.transport.length > 0 && (
+              <>
+                <SectionHead icon={<Route size={11} />} label="Transport" count={derived.transport.length} />
+                {derived.transport.map(t => (
+                  <div key={t.name} className="flex items-center justify-between gap-2 py-px"
+                    title={t.usable ? `${t.network} network unlocked` : `Needs the "${t.network}" mobility unlock`}>
+                    <span className={`truncate ${stateCls(t.usable)}`}>
+                      <WikiLink name={t.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">×{t.count}</span>
+                    </span>
+                    <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${t.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
+                      {t.network.replace(/s$/, '')}
+                    </span>
                   </div>
                 ))}
               </>
@@ -417,12 +486,22 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
               </>
             )}
 
-            {Object.keys(content.diaries).length > 0 && (
+            {derived.diaries.length > 0 && (
               <>
-                <SectionHead icon={<BookOpen size={11} />} label="Diary tasks here" />
-                {Object.entries(content.diaries).map(([area, refs]) => (
-                  <div key={area} className="py-px text-gray-300 truncate" title={refs}>
-                    <WikiLink name={`${area} Diary`}>{area}</WikiLink> <span className="text-gray-600">({refs})</span>
+                <SectionHead icon={<BookOpen size={11} />} label="Diary tasks here" count={derived.diaries.length} />
+                {derived.diaries.map(d => (
+                  <div key={d.area} className="flex items-center justify-between gap-2 py-px"
+                    title={d.reachable
+                      ? `${d.region ?? d.area} is unlocked — these tasks are reachable`
+                      : `Locked: the ${d.region} region isn't unlocked yet`}>
+                    <span className={`truncate ${stateCls(d.reachable)}`}>
+                      <WikiLink name={`${d.area} Diary`} className="hover:underline decoration-dotted underline-offset-2">{d.area}</WikiLink> <span className="text-gray-600 no-underline">({d.refs})</span>
+                    </span>
+                    {d.region && (
+                      <span className={`text-[9px] px-1 rounded shrink-0 ${d.reachable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
+                        {d.reachable ? 'Reachable' : 'Locked'}
+                      </span>
+                    )}
                   </div>
                 ))}
               </>

@@ -21,6 +21,12 @@ describe('resourceReqFor', () => {
       ['Fishing spot (small net, bait)', 'Fishing', 1],
       ['Fishing spot (barbarian)', 'Fishing', 48],
       ['Fishing spot (anglerfish)', 'Fishing', 82],
+      ['Silk stall', 'Thieving', 20],
+      ['Gem stall', 'Thieving', 75],
+      ['Blood Altar', 'Runecraft', 77],
+      ['Nature altar', 'Runecraft', 1],
+      ['Varrock Rooftop Course', 'Agility', 30],
+      ['Box trap', 'Hunter', 1],
     ];
     for (const [name, skill, level] of cases) {
       const req = resourceReqFor(name);
