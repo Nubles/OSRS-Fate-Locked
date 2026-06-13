@@ -4,7 +4,7 @@ import { useGame } from '../../context/GameContext';
 import { chunkContentService } from '../../services/ChunkContentService';
 import { runTurn, AssistantReply } from '../engine/dispatcher';
 import { LocalBackend } from '../engine/localBackend';
-import { WebGpuBackend } from '../engine/webgpuBackend';
+import { WebGpuBackend, MODEL } from '../engine/webgpuBackend';
 import { runAction } from '../tools';
 import { setAssistantEnabled, ASSISTANT_PROTOTYPE_LABEL } from '../config';
 import type { InferenceBackend, AssistantAction } from '../types';
@@ -49,7 +49,7 @@ export const AssistantWidget: React.FC = () => {
     setDl({ active: false, pct: ok ? 1 : 0, label: '' });
     backend.status().then(setStatus);
     setMsgs(m => [...m, { role: 'bot', text: ok
-      ? 'SmolLM2 is loaded — I\'ll now understand your messages on-device.'
+      ? `${MODEL.name} is loaded — I\'ll now understand your messages on-device.`
       : `The model failed to load (${backend.lastError?.() ?? 'unknown'}). I\'ll keep using the built-in responder.` }]);
   };
 
@@ -119,7 +119,7 @@ export const AssistantWidget: React.FC = () => {
           <button
             onClick={downloadModel}
             className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-violet-700/80 hover:bg-violet-600 text-violet-50 font-bold shrink-0"
-            title="Download SmolLM2 (~376 MB, cached after first time)"
+            title={`Download ${MODEL.name} (${MODEL.size}, cached after first time)`}
           >
             <Download size={10} /> Get model
           </button>

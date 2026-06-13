@@ -1,23 +1,28 @@
 /**
- * WebGpuBackend — on-device SmolLM2-360M via @mlc-ai/web-llm (WebGPU).
+ * WebGpuBackend — on-device LLM via @mlc-ai/web-llm (WebGPU).
  *
  * Role: the model ONLY parses — it picks one grounded tool and pulls out its
  * argument. Every factual answer still comes from our own code (the tools), so
- * the model can't hallucinate OSRS facts. That's why a 360M model is plenty:
- * it just has to choose a tool and extract a noun.
+ * the model can't hallucinate OSRS facts.
  *
  * web-llm is loaded from a CDN via a dynamic import (kept out of the main
  * bundle and out of package.json, so the whole assistant/ folder stays
- * self-contained and removable). Model weights (~376 MB, q4f16) are fetched by
- * web-llm from the HF CDN on first use and cached in the browser. If WebGPU is
- * unavailable, the model fails to load, or it answers unclearly, we fall back
- * to the deterministic LocalBackend parser — so this is never worse than the
- * built-in responder.
+ * self-contained and removable). Model weights are fetched by web-llm from the
+ * HF CDN on first use and cached in the browser. If WebGPU is unavailable, the
+ * model fails to load, or it answers unclearly, we fall back to the
+ * deterministic LocalBackend parser — so this is never worse than built-in.
+ *
+ * Model is swappable in one place (MODEL below): any id from web-llm's
+ * prebuiltAppConfig works (e.g. SmolLM2-360M ~376 MB, Llama-3.2-1B ~880 MB).
  */
 import type { InferenceBackend, Tool, ToolCall, AssistantContext } from '../types';
 import { parseIntent } from './localBackend';
 
-const MODEL_ID = 'SmolLM2-360M-Instruct-q4f16_1-MLC';
+export const MODEL = {
+  id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC',
+  name: 'Llama-3.2-1B',
+  size: '~880 MB',
+};
 const WEB_LLM_URL = 'https://esm.run/@mlc-ai/web-llm@0.2.84';
 
 const hasWebGPU = (): boolean => typeof navigator !== 'undefined' && 'gpu' in navigator;
@@ -48,7 +53,7 @@ export const buildMessages = (message: string, tools: Tool[]) => {
 
 /**
  * A JSON schema that constrains the model's output so `tool` MUST be one of the
- * real tool names (or "none"). Without this, a 360M model invents tool names;
+ * real tool names (or "none"). Without this, a small model invents tool names;
  * with it, the enum does the heavy lifting and even a tiny model stays valid.
  */
 export const buildSchema = (tools: Tool[]): string =>
@@ -94,7 +99,7 @@ const startLoad = (onProgress: (pct: number, label: string) => void): Promise<bo
         // @vite-ignore — resolved at runtime from the CDN, never bundled.
         const webllm: any = await import(/* @vite-ignore */ WEB_LLM_URL);
         onProgress(0, 'starting…');
-        engine = await webllm.CreateMLCEngine(MODEL_ID, {
+        engine = await webllm.CreateMLCEngine(MODEL.id, {
           initProgressCallback: (r: { text?: string; progress?: number }) =>
             onProgress(r.progress ?? 0, r.text ?? 'loading…'),
         });
@@ -113,7 +118,7 @@ const startLoad = (onProgress: (pct: number, label: string) => void): Promise<bo
 
 export class WebGpuBackend implements InferenceBackend {
   id = 'smollm-webgpu';
-  label = 'SmolLM2-360M · on-device (WebGPU)';
+  label = `${MODEL.name} · on-device (WebGPU)`;
   needsDownload = true;
 
   isSupported() { return hasWebGPU(); }
@@ -125,12 +130,12 @@ export class WebGpuBackend implements InferenceBackend {
     if (!hasWebGPU()) return 'This browser has no WebGPU — needs desktop Chrome/Edge. Using built-in.';
     if (engine) return 'Model loaded — answering on-device.';
     if (lastError) return `Load failed: ${lastError.slice(0, 80)}`;
-    return 'Not downloaded yet (~376 MB). Built-in responder active until you download.';
+    return `Not downloaded yet (${MODEL.size}). Built-in responder active until you download.`;
   }
 
   async plan(message: string, tools: Tool[], _ctx: AssistantContext): Promise<ToolCall[]> {
     // Deterministic-first: the rule parser is fast and reliable for clear
-    // phrasings. A 360M model is only worth invoking for the long tail it
+    // phrasings. The model is only worth invoking for the long tail it
     // misses — and even then it mis-picks the tool sometimes, so we constrain
     // its output to valid tool names (enum schema) and still validate it.
     const det = parseIntent(message);
