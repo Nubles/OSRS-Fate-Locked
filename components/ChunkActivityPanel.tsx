@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { X, Lock, Check, Swords, Store, Users, Scroll, Package, BookOpen, MapPin, Sparkles, Sprout, Flag, Gamepad2, ChevronDown, ChevronRight } from 'lucide-react';
+import { X, Lock, Check, Swords, Store, Users, Scroll, Package, BookOpen, MapPin, Sparkles, Sprout, Flag, Gamepad2, Pickaxe, ChevronDown, ChevronRight } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { chunkContentService, ChunkContent } from '../services/ChunkContentService';
 import { QUEST_DATA } from '../data/questData';
 import { getQuestStatus, QuestStatus } from '../utils/journalStatus';
 import { classifyShop } from '../utils/merchantShops';
+import { resourceReqFor, resourceUsable } from '../utils/chunkResources';
 import { FARMING_PATCH_LIST, GUILDS_LIST, MINIGAMES_LIST } from '../constants';
 import type { ChunkCoord } from '../utils/mapCoords';
 import { WikiLink } from './WikiLink';
@@ -177,17 +178,24 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       return { name, category, usable: catUnlocked };
     });
 
-    // Farming patches pulled OUT of objects, mapped to their patch unlock.
+    // Objects split three ways: Farming patches (own unlock table), gatherable
+    // Resources (skill tier + level gate), and inert scenery/stations (ungated).
     const farming: { name: string; count: number; patch: string; usable: boolean }[] = [];
+    const resources: { name: string; count: number; skill: string; level: number; usable: boolean }[] = [];
     const objects: [string, number][] = [];
     for (const [name, count] of content.objects) {
       const patch = farmingPatchFor(name);
+      const req = resourceReqFor(name);
       if (patch && FARMING_PATCH_LIST.includes(patch)) {
         farming.push({ name, count, patch, usable: unlocks.farming.includes(patch) });
+      } else if (req) {
+        resources.push({ name, count, skill: req.skill, level: req.level, usable: resourceUsable(req, unlocks) });
       } else {
         objects.push([name, count]);
       }
     }
+    // Group like nodes within a skill first, then by required level.
+    resources.sort((a, b) => a.skill.localeCompare(b.skill) || a.level - b.level || a.name.localeCompare(b.name));
 
     // Guilds & minigames detected from the chunk's own text.
     const haystack = norm([
@@ -200,7 +208,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     const minigames = matchListInText(MINIGAMES_LIST, haystack)
       .map(name => ({ name, usable: unlocks.minigames.includes(name) }));
 
-    return { shops, farming, objects, guilds, minigames };
+    return { shops, farming, resources, objects, guilds, minigames };
   }, [content, subArea, unlocks]);
 
   // ── Can-do / Locked overview ───────────────────────────────────────────────
@@ -221,6 +229,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     }
     for (const s of derived.shops) push(unlocked && s.usable, `Shop: ${s.name}`);
     for (const f of derived.farming) push(unlocked && f.usable, `Farm: ${f.name}`);
+    for (const r of derived.resources) push(unlocked && r.usable, `Gather: ${r.name}`);
     for (const g of derived.guilds) push(unlocked && g.usable, g.name);
     for (const mg of derived.minigames) push(unlocked && mg.usable, mg.name);
     return { can, cant };
@@ -378,9 +387,30 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
               </>
             )}
 
+            {derived.resources.length > 0 && (
+              <>
+                <SectionHead icon={<Pickaxe size={11} />} label="Resources" count={derived.resources.length} />
+                <CappedList cap={10} items={derived.resources.map(r => (
+                  <div key={r.name} className="flex items-center justify-between gap-2 py-px"
+                    title={r.usable
+                      ? `${r.skill} ${r.level} — you can gather this`
+                      : (unlocks.skills?.[r.skill] ?? 0) > 0
+                        ? `Needs ${r.skill} ${r.level} — you have ${unlocks.levels?.[r.skill] ?? 1}`
+                        : `${r.skill} skill not unlocked yet (needs level ${r.level})`}>
+                    <span className={`truncate ${stateCls(r.usable)}`}>
+                      <WikiLink name={r.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">×{r.count}</span>
+                    </span>
+                    <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${r.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
+                      {r.skill.slice(0, 4)} {r.level}
+                    </span>
+                  </div>
+                ))} />
+              </>
+            )}
+
             {derived.objects.length > 0 && (
               <>
-                <SectionHead icon={<Package size={11} />} label="Objects & Resources" count={derived.objects.length} />
+                <SectionHead icon={<Package size={11} />} label="Objects" count={derived.objects.length} />
                 <CappedList cap={10} items={derived.objects.map(([name, count]) => (
                   <div key={name} className="text-gray-300 py-px truncate"><WikiLink name={name} /> <span className="text-gray-600">×{count}</span></div>
                 ))} />
