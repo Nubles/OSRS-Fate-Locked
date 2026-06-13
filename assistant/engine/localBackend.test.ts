@@ -12,7 +12,8 @@ describe('parseIntent', () => {
 
   it('routes "why is X locked" to why_quest_locked', () => {
     expect(one('why is Dragon Slayer II locked?')).toEqual({ tool: 'why_quest_locked', args: { quest: 'Dragon Slayer II' } });
-    expect(one('what do I need for Monkey Madness')).toEqual({ tool: 'why_quest_locked', args: { quest: 'Monkey Madness' } });
+    // "Monkey Madness" isn't a real quest name; fuzzy resolves it to the real one.
+    expect(one('what do I need for Monkey Madness')).toEqual({ tool: 'why_quest_locked', args: { quest: 'Monkey Madness I' } });
   });
 
   it('routes "what can I do in X" to what_can_i_do_here', () => {
@@ -56,5 +57,22 @@ describe('parseIntent', () => {
   it('falls back to a known place name for casual phrasing', () => {
     expect(one("what about Lumbridge"))
       .toMatchObject({ tool: 'what_can_i_do_here' });
+  });
+
+  it('treats bare noun queries as a "where to find" lookup', () => {
+    expect(one('mithril?')).toEqual({ tool: 'where_to_find', args: { entity: 'mithril' } });
+    expect(one('rune')).toEqual({ tool: 'where_to_find', args: { entity: 'rune' } });
+    expect(one('adamant ore')).toEqual({ tool: 'where_to_find', args: { entity: 'adamant ore' } });
+  });
+
+  it('handles "reqs/requirements for X" mid-sentence and typo-corrects the quest', () => {
+    expect(one('reqs for dragon slayer')).toEqual({ tool: 'why_quest_locked', args: { quest: 'Dragon Slayer I' } });
+    expect(one('what are the requirments for drago nslayer'))
+      .toEqual({ tool: 'why_quest_locked', args: { quest: 'Dragon Slayer I' } });
+  });
+
+  it('does NOT treat chatter as a lookup', () => {
+    expect(parseIntent('what do you suggest?')).toEqual([]);
+    expect(parseIntent('thanks, that helps')).toEqual([]);
   });
 });

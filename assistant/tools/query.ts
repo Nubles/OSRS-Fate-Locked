@@ -50,11 +50,15 @@ const whereToFind: Tool = {
     // phrase minus a generic suffix (ore/rock/tree/spot) → first word.
     const stripped = name.replace(/\b(ores?|rocks?|trees?|spots?|nodes?)\b/gi, '').trim();
     const firstWord = name.split(/\s+/)[0];
+    // "find" is for findable things (monsters, nodes, NPCs, spawns, shops) —
+    // never quests, so "rune" resolves to Runite ore, not "Rune Mysteries".
+    const KINDS = ['monster', 'object', 'npc', 'spawn', 'shop'] as const;
+    const search = (q: string) => chunkContentService.searchEntities(q, 5).find(h => h.kind !== 'quest');
     const hit =
-      chunkContentService.entityLocations(name) ??
-      chunkContentService.searchEntities(name, 1)[0] ??
-      (stripped && stripped !== name ? chunkContentService.searchEntities(stripped, 1)[0] : undefined) ??
-      (firstWord !== name ? chunkContentService.searchEntities(firstWord, 1)[0] : undefined);
+      chunkContentService.entityLocations(name, KINDS as any) ??
+      search(name) ??
+      (stripped && stripped !== name ? search(stripped) : undefined) ??
+      (firstWord !== name ? search(firstWord) : undefined);
     if (!hit) return { text: `I couldn't find "${name}" anywhere in the chunk data.` };
     const places = summarisePlaces(hit.locations, ctx.unlocks);
     const open = places.filter(p => p.unlocked);
