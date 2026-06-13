@@ -325,7 +325,15 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
         applyTransform({ x: rect.width / 2 - px * scale, y: rect.height / 2 - py * scale, scale });
         return true;
       };
-      if (!centre()) window.setTimeout(centre, 120);
+      // The container can be 0px when the tab is still mounting (esp. when the
+      // map is reached programmatically, e.g. from the assistant). Poll briefly
+      // until it has a size rather than giving up after one retry.
+      if (!centre()) {
+        let tries = 0;
+        const timer = window.setInterval(() => {
+          if (centre() || ++tries >= 15) window.clearInterval(timer);
+        }, 100);
+      }
     };
     const onShow = (e: Event) => {
       const d = (e as CustomEvent<{ cx?: number; cy?: number }>).detail;
