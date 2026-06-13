@@ -12,7 +12,6 @@ import { SectionGuide, GUIDES } from './components/SectionGuide';
 import { PopOnChange } from './components/PopOnChange';
 import { CommandPalette } from './components/CommandPalette';
 import { GuidedTour } from './components/GuidedTour';
-import { AssistantMount } from './assistant';
 import { WikiIcon } from './components/WikiIcon';
 import { VoidAltar } from './components/VoidAltar';
 import { TransmutationEffect } from './components/TransmutationEffect';
@@ -548,9 +547,6 @@ const GameLayout = () => {
       <CommandPalette />
       {/* Replayable spotlight tour — start via fate:start-tour. */}
       <GuidedTour />
-      {/* Opt-in AI assistant prototype (OFF by default). Remove this line +
-          delete the assistant/ folder to fully uninstall. */}
-      <AssistantMount />
 
       {/* Main Command Center Layout */}
       <main className="max-w-[1600px] mx-auto px-4 py-4 h-[calc(100vh-80px)]">
