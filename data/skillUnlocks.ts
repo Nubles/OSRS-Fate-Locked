@@ -1234,6 +1234,9 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 1: Air Runes, Mind/Water/Earth/Fire/Body Tiaras',
       'Lvl 1: Ourania Altar (ZMI)',
       'Lvl 1: Small Pouch',
+      'Lvl 2: Mind Runes',
+      'Lvl 5: Water Runes',
+      'Lvl 9: Earth Runes',
       'Lvl 10: Dust Runes, Temple of the Eye'
     ],
     2: [
