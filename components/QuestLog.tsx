@@ -1,9 +1,12 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { QUEST_DATA, QuestData } from '../data/questData';
 import { MISTHALIN_AREAS, WIKI_OVERRIDES } from '../constants';
-import { CheckCircle2, Lock, Map, BookOpen, Sparkles, Scroll, Bookmark, Layers, List, ExternalLink, ArrowUpRight, TrendingUp } from 'lucide-react';
+import { CheckCircle2, Lock, Map, BookOpen, Sparkles, Scroll, Bookmark, Layers, List, ExternalLink, ArrowUpRight, TrendingUp, MapPin } from 'lucide-react';
+import { chunkContentService } from '../services/ChunkContentService';
+import { questLocations, refineQuestRegion, QuestLocationInfo } from '../utils/questLocations';
+import { showChunkOnMap } from '../utils/chunkLocations';
 import { DROP_RATES } from '../config/rules';
 import { DropSource } from '../types';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
@@ -58,12 +61,21 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, currentQP, onTogg
     const isAvailable = quest.status === 'AVAILABLE';
     const diffStyle = getDifficultyColor(quest.difficulty);
 
+    // Chunk-derived locations refine the coarse continent requirement: a quest
+    // tagged "Kandarin" may only actually visit the Ardougne sub-area, so we
+    // check the real chunks it touches and can grant region access from those.
+    const loc: QuestLocationInfo = questLocations(quest.name, unlocks);
+
     // Req-met accounting — drives the progress bar shown on LOCKED cards so
     // players can see at a glance how close they are without counting chips.
     const gatedRegions: string[] = quest.regions.filter(
       (r: string) => !MISTHALIN_AREAS.includes(r) && r !== 'Misthalin',
     );
-    const metRegions = gatedRegions.filter((r: string) => unlocks.regions.includes(r));
+    const authoredRegionMet = gatedRegions.every((r: string) => unlocks.regions.includes(r));
+    const region = refineQuestRegion(authoredRegionMet, loc);
+    // When chunk evidence grants access, count every gated continent as met so
+    // the progress bar agrees with the (now AVAILABLE) status.
+    const metRegions = region.met ? gatedRegions : gatedRegions.filter((r: string) => unlocks.regions.includes(r));
     const skillReqs = Object.entries(quest.skills as Record<string, number>);
     const metSkills = skillReqs.filter(([skill, lvl]) => {
       if (skill === 'Quest Points') return currentQP >= lvl;
@@ -124,12 +136,42 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, currentQP, onTogg
                                   </span>
                               );
                           }
+                          // Continent isn't unlocked, but chunk data shows the quest is
+                          // fully reachable via unlocked sub-areas → "bypassed", not a blocker.
+                          if (region.via === 'chunks') {
+                              return (
+                                  <span key={r} className="text-[10px] px-1.5 rounded flex items-center gap-1 border bg-amber-900/10 text-amber-400/80 border-amber-500/20"
+                                    title={`${r} isn't fully unlocked, but every chunk this quest needs is reachable via your unlocked sub-areas`}>
+                                      <Map size={8} /> {r} <span className="opacity-70">↳ via chunks</span>
+                                  </span>
+                              );
+                          }
                           return (
                               <span key={r} className="text-[10px] px-1.5 rounded flex items-center gap-1 border bg-red-900/10 text-red-400 border-red-500/20">
                                   <Map size={8} /> {r}
                               </span>
                           );
                       })}
+                      {/* Chunk-derived sub-area locations: the precise places this quest
+                          touches, green/red by real unlock state, click → jump to map.
+                          Locked places lead (they're the actual blockers). */}
+                      {!isCompleted && loc.hasData && loc.places.slice(0, 4).map((p) => (
+                          <button
+                              key={`loc:${p.label}`}
+                              onClick={(e) => { e.stopPropagation(); showChunkOnMap(p.cx, p.cy); }}
+                              className={`text-[10px] px-1.5 rounded flex items-center gap-1 border transition-colors cursor-pointer ${
+                                p.unlocked
+                                  ? 'bg-emerald-900/10 text-emerald-400/80 border-emerald-500/20 hover:bg-emerald-900/25'
+                                  : 'bg-red-900/10 text-red-400 border-red-500/30 hover:bg-red-900/25'}`}
+                              title={`${p.label} — ${p.unlocked ? 'unlocked' : 'locked'}${p.role === 'first' ? ' · quest starts here' : ''} (show on map)`}
+                          >
+                              <MapPin size={8} /> {p.subArea ?? p.region ?? p.label}
+                              {p.role === 'first' && <span className="text-cyan-300/80">★</span>}
+                          </button>
+                      ))}
+                      {!isCompleted && loc.places.length > 4 && (
+                          <span className="text-[10px] px-1 text-gray-600">+{loc.places.length - 4}</span>
+                      )}
                       {Object.entries(quest.skills).map(([skill, lvl]) => {
                           const reqLevel = lvl as number;
                           let met = false;
@@ -256,6 +298,13 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
   const [sortMode, setSortMode] = useLocalStorage<string>('jrnl:quest:sort', 'SMART');
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [skillPopover, setSkillPopover] = useState<SkillPopoverState | null>(null);
+  // Chunk content powers the per-quest sub-area refinement; lazy-load it once,
+  // then bump a tick so statuses recompute against the now-ready index.
+  const [chunkTick, setChunkTick] = useState(0);
+  useEffect(() => {
+    if (chunkContentService.ready) { setChunkTick(t => t + 1); return; }
+    chunkContentService.init().then(ok => { if (ok) setChunkTick(t => t + 1); });
+  }, []);
 
   // focusCard is called from:
   //   • the "Next up" strip (same-tab, no filter clearing needed)
@@ -280,13 +329,17 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
 
   const getStatus = (quest: QuestData) => {
     if (unlocks.quests.includes(quest.id)) return 'COMPLETED';
-    
+
     const missingRegions = quest.regions.filter(r => {
         if (MISTHALIN_AREAS.includes(r) || r === 'Misthalin') return false;
         return !unlocks.regions.includes(r);
     });
-    
-    if (missingRegions.length > 0) return 'LOCKED_REGION';
+
+    // Refine the coarse continent gate with chunk evidence: if every chunk the
+    // quest actually visits is in an unlocked sub-area, it's reachable even when
+    // the whole authored continent isn't unlocked.
+    const region = refineQuestRegion(missingRegions.length === 0, questLocations(quest.name, unlocks));
+    if (!region.met) return 'LOCKED_REGION';
 
     const missingSkills = Object.entries(quest.skills).some(([skill, lvl]) => {
       if (skill === 'Quest Points') {
@@ -310,7 +363,9 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
         const score = (s: string) => s === 'AVAILABLE' ? 0 : s.includes('LOCKED') ? 1 : 2;
         return score(a.status) - score(b.status) || a.name.localeCompare(b.name);
     });
-  }, [unlocks]);
+    // chunkTick: recompute statuses once the chunk index finishes loading.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unlocks, chunkTick]);
 
   const filteredQuests = useMemo(() => {
     const diffRank = (d: DropSource) =>
