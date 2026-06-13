@@ -1,6 +1,6 @@
 
 import React, { useRef, useEffect, useMemo, useState } from 'react';
-import { X, BookOpen, Lock, Unlock, Star, MapPin, Navigation, ChevronRight } from 'lucide-react';
+import { X, BookOpen, Lock, Unlock, Star, MapPin, Navigation, ChevronRight, Search } from 'lucide-react';
 import { SKILL_UNLOCK_DATA } from '../data/skillUnlocks';
 import { tierBand } from '../utils/skillTiers';
 import { skillChunkNodesByTier } from '../utils/skillChunkNodes';
@@ -92,8 +92,23 @@ export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, curre
   const jump = (cx: number, cy: number) => { showChunkOnMap(cx, cy); onClose(); };
   const iconUrl = `https://oldschool.runescape.wiki/images/${skill}_icon.png`;
 
-  // In the gather tab, only render tiers that actually have nodes.
-  const visibleTiers = tab === 'gather' ? tiers.filter(t => nodesByTier[t]?.length) : tiers;
+  // ── Localised filter: a text search + an "unlocked only" toggle, scoped to
+  // the active tab. Filtering happens within the tier grouping so the
+  // locked/unlocked context is preserved.
+  const [query, setQuery] = useState('');
+  const [unlockedOnly, setUnlockedOnly] = useState(false);
+  const q = query.trim().toLowerCase();
+  const nodesFor = (tier: number) =>
+    (nodesByTier[tier] ?? []).filter(n => !q || n.name.toLowerCase().includes(q));
+  const benefitsFor = (tier: number) =>
+    (unlockData[tier] ?? []).filter(b => !q || b.toLowerCase().includes(q));
+
+  const visibleTiers = tiers.filter(t => {
+    if (unlockedOnly && currentTier < t) return false;
+    if (tab === 'gather') return nodesFor(t).length > 0;
+    return q ? benefitsFor(t).length > 0 : true;
+  });
+  const noMatches = (q || unlockedOnly) && visibleTiers.length === 0;
 
   return (
     <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={`${skill} skill detail`} tabIndex={-1} className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-200">
@@ -149,19 +164,51 @@ export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, curre
             </p>
           </div>
 
+          {/* Localised filter bar */}
+          {(tab === 'unlocks' || hasGathering) && (
+            <div className="flex items-center gap-2 sticky -top-6 z-10 -mx-6 px-6 py-2 bg-[#1a1a1a]/95 backdrop-blur-sm">
+              <div className="relative flex-1">
+                <Search size={13} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+                <input
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  placeholder={tab === 'gather' ? 'Filter resources… (e.g. yew, lobster)' : 'Filter unlocks…'}
+                  className="w-full bg-black/40 border border-white/10 rounded pl-7 pr-7 py-1.5 text-xs text-gray-200 placeholder-gray-600 focus:outline-none focus:border-cyan-400/40"
+                  aria-label="Filter skill progression"
+                />
+                {query && (
+                  <button onClick={() => setQuery('')} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white" aria-label="Clear filter">
+                    <X size={13} />
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => setUnlockedOnly(v => !v)}
+                className={`shrink-0 text-[11px] font-bold px-2 py-1.5 rounded border flex items-center gap-1 transition-colors ${
+                  unlockedOnly ? 'bg-green-900/40 border-green-500/40 text-green-300' : 'bg-black/40 border-white/10 text-gray-400 hover:text-gray-200'}`}
+                title="Show only tiers you've unlocked"
+              >
+                <Unlock size={11} /> Unlocked
+              </button>
+            </div>
+          )}
+
           {tab === 'gather' && !hasGathering && (
             <p className="text-sm text-gray-500 italic">This skill has no gatherable map resources — see Skill Unlocks for what it offers.</p>
           )}
           {tab === 'gather' && hasGathering && !chunksReady && (
             <p className="text-sm text-gray-500 animate-pulse">Loading map resources…</p>
           )}
+          {noMatches && (
+            <p className="text-sm text-gray-500 italic">No {tab === 'gather' ? 'resources' : 'unlocks'} match{q && ` “${query}”`}{unlockedOnly && ' in unlocked tiers'}.</p>
+          )}
 
           <div className="space-y-4">
             {visibleTiers.map((tier) => {
               const isUnlocked = currentTier >= tier;
               const isNext = currentTier + 1 === tier;
-              const benefits = unlockData[tier];
-              const nodes = nodesByTier[tier] ?? [];
+              const benefits = benefitsFor(tier);
+              const nodes = nodesFor(tier);
               const range = tierBand(tier).label;
 
               return (
