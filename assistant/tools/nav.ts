@@ -7,12 +7,14 @@ import { showChunkOnMap } from '../../utils/chunkLocations';
 import { resolvePlace } from './query';
 import type { Tool } from '../types';
 
+// Values must match the Dashboard tab ids exactly (WORLD/CHARACTER/ACTIVITIES/
+// JOURNAL/COLLECTION).
 const TAB_ALIASES: Record<string, string> = {
   world: 'WORLD', map: 'WORLD',
-  character: 'CHARACTER', stats: 'CHARACTER',
-  activities: 'ACTIVITIES & UTILITY', utility: 'ACTIVITIES & UTILITY',
-  journal: 'JOURNAL', quests: 'JOURNAL', diaries: 'JOURNAL',
-  collection: 'COLLECTION', clog: 'COLLECTION',
+  character: 'CHARACTER', stats: 'CHARACTER', skill: 'CHARACTER', skills: 'CHARACTER',
+  activities: 'ACTIVITIES', activity: 'ACTIVITIES', utility: 'ACTIVITIES',
+  journal: 'JOURNAL', quest: 'JOURNAL', quests: 'JOURNAL', diary: 'JOURNAL', diaries: 'JOURNAL',
+  collection: 'COLLECTION', clog: 'COLLECTION', log: 'COLLECTION',
 };
 
 /** Jump the world map to a named place (and spotlight its chunk). */

@@ -8,39 +8,38 @@ export const ALL_TOOLS: Tool[] = [...QUERY_TOOLS, ...NAV_TOOLS];
 export const toolByName = (name: string): Tool | undefined =>
   ALL_TOOLS.find(t => t.name === name);
 
-// A freshly-switched tab can mount a component before its container has size
-// (the map measures width; lists measure height), leaving it blank until the
-// user interacts. A couple of resize ticks make those components re-measure.
-const nudgeLayout = () => [80, 250, 550].forEach(ms =>
-  setTimeout(() => window.dispatchEvent(new Event('resize')), ms));
+// One dispatch of the navigation event.
+const fire = (a: AssistantAction): void => {
+  switch (a.kind) {
+    case 'map': {
+      // showChunkOnMap switches to the World tab, parks the chunk, + spotlights it.
+      const { cx, cy } = a.payload as { cx: number; cy: number };
+      import('../../utils/chunkLocations').then(m => m.showChunkOnMap(cx, cy));
+      break;
+    }
+    case 'tab':
+    case 'modal':
+      window.dispatchEvent(new CustomEvent('fate:nav', { detail: { target: a.payload.target } }));
+      break;
+    case 'journal':
+      window.dispatchEvent(new CustomEvent('navigate-journal', { detail: { tab: a.payload.tab } }));
+      break;
+  }
+};
 
 /**
  * Fire an action through the app's existing public event API.
  *
- * Deferred to a fresh task (setTimeout 0): the action button lives in a portal,
- * so dispatching synchronously would fire `fate:nav` *nested inside* the
- * assistant's own React click handler — which is exactly the case that left the
- * destination tab stuck blank until a manual click. Deferring lets React finish
- * the current handler first, so tab/map owners receive the event cleanly (the
- * same way they do from the ⌘K palette).
+ * Why the repeated dispatch + resize: the action button lives in a portal, and
+ * the destination tab (e.g. the map) mounts a beat after the tab switch. A
+ * single fire could land before the target is listening/measured, leaving it
+ * blank until a manual click. Re-firing the (idempotent) navigation a few times
+ * over ~1s — and nudging a resize so size-measuring components re-measure —
+ * makes a later fire always catch the mounted destination. Switching to a tab
+ * that's already active, or re-centring the map, are both no-ops, so this is safe.
  */
 export const runAction = (a: AssistantAction): void => {
-  setTimeout(() => {
-    switch (a.kind) {
-      case 'map': {
-        // showChunkOnMap also switches to the World tab + spotlights the chunk.
-        const { cx, cy } = a.payload as { cx: number; cy: number };
-        import('../../utils/chunkLocations').then(m => m.showChunkOnMap(cx, cy));
-        break;
-      }
-      case 'tab':
-      case 'modal':
-        window.dispatchEvent(new CustomEvent('fate:nav', { detail: { target: a.payload.target } }));
-        break;
-      case 'journal':
-        window.dispatchEvent(new CustomEvent('navigate-journal', { detail: { tab: a.payload.tab } }));
-        break;
-    }
-    nudgeLayout();
-  }, 0);
+  [0, 250, 700].forEach(ms => setTimeout(() => fire(a), ms));
+  [120, 400, 900, 1500].forEach(ms =>
+    setTimeout(() => window.dispatchEvent(new Event('resize')), ms));
 };

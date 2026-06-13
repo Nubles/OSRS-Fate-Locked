@@ -31,15 +31,35 @@ export const buildMessages = (message: string, tools: Tool[]) => {
     .join('\n');
   const system =
     'You route a user message to exactly ONE tool for an Old School RuneScape ' +
-    'companion app. Available tools:\n' + menu + '\n\n' +
+    'companion app, and extract its single argument. Tools:\n' + menu + '\n\n' +
+    'Examples:\n' +
+    'User: where can I get coal -> {"tool":"where_to_find","arg":"coal"}\n' +
+    'User: take me to Varrock -> {"tool":"go_to_place","arg":"Varrock"}\n' +
+    'User: why is Monkey Madness locked -> {"tool":"why_quest_locked","arg":"Monkey Madness"}\n' +
+    'User: what can I do in Falador -> {"tool":"what_can_i_do_here","arg":"Falador"}\n' +
+    'User: open my quests -> {"tool":"open_tab","arg":"journal"}\n\n' +
     'Reply with ONLY compact JSON: {"tool":"<tool_name>","arg":"<argument>"}. ' +
-    'The arg is the single value the tool needs (a place, quest, entity, or tab). ' +
-    'If no tool fits, reply {"tool":"none"}. Output JSON only, no explanation.';
+    'If no tool fits, use {"tool":"none","arg":""}. JSON only, no explanation.';
   return [
     { role: 'system', content: system },
     { role: 'user', content: message },
   ];
 };
+
+/**
+ * A JSON schema that constrains the model's output so `tool` MUST be one of the
+ * real tool names (or "none"). Without this, a 360M model invents tool names;
+ * with it, the enum does the heavy lifting and even a tiny model stays valid.
+ */
+export const buildSchema = (tools: Tool[]): string =>
+  JSON.stringify({
+    type: 'object',
+    properties: {
+      tool: { type: 'string', enum: [...tools.map(t => t.name), 'none'] },
+      arg: { type: 'string' },
+    },
+    required: ['tool', 'arg'],
+  });
 
 /** Parse the model's JSON reply into a validated ToolCall (or [] if unusable). */
 export const parseToolResponse = (raw: string, tools: Tool[]): ToolCall[] => {
@@ -56,30 +76,35 @@ export const parseToolResponse = (raw: string, tools: Tool[]): ToolCall[] => {
 };
 
 // ── engine lifecycle ────────────────────────────────────────────────────────
+// The download is large (~376 MB), so it is triggered EXPLICITLY by the user
+// (a Download button in the widget) with live progress — never silently on the
+// first message. plan() only uses the model once it's ready; otherwise it falls
+// back to the deterministic parser, so the assistant always answers instantly.
 type Engine = { chat: { completions: { create: (o: any) => Promise<any> } } };
 let engine: Engine | null = null;
-let loadPromise: Promise<Engine | null> | null = null;
-let progress = '';
+let loadPromise: Promise<boolean> | null = null;
+let lastError: string | null = null;
 
-const loadEngine = (): Promise<Engine | null> => {
-  if (engine) return Promise.resolve(engine);
+const startLoad = (onProgress: (pct: number, label: string) => void): Promise<boolean> => {
+  if (engine) return Promise.resolve(true);
   if (!loadPromise) {
     loadPromise = (async () => {
+      lastError = null;
       try {
         // @vite-ignore — resolved at runtime from the CDN, never bundled.
         const webllm: any = await import(/* @vite-ignore */ WEB_LLM_URL);
-        progress = 'starting…';
+        onProgress(0, 'starting…');
         engine = await webllm.CreateMLCEngine(MODEL_ID, {
-          initProgressCallback: (r: { text?: string; progress?: number }) => {
-            progress = r.text ?? (r.progress != null ? `${Math.round(r.progress * 100)}%` : 'loading…');
-          },
+          initProgressCallback: (r: { text?: string; progress?: number }) =>
+            onProgress(r.progress ?? 0, r.text ?? 'loading…'),
         });
-        progress = 'ready';
-        return engine;
+        onProgress(1, 'ready');
+        return true;
       } catch (e) {
-        progress = `failed to load (${(e as Error).message?.slice(0, 60) ?? 'error'})`;
+        lastError = (e as Error).message ?? 'unknown error';
         loadPromise = null; // allow retry
-        return null;
+        engine = null;
+        return false;
       }
     })();
   }
@@ -89,30 +114,37 @@ const loadEngine = (): Promise<Engine | null> => {
 export class WebGpuBackend implements InferenceBackend {
   id = 'smollm-webgpu';
   label = 'SmolLM2-360M · on-device (WebGPU)';
+  needsDownload = true;
+
+  isSupported() { return hasWebGPU(); }
+  isReady() { return engine != null; }
+  lastError() { return lastError; }
+  load(onProgress: (pct: number, label: string) => void) { return startLoad(onProgress); }
 
   async status(): Promise<string> {
-    if (!hasWebGPU()) return 'unsupported browser (no WebGPU) — falls back to built-in';
-    if (engine) return 'model ready';
-    if (progress) return `model: ${progress}`;
-    return 'WebGPU ok · ~376 MB model downloads on first message';
+    if (!hasWebGPU()) return 'This browser has no WebGPU — needs desktop Chrome/Edge. Using built-in.';
+    if (engine) return 'Model loaded — answering on-device.';
+    if (lastError) return `Load failed: ${lastError.slice(0, 80)}`;
+    return 'Not downloaded yet (~376 MB). Built-in responder active until you download.';
   }
 
   async plan(message: string, tools: Tool[], _ctx: AssistantContext): Promise<ToolCall[]> {
-    if (!hasWebGPU()) return parseIntent(message);
-    const eng = await loadEngine();
-    if (!eng) return parseIntent(message); // load failed → deterministic fallback
+    // Deterministic-first: the rule parser is fast and reliable for clear
+    // phrasings. A 360M model is only worth invoking for the long tail it
+    // misses — and even then it mis-picks the tool sometimes, so we constrain
+    // its output to valid tool names (enum schema) and still validate it.
+    const det = parseIntent(message);
+    if (det.length || !engine) return det;
     try {
-      const res = await eng.chat.completions.create({
+      const res = await engine.chat.completions.create({
         messages: buildMessages(message, tools),
         temperature: 0,
-        max_tokens: 64,
+        max_tokens: 48,
+        response_format: { type: 'json_object', schema: buildSchema(tools) },
       });
-      const text: string = res?.choices?.[0]?.message?.content ?? '';
-      const calls = parseToolResponse(text, tools);
-      // If the model is unsure, fall back rather than answering nothing.
-      return calls.length ? calls : parseIntent(message);
+      return parseToolResponse(res?.choices?.[0]?.message?.content ?? '', tools);
     } catch {
-      return parseIntent(message);
+      return [];
     }
   }
 }

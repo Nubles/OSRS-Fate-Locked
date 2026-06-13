@@ -43,4 +43,16 @@ export interface InferenceBackend {
   status(): Promise<string>;
   /** Parse a user message into tool calls. Streaming/async to allow a real LLM later. */
   plan(message: string, tools: Tool[], ctx: AssistantContext): Promise<ToolCall[]>;
+
+  // ── optional: backends that need a one-time model download ────────────────
+  /** True if this backend needs an explicit download before it can be used. */
+  needsDownload?: boolean;
+  /** Whether the model is loaded and ready right now. */
+  isReady?(): boolean;
+  /** Whether the host browser can run this backend at all (e.g. has WebGPU). */
+  isSupported?(): boolean;
+  /** Trigger the (large) model download, reporting progress 0..1 + a label. */
+  load?(onProgress: (pct: number, label: string) => void): Promise<boolean>;
+  /** Last load error, if any. */
+  lastError?(): string | null;
 }

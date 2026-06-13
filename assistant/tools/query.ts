@@ -45,7 +45,16 @@ const whereToFind: Tool = {
     if (!chunkContentService.ready) return notReady();
     const name = (entity ?? '').trim();
     if (!name) return { text: 'Tell me what to find, e.g. "where can I find coal?"' };
-    const hit = chunkContentService.entityLocations(name) ?? chunkContentService.searchEntities(name, 1)[0];
+    // Natural phrasings ("iron ore", "yew trees") rarely match an entity name
+    // exactly, so try progressively looser searches: exact → full phrase →
+    // phrase minus a generic suffix (ore/rock/tree/spot) → first word.
+    const stripped = name.replace(/\b(ores?|rocks?|trees?|spots?|nodes?)\b/gi, '').trim();
+    const firstWord = name.split(/\s+/)[0];
+    const hit =
+      chunkContentService.entityLocations(name) ??
+      chunkContentService.searchEntities(name, 1)[0] ??
+      (stripped && stripped !== name ? chunkContentService.searchEntities(stripped, 1)[0] : undefined) ??
+      (firstWord !== name ? chunkContentService.searchEntities(firstWord, 1)[0] : undefined);
     if (!hit) return { text: `I couldn't find "${name}" anywhere in the chunk data.` };
     const places = summarisePlaces(hit.locations, ctx.unlocks);
     const open = places.filter(p => p.unlocked);

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildMessages, parseToolResponse } from './webgpuBackend';
+import { buildMessages, parseToolResponse, buildSchema } from './webgpuBackend';
 import { ALL_TOOLS } from '../tools';
 
 describe('buildMessages', () => {
@@ -9,6 +9,16 @@ describe('buildMessages', () => {
     for (const t of ALL_TOOLS) expect(system.content).toContain(t.name);
     expect(system.content).toMatch(/JSON only|Output JSON/i);
     expect(user).toEqual({ role: 'user', content: 'where is coal' });
+  });
+});
+
+describe('buildSchema', () => {
+  it('constrains tool to the real tool names plus "none"', () => {
+    const schema = JSON.parse(buildSchema(ALL_TOOLS));
+    const enumVals: string[] = schema.properties.tool.enum;
+    for (const t of ALL_TOOLS) expect(enumVals).toContain(t.name);
+    expect(enumVals).toContain('none');
+    expect(schema.required).toEqual(['tool', 'arg']);
   });
 });
 

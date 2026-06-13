@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Sparkles, X, Send, Power, ChevronDown } from 'lucide-react';
+import { Sparkles, X, Send, Power, ChevronDown, Download } from 'lucide-react';
 import { useGame } from '../../context/GameContext';
 import { chunkContentService } from '../../services/ChunkContentService';
 import { runTurn, AssistantReply } from '../engine/dispatcher';
@@ -29,13 +29,29 @@ export const AssistantWidget: React.FC = () => {
   const [busy, setBusy] = useState(false);
   const [backendId, setBackendId] = useState('local');
   const [status, setStatus] = useState('');
+  const [dl, setDl] = useState<{ active: boolean; pct: number; label: string }>({ active: false, pct: 0, label: '' });
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const backend = useMemo(() => BACKENDS.find(b => b.id === backendId) ?? BACKENDS[0], [backendId]);
+  // Does this backend need a (one-time) model download, and is it ready?
+  const modelReady = backend.isReady?.() ?? true;
+  const modelSupported = backend.isSupported?.() ?? true;
+  const canDownload = !!backend.needsDownload && modelSupported && !modelReady && !dl.active;
 
   useEffect(() => { if (open) chunkContentService.init(); }, [open]);
-  useEffect(() => { backend.status().then(setStatus); }, [backend]);
+  useEffect(() => { backend.status().then(setStatus); }, [backend, dl]);
   useEffect(() => { scrollRef.current?.scrollTo({ top: 1e9, behavior: 'smooth' }); }, [msgs, open]);
+
+  const downloadModel = async () => {
+    if (!backend.load) return;
+    setDl({ active: true, pct: 0, label: 'starting…' });
+    const ok = await backend.load((pct, label) => setDl({ active: true, pct, label }));
+    setDl({ active: false, pct: ok ? 1 : 0, label: '' });
+    backend.status().then(setStatus);
+    setMsgs(m => [...m, { role: 'bot', text: ok
+      ? 'SmolLM2 is loaded — I\'ll now understand your messages on-device.'
+      : `The model failed to load (${backend.lastError?.() ?? 'unknown'}). I\'ll keep using the built-in responder.` }]);
+  };
 
   const send = async () => {
     const text = input.trim();
@@ -99,8 +115,24 @@ export const AssistantWidget: React.FC = () => {
           </select>
           <ChevronDown size={10} className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
         </div>
-        <span className="text-gray-500 truncate" title={status}>{status}</span>
+        {canDownload && (
+          <button
+            onClick={downloadModel}
+            className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-violet-700/80 hover:bg-violet-600 text-violet-50 font-bold shrink-0"
+            title="Download SmolLM2 (~376 MB, cached after first time)"
+          >
+            <Download size={10} /> Get model
+          </button>
+        )}
+        {dl.active
+          ? <span className="text-violet-300 truncate" title={dl.label}>↓ {Math.round(dl.pct * 100)}% {dl.label}</span>
+          : <span className="text-gray-500 truncate" title={status}>{status}</span>}
       </div>
+      {dl.active && (
+        <div className="h-0.5 bg-black/40 shrink-0">
+          <div className="h-full bg-violet-500 transition-all" style={{ width: `${Math.round(dl.pct * 100)}%` }} />
+        </div>
+      )}
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto custom-scrollbar p-2.5 space-y-2">
