@@ -23,14 +23,19 @@ const MOBILITY_RULES: [RegExp, string][] = [
   [/carpet/i, 'Magic Carpets'],
   [/quetzal/i, 'Quetzal Network'],
   [/\beagle\b/i, 'Eagle Transport'],
-  [/obelisk of (air|water|earth|fire)|\bwilderness obelisk\b|^obelisk$/i, 'Wilderness Obelisks'],
+  // Only the numbered Wilderness teleport obelisks. The elemental "Obelisk of
+  // Air/Water/Earth/Fire" are orb-charging (Magic) spots, not transport — see
+  // NOT_MOBILITY below. (oldschool.runescape.wiki/w/Obelisk_of_Water)
+  [/\bwilderness obelisk\b|^obelisk$/i, 'Wilderness Obelisks'],
   [/mine ?cart|minecart/i, 'Mine Carts'],
   [/charter|sailing ship/i, 'Charter Ships'],
   [/digsite pendant/i, 'Digsite Pendant'],
 ];
 
-// Cart-like scenery that is NOT the Dwarven mine-cart network.
-const NOT_MOBILITY = /broken cart|cart wheel|corpse cart|cart camel|travel cart|coal truck/i;
+// Things that look transport-ish but aren't: cart-shaped scenery (not the
+// Dwarven mine-cart network) and the elemental obelisks (Air/Water/Earth/Fire),
+// which are orb-charging Magic spots, not a teleport network.
+const NOT_MOBILITY = /broken cart|cart wheel|corpse cart|cart camel|travel cart|coal truck|obelisk of (air|water|earth|fire)/i;
 
 /** The MOBILITY_LIST network this object belongs to, or null if it's not transport. */
 export const mobilityFor = (objectName: string): string | null => {

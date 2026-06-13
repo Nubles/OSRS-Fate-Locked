@@ -12,7 +12,7 @@ describe('mobilityFor', () => {
       ['Balloon toad pile', 'Balloon Transport'],
       ['Magic Mushtree', 'Mycelium Transport'],
       ['Carpet hotspot', 'Magic Carpets'],
-      ['Obelisk of Water', 'Wilderness Obelisks'],
+      ['Obelisk', 'Wilderness Obelisks'],
       ['Mine cart', 'Mine Carts'],
     ];
     for (const [name, network] of cases) {
@@ -22,7 +22,7 @@ describe('mobilityFor', () => {
 
   it('only ever returns networks the Mobility table actually has', () => {
     const valid = new Set(MOBILITY_LIST);
-    for (const name of ['Spirit tree', 'Fairy ring', 'Canoe Station', 'Obelisk of Air', 'Quetzal']) {
+    for (const name of ['Spirit tree', 'Fairy ring', 'Canoe Station', 'Obelisk', 'Quetzal']) {
       const got = mobilityFor(name);
       if (got) expect(valid.has(got), `${name} -> ${got}`).toBe(true);
     }
@@ -30,6 +30,12 @@ describe('mobilityFor', () => {
 
   it('ignores cart-shaped scenery that is not the mine-cart network', () => {
     for (const name of ['Broken cart', 'Corpse cart', 'Travel cart', 'Coal Truck', 'Broken cart wheel']) {
+      expect(mobilityFor(name), name).toBeNull();
+    }
+  });
+
+  it('does not treat elemental orb-charging obelisks as transport', () => {
+    for (const name of ['Obelisk of Water', 'Obelisk of Air', 'Obelisk of Earth', 'Obelisk of Fire']) {
       expect(mobilityFor(name), name).toBeNull();
     }
   });
