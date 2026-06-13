@@ -49,14 +49,24 @@ describe('resourceReqFor', () => {
 });
 
 describe('resourceUsable', () => {
-  const yew = resourceReqFor('Yew tree')!;
-  it('requires both the tier upgrade AND the level', () => {
-    expect(resourceUsable(yew, u({ Woodcutting: 0 }, { Woodcutting: 99 }))).toBe(false); // tier not bought
-    expect(resourceUsable(yew, u({ Woodcutting: 6 }, { Woodcutting: 45 }))).toBe(false); // level too low
-    expect(resourceUsable(yew, u({ Woodcutting: 7 }, { Woodcutting: 60 }))).toBe(true);
+  const yew = resourceReqFor('Yew tree')!; // level 60 → needs tier 6 (cap model)
+
+  it('locks a node when the TIER does not reach the level, even at 99', () => {
+    // The headline case: 99 Woodcutting but only tier 3 unlocked → no yews.
+    expect(resourceUsable(yew, u({ Woodcutting: 3 }, { Woodcutting: 99 }))).toBe(false);
   });
+
+  it('unlocks once the tier reaches the level (tier 6 for a 60 node)', () => {
+    expect(resourceUsable(yew, u({ Woodcutting: 5 }, { Woodcutting: 99 }))).toBe(false); // tier 5 caps at 50
+    expect(resourceUsable(yew, u({ Woodcutting: 6 }, { Woodcutting: 60 }))).toBe(true);
+  });
+
+  it('still requires the current level, not just the tier', () => {
+    expect(resourceUsable(yew, u({ Woodcutting: 10 }, { Woodcutting: 55 }))).toBe(false); // tier ok, level too low
+  });
+
   it('defaults a missing level to 1', () => {
-    const tree = resourceReqFor('Tree')!;
+    const tree = resourceReqFor('Tree')!; // level 1 → tier 1
     expect(resourceUsable(tree, u({ Woodcutting: 1 }, {}))).toBe(true);
   });
 });

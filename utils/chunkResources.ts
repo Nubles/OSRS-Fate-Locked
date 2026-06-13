@@ -7,14 +7,16 @@
  * the panel can show them green (can gather now) or red/struck-through (locked),
  * exactly the way shops gate on a merchant category and monsters on Slayer.
  *
- * A node is usable when the run has BOTH purchased the skill's tier upgrade
- * (`skills[skill] > 0`) AND reached the required level (`levels[skill] >= req`)
- * — the same two-part test journalStatus/goalLogic use for quests and tasks.
+ * A node is usable when the run's unlocked skill TIER actually reaches the
+ * node's required level (cap model — tier N unlocks levels 1…N×10) AND the
+ * player's current level meets it. So 99 Woodcutting at tier 3 still can't cut
+ * yews (level 60 needs tier 6), exactly as the tier system intends.
  *
  * Facts (which node needs which level) are standard OSRS skilling requirements,
  * re-expressed here; the node *names* come from our own chunk-content dataset.
  */
 import type { UnlockState } from '../types';
+import { tierForLevel } from './skillTiers';
 
 export interface ResourceReq {
   skill: string;
@@ -118,9 +120,12 @@ export const resourceReqFor = (objectName: string): ResourceReq | null => {
   return null;
 };
 
-/** Has the run bought the skill's tier AND reached the required level? */
+/**
+ * Usable when the unlocked tier reaches the node's level (cap model) AND the
+ * current level meets it. e.g. yews (60) need tier ≥ 6 and level ≥ 60.
+ */
 export const resourceUsable = (req: ResourceReq, unlocks: UnlockState): boolean => {
-  const tierBought = (unlocks.skills?.[req.skill] ?? 0) > 0;
+  const tier = unlocks.skills?.[req.skill] ?? 0;
   const level = unlocks.levels?.[req.skill] ?? 1;
-  return tierBought && level >= req.level;
+  return tier >= tierForLevel(req.level) && level >= req.level;
 };

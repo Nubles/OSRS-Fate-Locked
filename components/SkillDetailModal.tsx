@@ -1,7 +1,10 @@
 
-import React, { useRef } from 'react';
-import { X, BookOpen, Lock, Unlock, Star } from 'lucide-react';
+import React, { useRef, useEffect, useMemo, useState } from 'react';
+import { X, BookOpen, Lock, Unlock, Star, MapPin } from 'lucide-react';
 import { SKILL_UNLOCK_DATA } from '../data/skillUnlocks';
+import { tierBand } from '../utils/skillTiers';
+import { skillChunkNodesByTier } from '../utils/skillChunkNodes';
+import { chunkContentService } from '../services/ChunkContentService';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface SkillDetailModalProps {
@@ -15,6 +18,14 @@ export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, curre
   useFocusTrap(dialogRef);
   const unlockData = SKILL_UNLOCK_DATA[skill] || {};
   const tiers = Array.from({ length: 10 }, (_, i) => i + 1);
+
+  // Chunk-grounded nodes this skill unlocks, grouped by tier. Loads lazily.
+  const [chunksReady, setChunksReady] = useState(chunkContentService.ready);
+  useEffect(() => { if (!chunksReady) chunkContentService.init().then(ok => ok && setChunksReady(true)); }, [chunksReady]);
+  const nodesByTier = useMemo(
+    () => (chunksReady ? skillChunkNodesByTier(skill) : {}),
+    [skill, chunksReady],
+  );
 
   // Get skill icon url
   const iconUrl = `https://oldschool.runescape.wiki/images/${skill}_icon.png`;
@@ -66,7 +77,8 @@ export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, curre
                     const isUnlocked = currentTier >= tier;
                     const isNext = currentTier + 1 === tier;
                     const benefits = unlockData[tier];
-                    const range = tier === 10 ? '90-99' : `${(tier - 1) * 10 + (tier === 1 ? 1 : 0)}-${tier * 10 - 1}`;
+                    // Cap model: tier N opens levels (N-1)×10+1 … N×10 (cumulative 1→N×10).
+                    const range = tierBand(tier).label;
 
                     return (
                         <div 
@@ -108,6 +120,30 @@ export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, curre
                                     </ul>
                                 ) : (
                                     <p className="text-xs text-gray-600 italic">No specific unlocks recorded for this tier.</p>
+                                )}
+
+                                {/* Chunk-grounded nodes this tier unlocks (from the world map data). */}
+                                {nodesByTier[tier]?.length > 0 && (
+                                    <div className="mt-3 pt-3 border-t border-white/5">
+                                        <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-cyan-400/80 mb-1.5">
+                                            <MapPin size={11} /> Gatherable on the map
+                                        </div>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {nodesByTier[tier].map((n) => (
+                                                <span
+                                                    key={n.name}
+                                                    title={`${n.name} — level ${n.level}, found in ${n.chunks} chunk${n.chunks === 1 ? '' : 's'}`}
+                                                    className={`text-[10px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${
+                                                        isUnlocked
+                                                            ? 'bg-cyan-900/20 text-cyan-200 border-cyan-500/25'
+                                                            : 'bg-black/30 text-gray-500 border-white/5'}`}
+                                                >
+                                                    {n.name} <span className="opacity-60 font-mono">L{n.level}</span>
+                                                    <span className="opacity-50">· {n.chunks}🗺</span>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         </div>

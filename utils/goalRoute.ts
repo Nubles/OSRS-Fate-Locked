@@ -6,6 +6,7 @@ import { RESOURCE_MAP } from '../data/resourceData';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
 import { calculateSupplyChain } from './supplyChain';
 import { getPoolAndStateKey, isValidUnlock } from './gameEngine';
+import { tierForLevel } from './skillTiers';
 
 /**
  * Route to goal — the planning brain behind a pinned goal.
@@ -67,9 +68,9 @@ export interface GoalRoute {
   percentage: number;
 }
 
-/** Smallest skill tier whose training cap (tier × 10) reaches `level`. */
-export const tierForLevel = (level: number): number =>
-  level > 90 ? 10 : Math.max(1, Math.ceil(level / 10));
+// Tier ↔ level model now lives in one place (utils/skillTiers); re-exported
+// here so existing callers and tests keep working unchanged.
+export { tierForLevel };
 
 const isRegionMet = (r: string, unlocks: UnlockState): boolean => {
   if (r === 'Misthalin' || MISTHALIN_AREAS.includes(r) || unlocks.regions.includes(r)) return true;
