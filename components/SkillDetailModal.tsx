@@ -1,10 +1,12 @@
 
 import React, { useRef, useEffect, useMemo, useState } from 'react';
-import { X, BookOpen, Lock, Unlock, Star, MapPin } from 'lucide-react';
+import { X, BookOpen, Lock, Unlock, Star, MapPin, Navigation, ChevronRight } from 'lucide-react';
 import { SKILL_UNLOCK_DATA } from '../data/skillUnlocks';
 import { tierBand } from '../utils/skillTiers';
 import { skillChunkNodesByTier } from '../utils/skillChunkNodes';
 import { chunkContentService } from '../services/ChunkContentService';
+import { summarisePlaces, showChunkOnMap } from '../utils/chunkLocations';
+import { useGame } from '../context/GameContext';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface SkillDetailModalProps {
@@ -13,11 +15,67 @@ interface SkillDetailModalProps {
   onClose: () => void;
 }
 
+type Tab = 'gather' | 'unlocks';
+
+/**
+ * Region picker for a gatherable node: lists the places it's found, reachable
+ * (unlocked) ones first and clickable to jump the world map there. Deduped to
+ * one entry per sub-area/region (e.g. Oak → Lumbridge, Draynor, Varrock) rather
+ * than every individual chunk.
+ */
+const RegionPicker: React.FC<{ node: string; onJump: (cx: number, cy: number) => void }> = ({ node, onJump }) => {
+  const { unlocks } = useGame();
+  const [expanded, setExpanded] = useState(false);
+  const places = useMemo(() => {
+    const hit = chunkContentService.entityLocations(node, ['object']);
+    return hit ? summarisePlaces(hit.locations, unlocks) : [];
+  }, [node, unlocks]);
+
+  if (places.length === 0) return <p className="text-[11px] text-gray-500 px-1 py-1.5">No mapped locations found.</p>;
+  const reachable = places.filter(p => p.unlocked);
+  const locked = places.filter(p => !p.unlocked);
+  const shown = expanded ? places : places.slice(0, 6);
+
+  return (
+    <div className="mt-1.5 space-y-1">
+      <p className="text-[10px] text-gray-500 px-1">
+        {reachable.length > 0
+          ? `Go to ${node} — ${reachable.length} unlocked place${reachable.length === 1 ? '' : 's'}:`
+          : `${node} isn't in any unlocked area yet. Locations:`}
+      </p>
+      <div className="grid grid-cols-2 gap-1">
+        {shown.map((p) => (
+          <button
+            key={p.label}
+            onClick={() => onJump(p.cx, p.cy)}
+            className={`text-left text-[11px] px-2 py-1 rounded border flex items-center gap-1.5 transition-colors ${
+              p.unlocked
+                ? 'bg-emerald-900/20 text-emerald-200 border-emerald-500/25 hover:bg-emerald-900/40'
+                : 'bg-black/30 text-gray-500 border-white/5 hover:bg-white/5'}`}
+            title={p.unlocked ? `Jump to ${p.label}` : `${p.label} — area locked (preview)`}
+          >
+            {p.unlocked ? <Navigation size={10} className="shrink-0" /> : <Lock size={9} className="shrink-0" />}
+            <span className="truncate">{p.subArea ?? p.region ?? p.label}</span>
+          </button>
+        ))}
+      </div>
+      {places.length > 6 && (
+        <button onClick={() => setExpanded(e => !e)} className="text-[10px] text-cyan-400/80 hover:text-cyan-300 px-1">
+          {expanded ? 'show fewer' : `+${places.length - 6} more place${places.length - 6 === 1 ? '' : 's'}${locked.length ? ' (incl. locked)' : ''}`}
+        </button>
+      )}
+    </div>
+  );
+};
+
 export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, currentTier, onClose }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
   const unlockData = SKILL_UNLOCK_DATA[skill] || {};
   const tiers = Array.from({ length: 10 }, (_, i) => i + 1);
+
+  const [tab, setTab] = useState<Tab>('unlocks');
+  const [openNode, setOpenNode] = useState<string | null>(null);
 
   // Chunk-grounded nodes this skill unlocks, grouped by tier. Loads lazily.
   const [chunksReady, setChunksReady] = useState(chunkContentService.ready);
@@ -26,14 +84,21 @@ export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, curre
     () => (chunksReady ? skillChunkNodesByTier(skill) : {}),
     [skill, chunksReady],
   );
+  const hasGathering = Object.keys(nodesByTier).length > 0;
+  // Default to the Map Gathering tab for skills that have nodes — that's the
+  // "where can I actually do this" view the player usually wants.
+  useEffect(() => { if (hasGathering) setTab('gather'); }, [hasGathering]);
 
-  // Get skill icon url
+  const jump = (cx: number, cy: number) => { showChunkOnMap(cx, cy); onClose(); };
   const iconUrl = `https://oldschool.runescape.wiki/images/${skill}_icon.png`;
+
+  // In the gather tab, only render tiers that actually have nodes.
+  const visibleTiers = tab === 'gather' ? tiers.filter(t => nodesByTier[t]?.length) : tiers;
 
   return (
     <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={`${skill} skill detail`} tabIndex={-1} className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div className="bg-[#1a1a1a] border border-white/10 w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
-        
+
         {/* Header */}
         <div className="bg-[#222] p-4 border-b border-white/10 flex justify-between items-center shrink-0">
           <div className="flex items-center gap-3">
@@ -43,114 +108,119 @@ export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, curre
             <div>
                 <h2 className="text-xl font-bold text-white tracking-wide">{skill} Progression</h2>
                 <div className="flex items-center gap-2 text-xs text-gray-400 font-mono mt-0.5">
-                    <span className={currentTier > 0 ? "text-green-400" : "text-gray-500"}>
-                        Current: Tier {currentTier}
-                    </span>
+                    <span className={currentTier > 0 ? "text-green-400" : "text-gray-500"}>Current: Tier {currentTier}</span>
                     <span>•</span>
                     <span>Max: Tier 10</span>
                 </div>
             </div>
           </div>
-          <button 
-            onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-full transition-colors group"
-          >
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors group">
             <X className="w-6 h-6 text-gray-400 group-hover:text-white" />
           </button>
         </div>
 
+        {/* Tabs */}
+        <div className="shrink-0 flex gap-1 px-4 pt-3 bg-[#1a1a1a] border-b border-white/5">
+          {([['gather', 'Map Gathering', MapPin], ['unlocks', 'Skill Unlocks', BookOpen]] as const).map(([id, label, Icon]) => (
+            <button
+              key={id}
+              onClick={() => setTab(id)}
+              disabled={id === 'gather' && !hasGathering}
+              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-t-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                tab === id ? 'bg-[#111] text-white border-x border-t border-white/10' : 'text-gray-500 hover:text-gray-300'}`}
+            >
+              <Icon size={13} /> {label}
+              {id === 'gather' && hasGathering && (
+                <span className="text-[9px] font-mono text-cyan-400/70">{Object.values(nodesByTier).flat().length}</span>
+              )}
+            </button>
+          ))}
+        </div>
+
         {/* Content */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
-            
-            {/* Description / Flavor (Optional placeholder) */}
-            <div className="bg-blue-900/20 border border-blue-500/30 p-4 rounded-lg flex gap-3">
-                <BookOpen className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
-                <p className="text-sm text-blue-200/80 leading-relaxed">
-                    Unlocking a tier grants access to training methods and equipment requirements within that level range. 
-                    You may train beyond your unlocked tier, but you are restricted to using only unlocked content.
-                </p>
-            </div>
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
 
-            {/* Tiers Grid/List */}
-            <div className="space-y-4">
-                {tiers.map((tier) => {
-                    const isUnlocked = currentTier >= tier;
-                    const isNext = currentTier + 1 === tier;
-                    const benefits = unlockData[tier];
-                    // Cap model: tier N opens levels (N-1)×10+1 … N×10 (cumulative 1→N×10).
-                    const range = tierBand(tier).label;
+          <div className={`border p-3 rounded-lg flex gap-3 ${tab === 'gather' ? 'bg-cyan-900/15 border-cyan-500/25' : 'bg-blue-900/20 border-blue-500/30'}`}>
+            {tab === 'gather' ? <MapPin className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" /> : <BookOpen className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />}
+            <p className="text-sm text-blue-200/80 leading-relaxed">
+              {tab === 'gather'
+                ? 'Everything this skill can gather on the world map, grouped by the tier that unlocks it. Click a resource to pick a region and jump straight there.'
+                : 'Unlocking a tier grants access to training methods and equipment within that level range. You may train beyond your unlocked tier, but you can only use unlocked content.'}
+            </p>
+          </div>
 
-                    return (
-                        <div 
-                            key={tier} 
-                            className={`
-                                relative border rounded-lg overflow-hidden transition-all
-                                ${isUnlocked 
-                                    ? 'bg-[#1f2937] border-green-500/30 shadow-[0_0_10px_rgba(16,185,129,0.05)]' 
-                                    : isNext 
-                                        ? 'bg-[#1a1a1a] border-purple-500/40 ring-1 ring-purple-500/20' 
-                                        : 'bg-[#111] border-white/5 opacity-60'}
-                            `}
-                        >
-                            {/* Tier Header */}
-                            <div className={`
-                                px-4 py-2 flex justify-between items-center text-xs font-bold uppercase tracking-wider
-                                ${isUnlocked ? 'bg-green-900/20 text-green-400 border-b border-green-500/10' : isNext ? 'bg-purple-900/20 text-purple-300 border-b border-purple-500/10' : 'bg-black/40 text-gray-500 border-b border-white/5'}
-                            `}>
-                                <div className="flex items-center gap-2">
-                                    {isUnlocked ? <Unlock size={14} /> : <Lock size={14} />}
-                                    <span>Tier {tier}</span>
-                                    <span className="opacity-50">|</span>
-                                    <span>Levels {range}</span>
-                                </div>
-                                {isUnlocked && <span className="flex items-center gap-1"><Star size={12} fill="currentColor" /> Active</span>}
-                                {isNext && <span className="flex items-center gap-1 animate-pulse">Next Unlock</span>}
+          {tab === 'gather' && !hasGathering && (
+            <p className="text-sm text-gray-500 italic">This skill has no gatherable map resources — see Skill Unlocks for what it offers.</p>
+          )}
+          {tab === 'gather' && hasGathering && !chunksReady && (
+            <p className="text-sm text-gray-500 animate-pulse">Loading map resources…</p>
+          )}
+
+          <div className="space-y-4">
+            {visibleTiers.map((tier) => {
+              const isUnlocked = currentTier >= tier;
+              const isNext = currentTier + 1 === tier;
+              const benefits = unlockData[tier];
+              const nodes = nodesByTier[tier] ?? [];
+              const range = tierBand(tier).label;
+
+              return (
+                <div key={tier} className={`relative border rounded-lg overflow-hidden transition-all ${
+                  isUnlocked ? 'bg-[#1f2937] border-green-500/30 shadow-[0_0_10px_rgba(16,185,129,0.05)]'
+                    : isNext ? 'bg-[#1a1a1a] border-purple-500/40 ring-1 ring-purple-500/20'
+                    : 'bg-[#111] border-white/5 opacity-70'}`}>
+
+                  <div className={`px-4 py-2 flex justify-between items-center text-xs font-bold uppercase tracking-wider ${
+                    isUnlocked ? 'bg-green-900/20 text-green-400 border-b border-green-500/10' : isNext ? 'bg-purple-900/20 text-purple-300 border-b border-purple-500/10' : 'bg-black/40 text-gray-500 border-b border-white/5'}`}>
+                    <div className="flex items-center gap-2">
+                      {isUnlocked ? <Unlock size={14} /> : <Lock size={14} />}
+                      <span>Tier {tier}</span><span className="opacity-50">|</span><span>Levels {range}</span>
+                    </div>
+                    {isUnlocked && <span className="flex items-center gap-1"><Star size={12} fill="currentColor" /> Active</span>}
+                    {isNext && <span className="flex items-center gap-1 animate-pulse">Next Unlock</span>}
+                  </div>
+
+                  <div className="p-4">
+                    {tab === 'unlocks' ? (
+                      benefits && benefits.length > 0 ? (
+                        <ul className="space-y-2">
+                          {benefits.map((benefit, idx) => (
+                            <li key={idx} className="text-sm flex items-start gap-2">
+                              <span className={`mt-1.5 w-1 h-1 rounded-full shrink-0 ${isUnlocked ? 'bg-green-500' : 'bg-gray-600'}`}></span>
+                              <span className={isUnlocked ? 'text-gray-200' : 'text-gray-500'}>{benefit}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-xs text-gray-600 italic">No specific unlocks recorded for this tier.</p>
+                      )
+                    ) : (
+                      // Gather tab: clickable node rows, each expanding a region picker.
+                      <div className="space-y-1.5">
+                        {nodes.map((n) => {
+                          const isOpen = openNode === n.name;
+                          return (
+                            <div key={n.name} className={`rounded border ${isOpen ? 'border-cyan-500/30 bg-black/30' : 'border-white/5'}`}>
+                              <button
+                                onClick={() => setOpenNode(isOpen ? null : n.name)}
+                                className="w-full flex items-center gap-2 px-2 py-1.5 text-left hover:bg-white/5 rounded"
+                              >
+                                <ChevronRight size={12} className={`text-gray-500 shrink-0 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+                                <span className={`text-sm flex-1 truncate ${isUnlocked ? 'text-cyan-100' : 'text-gray-400'}`}>{n.name}</span>
+                                <span className="text-[10px] font-mono text-gray-500 shrink-0">L{n.level}</span>
+                                <span className="text-[10px] text-gray-600 shrink-0">{n.chunks}🗺</span>
+                              </button>
+                              {isOpen && <div className="px-2 pb-2"><RegionPicker node={n.name} onJump={jump} /></div>}
                             </div>
-
-                            {/* Benefits List */}
-                            <div className="p-4">
-                                {benefits && benefits.length > 0 ? (
-                                    <ul className="space-y-2">
-                                        {benefits.map((benefit, idx) => (
-                                            <li key={idx} className="text-sm text-gray-300 flex items-start gap-2">
-                                                <span className={`mt-1.5 w-1 h-1 rounded-full ${isUnlocked ? 'bg-green-500' : 'bg-gray-600'}`}></span>
-                                                <span className={isUnlocked ? 'text-gray-200' : 'text-gray-500'}>{benefit}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                    <p className="text-xs text-gray-600 italic">No specific unlocks recorded for this tier.</p>
-                                )}
-
-                                {/* Chunk-grounded nodes this tier unlocks (from the world map data). */}
-                                {nodesByTier[tier]?.length > 0 && (
-                                    <div className="mt-3 pt-3 border-t border-white/5">
-                                        <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-cyan-400/80 mb-1.5">
-                                            <MapPin size={11} /> Gatherable on the map
-                                        </div>
-                                        <div className="flex flex-wrap gap-1.5">
-                                            {nodesByTier[tier].map((n) => (
-                                                <span
-                                                    key={n.name}
-                                                    title={`${n.name} — level ${n.level}, found in ${n.chunks} chunk${n.chunks === 1 ? '' : 's'}`}
-                                                    className={`text-[10px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${
-                                                        isUnlocked
-                                                            ? 'bg-cyan-900/20 text-cyan-200 border-cyan-500/25'
-                                                            : 'bg-black/30 text-gray-500 border-white/5'}`}
-                                                >
-                                                    {n.name} <span className="opacity-60 font-mono">L{n.level}</span>
-                                                    <span className="opacity-50">· {n.chunks}🗺</span>
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
