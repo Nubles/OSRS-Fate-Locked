@@ -129,13 +129,25 @@ const AGILITY_OBJ: [RegExp, number][] = [
   [/varrock rooftop/i, 30], [/al kharid rooftop/i, 20], [/draynor.{0,12}rooftop/i, 1],
 ];
 
+// Sailing — salvageable shipwrecks (the skill's "gathering" mechanic). Levels
+// are the salvage requirements from the game's own Sailing data.
+const sailingReq = (name: string): Req | null => {
+  if (!/shipwreck|wreck of\b/i.test(name)) return null;
+  if (/campfire|\bprop\b|bank /i.test(name)) return null; // scenery, not a salvage spot
+  const level = /merchant/i.test(name) ? 87 : /fremennik/i.test(name) ? 80
+    : /mercenary/i.test(name) ? 73 : /pirate/i.test(name) ? 64 : /large/i.test(name) ? 53
+    : /barracuda/i.test(name) ? 35 : /fisherman/i.test(name) ? 26 : /small/i.test(name) ? 15
+    : 15; // named "Wreck of the …" salvage spots default to the small tier
+  return { skill: 'Sailing', level };
+};
+
 const reqFor = (name: string, kind: EntityKind): Req | null => {
   if (kind === 'object') {
     const r = resourceReqFor(name);
     if (r) return r;
     if (FARMING_PATCH.test(name) && !NOT_PATCH.test(name)) return { skill: 'Farming', level: 1 };
     for (const [re, level] of AGILITY_OBJ) if (re.test(name)) return { skill: 'Agility', level };
-    return null;
+    return sailingReq(name);
   }
   return npcReq(name); // npc | monster
 };
