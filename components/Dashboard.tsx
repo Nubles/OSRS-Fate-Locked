@@ -17,6 +17,7 @@ import { TableType } from '../types';
 import { wikiService } from '../services/WikiService';
 import { NoteTrigger } from './NoteTrigger';
 import { RegionMap } from './RegionMap';
+import { JournalNextBest } from './JournalNextBest';
 import { EquipmentLab } from './EquipmentLab';
 import { WikiIcon } from './WikiIcon';
 import { SectionGuide } from './SectionGuide';
@@ -812,6 +813,7 @@ export const Dashboard: React.FC = () => {
                   Combat Achievements
               </button>
           </div>
+          <JournalNextBest onPick={setJournalSubTab} />
           <div className="flex-1 overflow-hidden p-2">
               <Suspense fallback={<ModalFallback />}>
                   {journalSubTab === 'QUESTS' && <QuestLog searchTerm={searchQuery} />}
