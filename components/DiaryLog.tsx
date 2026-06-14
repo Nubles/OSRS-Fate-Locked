@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS, DiaryTask } from '../data/diaryTasks';
@@ -55,6 +55,17 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
       window.setTimeout(() => setHighlightedId(null), 1800);
     }, 120);
   };
+
+  // Focus a specific diary card when asked from elsewhere (journal feed).
+  useEffect(() => {
+    const onFocus = (e: Event) => {
+      const id = (e as CustomEvent<{ id?: string }>).detail?.id;
+      if (id && DIARY_DATA[id]) focusCard(id);
+    };
+    window.addEventListener('fate:journal-focus', onFocus);
+    return () => window.removeEventListener('fate:journal-focus', onFocus);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const getStatus = (diary: DiaryTier) => {
     if (unlocks.diaries.includes(diary.id)) return 'COMPLETED';

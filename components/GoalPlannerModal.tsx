@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   Target, Search, X, MapPin, BookOpen, Award, Dumbbell,
   CheckCircle2, Circle, ArrowRight, Star, Compass, Route,
@@ -26,6 +26,8 @@ import { SectionGuide } from './SectionGuide';
 
 interface Props {
   onClose: () => void;
+  /** Pre-select a target when opened from elsewhere (e.g. the journal feed). */
+  initialTarget?: { kind: GoalKind; id: string } | null;
 }
 
 const KIND_META: Record<GoalKind, { icon: React.ReactNode; label: string; color: string }> = {
@@ -130,13 +132,14 @@ const PlanSection: React.FC<{
   );
 };
 
-export const GoalPlannerModal: React.FC<Props> = ({ onClose }) => {
+export const GoalPlannerModal: React.FC<Props> = ({ onClose, initialTarget }) => {
   const { unlocks } = useGame();
   useEscapeKey(onClose, true);
 
   const targets = useMemo(() => listGoalTargets(), []);
   const [query, setQuery] = useState('');
-  const [selected, setSelected] = useState<{ kind: GoalKind; id: string } | null>(null);
+  const [selected, setSelected] = useState<{ kind: GoalKind; id: string } | null>(initialTarget ?? null);
+  useEffect(() => { if (initialTarget) setSelected(initialTarget); }, [initialTarget]);
 
   // Filter + lightweight ranking: incomplete & matching first.
   const results = useMemo(() => {

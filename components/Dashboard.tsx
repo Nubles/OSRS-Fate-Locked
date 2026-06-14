@@ -305,6 +305,7 @@ export const Dashboard: React.FC = () => {
   const [worldView, setWorldView] = useState<'LIST' | 'MAP'>('MAP');
   const [showRunCard, setShowRunCard] = useState(false);
   const [showGoalPlanner, setShowGoalPlanner] = useState(false);
+  const [goalTarget, setGoalTarget] = useState<{ kind: 'quest' | 'diary' | 'region'; id: string } | null>(null);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showForecast, setShowForecast] = useState(false);
   const [showRival, setShowRival] = useState(false);
@@ -354,6 +355,16 @@ export const Dashboard: React.FC = () => {
     };
     window.addEventListener('fate:nav', onNav);
     return () => window.removeEventListener('fate:nav', onNav);
+  }, []);
+
+  // Open the goal planner pre-targeting a quest/diary (journal "Plan route").
+  useEffect(() => {
+    const onPlanGoal = (e: Event) => {
+      const d = (e as CustomEvent<{ kind?: 'quest' | 'diary' | 'region'; id?: string }>).detail;
+      if (d?.kind && d.id) { setGoalTarget({ kind: d.kind, id: d.id }); setShowGoalPlanner(true); }
+    };
+    window.addEventListener('fate:plan-goal', onPlanGoal);
+    return () => window.removeEventListener('fate:plan-goal', onPlanGoal);
   }, []);
 
   // --- Calculations ---
@@ -1043,7 +1054,7 @@ export const Dashboard: React.FC = () => {
 
     {showGoalPlanner && (
       <Suspense fallback={<ModalFallback label="Loading planner…" />}>
-        <GoalPlannerModal onClose={() => setShowGoalPlanner(false)} />
+        <GoalPlannerModal onClose={() => { setShowGoalPlanner(false); setGoalTarget(null); }} initialTarget={goalTarget} />
       </Suspense>
     )}
 

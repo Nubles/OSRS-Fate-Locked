@@ -346,6 +346,17 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
       window.setTimeout(() => setHighlightedId(null), 1800);
     }, 50);
   };
+
+  // Focus a specific quest card when asked from elsewhere (journal feed).
+  useEffect(() => {
+    const onFocus = (e: Event) => {
+      const id = (e as CustomEvent<{ id?: string }>).detail?.id;
+      if (id && QUEST_DATA[id]) focusCard(id);
+    };
+    window.addEventListener('fate:journal-focus', onFocus);
+    return () => window.removeEventListener('fate:journal-focus', onFocus);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // External search (from the dashboard's global search box) takes precedence
   // when set so cross-tab search still works; otherwise the bar's own search
   // input drives.
