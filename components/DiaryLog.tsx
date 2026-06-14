@@ -14,6 +14,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SkillTrainingPopover, SkillPopoverState } from './SkillTrainingPopover';
 import { showToast } from '../utils/toast';
 import { DiaryInsights } from './JournalInsights';
+import { DiaryHeatmap } from './DiaryHeatmap';
 import { countDoableTasks } from '../utils/journalStatus';
 
 // Doable-now counting lives in utils/journalStatus (shared with the
@@ -284,6 +285,8 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
           </select>
         }
       />
+
+      <DiaryHeatmap onPick={focusCard} />
 
       <DiaryInsights />
 

@@ -18,6 +18,7 @@ import { wikiService } from '../services/WikiService';
 import { NoteTrigger } from './NoteTrigger';
 import { RegionMap } from './RegionMap';
 import { JournalNextBest } from './JournalNextBest';
+import { JournalProgressRings } from './JournalProgressRings';
 import { EquipmentLab } from './EquipmentLab';
 import { WikiIcon } from './WikiIcon';
 import { SectionGuide } from './SectionGuide';
@@ -793,6 +794,7 @@ export const Dashboard: React.FC = () => {
 
   const renderJournalTab = () => (
       <div className="h-full flex flex-col">
+          <JournalProgressRings />
           <div className="flex bg-[#1a1a1a] border-b border-white/10 shrink-0">
               <button 
                   onClick={() => setJournalSubTab('QUESTS')}
