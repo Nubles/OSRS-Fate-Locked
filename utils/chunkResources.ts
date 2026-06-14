@@ -46,29 +46,39 @@ const RESOURCE_RULES: [RegExp, ResourceReq][] = [
   //    handholds are ambiguous Agility/scenery and stay ungated) ───────────
   [/amethyst/i, { skill: 'Mining', level: 92 }],
   [/runite rocks/i, { skill: 'Mining', level: 85 }],
+  [/nickel rocks/i, { skill: 'Mining', level: 74 }],
+  [/basalt rock/i, { skill: 'Mining', level: 72 }],
   [/adamantite rocks/i, { skill: 'Mining', level: 70 }],
   [/lovakite rocks/i, { skill: 'Mining', level: 65 }],
   [/mithril rocks/i, { skill: 'Mining', level: 55 }],
   [/granite rocks/i, { skill: 'Mining', level: 45 }],
+  [/volcanic sulphur/i, { skill: 'Mining', level: 42 }],
   [/gold rocks/i, { skill: 'Mining', level: 40 }],
   [/gem rocks?\b/i, { skill: 'Mining', level: 40 }],
+  [/boulder \(dense essence/i, { skill: 'Mining', level: 38 }],
   [/sandstone rocks/i, { skill: 'Mining', level: 35 }],
   [/coal rocks/i, { skill: 'Mining', level: 30 }],
-  [/silver rocks/i, { skill: 'Mining', level: 20 }],
+  [/lead rocks/i, { skill: 'Mining', level: 25 }],
+  [/silver rocks|daeyalt/i, { skill: 'Mining', level: 20 }],
   [/iron rocks/i, { skill: 'Mining', level: 15 }],
-  [/(copper|tin|clay) rocks/i, { skill: 'Mining', level: 1 }],
+  [/(copper|tin|clay) rocks|dig site specimen/i, { skill: 'Mining', level: 1 }],
 
-  // ── Fishing (by the spot's method) ──────────────────────────────────────
+  // ── Fishing (by the spot's method / catch) ──────────────────────────────
+  [/fishing spot \(sacred eel\)/i, { skill: 'Fishing', level: 87 }],
   [/fishing spot \(dark crab\)/i, { skill: 'Fishing', level: 85 }],
-  [/fishing spot \(anglerfish\)/i, { skill: 'Fishing', level: 82 }],
   [/fishing spot \(lantern\)/i, { skill: 'Fishing', level: 87 }],
-  [/fishing spot \(karambwan\)/i, { skill: 'Fishing', level: 65 }],
+  [/fishing spot \(anglerfish\)/i, { skill: 'Fishing', level: 82 }],
+  [/fishing spot \(minnow\)/i, { skill: 'Fishing', level: 82 }],
+  [/fishing spot \(karambwan\)\b/i, { skill: 'Fishing', level: 65 }],
+  [/fishing spot \(lava eel\)/i, { skill: 'Fishing', level: 53 }],
   [/fishing spot \(barbarian\)/i, { skill: 'Fishing', level: 48 }],
   [/fishing spot \(cage, harpoon\)/i, { skill: 'Fishing', level: 40 }],
+  [/fishing spot \(aerial fishing\)/i, { skill: 'Fishing', level: 35 }],
   [/fishing spot \(harpoon\)/i, { skill: 'Fishing', level: 35 }],
-  [/fishing spot \(big net, harpoon\)/i, { skill: 'Fishing', level: 16 }],
   [/fishing spot \(lure, bait\)/i, { skill: 'Fishing', level: 20 }],
-  [/fishing spot/i, { skill: 'Fishing', level: 1 }], // small net / bait / swamp
+  [/fishing spot \(big net, harpoon\)/i, { skill: 'Fishing', level: 16 }],
+  [/fishing spot \(karambwanji\)/i, { skill: 'Fishing', level: 5 }],
+  [/fishing spot/i, { skill: 'Fishing', level: 1 }], // small net / bait / swamp / location spots
 
   // ── Thieving (named market stalls + thievable chests; levels are the OSRS
   //    stall requirements. Bank/quest chests are excluded below) ────────────
@@ -87,31 +97,20 @@ const RESOURCE_RULES: [RegExp, ResourceReq][] = [
   [/general stall|food stall|seed stall/i, { skill: 'Thieving', level: 5 }],
   [/\bstall\b/i, { skill: 'Thieving', level: 5 }], // generic market stall fallback
 
-  // ── Runecrafting (altars / the Abyss rift) ──────────────────────────────
-  [/blood altar/i, { skill: 'Runecraft', level: 77 }],
+  // ── Runecrafting altars (Prayer altars and travel portals are excluded
+  //    below; the basic rune altars are reached via "Mysterious ruins") ─────
   [/soul altar/i, { skill: 'Runecraft', level: 90 }],
-  [/(nature|law|death|astral|wrath|cosmic|chaos) altar/i, { skill: 'Runecraft', level: 1 }],
-  [/mysterious ruins|rune(craft)? altar|\bthe rift\b/i, { skill: 'Runecraft', level: 1 }],
-
-  // ── Hunter (named trap / tracking nodes) ────────────────────────────────
-  [/bird snare|box trap|net trap|deadfall|magic box|impling/i, { skill: 'Hunter', level: 1 }],
-
-  // ── Agility (rooftop courses & shortcuts; level is the course requirement) ─
-  [/ardougne rooftop|ardougne agility/i, { skill: 'Agility', level: 90 }],
-  [/rellekka rooftop/i, { skill: 'Agility', level: 80 }],
-  [/seers'? rooftop|seers'? agility/i, { skill: 'Agility', level: 60 }],
-  [/pollnivneach rooftop/i, { skill: 'Agility', level: 70 }],
-  [/falador rooftop/i, { skill: 'Agility', level: 50 }],
-  [/canifis rooftop/i, { skill: 'Agility', level: 40 }],
-  [/varrock rooftop/i, { skill: 'Agility', level: 30 }],
-  [/al kharid rooftop/i, { skill: 'Agility', level: 20 }],
-  [/draynor rooftop/i, { skill: 'Agility', level: 10 }],
-  [/gnome (stronghold )?agility|agility training area/i, { skill: 'Agility', level: 1 }],
+  [/blood altar/i, { skill: 'Runecraft', level: 77 }],
+  [/astral altar/i, { skill: 'Runecraft', level: 40 }],
+  [/dark altar|mysterious ruins|\brift\b|temple of the eye/i, { skill: 'Runecraft', level: 1 }],
+  // Agility rooftop courses are classified in utils/skillChunkNodes (their
+  // obstacle objects are named "… Rooftop Course", excluded from trees above).
 ];
 
-// Transport / scenery nodes that contain a gatherable keyword but aren't one:
-// spirit trees & magic mushtrees are travel nodes, not Woodcutting.
-const NOT_A_RESOURCE = /spirit tree|mushtree/i;
+// Keyword-bearing nodes that are NOT the gatherable they look like: spirit
+// trees / mushtrees are travel nodes; "(Prayer)" altars and travel portals
+// are not Runecrafting.
+const NOT_A_RESOURCE = /spirit tree|mushtree|rooftop course|\(prayer\)|altar of (guthix|zamorak|saradomin)|exposed altar|chaos altar|\bportal\b/i;
 
 /** The Skill + level needed to gather this object, or null if it's inert. */
 export const resourceReqFor = (objectName: string): ResourceReq | null => {

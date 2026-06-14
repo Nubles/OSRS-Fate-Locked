@@ -23,15 +23,25 @@ describe('resourceReqFor', () => {
       ['Fishing spot (anglerfish)', 'Fishing', 82],
       ['Silk stall', 'Thieving', 20],
       ['Gem stall', 'Thieving', 75],
-      ['Blood Altar', 'Runecraft', 77],
-      ['Nature altar', 'Runecraft', 1],
-      ['Varrock Rooftop Course', 'Agility', 30],
-      ['Box trap', 'Hunter', 1],
+      ['Nickel rocks', 'Mining', 74],
+      ['Volcanic sulphur rock', 'Mining', 42],
+      ['Lead rocks', 'Mining', 25],
+      ['Blood Altar (Kourend)', 'Runecraft', 77],
+      ['Soul Altar', 'Runecraft', 90],
+      ['Astral Altar', 'Runecraft', 40],
+      ['Dark Altar', 'Runecraft', 1],
+      ['Mysterious ruins', 'Runecraft', 1],
     ];
     for (const [name, skill, level] of cases) {
       const req = resourceReqFor(name);
       expect(req?.skill ?? null, name).toBe(skill);
       if (skill) expect(req!.level, name).toBe(level);
+    }
+  });
+
+  it('excludes Prayer altars and travel portals from Runecrafting', () => {
+    for (const name of ['Chaos altar (Prayer)', 'Altar of Guthix', 'Altar of Zamorak', 'Exposed altar', 'Saradomin Portal', 'Portal of Cadarn']) {
+      expect(resourceReqFor(name), name).toBeNull();
     }
   });
 
