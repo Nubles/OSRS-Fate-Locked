@@ -10,6 +10,7 @@ import { JournalNextUpStrip, NextUpItem } from './JournalNextUpStrip';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { showToast } from '../utils/toast';
 import { CAInsights } from './JournalInsights';
+import { EntityLocations } from './EntityLocations';
 import { WikiLink } from './WikiLink';
 
 interface CALogProps {
@@ -314,6 +315,12 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                                                 </a>
                                             </div>
                                             <span className={`text-xs ${isTaskDone ? 'text-gray-400 line-through' : 'text-gray-300'}`}>{task.description}</span>
+                                            {/* Where to fight this monster — green/red by unlock, click to map. */}
+                                            {!isTaskDone && (
+                                              <div onClick={(e) => e.stopPropagation()}>
+                                                <EntityLocations name={task.monster} kinds={['monster']} cap={3} className="mt-1" />
+                                              </div>
+                                            )}
                                         </div>
                                     </button>
                                 )

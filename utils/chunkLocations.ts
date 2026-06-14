@@ -2,6 +2,7 @@ import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
 import { UnlockState } from '../types';
+import type { ChunkCoord } from './mapCoords';
 
 /**
  * Where is chunk (cx, cy), and can the player go there?
@@ -22,6 +23,17 @@ const CHUNK_REGION: Record<string, string> = {};
 for (const [region, chunks] of Object.entries(REGION_CHUNKS)) {
   for (const c of chunks) CHUNK_REGION[key(c.cx, c.cy)] = region;
 }
+
+// Reverse lookup: a place NAME (sub-area or continent) → a representative chunk,
+// so journal items that reference a place by name (diary tasks, etc.) can link
+// to the map. Sub-areas win over continents for the same name.
+const PLACE_CHUNK: Record<string, ChunkCoord> = {};
+for (const [name, chunks] of Object.entries(REGION_CHUNKS)) if (chunks[0]) PLACE_CHUNK[name.toLowerCase()] = chunks[0];
+for (const [name, chunks] of Object.entries(SUB_AREA_CHUNKS)) if (chunks[0]) PLACE_CHUNK[name.toLowerCase()] = chunks[0];
+
+/** A representative chunk for a named place, or null if it isn't on the map. */
+export const chunkForPlace = (name: string): ChunkCoord | null =>
+  PLACE_CHUNK[name.trim().toLowerCase()] ?? null;
 
 const ALWAYS_FREE = new Set<string>(['Misthalin', ...MISTHALIN_AREAS]);
 

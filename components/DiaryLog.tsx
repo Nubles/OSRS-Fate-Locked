@@ -3,9 +3,10 @@ import React, { useMemo, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS, DiaryTask } from '../data/diaryTasks';
-import { Map, CheckCircle2, Lock, Sparkles, BookOpen, ChevronDown, CheckSquare, Square, ExternalLink, ArrowUpRight, TrendingUp } from 'lucide-react';
+import { Map, CheckCircle2, Lock, Sparkles, BookOpen, ChevronDown, CheckSquare, Square, ExternalLink, ArrowUpRight, TrendingUp, MapPin } from 'lucide-react';
 import { DROP_RATES } from '../config/rules';
 import { MISTHALIN_AREAS } from '../constants';
+import { chunkForPlace, showChunkOnMap } from '../utils/chunkLocations';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { JournalNextUpStrip, NextUpItem } from './JournalNextUpStrip';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -496,12 +497,20 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                                   const isMisthalin = r === 'Misthalin' || MISTHALIN_AREAS.includes(r);
                                                   const isUnlocked = isMisthalin || unlocks.regions.includes(r);
                                                   const cls = isUnlocked
-                                                      ? 'border-white/5 text-gray-500 bg-black/30'
-                                                      : 'border-red-500/30 text-red-400 bg-red-900/10';
+                                                      ? 'border-white/5 text-gray-500 bg-black/30 hover:bg-white/5'
+                                                      : 'border-red-500/30 text-red-400 bg-red-900/10 hover:bg-red-900/20';
+                                                  const chunk = chunkForPlace(r);
+                                                  // Where the task is done — click to jump the map there.
                                                   return (
-                                                      <span key={r} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${cls}`}>
-                                                          <Map size={8} /> {r}
-                                                      </span>
+                                                      <button
+                                                          key={r}
+                                                          onClick={(e) => { e.stopPropagation(); if (chunk) showChunkOnMap(chunk.cx, chunk.cy); }}
+                                                          disabled={!chunk}
+                                                          title={chunk ? `Show ${r} on the map` : r}
+                                                          className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 transition-colors ${cls} ${chunk ? 'cursor-pointer' : 'cursor-default'}`}
+                                                      >
+                                                          <MapPin size={8} /> {r}
+                                                      </button>
                                                   );
                                               })}
                                           </div>
