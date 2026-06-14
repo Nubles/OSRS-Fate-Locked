@@ -43,7 +43,8 @@ import { UnlockReveal } from './UnlockReveal';
 import { useAchievementReveal } from '../hooks/useAchievementReveal';
 import { AchievementReveal } from './AchievementReveal';
 import { getGameMode } from '../config/gameModes';
-import { getActivityRegion } from '../data/activityRegions';
+import { getActivityRegion, SHORTCUT_SUBAREA } from '../data/activityRegions';
+import { chunkForPlace, showChunkOnMap } from '../utils/chunkLocations';
 import { getActivityReq, ActivityReq } from '../data/activityRequirements';
 import { RegionAdvisorPanel } from './RegionAdvisorPanel';
 import { SkillAdvisorPanel } from './SkillAdvisorPanel';
@@ -150,6 +151,8 @@ interface UnlockCardProps {
   onClick: () => void;
   subText?: string;
   region?: string;
+  /** When set, the location tag becomes a button that jumps to this chunk. */
+  chunk?: { cx: number; cy: number } | null;
   req?: ActivityReq;
 }
 
@@ -161,6 +164,7 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
   onClick,
   subText,
   region,
+  chunk,
   req
 }) => {
   // Image priority: a hand-picked sprite/icon → the item's real OSRS wiki image
@@ -225,10 +229,21 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
             </div>
             {subText && <div className="text-[10px] text-gray-500 leading-tight mt-0.5">{subText}</div>}
             {region && (
-                <div className="flex items-center gap-1 text-[10px] text-emerald-400/80 leading-tight mt-0.5">
-                    <MapPin size={9} className="shrink-0" />
-                    <span className="truncate">{region}</span>
-                </div>
+                chunk ? (
+                    <button
+                        onClick={(e) => { e.stopPropagation(); showChunkOnMap(chunk.cx, chunk.cy); }}
+                        className="flex items-center gap-1 text-[10px] text-emerald-400/80 hover:text-emerald-300 leading-tight mt-0.5 w-fit"
+                        title="Show on map"
+                    >
+                        <MapPin size={9} className="shrink-0" />
+                        <span className="truncate underline decoration-dotted underline-offset-2">{region}</span>
+                    </button>
+                ) : (
+                    <div className="flex items-center gap-1 text-[10px] text-emerald-400/80 leading-tight mt-0.5">
+                        <MapPin size={9} className="shrink-0" />
+                        <span className="truncate">{region}</span>
+                    </div>
+                )
             )}
             {req && (req.skills || req.quests) && (
                 <div className="flex flex-wrap items-center gap-1 mt-1">
@@ -566,6 +581,12 @@ export const Dashboard: React.FC = () => {
             // Filter logic: Show if unlocked OR can unlock (Omni)
             if (showOnlyActionable && !isUnlocked && !canUnlock) return null;
 
+            // Location tag: prefer a shortcut's precise sub-area (links to its
+            // exact chunk), else the activity's continent (links to the region).
+            const subArea = SHORTCUT_SUBAREA[item];
+            const placeLabel = subArea ?? getActivityRegion(item);
+            const placeChunk = subArea ? chunkForPlace(subArea) : (placeLabel ? chunkForPlace(placeLabel) : null);
+
             return (
                 <UnlockCard
                     key={item}
@@ -575,7 +596,8 @@ export const Dashboard: React.FC = () => {
                     icon={iconMap ? iconMap[item] : undefined}
                     onClick={() => handleSpecialUnlock(type, item)}
                     subText={sub}
-                    region={getActivityRegion(item)}
+                    region={placeLabel}
+                    chunk={placeChunk}
                     req={getActivityReq(item)}
                 />
             );
