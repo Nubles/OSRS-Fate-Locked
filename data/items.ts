@@ -52,9 +52,10 @@ export const MERCHANTS_LIST = [
   'Staff Shops', 'Crossbow Shops', 'Hunter Shops', 'Candle Shops', 'Fur Traders', 
   'Jewellery Shops', 'Kebab Sellers', 'Silk Shops', 'Silver Shops', 'Spice Shops', 
   'Vegetable Shops', 'Wine Traders', 'Amulet Shops',
-  'Slayer Equipment', 'Stonemasons', 'Sawmill Operators', 'Ore Merchants', 
+  'Slayer Equipment', 'Stonemasons', 'Sawmill Operators', 'Ore Merchants',
   'Real Estate Agents', 'Tanners', 'Taxidermists', 'Decanters', 'Lost Property',
-  'Warhammer Shops', 'Claw Shops', 'Halberd Shops', 'Pet Shops'
+  'Warhammer Shops', 'Claw Shops', 'Halberd Shops', 'Pet Shops',
+  'Weapon Shops', 'Reward Shops'
 ];
 
 export const STORAGE_LIST = [

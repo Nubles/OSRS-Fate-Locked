@@ -16,7 +16,7 @@ describe('classifyShop', () => {
       ["Nurmof's Pickaxe Shop", 'Mining Shops'],
       ["Horvik's Armour Shop.", 'Platebody Shops'],
       ['The Blue Moon Inn', 'Bars & Inns'],
-      ['The Sheared Ram', null as unknown as string], // pun name, no keyword — unclassified
+      ['The Sheared Ram', 'Bars & Inns'], // a Varrock pub — now matched by name
       ["Wydin's Food Store", 'Food Shops'],
       ['Gem Trader', 'Gem Shops'],
       ["Pelters' Veg Stall", 'Vegetable Shops'],
@@ -25,6 +25,17 @@ describe('classifyShop', () => {
       ['Crossbow Shop', 'Crossbow Shops'],
       ["Harry's Fishing Shop.", 'Fishing Shops'],
       ['Kebab seller', 'Kebab Sellers'],
+      // ── newly covered categories ──
+      ['Slayer Equipment (shop)', 'Slayer Equipment'],
+      ["Briget's Weapons", 'Weapon Shops'],
+      ['Soul Wars Reward Shop', 'Reward Shops'],
+      ["Ian's Wilderness Cape Shop", 'Reward Shops'],
+      ['Stonecutter Supplies', 'Stonemasons'],
+      ['Razmire Builders Merchants', 'Real Estate Agents'],
+      ["Ranael's Super Skirt Store", 'Plateskirt Shops'],
+      ['Garden Centre', 'Farming Shops'],
+      ["Rufus' Meat Emporium", 'Food Shops'],
+      ["Aemad's Adventuring Supplies", 'General Stores'],
     ];
     for (const [name, want] of cases) {
       expect(classifyShop(name), name).toBe(want ?? null);
