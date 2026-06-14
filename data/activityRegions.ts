@@ -166,66 +166,7 @@ export const ACTIVITY_REGIONS: Record<string, string> = {
   'Anima': 'Kourend & Kebos',
   'Vinery': 'Kourend & Kebos',
   'Coral Nursery': 'Islands & Others', // underwater, beneath The Great Conch
-
-  // ---- Agility Shortcuts (continent of the shortcut) -----------------------
-  'Falador Crumbling Wall': 'Asgarnia',
-  'Falador East Underwall Tunnel': 'Asgarnia',
-  'Grand Exchange Underwall Tunnel': 'Misthalin',
-  'Edgeville Dungeon Obstacle Pipe': 'Misthalin',
-  'Al Kharid Mine Scramble': 'Kharidian Desert',
-  'Coal Trucks Log Balance': 'Kandarin',
-  'Brimhaven Dungeon Stepping Stones': 'Karamja',
-  'Cairn Isle Stepping Stone': 'Karamja',
-  'Shilo Village Stepping Stones': 'Karamja',
-  'Yanille Wall (Grapple)': 'Kandarin',
-  'Catherby Cliffside (Grapple)': 'Kandarin',
-  'Taverley Dungeon Pipe Squeeze': 'Asgarnia',
-  'Trollheim Mountain Path': 'Asgarnia',
-  'Gnome Stronghold Climbing Net': 'Kandarin',
-  'Draynor Manor Stile': 'Misthalin',
-  'Varrock South Fence': 'Misthalin',
-  'Wilderness Lava Maze Stepping Stone': 'Wilderness',
-  'Deep Wilderness Dungeon Crevice': 'Wilderness',
-  'Lava Dragon Isle Stepping Stones': 'Wilderness',
-  'Karamja Volcano Climbing Rocks': 'Karamja',
-  'Slayer Tower Spiked Chain': 'Morytania',
-  'Fremennik Province Log Balance': 'Fremennik',
-  "Eagles' Peak Crevice": 'Kandarin',
-  'Hosidius Crevice': 'Kourend & Kebos',
 };
 
 export const getActivityRegion = (item: string): string | undefined =>
   ACTIVITY_REGIONS[item];
-
-/**
- * Precise sub-area each agility shortcut sits in (or beside) — these names are
- * real keys in SUB_AREA_CHUNKS, so chunkForPlace() resolves each to an actual
- * map chunk for the "show on map" jump. Multi-area shortcuts use their nearest
- * named access point.
- */
-export const SHORTCUT_SUBAREA: Record<string, string> = {
-  'Falador Crumbling Wall': 'Falador',
-  'Falador East Underwall Tunnel': 'Falador',
-  'Grand Exchange Underwall Tunnel': 'Edgeville',
-  'Edgeville Dungeon Obstacle Pipe': 'Edgeville',
-  'Al Kharid Mine Scramble': 'Al Kharid',
-  'Coal Trucks Log Balance': 'Hemenster',
-  'Brimhaven Dungeon Stepping Stones': 'Brimhaven',
-  'Cairn Isle Stepping Stone': 'Shilo Village',
-  'Shilo Village Stepping Stones': 'Shilo Village',
-  'Yanille Wall (Grapple)': 'Yanille',
-  'Catherby Cliffside (Grapple)': 'Catherby',
-  'Taverley Dungeon Pipe Squeeze': 'Taverley',
-  'Trollheim Mountain Path': 'Burthorpe',
-  'Gnome Stronghold Climbing Net': 'Tree Gnome Stronghold',
-  'Draynor Manor Stile': 'Draynor Village',
-  'Varrock South Fence': 'Varrock',
-  'Wilderness Lava Maze Stepping Stone': 'Lava Maze',
-  'Deep Wilderness Dungeon Crevice': 'Lava Maze',
-  'Lava Dragon Isle Stepping Stones': 'Fountain of Rune',
-  'Karamja Volcano Climbing Rocks': 'Musa Point',
-  'Slayer Tower Spiked Chain': 'Slayer Tower',
-  'Fremennik Province Log Balance': 'Rellekka',
-  "Eagles' Peak Crevice": 'Piscatoris Fishing Colony',
-  'Hosidius Crevice': 'Hosidius',
-};

@@ -6,8 +6,7 @@ import {
   SLAYER_UNLOCKS_LIST, AGILITY_SHORTCUTS_LIST,
 } from './items';
 import { COLLECTION_LOG_DATA } from './collectionLogData';
-import { ACTIVITY_REGIONS, SHORTCUT_SUBAREA } from './activityRegions';
-import { SUB_AREA_CHUNKS } from './subAreaChunks';
+import { ACTIVITY_REGIONS } from './activityRegions';
 
 /**
  * Data-consistency tests.
@@ -70,7 +69,7 @@ describe('region definitions', () => {
 describe('activityRegions', () => {
   const activityItems = new Set([
     ...BOSSES_LIST, ...MINIGAMES_LIST, ...GUILDS_LIST,
-    ...MOBILITY_LIST, ...FARMING_PATCH_LIST, ...AGILITY_SHORTCUTS_LIST,
+    ...MOBILITY_LIST, ...FARMING_PATCH_LIST,
   ]);
   const validRegions = new Set([...Object.keys(REGION_GROUPS), 'Misthalin']);
 
@@ -84,24 +83,6 @@ describe('activityRegions', () => {
       .filter(([, region]) => !validRegions.has(region))
       .map(([item, region]) => `${item} → ${region}`);
     expect(bad, 'invalid region values').toEqual([]);
-  });
-});
-
-// --- agility shortcut chunk assignment --------------------------------------
-
-describe('agility shortcut chunk assignment', () => {
-  it('every shortcut maps to a sub-area that exists on the map', () => {
-    const subAreas = new Set(Object.keys(SUB_AREA_CHUNKS));
-    const bad = AGILITY_SHORTCUTS_LIST
-      .map(s => ({ s, area: SHORTCUT_SUBAREA[s] }))
-      .filter(({ area }) => !area || !subAreas.has(area))
-      .map(({ s, area }) => `${s} → ${area ?? '(unmapped)'}`);
-    expect(bad, 'shortcuts with no chunk-resolvable sub-area').toEqual([]);
-  });
-
-  it('every shortcut has a continent tag', () => {
-    const missing = AGILITY_SHORTCUTS_LIST.filter(s => !ACTIVITY_REGIONS[s]);
-    expect(missing, 'shortcuts missing an ACTIVITY_REGIONS continent').toEqual([]);
   });
 });
 
