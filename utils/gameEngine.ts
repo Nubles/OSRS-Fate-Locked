@@ -1,6 +1,6 @@
 
 import { UnlockState, TableType } from '../types';
-import { SKILLS_LIST, EQUIPMENT_SLOTS, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST } from '../data/items';
+import { SKILLS_LIST, EQUIPMENT_SLOTS, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST, AGILITY_SHORTCUTS_LIST } from '../data/items';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
 
 export const rollDice = (max: number = 100) => Math.floor(Math.random() * max) + 1;
@@ -21,6 +21,8 @@ export const checkUnlockAvailability = (unlocks: UnlockState) => {
         storage: unlocks.storage.length < STORAGE_LIST.length,
         guilds: unlocks.guilds.length < GUILDS_LIST.length,
         farming: unlocks.farming.length < FARMING_PATCH_LIST.length,
+        slayerUnlocks: unlocks.slayerUnlocks.length < SLAYER_UNLOCKS_LIST.length,
+        agilityShortcuts: unlocks.agilityShortcuts.length < AGILITY_SHORTCUTS_LIST.length,
     };
 };
 
@@ -41,6 +43,8 @@ export const isValidUnlock = (table: TableType, item: string, unlocks: UnlockSta
     if (table === TableType.STORAGE) return !unlocks.storage.includes(item);
     if (table === TableType.GUILDS) return !unlocks.guilds.includes(item);
     if (table === TableType.FARMING_LAYERS) return !unlocks.farming.includes(item);
+    if (table === TableType.SLAYER_UNLOCKS) return !unlocks.slayerUnlocks.includes(item);
+    if (table === TableType.AGILITY_SHORTCUTS) return !unlocks.agilityShortcuts.includes(item);
     return true;
 };
 
@@ -58,6 +62,8 @@ export const getPoolAndStateKey = (table: TableType) => {
         case TableType.STORAGE: return { pool: STORAGE_LIST, stateKey: 'storage' };
         case TableType.GUILDS: return { pool: GUILDS_LIST, stateKey: 'guild' };
         case TableType.FARMING_LAYERS: return { pool: FARMING_PATCH_LIST, stateKey: 'farming' };
+        case TableType.SLAYER_UNLOCKS: return { pool: SLAYER_UNLOCKS_LIST, stateKey: 'slayerUnlocks' };
+        case TableType.AGILITY_SHORTCUTS: return { pool: AGILITY_SHORTCUTS_LIST, stateKey: 'agilityShortcuts' };
         default: return { pool: [], stateKey: '' };
     }
 };

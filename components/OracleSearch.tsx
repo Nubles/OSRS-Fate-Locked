@@ -7,7 +7,7 @@ import { SectionGuide } from './SectionGuide';
 import { 
   SKILLS_LIST, REGIONS_LIST, BOSSES_LIST, MINIGAMES_LIST, FARMING_PATCH_LIST, 
   MOBILITY_LIST, ARCANA_LIST, POH_LIST, EQUIPMENT_SLOTS, MERCHANTS_LIST, 
-  STORAGE_LIST, GUILDS_LIST, MISTHALIN_AREAS, wikiUrlFor
+  STORAGE_LIST, GUILDS_LIST, SLAYER_UNLOCKS_LIST, AGILITY_SHORTCUTS_LIST, MISTHALIN_AREAS, wikiUrlFor
 } from '../constants';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
@@ -102,6 +102,8 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
     addGroup(MERCHANTS_LIST, 'Merchant', TableType.MERCHANTS, Store, 'Requires Key in Merchants Table');
     addGroup(STORAGE_LIST, 'Storage', TableType.STORAGE, Package, 'Requires Key in Storage Table');
     addGroup(GUILDS_LIST, 'Guild', TableType.GUILDS, Flag, 'Requires Key in Guilds Table');
+    addGroup(SLAYER_UNLOCKS_LIST, 'Slayer Unlock', TableType.SLAYER_UNLOCKS, Skull, 'Requires Key in Slayer Table');
+    addGroup(AGILITY_SHORTCUTS_LIST, 'Agility Shortcut', TableType.AGILITY_SHORTCUTS, Footprints, 'Requires Key in Shortcuts Table');
     addGroup(EQUIPMENT_SLOTS, 'Equipment Slot', TableType.EQUIPMENT, Shield, 'Requires Key in Equipment Table');
 
     // Quests
@@ -218,6 +220,12 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
         break;
       case TableType.FARMING_LAYERS:
         isUnlocked = unlocks.farming.includes(item.name);
+        break;
+      case TableType.SLAYER_UNLOCKS:
+        isUnlocked = unlocks.slayerUnlocks.includes(item.name);
+        break;
+      case TableType.AGILITY_SHORTCUTS:
+        isUnlocked = unlocks.agilityShortcuts.includes(item.name);
         break;
       case TableType.QUESTS:
         isUnlocked = unlocks.quests.includes(item.id as string);

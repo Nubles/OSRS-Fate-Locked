@@ -158,7 +158,7 @@ describe('findEasiestPath surfaces the closest unlock route', () => {
     unlocks: {
       equipment: {}, skills: {}, levels: {},
       regions: [], mobility: [], arcana: [], housing: [], merchants: [],
-      minigames: [], bosses: [], storage: [], guilds: [], farming: [],
+      minigames: [], bosses: [], storage: [], guilds: [], farming: [], slayerUnlocks: [], agilityShortcuts: [],
       quests: [], diaries: [], cas: [], completedTasks: [], collectionLog: {},
     },
     history: [], pinnedGoals: [], userNotes: {},
@@ -203,7 +203,7 @@ describe('getNextAchievableItems returns a useful ranked list', () => {
     unlocks: {
       equipment: {}, skills: {}, levels: {},
       regions: [], mobility: [], arcana: [], housing: [], merchants: [],
-      minigames: [], bosses: [], storage: [], guilds: [], farming: [],
+      minigames: [], bosses: [], storage: [], guilds: [], farming: [], slayerUnlocks: [], agilityShortcuts: [],
       quests: [], diaries: [], cas: [], completedTasks: [], collectionLog: {},
     },
     history: [], pinnedGoals: [], userNotes: {},
@@ -239,7 +239,7 @@ describe('calculateEngineItemProgress mirrors the GoalProgress shape', () => {
     unlocks: {
       equipment: {}, skills: {}, levels: {},
       regions: [], mobility: [], arcana: [], housing: [], merchants: [],
-      minigames: [], bosses: [], storage: [], guilds: [], farming: [],
+      minigames: [], bosses: [], storage: [], guilds: [], farming: [], slayerUnlocks: [], agilityShortcuts: [],
       quests: [], diaries: [], cas: [], completedTasks: [], collectionLog: {},
     },
     history: [], pinnedGoals: [], userNotes: {},

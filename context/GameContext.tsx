@@ -90,6 +90,8 @@ const getInitialUnlocks = (): UnlockState => ({
   storage: [],
   guilds: [],
   farming: [],
+  slayerUnlocks: [],
+  agilityShortcuts: [],
   quests: [],
   diaries: [],
   cas: [],
@@ -181,7 +183,8 @@ const migrateSave = (saveData: Partial<GameState>): GameState => {
   // Defensive: dedupe unlock arrays so a corrupted import can't load the
   // same region/boss/etc. twice.
   const ARRAY_KEYS = ['regions', 'mobility', 'arcana', 'housing', 'merchants',
-    'minigames', 'bosses', 'storage', 'guilds', 'farming', 'quests', 'diaries',
+    'minigames', 'bosses', 'storage', 'guilds', 'farming', 'slayerUnlocks',
+    'agilityShortcuts', 'quests', 'diaries',
     'cas', 'completedTasks'] as const;
   for (const k of ARRAY_KEYS) {
     const arr = (mergedState.unlocks as any)[k];
@@ -414,6 +417,8 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       else if (table === TableType.STORAGE) newUnlocks.storage = pushOnce(newUnlocks.storage);
       else if (table === TableType.GUILDS) newUnlocks.guilds = pushOnce(newUnlocks.guilds);
       else if (table === TableType.FARMING_LAYERS) newUnlocks.farming = pushOnce(newUnlocks.farming);
+      else if (table === TableType.SLAYER_UNLOCKS) newUnlocks.slayerUnlocks = pushOnce(newUnlocks.slayerUnlocks);
+      else if (table === TableType.AGILITY_SHORTCUTS) newUnlocks.agilityShortcuts = pushOnce(newUnlocks.agilityShortcuts);
 
       let newState = { ...state, unlocks: newUnlocks };
       if (costType === 'key') newState.keys -= cost;

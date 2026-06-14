@@ -3,6 +3,7 @@ import {
   SKILLS_LIST, EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, REGIONS_LIST,
   MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST,
   BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST,
+  SLAYER_UNLOCKS_LIST, AGILITY_SHORTCUTS_LIST,
 } from '../constants';
 import { QUEST_DATA } from '../data/questData';
 import {
@@ -17,7 +18,7 @@ function emptyUnlocks(over: Partial<UnlockState> = {}): UnlockState {
     levels: Object.fromEntries(SKILLS_LIST.map((s) => [s, 1])),
     regions: [],
     mobility: [], arcana: [], housing: [], merchants: [], minigames: [],
-    bosses: [], storage: [], guilds: [], farming: [],
+    bosses: [], storage: [], guilds: [], farming: [], slayerUnlocks: [], agilityShortcuts: [],
     quests: [],
     diaries: [],
     cas: [],
@@ -42,6 +43,8 @@ function maxedUnlocks(): UnlockState {
     storage: [...STORAGE_LIST],
     guilds: [...GUILDS_LIST],
     farming: [...FARMING_PATCH_LIST],
+    slayerUnlocks: [...SLAYER_UNLOCKS_LIST],
+    agilityShortcuts: [...AGILITY_SHORTCUTS_LIST],
   });
 }
 

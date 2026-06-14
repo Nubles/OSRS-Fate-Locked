@@ -74,6 +74,31 @@ export const GUILDS_LIST = [
   'Wizards\' Guild', 'Woodcutting Guild'
 ];
 
+// Slayer reward-point "Unlocks" (verified against the OSRS wiki Slayer Rewards
+// interface): monster-assignment unlocks, the finishing-blow toggles, and the
+// crafting/utility unlocks bought with Slayer points.
+export const SLAYER_UNLOCKS_LIST = [
+  'Malevolent Masquerade', 'Broader Fletching', 'Ring Bling', 'Bigger and Badder',
+  'Like a Boss', 'Task Storage', 'Gargoyle Smasher', 'Slug Salter', 'Reptile Freezer',
+  "'Shroom Sprayer", 'Duly Noted', 'Stop the Wyvern', 'Double Trouble',
+  'Seeing Red', 'Watch the Birdie', 'Hot Stuff', 'Reptile Got Ripped', 'Basilocked',
+  'Actual Vampyre Slayer', 'I Wildy More Slayer', 'Warped Reality', 'Lured In',
+  'Wings Spread'
+];
+
+// Notable agility shortcuts — named by location. Each effectively links areas or
+// trims a route; tracked as one-off unlocks like guilds/merchants.
+export const AGILITY_SHORTCUTS_LIST = [
+  'Falador Crumbling Wall', 'Falador East Underwall Tunnel', 'Grand Exchange Underwall Tunnel',
+  'Edgeville Dungeon Obstacle Pipe', 'Al Kharid Mine Scramble', 'Coal Trucks Log Balance',
+  'Brimhaven Dungeon Stepping Stones', 'Cairn Isle Stepping Stone', 'Shilo Village Stepping Stones',
+  'Yanille Wall (Grapple)', 'Catherby Cliffside (Grapple)', 'Taverley Dungeon Pipe Squeeze',
+  'Trollheim Mountain Path', 'Gnome Stronghold Climbing Net', 'Draynor Manor Stile',
+  'Varrock South Fence', 'Wilderness Lava Maze Stepping Stone', 'Deep Wilderness Dungeon Crevice',
+  'Lava Dragon Isle Stepping Stones', 'Karamja Volcano Climbing Rocks', 'Slayer Tower Spiked Chain',
+  'Fremennik Province Log Balance', "Eagles' Peak Crevice", 'Hosidius Crevice'
+];
+
 export const FARMING_PATCH_LIST = [
   'Allotment', 'Herb', 'Flower', 'Hops', 'Bush', 'Wood Tree', 
   'Fruit Tree', 'Hardwood Tree', 'Cactus', 'Mushroom', 'Belladonna', 

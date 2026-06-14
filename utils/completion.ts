@@ -9,6 +9,7 @@ import {
   SKILLS_LIST, REGIONS_LIST, EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX,
   MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST,
   BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST,
+  SLAYER_UNLOCKS_LIST, AGILITY_SHORTCUTS_LIST,
 } from '../constants';
 import { UnlockState } from '../types';
 
@@ -19,7 +20,8 @@ export const COMPLETION_DENOMINATOR =
   EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX +
   MOBILITY_LIST.length + ARCANA_LIST.length + POH_LIST.length +
   MERCHANTS_LIST.length + MINIGAMES_LIST.length + BOSSES_LIST.length +
-  STORAGE_LIST.length + GUILDS_LIST.length + FARMING_PATCH_LIST.length;
+  STORAGE_LIST.length + GUILDS_LIST.length + FARMING_PATCH_LIST.length +
+  SLAYER_UNLOCKS_LIST.length + AGILITY_SHORTCUTS_LIST.length;
 
 const sum = (o: Record<string, number> | undefined) =>
   o ? Object.values(o).reduce((a, b) => a + (typeof b === 'number' ? b : 0), 0) : 0;
@@ -30,7 +32,7 @@ export const playerUnlockPoints = (u: UnlockState): number =>
   sum(u.skills) + sum(u.equipment) +
   len(u.regions) + len(u.mobility) + len(u.arcana) + len(u.housing) +
   len(u.merchants) + len(u.minigames) + len(u.bosses) + len(u.storage) +
-  len(u.guilds) + len(u.farming);
+  len(u.guilds) + len(u.farming) + len(u.slayerUnlocks) + len(u.agilityShortcuts);
 
 /** Overall completion percentage (0–100, rounded). */
 export const completionPercent = (u: UnlockState): number =>

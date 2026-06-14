@@ -2,8 +2,8 @@ import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { 
   EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, REGION_GROUPS, MISTHALIN_AREAS, 
   MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, POH_LIST, 
-  MERCHANTS_LIST, STORAGE_LIST, GUILDS_LIST, 
-  FARMING_PATCH_LIST, FARMING_UNLOCK_DETAILS, EQUIPMENT_TIER_MAX, 
+  MERCHANTS_LIST, STORAGE_LIST, GUILDS_LIST, SLAYER_UNLOCKS_LIST, AGILITY_SHORTCUTS_LIST,
+  FARMING_PATCH_LIST, FARMING_UNLOCK_DETAILS, EQUIPMENT_TIER_MAX,
   REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, wikiUrlFor, UTILITY_ITEM_IDS,
   SKILL_UNLOCK_DATA
 } from '../constants';
@@ -735,6 +735,8 @@ export const Dashboard: React.FC = () => {
         { id: 'POH',       label: 'Player Owned House', color: 'text-orange-400', bar: 'bg-orange-500', list: POH_LIST,           unlocked: unlocks.housing,   type: TableType.POH },
         { id: 'STORAGE',   label: 'Storage',            color: 'text-amber-600',  bar: 'bg-amber-600',  list: STORAGE_LIST,       unlocked: unlocks.storage,   type: TableType.STORAGE },
         { id: 'MERCHANTS', label: 'Merchants',          color: 'text-yellow-400', bar: 'bg-yellow-500', list: MERCHANTS_LIST,     unlocked: unlocks.merchants, type: TableType.MERCHANTS },
+        { id: 'SLAYER',    label: 'Slayer Unlocks',     color: 'text-rose-400',   bar: 'bg-rose-500',   list: SLAYER_UNLOCKS_LIST, unlocked: unlocks.slayerUnlocks,   type: TableType.SLAYER_UNLOCKS },
+        { id: 'SHORTCUTS', label: 'Agility Shortcuts',  color: 'text-fuchsia-400',bar: 'bg-fuchsia-500',list: AGILITY_SHORTCUTS_LIST, unlocked: unlocks.agilityShortcuts, type: TableType.AGILITY_SHORTCUTS },
       ];
 
       // Search mode: span every category so a search isn't trapped in one tab.
