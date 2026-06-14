@@ -40,6 +40,15 @@ const getDifficultyColor = (difficulty: DropSource) => {
     return 'text-green-400 border-green-500/30 bg-green-900/10'; // Novice
 };
 
+// Solid accent colour for the card's left edge — a strong difficulty signal.
+const getDifficultyAccent = (difficulty: DropSource) => {
+    if (difficulty === DropSource.QUEST_GRANDMASTER) return 'bg-yellow-400';
+    if (difficulty === DropSource.QUEST_MASTER) return 'bg-purple-400';
+    if (difficulty === DropSource.QUEST_EXPERIENCED) return 'bg-red-400';
+    if (difficulty === DropSource.QUEST_INTERMEDIATE) return 'bg-blue-400';
+    return 'bg-green-400'; // Novice
+};
+
 const getDifficultyLabel = (difficulty: DropSource) => {
     return difficulty.replace('Quest (', '').replace(')', '');
 };
@@ -96,13 +105,16 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, currentQP, onTogg
       <div
           data-journal-id={quest.id}
           className={`
-              relative border rounded-lg p-3 transition-all
+              group relative border rounded-lg p-3 pl-4 overflow-hidden transition-all duration-200
+              hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/40
               ${isCompleted ? 'bg-green-900/10 border-green-500/20 opacity-60 hover:opacity-100' :
                 isAvailable ? 'bg-blue-900/10 border-blue-500/40 hover:bg-blue-900/20' :
-                'bg-[#1a1a1a] border-white/5 opacity-80'}
+                'bg-[#1a1a1a] border-white/5 opacity-80 hover:opacity-100'}
               ${highlight ? 'ring-2 ring-amber-400/70 shadow-[0_0_20px_rgba(251,191,36,0.25)]' : ''}
           `}
       >
+          {/* Difficulty accent edge */}
+          <div className={`absolute left-0 top-0 bottom-0 w-1 ${getDifficultyAccent(quest.difficulty)} ${isCompleted ? 'opacity-40' : 'opacity-80 group-hover:opacity-100'}`} />
           <div className="flex justify-between items-start gap-4">
               <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
