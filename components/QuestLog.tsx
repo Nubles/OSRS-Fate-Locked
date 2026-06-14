@@ -339,7 +339,10 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
     // query the DOM — ensures the card exists when we try to scroll to it.
     window.setTimeout(() => {
       const el = document.querySelector<HTMLElement>(`[data-journal-id="${id}"]`);
-      if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      if (el) {
+        el.style.scrollMarginTop = '8px';
+        el.scrollIntoView({ block: 'start', behavior: 'smooth' }); // header in view, not centred
+      }
       window.setTimeout(() => setHighlightedId(null), 1800);
     }, 50);
   };

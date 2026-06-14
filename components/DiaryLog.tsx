@@ -43,11 +43,17 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
     setFilterRegion('ALL');
     setFilterTier('ALL');
     setHighlightedId(id);
+    // Align the card's top (header + border + first task in view) rather than
+    // centring the now-expanded, tall card — and wait a frame longer so the
+    // heatmap-collapse + expand layout settles before we measure.
     window.setTimeout(() => {
       const el = document.querySelector<HTMLElement>(`[data-journal-id="${id}"]`);
-      if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      if (el) {
+        el.style.scrollMarginTop = '8px';
+        el.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      }
       window.setTimeout(() => setHighlightedId(null), 1800);
-    }, 50);
+    }, 120);
   };
 
   const getStatus = (diary: DiaryTier) => {
