@@ -11,7 +11,6 @@ import { questUnmet, isAlmostThere } from '../utils/journalProgress';
 import { DROP_RATES } from '../config/rules';
 import { DropSource } from '../types';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
-import { JournalNextUpStrip, NextUpItem } from './JournalNextUpStrip';
 import { QuestAdvisorPanel } from './QuestAdvisorPanel';
 import { rankAvailableQuests } from '../utils/questAdvisor';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -423,29 +422,6 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
     COMPLETED: allQuests.filter((q) => q.status === 'COMPLETED').length,
   }), [allQuests]);
 
-  // Top 3 actionable quests for the "Next up" strip. Prefer Novice difficulty
-  // first (quickest to clear) so the strip skews toward easy wins.
-  const nextUpItems = useMemo<NextUpItem[]>(() => {
-    const difficultyRank = (d: DropSource) => {
-      if (d === DropSource.QUEST_GRANDMASTER) return 5;
-      if (d === DropSource.QUEST_MASTER) return 4;
-      if (d === DropSource.QUEST_EXPERIENCED) return 3;
-      if (d === DropSource.QUEST_INTERMEDIATE) return 2;
-      return 1; // Novice
-    };
-    return allQuests
-      .filter((q) => q.status === 'AVAILABLE')
-      .sort((a, b) => difficultyRank(a.difficulty) - difficultyRank(b.difficulty) || a.name.localeCompare(b.name))
-      .slice(0, 3)
-      .map((q) => ({
-        id: q.id,
-        title: q.name,
-        subtitle: q.points > 0 ? `${q.points} QP · ${getDifficultyLabel(q.difficulty)}` : `Miniquest · ${getDifficultyLabel(q.difficulty)}`,
-        tierLabel: getDifficultyLabel(q.difficulty),
-        tierColorClass: getDifficultyColor(q.difficulty).split(' ').find((c) => c.startsWith('text-')),
-      }));
-  }, [allQuests]);
-
   // Quest Impact Advisor — ranked by unlock score. Only computed when the
   // panel is visible (advisor mode + not filtering) to avoid running O(n²)
   // simulations on every keystroke while the player is searching.
@@ -455,10 +431,6 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [showAdvisorStrip, unlocks],
   );
-
-  // Only show the strip when the player is browsing (not searching / filtering),
-  // otherwise it duplicates whatever they're already trying to see.
-  const showNextUpStrip = !searchTerm && filter === 'ALL' && regionFilter === 'ALL' && !advisorMode;
 
   const mainQuests = filteredQuests.filter(q => q.points > 0);
   const miniquests = filteredQuests.filter(q => q.points === 0);
@@ -558,15 +530,6 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
       />
 
       <QuestInsights />
-
-      {showNextUpStrip && (
-        <JournalNextUpStrip
-          items={nextUpItems}
-          noun="quests"
-          accent="bg-blue-900/40 text-blue-300"
-          onItemClick={focusCard}
-        />
-      )}
 
       {showAdvisorStrip && (
         <QuestAdvisorPanel

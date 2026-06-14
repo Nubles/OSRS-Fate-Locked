@@ -9,7 +9,6 @@ import { MISTHALIN_AREAS } from '../constants';
 import { chunkForPlace, showChunkOnMap } from '../utils/chunkLocations';
 import { diaryUnmet, isAlmostThere } from '../utils/journalProgress';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
-import { JournalNextUpStrip, NextUpItem } from './JournalNextUpStrip';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SkillTrainingPopover, SkillPopoverState } from './SkillTrainingPopover';
 import { showToast } from '../utils/toast';
@@ -171,38 +170,6 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
     COMPLETED: diaries.filter((d) => d.status === 'COMPLETED').length,
   }), [diaries]);
 
-  // Top 3 actionable diary tiers — prefer Easy first to skew toward quick wins.
-  const tierRank: Record<string, number> = { Easy: 1, Medium: 2, Hard: 3, Elite: 4 };
-  const nextUpItems = useMemo<NextUpItem[]>(() => {
-    return diaries
-      .filter((d) => d.status === 'AVAILABLE')
-      .sort((a, b) => (tierRank[a.tier] || 5) - (tierRank[b.tier] || 5) || a.id.localeCompare(b.id))
-      .slice(0, 3)
-      .map((d) => {
-        const tasks = ALL_DIARY_TASKS.filter((t) => t.tierId === d.id);
-        const doneCount = tasks.filter((t) => unlocks.completedTasks.includes(t.id)).length;
-        const doable = countDoableTasks(tasks, unlocks);
-        const tierColor =
-          d.tier === 'Elite' ? 'text-purple-300' :
-          d.tier === 'Hard' ? 'text-red-300' :
-          d.tier === 'Medium' ? 'text-blue-300' : 'text-green-300';
-        const subtitle = tasks.length === 0
-          ? `${d.region} · ${d.tier}`
-          : doable > 0
-            ? `${doable} task${doable !== 1 ? 's' : ''} doable now · ${doneCount}/${tasks.length} done`
-            : `${doneCount}/${tasks.length} tasks done`;
-        return {
-          id: d.id,
-          title: d.id,
-          subtitle,
-          tierLabel: d.tier,
-          tierColorClass: tierColor,
-        };
-      });
-  }, [diaries, unlocks.completedTasks]);
-
-  const showNextUpStrip = !searchTerm && filterStatus === 'ALL' && filterRegion === 'ALL' && filterTier === 'ALL';
-
   const handleToggle = (e: React.MouseEvent, diary: DiaryTier) => {
       e.stopPropagation();
       const isCompleting = !unlocks.diaries.includes(diary.id);
@@ -289,15 +256,6 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
       <DiaryHeatmap onPick={focusCard} />
 
       <DiaryInsights />
-
-      {showNextUpStrip && (
-        <JournalNextUpStrip
-          items={nextUpItems}
-          noun="diaries"
-          accent="bg-green-900/40 text-green-300"
-          onItemClick={focusCard}
-        />
-      )}
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
         {sortedDiaries.map(diary => {

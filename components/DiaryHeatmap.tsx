@@ -67,7 +67,7 @@ export const DiaryHeatmap: React.FC<{ onPick: (diaryId: string) => void }> = ({ 
                   return (
                     <button
                       key={tier}
-                      onClick={() => onPick(`${area} ${tier}`)}
+                      onClick={() => { onPick(`${area} ${tier}`); setOpen(false); }}
                       title={`${area} ${tier} — ${s}`}
                       className={`h-5 rounded-sm transition-colors ${CELL[s]}`}
                       aria-label={`${area} ${tier} diary: ${s}`}

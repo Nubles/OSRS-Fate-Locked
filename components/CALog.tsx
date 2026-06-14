@@ -6,7 +6,6 @@ import { ALL_CA_TASKS, CATask } from '../data/caTasks';
 import { Swords, CheckCircle2, Sparkles, Skull, Info, ChevronDown, CheckSquare, Square, Lock, ExternalLink } from 'lucide-react';
 import { DROP_RATES } from '../config/rules';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
-import { JournalNextUpStrip, NextUpItem } from './JournalNextUpStrip';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { showToast } from '../utils/toast';
 import { CAInsights } from './JournalInsights';
@@ -135,35 +134,6 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
   }, [unlocks.cas]);
 
   // Lowest incomplete tiers — these are the player's next combat-achievement
-  // grind targets. Easy first, etc.
-  const tierRank: Record<string, number> = { Easy: 1, Medium: 2, Hard: 3, Elite: 4, Master: 5, Grandmaster: 6 };
-  const nextUpItems = useMemo<NextUpItem[]>(() => {
-    return Object.values(CA_DATA)
-      .filter((c) => !unlocks.cas.includes(c.id))
-      .sort((a, b) => (tierRank[a.id] || 99) - (tierRank[b.id] || 99))
-      .slice(0, 3)
-      .map((c) => {
-        const tasks = ALL_CA_TASKS.filter((t) => t.tierId === c.id);
-        const done = tasks.filter((t) => unlocks.completedTasks.includes(t.id)).length;
-        const colorClass =
-          c.id === 'Easy' ? 'text-green-300' :
-          c.id === 'Medium' ? 'text-blue-300' :
-          c.id === 'Hard' ? 'text-red-300' :
-          c.id === 'Elite' ? 'text-purple-300' :
-          c.id === 'Master' ? 'text-amber-300' :
-          'text-yellow-300';
-        return {
-          id: c.id,
-          title: `${c.id} Tier`,
-          subtitle: tasks.length > 0 ? `${done}/${tasks.length} tasks done` : `${c.pointsRequired} pts`,
-          tierLabel: c.id === 'Grandmaster' ? 'GM' : c.id,
-          tierColorClass: colorClass,
-        };
-      });
-  }, [unlocks.cas, unlocks.completedTasks]);
-
-  const showNextUpStrip = !searchTerm && filterStatus === 'ALL' && filterTier === 'ALL';
-
   return (
     <div className="flex flex-col h-full bg-[#121212] border border-white/10 rounded-lg overflow-hidden">
       <JournalFilterBar
@@ -191,15 +161,6 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
       />
 
       <CAInsights />
-
-      {showNextUpStrip && (
-        <JournalNextUpStrip
-          items={nextUpItems}
-          noun="combat-achievement tiers"
-          accent="bg-red-900/40 text-red-300"
-          onItemClick={focusCard}
-        />
-      )}
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
         {filteredCAs.map(ca => {

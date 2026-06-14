@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search } from 'lucide-react';
+import { Search, ChevronDown } from 'lucide-react';
 
 /**
  * Status common to every Journal sub-tab. Diaries / CAs previously had no
@@ -7,29 +7,6 @@ import { Search } from 'lucide-react';
  * three sub-tabs feel like one tool.
  */
 export type JournalStatus = 'ALL' | 'AVAILABLE' | 'LOCKED' | 'COMPLETED';
-
-interface PillProps<T extends string> {
-  value: T;
-  active: T;
-  onClick: (v: T) => void;
-  label: string;
-  count?: number;
-  accent: string;
-}
-
-const Pill = <T extends string>({ value, active, onClick, label, count, accent }: PillProps<T>) => (
-  <button
-    onClick={() => onClick(value)}
-    className={`shrink-0 text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full border transition-colors ${
-      active === value
-        ? `${accent} border-current`
-        : 'bg-black/30 border-white/10 text-gray-500 hover:text-gray-200 hover:border-white/30'
-    }`}
-  >
-    {label}
-    {typeof count === 'number' && <span className="ml-1 font-mono opacity-70">({count})</span>}
-  </button>
-);
 
 interface JournalFilterBarProps {
   /** Visual title shown on the left (e.g. "Quest Journal", "Diaries", "Combat Achievements"). */
@@ -109,65 +86,74 @@ export const JournalFilterBar: React.FC<JournalFilterBarProps> = ({
         />
       </div>
 
-      {/* Status pills + tier pills on the same row when there's room */}
-      <div className="flex flex-wrap gap-1.5 items-center">
-        <Pill value="ALL"        active={status} onClick={onStatusChange} label="All"        count={statusCounts?.ALL}        accent={accent} />
-        <Pill value="AVAILABLE"  active={status} onClick={onStatusChange} label="Available"  count={statusCounts?.AVAILABLE}  accent={accent} />
-        <Pill value="LOCKED"     active={status} onClick={onStatusChange} label="Locked"     count={statusCounts?.LOCKED}     accent={accent} />
-        <Pill value="COMPLETED"  active={status} onClick={onStatusChange} label="Completed"  count={statusCounts?.COMPLETED}  accent={accent} />
-
-        {tiers && tiers.length > 0 && onTierChange && (
-          <>
-            <div className="w-px h-4 bg-white/10 mx-1" />
+      {/* One tidy row: status as a segmented control, region + tier as compact
+          dropdowns (long pill rows were the messy part). */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex bg-black/40 rounded-lg p-0.5 gap-0.5 shrink-0">
+          {STATUSES.map((s) => (
             <button
-              onClick={() => onTierChange('ALL')}
-              className={`shrink-0 text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full border transition-colors ${
-                activeTier === 'ALL' ? `${accent} border-current` : 'bg-black/30 border-white/10 text-gray-500 hover:text-gray-200 hover:border-white/30'
+              key={s.value}
+              onClick={() => onStatusChange(s.value)}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wide transition-colors ${
+                status === s.value ? accent : 'text-gray-500 hover:text-gray-200'
               }`}
             >
-              All tiers
-            </button>
-            {tiers.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => onTierChange(t.id)}
-                className={`shrink-0 text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full border transition-colors ${
-                  activeTier === t.id
-                    ? `${t.colorClass || accent} border-current`
-                    : 'bg-black/30 border-white/10 text-gray-500 hover:text-gray-200 hover:border-white/30'
-                }`}
-              >
-                {t.label || t.id}
-              </button>
-            ))}
-          </>
-        )}
-      </div>
-
-      {/* Region pills (only when provided). Hidden when there are <2 regions. */}
-      {regions && regions.length > 1 && onRegionChange && (
-        <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
-          <button
-            onClick={() => onRegionChange('ALL')}
-            className={`shrink-0 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full border transition-colors ${
-              activeRegion === 'ALL' ? `${accent} border-current` : 'bg-black/30 border-white/10 text-gray-500 hover:text-gray-200 hover:border-white/30'
-            }`}
-          >
-            All regions
-          </button>
-          {regions.map((r) => (
-            <button
-              key={r}
-              onClick={() => onRegionChange(r)}
-              className={`shrink-0 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full border transition-colors ${
-                activeRegion === r ? `${accent} border-current` : 'bg-black/30 border-white/10 text-gray-500 hover:text-gray-200 hover:border-white/30'
-              }`}
-            >
-              {r}
+              {s.label}
+              {typeof statusCounts?.[s.value] === 'number' && <span className="ml-1 font-mono opacity-60">{statusCounts[s.value]}</span>}
             </button>
           ))}
         </div>
-      )}
+
+        <div className="flex items-center gap-1.5 ml-auto">
+          {regions && regions.length > 1 && onRegionChange && (
+            <Dropdown value={activeRegion ?? 'ALL'} onChange={onRegionChange} allLabel="All regions" options={regions} active={activeRegion !== 'ALL'} accent={accent} aria="Filter by region" />
+          )}
+          {tiers && tiers.length > 0 && onTierChange && (
+            <Dropdown value={activeTier ?? 'ALL'} onChange={onTierChange} allLabel="All tiers" options={tiers.map((t) => ({ id: t.id, label: t.label || t.id }))} active={activeTier !== 'ALL'} accent={accent} aria="Filter by tier" />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const STATUSES: { value: JournalStatus; label: string }[] = [
+  { value: 'ALL', label: 'All' },
+  { value: 'AVAILABLE', label: 'Available' },
+  { value: 'LOCKED', label: 'Locked' },
+  { value: 'COMPLETED', label: 'Done' },
+];
+
+interface DropdownProps {
+  value: string;
+  onChange: (v: string) => void;
+  allLabel: string;
+  options: (string | { id: string; label: string })[];
+  active: boolean;
+  accent: string;
+  aria: string;
+}
+
+const Dropdown: React.FC<DropdownProps> = ({ value, onChange, allLabel, options, active, accent, aria }) => {
+  const accentText = accent.split(' ').find((c) => c.startsWith('text-')) || 'text-gray-300';
+  return (
+    <div className="relative shrink-0">
+      <select
+        aria-label={aria}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`appearance-none bg-black/40 border rounded-lg pl-2.5 pr-6 py-1 text-[11px] font-semibold focus:outline-none transition-colors ${
+          active ? `border-current ${accentText}` : 'border-white/10 text-gray-400 hover:border-white/30'
+        }`}
+      >
+        <option value="ALL">{allLabel}</option>
+        {options.map((o) => {
+          const id = typeof o === 'string' ? o : o.id;
+          const label = typeof o === 'string' ? o : o.label;
+          return <option key={id} value={id}>{label}</option>;
+        })}
+      </select>
+      <ChevronDown size={11} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
     </div>
   );
 };
