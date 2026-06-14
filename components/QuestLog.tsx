@@ -473,6 +473,8 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
       if (isCompleted) return;
 
       toggleQuest(quest.id);
+      // Celebration overlay (QuestCompleteOverlay) shows the wiki reward scroll.
+      window.dispatchEvent(new CustomEvent('fate:quest-complete', { detail: { name: quest.name } }));
 
       const rate = DROP_RATES[quest.difficulty];
       rollForKey(quest.difficulty, rate, e.clientX, e.clientY);

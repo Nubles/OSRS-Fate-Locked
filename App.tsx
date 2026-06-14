@@ -12,6 +12,7 @@ import { SectionGuide, GUIDES } from './components/SectionGuide';
 import { PopOnChange } from './components/PopOnChange';
 import { CommandPalette } from './components/CommandPalette';
 import { GuidedTour } from './components/GuidedTour';
+import { QuestCompleteOverlay } from './components/QuestCompleteOverlay';
 import { WikiIcon } from './components/WikiIcon';
 import { VoidAltar } from './components/VoidAltar';
 import { TransmutationEffect } from './components/TransmutationEffect';
@@ -547,6 +548,8 @@ const GameLayout = () => {
       <CommandPalette />
       {/* Replayable spotlight tour — start via fate:start-tour. */}
       <GuidedTour />
+      {/* Quest-complete celebration with the wiki reward scroll. */}
+      <QuestCompleteOverlay />
 
       {/* Main Command Center Layout */}
       <main className="max-w-[1600px] mx-auto px-4 py-4 h-[calc(100vh-80px)]">
