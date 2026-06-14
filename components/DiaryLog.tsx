@@ -7,6 +7,7 @@ import { Map, CheckCircle2, Lock, Sparkles, BookOpen, ChevronDown, CheckSquare, 
 import { DROP_RATES } from '../config/rules';
 import { MISTHALIN_AREAS } from '../constants';
 import { chunkForPlace, showChunkOnMap } from '../utils/chunkLocations';
+import { diaryUnmet, isAlmostThere } from '../utils/journalProgress';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { JournalNextUpStrip, NextUpItem } from './JournalNextUpStrip';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -328,6 +329,9 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
           const dTotalMet = metRegionCount + metSkillCount + metQuestCount;
           const dReqPct = dTotalReqs === 0 ? 100 : Math.round((dTotalMet / dTotalReqs) * 100);
           const missingDiaryQuests = diary.quests.filter(q => !unlocks.quests.includes(q));
+          // "Almost there" — the tier is blocked by exactly one requirement.
+          const dUnmet = (isCompleted || isAvailable) ? [] : diaryUnmet(diary, unlocks);
+          const dAlmost = isAlmostThere(dUnmet);
 
           return (
             <div
@@ -367,6 +371,11 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                   {!isCompleted && !isAvailable && !isExpanded && dTotalReqs > 0 && (
                     <div className="mt-1.5 space-y-1.5">
                       <div className="flex items-center gap-2">
+                        {dAlmost && (
+                          <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40 flex items-center gap-1 shrink-0 animate-pulse">
+                            <Sparkles size={8} /> Almost — {dUnmet[0].label}
+                          </span>
+                        )}
                         <div className="flex-1 h-1 bg-black/40 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-amber-500/50 transition-all duration-500"

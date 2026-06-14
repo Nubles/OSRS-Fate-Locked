@@ -7,6 +7,7 @@ import { CheckCircle2, Lock, Map, BookOpen, Sparkles, Scroll, Bookmark, Layers, 
 import { chunkContentService } from '../services/ChunkContentService';
 import { questLocations, refineQuestRegion, QuestLocationInfo } from '../utils/questLocations';
 import { showChunkOnMap } from '../utils/chunkLocations';
+import { questUnmet, isAlmostThere } from '../utils/journalProgress';
 import { DROP_RATES } from '../config/rules';
 import { DropSource } from '../types';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
@@ -60,6 +61,10 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, currentQP, onTogg
     const isCompleted = quest.status === 'COMPLETED';
     const isAvailable = quest.status === 'AVAILABLE';
     const diffStyle = getDifficultyColor(quest.difficulty);
+
+    // "Almost there" — locked by exactly one requirement (a quick win).
+    const unmet = !isCompleted && !isAvailable ? questUnmet(quest, unlocks) : [];
+    const almost = isAlmostThere(unmet);
 
     // Chunk-derived locations refine the coarse continent requirement: a quest
     // tagged "Kandarin" may only actually visit the Ardougne sub-area, so we
@@ -264,6 +269,11 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, currentQP, onTogg
               specific blockers; the bar gives an at-a-glance % completion. */}
           {!isCompleted && !isAvailable && totalReqs > 0 && (
               <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2">
+                  {almost && (
+                      <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40 flex items-center gap-1 shrink-0 animate-pulse">
+                          <Sparkles size={8} /> Almost — {unmet[0].label}
+                      </span>
+                  )}
                   <div className="flex-1 h-1 bg-black/40 rounded-full overflow-hidden">
                       <div
                           className="h-full bg-amber-500/60 transition-all duration-500"
