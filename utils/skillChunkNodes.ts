@@ -22,9 +22,31 @@ export interface SkillChunkNode {
   tier: number;
   chunks: number;
   kind: EntityKind;
+  /** A use-station (anvil, range, altar…) — usable from level 1, no level gate. */
+  station?: boolean;
 }
 
-interface Req { skill: string; level: number }
+interface Req { skill: string; level: number; station?: boolean }
+
+// Production-skill training stations: usable from level 1 (the bar/food/item
+// you bring sets the real level), so they carry no level gate. Excludes broken/
+// placeholder variants below.
+const STATION_RULES: [RegExp, string][] = [
+  [/\banvil\b/i, 'Smithing'],
+  [/\bfurnace\b|\bforge\b/i, 'Smithing'],
+  [/cooking range|cooking spot|^range$|^cooker$|gnome cooker|^stove$|simple stove|cooking pot|clay oven/i, 'Cooking'],
+  [/spinning wheel|\bloom\b|potter'?s wheel|pottery oven|potter'?s oven/i, 'Crafting'],
+  [/\bbonfire\b|\bbrazier\b|^campfire$|fire pit/i, 'Firemaking'],
+  [/gilded altar|chaos altar \(prayer\)|altar of (guthix|zamorak|saradomin)|exposed altar|ectofuntus|^altar$/i, 'Prayer'],
+  [/\bsawmill\b|workbench/i, 'Construction'],
+];
+const NOT_STATION = /broken|space|half-built|rusted|cart wheel|experimental|\bbank\b/i;
+
+const stationReq = (name: string): Req | null => {
+  if (NOT_STATION.test(name)) return null;
+  for (const [re, skill] of STATION_RULES) if (re.test(name)) return { skill, level: 1, station: true };
+  return null;
+};
 
 // Farming patches — usable from low levels (the crop sets the real level), so
 // they're surfaced at level 1. Excludes look-alikes like "Patched Wall".
@@ -147,7 +169,7 @@ const reqFor = (name: string, kind: EntityKind): Req | null => {
     if (r) return r;
     if (FARMING_PATCH.test(name) && !NOT_PATCH.test(name)) return { skill: 'Farming', level: 1 };
     for (const [re, level] of AGILITY_OBJ) if (re.test(name)) return { skill: 'Agility', level };
-    return sailingReq(name);
+    return sailingReq(name) ?? stationReq(name);
   }
   return npcReq(name); // npc | monster
 };
@@ -164,15 +186,19 @@ export const skillChunkNodes = (skill: string): SkillChunkNode[] => {
       const key = hit.name.toLowerCase();
       if (seen.has(key)) continue;
       seen.add(key);
-      out.push({ name: hit.name, level: req.level, tier: tierForLevel(req.level), chunks: hit.locations.length, kind });
+      out.push({ name: hit.name, level: req.level, tier: tierForLevel(req.level), chunks: hit.locations.length, kind, station: req.station });
     }
   }
   return out.sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
 };
 
-/** Same nodes grouped by the tier that unlocks them (1..10). */
+/** Level-graded gathering nodes grouped by the tier that unlocks them (stations excluded). */
 export const skillChunkNodesByTier = (skill: string): Record<number, SkillChunkNode[]> => {
   const grouped: Record<number, SkillChunkNode[]> = {};
-  for (const node of skillChunkNodes(skill)) (grouped[node.tier] ??= []).push(node);
+  for (const node of skillChunkNodes(skill)) if (!node.station) (grouped[node.tier] ??= []).push(node);
   return grouped;
 };
+
+/** Use-stations for a skill (anvils, ranges, altars…) — usable from level 1. */
+export const skillStations = (skill: string): SkillChunkNode[] =>
+  skillChunkNodes(skill).filter(n => n.station).sort((a, b) => a.name.localeCompare(b.name));

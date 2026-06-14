@@ -3,7 +3,7 @@ import React, { useRef, useEffect, useMemo, useState } from 'react';
 import { X, BookOpen, Lock, Unlock, Star, MapPin, Navigation, ChevronRight, Search } from 'lucide-react';
 import { SKILL_UNLOCK_DATA } from '../data/skillUnlocks';
 import { tierBand } from '../utils/skillTiers';
-import { skillChunkNodesByTier } from '../utils/skillChunkNodes';
+import { skillChunkNodesByTier, skillStations } from '../utils/skillChunkNodes';
 import { chunkContentService } from '../services/ChunkContentService';
 import { summarisePlaces, showChunkOnMap } from '../utils/chunkLocations';
 import { useGame } from '../context/GameContext';
@@ -84,7 +84,11 @@ export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, curre
     () => (chunksReady ? skillChunkNodesByTier(skill) : {}),
     [skill, chunksReady],
   );
-  const hasGathering = Object.keys(nodesByTier).length > 0;
+  const stations = useMemo(
+    () => (chunksReady ? skillStations(skill) : []),
+    [skill, chunksReady],
+  );
+  const hasGathering = Object.keys(nodesByTier).length > 0 || stations.length > 0;
   // Default to the Map Gathering tab for skills that have nodes — that's the
   // "where can I actually do this" view the player usually wants.
   useEffect(() => { if (hasGathering) setTab('gather'); }, [hasGathering]);
@@ -108,7 +112,13 @@ export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, curre
     if (tab === 'gather') return nodesFor(t).length > 0;
     return q ? benefitsFor(t).length > 0 : true;
   });
-  const noMatches = (q || unlockedOnly) && visibleTiers.length === 0;
+  // Stations are usable from level 1, so they show whenever the skill's tier 1
+  // is unlocked (i.e. always, unless "unlocked only" and the skill is at tier 0).
+  const visibleStations = (tab === 'gather' && (!unlockedOnly || currentTier >= 1))
+    ? stations.filter(s => !q || s.name.toLowerCase().includes(q))
+    : [];
+  const noMatches = (q || unlockedOnly) && visibleTiers.length === 0 &&
+    (tab !== 'gather' || visibleStations.length === 0);
 
   return (
     <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={`${skill} skill detail`} tabIndex={-1} className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-200">
@@ -146,7 +156,7 @@ export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, curre
             >
               <Icon size={13} /> {label}
               {id === 'gather' && hasGathering && (
-                <span className="text-[9px] font-mono text-cyan-400/70">{Object.values(nodesByTier).flat().length}</span>
+                <span className="text-[9px] font-mono text-cyan-400/70">{Object.values(nodesByTier).flat().length + stations.length}</span>
               )}
             </button>
           ))}
@@ -201,6 +211,31 @@ export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, curre
           )}
           {noMatches && (
             <p className="text-sm text-gray-500 italic">No {tab === 'gather' ? 'resources' : 'unlocks'} match{q && ` “${query}”`}{unlockedOnly && ' in unlocked tiers'}.</p>
+          )}
+
+          {/* Stations — usable from level 1, shown separately from level-graded nodes. */}
+          {tab === 'gather' && visibleStations.length > 0 && (
+            <div className="border border-amber-500/25 bg-amber-900/10 rounded-lg overflow-hidden">
+              <div className="px-4 py-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider bg-amber-900/20 text-amber-300 border-b border-amber-500/10">
+                <BookOpen size={14} /> Stations <span className="opacity-60 font-mono">· usable from level 1</span>
+              </div>
+              <div className="p-4 space-y-1.5">
+                {visibleStations.map((n) => {
+                  const isOpen = openNode === n.name;
+                  return (
+                    <div key={n.name} className={`rounded border ${isOpen ? 'border-amber-500/30 bg-black/30' : 'border-white/5'}`}>
+                      <button onClick={() => setOpenNode(isOpen ? null : n.name)} className="w-full flex items-center gap-2 px-2 py-1.5 text-left hover:bg-white/5 rounded">
+                        <ChevronRight size={12} className={`text-gray-500 shrink-0 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+                        <span className="text-sm flex-1 truncate text-amber-100/90">{n.name}</span>
+                        <span className="text-[9px] uppercase font-bold text-amber-400/70 shrink-0">station</span>
+                        <span className="text-[10px] text-gray-600 shrink-0">{n.chunks}🗺</span>
+                      </button>
+                      {isOpen && <div className="px-2 pb-2"><RegionPicker node={n.name} onJump={jump} /></div>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           )}
 
           <div className="space-y-4">
