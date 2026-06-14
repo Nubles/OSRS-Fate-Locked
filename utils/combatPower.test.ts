@@ -9,7 +9,7 @@ function unlocks(over: Partial<UnlockState> = {}): UnlockState {
     skills: Object.fromEntries(SKILLS_LIST.map((s) => [s, 0])),
     levels: Object.fromEntries(SKILLS_LIST.map((s) => [s, 1])),
     regions: [], mobility: [], arcana: [], housing: [], merchants: [], minigames: [],
-    bosses: [], storage: [], guilds: [], farming: [], slayerUnlocks: [], agilityShortcuts: [], quests: [], diaries: [], cas: [],
+    bosses: [], storage: [], guilds: [], farming: [], slayerUnlocks: [], quests: [], diaries: [], cas: [],
     completedTasks: [], collectionLog: {},
     ...over,
   };

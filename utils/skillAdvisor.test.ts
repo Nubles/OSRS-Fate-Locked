@@ -12,7 +12,7 @@ function lowSkills(over: Record<string, any> = {}) {
     levels: Object.fromEntries(SKILLS_LIST.map((s) => [s, 1])),
     regions: [],
     mobility: [], arcana: [], housing: [], merchants: [], minigames: [],
-    bosses: [], storage: [], guilds: [], farming: [], slayerUnlocks: [], agilityShortcuts: [],
+    bosses: [], storage: [], guilds: [], farming: [], slayerUnlocks: [],
     quests: [],
     diaries: [],
     cas: [],

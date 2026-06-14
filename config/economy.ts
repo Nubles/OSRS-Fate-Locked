@@ -15,7 +15,7 @@ import { DROP_RATES, EQUIPMENT_TIER_MAX } from './rules';
 import {
   SKILLS_LIST, EQUIPMENT_SLOTS, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST,
   POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST,
-  GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST, AGILITY_SHORTCUTS_LIST,
+  GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST,
 } from '../data/items';
 
 const WIKI = 'https://oldschool.runescape.wiki/images/';
@@ -237,7 +237,6 @@ export const SPEND_TABLES: SpendTable[] = [
   { type: TableType.GUILDS,          label: 'Guilds',     count: GUILDS_LIST.length,     blurb: 'Skill guilds and their perks.' },
   { type: TableType.FARMING_LAYERS,  label: 'Farming',    count: FARMING_PATCH_LIST.length, blurb: 'Farming patches across the world.' },
   { type: TableType.SLAYER_UNLOCKS,  label: 'Slayer',     count: SLAYER_UNLOCKS_LIST.length, blurb: 'Slayer reward unlocks: new tasks, superiors, helmet & more.' },
-  { type: TableType.AGILITY_SHORTCUTS, label: 'Shortcuts', count: AGILITY_SHORTCUTS_LIST.length, blurb: 'Agility shortcuts that link areas and trim routes.' },
 ];
 
 /** Flat cost, in keys, of a single unlock from any table. */

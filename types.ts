@@ -55,7 +55,6 @@ export enum TableType {
   FARMING_LAYERS = 'Farming Patches',
   AGILITY_COURSES = 'Agility Courses',
   SLAYER_UNLOCKS = 'Slayer Unlocks',
-  AGILITY_SHORTCUTS = 'Agility Shortcuts',
   QUESTS = 'Quests',
   DIARIES = 'Diaries',
   COMBAT_ACHIEVEMENTS = 'Combat Achievements',
@@ -97,7 +96,6 @@ export interface UnlockState {
   guilds: string[];
   farming: string[];
   slayerUnlocks: string[];
-  agilityShortcuts: string[];
   quests: string[]; // List of completed Quest IDs
   diaries: string[]; // List of completed Diary IDs (e.g. "Ardougne Easy")
   cas: string[]; // List of completed CA tiers (e.g. "Easy")

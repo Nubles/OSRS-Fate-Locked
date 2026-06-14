@@ -15,7 +15,7 @@ function maxedUnlocks(over: Record<string, any> = {}) {
     levels: Object.fromEntries(SKILLS_LIST.map((s) => [s, 99])),
     regions: [],
     mobility: [], arcana: [], housing: [], merchants: [], minigames: [],
-    bosses: [], storage: [], guilds: [], farming: [], slayerUnlocks: [], agilityShortcuts: [],
+    bosses: [], storage: [], guilds: [], farming: [], slayerUnlocks: [],
     quests: [],
     diaries: [],
     cas: [],

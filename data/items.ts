@@ -86,19 +86,6 @@ export const SLAYER_UNLOCKS_LIST = [
   'Wings Spread'
 ];
 
-// Notable agility shortcuts — named by location. Each effectively links areas or
-// trims a route; tracked as one-off unlocks like guilds/merchants.
-export const AGILITY_SHORTCUTS_LIST = [
-  'Falador Crumbling Wall', 'Falador East Underwall Tunnel', 'Grand Exchange Underwall Tunnel',
-  'Edgeville Dungeon Obstacle Pipe', 'Al Kharid Mine Scramble', 'Coal Trucks Log Balance',
-  'Brimhaven Dungeon Stepping Stones', 'Cairn Isle Stepping Stone', 'Shilo Village Stepping Stones',
-  'Yanille Wall (Grapple)', 'Catherby Cliffside (Grapple)', 'Taverley Dungeon Pipe Squeeze',
-  'Trollheim Mountain Path', 'Gnome Stronghold Climbing Net', 'Draynor Manor Stile',
-  'Varrock South Fence', 'Wilderness Lava Maze Stepping Stone', 'Deep Wilderness Dungeon Crevice',
-  'Lava Dragon Isle Stepping Stones', 'Karamja Volcano Climbing Rocks', 'Slayer Tower Spiked Chain',
-  'Fremennik Province Log Balance', "Eagles' Peak Crevice", 'Hosidius Crevice'
-];
-
 export const FARMING_PATCH_LIST = [
   'Allotment', 'Herb', 'Flower', 'Hops', 'Bush', 'Wood Tree', 
   'Fruit Tree', 'Hardwood Tree', 'Cactus', 'Mushroom', 'Belladonna', 

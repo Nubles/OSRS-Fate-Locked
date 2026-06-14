@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { TableType } from '../types';
 import { useGame } from '../context/GameContext';
 import { checkUnlockAvailability, getPoolAndStateKey, isValidUnlock, UNLOCK_COST } from '../utils/gameEngine';
-import { REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, POH_LIST, MERCHANTS_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST, AGILITY_SHORTCUTS_LIST, UTILITY_ITEM_IDS } from '../constants';
+import { REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, POH_LIST, MERCHANTS_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST, UTILITY_ITEM_IDS } from '../constants';
 import { VoidReveal } from './VoidReveal';
 import { wikiService } from '../services/WikiService';
 import { showToast } from '../utils/toast';
@@ -36,7 +36,6 @@ const ACCENTS: Record<string, Accent> = {
   [TableType.GUILDS]: { icon: 'text-teal-300', bar: 'bg-teal-400', hoverBorder: 'hover:border-teal-400/70', hoverShadow: 'hover:shadow-[0_0_22px_-6px_rgba(45,212,191,0.6)]', titleHover: 'group-hover:text-teal-200', ctaBorder: 'border-teal-500/25', ctaText: 'text-teal-300/80', ctaHover: 'group-hover:bg-teal-500/15 group-hover:border-teal-400/50 group-hover:text-teal-100' },
   [TableType.FARMING_LAYERS]: { icon: 'text-lime-300', bar: 'bg-lime-400', hoverBorder: 'hover:border-lime-400/70', hoverShadow: 'hover:shadow-[0_0_22px_-6px_rgba(163,230,53,0.6)]', titleHover: 'group-hover:text-lime-200', ctaBorder: 'border-lime-500/25', ctaText: 'text-lime-300/80', ctaHover: 'group-hover:bg-lime-500/15 group-hover:border-lime-400/50 group-hover:text-lime-100' },
   [TableType.SLAYER_UNLOCKS]: { icon: 'text-rose-300', bar: 'bg-rose-400', hoverBorder: 'hover:border-rose-400/70', hoverShadow: 'hover:shadow-[0_0_22px_-6px_rgba(251,113,133,0.6)]', titleHover: 'group-hover:text-rose-200', ctaBorder: 'border-rose-500/25', ctaText: 'text-rose-300/80', ctaHover: 'group-hover:bg-rose-500/15 group-hover:border-rose-400/50 group-hover:text-rose-100' },
-  [TableType.AGILITY_SHORTCUTS]: { icon: 'text-fuchsia-300', bar: 'bg-fuchsia-400', hoverBorder: 'hover:border-fuchsia-400/70', hoverShadow: 'hover:shadow-[0_0_22px_-6px_rgba(232,121,249,0.6)]', titleHover: 'group-hover:text-fuchsia-200', ctaBorder: 'border-fuchsia-500/25', ctaText: 'text-fuchsia-300/80', ctaHover: 'group-hover:bg-fuchsia-500/15 group-hover:border-fuchsia-400/50 group-hover:text-fuchsia-100' },
 };
 const DEFAULT_ACCENT = ACCENTS[TableType.EQUIPMENT];
 
@@ -71,7 +70,6 @@ const OSRS_GACHA_ICONS = {
   GUILDS: 'https://oldschool.runescape.wiki/images/Achievement_Diaries_icon.png',
   FARMING: 'https://oldschool.runescape.wiki/images/Farming_icon.png',
   SLAYER_UNLOCKS: 'https://oldschool.runescape.wiki/images/Slayer_icon.png',
-  AGILITY_SHORTCUTS: 'https://oldschool.runescape.wiki/images/Agility_icon.png',
 };
 
 const SpendCard: React.FC<SpendCardProps> = ({
@@ -215,7 +213,7 @@ export const GachaSection: React.FC = () => {
           TableType.EQUIPMENT, TableType.SKILLS, TableType.REGIONS, TableType.MOBILITY,
           TableType.ARCANA, TableType.POH, TableType.MERCHANTS, TableType.MINIGAMES,
           TableType.BOSSES, TableType.STORAGE, TableType.GUILDS,
-          TableType.FARMING_LAYERS, TableType.SLAYER_UNLOCKS, TableType.AGILITY_SHORTCUTS
+          TableType.FARMING_LAYERS, TableType.SLAYER_UNLOCKS
       ];
 
       const globalPool: { item: string, tableType: TableType, stateKey: string }[] = [];
@@ -280,7 +278,6 @@ export const GachaSection: React.FC = () => {
     { type: TableType.GUILDS, label: 'Guilds', subLabel: 'Professional Societies', iconSrc: OSRS_GACHA_ICONS.GUILDS, unlocked: (unlocks.guilds ?? []).length, total: GUILDS_LIST.length, can: canUnlock.guilds },
     { type: TableType.FARMING_LAYERS, label: 'Farming', subLabel: 'Patches', iconSrc: OSRS_GACHA_ICONS.FARMING, unlocked: (unlocks.farming ?? []).length, total: FARMING_PATCH_LIST.length, can: canUnlock.farming },
     { type: TableType.SLAYER_UNLOCKS, label: 'Slayer', subLabel: 'Reward Unlocks', iconSrc: OSRS_GACHA_ICONS.SLAYER_UNLOCKS, unlocked: (unlocks.slayerUnlocks ?? []).length, total: SLAYER_UNLOCKS_LIST.length, can: canUnlock.slayerUnlocks },
-    { type: TableType.AGILITY_SHORTCUTS, label: 'Shortcuts', subLabel: 'Agility Routes', iconSrc: OSRS_GACHA_ICONS.AGILITY_SHORTCUTS, unlocked: (unlocks.agilityShortcuts ?? []).length, total: AGILITY_SHORTCUTS_LIST.length, can: canUnlock.agilityShortcuts },
   ];
 
   return (

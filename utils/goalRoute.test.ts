@@ -8,7 +8,7 @@ const stateWith = (over: Partial<any> = {}): GameState => ({
   unlocks: {
     regions: [], skills: {}, levels: {}, quests: [], diaries: [],
     bosses: [], minigames: [], guilds: [], mobility: [], arcana: [],
-    storage: [], housing: [], merchants: [], farming: [], slayerUnlocks: [], agilityShortcuts: [], equipment: {},
+    storage: [], housing: [], merchants: [], farming: [], slayerUnlocks: [], equipment: {},
     completedTasks: [], cas: [],
     ...over,
   },
