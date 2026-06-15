@@ -22,6 +22,44 @@ for (const d of Object.values(DIARY_DATA)) {
 }
 
 /**
+ * Walk the Connect graph from a chunk to the nearest *named* areas, hopping up
+ * to 3 steps through unnamed connector chunks (ocean/dungeon). Skips areas the
+ * chunk already belongs to (ownIds).
+ */
+const expandLinks = (graph: Record<string, string[]>, start: string, ownIds: Set<string>) => {
+  const out = new Map<string, { label: string; cx: number; cy: number; via: string | null }>();
+  const visited = new Set<string>([start]);
+  // Each frontier node carries the named connector (e.g. "Brimhaven Dungeon")
+  // traversed to reach it, so we can classify the link type.
+  let frontier = (graph[start] ?? []).map(id => ({ id, via: isNaN(+id) ? id : null }));
+  for (let depth = 0; depth < 3 && frontier.length; depth++) {
+    const next: { id: string; via: string | null }[] = [];
+    for (const { id, via } of frontier) {
+      if (visited.has(id)) continue;
+      visited.add(id);
+      const numeric = !isNaN(+id);
+      const tx = numeric ? Math.floor(+id / 256) : -1, ty = numeric ? +id % 256 : -1;
+      const label = numeric ? (placeOf(tx, ty).subArea ?? placeOf(tx, ty).region) : null;
+      if (label) { if (!ownIds.has(id) && !out.has(label)) out.set(label, { label, cx: tx, cy: ty, via }); }
+      else {
+        const nextVia = numeric ? via : id; // a named connector node names the link
+        for (const t of graph[id] ?? []) next.push({ id: t, via: nextVia });
+      }
+    }
+    frontier = next;
+  }
+  return [...out.values()];
+};
+
+/** Classify a link by the named connector it routes through. */
+const classifyVia = (via: string | null): string => {
+  if (!via) return 'Stairs & links';
+  if (/altar/i.test(via)) return 'Altars';
+  if (/dungeon|cave|catacomb|lair|sewer|\bmine\b|crypt|basement|temple|prison|vault|nexus|cavern|hole|\bpit\b|ruins|tomb|tunnel/i.test(via)) return 'Dungeons & caves';
+  return 'Stairs & links';
+};
+
+/**
  * "What can I play here?" — the OneChunkMan-style content readout for a
  * clicked map chunk, or aggregated across its whole region (since this mode
  * unlocks areas, not single chunks). Every activity is checked against the
@@ -121,11 +159,19 @@ const CappedList: React.FC<{ items: React.ReactNode[]; cap: number }> = ({ items
   );
 };
 
-/** Collapsible overview block: header with count, comma-list body. */
-const Overview: React.FC<{ kind: 'can' | 'cant'; items: string[] }> = ({ kind, items }) => {
+interface OverviewItem { cat: string; label: string }
+
+// Stable display order for the grouped can/cant overview.
+const OVERVIEW_ORDER = ['Quests', 'Diaries', 'Bosses', 'Monsters', 'Minigames', 'Guilds', 'Shops', 'Resources', 'Farming', 'Travel'];
+
+/** Collapsible overview block, grouped by activity type (quests / shops / …). */
+const Overview: React.FC<{ kind: 'can' | 'cant'; items: OverviewItem[] }> = ({ kind, items }) => {
   const [open, setOpen] = useState(false);
   if (items.length === 0) return null;
   const can = kind === 'can';
+  const groups = new Map<string, string[]>();
+  for (const it of items) (groups.get(it.cat) ?? groups.set(it.cat, []).get(it.cat)!).push(it.label);
+  const ordered = [...groups.entries()].sort((a, b) => OVERVIEW_ORDER.indexOf(a[0]) - OVERVIEW_ORDER.indexOf(b[0]));
   return (
     <div className={`mt-2 rounded border ${can ? 'border-emerald-700/40 bg-emerald-950/30' : 'border-red-800/40 bg-red-950/20'}`}>
       <button
@@ -140,8 +186,14 @@ const Overview: React.FC<{ kind: 'can' | 'cant'; items: string[] }> = ({ kind, i
         <span className="text-[10px] font-mono text-gray-500">({items.length})</span>
       </button>
       {open && (
-        <div className={`px-2 pb-2 text-[10px] leading-relaxed ${can ? 'text-emerald-200/90' : 'text-red-200/70'}`}>
-          {items.join(' · ')}
+        <div className="px-2 pb-2 space-y-1">
+          {ordered.map(([cat, labels]) => (
+            <div key={cat} className="text-[10px] leading-relaxed">
+              <span className={`font-bold uppercase tracking-wide text-[9px] ${can ? 'text-emerald-400/80' : 'text-red-400/70'}`}>{cat}</span>
+              <span className="text-gray-600"> · </span>
+              <span className={can ? 'text-emerald-200/90' : 'text-red-200/70'}>{labels.join(', ')}</span>
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -154,6 +206,8 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
   const [, setLoadedTick] = useState(0);
   const [failed, setFailed] = useState(false);
   const [openShop, setOpenShop] = useState<string | null>(null);
+  const [showLinks, setShowLinks] = useState(false);
+  const [linksCap, setLinksCap] = useState<Record<string, number>>({});
 
   useEffect(() => {
     chunkContentService.init().then(ok => (ok ? setLoadedTick(t => t + 1) : setFailed(true)));
@@ -165,41 +219,46 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     return chunkContentService.contentFor(chunk.cx, chunk.cy);
   }, [mode, region, regionChunks, chunk, chunkContentService.ready]);
 
-  // Transport links: chunks this area connects to without walking (boats,
-  // teleports, stairs). Many links route through unnamed connector chunks
-  // (ocean/dungeon), so hop through those to the first named destination.
-  const links = useMemo(() => {
+  // Transport links grouped by network (fairy ring / canoe / boat / …). A link
+  // is only usable if both the destination area AND its transport network are
+  // unlocked — an unlocked area you can't yet sail/ring to is still locked.
+  const linkGroups = useMemo(() => {
     if (!chunkContentService.ready) return [];
     const graph = chunkContentService.connectGraph();
     const ownIds = new Set(regionChunks.map(c => String(c.cx * 256 + c.cy)));
     const sources = mode === 'region' ? regionChunks : [chunk];
-    const seen = new Map<string, { cx: number; cy: number; label: string; unlocked: boolean }>();
+    const mob = new Set(unlocks.mobility ?? []);
+    const mobNetworks = new Set(MOBILITY_LIST);
+    const byCat = new Map<string, Map<string, { cx: number; cy: number; unlocked: boolean }>>();
 
     for (const s of sources) {
-      const start = String(s.cx * 256 + s.cy);
-      const visited = new Set<string>([start]);
-      let frontier = graph[start] ?? [];
-      for (let depth = 0; depth < 3 && frontier.length; depth++) {
-        const next: string[] = [];
-        for (const tid of frontier) {
-          if (visited.has(tid)) continue;
-          visited.add(tid);
-          const tx = Math.floor(+tid / 256), ty = +tid % 256;
-          const place = placeOf(tx, ty);
-          const label = place.subArea ?? place.region;
-          if (label) {
-            if (!ownIds.has(tid) && !seen.has(label)) {
-              seen.set(label, { cx: tx, cy: ty, label, unlocked: chunkUnlocked(tx, ty, unlocks) });
-            }
-          } else {
-            next.push(...(graph[tid] ?? [])); // unnamed connector → keep hopping
-          }
-        }
-        frontier = next;
+      const dests = expandLinks(graph, String(s.cx * 256 + s.cy), ownIds);
+      if (!dests.length) continue;
+      // A recognised transport object in the source chunk names the network
+      // (fairy ring / canoe / boat …); otherwise classify by the connector.
+      const c = chunkContentService.contentFor(s.cx, s.cy);
+      const nets = new Set<string>();
+      for (const [obj] of c?.objects ?? []) { const n = mobilityFor(obj); if (n) nets.add(n); }
+      const sourceNet = nets.size === 1 ? [...nets][0] : null;
+      for (const d of dests) {
+        const category = sourceNet ?? classifyVia(d.via);
+        if (!byCat.has(category)) byCat.set(category, new Map());
+        const m = byCat.get(category)!;
+        if (!m.has(d.label)) m.set(d.label, { cx: d.cx, cy: d.cy, unlocked: chunkUnlocked(d.cx, d.cy, unlocks) });
       }
     }
-    return [...seen.values()].sort((a, b) => Number(b.unlocked) - Number(a.unlocked) || a.label.localeCompare(b.label));
+
+    return [...byCat.entries()].map(([category, m]) => ({
+      category,
+      isNetwork: mobNetworks.has(category),
+      networkUnlocked: !mobNetworks.has(category) || mob.has(category),
+      dests: [...m.entries()].map(([label, v]) => ({ label, ...v }))
+        .sort((a, b) => Number(b.unlocked) - Number(a.unlocked) || a.label.localeCompare(b.label)),
+    })).sort((a, b) => b.dests.length - a.dests.length);
   }, [mode, chunk, regionChunks, unlocks, chunkContentService.ready]);
+
+  const totalLinks = useMemo(() => linkGroups.reduce((a, g) => a + g.dests.length, 0), [linkGroups]);
+  const reachableLinks = useMemo(() => linkGroups.reduce((a, g) => a + (g.networkUnlocked ? g.dests.filter(d => d.unlocked).length : 0), 0), [linkGroups]);
 
   const slayerLevel = unlocks.levels['Slayer'] ?? 1;
   const slayerUnlocked = (unlocks.skills?.['Slayer'] ?? 0) > 0;
@@ -284,27 +343,27 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
 
   // ── Can-do / Locked overview ───────────────────────────────────────────────
   const overview = useMemo(() => {
-    if (!content || !derived) return { can: [] as string[], cant: [] as string[] };
-    const can: string[] = [];
-    const cant: string[] = [];
-    const push = (ok: boolean, label: string) => (ok ? can : cant).push(label);
+    if (!content || !derived) return { can: [] as OverviewItem[], cant: [] as OverviewItem[] };
+    const can: OverviewItem[] = [];
+    const cant: OverviewItem[] = [];
+    const push = (ok: boolean, cat: string, label: string) => (ok ? can : cant).push({ cat, label });
 
     for (const q of questRows) {
       if (q.status === 'COMPLETED') continue;
-      if (q.status === 'AVAILABLE') push(unlocked, `Quest: ${q.name}`);
-      else if (q.status) cant.push(`Quest: ${q.name}`);
+      if (q.status === 'AVAILABLE') push(unlocked, 'Quests', q.name);
+      else if (q.status) cant.push({ cat: 'Quests', label: q.name });
     }
-    for (const b of derived.bosses) push(unlocked && b.usable, `Boss: ${b.name}`);
+    for (const b of derived.bosses) push(unlocked && b.usable, 'Bosses', b.name);
     for (const m of derived.monsters.slice(0, 12)) {
       const met = m.slayer == null || (slayerUnlocked && slayerLevel >= m.slayer);
-      push(unlocked && met, `Kill ${m.name}`);
+      push(unlocked && met, 'Monsters', m.name);
     }
-    for (const s of derived.shops) push(unlocked && s.usable, `Shop: ${s.name}`);
-    for (const t of derived.transport) push(unlocked && t.usable, `Travel: ${t.name}`);
-    for (const f of derived.farming) push(unlocked && f.usable, `Farm: ${f.name}`);
-    for (const r of derived.resources) push(unlocked && r.usable, `Gather: ${r.name}`);
-    for (const g of derived.guilds) push(unlocked && g.usable, g.name);
-    for (const mg of derived.minigames) push(unlocked && mg.usable, mg.name);
+    for (const s of derived.shops) push(unlocked && s.usable, 'Shops', s.name);
+    for (const t of derived.transport) push(unlocked && t.usable, 'Travel', t.name);
+    for (const f of derived.farming) push(unlocked && f.usable, 'Farming', f.name);
+    for (const r of derived.resources) push(unlocked && r.usable, 'Resources', r.name);
+    for (const g of derived.guilds) push(unlocked && g.usable, 'Guilds', g.name);
+    for (const mg of derived.minigames) push(unlocked && mg.usable, 'Minigames', mg.name);
     return { can, cant };
   }, [content, derived, questRows, unlocked, slayerLevel, slayerUnlocked]);
 
@@ -453,19 +512,47 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
               </>
             )}
 
-            {links.length > 0 && (
+            {totalLinks > 0 && (
               <>
-                <SectionHead icon={<Route size={11} />} label="Travel links" count={links.length} />
-                {links.map(l => (
-                  <button
-                    key={l.label}
-                    onClick={() => showChunkOnMap(l.cx, l.cy)}
-                    className="w-full flex items-center gap-1.5 py-px text-left group"
-                    title={l.unlocked ? `Linked area — unlocked` : `Linked area — locked`}
-                  >
-                    <MapPin size={10} className={`shrink-0 ${l.unlocked ? 'text-green-400' : 'text-red-400/70'}`} />
-                    <span className={`truncate group-hover:underline decoration-dotted underline-offset-2 ${l.unlocked ? 'text-gray-300' : 'text-gray-500 line-through decoration-red-500/40'}`}>{l.label}</span>
-                  </button>
+                <button onClick={() => setShowLinks(v => !v)} className="w-full flex items-center gap-1.5 mt-2 mb-0.5 text-left">
+                  {showLinks ? <ChevronDown size={11} className="text-gray-500 shrink-0" /> : <ChevronRight size={11} className="text-gray-500 shrink-0" />}
+                  <Route size={11} className="text-cyan-400 shrink-0" />
+                  <span className="text-[10px] font-bold uppercase tracking-wide text-cyan-300">Travel links</span>
+                  <span className="text-[9px] font-mono text-gray-500">
+                    <span className="text-emerald-300">{reachableLinks}</span>/{totalLinks}
+                  </span>
+                </button>
+                {showLinks && linkGroups.map(g => (
+                  <div key={g.category} className="mb-1.5 ml-1">
+                    <div className="flex items-center gap-1.5 py-0.5">
+                      <span className="text-[10px] font-semibold text-gray-300">{g.category}</span>
+                      <span className="text-[9px] font-mono text-gray-600">{g.dests.length}</span>
+                      {!g.networkUnlocked && (
+                        <span className="text-[8px] px-1 rounded bg-amber-950/60 text-amber-300/90 border border-amber-700/40" title={`Needs the "${g.category}" mobility unlock`}>network locked</span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-1 ml-1">
+                      {g.dests.slice(0, linksCap[g.category] ?? 8).map(d => {
+                        const usable = d.unlocked && g.networkUnlocked;
+                        return (
+                          <button
+                            key={d.label}
+                            onClick={() => showChunkOnMap(d.cx, d.cy)}
+                            title={usable ? 'Reachable — click to view' : !d.unlocked ? 'Area locked' : `Needs the "${g.category}" network`}
+                            className={`text-[9px] px-1 py-0.5 rounded border transition-colors hover:border-white/30
+                              ${usable ? 'bg-emerald-900/20 border-emerald-600/30 text-emerald-200'
+                                : !d.unlocked ? 'bg-red-950/30 border-red-700/30 text-gray-500 line-through decoration-red-500/40'
+                                : 'bg-amber-950/20 border-amber-700/30 text-amber-200/80'}`}
+                          >{d.label}</button>
+                        );
+                      })}
+                      {g.dests.length > (linksCap[g.category] ?? 8) && (
+                        <button onClick={() => setLinksCap(c => ({ ...c, [g.category]: g.dests.length }))} className="text-[9px] px-1 py-0.5 text-cyan-400 hover:underline">
+                          +{g.dests.length - (linksCap[g.category] ?? 8)} more
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 ))}
               </>
             )}
