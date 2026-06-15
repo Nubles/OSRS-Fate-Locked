@@ -8,6 +8,7 @@ import { getQuestStatus, QuestStatus } from '../utils/journalStatus';
 import { classifyShop } from '../utils/merchantShops';
 import { resourceReqFor, resourceUsable } from '../utils/chunkResources';
 import { mobilityFor } from '../utils/chunkMobility';
+import { placeOf, chunkUnlocked, showChunkOnMap } from '../utils/chunkLocations';
 import { FARMING_PATCH_LIST, GUILDS_LIST, MINIGAMES_LIST, MOBILITY_LIST, BOSSES_LIST, MISTHALIN_AREAS } from '../constants';
 import type { ChunkCoord } from '../utils/mapCoords';
 import { WikiLink } from './WikiLink';
@@ -162,6 +163,42 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     if (mode === 'region' && region) return chunkContentService.aggregate(regionChunks);
     return chunkContentService.contentFor(chunk.cx, chunk.cy);
   }, [mode, region, regionChunks, chunk, chunkContentService.ready]);
+
+  // Transport links: chunks this area connects to without walking (boats,
+  // teleports, stairs). Many links route through unnamed connector chunks
+  // (ocean/dungeon), so hop through those to the first named destination.
+  const links = useMemo(() => {
+    if (!chunkContentService.ready) return [];
+    const graph = chunkContentService.connectGraph();
+    const ownIds = new Set(regionChunks.map(c => String(c.cx * 256 + c.cy)));
+    const sources = mode === 'region' ? regionChunks : [chunk];
+    const seen = new Map<string, { cx: number; cy: number; label: string; unlocked: boolean }>();
+
+    for (const s of sources) {
+      const start = String(s.cx * 256 + s.cy);
+      const visited = new Set<string>([start]);
+      let frontier = graph[start] ?? [];
+      for (let depth = 0; depth < 3 && frontier.length; depth++) {
+        const next: string[] = [];
+        for (const tid of frontier) {
+          if (visited.has(tid)) continue;
+          visited.add(tid);
+          const tx = Math.floor(+tid / 256), ty = +tid % 256;
+          const place = placeOf(tx, ty);
+          const label = place.subArea ?? place.region;
+          if (label) {
+            if (!ownIds.has(tid) && !seen.has(label)) {
+              seen.set(label, { cx: tx, cy: ty, label, unlocked: chunkUnlocked(tx, ty, unlocks) });
+            }
+          } else {
+            next.push(...(graph[tid] ?? [])); // unnamed connector → keep hopping
+          }
+        }
+        frontier = next;
+      }
+    }
+    return [...seen.values()].sort((a, b) => Number(b.unlocked) - Number(a.unlocked) || a.label.localeCompare(b.label));
+  }, [mode, chunk, regionChunks, unlocks, chunkContentService.ready]);
 
   const slayerLevel = unlocks.levels['Slayer'] ?? 1;
   const slayerUnlocked = (unlocks.skills?.['Slayer'] ?? 0) > 0;
@@ -411,6 +448,23 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
                       {t.network.replace(/s$/, '')}
                     </span>
                   </div>
+                ))}
+              </>
+            )}
+
+            {links.length > 0 && (
+              <>
+                <SectionHead icon={<Route size={11} />} label="Travel links" count={links.length} />
+                {links.map(l => (
+                  <button
+                    key={l.label}
+                    onClick={() => showChunkOnMap(l.cx, l.cy)}
+                    className="w-full flex items-center gap-1.5 py-px text-left group"
+                    title={l.unlocked ? `Linked area — unlocked` : `Linked area — locked`}
+                  >
+                    <MapPin size={10} className={`shrink-0 ${l.unlocked ? 'text-green-400' : 'text-red-400/70'}`} />
+                    <span className={`truncate group-hover:underline decoration-dotted underline-offset-2 ${l.unlocked ? 'text-gray-300' : 'text-gray-500 line-through decoration-red-500/40'}`}>{l.label}</span>
+                  </button>
                 ))}
               </>
             )}
