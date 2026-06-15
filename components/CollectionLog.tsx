@@ -10,6 +10,7 @@ import { wikiService } from '../services/WikiService';
 import { priceService } from '../services/PriceService';
 import { collectionLogSync } from '../services/CollectionLogSyncService';
 import { WikiLink } from './WikiLink';
+import { collogReachability } from '../utils/collogReach';
 
 interface CollectionLogProps {
   searchTerm?: string;
@@ -268,6 +269,11 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
     return { obtained, total };
   }, [unlocks.collectionLog, syncVersion]);
 
+  // Reachable %: how much of the log is even obtainable given current unlocks
+  // (boss/minigame sources), and which unlocks would open the most new slots.
+  const reach = useMemo(() => collogReachability(unlocks), [unlocks]);
+  const [showReach, setShowReach] = useState(false);
+
   return (
     <div className="flex flex-col h-full bg-[#3e3529] border-2 border-[#5a5245] rounded-lg overflow-hidden font-sans shadow-2xl relative text-[#ff981f]">
       {/* Top Bar */}
@@ -290,8 +296,45 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
             <div className="text-xs font-mono bg-black/30 px-2 py-1 rounded border border-[#5a5245]">
                <span className="text-white">{globalStats.obtained}</span> / {globalStats.total}
             </div>
+            <button
+              onClick={() => setShowReach(s => !s)}
+              title="How much of the log is obtainable with your current unlocks"
+              className={`text-xs font-mono px-2 py-1 rounded border transition-colors ${showReach ? 'bg-emerald-900/40 border-emerald-500/50' : 'bg-black/30 border-[#5a5245] hover:border-emerald-500/40'}`}
+            >
+              <span className="text-emerald-300">{reach.pct}%</span> <span className="text-[#d4c5b0]">reachable</span>
+            </button>
         </div>
       </div>
+
+      {/* Reachability strip — obtainable now + top unlocks to open more slots */}
+      {showReach && (
+        <div className="bg-[#2c241b] border-b-2 border-[#5a5245] px-3 py-2 shrink-0 text-[11px]">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
+            <span className="text-[#d4c5b0]">
+              <span className="text-emerald-300 font-bold">{reach.obtainable}</span> / {reach.total} slots obtainable now
+            </span>
+            <span className="text-[#d4c5b0]">
+              Unlock-gated: <span className="text-white font-mono">{reach.gatedObtainable}/{reach.gatedTotal}</span>
+            </span>
+            {reach.tabs.filter(t => t.gated).map(t => (
+              <span key={t.tab} className="text-[#9a8a73]">{t.tab}: <span className="text-[#d4c5b0] font-mono">{t.obtainable}/{t.total}</span></span>
+            ))}
+          </div>
+          {reach.suggestions.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[#9a8a73] uppercase tracking-wide text-[9px]">Open most slots:</span>
+              {reach.suggestions.slice(0, 6).map(s => (
+                <span key={s.tab + s.page} className="px-1.5 py-0.5 rounded bg-black/30 border border-[#5a5245] text-[#d4c5b0]">
+                  {s.kind === 'boss' ? '🗡' : '🎯'} {s.unlock} <span className="text-emerald-300 font-mono">+{s.items}</span>
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="text-[9px] text-[#7a6f5e] mt-1.5 italic">
+            Based on boss/minigame unlocks. Clues &amp; Other slots are counted as always-available (no single gating source), so this % is approximate.
+          </div>
+        </div>
+      )}
 
       {/* Tabs Row */}
       <div className="flex bg-[#3e3529] border-b border-[#5a5245] overflow-x-auto no-scrollbar shrink-0">
