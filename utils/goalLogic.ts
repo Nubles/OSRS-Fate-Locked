@@ -1,7 +1,8 @@
 
 import { ContentRequirement } from '../data/requirements';
 import { UnlockState, TableType } from '../types';
-import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
+import { REGION_GROUPS } from '../constants';
+import { isFreeArea } from './freeAreas';
 
 export interface GoalProgress {
   percentage: number;
@@ -20,8 +21,8 @@ export const calculateGoalProgress = (req: ContentRequirement, unlocks: UnlockSt
     total++;
     let isUnlocked = false;
 
-    // Direct check or Misthalin check
-    if (r === 'Misthalin' || MISTHALIN_AREAS.includes(r) || unlocks.regions.includes(r)) {
+    // Direct check or free-area (Misthalin / Xtreme-start Lumbridge) check
+    if (isFreeArea(r) || unlocks.regions.includes(r)) {
       isUnlocked = true;
     } 
     // Region Group check (e.g. Asgarnia is unlocked if Falador is unlocked)

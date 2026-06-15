@@ -1,7 +1,8 @@
 
 import { RESOURCE_MAP, ResourceSource } from '../data/resourceData';
 import { GameState, TableType } from '../types';
-import { REGION_GROUPS, MISTHALIN_AREAS, MERCHANTS_LIST } from '../constants';
+import { REGION_GROUPS, MERCHANTS_LIST } from '../constants';
+import { isFreeArea } from './freeAreas';
 
 export interface RouteStatus {
   isAvailable: boolean;
@@ -31,8 +32,7 @@ const PLURAL_MAPPINGS: Record<string, string> = {
 };
 
 // Lookup tables built once from constants (independent of game state) so the
-// hot path doesn't repeatedly scan MISTHALIN_AREAS / MERCHANTS_LIST arrays.
-const MISTHALIN_AREA_SET: Set<string> = new Set(MISTHALIN_AREAS);
+// hot path doesn't repeatedly scan the MERCHANTS_LIST array.
 const MERCHANT_BY_NORM_NAME: Map<string, string> = new Map(
   MERCHANTS_LIST.map((m) => [normalize(m), m]),
 );
@@ -95,7 +95,7 @@ const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collect
   // 1. Region
   let hasRegion = false;
   for (const r of source.regions) {
-    if (r === 'Any' || r === 'Misthalin' || MISTHALIN_AREA_SET.has(r) || ctx.regions.has(r)) {
+    if (r === 'Any' || isFreeArea(r) || ctx.regions.has(r)) {
       hasRegion = true; break;
     }
     const children = REGION_GROUPS[r];

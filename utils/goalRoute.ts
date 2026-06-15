@@ -3,7 +3,8 @@ import { STRATEGY_DATABASE, ContentRequirement } from '../data/requirements';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { RESOURCE_MAP } from '../data/resourceData';
-import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
+import { REGION_GROUPS } from '../constants';
+import { isFreeArea } from './freeAreas';
 import { calculateSupplyChain } from './supplyChain';
 import { getPoolAndStateKey, isValidUnlock } from './gameEngine';
 import { tierForLevel } from './skillTiers';
@@ -73,7 +74,7 @@ export interface GoalRoute {
 export { tierForLevel };
 
 const isRegionMet = (r: string, unlocks: UnlockState): boolean => {
-  if (r === 'Misthalin' || MISTHALIN_AREAS.includes(r) || unlocks.regions.includes(r)) return true;
+  if (isFreeArea(r) || unlocks.regions.includes(r)) return true;
   const children = REGION_GROUPS[r];
   return !!children && children.some(a => unlocks.regions.includes(a));
 };

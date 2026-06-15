@@ -17,8 +17,8 @@
 import { SKILLS_LIST } from '../constants';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
-import { MISTHALIN_AREAS } from '../constants';
 import { computeUnlockImpact } from './unlockImpact';
+import { isFreeArea } from './freeAreas';
 
 export interface RankedSkill {
   id: string;          // skill name
@@ -32,7 +32,7 @@ export interface RankedSkill {
   cascadeScore: number;
 }
 
-const isMisthalin = (r: string) => r === 'Misthalin' || MISTHALIN_AREAS.includes(r);
+const isMisthalin = (r: string) => isFreeArea(r);
 
 /** A diary tier is fully completable if regions, quests, AND all skills are met. */
 function diaryFullyDoable(d: DiaryTier, unlocks: any): boolean {

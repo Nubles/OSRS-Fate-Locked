@@ -15,8 +15,8 @@
 import { QUEST_DATA, QuestData } from '../data/questData';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { REGION_GROUPS } from '../data/items';
-import { MISTHALIN_AREAS } from '../constants';
 import { getQuestStatus, getDiaryStatus } from './journalStatus';
+import { isFreeArea } from './freeAreas';
 
 export type GoalKind = 'quest' | 'diary' | 'region';
 
@@ -65,7 +65,7 @@ interface Selectable {
 
 const UNLOCKABLE_REGIONS = Object.keys(REGION_GROUPS);
 
-const isMisthalin = (r: string) => r === 'Misthalin' || MISTHALIN_AREAS.includes(r);
+const isMisthalin = (r: string) => isFreeArea(r);
 
 /** A skill requirement is met if the skill is unlocked AND the level is reached. */
 function skillMet(skill: string, lvl: number, unlocks: any): boolean {

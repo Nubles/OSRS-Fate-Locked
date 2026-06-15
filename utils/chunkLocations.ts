@@ -1,6 +1,7 @@
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
+import { isFreeArea } from './freeAreas';
 import { UnlockState } from '../types';
 import type { ChunkCoord } from './mapCoords';
 
@@ -35,7 +36,6 @@ for (const [name, chunks] of Object.entries(SUB_AREA_CHUNKS)) if (chunks[0]) PLA
 export const chunkForPlace = (name: string): ChunkCoord | null =>
   PLACE_CHUNK[name.trim().toLowerCase()] ?? null;
 
-const ALWAYS_FREE = new Set<string>(['Misthalin', ...MISTHALIN_AREAS]);
 
 export interface ChunkPlace {
   cx: number;
@@ -59,11 +59,11 @@ export const placeOf = (cx: number, cy: number): ChunkPlace => {
 };
 
 const nameUnlocked = (name: string, unlocks: UnlockState): boolean => {
-  if (ALWAYS_FREE.has(name)) return true;
+  if (isFreeArea(name)) return true;
   if (unlocks.regions.includes(name)) return true;
   const children = name === 'Misthalin' ? MISTHALIN_AREAS : REGION_GROUPS[name];
   if (children && children.length > 0) {
-    return children.every(c => ALWAYS_FREE.has(c) || unlocks.regions.includes(c));
+    return children.every(c => isFreeArea(c) || unlocks.regions.includes(c));
   }
   return false;
 };

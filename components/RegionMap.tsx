@@ -3,11 +3,11 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useGame } from '../context/GameContext';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
 import { Lock, Unlock, ZoomIn, ZoomOut, Move, Loader2, Download, Grid3x3, Paintbrush, Eye, EyeOff, ClipboardCopy, Trash2, FileDown, FileUp, Radio, Undo2, Redo2 } from 'lucide-react';
-import { RegionProgressPanel } from './RegionProgressPanel';
 import { ChunkActivityPanel } from './ChunkActivityPanel';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { consumePendingChunk } from '../utils/chunkLocations';
+import { isFreeArea } from '../utils/freeAreas';
 import {
   MAP_IMAGE,
   MAP_BOUNDS,
@@ -40,7 +40,6 @@ const REGION_COORDS: Record<string, { x: number; y: number }> = {
 export { REGION_CHUNKS } from '../data/regionChunks';
 
 
-const ALWAYS_UNLOCKED_REGIONS = new Set<string>(['Misthalin']);
 
 // Maps a leaf/sub-region back to its continent, derived once from
 // REGION_GROUPS + MISTHALIN_AREAS. Used by isRegionUnlocked to walk
@@ -63,17 +62,17 @@ const PARENT_CONTINENT: Record<string, string> = (() => {
 // Rule (4) is the "continent turns fully green once all sub-areas are done"
 // rule and covers chunks tagged at the continent level too.
 const isRegionUnlocked = (region: string, unlocks: string[]): boolean => {
-  if (ALWAYS_UNLOCKED_REGIONS.has(region)) return true;
+  if (isFreeArea(region)) return true;
   if (unlocks.includes(region)) return true;
   const continent = PARENT_CONTINENT[region];
   if (continent) {
-    if (ALWAYS_UNLOCKED_REGIONS.has(continent)) return true;
+    if (isFreeArea(continent)) return true;
     if (unlocks.includes(continent)) return true;
     const siblings = continent === 'Misthalin' ? MISTHALIN_AREAS : (REGION_GROUPS[continent] ?? []);
-    if (siblings.length > 0 && siblings.every(s => unlocks.includes(s) || ALWAYS_UNLOCKED_REGIONS.has(s))) return true;
+    if (siblings.length > 0 && siblings.every(s => unlocks.includes(s) || isFreeArea(s))) return true;
   }
   const children = region === 'Misthalin' ? MISTHALIN_AREAS : REGION_GROUPS[region];
-  if (children && children.length > 0 && children.every(s => unlocks.includes(s) || ALWAYS_UNLOCKED_REGIONS.has(s))) return true;
+  if (children && children.length > 0 && children.every(s => unlocks.includes(s) || isFreeArea(s))) return true;
   return false;
 };
 
@@ -212,6 +211,8 @@ const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectK
       alt="OSRS World Map"
       className="w-full h-full object-fill pointer-events-none opacity-60 grayscale-[0.2]"
       draggable={false}
+      decoding="async"
+      fetchPriority="high"
     />
 
     <svg
@@ -263,7 +264,7 @@ const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectK
 
     {Object.entries(REGION_COORDS).map(([region, coords]) => {
       const isMisthalin = region === 'Misthalin';
-      const isUnlocked = isMisthalin || regionUnlocks.includes(region);
+      const isUnlocked = isFreeArea(region) || regionUnlocks.includes(region);
       const subRegions = isMisthalin ? MISTHALIN_AREAS : REGION_GROUPS[region] || [];
       return (
         <div
@@ -278,7 +279,7 @@ const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectK
             <h4 className={`font-bold text-sm border-b pb-1 ${isUnlocked ? 'text-emerald-400 border-emerald-500/30' : 'text-red-400 border-red-500/30'}`}>{region}</h4>
             <div className="flex flex-wrap gap-1">
               {subRegions.slice(0, 8).map(area => (
-                <span key={area} className={`text-[9px] px-1.5 py-0.5 rounded text-gray-300 ${regionUnlocks.includes(area) ? 'bg-emerald-900/40 text-emerald-300' : 'bg-white/10'}`}>{area}</span>
+                <span key={area} className={`text-[9px] px-1.5 py-0.5 rounded text-gray-300 ${regionUnlocks.includes(area) || isFreeArea(area) ? 'bg-emerald-900/40 text-emerald-300' : 'bg-white/10'}`}>{area}</span>
               ))}
               {subRegions.length > 8 && <span className="text-[9px] text-gray-500">+{subRegions.length - 8} more...</span>}
             </div>
@@ -1207,12 +1208,6 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
             {toast}
           </div>
         )}
-      </div>
-
-      {/* Region progress panel (left, below status) — positioned independently so
-          the hover-coords readout appearing/disappearing doesn't shove it around. */}
-      <div className="absolute top-20 left-4 z-20">
-        <RegionProgressPanel regionUnlocks={regionUnlocks} />
       </div>
 
       {/* Chunk activity panel: click any chunk (outside authoring) to see what

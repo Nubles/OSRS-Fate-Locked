@@ -7,7 +7,7 @@
 
 import { QuestData, QUEST_DATA } from '../data/questData';
 import { DiaryTier } from '../data/diaryData';
-import { MISTHALIN_AREAS } from '../constants';
+import { isFreeArea } from './freeAreas';
 
 export type QuestStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
 export type DiaryStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_QUEST';
@@ -16,7 +16,7 @@ export function getQuestStatus(quest: QuestData, unlocks: any): QuestStatus {
   if (unlocks.quests.includes(quest.id)) return 'COMPLETED';
 
   const missingRegion = quest.regions.some(r => {
-    if (MISTHALIN_AREAS.includes(r) || r === 'Misthalin') return false;
+    if (isFreeArea(r)) return false;
     return !unlocks.regions.includes(r);
   });
   if (missingRegion) return 'LOCKED_REGION';
@@ -42,8 +42,7 @@ export function getDiaryStatus(diary: DiaryTier, unlocks: any): DiaryStatus {
   if (unlocks.diaries.includes(diary.id)) return 'COMPLETED';
 
   const missingRegion = diary.requiredRegions.some(r => {
-    const isMisthalin = r === 'Misthalin' || MISTHALIN_AREAS.includes(r);
-    return !isMisthalin && !unlocks.regions.includes(r);
+    return !isFreeArea(r) && !unlocks.regions.includes(r);
   });
   if (missingRegion) return 'LOCKED_REGION';
 
@@ -77,7 +76,7 @@ export function countDoableTasks(tasks: DoableTask[], unlocks: any): number {
     )) return false;
     if (task.quests && !task.quests.every(q => unlocks.quests.includes(q))) return false;
     if (task.regions && !task.regions.every(
-      r => r === 'Misthalin' || MISTHALIN_AREAS.includes(r) || unlocks.regions.includes(r),
+      r => isFreeArea(r) || unlocks.regions.includes(r),
     )) return false;
     return true;
   }).length;

@@ -4,6 +4,7 @@ import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState } f
 import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST } from '../data/items';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
+import { setStartArea } from '../utils/freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { getRitual } from '../config/economy';
@@ -652,6 +653,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     },
   );
   const saveTimeoutRef = useRef<number | null>(null);
+
+  // Keep the free-area baseline in sync with the run's mode, synchronously so
+  // the unlock helpers (chunkUnlocked, journal status, …) read the right set on
+  // this render. Xtreme start frees only Lumbridge; every other mode frees all
+  // of Misthalin.
+  setStartArea(resolveModeRules(state.gameModeId, state.customMode).startArea);
 
   // Always-current snapshot of state so backup/reset callbacks can read the
   // latest persisted shape without re-creating on every state change.

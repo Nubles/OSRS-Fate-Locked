@@ -46,6 +46,7 @@ import { useAchievementReveal } from '../hooks/useAchievementReveal';
 import { AchievementReveal } from './AchievementReveal';
 import { getGameMode } from '../config/gameModes';
 import { getActivityRegion } from '../data/activityRegions';
+import { isFreeArea } from '../utils/freeAreas';
 import { getActivityReq, ActivityReq } from '../data/activityRequirements';
 import { RegionAdvisorPanel } from './RegionAdvisorPanel';
 import { SkillAdvisorPanel } from './SkillAdvisorPanel';
@@ -625,26 +626,39 @@ export const Dashboard: React.FC = () => {
                       <div className="absolute top-1 right-1 z-20">
                             <NoteTrigger id="Misthalin" title="Misthalin" />
                       </div>
-                      <div className="flex items-center gap-2 mb-2 relative z-10">
-                          <Compass className="w-5 h-5 text-emerald-400" />
-                          <span className="font-bold text-sm text-emerald-200">Misthalin (Starter Area)</span>
-                          <span className="ml-auto text-xs text-emerald-400 font-mono flex items-center gap-1">
-                              <Unlock size={10} /> Unlocked
-                          </span>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5 relative z-10 pr-6">
-                          {MISTHALIN_AREAS.map(area => (
-                              <a 
-                                  key={area}
-                                  href={getWikiUrl(area)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="px-2 py-1 bg-emerald-900/20 text-emerald-200 border border-emerald-500/20 rounded text-xs hover:bg-emerald-900/40 hover:text-white transition-colors flex items-center gap-1"
-                              >
-                                  {area} <ExternalLink size={8} className="opacity-50" />
-                              </a>
-                          ))}
-                      </div>
+                      {(() => {
+                        const freeCount = MISTHALIN_AREAS.filter(a => isFreeArea(a) || unlocks.regions.includes(a)).length;
+                        const allFree = freeCount === MISTHALIN_AREAS.length;
+                        return (
+                          <>
+                            <div className="flex items-center gap-2 mb-2 relative z-10">
+                                <Compass className="w-5 h-5 text-emerald-400" />
+                                <span className="font-bold text-sm text-emerald-200">Misthalin (Starter Area)</span>
+                                <span className={`ml-auto text-xs font-mono flex items-center gap-1 ${allFree ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                    <Unlock size={10} /> {allFree ? 'Unlocked' : `${freeCount}/${MISTHALIN_AREAS.length}`}
+                                </span>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5 relative z-10 pr-6">
+                                {MISTHALIN_AREAS.map(area => {
+                                    const free = isFreeArea(area) || unlocks.regions.includes(area);
+                                    const canUnlock = !free && specialKeys > 0;
+                                    if (free) return (
+                                        <a key={area} href={getWikiUrl(area)} target="_blank" rel="noopener noreferrer"
+                                            className="px-2 py-1 bg-emerald-900/20 text-emerald-200 border border-emerald-500/20 rounded text-xs hover:bg-emerald-900/40 hover:text-white transition-colors flex items-center gap-1">
+                                            {area} <ExternalLink size={8} className="opacity-50" />
+                                        </a>
+                                    );
+                                    return (
+                                        <button key={area} onClick={() => canUnlock && handleSpecialUnlock(TableType.REGIONS, area)} disabled={!canUnlock}
+                                            className={`px-2 py-1 rounded text-xs border flex items-center gap-1 ${canUnlock ? 'bg-purple-900/10 text-purple-300 border-purple-500/30 hover:bg-purple-900/20 cursor-pointer' : 'bg-[#222] text-gray-600 border-transparent cursor-default'}`}>
+                                            {area} <Lock size={8} />
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                          </>
+                        );
+                      })()}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

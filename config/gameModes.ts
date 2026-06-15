@@ -15,6 +15,11 @@ export interface GameModeRules {
   ritualCostMultiplier: number;
   /** Whether per-region passive modifiers are active. */
   regionModifiers: boolean;
+  /**
+   * Which areas are free at the start. 'misthalin' (default) frees the whole
+   * starter region; 'lumbridge' frees only Lumbridge — the Xtreme start.
+   */
+  startArea?: 'misthalin' | 'lumbridge';
 }
 
 export interface GameMode {
@@ -80,6 +85,20 @@ export const GAME_MODES: GameMode[] = [
       omniChanceBase: 2,
       ritualCostMultiplier: 1,
       regionModifiers: true,
+    },
+  },
+  {
+    id: 'xtreme',
+    name: 'Xtreme Start',
+    description: 'Begin with only Lumbridge unlocked — the rest of Misthalin (Varrock, Draynor, Edgeville…) must be earned like any other region. The hardest possible opening.',
+    tagline: 'Lumbridge only at the start',
+    rules: {
+      pityEnabled: true,
+      pityThreshold: 50,
+      omniChanceBase: 2,
+      ritualCostMultiplier: 1,
+      regionModifiers: false,
+      startArea: 'lumbridge',
     },
   },
   {

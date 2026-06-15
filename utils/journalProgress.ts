@@ -9,16 +9,16 @@
  */
 import { QuestData, QUEST_DATA } from '../data/questData';
 import { DiaryTier } from '../data/diaryData';
-import { MISTHALIN_AREAS } from '../constants';
 import { UnlockState } from '../types';
 import { questLocations, refineQuestRegion } from './questLocations';
+import { isFreeArea } from './freeAreas';
 
 export interface Unmet {
   kind: 'region' | 'skill' | 'quest' | 'qp';
   label: string;
 }
 
-const regionFree = (r: string) => r === 'Misthalin' || MISTHALIN_AREAS.includes(r);
+const regionFree = (r: string) => isFreeArea(r);
 
 const skillUnmet = (skills: Record<string, number>, unlocks: UnlockState, qp: number): Unmet[] => {
   const out: Unmet[] = [];
