@@ -45,6 +45,9 @@ async function loadExport() {
 /** "Goblin#Drop table 1" → "Goblin" (the # suffix is a data-variant marker). */
 const cleanName = (s) => s.split('#')[0].trim();
 
+/** Strip the picker's ~|wiki link|~ markup: "~|Priest in Peril|~ ..." → "Priest in Peril ...". */
+const stripWiki = (s) => String(s).replace(/~\|/g, '').replace(/\|~/g, '').trim();
+
 /** Merge a content blob (chunk top level OR one section) into the record. */
 function mergeBlob(rec, blob, slayerReq) {
   if (blob.Monster) {
@@ -84,6 +87,71 @@ function mergeBlob(rec, blob, slayerReq) {
   if (blob.Spawn) for (const raw of Object.keys(blob.Spawn)) rec.spawns.add(cleanName(raw));
 }
 
+/**
+ * The chunk transport graph: links that bypass walking (boats, teleports,
+ * stairs, agility shortcuts). Built undirected over *all* chunks — many links
+ * route a walkable chunk through a non-walkable connector (ocean/dungeon), so
+ * restricting to walkable chunks alone loses them. The app contracts those
+ * connectors when it computes reachability.
+ */
+function buildConnect(data) {
+  const adj = new Map();
+  const link = (a, b) => {
+    if (a === b) return;
+    if (!adj.has(a)) adj.set(a, new Set());
+    if (!adj.has(b)) adj.set(b, new Set());
+    adj.get(a).add(b); adj.get(b).add(a);
+  };
+  const eat = (id, blob) => { if (blob.Connect) for (const t of Object.keys(blob.Connect)) link(String(id), String(t)); };
+  for (const [id, chunk] of Object.entries(data.chunks)) {
+    eat(id, chunk);
+    if (chunk.Sections) for (const sec of Object.values(chunk.Sections)) eat(id, sec);
+  }
+  const out = {};
+  for (const [id, set] of adj) out[id] = [...set].sort();
+  return out;
+}
+
+/** Re-express the Slayer master → assignable monster tables (facts only). */
+function buildSlayerMasters(data) {
+  const out = {};
+  for (const [master, tasks] of Object.entries(data.slayerMasterTasks ?? {})) {
+    const m = {};
+    for (const [monster, info] of Object.entries(tasks)) {
+      const entry = { weight: info.Weight ?? 1 };
+      if (info.CombatLevel != null) entry.combat = info.CombatLevel;
+      if (info.Level != null) entry.slayer = info.Level;          // Slayer level to be assigned
+      // Unlock requirements live under Tasks as "~|Quest|~ Complete the quest".
+      const reqs = Object.keys(info.Tasks ?? {}).map(stripWiki);
+      if (reqs.length) entry.req = reqs;
+      m[cleanName(monster)] = entry;
+    }
+    out[master] = m;
+  }
+  return out;
+}
+
+/**
+ * Agility (and other) shortcuts from the challenge tables: name + level + the
+ * object you interact with (so the app can locate it via the object index).
+ */
+function buildShortcuts(data) {
+  const out = [];
+  for (const [skill, challenges] of Object.entries(data.challenges ?? {})) {
+    for (const [name, info] of Object.entries(challenges)) {
+      if (!(info.Category ?? []).includes('Shortcut')) continue;
+      out.push({
+        name: stripWiki(name),
+        skill,
+        level: info.Level ?? 1,
+        objects: (info.Objects ?? []).map(cleanName),
+        chunks: info.Chunks ?? [],
+      });
+    }
+  }
+  return out;
+}
+
 function main(data) {
   const walkable = new Set(data.walkableChunks.map(String));
   // slayer requirement lookup (raw and cleaned names)
@@ -118,11 +186,20 @@ function main(data) {
     if (Object.keys(entry).length) { out[id] = entry; withContent++; }
   }
 
+  const connect = buildConnect(data);
+  const slayerMasters = buildSlayerMasters(data);
+  const shortcuts = buildShortcuts(data);
+
   const doc = {
-    version: 1,
+    version: 2,
     source: 'source-chunk/chunk-picker-v2 (chunkpicker-chunkinfo-export.json, gh-pages)',
     chunks: out,
+    connect,
+    slayerMasters,
+    shortcuts,
   };
+  console.log(`  connect: ${Object.keys(connect).length} chunks with links`);
+  console.log(`  slayerMasters: ${Object.keys(slayerMasters).length} | shortcuts: ${shortcuts.length}`);
   writeFileSync(OUT, JSON.stringify(doc));
   const kb = Math.round(JSON.stringify(doc).length / 1024);
   console.log(`wrote public/chunk-content.json — ${withContent} chunks with content, ~${kb} KB`);

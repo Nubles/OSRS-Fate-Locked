@@ -41,7 +41,39 @@ interface RawEntry {
   c?: Record<string, number>;
   i?: string[];
 }
-interface RawDoc { version: number; source: string; chunks: Record<string, RawEntry> }
+/** A Slayer master's assignable monster: gating + assignment weight. */
+export interface SlayerAssignment {
+  weight: number;
+  /** Combat level needed before the master will assign it. */
+  combat?: number;
+  /** Slayer level needed to damage/be assigned it. */
+  slayer?: number;
+  /** Unlock requirements (e.g. "Priest in Peril Complete the quest"). */
+  req?: string[];
+}
+export type SlayerMasters = Record<string, Record<string, SlayerAssignment>>;
+
+/** A travel/agility shortcut surfaced from the picker's challenge tables. */
+export interface Shortcut {
+  name: string;
+  skill: string;
+  level: number;
+  /** Interactable object names — used to locate the shortcut's chunk(s). */
+  objects: string[];
+  chunks: string[];
+}
+
+/** Undirected chunk transport graph: region id → linked region ids. */
+export type ConnectGraph = Record<string, string[]>;
+
+interface RawDoc {
+  version: number;
+  source: string;
+  chunks: Record<string, RawEntry>;
+  connect?: ConnectGraph;
+  slayerMasters?: SlayerMasters;
+  shortcuts?: Shortcut[];
+}
 
 const decode = (e: RawEntry): ChunkContent => ({
   name: e.n,
@@ -207,6 +239,15 @@ class ChunkContentService {
     for (const hit of index.values()) if (hit.kind === kind) out.push(hit);
     return out;
   }
+
+  /** The undirected chunk transport graph (boats/teleports/stairs/shortcuts). */
+  connectGraph(): ConnectGraph { return this.doc?.connect ?? {}; }
+
+  /** Slayer master → assignable monster tables. */
+  slayerMasters(): SlayerMasters { return this.doc?.slayerMasters ?? {}; }
+
+  /** Travel/agility shortcuts with level + the object that triggers them. */
+  shortcuts(): Shortcut[] { return this.doc?.shortcuts ?? []; }
 
   /** Ranked substring search across every entity in Gielinor. */
   searchEntities(query: string, limit = 8): EntityHit[] {
