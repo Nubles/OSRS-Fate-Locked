@@ -36,6 +36,7 @@ const SkillDetailModal = lazy(() => import('./SkillDetailModal').then(m => ({ de
 import { PanelErrorBoundary } from './PanelErrorBoundary';
 import { MerchantShopsPanel } from './MerchantShopsPanel';
 import { SlayerReachabilityPanel } from './SlayerReachabilityPanel';
+import { ShortcutsPanel } from './ShortcutsPanel';
 import { ModalFallback } from './LoadingFallback';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -798,6 +799,8 @@ export const Dashboard: React.FC = () => {
             </h3>
             {/* Slayer only: which assignable monsters you can actually reach now. */}
             {selected.id === 'SLAYER' && <SlayerReachabilityPanel />}
+            {/* Mobility only: agility shortcuts with level + real chunk location. */}
+            {selected.id === 'MOBILITY' && <ShortcutsPanel />}
             {renderGridSection(selected.list, selected.unlocked, selected.type, SPECIAL_ICONS, selected.details)}
             {/* Merchants only: the real shops behind each category, from the
                 chunk dataset, with per-location lock state. */}
