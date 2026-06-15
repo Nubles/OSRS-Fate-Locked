@@ -153,6 +153,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
   const [mode, setMode] = useState<'chunk' | 'region'>('chunk');
   const [, setLoadedTick] = useState(0);
   const [failed, setFailed] = useState(false);
+  const [openShop, setOpenShop] = useState<string | null>(null);
 
   useEffect(() => {
     chunkContentService.init().then(ok => (ok ? setLoadedTick(t => t + 1) : setFailed(true)));
@@ -496,17 +497,37 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
             {derived.shops.length > 0 && (
               <>
                 <SectionHead icon={<Store size={11} />} label="Shops" count={derived.shops.length} />
-                {derived.shops.map(s => (
-                  <div key={s.name} className="flex items-center justify-between gap-2 py-px"
-                    title={s.usable ? `${s.category} unlocked` : s.category ? `Needs the "${s.category}" merchant unlock` : 'Unclassified shop — no merchant category gate'}>
-                    <WikiLink name={s.name} className={`truncate hover:underline decoration-dotted underline-offset-2 ${s.category ? stateCls(s.usable) : 'text-gray-300'}`} />
-                    {s.category && (
-                      <span className={`text-[9px] px-1 rounded shrink-0 ${s.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
-                        {s.category.replace(/ Shops?$/, '')}
-                      </span>
-                    )}
-                  </div>
-                ))}
+                {derived.shops.map(s => {
+                  const stock = chunkContentService.shopStock(s.name);
+                  const isOpen = openShop === s.name;
+                  return (
+                    <div key={s.name}>
+                      <div className="flex items-center justify-between gap-2 py-px"
+                        title={s.usable ? `${s.category} unlocked` : s.category ? `Needs the "${s.category}" merchant unlock` : 'Unclassified shop — no merchant category gate'}>
+                        <span className="flex items-center gap-1 min-w-0">
+                          {stock.length > 0 && (
+                            <button onClick={() => setOpenShop(isOpen ? null : s.name)} className="text-gray-500 hover:text-white shrink-0" title="Show stock">
+                              {isOpen ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+                            </button>
+                          )}
+                          <WikiLink name={s.name} className={`truncate hover:underline decoration-dotted underline-offset-2 ${s.category ? stateCls(s.usable) : 'text-gray-300'}`} />
+                        </span>
+                        {s.category && (
+                          <span className={`text-[9px] px-1 rounded shrink-0 ${s.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
+                            {s.category.replace(/ Shops?$/, '')}
+                          </span>
+                        )}
+                      </div>
+                      {isOpen && stock.length > 0 && (
+                        <div className="ml-4 mb-1 flex flex-wrap gap-1">
+                          {stock.map(it => (
+                            <WikiLink key={it} name={it} className="text-[9px] px-1 py-0.5 rounded bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:border-white/20" />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </>
             )}
 

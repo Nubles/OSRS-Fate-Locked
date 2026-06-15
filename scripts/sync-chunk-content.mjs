@@ -152,6 +152,16 @@ function buildShortcuts(data) {
   return out;
 }
 
+/** Shop → sorted stock list (what each named shop sells). */
+function buildShopItems(data) {
+  const out = {};
+  for (const [shop, items] of Object.entries(data.shopItems ?? {})) {
+    const name = shop.replace(/\.$/, '');
+    out[name] = Object.keys(items).map(cleanName).sort();
+  }
+  return out;
+}
+
 function main(data) {
   const walkable = new Set(data.walkableChunks.map(String));
   // slayer requirement lookup (raw and cleaned names)
@@ -189,6 +199,7 @@ function main(data) {
   const connect = buildConnect(data);
   const slayerMasters = buildSlayerMasters(data);
   const shortcuts = buildShortcuts(data);
+  const shopItems = buildShopItems(data);
 
   const doc = {
     version: 2,
@@ -197,9 +208,10 @@ function main(data) {
     connect,
     slayerMasters,
     shortcuts,
+    shopItems,
   };
   console.log(`  connect: ${Object.keys(connect).length} chunks with links`);
-  console.log(`  slayerMasters: ${Object.keys(slayerMasters).length} | shortcuts: ${shortcuts.length}`);
+  console.log(`  slayerMasters: ${Object.keys(slayerMasters).length} | shortcuts: ${shortcuts.length} | shops: ${Object.keys(shopItems).length}`);
   writeFileSync(OUT, JSON.stringify(doc));
   const kb = Math.round(JSON.stringify(doc).length / 1024);
   console.log(`wrote public/chunk-content.json — ${withContent} chunks with content, ~${kb} KB`);

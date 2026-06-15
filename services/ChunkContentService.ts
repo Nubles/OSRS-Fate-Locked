@@ -73,6 +73,7 @@ interface RawDoc {
   connect?: ConnectGraph;
   slayerMasters?: SlayerMasters;
   shortcuts?: Shortcut[];
+  shopItems?: Record<string, string[]>;
 }
 
 const decode = (e: RawEntry): ChunkContent => ({
@@ -248,6 +249,15 @@ class ChunkContentService {
 
   /** Travel/agility shortcuts with level + the object that triggers them. */
   shortcuts(): Shortcut[] { return this.doc?.shortcuts ?? []; }
+
+  /** What a named shop sells (case-insensitive, tolerant of a trailing dot). */
+  shopStock(name: string): string[] {
+    const items = this.doc?.shopItems;
+    if (!items) return [];
+    const key = name.replace(/\.$/, '');
+    return items[key] ?? items[key.toLowerCase()] ??
+      Object.entries(items).find(([k]) => k.toLowerCase() === key.toLowerCase())?.[1] ?? [];
+  }
 
   /** Ranked substring search across every entity in Gielinor. */
   searchEntities(query: string, limit = 8): EntityHit[] {
