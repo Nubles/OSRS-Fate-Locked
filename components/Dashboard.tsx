@@ -35,6 +35,7 @@ const CollectionLog = lazy(() => import('./CollectionLog').then(m => ({ default:
 const SkillDetailModal = lazy(() => import('./SkillDetailModal').then(m => ({ default: m.SkillDetailModal })));
 import { PanelErrorBoundary } from './PanelErrorBoundary';
 import { MerchantShopsPanel } from './MerchantShopsPanel';
+import { SlayerReachabilityPanel } from './SlayerReachabilityPanel';
 import { ModalFallback } from './LoadingFallback';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -795,6 +796,8 @@ export const Dashboard: React.FC = () => {
                 {selected.unlocked.length} / {selected.list.length} unlocked
               </span>
             </h3>
+            {/* Slayer only: which assignable monsters you can actually reach now. */}
+            {selected.id === 'SLAYER' && <SlayerReachabilityPanel />}
             {renderGridSection(selected.list, selected.unlocked, selected.type, SPECIAL_ICONS, selected.details)}
             {/* Merchants only: the real shops behind each category, from the
                 chunk dataset, with per-location lock state. */}
