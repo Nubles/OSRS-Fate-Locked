@@ -15,6 +15,8 @@ export const MAP_IMAGE = {
   // to WebP. Cropped to a whole number of OSRS chunks (see MAP_BOUNDS below),
   // so the chunk grid lines up exactly with the canonical region grid.
   src: `${import.meta.env.BASE_URL}osrs_world_map.webp`,
+  /** Tiny (~90 KB) low-res placeholder shown instantly while `src` streams in. */
+  srcLo: `${import.meta.env.BASE_URL}osrs_world_map_lo.webp`,
   width: 9216,
   height: 6528,
 } as const;

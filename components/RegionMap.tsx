@@ -204,16 +204,37 @@ interface MapSurfaceProps {
   regionUnlocks: string[];
 }
 
+// Progressive map: a tiny low-res placeholder shows instantly (and sizes the
+// surface), while the full-res image streams in and fades over it on load. The
+// browser caches the full image, so on later mounts onLoad fires immediately.
+const ProgressiveMapImage: React.FC = () => {
+  const [hiLoaded, setHiLoaded] = useState(false);
+  return (
+    <>
+      <img
+        src={MAP_IMAGE.srcLo}
+        alt="OSRS World Map"
+        className="w-full h-full object-fill pointer-events-none opacity-60 grayscale-[0.2]"
+        draggable={false}
+      />
+      <img
+        src={MAP_IMAGE.src}
+        alt=""
+        aria-hidden
+        className="absolute inset-0 w-full h-full object-fill pointer-events-none grayscale-[0.2] transition-opacity duration-500"
+        style={{ opacity: hiLoaded ? 0.6 : 0 }}
+        draggable={false}
+        decoding="async"
+        fetchPriority="high"
+        onLoad={() => setHiLoaded(true)}
+      />
+    </>
+  );
+};
+
 const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectKind, regionUnlocks }: MapSurfaceProps) => (
   <>
-    <img
-      src={MAP_IMAGE.src}
-      alt="OSRS World Map"
-      className="w-full h-full object-fill pointer-events-none opacity-60 grayscale-[0.2]"
-      draggable={false}
-      decoding="async"
-      fetchPriority="high"
-    />
+    <ProgressiveMapImage />
 
     <svg
       className="absolute inset-0 pointer-events-none"
