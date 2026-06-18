@@ -1,7 +1,8 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { DropSource } from '../types';
-import { DROP_RATES } from '../constants';
+import { DROP_RATES, BOSSES_LIST } from '../constants';
+import { bossTier, TIER_SOURCE, TIER_LABEL, TIER_ORDER, BossTier } from '../data/bossKeyTiers';
 import { useGame } from '../context/GameContext';
 import { BookOpen, ScrollText, Crosshair, Dices } from 'lucide-react';
 import { wikiService } from '../services/WikiService';
@@ -100,22 +101,17 @@ const TIER_STYLES = {
   }
 };
 
-// Repeatable PvM faucets — self-reported (click the card when you finish the
-// content), mirroring how the Slayer/Clue cards work. Bosses + Raids share the
-// "Bossing" tab; minigames / skilling bosses / pets share "Activities".
-const BOSS_ROLLS = [
-  { name: 'Low-tier Boss',    subText: 'Mole, KBD, Barrows, Sarachnis…',  source: DropSource.BOSS_LOW,  image: `${WIKI_IMG}King_Black_Dragon.png`, style: TIER_STYLES.GREEN },
-  { name: 'Mid-tier Boss',    subText: 'GWD, Zulrah, Vorkath, Cerberus…',  source: DropSource.BOSS_MID,  image: `${WIKI_IMG}Zulrah.png`,            style: TIER_STYLES.BLUE },
-  { name: 'High-tier Boss',   subText: 'Nex, Nightmare, Gauntlet, DT2…',   source: DropSource.BOSS_HIGH, image: `${WIKI_IMG}Nex.png`,               style: TIER_STYLES.PURPLE },
-  { name: 'Chambers of Xeric', subText: 'Raid completion',                 source: DropSource.RAID,      image: `${WIKI_IMG}Olmlet.png`,            style: TIER_STYLES.AMBER },
-  { name: 'Theatre of Blood',  subText: 'Raid completion',                 source: DropSource.RAID,      image: `${WIKI_IMG}Lil%27_zik.png`,        style: TIER_STYLES.AMBER },
-  { name: 'Tombs of Amascut',  subText: 'Raid completion',                 source: DropSource.RAID,      image: `${WIKI_IMG}Osmumten%27s_fang.png`, style: TIER_STYLES.AMBER },
-];
+// Repeatable PvM faucets — self-reported (click the exact boss you killed, or
+// the activity you finished), mirroring how the Slayer/Clue cards work.
+const TIER_STYLE: Record<BossTier, typeof TIER_STYLES.GREEN> = {
+  raid: TIER_STYLES.GOLD,
+  high: TIER_STYLES.PURPLE,
+  mid: TIER_STYLES.BLUE,
+  low: TIER_STYLES.GREEN,
+};
 const ACTIVITY_ROLLS = [
-  { name: 'Minigame',           subText: 'Pest Control, BA, Castle Wars…',          source: DropSource.ACTIVITY_MINIGAME, image: `${WIKI_IMG}Void_knight_mace.png`, style: TIER_STYLES.STONE },
-  { name: 'Skilling Boss',      subText: 'Wintertodt, Tempoross, GotR, Zalcano',    source: DropSource.ACTIVITY_SKILLING, image: `${WIKI_IMG}Phoenix.png`,          style: TIER_STYLES.GREEN },
-  { name: 'Fight Cave / Inferno', subText: 'TzHaar Fight Cave, The Inferno',        source: DropSource.ACTIVITY_INFERNO,  image: `${WIKI_IMG}Infernal_cape.png`,    style: TIER_STYLES.RED },
-  { name: 'Any Pet',            subText: 'Guaranteed key on a pet drop!',           source: DropSource.PET,               image: `${WIKI_IMG}Vorki.png`,            style: TIER_STYLES.GOLD },
+  { name: 'Minigame', subText: 'Pest Control, BA, Castle Wars, Soul Wars…', source: DropSource.ACTIVITY_MINIGAME, image: `${WIKI_IMG}Void_knight_mace.png`, style: TIER_STYLES.STONE },
+  { name: 'Any Pet',  subText: 'Guaranteed key on a pet drop!',            source: DropSource.PET,               image: `${WIKI_IMG}Vorki.png`,           style: TIER_STYLES.GOLD },
 ];
 
 type TierStyle = typeof TIER_STYLES.GREEN;
@@ -311,6 +307,25 @@ const CLUE_SCROLLS = [
   { tier: "Master", source: DropSource.CLUE_MASTER, itemId: 19836 },   // Reward casket (master)
 ];
 
+// Compact card for the per-boss list — name + its own rate, no per-boss art so
+// the long (66-entry) list stays scannable. Click rolls at that boss's rate.
+const BossRollCard: React.FC<{ name: string; displayRate: number; bonus: number; style: TierStyle; onClick: (e: React.MouseEvent) => void }>
+  = ({ name, displayRate, bonus, style, onClick }) => {
+  const { isRolling, triggerRoll } = useRollSuspense(onClick);
+  return (
+    <button
+      onClick={triggerRoll}
+      disabled={isRolling}
+      className={`w-full text-left rounded-lg border p-2.5 flex items-center justify-between gap-2 transition-all ${style.bg} ${style.border} ${style.hover} ${isRolling ? 'opacity-60 cursor-wait' : ''}`}
+    >
+      <span className={`text-xs font-semibold truncate ${style.text}`}>{name}</span>
+      <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border shrink-0 ${style.pill}`}>
+        {displayRate}%{bonus > 0 ? <span className="text-green-400"> +{bonus}</span> : ''}
+      </span>
+    </button>
+  );
+};
+
 // --- Info chip (non-interactive navigational hint) ---
 const InfoChip: React.FC<{
   icon: React.ReactNode;
@@ -335,6 +350,7 @@ type FarmSubTab = 'SLAYER' | 'CLUES' | 'BOSSING' | 'ACTIVITIES';
 export const ActionSection: React.FC = () => {
   const { rollForKey, unlocks, gameModeId, customMode, animationsEnabled } = useGame();
   const [subTab, setSubTab] = useState<FarmSubTab>('SLAYER');
+  const [bossQuery, setBossQuery] = useState('');
 
   // When the run's mode enables region passives, rolls are boosted. rollForKey
   // applies the bonus internally, so handleRoll still passes the BASE rate —
@@ -431,7 +447,7 @@ export const ActionSection: React.FC = () => {
   const tabs: { id: FarmSubTab; label: string; icon: string; count: number }[] = [
     { id: 'SLAYER', label: 'Slayer', icon: OSRS_ICONS.SLAYER, count: slayers.length },
     { id: 'CLUES', label: 'Clues', icon: OSRS_ICONS.CLUE, count: CLUE_SCROLLS.length },
-    { id: 'BOSSING', label: 'Bossing', icon: OSRS_ICONS.BOSS, count: BOSS_ROLLS.length },
+    { id: 'BOSSING', label: 'Bossing', icon: OSRS_ICONS.BOSS, count: BOSSES_LIST.length },
     { id: 'ACTIVITIES', label: 'Activities', icon: OSRS_ICONS.ACTIVITY, count: ACTIVITY_ROLLS.length },
   ];
 
@@ -502,24 +518,43 @@ export const ActionSection: React.FC = () => {
           </div>
         )}
         {subTab === 'BOSSING' && (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-            {BOSS_ROLLS.map((b, i) => (
-              <div
-                key={b.name}
-                className={animationsEnabled ? 'animate-fade-in-up' : ''}
-                style={animationsEnabled ? { animationDelay: `${i * 35}ms` } : undefined}
-              >
-                <SlayerMasterCard
-                  name={b.name}
-                  subText={b.subText}
-                  displayRate={effectiveRate(b.source)}
-                  bonus={regionBonus}
-                  image={b.image}
-                  style={b.style}
-                  onClick={(e) => handleRoll(b.source, DROP_RATES[b.source], e)}
-                />
-              </div>
-            ))}
+          <div>
+            <input
+              value={bossQuery}
+              onChange={(e) => setBossQuery(e.target.value)}
+              placeholder="Search bosses…"
+              className="w-full mb-3 bg-[#161616] border border-white/10 rounded-lg px-3 py-2 text-xs text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-white/25"
+            />
+            {TIER_ORDER.map(tier => {
+              const q = bossQuery.trim().toLowerCase();
+              const list = BOSSES_LIST.filter(b => bossTier(b) === tier && b.toLowerCase().includes(q));
+              if (list.length === 0) return null;
+              const source = TIER_SOURCE[tier];
+              const style = TIER_STYLE[tier];
+              return (
+                <div key={tier} className="mb-3">
+                  <div className="flex items-center justify-between px-1 mb-1.5">
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${style.text}`}>{TIER_LABEL[tier]}-tier</span>
+                    <span className="text-[9px] font-mono text-gray-500">{effectiveRate(source)}% · {list.length}</span>
+                  </div>
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
+                    {list.map(name => (
+                      <BossRollCard
+                        key={name}
+                        name={name}
+                        displayRate={effectiveRate(source)}
+                        bonus={regionBonus}
+                        style={style}
+                        onClick={(e) => handleRoll(source, DROP_RATES[source], e)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+            {BOSSES_LIST.filter(b => b.toLowerCase().includes(bossQuery.trim().toLowerCase())).length === 0 && (
+              <div className="text-center text-gray-600 text-xs py-6">No bosses match “{bossQuery}”.</div>
+            )}
           </div>
         )}
         {subTab === 'ACTIVITIES' && (

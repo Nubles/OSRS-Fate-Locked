@@ -53,8 +53,6 @@ export const DROP_RATES: Record<string, number> = {
   [DropSource.BOSS_HIGH]: 50,
   [DropSource.RAID]: 65,
   [DropSource.ACTIVITY_MINIGAME]: 10,
-  [DropSource.ACTIVITY_SKILLING]: 15,
-  [DropSource.ACTIVITY_INFERNO]: 35,
   [DropSource.PET]: 100,
 
   [DropSource.CUSTOM]: 50,

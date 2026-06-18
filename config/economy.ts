@@ -29,7 +29,7 @@ export const LEVEL_CHAOS_CHANCE = 2;   // % chance of a Chaos Key on any level u
 export type EarnCategory =
   | 'Quests' | 'Achievement Diaries' | 'Combat Achievements'
   | 'Clue Scrolls' | 'Slayer Tasks' | 'Collection Log' | 'Level Ups'
-  | 'Bosses' | 'Raids' | 'Activities' | 'Pets';
+  | 'Bosses' | 'Activities' | 'Pets';
 
 export interface EarnTier {
   /** Display label for the tier / Slayer master. */
@@ -132,32 +132,22 @@ export const EARN_METHODS: EarnMethod[] = [
   {
     category: 'Bosses',
     icon: `${WIKI}Boss.png`,
-    where: 'Farm Keys → Bossing — roll a kill card per boss kill.',
-    blurb: 'Repeatable PvM income: every boss kill rolls, with odds scaling by the boss’s difficulty.',
+    where: 'Farm Keys → Bossing — pick the boss you killed and roll.',
+    blurb: 'Repeatable PvM income: every kill rolls at that specific boss’s rate, from entry bosses up to raids.',
     tiers: [
-      { tier: 'Low-tier Boss',  source: DropSource.BOSS_LOW,  rate: DROP_RATES[DropSource.BOSS_LOW] },
-      { tier: 'Mid-tier Boss',  source: DropSource.BOSS_MID,  rate: DROP_RATES[DropSource.BOSS_MID] },
-      { tier: 'High-tier Boss', source: DropSource.BOSS_HIGH, rate: DROP_RATES[DropSource.BOSS_HIGH], omni: 10, bonus: 'Top bosses keep elevated Omni odds.' },
-    ],
-  },
-  {
-    category: 'Raids',
-    icon: `${WIKI}Chambers_of_Xeric_logo.png`,
-    where: 'Farm Keys → Bossing — roll on every raid completion.',
-    blurb: 'The premium grind: each raid clear rolls at the best repeatable odds in the game.',
-    tiers: [
-      { tier: 'Raid completion', source: DropSource.RAID, rate: DROP_RATES[DropSource.RAID], omni: 15, bonus: 'CoX / ToB / ToA — elevated Omni chance.' },
+      { tier: 'Low boss',  source: DropSource.BOSS_LOW,  rate: DROP_RATES[DropSource.BOSS_LOW] },
+      { tier: 'Mid boss',  source: DropSource.BOSS_MID,  rate: DROP_RATES[DropSource.BOSS_MID] },
+      { tier: 'High boss', source: DropSource.BOSS_HIGH, rate: DROP_RATES[DropSource.BOSS_HIGH], omni: 10, bonus: 'Top bosses keep elevated Omni odds.' },
+      { tier: 'Raid',      source: DropSource.RAID,      rate: DROP_RATES[DropSource.RAID], omni: 15, bonus: 'CoX / ToB / ToA — the best repeatable odds in the game.' },
     ],
   },
   {
     category: 'Activities',
     icon: `${WIKI}Minigames.png`,
     where: 'Farm Keys → Activities — roll on each completion.',
-    blurb: 'Minigames and skilling bosses keep paying out long after the journal is done.',
+    blurb: 'Minigames keep paying out long after the journal is done.',
     tiers: [
-      { tier: 'Minigame',          source: DropSource.ACTIVITY_MINIGAME, rate: DROP_RATES[DropSource.ACTIVITY_MINIGAME] },
-      { tier: 'Skilling Boss',     source: DropSource.ACTIVITY_SKILLING, rate: DROP_RATES[DropSource.ACTIVITY_SKILLING] },
-      { tier: 'Fight Cave/Inferno', source: DropSource.ACTIVITY_INFERNO, rate: DROP_RATES[DropSource.ACTIVITY_INFERNO], bonus: 'The hardest waves pay the best of the activity tiers.' },
+      { tier: 'Minigame', source: DropSource.ACTIVITY_MINIGAME, rate: DROP_RATES[DropSource.ACTIVITY_MINIGAME] },
     ],
   },
   {

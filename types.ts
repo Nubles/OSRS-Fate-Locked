@@ -38,14 +38,14 @@ export enum DropSource {
   CLUE_ELITE = 'Clue Scroll (Elite)',
   CLUE_MASTER = 'Clue Scroll (Master)',
 
-  // Repeatable endgame faucets — roll per completion of the content.
+  // Repeatable endgame faucets — roll per completion of the content. Bosses are
+  // rolled per-encounter (see data/bossKeyTiers) by difficulty tier; raids share
+  // the top boss rate; minigames and pets are flat.
   BOSS_LOW = 'Boss (Low)',
   BOSS_MID = 'Boss (Mid)',
   BOSS_HIGH = 'Boss (High)',
   RAID = 'Raid',
   ACTIVITY_MINIGAME = 'Activity (Minigame)',
-  ACTIVITY_SKILLING = 'Activity (Skilling Boss)',
-  ACTIVITY_INFERNO = 'Activity (Fight Cave/Inferno)',
   PET = 'Pet Drop',
 
   CUSTOM = 'Custom',
