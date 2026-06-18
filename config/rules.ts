@@ -45,6 +45,17 @@ export const DROP_RATES: Record<string, number> = {
   [DropSource.CLUE_HARD]: 35,
   [DropSource.CLUE_ELITE]: 65,
   [DropSource.CLUE_MASTER]: 80,
-  
+
+  // Repeatable endgame faucets — keep unlocked bosses/raids/activities/pets
+  // earning keys long after the one-time sources (quests/diaries/CAs) dry up.
+  [DropSource.BOSS_LOW]: 15,
+  [DropSource.BOSS_MID]: 30,
+  [DropSource.BOSS_HIGH]: 50,
+  [DropSource.RAID]: 65,
+  [DropSource.ACTIVITY_MINIGAME]: 10,
+  [DropSource.ACTIVITY_SKILLING]: 15,
+  [DropSource.ACTIVITY_INFERNO]: 35,
+  [DropSource.PET]: 100,
+
   [DropSource.CUSTOM]: 50,
 };

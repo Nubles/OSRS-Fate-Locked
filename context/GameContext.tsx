@@ -716,6 +716,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
       else if (source === DropSource.DIARY_ELITE) omniChance = Math.max(omniChance, 10);
       else if (source === "Diary Section Complete") omniChance = Math.max(omniChance, 10);
       else if (source === "CA Tier Complete") omniChance = Math.max(omniChance, 10);
+      else if (source === DropSource.PET) omniChance = Math.max(omniChance, 25);
+      else if (source === DropSource.RAID) omniChance = Math.max(omniChance, 15);
+      else if (source === DropSource.BOSS_HIGH) omniChance = Math.max(omniChance, 10);
 
       if (rollDice(100) <= omniChance) omni = true;
     } else {

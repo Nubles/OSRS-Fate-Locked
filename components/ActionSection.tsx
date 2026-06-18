@@ -7,14 +7,26 @@ import { BookOpen, ScrollText, Crosshair, Dices } from 'lucide-react';
 import { wikiService } from '../services/WikiService';
 import { resolveModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
+import { EARN_METHODS, LEVEL_ROLL_MAX } from '../config/economy';
 
 // OSRS Wiki Icon URLs
+const WIKI_IMG = 'https://oldschool.runescape.wiki/images/';
 const OSRS_ICONS = {
   SLAYER: 'https://oldschool.runescape.wiki/images/Slayer_icon.png',
   STATS: 'https://oldschool.runescape.wiki/images/Stats_icon.png',
   COLL_LOG: 'https://oldschool.runescape.wiki/images/Collection_log_icon.png',
-  CLUE: 'https://oldschool.runescape.wiki/images/Clue_scroll_%28master%29.png'
+  CLUE: 'https://oldschool.runescape.wiki/images/Clue_scroll_%28master%29.png',
+  BOSS: 'https://oldschool.runescape.wiki/images/Combat_icon.png',
+  ACTIVITY: 'https://oldschool.runescape.wiki/images/Minigames.png',
 };
+
+// Live min/max of the journal (one-time) faucets, so the "Other Key Sources"
+// chip can't drift from DROP_RATES the way the old hardcoded 10%-100% did.
+const JOURNAL_RATES = EARN_METHODS
+  .filter(m => ['Quests', 'Achievement Diaries', 'Combat Achievements'].includes(m.category))
+  .flatMap(m => m.tiers.map(t => t.rate));
+const JOURNAL_MIN = Math.min(...JOURNAL_RATES);
+const JOURNAL_MAX = Math.max(...JOURNAL_RATES);
 
 // Component to dynamically fetch wiki image for icons
 const WikiIcon = ({ name, fallbackSrc, className }: { name: string, fallbackSrc?: string, className?: string }) => {
@@ -87,6 +99,24 @@ const TIER_STYLES = {
     pill: 'bg-[#13110a] border-[#2e2a15] text-[#facc15] shadow-[0_0_8px_rgba(250,204,21,0.2)]'
   }
 };
+
+// Repeatable PvM faucets — self-reported (click the card when you finish the
+// content), mirroring how the Slayer/Clue cards work. Bosses + Raids share the
+// "Bossing" tab; minigames / skilling bosses / pets share "Activities".
+const BOSS_ROLLS = [
+  { name: 'Low-tier Boss',    subText: 'Mole, KBD, Barrows, Sarachnis…',  source: DropSource.BOSS_LOW,  image: `${WIKI_IMG}King_Black_Dragon.png`, style: TIER_STYLES.GREEN },
+  { name: 'Mid-tier Boss',    subText: 'GWD, Zulrah, Vorkath, Cerberus…',  source: DropSource.BOSS_MID,  image: `${WIKI_IMG}Zulrah.png`,            style: TIER_STYLES.BLUE },
+  { name: 'High-tier Boss',   subText: 'Nex, Nightmare, Gauntlet, DT2…',   source: DropSource.BOSS_HIGH, image: `${WIKI_IMG}Nex.png`,               style: TIER_STYLES.PURPLE },
+  { name: 'Chambers of Xeric', subText: 'Raid completion',                 source: DropSource.RAID,      image: `${WIKI_IMG}Olmlet.png`,            style: TIER_STYLES.AMBER },
+  { name: 'Theatre of Blood',  subText: 'Raid completion',                 source: DropSource.RAID,      image: `${WIKI_IMG}Lil%27_zik.png`,        style: TIER_STYLES.AMBER },
+  { name: 'Tombs of Amascut',  subText: 'Raid completion',                 source: DropSource.RAID,      image: `${WIKI_IMG}Osmumten%27s_fang.png`, style: TIER_STYLES.AMBER },
+];
+const ACTIVITY_ROLLS = [
+  { name: 'Minigame',           subText: 'Pest Control, BA, Castle Wars…',          source: DropSource.ACTIVITY_MINIGAME, image: `${WIKI_IMG}Void_knight_mace.png`, style: TIER_STYLES.STONE },
+  { name: 'Skilling Boss',      subText: 'Wintertodt, Tempoross, GotR, Zalcano',    source: DropSource.ACTIVITY_SKILLING, image: `${WIKI_IMG}Phoenix.png`,          style: TIER_STYLES.GREEN },
+  { name: 'Fight Cave / Inferno', subText: 'TzHaar Fight Cave, The Inferno',        source: DropSource.ACTIVITY_INFERNO,  image: `${WIKI_IMG}Infernal_cape.png`,    style: TIER_STYLES.RED },
+  { name: 'Any Pet',            subText: 'Guaranteed key on a pet drop!',           source: DropSource.PET,               image: `${WIKI_IMG}Vorki.png`,            style: TIER_STYLES.GOLD },
+];
 
 type TierStyle = typeof TIER_STYLES.GREEN;
 
@@ -300,7 +330,7 @@ const InfoChip: React.FC<{
   </div>
 );
 
-type FarmSubTab = 'SLAYER' | 'CLUES';
+type FarmSubTab = 'SLAYER' | 'CLUES' | 'BOSSING' | 'ACTIVITIES';
 
 export const ActionSection: React.FC = () => {
   const { rollForKey, unlocks, gameModeId, customMode, animationsEnabled } = useGame();
@@ -399,8 +429,10 @@ export const ActionSection: React.FC = () => {
   }, [unlocks.quests]);
 
   const tabs: { id: FarmSubTab; label: string; icon: string; count: number }[] = [
-    { id: 'SLAYER', label: 'Slayer Tasks', icon: OSRS_ICONS.SLAYER, count: slayers.length },
-    { id: 'CLUES', label: 'Clue Scrolls', icon: OSRS_ICONS.CLUE, count: CLUE_SCROLLS.length },
+    { id: 'SLAYER', label: 'Slayer', icon: OSRS_ICONS.SLAYER, count: slayers.length },
+    { id: 'CLUES', label: 'Clues', icon: OSRS_ICONS.CLUE, count: CLUE_SCROLLS.length },
+    { id: 'BOSSING', label: 'Bossing', icon: OSRS_ICONS.BOSS, count: BOSS_ROLLS.length },
+    { id: 'ACTIVITIES', label: 'Activities', icon: OSRS_ICONS.ACTIVITY, count: ACTIVITY_ROLLS.length },
   ];
 
   return (
@@ -469,6 +501,48 @@ export const ActionSection: React.FC = () => {
             ))}
           </div>
         )}
+        {subTab === 'BOSSING' && (
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+            {BOSS_ROLLS.map((b, i) => (
+              <div
+                key={b.name}
+                className={animationsEnabled ? 'animate-fade-in-up' : ''}
+                style={animationsEnabled ? { animationDelay: `${i * 35}ms` } : undefined}
+              >
+                <SlayerMasterCard
+                  name={b.name}
+                  subText={b.subText}
+                  displayRate={effectiveRate(b.source)}
+                  bonus={regionBonus}
+                  image={b.image}
+                  style={b.style}
+                  onClick={(e) => handleRoll(b.source, DROP_RATES[b.source], e)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+        {subTab === 'ACTIVITIES' && (
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+            {ACTIVITY_ROLLS.map((a, i) => (
+              <div
+                key={a.name}
+                className={animationsEnabled ? 'animate-fade-in-up' : ''}
+                style={animationsEnabled ? { animationDelay: `${i * 35}ms` } : undefined}
+              >
+                <SlayerMasterCard
+                  name={a.name}
+                  subText={a.subText}
+                  displayRate={effectiveRate(a.source)}
+                  bonus={regionBonus}
+                  image={a.image}
+                  style={a.style}
+                  onClick={(e) => handleRoll(a.source, DROP_RATES[a.source], e)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Other key sources — compact, always-visible navigational hints */}
@@ -480,7 +554,7 @@ export const ActionSection: React.FC = () => {
             label="Skill Rolling"
             accent="text-blue-500"
             desc={<>Click unlocked skills in the <span className="text-blue-200">Dashboard</span> to roll.</>}
-            rate="Chance = Level / 5 (Max 20%)"
+            rate={`Chance = Level / 5 (Max ${LEVEL_ROLL_MAX}%)`}
             badge="bg-blue-900/20 border-blue-900/30 text-blue-400"
           />
           <InfoChip
@@ -488,7 +562,7 @@ export const ActionSection: React.FC = () => {
             label="Journal Activities"
             accent="text-cyan-500"
             desc={<>Complete Quests, Diaries & CAs in the <span className="text-cyan-200">Journal Tab</span>.</>}
-            rate="Variable Rates (10% - 100%)"
+            rate={`Variable (${JOURNAL_MIN}% - ${JOURNAL_MAX}%)`}
             badge="bg-cyan-900/20 border-cyan-900/30 text-cyan-400"
           />
           <InfoChip
@@ -496,7 +570,7 @@ export const ActionSection: React.FC = () => {
             label="Collection Log"
             accent="text-amber-500"
             desc={<>Log new unique items in the <span className="text-amber-200">Collection Log Tab</span> to roll.</>}
-            rate="20% Drop Chance"
+            rate={`${DROP_RATES[DropSource.COLLECTION_LOG]}% Drop Chance`}
             badge="bg-amber-900/20 border-amber-900/30 text-amber-400"
           />
         </div>

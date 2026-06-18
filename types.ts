@@ -37,6 +37,17 @@ export enum DropSource {
   CLUE_HARD = 'Clue Scroll (Hard)',
   CLUE_ELITE = 'Clue Scroll (Elite)',
   CLUE_MASTER = 'Clue Scroll (Master)',
+
+  // Repeatable endgame faucets — roll per completion of the content.
+  BOSS_LOW = 'Boss (Low)',
+  BOSS_MID = 'Boss (Mid)',
+  BOSS_HIGH = 'Boss (High)',
+  RAID = 'Raid',
+  ACTIVITY_MINIGAME = 'Activity (Minigame)',
+  ACTIVITY_SKILLING = 'Activity (Skilling Boss)',
+  ACTIVITY_INFERNO = 'Activity (Fight Cave/Inferno)',
+  PET = 'Pet Drop',
+
   CUSTOM = 'Custom',
 }
 
