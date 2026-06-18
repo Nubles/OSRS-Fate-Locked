@@ -101,7 +101,7 @@ function recommendNextAction(unlocks: any, diaryDoable: number, caLeft: number):
 }
 
 export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
-  const { unlocks } = useGame();
+  const { unlocks, advisorsEnabled } = useGame();
 
   const stats = useMemo(() => {
     // ── Quests available ─────────────────────────────────────────────────────
@@ -207,8 +207,8 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
         <span className="ml-auto text-[10px] text-gray-600">click to jump</span>
       </div>
 
-      {/* ── Recommended next action ───────────────────────────────────────── */}
-      {noneLeft ? (
+      {/* ── Recommended next action (advisory — hidden when advisors are off) ── */}
+      {advisorsEnabled && (noneLeft ? (
         <div className="mb-3 rounded-lg border border-emerald-500/25 bg-emerald-900/15 px-3 py-2.5 flex items-center gap-2.5">
           <PartyPopper size={15} className="text-emerald-400 shrink-0" aria-hidden />
           <div>
@@ -230,7 +230,7 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
           </div>
           <ChevronRight size={13} className="text-amber-600 group-hover:text-amber-300 transition-colors shrink-0" aria-hidden />
         </button>
-      )}
+      ))}
 
       <div className="space-y-2" role="list">
         {rows.map((row, idx) => (

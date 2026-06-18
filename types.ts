@@ -124,6 +124,8 @@ export interface GameState {
   unlocks: UnlockState;
   history: LogEntry[];
   animationsEnabled?: boolean;
+  /** Show the advisor / recommendation panels across the app (default off). */
+  advisorsEnabled?: boolean;
   hasSeenOnboarding?: boolean;
   pinnedGoals: string[]; // IDs from STRATEGY_DATABASE
   userNotes: Record<string, string>; // ID -> Note Content

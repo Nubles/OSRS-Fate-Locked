@@ -300,7 +300,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
 // --- Main Dashboard Component ---
 
 export const Dashboard: React.FC = () => {
-  const { unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, gameModeId } = useGame();
+  const { unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId } = useGame();
   const activeMode = getGameMode(gameModeId);
   const [activeTab, setActiveTab] = useState('CHARACTER');
   const [activityCategory, setActivityCategory] = useState('BOSSES');
@@ -438,7 +438,7 @@ export const Dashboard: React.FC = () => {
             {/* Skill Advisor — ranks which skill to train next (and to what
                 level) by how much quest + diary content the threshold unlocks.
                 Clicking a row flashes the matching skill card below. */}
-            <SkillAdvisorPanel />
+            {advisorsEnabled && <SkillAdvisorPanel />}
 
             <div className="grid grid-cols-3 gap-2">
                 {SKILLS_LIST.map(skill => {
@@ -618,7 +618,7 @@ export const Dashboard: React.FC = () => {
               <div className="space-y-6 h-full overflow-y-auto pr-2 custom-scrollbar pb-10">
                   {/* Region Advisor — shows which locked regions would unlock the most
                       quests + diary tiers, helping ironmen pick the next unlock target. */}
-                  <RegionAdvisorPanel />
+                  {advisorsEnabled && <RegionAdvisorPanel />}
 
                   {/* Misthalin Special Card */}
                   <div className="bg-[#1a1a1a] rounded border border-emerald-500/30 p-3 relative overflow-hidden group">
@@ -847,7 +847,7 @@ export const Dashboard: React.FC = () => {
                   Combat Achievements
               </button>
           </div>
-          <JournalNextBest onPick={setJournalSubTab} />
+          {advisorsEnabled && <JournalNextBest onPick={setJournalSubTab} />}
           <div className="flex-1 overflow-hidden p-2">
               <Suspense fallback={<ModalFallback />}>
                   {journalSubTab === 'QUESTS' && <QuestLog searchTerm={searchQuery} />}

@@ -24,7 +24,7 @@ interface DiaryLogProps {
 }
 
 export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch = '' }) => {
-  const { unlocks, toggleDiary, rollForKey, toggleTask } = useGame();
+  const { unlocks, toggleDiary, rollForKey, toggleTask, advisorsEnabled } = useGame();
   // Filter state persisted across sessions.
   const [filterRegion, setFilterRegion] = useLocalStorage<string>('jrnl:diary:region', 'ALL');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -272,7 +272,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
 
       <DiaryHeatmap onPick={focusCard} />
 
-      <DiaryInsights />
+      {advisorsEnabled && <DiaryInsights />}
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
         {sortedDiaries.map(diary => {

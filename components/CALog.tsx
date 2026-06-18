@@ -17,7 +17,7 @@ interface CALogProps {
 }
 
 export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' }) => {
-  const { unlocks, toggleCA, rollForKey, toggleTask } = useGame();
+  const { unlocks, toggleCA, rollForKey, toggleTask, advisorsEnabled } = useGame();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   // Filter state persisted across sessions.
   const [filterStatus, setFilterStatus] = useLocalStorage<JournalStatus>('jrnl:ca:status', 'ALL');
@@ -160,7 +160,7 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
         onTierChange={setFilterTier}
       />
 
-      <CAInsights />
+      {advisorsEnabled && <CAInsights />}
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
         {filteredCAs.map(ca => {

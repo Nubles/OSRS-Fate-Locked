@@ -40,7 +40,7 @@ const SyncCodeModal = lazy(() => import('./components/SyncCodeModal').then(m => 
 const ModelGallery = lazy(() => import('./components/ModelGallery').then(m => ({ default: m.ModelGallery })));
 import { obfuscateFateSave, deobfuscateFateSave } from './utils/encryption';
 import { GameState } from './types';
-import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2 } from 'lucide-react';
+import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb } from 'lucide-react';
 
 // --- Error Boundary ---
 interface ErrorBoundaryState {
@@ -164,7 +164,7 @@ interface HeaderProps {
 }
 
 const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode }: HeaderProps) => {
-  const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, importSave, resetGame, getExportData, createBackup, gameModeId, customMode } = useGame();
+  const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, importSave, resetGame, getExportData, createBackup, gameModeId, customMode } = useGame();
   const pityRules = resolveModeRules(gameModeId, customMode);
   const pityCap = pityRules.pityEnabled ? pityRules.pityThreshold : 50; // 50 = visual-only fallback
   const nearPity = pityRules.pityEnabled && fatePoints >= pityRules.pityThreshold * 0.8;
@@ -310,6 +310,10 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
              <div className="flex items-center bg-[#252525] border border-white/10 rounded-lg p-0.5 gap-0.5 h-8">
                  <button onClick={toggleAnimations} className={`w-7 h-full flex items-center justify-center rounded transition-colors ${animationsEnabled ? 'text-green-400' : 'text-gray-500'}`} title="Animations" aria-label="Toggle animations" aria-pressed={animationsEnabled}>
                     {animationsEnabled ? <PlayCircle size={14} /> : <PauseCircle size={14} />}
+                 </button>
+                 <div className="w-px h-4 bg-white/10"></div>
+                 <button onClick={toggleAdvisors} className={`w-7 h-full flex items-center justify-center rounded transition-colors ${advisorsEnabled ? 'text-amber-400' : 'text-gray-500 hover:text-gray-300'}`} title={advisorsEnabled ? 'Advisor panels: on' : 'Advisor panels: off'} aria-label="Toggle advisor panels" aria-pressed={advisorsEnabled}>
+                    <Lightbulb size={14} />
                  </button>
                  <div className="w-px h-4 bg-white/10"></div>
                  <button onClick={() => fileInputRef.current?.click()} className="w-7 h-full flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/5 rounded" title="Import Save" aria-label="Import Save"><Upload size={14} /></button>

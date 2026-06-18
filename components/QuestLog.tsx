@@ -307,7 +307,7 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, currentQP, onTogg
 };
 
 export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch = '' }) => {
-  const { unlocks, toggleQuest, rollForKey } = useGame();
+  const { unlocks, toggleQuest, rollForKey, advisorsEnabled } = useGame();
   // Filter state is persisted in localStorage so returning players don't have
   // to re-apply their preferred view every session.
   const [filter, setFilter] = useLocalStorage<JournalStatus>('jrnl:quest:filter', 'ALL');
@@ -439,7 +439,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
   // Quest Impact Advisor — ranked by unlock score. Only computed when the
   // panel is visible (advisor mode + not filtering) to avoid running O(n²)
   // simulations on every keystroke while the player is searching.
-  const showAdvisorStrip = !searchTerm && filter === 'ALL' && regionFilter === 'ALL' && advisorMode;
+  const showAdvisorStrip = advisorsEnabled && !searchTerm && filter === 'ALL' && regionFilter === 'ALL' && advisorMode;
   const rankedQuests = useMemo(
     () => (showAdvisorStrip ? rankAvailableQuests(unlocks) : []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -543,7 +543,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
         }
       />
 
-      <QuestInsights />
+      {advisorsEnabled && <QuestInsights />}
 
       {showAdvisorStrip && (
         <QuestAdvisorPanel

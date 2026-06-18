@@ -47,6 +47,7 @@ interface GameContextType extends GameState {
   performRitual: (type: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE') => void;
   levelUpSkill: (skill: string) => void;
   toggleAnimations: () => void;
+  toggleAdvisors: () => void;
   completeOnboarding: () => void;
   setGameMode: (modeId: string, customRules?: GameModeRules) => void;
   importSave: (data: Partial<GameState>) => void;
@@ -109,6 +110,7 @@ export const initialState: GameState = {
   unlocks: getInitialUnlocks(),
   history: [],
   animationsEnabled: true,
+  advisorsEnabled: false,
   hasSeenOnboarding: false,
   pinnedGoals: [],
   userNotes: {},
@@ -207,6 +209,7 @@ export type Action =
   | { type: 'LOAD_SAVE'; payload: Partial<GameState> }
   | { type: 'RESET' }
   | { type: 'TOGGLE_ANIMATIONS' }
+  | { type: 'TOGGLE_ADVISORS' }
   | { type: 'COMPLETE_ONBOARDING' }
   | { type: 'ROLL_RESULT'; payload: { success: boolean; omni: boolean; pity: boolean; roll: number; threshold: number; source: string; x?: number; y?: number } }
   | { type: 'UNLOCK'; payload: { table: TableType; item: string; costType: 'key' | 'specialKey' | 'chaosKey'; cost: number } }
@@ -296,6 +299,8 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 
     case 'TOGGLE_ANIMATIONS':
       return { ...state, animationsEnabled: !state.animationsEnabled };
+    case 'TOGGLE_ADVISORS':
+      return { ...state, advisorsEnabled: !state.advisorsEnabled };
 
     case 'COMPLETE_ONBOARDING':
       return { ...state, hasSeenOnboarding: true };
@@ -767,6 +772,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
   const setGameMode = useCallback((modeId: string, customRules?: GameModeRules) =>
     dispatch({ type: 'SET_GAME_MODE', payload: { modeId, customRules } }), []);
   const toggleAnimations = useCallback(() => dispatch({ type: 'TOGGLE_ANIMATIONS' }), []);
+  const toggleAdvisors = useCallback(() => dispatch({ type: 'TOGGLE_ADVISORS' }), []);
   const importSave = useCallback((data: Partial<GameState>) => {
     if (isValidSaveData(data)) {
       dispatch({ type: 'LOAD_SAVE', payload: data });
@@ -816,6 +822,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     performRitual,
     levelUpSkill,
     toggleAnimations,
+    toggleAdvisors,
     completeOnboarding,
     setGameMode,
     importSave,
@@ -842,6 +849,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     performRitual,
     levelUpSkill,
     toggleAnimations,
+    toggleAdvisors,
     completeOnboarding,
     setGameMode,
     importSave,
