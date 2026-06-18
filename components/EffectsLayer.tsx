@@ -39,9 +39,11 @@ export const EffectsLayer: React.FC = () => {
     if (!lastEvent || !animationsEnabled) return;
     const { type, x, y, meta } = lastEvent;
 
-    // Loot beam — fired for any significant event. Unlocks carry no click
-    // coordinates, so they beam from just below screen-centre like a loot pile.
-    const rarity = eventRarity(type, meta as Record<string, any> | undefined);
+    // Loot beam — fired for significant events. UNLOCK is handled inside the
+    // reveal itself (the beam rises behind the revealed item), so we skip it
+    // here; otherwise the beam would fire from screen-centre only after the
+    // reveal is dismissed via "Accept Destiny", which looked disconnected.
+    const rarity = type === 'UNLOCK' ? null : eventRarity(type, meta as Record<string, any> | undefined);
     if (rarity) {
       // Events without a click point (unlocks, or rolls that pass 0,0) beam from
       // just below screen-centre like a loot pile.

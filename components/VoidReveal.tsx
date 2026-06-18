@@ -4,6 +4,7 @@ import { Sparkles, Map, Box, Copy, Shield, BookOpen, Footprints, Zap, Home, Stor
 import { wikiUrlFor } from '../constants';
 import { EntityModel } from './EntityModel';
 import { modelFor, orientationFor } from '../data/entityModels';
+import { categoryColor, categoryRarity, rarityRank } from '../utils/rarity';
 
 interface VoidRevealProps {
   itemName: string;
@@ -287,6 +288,22 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
   const description = getItemDescription(itemType, itemName);
   const entityModel = modelFor(itemName);
 
+  // Loot beam rising behind the revealed item — same rarity colour language as
+  // the transient roll beams, but it lives inside the reveal so the pillar of
+  // light is part of the moment (rather than a stray beam after Accept Destiny).
+  const beamColor = isChaos ? '#ef4444' : categoryColor(itemType);
+  const beamIntense = isChaos || rarityRank(categoryRarity(itemType)) >= rarityRank('epic');
+  const lootBeam = animationsEnabled ? (
+    <div
+      className="absolute left-1/2 bottom-0 pointer-events-none z-0"
+      style={{ width: beamIntense ? 76 : 54, height: 280, transformOrigin: 'bottom center', animation: 'beam-rise 0.7s ease-out both' }}
+    >
+      <div className="absolute inset-x-0 bottom-0" style={{ height: '100%', background: `linear-gradient(to top, ${beamColor}, ${beamColor}55 45%, transparent)`, filter: 'blur(8px)', WebkitMaskImage: 'linear-gradient(to top, black, transparent)', maskImage: 'linear-gradient(to top, black, transparent)', borderRadius: '50% / 14px' }} />
+      <div className="absolute bottom-0 left-1/2" style={{ width: beamIntense ? 10 : 6, height: '100%', transform: 'translateX(-50%)', background: `linear-gradient(to top, #ffffff, ${beamColor} 26%, transparent)`, filter: 'blur(1.5px)' }} />
+      <div className="absolute left-1/2 bottom-0 rounded-full" style={{ width: (beamIntense ? 76 : 54) * 2.2, height: 30, transform: 'translate(-50%, 50%)', background: beamColor, filter: 'blur(16px)', animation: 'loot-beam-glow 1.4s ease-in-out infinite' }} />
+    </div>
+  ) : null;
+
   return (
     <div 
         ref={containerRef}
@@ -417,6 +434,7 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
               {entityModel ? (
                  // 3D model reveal — falls back to the sprite poster automatically.
                  <div className="flex justify-center my-6 relative items-center">
+                    {lootBeam}
                     {animationsEnabled && (
                         <div className={`absolute inset-0 bg-gradient-to-t ${theme.bgGradient} blur-xl opacity-50 animate-pulse`}></div>
                     )}
@@ -426,6 +444,7 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
                  </div>
               ) : itemImage && !imageError ? (
                  <div className="flex justify-center my-6 relative min-h-[6rem] items-center">
+                    {lootBeam}
                     {animationsEnabled && (
                         <div className={`absolute inset-0 bg-gradient-to-t ${theme.bgGradient} blur-xl opacity-50 animate-pulse`}></div>
                     )}
@@ -449,7 +468,8 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
               ) : (
                 // Fallback Icon if Image Missing or Error
                 <div className="flex justify-center my-6 relative">
-                    <div className={`w-24 h-24 rounded-full bg-gradient-to-br ${theme.bgGradient} flex items-center justify-center border border-white/10 shadow-inner`}>
+                    {lootBeam}
+                    <div className={`relative z-10 w-24 h-24 rounded-full bg-gradient-to-br ${theme.bgGradient} flex items-center justify-center border border-white/10 shadow-inner`}>
                        {isRegion ? <Map className={`w-12 h-12 ${theme.icon}`} /> : <Box className={`w-12 h-12 ${theme.icon}`} />}
                     </div>
                 </div>
