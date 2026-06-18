@@ -25,12 +25,28 @@ export const PopOnChange: React.FC<{
     if (value === prev.current) return;
     const from = prev.current;
     prev.current = value;
-    if (!animationsEnabled) {
+    // Snap (no roll) when animations are off OR the OS asks to reduce motion.
+    // The reduce-motion case MUST snap here: the reduce-motion CSS sets
+    // `animation: none` on the roll track, so `onAnimationEnd` never fires and
+    // `settled` would otherwise stay stuck a value behind (e.g. 0 keys earns a
+    // key but the counter only catches up on the next one).
+    const reduce = typeof window !== 'undefined'
+      && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (!animationsEnabled || reduce) {
       setSettled(value);
+      setRolling(null);
       return;
     }
     keyRef.current += 1;
-    setRolling({ from, to: value, dir: value > from ? 'up' : 'down', key: keyRef.current });
+    const k = keyRef.current;
+    setRolling({ from, to: value, dir: value > from ? 'up' : 'down', key: k });
+    // Safety net: if the animation (and thus onAnimationEnd) never runs for any
+    // reason, still settle so the counter can't get stuck behind the real value.
+    const t = window.setTimeout(() => {
+      setSettled(value);
+      setRolling(r => (r && r.key === k ? null : r));
+    }, 650);
+    return () => window.clearTimeout(t);
   }, [value, animationsEnabled]);
 
   if (!rolling) {
