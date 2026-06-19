@@ -152,6 +152,16 @@ function buildShortcuts(data) {
   return out;
 }
 
+/** Monster → sorted unique drop item names (names only, to keep the file small). */
+function buildDrops(data) {
+  const out = {};
+  for (const [monster, table] of Object.entries(data.drops ?? {})) {
+    const items = [...new Set(Object.keys(table).map(cleanName))].sort();
+    if (items.length) out[cleanName(monster)] = items;
+  }
+  return out;
+}
+
 /** Shop → sorted stock list (what each named shop sells). */
 function buildShopItems(data) {
   const out = {};
@@ -200,6 +210,7 @@ function main(data) {
   const slayerMasters = buildSlayerMasters(data);
   const shortcuts = buildShortcuts(data);
   const shopItems = buildShopItems(data);
+  const drops = buildDrops(data);
 
   const doc = {
     version: 2,
@@ -209,9 +220,10 @@ function main(data) {
     slayerMasters,
     shortcuts,
     shopItems,
+    drops,
   };
   console.log(`  connect: ${Object.keys(connect).length} chunks with links`);
-  console.log(`  slayerMasters: ${Object.keys(slayerMasters).length} | shortcuts: ${shortcuts.length} | shops: ${Object.keys(shopItems).length}`);
+  console.log(`  slayerMasters: ${Object.keys(slayerMasters).length} | shortcuts: ${shortcuts.length} | shops: ${Object.keys(shopItems).length} | drop tables: ${Object.keys(drops).length}`);
   writeFileSync(OUT, JSON.stringify(doc));
   const kb = Math.round(JSON.stringify(doc).length / 1024);
   console.log(`wrote public/chunk-content.json — ${withContent} chunks with content, ~${kb} KB`);

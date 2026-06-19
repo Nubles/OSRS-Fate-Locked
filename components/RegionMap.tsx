@@ -419,13 +419,19 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
   const [lensReady, setLensReady] = useState(chunkContentService.ready);
   useEffect(() => { if (!lensReady) chunkContentService.init().then(() => setLensReady(true)); }, [lensReady]);
   const [lensInput, setLensInput] = useState('');
-  const [lens, setLens] = useState<{ kind: 'entity' | 'skill' | 'reach'; key: string; label: string } | null>(null);
+  const [lens, setLens] = useState<{ kind: 'entity' | 'skill' | 'reach' | 'drop'; key: string; label: string } | null>(null);
   const [onlyUnlocked, setOnlyUnlocked] = useState(false);
   const jumpIdx = useRef(0);
 
   const lensSuggestions = useMemo(() => {
     if (!lensReady || lens || lensInput.trim().length < 2) return [];
-    return chunkContentService.searchEntities(lensInput.trim(), 8);
+    return chunkContentService.searchEntities(lensInput.trim(), 6);
+  }, [lensInput, lensReady, lens]);
+
+  // Item drops ("where do I get X") — shown alongside the entity suggestions.
+  const lensItemSuggestions = useMemo(() => {
+    if (!lensReady || lens || lensInput.trim().length < 2) return [];
+    return chunkContentService.searchItems(lensInput.trim(), 5);
   }, [lensInput, lensReady, lens]);
 
   const lensResult = useMemo(() => {
@@ -455,6 +461,16 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
     if (lens.kind === 'entity') {
       const hit = chunkContentService.entityLocations(lens.key);
       for (const l of hit?.locations ?? []) add(l.cx, l.cy);
+    } else if (lens.kind === 'drop') {
+      const monsters = chunkContentService.itemSources(lens.key);
+      const located = new Set<string>();
+      for (const m of monsters) {
+        const hit = chunkContentService.entityLocations(m, ['monster']);
+        if (hit?.locations.length) { located.add(m); for (const l of hit.locations) add(l.cx, l.cy); }
+      }
+      detail = located.size
+        ? `Dropped by ${[...located].slice(0, 3).join(', ')}${located.size > 3 ? `, +${located.size - 3}` : ''}`
+        : `Dropped by ${monsters.length} monster${monsters.length === 1 ? '' : 's'} — none in the chunk map.`;
     } else {
       const objs = chunkContentService.entitiesOfKind('object');
       let best = -1;
@@ -492,7 +508,7 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
   }, [visibleLensChunks]);
 
   const clearLens = useCallback(() => { setLens(null); setLensInput(''); jumpIdx.current = 0; }, []);
-  const pickLens = useCallback((kind: 'entity' | 'skill' | 'reach', key: string, label: string) => {
+  const pickLens = useCallback((kind: 'entity' | 'skill' | 'reach' | 'drop', key: string, label: string) => {
     setLens({ kind, key, label }); setLensInput(''); jumpIdx.current = 0;
   }, []);
   const jumpToMatch = useCallback((dir: number) => {
@@ -1101,8 +1117,8 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
               {lens && <button onClick={clearLens} title="Clear" className="text-gray-500 hover:text-white shrink-0"><X size={13} /></button>}
             </div>
 
-            {lensSuggestions.length > 0 && (
-              <div className="max-h-44 overflow-y-auto custom-scrollbar border-t border-white/5">
+            {(lensSuggestions.length > 0 || lensItemSuggestions.length > 0) && (
+              <div className="max-h-52 overflow-y-auto custom-scrollbar border-t border-white/5">
                 {lensSuggestions.map(s => (
                   <button
                     key={s.kind + s.name}
@@ -1113,10 +1129,21 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
                     <span className="text-[9px] text-gray-500 font-mono shrink-0">{s.kind} · {s.locations.length}</span>
                   </button>
                 ))}
+                {lensItemSuggestions.map(it => (
+                  <button
+                    key={'item:' + it.name}
+                    onClick={() => pickLens('drop', it.name, it.name)}
+                    title="Highlight chunks whose monsters drop this item"
+                    className="w-full flex items-center justify-between gap-2 px-2 py-1 text-left hover:bg-white/10"
+                  >
+                    <span className="text-[11px] text-amber-200/90 truncate">{it.name}</span>
+                    <span className="text-[9px] text-amber-500/70 font-mono shrink-0">drop · {it.sources}</span>
+                  </button>
+                ))}
               </div>
             )}
 
-            {!lens && lensSuggestions.length === 0 && (
+            {!lens && lensSuggestions.length === 0 && lensItemSuggestions.length === 0 && (
               <div className="border-t border-white/5">
                 <div className="flex items-center gap-1.5 px-2 py-1.5">
                   <Pickaxe size={12} className="text-amber-400 shrink-0" />
