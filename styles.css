@@ -118,6 +118,14 @@ a:focus:not(:focus-visible),
   25%  { opacity: 1; }
   100% { opacity: 0; transform: translateY(-90px) scale(1); }
 }
+/* Chunk-lens highlight: gentle pulse on unlocked matches so they read as "go
+   here" without being noisy. */
+.lens-pulse { animation: lens-pulse 1.6s ease-in-out infinite; }
+@keyframes lens-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+
 /* Loot beam that rises behind a revealed item and then stays lit (unlike the
    self-dismissing loot-beam used for transient roll feedback). */
 @keyframes beam-rise {

@@ -2,12 +2,17 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useGame } from '../context/GameContext';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
-import { Lock, Unlock, ZoomIn, ZoomOut, Move, Loader2, Download, Grid3x3, Paintbrush, Eye, EyeOff, ClipboardCopy, Trash2, FileDown, FileUp, Radio, Undo2, Redo2 } from 'lucide-react';
+import { Lock, Unlock, ZoomIn, ZoomOut, Move, Loader2, Download, Grid3x3, Paintbrush, Eye, EyeOff, ClipboardCopy, Trash2, FileDown, FileUp, Radio, Undo2, Redo2, Search, X, Target, Pickaxe, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ChunkActivityPanel } from './ChunkActivityPanel';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_CHUNKS } from '../data/regionChunks';
-import { consumePendingChunk } from '../utils/chunkLocations';
+import { consumePendingChunk, chunkUnlocked } from '../utils/chunkLocations';
 import { isFreeArea } from '../utils/freeAreas';
+import { chunkContentService } from '../services/ChunkContentService';
+import { resourceReqFor, resourceUsable } from '../utils/chunkResources';
+
+// Skills the chunk-resource lens can find "best training" nodes for.
+const LENS_SKILLS = ['Woodcutting', 'Mining', 'Fishing', 'Thieving', 'Runecraft'];
 import {
   MAP_IMAGE,
   MAP_BOUNDS,
@@ -400,6 +405,86 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
   const [isExporting, setIsExporting] = useState(false);
   const [showGrid, setShowGrid] = useState(true);
   const [hoverTile, setHoverTile] = useState<TileCoord | null>(null);
+
+  // ── Chunk lens ──────────────────────────────────────────────────────────────
+  // Highlight every chunk that holds a chosen resource / monster (e.g. "Coal
+  // rocks", "Yew tree"), or the best training node for a skill — unlocked chunks
+  // brighter, locked ones dim, with a jump-to-match.
+  const { unlocks } = useGame();
+  const [lensReady, setLensReady] = useState(chunkContentService.ready);
+  useEffect(() => { if (!lensReady) chunkContentService.init().then(() => setLensReady(true)); }, [lensReady]);
+  const [lensInput, setLensInput] = useState('');
+  const [lens, setLens] = useState<{ kind: 'entity' | 'skill'; key: string; label: string } | null>(null);
+  const [onlyUnlocked, setOnlyUnlocked] = useState(false);
+  const jumpIdx = useRef(0);
+
+  const lensSuggestions = useMemo(() => {
+    if (!lensReady || lens || lensInput.trim().length < 2) return [];
+    return chunkContentService.searchEntities(lensInput.trim(), 8);
+  }, [lensInput, lensReady, lens]);
+
+  const lensResult = useMemo(() => {
+    if (!lens || !lensReady) return null;
+    const seen = new Map<string, { cx: number; cy: number; unlocked: boolean }>();
+    const add = (cx: number, cy: number) => {
+      const k = `${cx},${cy}`;
+      if (!seen.has(k)) seen.set(k, { cx, cy, unlocked: chunkUnlocked(cx, cy, unlocks) });
+    };
+    let detail = '';
+    if (lens.kind === 'entity') {
+      const hit = chunkContentService.entityLocations(lens.key);
+      for (const l of hit?.locations ?? []) add(l.cx, l.cy);
+    } else {
+      // Skill: highlight the highest-level resource node the player can use now.
+      const objs = chunkContentService.entitiesOfKind('object');
+      let best = -1;
+      const usable: { hit: typeof objs[number]; level: number }[] = [];
+      for (const o of objs) {
+        const req = resourceReqFor(o.name);
+        if (req && req.skill === lens.key && resourceUsable(req, unlocks)) {
+          usable.push({ hit: o, level: req.level });
+          best = Math.max(best, req.level);
+        }
+      }
+      const bestObjs = usable.filter(u => u.level === best);
+      detail = best < 0 ? 'No usable nodes yet — raise the skill/tier.' : `${[...new Set(bestObjs.map(u => u.hit.name))].join(', ')} · lvl ${best}`;
+      for (const u of bestObjs) for (const l of u.hit.locations) add(l.cx, l.cy);
+    }
+    const chunks = [...seen.values()];
+    return { chunks, unlockedCount: chunks.filter(c => c.unlocked).length, detail };
+  }, [lens, lensReady, unlocks]);
+
+  const visibleLensChunks = useMemo(
+    () => (lensResult ? (onlyUnlocked ? lensResult.chunks.filter(c => c.unlocked) : lensResult.chunks) : []),
+    [lensResult, onlyUnlocked],
+  );
+
+  const highlightRects = useMemo(() => {
+    const chunkPx = CHUNK_TILES * (MAP_IMAGE.width / (MAP_BOUNDS.tileMaxX - MAP_BOUNDS.tileMinX));
+    const chunkPy = CHUNK_TILES * (MAP_IMAGE.height / (MAP_BOUNDS.tileMaxY - MAP_BOUNDS.tileMinY));
+    return visibleLensChunks.map(c => {
+      const { px, py } = tileToPixel({ tx: c.cx * CHUNK_TILES, ty: (c.cy + 1) * CHUNK_TILES });
+      return { key: `${c.cx},${c.cy}`, x: px, y: py, w: chunkPx, h: chunkPy, unlocked: c.unlocked };
+    });
+  }, [visibleLensChunks]);
+
+  const clearLens = useCallback(() => { setLens(null); setLensInput(''); jumpIdx.current = 0; }, []);
+  const pickLens = useCallback((kind: 'entity' | 'skill', key: string, label: string) => {
+    setLens({ kind, key, label }); setLensInput(''); jumpIdx.current = 0;
+  }, []);
+  const jumpToMatch = useCallback((dir: number) => {
+    const list = visibleLensChunks;
+    if (!list.length) return;
+    jumpIdx.current = ((jumpIdx.current + dir) % list.length + list.length) % list.length;
+    const c = list[jumpIdx.current];
+    const container = containerRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    if (!rect.width) return;
+    const scale = Math.max(transformRef.current.scale, 0.7);
+    const { px, py } = tileToPixel({ tx: (c.cx + 0.5) * CHUNK_TILES, ty: (c.cy + 0.5) * CHUNK_TILES });
+    applyTransform({ x: rect.width / 2 - px * scale, y: rect.height / 2 - py * scale, scale });
+  }, [visibleLensChunks, applyTransform]);
   // Coalesce hover updates to one state set per animation frame — mousemove
   // can fire far more often than the readout needs to repaint.
   const hoverRaf = useRef<number | null>(null);
@@ -978,6 +1063,78 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
 
   return (
     <div className="h-[600px] w-full bg-[#0b0d10] rounded-lg border border-white/10 relative overflow-hidden group select-none shadow-inner">
+      {/* ── Chunk lens control ─────────────────────────────────────────────── */}
+      {!authoring && (
+        <div className="absolute top-2 left-2 z-30 w-64 max-w-[70%]">
+          <div className="bg-[#101010]/95 border border-white/15 rounded-lg shadow-xl backdrop-blur-sm overflow-hidden">
+            <div className="flex items-center gap-1.5 px-2 py-1.5">
+              <Search size={13} className="text-gray-500 shrink-0" />
+              <input
+                value={lensInput}
+                onChange={(e) => setLensInput(e.target.value)}
+                placeholder={lens ? lens.label : 'Highlight coal, yews, a monster…'}
+                className="flex-1 min-w-0 bg-transparent text-[11px] text-gray-200 placeholder:text-gray-600 focus:outline-none"
+              />
+              {lens && <button onClick={clearLens} title="Clear" className="text-gray-500 hover:text-white shrink-0"><X size={13} /></button>}
+            </div>
+
+            {lensSuggestions.length > 0 && (
+              <div className="max-h-44 overflow-y-auto custom-scrollbar border-t border-white/5">
+                {lensSuggestions.map(s => (
+                  <button
+                    key={s.kind + s.name}
+                    onClick={() => pickLens('entity', s.name, s.name)}
+                    className="w-full flex items-center justify-between gap-2 px-2 py-1 text-left hover:bg-white/10"
+                  >
+                    <span className="text-[11px] text-gray-200 truncate">{s.name}</span>
+                    <span className="text-[9px] text-gray-500 font-mono shrink-0">{s.kind} · {s.locations.length}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {!lens && lensSuggestions.length === 0 && (
+              <div className="flex items-center gap-1.5 px-2 py-1.5 border-t border-white/5">
+                <Pickaxe size={12} className="text-amber-400 shrink-0" />
+                <span className="text-[10px] text-gray-500 shrink-0">Best for</span>
+                <select
+                  value=""
+                  onChange={(e) => { if (e.target.value) pickLens('skill', e.target.value, `Best ${e.target.value}`); }}
+                  className="flex-1 min-w-0 bg-[#1a1a1a] border border-white/10 rounded text-[10px] text-gray-300 px-1 py-0.5 focus:outline-none"
+                >
+                  <option value="">a skill…</option>
+                  {LENS_SKILLS.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+            )}
+
+            {lens && lensResult && (
+              <div className="px-2 py-1.5 border-t border-white/5 space-y-1.5">
+                {lensResult.detail && <div className="text-[9px] text-gray-500 leading-snug">{lensResult.detail}</div>}
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-mono text-gray-400">
+                    <span className="text-emerald-300">{lensResult.unlockedCount}</span> unlocked · {lensResult.chunks.length} total
+                  </span>
+                  <label className="flex items-center gap-1 text-[9px] text-gray-500 cursor-pointer shrink-0">
+                    <input type="checkbox" checked={onlyUnlocked} onChange={(e) => setOnlyUnlocked(e.target.checked)} className="accent-emerald-500" />
+                    only unlocked
+                  </label>
+                </div>
+                {visibleLensChunks.length > 0 ? (
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => jumpToMatch(-1)} className="px-1.5 py-0.5 rounded bg-white/5 hover:bg-white/15 text-gray-300"><ChevronLeft size={12} /></button>
+                    <span className="flex-1 text-center text-[9px] text-gray-500 flex items-center justify-center gap-1"><Target size={9} /> jump to match</span>
+                    <button onClick={() => jumpToMatch(1)} className="px-1.5 py-0.5 rounded bg-white/5 hover:bg-white/15 text-gray-300"><ChevronRight size={12} /></button>
+                  </div>
+                ) : (
+                  <div className="text-[9px] text-gray-600 text-center">No matching chunks.</div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div
         ref={containerRef}
         className={`w-full h-full ${authoring ? 'cursor-crosshair' : 'cursor-move'}`}
@@ -1012,6 +1169,29 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
             rectKind={rectMode.current}
             regionUnlocks={regionUnlocks}
           />
+
+          {/* Chunk-lens highlight overlay — inside the transformed layer so the
+              glow pans & zooms with the map. Unlocked matches bright, locked dim. */}
+          {highlightRects.length > 0 && (
+            <svg
+              className="absolute inset-0 pointer-events-none"
+              width={MAP_IMAGE.width}
+              height={MAP_IMAGE.height}
+              viewBox={`0 0 ${MAP_IMAGE.width} ${MAP_IMAGE.height}`}
+            >
+              {highlightRects.map(r => (
+                <rect
+                  key={r.key}
+                  x={r.x} y={r.y} width={r.w} height={r.h}
+                  fill={r.unlocked ? 'rgba(16,185,129,0.30)' : 'rgba(245,158,11,0.10)'}
+                  stroke={r.unlocked ? '#34d399' : '#f59e0b'}
+                  strokeWidth={r.unlocked ? 9 : 5}
+                  strokeDasharray={r.unlocked ? undefined : '16 12'}
+                  className={r.unlocked ? 'lens-pulse' : ''}
+                />
+              ))}
+            </svg>
+          )}
 
           {/* Gold spotlight on the selected chunk (panel open / deep link) —
               lives inside the transformed layer so it pans & zooms with the
