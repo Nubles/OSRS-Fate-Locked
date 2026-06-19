@@ -2,14 +2,13 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useGame } from '../context/GameContext';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
-import { Lock, Unlock, ZoomIn, ZoomOut, Move, Loader2, Download, Grid3x3, Paintbrush, Eye, EyeOff, ClipboardCopy, Trash2, FileDown, FileUp, Radio, Undo2, Redo2, Search, X, Target, Pickaxe, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Lock, Unlock, ZoomIn, ZoomOut, Move, Loader2, Download, Grid3x3, Paintbrush, Eye, EyeOff, ClipboardCopy, Trash2, FileDown, FileUp, Radio, Undo2, Redo2, Search, X, Target, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ChunkActivityPanel } from './ChunkActivityPanel';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { consumePendingChunk, chunkUnlocked, chunkForPlace } from '../utils/chunkLocations';
 import { isFreeArea } from '../utils/freeAreas';
 import { chunkContentService } from '../services/ChunkContentService';
-import { resourceReqFor, resourceUsable } from '../utils/chunkResources';
 import { chunkReachability } from '../utils/chunkReach';
 
 type LensTone = 'good' | 'warn' | 'bad';
@@ -17,7 +16,6 @@ const TONE_FILL: Record<LensTone, string> = { good: 'rgba(16,185,129,0.30)', war
 const TONE_STROKE: Record<LensTone, string> = { good: '#34d399', warn: '#f59e0b', bad: '#f87171' };
 
 // Skills the chunk-resource lens can find "best training" nodes for.
-const LENS_SKILLS = ['Woodcutting', 'Mining', 'Fishing', 'Thieving', 'Runecraft'];
 import {
   MAP_IMAGE,
   MAP_BOUNDS,
@@ -419,7 +417,7 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
   const [lensReady, setLensReady] = useState(chunkContentService.ready);
   useEffect(() => { if (!lensReady) chunkContentService.init().then(() => setLensReady(true)); }, [lensReady]);
   const [lensInput, setLensInput] = useState('');
-  const [lens, setLens] = useState<{ kind: 'entity' | 'skill' | 'reach' | 'drop'; key: string; label: string } | null>(null);
+  const [lens, setLens] = useState<{ kind: 'entity' | 'reach' | 'drop'; key: string; label: string } | null>(null);
   const [onlyUnlocked, setOnlyUnlocked] = useState(false);
   const jumpIdx = useRef(0);
 
@@ -458,10 +456,7 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
       if (!seen.has(k)) seen.set(k, { cx, cy, tone: chunkUnlocked(cx, cy, unlocks) ? 'good' : 'warn' });
     };
     let detail = '';
-    if (lens.kind === 'entity') {
-      const hit = chunkContentService.entityLocations(lens.key);
-      for (const l of hit?.locations ?? []) add(l.cx, l.cy);
-    } else if (lens.kind === 'drop') {
+    if (lens.kind === 'drop') {
       const monsters = chunkContentService.itemSources(lens.key);
       const located = new Set<string>();
       for (const m of monsters) {
@@ -472,19 +467,8 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
         ? `Dropped by ${[...located].slice(0, 3).join(', ')}${located.size > 3 ? `, +${located.size - 3}` : ''}`
         : `Dropped by ${monsters.length} monster${monsters.length === 1 ? '' : 's'} — none in the chunk map.`;
     } else {
-      const objs = chunkContentService.entitiesOfKind('object');
-      let best = -1;
-      const usable: { hit: typeof objs[number]; level: number }[] = [];
-      for (const o of objs) {
-        const req = resourceReqFor(o.name);
-        if (req && req.skill === lens.key && resourceUsable(req, unlocks)) {
-          usable.push({ hit: o, level: req.level });
-          best = Math.max(best, req.level);
-        }
-      }
-      const bestObjs = usable.filter(u => u.level === best);
-      detail = best < 0 ? 'No usable nodes yet — raise the skill/tier.' : `${[...new Set(bestObjs.map(u => u.hit.name))].join(', ')} · lvl ${best}`;
-      for (const u of bestObjs) for (const l of u.hit.locations) add(l.cx, l.cy);
+      const hit = chunkContentService.entityLocations(lens.key);
+      for (const l of hit?.locations ?? []) add(l.cx, l.cy);
     }
     const chunks = [...seen.values()];
     return {
@@ -508,7 +492,7 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
   }, [visibleLensChunks]);
 
   const clearLens = useCallback(() => { setLens(null); setLensInput(''); jumpIdx.current = 0; }, []);
-  const pickLens = useCallback((kind: 'entity' | 'skill' | 'reach' | 'drop', key: string, label: string) => {
+  const pickLens = useCallback((kind: 'entity' | 'reach' | 'drop', key: string, label: string) => {
     setLens({ kind, key, label }); setLensInput(''); jumpIdx.current = 0;
   }, []);
   const jumpToMatch = useCallback((dir: number) => {
@@ -1144,27 +1128,13 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
             )}
 
             {!lens && lensSuggestions.length === 0 && lensItemSuggestions.length === 0 && (
-              <div className="border-t border-white/5">
-                <div className="flex items-center gap-1.5 px-2 py-1.5">
-                  <Pickaxe size={12} className="text-amber-400 shrink-0" />
-                  <span className="text-[10px] text-gray-500 shrink-0">Best for</span>
-                  <select
-                    value=""
-                    onChange={(e) => { if (e.target.value) pickLens('skill', e.target.value, `Best ${e.target.value}`); }}
-                    className="flex-1 min-w-0 bg-[#1a1a1a] border border-white/10 rounded text-[10px] text-gray-300 px-1 py-0.5 focus:outline-none"
-                  >
-                    <option value="">a skill…</option>
-                    {LENS_SKILLS.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-                <button
-                  onClick={() => pickLens('reach', 'reach', 'Reachability')}
-                  className="w-full flex items-center gap-1.5 px-2 py-1.5 border-t border-white/5 text-left hover:bg-white/5"
-                >
-                  <Target size={12} className="text-emerald-400 shrink-0" />
-                  <span className="text-[10px] text-gray-400">Reachability — find stranded unlocks</span>
-                </button>
-              </div>
+              <button
+                onClick={() => pickLens('reach', 'reach', 'Reachability')}
+                className="w-full flex items-center gap-1.5 px-2 py-1.5 border-t border-white/5 text-left hover:bg-white/5"
+              >
+                <Target size={12} className="text-emerald-400 shrink-0" />
+                <span className="text-[10px] text-gray-400">Reachability — find stranded unlocks</span>
+              </button>
             )}
 
             {lens && lensResult && (
