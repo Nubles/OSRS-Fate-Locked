@@ -209,6 +209,13 @@ interface MapSurfaceProps {
 // browser caches the full image, so on later mounts onLoad fires immediately.
 const ProgressiveMapImage: React.FC = () => {
   const [hiLoaded, setHiLoaded] = useState(false);
+  const hiRef = useRef<HTMLImageElement>(null);
+  // When the full image is already in cache (every visit after the first), its
+  // load event can fire before React attaches onLoad — leaving the image stuck
+  // transparent so only the blurry placeholder ever shows. Reconcile on mount.
+  useEffect(() => {
+    if (hiRef.current?.complete && hiRef.current.naturalWidth > 0) setHiLoaded(true);
+  }, []);
   return (
     <>
       <img
@@ -218,6 +225,7 @@ const ProgressiveMapImage: React.FC = () => {
         draggable={false}
       />
       <img
+        ref={hiRef}
         src={MAP_IMAGE.src}
         alt=""
         aria-hidden
@@ -367,6 +375,24 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
     window.addEventListener('fate:show-chunk', onShow);
     return () => window.removeEventListener('fate:show-chunk', onShow);
   }, [applyTransform]);
+
+  // First-paint guard. The map surface is a huge (9216×6528) will-change:transform
+  // layer; on first mount — especially while the tab content is animating in, or
+  // when reached programmatically (a "show on map" redirect) — the browser
+  // sometimes fails to rasterise it, so the map shows blank until a tab switch
+  // forces a repaint. Toggling will-change off→on after the first frame tears
+  // down and rebuilds the layer, forcing the missing paint. It's a sub-pixel
+  // no-op visually.
+  useEffect(() => {
+    const node = mapContentRef.current;
+    if (!node) return;
+    const id = requestAnimationFrame(() => {
+      node.style.willChange = 'auto';
+      void node.offsetHeight; // flush a reflow between the two writes
+      node.style.willChange = 'transform';
+    });
+    return () => cancelAnimationFrame(id);
+  }, []);
   // Pan/zoom lives in a ref and is applied straight to the DOM node — going
   // through React state re-rendered the whole 600-element map surface on every
   // mousemove frame, which is what made dragging laggy.
