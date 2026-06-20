@@ -39,6 +39,7 @@ class FateLockedPanel extends PluginPanel
     private static final Color GOLD = new Color(245, 158, 11);
 
     private final JLabel profileVal = value();
+    private final JLabel accountVal = value();
     private final JLabel runIdVal = value();
     private final JLabel keysVal = value();
     private final JLabel fateVal = value();
@@ -75,8 +76,8 @@ class FateLockedPanel extends PluginPanel
         col.add(Box.createVerticalStrut(10));
 
         col.add(section("RUN"));
-        col.add(stats(new String[]{ "Profile", "Run ID", "Keys", "Fate", "Buff", "Goal" },
-            new JLabel[]{ profileVal, runIdVal, keysVal, fateVal, buffVal, goalVal }));
+        col.add(stats(new String[]{ "Profile", "Account", "Run ID", "Keys", "Fate", "Buff", "Goal" },
+            new JLabel[]{ profileVal, accountVal, runIdVal, keysVal, fateVal, buffVal, goalVal }));
         col.add(Box.createVerticalStrut(12));
 
         col.add(section("CURRENT LOCATION"));
@@ -175,6 +176,8 @@ class FateLockedPanel extends PluginPanel
             runIdVal.setText(orDash(bundle.getRunId()));
             if (st != null)
             {
+                String bound = st.getLinkedAccount();
+                accountVal.setText(bound == null || bound.trim().isEmpty() ? "—" : bound);
                 keysVal.setText(st.getKeys() + " · O " + st.getSpecialKeys() + " · C " + st.getChaosKeys());
                 keysVal.setForeground(GOLD);
                 fateVal.setText(String.valueOf(st.getFatePoints()));
@@ -183,6 +186,7 @@ class FateLockedPanel extends PluginPanel
             }
             else
             {
+                accountVal.setText("—");
                 keysVal.setText("—");
                 fateVal.setText("—");
                 buffVal.setText("—");

@@ -356,6 +356,8 @@ const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectK
 interface GameSnapshot {
   keys: number; specialKeys: number; chaosKeys: number;
   fatePoints: number; activeBuff: string; pinnedGoals: string[];
+  /** OSRS account this run is bound to (Auto-Roll), if any. */
+  linkedAccount?: string;
 }
 
 const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnlocks: string[]; getGameSnapshot: () => GameSnapshot }) => {
@@ -995,11 +997,12 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
   };
 
   const exportRuneLiteBundle = () => {
-    // v2 bundle: adds the sub-area layer, the region hierarchy (so the plugin
-    // resolves lock state exactly like the app), and live run state for the
-    // in-game HUD. The plugin still accepts v1 bundles.
+    // v3 bundle: adds the run's bound OSRS account (state.linkedAccount) so the
+    // plugin can warn if you're logged into a different account. Builds on v2's
+    // sub-area layer + region hierarchy + live run state. Older plugins ignore
+    // the extra field; the plugin still accepts v1/v2 bundles.
     const payload = {
-      version: 2,
+      version: 3,
       exportedAt: new Date().toISOString(),
       chunkOffset: RUNELITE_CHUNK_OFFSET,
       chunks: draftChunks,
@@ -1640,11 +1643,11 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
 }, (prev, next) => prev.regionUnlocks === next.regionUnlocks);
 
 export const RegionMap: React.FC = () => {
-  const { unlocks, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals } = useGame();
+  const { unlocks, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount } = useGame();
   // Live run state for the RuneLite bundle, read lazily at export time via a
   // stable getter so MapContent's memoization (regionUnlocks-only) holds.
-  const snapRef = useRef({ keys: 0, specialKeys: 0, chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', pinnedGoals: [] as string[] });
-  snapRef.current = { keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals: pinnedGoals ?? [] };
+  const snapRef = useRef<GameSnapshot>({ keys: 0, specialKeys: 0, chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', pinnedGoals: [] as string[] });
+  snapRef.current = { keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals: pinnedGoals ?? [], linkedAccount };
   const getGameSnapshot = useCallback(() => snapRef.current, []);
   return <MapContent regionUnlocks={unlocks.regions} getGameSnapshot={getGameSnapshot} />;
 };

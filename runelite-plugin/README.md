@@ -24,6 +24,10 @@ haven't unlocked yet.
   warning arrives *before* you click, where feasible.
 - **Locked-entry alarm.** Crossing into locked territory plays an audio cue
   and pulses a red border around the entire viewport for ~1.6s.
+- **Account binding.** A run is bound to one OSRS account in the web app
+  (Auto-Roll). The HUD shows that account — green when it matches the logged-in
+  character, red ⚠ when it doesn't — and a one-time chat warning fires per login
+  if you're on the wrong character. Toggle: *Warn on wrong account*.
 - **Side panel.** Run stats (keys/fate/buff/goal), current location, and an
   **Allowed / Forbidden / Unknown** breakdown: every unlocked area, every
   authored-but-locked area, and how many map chunks sit in unnamed terrain.
@@ -52,11 +56,11 @@ overlay, all three colors).
 4. Launch RuneLite. The plugin appears in the plugin panel as **Fate Locked
    Ironman**.
 
-## Bundle format (v2)
+## Bundle format (v3)
 
 ```json
 {
-  "version": 2,
+  "version": 3,
   "chunkOffset": { "cx": 0, "cy": 0 },
   "chunks":        { "Asgarnia": [{ "cx": 46, "cy": 52 }] },
   "subAreaChunks": { "Falador":  [{ "cx": 46, "cy": 52 }] },
@@ -64,17 +68,23 @@ overlay, all three colors).
   "unlockedRegions": ["Falador"],
   "state": {
     "keys": 3, "specialKeys": 0, "chaosKeys": 0,
-    "fatePoints": 12, "activeBuff": "NONE", "pinnedGoals": []
+    "fatePoints": 12, "activeBuff": "NONE", "pinnedGoals": [],
+    "linkedAccount": "Zezima"
   }
 }
 ```
+
+- `state.linkedAccount` (v3) — the OSRS account the run is bound to, used for the
+  HUD account line and the wrong-character warning. Omitted until the run is
+  bound in the app's Auto-Roll tab.
 
 - `chunks` — continent blocks; `subAreaChunks` — the named areas inside them.
 - `regionGroups` — hierarchy so the plugin can resolve continent unlocks the
   same way the app does (Misthalin + its starter areas are always free).
 - `state` — live run stats for the HUD and side panel.
 - v1 bundles (no `subAreaChunks` / `regionGroups` / `state`) still load; lock
-  state then falls back to continent-level.
+  state then falls back to continent-level. v2 bundles (no `linkedAccount`) load
+  fine too — the account features simply stay dormant.
 
 The app's map is calibrated to canonical OSRS chunk coordinates, so
 `chunkOffset` is `{0,0}` in current exports; the plugin still honors non-zero

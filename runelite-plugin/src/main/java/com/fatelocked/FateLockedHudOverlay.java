@@ -86,6 +86,19 @@ public class FateLockedHudOverlay extends OverlayPanel
                     .rightColor(Color.WHITE)
                     .build());
             }
+            String bound = state.getLinkedAccount();
+            if (bound != null && !bound.trim().isEmpty())
+            {
+                Player me = client.getLocalPlayer();
+                String current = me == null ? null : me.getName();
+                boolean match = current == null
+                    || FateLockedPlugin.normName(bound).equals(FateLockedPlugin.normName(current));
+                panelComponent.getChildren().add(LineComponent.builder()
+                    .left("Account")
+                    .right(truncate(bound, 14) + (match ? "" : " ⚠"))
+                    .rightColor(match ? GREEN : RED)
+                    .build());
+            }
         }
 
         Player local = client.getLocalPlayer();

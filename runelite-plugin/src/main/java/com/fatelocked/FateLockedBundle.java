@@ -17,17 +17,18 @@ import java.util.Set;
 /**
  * Parsed bundle exported by the Fate Locked web app.
  *
- * v2 wire format (v1 bundles — no subAreaChunks/regionGroups/state — still load):
+ * v3 wire format (v1/v2 bundles still load; missing fields degrade gracefully):
  * <pre>
  * {
- *   "version": 2,
+ *   "version": 3,
  *   "chunkOffset": { "cx": 0, "cy": 0 },
  *   "chunks":         { "Asgarnia": [{"cx":46,"cy":52}], ... },   // continents
  *   "subAreaChunks":  { "Falador":  [{"cx":46,"cy":52}], ... },   // named areas
  *   "regionGroups":   { "Asgarnia": ["Falador", "Port Sarim"], ... },
  *   "unlockedRegions": ["Falador", "Lumbridge"],
  *   "state": { "keys": 3, "specialKeys": 0, "chaosKeys": 0,
- *              "fatePoints": 12, "activeBuff": "NONE", "pinnedGoals": [] }
+ *              "fatePoints": 12, "activeBuff": "NONE", "pinnedGoals": [],
+ *              "linkedAccount": "Zezima" }   // v3: account the run is bound to
  * }
  * </pre>
  *
@@ -202,7 +203,7 @@ public class FateLockedBundle
 
     // ---- wire format ---------------------------------------------------------
 
-    /** Live run stats included in v2 bundles for the in-game HUD. */
+    /** Live run stats included in v2+ bundles for the in-game HUD. */
     @Getter
     public static final class RunState
     {
@@ -212,6 +213,8 @@ public class FateLockedBundle
         int fatePoints;
         String activeBuff;
         List<String> pinnedGoals;
+        /** OSRS account the run is bound to (v3). null/empty on older bundles. */
+        String linkedAccount;
     }
 
     private static final class RawBundle

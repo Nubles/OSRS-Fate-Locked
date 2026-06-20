@@ -84,6 +84,17 @@ public interface FateLockedConfig extends Config
     }
 
     @ConfigItem(
+        keyName = "warnAccountMismatch",
+        name = "Warn on wrong account",
+        description = "Chat warning when the logged-in character isn't the account this run is bound to",
+        section = warningsSection
+    )
+    default boolean warnAccountMismatch()
+    {
+        return true;
+    }
+
+    @ConfigItem(
         keyName = "tagLockedMenus",
         name = "Tag locked right-click targets",
         description = "Append a red (LOCKED) tag to menu entries for NPCs/objects standing in locked chunks",

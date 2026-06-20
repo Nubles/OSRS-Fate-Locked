@@ -72,6 +72,8 @@ public class FateLockedPlugin extends Plugin
     private NavigationButton navButton;
     private Thread watcherThread;
     private volatile boolean watcherStop;
+    /** Last account name we warned about, so we nag at most once per character. */
+    private String lastAccountWarned;
 
     @Provides
     FateLockedConfig provideConfig(ConfigManager configManager)
@@ -137,7 +139,51 @@ public class FateLockedPlugin extends Plugin
         if (ev.getGameState() == GameState.LOGGED_IN)
         {
             lastChunk = null; // force re-announce on next tick
+            lastAccountWarned = null; // re-check the bound account for this login
         }
+        else if (ev.getGameState() == GameState.LOGIN_SCREEN)
+        {
+            lastAccountWarned = null;
+        }
+    }
+
+    /** Normalise an OSRS name for comparison (RuneLite uses non-breaking spaces). */
+    static String normName(String s)
+    {
+        return s == null ? "" : s.replace((char)0x00A0, ' ').trim().toLowerCase();
+    }
+
+    /**
+     * Warn (once per login) if the bound account doesn't match the logged-in
+     * character — the run's progress is tied to one OSRS account.
+     */
+    private void checkBoundAccount()
+    {
+        if (!config.warnAccountMismatch()) return;
+        FateLockedBundle.RunState st = bundle.getState();
+        String bound = st == null ? null : st.getLinkedAccount();
+        if (bound == null || bound.trim().isEmpty()) return;
+
+        Player local = client.getLocalPlayer();
+        String current = local == null ? null : local.getName();
+        if (current == null || current.isEmpty()) return;
+
+        if (normName(bound).equals(normName(current))) return;
+        if (normName(bound).equals(lastAccountWarned)) return;
+        lastAccountWarned = normName(bound);
+
+        ChatMessageBuilder msg = new ChatMessageBuilder()
+            .append(ChatColorType.HIGHLIGHT).append("[Fate Locked] ")
+            .append(ChatColorType.NORMAL).append("This run is bound to ")
+            .append(ChatColorType.HIGHLIGHT).append(bound)
+            .append(ChatColorType.NORMAL).append(" — you're logged in as ")
+            .append(ChatColorType.HIGHLIGHT).append(current)
+            .append(ChatColorType.NORMAL).append(".");
+        chatMessageManager.queue(QueuedMessage.builder()
+            .type(ChatMessageType.GAMEMESSAGE)
+            .runeLiteFormattedMessage(msg.build())
+            .build());
+        client.playSoundEffect(2277);
     }
 
     @Subscribe
@@ -145,6 +191,10 @@ public class FateLockedPlugin extends Plugin
     {
         Player local = client.getLocalPlayer();
         if (local == null) return;
+
+        // Once per login, flag if the character doesn't match the bound account.
+        checkBoundAccount();
+
         WorldPoint wp = local.getWorldLocation();
         if (wp == null) return;
 
