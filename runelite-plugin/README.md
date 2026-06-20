@@ -47,14 +47,28 @@ overlay, all three colors).
    `fate-locked-bundle-YYYY-MM-DD.json`; the file is watched and hot-reloaded,
    so re-exporting over it updates the plugin automatically.
 
-## Install (sideload for development)
+## Install
+
+### Easiest — download the prebuilt jar (no build tools)
+
+1. Grab `fatelocked-0.1.0-all.jar` from the repo's
+   [**latest plugin release**](https://github.com/Nubles/OSRS-Fate-Locked/releases/tag/runelite-plugin-latest)
+   (auto-built by CI on every change).
+2. Drop it into `~/.runelite/sideloaded-plugins/` (create the folder if needed).
+   On Windows that's `%USERPROFILE%\.runelite\sideloaded-plugins\`.
+3. Launch RuneLite **with developer mode** — sideloaded plugins only load with
+   the `--developer-mode` flag (append it to your RuneLite shortcut's target).
+4. The plugin appears in the plugin panel as **Fate Locked Ironman**.
+
+> For a zero-friction, no-developer-mode install, the plugin needs to be on the
+> RuneLite Plugin Hub — see [HUB-SUBMISSION.md](HUB-SUBMISSION.md).
+
+### Build it yourself (development)
 
 1. `cd runelite-plugin`
-2. `./gradlew shadowJar`
-3. Copy `build/libs/fatelocked-0.1.0-all.jar` into `~/.runelite/sideloaded-plugins/`
-   (create the directory if it doesn't exist).
-4. Launch RuneLite. The plugin appears in the plugin panel as **Fate Locked
-   Ironman**.
+2. `gradle shadowJar` (needs JDK 11 + Gradle)
+3. Copy `build/libs/fatelocked-0.1.0-all.jar` into `~/.runelite/sideloaded-plugins/`.
+4. Launch RuneLite with `--developer-mode`.
 
 ## Bundle format (v3)
 
