@@ -134,6 +134,8 @@ export interface GameState {
   gameModeLocked?: boolean; // true once a mode has been chosen — permanent for the account
   loadout?: Record<string, number>; // equipment slot -> real item id (Gear mode)
   rival?: RivalState; // Rival Ghost the player is racing (optional)
+  /** OSRS account this run is bound to (Auto-Roll). Set once, then permanent. */
+  linkedAccount?: string;
 }
 
 /** A simulated nemesis ('sim') or a friend's run snapshot ('friend') to race. */

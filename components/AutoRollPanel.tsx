@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Loader2, Search, Sparkles, Dice5, CheckCircle2, AlertTriangle, RefreshCw, Lock } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 
@@ -81,8 +81,9 @@ async function fetchPlayer(name: string): Promise<Fetched> {
 }
 
 export function AutoRollPanel() {
-  const { unlocks, createBackup, levelUpSkill, keys, specialKeys, chaosKeys } = useGame() as any;
-  const [name, setName] = useState('');
+  const { unlocks, createBackup, levelUpSkill, keys, specialKeys, chaosKeys, linkedAccount, setLinkedAccount } = useGame() as any;
+  // Each run binds to one OSRS account: once set, the input is locked to it.
+  const [name, setName] = useState(linkedAccount ?? '');
   const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'loaded'>('idle');
   const [error, setError] = useState('');
   const [fetched, setFetched] = useState<Fetched | null>(null);
@@ -114,19 +115,26 @@ export function AutoRollPanel() {
   }, [fetched, currentLevels, isUnlocked]);
 
   const onFetch = useCallback(async () => {
-    if (!name.trim()) return;
+    // Once bound, only that account can be fetched for this run.
+    const query = (linkedAccount ?? name).trim();
+    if (!query) return;
     setStatus('loading'); setError(''); setFetched(null); setRolledTo(0); setApplied(false);
     setSkillRolling(false); setSkillKeysGained(null);
     if (skillTimer.current) window.clearInterval(skillTimer.current);
     try {
-      const data = await fetchPlayer(name);
+      const data = await fetchPlayer(query);
       setFetched(data);
       setStatus('loaded');
+      // Bind the run to this account on the first successful fetch.
+      if (!linkedAccount) { setLinkedAccount?.(data.displayName); setName(data.displayName); }
     } catch (e: any) {
       setError(e?.message ?? 'Failed to reach the hiscores API.');
       setStatus('error');
     }
-  }, [name]);
+  }, [name, linkedAccount, setLinkedAccount]);
+
+  // If the run is already bound, pull that account's hiscores on open.
+  useEffect(() => { if (linkedAccount) onFetch(); /* eslint-disable-line react-hooks/exhaustive-deps */ }, []);
 
   // "Auto-roll": walk each unlocked skill up to its real level through the LIVE
   // level-up engine — every level fires its key roll (chance = ceil(level/5)%),
@@ -188,28 +196,35 @@ export function AutoRollPanel() {
         </div>
       </div>
 
-      {/* Username input */}
+      {/* Username input — locked to the bound account once set */}
       <div className="flex items-center gap-2 max-w-md">
-        <div className="flex items-center gap-2 flex-1 bg-black/40 border border-white/15 rounded-lg px-3 py-2 focus-within:border-fuchsia-500/60">
-          <Search size={14} className="text-gray-500 shrink-0" />
+        <div className={`flex items-center gap-2 flex-1 bg-black/40 border rounded-lg px-3 py-2 ${linkedAccount ? 'border-white/10' : 'border-white/15 focus-within:border-fuchsia-500/60'}`}>
+          {linkedAccount ? <Lock size={14} className="text-fuchsia-400 shrink-0" /> : <Search size={14} className="text-gray-500 shrink-0" />}
           <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={linkedAccount ?? name}
+            onChange={(e) => !linkedAccount && setName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && onFetch()}
             placeholder="OSRS username…"
-            className="flex-1 min-w-0 bg-transparent text-sm text-gray-100 placeholder:text-gray-600 focus:outline-none"
+            readOnly={!!linkedAccount}
+            title={linkedAccount ? 'This run is permanently bound to this account' : undefined}
+            className={`flex-1 min-w-0 bg-transparent text-sm focus:outline-none ${linkedAccount ? 'text-gray-300 cursor-default' : 'text-gray-100 placeholder:text-gray-600'}`}
             maxLength={12}
           />
         </div>
         <button
           onClick={onFetch}
-          disabled={status === 'loading' || !name.trim()}
+          disabled={status === 'loading' || (!linkedAccount && !name.trim())}
           className="px-3 py-2 rounded-lg bg-fuchsia-600 hover:bg-fuchsia-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold flex items-center gap-1.5 shrink-0"
         >
           {status === 'loading' ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-          Fetch
+          {linkedAccount ? 'Refresh' : 'Fetch'}
         </button>
       </div>
+      {linkedAccount && (
+        <p className="text-[10px] text-gray-500 -mt-2 flex items-center gap-1">
+          <Lock size={9} /> This run is bound to <span className="text-gray-300">{linkedAccount}</span> — the account can't be changed.
+        </p>
+      )}
 
       {status === 'error' && (
         <div className="flex items-start gap-2 text-sm text-red-300 bg-red-950/40 border border-red-900/60 rounded-lg px-3 py-2 max-w-xl">
@@ -316,9 +331,9 @@ export function AutoRollPanel() {
         </div>
       )}
 
-      {status === 'idle' && (
+      {status === 'idle' && !linkedAccount && (
         <div className="text-xs text-gray-600 max-w-xl border border-dashed border-white/10 rounded-lg px-4 py-6 text-center">
-          Enter a username above to fetch live hiscores. Try a maxed account like <span className="text-gray-400">"Lynx Titan"</span> to see a full auto-roll.
+          Enter your OSRS username to bind this run to your account. It's saved permanently to the run and can't be changed afterward.
         </div>
       )}
     </div>

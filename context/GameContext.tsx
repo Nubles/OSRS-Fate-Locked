@@ -68,6 +68,7 @@ interface GameContextType extends GameState {
   getExportData: () => string | null;
   /** Equip (or clear, with itemId=null) a real item in a slot; optionally clear other slots (2h handling). */
   setLoadoutSlot: (slot: string, itemId: number | null, clearSlots?: string[]) => void;
+  setLinkedAccount: (account: string) => void;
   /** Rival Ghost controls. */
   setRival: (rival: RivalState) => void;
   clearRival: () => void;
@@ -227,6 +228,7 @@ export type Action =
   | { type: 'TOGGLE_TASK'; payload: string }
   | { type: 'SET_GAME_MODE'; payload: { modeId: string; customRules?: GameModeRules } }
   | { type: 'SET_LOADOUT_SLOT'; payload: { slot: string; itemId: number | null; clearSlots?: string[] } }
+  | { type: 'SET_LINKED_ACCOUNT'; payload: string }
   | { type: 'SET_RIVAL'; payload: RivalState }
   | { type: 'CLEAR_RIVAL' }
   | { type: 'ACK_RIVAL'; payload: number }
@@ -604,6 +606,12 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       return { ...state, loadout };
     }
 
+    case 'SET_LINKED_ACCOUNT': {
+      // Bind the run to one OSRS account, permanently — once set it can't change.
+      if (state.linkedAccount) return state;
+      return { ...state, linkedAccount: action.payload };
+    }
+
     case 'LOG_ITEM': {
       const itemId = action.payload;
       const currentCount = state.unlocks.collectionLog[itemId] || 0;
@@ -763,6 +771,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
   const setLoadoutSlot = useCallback((slot: string, itemId: number | null, clearSlots?: string[]) => {
     dispatch({ type: 'SET_LOADOUT_SLOT', payload: { slot, itemId, clearSlots } });
   }, []);
+  const setLinkedAccount = useCallback((account: string) => {
+    dispatch({ type: 'SET_LINKED_ACCOUNT', payload: account });
+  }, []);
 
   const setRival = useCallback((rival: RivalState) => dispatch({ type: 'SET_RIVAL', payload: rival }), []);
   const clearRival = useCallback(() => dispatch({ type: 'CLEAR_RIVAL' }), []);
@@ -839,6 +850,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     logCollectionItem,
     getExportData,
     setLoadoutSlot,
+    setLinkedAccount,
     setRival,
     clearRival,
     ackRival
@@ -866,6 +878,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     logCollectionItem,
     getExportData,
     setLoadoutSlot,
+    setLinkedAccount,
     setRival,
     clearRival,
     ackRival
