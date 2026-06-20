@@ -86,13 +86,15 @@ async function fetchPlayer(name: string): Promise<Fetched> {
 }
 
 export function AutoRollPanel() {
-  const { unlocks, importSave, createBackup, getExportData, rollForKey, keys } = useGame() as any;
+  const { unlocks, createBackup, rollForKey, levelUpSkill, keys, specialKeys, chaosKeys } = useGame() as any;
   const [name, setName] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'loaded'>('idle');
   const [error, setError] = useState('');
   const [fetched, setFetched] = useState<Fetched | null>(null);
   const [rolledTo, setRolledTo] = useState(0); // how many skills the roll animation has revealed
   const [applied, setApplied] = useState(false);
+  const [skillRolling, setSkillRolling] = useState(false);
+  const [skillKeysGained, setSkillKeysGained] = useState<{ keys: number; special: number; chaos: number } | null>(null);
   const rollTimer = useRef<number | null>(null);
 
   // Key-faucet auto-roll state.
@@ -109,6 +111,14 @@ export function AutoRollPanel() {
   // Always-fresh key count, so we can diff before/after a burst of rolls.
   const keysRef = useRef(keys);
   keysRef.current = keys;
+  // Fresh refs for the level-up loop: levelUpSkill closes over state, so we read
+  // it fresh each tick (between ticks the component re-renders) to keep the
+  // per-level key rate ramping correctly. Counts let us tally what was earned.
+  const levelUpRef = useRef(levelUpSkill);
+  levelUpRef.current = levelUpSkill;
+  const countsRef = useRef({ keys, specialKeys, chaosKeys });
+  countsRef.current = { keys, specialKeys, chaosKeys };
+  const skillTimer = useRef<number | null>(null);
 
   const faucets: FaucetGroup[] = useMemo(
     () => (fetched ? buildKeyFaucets(fetched.bosses, fetched.activities) : []),
@@ -129,6 +139,8 @@ export function AutoRollPanel() {
     if (!name.trim()) return;
     setStatus('loading'); setError(''); setFetched(null); setRolledTo(0); setApplied(false);
     setKeyRolling(false); setKeyRollProgress(0); setKeysGained(null);
+    setSkillRolling(false); setSkillKeysGained(null);
+    if (skillTimer.current) window.clearInterval(skillTimer.current);
     try {
       const data = await fetchPlayer(name);
       setFetched(data);
@@ -139,46 +151,47 @@ export function AutoRollPanel() {
     }
   }, [name]);
 
-  // "Auto-roll": reveal each needed skill in sequence (slot-machine feel), then
-  // commit the synced levels to the save in one merge.
+  // "Auto-roll": walk each unlocked skill up to its real level through the LIVE
+  // level-up engine — every level fires its key roll (chance = ceil(level/5)%),
+  // the 2% chaos-key chance and the omni chance — so the run earns exactly the
+  // keys those levels would have. Runs in batches for a responsive slot-machine
+  // feel; tallies the keys/omni/chaos earned at the end.
   const autoRoll = useCallback(() => {
-    if (!fetched || gains.length === 0) return;
-    setRolledTo(0); setApplied(false);
-    if (rollTimer.current) window.clearInterval(rollTimer.current);
-    rollTimer.current = window.setInterval(() => {
-      setRolledTo(prev => {
-        const next = prev + 1;
-        if (next >= gains.length) {
-          if (rollTimer.current) window.clearInterval(rollTimer.current);
-          // Commit once the reveal finishes.
-          window.setTimeout(() => commit(), 250);
-        }
-        return next;
-      });
-    }, 90);
-  }, [fetched, gains]);
+    if (!fetched || gains.length === 0 || skillRolling) return;
+    createBackup?.('Before Auto-Roll skill sync');
+    const before = { ...countsRef.current };
 
-  const commit = useCallback(() => {
-    if (!fetched) return;
-    const raw = getExportData?.();
-    if (!raw) { setError('No active save to sync into.'); setStatus('error'); return; }
-    let save: any;
-    try { save = JSON.parse(raw); } catch { setError('Save data is unreadable.'); setStatus('error'); return; }
-
-    // Only sync levels for skills already unlocked in the run — locked skills
-    // can't be levelled, so writing a level there wouldn't count.
-    const unlockedNow: Record<string, number> = save.unlocks?.skills ?? {};
-    const mergedLevels: Record<string, number> = { ...(save.unlocks?.levels ?? {}) };
-    for (const s of fetched.skills) {
-      if ((unlockedNow[s.skill] ?? 0) <= 0) continue;
-      mergedLevels[s.skill] = Math.max(mergedLevels[s.skill] ?? 1, s.level);
+    // One queue entry per level still to gain, plus per-skill reveal boundaries.
+    const queue: string[] = [];
+    const bounds: number[] = [];
+    for (const g of gains) {
+      for (let lvl = g.current; lvl < g.level; lvl++) queue.push(g.skill);
+      bounds.push(queue.length);
     }
-    save.unlocks = { ...(save.unlocks ?? {}), levels: mergedLevels };
+    const total = queue.length;
+    if (total === 0) return;
 
-    createBackup?.('Before Auto-Roll sync');
-    importSave(save);
-    setApplied(true);
-  }, [fetched, getExportData, createBackup, importSave]);
+    setRolledTo(0); setApplied(false); setSkillRolling(true); setSkillKeysGained(null);
+    const BATCH = Math.min(25, Math.max(1, Math.ceil(total / 50)));
+    let i = 0;
+    if (skillTimer.current) window.clearInterval(skillTimer.current);
+    skillTimer.current = window.setInterval(() => {
+      const levelUp = levelUpRef.current;
+      for (let b = 0; b < BATCH && i < total; b++, i++) levelUp(queue[i]);
+      let revealed = 0;
+      for (const bnd of bounds) if (bnd <= i) revealed++;
+      setRolledTo(revealed);
+      if (i >= total) {
+        if (skillTimer.current) window.clearInterval(skillTimer.current);
+        setSkillRolling(false);
+        window.setTimeout(() => {
+          const a = countsRef.current;
+          setSkillKeysGained({ keys: a.keys - before.keys, special: a.specialKeys - before.specialKeys, chaos: a.chaosKeys - before.chaosKeys });
+          setApplied(true);
+        }, 250);
+      }
+    }, 70);
+  }, [fetched, gains, skillRolling, createBackup]);
 
   // Roll the key faucets derived from real boss/clue/minigame history. Runs the
   // real rollForKey faucet (logs to history, awards keys, can crit Omni) in
@@ -264,7 +277,7 @@ export function AutoRollPanel() {
               </div>
             </div>
             <div className="flex-1" />
-            {gains.length > 0 && !applied && (
+            {!applied && !skillRolling && gains.length > 0 && (
               <button
                 onClick={autoRoll}
                 className="px-4 py-2 rounded-lg bg-gradient-to-r from-fuchsia-600 to-emerald-600 hover:from-fuchsia-500 hover:to-emerald-500 text-white text-sm font-bold flex items-center gap-2 shadow-lg"
@@ -272,12 +285,24 @@ export function AutoRollPanel() {
                 <Sparkles size={16} /> Auto-roll {gains.length} skill{gains.length === 1 ? '' : 's'} (+{totalGain})
               </button>
             )}
-            {applied && (
-              <div className="flex items-center gap-2 text-emerald-300 text-sm font-semibold">
-                <CheckCircle2 size={18} /> Synced — backup saved
+            {skillRolling && (
+              <div className="flex items-center gap-2 text-fuchsia-300 text-sm font-semibold">
+                <Loader2 size={16} className="animate-spin" /> Rolling levels…
               </div>
             )}
-            {gains.length === 0 && (
+            {applied && (
+              <div className="flex items-center gap-2 text-emerald-300 text-sm font-semibold flex-wrap">
+                <CheckCircle2 size={18} /> Synced
+                {skillKeysGained && (skillKeysGained.keys + skillKeysGained.special + skillKeysGained.chaos) > 0 && (
+                  <span className="font-normal text-gray-300">
+                    · earned <span className="text-amber-300 font-semibold">{skillKeysGained.keys} key{skillKeysGained.keys === 1 ? '' : 's'}</span>
+                    {skillKeysGained.special > 0 && <>, <span className="text-purple-300 font-semibold">{skillKeysGained.special} omni</span></>}
+                    {skillKeysGained.chaos > 0 && <>, <span className="text-red-400 font-semibold">{skillKeysGained.chaos} chaos</span></>}
+                  </span>
+                )}
+              </div>
+            )}
+            {!applied && !skillRolling && gains.length === 0 && (
               <div className="text-sm text-gray-400">
                 {fetched.skills.some(s => !isUnlocked(s.skill) && s.level > (currentLevels[s.skill] ?? 1))
                   ? 'No unlocked skills to roll — unlock more skills in the run first.'
@@ -380,8 +405,8 @@ export function AutoRollPanel() {
           )}
 
           <p className="text-[10px] text-gray-600">
-            Hiscores data via Wise Old Man · skill levels sync exactly; key faucets roll a capped sample of your real
-            history through the live RNG engine (logged to History, can crit Omni) · a backup is created before syncing levels.
+            Hiscores data via Wise Old Man · every synced level and capped history roll runs through the live RNG engine —
+            so they award keys, Omni and Chaos exactly as earning them would, all logged to History · a backup is created first.
           </p>
         </div>
       )}
