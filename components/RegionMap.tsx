@@ -25,6 +25,9 @@ const OVERLAY_COLORS: Record<string, string> = {
   'Clues': '#e879f9',
 };
 const overlayColor = (cat: string) => OVERLAY_COLORS[cat] ?? '#38bdf8';
+// Target on-screen marker radius in CSS px (kept constant across zoom by
+// counter-scaling the SVG radius against the map transform).
+const MARKER_SCREEN_R = 6;
 
 
 import {
@@ -351,7 +354,13 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
   const applyTransform = useCallback((t: { x: number; y: number; scale: number }) => {
     transformRef.current = t;
     const node = mapContentRef.current;
-    if (node) node.style.transform = `translate(${t.x}px, ${t.y}px) scale(${t.scale})`;
+    if (node) {
+      node.style.transform = `translate(${t.x}px, ${t.y}px) scale(${t.scale})`;
+      // Counter-scale overlay markers so they stay a constant on-screen size
+      // (map-pin behaviour) instead of ballooning/vanishing with zoom. The
+      // marker <circle>s read this inherited CSS var for their radius.
+      node.style.setProperty('--marker-r', `${MARKER_SCREEN_R / t.scale}px`);
+    }
   }, []);
 
   // Deep link: `fate:show-chunk` {cx, cy} (from the Oracle / palette / location
@@ -1267,7 +1276,8 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
             top: 0,
             left: 0,
             willChange: 'transform',
-          }}
+            ['--marker-r' as string]: `${MARKER_SCREEN_R / transformRef.current.scale}px`,
+          } as React.CSSProperties}
         >
           <MapSurface
             chunkRects={chunkRects}
@@ -1314,12 +1324,14 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
               {overlayMarkers.map(m => (
                 <circle
                   key={m.key}
-                  cx={m.x} cy={m.y} r={44}
+                  cx={m.x} cy={m.y}
+                  style={{ r: 'var(--marker-r, 30px)' }}
                   fill={m.color}
                   fillOpacity={m.owned ? 0.9 : 0.25}
                   stroke="#000"
                   strokeOpacity={0.55}
-                  strokeWidth={7}
+                  strokeWidth={1.5}
+                  vectorEffect="non-scaling-stroke"
                 />
               ))}
             </svg>
