@@ -6,8 +6,6 @@ import net.runelite.api.Player;
 import net.runelite.api.Point;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
-import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -18,8 +16,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
-import java.awt.Rectangle;
-import java.awt.Shape;
 
 /**
  * Tints the player's current 64-tile chunk on the minimap, color-coded by the
@@ -69,14 +65,10 @@ public class FateLockedMinimapOverlay extends Overlay
         Polygon poly = chunkMinimapPolygon(chunk);
         if (poly == null) return null;
 
-        Shape prevClip = graphics.getClip();
-        Widget minimap = client.getWidget(WidgetInfo.MINIMAP);
-        if (minimap != null && !minimap.isHidden())
-        {
-            Rectangle b = minimap.getBounds();
-            if (b != null) graphics.setClip(b);
-        }
-
+        // Perspective.localToMinimap already constrains corners to the minimap
+        // region (returns null off-projection), so we draw directly — no need to
+        // clip against the minimap widget, whose WidgetInfo id keeps changing
+        // across RuneLite releases.
         graphics.setColor(color);
         graphics.fillPolygon(poly);
         graphics.setStroke(STROKE);
@@ -86,8 +78,6 @@ public class FateLockedMinimapOverlay extends Overlay
             Math.min(color.getBlue() + 40, 255),
             230));
         graphics.drawPolygon(poly);
-
-        graphics.setClip(prevClip);
         return null;
     }
 

@@ -53,8 +53,8 @@ class FateLockedPanel extends PluginPanel
     private final JLabel allowedHead = section("ALLOWED (0)");
     private final JLabel forbiddenHead = section("FORBIDDEN (0)");
     private final JLabel unknownHead = section("UNKNOWN");
-    private final JTextArea allowedList = list();
-    private final JTextArea forbiddenList = list();
+    private final JTextArea allowedList = listArea();
+    private final JTextArea forbiddenList = listArea();
     private final JLabel unknownNote = value();
 
     private final JTextArea pasteArea = new JTextArea(6, 10);
@@ -261,7 +261,7 @@ class FateLockedPanel extends PluginPanel
         return l;
     }
 
-    private static JTextArea list()
+    private static JTextArea listArea()
     {
         JTextArea a = new JTextArea(2, 10);
         a.setLineWrap(true);

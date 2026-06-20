@@ -1,8 +1,8 @@
 package com.fatelocked;
 
 import net.runelite.api.Client;
+import net.runelite.api.Point;
 import net.runelite.api.RenderOverview;
-import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.ui.overlay.Overlay;
@@ -101,7 +101,9 @@ public class FateLockedWorldMapOverlay extends Overlay
     private Rectangle2D worldMapRectForChunk(CanonicalChunk chunk, Rectangle bounds, RenderOverview ro)
     {
         float pixelsPerTile = ro.getWorldMapZoom();
-        WorldPoint centre = ro.getWorldMapPosition();
+        // RuneLite's RenderOverview.getWorldMapPosition() returns a Point whose
+        // (x, y) are world-tile coordinates of the map centre (not a WorldPoint).
+        Point centre = ro.getWorldMapPosition();
         if (centre == null) return null;
 
         // The world-map widget shows a rectangular view of world tiles, centered
