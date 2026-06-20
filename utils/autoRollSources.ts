@@ -150,5 +150,18 @@ export function buildKeyFaucets(
     });
   }
 
+  // ── Collection log → unique slots filled ──────────────────────────────────
+  const collReal = count(activities?.collections_logged);
+  if (collReal > 0) {
+    groups.push({
+      key: 'collection_log',
+      label: 'Collection log slots',
+      source: DropSource.COLLECTION_LOG,
+      rate: DROP_RATES[DropSource.COLLECTION_LOG] ?? 0,
+      real: collReal,
+      rolls: clamp(collReal),
+    });
+  }
+
   return groups;
 }

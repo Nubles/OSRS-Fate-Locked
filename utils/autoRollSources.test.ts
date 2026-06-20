@@ -59,4 +59,12 @@ describe('buildKeyFaucets', () => {
     expect(mini.rolls).toBe(DEFAULT_ROLL_CAP);
     expect(buildKeyFaucets({}, {})).toEqual([]);
   });
+
+  it('maps collection log slots to the collection-log source', () => {
+    const groups = buildKeyFaucets({}, { collections_logged: { score: 992 } });
+    const coll = groups.find(g => g.key === 'collection_log')!;
+    expect(coll.source).toBe(DropSource.COLLECTION_LOG);
+    expect(coll.real).toBe(992);
+    expect(coll.rolls).toBe(DEFAULT_ROLL_CAP);
+  });
 });
