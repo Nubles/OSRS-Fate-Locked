@@ -162,6 +162,50 @@ function buildDrops(data) {
   return out;
 }
 
+/**
+ * Map marker overlays (shooting stars, impling spawns, crop circles, organized
+ * crime, clue steps) keyed by category. Each point carries its world (x,y) plus
+ * the chunk (cx,cy) it falls in (regionId = floor(x/64)*256 + floor(y/64)), so
+ * the app can both place a precise marker and ask "is this in an owned chunk?".
+ */
+function buildOverlays(data) {
+  const out = {};
+  for (const [rawCat, points] of Object.entries(data.mapOverlays ?? {})) {
+    if (!Array.isArray(points) || !points.length) continue;
+    const cat = rawCat.split('|')[0].trim(); // "Puro-Puro Entrances|Crop circle" → "Puro-Puro Entrances"
+    out[cat] = points.map((p) => {
+      const o = { x: p.x, y: p.y, cx: Math.floor(p.x / 64), cy: Math.floor(p.y / 64) };
+      if (p.type) o.t = p.type;          // clue tier (Hard/Elite/…)
+      if (p.text) o.h = stripWiki(p.text); // clue hint text
+      return o;
+    });
+  }
+  return out;
+}
+
+/**
+ * Per-skill gathering/processing yields: skill → method/node name → [item, rate].
+ * e.g. skillItems.Mining["Gem rocks"] = [["Uncut diamond","4/128"], …]. Method
+ * names line up with the object/NPC index, so the app can say "training here
+ * (Gem rocks) yields …". Drop-rate stages are de-duped and joined.
+ */
+function buildSkillItems(data) {
+  const out = {};
+  for (const [skill, methods] of Object.entries(data.skillItems ?? {})) {
+    const m = {};
+    for (const [method, items] of Object.entries(methods)) {
+      const list = [];
+      for (const [item, stages] of Object.entries(items)) {
+        const rates = [...new Set(Object.values(stages))];
+        list.push([cleanName(item), rates.join(', ')]);
+      }
+      if (list.length) m[cleanName(stripWiki(method))] = list;
+    }
+    if (Object.keys(m).length) out[stripWiki(skill)] = m;
+  }
+  return out;
+}
+
 /** Shop → sorted stock list (what each named shop sells). */
 function buildShopItems(data) {
   const out = {};
@@ -211,9 +255,11 @@ function main(data) {
   const shortcuts = buildShortcuts(data);
   const shopItems = buildShopItems(data);
   const drops = buildDrops(data);
+  const overlays = buildOverlays(data);
+  const skillItems = buildSkillItems(data);
 
   const doc = {
-    version: 2,
+    version: 3,
     source: 'source-chunk/chunk-picker-v2 (chunkpicker-chunkinfo-export.json, gh-pages)',
     chunks: out,
     connect,
@@ -221,9 +267,14 @@ function main(data) {
     shortcuts,
     shopItems,
     drops,
+    overlays,
+    skillItems,
   };
   console.log(`  connect: ${Object.keys(connect).length} chunks with links`);
   console.log(`  slayerMasters: ${Object.keys(slayerMasters).length} | shortcuts: ${shortcuts.length} | shops: ${Object.keys(shopItems).length} | drop tables: ${Object.keys(drops).length}`);
+  const overlayCounts = Object.entries(overlays).map(([k, v]) => `${k}:${v.length}`).join(', ');
+  console.log(`  overlays: ${overlayCounts}`);
+  console.log(`  skillItems: ${Object.keys(skillItems).length} skills, ${Object.values(skillItems).reduce((n, m) => n + Object.keys(m).length, 0)} methods`);
   writeFileSync(OUT, JSON.stringify(doc));
   const kb = Math.round(JSON.stringify(doc).length / 1024);
   console.log(`wrote public/chunk-content.json — ${withContent} chunks with content, ~${kb} KB`);

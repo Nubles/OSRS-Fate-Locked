@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useGame } from '../context/GameContext';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
-import { Lock, Unlock, ZoomIn, ZoomOut, Move, Loader2, Download, Grid3x3, Paintbrush, Eye, EyeOff, ClipboardCopy, Trash2, FileDown, FileUp, Radio, Undo2, Redo2, Search, X, Target, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Lock, Unlock, ZoomIn, ZoomOut, Move, Loader2, Download, Grid3x3, Paintbrush, Eye, EyeOff, ClipboardCopy, Trash2, FileDown, FileUp, Radio, Undo2, Redo2, Search, X, Target, ChevronLeft, ChevronRight, Layers } from 'lucide-react';
 import { ChunkActivityPanel } from './ChunkActivityPanel';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_CHUNKS } from '../data/regionChunks';
@@ -15,7 +15,18 @@ type LensTone = 'good' | 'warn' | 'bad';
 const TONE_FILL: Record<LensTone, string> = { good: 'rgba(16,185,129,0.30)', warn: 'rgba(245,158,11,0.10)', bad: 'rgba(239,68,68,0.22)' };
 const TONE_STROKE: Record<LensTone, string> = { good: '#34d399', warn: '#f59e0b', bad: '#f87171' };
 
-// Skills the chunk-resource lens can find "best training" nodes for.
+// Map marker overlays (stars/implings/crop circles/crime/clues). Keyed by the
+// picker's category name; anything unlisted falls back to sky blue.
+const OVERLAY_COLORS: Record<string, string> = {
+  'Shooting Stars': '#38bdf8',
+  'Impling Spawns': '#a78bfa',
+  'Puro-Puro Entrances': '#fbbf24',
+  'Organized Crime': '#4ade80',
+  'Clues': '#e879f9',
+};
+const overlayColor = (cat: string) => OVERLAY_COLORS[cat] ?? '#38bdf8';
+
+
 import {
   MAP_IMAGE,
   MAP_BOUNDS,
@@ -421,6 +432,17 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
   const [onlyUnlocked, setOnlyUnlocked] = useState(false);
   const jumpIdx = useRef(0);
 
+  // ── Map overlays ──────────────────────────────────────────────────────────
+  // Marker layers from the picker export: shooting stars, impling spawns, crop
+  // circles, organized-crime spots, clue steps. Toggle per category; optionally
+  // restrict to chunks you own.
+  const [overlayCats, setOverlayCats] = useState<Set<string>>(new Set());
+  const [overlayOwnedOnly, setOverlayOwnedOnly] = useState(false);
+  const overlayCategories = useMemo(() => (lensReady ? chunkContentService.overlayCategories() : []), [lensReady]);
+  const toggleOverlay = useCallback((cat: string) => {
+    setOverlayCats(prev => { const next = new Set(prev); next.has(cat) ? next.delete(cat) : next.add(cat); return next; });
+  }, []);
+
   const lensSuggestions = useMemo(() => {
     if (!lensReady || lens || lensInput.trim().length < 2) return [];
     return chunkContentService.searchEntities(lensInput.trim(), 6);
@@ -490,6 +512,23 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
       return { key: `${c.cx},${c.cy}`, x: px, y: py, w: chunkPx, h: chunkPy, tone: c.tone };
     });
   }, [visibleLensChunks]);
+
+  const overlayMarkers = useMemo(() => {
+    if (!lensReady || overlayCats.size === 0) return [];
+    const all = chunkContentService.overlays();
+    const out: { key: string; x: number; y: number; color: string; owned: boolean }[] = [];
+    let i = 0;
+    for (const cat of overlayCats) {
+      const color = overlayColor(cat);
+      for (const p of all[cat] ?? []) {
+        const owned = chunkUnlocked(p.cx, p.cy, unlocks);
+        if (overlayOwnedOnly && !owned) continue;
+        const { px, py } = tileToPixel({ tx: p.x, ty: p.y });
+        out.push({ key: `${cat}:${i++}`, x: px, y: py, color, owned });
+      }
+    }
+    return out;
+  }, [lensReady, overlayCats, overlayOwnedOnly, unlocks]);
 
   const clearLens = useCallback(() => { setLens(null); setLensInput(''); jumpIdx.current = 0; }, []);
   const pickLens = useCallback((kind: 'entity' | 'reach' | 'drop', key: string, label: string) => {
@@ -1167,6 +1206,43 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
         </div>
       )}
 
+      {/* ── Map overlay layers ─────────────────────────────────────────────── */}
+      {!authoring && overlayCategories.length > 0 && (
+        <div className="absolute bottom-2 left-2 z-30 w-56 max-w-[70%]">
+          <div className="bg-[#101010]/95 border border-white/15 rounded-lg shadow-xl backdrop-blur-sm overflow-hidden">
+            <div className="flex items-center gap-1.5 px-2 py-1.5 border-b border-white/5">
+              <Layers size={12} className="text-sky-400 shrink-0" />
+              <span className="text-[10px] font-semibold text-gray-300 flex-1">Overlays</span>
+              {overlayCats.size > 0 && (
+                <label className="flex items-center gap-1 text-[9px] text-gray-500 cursor-pointer">
+                  <input type="checkbox" checked={overlayOwnedOnly} onChange={(e) => setOverlayOwnedOnly(e.target.checked)} className="accent-sky-500" />
+                  owned only
+                </label>
+              )}
+            </div>
+            <div className="p-1.5 flex flex-wrap gap-1">
+              {overlayCategories.map(cat => {
+                const on = overlayCats.has(cat);
+                const color = overlayColor(cat);
+                const count = chunkContentService.overlays()[cat]?.length ?? 0;
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => toggleOverlay(cat)}
+                    className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] border transition-colors ${on ? 'border-white/30 bg-white/10 text-gray-100' : 'border-white/5 text-gray-500 hover:bg-white/5'}`}
+                    title={`${cat} — ${count} marker${count === 1 ? '' : 's'}`}
+                  >
+                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: color, opacity: on ? 1 : 0.4 }} />
+                    <span className="truncate max-w-[88px]">{cat}</span>
+                    <span className="text-[8px] text-gray-500 font-mono">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div
         ref={containerRef}
         className={`w-full h-full ${authoring ? 'cursor-crosshair' : 'cursor-move'}`}
@@ -1220,6 +1296,30 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
                   strokeWidth={r.tone === 'good' ? 9 : r.tone === 'bad' ? 8 : 5}
                   strokeDasharray={r.tone === 'warn' ? '16 12' : undefined}
                   className={r.tone === 'good' ? 'lens-pulse' : ''}
+                />
+              ))}
+            </svg>
+          )}
+
+          {/* Map marker overlays (stars/implings/crop circles/crime/clues) —
+              inside the transformed layer so they pan & zoom with the map.
+              Owned-chunk markers bright, others dimmed. */}
+          {overlayMarkers.length > 0 && (
+            <svg
+              className="absolute inset-0 pointer-events-none"
+              width={MAP_IMAGE.width}
+              height={MAP_IMAGE.height}
+              viewBox={`0 0 ${MAP_IMAGE.width} ${MAP_IMAGE.height}`}
+            >
+              {overlayMarkers.map(m => (
+                <circle
+                  key={m.key}
+                  cx={m.x} cy={m.y} r={44}
+                  fill={m.color}
+                  fillOpacity={m.owned ? 0.9 : 0.25}
+                  stroke="#000"
+                  strokeOpacity={0.55}
+                  strokeWidth={7}
                 />
               ))}
             </svg>

@@ -66,6 +66,24 @@ export interface Shortcut {
 /** Undirected chunk transport graph: region id → linked region ids. */
 export type ConnectGraph = Record<string, string[]>;
 
+/** A map marker (star / impling / crop circle / crime / clue step). */
+export interface OverlayPoint {
+  /** World coordinates (for precise placement). */
+  x: number;
+  y: number;
+  /** The chunk this point falls in. */
+  cx: number;
+  cy: number;
+  /** Clue tier (Hard/Elite/…), clue points only. */
+  t?: string;
+  /** Clue hint text, clue points only. */
+  h?: string;
+}
+export type Overlays = Record<string, OverlayPoint[]>;
+
+/** Per-skill yields: skill → method/node name → [item, rate] pairs. */
+export type SkillItems = Record<string, Record<string, [string, string][]>>;
+
 interface RawDoc {
   version: number;
   source: string;
@@ -76,6 +94,10 @@ interface RawDoc {
   shopItems?: Record<string, string[]>;
   /** Monster name → the item names it drops. */
   drops?: Record<string, string[]>;
+  /** Map marker overlays, keyed by category. */
+  overlays?: Overlays;
+  /** Per-skill gathering/processing yields. */
+  skillItems?: SkillItems;
 }
 
 const decode = (e: RawEntry): ChunkContent => ({
@@ -251,6 +273,21 @@ class ChunkContentService {
 
   /** Travel/agility shortcuts with level + the object that triggers them. */
   shortcuts(): Shortcut[] { return this.doc?.shortcuts ?? []; }
+
+  /** Map marker overlays (stars, implings, crop circles, crime, clues). */
+  overlays(): Overlays { return this.doc?.overlays ?? {}; }
+
+  /** Overlay category names that actually have points. */
+  overlayCategories(): string[] { return Object.keys(this.doc?.overlays ?? {}); }
+
+  /** Per-skill gathering/processing yields. */
+  skillItems(): SkillItems { return this.doc?.skillItems ?? {}; }
+
+  /** The yield methods for one skill (e.g. Mining → {"Gem rocks": [...], …}). */
+  skillYields(skill: string): Record<string, [string, string][]> {
+    const all = this.doc?.skillItems ?? {};
+    return all[skill] ?? all[Object.keys(all).find(k => k.toLowerCase() === skill.toLowerCase()) ?? ''] ?? {};
+  }
 
   // Item → monsters that drop it, built lazily by inverting the drops table.
   private itemIdx: Map<string, { name: string; monsters: string[] }> | null = null;

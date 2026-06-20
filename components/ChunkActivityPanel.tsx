@@ -13,6 +13,26 @@ import { FARMING_PATCH_LIST, GUILDS_LIST, MINIGAMES_LIST, MOBILITY_LIST, BOSSES_
 import type { ChunkCoord } from '../utils/mapCoords';
 import { WikiLink } from './WikiLink';
 
+/**
+ * What gathering a resource node yields, from the picker's per-skill item tables.
+ * Matches the chunk's node name (e.g. "Gem rocks", "Yew tree") against the
+ * skill's method keys: exact first, then a tolerant substring match. Returns
+ * [item, rate] pairs, or null when the dataset has nothing for this node.
+ */
+function nodeYields(skill: string, nodeName: string): [string, string][] | null {
+  const methods = chunkContentService.skillYields(skill);
+  const keys = Object.keys(methods);
+  if (!keys.length) return null;
+  const lower = nodeName.toLowerCase();
+  let key = keys.find(k => k.toLowerCase() === lower);
+  // Tolerant fallback, but only for names long enough to be unambiguous
+  // (avoids short generic nodes like "Soil"/"Rocks" grabbing the wrong table).
+  if (!key && lower.length >= 4) {
+    key = keys.find(k => { const kl = k.toLowerCase(); return kl.includes(lower) || (kl.length >= 4 && lower.includes(kl)); });
+  }
+  return key ? methods[key] : null;
+}
+
 // Boss name → set for O(1) lookup; diary area → home region for the diary gate.
 const BOSS_SET = new Set(BOSSES_LIST.map(b => b.toLowerCase()));
 const DIARY_AREA_REGION: Record<string, string> = {};
@@ -206,6 +226,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
   const [, setLoadedTick] = useState(0);
   const [failed, setFailed] = useState(false);
   const [openShop, setOpenShop] = useState<string | null>(null);
+  const [openResource, setOpenResource] = useState<string | null>(null);
   const [showLinks, setShowLinks] = useState(false);
   const [linksCap, setLinksCap] = useState<Record<string, number>>({});
 
@@ -621,21 +642,44 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
             {derived.resources.length > 0 && (
               <>
                 <SectionHead icon={<Pickaxe size={11} />} label="Resources" count={derived.resources.length} />
-                <CappedList cap={10} items={derived.resources.map(r => (
-                  <div key={r.name} className="flex items-center justify-between gap-2 py-px"
-                    title={r.usable
-                      ? `${r.skill} ${r.level} — you can gather this`
-                      : (unlocks.skills?.[r.skill] ?? 0) > 0
-                        ? `Needs ${r.skill} ${r.level} — you have ${unlocks.levels?.[r.skill] ?? 1}`
-                        : `${r.skill} skill not unlocked yet (needs level ${r.level})`}>
-                    <span className={`truncate ${stateCls(r.usable)}`}>
-                      <WikiLink name={r.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">×{r.count}</span>
-                    </span>
-                    <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${r.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
-                      {r.skill.slice(0, 4)} {r.level}
-                    </span>
+                <CappedList cap={10} items={derived.resources.map(r => {
+                  const yields = nodeYields(r.skill, r.name);
+                  const isOpen = openResource === r.name;
+                  return (
+                  <div key={r.name}>
+                    <div className="flex items-center justify-between gap-2 py-px"
+                      title={r.usable
+                        ? `${r.skill} ${r.level} — you can gather this`
+                        : (unlocks.skills?.[r.skill] ?? 0) > 0
+                          ? `Needs ${r.skill} ${r.level} — you have ${unlocks.levels?.[r.skill] ?? 1}`
+                          : `${r.skill} skill not unlocked yet (needs level ${r.level})`}>
+                      <span className={`flex items-center gap-1 min-w-0 ${stateCls(r.usable)}`}>
+                        {yields && yields.length > 0 && (
+                          <button onClick={() => setOpenResource(isOpen ? null : r.name)} className="text-gray-500 hover:text-white shrink-0" title="Show what this yields">
+                            {isOpen ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+                          </button>
+                        )}
+                        <span className="truncate">
+                          <WikiLink name={r.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">×{r.count}</span>
+                        </span>
+                      </span>
+                      <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${r.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
+                        {r.skill.slice(0, 4)} {r.level}
+                      </span>
+                    </div>
+                    {isOpen && yields && (
+                      <div className="ml-4 mb-1 flex flex-wrap gap-1">
+                        {yields.map(([item, rate]) => (
+                          <span key={item} className="text-[9px] px-1 py-0.5 rounded bg-white/5 border border-white/10 text-gray-400 flex items-center gap-1">
+                            <WikiLink name={item} className="hover:text-white" />
+                            <span className="text-gray-600 font-mono">{rate}</span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                ))} />
+                  );
+                })} />
               </>
             )}
 
