@@ -15,7 +15,8 @@ plugins {
 }
 
 group 'com.fatelocked'
-version '0.1.0'
+// Overridable from CI for tagged releases: gradle shadowJar -PpluginVersion=0.2.0
+version = project.findProperty('pluginVersion') ?: '0.1.0'
 sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
 

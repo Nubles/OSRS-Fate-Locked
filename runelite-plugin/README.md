@@ -70,6 +70,16 @@ overlay, all three colors).
 3. Copy `build/libs/fatelocked-0.1.0-all.jar` into `~/.runelite/sideloaded-plugins/`.
 4. Launch RuneLite with `--developer-mode`.
 
+### Cutting a versioned release
+
+Push a `vX.Y.Z` git tag — CI builds the jar (named to match the tag) and
+publishes a permanent GitHub release `vX.Y.Z`, alongside the rolling
+`runelite-plugin-latest`:
+
+```sh
+git tag v0.1.0 && git push origin v0.1.0
+```
+
 ## Bundle format (v3)
 
 ```json

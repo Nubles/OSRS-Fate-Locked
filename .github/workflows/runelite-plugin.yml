@@ -1,8 +1,12 @@
 name: Build RuneLite plugin
 
-# Compiles the Fate Locked RuneLite plugin and publishes a ready-to-use jar as a
-# build artifact — so nobody has to install a JDK or run Gradle by hand. Also
-# acts as a compile check for the plugin's Java on every change.
+# Compiles the Fate Locked RuneLite plugin and publishes a ready-to-use jar — so
+# nobody has to install a JDK or run Gradle by hand. Also acts as a compile check
+# for the plugin's Java on every change.
+#
+# - push to main (plugin changes)  → rolling prerelease `runelite-plugin-latest`
+# - push a tag `vX.Y.Z`            → permanent versioned release `vX.Y.Z`
+#   (path filters don't apply to tag pushes, so a tag always builds)
 
 on:
   push:
@@ -10,6 +14,8 @@ on:
     paths:
       - 'runelite-plugin/**'
       - '.github/workflows/runelite-plugin.yml'
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 permissions:
@@ -34,7 +40,12 @@ jobs:
 
       - name: Build shadow jar
         working-directory: runelite-plugin
-        run: gradle shadowJar --no-daemon
+        run: |
+          VERSION_ARG=""
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION_ARG="-PpluginVersion=${GITHUB_REF_NAME#v}"
+          fi
+          gradle shadowJar --no-daemon $VERSION_ARG
 
       - name: Upload plugin jar (artifact)
         uses: actions/upload-artifact@v4
@@ -43,19 +54,31 @@ jobs:
           path: runelite-plugin/build/libs/fatelocked-*-all.jar
           if-no-files-found: error
 
-      # Publish a permanent, one-click download so users never build anything.
-      # (Sideloading still needs RuneLite's --developer-mode; the Plugin Hub is
-      # the only install path that avoids that.)
-      - name: Publish jar to a rolling release
-        if: github.event_name == 'push'
+      # Rolling "latest build" download (main branch). Sideloading still needs
+      # RuneLite's --developer-mode; the Plugin Hub is the only path that avoids it.
+      - name: Publish rolling latest release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/')
         uses: softprops/action-gh-release@v2
         with:
           tag_name: runelite-plugin-latest
           name: RuneLite plugin (latest build)
           body: |
-            Auto-built Fate Locked RuneLite plugin jar.
+            Auto-built Fate Locked RuneLite plugin jar (rolling — tracks `main`).
 
             Install: drop the jar in `~/.runelite/sideloaded-plugins/` and launch
             RuneLite with `--developer-mode`. See `runelite-plugin/README.md`.
           prerelease: true
+          files: runelite-plugin/build/libs/fatelocked-*-all.jar
+
+      # Permanent, versioned release cut from a `vX.Y.Z` tag.
+      - name: Publish versioned release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: RuneLite plugin ${{ github.ref_name }}
+          body: |
+            Fate Locked RuneLite plugin ${{ github.ref_name }}.
+
+            Install: drop the jar in `~/.runelite/sideloaded-plugins/` and launch
+            RuneLite with `--developer-mode`. See `runelite-plugin/README.md`.
           files: runelite-plugin/build/libs/fatelocked-*-all.jar
