@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { Loader2, Search, Sparkles, Dice5, CheckCircle2, AlertTriangle, RefreshCw, KeyRound, Swords } from 'lucide-react';
+import { Loader2, Search, Sparkles, Dice5, CheckCircle2, AlertTriangle, RefreshCw, KeyRound, Swords, Lock } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { buildKeyFaucets, DEFAULT_ROLL_CAP, type FaucetGroup } from '../utils/autoRollSources';
 
@@ -103,6 +103,9 @@ export function AutoRollPanel() {
   const keyTimer = useRef<number | null>(null);
 
   const currentLevels: Record<string, number> = unlocks?.levels ?? {};
+  const unlockedSkills: Record<string, number> = unlocks?.skills ?? {};
+  // A skill can only be levelled once it's been unlocked in the run.
+  const isUnlocked = useCallback((skill: string) => (unlockedSkills[skill] ?? 0) > 0, [unlockedSkills]);
   // Always-fresh key count, so we can diff before/after a burst of rolls.
   const keysRef = useRef(keys);
   keysRef.current = keys;
@@ -113,13 +116,14 @@ export function AutoRollPanel() {
   );
   const totalRolls = faucets.reduce((a, f) => a + f.rolls, 0);
 
-  // Skills where the real account is ahead of the app run — the "needed" rolls.
+  // Skills where the real account is ahead AND the skill is unlocked in the run.
+  // Locked skills can't be levelled, so they're never rolled.
   const gains = useMemo(() => {
     if (!fetched) return [];
     return fetched.skills
       .map(s => ({ ...s, current: currentLevels[s.skill] ?? 1 }))
-      .filter(s => s.level > s.current);
-  }, [fetched, currentLevels]);
+      .filter(s => s.level > s.current && isUnlocked(s.skill));
+  }, [fetched, currentLevels, isUnlocked]);
 
   const onFetch = useCallback(async () => {
     if (!name.trim()) return;
@@ -161,8 +165,12 @@ export function AutoRollPanel() {
     let save: any;
     try { save = JSON.parse(raw); } catch { setError('Save data is unreadable.'); setStatus('error'); return; }
 
+    // Only sync levels for skills already unlocked in the run — locked skills
+    // can't be levelled, so writing a level there wouldn't count.
+    const unlockedNow: Record<string, number> = save.unlocks?.skills ?? {};
     const mergedLevels: Record<string, number> = { ...(save.unlocks?.levels ?? {}) };
     for (const s of fetched.skills) {
+      if ((unlockedNow[s.skill] ?? 0) <= 0) continue;
       mergedLevels[s.skill] = Math.max(mergedLevels[s.skill] ?? 1, s.level);
     }
     save.unlocks = { ...(save.unlocks ?? {}), levels: mergedLevels };
@@ -270,7 +278,11 @@ export function AutoRollPanel() {
               </div>
             )}
             {gains.length === 0 && (
-              <div className="text-sm text-gray-400">Your run already matches or exceeds this account.</div>
+              <div className="text-sm text-gray-400">
+                {fetched.skills.some(s => !isUnlocked(s.skill) && s.level > (currentLevels[s.skill] ?? 1))
+                  ? 'No unlocked skills to roll — unlock more skills in the run first.'
+                  : 'Your unlocked skills already match or exceed this account.'}
+              </div>
             )}
           </div>
 
@@ -278,29 +290,42 @@ export function AutoRollPanel() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5">
             {fetched.skills.map((s) => {
               const current = currentLevels[s.skill] ?? 1;
-              const isGain = s.level > current;
+              const unlocked = isUnlocked(s.skill);
+              const isGain = s.level > current && unlocked;
               const gainIdx = gains.findIndex(g => g.skill === s.skill);
               const revealed = !isGain || applied || (gainIdx > -1 && gainIdx < rolledTo);
               return (
                 <div
                   key={s.skill}
+                  title={!unlocked ? `${s.skill} isn't unlocked yet — unlock it in the run before it can be rolled` : undefined}
                   className={`flex items-center justify-between px-2.5 py-1.5 rounded border text-xs transition-colors ${
-                    isGain && !applied
-                      ? revealed ? 'border-emerald-500/50 bg-emerald-950/30' : 'border-fuchsia-500/30 bg-fuchsia-950/20'
-                      : 'border-white/10 bg-white/5'
+                    !unlocked
+                      ? 'border-white/5 bg-black/20 opacity-50'
+                      : isGain && !applied
+                        ? revealed ? 'border-emerald-500/50 bg-emerald-950/30' : 'border-fuchsia-500/30 bg-fuchsia-950/20'
+                        : 'border-white/10 bg-white/5'
                   }`}
                 >
-                  <span className="text-gray-300 truncate">{s.skill}</span>
+                  <span className="text-gray-300 truncate flex items-center gap-1">
+                    {!unlocked && <Lock size={9} className="text-gray-500 shrink-0" />}
+                    {s.skill}
+                  </span>
                   <span className="font-mono shrink-0 flex items-center gap-1">
-                    {isGain && !applied && (
+                    {!unlocked ? (
+                      <span className="text-gray-600 text-[10px] uppercase tracking-wide">locked</span>
+                    ) : (
                       <>
-                        <span className="text-gray-600">{current}</span>
-                        <span className="text-gray-600">→</span>
+                        {isGain && !applied && (
+                          <>
+                            <span className="text-gray-600">{current}</span>
+                            <span className="text-gray-600">→</span>
+                          </>
+                        )}
+                        <span className={isGain ? (revealed ? 'text-emerald-300 font-bold' : 'text-gray-600') : 'text-gray-400'}>
+                          {revealed ? s.level : '··'}
+                        </span>
                       </>
                     )}
-                    <span className={isGain ? (revealed ? 'text-emerald-300 font-bold' : 'text-gray-600') : 'text-gray-400'}>
-                      {revealed ? s.level : '··'}
-                    </span>
                   </span>
                 </div>
               );
