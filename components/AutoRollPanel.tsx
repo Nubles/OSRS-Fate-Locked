@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { Loader2, Search, Sparkles, Dice5, CheckCircle2, AlertTriangle, RefreshCw, KeyRound, Swords, Lock } from 'lucide-react';
+import { Loader2, Search, Sparkles, Dice5, CheckCircle2, AlertTriangle, RefreshCw, Lock } from 'lucide-react';
 import { useGame } from '../context/GameContext';
-import { buildKeyFaucets, DEFAULT_ROLL_CAP, type FaucetGroup } from '../utils/autoRollSources';
 
 /**
  * Auto-Roll (PROTOTYPE)
@@ -39,8 +38,6 @@ interface Fetched {
   totalLevel: number;
   combatLevel: number | null;
   skills: FetchedSkill[];
-  bosses: Record<string, any>;
-  activities: Record<string, any>;
   updatedAt: string | null;
 }
 
@@ -79,14 +76,12 @@ async function fetchPlayer(name: string): Promise<Fetched> {
     totalLevel: snap.overall?.level ?? skills.reduce((a, s) => a + s.level, 0),
     combatLevel: typeof data.combatLevel === 'number' ? data.combatLevel : null,
     skills,
-    bosses: data.latestSnapshot?.data?.bosses ?? {},
-    activities: data.latestSnapshot?.data?.activities ?? {},
     updatedAt: data.updatedAt ?? null,
   };
 }
 
 export function AutoRollPanel() {
-  const { unlocks, createBackup, rollForKey, levelUpSkill, keys, specialKeys, chaosKeys } = useGame() as any;
+  const { unlocks, createBackup, levelUpSkill, keys, specialKeys, chaosKeys } = useGame() as any;
   const [name, setName] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'loaded'>('idle');
   const [error, setError] = useState('');
@@ -95,22 +90,11 @@ export function AutoRollPanel() {
   const [applied, setApplied] = useState(false);
   const [skillRolling, setSkillRolling] = useState(false);
   const [skillKeysGained, setSkillKeysGained] = useState<{ keys: number; special: number; chaos: number } | null>(null);
-  const rollTimer = useRef<number | null>(null);
-
-  // Key-faucet auto-roll state.
-  const [keyRolling, setKeyRolling] = useState(false);
-  const [keyRollProgress, setKeyRollProgress] = useState(0); // 0..1
-  const [keysGained, setKeysGained] = useState<number | null>(null);
-  const keysBefore = useRef(0);
-  const keyTimer = useRef<number | null>(null);
 
   const currentLevels: Record<string, number> = unlocks?.levels ?? {};
   const unlockedSkills: Record<string, number> = unlocks?.skills ?? {};
   // A skill can only be levelled once it's been unlocked in the run.
   const isUnlocked = useCallback((skill: string) => (unlockedSkills[skill] ?? 0) > 0, [unlockedSkills]);
-  // Always-fresh key count, so we can diff before/after a burst of rolls.
-  const keysRef = useRef(keys);
-  keysRef.current = keys;
   // Fresh refs for the level-up loop: levelUpSkill closes over state, so we read
   // it fresh each tick (between ticks the component re-renders) to keep the
   // per-level key rate ramping correctly. Counts let us tally what was earned.
@@ -119,12 +103,6 @@ export function AutoRollPanel() {
   const countsRef = useRef({ keys, specialKeys, chaosKeys });
   countsRef.current = { keys, specialKeys, chaosKeys };
   const skillTimer = useRef<number | null>(null);
-
-  const faucets: FaucetGroup[] = useMemo(
-    () => (fetched ? buildKeyFaucets(fetched.bosses, fetched.activities) : []),
-    [fetched],
-  );
-  const totalRolls = faucets.reduce((a, f) => a + f.rolls, 0);
 
   // Skills where the real account is ahead AND the skill is unlocked in the run.
   // Locked skills can't be levelled, so they're never rolled.
@@ -138,7 +116,6 @@ export function AutoRollPanel() {
   const onFetch = useCallback(async () => {
     if (!name.trim()) return;
     setStatus('loading'); setError(''); setFetched(null); setRolledTo(0); setApplied(false);
-    setKeyRolling(false); setKeyRollProgress(0); setKeysGained(null);
     setSkillRolling(false); setSkillKeysGained(null);
     if (skillTimer.current) window.clearInterval(skillTimer.current);
     try {
@@ -192,31 +169,6 @@ export function AutoRollPanel() {
       }
     }, 70);
   }, [fetched, gains, skillRolling, createBackup]);
-
-  // Roll the key faucets derived from real boss/clue/minigame history. Runs the
-  // real rollForKey faucet (logs to history, awards keys, can crit Omni) in
-  // batches so the UI stays responsive and shows progress.
-  const autoRollKeys = useCallback(() => {
-    if (keyRolling || totalRolls === 0) return;
-    keysBefore.current = keysRef.current;
-    setKeysGained(null); setKeyRolling(true); setKeyRollProgress(0);
-
-    const queue: { source: string; rate: number }[] = [];
-    for (const f of faucets) for (let i = 0; i < f.rolls; i++) queue.push({ source: f.source, rate: f.rate });
-
-    let i = 0;
-    const BATCH = 6;
-    if (keyTimer.current) window.clearInterval(keyTimer.current);
-    keyTimer.current = window.setInterval(() => {
-      for (let b = 0; b < BATCH && i < queue.length; b++, i++) rollForKey(queue[i].source, queue[i].rate);
-      setKeyRollProgress(queue.length ? Math.min(1, i / queue.length) : 1);
-      if (i >= queue.length) {
-        if (keyTimer.current) window.clearInterval(keyTimer.current);
-        setKeyRolling(false);
-        window.setTimeout(() => setKeysGained(keysRef.current - keysBefore.current), 250);
-      }
-    }, 70);
-  }, [keyRolling, totalRolls, faucets, rollForKey]);
 
   const totalGain = gains.reduce((a, s) => a + (s.level - s.current), 0);
 
@@ -357,56 +309,9 @@ export function AutoRollPanel() {
             })}
           </div>
 
-          {/* ── Key faucets from real PvM / clue / minigame history ─────────── */}
-          {faucets.length > 0 && (
-            <div className="space-y-2 pt-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
-                  <Swords size={15} className="text-amber-400" /> Earn keys from your history
-                </h3>
-                <span className="text-[10px] text-gray-500">
-                  bosses · clues · minigames — each source capped at {DEFAULT_ROLL_CAP} rolls
-                </span>
-                <div className="flex-1" />
-                {keysGained == null ? (
-                  <button
-                    onClick={autoRollKeys}
-                    disabled={keyRolling || totalRolls === 0}
-                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-fuchsia-600 hover:from-amber-500 hover:to-fuchsia-500 disabled:opacity-50 text-white text-sm font-bold flex items-center gap-2 shadow-lg"
-                  >
-                    {keyRolling ? <Loader2 size={15} className="animate-spin" /> : <Dice5 size={15} />}
-                    {keyRolling ? 'Rolling…' : `Auto-roll ${totalRolls} keys`}
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2 text-amber-300 text-sm font-semibold">
-                    <KeyRound size={16} /> +{keysGained} key{keysGained === 1 ? '' : 's'} earned
-                  </div>
-                )}
-              </div>
-
-              {keyRolling && (
-                <div className="h-1.5 w-full bg-white/10 rounded overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-amber-400 to-fuchsia-400 transition-[width] duration-75" style={{ width: `${Math.round(keyRollProgress * 100)}%` }} />
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5">
-                {faucets.map(f => (
-                  <div key={f.key} className="flex items-center justify-between px-2.5 py-1.5 rounded border border-white/10 bg-white/5 text-xs">
-                    <span className="text-gray-300 truncate" title={`${f.real.toLocaleString()} real`}>{f.label}</span>
-                    <span className="font-mono shrink-0 flex items-center gap-1.5">
-                      <span className="text-gray-500" title="real completions">{f.real.toLocaleString()}</span>
-                      <span className="text-amber-300" title={`rolling ${f.rolls} at ${f.rate}%`}>🎲{f.rolls}</span>
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           <p className="text-[10px] text-gray-600">
-            Hiscores data via Wise Old Man · every synced level and capped history roll runs through the live RNG engine —
-            so they award keys, Omni and Chaos exactly as earning them would, all logged to History · a backup is created first.
+            Hiscores data via Wise Old Man · each synced level runs through the live RNG engine, so it awards keys, Omni and
+            Chaos exactly as levelling it would — all logged to History · a backup is created first.
           </p>
         </div>
       )}
