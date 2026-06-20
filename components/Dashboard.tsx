@@ -10,7 +10,7 @@ import {
 import { useGame } from '../context/GameContext';
 import {
   Sparkles, Search, User, Map, Swords, Package,
-  ExternalLink, Unlock, Lock, Compass, ChevronDown, ChevronsUp, AlertCircle, BookOpen, ScrollText, Globe, List, Filter, Info, Share2, MapPin, Route, Trophy, Skull
+  ExternalLink, Unlock, Lock, Compass, ChevronDown, ChevronsUp, AlertCircle, BookOpen, ScrollText, Globe, List, Filter, Info, Share2, MapPin, Route, Trophy, Skull, Dice5
 } from 'lucide-react';
 import { VoidReveal } from './VoidReveal';
 import { TableType } from '../types';
@@ -63,6 +63,8 @@ const FateForecastModal = lazy(() => import('./FateForecastModal').then(m => ({ 
 const RivalModal = lazy(() => import('./RivalModal').then(m => ({ default: m.RivalModal })));
 // Boss Kill Planner — DPS/TTK/readiness vs your unlocked bosses.
 const BossKillPlanner = lazy(() => import('./BossKillPlanner').then(m => ({ default: m.BossKillPlanner })));
+// Auto-Roll (prototype) — sync a run from a real account via the hiscores API.
+const AutoRollPanel = lazy(() => import('./AutoRollPanel').then(m => ({ default: m.AutoRollPanel })));
 
 // --- Constants & Helpers ---
 
@@ -72,6 +74,7 @@ const TABS = [
   { id: 'ACTIVITIES', label: 'Activities & Utility', icon: Swords, img: 'Combat_icon.png', color: 'text-red-400', border: 'border-red-500' },
   { id: 'JOURNAL', label: 'Journal', icon: ScrollText, img: 'Quest_point_icon.png', color: 'text-cyan-400', border: 'border-cyan-500' },
   { id: 'COLLECTION', label: 'Collection Log', icon: BookOpen, img: 'Collection_log.png', color: 'text-amber-600', border: 'border-amber-600' },
+  { id: 'AUTOROLL', label: 'Auto-Roll', icon: Dice5, img: 'Mysterious_emblem.png', color: 'text-fuchsia-400', border: 'border-fuchsia-500' },
 ];
 
 // Define the 10-tier progression colors
@@ -1063,6 +1066,11 @@ export const Dashboard: React.FC = () => {
                         <CollectionLog searchTerm={searchQuery} />
                     </Suspense>
                 </div>
+            )}
+            {activeTab === 'AUTOROLL' && (
+                <Suspense fallback={<ModalFallback />}>
+                    <AutoRollPanel />
+                </Suspense>
             )}
           </div>
       </div>
