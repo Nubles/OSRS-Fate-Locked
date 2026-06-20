@@ -8,7 +8,7 @@ import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { consumePendingChunk, chunkUnlocked, chunkForPlace } from '../utils/chunkLocations';
 import { isFreeArea } from '../utils/freeAreas';
-import { chunkContentService } from '../services/ChunkContentService';
+import { chunkContentService, type OverlayPoint } from '../services/ChunkContentService';
 import { chunkReachability } from '../utils/chunkReach';
 
 type LensTone = 'good' | 'warn' | 'bad';
@@ -24,7 +24,19 @@ const OVERLAY_COLORS: Record<string, string> = {
   'Organized Crime': '#4ade80',
   'Clues': '#e879f9',
 };
-const overlayColor = (cat: string) => OVERLAY_COLORS[cat] ?? '#38bdf8';
+// The "Clues" layer is split per tier; each tier gets its own marker colour.
+const CLUE_TIER_ORDER = ['Beginner', 'Easy', 'Medium', 'Hard', 'Elite', 'Master'] as const;
+const CLUE_TIER_COLORS: Record<string, string> = {
+  Beginner: '#e5e7eb',
+  Easy: '#4ade80',
+  Medium: '#3b82f6',
+  Hard: '#a855f7',
+  Elite: '#eab308',
+  Master: '#ef4444',
+};
+const CLUE_PREFIX = 'Clue: ';
+const overlayColor = (cat: string) =>
+  cat.startsWith(CLUE_PREFIX) ? (CLUE_TIER_COLORS[cat.slice(CLUE_PREFIX.length)] ?? '#e879f9') : (OVERLAY_COLORS[cat] ?? '#38bdf8');
 // Target on-screen marker radius in CSS px (kept constant across zoom by
 // counter-scaling the SVG radius against the map transform).
 const MARKER_SCREEN_R = 6;
@@ -447,7 +459,28 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
   // restrict to chunks you own.
   const [overlayCats, setOverlayCats] = useState<Set<string>>(new Set());
   const [overlayOwnedOnly, setOverlayOwnedOnly] = useState(false);
-  const overlayCategories = useMemo(() => (lensReady ? chunkContentService.overlayCategories() : []), [lensReady]);
+  // Effective overlay layers: pass non-clue categories through, but split the
+  // single "Clues" layer into one toggleable layer per clue tier (Easy…Master).
+  const overlaysData = useMemo(() => {
+    if (!lensReady) return {} as Record<string, OverlayPoint[]>;
+    const raw = chunkContentService.overlays();
+    const out: Record<string, OverlayPoint[]> = {};
+    for (const [cat, pts] of Object.entries(raw)) {
+      if (cat === 'Clues') {
+        for (const p of pts) (out[`${CLUE_PREFIX}${p.t || 'Other'}`] ??= []).push(p);
+      } else {
+        out[cat] = pts;
+      }
+    }
+    return out;
+  }, [lensReady]);
+  // Non-clue layers first (in source order), then clue tiers easy→master.
+  const overlayCategories = useMemo(() => {
+    const keys = Object.keys(overlaysData);
+    const nonClue = keys.filter(k => !k.startsWith(CLUE_PREFIX));
+    const clue = CLUE_TIER_ORDER.map(t => `${CLUE_PREFIX}${t}`).filter(k => keys.includes(k));
+    return [...nonClue, ...clue];
+  }, [overlaysData]);
   const toggleOverlay = useCallback((cat: string) => {
     setOverlayCats(prev => { const next = new Set(prev); next.has(cat) ? next.delete(cat) : next.add(cat); return next; });
   }, []);
@@ -524,12 +557,11 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
 
   const overlayMarkers = useMemo(() => {
     if (!lensReady || overlayCats.size === 0) return [];
-    const all = chunkContentService.overlays();
     const out: { key: string; x: number; y: number; color: string; owned: boolean }[] = [];
     let i = 0;
     for (const cat of overlayCats) {
       const color = overlayColor(cat);
-      for (const p of all[cat] ?? []) {
+      for (const p of overlaysData[cat] ?? []) {
         const owned = chunkUnlocked(p.cx, p.cy, unlocks);
         if (overlayOwnedOnly && !owned) continue;
         const { px, py } = tileToPixel({ tx: p.x, ty: p.y });
@@ -537,7 +569,7 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
       }
     }
     return out;
-  }, [lensReady, overlayCats, overlayOwnedOnly, unlocks]);
+  }, [lensReady, overlaysData, overlayCats, overlayOwnedOnly, unlocks]);
 
   const clearLens = useCallback(() => { setLens(null); setLensInput(''); jumpIdx.current = 0; }, []);
   const pickLens = useCallback((kind: 'entity' | 'reach' | 'drop', key: string, label: string) => {
@@ -1233,16 +1265,17 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
               {overlayCategories.map(cat => {
                 const on = overlayCats.has(cat);
                 const color = overlayColor(cat);
-                const count = chunkContentService.overlays()[cat]?.length ?? 0;
+                const count = overlaysData[cat]?.length ?? 0;
+                const label = cat.startsWith(CLUE_PREFIX) ? `${cat.slice(CLUE_PREFIX.length)} clue` : cat;
                 return (
                   <button
                     key={cat}
                     onClick={() => toggleOverlay(cat)}
                     className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] border transition-colors ${on ? 'border-white/30 bg-white/10 text-gray-100' : 'border-white/5 text-gray-500 hover:bg-white/5'}`}
-                    title={`${cat} — ${count} marker${count === 1 ? '' : 's'}`}
+                    title={`${label} — ${count} marker${count === 1 ? '' : 's'}`}
                   >
                     <span className="w-2 h-2 rounded-full shrink-0" style={{ background: color, opacity: on ? 1 : 0.4 }} />
-                    <span className="truncate max-w-[88px]">{cat}</span>
+                    <span className="truncate max-w-[88px]">{label}</span>
                     <span className="text-[8px] text-gray-500 font-mono">{count}</span>
                   </button>
                 );
