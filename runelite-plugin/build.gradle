@@ -27,12 +27,14 @@ repositories {
 def runeLiteVersion = 'latest.release'
 
 dependencies {
+    // RuneLite's client brings Guice / Gson / SLF4J transitively (and its repo
+    // hosts the guice `no_aop` variant). Declaring Guice explicitly here pins the
+    // module to Maven Central, which has no `guice-5.1.0-no_aop.jar`, breaking the
+    // build — so we let those come from the client dependency, per the official
+    // RuneLite plugin template.
     compileOnly group: 'net.runelite', name: 'client', version: runeLiteVersion
     compileOnly 'org.projectlombok:lombok:1.18.30'
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
-    compileOnly 'com.google.inject:guice:5.1.0'
-    compileOnly 'com.google.code.gson:gson:2.10.1'
-    compileOnly 'org.slf4j:slf4j-api:1.7.36'
 
     testImplementation group: 'net.runelite', name: 'client', version: runeLiteVersion
     testImplementation 'junit:junit:4.13.2'

@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -36,9 +36,26 @@ jobs:
         working-directory: runelite-plugin
         run: gradle shadowJar --no-daemon
 
-      - name: Upload plugin jar
+      - name: Upload plugin jar (artifact)
         uses: actions/upload-artifact@v4
         with:
           name: fatelocked-runelite-plugin
           path: runelite-plugin/build/libs/fatelocked-*-all.jar
           if-no-files-found: error
+
+      # Publish a permanent, one-click download so users never build anything.
+      # (Sideloading still needs RuneLite's --developer-mode; the Plugin Hub is
+      # the only install path that avoids that.)
+      - name: Publish jar to a rolling release
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: runelite-plugin-latest
+          name: RuneLite plugin (latest build)
+          body: |
+            Auto-built Fate Locked RuneLite plugin jar.
+
+            Install: drop the jar in `~/.runelite/sideloaded-plugins/` and launch
+            RuneLite with `--developer-mode`. See `runelite-plugin/README.md`.
+          prerelease: true
+          files: runelite-plugin/build/libs/fatelocked-*-all.jar
