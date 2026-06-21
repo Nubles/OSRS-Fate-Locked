@@ -490,7 +490,7 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
   const [overlayOwnedOnly, setOverlayOwnedOnly] = useState(false);
   const [overlayCollapsed, setOverlayCollapsed] = useState(false);
   // Marker hover tooltip + the manually-flagged "active" shooting star.
-  const [hoverMarker, setHoverMarker] = useState<{ x: number; y: number; cat: string; tier?: string; hint?: string; star?: { site: string; worlds: number; tier: number; landIn: number } } | null>(null);
+  const [hoverMarker, setHoverMarker] = useState<{ x: number; y: number; cat: string; tier?: string; hint?: string; star?: { site: string; worlds: number; worldList: number[]; tier: number; landIn: number } } | null>(null);
   const [activeStarKey, setActiveStarKey] = useState<string | null>(null);
   // Live active-star feed: site name → coords (static) + currently-active list.
   const [liveStarsOn, setLiveStarsOn] = useState(false);
@@ -541,12 +541,13 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
       if (cur) { cur.worlds.add(s.world); cur.tier = Math.max(cur.tier, s.tier); cur.soonest = Math.min(cur.soonest, s.minTime); }
       else bySite.set(s.calledLocation, { worlds: new Set([s.world]), tier: s.tier, soonest: s.minTime });
     }
-    const out: { key: string; x: number; y: number; site: string; worlds: number; tier: number; landIn: number }[] = [];
+    const out: { key: string; x: number; y: number; site: string; worlds: number; worldList: number[]; tier: number; landIn: number }[] = [];
     for (const [site, info] of bySite) {
       const pos = starSites[site];
       if (!pos) continue;
       const { px, py } = tileToPixel({ tx: pos.x, ty: pos.y });
-      out.push({ key: `star:${site}`, x: px, y: py, site, worlds: info.worlds.size, tier: info.tier, landIn: Math.round((info.soonest - Date.now() / 1000) / 60) });
+      const worldList = [...info.worlds].sort((a, b) => a - b);
+      out.push({ key: `star:${site}`, x: px, y: py, site, worlds: worldList.length, worldList, tier: info.tier, landIn: Math.round((info.soonest - Date.now() / 1000) / 60) });
     }
     return out;
   }, [liveStarsOn, starSites, liveStars, starWorld]);
@@ -1433,6 +1434,15 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
               <div className="text-[11px] font-semibold text-amber-300 flex items-center gap-1">★ {hoverMarker.star.site}</div>
               <div>Size <span className="text-gray-100 font-mono">T{hoverMarker.star.tier}</span> · {hoverMarker.star.worlds} world{hoverMarker.star.worlds === 1 ? '' : 's'}</div>
               <div className="text-gray-400">{hoverMarker.star.landIn > 0 ? `lands in ~${hoverMarker.star.landIn} min` : 'landing now / active'}</div>
+              <div className="mt-1 pt-1 border-t border-white/10 text-gray-500 uppercase tracking-wide text-[8px]">Worlds</div>
+              <div className="flex flex-wrap gap-0.5 mt-0.5 max-w-[200px]">
+                {hoverMarker.star.worldList.slice(0, 24).map(w => (
+                  <span key={w} className="font-mono text-[9px] px-1 rounded bg-amber-500/15 text-amber-200">{w}</span>
+                ))}
+                {hoverMarker.star.worldList.length > 24 && (
+                  <span className="font-mono text-[9px] text-gray-500">+{hoverMarker.star.worldList.length - 24}</span>
+                )}
+              </div>
             </div>
           ) : hoverMarker.tier ? (
             <div className="flex items-start gap-2">
@@ -1583,7 +1593,7 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
                     style={{ r: 'var(--marker-r, 30px)', pointerEvents: 'auto', cursor: 'help' }}
                     fill="#facc15" fillOpacity={0.95} stroke="#000" strokeOpacity={0.6} strokeWidth={1.5}
                     vectorEffect="non-scaling-stroke"
-                    onMouseEnter={(e) => setHoverMarker({ x: e.clientX, y: e.clientY, cat: 'live-star', star: { site: s.site, worlds: s.worlds, tier: s.tier, landIn: s.landIn } })}
+                    onMouseEnter={(e) => setHoverMarker({ x: e.clientX, y: e.clientY, cat: 'live-star', star: { site: s.site, worlds: s.worlds, worldList: s.worldList, tier: s.tier, landIn: s.landIn } })}
                     onMouseMove={(e) => setHoverMarker(h => (h ? { ...h, x: e.clientX, y: e.clientY } : h))}
                     onMouseLeave={() => setHoverMarker(null)}
                   />
