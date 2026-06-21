@@ -1580,8 +1580,20 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
               height={MAP_IMAGE.height}
               viewBox={`0 0 ${MAP_IMAGE.width} ${MAP_IMAGE.height}`}
             >
-              {liveStarMarkers.map(s => (
+              {liveStarMarkers.map(s => {
+                const onEnter = (e: React.MouseEvent) => setHoverMarker({ x: e.clientX, y: e.clientY, cat: 'live-star', star: { site: s.site, worlds: s.worlds, worldList: s.worldList, tier: s.tier, landIn: s.landIn } });
+                return (
                 <g key={s.key}>
+                  {/* Transparent hit area covering the whole glow, so hovering the
+                      ring (not just the centre dot) shows the world list. */}
+                  <circle
+                    cx={s.x} cy={s.y}
+                    style={{ r: 'calc(var(--marker-r, 30px) * 2.4)', pointerEvents: 'all', cursor: 'help' }}
+                    fill="none"
+                    onMouseEnter={onEnter}
+                    onMouseMove={(e) => setHoverMarker(h => (h ? { ...h, x: e.clientX, y: e.clientY } : h))}
+                    onMouseLeave={() => setHoverMarker(null)}
+                  />
                   <circle
                     cx={s.x} cy={s.y}
                     style={{ r: 'calc(var(--marker-r, 30px) * 2.4)', pointerEvents: 'none' }}
@@ -1590,15 +1602,12 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
                   />
                   <circle
                     cx={s.x} cy={s.y}
-                    style={{ r: 'var(--marker-r, 30px)', pointerEvents: 'auto', cursor: 'help' }}
+                    style={{ r: 'var(--marker-r, 30px)', pointerEvents: 'none' }}
                     fill="#facc15" fillOpacity={0.95} stroke="#000" strokeOpacity={0.6} strokeWidth={1.5}
                     vectorEffect="non-scaling-stroke"
-                    onMouseEnter={(e) => setHoverMarker({ x: e.clientX, y: e.clientY, cat: 'live-star', star: { site: s.site, worlds: s.worlds, worldList: s.worldList, tier: s.tier, landIn: s.landIn } })}
-                    onMouseMove={(e) => setHoverMarker(h => (h ? { ...h, x: e.clientX, y: e.clientY } : h))}
-                    onMouseLeave={() => setHoverMarker(null)}
                   />
                 </g>
-              ))}
+              );})}
             </svg>
           )}
 
