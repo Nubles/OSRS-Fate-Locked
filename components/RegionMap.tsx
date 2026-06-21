@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useGame } from '../context/GameContext';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
-import { Lock, Unlock, ZoomIn, ZoomOut, Move, Loader2, Download, Grid3x3, Paintbrush, Eye, EyeOff, ClipboardCopy, Trash2, FileDown, FileUp, Radio, Undo2, Redo2, Search, X, Target, ChevronLeft, ChevronRight, Layers } from 'lucide-react';
+import { Lock, Unlock, ZoomIn, ZoomOut, Move, Loader2, Download, Grid3x3, Paintbrush, Eye, EyeOff, ClipboardCopy, Trash2, FileDown, FileUp, Radio, Undo2, Redo2, Search, X, Target, ChevronLeft, ChevronRight, ChevronDown, Layers } from 'lucide-react';
 import { ChunkActivityPanel } from './ChunkActivityPanel';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_CHUNKS } from '../data/regionChunks';
@@ -35,6 +35,15 @@ const CLUE_TIER_COLORS: Record<string, string> = {
   Master: '#ef4444',
 };
 const CLUE_PREFIX = 'Clue: ';
+// Per-tier clue-scroll item images (OSRS wiki) shown in the marker hover card.
+const CLUE_SCROLL_IMG: Record<string, string> = {
+  Beginner: 'https://oldschool.runescape.wiki/images/Clue_scroll_%28beginner%29.png',
+  Easy: 'https://oldschool.runescape.wiki/images/Clue_scroll_%28easy%29.png',
+  Medium: 'https://oldschool.runescape.wiki/images/Clue_scroll_%28medium%29.png',
+  Hard: 'https://oldschool.runescape.wiki/images/Clue_scroll_%28hard%29.png',
+  Elite: 'https://oldschool.runescape.wiki/images/Clue_scroll_%28elite%29.png',
+  Master: 'https://oldschool.runescape.wiki/images/Clue_scroll_%28master%29.png',
+};
 const overlayColor = (cat: string) =>
   cat.startsWith(CLUE_PREFIX) ? (CLUE_TIER_COLORS[cat.slice(CLUE_PREFIX.length)] ?? '#e879f9') : (OVERLAY_COLORS[cat] ?? '#38bdf8');
 // Target on-screen marker radius in CSS px (kept constant across zoom by
@@ -461,6 +470,10 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
   // restrict to chunks you own.
   const [overlayCats, setOverlayCats] = useState<Set<string>>(new Set());
   const [overlayOwnedOnly, setOverlayOwnedOnly] = useState(false);
+  const [overlayCollapsed, setOverlayCollapsed] = useState(false);
+  // Marker hover tooltip + the manually-flagged "active" shooting star.
+  const [hoverMarker, setHoverMarker] = useState<{ x: number; y: number; cat: string; tier?: string; hint?: string } | null>(null);
+  const [activeStarKey, setActiveStarKey] = useState<string | null>(null);
   // Effective overlay layers: pass non-clue categories through, but split the
   // single "Clues" layer into one toggleable layer per clue tier (Easy…Master).
   const overlaysData = useMemo(() => {
@@ -559,15 +572,17 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
 
   const overlayMarkers = useMemo(() => {
     if (!lensReady || overlayCats.size === 0) return [];
-    const out: { key: string; x: number; y: number; color: string; owned: boolean }[] = [];
+    const out: { key: string; x: number; y: number; color: string; owned: boolean; cat: string; star: boolean; tier?: string; hint?: string }[] = [];
     let i = 0;
     for (const cat of overlayCats) {
       const color = overlayColor(cat);
+      const star = cat === 'Shooting Stars';
+      const tier = cat.startsWith(CLUE_PREFIX) ? cat.slice(CLUE_PREFIX.length) : undefined;
       for (const p of overlaysData[cat] ?? []) {
         const owned = chunkUnlocked(p.cx, p.cy, unlocks);
         if (overlayOwnedOnly && !owned) continue;
         const { px, py } = tileToPixel({ tx: p.x, ty: p.y });
-        out.push({ key: `${cat}:${i++}`, x: px, y: py, color, owned });
+        out.push({ key: `${cat}:${i++}`, x: px, y: py, color, owned, cat, star, tier, hint: p.h });
       }
     }
     return out;
@@ -1254,16 +1269,21 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
       {!authoring && overlayCategories.length > 0 && (
         <div className="absolute bottom-2 left-2 z-30 w-56 max-w-[70%]">
           <div className="bg-[#101010]/95 border border-white/15 rounded-lg shadow-xl backdrop-blur-sm overflow-hidden">
-            <div className="flex items-center gap-1.5 px-2 py-1.5 border-b border-white/5">
-              <Layers size={12} className="text-sky-400 shrink-0" />
-              <span className="text-[10px] font-semibold text-gray-300 flex-1">Overlays</span>
-              {overlayCats.size > 0 && (
-                <label className="flex items-center gap-1 text-[9px] text-gray-500 cursor-pointer">
+            <div className={`flex items-center gap-1.5 px-2 py-1.5 ${overlayCollapsed ? '' : 'border-b border-white/5'}`}>
+              <button onClick={() => setOverlayCollapsed(c => !c)} className="flex items-center gap-1.5 flex-1 min-w-0 text-left" title={overlayCollapsed ? 'Expand overlays' : 'Collapse overlays'}>
+                <Layers size={12} className="text-sky-400 shrink-0" />
+                <span className="text-[10px] font-semibold text-gray-300 flex-1">Overlays</span>
+                {overlayCats.size > 0 && <span className="text-[8px] font-mono text-sky-300/80 px-1 rounded bg-sky-500/10">{overlayCats.size} on</span>}
+                {overlayCollapsed ? <ChevronRight size={12} className="text-gray-500 shrink-0" /> : <ChevronDown size={12} className="text-gray-500 shrink-0" />}
+              </button>
+              {!overlayCollapsed && overlayCats.size > 0 && (
+                <label className="flex items-center gap-1 text-[9px] text-gray-500 cursor-pointer shrink-0">
                   <input type="checkbox" checked={overlayOwnedOnly} onChange={(e) => setOverlayOwnedOnly(e.target.checked)} className="accent-sky-500" />
                   owned only
                 </label>
               )}
             </div>
+            {!overlayCollapsed && (
             <div className="p-1.5 flex flex-wrap gap-1">
               {overlayCategories.map(cat => {
                 const on = overlayCats.has(cat);
@@ -1284,7 +1304,33 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
                 );
               })}
             </div>
+            )}
           </div>
+        </div>
+      )}
+
+      {/* Marker hover card — clue scroll image + this location's hint, or star info. */}
+      {hoverMarker && (
+        <div
+          className="fixed z-50 pointer-events-none bg-[#0b0b0b]/95 border border-white/15 rounded-md shadow-xl px-2 py-1.5 max-w-[220px]"
+          style={{ left: hoverMarker.x + 14, top: hoverMarker.y + 14 }}
+        >
+          {hoverMarker.tier ? (
+            <div className="flex items-start gap-2">
+              <img src={CLUE_SCROLL_IMG[hoverMarker.tier]} alt="" className="w-7 h-7 shrink-0 mt-0.5" style={{ imageRendering: 'pixelated' }} />
+              <div className="min-w-0">
+                <div className="text-[11px] font-semibold" style={{ color: overlayColor(`${CLUE_PREFIX}${hoverMarker.tier}`) }}>{hoverMarker.tier} clue</div>
+                {hoverMarker.hint && <div className="text-[10px] text-gray-300 leading-snug italic">“{hoverMarker.hint}”</div>}
+              </div>
+            </div>
+          ) : hoverMarker.cat === 'Shooting Stars' ? (
+            <div className="text-[10px] text-gray-300">
+              <span className="font-semibold text-sky-300">Shooting star landing site</span>
+              <div className="text-gray-500">{activeStarKey ? 'Click another to move the active marker.' : 'Click to flag it as the active star.'}</div>
+            </div>
+          ) : (
+            <div className="text-[11px] font-semibold text-gray-200">{hoverMarker.cat}</div>
+          )}
         </div>
       )}
 
@@ -1349,7 +1395,9 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
 
           {/* Map marker overlays (stars/implings/crop circles/crime/clues) —
               inside the transformed layer so they pan & zoom with the map.
-              Owned-chunk markers bright, others dimmed. */}
+              Owned-chunk markers bright, others dimmed. The <svg> stays
+              click-through; only the circles capture hover/click so map
+              dragging through the gaps still works. */}
           {overlayMarkers.length > 0 && (
             <svg
               className="absolute inset-0 pointer-events-none"
@@ -1357,19 +1405,39 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
               height={MAP_IMAGE.height}
               viewBox={`0 0 ${MAP_IMAGE.width} ${MAP_IMAGE.height}`}
             >
-              {overlayMarkers.map(m => (
-                <circle
-                  key={m.key}
-                  cx={m.x} cy={m.y}
-                  style={{ r: 'var(--marker-r, 30px)' }}
-                  fill={m.color}
-                  fillOpacity={m.owned ? 0.9 : 0.25}
-                  stroke="#000"
-                  strokeOpacity={0.55}
-                  strokeWidth={1.5}
-                  vectorEffect="non-scaling-stroke"
-                />
-              ))}
+              {overlayMarkers.map(m => {
+                const active = m.star && activeStarKey === m.key;
+                return (
+                  <circle
+                    key={m.key}
+                    cx={m.x} cy={m.y}
+                    style={{ r: 'var(--marker-r, 30px)', pointerEvents: 'auto', cursor: m.star ? 'pointer' : 'help' }}
+                    fill={m.color}
+                    fillOpacity={m.owned ? 0.9 : 0.25}
+                    stroke={active ? '#facc15' : '#000'}
+                    strokeOpacity={active ? 1 : 0.55}
+                    strokeWidth={active ? 3 : 1.5}
+                    vectorEffect="non-scaling-stroke"
+                    onMouseEnter={(e) => setHoverMarker({ x: e.clientX, y: e.clientY, cat: m.cat, tier: m.tier, hint: m.hint })}
+                    onMouseMove={(e) => setHoverMarker(h => (h ? { ...h, x: e.clientX, y: e.clientY } : h))}
+                    onMouseLeave={() => setHoverMarker(null)}
+                    onClick={(e) => { if (m.star) { e.stopPropagation(); setActiveStarKey(k => (k === m.key ? null : m.key)); } }}
+                  />
+                );
+              })}
+              {/* Gold pulsing ring on the manually-flagged active shooting star. */}
+              {(() => {
+                const s = overlayMarkers.find(m => m.key === activeStarKey);
+                if (!s) return null;
+                return (
+                  <circle
+                    cx={s.x} cy={s.y}
+                    style={{ r: 'calc(var(--marker-r, 30px) * 2.2)', pointerEvents: 'none' }}
+                    fill="none" stroke="#facc15" strokeWidth={3} strokeOpacity={0.9}
+                    vectorEffect="non-scaling-stroke" className="lens-pulse"
+                  />
+                );
+              })()}
             </svg>
           )}
 
