@@ -35,6 +35,20 @@ const CLUE_TIER_COLORS: Record<string, string> = {
   Master: '#ef4444',
 };
 const CLUE_PREFIX = 'Clue: ';
+
+// ── Live shooting-star feed ────────────────────────────────────────────────
+// Crowdsourced active-star data (starminers) sends no CORS header, so the app
+// reads it through a user-hosted proxy (a tiny Cloudflare Worker — see
+// runelite-plugin/../docs). The URL comes from a Vite env var or a localStorage
+// override so it can be set without rebuilding.
+const getStarFeedUrl = (): string => {
+  const env = (import.meta as any).env?.VITE_STAR_FEED as string | undefined;
+  let ls = '';
+  try { ls = localStorage.getItem('fate_star_feed') || ''; } catch { /* ignore */ }
+  return (ls || env || '').trim();
+};
+interface LiveStar { world: number; calledLocation: string; tier: number; minTime: number; maxTime: number }
+
 // Per-tier clue-scroll item images (OSRS wiki) shown in the marker hover card.
 const CLUE_SCROLL_IMG: Record<string, string> = {
   Beginner: 'https://oldschool.runescape.wiki/images/Clue_scroll_%28beginner%29.png',
@@ -472,8 +486,66 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
   const [overlayOwnedOnly, setOverlayOwnedOnly] = useState(false);
   const [overlayCollapsed, setOverlayCollapsed] = useState(false);
   // Marker hover tooltip + the manually-flagged "active" shooting star.
-  const [hoverMarker, setHoverMarker] = useState<{ x: number; y: number; cat: string; tier?: string; hint?: string } | null>(null);
+  const [hoverMarker, setHoverMarker] = useState<{ x: number; y: number; cat: string; tier?: string; hint?: string; star?: { site: string; worlds: number; tier: number; landIn: number } } | null>(null);
   const [activeStarKey, setActiveStarKey] = useState<string | null>(null);
+  // Live active-star feed: site name → coords (static) + currently-active list.
+  const [liveStarsOn, setLiveStarsOn] = useState(false);
+  const [starSites, setStarSites] = useState<Record<string, { x: number; y: number }> | null>(null);
+  const [liveStars, setLiveStars] = useState<LiveStar[]>([]);
+  const [liveStarErr, setLiveStarErr] = useState<string | null>(null);
+  const [starWorld, setStarWorld] = useState<string>(''); // optional world filter
+
+  const refreshLiveStars = useCallback(async () => {
+    const url = getStarFeedUrl();
+    if (!url) { setLiveStarErr('no-feed'); return; }
+    try {
+      const res = await fetch(`${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const arr: LiveStar[] = (Array.isArray(data) ? data : []).map((s: any) => ({
+        world: +s.world, calledLocation: String(s.calledLocation ?? ''), tier: +s.tier || 0,
+        minTime: +s.minTime || 0, maxTime: +s.maxTime || 0,
+      })).filter(s => s.calledLocation);
+      setLiveStars(arr);
+      setLiveStarErr(null);
+    } catch (e: any) {
+      setLiveStarErr(e?.message ?? 'fetch failed');
+    }
+  }, []);
+
+  // Lazy-load the static site→coords map and poll the feed while enabled.
+  useEffect(() => {
+    if (!liveStarsOn) return;
+    let alive = true;
+    if (!starSites) {
+      const base = (import.meta as any).env?.BASE_URL ?? '/';
+      fetch(`${base}star-sites.json`).then(r => r.json()).then(d => { if (alive) setStarSites(d); }).catch(() => {});
+    }
+    refreshLiveStars();
+    const id = window.setInterval(refreshLiveStars, 60000);
+    return () => { alive = false; window.clearInterval(id); };
+  }, [liveStarsOn, starSites, refreshLiveStars]);
+
+  // Aggregate active stars by site (one gold marker per site, with details).
+  const liveStarMarkers = useMemo(() => {
+    if (!liveStarsOn || !starSites) return [];
+    const wf = starWorld.trim();
+    const bySite = new Map<string, { worlds: Set<number>; tier: number; soonest: number }>();
+    for (const s of liveStars) {
+      if (wf && String(s.world) !== wf) continue;
+      const cur = bySite.get(s.calledLocation);
+      if (cur) { cur.worlds.add(s.world); cur.tier = Math.max(cur.tier, s.tier); cur.soonest = Math.min(cur.soonest, s.minTime); }
+      else bySite.set(s.calledLocation, { worlds: new Set([s.world]), tier: s.tier, soonest: s.minTime });
+    }
+    const out: { key: string; x: number; y: number; site: string; worlds: number; tier: number; landIn: number }[] = [];
+    for (const [site, info] of bySite) {
+      const pos = starSites[site];
+      if (!pos) continue;
+      const { px, py } = tileToPixel({ tx: pos.x, ty: pos.y });
+      out.push({ key: `star:${site}`, x: px, y: py, site, worlds: info.worlds.size, tier: info.tier, landIn: Math.round((info.soonest - Date.now() / 1000) / 60) });
+    }
+    return out;
+  }, [liveStarsOn, starSites, liveStars, starWorld]);
   // Effective overlay layers: pass non-clue categories through, but split the
   // single "Clues" layer into one toggleable layer per clue tier (Easy…Master).
   const overlaysData = useMemo(() => {
@@ -1305,6 +1377,43 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
               })}
             </div>
             )}
+            {/* Live active shooting stars (crowdsourced feed via a user proxy). */}
+            {!overlayCollapsed && (
+              <div className="px-1.5 pb-1.5 pt-1 border-t border-white/5 space-y-1">
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => {
+                      if (!liveStarsOn && !getStarFeedUrl()) {
+                        const v = window.prompt('Live star feed URL (your Cloudflare Worker proxying starminers /data2):', '');
+                        if (v && v.trim()) { try { localStorage.setItem('fate_star_feed', v.trim()); } catch { /* ignore */ } } else { return; }
+                      }
+                      setLiveStarsOn(v => !v);
+                    }}
+                    className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] border transition-colors ${liveStarsOn ? 'border-amber-400/50 bg-amber-500/15 text-amber-200' : 'border-white/10 text-gray-400 hover:bg-white/5'}`}
+                    title="Show live active shooting stars from the crowdsourced feed"
+                  >
+                    <span style={{ color: '#facc15' }}>★</span> Live stars
+                  </button>
+                  {liveStarsOn && (
+                    <input
+                      value={starWorld}
+                      onChange={(e) => setStarWorld(e.target.value.replace(/[^0-9]/g, ''))}
+                      placeholder="world"
+                      className="w-14 bg-black/40 border border-white/10 rounded px-1.5 py-0.5 text-[10px] text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-amber-400/50"
+                    />
+                  )}
+                </div>
+                {liveStarsOn && (
+                  <div className="text-[9px] text-gray-500">
+                    {liveStarErr === 'no-feed'
+                      ? 'No feed URL set — toggle off/on to enter your proxy.'
+                      : liveStarErr
+                        ? <span className="text-red-400">feed error: {liveStarErr}</span>
+                        : `${liveStarMarkers.length} site${liveStarMarkers.length === 1 ? '' : 's'} active${starWorld ? ` on world ${starWorld}` : ' (all worlds)'}`}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -1315,7 +1424,13 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
           className="fixed z-50 pointer-events-none bg-[#0b0b0b]/95 border border-white/15 rounded-md shadow-xl px-2 py-1.5 max-w-[220px]"
           style={{ left: hoverMarker.x + 14, top: hoverMarker.y + 14 }}
         >
-          {hoverMarker.tier ? (
+          {hoverMarker.star ? (
+            <div className="text-[10px] text-gray-300 leading-snug">
+              <div className="text-[11px] font-semibold text-amber-300 flex items-center gap-1">★ {hoverMarker.star.site}</div>
+              <div>Size <span className="text-gray-100 font-mono">T{hoverMarker.star.tier}</span> · {hoverMarker.star.worlds} world{hoverMarker.star.worlds === 1 ? '' : 's'}</div>
+              <div className="text-gray-400">{hoverMarker.star.landIn > 0 ? `lands in ~${hoverMarker.star.landIn} min` : 'landing now / active'}</div>
+            </div>
+          ) : hoverMarker.tier ? (
             <div className="flex items-start gap-2">
               <img src={CLUE_SCROLL_IMG[hoverMarker.tier]} alt="" className="w-7 h-7 shrink-0 mt-0.5" style={{ imageRendering: 'pixelated' }} />
               <div className="min-w-0">
@@ -1438,6 +1553,38 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
                   />
                 );
               })()}
+            </svg>
+          )}
+
+          {/* Live active shooting stars (from the crowdsourced feed) — gold
+              pulsing rings at sites that currently have a star, hoverable for
+              world / tier / landing-time details. */}
+          {liveStarMarkers.length > 0 && (
+            <svg
+              className="absolute inset-0 pointer-events-none"
+              width={MAP_IMAGE.width}
+              height={MAP_IMAGE.height}
+              viewBox={`0 0 ${MAP_IMAGE.width} ${MAP_IMAGE.height}`}
+            >
+              {liveStarMarkers.map(s => (
+                <g key={s.key}>
+                  <circle
+                    cx={s.x} cy={s.y}
+                    style={{ r: 'calc(var(--marker-r, 30px) * 2.4)', pointerEvents: 'none' }}
+                    fill="none" stroke="#facc15" strokeWidth={3} strokeOpacity={0.85}
+                    vectorEffect="non-scaling-stroke" className="lens-pulse"
+                  />
+                  <circle
+                    cx={s.x} cy={s.y}
+                    style={{ r: 'var(--marker-r, 30px)', pointerEvents: 'auto', cursor: 'help' }}
+                    fill="#facc15" fillOpacity={0.95} stroke="#000" strokeOpacity={0.6} strokeWidth={1.5}
+                    vectorEffect="non-scaling-stroke"
+                    onMouseEnter={(e) => setHoverMarker({ x: e.clientX, y: e.clientY, cat: 'live-star', star: { site: s.site, worlds: s.worlds, tier: s.tier, landIn: s.landIn } })}
+                    onMouseMove={(e) => setHoverMarker(h => (h ? { ...h, x: e.clientX, y: e.clientY } : h))}
+                    onMouseLeave={() => setHoverMarker(null)}
+                  />
+                </g>
+              ))}
             </svg>
           )}
 
