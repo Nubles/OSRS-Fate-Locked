@@ -41,11 +41,15 @@ const CLUE_PREFIX = 'Clue: ';
 // reads it through a user-hosted proxy (a tiny Cloudflare Worker — see
 // runelite-plugin/../docs). The URL comes from a Vite env var or a localStorage
 // override so it can be set without rebuilding.
+// Default proxy shipped for everyone (a Cloudflare Worker that re-serves the
+// starminers feed with CORS). A per-browser localStorage override or a build-time
+// VITE_STAR_FEED still take precedence.
+const DEFAULT_STAR_FEED = 'https://star-proxy.alexanderhaynes18.workers.dev/';
 const getStarFeedUrl = (): string => {
   const env = (import.meta as any).env?.VITE_STAR_FEED as string | undefined;
   let ls = '';
   try { ls = localStorage.getItem('fate_star_feed') || ''; } catch { /* ignore */ }
-  return (ls || env || '').trim();
+  return (ls || env || DEFAULT_STAR_FEED || '').trim();
 };
 interface LiveStar { world: number; calledLocation: string; tier: number; minTime: number; maxTime: number }
 

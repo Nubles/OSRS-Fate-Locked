@@ -6,8 +6,10 @@ hover. The data is crowdsourced by [starminers](https://map.starminers.site),
 whose `/data2` endpoint sends **no CORS header**, so a browser on
 `*.github.io` can't read it directly.
 
-You host a tiny proxy once that re-serves the feed with CORS. A free Cloudflare
-Worker is ~12 lines:
+A default proxy is **already shipped** (`DEFAULT_STAR_FEED` in
+`components/RegionMap.tsx`), so Live stars works for everyone with no setup. The
+rest of this doc is only needed if you want to run **your own** proxy (e.g. to
+not depend on the default Worker). A free Cloudflare Worker is ~12 lines:
 
 ## Cloudflare Worker
 
