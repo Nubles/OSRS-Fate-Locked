@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useGame } from '../context/GameContext';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
 import { Lock, Unlock, ZoomIn, ZoomOut, Move, Loader2, Download, Grid3x3, Paintbrush, Eye, EyeOff, ClipboardCopy, Trash2, FileDown, FileUp, Radio, Undo2, Redo2, Search, X, Target, ChevronLeft, ChevronRight, ChevronDown, Layers } from 'lucide-react';
@@ -1423,10 +1424,13 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
         </div>
       )}
 
-      {/* Marker hover card — clue scroll image + this location's hint, or star info. */}
-      {hoverMarker && (
+      {/* Marker hover card — clue scroll image + this location's hint, or star
+          info. Portaled to <body> so its position:fixed resolves against the
+          viewport, not a transformed ancestor (the tab wrapper's animation
+          transform would otherwise offset it off-screen). */}
+      {hoverMarker && createPortal(
         <div
-          className="fixed z-50 pointer-events-none bg-[#0b0b0b]/95 border border-white/15 rounded-md shadow-xl px-2 py-1.5 max-w-[220px]"
+          className="fixed z-[100] pointer-events-none bg-[#0b0b0b]/95 border border-white/15 rounded-md shadow-xl px-2 py-1.5 max-w-[220px]"
           style={{ left: hoverMarker.x + 14, top: hoverMarker.y + 14 }}
         >
           {hoverMarker.star ? (
@@ -1460,7 +1464,8 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
           ) : (
             <div className="text-[11px] font-semibold text-gray-200">{hoverMarker.cat}</div>
           )}
-        </div>
+        </div>,
+        document.body,
       )}
 
       <div
