@@ -501,7 +501,9 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
                 <SectionHead icon={<Swords size={11} />} label="Monsters" count={derived.monsters.length} />
                 <CappedList cap={8} items={derived.monsters.map(m => {
                   const met = m.slayer == null || (slayerUnlocked && slayerLevel >= m.slayer);
-                  const reqs = chunkContentService.taskRequirements(m.name, 'monster');
+                  // Per-chunk requirement — only meaningful for a single chunk
+                  // (region mode aggregates many chunks, so we can't pin it).
+                  const reqs = mode === 'chunk' ? chunkContentService.taskRequirements(m.name, 'monster', chunk.cx, chunk.cy) : [];
                   return (
                     <div key={m.name} className="flex items-center justify-between gap-2 py-px">
                       <span className={`truncate ${stateCls(met)}`}>

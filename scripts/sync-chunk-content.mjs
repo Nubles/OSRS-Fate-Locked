@@ -162,13 +162,28 @@ function buildDrops(data) {
   return out;
 }
 
+/** [{ "~|req|~ text": type }, …] → deduped, wiki-stripped requirement strings. */
+function cleanReqs(arr) {
+  const out = new Set();
+  for (const reqObj of arr) {
+    for (const reqKey of Object.keys(reqObj)) {
+      const clean = stripWiki(reqKey).replace(/\s+/g, ' ').trim();
+      if (clean) out.add(clean);
+    }
+  }
+  return [...out];
+}
+
 /**
- * Access/use requirements per entity, from the picker's taskUnlocks tables.
- * Categories: Items / Monsters / NPCs / Objects / Shops / Spawns. The source
- * keys requirements by location ({"loc": [{req: type}]}) except Items (a flat
- * [{req: type}] array). We flatten across locations into a deduped list of
- * human-readable requirement strings per (cleaned) entity name — advisory-level
- * "to use/fight/access this you need …" (e.g. a quest, slayer task, guild).
+ * Access/use requirements per entity, KEYED BY CHUNK so a generic entity (a
+ * "Man", a "Banker") only carries the requirement in the chunk it actually
+ * applies to. The picker keys these by location: numeric region ids
+ * (regionId = cx*256+cy, optionally with a "-subarea" suffix) which ARE our
+ * chunk coords, or named areas ("Stronghold Slayer Cave") which we can't map to
+ * a chunk and therefore drop. Items have no location (a global wield/use
+ * requirement) and are stored under "*".
+ *
+ * Shape: category → entity name → { chunkId | "*": [requirement strings] }.
  */
 function buildTaskUnlocks(data) {
   const src = data.taskUnlocks ?? {};
@@ -177,19 +192,21 @@ function buildTaskUnlocks(data) {
     const m = {};
     for (const [rawName, val] of Object.entries(entries)) {
       const name = cleanName(rawName);
-      const reqs = new Set(m[name] ?? []);
-      // Items → a flat array; keyed categories → { location: [ {req:type} ] }.
-      const groups = Array.isArray(val) ? [val] : Object.values(val);
-      for (const arr of groups) {
-        if (!Array.isArray(arr)) continue;
-        for (const reqObj of arr) {
-          for (const reqKey of Object.keys(reqObj)) {
-            const clean = stripWiki(reqKey).replace(/\s+/g, ' ').trim();
-            if (clean) reqs.add(clean);
-          }
+      const byChunk = m[name] ?? {};
+      if (Array.isArray(val)) {
+        // Items: a flat, location-less requirement → global.
+        const reqs = cleanReqs(val);
+        if (reqs.length) byChunk['*'] = [...new Set([...(byChunk['*'] ?? []), ...reqs])].sort();
+      } else {
+        for (const [loc, arr] of Object.entries(val)) {
+          if (!Array.isArray(arr)) continue;
+          const base = String(loc).split('-')[0]; // "9772-1" → "9772"
+          if (!/^\d+$/.test(base)) continue;       // skip named-area keys (unmappable)
+          const reqs = cleanReqs(arr);
+          if (reqs.length) byChunk[base] = [...new Set([...(byChunk[base] ?? []), ...reqs])].sort();
         }
       }
-      if (reqs.size) m[name] = [...reqs].sort();
+      if (Object.keys(byChunk).length) m[name] = byChunk;
     }
     if (Object.keys(m).length) out[cat] = m;
   }

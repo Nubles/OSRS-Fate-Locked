@@ -84,9 +84,13 @@ export type Overlays = Record<string, OverlayPoint[]>;
 /** Per-skill yields: skill → method/node name → [item, rate] pairs. */
 export type SkillItems = Record<string, Record<string, [string, string][]>>;
 
-/** Access/use requirements: category → entity name → requirement strings. */
+/**
+ * Access/use requirements, keyed *per chunk* so a generic entity (a "Man", a
+ * "Banker") only carries the requirement in the chunk it applies to:
+ *   category → entity name → { chunkId | "*" (Items, global): requirement strings }
+ */
 export type TaskUnlockCategory = 'Items' | 'Monsters' | 'NPCs' | 'Objects' | 'Shops' | 'Spawns';
-export type TaskUnlocks = Partial<Record<TaskUnlockCategory, Record<string, string[]>>>;
+export type TaskUnlocks = Partial<Record<TaskUnlockCategory, Record<string, Record<string, string[]>>>>;
 /** Our entity kinds → the taskUnlocks category they map to. */
 const TASK_CATEGORY: Record<EntityKind, TaskUnlockCategory> = {
   monster: 'Monsters', npc: 'NPCs', object: 'Objects', shop: 'Shops', spawn: 'Spawns', quest: 'Items',
@@ -294,14 +298,14 @@ class ChunkContentService {
   skillItems(): SkillItems { return this.doc?.skillItems ?? {}; }
 
   // Access/use requirements (quests / slayer tasks / guild access), built lazily
-  // into a case-insensitive lookup keyed by "category|name".
-  private taskIdx: Map<string, string[]> | null = null;
-  private getTaskIdx(): Map<string, string[]> | null {
+  // into a case-insensitive lookup keyed by "category|name" → { chunkId: reqs }.
+  private taskIdx: Map<string, Record<string, string[]>> | null = null;
+  private getTaskIdx(): Map<string, Record<string, string[]>> | null {
     if (!this.doc) return null;
     if (!this.taskIdx) {
-      const idx = new Map<string, string[]>();
+      const idx = new Map<string, Record<string, string[]>>();
       for (const [cat, entries] of Object.entries(this.doc.taskUnlocks ?? {})) {
-        for (const [name, reqs] of Object.entries(entries)) idx.set(`${cat}|${name.toLowerCase()}`, reqs);
+        for (const [name, byChunk] of Object.entries(entries)) idx.set(`${cat}|${name.toLowerCase()}`, byChunk);
       }
       this.taskIdx = idx;
     }
@@ -309,21 +313,19 @@ class ChunkContentService {
   }
 
   /**
-   * Access/use requirements for a named entity — e.g. "needs Dragon Slayer I",
-   * "Aberrant spectre task", "Access the fishing guild". `kind` picks the right
-   * category (a monster vs an object can share a name); defaults to its mapped
-   * category. Returns [] when the entity has no recorded requirement.
+   * Access/use requirements for a named entity *in a specific chunk* — e.g.
+   * "Access the fishing guild", "Dragon Slayer I". Keyed per chunk so a generic
+   * entity only reports the requirement where it actually applies. Returns []
+   * when there's no requirement for this entity in this chunk.
    */
-  taskRequirements(name: string, kind: EntityKind = 'monster'): string[] {
-    const idx = this.getTaskIdx();
-    if (!idx) return [];
-    return idx.get(`${TASK_CATEGORY[kind]}|${name.toLowerCase()}`) ?? [];
+  taskRequirements(name: string, kind: EntityKind, cx: number, cy: number): string[] {
+    const byChunk = this.getTaskIdx()?.get(`${TASK_CATEGORY[kind]}|${name.toLowerCase()}`);
+    return byChunk?.[String(cx * 256 + cy)] ?? [];
   }
 
-  /** Raw access requirements for a dropped/shop item by item name. */
+  /** Global wield/use requirement for an item (location-less). */
   itemRequirements(name: string): string[] {
-    const idx = this.getTaskIdx();
-    return idx?.get(`Items|${name.toLowerCase()}`) ?? [];
+    return this.getTaskIdx()?.get(`Items|${name.toLowerCase()}`)?.['*'] ?? [];
   }
 
   /** The yield methods for one skill (e.g. Mining → {"Gem rocks": [...], …}). */
