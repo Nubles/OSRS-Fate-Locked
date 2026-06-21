@@ -163,6 +163,40 @@ function buildDrops(data) {
 }
 
 /**
+ * Access/use requirements per entity, from the picker's taskUnlocks tables.
+ * Categories: Items / Monsters / NPCs / Objects / Shops / Spawns. The source
+ * keys requirements by location ({"loc": [{req: type}]}) except Items (a flat
+ * [{req: type}] array). We flatten across locations into a deduped list of
+ * human-readable requirement strings per (cleaned) entity name — advisory-level
+ * "to use/fight/access this you need …" (e.g. a quest, slayer task, guild).
+ */
+function buildTaskUnlocks(data) {
+  const src = data.taskUnlocks ?? {};
+  const out = {};
+  for (const [cat, entries] of Object.entries(src)) {
+    const m = {};
+    for (const [rawName, val] of Object.entries(entries)) {
+      const name = cleanName(rawName);
+      const reqs = new Set(m[name] ?? []);
+      // Items → a flat array; keyed categories → { location: [ {req:type} ] }.
+      const groups = Array.isArray(val) ? [val] : Object.values(val);
+      for (const arr of groups) {
+        if (!Array.isArray(arr)) continue;
+        for (const reqObj of arr) {
+          for (const reqKey of Object.keys(reqObj)) {
+            const clean = stripWiki(reqKey).replace(/\s+/g, ' ').trim();
+            if (clean) reqs.add(clean);
+          }
+        }
+      }
+      if (reqs.size) m[name] = [...reqs].sort();
+    }
+    if (Object.keys(m).length) out[cat] = m;
+  }
+  return out;
+}
+
+/**
  * Map marker overlays (shooting stars, impling spawns, crop circles, organized
  * crime, clue steps) keyed by category. Each point carries its world (x,y) plus
  * the chunk (cx,cy) it falls in (regionId = floor(x/64)*256 + floor(y/64)), so
@@ -257,9 +291,10 @@ function main(data) {
   const drops = buildDrops(data);
   const overlays = buildOverlays(data);
   const skillItems = buildSkillItems(data);
+  const taskUnlocks = buildTaskUnlocks(data);
 
   const doc = {
-    version: 3,
+    version: 4,
     source: 'source-chunk/chunk-picker-v2 (chunkpicker-chunkinfo-export.json, gh-pages)',
     chunks: out,
     connect,
@@ -269,12 +304,14 @@ function main(data) {
     drops,
     overlays,
     skillItems,
+    taskUnlocks,
   };
   console.log(`  connect: ${Object.keys(connect).length} chunks with links`);
   console.log(`  slayerMasters: ${Object.keys(slayerMasters).length} | shortcuts: ${shortcuts.length} | shops: ${Object.keys(shopItems).length} | drop tables: ${Object.keys(drops).length}`);
   const overlayCounts = Object.entries(overlays).map(([k, v]) => `${k}:${v.length}`).join(', ');
   console.log(`  overlays: ${overlayCounts}`);
   console.log(`  skillItems: ${Object.keys(skillItems).length} skills, ${Object.values(skillItems).reduce((n, m) => n + Object.keys(m).length, 0)} methods`);
+  console.log(`  taskUnlocks: ${Object.entries(taskUnlocks).map(([k, v]) => `${k}:${Object.keys(v).length}`).join(', ')}`);
   writeFileSync(OUT, JSON.stringify(doc));
   const kb = Math.round(JSON.stringify(doc).length / 1024);
   console.log(`wrote public/chunk-content.json — ${withContent} chunks with content, ~${kb} KB`);

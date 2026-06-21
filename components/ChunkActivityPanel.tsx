@@ -33,6 +33,24 @@ function nodeYields(skill: string, nodeName: string): [string, string][] | null 
   return key ? methods[key] : null;
 }
 
+/** Trim a raw access-requirement string to a compact chip label. */
+const shortReq = (s: string): string =>
+  s.replace(/\s*Complete the quest$/i, '')
+   .replace(/^Access (?:the |to )?/i, '')
+   .replace(/\s+\d+$/, '') // quest-step number suffix
+   .trim();
+
+/** Amber lock chip for an entity's access/use requirements (quest, task, guild). */
+const ReqBadge: React.FC<{ reqs: string[] }> = ({ reqs }) => (
+  <span
+    className="text-[9px] px-1 rounded bg-amber-950/60 text-amber-300 flex items-center gap-0.5 max-w-[120px]"
+    title={`Access requirement: ${reqs.join(' · ')}`}
+  >
+    <Lock size={8} className="shrink-0" />
+    <span className="truncate">{shortReq(reqs[0])}{reqs.length > 1 ? ` +${reqs.length - 1}` : ''}</span>
+  </span>
+);
+
 // Boss name → set for O(1) lookup; diary area → home region for the diary gate.
 const BOSS_SET = new Set(BOSSES_LIST.map(b => b.toLowerCase()));
 const DIARY_AREA_REGION: Record<string, string> = {};
@@ -483,19 +501,23 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
                 <SectionHead icon={<Swords size={11} />} label="Monsters" count={derived.monsters.length} />
                 <CappedList cap={8} items={derived.monsters.map(m => {
                   const met = m.slayer == null || (slayerUnlocked && slayerLevel >= m.slayer);
+                  const reqs = chunkContentService.taskRequirements(m.name, 'monster');
                   return (
                     <div key={m.name} className="flex items-center justify-between gap-2 py-px">
                       <span className={`truncate ${stateCls(met)}`}>
                         <WikiLink name={m.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">×{m.count}</span>
                       </span>
-                      {m.slayer != null && (
-                        <span
-                          className={`text-[9px] px-1 rounded shrink-0 font-bold ${met ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}
-                          title={met ? 'Slayer requirement met' : `Needs Slayer ${m.slayer} — you have ${slayerUnlocked ? slayerLevel : 'the skill locked'}`}
-                        >
-                          Slay {m.slayer}
-                        </span>
-                      )}
+                      <span className="flex items-center gap-1 shrink-0">
+                        {reqs.length > 0 && <ReqBadge reqs={reqs} />}
+                        {m.slayer != null && (
+                          <span
+                            className={`text-[9px] px-1 rounded font-bold ${met ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}
+                            title={met ? 'Slayer requirement met' : `Needs Slayer ${m.slayer} — you have ${slayerUnlocked ? slayerLevel : 'the skill locked'}`}
+                          >
+                            Slay {m.slayer}
+                          </span>
+                        )}
+                      </span>
                     </div>
                   );
                 })} />

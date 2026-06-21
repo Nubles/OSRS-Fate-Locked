@@ -84,6 +84,14 @@ export type Overlays = Record<string, OverlayPoint[]>;
 /** Per-skill yields: skill → method/node name → [item, rate] pairs. */
 export type SkillItems = Record<string, Record<string, [string, string][]>>;
 
+/** Access/use requirements: category → entity name → requirement strings. */
+export type TaskUnlockCategory = 'Items' | 'Monsters' | 'NPCs' | 'Objects' | 'Shops' | 'Spawns';
+export type TaskUnlocks = Partial<Record<TaskUnlockCategory, Record<string, string[]>>>;
+/** Our entity kinds → the taskUnlocks category they map to. */
+const TASK_CATEGORY: Record<EntityKind, TaskUnlockCategory> = {
+  monster: 'Monsters', npc: 'NPCs', object: 'Objects', shop: 'Shops', spawn: 'Spawns', quest: 'Items',
+};
+
 interface RawDoc {
   version: number;
   source: string;
@@ -98,6 +106,8 @@ interface RawDoc {
   overlays?: Overlays;
   /** Per-skill gathering/processing yields. */
   skillItems?: SkillItems;
+  /** Access/use requirements per entity (quests, slayer tasks, guild access). */
+  taskUnlocks?: TaskUnlocks;
 }
 
 const decode = (e: RawEntry): ChunkContent => ({
@@ -282,6 +292,39 @@ class ChunkContentService {
 
   /** Per-skill gathering/processing yields. */
   skillItems(): SkillItems { return this.doc?.skillItems ?? {}; }
+
+  // Access/use requirements (quests / slayer tasks / guild access), built lazily
+  // into a case-insensitive lookup keyed by "category|name".
+  private taskIdx: Map<string, string[]> | null = null;
+  private getTaskIdx(): Map<string, string[]> | null {
+    if (!this.doc) return null;
+    if (!this.taskIdx) {
+      const idx = new Map<string, string[]>();
+      for (const [cat, entries] of Object.entries(this.doc.taskUnlocks ?? {})) {
+        for (const [name, reqs] of Object.entries(entries)) idx.set(`${cat}|${name.toLowerCase()}`, reqs);
+      }
+      this.taskIdx = idx;
+    }
+    return this.taskIdx;
+  }
+
+  /**
+   * Access/use requirements for a named entity — e.g. "needs Dragon Slayer I",
+   * "Aberrant spectre task", "Access the fishing guild". `kind` picks the right
+   * category (a monster vs an object can share a name); defaults to its mapped
+   * category. Returns [] when the entity has no recorded requirement.
+   */
+  taskRequirements(name: string, kind: EntityKind = 'monster'): string[] {
+    const idx = this.getTaskIdx();
+    if (!idx) return [];
+    return idx.get(`${TASK_CATEGORY[kind]}|${name.toLowerCase()}`) ?? [];
+  }
+
+  /** Raw access requirements for a dropped/shop item by item name. */
+  itemRequirements(name: string): string[] {
+    const idx = this.getTaskIdx();
+    return idx?.get(`Items|${name.toLowerCase()}`) ?? [];
+  }
 
   /** The yield methods for one skill (e.g. Mining → {"Gem rocks": [...], …}). */
   skillYields(skill: string): Record<string, [string, string][]> {
