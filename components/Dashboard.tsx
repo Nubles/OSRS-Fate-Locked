@@ -31,6 +31,7 @@ const GoalTracker = lazy(() => import('./GoalTracker').then(m => ({ default: m.G
 const QuestLog = lazy(() => import('./QuestLog').then(m => ({ default: m.QuestLog })));
 const DiaryLog = lazy(() => import('./DiaryLog').then(m => ({ default: m.DiaryLog })));
 const CALog = lazy(() => import('./CALog').then(m => ({ default: m.CALog })));
+const QuestDoabilityPanel = lazy(() => import('./QuestDoabilityPanel').then(m => ({ default: m.QuestDoabilityPanel })));
 const CollectionLog = lazy(() => import('./CollectionLog').then(m => ({ default: m.CollectionLog })));
 const SkillDetailModal = lazy(() => import('./SkillDetailModal').then(m => ({ default: m.SkillDetailModal })));
 import { PanelErrorBoundary } from './PanelErrorBoundary';
@@ -307,7 +308,7 @@ export const Dashboard: React.FC = () => {
   const activeMode = getGameMode(gameModeId);
   const [activeTab, setActiveTab] = useState('CHARACTER');
   const [activityCategory, setActivityCategory] = useState('BOSSES');
-  const [journalSubTab, setJournalSubTab] = useLocalStorage<'QUESTS' | 'DIARIES' | 'CA'>('jrnl:subtab', 'QUESTS');
+  const [journalSubTab, setJournalSubTab] = useLocalStorage<'QUESTS' | 'DIARIES' | 'CA' | 'DOABLE'>('jrnl:subtab', 'QUESTS');
   const [worldView, setWorldView] = useState<'LIST' | 'MAP'>('MAP');
   const [showRunCard, setShowRunCard] = useState(false);
   const [showGoalPlanner, setShowGoalPlanner] = useState(false);
@@ -334,7 +335,7 @@ export const Dashboard: React.FC = () => {
   // `navigate-journal` event instead; we open the Journal tab + matching sub-tab.
   useEffect(() => {
     const onNavigate = (e: Event) => {
-      const tab = (e as CustomEvent<{ tab?: 'QUESTS' | 'DIARIES' | 'CA' }>).detail?.tab;
+      const tab = (e as CustomEvent<{ tab?: 'QUESTS' | 'DIARIES' | 'CA' | 'DOABLE' }>).detail?.tab;
       if (!tab) return;
       setActiveTab('JOURNAL');
       setJournalSubTab(tab);
@@ -843,11 +844,17 @@ export const Dashboard: React.FC = () => {
               >
                   Diaries
               </button>
-              <button 
+              <button
                   onClick={() => setJournalSubTab('CA')}
                   className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${journalSubTab === 'CA' ? 'bg-[#222] text-red-400 border-b-2 border-red-400' : 'text-gray-500 hover:text-gray-300'}`}
               >
                   Combat Achievements
+              </button>
+              <button
+                  onClick={() => setJournalSubTab('DOABLE')}
+                  className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${journalSubTab === 'DOABLE' ? 'bg-[#222] text-emerald-400 border-b-2 border-emerald-400' : 'text-gray-500 hover:text-gray-300'}`}
+              >
+                  Doable
               </button>
           </div>
           {advisorsEnabled && <JournalNextBest onPick={setJournalSubTab} />}
@@ -856,6 +863,7 @@ export const Dashboard: React.FC = () => {
                   {journalSubTab === 'QUESTS' && <QuestLog searchTerm={searchQuery} />}
                   {journalSubTab === 'DIARIES' && <DiaryLog searchTerm={searchQuery} />}
                   {journalSubTab === 'CA' && <CALog searchTerm={searchQuery} />}
+                  {journalSubTab === 'DOABLE' && <QuestDoabilityPanel searchTerm={searchQuery} />}
               </Suspense>
           </div>
       </div>
