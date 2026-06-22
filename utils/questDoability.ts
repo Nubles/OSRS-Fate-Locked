@@ -12,6 +12,25 @@
  * "doable now" verdict.
  */
 
+/**
+ * Build a chunk-entry gate from the picker's per-chunk quest requirements
+ * (questSections). A chunk is blocked when any of its required quests is a
+ * *known* quest the player hasn't completed — unknown/non-quest requirements
+ * are ignored so we never falsely mark a chunk unreachable. Pass the result to
+ * chunkReachability(connect, unlocks, home, gate).
+ */
+export function entryBlockedGate(
+  questSections: Record<string, string[]>,
+  completedQuests: Set<string>,
+  knownQuests: Set<string>,
+): (chunkId: string) => boolean {
+  return (chunkId: string) => {
+    const reqs = questSections[chunkId];
+    if (!reqs) return false;
+    return reqs.some(r => knownQuests.has(r) && !completedQuests.has(r));
+  };
+}
+
 export type ChunkAccess = 'REACHABLE' | 'STRANDED' | 'LOCKED';
 
 export interface QuestLoc { cx: number; cy: number; role?: 'first' | 'step' }

@@ -163,25 +163,50 @@ function buildDrops(data) {
 }
 
 /**
- * [{ "~|req|~ text": type }, …] → deduped, wiki-stripped requirement strings.
- * The picker writes quest requirements as "~|Quest|~ Complete the quest" or
- * "~|Quest|~ <step code>" (e.g. "5b2"). We strip the wiki markup and the trailing
- * "Complete the quest" / step code so a badge reads "Dragon Slayer I", not
- * "Dragon Slayer I 5b2".
+ * Tidy one raw requirement string: strip wiki markup and the trailing
+ * "Complete the quest" / quest-step code (e.g. "5b2") so it reads "Dragon
+ * Slayer I", not "Dragon Slayer I 5b2".
  */
+function tidyReq(s) {
+  return stripWiki(s)
+    .replace(/\s+/g, ' ')
+    .replace(/\s+Complete the quest$/i, '')
+    .replace(/\s+\d[a-z0-9]*$/i, '') // trailing quest-step code (5, 5b2, …)
+    .trim();
+}
+
+/** [{ "~|req|~ text": type }, …] → deduped, tidied requirement strings. */
 function cleanReqs(arr) {
   const out = new Set();
   for (const reqObj of arr) {
     for (const reqKey of Object.keys(reqObj)) {
-      const clean = stripWiki(reqKey)
-        .replace(/\s+/g, ' ')
-        .replace(/\s+Complete the quest$/i, '')
-        .replace(/\s+\d[a-z0-9]*$/i, '') // trailing quest-step code (5, 5b2, …)
-        .trim();
+      const clean = tidyReq(reqKey);
       if (clean) out.add(clean);
     }
   }
   return [...out];
+}
+
+/**
+ * Per-chunk ENTRY requirements — the quest(s) you need to set foot in a chunk
+ * at all (the picker's questSections table). Keyed by chunk; sub-area suffixes
+ * ("-1") collapse onto the base chunk; non-numeric keys are dropped. This is the
+ * gating the bare `connect` graph lacks, so the app can mark a chunk truly
+ * unreachable until its quest is done.
+ *
+ * Shape: chunkId → [requirement strings].
+ */
+function buildQuestSections(data) {
+  const src = data.questSections ?? {};
+  const out = {};
+  for (const [loc, val] of Object.entries(src)) {
+    const base = String(loc).split('-')[0];
+    if (!/^\d+$/.test(base)) continue;
+    const list = Array.isArray(val) ? val : [];
+    const reqs = list.map(r => (typeof r === 'string' ? tidyReq(r) : '')).filter(Boolean);
+    if (reqs.length) out[base] = [...new Set([...(out[base] ?? []), ...reqs])].sort();
+  }
+  return out;
 }
 
 /**
@@ -319,9 +344,10 @@ function main(data) {
   const overlays = buildOverlays(data);
   const skillItems = buildSkillItems(data);
   const taskUnlocks = buildTaskUnlocks(data);
+  const questSections = buildQuestSections(data);
 
   const doc = {
-    version: 5,
+    version: 6,
     source: 'source-chunk/chunk-picker-v2 (chunkpicker-chunkinfo-export.json, gh-pages)',
     chunks: out,
     connect,
@@ -332,6 +358,7 @@ function main(data) {
     overlays,
     skillItems,
     taskUnlocks,
+    questSections,
   };
   console.log(`  connect: ${Object.keys(connect).length} chunks with links`);
   console.log(`  slayerMasters: ${Object.keys(slayerMasters).length} | shortcuts: ${shortcuts.length} | shops: ${Object.keys(shopItems).length} | drop tables: ${Object.keys(drops).length}`);
@@ -339,6 +366,7 @@ function main(data) {
   console.log(`  overlays: ${overlayCounts}`);
   console.log(`  skillItems: ${Object.keys(skillItems).length} skills, ${Object.values(skillItems).reduce((n, m) => n + Object.keys(m).length, 0)} methods`);
   console.log(`  taskUnlocks: ${Object.entries(taskUnlocks).map(([k, v]) => `${k}:${Object.keys(v).length}`).join(', ')}`);
+  console.log(`  questSections: ${Object.keys(questSections).length} gated chunks`);
   writeFileSync(OUT, JSON.stringify(doc));
   const kb = Math.round(JSON.stringify(doc).length / 1024);
   console.log(`wrote public/chunk-content.json — ${withContent} chunks with content, ~${kb} KB`);

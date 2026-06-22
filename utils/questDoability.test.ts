@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { questChunkStatus, doabilityBucket } from './questDoability';
+import { questChunkStatus, doabilityBucket, entryBlockedGate } from './questDoability';
 
 const reach = (...ids: number[]) => new Set(ids.map(String));
 const allUnlocked = () => true;
@@ -36,6 +36,25 @@ describe('questChunkStatus', () => {
   it('dedupes repeated chunks', () => {
     const r = questChunkStatus([{ cx: 1, cy: 0 }, { cx: 1, cy: 0 }], reach(256), allUnlocked);
     expect(r.chunkCount).toBe(1);
+  });
+});
+
+describe('entryBlockedGate', () => {
+  const qs = { '100': ['Pandemonium'], '200': ['Access the fishing guild'], '300': ['Dragon Slayer I'] };
+  const known = new Set(['Pandemonium', 'Dragon Slayer I']);
+  it('blocks a chunk whose required quest is known but not completed', () => {
+    const gate = entryBlockedGate(qs, new Set<string>(), known);
+    expect(gate('100')).toBe(true);
+    expect(gate('300')).toBe(true);
+  });
+  it('does not block once the quest is completed', () => {
+    const gate = entryBlockedGate(qs, new Set(['Pandemonium', 'Dragon Slayer I']), known);
+    expect(gate('100')).toBe(false);
+  });
+  it('ignores non-quest / unknown requirements (errs toward reachable)', () => {
+    const gate = entryBlockedGate(qs, new Set<string>(), known);
+    expect(gate('200')).toBe(false); // "Access the fishing guild" isn't a known quest
+    expect(gate('999')).toBe(false); // ungated chunk
   });
 });
 

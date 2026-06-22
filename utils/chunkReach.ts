@@ -49,6 +49,10 @@ export function chunkReachability(
   connect: Record<string, string[]>,
   unlocks: UnlockState,
   home: { cx: number; cy: number } | null,
+  /** Optional gate: return true if a chunk can't be entered yet (e.g. a quest
+   *  requirement isn't met). Blocked chunks aren't reachable and can't be
+   *  routed through. */
+  blocked?: (chunkId: string) => boolean,
 ): ReachResult {
   buildUniverse();
   const owned = new Set<string>();
@@ -64,6 +68,8 @@ export function chunkReachability(
   const queue: string[] = [homeId];
   while (queue.length) {
     const cur = queue.shift()!;
+    // A quest-gated chunk you can't enter yet: not reachable, no routing through.
+    if (cur !== homeId && blocked?.(cur)) continue;
     const isOwned = owned.has(cur);
     if (isOwned) reachable.add(cur);
     const next: string[] = [];

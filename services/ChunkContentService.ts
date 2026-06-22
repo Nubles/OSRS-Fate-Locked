@@ -112,6 +112,8 @@ interface RawDoc {
   skillItems?: SkillItems;
   /** Access/use requirements per entity (quests, slayer tasks, guild access). */
   taskUnlocks?: TaskUnlocks;
+  /** Per-chunk ENTRY requirements: chunkId → quest(s) needed to enter at all. */
+  questSections?: Record<string, string[]>;
 }
 
 const decode = (e: RawEntry): ChunkContent => ({
@@ -190,7 +192,7 @@ export interface EntityHit {
 
 // Bump when public/chunk-content.json changes so the fetch URL changes and
 // browsers don't serve a stale cached copy (the filename itself never changes).
-const DATA_REV = 5;
+const DATA_REV = 6;
 
 class ChunkContentService {
   private doc: RawDoc | null = null;
@@ -330,6 +332,14 @@ class ChunkContentService {
   /** Global wield/use requirement for an item (location-less). */
   itemRequirements(name: string): string[] {
     return this.getTaskIdx()?.get(`Items|${name.toLowerCase()}`)?.['*'] ?? [];
+  }
+
+  /** Per-chunk entry requirements: chunkId → quest(s) needed to enter. */
+  questSections(): Record<string, string[]> { return this.doc?.questSections ?? {}; }
+
+  /** Quest(s) you must have to enter this chunk at all ([] when ungated). */
+  chunkEntryRequirements(cx: number, cy: number): string[] {
+    return this.doc?.questSections?.[String(cx * 256 + cy)] ?? [];
   }
 
   /** The yield methods for one skill (e.g. Mining → {"Gem rocks": [...], …}). */

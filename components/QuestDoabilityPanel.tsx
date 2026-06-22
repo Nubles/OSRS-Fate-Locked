@@ -6,7 +6,7 @@ import { chunkContentService } from '../services/ChunkContentService';
 import { chunkReachability } from '../utils/chunkReach';
 import { chunkForPlace, chunkUnlocked, placeOf, showChunkOnMap } from '../utils/chunkLocations';
 import { questLocations } from '../utils/questLocations';
-import { questChunkStatus, doabilityBucket, DoabilityBucket } from '../utils/questDoability';
+import { questChunkStatus, doabilityBucket, DoabilityBucket, entryBlockedGate } from '../utils/questDoability';
 import { isFreeArea } from '../utils/freeAreas';
 import { WIKI_OVERRIDES } from '../constants';
 
@@ -46,7 +46,12 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
 
   const rows = useMemo<Row[]>(() => {
     if (!ready) return [];
-    const reach = chunkReachability(chunkContentService.connectGraph(), unlocks, chunkForPlace('Lumbridge'));
+    // Gate reachability on per-chunk quest-entry requirements (questSections),
+    // so a quest whose step sits behind an un-done quest reads correctly.
+    const completed = new Set<string>(unlocks.quests as string[]);
+    const known = new Set<string>(Object.keys(QUEST_DATA));
+    const gate = entryBlockedGate(chunkContentService.questSections(), completed, known);
+    const reach = chunkReachability(chunkContentService.connectGraph(), unlocks, chunkForPlace('Lumbridge'), gate);
     const isUnlocked = (cx: number, cy: number) => chunkUnlocked(cx, cy, unlocks);
     const currentQP = (unlocks.quests as string[]).reduce((a, qid) => a + (QUEST_DATA[qid]?.points ?? 0), 0);
 

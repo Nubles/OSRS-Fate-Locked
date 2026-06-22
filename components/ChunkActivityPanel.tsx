@@ -455,6 +455,17 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
           </div>
         )}
 
+        {mode === 'chunk' && (() => {
+          const entry = chunkContentService.chunkEntryRequirements(chunk.cx, chunk.cy);
+          if (entry.length === 0) return null;
+          return (
+            <div className="mt-2 px-2 py-1.5 rounded bg-purple-950/50 border border-purple-700/40 text-purple-200/90 text-[10px] flex items-start gap-1.5">
+              <Lock size={10} className="shrink-0 mt-px" />
+              <span>Requires <span className="font-semibold text-purple-100">{entry.join(', ')}</span> to enter this chunk.</span>
+            </div>
+          );
+        })()}
+
         {/* Brief can / can't overview — collapsed by default. */}
         <Overview kind="can" items={overview.can} />
         <Overview kind="cant" items={overview.cant} />

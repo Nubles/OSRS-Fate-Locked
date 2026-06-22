@@ -11,6 +11,8 @@ import { consumePendingChunk, chunkUnlocked, chunkForPlace } from '../utils/chun
 import { isFreeArea } from '../utils/freeAreas';
 import { chunkContentService, type OverlayPoint } from '../services/ChunkContentService';
 import { chunkReachability } from '../utils/chunkReach';
+import { entryBlockedGate } from '../utils/questDoability';
+import { QUEST_DATA } from '../data/questData';
 
 type LensTone = 'good' | 'warn' | 'bad';
 const TONE_FILL: Record<LensTone, string> = { good: 'rgba(16,185,129,0.30)', warn: 'rgba(245,158,11,0.10)', bad: 'rgba(239,68,68,0.22)' };
@@ -594,7 +596,8 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
 
     // Reachability mode: paint your OWNED chunks by whether they connect to home.
     if (lens.kind === 'reach') {
-      const res = chunkReachability(chunkContentService.connectGraph(), unlocks, chunkForPlace('Lumbridge'));
+      const gate = entryBlockedGate(chunkContentService.questSections(), new Set(unlocks.quests as string[]), new Set(Object.keys(QUEST_DATA)));
+      const res = chunkReachability(chunkContentService.connectGraph(), unlocks, chunkForPlace('Lumbridge'), gate);
       const chunks: { cx: number; cy: number; tone: LensTone }[] = [];
       for (const id of res.reachable) { const n = +id; chunks.push({ cx: Math.floor(n / 256), cy: n % 256, tone: 'good' }); }
       for (const id of res.stranded) { const n = +id; chunks.push({ cx: Math.floor(n / 256), cy: n % 256, tone: 'bad' }); }
