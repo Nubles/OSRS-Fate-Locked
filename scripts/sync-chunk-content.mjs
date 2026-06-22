@@ -198,13 +198,24 @@ function cleanReqs(arr) {
  */
 function buildQuestSections(data) {
   const src = data.questSections ?? {};
-  const out = {};
+  const raw = {};
   for (const [loc, val] of Object.entries(src)) {
     const base = String(loc).split('-')[0];
     if (!/^\d+$/.test(base)) continue;
     const list = Array.isArray(val) ? val : [];
     const reqs = list.map(r => (typeof r === 'string' ? tidyReq(r) : '')).filter(Boolean);
-    if (reqs.length) out[base] = [...new Set([...(out[base] ?? []), ...reqs])].sort();
+    if (reqs.length) raw[base] = [...new Set([...(raw[base] ?? []), ...reqs])].sort();
+  }
+  // Drop bad source entries: a single quest blanketing an implausible number of
+  // chunks (e.g. "Pandemonium" on ~800 far-west/ocean chunks) is junk — the
+  // largest legitimate region gate is well under 100 chunks.
+  const MAX_CHUNKS_PER_REQ = 150;
+  const count = {};
+  for (const reqs of Object.values(raw)) for (const r of reqs) count[r] = (count[r] ?? 0) + 1;
+  const out = {};
+  for (const [id, reqs] of Object.entries(raw)) {
+    const kept = reqs.filter(r => count[r] <= MAX_CHUNKS_PER_REQ);
+    if (kept.length) out[id] = kept;
   }
   return out;
 }
@@ -394,7 +405,7 @@ function main(data) {
   const tags = buildTags(data, out, shopItems, drops);
 
   const doc = {
-    version: 7,
+    version: 8,
     source: 'source-chunk/chunk-picker-v2 (chunkpicker-chunkinfo-export.json, gh-pages)',
     chunks: out,
     connect,
