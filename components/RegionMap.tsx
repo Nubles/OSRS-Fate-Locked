@@ -481,7 +481,7 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
   const [lensReady, setLensReady] = useState(chunkContentService.ready);
   useEffect(() => { if (!lensReady) chunkContentService.init().then(() => setLensReady(true)); }, [lensReady]);
   const [lensInput, setLensInput] = useState('');
-  const [lens, setLens] = useState<{ kind: 'entity' | 'reach' | 'drop'; key: string; label: string } | null>(null);
+  const [lens, setLens] = useState<{ kind: 'entity' | 'reach' | 'drop' | 'category'; key: string; label: string } | null>(null);
   const [onlyUnlocked, setOnlyUnlocked] = useState(false);
   const jumpIdx = useRef(0);
 
@@ -591,6 +591,13 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
     return chunkContentService.searchItems(lensInput.trim(), 5);
   }, [lensInput, lensReady, lens]);
 
+  // Faceted categories ("food", "boss", "bank", …) matching the search text.
+  const lensTagSuggestions = useMemo(() => {
+    if (!lensReady || lens || lensInput.trim().length < 2) return [];
+    const q = lensInput.trim().toLowerCase();
+    return chunkContentService.tagList().filter(t => t.includes(q)).slice(0, 5);
+  }, [lensInput, lensReady, lens]);
+
   const lensResult = useMemo(() => {
     if (!lens || !lensReady) return null;
 
@@ -616,7 +623,10 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
       if (!seen.has(k)) seen.set(k, { cx, cy, tone: chunkUnlocked(cx, cy, unlocks) ? 'good' : 'warn' });
     };
     let detail = '';
-    if (lens.kind === 'drop') {
+    if (lens.kind === 'category') {
+      for (const c of chunkContentService.tagChunks(lens.key)) add(c.cx, c.cy);
+      detail = `${seen.size} chunk${seen.size === 1 ? '' : 's'} with ${lens.label.toLowerCase()}`;
+    } else if (lens.kind === 'drop') {
       const monsters = chunkContentService.itemSources(lens.key);
       const located = new Set<string>();
       for (const m of monsters) {
@@ -670,7 +680,7 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
   }, [lensReady, overlaysData, overlayCats, overlayOwnedOnly, unlocks]);
 
   const clearLens = useCallback(() => { setLens(null); setLensInput(''); jumpIdx.current = 0; }, []);
-  const pickLens = useCallback((kind: 'entity' | 'reach' | 'drop', key: string, label: string) => {
+  const pickLens = useCallback((kind: 'entity' | 'reach' | 'drop' | 'category', key: string, label: string) => {
     setLens({ kind, key, label }); setLensInput(''); jumpIdx.current = 0;
   }, []);
   const jumpToMatch = useCallback((dir: number) => {
@@ -1280,8 +1290,19 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
               {lens && <button onClick={clearLens} title="Clear" className="text-gray-500 hover:text-white shrink-0"><X size={13} /></button>}
             </div>
 
-            {(lensSuggestions.length > 0 || lensItemSuggestions.length > 0) && (
+            {(lensSuggestions.length > 0 || lensItemSuggestions.length > 0 || lensTagSuggestions.length > 0) && (
               <div className="max-h-52 overflow-y-auto custom-scrollbar border-t border-white/5">
+                {lensTagSuggestions.map(t => (
+                  <button
+                    key={'tag:' + t}
+                    onClick={() => pickLens('category', t, `${t.charAt(0).toUpperCase()}${t.slice(1)}`)}
+                    title={`Highlight every chunk with ${t}`}
+                    className="w-full flex items-center justify-between gap-2 px-2 py-1 text-left hover:bg-white/10"
+                  >
+                    <span className="text-[11px] text-sky-200/90 truncate capitalize">{t}</span>
+                    <span className="text-[9px] text-sky-500/70 font-mono shrink-0">category · {chunkContentService.tagChunks(t).length}</span>
+                  </button>
+                ))}
                 {lensSuggestions.map(s => (
                   <button
                     key={s.kind + s.name}
@@ -1306,14 +1327,27 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
               </div>
             )}
 
-            {!lens && lensSuggestions.length === 0 && lensItemSuggestions.length === 0 && (
-              <button
-                onClick={() => pickLens('reach', 'reach', 'Reachability')}
-                className="w-full flex items-center gap-1.5 px-2 py-1.5 border-t border-white/5 text-left hover:bg-white/5"
-              >
-                <Target size={12} className="text-emerald-400 shrink-0" />
-                <span className="text-[10px] text-gray-400">Reachability — find stranded unlocks</span>
-              </button>
+            {!lens && lensSuggestions.length === 0 && lensItemSuggestions.length === 0 && lensTagSuggestions.length === 0 && (
+              <div className="border-t border-white/5">
+                <button
+                  onClick={() => pickLens('reach', 'reach', 'Reachability')}
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-left hover:bg-white/5"
+                >
+                  <Target size={12} className="text-emerald-400 shrink-0" />
+                  <span className="text-[10px] text-gray-400">Reachability — find stranded unlocks</span>
+                </button>
+                <div className="px-2 py-1.5 border-t border-white/5 flex flex-wrap gap-1">
+                  {['bank', 'boss', 'food', 'boost'].filter(t => chunkContentService.tagChunks(t).length > 0).map(t => (
+                    <button
+                      key={t}
+                      onClick={() => pickLens('category', t, `${t.charAt(0).toUpperCase()}${t.slice(1)}`)}
+                      className="px-1.5 py-0.5 rounded text-[10px] border border-sky-500/30 text-sky-200/90 hover:bg-sky-500/10 capitalize"
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
 
             {lens && lensResult && (

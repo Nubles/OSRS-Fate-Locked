@@ -114,6 +114,10 @@ interface RawDoc {
   taskUnlocks?: TaskUnlocks;
   /** Per-chunk ENTRY requirements: chunkId → quest(s) needed to enter at all. */
   questSections?: Record<string, string[]>;
+  /** Chunk ids that contain a bank. */
+  banks?: string[];
+  /** Faceted categories (food/boost/boss/…) → the chunk ids that contain them. */
+  tags?: Record<string, string[]>;
 }
 
 const decode = (e: RawEntry): ChunkContent => ({
@@ -192,7 +196,7 @@ export interface EntityHit {
 
 // Bump when public/chunk-content.json changes so the fetch URL changes and
 // browsers don't serve a stale cached copy (the filename itself never changes).
-const DATA_REV = 6;
+const DATA_REV = 7;
 
 class ChunkContentService {
   private doc: RawDoc | null = null;
@@ -340,6 +344,27 @@ class ChunkContentService {
   /** Quest(s) you must have to enter this chunk at all ([] when ungated). */
   chunkEntryRequirements(cx: number, cy: number): string[] {
     return this.doc?.questSections?.[String(cx * 256 + cy)] ?? [];
+  }
+
+  // ── Banks + faceted categories ────────────────────────────────────────────
+  private bankSet: Set<string> | null = null;
+  private getBankSet(): Set<string> {
+    if (!this.bankSet) this.bankSet = new Set(this.doc?.banks ?? []);
+    return this.bankSet;
+  }
+  /** Does this chunk contain a bank? */
+  hasBank(cx: number, cy: number): boolean { return this.getBankSet().has(String(cx * 256 + cy)); }
+
+  /** Available faceted categories ("bank" is synthesised from the bank set). */
+  tagList(): string[] {
+    const tags = Object.keys(this.doc?.tags ?? {});
+    return (this.doc?.banks?.length ? ['bank', ...tags] : tags);
+  }
+
+  /** Chunks (cx,cy) that contain a given category — "bank", "boss", "food", … */
+  tagChunks(tag: string): { cx: number; cy: number }[] {
+    const ids = tag === 'bank' ? (this.doc?.banks ?? []) : (this.doc?.tags?.[tag] ?? []);
+    return ids.map(id => { const n = +id; return { cx: Math.floor(n / 256), cy: n % 256 }; });
   }
 
   /** The yield methods for one skill (e.g. Mining → {"Gem rocks": [...], …}). */

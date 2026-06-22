@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { X, Lock, Check, Swords, Store, Users, Scroll, Package, BookOpen, MapPin, Sparkles, Sprout, Flag, Gamepad2, Pickaxe, Skull, Route, ChevronDown, ChevronRight } from 'lucide-react';
+import { X, Lock, Check, Swords, Store, Users, Scroll, Package, BookOpen, MapPin, Sparkles, Sprout, Flag, Gamepad2, Pickaxe, Skull, Route, ChevronDown, ChevronRight, Landmark } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { chunkContentService, ChunkContent } from '../services/ChunkContentService';
 import { QUEST_DATA } from '../data/questData';
@@ -465,6 +465,12 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
             </div>
           );
         })()}
+
+        {mode === 'chunk' && chunkContentService.hasBank(chunk.cx, chunk.cy) && (
+          <div className="mt-2 px-2 py-1 rounded bg-emerald-950/40 border border-emerald-700/30 text-emerald-300/90 text-[10px] flex items-center gap-1.5">
+            <Landmark size={10} className="shrink-0" /> This chunk has a bank.
+          </div>
+        )}
 
         {/* Brief can / can't overview — collapsed by default. */}
         <Overview kind="can" items={overview.can} />

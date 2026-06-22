@@ -292,6 +292,51 @@ function buildSkillItems(data) {
   return out;
 }
 
+/** Chunks that contain a bank (from the picker's rollingChunks.bank set). */
+function buildBanks(data) {
+  const set = new Set();
+  for (const id of (data.rollingChunks?.bank ?? [])) {
+    const base = String(id).split('-')[0];
+    if (/^\d+$/.test(base)) set.add(base);
+  }
+  return [...set].sort((a, b) => +a - +b);
+}
+
+/**
+ * Faceted category → the chunks that contain it, PRE-RESOLVED at build time so
+ * the app just highlights a chunk set. Built from the picker's searchTerms
+ * (tag|Type → entity names). Entity types resolve straight to their chunks;
+ * Items resolve to the chunks that sell them (shops) or drop them (monsters).
+ * e.g. tags.boss = every chunk with a boss, tags.food = every chunk you can get
+ * food in.
+ */
+function buildTags(data, chunkRecs, shopItems, drops) {
+  const add = (map, name, id) => { let s = map.get(name); if (!s) { s = new Set(); map.set(name, s); } s.add(id); };
+  const Monsters = new Map(), NPCs = new Map(), Objects = new Map(), itemChunks = new Map();
+  for (const [id, e] of Object.entries(chunkRecs)) {
+    if (e.m) for (const mm of e.m) { add(Monsters, mm[0], id); for (const it of (drops[mm[0]] ?? [])) add(itemChunks, it, id); }
+    if (e.p) for (const n of e.p) add(NPCs, n, id);
+    if (e.o) for (const oo of e.o) add(Objects, oo[0], id);
+    if (e.s) for (const sh of e.s) for (const it of (shopItems[sh] ?? [])) add(itemChunks, it, id);
+  }
+  const byType = { Items: itemChunks, Monsters, NPCs, Objects };
+  const out = {};
+  for (const [key, names] of Object.entries(data.searchTerms ?? {})) {
+    const [tag, type] = key.split('|');
+    const map = byType[type];
+    if (!tag || !map) continue;
+    const chunks = out[tag] ?? new Set();
+    for (const rawName of Object.keys(names)) {
+      const hit = map.get(cleanName(rawName));
+      if (hit) for (const id of hit) chunks.add(id);
+    }
+    if (chunks.size) out[tag] = chunks;
+  }
+  const ser = {};
+  for (const [tag, set] of Object.entries(out)) ser[tag] = [...set].sort((a, b) => +a - +b);
+  return ser;
+}
+
 /** Shop → sorted stock list (what each named shop sells). */
 function buildShopItems(data) {
   const out = {};
@@ -345,9 +390,11 @@ function main(data) {
   const skillItems = buildSkillItems(data);
   const taskUnlocks = buildTaskUnlocks(data);
   const questSections = buildQuestSections(data);
+  const banks = buildBanks(data);
+  const tags = buildTags(data, out, shopItems, drops);
 
   const doc = {
-    version: 6,
+    version: 7,
     source: 'source-chunk/chunk-picker-v2 (chunkpicker-chunkinfo-export.json, gh-pages)',
     chunks: out,
     connect,
@@ -359,6 +406,8 @@ function main(data) {
     skillItems,
     taskUnlocks,
     questSections,
+    banks,
+    tags,
   };
   console.log(`  connect: ${Object.keys(connect).length} chunks with links`);
   console.log(`  slayerMasters: ${Object.keys(slayerMasters).length} | shortcuts: ${shortcuts.length} | shops: ${Object.keys(shopItems).length} | drop tables: ${Object.keys(drops).length}`);
@@ -367,6 +416,7 @@ function main(data) {
   console.log(`  skillItems: ${Object.keys(skillItems).length} skills, ${Object.values(skillItems).reduce((n, m) => n + Object.keys(m).length, 0)} methods`);
   console.log(`  taskUnlocks: ${Object.entries(taskUnlocks).map(([k, v]) => `${k}:${Object.keys(v).length}`).join(', ')}`);
   console.log(`  questSections: ${Object.keys(questSections).length} gated chunks`);
+  console.log(`  banks: ${banks.length} | tags: ${Object.keys(tags).length} (${Object.keys(tags).slice(0, 8).join(', ')}…)`);
   writeFileSync(OUT, JSON.stringify(doc));
   const kb = Math.round(JSON.stringify(doc).length / 1024);
   console.log(`wrote public/chunk-content.json — ${withContent} chunks with content, ~${kb} KB`);
