@@ -37,6 +37,8 @@ const CLUE_TIER_COLORS: Record<string, string> = {
   Elite: '#eab308',
   Master: '#ef4444',
 };
+// Faceted categories hidden from the lens — too broad/low-signal to be useful.
+const HIDDEN_TAGS = new Set(['boss', 'food', 'boost']);
 const CLUE_PREFIX = 'Clue: ';
 
 // ── Live shooting-star feed ────────────────────────────────────────────────
@@ -591,11 +593,12 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
     return chunkContentService.searchItems(lensInput.trim(), 5);
   }, [lensInput, lensReady, lens]);
 
-  // Faceted categories ("food", "boss", "bank", …) matching the search text.
+  // Faceted categories ("bank", skilling tags, …) matching the search text.
+  // boss/food/boost are excluded — too broad/low-signal to be useful.
   const lensTagSuggestions = useMemo(() => {
     if (!lensReady || lens || lensInput.trim().length < 2) return [];
     const q = lensInput.trim().toLowerCase();
-    return chunkContentService.tagList().filter(t => t.includes(q)).slice(0, 5);
+    return chunkContentService.tagList().filter(t => t.includes(q) && !HIDDEN_TAGS.has(t)).slice(0, 5);
   }, [lensInput, lensReady, lens]);
 
   const lensResult = useMemo(() => {
@@ -1337,7 +1340,7 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
                   <span className="text-[10px] text-gray-400">Reachability — find stranded unlocks</span>
                 </button>
                 <div className="px-2 py-1.5 border-t border-white/5 flex flex-wrap gap-1">
-                  {['bank', 'boss', 'food', 'boost'].filter(t => chunkContentService.tagChunks(t).length > 0).map(t => (
+                  {['bank'].filter(t => chunkContentService.tagChunks(t).length > 0).map(t => (
                     <button
                       key={t}
                       onClick={() => pickLens('category', t, `${t.charAt(0).toUpperCase()}${t.slice(1)}`)}
