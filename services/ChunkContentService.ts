@@ -188,6 +188,10 @@ export interface EntityHit {
   locations: EntityLocation[];
 }
 
+// Bump when public/chunk-content.json changes so the fetch URL changes and
+// browsers don't serve a stale cached copy (the filename itself never changes).
+const DATA_REV = 5;
+
 class ChunkContentService {
   private doc: RawDoc | null = null;
   private promise: Promise<boolean> | null = null;
@@ -201,7 +205,7 @@ class ChunkContentService {
     if (this.doc) return Promise.resolve(true);
     if (!this.promise) {
       const base = (import.meta as any).env?.BASE_URL ?? '/';
-      this.promise = fetch(`${base}chunk-content.json`)
+      this.promise = fetch(`${base}chunk-content.json?v=${DATA_REV}`)
         .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
         .then((doc: RawDoc) => { this.doc = doc; return true; })
         .catch((err: Error) => {

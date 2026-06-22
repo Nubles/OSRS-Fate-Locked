@@ -162,12 +162,22 @@ function buildDrops(data) {
   return out;
 }
 
-/** [{ "~|req|~ text": type }, …] → deduped, wiki-stripped requirement strings. */
+/**
+ * [{ "~|req|~ text": type }, …] → deduped, wiki-stripped requirement strings.
+ * The picker writes quest requirements as "~|Quest|~ Complete the quest" or
+ * "~|Quest|~ <step code>" (e.g. "5b2"). We strip the wiki markup and the trailing
+ * "Complete the quest" / step code so a badge reads "Dragon Slayer I", not
+ * "Dragon Slayer I 5b2".
+ */
 function cleanReqs(arr) {
   const out = new Set();
   for (const reqObj of arr) {
     for (const reqKey of Object.keys(reqObj)) {
-      const clean = stripWiki(reqKey).replace(/\s+/g, ' ').trim();
+      const clean = stripWiki(reqKey)
+        .replace(/\s+/g, ' ')
+        .replace(/\s+Complete the quest$/i, '')
+        .replace(/\s+\d[a-z0-9]*$/i, '') // trailing quest-step code (5, 5b2, …)
+        .trim();
       if (clean) out.add(clean);
     }
   }
@@ -311,7 +321,7 @@ function main(data) {
   const taskUnlocks = buildTaskUnlocks(data);
 
   const doc = {
-    version: 4,
+    version: 5,
     source: 'source-chunk/chunk-picker-v2 (chunkpicker-chunkinfo-export.json, gh-pages)',
     chunks: out,
     connect,
