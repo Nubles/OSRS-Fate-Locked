@@ -21,6 +21,7 @@ import { EffectsLayer } from './components/EffectsLayer';
 import { OnboardingWizard } from './components/OnboardingWizard';
 import { ProfileSwitcher } from './components/ProfileSwitcher';
 import { PanelErrorBoundary } from './components/PanelErrorBoundary';
+import { UpdateBanner } from './components/UpdateBanner';
 import { ModalFallback } from './components/LoadingFallback';
 import { JournalSummaryCard } from './components/JournalSummaryCard';
 import { useEscapeKey } from './hooks/useEscapeKey';
@@ -614,6 +615,7 @@ function App() {
           <GameLayout />
         </GameProviderBridge>
       </ProfileProvider>
+      <UpdateBanner />
     </ErrorBoundary>
   );
 }

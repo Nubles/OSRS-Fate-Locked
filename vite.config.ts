@@ -6,13 +6,28 @@ import react from '@vitejs/plugin-react';
 // @types/node (which would leak Node globals into the browser app code).
 declare const process: { env: Record<string, string | undefined> };
 
+// Unique id for this build. CI passes the commit SHA via BUILD_ID; otherwise a
+// timestamp. Baked into the bundle as __BUILD_ID__ AND written to version.json,
+// so the running app can detect when a newer build has been deployed and offer
+// a reload (see components/UpdateBanner.tsx).
+const BUILD_ID = process.env.BUILD_ID || String(Date.now());
+
 // https://vitejs.dev/config/
 //
 // `base` controls the public path assets are served from. GitHub Pages project
 // sites live at /<repo-name>/, so CI injects the real repo name via VITE_BASE
 // (see .github/workflows/deploy.yml). Local dev/build falls back to '/'.
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: 'emit-version-json',
+      generateBundle() {
+        this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ build: BUILD_ID }) });
+      },
+    },
+  ],
+  define: { __BUILD_ID__: JSON.stringify(BUILD_ID) },
   base: process.env.VITE_BASE || '/',
   build: {
     outDir: 'dist',
