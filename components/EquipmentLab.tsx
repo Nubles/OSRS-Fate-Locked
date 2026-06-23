@@ -1,13 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import {
-  X, Sparkles, ChevronsUp, Crown, AlertCircle, Shield, Gauge,
-  Swords, Crosshair, Wand2, Heart, RotateCcw, Plus, Minus, SlidersHorizontal, Lock,
+  X, Sparkles, ChevronsUp, Crown, AlertCircle,
+  Swords, RotateCcw, Plus, Minus, SlidersHorizontal, Lock,
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, SLOT_CONFIG } from '../constants';
 import { NoteTrigger } from './NoteTrigger';
 import { useEscapeKey } from '../hooks/useEscapeKey';
-import { computeCombatPower, overallCombatPower, TIER_LABELS, PowerAxisKey } from '../utils/combatPower';
+import { TIER_LABELS } from '../utils/combatPower';
 import { EQUIP_TIER_COLORS, equipTierColor } from '../utils/equipTiers';
 import { GearView } from './GearView';
 import { SectionGuide } from './SectionGuide';
@@ -15,14 +15,6 @@ import { DpsCalc } from './DpsCalc';
 
 const slotImg = (slot: string) =>
   `https://oldschool.runescape.wiki/images/${SLOT_CONFIG[slot]?.file ?? 'Globe_icon.png'}`;
-
-const AXIS_ICON: Record<PowerAxisKey, typeof Swords> = {
-  melee: Swords, ranged: Crosshair, magic: Wand2, defence: Shield, prayer: Heart,
-};
-const AXIS_BAR: Record<PowerAxisKey, string> = {
-  melee: 'bg-red-500', ranged: 'bg-emerald-500', magic: 'bg-blue-500',
-  defence: 'bg-slate-400', prayer: 'bg-amber-400',
-};
 
 interface Props {
   /** Kick off the existing Omni-key upgrade flow (confirm + reveal) for a slot. */
@@ -57,8 +49,6 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade }) => {
     };
   }, [equipment, totalEquipTiers, maxPossible]);
 
-  const power = useMemo(() => computeCombatPower(unlocks), [unlocks]);
-  const overall = useMemo(() => overallCombatPower(unlocks), [unlocks]);
 
   // ── Loadout planner ──────────────────────────────────────────────────────
   const targetFor = (slot: string) => Math.max(targets[slot] ?? (equipment[slot] || 0), equipment[slot] || 0);
@@ -161,34 +151,6 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade }) => {
                 <div className="absolute top-0 left-0 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
                   <NoteTrigger id={`Equip_${slot}`} title={slot} />
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Combat Power */}
-      <div className="mt-4 bg-[#151515] border border-white/10 rounded-xl p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="text-[11px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1.5">
-            <Gauge size={12} className="text-amber-300" /> Combat Power
-          </h4>
-          <div className="flex items-baseline gap-1">
-            <span className="text-lg font-black text-amber-300 leading-none">{overall}</span>
-            <span className="text-[9px] text-gray-600 font-mono">/100</span>
-          </div>
-        </div>
-        <div className="space-y-1.5">
-          {power.map((r) => {
-            const Icon = AXIS_ICON[r.key];
-            return (
-              <div key={r.key} className="flex items-center gap-2.5">
-                <Icon size={12} className="text-gray-500 shrink-0" />
-                <span className="text-[10px] font-semibold text-gray-400 w-14 shrink-0">{r.label}</span>
-                <div className="flex-1 h-2 bg-black/50 rounded-full overflow-hidden border border-white/5">
-                  <div className={`h-full rounded-full transition-all duration-500 ${AXIS_BAR[r.key]}`} style={{ width: `${r.value}%` }} />
-                </div>
-                <span className="text-[9px] font-mono font-bold text-gray-300 w-6 text-right shrink-0">{r.value}</span>
               </div>
             );
           })}

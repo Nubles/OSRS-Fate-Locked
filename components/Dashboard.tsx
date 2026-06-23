@@ -429,7 +429,7 @@ export const Dashboard: React.FC = () => {
   const renderCharacterTab = () => (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-full overflow-y-auto pr-2 custom-scrollbar pb-10">
         {/* Equipment Lab — interactive paper-doll (click a slot for its tier
-            ladder + upgrade), derived Combat Power, and a target-loadout planner. */}
+            ladder + upgrade), a target-loadout planner, and a DPS calculator. */}
         <EquipmentLab onUpgrade={(slot) => handleSpecialUnlock(TableType.EQUIPMENT, slot)} />
 
         {/* Skills Section */}
