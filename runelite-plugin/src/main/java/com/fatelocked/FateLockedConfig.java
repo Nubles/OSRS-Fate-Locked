@@ -117,9 +117,39 @@ public interface FateLockedConfig extends Config
     }
 
     @ConfigSection(
+        name = "Live sync",
+        description = "Two-way bridge so the Fate Locked web app reads live game state and pushes your unlock state in",
+        position = 2,
+        closedByDefault = true
+    )
+    String liveSyncSection = "liveSyncSection";
+
+    @ConfigItem(
+        keyName = "liveSync",
+        name = "Enable live sync",
+        description = "Run a localhost server so the web tracker can read live game state (levels, position, …) and push your unlocks in. Sideload-only.",
+        section = liveSyncSection
+    )
+    default boolean liveSync()
+    {
+        return false;
+    }
+
+    @ConfigItem(
+        keyName = "liveSyncPort",
+        name = "Live sync port",
+        description = "Local port for the web-app bridge. Must match the port set in the app (default 43596).",
+        section = liveSyncSection
+    )
+    default int liveSyncPort()
+    {
+        return 43596;
+    }
+
+    @ConfigSection(
         name = "Rendering",
         description = "How chunks are drawn on the map and in-world",
-        position = 2
+        position = 3
     )
     String renderingSection = "renderingSection";
 

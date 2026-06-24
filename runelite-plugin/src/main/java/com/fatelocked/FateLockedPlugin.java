@@ -1,5 +1,6 @@
 package com.fatelocked;
 
+import com.google.gson.Gson;
 import com.google.inject.Provides;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +10,7 @@ import net.runelite.api.GameState;
 import net.runelite.api.MenuAction;
 import net.runelite.api.NPC;
 import net.runelite.api.Player;
+import net.runelite.api.Skill;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
@@ -33,6 +35,8 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.WatchEvent;
@@ -75,6 +79,11 @@ public class FateLockedPlugin extends Plugin
     /** Last account name we warned about, so we nag at most once per character. */
     private String lastAccountWarned;
 
+    /** Live two-way sync with the web app (localhost HTTP bridge). */
+    private final Gson gson = new Gson();
+    private LiveSyncServer liveServer;
+    private volatile String liveStateJson = "{\"loggedIn\":false}";
+
     @Provides
     FateLockedConfig provideConfig(ConfigManager configManager)
     {
@@ -101,6 +110,7 @@ public class FateLockedPlugin extends Plugin
 
         reloadBundle();
         startWatcher();
+        if (config.liveSync()) startLiveServer();
     }
 
     @Override
@@ -117,6 +127,7 @@ public class FateLockedPlugin extends Plugin
             navButton = null;
         }
         stopWatcher();
+        stopLiveServer();
         bundle = FateLockedBundle.empty();
         lastChunk = null;
     }
@@ -131,6 +142,59 @@ public class FateLockedPlugin extends Plugin
             stopWatcher();
             startWatcher();
         }
+        else if ("liveSync".equals(ev.getKey()) || "liveSyncPort".equals(ev.getKey()))
+        {
+            if (config.liveSync()) startLiveServer(); else stopLiveServer();
+        }
+    }
+
+    // ── Live two-way sync ───────────────────────────────────────────────────
+    private void startLiveServer()
+    {
+        if (liveServer == null)
+        {
+            liveServer = new LiveSyncServer(
+                () -> liveStateJson,
+                json -> clientThread.invoke(() -> applyPastedBundle(json)));
+        }
+        liveServer.start(config.liveSyncPort());
+    }
+
+    private void stopLiveServer()
+    {
+        if (liveServer != null) liveServer.stop();
+    }
+
+    /** Rebuild the live game-state snapshot served at /state. Client thread only. */
+    private void updateLiveState(Player local, CanonicalChunk chunk)
+    {
+        Map<String, Object> m = new LinkedHashMap<>();
+        if (local == null)
+        {
+            m.put("loggedIn", false);
+            liveStateJson = gson.toJson(m);
+            return;
+        }
+        m.put("loggedIn", true);
+        m.put("player", local.getName());
+        m.put("combatLevel", local.getCombatLevel());
+        m.put("world", client.getWorld());
+        if (chunk != null)
+        {
+            m.put("chunk", new int[]{ chunk.getCx(), chunk.getCy() });
+            m.put("area", bundle.labelAt(chunk));
+            m.put("lock", bundle.lockStateAt(chunk).name());
+        }
+        Map<String, Integer> skills = new LinkedHashMap<>();
+        for (Skill s : Skill.values())
+        {
+            if ("OVERALL".equals(s.name())) continue; // not a trainable skill
+            try { skills.put(s.getName(), client.getRealSkillLevel(s)); }
+            catch (RuntimeException ignored) { /* skip */ }
+        }
+        m.put("skills", skills);
+        m.put("ts", System.currentTimeMillis());
+        liveStateJson = gson.toJson(m);
     }
 
     @Subscribe
@@ -144,6 +208,7 @@ public class FateLockedPlugin extends Plugin
         else if (ev.getGameState() == GameState.LOGIN_SCREEN)
         {
             lastAccountWarned = null;
+            updateLiveState(null, null); // mark the bridge as logged-out
         }
     }
 
@@ -203,6 +268,9 @@ public class FateLockedPlugin extends Plugin
         FateLockedBundle.LockState lock = b.lockStateAt(current);
         String label = b.labelAt(current);
         boolean unlocked = lock == FateLockedBundle.LockState.UNLOCKED;
+
+        // Refresh the live-sync snapshot (cheap; only when the bridge is on).
+        if (liveServer != null && liveServer.isRunning()) updateLiveState(local, current);
 
         boolean changed = !current.equals(lastChunk);
         if (changed)

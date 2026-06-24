@@ -28,6 +28,12 @@ haven't unlocked yet.
   (Auto-Roll). The HUD shows that account — green when it matches the logged-in
   character, red ⚠ when it doesn't — and a one-time chat warning fires per login
   if you're on the wrong character. Toggle: *Warn on wrong account*.
+- **Live two-way sync.** Enable *Live sync* in the config and the plugin runs a
+  localhost HTTP bridge (default port 43596, 127.0.0.1 only). The web app's
+  Auto-Roll tab can then **read** your live game state (levels, world, current
+  chunk + lock status) and **push** your unlock state straight into the plugin —
+  no more clipboard exports. Sideload-only: a local server makes the plugin
+  ineligible for the Plugin Hub, so it's off by default.
 - **Side panel.** Run stats (keys/fate/buff/goal), current location, and an
   **Allowed / Forbidden / Unknown** breakdown: every unlocked area, every
   authored-but-locked area, and how many map chunks sit in unnamed terrain.
