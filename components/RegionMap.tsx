@@ -7,6 +7,7 @@ import { Lock, Unlock, ZoomIn, ZoomOut, Move, Loader2, Download, Grid3x3, Paintb
 import { ChunkActivityPanel } from './ChunkActivityPanel';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_CHUNKS } from '../data/regionChunks';
+import { buildRuneliteBundle } from '../utils/runeliteBundle';
 import { consumePendingChunk, chunkUnlocked, chunkForPlace } from '../utils/chunkLocations';
 import { isFreeArea } from '../utils/freeAreas';
 import { chunkContentService, type OverlayPoint } from '../services/ChunkContentService';
@@ -248,14 +249,6 @@ const serializeDraft = (data: Record<string, ChunkCoord[]>) => {
     });
   return `export const REGION_CHUNKS: Record<string, ChunkCoord[]> = {\n${entries.join('\n')}\n};`;
 };
-
-// Chunk-space offset between the web app's map coordinates and canonical OSRS
-// runescript coordinates (what RuneLite reports as `WorldPoint.getX() >> 6`).
-// MAP_BOUNDS is now calibrated exactly to the canonical chunk grid (see
-// utils/mapCoords.ts), so our cx/cy already equal canonical region coords and
-// no offset is required. Kept as an explicit field in RuneLite exports so the
-// plugin never has to guess.
-const RUNELITE_CHUNK_OFFSET = { cx: 0, cy: 0 } as const;
 
 // The heavy, rarely-changing part of the map: the 9216x6528 image, ~600 chunk
 // rects, the chunk grid and the region markers. Memoized so per-frame hover
@@ -1106,20 +1099,13 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
   };
 
   const exportRuneLiteBundle = () => {
-    // v3 bundle: adds the run's bound OSRS account (state.linkedAccount) so the
-    // plugin can warn if you're logged into a different account. Builds on v2's
-    // sub-area layer + region hierarchy + live run state. Older plugins ignore
-    // the extra field; the plugin still accepts v1/v2 bundles.
-    const payload = {
-      version: 3,
-      exportedAt: new Date().toISOString(),
-      chunkOffset: RUNELITE_CHUNK_OFFSET,
-      chunks: draftChunks,
-      subAreaChunks: subDraft,
-      regionGroups: { Misthalin: MISTHALIN_AREAS, ...REGION_GROUPS },
-      unlockedRegions: regionUnlocks,
-      state: getGameSnapshot(),
-    };
+    // v3 bundle built from the SHIPPED chunk baselines (REGION_CHUNKS /
+    // SUB_AREA_CHUNKS), not the local map-editor draft — a player exporting their
+    // unlocks isn't authoring chunks, and an empty/partial draft would ship the
+    // plugin "0 regions" (overlays render nothing). Shares buildRuneliteBundle
+    // with the live-sync push so both paths are identical. state.linkedAccount
+    // lets the plugin warn on a wrong-account login.
+    const payload = buildRuneliteBundle(regionUnlocks, getGameSnapshot());
     const json = JSON.stringify(payload, null, 2);
     // Clipboard first (paste straight into the plugin's side panel)…
     navigator.clipboard?.writeText(json).catch(() => {});

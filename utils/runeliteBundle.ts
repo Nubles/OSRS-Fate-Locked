@@ -7,7 +7,6 @@
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
-import { UnlockState } from '../types';
 
 export interface RuneliteRunState {
   keys: number;
@@ -19,7 +18,7 @@ export interface RuneliteRunState {
   linkedAccount?: string;
 }
 
-export function buildRuneliteBundle(unlocks: UnlockState, state: RuneliteRunState) {
+export function buildRuneliteBundle(unlockedRegions: string[], state: RuneliteRunState) {
   return {
     version: 3,
     exportedAt: new Date().toISOString(),
@@ -27,7 +26,7 @@ export function buildRuneliteBundle(unlocks: UnlockState, state: RuneliteRunStat
     chunks: REGION_CHUNKS,
     subAreaChunks: SUB_AREA_CHUNKS,
     regionGroups: { Misthalin: MISTHALIN_AREAS, ...REGION_GROUPS },
-    unlockedRegions: unlocks.regions,
+    unlockedRegions,
     state,
   };
 }

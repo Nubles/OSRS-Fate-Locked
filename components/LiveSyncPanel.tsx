@@ -28,7 +28,7 @@ export const LiveSyncPanel: React.FC = () => {
 
   const push = async () => {
     setPushState('pushing');
-    const bundle = buildRuneliteBundle(unlocks, { keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals: pinnedGoals ?? [], linkedAccount });
+    const bundle = buildRuneliteBundle(unlocks.regions, { keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals: pinnedGoals ?? [], linkedAccount });
     const ok = await liveSync.pushBundle(JSON.stringify(bundle));
     setPushState(ok ? 'ok' : 'fail');
     window.setTimeout(() => setPushState('idle'), 2500);
