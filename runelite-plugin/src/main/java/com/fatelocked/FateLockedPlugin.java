@@ -10,7 +10,6 @@ import net.runelite.api.GameState;
 import net.runelite.api.MenuAction;
 import net.runelite.api.NPC;
 import net.runelite.api.Player;
-import net.runelite.api.Skill;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
@@ -34,15 +33,15 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.WatchEvent;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
-import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.attribute.FileTime;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @PluginDescriptor(
@@ -64,6 +63,8 @@ public class FateLockedPlugin extends Plugin
     @Inject private ChatMessageManager chatMessageManager;
     @Inject private ClientToolbar clientToolbar;
     @Inject private FateLockedPanel panel;
+    @Inject private Gson gson;
+    @Inject private ScheduledExecutorService executor;
 
     @Getter private volatile FateLockedBundle bundle = FateLockedBundle.empty();
 
@@ -74,15 +75,12 @@ public class FateLockedPlugin extends Plugin
     private CanonicalChunk lastChunk;
     private FateLockedBundle.LockState lastLockState;
     private NavigationButton navButton;
-    private Thread watcherThread;
-    private volatile boolean watcherStop;
+    private ScheduledFuture<?> watcherFuture;
+    private Path watcherLoadedPath;
+    private FileTime watcherLastModified;
     /** Last account name we warned about, so we nag at most once per character. */
     private String lastAccountWarned;
 
-    /** Live two-way sync with the web app (localhost HTTP bridge). */
-    private final Gson gson = new Gson();
-    private LiveSyncServer liveServer;
-    private volatile String liveStateJson = "{\"loggedIn\":false}";
 
     @Provides
     FateLockedConfig provideConfig(ConfigManager configManager)
@@ -110,7 +108,6 @@ public class FateLockedPlugin extends Plugin
 
         reloadBundle();
         startWatcher();
-        if (config.liveSync()) startLiveServer();
     }
 
     @Override
@@ -127,7 +124,6 @@ public class FateLockedPlugin extends Plugin
             navButton = null;
         }
         stopWatcher();
-        stopLiveServer();
         bundle = FateLockedBundle.empty();
         lastChunk = null;
     }
@@ -136,65 +132,13 @@ public class FateLockedPlugin extends Plugin
     public void onConfigChanged(ConfigChanged ev)
     {
         if (!FateLockedConfig.GROUP.equals(ev.getGroup())) return;
-        if ("bundlePath".equals(ev.getKey()))
+        String key = ev.getKey();
+        if ("bundlePath".equals(key) || "autoReload".equals(key) || "autoDetectDownloads".equals(key))
         {
             reloadBundle();
             stopWatcher();
             startWatcher();
         }
-        else if ("liveSync".equals(ev.getKey()) || "liveSyncPort".equals(ev.getKey()))
-        {
-            if (config.liveSync()) startLiveServer(); else stopLiveServer();
-        }
-    }
-
-    // ── Live two-way sync ───────────────────────────────────────────────────
-    private void startLiveServer()
-    {
-        if (liveServer == null)
-        {
-            liveServer = new LiveSyncServer(
-                () -> liveStateJson,
-                json -> clientThread.invoke(() -> applyPastedBundle(json)));
-        }
-        liveServer.start(config.liveSyncPort());
-    }
-
-    private void stopLiveServer()
-    {
-        if (liveServer != null) liveServer.stop();
-    }
-
-    /** Rebuild the live game-state snapshot served at /state. Client thread only. */
-    private void updateLiveState(Player local, CanonicalChunk chunk)
-    {
-        Map<String, Object> m = new LinkedHashMap<>();
-        if (local == null)
-        {
-            m.put("loggedIn", false);
-            liveStateJson = gson.toJson(m);
-            return;
-        }
-        m.put("loggedIn", true);
-        m.put("player", local.getName());
-        m.put("combatLevel", local.getCombatLevel());
-        m.put("world", client.getWorld());
-        if (chunk != null)
-        {
-            m.put("chunk", new int[]{ chunk.getCx(), chunk.getCy() });
-            m.put("area", bundle.labelAt(chunk));
-            m.put("lock", bundle.lockStateAt(chunk).name());
-        }
-        Map<String, Integer> skills = new LinkedHashMap<>();
-        for (Skill s : Skill.values())
-        {
-            if ("OVERALL".equals(s.name())) continue; // not a trainable skill
-            try { skills.put(s.getName(), client.getRealSkillLevel(s)); }
-            catch (RuntimeException ignored) { /* skip */ }
-        }
-        m.put("skills", skills);
-        m.put("ts", System.currentTimeMillis());
-        liveStateJson = gson.toJson(m);
     }
 
     @Subscribe
@@ -208,7 +152,6 @@ public class FateLockedPlugin extends Plugin
         else if (ev.getGameState() == GameState.LOGIN_SCREEN)
         {
             lastAccountWarned = null;
-            updateLiveState(null, null); // mark the bridge as logged-out
         }
     }
 
@@ -269,8 +212,6 @@ public class FateLockedPlugin extends Plugin
         String label = b.labelAt(current);
         boolean unlocked = lock == FateLockedBundle.LockState.UNLOCKED;
 
-        // Refresh the live-sync snapshot (cheap; only when the bridge is on).
-        if (liveServer != null && liveServer.isRunning()) updateLiveState(local, current);
 
         boolean changed = !current.equals(lastChunk);
         if (changed)
@@ -392,8 +333,13 @@ public class FateLockedPlugin extends Plugin
 
     private void reloadBundle()
     {
-        String p = config.bundlePath();
-        if (p == null || p.trim().isEmpty())
+        Path file = effectiveBundlePath();
+        // Mark what we're about to read up-front so the watcher doesn't re-fire
+        // every tick if the file is missing or fails to parse.
+        watcherLoadedPath = file;
+        watcherLastModified = file == null ? null : lastModified(file);
+
+        if (file == null)
         {
             bundle = FateLockedBundle.empty();
             refreshPanel();
@@ -401,16 +347,43 @@ public class FateLockedPlugin extends Plugin
         }
         try
         {
-            bundle = FateLockedBundle.loadFromFile(Paths.get(p));
-            log.info("Fate Locked bundle loaded: {} regions, {} unlocked",
-                bundle.getRegionChunks().size(), bundle.getUnlockedRegions().size());
+            bundle = FateLockedBundle.loadFromFile(gson, file);
+            log.info("Fate Locked bundle loaded from {}: {} regions, {} unlocked",
+                file, bundle.getRegionChunks().size(), bundle.getUnlockedRegions().size());
         }
         catch (IOException | RuntimeException ex)
         {
-            log.warn("Failed to load bundle at {}: {}", p, ex.getMessage());
+            log.warn("Failed to load bundle at {}: {}", file, ex.getMessage());
             bundle = FateLockedBundle.empty();
         }
         refreshPanel();
+    }
+
+    /**
+     * The bundle file to read: the configured path if set, otherwise (when
+     * auto-detect is on) the newest fate-locked-bundle file in Downloads.
+     */
+    private Path effectiveBundlePath()
+    {
+        String p = config.bundlePath();
+        if (p != null && !p.trim().isEmpty()) return Paths.get(p.trim());
+        if (config.autoDetectDownloads()) return findNewestDownloadBundle();
+        return null;
+    }
+
+    /** Newest fate-locked-bundle-*.json in the user's Downloads folder, or null. */
+    private Path findNewestDownloadBundle()
+    {
+        File dir = new File(System.getProperty("user.home"), "Downloads");
+        File[] files = dir.listFiles((d, name) ->
+            name.startsWith("fate-locked-bundle") && name.toLowerCase().endsWith(".json"));
+        if (files == null || files.length == 0) return null;
+        File newest = null;
+        for (File f : files)
+        {
+            if (newest == null || f.lastModified() > newest.lastModified()) newest = f;
+        }
+        return newest == null ? null : newest.toPath();
     }
 
     /** Load a bundle from JSON pasted into the side panel. */
@@ -418,7 +391,7 @@ public class FateLockedPlugin extends Plugin
     {
         try
         {
-            FateLockedBundle parsed = FateLockedBundle.loadFromJson(json);
+            FateLockedBundle parsed = FateLockedBundle.loadFromJson(gson, json);
             bundle = parsed;
             log.info("Fate Locked bundle imported from paste: {} regions", parsed.getRegionChunks().size());
             panel.flashStatus("imported " + parsed.getRegionChunks().size() + " regions", true);
@@ -470,54 +443,42 @@ public class FateLockedPlugin extends Plugin
     private void startWatcher()
     {
         if (!config.autoReload()) return;
-        String p = config.bundlePath();
-        if (p == null || p.trim().isEmpty()) return;
 
-        Path file = Paths.get(p);
-        Path parent = file.getParent();
-        if (parent == null) return;
-
-        watcherStop = false;
-        watcherThread = new Thread(() -> {
-            try (WatchService ws = parent.getFileSystem().newWatchService())
+        // Poll the effective bundle file on RuneLite's shared executor, reloading
+        // when it changes — or when a newer file becomes the auto-detect target
+        // (e.g. a fresh export landed in Downloads). No background worker of our
+        // own and no blocking calls.
+        watcherFuture = executor.scheduleWithFixedDelay(() -> {
+            Path file = effectiveBundlePath();
+            if (file == null) return;
+            FileTime now = lastModified(file);
+            if (now == null) return;
+            if (!file.equals(watcherLoadedPath) || !now.equals(watcherLastModified))
             {
-                parent.register(ws, StandardWatchEventKinds.ENTRY_MODIFY,
-                    StandardWatchEventKinds.ENTRY_CREATE);
-                while (!watcherStop)
-                {
-                    WatchKey key = ws.poll();
-                    if (key == null)
-                    {
-                        Thread.sleep(500);
-                        continue;
-                    }
-                    for (WatchEvent<?> ev : key.pollEvents())
-                    {
-                        Object ctx = ev.context();
-                        if (ctx instanceof Path && ((Path) ctx).getFileName().equals(file.getFileName()))
-                        {
-                            clientThread.invoke(this::reloadBundle);
-                        }
-                    }
-                    if (!key.reset()) break;
-                }
+                clientThread.invoke(this::reloadBundle);
             }
-            catch (Exception ex)
-            {
-                log.debug("Bundle watcher stopped: {}", ex.getMessage());
-            }
-        }, "fate-locked-bundle-watcher");
-        watcherThread.setDaemon(true);
-        watcherThread.start();
+        }, 1, 1, TimeUnit.SECONDS);
     }
 
     private void stopWatcher()
     {
-        watcherStop = true;
-        if (watcherThread != null)
+        if (watcherFuture != null)
         {
-            watcherThread.interrupt();
-            watcherThread = null;
+            watcherFuture.cancel(false);
+            watcherFuture = null;
+        }
+    }
+
+    /** Last-modified time of the bundle file, or null if it doesn't exist yet. */
+    private static FileTime lastModified(Path file)
+    {
+        try
+        {
+            return Files.exists(file) ? Files.getLastModifiedTime(file) : null;
+        }
+        catch (IOException ex)
+        {
+            return null;
         }
     }
 }

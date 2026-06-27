@@ -22,7 +22,7 @@ public interface FateLockedConfig extends Config
     @ConfigItem(
         keyName = "bundlePath",
         name = "Bundle file path",
-        description = "Absolute path to the .json file exported from the Fate Locked tracker",
+        description = "Absolute path to the .json exported from the Fate Locked tracker. Leave blank to auto-detect the newest fate-locked-bundle file in your Downloads folder.",
         section = bundleSection,
         position = 0
     )
@@ -32,11 +32,23 @@ public interface FateLockedConfig extends Config
     }
 
     @ConfigItem(
-        keyName = "autoReload",
-        name = "Auto-reload on change",
-        description = "Re-parse the bundle file whenever it changes on disk",
+        keyName = "autoDetectDownloads",
+        name = "Auto-detect from Downloads",
+        description = "When the path above is blank, automatically load the newest fate-locked-bundle-*.json from your Downloads folder",
         section = bundleSection,
         position = 1
+    )
+    default boolean autoDetectDownloads()
+    {
+        return true;
+    }
+
+    @ConfigItem(
+        keyName = "autoReload",
+        name = "Auto-reload on change",
+        description = "Re-parse the bundle whenever it changes (or a newer one is exported)",
+        section = bundleSection,
+        position = 2
     )
     default boolean autoReload()
     {
@@ -117,39 +129,9 @@ public interface FateLockedConfig extends Config
     }
 
     @ConfigSection(
-        name = "Live sync",
-        description = "Two-way bridge so the Fate Locked web app reads live game state and pushes your unlock state in",
-        position = 2,
-        closedByDefault = true
-    )
-    String liveSyncSection = "liveSyncSection";
-
-    @ConfigItem(
-        keyName = "liveSync",
-        name = "Enable live sync",
-        description = "Run a localhost server so the web tracker can read live game state (levels, position, …) and push your unlocks in. Sideload-only.",
-        section = liveSyncSection
-    )
-    default boolean liveSync()
-    {
-        return false;
-    }
-
-    @ConfigItem(
-        keyName = "liveSyncPort",
-        name = "Live sync port",
-        description = "Local port for the web-app bridge. Must match the port set in the app (default 43596).",
-        section = liveSyncSection
-    )
-    default int liveSyncPort()
-    {
-        return 43596;
-    }
-
-    @ConfigSection(
         name = "Rendering",
         description = "How chunks are drawn on the map and in-world",
-        position = 3
+        position = 2
     )
     String renderingSection = "renderingSection";
 
