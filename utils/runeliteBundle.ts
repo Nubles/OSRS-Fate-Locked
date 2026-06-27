@@ -6,6 +6,7 @@
  */
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
+import { CHUNK_CONTENT_LITE } from '../data/chunkContentLite';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
 
 export interface RuneliteRunState {
@@ -27,6 +28,9 @@ export function buildRuneliteBundle(unlockedRegions: string[], state: RuneliteRu
     subAreaChunks: SUB_AREA_CHUNKS,
     regionGroups: { Misthalin: MISTHALIN_AREAS, ...REGION_GROUPS },
     unlockedRegions,
+    // Slim per-chunk "what's here" (monster names), keyed "cx,cy". Optional —
+    // older plugins ignore it; ~26 KB, regenerated with the dataset.
+    chunkContent: CHUNK_CONTENT_LITE,
     state,
   };
 }
