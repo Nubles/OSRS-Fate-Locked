@@ -41,7 +41,8 @@ const SyncCodeModal = lazy(() => import('./components/SyncCodeModal').then(m => 
 const ModelGallery = lazy(() => import('./components/ModelGallery').then(m => ({ default: m.ModelGallery })));
 import { obfuscateFateSave, deobfuscateFateSave } from './utils/encryption';
 import { GameState } from './types';
-import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb } from 'lucide-react';
+import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb, Radio } from 'lucide-react';
+import { exportRuneliteBundle } from './utils/runeliteExport';
 
 // --- Error Boundary ---
 interface ErrorBoundaryState {
@@ -165,7 +166,7 @@ interface HeaderProps {
 }
 
 const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode }: HeaderProps) => {
-  const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, importSave, resetGame, getExportData, createBackup, gameModeId, customMode } = useGame();
+  const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, importSave, resetGame, getExportData, createBackup, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount } = useGame();
   const pityRules = resolveModeRules(gameModeId, customMode);
   const pityCap = pityRules.pityEnabled ? pityRules.pityThreshold : 50; // 50 = visual-only fallback
   const nearPity = pityRules.pityEnabled && fatePoints >= pityRules.pityThreshold * 0.8;
@@ -292,6 +293,15 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                 <Search size={13} />
                 <span className="text-[11px] font-medium hidden sm:inline">Jump to…</span>
                 <kbd className="text-[9px] font-mono text-gray-500 border border-white/15 rounded px-1 py-0.5 hidden sm:inline group-hover:border-white/25">⌘K</kbd>
+             </button>
+
+             <button
+               onClick={() => exportRuneliteBundle(unlocks, { keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount })}
+               className="h-8 px-2.5 rounded-lg border border-amber-500/40 bg-amber-900/30 hover:bg-amber-800/40 text-amber-200 hover:text-amber-100 flex items-center gap-2 transition-colors"
+               title="Export your run for the RuneLite plugin (copies to clipboard + downloads). Then use 'Import from clipboard' in the plugin."
+             >
+                <Radio size={13} />
+                <span className="text-[11px] font-medium hidden sm:inline">RuneLite</span>
              </button>
 
              <div className="flex items-center bg-[#252525] border border-white/10 rounded-lg p-0.5 gap-0.5 h-8">

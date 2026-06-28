@@ -7,8 +7,7 @@ import { Lock, Unlock, ZoomIn, ZoomOut, Move, Loader2, Download, Grid3x3, Paintb
 import { ChunkActivityPanel } from './ChunkActivityPanel';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_CHUNKS } from '../data/regionChunks';
-import { buildRuneliteBundle } from '../utils/runeliteBundle';
-import { gearService } from '../services/GearService';
+import { exportRuneliteBundle } from '../utils/runeliteExport';
 import { consumePendingChunk, chunkUnlocked, chunkForPlace } from '../utils/chunkLocations';
 import { isFreeArea } from '../utils/freeAreas';
 import { chunkContentService, type OverlayPoint } from '../services/ChunkContentService';
@@ -1101,43 +1100,9 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
     else window.prompt(`Copy this into ${isSub ? 'data/subAreaChunks.ts' : 'REGION_CHUNKS'}:`, code);
   };
 
-  const exportRuneLiteBundle = async () => {
-    // v3 bundle built from the SHIPPED chunk baselines (REGION_CHUNKS /
-    // SUB_AREA_CHUNKS), not the local map-editor draft — a player exporting their
-    // unlocks isn't authoring chunks, and an empty/partial draft would ship the
-    // plugin "0 regions" (overlays render nothing). state.linkedAccount lets the
-    // plugin warn on a wrong-account login; state.equipment + itemTiers let it
-    // warn on over-tier worn gear.
-    let itemTiers: Record<string, number> | undefined;
-    try {
-      await gearService.init();           // cached after first load
-      if (gearService.ready) itemTiers = gearService.tierExport();
-    } catch { /* offline / load failed — ship without tiers, plugin degrades */ }
-
-    let slayerChunks: Record<string, { cx: number; cy: number }[]> | undefined;
-    try {
-      await chunkContentService.init();
-      if (chunkContentService.ready) slayerChunks = chunkContentService.slayerReachIndex();
-    } catch { /* no chunk data — plugin falls back to its capped monster index */ }
-
-    const payload = buildRuneliteBundle(regionUnlocks, getGameSnapshot(), itemTiers, slayerChunks);
-    // Compact (no indentation) — the plugin parses this, so indentation would
-    // just ~double the clipboard/file size for no benefit.
-    const json = JSON.stringify(payload);
-    // Clipboard first (paste straight into the plugin's side panel)…
-    navigator.clipboard?.writeText(json).catch(() => {});
-    // …and the file download for the watch-this-path workflow.
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `fate-locked-bundle-${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showToast('RuneLite bundle copied + downloaded');
-  };
+  // Export the run for the RuneLite plugin from the SHIPPED chunk baselines (not
+  // the map-editor draft). Shared with the header's dedicated RuneLite button.
+  const exportRuneLiteBundle = () => exportRuneliteBundle(unlocks, getGameSnapshot());
 
   const exportDraftJson = () => {
     const payload = {
