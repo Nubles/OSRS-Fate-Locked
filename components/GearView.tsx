@@ -4,9 +4,13 @@ import { useGame } from '../context/GameContext';
 import { EQUIPMENT_SLOTS, SLOT_CONFIG } from '../constants';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { gearService } from '../services/GearService';
+import { chunkContentService } from '../services/ChunkContentService';
 import { GearItem, sumBonuses, BONUS_GROUPS, GearBonuses } from '../utils/gearStats';
 import { equipTierColor } from '../utils/equipTiers';
+import { itemObtainability } from '../utils/itemObtainability';
+import { MapPin } from 'lucide-react';
 import { WikiLink } from './WikiLink';
+import { UnlockState } from '../types';
 
 const emptySlotImg = (slot: string) =>
   `https://oldschool.runescape.wiki/images/${SLOT_CONFIG[slot]?.file ?? 'Globe_icon.png'}`;
@@ -144,6 +148,7 @@ export const GearView: React.FC = () => {
           status={status}
           currentItemId={equipped[selected]}
           unlockedTier={unlocks.equipment[selected] || 0}
+          unlocks={unlocks}
           onClose={() => setSelected(null)}
           onEquip={equip}
           onRemove={() => { setLoadoutSlot(selected, null); setSelected(null); }}
@@ -160,15 +165,22 @@ interface PickerProps {
   status: Status;
   currentItemId?: number;
   unlockedTier: number;
+  unlocks: UnlockState;
   onClose: () => void;
   onEquip: (item: GearItem) => void;
   onRemove: () => void;
   onRetry: () => void;
 }
 
-const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlockedTier, onClose, onEquip, onRemove, onRetry }) => {
+const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlockedTier, unlocks, onClose, onEquip, onRemove, onRetry }) => {
   useEscapeKey(onClose, true);
   const [query, setQuery] = useState('');
+  // Lazy-load the chunk-content dataset so we can show where each item is
+  // obtainable (and whether that source is unlocked yet).
+  const [contentReady, setContentReady] = useState(chunkContentService.ready);
+  useEffect(() => {
+    if (!contentReady) chunkContentService.init().then((ok) => setContentReady(ok));
+  }, [contentReady]);
 
   const all = status === 'ready' ? gearService.bySlot(slot) : [];
   const filtered = useMemo(() => {
@@ -248,6 +260,7 @@ const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlock
                 const tier = gearService.tierOf(item.id);
                 const locked = tier > unlockedTier;
                 const isCurrent = item.id === currentItemId;
+                const obt = contentReady ? itemObtainability(item.name, unlocks) : 'unknown';
                 return (
                   <button
                     key={item.id}
@@ -262,7 +275,16 @@ const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlock
                   >
                     <img src={itemImg(item.imageFile)} alt="" className="w-7 h-7 object-contain shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.visibility = 'hidden'; }} />
                     <div className="min-w-0 flex-1">
-                      <div className="text-[12px] font-semibold text-gray-200 truncate"><WikiLink name={item.name} /></div>
+                      <div className="text-[12px] font-semibold text-gray-200 truncate flex items-center gap-1">
+                        <WikiLink name={item.name} />
+                        {obt !== 'unknown' && (
+                          <MapPin
+                            size={10}
+                            className={`shrink-0 ${obt === 'obtainable' ? 'text-emerald-400' : 'text-red-400'}`}
+                            aria-label={obt === 'obtainable' ? 'Obtainable in an unlocked area' : 'Only obtainable in locked areas'}
+                          />
+                        )}
+                      </div>
                       <div className="text-[9px] text-gray-500 truncate">{topBonus(item.bonuses)}{item.twoHanded ? ' · 2H' : ''}</div>
                     </div>
                     <span className={`shrink-0 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${locked ? 'bg-[#1a1a1a] text-gray-500 border border-white/5' : `${equipTierColor(tier)} text-black/80`}`}>

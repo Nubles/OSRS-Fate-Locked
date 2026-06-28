@@ -338,6 +338,34 @@ class ChunkContentService {
     return this.getTaskIdx()?.get(`Items|${name.toLowerCase()}`)?.['*'] ?? [];
   }
 
+  // Item → the chunks it can be obtained in (shops selling it + monsters
+  // dropping it), built lazily by inverting shopItems / drops and resolving each
+  // host's locations through the entity index.
+  private itemSrcIdx: Map<string, EntityLocation[]> | null = null;
+  private buildItemSrcIdx(): Map<string, EntityLocation[]> {
+    const idx = new Map<string, EntityLocation[]>();
+    const addSources = (items: string[], host: string, kind: EntityKind) => {
+      const hit = this.entityLocations(host, [kind]);
+      if (!hit) return;
+      for (const item of items) {
+        const k = item.toLowerCase();
+        const arr = idx.get(k);
+        if (arr) arr.push(...hit.locations);
+        else idx.set(k, [...hit.locations]);
+      }
+    };
+    for (const [shop, items] of Object.entries(this.doc?.shopItems ?? {})) addSources(items, shop, 'shop');
+    for (const [mon, items] of Object.entries(this.doc?.drops ?? {})) addSources(items, mon, 'monster');
+    return idx;
+  }
+
+  /** Chunks where an item can be obtained (shops + drops). Empty when unknown. */
+  itemSourceChunks(itemName: string): EntityLocation[] {
+    if (!this.doc) return [];
+    if (!this.itemSrcIdx) this.itemSrcIdx = this.buildItemSrcIdx();
+    return this.itemSrcIdx.get(itemName.toLowerCase()) ?? [];
+  }
+
   /** Per-chunk entry requirements: chunkId → quest(s) needed to enter. */
   questSections(): Record<string, string[]> { return this.doc?.questSections ?? {}; }
 
