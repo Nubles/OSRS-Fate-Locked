@@ -24,6 +24,7 @@ export function buildRuneliteBundle(
   unlockedRegions: string[],
   state: RuneliteRunState,
   itemTiers?: Record<string, number>,
+  slayerChunks?: Record<string, { cx: number; cy: number }[]>,
 ) {
   return {
     version: 3,
@@ -39,6 +40,9 @@ export function buildRuneliteBundle(
     // Item-id → tier map so the plugin can warn on over-tier worn gear.
     // Optional; omitted if the gear dataset wasn't loaded at export time.
     ...(itemTiers ? { itemTiers } : {}),
+    // Slayer task → chunks (complete monster coverage) for the locked-slayer
+    // warning. Optional; omitted if the chunk dataset wasn't loaded.
+    ...(slayerChunks ? { slayerChunks } : {}),
     state,
   };
 }

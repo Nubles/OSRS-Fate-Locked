@@ -366,6 +366,47 @@ class ChunkContentService {
     return this.itemSrcIdx.get(itemName.toLowerCase()) ?? [];
   }
 
+  /**
+   * Slayer task → the chunks its monster appears in, for the RuneLite plugin's
+   * locked-slayer warning. Keyed by a normalised task name (lowercased, trailing
+   * 's' dropped) so the plugin can match the assignment chat. Built from the FULL
+   * (uncapped) monster index, so coverage is complete — unlike the slim
+   * chunkContentLite "mon" list which caps at a few per chunk.
+   */
+  slayerReachIndex(): Record<string, { cx: number; cy: number }[]> {
+    if (!this.doc) return {};
+    const norm = (s: string) => {
+      const t = s.toLowerCase().trim();
+      return t.endsWith('s') ? t.slice(0, -1) : t;
+    };
+    // normalised monster name → its chunks (full, uncapped)
+    const monIdx = new Map<string, { cx: number; cy: number }[]>();
+    for (const hit of this.entitiesOfKind('monster')) {
+      monIdx.set(norm(hit.name), hit.locations.map((l) => ({ cx: l.cx, cy: l.cy })));
+    }
+    // every assignable task name across all masters
+    const cats = new Set<string>();
+    for (const tasks of Object.values(this.slayerMasters())) {
+      for (const t of Object.keys(tasks)) cats.add(t);
+    }
+    const out: Record<string, { cx: number; cy: number }[]> = {};
+    for (const cat of cats) {
+      const k = norm(cat);
+      let chunks = monIdx.get(k);
+      if (!chunks) {
+        // fall back to fuzzy containment (e.g. "fever spider" task vs "Fever spider")
+        const acc: { cx: number; cy: number }[] = [];
+        for (const [mn, ch] of monIdx) if (mn === k || mn.includes(k) || k.includes(mn)) acc.push(...ch);
+        chunks = acc;
+      }
+      if (chunks.length) {
+        const seen = new Set<string>();
+        out[k] = chunks.filter((c) => { const id = `${c.cx},${c.cy}`; if (seen.has(id)) return false; seen.add(id); return true; });
+      }
+    }
+    return out;
+  }
+
   /** Per-chunk entry requirements: chunkId → quest(s) needed to enter. */
   questSections(): Record<string, string[]> { return this.doc?.questSections ?? {}; }
 

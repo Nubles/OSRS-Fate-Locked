@@ -44,6 +44,12 @@ const NAMED_TIERS: [RegExp, number][] = [
   [/granite maul/, 6],
   [/(light|heavy) ballista/, 8],
   [/craw's bow|webweaver|crystal bow/, 8],
+  // newer / mechanic weapons the raw-stat fallback mis-rates
+  [/voidwaker|elder maul|soulreaper axe|emberlight|tonalztics of ralos/, 8],
+  [/burning claws|accursed sceptre|(ursine|viggora's|thammaron's) .*(chainmace|sceptre)|keris partisan/, 7],
+  [/dinh's bulwark|amulet of blood fury/, 7],
+  [/amulet of rancour/, 9],
+  [/tome of (fire|water|earth)/, 7],
   // modern / Colosseum / Varlamore sets whose strength is a set effect or
   // mechanic, not raw bonuses (so a set isn't scattered across tiers).
   [/elite calamity/, 9],

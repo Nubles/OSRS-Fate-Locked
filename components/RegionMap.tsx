@@ -1114,7 +1114,13 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
       if (gearService.ready) itemTiers = gearService.tierExport();
     } catch { /* offline / load failed — ship without tiers, plugin degrades */ }
 
-    const payload = buildRuneliteBundle(regionUnlocks, getGameSnapshot(), itemTiers);
+    let slayerChunks: Record<string, { cx: number; cy: number }[]> | undefined;
+    try {
+      await chunkContentService.init();
+      if (chunkContentService.ready) slayerChunks = chunkContentService.slayerReachIndex();
+    } catch { /* no chunk data — plugin falls back to its capped monster index */ }
+
+    const payload = buildRuneliteBundle(regionUnlocks, getGameSnapshot(), itemTiers, slayerChunks);
     // Compact (no indentation) — the plugin parses this, so indentation would
     // just ~double the clipboard/file size for no benefit.
     const json = JSON.stringify(payload);
