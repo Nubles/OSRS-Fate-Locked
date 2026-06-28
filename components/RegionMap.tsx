@@ -1115,7 +1115,9 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
     } catch { /* offline / load failed — ship without tiers, plugin degrades */ }
 
     const payload = buildRuneliteBundle(regionUnlocks, getGameSnapshot(), itemTiers);
-    const json = JSON.stringify(payload, null, 2);
+    // Compact (no indentation) — the plugin parses this, so indentation would
+    // just ~double the clipboard/file size for no benefit.
+    const json = JSON.stringify(payload);
     // Clipboard first (paste straight into the plugin's side panel)…
     navigator.clipboard?.writeText(json).catch(() => {});
     // …and the file download for the watch-this-path workflow.
