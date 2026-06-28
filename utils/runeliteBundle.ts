@@ -1,8 +1,7 @@
 /**
- * Build the RuneLite plugin bundle (the same v3 shape the map's RL-export button
- * produces) from the current run, as a pure function — so both the export button
- * and the live-sync push can share it. Uses the shipped chunk baselines (a player
- * pushing live isn't authoring, so drafts don't apply).
+ * Build the RuneLite plugin bundle (the v3 shape the map's RL-export button
+ * produces) from the current run. Uses the shipped chunk baselines (a player
+ * isn't authoring, so map drafts don't apply).
  */
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
@@ -17,9 +16,15 @@ export interface RuneliteRunState {
   activeBuff: string;
   pinnedGoals: string[];
   linkedAccount?: string;
+  /** Per-slot unlocked equipment tier (e.g. { Head: 2, Weapon: 3 }). */
+  equipment?: Record<string, number>;
 }
 
-export function buildRuneliteBundle(unlockedRegions: string[], state: RuneliteRunState) {
+export function buildRuneliteBundle(
+  unlockedRegions: string[],
+  state: RuneliteRunState,
+  itemTiers?: Record<string, number>,
+) {
   return {
     version: 3,
     exportedAt: new Date().toISOString(),
@@ -28,9 +33,12 @@ export function buildRuneliteBundle(unlockedRegions: string[], state: RuneliteRu
     subAreaChunks: SUB_AREA_CHUNKS,
     regionGroups: { Misthalin: MISTHALIN_AREAS, ...REGION_GROUPS },
     unlockedRegions,
-    // Slim per-chunk "what's here" (monster names), keyed "cx,cy". Optional —
-    // older plugins ignore it; ~26 KB, regenerated with the dataset.
+    // Slim per-chunk "what's here" (categorised), keyed "cx,cy". Optional —
+    // older plugins ignore it; regenerated with the dataset.
     chunkContent: CHUNK_CONTENT_LITE,
+    // Item-id → tier map so the plugin can warn on over-tier worn gear.
+    // Optional; omitted if the gear dataset wasn't loaded at export time.
+    ...(itemTiers ? { itemTiers } : {}),
     state,
   };
 }

@@ -187,6 +187,12 @@ class GearService {
   tierOf(id: number): number {
     return this.tierMap.get(id) ?? 1;
   }
+  /** Full item-id → tier map (string-keyed) for the RuneLite bundle export. */
+  tierExport(): Record<string, number> {
+    const out: Record<string, number> = {};
+    for (const [id, tier] of this.tierMap) out[id] = tier;
+    return out;
+  }
 }
 
 export const gearService = new GearService();
