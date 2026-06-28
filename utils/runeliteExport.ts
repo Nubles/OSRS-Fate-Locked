@@ -10,6 +10,28 @@ import { chunkContentService } from '../services/ChunkContentService';
 import { showToast } from './toast';
 import { UnlockState } from '../types';
 
+/**
+ * gzip+base64 a string for the clipboard, prefixed "FLGZ:" so the plugin knows
+ * to inflate it. Returns the plain string unchanged if CompressionStream is
+ * unavailable (older browser) — the plugin accepts both forms.
+ */
+async function compressForClipboard(json: string): Promise<string> {
+  const CS: any = (globalThis as any).CompressionStream;
+  if (!CS) return json;
+  try {
+    const stream = new Blob([json]).stream().pipeThrough(new CS('gzip'));
+    const bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+    let bin = '';
+    const CHUNK = 0x8000;
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+      bin += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+    }
+    return 'FLGZ:' + btoa(bin);
+  } catch {
+    return json; // any failure → plain JSON still works
+  }
+}
+
 export interface RuneliteRunInput {
   keys: number;
   specialKeys: number;
@@ -46,9 +68,13 @@ export async function exportRuneliteBundle(unlocks: UnlockState, run: RuneliteRu
   const payload = buildRuneliteBundle(unlocks.regions, state, itemTiers, slayerChunks);
   const json = JSON.stringify(payload); // compact — the plugin parses it
 
-  // Clipboard (paste straight into the plugin's panel)…
-  navigator.clipboard?.writeText(json).catch(() => { /* non-secure origin / no focus */ });
-  // …and a file download for the watch-this-path / Downloads auto-detect flow.
+  // Clipboard: compress (gzip+base64) so we don't dump ~115 KB of mostly-static
+  // reference data onto the user's clipboard — the plugin inflates the "FLGZ:"
+  // prefix. Falls back to plain JSON if the browser lacks CompressionStream.
+  const clip = await compressForClipboard(json);
+  navigator.clipboard?.writeText(clip).catch(() => { /* non-secure origin / no focus */ });
+  // …and a file download kept as PLAIN, readable JSON (openable/inspectable, and
+  // what the plugin's Downloads auto-detect / file-watch path reads).
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
