@@ -1,0 +1,10 @@
+name = "fate-relay"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# Create the KV namespace once with:
+#   wrangler kv namespace create RELAY
+# then paste the returned id below.
+[[kv_namespaces]]
+binding = "RELAY"
+id = "PASTE_YOUR_KV_NAMESPACE_ID_HERE"

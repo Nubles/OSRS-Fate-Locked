@@ -42,7 +42,15 @@ export interface RuneliteRunInput {
   linkedAccount?: string;
 }
 
-export async function exportRuneliteBundle(unlocks: UnlockState, run: RuneliteRunInput): Promise<void> {
+/**
+ * Build the v3 bundle for the current run and return it both as plain JSON (for
+ * the readable file download) and as the compressed FLGZ form (clipboard / relay).
+ * Shared by the clipboard/file export and the online relay push.
+ */
+export async function buildBundlePayload(
+  unlocks: UnlockState,
+  run: RuneliteRunInput,
+): Promise<{ json: string; compressed: string }> {
   let itemTiers: Record<string, number> | undefined;
   try {
     await gearService.init();           // cached after first load
@@ -66,12 +74,15 @@ export async function exportRuneliteBundle(unlocks: UnlockState, run: RuneliteRu
     equipment: unlocks.equipment,
   };
   const payload = buildRuneliteBundle(unlocks.regions, state, itemTiers, slayerChunks);
-  const json = JSON.stringify(payload); // compact — the plugin parses it
+  const json = JSON.stringify(payload);
+  const compressed = await compressForClipboard(json);
+  return { json, compressed };
+}
 
-  // Clipboard: compress (gzip+base64) so we don't dump ~115 KB of mostly-static
-  // reference data onto the user's clipboard — the plugin inflates the "FLGZ:"
-  // prefix. Falls back to plain JSON if the browser lacks CompressionStream.
-  const clip = await compressForClipboard(json);
+export async function exportRuneliteBundle(unlocks: UnlockState, run: RuneliteRunInput): Promise<void> {
+  // Clipboard gets the compressed (gzip+base64 "FLGZ:") form so we don't dump
+  // ~115 KB onto the clipboard; the file download stays plain readable JSON.
+  const { json, compressed: clip } = await buildBundlePayload(unlocks, run);
   navigator.clipboard?.writeText(clip).catch(() => { /* non-secure origin / no focus */ });
   // …and a file download kept as PLAIN, readable JSON (openable/inspectable, and
   // what the plugin's Downloads auto-detect / file-watch path reads).

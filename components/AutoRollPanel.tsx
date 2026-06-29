@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Loader2, Search, Sparkles, Dice5, CheckCircle2, AlertTriangle, RefreshCw, Lock } from 'lucide-react';
 import { useGame } from '../context/GameContext';
+import { OnlineSyncPanel } from './OnlineSyncPanel';
 
 /**
  * Auto-Roll (PROTOTYPE)
@@ -360,6 +361,8 @@ export function AutoRollPanel() {
           Enter your OSRS username to bind this run to your account. It's saved permanently to the run and can't be changed afterward.
         </div>
       )}
+
+      <OnlineSyncPanel />
     </div>
   );
 }

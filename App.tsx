@@ -18,6 +18,7 @@ import { VoidAltar } from './components/VoidAltar';
 import { TransmutationEffect } from './components/TransmutationEffect';
 import { ClarityEffect, GreedEffect, ChaosEffect } from './components/RitualEffects';
 import { EffectsLayer } from './components/EffectsLayer';
+import { OnlineSyncDriver } from './components/OnlineSyncDriver';
 import { OnboardingWizard } from './components/OnboardingWizard';
 import { ProfileSwitcher } from './components/ProfileSwitcher';
 import { PanelErrorBoundary } from './components/PanelErrorBoundary';
@@ -521,6 +522,8 @@ const GameLayout = () => {
   return (
     <div className="min-h-screen bg-osrs-bg text-osrs-text pb-6 font-sans selection:bg-osrs-gold selection:text-black relative">
       <EffectsLayer />
+      <OnlineSyncDriver />
+
 
       {/* Shared notification stacks: every toast/reveal portals into one of
           these so they queue cleanly instead of overlapping in a corner. */}
