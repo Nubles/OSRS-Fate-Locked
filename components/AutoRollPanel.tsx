@@ -33,8 +33,19 @@ const womMetric = (skill: string) =>
   skill === 'Runecraft' ? 'runecrafting' : skill.toLowerCase();
 
 interface FetchedSkill { skill: string; level: number }
+/** WiseOldMan account `type` → a friendly label. GIM isn't distinguishable from
+ *  the player type (WOM reports it as ironman/hardcore), so it's not listed. */
+const ACCOUNT_TYPE_LABEL: Record<string, string> = {
+  ultimate: 'Ultimate Ironman',
+  hardcore: 'Hardcore Ironman',
+  ironman: 'Ironman',
+  regular: 'Regular',
+  unknown: 'Unknown',
+};
+
 interface Fetched {
   displayName: string;
+  accountType: string;
   totalLevel: number;
   combatLevel: number | null;
   skills: FetchedSkill[];
@@ -73,6 +84,7 @@ async function fetchPlayer(name: string): Promise<Fetched> {
   });
   return {
     displayName: data.displayName ?? name,
+    accountType: typeof data.type === 'string' ? data.type : 'unknown',
     totalLevel: snap.overall?.level ?? skills.reduce((a, s) => a + s.level, 0),
     combatLevel: typeof data.combatLevel === 'number' ? data.combatLevel : null,
     skills,
@@ -237,11 +249,23 @@ export function AutoRollPanel() {
         <div className="space-y-4">
           <div className="flex items-center gap-4 flex-wrap bg-white/5 border border-white/10 rounded-lg px-4 py-3">
             <div>
-              <div className="text-base font-bold text-white">{fetched.displayName}</div>
+              <div className="text-base font-bold text-white flex items-center gap-2">
+                {fetched.displayName}
+                <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+                  fetched.accountType === 'ultimate' ? 'bg-sky-500/15 border-sky-500/40 text-sky-300'
+                  : fetched.accountType === 'hardcore' ? 'bg-red-500/15 border-red-500/40 text-red-300'
+                  : fetched.accountType === 'ironman' ? 'bg-gray-400/15 border-gray-400/40 text-gray-300'
+                  : 'bg-amber-500/15 border-amber-500/40 text-amber-300'}`}>
+                  {ACCOUNT_TYPE_LABEL[fetched.accountType] ?? 'Unknown'}
+                </span>
+              </div>
               <div className="text-[11px] text-gray-500">
                 Total level <span className="text-gray-300 font-mono">{fetched.totalLevel}</span>
                 {fetched.combatLevel != null && <> · Combat <span className="text-gray-300 font-mono">{fetched.combatLevel}</span></>}
               </div>
+              {fetched.accountType === 'regular' && (
+                <div className="text-[10px] text-amber-400/90 mt-0.5">⚠ Not an ironman account on the hiscores.</div>
+              )}
             </div>
             <div className="flex-1" />
             {!applied && !skillRolling && gains.length > 0 && (
