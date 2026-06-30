@@ -7,7 +7,7 @@
  * and the always-mounted driver stay in sync. No data leaves until the user
  * explicitly enables it.
  */
-const DEFAULT_BASE = 'https://fate-relay.alexanderhaynes18.workers.dev';
+const DEFAULT_BASE = 'https://fate-relay.fatelocked.workers.dev';
 const SESSION_KEY = 'fate_relay_session_v1';
 const BASE_KEY = 'fate_relay_base';
 

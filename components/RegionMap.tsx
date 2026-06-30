@@ -50,7 +50,7 @@ const CLUE_PREFIX = 'Clue: ';
 // Default proxy shipped for everyone (a Cloudflare Worker that re-serves the
 // starminers feed with CORS). A per-browser localStorage override or a build-time
 // VITE_STAR_FEED still take precedence.
-const DEFAULT_STAR_FEED = 'https://star-proxy.alexanderhaynes18.workers.dev/';
+const DEFAULT_STAR_FEED = 'https://star-proxy.fatelocked.workers.dev/';
 const getStarFeedUrl = (): string => {
   const env = (import.meta as any).env?.VITE_STAR_FEED as string | undefined;
   let ls = '';

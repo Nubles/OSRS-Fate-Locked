@@ -18,7 +18,7 @@ From `workers/fate-relay/`:
 
 ## Point the app at it
 
-The web app defaults to `https://fate-relay.alexanderhaynes18.workers.dev`.
+The web app defaults to `https://fate-relay.fatelocked.workers.dev`.
 Override per-deploy with `VITE_FATE_RELAY=https://fate-relay.<you>.workers.dev`,
 or at runtime via `localStorage.setItem('fate_relay_base', '<url>')`.
 
