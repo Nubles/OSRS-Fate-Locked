@@ -55,7 +55,7 @@ export const OnlineSyncPanel: React.FC = () => {
             </span>
           </div>
           <p className="text-[11px] text-gray-500">
-            In RuneLite, open the Fate Locked plugin config and paste this into <span className="text-gray-300">Online sync code</span>.
+            In RuneLite, open the Fate Locked plugin config, tick <span className="text-gray-300">Enable online sync</span> (accept the prompt), then paste this into <span className="text-gray-300">Online sync code</span>.
             Your unlocks then sync over the internet — no clipboard or files. Data is ephemeral (24h); only this code can read it.
           </p>
           {relaySync.status === 'error' && relaySync.lastError && (
