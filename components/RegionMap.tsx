@@ -55,6 +55,12 @@ const getStarFeedUrl = (): string => {
   const env = (import.meta as any).env?.VITE_STAR_FEED as string | undefined;
   let ls = '';
   try { ls = localStorage.getItem('fate_star_feed') || ''; } catch { /* ignore */ }
+  // Heal stale overrides that point at the retired workers.dev subdomain so they
+  // fall through to the current default instead of failing to fetch.
+  if (ls.includes('.alexanderhaynes18.workers.dev')) {
+    try { localStorage.removeItem('fate_star_feed'); } catch { /* ignore */ }
+    ls = '';
+  }
   return (ls || env || DEFAULT_STAR_FEED || '').trim();
 };
 interface LiveStar { world: number; calledLocation: string; tier: number; minTime: number; maxTime: number }
