@@ -8,6 +8,7 @@ import { VoidReveal } from './VoidReveal';
 import { wikiService } from '../services/WikiService';
 import { showToast } from '../utils/toast';
 import { Sparkles, Dices, HelpCircle, Dna, Lock, Sprout, TrendingUp, AlertTriangle, Check, Key } from 'lucide-react';
+import { ALL_CHUNK_KEYS, chunkLabel } from '../utils/chunkAdjacency';
 
 // --- Inner Components ---
 interface Accent {
@@ -26,6 +27,7 @@ const ACCENTS: Record<string, Accent> = {
   [TableType.EQUIPMENT]: { icon: 'text-amber-300', bar: 'bg-amber-400', hoverBorder: 'hover:border-amber-400/70', hoverShadow: 'hover:shadow-[0_0_22px_-6px_rgba(251,191,36,0.6)]', titleHover: 'group-hover:text-amber-200', ctaBorder: 'border-amber-500/25', ctaText: 'text-amber-300/80', ctaHover: 'group-hover:bg-amber-500/15 group-hover:border-amber-400/50 group-hover:text-amber-100' },
   [TableType.SKILLS]: { icon: 'text-sky-300', bar: 'bg-sky-400', hoverBorder: 'hover:border-sky-400/70', hoverShadow: 'hover:shadow-[0_0_22px_-6px_rgba(56,189,248,0.6)]', titleHover: 'group-hover:text-sky-200', ctaBorder: 'border-sky-500/25', ctaText: 'text-sky-300/80', ctaHover: 'group-hover:bg-sky-500/15 group-hover:border-sky-400/50 group-hover:text-sky-100' },
   [TableType.REGIONS]: { icon: 'text-emerald-300', bar: 'bg-emerald-400', hoverBorder: 'hover:border-emerald-400/70', hoverShadow: 'hover:shadow-[0_0_22px_-6px_rgba(52,211,153,0.6)]', titleHover: 'group-hover:text-emerald-200', ctaBorder: 'border-emerald-500/25', ctaText: 'text-emerald-300/80', ctaHover: 'group-hover:bg-emerald-500/15 group-hover:border-emerald-400/50 group-hover:text-emerald-100' },
+  [TableType.CHUNKS]: { icon: 'text-emerald-300', bar: 'bg-emerald-400', hoverBorder: 'hover:border-emerald-400/70', hoverShadow: 'hover:shadow-[0_0_22px_-6px_rgba(52,211,153,0.6)]', titleHover: 'group-hover:text-emerald-200', ctaBorder: 'border-emerald-500/25', ctaText: 'text-emerald-300/80', ctaHover: 'group-hover:bg-emerald-500/15 group-hover:border-emerald-400/50 group-hover:text-emerald-100' },
   [TableType.MOBILITY]: { icon: 'text-cyan-300', bar: 'bg-cyan-400', hoverBorder: 'hover:border-cyan-400/70', hoverShadow: 'hover:shadow-[0_0_22px_-6px_rgba(34,211,238,0.6)]', titleHover: 'group-hover:text-cyan-200', ctaBorder: 'border-cyan-500/25', ctaText: 'text-cyan-300/80', ctaHover: 'group-hover:bg-cyan-500/15 group-hover:border-cyan-400/50 group-hover:text-cyan-100' },
   [TableType.ARCANA]: { icon: 'text-violet-300', bar: 'bg-violet-400', hoverBorder: 'hover:border-violet-400/70', hoverShadow: 'hover:shadow-[0_0_22px_-6px_rgba(167,139,250,0.6)]', titleHover: 'group-hover:text-violet-200', ctaBorder: 'border-violet-500/25', ctaText: 'text-violet-300/80', ctaHover: 'group-hover:bg-violet-500/15 group-hover:border-violet-400/50 group-hover:text-violet-100' },
   [TableType.STORAGE]: { icon: 'text-orange-300', bar: 'bg-orange-400', hoverBorder: 'hover:border-orange-400/70', hoverShadow: 'hover:shadow-[0_0_22px_-6px_rgba(251,146,60,0.6)]', titleHover: 'group-hover:text-orange-200', ctaBorder: 'border-orange-500/25', ctaText: 'text-orange-300/80', ctaHover: 'group-hover:bg-orange-500/15 group-hover:border-orange-400/50 group-hover:text-orange-100' },
@@ -145,7 +147,8 @@ const SpendCard: React.FC<SpendCardProps> = ({
 };
 
 export const GachaSection: React.FC = () => {
-  const { keys, specialKeys, chaosKeys, unlocks, unlockContent, animationsEnabled } = useGame();
+  const { keys, specialKeys, chaosKeys, unlocks, unlockContent, animationsEnabled, gameModeId } = useGame();
+  const isChunked = gameModeId === 'chunked';
   const [pendingReveal, setPendingReveal] = useState<{ 
       item: string, 
       tableType: TableType, 
@@ -165,6 +168,7 @@ export const GachaSection: React.FC = () => {
     if (table === 'skill') return `${baseUrl}${item}_icon.png`;
     if (table === 'equipment') return SLOT_CONFIG[item] ? `${baseUrl}${SLOT_CONFIG[item].file}` : undefined;
     if (table === 'region') return REGION_ICONS[item] ? `${baseUrl}${REGION_ICONS[item]}` : `${baseUrl}Globe_icon.png`;
+    if (table === 'chunks') return `${baseUrl}World_map_icon.png`;
     return SPECIAL_ICONS[item] ? `${baseUrl}${SPECIAL_ICONS[item]}` : undefined;
   };
   
@@ -210,9 +214,10 @@ export const GachaSection: React.FC = () => {
 
       // Build a global pool of all valid unlocks across all tables
       const allTables = [
-          TableType.EQUIPMENT, TableType.SKILLS, TableType.REGIONS, TableType.MOBILITY,
-          TableType.ARCANA, TableType.POH, TableType.MERCHANTS, TableType.MINIGAMES,
-          TableType.BOSSES, TableType.STORAGE, TableType.GUILDS,
+          TableType.EQUIPMENT, TableType.SKILLS,
+          ...(isChunked ? [TableType.CHUNKS] : [TableType.REGIONS]),
+          TableType.MOBILITY, TableType.ARCANA, TableType.POH, TableType.MERCHANTS,
+          TableType.MINIGAMES, TableType.BOSSES, TableType.STORAGE, TableType.GUILDS,
           TableType.FARMING_LAYERS, TableType.SLAYER_UNLOCKS
       ];
 
@@ -267,7 +272,9 @@ export const GachaSection: React.FC = () => {
   const SPEND_CATEGORIES: { type: TableType; label: string; subLabel: string; iconSrc?: string; icon?: any; unlocked: number; total: number; can: boolean }[] = [
     { type: TableType.EQUIPMENT, label: 'Equipment', subLabel: 'Upgrade Gear', iconSrc: OSRS_GACHA_ICONS.EQUIPMENT, unlocked: tierCount(unlocks.equipment), total: EQUIPMENT_SLOTS.length, can: canUnlock.equipment },
     { type: TableType.SKILLS, label: 'Skills', subLabel: '+10 Level Cap', iconSrc: OSRS_GACHA_ICONS.SKILLS, unlocked: tierCount(unlocks.skills), total: SKILLS_LIST.length, can: canUnlock.skills },
-    { type: TableType.REGIONS, label: 'Areas', subLabel: 'New Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: (unlocks.regions ?? []).length, total: REGIONS_LIST.length, can: canUnlock.regions },
+    isChunked
+      ? { type: TableType.CHUNKS, label: 'Chunks', subLabel: 'Adjacent Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: (unlocks.chunks ?? []).length, total: ALL_CHUNK_KEYS.length, can: canUnlock.chunks }
+      : { type: TableType.REGIONS, label: 'Areas', subLabel: 'New Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: (unlocks.regions ?? []).length, total: REGIONS_LIST.length, can: canUnlock.regions },
     { type: TableType.MOBILITY, label: 'Mobility', subLabel: 'Travel Networks', iconSrc: OSRS_GACHA_ICONS.MOBILITY, unlocked: (unlocks.mobility ?? []).length, total: MOBILITY_LIST.length, can: canUnlock.mobility },
     { type: TableType.ARCANA, label: 'Arcana', subLabel: 'Spells & Prayers', iconSrc: OSRS_GACHA_ICONS.ARCANA, unlocked: (unlocks.arcana ?? []).length, total: ARCANA_LIST.length, can: canUnlock.arcana },
     { type: TableType.STORAGE, label: 'Storage', subLabel: 'Inventory Space', iconSrc: OSRS_GACHA_ICONS.STORAGE, unlocked: (unlocks.storage ?? []).length, total: STORAGE_LIST.length, can: canUnlock.storage },
@@ -283,8 +290,8 @@ export const GachaSection: React.FC = () => {
   return (
     <div className="h-full flex flex-col relative p-4">
       {pendingReveal && (
-          <VoidReveal 
-             itemName={pendingReveal.item} 
+          <VoidReveal
+             itemName={pendingReveal.tableType === TableType.CHUNKS ? chunkLabel(pendingReveal.item) : pendingReveal.item}
              itemType={pendingReveal.tableType} 
              itemImage={pendingReveal.image} 
              onComplete={finalizeReveal} 

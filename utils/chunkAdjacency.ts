@@ -1,5 +1,6 @@
 import type { ChunkCoord } from './mapCoords';
 import { REGION_CHUNKS } from '../data/regionChunks';
+import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 
 /**
  * Chunked mode's frontier logic: unlocking is one map-region chunk at a time,
@@ -61,3 +62,33 @@ export const isFrontierChunk = (key: string, unlockedKeys: readonly string[]): b
 /** Full frontier list — used for map rendering (highlight rollable chunks), not the hot unlock path. */
 export const getChunkFrontier = (unlockedKeys: readonly string[]): ChunkCoord[] =>
   ALL_CHUNKS.filter(c => isFrontierChunk(chunkKey(c), unlockedKeys));
+
+const CHUNK_TO_SUBAREA: Record<string, string> = (() => {
+  const m: Record<string, string> = {};
+  for (const [name, chunks] of Object.entries(SUB_AREA_CHUNKS)) {
+    for (const c of chunks) m[chunkKey(c)] = name;
+  }
+  return m;
+})();
+
+const CHUNK_TO_REGION: Record<string, string> = (() => {
+  const m: Record<string, string> = {};
+  for (const [name, chunks] of Object.entries(REGION_CHUNKS)) {
+    for (const c of chunks) m[chunkKey(c)] = name;
+  }
+  return m;
+})();
+
+/**
+ * Human-readable label for a chunk key, for the gacha reveal/panel display —
+ * its named sub-area if authored (e.g. "Falador"), else its parent continent
+ * plus coords (e.g. "Asgarnia (46, 51)"), since a raw "cx,cy" key means
+ * nothing to a player.
+ */
+export const chunkLabel = (key: string): string => {
+  const named = CHUNK_TO_SUBAREA[key];
+  if (named) return named;
+  const region = CHUNK_TO_REGION[key];
+  const { cx, cy } = parseChunkKey(key);
+  return region ? `${region} (${cx}, ${cy})` : `Uncharted Chunk (${cx}, ${cy})`;
+};
