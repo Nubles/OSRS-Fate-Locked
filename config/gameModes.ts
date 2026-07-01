@@ -16,11 +16,12 @@ export interface GameModeRules {
   /** Whether per-region passive modifiers are active. */
   regionModifiers: boolean;
   /**
-   * Which areas are free at the start. 'misthalin' (default) frees the whole
-   * starter region; 'lumbridge' frees only Lumbridge — the Xtreme start.
-   * Unused (and meaningless) for the 'chunked' mode — see chunkGranularity.
+   * Which NAMED areas are free at the start. 'misthalin' (default) frees the
+   * whole starter region; 'lumbridge' frees only Lumbridge — the Xtreme start;
+   * 'none' frees no named area — required for 'chunked' mode, whose free
+   * baseline is a single map-region chunk (chunkGranularity), not a name.
    */
-  startArea?: 'misthalin' | 'lumbridge';
+  startArea?: 'misthalin' | 'lumbridge' | 'none';
   /**
    * Chunked mode only: unlocking happens one map-region chunk at a time,
    * adjacent to the unlocked set (TableType.CHUNKS), instead of whole named
@@ -120,6 +121,7 @@ export const GAME_MODES: GameMode[] = [
       omniChanceBase: 2,
       ritualCostMultiplier: 1,
       regionModifiers: false,
+      startArea: 'none',
       chunkGranularity: true,
     },
   },

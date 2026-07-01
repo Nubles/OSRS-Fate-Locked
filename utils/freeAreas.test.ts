@@ -26,4 +26,12 @@ describe('freeAreas', () => {
     setStartArea(undefined);
     expect(isFreeArea('Varrock')).toBe(true);
   });
+
+  it("Chunked mode ('none') frees no named area — the map must not read as all-Misthalin-unlocked", () => {
+    setStartArea('none');
+    expect(isFreeArea('Misthalin')).toBe(false);
+    expect(isFreeArea('Lumbridge')).toBe(false);
+    expect(isFreeArea('Varrock')).toBe(false);
+    expect(isFreeArea('Draynor Village')).toBe(false);
+  });
 });
