@@ -15,6 +15,7 @@ import { chunkReachability } from '../utils/chunkReach';
 import { entryBlockedGate } from '../utils/questDoability';
 import { QUEST_DATA } from '../data/questData';
 import { isChunkUnlocked, isFrontierChunk } from '../utils/chunkAdjacency';
+import { isNamedAreaReachableViaChunks } from '../utils/reachability';
 
 type LensTone = 'good' | 'warn' | 'bad';
 const TONE_FILL: Record<LensTone, string> = { good: 'rgba(16,185,129,0.30)', warn: 'rgba(245,158,11,0.10)', bad: 'rgba(239,68,68,0.22)' };
@@ -270,6 +271,8 @@ interface MapSurfaceProps {
   rectBox: { cx0: number; cy0: number; cx1: number; cy1: number } | null;
   rectKind: 'add' | 'remove' | null;
   regionUnlocks: string[];
+  chunkUnlocks: string[];
+  isChunked: boolean;
 }
 
 // Progressive map: a tiny low-res placeholder shows instantly (and sizes the
@@ -308,7 +311,7 @@ const ProgressiveMapImage: React.FC = () => {
   );
 };
 
-const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectKind, regionUnlocks }: MapSurfaceProps) => (
+const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectKind, regionUnlocks, chunkUnlocks, isChunked }: MapSurfaceProps) => (
   <>
     <ProgressiveMapImage />
 
@@ -361,7 +364,9 @@ const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectK
 
     {Object.entries(REGION_COORDS).map(([region, coords]) => {
       const isMisthalin = region === 'Misthalin';
-      const isUnlocked = isFreeArea(region) || regionUnlocks.includes(region);
+      const isUnlocked = isChunked
+        ? isNamedAreaReachableViaChunks(region, chunkUnlocks)
+        : isFreeArea(region) || regionUnlocks.includes(region);
       const subRegions = isMisthalin ? MISTHALIN_AREAS : REGION_GROUPS[region] || [];
       return (
         <div
@@ -376,7 +381,7 @@ const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectK
             <h4 className={`font-bold text-sm border-b pb-1 ${isUnlocked ? 'text-emerald-400 border-emerald-500/30' : 'text-red-400 border-red-500/30'}`}>{region}</h4>
             <div className="flex flex-wrap gap-1">
               {subRegions.slice(0, 8).map(area => (
-                <span key={area} className={`text-[9px] px-1.5 py-0.5 rounded text-gray-300 ${regionUnlocks.includes(area) || isFreeArea(area) ? 'bg-emerald-900/40 text-emerald-300' : 'bg-white/10'}`}>{area}</span>
+                <span key={area} className={`text-[9px] px-1.5 py-0.5 rounded text-gray-300 ${(isChunked ? isNamedAreaReachableViaChunks(area, chunkUnlocks) : regionUnlocks.includes(area) || isFreeArea(area)) ? 'bg-emerald-900/40 text-emerald-300' : 'bg-white/10'}`}>{area}</span>
               ))}
               {subRegions.length > 8 && <span className="text-[9px] text-gray-500">+{subRegions.length - 8} more...</span>}
             </div>
@@ -1529,6 +1534,8 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
             rectBox={rectBox}
             rectKind={rectMode.current}
             regionUnlocks={regionUnlocks}
+            chunkUnlocks={chunkUnlocks}
+            isChunked={isChunked}
           />
 
           {/* Chunk-lens highlight overlay — inside the transformed layer so the
