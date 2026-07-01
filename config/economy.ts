@@ -25,6 +25,20 @@ export const SKILLS_TIER_CAP = 10;     // tiers per skill (1 Key each)
 export const LEVEL_ROLL_MAX = 20;      // ceil(99/5) — the cap of the Level ÷ 5 curve
 export const LEVEL_CHAOS_CHANCE = 2;   // % chance of a Chaos Key on any level up
 
+// ── Xtreme Start anti-softlock insurance ──────────────────────────────────
+// Xtreme Start frees only Lumbridge, which rules out slayer/clues/most quests
+// & diaries/CAs as key sources — level-ups are the only thing left, and a run
+// with truly awful RNG on that single faucet can stall forever with nothing
+// left to try. This is a deterministic (not RNG) safety net: a guaranteed key
+// every 50 total levels, but ONLY while gameModeId === 'xtreme' AND
+// unlocks.regions is still empty. It turns itself off the moment the run
+// unlocks a second region, so it never inflates the tuned earn:sink ratio for
+// Vanilla/Chill/Custom runs or for Xtreme runs that have already broken out.
+// A fresh account's total level is 32 (all skills at 1), so the first payout
+// at total 82 is real, Lumbridge-reachable grinding (WC/Mining/Fishing/
+// Cooking/Firemaking/Crafting/Prayer/Thieving/Farming), not a freebie.
+export const XTREME_MILESTONE_INTERVAL = 50; // total-level gap between guaranteed keys
+
 // ── Earning ──────────────────────────────────────────────────────────────────
 export type EarnCategory =
   | 'Quests' | 'Achievement Diaries' | 'Combat Achievements'

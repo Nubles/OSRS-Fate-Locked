@@ -78,7 +78,7 @@ export interface LogEntry {
   // outcomes; the bare 'ROLL' literal was a footgun (consumers filtered for
   // it expecting all rolls and got nothing). Use isRollEntry() in utils
   // instead of comparing to 'ROLL'.
-  type: 'UNLOCK' | 'PITY' | 'ALTAR' | 'ROLL_SUCCESS' | 'ROLL_FAIL' | 'ROLL_OMNI' | 'LEVEL_UP';
+  type: 'UNLOCK' | 'PITY' | 'ALTAR' | 'ROLL_SUCCESS' | 'ROLL_FAIL' | 'ROLL_OMNI' | 'LEVEL_UP' | 'XTREME_MILESTONE';
   source?: string;
   result?: 'SUCCESS' | 'FAIL';
   rollValue?: number;
@@ -136,6 +136,15 @@ export interface GameState {
   rival?: RivalState; // Rival Ghost the player is racing (optional)
   /** OSRS account this run is bound to (Auto-Roll). Set once, then permanent. */
   linkedAccount?: string;
+  /**
+   * Xtreme Start anti-softlock insurance: how many 50-total-level milestones
+   * have already paid out a guaranteed key. Only accrues while gameModeId is
+   * 'xtreme' AND unlocks.regions is still empty (no extra region unlocked yet)
+   * — see XTREME_MILESTONE_INTERVAL in config/economy.ts. Stops mattering the
+   * moment the run breaks out of Lumbridge, so it never touches the normal
+   * key economy for any other mode.
+   */
+  xtremeMilestoneClaimed?: number;
 }
 
 /** A simulated nemesis ('sim') or a friend's run snapshot ('friend') to race. */

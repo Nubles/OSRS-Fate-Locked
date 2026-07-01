@@ -54,6 +54,7 @@ export const detectMilestones = (history: LogEntry[]): Milestone[] => {
     if (e.type === 'ROLL_SUCCESS' && !seen.has('success')) { seen.add('success'); push('First Key earned', '🗝️'); }
     if (e.type === 'UNLOCK' && !seen.has('unlock')) { seen.add('unlock'); push(`First unlock: ${e.meta?.item ?? '?'}`, '🔓'); }
     if (e.type === 'LEVEL_UP' && !seen.has('level')) { seen.add('level'); push('First level up', '📈'); }
+    if (e.type === 'XTREME_MILESTONE') push('Xtreme milestone key', '🌟');
     if (e.type === 'ALTAR' && !seen.has('altar')) { seen.add('altar'); push('First ritual performed', '🕯️'); }
     if (rollCount > 0 && rollCount % 100 === 0 && !seen.has(`r${rollCount}`)) {
       seen.add(`r${rollCount}`);

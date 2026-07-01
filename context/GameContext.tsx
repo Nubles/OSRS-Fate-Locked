@@ -7,7 +7,7 @@ import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
 import { setStartArea } from '../utils/freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
-import { getRitual } from '../config/economy';
+import { getRitual, XTREME_MILESTONE_INTERVAL } from '../config/economy';
 import { rollDice, UNLOCK_COST } from '../utils/gameEngine';
 import { hashEntry, ensureChain } from '../utils/integrity';
 import { pushBackup, listBackups as readBackups, getBackupData, BackupMeta } from '../utils/backups';
@@ -518,12 +518,36 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
           });
       }
 
+      // Xtreme Start anti-softlock insurance — see XTREME_MILESTONE_INTERVAL in
+      // config/economy.ts. Deterministic, not RNG, and only accrues while the
+      // run is still stuck at just the start area.
+      let keys = state.keys;
+      let xtremeMilestoneClaimed = state.xtremeMilestoneClaimed ?? 0;
+      if (state.gameModeId === 'xtreme' && state.unlocks.regions.length === 0) {
+        const eligible = Math.floor(totalLevel / XTREME_MILESTONE_INTERVAL);
+        if (eligible > xtremeMilestoneClaimed) {
+          const gained = eligible - xtremeMilestoneClaimed;
+          keys += gained;
+          xtremeMilestoneClaimed = eligible;
+          logs.push({
+            id: generateId(),
+            timestamp: now,
+            type: 'XTREME_MILESTONE',
+            message: `Xtreme milestone: Total Level ${eligible * XTREME_MILESTONE_INTERVAL} — ${gained === 1 ? 'a Key' : `${gained} Keys`} guaranteed.`,
+            details: `Stuck at the start area with nothing else to roll — Fate steps in every ${XTREME_MILESTONE_INTERVAL} total levels.`,
+            meta: { totalLevel, gained }
+          });
+        }
+      }
+
       const eventMeta: LevelUpEventMeta = { skill, level: newLevel, totalLevel, chaosKeyAwarded };
 
       return {
         ...state,
         unlocks: newUnlocks,
+        keys,
         chaosKeys,
+        xtremeMilestoneClaimed,
         history: logs,
         lastEvent: { id: generateId(), type: 'LEVEL_UP', meta: eventMeta }
       };

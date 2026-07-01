@@ -183,6 +183,9 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3): { violatio
       case 'LEVEL_UP':
         if (/Chaos Key Drop/.test(e.message)) s.chaosKeys += 1;
         break;
+      case 'XTREME_MILESTONE':
+        s.keys += typeof e.meta?.gained === 'number' ? e.meta.gained : 1;
+        break;
     }
     check(i);
   }

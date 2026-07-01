@@ -66,6 +66,14 @@ const getLogStyle = (entry: LogEntry) => {
         bg: 'bg-cyan-900/10',
         glow: 'group-hover:shadow-[inset_0_0_20px_rgba(34,211,238,0.1)]'
       };
+    case 'XTREME_MILESTONE':
+      return {
+        icon: Sparkles,
+        color: 'text-emerald-400',
+        border: 'border-l-emerald-500',
+        bg: 'bg-emerald-900/10',
+        glow: 'group-hover:shadow-[inset_0_0_20px_rgba(52,211,153,0.1)]'
+      };
     default:
       return {
         icon: AlertCircle,
@@ -154,7 +162,7 @@ export const LogViewer: React.FC = () => {
         if (filterType === 'ROLLS') return isRollEntry(entry);
         if (filterType === 'UNLOCKS') return entry.type === 'UNLOCK';
         if (filterType === 'RITUALS') return entry.type === 'ALTAR';
-        if (filterType === 'PROGRESS') return entry.type === 'LEVEL_UP';
+        if (filterType === 'PROGRESS') return entry.type === 'LEVEL_UP' || entry.type === 'XTREME_MILESTONE';
         return true;
       });
     }

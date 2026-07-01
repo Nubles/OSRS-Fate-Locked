@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { gameReducer, initialState } from './GameContext';
 import { TableType, LogEntry } from '../types';
 import { isRollEntry } from '../utils/logEntry';
+import { XTREME_MILESTONE_INTERVAL } from '../config/economy';
 
 /**
  * Tests for the core game reducer — every roll, unlock, ritual, level-up and
@@ -173,6 +174,44 @@ describe('LEVEL_UP', () => {
   it('awards a chaos key when the roll lands under 2%', () => {
     const s = gameReducer(base(), { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.01 } });
     expect(s.chaosKeys).toBe(initialState.chaosKeys + 1);
+  });
+});
+
+// --- Xtreme Start milestone insurance ---------------------------------------
+
+describe('LEVEL_UP — Xtreme milestone insurance', () => {
+  const xtremeIsolated = () => ({ ...base(), gameModeId: 'xtreme', unlocks: { ...initialState.unlocks, regions: [] } });
+
+  it('does nothing outside Xtreme mode, even with no regions unlocked', () => {
+    const state = { ...base(), gameModeId: 'vanilla', unlocks: { ...initialState.unlocks, regions: [] } };
+    const s = gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
+    expect(s.keys).toBe(initialState.keys);
+    expect(s.xtremeMilestoneClaimed ?? 0).toBe(0);
+  });
+
+  it('does nothing in Xtreme mode once a region has been unlocked', () => {
+    const state = { ...xtremeIsolated(), unlocks: { ...initialState.unlocks, regions: ['Varrock'] } };
+    const s = gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
+    expect(s.keys).toBe(initialState.keys);
+  });
+
+  it('grants a guaranteed key the instant total level crosses the interval, isolated in Xtreme', () => {
+    const startingTotal = Object.values(initialState.unlocks.levels).reduce((a, b) => a + b, 0);
+    // One level below the first milestone — the single Attack level-up should cross it.
+    const state = {
+      ...xtremeIsolated(),
+      unlocks: { ...xtremeIsolated().unlocks, levels: { ...xtremeIsolated().unlocks.levels, Attack: XTREME_MILESTONE_INTERVAL - startingTotal } },
+    };
+    const s = gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
+    expect(s.keys).toBe(initialState.keys + 1);
+    expect(s.xtremeMilestoneClaimed).toBe(1);
+  });
+
+  it('does not re-grant the same milestone on a level-up that does not cross a new threshold', () => {
+    const already = { ...xtremeIsolated(), xtremeMilestoneClaimed: 1, keys: 10 };
+    const s = gameReducer(already, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
+    expect(s.keys).toBe(10);
+    expect(s.xtremeMilestoneClaimed).toBe(1);
   });
 });
 
