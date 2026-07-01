@@ -25,6 +25,7 @@ import { PanelErrorBoundary } from './components/PanelErrorBoundary';
 import { UpdateBanner } from './components/UpdateBanner';
 import { ModalFallback } from './components/LoadingFallback';
 import { JournalSummaryCard } from './components/JournalSummaryCard';
+import { isChunkLoadError, reloadOnceForChunkError } from './utils/chunkLoadError';
 import { useEscapeKey } from './hooks/useEscapeKey';
 import { resolveModeRules } from './config/gameModes';
 import { showToast } from './utils/toast';
@@ -60,10 +61,23 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Application error:', error, errorInfo);
+    // Stale chunk from a superseded deploy — retrying in-app can't fix it,
+    // so reload once to pick up the current build.
+    if (isChunkLoadError(error)) reloadOnceForChunkError();
   }
 
   render() {
     if (this.state.hasError) {
+      if (isChunkLoadError(this.state.error)) {
+        return (
+          <div className="min-h-screen bg-[#161616] flex items-center justify-center p-8">
+            <div className="bg-[#1e1e1e] border border-amber-500/30 rounded-xl p-8 max-w-lg text-center">
+              <h1 className="text-2xl font-bold text-amber-400 mb-2">Updating…</h1>
+              <p className="text-gray-400">A newer version was deployed — reloading to pick it up.</p>
+            </div>
+          </div>
+        );
+      }
       return (
         <div className="min-h-screen bg-[#161616] flex items-center justify-center p-8">
           <div className="bg-[#1e1e1e] border border-red-500/30 rounded-xl p-8 max-w-lg text-center">
