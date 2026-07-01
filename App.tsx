@@ -311,7 +311,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
              </button>
 
              <button
-               onClick={() => exportRuneliteBundle(unlocks, { keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount })}
+               onClick={() => exportRuneliteBundle(unlocks, { keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId })}
                className="h-8 px-2.5 rounded-lg border border-amber-500/40 bg-amber-900/30 hover:bg-amber-800/40 text-amber-200 hover:text-amber-100 flex items-center gap-2 transition-colors"
                title="Export your run for the RuneLite plugin (copies to clipboard + downloads). Then use 'Import from clipboard' in the plugin."
              >

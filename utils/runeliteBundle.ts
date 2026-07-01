@@ -37,9 +37,13 @@ export function buildRuneliteBundle(
     regionGroups: { Misthalin: MISTHALIN_AREAS, ...REGION_GROUPS },
     unlockedRegions,
     // Chunked mode's unlock state — individual map-region chunks the player
-    // has rolled, keyed "cx,cy" (matches unlocks.chunks). Empty/omitted for
-    // every other mode, which uses unlockedRegions instead.
-    ...(unlockedChunks && unlockedChunks.length > 0 ? { unlockedChunks } : {}),
+    // has rolled, keyed "cx,cy" (matches unlocks.chunks). Included (even as
+    // an empty array, at the very start of a Chunked run) whenever the
+    // caller passes it at all; omitted for every other mode, which uses
+    // unlockedRegions instead. The distinction matters: an empty array is a
+    // real, meaningful state for Chunked mode (nothing rolled yet, but the
+    // free start chunk still applies) and must not collapse to "not chunked".
+    ...(unlockedChunks !== undefined ? { unlockedChunks } : {}),
     // Slim per-chunk "what's here" (categorised), keyed "cx,cy". Optional —
     // older plugins ignore it; regenerated with the dataset.
     chunkContent: CHUNK_CONTENT_LITE,

@@ -8,7 +8,7 @@ import { buildBundlePayload } from '../utils/runeliteExport';
  * the run bundle to the relay on every unlock/state change (and once on enable).
  */
 export function OnlineSyncDriver() {
-  const { unlocks, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount } = useGame() as any;
+  const { unlocks, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId } = useGame() as any;
   const [, force] = useState(0);
   useEffect(() => relaySync.subscribe(() => force((n) => n + 1)), []);
   const enabled = relaySync.enabled;
@@ -18,12 +18,12 @@ export function OnlineSyncDriver() {
     if (!enabled) return;
     if (timer.current) window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => {
-      buildBundlePayload(unlocks, { keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount })
+      buildBundlePayload(unlocks, { keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId })
         .then(({ compressed }) => relaySync.push(compressed))
         .catch(() => { /* surfaced via relaySync.status */ });
     }, 1500);
     return () => { if (timer.current) window.clearTimeout(timer.current); };
-  }, [enabled, unlocks, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount]);
+  }, [enabled, unlocks, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId]);
 
   return null;
 }

@@ -399,6 +399,7 @@ interface GameSnapshot {
   linkedAccount?: string;
   /** Per-slot unlocked equipment tier, for the plugin's over-tier gear warning. */
   equipment?: Record<string, number>;
+  gameModeId?: string;
 }
 
 const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGameSnapshot }: { regionUnlocks: string[]; chunkUnlocks: string[]; isChunked: boolean; getGameSnapshot: () => GameSnapshot }) => {
@@ -1926,7 +1927,7 @@ export const RegionMap: React.FC = () => {
   // Live run state for the RuneLite bundle, read lazily at export time via a
   // stable getter so MapContent's memoization (regionUnlocks-only) holds.
   const snapRef = useRef<GameSnapshot>({ keys: 0, specialKeys: 0, chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', pinnedGoals: [] as string[] });
-  snapRef.current = { keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals: pinnedGoals ?? [], linkedAccount, equipment: unlocks.equipment };
+  snapRef.current = { keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals: pinnedGoals ?? [], linkedAccount, equipment: unlocks.equipment, gameModeId };
   const getGameSnapshot = useCallback(() => snapRef.current, []);
   return <MapContent regionUnlocks={unlocks.regions} chunkUnlocks={unlocks.chunks ?? []} isChunked={gameModeId === 'chunked'} getGameSnapshot={getGameSnapshot} />;
 };

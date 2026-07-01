@@ -40,6 +40,10 @@ export interface RuneliteRunInput {
   activeBuff: string;
   pinnedGoals?: string[];
   linkedAccount?: string;
+  /** The run's game mode — needed so the plugin can tell a genuinely-empty
+   *  Chunked run (0 chunks unlocked) apart from a non-Chunked bundle; an
+   *  empty unlockedChunks array alone is ambiguous between the two. */
+  gameModeId?: string;
 }
 
 /**
@@ -73,7 +77,10 @@ export async function buildBundlePayload(
     linkedAccount: run.linkedAccount,
     equipment: unlocks.equipment,
   };
-  const payload = buildRuneliteBundle(unlocks.regions, state, itemTiers, slayerChunks, unlocks.chunks);
+  const payload = buildRuneliteBundle(
+    unlocks.regions, state, itemTiers, slayerChunks,
+    run.gameModeId === 'chunked' ? (unlocks.chunks ?? []) : undefined,
+  );
   const json = JSON.stringify(payload);
   const compressed = await compressForClipboard(json);
   return { json, compressed };
