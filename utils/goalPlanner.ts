@@ -16,7 +16,7 @@ import { QUEST_DATA, QuestData } from '../data/questData';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { REGION_GROUPS } from '../data/items';
 import { getQuestStatus, getDiaryStatus } from './journalStatus';
-import { isFreeArea } from './freeAreas';
+import { isAreaReachable } from './reachability';
 
 export type GoalKind = 'quest' | 'diary' | 'region';
 
@@ -65,8 +65,6 @@ interface Selectable {
 
 const UNLOCKABLE_REGIONS = Object.keys(REGION_GROUPS);
 
-const isMisthalin = (r: string) => isFreeArea(r);
-
 /** A skill requirement is met if the skill is unlocked AND the level is reached. */
 function skillMet(skill: string, lvl: number, unlocks: any): boolean {
   const unlocked = (unlocks.skills[skill] ?? 0) > 0;
@@ -89,7 +87,7 @@ function currentQuestPoints(unlocks: any): number {
  *
  * Completed quests are pruned — their sub-tree is already satisfied.
  */
-function collectQuestChain(rootQuestId: string, unlocks: any) {
+function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: string) {
   const order: string[] = []; // incomplete quests, dependency order
   const visited = new Set<string>();
   const regions = new Set<string>();
@@ -107,9 +105,10 @@ function collectQuestChain(rootQuestId: string, unlocks: any) {
     // Prereqs first (post-order) so they land earlier in `order`.
     for (const p of q.prereqs) visit(p);
 
-    // Region gates.
+    // Region gates — already-reachable regions (free, unlocked, or in Chunked
+    // mode reachable via any overlapping chunk) don't need a plan step.
     for (const r of q.regions) {
-      if (!isMisthalin(r)) regions.add(r);
+      if (!isAreaReachable(r, unlocks, gameModeId)) regions.add(r);
     }
     // Skill / quest-point gates.
     for (const [skill, lvl] of Object.entries(q.skills as Record<string, number>)) {
@@ -135,6 +134,7 @@ function buildPlanFromRequirements(
   unlocks: any,
   alreadyReachable: boolean,
   alreadyDone: boolean,
+  gameModeId?: string,
 ): GoalPlan {
   // Region steps.
   const regionSteps: PlanStep[] = Array.from(reqs.regions)
@@ -142,7 +142,7 @@ function buildPlanFromRequirements(
       kind: 'region',
       id: r,
       label: r,
-      done: unlocks.regions.includes(r),
+      done: isAreaReachable(r, unlocks, gameModeId),
     }))
     .sort((a, b) => Number(a.done) - Number(b.done) || a.label.localeCompare(b.label));
 
@@ -232,12 +232,12 @@ function buildPlanFromRequirements(
  * @param id       quest id, diary tier id, or region name
  * @param unlocks  current unlocks snapshot
  */
-export function planForTarget(kind: GoalKind, id: string, unlocks: any): GoalPlan | null {
+export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameModeId?: string): GoalPlan | null {
   if (kind === 'quest') {
     const q: QuestData | undefined = QUEST_DATA[id];
     if (!q) return null;
-    const status = getQuestStatus(q, unlocks);
-    const reqs = collectQuestChain(id, unlocks);
+    const status = getQuestStatus(q, unlocks, gameModeId);
+    const reqs = collectQuestChain(id, unlocks, gameModeId);
     return buildPlanFromRequirements(
       'quest',
       id,
@@ -246,13 +246,14 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any): GoalPla
       unlocks,
       status === 'AVAILABLE' || status === 'COMPLETED',
       status === 'COMPLETED',
+      gameModeId,
     );
   }
 
   if (kind === 'diary') {
     const d: DiaryTier | undefined = DIARY_DATA[id];
     if (!d) return null;
-    const status = getDiaryStatus(d, unlocks);
+    const status = getDiaryStatus(d, unlocks, gameModeId);
 
     // Merge requirements across all gating quests + the diary's own gates.
     const merged = {
@@ -263,7 +264,7 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any): GoalPla
     };
     const seen = new Set<string>();
     for (const qid of d.quests) {
-      const sub = collectQuestChain(qid, unlocks);
+      const sub = collectQuestChain(qid, unlocks, gameModeId);
       for (const r of sub.regions) merged.regions.add(r);
       for (const [s, lvl] of Object.entries(sub.skills)) {
         merged.skills[s] = Math.max(merged.skills[s] ?? 0, lvl);
@@ -278,7 +279,7 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any): GoalPla
     }
     // The diary's own region requirements.
     for (const r of d.requiredRegions) {
-      if (!isMisthalin(r)) merged.regions.add(r);
+      if (!isAreaReachable(r, unlocks, gameModeId)) merged.regions.add(r);
     }
     // The diary's own skill requirements (needed to actually do the tasks).
     for (const [s, lvl] of Object.entries(d.skills as Record<string, number>)) {
@@ -293,11 +294,12 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any): GoalPla
       unlocks,
       status === 'AVAILABLE' || status === 'COMPLETED',
       status === 'COMPLETED',
+      gameModeId,
     );
   }
 
   // region
-  const isUnlocked = unlocks.regions.includes(id);
+  const isUnlocked = isAreaReachable(id, unlocks, gameModeId);
   const regionStep: PlanStep = { kind: 'region', id, label: id, done: isUnlocked };
   return {
     targetKind: 'region',

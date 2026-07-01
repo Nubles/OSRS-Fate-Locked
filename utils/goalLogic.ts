@@ -2,7 +2,7 @@
 import { ContentRequirement } from '../data/requirements';
 import { UnlockState, TableType } from '../types';
 import { REGION_GROUPS } from '../constants';
-import { isFreeArea } from './freeAreas';
+import { isAreaReachable } from './reachability';
 
 export interface GoalProgress {
   percentage: number;
@@ -11,7 +11,7 @@ export interface GoalProgress {
   completedSteps: number;
 }
 
-export const calculateGoalProgress = (req: ContentRequirement, unlocks: UnlockState): GoalProgress => {
+export const calculateGoalProgress = (req: ContentRequirement, unlocks: UnlockState, gameModeId?: string): GoalProgress => {
   const missing: string[] = [];
   let total = 0;
   let completed = 0;
@@ -21,13 +21,14 @@ export const calculateGoalProgress = (req: ContentRequirement, unlocks: UnlockSt
     total++;
     let isUnlocked = false;
 
-    // Direct check or free-area (Misthalin / Xtreme-start Lumbridge) check
-    if (isFreeArea(r) || unlocks.regions.includes(r)) {
+    // Direct check or free-area (Misthalin / Xtreme-start Lumbridge) check,
+    // or chunk-reachable in Chunked mode.
+    if (isAreaReachable(r, unlocks, gameModeId)) {
       isUnlocked = true;
-    } 
+    }
     // Region Group check (e.g. Asgarnia is unlocked if Falador is unlocked)
     else if (REGION_GROUPS[r]) {
-      const hasSubRegion = REGION_GROUPS[r].some((area: string) => unlocks.regions.includes(area));
+      const hasSubRegion = REGION_GROUPS[r].some((area: string) => isAreaReachable(area, unlocks, gameModeId));
       if (hasSubRegion) isUnlocked = true;
     }
 

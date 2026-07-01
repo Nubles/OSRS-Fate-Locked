@@ -13,7 +13,7 @@ import { GoalRouteView } from './GoalRouteView';
 
 export const GoalTracker: React.FC = () => {
   const gameState = useGame();
-  const { pinnedGoals, togglePin, unlocks } = gameState;
+  const { pinnedGoals, togglePin, unlocks, gameModeId } = gameState;
   // Which pinned goal has its full route expanded (one at a time keeps it tidy).
   const [routeFor, setRouteFor] = useState<string | null>(null);
 
@@ -65,7 +65,7 @@ export const GoalTracker: React.FC = () => {
           let progress: GoalProgress;
           let description: string | undefined;
           if (req) {
-            progress = calculateGoalProgress(req, unlocks);
+            progress = calculateGoalProgress(req, unlocks, gameModeId);
             description = req.description;
           } else if (RESOURCE_MAP[id]) {
             const engineProgress = calculateEngineItemProgress(id, gameState);

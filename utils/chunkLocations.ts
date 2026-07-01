@@ -1,7 +1,7 @@
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
-import { isFreeArea } from './freeAreas';
+import { isAreaReachable } from './reachability';
 import { UnlockState } from '../types';
 import type { ChunkCoord } from './mapCoords';
 
@@ -58,23 +58,22 @@ export const placeOf = (cx: number, cy: number): ChunkPlace => {
   return { cx, cy, subArea, region, label };
 };
 
-const nameUnlocked = (name: string, unlocks: UnlockState): boolean => {
-  if (isFreeArea(name)) return true;
-  if (unlocks.regions.includes(name)) return true;
+const nameUnlocked = (name: string, unlocks: UnlockState, gameModeId?: string): boolean => {
+  if (isAreaReachable(name, unlocks, gameModeId)) return true;
   const children = name === 'Misthalin' ? MISTHALIN_AREAS : REGION_GROUPS[name];
   if (children && children.length > 0) {
-    return children.every(c => isFreeArea(c) || unlocks.regions.includes(c));
+    return children.every(c => isAreaReachable(c, unlocks, gameModeId));
   }
   return false;
 };
 
 /** Sub-area-first unlock check, matching the world map's colouring. */
-export const chunkUnlocked = (cx: number, cy: number, unlocks: UnlockState): boolean => {
+export const chunkUnlocked = (cx: number, cy: number, unlocks: UnlockState, gameModeId?: string): boolean => {
   const k = key(cx, cy);
   const sub = CHUNK_SUB[k];
-  if (sub) return nameUnlocked(sub, unlocks);
+  if (sub) return nameUnlocked(sub, unlocks, gameModeId);
   const region = CHUNK_REGION[k];
-  if (region) return nameUnlocked(region, unlocks);
+  if (region) return nameUnlocked(region, unlocks, gameModeId);
   return false;
 };
 
@@ -111,12 +110,13 @@ export const showChunkOnMap = (cx: number, cy: number) => {
 export const summarisePlaces = (
   chunks: { cx: number; cy: number }[],
   unlocks: UnlockState,
+  gameModeId?: string,
 ): (ChunkPlace & { unlocked: boolean })[] => {
   const seen = new Map<string, ChunkPlace & { unlocked: boolean }>();
   for (const { cx, cy } of chunks) {
     const place = placeOf(cx, cy);
     if (!seen.has(place.label)) {
-      seen.set(place.label, { ...place, unlocked: chunkUnlocked(cx, cy, unlocks) });
+      seen.set(place.label, { ...place, unlocked: chunkUnlocked(cx, cy, unlocks, gameModeId) });
     }
   }
   return [...seen.values()].sort((a, b) =>

@@ -18,7 +18,7 @@ import { SKILLS_LIST } from '../constants';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { computeUnlockImpact } from './unlockImpact';
-import { isFreeArea } from './freeAreas';
+import { isAreaReachable } from './reachability';
 
 export interface RankedSkill {
   id: string;          // skill name
@@ -32,11 +32,9 @@ export interface RankedSkill {
   cascadeScore: number;
 }
 
-const isMisthalin = (r: string) => isFreeArea(r);
-
 /** A diary tier is fully completable if regions, quests, AND all skills are met. */
-function diaryFullyDoable(d: DiaryTier, unlocks: any): boolean {
-  if (d.requiredRegions.some((r) => !isMisthalin(r) && !unlocks.regions.includes(r))) return false;
+function diaryFullyDoable(d: DiaryTier, unlocks: any, gameModeId?: string): boolean {
+  if (d.requiredRegions.some((r) => !isAreaReachable(r, unlocks, gameModeId))) return false;
   if (d.quests.some((qid) => !unlocks.quests.includes(qid))) return false;
   for (const [skill, lvl] of Object.entries(d.skills as Record<string, number>)) {
     const unlocked = (unlocks.skills[skill] ?? 0) > 0;
@@ -51,7 +49,7 @@ function diaryFullyDoable(d: DiaryTier, unlocks: any): boolean {
  * Skills whose next threshold unlocks nothing are omitted. Sorted by cascade
  * score, then direct score, then lower target level, then name.
  */
-export function rankSkillBottlenecks(unlocks: any): RankedSkill[] {
+export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedSkill[] {
   const allDiaries = Object.values(DIARY_DATA);
 
   const ranked: RankedSkill[] = [];
@@ -89,14 +87,14 @@ export function rankSkillBottlenecks(unlocks: any): RankedSkill[] {
       // Skill-aware diary tiers: newly fully-doable right now (regions+quests
       // already satisfied, this skill raise closes the last skill gap).
       const directDiaryIds = allDiaries
-        .filter((d) => !diaryFullyDoable(d, unlocks) && diaryFullyDoable(d, simulated))
+        .filter((d) => !diaryFullyDoable(d, unlocks, gameModeId) && diaryFullyDoable(d, simulated, gameModeId))
         .map((d) => d.id);
 
       // Cascade diaries: same check but on the post-cascade quest snapshot,
       // so quests the skill unblocks can in turn satisfy diary quest gates.
       const cascadeSnap = { ...simulated, quests: impact.finalQuestIds };
       const cascadeDiaryIds = allDiaries
-        .filter((d) => !diaryFullyDoable(d, unlocks) && diaryFullyDoable(d, cascadeSnap))
+        .filter((d) => !diaryFullyDoable(d, unlocks, gameModeId) && diaryFullyDoable(d, cascadeSnap, gameModeId))
         .map((d) => d.id);
 
       const unlocksSomething =

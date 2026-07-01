@@ -24,12 +24,12 @@ type Tab = 'gather' | 'unlocks';
  * than every individual chunk.
  */
 const RegionPicker: React.FC<{ node: string; onJump: (cx: number, cy: number) => void }> = ({ node, onJump }) => {
-  const { unlocks } = useGame();
+  const { unlocks, gameModeId } = useGame();
   const [expanded, setExpanded] = useState(false);
   const places = useMemo(() => {
     const hit = chunkContentService.entityLocations(node, ['object']);
-    return hit ? summarisePlaces(hit.locations, unlocks) : [];
-  }, [node, unlocks]);
+    return hit ? summarisePlaces(hit.locations, unlocks, gameModeId) : [];
+  }, [node, unlocks, gameModeId]);
 
   if (places.length === 0) return <p className="text-[11px] text-gray-500 px-1 py-1.5">No mapped locations found.</p>;
   const reachable = places.filter(p => p.unlocked);

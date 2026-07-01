@@ -43,7 +43,7 @@ const Row: React.FC<{ r: SlayerTaskRow }> = ({ r }) => {
  * and whether the monster lives in an unlocked chunk).
  */
 export const SlayerReachabilityPanel: React.FC = () => {
-  const { unlocks } = useGame();
+  const { unlocks, gameModeId } = useGame();
   const [ready, setReady] = useState(chunkContentService.ready);
   const [open, setOpen] = useState<string | null>(null);
 
@@ -58,7 +58,7 @@ export const SlayerReachabilityPanel: React.FC = () => {
       for (const cand of [task, task.replace(/s$/, '')]) {
         const hit = chunkContentService.entityLocations(cand, ['monster']);
         if (hit && hit.locations.length) {
-          const un = hit.locations.find(l => chunkUnlocked(l.cx, l.cy, unlocks));
+          const un = hit.locations.find(l => chunkUnlocked(l.cx, l.cy, unlocks, gameModeId));
           const l = un ?? hit.locations[0];
           return { cx: l.cx, cy: l.cy, unlocked: !!un };
         }
@@ -66,7 +66,7 @@ export const SlayerReachabilityPanel: React.FC = () => {
       return null;
     };
     return slayerReachability(masters, unlocks, locate);
-  }, [ready, unlocks]);
+  }, [ready, unlocks, gameModeId]);
 
   if (!reach || reach.masters.length === 0) return null;
   const totalReady = reach.masters.reduce((a, m) => a + m.ready, 0);

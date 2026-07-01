@@ -54,16 +54,17 @@ const isOpen = (status: string | undefined) =>
 export function computeUnlockImpact(
   baseUnlocks: any,
   simulatedUnlocks: any,
+  gameModeId?: string,
 ): UnlockImpact {
   const allQuests = Object.values(QUEST_DATA);
   const allDiaries = Object.values(DIARY_DATA);
 
   // Baseline statuses — computed once.
   const baseQuestStatus = new Map<string, string>(
-    allQuests.map((q) => [q.id, getQuestStatus(q, baseUnlocks)]),
+    allQuests.map((q) => [q.id, getQuestStatus(q, baseUnlocks, gameModeId)]),
   );
   const baseDiaryStatus = new Map<string, string>(
-    allDiaries.map((d) => [d.id, getDiaryStatus(d, baseUnlocks)]),
+    allDiaries.map((d) => [d.id, getDiaryStatus(d, baseUnlocks, gameModeId)]),
   );
 
   // Quests that were already actionable independent of the candidate — these
@@ -77,7 +78,7 @@ export function computeUnlockImpact(
     .filter(
       (q) =>
         !isOpen(baseQuestStatus.get(q.id)) &&
-        getQuestStatus(q, simulatedUnlocks) === 'AVAILABLE',
+        getQuestStatus(q, simulatedUnlocks, gameModeId) === 'AVAILABLE',
     )
     .map((q) => q.name);
 
@@ -85,7 +86,7 @@ export function computeUnlockImpact(
     .filter(
       (d) =>
         !isOpen(baseDiaryStatus.get(d.id)) &&
-        getDiaryStatus(d, simulatedUnlocks) === 'AVAILABLE',
+        getDiaryStatus(d, simulatedUnlocks, gameModeId) === 'AVAILABLE',
     )
     .map((d) => d.id);
 
@@ -100,7 +101,7 @@ export function computeUnlockImpact(
     for (const q of allQuests) {
       if (completed.has(q.id)) continue;
       if (baseAvailableIds.has(q.id)) continue; // don't claim the existing backlog
-      if (getQuestStatus(q, snap) === 'AVAILABLE') {
+      if (getQuestStatus(q, snap, gameModeId) === 'AVAILABLE') {
         completed.add(q.id);
         changed = true;
       }
@@ -116,7 +117,7 @@ export function computeUnlockImpact(
     .filter(
       (d) =>
         !isOpen(baseDiaryStatus.get(d.id)) &&
-        getDiaryStatus(d, finalSnap) === 'AVAILABLE',
+        getDiaryStatus(d, finalSnap, gameModeId) === 'AVAILABLE',
     )
     .map((d) => d.id);
 

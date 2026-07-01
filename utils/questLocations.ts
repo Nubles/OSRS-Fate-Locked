@@ -48,6 +48,7 @@ export interface QuestLocationInfo {
 export function summariseQuestPlaces(
   locations: EntityLocation[],
   unlocks: UnlockState,
+  gameModeId?: string,
 ): QuestLocationInfo {
   if (locations.length === 0) {
     return { hasData: false, places: [], startPlaces: [], lockedPlaces: [], allUnlocked: false };
@@ -56,7 +57,7 @@ export function summariseQuestPlaces(
   for (const loc of locations) {
     const place = placeOf(loc.cx, loc.cy);
     const role: 'first' | 'step' = loc.role ?? 'step';
-    const unlocked = chunkUnlocked(loc.cx, loc.cy, unlocks);
+    const unlocked = chunkUnlocked(loc.cx, loc.cy, unlocks, gameModeId);
     const existing = seen.get(place.label);
     if (!existing) {
       seen.set(place.label, { ...place, unlocked, role });
@@ -74,9 +75,9 @@ export function summariseQuestPlaces(
 }
 
 /** Look the quest up in the (already-initialised) chunk index, then summarise. */
-export function questLocations(questName: string, unlocks: UnlockState): QuestLocationInfo {
+export function questLocations(questName: string, unlocks: UnlockState, gameModeId?: string): QuestLocationInfo {
   const hit = chunkContentService.entityLocations(questName, ['quest']);
-  return summariseQuestPlaces(hit?.locations ?? [], unlocks);
+  return summariseQuestPlaces(hit?.locations ?? [], unlocks, gameModeId);
 }
 
 /**

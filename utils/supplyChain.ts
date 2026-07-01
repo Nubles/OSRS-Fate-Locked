@@ -3,6 +3,9 @@ import { RESOURCE_MAP, ResourceSource } from '../data/resourceData';
 import { GameState, TableType } from '../types';
 import { REGION_GROUPS, MERCHANTS_LIST } from '../constants';
 import { isFreeArea } from './freeAreas';
+import { isNamedAreaReachableViaChunks } from './reachability';
+import { REGION_CHUNKS } from '../data/regionChunks';
+import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 
 export interface RouteStatus {
   isAvailable: boolean;
@@ -59,12 +62,23 @@ export interface AvailabilityContext {
   skillsUnlocked: Set<string>;
 }
 
+// Every named region/sub-area name that could appear in a source's `regions`
+// list — used to build the Chunked-mode reachable set below.
+const ALL_NAMED_AREAS: string[] = [...new Set([...Object.keys(REGION_CHUNKS), ...Object.keys(SUB_AREA_CHUNKS)])];
+
 export const buildAvailabilityContext = (gs: GameState): AvailabilityContext => {
   const u = gs.unlocks;
   const skillsUnlocked = new Set<string>();
   for (const [k, v] of Object.entries(u.skills || {})) if ((v as number) > 0) skillsUnlocked.add(k);
+  // Chunked mode has no unlocks.regions — instead, populate the regions Set
+  // with every named area reachable via an unlocked chunk, so analyzeSource's
+  // `ctx.regions.has(r)` check (and the isFreeArea(r) fallback) both work
+  // unmodified for Chunked runs.
+  const regions = gs.gameModeId === 'chunked'
+    ? new Set(ALL_NAMED_AREAS.filter((name) => isNamedAreaReachableViaChunks(name, u.chunks ?? [])))
+    : new Set(u.regions);
   return {
-    regions: new Set(u.regions),
+    regions,
     quests: new Set(u.quests),
     bosses: new Set(u.bosses),
     minigames: new Set(u.minigames),

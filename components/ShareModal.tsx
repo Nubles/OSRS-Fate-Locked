@@ -9,6 +9,7 @@ import { SectionGuide } from './SectionGuide';
 import { getGameMode } from '../config/gameModes';
 import { showToast } from '../utils/toast';
 import { EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, SKILLS_LIST, REGIONS_LIST, REGION_GROUPS, SLOT_CONFIG } from '../constants';
+import { isAreaReachable } from '../utils/reachability';
 
 interface ShareModalProps {
   onClose: () => void;
@@ -40,12 +41,15 @@ const StatsShareCard: React.FC<ShareModalProps & { embedded?: boolean }> = ({ on
   const [theme, setTheme] = useState<CardTheme>('VOID');
 
   // --- Stats Calculation ---
-  const { unlocks } = gameState;
-  const totalRegions = unlocks.regions.length;
+  const { unlocks, gameModeId } = gameState;
+  const isChunked = gameModeId === 'chunked';
+  // Chunked mode has no unlocks.regions — its "territory unlocked" stat is
+  // chunk count instead.
+  const totalRegions = isChunked ? (unlocks.chunks ?? []).length : unlocks.regions.length;
   const totalSkillTiers = (Object.values(unlocks.skills) as number[]).reduce((a, b) => a + b, 0);
   const totalEquipTiers = (Object.values(unlocks.equipment) as number[]).reduce((a, b) => a + b, 0);
   const totalLevel = (Object.values(unlocks.levels) as number[]).reduce((a, b) => a + b, 0);
-  
+
   const maxProgression = (SKILLS_LIST.length * 10) + (EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX) + REGIONS_LIST.length;
   const currentProgression = totalSkillTiers + totalEquipTiers + totalRegions;
   const progressPercent = Math.round((currentProgression / maxProgression) * 100);
@@ -140,7 +144,7 @@ const StatsShareCard: React.FC<ShareModalProps & { embedded?: boolean }> = ({ on
     return `📜 **Fate-Locked Ironman** - ${rank.title}
 Progression: ${progressPercent}% | Total Level: ${totalLevel}
 🔑 Keys: ${gameState.keys} | ✨ Omni: ${gameState.specialKeys} | 🧬 Chaos: ${gameState.chaosKeys}
-🌍 Regions: ${totalRegions} Unlocked
+🌍 ${isChunked ? 'Chunks' : 'Regions'}: ${totalRegions} Unlocked
 ⚔️ Gear Tiers: ${totalEquipTiers}
 🏆 Bosses: ${bossCount} | 🎲 Minigames: ${minigameCount}
 #OSRS #FateLocked`;
@@ -212,16 +216,16 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
 
       // Specifics
       if (unlocks.bosses.includes('Inferno')) feats.push({ label: 'Inferno Unlocked', icon: Zap, color: 'text-orange-500' });
-      if (unlocks.regions.includes('Prifddinas')) feats.push({ label: 'Prifddinas Access', icon: Map, color: 'text-teal-400' });
+      if (isAreaReachable('Prifddinas', unlocks, gameModeId)) feats.push({ label: 'Prifddinas Access', icon: Map, color: 'text-teal-400' });
       // 'Wilderness' is a REGION_GROUPS continent key, not an unlockable area —
       // unlocks.regions only ever contains children (Ferox Enclave, Lava Maze,
       // etc.). Check any Wilderness area is unlocked instead.
-      if ((REGION_GROUPS['Wilderness'] || []).some(a => unlocks.regions.includes(a))) {
+      if ((REGION_GROUPS['Wilderness'] || []).some(a => isAreaReachable(a, unlocks, gameModeId))) {
           feats.push({ label: 'Brave Wanderer', icon: Skull, color: 'text-gray-400' });
       }
 
       return feats.slice(0, 4);
-  }, [unlocks]);
+  }, [unlocks, gameModeId]);
 
   const inner = (
       <div className="flex flex-col gap-6 items-center w-full max-w-5xl my-auto">

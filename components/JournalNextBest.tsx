@@ -119,7 +119,7 @@ const ActionMenu: React.FC<{ a: Action; onPick: (s: SubTab) => void; onClose: ()
  * it unlocks.
  */
 export const JournalNextBest: React.FC<{ onPick: (sub: SubTab) => void }> = ({ onPick }) => {
-  const { unlocks } = useGame();
+  const { unlocks, gameModeId } = useGame();
   const [open, setOpen] = useLocalStorage<boolean>('jrnl:nextbest:open', true);
   const [openItem, setOpenItem] = useState<string | null>(null);
 
@@ -127,21 +127,21 @@ export const JournalNextBest: React.FC<{ onPick: (sub: SubTab) => void }> = ({ o
     const out: Action[] = [];
     for (const q of Object.values(QUEST_DATA)) {
       if (unlocks.quests.includes(q.id)) continue;
-      const unmet = questUnmet(q, unlocks);
+      const unmet = questUnmet(q, unlocks, gameModeId);
       out.push({ kind: 'quest', sub: 'QUESTS', id: q.id, name: q.name, unmet: unmet.length, firstBlocker: unmet[0]?.label, diffRank: diffRank(q.difficulty) });
     }
     for (const d of Object.values(DIARY_DATA)) {
       if (unlocks.diaries.includes(d.id)) continue;
       const tasks = ALL_DIARY_TASKS.filter(t => t.tierId === d.id);
       if (tasks.length > 0 && tasks.every(t => unlocks.completedTasks.includes(t.id))) continue;
-      const unmet = diaryUnmet(d, unlocks);
+      const unmet = diaryUnmet(d, unlocks, gameModeId);
       out.push({ kind: 'diary', sub: 'DIARIES', id: d.id, name: d.id, unmet: unmet.length, firstBlocker: unmet[0]?.label, diffRank: diffRank(d.difficulty) });
     }
     return out
       .filter(a => a.unmet <= 1)
       .sort((a, b) => a.unmet - b.unmet || a.diffRank - b.diffRank || a.name.localeCompare(b.name))
       .slice(0, 8);
-  }, [unlocks]);
+  }, [unlocks, gameModeId]);
 
   if (actions.length === 0) return null;
   const ready = actions.filter(a => a.unmet === 0).length;

@@ -627,7 +627,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
     const seen = new Map<string, { cx: number; cy: number; tone: LensTone }>();
     const add = (cx: number, cy: number) => {
       const k = `${cx},${cy}`;
-      if (!seen.has(k)) seen.set(k, { cx, cy, tone: chunkUnlocked(cx, cy, unlocks) ? 'good' : 'warn' });
+      if (!seen.has(k)) seen.set(k, { cx, cy, tone: chunkUnlocked(cx, cy, unlocks, isChunked ? 'chunked' : undefined) ? 'good' : 'warn' });
     };
     let detail = '';
     if (lens.kind === 'category') {
@@ -652,7 +652,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
       chunks, primary: chunks.filter(c => c.tone === 'good').length, total: chunks.length,
       primaryLabel: 'unlocked', totalLabel: 'total', detail, mode: 'find' as const,
     };
-  }, [lens, lensReady, unlocks]);
+  }, [lens, lensReady, unlocks, isChunked]);
 
   const visibleLensChunks = useMemo(
     () => (lensResult ? (onlyUnlocked && lensResult.mode === 'find' ? lensResult.chunks.filter(c => c.tone === 'good') : lensResult.chunks) : []),
@@ -677,14 +677,14 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
       const star = cat === 'Shooting Stars';
       const tier = cat.startsWith(CLUE_PREFIX) ? cat.slice(CLUE_PREFIX.length) : undefined;
       for (const p of overlaysData[cat] ?? []) {
-        const owned = chunkUnlocked(p.cx, p.cy, unlocks);
+        const owned = chunkUnlocked(p.cx, p.cy, unlocks, isChunked ? 'chunked' : undefined);
         if (overlayOwnedOnly && !owned) continue;
         const { px, py } = tileToPixel({ tx: p.x, ty: p.y });
         out.push({ key: `${cat}:${i++}`, x: px, y: py, color, owned, cat, star, tier, hint: p.h });
       }
     }
     return out;
-  }, [lensReady, overlaysData, overlayCats, overlayOwnedOnly, unlocks]);
+  }, [lensReady, overlaysData, overlayCats, overlayOwnedOnly, unlocks, isChunked]);
 
   const clearLens = useCallback(() => { setLens(null); setLensInput(''); jumpIdx.current = 0; }, []);
   const pickLens = useCallback((kind: 'entity' | 'reach' | 'drop' | 'category', key: string, label: string) => {
@@ -1894,9 +1894,11 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
           list.some(c => c.cx === selectedChunk.cx && c.cy === selectedChunk.cy),
         )?.[0] ?? null;
         const subArea = chunkSubArea[`${selectedChunk.cx},${selectedChunk.cy}`] ?? null;
-        const unlocked = subArea
-          ? isRegionUnlocked(subArea, regionUnlocks)
-          : region ? isRegionUnlocked(region, regionUnlocks) : false;
+        const unlocked = isChunked
+          ? isChunkUnlocked(chunkKey(selectedChunk), chunkUnlocks)
+          : subArea
+            ? isRegionUnlocked(subArea, regionUnlocks)
+            : region ? isRegionUnlocked(region, regionUnlocks) : false;
         return (
           <ChunkActivityPanel
             chunk={selectedChunk}

@@ -53,10 +53,11 @@ export function chunkReachability(
    *  requirement isn't met). Blocked chunks aren't reachable and can't be
    *  routed through. */
   blocked?: (chunkId: string) => boolean,
+  gameModeId?: string,
 ): ReachResult {
   buildUniverse();
   const owned = new Set<string>();
-  for (const c of UNIVERSE!) if (chunkUnlocked(c.cx, c.cy, unlocks)) owned.add(c.id);
+  for (const c of UNIVERSE!) if (chunkUnlocked(c.cx, c.cy, unlocks, gameModeId)) owned.add(c.id);
 
   const reachable = new Set<string>();
   const homeId = home ? idOf(home.cx, home.cy) : null;

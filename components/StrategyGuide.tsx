@@ -6,6 +6,7 @@ import { STRATEGY_DATABASE, ContentRequirement } from '../data/requirements';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { TableType } from '../types';
+import { isAreaReachable } from '../utils/reachability';
 import { 
     EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, 
     POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, 
@@ -28,12 +29,11 @@ const ROOT_UNLOCKS = {
     [TableType.FARMING_LAYERS]: new Set(FARMING_PATCH_LIST),
 };
 
-const analyzeRequirement = (req: ContentRequirement, unlocks: any) => {
+const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameModeId?: string) => {
     const missingRegions = req.regions.filter(r => {
-        if (r === 'Misthalin' || MISTHALIN_AREAS.includes(r)) return false;
-        if (unlocks.regions.includes(r)) return false;
+        if (isAreaReachable(r, unlocks, gameModeId)) return false;
         if (REGION_GROUPS[r]) {
-            const hasSubRegion = REGION_GROUPS[r].some((area: string) => unlocks.regions.includes(area));
+            const hasSubRegion = REGION_GROUPS[r].some((area: string) => isAreaReachable(area, unlocks, gameModeId));
             if (hasSubRegion) return false;
         }
         return true;
@@ -103,7 +103,7 @@ const calculateProphecyScore = (req: ContentRequirement, analysis: any) => {
 export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const dialogRef = useRef<HTMLDivElement>(null);
     useFocusTrap(dialogRef);
-    const { unlocks, togglePin, pinnedGoals } = useGame();
+    const { unlocks, togglePin, pinnedGoals, gameModeId } = useGame();
     const [activeTab, setActiveTab] = useState<'PLAYABLE' | 'PLANNER' | 'PROPHECY'>('PLAYABLE');
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
@@ -143,10 +143,10 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
         return Object.entries(allContent)
             .map(([key, req]) => {
                 const typedReq = req as ContentRequirement;
-                const analysis = analyzeRequirement(typedReq, unlocks);
+                const analysis = analyzeRequirement(typedReq, unlocks, gameModeId);
                 return { ...typedReq, uniqueId: key, analysis };
             });
-    }, [allContent, unlocks]);
+    }, [allContent, unlocks, gameModeId]);
 
     const categories = useMemo(() => {
         const cats = new Set(contentAnalysis.map(c => c.category));

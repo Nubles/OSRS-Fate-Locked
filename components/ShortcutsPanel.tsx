@@ -24,7 +24,7 @@ const FILTERS: { key: 'all' | ShortcutStatus; label: string }[] = [
  * real chunk location, flagged by whether you have the level and the area.
  */
 export const ShortcutsPanel: React.FC = () => {
-  const { unlocks } = useGame();
+  const { unlocks, gameModeId } = useGame();
   const [ready, setReady] = useState(chunkContentService.ready);
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<'all' | ShortcutStatus>('all');
@@ -40,19 +40,19 @@ export const ShortcutsPanel: React.FC = () => {
       for (const obj of s.objects) {
         const hit = chunkContentService.entityLocations(obj, ['object']);
         if (hit && hit.locations.length) {
-          const un = hit.locations.find(l => chunkUnlocked(l.cx, l.cy, unlocks));
+          const un = hit.locations.find(l => chunkUnlocked(l.cx, l.cy, unlocks, gameModeId));
           const l = un ?? hit.locations[0];
           return { cx: l.cx, cy: l.cy, unlocked: !!un };
         }
       }
       for (const name of s.chunks) {
         const c = chunkForPlace(name);
-        if (c) return { cx: c.cx, cy: c.cy, unlocked: chunkUnlocked(c.cx, c.cy, unlocks) };
+        if (c) return { cx: c.cx, cy: c.cy, unlocked: chunkUnlocked(c.cx, c.cy, unlocks, gameModeId) };
       }
       return null;
     };
     return shortcutReachability(shortcuts, unlocks, locate);
-  }, [ready, unlocks]);
+  }, [ready, unlocks, gameModeId]);
 
   if (!reach || reach.total === 0) return null;
   const rows = filter === 'all' ? reach.rows : reach.rows.filter(r => r.status === filter);

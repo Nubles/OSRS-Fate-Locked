@@ -47,7 +47,7 @@ import { useAchievementReveal } from '../hooks/useAchievementReveal';
 import { AchievementReveal } from './AchievementReveal';
 import { getGameMode } from '../config/gameModes';
 import { getActivityRegion } from '../data/activityRegions';
-import { isFreeArea } from '../utils/freeAreas';
+import { isAreaReachable } from '../utils/reachability';
 import { getActivityReq, ActivityReq } from '../data/activityRequirements';
 import { RegionAdvisorPanel } from './RegionAdvisorPanel';
 import { SkillAdvisorPanel } from './SkillAdvisorPanel';
@@ -324,7 +324,7 @@ export const Dashboard: React.FC = () => {
   const [confirmOmni, setConfirmOmni] = useState<{table: TableType, item: string} | null>(null);
   const [selectedSkillForDetails, setSelectedSkillForDetails] = useState<{name: string, tier: number} | null>(null);
 
-  const [unlockReveal, dismissReveal] = useUnlockReveal(unlocks);
+  const [unlockReveal, dismissReveal] = useUnlockReveal(unlocks, gameModeId);
   const [achievementReveal, dismissAchievementReveal] = useAchievementReveal(unlocks);
 
   useEscapeKey(() => setShowRunCard(false), showRunCard);
@@ -631,7 +631,7 @@ export const Dashboard: React.FC = () => {
                             <NoteTrigger id="Misthalin" title="Misthalin" />
                       </div>
                       {(() => {
-                        const freeCount = MISTHALIN_AREAS.filter(a => isFreeArea(a) || unlocks.regions.includes(a)).length;
+                        const freeCount = MISTHALIN_AREAS.filter(a => isAreaReachable(a, unlocks, gameModeId)).length;
                         const allFree = freeCount === MISTHALIN_AREAS.length;
                         return (
                           <>
@@ -644,7 +644,7 @@ export const Dashboard: React.FC = () => {
                             </div>
                             <div className="flex flex-wrap gap-1.5 relative z-10 pr-6">
                                 {MISTHALIN_AREAS.map(area => {
-                                    const free = isFreeArea(area) || unlocks.regions.includes(area);
+                                    const free = isAreaReachable(area, unlocks, gameModeId);
                                     const canUnlock = !free && specialKeys > 0;
                                     if (free) return (
                                         <a key={area} href={getWikiUrl(area)} target="_blank" rel="noopener noreferrer"

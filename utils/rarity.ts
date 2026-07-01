@@ -28,6 +28,7 @@ export const CATEGORY_COLOR: Record<string, string> = {
   [TableType.EQUIPMENT]: '#60a5fa', // blue-400 (Character)
   [TableType.SKILLS]: '#818cf8', // indigo-400
   [TableType.REGIONS]: '#34d399', // emerald-400 (World)
+  [TableType.CHUNKS]: '#34d399', // emerald-400 (World, Chunked mode's region equivalent)
   [TableType.BOSSES]: '#f87171', // red-400
   [TableType.MINIGAMES]: '#22d3ee', // cyan-400
   [TableType.FARMING_LAYERS]: '#4ade80', // green-400

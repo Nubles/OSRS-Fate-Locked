@@ -8,6 +8,7 @@ import { DROP_RATES } from '../config/rules';
 import { MISTHALIN_AREAS } from '../constants';
 import { chunkForPlace, showChunkOnMap } from '../utils/chunkLocations';
 import { diaryUnmet, isAlmostThere } from '../utils/journalProgress';
+import { isAreaReachable } from '../utils/reachability';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SkillTrainingPopover, SkillPopoverState } from './SkillTrainingPopover';
@@ -24,7 +25,7 @@ interface DiaryLogProps {
 }
 
 export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch = '' }) => {
-  const { unlocks, toggleDiary, rollForKey, toggleTask, advisorsEnabled } = useGame();
+  const { unlocks, toggleDiary, rollForKey, toggleTask, advisorsEnabled, gameModeId } = useGame();
   // Filter state persisted across sessions.
   const [filterRegion, setFilterRegion] = useLocalStorage<string>('jrnl:diary:region', 'ALL');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -77,10 +78,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
         // Check Region Lock: Are ALL tasks region locked?
         const allTasksRegionLocked = tasks.every(t => {
             if (!t.regions || t.regions.length === 0) return false;
-            return t.regions.every(r => {
-                const isMisthalin = r === 'Misthalin' || MISTHALIN_AREAS.includes(r);
-                return !isMisthalin && !unlocks.regions.includes(r);
-            });
+            return t.regions.every(r => !isAreaReachable(r, unlocks, gameModeId));
         });
         if (allTasksRegionLocked) return 'LOCKED_REGION';
 
@@ -96,13 +94,10 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
         // Fallback for empty/data-less diaries (shouldn't happen with full data)
         // Check Regions on Tier Object
         if (diary.requiredRegions.some(r => {
-             // Handle Group Names or Specifics
-             const isMisthalin = r === 'Misthalin' || MISTHALIN_AREAS.includes(r);
-             const isUnlocked = isMisthalin || unlocks.regions.includes(r);
              // If r is a group name like 'Kandarin' and not in unlocks, this returns true (locked),
-             // which is the bug we wanted to avoid if we rely solely on this. 
+             // which is the bug we wanted to avoid if we rely solely on this.
              // But since we prioritize tasks above, this fallback is minor.
-             return !isUnlocked; 
+             return !isAreaReachable(r, unlocks, gameModeId);
         })) return 'LOCKED_REGION';
     }
 
@@ -138,7 +133,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
         const score = (s: string) => s === 'AVAILABLE' ? 0 : s.includes('LOCKED') ? 1 : 2;
         return score(a.status) - score(b.status) || a.id.localeCompare(b.id);
     });
-  }, [unlocks]);
+  }, [unlocks, gameModeId]);
 
   const filteredDiaries = diaries.filter(d => {
       const matchesRegion = filterRegion === 'ALL' || d.region === filterRegion;
@@ -171,14 +166,14 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
       const tasks = ALL_DIARY_TASKS.filter(t => t.tierId === d.id);
       const remaining = tasks.filter(t => !unlocks.completedTasks.includes(t.id)).length;
       if (!tasks.length || remaining === 0) return [2, Infinity, 0];
-      const doable = countDoableTasks(tasks, unlocks);
+      const doable = countDoableTasks(tasks, unlocks, gameModeId);
       return [doable > 0 ? 0 : 1, remaining, -doable];
     };
     return [...filteredDiaries].sort((a, b) => {
       const ka = key(a), kb = key(b);
       return ka[0] - kb[0] || ka[1] - kb[1] || ka[2] - kb[2];
     });
-  }, [filteredDiaries, sortMode, unlocks]);
+  }, [filteredDiaries, sortMode, unlocks, gameModeId]);
 
   const statusCounts = useMemo(() => ({
     ALL: diaries.length,
@@ -290,14 +285,14 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
           const isActionable = isCompleted || allTasksDone;
 
           // Tasks the player can tick off right now — drives the green badge.
-          const doableNow = isCompleted ? 0 : countDoableTasks(tasks, unlocks);
+          const doableNow = isCompleted ? 0 : countDoableTasks(tasks, unlocks, gameModeId);
 
           // Req progress for LOCKED diary cards: count diary-level gates met
           // (required regions + prerequisite quests + skill requirements).
           const gatedRegions = diary.requiredRegions.filter(
             r => r !== 'Misthalin' && !MISTHALIN_AREAS.includes(r),
           );
-          const metRegionCount = gatedRegions.filter(r => unlocks.regions.includes(r)).length;
+          const metRegionCount = gatedRegions.filter(r => isAreaReachable(r, unlocks, gameModeId)).length;
           const diarySkillReqs = Object.entries(diary.skills);
           const metSkillCount = diarySkillReqs.filter(
             ([skill, lvl]) => (unlocks.skills[skill] || 0) > 0 && (unlocks.levels[skill] || 1) >= (lvl as number),
@@ -308,7 +303,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
           const dReqPct = dTotalReqs === 0 ? 100 : Math.round((dTotalMet / dTotalReqs) * 100);
           const missingDiaryQuests = diary.quests.filter(q => !unlocks.quests.includes(q));
           // "Almost there" — the tier is blocked by exactly one requirement.
-          const dUnmet = (isCompleted || isAvailable) ? [] : diaryUnmet(diary, unlocks);
+          const dUnmet = (isCompleted || isAvailable) ? [] : diaryUnmet(diary, unlocks, gameModeId);
           const dAlmost = isAlmostThere(dUnmet);
 
           return (
@@ -483,8 +478,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                                   );
                                               })}
                                               {task.regions && task.regions.map(r => {
-                                                  const isMisthalin = r === 'Misthalin' || MISTHALIN_AREAS.includes(r);
-                                                  const isUnlocked = isMisthalin || unlocks.regions.includes(r);
+                                                  const isUnlocked = isAreaReachable(r, unlocks, gameModeId);
                                                   const cls = isUnlocked
                                                       ? 'border-white/5 text-gray-500 bg-black/30 hover:bg-white/5'
                                                       : 'border-red-500/30 text-red-400 bg-red-900/10 hover:bg-red-900/20';

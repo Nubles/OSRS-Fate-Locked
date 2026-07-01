@@ -10,6 +10,7 @@ import {
 import { ensureChain, verifyChain, computeRunId, replayInvariants } from '../utils/integrity';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { getGameMode } from '../config/gameModes';
+import { chunkKey, isChunkUnlocked, ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 
 // ---- mini-map drawing -------------------------------------------------------
 
@@ -24,6 +25,8 @@ const drawMiniMap = (
   canvas: HTMLCanvasElement,
   draftChunks: Record<string, ChunkCoord[]>,
   unlockedRegions: string[],
+  isChunked?: boolean,
+  unlockedChunks?: string[],
 ) => {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
@@ -101,12 +104,26 @@ const drawMiniMap = (
       return false;
     };
 
-    for (const [region, chunks] of Object.entries(draftChunks)) {
-      const unlocked = isUnlocked(region);
-      ctx.fillStyle = unlocked ? 'rgba(16,185,129,0.55)' : 'rgba(239,68,68,0.45)';
-      for (const { cx, cy } of chunks) {
-        const { px, py } = tileToPixel({ tx: cx * CHUNK_TILES, ty: (cy + 1) * CHUNK_TILES });
-        ctx.fillRect(px * sx, py * sy, chunkPx, chunkPy);
+    if (isChunked) {
+      // Chunked mode: colour each individual chunk by its own unlock state
+      // (the free start chunk + whatever's been rolled), not by named region.
+      const chunkKeys = unlockedChunks ?? [];
+      for (const chunks of Object.values(draftChunks)) {
+        for (const { cx, cy } of chunks) {
+          ctx.fillStyle = isChunkUnlocked(chunkKey({ cx, cy }), chunkKeys)
+            ? 'rgba(16,185,129,0.55)' : 'rgba(239,68,68,0.45)';
+          const { px, py } = tileToPixel({ tx: cx * CHUNK_TILES, ty: (cy + 1) * CHUNK_TILES });
+          ctx.fillRect(px * sx, py * sy, chunkPx, chunkPy);
+        }
+      }
+    } else {
+      for (const [region, chunks] of Object.entries(draftChunks)) {
+        const unlocked = isUnlocked(region);
+        ctx.fillStyle = unlocked ? 'rgba(16,185,129,0.55)' : 'rgba(239,68,68,0.45)';
+        for (const { cx, cy } of chunks) {
+          const { px, py } = tileToPixel({ tx: cx * CHUNK_TILES, ty: (cy + 1) * CHUNK_TILES });
+          ctx.fillRect(px * sx, py * sy, chunkPx, chunkPy);
+        }
       }
     }
 
@@ -172,11 +189,12 @@ const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
 }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const draftChunks = loadDraftChunks();
-  const { unlocks } = useGame();
+  const { unlocks, gameModeId } = useGame();
+  const isChunked = gameModeId === 'chunked';
 
   useEffect(() => {
     if (canvasRef.current) {
-      drawMiniMap(canvasRef.current, draftChunks, unlocks.regions);
+      drawMiniMap(canvasRef.current, draftChunks, unlocks.regions, isChunked, unlocks.chunks ?? []);
     }
   }, []);
 
@@ -275,7 +293,7 @@ const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
             style={{ fontSize: 10, lineHeight: '14px', whiteSpace: 'nowrap' }}
           >
             <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: '#10b981', verticalAlign: 'middle', marginRight: 6, position: 'relative', top: -1 }} />
-            <span style={{ verticalAlign: 'middle' }}>{regionsUnlocked}/{regionsTotal} regions</span>
+            <span style={{ verticalAlign: 'middle' }}>{regionsUnlocked}/{regionsTotal} {isChunked ? 'chunks' : 'regions'}</span>
           </div>
         </div>
 
@@ -392,8 +410,15 @@ export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }>
   const runId = React.useMemo(() => computeRunId(chained), [chained]);
   const firstTs = chained[0]?.timestamp ?? Date.now();
 
-  const regionsTotal = Object.values(REGION_GROUPS).reduce((a, b) => a + b.length, 0) + MISTHALIN_AREAS.length;
-  const regionsUnlocked = unlocks.regions.length + (MISTHALIN_AREAS.length); // Misthalin always unlocked
+  const isChunkedMode = gameModeId === 'chunked';
+  const regionsTotal = isChunkedMode
+    ? ALL_CHUNK_KEYS.length
+    : Object.values(REGION_GROUPS).reduce((a, b) => a + b.length, 0) + MISTHALIN_AREAS.length;
+  // Misthalin always unlocked in non-chunked modes; Chunked mode's baseline is
+  // the always-free start chunk, already included in unlocks.chunks' effective count via +1.
+  const regionsUnlocked = isChunkedMode
+    ? (unlocks.chunks ?? []).length + 1
+    : unlocks.regions.length + MISTHALIN_AREAS.length;
 
   const cardProps: CardInnerProps = {
     profileName: activeProfileName,

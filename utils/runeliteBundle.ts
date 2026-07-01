@@ -25,6 +25,8 @@ export function buildRuneliteBundle(
   state: RuneliteRunState,
   itemTiers?: Record<string, number>,
   slayerChunks?: Record<string, { cx: number; cy: number }[]>,
+  /** Chunked mode only — unlocks.chunks, keyed "cx,cy" (see utils/chunkAdjacency.ts). */
+  unlockedChunks?: string[],
 ) {
   return {
     version: 3,
@@ -34,6 +36,10 @@ export function buildRuneliteBundle(
     subAreaChunks: SUB_AREA_CHUNKS,
     regionGroups: { Misthalin: MISTHALIN_AREAS, ...REGION_GROUPS },
     unlockedRegions,
+    // Chunked mode's unlock state — individual map-region chunks the player
+    // has rolled, keyed "cx,cy" (matches unlocks.chunks). Empty/omitted for
+    // every other mode, which uses unlockedRegions instead.
+    ...(unlockedChunks && unlockedChunks.length > 0 ? { unlockedChunks } : {}),
     // Slim per-chunk "what's here" (categorised), keyed "cx,cy". Optional —
     // older plugins ignore it; regenerated with the dataset.
     chunkContent: CHUNK_CONTENT_LITE,

@@ -7,18 +7,15 @@
 
 import { QuestData, QUEST_DATA } from '../data/questData';
 import { DiaryTier } from '../data/diaryData';
-import { isFreeArea } from './freeAreas';
+import { isAreaReachable } from './reachability';
 
 export type QuestStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
 export type DiaryStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_QUEST';
 
-export function getQuestStatus(quest: QuestData, unlocks: any): QuestStatus {
+export function getQuestStatus(quest: QuestData, unlocks: any, gameModeId?: string): QuestStatus {
   if (unlocks.quests.includes(quest.id)) return 'COMPLETED';
 
-  const missingRegion = quest.regions.some(r => {
-    if (isFreeArea(r)) return false;
-    return !unlocks.regions.includes(r);
-  });
+  const missingRegion = quest.regions.some(r => !isAreaReachable(r, unlocks, gameModeId));
   if (missingRegion) return 'LOCKED_REGION';
 
   const currentQP: number = (unlocks.quests as string[]).reduce(
@@ -38,12 +35,10 @@ export function getQuestStatus(quest: QuestData, unlocks: any): QuestStatus {
   return 'AVAILABLE';
 }
 
-export function getDiaryStatus(diary: DiaryTier, unlocks: any): DiaryStatus {
+export function getDiaryStatus(diary: DiaryTier, unlocks: any, gameModeId?: string): DiaryStatus {
   if (unlocks.diaries.includes(diary.id)) return 'COMPLETED';
 
-  const missingRegion = diary.requiredRegions.some(r => {
-    return !isFreeArea(r) && !unlocks.regions.includes(r);
-  });
+  const missingRegion = diary.requiredRegions.some(r => !isAreaReachable(r, unlocks, gameModeId));
   if (missingRegion) return 'LOCKED_REGION';
 
   const missingQuest = diary.quests.some((qid: string) => !unlocks.quests.includes(qid));
@@ -68,7 +63,7 @@ export interface DoableTask {
   regions?: string[];
 }
 
-export function countDoableTasks(tasks: DoableTask[], unlocks: any): number {
+export function countDoableTasks(tasks: DoableTask[], unlocks: any, gameModeId?: string): number {
   return tasks.filter(task => {
     if (unlocks.completedTasks.includes(task.id)) return false;
     if (task.skills && !Object.entries(task.skills).every(
@@ -76,7 +71,7 @@ export function countDoableTasks(tasks: DoableTask[], unlocks: any): number {
     )) return false;
     if (task.quests && !task.quests.every(q => unlocks.quests.includes(q))) return false;
     if (task.regions && !task.regions.every(
-      r => isFreeArea(r) || unlocks.regions.includes(r),
+      r => isAreaReachable(r, unlocks, gameModeId),
     )) return false;
     return true;
   }).length;

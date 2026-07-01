@@ -43,6 +43,7 @@ export const FateThread: React.FC<Props> = ({ onClose }) => {
     const defs: Array<[string, string, string[]]> = [
       [TableType.BOSSES, 'Bosses', unlocks.bosses],
       [TableType.REGIONS, 'Regions', unlocks.regions],
+      [TableType.CHUNKS, 'Chunks', unlocks.chunks ?? []],
       [TableType.MINIGAMES, 'Minigames', unlocks.minigames],
       [TableType.GUILDS, 'Guilds', unlocks.guilds],
       [TableType.MOBILITY, 'Mobility', unlocks.mobility],

@@ -8,7 +8,7 @@ import { ALL_DIARY_TASKS, DiaryTask } from '../data/diaryTasks';
 import { CA_DATA } from '../data/caData';
 import { ALL_CA_TASKS } from '../data/caTasks';
 import { getQuestStatus, getDiaryStatus } from '../utils/journalStatus';
-import { MISTHALIN_AREAS } from '../data/items';
+import { isAreaReachable } from '../utils/reachability';
 
 /**
  * Compact "what can I do right now?" summary card for the Dashboard CHARACTER
@@ -25,7 +25,7 @@ interface Props {
 }
 
 /** Mirrors the per-task doability check from DiaryLog.tsx (kept in sync). */
-function countDoableDiaryTasks(unlocks: any): number {
+function countDoableDiaryTasks(unlocks: any, gameModeId?: string): number {
   return ALL_DIARY_TASKS.filter((task: DiaryTask) => {
     if (unlocks.completedTasks.includes(task.id)) return false;
     if (task.skills && !Object.entries(task.skills).every(
@@ -33,7 +33,7 @@ function countDoableDiaryTasks(unlocks: any): number {
     )) return false;
     if (task.quests && !task.quests.every((q: string) => unlocks.quests.includes(q))) return false;
     if (task.regions && !task.regions.every(
-      (r: string) => r === 'Misthalin' || MISTHALIN_AREAS.includes(r) || unlocks.regions.includes(r),
+      (r: string) => isAreaReachable(r, unlocks, gameModeId),
     )) return false;
     // Also check the tier isn't already fully completed.
     if (unlocks.diaries.includes(task.tierId)) return false;
@@ -53,13 +53,13 @@ interface Recommendation {
  * tasks, then any available quest, then CA grind. Returns a celebratory state
  * when nothing is left.
  */
-function recommendNextAction(unlocks: any, diaryDoable: number, caLeft: number): Recommendation {
+function recommendNextAction(unlocks: any, diaryDoable: number, caLeft: number, gameModeId?: string): Recommendation {
   const allQuests = Object.values(QUEST_DATA);
   const allDiaries = Object.values(DIARY_DATA);
 
   // Base statuses once — reused across the candidate loop.
-  const baseQ = new Map(allQuests.map((q) => [q.id, getQuestStatus(q, unlocks)]));
-  const baseD = new Map(allDiaries.map((d) => [d.id, getDiaryStatus(d, unlocks)]));
+  const baseQ = new Map(allQuests.map((q) => [q.id, getQuestStatus(q, unlocks, gameModeId)]));
+  const baseD = new Map(allDiaries.map((d) => [d.id, getDiaryStatus(d, unlocks, gameModeId)]));
   const wasOpen = (s: string | undefined) => s === 'AVAILABLE' || s === 'COMPLETED';
 
   const available = allQuests.filter((q) => baseQ.get(q.id) === 'AVAILABLE');
@@ -71,12 +71,12 @@ function recommendNextAction(unlocks: any, diaryDoable: number, caLeft: number):
     for (const oq of allQuests) {
       if (oq.id === q.id) continue;
       if (wasOpen(baseQ.get(oq.id))) continue;
-      if (getQuestStatus(oq, sim) === 'AVAILABLE') nq++;
+      if (getQuestStatus(oq, sim, gameModeId) === 'AVAILABLE') nq++;
     }
     let nd = 0;
     for (const d of allDiaries) {
       if (wasOpen(baseD.get(d.id))) continue;
-      if (getDiaryStatus(d, sim) === 'AVAILABLE') nd++;
+      if (getDiaryStatus(d, sim, gameModeId) === 'AVAILABLE') nd++;
     }
     const impact = nq * 2 + nd;
     if (!best || impact > best.impact) best = { name: q.name, nq, nd, impact };
@@ -101,19 +101,19 @@ function recommendNextAction(unlocks: any, diaryDoable: number, caLeft: number):
 }
 
 export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
-  const { unlocks, advisorsEnabled } = useGame();
+  const { unlocks, advisorsEnabled, gameModeId } = useGame();
 
   const stats = useMemo(() => {
     // ── Quests available ─────────────────────────────────────────────────────
     const allQuests = Object.values(QUEST_DATA);
     const questsAvailable = allQuests.filter(
-      (q) => getQuestStatus(q, unlocks) === 'AVAILABLE',
+      (q) => getQuestStatus(q, unlocks, gameModeId) === 'AVAILABLE',
     ).length;
     const questsTotal    = allQuests.length;
     const questsDone     = unlocks.quests.length;
 
     // ── Diary tasks doable ───────────────────────────────────────────────────
-    const diaryTasksDoable = countDoableDiaryTasks(unlocks);
+    const diaryTasksDoable = countDoableDiaryTasks(unlocks, gameModeId);
     const diaryTasksTotal  = ALL_DIARY_TASKS.length;
     const diaryTasksDone   = unlocks.completedTasks.filter((id: string) =>
       ALL_DIARY_TASKS.some((t) => t.id === id),
@@ -133,12 +133,12 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
       diaries: { doable: diaryTasksDoable, done: diaryTasksDone, total: diaryTasksTotal },
       ca: { left: caTasksLeft, done: caTiersDone, total: caTiersTotal, tasksDone: caTasksDone, tasksTotal: caTasksTotal },
     };
-  }, [unlocks]);
+  }, [unlocks, gameModeId]);
 
   // The single best next action — computed once per unlocks change.
   const recommendation = useMemo(
-    () => recommendNextAction(unlocks, stats.diaries.doable, stats.ca.left),
-    [unlocks, stats.diaries.doable, stats.ca.left],
+    () => recommendNextAction(unlocks, stats.diaries.doable, stats.ca.left, gameModeId),
+    [unlocks, stats.diaries.doable, stats.ca.left, gameModeId],
   );
 
   const rows: Array<{

@@ -9,6 +9,7 @@ import {
   listGoalTargets, planForTarget, GoalTarget, GoalPlan, PlanStep, GoalKind,
 } from '../utils/goalPlanner';
 import { getQuestStatus, getDiaryStatus } from '../utils/journalStatus';
+import { isAreaReachable } from '../utils/reachability';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { useEscapeKey } from '../hooks/useEscapeKey';
@@ -39,16 +40,16 @@ const KIND_META: Record<GoalKind, { icon: React.ReactNode; label: string; color:
 // Status of a target in the current snapshot — drives the picker dot.
 type TargetState = 'done' | 'ready' | 'locked';
 
-function targetState(t: GoalTarget, unlocks: any): TargetState {
+function targetState(t: GoalTarget, unlocks: any, gameModeId?: string): TargetState {
   if (t.kind === 'quest') {
-    const s = getQuestStatus(QUEST_DATA[t.id], unlocks);
+    const s = getQuestStatus(QUEST_DATA[t.id], unlocks, gameModeId);
     return s === 'COMPLETED' ? 'done' : s === 'AVAILABLE' ? 'ready' : 'locked';
   }
   if (t.kind === 'diary') {
-    const s = getDiaryStatus(DIARY_DATA[t.id], unlocks);
+    const s = getDiaryStatus(DIARY_DATA[t.id], unlocks, gameModeId);
     return s === 'COMPLETED' ? 'done' : s === 'AVAILABLE' ? 'ready' : 'locked';
   }
-  return unlocks.regions.includes(t.id) ? 'done' : 'locked';
+  return isAreaReachable(t.id, unlocks, gameModeId) ? 'done' : 'locked';
 }
 
 const STATE_DOT: Record<TargetState, string> = {
@@ -133,7 +134,7 @@ const PlanSection: React.FC<{
 };
 
 export const GoalPlannerModal: React.FC<Props> = ({ onClose, initialTarget }) => {
-  const { unlocks } = useGame();
+  const { unlocks, gameModeId } = useGame();
   useEscapeKey(onClose, true);
 
   const targets = useMemo(() => listGoalTargets(), []);
@@ -148,17 +149,17 @@ export const GoalPlannerModal: React.FC<Props> = ({ onClose, initialTarget }) =>
       ? targets.filter((t) => t.label.toLowerCase().includes(q) || t.group.toLowerCase().includes(q))
       : targets;
     return matched
-      .map((t) => ({ t, state: targetState(t, unlocks) }))
+      .map((t) => ({ t, state: targetState(t, unlocks, gameModeId) }))
       .sort((a, b) => {
         // Ready-to-start first, then locked, then done; alpha within.
         const rank = (s: TargetState) => (s === 'ready' ? 0 : s === 'locked' ? 1 : 2);
         return rank(a.state) - rank(b.state) || a.t.label.localeCompare(b.t.label);
       });
-  }, [targets, query, unlocks]);
+  }, [targets, query, unlocks, gameModeId]);
 
   const plan: GoalPlan | null = useMemo(
-    () => (selected ? planForTarget(selected.kind, selected.id, unlocks) : null),
-    [selected, unlocks],
+    () => (selected ? planForTarget(selected.kind, selected.id, unlocks, gameModeId) : null),
+    [selected, unlocks, gameModeId],
   );
 
   const totalSteps = plan ? plan.steps.length : 0;

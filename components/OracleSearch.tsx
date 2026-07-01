@@ -18,6 +18,7 @@ import { TestSuiteRunner } from './TestSuiteRunner';
 
 import { chunkContentService, EntityHit, EntityKind } from '../services/ChunkContentService';
 import { EntityLocations } from './EntityLocations';
+import { isAreaReachable } from '../utils/reachability';
 
 interface OracleSearchProps {
   onClose: () => void;
@@ -45,7 +46,7 @@ type SearchItem = {
 const getWikiUrl = wikiUrlFor;
 
 export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
-  const { unlocks } = useGame();
+  const { unlocks, gameModeId } = useGame();
   const [query, setQuery] = useState('');
   const [isRunningTest, setIsRunningTest] = useState(false);
   // World-entity search (monsters / objects / NPCs / spawns / shops / quest
@@ -186,11 +187,11 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
         detail = isUnlocked ? `Unlocked (Tier ${eqTier})` : "Unequippable";
         break;
       case TableType.REGIONS:
-        if (MISTHALIN_AREAS.includes(item.name)) {
+        if (gameModeId !== 'chunked' && MISTHALIN_AREAS.includes(item.name)) {
             isUnlocked = true;
             detail = "Starting Area";
         } else {
-            isUnlocked = unlocks.regions.includes(item.name);
+            isUnlocked = isAreaReachable(item.name, unlocks, gameModeId);
         }
         break;
       case TableType.MOBILITY:

@@ -37,7 +37,13 @@ export interface RankedRegion {
  *
  * @param unlocks  Current unlocks snapshot (same shape as GameContext unlocks)
  */
-export function rankLockedRegions(unlocks: any): RankedRegion[] {
+export function rankLockedRegions(unlocks: any, gameModeId?: string): RankedRegion[] {
+  // Chunked mode unlocks one map chunk at a time, not a whole named region in
+  // a single roll — "what if I unlocked region X" doesn't translate to a
+  // single spend the way it does for every other mode, so there's nothing
+  // meaningful to rank here. Short-circuit rather than force a wrong model.
+  if (gameModeId === 'chunked') return [];
+
   const locked = UNLOCKABLE_REGIONS.filter((r) => !unlocks.regions.includes(r));
 
   return locked

@@ -22,7 +22,7 @@ const CELL: Record<Status, string> = {
  * cell to filter the list to that tier.
  */
 export const DiaryHeatmap: React.FC<{ onPick: (diaryId: string) => void }> = ({ onPick }) => {
-  const { unlocks } = useGame();
+  const { unlocks, gameModeId } = useGame();
   const [open, setOpen] = useLocalStorage<boolean>('jrnl:diary:heatmap', true);
 
   // Diary "areas" are the id prefix (e.g. "Ardougne"), not the continent.
@@ -34,11 +34,11 @@ export const DiaryHeatmap: React.FC<{ onPick: (diaryId: string) => void }> = ({ 
       const tasks = ALL_DIARY_TASKS.filter(t => t.tierId === d.id);
       const allDone = tasks.length > 0 && tasks.every(t => unlocks.completedTasks.includes(t.id));
       if (unlocks.diaries.includes(d.id) || allDone) return 'done';
-      const unmet = diaryUnmet(d, unlocks).length;
+      const unmet = diaryUnmet(d, unlocks, gameModeId).length;
       return unmet === 0 ? 'available' : unmet === 1 ? 'almost' : 'locked';
     };
     return { areas, statusOf };
-  }, [unlocks]);
+  }, [unlocks, gameModeId]);
 
   return (
     <div className="shrink-0 border-b border-white/5 bg-[#161616]">

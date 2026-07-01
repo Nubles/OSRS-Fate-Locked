@@ -13,8 +13,8 @@ import { AdvisorList, AdvisorItem } from './AdvisorList';
  */
 
 export const SkillAdvisorPanel: React.FC = () => {
-  const { unlocks } = useGame();
-  const ranked = useMemo(() => rankSkillBottlenecks(unlocks), [unlocks]);
+  const { unlocks, gameModeId } = useGame();
+  const ranked = useMemo(() => rankSkillBottlenecks(unlocks, gameModeId), [unlocks, gameModeId]);
 
   // Scroll the matching skill card into view + flash a highlight ring.
   const scrollToSkill = (id: string) => {

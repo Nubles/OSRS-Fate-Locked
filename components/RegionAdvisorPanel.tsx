@@ -13,8 +13,8 @@ import { AdvisorList, AdvisorItem } from './AdvisorList';
  */
 
 export const RegionAdvisorPanel: React.FC = () => {
-  const { unlocks } = useGame();
-  const ranked = useMemo(() => rankLockedRegions(unlocks), [unlocks]);
+  const { unlocks, gameModeId } = useGame();
+  const ranked = useMemo(() => rankLockedRegions(unlocks, gameModeId), [unlocks, gameModeId]);
 
   // Scroll the matching region group card into view + flash a highlight ring.
   const scrollToRegion = (id: string) => {

@@ -13,12 +13,12 @@ import { UnlockState } from '../types';
 
 export type Obtainability = 'obtainable' | 'locked' | 'unknown';
 
-export function itemObtainability(itemName: string, unlocks: UnlockState): Obtainability {
+export function itemObtainability(itemName: string, unlocks: UnlockState, gameModeId?: string): Obtainability {
   if (!chunkContentService.ready || !itemName) return 'unknown';
   const sources = chunkContentService.itemSourceChunks(itemName);
   if (sources.length === 0) return 'unknown';
   for (const s of sources) {
-    if (chunkUnlocked(s.cx, s.cy, unlocks)) return 'obtainable';
+    if (chunkUnlocked(s.cx, s.cy, unlocks, gameModeId)) return 'obtainable';
   }
   return 'locked';
 }

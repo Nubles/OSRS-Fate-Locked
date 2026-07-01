@@ -4,7 +4,7 @@ import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { RESOURCE_MAP } from '../data/resourceData';
 import { REGION_GROUPS } from '../constants';
-import { isFreeArea } from './freeAreas';
+import { isAreaReachable } from './reachability';
 import { calculateSupplyChain } from './supplyChain';
 import { getPoolAndStateKey, isValidUnlock } from './gameEngine';
 import { tierForLevel } from './skillTiers';
@@ -73,10 +73,10 @@ export interface GoalRoute {
 // here so existing callers and tests keep working unchanged.
 export { tierForLevel };
 
-const isRegionMet = (r: string, unlocks: UnlockState): boolean => {
-  if (isFreeArea(r) || unlocks.regions.includes(r)) return true;
+const isRegionMet = (r: string, unlocks: UnlockState, gameModeId?: string): boolean => {
+  if (isAreaReachable(r, unlocks, gameModeId)) return true;
   const children = REGION_GROUPS[r];
-  return !!children && children.some(a => unlocks.regions.includes(a));
+  return !!children && children.some(a => isAreaReachable(a, unlocks, gameModeId));
 };
 
 /** Resolve a pinned goal id the same way GoalTracker does. */
@@ -129,6 +129,7 @@ export function expandQuestChain(seeds: string[]): string[] {
 
 export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute | null {
   const unlocks = gameState.unlocks;
+  const gameModeId = gameState.gameModeId;
   const { req, kind } = resolveRequirement(goalId);
 
   // ── Resource Engine item goals: route = its sources + tables ─────────────
@@ -144,7 +145,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
     const neededNames = new Set<string>();
     for (const s of sources) {
       if (s.available) continue;
-      for (const m of s.missing) collectNeededFromMissing(m, unlocks, neededNames);
+      for (const m of s.missing) collectNeededFromMissing(m, unlocks, neededNames, gameModeId);
     }
     const tables = suggestTables(neededNames, unlocks);
     const total = Math.max(1, sources.length);
@@ -195,7 +196,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
 
   const regions: RouteItem[] = [...regionSet].sort().map(r => ({
     name: r,
-    met: isRegionMet(r, unlocks),
+    met: isRegionMet(r, unlocks, gameModeId),
     detail: REGION_GROUPS[r] ? 'any sub-area counts' : undefined,
   }));
 
@@ -226,7 +227,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
     if (r.met) continue;
     if (REGION_GROUPS[r.name]) {
       for (const child of REGION_GROUPS[r.name]) {
-        if (!unlocks.regions.includes(child)) neededNames.add(child);
+        if (!isAreaReachable(child, unlocks, gameModeId)) neededNames.add(child);
       }
     } else {
       neededNames.add(r.name);
@@ -251,14 +252,14 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
 }
 
 /** Parse a supply-chain "missing" reason into unlockable names. */
-function collectNeededFromMissing(missing: string, unlocks: UnlockState, out: Set<string>) {
+function collectNeededFromMissing(missing: string, unlocks: UnlockState, out: Set<string>, gameModeId?: string) {
   const region = missing.match(/^Region: (.+)$/);
   if (region) {
     for (const r of region[1].split(' or ')) {
       const name = r.trim();
       if (REGION_GROUPS[name]) {
         for (const child of REGION_GROUPS[name]) {
-          if (!unlocks.regions.includes(child)) out.add(child);
+          if (!isAreaReachable(child, unlocks, gameModeId)) out.add(child);
         }
       } else {
         out.add(name);

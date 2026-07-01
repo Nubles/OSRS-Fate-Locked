@@ -73,7 +73,7 @@ export async function buildBundlePayload(
     linkedAccount: run.linkedAccount,
     equipment: unlocks.equipment,
   };
-  const payload = buildRuneliteBundle(unlocks.regions, state, itemTiers, slayerChunks);
+  const payload = buildRuneliteBundle(unlocks.regions, state, itemTiers, slayerChunks, unlocks.chunks);
   const json = JSON.stringify(payload);
   const compressed = await compressForClipboard(json);
   return { json, compressed };

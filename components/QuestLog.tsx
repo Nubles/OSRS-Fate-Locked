@@ -8,6 +8,7 @@ import { chunkContentService } from '../services/ChunkContentService';
 import { questLocations, refineQuestRegion, QuestLocationInfo } from '../utils/questLocations';
 import { showChunkOnMap } from '../utils/chunkLocations';
 import { questUnmet, isAlmostThere } from '../utils/journalProgress';
+import { isAreaReachable } from '../utils/reachability';
 import { DROP_RATES } from '../config/rules';
 import { DropSource } from '../types';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
@@ -56,6 +57,7 @@ const getDifficultyLabel = (difficulty: DropSource) => {
 interface QuestCardProps {
     quest: any; // Augmented QuestData with status
     unlocks: any;
+    gameModeId?: string;
     currentQP: number;
     onToggle: (e: React.MouseEvent, quest: any) => void;
     highlight?: boolean;
@@ -65,30 +67,30 @@ interface QuestCardProps {
     onSkillClick?: (skill: string, required: number, current: number, rect: DOMRect) => void;
 }
 
-const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, currentQP, onToggle, highlight, onPrereqClick, onSkillClick }) => {
+const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId, currentQP, onToggle, highlight, onPrereqClick, onSkillClick }) => {
     const isCompleted = quest.status === 'COMPLETED';
     const isAvailable = quest.status === 'AVAILABLE';
     const diffStyle = getDifficultyColor(quest.difficulty);
 
     // "Almost there" — locked by exactly one requirement (a quick win).
-    const unmet = !isCompleted && !isAvailable ? questUnmet(quest, unlocks) : [];
+    const unmet = !isCompleted && !isAvailable ? questUnmet(quest, unlocks, gameModeId) : [];
     const almost = isAlmostThere(unmet);
 
     // Chunk-derived locations refine the coarse continent requirement: a quest
     // tagged "Kandarin" may only actually visit the Ardougne sub-area, so we
     // check the real chunks it touches and can grant region access from those.
-    const loc: QuestLocationInfo = questLocations(quest.name, unlocks);
+    const loc: QuestLocationInfo = questLocations(quest.name, unlocks, gameModeId);
 
     // Req-met accounting — drives the progress bar shown on LOCKED cards so
     // players can see at a glance how close they are without counting chips.
     const gatedRegions: string[] = quest.regions.filter(
       (r: string) => !MISTHALIN_AREAS.includes(r) && r !== 'Misthalin',
     );
-    const authoredRegionMet = gatedRegions.every((r: string) => unlocks.regions.includes(r));
+    const authoredRegionMet = gatedRegions.every((r: string) => isAreaReachable(r, unlocks, gameModeId));
     const region = refineQuestRegion(authoredRegionMet, loc);
     // When chunk evidence grants access, count every gated continent as met so
     // the progress bar agrees with the (now AVAILABLE) status.
-    const metRegions = region.met ? gatedRegions : gatedRegions.filter((r: string) => unlocks.regions.includes(r));
+    const metRegions = region.met ? gatedRegions : gatedRegions.filter((r: string) => isAreaReachable(r, unlocks, gameModeId));
     const skillReqs = Object.entries(quest.skills as Record<string, number>);
     const metSkills = skillReqs.filter(([skill, lvl]) => {
       if (skill === 'Quest Points') return currentQP >= lvl;
@@ -144,7 +146,7 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, currentQP, onTogg
                   */}
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
                       {quest.regions.map((r: string) => {
-                          const unlocked = unlocks.regions.includes(r) || MISTHALIN_AREAS.includes(r) || r === 'Misthalin';
+                          const unlocked = isAreaReachable(r, unlocks, gameModeId);
                           if (isCompleted || unlocked) {
                               return (
                                   <span key={r} className="text-[10px] px-1.5 rounded flex items-center gap-1 border bg-black/30 text-gray-500 border-white/5">
@@ -307,7 +309,7 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, currentQP, onTogg
 };
 
 export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch = '' }) => {
-  const { unlocks, toggleQuest, rollForKey, advisorsEnabled } = useGame();
+  const { unlocks, toggleQuest, rollForKey, advisorsEnabled, gameModeId } = useGame();
   // Filter state is persisted in localStorage so returning players don't have
   // to re-apply their preferred view every session.
   const [filter, setFilter] = useLocalStorage<JournalStatus>('jrnl:quest:filter', 'ALL');
@@ -365,15 +367,12 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
   const getStatus = (quest: QuestData) => {
     if (unlocks.quests.includes(quest.id)) return 'COMPLETED';
 
-    const missingRegions = quest.regions.filter(r => {
-        if (MISTHALIN_AREAS.includes(r) || r === 'Misthalin') return false;
-        return !unlocks.regions.includes(r);
-    });
+    const missingRegions = quest.regions.filter(r => !isAreaReachable(r, unlocks, gameModeId));
 
     // Refine the coarse continent gate with chunk evidence: if every chunk the
     // quest actually visits is in an unlocked sub-area, it's reachable even when
     // the whole authored continent isn't unlocked.
-    const region = refineQuestRegion(missingRegions.length === 0, questLocations(quest.name, unlocks));
+    const region = refineQuestRegion(missingRegions.length === 0, questLocations(quest.name, unlocks, gameModeId));
     if (!region.met) return 'LOCKED_REGION';
 
     const missingSkills = Object.entries(quest.skills).some(([skill, lvl]) => {
@@ -400,7 +399,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
     });
     // chunkTick: recompute statuses once the chunk index finishes loading.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unlocks, chunkTick]);
+  }, [unlocks, gameModeId, chunkTick]);
 
   const filteredQuests = useMemo(() => {
     const diffRank = (d: DropSource) =>
@@ -568,6 +567,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
                                 <QuestCard
                                     key={quest.id}
                                     quest={quest}
+                                    gameModeId={gameModeId}
                                     unlocks={unlocks}
                                     currentQP={currentQP}
                                     onToggle={handleQuestToggle}
@@ -600,6 +600,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
                                 <QuestCard
                                     key={quest.id}
                                     quest={quest}
+                                    gameModeId={gameModeId}
                                     unlocks={unlocks}
                                     currentQP={currentQP}
                                     onToggle={handleQuestToggle}
@@ -624,6 +625,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
                                 <QuestCard
                                     key={quest.id}
                                     quest={quest}
+                                    gameModeId={gameModeId}
                                     unlocks={unlocks}
                                     currentQP={currentQP}
                                     onToggle={handleQuestToggle}

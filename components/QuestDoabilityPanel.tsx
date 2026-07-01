@@ -7,7 +7,7 @@ import { chunkReachability } from '../utils/chunkReach';
 import { chunkForPlace, chunkUnlocked, placeOf, showChunkOnMap } from '../utils/chunkLocations';
 import { questLocations } from '../utils/questLocations';
 import { questChunkStatus, doabilityBucket, DoabilityBucket, entryBlockedGate } from '../utils/questDoability';
-import { isFreeArea } from '../utils/freeAreas';
+import { isAreaReachable } from '../utils/reachability';
 import { WIKI_OVERRIDES } from '../constants';
 
 interface Props { searchTerm?: string }
@@ -39,7 +39,7 @@ interface Row {
 }
 
 export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
-  const { unlocks } = useGame();
+  const { unlocks, gameModeId } = useGame();
   const [ready, setReady] = useState(chunkContentService.ready);
   useEffect(() => { if (!ready) chunkContentService.init().then(() => setReady(true)); }, [ready]);
   const [open, setOpen] = useState<Record<string, boolean>>({ DOABLE: true, REQS: true, STRANDED: true, LOCKED: true });
@@ -51,8 +51,8 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
     const completed = new Set<string>(unlocks.quests as string[]);
     const known = new Set<string>(Object.keys(QUEST_DATA));
     const gate = entryBlockedGate(chunkContentService.questSections(), completed, known);
-    const reach = chunkReachability(chunkContentService.connectGraph(), unlocks, chunkForPlace('Lumbridge'), gate);
-    const isUnlocked = (cx: number, cy: number) => chunkUnlocked(cx, cy, unlocks);
+    const reach = chunkReachability(chunkContentService.connectGraph(), unlocks, chunkForPlace('Lumbridge'), gate, gameModeId);
+    const isUnlocked = (cx: number, cy: number) => chunkUnlocked(cx, cy, unlocks, gameModeId);
     const currentQP = (unlocks.quests as string[]).reduce((a, qid) => a + (QUEST_DATA[qid]?.points ?? 0), 0);
 
     return Object.values(QUEST_DATA).map((q) => {
@@ -73,7 +73,7 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
       // hand-authored region gate so a region-locked quest can't read "doable".
       const hit = chunkContentService.entityLocations(q.id, ['quest']);
       const chunk = hit ? questChunkStatus(hit.locations, reach.reachable, isUnlocked) : null;
-      const authoredRegionMet = q.regions.every((r: string) => isFreeArea(r) || unlocks.regions.includes(r));
+      const authoredRegionMet = q.regions.every((r: string) => isAreaReachable(r, unlocks, gameModeId));
       let bucket: DoabilityBucket;
       if (chunk) {
         bucket = doabilityBucket(completed, reqsMet, chunk);
@@ -84,14 +84,14 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
       // Blocker detail for the row.
       const lockedAreas = bucket !== 'LOCKED' ? []
         : chunk
-          ? [...new Set(questLocations(q.id, unlocks).lockedPlaces.map(p => p.label))]
-          : q.regions.filter((r: string) => !isFreeArea(r) && !unlocks.regions.includes(r));
+          ? [...new Set(questLocations(q.id, unlocks, gameModeId).lockedPlaces.map(p => p.label))]
+          : q.regions.filter((r: string) => !isAreaReachable(r, unlocks, gameModeId));
       const strandedFirst = bucket === 'STRANDED' ? chunk?.blockers.find(b => b.access === 'STRANDED') : null;
       const strandedChunk = strandedFirst ? { cx: strandedFirst.cx, cy: strandedFirst.cy, label: placeOf(strandedFirst.cx, strandedFirst.cy).label } : null;
 
       return { id: q.id, bucket, reqsMet, missingSkills, missingPrereqs, lockedAreas, strandedChunk };
     });
-  }, [ready, unlocks]);
+  }, [ready, unlocks, gameModeId]);
 
   const filtered = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();

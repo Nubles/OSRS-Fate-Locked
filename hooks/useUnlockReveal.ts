@@ -25,6 +25,7 @@ export interface UnlockRevealData {
  */
 export function useUnlockReveal(
   unlocks: any,
+  gameModeId?: string,
 ): [UnlockRevealData | null, () => void] {
   const prevRef = useRef<any | null>(null);
   const [reveal, setReveal] = useState<UnlockRevealData | null>(null);
@@ -55,8 +56,8 @@ export function useUnlockReveal(
       .filter((q) => !unlocks.quests.includes(q.id))
       .filter(
         (q) =>
-          getQuestStatus(q, prev) !== 'AVAILABLE' &&
-          getQuestStatus(q, unlocks) === 'AVAILABLE',
+          getQuestStatus(q, prev, gameModeId) !== 'AVAILABLE' &&
+          getQuestStatus(q, unlocks, gameModeId) === 'AVAILABLE',
       )
       .map((q) => ({ id: q.id, name: q.name }));
 
@@ -65,8 +66,8 @@ export function useUnlockReveal(
       .filter((d) => !unlocks.diaries.includes(d.id))
       .filter(
         (d) =>
-          getDiaryStatus(d, prev) !== 'AVAILABLE' &&
-          getDiaryStatus(d, unlocks) === 'AVAILABLE',
+          getDiaryStatus(d, prev, gameModeId) !== 'AVAILABLE' &&
+          getDiaryStatus(d, unlocks, gameModeId) === 'AVAILABLE',
       )
       .map((d) => d.id);
 

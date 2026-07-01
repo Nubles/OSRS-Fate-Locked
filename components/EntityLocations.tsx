@@ -19,7 +19,7 @@ interface Props {
 }
 
 export const EntityLocations: React.FC<Props> = ({ name, kinds, cap = 4, className }) => {
-  const { unlocks } = useGame();
+  const { unlocks, gameModeId } = useGame();
   const [, setTick] = useState(0);
   const [expanded, setExpanded] = useState(false);
 
@@ -31,9 +31,9 @@ export const EntityLocations: React.FC<Props> = ({ name, kinds, cap = 4, classNa
     if (!chunkContentService.ready) return null;
     const hit = chunkContentService.entityLocations(name, kinds);
     if (!hit) return [];
-    return summarisePlaces(hit.locations, unlocks);
+    return summarisePlaces(hit.locations, unlocks, gameModeId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [name, kinds?.join(','), unlocks, chunkContentService.ready]);
+  }, [name, kinds?.join(','), unlocks, gameModeId, chunkContentService.ready]);
 
   if (!places || places.length === 0) return null;
 

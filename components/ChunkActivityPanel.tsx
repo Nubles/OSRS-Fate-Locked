@@ -9,6 +9,7 @@ import { classifyShop } from '../utils/merchantShops';
 import { resourceReqFor, resourceUsable } from '../utils/chunkResources';
 import { mobilityFor } from '../utils/chunkMobility';
 import { placeOf, chunkUnlocked, showChunkOnMap } from '../utils/chunkLocations';
+import { isAreaReachable } from '../utils/reachability';
 import { FARMING_PATCH_LIST, GUILDS_LIST, MINIGAMES_LIST, MOBILITY_LIST, BOSSES_LIST, MISTHALIN_AREAS } from '../constants';
 import type { ChunkCoord } from '../utils/mapCoords';
 import { WikiLink } from './WikiLink';
@@ -239,7 +240,7 @@ const Overview: React.FC<{ kind: 'can' | 'cant'; items: OverviewItem[] }> = ({ k
 };
 
 export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, regionChunks, unlocked, onClose }) => {
-  const { unlocks } = useGame();
+  const { unlocks, gameModeId } = useGame();
   const [mode, setMode] = useState<'chunk' | 'region'>('chunk');
   const [, setLoadedTick] = useState(0);
   const [failed, setFailed] = useState(false);
@@ -283,7 +284,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
         const category = sourceNet ?? classifyVia(d.via);
         if (!byCat.has(category)) byCat.set(category, new Map());
         const m = byCat.get(category)!;
-        if (!m.has(d.label)) m.set(d.label, { cx: d.cx, cy: d.cy, unlocked: chunkUnlocked(d.cx, d.cy, unlocks) });
+        if (!m.has(d.label)) m.set(d.label, { cx: d.cx, cy: d.cy, unlocked: chunkUnlocked(d.cx, d.cy, unlocks, gameModeId) });
       }
     }
 
@@ -294,7 +295,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       dests: [...m.entries()].map(([label, v]) => ({ label, ...v }))
         .sort((a, b) => Number(b.unlocked) - Number(a.unlocked) || a.label.localeCompare(b.label)),
     })).sort((a, b) => b.dests.length - a.dests.length);
-  }, [mode, chunk, regionChunks, unlocks, chunkContentService.ready]);
+  }, [mode, chunk, regionChunks, unlocks, gameModeId, chunkContentService.ready]);
 
   const totalLinks = useMemo(() => linkGroups.reduce((a, g) => a + g.dests.length, 0), [linkGroups]);
   const reachableLinks = useMemo(() => linkGroups.reduce((a, g) => a + (g.networkUnlocked ? g.dests.filter(d => d.unlocked).length : 0), 0), [linkGroups]);
@@ -307,11 +308,11 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     return Object.entries(content.quests)
       .map(([name, kind]) => {
         const data = QUEST_DATA[name];
-        const status = data ? getQuestStatus(data, unlocks) : null;
+        const status = data ? getQuestStatus(data, unlocks, gameModeId) : null;
         return { name, kind, status };
       })
       .sort((a, b) => (a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === 'first' ? -1 : 1));
-  }, [content, unlocks]);
+  }, [content, unlocks, gameModeId]);
 
   // ── Derived sections with their own unlock gates ──────────────────────────
   const derived = useMemo(() => {
@@ -362,7 +363,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     // Diary tasks → reachable when the diary's home region is unlocked.
     const diaries = Object.entries(content.diaries).map(([area, refs]) => {
       const region = DIARY_AREA_REGION[area];
-      const reachable = !region || region === 'Misthalin' || MISTHALIN_AREAS.includes(region) || unlocks.regions.includes(region);
+      const reachable = !region || isAreaReachable(region, unlocks, gameModeId);
       return { area, refs, region, reachable };
     });
 
@@ -378,7 +379,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       .map(name => ({ name, usable: unlocks.minigames.includes(name) }));
 
     return { shops, bosses, monsters, transport, farming, resources, objects, guilds, minigames, diaries };
-  }, [content, subArea, unlocks]);
+  }, [content, subArea, unlocks, gameModeId]);
 
   // ── Can-do / Locked overview ───────────────────────────────────────────────
   const overview = useMemo(() => {

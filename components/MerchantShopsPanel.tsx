@@ -15,7 +15,7 @@ import { WikiLink } from './WikiLink';
  * chunk; categories with no classified shops are simply omitted.
  */
 export const MerchantShopsPanel: React.FC = () => {
-  const { unlocks } = useGame();
+  const { unlocks, gameModeId } = useGame();
   const [ready, setReady] = useState(chunkContentService.ready);
   const [openCats, setOpenCats] = useState<Set<string>>(new Set());
 
@@ -54,7 +54,7 @@ export const MerchantShopsPanel: React.FC = () => {
         const isOpen = openCats.has(cat);
         // usable = category unlocked AND at least one location reachable
         const usableCount = catUnlocked
-          ? shops.filter(s => summarisePlaces(s.locations, unlocks).some(p => p.unlocked)).length
+          ? shops.filter(s => summarisePlaces(s.locations, unlocks, gameModeId).some(p => p.unlocked)).length
           : 0;
         return (
           <div key={cat} className="border-b border-white/5">
@@ -75,7 +75,7 @@ export const MerchantShopsPanel: React.FC = () => {
             {isOpen && (
               <div className="pb-2 pl-7 space-y-1">
                 {shops.map(shop => {
-                  const places = summarisePlaces(shop.locations, unlocks);
+                  const places = summarisePlaces(shop.locations, unlocks, gameModeId);
                   const usable = catUnlocked && places.some(p => p.unlocked);
                   return (
                     <div key={shop.name} className="flex flex-wrap items-center gap-1.5 text-[11px]">
