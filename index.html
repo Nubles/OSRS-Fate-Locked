@@ -25,6 +25,23 @@
 </head>
   <body>
     <div id="root"></div>
+    <!-- GitHub Pages caches this document itself for a while and we can't set
+         cache headers to prevent that; a stale cached copy can reference a
+         hashed bundle a newer deploy has since deleted, 404ing before React
+         ever mounts (the app-level auto-reload in utils/chunkLoadError.ts only
+         catches lazy chunks failing after boot, not this). Force one bypass
+         reload — guarded so a genuinely offline visitor doesn't loop. -->
+    <script>
+      window.addEventListener('error', function (e) {
+        if (e.target && e.target.tagName === 'SCRIPT' && e.target.type === 'module') {
+          var last = Number(sessionStorage.getItem('fate_entry_reload_at') || 0);
+          if (Date.now() - last > 15000) {
+            sessionStorage.setItem('fate_entry_reload_at', String(Date.now()));
+            location.reload();
+          }
+        }
+      }, true);
+    </script>
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>

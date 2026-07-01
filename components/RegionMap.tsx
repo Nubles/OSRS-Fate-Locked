@@ -14,6 +14,7 @@ import { chunkContentService, type OverlayPoint } from '../services/ChunkContent
 import { chunkReachability } from '../utils/chunkReach';
 import { entryBlockedGate } from '../utils/questDoability';
 import { QUEST_DATA } from '../data/questData';
+import { isChunkUnlocked, isFrontierChunk } from '../utils/chunkAdjacency';
 
 type LensTone = 'good' | 'warn' | 'bad';
 const TONE_FILL: Record<LensTone, string> = { good: 'rgba(16,185,129,0.30)', warn: 'rgba(245,158,11,0.10)', bad: 'rgba(239,68,68,0.22)' };
@@ -219,6 +220,8 @@ const loadInitialDraft = (): LoadedDraft => loadVersionedDraft(AUTHORING_STORAGE
 const GRID_LINE_COLOR = 'rgba(255,255,255,0.12)';
 const UNLOCKED_FILL = 'rgba(16, 185, 129, 0.35)';
 const LOCKED_FILL = 'rgba(239, 68, 68, 0.30)';
+// Chunked mode only — chunks adjacent to the unlocked set (rollable next).
+const FRONTIER_FILL = 'rgba(245, 158, 11, 0.35)';
 const ACTIVE_STROKE = 'rgba(250, 204, 21, 0.9)';
 
 // ── Sub-area authoring layer ───────────────────────────────────────────────
@@ -393,7 +396,7 @@ interface GameSnapshot {
   equipment?: Record<string, number>;
 }
 
-const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnlocks: string[]; getGameSnapshot: () => GameSnapshot }) => {
+const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGameSnapshot }: { regionUnlocks: string[]; chunkUnlocks: string[]; isChunked: boolean; getGameSnapshot: () => GameSnapshot }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapContentRef = useRef<HTMLDivElement>(null);
 
@@ -1233,14 +1236,24 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
         // chunks of the selected sub-area, and Solo hides everything else.
         const isActive = subLevel ? subArea === activeSubArea : regionActive;
         if (soloView && subLevel && !isActive) continue;
-        const unlocked = subArea ? isRegionUnlocked(subArea, regionUnlocks) : continentUnlocked;
-        const fill = unlocked ? UNLOCKED_FILL : LOCKED_FILL;
+        let fill: string;
+        if (isChunked) {
+          // Chunked mode ignores named-region unlock state entirely — the
+          // real unlock unit is the individual chunk (see utils/chunkAdjacency.ts).
+          const key = chunkKey({ cx, cy });
+          if (isChunkUnlocked(key, chunkUnlocks)) fill = UNLOCKED_FILL;
+          else if (isFrontierChunk(key, chunkUnlocks)) fill = FRONTIER_FILL;
+          else fill = LOCKED_FILL;
+        } else {
+          const unlocked = subArea ? isRegionUnlocked(subArea, regionUnlocks) : continentUnlocked;
+          fill = unlocked ? UNLOCKED_FILL : LOCKED_FILL;
+        }
         const { px, py } = tileToPixel({ tx: cx * CHUNK_TILES, ty: (cy + 1) * CHUNK_TILES });
         rects.push({ key: `${region}:${cx},${cy}`, region, x: px, y: py, w: chunkPx, h: chunkPy, fill, isActive });
       }
     }
     return rects;
-  }, [draftChunks, chunkSubArea, regionUnlocks, authoring, authorLevel, activeRegion, activeSubArea, soloView]);
+  }, [draftChunks, chunkSubArea, regionUnlocks, chunkUnlocks, isChunked, authoring, authorLevel, activeRegion, activeSubArea, soloView]);
 
   const activeChunkCount = authorLevel === 'SUBAREA'
     ? (subDraft[activeSubArea]?.length ?? 0)
@@ -1897,14 +1910,14 @@ const MapContent = React.memo(({ regionUnlocks, getGameSnapshot }: { regionUnloc
       })()}
     </div>
   );
-}, (prev, next) => prev.regionUnlocks === next.regionUnlocks);
+}, (prev, next) => prev.regionUnlocks === next.regionUnlocks && prev.chunkUnlocks === next.chunkUnlocks && prev.isChunked === next.isChunked);
 
 export const RegionMap: React.FC = () => {
-  const { unlocks, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount } = useGame();
+  const { unlocks, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId } = useGame();
   // Live run state for the RuneLite bundle, read lazily at export time via a
   // stable getter so MapContent's memoization (regionUnlocks-only) holds.
   const snapRef = useRef<GameSnapshot>({ keys: 0, specialKeys: 0, chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', pinnedGoals: [] as string[] });
   snapRef.current = { keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals: pinnedGoals ?? [], linkedAccount, equipment: unlocks.equipment };
   const getGameSnapshot = useCallback(() => snapRef.current, []);
-  return <MapContent regionUnlocks={unlocks.regions} getGameSnapshot={getGameSnapshot} />;
+  return <MapContent regionUnlocks={unlocks.regions} chunkUnlocks={unlocks.chunks ?? []} isChunked={gameModeId === 'chunked'} getGameSnapshot={getGameSnapshot} />;
 };
