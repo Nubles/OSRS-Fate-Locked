@@ -7,7 +7,7 @@ import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
 import { setStartArea } from '../utils/freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
-import { getRitual, XTREME_MILESTONE_INTERVAL } from '../config/economy';
+import { getRitual, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL } from '../config/economy';
 import { rollDice, UNLOCK_COST } from '../utils/gameEngine';
 import { hashEntry, ensureChain } from '../utils/integrity';
 import { pushBackup, listBackups as readBackups, getBackupData, BackupMeta } from '../utils/backups';
@@ -84,6 +84,7 @@ const getInitialUnlocks = (): UnlockState => ({
     [skill]: skill === 'Hitpoints' ? 10 : 1
   }), {} as Record<string, number>),
   regions: [],
+  chunks: [],
   mobility: [],
   arcana: [],
   housing: [],
@@ -185,7 +186,7 @@ const migrateSave = (saveData: Partial<GameState>): GameState => {
 
   // Defensive: dedupe unlock arrays so a corrupted import can't load the
   // same region/boss/etc. twice.
-  const ARRAY_KEYS = ['regions', 'mobility', 'arcana', 'housing', 'merchants',
+  const ARRAY_KEYS = ['regions', 'chunks', 'mobility', 'arcana', 'housing', 'merchants',
     'minigames', 'bosses', 'storage', 'guilds', 'farming', 'slayerUnlocks',
     'quests', 'diaries',
     'cas', 'completedTasks'] as const;
@@ -425,6 +426,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       else if (table === TableType.GUILDS) newUnlocks.guilds = pushOnce(newUnlocks.guilds);
       else if (table === TableType.FARMING_LAYERS) newUnlocks.farming = pushOnce(newUnlocks.farming);
       else if (table === TableType.SLAYER_UNLOCKS) newUnlocks.slayerUnlocks = pushOnce(newUnlocks.slayerUnlocks);
+      else if (table === TableType.CHUNKS) newUnlocks.chunks = pushOnce(newUnlocks.chunks ?? []);
 
       let newState = { ...state, unlocks: newUnlocks };
       if (costType === 'key') newState.keys -= cost;
@@ -540,6 +542,27 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         }
       }
 
+      // Same insurance for Chunked mode — see CHUNKED_MILESTONE_INTERVAL.
+      // Tighter interval than Xtreme's since a single starting chunk is a
+      // much smaller training footprint than all of Lumbridge.
+      let chunkedMilestoneClaimed = state.chunkedMilestoneClaimed ?? 0;
+      if (state.gameModeId === 'chunked' && (state.unlocks.chunks ?? []).length === 0) {
+        const eligible = Math.floor(totalLevel / CHUNKED_MILESTONE_INTERVAL);
+        if (eligible > chunkedMilestoneClaimed) {
+          const gained = eligible - chunkedMilestoneClaimed;
+          keys += gained;
+          chunkedMilestoneClaimed = eligible;
+          logs.push({
+            id: generateId(),
+            timestamp: now,
+            type: 'XTREME_MILESTONE',
+            message: `Chunked milestone: Total Level ${eligible * CHUNKED_MILESTONE_INTERVAL} — ${gained === 1 ? 'a Key' : `${gained} Keys`} guaranteed.`,
+            details: `Stuck in the start chunk with nothing else to roll — Fate steps in every ${CHUNKED_MILESTONE_INTERVAL} total levels.`,
+            meta: { totalLevel, gained }
+          });
+        }
+      }
+
       const eventMeta: LevelUpEventMeta = { skill, level: newLevel, totalLevel, chaosKeyAwarded };
 
       return {
@@ -548,6 +571,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         keys,
         chaosKeys,
         xtremeMilestoneClaimed,
+        chunkedMilestoneClaimed,
         history: logs,
         lastEvent: { id: generateId(), type: 'LEVEL_UP', meta: eventMeta }
       };

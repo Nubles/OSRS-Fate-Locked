@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { gameReducer, initialState } from './GameContext';
 import { TableType, LogEntry } from '../types';
 import { isRollEntry } from '../utils/logEntry';
-import { XTREME_MILESTONE_INTERVAL } from '../config/economy';
+import { XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL } from '../config/economy';
+import { isValidUnlock } from '../utils/gameEngine';
+import { ALL_CHUNKS, CHUNKED_START, chunkKey } from '../utils/chunkAdjacency';
 
 /**
  * Tests for the core game reducer — every roll, unlock, ritual, level-up and
@@ -118,6 +120,31 @@ describe('UNLOCK', () => {
   });
 });
 
+// --- UNLOCK — Chunked mode ---------------------------------------------------
+
+describe('UNLOCK — Chunks (Chunked mode)', () => {
+  it('adds a chunk key and deducts a standard key', () => {
+    const target = chunkKey({ cx: CHUNKED_START.cx + 1, cy: CHUNKED_START.cy });
+    const s = gameReducer(base(), { type: 'UNLOCK', payload: { table: TableType.CHUNKS, item: target, costType: 'key', cost: 1 } });
+    expect(s.unlocks.chunks).toContain(target);
+    expect(s.keys).toBe(initialState.keys - 1);
+  });
+
+  it('does not duplicate a chunk unlocked twice', () => {
+    const target = chunkKey({ cx: CHUNKED_START.cx + 1, cy: CHUNKED_START.cy });
+    const once = gameReducer(base(), { type: 'UNLOCK', payload: { table: TableType.CHUNKS, item: target, costType: 'key', cost: 1 } });
+    const twice = gameReducer(once, { type: 'UNLOCK', payload: { table: TableType.CHUNKS, item: target, costType: 'key', cost: 1 } });
+    expect(twice.unlocks.chunks!.filter((c) => c === target)).toHaveLength(1);
+  });
+
+  it('isValidUnlock only allows chunks in the current frontier', () => {
+    const notAdjacent = ALL_CHUNKS.find(c => Math.abs(c.cx - CHUNKED_START.cx) > 20 || Math.abs(c.cy - CHUNKED_START.cy) > 20)!;
+    const adjacent = chunkKey({ cx: CHUNKED_START.cx + 1, cy: CHUNKED_START.cy });
+    expect(isValidUnlock(TableType.CHUNKS, chunkKey(notAdjacent), initialState.unlocks)).toBe(false);
+    expect(isValidUnlock(TableType.CHUNKS, adjacent, initialState.unlocks)).toBe(true);
+  });
+});
+
 // --- Void Altar rituals -----------------------------------------------------
 
 describe('rituals', () => {
@@ -212,6 +239,53 @@ describe('LEVEL_UP — Xtreme milestone insurance', () => {
     const s = gameReducer(already, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
     expect(s.keys).toBe(10);
     expect(s.xtremeMilestoneClaimed).toBe(1);
+  });
+});
+
+// --- Chunked milestone insurance ---------------------------------------------
+
+describe('LEVEL_UP — Chunked milestone insurance', () => {
+  const chunkedIsolated = () => ({ ...base(), gameModeId: 'chunked', unlocks: { ...initialState.unlocks, chunks: [] } });
+
+  it('does nothing outside Chunked mode, even with no chunks unlocked', () => {
+    const state = { ...base(), gameModeId: 'vanilla', unlocks: { ...initialState.unlocks, chunks: [] } };
+    const s = gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
+    expect(s.keys).toBe(initialState.keys);
+    expect(s.chunkedMilestoneClaimed ?? 0).toBe(0);
+  });
+
+  it('does nothing in Chunked mode once a chunk has been unlocked', () => {
+    const target = chunkKey({ cx: CHUNKED_START.cx + 1, cy: CHUNKED_START.cy });
+    const state = { ...chunkedIsolated(), unlocks: { ...initialState.unlocks, chunks: [target] } };
+    const s = gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
+    expect(s.keys).toBe(initialState.keys);
+  });
+
+  it('grants a guaranteed key the instant total level crosses the (tighter) interval, isolated in Chunked', () => {
+    const startingTotal = Object.values(initialState.unlocks.levels).reduce((a, b) => a + b, 0);
+    const state = {
+      ...chunkedIsolated(),
+      unlocks: { ...chunkedIsolated().unlocks, levels: { ...chunkedIsolated().unlocks.levels, Attack: CHUNKED_MILESTONE_INTERVAL - startingTotal } },
+    };
+    const s = gameReducer(state, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
+    expect(s.keys).toBe(initialState.keys + 1);
+    expect(s.chunkedMilestoneClaimed).toBe(1);
+  });
+
+  it('does not re-grant the same milestone on a level-up that does not cross a new threshold', () => {
+    const already = { ...chunkedIsolated(), chunkedMilestoneClaimed: 1, keys: 10 };
+    const s = gameReducer(already, { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 } });
+    expect(s.keys).toBe(10);
+    expect(s.chunkedMilestoneClaimed).toBe(1);
+  });
+
+  it('the two modes\' milestone counters are independent', () => {
+    const state = { ...chunkedIsolated(), xtremeMilestoneClaimed: 3 };
+    const s = gameReducer(state, {
+      type: 'LEVEL_UP',
+      payload: { skill: 'Attack', chaosRoll: 0.5 },
+    });
+    expect(s.xtremeMilestoneClaimed).toBe(3); // untouched — this run is Chunked, not Xtreme
   });
 });
 

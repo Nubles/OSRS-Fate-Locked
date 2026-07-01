@@ -39,6 +39,14 @@ export const LEVEL_CHAOS_CHANCE = 2;   // % chance of a Chaos Key on any level u
 // Cooking/Firemaking/Crafting/Prayer/Thieving/Farming), not a freebie.
 export const XTREME_MILESTONE_INTERVAL = 50; // total-level gap between guaranteed keys
 
+// Chunked mode is the same anti-softlock problem, worse: the frontier can be
+// a single ~64x64-tile chunk with barely any trainable resources at all (vs.
+// Xtreme's whole 6-chunk Lumbridge). Same deterministic-key mechanic, gated
+// on gameModeId === 'chunked' && unlocks.chunks.length === 0 (still on the
+// free start chunk, nothing rolled yet), but a tighter interval since the
+// training footprint is so much smaller.
+export const CHUNKED_MILESTONE_INTERVAL = 25; // total-level gap between guaranteed keys
+
 // ── Earning ──────────────────────────────────────────────────────────────────
 export type EarnCategory =
   | 'Quests' | 'Achievement Diaries' | 'Combat Achievements'

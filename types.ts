@@ -66,6 +66,8 @@ export enum TableType {
   FARMING_LAYERS = 'Farming Patches',
   AGILITY_COURSES = 'Agility Courses',
   SLAYER_UNLOCKS = 'Slayer Unlocks',
+  /** Chunked mode only — one map-region chunk at a time, adjacent to the unlocked set. */
+  CHUNKS = 'Chunks',
   QUESTS = 'Quests',
   DIARIES = 'Diaries',
   COMBAT_ACHIEVEMENTS = 'Combat Achievements',
@@ -97,6 +99,12 @@ export interface UnlockState {
   skills: Record<string, number>; // Name -> Tier (1-10)
   levels: Record<string, number>; // Name -> Current Level (1-99)
   regions: string[];
+  /**
+   * Chunked mode only — individual unlocked map-region chunks, keyed "cx,cy".
+   * Optional (defaults to []) so the many UnlockState fixtures across the test
+   * suite, written before this mode existed, don't all need updating.
+   */
+  chunks?: string[];
   mobility: string[];
   arcana: string[];
   housing: string[];
@@ -145,6 +153,8 @@ export interface GameState {
    * key economy for any other mode.
    */
   xtremeMilestoneClaimed?: number;
+  /** Same insurance as xtremeMilestoneClaimed, for the 'chunked' mode — see CHUNKED_MILESTONE_INTERVAL. */
+  chunkedMilestoneClaimed?: number;
 }
 
 /** A simulated nemesis ('sim') or a friend's run snapshot ('friend') to race. */

@@ -18,8 +18,16 @@ export interface GameModeRules {
   /**
    * Which areas are free at the start. 'misthalin' (default) frees the whole
    * starter region; 'lumbridge' frees only Lumbridge — the Xtreme start.
+   * Unused (and meaningless) for the 'chunked' mode — see chunkGranularity.
    */
   startArea?: 'misthalin' | 'lumbridge';
+  /**
+   * Chunked mode only: unlocking happens one map-region chunk at a time,
+   * adjacent to the unlocked set (TableType.CHUNKS), instead of whole named
+   * regions/sub-areas. See utils/chunkAdjacency.ts for the frontier logic and
+   * CHUNKED_START for the fixed (free) starting chunk.
+   */
+  chunkGranularity?: boolean;
 }
 
 export interface GameMode {
@@ -99,6 +107,20 @@ export const GAME_MODES: GameMode[] = [
       ritualCostMultiplier: 1,
       regionModifiers: false,
       startArea: 'lumbridge',
+    },
+  },
+  {
+    id: 'chunked',
+    name: 'Chunked',
+    description: 'The classic "Chunked Ironman" format: you start in a single Lumbridge chunk and can only unlock a chunk that borders one you already hold. No named regions — Fate hands you a random adjacent tile of the map, one at a time.',
+    tagline: 'One chunk at a time, adjacent only',
+    rules: {
+      pityEnabled: true,
+      pityThreshold: 50,
+      omniChanceBase: 2,
+      ritualCostMultiplier: 1,
+      regionModifiers: false,
+      chunkGranularity: true,
     },
   },
   {

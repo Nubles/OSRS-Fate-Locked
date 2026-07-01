@@ -2,6 +2,7 @@
 import { UnlockState, TableType } from '../types';
 import { SKILLS_LIST, EQUIPMENT_SLOTS, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST } from '../data/items';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
+import { ALL_CHUNK_KEYS, isFrontierChunk } from './chunkAdjacency';
 
 export const rollDice = (max: number = 100) => Math.floor(Math.random() * max) + 1;
 
@@ -12,6 +13,7 @@ export const checkUnlockAvailability = (unlocks: UnlockState) => {
         equipment: totalEquipTiers < (EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX),
         skills: totalSkillTiers < (SKILLS_LIST.length * 10),
         regions: unlocks.regions.length < REGIONS_LIST.length,
+        chunks: (unlocks.chunks ?? []).length < ALL_CHUNK_KEYS.length,
         mobility: unlocks.mobility.length < MOBILITY_LIST.length,
         arcana: unlocks.arcana.length < ARCANA_LIST.length,
         poh: unlocks.housing.length < POH_LIST.length,
@@ -43,6 +45,7 @@ export const isValidUnlock = (table: TableType, item: string, unlocks: UnlockSta
     if (table === TableType.GUILDS) return !unlocks.guilds.includes(item);
     if (table === TableType.FARMING_LAYERS) return !unlocks.farming.includes(item);
     if (table === TableType.SLAYER_UNLOCKS) return !unlocks.slayerUnlocks.includes(item);
+    if (table === TableType.CHUNKS) return isFrontierChunk(item, unlocks.chunks ?? []);
     return true;
 };
 
@@ -61,6 +64,7 @@ export const getPoolAndStateKey = (table: TableType) => {
         case TableType.GUILDS: return { pool: GUILDS_LIST, stateKey: 'guild' };
         case TableType.FARMING_LAYERS: return { pool: FARMING_PATCH_LIST, stateKey: 'farming' };
         case TableType.SLAYER_UNLOCKS: return { pool: SLAYER_UNLOCKS_LIST, stateKey: 'slayerUnlocks' };
+        case TableType.CHUNKS: return { pool: ALL_CHUNK_KEYS, stateKey: 'chunks' };
         default: return { pool: [], stateKey: '' };
     }
 };
