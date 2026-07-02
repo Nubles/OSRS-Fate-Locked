@@ -346,10 +346,17 @@ export const Dashboard: React.FC = () => {
 
   // Command-palette navigation: switch dashboard tabs and open the modals this
   // component owns (fired as `fate:nav` window events by the ⌘K palette).
+  // An optional `query` seeds the shared search box — e.g. a Collection Log
+  // suggestion jump ("tab:COLLECTION" + query: itemName) lands directly on
+  // that item, filtered and highlighted via the existing search machinery.
   useEffect(() => {
     const onNav = (e: Event) => {
-      const target = (e as CustomEvent<{ target?: string }>).detail?.target ?? '';
-      if (target.startsWith('tab:')) { setActiveTab(target.slice(4)); return; }
+      const { target = '', query } = (e as CustomEvent<{ target?: string; query?: string }>).detail ?? {};
+      if (target.startsWith('tab:')) {
+        setActiveTab(target.slice(4));
+        if (query) setSearchQuery(query);
+        return;
+      }
       const opens: Record<string, (v: boolean) => void> = {
         'open:goal': setShowGoalPlanner,
         'open:achievements': setShowAchievements,

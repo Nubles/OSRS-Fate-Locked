@@ -1,7 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Sparkles, X } from 'lucide-react';
+import { useGame } from '../context/GameContext';
 import { relaySync } from '../services/relaySync';
 import { suggestSync, Suggestion } from '../services/suggestSync';
+import { isRollEntry } from '../utils/logEntry';
+import { LogEntry } from '../types';
 
 /**
  * Invisible-until-triggered, always-mounted: while online sync is enabled,
@@ -22,6 +25,7 @@ export function SuggestionBanner() {
   useEffect(() => relaySync.subscribe(() => force((n) => n + 1)), []);
   const enabled = relaySync.enabled;
   const [queue, setQueue] = useState<Suggestion[]>([]);
+  const { history } = useGame() as { history: LogEntry[] };
 
   useEffect(() => {
     if (!enabled) { suggestSync.stop(); return; }
@@ -39,6 +43,21 @@ export function SuggestionBanner() {
     return () => { unsub(); suggestSync.stop(); };
   }, [enabled]);
 
+  // Auto-clear matching persistent suggestions (the "Suggestions" list in the
+  // Auto-Roll tab, see SuggestionQueue.tsx) once the player actually rolls
+  // that category — the reminder did its job. This lives here (always
+  // mounted) rather than in SuggestionQueue itself (a lazily-mounted
+  // Dashboard tab) so a roll made on any other tab is never missed.
+  const lastLen = useRef(history.length);
+  useEffect(() => {
+    if (history.length <= lastLen.current) { lastLen.current = history.length; return; }
+    const newest = history[history.length - 1];
+    lastLen.current = history.length;
+    if (newest && isRollEntry(newest) && newest.source) {
+      suggestSync.clearPendingForRoll(newest.source);
+    }
+  }, [history]);
+
   if (!enabled || queue.length === 0) return null;
 
   const dismiss = (s: Suggestion) => {
@@ -47,8 +66,10 @@ export function SuggestionBanner() {
   };
 
   const jump = (s: Suggestion) => {
-    window.dispatchEvent(new CustomEvent('fate:nav', { detail: { target: navTargetFor(s.source) } }));
-    dismiss(s);
+    window.dispatchEvent(new CustomEvent('fate:nav', {
+      detail: { target: navTargetFor(s.source), query: s.source.toLowerCase().includes('collection log') ? s.label : undefined },
+    }));
+    dismiss(s); // clears the toast only — stays in the persistent Suggestions list until actually rolled
   };
 
   return (
