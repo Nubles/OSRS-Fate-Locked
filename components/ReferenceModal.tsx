@@ -6,6 +6,8 @@ import { useGame } from '../context/GameContext';
 import { GAME_MODES, getGameMode, resolveModeRules } from '../config/gameModes';
 import { REGION_MODIFIERS } from '../config/regionModifiers';
 import { EARN_METHODS, KEY_TYPES, RITUALS, SPEND_TABLES, UNLOCK_KEY_COST } from '../config/economy';
+import { TableType } from '../types';
+import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 
 interface ReferenceModalProps {
   onClose: () => void;
@@ -41,6 +43,15 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose }) => {
   const activeMode = getGameMode(gameModeId);
   const rules = resolveModeRules(gameModeId, customMode);
   const ritualCost = (base: number) => Math.round(base * rules.ritualCostMultiplier);
+
+  // Chunked mode unlocks individual map chunks, not named regions — swap the
+  // "Areas" entry for the real table/count/blurb so the Codex matches what
+  // Spend Keys actually shows (see components/GachaSection.tsx).
+  const spendTables = gameModeId === 'chunked'
+    ? SPEND_TABLES.map(t => t.type === TableType.REGIONS
+        ? { ...t, type: TableType.CHUNKS, label: 'Chunks', count: ALL_CHUNK_KEYS.length, blurb: 'Unlock a random chunk directly adjacent to territory you already hold.' }
+        : t)
+    : SPEND_TABLES;
 
   const tabs: { id: TabId; label: string; icon: any }[] = [
     { id: 'core', label: 'Core Rules', icon: BookOpen },
@@ -290,7 +301,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose }) => {
                             </div>
 
                             <p className="text-xs text-gray-500">
-                                Standard Keys cash in across <b className="text-gray-300">{SPEND_TABLES.length} tables</b> — {SPEND_TABLES.map(t => t.label).join(', ')} — at a flat <b className="text-osrs-gold">{UNLOCK_KEY_COST} Key</b> each. The Unlock Systems tab breaks down what every table does.
+                                Standard Keys cash in across <b className="text-gray-300">{spendTables.length} tables</b> — {spendTables.map(t => t.label).join(', ')} — at a flat <b className="text-osrs-gold">{UNLOCK_KEY_COST} Key</b> each. The Unlock Systems tab breaks down what every table does.
                             </p>
 
                             {/* Smart play */}
@@ -605,14 +616,28 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose }) => {
                                         <Map size={24} className="text-emerald-400" />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-gray-200 text-lg">Regions</h3>
-                                        <p className="text-sm text-gray-400 mt-1 leading-relaxed">
-                                            You start in <b>Misthalin</b> (Lumbridge/Varrock/Draynor).
-                                            <br/>
-                                            1 Key = Unlock a random adjacent or logical region chunk (e.g. "Catherby", "Fremennik Province").
-                                            <br/>
-                                            You can only enter unlocked regions.
-                                        </p>
+                                        <h3 className="font-bold text-gray-200 text-lg">{gameModeId === 'chunked' ? 'Chunks' : 'Regions'}</h3>
+                                        {gameModeId === 'chunked' ? (
+                                            <p className="text-sm text-gray-400 mt-1 leading-relaxed">
+                                                Chunked mode uses a different model entirely: no named regions.
+                                                You start in a single free chunk — the Lumbridge castle courtyard.
+                                                <br/>
+                                                1 Key = Unlock a <b>random chunk directly adjacent</b> to one you already
+                                                hold (map-region granularity, not a named area).
+                                                <br/>
+                                                You can only enter chunks you've unlocked, one step out from your
+                                                territory at a time — Fate hands you a random tile of the frontier,
+                                                not the one you wanted.
+                                            </p>
+                                        ) : (
+                                            <p className="text-sm text-gray-400 mt-1 leading-relaxed">
+                                                You start in <b>Misthalin</b> (Lumbridge/Varrock/Draynor).
+                                                <br/>
+                                                1 Key = Unlock a random adjacent or logical region chunk (e.g. "Catherby", "Fremennik Province").
+                                                <br/>
+                                                You can only enter unlocked regions.
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -622,7 +647,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose }) => {
                                 <h3 className="text-osrs-gold font-bold uppercase tracking-widest mb-3 flex items-center gap-2"><Coins size={16}/> Every Spend Table</h3>
                                 <p className="text-xs text-gray-500 mb-4">A Standard Key cashes in on whichever table you choose, for a random entry from it. Equipment and Skills are tiered — repeat unlocks deepen them (slots × tiers); the rest are one-and-done.</p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    {SPEND_TABLES.map(t => (
+                                    {spendTables.map(t => (
                                         <div key={t.label} className="bg-[#222] rounded-lg border border-white/5 p-3 flex items-start gap-3">
                                             <div className="text-[11px] font-mono font-bold text-osrs-gold bg-black/30 rounded px-2 py-1 shrink-0 mt-0.5" title={t.tiers ? `${t.count} entries × ${t.tiers} tiers` : `${t.count} entries`}>
                                                 {t.count}{t.tiers ? `×${t.tiers}` : ''}
