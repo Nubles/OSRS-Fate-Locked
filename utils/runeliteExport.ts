@@ -77,7 +77,7 @@ export async function buildBundlePayload(
     linkedAccount: run.linkedAccount,
     equipment: unlocks.equipment,
   };
-  const payload = buildRuneliteBundle(
+  const payload = await buildRuneliteBundle(
     unlocks.regions, state, itemTiers, slayerChunks,
     run.gameModeId === 'chunked' ? (unlocks.chunks ?? []) : undefined,
   );

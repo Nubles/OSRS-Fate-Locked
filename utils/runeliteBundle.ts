@@ -5,7 +5,6 @@
  */
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
-import { CHUNK_CONTENT_LITE } from '../data/chunkContentLite';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
 
 export interface RuneliteRunState {
@@ -20,7 +19,7 @@ export interface RuneliteRunState {
   equipment?: Record<string, number>;
 }
 
-export function buildRuneliteBundle(
+export async function buildRuneliteBundle(
   unlockedRegions: string[],
   state: RuneliteRunState,
   itemTiers?: Record<string, number>,
@@ -28,6 +27,10 @@ export function buildRuneliteBundle(
   /** Chunked mode only — unlocks.chunks, keyed "cx,cy" (see utils/chunkAdjacency.ts). */
   unlockedChunks?: string[],
 ) {
+  // Dynamic import keeps the ~53 kB chunk-content dataset out of the eager
+  // startup bundle — it's only ever needed here, at export time, and every
+  // caller is already async.
+  const { CHUNK_CONTENT_LITE } = await import('../data/chunkContentLite');
   return {
     version: 3,
     exportedAt: new Date().toISOString(),

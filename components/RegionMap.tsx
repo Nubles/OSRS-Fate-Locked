@@ -304,7 +304,10 @@ const ProgressiveMapImage: React.FC = () => {
         style={{ opacity: hiLoaded ? 0.6 : 0 }}
         draggable={false}
         decoding="async"
-        fetchPriority="high"
+        // Lowercase on purpose: this React version's DOM doesn't know the
+        // camelCase prop and warns; lowercase passes it straight through as
+        // the real HTML attribute.
+        {...{ fetchpriority: 'high' }}
         onLoad={() => setHiLoaded(true)}
       />
     </>

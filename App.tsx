@@ -7,7 +7,7 @@ import { ProfileProvider, useProfiles } from './context/ProfileContext';
 import { ActionSection } from './components/ActionSection';
 import { GachaSection } from './components/GachaSection';
 import { Dashboard } from './components/Dashboard';
-import { LogViewer } from './components/LogViewer';
+const LogViewer = lazy(() => import('./components/LogViewer').then(m => ({ default: m.LogViewer })));
 import { SectionGuide, GUIDES } from './components/SectionGuide';
 import { PopOnChange } from './components/PopOnChange';
 import { CommandPalette } from './components/CommandPalette';
@@ -360,6 +360,11 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
 // --- New Control Panel Component ---
 const ControlPanel = () => {
   const [activeTab, setActiveTab] = useState<'FARM' | 'SPEND' | 'LOG'>('FARM');
+  // History mounts on first visit, then stays mounted (its filters/scroll
+  // survive tab switches) — rendering the full history list at startup while
+  // hidden was pure wasted work on the critical path.
+  const [logVisited, setLogVisited] = useState(false);
+  useEffect(() => { if (activeTab === 'LOG') setLogVisited(true); }, [activeTab]);
 
   // Command-palette navigation to a control tab.
   useEffect(() => {
@@ -412,7 +417,11 @@ const ControlPanel = () => {
            <GachaSection />
         </div>
         <div className={activeTab === 'LOG' ? 'block h-full' : 'hidden'}>
-           <LogViewer />
+           {logVisited && (
+             <Suspense fallback={<ModalFallback />}>
+               <LogViewer />
+             </Suspense>
+           )}
         </div>
       </div>
     </div>

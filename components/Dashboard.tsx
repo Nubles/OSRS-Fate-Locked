@@ -16,7 +16,10 @@ import { VoidReveal } from './VoidReveal';
 import { TableType } from '../types';
 import { wikiService } from '../services/WikiService';
 import { NoteTrigger } from './NoteTrigger';
-import { RegionMap } from './RegionMap';
+// RegionMap is the single heaviest component in the app (map surface,
+// authoring tool, chunk overlays + their data). It only renders on the World
+// tab, so keep it out of the initial bundle.
+const RegionMap = lazy(() => import('./RegionMap').then(m => ({ default: m.RegionMap })));
 import { JournalNextBest } from './JournalNextBest';
 import { JournalProgressRings } from './JournalProgressRings';
 import { EquipmentLab } from './EquipmentLab';
@@ -622,7 +625,9 @@ export const Dashboard: React.FC = () => {
           {worldView === 'MAP' ? (
               <div className="flex-1 bg-[#050505] rounded-lg border border-white/10 overflow-hidden relative">
                   <PanelErrorBoundary name="Region map">
-                    <RegionMap />
+                    <Suspense fallback={<ModalFallback />}>
+                      <RegionMap />
+                    </Suspense>
                   </PanelErrorBoundary>
               </div>
           ) : (
