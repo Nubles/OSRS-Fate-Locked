@@ -9,12 +9,23 @@
  *   GET  /r/:code        → { version, payload }  (read; 304 with If-None-Match)
  *   POST /r/:code/state  { token?, payload }  → live game state (optional reverse)
  *   GET  /r/:code/state  → { version, payload }
+ *   POST /r/:code/suggest { token?, payload } → plugin-detected "may be worth
+ *                                                a roll" suggestions (see below)
+ *   GET  /r/:code/suggest → { version, payload }
+ *
+ * /suggest carries the OTHER direction: the RuneLite plugin (not the web app)
+ * is the writer, appending small roll suggestions ({source, label, ts} JSON,
+ * plugin-side) as it detects boss kills, collection log entries, etc. The web
+ * app is a read-only poller that tracks its own "last seen" timestamp
+ * client-side — it never writes here, so there's no lock-step coordination
+ * needed between the two directions. Same size cap, same 24h TTL, same
+ * first-writer-claims-the-token model as every other sub-resource.
  *
  * Requires a KV namespace bound as `RELAY` (see wrangler.toml).
  */
 const TTL_SECONDS = 86400;          // 24h — this is a transit buffer, not storage
 const MAX_PAYLOAD = 256 * 1024;     // 256 KB cap
-const CODE_RE = /^\/r\/([A-Za-z0-9-]{4,40})(\/state)?$/;
+const CODE_RE = /^\/r\/([A-Za-z0-9-]{4,40})(\/state|\/suggest)?$/;
 
 function cors(origin) {
   return {
