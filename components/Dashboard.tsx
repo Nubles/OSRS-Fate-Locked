@@ -10,7 +10,7 @@ import {
 import { useGame } from '../context/GameContext';
 import {
   Sparkles, Search, User, Map, Swords, Package,
-  ExternalLink, Unlock, Lock, Compass, ChevronDown, ChevronsUp, AlertCircle, BookOpen, ScrollText, Globe, List, Filter, Info, Share2, MapPin, Route, Trophy, Skull, Dice5
+  ExternalLink, Unlock, Lock, Compass, ChevronDown, ChevronsUp, AlertCircle, BookOpen, ScrollText, Globe, List, Filter, Info, Share2, MapPin, Route, Trophy, Skull
 } from 'lucide-react';
 import { VoidReveal } from './VoidReveal';
 import { TableType } from '../types';
@@ -74,11 +74,11 @@ const AutoRollPanel = lazy(() => import('./AutoRollPanel').then(m => ({ default:
 
 const TABS = [
   { id: 'CHARACTER', label: 'Character', icon: User, img: 'Worn_Equipment.png', color: 'text-blue-400', border: 'border-blue-500' },
+  { id: 'AUTOROLL', label: 'Sync & Roll', icon: Share2, img: 'Mysterious_emblem.png', color: 'text-fuchsia-400', border: 'border-fuchsia-500' },
   { id: 'WORLD', label: 'World', icon: Globe, img: 'World_map_icon.png', color: 'text-emerald-400', border: 'border-emerald-500' },
   { id: 'ACTIVITIES', label: 'Activities & Utility', icon: Swords, img: 'Combat_icon.png', color: 'text-red-400', border: 'border-red-500' },
   { id: 'JOURNAL', label: 'Journal', icon: ScrollText, img: 'Quest_point_icon.png', color: 'text-cyan-400', border: 'border-cyan-500' },
   { id: 'COLLECTION', label: 'Collection Log', icon: BookOpen, img: 'Collection_log.png', color: 'text-amber-600', border: 'border-amber-600' },
-  { id: 'AUTOROLL', label: 'Auto-Roll', icon: Dice5, img: 'Mysterious_emblem.png', color: 'text-fuchsia-400', border: 'border-fuchsia-500' },
 ];
 
 // Define the 10-tier progression colors
