@@ -85,6 +85,11 @@ const CHUNK_TO_REGION: Record<string, string> = (() => {
  * plus coords (e.g. "Asgarnia (46, 51)"), since a raw "cx,cy" key means
  * nothing to a player.
  */
+/** Named sub-area this chunk belongs to (e.g. "Falador"), if authored. */
+export const chunkSubArea = (key: string): string | undefined => CHUNK_TO_SUBAREA[key];
+/** Parent continent this chunk belongs to (e.g. "Asgarnia"), if authored. */
+export const chunkRegion = (key: string): string | undefined => CHUNK_TO_REGION[key];
+
 export const chunkLabel = (key: string): string => {
   const named = CHUNK_TO_SUBAREA[key];
   if (named) return named;

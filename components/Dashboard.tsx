@@ -53,6 +53,7 @@ import { getActivityRegion } from '../data/activityRegions';
 import { isAreaReachable } from '../utils/reachability';
 import { getActivityReq, ActivityReq } from '../data/activityRequirements';
 import { RegionAdvisorPanel } from './RegionAdvisorPanel';
+import { FrontierAdvisorPanel } from './FrontierAdvisorPanel';
 import { SkillAdvisorPanel } from './SkillAdvisorPanel';
 
 // Code-split: the run card pulls in html2canvas only when actually opened.
@@ -640,8 +641,9 @@ export const Dashboard: React.FC = () => {
           ) : (
               <div className="space-y-6 h-full overflow-y-auto pr-2 custom-scrollbar pb-10">
                   {/* Region Advisor — shows which locked regions would unlock the most
-                      quests + diary tiers, helping ironmen pick the next unlock target. */}
-                  {advisorsEnabled && <RegionAdvisorPanel />}
+                      quests + diary tiers, helping ironmen pick the next unlock target.
+                      Chunked mode ranks frontier chunks instead — same idea, chunk-sized. */}
+                  {advisorsEnabled && (gameModeId === 'chunked' ? <FrontierAdvisorPanel /> : <RegionAdvisorPanel />)}
 
                   {/* Misthalin Special Card */}
                   <div className="bg-[#1a1a1a] rounded border border-emerald-500/30 p-3 relative overflow-hidden group">
