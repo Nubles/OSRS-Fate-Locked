@@ -1,17 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { Puzzle, Copy, Check, ExternalLink, CheckCircle2, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
-import { relaySync } from '../services/relaySync';
+import { relaySync, RelayStatus } from '../services/relaySync';
 
 /**
- * First-run guide for connecting the RuneLite companion plugin. The pairing
- * flow (install plugin → enable sync → paste code) is powerful but invisible
- * to a new user, so this walks the three steps and proves the connection by
- * polling the relay's /state heartbeat — the plugin POSTs {ts} there after
- * each successful import, so "connected" here means the full pipeline works.
+ * The Sync & Roll tab's single home for the RuneLite connection: a first-run
+ * guide (install plugin → enable sync → paste code) that doubles as the
+ * ongoing status/control surface — run-upload status, Disconnect, and the
+ * plugin-side heartbeat (the plugin POSTs {ts} to /state after each
+ * successful import, so "connected" means the full pipeline works).
+ * Absorbed the old separate OnlineSyncPanel, which duplicated the enable
+ * button and instructions right below this card.
  *
- * Collapses to a slim status row once connected (or when manually hidden);
- * the OnlineSyncPanel below stays the compact power-user control.
+ * Collapses to a slim status row (persisted) once it's done its job.
  */
+
+const PUSH_LABEL: Record<RelayStatus, string> = {
+  off: 'off', syncing: 'uploading…', synced: 'up to date', error: 'error',
+};
+const PUSH_CLASS: Record<RelayStatus, string> = {
+  off: 'text-gray-500', syncing: 'text-amber-300', synced: 'text-emerald-300', error: 'text-red-300',
+};
 
 const HUB_URL = 'https://runelite.net/plugin-hub/show/fate-locked-ironman';
 const HIDDEN_KEY = 'fate_rl_onboard_hidden_v1';
@@ -139,12 +147,31 @@ export const RuneLiteOnboarding: React.FC = () => {
       </ol>
 
       {enabled && (
-        <div className={`flex items-center gap-2 rounded-md px-2.5 py-2 text-[11px] border
-          ${connected ? 'bg-emerald-900/15 border-emerald-500/25 text-emerald-200' : 'bg-amber-900/10 border-amber-500/20 text-amber-200/90'}`}>
-          {connected
-            ? <><CheckCircle2 size={12} className="text-emerald-400" /> Plugin connected — last import {agoLabel(pluginSeen!)}.</>
-            : <><Loader2 size={12} className="animate-spin text-amber-300" /> Waiting for the plugin's first sync — it appears here within seconds of pasting the code.</>}
-        </div>
+        <>
+          <div className={`flex items-center gap-2 rounded-md px-2.5 py-2 text-[11px] border
+            ${connected ? 'bg-emerald-900/15 border-emerald-500/25 text-emerald-200' : 'bg-amber-900/10 border-amber-500/20 text-amber-200/90'}`}>
+            {connected
+              ? <><CheckCircle2 size={12} className="text-emerald-400" /> Plugin connected — last import {agoLabel(pluginSeen!)}.</>
+              : <><Loader2 size={12} className="animate-spin text-amber-300" /> Waiting for the plugin's first sync — it appears here within seconds of pasting the code.</>}
+          </div>
+          <div className="flex items-center gap-2 text-[11px] text-gray-500 flex-wrap">
+            <span>
+              Run upload: <span className={`font-semibold ${PUSH_CLASS[relaySync.status]}`}>{PUSH_LABEL[relaySync.status]}</span>
+              {relaySync.status === 'synced' && relaySync.lastSyncAt ? ` · ${agoLabel(relaySync.lastSyncAt)}` : ''}
+            </span>
+            {relaySync.status === 'error' && relaySync.lastError && (
+              <span className="text-red-300/90">({relaySync.lastError} — the clipboard/file export still works)</span>
+            )}
+            <span className="text-gray-600">· data is ephemeral (24h), readable only with this code</span>
+            <div className="flex-1" />
+            <button
+              onClick={() => relaySync.disable()}
+              className="px-2 py-0.5 rounded text-[11px] font-semibold bg-white/10 hover:bg-white/15 text-gray-300"
+            >
+              Disconnect
+            </button>
+          </div>
+        </>
       )}
     </div>
   );

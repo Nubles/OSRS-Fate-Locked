@@ -44,7 +44,7 @@ const SyncCodeModal = lazy(() => import('./components/SyncCodeModal').then(m => 
 const ModelGallery = lazy(() => import('./components/ModelGallery').then(m => ({ default: m.ModelGallery })));
 import { obfuscateFateSave, deobfuscateFateSave } from './utils/encryption';
 import { GameState } from './types';
-import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb, Radio } from 'lucide-react';
+import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb, Radio, Settings } from 'lucide-react';
 import { exportRuneliteBundle } from './utils/runeliteExport';
 
 // --- Error Boundary ---
@@ -187,6 +187,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
   const pityCap = pityRules.pityEnabled ? pityRules.pityThreshold : 50; // 50 = visual-only fallback
   const nearPity = pityRules.pityEnabled && fatePoints >= pityRules.pityThreshold * 0.8;
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showUtilMenu, setShowUtilMenu] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -334,22 +335,48 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                  <button onClick={() => setShowGameMode(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-amber-400 hover:bg-white/5 rounded transition-colors" title="Game Mode" aria-label="Game Mode"><SlidersHorizontal size={14} /></button>
              </div>
 
-             <div className="flex items-center bg-[#252525] border border-white/10 rounded-lg p-0.5 gap-0.5 h-8">
-                 <button onClick={toggleAnimations} className={`w-7 h-full flex items-center justify-center rounded transition-colors ${animationsEnabled ? 'text-green-400' : 'text-gray-500'}`} title="Animations" aria-label="Toggle animations" aria-pressed={animationsEnabled}>
-                    {animationsEnabled ? <PlayCircle size={14} /> : <PauseCircle size={14} />}
+             {/* Low-frequency utilities live behind one gear menu — they were six
+                 always-visible icons crowding the header for actions used once a
+                 session at most. */}
+             <div className="relative h-8">
+                 <button
+                   onClick={() => setShowUtilMenu((v) => !v)}
+                   className={`h-8 w-8 flex items-center justify-center bg-[#252525] border border-white/10 rounded-lg transition-colors ${showUtilMenu ? 'text-white border-white/25' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                   title="Settings & save tools"
+                   aria-label="Settings & save tools"
+                   aria-expanded={showUtilMenu}
+                 >
+                    <Settings size={14} />
                  </button>
-                 <div className="w-px h-4 bg-white/10"></div>
-                 <button onClick={toggleAdvisors} className={`w-7 h-full flex items-center justify-center rounded transition-colors ${advisorsEnabled ? 'text-amber-400' : 'text-gray-500 hover:text-gray-300'}`} title={advisorsEnabled ? 'Advisor panels: on' : 'Advisor panels: off'} aria-label="Toggle advisor panels" aria-pressed={advisorsEnabled}>
-                    <Lightbulb size={14} />
-                 </button>
-                 <div className="w-px h-4 bg-white/10"></div>
-                 <button onClick={() => fileInputRef.current?.click()} className="w-7 h-full flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/5 rounded" title="Import Save" aria-label="Import Save"><Upload size={14} /></button>
-                 <div className="w-px h-4 bg-white/10"></div>
-                 <button onClick={handleExport} className="w-7 h-full flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/5 rounded" title="Export Encrypted Save" aria-label="Export Encrypted Save"><Download size={14} /></button>
-                 <div className="w-px h-4 bg-white/10"></div>
-                 <button onClick={() => setShowSyncCode(true)} className="w-7 h-full flex items-center justify-center text-gray-500 hover:text-cyan-400 hover:bg-white/5 rounded" title="Sync Code (move run between devices)" aria-label="Sync Code"><Link2 size={14} /></button>
-                 <div className="w-px h-4 bg-white/10"></div>
-                 <button onClick={() => { if(window.confirm("Are you sure you want to reset ALL progress? This cannot be undone.")) resetGame(); }} className="w-7 h-full flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-white/5 rounded" title="Reset" aria-label="Reset all progress"><RotateCcw size={14} /></button>
+                 {showUtilMenu && (
+                   <>
+                     <div className="fixed inset-0 z-[90]" onClick={() => setShowUtilMenu(false)} />
+                     <div className="absolute right-0 top-9 z-[91] w-56 bg-[#1c1c1c] border border-white/15 rounded-lg shadow-2xl py-1.5 text-[12px]">
+                        <button onClick={() => { toggleAnimations(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={animationsEnabled}>
+                           {animationsEnabled ? <PlayCircle size={13} className="text-green-400" /> : <PauseCircle size={13} className="text-gray-500" />}
+                           Animations <span className="ml-auto text-[10px] text-gray-500">{animationsEnabled ? 'on' : 'off'}</span>
+                        </button>
+                        <button onClick={() => { toggleAdvisors(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={advisorsEnabled}>
+                           <Lightbulb size={13} className={advisorsEnabled ? 'text-amber-400' : 'text-gray-500'} />
+                           Advisor panels <span className="ml-auto text-[10px] text-gray-500">{advisorsEnabled ? 'on' : 'off'}</span>
+                        </button>
+                        <div className="my-1 border-t border-white/10" />
+                        <button onClick={() => { setShowUtilMenu(false); fileInputRef.current?.click(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white">
+                           <Upload size={13} /> Import save
+                        </button>
+                        <button onClick={() => { setShowUtilMenu(false); handleExport(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white">
+                           <Download size={13} /> Export encrypted save
+                        </button>
+                        <button onClick={() => { setShowUtilMenu(false); setShowSyncCode(true); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-cyan-300">
+                           <Link2 size={13} /> Sync code (move device)
+                        </button>
+                        <div className="my-1 border-t border-white/10" />
+                        <button onClick={() => { setShowUtilMenu(false); if(window.confirm("Are you sure you want to reset ALL progress? This cannot be undone.")) resetGame(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-red-300/90 hover:bg-red-900/20 hover:text-red-200">
+                           <RotateCcw size={13} /> Reset all progress
+                        </button>
+                     </div>
+                   </>
+                 )}
              </div>
           </div>
         </div>

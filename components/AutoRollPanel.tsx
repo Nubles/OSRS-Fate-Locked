@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Loader2, Search, Sparkles, Dice5, CheckCircle2, AlertTriangle, RefreshCw, Lock } from 'lucide-react';
 import { useGame } from '../context/GameContext';
-import { OnlineSyncPanel } from './OnlineSyncPanel';
 import { SuggestionQueue } from './SuggestionQueue';
 import { RuneLiteOnboarding } from './RuneLiteOnboarding';
 
@@ -365,7 +364,6 @@ export function AutoRollPanel() {
       )}
 
       <RuneLiteOnboarding />
-      <OnlineSyncPanel />
       <SuggestionQueue />
     </div>
   );
