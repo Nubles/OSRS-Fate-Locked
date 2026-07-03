@@ -54,9 +54,10 @@ const StatsShareCard: React.FC<ShareModalProps & { embedded?: boolean }> = ({ on
   const currentProgression = totalSkillTiers + totalEquipTiers + totalRegions;
   const progressPercent = Math.round((currentProgression / maxProgression) * 100);
 
-  // Region Mastery
+  // Region Mastery — chunk-aware: in Chunked mode an area counts once you
+  // hold a chunk foothold in it (same rule as the map and World tab).
   const regionMastery = Object.entries(REGION_GROUPS).map(([group, areas]) => {
-      const unlockedCount = areas.filter(a => unlocks.regions.includes(a)).length;
+      const unlockedCount = areas.filter(a => isAreaReachable(a, unlocks, gameModeId)).length;
       return { group, count: unlockedCount, total: areas.length, percent: unlockedCount / areas.length };
   }).filter(r => r.count > 0).sort((a, b) => b.percent - a.percent);
 

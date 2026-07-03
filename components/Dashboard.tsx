@@ -406,6 +406,9 @@ export const Dashboard: React.FC = () => {
   };
 
   const handleSpecialUnlock = (table: TableType, name: string) => {
+      // Chunked mode has no named-region unlocks (chunks are the only territory
+      // currency) — belt-and-braces guard in case a caller misses the UI gate.
+      if (table === TableType.REGIONS && gameModeId === 'chunked') return;
       setConfirmOmni({ table, item: name });
   };
 
@@ -661,7 +664,8 @@ export const Dashboard: React.FC = () => {
                             <div className="flex flex-wrap gap-1.5 relative z-10 pr-6">
                                 {MISTHALIN_AREAS.map(area => {
                                     const free = isAreaReachable(area, unlocks, gameModeId);
-                                    const canUnlock = !free && specialKeys > 0;
+                                    // Chunked mode: named areas can't be bought — chunks only.
+                                    const canUnlock = !free && gameModeId !== 'chunked' && specialKeys > 0;
                                     if (free) return (
                                         <a key={area} href={getWikiUrl(area)} target="_blank" rel="noopener noreferrer"
                                             className="px-2 py-1 bg-emerald-900/20 text-emerald-200 border border-emerald-500/20 rounded text-xs hover:bg-emerald-900/40 hover:text-white transition-colors flex items-center gap-1">
@@ -683,8 +687,11 @@ export const Dashboard: React.FC = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {Object.entries(REGION_GROUPS).map(([group, areas]) => {
-                          const unlockedCount = areas.filter(a => unlocks.regions.includes(a)).length;
-                          
+                          // Chunked mode: "unlocked" means you hold a chunk foothold in the
+                          // area (same rule as the map); named areas can't be bought with
+                          // keys there — chunks are the only unlock currency.
+                          const unlockedCount = areas.filter(a => isAreaReachable(a, unlocks, gameModeId)).length;
+
                           // Search filter support for grouped regions
                           const matchesGroup = group.toLowerCase().includes(searchQuery.toLowerCase());
                           const matchesArea = areas.some(a => a.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -692,7 +699,7 @@ export const Dashboard: React.FC = () => {
 
                           // Actionable filter: Hide group if all regions locked and no keys
                           // But regions are grouped. Individual sub-regions are unlockable.
-                          const canUnlockAny = specialKeys > 0;
+                          const canUnlockAny = gameModeId !== 'chunked' && specialKeys > 0;
                           const hasAnyUnlocked = unlockedCount > 0;
                           
                           if (showOnlyActionable && !hasAnyUnlocked && !canUnlockAny) return null;
@@ -709,8 +716,8 @@ export const Dashboard: React.FC = () => {
                                   </div>
                                   <div className="flex flex-wrap gap-1.5">
                                       {areas.map(area => {
-                                          const isUnlocked = unlocks.regions.includes(area);
-                                          const canUnlock = !isUnlocked && specialKeys > 0;
+                                          const isUnlocked = isAreaReachable(area, unlocks, gameModeId);
+                                          const canUnlock = !isUnlocked && gameModeId !== 'chunked' && specialKeys > 0;
                                           
                                           // If searching, highlight matching specific areas, or show all if group matches
                                           if (searchQuery && !matchesGroup && !area.toLowerCase().includes(searchQuery.toLowerCase())) return null;
