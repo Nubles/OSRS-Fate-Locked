@@ -25,6 +25,10 @@ export function SuggestionBanner() {
 
   useEffect(() => {
     if (!enabled) { suggestSync.stop(); return; }
+    // The toast is transient by design — the persistent Suggestions list in
+    // the Sync & Roll tab is the durable copy — so each one auto-dismisses
+    // after a few seconds instead of piling up until manually closed.
+    const timers = new Set<ReturnType<typeof setTimeout>>();
     // Dedup on append, not just in the singleton — React StrictMode's dev-only
     // double-invoked effects can otherwise queue the same item twice in one
     // mounted instance (duplicate React keys). Never happens in production
@@ -33,10 +37,18 @@ export function SuggestionBanner() {
     const unsub = suggestSync.subscribe((fresh) => setQueue((q) => {
       const existing = new Set(q.map(suggestionKey));
       const toAdd = fresh.filter((s) => !existing.has(suggestionKey(s)));
+      for (const s of toAdd) {
+        const t = setTimeout(() => {
+          timers.delete(t);
+          suggestSync.markSeen(s.ts);
+          setQueue((cur) => cur.filter((x) => x !== s));
+        }, 12_000);
+        timers.add(t);
+      }
       return toAdd.length > 0 ? [...q, ...toAdd] : q;
     }));
     suggestSync.start();
-    return () => { unsub(); suggestSync.stop(); };
+    return () => { unsub(); suggestSync.stop(); for (const t of timers) clearTimeout(t); };
   }, [enabled]);
 
   // Auto-clear matching persistent suggestions (the "Suggestions" list in the

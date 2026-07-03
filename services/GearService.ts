@@ -39,13 +39,22 @@ class GearService {
   private tierMap = new Map<number, number>();
   private initialized = false;
   private initPromise: Promise<void> | null = null;
+  private lastFailAt = 0;
+  /** After a failed load, implicit init() calls fast-fail for this long —
+   *  background callers (bundle export, relay sync on every state change)
+   *  must not each re-run the full 2×15s fetch retry while offline. */
+  private static readonly FAIL_COOLDOWN_MS = 60_000;
 
   public ready = false;
   public error: string | null = null;
 
-  async init(): Promise<void> {
+  /** `force` skips the failure cool-down — for explicit user Retry buttons. */
+  async init(force = false): Promise<void> {
     if (this.initialized) return;
     if (this.initPromise) return this.initPromise;
+    if (!force && Date.now() - this.lastFailAt < GearService.FAIL_COOLDOWN_MS) {
+      throw new Error(this.error ?? 'equipment data unavailable (retry cool-down)');
+    }
     this.initPromise = this.perform();
     return this.initPromise;
   }
@@ -63,6 +72,7 @@ class GearService {
       console.warn('GearService init failed', e);
       this.error = 'Could not load equipment data. Check your connection and retry.';
       this.initPromise = null; // allow a later retry
+      this.lastFailAt = Date.now();
       this.ready = false;
       throw e;
     }

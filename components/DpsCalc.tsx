@@ -44,7 +44,7 @@ export const DpsCalc: React.FC = () => {
       .catch(() => alive && setStatus('error'));
     return () => { alive = false; };
   }, []);
-  const retry = () => { setStatus('loading'); Promise.all([gearService.init(), monsterService.init()]).then(() => setStatus('ready')).catch(() => setStatus('error')); };
+  const retry = () => { setStatus('loading'); Promise.all([gearService.init(true), monsterService.init(true)]).then(() => setStatus('ready')).catch(() => setStatus('error')); };
 
   // ── Config state ──────────────────────────────────────────────────────────
   const [style, setStyle] = useState<Style>('melee');

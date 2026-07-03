@@ -49,7 +49,7 @@ export const GearView: React.FC = () => {
 
   const retry = () => {
     setStatus('loading');
-    gearService.init().then(() => setStatus('ready')).catch(() => setStatus('error'));
+    gearService.init(true).then(() => setStatus('ready')).catch(() => setStatus('error'));
   };
 
   // Resolved equipped items + summed bonuses (recompute when loadout / data changes).

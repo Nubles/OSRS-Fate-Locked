@@ -43,13 +43,21 @@ class MonsterService {
   private byIdMap = new Map<number, MonsterStats>();
   private initialized = false;
   private initPromise: Promise<void> | null = null;
+  private lastFailAt = 0;
+  /** See GearService — implicit init() fast-fails during the cool-down so
+   *  background callers don't each re-run the full fetch retry while offline. */
+  private static readonly FAIL_COOLDOWN_MS = 60_000;
 
   public ready = false;
   public error: string | null = null;
 
-  async init(): Promise<void> {
+  /** `force` skips the failure cool-down — for explicit user Retry buttons. */
+  async init(force = false): Promise<void> {
     if (this.initialized) return;
     if (this.initPromise) return this.initPromise;
+    if (!force && Date.now() - this.lastFailAt < MonsterService.FAIL_COOLDOWN_MS) {
+      throw new Error(this.error ?? 'monster data unavailable (retry cool-down)');
+    }
     this.initPromise = this.perform();
     return this.initPromise;
   }
@@ -67,6 +75,7 @@ class MonsterService {
       console.warn('MonsterService init failed', e);
       this.error = 'Could not load monster data. Check your connection and retry.';
       this.initPromise = null;
+      this.lastFailAt = Date.now();
       this.ready = false;
       throw e;
     }
