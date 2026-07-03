@@ -15,6 +15,7 @@ import { chunkReachability } from '../utils/chunkReach';
 import { entryBlockedGate } from '../utils/questDoability';
 import { QUEST_DATA } from '../data/questData';
 import { isChunkUnlocked, isFrontierChunk } from '../utils/chunkAdjacency';
+import { rankFrontierChunks } from '../utils/frontierAdvisor';
 import { isNamedAreaReachableViaChunks } from '../utils/reachability';
 
 type LensTone = 'good' | 'warn' | 'bad';
@@ -223,6 +224,8 @@ const UNLOCKED_FILL = 'rgba(16, 185, 129, 0.35)';
 const LOCKED_FILL = 'rgba(239, 68, 68, 0.30)';
 // Chunked mode only — chunks adjacent to the unlocked set (rollable next).
 const FRONTIER_FILL = 'rgba(245, 158, 11, 0.35)';
+/** The Frontier Advisor's top picks — "hope for these" tint (cyan). */
+const HOT_FRONTIER_FILL = 'rgba(34, 211, 238, 0.45)';
 const ACTIVE_STROKE = 'rgba(250, 204, 21, 0.9)';
 
 // ── Sub-area authoring layer ───────────────────────────────────────────────
@@ -1227,6 +1230,22 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
     return { verticals, horizontals };
   }, []);
 
+  // Frontier Advisor's top picks, tinted cyan on the map so "what to hope
+  // for" is visible spatially, not just as a list. Re-ranks when the chunk
+  // dataset lands (lensReady) since content feeds the tie-breaker.
+  const hotFrontier = useMemo(() => {
+    if (!isChunked) return new Set<string>();
+    const ranked = rankFrontierChunks(
+      unlocks, 'chunked',
+      chunkContentService.ready ? (cx, cy) => chunkContentService.contentFor(cx, cy) : undefined,
+      chunkContentService.ready ? (cx, cy) => chunkContentService.hasBank(cx, cy) : undefined,
+    );
+    // Only tint chunks that are actually worth something — a zero-score
+    // frontier shouldn't glow just because five slots exist.
+    return new Set(ranked.filter((r) => r.sortScore > 0).slice(0, 5).map((r) => r.key));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isChunked, unlocks, chunkUnlocks, lensReady]);
+
   const chunkRects = useMemo(() => {
     const chunkPx = CHUNK_TILES * (MAP_IMAGE.width / (MAP_BOUNDS.tileMaxX - MAP_BOUNDS.tileMinX));
     const chunkPy = CHUNK_TILES * (MAP_IMAGE.height / (MAP_BOUNDS.tileMaxY - MAP_BOUNDS.tileMinY));
@@ -1251,7 +1270,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
           // real unlock unit is the individual chunk (see utils/chunkAdjacency.ts).
           const key = chunkKey({ cx, cy });
           if (isChunkUnlocked(key, chunkUnlocks)) fill = UNLOCKED_FILL;
-          else if (isFrontierChunk(key, chunkUnlocks)) fill = FRONTIER_FILL;
+          else if (isFrontierChunk(key, chunkUnlocks)) fill = hotFrontier.has(key) ? HOT_FRONTIER_FILL : FRONTIER_FILL;
           else fill = LOCKED_FILL;
         } else {
           const unlocked = subArea ? isRegionUnlocked(subArea, regionUnlocks) : continentUnlocked;
@@ -1262,7 +1281,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
       }
     }
     return rects;
-  }, [draftChunks, chunkSubArea, regionUnlocks, chunkUnlocks, isChunked, authoring, authorLevel, activeRegion, activeSubArea, soloView]);
+  }, [draftChunks, chunkSubArea, regionUnlocks, chunkUnlocks, isChunked, authoring, authorLevel, activeRegion, activeSubArea, soloView, hotFrontier]);
 
   const activeChunkCount = authorLevel === 'SUBAREA'
     ? (subDraft[activeSubArea]?.length ?? 0)
