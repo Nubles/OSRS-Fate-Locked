@@ -3,6 +3,7 @@ import { Loader2, Search, Sparkles, Dice5, CheckCircle2, AlertTriangle, RefreshC
 import { useGame } from '../context/GameContext';
 import { OnlineSyncPanel } from './OnlineSyncPanel';
 import { SuggestionQueue } from './SuggestionQueue';
+import { RuneLiteOnboarding } from './RuneLiteOnboarding';
 
 /**
  * Auto-Roll (PROTOTYPE)
@@ -363,6 +364,7 @@ export function AutoRollPanel() {
         </div>
       )}
 
+      <RuneLiteOnboarding />
       <OnlineSyncPanel />
       <SuggestionQueue />
     </div>

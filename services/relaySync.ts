@@ -96,6 +96,25 @@ class RelaySyncService {
       return false;
     }
   }
+
+  /**
+   * The plugin's last-import heartbeat: after each successful relay import it
+   * POSTs {ts, version} to /state. Null until the plugin's first sync (404) or
+   * when disabled — the onboarding card uses this to show "plugin connected".
+   */
+  async fetchPluginState(): Promise<{ ts: number; version?: number } | null> {
+    if (!this.session) return null;
+    try {
+      const res = await fetch(`${this.base()}/r/${this.session.code}/state`, { cache: 'no-store' });
+      if (!res.ok) return null;
+      const { payload } = await res.json();
+      if (!payload) return null;
+      const state = JSON.parse(payload);
+      return typeof state?.ts === 'number' ? state : null;
+    } catch {
+      return null;
+    }
+  }
 }
 
 export const relaySync = new RelaySyncService();
