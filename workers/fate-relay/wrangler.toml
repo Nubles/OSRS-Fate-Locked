@@ -7,4 +7,4 @@ compatibility_date = "2024-11-01"
 # then paste the returned id below.
 [[kv_namespaces]]
 binding = "RELAY"
-id = "PASTE_YOUR_KV_NAMESPACE_ID_HERE"
+id = "f225f7fa3c294e98a942d89ff50e07fa"

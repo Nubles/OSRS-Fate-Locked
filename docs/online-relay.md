@@ -34,12 +34,17 @@ or at runtime via `localStorage.setItem('fate_relay_base', '<url>')`.
 
 | Method | Path | Body | Notes |
 |---|---|---|---|
-| `POST` | `/r/:code` | `{ token?, payload }` | Write. First write claims the code's token; later writes must match it. |
+| `POST` | `/r/:code` | `{ token?, payload }` | Write the run bundle. First write claims the code's token; later writes must match it. |
 | `GET` | `/r/:code` | — | Read `{ version, payload }`; `304` with `If-None-Match: <version>`. |
-| `POST`/`GET` | `/r/:code/state` | — | Optional reverse channel (live game state). |
+| `POST` | `/r/:code/suggest` | `{ token?, payload }` | **Plugin → app.** Roll suggestions the plugin detected (quest / diary / CA completions), a JSON array of `{source, label, ts}` capped at 20. The plugin is the sole writer; its token persists in plugin config. |
+| `GET` | `/r/:code/suggest` | — | The web app polls this every ~15s and shows the items as toasts + the persistent Sync & Roll queue. |
+| `POST` | `/r/:code/state` | `{ token?, payload }` | **Plugin → app.** Heartbeat: `{ts, version}` after each successful relay import. |
+| `GET` | `/r/:code/state` | — | The web app's Connect RuneLite card polls this to show "plugin connected — last import X ago". |
 
-`payload` is the `FLGZ:`-prefixed gzip+base64 bundle (same compact form the
-clipboard copy uses). Max 256 KB; TTL 24h.
+Each sub-resource is an independent record with its own version, first-writer
+token and 24h TTL — the two directions never contend for a write-token. The
+main channel's `payload` is the `FLGZ:`-prefixed gzip+base64 bundle (same
+compact form the clipboard copy uses). Max 256 KB per record.
 
 ## Privacy
 
