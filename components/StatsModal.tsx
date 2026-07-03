@@ -3,8 +3,9 @@ import React, { useMemo, useState, useRef } from 'react';
 import { useGame } from '../context/GameContext';
 import { SectionGuide } from './SectionGuide';
 import { useFocusTrap } from '../hooks/useFocusTrap';
-import { X, TrendingUp, TrendingDown, Skull, Key, Shield, Activity, BarChart3, LineChart as LineChartIcon, PieChart, List, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { X, TrendingUp, TrendingDown, Skull, Key, Shield, Activity, BarChart3, LineChart as LineChartIcon, PieChart, List, ArrowUpDown, ArrowUp, ArrowDown, Sparkles } from 'lucide-react';
 import { isRollEntry } from '../utils/logEntry';
+import { buildFateReport } from '../utils/fateReport';
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, ReferenceLine, Cell, CartesianGrid, AreaChart, Area
@@ -14,7 +15,7 @@ interface StatsModalProps {
   onClose: () => void;
 }
 
-type Tab = 'overview' | 'charts' | 'breakdown';
+type Tab = 'overview' | 'charts' | 'breakdown' | 'fate';
 type SortKey = 'source' | 'attempts' | 'success' | 'actualRate' | 'expectedRate';
 
 export const StatsModal: React.FC<StatsModalProps> = ({ onClose }) => {
@@ -23,6 +24,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({ onClose }) => {
   const { history } = useGame();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'asc' | 'desc' }>({ key: 'attempts', direction: 'desc' });
+  const fateReport = useMemo(() => buildFateReport(history), [history]);
 
   const stats = useMemo(() => {
     const rolls = history.filter(isRollEntry).sort((a, b) => a.timestamp - b.timestamp);
@@ -196,11 +198,17 @@ export const StatsModal: React.FC<StatsModalProps> = ({ onClose }) => {
             >
                 <LineChartIcon size={16} /> Visualizations
             </button>
-            <button 
+            <button
                 onClick={() => setActiveTab('breakdown')}
                 className={`px-6 py-3 text-sm font-bold uppercase tracking-wider flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'breakdown' ? 'border-osrs-gold text-osrs-gold bg-osrs-gold/5' : 'border-transparent text-gray-500 hover:text-gray-300'}`}
             >
                 <List size={16} /> Activity Breakdown
+            </button>
+            <button
+                onClick={() => setActiveTab('fate')}
+                className={`px-6 py-3 text-sm font-bold uppercase tracking-wider flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'fate' ? 'border-osrs-gold text-osrs-gold bg-osrs-gold/5' : 'border-transparent text-gray-500 hover:text-gray-300'}`}
+            >
+                <Sparkles size={16} /> Fate Report
             </button>
         </div>
 
@@ -392,6 +400,85 @@ export const StatsModal: React.FC<StatsModalProps> = ({ onClose }) => {
                         </table>
                     </div>
                  </div>
+            )}
+
+            {/* FATE REPORT TAB — "how lucky has this run actually been?" */}
+            {activeTab === 'fate' && (
+                <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
+                    {!fateReport ? (
+                        <div className="p-10 text-center text-gray-600 italic">No rolls recorded yet — Fate hasn't had a chance to judge you.</div>
+                    ) : (
+                        <>
+                            {/* Verdict headline */}
+                            <div className="bg-[#1f1f1f] border border-white/5 rounded-lg p-5 text-center">
+                                <div className={`text-2xl font-black tracking-wide ${fateReport.zScore >= 1 ? 'text-emerald-300' : fateReport.zScore <= -1 ? 'text-red-300' : 'text-gray-200'}`}>
+                                    {fateReport.verdict}
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1.5">
+                                    {fateReport.actual} successes across {fateReport.rolls} rolls, where the odds predicted {fateReport.expected.toFixed(1)} —{' '}
+                                    <span className={fateReport.delta >= 0 ? 'text-emerald-400 font-semibold' : 'text-red-400 font-semibold'}>
+                                        {fateReport.delta >= 0 ? '+' : ''}{fateReport.delta.toFixed(1)} keys vs expectation
+                                    </span>{' '}
+                                    ({fateReport.zScore >= 0 ? '+' : ''}{fateReport.zScore.toFixed(1)}σ)
+                                </p>
+                            </div>
+
+                            {/* Notable rolls + streaks */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                <div className="bg-[#1f1f1f] border border-emerald-500/15 rounded-lg p-3">
+                                    <div className="text-[10px] uppercase font-bold text-emerald-400/80 mb-1">Luckiest roll</div>
+                                    {fateReport.luckiest
+                                        ? <><div className="text-sm text-gray-200 font-semibold truncate">{fateReport.luckiest.source}</div><div className="text-[11px] text-gray-500">hit at {fateReport.luckiest.threshold}% odds</div></>
+                                        : <div className="text-[11px] text-gray-600 italic">none yet</div>}
+                                </div>
+                                <div className="bg-[#1f1f1f] border border-red-500/15 rounded-lg p-3">
+                                    <div className="text-[10px] uppercase font-bold text-red-400/80 mb-1">Cruelest miss</div>
+                                    {fateReport.cruelest
+                                        ? <><div className="text-sm text-gray-200 font-semibold truncate">{fateReport.cruelest.source}</div><div className="text-[11px] text-gray-500">missed at {fateReport.cruelest.threshold}% odds</div></>
+                                        : <div className="text-[11px] text-gray-600 italic">none yet</div>}
+                                </div>
+                                <div className="bg-[#1f1f1f] border border-white/5 rounded-lg p-3">
+                                    <div className="text-[10px] uppercase font-bold text-gray-500 mb-1">Longest hot streak</div>
+                                    <div className="text-xl font-black text-emerald-300">{fateReport.longestHotStreak}</div>
+                                    <div className="text-[11px] text-gray-500">successes in a row</div>
+                                </div>
+                                <div className="bg-[#1f1f1f] border border-white/5 rounded-lg p-3">
+                                    <div className="text-[10px] uppercase font-bold text-gray-500 mb-1">Longest drought</div>
+                                    <div className="text-xl font-black text-red-300">{fateReport.longestDrought}</div>
+                                    <div className="text-[11px] text-gray-500">failures in a row</div>
+                                </div>
+                            </div>
+
+                            {/* Per-category luck */}
+                            <div className="bg-[#1f1f1f] border border-white/5 rounded-lg overflow-hidden">
+                                <table className="w-full text-left text-xs">
+                                    <thead className="bg-[#252525] text-gray-400 uppercase font-bold">
+                                        <tr>
+                                            <th className="p-3">Category</th>
+                                            <th className="p-3 text-right">Rolls</th>
+                                            <th className="p-3 text-right">Won</th>
+                                            <th className="p-3 text-right">Expected</th>
+                                            <th className="p-3 text-right">Luck</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5 text-gray-300">
+                                        {fateReport.categories.map((c) => (
+                                            <tr key={c.category} className="hover:bg-white/5 transition-colors">
+                                                <td className="p-3 font-medium">{c.category}</td>
+                                                <td className="p-3 text-right font-mono text-gray-500">{c.rolls}</td>
+                                                <td className="p-3 text-right font-mono text-white font-bold">{c.actual}</td>
+                                                <td className="p-3 text-right font-mono text-gray-500">{c.expected.toFixed(1)}</td>
+                                                <td className={`p-3 text-right font-mono font-bold ${c.delta >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                    {c.delta >= 0 ? '+' : ''}{c.delta.toFixed(1)}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
+                    )}
+                </div>
             )}
 
         </div>

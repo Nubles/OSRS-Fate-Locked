@@ -34,11 +34,9 @@ their first line and no request is ever made.
 
 ## 2. Near-term features (in rough value order)
 
-1. **Map: tint the top-ranked frontier chunks.** The Frontier Advisor
-   (`utils/frontierAdvisor.ts`) already ranks the frontier; the map already
-   renders a frontier outline. Tinting the top ~5 by `sortScore` (cyan,
-   say) connects the advisor to the map. All data is in place — this is a
-   RegionMap rendering change only.
+1. ~~Map: tint the top-ranked frontier chunks~~ — done: top-5 by `sortScore`
+   render cyan (`HOT_FRONTIER_FILL` in RegionMap). The plugin's world map
+   also tints the Chunked frontier amber with a "rollable next" tooltip.
 2. **Frontier Advisor tuning.** Current weights: bank 3, shops ≤3, quest
    steps ≤3, monsters ≤1, flat +3 per new-area foothold (see
    `frontierAdvisor.ts`, all in one place). Tune with real play feedback;
