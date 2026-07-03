@@ -356,7 +356,11 @@ export const Dashboard: React.FC = () => {
     const onNav = (e: Event) => {
       const { target = '', query } = (e as CustomEvent<{ target?: string; query?: string }>).detail ?? {};
       if (target.startsWith('tab:')) {
-        setActiveTab(target.slice(4));
+        // "tab:JOURNAL/QUESTS" also selects a Journal sub-tab — without this a
+        // quest jump would land on whichever sub-tab the player last had open.
+        const [tab, subTab] = target.slice(4).split('/');
+        setActiveTab(tab);
+        if (subTab && tab === 'JOURNAL') setJournalSubTab(subTab as 'QUESTS' | 'DIARIES' | 'CA' | 'DOABLE');
         if (query) setSearchQuery(query);
         return;
       }

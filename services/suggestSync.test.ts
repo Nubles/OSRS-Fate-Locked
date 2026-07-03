@@ -39,6 +39,34 @@ describe('suggestSync', () => {
     expect(rollSatisfiesSuggestion('Collection Log', 'Boss (Mid)')).toBe(false);
   });
 
+  it('rollSatisfiesSuggestion: bare plugin categories match any tier of the rolled DropSource', async () => {
+    // The plugin pushes bare categories ("Quest"); the app's roll history
+    // records the tiered DropSource string ("Quest (Novice)"). Any tier of
+    // the category satisfies the suggestion — but not other categories.
+    const { rollSatisfiesSuggestion } = await import('./suggestSync');
+    expect(rollSatisfiesSuggestion('Quest', 'Quest (Novice)')).toBe(true);
+    expect(rollSatisfiesSuggestion('Quest', 'Quest (Grandmaster)')).toBe(true);
+    expect(rollSatisfiesSuggestion('Quest', 'Diary (Easy)')).toBe(false);
+    expect(rollSatisfiesSuggestion('Diary', 'Diary (Elite)')).toBe(true);
+    expect(rollSatisfiesSuggestion('Combat Achievement', 'Combat Achievement (Master)')).toBe(true);
+    expect(rollSatisfiesSuggestion('Combat Achievement', 'Quest (Master)')).toBe(false);
+  });
+
+  it('suggestionNav routes each category to its tab and drops the generic fallback label', async () => {
+    const { suggestionNav } = await import('./suggestSync');
+    expect(suggestionNav({ source: 'Quest', label: 'Dragon Slayer II', ts: 1 }))
+      .toEqual({ target: 'tab:JOURNAL/QUESTS', query: 'Dragon Slayer II' });
+    // "Quest complete" is the plugin's fallback when name extraction failed —
+    // pre-filling the search with it would filter the quest list to nothing.
+    expect(suggestionNav({ source: 'Quest', label: 'Quest complete', ts: 1 }))
+      .toEqual({ target: 'tab:JOURNAL/QUESTS', query: undefined });
+    expect(suggestionNav({ source: 'Diary', label: 'Diary complete', ts: 1 }).target).toBe('tab:JOURNAL/DIARIES');
+    expect(suggestionNav({ source: 'Combat Achievement', label: 'X', ts: 1 }).target).toBe('tab:JOURNAL/CA');
+    expect(suggestionNav({ source: 'Collection Log', label: 'Vorki', ts: 1 }))
+      .toEqual({ target: 'tab:COLLECTION', query: 'Vorki' });
+    expect(suggestionNav({ source: 'Boss (Mid)', label: 'Vorkath', ts: 1 }).target).toBe('ctrl:FARM');
+  });
+
   it('poll() adds new relay items to the persistent pending list', async () => {
     mockRelayPayload([{ source: 'Boss (Mid)', label: 'Vorkath', ts: 1000 }]);
     const { suggestSync } = await import('./suggestSync');

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, X, ArrowRight, Radio } from 'lucide-react';
 import { relaySync } from '../services/relaySync';
-import { suggestSync, Suggestion } from '../services/suggestSync';
+import { suggestSync, suggestionNav, Suggestion } from '../services/suggestSync';
 
 /**
  * Persistent list of RuneLite-detected roll suggestions — unlike the
@@ -17,9 +17,6 @@ import { suggestSync, Suggestion } from '../services/suggestSync';
  * mounted banner can.
  */
 
-const navTargetFor = (source: string): string =>
-  source.toLowerCase().includes('collection log') ? 'tab:COLLECTION' : 'ctrl:FARM';
-
 export function SuggestionQueue() {
   const [, force] = useState(0);
   useEffect(() => relaySync.subscribe(() => force((n) => n + 1)), []);
@@ -29,9 +26,7 @@ export function SuggestionQueue() {
   if (!relaySync.enabled) return null;
 
   const jump = (s: Suggestion) => {
-    window.dispatchEvent(new CustomEvent('fate:nav', {
-      detail: { target: navTargetFor(s.source), query: s.source.toLowerCase().includes('collection log') ? s.label : undefined },
-    }));
+    window.dispatchEvent(new CustomEvent('fate:nav', { detail: suggestionNav(s) }));
   };
 
   return (

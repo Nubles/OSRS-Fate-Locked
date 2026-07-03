@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Sparkles, X } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { relaySync } from '../services/relaySync';
-import { suggestSync, Suggestion } from '../services/suggestSync';
+import { suggestSync, suggestionNav, Suggestion } from '../services/suggestSync';
 import { isRollEntry } from '../utils/logEntry';
 import { LogEntry } from '../types';
 
@@ -13,10 +13,6 @@ import { LogEntry } from '../types';
  * never an auto-roll. See services/suggestSync.ts for why this direction
  * (plugin → app) needs no write access from the web side at all.
  */
-
-/** Where "Take me there" should navigate, per suggestion source. */
-const navTargetFor = (source: string): string =>
-  source.toLowerCase().includes('collection log') ? 'tab:COLLECTION' : 'ctrl:FARM';
 
 const suggestionKey = (s: Suggestion) => `${s.ts}-${s.source}-${s.label}`;
 
@@ -66,9 +62,7 @@ export function SuggestionBanner() {
   };
 
   const jump = (s: Suggestion) => {
-    window.dispatchEvent(new CustomEvent('fate:nav', {
-      detail: { target: navTargetFor(s.source), query: s.source.toLowerCase().includes('collection log') ? s.label : undefined },
-    }));
+    window.dispatchEvent(new CustomEvent('fate:nav', { detail: suggestionNav(s) }));
     dismiss(s); // clears the toast only — stays in the persistent Suggestions list until actually rolled
   };
 

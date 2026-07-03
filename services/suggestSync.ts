@@ -35,13 +35,36 @@ const key = (s: Suggestion) => `${s.ts}-${s.source}-${s.label}`;
  * Does a roll's history `source` string (e.g. "Boss (Mid)", "Col. Log: Vorki")
  * satisfy a pending suggestion's category? Boss/Raid sources match the
  * DropSource string exactly; Collection Log rolls are prefixed per-item
- * ("Col. Log: X"), so that one's a prefix check instead.
+ * ("Col. Log: X"), so that one's a prefix check instead. Plugin suggestions
+ * carry bare categories ("Quest", "Diary", "Combat Achievement") while the
+ * app's rolls record the tiered DropSource string ("Quest (Novice)"), so a
+ * bare category matches any tier of it.
  */
 export const rollSatisfiesSuggestion = (suggestionSource: string, rolledSource: string): boolean => {
-  if (suggestionSource.toLowerCase().includes('collection log')) {
-    return rolledSource.toLowerCase().startsWith('col. log:');
+  const suggestion = suggestionSource.toLowerCase();
+  const rolled = rolledSource.toLowerCase();
+  if (suggestion.includes('collection log')) {
+    return rolled.startsWith('col. log:');
   }
+  if (rolled.startsWith(`${suggestion} (`)) return true;
   return rolledSource === suggestionSource;
+};
+
+/**
+ * Where a suggestion's "Take me there" button should land, as a `fate:nav`
+ * event detail. Shared by the toast banner and the persistent queue so the
+ * two never drift. The query pre-fills the destination's search box with the
+ * item/quest name — skipped when the label is just the plugin's generic
+ * "<source> complete" fallback, which would match nothing.
+ */
+export const suggestionNav = (s: Suggestion): { target: string; query?: string } => {
+  const source = s.source.toLowerCase();
+  const query = s.label && s.label !== `${s.source} complete` ? s.label : undefined;
+  if (source.includes('collection log')) return { target: 'tab:COLLECTION', query };
+  if (source === 'quest') return { target: 'tab:JOURNAL/QUESTS', query };
+  if (source === 'diary') return { target: 'tab:JOURNAL/DIARIES', query };
+  if (source === 'combat achievement') return { target: 'tab:JOURNAL/CA', query };
+  return { target: 'ctrl:FARM' };
 };
 
 class SuggestSyncService {
