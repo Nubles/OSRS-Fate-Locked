@@ -20,6 +20,7 @@ import { ClarityEffect, GreedEffect, ChaosEffect } from './components/RitualEffe
 import { EffectsLayer } from './components/EffectsLayer';
 import { OnlineSyncDriver } from './components/OnlineSyncDriver';
 import { SuggestionBanner } from './components/SuggestionBanner';
+import { CoachStrip } from './components/CoachStrip';
 import { OnboardingWizard } from './components/OnboardingWizard';
 import { ProfileSwitcher } from './components/ProfileSwitcher';
 import { PanelErrorBoundary } from './components/PanelErrorBoundary';
@@ -112,6 +113,8 @@ const ToastNotification = () => {
   const { lastEvent } = useGame();
   const [visible, setVisible] = useState(false);
   const [message, setMessage] = useState('');
+  /** Optional handoff button — closes the loop (e.g. key won → "Spend it"). */
+  const [action, setAction] = useState<{ label: string; run: () => void } | null>(null);
   const timeoutRef = useRef<number | null>(null);
 
   // Imperative channel (import/export feedback, etc.).
@@ -120,6 +123,7 @@ const ToastNotification = () => {
       const msg = (e as CustomEvent<{ message?: string }>).detail?.message;
       if (!msg) return;
       setMessage(msg);
+      setAction(null);
       setVisible(true);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = window.setTimeout(() => setVisible(false), 5000);
@@ -151,6 +155,19 @@ const ToastNotification = () => {
       }
 
       setMessage(msg);
+      // A won key's natural next beat is spending it — hand the player there
+      // instead of dead-ending at "Roll Recorded".
+      if (lastEvent.type === 'ROLL_SUCCESS' || lastEvent.type === 'ROLL_OMNI' || lastEvent.type === 'ROLL_PITY') {
+        setAction({
+          label: 'Spend it',
+          run: () => {
+            window.dispatchEvent(new CustomEvent('fate:nav', { detail: { target: 'ctrl:SPEND' } }));
+            setVisible(false);
+          },
+        });
+      } else {
+        setAction(null);
+      }
       setVisible(true);
 
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -165,6 +182,14 @@ const ToastNotification = () => {
   return createPortal(
     <div className="pointer-events-auto bg-[#222] border border-white/20 shadow-2xl rounded-lg p-3 flex items-center gap-4 animate-in slide-in-from-bottom-5 fade-in duration-300">
        <span className="text-sm font-bold text-gray-200">{message}</span>
+       {action && (
+         <button
+           onClick={action.run}
+           className="text-[11px] font-bold px-2.5 py-1 rounded-md bg-amber-600 hover:bg-amber-500 text-white transition-colors"
+         >
+           {action.label} →
+         </button>
+       )}
     </div>,
     host,
   );
@@ -259,7 +284,9 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
 
           {/* Resources Bar */}
           <div className="flex flex-col md:flex-row items-center gap-3 md:gap-6 bg-black/20 p-1.5 pr-4 rounded-xl border border-white/5 w-full xl:w-auto shadow-inner">
-            <div className="w-full md:w-48 lg:w-64 px-2">
+            <div className="w-full md:w-48 lg:w-64 px-2" title={pityRules.pityEnabled
+                ? `Fate Points — failed rolls build these; at ${pityRules.pityThreshold} you get a guaranteed pity key. Also spend them on rituals at the Altar.`
+                : 'Fate Points — failed rolls build these; spend them on rituals at the Altar.'}>
                <div className="flex justify-between text-[10px] mb-1.5 font-bold uppercase tracking-wider">
                   <span className={nearPity ? "text-red-400 animate-pulse" : "text-gray-500"}>Fate Points</span>
                   <span className="text-gray-400">{pityRules.pityEnabled ? `${fatePoints}/${pityRules.pityThreshold}` : `${fatePoints} Fate`}</span>
@@ -620,6 +647,9 @@ const GameLayout = () => {
       <GuidedTour />
       {/* Quest-complete celebration with the wiki reward scroll. */}
       <QuestCompleteOverlay />
+
+      {/* One contextual "next step" hint under the header — teaches the loop. */}
+      <CoachStrip />
 
       {/* Main Command Center Layout */}
       <main className="max-w-[1600px] mx-auto px-4 py-4 h-[calc(100vh-80px)]">
