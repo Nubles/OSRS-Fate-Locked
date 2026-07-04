@@ -64,8 +64,8 @@ describe('economy ↔ engine consistency', () => {
     expect(equip?.tiers).toBe(EQUIPMENT_TIER_MAX);
   });
 
-  it('defines all four Void Altar rituals with a cost', () => {
-    expect(RITUALS.map(r => r.id).sort()).toEqual(['CHAOS', 'GREED', 'LUCK', 'TRANSMUTE']);
+  it('defines all six Void Altar rituals with a cost', () => {
+    expect(RITUALS.map(r => r.id).sort()).toEqual(['CARTOGRAPHER', 'CHAOS', 'GAMBIT', 'GREED', 'LUCK', 'TRANSMUTE']);
     for (const r of RITUALS) expect((r.fateCost ?? 0) + (r.keyCost ?? 0)).toBeGreaterThan(0);
   });
 });

@@ -112,9 +112,9 @@ export const GUIDES: Record<string, Guide> = {
     title: 'The Void Altar',
     blurb: 'Spend Fate Points on high-risk, high-reward rituals.',
     bullets: [
-      'Each ritual costs Fate Points (earned from failed key rolls) for a powerful effect.',
-      'Transmute, gamble for bonus keys, reroll outcomes, or convert resources.',
-      'Effects are permanent once performed — weigh the cost before committing.',
+      'Fate builds on failed rolls and RESETS on your next success — spend it while it lasts.',
+      'Cheap spice (Clarity), softened gambles (Greed refunds half on a miss), converters (Chaos, Transmute).',
+      'The Void Gambit stakes ALL your fate on a coin flip; in Chunked mode the Cartographer lets you choose a frontier chunk.',
     ],
   },
   ACHIEVEMENTS: {

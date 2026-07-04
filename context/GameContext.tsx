@@ -7,7 +7,7 @@ import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
 import { setStartArea } from '../utils/freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
-import { getRitual, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL } from '../config/economy';
+import { getRitual, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, GAMBIT_KEYS_PER } from '../config/economy';
 import { rollDice, UNLOCK_COST } from '../utils/gameEngine';
 import { hashEntry, ensureChain } from '../utils/integrity';
 import { pushBackup, listBackups as readBackups, getBackupData, BackupMeta } from '../utils/backups';
@@ -27,7 +27,7 @@ const generateId = (): string => {
 
 type RollEventMeta = { roll: number; threshold: number };
 type UnlockEventMeta = { item: string; cost: number; category?: TableType };
-type RitualEventMeta = { type: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE' };
+type RitualEventMeta = { type: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE' | 'GAMBIT' | 'CARTOGRAPHER'; won?: boolean; chunk?: string };
 type LevelUpEventMeta = { skill: string; level: number; totalLevel: number; chaosKeyAwarded: boolean };
 
 type GameEventMeta = RollEventMeta | UnlockEventMeta | RitualEventMeta | LevelUpEventMeta;
@@ -45,6 +45,8 @@ interface GameContextType extends GameState {
   rollForKey: (source: string, threshold: number, x?: number, y?: number) => void;
   unlockContent: (table: TableType, item: string, costType: 'key' | 'specialKey' | 'chaosKey', cost: number) => void;
   performRitual: (type: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE') => void;
+  performGambit: () => void;
+  performCartographer: (chunkKey: string, label: string) => void;
   levelUpSkill: (skill: string) => void;
   toggleAnimations: () => void;
   toggleAdvisors: () => void;
@@ -219,6 +221,8 @@ export type Action =
   | { type: 'RITUAL_GREED' }
   | { type: 'RITUAL_CHAOS' }
   | { type: 'RITUAL_TRANSMUTE' }
+  | { type: 'RITUAL_GAMBIT'; payload: { won: boolean; stake: number; keysWon: number } }
+  | { type: 'RITUAL_CARTOGRAPHER'; payload: { chunkKey: string; label: string } }
   | { type: 'LEVEL_UP'; payload: { skill: string; chaosRoll: number } }
   | { type: 'ADD_LOG'; payload: LogEntry }
   | { type: 'TOGGLE_PIN'; payload: string }
@@ -281,7 +285,7 @@ const chainAppendedHistory = (prev: GameState['history'], next: GameState['histo
 // Fate cost of a ritual after the run's mode multiplier. Costs live in
 // config/economy.ts (RITUALS) — the single source the Codex and Void Altar
 // also read, so the three can never disagree.
-const ritualFateCost = (id: 'LUCK' | 'GREED' | 'CHAOS', mult: number): number =>
+const ritualFateCost = (id: 'LUCK' | 'GREED' | 'CHAOS' | 'CARTOGRAPHER', mult: number): number =>
   Math.round((getRitual(id).fateCost ?? 0) * mult);
 
 const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: Action): GameState & { lastEvent: GameEvent | null } => {
@@ -383,11 +387,19 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
             newState.lastEvent = { id: generateId(), type: 'ROLL_PITY', x, y, meta: { roll, threshold } };
          } else {
             newState.fatePoints += 1;
+            // Greed's consolation: half the (scaled) ritual cost flows back,
+            // so it's double-or-something rather than double-or-nothing.
+            let greedRefund = 0;
+            if (isGreed) {
+              const mult = resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier;
+              greedRefund = Math.ceil(ritualFateCost('GREED', mult) * GREED_REFUND_FRACTION);
+              newState.fatePoints += greedRefund;
+            }
             newHistory.push({
                 id: generateId(),
                 timestamp: now,
                 type: 'ROLL_FAIL',
-                message: `No Key.${isGreed ? ' (Greed Wasted)' : ''}`,
+                message: `No Key.${isGreed ? ` (Greed refunded ${greedRefund} Fate)` : ''}`,
                 details: `Rolled ${roll} (> ${threshold}). Fate: ${newState.fatePoints}/${resolveModeRules(state.gameModeId, state.customMode).pityThreshold}`,
                 meta: { roll, threshold, source },
                 result: 'FAIL',
@@ -484,6 +496,44 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         history: [...state.history, { id: generateId(), timestamp: now, type: 'ALTAR', message: 'Ritual of Transmutation', details: '5 Keys fused into 1 Omni-Key.' }],
         lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'TRANSMUTE' } }
       };
+
+    case 'RITUAL_GAMBIT': {
+      // The stake is the player's ENTIRE fate pool (validated + coin-flipped
+      // by the caller, keeping the reducer pure). Win or lose, fate hits 0 —
+      // which is exactly where the next success would have put it anyway.
+      const { won, stake, keysWon } = action.payload;
+      return {
+        ...state,
+        fatePoints: 0,
+        keys: state.keys + (won ? keysWon : 0),
+        history: [...state.history, {
+          id: generateId(), timestamp: now, type: 'ALTAR',
+          message: won ? `Void Gambit WON — ${keysWon} Key${keysWon > 1 ? 's' : ''}!` : 'Void Gambit lost.',
+          details: won ? `Staked ${stake} Fate; the Void blinked.` : `Staked ${stake} Fate; the Void keeps it.`,
+        }],
+        lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'GAMBIT', won } }
+      };
+    }
+
+    case 'RITUAL_CARTOGRAPHER': {
+      // Chunked mode's one moment of agency: the chosen frontier chunk
+      // unlocks directly (candidates were drawn from the live frontier by
+      // the Altar UI).
+      const { chunkKey: chosen, label } = action.payload;
+      const cost = ritualFateCost('CARTOGRAPHER', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier);
+      if (state.fatePoints < cost || (state.unlocks.chunks ?? []).includes(chosen)) return state;
+      return {
+        ...state,
+        fatePoints: state.fatePoints - cost,
+        unlocks: { ...state.unlocks, chunks: [...(state.unlocks.chunks ?? []), chosen] },
+        history: [...state.history, {
+          id: generateId(), timestamp: now, type: 'ALTAR',
+          message: `Cartographer charted ${label}`,
+          details: `Chose a frontier chunk for ${cost} Fate — the one decision Fate allows.`,
+        }],
+        lastEvent: { id: generateId(), type: 'RITUAL', meta: { type: 'CARTOGRAPHER', chunk: chosen } }
+      };
+    }
 
     case 'LEVEL_UP': {
       const { skill, chaosRoll } = action.payload;
@@ -801,6 +851,21 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     if (type === 'TRANSMUTE') dispatch({ type: 'RITUAL_TRANSMUTE' });
   }, []);
 
+  /** Void Gambit: stake ALL fate on a coin flip (RNG here — reducer stays pure). */
+  const performGambit = useCallback(() => {
+    const stake = state.fatePoints;
+    const min = getRitual('GAMBIT').fateCost ?? 15;
+    if (stake < min) return;
+    const won = Math.random() < 0.5;
+    const keysWon = Math.max(1, Math.floor(stake / GAMBIT_KEYS_PER));
+    dispatch({ type: 'RITUAL_GAMBIT', payload: { won, stake, keysWon } });
+  }, [state.fatePoints]);
+
+  /** Cartographer: unlock the chosen frontier chunk (Chunked mode only). */
+  const performCartographer = useCallback((chunkKey: string, label: string) => {
+    dispatch({ type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey, label } });
+  }, []);
+
   const levelUpSkill = useCallback((skill: string) => {
     // Pre-compute RNG outside reducer to maintain reducer purity
     const chaosRoll = Math.random();
@@ -879,6 +944,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     rollForKey,
     unlockContent,
     performRitual,
+    performGambit,
+    performCartographer,
     levelUpSkill,
     toggleAnimations,
     toggleAdvisors,
@@ -907,6 +974,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     rollForKey,
     unlockContent,
     performRitual,
+    performGambit,
+    performCartographer,
     levelUpSkill,
     toggleAnimations,
     toggleAdvisors,

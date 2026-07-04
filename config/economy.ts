@@ -296,21 +296,42 @@ export const SPEND_TABLES: SpendTable[] = [
 export const UNLOCK_KEY_COST = 1;
 
 // ── Void Altar rituals (base costs; the mode's ritualCostMultiplier scales Fate) ─
+//
+// The economics that make these work: fate RESETS TO ZERO whenever a roll
+// succeeds, so it can't be banked — it only exists mid-drought. The altar is
+// therefore a drought valve ("spend it before a key burns it"), and every
+// cost below is tuned against that: cheap habitual spice (Clarity), a
+// softened gamble (Greed refunds half on failure), converters (Chaos /
+// Transmute), a stake-it-all coin flip (Gambit), and Chunked mode's only
+// agency valve (Cartographer, priced just under the pity key).
 export interface Ritual {
-  id: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE';
+  id: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE' | 'GAMBIT' | 'CARTOGRAPHER';
   name: string;
   tagline: string;
   /** Base cost before the mode multiplier (fate costs are scaled, key costs are not). */
   fateCost?: number;
   keyCost?: number;
   effect: string;
+  /** GAMBIT: fateCost is the MINIMUM stake — the ritual consumes ALL fate. */
+  stakesAllFate?: boolean;
+  /** Only offered in Chunked mode (needs a chunk frontier to choose from). */
+  chunkedOnly?: boolean;
 }
 
+/** Gambit payout: keys won per this many staked fate points (on a 50/50 win). */
+export const GAMBIT_KEYS_PER = 15;
+/** Greed's consolation: this fraction of the (scaled) cost refunds on a failed roll. */
+export const GREED_REFUND_FRACTION = 0.5;
+
 export const RITUALS: Ritual[] = [
-  { id: 'LUCK',      name: 'Ritual of Clarity',       tagline: 'Roll with advantage.',  fateCost: 15, effect: 'Your next roll is made twice — the better result is kept.' },
-  { id: 'GREED',     name: 'Ritual of Greed',         tagline: 'Double or nothing.',    fateCost: 30, effect: 'If your next roll succeeds you get 2 Keys; if it fails, the Fate is spent.' },
-  { id: 'CHAOS',     name: 'Ritual of Chaos',         tagline: 'Embrace entropy.',      fateCost: 25, effect: 'Immediately forge 1 Chaos Key (a random unlock from ANY table).' },
-  { id: 'TRANSMUTE', name: 'Ritual of Transmutation', tagline: 'Equivalent exchange.',  keyCost: 5,   effect: 'Fuse 5 standard Keys into 1 Omni-Key.' },
+  { id: 'LUCK',         name: 'Ritual of Clarity',       tagline: 'Roll with advantage.',   fateCost: 8,  effect: 'Your next roll is made twice — the better result is kept.' },
+  { id: 'GREED',        name: 'Ritual of Greed',         tagline: 'Double or… something.',  fateCost: 15, effect: 'If your next roll succeeds you get 2 Keys. If it fails, half the Fate is refunded.' },
+  { id: 'CHAOS',        name: 'Ritual of Chaos',         tagline: 'Embrace entropy.',       fateCost: 25, effect: 'Immediately forge 1 Chaos Key (a random unlock from ANY table).' },
+  { id: 'GAMBIT',       name: 'Void Gambit',             tagline: 'Before Fate reclaims it.', fateCost: 15, stakesAllFate: true,
+    effect: `Stake ALL your Fate on a coin flip. Win: 1 Key per ${GAMBIT_KEYS_PER} staked. Lose: the Void keeps everything.` },
+  { id: 'CARTOGRAPHER', name: 'Ritual of the Cartographer', tagline: 'Chart your own course.', fateCost: 40, chunkedOnly: true,
+    effect: 'Reveal 3 random frontier chunks — and CHOOSE which one unlocks. The only say you get in where Fate takes you.' },
+  { id: 'TRANSMUTE',    name: 'Ritual of Transmutation', tagline: 'Equivalent exchange.',   keyCost: 5,   effect: 'Fuse 5 standard Keys into 1 Omni-Key.' },
 ];
 
 export const getRitual = (id: Ritual['id']): Ritual => RITUALS.find(r => r.id === id)!;

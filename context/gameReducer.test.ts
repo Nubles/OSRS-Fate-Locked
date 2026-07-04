@@ -148,16 +148,67 @@ describe('UNLOCK — Chunks (Chunked mode)', () => {
 // --- Void Altar rituals -----------------------------------------------------
 
 describe('rituals', () => {
-  it('Clarity costs 15 Fate and applies the LUCK buff (Vanilla)', () => {
+  it('Clarity costs 8 Fate and applies the LUCK buff (Vanilla)', () => {
     const s = gameReducer({ ...base(), fatePoints: 20 }, { type: 'RITUAL_LUCK' });
-    expect(s.fatePoints).toBe(5);
+    expect(s.fatePoints).toBe(12);
     expect(s.activeBuff).toBe('LUCK');
   });
 
-  it('Greed costs 30 Fate and applies the GREED buff (Vanilla)', () => {
+  it('Greed costs 15 Fate and applies the GREED buff (Vanilla)', () => {
     const s = gameReducer({ ...base(), fatePoints: 40 }, { type: 'RITUAL_GREED' });
-    expect(s.fatePoints).toBe(10);
+    expect(s.fatePoints).toBe(25);
     expect(s.activeBuff).toBe('GREED');
+  });
+
+  it('a failed roll under GREED refunds half the ritual cost (plus the normal fate point)', () => {
+    const armed = gameReducer({ ...base(), fatePoints: 15 }, { type: 'RITUAL_GREED' }); // 0 left
+    const s = gameReducer(armed, roll({ success: false }));
+    // +1 normal fail fate, +8 refund (ceil(15 × 0.5)); buff consumed.
+    expect(s.fatePoints).toBe(9);
+    expect(s.activeBuff).toBe('NONE');
+    expect(s.keys).toBe(initialState.keys);
+  });
+
+  it('a successful roll under GREED pays double and consumes the buff', () => {
+    const armed = gameReducer({ ...base(), fatePoints: 15 }, { type: 'RITUAL_GREED' });
+    const s = gameReducer(armed, roll({ success: true }));
+    expect(s.keys).toBe(initialState.keys + 2);
+    expect(s.activeBuff).toBe('NONE');
+  });
+
+  it('Void Gambit: a win pays the pre-rolled keys and zeroes fate', () => {
+    const s = gameReducer({ ...base(), fatePoints: 45 },
+      { type: 'RITUAL_GAMBIT', payload: { won: true, stake: 45, keysWon: 3 } });
+    expect(s.keys).toBe(initialState.keys + 3);
+    expect(s.fatePoints).toBe(0);
+    expect(s.history[s.history.length - 1].message).toContain('WON');
+  });
+
+  it('Void Gambit: a loss zeroes fate and pays nothing', () => {
+    const s = gameReducer({ ...base(), fatePoints: 45 },
+      { type: 'RITUAL_GAMBIT', payload: { won: false, stake: 45, keysWon: 3 } });
+    expect(s.keys).toBe(initialState.keys);
+    expect(s.fatePoints).toBe(0);
+  });
+
+  it('Cartographer unlocks the chosen chunk for 40 Fate (Chunked)', () => {
+    const start = { ...base(), gameModeId: 'chunked', fatePoints: 50,
+      unlocks: { ...initialState.unlocks, chunks: [] } };
+    const s = gameReducer(start, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '46,51', label: 'Falador' } });
+    expect(s.fatePoints).toBe(10);
+    expect(s.unlocks.chunks).toContain('46,51');
+    expect(s.history[s.history.length - 1].message).toContain('Falador');
+  });
+
+  it('Cartographer refuses when fate is short or the chunk is already owned', () => {
+    const poor = gameReducer({ ...base(), gameModeId: 'chunked', fatePoints: 10 },
+      { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '46,51', label: 'Falador' } });
+    expect(poor.unlocks.chunks ?? []).not.toContain('46,51');
+
+    const owned = { ...base(), gameModeId: 'chunked', fatePoints: 50,
+      unlocks: { ...initialState.unlocks, chunks: ['46,51'] } };
+    const s = gameReducer(owned, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '46,51', label: 'Falador' } });
+    expect(s.fatePoints).toBe(50); // untouched
   });
 
   it('Chaos costs 25 Fate and grants a chaos key (Vanilla)', () => {
@@ -174,7 +225,7 @@ describe('rituals', () => {
 
   it('ritual cost scales with the game mode (Casual = 0.6x)', () => {
     const s = gameReducer({ ...base(), gameModeId: 'casual', fatePoints: 20 }, { type: 'RITUAL_LUCK' });
-    expect(s.fatePoints).toBe(20 - Math.round(15 * 0.6)); // 20 - 9 = 11
+    expect(s.fatePoints).toBe(20 - Math.round(8 * 0.6)); // 20 - 5 = 15
   });
 });
 

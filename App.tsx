@@ -145,7 +145,13 @@ const ToastNotification = () => {
       let msg = 'Action Complete';
       if (lastEvent.type.includes('ROLL')) msg = 'Roll Recorded';
       if (lastEvent.type === 'UNLOCK') msg = 'Content Unlocked';
-      if (lastEvent.type === 'RITUAL') msg = 'Ritual Performed';
+      if (lastEvent.type === 'RITUAL') {
+        const rm = lastEvent.meta as any;
+        msg = rm?.type === 'GAMBIT'
+          ? (rm.won ? 'The Void blinked — Gambit WON!' : 'The Void keeps your Fate.')
+          : rm?.type === 'CARTOGRAPHER' ? 'Course charted — chunk unlocked!'
+          : 'Ritual Performed';
+      }
       if (lastEvent.type === 'LEVEL_UP') {
           // Check for Chaos Key award in metadata
           if (lastEvent.meta && 'chaosKeyAwarded' in lastEvent.meta && lastEvent.meta.chaosKeyAwarded) {

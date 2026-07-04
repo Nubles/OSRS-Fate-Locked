@@ -29,6 +29,8 @@ const ALTAR_UI: Record<string, { icon: any; color: string; border: string }> = {
   LUCK:      { icon: Dices,    color: 'text-blue-400',   border: 'border-blue-500/30' },
   GREED:     { icon: Coins,    color: 'text-yellow-400', border: 'border-yellow-500/30' },
   CHAOS:     { icon: Dna,      color: 'text-red-400',    border: 'border-red-500/30' },
+  GAMBIT:       { icon: Skull,    color: 'text-fuchsia-400', border: 'border-fuchsia-500/30' },
+  CARTOGRAPHER: { icon: Map,      color: 'text-emerald-400', border: 'border-emerald-500/30' },
   TRANSMUTE: { icon: Sparkles, color: 'text-purple-400', border: 'border-purple-500/30' },
 };
 
@@ -487,7 +489,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose }) => {
                                         <div key={r.id} className={`bg-[#222] p-6 rounded-xl border ${ui.border} relative overflow-hidden`}>
                                             <div className="absolute top-0 right-0 p-4 opacity-10"><Icon size={64} /></div>
                                             <h3 className={`${ui.color} font-bold text-lg mb-2`}>{r.name}</h3>
-                                            <p className="text-sm text-gray-300 mb-4">{r.tagline}</p>
+                                            <p className="text-sm text-gray-300 mb-4">{r.tagline}{r.chunkedOnly ? ' (Chunked mode only)' : ''}</p>
                                             <div className="text-xs font-mono bg-black/40 p-3 rounded border border-white/5 text-gray-400">
                                                 Cost: <span className="text-white font-bold">{r.fateCost ? `${ritualCost(r.fateCost)} Fate Points` : `${r.keyCost} Keys`}</span>
                                                 <br/>
