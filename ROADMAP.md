@@ -46,7 +46,12 @@ their first line and no request is ever made.
    that exact string. Check `suggestionNav()` query behavior against the
    DiaryLog search and adjust the label → query mapping if jumps land on
    empty filters.
-4. **Plugin-side chunk-content in the side panel** is already done for the
+4. **Streamer overlay** — done: `#/overlay?code=<pairing code>` renders a
+   transparent OBS-browser-source badge bar (keys/fate/territory/buff/goal +
+   "NEW UNLOCK" pops) polling the relay bundle with ETags; copy-URL button
+   lives in the Connect RuneLite card. `components/StreamOverlay.tsx`,
+   lazy-loaded via the hash gate in `index.tsx`.
+5. **Plugin-side chunk-content in the side panel** is already done for the
    current chunk; a "nearest locked bank/shop" line in the HUD would be the
    next in-game QoL win (all from `FateLockedBundle.contentAt`, no network).
 

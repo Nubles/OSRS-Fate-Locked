@@ -80,6 +80,17 @@ export const RuneLiteOnboarding: React.FC = () => {
     window.setTimeout(() => setCopied(false), 1500);
   };
 
+  const [overlayCopied, setOverlayCopied] = useState(false);
+  const copyOverlayUrl = () => {
+    if (!relaySync.code) return;
+    // Same origin+path the app is served from, so it works on GH Pages,
+    // custom domains, and local dev alike.
+    const url = `${window.location.origin}${window.location.pathname}#/overlay?code=${relaySync.code}`;
+    navigator.clipboard?.writeText(url).catch(() => {});
+    setOverlayCopied(true);
+    window.setTimeout(() => setOverlayCopied(false), 1500);
+  };
+
   // Collapsed: one honest status line, expandable.
   if (hidden) {
     return (
@@ -164,6 +175,13 @@ export const RuneLiteOnboarding: React.FC = () => {
             )}
             <span className="text-gray-600">· data is ephemeral (24h), readable only with this code</span>
             <div className="flex-1" />
+            <button
+              onClick={copyOverlayUrl}
+              className="px-2 py-0.5 rounded text-[11px] font-semibold bg-white/10 hover:bg-white/15 text-gray-300"
+              title="OBS browser-source URL showing your live keys/fate/unlocks on stream (transparent background)"
+            >
+              {overlayCopied ? 'Copied!' : 'Copy stream overlay URL'}
+            </button>
             <button
               onClick={() => relaySync.disable()}
               className="px-2 py-0.5 rounded text-[11px] font-semibold bg-white/10 hover:bg-white/15 text-gray-300"
