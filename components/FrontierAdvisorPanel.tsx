@@ -3,6 +3,7 @@ import { Compass } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { rankFrontierChunks } from '../utils/frontierAdvisor';
 import { chunkRegion } from '../utils/chunkAdjacency';
+import { flashSelector } from '../utils/flash';
 import { chunkContentService } from '../services/ChunkContentService';
 import { AdvisorList, AdvisorItem } from './AdvisorList';
 
@@ -74,11 +75,7 @@ export const FrontierAdvisorPanel: React.FC = () => {
         // Same affordance as the Region Advisor: jump to the chunk's continent
         // card in the list below and flash it.
         const region = chunkRegion(key);
-        const el = region ? document.querySelector<HTMLElement>(`[data-region-card="${region}"]`) : null;
-        if (!el) return;
-        el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-        el.classList.add('ring-2', 'ring-cyan-400/70');
-        window.setTimeout(() => el.classList.remove('ring-2', 'ring-cyan-400/70'), 1800);
+        if (region) flashSelector(`[data-region-card="${region}"]`, 'cyan');
       }}
       variant="card"
     />

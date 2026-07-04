@@ -3,6 +3,7 @@ import { Map } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { rankLockedRegions } from '../utils/regionAdvisor';
 import { AdvisorList, AdvisorItem } from './AdvisorList';
+import { flashSelector } from '../utils/flash';
 
 /**
  * Dashboard widget: "Which region should I unlock next?"
@@ -17,13 +18,7 @@ export const RegionAdvisorPanel: React.FC = () => {
   const ranked = useMemo(() => rankLockedRegions(unlocks, gameModeId), [unlocks, gameModeId]);
 
   // Scroll the matching region group card into view + flash a highlight ring.
-  const scrollToRegion = (id: string) => {
-    const el = document.querySelector<HTMLElement>(`[data-region-card="${id}"]`);
-    if (!el) return;
-    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    el.classList.add('ring-2', 'ring-amber-400/70');
-    window.setTimeout(() => el.classList.remove('ring-2', 'ring-amber-400/70'), 1800);
-  };
+  const scrollToRegion = (id: string) => flashSelector(`[data-region-card="${id}"]`, 'amber');
 
   const items: AdvisorItem[] = ranked.map((r) => ({
     id: r.id,

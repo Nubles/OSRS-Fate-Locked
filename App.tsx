@@ -21,6 +21,7 @@ import { EffectsLayer } from './components/EffectsLayer';
 import { OnlineSyncDriver } from './components/OnlineSyncDriver';
 import { SuggestionBanner } from './components/SuggestionBanner';
 import { CoachStrip } from './components/CoachStrip';
+import { flashElement } from './utils/flash';
 import { OnboardingWizard } from './components/OnboardingWizard';
 import { ProfileSwitcher } from './components/ProfileSwitcher';
 import { PanelErrorBoundary } from './components/PanelErrorBoundary';
@@ -421,17 +422,23 @@ const ControlPanel = () => {
   useEffect(() => { if (activeTab === 'LOG') setLogVisited(true); }, [activeTab]);
 
   // Command-palette navigation to a control tab.
+  const panelRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const onNav = (e: Event) => {
       const target = (e as CustomEvent<{ target?: string }>).detail?.target ?? '';
-      if (target.startsWith('ctrl:')) setActiveTab(target.slice(5) as 'FARM' | 'SPEND' | 'LOG');
+      if (target.startsWith('ctrl:')) {
+        setActiveTab(target.slice(5) as 'FARM' | 'SPEND' | 'LOG');
+        // Cross-panel jumps (coach strip, toasts, palette, suggestions) land
+        // here from far away — the house ring pulse says "you are here".
+        flashElement(panelRef.current, 'amber');
+      }
     };
     window.addEventListener('fate:nav', onNav);
     return () => window.removeEventListener('fate:nav', onNav);
   }, []);
 
   return (
-    <div className="flex flex-col h-full bg-[#1b1b1b] border border-[#333] rounded-lg overflow-hidden shadow-xl">
+    <div ref={panelRef} className="flex flex-col h-full bg-[#1b1b1b] border border-[#333] rounded-lg overflow-hidden shadow-xl">
       {/* Tabs */}
       <div className="flex border-b border-[#333] bg-[#161616] shrink-0">
         <button
