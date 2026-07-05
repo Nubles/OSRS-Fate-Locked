@@ -233,8 +233,9 @@ describe('rituals', () => {
     expect(s.specialKeys).toBe(initialState.specialKeys + 1);
   });
 
-  it('ritual cost scales with the game mode (Casual = 0.6x)', () => {
-    const s = gameReducer({ ...base(), gameModeId: 'casual', fatePoints: 20 }, { type: 'RITUAL_LUCK' });
+  it('ritual cost scales with the ritual-cost multiplier (Custom 0.6x)', () => {
+    const custom = { pityEnabled: true, pityThreshold: 50, omniChanceBase: 2, ritualCostMultiplier: 0.6, regionModifiers: false };
+    const s = gameReducer({ ...base(), gameModeId: 'custom', customMode: custom, fatePoints: 20 }, { type: 'RITUAL_LUCK' });
     expect(s.fatePoints).toBe(20 - Math.round(8 * 0.6)); // 20 - 5 = 15
   });
 });

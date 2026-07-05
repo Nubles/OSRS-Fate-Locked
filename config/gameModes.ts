@@ -67,63 +67,6 @@ export const GAME_MODES: GameMode[] = [
     rules: { ...VANILLA_RULES },
   },
   {
-    id: 'casual',
-    name: 'Casual',
-    description: 'A gentler run: pity arrives sooner, Omni-keys are more common, and rituals are cheaper.',
-    tagline: 'Forgiving — good for a first run',
-    rules: {
-      pityEnabled: true,
-      pityThreshold: 30,
-      omniChanceBase: 4,
-      ritualCostMultiplier: 0.6,
-      regionModifiers: false,
-      bankLocks: true,
-    },
-  },
-  {
-    id: 'hardcore',
-    name: 'Hardcore',
-    description: 'No safety net: the pity system is disabled, Omni-keys are rare, and rituals cost dearly.',
-    tagline: 'No pity — for veterans',
-    rules: {
-      pityEnabled: false,
-      pityThreshold: 50,
-      omniChanceBase: 1,
-      ritualCostMultiplier: 1.5,
-      regionModifiers: false,
-      bankLocks: true,
-    },
-  },
-  {
-    id: 'region-rush',
-    name: 'Region Rush',
-    description: 'Region passives are active — every unlocked region grants a bonus, making the unlock chase the core mechanic.',
-    tagline: 'Region passives ON',
-    rules: {
-      pityEnabled: true,
-      pityThreshold: 45,
-      omniChanceBase: 2,
-      ritualCostMultiplier: 1,
-      regionModifiers: true,
-      bankLocks: true,
-    },
-  },
-  {
-    id: 'xtreme',
-    name: 'Xtreme Start',
-    description: 'Begin with only Lumbridge unlocked — the rest of Misthalin (Varrock, Draynor, Edgeville…) must be earned like any other region. The hardest possible opening.',
-    tagline: 'Lumbridge only at the start',
-    rules: {
-      pityEnabled: true,
-      pityThreshold: 50,
-      omniChanceBase: 2,
-      ritualCostMultiplier: 1,
-      regionModifiers: false,
-      startArea: 'lumbridge',
-      bankLocks: true,
-    },
-  },
-  {
     id: 'chunked',
     name: 'Chunked',
     description: 'The classic "Chunked Ironman" format: you start in a single Lumbridge chunk and can only unlock a chunk that borders one you already hold. No named regions — Fate hands you a random adjacent tile of the map, one at a time.',
@@ -141,13 +84,10 @@ export const GAME_MODES: GameMode[] = [
       bankLocks: true,
     },
   },
-  {
-    id: 'custom',
-    name: 'Custom',
-    description: 'Build your own ruleset. Every value below is yours to tune before the run begins.',
-    tagline: 'Your rules, your run',
-    rules: { ...VANILLA_RULES },
-  },
+  // NOTE: Casual / Hardcore / Region Rush / Xtreme Start / Custom were removed
+  // from the picker "for now" — VANILLA_RULES and the Custom-editor machinery
+  // (GameModePicker) are intact, so restoring any of them is just re-adding the
+  // object here.
 ];
 
 export const DEFAULT_MODE_ID = 'vanilla';
