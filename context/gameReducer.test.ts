@@ -122,6 +122,16 @@ describe('UNLOCK', () => {
 
 // --- UNLOCK — Chunked mode ---------------------------------------------------
 
+describe('UNLOCK — Banks (bank-locked modes)', () => {
+  it('unlocking a bank adds its chunk id and names it in history', () => {
+    const s = gameReducer(base(), { type: 'UNLOCK', payload: { table: TableType.BANKS, item: '13618', costType: 'key', cost: 1 } });
+    expect(s.unlocks.banks).toContain('13618');
+    // History message resolves the id to the place name, not the raw number.
+    expect(s.history[s.history.length - 1].message).toBe('Unlocked Abandoned Mine');
+    expect(s.keys).toBe(initialState.keys - 1);
+  });
+});
+
 describe('UNLOCK — Chunks (Chunked mode)', () => {
   it('adds a chunk key and deducts a standard key', () => {
     const target = chunkKey({ cx: CHUNKED_START.cx + 1, cy: CHUNKED_START.cy });

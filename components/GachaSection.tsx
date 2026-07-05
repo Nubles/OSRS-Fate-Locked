@@ -2,6 +2,8 @@
 import React, { useState, useMemo } from 'react';
 import { TableType } from '../types';
 import { useGame } from '../context/GameContext';
+import { bankLocksActive } from '../utils/reachability';
+import { BANK_IDS, BANK_BY_ID } from '../data/banks';
 import { checkUnlockAvailability, getPoolAndStateKey, isValidUnlock, UNLOCK_COST } from '../utils/gameEngine';
 import { REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, POH_LIST, MERCHANTS_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST, UTILITY_ITEM_IDS } from '../constants';
 import { VoidReveal } from './VoidReveal';
@@ -38,6 +40,7 @@ const ACCENTS: Record<string, Accent> = {
   [TableType.GUILDS]: { icon: 'text-teal-300', bar: 'bg-teal-400', hoverBorder: 'hover:border-teal-400/70', hoverShadow: 'hover:shadow-[0_0_22px_-6px_rgba(45,212,191,0.6)]', titleHover: 'group-hover:text-teal-200', ctaBorder: 'border-teal-500/25', ctaText: 'text-teal-300/80', ctaHover: 'group-hover:bg-teal-500/15 group-hover:border-teal-400/50 group-hover:text-teal-100' },
   [TableType.FARMING_LAYERS]: { icon: 'text-lime-300', bar: 'bg-lime-400', hoverBorder: 'hover:border-lime-400/70', hoverShadow: 'hover:shadow-[0_0_22px_-6px_rgba(163,230,53,0.6)]', titleHover: 'group-hover:text-lime-200', ctaBorder: 'border-lime-500/25', ctaText: 'text-lime-300/80', ctaHover: 'group-hover:bg-lime-500/15 group-hover:border-lime-400/50 group-hover:text-lime-100' },
   [TableType.SLAYER_UNLOCKS]: { icon: 'text-rose-300', bar: 'bg-rose-400', hoverBorder: 'hover:border-rose-400/70', hoverShadow: 'hover:shadow-[0_0_22px_-6px_rgba(251,113,133,0.6)]', titleHover: 'group-hover:text-rose-200', ctaBorder: 'border-rose-500/25', ctaText: 'text-rose-300/80', ctaHover: 'group-hover:bg-rose-500/15 group-hover:border-rose-400/50 group-hover:text-rose-100' },
+  [TableType.BANKS]: { icon: 'text-amber-300', bar: 'bg-amber-400', hoverBorder: 'hover:border-amber-400/70', hoverShadow: 'hover:shadow-[0_0_22px_-6px_rgba(251,191,36,0.6)]', titleHover: 'group-hover:text-amber-200', ctaBorder: 'border-amber-500/25', ctaText: 'text-amber-300/80', ctaHover: 'group-hover:bg-amber-500/15 group-hover:border-amber-400/50 group-hover:text-amber-100' },
 };
 const DEFAULT_ACCENT = ACCENTS[TableType.EQUIPMENT];
 
@@ -72,6 +75,7 @@ const OSRS_GACHA_ICONS = {
   GUILDS: 'https://oldschool.runescape.wiki/images/Achievement_Diaries_icon.png',
   FARMING: 'https://oldschool.runescape.wiki/images/Farming_icon.png',
   SLAYER_UNLOCKS: 'https://oldschool.runescape.wiki/images/Slayer_icon.png',
+  BANKS: 'https://oldschool.runescape.wiki/images/Bank_icon.png',
 };
 
 const SpendCard: React.FC<SpendCardProps> = ({
@@ -147,8 +151,9 @@ const SpendCard: React.FC<SpendCardProps> = ({
 };
 
 export const GachaSection: React.FC = () => {
-  const { keys, specialKeys, chaosKeys, unlocks, unlockContent, animationsEnabled, gameModeId } = useGame();
+  const { keys, specialKeys, chaosKeys, unlocks, unlockContent, animationsEnabled, gameModeId, customMode } = useGame();
   const isChunked = gameModeId === 'chunked';
+  const bankLocks = bankLocksActive(gameModeId, customMode);
   const [pendingReveal, setPendingReveal] = useState<{ 
       item: string, 
       tableType: TableType, 
@@ -169,6 +174,7 @@ export const GachaSection: React.FC = () => {
     if (table === 'equipment') return SLOT_CONFIG[item] ? `${baseUrl}${SLOT_CONFIG[item].file}` : undefined;
     if (table === 'region') return REGION_ICONS[item] ? `${baseUrl}${REGION_ICONS[item]}` : `${baseUrl}Globe_icon.png`;
     if (table === 'chunks') return `${baseUrl}World_map_icon.png`;
+    if (table === 'banks') return `${baseUrl}Bank_icon.png`;
     return SPECIAL_ICONS[item] ? `${baseUrl}${SPECIAL_ICONS[item]}` : undefined;
   };
   
@@ -218,7 +224,8 @@ export const GachaSection: React.FC = () => {
           ...(isChunked ? [TableType.CHUNKS] : [TableType.REGIONS]),
           TableType.MOBILITY, TableType.ARCANA, TableType.POH, TableType.MERCHANTS,
           TableType.MINIGAMES, TableType.BOSSES, TableType.STORAGE, TableType.GUILDS,
-          TableType.FARMING_LAYERS, TableType.SLAYER_UNLOCKS
+          TableType.FARMING_LAYERS, TableType.SLAYER_UNLOCKS,
+          ...(bankLocks ? [TableType.BANKS] : []),
       ];
 
       const globalPool: { item: string, tableType: TableType, stateKey: string }[] = [];
@@ -285,13 +292,14 @@ export const GachaSection: React.FC = () => {
     { type: TableType.GUILDS, label: 'Guilds', subLabel: 'Professional Societies', iconSrc: OSRS_GACHA_ICONS.GUILDS, unlocked: (unlocks.guilds ?? []).length, total: GUILDS_LIST.length, can: canUnlock.guilds },
     { type: TableType.FARMING_LAYERS, label: 'Farming', subLabel: 'Patches', iconSrc: OSRS_GACHA_ICONS.FARMING, unlocked: (unlocks.farming ?? []).length, total: FARMING_PATCH_LIST.length, can: canUnlock.farming },
     { type: TableType.SLAYER_UNLOCKS, label: 'Slayer', subLabel: 'Reward Unlocks', iconSrc: OSRS_GACHA_ICONS.SLAYER_UNLOCKS, unlocked: (unlocks.slayerUnlocks ?? []).length, total: SLAYER_UNLOCKS_LIST.length, can: canUnlock.slayerUnlocks },
+    ...(bankLocks ? [{ type: TableType.BANKS, label: 'Banks', subLabel: 'Bank Access', iconSrc: OSRS_GACHA_ICONS.BANKS, unlocked: (unlocks.banks ?? []).length, total: BANK_IDS.length, can: (canUnlock as any).banks as boolean }] : []),
   ];
 
   return (
     <div className="h-full flex flex-col relative p-4">
       {pendingReveal && (
           <VoidReveal
-             itemName={pendingReveal.tableType === TableType.CHUNKS ? chunkLabel(pendingReveal.item) : pendingReveal.item}
+             itemName={pendingReveal.tableType === TableType.CHUNKS ? chunkLabel(pendingReveal.item) : pendingReveal.tableType === TableType.BANKS ? (BANK_BY_ID[pendingReveal.item]?.name ?? pendingReveal.item) : pendingReveal.item}
              itemType={pendingReveal.tableType} 
              itemImage={pendingReveal.image} 
              onComplete={finalizeReveal} 

@@ -11,6 +11,7 @@
  * tables below read from it, so they update for free.
  */
 import { DropSource, TableType } from '../types';
+import { BANK_IDS } from '../data/banks';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from './rules';
 import {
   SKILLS_LIST, EQUIPMENT_SLOTS, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST,
@@ -290,6 +291,8 @@ export const SPEND_TABLES: SpendTable[] = [
   { type: TableType.GUILDS,          label: 'Guilds',     count: GUILDS_LIST.length,     blurb: 'Skill guilds and their perks.' },
   { type: TableType.FARMING_LAYERS,  label: 'Farming',    count: FARMING_PATCH_LIST.length, blurb: 'Farming patches across the world.' },
   { type: TableType.SLAYER_UNLOCKS,  label: 'Slayer',     count: SLAYER_UNLOCKS_LIST.length, blurb: 'Slayer reward unlocks: new tasks, superiors, helmet & more.' },
+  // Bank-locked modes only (rules.bankLocks) — filtered in on demand.
+  { type: TableType.BANKS,           label: 'Banks',      count: BANK_IDS.length,        blurb: 'Every bank and deposit box is locked until you roll it — banking is a privilege, not a given.' },
 ];
 
 /** Flat cost, in keys, of a single unlock from any table. */

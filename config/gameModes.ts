@@ -29,6 +29,13 @@ export interface GameModeRules {
    * CHUNKED_START for the fixed (free) starting chunk.
    */
   chunkGranularity?: boolean;
+  /**
+   * When true, every bankable location (bank/deposit box) must be individually
+   * unlocked (TableType.BANKS) before it can be used — a OneChunkMan-style
+   * restriction. Off in every built-in mode by default so existing runs are
+   * unaffected; opt in via Custom mode. See utils/reachability.ts isBankReachable.
+   */
+  bankLocks?: boolean;
 }
 
 export interface GameMode {

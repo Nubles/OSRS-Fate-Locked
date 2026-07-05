@@ -8,6 +8,7 @@ import { setStartArea } from '../utils/freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { getRitual, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, GAMBIT_KEYS_PER } from '../config/economy';
+import { BANK_BY_ID } from '../data/banks';
 import { rollDice, UNLOCK_COST } from '../utils/gameEngine';
 import { hashEntry, ensureChain } from '../utils/integrity';
 import { pushBackup, listBackups as readBackups, getBackupData, BackupMeta } from '../utils/backups';
@@ -97,6 +98,7 @@ const getInitialUnlocks = (): UnlockState => ({
   guilds: [],
   farming: [],
   slayerUnlocks: [],
+  banks: [],
   quests: [],
   diaries: [],
   cas: [],
@@ -189,7 +191,7 @@ const migrateSave = (saveData: Partial<GameState>): GameState => {
   // Defensive: dedupe unlock arrays so a corrupted import can't load the
   // same region/boss/etc. twice.
   const ARRAY_KEYS = ['regions', 'chunks', 'mobility', 'arcana', 'housing', 'merchants',
-    'minigames', 'bosses', 'storage', 'guilds', 'farming', 'slayerUnlocks',
+    'minigames', 'bosses', 'storage', 'guilds', 'farming', 'slayerUnlocks', 'banks',
     'quests', 'diaries',
     'cas', 'completedTasks'] as const;
   for (const k of ARRAY_KEYS) {
@@ -439,17 +441,20 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       else if (table === TableType.FARMING_LAYERS) newUnlocks.farming = pushOnce(newUnlocks.farming);
       else if (table === TableType.SLAYER_UNLOCKS) newUnlocks.slayerUnlocks = pushOnce(newUnlocks.slayerUnlocks);
       else if (table === TableType.CHUNKS) newUnlocks.chunks = pushOnce(newUnlocks.chunks ?? []);
+      else if (table === TableType.BANKS) newUnlocks.banks = pushOnce(newUnlocks.banks ?? []);
 
       let newState = { ...state, unlocks: newUnlocks };
       if (costType === 'key') newState.keys -= cost;
       else if (costType === 'specialKey') newState.specialKeys -= 1;
       else if (costType === 'chaosKey') newState.chaosKeys -= 1;
 
+      // Banks are keyed by chunk id ("13618"); show the place name instead.
+      const itemLabel = table === TableType.BANKS ? (BANK_BY_ID[item]?.name ?? item) : item;
       const log: LogEntry = {
           id: generateId(),
           timestamp: now,
           type: 'UNLOCK',
-          message: `Unlocked ${item}`,
+          message: `Unlocked ${itemLabel}`,
           details: `Category: ${table}`,
           meta: { item, category: table, cost, costType }
       };

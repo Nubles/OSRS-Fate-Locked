@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { X, Lock, Check, Settings2, Sparkles, ShieldOff, Gauge } from 'lucide-react';
+import { X, Lock, Check, Settings2, Sparkles, ShieldOff, Gauge, Landmark } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useEscapeKey } from '../hooks/useEscapeKey';
@@ -152,6 +152,18 @@ export const GameModePicker: React.FC<Props> = ({ onClose }) => {
                   className="accent-amber-500 w-4 h-4"
                 />
               </label>
+
+              <label className="flex items-center justify-between gap-3 cursor-pointer">
+                <span className="flex items-center gap-2 text-xs text-gray-300">
+                  <Landmark size={13} className="text-amber-400" /> Lock every bank &amp; deposit box
+                </span>
+                <input
+                  type="checkbox"
+                  checked={!!customDraft.bankLocks}
+                  onChange={e => setCustom('bankLocks', e.target.checked)}
+                  className="accent-amber-500 w-4 h-4"
+                />
+              </label>
             </div>
           )}
         </div>
@@ -164,6 +176,7 @@ export const GameModePicker: React.FC<Props> = ({ onClose }) => {
             <span>Omni: {activeRules.omniChanceBase}%</span>
             <span>Rituals: {activeRules.ritualCostMultiplier.toFixed(2)}×</span>
             <span>Regions: {activeRules.regionModifiers ? 'on' : 'off'}</span>
+            {activeRules.bankLocks && <span className="text-amber-400">Banks locked</span>}
           </div>
           <button
             onClick={apply}

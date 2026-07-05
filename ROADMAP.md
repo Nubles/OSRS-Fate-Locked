@@ -55,6 +55,30 @@ their first line and no request is ever made.
    current chunk; a "nearest locked bank/shop" line in the HUD would be the
    next in-game QoL win (all from `FateLockedBundle.contentAt`, no network).
 
+## 2b. Bank unlocks (shipped — web side) & follow-ups
+
+Each of the 100 canonical bank/deposit-box locations is its own unlock
+(`TableType.BANKS`, `unlocks.banks[]`, keyed by canonical chunk id cx*256+cy),
+mirroring the STORAGE table pattern. Data: `data/banks.ts` (regen with
+`node scripts/gen-banks.mjs` from public/chunk-content.json's `banks`).
+
+Gated by a per-mode `bankLocks` rule (config/gameModes.ts), **off in every
+built-in mode** so existing saves are untouched; opt in via Custom mode.
+Reachability choke point: `utils/reachability.ts::isBankReachable(cx, cy,
+unlocks, gameModeId, customMode)` and `bankLocksActive(...)` — every consumer
+must read through these, same discipline as isAreaReachable.
+
+Follow-ups (not yet done):
+- **Flip Chunked to default-on**: one line — add `bankLocks: true` to the
+  chunked mode's rules in config/gameModes.ts (it's the thematic home).
+- **Map/chunk-panel bank lock display**: ChunkActivityPanel + RegionMap should
+  show a bank's locked state via isBankReachable (currently only the Spend
+  card + reveal + history surface banks).
+- **Plugin integration**: export `unlocks.banks` + `bankLocks` in the bundle
+  (utils/runeliteBundle.ts), and have the plugin warn when opening a locked
+  bank (bundle already carries the `banks` chunk set for hasBank).
+- **Browsable owned-banks list** in the Dashboard (Spend card only shows X/100).
+
 ## 3. Architecture cheat-sheet
 
 - **Reachability choke point:** `utils/reachability.ts::isAreaReachable(name,

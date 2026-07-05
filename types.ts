@@ -71,6 +71,8 @@ export enum TableType {
   QUESTS = 'Quests',
   DIARIES = 'Diaries',
   COMBAT_ACHIEVEMENTS = 'Combat Achievements',
+  /** Bank-locked modes only — each bankable location is its own unlock. */
+  BANKS = 'Banks',
 }
 
 export interface LogEntry {
@@ -115,6 +117,12 @@ export interface UnlockState {
   guilds: string[];
   farming: string[];
   slayerUnlocks: string[];
+  /**
+   * Bank-locked modes only (rules.bankLocks) — unlocked bank locations, keyed
+   * by canonical chunk id "cx*256+cy" (see data/banks.ts). Optional so existing
+   * saves/fixtures without it default to []; ignored when bankLocks is off.
+   */
+  banks?: string[];
   quests: string[]; // List of completed Quest IDs
   diaries: string[]; // List of completed Diary IDs (e.g. "Ardougne Easy")
   cas: string[]; // List of completed CA tiers (e.g. "Easy")
