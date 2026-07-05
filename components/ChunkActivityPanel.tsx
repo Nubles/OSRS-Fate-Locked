@@ -9,7 +9,7 @@ import { classifyShop } from '../utils/merchantShops';
 import { resourceReqFor, resourceUsable } from '../utils/chunkResources';
 import { mobilityFor } from '../utils/chunkMobility';
 import { placeOf, chunkUnlocked, showChunkOnMap } from '../utils/chunkLocations';
-import { isAreaReachable } from '../utils/reachability';
+import { isAreaReachable, isBankReachable, bankLocksActive } from '../utils/reachability';
 import { FARMING_PATCH_LIST, GUILDS_LIST, MINIGAMES_LIST, MOBILITY_LIST, BOSSES_LIST, MISTHALIN_AREAS } from '../constants';
 import type { ChunkCoord } from '../utils/mapCoords';
 import { WikiLink } from './WikiLink';
@@ -240,7 +240,7 @@ const Overview: React.FC<{ kind: 'can' | 'cant'; items: OverviewItem[] }> = ({ k
 };
 
 export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, regionChunks, unlocked, onClose }) => {
-  const { unlocks, gameModeId } = useGame();
+  const { unlocks, gameModeId, customMode } = useGame();
   const [mode, setMode] = useState<'chunk' | 'region'>('chunk');
   const [, setLoadedTick] = useState(0);
   const [failed, setFailed] = useState(false);
@@ -467,11 +467,29 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
           );
         })()}
 
-        {mode === 'chunk' && chunkContentService.hasBank(chunk.cx, chunk.cy) && (
-          <div className="mt-2 px-2 py-1 rounded bg-emerald-950/40 border border-emerald-700/30 text-emerald-300/90 text-[10px] flex items-center gap-1.5">
-            <Landmark size={10} className="shrink-0" /> This chunk has a bank.
-          </div>
-        )}
+        {mode === 'chunk' && chunkContentService.hasBank(chunk.cx, chunk.cy) && (() => {
+          // In bank-locked modes each bank is its own unlock — surface this
+          // chunk's bank lock state (green usable / red roll-it), matching the
+          // per-content lock rendering the rest of the panel uses. When banks
+          // aren't locked, keep the neutral "has a bank" note.
+          if (!bankLocksActive(gameModeId, customMode)) {
+            return (
+              <div className="mt-2 px-2 py-1 rounded bg-emerald-950/40 border border-emerald-700/30 text-emerald-300/90 text-[10px] flex items-center gap-1.5">
+                <Landmark size={10} className="shrink-0" /> This chunk has a bank.
+              </div>
+            );
+          }
+          const usable = isBankReachable(chunk.cx, chunk.cy, unlocks, gameModeId, customMode);
+          return usable ? (
+            <div className="mt-2 px-2 py-1 rounded bg-emerald-950/40 border border-emerald-700/30 text-emerald-300/90 text-[10px] flex items-center gap-1.5">
+              <Landmark size={10} className="shrink-0" /> <Check size={10} className="shrink-0" /> Bank unlocked here.
+            </div>
+          ) : (
+            <div className="mt-2 px-2 py-1 rounded bg-red-950/40 border border-red-700/40 text-red-300/90 text-[10px] flex items-center gap-1.5">
+              <Landmark size={10} className="shrink-0" /> <Lock size={10} className="shrink-0" /> Bank locked — roll it under Banks in Spend Keys.
+            </div>
+          );
+        })()}
 
         {/* Brief can / can't overview — collapsed by default. */}
         <Overview kind="can" items={overview.can} />

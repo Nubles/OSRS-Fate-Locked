@@ -71,9 +71,10 @@ must read through these, same discipline as isAreaReachable.
 Follow-ups (not yet done):
 - **Flip Chunked to default-on**: one line — add `bankLocks: true` to the
   chunked mode's rules in config/gameModes.ts (it's the thematic home).
-- **Map/chunk-panel bank lock display**: ChunkActivityPanel + RegionMap should
-  show a bank's locked state via isBankReachable (currently only the Spend
-  card + reveal + history surface banks).
+- ~~Chunk-panel bank lock display~~ — done: ChunkActivityPanel shows the
+  standing chunk's bank as unlocked (green) or locked (red "roll it in Spend
+  Keys") via isBankReachable, when bankLocks is on. A map-level bank tint on
+  RegionMap is still open if wanted.
 - **Plugin integration**: export `unlocks.banks` + `bankLocks` in the bundle
   (utils/runeliteBundle.ts), and have the plugin warn when opening a locked
   bank (bundle already carries the `banks` chunk set for hasBank).
