@@ -130,6 +130,9 @@ export const GAME_MODES: GameMode[] = [
       regionModifiers: false,
       startArea: 'none',
       chunkGranularity: true,
+      // Banking is a privilege in Chunked: every bank/deposit box is its own
+      // unlock (TableType.BANKS), the same one-at-a-time spirit as chunks.
+      bankLocks: true,
     },
   },
   {

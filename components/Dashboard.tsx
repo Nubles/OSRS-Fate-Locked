@@ -50,7 +50,8 @@ import { useAchievementReveal } from '../hooks/useAchievementReveal';
 import { AchievementReveal } from './AchievementReveal';
 import { getGameMode } from '../config/gameModes';
 import { getActivityRegion } from '../data/activityRegions';
-import { isAreaReachable } from '../utils/reachability';
+import { isAreaReachable, bankLocksActive } from '../utils/reachability';
+import { BANKS, BANK_IDS, BANK_BY_ID } from '../data/banks';
 import { getActivityReq, ActivityReq } from '../data/activityRequirements';
 import { RegionAdvisorPanel } from './RegionAdvisorPanel';
 import { FrontierAdvisorPanel } from './FrontierAdvisorPanel';
@@ -308,7 +309,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
 // --- Main Dashboard Component ---
 
 export const Dashboard: React.FC = () => {
-  const { unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId } = useGame();
+  const { unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId, customMode } = useGame();
   const activeMode = getGameMode(gameModeId);
   const [activeTab, setActiveTab] = useState('CHARACTER');
   const [activityCategory, setActivityCategory] = useState('BOSSES');
@@ -580,28 +581,32 @@ export const Dashboard: React.FC = () => {
     </div>
   );
 
-  const renderGridSection = (items: string[], unlocked: string[], type: TableType, iconMap?: Record<string, string>, detailsMap?: Record<string, string>) => (
+  // `nameMap` lets a category key on a stable id (e.g. banks keyed by chunk id)
+  // while displaying a friendly name — the card, search, region/req lookups and
+  // the omni-unlock all use the id, only the label uses the name.
+  const renderGridSection = (items: string[], unlocked: string[], type: TableType, iconMap?: Record<string, string>, detailsMap?: Record<string, string>, nameMap?: Record<string, string>) => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         {items.map(item => {
-            if (searchQuery && !item.toLowerCase().includes(searchQuery.toLowerCase())) return null;
+            const label = nameMap?.[item] ?? item;
+            if (searchQuery && !label.toLowerCase().includes(searchQuery.toLowerCase())) return null;
             const isUnlocked = unlocked.includes(item);
             const canUnlock = !isUnlocked && specialKeys > 0;
             const sub = detailsMap ? detailsMap[item] : undefined;
-            
+
             // Filter logic: Show if unlocked OR can unlock (Omni)
             if (showOnlyActionable && !isUnlocked && !canUnlock) return null;
 
             return (
                 <UnlockCard
                     key={item}
-                    item={item}
+                    item={label}
                     isUnlocked={isUnlocked}
                     canUnlock={canUnlock}
                     icon={iconMap ? iconMap[item] : undefined}
                     onClick={() => handleSpecialUnlock(type, item)}
                     subText={sub}
-                    region={getActivityRegion(item)}
-                    req={getActivityReq(item)}
+                    region={getActivityRegion(label)}
+                    req={getActivityReq(label)}
                 />
             );
         })}
@@ -769,6 +774,8 @@ export const Dashboard: React.FC = () => {
         id: string; label: string; color: string; bar: string;
         list: string[]; unlocked: string[]; type: TableType;
         details?: Record<string, string>;
+        /** id → display name, for categories keyed by id (Banks). */
+        nameMap?: Record<string, string>;
       };
       const categories: ActivityCategory[] = [
         { id: 'BOSSES',    label: 'Bosses & Raids',     color: 'text-red-400',    bar: 'bg-red-500',    list: BOSSES_LIST,        unlocked: unlocks.bosses,    type: TableType.BOSSES },
@@ -781,6 +788,9 @@ export const Dashboard: React.FC = () => {
         { id: 'STORAGE',   label: 'Storage',            color: 'text-amber-600',  bar: 'bg-amber-600',  list: STORAGE_LIST,       unlocked: unlocks.storage,   type: TableType.STORAGE },
         { id: 'MERCHANTS', label: 'Merchants',          color: 'text-yellow-400', bar: 'bg-yellow-500', list: MERCHANTS_LIST,     unlocked: unlocks.merchants, type: TableType.MERCHANTS },
         { id: 'SLAYER',    label: 'Slayer Unlocks',     color: 'text-rose-400',   bar: 'bg-rose-500',   list: SLAYER_UNLOCKS_LIST, unlocked: unlocks.slayerUnlocks,   type: TableType.SLAYER_UNLOCKS },
+        // Banks are keyed by chunk id but shown by place name; only present when
+        // the run locks banks (see bankLocksActive).
+        ...(bankLocksActive(gameModeId, customMode) ? [{ id: 'BANKS', label: 'Banks', color: 'text-amber-300', bar: 'bg-amber-400', list: BANK_IDS, unlocked: (unlocks.banks ?? []), type: TableType.BANKS, nameMap: Object.fromEntries(BANKS.map(b => [b.id, b.name])) as Record<string, string> }] : []),
       ];
 
       // Search mode: span every category so a search isn't trapped in one tab.
@@ -795,7 +805,7 @@ export const Dashboard: React.FC = () => {
             {matching.map(c => (
               <div key={c.id}>
                 <h3 className={`${c.color} font-bold text-sm uppercase tracking-wide border-b border-white/10 pb-2 mb-2`}>{c.label}</h3>
-                {renderGridSection(c.list, c.unlocked, c.type, SPECIAL_ICONS, c.details)}
+                {renderGridSection(c.list, c.unlocked, c.type, SPECIAL_ICONS, c.details, c.nameMap)}
               </div>
             ))}
           </div>
@@ -844,7 +854,7 @@ export const Dashboard: React.FC = () => {
             {selected.id === 'SLAYER' && <SlayerReachabilityPanel />}
             {/* Mobility only: agility shortcuts with level + real chunk location. */}
             {selected.id === 'MOBILITY' && <ShortcutsPanel />}
-            {renderGridSection(selected.list, selected.unlocked, selected.type, SPECIAL_ICONS, selected.details)}
+            {renderGridSection(selected.list, selected.unlocked, selected.type, SPECIAL_ICONS, selected.details, selected.nameMap)}
             {/* Merchants only: the real shops behind each category, from the
                 chunk dataset, with per-location lock state. */}
             {selected.id === 'MERCHANTS' && <MerchantShopsPanel />}

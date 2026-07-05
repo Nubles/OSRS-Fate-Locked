@@ -68,9 +68,10 @@ Reachability choke point: `utils/reachability.ts::isBankReachable(cx, cy,
 unlocks, gameModeId, customMode)` and `bankLocksActive(...)` — every consumer
 must read through these, same discipline as isAreaReachable.
 
-Follow-ups (not yet done):
-- **Flip Chunked to default-on**: one line — add `bankLocks: true` to the
-  chunked mode's rules in config/gameModes.ts (it's the thematic home).
+Follow-ups:
+- ~~Flip Chunked to default-on~~ — done: Chunked mode has `bankLocks: true`,
+  so banks show in Spend Keys, the Activities & Utility tab (browsable named
+  grid, Omni-unlockable), and the map chunk panel.
 - ~~Chunk-panel bank lock display~~ — done: ChunkActivityPanel shows the
   standing chunk's bank as unlocked (green) or locked (red "roll it in Spend
   Keys") via isBankReachable, when bankLocks is on. A map-level bank tint on

@@ -28,7 +28,7 @@ describe('bank data', () => {
 describe('bankLocksActive', () => {
   it('is off for built-in modes and on only when the rule is set', () => {
     expect(bankLocksActive('vanilla')).toBe(false);
-    expect(bankLocksActive('chunked')).toBe(false);
+    expect(bankLocksActive('chunked')).toBe(true); // Chunked locks banks by default
     expect(bankLocksActive('custom', { pityEnabled: true, pityThreshold: 50, omniChanceBase: 2, ritualCostMultiplier: 1, regionModifiers: false, bankLocks: true })).toBe(true);
   });
 });
@@ -38,7 +38,12 @@ describe('isBankReachable', () => {
 
   it('is always reachable when the mode does not lock banks (no save impact)', () => {
     expect(isBankReachable(cx, cy, unlocks(), 'vanilla')).toBe(true);
-    expect(isBankReachable(cx, cy, unlocks({ banks: [] }), 'chunked')).toBe(true);
+    expect(isBankReachable(cx, cy, unlocks({ banks: [] }), 'casual')).toBe(true);
+  });
+
+  it('Chunked mode locks banks: unreachable until the specific bank is rolled', () => {
+    expect(isBankReachable(cx, cy, unlocks({ banks: [] }), 'chunked')).toBe(false);
+    expect(isBankReachable(cx, cy, unlocks({ banks: [id] }), 'chunked')).toBe(true);
   });
 
   it('gates on the unlocked set when banks are locked', () => {
