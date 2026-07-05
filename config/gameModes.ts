@@ -32,8 +32,8 @@ export interface GameModeRules {
   /**
    * When true, every bankable location (bank/deposit box) must be individually
    * unlocked (TableType.BANKS) before it can be used — a OneChunkMan-style
-   * restriction. Off in every built-in mode by default so existing runs are
-   * unaffected; opt in via Custom mode. See utils/reachability.ts isBankReachable.
+   * restriction. ON in every built-in mode; Custom mode can turn it off.
+   * See utils/reachability.ts isBankReachable.
    */
   bankLocks?: boolean;
 }
@@ -54,6 +54,8 @@ const VANILLA_RULES: GameModeRules = {
   omniChanceBase: 2,
   ritualCostMultiplier: 1,
   regionModifiers: false,
+  // Every bank/deposit box is its own unlock (TableType.BANKS) in all modes.
+  bankLocks: true,
 };
 
 export const GAME_MODES: GameMode[] = [
@@ -75,6 +77,7 @@ export const GAME_MODES: GameMode[] = [
       omniChanceBase: 4,
       ritualCostMultiplier: 0.6,
       regionModifiers: false,
+      bankLocks: true,
     },
   },
   {
@@ -88,6 +91,7 @@ export const GAME_MODES: GameMode[] = [
       omniChanceBase: 1,
       ritualCostMultiplier: 1.5,
       regionModifiers: false,
+      bankLocks: true,
     },
   },
   {
@@ -101,6 +105,7 @@ export const GAME_MODES: GameMode[] = [
       omniChanceBase: 2,
       ritualCostMultiplier: 1,
       regionModifiers: true,
+      bankLocks: true,
     },
   },
   {
@@ -115,6 +120,7 @@ export const GAME_MODES: GameMode[] = [
       ritualCostMultiplier: 1,
       regionModifiers: false,
       startArea: 'lumbridge',
+      bankLocks: true,
     },
   },
   {

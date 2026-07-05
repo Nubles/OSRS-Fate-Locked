@@ -26,24 +26,29 @@ describe('bank data', () => {
 });
 
 describe('bankLocksActive', () => {
-  it('is off for built-in modes and on only when the rule is set', () => {
-    expect(bankLocksActive('vanilla')).toBe(false);
-    expect(bankLocksActive('chunked')).toBe(true); // Chunked locks banks by default
-    expect(bankLocksActive('custom', { pityEnabled: true, pityThreshold: 50, omniChanceBase: 2, ritualCostMultiplier: 1, regionModifiers: false, bankLocks: true })).toBe(true);
+  it('is on in every built-in mode and follows the Custom rule when set', () => {
+    expect(bankLocksActive('vanilla')).toBe(true);
+    expect(bankLocksActive('chunked')).toBe(true);
+    expect(bankLocksActive('hardcore')).toBe(true);
+    // Custom carries its own rules — off when the toggle is off.
+    const off = { pityEnabled: true, pityThreshold: 50, omniChanceBase: 2, ritualCostMultiplier: 1, regionModifiers: false, bankLocks: false };
+    expect(bankLocksActive('custom', off)).toBe(false);
   });
 });
 
 describe('isBankReachable', () => {
   const cx = 19, cy = 48, id = bankId(cx, cy);
 
-  it('is always reachable when the mode does not lock banks (no save impact)', () => {
-    expect(isBankReachable(cx, cy, unlocks(), 'vanilla')).toBe(true);
-    expect(isBankReachable(cx, cy, unlocks({ banks: [] }), 'casual')).toBe(true);
+  it('is always reachable only when a Custom run turns bank-locking off', () => {
+    const off = { pityEnabled: true, pityThreshold: 50, omniChanceBase: 2, ritualCostMultiplier: 1, regionModifiers: false, bankLocks: false };
+    expect(isBankReachable(cx, cy, unlocks({ banks: [] }), 'custom', off)).toBe(true);
   });
 
-  it('Chunked mode locks banks: unreachable until the specific bank is rolled', () => {
-    expect(isBankReachable(cx, cy, unlocks({ banks: [] }), 'chunked')).toBe(false);
-    expect(isBankReachable(cx, cy, unlocks({ banks: [id] }), 'chunked')).toBe(true);
+  it('every built-in mode locks banks: unreachable until the specific bank is rolled', () => {
+    for (const mode of ['vanilla', 'casual', 'hardcore', 'xtreme', 'region-rush', 'chunked']) {
+      expect(isBankReachable(cx, cy, unlocks({ banks: [] }), mode)).toBe(false);
+      expect(isBankReachable(cx, cy, unlocks({ banks: [id] }), mode)).toBe(true);
+    }
   });
 
   it('gates on the unlocked set when banks are locked', () => {

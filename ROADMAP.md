@@ -62,8 +62,8 @@ Each of the 100 canonical bank/deposit-box locations is its own unlock
 mirroring the STORAGE table pattern. Data: `data/banks.ts` (regen with
 `node scripts/gen-banks.mjs` from public/chunk-content.json's `banks`).
 
-Gated by a per-mode `bankLocks` rule (config/gameModes.ts), **off in every
-built-in mode** so existing saves are untouched; opt in via Custom mode.
+Gated by a per-mode `bankLocks` rule (config/gameModes.ts), **on in every
+built-in mode**; Custom mode can toggle it off.
 Reachability choke point: `utils/reachability.ts::isBankReachable(cx, cy,
 unlocks, gameModeId, customMode)` and `bankLocksActive(...)` — every consumer
 must read through these, same discipline as isAreaReachable.
