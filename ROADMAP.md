@@ -76,9 +76,11 @@ Follow-ups:
   standing chunk's bank as unlocked (green) or locked (red "roll it in Spend
   Keys") via isBankReachable, when bankLocks is on. A map-level bank tint on
   RegionMap is still open if wanted.
-- **Plugin integration**: export `unlocks.banks` + `bankLocks` in the bundle
-  (utils/runeliteBundle.ts), and have the plugin warn when opening a locked
-  bank (bundle already carries the `banks` chunk set for hasBank).
+- ~~Plugin integration~~ — done: bundle exports `bankLocks` + `unlockedBanks`;
+  the plugin warns (chat + notifier) on opening a bank/deposit box in an
+  unlocked chunk (warnLockedBank toggle). Bank group ids 12 / 192.
+- ~~Completion/stats~~ — done: banks counted in completion % (denominator +
+  points), Share card tile, and the copy summary.
 - **Browsable owned-banks list** in the Dashboard (Spend card only shows X/100).
 
 ## 3. Architecture cheat-sheet
