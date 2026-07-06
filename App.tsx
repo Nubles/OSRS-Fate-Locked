@@ -32,6 +32,7 @@ import { isChunkLoadError, reloadOnceForChunkError } from './utils/chunkLoadErro
 import { useEscapeKey } from './hooks/useEscapeKey';
 import { resolveModeRules } from './config/gameModes';
 import { showToast } from './utils/toast';
+import { prefetchHeavyChunks } from './utils/prefetch';
 
 // Heavy, conditionally-rendered modals — code-split so they (and their deps,
 // e.g. recharts in StatsModal) stay out of the initial bundle.
@@ -498,6 +499,10 @@ const ControlPanel = () => {
 const GameLayout = () => {
   const { lastEvent, animationsEnabled, hasSeenOnboarding, history } = useGame();
   const { recentlyCreatedId, activeProfileId, clearRecentlyCreated } = useProfiles();
+
+  // Warm the heavy lazy chunks (map, stats+charts, resource engine, …) during
+  // idle time so opening them is instant instead of a visible fetch delay.
+  useEffect(() => { prefetchHeavyChunks(); }, []);
 
   // UI States
   const [showStats, setShowStats] = useState(false);
