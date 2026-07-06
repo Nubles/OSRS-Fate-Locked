@@ -12,6 +12,7 @@ import {
   SLAYER_UNLOCKS_LIST,
 } from '../constants';
 import { UnlockState } from '../types';
+import { BANK_IDS } from '../data/banks';
 
 /** Total unlock points available for 100% completion. */
 export const COMPLETION_DENOMINATOR =
@@ -21,7 +22,10 @@ export const COMPLETION_DENOMINATOR =
   MOBILITY_LIST.length + ARCANA_LIST.length + POH_LIST.length +
   MERCHANTS_LIST.length + MINIGAMES_LIST.length + BOSSES_LIST.length +
   STORAGE_LIST.length + GUILDS_LIST.length + FARMING_PATCH_LIST.length +
-  SLAYER_UNLOCKS_LIST.length;
+  SLAYER_UNLOCKS_LIST.length +
+  // Each bank/deposit box is its own unlock (locked in every built-in mode).
+  // (A Custom banks-off run — no longer selectable — would cap just under 100%.)
+  BANK_IDS.length;
 
 const sum = (o: Record<string, number> | undefined) =>
   o ? Object.values(o).reduce((a, b) => a + (typeof b === 'number' ? b : 0), 0) : 0;
@@ -32,7 +36,7 @@ export const playerUnlockPoints = (u: UnlockState): number =>
   sum(u.skills) + sum(u.equipment) +
   len(u.regions) + len(u.mobility) + len(u.arcana) + len(u.housing) +
   len(u.merchants) + len(u.minigames) + len(u.bosses) + len(u.storage) +
-  len(u.guilds) + len(u.farming) + len(u.slayerUnlocks);
+  len(u.guilds) + len(u.farming) + len(u.slayerUnlocks) + len(u.banks);
 
 /** Overall completion percentage (0–100, rounded). */
 export const completionPercent = (u: UnlockState): number =>

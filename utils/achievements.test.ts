@@ -5,6 +5,7 @@ import {
   BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST,
   SLAYER_UNLOCKS_LIST,
 } from '../constants';
+import { BANK_IDS } from '../data/banks';
 import { QUEST_DATA } from '../data/questData';
 import {
   ACHIEVEMENTS, evaluateAchievements, earnedIds, completionPercent,
@@ -44,6 +45,7 @@ function maxedUnlocks(): UnlockState {
     guilds: [...GUILDS_LIST],
     farming: [...FARMING_PATCH_LIST],
     slayerUnlocks: [...SLAYER_UNLOCKS_LIST],
+    banks: [...BANK_IDS],
   });
 }
 

@@ -31,4 +31,14 @@ describe('buildRuneliteBundle — unlockedChunks presence', () => {
     expect(bundle.chunkContent).toBeTruthy();
     expect(Object.keys(bundle.chunkContent).length).toBeGreaterThan(100);
   });
+
+  it('emits bankLocks + unlockedBanks only when banks are locked', async () => {
+    const off = await buildRuneliteBundle([], state) as any;
+    expect('bankLocks' in off).toBe(false);
+    expect('unlockedBanks' in off).toBe(false);
+
+    const on = await buildRuneliteBundle([], state, undefined, undefined, undefined, ['12850'], true) as any;
+    expect(on.bankLocks).toBe(true);
+    expect(on.unlockedBanks).toEqual(['12850']);
+  });
 });

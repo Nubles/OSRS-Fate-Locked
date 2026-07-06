@@ -1,6 +1,6 @@
 
 import React, { useRef, useState, useMemo, useEffect } from 'react';
-import { X, Copy, Download, Trophy, Map, Shield, Sparkles, Skull, Crown, Hash, Activity, Zap, Home, Store, Gamepad2, Package, BookOpen, Dna, Calendar, Star } from 'lucide-react';
+import { X, Copy, Download, Trophy, Map, Shield, Sparkles, Skull, Crown, Hash, Activity, Zap, Home, Store, Gamepad2, Package, BookOpen, Dna, Calendar, Star, Landmark } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useEscapeKey } from '../hooks/useEscapeKey';
@@ -148,6 +148,7 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
 🌍 ${isChunked ? 'Chunks' : 'Regions'}: ${totalRegions} Unlocked
 ⚔️ Gear Tiers: ${totalEquipTiers}
 🏆 Bosses: ${bossCount} | 🎲 Minigames: ${minigameCount}
+🏦 Banks: ${(unlocks.banks ?? []).length}/${100}
 #OSRS #FateLocked`;
   };
 
@@ -395,6 +396,10 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
                             <div className={`${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
                                 <div className="text-xs text-gray-400 font-bold uppercase flex items-center gap-1.5"><Package size={12} /> Storage</div>
                                 <span className="font-bold text-white text-lg leading-none">{unlocks.storage.length}</span>
+                            </div>
+                            <div className={`${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
+                                <div className="text-xs text-gray-400 font-bold uppercase flex items-center gap-1.5"><Landmark size={12} /> Banks</div>
+                                <span className="font-bold text-white text-lg leading-none">{(unlocks.banks ?? []).length}</span>
                             </div>
                         </div>
                     </div>

@@ -9,6 +9,7 @@ import { gearService } from '../services/GearService';
 import { chunkContentService } from '../services/ChunkContentService';
 import { showToast } from './toast';
 import { UnlockState } from '../types';
+import { bankLocksActive } from './reachability';
 
 /**
  * gzip+base64 a string for the clipboard, prefixed "FLGZ:" so the plugin knows
@@ -77,9 +78,12 @@ export async function buildBundlePayload(
     linkedAccount: run.linkedAccount,
     equipment: unlocks.equipment,
   };
+  const banksLocked = bankLocksActive(run.gameModeId);
   const payload = await buildRuneliteBundle(
     unlocks.regions, state, itemTiers, slayerChunks,
     run.gameModeId === 'chunked' ? (unlocks.chunks ?? []) : undefined,
+    banksLocked ? (unlocks.banks ?? []) : undefined,
+    banksLocked,
   );
   const json = JSON.stringify(payload);
   const compressed = await compressForClipboard(json);
