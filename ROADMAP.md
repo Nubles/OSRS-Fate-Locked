@@ -32,6 +32,60 @@ IP-address warning; both are documented in the plugin repo's CONTRIBUTING
 (§ Online sync). No consent → `pollRelay()`/`pushSuggestion()` return on
 their first line and no request is ever made.
 
+## 1b. Shipped — July 2026 sprint (onboarding, safety, community)
+
+Four features landed together; each has unit tests and follows the existing
+always-mounted-driver / choke-point conventions.
+
+1. **Progressive disclosure onboarding** (`utils/featureGates.ts`,
+   `hooks/useFeatureGates.ts`, `components/FeatureRevealDriver.tsx`).
+   A fresh run shows only Farm/Spend + the Character tab; every other
+   dashboard tab and header tool reveals at a run milestone (first roll →
+   History + Journal, first Fate Point → Altar, first boss/minigame →
+   Collection Log, …), each with a history-length fallback so nothing hides
+   forever. Gates derive purely from game state, so mature runs and imports
+   auto-graduate silently (the driver seeds its per-profile seen-set on
+   first sight). Escape hatches: "Reveal all features" in the gear menu
+   (persisted `revealAllFeatures`), the ⌘K palette (never gated), and
+   navigation-to-a-hidden-tab shows it (navigation = intent).
+
+2. **Auto-backup + export nag** (`utils/backupNag.ts`,
+   `components/BackupNagBanner.tsx`). GameContext drops one "Session start"
+   snapshot into the backup ring per profile mount (ring grown 5 → 8 so
+   session snapshots can't evict every pre-overwrite one). A dismissible
+   banner under the header nags when a run with 10+ events has no .fate
+   export in 7 days; Export downloads in place, dismiss snoozes 7 days.
+   Only real file downloads call `markExported` — sync codes don't count
+   (24h relay TTL is not durable storage).
+
+3. **Discord webhook announcements** (`utils/discordWebhook.ts`,
+   `components/DiscordSyncDriver.tsx`, `components/DiscordSettingsModal.tsx`,
+   gear menu → Discord notifications). Posts an embed per unlock. The
+   webhook URL lives in per-profile localStorage OUTSIDE GameState — it must
+   never travel with exports/sync codes (a leaked webhook lets anyone post).
+   The sender only accepts real discord.com webhook URLs, batches to the
+   10-embed limit, retries once on 429. Cursor advances before sending, so
+   failures drop announcements but can never double-post; enabling seeds
+   the cursor to "now" so the back-catalogue never floods.
+
+4. **Seeded runs / weekly seed** (`utils/seededRng.ts`, seed section in
+   GameModePicker, `GameState.rngSeed`). Every gameplay outcome draws
+   `hash(seed, newest history hash, purpose, index)` — same seed + same
+   decisions = the same fate, and every roll is recomputable from a
+   verified bundle. Seed is chosen at run start (weekly `FATE-YYYY-WNN`,
+   custom phrase, or random), locks at the first history entry, travels
+   with the save. Unseeded runs keep classic Math.random.
+   **New choke point:** ALL gameplay randomness must go through
+   `GameContext.nextFloat(purpose)` — never `Math.random` directly (that
+   would silently break seeded determinism). Visual-only randomness is
+   exempt. Current call sites: rollForKey (roll/advantage/omni), GachaSection
+   table + chaos picks, Gambit, level-up chaos roll, Cartographer offers.
+
+Follow-ups from the sprint: SET_SEED lock-rule test in gameReducer.test.ts;
+seed chip on the share card + stream overlay; check GuidedTour skips its
+altar step gracefully on a fresh (gated) run; CoachStrip hints could avoid
+referencing still-hidden surfaces.
+
 ## 2. Near-term features (in rough value order)
 
 1. ~~Map: tint the top-ranked frontier chunks~~ — done: top-5 by `sortScore`
@@ -90,6 +144,11 @@ Follow-ups:
   through it — that's how Chunked mode works app-wide. If a new surface
   reads `unlocks.regions.includes(...)` directly, it's a bug (this exact
   bug was found twice: World tab grid, ShareModal mastery).
+- **Gameplay RNG choke point:** `GameContext.nextFloat(purpose)` — every
+  gameplay outcome (rolls, table picks, gambles) draws through it so seeded
+  runs stay deterministic and verifiable. A new surface calling
+  `Math.random` for a gameplay outcome is a bug, same discipline as
+  isAreaReachable. Visual randomness (particles, jitter) is exempt.
 - **Impact engine:** `utils/unlockImpact.ts::computeUnlockImpact(base,
   simulated, gameModeId)` — shared by Quest, Region and Frontier advisors.
   Chunk-aware via gameModeId.

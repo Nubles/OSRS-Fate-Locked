@@ -21,6 +21,11 @@ import { EffectsLayer } from './components/EffectsLayer';
 import { OnlineSyncDriver } from './components/OnlineSyncDriver';
 import { SuggestionBanner } from './components/SuggestionBanner';
 import { CoachStrip } from './components/CoachStrip';
+import { FeatureRevealDriver } from './components/FeatureRevealDriver';
+import { BackupNagBanner } from './components/BackupNagBanner';
+import { DiscordSyncDriver } from './components/DiscordSyncDriver';
+import { markExported } from './utils/backupNag';
+import { useFeatureGates } from './hooks/useFeatureGates';
 import { flashElement } from './utils/flash';
 import { OnboardingWizard } from './components/OnboardingWizard';
 import { ProfileSwitcher } from './components/ProfileSwitcher';
@@ -45,6 +50,7 @@ const SupplyChainCalculator = lazy(() => import('./components/SupplyChainCalcula
 const GameModePicker = lazy(() => import('./components/GameModePicker').then(m => ({ default: m.GameModePicker })));
 const SyncCodeModal = lazy(() => import('./components/SyncCodeModal').then(m => ({ default: m.SyncCodeModal })));
 const ModelGallery = lazy(() => import('./components/ModelGallery').then(m => ({ default: m.ModelGallery })));
+const DiscordSettingsModal = lazy(() => import('./components/DiscordSettingsModal'));
 import { obfuscateFateSave, deobfuscateFateSave } from './utils/encryption';
 import { GameState } from './types';
 import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb, Radio, Settings } from 'lucide-react';
@@ -212,10 +218,14 @@ interface HeaderProps {
   setShowSupplyChain: (show: boolean) => void;
   setShowGameMode: (show: boolean) => void;
   setShowSyncCode: (show: boolean) => void;
+  setShowDiscord: (show: boolean) => void;
 }
 
-const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode }: HeaderProps) => {
-  const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, importSave, resetGame, getExportData, createBackup, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount } = useGame();
+const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode, setShowDiscord }: HeaderProps) => {
+  const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, revealAllFeatures, toggleRevealAll, importSave, resetGame, getExportData, createBackup, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount } = useGame();
+  // Progressive disclosure — advanced tools stay hidden until the run earns them.
+  const gates = useFeatureGates();
+  const { storageKeyForActiveProfile } = useProfiles();
   const pityRules = resolveModeRules(gameModeId, customMode);
   const pityCap = pityRules.pityEnabled ? pityRules.pityThreshold : 50; // 50 = visual-only fallback
   const nearPity = pityRules.pityEnabled && fatePoints >= pityRules.pityThreshold * 0.8;
@@ -267,6 +277,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
           a.download = `fate_locked_${Date.now()}.fate`;
           a.click();
           URL.revokeObjectURL(url);
+          markExported(storageKeyForActiveProfile); // quiets the backup nag
           showToast('Save exported');
       } catch (e) {
           console.error("Export failed", e);
@@ -327,14 +338,14 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
              {/* Accept .fate files and legacy .json files */}
              <input type="file" ref={fileInputRef} className="hidden" accept=".json,.fate" onChange={handleFileChange} />
 
-             <button
+             {gates.has('tool:altar') && <button
                 data-tour="altar"
                 onClick={() => setShowAltar(true)}
                 className={`h-8 group px-3 rounded-lg border font-bold text-[10px] uppercase tracking-wider flex items-center gap-2 transition-all shadow-lg ${activeBuff !== 'NONE' ? activeBuff === 'GREED' ? 'bg-amber-900/40 border-amber-500 text-amber-300' : 'bg-blue-900/40 border-blue-500 text-blue-300' : 'bg-[#252525] border-purple-500/30 text-purple-300 hover:bg-purple-900/20'}`}
              >
                 <span className={`w-1.5 h-1.5 rounded-full ${activeBuff !== 'NONE' ? (activeBuff === 'GREED' ? 'bg-amber-400 animate-bounce' : 'bg-blue-400 animate-pulse') : 'bg-purple-500'}`}></span>
                 <span>{activeBuff === 'NONE' ? 'Altar' : activeBuff}</span>
-             </button>
+             </button>}
 
              <button
                data-tour="palette"
@@ -356,14 +367,20 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                 <span className="text-[11px] font-medium hidden sm:inline">RuneLite</span>
              </button>
 
-             <div className="flex items-center bg-[#252525] border border-white/10 rounded-lg p-0.5 gap-0.5 h-8">
+             <div data-reveal="tools" className="flex items-center bg-[#252525] border border-white/10 rounded-lg p-0.5 gap-0.5 h-8">
                  <button onClick={() => setShowOracle(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/5 rounded transition-colors" title="Oracle — search content" aria-label="Oracle — search content"><Search size={14} /></button>
+                 {gates.has('tool:strategy') && <>
                  <div className="w-px h-4 bg-white/10"></div>
                  <button onClick={() => setShowStrategy(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-emerald-400 hover:bg-white/5 rounded transition-colors" title="Strategy Guide" aria-label="Strategy Guide"><Compass size={14} /></button>
+                 </>}
+                 {gates.has('tool:supply') && <>
                  <div className="w-px h-4 bg-white/10"></div>
                  <button onClick={() => setShowSupplyChain(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-cyan-400 hover:bg-white/5 rounded transition-colors" title="Resource Engine" aria-label="Resource Engine"><Database size={14} /></button>
+                 </>}
+                 {gates.has('tool:stats') && <>
                  <div className="w-px h-4 bg-white/10"></div>
                  <button onClick={() => setShowStats(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-blue-400 hover:bg-white/5 rounded transition-colors" title="Stats" aria-label="Stats"><BarChart3 size={14} /></button>
+                 </>}
                  <div className="w-px h-4 bg-white/10"></div>
                  <button onClick={() => setShowReference(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-yellow-400 hover:bg-white/5 rounded transition-colors" title="Rules" aria-label="Rules"><HelpCircle size={14} /></button>
                  <div className="w-px h-4 bg-white/10"></div>
@@ -395,6 +412,10 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                            <Lightbulb size={13} className={advisorsEnabled ? 'text-amber-400' : 'text-gray-500'} />
                            Advisor panels <span className="ml-auto text-[10px] text-gray-500">{advisorsEnabled ? 'on' : 'off'}</span>
                         </button>
+                        <button onClick={() => { toggleRevealAll(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={!!revealAllFeatures} title="Show every tab and tool now, instead of revealing them as your run progresses">
+                           <Sparkles size={13} className={revealAllFeatures ? 'text-purple-400' : 'text-gray-500'} />
+                           Reveal all features <span className="ml-auto text-[10px] text-gray-500">{revealAllFeatures ? 'on' : 'off'}</span>
+                        </button>
                         <div className="my-1 border-t border-white/10" />
                         <button onClick={() => { setShowUtilMenu(false); fileInputRef.current?.click(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white">
                            <Upload size={13} /> Import save
@@ -404,6 +425,9 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                         </button>
                         <button onClick={() => { setShowUtilMenu(false); setShowSyncCode(true); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-cyan-300">
                            <Link2 size={13} /> Sync code (move device)
+                        </button>
+                        <button onClick={() => { setShowUtilMenu(false); setShowDiscord(true); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-indigo-300">
+                           <Radio size={13} /> Discord notifications
                         </button>
                         <div className="my-1 border-t border-white/10" />
                         <button onClick={() => { setShowUtilMenu(false); if(window.confirm("Are you sure you want to reset ALL progress? This cannot be undone.")) resetGame(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-red-300/90 hover:bg-red-900/20 hover:text-red-200">
@@ -422,6 +446,9 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
 // --- New Control Panel Component ---
 const ControlPanel = () => {
   const [activeTab, setActiveTab] = useState<'FARM' | 'SPEND' | 'LOG'>('FARM');
+  // History reveals with the first logged event (progressive disclosure).
+  const gates = useFeatureGates();
+  const showLogTab = gates.has('ctrl:LOG') || activeTab === 'LOG';
   // History mounts on first visit, then stays mounted (its filters/scroll
   // survive tab switches) — rendering the full history list at startup while
   // hidden was pure wasted work on the critical path.
@@ -462,12 +489,12 @@ const ControlPanel = () => {
         >
           <WikiIcon file="Mystery_box.png" alt="Spend Keys" Fallback={ShoppingBag} size={15} className={activeTab === 'SPEND' ? '' : 'opacity-60 grayscale'} /> Spend Keys
         </button>
-        <button
+        {showLogTab && <button
           onClick={() => setActiveTab('LOG')}
           className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'LOG' ? 'bg-[#252525] text-blue-400 border-b-2 border-blue-400' : 'text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1a]'}`}
         >
           <WikiIcon file="Watch.png" alt="History" Fallback={ScrollText} size={15} className={activeTab === 'LOG' ? '' : 'opacity-60 grayscale'} /> History
-        </button>
+        </button>}
       </div>
 
       {/* Contextual guide for the active panel */}
@@ -551,6 +578,7 @@ const GameLayout = () => {
   }, []);
   const [showGameMode, setShowGameMode] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
+  const [showDiscord, setShowDiscord] = useState(false);
   const [showSyncCode, setShowSyncCode] = useState(false);
   const [syncImportCode, setSyncImportCode] = useState<string | undefined>(undefined);
   const [activeRitualAnim, setActiveRitualAnim] = useState<'NONE' | 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE'>('NONE');
@@ -620,6 +648,9 @@ const GameLayout = () => {
       <EffectsLayer />
       <OnlineSyncDriver />
       <SuggestionBanner />
+      {/* Progressive-disclosure watcher — always mounted (same rule as
+          SuggestionBanner): reveals earned anywhere must toast from here. */}
+      <FeatureRevealDriver />
 
 
       {/* Shared notification stacks: every toast/reveal portals into one of
@@ -646,6 +677,7 @@ const GameLayout = () => {
         {showGameMode && <GameModePicker onClose={() => setShowGameMode(false)} />}
         {showSyncCode && <SyncCodeModal onClose={() => { setShowSyncCode(false); setSyncImportCode(undefined); }} initialImportCode={syncImportCode} />}
         {showGallery && <ModelGallery onClose={() => setShowGallery(false)} />}
+        {showDiscord && <DiscordSettingsModal onClose={() => setShowDiscord(false)} />}
       </Suspense>
 
       <Header
@@ -657,6 +689,7 @@ const GameLayout = () => {
         setShowSupplyChain={setShowSupplyChain}
         setShowGameMode={setShowGameMode}
         setShowSyncCode={setShowSyncCode}
+        setShowDiscord={setShowDiscord}
       />
 
       {/* Global ⌘K command palette — navigates via fate:nav events. */}
@@ -668,6 +701,11 @@ const GameLayout = () => {
 
       {/* One contextual "next step" hint under the header — teaches the loop. */}
       <CoachStrip />
+
+      {/* Dismissible "export a .fate backup" reminder for unbacked-up runs. */}
+      <BackupNagBanner />
+      {/* Posts new unlocks to the profile's Discord webhook (if configured). */}
+      <DiscordSyncDriver />
 
       {/* Main Command Center Layout */}
       <main className="max-w-[1600px] mx-auto px-4 py-4 h-[calc(100vh-80px)]">

@@ -38,12 +38,12 @@ describe('backup ring', () => {
     expect(listBackups(KEY).length).toBe(1);
   });
 
-  it('caps the ring at 5, evicting the oldest', () => {
-    for (let i = 0; i < 8; i++) pushBackup(KEY, save({ keys: i }), `r${i}`);
+  it('caps the ring at 8, evicting the oldest', () => {
+    for (let i = 0; i < 11; i++) pushBackup(KEY, save({ keys: i }), `r${i}`);
     const list = listBackups(KEY);
-    expect(list.length).toBe(5);
-    expect(list[0].reason).toBe('r7');
-    expect(list[4].reason).toBe('r3');
+    expect(list.length).toBe(8);
+    expect(list[0].reason).toBe('r10');
+    expect(list[7].reason).toBe('r3');
   });
 
   it('round-trips backup data by timestamp', () => {

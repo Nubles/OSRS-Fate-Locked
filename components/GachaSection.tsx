@@ -151,7 +151,7 @@ const SpendCard: React.FC<SpendCardProps> = ({
 };
 
 export const GachaSection: React.FC = () => {
-  const { keys, specialKeys, chaosKeys, unlocks, unlockContent, animationsEnabled, gameModeId, customMode } = useGame();
+  const { keys, specialKeys, chaosKeys, unlocks, unlockContent, animationsEnabled, gameModeId, customMode, nextFloat } = useGame();
   const isChunked = gameModeId === 'chunked';
   const bankLocks = bankLocksActive(gameModeId, customMode);
   const [pendingReveal, setPendingReveal] = useState<{ 
@@ -201,7 +201,8 @@ export const GachaSection: React.FC = () => {
         return;
     }
 
-    const item = validPool[Math.floor(Math.random() * validPool.length)];
+    // Seeded-run choke point: table picks must draw through nextFloat.
+    const item = validPool[Math.floor(nextFloat('gacha') * validPool.length)];
     const cost = UNLOCK_COST;
     let imageUrl = getUnlockImage(stateKey, item);
 
@@ -244,8 +245,8 @@ export const GachaSection: React.FC = () => {
           return;
       }
 
-      // Pick a random item from the global pool
-      const selection = globalPool[Math.floor(Math.random() * globalPool.length)];
+      // Pick a random item from the global pool (seeded-run choke point).
+      const selection = globalPool[Math.floor(nextFloat('chaos') * globalPool.length)];
       
       let imageUrl = getUnlockImage(selection.stateKey, selection.item);
 

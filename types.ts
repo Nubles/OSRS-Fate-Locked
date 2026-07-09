@@ -142,12 +142,26 @@ export interface GameState {
   animationsEnabled?: boolean;
   /** Show the advisor / recommendation panels across the app (default off). */
   advisorsEnabled?: boolean;
+  /**
+   * Progressive-disclosure escape hatch: when true, every gated surface
+   * (dashboard tabs, header tools) is visible regardless of run milestones —
+   * see utils/featureGates.ts. Default off; mature runs auto-graduate anyway
+   * because the gates derive from game state.
+   */
+  revealAllFeatures?: boolean;
   hasSeenOnboarding?: boolean;
   pinnedGoals: string[]; // IDs from STRATEGY_DATABASE
   userNotes: Record<string, string>; // ID -> Note Content
   gameModeId?: string; // selected game mode
   customMode?: GameModeRules; // ruleset when gameModeId === 'custom'
   gameModeLocked?: boolean; // true once a mode has been chosen — permanent for the account
+  /**
+   * Seeded runs: when set, every gameplay outcome derives from
+   * hash(rngSeed, newest history hash, purpose) — see utils/seededRng.ts.
+   * Chosen at run start (weekly seed, custom phrase, or random) and locked
+   * once the run has history. Undefined = classic Math.random play.
+   */
+  rngSeed?: string;
   loadout?: Record<string, number>; // equipment slot -> real item id (Gear mode)
   rival?: RivalState; // Rival Ghost the player is racing (optional)
   /** OSRS account this run is bound to (Auto-Roll). Set once, then permanent. */

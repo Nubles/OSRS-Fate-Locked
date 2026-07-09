@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
-import { X, Lock, Check, Settings2, Sparkles, ShieldOff, Gauge, Landmark } from 'lucide-react';
+import { X, Lock, Check, Settings2, Sparkles, ShieldOff, Gauge, Landmark, Dices, CalendarDays } from 'lucide-react';
 import { useGame } from '../context/GameContext';
+import { weeklySeed, randomSeed, normalizeSeed } from '../utils/seededRng';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import {
@@ -19,16 +20,21 @@ export const GameModePicker: React.FC<Props> = ({ onClose }) => {
   useFocusTrap(dialogRef);
   useEscapeKey(onClose);
 
-  const { gameModeId, customMode, history, gameModeLocked, setGameMode } = useGame();
+  const { gameModeId, customMode, history, gameModeLocked, setGameMode, rngSeed, setSeed } = useGame();
   const locked = gameModeLocked || history.length > 0;
+  // The seed locks with the run's first history entry, independent of the
+  // mode lock (an empty run that picked a mode can still choose its fate).
+  const seedLocked = history.length > 0;
 
   const [selectedId, setSelectedId] = useState(gameModeId ?? 'vanilla');
   const [customDraft, setCustomDraft] = useState<GameModeRules>(
     customMode ?? { ...VANILLA },
   );
+  const [seedDraft, setSeedDraft] = useState(rngSeed ?? '');
 
   const apply = () => {
-    if (locked) return;
+    if (!seedLocked) setSeed(normalizeSeed(seedDraft));
+    if (locked) { onClose(); return; }
     setGameMode(selectedId, selectedId === 'custom' ? customDraft : undefined);
     onClose();
   };
@@ -166,6 +172,56 @@ export const GameModePicker: React.FC<Props> = ({ onClose }) => {
               </label>
             </div>
           )}
+
+          {/* Seeded run */}
+          <div className="rounded-lg border border-white/10 bg-black/30 p-4 mt-1 flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div className="text-[10px] uppercase tracking-widest text-gray-500 flex items-center gap-1.5">
+                <Dices size={12} className="text-cyan-400" /> Seeded run <span className="text-gray-600 normal-case tracking-normal">(optional)</span>
+              </div>
+              {seedLocked && rngSeed && (
+                <span className="text-[10px] font-mono text-cyan-300 flex items-center gap-1"><Lock size={10} /> {rngSeed}</span>
+              )}
+            </div>
+            {seedLocked ? (
+              <p className="text-[11px] text-gray-500">
+                {rngSeed
+                  ? 'This run is seeded — same seed + same decisions means the same fate, and every roll is verifiable.'
+                  : 'This run is unseeded (classic randomness). Seeds can only be chosen before the first roll.'}
+              </p>
+            ) : (
+              <>
+                <p className="text-[11px] text-gray-500">
+                  Same seed + same decisions = the same fate — race a friend or run this week's
+                  community seed. Leave blank for classic randomness. Locks at your first roll.
+                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={seedDraft}
+                    onChange={(e) => setSeedDraft(e.target.value)}
+                    placeholder="Any phrase — or leave blank"
+                    className="flex-1 bg-black/40 border border-white/15 rounded-lg px-3 py-1.5 text-[12px] font-mono text-cyan-200 placeholder-gray-600 focus:outline-none focus:border-cyan-500/50"
+                    aria-label="Run seed"
+                  />
+                  <button
+                    onClick={() => setSeedDraft(weeklySeed())}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-cyan-500/30 bg-cyan-950/30 hover:bg-cyan-900/40 text-cyan-300 text-[11px] font-bold whitespace-nowrap transition-colors"
+                    title="This week's community seed"
+                  >
+                    <CalendarDays size={12} /> {weeklySeed()}
+                  </button>
+                  <button
+                    onClick={() => setSeedDraft(randomSeed())}
+                    className="px-2.5 py-1.5 rounded-lg border border-white/15 bg-[#252525] hover:bg-white/5 text-gray-300 text-[11px] font-bold transition-colors"
+                    title="Random seed"
+                  >
+                    <Dices size={12} />
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Summary + apply */}
@@ -180,10 +236,10 @@ export const GameModePicker: React.FC<Props> = ({ onClose }) => {
           </div>
           <button
             onClick={apply}
-            disabled={locked}
+            disabled={locked && seedLocked}
             className="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-sm font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {locked ? 'Locked' : 'Apply mode'}
+            {locked && seedLocked ? 'Locked' : locked ? 'Save seed' : 'Apply mode'}
           </button>
         </div>
       </div>

@@ -9,7 +9,8 @@ import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { getRitual, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, GAMBIT_KEYS_PER } from '../config/economy';
 import { BANK_BY_ID } from '../data/banks';
-import { rollDice, UNLOCK_COST } from '../utils/gameEngine';
+import { UNLOCK_COST } from '../utils/gameEngine';
+import { drawFloat } from '../utils/seededRng';
 import { hashEntry, ensureChain } from '../utils/integrity';
 import { pushBackup, listBackups as readBackups, getBackupData, BackupMeta } from '../utils/backups';
 import { showToast } from '../utils/toast';
@@ -51,8 +52,20 @@ interface GameContextType extends GameState {
   levelUpSkill: (skill: string) => void;
   toggleAnimations: () => void;
   toggleAdvisors: () => void;
+  toggleRevealAll: () => void;
   completeOnboarding: () => void;
   setGameMode: (modeId: string, customRules?: GameModeRules) => void;
+  /** Seeded runs — set/clear the seed (only while the run has no history). */
+  setSeed: (seed: string) => void;
+  /**
+   * Gameplay RNG choke point. On a seeded run this derives from
+   * (rngSeed, newest history hash, purpose, index) — deterministic and
+   * replayable; on an unseeded run it's Math.random. EVERY gameplay outcome
+   * (rolls, table picks, gambles) must draw through here, never Math.random
+   * directly — that's what makes seeded runs raceable and verifiable.
+   * Visual-only randomness (particles, animation jitter) is exempt.
+   */
+  nextFloat: (purpose: string, index?: number) => number;
   importSave: (data: Partial<GameState>) => void;
   resetGame: () => void;
   /** Snapshot the current run before something overwrites it. */
@@ -216,6 +229,8 @@ export type Action =
   | { type: 'RESET' }
   | { type: 'TOGGLE_ANIMATIONS' }
   | { type: 'TOGGLE_ADVISORS' }
+  | { type: 'TOGGLE_REVEAL_ALL' }
+  | { type: 'SET_SEED'; payload: string }
   | { type: 'COMPLETE_ONBOARDING' }
   | { type: 'ROLL_RESULT'; payload: { success: boolean; omni: boolean; pity: boolean; roll: number; threshold: number; source: string; x?: number; y?: number } }
   | { type: 'UNLOCK'; payload: { table: TableType; item: string; costType: 'key' | 'specialKey' | 'chaosKey'; cost: number } }
@@ -310,6 +325,8 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       return { ...state, animationsEnabled: !state.animationsEnabled };
     case 'TOGGLE_ADVISORS':
       return { ...state, advisorsEnabled: !state.advisorsEnabled };
+    case 'TOGGLE_REVEAL_ALL':
+      return { ...state, revealAllFeatures: !state.revealAllFeatures };
 
     case 'COMPLETE_ONBOARDING':
       return { ...state, hasSeenOnboarding: true };
@@ -324,6 +341,13 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         customMode: action.payload.customRules,
         gameModeLocked: true,
       };
+    }
+
+    case 'SET_SEED': {
+      // Like the game mode, the seed is part of the run's identity — it can
+      // be chosen or changed only while the run has no history.
+      if (state.history.length > 0) return state;
+      return { ...state, rngSeed: action.payload || undefined };
     }
 
     case 'ROLL_RESULT': {
@@ -800,10 +824,36 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     };
   }, [state, storageKey]);
 
+  // One automatic snapshot per session (per profile mount), so "the run was
+  // fine yesterday" is always recoverable from the ring — not just the
+  // pre-import/pre-reset moments. pushBackup no-ops when nothing changed
+  // since the newest entry, so idle reloads don't churn the ring.
+  useEffect(() => {
+    if (stateRef.current.history.length > 0) {
+      pushBackup(storageKey, serializeCurrent(), 'Session start');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey]);
+
   // --- Actions ---
+
+  // Gameplay RNG choke point (see GameContextType.nextFloat). Reads through
+  // stateRef so one render's callbacks always draw against the latest chain
+  // tip; the tip changes with every appended history entry, which is what
+  // keeps successive draws independent on a seeded run.
+  const nextFloat = useCallback((purpose: string, index = 0): number => {
+    const s = stateRef.current;
+    if (!s.rngSeed) return Math.random();
+    const tip = s.history[s.history.length - 1]?.hash ?? 'genesis';
+    return drawFloat(s.rngSeed, tip, purpose, index);
+  }, []);
+  const nextDice = useCallback((purpose: string, index = 0, max = 100): number =>
+    Math.floor(nextFloat(purpose, index) * max) + 1, [nextFloat]);
+  const setSeed = useCallback((seed: string) => dispatch({ type: 'SET_SEED', payload: seed }), []);
+
   const rollForKey = useCallback((source: string, threshold: number, x?: number, y?: number) => {
-    let roll = rollDice(100);
-    const advantageRoll = rollDice(100);
+    let roll = nextDice('roll', 0);
+    const advantageRoll = nextDice('roll', 1);
 
     if (state.activeBuff === 'LUCK') {
       roll = Math.min(roll, advantageRoll);
@@ -836,14 +886,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
       else if (source === DropSource.RAID) omniChance = Math.max(omniChance, 15);
       else if (source === DropSource.BOSS_HIGH) omniChance = Math.max(omniChance, 10);
 
-      if (rollDice(100) <= omniChance) omni = true;
+      if (nextDice('roll', 2) <= omniChance) omni = true;
     } else {
       if (mode.pityEnabled && state.fatePoints + 1 >= mode.pityThreshold) pity = true;
     }
 
     // Pass the effective threshold so logs and stats reflect the real odds.
     dispatch({ type: 'ROLL_RESULT', payload: { success, omni, pity, roll, threshold: effectiveThreshold, source, x, y } });
-  }, [state.activeBuff, state.fatePoints, state.gameModeId, state.customMode, state.unlocks.regions]);
+  }, [state.activeBuff, state.fatePoints, state.gameModeId, state.customMode, state.unlocks.regions, nextDice]);
 
   const unlockContent = useCallback((table: TableType, item: string, costType: 'key' | 'specialKey' | 'chaosKey', cost: number) => {
     dispatch({ type: 'UNLOCK', payload: { table, item, costType, cost } });
@@ -861,10 +911,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     const stake = state.fatePoints;
     const min = getRitual('GAMBIT').fateCost ?? 15;
     if (stake < min) return;
-    const won = Math.random() < 0.5;
+    const won = nextFloat('gambit') < 0.5;
     const keysWon = Math.max(1, Math.floor(stake / GAMBIT_KEYS_PER));
     dispatch({ type: 'RITUAL_GAMBIT', payload: { won, stake, keysWon } });
-  }, [state.fatePoints]);
+  }, [state.fatePoints, nextFloat]);
 
   /** Cartographer: unlock the chosen frontier chunk (Chunked mode only). */
   const performCartographer = useCallback((chunkKey: string, label: string) => {
@@ -873,14 +923,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
 
   const levelUpSkill = useCallback((skill: string) => {
     // Pre-compute RNG outside reducer to maintain reducer purity
-    const chaosRoll = Math.random();
+    const chaosRoll = nextFloat('levelup');
     dispatch({ type: 'LEVEL_UP', payload: { skill, chaosRoll } });
 
     const newLevel = (state.unlocks.levels[skill] || 1) + 1;
     const rollChance = Math.ceil(newLevel / 5); // Level ÷ 5 curve (max 20% at 99) — rebalanced 2026
 
     rollForKey(`${skill} Level ${newLevel}`, rollChance);
-  }, [state.unlocks.levels, rollForKey]);
+  }, [state.unlocks.levels, rollForKey, nextFloat]);
 
   const logCollectionItem = useCallback((itemId: number) => {
     dispatch({ type: 'LOG_ITEM', payload: itemId });
@@ -902,6 +952,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     dispatch({ type: 'SET_GAME_MODE', payload: { modeId, customRules } }), []);
   const toggleAnimations = useCallback(() => dispatch({ type: 'TOGGLE_ANIMATIONS' }), []);
   const toggleAdvisors = useCallback(() => dispatch({ type: 'TOGGLE_ADVISORS' }), []);
+  const toggleRevealAll = useCallback(() => dispatch({ type: 'TOGGLE_REVEAL_ALL' }), []);
   const importSave = useCallback((data: Partial<GameState>) => {
     if (isValidSaveData(data)) {
       dispatch({ type: 'LOAD_SAVE', payload: data });
@@ -954,8 +1005,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     levelUpSkill,
     toggleAnimations,
     toggleAdvisors,
+    toggleRevealAll,
     completeOnboarding,
     setGameMode,
+    setSeed,
+    nextFloat,
     importSave,
     resetGame,
     createBackup,
@@ -984,8 +1038,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     levelUpSkill,
     toggleAnimations,
     toggleAdvisors,
+    toggleRevealAll,
     completeOnboarding,
     setGameMode,
+    setSeed,
+    nextFloat,
     importSave,
     resetGame,
     createBackup,

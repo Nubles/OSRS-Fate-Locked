@@ -23,7 +23,7 @@ interface ChunkChoice {
 export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
-  const { fatePoints, keys, activeBuff, performRitual, performGambit, performCartographer, unlocks, animationsEnabled, gameModeId, customMode } = useGame();
+  const { fatePoints, keys, activeBuff, performRitual, performGambit, performCartographer, unlocks, animationsEnabled, gameModeId, customMode, nextFloat } = useGame();
 
   // The Gambit is irreversible and stakes everything — arm on first click,
   // fire on the second, disarm when anything else is touched.
@@ -49,7 +49,13 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
   const openCartographer = () => {
     // Draw 3 distinct candidates from the live frontier (fewer if it's small).
     const frontier = getChunkFrontier(unlocks.chunks ?? []);
-    const shuffled = [...frontier].sort(() => Math.random() - 0.5).slice(0, 3);
+    // Partial Fisher–Yates through the seeded-run choke point: the 3 offered
+    // chunks are deterministic per chain tip on a seeded run.
+    const pool = [...frontier];
+    const shuffled: typeof pool = [];
+    for (let i = 0; i < Math.min(3, pool.length); i++) {
+      shuffled.push(pool.splice(Math.floor(nextFloat('cartographer', i) * pool.length), 1)[0]);
+    }
     setChunkChoices(shuffled.map((c) => {
       const key = chunkKey(c);
       let hint: string | null = null;

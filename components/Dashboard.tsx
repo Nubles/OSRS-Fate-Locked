@@ -8,6 +8,8 @@ import {
   SKILL_UNLOCK_DATA
 } from '../constants';
 import { useGame } from '../context/GameContext';
+import { useFeatureGates } from '../hooks/useFeatureGates';
+import type { FeatureId } from '../utils/featureGates';
 import {
   Sparkles, Search, User, Map, Swords, Package,
   ExternalLink, Unlock, Lock, Compass, ChevronDown, ChevronsUp, AlertCircle, BookOpen, ScrollText, Globe, List, Filter, Info, Share2, MapPin, Route, Trophy, Skull
@@ -312,6 +314,13 @@ export const Dashboard: React.FC = () => {
   const { unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId, customMode } = useGame();
   const activeMode = getGameMode(gameModeId);
   const [activeTab, setActiveTab] = useState('CHARACTER');
+  // Progressive disclosure: tabs reveal as the run earns them (Character is
+  // always visible; a palette/advisor jump to a still-hidden tab shows it too,
+  // since navigation is intent). See utils/featureGates.ts.
+  const gates = useFeatureGates();
+  const visibleTabs = TABS.filter(
+    (t) => t.id === 'CHARACTER' || t.id === activeTab || gates.has(`dash:${t.id}` as FeatureId),
+  );
   const [activityCategory, setActivityCategory] = useState('BOSSES');
   const [journalSubTab, setJournalSubTab] = useLocalStorage<'QUESTS' | 'DIARIES' | 'CA' | 'DOABLE'>('jrnl:subtab', 'QUESTS');
   const [worldView, setWorldView] = useState<'LIST' | 'MAP'>('MAP');
@@ -1054,7 +1063,7 @@ export const Dashboard: React.FC = () => {
       {/* Tabs & Search */}
       <div className="flex flex-col md:flex-row border-b border-white/5 bg-[#161616] shrink-0">
           <div data-tour="dashtabs" className="flex flex-1 overflow-x-auto no-scrollbar">
-              {TABS.map(tab => {
+              {visibleTabs.map(tab => {
                   const isActive = activeTab === tab.id;
                   return (
                       <button

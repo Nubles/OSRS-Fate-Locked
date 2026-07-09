@@ -3,12 +3,14 @@
  *
  * Before anything overwrites a profile's save (importing a file, importing a
  * sync code, or resetting), we stash the current state here so a mistake is
- * recoverable. Backups are per-profile (keyed off the profile's storage key)
- * and capped at MAX_BACKUPS — newest first, oldest evicted.
+ * recoverable. GameContext also drops one automatic "Session start" snapshot
+ * per profile mount. Backups are per-profile (keyed off the profile's storage
+ * key) and capped at MAX_BACKUPS — newest first, oldest evicted. The ring is
+ * sized so routine session snapshots can't evict every pre-overwrite one.
  */
 
 const SUFFIX = '__backups';
-const MAX_BACKUPS = 5;
+const MAX_BACKUPS = 8;
 
 export interface BackupMeta {
   ts: number;
