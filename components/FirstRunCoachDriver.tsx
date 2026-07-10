@@ -47,6 +47,8 @@ export const FirstRunCoachDriver: React.FC = () => {
   const { activeProfileId } = useProfiles();
   const [dismissed, setDismissed] = useState(false);
   const [rect, setRect] = useState<DOMRect | null>(null);
+  // Yield to any open modal (game-mode picker, altar, …) — coach waits its turn.
+  const [modalOpen, setModalOpen] = useState(false);
   // Which step the coach actually displayed this session — gates the done toast.
   const shownRef = useRef<CoachStepId | null>(null);
 
@@ -69,9 +71,13 @@ export const FirstRunCoachDriver: React.FC = () => {
   // interval (targets mount/unmount as the user switches Farm/Spend tabs).
   const measure = useCallback(() => {
     if (step !== 'roll' && step !== 'spend') { setRect(null); return; }
+    setModalOpen(!!document.querySelector('[aria-modal="true"]'));
     for (const sel of TARGETS[step]) {
       const el = document.querySelector(sel) as HTMLElement | null;
-      if (el) { setRect(el.getBoundingClientRect()); return; }
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      // Hidden targets (e.g. the tables grid under an inactive tab) measure 0×0.
+      if (r.width > 0 && r.height > 0) { setRect(r); return; }
     }
     setRect(null); // fallback corner card
   }, [step]);
@@ -90,6 +96,7 @@ export const FirstRunCoachDriver: React.FC = () => {
   }, [step, measure]);
 
   if (step !== 'roll' && step !== 'spend') return null;
+  if (modalOpen) return null;
   shownRef.current = step;
 
   const copy = COPY[step];
