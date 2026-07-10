@@ -405,7 +405,7 @@ export const OnboardingWizard: React.FC = () => {
                     onClick={handleNext}
                     className="group px-8 py-4 bg-white text-black font-black uppercase tracking-widest rounded-lg hover:bg-gray-200 transition-all flex items-center gap-3 shadow-lg hover:shadow-white/20"
                 >
-                    {step === STEPS.length - 1 ? "Enter The Void" : "Next"}
+                    {step === STEPS.length - 1 ? "Make Your First Roll" : "Next"}
                     <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                 </button>
             </div>
