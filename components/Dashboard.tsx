@@ -1,3 +1,4 @@
+import { lazyWithRetry } from '../utils/lazyRetry';
 import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { 
   EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, REGION_GROUPS, MISTHALIN_AREAS, 
@@ -21,7 +22,7 @@ import { NoteTrigger } from './NoteTrigger';
 // RegionMap is the single heaviest component in the app (map surface,
 // authoring tool, chunk overlays + their data). It only renders on the World
 // tab, so keep it out of the initial bundle.
-const RegionMap = lazy(() => import('./RegionMap').then(m => ({ default: m.RegionMap })));
+const RegionMap = lazyWithRetry(() => import('./RegionMap').then(m => ({ default: m.RegionMap })));
 import { JournalNextBest } from './JournalNextBest';
 import { JournalProgressRings } from './JournalProgressRings';
 import { EquipmentLab } from './EquipmentLab';
@@ -32,13 +33,13 @@ import { rivalCompletion, standing as rivalStanding } from '../utils/rival';
 // Heavy tab/modal contents — code-split so their large data dependencies
 // (questData, diaryTasks, caTasks, collectionLogData, requirements, etc.)
 // stay out of the initial dashboard bundle.
-const GoalTracker = lazy(() => import('./GoalTracker').then(m => ({ default: m.GoalTracker })));
-const QuestLog = lazy(() => import('./QuestLog').then(m => ({ default: m.QuestLog })));
-const DiaryLog = lazy(() => import('./DiaryLog').then(m => ({ default: m.DiaryLog })));
-const CALog = lazy(() => import('./CALog').then(m => ({ default: m.CALog })));
-const QuestDoabilityPanel = lazy(() => import('./QuestDoabilityPanel').then(m => ({ default: m.QuestDoabilityPanel })));
-const CollectionLog = lazy(() => import('./CollectionLog').then(m => ({ default: m.CollectionLog })));
-const SkillDetailModal = lazy(() => import('./SkillDetailModal').then(m => ({ default: m.SkillDetailModal })));
+const GoalTracker = lazyWithRetry(() => import('./GoalTracker').then(m => ({ default: m.GoalTracker })));
+const QuestLog = lazyWithRetry(() => import('./QuestLog').then(m => ({ default: m.QuestLog })));
+const DiaryLog = lazyWithRetry(() => import('./DiaryLog').then(m => ({ default: m.DiaryLog })));
+const CALog = lazyWithRetry(() => import('./CALog').then(m => ({ default: m.CALog })));
+const QuestDoabilityPanel = lazyWithRetry(() => import('./QuestDoabilityPanel').then(m => ({ default: m.QuestDoabilityPanel })));
+const CollectionLog = lazyWithRetry(() => import('./CollectionLog').then(m => ({ default: m.CollectionLog })));
+const SkillDetailModal = lazyWithRetry(() => import('./SkillDetailModal').then(m => ({ default: m.SkillDetailModal })));
 import { PanelErrorBoundary } from './PanelErrorBoundary';
 import { MerchantShopsPanel } from './MerchantShopsPanel';
 import { SlayerReachabilityPanel } from './SlayerReachabilityPanel';
@@ -60,19 +61,19 @@ import { FrontierAdvisorPanel } from './FrontierAdvisorPanel';
 import { SkillAdvisorPanel } from './SkillAdvisorPanel';
 
 // Code-split: the run card pulls in html2canvas only when actually opened.
-const ShareModal = lazy(() => import('./ShareModal').then(m => ({ default: m.ShareModal })));
+const ShareModal = lazyWithRetry(() => import('./ShareModal').then(m => ({ default: m.ShareModal })));
 // Goal Planner modal — pulls in the full quest/diary datasets, so load on demand.
-const GoalPlannerModal = lazy(() => import('./GoalPlannerModal').then(m => ({ default: m.GoalPlannerModal })));
+const GoalPlannerModal = lazyWithRetry(() => import('./GoalPlannerModal').then(m => ({ default: m.GoalPlannerModal })));
 // Achievements modal — pulls in the quest/diary/CA datasets via the engine.
-const AchievementsModal = lazy(() => import('./AchievementsModal').then(m => ({ default: m.AchievementsModal })));
+const AchievementsModal = lazyWithRetry(() => import('./AchievementsModal').then(m => ({ default: m.AchievementsModal })));
 // Fate Forecast modal — projects keys/time to a chosen locked unlock.
-const FateForecastModal = lazy(() => import('./FateForecastModal').then(m => ({ default: m.FateForecastModal })));
+const FateForecastModal = lazyWithRetry(() => import('./FateForecastModal').then(m => ({ default: m.FateForecastModal })));
 // Rival Ghost modal — race a simulated nemesis or a friend's run.
-const RivalModal = lazy(() => import('./RivalModal').then(m => ({ default: m.RivalModal })));
+const RivalModal = lazyWithRetry(() => import('./RivalModal').then(m => ({ default: m.RivalModal })));
 // Boss Kill Planner — DPS/TTK/readiness vs your unlocked bosses.
-const BossKillPlanner = lazy(() => import('./BossKillPlanner').then(m => ({ default: m.BossKillPlanner })));
+const BossKillPlanner = lazyWithRetry(() => import('./BossKillPlanner').then(m => ({ default: m.BossKillPlanner })));
 // Auto-Roll (prototype) — sync a run from a real account via the hiscores API.
-const AutoRollPanel = lazy(() => import('./AutoRollPanel').then(m => ({ default: m.AutoRollPanel })));
+const AutoRollPanel = lazyWithRetry(() => import('./AutoRollPanel').then(m => ({ default: m.AutoRollPanel })));
 
 // --- Constants & Helpers ---
 

@@ -1,4 +1,5 @@
 
+import { lazyWithRetry } from '../utils/lazyRetry';
 import React, { useRef, useEffect, useState, useMemo, lazy, Suspense } from 'react';
 import { useGame } from '../context/GameContext';
 import { Scroll, Search, Filter, Dices, Lock, Unlock, Zap, TrendingUp, AlertCircle, CheckCircle2, XCircle, Sparkles, Skull, ArrowUp, ArrowDown, Film } from 'lucide-react';
@@ -9,7 +10,7 @@ import { isRollEntry } from '../utils/logEntry';
 import { ModalFallback } from './LoadingFallback';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 
-const TimelapseModal = lazy(() => import('./TimelapseModal').then(m => ({ default: m.TimelapseModal })));
+const TimelapseModal = lazyWithRetry(() => import('./TimelapseModal').then(m => ({ default: m.TimelapseModal })));
 
 type FilterType = 'ALL' | 'ROLLS' | 'UNLOCKS' | 'RITUALS' | 'PROGRESS';
 type SortOrder = 'ASC' | 'DESC';

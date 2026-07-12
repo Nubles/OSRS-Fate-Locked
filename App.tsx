@@ -1,4 +1,5 @@
 
+import { lazyWithRetry } from './utils/lazyRetry';
 import React, { useState, useRef, useEffect, Component, ErrorInfo, ReactNode, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { GameProvider, useGame } from './context/GameContext';
@@ -7,7 +8,7 @@ import { ProfileProvider, useProfiles } from './context/ProfileContext';
 import { ActionSection } from './components/ActionSection';
 import { GachaSection } from './components/GachaSection';
 import { Dashboard } from './components/Dashboard';
-const LogViewer = lazy(() => import('./components/LogViewer').then(m => ({ default: m.LogViewer })));
+const LogViewer = lazyWithRetry(() => import('./components/LogViewer').then(m => ({ default: m.LogViewer })));
 import { SectionGuide, GUIDES } from './components/SectionGuide';
 import { PopOnChange } from './components/PopOnChange';
 import { CommandPalette } from './components/CommandPalette';
@@ -42,16 +43,16 @@ import { prefetchHeavyChunks } from './utils/prefetch';
 
 // Heavy, conditionally-rendered modals — code-split so they (and their deps,
 // e.g. recharts in StatsModal) stay out of the initial bundle.
-const StatsModal = lazy(() => import('./components/StatsModal').then(m => ({ default: m.StatsModal })));
-const FateThread = lazy(() => import('./components/FateThread').then(m => ({ default: m.FateThread })));
-const ReferenceModal = lazy(() => import('./components/ReferenceModal').then(m => ({ default: m.ReferenceModal })));
-const OracleSearch = lazy(() => import('./components/OracleSearch').then(m => ({ default: m.OracleSearch })));
-const StrategyGuide = lazy(() => import('./components/StrategyGuide').then(m => ({ default: m.StrategyGuide })));
-const SupplyChainCalculator = lazy(() => import('./components/SupplyChainCalculator').then(m => ({ default: m.SupplyChainCalculator })));
-const GameModePicker = lazy(() => import('./components/GameModePicker').then(m => ({ default: m.GameModePicker })));
-const SyncCodeModal = lazy(() => import('./components/SyncCodeModal').then(m => ({ default: m.SyncCodeModal })));
-const ModelGallery = lazy(() => import('./components/ModelGallery').then(m => ({ default: m.ModelGallery })));
-const DiscordSettingsModal = lazy(() => import('./components/DiscordSettingsModal'));
+const StatsModal = lazyWithRetry(() => import('./components/StatsModal').then(m => ({ default: m.StatsModal })));
+const FateThread = lazyWithRetry(() => import('./components/FateThread').then(m => ({ default: m.FateThread })));
+const ReferenceModal = lazyWithRetry(() => import('./components/ReferenceModal').then(m => ({ default: m.ReferenceModal })));
+const OracleSearch = lazyWithRetry(() => import('./components/OracleSearch').then(m => ({ default: m.OracleSearch })));
+const StrategyGuide = lazyWithRetry(() => import('./components/StrategyGuide').then(m => ({ default: m.StrategyGuide })));
+const SupplyChainCalculator = lazyWithRetry(() => import('./components/SupplyChainCalculator').then(m => ({ default: m.SupplyChainCalculator })));
+const GameModePicker = lazyWithRetry(() => import('./components/GameModePicker').then(m => ({ default: m.GameModePicker })));
+const SyncCodeModal = lazyWithRetry(() => import('./components/SyncCodeModal').then(m => ({ default: m.SyncCodeModal })));
+const ModelGallery = lazyWithRetry(() => import('./components/ModelGallery').then(m => ({ default: m.ModelGallery })));
+const DiscordSettingsModal = lazyWithRetry(() => import('./components/DiscordSettingsModal'));
 import { obfuscateFateSave, deobfuscateFateSave } from './utils/encryption';
 import { GameState } from './types';
 import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb, Radio, Settings } from 'lucide-react';
@@ -84,7 +85,13 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
           <div className="min-h-screen bg-[#161616] flex items-center justify-center p-8">
             <div className="bg-[#1e1e1e] border border-amber-500/30 rounded-xl p-8 max-w-lg text-center">
               <h1 className="text-2xl font-bold text-amber-400 mb-2">Updating…</h1>
-              <p className="text-gray-400">A newer version was deployed — reloading to pick it up.</p>
+              <p className="text-gray-400 mb-4">The app couldn't load its code — usually a new version or a network blip.</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-6 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-bold transition-colors"
+              >
+                Reload now
+              </button>
             </div>
           </div>
         );
