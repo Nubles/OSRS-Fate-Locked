@@ -29,3 +29,8 @@ export const setStartArea = (startArea?: string): void => {
 
 /** Is this region / sub-area free from the start of the run? */
 export const isFreeArea = (name: string): boolean => current.has(name);
+
+/** The current free baseline as a list — exported to the RuneLite bundle so
+ *  the plugin doesn't have to guess the mode's start area (it used to hardcode
+ *  full Misthalin, which over-unlocked Lumbridge-only starts in-game). */
+export const getFreeAreas = (): string[] => [...current];

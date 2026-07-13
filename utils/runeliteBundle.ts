@@ -6,6 +6,7 @@
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
+import { getFreeAreas } from './freeAreas';
 
 export interface RuneliteRunState {
   keys: number;
@@ -43,6 +44,10 @@ export async function buildRuneliteBundle(
     subAreaChunks: SUB_AREA_CHUNKS,
     regionGroups: { Misthalin: MISTHALIN_AREAS, ...REGION_GROUPS },
     unlockedRegions,
+    // The mode's free-start baseline (full Misthalin / Lumbridge-only / none).
+    // Without it the plugin used to assume full Misthalin, over-unlocking
+    // narrower starts in-game. Older plugins ignore the field.
+    freeAreas: getFreeAreas(),
     // Chunked mode's unlock state — individual map-region chunks the player
     // has rolled, keyed "cx,cy" (matches unlocks.chunks). Included (even as
     // an empty array, at the very start of a Chunked run) whenever the
