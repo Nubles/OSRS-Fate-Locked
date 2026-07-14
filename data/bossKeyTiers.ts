@@ -26,6 +26,7 @@ export const BOSS_TIERS: Record<string, BossTier> = {
   'Nex': 'high',
   'Corporeal Beast': 'high',
   'Araxxor': 'high',
+  'Maggot King': 'high',
   'Fortis Colosseum': 'high',
   'Duke Sucellus': 'high',
   'The Leviathan': 'high',

@@ -72,12 +72,13 @@ describe('collection log data integrity', () => {
 
   // Page structure mirrors the live wiki: every wiki collection-log page is
   // present (incl. Brutus, kept for log parity though it isn't an unlockable
-  // boss — see consistency.test). Bosses 55, Raids 3, Minigames 22, Other 31;
+  // boss — see consistency.test). Bosses 56 (Maggot King, July 2026), Raids 3,
+  // Minigames 22, Other 32 (Venators, July 2026);
   // Clues 11 = the 10 Treasure-Trail tiers + Scroll Cases.
   it('has the audited page count in each tab', () => {
     const counts = Object.fromEntries(
       Object.entries(COLLECTION_LOG_DATA).map(([k, t]) => [k, Object.keys(t.pages).length])
     );
-    expect(counts).toEqual({ Bosses: 55, Raids: 3, Clues: 11, Minigames: 22, Other: 31 });
+    expect(counts).toEqual({ Bosses: 56, Raids: 3, Clues: 11, Minigames: 22, Other: 32 });
   });
 });
