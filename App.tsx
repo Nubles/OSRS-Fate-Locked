@@ -23,7 +23,6 @@ import { OnlineSyncDriver } from './components/OnlineSyncDriver';
 import { SuggestionBanner } from './components/SuggestionBanner';
 import { CoachStrip } from './components/CoachStrip';
 import { FeatureRevealDriver } from './components/FeatureRevealDriver';
-import { FirstRunCoachDriver } from './components/FirstRunCoachDriver';
 import { BackupNagBanner } from './components/BackupNagBanner';
 import { DiscordSyncDriver } from './components/DiscordSyncDriver';
 import { markExported } from './utils/backupNag';
@@ -655,8 +654,6 @@ const GameLayout = () => {
       {/* Progressive-disclosure watcher — always mounted (same rule as
           SuggestionBanner): reveals earned anywhere must toast from here. */}
       <FeatureRevealDriver />
-      {/* First-run coach — spotlights the first roll & first spend. */}
-      <FirstRunCoachDriver />
 
 
       {/* Shared notification stacks: every toast/reveal portals into one of

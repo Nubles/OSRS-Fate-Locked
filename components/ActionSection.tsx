@@ -482,7 +482,6 @@ export const ActionSection: React.FC = () => {
             {slayers.map((master, i) => (
               <div
                 key={master.name}
-                data-coach={i === 0 ? 'first-master' : undefined}
                 className={animationsEnabled ? 'animate-fade-in-up' : ''}
                 style={animationsEnabled ? { animationDelay: `${i * 35}ms` } : undefined}
               >
