@@ -40,6 +40,40 @@ describe('collection log data integrity', () => {
     expect(dups, 'pages with duplicate item names').toEqual([]);
   });
 
+  // A wiki micro-rename ("Araxyte venom sack" -> "…sac") once slipped past the
+  // sync's matcher, so the old spelling was kept AND the new one appended —
+  // a permanent duplicate slot. Near-identical names on one page are that bug.
+  // Numbered variants (Godsword shard 1/2/3) are legitimate, so names whose
+  // digits differ are exempt — and single-character SUBSTITUTIONS are too
+  // (Team cape i/x, "(t)"/"(g)" ornament kits are real distinct items). Only
+  // a single INSERTION/DELETION (the sack→sac shape) is flagged.
+  it('no page lists two near-identical item names (rename-duplicate guard)', () => {
+    const lev = (a: string, b: string): number => {
+      const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+      for (let j = 1; j <= b.length; j++) d[0][j] = j;
+      for (let i = 1; i <= a.length; i++)
+        for (let j = 1; j <= b.length; j++)
+          d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      return d[a.length][b.length];
+    };
+    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    const digits = (s: string) => s.replace(/\D/g, '');
+    const sus: string[] = [];
+    for (const tab of Object.values(COLLECTION_LOG_DATA))
+      for (const page of Object.values(tab.pages)) {
+        const items = page.items;
+        for (let i = 0; i < items.length; i++)
+          for (let j = i + 1; j < items.length; j++) {
+            const a = norm(items[i].name), b = norm(items[j].name);
+            if (a === b) continue; // exact dupes are the previous test's job
+            if (digits(a) !== digits(b)) continue; // numbered variants are fine
+            if (Math.abs(a.length - b.length) !== 1) continue; // substitutions are fine
+            if (lev(a, b) === 1) sus.push(`${page.name}: "${items[i].name}" ~ "${items[j].name}"`);
+          }
+      }
+    expect(sus, 'near-duplicate names (likely a missed wiki rename)').toEqual([]);
+  });
+
   it('no page is empty', () => {
     const empty: string[] = [];
     for (const tab of Object.values(COLLECTION_LOG_DATA))
