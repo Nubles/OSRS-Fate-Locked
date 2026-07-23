@@ -2,16 +2,104 @@
 // The default sync is deliberately offline: source refreshes are explicit review work,
 // while normal development and CI always render the same bytes.
 import { readFileSync, writeFileSync } from 'node:fs';
+import { isDeepStrictEqual } from 'node:util';
 
 export const CA_TIERS = ['Easy', 'Medium', 'Hard', 'Elite', 'Master', 'Grandmaster'];
-export const EXPECTED_CA_COUNTS = {
-  Easy: 41,
-  Medium: 60,
-  Hard: 86,
-  Elite: 164,
-  Master: 174,
-  Grandmaster: 121,
+
+const deepFreeze = value => {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    Object.freeze(value);
+    for (const nested of Object.values(value)) deepFreeze(nested);
+  }
+  return value;
 };
+
+export const EXPECTED_CA_PROVENANCE = deepFreeze({
+  verifiedAt: '2026-07-23',
+  source: {
+    url: 'https://oldschool.runescape.wiki/w/Combat_Achievements',
+    revision: 15272408,
+    revisionTimestamp: '2026-07-22T17:11:33Z',
+    endpoint: 'https://oldschool.runescape.wiki/api.php',
+    taskTableQuery: {
+      action: 'parse',
+      page: 'Combat Achievements/<tier>',
+      prop: 'text',
+      format: 'json',
+    },
+    globalsQuery: {
+      action: 'parse',
+      text: '{{Globals|ca <tier> tasks}} and {{Globals|ca <tier> points}}',
+      contentmodel: 'wikitext',
+      prop: 'text',
+      format: 'json',
+    },
+    retrievedAt: '2026-07-23T19:13:36.119Z',
+    overviewDeclaredRows: 637,
+    officialRows: 646,
+    authoritativeGlobals: {
+      counts: {
+        Easy: 41,
+        Medium: 60,
+        Hard: 86,
+        Elite: 164,
+        Master: 174,
+        Grandmaster: 121,
+      },
+      thresholds: [41, 161, 419, 1075, 1945, 2671],
+    },
+    discrepancy: 'The overview revision still displays 637 rows; live official Globals and tier API tables return 646 after the Maggot King additions.',
+    tierSources: [
+      {
+        tier: 'Easy',
+        url: 'https://oldschool.runescape.wiki/w/Combat_Achievements/Easy',
+        revision: 15272565,
+        revisionTimestamp: '2026-07-22T19:56:56Z',
+        officialRows: 41,
+      },
+      {
+        tier: 'Medium',
+        url: 'https://oldschool.runescape.wiki/w/Combat_Achievements/Medium',
+        revision: 15135540,
+        revisionTimestamp: '2026-02-25T18:48:27Z',
+        officialRows: 60,
+      },
+      {
+        tier: 'Hard',
+        url: 'https://oldschool.runescape.wiki/w/Combat_Achievements/Hard',
+        revision: 15272569,
+        revisionTimestamp: '2026-07-22T19:58:23Z',
+        officialRows: 86,
+      },
+      {
+        tier: 'Elite',
+        url: 'https://oldschool.runescape.wiki/w/Combat_Achievements/Elite',
+        revision: 15272563,
+        revisionTimestamp: '2026-07-22T19:55:28Z',
+        officialRows: 164,
+      },
+      {
+        tier: 'Master',
+        url: 'https://oldschool.runescape.wiki/w/Combat_Achievements/Master',
+        revision: 15272564,
+        revisionTimestamp: '2026-07-22T19:55:46Z',
+        officialRows: 174,
+      },
+      {
+        tier: 'Grandmaster',
+        url: 'https://oldschool.runescape.wiki/w/Combat_Achievements/Grandmaster',
+        revision: 15025941,
+        revisionTimestamp: '2025-11-13T02:26:22Z',
+        officialRows: 121,
+      },
+    ],
+  },
+});
+
+export const EXPECTED_CA_COUNTS =
+  EXPECTED_CA_PROVENANCE.source.authoritativeGlobals.counts;
+const EXPECTED_CA_TOTAL = Object.values(EXPECTED_CA_COUNTS)
+  .reduce((total, count) => total + count, 0);
 
 const SNAPSHOT = new URL('../data/sources/combat-achievement-tasks.json', import.meta.url);
 const OUT = new URL('../data/caTasks.ts', import.meta.url);
@@ -22,54 +110,21 @@ const escapeTypeScript = value => value
 
 export function validateCombatAchievementSnapshot(snapshot) {
   if (!snapshot || typeof snapshot !== 'object') throw new Error('CA snapshot is empty');
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(snapshot.verifiedAt ?? '')) {
-    throw new Error('CA snapshot verifiedAt must be YYYY-MM-DD');
-  }
-  if (snapshot.source?.url !== 'https://oldschool.runescape.wiki/w/Combat_Achievements') {
-    throw new Error('CA snapshot has an unknown official source URL');
-  }
-  if (!Number.isInteger(snapshot.source?.revision) || snapshot.source.revision <= 0) {
-    throw new Error('CA snapshot source revision is missing');
-  }
-  if (snapshot.source?.officialRows !== 646) {
-    throw new Error('CA snapshot source must declare exactly 646 official rows');
+
+  const actualProvenance = {
+    verifiedAt: snapshot.verifiedAt,
+    source: snapshot.source,
+  };
+  if (!isDeepStrictEqual(actualProvenance, EXPECTED_CA_PROVENANCE)) {
+    throw new Error(
+      'CA snapshot provenance does not exactly match the reviewed official API baseline',
+    );
   }
 
-  if (
-    snapshot.source?.endpoint !== 'https://oldschool.runescape.wiki/api.php'
-    || !/^2026-07-23T/.test(snapshot.source?.retrievedAt ?? '')
-  ) {
-    throw new Error('CA snapshot official API retrieval metadata is missing');
-  }
-  const expectedThresholds = [41, 161, 419, 1075, 1945, 2671];
-  if (
-    JSON.stringify(snapshot.source?.authoritativeGlobals?.counts)
-      !== JSON.stringify(EXPECTED_CA_COUNTS)
-    || JSON.stringify(snapshot.source?.authoritativeGlobals?.thresholds)
-      !== JSON.stringify(expectedThresholds)
-  ) {
-    throw new Error('CA snapshot authoritative Globals baseline drifted');
-  }
-  if (!/overview.*637.*live.*646/i.test(snapshot.source?.discrepancy ?? '')) {
-    throw new Error('CA snapshot must document the stale overview discrepancy');
-  }
-
-  const tierSources = snapshot.source?.tierSources;
-  if (!Array.isArray(tierSources) || tierSources.length !== CA_TIERS.length) {
-    throw new Error('CA snapshot must pin all six official tier pages');
-  }
-  for (const tier of CA_TIERS) {
-    const source = tierSources.find(candidate => candidate.tier === tier);
-    if (!source || !Number.isInteger(source.revision) || source.revision <= 0) {
-      throw new Error(`CA snapshot source revision is missing for ${tier}`);
-    }
-    if (source.officialRows !== EXPECTED_CA_COUNTS[tier]) {
-      throw new Error(`CA snapshot source count drift for ${tier}`);
-    }
-  }
-
-  if (!Array.isArray(snapshot.tasks) || snapshot.tasks.length !== 646) {
-    throw new Error(`CA snapshot task count must be 646, got ${snapshot.tasks?.length ?? 0}`);
+  if (!Array.isArray(snapshot.tasks) || snapshot.tasks.length !== EXPECTED_CA_TOTAL) {
+    throw new Error(
+      `CA snapshot task count must be ${EXPECTED_CA_TOTAL}, got ${snapshot.tasks?.length ?? 0}`,
+    );
   }
 
   const counts = Object.fromEntries(CA_TIERS.map(tier => [tier, 0]));

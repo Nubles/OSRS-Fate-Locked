@@ -58,7 +58,7 @@ npm run clog:sync     # or: npm run content:sync
 | **Collection log items** | ✅ **Auto, live** (runtime sync) + baked in by CI | ⚠️ Detected; page added by `clog:sync` once a tab is chosen |
 | **Bosses** | ✅ new drops auto-add to the boss's log | ⚠️ **Detected** (new log page) → curate: model, drop-rate, key cost, gacha tier, `BOSSES_LIST` |
 | **Quests** | — | ✅ **Detected** by `content:check` (wiki `{{Globals\|quests}}` count) → curate: skill reqs, prereqs, region, QP, difficulty tier |
-| **Combat Achievements** | ✅ **Auto-synced** by `ca:sync` — a CA task is fully wiki-defined (monster, official name, requirement, tier) with stable in-game ids, so the whole list regenerates from the wiki | ✅ same sync |
+| **Combat Achievements** | ✅ Offline render from the committed, reviewed snapshot via `ca:sync` | ✅ Network drift detection via `content:check` → explicitly fetch/review/update the snapshot, then run `ca:sync` |
 | **Diaries** | — | ✅ Reviewed 492-row snapshot; regenerate with `diary:sync` |
 
 The curation gate is **intentional**, not a limitation:
@@ -88,11 +88,12 @@ wiki's own authoritative numbers next to the app's in **`docs/SYNC_STATUS.md`**:
   count variables (rendered via the API). The app tracks *more* entries than the
   wiki's quest count because it also includes miniquests/sub-quests, so the
   signal to watch is a **change** in the wiki number.
-- **Combat Achievements** — fully **auto-synced** (`npm run ca:sync`,
-  `scripts/sync-combat-achievements.mjs`): regenerates `data/caTasks.ts` from the
-  six tier pages, keying each task by its stable in-game `data-ca-task-id` so
-  re-runs are idempotent and preserve progress. `content:check` then just
-  verifies the per-tier counts match.
+- **Combat Achievements** — `ca:sync` renders the committed, reviewed snapshot
+  without network access, keying each task by its stable in-game
+  `data-ca-task-id` so re-runs are deterministic and preserve progress.
+  `content:check` uses the network to detect upstream drift; it does not rewrite
+  the snapshot. To refresh the data, fetch the official API data, review and
+  update the snapshot, then run `npm run ca:sync`.
 - **Diaries** — generated offline from the committed 492-row reviewed snapshot;
   source refreshes remain explicit review work because the wiki has no stable per-task ID.
 
@@ -103,8 +104,8 @@ quest/CA shipped" into a reviewable PR (`docs/SYNC_STATUS.md` is in its
 `data/caTasks.ts`.
 
 > The detector originally surfaced that the app tracked only 223 of the wiki's
-> then-current 637 combat achievements; `ca:sync` then backfilled the full set (now 646/646 in
-> `SYNC_STATUS.md`). Adding another content type later follows the same pattern:
+> then-current 637 combat achievements; a reviewed snapshot refresh followed by
+> `ca:sync` backfilled the full set (now 646/646 in `SYNC_STATUS.md`). Adding another content type later follows the same pattern:
 > a `sync-*` script (if fully wiki-defined) or a detector entry, joining the same
 > weekly PR automatically.
 
@@ -167,5 +168,6 @@ The command validates the stable `ca_<official-id>` identity format, source
 metadata, unique IDs, exact 646-row total, and the official tier distribution
 (41 Easy, 60 Medium, 86 Hard, 164 Elite, 174 Master, 121 Grandmaster) before
 writing `data/caTasks.ts`. It aborts before writing on any drift. The generated
-module is never hand-edited; a source refresh updates and reviews the committed
-snapshot first.
+module is never hand-edited. `content:check` uses the network to detect upstream
+drift but never rewrites the snapshot. To refresh, fetch the official API data,
+review and update the snapshot, then run `npm run ca:sync`.
