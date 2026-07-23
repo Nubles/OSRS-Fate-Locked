@@ -85,6 +85,51 @@ describe('rankSkillBottlenecks', () => {
     expect(rankSkillBottlenecks(maxed)).toHaveLength(0);
   });
 
+  it('threads Chunked mode through quest impact simulations', () => {
+    const base = lowSkills({
+      skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Slayer' ? 0 : 10])),
+      levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Slayer' ? 0 : 99])),
+      regions: ['Misthalin', 'Draynor Village', 'Falador'],
+      chunks: ['46,51', '48,50'],
+    });
+    const exact = { ...base, chunks: ['46,51', '48,50', '47,51'] };
+
+    const before = rankSkillBottlenecks(base, 'chunked')
+      .find(candidate => candidate.id === 'Slayer')!;
+    const after = rankSkillBottlenecks(exact, 'chunked')
+      .find(candidate => candidate.id === 'Slayer')!;
+
+    expect(before).toBeUndefined();
+    expect(after.targetLevel).toBe(1);
+    expect(after.newQuestNames).toContain('A Porcine of Interest');
+  });
+
+  it('does not credit a diary while another skill is blocked by its method cap', () => {
+    const base = lowSkills({
+      skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Smithing' ? 1 : 10])),
+      levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Agility' ? 1 : 99])),
+      regions: [
+        'Asgarnia', 'Kandarin', 'Karamja', 'Kharidian Desert', 'Morytania',
+        'Fremennik', 'Tirannwn', 'Wilderness', 'Kourend & Kebos', 'Varlamore',
+        'Islands & Others', 'The Open Seas',
+      ],
+      quests: Object.keys(QUEST_DATA),
+    });
+    const capable = {
+      ...base,
+      skills: { ...base.skills, Smithing: 2 },
+    };
+
+    const blocked = rankSkillBottlenecks(base)
+      .find(candidate => candidate.id === 'Agility')!;
+    const unblocked = rankSkillBottlenecks(capable)
+      .find(candidate => candidate.id === 'Agility')!;
+
+    expect(blocked.newDiaryIds).not.toContain('Falador Easy');
+    expect(unblocked.targetLevel).toBe(5);
+    expect(unblocked.newDiaryIds).toContain('Falador Easy');
+  });
+
   it('surfaces diary unlocks when regions + quests are already done', () => {
     const ranked = rankSkillBottlenecks(regionsAndQuestsDone());
     // At least one skill should now bring a diary tier within reach via skills,

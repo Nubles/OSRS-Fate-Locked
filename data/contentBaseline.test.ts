@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { SKILLS_LIST } from '../constants';
 import { questLogEligibility } from '../components/QuestLog';
-import { journalNextBestQuestAction } from '../components/JournalNextBest';
+import {
+  journalNextBestQuestAction, selectJournalNextBestActions,
+} from '../components/JournalNextBest';
 import { QUEST_DATA } from './questData';
+import { DIARY_DATA } from './diaryData';
 import { ALL_DIARY_TASKS } from './diaryTasks';
 import { ALL_CA_TASKS } from './caTasks';
 import { CA_DATA } from './caData';
@@ -36,16 +39,35 @@ const maxedChunkedUnlocks = (chunks: string[]) => ({
   collectionLog: {},
 });
 
+const porcineOnlyUnlocks = (chunks: string[]) => ({
+  ...maxedChunkedUnlocks(chunks),
+  quests: Object.keys(QUEST_DATA).filter(id => id !== 'A Porcine of Interest'),
+  diaries: Object.keys(DIARY_DATA),
+});
+
+const questRequirementFields = (id: string) => {
+  const quest = QUEST_DATA[id];
+  return {
+    regions: quest.regions,
+    locations: quest.locations?.map(location => location.id),
+    skills: quest.skills,
+    combatLevel: quest.combatLevel,
+    prereqs: quest.prereqs,
+    oneOf: quest.oneOf,
+    manualRequirements: quest.manualRequirements,
+  };
+};
+
 describe('cross-surface quest eligibility contract', () => {
   it.each([
     {
       expected: 'LOCKED_REGION',
-      unlocks: maxedChunkedUnlocks(['46,51', '48,50']),
+      unlocks: porcineOnlyUnlocks(['46,51', '48,50']),
       blocker: 'South Falador Farm',
     },
     {
       expected: 'AVAILABLE',
-      unlocks: maxedChunkedUnlocks(['46,51', '48,50', '47,51']),
+      unlocks: porcineOnlyUnlocks(['46,51', '48,50', '47,51']),
       blocker: undefined,
     },
   ] as const)(
@@ -56,18 +78,21 @@ describe('cross-surface quest eligibility contract', () => {
         .some(candidate => candidate.id === quest.id);
       const plan = planForTarget('quest', quest.id, unlocks, 'chunked')!;
       const nextBest = journalNextBestQuestAction(quest, unlocks, 'chunked')!;
+      const selectedActions = selectJournalNextBestActions(unlocks, 'chunked');
+      const selected = selectedActions.find(action => action.id === quest.id)!;
       const completion = questCompletionDecision(quest, unlocks, 'chunked');
 
       const statuses = [
         questLogEligibility(quest, unlocks, 'chunked').status,
         advisorAvailable ? 'AVAILABLE' : 'LOCKED_REGION',
         plan.alreadyReachable ? 'AVAILABLE' : 'LOCKED_REGION',
-        nextBest.unmet === 0 ? 'AVAILABLE' : 'LOCKED_REGION',
+        selected.unmet === 0 ? 'AVAILABLE' : 'LOCKED_REGION',
         completion.ok ? 'AVAILABLE' : 'LOCKED_REGION',
       ];
 
       expect(statuses).toEqual(Array(5).fill(expected));
-      expect(nextBest.firstBlocker).toBe(blocker);
+      expect(selectedActions).toEqual([nextBest]);
+      expect(selected.firstBlocker).toBe(blocker);
       expect(plan.regionSteps.map(step => step.label)).toEqual(
         blocker ? [blocker] : [],
       );
@@ -76,53 +101,78 @@ describe('cross-surface quest eligibility contract', () => {
 });
 
 describe('deterministic current content baseline', () => {
-  it('pins audited quest records and the exact Porcine locations', () => {
-    expect(QUEST_DATA['A Porcine of Interest'].locations?.map(location => location.id))
-      .toEqual(['draynor-village', 'south-falador-farm']);
-    expect(QUEST_DATA['Dream Mentor']).toMatchObject({ combatLevel: 85 });
-    expect(QUEST_DATA['Ethically Acquired Antiquities']).toMatchObject({
-      skills: { Thieving: 25 },
-      prereqs: ['Children of the Sun', 'Shield of Arrav'],
+  it('pins audited quest requirement fields with exact equality', () => {
+    expect(questRequirementFields('A Porcine of Interest')).toEqual({
+      regions: ['Misthalin'],
+      locations: ['draynor-village', 'south-falador-farm'],
+      skills: { Slayer: 1 },
+      combatLevel: undefined,
+      prereqs: [],
+      oneOf: undefined,
+      manualRequirements: undefined,
     });
-    expect(QUEST_DATA['Ethically Acquired Antiquities'].locations?.map(location => location.id))
-      .toEqual(['civitas-illa-fortis', 'port-sarim', 'varrock-museum']);
-    expect(QUEST_DATA['The Curse of Arrav']).toMatchObject({
+    expect(questRequirementFields('Dream Mentor')).toEqual({
+      regions: ['Fremennik'], locations: undefined, skills: {}, combatLevel: 85,
+      prereqs: ['Lunar Diplomacy', "Eadgar's Ruse"], oneOf: undefined,
+      manualRequirements: undefined,
+    });
+    expect(questRequirementFields('Ethically Acquired Antiquities')).toEqual({
+      regions: ['Varlamore'],
+      locations: ['civitas-illa-fortis', 'port-sarim', 'varrock-museum'],
+      skills: { Thieving: 25 }, combatLevel: undefined,
+      prereqs: ['Children of the Sun', 'Shield of Arrav'], oneOf: undefined,
+      manualRequirements: undefined,
+    });
+    expect(questRequirementFields('The Curse of Arrav')).toEqual({
+      regions: ['Misthalin'], locations: undefined,
       skills: {
         Agility: 61, Ranged: 62, Strength: 58, Thieving: 62, Mining: 64,
         Slayer: 37,
       },
-      prereqs: ['Defender of Varrock', 'Troll Romance'],
+      combatLevel: undefined, prereqs: ['Defender of Varrock', 'Troll Romance'],
+      oneOf: undefined, manualRequirements: undefined,
     });
-    expect(QUEST_DATA['The Final Dawn']).toMatchObject({
+    expect(questRequirementFields('The Final Dawn')).toEqual({
+      regions: ['Varlamore'], locations: undefined,
       skills: { Thieving: 66, Fletching: 52, Runecraft: 52 },
-      prereqs: ['The Heart of Darkness', 'Perilous Moons'],
+      combatLevel: undefined, prereqs: ['The Heart of Darkness', 'Perilous Moons'],
+      oneOf: undefined, manualRequirements: undefined,
     });
-    expect(QUEST_DATA['Shadows of Custodia']).toMatchObject({
+    expect(questRequirementFields('Shadows of Custodia')).toEqual({
+      regions: ['Varlamore'], locations: undefined,
       skills: { Slayer: 54, Fishing: 45, Construction: 41, Hunter: 36 },
-      prereqs: ['Children of the Sun'],
+      combatLevel: undefined, prereqs: ['Children of the Sun'],
+      oneOf: undefined, manualRequirements: undefined,
     });
-    expect(QUEST_DATA['Scrambled!']).toMatchObject({
+    expect(questRequirementFields('Scrambled!')).toEqual({
+      regions: ['Varlamore'], locations: undefined,
       skills: { Construction: 38, Cooking: 36, Smithing: 35 },
-      prereqs: ['Children of the Sun'],
+      combatLevel: undefined, prereqs: ['Children of the Sun'],
+      oneOf: undefined, manualRequirements: undefined,
     });
-    expect(QUEST_DATA['Pandemonium']).toMatchObject({ skills: {}, prereqs: [] });
-    expect(QUEST_DATA['Pandemonium'].locations?.map(location => location.id))
-      .toEqual(['port-sarim']);
-    expect(QUEST_DATA['Prying Times']).toMatchObject({
-      skills: { Smithing: 30, Sailing: 12 },
-      prereqs: ['Pandemonium', "The Knight's Sword"],
+    expect(questRequirementFields('Pandemonium')).toEqual({
+      regions: [], locations: ['port-sarim'], skills: {}, combatLevel: undefined,
+      prereqs: [], oneOf: undefined, manualRequirements: undefined,
+    });
+    expect(questRequirementFields('Prying Times')).toEqual({
+      regions: ['The Open Seas'], locations: undefined,
+      skills: { Smithing: 30, Sailing: 12 }, combatLevel: undefined,
+      prereqs: ['Pandemonium', "The Knight's Sword"], oneOf: undefined,
       manualRequirements: ['One open Sailing task slot'],
     });
-    expect(QUEST_DATA['Current Affairs']).toMatchObject({
-      skills: { Sailing: 22, Fishing: 10 },
-      prereqs: ['Pandemonium'],
+    expect(questRequirementFields('Current Affairs')).toEqual({
+      regions: ['The Open Seas'], locations: undefined,
+      skills: { Sailing: 22, Fishing: 10 }, combatLevel: undefined,
+      prereqs: ['Pandemonium'], oneOf: undefined, manualRequirements: undefined,
     });
-    expect(QUEST_DATA['Troubled Tortugans']).toMatchObject({
+    expect(questRequirementFields('Troubled Tortugans')).toEqual({
+      regions: ['The Open Seas'], locations: undefined,
       skills: {
         Slayer: 51, Construction: 48, Sailing: 45, Hunter: 45,
         Woodcutting: 40, Crafting: 34,
       },
-      prereqs: ['Pandemonium'],
+      combatLevel: undefined, prereqs: ['Pandemonium'], oneOf: undefined,
+      manualRequirements: undefined,
     });
   });
 

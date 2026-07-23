@@ -18,7 +18,7 @@ import { SKILLS_LIST } from '../constants';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { computeUnlockImpact } from './unlockImpact';
-import { isAreaReachable } from './reachability';
+import { taskEligibilityBlockers } from './journalStatus';
 
 export interface RankedSkill {
   id: string;          // skill name
@@ -32,16 +32,14 @@ export interface RankedSkill {
   cascadeScore: number;
 }
 
-/** A diary tier is fully completable if regions, quests, AND all skills are met. */
+/** A diary tier is fully completable when its aggregate task gates have no canonical blockers. */
 function diaryFullyDoable(d: DiaryTier, unlocks: any, gameModeId?: string): boolean {
-  if (d.requiredRegions.some((r) => !isAreaReachable(r, unlocks, gameModeId))) return false;
-  if (d.quests.some((qid) => !unlocks.quests.includes(qid))) return false;
-  for (const [skill, lvl] of Object.entries(d.skills as Record<string, number>)) {
-    const unlocked = (unlocks.skills[skill] ?? 0) > 0;
-    const current = unlocks.levels[skill] ?? 1;
-    if (!unlocked || current < lvl) return false;
-  }
-  return true;
+  return taskEligibilityBlockers({
+    id: d.id,
+    skills: d.skills,
+    quests: d.quests,
+    regions: d.requiredRegions,
+  }, unlocks, gameModeId).length === 0;
 }
 
 /**
@@ -82,7 +80,7 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
         skills: { ...unlocks.skills, [skill]: Math.max(unlocks.skills[skill] ?? 0, 1) },
       };
 
-      const impact = computeUnlockImpact(unlocks, simulated);
+      const impact = computeUnlockImpact(unlocks, simulated, gameModeId);
 
       // Skill-aware diary tiers: newly fully-doable right now (regions+quests
       // already satisfied, this skill raise closes the last skill gap).
