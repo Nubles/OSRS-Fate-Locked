@@ -51,6 +51,33 @@ export const deleteProfileStorage = (
   return result;
 };
 
+export interface ProfileMetadataCell {
+  current: ProfileMetadata;
+}
+
+export type ProfileMetadataUpdate = (previous: ProfileMetadata) => ProfileMetadata;
+
+export type ProfileMetadataCommitResult =
+  | { ok: true; metadata: ProfileMetadata }
+  | { ok: false; metadata: ProfileMetadata };
+
+export const commitProfileMetadata = (
+  storage: Pick<Storage, 'setItem'>,
+  metadataKey: string,
+  current: ProfileMetadataCell,
+  update: ProfileMetadataUpdate,
+): ProfileMetadataCommitResult => {
+  const previous = current.current;
+  const next = update(previous);
+  try {
+    storage.setItem(metadataKey, JSON.stringify(next));
+  } catch {
+    return { ok: false, metadata: previous };
+  }
+  current.current = next;
+  return { ok: true, metadata: next };
+};
+
 export type ProfileDeletionStatus =
   | 'deleted'
   | 'last_profile'
@@ -65,9 +92,10 @@ export interface ProfileDeletionTransactionResult {
 export const deleteProfileTransaction = (
   storage: Pick<Storage, 'removeItem' | 'setItem'>,
   metadataKey: string,
-  previous: ProfileMetadata,
+  current: ProfileMetadataCell,
   profileId: string,
 ): ProfileDeletionTransactionResult => {
+  const previous = current.current;
   if (previous.profiles.length <= 1) {
     return {
       status: 'last_profile',
@@ -82,20 +110,19 @@ export const deleteProfileTransaction = (
     : previous.activeProfileId;
   const updated: ProfileMetadata = { profiles, activeProfileId };
   const deletion = deleteProfileStorage(storage, profileId);
+  const commit = commitProfileMetadata(storage, metadataKey, current, () => updated);
 
-  try {
-    storage.setItem(metadataKey, JSON.stringify(updated));
-  } catch {
+  if (!commit.ok) {
     return {
       status: 'metadata_write_failed',
-      metadata: previous,
+      metadata: commit.metadata,
       storage: deletion,
     };
   }
 
   return {
     status: 'deleted',
-    metadata: updated,
+    metadata: commit.metadata,
     storage: deletion,
   };
 };

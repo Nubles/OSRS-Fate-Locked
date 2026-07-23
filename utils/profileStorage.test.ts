@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  commitProfileMetadata,
   deleteProfileTransaction,
   profileDeletionNotice,
   deleteProfileStorage,
@@ -96,7 +97,7 @@ describe('profile deletion transaction', () => {
           activeProfileId: 'other',
         });
       },
-    }, 'FATE_PROFILES', metadata, 'target');
+    }, 'FATE_PROFILES', { current: metadata }, 'target');
 
     expect(operations).toEqual([
       ...expectedKeys('target').map((key) => 'remove:' + key),
@@ -122,7 +123,7 @@ describe('profile deletion transaction', () => {
       setItem: () => {
         persisted = true;
       },
-    }, 'FATE_PROFILES', metadata, 'target');
+    }, 'FATE_PROFILES', { current: metadata }, 'target');
 
     expect(persisted).toBe(true);
     expect(result.status).toBe('deleted');
@@ -135,7 +136,7 @@ describe('profile deletion transaction', () => {
       setItem: () => {
         throw new Error('quota');
       },
-    }, 'FATE_PROFILES', metadata, 'target');
+    }, 'FATE_PROFILES', { current: metadata }, 'target');
 
     expect(result).toEqual({
       status: 'metadata_write_failed',
@@ -154,7 +155,7 @@ describe('profile deletion transaction', () => {
     const result = deleteProfileTransaction({
       removeItem: (key) => operations.push('remove:' + key),
       setItem: (key) => operations.push('set:' + key),
-    }, 'FATE_PROFILES', single, 'target');
+    }, 'FATE_PROFILES', { current: single }, 'target');
 
     expect(operations).toEqual([]);
     expect(result).toEqual({
@@ -195,5 +196,87 @@ describe('profile deletion notice policy', () => {
       metadata,
       storage: { removed: expectedKeys('target'), failed: [] },
     })).toBeNull();
+  });
+});
+
+describe('synchronous profile metadata transactions', () => {
+  it('feeds each same-tick mutation the last committed metadata', () => {
+    const current = { current: metadata };
+    const persisted: ProfileMetadata[] = [];
+    const storage = {
+      setItem: (_key: string, value: string) => persisted.push(JSON.parse(value)),
+    };
+
+    const created = commitProfileMetadata(storage, 'FATE_PROFILES', current, (previous) => ({
+      profiles: [
+        ...previous.profiles,
+        { id: 'new', name: 'New', createdAt: 3 },
+      ],
+      activeProfileId: 'new',
+    }));
+    const renamed = commitProfileMetadata(storage, 'FATE_PROFILES', current, (previous) => ({
+      ...previous,
+      profiles: previous.profiles.map((profile) =>
+        profile.id === 'target' ? { ...profile, name: 'Renamed' } : profile
+      ),
+    }));
+
+    expect(created.ok).toBe(true);
+    expect(renamed.ok).toBe(true);
+    expect(persisted).toHaveLength(2);
+    expect(current.current.profiles.map((profile) => profile.id)).toEqual(['target', 'other', 'new']);
+    expect(current.current.profiles[0].name).toBe('Renamed');
+    expect(current.current.activeProfileId).toBe('new');
+  });
+
+  it('keeps the exact current object when metadata persistence fails', () => {
+    const current = { current: metadata };
+    const result = commitProfileMetadata({
+      setItem: () => {
+        throw new Error('quota');
+      },
+    }, 'FATE_PROFILES', current, (previous) => ({
+      ...previous,
+      activeProfileId: 'other',
+    }));
+
+    expect(result).toEqual({ ok: false, metadata });
+    expect(result.metadata).toBe(metadata);
+    expect(current.current).toBe(metadata);
+  });
+
+  it('does not resurrect profiles across two same-tick allowed deletes', () => {
+    const third = { id: 'third', name: 'Third', createdAt: 3 };
+    const current = {
+      current: {
+        profiles: [...metadata.profiles, third],
+        activeProfileId: 'target',
+      },
+    };
+    const storage = { removeItem: () => undefined, setItem: () => undefined };
+
+    const first = deleteProfileTransaction(storage, 'FATE_PROFILES', current, 'target');
+    const second = deleteProfileTransaction(storage, 'FATE_PROFILES', current, 'other');
+
+    expect(first.status).toBe('deleted');
+    expect(second.status).toBe('deleted');
+    expect(current.current).toEqual({ profiles: [third], activeProfileId: 'third' });
+  });
+
+  it('preserves a same-tick prior mutation when deletion commits', () => {
+    const current = { current: metadata };
+    const storage = { removeItem: () => undefined, setItem: () => undefined };
+    commitProfileMetadata(storage, 'FATE_PROFILES', current, (previous) => ({
+      ...previous,
+      profiles: [
+        ...previous.profiles,
+        { id: 'new', name: 'New', createdAt: 3 },
+      ],
+    }));
+
+    const result = deleteProfileTransaction(storage, 'FATE_PROFILES', current, 'target');
+
+    expect(result.status).toBe('deleted');
+    expect(current.current.profiles.map((profile) => profile.id)).toEqual(['other', 'new']);
   });
 });

@@ -1,8 +1,8 @@
 
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useRef } from 'react';
 import { Profile, ProfileMetadata } from '../types';
 import { showToast } from '../utils/toast';
-import { deleteProfileTransaction, profileBaseKey, profileDeletionNotice } from '../utils/profileStorage';
+import { commitProfileMetadata, deleteProfileTransaction, profileBaseKey, profileDeletionNotice } from '../utils/profileStorage';
 
 const PROFILES_KEY = 'FATE_PROFILES';
 const LEGACY_SAVE_KEY = 'FATE_UIM_SAVE_V1';
@@ -73,61 +73,59 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [recentlyCreatedId, setRecentlyCreatedId] = useState<string | null>(null);
   const clearRecentlyCreated = useCallback(() => setRecentlyCreatedId(null), []);
 
-  const persist = useCallback((updated: ProfileMetadata) => {
-    setMetadata(updated);
-    localStorage.setItem(PROFILES_KEY, JSON.stringify(updated));
+  const metadataRef = useRef(metadata);
+
+  const commitMetadata = useCallback((
+    update: (previous: ProfileMetadata) => ProfileMetadata,
+  ) => {
+    const result = commitProfileMetadata(localStorage, PROFILES_KEY, metadataRef, update);
+    if (result.ok) {
+      setMetadata(result.metadata);
+    } else {
+      showToast('Profile changes could not be saved. Your profile list is unchanged.');
+    }
+    return result;
   }, []);
 
   const createProfile = useCallback((name: string) => {
+    if (metadataRef.current.profiles.length >= MAX_PROFILES) {
+      showToast('Maximum of ' + MAX_PROFILES + ' profiles reached');
+      return;
+    }
     const newProfile: Profile = {
       id: generateId(),
       name: sanitizeName(name),
       createdAt: Date.now(),
     };
-    setMetadata(prev => {
-      if (prev.profiles.length >= MAX_PROFILES) {
-        showToast(`Maximum of ${MAX_PROFILES} profiles reached`);
-        return prev;
-      }
-      const updated = {
-        ...prev,
-        profiles: [...prev.profiles, newProfile],
-        activeProfileId: newProfile.id,
-      };
-      localStorage.setItem(PROFILES_KEY, JSON.stringify(updated));
-      return updated;
-    });
-    setRecentlyCreatedId(newProfile.id);
-  }, []);
+    const result = commitMetadata((previous) => ({
+      ...previous,
+      profiles: [...previous.profiles, newProfile],
+      activeProfileId: newProfile.id,
+    }));
+    if (result.ok) setRecentlyCreatedId(newProfile.id);
+  }, [commitMetadata]);
 
   const switchProfile = useCallback((id: string) => {
-    setMetadata(prev => {
-      if (!prev.profiles.some(p => p.id === id)) return prev;
-      const updated = { ...prev, activeProfileId: id };
-      localStorage.setItem(PROFILES_KEY, JSON.stringify(updated));
-      return updated;
-    });
-  }, []);
+    if (!metadataRef.current.profiles.some((profile) => profile.id === id)) return;
+    commitMetadata((previous) => ({ ...previous, activeProfileId: id }));
+  }, [commitMetadata]);
 
   const renameProfile = useCallback((id: string, newName: string) => {
-    setMetadata(prev => {
-      const updated = {
-        ...prev,
-        profiles: prev.profiles.map(p =>
-          p.id === id ? { ...p, name: sanitizeName(newName) } : p
-        ),
-      };
-      localStorage.setItem(PROFILES_KEY, JSON.stringify(updated));
-      return updated;
-    });
-  }, []);
+    const sanitized = sanitizeName(newName);
+    commitMetadata((previous) => ({
+      ...previous,
+      profiles: previous.profiles.map((profile) =>
+        profile.id === id ? { ...profile, name: sanitized } : profile
+      ),
+    }));
+  }, [commitMetadata]);
 
   const deleteProfile = useCallback((id: string) => {
-    const result = deleteProfileTransaction(localStorage, PROFILES_KEY, metadata, id);
+    const result = deleteProfileTransaction(localStorage, PROFILES_KEY, metadataRef, id);
     if (result.status === 'deleted') setMetadata(result.metadata);
     const notice = profileDeletionNotice(result);
     if (notice) showToast(notice);
-  }, [metadata]);
+  }, []);
 
   const value = useMemo<ProfileContextType>(() => {
     const activeProfile = metadata.profiles.find(p => p.id === metadata.activeProfileId);
