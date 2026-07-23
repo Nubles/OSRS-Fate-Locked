@@ -4,11 +4,12 @@ import { WikiIcon } from './WikiIcon';
 import { useGame } from '../context/GameContext';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
-import { ALL_DIARY_TASKS, DiaryTask } from '../data/diaryTasks';
+import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { CA_DATA } from '../data/caData';
 import { ALL_CA_TASKS } from '../data/caTasks';
-import { getQuestStatus, getDiaryStatus } from '../utils/journalStatus';
-import { isAreaReachable } from '../utils/reachability';
+import {
+  countDoableDiaryTasks, getQuestStatus, getDiaryStatus,
+} from '../utils/journalStatus';
 
 /**
  * Compact "what can I do right now?" summary card for the Dashboard CHARACTER
@@ -22,23 +23,6 @@ interface Props {
   /** Called when the player clicks a row.  Parent should switch to the Journal
    *  and open the indicated sub-tab. */
   onNavClick: (tab: 'QUESTS' | 'DIARIES' | 'CA') => void;
-}
-
-/** Mirrors the per-task doability check from DiaryLog.tsx (kept in sync). */
-function countDoableDiaryTasks(unlocks: any, gameModeId?: string): number {
-  return ALL_DIARY_TASKS.filter((task: DiaryTask) => {
-    if (unlocks.completedTasks.includes(task.id)) return false;
-    if (task.skills && !Object.entries(task.skills).every(
-      ([skill, lvl]) => (unlocks.skills[skill] || 0) > 0 && (unlocks.levels[skill] || 1) >= (lvl as number),
-    )) return false;
-    if (task.quests && !task.quests.every((q: string) => unlocks.quests.includes(q))) return false;
-    if (task.regions && !task.regions.every(
-      (r: string) => isAreaReachable(r, unlocks, gameModeId),
-    )) return false;
-    // Also check the tier isn't already fully completed.
-    if (unlocks.diaries.includes(task.tierId)) return false;
-    return true;
-  }).length;
 }
 
 interface Recommendation {
@@ -113,7 +97,8 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
     const questsDone     = unlocks.quests.length;
 
     // ── Diary tasks doable ───────────────────────────────────────────────────
-    const diaryTasksDoable = countDoableDiaryTasks(unlocks, gameModeId);
+    const diaryTasksDoable = countDoableDiaryTasks(
+      ALL_DIARY_TASKS, unlocks, gameModeId);
     const diaryTasksTotal  = ALL_DIARY_TASKS.length;
     const diaryTasksDone   = unlocks.completedTasks.filter((id: string) =>
       ALL_DIARY_TASKS.some((t) => t.id === id),

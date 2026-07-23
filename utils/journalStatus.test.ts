@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { QUEST_DATA, QuestData } from '../data/questData';
 import { DropSource, UnlockState } from '../types';
 import {
-  countDoableTasks, getQuestStatus, meetsSkillRequirement,
+  countDoableDiaryTasks, countDoableTasks, countMetSkillRequirements,
+  getQuestStatus, meetsSkillRequirement,
 } from './journalStatus';
 
 const unlocked = (over: Partial<UnlockState> = {}): UnlockState => ({
@@ -80,5 +81,40 @@ describe('skill-method caps', () => {
     expect(countDoableTasks(tasks, unlocked({
       skills: { Woodcutting: 2 }, levels: { Woodcutting: 15 },
     }))).toBe(1);
+  });
+
+  it('applies method caps to diary consumer counts', () => {
+    const tasks = [{
+      id: 'wc15', tierId: 'Test Diary',
+      skills: { Woodcutting: 15 },
+    }];
+    const tier1 = unlocked({
+      skills: { Woodcutting: 1 }, levels: { Woodcutting: 15 },
+    });
+    const tier2 = unlocked({
+      skills: { Woodcutting: 2 }, levels: { Woodcutting: 15 },
+    });
+
+    expect(countDoableDiaryTasks(tasks, tier1)).toBe(0);
+    expect(countMetSkillRequirements(tasks[0].skills, tier1)).toBe(0);
+    expect(countDoableDiaryTasks(tasks, tier2)).toBe(1);
+    expect(countMetSkillRequirements(tasks[0].skills, tier2)).toBe(1);
+  });
+
+  it('excludes completed diary tasks and completed diary tiers', () => {
+    const tasks = [{
+      id: 'wc15', tierId: 'Test Diary',
+      skills: { Woodcutting: 15 },
+    }];
+    const eligible = {
+      skills: { Woodcutting: 2 }, levels: { Woodcutting: 15 },
+    };
+
+    expect(countDoableDiaryTasks(tasks, unlocked({
+      ...eligible, completedTasks: ['wc15'],
+    }))).toBe(0);
+    expect(countDoableDiaryTasks(tasks, unlocked({
+      ...eligible, diaries: ['Test Diary'],
+    }))).toBe(0);
   });
 });

@@ -28,6 +28,13 @@ export const meetsSkillRequirement = (
   return tier > 0 && level >= required && cap >= required;
 };
 
+export const countMetSkillRequirements = (
+  requirements: Record<string, number> | undefined,
+  unlocks: Pick<UnlockState, 'skills' | 'levels'>,
+): number => Object.entries(requirements ?? {}).filter(
+  ([skill, required]) => meetsSkillRequirement(unlocks, skill, required),
+).length;
+
 export const questRequirementOptionMet = (
   option: QuestRequirementOption,
   unlocks: UnlockState,
@@ -108,6 +115,10 @@ export interface DoableTask {
   regions?: string[];
 }
 
+export interface DoableDiaryTask extends DoableTask {
+  tierId: string;
+}
+
 export function countDoableTasks(tasks: DoableTask[], unlocks: UnlockState, gameModeId?: string): number {
   return tasks.filter(task => {
     if (unlocks.completedTasks.includes(task.id)) return false;
@@ -120,4 +131,13 @@ export function countDoableTasks(tasks: DoableTask[], unlocks: UnlockState, game
     )) return false;
     return true;
   }).length;
+}
+
+export function countDoableDiaryTasks(
+  tasks: DoableDiaryTask[],
+  unlocks: UnlockState,
+  gameModeId?: string,
+): number {
+  const incompleteTiers = tasks.filter(task => !unlocks.diaries.includes(task.tierId));
+  return countDoableTasks(incompleteTiers, unlocks, gameModeId);
 }
