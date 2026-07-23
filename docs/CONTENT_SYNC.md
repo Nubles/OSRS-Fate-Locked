@@ -103,7 +103,7 @@ quest/CA shipped" into a reviewable PR (`docs/SYNC_STATUS.md` is in its
 `data/caTasks.ts`.
 
 > The detector originally surfaced that the app tracked only 223 of the wiki's
-> 637 combat achievements; `ca:sync` then backfilled the full set (now 637/637 in
+> then-current 637 combat achievements; `ca:sync` then backfilled the full set (now 646/646 in
 > `SYNC_STATUS.md`). Adding another content type later follows the same pattern:
 > a `sync-*` script (if fully wiki-defined) or a detector entry, joining the same
 > weekly PR automatically.
@@ -144,3 +144,28 @@ ID rules:
 Current reviewed classification: 471 preserved semantic IDs, 0 source-supported
 replacement aliases, 14 retired existing IDs, and 21 new canonical IDs. The net
 increase is seven, but the refresh is not a seven-row append.
+
+
+## Combat Achievement snapshot
+
+Combat Achievement tasks are generated offline from
+`data/sources/combat-achievement-tasks.json`. The reviewed baseline is pinned
+to the official [Combat Achievements](https://oldschool.runescape.wiki/w/Combat_Achievements)
+overview revision `15272408`, verified on 2026-07-23, plus the exact six tier
+page revisions and official API queries recorded in the snapshot. The overview
+still displayed 637 tasks, but its own live Globals and the tier tables had
+already advanced to 646 after the Maggot King additions; the live API data takes
+precedence over that stale summary.
+
+Regenerate the TypeScript list without network access:
+
+```bash
+npm run ca:sync
+```
+
+The command validates the stable `ca_<official-id>` identity format, source
+metadata, unique IDs, exact 646-row total, and the official tier distribution
+(41 Easy, 60 Medium, 86 Hard, 164 Elite, 174 Master, 121 Grandmaster) before
+writing `data/caTasks.ts`. It aborts before writing on any drift. The generated
+module is never hand-edited; a source refresh updates and reviews the committed
+snapshot first.

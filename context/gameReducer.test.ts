@@ -5,6 +5,7 @@ import {
   prepareGameTransition,
   prepareLevelUpActions,
   prepareKeyRollAction,
+  prepareCATaskCompletionActions,
 } from './GameContext';
 import { drawDice } from '../utils/seededRng';
 import { TableType, LogEntry } from '../types';
@@ -13,6 +14,7 @@ import { XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL } from '../config
 import { isValidUnlock } from '../utils/gameEngine';
 import { DIARY_TASK_ID_MIGRATIONS } from '../utils/taskIdMigrations';
 import { ALL_CHUNKS, CHUNKED_START, chunkKey } from '../utils/chunkAdjacency';
+import { ALL_CA_TASKS } from '../data/caTasks';
 
 /**
  * Tests for the core game reducer — every roll, unlock, ritual, level-up and
@@ -568,6 +570,70 @@ describe('journal completion actions', () => {
 
     expect(next.unlocks.quests).toContain('Cook\'s Assistant');
     expect(next.unlocks.diaries).toContain('Falador Easy');
+  });
+
+  it('COMPLETE_CA appends once and never removes a historical tier', () => {
+    const once = gameReducer(base(), { type: 'COMPLETE_CA', payload: 'Easy' });
+    const twice = gameReducer(once, { type: 'COMPLETE_CA', payload: 'Easy' });
+
+    expect(once.unlocks.cas).toEqual(['Easy']);
+    expect(twice.unlocks.cas).toEqual(['Easy']);
+  });
+
+  it('prepares one task roll and every newly crossed sticky CA tier', () => {
+    const easyTasks = ALL_CA_TASKS.filter(task => task.tierId === 'Easy');
+    const mediumTasks = ALL_CA_TASKS.filter(task => task.tierId === 'Medium');
+    const candidate = easyTasks.at(-1)!;
+    const start = {
+      ...base(),
+      unlocks: {
+        ...base().unlocks,
+        completedTasks: [
+          ...easyTasks.slice(0, -1).map(task => task.id),
+          ...mediumTasks.map(task => task.id),
+        ],
+      },
+    };
+    const drawIndexes: number[] = [];
+    const prepared = prepareCATaskCompletionActions(
+      start,
+      candidate,
+      (_purpose, index = 0) => {
+        drawIndexes.push(index);
+        return 100;
+      },
+    );
+
+    expect(prepared.result).toEqual({ ok: true });
+    expect(prepared.actions.map(action => action.type)).toEqual([
+      'COMPLETE_TASK',
+      'ROLL_RESULT',
+      'COMPLETE_CA',
+      'COMPLETE_CA',
+    ]);
+    expect(prepared.actions[1]).toMatchObject({
+      payload: {
+        source: 'Combat Achievement (Easy)',
+        threshold: 8,
+      },
+    });
+    expect(drawIndexes).toEqual([0, 1]);
+
+    const finished = prepared.actions.reduce(
+      (state, action) => prepareGameTransition(state, action).state,
+      start,
+    );
+    expect(finished.unlocks.completedTasks).toContain(candidate.id);
+    expect(finished.unlocks.cas).toEqual(['Easy', 'Medium']);
+    expect(finished.history.filter(entry => entry.type === 'ROLL_FAIL')).toHaveLength(1);
+
+    const repeated = prepareCATaskCompletionActions(
+      finished,
+      candidate,
+      () => 1,
+    );
+    expect(repeated.result).toEqual({ ok: false, reason: 'Already completed' });
+    expect(repeated.actions).toEqual([]);
   });
 });
 

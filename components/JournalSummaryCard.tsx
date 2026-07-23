@@ -10,6 +10,11 @@ import { ALL_CA_TASKS } from '../data/caTasks';
 import {
   countDoableDiaryTasks, getQuestStatus, getDiaryStatus,
 } from '../utils/journalStatus';
+import {
+  CA_TIER_ORDER,
+  completedCAPoints,
+  earnedCATiers,
+} from '../utils/caProgress';
 
 /**
  * Compact "what can I do right now?" summary card for the Dashboard CHARACTER
@@ -105,18 +110,30 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
     ).length;
 
     // ── CA tasks remaining ───────────────────────────────────────────────────
-    const caTiersTotal   = Object.keys(CA_DATA).length;
-    const caTiersDone    = unlocks.cas.length;
-    const caTasksTotal   = ALL_CA_TASKS.length;
-    const caTasksDone    = unlocks.completedTasks.filter((id: string) =>
-      ALL_CA_TASKS.some((t) => t.id === id),
+    const caTiersTotal = CA_TIER_ORDER.length;
+    const caPoints = completedCAPoints(unlocks.completedTasks);
+    const caEarnedTiers = earnedCATiers(caPoints, unlocks.cas);
+    const caTasksTotal = ALL_CA_TASKS.length;
+    const completedTaskIds = new Set(unlocks.completedTasks);
+    const caTasksDone = ALL_CA_TASKS.filter(
+      task => completedTaskIds.has(task.id),
     ).length;
-    const caTasksLeft    = caTasksTotal - caTasksDone;
+    const caTasksLeft = caTasksTotal - caTasksDone;
+    const nextCATier = CA_TIER_ORDER.find(tier => !caEarnedTiers.includes(tier));
 
     return {
       quests: { available: questsAvailable, done: questsDone, total: questsTotal },
       diaries: { doable: diaryTasksDoable, done: diaryTasksDone, total: diaryTasksTotal },
-      ca: { left: caTasksLeft, done: caTiersDone, total: caTiersTotal, tasksDone: caTasksDone, tasksTotal: caTasksTotal },
+      ca: {
+        left: caTasksLeft,
+        done: caEarnedTiers.length,
+        total: caTiersTotal,
+        tasksDone: caTasksDone,
+        tasksTotal: caTasksTotal,
+        points: caPoints,
+        pointsTotal: CA_DATA.Grandmaster.pointsRequired,
+        nextTier: nextCATier,
+      },
     };
   }, [unlocks, gameModeId]);
 
@@ -173,11 +190,11 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
       accent: 'text-red-300',
       barColor: 'bg-red-500/50',
       badgeColor: 'bg-red-900/40 text-red-300 border-red-500/30',
-      headline: `${stats.ca.tasksDone}/${stats.ca.tasksTotal} tasks · ${stats.ca.done}/${stats.ca.total} tiers`,
-      sub: stats.ca.left > 0
-        ? `${stats.ca.left} task${stats.ca.left !== 1 ? 's' : ''} remaining`
-        : 'All tasks complete!',
-      pct: Math.round((stats.ca.tasksDone / stats.ca.tasksTotal) * 100),
+      headline: `${stats.ca.points}/${stats.ca.pointsTotal} points · ${stats.ca.done}/${stats.ca.total} rewards`,
+      sub: stats.ca.nextTier
+        ? `${CA_DATA[stats.ca.nextTier].pointsRequired - stats.ca.points} points to ${stats.ca.nextTier}`
+        : 'All reward tiers earned!',
+      pct: Math.round((stats.ca.points / stats.ca.pointsTotal) * 100),
       badgeValue: stats.ca.left,
     },
   ];

@@ -3,7 +3,10 @@ import { DiaryTask } from '../data/diaryTasks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { UnlockState } from '../types';
 import { chunkKey } from '../utils/chunkAdjacency';
-import { calculateDiaryInsightStats } from './JournalInsights';
+import {
+  calculateCAInsightStats,
+  calculateDiaryInsightStats,
+} from './JournalInsights';
 
 const unlocks = (over: Partial<UnlockState> = {}): UnlockState => ({
   equipment: {},
@@ -68,5 +71,28 @@ describe('calculateDiaryInsightStats', () => {
       { ...regionOnly, chunks: [eastArdougneChunk] },
       'chunked',
     ).closest?.doable).toBe(1);
+  });
+});
+
+
+describe('calculateCAInsightStats', () => {
+  it('derives points and sticky reward tiers from canonical helpers', () => {
+    const tasks = [
+      { id: 'easy', tierId: 'Easy' },
+      { id: 'medium', tierId: 'Medium' },
+      { id: 'grandmaster', tierId: 'Grandmaster' },
+    ];
+
+    const stats = calculateCAInsightStats(
+      tasks,
+      unlocks({
+        completedTasks: ['easy', 'medium', 'grandmaster'],
+        cas: ['Master'],
+      }),
+    );
+
+    expect(stats.pointsEarned).toBe(9);
+    expect(stats.earnedTiers).toEqual(['Master']);
+    expect(stats.tiers.map(tier => tier.points)).toEqual([1, 2, 6]);
   });
 });

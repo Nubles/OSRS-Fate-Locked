@@ -40,6 +40,47 @@ const VALID_CA_TIER = new Set(Object.keys(CA_DATA));
 const VALID_DIARY_TIER = new Set(Object.keys(DIARY_DATA));
 
 describe('CA task list references resolve', () => {
+  it('pins the current 646-task Combat Achievement baseline', () => {
+    const counts = Object.fromEntries(
+      Object.keys(CA_DATA).map(tier => [
+        tier,
+        ALL_CA_TASKS.filter(task => task.tierId === tier).length,
+      ]),
+    );
+
+    expect(ALL_CA_TASKS).toHaveLength(646);
+    expect(counts).toEqual({
+      Easy: 41,
+      Medium: 60,
+      Hard: 86,
+      Elite: 164,
+      Master: 174,
+      Grandmaster: 121,
+    });
+  });
+
+  it('pins the current Maggot King rows and updated Gauntlet times', () => {
+    const byId = new Map(ALL_CA_TASKS.map(task => [task.id, task]));
+    expect(
+      Array.from({ length: 9 }, (_, index) => {
+        const task = byId.get(`ca_${637 + index}`);
+        return [task?.id, task?.tierId, task?.name];
+      }),
+    ).toEqual([
+      ['ca_637', 'Hard', 'Maggot Squasher'],
+      ['ca_638', 'Elite', 'Maggot Exterminator'],
+      ['ca_639', 'Master', 'Camping the King'],
+      ['ca_640', 'Master', 'Maggot King Speed Chaser'],
+      ['ca_641', 'Elite', 'Trying to fit in'],
+      ['ca_642', 'Master', 'King-sized clobbering'],
+      ['ca_643', 'Master', 'Digging in'],
+      ['ca_644', 'Master', 'Cordoned Off'],
+      ['ca_645', 'Master', 'Perfect Maggot King'],
+    ]);
+    expect(byId.get('ca_107')?.description).toContain('7 minutes and 5 seconds');
+    expect(byId.get('ca_117')?.description).toContain('4 minutes and 45 seconds');
+  });
+
   it('every CA task tierId matches CA_DATA', () => {
     const bad = ALL_CA_TASKS.filter((t) => !VALID_CA_TIER.has(t.tierId))
       .map((t) => `${t.id} -> "${t.tierId}"`);

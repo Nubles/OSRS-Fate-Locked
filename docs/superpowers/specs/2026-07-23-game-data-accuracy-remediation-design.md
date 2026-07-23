@@ -14,7 +14,7 @@ This change will:
 - Represent normal skills, calculated combat level, named areas, exact chunks, prerequisites, alternative routes, and display-only manual requirements without quest-specific conditionals.
 - Replace the broad Port Sarim approximation for A Porcine of Interest with the actual Draynor and South Falador Farm route.
 - Refresh all Achievement Diary tasks to the current total of 492 while preserving existing completion IDs wherever the same task still exists.
-- Refresh Combat Achievements to 637 tasks and current reward thresholds.
+- Refresh Combat Achievements to 646 tasks and current reward thresholds.
 - Calculate Combat Achievement rewards from cumulative task points across every tier.
 - Make the Journal, planner, advisor, task counters, and any key-awarding completion action consume the same eligibility evaluators.
 - Correct the authored What's New text so it claims only behavior that is actually fixed.
@@ -36,12 +36,21 @@ The curated data will be checked against the Old School RuneScape Wiki pages for
 The release baseline for this remediation is:
 
 - Achievement Diaries: 492 tasks across 12 regions.
-- Combat Achievements: 637 tasks.
-- Combat Achievement tier counts: Easy 41, Medium 60, Hard 85, Elite 162, Master 168, Grandmaster 121.
-- Combat Achievement reward thresholds: 41, 161, 416, 1064, 1904, and 2630 cumulative points.
+- Combat Achievements: 646 tasks.
+- Combat Achievement tier counts: Easy 41, Medium 60, Hard 86, Elite 164, Master 174, Grandmaster 121.
+- Combat Achievement reward thresholds: 41, 161, 419, 1075, 1945, and 2671 cumulative points.
 - Combat Achievement point values: 1 through 6 points for Easy through Grandmaster tasks.
 
 Primary reference pages for this baseline:
+
+**Authoritative-source update (2026-07-23):** During implementation, the
+official overview revision still displayed the earlier 637-row summary, while
+the official live Globals and six tier API tables had advanced to 646 after
+nine Maggot King tasks were added. The live structured sources take precedence
+over the stale prose table. The committed API snapshot records both results,
+the exact retrieval query/time, and current page revisions so this discrepancy
+is explicit and reproducible offline.
+
 
 - [Achievement Diary](https://oldschool.runescape.wiki/w/Achievement_Diary) and [all achievements](https://oldschool.runescape.wiki/w/Achievement_Diary/All_achievements).
 - [Combat Achievements](https://oldschool.runescape.wiki/w/Combat_Achievements).
@@ -165,7 +174,7 @@ Task-level availability uses the shared access primitives only where the dataset
 Source-aware tests pin:
 
 - The 492 Diary total and uniqueness of every current task ID.
-- The 637 Combat Achievement total, per-tier counts, point values, and thresholds.
+- The 646 Combat Achievement total, per-tier counts, point values, and thresholds.
 - The corrected quest records and absence of the known wrong prerequisites/routes.
 - Every referenced skill, quest, area, guild, and chunk against canonical application data.
 - Stable ID migrations, idempotence, and no silent loss of completed task IDs.
@@ -203,8 +212,8 @@ Implementation follows test-first development. Required regression coverage incl
 ## Success criteria
 
 - The known inaccurate quest records show the current official requirements and locations.
-- All 492 current Diary tasks and all 637 current Combat Achievement tasks are represented with pinned totals.
-- CA reward tiers use 41/161/416/1064/1904/2630 cumulative points.
+- All 492 current Diary tasks and all 646 current Combat Achievement tasks are represented with pinned totals.
+- CA reward tiers use 41/161/419/1075/1945/2671 cumulative points.
 - The same player state cannot be reported as eligible by one first-party surface and ineligible by another.
 - Existing saves keep their quest, diary, CA, and completed-task progress without duplicate rewards.
 - Future content drift produces a clear deterministic test or source-status change instead of silently changing runtime behavior.

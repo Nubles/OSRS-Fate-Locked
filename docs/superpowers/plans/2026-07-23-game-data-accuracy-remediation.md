@@ -42,7 +42,7 @@
 - <code>context/GameContext.tsx</code>: additive completion actions and sticky tier awards.
 - <code>utils/questAdvisor.ts</code>, <code>utils/goalPlanner.ts</code>, and their consumers/tests: thread gameModeId consistently.
 - <code>data/diaryTasks.ts</code>: generated 492-task output.
-- <code>scripts/sync-combat-achievements.mjs</code> and <code>data/caTasks.ts</code>: refreshed 637-task output and source metadata.
+- <code>scripts/sync-combat-achievements.mjs</code> and <code>data/caTasks.ts</code>: refreshed 646-task output and source metadata.
 - <code>data/caData.ts</code>, <code>components/JournalInsights.tsx</code>, and <code>components/JournalSummaryCard.tsx</code>: current thresholds and cumulative points.
 - <code>data/tasksConsistency.test.ts</code>: exact totals, references, locations, and task IDs.
 - <code>data/changelog.ts</code>: truthful release wording.
@@ -630,6 +630,15 @@ fix: refresh achievement diary tasks
 
 ### Task 4: Current Combat Achievement data and cumulative points
 
+**Authoritative-source update (2026-07-23):** During implementation, the
+official overview revision still displayed the earlier 637-row summary, while
+the official live Globals and six tier API tables had advanced to 646 after
+nine Maggot King tasks were added. The live structured sources take precedence
+over the stale prose table. The committed API snapshot records both results,
+the exact retrieval query/time, and current page revisions so this discrepancy
+is explicit and reproducible offline.
+
+
 **Files:**
 
 - Create: <code>utils/caProgress.ts</code>
@@ -663,7 +672,7 @@ it('adds points across mixed tiers', () => {
 
 it('uses current cumulative reward thresholds', () => {
   expect(Object.values(CA_DATA).map(tier => tier.pointsRequired)).toEqual([
-    41, 161, 416, 1064, 1904, 2630,
+    41, 161, 419, 1075, 1945, 2671,
   ]);
 });
 
@@ -676,7 +685,7 @@ it('keeps stored historical tiers while adding newly qualified tiers', () => {
 Extend <code>data/tasksConsistency.test.ts</code> with exact total and tier counts:
 
 ~~~ts
-expect(ALL_CA_TASKS).toHaveLength(637);
+expect(ALL_CA_TASKS).toHaveLength(646);
 expect(counts).toEqual({ Easy: 41, Medium: 60, Hard: 85, Elite: 162, Master: 168, Grandmaster: 121 });
 ~~~
 
@@ -718,11 +727,11 @@ export const newlyEarnedCATiers = (points: number, stored: readonly string[]): s
 };
 ~~~
 
-Set CA_DATA thresholds to 41, 161, 416, 1064, 1904, 2630.
+Set CA_DATA thresholds to 41, 161, 419, 1075, 1945, 2671.
 
 - [ ] **Step 4: Harden and run the CA generator**
 
-Make the sync script emit source URL/verified date metadata and require the exact six tier counts before writing. Retain stable <code>ca_&lt;official-id&gt;</code> IDs. Run <code>npm run ca:sync</code>; require 637 rows and a byte-identical second run.
+Make the sync script emit source URL/verified date metadata and require the exact six tier counts before writing. Retain stable <code>ca_&lt;official-id&gt;</code> IDs. Run <code>npm run ca:sync</code>; require 646 rows and a byte-identical second run.
 
 - [ ] **Step 5: Add additive CA completion actions**
 
@@ -750,7 +759,7 @@ git diff --exit-code -- data/caTasks.ts
 npx tsc --noEmit
 ~~~
 
-Expected: 637 tasks with 41/60/85/162/168/121 distribution; tests and types PASS; second sync has no diff.
+Expected: 646 tasks with 41/60/86/164/174/121 distribution; tests and types PASS; second sync has no diff.
 
 Commit subject:
 
@@ -774,7 +783,7 @@ fix: use current combat achievement points
 
 **Interfaces:**
 
-- Produces one deterministic baseline suite proving the current quest records, 492 Diaries, 637 CAs, tier distribution, thresholds, and valid source metadata.
+- Produces one deterministic baseline suite proving the current quest records, 492 Diaries, 646 CAs, tier distribution, thresholds, and valid source metadata.
 
 - [ ] **Step 1: Write the failing cross-surface regression**
 

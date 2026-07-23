@@ -13,6 +13,8 @@ import { getRitual, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED
 import { BANK_BY_ID } from '../data/banks';
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
+import { CA_DATA } from '../data/caData';
+import { ALL_CA_TASKS, CATask } from '../data/caTasks';
 import { QUEST_DATA } from '../data/questData';
 import { UNLOCK_COST } from '../utils/gameEngine';
 import { drawFloat } from '../utils/seededRng';
@@ -26,6 +28,11 @@ import {
   withJournalCompletion,
 } from '../utils/journalCompletion';
 import type { CompletionResult } from '../utils/journalCompletion';
+import {
+  caTierCompletionDecision,
+  completedCAPoints,
+  newlyEarnedCATiers,
+} from '../utils/caProgress';
 
 // --- Types ---
 const CURRENT_VERSION = 1;
@@ -96,9 +103,8 @@ interface GameContextType extends GameState {
   completeQuest: (id: string, x?: number, y?: number) => CompletionResult;
   completeDiaryTask: (id: string, x?: number, y?: number) => CompletionResult;
   completeDiaryTier: (id: string) => CompletionResult;
-  toggleCA: (id: string) => void;
-  /** Transitional CA task action; additive even though the legacy name remains. */
-  toggleTask: (id: string) => void;
+  completeCATask: (id: string, x?: number, y?: number) => CompletionResult;
+  completeCATier: (id: string) => CompletionResult;
   logCollectionItem: (itemId: number) => void;
   getExportData: () => string | null;
   /** Equip (or clear, with itemId=null) a real item in a slot; optionally clear other slots (2h handling). */
@@ -270,7 +276,7 @@ export type Action =
   | { type: 'UPDATE_NOTE'; payload: { id: string; text: string } }
   | { type: 'COMPLETE_QUEST'; payload: string }
   | { type: 'COMPLETE_DIARY'; payload: string }
-  | { type: 'TOGGLE_CA'; payload: string }
+  | { type: 'COMPLETE_CA'; payload: string }
   | { type: 'COMPLETE_TASK'; payload: string }
   | { type: 'SET_GAME_MODE'; payload: { modeId: string; customRules?: GameModeRules } }
   | { type: 'SET_LOADOUT_SLOT'; payload: { slot: string; itemId: number | null; clearSlots?: string[] } }
@@ -336,6 +342,53 @@ export const prepareKeyRollAction = (
   return {
     type: 'ROLL_RESULT',
     payload: { success, omni, pity, roll, threshold: effectiveThreshold, source, x, y },
+  };
+};
+
+export const prepareCATaskCompletionActions = (
+  state: GameState & { lastEvent: GameEvent | null },
+  task: CATask,
+  nextDice: DiceRoller,
+  x?: number,
+  y?: number,
+): {
+  result: CompletionResult;
+  actions: TransitionAction[];
+} => {
+  if (state.unlocks.completedTasks.includes(task.id)) {
+    return {
+      result: { ok: false, reason: 'Already completed' },
+      actions: [],
+    };
+  }
+  const tier = CA_DATA[task.tierId];
+  if (!tier) {
+    return {
+      result: { ok: false, reason: 'Unknown Combat Achievement tier' },
+      actions: [],
+    };
+  }
+
+  const completedIds = [...state.unlocks.completedTasks, task.id];
+  const points = completedCAPoints(completedIds);
+  const crossedTiers = newlyEarnedCATiers(points, state.unlocks.cas);
+  return {
+    result: { ok: true },
+    actions: [
+      { type: 'COMPLETE_TASK', payload: task.id },
+      prepareKeyRollAction(
+        state,
+        tier.difficulty,
+        DROP_RATES[tier.difficulty],
+        nextDice,
+        x,
+        y,
+      ),
+      ...crossedTiers.map(tierId => ({
+        type: 'COMPLETE_CA' as const,
+        payload: tierId,
+      })),
+    ],
   };
 };
 
@@ -800,13 +853,16 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       return unlocks === state.unlocks ? state : { ...state, unlocks };
     }
 
-    case 'TOGGLE_CA': {
+    case 'COMPLETE_CA': {
       const id = action.payload;
-      const isCompleted = state.unlocks.cas.includes(id);
-      const newCAs = isCompleted
-        ? state.unlocks.cas.filter(c => c !== id)
-        : [...state.unlocks.cas, id];
-      return { ...state, unlocks: { ...state.unlocks, cas: newCAs } };
+      if (state.unlocks.cas.includes(id)) return state;
+      return {
+        ...state,
+        unlocks: {
+          ...state.unlocks,
+          cas: [...state.unlocks.cas, id],
+        },
+      };
     }
 
     case 'COMPLETE_TASK': {
@@ -1133,8 +1189,37 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     return { ok: true };
   }, [commitAction]);
 
-  const toggleCA = useCallback((id: string) => commitAction({ type: 'TOGGLE_CA', payload: id }), [commitAction]);
-  const toggleTask = useCallback((id: string) => commitAction({ type: 'COMPLETE_TASK', payload: id }), [commitAction]);
+  const completeCATask = useCallback((
+    id: string,
+    x?: number,
+    y?: number,
+  ): CompletionResult => {
+    const task = ALL_CA_TASKS.find(candidate => candidate.id === id);
+    if (!task) return completionFailure('Unknown Combat Achievement task');
+
+    const prepared = prepareCATaskCompletionActions(
+      stateRef.current,
+      task,
+      nextDice,
+      x,
+      y,
+    );
+    if (prepared.result.ok === false) {
+      return completionFailure(prepared.result.reason);
+    }
+    for (const action of prepared.actions) commitAction(action);
+    return prepared.result;
+  }, [commitAction, nextDice]);
+
+  const completeCATier = useCallback((id: string): CompletionResult => {
+    const snapshot = stateRef.current;
+    const points = completedCAPoints(snapshot.unlocks.completedTasks);
+    const result = caTierCompletionDecision(id, points, snapshot.unlocks.cas);
+    if (result.ok === false) return completionFailure(result.reason);
+
+    commitAction({ type: 'COMPLETE_CA', payload: id });
+    return result;
+  }, [commitAction]);
 
   const getExportData = useCallback((): string | null => {
     return localStorage.getItem(storageKey);
@@ -1165,8 +1250,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     completeQuest,
     completeDiaryTask,
     completeDiaryTier,
-    toggleCA,
-    toggleTask,
+    completeCATask,
+    completeCATier,
     logCollectionItem,
     getExportData,
     setLoadoutSlot,
@@ -1199,8 +1284,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     completeQuest,
     completeDiaryTask,
     completeDiaryTier,
-    toggleCA,
-    toggleTask,
+    completeCATask,
+    completeCATier,
     logCollectionItem,
     getExportData,
     setLoadoutSlot,

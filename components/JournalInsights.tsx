@@ -5,8 +5,14 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS, DiaryTask } from '../data/diaryTasks';
-import { CA_DATA } from '../data/caData';
-import { ALL_CA_TASKS } from '../data/caTasks';
+import { ALL_CA_TASKS, CATask } from '../data/caTasks';
+import {
+  CA_TASK_POINTS,
+  CA_TIER_ORDER,
+  completedCAPoints,
+  earnedCATiers,
+  isCATierId,
+} from '../utils/caProgress';
 import { DropSource, UnlockState } from '../types';
 import { countDoableDiaryTasks } from '../utils/journalStatus';
 
@@ -164,33 +170,55 @@ export const DiaryInsights: React.FC = () => {
 };
 
 // ── Combat Achievements ───────────────────────────────────────────────────
-const CA_POINTS: Record<string, number> = { Easy: 1, Medium: 2, Hard: 3, Elite: 4, Master: 5, Grandmaster: 6 };
 const CA_COLORS: Record<string, string> = {
   Easy: 'bg-green-600', Medium: 'bg-cyan-600', Hard: 'bg-blue-600',
   Elite: 'bg-purple-600', Master: 'bg-rose-600', Grandmaster: 'bg-amber-500',
 };
 
+export const calculateCAInsightStats = (
+  tasks: readonly Pick<CATask, 'id' | 'tierId'>[],
+  unlocks: Pick<UnlockState, 'completedTasks' | 'cas'>,
+) => {
+  const done = new Set(unlocks.completedTasks);
+  const presentTiers = new Set(tasks.map(task => task.tierId));
+  const tiers = CA_TIER_ORDER
+    .filter(tier => presentTiers.has(tier))
+    .map(tier => {
+      const tierTasks = tasks.filter(task => task.tierId === tier);
+      return {
+        tier,
+        done: tierTasks.filter(task => done.has(task.id)).length,
+        total: tierTasks.length,
+        points: CA_TASK_POINTS[tier],
+      };
+    });
+  const pointsEarned = completedCAPoints(unlocks.completedTasks, tasks);
+  const pointsTotal = tasks.reduce(
+    (sum, task) => sum + (isCATierId(task.tierId) ? CA_TASK_POINTS[task.tierId] : 0),
+    0,
+  );
+  return {
+    tiers,
+    pointsEarned,
+    pointsTotal,
+    earnedTiers: earnedCATiers(pointsEarned, unlocks.cas),
+  };
+};
+
 export const CAInsights: React.FC = () => {
   const { unlocks } = useGame();
-  const stats = useMemo(() => {
-    const done = new Set(unlocks.completedTasks);
-    const tiers = Object.keys(CA_DATA).map(tier => {
-      let d = 0, t = 0;
-      for (const task of ALL_CA_TASKS) if (task.tierId === tier) { t++; if (done.has(task.id)) d++; }
-      return { tier, done: d, total: t, pts: CA_POINTS[tier] ?? 1 };
-    });
-    const ptsEarned = tiers.reduce((a, x) => a + x.done * x.pts, 0);
-    const ptsTotal = tiers.reduce((a, x) => a + x.total * x.pts, 0);
-    return { tiers, ptsEarned, ptsTotal };
-  }, [unlocks.completedTasks]);
+  const stats = useMemo(
+    () => calculateCAInsightStats(ALL_CA_TASKS, unlocks),
+    [unlocks.completedTasks, unlocks.cas],
+  );
 
   return (
     <Shell storageKey="jrnl:insights:ca" title="CA insights" icon={<Award size={11} />}
-      summary={`${stats.ptsEarned}/${stats.ptsTotal} points`}>
+      summary={`${stats.pointsEarned}/${stats.pointsTotal} points · ${stats.earnedTiers.length}/6 rewards`}>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1.5">
-        <Bar label="CA Points" done={stats.ptsEarned} total={stats.ptsTotal} color="bg-yellow-500" suffix=" pts" />
+        <Bar label="CA Points" done={stats.pointsEarned} total={stats.pointsTotal} color="bg-yellow-500" suffix=" pts" />
         {stats.tiers.map(t => (
-          <Bar key={t.tier} label={`${t.tier} (${t.pts}pt)`} done={t.done} total={t.total} color={CA_COLORS[t.tier] ?? 'bg-gray-600'} />
+          <Bar key={t.tier} label={`${t.tier} (${t.points}pt)`} done={t.done} total={t.total} color={CA_COLORS[t.tier] ?? 'bg-gray-600'} />
         ))}
       </div>
     </Shell>

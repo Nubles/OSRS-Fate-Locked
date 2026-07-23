@@ -4,20 +4,23 @@ import { useGame } from '../context/GameContext';
 import { CA_DATA, CATier } from '../data/caData';
 import { ALL_CA_TASKS, CATask } from '../data/caTasks';
 import { Swords, CheckCircle2, Sparkles, Skull, Info, ChevronDown, CheckSquare, Square, Lock, ExternalLink } from 'lucide-react';
-import { DROP_RATES } from '../config/rules';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { showToast } from '../utils/toast';
 import { CAInsights } from './JournalInsights';
 import { EntityLocations } from './EntityLocations';
 import { WikiLink } from './WikiLink';
+import {
+  CA_TIER_ORDER,
+  completedCAPoints,
+  earnedCATiers,
+} from '../utils/caProgress';
 
 interface CALogProps {
   searchTerm?: string;
 }
 
 export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' }) => {
-  const { unlocks, toggleCA, rollForKey, toggleTask, advisorsEnabled } = useGame();
+  const { unlocks, completeCATask, completeCATier, advisorsEnabled } = useGame();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   // Filter state persisted across sessions.
   const [filterStatus, setFilterStatus] = useLocalStorage<JournalStatus>('jrnl:ca:status', 'ALL');
@@ -44,61 +47,27 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
     return `https://oldschool.runescape.wiki/w/${encodeURIComponent(monster.replace(/ /g, '_'))}`;
   };
 
-  const handleToggle = (e: React.MouseEvent, ca: CATier) => {
-      e.stopPropagation();
-      const isCompleting = !unlocks.cas.includes(ca.id);
-      
-      if (!isCompleting) return; // Prevent un-completing once done
+  const totalPoints = useMemo(
+    () => completedCAPoints(unlocks.completedTasks),
+    [unlocks.completedTasks],
+  );
+  const earnedTierIds = useMemo(
+    () => earnedCATiers(totalPoints, unlocks.cas),
+    [totalPoints, unlocks.cas],
+  );
+  const nextTier = CA_TIER_ORDER.find(tier => !earnedTierIds.includes(tier));
 
-      if (isCompleting) {
-          const tasks = ALL_CA_TASKS.filter(t => t.tierId === ca.id);
-          // If tasks exist, require them all to be complete
-          if (tasks.length > 0) {
-              const allDone = tasks.every(t => unlocks.completedTasks.includes(t.id));
-              if (!allDone) {
-                  showToast('Complete all individual tasks in this tier first');
-                  return;
-              }
-          }
-
-          toggleCA(ca.id);
-          // Removed guaranteed key roll for tier completion
-      }
+  const handleTierComplete = (event: React.MouseEvent, tier: CATier) => {
+    event.stopPropagation();
+    completeCATier(tier.id);
   };
 
-  const handleTaskToggle = (task: CATask, ca: CATier, e: React.MouseEvent) => {
-      e.stopPropagation();
-      
-      // Prevent toggling tasks if the CA tier is already complete
-      if (unlocks.cas.includes(ca.id)) {
-          return;
-      }
-
-      // Prevent unchecking if already completed
-      if (unlocks.completedTasks.includes(task.id)) {
-          return;
-      }
-
-      const isCompleting = !unlocks.completedTasks.includes(task.id);
-      toggleTask(task.id);
-
-      if (isCompleting) {
-          // 1. Single Task Roll
-          const rate = DROP_RATES[ca.difficulty];
-          rollForKey(ca.difficulty, rate, e.clientX, e.clientY);
-
-          // 2. Check for Full Section Completion
-          const tierTasks = ALL_CA_TASKS.filter(t => t.tierId === ca.id);
-          const otherTasksDone = tierTasks.every(t => t.id === task.id || unlocks.completedTasks.includes(t.id));
-          
-          if (otherTasksDone) {
-              // If the tier is not yet marked complete
-              if (!unlocks.cas.includes(ca.id)) {
-                  toggleCA(ca.id);
-                  // Removed guaranteed key roll for tier completion
-              }
-          }
-      }
+  const handleTaskComplete = (
+    task: CATask,
+    event: React.MouseEvent,
+  ) => {
+    event.stopPropagation();
+    completeCATask(task.id, event.clientX, event.clientY);
   };
 
   const getStyle = (id: string) => {
@@ -114,7 +83,9 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
   };
 
   const filteredCAs = Object.values(CA_DATA).filter(ca => {
-      const isCompleted = unlocks.cas.includes(ca.id);
+      const isCompleted = earnedTierIds.includes(
+        ca.id as (typeof CA_TIER_ORDER)[number],
+      );
       if (filterTier !== 'ALL' && ca.id !== filterTier) return false;
       if (filterStatus === 'COMPLETED' && !isCompleted) return false;
       if (filterStatus === 'AVAILABLE' && isCompleted) return false;
@@ -128,10 +99,15 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
   });
 
   const statusCounts = useMemo(() => {
-    const all = Object.values(CA_DATA);
-    const completed = all.filter((c) => unlocks.cas.includes(c.id)).length;
-    return { ALL: all.length, AVAILABLE: all.length - completed, LOCKED: all.length - completed, COMPLETED: completed };
-  }, [unlocks.cas]);
+    const total = CA_TIER_ORDER.length;
+    const completed = earnedTierIds.length;
+    return {
+      ALL: total,
+      AVAILABLE: total - completed,
+      LOCKED: total - completed,
+      COMPLETED: completed,
+    };
+  }, [earnedTierIds]);
 
   // Lowest incomplete tiers — these are the player's next combat-achievement
   return (
@@ -146,7 +122,7 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
         status={filterStatus}
         onStatusChange={setFilterStatus}
         statusCounts={statusCounts}
-        completed={unlocks.cas.length}
+        completed={earnedTierIds.length}
         total={Object.keys(CA_DATA).length}
         tiers={[
           { id: 'Easy', colorClass: 'bg-green-900/40 text-green-300' },
@@ -162,21 +138,30 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
 
       {advisorsEnabled && <CAInsights />}
 
+      <div className="border-b border-white/10 bg-black/20 px-4 py-2 text-[11px] text-gray-400">
+        <span className="font-bold text-amber-300">{totalPoints.toLocaleString()}</span>
+        {' '}Combat Achievement points
+        {nextTier
+          ? ` · next reward: ${nextTier} at ${CA_DATA[nextTier].pointsRequired.toLocaleString()}`
+          : ' · all reward tiers earned'}
+      </div>
+
       <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
         {filteredCAs.map(ca => {
-            const isCompleted = unlocks.cas.includes(ca.id);
+            const isRecorded = unlocks.cas.includes(ca.id);
+            const isCompleted = earnedTierIds.includes(
+              ca.id as (typeof CA_TIER_ORDER)[number],
+            );
             const style = getStyle(ca.id);
             const isSearching = searchTerm.length > 0;
             const isExpanded = expandedId === ca.id || isSearching;
-            
+
             // Get tasks
             const tasks = ALL_CA_TASKS.filter(t => t.tierId === ca.id);
             const hasTasks = tasks.length > 0;
             const tasksCompletedCount = tasks.filter(t => unlocks.completedTasks.includes(t.id)).length;
-            
-            // Determine if actionable (can complete manually if all tasks done or no tasks)
-            const allTasksDone = !hasTasks || tasksCompletedCount === tasks.length;
-            const isActionable = isCompleted || allTasksDone; 
+
+            const isActionable = isRecorded || totalPoints >= ca.pointsRequired;
 
             return (
                 <div
@@ -184,14 +169,14 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                   data-journal-id={ca.id}
                   className={`relative border rounded-lg transition-all group ${isCompleted ? 'bg-green-900/10 border-green-500/30 opacity-60' : `bg-[#1a1a1a] ${style}`} ${highlightedId === ca.id ? 'ring-2 ring-amber-400/70 shadow-[0_0_20px_rgba(251,191,36,0.25)]' : ''}`}
                 >
-                    <div 
+                    <div
                         className="p-4 flex justify-between items-start cursor-pointer"
                         onClick={() => setExpandedId(isExpanded && !isSearching ? null : ca.id)}
                     >
                         <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                                 <h3 className={`font-bold text-lg ${isCompleted ? 'text-gray-400 line-through' : 'text-white'}`}>{ca.id} Tier</h3>
-                                <span className="text-[10px] bg-black/40 px-2 py-0.5 rounded border border-white/10 text-gray-400 font-mono">{ca.pointsRequired} Pts</span>
+                                <span className="text-[10px] bg-black/40 px-2 py-0.5 rounded border border-white/10 text-gray-400 font-mono">{totalPoints}/{ca.pointsRequired} cumulative pts</span>
                                 {hasTasks && (
                                     <span className="text-[10px] text-gray-400 font-mono">
                                         {tasksCompletedCount}/{tasks.length}
@@ -206,7 +191,7 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                                     </span>
                                 )}
                             </div>
-                            
+
                             {!isExpanded && (
                                 <div className="text-xs text-gray-400 mb-2 font-mono">
                                     Rec: {ca.recommendedStats}
@@ -228,16 +213,16 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <button 
-                                onClick={(e) => handleToggle(e, ca)}
-                                disabled={isCompleted}
-                                className={`w-10 h-10 flex items-center justify-center rounded-full border transition-all shrink-0 z-10 
-                                    ${isCompleted ? 'bg-green-500 text-black border-green-400 cursor-default' : 
+                            <button
+                                onClick={(e) => handleTierComplete(e, ca)}
+                                disabled={isRecorded}
+                                className={`w-10 h-10 flex items-center justify-center rounded-full border transition-all shrink-0 z-10
+                                    ${isCompleted ? 'bg-green-500 text-black border-green-400 cursor-default' :
                                       isActionable ? 'bg-black/40 text-gray-600 border-gray-700 hover:border-gray-500 hover:text-gray-400' :
                                       'bg-black/20 text-gray-700 border-gray-800 cursor-not-allowed opacity-50'}`}
-                                title={isCompleted ? "Completed" : isActionable ? "Complete Full Tier" : "Complete all tasks first"}
+                                title={isRecorded ? "Reward tier recorded" : isActionable ? "Record earned reward tier" : `Requires ${ca.pointsRequired} cumulative points`}
                             >
-                                {isCompleted ? <CheckCircle2 size={20} /> : isActionable ? <Sparkles size={18} /> : <Lock size={16} />}
+                                {isRecorded ? <CheckCircle2 size={20} /> : isActionable ? <Sparkles size={18} /> : <Lock size={16} />}
                             </button>
                             {hasTasks && <ChevronDown size={16} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />}
                         </div>
@@ -251,11 +236,11 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                                 if (searchTerm && !task.description.toLowerCase().includes(searchTerm.toLowerCase()) && !task.monster.toLowerCase().includes(searchTerm.toLowerCase()) && !ca.id.toLowerCase().includes(searchTerm.toLowerCase())) return null;
 
                                 return (
-                                    <button 
+                                    <button
                                         key={task.id}
-                                        onClick={(e) => handleTaskToggle(task, ca, e)}
-                                        disabled={isCompleted || isTaskDone}
-                                        className={`w-full flex items-start gap-3 p-2 rounded text-left group ${(isCompleted || isTaskDone) ? 'cursor-default opacity-70' : 'hover:bg-white/5 cursor-pointer'}`}
+                                        onClick={(e) => handleTaskComplete(task, e)}
+                                        disabled={isTaskDone}
+                                        className={`w-full flex items-start gap-3 p-2 rounded text-left group ${isTaskDone ? 'cursor-default opacity-70' : 'hover:bg-white/5 cursor-pointer'}`}
                                     >
                                         <div className={`mt-0.5 ${isTaskDone ? 'text-green-400' : 'text-gray-600 group-hover:text-gray-400'}`}>
                                             {isTaskDone ? <CheckSquare size={14} /> : <Square size={14} />}
@@ -266,8 +251,8 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                                                 {task.name && <WikiLink name={task.name} className="text-[11px] font-semibold text-gray-300 hover:underline decoration-dotted underline-offset-2 hover:text-amber-200" />}
                                                 <a
                                                     href={getWikiUrl(task.monster)}
-                                                    target="_blank" 
-                                                    rel="noopener noreferrer" 
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
                                                     className="text-gray-500 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
                                                     onClick={(e) => e.stopPropagation()}
                                                     title="Open Wiki"
