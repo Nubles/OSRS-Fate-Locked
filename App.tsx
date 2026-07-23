@@ -41,8 +41,8 @@ import { prefetchHeavyChunks } from './utils/prefetch';
 import { LATEST_CHANGELOG } from './data/changelog';
 import {
   changelogVisibilityReducer, markChangelogSeen, resolveChangelogRestoreTarget,
-  shouldAutoOpenChangelog, shouldEnableUnderlyingModalEscape,
-  shouldRenderUnderlyingModals, shouldShowChangelog,
+  resolveChangelogModalRenderPolicy, shouldAutoOpenChangelog,
+  shouldEnableUnderlyingModalEscape, shouldShowChangelog,
 } from './utils/changelogState';
 
 // Heavy, conditionally-rendered modals — code-split so they (and their deps,
@@ -683,7 +683,7 @@ const GameLayout = () => {
     setShowGameMode(false);
     setShowSyncCode(false);
   }, shouldEnableUnderlyingModalEscape(anyModalOpen, showChangelog));
-  const renderUnderlyingModals = shouldRenderUnderlyingModals(showChangelog);
+  const modalRenderPolicy = resolveChangelogModalRenderPolicy(showChangelog);
 
   return (
     <div className="min-h-screen bg-osrs-bg text-osrs-text pb-6 font-sans selection:bg-osrs-gold selection:text-black relative">
@@ -708,9 +708,9 @@ const GameLayout = () => {
       {activeRitualAnim === 'GREED' && <GreedEffect onComplete={() => setActiveRitualAnim('NONE')} />}
       {activeRitualAnim === 'CHAOS' && <ChaosEffect onComplete={() => setActiveRitualAnim('NONE')} />}
 
-      {renderUnderlyingModals && showAltar && <VoidAltar onClose={() => setShowAltar(false)} />}
+      {modalRenderPolicy.renderAppModals && showAltar && <VoidAltar onClose={() => setShowAltar(false)} />}
       <Suspense fallback={<ModalFallback />}>
-        {renderUnderlyingModals && (
+        {modalRenderPolicy.renderAppModals && (
           <>
             {showStats && <StatsModal onClose={() => setShowStats(false)} />}
             {showFateThread && <FateThread onClose={() => setShowFateThread(false)} />}
@@ -743,11 +743,11 @@ const GameLayout = () => {
       />
 
       {/* Global ⌘K command palette — navigates via fate:nav events. */}
-      <CommandPalette />
+      {modalRenderPolicy.renderGlobalDialogOverlays && <CommandPalette />}
       {/* Replayable spotlight tour — start via fate:start-tour. */}
-      <GuidedTour />
+      {modalRenderPolicy.renderGlobalDialogOverlays && <GuidedTour />}
       {/* Quest-complete celebration with the wiki reward scroll. */}
-      <QuestCompleteOverlay />
+      {modalRenderPolicy.renderGlobalDialogOverlays && <QuestCompleteOverlay />}
 
       {/* One contextual "next step" hint under the header — teaches the loop. */}
       <CoachStrip />
@@ -786,7 +786,7 @@ const GameLayout = () => {
           <div className="lg:col-span-8 h-full min-h-[500px] flex flex-col gap-4">
              <div className="flex-1 overflow-hidden h-full">
                <PanelErrorBoundary name="Dashboard">
-                 <Dashboard />
+                 <Dashboard suspendModals={modalRenderPolicy.suspendDashboardModals} />
                </PanelErrorBoundary>
              </div>
           </div>

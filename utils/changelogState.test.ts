@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   CHANGELOG_STORAGE_KEY, ChangelogStorage,
   changelogVisibilityReducer, markChangelogSeen, resolveChangelogRestoreTarget,
-  shouldAutoOpenChangelog, shouldEnableUnderlyingModalEscape,
+  resolveChangelogModalRenderPolicy, shouldAutoOpenChangelog,
+  shouldEnableUnderlyingModalEscape,
   shouldRenderUnderlyingModals, shouldShowChangelog,
 } from './changelogState';
 
@@ -107,5 +108,21 @@ describe('changelog state', () => {
   it('renders underlying top-level modals only while the changelog is closed', () => {
     expect(shouldRenderUnderlyingModals(true)).toBe(false);
     expect(shouldRenderUnderlyingModals(false)).toBe(true);
+  });
+
+  it('suspends every App and Dashboard modal layer while the changelog is open', () => {
+    expect(resolveChangelogModalRenderPolicy(true)).toEqual({
+      renderAppModals: false,
+      renderGlobalDialogOverlays: false,
+      suspendDashboardModals: true,
+    });
+  });
+
+  it('restores every App and Dashboard modal layer after the changelog closes', () => {
+    expect(resolveChangelogModalRenderPolicy(false)).toEqual({
+      renderAppModals: true,
+      renderGlobalDialogOverlays: true,
+      suspendDashboardModals: false,
+    });
   });
 });

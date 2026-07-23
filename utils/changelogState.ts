@@ -78,3 +78,20 @@ export const shouldEnableUnderlyingModalEscape = (
 export const shouldRenderUnderlyingModals = (
   showChangelog: boolean,
 ): boolean => !showChangelog;
+
+export interface ChangelogModalRenderPolicy {
+  renderAppModals: boolean;
+  renderGlobalDialogOverlays: boolean;
+  suspendDashboardModals: boolean;
+}
+
+export const resolveChangelogModalRenderPolicy = (
+  showChangelog: boolean,
+): ChangelogModalRenderPolicy => {
+  const renderUnderlyingModals = shouldRenderUnderlyingModals(showChangelog);
+  return {
+    renderAppModals: renderUnderlyingModals,
+    renderGlobalDialogOverlays: renderUnderlyingModals,
+    suspendDashboardModals: !renderUnderlyingModals,
+  };
+};

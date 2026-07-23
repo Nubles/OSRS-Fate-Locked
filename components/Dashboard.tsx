@@ -311,7 +311,11 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
 
 // --- Main Dashboard Component ---
 
-export const Dashboard: React.FC = () => {
+interface DashboardProps {
+  suspendModals?: boolean;
+}
+
+export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) => {
   const { unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId, customMode } = useGame();
   const activeMode = getGameMode(gameModeId);
   const [activeTab, setActiveTab] = useState('CHARACTER');
@@ -342,8 +346,8 @@ export const Dashboard: React.FC = () => {
   const [unlockReveal, dismissReveal] = useUnlockReveal(unlocks, gameModeId);
   const [achievementReveal, dismissAchievementReveal] = useAchievementReveal(unlocks);
 
-  useEscapeKey(() => setShowRunCard(false), showRunCard);
-  useEscapeKey(() => setSelectedSkillForDetails(null), selectedSkillForDetails !== null);
+  useEscapeKey(() => setShowRunCard(false), showRunCard && !suspendModals);
+  useEscapeKey(() => setSelectedSkillForDetails(null), selectedSkillForDetails !== null && !suspendModals);
 
   // The Journal summary card lives in the persistent left sidebar (App.tsx), so
   // it can't set this component's tab state directly. It dispatches a
@@ -917,11 +921,11 @@ export const Dashboard: React.FC = () => {
   return (
     <>
     <div className="bg-osrs-panel border border-osrs-border rounded-lg shadow-lg flex flex-col h-full overflow-hidden relative">
-      {pendingSpecial && (
+      {!suspendModals && pendingSpecial && (
           <VoidReveal itemName={pendingSpecial.item} itemType={pendingSpecial.table} itemImage={pendingSpecial.image} onComplete={finalizeSpecial} animationsEnabled={animationsEnabled} />
       )}
 
-      {selectedSkillForDetails && (
+      {!suspendModals && selectedSkillForDetails && (
           <Suspense fallback={<ModalFallback />}>
               <SkillDetailModal
                   skill={selectedSkillForDetails.name}
@@ -932,7 +936,7 @@ export const Dashboard: React.FC = () => {
       )}
 
       {/* Confirmation Modal */}
-      {confirmOmni && (
+      {!suspendModals && confirmOmni && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
               <div className="bg-[#1a1a1a] border border-purple-500/50 rounded-xl shadow-2xl p-6 max-w-sm w-full relative">
                   <div className="flex items-center gap-3 mb-4">
@@ -1128,44 +1132,44 @@ export const Dashboard: React.FC = () => {
           </div>
       </div>
     </div>
-    {showRunCard && (
+    {!suspendModals && showRunCard && (
       <Suspense fallback={<ModalFallback label="Building share card…" />}>
         <ShareModal onClose={() => setShowRunCard(false)} />
       </Suspense>
     )}
 
-    {showGoalPlanner && (
+    {!suspendModals && showGoalPlanner && (
       <Suspense fallback={<ModalFallback label="Loading planner…" />}>
         <GoalPlannerModal onClose={() => { setShowGoalPlanner(false); setGoalTarget(null); }} initialTarget={goalTarget} />
       </Suspense>
     )}
 
-    {showAchievements && (
+    {!suspendModals && showAchievements && (
       <Suspense fallback={<ModalFallback label="Loading achievements…" />}>
         <AchievementsModal onClose={() => setShowAchievements(false)} />
       </Suspense>
     )}
 
-    {showForecast && (
+    {!suspendModals && showForecast && (
       <Suspense fallback={<ModalFallback label="Consulting Fate…" />}>
         <FateForecastModal onClose={() => setShowForecast(false)} />
       </Suspense>
     )}
 
-    {showRival && (
+    {!suspendModals && showRival && (
       <Suspense fallback={<ModalFallback label="Summoning your rival…" />}>
         <RivalModal onClose={() => setShowRival(false)} />
       </Suspense>
     )}
 
-    {showBossPlanner && (
+    {!suspendModals && showBossPlanner && (
       <Suspense fallback={<ModalFallback label="Loading kill planner…" />}>
         <BossKillPlanner onClose={() => setShowBossPlanner(false)} />
       </Suspense>
     )}
 
     {/* Celebratory reveal when a milestone is newly earned. */}
-    {achievementReveal && (
+    {!suspendModals && achievementReveal && (
       <AchievementReveal
         data={achievementReveal}
         onDismiss={dismissAchievementReveal}
@@ -1175,7 +1179,7 @@ export const Dashboard: React.FC = () => {
 
     {/* Unlock reveal — slides in from the right when a quest or region
         unlocks and shows what new content just became available. */}
-    {unlockReveal && (
+    {!suspendModals && unlockReveal && (
       <UnlockReveal
         data={unlockReveal}
         onDismiss={dismissReveal}
