@@ -18,6 +18,7 @@ import { VoidReveal } from './VoidReveal';
 import { TableType } from '../types';
 import { wikiService } from '../services/WikiService';
 import { NoteTrigger } from './NoteTrigger';
+import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 // RegionMap is the single heaviest component in the app (map surface,
 // authoring tool, chunk overlays + their data). It only renders on the World
 // tab, so keep it out of the initial bundle.
@@ -792,7 +793,7 @@ export const Dashboard: React.FC = () => {
         { id: 'FARMING',   label: 'Farming Patches',    color: 'text-green-400',  bar: 'bg-green-500',  list: FARMING_PATCH_LIST, unlocked: unlocks.farming,   type: TableType.FARMING_LAYERS, details: FARMING_UNLOCK_DETAILS },
         { id: 'MOBILITY',  label: 'Mobility',           color: 'text-amber-400',  bar: 'bg-amber-500',  list: MOBILITY_LIST,      unlocked: unlocks.mobility,  type: TableType.MOBILITY },
         { id: 'GUILDS',    label: 'Guilds',             color: 'text-teal-400',   bar: 'bg-teal-500',   list: GUILDS_LIST,        unlocked: unlocks.guilds,    type: TableType.GUILDS },
-        { id: 'ARCANA',    label: 'Arcana',             color: 'text-violet-400', bar: 'bg-violet-500', list: ARCANA_LIST,        unlocked: unlocks.arcana,    type: TableType.ARCANA },
+        { id: 'ARCANA',    label: COMBAT_POWERS_LABEL,  color: 'text-violet-400', bar: 'bg-violet-500', list: ARCANA_LIST,        unlocked: unlocks.arcana,    type: TableType.ARCANA },
         { id: 'POH',       label: 'Player Owned House', color: 'text-orange-400', bar: 'bg-orange-500', list: POH_LIST,           unlocked: unlocks.housing,   type: TableType.POH },
         { id: 'STORAGE',   label: 'Storage',            color: 'text-amber-600',  bar: 'bg-amber-600',  list: STORAGE_LIST,       unlocked: unlocks.storage,   type: TableType.STORAGE },
         { id: 'MERCHANTS', label: 'Merchants',          color: 'text-yellow-400', bar: 'bg-yellow-500', list: MERCHANTS_LIST,     unlocked: unlocks.merchants, type: TableType.MERCHANTS },

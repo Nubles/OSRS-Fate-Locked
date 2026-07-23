@@ -6,6 +6,7 @@ import { SectionGuide } from './SectionGuide';
 import { TableType } from '../types';
 import { getPoolAndStateKey, isValidUnlock } from '../utils/gameEngine';
 import { keyVelocity, forecastTarget, keysToTarget } from '../utils/fateForecast';
+import { tableDisplayName } from '../utils/tableDisplay';
 
 interface Props {
   onClose: () => void;
@@ -24,7 +25,7 @@ const FORECAST_TABLES: { table: TableType; singular: string }[] = [
   { table: TableType.MOBILITY, singular: 'mobility unlock' },
   { table: TableType.FARMING_LAYERS, singular: 'farming patch' },
   { table: TableType.GUILDS, singular: 'guild' },
-  { table: TableType.ARCANA, singular: 'arcana unlock' },
+  { table: TableType.ARCANA, singular: 'combat power' },
 ];
 
 const fmtDays = (d: number): string => {
@@ -46,7 +47,7 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
     return FORECAST_TABLES.map(({ table, singular }) => {
       const { pool } = getPoolAndStateKey(table);
       const remaining = pool.filter((item) => isValidUnlock(table, item, unlocks)).length;
-      return { table, singular, remaining, headline: keysToTarget(remaining).p50 };
+      return { table, label: tableDisplayName(table), singular, remaining, headline: keysToTarget(remaining).p50 };
     }).filter((c) => c.remaining > 0);
   }, [unlocks]);
 
@@ -121,7 +122,7 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
                       }`}
                     >
                       <div className="flex-1 min-w-0">
-                        <div className={`text-[13px] font-semibold truncate ${isActive ? 'text-fuchsia-200' : 'text-gray-200'}`}>{c.table}</div>
+                        <div className={`text-[13px] font-semibold truncate ${isActive ? 'text-fuchsia-200' : 'text-gray-200'}`}>{c.label}</div>
                         <div className="text-[10px] text-gray-500">{c.remaining} locked</div>
                       </div>
                       <div className="text-right shrink-0">
@@ -140,7 +141,7 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
               {active && forecast && (
                 <div className="space-y-4 animate-in fade-in duration-200">
                   <div>
-                    <h3 className="text-lg font-bold text-white leading-tight">{active.table}</h3>
+                    <h3 className="text-lg font-bold text-white leading-tight">{active.label}</h3>
                     <p className="text-[11px] text-gray-500 mt-1 flex items-center gap-1.5">
                       <Dices size={12} className="text-fuchsia-400" />
                       <span className="text-gray-300 font-semibold">{active.remaining}</span> locked · each draw is a <span className="text-gray-300 font-semibold">1 in {active.remaining}</span> shot at any specific one.
@@ -194,7 +195,7 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
 
                   <p className="text-[9px] text-gray-600 leading-relaxed flex items-start gap-1.5">
                     <TrendingUp size={11} className="shrink-0 mt-0.5" />
-                    Assumes you spend keys on {active.table.toLowerCase()} and that Fate draws uniformly at random; the pool shrinks as you unlock.
+                    Assumes you spend keys on {active.label.toLowerCase()} and that Fate draws uniformly at random; the pool shrinks as you unlock.
                   </p>
                 </div>
               )}

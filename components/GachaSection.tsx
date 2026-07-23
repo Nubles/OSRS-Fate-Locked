@@ -10,6 +10,7 @@ import { VoidReveal } from './VoidReveal';
 import { wikiService } from '../services/WikiService';
 import { showToast } from '../utils/toast';
 import { Sparkles, Dices, HelpCircle, Dna, Lock, Sprout, TrendingUp, AlertTriangle, Check, Key } from 'lucide-react';
+import { COMBAT_POWERS_DESCRIPTION, COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { ALL_CHUNK_KEYS, chunkLabel } from '../utils/chunkAdjacency';
 
 // --- Inner Components ---
@@ -284,7 +285,7 @@ export const GachaSection: React.FC = () => {
       ? { type: TableType.CHUNKS, label: 'Chunks', subLabel: 'Adjacent Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: (unlocks.chunks ?? []).length, total: ALL_CHUNK_KEYS.length, can: canUnlock.chunks }
       : { type: TableType.REGIONS, label: 'Areas', subLabel: 'New Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: (unlocks.regions ?? []).length, total: REGIONS_LIST.length, can: canUnlock.regions },
     { type: TableType.MOBILITY, label: 'Mobility', subLabel: 'Travel Networks', iconSrc: OSRS_GACHA_ICONS.MOBILITY, unlocked: (unlocks.mobility ?? []).length, total: MOBILITY_LIST.length, can: canUnlock.mobility },
-    { type: TableType.ARCANA, label: 'Arcana', subLabel: 'Spells & Prayers', iconSrc: OSRS_GACHA_ICONS.ARCANA, unlocked: (unlocks.arcana ?? []).length, total: ARCANA_LIST.length, can: canUnlock.arcana },
+    { type: TableType.ARCANA, label: COMBAT_POWERS_LABEL, subLabel: COMBAT_POWERS_DESCRIPTION, iconSrc: OSRS_GACHA_ICONS.ARCANA, unlocked: (unlocks.arcana ?? []).length, total: ARCANA_LIST.length, can: canUnlock.arcana },
     { type: TableType.STORAGE, label: 'Storage', subLabel: 'Inventory Space', iconSrc: OSRS_GACHA_ICONS.STORAGE, unlocked: (unlocks.storage ?? []).length, total: STORAGE_LIST.length, can: canUnlock.storage },
     { type: TableType.POH, label: 'Housing', subLabel: 'POH Facilities', iconSrc: OSRS_GACHA_ICONS.POH, unlocked: (unlocks.housing ?? []).length, total: POH_LIST.length, can: canUnlock.poh },
     { type: TableType.MERCHANTS, label: 'Merchants', subLabel: 'Shops & Wares', iconSrc: OSRS_GACHA_ICONS.MERCHANTS, unlocked: (unlocks.merchants ?? []).length, total: MERCHANTS_LIST.length, can: canUnlock.merchants },

@@ -9,6 +9,7 @@ import { SectionGuide } from './SectionGuide';
 import { getGameMode } from '../config/gameModes';
 import { showToast } from '../utils/toast';
 import { EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, SKILLS_LIST, REGIONS_LIST, REGION_GROUPS, SLOT_CONFIG } from '../constants';
+import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { isAreaReachable } from '../utils/reachability';
 
 interface ShareModalProps {
@@ -390,7 +391,7 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
                                 <span className="font-bold text-white text-lg leading-none">{pohCount}</span>
                             </div>
                             <div className={`${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
-                                <div className="text-xs text-gray-400 font-bold uppercase flex items-center gap-1.5"><Sparkles size={12} /> Arcana</div>
+                                <div className="text-xs text-gray-400 font-bold uppercase flex items-center gap-1.5"><Sparkles size={12} /> {COMBAT_POWERS_LABEL}</div>
                                 <span className="font-bold text-white text-lg leading-none">{arcanaCount}</span>
                             </div>
                             <div className={`${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
