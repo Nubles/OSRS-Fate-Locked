@@ -15,7 +15,10 @@
 import { QUEST_DATA, QuestData } from '../data/questData';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { REGION_GROUPS } from '../data/items';
-import { getQuestStatus, getDiaryStatus } from './journalStatus';
+import {
+  getQuestStatus, getDiaryStatus, meetsSkillRequirement,
+  questAlternativesMet, questRequirementOptionLabel,
+} from './journalStatus';
 import { isAreaReachable } from './reachability';
 
 export type GoalKind = 'quest' | 'diary' | 'region';
@@ -65,13 +68,6 @@ interface Selectable {
 
 const UNLOCKABLE_REGIONS = Object.keys(REGION_GROUPS);
 
-/** A skill requirement is met if the skill is unlocked AND the level is reached. */
-function skillMet(skill: string, lvl: number, unlocks: any): boolean {
-  const unlocked = (unlocks.skills[skill] ?? 0) > 0;
-  const current = unlocks.levels[skill] ?? 1;
-  return unlocked && current >= lvl;
-}
-
 /** Total quest points the player currently has. */
 function currentQuestPoints(unlocks: any): number {
   return (unlocks.quests as string[]).reduce(
@@ -91,6 +87,7 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
   const order: string[] = []; // incomplete quests, dependency order
   const visited = new Set<string>();
   const regions = new Set<string>();
+  const alternatives = new Set<string>();
   const skills: Record<string, number> = {};
   let qpRequired = 0;
 
@@ -110,6 +107,11 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
     for (const r of q.regions) {
       if (!isAreaReachable(r, unlocks, gameModeId)) regions.add(r);
     }
+    if (!questAlternativesMet(q, unlocks, gameModeId)) {
+      alternatives.add(
+        `One of: ${q.oneOf!.map(questRequirementOptionLabel).join(' or ')}`,
+      );
+    }
     // Skill / quest-point gates.
     for (const [skill, lvl] of Object.entries(q.skills as Record<string, number>)) {
       if (skill === 'Quest Points') {
@@ -123,40 +125,57 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
   };
 
   visit(rootQuestId);
-  return { order, regions, skills, qpRequired };
+  return { order, regions, alternatives, skills, qpRequired };
 }
 
 function buildPlanFromRequirements(
   targetKind: GoalKind,
   targetId: string,
   targetLabel: string,
-  reqs: { order: string[]; regions: Set<string>; skills: Record<string, number>; qpRequired: number },
+  reqs: {
+    order: string[]; regions: Set<string>; alternatives: Set<string>;
+    skills: Record<string, number>; qpRequired: number;
+  },
   unlocks: any,
   alreadyReachable: boolean,
   alreadyDone: boolean,
   gameModeId?: string,
 ): GoalPlan {
   // Region steps.
-  const regionSteps: PlanStep[] = Array.from(reqs.regions)
-    .map((r): PlanStep => ({
+  const regionSteps: PlanStep[] = [
+    ...Array.from(reqs.regions).map((region): PlanStep => ({
       kind: 'region',
-      id: r,
-      label: r,
-      done: isAreaReachable(r, unlocks, gameModeId),
-    }))
-    .sort((a, b) => Number(a.done) - Number(b.done) || a.label.localeCompare(b.label));
+      id: region,
+      label: region,
+      done: isAreaReachable(region, unlocks, gameModeId),
+    })),
+    ...Array.from(reqs.alternatives).map((label): PlanStep => ({
+      kind: 'region',
+      id: `alternative:${label}`,
+      label,
+      detail: 'Unlock any listed route',
+      done: false,
+    })),
+  ].sort((a, b) => Number(a.done) - Number(b.done) || a.label.localeCompare(b.label));
 
   // Skill steps.
   const skillSteps: PlanStep[] = Object.entries(reqs.skills)
     .map(([skill, lvl]): PlanStep => {
-      const done = skillMet(skill, lvl, unlocks);
+      const done = meetsSkillRequirement(unlocks, skill, lvl);
       const have = unlocks.levels[skill] ?? 1;
-      const unlocked = (unlocks.skills[skill] ?? 0) > 0;
+      const tier = unlocks.skills[skill] ?? 0;
+      const unlocked = tier > 0;
+      const methodCap = Math.min(99, tier * 10);
+      const detail = !unlocked
+        ? `Lv ${lvl} (locked)`
+        : have >= lvl && methodCap < lvl
+          ? `Lv ${lvl} (have ${have}; method cap ${methodCap})`
+          : `Lv ${lvl} (have ${have})`;
       return {
         kind: 'skill',
         id: skill,
         label: skill,
-        detail: unlocked ? `Lv ${lvl} (have ${have})` : `Lv ${lvl} (locked)`,
+        detail,
         done,
       };
     })
@@ -259,6 +278,7 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
     const merged = {
       order: [] as string[],
       regions: new Set<string>(),
+      alternatives: new Set<string>(),
       skills: {} as Record<string, number>,
       qpRequired: 0,
     };
@@ -266,6 +286,7 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
     for (const qid of d.quests) {
       const sub = collectQuestChain(qid, unlocks, gameModeId);
       for (const r of sub.regions) merged.regions.add(r);
+      for (const alternative of sub.alternatives) merged.alternatives.add(alternative);
       for (const [s, lvl] of Object.entries(sub.skills)) {
         merged.skills[s] = Math.max(merged.skills[s] ?? 0, lvl);
       }
