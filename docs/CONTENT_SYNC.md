@@ -123,9 +123,11 @@ npm run diary:sync
 ```
 
 The command never contacts the network. It validates the frozen source metadata,
-the 492-row total, unique IDs and ordinals, known tiers, alias targets, and the
-reviewed 485-row classification before writing `data/diaryTasks.ts` and the
-migration map in `utils/taskIdMigrations.ts`.
+the 492-row total, unique IDs and ordinals, known tiers, alias targets, and an
+independently derived 485-row classification before writing `data/diaryTasks.ts` and the
+migration map in `utils/taskIdMigrations.ts`. The audit parses the canonical
+project skill, quest, and region declarations, so the reported zero unknown
+references cannot mask a bad snapshot row.
 
 ID rules:
 
@@ -137,6 +139,6 @@ ID rules:
 - Retired and unknown historical completion IDs remain in saves but do not count
   toward the current 492-task total.
 
-Current reviewed classification: 469 preserved semantic IDs, 0 source-supported
-replacement aliases, 16 retired existing IDs, and 23 new canonical IDs. The net
+Current reviewed classification: 470 preserved semantic IDs, 0 source-supported
+replacement aliases, 15 retired existing IDs, and 22 new canonical IDs. The net
 increase is seven, but the refresh is not a seven-row append.

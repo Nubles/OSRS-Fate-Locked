@@ -82,10 +82,10 @@
   "verifiedAt": "2026-07-23",
   "classification": {
     "existingRows": 485,
-    "preservedIds": 469,
+    "preservedIds": 470,
     "renamedOrReplacedAliases": 0,
-    "retiredExistingIds": 16,
-    "newCanonicalIds": 23,
+    "retiredExistingIds": 15,
+    "newCanonicalIds": 22,
     "unresolvedExistingRows": 0,
     "unresolvedDuplicateIds": 0,
     "unknownReferences": 0,
@@ -7801,7 +7801,7 @@
       "sourceRequirements": "Partial completion of Monkey Madness I 46 Fishing Big fishing net"
     },
     {
-      "id": "western_med_5",
+      "id": "west_med_5",
       "area": "Western",
       "tier": "Medium",
       "tierId": "Western Medium",
@@ -7818,7 +7818,8 @@
         "Kandarin"
       ],
       "aliases": [],
-      "classification": "new-canonical",
+      "classification": "preserved-semantic",
+      "previousDescription": "Chop some Teak logs.",
       "sourceRequirements": "Partial completion of Monkey Madness I 35 Woodcutting and 35 Firemaking Any axe and tinderbox"
     },
     {
@@ -9104,13 +9105,6 @@
       "id": "west_easy_8",
       "tierId": "Western Easy",
       "description": "Kill a Chompy Bird.",
-      "classification": "retired",
-      "reason": "No current semantic match in the verified OSRS Wiki source; preserved as a legacy completion id."
-    },
-    {
-      "id": "west_med_5",
-      "tierId": "Western Medium",
-      "description": "Chop some Teak logs.",
       "classification": "retired",
       "reason": "No current semantic match in the verified OSRS Wiki source; preserved as a legacy completion id."
     },

@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import ts from 'typescript';
 
 export const DIARY_TIER_ORDER = [
   'Ardougne Easy', 'Ardougne Medium', 'Ardougne Hard', 'Ardougne Elite',
@@ -298,30 +299,242 @@ export function renderTaskIdMigrations(snapshot) {
   return lines.join('\n');
 }
 
-const validateAudit = (snapshot) => {
+const unwrapTsExpression = (expression) => {
+  let node = expression;
+  while (
+    ts.isAsExpression(node)
+    || ts.isTypeAssertionExpression(node)
+    || ts.isSatisfiesExpression(node)
+    || ts.isParenthesizedExpression(node)
+  ) {
+    node = node.expression;
+  }
+  return node;
+};
+
+const initializerOf = (sourceFile, declarationName) => {
+  for (const statement of sourceFile.statements) {
+    if (!ts.isVariableStatement(statement)) continue;
+    for (const declaration of statement.declarationList.declarations) {
+      if (
+        ts.isIdentifier(declaration.name)
+        && declaration.name.text === declarationName
+        && declaration.initializer
+      ) {
+        return unwrapTsExpression(declaration.initializer);
+      }
+    }
+  }
+  throw new Error('Could not read project reference declaration: ' + declarationName);
+};
+
+const propertyNameOf = (property) => {
+  const name = property.name;
+  if (ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNumericLiteral(name)) {
+    return name.text;
+  }
+  throw new Error('Unsupported computed project reference key');
+};
+
+const stringLiteralOf = (expression) => {
+  const node = unwrapTsExpression(expression);
+  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return node.text;
+  throw new Error('Project reference contains a non-literal string');
+};
+
+const stringArrayOf = (expression) => {
+  const node = unwrapTsExpression(expression);
+  if (!ts.isArrayLiteralExpression(node)) {
+    throw new Error('Project reference contains a non-literal string array');
+  }
+  return node.elements.map(stringLiteralOf);
+};
+
+const referenceCatalogCache = new Map();
+
+const loadReferenceCatalog = (projectRoot) => {
+  const cached = referenceCatalogCache.get(projectRoot);
+  if (cached) return cached;
+
+  const parseProjectFile = (relativePath) => {
+    const absolutePath = resolve(projectRoot, relativePath);
+    return ts.createSourceFile(
+      absolutePath,
+      readFileSync(absolutePath, 'utf8'),
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.TS,
+    );
+  };
+  const itemsSource = parseProjectFile('data/items.ts');
+  const questSource = parseProjectFile('data/questData.ts');
+
+  const skills = new Set(stringArrayOf(initializerOf(itemsSource, 'SKILLS_LIST')));
+  const regions = new Set([
+    'Misthalin',
+    ...stringArrayOf(initializerOf(itemsSource, 'MISTHALIN_AREAS')),
+  ]);
+  const regionGroups = initializerOf(itemsSource, 'REGION_GROUPS');
+  if (!ts.isObjectLiteralExpression(regionGroups)) {
+    throw new Error('REGION_GROUPS must remain an object literal');
+  }
+  for (const property of regionGroups.properties) {
+    if (!ts.isPropertyAssignment(property)) continue;
+    regions.add(propertyNameOf(property));
+    for (const region of stringArrayOf(property.initializer)) regions.add(region);
+  }
+
+  const quests = new Set();
+  const questData = initializerOf(questSource, 'QUEST_DATA');
+  if (!ts.isObjectLiteralExpression(questData)) {
+    throw new Error('QUEST_DATA must remain an object literal');
+  }
+  for (const property of questData.properties) {
+    if (!ts.isPropertyAssignment(property)) continue;
+    quests.add(propertyNameOf(property));
+    const quest = unwrapTsExpression(property.initializer);
+    if (!ts.isObjectLiteralExpression(quest)) continue;
+    const nameProperty = quest.properties.find(candidate => (
+      ts.isPropertyAssignment(candidate) && propertyNameOf(candidate) === 'name'
+    ));
+    if (nameProperty) quests.add(stringLiteralOf(nameProperty.initializer));
+  }
+
+  const catalog = { skills, quests, regions };
+  referenceCatalogCache.set(projectRoot, catalog);
+  return catalog;
+};
+
+const findUnknownReferences = (snapshot, projectRoot) => {
+  const catalog = loadReferenceCatalog(projectRoot);
+  const unknown = [];
+  for (const task of snapshot.tasks) {
+    for (const skill of Object.keys(task.skills ?? {})) {
+      if (!catalog.skills.has(skill)) unknown.push(task.id + ' skill ' + skill);
+    }
+    for (const quest of task.quests ?? []) {
+      if (!catalog.quests.has(quest)) unknown.push(task.id + ' quest ' + quest);
+    }
+    for (const region of task.regions ?? []) {
+      if (!catalog.regions.has(region)) unknown.push(task.id + ' region ' + region);
+    }
+  }
+  return unknown;
+};
+
+export const validateAudit = (
+  snapshot,
+  projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..'),
+) => {
   const audit = snapshot.classification;
   if (!audit) throw new Error('Diary snapshot classification report is missing');
-  const blockers = [
-    ['official rows', snapshot.tasks.length === 492],
-    ['existing rows classified', audit.existingRows === 485],
-    ['unresolved existing rows', audit.unresolvedExistingRows === 0],
-    ['unresolved duplicate ids', audit.unresolvedDuplicateIds === 0],
-    ['unknown tiers/skills/quests/regions', audit.unknownReferences === 0],
-  ].filter(([, ok]) => !ok).map(([label]) => label);
-  if (blockers.length > 0) {
-    throw new Error('Diary snapshot audit failed: ' + blockers.join(', '));
+  if (snapshot.tasks.length !== 492) {
+    throw new Error('Diary snapshot audit failed: official rows');
   }
-  if (audit.existingRows !== (
-    audit.preservedIds + audit.renamedOrReplacedAliases + audit.retiredExistingIds
-  )) {
-    throw new Error('Diary existing-row classification counts do not sum to 485');
+
+  const currentIds = new Set(snapshot.tasks.map(task => task.id));
+  const historicalIds = new Set();
+  const derived = {
+    preservedIds: 0,
+    renamedOrReplacedAliases: 0,
+    retiredExistingIds: 0,
+    newCanonicalIds: 0,
+  };
+  const addHistoricalId = (id, source) => {
+    if (historicalIds.has(id)) {
+      throw new Error('Duplicate historical Diary id classification: ' + id + ' (' + source + ')');
+    }
+    historicalIds.add(id);
+  };
+
+  for (const task of snapshot.tasks) {
+    const aliases = task.aliases ?? [];
+    if (task.classification === 'preserved-exact'
+      || task.classification === 'preserved-semantic') {
+      if (aliases.length > 0) {
+        throw new Error('Preserved Diary task must not declare aliases: ' + task.id);
+      }
+      derived.preservedIds += 1;
+      addHistoricalId(task.id, 'preserved');
+    } else if (task.classification === 'renamed-or-replaced') {
+      if (aliases.length !== 1) {
+        throw new Error('Renamed/replaced Diary task must declare exactly one historical alias: ' + task.id);
+      }
+      derived.renamedOrReplacedAliases += 1;
+      if (currentIds.has(aliases[0])) {
+        throw new Error('Diary alias/current id collision: ' + aliases[0]);
+      }
+      addHistoricalId(aliases[0], 'alias');
+    } else if (task.classification === 'new-canonical') {
+      if (aliases.length > 0) {
+        throw new Error('New Diary task must not declare historical aliases: ' + task.id);
+      }
+      derived.newCanonicalIds += 1;
+    } else {
+      throw new Error(
+        'Unknown Diary task classification: ' + task.id + ' -> ' + task.classification,
+      );
+    }
   }
-  if (snapshot.tasks.length !== (
-    audit.preservedIds + audit.renamedOrReplacedAliases + audit.newCanonicalIds
-  )) {
-    throw new Error('Diary current-row classification counts do not sum to 492');
+
+  for (const retired of snapshot.retired) {
+    if (!retired.id || retired.classification !== 'retired') {
+      throw new Error('Diary retired classification is incomplete');
+    }
+    if (currentIds.has(retired.id)) {
+      throw new Error('Diary retired/current id collision: ' + retired.id);
+    }
+    derived.retiredExistingIds += 1;
+    addHistoricalId(retired.id, 'retired');
   }
-  return audit;
+
+  if (historicalIds.size !== 485) {
+    throw new Error(
+      'Diary historical classification mismatch: expected 485, derived ' + historicalIds.size,
+    );
+  }
+  const derivedCurrentRows = (
+    derived.preservedIds
+    + derived.renamedOrReplacedAliases
+    + derived.newCanonicalIds
+  );
+  if (derivedCurrentRows !== snapshot.tasks.length) {
+    throw new Error(
+      'Diary current classification mismatch: expected '
+      + snapshot.tasks.length + ', derived ' + derivedCurrentRows,
+    );
+  }
+
+  const unknownReferences = findUnknownReferences(snapshot, projectRoot);
+  if (unknownReferences.length > 0) {
+    throw new Error('Unknown Diary references: ' + unknownReferences.join(', '));
+  }
+
+  const reportedComparisons = [
+    ['existingRows', audit.existingRows, historicalIds.size],
+    ['preservedIds', audit.preservedIds, derived.preservedIds],
+    [
+      'renamedOrReplacedAliases',
+      audit.renamedOrReplacedAliases,
+      derived.renamedOrReplacedAliases,
+    ],
+    ['retiredExistingIds', audit.retiredExistingIds, derived.retiredExistingIds],
+    ['newCanonicalIds', audit.newCanonicalIds, derived.newCanonicalIds],
+    ['unknownReferences', audit.unknownReferences, unknownReferences.length],
+  ];
+  const mismatches = reportedComparisons
+    .filter(([, reported, actual]) => reported !== actual)
+    .map(([label, reported, actual]) => (
+      label + ' reported=' + reported + ' derived=' + actual
+    ));
+  if (mismatches.length > 0) {
+    throw new Error('Diary classification counter mismatch: ' + mismatches.join(', '));
+  }
+  if (audit.unresolvedExistingRows !== 0 || audit.unresolvedDuplicateIds !== 0) {
+    throw new Error('Diary snapshot audit has unresolved rows or duplicate ids');
+  }
+
+  return { ...audit, ...derived, existingRows: historicalIds.size, unknownReferences: 0 };
 };
 
 const run = () => {

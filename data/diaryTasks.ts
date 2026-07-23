@@ -433,7 +433,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'west_med_2', tierId: 'Western Medium', description: 'Travel to the Gnome Stronghold by Spirit Tree.', quests: ['Tree Gnome Village'], regions: ['Tree Gnome Stronghold'] },
   { id: 'west_med_3', tierId: 'Western Medium', description: 'Trap a Spined Larupia.', skills: { 'Hunter': 31 }, regions: ['Feldip Hills'] },
   { id: 'west_med_4', tierId: 'Western Medium', description: 'Fish some Bass on Ape Atoll.', skills: { 'Fishing': 46 }, quests: ['Monkey Madness I'], regions: ['Kandarin'] },
-  { id: 'western_med_5', tierId: 'Western Medium', description: 'Chop and burn some teak logs on Ape Atoll.', skills: { 'Firemaking': 35, 'Woodcutting': 35 }, quests: ['Monkey Madness I'], regions: ['Kandarin'] },
+  { id: 'west_med_5', tierId: 'Western Medium', description: 'Chop and burn some teak logs on Ape Atoll.', skills: { 'Firemaking': 35, 'Woodcutting': 35 }, quests: ['Monkey Madness I'], regions: ['Kandarin'] },
   { id: 'western_med_6', tierId: 'Western Medium', description: 'Complete an intermediate game of Pest Control.', regions: ['Kandarin'] },
   { id: 'western_med_7', tierId: 'Western Medium', description: 'Travel to the Feldip Hills by Gnome Glider.', quests: ['The Grand Tree', 'One Small Favour'], regions: ['Kandarin'] },
   { id: 'western_med_8', tierId: 'Western Medium', description: 'Claim a Chompy bird hat from Rantz after registering at least 125 kills.', quests: ['Big Chompy Bird Hunting'], regions: ['Kandarin'] },

@@ -1,7 +1,9 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   parseAchievementDiaryHtml,
   renderDiaryTasks,
+  validateAudit,
 } from './sync-achievement-diaries.mjs';
 
 const SIX_ROW_HTML = [
@@ -181,4 +183,45 @@ it('keeps outer task rows when a requirement cell contains a nested table', () =
     'First task',
     'Second task',
   ]);
+});
+
+describe('Achievement Diary id-classification audit', () => {
+  const loadSnapshot = () => JSON.parse(readFileSync(
+    new URL('../data/sources/achievement-diary-tasks.json', import.meta.url),
+    'utf8',
+  ));
+
+  it('derives the historical partition instead of trusting reported counters', () => {
+    const snapshot = loadSnapshot();
+    snapshot.tasks[0].classification = 'new-canonical';
+
+    expect(() => validateAudit(snapshot)).toThrow(/classification.*mismatch/i);
+  });
+
+  it('rejects an id classified as both retired and current', () => {
+    const snapshot = loadSnapshot();
+    snapshot.retired[0].id = snapshot.tasks[0].id;
+
+    expect(() => validateAudit(snapshot)).toThrow(/retired.*current|collision/i);
+  });
+
+  it('rejects unknown references even when the reported counter is zero', () => {
+    const snapshot = loadSnapshot();
+    snapshot.tasks[0].skills.NotASkill = 1;
+
+    expect(() => validateAudit(snapshot)).toThrow(/unknown.*NotASkill/i);
+  });
+
+  it('preserves the historical teak-log completion id for its semantic match', () => {
+    const snapshot = loadSnapshot();
+    const task = snapshot.tasks.find(
+      candidate => candidate.tierId === 'Western Medium' && candidate.ordinal === 5,
+    );
+
+    expect(task).toMatchObject({
+      id: 'west_med_5',
+      classification: 'preserved-semantic',
+    });
+    expect(snapshot.retired.map(candidate => candidate.id)).not.toContain('west_med_5');
+  });
 });
