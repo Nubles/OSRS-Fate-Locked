@@ -1,5 +1,6 @@
 import { CUSTOM_RULE_BOUNDS, type GameModeRules } from '../config/gameModes';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
+import { EQUIPMENT_SLOTS } from '../data/items';
 import type { GameState, LogEntry, RivalState, UnlockState } from '../types';
 import { migrateClogIds } from './clogIdMigrations';
 import { migrateCompletedTaskIds } from './taskIdMigrations';
@@ -40,6 +41,7 @@ type Failure = Extract<SaveValidationResult, { ok: false }>;
 type Outcome<T> = { ok: true; value: T } | Failure;
 
 const DANGEROUS_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
+const LOADOUT_SLOTS = new Set<string>(EQUIPMENT_SLOTS);
 const own = (record: object, key: PropertyKey): boolean =>
   Object.prototype.hasOwnProperty.call(record, key);
 
@@ -538,6 +540,7 @@ const normalizeLoadout = (value: unknown): Outcome<Record<string, number>> => {
   if (inspected.ok === false) return inspected;
   const out: Record<string, number> = {};
   for (const key of Object.getOwnPropertyNames(inspected.value)) {
+    if (!LOADOUT_SLOTS.has(key)) return invalid('invalid_field', pathOf('loadout', key));
     const itemId = boundedInteger(readOwn(inspected.value, key), pathOf('loadout', key), 0, MAX_COUNTER);
     if (itemId.ok === false) return itemId;
     out[key] = itemId.value;
@@ -689,6 +692,14 @@ const normalizeState = (
   defaults: GameState,
   sourceVersion: number,
 ): Outcome<{ state: GameState; migrated: boolean }> => {
+  if (sourceVersion === CURRENT_SAVE_VERSION) {
+    for (const key of [
+      'keys', 'specialKeys', 'chaosKeys', 'fatePoints', 'activeBuff',
+      'unlocks', 'history', 'pinnedGoals', 'userNotes',
+    ]) {
+      if (!own(input, key)) return invalid('invalid_field', key);
+    }
+  }
   const defaultRecord = defaults as unknown as Record<string, unknown>;
   const counter = (key: 'keys' | 'specialKeys' | 'chaosKeys' | 'fatePoints'): Outcome<number> => {
     const selected = readPreferred(input, defaultRecord, key);

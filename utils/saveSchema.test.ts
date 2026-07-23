@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { GameState, LogEntry, UnlockState } from '../types';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
-import { DIARY_TASK_ID_MIGRATIONS } from './taskIdMigrations';
 import {
   CURRENT_SAVE_VERSION,
   MAX_COLLECTION_LOG_ENTRIES,
@@ -190,48 +189,63 @@ describe('save schema compatibility', () => {
   });
 
   it('migrates supported legacy aliases exactly once without double-counting collection aliases', () => {
-    const aliases = DIARY_TASK_ID_MIGRATIONS as Record<string, string>;
-    aliases.old_diary = 'ard_easy_1';
-    aliases.old_ca = 'ca_0';
-    try {
-      const legacy = clone(fullStateFixture()) as unknown as Record<string, unknown>;
-      delete legacy.version;
-      const unlocks = legacy.unlocks as unknown as Record<string, unknown>;
-      delete unlocks.arcana;
-      delete unlocks.housing;
-      unlocks.power = ['Protect from Melee', 'Protect from Melee'];
-      unlocks.poh = ['Kitchen'];
-      unlocks.completedTasks = ['old_diary', 'ard_easy_1', 'old_ca', 'ca_0', 'retired_task'];
-      unlocks.collectionLog = { 104011: 5, 104002: 3 };
+    const legacy = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    delete legacy.version;
+    const unlocks = legacy.unlocks as unknown as Record<string, unknown>;
+    delete unlocks.arcana;
+    delete unlocks.housing;
+    unlocks.power = ['Protect from Melee', 'Protect from Melee'];
+    unlocks.poh = ['Kitchen'];
+    unlocks.completedTasks = [
+      'ard_easy_1', 'ard_easy_1',
+      'ca_0', 'ca_0',
+      'kar_elite_3', 'kar_elite_3',
+      'unknown_future_task', 'unknown_future_task',
+      'toString', 'constructor', 'constructor',
+    ];
+    unlocks.collectionLog = { 104011: 5, 104002: 3 };
 
-      const first = expectAccepted(validateAndMigrateSave(legacy, defaultsFixture()));
-      const second = expectAccepted(validateAndMigrateSave(first.state, defaultsFixture()));
-      expect(first.sourceVersion).toBe(0);
-      expect(first.warnings).toHaveLength(1);
-      expect(first.state.unlocks.arcana).toEqual(['Protect from Melee']);
-      expect(first.state.unlocks.housing).toEqual(['Kitchen']);
-      expect(first.state.unlocks.completedTasks).toEqual(['ard_easy_1', 'ca_0', 'retired_task']);
-      expect(first.state.unlocks.collectionLog).toEqual({ 104002: 5 });
-      expect(second.state).toEqual(first.state);
-      expect(second.warnings).toEqual([]);
-    } finally {
-      delete aliases.old_diary;
-      delete aliases.old_ca;
-    }
+    const first = expectAccepted(validateAndMigrateSave(legacy, defaultsFixture()));
+    const second = expectAccepted(validateAndMigrateSave(first.state, defaultsFixture()));
+    expect(first.sourceVersion).toBe(0);
+    expect(first.warnings).toHaveLength(1);
+    expect(first.state.unlocks.arcana).toEqual(['Protect from Melee']);
+    expect(first.state.unlocks.housing).toEqual(['Kitchen']);
+    expect(first.state.unlocks.completedTasks).toEqual([
+      'ard_easy_1',
+      'ca_0',
+      'kar_elite_3',
+      'unknown_future_task',
+      'toString',
+      'constructor',
+    ]);
+    expect(first.state.unlocks.collectionLog).toEqual({ 104002: 5 });
+    expect(second.state).toEqual(first.state);
+    expect(second.warnings).toEqual([]);
   });
 
   it('treats a missing version as legacy, accepts version 1, and rejects future versions', () => {
     expect(expectAccepted(validateAndMigrateSave({ keys: 1 }, defaultsFixture())).sourceVersion).toBe(0);
-    expect(expectAccepted(validateAndMigrateSave({ version: 1 }, defaultsFixture())).sourceVersion).toBe(1);
+    expect(expectAccepted(validateAndMigrateSave(fullStateFixture(), defaultsFixture())).sourceVersion).toBe(1);
+    expectRejected({ version: 1 }, 'invalid_field', 'keys');
     expectRejected({ version: 2 }, 'unsupported_version', 'version');
     expectRejected({ version: 0 }, 'unsupported_version', 'version');
+  });
+
+  it.each([
+    'keys', 'specialKeys', 'chaosKeys', 'fatePoints', 'activeBuff',
+    'unlocks', 'history', 'pinnedGoals', 'userNotes',
+  ])('requires current-version field %s instead of defaulting it', field => {
+    const truncated = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    delete truncated[field];
+    expectRejected(truncated, 'invalid_field', field);
   });
 
   it('fills absent optional fields from fresh defaults and never shares mutable defaults', () => {
     const input = clone(fullStateFixture()) as unknown as Record<string, unknown>;
     for (const key of [
       'animationsEnabled', 'advisorsEnabled', 'revealAllFeatures', 'hasSeenOnboarding',
-      'pinnedGoals', 'userNotes', 'gameModeId', 'customMode', 'gameModeLocked',
+      'gameModeId', 'customMode', 'gameModeLocked',
       'rngSeed', 'loadout', 'rival', 'linkedAccount', 'xtremeMilestoneClaimed',
       'chunkedMilestoneClaimed',
     ]) delete input[key];
@@ -241,8 +255,6 @@ describe('save schema compatibility', () => {
       advisorsEnabled: false,
       revealAllFeatures: false,
       hasSeenOnboarding: false,
-      pinnedGoals: [],
-      userNotes: {},
       gameModeId: 'vanilla',
       gameModeLocked: false,
       loadout: {},
@@ -275,7 +287,6 @@ describe('save schema structural rejection', () => {
 
   it('accepts a null-prototype root while rebuilding an ordinary safe state', () => {
     const input = Object.create(null) as Record<string, unknown>;
-    input.version = 1;
     input.keys = 7;
     const accepted = expectAccepted(validateAndMigrateSave(input, defaultsFixture()));
     expect(accepted.state.keys).toBe(7);
@@ -290,8 +301,12 @@ describe('save schema structural rejection', () => {
   it.each(['__proto__', 'prototype', 'constructor'])(
     'rejects dangerous key %s at any depth',
     key => {
-      const json = `{"version":1,"unlocks":{"${key}":{"secret":"never"}}}`;
-      expectRejected(JSON.parse(json), 'invalid_field', `unlocks.${key}`);
+      const input = clone(fullStateFixture());
+      Object.defineProperty(input.unlocks, key, {
+        value: { secret: 'never' },
+        enumerable: true,
+      });
+      expectRejected(input, 'invalid_field', `unlocks.${key}`);
     },
   );
 
@@ -376,6 +391,7 @@ describe('save schema numeric and enum boundaries', () => {
     expectRejected(candidate({ activeBuff: 'POWER' }), 'invalid_field', 'activeBuff');
     expectRejected(candidate({ loadout: { Head: -1 } }), 'invalid_number', 'loadout.Head');
     expectRejected(candidate({ loadout: { Head: 1.5 } }), 'invalid_number', 'loadout.Head');
+    expectRejected(candidate({ loadout: { NotARealSlot: 4151 } }), 'invalid_field', 'loadout.NotARealSlot');
     expectRejected(candidate({ rival: { ...fullStateFixture().rival, mode: 'ghost' } }), 'invalid_field', 'rival.mode');
     expectRejected(candidate({ rival: { ...fullStateFixture().rival, friendPct: 101 } }), 'invalid_number', 'rival.friendPct');
     expectRejected(candidate({ customMode: { ...fullStateFixture().customMode, pityThreshold: 9 } }), 'invalid_number', 'customMode.pityThreshold');

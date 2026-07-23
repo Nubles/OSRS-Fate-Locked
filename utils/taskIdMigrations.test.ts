@@ -13,4 +13,13 @@ describe('Diary task id migrations', () => {
       aliases,
     )).toEqual(['current_a']);
   });
+  it('does not resolve unknown ids through Object.prototype', () => {
+    expect(migrateCompletedTaskIds([
+      'toString',
+      'constructor',
+      'toString',
+      'retired_x',
+    ], {})).toEqual(['toString', 'constructor', 'retired_x']);
+  });
+
 });

@@ -10,7 +10,9 @@ export const migrateCompletedTaskIds = (
   const out: string[] = [];
   const seen = new Set<string>();
   for (const id of ids) {
-    const canonical = migrations[id] ?? id;
+    const canonical = Object.prototype.hasOwnProperty.call(migrations, id)
+      ? migrations[id]
+      : id;
     if (!seen.has(canonical)) {
       seen.add(canonical);
       out.push(canonical);
