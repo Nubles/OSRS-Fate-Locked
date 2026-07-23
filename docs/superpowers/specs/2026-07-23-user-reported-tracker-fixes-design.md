@@ -16,6 +16,7 @@ This change will:
 - Make **Enter the Abyss** require a third Rune Essence Mine teleport provider beyond the two always available in Misthalin.
 - Make quest and diary eligibility respect the player's unlocked skill-method cap as well as their recorded level.
 - Consolidate quest eligibility so the journal, advisors, planners, reveal hooks, and activity panels use the same rules.
+- Add a **What's New** dialog that presents authored, player-facing release notes once per browser for each release and remains available for manual reopening.
 - Add focused regression coverage for each corrected behavior.
 
 This change will not:
@@ -24,6 +25,7 @@ This change will not:
 - Rebalance Fate Point rewards, key probabilities, diminishing returns, or unlock adjacency.
 - Change the internal `ARCANA` table identifier or stored `unlocks.arcana` field.
 - Introduce a general-purpose rules language for every possible future requirement.
+- Generate release notes from Git history or require a network-hosted changelog service.
 
 ## Design
 
@@ -78,6 +80,18 @@ The helper will be used by quest eligibility and diary-task doability. For examp
 
 The change will remain focused: diary-tier display semantics will not be redesigned. `countDoableTasks` will receive the corrected skill-cap check, which controls the actionable task counts and recommendations reported by users.
 
+### What's New dialog
+
+Release notes will be stored as typed, authored application data. Each release entry has a stable release identifier, display title, date, and optional **Added**, **Changed**, and **Fixed** sections. Empty sections are omitted from the dialog. The authored release identifier is deliberately separate from the generated build ID so routine rebuilds do not repeatedly announce the same notes.
+
+After the application loads, it compares the latest authored release identifier with a browser-local `last seen` value. If they differ, the latest release opens automatically. Dismissing the dialog records that release as seen, so it appears automatically only once per browser. The dialog can always be reopened from a permanent **What's New** action in the application's utility menu; manual reopening does not change release data.
+
+The dialog follows the application's existing modal conventions: it is lazily loaded, traps keyboard focus, has dialog labelling, closes through its explicit close control or Escape, and restores focus appropriately. Its release content is local to the application and therefore remains available offline.
+
+The existing update banner keeps its current responsibility. It announces that a newer build is available and reloads the application; after the reload, the What's New controller independently opens the dialog if the loaded build contains an unseen authored release.
+
+The first entry will summarize the user-visible work in this change: the Combat Powers rename, the Dragon Claws source correction, and the quest and skill-cap eligibility fixes. It will not claim RuneLite plugin changes or include the out-of-scope balance suggestions.
+
 ## Error Handling and Compatibility
 
 - Missing `oneOf` means no alternative requirement, preserving every existing quest record.
@@ -85,6 +99,8 @@ The change will remain focused: diary-tier display semantics will not be redesig
 - Missing skill tier or level data uses the existing locked/default behavior.
 - The internal Arcana enum and save field remain unchanged, so no migration is required.
 - Alternative requirements use existing unlock arrays and reachability functions; no new persisted state is introduced.
+- An unavailable or malformed browser storage value is treated as unseen; storage read/write failures do not prevent the application or dialog from functioning.
+- Changelog seen-state is browser-local and intentionally independent of player profiles and save exports.
 
 ## Testing
 
@@ -98,10 +114,15 @@ Implementation will follow test-first development. Regression tests will cover:
 - A diary task requiring level 15 is not doable with tier 1 even when the recorded level is 15 or higher.
 - The same task becomes doable after the skill tier permits level 15 and the recorded level also meets the requirement.
 - Existing quest, diary, data-consistency, TypeScript, and production-build checks continue to pass.
+- The latest changelog release opens when it has not been seen, records dismissal, and does not automatically reopen on a later visit.
+- A newly authored release opens even when an older release was previously seen.
+- The utility-menu action reopens the latest release after it has been dismissed.
+- Missing or unusable browser storage degrades safely without blocking the dialog or application.
 
 ## Success Criteria
 
 - GitHub issues #3 and #4 in the tracker repository are addressed by observable application behavior and regression tests.
 - The three concrete tracker defects described in plugin issue #2 are addressed without changing plugin code.
 - Existing saves load without migration or loss of Arcana unlocks.
+- Players see concise release notes once for the new release and can reopen them later through **What's New**.
 - All automated tests, TypeScript checking, and the production build pass.
