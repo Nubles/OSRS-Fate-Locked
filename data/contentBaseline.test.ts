@@ -197,7 +197,7 @@ describe('deterministic current content baseline', () => {
     expect(diarySource.tasks).toHaveLength(492);
   });
 
-  it('describes only the game-data work that has landed', () => {
+  it('describes only the game-data and save-integrity work that has landed', () => {
     const wording = Object.values(LATEST_CHANGELOG.sections)
       .flatMap(lines => lines ?? [])
       .join(' ');
@@ -207,7 +207,11 @@ describe('deterministic current content baseline', () => {
     expect(wording).toContain('492 current tasks');
     expect(wording).toContain('646 current tasks, including the Maggot King');
     expect(wording).toContain('cumulative points');
-    expect(wording).not.toMatch(/plugin|relay|balance|imports?|profile cleanup/i);
+    expect(wording).toContain('Exports now capture the run currently visible on screen.');
+    expect(wording).toContain('Malformed or oversized imports and backups are now rejected without overwriting progress.');
+    expect(wording).toContain('File imports, sync-code imports, and backup restores now report their real outcomes.');
+    expect(wording).toContain('Deleting a profile now also clears its local backups and profile-specific settings.');
+    expect(wording).not.toMatch(/plugin|relay|balance/i);
   });
 
   it('pins 646 Combat Achievements, tier counts, thresholds, and provenance', () => {

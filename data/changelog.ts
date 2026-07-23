@@ -24,6 +24,10 @@ export const CHANGELOG_RELEASES = [{
       'A Porcine of Interest now checks both Draynor Village and South Falador Farm.',
       'Recent quest skill, combat, prerequisite, and access requirements were refreshed.',
       'Quest and diary recommendations now respect unlocked skill-method caps as well as recorded levels.',
+      'Exports now capture the run currently visible on screen.',
+      'Malformed or oversized imports and backups are now rejected without overwriting progress.',
+      'File imports, sync-code imports, and backup restores now report their real outcomes.',
+      'Deleting a profile now also clears its local backups and profile-specific settings.',
     ],
   },
 }] as const satisfies readonly ChangelogRelease[];
