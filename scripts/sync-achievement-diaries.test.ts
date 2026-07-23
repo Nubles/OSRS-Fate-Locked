@@ -224,4 +224,25 @@ describe('Achievement Diary id-classification audit', () => {
     });
     expect(snapshot.retired.map(candidate => candidate.id)).not.toContain('west_med_5');
   });
+
+  it('rejects a fabricated historical id even when classification counts still reconcile', () => {
+    const snapshot = loadSnapshot();
+    snapshot.tasks[0].id = 'not_a_real_historical_id';
+
+    expect(() => validateAudit(snapshot)).toThrow(/frozen historical.*not_a_real_historical_id/i);
+  });
+
+  it('preserves the historical Jad completion id for the current cape task', () => {
+    const snapshot = loadSnapshot();
+    const task = snapshot.tasks.find(
+      candidate => candidate.tierId === 'Karamja Elite' && candidate.ordinal === 2,
+    );
+
+    expect(task).toMatchObject({
+      id: 'kar_elite_4',
+      classification: 'preserved-semantic',
+      previousDescription: 'Defeat TzTok-Jad in the Fight Caves.',
+    });
+    expect(snapshot.retired.map(candidate => candidate.id)).not.toContain('kar_elite_4');
+  });
 });

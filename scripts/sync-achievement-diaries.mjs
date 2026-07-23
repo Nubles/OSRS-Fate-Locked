@@ -493,6 +493,33 @@ export const validateAudit = (
       'Diary historical classification mismatch: expected 485, derived ' + historicalIds.size,
     );
   }
+
+  const legacyFixturePath = resolve(
+    projectRoot,
+    'data/sources/achievement-diary-legacy-ids.json',
+  );
+  const legacyFixture = JSON.parse(
+    readFileSync(legacyFixturePath, 'utf8').replace(/^\uFEFF/, ''),
+  );
+  if (!Array.isArray(legacyFixture.ids)
+    || legacyFixture.ids.length !== 485
+    || new Set(legacyFixture.ids).size !== 485) {
+    throw new Error('Frozen historical Diary ID fixture must contain 485 unique ids');
+  }
+  const frozenHistoricalIds = new Set(legacyFixture.ids);
+  const unexpectedHistoricalIds = [...historicalIds]
+    .filter(id => !frozenHistoricalIds.has(id))
+    .sort();
+  const missingHistoricalIds = legacyFixture.ids
+    .filter(id => !historicalIds.has(id))
+    .sort();
+  if (unexpectedHistoricalIds.length > 0 || missingHistoricalIds.length > 0) {
+    throw new Error(
+      'Frozen historical Diary ID set mismatch: unexpected '
+      + (unexpectedHistoricalIds.join(', ') || 'none')
+      + '; missing ' + (missingHistoricalIds.join(', ') || 'none'),
+    );
+  }
   const derivedCurrentRows = (
     derived.preservedIds
     + derived.renamedOrReplacedAliases

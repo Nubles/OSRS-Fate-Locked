@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DiaryTask } from '../data/diaryTasks';
+import { ALL_DIARY_TASKS, DiaryTask } from '../data/diaryTasks';
 import { QUEST_DATA } from '../data/questData';
 import { UnlockState } from '../types';
 import {
@@ -85,6 +85,20 @@ describe('journal completion decisions', () => {
       ok: false,
       reason: 'Already completed',
     });
+  });
+
+  it('does not offer the current Karamja cape task after the legacy Jad completion', () => {
+    const task = ALL_DIARY_TASKS.find(
+      candidate => candidate.tierId === 'Karamja Elite'
+        && candidate.description.startsWith('Equip a Fire Cape'),
+    );
+
+    expect(task?.id).toBe('kar_elite_4');
+    expect(diaryTaskCompletionDecision(
+      task!,
+      unlocked({ completedTasks: ['kar_elite_4'] }),
+      'vanilla',
+    )).toEqual({ ok: false, reason: 'Already completed' });
   });
 
   it('accepts two distinct legitimate completions in order', () => {

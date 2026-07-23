@@ -250,7 +250,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'kar_hard_9', tierId: 'Karamja Hard', description: 'Be assigned a Slayer task by the Slayer Master in Shilo Village.', skills: { 'Slayer': 50 }, quests: ['Shilo Village'], regions: ['Shilo Village'] },
   { id: 'kar_hard_10', tierId: 'Karamja Hard', description: 'Kill a metal dragon in Brimhaven Dungeon.', skills: { 'Woodcutting': 10 }, regions: ['Brimhaven'] },
   { id: 'kar_elite_1', tierId: 'Karamja Elite', description: 'Craft 56 Nature runes simultaneously from Essence without the use of Extracts.', skills: { 'Runecraft': 91 }, regions: ['Tai Bwo Wannai'] },
-  { id: 'karamja_elite_2', tierId: 'Karamja Elite', description: 'Equip a Fire Cape or Infernal Cape in Mor Ul Rek.', regions: ['Karamja'] },
+  { id: 'kar_elite_4', tierId: 'Karamja Elite', description: 'Equip a Fire Cape or Infernal Cape in Mor Ul Rek.', regions: ['Karamja'] },
   { id: 'kar_elite_2', tierId: 'Karamja Elite', description: 'Check the health of a palm tree in Brimhaven.', skills: { 'Farming': 68 }, regions: ['Brimhaven'] },
   { id: 'karamja_elite_4', tierId: 'Karamja Elite', description: 'Create an antivenom potion whilst standing in the horse shoe mine.', skills: { 'Herblore': 87 }, regions: ['Karamja'] },
   { id: 'karamja_elite_5', tierId: 'Karamja Elite', description: 'Check the health of your Calquat tree patch.', skills: { 'Farming': 72 }, regions: ['Karamja'] },

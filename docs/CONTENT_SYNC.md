@@ -127,7 +127,9 @@ the 492-row total, unique IDs and ordinals, known tiers, alias targets, and an
 independently derived 485-row classification before writing `data/diaryTasks.ts` and the
 migration map in `utils/taskIdMigrations.ts`. The audit parses the canonical
 project skill, quest, and region declarations, so the reported zero unknown
-references cannot mask a bad snapshot row.
+references cannot mask a bad snapshot row. It also compares the derived historical
+IDs with `data/sources/achievement-diary-legacy-ids.json`, frozen from the exact
+pre-refresh `data/diaryTasks.ts` at commit `fe4654f`.
 
 ID rules:
 
@@ -139,6 +141,6 @@ ID rules:
 - Retired and unknown historical completion IDs remain in saves but do not count
   toward the current 492-task total.
 
-Current reviewed classification: 470 preserved semantic IDs, 0 source-supported
-replacement aliases, 15 retired existing IDs, and 22 new canonical IDs. The net
+Current reviewed classification: 471 preserved semantic IDs, 0 source-supported
+replacement aliases, 14 retired existing IDs, and 21 new canonical IDs. The net
 increase is seven, but the refresh is not a seven-row append.
