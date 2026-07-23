@@ -3,6 +3,7 @@ import { simpleHash } from './integrity';
 import { MAX_SAVE_BYTES } from './saveSchema';
 import {
   MAX_SYNC_CODE_CHARS,
+  boundRawSyncPayload,
   encodeSyncCode,
   decodeSyncCode,
   looksLikeSyncCode,
@@ -117,11 +118,28 @@ describe('sync code codec', () => {
     expectStableFailure(oversized, 'too_large');
   });
 
-  it('rejects a raw payload above the expanded save limit', async () => {
-    const json = `"${'x'.repeat(MAX_SAVE_BYTES)}"`;
-    expect(new TextEncoder().encode(json).byteLength).toBeGreaterThan(MAX_SAVE_BYTES);
-    expectStableFailure(await decodeSyncCode(oldRawCode(json)), 'too_large');
+  it('accepts raw decoded bytes at the expanded cap and rejects one byte above it', () => {
+    expect(boundRawSyncPayload(new Uint8Array(MAX_SAVE_BYTES))).toMatchObject({
+      ok: true,
+    });
+    expect(boundRawSyncPayload(new Uint8Array(MAX_SAVE_BYTES + 1))).toMatchObject({
+      ok: false,
+      code: 'too_large',
+    });
   });
+
+  it('accepts compressed JSON whose decompressed UTF-8 bytes equal the save limit', async () => {
+    const note = 'x'.repeat(MAX_SAVE_BYTES - '{"note":""}'.length);
+    const json = JSON.stringify({ note });
+    expect(new TextEncoder().encode(json)).toHaveLength(MAX_SAVE_BYTES);
+    const code = await oldGzipCode(json);
+    expect(code.length).toBeLessThan(MAX_SYNC_CODE_CHARS);
+
+    const result = await decodeSyncCode(code);
+
+    expect(result).toMatchObject({ ok: true, checksumOk: true });
+    expect(result.state).toEqual({ note });
+  }, 30_000);
 
   it('aborts a compressed payload once decompressed output crosses the save limit', async () => {
     const json = JSON.stringify({ note: 'x'.repeat(MAX_SAVE_BYTES) });

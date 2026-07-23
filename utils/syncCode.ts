@@ -155,6 +155,22 @@ const decodeFailure = (
   ...(checksumOk === undefined ? {} : { checksumOk }),
 });
 
+export type BoundedRawSyncPayloadResult =
+  | { ok: true; bytes: Uint8Array }
+  | { ok: false; code: 'too_large'; error: string };
+
+export const boundRawSyncPayload = (
+  bytes: Uint8Array,
+): BoundedRawSyncPayloadResult => (
+  bytes.byteLength > MAX_SAVE_BYTES
+    ? {
+        ok: false,
+        code: 'too_large',
+        error: 'The decoded save data is too large.',
+      }
+    : { ok: true, bytes }
+);
+
 export const decodeSyncCode = async (code: string): Promise<DecodeResult> => {
   if (typeof code !== 'string' || code.length === 0) {
     return decodeFailure('decode_failed', 'Paste a sync code first.');
@@ -201,10 +217,9 @@ export const decodeSyncCode = async (code: string): Promise<DecodeResult> => {
 
   let jsonBytes: Uint8Array;
   if (method === METHOD_RAW) {
-    if (bytes.byteLength > MAX_SAVE_BYTES) {
-      return decodeFailure('too_large', 'The decoded save data is too large.');
-    }
-    jsonBytes = bytes;
+    const bounded = boundRawSyncPayload(bytes);
+    if (!bounded.ok) return bounded;
+    jsonBytes = bounded.bytes;
   } else {
     if (!canDecompress()) {
       return decodeFailure(

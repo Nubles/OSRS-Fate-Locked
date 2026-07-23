@@ -127,6 +127,7 @@ export const deobfuscateFateSave = (cipher: string): SaveDecodeResult => {
     if (!isStrictBase64(base64)) return failure('decode_failed');
 
     const binary = atob(base64);
+    if (btoa(binary) !== base64) return failure('decode_failed');
     if (binary.length > MAX_SAVE_BYTES) return failure('too_large');
     const bytes = new Uint8Array(binary.length);
     for (let index = 0; index < binary.length; index += 1) {

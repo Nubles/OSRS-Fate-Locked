@@ -38,6 +38,19 @@ describe('Fate save file decoding', () => {
     });
   });
 
+  it('rejects non-canonical Base64 aliases while accepting the canonical legacy bytes', () => {
+    expect(deobfuscateFateSave(legacyCipherForBase64('e30='))).toEqual({
+      ok: true,
+      value: {},
+    });
+    for (const alias of ['e31=', 'e32=', 'e33=']) {
+      expect(deobfuscateFateSave(legacyCipherForBase64(alias))).toMatchObject({
+        ok: false,
+        code: 'decode_failed',
+      });
+    }
+  });
+
   it('accepts a plain JSON payload at the exact UTF-8 byte cap', () => {
     const json = `"${'x'.repeat(MAX_SAVE_BYTES - 2)}"`;
     expect(new TextEncoder().encode(json)).toHaveLength(MAX_SAVE_BYTES);
