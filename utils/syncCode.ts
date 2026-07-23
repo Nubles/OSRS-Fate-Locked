@@ -9,7 +9,13 @@
  */
 
 import { simpleHash } from './integrity';
-import { MAX_SAVE_BYTES } from './saveSchema';
+import type { GameState } from '../types';
+import {
+  MAX_SAVE_BYTES,
+  validateAndMigrateSave,
+  type SaveErrorCode,
+  type SaveWarning,
+} from './saveSchema';
 
 const PREFIX = 'FLSYNC';
 const SEP = '.';
@@ -266,6 +272,54 @@ export const decodeSyncCode = async (code: string): Promise<DecodeResult> => {
       true,
     );
   }
+};
+
+export type ValidatedSyncCodeResult =
+  | {
+      ok: true;
+      state: GameState;
+      checksumOk: true;
+      warnings: SaveWarning[];
+    }
+  | {
+      ok: false;
+      code: SaveErrorCode;
+      error: string;
+      path?: string;
+      checksumOk?: boolean;
+    };
+
+export const decodeAndValidateSyncCode = async (
+  code: string,
+  defaults: GameState,
+): Promise<ValidatedSyncCodeResult> => {
+  const decoded = await decodeSyncCode(code);
+  if (!decoded.ok || !decoded.state) {
+    return {
+      ok: false,
+      code: decoded.code ?? 'decode_failed',
+      error: decoded.error ?? 'Could not read that code.',
+      ...(decoded.checksumOk === undefined ? {} : { checksumOk: decoded.checksumOk }),
+    };
+  }
+
+  const validated = validateAndMigrateSave(decoded.state, defaults);
+  if (validated.ok === false) {
+    return {
+      ok: false,
+      code: validated.code,
+      error: validated.message,
+      ...(validated.path ? { path: validated.path } : {}),
+      checksumOk: true,
+    };
+  }
+
+  return {
+    ok: true,
+    state: validated.state,
+    checksumOk: true,
+    warnings: validated.warnings,
+  };
 };
 
 export const looksLikeSyncCode = (value: string): boolean =>

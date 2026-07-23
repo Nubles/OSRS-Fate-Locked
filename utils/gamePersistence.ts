@@ -10,6 +10,33 @@ export type ImportResult =
   | { ok: true; warnings: SaveWarning[] }
   | { ok: false; code: SaveErrorCode; message: string; path?: string };
 
+export type ImportUiDecision = {
+  close: boolean;
+  success: string | null;
+  error: string | null;
+  warning: string | null;
+};
+
+export const importUiDecision = (result: ImportResult): ImportUiDecision => {
+  if (result.ok === false) {
+    return {
+      close: false,
+      success: null,
+      error: result.message,
+      warning: null,
+    };
+  }
+
+  return {
+    close: true,
+    success: 'Fate restored successfully',
+    error: null,
+    warning: result.warnings.length > 0
+      ? result.warnings.map(item => item.message).join(' ')
+      : null,
+  };
+};
+
 export type BackupWriteResult =
   | { stored: true }
   | { stored: false; reason: 'empty' | 'duplicate' | 'storage_unavailable' };

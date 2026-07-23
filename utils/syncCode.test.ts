@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { initialState } from '../context/GameContext';
 import { simpleHash } from './integrity';
 import { MAX_SAVE_BYTES } from './saveSchema';
 import {
@@ -6,6 +7,7 @@ import {
   boundRawSyncPayload,
   encodeSyncCode,
   decodeSyncCode,
+  decodeAndValidateSyncCode,
   looksLikeSyncCode,
   type DecodeResult,
 } from './syncCode';
@@ -63,6 +65,34 @@ describe('sync code codec', () => {
     expect(result.ok).toBe(true);
     expect(result.checksumOk).toBe(true);
     expect(result.state).toEqual(sampleState);
+  });
+
+  it('normalizes a decoded candidate through the canonical save schema', async () => {
+    const code = await encodeSyncCode({ keys: 7 });
+    const result = await decodeAndValidateSyncCode(code, initialState);
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.state.keys).toBe(7);
+      expect(result.state.version).toBe(initialState.version);
+      expect(result.state.unlocks).toEqual(initialState.unlocks);
+    }
+  });
+
+  it('rejects invalid nested save data before it can be previewed', async () => {
+    const candidate = structuredClone(initialState);
+    candidate.unlocks.levels.Attack = 0;
+    const result = await decodeAndValidateSyncCode(
+      await encodeSyncCode(candidate as unknown as Record<string, unknown>),
+      initialState,
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: 'invalid_number',
+      path: 'unlocks.levels.Attack',
+    });
+    expect(result).not.toHaveProperty('state');
   });
 
   it('produces a recognisable, prefixed code', async () => {

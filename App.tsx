@@ -38,6 +38,8 @@ import { isChunkLoadError, reloadOnceForChunkError } from './utils/chunkLoadErro
 import { useEscapeKey } from './hooks/useEscapeKey';
 import { resolveModeRules } from './config/gameModes';
 import { showToast } from './utils/toast';
+import { importUiDecision } from './utils/gamePersistence';
+import { MAX_SAVE_BYTES } from './utils/saveSchema';
 import { prefetchHeavyChunks } from './utils/prefetch';
 import { LATEST_CHANGELOG } from './data/changelog';
 import {
@@ -64,7 +66,6 @@ const ChangelogModal = lazyWithRetry(() =>
   })),
 );
 import { obfuscateFateSave, deobfuscateFateSave } from './utils/encryption';
-import { GameState } from './types';
 import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb, Radio, Settings, Newspaper } from 'lucide-react';
 import { exportRuneliteBundle } from './utils/runeliteExport';
 
@@ -241,7 +242,7 @@ interface HeaderProps {
 }
 
 const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode, setShowDiscord, onOpenChangelog }: HeaderProps) => {
-  const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, importSave, resetGame, getExportData, createBackup, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount } = useGame();
+  const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, importSave, resetGame, getExportData, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount } = useGame();
   // Progressive disclosure — advanced tools stay hidden until the run earns them.
   const gates = useFeatureGates();
   const { storageKeyForActiveProfile } = useProfiles();
@@ -253,38 +254,63 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
   const [showUtilMenu, setShowUtilMenu] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const input = e.currentTarget;
+    const file = input.files?.[0];
     if (!file) return;
+
+    const clearInput = () => { input.value = ''; };
+    if (file.size > MAX_SAVE_BYTES) {
+      showToast('That save file is too large.');
+      clearInput();
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
-        const fileContent = event.target?.result as string;
-        const imported = deobfuscateFateSave(fileContent);
-
-        if (imported) {
-            createBackup('Before file import');
-            importSave(imported as Partial<GameState>);
-            showToast('Fate restored successfully');
-        } else {
-            showToast('Import failed — invalid save file');
-        }
-      } catch (err) {
+        const fileContent = event.target?.result;
+        if (typeof fileContent !== 'string') {
           showToast('Import failed — could not read save data');
-          console.error(err);
+          return;
+        }
+
+        const decoded = deobfuscateFateSave(fileContent);
+        if (decoded.ok === false) {
+          showToast(decoded.message);
+          return;
+        }
+
+        const decision = importUiDecision(importSave(decoded.value));
+        if (decision.error) {
+          showToast(decision.error);
+          return;
+        }
+        if (decision.success) {
+          showToast(decision.warning
+            ? `${decision.success}. ${decision.warning}`
+            : decision.success);
+        }
+      } catch {
+        showToast('Import failed — could not read save data');
+      } finally {
+        clearInput();
       }
     };
     reader.onerror = () => {
       showToast('Import failed — could not read the file');
+      clearInput();
     };
-    reader.readAsText(file);
-    // Reset input
-    e.target.value = '';
+    reader.onabort = clearInput;
+    try {
+      reader.readAsText(file);
+    } catch {
+      showToast('Import failed — could not read the file');
+      clearInput();
+    }
   };
 
   const handleExport = () => {
       const rawData = getExportData();
-      if (!rawData) return;
 
       try {
           const jsonData = JSON.parse(rawData);

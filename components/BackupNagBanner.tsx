@@ -23,7 +23,6 @@ export const BackupNagBanner: React.FC = () => {
 
   const handleExport = useCallback(() => {
     const rawData = getExportData();
-    if (!rawData) return;
     try {
       const blob = new Blob([obfuscateFateSave(JSON.parse(rawData))], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);

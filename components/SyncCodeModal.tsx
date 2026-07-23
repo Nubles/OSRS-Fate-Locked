@@ -3,14 +3,16 @@ import {
   X, Link2, Copy, Check, ClipboardPaste, ShieldCheck, ShieldAlert,
   AlertTriangle, Loader2, ArrowDownToLine, Upload, QrCode, History, RotateCcw,
 } from 'lucide-react';
-import { useGame } from '../context/GameContext';
+import { initialState, useGame } from '../context/GameContext';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SectionGuide } from './SectionGuide';
-import { encodeSyncCode, decodeSyncCode } from '../utils/syncCode';
+import { encodeSyncCode, decodeAndValidateSyncCode } from '../utils/syncCode';
 import { makeQrSvg } from '../utils/qr';
 import { auditHistory, RunVerdict } from '../utils/integrity';
 import { BackupMeta } from '../utils/backups';
-import { GameState, LogEntry } from '../types';
+import type { GameState } from '../types';
+import { importUiDecision } from '../utils/gamePersistence';
+import { showToast } from '../utils/toast';
 
 interface Props {
   onClose: () => void;
@@ -46,20 +48,18 @@ interface RunPreview {
   mode?: string;
 }
 
-const previewOf = (state: Record<string, unknown>): RunPreview => {
-  const s = state as Partial<GameState>;
-  const u = (s.unlocks ?? {}) as Record<string, any>;
-  const skillTiers = Object.values((u.skills ?? {}) as Record<string, number>)
-    .reduce((a, b) => a + (typeof b === 'number' ? b : 0), 0);
+const previewOf = (state: GameState): RunPreview => {
+  const skillTiers = Object.values(state.unlocks.skills)
+    .reduce((total, tier) => total + tier, 0);
   return {
-    keys: typeof s.keys === 'number' ? s.keys : 0,
-    specialKeys: typeof s.specialKeys === 'number' ? s.specialKeys : 0,
-    chaosKeys: typeof s.chaosKeys === 'number' ? s.chaosKeys : 0,
-    regions: Array.isArray(u.regions) ? u.regions.length : 0,
-    quests: Array.isArray(u.quests) ? u.quests.length : 0,
+    keys: state.keys,
+    specialKeys: state.specialKeys,
+    chaosKeys: state.chaosKeys,
+    regions: state.unlocks.regions.length,
+    quests: state.unlocks.quests.length,
     skillTiers,
-    events: Array.isArray(s.history) ? s.history.length : 0,
-    mode: typeof s.gameModeId === 'string' ? s.gameModeId : undefined,
+    events: state.history.length,
+    mode: state.gameModeId,
   };
 };
 
@@ -85,7 +85,7 @@ const VERDICT_UI: Record<RunVerdict, { label: string; sub: string; cls: string; 
 };
 
 export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) => {
-  const { getExportData, importSave, createBackup, listBackups, restoreBackup } = useGame();
+  const { getExportData, importSave, listBackups, restoreBackup } = useGame();
   useEscapeKey(onClose, true);
 
   const [tab, setTab] = useState<Tab>(initialImportCode ? 'IMPORT' : 'EXPORT');
@@ -103,7 +103,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
     (async () => {
       try {
         const raw = getExportData();
-        const state = raw ? JSON.parse(raw) : {};
+        const state = JSON.parse(raw) as Record<string, unknown>;
         const generated = await encodeSyncCode(state);
         if (!cancelled) setCode(generated);
       } catch {
@@ -130,19 +130,23 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
   const [input, setInput] = useState(initialImportCode ?? '');
   const [decoding, setDecoding] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [decoded, setDecoded] = useState<Record<string, unknown> | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
+  const [decoded, setDecoded] = useState<GameState | null>(null);
 
   const preview = useMemo(() => (decoded ? previewOf(decoded) : null), [decoded]);
-  const audit = useMemo(() => {
-    if (!decoded) return null;
-    const history = (decoded as Partial<GameState>).history;
-    return auditHistory(Array.isArray(history) ? (history as LogEntry[]) : []);
-  }, [decoded]);
+  const audit = useMemo(() => decoded
+    ? auditHistory(decoded.history)
+    : null, [decoded]);
 
   const handlePaste = useCallback(async () => {
     try {
       const text = await navigator.clipboard.readText();
-      if (text) setInput(text);
+      if (text) {
+        setInput(text);
+        setDecoded(null);
+        setError(null);
+        setStatus(null);
+      }
     } catch {
       /* clipboard read blocked — user pastes manually */
     }
@@ -151,14 +155,18 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
   const handleVerify = useCallback(async (codeToVerify?: string) => {
     setDecoding(true);
     setError(null);
+    setStatus(null);
     setDecoded(null);
-    const result = await decodeSyncCode(codeToVerify ?? input);
+    const result = await decodeAndValidateSyncCode(codeToVerify ?? input, initialState);
     setDecoding(false);
-    if (!result.ok) {
-      setError(result.error ?? 'Could not read that code.');
+    if (result.ok === false) {
+      setError(result.error);
       return;
     }
-    setDecoded(result.state ?? null);
+    setDecoded(result.state);
+    if (result.warnings.length > 0) {
+      setStatus(result.warnings.map(item => item.message).join(' '));
+    }
   }, [input]);
 
   // Opened from a #sync= link → verify the pre-filled code immediately.
@@ -175,14 +183,25 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
     if (!window.confirm(`${warn}Import this run? It will OVERWRITE the current profile's save. This cannot be undone.`)) {
       return;
     }
-    // Snapshot the run we're about to replace so the import is recoverable.
-    createBackup('Before sync import');
-    importSave(decoded as Partial<GameState>);
-    onClose();
-  }, [decoded, audit, importSave, createBackup, onClose]);
+
+    const decision = importUiDecision(importSave(decoded));
+    setError(decision.error);
+    setStatus(decision.warning);
+    if (decision.success) {
+      showToast(decision.warning
+        ? `${decision.success}. ${decision.warning}`
+        : decision.success);
+    }
+    if (decision.close) {
+      setInput('');
+      setDecoded(null);
+      onClose();
+    }
+  }, [decoded, audit, importSave, onClose]);
 
   // ── Backups ───────────────────────────────────────────────────────────────
   const [backups, setBackups] = useState<BackupMeta[]>([]);
+  const [backupError, setBackupError] = useState<string | null>(null);
   useEffect(() => {
     if (tab === 'BACKUPS') setBackups(listBackups());
   }, [tab, listBackups]);
@@ -191,13 +210,25 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
     if (!window.confirm(`Restore this backup (${b.summary})? It will OVERWRITE the current profile's save.`)) {
       return;
     }
-    restoreBackup(b.ts);
-    onClose();
+
+    const decision = importUiDecision(restoreBackup(b.ts));
+    setBackupError(decision.error);
+    setStatus(decision.warning);
+    if (decision.success) {
+      showToast(decision.warning
+        ? `${decision.success}. ${decision.warning}`
+        : decision.success);
+    }
+    if (decision.close) onClose();
   }, [restoreBackup, onClose]);
 
   const TabBtn: React.FC<{ id: Tab; label: string; Icon: typeof Link2 }> = ({ id, label, Icon }) => (
     <button
-      onClick={() => setTab(id)}
+      onClick={() => {
+        setTab(id);
+        setStatus(null);
+        if (id !== 'BACKUPS') setBackupError(null);
+      }}
       className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors ${
         tab === id
           ? 'text-cyan-300 border-b-2 border-cyan-400 bg-white/[0.03]'
@@ -319,7 +350,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
               <div className="relative">
                 <textarea
                   value={input}
-                  onChange={(e) => { setInput(e.target.value); setDecoded(null); setError(null); }}
+                  onChange={(e) => { setInput(e.target.value); setDecoded(null); setError(null); setStatus(null); }}
                   placeholder="FLSYNC.g1.…"
                   className="w-full h-28 resize-none rounded-lg bg-black/40 border border-white/10 p-3 font-mono text-[11px] text-gray-200 leading-relaxed break-all focus:outline-none focus:border-cyan-500/40 placeholder:text-gray-700"
                 />
@@ -344,6 +375,13 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
                 <div className="flex items-start gap-2.5 rounded-lg border border-red-500/30 bg-red-950/40 p-3 text-red-300">
                   <AlertTriangle size={15} className="shrink-0 mt-0.5" />
                   <p className="text-[11px] leading-relaxed">{error}</p>
+                </div>
+              )}
+
+              {status && (
+                <div className="flex items-start gap-2.5 rounded-lg border border-amber-500/30 bg-amber-950/40 p-3 text-amber-300">
+                  <AlertTriangle size={15} className="shrink-0 mt-0.5" />
+                  <p className="text-[11px] leading-relaxed">{status}</p>
                 </div>
               )}
 
@@ -396,6 +434,18 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
                 A snapshot is saved automatically before any import or reset. Restore one
                 to roll back. Only the most recent few are kept, per profile.
               </p>
+              {backupError && (
+                <div className="flex items-start gap-2.5 rounded-lg border border-red-500/30 bg-red-950/40 p-3 text-red-300">
+                  <AlertTriangle size={15} className="shrink-0 mt-0.5" />
+                  <p className="text-[11px] leading-relaxed">{backupError}</p>
+                </div>
+              )}
+              {status && (
+                <div className="flex items-start gap-2.5 rounded-lg border border-amber-500/30 bg-amber-950/40 p-3 text-amber-300">
+                  <AlertTriangle size={15} className="shrink-0 mt-0.5" />
+                  <p className="text-[11px] leading-relaxed">{status}</p>
+                </div>
+              )}
               {backups.length === 0 ? (
                 <div className="rounded-lg border border-white/5 bg-[#1a1a1a] p-6 text-center">
                   <History size={20} className="mx-auto text-gray-600 mb-2" />

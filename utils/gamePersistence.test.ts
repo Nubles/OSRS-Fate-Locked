@@ -5,6 +5,7 @@ import { getBackupData, listBackups, pushBackup } from './backups';
 import {
   applyPreparedReplacement,
   applyValidatedReplacement,
+  importUiDecision,
   prepareReplacement,
   serializeCurrent,
 } from './gamePersistence';
@@ -41,6 +42,46 @@ describe('live-state serialization', () => {
     expect(Object.prototype.hasOwnProperty.call(JSON.parse(serialized), 'lastEvent')).toBe(false);
     expect(getItem).not.toHaveBeenCalled();
     expect(visible.lastEvent).toEqual({ id: 'transient' });
+  });
+});
+
+describe('import outcome UI policy', () => {
+  it('closes and reports success only for an accepted import', () => {
+    expect(importUiDecision({ ok: true, warnings: [] })).toEqual({
+      close: true,
+      success: 'Fate restored successfully',
+      error: null,
+      warning: null,
+    });
+  });
+
+  it('keeps the source open and reports the returned rejection message', () => {
+    expect(importUiDecision({
+      ok: false,
+      code: 'invalid_unlocks',
+      message: 'Save unlock data is invalid at unlocks.levels.Attack.',
+      path: 'unlocks.levels.Attack',
+    })).toEqual({
+      close: false,
+      success: null,
+      error: 'Save unlock data is invalid at unlocks.levels.Attack.',
+      warning: null,
+    });
+  });
+
+  it('displays backup warnings while still accepting and closing the import', () => {
+    expect(importUiDecision({
+      ok: true,
+      warnings: [{
+        code: 'storage_warning',
+        message: 'The current run could not be saved as a protective backup.',
+      }],
+    })).toEqual({
+      close: true,
+      success: 'Fate restored successfully',
+      error: null,
+      warning: 'The current run could not be saved as a protective backup.',
+    });
   });
 });
 
