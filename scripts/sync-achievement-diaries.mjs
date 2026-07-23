@@ -588,45 +588,60 @@ export const validateAudit = (
   return { ...audit, ...derived, existingRows: historicalIds.size, unknownReferences: 0 };
 };
 
-const run = () => {
+export function runDiaryCommand({
+  args = process.argv.slice(2),
+  paths,
+  log = message => console.log(message),
+  error = message => console.error(message),
+} = {}) {
   const scriptDir = dirname(fileURLToPath(import.meta.url));
-  const root = resolve(scriptDir, '..');
-  const snapshotPath = resolve(root, 'data/sources/achievement-diary-tasks.json');
-  const outputPath = resolve(root, 'data/diaryTasks.ts');
-  const migrationPath = resolve(root, 'utils/taskIdMigrations.ts');
+  const defaultRoot = resolve(scriptDir, '..');
+  const projectRoot = paths?.projectRoot ?? defaultRoot;
+  const snapshotPath = paths?.snapshotPath
+    ?? resolve(projectRoot, 'data/sources/achievement-diary-tasks.json');
+  const diaryPath = paths?.diaryPath ?? resolve(projectRoot, 'data/diaryTasks.ts');
+  const migrationPath = paths?.migrationPath
+    ?? resolve(projectRoot, 'utils/taskIdMigrations.ts');
   const snapshot = JSON.parse(readFileSync(snapshotPath, 'utf8').replace(/^\uFEFF/, ''));
   validateSnapshot(snapshot);
-  const audit = validateAudit(snapshot);
+  const audit = validateAudit(snapshot, projectRoot);
 
-  console.log('official rows: ' + snapshot.tasks.length);
-  console.log('existing rows classified: ' + audit.existingRows);
-  console.log('unresolved existing rows: ' + audit.unresolvedExistingRows);
-  console.log('unresolved duplicate ids: ' + audit.unresolvedDuplicateIds);
-  console.log('unknown tiers/skills/quests/regions: ' + audit.unknownReferences);
-  console.log('preserved exact/semantic ids: ' + audit.preservedIds);
-  console.log('renamed/replaced aliases: ' + audit.renamedOrReplacedAliases);
-  console.log('retired existing ids: ' + audit.retiredExistingIds);
-  console.log('new canonical ids: ' + audit.newCanonicalIds);
+  log('official rows: ' + snapshot.tasks.length);
+  log('existing rows classified: ' + audit.existingRows);
+  log('unresolved existing rows: ' + audit.unresolvedExistingRows);
+  log('unresolved duplicate ids: ' + audit.unresolvedDuplicateIds);
+  log('unknown tiers/skills/quests/regions: ' + audit.unknownReferences);
+  log('preserved exact/semantic ids: ' + audit.preservedIds);
+  log('renamed/replaced aliases: ' + audit.renamedOrReplacedAliases);
+  log('retired existing ids: ' + audit.retiredExistingIds);
+  log('new canonical ids: ' + audit.newCanonicalIds);
 
-  if (process.argv.includes('--check')) {
-    const result = checkGeneratedDiaryFiles({
-      snapshotPath,
-      diaryPath: outputPath,
-      migrationPath,
-    });
+  if (args.includes('--check')) {
+    const result = checkGeneratedDiaryFiles({ snapshotPath, diaryPath, migrationPath });
     if (result.ok) {
-      console.log('[diary:verify] generated files are current.');
-    } else {
-      for (const error of result.errors) console.error('[diary:verify] ' + error);
-      process.exitCode = 1;
+      log('[diary:verify] generated files are current.');
+      return 0;
     }
-    return;
+    for (const mismatch of result.errors) {
+      error('[diary:verify] ' + mismatch);
+    }
+    return 1;
   }
 
-  writeFileSync(outputPath, renderDiaryTasks(snapshot), 'utf8');
+  writeFileSync(diaryPath, renderDiaryTasks(snapshot), 'utf8');
   writeFileSync(migrationPath, renderTaskIdMigrations(snapshot), 'utf8');
-};
+  return 0;
+}
+
+export function runDiaryMain({
+  setExitCode = code => { process.exitCode = code; },
+  ...commandOptions
+} = {}) {
+  const status = runDiaryCommand(commandOptions);
+  setExitCode(status);
+  return status;
+}
 
 const isMain = process.argv[1]
   && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
-if (isMain) run();
+if (isMain) runDiaryMain();

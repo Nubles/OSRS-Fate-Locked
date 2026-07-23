@@ -3,6 +3,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   checkGeneratedDiary,
@@ -10,6 +11,7 @@ import {
   parseAchievementDiaryHtml,
   renderDiaryTasks,
   renderTaskIdMigrations,
+  runDiaryMain,
   validateAudit,
 } from './sync-achievement-diaries.mjs';
 
@@ -247,6 +249,86 @@ describe('offline generated Diary verification', () => {
         errors: ['data/diaryTasks.ts is out of date'],
       });
       expect(readFileSync(diaryPath, 'utf8')).toBe(staleDiaryText);
+    } finally {
+      globalThis.fetch = originalFetch;
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('Achievement Diary command entrypoint', () => {
+  it('routes the package check command through the CLI runner', () => {
+    const packageJson = JSON.parse(readFileSync(
+      new URL('../package.json', import.meta.url),
+      'utf8',
+    ));
+
+    expect(packageJson.scripts['diary:verify'])
+      .toBe('node scripts/sync-achievement-diaries.mjs --check');
+    expect(readFileSync(
+      new URL('./sync-achievement-diaries.mjs', import.meta.url),
+      'utf8',
+    )).toContain('if (isMain) runDiaryMain();');
+  });
+
+  it('assigns exact check exit codes and never rewrites explicit output paths', () => {
+    const fixtureRoot = mkdtempSync(join(tmpdir(), 'fate-diary-cli-'));
+    const projectRoot = fileURLToPath(new URL('..', import.meta.url));
+    const snapshotPath = join(fixtureRoot, 'snapshot.json');
+    const diaryPath = join(fixtureRoot, 'diaryTasks.ts');
+    const migrationPath = join(fixtureRoot, 'taskIdMigrations.ts');
+    const snapshotText = readFileSync(
+      join(projectRoot, 'data/sources/achievement-diary-tasks.json'),
+      'utf8',
+    );
+    const snapshot = JSON.parse(snapshotText);
+    const diaryText = renderDiaryTasks(snapshot);
+    const migrationText = renderTaskIdMigrations(snapshot);
+    const originalFetch = globalThis.fetch;
+    const stdout: string[] = [];
+    const stderr: string[] = [];
+    const assignedExitCodes: number[] = [];
+    const runCheck = () => runDiaryMain({
+      args: ['--check'],
+      paths: { snapshotPath, diaryPath, migrationPath, projectRoot },
+      log: (message: string) => stdout.push(message),
+      error: (message: string) => stderr.push(message),
+      setExitCode: (code: number) => assignedExitCodes.push(code),
+    });
+
+    try {
+      writeFileSync(snapshotPath, snapshotText, 'utf8');
+      writeFileSync(diaryPath, diaryText, 'utf8');
+      writeFileSync(migrationPath, migrationText, 'utf8');
+      globalThis.fetch = (() => {
+        throw new Error('CLI verification attempted a network request');
+      }) as typeof fetch;
+
+      expect(runCheck()).toBe(0);
+      expect(assignedExitCodes).toEqual([0]);
+      expect(stderr).toEqual([]);
+      expect(stdout).toContain('[diary:verify] generated files are current.');
+      expect(readFileSync(snapshotPath, 'utf8')).toBe(snapshotText);
+      expect(readFileSync(diaryPath, 'utf8')).toBe(diaryText);
+      expect(readFileSync(migrationPath, 'utf8')).toBe(migrationText);
+
+      const staleDiaryText = diaryText + 'stale diary byte';
+      const staleMigrationText = migrationText + 'stale migration byte';
+      writeFileSync(diaryPath, staleDiaryText, 'utf8');
+      writeFileSync(migrationPath, staleMigrationText, 'utf8');
+      stdout.length = 0;
+      stderr.length = 0;
+      assignedExitCodes.length = 0;
+
+      expect(runCheck()).toBe(1);
+      expect(assignedExitCodes).toEqual([1]);
+      expect(stderr).toEqual([
+        '[diary:verify] data/diaryTasks.ts is out of date',
+        '[diary:verify] utils/taskIdMigrations.ts is out of date',
+      ]);
+      expect(readFileSync(snapshotPath, 'utf8')).toBe(snapshotText);
+      expect(readFileSync(diaryPath, 'utf8')).toBe(staleDiaryText);
+      expect(readFileSync(migrationPath, 'utf8')).toBe(staleMigrationText);
     } finally {
       globalThis.fetch = originalFetch;
       rmSync(fixtureRoot, { recursive: true, force: true });
