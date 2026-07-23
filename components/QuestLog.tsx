@@ -13,7 +13,6 @@ import {
   meetsSkillRequirement,
   questRequirementOptionLabel,
 } from '../utils/journalStatus';
-import { DROP_RATES } from '../config/rules';
 import { DropSource } from '../types';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { QuestAdvisorPanel } from './QuestAdvisorPanel';
@@ -347,7 +346,7 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId, curre
 };
 
 export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch = '', suspendModals = false }) => {
-  const { unlocks, toggleQuest, rollForKey, advisorsEnabled, gameModeId } = useGame();
+  const { unlocks, completeQuest, advisorsEnabled, gameModeId } = useGame();
   // Filter state is persisted in localStorage so returning players don't have
   // to re-apply their preferred view every session.
   const [filter, setFilter] = useLocalStorage<JournalStatus>('jrnl:quest:filter', 'ALL');
@@ -453,9 +452,9 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
   // simulations on every keystroke while the player is searching.
   const showAdvisorStrip = advisorsEnabled && !searchTerm && filter === 'ALL' && regionFilter === 'ALL' && advisorMode;
   const rankedQuests = useMemo(
-    () => (showAdvisorStrip ? rankAvailableQuests(unlocks) : []),
+    () => (showAdvisorStrip ? rankAvailableQuests(unlocks, gameModeId) : []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [showAdvisorStrip, unlocks],
+    [showAdvisorStrip, unlocks, gameModeId],
   );
 
   const mainQuests = filteredQuests.filter(q => q.points > 0);
@@ -478,16 +477,11 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
 
   const handleQuestToggle = (e: React.MouseEvent, quest: QuestData) => {
       e.stopPropagation();
-      const isCompleted = unlocks.quests.includes(quest.id);
-      
-      if (isCompleted) return;
+      const result = completeQuest(quest.id, e.clientX, e.clientY);
+      if (!result.ok) return;
 
-      toggleQuest(quest.id);
       // Celebration overlay (QuestCompleteOverlay) shows the wiki reward scroll.
       window.dispatchEvent(new CustomEvent('fate:quest-complete', { detail: { name: quest.name } }));
-
-      const rate = DROP_RATES[quest.difficulty];
-      rollForKey(quest.difficulty, rate, e.clientX, e.clientY);
   };
 
   const totalQuests = Object.values(QUEST_DATA).filter(q => q.points > 0).length;

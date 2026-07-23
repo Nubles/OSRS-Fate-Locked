@@ -4,7 +4,6 @@ import { useGame } from '../context/GameContext';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS, DiaryTask } from '../data/diaryTasks';
 import { Map, CheckCircle2, Lock, Sparkles, BookOpen, ChevronDown, CheckSquare, Square, ExternalLink, ArrowUpRight, TrendingUp, MapPin } from 'lucide-react';
-import { DROP_RATES } from '../config/rules';
 import { MISTHALIN_AREAS } from '../constants';
 import { chunkForPlace, showChunkOnMap } from '../utils/chunkLocations';
 import { diaryUnmet, isAlmostThere } from '../utils/journalProgress';
@@ -12,7 +11,6 @@ import { isAreaReachable } from '../utils/reachability';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SkillTrainingPopover, SkillPopoverState } from './SkillTrainingPopover';
-import { showToast } from '../utils/toast';
 import { DiaryInsights } from './JournalInsights';
 import { DiaryHeatmap } from './DiaryHeatmap';
 import {
@@ -28,7 +26,7 @@ interface DiaryLogProps {
 }
 
 export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch = '', suspendModals = false }) => {
-  const { unlocks, toggleDiary, rollForKey, toggleTask, advisorsEnabled, gameModeId } = useGame();
+  const { unlocks, completeDiaryTask, completeDiaryTier, advisorsEnabled, gameModeId } = useGame();
   // Filter state persisted across sessions.
   const [filterRegion, setFilterRegion] = useLocalStorage<string>('jrnl:diary:region', 'ALL');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -187,46 +185,12 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
 
   const handleToggle = (e: React.MouseEvent, diary: DiaryTier) => {
       e.stopPropagation();
-      const isCompleting = !unlocks.diaries.includes(diary.id);
-      
-      if (!isCompleting) return; 
-
-      if (isCompleting) {
-          const tasks = ALL_DIARY_TASKS.filter(t => t.tierId === diary.id);
-          if (tasks.length > 0) {
-              const allDone = tasks.every(t => unlocks.completedTasks.includes(t.id));
-              if (!allDone) {
-                  showToast('Complete all individual tasks in this section first');
-                  return;
-              }
-          }
-
-          toggleDiary(diary.id);
-      }
+      completeDiaryTier(diary.id);
   };
 
-  const handleTaskToggle = (task: DiaryTask, diary: DiaryTier, e: React.MouseEvent) => {
+  const handleTaskToggle = (task: DiaryTask, e: React.MouseEvent) => {
       e.stopPropagation();
-      
-      if (unlocks.diaries.includes(diary.id)) return;
-      if (unlocks.completedTasks.includes(task.id)) return;
-
-      const isCompleting = !unlocks.completedTasks.includes(task.id);
-      toggleTask(task.id);
-
-      if (isCompleting) {
-          const rate = DROP_RATES[diary.difficulty];
-          rollForKey(diary.difficulty, rate, e.clientX, e.clientY);
-
-          const tierTasks = ALL_DIARY_TASKS.filter(t => t.tierId === diary.id);
-          const otherTasksDone = tierTasks.every(t => t.id === task.id || unlocks.completedTasks.includes(t.id));
-          
-          if (otherTasksDone) {
-              if (!unlocks.diaries.includes(diary.id)) {
-                  toggleDiary(diary.id); 
-              }
-          }
-      }
+      completeDiaryTask(task.id, e.clientX, e.clientY);
   };
 
   return (
@@ -410,7 +374,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                           return (
                               <button 
                                 key={task.id}
-                                onClick={(e) => handleTaskToggle(task, diary, e)}
+                                onClick={(e) => handleTaskToggle(task, e)}
                                 disabled={isCompleted || isTaskDone}
                                 className={`w-full flex items-start gap-3 p-2 rounded text-left group ${(isCompleted || isTaskDone) ? 'cursor-default opacity-70' : 'hover:bg-white/5 cursor-pointer'}`}
                               >

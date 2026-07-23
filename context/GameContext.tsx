@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef } from 'react';
 import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState } from '../types';
 import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST } from '../data/items';
-import { EQUIPMENT_TIER_MAX } from '../config/rules';
+import { DROP_RATES, EQUIPMENT_TIER_MAX } from '../config/rules';
 import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
 import { setStartArea } from '../utils/freeAreas';
 import { migrateClogIds } from '../utils/clogIdMigrations';
@@ -10,11 +10,22 @@ import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { getRitual, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, GAMBIT_KEYS_PER } from '../config/economy';
 import { BANK_BY_ID } from '../data/banks';
+import { DIARY_DATA } from '../data/diaryData';
+import { ALL_DIARY_TASKS } from '../data/diaryTasks';
+import { QUEST_DATA } from '../data/questData';
 import { UNLOCK_COST } from '../utils/gameEngine';
 import { drawFloat } from '../utils/seededRng';
 import { hashEntry, ensureChain } from '../utils/integrity';
 import { pushBackup, listBackups as readBackups, getBackupData, BackupMeta } from '../utils/backups';
 import { showToast } from '../utils/toast';
+import {
+  canEarnDiaryTier,
+  claimRollDrawBase,
+  diaryTaskCompletionDecision,
+  questCompletionDecision,
+  withJournalCompletion,
+} from '../utils/journalCompletion';
+import type { CompletionResult, RollDrawCursor } from '../utils/journalCompletion';
 
 // --- Types ---
 const CURRENT_VERSION = 1;
@@ -26,6 +37,11 @@ const generateId = (): string => {
   }
   // Fallback for older browsers
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 11)}`;
+};
+
+const completionFailure = (reason: string): CompletionResult => {
+  showToast(reason);
+  return { ok: false, reason };
 };
 
 type RollEventMeta = { roll: number; threshold: number };
@@ -77,9 +93,11 @@ interface GameContextType extends GameState {
   restoreBackup: (ts: number) => void;
   togglePin: (id: string) => void;
   saveNote: (id: string, text: string) => void;
-  toggleQuest: (id: string) => void;
-  toggleDiary: (id: string) => void;
+  completeQuest: (id: string, x?: number, y?: number) => CompletionResult;
+  completeDiaryTask: (id: string, x?: number, y?: number) => CompletionResult;
+  completeDiaryTier: (id: string) => CompletionResult;
   toggleCA: (id: string) => void;
+  /** Transitional CA task action; additive even though the legacy name remains. */
   toggleTask: (id: string) => void;
   logCollectionItem: (itemId: number) => void;
   getExportData: () => string | null;
@@ -245,10 +263,10 @@ export type Action =
   | { type: 'ADD_LOG'; payload: LogEntry }
   | { type: 'TOGGLE_PIN'; payload: string }
   | { type: 'UPDATE_NOTE'; payload: { id: string; text: string } }
-  | { type: 'TOGGLE_QUEST'; payload: string }
-  | { type: 'TOGGLE_DIARY'; payload: string }
+  | { type: 'COMPLETE_QUEST'; payload: string }
+  | { type: 'COMPLETE_DIARY'; payload: string }
   | { type: 'TOGGLE_CA'; payload: string }
-  | { type: 'TOGGLE_TASK'; payload: string }
+  | { type: 'COMPLETE_TASK'; payload: string }
   | { type: 'SET_GAME_MODE'; payload: { modeId: string; customRules?: GameModeRules } }
   | { type: 'SET_LOADOUT_SLOT'; payload: { slot: string; itemId: number | null; clearSlots?: string[] } }
   | { type: 'SET_LINKED_ACCOUNT'; payload: string }
@@ -678,26 +696,16 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       };
     }
 
-    case 'TOGGLE_QUEST': {
+    case 'COMPLETE_QUEST': {
       const questId = action.payload;
-      const isCompleted = state.unlocks.quests.includes(questId);
-      const newQuests = isCompleted
-        ? state.unlocks.quests.filter(q => q !== questId)
-        : [...state.unlocks.quests, questId];
-
-      return {
-        ...state,
-        unlocks: { ...state.unlocks, quests: newQuests }
-      };
+      const unlocks = withJournalCompletion(state.unlocks, 'quests', questId);
+      return unlocks === state.unlocks ? state : { ...state, unlocks };
     }
 
-    case 'TOGGLE_DIARY': {
+    case 'COMPLETE_DIARY': {
       const id = action.payload;
-      const isCompleted = state.unlocks.diaries.includes(id);
-      const newDiaries = isCompleted
-        ? state.unlocks.diaries.filter(d => d !== id)
-        : [...state.unlocks.diaries, id];
-      return { ...state, unlocks: { ...state.unlocks, diaries: newDiaries } };
+      const unlocks = withJournalCompletion(state.unlocks, 'diaries', id);
+      return unlocks === state.unlocks ? state : { ...state, unlocks };
     }
 
     case 'TOGGLE_CA': {
@@ -709,13 +717,10 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       return { ...state, unlocks: { ...state.unlocks, cas: newCAs } };
     }
 
-    case 'TOGGLE_TASK': {
+    case 'COMPLETE_TASK': {
       const taskId = action.payload;
-      const isCompleted = state.unlocks.completedTasks.includes(taskId);
-      const newTasks = isCompleted
-        ? state.unlocks.completedTasks.filter(t => t !== taskId)
-        : [...state.unlocks.completedTasks, taskId];
-      return { ...state, unlocks: { ...state.unlocks, completedTasks: newTasks } };
+      const unlocks = withJournalCompletion(state.unlocks, 'completedTasks', taskId);
+      return unlocks === state.unlocks ? state : { ...state, unlocks };
     }
 
     case 'SET_RIVAL':
@@ -804,6 +809,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
   // Always-current snapshot of state so backup/reset callbacks can read the
   // latest persisted shape without re-creating on every state change.
   const stateRef = useRef(state);
+  const rollDrawCursorRef = useRef<RollDrawCursor>({ context: '', rolls: 0 });
   stateRef.current = state;
   const serializeCurrent = useCallback((): string => {
     const { lastEvent, ...persist } = stateRef.current;
@@ -853,8 +859,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
   const setSeed = useCallback((seed: string) => dispatch({ type: 'SET_SEED', payload: seed }), []);
 
   const rollForKey = useCallback((source: string, threshold: number, x?: number, y?: number) => {
-    let roll = nextDice('roll', 0);
-    const advantageRoll = nextDice('roll', 1);
+    const current = stateRef.current;
+    const context = current.history[current.history.length - 1]?.hash ?? 'genesis';
+    const claimed = claimRollDrawBase(rollDrawCursorRef.current, context);
+    rollDrawCursorRef.current = claimed.cursor;
+
+    let roll = nextDice('roll', claimed.baseIndex);
+    const advantageRoll = nextDice('roll', claimed.baseIndex + 1);
 
     if (state.activeBuff === 'LUCK') {
       roll = Math.min(roll, advantageRoll);
@@ -887,7 +898,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
       else if (source === DropSource.RAID) omniChance = Math.max(omniChance, 15);
       else if (source === DropSource.BOSS_HIGH) omniChance = Math.max(omniChance, 10);
 
-      if (nextDice('roll', 2) <= omniChance) omni = true;
+      if (nextDice('roll', claimed.baseIndex + 2) <= omniChance) omni = true;
     } else {
       if (mode.pityEnabled && state.fatePoints + 1 >= mode.pityThreshold) pity = true;
     }
@@ -987,10 +998,86 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
   }, [storageKey, serializeCurrent]);
   const togglePin = useCallback((id: string) => dispatch({ type: 'TOGGLE_PIN', payload: id }), []);
   const saveNote = useCallback((id: string, text: string) => dispatch({ type: 'UPDATE_NOTE', payload: { id, text } }), []);
-  const toggleQuest = useCallback((id: string) => dispatch({ type: 'TOGGLE_QUEST', payload: id }), []);
-  const toggleDiary = useCallback((id: string) => dispatch({ type: 'TOGGLE_DIARY', payload: id }), []);
+  const completeQuest = useCallback((id: string, x?: number, y?: number): CompletionResult => {
+    const snapshot = stateRef.current;
+    const quest = QUEST_DATA[id];
+    if (!quest) return completionFailure('Unknown quest');
+
+    const result = questCompletionDecision(quest, snapshot.unlocks, snapshot.gameModeId);
+    if (result.ok === false) return completionFailure(result.reason);
+
+    stateRef.current = {
+      ...snapshot,
+      unlocks: withJournalCompletion(snapshot.unlocks, 'quests', id),
+    };
+    dispatch({ type: 'COMPLETE_QUEST', payload: id });
+    rollForKey(quest.difficulty, DROP_RATES[quest.difficulty], x, y);
+    return result;
+  }, [rollForKey]);
+
+  const completeDiaryTask = useCallback((
+    id: string,
+    x?: number,
+    y?: number,
+  ): CompletionResult => {
+    const snapshot = stateRef.current;
+    const task = ALL_DIARY_TASKS.find(candidate => candidate.id === id);
+    if (!task) return completionFailure('Unknown Diary task');
+    const diary = DIARY_DATA[task.tierId];
+    if (!diary) return completionFailure('Unknown Diary tier');
+
+    const result = diaryTaskCompletionDecision(
+      task,
+      snapshot.unlocks,
+      snapshot.gameModeId,
+    );
+    if (result.ok === false) return completionFailure(result.reason);
+
+    stateRef.current = {
+      ...snapshot,
+      unlocks: withJournalCompletion(snapshot.unlocks, 'completedTasks', id),
+    };
+    dispatch({ type: 'COMPLETE_TASK', payload: id });
+    rollForKey(diary.difficulty, DROP_RATES[diary.difficulty], x, y);
+
+    const current = stateRef.current;
+    if (
+      !current.unlocks.diaries.includes(task.tierId)
+      && canEarnDiaryTier(
+        task.tierId,
+        current.unlocks.completedTasks,
+        ALL_DIARY_TASKS,
+      )
+    ) {
+      stateRef.current = {
+        ...current,
+        unlocks: withJournalCompletion(current.unlocks, 'diaries', task.tierId),
+      };
+      dispatch({ type: 'COMPLETE_DIARY', payload: task.tierId });
+    }
+    return result;
+  }, [rollForKey]);
+
+  const completeDiaryTier = useCallback((id: string): CompletionResult => {
+    const snapshot = stateRef.current;
+    if (!DIARY_DATA[id]) return completionFailure('Unknown Diary tier');
+    if (snapshot.unlocks.diaries.includes(id)) {
+      return completionFailure('Already completed');
+    }
+    if (!canEarnDiaryTier(id, snapshot.unlocks.completedTasks, ALL_DIARY_TASKS)) {
+      return completionFailure('Complete all individual tasks in this section first');
+    }
+
+    stateRef.current = {
+      ...snapshot,
+      unlocks: withJournalCompletion(snapshot.unlocks, 'diaries', id),
+    };
+    dispatch({ type: 'COMPLETE_DIARY', payload: id });
+    return { ok: true };
+  }, []);
+
   const toggleCA = useCallback((id: string) => dispatch({ type: 'TOGGLE_CA', payload: id }), []);
-  const toggleTask = useCallback((id: string) => dispatch({ type: 'TOGGLE_TASK', payload: id }), []);
+  const toggleTask = useCallback((id: string) => dispatch({ type: 'COMPLETE_TASK', payload: id }), []);
 
   const getExportData = useCallback((): string | null => {
     return localStorage.getItem(storageKey);
@@ -1018,8 +1105,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     restoreBackup,
     togglePin,
     saveNote,
-    toggleQuest,
-    toggleDiary,
+    completeQuest,
+    completeDiaryTask,
+    completeDiaryTier,
     toggleCA,
     toggleTask,
     logCollectionItem,
@@ -1051,8 +1139,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     restoreBackup,
     togglePin,
     saveNote,
-    toggleQuest,
-    toggleDiary,
+    completeQuest,
+    completeDiaryTask,
+    completeDiaryTier,
     toggleCA,
     toggleTask,
     logCollectionItem,

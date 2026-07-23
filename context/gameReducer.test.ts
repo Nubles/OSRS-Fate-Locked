@@ -389,6 +389,31 @@ describe('SET_GAME_MODE', () => {
   });
 });
 
+// --- journal completion -----------------------------------------------------
+
+describe('journal completion actions', () => {
+  it.each([
+    ['COMPLETE_QUEST', 'quests', 'Cook\'s Assistant'],
+    ['COMPLETE_DIARY', 'diaries', 'Falador Easy'],
+    ['COMPLETE_TASK', 'completedTasks', 'fal_easy_1'],
+  ] as const)('%s appends once and never removes historical completion',
+    (type, field, id) => {
+      const once = gameReducer(base(), { type, payload: id });
+      const twice = gameReducer(once, { type, payload: id });
+
+      expect(once.unlocks[field]).toContain(id);
+      expect(twice.unlocks[field].filter(value => value === id)).toHaveLength(1);
+    });
+
+  it('preserves unrelated journal completion fields', () => {
+    const start = gameReducer(base(), { type: 'COMPLETE_QUEST', payload: 'Cook\'s Assistant' });
+    const next = gameReducer(start, { type: 'COMPLETE_DIARY', payload: 'Falador Easy' });
+
+    expect(next.unlocks.quests).toContain('Cook\'s Assistant');
+    expect(next.unlocks.diaries).toContain('Falador Easy');
+  });
+});
+
 // --- lifecycle --------------------------------------------------------------
 
 describe('lifecycle actions', () => {

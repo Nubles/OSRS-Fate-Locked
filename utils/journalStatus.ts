@@ -175,17 +175,51 @@ export interface DoableDiaryTask extends DoableTask {
   tierId: string;
 }
 
+export interface DiaryTaskEligibility {
+  eligible: boolean;
+  blockers: EligibilityBlocker[];
+  evidence: string[];
+}
+
+export function evaluateDiaryTaskEligibility(
+  task: DoableTask,
+  unlocks: UnlockState,
+  gameModeId?: string,
+): DiaryTaskEligibility {
+  const blockers: EligibilityBlocker[] = [];
+  const evidence: string[] = [];
+
+  for (const [skill, required] of Object.entries(task.skills ?? {})) {
+    if (meetsSkillRequirement(unlocks, skill, required)) {
+      evidence.push(skill + ' ' + required);
+    } else {
+      blockers.push({ kind: 'skill', label: skill + ' ' + required });
+    }
+  }
+  for (const quest of task.quests ?? []) {
+    if (unlocks.quests.includes(quest)) evidence.push(quest);
+    else blockers.push({ kind: 'quest', label: quest });
+  }
+  for (const region of task.regions ?? []) {
+    if (isAreaReachable(region, unlocks, gameModeId)) evidence.push(region);
+    else blockers.push({ kind: 'region', label: region });
+  }
+
+  return { eligible: blockers.length === 0, blockers, evidence };
+}
+
+export function taskEligibilityBlockers(
+  task: DoableTask,
+  unlocks: UnlockState,
+  gameModeId?: string,
+): EligibilityBlocker[] {
+  return evaluateDiaryTaskEligibility(task, unlocks, gameModeId).blockers;
+}
+
 export function countDoableTasks(tasks: DoableTask[], unlocks: UnlockState, gameModeId?: string): number {
   return tasks.filter(task => {
     if (unlocks.completedTasks.includes(task.id)) return false;
-    if (task.skills && !Object.entries(task.skills).every(
-      ([skill, level]) => meetsSkillRequirement(unlocks, skill, level),
-    )) return false;
-    if (task.quests && !task.quests.every(q => unlocks.quests.includes(q))) return false;
-    if (task.regions && !task.regions.every(
-      r => isAreaReachable(r, unlocks, gameModeId),
-    )) return false;
-    return true;
+    return taskEligibilityBlockers(task, unlocks, gameModeId).length === 0;
   }).length;
 }
 
