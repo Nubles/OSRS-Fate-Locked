@@ -12,7 +12,6 @@ import { TableType, LogEntry } from '../types';
 import { isRollEntry } from '../utils/logEntry';
 import { XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL } from '../config/economy';
 import { isValidUnlock } from '../utils/gameEngine';
-import { DIARY_TASK_ID_MIGRATIONS } from '../utils/taskIdMigrations';
 import { ALL_CHUNKS, CHUNKED_START, chunkKey } from '../utils/chunkAdjacency';
 import { ALL_CA_TASKS } from '../data/caTasks';
 
@@ -493,37 +492,27 @@ describe('LEVEL_UP — Chunked milestone insurance', () => {
 
 // --- SET_GAME_MODE ----------------------------------------------------------
 
-describe('LOAD_SAVE migration', () => {
-  it('dedupes unlock arrays from a corrupted save', () => {
-    const corrupted: any = {
-      keys: 0,
-      unlocks: {
-        regions: ['Karamja', 'Karamja', 'Falador'],
-        bosses: ['Zulrah', 'Zulrah'],
+describe('LOAD_SAVE normalized replacement', () => {
+  it('replaces the whole accepted state without retaining current-only fields', () => {
+    const current = {
+      ...base(),
+      rival: {
+        mode: 'sim' as const,
+        personaId: 'old-rival',
+        name: 'Old rival',
+        emoji: '!',
+        keysPerDay: 1,
+        seed: 1,
+        startedAt: 1,
       },
     };
-    const s = gameReducer(base(), { type: 'LOAD_SAVE', payload: corrupted });
-    expect(s.unlocks.regions).toEqual(['Karamja', 'Falador']);
-    expect(s.unlocks.bosses).toEqual(['Zulrah']);
-  });
-  it('canonicalizes Diary aliases while retaining unknown retired completion ids', () => {
-    const aliases = DIARY_TASK_ID_MIGRATIONS as Record<string, string>;
-    aliases.old_a = 'current_a';
-    try {
-      const loaded = gameReducer(base(), {
-        type: 'LOAD_SAVE',
-        payload: {
-          unlocks: {
-            ...initialState.unlocks,
-            completedTasks: ['old_a', 'old_a', 'retired_x'],
-          },
-        },
-      });
+    const accepted = { ...structuredClone(initialState), keys: 8 };
 
-      expect(loaded.unlocks.completedTasks).toEqual(['current_a', 'retired_x']);
-    } finally {
-      delete aliases.old_a;
-    }
+    const replaced = gameReducer(current, { type: 'LOAD_SAVE', payload: accepted });
+
+    expect(replaced.keys).toBe(8);
+    expect(replaced.rival).toBeUndefined();
+    expect(replaced.lastEvent).toBeNull();
   });
 });
 
