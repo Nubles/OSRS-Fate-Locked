@@ -333,6 +333,34 @@ export const prepareKeyRollAction = (
   };
 };
 
+type LevelUpAction = Extract<TransitionAction, { type: 'LEVEL_UP' }>;
+
+/**
+ * Preserve the established level reward RNG context by deciding the reward
+ * before LEVEL_UP can append history, while applying it after the level state.
+ */
+export const prepareLevelUpActions = (
+  state: GameState,
+  skill: string,
+  chaosRoll: number,
+  nextDice: DiceRoller,
+): {
+  levelAction: LevelUpAction;
+  rewardAction: RollResultAction;
+} => {
+  const newLevel = (state.unlocks.levels[skill] || 1) + 1;
+  const rollChance = Math.ceil(newLevel / 5);
+  return {
+    levelAction: { type: 'LEVEL_UP', payload: { skill, chaosRoll } },
+    rewardAction: prepareKeyRollAction(
+      state,
+      `${skill} Level ${newLevel}`,
+      rollChance,
+      nextDice,
+    ),
+  };
+};
+
 // Wrap the raw reducer so any history entries appended during a dispatch
 // are chained (prevHash + hash) before the new state is returned. This
 // keeps the individual cases unchanged — they can keep push()-ing entries
@@ -974,14 +1002,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
   const levelUpSkill = useCallback((skill: string) => {
     // Pre-compute RNG outside reducer to maintain reducer purity
     const chaosRoll = nextFloat('levelup');
-    const currentLevel = stateRef.current.unlocks.levels[skill] || 1;
-    commitAction({ type: 'LEVEL_UP', payload: { skill, chaosRoll } });
-
-    const newLevel = currentLevel + 1;
-    const rollChance = Math.ceil(newLevel / 5); // Level ÷ 5 curve (max 20% at 99) — rebalanced 2026
-
-    rollForKey(`${skill} Level ${newLevel}`, rollChance);
-  }, [commitAction, rollForKey, nextFloat]);
+    const prepared = prepareLevelUpActions(stateRef.current, skill, chaosRoll, nextDice);
+    commitAction(prepared.levelAction);
+    commitAction(prepared.rewardAction);
+  }, [commitAction, nextDice, nextFloat]);
 
   const logCollectionItem = useCallback((itemId: number) => {
     commitAction({ type: 'LOG_ITEM', payload: itemId });

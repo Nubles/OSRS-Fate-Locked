@@ -3,6 +3,7 @@ import {
   gameReducer,
   initialState,
   prepareGameTransition,
+  prepareLevelUpActions,
   prepareKeyRollAction,
 } from './GameContext';
 import { drawDice } from '../utils/seededRng';
@@ -161,6 +162,54 @@ describe('ROLL_RESULT', () => {
     expect(committed.lastEvent?.id).toBe(prepared.state.lastEvent?.id);
     expect(committed.history.at(-1)?.timestamp)
       .toBe(prepared.state.history.at(-1)?.timestamp);
+  });
+
+  it('prepares seeded level-up reward draws from the pre-level history tip', () => {
+    const seed = 'FATE-LEVEL-8';
+    const start = {
+      ...base(),
+      rngSeed: seed,
+      unlocks: {
+        ...base().unlocks,
+        levels: { ...base().unlocks.levels, Attack: 98 },
+      },
+    };
+    let currentContext = start.history.at(-1)?.hash ?? 'genesis';
+    const drawContexts: Array<{ context: string; index: number }> = [];
+    const dice = (purpose: string, index = 0, max = 100) => {
+      drawContexts.push({ context: currentContext, index });
+      return drawDice(seed, currentContext, purpose, index, max);
+    };
+
+    const prepared = prepareLevelUpActions(
+      start,
+      'Attack',
+      0.01,
+      dice,
+    );
+
+    expect(drawContexts).toEqual([
+      { context: 'genesis', index: 0 },
+      { context: 'genesis', index: 1 },
+      { context: 'genesis', index: 2 },
+    ]);
+    expect(prepared.rewardAction.payload).toMatchObject({
+      roll: 6,
+      threshold: 20,
+      source: 'Attack Level 99',
+      success: true,
+    });
+
+    const afterLevel = prepareGameTransition(start, prepared.levelAction).state;
+    const levelTip = afterLevel.history.at(-1)?.hash;
+    expect(levelTip).toBeTruthy();
+    expect(levelTip).not.toBe('genesis');
+    currentContext = levelTip!;
+
+    const finished = prepareGameTransition(afterLevel, prepared.rewardAction).state;
+    expect(finished.history.map(entry => entry.type))
+      .toEqual(['LEVEL_UP', 'ROLL_SUCCESS']);
+    expect(drawContexts).toHaveLength(3);
   });
 });
 
