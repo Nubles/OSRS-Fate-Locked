@@ -146,6 +146,24 @@ describe('planForTarget — diaries', () => {
       }
     }
   });
+  it('delegates diary skill gates and omits requirements already met', () => {
+    const diary = Object.values(DIARY_DATA).find(candidate =>
+      Object.keys(candidate.skills).length > 0)!;
+    const plan = planForTarget('diary', diary.id, maxedUnlocks())!;
+
+    expect(plan.skillSteps).toEqual([]);
+  });
+
+  it('keeps a stored completed diary done with no reconstructed backlog', () => {
+    const diary = Object.values(DIARY_DATA)[0];
+    const plan = planForTarget('diary', diary.id, maxedUnlocks({
+      diaries: [diary.id],
+    }))!;
+
+    expect(plan.alreadyDone).toBe(true);
+    expect(plan.remaining).toBe(0);
+    expect(plan.steps).toEqual([]);
+  });
 });
 
 describe('planForTarget — regions', () => {

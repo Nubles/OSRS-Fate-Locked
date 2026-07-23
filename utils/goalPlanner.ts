@@ -16,8 +16,8 @@ import { QUEST_DATA, QuestData } from '../data/questData';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { REGION_GROUPS } from '../data/items';
 import {
-  getQuestStatus, getDiaryStatus, meetsSkillRequirement,
-  questAlternativesMet, questRequirementOptionLabel,
+  evaluateQuestEligibility, getQuestStatus, getDiaryStatus,
+  questRequirementOptionLabel, taskEligibilityBlockers,
 } from './journalStatus';
 import { isAreaReachable } from './reachability';
 
@@ -96,28 +96,41 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
     visited.add(qid);
     const q: QuestData | undefined = QUEST_DATA[qid];
     if (!q) return;
-    // Already completed → its whole prereq sub-tree is satisfied; skip.
-    if (unlocks.quests.includes(qid)) return;
 
-    // Prereqs first (post-order) so they land earlier in `order`.
-    for (const p of q.prereqs) visit(p);
+    const eligibility = evaluateQuestEligibility(q, unlocks, gameModeId);
+    if (eligibility.status === 'COMPLETED') return;
 
-    // Region gates — already-reachable regions (free, unlocked, or in Chunked
-    // mode reachable via any overlapping chunk) don't need a plan step.
-    for (const r of q.regions) {
-      if (!isAreaReachable(r, unlocks, gameModeId)) regions.add(r);
+    // Canonical quest blockers decide every requirement. Walking quest blockers
+    // first preserves dependency order without rebuilding prerequisite logic.
+    for (const blocker of eligibility.blockers) {
+      if (blocker.kind === 'quest') visit(blocker.label);
     }
-    if (!questAlternativesMet(q, unlocks, gameModeId)) {
-      alternatives.add(
-        `One of: ${q.oneOf!.map(questRequirementOptionLabel).join(' or ')}`,
-      );
-    }
-    // Skill / quest-point gates.
-    for (const [skill, lvl] of Object.entries(q.skills as Record<string, number>)) {
-      if (skill === 'Quest Points') {
-        qpRequired = Math.max(qpRequired, lvl);
-      } else {
-        skills[skill] = Math.max(skills[skill] ?? 0, lvl);
+
+    const alternativeLabel = q.oneOf
+      ?.map(questRequirementOptionLabel)
+      .join(' or ');
+
+    for (const blocker of eligibility.blockers) {
+      if (blocker.kind === 'region') {
+        if (alternativeLabel && blocker.label === alternativeLabel) {
+          alternatives.add('One of: ' + blocker.label);
+        } else {
+          regions.add(blocker.label);
+        }
+        continue;
+      }
+      if (blocker.kind === 'combat') {
+        if (q.combatLevel !== undefined) {
+          skills['Combat level'] = Math.max(skills['Combat level'] ?? 0, q.combatLevel);
+        }
+        continue;
+      }
+      if (blocker.kind === 'skill') {
+        for (const [skill, level] of Object.entries(q.skills)) {
+          if (blocker.label !== skill + ' ' + level) continue;
+          if (skill === 'Quest Points') qpRequired = Math.max(qpRequired, level);
+          else skills[skill] = Math.max(skills[skill] ?? 0, level);
+        }
       }
     }
 
@@ -139,7 +152,6 @@ function buildPlanFromRequirements(
   unlocks: any,
   alreadyReachable: boolean,
   alreadyDone: boolean,
-  gameModeId?: string,
 ): GoalPlan {
   // Region steps.
   const regionSteps: PlanStep[] = [
@@ -147,7 +159,7 @@ function buildPlanFromRequirements(
       kind: 'region',
       id: region,
       label: region,
-      done: isAreaReachable(region, unlocks, gameModeId),
+      done: false,
     })),
     ...Array.from(reqs.alternatives).map((label): PlanStep => ({
       kind: 'region',
@@ -161,16 +173,18 @@ function buildPlanFromRequirements(
   // Skill steps.
   const skillSteps: PlanStep[] = Object.entries(reqs.skills)
     .map(([skill, lvl]): PlanStep => {
-      const done = meetsSkillRequirement(unlocks, skill, lvl);
+      const done = false;
       const have = unlocks.levels[skill] ?? 1;
       const tier = unlocks.skills[skill] ?? 0;
       const unlocked = tier > 0;
       const methodCap = Math.min(99, tier * 10);
-      const detail = !unlocked
-        ? `Lv ${lvl} (locked)`
-        : have >= lvl && methodCap < lvl
-          ? `Lv ${lvl} (have ${have}; method cap ${methodCap})`
-          : `Lv ${lvl} (have ${have})`;
+      const detail = skill === 'Combat level'
+        ? `Level ${lvl}`
+        : !unlocked
+          ? `Lv ${lvl} (locked)`
+          : have >= lvl && methodCap < lvl
+            ? `Lv ${lvl} (have ${have}; method cap ${methodCap})`
+            : `Lv ${lvl} (have ${have})`;
       return {
         kind: 'skill',
         id: skill,
@@ -265,7 +279,6 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
       unlocks,
       status === 'AVAILABLE' || status === 'COMPLETED',
       status === 'COMPLETED',
-      gameModeId,
     );
   }
 
@@ -282,29 +295,40 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
       skills: {} as Record<string, number>,
       qpRequired: 0,
     };
-    const seen = new Set<string>();
-    for (const qid of d.quests) {
-      const sub = collectQuestChain(qid, unlocks, gameModeId);
-      for (const r of sub.regions) merged.regions.add(r);
-      for (const alternative of sub.alternatives) merged.alternatives.add(alternative);
-      for (const [s, lvl] of Object.entries(sub.skills)) {
-        merged.skills[s] = Math.max(merged.skills[s] ?? 0, lvl);
-      }
-      merged.qpRequired = Math.max(merged.qpRequired, sub.qpRequired);
-      for (const oq of sub.order) {
-        if (!seen.has(oq)) {
-          seen.add(oq);
-          merged.order.push(oq);
+    if (status !== 'COMPLETED') {
+      const seen = new Set<string>();
+      for (const qid of d.quests) {
+        const sub = collectQuestChain(qid, unlocks, gameModeId);
+        for (const region of sub.regions) merged.regions.add(region);
+        for (const alternative of sub.alternatives) merged.alternatives.add(alternative);
+        for (const [skill, level] of Object.entries(sub.skills)) {
+          merged.skills[skill] = Math.max(merged.skills[skill] ?? 0, level);
+        }
+        merged.qpRequired = Math.max(merged.qpRequired, sub.qpRequired);
+        for (const questId of sub.order) {
+          if (!seen.has(questId)) {
+            seen.add(questId);
+            merged.order.push(questId);
+          }
         }
       }
-    }
-    // The diary's own region requirements.
-    for (const r of d.requiredRegions) {
-      if (!isAreaReachable(r, unlocks, gameModeId)) merged.regions.add(r);
-    }
-    // The diary's own skill requirements (needed to actually do the tasks).
-    for (const [s, lvl] of Object.entries(d.skills as Record<string, number>)) {
-      merged.skills[s] = Math.max(merged.skills[s] ?? 0, lvl);
+
+      const blockers = taskEligibilityBlockers({
+        id: d.id,
+        skills: d.skills,
+        quests: d.quests,
+        regions: d.requiredRegions,
+      }, unlocks, gameModeId);
+      for (const blocker of blockers) {
+        if (blocker.kind === 'region') merged.regions.add(blocker.label);
+        if (blocker.kind === 'skill') {
+          for (const [skill, level] of Object.entries(d.skills)) {
+            if (blocker.label === skill + ' ' + level) {
+              merged.skills[skill] = Math.max(merged.skills[skill] ?? 0, level);
+            }
+          }
+        }
+      }
     }
 
     return buildPlanFromRequirements(
@@ -315,7 +339,6 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
       unlocks,
       status === 'AVAILABLE' || status === 'COMPLETED',
       status === 'COMPLETED',
-      gameModeId,
     );
   }
 

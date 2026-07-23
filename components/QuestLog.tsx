@@ -13,7 +13,7 @@ import {
   meetsSkillRequirement,
   questRequirementOptionLabel,
 } from '../utils/journalStatus';
-import { DropSource } from '../types';
+import { DropSource, UnlockState } from '../types';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { QuestAdvisorPanel } from './QuestAdvisorPanel';
 import { rankAvailableQuests } from '../utils/questAdvisor';
@@ -25,6 +25,12 @@ interface QuestLogProps {
   searchTerm?: string;
   suspendModals?: boolean;
 }
+
+export const questLogEligibility = (
+  quest: QuestData,
+  unlocks: UnlockState,
+  gameModeId?: string,
+) => evaluateQuestEligibility(quest, unlocks, gameModeId);
 
 // Helpers
 const getWikiUrl = (name: string) => {
@@ -403,7 +409,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
 
   const allQuests = useMemo(() => {
     return Object.values(QUEST_DATA).map(q => {
-      const eligibility = evaluateQuestEligibility(q, unlocks, gameModeId);
+      const eligibility = questLogEligibility(q, unlocks, gameModeId);
       return { ...q, status: eligibility.status, eligibility };
     }).sort((a, b) => {
         const score = (s: string) => s === 'AVAILABLE' ? 0 : s.includes('LOCKED') ? 1 : 2;

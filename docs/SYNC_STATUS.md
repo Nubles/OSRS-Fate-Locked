@@ -16,11 +16,11 @@
 | --- | --- | --- | --- |
 | Easy | 41 | 41 | — |
 | Medium | 60 | 60 | — |
-| Hard | 85 | 85 | — |
-| Elite | 162 | 162 | — |
-| Master | 168 | 168 | — |
+| Hard | 86 | 86 | — |
+| Elite | 164 | 164 | — |
+| Master | 174 | 174 | — |
 | Grandmaster | 121 | 121 | — |
-| **Total** | **637** | **637** | — |
+| **Total** | **646** | **646** | — |
 
 ## Achievement Diaries
 
@@ -28,7 +28,7 @@ _Diary tasks have no clean machine-readable wiki marker, and change very rarely.
 _App-side counts are tracked here so accidental data loss shows up; genuinely new_
 _diary content is flagged on manual review._
 
-- App: **485** diary tasks across **48** region/tier groups.
+- App: **492** diary tasks across **48** region/tier groups.
 
 ## Action needed
 
