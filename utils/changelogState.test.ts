@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   CHANGELOG_STORAGE_KEY, ChangelogStorage,
   changelogVisibilityReducer, markChangelogSeen, resolveChangelogRestoreTarget,
-  shouldAutoOpenChangelog, shouldEnableUnderlyingModalEscape, shouldShowChangelog,
+  shouldAutoOpenChangelog, shouldEnableUnderlyingModalEscape,
+  shouldRenderUnderlyingModals, shouldShowChangelog,
 } from './changelogState';
 
 class MemoryStorage implements ChangelogStorage {
@@ -101,5 +102,10 @@ describe('changelog state', () => {
     expect(shouldEnableUnderlyingModalEscape(true, true)).toBe(false);
     expect(shouldEnableUnderlyingModalEscape(true, false)).toBe(true);
     expect(shouldEnableUnderlyingModalEscape(false, false)).toBe(false);
+  });
+
+  it('renders underlying top-level modals only while the changelog is closed', () => {
+    expect(shouldRenderUnderlyingModals(true)).toBe(false);
+    expect(shouldRenderUnderlyingModals(false)).toBe(true);
   });
 });

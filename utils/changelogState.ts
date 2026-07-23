@@ -74,3 +74,7 @@ export const shouldEnableUnderlyingModalEscape = (
   anyUnderlyingModalOpen: boolean,
   showChangelog: boolean,
 ): boolean => anyUnderlyingModalOpen && !showChangelog;
+
+export const shouldRenderUnderlyingModals = (
+  showChangelog: boolean,
+): boolean => !showChangelog;

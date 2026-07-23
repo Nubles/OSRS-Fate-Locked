@@ -41,7 +41,8 @@ import { prefetchHeavyChunks } from './utils/prefetch';
 import { LATEST_CHANGELOG } from './data/changelog';
 import {
   changelogVisibilityReducer, markChangelogSeen, resolveChangelogRestoreTarget,
-  shouldAutoOpenChangelog, shouldEnableUnderlyingModalEscape, shouldShowChangelog,
+  shouldAutoOpenChangelog, shouldEnableUnderlyingModalEscape,
+  shouldRenderUnderlyingModals, shouldShowChangelog,
 } from './utils/changelogState';
 
 // Heavy, conditionally-rendered modals — code-split so they (and their deps,
@@ -682,6 +683,7 @@ const GameLayout = () => {
     setShowGameMode(false);
     setShowSyncCode(false);
   }, shouldEnableUnderlyingModalEscape(anyModalOpen, showChangelog));
+  const renderUnderlyingModals = shouldRenderUnderlyingModals(showChangelog);
 
   return (
     <div className="min-h-screen bg-osrs-bg text-osrs-text pb-6 font-sans selection:bg-osrs-gold selection:text-black relative">
@@ -706,18 +708,22 @@ const GameLayout = () => {
       {activeRitualAnim === 'GREED' && <GreedEffect onComplete={() => setActiveRitualAnim('NONE')} />}
       {activeRitualAnim === 'CHAOS' && <ChaosEffect onComplete={() => setActiveRitualAnim('NONE')} />}
 
-      {showAltar && <VoidAltar onClose={() => setShowAltar(false)} />}
+      {renderUnderlyingModals && showAltar && <VoidAltar onClose={() => setShowAltar(false)} />}
       <Suspense fallback={<ModalFallback />}>
-        {showStats && <StatsModal onClose={() => setShowStats(false)} />}
-        {showFateThread && <FateThread onClose={() => setShowFateThread(false)} />}
-        {showReference && <ReferenceModal onClose={() => setShowReference(false)} />}
-        {showOracle && <OracleSearch onClose={() => setShowOracle(false)} />}
-        {showStrategy && <StrategyGuide onClose={() => setShowStrategy(false)} />}
-        {showSupplyChain && <SupplyChainCalculator initialQuery={supplyChainPreset} onClose={() => { setShowSupplyChain(false); setSupplyChainPreset(undefined); }} />}
-        {showGameMode && <GameModePicker onClose={() => setShowGameMode(false)} />}
-        {showSyncCode && <SyncCodeModal onClose={() => { setShowSyncCode(false); setSyncImportCode(undefined); }} initialImportCode={syncImportCode} />}
-        {showGallery && <ModelGallery onClose={() => setShowGallery(false)} />}
-        {showDiscord && <DiscordSettingsModal onClose={() => setShowDiscord(false)} />}
+        {renderUnderlyingModals && (
+          <>
+            {showStats && <StatsModal onClose={() => setShowStats(false)} />}
+            {showFateThread && <FateThread onClose={() => setShowFateThread(false)} />}
+            {showReference && <ReferenceModal onClose={() => setShowReference(false)} />}
+            {showOracle && <OracleSearch onClose={() => setShowOracle(false)} />}
+            {showStrategy && <StrategyGuide onClose={() => setShowStrategy(false)} />}
+            {showSupplyChain && <SupplyChainCalculator initialQuery={supplyChainPreset} onClose={() => { setShowSupplyChain(false); setSupplyChainPreset(undefined); }} />}
+            {showGameMode && <GameModePicker onClose={() => setShowGameMode(false)} />}
+            {showSyncCode && <SyncCodeModal onClose={() => { setShowSyncCode(false); setSyncImportCode(undefined); }} initialImportCode={syncImportCode} />}
+            {showGallery && <ModelGallery onClose={() => setShowGallery(false)} />}
+            {showDiscord && <DiscordSettingsModal onClose={() => setShowDiscord(false)} />}
+          </>
+        )}
         {showChangelog && (
           <ChangelogModal release={LATEST_CHANGELOG} onClose={closeChangelog} />
         )}
