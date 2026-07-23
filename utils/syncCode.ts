@@ -5,80 +5,118 @@
  * Format:  FLSYNC.<method>.<base64url payload>.<checksum>
  *   method   : 'g1' = gzip (CompressionStream), 'r1' = raw UTF-8 (fallback)
  *   payload  : base64url of the (compressed) JSON bytes
- *   checksum : simpleHash(json) — lets the importer detect a truncated or
- *              hand-edited code BEFORE it overwrites a save.
- *
- * Compression uses the browser-native CompressionStream when available (history
- * is highly repetitive, so gzip shrinks codes dramatically) and falls back to a
- * raw UTF-8 payload otherwise. Decoding auto-detects the method from the header,
- * so a code produced on one device always reads on another.
+ *   checksum : simpleHash(json)
  */
 
 import { simpleHash } from './integrity';
+import { MAX_SAVE_BYTES } from './saveSchema';
 
 const PREFIX = 'FLSYNC';
 const SEP = '.';
 const METHOD_GZIP = 'g1';
 const METHOD_RAW = 'r1';
 
-// ── base64url ───────────────────────────────────────────────────────────────
+export const MAX_SYNC_CODE_CHARS = 2 * 1024 * 1024;
+
 const bytesToBase64 = (bytes: Uint8Array): string => {
-  let bin = '';
-  const chunk = 0x8000; // avoid arg-count limits on String.fromCharCode
-  for (let i = 0; i < bytes.length; i += chunk) {
-    bin += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
   }
-  return btoa(bin);
+  return btoa(binary);
 };
 
-const base64ToBytes = (b64: string): Uint8Array => {
-  const bin = atob(b64);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+const base64ToBytes = (base64: string): Uint8Array => {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
   return bytes;
 };
 
-const toUrlSafe = (b64: string): string =>
-  b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const toUrlSafe = (base64: string): string =>
+  base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
-const fromUrlSafe = (s: string): string => {
-  const b64 = s.replace(/-/g, '+').replace(/_/g, '/');
-  const padLen = b64.length % 4 ? 4 - (b64.length % 4) : 0;
-  return b64 + '='.repeat(padLen);
+const fromUrlSafe = (value: string): string => {
+  const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padding = base64.length % 4 ? 4 - (base64.length % 4) : 0;
+  return base64 + '='.repeat(padding);
 };
 
-// ── gzip via Compression Streams (browser + Node 18+) ───────────────────────
+const isStrictBase64Url = (value: string): boolean =>
+  value.length > 0
+  && value.length % 4 !== 1
+  && /^[A-Za-z0-9_-]+$/.test(value);
+
 const canCompress = (): boolean => typeof CompressionStream !== 'undefined';
 const canDecompress = (): boolean => typeof DecompressionStream !== 'undefined';
 
-// Pump bytes into a transform stream and read the whole output. The writer
-// promises are intentionally swallowed: when the stream errors (e.g. corrupt
-// gzip input) the failure surfaces through the readable side, which the
-// caller awaits — without this guard the writer's rejection would escape as
-// an unhandled promise rejection.
-const runStream = async (
-  stream: { writable: WritableStream<BufferSource>; readable: ReadableStream<Uint8Array> },
+const runCompressionStream = async (
+  stream: CompressionStream,
   input: Uint8Array,
 ): Promise<Uint8Array> => {
   const writer = stream.writable.getWriter();
-  // Cast: lib.dom types BufferSource around ArrayBuffer; a plain Uint8Array
-  // (ArrayBufferLike) is runtime-compatible but trips TS 5.7's stricter generic.
   void writer.write(input as BufferSource).catch(() => {});
   void writer.close().catch(() => {});
-  const buf = await new Response(stream.readable).arrayBuffer();
-  return new Uint8Array(buf);
+  const buffer = await new Response(stream.readable).arrayBuffer();
+  return new Uint8Array(buffer);
 };
 
-const gzipString = async (str: string): Promise<Uint8Array> =>
-  runStream(new CompressionStream('gzip'), new TextEncoder().encode(str));
+const gzipString = async (value: string): Promise<Uint8Array> =>
+  runCompressionStream(
+    new CompressionStream('gzip'),
+    new TextEncoder().encode(value),
+  );
 
-const gunzipToString = async (bytes: Uint8Array): Promise<string> =>
-  new TextDecoder().decode(await runStream(new DecompressionStream('gzip'), bytes));
+class ExpandedPayloadTooLarge extends Error {}
 
-// ── public API ───────────────────────────────────────────────────────────────
+const gunzipBounded = async (input: Uint8Array): Promise<Uint8Array> => {
+  const stream = new DecompressionStream('gzip');
+  const writer = stream.writable.getWriter();
+  const reader = stream.readable.getReader();
+  const pump = writer.write(input as BufferSource).then(() => writer.close());
+  void pump.catch(() => {});
 
-/** Encode a persisted-state object into a shareable sync code. */
-export const encodeSyncCode = async (state: Record<string, unknown>): Promise<string> => {
+  const chunks: Uint8Array[] = [];
+  let byteLength = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      byteLength += value.byteLength;
+      if (byteLength > MAX_SAVE_BYTES) {
+        await reader.cancel('Expanded sync payload exceeds the save limit').catch(() => {});
+        await writer.abort().catch(() => {});
+        await pump.catch(() => {});
+        throw new ExpandedPayloadTooLarge();
+      }
+      chunks.push(value);
+    }
+    await pump;
+  } catch (error) {
+    await reader.cancel().catch(() => {});
+    await writer.abort().catch(() => {});
+    await pump.catch(() => {});
+    throw error;
+  } finally {
+    reader.releaseLock();
+    writer.releaseLock();
+  }
+
+  const output = new Uint8Array(byteLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    output.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return output;
+};
+
+export const encodeSyncCode = async (
+  state: Record<string, unknown>,
+): Promise<string> => {
   const json = JSON.stringify(state);
   const checksum = simpleHash(json);
 
@@ -90,7 +128,6 @@ export const encodeSyncCode = async (state: Record<string, unknown>): Promise<st
       method = METHOD_GZIP;
     } catch {
       bytes = new TextEncoder().encode(json);
-      method = METHOD_RAW;
     }
   } else {
     bytes = new TextEncoder().encode(json);
@@ -101,64 +138,120 @@ export const encodeSyncCode = async (state: Record<string, unknown>): Promise<st
 
 export interface DecodeResult {
   ok: boolean;
-  /** The decoded persisted-state object (present whenever decoding succeeded,
-   *  even if the checksum failed — so callers can preview a damaged run). */
   state?: Record<string, unknown>;
-  /** Whether the embedded checksum matched the decoded payload. */
   checksumOk?: boolean;
-  /** Human-readable reason when `ok` is false. */
+  code?: 'too_large' | 'decode_failed' | 'invalid_json';
   error?: string;
 }
 
-/** Decode a sync code back into a persisted-state object, validating the checksum. */
+const decodeFailure = (
+  code: NonNullable<DecodeResult['code']>,
+  error: string,
+  checksumOk?: boolean,
+): DecodeResult => ({
+  ok: false,
+  code,
+  error,
+  ...(checksumOk === undefined ? {} : { checksumOk }),
+});
+
 export const decodeSyncCode = async (code: string): Promise<DecodeResult> => {
-  const trimmed = (code || '').trim();
-  if (!trimmed) return { ok: false, error: 'Paste a sync code first.' };
+  if (typeof code !== 'string' || code.length === 0) {
+    return decodeFailure('decode_failed', 'Paste a sync code first.');
+  }
+  if (code.length > MAX_SYNC_CODE_CHARS) {
+    return decodeFailure('too_large', 'That sync code is too large.');
+  }
+
+  const trimmed = code.trim();
+  if (!trimmed) {
+    return decodeFailure('decode_failed', 'Paste a sync code first.');
+  }
 
   const parts = trimmed.split(SEP);
   if (parts.length !== 4 || parts[0] !== PREFIX) {
-    return { ok: false, error: 'That doesn’t look like a Fate Locked sync code.' };
+    return decodeFailure(
+      'decode_failed',
+      'That doesn’t look like a Fate Locked sync code.',
+    );
   }
 
   const [, method, payload, checksum] = parts;
-  let json: string;
+  if (method !== METHOD_RAW && method !== METHOD_GZIP) {
+    return decodeFailure('decode_failed', 'Unknown sync code format.');
+  }
+  if (!isStrictBase64Url(payload) || !/^[0-9a-f]{8}$/i.test(checksum)) {
+    return decodeFailure('decode_failed', 'The code is corrupted or incomplete.');
+  }
+
+  const conservativeDecodedBytes = Math.floor(payload.length * 3 / 4);
+  if (method === METHOD_RAW && conservativeDecodedBytes > MAX_SAVE_BYTES) {
+    return decodeFailure('too_large', 'The decoded save data is too large.');
+  }
+
+  let bytes: Uint8Array;
   try {
-    const bytes = base64ToBytes(fromUrlSafe(payload));
-    if (method === METHOD_GZIP) {
-      if (!canDecompress()) {
-        return { ok: false, error: 'This browser can’t read compressed codes. Try a newer browser.' };
-      }
-      json = await gunzipToString(bytes);
-    } else if (method === METHOD_RAW) {
-      json = new TextDecoder().decode(bytes);
-    } else {
-      return { ok: false, error: `Unknown code format “${method}”.` };
+    bytes = base64ToBytes(fromUrlSafe(payload));
+    if (toUrlSafe(bytesToBase64(bytes)) !== payload) {
+      return decodeFailure('decode_failed', 'The code is corrupted or incomplete.');
     }
   } catch {
-    return { ok: false, error: 'The code is corrupted or incomplete.' };
+    return decodeFailure('decode_failed', 'The code is corrupted or incomplete.');
+  }
+
+  let jsonBytes: Uint8Array;
+  if (method === METHOD_RAW) {
+    if (bytes.byteLength > MAX_SAVE_BYTES) {
+      return decodeFailure('too_large', 'The decoded save data is too large.');
+    }
+    jsonBytes = bytes;
+  } else {
+    if (!canDecompress()) {
+      return decodeFailure(
+        'decode_failed',
+        'This browser can’t read compressed codes. Try a newer browser.',
+      );
+    }
+    try {
+      jsonBytes = await gunzipBounded(bytes);
+    } catch (error) {
+      if (error instanceof ExpandedPayloadTooLarge) {
+        return decodeFailure('too_large', 'The decoded save data is too large.');
+      }
+      return decodeFailure('decode_failed', 'The code is corrupted or incomplete.');
+    }
+  }
+
+  let json: string;
+  try {
+    json = new TextDecoder('utf-8', { fatal: true }).decode(jsonBytes);
+  } catch {
+    return decodeFailure('decode_failed', 'The code is corrupted or incomplete.');
   }
 
   const checksumOk = simpleHash(json) === checksum;
-
-  let state: Record<string, unknown>;
-  try {
-    state = JSON.parse(json);
-  } catch {
-    return { ok: false, error: 'The decoded data isn’t valid.', checksumOk };
-  }
-
   if (!checksumOk) {
-    return {
-      ok: false,
-      state,
-      checksumOk,
-      error: 'Checksum mismatch — the code was truncated or edited. Copy the whole code and try again.',
-    };
+    return decodeFailure(
+      'decode_failed',
+      'Checksum mismatch — the code was truncated or edited. Copy the whole code and try again.',
+      false,
+    );
   }
 
-  return { ok: true, state, checksumOk: true };
+  try {
+    return {
+      ok: true,
+      state: JSON.parse(json) as Record<string, unknown>,
+      checksumOk: true,
+    };
+  } catch {
+    return decodeFailure(
+      'invalid_json',
+      'The decoded data isn’t valid JSON.',
+      true,
+    );
+  }
 };
 
-/** True if `s` is shaped like a sync code (cheap, non-async pre-check for UI). */
-export const looksLikeSyncCode = (s: string): boolean =>
-  (s || '').trim().startsWith(`${PREFIX}${SEP}`);
+export const looksLikeSyncCode = (value: string): boolean =>
+  (value || '').trim().startsWith(`${PREFIX}${SEP}`);
