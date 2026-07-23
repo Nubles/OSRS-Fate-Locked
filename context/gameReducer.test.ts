@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { gameReducer, initialState } from './GameContext';
+import {
+  gameReducer,
+  initialState,
+  prepareGameTransition,
+  prepareKeyRollAction,
+} from './GameContext';
+import { drawDice } from '../utils/seededRng';
 import { TableType, LogEntry } from '../types';
 import { isRollEntry } from '../utils/logEntry';
 import { XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL } from '../config/economy';
@@ -73,6 +79,88 @@ describe('ROLL_RESULT', () => {
   it('clears the LUCK / GREED buff after a roll', () => {
     expect(gameReducer({ ...base(), activeBuff: 'LUCK' as const }, roll({ success: false })).activeBuff).toBe('NONE');
     expect(gameReducer({ ...base(), activeBuff: 'GREED' as const }, roll({ success: true })).activeBuff).toBe('NONE');
+  });
+
+  it('consumes one Luck buff on the first of two queued rolls', () => {
+    const dice = (_purpose: string, index = 0) => index === 1 ? 10 : 90;
+    const start = { ...base(), activeBuff: 'LUCK' as const };
+
+    const firstAction = prepareKeyRollAction(start, 'First queued roll', 20, dice);
+    const first = prepareGameTransition(start, firstAction).state;
+    const secondAction = prepareKeyRollAction(first, 'Second queued roll', 20, dice);
+    const second = prepareGameTransition(first, secondAction).state;
+
+    expect(first.history.at(-1)?.type).toBe('ROLL_SUCCESS');
+    expect(first.activeBuff).toBe('NONE');
+    expect(second.history.at(-1)?.type).toBe('ROLL_FAIL');
+  });
+
+  it('grants only one pity when two queued failures start at the pity boundary', () => {
+    const dice = () => 100;
+    const start = { ...base(), fatePoints: 49 };
+
+    const firstAction = prepareKeyRollAction(start, 'First queued failure', 20, dice);
+    const first = prepareGameTransition(start, firstAction).state;
+    const secondAction = prepareKeyRollAction(first, 'Second queued failure', 20, dice);
+    const second = prepareGameTransition(first, secondAction).state;
+
+    expect(first.history.at(-1)?.type).toBe('PITY');
+    expect(first.fatePoints).toBe(0);
+    expect(second.history.at(-1)?.type).toBe('ROLL_FAIL');
+    expect(second.fatePoints).toBe(1);
+    expect(second.keys).toBe(start.keys + 1);
+  });
+
+  it('replays the same next seeded roll from identical restored state', () => {
+    const snapshot = {
+      ...base(),
+      rngSeed: 'FATE-ATOMIC',
+      history: [],
+    };
+    const restored = {
+      ...snapshot,
+      unlocks: { ...snapshot.unlocks },
+      history: [...snapshot.history],
+    };
+    const reset = {
+      ...snapshot,
+      unlocks: { ...snapshot.unlocks },
+      history: [...snapshot.history],
+    };
+    const diceFor = (state: typeof snapshot) =>
+      (purpose: string, index = 0, max = 100) =>
+        drawDice(
+          state.rngSeed,
+          state.history.at(-1)?.hash ?? 'genesis',
+          purpose,
+          index,
+          max,
+        );
+
+    const restoredAction = prepareKeyRollAction(
+      restored,
+      'Seeded replay',
+      50,
+      diceFor(restored),
+    );
+    const resetAction = prepareKeyRollAction(
+      reset,
+      'Seeded replay',
+      50,
+      diceFor(reset),
+    );
+
+    expect(restoredAction).toEqual(resetAction);
+  });
+  it('queues the exact prepared state without regenerating event fields', () => {
+    const start = base();
+    const prepared = prepareGameTransition(start, roll({ success: true }));
+    const committed = gameReducer(start, prepared.commit);
+
+    expect(committed).toBe(prepared.state);
+    expect(committed.lastEvent?.id).toBe(prepared.state.lastEvent?.id);
+    expect(committed.history.at(-1)?.timestamp)
+      .toBe(prepared.state.history.at(-1)?.timestamp);
   });
 });
 

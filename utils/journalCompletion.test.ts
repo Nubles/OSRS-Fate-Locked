@@ -3,7 +3,6 @@ import { DiaryTask } from '../data/diaryTasks';
 import { QUEST_DATA } from '../data/questData';
 import { UnlockState } from '../types';
 import {
-  claimRollDrawBase,
   canEarnDiaryTier,
   diaryTaskCompletionDecision,
   questCompletionDecision,
@@ -88,14 +87,33 @@ describe('journal completion decisions', () => {
     });
   });
 
-  it('reserves distinct seeded draw slots until history advances', () => {
-    const first = claimRollDrawBase({ context: '', rolls: 0 }, 'tip-a');
-    const second = claimRollDrawBase(first.cursor, 'tip-a');
-    const advanced = claimRollDrawBase(second.cursor, 'tip-b');
+  it('accepts two distinct legitimate completions in order', () => {
+    const first: DiaryTask = {
+      id: 'fal_easy_first',
+      tierId: 'Falador Easy',
+      description: 'Complete the first eligible task.',
+    };
+    const second: DiaryTask = {
+      id: 'fal_easy_second',
+      tierId: 'Falador Easy',
+      description: 'Complete the second eligible task.',
+    };
 
-    expect(first.baseIndex).toBe(0);
-    expect(second.baseIndex).toBe(3);
-    expect(advanced.baseIndex).toBe(0);
+    const available = unlocked();
+    expect(diaryTaskCompletionDecision(first, available, 'vanilla')).toEqual({ ok: true });
+    const afterFirst = withJournalCompletion(
+      available,
+      'completedTasks',
+      first.id,
+    );
+    expect(diaryTaskCompletionDecision(second, afterFirst, 'vanilla')).toEqual({ ok: true });
+    const afterSecond = withJournalCompletion(
+      afterFirst,
+      'completedTasks',
+      second.id,
+    );
+
+    expect(afterSecond.completedTasks).toEqual([first.id, second.id]);
   });
 
   it('earns a Diary tier only after every current task is complete', () => {

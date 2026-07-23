@@ -18,22 +18,6 @@ export const withJournalCompletion = (
   return { ...unlocks, [field]: [...completed, id] };
 };
 
-export interface RollDrawCursor {
-  context: string;
-  rolls: number;
-}
-
-export const claimRollDrawBase = (
-  cursor: RollDrawCursor,
-  context: string,
-): { baseIndex: number; cursor: RollDrawCursor } => {
-  const rolls = cursor.context === context ? cursor.rolls : 0;
-  return {
-    baseIndex: rolls * 3,
-    cursor: { context, rolls: rolls + 1 },
-  };
-};
-
 export type CompletionResult =
   | { ok: true }
   | { ok: false; reason: string };
