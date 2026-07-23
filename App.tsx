@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect, Component, ErrorInfo, ReactNode, lazy, Suspense } from 'react';
+import React, { useState, useRef, useEffect, useReducer, Component, ErrorInfo, ReactNode, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { GameProvider, useGame } from './context/GameContext';
 import { usePortalHost } from './hooks/usePortalHost';
@@ -38,6 +38,10 @@ import { useEscapeKey } from './hooks/useEscapeKey';
 import { resolveModeRules } from './config/gameModes';
 import { showToast } from './utils/toast';
 import { prefetchHeavyChunks } from './utils/prefetch';
+import { LATEST_CHANGELOG } from './data/changelog';
+import {
+  changelogVisibilityReducer, markChangelogSeen, shouldShowChangelog,
+} from './utils/changelogState';
 
 // Heavy, conditionally-rendered modals — code-split so they (and their deps,
 // e.g. recharts in StatsModal) stay out of the initial bundle.
@@ -51,9 +55,14 @@ const GameModePicker = lazy(() => import('./components/GameModePicker').then(m =
 const SyncCodeModal = lazy(() => import('./components/SyncCodeModal').then(m => ({ default: m.SyncCodeModal })));
 const ModelGallery = lazy(() => import('./components/ModelGallery').then(m => ({ default: m.ModelGallery })));
 const DiscordSettingsModal = lazy(() => import('./components/DiscordSettingsModal'));
+const ChangelogModal = lazy(() =>
+  import('./components/ChangelogModal').then(module => ({
+    default: module.ChangelogModal,
+  })),
+);
 import { obfuscateFateSave, deobfuscateFateSave } from './utils/encryption';
 import { GameState } from './types';
-import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb, Radio, Settings } from 'lucide-react';
+import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb, Radio, Settings, Newspaper } from 'lucide-react';
 import { exportRuneliteBundle } from './utils/runeliteExport';
 
 // --- Error Boundary ---
@@ -219,9 +228,10 @@ interface HeaderProps {
   setShowGameMode: (show: boolean) => void;
   setShowSyncCode: (show: boolean) => void;
   setShowDiscord: (show: boolean) => void;
+  onOpenChangelog: () => void;
 }
 
-const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode, setShowDiscord }: HeaderProps) => {
+const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode, setShowDiscord, onOpenChangelog }: HeaderProps) => {
   const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, revealAllFeatures, toggleRevealAll, importSave, resetGame, getExportData, createBackup, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount } = useGame();
   // Progressive disclosure — advanced tools stay hidden until the run earns them.
   const gates = useFeatureGates();
@@ -404,6 +414,14 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                    <>
                      <div className="fixed inset-0 z-[90]" onClick={() => setShowUtilMenu(false)} />
                      <div className="absolute right-0 top-9 z-[91] w-56 bg-[#1c1c1c] border border-white/15 rounded-lg shadow-2xl py-1.5 text-[12px]">
+                        <button type="button" onClick={() => {
+                          setShowUtilMenu(false);
+                          onOpenChangelog();
+                        }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-amber-300">
+                          <Newspaper size={13} className="text-amber-400" />
+                          What's New
+                        </button>
+                        <div className="my-1 border-t border-white/10" />
                         <button onClick={() => { toggleAnimations(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={animationsEnabled}>
                            {animationsEnabled ? <PlayCircle size={13} className="text-green-400" /> : <PauseCircle size={13} className="text-gray-500" />}
                            Animations <span className="ml-auto text-[10px] text-gray-500">{animationsEnabled ? 'on' : 'off'}</span>
@@ -526,6 +544,18 @@ const ControlPanel = () => {
 const GameLayout = () => {
   const { lastEvent, animationsEnabled, hasSeenOnboarding, history } = useGame();
   const { recentlyCreatedId, activeProfileId, clearRecentlyCreated } = useProfiles();
+
+  const [showChangelog, dispatchChangelog] = useReducer(
+    changelogVisibilityReducer,
+    undefined,
+    () => hasSeenOnboarding && shouldShowChangelog(LATEST_CHANGELOG.id),
+  );
+
+  const openChangelog = () => dispatchChangelog({ type: 'OPEN' });
+  const closeChangelog = () => {
+    markChangelogSeen(LATEST_CHANGELOG.id);
+    dispatchChangelog({ type: 'DISMISS' });
+  };
 
   // Warm the heavy lazy chunks (map, stats+charts, resource engine, …) during
   // idle time so opening them is instant instead of a visible fetch delay.
@@ -678,6 +708,9 @@ const GameLayout = () => {
         {showSyncCode && <SyncCodeModal onClose={() => { setShowSyncCode(false); setSyncImportCode(undefined); }} initialImportCode={syncImportCode} />}
         {showGallery && <ModelGallery onClose={() => setShowGallery(false)} />}
         {showDiscord && <DiscordSettingsModal onClose={() => setShowDiscord(false)} />}
+        {showChangelog && (
+          <ChangelogModal release={LATEST_CHANGELOG} onClose={closeChangelog} />
+        )}
       </Suspense>
 
       <Header
@@ -690,6 +723,7 @@ const GameLayout = () => {
         setShowGameMode={setShowGameMode}
         setShowSyncCode={setShowSyncCode}
         setShowDiscord={setShowDiscord}
+        onOpenChangelog={openChangelog}
       />
 
       {/* Global ⌘K command palette — navigates via fate:nav events. */}
