@@ -10,8 +10,11 @@ export type ImportResult =
   | { ok: true; warnings: SaveWarning[] }
   | { ok: false; code: SaveErrorCode; message: string; path?: string };
 
+export const ACCEPTED_WARNING_CLOSE_DELAY_MS = 1_500;
+
 export type ImportUiDecision = {
   close: boolean;
+  closeDelayMs: number | null;
   success: string | null;
   error: string | null;
   warning: string | null;
@@ -21,21 +24,46 @@ export const importUiDecision = (result: ImportResult): ImportUiDecision => {
   if (result.ok === false) {
     return {
       close: false,
+      closeDelayMs: null,
       success: null,
       error: result.message,
       warning: null,
     };
   }
 
+  const warning = result.warnings.length > 0
+    ? result.warnings.map(item => item.message).join(' ')
+    : null;
+
   return {
     close: true,
+    closeDelayMs: warning ? ACCEPTED_WARNING_CLOSE_DELAY_MS : 0,
     success: 'Fate restored successfully',
     error: null,
-    warning: result.warnings.length > 0
-      ? result.warnings.map(item => item.message).join(' ')
-      : null,
+    warning,
   };
 };
+
+export type ImportRequestToken = {
+  id: number;
+  source: string;
+};
+
+export type SourceBoundCandidate<T> = {
+  source: string;
+  value: T;
+};
+
+export const isCurrentImportRequest = (
+  latestId: number,
+  currentSource: string,
+  request: ImportRequestToken,
+): boolean => latestId === request.id && currentSource === request.source;
+
+export const candidateMatchesSource = <T>(
+  candidate: SourceBoundCandidate<T> | null,
+  currentSource: string,
+): candidate is SourceBoundCandidate<T> => candidate?.source === currentSource;
 
 export type BackupWriteResult =
   | { stored: true }

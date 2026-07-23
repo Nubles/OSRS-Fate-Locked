@@ -3,9 +3,12 @@ import { initialState } from '../context/GameContext';
 import type { GameState } from '../types';
 import { getBackupData, listBackups, pushBackup } from './backups';
 import {
+  ACCEPTED_WARNING_CLOSE_DELAY_MS,
   applyPreparedReplacement,
   applyValidatedReplacement,
+  candidateMatchesSource,
   importUiDecision,
+  isCurrentImportRequest,
   prepareReplacement,
   serializeCurrent,
 } from './gamePersistence';
@@ -49,6 +52,7 @@ describe('import outcome UI policy', () => {
   it('closes and reports success only for an accepted import', () => {
     expect(importUiDecision({ ok: true, warnings: [] })).toEqual({
       close: true,
+      closeDelayMs: 0,
       success: 'Fate restored successfully',
       error: null,
       warning: null,
@@ -63,6 +67,7 @@ describe('import outcome UI policy', () => {
       path: 'unlocks.levels.Attack',
     })).toEqual({
       close: false,
+      closeDelayMs: null,
       success: null,
       error: 'Save unlock data is invalid at unlocks.levels.Attack.',
       warning: null,
@@ -70,6 +75,7 @@ describe('import outcome UI policy', () => {
   });
 
   it('displays backup warnings while still accepting and closing the import', () => {
+    expect(ACCEPTED_WARNING_CLOSE_DELAY_MS).toBe(1_500);
     expect(importUiDecision({
       ok: true,
       warnings: [{
@@ -78,10 +84,34 @@ describe('import outcome UI policy', () => {
       }],
     })).toEqual({
       close: true,
+      closeDelayMs: ACCEPTED_WARNING_CLOSE_DELAY_MS,
       success: 'Fate restored successfully',
       error: null,
       warning: 'The current run could not be saved as a protective backup.',
     });
+  });
+});
+
+describe('async import request guards', () => {
+  it('accepts only the latest request for the exact source text', () => {
+    const first = { id: 1, source: 'FLSYNC.old' };
+    const second = { id: 2, source: 'FLSYNC.new' };
+
+    expect(isCurrentImportRequest(2, 'FLSYNC.new', second)).toBe(true);
+    expect(isCurrentImportRequest(2, 'FLSYNC.new', first)).toBe(false);
+    expect(isCurrentImportRequest(2, 'FLSYNC.edited', second)).toBe(false);
+  });
+
+  it('binds a verified candidate to the source that produced it', () => {
+    const candidate = { source: 'FLSYNC.verified', value: cloneState({ keys: 9 }) };
+    expect(candidateMatchesSource(candidate, 'FLSYNC.verified')).toBe(true);
+    expect(candidateMatchesSource(candidate, 'FLSYNC.changed')).toBe(false);
+  });
+
+  it('uses the same request guard to reject a stale profile file read', () => {
+    const fileRead = { id: 4, source: 'FATE_PROFILE_alpha' };
+    expect(isCurrentImportRequest(4, 'FATE_PROFILE_alpha', fileRead)).toBe(true);
+    expect(isCurrentImportRequest(5, 'FATE_PROFILE_beta', fileRead)).toBe(false);
   });
 });
 

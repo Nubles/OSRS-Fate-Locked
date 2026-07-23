@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import { initialState } from '../context/GameContext';
 import { simpleHash } from './integrity';
 import { MAX_SAVE_BYTES } from './saveSchema';
@@ -58,7 +58,18 @@ const expectStableFailure = (
   expect(result).not.toHaveProperty('state');
 };
 
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 describe('sync code codec', () => {
+  it('rejects a generated code that exceeds the encoded sync cap', async () => {
+    vi.stubGlobal('CompressionStream', undefined);
+    await expect(encodeSyncCode({ note: 'x'.repeat(1_600_000) })).rejects.toThrow(
+      'The generated sync code is too large to share.',
+    );
+  });
+
   it('round-trips an arbitrary state object', async () => {
     const code = await encodeSyncCode(sampleState);
     const result = await decodeSyncCode(code);

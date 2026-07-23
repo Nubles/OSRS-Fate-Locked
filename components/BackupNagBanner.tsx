@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { useProfiles } from '../context/ProfileContext';
 import { shouldNag, snoozeNag, markExported, lastExportLabel } from '../utils/backupNag';
-import { obfuscateFateSave } from '../utils/encryption';
+import { encodeFateSaveExport } from '../utils/encryption';
 import { showToast } from '../utils/toast';
 import { HardDriveDownload, X } from 'lucide-react';
 
@@ -24,7 +24,12 @@ export const BackupNagBanner: React.FC = () => {
   const handleExport = useCallback(() => {
     const rawData = getExportData();
     try {
-      const blob = new Blob([obfuscateFateSave(JSON.parse(rawData))], { type: 'text/plain' });
+      const encoded = encodeFateSaveExport(JSON.parse(rawData));
+      if (encoded.ok === false) {
+        showToast(encoded.message);
+        return;
+      }
+      const blob = new Blob([encoded.value], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

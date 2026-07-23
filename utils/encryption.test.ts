@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { MAX_SAVE_BYTES } from './saveSchema';
+import { initialState } from '../context/GameContext';
+import { MAX_SAVE_BYTES, validateAndMigrateSave } from './saveSchema';
 import {
+  boundFateSaveExport,
   deobfuscateFateSave,
+  encodeFateSaveExport,
   obfuscateFateSave,
 } from './encryption';
 
@@ -23,6 +26,43 @@ const legacyCipherForText = (text: string): string => {
   for (const byte of bytes) binary += String.fromCharCode(byte);
   return legacyCipherForBase64(btoa(binary));
 };
+
+describe('Fate save file export bounds', () => {
+  it('keeps existing valid file exports wire-compatible', () => {
+    const result = encodeFateSaveExport({ keys: 7, regions: ['Varrock'] });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(deobfuscateFateSave(result.value)).toEqual({
+        ok: true,
+        value: { keys: 7, regions: ['Varrock'] },
+      });
+    }
+  });
+
+  it('rejects an empty encoder result instead of treating it as a download', () => {
+    expect(boundFateSaveExport('')).toEqual({
+      ok: false,
+      code: 'encode_failed',
+      message: 'The save file could not be generated.',
+    });
+  });
+
+  it('rejects a valid live save whose obfuscated artifact exceeds the file cap', () => {
+    const live = structuredClone(initialState);
+    live.userNotes = Object.fromEntries(Array.from(
+      { length: 105 },
+      (_, index) => [`note-${index}`, 'x'.repeat(20_000)],
+    ));
+    expect(validateAndMigrateSave(live, initialState).ok).toBe(true);
+    expect(new TextEncoder().encode(JSON.stringify(live)).byteLength).toBeLessThan(MAX_SAVE_BYTES);
+
+    expect(encodeFateSaveExport(live)).toEqual({
+      ok: false,
+      code: 'too_large',
+      message: 'The generated save file is too large to export.',
+    });
+  });
+});
 
 describe('Fate save file decoding', () => {
   it('accepts legacy plain JSON and the existing obfuscated wire format', () => {

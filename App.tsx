@@ -38,7 +38,7 @@ import { isChunkLoadError, reloadOnceForChunkError } from './utils/chunkLoadErro
 import { useEscapeKey } from './hooks/useEscapeKey';
 import { resolveModeRules } from './config/gameModes';
 import { showToast } from './utils/toast';
-import { importUiDecision } from './utils/gamePersistence';
+import { importUiDecision, isCurrentImportRequest } from './utils/gamePersistence';
 import { MAX_SAVE_BYTES } from './utils/saveSchema';
 import { prefetchHeavyChunks } from './utils/prefetch';
 import { LATEST_CHANGELOG } from './data/changelog';
@@ -65,7 +65,7 @@ const ChangelogModal = lazyWithRetry(() =>
     default: module.ChangelogModal,
   })),
 );
-import { obfuscateFateSave, deobfuscateFateSave } from './utils/encryption';
+import { deobfuscateFateSave, encodeFateSaveExport } from './utils/encryption';
 import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb, Radio, Settings, Newspaper } from 'lucide-react';
 import { exportRuneliteBundle } from './utils/runeliteExport';
 
@@ -250,13 +250,35 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
   const pityCap = pityRules.pityEnabled ? pityRules.pityThreshold : 50; // 50 = visual-only fallback
   const nearPity = pityRules.pityEnabled && fatePoints >= pityRules.pityThreshold * 0.8;
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const activeFileReaderRef = useRef<FileReader | null>(null);
+  const fileReadRequestRef = useRef(0);
+  const activeProfileKeyRef = useRef(storageKeyForActiveProfile);
+  activeProfileKeyRef.current = storageKeyForActiveProfile;
   const settingsTriggerRef = useRef<HTMLButtonElement>(null);
   const [showUtilMenu, setShowUtilMenu] = useState(false);
+
+  useEffect(() => {
+    fileReadRequestRef.current += 1;
+    activeFileReaderRef.current?.abort();
+    activeFileReaderRef.current = null;
+    return () => {
+      fileReadRequestRef.current += 1;
+      activeFileReaderRef.current?.abort();
+      activeFileReaderRef.current = null;
+    };
+  }, [storageKeyForActiveProfile]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.currentTarget;
     const file = input.files?.[0];
     if (!file) return;
+
+    const request = {
+      id: fileReadRequestRef.current + 1,
+      source: activeProfileKeyRef.current,
+    };
+    fileReadRequestRef.current = request.id;
+    activeFileReaderRef.current?.abort();
 
     const clearInput = () => { input.value = ''; };
     if (file.size > MAX_SAVE_BYTES) {
@@ -266,7 +288,22 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
     }
 
     const reader = new FileReader();
+    activeFileReaderRef.current = reader;
+    const isCurrent = () => isCurrentImportRequest(
+      fileReadRequestRef.current,
+      activeProfileKeyRef.current,
+      request,
+    );
+    const release = () => {
+      if (activeFileReaderRef.current === reader) activeFileReaderRef.current = null;
+    };
+
     reader.onload = (event) => {
+      if (!isCurrent()) {
+        release();
+        clearInput();
+        return;
+      }
       try {
         const fileContent = event.target?.result;
         if (typeof fileContent !== 'string') {
@@ -279,6 +316,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
           showToast(decoded.message);
           return;
         }
+        if (!isCurrent()) return;
 
         const decision = importUiDecision(importSave(decoded.value));
         if (decision.error) {
@@ -291,20 +329,26 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
             : decision.success);
         }
       } catch {
-        showToast('Import failed — could not read save data');
+        if (isCurrent()) showToast('Import failed — could not read save data');
       } finally {
+        release();
         clearInput();
       }
     };
     reader.onerror = () => {
-      showToast('Import failed — could not read the file');
+      if (isCurrent()) showToast('Import failed — could not read the file');
+      release();
       clearInput();
     };
-    reader.onabort = clearInput;
+    reader.onabort = () => {
+      release();
+      clearInput();
+    };
     try {
       reader.readAsText(file);
     } catch {
-      showToast('Import failed — could not read the file');
+      if (isCurrent()) showToast('Import failed — could not read the file');
+      release();
       clearInput();
     }
   };
@@ -314,9 +358,13 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
 
       try {
           const jsonData = JSON.parse(rawData);
-          const obfuscatedData = obfuscateFateSave(jsonData);
+          const encoded = encodeFateSaveExport(jsonData);
+          if (encoded.ok === false) {
+            showToast(encoded.message);
+            return;
+          }
 
-          const blob = new Blob([obfuscatedData], { type: 'text/plain' });
+          const blob = new Blob([encoded.value], { type: 'text/plain' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;

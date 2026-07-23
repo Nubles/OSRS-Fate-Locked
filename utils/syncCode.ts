@@ -124,6 +124,10 @@ export const encodeSyncCode = async (
   state: Record<string, unknown>,
 ): Promise<string> => {
   const json = JSON.stringify(state);
+  const jsonBytes = new TextEncoder().encode(json);
+  if (jsonBytes.byteLength > MAX_SAVE_BYTES) {
+    throw new Error('The current save is too large to share.');
+  }
   const checksum = simpleHash(json);
 
   let method = METHOD_RAW;
@@ -133,13 +137,17 @@ export const encodeSyncCode = async (
       bytes = await gzipString(json);
       method = METHOD_GZIP;
     } catch {
-      bytes = new TextEncoder().encode(json);
+      bytes = jsonBytes;
     }
   } else {
-    bytes = new TextEncoder().encode(json);
+    bytes = jsonBytes;
   }
 
-  return [PREFIX, method, toUrlSafe(bytesToBase64(bytes)), checksum].join(SEP);
+  const code = [PREFIX, method, toUrlSafe(bytesToBase64(bytes)), checksum].join(SEP);
+  if (code.length > MAX_SYNC_CODE_CHARS) {
+    throw new Error('The generated sync code is too large to share.');
+  }
+  return code;
 };
 
 export interface DecodeResult {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   X, Link2, Copy, Check, ClipboardPaste, ShieldCheck, ShieldAlert,
   AlertTriangle, Loader2, ArrowDownToLine, Upload, QrCode, History, RotateCcw,
@@ -11,7 +11,12 @@ import { makeQrSvg } from '../utils/qr';
 import { auditHistory, RunVerdict } from '../utils/integrity';
 import { BackupMeta } from '../utils/backups';
 import type { GameState } from '../types';
-import { importUiDecision } from '../utils/gamePersistence';
+import {
+  candidateMatchesSource,
+  importUiDecision,
+  isCurrentImportRequest,
+  type SourceBoundCandidate,
+} from '../utils/gamePersistence';
 import { showToast } from '../utils/toast';
 
 interface Props {
@@ -86,13 +91,25 @@ const VERDICT_UI: Record<RunVerdict, { label: string; sub: string; cls: string; 
 
 export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) => {
   const { getExportData, importSave, listBackups, restoreBackup } = useGame();
-  useEscapeKey(onClose, true);
+  const closeTimerRef = useRef<number | null>(null);
+  const closeModal = useCallback(() => {
+    if (closeTimerRef.current !== null) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    onClose();
+  }, [onClose]);
+  useEffect(() => () => {
+    if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
+  }, []);
+  useEscapeKey(closeModal, true);
 
   const [tab, setTab] = useState<Tab>(initialImportCode ? 'IMPORT' : 'EXPORT');
 
   // ── Export ──────────────────────────────────────────────────────────────
   const [code, setCode] = useState<string>('');
   const [encoding, setEncoding] = useState(true);
+  const [exportError, setExportError] = useState<string | null>(null);
   const [copied, setCopied] = useState<'none' | 'code' | 'link'>('none');
 
   const qr = useMemo(() => (code ? makeQrSvg(shareUrlFor(code)) : null), [code]);
@@ -100,14 +117,20 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
   useEffect(() => {
     let cancelled = false;
     setEncoding(true);
+    setExportError(null);
     (async () => {
       try {
         const raw = getExportData();
         const state = JSON.parse(raw) as Record<string, unknown>;
         const generated = await encodeSyncCode(state);
         if (!cancelled) setCode(generated);
-      } catch {
-        if (!cancelled) setCode('');
+      } catch (cause) {
+        if (!cancelled) {
+          setCode('');
+          setExportError(cause instanceof Error
+            ? cause.message
+            : 'The sync code could not be generated.');
+        }
       } finally {
         if (!cancelled) setEncoding(false);
       }
@@ -128,46 +151,82 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
 
   // ── Import ──────────────────────────────────────────────────────────────
   const [input, setInput] = useState(initialImportCode ?? '');
+  const inputRef = useRef(initialImportCode ?? '');
+  const verifyRequestRef = useRef(0);
   const [decoding, setDecoding] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
-  const [decoded, setDecoded] = useState<GameState | null>(null);
+  const [accepted, setAccepted] = useState(false);
+  const acceptedRef = useRef(false);
+  const [decoded, setDecoded] = useState<SourceBoundCandidate<GameState> | null>(null);
 
-  const preview = useMemo(() => (decoded ? previewOf(decoded) : null), [decoded]);
-  const audit = useMemo(() => decoded
-    ? auditHistory(decoded.history)
-    : null, [decoded]);
+  useEffect(() => () => {
+    verifyRequestRef.current += 1;
+  }, []);
+
+  const decodedState = decoded?.value ?? null;
+  const preview = useMemo(() => (decodedState ? previewOf(decodedState) : null), [decodedState]);
+  const audit = useMemo(() => decodedState
+    ? auditHistory(decodedState.history)
+    : null, [decodedState]);
+
+  const invalidateSource = useCallback((next: string) => {
+    inputRef.current = next;
+    verifyRequestRef.current += 1;
+    setInput(next);
+    setDecoding(false);
+    setDecoded(null);
+    setError(null);
+    setStatus(null);
+  }, []);
+
+  const scheduleAcceptedClose = useCallback((delayMs: number) => {
+    if (delayMs <= 0) {
+      closeModal();
+      return;
+    }
+    if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = window.setTimeout(() => {
+      closeTimerRef.current = null;
+      onClose();
+    }, delayMs);
+  }, [closeModal, onClose]);
 
   const handlePaste = useCallback(async () => {
     try {
       const text = await navigator.clipboard.readText();
-      if (text) {
-        setInput(text);
-        setDecoded(null);
-        setError(null);
-        setStatus(null);
-      }
+      if (text) invalidateSource(text);
     } catch {
       /* clipboard read blocked — user pastes manually */
     }
-  }, []);
+  }, [invalidateSource]);
 
   const handleVerify = useCallback(async (codeToVerify?: string) => {
+    const source = codeToVerify ?? inputRef.current;
+    if (codeToVerify !== undefined && source !== inputRef.current) {
+      inputRef.current = source;
+      setInput(source);
+    }
+    const request = { id: verifyRequestRef.current + 1, source };
+    verifyRequestRef.current = request.id;
     setDecoding(true);
     setError(null);
     setStatus(null);
     setDecoded(null);
-    const result = await decodeAndValidateSyncCode(codeToVerify ?? input, initialState);
+
+    const result = await decodeAndValidateSyncCode(source, initialState);
+    if (!isCurrentImportRequest(verifyRequestRef.current, inputRef.current, request)) return;
+
     setDecoding(false);
     if (result.ok === false) {
       setError(result.error);
       return;
     }
-    setDecoded(result.state);
+    setDecoded({ source, value: result.state });
     if (result.warnings.length > 0) {
       setStatus(result.warnings.map(item => item.message).join(' '));
     }
-  }, [input]);
+  }, []);
 
   // Opened from a #sync= link → verify the pre-filled code immediately.
   useEffect(() => {
@@ -176,28 +235,48 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
   }, [initialImportCode]);
 
   const handleImport = useCallback(() => {
-    if (!decoded) return;
+    if (acceptedRef.current) return;
+    if (!candidateMatchesSource(decoded, inputRef.current)) {
+      verifyRequestRef.current += 1;
+      setDecoded(null);
+      setError('The sync code changed. Verify the current code again.');
+      return;
+    }
     const warn = audit && audit.verdict === 'tampered'
       ? 'This run failed verification (the hash chain is broken). '
       : '';
     if (!window.confirm(`${warn}Import this run? It will OVERWRITE the current profile's save. This cannot be undone.`)) {
       return;
     }
+    if (!candidateMatchesSource(decoded, inputRef.current)) {
+      verifyRequestRef.current += 1;
+      setDecoded(null);
+      setError('The sync code changed. Verify the current code again.');
+      return;
+    }
 
-    const decision = importUiDecision(importSave(decoded));
+    const decision = importUiDecision(importSave(decoded.value));
     setError(decision.error);
-    setStatus(decision.warning);
     if (decision.success) {
-      showToast(decision.warning
+      const acceptedMessage = decision.warning
         ? `${decision.success}. ${decision.warning}`
-        : decision.success);
+        : decision.success;
+      acceptedRef.current = true;
+      setAccepted(true);
+      setStatus(acceptedMessage);
+      showToast(acceptedMessage);
+    } else {
+      setStatus(null);
     }
     if (decision.close) {
+      inputRef.current = '';
+      verifyRequestRef.current += 1;
       setInput('');
+      setDecoding(false);
       setDecoded(null);
-      onClose();
+      scheduleAcceptedClose(decision.closeDelayMs ?? 0);
     }
-  }, [decoded, audit, importSave, onClose]);
+  }, [decoded, audit, importSave, scheduleAcceptedClose]);
 
   // ── Backups ───────────────────────────────────────────────────────────────
   const [backups, setBackups] = useState<BackupMeta[]>([]);
@@ -207,23 +286,30 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
   }, [tab, listBackups]);
 
   const handleRestore = useCallback((b: BackupMeta) => {
+    if (acceptedRef.current) return;
     if (!window.confirm(`Restore this backup (${b.summary})? It will OVERWRITE the current profile's save.`)) {
       return;
     }
 
     const decision = importUiDecision(restoreBackup(b.ts));
     setBackupError(decision.error);
-    setStatus(decision.warning);
     if (decision.success) {
-      showToast(decision.warning
+      const acceptedMessage = decision.warning
         ? `${decision.success}. ${decision.warning}`
-        : decision.success);
+        : decision.success;
+      acceptedRef.current = true;
+      setAccepted(true);
+      setStatus(acceptedMessage);
+      showToast(acceptedMessage);
+    } else {
+      setStatus(null);
     }
-    if (decision.close) onClose();
-  }, [restoreBackup, onClose]);
+    if (decision.close) scheduleAcceptedClose(decision.closeDelayMs ?? 0);
+  }, [restoreBackup, scheduleAcceptedClose]);
 
   const TabBtn: React.FC<{ id: Tab; label: string; Icon: typeof Link2 }> = ({ id, label, Icon }) => (
     <button
+      disabled={accepted}
       onClick={() => {
         setTab(id);
         setStatus(null);
@@ -242,7 +328,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
-      onClick={onClose}
+      onClick={closeModal}
       role="dialog"
       aria-modal="true"
       aria-label="Sync code"
@@ -263,7 +349,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
             </p>
           </div>
           <button
-            onClick={onClose}
+            onClick={closeModal}
             className="p-1.5 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
             aria-label="Close"
           >
@@ -289,7 +375,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
               <div className="relative">
                 <textarea
                   readOnly
-                  value={encoding ? 'Generating sync code…' : (code || 'Nothing to export yet.')}
+                  value={encoding ? 'Generating sync code…' : code}
                   onClick={(e) => (e.target as HTMLTextAreaElement).select()}
                   className="w-full h-32 resize-none rounded-lg bg-black/40 border border-white/10 p-3 font-mono text-[11px] text-cyan-200/90 leading-relaxed break-all focus:outline-none focus:border-cyan-500/40"
                 />
@@ -297,6 +383,12 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
                   <Loader2 size={16} className="absolute top-3 right-3 text-cyan-400 animate-spin" />
                 )}
               </div>
+              {exportError && (
+                <div role="alert" className="flex items-start gap-2.5 rounded-lg border border-red-500/30 bg-red-950/40 p-3 text-red-300">
+                  <AlertTriangle size={15} className="shrink-0 mt-0.5" />
+                  <p className="text-[11px] leading-relaxed">{exportError}</p>
+                </div>
+              )}
               <div className="flex items-center justify-between gap-2">
                 <span className="text-[10px] text-gray-600 font-mono">
                   {code ? `${code.length.toLocaleString()} chars` : '—'}
@@ -350,7 +442,8 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
               <div className="relative">
                 <textarea
                   value={input}
-                  onChange={(e) => { setInput(e.target.value); setDecoded(null); setError(null); setStatus(null); }}
+                  disabled={accepted}
+                  onChange={(e) => invalidateSource(e.target.value)}
                   placeholder="FLSYNC.g1.…"
                   className="w-full h-28 resize-none rounded-lg bg-black/40 border border-white/10 p-3 font-mono text-[11px] text-gray-200 leading-relaxed break-all focus:outline-none focus:border-cyan-500/40 placeholder:text-gray-700"
                 />
@@ -358,13 +451,14 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
               <div className="flex items-center gap-2">
                 <button
                   onClick={handlePaste}
+                  disabled={accepted}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#252525] border border-white/10 hover:bg-[#2d2d2d] text-gray-300 text-[11px] font-medium transition-colors"
                 >
                   <ClipboardPaste size={13} /> Paste
                 </button>
                 <button
                   onClick={() => handleVerify()}
-                  disabled={!input.trim() || decoding}
+                  disabled={!input.trim() || decoding || accepted}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-[11px] font-bold transition-colors"
                 >
                   {decoding ? <><Loader2 size={13} className="animate-spin" /> Verifying…</> : <><ShieldCheck size={13} /> Verify code</>}
@@ -372,14 +466,14 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
               </div>
 
               {error && (
-                <div className="flex items-start gap-2.5 rounded-lg border border-red-500/30 bg-red-950/40 p-3 text-red-300">
+                <div role="alert" className="flex items-start gap-2.5 rounded-lg border border-red-500/30 bg-red-950/40 p-3 text-red-300">
                   <AlertTriangle size={15} className="shrink-0 mt-0.5" />
                   <p className="text-[11px] leading-relaxed">{error}</p>
                 </div>
               )}
 
               {status && (
-                <div className="flex items-start gap-2.5 rounded-lg border border-amber-500/30 bg-amber-950/40 p-3 text-amber-300">
+                <div role="status" aria-live="polite" className="flex items-start gap-2.5 rounded-lg border border-amber-500/30 bg-amber-950/40 p-3 text-amber-300">
                   <AlertTriangle size={15} className="shrink-0 mt-0.5" />
                   <p className="text-[11px] leading-relaxed">{status}</p>
                 </div>
@@ -418,6 +512,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
 
                     <button
                       onClick={handleImport}
+                      disabled={accepted}
                       className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-[12px] font-bold transition-colors"
                     >
                       <ArrowDownToLine size={14} /> Import &amp; overwrite this profile
@@ -435,13 +530,13 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
                 to roll back. Only the most recent few are kept, per profile.
               </p>
               {backupError && (
-                <div className="flex items-start gap-2.5 rounded-lg border border-red-500/30 bg-red-950/40 p-3 text-red-300">
+                <div role="alert" className="flex items-start gap-2.5 rounded-lg border border-red-500/30 bg-red-950/40 p-3 text-red-300">
                   <AlertTriangle size={15} className="shrink-0 mt-0.5" />
                   <p className="text-[11px] leading-relaxed">{backupError}</p>
                 </div>
               )}
               {status && (
-                <div className="flex items-start gap-2.5 rounded-lg border border-amber-500/30 bg-amber-950/40 p-3 text-amber-300">
+                <div role="status" aria-live="polite" className="flex items-start gap-2.5 rounded-lg border border-amber-500/30 bg-amber-950/40 p-3 text-amber-300">
                   <AlertTriangle size={15} className="shrink-0 mt-0.5" />
                   <p className="text-[11px] leading-relaxed">{status}</p>
                 </div>
@@ -470,6 +565,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
                       </div>
                       <button
                         onClick={() => handleRestore(b)}
+                        disabled={accepted}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#252525] border border-white/10 hover:border-cyan-500/40 hover:text-cyan-300 text-gray-300 text-[11px] font-bold transition-colors shrink-0"
                       >
                         <RotateCcw size={12} /> Restore

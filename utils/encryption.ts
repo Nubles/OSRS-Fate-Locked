@@ -46,7 +46,7 @@ const isStrictBase64 = (value: string): boolean =>
  *
  * Note: This is obfuscation, not encryption. The key is embedded in source code.
  */
-export const obfuscateFateSave = (data: Record<string, unknown>): string => {
+export const obfuscateFateSave = (data: unknown): string => {
   try {
     const json = JSON.stringify(data);
 
@@ -71,6 +71,35 @@ export const obfuscateFateSave = (data: Record<string, unknown>): string => {
     return "";
   }
 };
+
+export type FateSaveExportResult =
+  | { ok: true; value: string }
+  | {
+      ok: false;
+      code: 'too_large' | 'encode_failed';
+      message: string;
+    };
+
+export const boundFateSaveExport = (encoded: string): FateSaveExportResult => {
+  if (!encoded) {
+    return {
+      ok: false,
+      code: 'encode_failed',
+      message: 'The save file could not be generated.',
+    };
+  }
+  if (new TextEncoder().encode(encoded).byteLength > MAX_SAVE_BYTES) {
+    return {
+      ok: false,
+      code: 'too_large',
+      message: 'The generated save file is too large to export.',
+    };
+  }
+  return { ok: true, value: encoded };
+};
+
+export const encodeFateSaveExport = (data: unknown): FateSaveExportResult =>
+  boundFateSaveExport(obfuscateFateSave(data));
 
 /**
  * Deobfuscates a "Fate Locked" string back into a game state object.
