@@ -5,33 +5,78 @@
  * a quest completion) without needing component context.
  */
 
-import { QuestData, QUEST_DATA } from '../data/questData';
+import { QuestData, QuestRequirementOption, QUEST_DATA } from '../data/questData';
 import { DiaryTier } from '../data/diaryData';
+import { UnlockState } from '../types';
 import { isAreaReachable } from './reachability';
 
 export type QuestStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
 export type DiaryStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_QUEST';
 
-export function getQuestStatus(quest: QuestData, unlocks: any, gameModeId?: string): QuestStatus {
+export interface QuestStatusOptions {
+  requiredRegionsReachable?: boolean;
+}
+
+export const meetsSkillRequirement = (
+  unlocks: Pick<UnlockState, 'skills' | 'levels'>,
+  skill: string,
+  required: number,
+): boolean => {
+  const tier = unlocks.skills[skill] ?? 0;
+  const level = unlocks.levels[skill] ?? 1;
+  const cap = Math.min(99, tier * 10);
+  return tier > 0 && level >= required && cap >= required;
+};
+
+export const questRequirementOptionMet = (
+  option: QuestRequirementOption,
+  unlocks: UnlockState,
+  gameModeId?: string,
+): boolean =>
+  (option.regions ?? []).every(region =>
+    isAreaReachable(region, unlocks, gameModeId)) &&
+  (option.guilds ?? []).every(guild =>
+    unlocks.guilds.includes(guild));
+
+export const questAlternativesMet = (
+  quest: QuestData,
+  unlocks: UnlockState,
+  gameModeId?: string,
+): boolean =>
+  !quest.oneOf?.length ||
+  quest.oneOf.some(option =>
+    questRequirementOptionMet(option, unlocks, gameModeId));
+
+export const questRequirementOptionLabel = (
+  option: QuestRequirementOption,
+): string => [...(option.regions ?? []), ...(option.guilds ?? [])].join(' + ');
+
+export function getQuestStatus(
+  quest: QuestData,
+  unlocks: UnlockState,
+  gameModeId?: string,
+  options: QuestStatusOptions = {},
+): QuestStatus {
   if (unlocks.quests.includes(quest.id)) return 'COMPLETED';
 
-  const missingRegion = quest.regions.some(r => !isAreaReachable(r, unlocks, gameModeId));
-  if (missingRegion) return 'LOCKED_REGION';
+  const regionsMet = options.requiredRegionsReachable ??
+    quest.regions.every(region =>
+      isAreaReachable(region, unlocks, gameModeId));
+  if (!regionsMet || !questAlternativesMet(quest, unlocks, gameModeId)) {
+    return 'LOCKED_REGION';
+  }
 
-  const currentQP: number = (unlocks.quests as string[]).reduce(
-    (acc, qid) => acc + (QUEST_DATA[qid]?.points ?? 0), 0,
-  );
-  const missingSkill = Object.entries(quest.skills as Record<string, number>).some(([skill, lvl]) => {
-    if (skill === 'Quest Points') return currentQP < lvl;
-    const current: number = unlocks.levels[skill] ?? 1;
-    const isUnlocked: boolean = (unlocks.skills[skill] ?? 0) > 0;
-    return !isUnlocked || current < lvl;
-  });
+  const qp = unlocks.quests.reduce(
+    (total, id) => total + (QUEST_DATA[id]?.points ?? 0), 0);
+  const missingSkill = Object.entries(quest.skills).some(
+    ([skill, level]) => skill === 'Quest Points'
+      ? qp < level
+      : !meetsSkillRequirement(unlocks, skill, level));
   if (missingSkill) return 'LOCKED_SKILL';
 
-  const missingPrereq = quest.prereqs.some((qid: string) => !unlocks.quests.includes(qid));
-  if (missingPrereq) return 'LOCKED_QUEST';
-
+  if (quest.prereqs.some(id => !unlocks.quests.includes(id))) {
+    return 'LOCKED_QUEST';
+  }
   return 'AVAILABLE';
 }
 
@@ -63,11 +108,11 @@ export interface DoableTask {
   regions?: string[];
 }
 
-export function countDoableTasks(tasks: DoableTask[], unlocks: any, gameModeId?: string): number {
+export function countDoableTasks(tasks: DoableTask[], unlocks: UnlockState, gameModeId?: string): number {
   return tasks.filter(task => {
     if (unlocks.completedTasks.includes(task.id)) return false;
     if (task.skills && !Object.entries(task.skills).every(
-      ([skill, lvl]) => (unlocks.skills[skill] || 0) > 0 && (unlocks.levels[skill] || 1) >= (lvl as number),
+      ([skill, level]) => meetsSkillRequirement(unlocks, skill, level),
     )) return false;
     if (task.quests && !task.quests.every(q => unlocks.quests.includes(q))) return false;
     if (task.regions && !task.regions.every(

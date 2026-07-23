@@ -8,6 +8,12 @@ import { chunkContentService } from '../services/ChunkContentService';
 import { questLocations, refineQuestRegion, QuestLocationInfo } from '../utils/questLocations';
 import { showChunkOnMap } from '../utils/chunkLocations';
 import { questUnmet, isAlmostThere } from '../utils/journalProgress';
+import {
+  getQuestStatus,
+  meetsSkillRequirement,
+  questAlternativesMet,
+  questRequirementOptionLabel,
+} from '../utils/journalStatus';
 import { isAreaReachable } from '../utils/reachability';
 import { DROP_RATES } from '../config/rules';
 import { DropSource } from '../types';
@@ -94,12 +100,16 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId, curre
     const skillReqs = Object.entries(quest.skills as Record<string, number>);
     const metSkills = skillReqs.filter(([skill, lvl]) => {
       if (skill === 'Quest Points') return currentQP >= lvl;
-      return (unlocks.skills[skill] || 0) > 0 && (unlocks.levels[skill] || 1) >= lvl;
+      return meetsSkillRequirement(unlocks, skill, lvl);
     });
     const prereqReqs: string[] = quest.prereqs || [];
     const metPrereqs = prereqReqs.filter((qid: string) => unlocks.quests.includes(qid));
-    const totalReqs = gatedRegions.length + skillReqs.length + prereqReqs.length;
-    const totalMet = metRegions.length + metSkills.length + metPrereqs.length;
+    const hasAlternative = Boolean(quest.oneOf?.length);
+    const alternativeMet = questAlternativesMet(quest, unlocks, gameModeId);
+    const totalReqs = gatedRegions.length + skillReqs.length +
+      prereqReqs.length + (hasAlternative ? 1 : 0);
+    const totalMet = metRegions.length + metSkills.length +
+      metPrereqs.length + (hasAlternative && alternativeMet ? 1 : 0);
     const reqPct = totalReqs === 0 ? 100 : Math.round((totalMet / totalReqs) * 100);
 
     return (
@@ -190,6 +200,14 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId, curre
                       {!isCompleted && loc.places.length > 4 && (
                           <span className="text-[10px] px-1 text-gray-600">+{loc.places.length - 4}</span>
                       )}
+                      {hasAlternative && (
+                        <span className={'text-[10px] px-2 py-1 rounded border ' +
+                          (alternativeMet
+                            ? 'bg-black/30 border-white/5 text-gray-500'
+                            : 'bg-red-900/20 border-red-500/30 text-red-300')}>
+                          One of: {quest.oneOf.map(questRequirementOptionLabel).join(' or ')}
+                        </span>
+                      )}
                       {Object.entries(quest.skills).map(([skill, lvl]) => {
                           const reqLevel = lvl as number;
                           let met = false;
@@ -203,7 +221,7 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId, curre
                               currentLevel = unlocks.levels[skill] || 1;
                               const skillUnlocked = (unlocks.skills[skill] || 0) > 0;
                               isLocked = !skillUnlocked;
-                              met = skillUnlocked && currentLevel >= reqLevel;
+                              met = meetsSkillRequirement(unlocks, skill, reqLevel);
                           }
 
                           if (isCompleted || met) {
@@ -365,31 +383,13 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
   const searchTerm = externalSearch || localSearch;
 
   const getStatus = (quest: QuestData) => {
-    if (unlocks.quests.includes(quest.id)) return 'COMPLETED';
-
-    const missingRegions = quest.regions.filter(r => !isAreaReachable(r, unlocks, gameModeId));
-
-    // Refine the coarse continent gate with chunk evidence: if every chunk the
-    // quest actually visits is in an unlocked sub-area, it's reachable even when
-    // the whole authored continent isn't unlocked.
-    const region = refineQuestRegion(missingRegions.length === 0, questLocations(quest.name, unlocks, gameModeId));
-    if (!region.met) return 'LOCKED_REGION';
-
-    const missingSkills = Object.entries(quest.skills).some(([skill, lvl]) => {
-      if (skill === 'Quest Points') {
-         const currentQP = unlocks.quests.reduce((acc, qid) => acc + (QUEST_DATA[qid]?.points || 0), 0);
-         return currentQP < lvl;
-      }
-      const current = unlocks.levels[skill] || 1;
-      const isUnlocked = (unlocks.skills[skill] || 0) > 0;
-      return !isUnlocked || current < lvl;
+    const authoredMet = quest.regions.every(region =>
+      isAreaReachable(region, unlocks, gameModeId));
+    const refined = refineQuestRegion(
+      authoredMet, questLocations(quest.name, unlocks, gameModeId));
+    return getQuestStatus(quest, unlocks, gameModeId, {
+      requiredRegionsReachable: refined.met,
     });
-    if (missingSkills) return 'LOCKED_SKILL';
-
-    const missingPrereqs = quest.prereqs.some(qid => !unlocks.quests.includes(qid));
-    if (missingPrereqs) return 'LOCKED_QUEST';
-
-    return 'AVAILABLE';
   };
 
   const allQuests = useMemo(() => {
