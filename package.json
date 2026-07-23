@@ -19,7 +19,9 @@
     "build": "node scripts/gen-model-manifest.mjs && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "release:verify": "npm test && npm run typecheck && npm run content:verify && npm run build"
   },
   "dependencies": {
     "@google/model-viewer": "^4.3.0",

@@ -28,13 +28,16 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        # `npm install` (not `npm ci`) — it reconciles the lockfile on the fly
-        # rather than failing on strict sync, which keeps the build robust
-        # across npm versions on the runner.
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Run tests
         run: npm test
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Verify content
+        run: npm run content:verify
 
       - name: Build
         # VITE_BASE makes the bundle's asset paths match the GitHub Pages
