@@ -1,9 +1,17 @@
 
 import { DropSource } from '../types';
 
+export interface QuestLocationRequirement {
+  id: string;
+  label: string;
+  standardAreas: string[];
+  chunkOptions: Array<{ cx: number; cy: number }>;
+}
+
 export interface QuestRequirementOption {
   regions?: string[];
   guilds?: string[];
+  locations?: QuestLocationRequirement[];
 }
 
 export interface QuestData {
@@ -11,12 +19,24 @@ export interface QuestData {
   name: string;
   regions: string[];
   skills: Record<string, number>;
+  combatLevel?: number;
+  locations?: QuestLocationRequirement[];
+  manualRequirements?: string[];
   prereqs: string[];
   points: number;
   series?: string;
   difficulty: DropSource;
   oneOf?: QuestRequirementOption[];
 }
+
+const LOCATIONS = {
+  draynorVillage: { id: 'draynor-village', label: 'Draynor Village', standardAreas: ['Draynor Village'], chunkOptions: [{ cx: 48, cy: 50 }] },
+  southFaladorFarm: { id: 'south-falador-farm', label: 'South Falador Farm', standardAreas: ['Falador'], chunkOptions: [{ cx: 47, cy: 51 }] },
+  civitas: { id: 'civitas-illa-fortis', label: 'Civitas illa Fortis', standardAreas: ['Civitas illa Fortis'], chunkOptions: [{ cx: 26, cy: 48 }] },
+  portSarim: { id: 'port-sarim', label: 'Port Sarim', standardAreas: ['Port Sarim'], chunkOptions: [{ cx: 47, cy: 50 }] },
+  varrockMuseum: { id: 'varrock-museum', label: 'Varrock Museum', standardAreas: ['Varrock'], chunkOptions: [{ cx: 50, cy: 53 }] },
+  pandemonium: { id: 'the-pandemonium', label: 'The Pandemonium', standardAreas: ['The Pandemonium'], chunkOptions: [{ cx: 47, cy: 46 }] },
+} satisfies Record<string, QuestLocationRequirement>;
 
 export const QUEST_DATA: Record<string, QuestData> = {
   // --- F2P Quests ---
@@ -851,7 +871,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Dream Mentor': {
     id: 'Dream Mentor', name: 'Dream Mentor',
     regions: ['Fremennik'],
-    skills: { 'Combat': 85 }, prereqs: ['Lunar Diplomacy', 'Eadgar\'s Ruse'], points: 2,
+    skills: {}, combatLevel: 85, prereqs: ['Lunar Diplomacy', 'Eadgar\'s Ruse'], points: 2,
     difficulty: DropSource.QUEST_MASTER
   },
   'Grim Tales': {
@@ -958,7 +978,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
   },
   'A Porcine of Interest': {
     id: 'A Porcine of Interest', name: 'A Porcine of Interest',
-    regions: ['Misthalin', 'Port Sarim'],
+    regions: ['Misthalin'],
+    locations: [LOCATIONS.draynorVillage, LOCATIONS.southFaladorFarm],
     skills: { 'Slayer': 1 }, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -1091,55 +1112,58 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Ethically Acquired Antiquities': {
     id: 'Ethically Acquired Antiquities', name: 'Ethically Acquired Antiquities',
     regions: ['Varlamore'],
-    skills: { 'Thieving': 25 }, prereqs: ['Children of the Sun'], points: 1,
+    locations: [LOCATIONS.civitas, LOCATIONS.portSarim, LOCATIONS.varrockMuseum],
+    skills: { 'Thieving': 25 }, prereqs: ['Children of the Sun', 'Shield of Arrav'], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
   'The Curse of Arrav': {
     id: 'The Curse of Arrav', name: 'The Curse of Arrav',
     regions: ['Misthalin'],
-    skills: { 'Agility': 61, 'Ranged': 62, 'Strength': 58, 'Thieving': 62, 'Mining': 64, 'Slayer': 37 }, prereqs: ['Defender of Varrock', 'While Guthix Sleeps'], points: 2, series: 'Mahjarrat',
+    skills: { 'Agility': 61, 'Ranged': 62, 'Strength': 58, 'Thieving': 62, 'Mining': 64, 'Slayer': 37 }, prereqs: ['Defender of Varrock', 'Troll Romance'], points: 2, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_MASTER
   },
   'The Final Dawn': {
     id: 'The Final Dawn', name: 'The Final Dawn',
     regions: ['Varlamore'],
-    skills: {}, prereqs: ['The Heart of Darkness'], points: 3, series: 'Twilight Emissaries',
+    skills: { 'Thieving': 66, 'Fletching': 52, 'Runecraft': 52 }, prereqs: ['The Heart of Darkness', 'Perilous Moons'], points: 3, series: 'Twilight Emissaries',
     difficulty: DropSource.QUEST_MASTER
   },
   'Shadows of Custodia': {
     id: 'Shadows of Custodia', name: 'Shadows of Custodia',
     regions: ['Varlamore'],
-    skills: {}, prereqs: [], points: 2,
+    skills: { 'Slayer': 54, 'Fishing': 45, 'Construction': 41, 'Hunter': 36 }, prereqs: ['Children of the Sun'], points: 2,
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Scrambled!': {
     id: 'Scrambled!', name: 'Scrambled!',
     regions: ['Varlamore'],
-    skills: {}, prereqs: [], points: 1,
+    skills: { 'Construction': 38, 'Cooking': 36, 'Smithing': 35 }, prereqs: ['Children of the Sun'], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Pandemonium': {
     id: 'Pandemonium', name: 'Pandemonium',
-    regions: ['The Open Seas'],
+    regions: [],
+    locations: [LOCATIONS.portSarim],
     skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
   'Prying Times': {
     id: 'Prying Times', name: 'Prying Times',
     regions: ['The Open Seas'],
-    skills: {}, prereqs: [], points: 1,
+    skills: { 'Smithing': 30, 'Sailing': 12 }, prereqs: ['Pandemonium', 'The Knight\'s Sword'],
+    manualRequirements: ['One open Sailing task slot'], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Current Affairs': {
     id: 'Current Affairs', name: 'Current Affairs',
     regions: ['The Open Seas'],
-    skills: {}, prereqs: [], points: 1,
+    skills: { 'Sailing': 22, 'Fishing': 10 }, prereqs: ['Pandemonium'], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
   'Troubled Tortugans': {
     id: 'Troubled Tortugans', name: 'Troubled Tortugans',
     regions: ['The Open Seas'],
-    skills: {}, prereqs: [], points: 1, series: 'Tortugan',
+    skills: { 'Slayer': 51, 'Construction': 48, 'Sailing': 45, 'Hunter': 45, 'Woodcutting': 40, 'Crafting': 34 }, prereqs: ['Pandemonium'], points: 1, series: 'Tortugan',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'The Red Reef': {

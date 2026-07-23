@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { questUnmet, diaryUnmet, isAlmostThere } from './journalProgress';
-import type { QuestData } from '../data/questData';
+import { QUEST_DATA, type QuestData } from '../data/questData';
 import type { DiaryTier } from '../data/diaryData';
 import type { UnlockState } from '../types';
 
@@ -35,6 +35,17 @@ describe('questUnmet', () => {
     ] }), u({}))).toEqual([{
       kind: 'region', label: "East Ardougne or Wizards' Guild",
     }]);
+  });
+
+  it('maps calculated combat blockers into the existing unmet shape', () => {
+    expect(questUnmet(QUEST_DATA['Dream Mentor'], u({
+      regions: ['Fremennik'],
+      quests: ['Lunar Diplomacy', "Eadgar's Ruse"],
+      levels: {
+        Attack: 60, Strength: 60, Defence: 60, Hitpoints: 60,
+        Prayer: 60, Ranged: 60, Magic: 60,
+      },
+    }))).toEqual([{ kind: 'skill', label: 'Combat level 85' }]);
   });
 });
 

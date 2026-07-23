@@ -4,17 +4,14 @@
  * unlock-path checklists. One definition of "what's blocking this" shared by
  * every journal surface.
  *
- * Region checks use the chunk-refined gate (a quest reachable via unlocked
- * sub-areas isn't counted as region-blocked), matching the quest cards.
+ * Quest checks delegate to the canonical mode-aware eligibility evaluator so
+ * every Journal surface reports the same blockers.
  */
 import { QuestData, QUEST_DATA } from '../data/questData';
 import { DiaryTier } from '../data/diaryData';
 import { UnlockState } from '../types';
-import { questLocations, refineQuestRegion } from './questLocations';
 import {
-  meetsSkillRequirement,
-  questAlternativesMet,
-  questRequirementOptionLabel,
+  EligibilityBlocker, evaluateQuestEligibility, meetsSkillRequirement,
 } from './journalStatus';
 import { isAreaReachable } from './reachability';
 
@@ -37,22 +34,19 @@ const skillUnmet = (skills: Record<string, number>, unlocks: UnlockState, qp: nu
 const currentQP = (unlocks: UnlockState) =>
   unlocks.quests.reduce((a, id) => a + (QUEST_DATA[id]?.points ?? 0), 0);
 
-/** Everything blocking a quest right now (empty ⇒ doable). */
-export const questUnmet = (q: QuestData, unlocks: UnlockState, gameModeId?: string): Unmet[] => {
-  const out: Unmet[] = [];
-  const gated = q.regions.filter(r => !isAreaReachable(r, unlocks, gameModeId));
-  const region = refineQuestRegion(gated.length === 0, questLocations(q.name, unlocks, gameModeId));
-  if (!region.met) for (const r of gated) out.push({ kind: 'region', label: r });
-  if (!questAlternativesMet(q, unlocks, gameModeId)) {
-    out.push({
-      kind: 'region',
-      label: q.oneOf!.map(questRequirementOptionLabel).join(' or '),
-    });
+const eligibilityBlockerToUnmet = (blocker: EligibilityBlocker): Unmet => {
+  if (blocker.kind === 'combat') {
+    return { kind: 'skill', label: blocker.label };
   }
-  out.push(...skillUnmet(q.skills as Record<string, number>, unlocks, currentQP(unlocks)));
-  for (const p of q.prereqs) if (!unlocks.quests.includes(p)) out.push({ kind: 'quest', label: p });
-  return out;
+  if (blocker.kind === 'skill' && blocker.label.startsWith('Quest Points ')) {
+    return { kind: 'qp', label: blocker.label.slice('Quest Points '.length) + ' QP' };
+  }
+  return { kind: blocker.kind, label: blocker.label };
 };
+
+/** Everything blocking a quest right now (empty ⇒ doable). */
+export const questUnmet = (q: QuestData, unlocks: UnlockState, gameModeId?: string): Unmet[] =>
+  evaluateQuestEligibility(q, unlocks, gameModeId).blockers.map(eligibilityBlockerToUnmet);
 
 /** Everything blocking a diary tier right now (empty ⇒ doable). */
 export const diaryUnmet = (d: DiaryTier, unlocks: UnlockState, gameModeId?: string): Unmet[] => {

@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { QUEST_DATA, QuestData } from '../data/questData';
 import { DropSource, UnlockState } from '../types';
+import { combatLevel } from './slayerReach';
 import {
   countDoableDiaryTasks, countDoableTasks, countMetSkillRequirements,
-  getQuestStatus, meetsSkillRequirement,
+  evaluateQuestEligibility, getQuestStatus, meetsSkillRequirement,
 } from './journalStatus';
 
 const unlocked = (over: Partial<UnlockState> = {}): UnlockState => ({
@@ -15,12 +16,34 @@ const unlocked = (over: Partial<UnlockState> = {}): UnlockState => ({
 });
 
 describe('reported quest access', () => {
-  it('requires Port Sarim for A Porcine of Interest', () => {
-    const quest = QUEST_DATA['A Porcine of Interest'];
-    expect(quest.regions).toEqual(['Misthalin', 'Port Sarim']);
-    expect(getQuestStatus(quest, unlocked())).toBe('LOCKED_REGION');
-    expect(getQuestStatus(quest,
-      unlocked({ regions: ['Port Sarim'] }))).toBe('AVAILABLE');
+  it('requires the exact South Falador Farm chunk in Chunked mode', () => {
+    const q = QUEST_DATA['A Porcine of Interest'];
+    const near = unlocked({ chunks: ['46,51', '48,50'] });
+    const exact = unlocked({ chunks: ['47,51', '48,50'] });
+    expect(evaluateQuestEligibility(q, near, 'chunked').status).toBe('LOCKED_REGION');
+    expect(evaluateQuestEligibility(q, exact, 'chunked').status).toBe('AVAILABLE');
+  });
+
+  it('calculates Dream Mentor combat instead of reading a pseudo-skill', () => {
+    const q = QUEST_DATA['Dream Mentor'];
+    const base = {
+      regions: ['Fremennik'], quests: ['Lunar Diplomacy', "Eadgar's Ruse"],
+      skills: { Attack: 10, Strength: 10, Defence: 10, Hitpoints: 10, Prayer: 10, Ranged: 10, Magic: 10 },
+    };
+    const lowLevels = { Attack: 60, Strength: 60, Defence: 60, Hitpoints: 60, Prayer: 60, Ranged: 60, Magic: 60 };
+    const highLevels = { Attack: 70, Strength: 70, Defence: 70, Hitpoints: 70, Prayer: 70, Ranged: 70, Magic: 70 };
+    const low = unlocked({ ...base, levels: lowLevels });
+    const high = unlocked({ ...base, levels: highLevels });
+
+    expect(combatLevel(lowLevels)).toBeLessThan(85);
+    expect(evaluateQuestEligibility(q, low).blockers).toContainEqual({
+      kind: 'combat', label: 'Combat level 85',
+    });
+    expect(combatLevel(highLevels)).toBeGreaterThanOrEqual(85);
+    expect(evaluateQuestEligibility(q, high).blockers).not.toContainEqual({
+      kind: 'combat', label: 'Combat level 85',
+    });
+    expect(evaluateQuestEligibility(q, high).status).toBe('AVAILABLE');
   });
 
   it.each([
@@ -38,10 +61,29 @@ describe('reported quest access', () => {
       unlocked({ quests: ['Rune Mysteries'] }))).toBe('LOCKED_REGION');
   });
 
+  it('checks and labels location-based alternative routes', () => {
+    const quest: QuestData = {
+      ...QUEST_DATA['A Porcine of Interest'],
+      id: 'alternative-location', name: 'Alternative location',
+      regions: [], locations: [], skills: {}, prereqs: [],
+      oneOf: [{ locations: [{
+        id: 'test-crossing', label: 'Test crossing',
+        standardAreas: ['Falador'], chunkOptions: [{ cx: 47, cy: 51 }],
+      }] }],
+    };
+    expect(evaluateQuestEligibility(
+      quest, unlocked({ chunks: ['46,51'] }), 'chunked',
+    ).blockers).toContainEqual({ kind: 'region', label: 'Test crossing' });
+    expect(evaluateQuestEligibility(
+      quest, unlocked({ chunks: ['47,51'] }), 'chunked',
+    ).status).toBe('AVAILABLE');
+  });
+
   it('treats an empty alternative list as no alternative requirement', () => {
     const quest = {
       ...QUEST_DATA['A Porcine of Interest'],
       regions: ['Misthalin'],
+      locations: [],
       oneOf: [],
     };
     expect(getQuestStatus(quest, unlocked())).toBe('AVAILABLE');
