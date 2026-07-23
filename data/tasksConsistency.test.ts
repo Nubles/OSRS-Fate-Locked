@@ -55,6 +55,11 @@ describe('CA task list references resolve', () => {
 });
 
 describe('Diary task list references resolve', () => {
+  it('pins the current 492-task Diary baseline', () => {
+    expect(ALL_DIARY_TASKS).toHaveLength(492);
+    expect(new Set(ALL_DIARY_TASKS.map(task => task.id)).size).toBe(492);
+  });
+
   it('every diary task tierId matches DIARY_DATA', () => {
     const bad = (ALL_DIARY_TASKS as any[]).filter((t) => !VALID_DIARY_TIER.has(t.tierId))
       .map((t) => `${t.id} -> "${t.tierId}"`);

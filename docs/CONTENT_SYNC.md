@@ -59,7 +59,7 @@ npm run clog:sync     # or: npm run content:sync
 | **Bosses** | ✅ new drops auto-add to the boss's log | ⚠️ **Detected** (new log page) → curate: model, drop-rate, key cost, gacha tier, `BOSSES_LIST` |
 | **Quests** | — | ✅ **Detected** by `content:check` (wiki `{{Globals\|quests}}` count) → curate: skill reqs, prereqs, region, QP, difficulty tier |
 | **Combat Achievements** | ✅ **Auto-synced** by `ca:sync` — a CA task is fully wiki-defined (monster, official name, requirement, tier) with stable in-game ids, so the whole list regenerates from the wiki | ✅ same sync |
-| **Diaries** | — | ⚠️ App-side self-audit (no clean wiki marker; diary content changes very rarely) |
+| **Diaries** | — | ✅ Reviewed 492-row snapshot; regenerate with `diary:sync` |
 
 The curation gate is **intentional**, not a limitation:
 
@@ -93,8 +93,8 @@ wiki's own authoritative numbers next to the app's in **`docs/SYNC_STATUS.md`**:
   six tier pages, keying each task by its stable in-game `data-ca-task-id` so
   re-runs are idempotent and preserve progress. `content:check` then just
   verifies the per-tier counts match.
-- **Diaries** — app-side self-audit (per region/tier counts); the wiki exposes no
-  stable per-task marker and diary content changes very rarely.
+- **Diaries** — generated offline from the committed 492-row reviewed snapshot;
+  source refreshes remain explicit review work because the wiki has no stable per-task ID.
 
 Because the report is **deterministic** (no timestamps), git only shows a diff
 when an upstream number actually moves — so the weekly workflow turns "a new
@@ -107,3 +107,36 @@ quest/CA shipped" into a reviewable PR (`docs/SYNC_STATUS.md` is in its
 > `SYNC_STATUS.md`). Adding another content type later follows the same pattern:
 > a `sync-*` script (if fully wiki-defined) or a detector entry, joining the same
 > weekly PR automatically.
+
+## Achievement Diary snapshot
+
+Achievement Diary tasks are generated from the committed, reviewed snapshot at
+`data/sources/achievement-diary-tasks.json`. The snapshot was verified against
+[Achievement Diary/All achievements](https://oldschool.runescape.wiki/w/Achievement_Diary/All_achievements)
+revision `15263582` and the twelve linked official Diary pages recorded in the
+snapshot. Their tier tables contain exactly 492 current tasks.
+
+Regenerate the TypeScript task list and task-ID migration map offline:
+
+```bash
+npm run diary:sync
+```
+
+The command never contacts the network. It validates the frozen source metadata,
+the 492-row total, unique IDs and ordinals, known tiers, alias targets, and the
+reviewed 485-row classification before writing `data/diaryTasks.ts` and the
+migration map in `utils/taskIdMigrations.ts`.
+
+ID rules:
+
+- A current task with the same semantics keeps its existing application ID.
+- A genuinely replaced task may use an explicit old-ID alias only when the source
+  establishes that succession; lookalike tasks are not guessed.
+- A task with no legitimate predecessor receives a frozen
+  `<area-prefix>_<tier-prefix>_<official-ordinal>` ID that never reuses a retired ID.
+- Retired and unknown historical completion IDs remain in saves but do not count
+  toward the current 492-task total.
+
+Current reviewed classification: 469 preserved semantic IDs, 0 source-supported
+replacement aliases, 16 retired existing IDs, and 23 new canonical IDs. The net
+increase is seven, but the refresh is not a seven-row append.

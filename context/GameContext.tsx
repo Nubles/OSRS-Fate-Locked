@@ -6,6 +6,7 @@ import { DROP_RATES, EQUIPMENT_TIER_MAX } from '../config/rules';
 import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
 import { setStartArea } from '../utils/freeAreas';
 import { migrateClogIds } from '../utils/clogIdMigrations';
+import { migrateCompletedTaskIds } from '../utils/taskIdMigrations';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { getRitual, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, GAMBIT_KEYS_PER } from '../config/economy';
@@ -216,7 +217,12 @@ const migrateSave = (saveData: Partial<GameState>): GameState => {
       equipment: { ...defaultUnlocks.equipment, ...(loadedUnlocks.equipment || {}) },
       skills: { ...defaultUnlocks.skills, ...(loadedUnlocks.skills || {}) },
       levels: { ...defaultUnlocks.levels, ...(loadedUnlocks.levels || {}) },
-      collectionLog: migrateClogIds({ ...defaultUnlocks.collectionLog, ...(loadedUnlocks.collectionLog || {}) })
+      collectionLog: migrateClogIds({ ...defaultUnlocks.collectionLog, ...(loadedUnlocks.collectionLog || {}) }),
+      completedTasks: migrateCompletedTaskIds(
+        Array.isArray(loadedUnlocks.completedTasks)
+          ? loadedUnlocks.completedTasks
+          : defaultUnlocks.completedTasks,
+      ),
   };
 
   // Defensive: dedupe unlock arrays so a corrupted import can't load the

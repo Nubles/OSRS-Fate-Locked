@@ -11,6 +11,7 @@ import { TableType, LogEntry } from '../types';
 import { isRollEntry } from '../utils/logEntry';
 import { XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL } from '../config/economy';
 import { isValidUnlock } from '../utils/gameEngine';
+import { DIARY_TASK_ID_MIGRATIONS } from '../utils/taskIdMigrations';
 import { ALL_CHUNKS, CHUNKED_START, chunkKey } from '../utils/chunkAdjacency';
 
 /**
@@ -502,6 +503,25 @@ describe('LOAD_SAVE migration', () => {
     const s = gameReducer(base(), { type: 'LOAD_SAVE', payload: corrupted });
     expect(s.unlocks.regions).toEqual(['Karamja', 'Falador']);
     expect(s.unlocks.bosses).toEqual(['Zulrah']);
+  });
+  it('canonicalizes Diary aliases while retaining unknown retired completion ids', () => {
+    const aliases = DIARY_TASK_ID_MIGRATIONS as Record<string, string>;
+    aliases.old_a = 'current_a';
+    try {
+      const loaded = gameReducer(base(), {
+        type: 'LOAD_SAVE',
+        payload: {
+          unlocks: {
+            ...initialState.unlocks,
+            completedTasks: ['old_a', 'old_a', 'retired_x'],
+          },
+        },
+      });
+
+      expect(loaded.unlocks.completedTasks).toEqual(['current_a', 'retired_x']);
+    } finally {
+      delete aliases.old_a;
+    }
   });
 });
 
