@@ -1,4 +1,5 @@
 
+import { lazyWithRetry } from '../utils/lazyRetry';
 import React, { useMemo, useState, useRef, lazy, Suspense } from 'react';
 import { useGame } from '../context/GameContext';
 import { SectionGuide } from './SectionGuide';
@@ -8,7 +9,7 @@ import { isRollEntry } from '../utils/logEntry';
 import { buildFateReport } from '../utils/fateReport';
 // Charts (recharts, ~300 KB) live in their own lazily-loaded chunk so opening
 // Stats to see the overview/breakdown/fate tabs doesn't pay the recharts tax.
-const StatsChartsView = lazy(() => import('./StatsChartsView'));
+const StatsChartsView = lazyWithRetry(() => import('./StatsChartsView'));
 
 interface StatsModalProps {
   onClose: () => void;

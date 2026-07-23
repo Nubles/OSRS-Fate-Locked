@@ -2,6 +2,7 @@ import { UnlockState } from '../types';
 import { isFreeArea } from './freeAreas';
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
+import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
 import { chunkKey, isChunkUnlocked } from './chunkAdjacency';
 import { resolveModeRules } from '../config/gameModes';
 import type { GameModeRules } from '../config/gameModes';
@@ -31,6 +32,44 @@ export const isNamedAreaReachableViaChunks = (name: string, unlockedChunkKeys: r
 export const isAreaReachable = (name: string, unlocks: UnlockState, gameModeId?: string): boolean => {
   if (gameModeId === 'chunked') return isNamedAreaReachableViaChunks(name, unlocks.chunks ?? []);
   return isFreeArea(name) || unlocks.regions.includes(name);
+};
+
+// Maps a leaf/sub-region back to its continent, derived once from
+// REGION_GROUPS + MISTHALIN_AREAS.
+const PARENT_CONTINENT: Record<string, string> = (() => {
+  const parents: Record<string, string> = {};
+  for (const [continent, subs] of Object.entries(REGION_GROUPS)) {
+    for (const sub of subs) parents[sub] = continent;
+  }
+  for (const area of MISTHALIN_AREAS) parents[area] = 'Misthalin';
+  return parents;
+})();
+
+/**
+ * Non-chunked map-tint semantics for a named region — richer than
+ * isAreaReachable because chunks can be tagged at continent level.
+ * A region is unlocked if:
+ *  1. it's free at run start (mode-aware), or
+ *  2. it appears directly in unlocks.regions, or
+ *  3. its parent continent is free or directly unlocked, or
+ *  4. its parent continent is "complete" (every sibling unlocked/free), or
+ *  5. — if the region IS a continent — every one of its children is unlocked/free.
+ * The RuneLite plugin mirrors these exact rules (FateLockedBundle.isUnlocked);
+ * utils/runelitePluginParity.test.ts pins the two together.
+ */
+export const isRegionUnlocked = (region: string, unlocks: string[]): boolean => {
+  if (isFreeArea(region)) return true;
+  if (unlocks.includes(region)) return true;
+  const continent = PARENT_CONTINENT[region];
+  if (continent) {
+    if (isFreeArea(continent)) return true;
+    if (unlocks.includes(continent)) return true;
+    const siblings = continent === 'Misthalin' ? MISTHALIN_AREAS : (REGION_GROUPS[continent] ?? []);
+    if (siblings.length > 0 && siblings.every(s => unlocks.includes(s) || isFreeArea(s))) return true;
+  }
+  const children = region === 'Misthalin' ? MISTHALIN_AREAS : REGION_GROUPS[region];
+  if (children && children.length > 0 && children.every(s => unlocks.includes(s) || isFreeArea(s))) return true;
+  return false;
 };
 
 /**

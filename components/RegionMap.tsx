@@ -16,7 +16,7 @@ import { entryBlockedGate } from '../utils/questDoability';
 import { QUEST_DATA } from '../data/questData';
 import { isChunkUnlocked, isFrontierChunk } from '../utils/chunkAdjacency';
 import { rankFrontierChunks } from '../utils/frontierAdvisor';
-import { isNamedAreaReachableViaChunks } from '../utils/reachability';
+import { isNamedAreaReachableViaChunks, isRegionUnlocked } from '../utils/reachability';
 
 type LensTone = 'good' | 'warn' | 'bad';
 const TONE_FILL: Record<LensTone, string> = { good: 'rgba(16,185,129,0.30)', warn: 'rgba(245,158,11,0.10)', bad: 'rgba(239,68,68,0.22)' };
@@ -117,40 +117,9 @@ export { REGION_CHUNKS } from '../data/regionChunks';
 
 
 
-// Maps a leaf/sub-region back to its continent, derived once from
-// REGION_GROUPS + MISTHALIN_AREAS. Used by isRegionUnlocked to walk
-// the hierarchy.
-const PARENT_CONTINENT: Record<string, string> = (() => {
-  const parents: Record<string, string> = {};
-  for (const [continent, subs] of Object.entries(REGION_GROUPS)) {
-    for (const sub of subs) parents[sub] = continent;
-  }
-  for (const area of MISTHALIN_AREAS) parents[area] = 'Misthalin';
-  return parents;
-})();
-
-// A chunk's region is unlocked if:
-//  1. it's in ALWAYS_UNLOCKED_REGIONS, or
-//  2. it appears directly in unlocks.regions, or
-//  3. its parent continent is unlocked, or
-//  4. its parent continent is "complete" (every sibling sub-region is unlocked),
-//  5. or — if the region IS a continent — every one of its sub-regions is unlocked.
-// Rule (4) is the "continent turns fully green once all sub-areas are done"
-// rule and covers chunks tagged at the continent level too.
-const isRegionUnlocked = (region: string, unlocks: string[]): boolean => {
-  if (isFreeArea(region)) return true;
-  if (unlocks.includes(region)) return true;
-  const continent = PARENT_CONTINENT[region];
-  if (continent) {
-    if (isFreeArea(continent)) return true;
-    if (unlocks.includes(continent)) return true;
-    const siblings = continent === 'Misthalin' ? MISTHALIN_AREAS : (REGION_GROUPS[continent] ?? []);
-    if (siblings.length > 0 && siblings.every(s => unlocks.includes(s) || isFreeArea(s))) return true;
-  }
-  const children = region === 'Misthalin' ? MISTHALIN_AREAS : REGION_GROUPS[region];
-  if (children && children.length > 0 && children.every(s => unlocks.includes(s) || isFreeArea(s))) return true;
-  return false;
-};
+// Region-unlock resolution lives in utils/reachability.ts (isRegionUnlocked)
+// so the RuneLite plugin parity test can pin the exact same rules the map
+// renders with.
 
 // Every unlockable/assignable region name, deduped + alphabetised. Pulled
 // from the existing unlock data so the authoring dropdown can't introduce

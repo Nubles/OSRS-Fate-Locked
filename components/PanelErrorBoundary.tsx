@@ -43,7 +43,16 @@ export class PanelErrorBoundary extends Component<Props, State> {
           <div className="bg-[#1e1e1e] border border-amber-500/30 rounded-lg p-5 max-w-sm text-center">
             <RotateCcw className="w-8 h-8 text-amber-400 mx-auto mb-3 animate-spin" />
             <h3 className="text-sm font-bold text-amber-300 mb-1">Updating…</h3>
-            <p className="text-xs text-gray-500">A newer version was deployed — reloading to pick it up.</p>
+            <p className="text-xs text-gray-500 mb-3">This part of the app couldn't load — usually a new version or a network blip.</p>
+            {/* The auto-reload is once-per-15s guarded; without this button a
+                suppressed reload would leave the spinner stuck forever. */}
+            <button
+              onClick={() => window.location.reload()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded text-xs font-bold transition-colors"
+            >
+              <RotateCcw size={12} />
+              Reload now
+            </button>
           </div>
         </div>
       );

@@ -4,6 +4,8 @@ A companion tracker for the **Fate Locked Ironman** challenge mode in Old School
 
 **Live app:** https://nubles.github.io/OSRS-Fate-Locked/
 
+![Spending a Key: the gacha table rolls, Fate is altered, and the TzHaar Fight Cave is unlocked](docs/media/hero.gif)
+
 ## The concept
 
 You begin as a fresh Ironman with nothing: no skills past level 1, no equipment slots, no map regions, no transport. To progress you:
@@ -13,6 +15,15 @@ You begin as a fresh Ironman with nothing: no skills past level 1, no equipment 
 3. **Snowball** — each unlock opens up new tasks, which earn more Keys.
 
 Bad luck is cushioned by **Fate Points** (a pity timer) and the **Void Altar**, where Fate Points can be spent on rituals. Rare **Omni-Keys** let you pick an unlock directly; **Chaos Keys** unlock from any table at random.
+
+## Screenshots
+
+| | |
+|---|---|
+| ![Farm Keys — Slayer master roll cards next to the Character dashboard](docs/media/farm-keys.png) | ![Spend Keys — unlock tables alongside the interactive world region map](docs/media/region-map.png) |
+| *Farm Keys & the Character dashboard* | *Spend Keys & the world region map* |
+| ![Spend Keys tables next to the Equipment Lab](docs/media/spend-keys.png) | ![The Journal — quest, diary and combat-achievement tracking](docs/media/journal.png) |
+| *Unlock tables & the Equipment Lab* | *The Journal: quests, diaries & combat achievements* |
 
 ## Features
 

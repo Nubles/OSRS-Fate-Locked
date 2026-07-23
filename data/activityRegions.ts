@@ -30,6 +30,9 @@ export const ACTIVITY_REGIONS: Record<string, string> = {
   'Skotizo': 'Kourend & Kebos',
   'Thermonuclear Smoke Devil': 'Kandarin',
   'Araxxor': 'Morytania',
+  // Vampyrium (The Blood Moon Rises) isn't a mapped region yet; Morytania is
+  // the closest canonical tag for its vampyre-lands content.
+  'Maggot King': 'Morytania',
   'Artio': 'Wilderness',
   'Callisto': 'Wilderness',
   "Calvar'ion": 'Wilderness',

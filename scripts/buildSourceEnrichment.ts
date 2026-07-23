@@ -9,6 +9,36 @@ import { RESOURCE_MAP } from '../data/resourceData';
 import { ENRICHED_SOURCES } from '../data/resourceEnrichment';
 import { BOSSES_LIST, MINIGAMES_LIST, REGION_GROUPS, MISTHALIN_AREAS } from '../data/items';
 import { ACTIVITY_REGIONS } from '../data/activityRegions';
+import { REGION_CHUNKS } from '../data/regionChunks';
+import chunkDoc from '../public/chunk-content.json';
+
+// Chunk-truth: monster (lowercased) -> regions the chunk dataset proves it in.
+// data/resourceChunkTruth.test.ts enforces that every proven region is listed
+// on the emitted DROP source, so union them in here at generation time.
+const provenRegions: Map<string, Set<string>> = (() => {
+  const chunkRegion: Record<string, string> = {};
+  for (const [region, chunks] of Object.entries(REGION_CHUNKS)) {
+    for (const c of chunks as { cx: number; cy: number }[]) chunkRegion[`${c.cx},${c.cy}`] = region;
+  }
+  const truth = new Map<string, Set<string>>();
+  for (const [id, e] of Object.entries<any>((chunkDoc as any).chunks)) {
+    const region = chunkRegion[`${Math.floor(+id / 256)},${+id % 256}`];
+    if (!region) continue;
+    for (const [name] of e.m ?? []) {
+      const k = (name as string).toLowerCase();
+      if (!truth.has(k)) truth.set(k, new Set());
+      truth.get(k)!.add(region);
+    }
+  }
+  return truth;
+})();
+
+/** Mirrors resourceChunkTruth.test.ts's covers(): is region r already implied? */
+const coversRegion = (listed: string[], r: string): boolean => {
+  if (listed.includes('Any') || listed.includes(r)) return true;
+  const children = r === 'Misthalin' ? MISTHALIN_AREAS : (REGION_GROUPS as Record<string, string[]>)[r];
+  return !!children && listed.some((l) => children.includes(l));
+};
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)';
 const API = 'https://oldschool.runescape.wiki/api.php';
@@ -272,6 +302,13 @@ for (const [lower, key] of lowerToKey) {
       // stays consistent with ACTIVITY_REGIONS.
       if (ACTIVITY_REGIONS[unlock]) src.regions = [ACTIVITY_REGIONS[unlock]];
     }
+    // Union in every chunk-proven region the listed ones don't already cover.
+    const proven = provenRegions.get(d.monster.toLowerCase());
+    if (proven) {
+      for (const r of proven) {
+        if (!coversRegion(src.regions, r)) src.regions.push(r);
+      }
+    }
     if (d.rarity && !/^varies$/i.test(d.rarity)) src.rarity = d.rarity;
     added.push(src);
     dropCount++;
@@ -283,7 +320,7 @@ for (const [lower, key] of lowerToKey) {
 // --- emit data/resourceEnrichment.ts ----------------------------------------
 const esc = (s: string) => s.replace(/'/g, "\\'");
 const fmt = (s: any) => {
-  const parts = [`type: '${s.type}'`, `name: '${esc(s.name)}'`, `regions: ['${esc(s.regions[0])}']`];
+  const parts = [`type: '${s.type}'`, `name: '${esc(s.name)}'`, `regions: [${s.regions.map((r: string) => `'${esc(r)}'`).join(', ')}]`];
   if (s.unlockId) parts.push(`unlockId: '${esc(s.unlockId)}'`);
   if (s.rarity) parts.push(`rarity: '${esc(s.rarity)}'`);
   if (s.notes) parts.push(`notes: '${esc(s.notes)}'`);
