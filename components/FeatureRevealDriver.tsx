@@ -4,6 +4,7 @@ import { useFeatureGates } from '../hooks/useFeatureGates';
 import { gateMeta, type FeatureId } from '../utils/featureGates';
 import { showToast } from '../utils/toast';
 import { flashSelector } from '../utils/flash';
+import { profileFeatureSeenKey } from '../utils/profileStorage';
 
 /**
  * Watches the progressive-disclosure gates and celebrates each new reveal
@@ -18,7 +19,7 @@ import { flashSelector } from '../utils/flash';
 export const FeatureRevealDriver: React.FC = () => {
   const visible = useFeatureGates();
   const { activeProfileId } = useProfiles();
-  const storageKey = `fate_features_seen_v1_${activeProfileId}`;
+  const storageKey = profileFeatureSeenKey(activeProfileId);
   // Tracks which profile the seen-set was seeded for, so profile switches
   // re-seed silently instead of toasting the delta between two runs.
   const seededFor = useRef<string | null>(null);

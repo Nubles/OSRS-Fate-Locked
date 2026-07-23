@@ -10,8 +10,7 @@
  */
 
 import type { BackupWriteResult } from './gamePersistence';
-
-const SUFFIX = '__backups';
+import { profileBackupKey } from './profileStorage';
 const MAX_BACKUPS = 8;
 
 export interface BackupMeta {
@@ -25,11 +24,9 @@ interface BackupEntry extends BackupMeta {
   data: string;
 }
 
-const keyFor = (storageKey: string): string => storageKey + SUFFIX;
-
 const readAll = (storageKey: string): BackupEntry[] => {
   try {
-    const parsed = JSON.parse(localStorage.getItem(keyFor(storageKey)) || '[]');
+    const parsed = JSON.parse(localStorage.getItem(profileBackupKey(storageKey)) || '[]');
     return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
@@ -70,11 +67,11 @@ export const pushBackup = (
   const entry: BackupEntry = { ts: Date.now(), reason, summary: summarizeSave(data), data };
   const next = [entry, ...entries].slice(0, MAX_BACKUPS);
   try {
-    localStorage.setItem(keyFor(storageKey), JSON.stringify(next));
+    localStorage.setItem(profileBackupKey(storageKey), JSON.stringify(next));
     return { stored: true };
   } catch {
     try {
-      localStorage.setItem(keyFor(storageKey), JSON.stringify(next.slice(0, 2)));
+      localStorage.setItem(profileBackupKey(storageKey), JSON.stringify(next.slice(0, 2)));
       return { stored: true };
     } catch {
       return { stored: false, reason: 'storage_unavailable' };
