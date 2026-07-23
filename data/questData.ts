@@ -1,6 +1,11 @@
 
 import { DropSource } from '../types';
 
+export interface QuestRequirementOption {
+  regions?: string[];
+  guilds?: string[];
+}
+
 export interface QuestData {
   id: string;
   name: string;
@@ -10,6 +15,7 @@ export interface QuestData {
   points: number;
   series?: string;
   difficulty: DropSource;
+  oneOf?: QuestRequirementOption[];
 }
 
 export const QUEST_DATA: Record<string, QuestData> = {
@@ -952,7 +958,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   },
   'A Porcine of Interest': {
     id: 'A Porcine of Interest', name: 'A Porcine of Interest',
-    regions: ['Misthalin'],
+    regions: ['Misthalin', 'Port Sarim'],
     skills: { 'Slayer': 1 }, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -1189,7 +1195,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
   },
   'Enter the Abyss': {
     id: 'Enter the Abyss', name: 'Enter the Abyss',
-    regions: ['Misthalin'], // Varrock
+    regions: ['Misthalin'],
+    oneOf: [
+      { regions: ['East Ardougne'] },
+      { regions: ['Tree Gnome Stronghold'] },
+      { guilds: ["Wizards' Guild"] },
+    ],
     skills: {}, prereqs: ['Rune Mysteries'], points: 0, series: 'Order of Wizards',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },

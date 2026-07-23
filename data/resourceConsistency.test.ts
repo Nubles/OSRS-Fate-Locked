@@ -312,3 +312,16 @@ describe('computeFullBreakdown always terminates', () => {
     }
   });
 });
+
+describe('reported item-source corrections', () => {
+  it('keeps Dragon Claws in Chambers of Xeric and removes Tormented Demon', () => {
+    const sources = RESOURCE_MAP['Dragon Claws'];
+    expect(sources.some(source =>
+      source.name === 'Ancient Chest' ||
+      source.unlockId === 'Chambers of Xeric'
+    )).toBe(true);
+    expect(sources.some(source =>
+      source.name === 'Tormented Demon'
+    )).toBe(false);
+  });
+});

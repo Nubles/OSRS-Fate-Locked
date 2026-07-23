@@ -5,6 +5,7 @@ import { wikiUrlFor } from '../constants';
 import { EntityModel } from './EntityModel';
 import { modelFor, orientationFor } from '../data/entityModels';
 import { categoryColor, categoryRarity, rarityRank } from '../utils/rarity';
+import { tableDisplayName } from '../utils/tableDisplay';
 
 interface VoidRevealProps {
   itemName: string;
@@ -52,6 +53,7 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
   const [copied, setCopied] = useState(false);
   const [rouletteIndex, setRouletteIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const displayItemType = tableDisplayName(itemType);
 
   const rouletteIcons = [
       { icon: Shield, color: 'text-gray-400' },
@@ -137,7 +139,7 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
   }, [isChaos, animationsEnabled]);
 
   const handleCopyFlex = () => {
-      const text = `🔥 Fate-Locked UIM Update 🔥\nJust unlocked: **${itemName}** (${itemType})!\n#OSRS #FateLocked`;
+      const text = `🔥 Fate-Locked UIM Update 🔥\nJust unlocked: **${itemName}** (${displayItemType})!\n#OSRS #FateLocked`;
       navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -428,7 +430,7 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
 
             <div className="mt-6 space-y-2">
               <h3 className={`${theme.text} text-sm font-bold uppercase tracking-widest drop-shadow-sm`}>
-                  {isChaos ? 'CHAOS UNLOCK' : `${itemType} UNLOCKED`}
+                  {isChaos ? 'CHAOS UNLOCK' : `${displayItemType.toUpperCase()} UNLOCKED`}
               </h3>
               
               {entityModel ? (

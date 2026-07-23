@@ -15,16 +15,19 @@ import { SkillTrainingPopover, SkillPopoverState } from './SkillTrainingPopover'
 import { showToast } from '../utils/toast';
 import { DiaryInsights } from './JournalInsights';
 import { DiaryHeatmap } from './DiaryHeatmap';
-import { countDoableTasks } from '../utils/journalStatus';
+import {
+  countDoableTasks, countMetSkillRequirements, meetsSkillRequirement,
+} from '../utils/journalStatus';
 
 // Doable-now counting lives in utils/journalStatus (shared with the
 // insights band) — see countDoableTasks there.
 
 interface DiaryLogProps {
   searchTerm?: string;
+  suspendModals?: boolean;
 }
 
-export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch = '' }) => {
+export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch = '', suspendModals = false }) => {
   const { unlocks, toggleDiary, rollForKey, toggleTask, advisorsEnabled, gameModeId } = useGame();
   // Filter state persisted across sessions.
   const [filterRegion, setFilterRegion] = useLocalStorage<string>('jrnl:diary:region', 'ALL');
@@ -294,9 +297,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
           );
           const metRegionCount = gatedRegions.filter(r => isAreaReachable(r, unlocks, gameModeId)).length;
           const diarySkillReqs = Object.entries(diary.skills);
-          const metSkillCount = diarySkillReqs.filter(
-            ([skill, lvl]) => (unlocks.skills[skill] || 0) > 0 && (unlocks.levels[skill] || 1) >= (lvl as number),
-          ).length;
+          const metSkillCount = countMetSkillRequirements(diary.skills, unlocks);
           const metQuestCount = diary.quests.filter(q => unlocks.quests.includes(q)).length;
           const dTotalReqs = gatedRegions.length + diarySkillReqs.length + diary.quests.length;
           const dTotalMet = metRegionCount + metSkillCount + metQuestCount;
@@ -438,8 +439,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                           <div className="flex flex-wrap gap-1.5 mt-1.5">
                                               {task.skills && Object.entries(task.skills).map(([skill, level]) => {
                                                   const current = unlocks.levels[skill] || 1;
-                                                  const unlocked = (unlocks.skills[skill] || 0) > 0;
-                                                  const met = unlocked && current >= (level as number);
+                                                  const met = meetsSkillRequirement(unlocks, skill, level as number);
                                                   if (met) {
                                                       return (
                                                           <span key={skill} className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-white/5 text-gray-500 bg-black/30">
@@ -509,7 +509,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
         })}
       </div>
 
-      {skillPopover && (
+      {!suspendModals && skillPopover && (
         <SkillTrainingPopover
           {...skillPopover}
           onClose={() => setSkillPopover(null)}

@@ -1,6 +1,6 @@
 
 import { lazyWithRetry } from './utils/lazyRetry';
-import React, { useState, useRef, useEffect, Component, ErrorInfo, ReactNode, lazy, Suspense } from 'react';
+import React, { useState, useRef, useEffect, useReducer, Component, ErrorInfo, ReactNode, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { GameProvider, useGame } from './context/GameContext';
 import { usePortalHost } from './hooks/usePortalHost';
@@ -39,6 +39,12 @@ import { useEscapeKey } from './hooks/useEscapeKey';
 import { resolveModeRules } from './config/gameModes';
 import { showToast } from './utils/toast';
 import { prefetchHeavyChunks } from './utils/prefetch';
+import { LATEST_CHANGELOG } from './data/changelog';
+import {
+  changelogVisibilityReducer, markChangelogSeen, resolveChangelogRestoreTarget,
+  resolveChangelogModalRenderPolicy, shouldAutoOpenChangelog,
+  shouldEnableUnderlyingModalEscape, shouldShowChangelog,
+} from './utils/changelogState';
 
 // Heavy, conditionally-rendered modals — code-split so they (and their deps,
 // e.g. recharts in StatsModal) stay out of the initial bundle.
@@ -52,9 +58,14 @@ const GameModePicker = lazyWithRetry(() => import('./components/GameModePicker')
 const SyncCodeModal = lazyWithRetry(() => import('./components/SyncCodeModal').then(m => ({ default: m.SyncCodeModal })));
 const ModelGallery = lazyWithRetry(() => import('./components/ModelGallery').then(m => ({ default: m.ModelGallery })));
 const DiscordSettingsModal = lazyWithRetry(() => import('./components/DiscordSettingsModal'));
+const ChangelogModal = lazyWithRetry(() =>
+  import('./components/ChangelogModal').then(module => ({
+    default: module.ChangelogModal,
+  })),
+);
 import { obfuscateFateSave, deobfuscateFateSave } from './utils/encryption';
 import { GameState } from './types';
-import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb, Radio, Settings } from 'lucide-react';
+import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb, Radio, Settings, Newspaper } from 'lucide-react';
 import { exportRuneliteBundle } from './utils/runeliteExport';
 
 // --- Error Boundary ---
@@ -226,9 +237,10 @@ interface HeaderProps {
   setShowGameMode: (show: boolean) => void;
   setShowSyncCode: (show: boolean) => void;
   setShowDiscord: (show: boolean) => void;
+  onOpenChangelog: () => void;
 }
 
-const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode, setShowDiscord }: HeaderProps) => {
+const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode, setShowDiscord, onOpenChangelog }: HeaderProps) => {
   const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, importSave, resetGame, getExportData, createBackup, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount } = useGame();
   // Progressive disclosure — advanced tools stay hidden until the run earns them.
   const gates = useFeatureGates();
@@ -237,6 +249,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
   const pityCap = pityRules.pityEnabled ? pityRules.pityThreshold : 50; // 50 = visual-only fallback
   const nearPity = pityRules.pityEnabled && fatePoints >= pityRules.pityThreshold * 0.8;
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const settingsTriggerRef = useRef<HTMLButtonElement>(null);
   const [showUtilMenu, setShowUtilMenu] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -399,6 +412,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                  session at most. */}
              <div className="relative h-8">
                  <button
+                   ref={settingsTriggerRef}
                    onClick={() => setShowUtilMenu((v) => !v)}
                    className={`h-8 w-8 flex items-center justify-center bg-[#252525] border border-white/10 rounded-lg transition-colors ${showUtilMenu ? 'text-white border-white/25' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                    title="Settings & save tools"
@@ -411,6 +425,16 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                    <>
                      <div className="fixed inset-0 z-[90]" onClick={() => setShowUtilMenu(false)} />
                      <div className="absolute right-0 top-9 z-[91] w-56 bg-[#1c1c1c] border border-white/15 rounded-lg shadow-2xl py-1.5 text-[12px]">
+                        <button type="button" onClick={() => {
+                          const restoreTarget = resolveChangelogRestoreTarget('manual', settingsTriggerRef.current);
+                          restoreTarget?.focus();
+                          setShowUtilMenu(false);
+                          onOpenChangelog();
+                        }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-amber-300">
+                          <Newspaper size={13} className="text-amber-400" />
+                          What's New
+                        </button>
+                        <div className="my-1 border-t border-white/10" />
                         <button onClick={() => { toggleAnimations(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={animationsEnabled}>
                            {animationsEnabled ? <PlayCircle size={13} className="text-green-400" /> : <PauseCircle size={13} className="text-gray-500" />}
                            Animations <span className="ml-auto text-[10px] text-gray-500">{animationsEnabled ? 'on' : 'off'}</span>
@@ -447,7 +471,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
 };
 
 // --- New Control Panel Component ---
-const ControlPanel = () => {
+const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = false }) => {
   const [activeTab, setActiveTab] = useState<'FARM' | 'SPEND' | 'LOG'>('FARM');
   // History reveals with the first logged event (progressive disclosure).
   const gates = useFeatureGates();
@@ -503,7 +527,7 @@ const ControlPanel = () => {
       {/* Contextual guide for the active panel */}
       <div className="flex items-center justify-end gap-1.5 px-3 py-1 bg-[#141414] border-b border-[#2a2a2a] shrink-0 text-[10px] text-gray-500">
         <span>{GUIDES[activeTab]?.title}</span>
-        <SectionGuide id={activeTab} />
+        <SectionGuide id={activeTab} suspendModals={suspendModals} />
       </div>
 
       {/* Content */}
@@ -529,6 +553,23 @@ const ControlPanel = () => {
 const GameLayout = () => {
   const { lastEvent, animationsEnabled, hasSeenOnboarding, history } = useGame();
   const { recentlyCreatedId, activeProfileId, clearRecentlyCreated } = useProfiles();
+
+  const [showChangelog, dispatchChangelog] = useReducer(
+    changelogVisibilityReducer,
+    undefined,
+    () => shouldAutoOpenChangelog({
+      hasSeenOnboarding,
+      releaseIsUnseen: shouldShowChangelog(LATEST_CHANGELOG.id),
+      startupHash: typeof window === 'undefined' ? '' : window.location.hash,
+      hasPendingGameModePrompt: recentlyCreatedId === activeProfileId,
+    }),
+  );
+
+  const openChangelog = () => dispatchChangelog({ type: 'OPEN' });
+  const closeChangelog = () => {
+    markChangelogSeen(LATEST_CHANGELOG.id);
+    dispatchChangelog({ type: 'DISMISS' });
+  };
 
   // Warm the heavy lazy chunks (map, stats+charts, resource engine, …) during
   // idle time so opening them is instant instead of a visible fetch delay.
@@ -644,7 +685,8 @@ const GameLayout = () => {
     setShowSupplyChain(false);
     setShowGameMode(false);
     setShowSyncCode(false);
-  }, anyModalOpen);
+  }, shouldEnableUnderlyingModalEscape(anyModalOpen, showChangelog));
+  const modalRenderPolicy = resolveChangelogModalRenderPolicy(showChangelog);
 
   return (
     <div className="min-h-screen bg-osrs-bg text-osrs-text pb-6 font-sans selection:bg-osrs-gold selection:text-black relative">
@@ -669,18 +711,25 @@ const GameLayout = () => {
       {activeRitualAnim === 'GREED' && <GreedEffect onComplete={() => setActiveRitualAnim('NONE')} />}
       {activeRitualAnim === 'CHAOS' && <ChaosEffect onComplete={() => setActiveRitualAnim('NONE')} />}
 
-      {showAltar && <VoidAltar onClose={() => setShowAltar(false)} />}
+      {modalRenderPolicy.renderAppModals && showAltar && <VoidAltar onClose={() => setShowAltar(false)} />}
       <Suspense fallback={<ModalFallback />}>
-        {showStats && <StatsModal onClose={() => setShowStats(false)} />}
-        {showFateThread && <FateThread onClose={() => setShowFateThread(false)} />}
-        {showReference && <ReferenceModal onClose={() => setShowReference(false)} />}
-        {showOracle && <OracleSearch onClose={() => setShowOracle(false)} />}
-        {showStrategy && <StrategyGuide onClose={() => setShowStrategy(false)} />}
-        {showSupplyChain && <SupplyChainCalculator initialQuery={supplyChainPreset} onClose={() => { setShowSupplyChain(false); setSupplyChainPreset(undefined); }} />}
-        {showGameMode && <GameModePicker onClose={() => setShowGameMode(false)} />}
-        {showSyncCode && <SyncCodeModal onClose={() => { setShowSyncCode(false); setSyncImportCode(undefined); }} initialImportCode={syncImportCode} />}
-        {showGallery && <ModelGallery onClose={() => setShowGallery(false)} />}
-        {showDiscord && <DiscordSettingsModal onClose={() => setShowDiscord(false)} />}
+        {modalRenderPolicy.renderAppModals && (
+          <>
+            {showStats && <StatsModal onClose={() => setShowStats(false)} />}
+            {showFateThread && <FateThread onClose={() => setShowFateThread(false)} />}
+            {showReference && <ReferenceModal onClose={() => setShowReference(false)} />}
+            {showOracle && <OracleSearch onClose={() => setShowOracle(false)} />}
+            {showStrategy && <StrategyGuide onClose={() => setShowStrategy(false)} />}
+            {showSupplyChain && <SupplyChainCalculator initialQuery={supplyChainPreset} onClose={() => { setShowSupplyChain(false); setSupplyChainPreset(undefined); }} />}
+            {showGameMode && <GameModePicker onClose={() => setShowGameMode(false)} />}
+            {showSyncCode && <SyncCodeModal onClose={() => { setShowSyncCode(false); setSyncImportCode(undefined); }} initialImportCode={syncImportCode} />}
+            {showGallery && <ModelGallery onClose={() => setShowGallery(false)} />}
+            {showDiscord && <DiscordSettingsModal onClose={() => setShowDiscord(false)} />}
+          </>
+        )}
+        {showChangelog && (
+          <ChangelogModal release={LATEST_CHANGELOG} onClose={closeChangelog} />
+        )}
       </Suspense>
 
       <Header
@@ -693,14 +742,15 @@ const GameLayout = () => {
         setShowGameMode={setShowGameMode}
         setShowSyncCode={setShowSyncCode}
         setShowDiscord={setShowDiscord}
+        onOpenChangelog={openChangelog}
       />
 
       {/* Global ⌘K command palette — navigates via fate:nav events. */}
-      <CommandPalette />
+      {modalRenderPolicy.renderGlobalDialogOverlays && <CommandPalette />}
       {/* Replayable spotlight tour — start via fate:start-tour. */}
-      <GuidedTour />
+      {modalRenderPolicy.renderGlobalDialogOverlays && <GuidedTour />}
       {/* Quest-complete celebration with the wiki reward scroll. */}
-      <QuestCompleteOverlay />
+      {modalRenderPolicy.renderGlobalDialogOverlays && <QuestCompleteOverlay />}
 
       {/* One contextual "next step" hint under the header — teaches the loop. */}
       <CoachStrip />
@@ -730,7 +780,7 @@ const GameLayout = () => {
             </div>
             <div className="flex-1 min-h-0">
               <PanelErrorBoundary name="Control panel">
-                <ControlPanel />
+                <ControlPanel suspendModals={modalRenderPolicy.suspendDashboardModals} />
               </PanelErrorBoundary>
             </div>
           </div>
@@ -739,7 +789,7 @@ const GameLayout = () => {
           <div className="lg:col-span-8 h-full min-h-[500px] flex flex-col gap-4">
              <div className="flex-1 overflow-hidden h-full">
                <PanelErrorBoundary name="Dashboard">
-                 <Dashboard />
+                 <Dashboard suspendModals={modalRenderPolicy.suspendDashboardModals} />
                </PanelErrorBoundary>
              </div>
           </div>

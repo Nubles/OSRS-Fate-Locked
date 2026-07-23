@@ -33,7 +33,9 @@ const topBonus = (b: GearBonuses): string => {
   return '';
 };
 
-export const GearView: React.FC = () => {
+interface GearViewProps { suspendModals?: boolean }
+
+export const GearView: React.FC<GearViewProps> = ({ suspendModals = false }) => {
   const { unlocks, loadout, setLoadoutSlot } = useGame();
   const equipped = loadout || {};
   const [status, setStatus] = useState<Status>(gearService.ready ? 'ready' : 'loading');
@@ -142,7 +144,7 @@ export const GearView: React.FC = () => {
       </div>
 
       {/* Picker */}
-      {selected && (
+      {!suspendModals && selected && (
         <GearPicker
           slot={selected}
           status={status}

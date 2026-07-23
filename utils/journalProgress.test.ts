@@ -5,10 +5,10 @@ import type { DiaryTier } from '../data/diaryData';
 import type { UnlockState } from '../types';
 
 const u = (o: Partial<UnlockState>): UnlockState =>
-  ({ regions: [], quests: [], skills: {}, levels: {}, ...o } as UnlockState);
+  ({ regions: [], quests: [], skills: {}, levels: {}, guilds: [], ...o } as UnlockState);
 
 const quest = (over: Partial<QuestData>): QuestData =>
-  ({ id: 'q', name: 'Q', regions: [], skills: {}, prereqs: [], points: 1 } as unknown as QuestData);
+  ({ id: 'q', name: 'Q', regions: [], skills: {}, prereqs: [], points: 1, ...over } as unknown as QuestData);
 
 describe('questUnmet', () => {
   it('returns nothing when everything is met', () => {
@@ -23,6 +23,18 @@ describe('questUnmet', () => {
     const q = { ...quest({}), skills: { Cooking: 30 } } as QuestData;
     expect(questUnmet(q, u({ skills: { Cooking: 3 }, levels: { Cooking: 35 } }))).toEqual([]);
     expect(questUnmet(q, u({ skills: { Cooking: 3 }, levels: { Cooking: 20 } })).length).toBe(1);
+  });
+  it('reports method-cap and alternative-access blockers', () => {
+    expect(questUnmet(quest({ skills: { Woodcutting: 15 } }), u({
+      skills: { Woodcutting: 1 }, levels: { Woodcutting: 15 },
+    }))).toEqual([{ kind: 'skill', label: 'Woodcutting 15' }]);
+
+    expect(questUnmet(quest({ oneOf: [
+      { regions: ['East Ardougne'] },
+      { guilds: ["Wizards' Guild"] },
+    ] }), u({}))).toEqual([{
+      kind: 'region', label: "East Ardougne or Wizards' Guild",
+    }]);
   });
 });
 

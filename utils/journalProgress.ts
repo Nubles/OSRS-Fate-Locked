@@ -11,6 +11,11 @@ import { QuestData, QUEST_DATA } from '../data/questData';
 import { DiaryTier } from '../data/diaryData';
 import { UnlockState } from '../types';
 import { questLocations, refineQuestRegion } from './questLocations';
+import {
+  meetsSkillRequirement,
+  questAlternativesMet,
+  questRequirementOptionLabel,
+} from './journalStatus';
 import { isAreaReachable } from './reachability';
 
 export interface Unmet {
@@ -22,9 +27,9 @@ const skillUnmet = (skills: Record<string, number>, unlocks: UnlockState, qp: nu
   const out: Unmet[] = [];
   for (const [skill, lvl] of Object.entries(skills)) {
     if (skill === 'Quest Points') { if (qp < lvl) out.push({ kind: 'qp', label: `${lvl} QP` }); continue; }
-    const have = unlocks.levels[skill] ?? 1;
-    const unlocked = (unlocks.skills[skill] ?? 0) > 0;
-    if (!unlocked || have < lvl) out.push({ kind: 'skill', label: `${skill} ${lvl}` });
+    if (!meetsSkillRequirement(unlocks, skill, lvl)) {
+      out.push({ kind: 'skill', label: `${skill} ${lvl}` });
+    }
   }
   return out;
 };
@@ -38,6 +43,12 @@ export const questUnmet = (q: QuestData, unlocks: UnlockState, gameModeId?: stri
   const gated = q.regions.filter(r => !isAreaReachable(r, unlocks, gameModeId));
   const region = refineQuestRegion(gated.length === 0, questLocations(q.name, unlocks, gameModeId));
   if (!region.met) for (const r of gated) out.push({ kind: 'region', label: r });
+  if (!questAlternativesMet(q, unlocks, gameModeId)) {
+    out.push({
+      kind: 'region',
+      label: q.oneOf!.map(questRequirementOptionLabel).join(' or '),
+    });
+  }
   out.push(...skillUnmet(q.skills as Record<string, number>, unlocks, currentQP(unlocks)));
   for (const p of q.prereqs) if (!unlocks.quests.includes(p)) out.push({ kind: 'quest', label: p });
   return out;

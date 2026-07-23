@@ -71,6 +71,9 @@ const STEP_ICON: Record<PlanStep['kind'], React.ReactNode> = {
 const stepWikiHref = (step: PlanStep): string =>
   wikiUrlFor(step.kind === 'qp' ? 'Quest points' : step.label);
 
+export const goalPlannerStepHasWikiLink = (step: PlanStep): boolean =>
+  !step.id.startsWith('alternative:');
+
 const StepRow: React.FC<{ step: PlanStep; index?: number }> = ({ step, index }) => (
   <div
     className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md border text-left transition-colors ${
@@ -90,18 +93,28 @@ const StepRow: React.FC<{ step: PlanStep; index?: number }> = ({ step, index }) 
       </span>
     )}
     <span className="text-gray-500 shrink-0" aria-hidden>{STEP_ICON[step.kind]}</span>
-    <a
-      href={stepWikiHref(step)}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={(e) => e.stopPropagation()}
-      title={`Open ${step.label} on the OSRS Wiki`}
-      className={`text-[11px] font-semibold truncate flex-1 hover:underline transition-colors ${
-        step.done ? 'text-gray-500 line-through hover:text-gray-400' : 'text-gray-200 hover:text-cyan-300'
-      }`}
-    >
-      {step.label}
-    </a>
+    {goalPlannerStepHasWikiLink(step) ? (
+      <a
+        href={stepWikiHref(step)}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        title={`Open ${step.label} on the OSRS Wiki`}
+        className={`text-[11px] font-semibold truncate flex-1 hover:underline transition-colors ${
+          step.done ? 'text-gray-500 line-through hover:text-gray-400' : 'text-gray-200 hover:text-cyan-300'
+        }`}
+      >
+        {step.label}
+      </a>
+    ) : (
+      <span
+        className={`text-[11px] font-semibold truncate flex-1 ${
+          step.done ? 'text-gray-500 line-through' : 'text-gray-200'
+        }`}
+      >
+        {step.label}
+      </span>
+    )}
     {step.detail && (
       <span className="text-[9px] text-gray-500 font-mono shrink-0">{step.detail}</span>
     )}

@@ -19,6 +19,7 @@ import { VoidReveal } from './VoidReveal';
 import { TableType } from '../types';
 import { wikiService } from '../services/WikiService';
 import { NoteTrigger } from './NoteTrigger';
+import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 // RegionMap is the single heaviest component in the app (map surface,
 // authoring tool, chunk overlays + their data). It only renders on the World
 // tab, so keep it out of the initial bundle.
@@ -166,6 +167,7 @@ interface UnlockCardProps {
   subText?: string;
   region?: string;
   req?: ActivityReq;
+  suspendModals?: boolean;
 }
 
 const UnlockCard: React.FC<UnlockCardProps> = ({
@@ -176,7 +178,8 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
   onClick,
   subText,
   region,
-  req
+  req,
+  suspendModals = false,
 }) => {
   // Image priority: a hand-picked sprite/icon → the item's real OSRS wiki image
   // (fetched + cached via WikiService) → the globe placeholder. Self-heals: if a
@@ -216,7 +219,7 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
         `}
     >
         <div className="absolute top-1 right-1 z-10">
-            <NoteTrigger id={item} title={item} />
+            <NoteTrigger id={item} title={item} suspendModals={suspendModals} />
         </div>
 
         <div className={`w-10 h-10 rounded flex items-center justify-center shrink-0 ${isUnlocked ? 'bg-black/30' : 'bg-black/20'}`}>
@@ -311,7 +314,11 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
 
 // --- Main Dashboard Component ---
 
-export const Dashboard: React.FC = () => {
+interface DashboardProps {
+  suspendModals?: boolean;
+}
+
+export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) => {
   const { unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId, customMode } = useGame();
   const activeMode = getGameMode(gameModeId);
   const [activeTab, setActiveTab] = useState('CHARACTER');
@@ -342,8 +349,8 @@ export const Dashboard: React.FC = () => {
   const [unlockReveal, dismissReveal] = useUnlockReveal(unlocks, gameModeId);
   const [achievementReveal, dismissAchievementReveal] = useAchievementReveal(unlocks);
 
-  useEscapeKey(() => setShowRunCard(false), showRunCard);
-  useEscapeKey(() => setSelectedSkillForDetails(null), selectedSkillForDetails !== null);
+  useEscapeKey(() => setShowRunCard(false), showRunCard && !suspendModals);
+  useEscapeKey(() => setSelectedSkillForDetails(null), selectedSkillForDetails !== null && !suspendModals);
 
   // The Journal summary card lives in the persistent left sidebar (App.tsx), so
   // it can't set this component's tab state directly. It dispatches a
@@ -459,12 +466,12 @@ export const Dashboard: React.FC = () => {
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-full overflow-y-auto pr-2 custom-scrollbar pb-10">
         {/* Equipment Lab — interactive paper-doll (click a slot for its tier
             ladder + upgrade), a target-loadout planner, and a DPS calculator. */}
-        <EquipmentLab onUpgrade={(slot) => handleSpecialUnlock(TableType.EQUIPMENT, slot)} />
+        <EquipmentLab onUpgrade={(slot) => handleSpecialUnlock(TableType.EQUIPMENT, slot)} suspendModals={suspendModals} />
 
         {/* Skills Section */}
         <div className="space-y-4">
             <div className="flex justify-between items-center bg-[#151515] p-2 rounded border border-white/5">
-                <h3 className="text-blue-400 font-bold text-sm flex items-center gap-1.5">Skills <SectionGuide id="SKILLS" /></h3>
+                <h3 className="text-blue-400 font-bold text-sm flex items-center gap-1.5">Skills <SectionGuide id="SKILLS" suspendModals={suspendModals} /></h3>
                 <span className="text-xs text-blue-400/60 font-mono">{totalSkillTiers}/{SKILLS_LIST.length * 10} Tiers</span>
             </div>
 
@@ -517,7 +524,7 @@ export const Dashboard: React.FC = () => {
                         >
                             {/* Note Trigger */}
                             <div className="absolute top-1 right-1 z-30">
-                                <NoteTrigger id={skill} title={skill} />
+                                <NoteTrigger id={skill} title={skill} suspendModals={suspendModals} />
                             </div>
 
                             {/* Omni Upgrade Button */}
@@ -613,6 +620,7 @@ export const Dashboard: React.FC = () => {
                     isUnlocked={isUnlocked}
                     canUnlock={canUnlock}
                     icon={iconMap ? iconMap[item] : undefined}
+                    suspendModals={suspendModals}
                     onClick={() => handleSpecialUnlock(type, item)}
                     subText={sub}
                     region={getActivityRegion(label)}
@@ -664,7 +672,7 @@ export const Dashboard: React.FC = () => {
                   <div className="bg-[#1a1a1a] rounded border border-emerald-500/30 p-3 relative overflow-hidden group">
                       <div className="absolute inset-0 bg-emerald-900/5 pointer-events-none"></div>
                       <div className="absolute top-1 right-1 z-20">
-                            <NoteTrigger id="Misthalin" title="Misthalin" />
+                            <NoteTrigger id="Misthalin" title="Misthalin" suspendModals={suspendModals} />
                       </div>
                       {(() => {
                         const freeCount = MISTHALIN_AREAS.filter(a => isAreaReachable(a, unlocks, gameModeId)).length;
@@ -724,7 +732,7 @@ export const Dashboard: React.FC = () => {
                           return (
                               <div key={group} data-region-card={group} className="bg-[#1a1a1a] rounded border border-white/5 p-3 h-full relative transition-shadow duration-300">
                                   <div className="absolute top-1 right-1 z-20">
-                                        <NoteTrigger id={group} title={group} />
+                                        <NoteTrigger id={group} title={group} suspendModals={suspendModals} />
                                   </div>
                                   <div className="flex items-center gap-2 mb-2 pr-6">
                                       <img src={`https://oldschool.runescape.wiki/images/${REGION_ICONS[group] || 'Globe_icon.png'}`} className="w-5 h-5 object-contain" />
@@ -793,7 +801,7 @@ export const Dashboard: React.FC = () => {
         { id: 'FARMING',   label: 'Farming Patches',    color: 'text-green-400',  bar: 'bg-green-500',  list: FARMING_PATCH_LIST, unlocked: unlocks.farming,   type: TableType.FARMING_LAYERS, details: FARMING_UNLOCK_DETAILS },
         { id: 'MOBILITY',  label: 'Mobility',           color: 'text-amber-400',  bar: 'bg-amber-500',  list: MOBILITY_LIST,      unlocked: unlocks.mobility,  type: TableType.MOBILITY },
         { id: 'GUILDS',    label: 'Guilds',             color: 'text-teal-400',   bar: 'bg-teal-500',   list: GUILDS_LIST,        unlocked: unlocks.guilds,    type: TableType.GUILDS },
-        { id: 'ARCANA',    label: 'Arcana',             color: 'text-violet-400', bar: 'bg-violet-500', list: ARCANA_LIST,        unlocked: unlocks.arcana,    type: TableType.ARCANA },
+        { id: 'ARCANA',    label: COMBAT_POWERS_LABEL,  color: 'text-violet-400', bar: 'bg-violet-500', list: ARCANA_LIST,        unlocked: unlocks.arcana,    type: TableType.ARCANA },
         { id: 'POH',       label: 'Player Owned House', color: 'text-orange-400', bar: 'bg-orange-500', list: POH_LIST,           unlocked: unlocks.housing,   type: TableType.POH },
         { id: 'STORAGE',   label: 'Storage',            color: 'text-amber-600',  bar: 'bg-amber-600',  list: STORAGE_LIST,       unlocked: unlocks.storage,   type: TableType.STORAGE },
         { id: 'MERCHANTS', label: 'Merchants',          color: 'text-yellow-400', bar: 'bg-yellow-500', list: MERCHANTS_LIST,     unlocked: unlocks.merchants, type: TableType.MERCHANTS },
@@ -905,8 +913,8 @@ export const Dashboard: React.FC = () => {
           {advisorsEnabled && <JournalNextBest onPick={setJournalSubTab} />}
           <div className="flex-1 overflow-hidden p-2">
               <Suspense fallback={<ModalFallback />}>
-                  {journalSubTab === 'QUESTS' && <QuestLog searchTerm={searchQuery} />}
-                  {journalSubTab === 'DIARIES' && <DiaryLog searchTerm={searchQuery} />}
+                  {journalSubTab === 'QUESTS' && <QuestLog searchTerm={searchQuery} suspendModals={suspendModals} />}
+                  {journalSubTab === 'DIARIES' && <DiaryLog searchTerm={searchQuery} suspendModals={suspendModals} />}
                   {journalSubTab === 'CA' && <CALog searchTerm={searchQuery} />}
                   {journalSubTab === 'DOABLE' && <QuestDoabilityPanel searchTerm={searchQuery} />}
               </Suspense>
@@ -917,11 +925,11 @@ export const Dashboard: React.FC = () => {
   return (
     <>
     <div className="bg-osrs-panel border border-osrs-border rounded-lg shadow-lg flex flex-col h-full overflow-hidden relative">
-      {pendingSpecial && (
+      {!suspendModals && pendingSpecial && (
           <VoidReveal itemName={pendingSpecial.item} itemType={pendingSpecial.table} itemImage={pendingSpecial.image} onComplete={finalizeSpecial} animationsEnabled={animationsEnabled} />
       )}
 
-      {selectedSkillForDetails && (
+      {!suspendModals && selectedSkillForDetails && (
           <Suspense fallback={<ModalFallback />}>
               <SkillDetailModal
                   skill={selectedSkillForDetails.name}
@@ -932,7 +940,7 @@ export const Dashboard: React.FC = () => {
       )}
 
       {/* Confirmation Modal */}
-      {confirmOmni && (
+      {!suspendModals && confirmOmni && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
               <div className="bg-[#1a1a1a] border border-purple-500/50 rounded-xl shadow-2xl p-6 max-w-sm w-full relative">
                   <div className="flex items-center gap-3 mb-4">
@@ -1098,7 +1106,7 @@ export const Dashboard: React.FC = () => {
               >
                   <Filter size={14} />
               </button>
-              <SectionGuide id={activeTab} className="p-1" />
+              <SectionGuide id={activeTab} className="p-1" suspendModals={suspendModals} />
           </div>
       </div>
 
@@ -1128,44 +1136,44 @@ export const Dashboard: React.FC = () => {
           </div>
       </div>
     </div>
-    {showRunCard && (
+    {!suspendModals && showRunCard && (
       <Suspense fallback={<ModalFallback label="Building share card…" />}>
         <ShareModal onClose={() => setShowRunCard(false)} />
       </Suspense>
     )}
 
-    {showGoalPlanner && (
+    {!suspendModals && showGoalPlanner && (
       <Suspense fallback={<ModalFallback label="Loading planner…" />}>
         <GoalPlannerModal onClose={() => { setShowGoalPlanner(false); setGoalTarget(null); }} initialTarget={goalTarget} />
       </Suspense>
     )}
 
-    {showAchievements && (
+    {!suspendModals && showAchievements && (
       <Suspense fallback={<ModalFallback label="Loading achievements…" />}>
         <AchievementsModal onClose={() => setShowAchievements(false)} />
       </Suspense>
     )}
 
-    {showForecast && (
+    {!suspendModals && showForecast && (
       <Suspense fallback={<ModalFallback label="Consulting Fate…" />}>
         <FateForecastModal onClose={() => setShowForecast(false)} />
       </Suspense>
     )}
 
-    {showRival && (
+    {!suspendModals && showRival && (
       <Suspense fallback={<ModalFallback label="Summoning your rival…" />}>
         <RivalModal onClose={() => setShowRival(false)} />
       </Suspense>
     )}
 
-    {showBossPlanner && (
+    {!suspendModals && showBossPlanner && (
       <Suspense fallback={<ModalFallback label="Loading kill planner…" />}>
         <BossKillPlanner onClose={() => setShowBossPlanner(false)} />
       </Suspense>
     )}
 
     {/* Celebratory reveal when a milestone is newly earned. */}
-    {achievementReveal && (
+    {!suspendModals && achievementReveal && (
       <AchievementReveal
         data={achievementReveal}
         onDismiss={dismissAchievementReveal}
@@ -1175,7 +1183,7 @@ export const Dashboard: React.FC = () => {
 
     {/* Unlock reveal — slides in from the right when a quest or region
         unlocks and shows what new content just became available. */}
-    {unlockReveal && (
+    {!suspendModals && unlockReveal && (
       <UnlockReveal
         data={unlockReveal}
         onDismiss={dismissReveal}

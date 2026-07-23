@@ -99,6 +99,37 @@ describe('planForTarget — quests', () => {
     expect(plan.regionSteps.length).toBeGreaterThan(0);
     for (const r of plan.regionSteps) expect(r.done).toBe(false);
   });
+  it('does not mark a cap-blocked skill requirement complete', () => {
+    const plan = planForTarget('quest', 'Doric\'s Quest', maxedUnlocks({
+      regions: ['Asgarnia'],
+      skills: { Mining: 1 },
+      levels: { Mining: 15 },
+    }))!;
+
+    expect(plan.skillSteps).toEqual([
+      expect.objectContaining({
+        id: 'Mining',
+        done: false,
+        detail: expect.stringContaining('method cap 10'),
+      }),
+    ]);
+    expect(plan.alreadyReachable).toBe(false);
+  });
+
+  it('surfaces an actionable alternative-access step for oneOf quests', () => {
+    const plan = planForTarget('quest', 'Enter the Abyss', maxedUnlocks({
+      quests: ['Rune Mysteries'],
+    }))!;
+
+    expect(plan.regionSteps).toEqual([
+      expect.objectContaining({
+        done: false,
+        label: "One of: East Ardougne or Tree Gnome Stronghold or Wizards' Guild",
+        detail: 'Unlock any listed route',
+      }),
+    ]);
+    expect(plan.alreadyReachable).toBe(false);
+  });
 });
 
 describe('planForTarget — diaries', () => {

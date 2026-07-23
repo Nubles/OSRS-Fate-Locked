@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from './rules';
-import { DropSource } from '../types';
+import { DropSource, TableType } from '../types';
 import {
   EARN_METHODS, KEY_TYPES, SPEND_TABLES, RITUALS,
   SKILLS_TIER_CAP, LEVEL_ROLL_MAX, earnRange,
@@ -56,6 +56,15 @@ describe('economy ↔ engine consistency', () => {
   it('lists every spend table with a non-empty pool', () => {
     expect(SPEND_TABLES.length).toBeGreaterThanOrEqual(12);
     for (const t of SPEND_TABLES) expect(t.count, t.label).toBeGreaterThan(0);
+  });
+
+  it('presents Arcana as Combat Powers without changing its type', () => {
+    const table = SPEND_TABLES.find(t => t.type === TableType.ARCANA);
+    expect(TableType.ARCANA).toBe('Arcana');
+    expect(table).toMatchObject({
+      label: 'Combat Powers',
+      blurb: 'Spellbooks, prayers, and special combat systems.',
+    });
   });
 
   it('keeps tier caps aligned with the engine', () => {

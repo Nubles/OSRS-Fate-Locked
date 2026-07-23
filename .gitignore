@@ -39,3 +39,7 @@ runelite-plugin/.gradle/
 osrs-cache/
 *.dat2
 main_file_cache.*
+
+# Local isolated feature worktrees
+.worktrees/
+.superpowers/

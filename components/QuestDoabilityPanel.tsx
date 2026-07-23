@@ -1,14 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, Lock, Route, MapPin, ChevronDown, ChevronRight, ExternalLink, AlertTriangle, HelpCircle } from 'lucide-react';
 import { useGame } from '../context/GameContext';
-import { QUEST_DATA } from '../data/questData';
+import { QuestData, QUEST_DATA } from '../data/questData';
 import { chunkContentService } from '../services/ChunkContentService';
 import { chunkReachability } from '../utils/chunkReach';
 import { chunkForPlace, chunkUnlocked, placeOf, showChunkOnMap } from '../utils/chunkLocations';
 import { questLocations } from '../utils/questLocations';
-import { questChunkStatus, doabilityBucket, DoabilityBucket, entryBlockedGate } from '../utils/questDoability';
+import { questChunkStatus, doabilityBucket, DoabilityBucket, entryBlockedGate, QuestChunkStatus } from '../utils/questDoability';
 import { isAreaReachable } from '../utils/reachability';
+import {
+  getQuestStatus, meetsSkillRequirement, questAlternativesMet,
+  questRequirementOptionLabel,
+} from '../utils/journalStatus';
 import { WIKI_OVERRIDES } from '../constants';
+import { UnlockState } from '../types';
 
 interface Props { searchTerm?: string }
 
@@ -28,16 +33,113 @@ const BUCKET_META: Record<DoabilityBucket, { label: string; cls: string; dot: st
 };
 const ORDER: DoabilityBucket[] = ['DOABLE', 'REQS', 'STRANDED', 'LOCKED', 'NO_DATA', 'DONE'];
 
-interface Row {
+export interface QuestDoabilityEvaluation {
   id: string;
   bucket: DoabilityBucket;
   reqsMet: boolean;
-  missingSkills: { skill: string; lvl: number; have: number }[];
+  missingSkills: {
+    skill: string; lvl: number; have: number; methodCap?: number;
+  }[];
   missingPrereqs: string[];
   lockedAreas: string[];
+}
+
+interface Row extends QuestDoabilityEvaluation {
   strandedChunk: { cx: number; cy: number; label: string } | null;
 }
 
+export const evaluateQuestDoability = (
+  quest: QuestData,
+  unlocks: UnlockState,
+  chunk: QuestChunkStatus | null,
+  chunkLockedAreas: string[] = [],
+  gameModeId?: string,
+): QuestDoabilityEvaluation => {
+  const completed = unlocks.quests.includes(quest.id);
+  const currentQP = unlocks.quests.reduce(
+    (total, qid) => total + (QUEST_DATA[qid]?.points ?? 0),
+    0,
+  );
+  const missingSkills: QuestDoabilityEvaluation['missingSkills'] = [];
+  for (const [skill, lvl] of Object.entries(quest.skills)) {
+    if (skill === 'Quest Points') {
+      if (currentQP < lvl) {
+        missingSkills.push({ skill, lvl, have: currentQP });
+      }
+      continue;
+    }
+    if (!meetsSkillRequirement(unlocks, skill, lvl)) {
+      const tier = unlocks.skills[skill] ?? 0;
+      const unlocked = tier > 0;
+      missingSkills.push({
+        skill,
+        lvl,
+        have: unlocked ? (unlocks.levels[skill] ?? 1) : 0,
+        methodCap: unlocked ? Math.min(99, tier * 10) : undefined,
+      });
+    }
+  }
+
+  const missingPrereqs = quest.prereqs.filter(
+    qid => !unlocks.quests.includes(qid),
+  );
+  const alternativeMet = questAlternativesMet(quest, unlocks, gameModeId);
+  const requirementStatus = getQuestStatus(
+    quest,
+    unlocks,
+    gameModeId,
+    { requiredRegionsReachable: true },
+  );
+  const reqsMet = requirementStatus === 'AVAILABLE'
+    || requirementStatus === 'COMPLETED';
+  const authoredBlockers = quest.regions.filter(
+    region => !isAreaReachable(region, unlocks, gameModeId),
+  );
+  const alternativeBlockers = alternativeMet
+    ? []
+    : [`One of: ${quest.oneOf!.map(questRequirementOptionLabel).join(' or ')}`];
+
+  let bucket: DoabilityBucket;
+  if (completed) {
+    bucket = 'DONE';
+  } else if (!alternativeMet) {
+    bucket = 'LOCKED';
+  } else if (chunk) {
+    bucket = doabilityBucket(false, reqsMet, chunk);
+  } else {
+    bucket = authoredBlockers.length > 0
+      ? 'LOCKED'
+      : reqsMet ? 'DOABLE' : 'REQS';
+  }
+
+  const lockedAreas = bucket !== 'LOCKED'
+    ? []
+    : [...new Set([
+      ...(chunk?.access === 'LOCKED' ? chunkLockedAreas : []),
+      ...(!chunk ? authoredBlockers : []),
+      ...alternativeBlockers,
+    ])];
+
+  return {
+    id: quest.id,
+    bucket,
+    reqsMet,
+    missingSkills,
+    missingPrereqs,
+    lockedAreas,
+  };
+};
+
+export const questDoabilitySkillBlockerLabel = (
+  blocker: QuestDoabilityEvaluation['missingSkills'][number],
+): string => {
+  const capSuffix = blocker.methodCap !== undefined
+    && blocker.have >= blocker.lvl
+    && blocker.methodCap < blocker.lvl
+    ? ` (method cap ${blocker.methodCap})`
+    : '';
+  return `${blocker.skill} ${blocker.lvl}${capSuffix}`;
+};
 export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
   const { unlocks, gameModeId } = useGame();
   const [ready, setReady] = useState(chunkContentService.ready);
@@ -53,43 +155,27 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
     const gate = entryBlockedGate(chunkContentService.questSections(), completed, known);
     const reach = chunkReachability(chunkContentService.connectGraph(), unlocks, chunkForPlace('Lumbridge'), gate, gameModeId);
     const isUnlocked = (cx: number, cy: number) => chunkUnlocked(cx, cy, unlocks, gameModeId);
-    const currentQP = (unlocks.quests as string[]).reduce((a, qid) => a + (QUEST_DATA[qid]?.points ?? 0), 0);
-
     return Object.values(QUEST_DATA).map((q) => {
-      const completed = unlocks.quests.includes(q.id);
-
-      // Requirement axis (skills + prereqs + QP) — region is handled by chunks.
-      const missingSkills: Row['missingSkills'] = [];
-      for (const [skill, lvl] of Object.entries(q.skills as Record<string, number>)) {
-        if (skill === 'Quest Points') { if (currentQP < lvl) missingSkills.push({ skill: 'Quest Points', lvl, have: currentQP }); continue; }
-        const have = unlocks.levels[skill] ?? 1;
-        const unlocked = (unlocks.skills[skill] ?? 0) > 0;
-        if (!unlocked || have < lvl) missingSkills.push({ skill, lvl, have: unlocked ? have : 0 });
-      }
-      const missingPrereqs = q.prereqs.filter((qid: string) => !unlocks.quests.includes(qid));
-      const reqsMet = missingSkills.length === 0 && missingPrereqs.length === 0;
-
-      // Chunk-access axis. When we have no chunk evidence, fall back to the
-      // hand-authored region gate so a region-locked quest can't read "doable".
       const hit = chunkContentService.entityLocations(q.id, ['quest']);
       const chunk = hit ? questChunkStatus(hit.locations, reach.reachable, isUnlocked) : null;
-      const authoredRegionMet = q.regions.every((r: string) => isAreaReachable(r, unlocks, gameModeId));
-      let bucket: DoabilityBucket;
-      if (chunk) {
-        bucket = doabilityBucket(completed, reqsMet, chunk);
-      } else {
-        bucket = completed ? 'DONE' : !authoredRegionMet ? 'LOCKED' : reqsMet ? 'DOABLE' : 'REQS';
-      }
+      const chunkLockedAreas = chunk?.access === 'LOCKED'
+        ? questLocations(q.id, unlocks, gameModeId).lockedPlaces.map(place => place.label)
+        : [];
+      const evaluation = evaluateQuestDoability(
+        q, unlocks, chunk, chunkLockedAreas, gameModeId,
+      );
+      const strandedFirst = evaluation.bucket === 'STRANDED'
+        ? chunk?.blockers.find(blocker => blocker.access === 'STRANDED')
+        : null;
+      const strandedChunk = strandedFirst
+        ? {
+            cx: strandedFirst.cx,
+            cy: strandedFirst.cy,
+            label: placeOf(strandedFirst.cx, strandedFirst.cy).label,
+          }
+        : null;
 
-      // Blocker detail for the row.
-      const lockedAreas = bucket !== 'LOCKED' ? []
-        : chunk
-          ? [...new Set(questLocations(q.id, unlocks, gameModeId).lockedPlaces.map(p => p.label))]
-          : q.regions.filter((r: string) => !isAreaReachable(r, unlocks, gameModeId));
-      const strandedFirst = bucket === 'STRANDED' ? chunk?.blockers.find(b => b.access === 'STRANDED') : null;
-      const strandedChunk = strandedFirst ? { cx: strandedFirst.cx, cy: strandedFirst.cy, label: placeOf(strandedFirst.cx, strandedFirst.cy).label } : null;
-
-      return { id: q.id, bucket, reqsMet, missingSkills, missingPrereqs, lockedAreas, strandedChunk };
+      return { ...evaluation, strandedChunk };
     });
   }, [ready, unlocks, gameModeId]);
 
@@ -149,7 +235,7 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
                       {r.bucket === 'DOABLE' && <span className="text-emerald-400 flex items-center gap-1 justify-end"><CheckCircle2 size={11} /> ready</span>}
                       {r.bucket === 'REQS' && (
                         <span className="text-amber-300/90">
-                          {r.missingSkills.map(s => `${s.skill} ${s.lvl}`).concat(r.missingPrereqs.map(p => `✦ ${p}`)).slice(0, 3).join(', ')}
+                          {r.missingSkills.map(questDoabilitySkillBlockerLabel).concat(r.missingPrereqs.map(p => `✦ ${p}`)).slice(0, 3).join(', ')}
                           {(r.missingSkills.length + r.missingPrereqs.length) > 3 ? '…' : ''}
                         </span>
                       )}
