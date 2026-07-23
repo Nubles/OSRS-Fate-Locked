@@ -42,3 +42,4 @@ main_file_cache.*
 
 # Local isolated feature worktrees
 .worktrees/
+.superpowers/
