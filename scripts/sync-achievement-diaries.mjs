@@ -301,6 +301,28 @@ export function renderTaskIdMigrations(snapshot) {
   return lines.join('\n');
 }
 
+export function checkGeneratedDiary(
+  snapshot,
+  diaryOutput,
+  migrationOutput = renderTaskIdMigrations(snapshot),
+) {
+  const errors = [];
+  if (diaryOutput !== renderDiaryTasks(snapshot)) {
+    errors.push('data/diaryTasks.ts is out of date');
+  }
+  if (migrationOutput !== renderTaskIdMigrations(snapshot)) {
+    errors.push('utils/taskIdMigrations.ts is out of date');
+  }
+  return { ok: errors.length === 0, errors };
+}
+
+export function checkGeneratedDiaryFiles({ snapshotPath, diaryPath, migrationPath }) {
+  const snapshot = JSON.parse(readFileSync(snapshotPath, 'utf8').replace(/^\uFEFF/, ''));
+  const diaryOutput = readFileSync(diaryPath, 'utf8');
+  const migrationOutput = readFileSync(migrationPath, 'utf8');
+  return checkGeneratedDiary(snapshot, diaryOutput, migrationOutput);
+}
+
 const unwrapTsExpression = (expression) => {
   let node = expression;
   while (
@@ -585,6 +607,21 @@ const run = () => {
   console.log('renamed/replaced aliases: ' + audit.renamedOrReplacedAliases);
   console.log('retired existing ids: ' + audit.retiredExistingIds);
   console.log('new canonical ids: ' + audit.newCanonicalIds);
+
+  if (process.argv.includes('--check')) {
+    const result = checkGeneratedDiaryFiles({
+      snapshotPath,
+      diaryPath: outputPath,
+      migrationPath,
+    });
+    if (result.ok) {
+      console.log('[diary:verify] generated files are current.');
+    } else {
+      for (const error of result.errors) console.error('[diary:verify] ' + error);
+      process.exitCode = 1;
+    }
+    return;
+  }
 
   writeFileSync(outputPath, renderDiaryTasks(snapshot), 'utf8');
   writeFileSync(migrationPath, renderTaskIdMigrations(snapshot), 'utf8');

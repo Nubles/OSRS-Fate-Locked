@@ -12,9 +12,12 @@ import { CA_DATA } from './caData';
 import { LATEST_CHANGELOG } from './changelog';
 import diarySource from './sources/achievement-diary-tasks.json';
 import caSource from './sources/combat-achievement-tasks.json';
+import legacyDiaryIds from './sources/achievement-diary-legacy-ids.json';
 import { rankAvailableQuests } from '../utils/questAdvisor';
 import { planForTarget } from '../utils/goalPlanner';
 import { questCompletionDecision } from '../utils/journalCompletion';
+import { CA_TASK_POINTS, CA_TIER_ORDER } from '../utils/caProgress';
+import { DIARY_TASK_ID_MIGRATIONS } from '../utils/taskIdMigrations';
 
 const maxedChunkedUnlocks = (chunks: string[]) => ({
   equipment: {},
@@ -261,5 +264,161 @@ describe('deterministic current content baseline', () => {
       /^202[5-6]-/.test(source.revisionTimestamp),
     )).toBe(true);
     expect(caSource.tasks).toHaveLength(646);
+  });
+});
+
+describe('independent generated-content contract', () => {
+  it('classifies every historical Diary id exactly once', () => {
+    const historicalIds = [
+      ...diarySource.tasks
+        .filter(task => task.classification === 'preserved-exact'
+          || task.classification === 'preserved-semantic')
+        .map(task => task.id),
+      ...diarySource.tasks
+        .filter(task => task.classification === 'renamed-or-replaced')
+        .flatMap(task => task.aliases),
+      ...diarySource.retired.map(task => task.id),
+    ];
+
+    expect(diarySource.classification).toEqual({
+      existingRows: 485,
+      preservedIds: 471,
+      renamedOrReplacedAliases: 0,
+      retiredExistingIds: 14,
+      newCanonicalIds: 21,
+      unresolvedExistingRows: 0,
+      unresolvedDuplicateIds: 0,
+      unknownReferences: 0,
+      combatLevelRequirementsRecordedOnly: 9,
+    });
+    expect(historicalIds).toHaveLength(485);
+    expect(new Set(historicalIds).size).toBe(485);
+    expect([...historicalIds].sort()).toEqual([...legacyDiaryIds.ids].sort());
+    expect(legacyDiaryIds.source).toEqual({
+      description: 'Exact Achievement Diary task IDs before the 492-task refresh.',
+      commit: 'fe4654ffef34700422480c4e41c9a50a4dc92b55',
+      file: 'data/diaryTasks.ts',
+      rowCount: 485,
+    });
+  });
+
+  it('keeps every reviewed Diary id and tier ordinal aligned with generated data', () => {
+    const sourceIds = diarySource.tasks.map(task => task.id);
+    const generatedIds = ALL_DIARY_TASKS.map(task => task.id);
+    const tierOrdinals = diarySource.tasks.map(task => task.tierId + '|' + task.ordinal);
+
+    expect(sourceIds).toHaveLength(492);
+    expect(new Set(sourceIds).size).toBe(492);
+    expect(new Set(tierOrdinals).size).toBe(492);
+    expect([...generatedIds].sort()).toEqual([...sourceIds].sort());
+    expect(diarySource.tasks.every(task => Object.hasOwn(DIARY_DATA, task.tierId))).toBe(true);
+  });
+
+  it('keeps every Diary migration source-supported with a current target', () => {
+    const expectedMigrations = diarySource.tasks.flatMap(task =>
+      task.aliases.map(alias => [alias, task.id] as const));
+    const currentIds = new Set(ALL_DIARY_TASKS.map(task => task.id));
+    const actualMigrations = Object.entries(DIARY_TASK_ID_MIGRATIONS);
+
+    expect(actualMigrations.sort()).toEqual(expectedMigrations.sort());
+    expect(actualMigrations.filter(([, target]) => !currentIds.has(target))).toEqual([]);
+    expect(actualMigrations.filter(([source]) => currentIds.has(source))).toEqual([]);
+  });
+
+  it('pins official CA point values and the cumulative maximum independently', () => {
+    expect(CA_TIER_ORDER).toEqual([
+      'Easy', 'Medium', 'Hard', 'Elite', 'Master', 'Grandmaster',
+    ]);
+    expect(CA_TASK_POINTS).toEqual({
+      Easy: 1, Medium: 2, Hard: 3, Elite: 4, Master: 5, Grandmaster: 6,
+    });
+    expect(CA_TIER_ORDER.map(tier => CA_DATA[tier].pointsRequired)).toEqual([
+      41, 161, 419, 1075, 1945, 2671,
+    ]);
+    expect(ALL_CA_TASKS.reduce(
+      (total, task) => total + CA_TASK_POINTS[task.tierId as keyof typeof CA_TASK_POINTS],
+      0,
+    )).toBe(2671);
+  });
+
+  it('keeps all 646 reviewed CA rows field-for-field aligned with generated data', () => {
+    const generatedById = new Map(ALL_CA_TASKS.map(task => [task.id, task]));
+    const mismatches = caSource.tasks.flatMap(sourceTask => {
+      const generated = generatedById.get(sourceTask.id);
+      return generated && JSON.stringify(generated) === JSON.stringify(sourceTask)
+        ? []
+        : [sourceTask.id];
+    });
+
+    expect(caSource.tasks).toHaveLength(646);
+    expect(new Set(caSource.tasks.map(task => task.id)).size).toBe(646);
+    expect(caSource.tasks.every(task => /^ca_\d+$/.test(task.id))).toBe(true);
+    expect(generatedById.size).toBe(646);
+    expect(mismatches, 'CA rows whose generated form differs from the snapshot').toEqual([]);
+  });
+
+  it('pins the nine Maggot King additions by stable official id', () => {
+    const byId = new Map(ALL_CA_TASKS.map(task => [task.id, task]));
+
+    expect(Array.from({ length: 9 }, (_, index) => {
+      const task = byId.get('ca_' + (637 + index));
+      return [task?.id, task?.tierId, task?.monster, task?.name];
+    })).toEqual([
+      ['ca_637', 'Hard', 'Maggot King', 'Maggot Squasher'],
+      ['ca_638', 'Elite', 'Maggot King', 'Maggot Exterminator'],
+      ['ca_639', 'Master', 'Maggot King', 'Camping the King'],
+      ['ca_640', 'Master', 'Maggot King', 'Maggot King Speed Chaser'],
+      ['ca_641', 'Elite', 'Maggot King', 'Trying to fit in'],
+      ['ca_642', 'Master', 'Maggot King', 'King-sized clobbering'],
+      ['ca_643', 'Master', 'Maggot King', 'Digging in'],
+      ['ca_644', 'Master', 'Maggot King', 'Cordoned Off'],
+      ['ca_645', 'Master', 'Maggot King', 'Perfect Maggot King'],
+    ]);
+  });
+
+  it('pins every reviewed Diary supporting revision', () => {
+    expect(diarySource.source.supportingPages.map(page => [
+      page.title, page.revision, page.revisionTimestamp,
+    ])).toEqual([
+      ['Ardougne Diary', 15262389, '2026-07-13T10:58:32Z'],
+      ['Desert Diary', 15212994, '2026-05-19T02:22:36Z'],
+      ['Falador Diary', 15167531, '2026-04-07T04:42:10Z'],
+      ['Fremennik Diary', 15267932, '2026-07-20T02:35:57Z'],
+      ['Kandarin Diary', 15261093, '2026-07-11T16:12:48Z'],
+      ['Karamja Diary', 15265693, '2026-07-16T23:30:13Z'],
+      ['Kourend & Kebos Diary', 15203434, '2026-04-29T08:08:12Z'],
+      ['Lumbridge & Draynor Diary', 15233767, '2026-06-15T03:19:28Z'],
+      ['Morytania Diary', 15250417, '2026-07-03T17:00:45Z'],
+      ['Varrock Diary', 15270202, '2026-07-20T15:17:53Z'],
+      ['Western Provinces Diary', 15263014, '2026-07-14T11:17:53Z'],
+      ['Wilderness Diary', 15270788, '2026-07-20T23:23:09Z'],
+    ]);
+  });
+
+  it('pins the authoritative CA query and all six reviewed tier revisions', () => {
+    expect(caSource.source).toMatchObject({
+      endpoint: 'https://oldschool.runescape.wiki/api.php',
+      taskTableQuery: {
+        action: 'parse', page: 'Combat Achievements/<tier>', prop: 'text', format: 'json',
+      },
+      globalsQuery: {
+        action: 'parse',
+        text: '{{Globals|ca <tier> tasks}} and {{Globals|ca <tier> points}}',
+        contentmodel: 'wikitext', prop: 'text', format: 'json',
+      },
+      retrievedAt: '2026-07-23T19:13:36.119Z',
+      overviewDeclaredRows: 637,
+    });
+    expect(caSource.source.discrepancy).toMatch(/overview.*637.*live.*646.*Maggot King/i);
+    expect(caSource.source.tierSources.map(source => [
+      source.tier, source.revision, source.revisionTimestamp, source.officialRows,
+    ])).toEqual([
+      ['Easy', 15272565, '2026-07-22T19:56:56Z', 41],
+      ['Medium', 15135540, '2026-02-25T18:48:27Z', 60],
+      ['Hard', 15272569, '2026-07-22T19:58:23Z', 86],
+      ['Elite', 15272563, '2026-07-22T19:55:28Z', 164],
+      ['Master', 15272564, '2026-07-22T19:55:46Z', 174],
+      ['Grandmaster', 15025941, '2025-11-13T02:26:22Z', 121],
+    ]);
   });
 });

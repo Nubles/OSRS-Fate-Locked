@@ -80,7 +80,7 @@ It verifies at least:
 
 - Expected quest records and reference integrity.
 - 492 current Achievement Diary tasks with unique IDs and valid migrations.
-- 637 Combat Achievement tasks with exact per-tier counts.
+- 646 Combat Achievement tasks with exact 41/60/86/164/174/121 per-tier counts.
 - CA point values and thresholds.
 - No duplicate generated IDs or unresolved references.
 - Generated-file/source metadata is present and internally consistent.

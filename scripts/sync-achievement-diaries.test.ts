@@ -1,8 +1,15 @@
-import { readFileSync } from 'node:fs';
+import {
+  mkdtempSync, readFileSync, rmSync, writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+  checkGeneratedDiary,
+  checkGeneratedDiaryFiles,
   parseAchievementDiaryHtml,
   renderDiaryTasks,
+  renderTaskIdMigrations,
   validateAudit,
 } from './sync-achievement-diaries.mjs';
 
@@ -165,6 +172,85 @@ describe('Achievement Diary source parser', () => {
         tierId: 'Sailing Easy',
       }],
     })).toThrow(/unknown.*Sailing Easy/i);
+  });
+});
+
+describe('offline generated Diary verification', () => {
+  it('reports generated output drift without rewriting the supplied output', () => {
+    const output = 'sentinel old output';
+
+    expect(checkGeneratedDiary(SIX_TASK_SNAPSHOT, output)).toEqual({
+      ok: false,
+      errors: ['data/diaryTasks.ts is out of date'],
+    });
+    expect(output).toBe('sentinel old output');
+  });
+
+  it('accepts byte-identical generated output', () => {
+    const expected = renderDiaryTasks(SIX_TASK_SNAPSHOT);
+
+    expect(checkGeneratedDiary(SIX_TASK_SNAPSHOT, expected)).toEqual({
+      ok: true,
+      errors: [],
+    });
+  });
+
+  it('reports every generated-file mismatch in one result', () => {
+    expect(checkGeneratedDiary(
+      SIX_TASK_SNAPSHOT,
+      'stale Diary output',
+      'stale migration output',
+    )).toEqual({
+      ok: false,
+      errors: [
+        'data/diaryTasks.ts is out of date',
+        'utils/taskIdMigrations.ts is out of date',
+      ],
+    });
+  });
+
+  it('checks explicit files without network access or tracked-file writes', () => {
+    const fixtureRoot = mkdtempSync(join(tmpdir(), 'fate-diary-check-'));
+    const snapshotPath = join(fixtureRoot, 'snapshot.json');
+    const diaryPath = join(fixtureRoot, 'diaryTasks.ts');
+    const migrationPath = join(fixtureRoot, 'taskIdMigrations.ts');
+    const snapshotText = JSON.stringify(SIX_TASK_SNAPSHOT);
+    const diaryText = renderDiaryTasks(SIX_TASK_SNAPSHOT);
+    const migrationText = renderTaskIdMigrations(SIX_TASK_SNAPSHOT);
+    const originalFetch = globalThis.fetch;
+
+    try {
+      writeFileSync(snapshotPath, snapshotText, 'utf8');
+      writeFileSync(diaryPath, diaryText, 'utf8');
+      writeFileSync(migrationPath, migrationText, 'utf8');
+      globalThis.fetch = (() => {
+        throw new Error('offline verification attempted a network request');
+      }) as typeof fetch;
+
+      expect(checkGeneratedDiaryFiles({
+        snapshotPath,
+        diaryPath,
+        migrationPath,
+      })).toEqual({ ok: true, errors: [] });
+      expect(readFileSync(snapshotPath, 'utf8')).toBe(snapshotText);
+      expect(readFileSync(diaryPath, 'utf8')).toBe(diaryText);
+      expect(readFileSync(migrationPath, 'utf8')).toBe(migrationText);
+
+      const staleDiaryText = diaryText + 'stale byte';
+      writeFileSync(diaryPath, staleDiaryText, 'utf8');
+      expect(checkGeneratedDiaryFiles({
+        snapshotPath,
+        diaryPath,
+        migrationPath,
+      })).toEqual({
+        ok: false,
+        errors: ['data/diaryTasks.ts is out of date'],
+      });
+      expect(readFileSync(diaryPath, 'utf8')).toBe(staleDiaryText);
+    } finally {
+      globalThis.fetch = originalFetch;
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
   });
 });
 

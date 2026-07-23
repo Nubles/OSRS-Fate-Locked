@@ -51,6 +51,24 @@ Run it locally any time:
 npm run clog:sync     # or: npm run content:sync
 ```
 
+## Verification and maintenance commands
+
+Use the command that matches the intended operation:
+
+- `npm run content:verify` is the deterministic gate used by pull-request and
+  deploy CI. It is fully offline and read-only: it validates committed quest,
+  Achievement Diary, and Combat Achievement data, then checks that generated
+  Diary files are byte-for-byte current without writing anything.
+- `npm run content:check` is a network-backed freshness inspection. It may
+  contact the OSRS Wiki and update `docs/SYNC_STATUS.md`, so it is kept out of
+  required CI.
+- `npm run content:sync`, `npm run diary:sync`, and `npm run ca:sync`
+  are explicit maintenance writes. Run them only when updating reviewed source
+  material, and review their generated changes in their own diff.
+
+Generated data is never hand-edited. Update its committed source snapshot or
+its generator, run the appropriate sync command, and review the resulting diff.
+
 ## What's automatic vs. what needs a human — and why
 
 | Content | New item on existing source | Brand-new source/entry |

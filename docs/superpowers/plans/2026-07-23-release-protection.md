@@ -115,8 +115,8 @@ Make <code>data/contentBaseline.test.ts</code> assert and report independently:
 - the audited recent quest records and exact A Porcine of Interest locations;
 - 492 Diary tasks, unique current IDs, valid tier/region references, and source metadata;
 - every historical Diary ID classified by the task migration table;
-- 637 CA tasks with 41/60/85/162/168/121 tier counts;
-- CA points 1/2/3/4/5/6 and thresholds 41/161/416/1064/1904/2630;
+- 646 CA tasks with 41/60/86/164/174/121 tier counts;
+- CA points 1/2/3/4/5/6 and thresholds 41/161/419/1075/1945/2671;
 - no duplicate generated IDs, dangling task references, or unresolved migration targets.
 
 Do not combine all assertions behind one early throw: when practical, one CI run should show every violated invariant as separate Vitest failures.
