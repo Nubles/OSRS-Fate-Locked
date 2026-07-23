@@ -26,6 +26,7 @@ import { QuestInsights } from './JournalInsights';
 
 interface QuestLogProps {
   searchTerm?: string;
+  suspendModals?: boolean;
 }
 
 // Helpers
@@ -326,7 +327,7 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId, curre
     );
 };
 
-export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch = '' }) => {
+export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch = '', suspendModals = false }) => {
   const { unlocks, toggleQuest, rollForKey, advisorsEnabled, gameModeId } = useGame();
   // Filter state is persisted in localStorage so returning players don't have
   // to re-apply their preferred view every session.
@@ -650,7 +651,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
 
       </div>
 
-      {skillPopover && (
+      {!suspendModals && skillPopover && (
         <SkillTrainingPopover
           {...skillPopover}
           onClose={() => setSkillPopover(null)}

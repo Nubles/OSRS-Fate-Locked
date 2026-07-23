@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { QuestData, QUEST_DATA } from '../data/questData';
 import { DropSource, UnlockState } from '../types';
 import { QuestChunkStatus } from '../utils/questDoability';
-import { evaluateQuestDoability } from './QuestDoabilityPanel';
+import { evaluateQuestDoability, questDoabilitySkillBlockerLabel } from './QuestDoabilityPanel';
 
 const unlocks = (over: Partial<UnlockState> = {}): UnlockState => ({
   equipment: {},
@@ -88,7 +88,10 @@ describe('evaluateQuestDoability', () => {
     expect(row.bucket).toBe('REQS');
     expect(row.reqsMet).toBe(false);
     expect(row.missingSkills).toEqual([
-      { skill: 'Woodcutting', lvl: 15, have: 15 },
+      { skill: 'Woodcutting', lvl: 15, have: 15, methodCap: 10 },
     ]);
+    expect(questDoabilitySkillBlockerLabel(row.missingSkills[0])).toBe(
+      'Woodcutting 15 (method cap 10)',
+    );
   });
 });

@@ -37,7 +37,9 @@ export interface QuestDoabilityEvaluation {
   id: string;
   bucket: DoabilityBucket;
   reqsMet: boolean;
-  missingSkills: { skill: string; lvl: number; have: number }[];
+  missingSkills: {
+    skill: string; lvl: number; have: number; methodCap?: number;
+  }[];
   missingPrereqs: string[];
   lockedAreas: string[];
 }
@@ -67,11 +69,13 @@ export const evaluateQuestDoability = (
       continue;
     }
     if (!meetsSkillRequirement(unlocks, skill, lvl)) {
-      const unlocked = (unlocks.skills[skill] ?? 0) > 0;
+      const tier = unlocks.skills[skill] ?? 0;
+      const unlocked = tier > 0;
       missingSkills.push({
         skill,
         lvl,
         have: unlocked ? (unlocks.levels[skill] ?? 1) : 0,
+        methodCap: unlocked ? Math.min(99, tier * 10) : undefined,
       });
     }
   }
@@ -126,6 +130,16 @@ export const evaluateQuestDoability = (
   };
 };
 
+export const questDoabilitySkillBlockerLabel = (
+  blocker: QuestDoabilityEvaluation['missingSkills'][number],
+): string => {
+  const capSuffix = blocker.methodCap !== undefined
+    && blocker.have >= blocker.lvl
+    && blocker.methodCap < blocker.lvl
+    ? ` (method cap ${blocker.methodCap})`
+    : '';
+  return `${blocker.skill} ${blocker.lvl}${capSuffix}`;
+};
 export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
   const { unlocks, gameModeId } = useGame();
   const [ready, setReady] = useState(chunkContentService.ready);
@@ -221,7 +235,7 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
                       {r.bucket === 'DOABLE' && <span className="text-emerald-400 flex items-center gap-1 justify-end"><CheckCircle2 size={11} /> ready</span>}
                       {r.bucket === 'REQS' && (
                         <span className="text-amber-300/90">
-                          {r.missingSkills.map(s => `${s.skill} ${s.lvl}`).concat(r.missingPrereqs.map(p => `✦ ${p}`)).slice(0, 3).join(', ')}
+                          {r.missingSkills.map(questDoabilitySkillBlockerLabel).concat(r.missingPrereqs.map(p => `✦ ${p}`)).slice(0, 3).join(', ')}
                           {(r.missingSkills.length + r.missingPrereqs.length) > 3 ? '…' : ''}
                         </span>
                       )}

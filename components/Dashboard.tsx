@@ -166,6 +166,7 @@ interface UnlockCardProps {
   subText?: string;
   region?: string;
   req?: ActivityReq;
+  suspendModals?: boolean;
 }
 
 const UnlockCard: React.FC<UnlockCardProps> = ({
@@ -176,7 +177,8 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
   onClick,
   subText,
   region,
-  req
+  req,
+  suspendModals = false,
 }) => {
   // Image priority: a hand-picked sprite/icon → the item's real OSRS wiki image
   // (fetched + cached via WikiService) → the globe placeholder. Self-heals: if a
@@ -216,7 +218,7 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
         `}
     >
         <div className="absolute top-1 right-1 z-10">
-            <NoteTrigger id={item} title={item} />
+            <NoteTrigger id={item} title={item} suspendModals={suspendModals} />
         </div>
 
         <div className={`w-10 h-10 rounded flex items-center justify-center shrink-0 ${isUnlocked ? 'bg-black/30' : 'bg-black/20'}`}>
@@ -463,12 +465,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-full overflow-y-auto pr-2 custom-scrollbar pb-10">
         {/* Equipment Lab — interactive paper-doll (click a slot for its tier
             ladder + upgrade), a target-loadout planner, and a DPS calculator. */}
-        <EquipmentLab onUpgrade={(slot) => handleSpecialUnlock(TableType.EQUIPMENT, slot)} />
+        <EquipmentLab onUpgrade={(slot) => handleSpecialUnlock(TableType.EQUIPMENT, slot)} suspendModals={suspendModals} />
 
         {/* Skills Section */}
         <div className="space-y-4">
             <div className="flex justify-between items-center bg-[#151515] p-2 rounded border border-white/5">
-                <h3 className="text-blue-400 font-bold text-sm flex items-center gap-1.5">Skills <SectionGuide id="SKILLS" /></h3>
+                <h3 className="text-blue-400 font-bold text-sm flex items-center gap-1.5">Skills <SectionGuide id="SKILLS" suspendModals={suspendModals} /></h3>
                 <span className="text-xs text-blue-400/60 font-mono">{totalSkillTiers}/{SKILLS_LIST.length * 10} Tiers</span>
             </div>
 
@@ -521,7 +523,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                         >
                             {/* Note Trigger */}
                             <div className="absolute top-1 right-1 z-30">
-                                <NoteTrigger id={skill} title={skill} />
+                                <NoteTrigger id={skill} title={skill} suspendModals={suspendModals} />
                             </div>
 
                             {/* Omni Upgrade Button */}
@@ -617,6 +619,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                     isUnlocked={isUnlocked}
                     canUnlock={canUnlock}
                     icon={iconMap ? iconMap[item] : undefined}
+                    suspendModals={suspendModals}
                     onClick={() => handleSpecialUnlock(type, item)}
                     subText={sub}
                     region={getActivityRegion(label)}
@@ -668,7 +671,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                   <div className="bg-[#1a1a1a] rounded border border-emerald-500/30 p-3 relative overflow-hidden group">
                       <div className="absolute inset-0 bg-emerald-900/5 pointer-events-none"></div>
                       <div className="absolute top-1 right-1 z-20">
-                            <NoteTrigger id="Misthalin" title="Misthalin" />
+                            <NoteTrigger id="Misthalin" title="Misthalin" suspendModals={suspendModals} />
                       </div>
                       {(() => {
                         const freeCount = MISTHALIN_AREAS.filter(a => isAreaReachable(a, unlocks, gameModeId)).length;
@@ -728,7 +731,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                           return (
                               <div key={group} data-region-card={group} className="bg-[#1a1a1a] rounded border border-white/5 p-3 h-full relative transition-shadow duration-300">
                                   <div className="absolute top-1 right-1 z-20">
-                                        <NoteTrigger id={group} title={group} />
+                                        <NoteTrigger id={group} title={group} suspendModals={suspendModals} />
                                   </div>
                                   <div className="flex items-center gap-2 mb-2 pr-6">
                                       <img src={`https://oldschool.runescape.wiki/images/${REGION_ICONS[group] || 'Globe_icon.png'}`} className="w-5 h-5 object-contain" />
@@ -909,8 +912,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
           {advisorsEnabled && <JournalNextBest onPick={setJournalSubTab} />}
           <div className="flex-1 overflow-hidden p-2">
               <Suspense fallback={<ModalFallback />}>
-                  {journalSubTab === 'QUESTS' && <QuestLog searchTerm={searchQuery} />}
-                  {journalSubTab === 'DIARIES' && <DiaryLog searchTerm={searchQuery} />}
+                  {journalSubTab === 'QUESTS' && <QuestLog searchTerm={searchQuery} suspendModals={suspendModals} />}
+                  {journalSubTab === 'DIARIES' && <DiaryLog searchTerm={searchQuery} suspendModals={suspendModals} />}
                   {journalSubTab === 'CA' && <CALog searchTerm={searchQuery} />}
                   {journalSubTab === 'DOABLE' && <QuestDoabilityPanel searchTerm={searchQuery} />}
               </Suspense>
@@ -1102,7 +1105,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
               >
                   <Filter size={14} />
               </button>
-              <SectionGuide id={activeTab} className="p-1" />
+              <SectionGuide id={activeTab} className="p-1" suspendModals={suspendModals} />
           </div>
       </div>
 

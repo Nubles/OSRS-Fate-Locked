@@ -468,7 +468,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
 };
 
 // --- New Control Panel Component ---
-const ControlPanel = () => {
+const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = false }) => {
   const [activeTab, setActiveTab] = useState<'FARM' | 'SPEND' | 'LOG'>('FARM');
   // History reveals with the first logged event (progressive disclosure).
   const gates = useFeatureGates();
@@ -524,7 +524,7 @@ const ControlPanel = () => {
       {/* Contextual guide for the active panel */}
       <div className="flex items-center justify-end gap-1.5 px-3 py-1 bg-[#141414] border-b border-[#2a2a2a] shrink-0 text-[10px] text-gray-500">
         <span>{GUIDES[activeTab]?.title}</span>
-        <SectionGuide id={activeTab} />
+        <SectionGuide id={activeTab} suspendModals={suspendModals} />
       </div>
 
       {/* Content */}
@@ -777,7 +777,7 @@ const GameLayout = () => {
             </div>
             <div className="flex-1 min-h-0">
               <PanelErrorBoundary name="Control panel">
-                <ControlPanel />
+                <ControlPanel suspendModals={modalRenderPolicy.suspendDashboardModals} />
               </PanelErrorBoundary>
             </div>
           </div>

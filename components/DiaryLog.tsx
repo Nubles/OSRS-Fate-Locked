@@ -24,9 +24,10 @@ import {
 
 interface DiaryLogProps {
   searchTerm?: string;
+  suspendModals?: boolean;
 }
 
-export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch = '' }) => {
+export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch = '', suspendModals = false }) => {
   const { unlocks, toggleDiary, rollForKey, toggleTask, advisorsEnabled, gameModeId } = useGame();
   // Filter state persisted across sessions.
   const [filterRegion, setFilterRegion] = useLocalStorage<string>('jrnl:diary:region', 'ALL');
@@ -508,7 +509,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
         })}
       </div>
 
-      {skillPopover && (
+      {!suspendModals && skillPopover && (
         <SkillTrainingPopover
           {...skillPopover}
           onClose={() => setSkillPopover(null)}
