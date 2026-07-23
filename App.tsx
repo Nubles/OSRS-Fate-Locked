@@ -40,7 +40,8 @@ import { showToast } from './utils/toast';
 import { prefetchHeavyChunks } from './utils/prefetch';
 import { LATEST_CHANGELOG } from './data/changelog';
 import {
-  changelogVisibilityReducer, markChangelogSeen, shouldShowChangelog,
+  changelogVisibilityReducer, markChangelogSeen, resolveChangelogRestoreTarget,
+  shouldAutoOpenChangelog, shouldEnableUnderlyingModalEscape, shouldShowChangelog,
 } from './utils/changelogState';
 
 // Heavy, conditionally-rendered modals — code-split so they (and their deps,
@@ -240,6 +241,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
   const pityCap = pityRules.pityEnabled ? pityRules.pityThreshold : 50; // 50 = visual-only fallback
   const nearPity = pityRules.pityEnabled && fatePoints >= pityRules.pityThreshold * 0.8;
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const settingsTriggerRef = useRef<HTMLButtonElement>(null);
   const [showUtilMenu, setShowUtilMenu] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -402,6 +404,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                  session at most. */}
              <div className="relative h-8">
                  <button
+                   ref={settingsTriggerRef}
                    onClick={() => setShowUtilMenu((v) => !v)}
                    className={`h-8 w-8 flex items-center justify-center bg-[#252525] border border-white/10 rounded-lg transition-colors ${showUtilMenu ? 'text-white border-white/25' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                    title="Settings & save tools"
@@ -415,6 +418,8 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                      <div className="fixed inset-0 z-[90]" onClick={() => setShowUtilMenu(false)} />
                      <div className="absolute right-0 top-9 z-[91] w-56 bg-[#1c1c1c] border border-white/15 rounded-lg shadow-2xl py-1.5 text-[12px]">
                         <button type="button" onClick={() => {
+                          const restoreTarget = resolveChangelogRestoreTarget('manual', settingsTriggerRef.current);
+                          restoreTarget?.focus();
                           setShowUtilMenu(false);
                           onOpenChangelog();
                         }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-amber-300">
@@ -548,7 +553,12 @@ const GameLayout = () => {
   const [showChangelog, dispatchChangelog] = useReducer(
     changelogVisibilityReducer,
     undefined,
-    () => hasSeenOnboarding && shouldShowChangelog(LATEST_CHANGELOG.id),
+    () => shouldAutoOpenChangelog({
+      hasSeenOnboarding,
+      releaseIsUnseen: shouldShowChangelog(LATEST_CHANGELOG.id),
+      startupHash: typeof window === 'undefined' ? '' : window.location.hash,
+      hasPendingGameModePrompt: recentlyCreatedId === activeProfileId,
+    }),
   );
 
   const openChangelog = () => dispatchChangelog({ type: 'OPEN' });
@@ -671,7 +681,7 @@ const GameLayout = () => {
     setShowSupplyChain(false);
     setShowGameMode(false);
     setShowSyncCode(false);
-  }, anyModalOpen);
+  }, shouldEnableUnderlyingModalEscape(anyModalOpen, showChangelog));
 
   return (
     <div className="min-h-screen bg-osrs-bg text-osrs-text pb-6 font-sans selection:bg-osrs-gold selection:text-black relative">

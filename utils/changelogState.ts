@@ -41,3 +41,36 @@ export const markChangelogSeen = (
 export const changelogVisibilityReducer = (
   _state: boolean, action: ChangelogVisibilityAction,
 ): boolean => action.type === 'OPEN';
+
+export type ChangelogOpenSource = 'automatic' | 'manual';
+
+interface ChangelogStartupContext {
+  hasSeenOnboarding: boolean;
+  releaseIsUnseen: boolean;
+  startupHash: string;
+  hasPendingGameModePrompt: boolean;
+}
+
+const SYNC_HASH_PREFIX = '#sync=';
+
+export const shouldAutoOpenChangelog = ({
+  hasSeenOnboarding,
+  releaseIsUnseen,
+  startupHash,
+  hasPendingGameModePrompt,
+}: ChangelogStartupContext): boolean =>
+  hasSeenOnboarding
+  && releaseIsUnseen
+  && !hasPendingGameModePrompt
+  && !(startupHash.startsWith(SYNC_HASH_PREFIX)
+    && startupHash.length > SYNC_HASH_PREFIX.length);
+
+export const resolveChangelogRestoreTarget = <T>(
+  source: ChangelogOpenSource,
+  persistentTrigger: T | null,
+): T | null => source === 'manual' ? persistentTrigger : null;
+
+export const shouldEnableUnderlyingModalEscape = (
+  anyUnderlyingModalOpen: boolean,
+  showChangelog: boolean,
+): boolean => anyUnderlyingModalOpen && !showChangelog;
