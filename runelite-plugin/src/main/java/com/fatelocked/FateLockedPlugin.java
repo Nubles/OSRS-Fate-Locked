@@ -11,6 +11,15 @@ import com.fatelocked.rules.PermissionStatus;
 import com.fatelocked.rules.RuleDecision;
 import com.fatelocked.panel.ChunkPanelViewModel;
 import com.fatelocked.panel.ChunkPanelViewModelFactory;
+import com.fatelocked.guardian.GuardedAction;
+import com.fatelocked.guardian.GuardedActionFactory;
+import com.fatelocked.guardian.GuardContext;
+import com.fatelocked.guardian.GuardResult;
+import com.fatelocked.guardian.StrictModeClickHandler;
+import com.fatelocked.guardian.StrictModeGuard;
+import com.fatelocked.guardian.StrictModePause;
+import com.fatelocked.guardian.StrictModeAuditEntry;
+import com.fatelocked.guardian.StrictModeAuditLog;
 import com.fatelocked.detectors.BossRaidDetector;
 import com.fatelocked.detectors.CollectionLogDetector;
 import com.fatelocked.detectors.ClueCasketDetector;
@@ -18,6 +27,11 @@ import com.fatelocked.detectors.CombatAchievementDetector;
 import com.fatelocked.detectors.DetectedEvent;
 import com.fatelocked.detectors.QuestDetector;
 import com.fatelocked.detectors.SkillLevelDetector;
+import com.fatelocked.detectors.SlayerTaskDetector;
+import com.fatelocked.detectors.DiaryTierReviewDetector;
+import com.fatelocked.detectors.PetDropDetector;
+import com.fatelocked.detectors.MinigameCompletionDetector;
+import com.fatelocked.detectors.BossKillDetectorV2;
 import com.google.inject.Provides;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +55,7 @@ import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.events.MenuEntryAdded;
+import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.events.StatChanged;
 import net.runelite.api.events.WidgetLoaded;
 import net.runelite.client.plugins.loottracker.LootReceived;
@@ -88,6 +103,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
+import java.time.Duration;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -139,6 +156,7 @@ public class FateLockedPlugin extends Plugin
     private volatile Instant lastTrackerSync;
     private volatile boolean relayOffline = true;
     private FateEventOutbox eventOutbox;
+    private StrictModeAuditLog strictAuditLog;
     private FateEventRelayClient eventRelayClient;
     private final FateEventFactory eventFactory = new FateEventFactory();
     private final SkillLevelDetector skillLevelDetector = new SkillLevelDetector();
@@ -146,7 +164,12 @@ public class FateLockedPlugin extends Plugin
     private final CombatAchievementDetector combatAchievementDetector = new CombatAchievementDetector();
     private final CollectionLogDetector collectionLogDetector = new CollectionLogDetector();
     private final ClueCasketDetector clueCasketDetector = new ClueCasketDetector();
-    private final BossRaidDetector bossRaidDetector = new BossRaidDetector();
+private final BossRaidDetector bossRaidDetector = new BossRaidDetector();
+    private final BossKillDetectorV2 bossKillDetectorV2 = new BossKillDetectorV2();
+    private final DiaryTierReviewDetector diaryTierReviewDetector = new DiaryTierReviewDetector();
+    private final PetDropDetector petDropDetector = new PetDropDetector();
+    private final MinigameCompletionDetector minigameCompletionDetector = new MinigameCompletionDetector();
+    private SlayerTaskDetector slayerTaskDetector;
     /** Configurable hotkey: re-import the bundle from the clipboard. */
     private final HotkeyListener reimportHotkey = new HotkeyListener(() -> config.reimportHotkey())
     {
@@ -160,6 +183,11 @@ public class FateLockedPlugin extends Plugin
     @Getter private volatile FateLockedBundle bundle = FateLockedBundle.empty();
     private final ChunkPanelViewModelFactory chunkPanelFactory =
         new ChunkPanelViewModelFactory();
+    private final GuardedActionFactory guardedActionFactory = new GuardedActionFactory();
+    private final StrictModeClickHandler strictClickHandler =
+        new StrictModeClickHandler(new StrictModeGuard());
+    private volatile Instant rulesImportedAt;
+    private final StrictModePause strictPause = new StrictModePause(Clock.systemUTC());
 
     /** How long the locked-entry screen flash lasts. */
     public static final long LOCKED_FLASH_MS = 1600;
@@ -294,7 +322,17 @@ public class FateLockedPlugin extends Plugin
     @Override
     protected void startUp()
     {
-        if (!DATA_DIR.exists()) DATA_DIR.mkdirs();
+if (!DATA_DIR.exists()) DATA_DIR.mkdirs();
+        try
+        {
+            slayerTaskDetector = new SlayerTaskDetector(gson,
+                DATA_DIR.toPath().resolve("slayer-assignment.json"));
+        }
+        catch (IOException ex)
+        {
+            log.warn("Could not open Slayer assignment state", ex);
+            slayerTaskDetector = null;
+        }
         try
         {
             eventOutbox = new FateEventOutbox(gson,
@@ -308,6 +346,16 @@ public class FateLockedPlugin extends Plugin
             eventOutbox = null;
             eventRelayClient = null;
         }
+        try
+        {
+            strictAuditLog = new StrictModeAuditLog(gson,
+                DATA_DIR.toPath().resolve("strict-mode-events.json"));
+        }
+        catch (IOException ex)
+        {
+            log.warn("Could not open Strict Mode audit log", ex);
+            strictAuditLog = null;
+        }
         overlayManager.add(worldMapOverlay);
         overlayManager.add(sceneOverlay);
         overlayManager.add(minimapOverlay);
@@ -316,6 +364,13 @@ public class FateLockedPlugin extends Plugin
         overlayManager.add(flashOverlay);
 
         panel.setCallbacks(this::applyPastedBundle, () -> clientThread.invoke(this::reloadBundle));
+        panel.setGuardianCallbacks(
+            () -> { strictPause.pauseFor(Duration.ofSeconds(60)); updateStrictModePanel(); },
+            () -> { strictPause.resume(); updateStrictModePanel(); },
+            () -> configManager.setConfiguration(
+                FateLockedConfig.GROUP, "strictModeIntroSeen", true));
+        updateStrictModePanel();
+        updateStrictAuditPanel();
         panel.setRollInboxLink(FateLockedPanel.TRACKER_URL, config.syncCode());
         updatePanelSyncHealth();
         navButton = NavigationButton.builder()
@@ -384,6 +439,17 @@ public class FateLockedPlugin extends Plugin
         {
             refreshInfoBoxes();
         }
+        else if ("strictMode".equals(key))
+        {
+            strictPause.resume();
+            updateStrictModePanel();
+            Boolean seen = configManager.getConfiguration(
+                FateLockedConfig.GROUP, "strictModeIntroSeen", Boolean.class);
+            if (config.strictMode() && !Boolean.TRUE.equals(seen))
+            {
+                panel.showStrictModeIntro();
+            }
+        }
         else if ("onlineSync".equals(key) || "syncCode".equals(key) || "relayUrl".equals(key))
         {
             lastRelayVersion = null; // re-fetch on the next poll with the new settings
@@ -443,7 +509,20 @@ public class FateLockedPlugin extends Plugin
     {
         if (ev.getType() != ChatMessageType.GAMEMESSAGE && ev.getType() != ChatMessageType.SPAM) return;
         String raw = ev.getMessage() == null ? "" : ev.getMessage();
-        String m = raw.toLowerCase();
+String m = raw.toLowerCase();
+
+        minigameCompletionDetector.onMessage(Text.removeTags(raw), System.currentTimeMillis())
+            .ifPresent(this::record);
+        Integer followerId = client.getFollower() == null
+            ? null : client.getFollower().getId();
+        petDropDetector.detect(Text.removeTags(raw), followerId, System.currentTimeMillis())
+            .ifPresent(this::record);
+        if (slayerTaskDetector != null
+            && (m.contains("completed your task") || m.contains("return to a slayer master")))
+        {
+            try { slayerTaskDetector.completion(Text.removeTags(raw)).ifPresent(this::record); }
+            catch (IOException ex) { log.debug("Could not update Slayer state", ex); }
+        }
 
         // Combat achievements stay on chat (their varbits are progress counts with
         // totals that shift as Jagex adds tasks). Diaries are detected via varbit
@@ -477,13 +556,21 @@ public class FateLockedPlugin extends Plugin
             }
         }
         // Slayer assignment / task-check messages mention the monster.
-        if (config.warnLockedSlayer() && m.contains("to kill"))
+        if (m.contains("to kill"))
         {
             Matcher mat = SLAYER_TASK.matcher(raw);
             if (mat.find())
             {
                 slayerTask = mat.group(1).trim();
-                recomputeSlayer();
+                if (slayerTaskDetector != null)
+                {
+                    try { slayerTaskDetector.assignment(slayerTask, null, 0, false); }
+                    catch (IOException ex) { log.debug("Could not save Slayer assignment", ex); }
+                }
+                if (config.warnLockedSlayer())
+                {
+                    recomputeSlayer();
+                }
             }
         }
     }
@@ -524,6 +611,7 @@ public class FateLockedPlugin extends Plugin
     @Subscribe
     public void onWidgetLoaded(WidgetLoaded ev)
     {
+        if (ev.getGroupId() == 408) minigameCompletionDetector.onPestControlWidget(System.currentTimeMillis());
         // Locked-bank warning is independent of the roll-nudge toggle.
         if ((ev.getGroupId() == BANK_GROUP_ID || ev.getGroupId() == DEPOSIT_BOX_GROUP_ID)
             && config.warnLockedBank() && bundle.banksLocked())
@@ -644,8 +732,12 @@ public class FateLockedPlugin extends Plugin
                 if (clue.isPresent()) record(clue.get());
             }
         }
-        java.util.Optional<DetectedEvent> detected =
-            bossRaidDetector.detect(type, ev.getName(), ev.getCombatLevel());
+java.util.Optional<DetectedEvent> detected =
+            bossKillDetectorV2.detect(type, ev.getName(), client.getGameCycle());
+        if (!detected.isPresent())
+        {
+            detected = bossRaidDetector.detect(type, ev.getName(), ev.getCombatLevel());
+        }
         if (detected.isPresent())
         {
             record(detected.get());
@@ -661,7 +753,6 @@ public class FateLockedPlugin extends Plugin
     @Subscribe
     public void onVarbitChanged(VarbitChanged ev)
     {
-        if (!config.rollNudges()) return;
         // Reliable diary-tier detection: each varbit flips 0→1 when that tier is
         // finished. VarbitChanged fires for EVERY varbit in the game — a very hot
         // event — so the steady-state path is a set-lookup filter, not a scan.
@@ -683,8 +774,12 @@ public class FateLockedPlugin extends Plugin
         Integer prev = diaryState.put(id, v);
         if (prev != null && prev == 0 && v == 1)
         {
-            nudge("Diary complete: " + name + " — may be worth a roll.");
-            pushSuggestion("Diary", name);
+            diaryTierReviewDetector.onVarbit(name, prev, v).ifPresent(this::record);
+            if (config.rollNudges())
+            {
+                nudge("Diary complete: " + name + " — review its tasks in the Roll Inbox.");
+                pushSuggestion("Diary", name);
+            }
         }
     }
 
@@ -850,6 +945,8 @@ public class FateLockedPlugin extends Plugin
         Player local = client.getLocalPlayer();
         if (local == null) return;
 
+        updateStrictModePanel();
+
         // Once per login, flag if the character doesn't match the bound account.
         checkBoundAccount();
 
@@ -887,41 +984,97 @@ public class FateLockedPlugin extends Plugin
      * red (LOCKED) marker — the "are you sure?" before you ever click.
      */
     @Subscribe
+    public void onMenuOptionClicked(MenuOptionClicked event)
+    {
+        GuardedAction action = guardedActionFactory.from(event.getMenuEntry(), client);
+        FateLockedBundle current = bundle;
+        boolean accountMatch = currentAccountMatches(current);
+        GuardContext context = new GuardContext(
+            config.strictMode(), strictPause.isPaused(), accountMatch, rulesAreFresh(),
+            new FateRuleEngine(current, accountMatch, false));
+        GuardResult result = strictClickHandler.handle(event, action, context);
+        if (result.getOutcome() != GuardResult.Outcome.BLOCK) return;
+
+        String target = action.getTarget().isEmpty()
+            ? result.getDecision().getLabel() : action.getTarget();
+        String reason = result.getDecision().getReason();
+        reason = reason == null || reason.trim().isEmpty()
+            ? "is locked" : "is " + reason;
+        ChatMessageBuilder message = new ChatMessageBuilder()
+            .append(ChatColorType.HIGHLIGHT).append("[Fate Locked] ")
+            .append(ChatColorType.NORMAL).append(
+                "Prevented: " + target + " — " + reason + ".");
+        chatMessageManager.queue(QueuedMessage.builder()
+            .type(ChatMessageType.GAMEMESSAGE)
+            .runeLiteFormattedMessage(message.build())
+            .build());
+        if (strictAuditLog != null)
+        {
+            try
+            {
+                String chunk = action.getChunk() == null ? null
+                    : action.getChunk().getCx() + "," + action.getChunk().getCy();
+                strictAuditLog.append(new StrictModeAuditEntry(
+                    System.currentTimeMillis(), action.getKind().name(),
+                    action.getTarget(), chunk, reason));
+                updateStrictAuditPanel();
+            }
+            catch (IOException ex)
+            {
+                log.debug("Could not write Strict Mode audit log: {}", ex.getMessage());
+            }
+        }
+    }
+
+    private void updateStrictAuditPanel()
+    {
+        List<String> lines = new ArrayList<>();
+        if (strictAuditLog != null)
+        {
+            for (StrictModeAuditEntry entry : strictAuditLog.recent(5))
+            {
+                lines.add(entry.getTarget() + " — " + entry.getReason());
+            }
+        }
+        panel.updateRecentPrevented(lines);
+    }
+    private void updateStrictModePanel()
+    {
+        panel.updateStrictMode(
+            config.strictMode(), strictPause.isPaused(), strictPause.remainingSeconds());
+    }
+    private boolean rulesAreFresh()
+    {
+        Instant stamp = config.onlineSync() ? lastTrackerSync : rulesImportedAt;
+        return stamp != null
+            && Duration.between(stamp, Instant.now()).toMinutes() < 15;
+    }
+    @Subscribe
     public void onMenuEntryAdded(MenuEntryAdded event)
     {
         if (!config.tagLockedMenus() && !config.tagLockedTeleports()) return;
         FateLockedBundle b = bundle;
         if (b.getRegionChunks().isEmpty()) return;
 
-        MenuEntry entry = event.getMenuEntry();
+MenuEntry entry = event.getMenuEntry();
+        GuardedAction action = guardedActionFactory.from(entry, client);
         boolean locked = false;
-
-        // Tile-based: NPC/object/ground/walk entries standing in a locked chunk.
-        if (config.tagLockedMenus())
+        if (config.tagLockedMenus()
+            && action.getChunk() != null
+            && action.getKind() != GuardedAction.Kind.TELEPORT)
         {
-            WorldPoint target = menuTargetWorldPoint(entry);
-            if (target != null)
-            {
-                CanonicalChunk targetChunk = CanonicalChunk.of(target);
-                locked = b.isLegacyRules()
-                    ? b.lockStateAt(targetChunk) == FateLockedBundle.LockState.LOCKED
-                    : ruleEngine(b).entry(targetChunk).getStatus() == PermissionStatus.LOCKED;
-            }
+            locked = b.isLegacyRules()
+                ? b.lockStateAt(action.getChunk()) == FateLockedBundle.LockState.LOCKED
+                : ruleEngine(b).entry(action.getChunk()).getStatus() == PermissionStatus.LOCKED;
         }
-
-        // Name-based: teleports (spells/jewellery/tablets) whose destination chunk
-        // is locked — these carry no world tile, so resolve by name.
-        if (!locked && config.tagLockedTeleports())
+        if (!locked && config.tagLockedTeleports()
+            && action.getKind() == GuardedAction.Kind.TELEPORT
+            && action.getChunk() != null)
         {
-            CanonicalChunk dest = Teleports.destinationChunk(entry.getOption(), entry.getTarget());
-            if (dest != null)
-            {
-                locked = b.isLegacyRules()
-                    ? b.lockStateAt(dest) == FateLockedBundle.LockState.LOCKED
-                    : ruleEngine(b).entry(dest).getStatus() == PermissionStatus.LOCKED;
-            }
+            locked = b.isLegacyRules()
+                ? b.lockStateAt(action.getChunk()) == FateLockedBundle.LockState.LOCKED
+                : ruleEngine(b).entry(action.getChunk()).getStatus() == PermissionStatus.LOCKED;
         }
-
         if (!locked) return;
         String t = entry.getTarget();
         String base = t == null ? "" : t;
@@ -1028,6 +1181,7 @@ public class FateLockedPlugin extends Plugin
         {
             FateLockedBundle parsed = FateLockedBundle.loadFromFile(gson, file);
             bundle = parsed;
+            rulesImportedAt = Instant.now();
             log.info("Fate Locked bundle loaded from {}: {} regions, {} unlocked",
                 file, parsed.getRegionChunks().size(), parsed.getUnlockedRegions().size());
         }
@@ -1087,6 +1241,7 @@ public class FateLockedPlugin extends Plugin
         {
             FateLockedBundle parsed = FateLockedBundle.loadFromJson(gson, json);
             bundle = parsed;
+            rulesImportedAt = Instant.now();
             log.info("Fate Locked bundle imported from paste: {} regions", parsed.getRegionChunks().size());
             panel.flashStatus("imported " + parsed.getRegionChunks().size() + " regions", true);
             refreshPanel();
