@@ -15,6 +15,7 @@ import { chunkContentService } from '../services/ChunkContentService';
 import { showToast } from './toast';
 import { UnlockState } from '../types';
 import { bankLocksActive } from './reachability';
+import type { GameModeRules } from '../config/gameModes';
 
 /**
  * gzip+base64 a string for the clipboard, prefixed "FLGZ:" so the plugin knows
