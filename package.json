@@ -9,6 +9,7 @@
     "models:export": "node scripts/export-models.mjs",
     "clog:sync": "node scripts/sync-collection-log.mjs",
     "ca:sync": "node scripts/sync-combat-achievements.mjs",
+    "runelite:mirror-check": "node scripts/check-runelite-mirror.mjs",
     "content:check": "node scripts/check-content-sync.mjs",
     "chunks:sync": "node scripts/sync-chunk-content.mjs",
     "content:sync": "node scripts/sync-collection-log.mjs && node scripts/sync-combat-achievements.mjs && node scripts/check-content-sync.mjs",

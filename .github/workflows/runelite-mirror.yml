@@ -1,0 +1,28 @@
+name: RuneLite mirror
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: app
+      - uses: actions/checkout@v4
+        with:
+          repository: Nubles/RS3-Fate-Locked-Runelite
+          ref: f450bbd87cee74d26d24061d034368ad9f0c0c86
+          path: plugin
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+        working-directory: app
+      - run: npm run runelite:mirror-check
+        working-directory: app
+        env:
+          RUNELITE_SOURCE_DIR: ${{ github.workspace }}/plugin
