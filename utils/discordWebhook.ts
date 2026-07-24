@@ -10,9 +10,7 @@
  * run's back-catalogue (the cursor seeds to "now" on enable).
  */
 import type { LogEntry } from '../types';
-
-const CONFIG_SUFFIX = '__discord';
-const CURSOR_SUFFIX = '__discordCursor';
+import { profileDiscordCursorKey, profileDiscordKey } from './profileStorage';
 
 export interface DiscordConfig {
   url: string;
@@ -27,7 +25,7 @@ const EMBED_COLOR = 0xfbbf24; // the app's gold
 
 export const readDiscordConfig = (storageKey: string): DiscordConfig => {
   try {
-    const parsed = JSON.parse(localStorage.getItem(storageKey + CONFIG_SUFFIX) || '');
+    const parsed = JSON.parse(localStorage.getItem(profileDiscordKey(storageKey)) || '');
     return {
       url: typeof parsed?.url === 'string' ? parsed.url : '',
       enabled: parsed?.enabled === true,
@@ -39,7 +37,7 @@ export const readDiscordConfig = (storageKey: string): DiscordConfig => {
 
 export const writeDiscordConfig = (storageKey: string, config: DiscordConfig): void => {
   try {
-    localStorage.setItem(storageKey + CONFIG_SUFFIX, JSON.stringify(config));
+    localStorage.setItem(profileDiscordKey(storageKey), JSON.stringify(config));
   } catch {
     /* quota — settings UI will show the stale value, nothing worse */
   }
@@ -48,13 +46,13 @@ export const writeDiscordConfig = (storageKey: string, config: DiscordConfig): v
 // ── Post cursor (timestamp of the newest history entry already posted) ─────
 
 export const readCursor = (storageKey: string): number => {
-  const n = Number(localStorage.getItem(storageKey + CURSOR_SUFFIX));
+  const n = Number(localStorage.getItem(profileDiscordCursorKey(storageKey)));
   return Number.isFinite(n) ? n : 0;
 };
 
 export const writeCursor = (storageKey: string, ts: number): void => {
   try {
-    localStorage.setItem(storageKey + CURSOR_SUFFIX, String(ts));
+    localStorage.setItem(profileDiscordCursorKey(storageKey), String(ts));
   } catch {
     /* best-effort */
   }

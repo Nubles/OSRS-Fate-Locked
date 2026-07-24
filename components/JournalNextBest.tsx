@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { Sparkles, ChevronDown, ChevronRight, Map as MapIcon, Scroll, ListChecks, Navigation, BookOpen, Route, Gift, ExternalLink } from 'lucide-react';
 import { useGame } from '../context/GameContext';
-import { QUEST_DATA } from '../data/questData';
+import { QUEST_DATA, QuestData } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
-import { DropSource } from '../types';
+import { DropSource, UnlockState } from '../types';
 import { questUnmet, diaryUnmet } from '../utils/journalProgress';
 import { questLocations } from '../utils/questLocations';
 import { chunkForPlace, showChunkOnMap } from '../utils/chunkLocations';
@@ -13,7 +13,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 
 type SubTab = 'QUESTS' | 'DIARIES' | 'CA';
 
-interface Action {
+export interface JournalNextBestAction {
   kind: 'quest' | 'diary';
   sub: SubTab;
   id: string;
@@ -32,14 +32,14 @@ const diffRank = (d: DropSource): number => {
   return 1;
 };
 
-const wikiUrl = (a: Action): string => {
+const wikiUrl = (a: JournalNextBestAction): string => {
   if (a.kind === 'quest') return `https://oldschool.runescape.wiki/w/${encodeURIComponent(a.name.replace(/ /g, '_'))}`;
   const area = a.id.replace(/ (Easy|Medium|Hard|Elite)$/, '');
   return `https://oldschool.runescape.wiki/w/${encodeURIComponent((area + ' Diary').replace(/ /g, '_'))}`;
 };
 
 /** A representative chunk to jump to for "start on map", or null. */
-const placeFor = (a: Action, unlocks: any): { cx: number; cy: number } | null => {
+const placeFor = (a: JournalNextBestAction, unlocks: any): { cx: number; cy: number } | null => {
   if (a.kind === 'quest') {
     const info = questLocations(a.name, unlocks);
     const p = info.startPlaces[0] ?? info.places[0];
@@ -50,16 +50,20 @@ const placeFor = (a: Action, unlocks: any): { cx: number; cy: number } | null =>
   return region ? chunkForPlace(region) : null;
 };
 
-const ActionMenu: React.FC<{ a: Action; onPick: (s: SubTab) => void; onClose: () => void }> = ({ a, onPick, onClose }) => {
-  const { unlocks } = useGame();
+const ActionMenu: React.FC<{ a: JournalNextBestAction; onPick: (s: SubTab) => void; onClose: () => void }> = ({ a, onPick, onClose }) => {
+  const { unlocks, gameModeId } = useGame();
   const [showUnlocks, setShowUnlocks] = useState(false);
   const place = placeFor(a, unlocks);
 
   const unlocks_ = useMemo(() => {
     if (a.kind !== 'quest') return null;
-    const imp = computeUnlockImpact(unlocks, { ...unlocks, quests: [...unlocks.quests, a.id] });
+    const imp = computeUnlockImpact(
+      unlocks,
+      { ...unlocks, quests: [...unlocks.quests, a.id] },
+      gameModeId,
+    );
     return { quests: imp.directQuestNames, diaries: imp.directDiaryIds };
-  }, [a, unlocks]);
+  }, [a, unlocks, gameModeId]);
 
   const Row: React.FC<{ icon: React.ReactNode; label: string; onClick?: () => void; disabled?: boolean }> = ({ icon, label, onClick, disabled }) => (
     <button
@@ -112,6 +116,55 @@ const ActionMenu: React.FC<{ a: Action; onPick: (s: SubTab) => void; onClose: ()
   );
 };
 
+export const journalNextBestQuestAction = (
+  quest: QuestData,
+  unlocks: UnlockState,
+  gameModeId?: string,
+): JournalNextBestAction | null => {
+  if (unlocks.quests.includes(quest.id)) return null;
+  const unmet = questUnmet(quest, unlocks, gameModeId);
+  return {
+    kind: 'quest',
+    sub: 'QUESTS',
+    id: quest.id,
+    name: quest.name,
+    unmet: unmet.length,
+    firstBlocker: unmet[0]?.label,
+    diffRank: diffRank(quest.difficulty),
+  };
+};
+
+export const selectJournalNextBestActions = (
+  unlocks: any,
+  gameModeId?: string,
+): JournalNextBestAction[] => {
+  const out: JournalNextBestAction[] = [];
+  for (const quest of Object.values(QUEST_DATA)) {
+    const action = journalNextBestQuestAction(quest, unlocks, gameModeId);
+    if (action) out.push(action);
+  }
+  for (const d of Object.values(DIARY_DATA)) {
+    if (unlocks.diaries.includes(d.id)) continue;
+    const tasks = ALL_DIARY_TASKS.filter(task => task.tierId === d.id);
+    if (tasks.length > 0 && tasks.every(task => unlocks.completedTasks.includes(task.id))) {
+      continue;
+    }
+    const unmet = diaryUnmet(d, unlocks, gameModeId);
+    out.push({
+      kind: 'diary', sub: 'DIARIES', id: d.id, name: d.id,
+      unmet: unmet.length, firstBlocker: unmet[0]?.label,
+      diffRank: diffRank(d.difficulty),
+    });
+  }
+  return out
+    .filter(action => action.unmet <= 1)
+    .sort((a, b) =>
+      a.unmet - b.unmet ||
+      a.diffRank - b.diffRank ||
+      a.name.localeCompare(b.name))
+    .slice(0, 8);
+};
+
 /**
  * Cross-journal "what should I do next" feed: blends quests + diary tiers,
  * ranked by readiness. Each item opens a small action menu — open in its list,
@@ -123,25 +176,10 @@ export const JournalNextBest: React.FC<{ onPick: (sub: SubTab) => void }> = ({ o
   const [open, setOpen] = useLocalStorage<boolean>('jrnl:nextbest:open', true);
   const [openItem, setOpenItem] = useState<string | null>(null);
 
-  const actions = useMemo<Action[]>(() => {
-    const out: Action[] = [];
-    for (const q of Object.values(QUEST_DATA)) {
-      if (unlocks.quests.includes(q.id)) continue;
-      const unmet = questUnmet(q, unlocks, gameModeId);
-      out.push({ kind: 'quest', sub: 'QUESTS', id: q.id, name: q.name, unmet: unmet.length, firstBlocker: unmet[0]?.label, diffRank: diffRank(q.difficulty) });
-    }
-    for (const d of Object.values(DIARY_DATA)) {
-      if (unlocks.diaries.includes(d.id)) continue;
-      const tasks = ALL_DIARY_TASKS.filter(t => t.tierId === d.id);
-      if (tasks.length > 0 && tasks.every(t => unlocks.completedTasks.includes(t.id))) continue;
-      const unmet = diaryUnmet(d, unlocks, gameModeId);
-      out.push({ kind: 'diary', sub: 'DIARIES', id: d.id, name: d.id, unmet: unmet.length, firstBlocker: unmet[0]?.label, diffRank: diffRank(d.difficulty) });
-    }
-    return out
-      .filter(a => a.unmet <= 1)
-      .sort((a, b) => a.unmet - b.unmet || a.diffRank - b.diffRank || a.name.localeCompare(b.name))
-      .slice(0, 8);
-  }, [unlocks, gameModeId]);
+  const actions = useMemo(
+    () => selectJournalNextBestActions(unlocks, gameModeId),
+    [unlocks, gameModeId],
+  );
 
   if (actions.length === 0) return null;
   const ready = actions.filter(a => a.unmet === 0).length;

@@ -8,9 +8,10 @@ export interface CATask {
   description: string;
 }
 
-// Generated from the OSRS Wiki Combat Achievements pages by
-// `npm run ca:sync` (scripts/sync-combat-achievements.mjs). IDs are the
-// stable in-game task ids — edit the wiki / re-run rather than hand-editing.
+// Generated from data/sources/combat-achievement-tasks.json.
+// Source API snapshot retrieved 2026-07-23T19:13:36.119Z.
+// Overview revision 15272408 is stale at 637; see snapshot metadata.
+// Verified: 2026-07-23. Run npm run ca:sync; do not hand-edit.
 export const ALL_CA_TASKS: CATask[] = [
   // EASY TIER (41)
   { id: 'ca_0', tierId: 'Easy', monster: 'Aberrant Spectre', name: 'Noxious Foe', description: 'Kill an Aberrant Spectre.' },
@@ -115,7 +116,7 @@ export const ALL_CA_TASKS: CATask[] = [
   { id: 'ca_628', tierId: 'Medium', monster: 'Shellbane gryphon', name: 'Shellbane Speedrunner', description: 'Kill the Shellbane Gryphon 10 times within 12:30 minutes of entering the cave.' },
   { id: 'ca_633', tierId: 'Medium', monster: 'Brutus', name: 'Brutus Champion', description: 'Kill Brutus 10 times.' },
   { id: 'ca_635', tierId: 'Medium', monster: 'Brutus', name: 'Beef vs Beef', description: 'Kill Brutus whilst neither equipping nor consuming anything.' },
-  // HARD TIER (85)
+  // HARD TIER (86)
   { id: 'ca_1', tierId: 'Hard', monster: 'Abyssal Sire', name: 'Abyssal Adept', description: 'Kill the Abyssal Sire 20 times.' },
   { id: 'ca_3', tierId: 'Hard', monster: 'Abyssal Sire', name: 'They Grow Up Too Fast', description: 'Kill the Abyssal Sire without letting any Scion mature.' },
   { id: 'ca_5', tierId: 'Hard', monster: 'Abyssal Sire', name: 'Don\'t Whip Me', description: 'Kill the Abyssal Sire without being hit by any external tentacles.' },
@@ -201,7 +202,8 @@ export const ALL_CA_TASKS: CATask[] = [
   { id: 'ca_629', tierId: 'Hard', monster: 'Shellbane gryphon', name: 'Shellbane Survivor', description: 'Kill the Shellbane Gryphon 25 times without leaving the cave.' },
   { id: 'ca_631', tierId: 'Hard', monster: 'Shellbane gryphon', name: 'Featherweight Fighter', description: 'Kill the Shellbane Gryphon 5 times without leaving the cave, while wearing gear weighing less than 40kg.' },
   { id: 'ca_636', tierId: 'Hard', monster: 'Brutus', name: 'Smarter than a Cow', description: 'Kill Brutus without being attacked.' },
-  // ELITE TIER (162)
+  { id: 'ca_637', tierId: 'Hard', monster: 'Maggot King', name: 'Maggot Squasher', description: 'Kill the Maggot King.' },
+  // ELITE TIER (164)
   { id: 'ca_2', tierId: 'Elite', monster: 'Abyssal Sire', name: 'Abyssal Veteran', description: 'Kill the Abyssal Sire 50 times.' },
   { id: 'ca_4', tierId: 'Elite', monster: 'Abyssal Sire', name: 'Respiratory Runner', description: 'Kill the Abyssal Sire after only stunning him once.' },
   { id: 'ca_6', tierId: 'Elite', monster: 'Abyssal Sire', name: 'Demonic Rebound', description: 'Use the Vengeance spell to reflect the damage from the Abyssal Sire\'s explosion back to him.' },
@@ -364,7 +366,9 @@ export const ALL_CA_TASKS: CATask[] = [
   { id: 'ca_613', tierId: 'Elite', monster: 'Doom of Mokhaiotl', name: 'Exposed Doom', description: 'Defeat the Doom of Mokhaiotl during its Melee charge phase.' },
   { id: 'ca_621', tierId: 'Elite', monster: 'Doom of Mokhaiotl', name: 'Doom Crawler', description: 'Defeat the Doom of Mokhaiotl level 1 in less than 30 seconds.' },
   { id: 'ca_634', tierId: 'Elite', monster: 'Brutus', name: 'Brutus Speed-Trialist', description: 'Kill Brutus in less than 2 seconds.' },
-  // MASTER TIER (168)
+  { id: 'ca_638', tierId: 'Elite', monster: 'Maggot King', name: 'Maggot Exterminator', description: 'Kill the Maggot King 25 times.' },
+  { id: 'ca_641', tierId: 'Elite', monster: 'Maggot King', name: 'Trying to fit in', description: 'Kill the Maggot King using only weapons that can be found in Vampyrium.' },
+  // MASTER TIER (174)
   { id: 'ca_11', tierId: 'Master', monster: 'Kree\'arra', name: 'Collateral Damage', description: 'Kill Kree\'arra in a private instance without ever attacking him directly.' },
   { id: 'ca_13', tierId: 'Master', monster: 'Kree\'arra', name: 'Swoop No More', description: 'Kill Kree\'arra in a private instance without taking any melee damage from the boss or his bodyguards.' },
   { id: 'ca_50', tierId: 'Master', monster: 'Skotizo', name: 'Precise Positioning', description: 'Kill Skotizo with the final source of damage being a Chinchompa explosion.' },
@@ -378,11 +382,11 @@ export const ALL_CA_TASKS: CATask[] = [
   { id: 'ca_102', tierId: 'Master', monster: 'Corrupted Hunllef', name: 'Perfect Corrupted Hunllef', description: 'Kill the Corrupted Hunllef without taking damage from: Tornadoes, Damaging Floor or Stomp Attacks. Also, do not take damage off prayer and do not attack the Corrupted Hunllef with the wrong weapon.' },
   { id: 'ca_103', tierId: 'Master', monster: 'Corrupted Hunllef', name: 'Defence Doesn\'t Matter II', description: 'Kill the Corrupted Hunllef without making any armour within the Corrupted Gauntlet.' },
   { id: 'ca_105', tierId: 'Master', monster: 'Corrupted Hunllef', name: 'Corrupted Warrior', description: 'Kill the Corrupted Hunllef with a full set of perfected corrupted armour equipped.' },
-  { id: 'ca_107', tierId: 'Master', monster: 'Corrupted Hunllef', name: 'Corrupted Gauntlet Speed-Chaser', description: 'Complete a Corrupted Gauntlet in less than 7 minutes and 30 seconds.' },
+  { id: 'ca_107', tierId: 'Master', monster: 'Corrupted Hunllef', name: 'Corrupted Gauntlet Speed-Chaser', description: 'Complete a Corrupted Gauntlet in less than 7 minutes and 5 seconds.' },
   { id: 'ca_110', tierId: 'Master', monster: 'Crystalline Hunllef', name: 'Gauntlet Master', description: 'Complete the Gauntlet 20 times.' },
   { id: 'ca_112', tierId: 'Master', monster: 'Crystalline Hunllef', name: 'Perfect Crystalline Hunllef', description: 'Kill the Crystalline Hunllef without taking damage from: Tornadoes, Damaging Floor or Stomp Attacks. Also, do not take damage off prayer and do not attack the Crystalline Hunllef with the wrong weapon.' },
   { id: 'ca_113', tierId: 'Master', monster: 'Crystalline Hunllef', name: 'Defence Doesn\'t Matter', description: 'Kill the Crystalline Hunllef without making any armour within the Gauntlet.' },
-  { id: 'ca_117', tierId: 'Master', monster: 'Crystalline Hunllef', name: 'Gauntlet Speed-Chaser', description: 'Complete the Gauntlet in less than 5 minutes.' },
+  { id: 'ca_117', tierId: 'Master', monster: 'Crystalline Hunllef', name: 'Gauntlet Speed-Chaser', description: 'Complete the Gauntlet in less than 4 minutes and 45 seconds.' },
   { id: 'ca_128', tierId: 'Master', monster: 'Hespori', name: 'Hespori Speed-Chaser', description: 'Kill the Hespori in less than 36 seconds.' },
   { id: 'ca_136', tierId: 'Master', monster: 'Alchemical Hydra', name: 'Alchemical Master', description: 'Kill the Alchemical Hydra 150 times.' },
   { id: 'ca_137', tierId: 'Master', monster: 'Alchemical Hydra', name: 'Unrequired Antipoisons', description: 'Kill the Alchemical Hydra without being hit by the acid pool attack.' },
@@ -533,6 +537,12 @@ export const ALL_CA_TASKS: CATask[] = [
   { id: 'ca_615', tierId: 'Master', monster: 'Doom of Mokhaiotl', name: 'Grub Patrol', description: 'Defeat the Doom of Mokhaiotl levels 1-8 without ever letting a grub be absorbed.' },
   { id: 'ca_620', tierId: 'Master', monster: 'Doom of Mokhaiotl', name: 'Mine\'s Better', description: 'Defeat the Doom of Mokhaiotl levels 1-8 whilst always wearing a shield.' },
   { id: 'ca_622', tierId: 'Master', monster: 'Doom of Mokhaiotl', name: 'Doom Chaser', description: 'Defeat the Doom of Mokhaiotl levels 1-8 in less than 10:00.' },
+  { id: 'ca_639', tierId: 'Master', monster: 'Maggot King', name: 'Camping the King', description: 'Kill the Maggot King 12 times without leaving the arena.' },
+  { id: 'ca_640', tierId: 'Master', monster: 'Maggot King', name: 'Maggot King Speed Chaser', description: 'Kill the Maggot King 5 times in 9 minutes.' },
+  { id: 'ca_642', tierId: 'Master', monster: 'Maggot King', name: 'King-sized clobbering', description: 'Kill the Maggot King without missing a single melee punish.' },
+  { id: 'ca_643', tierId: 'Master', monster: 'Maggot King', name: 'Digging in', description: 'Kill the Maggot King without moving more than 40 tiles.' },
+  { id: 'ca_644', tierId: 'Master', monster: 'Maggot King', name: 'Cordoned Off', description: 'Kill the Maggot King without moving beyond the back row of tiles.' },
+  { id: 'ca_645', tierId: 'Master', monster: 'Maggot King', name: 'Perfect Maggot King', description: 'Kill the Maggot King without taking any avoidable damage or him ever being healed.' },
   // GRANDMASTER TIER (121)
   { id: 'ca_14', tierId: 'Grandmaster', monster: 'Kree\'arra', name: 'The Worst Ranged Weapon', description: 'Kill Kree\'arra by only dealing damage to him with a salamander.' },
   { id: 'ca_15', tierId: 'Grandmaster', monster: 'Kree\'arra', name: 'Feather Hunter', description: 'Kill Kree\'arra 30 times in a private instance without leaving the room.' },

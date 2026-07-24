@@ -1,10 +1,19 @@
 import { describe, it, expect } from 'vitest';
-import { gameReducer, initialState } from './GameContext';
+import {
+  gameReducer,
+  initialState,
+  prepareGameTransition,
+  prepareLevelUpActions,
+  prepareKeyRollAction,
+  prepareCATaskCompletionActions,
+} from './GameContext';
+import { drawDice } from '../utils/seededRng';
 import { TableType, LogEntry } from '../types';
 import { isRollEntry } from '../utils/logEntry';
 import { XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL } from '../config/economy';
 import { isValidUnlock } from '../utils/gameEngine';
 import { ALL_CHUNKS, CHUNKED_START, chunkKey } from '../utils/chunkAdjacency';
+import { ALL_CA_TASKS } from '../data/caTasks';
 
 /**
  * Tests for the core game reducer — every roll, unlock, ritual, level-up and
@@ -73,6 +82,136 @@ describe('ROLL_RESULT', () => {
   it('clears the LUCK / GREED buff after a roll', () => {
     expect(gameReducer({ ...base(), activeBuff: 'LUCK' as const }, roll({ success: false })).activeBuff).toBe('NONE');
     expect(gameReducer({ ...base(), activeBuff: 'GREED' as const }, roll({ success: true })).activeBuff).toBe('NONE');
+  });
+
+  it('consumes one Luck buff on the first of two queued rolls', () => {
+    const dice = (_purpose: string, index = 0) => index === 1 ? 10 : 90;
+    const start = { ...base(), activeBuff: 'LUCK' as const };
+
+    const firstAction = prepareKeyRollAction(start, 'First queued roll', 20, dice);
+    const first = prepareGameTransition(start, firstAction).state;
+    const secondAction = prepareKeyRollAction(first, 'Second queued roll', 20, dice);
+    const second = prepareGameTransition(first, secondAction).state;
+
+    expect(first.history.at(-1)?.type).toBe('ROLL_SUCCESS');
+    expect(first.activeBuff).toBe('NONE');
+    expect(second.history.at(-1)?.type).toBe('ROLL_FAIL');
+  });
+
+  it('grants only one pity when two queued failures start at the pity boundary', () => {
+    const dice = () => 100;
+    const start = { ...base(), fatePoints: 49 };
+
+    const firstAction = prepareKeyRollAction(start, 'First queued failure', 20, dice);
+    const first = prepareGameTransition(start, firstAction).state;
+    const secondAction = prepareKeyRollAction(first, 'Second queued failure', 20, dice);
+    const second = prepareGameTransition(first, secondAction).state;
+
+    expect(first.history.at(-1)?.type).toBe('PITY');
+    expect(first.fatePoints).toBe(0);
+    expect(second.history.at(-1)?.type).toBe('ROLL_FAIL');
+    expect(second.fatePoints).toBe(1);
+    expect(second.keys).toBe(start.keys + 1);
+  });
+
+  it('replays the same next seeded roll from identical restored state', () => {
+    const snapshot = {
+      ...base(),
+      rngSeed: 'FATE-ATOMIC',
+      history: [],
+    };
+    const restored = {
+      ...snapshot,
+      unlocks: { ...snapshot.unlocks },
+      history: [...snapshot.history],
+    };
+    const reset = {
+      ...snapshot,
+      unlocks: { ...snapshot.unlocks },
+      history: [...snapshot.history],
+    };
+    const diceFor = (state: typeof snapshot) =>
+      (purpose: string, index = 0, max = 100) =>
+        drawDice(
+          state.rngSeed,
+          state.history.at(-1)?.hash ?? 'genesis',
+          purpose,
+          index,
+          max,
+        );
+
+    const restoredAction = prepareKeyRollAction(
+      restored,
+      'Seeded replay',
+      50,
+      diceFor(restored),
+    );
+    const resetAction = prepareKeyRollAction(
+      reset,
+      'Seeded replay',
+      50,
+      diceFor(reset),
+    );
+
+    expect(restoredAction).toEqual(resetAction);
+  });
+  it('queues the exact prepared state without regenerating event fields', () => {
+    const start = base();
+    const prepared = prepareGameTransition(start, roll({ success: true }));
+    const committed = gameReducer(start, prepared.commit);
+
+    expect(committed).toBe(prepared.state);
+    expect(committed.lastEvent?.id).toBe(prepared.state.lastEvent?.id);
+    expect(committed.history.at(-1)?.timestamp)
+      .toBe(prepared.state.history.at(-1)?.timestamp);
+  });
+
+  it('prepares seeded level-up reward draws from the pre-level history tip', () => {
+    const seed = 'FATE-LEVEL-8';
+    const start = {
+      ...base(),
+      rngSeed: seed,
+      unlocks: {
+        ...base().unlocks,
+        levels: { ...base().unlocks.levels, Attack: 98 },
+      },
+    };
+    let currentContext = start.history.at(-1)?.hash ?? 'genesis';
+    const drawContexts: Array<{ context: string; index: number }> = [];
+    const dice = (purpose: string, index = 0, max = 100) => {
+      drawContexts.push({ context: currentContext, index });
+      return drawDice(seed, currentContext, purpose, index, max);
+    };
+
+    const prepared = prepareLevelUpActions(
+      start,
+      'Attack',
+      0.01,
+      dice,
+    );
+
+    expect(drawContexts).toEqual([
+      { context: 'genesis', index: 0 },
+      { context: 'genesis', index: 1 },
+      { context: 'genesis', index: 2 },
+    ]);
+    expect(prepared.rewardAction.payload).toMatchObject({
+      roll: 6,
+      threshold: 20,
+      source: 'Attack Level 99',
+      success: true,
+    });
+
+    const afterLevel = prepareGameTransition(start, prepared.levelAction).state;
+    const levelTip = afterLevel.history.at(-1)?.hash;
+    expect(levelTip).toBeTruthy();
+    expect(levelTip).not.toBe('genesis');
+    currentContext = levelTip!;
+
+    const finished = prepareGameTransition(afterLevel, prepared.rewardAction).state;
+    expect(finished.history.map(entry => entry.type))
+      .toEqual(['LEVEL_UP', 'ROLL_SUCCESS']);
+    expect(drawContexts).toHaveLength(3);
   });
 });
 
@@ -353,18 +492,27 @@ describe('LEVEL_UP — Chunked milestone insurance', () => {
 
 // --- SET_GAME_MODE ----------------------------------------------------------
 
-describe('LOAD_SAVE migration', () => {
-  it('dedupes unlock arrays from a corrupted save', () => {
-    const corrupted: any = {
-      keys: 0,
-      unlocks: {
-        regions: ['Karamja', 'Karamja', 'Falador'],
-        bosses: ['Zulrah', 'Zulrah'],
+describe('LOAD_SAVE normalized replacement', () => {
+  it('replaces the whole accepted state without retaining current-only fields', () => {
+    const current = {
+      ...base(),
+      rival: {
+        mode: 'sim' as const,
+        personaId: 'old-rival',
+        name: 'Old rival',
+        emoji: '!',
+        keysPerDay: 1,
+        seed: 1,
+        startedAt: 1,
       },
     };
-    const s = gameReducer(base(), { type: 'LOAD_SAVE', payload: corrupted });
-    expect(s.unlocks.regions).toEqual(['Karamja', 'Falador']);
-    expect(s.unlocks.bosses).toEqual(['Zulrah']);
+    const accepted = { ...structuredClone(initialState), keys: 8 };
+
+    const replaced = gameReducer(current, { type: 'LOAD_SAVE', payload: accepted });
+
+    expect(replaced.keys).toBe(8);
+    expect(replaced.rival).toBeUndefined();
+    expect(replaced.lastEvent).toBeNull();
   });
 });
 
@@ -386,6 +534,95 @@ describe('SET_GAME_MODE', () => {
     const started = { ...base(), history: [entry] };
     const s = gameReducer(started, { type: 'SET_GAME_MODE', payload: { modeId: 'hardcore' } });
     expect(s.gameModeId).toBe(initialState.gameModeId);
+  });
+});
+
+// --- journal completion -----------------------------------------------------
+
+describe('journal completion actions', () => {
+  it.each([
+    ['COMPLETE_QUEST', 'quests', 'Cook\'s Assistant'],
+    ['COMPLETE_DIARY', 'diaries', 'Falador Easy'],
+    ['COMPLETE_TASK', 'completedTasks', 'fal_easy_1'],
+  ] as const)('%s appends once and never removes historical completion',
+    (type, field, id) => {
+      const once = gameReducer(base(), { type, payload: id });
+      const twice = gameReducer(once, { type, payload: id });
+
+      expect(once.unlocks[field]).toContain(id);
+      expect(twice.unlocks[field].filter(value => value === id)).toHaveLength(1);
+    });
+
+  it('preserves unrelated journal completion fields', () => {
+    const start = gameReducer(base(), { type: 'COMPLETE_QUEST', payload: 'Cook\'s Assistant' });
+    const next = gameReducer(start, { type: 'COMPLETE_DIARY', payload: 'Falador Easy' });
+
+    expect(next.unlocks.quests).toContain('Cook\'s Assistant');
+    expect(next.unlocks.diaries).toContain('Falador Easy');
+  });
+
+  it('COMPLETE_CA appends once and never removes a historical tier', () => {
+    const once = gameReducer(base(), { type: 'COMPLETE_CA', payload: 'Easy' });
+    const twice = gameReducer(once, { type: 'COMPLETE_CA', payload: 'Easy' });
+
+    expect(once.unlocks.cas).toEqual(['Easy']);
+    expect(twice.unlocks.cas).toEqual(['Easy']);
+  });
+
+  it('prepares one task roll and every newly crossed sticky CA tier', () => {
+    const easyTasks = ALL_CA_TASKS.filter(task => task.tierId === 'Easy');
+    const mediumTasks = ALL_CA_TASKS.filter(task => task.tierId === 'Medium');
+    const candidate = easyTasks.at(-1)!;
+    const start = {
+      ...base(),
+      unlocks: {
+        ...base().unlocks,
+        completedTasks: [
+          ...easyTasks.slice(0, -1).map(task => task.id),
+          ...mediumTasks.map(task => task.id),
+        ],
+      },
+    };
+    const drawIndexes: number[] = [];
+    const prepared = prepareCATaskCompletionActions(
+      start,
+      candidate,
+      (_purpose, index = 0) => {
+        drawIndexes.push(index);
+        return 100;
+      },
+    );
+
+    expect(prepared.result).toEqual({ ok: true });
+    expect(prepared.actions.map(action => action.type)).toEqual([
+      'COMPLETE_TASK',
+      'ROLL_RESULT',
+      'COMPLETE_CA',
+      'COMPLETE_CA',
+    ]);
+    expect(prepared.actions[1]).toMatchObject({
+      payload: {
+        source: 'Combat Achievement (Easy)',
+        threshold: 8,
+      },
+    });
+    expect(drawIndexes).toEqual([0, 1]);
+
+    const finished = prepared.actions.reduce(
+      (state, action) => prepareGameTransition(state, action).state,
+      start,
+    );
+    expect(finished.unlocks.completedTasks).toContain(candidate.id);
+    expect(finished.unlocks.cas).toEqual(['Easy', 'Medium']);
+    expect(finished.history.filter(entry => entry.type === 'ROLL_FAIL')).toHaveLength(1);
+
+    const repeated = prepareCATaskCompletionActions(
+      finished,
+      candidate,
+      () => 1,
+    );
+    expect(repeated.result).toEqual({ ok: false, reason: 'Already completed' });
+    expect(repeated.actions).toEqual([]);
   });
 });
 

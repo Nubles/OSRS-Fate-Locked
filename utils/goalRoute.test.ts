@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { buildGoalRoute, expandQuestChain, tierForLevel, suggestTables } from './goalRoute';
 import { QUEST_DATA } from '../data/questData';
 import { GameState, TableType } from '../types';
+import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 
 /** Minimal game state with the bits the route builder reads. */
 const stateWith = (over: Partial<any> = {}): GameState => ({
@@ -108,6 +109,34 @@ describe('buildGoalRoute — quest and engine-item goals', () => {
     expect(pureQuest.quests[pureQuest.quests.length - 1].name).toBe("Cook's Assistant");
   });
 
+  it('retains direct and transitive quest alternative routes', () => {
+    const direct = buildGoalRoute('Enter the Abyss', stateWith({ quests: ['Rune Mysteries'] }))!;
+    expect(direct.regions.map(region => region.name)).not.toContain('One of:');
+    expect(direct.alternatives).toEqual([
+      expect.objectContaining({
+        routes: expect.arrayContaining([
+          expect.objectContaining({ name: 'East Ardougne' }),
+          expect.objectContaining({ name: "Wizards' Guild" }),
+        ]),
+      }),
+    ]);
+
+    const transitive = buildGoalRoute('Temple of the Eye', stateWith())!;
+    expect(transitive.alternatives).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: expect.stringContaining('East Ardougne') }),
+    ]));
+  });
+
+  it('retains canonical alternatives for strategy-backed quest goals', () => {
+    const route = buildGoalRoute('Desert Treasure II', stateWith())!;
+
+    expect(route.kind).toBe('strategy');
+    expect(route.description).toContain('Unlocks 4 new bosses');
+    expect(route.alternatives).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: expect.stringContaining('East Ardougne') }),
+    ]));
+  });
+
   it('routes Resource Engine items through their sources', () => {
     const route = buildGoalRoute('Ranarr Weed', stateWith())!;
     expect(route.kind).toBe('engine-item');
@@ -120,6 +149,32 @@ describe('buildGoalRoute — quest and engine-item goals', () => {
   });
 });
 
+describe('buildGoalRoute — diary alternatives', () => {
+  it('does not present a blocked one-of skill route as a fake region', () => {
+    const route = buildGoalRoute('Karamja Hard', stateWith({
+      regions: ['Shilo Village'],
+      quests: ['Shilo Village'],
+      skills: { Slayer: 5 },
+      levels: {
+        Attack: 1, Strength: 1, Defence: 1, Hitpoints: 10,
+        Ranged: 1, Prayer: 1, Magic: 1, Slayer: 50,
+      },
+      completedTasks: ALL_DIARY_TASKS
+        .filter(task => task.tierId !== 'Karamja Hard' || task.id !== 'kar_hard_9')
+        .map(task => task.id),
+    }))!;
+
+    expect(route.regions).toEqual([]);
+    expect(route.alternatives).toEqual([
+      expect.objectContaining({
+        routes: expect.arrayContaining([
+          expect.objectContaining({ detail: expect.stringContaining('Combat level 100') }),
+          expect.objectContaining({ detail: expect.stringContaining('Slayer 99') }),
+        ]),
+      }),
+    ]);
+  });
+});
 describe('suggestTables', () => {
   it('computes odds as needed/remaining and ranks descending', () => {
     const unlocks = stateWith().unlocks;

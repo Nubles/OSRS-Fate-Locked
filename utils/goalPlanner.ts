@@ -12,14 +12,16 @@
  * so it's always consistent with what the rest of the Journal shows.
  */
 
-import { QUEST_DATA, QuestData } from '../data/questData';
+import { QUEST_CAPE_QUEST_IDS, QUEST_DATA, QuestData } from '../data/questData';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
+import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { REGION_GROUPS } from '../data/items';
 import {
-  getQuestStatus, getDiaryStatus, meetsSkillRequirement,
-  questAlternativesMet, questRequirementOptionLabel,
+  evaluateQuestEligibility, getQuestStatus, getDiaryStatus,
+  questRequirementOptionLabel, taskEligibilityBlockers, DirectEligibilityBlocker,
 } from './journalStatus';
 import { isAreaReachable } from './reachability';
+import { effectiveCombatLevel, effectiveSkillLevel } from './slayerReach';
 
 export type GoalKind = 'quest' | 'diary' | 'region';
 
@@ -32,8 +34,23 @@ export interface PlanStep {
   label: string;
   /** Secondary text (e.g. "Lv 50 (have 32)", "12 QP needed"). */
   detail?: string;
+  /** Unlock table ids that can satisfy a composite step. */
+  relatedIds?: string[];
   /** Already satisfied in the current unlocks snapshot. */
   done: boolean;
+}
+
+export interface AlternativePlanRoute {
+  label: string;
+  blockers: PlanStep[];
+}
+
+export interface AlternativePlanStep {
+  kind: 'alternative';
+  id: string;
+  label: string;
+  done: boolean;
+  routes: AlternativePlanRoute[];
 }
 
 export interface GoalPlan {
@@ -50,10 +67,12 @@ export interface GoalPlan {
   regionSteps: PlanStep[];
   /** Skill levels to train (highest required across the whole chain). */
   skillSteps: PlanStep[];
+  /** Requirements where any one complete route is sufficient. */
+  alternativeSteps: AlternativePlanStep[];
   /** Optional quest-point shortfall note. */
   qpStep?: PlanStep;
   /** Flat, sensibly-ordered roadmap: regions → skills → QP → quests. */
-  steps: PlanStep[];
+  steps: Array<PlanStep | AlternativePlanStep>;
   /** Number of steps not yet satisfied. */
   remaining: number;
 }
@@ -76,6 +95,79 @@ function currentQuestPoints(unlocks: any): number {
   );
 }
 
+function requirementOptionPlanSteps(option: any): PlanStep[] {
+  return [
+    ...(option.regions ?? []).map((label: string): PlanStep => ({
+      kind: 'region', id: label, label, done: false,
+    })),
+    ...(option.guilds ?? []).map((label: string): PlanStep => ({
+      kind: 'region', id: label, label, done: false,
+    })),
+    ...(option.locations ?? []).map((location: any): PlanStep => ({
+      kind: 'region', id: location.label, label: location.label, done: false,
+    })),
+  ];
+}
+
+function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): PlanStep {
+  if (blocker.kind === 'region' || blocker.kind === 'quest') {
+    return { kind: blocker.kind, id: blocker.label, label: blocker.label, done: false };
+  }
+  if (blocker.kind === 'combat') {
+    const required = Number(blocker.label.match(/\d+/)?.[0] ?? 1);
+    return {
+      kind: 'skill', id: 'Combat level', label: 'Combat level',
+      detail: 'Level ' + required + ' (have ' + effectiveCombatLevel(unlocks) + ')', done: false,
+    };
+  }
+
+  const requirement = blocker.requirement;
+  if (requirement?.type === 'combined') {
+    const levels = requirement.skills.map(skill => [
+      skill, effectiveSkillLevel(unlocks, skill),
+    ] as const);
+    const have = levels.reduce((sum, [, level]) => sum + level, 0);
+    return {
+      kind: 'skill', id: 'combined:' + requirement.skills.join('+'),
+      label: requirement.skills.join(' + ') + ' combined',
+      relatedIds: requirement.skills,
+      detail: 'Level ' + requirement.level + ' combined (have ' + have + ': '
+        + levels.map(([skill, level]) => skill + ' ' + level).join(' + ') + ')',
+      done: false,
+    };
+  }
+  if (requirement?.type === 'anyOf') {
+    return {
+      kind: 'skill', id: 'any-of:' + requirement.skills.join('|'),
+      label: requirement.skills.join(' or '),
+      relatedIds: requirement.skills,
+      detail: 'Lv ' + requirement.level + ' in either (have '
+        + requirement.skills.map(skill => (
+          skill + ' ' + effectiveSkillLevel(unlocks, skill)
+        )).join(', ') + ')',
+      done: false,
+    };
+  }
+  if (requirement?.type === 'any') {
+    return {
+      kind: 'skill', id: 'Any skill', label: 'Any skill',
+      detail: 'Lv ' + requirement.level, done: false,
+    };
+  }
+
+  const match = blocker.label.match(/^(.*) (\d+)$/);
+  const skill = requirement?.type === 'single'
+    ? requirement.skill
+    : (match?.[1] ?? blocker.label);
+  const required = requirement?.type === 'single'
+    ? requirement.level
+    : Number(match?.[2] ?? 1);
+  return {
+    kind: 'skill', id: skill, label: skill, relatedIds: [skill],
+    detail: 'Lv ' + required + ' (have ' + effectiveSkillLevel(unlocks, skill) + ')', done: false,
+  };
+}
+
 /**
  * Walk the prereq DAG of `rootQuestId` (post-order, so prerequisites come
  * before the quests that depend on them) and accumulate every requirement
@@ -87,7 +179,7 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
   const order: string[] = []; // incomplete quests, dependency order
   const visited = new Set<string>();
   const regions = new Set<string>();
-  const alternatives = new Set<string>();
+  const alternatives = new Map<string, AlternativePlanStep>();
   const skills: Record<string, number> = {};
   let qpRequired = 0;
 
@@ -96,28 +188,48 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
     visited.add(qid);
     const q: QuestData | undefined = QUEST_DATA[qid];
     if (!q) return;
-    // Already completed → its whole prereq sub-tree is satisfied; skip.
-    if (unlocks.quests.includes(qid)) return;
 
-    // Prereqs first (post-order) so they land earlier in `order`.
-    for (const p of q.prereqs) visit(p);
+    const eligibility = evaluateQuestEligibility(q, unlocks, gameModeId);
+    if (eligibility.status === 'COMPLETED') return;
 
-    // Region gates — already-reachable regions (free, unlocked, or in Chunked
-    // mode reachable via any overlapping chunk) don't need a plan step.
-    for (const r of q.regions) {
-      if (!isAreaReachable(r, unlocks, gameModeId)) regions.add(r);
+    // Canonical quest blockers decide every requirement. Walking quest blockers
+    // first preserves dependency order without rebuilding prerequisite logic.
+    for (const blocker of eligibility.blockers) {
+      if (blocker.kind === 'quest') visit(blocker.label);
     }
-    if (!questAlternativesMet(q, unlocks, gameModeId)) {
-      alternatives.add(
-        `One of: ${q.oneOf!.map(questRequirementOptionLabel).join(' or ')}`,
-      );
-    }
-    // Skill / quest-point gates.
-    for (const [skill, lvl] of Object.entries(q.skills as Record<string, number>)) {
-      if (skill === 'Quest Points') {
-        qpRequired = Math.max(qpRequired, lvl);
-      } else {
-        skills[skill] = Math.max(skills[skill] ?? 0, lvl);
+
+    const alternativeLabel = q.oneOf
+      ?.map(questRequirementOptionLabel)
+      .join(' or ');
+
+    for (const blocker of eligibility.blockers) {
+      if (blocker.kind === 'region') {
+        if (alternativeLabel && blocker.label === alternativeLabel) {
+          const label = 'One of: ' + blocker.label;
+          alternatives.set(label, {
+            kind: 'alternative', id: 'alternative:' + qid + ':' + label, label, done: false,
+            routes: (q.oneOf ?? []).map(option => ({
+              label: questRequirementOptionLabel(option),
+              blockers: requirementOptionPlanSteps(option),
+            })),
+          });
+        } else {
+          regions.add(blocker.label);
+        }
+        continue;
+      }
+      if (blocker.kind === 'combat') {
+        if (q.combatLevel !== undefined) {
+          skills['Combat level'] = Math.max(skills['Combat level'] ?? 0, q.combatLevel);
+        }
+        continue;
+      }
+      if (blocker.kind === 'skill') {
+        for (const [skill, level] of Object.entries(q.skills)) {
+          if (blocker.label !== skill + ' ' + level) continue;
+          if (skill === 'Quest Points') qpRequired = Math.max(qpRequired, level);
+          else skills[skill] = Math.max(skills[skill] ?? 0, level);
+        }
       }
     }
 
@@ -133,44 +245,40 @@ function buildPlanFromRequirements(
   targetId: string,
   targetLabel: string,
   reqs: {
-    order: string[]; regions: Set<string>; alternatives: Set<string>;
+    order: string[]; regions: Set<string>; alternatives: Map<string, AlternativePlanStep>;
     skills: Record<string, number>; qpRequired: number;
   },
   unlocks: any,
   alreadyReachable: boolean,
   alreadyDone: boolean,
-  gameModeId?: string,
 ): GoalPlan {
   // Region steps.
-  const regionSteps: PlanStep[] = [
-    ...Array.from(reqs.regions).map((region): PlanStep => ({
-      kind: 'region',
-      id: region,
-      label: region,
-      done: isAreaReachable(region, unlocks, gameModeId),
-    })),
-    ...Array.from(reqs.alternatives).map((label): PlanStep => ({
-      kind: 'region',
-      id: `alternative:${label}`,
-      label,
-      detail: 'Unlock any listed route',
-      done: false,
-    })),
-  ].sort((a, b) => Number(a.done) - Number(b.done) || a.label.localeCompare(b.label));
+  const regionSteps: PlanStep[] = Array.from(reqs.regions).map((region): PlanStep => ({
+    kind: 'region', id: region, label: region, done: false,
+  })).sort((a, b) => a.label.localeCompare(b.label));
+  const alternativeSteps = [...reqs.alternatives.values()]
+    .sort((a, b) => a.label.localeCompare(b.label));
 
   // Skill steps.
   const skillSteps: PlanStep[] = Object.entries(reqs.skills)
     .map(([skill, lvl]): PlanStep => {
-      const done = meetsSkillRequirement(unlocks, skill, lvl);
-      const have = unlocks.levels[skill] ?? 1;
+      const done = false;
+      const rawLevel = skill === 'Combat level'
+        ? effectiveCombatLevel(unlocks)
+        : (unlocks.levels[skill] ?? 1);
+      const have = skill === 'Combat level'
+        ? rawLevel
+        : effectiveSkillLevel(unlocks, skill);
       const tier = unlocks.skills[skill] ?? 0;
       const unlocked = tier > 0;
       const methodCap = Math.min(99, tier * 10);
-      const detail = !unlocked
-        ? `Lv ${lvl} (locked)`
-        : have >= lvl && methodCap < lvl
-          ? `Lv ${lvl} (have ${have}; method cap ${methodCap})`
-          : `Lv ${lvl} (have ${have})`;
+      const detail = skill === 'Combat level'
+        ? `Level ${lvl} (have ${have})`
+        : !unlocked
+          ? `Lv ${lvl} (locked)`
+          : rawLevel >= lvl && methodCap < lvl
+            ? `Lv ${lvl} (have ${rawLevel}; method cap ${methodCap})`
+            : `Lv ${lvl} (have ${have})`;
       return {
         kind: 'skill',
         id: skill,
@@ -221,9 +329,10 @@ function buildPlanFromRequirements(
     }
   }
 
-  const steps: PlanStep[] = [
+  const steps: Array<PlanStep | AlternativePlanStep> = [
     ...regionSteps,
     ...skillSteps,
+    ...alternativeSteps,
     ...(qpStep ? [qpStep] : []),
     ...questSteps,
   ];
@@ -238,6 +347,7 @@ function buildPlanFromRequirements(
     questSteps,
     regionSteps,
     skillSteps,
+    alternativeSteps,
     qpStep,
     steps,
     remaining,
@@ -265,7 +375,6 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
       unlocks,
       status === 'AVAILABLE' || status === 'COMPLETED',
       status === 'COMPLETED',
-      gameModeId,
     );
   }
 
@@ -274,37 +383,71 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
     if (!d) return null;
     const status = getDiaryStatus(d, unlocks, gameModeId);
 
-    // Merge requirements across all gating quests + the diary's own gates.
+    // Canonical tasks own diary eligibility; DIARY_DATA aggregates are display-only metadata.
     const merged = {
       order: [] as string[],
       regions: new Set<string>(),
-      alternatives: new Set<string>(),
+      alternatives: new Map<string, AlternativePlanStep>(),
       skills: {} as Record<string, number>,
       qpRequired: 0,
     };
-    const seen = new Set<string>();
-    for (const qid of d.quests) {
-      const sub = collectQuestChain(qid, unlocks, gameModeId);
-      for (const r of sub.regions) merged.regions.add(r);
-      for (const alternative of sub.alternatives) merged.alternatives.add(alternative);
-      for (const [s, lvl] of Object.entries(sub.skills)) {
-        merged.skills[s] = Math.max(merged.skills[s] ?? 0, lvl);
-      }
-      merged.qpRequired = Math.max(merged.qpRequired, sub.qpRequired);
-      for (const oq of sub.order) {
-        if (!seen.has(oq)) {
-          seen.add(oq);
-          merged.order.push(oq);
+    if (status !== 'COMPLETED') {
+      const seen = new Set<string>();
+      const mergeQuest = (qid: string) => {
+        const sub = collectQuestChain(qid, unlocks, gameModeId);
+        for (const region of sub.regions) merged.regions.add(region);
+        for (const [key, alternative] of sub.alternatives) merged.alternatives.set(key, alternative);
+        for (const [skill, level] of Object.entries(sub.skills)) {
+          merged.skills[skill] = Math.max(merged.skills[skill] ?? 0, level);
+        }
+        merged.qpRequired = Math.max(merged.qpRequired, sub.qpRequired);
+        for (const questId of sub.order) {
+          if (!seen.has(questId)) {
+            seen.add(questId);
+            merged.order.push(questId);
+          }
+        }
+      };
+
+      const tasks = ALL_DIARY_TASKS.filter(task => (
+        task.tierId === id && !unlocks.completedTasks.includes(task.id)
+      ));
+      for (const task of tasks) {
+        for (const qid of task.quests ?? []) mergeQuest(qid);
+        if (task.allQuests) {
+          for (const qid of QUEST_CAPE_QUEST_IDS) mergeQuest(qid);
+        }
+
+        const blockers = taskEligibilityBlockers(task, unlocks, gameModeId);
+        for (const blocker of blockers) {
+          if (blocker.kind === 'region') merged.regions.add(blocker.label);
+          if (blocker.kind === 'alternative') {
+            const label = 'One of: ' + blocker.label;
+            merged.alternatives.set(label, {
+              kind: 'alternative', id: 'alternative:' + task.id, label, done: false,
+              routes: blocker.routes.map(route => ({
+                label: route.label,
+                blockers: route.blockers.map(routeBlocker => (
+                  planStepForBlocker(routeBlocker, unlocks)
+                )),
+              })),
+            });
+          }
+          if (blocker.kind === 'combat' && task.combatLevel !== undefined) {
+            merged.skills['Combat level'] = Math.max(
+              merged.skills['Combat level'] ?? 0,
+              task.combatLevel,
+            );
+          }
+          if (blocker.kind === 'skill') {
+            for (const [skill, level] of Object.entries(task.skills ?? {})) {
+              if (blocker.label === skill + ' ' + level) {
+                merged.skills[skill] = Math.max(merged.skills[skill] ?? 0, level);
+              }
+            }
+          }
         }
       }
-    }
-    // The diary's own region requirements.
-    for (const r of d.requiredRegions) {
-      if (!isAreaReachable(r, unlocks, gameModeId)) merged.regions.add(r);
-    }
-    // The diary's own skill requirements (needed to actually do the tasks).
-    for (const [s, lvl] of Object.entries(d.skills as Record<string, number>)) {
-      merged.skills[s] = Math.max(merged.skills[s] ?? 0, lvl);
     }
 
     return buildPlanFromRequirements(
@@ -315,7 +458,6 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
       unlocks,
       status === 'AVAILABLE' || status === 'COMPLETED',
       status === 'COMPLETED',
-      gameModeId,
     );
   }
 
@@ -331,6 +473,7 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
     questSteps: [],
     regionSteps: [regionStep],
     skillSteps: [],
+    alternativeSteps: [],
     steps: [regionStep],
     remaining: isUnlocked ? 0 : 1,
   };

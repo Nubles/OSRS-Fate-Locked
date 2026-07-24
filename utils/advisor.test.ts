@@ -86,6 +86,16 @@ describe('rankAvailableQuests', () => {
       expect(getQuestStatus(QUEST_DATA[r.id], base)).toBe('AVAILABLE');
     }
   });
+
+  it('threads Chunked-mode access through quest ranking and impact', () => {
+    const before = maxedUnlocks({ chunks: ['48,50'] });
+    const after = maxedUnlocks({ chunks: ['48,50', '47,51'] });
+
+    expect(rankAvailableQuests(before, 'chunked').map(q => q.id))
+      .not.toContain('A Porcine of Interest');
+    expect(rankAvailableQuests(after, 'chunked').map(q => q.id))
+      .toContain('A Porcine of Interest');
+  });
 });
 
 describe('rankLockedRegions', () => {

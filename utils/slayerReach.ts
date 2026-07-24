@@ -46,6 +46,16 @@ export interface SlayerReach {
 export type LocateFn = (taskName: string) => { cx: number; cy: number; unlocked: boolean } | null;
 
 /** Standard OSRS combat level from the tracked skill levels. */
+/** Effective trainable level after applying the currently unlocked method cap. */
+export const effectiveSkillLevel = (
+  unlocks: Pick<UnlockState, 'skills' | 'levels'>,
+  skill: string,
+  fallback = 1,
+): number => {
+  const raw = Math.max(unlocks.levels?.[skill] ?? fallback, fallback);
+  const tier = unlocks.skills?.[skill] ?? 0;
+  return Math.min(raw, Math.min(99, tier * 10));
+};
 export const combatLevel = (levels: Record<string, number>): number => {
   const L = (k: string, d = 1) => Math.max(levels[k] ?? d, d);
   const base = 0.25 * (L('Defence') + L('Hitpoints', 10) + Math.floor(L('Prayer') / 2));
@@ -55,6 +65,18 @@ export const combatLevel = (levels: Record<string, number>): number => {
   return Math.floor(base + Math.max(melee, range, mage));
 };
 
+/** Combat level after each contributing skill is constrained by its method tier. */
+export const effectiveCombatLevel = (
+  unlocks: Pick<UnlockState, 'skills' | 'levels'>,
+): number => combatLevel({
+  Attack: effectiveSkillLevel(unlocks, 'Attack'),
+  Strength: effectiveSkillLevel(unlocks, 'Strength'),
+  Defence: effectiveSkillLevel(unlocks, 'Defence'),
+  Hitpoints: effectiveSkillLevel(unlocks, 'Hitpoints', 10),
+  Prayer: effectiveSkillLevel(unlocks, 'Prayer'),
+  Ranged: effectiveSkillLevel(unlocks, 'Ranged'),
+  Magic: effectiveSkillLevel(unlocks, 'Magic'),
+});
 /** A req string like "Priest in Peril Complete the quest" → quest name. */
 const questFromReq = (req: string): string | null => {
   const m = req.match(/^(.*?) Complete the quest$/);
@@ -62,9 +84,9 @@ const questFromReq = (req: string): string | null => {
 };
 
 export function slayerReachability(masters: SlayerMasters, unlocks: UnlockState, locate: LocateFn): SlayerReach {
-  const slayerLevel = unlocks.levels?.['Slayer'] ?? 1;
+  const slayerLevel = effectiveSkillLevel(unlocks, 'Slayer');
   const slayerUnlocked = (unlocks.skills?.['Slayer'] ?? 0) > 0;
-  const combat = combatLevel(unlocks.levels ?? {});
+  const combat = effectiveCombatLevel(unlocks);
   const questSet = new Set(unlocks.quests ?? []);
 
   const reqMet = (req?: string[]): boolean => {

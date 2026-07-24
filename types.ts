@@ -131,7 +131,8 @@ export interface UnlockState {
 }
 
 export interface GameState {
-  version?: number;
+  /** Canonical reducer states are stamped at the strict save boundary. */
+  version: number;
   keys: number;
   specialKeys: number;
   chaosKeys: number;

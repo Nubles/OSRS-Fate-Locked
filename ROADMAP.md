@@ -196,15 +196,14 @@ Follow-ups:
   after a failed load (`init(force)` bypasses for Retry buttons). Without
   this, the relay driver re-fetched on every state change while offline.
 
-## 5. Release checklist (web app)
+## 5. Web release handoff
 
-```
-npx vitest run        # 406 tests
-npx tsc --noEmit
-npx vite build        # main chunk should stay ≈118 kB gzip
-git push              # GitHub Pages deploys from main
-```
+Use the [release verification checklist](docs/RELEASE_CHECKLIST.md) for the
+single authoritative command order, generated-data review, and GitHub handoff.
+The required GitHub check is `CI / quality`; enabling it in branch protection
+is a manual repository-maintainer setting after the workflow first appears.
 
-If the eager `dist/assets/index-*.js` grows past ~130 kB gzip, something
-that should be lazy got imported eagerly — grep the built file for content
-markers, don't trust the import graph.
+Build-size watch: if the eager `dist/assets/index-*.js` grows past about
+130 kB gzip, something that should be lazy may have been imported eagerly.
+Inspect the built file for content markers rather than relying only on the
+import graph.

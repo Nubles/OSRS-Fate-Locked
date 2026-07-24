@@ -7,11 +7,10 @@ import { chunkReachability } from '../utils/chunkReach';
 import { chunkForPlace, chunkUnlocked, placeOf, showChunkOnMap } from '../utils/chunkLocations';
 import { questLocations } from '../utils/questLocations';
 import { questChunkStatus, doabilityBucket, DoabilityBucket, entryBlockedGate, QuestChunkStatus } from '../utils/questDoability';
-import { isAreaReachable } from '../utils/reachability';
 import {
-  getQuestStatus, meetsSkillRequirement, questAlternativesMet,
-  questRequirementOptionLabel,
+  evaluateQuestEligibility, questRequirementOptionLabel,
 } from '../utils/journalStatus';
+import { effectiveCombatLevel } from '../utils/slayerReach';
 import { WIKI_OVERRIDES } from '../constants';
 import { UnlockState } from '../types';
 
@@ -55,69 +54,72 @@ export const evaluateQuestDoability = (
   chunkLockedAreas: string[] = [],
   gameModeId?: string,
 ): QuestDoabilityEvaluation => {
-  const completed = unlocks.quests.includes(quest.id);
+  const eligibility = evaluateQuestEligibility(quest, unlocks, gameModeId);
+  const completed = eligibility.status === 'COMPLETED';
   const currentQP = unlocks.quests.reduce(
     (total, qid) => total + (QUEST_DATA[qid]?.points ?? 0),
     0,
   );
+  const skillBlockers = new Set(
+    eligibility.blockers
+      .filter(blocker => blocker.kind === 'skill')
+      .map(blocker => blocker.label),
+  );
   const missingSkills: QuestDoabilityEvaluation['missingSkills'] = [];
   for (const [skill, lvl] of Object.entries(quest.skills)) {
+    if (!skillBlockers.has(skill + ' ' + lvl)) continue;
     if (skill === 'Quest Points') {
-      if (currentQP < lvl) {
-        missingSkills.push({ skill, lvl, have: currentQP });
-      }
+      missingSkills.push({ skill, lvl, have: currentQP });
       continue;
     }
-    if (!meetsSkillRequirement(unlocks, skill, lvl)) {
-      const tier = unlocks.skills[skill] ?? 0;
-      const unlocked = tier > 0;
-      missingSkills.push({
-        skill,
-        lvl,
-        have: unlocked ? (unlocks.levels[skill] ?? 1) : 0,
-        methodCap: unlocked ? Math.min(99, tier * 10) : undefined,
-      });
-    }
+    const tier = unlocks.skills[skill] ?? 0;
+    const unlocked = tier > 0;
+    missingSkills.push({
+      skill,
+      lvl,
+      have: unlocked ? (unlocks.levels[skill] ?? 1) : 0,
+      methodCap: unlocked ? Math.min(99, tier * 10) : undefined,
+    });
+  }
+  if (quest.combatLevel !== undefined && eligibility.blockers.some(
+    blocker => blocker.kind === 'combat',
+  )) {
+    missingSkills.push({
+      skill: 'Combat level',
+      lvl: quest.combatLevel,
+      have: effectiveCombatLevel(unlocks),
+    });
   }
 
-  const missingPrereqs = quest.prereqs.filter(
-    qid => !unlocks.quests.includes(qid),
-  );
-  const alternativeMet = questAlternativesMet(quest, unlocks, gameModeId);
-  const requirementStatus = getQuestStatus(
-    quest,
-    unlocks,
-    gameModeId,
-    { requiredRegionsReachable: true },
-  );
-  const reqsMet = requirementStatus === 'AVAILABLE'
-    || requirementStatus === 'COMPLETED';
-  const authoredBlockers = quest.regions.filter(
-    region => !isAreaReachable(region, unlocks, gameModeId),
-  );
-  const alternativeBlockers = alternativeMet
-    ? []
-    : [`One of: ${quest.oneOf!.map(questRequirementOptionLabel).join(' or ')}`];
+  const missingPrereqs = eligibility.blockers
+    .filter(blocker => blocker.kind === 'quest')
+    .map(blocker => blocker.label);
+  const reqsMet = eligibility.status === 'AVAILABLE' || completed;
+  const alternativeLabel = quest.oneOf?.length
+    ? quest.oneOf.map(questRequirementOptionLabel).join(' or ')
+    : '';
+  const canonicalRegionBlockers = eligibility.blockers
+    .filter(blocker => blocker.kind === 'region')
+    .map(blocker => blocker.label === alternativeLabel
+      ? 'One of: ' + blocker.label
+      : blocker.label);
 
   let bucket: DoabilityBucket;
   if (completed) {
     bucket = 'DONE';
-  } else if (!alternativeMet) {
+  } else if (canonicalRegionBlockers.length > 0) {
     bucket = 'LOCKED';
   } else if (chunk) {
     bucket = doabilityBucket(false, reqsMet, chunk);
   } else {
-    bucket = authoredBlockers.length > 0
-      ? 'LOCKED'
-      : reqsMet ? 'DOABLE' : 'REQS';
+    bucket = reqsMet ? 'DOABLE' : 'REQS';
   }
 
   const lockedAreas = bucket !== 'LOCKED'
     ? []
     : [...new Set([
       ...(chunk?.access === 'LOCKED' ? chunkLockedAreas : []),
-      ...(!chunk ? authoredBlockers : []),
-      ...alternativeBlockers,
+      ...canonicalRegionBlockers,
     ])];
 
   return {

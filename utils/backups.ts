@@ -9,7 +9,8 @@
  * sized so routine session snapshots can't evict every pre-overwrite one.
  */
 
-const SUFFIX = '__backups';
+import type { BackupWriteResult } from './gamePersistence';
+import { profileBackupKey } from './profileStorage';
 const MAX_BACKUPS = 8;
 
 export interface BackupMeta {
@@ -23,11 +24,9 @@ interface BackupEntry extends BackupMeta {
   data: string;
 }
 
-const keyFor = (storageKey: string): string => storageKey + SUFFIX;
-
 const readAll = (storageKey: string): BackupEntry[] => {
   try {
-    const parsed = JSON.parse(localStorage.getItem(keyFor(storageKey)) || '[]');
+    const parsed = JSON.parse(localStorage.getItem(profileBackupKey(storageKey)) || '[]');
     return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
@@ -53,28 +52,33 @@ export const listBackups = (storageKey: string): BackupMeta[] =>
   readAll(storageKey).map(({ data: _data, ...meta }) => meta);
 
 /**
- * Snapshot `data` (a serialized persisted state). No-ops on empty input or when
- * it's identical to the most recent backup, so repeated saves don't churn the
- * ring. Quota failures are swallowed — a backup is best-effort.
+ * Snapshot `data` (a serialized persisted state). Empty and duplicate inputs are
+ * observable no-ops; storage failures are reported so replacement callers can
+ * warn without blocking the accepted operation.
  */
-export const pushBackup = (storageKey: string, data: string, reason: string): void => {
-  if (!data) return;
+export const pushBackup = (
+  storageKey: string,
+  data: string,
+  reason: string,
+): BackupWriteResult => {
+  if (!data) return { stored: false, reason: 'empty' };
   const entries = readAll(storageKey);
-  if (entries[0]?.data === data) return; // nothing changed since last snapshot
+  if (entries[0]?.data === data) return { stored: false, reason: 'duplicate' };
   const entry: BackupEntry = { ts: Date.now(), reason, summary: summarizeSave(data), data };
   const next = [entry, ...entries].slice(0, MAX_BACKUPS);
   try {
-    localStorage.setItem(keyFor(storageKey), JSON.stringify(next));
+    localStorage.setItem(profileBackupKey(storageKey), JSON.stringify(next));
+    return { stored: true };
   } catch {
-    // Quota exceeded — drop the oldest and retry once with a smaller ring.
     try {
-      localStorage.setItem(keyFor(storageKey), JSON.stringify(next.slice(0, 2)));
+      localStorage.setItem(profileBackupKey(storageKey), JSON.stringify(next.slice(0, 2)));
+      return { stored: true };
     } catch {
-      /* give up silently — backups must never block the real operation */
+      return { stored: false, reason: 'storage_unavailable' };
     }
   }
 };
 
 /** The serialized save for a given backup timestamp, or null if gone. */
 export const getBackupData = (storageKey: string, ts: number): string | null =>
-  readAll(storageKey).find((e) => e.ts === ts)?.data ?? null;
+  readAll(storageKey).find((entry) => entry.ts === ts)?.data ?? null;

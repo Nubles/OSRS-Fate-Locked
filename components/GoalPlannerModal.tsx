@@ -7,6 +7,7 @@ import { useGame } from '../context/GameContext';
 import { wikiUrlFor } from '../constants';
 import {
   listGoalTargets, planForTarget, GoalTarget, GoalPlan, PlanStep, GoalKind,
+  AlternativePlanStep,
 } from '../utils/goalPlanner';
 import { getQuestStatus, getDiaryStatus } from '../utils/journalStatus';
 import { isAreaReachable } from '../utils/reachability';
@@ -140,6 +141,42 @@ const PlanSection: React.FC<{
       <div className="space-y-1">
         {steps.map((s, i) => (
           <StepRow key={`${s.kind}:${s.id}`} step={s} index={numbered ? i + 1 : undefined} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const AlternativeSection: React.FC<{ steps: AlternativePlanStep[] }> = ({ steps }) => {
+  if (steps.length === 0) return null;
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-1.5 px-0.5">
+        <Route size={12} className="text-gray-400" aria-hidden />
+        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-300">Alternative routes</span>
+        <span className="text-[9px] text-gray-600 font-mono">choose one</span>
+        <div className="flex-1 h-px bg-white/5" />
+      </div>
+      <div className="space-y-1.5">
+        {steps.map(step => (
+          <div key={step.id} className="rounded-md border border-white/5 bg-[#1a1a1a] px-2.5 py-2">
+            <div className="text-[10px] font-semibold text-gray-300 mb-1">{step.label}</div>
+            <div className="space-y-1">
+              {step.routes.map(route => (
+                <div key={route.label} className="flex items-start gap-1.5 text-[10px] text-gray-400">
+                  <Circle size={10} className="text-gray-600 mt-0.5 shrink-0" aria-hidden />
+                  <span>
+                    <span className="text-gray-200">{route.label}</span>
+                    {route.blockers.length > 0 && (
+                      <span className="text-gray-600"> ? {route.blockers.map(blocker => (
+                        blocker.label + (blocker.detail ? ' ' + blocker.detail : '')
+                      )).join(' + ')}</span>
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
     </div>
@@ -317,6 +354,7 @@ export const GoalPlannerModal: React.FC<Props> = ({ onClose, initialTarget }) =>
                   <>
                     <PlanSection title="Regions to unlock" icon={<MapPin size={12} />} steps={plan.regionSteps} />
                     <PlanSection title="Skills to train" icon={<Dumbbell size={12} />} steps={plan.skillSteps} />
+                    <AlternativeSection steps={plan.alternativeSteps} />
                     {plan.qpStep && (
                       <PlanSection title="Quest points" icon={<Star size={12} />} steps={[plan.qpStep]} />
                     )}

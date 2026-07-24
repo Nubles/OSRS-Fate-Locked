@@ -1,13 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { pushBackup, listBackups, getBackupData, summarizeSave } from './backups';
 
-// Isolated in-memory localStorage so the ring tests are deterministic.
 beforeEach(() => {
   const store = new Map<string, string>();
   (globalThis as any).localStorage = {
-    getItem: (k: string) => (store.has(k) ? store.get(k)! : null),
-    setItem: (k: string, v: string) => { store.set(k, v); },
-    removeItem: (k: string) => { store.delete(k); },
+    getItem: (key: string) => (store.has(key) ? store.get(key)! : null),
+    setItem: (key: string, value: string) => { store.set(key, value); },
+    removeItem: (key: string) => { store.delete(key); },
     clear: () => store.clear(),
   };
 });
@@ -23,8 +22,8 @@ describe('backup ring', () => {
   });
 
   it('pushes and lists newest-first without the heavy data field', () => {
-    pushBackup(KEY, save({ keys: 1 }), 'first');
-    pushBackup(KEY, save({ keys: 2 }), 'second');
+    expect(pushBackup(KEY, save({ keys: 1 }), 'first')).toEqual({ stored: true });
+    expect(pushBackup(KEY, save({ keys: 2 }), 'second')).toEqual({ stored: true });
     const list = listBackups(KEY);
     expect(list.length).toBe(2);
     expect(list[0].reason).toBe('second');
@@ -34,7 +33,7 @@ describe('backup ring', () => {
   it('skips a snapshot identical to the most recent', () => {
     const data = save({ keys: 9 });
     pushBackup(KEY, data, 'a');
-    pushBackup(KEY, data, 'b');
+    expect(pushBackup(KEY, data, 'b')).toEqual({ stored: false, reason: 'duplicate' });
     expect(listBackups(KEY).length).toBe(1);
   });
 
@@ -54,8 +53,28 @@ describe('backup ring', () => {
     expect(getBackupData(KEY, 0)).toBeNull();
   });
 
-  it('ignores empty data', () => {
-    pushBackup(KEY, '', 'noop');
+  it('reports empty data as an observable no-op', () => {
+    expect(pushBackup(KEY, '', 'noop')).toEqual({ stored: false, reason: 'empty' });
     expect(listBackups(KEY).length).toBe(0);
+  });
+
+  it('reports storage failure when both the quota write and retry fail', () => {
+    (globalThis as any).localStorage.setItem = () => {
+      throw new DOMException('Quota exceeded', 'QuotaExceededError');
+    };
+    expect(pushBackup(KEY, save(), 'quota')).toEqual({ stored: false, reason: 'storage_unavailable' });
+  });
+
+  it('reports success when the smaller-ring quota retry succeeds', () => {
+    const writes: string[] = [];
+    let attempt = 0;
+    (globalThis as any).localStorage.setItem = (_key: string, value: string) => {
+      attempt += 1;
+      if (attempt === 1) throw new DOMException('Quota exceeded', 'QuotaExceededError');
+      writes.push(value);
+    };
+    expect(pushBackup(KEY, save(), 'retry')).toEqual({ stored: true });
+    expect(attempt).toBe(2);
+    expect(JSON.parse(writes[0])).toHaveLength(1);
   });
 });

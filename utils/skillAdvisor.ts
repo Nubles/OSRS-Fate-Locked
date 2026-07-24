@@ -8,17 +8,18 @@
  *   • QUESTS  — quests that go AVAILABLE once the level is reached (plus the
  *               full downstream cascade), via the shared unlock-impact engine.
  *   • DIARIES — diary tiers you can newly *fully complete* (regions + quests +
- *               every skill gate met). NOTE: getDiaryStatus deliberately
- *               ignores skill gates, so we evaluate them explicitly here.
+ *               every canonical task gate met).
  *
  * Pure & side-effect-free — safe inside useMemo.
  */
 
 import { SKILLS_LIST } from '../constants';
-import { QUEST_DATA } from '../data/questData';
-import { DIARY_DATA, DiaryTier } from '../data/diaryData';
-import { computeUnlockImpact } from './unlockImpact';
-import { isAreaReachable } from './reachability';
+import { hasCompletedQuestCapeRequirements, QUEST_DATA } from '../data/questData';
+import { DIARY_DATA } from '../data/diaryData';
+import { ALL_DIARY_TASKS } from '../data/diaryTasks';
+import { computeUnlockImpact, prepareUnlockImpactContext } from './unlockImpact';
+import { EligibilityBlocker, evaluateDiaryTierEligibility, getDiaryStatus } from './journalStatus';
+import { effectiveCombatLevel, effectiveSkillLevel } from './slayerReach';
 
 export interface RankedSkill {
   id: string;          // skill name
@@ -32,18 +33,6 @@ export interface RankedSkill {
   cascadeScore: number;
 }
 
-/** A diary tier is fully completable if regions, quests, AND all skills are met. */
-function diaryFullyDoable(d: DiaryTier, unlocks: any, gameModeId?: string): boolean {
-  if (d.requiredRegions.some((r) => !isAreaReachable(r, unlocks, gameModeId))) return false;
-  if (d.quests.some((qid) => !unlocks.quests.includes(qid))) return false;
-  for (const [skill, lvl] of Object.entries(d.skills as Record<string, number>)) {
-    const unlocked = (unlocks.skills[skill] ?? 0) > 0;
-    const current = unlocks.levels[skill] ?? 1;
-    if (!unlocked || current < lvl) return false;
-  }
-  return true;
-}
-
 /**
  * Returns skills ranked by the impact of training to their next gating level.
  * Skills whose next threshold unlocks nothing are omitted. Sorted by cascade
@@ -51,63 +40,164 @@ function diaryFullyDoable(d: DiaryTier, unlocks: any, gameModeId?: string): bool
  */
 export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedSkill[] {
   const allDiaries = Object.values(DIARY_DATA);
+  const impactContext = prepareUnlockImpactContext(unlocks, gameModeId);
+  const baseDiaryEligibility = new Map(allDiaries.map(diary => [
+    diary.id,
+    evaluateDiaryTierEligibility(diary, unlocks, gameModeId),
+  ]));
+  const isOpen = (status: string | undefined) => (
+    status === 'AVAILABLE' || status === 'COMPLETED'
+  );
+
+  const combatSkillNames = [
+    'Attack', 'Strength', 'Defence', 'Hitpoints', 'Prayer', 'Ranged', 'Magic',
+  ] as const;
+  const combatSkills = new Set<string>(combatSkillNames);
+  const combatRequirements = new Set<number>();
+
+  // Build the threshold index once. The previous skill-first scan revisited
+  // all 492 tasks and all quest requirements for every skill.
+  const thresholdsBySkill = new Map<string, Set<number>>(
+    SKILLS_LIST.map(skill => [skill, new Set<number>()]),
+  );
+  const addThreshold = (skill: string, level: number) => {
+    const current = unlocks.levels[skill] ?? (skill === 'Hitpoints' ? 10 : 1);
+    if (level > current && level <= 99) thresholdsBySkill.get(skill)?.add(level);
+  };
+  for (const quest of Object.values(QUEST_DATA)) {
+    for (const [skill, level] of Object.entries(quest.skills)) addThreshold(skill, level);
+    if (quest.combatLevel !== undefined) combatRequirements.add(quest.combatLevel);
+  }
+  for (const task of ALL_DIARY_TASKS) {
+    for (const requirement of [task, ...(task.oneOf ?? [])]) {
+      for (const [skill, level] of Object.entries(requirement.skills ?? {})) {
+        addThreshold(skill, level);
+      }
+      if (requirement.anySkillLevel) {
+        for (const skill of SKILLS_LIST) {
+          addThreshold(skill, requirement.anySkillLevel);
+        }
+      }
+      if (requirement.anyOfSkillsLevel) {
+        for (const skill of requirement.anyOfSkillsLevel.skills) {
+          addThreshold(skill, requirement.anyOfSkillsLevel.level);
+        }
+      }
+      if (requirement.combinedSkillLevel) {
+        for (const skill of requirement.combinedSkillLevel.skills) {
+          const otherLevels = requirement.combinedSkillLevel.skills
+            .filter(candidate => candidate !== skill)
+            .reduce((sum, candidate) => sum + effectiveSkillLevel(unlocks, candidate), 0);
+          addThreshold(skill, requirement.combinedSkillLevel.level - otherLevels);
+        }
+      }
+      if (requirement.combatLevel !== undefined) {
+        combatRequirements.add(requirement.combatLevel);
+      }
+    }
+  }
+
+  for (const requiredCombatLevel of combatRequirements) {
+    if (effectiveCombatLevel(unlocks) >= requiredCombatLevel) continue;
+    for (const skill of combatSkillNames) {
+      const current = unlocks.levels[skill] ?? (skill === 'Hitpoints' ? 10 : 1);
+      const candidateTier = Math.max(unlocks.skills[skill] ?? 0, 1);
+      const methodCap = Math.min(99, candidateTier * 10);
+      for (let level = current + 1; level <= methodCap; level += 1) {
+        const simulated = {
+          ...unlocks,
+          levels: { ...unlocks.levels, [skill]: level },
+          skills: { ...unlocks.skills, [skill]: candidateTier },
+        };
+        if (effectiveCombatLevel(simulated) >= requiredCombatLevel) {
+          addThreshold(skill, level);
+          break;
+        }
+      }
+    }
+  }
+  const blockerCanChange = (
+    blocker: EligibilityBlocker,
+    skill: string,
+    newQuestIds: Set<string>,
+    completesQuestCape: boolean,
+  ): boolean => {
+    if (blocker.kind === 'skill') {
+      return blocker.label.startsWith('Any skill ')
+        || blocker.label.includes(skill);
+    }
+    if (blocker.kind === 'combat') {
+      return blocker.label.startsWith('Combat level ') && combatSkills.has(skill);
+    }
+    if (blocker.kind === 'quest') {
+      return newQuestIds.has(blocker.label)
+        || (blocker.label === 'All quests' && completesQuestCape);
+    }
+    if (blocker.kind === 'region') return false;
+    return blocker.routes.some(route => route.blockers.every(routeBlocker => (
+      blockerCanChange(routeBlocker, skill, newQuestIds, completesQuestCape)
+    )));
+  };
+  const candidateDiaryIds = (
+    skill: string,
+    newQuestIds: Set<string>,
+    completesQuestCape: boolean,
+  ): string[] => allDiaries
+    .filter(diary => !isOpen(impactContext.baseDiaryStatus.get(diary.id)))
+    .filter(diary => baseDiaryEligibility.get(diary.id)!.blockers.every(blocker => (
+      blockerCanChange(blocker, skill, newQuestIds, completesQuestCape)
+    )))
+    .map(diary => diary.id);
 
   const ranked: RankedSkill[] = [];
-
   for (const skill of SKILLS_LIST) {
     const current = unlocks.levels[skill] ?? 1;
-
-    // Distinct level thresholds for this skill across quests + diaries,
-    // above the current level. Ascending — we want the *nearest* useful one.
-    const thresholds = new Set<number>();
-    for (const q of Object.values(QUEST_DATA)) {
-      const lvl = (q.skills as Record<string, number>)[skill];
-      if (lvl && lvl > current) thresholds.add(lvl);
-    }
-    for (const d of allDiaries) {
-      const lvl = (d.skills as Record<string, number>)[skill];
-      if (lvl && lvl > current) thresholds.add(lvl);
-    }
-    const sorted = Array.from(thresholds).sort((a, b) => a - b);
-    if (sorted.length === 0) continue;
-
-    // Walk thresholds and take the first that actually unlocks something.
+    const sorted = [...(thresholdsBySkill.get(skill) ?? [])].sort((a, b) => a - b);
     let chosen: RankedSkill | null = null;
+
     for (const target of sorted) {
       const simulated = {
         ...unlocks,
         levels: { ...unlocks.levels, [skill]: target },
-        // Treat the skill as unlocked at the target so the simulation is valid
-        // even for skills still on tier 0.
         skills: { ...unlocks.skills, [skill]: Math.max(unlocks.skills[skill] ?? 0, 1) },
       };
+      // Quest cascade work is shared, while diary checks are limited below to
+      // tiers this skill can affect (and broadened only when new quests cascade).
+      const impact = computeUnlockImpact(unlocks, simulated, gameModeId, {
+        context: impactContext,
+        diaryIds: [],
+      });
 
-      const impact = computeUnlockImpact(unlocks, simulated);
+      const directDiaryIds = candidateDiaryIds(skill, new Set(), false).filter(id => {
+        const diary = DIARY_DATA[id];
+        return diary && isOpen(getDiaryStatus(diary, simulated, gameModeId));
+      });
 
-      // Skill-aware diary tiers: newly fully-doable right now (regions+quests
-      // already satisfied, this skill raise closes the last skill gap).
-      const directDiaryIds = allDiaries
-        .filter((d) => !diaryFullyDoable(d, unlocks, gameModeId) && diaryFullyDoable(d, simulated, gameModeId))
-        .map((d) => d.id);
-
-      // Cascade diaries: same check but on the post-cascade quest snapshot,
-      // so quests the skill unblocks can in turn satisfy diary quest gates.
-      const cascadeSnap = { ...simulated, quests: impact.finalQuestIds };
-      const cascadeDiaryIds = allDiaries
-        .filter((d) => !diaryFullyDoable(d, unlocks, gameModeId) && diaryFullyDoable(d, cascadeSnap, gameModeId))
-        .map((d) => d.id);
+      let cascadeDiaryIds = directDiaryIds;
+      if (impact.cascadeQuestNames.length > 0) {
+        const cascadeSnap = { ...simulated, quests: impact.finalQuestIds };
+        const newQuestIds = new Set(impact.finalQuestIds.filter(
+          id => !unlocks.quests.includes(id),
+        ));
+        cascadeDiaryIds = candidateDiaryIds(
+          skill,
+          newQuestIds,
+          hasCompletedQuestCapeRequirements(impact.finalQuestIds),
+        ).filter(id => {
+          const diary = DIARY_DATA[id];
+          return diary && isOpen(getDiaryStatus(diary, cascadeSnap, gameModeId));
+        });
+      }
 
       const unlocksSomething =
         impact.directQuestNames.length > 0 ||
         impact.cascadeQuestNames.length > 0 ||
         directDiaryIds.length > 0 ||
         cascadeDiaryIds.length > 0;
-
       if (!unlocksSomething) continue;
 
       const score = impact.directQuestNames.length * 2 + directDiaryIds.length;
       const cascadeScore = impact.cascadeQuestNames.length * 2 + cascadeDiaryIds.length;
-
       chosen = {
         id: skill,
         currentLevel: current,
@@ -121,7 +211,6 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
       };
       break;
     }
-
     if (chosen) ranked.push(chosen);
   }
 

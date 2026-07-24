@@ -5,7 +5,7 @@
  * the new name appended under a fresh id — a duplicate slot players may have
  * ticked under either id. After merging the data back to one entry, this map
  * folds the retired id's progress into the surviving one at save load
- * (GameContext.migrateSave). Counts merge by MAX, not sum: both ids described
+ * (utils/saveSchema.ts). Counts merge by MAX, not sum: both ids described
  * the same physical drop, so summing would double-count it.
  */
 

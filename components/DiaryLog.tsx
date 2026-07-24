@@ -4,19 +4,18 @@ import { useGame } from '../context/GameContext';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS, DiaryTask } from '../data/diaryTasks';
 import { Map, CheckCircle2, Lock, Sparkles, BookOpen, ChevronDown, CheckSquare, Square, ExternalLink, ArrowUpRight, TrendingUp, MapPin } from 'lucide-react';
-import { DROP_RATES } from '../config/rules';
-import { MISTHALIN_AREAS } from '../constants';
 import { chunkForPlace, showChunkOnMap } from '../utils/chunkLocations';
 import { diaryUnmet, isAlmostThere } from '../utils/journalProgress';
 import { isAreaReachable } from '../utils/reachability';
+import { effectiveSkillLevel } from '../utils/slayerReach';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SkillTrainingPopover, SkillPopoverState } from './SkillTrainingPopover';
-import { showToast } from '../utils/toast';
 import { DiaryInsights } from './JournalInsights';
 import { DiaryHeatmap } from './DiaryHeatmap';
 import {
-  countDoableTasks, countMetSkillRequirements, meetsSkillRequirement,
+  countDoableTasks, diaryRequirementOptionLabel, evaluateDiaryTaskEligibility,
+  evaluateDiaryTierEligibility, getDiaryStatus, meetsSkillRequirement,
 } from '../utils/journalStatus';
 
 // Doable-now counting lives in utils/journalStatus (shared with the
@@ -28,7 +27,7 @@ interface DiaryLogProps {
 }
 
 export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch = '', suspendModals = false }) => {
-  const { unlocks, toggleDiary, rollForKey, toggleTask, advisorsEnabled, gameModeId } = useGame();
+  const { unlocks, completeDiaryTask, completeDiaryTier, advisorsEnabled, gameModeId } = useGame();
   // Filter state persisted across sessions.
   const [filterRegion, setFilterRegion] = useLocalStorage<string>('jrnl:diary:region', 'ALL');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -71,45 +70,9 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const getStatus = (diary: DiaryTier) => {
-    if (unlocks.diaries.includes(diary.id)) return 'COMPLETED';
-    
-    const tasks = ALL_DIARY_TASKS.filter(t => t.tierId === diary.id);
-    
-    // If we have tasks, determine status based on task accessibility
-    if (tasks.length > 0) {
-        // Check Region Lock: Are ALL tasks region locked?
-        const allTasksRegionLocked = tasks.every(t => {
-            if (!t.regions || t.regions.length === 0) return false;
-            return t.regions.every(r => !isAreaReachable(r, unlocks, gameModeId));
-        });
-        if (allTasksRegionLocked) return 'LOCKED_REGION';
-
-        // Check Skill Lock: Are ALL tasks skill locked? (Optional, but good for consistency)
-        // For now, we'll keep the top-level simpler and rely on the existing behavior 
-        // or just default to AVAILABLE if at least one task is region-accessible.
-        
-        // We can still check the DiaryTier object's explicit skills if we want, 
-        // but often the tasks are the source of truth. 
-        // Let's assume if regions are accessible, it's "AVAILABLE" (even if skills are low),
-        // because you can technically "see" it.
-    } else {
-        // Fallback for empty/data-less diaries (shouldn't happen with full data)
-        // Check Regions on Tier Object
-        if (diary.requiredRegions.some(r => {
-             // If r is a group name like 'Kandarin' and not in unlocks, this returns true (locked),
-             // which is the bug we wanted to avoid if we rely solely on this.
-             // But since we prioritize tasks above, this fallback is minor.
-             return !isAreaReachable(r, unlocks, gameModeId);
-        })) return 'LOCKED_REGION';
-    }
-
-    // Check Quests (Tier level)
-    const missingQuests = diary.quests.some(qid => !unlocks.quests.includes(qid));
-    if (missingQuests) return 'LOCKED_QUEST';
-
-    return 'AVAILABLE';
-  };
+  const getStatus = (diary: DiaryTier) => (
+    getDiaryStatus(diary, unlocks, gameModeId)
+  );
 
   const getDiaryWikiLink = (tierId: string) => {
     const [region, tier] = tierId.split(' ');
@@ -187,46 +150,12 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
 
   const handleToggle = (e: React.MouseEvent, diary: DiaryTier) => {
       e.stopPropagation();
-      const isCompleting = !unlocks.diaries.includes(diary.id);
-      
-      if (!isCompleting) return; 
-
-      if (isCompleting) {
-          const tasks = ALL_DIARY_TASKS.filter(t => t.tierId === diary.id);
-          if (tasks.length > 0) {
-              const allDone = tasks.every(t => unlocks.completedTasks.includes(t.id));
-              if (!allDone) {
-                  showToast('Complete all individual tasks in this section first');
-                  return;
-              }
-          }
-
-          toggleDiary(diary.id);
-      }
+      completeDiaryTier(diary.id);
   };
 
-  const handleTaskToggle = (task: DiaryTask, diary: DiaryTier, e: React.MouseEvent) => {
+  const handleTaskToggle = (task: DiaryTask, e: React.MouseEvent) => {
       e.stopPropagation();
-      
-      if (unlocks.diaries.includes(diary.id)) return;
-      if (unlocks.completedTasks.includes(task.id)) return;
-
-      const isCompleting = !unlocks.completedTasks.includes(task.id);
-      toggleTask(task.id);
-
-      if (isCompleting) {
-          const rate = DROP_RATES[diary.difficulty];
-          rollForKey(diary.difficulty, rate, e.clientX, e.clientY);
-
-          const tierTasks = ALL_DIARY_TASKS.filter(t => t.tierId === diary.id);
-          const otherTasksDone = tierTasks.every(t => t.id === task.id || unlocks.completedTasks.includes(t.id));
-          
-          if (otherTasksDone) {
-              if (!unlocks.diaries.includes(diary.id)) {
-                  toggleDiary(diary.id); 
-              }
-          }
-      }
+      completeDiaryTask(task.id, e.clientX, e.clientY);
   };
 
   return (
@@ -292,19 +221,17 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
 
           // Req progress for LOCKED diary cards: count diary-level gates met
           // (required regions + prerequisite quests + skill requirements).
-          const gatedRegions = diary.requiredRegions.filter(
-            r => r !== 'Misthalin' && !MISTHALIN_AREAS.includes(r),
-          );
-          const metRegionCount = gatedRegions.filter(r => isAreaReachable(r, unlocks, gameModeId)).length;
-          const diarySkillReqs = Object.entries(diary.skills);
-          const metSkillCount = countMetSkillRequirements(diary.skills, unlocks);
-          const metQuestCount = diary.quests.filter(q => unlocks.quests.includes(q)).length;
-          const dTotalReqs = gatedRegions.length + diarySkillReqs.length + diary.quests.length;
-          const dTotalMet = metRegionCount + metSkillCount + metQuestCount;
+          const tierEligibility = evaluateDiaryTierEligibility(diary, unlocks, gameModeId);
+          const dUnmet = (isCompleted || isAvailable)
+            ? []
+            : diaryUnmet(diary, unlocks, gameModeId);
+          const dTotalMet = tierEligibility.evidence.length;
+          const dTotalReqs = dTotalMet + tierEligibility.blockers.length;
           const dReqPct = dTotalReqs === 0 ? 100 : Math.round((dTotalMet / dTotalReqs) * 100);
-          const missingDiaryQuests = diary.quests.filter(q => !unlocks.quests.includes(q));
+          const missingDiaryQuests = dUnmet
+            .filter(requirement => requirement.kind === 'quest' && requirement.label !== 'All quests')
+            .map(requirement => requirement.label);
           // "Almost there" — the tier is blocked by exactly one requirement.
-          const dUnmet = (isCompleted || isAvailable) ? [] : diaryUnmet(diary, unlocks, gameModeId);
           const dAlmost = isAlmostThere(dUnmet);
 
           return (
@@ -403,14 +330,22 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                   <div className="border-t border-white/5 bg-black/20 p-2 space-y-1">
                       {tasks.map(task => {
                           const isTaskDone = unlocks.completedTasks.includes(task.id);
-                          const hasReqs = (task.skills && Object.keys(task.skills).length > 0) || (task.quests && task.quests.length > 0) || (task.regions && task.regions.length > 0);
+                          const taskEligibility = evaluateDiaryTaskEligibility(task, unlocks, gameModeId);
+                          const alternativeLabel = task.oneOf?.length
+                            ? task.oneOf.map(diaryRequirementOptionLabel).join(' or ')
+                            : undefined;
+                          const hasReqs = Boolean(
+                            Object.keys(task.skills ?? {}).length || task.items?.length || task.quests?.length
+                            || task.regions?.length || task.oneOf?.length || task.combatLevel
+                            || task.allQuests || task.anySkillLevel,
+                          );
                           
                           if (searchTerm && !task.description.toLowerCase().includes(searchTerm.toLowerCase()) && !diary.id.toLowerCase().includes(searchTerm.toLowerCase())) return null;
 
                           return (
                               <button 
                                 key={task.id}
-                                onClick={(e) => handleTaskToggle(task, diary, e)}
+                                onClick={(e) => handleTaskToggle(task, e)}
                                 disabled={isCompleted || isTaskDone}
                                 className={`w-full flex items-start gap-3 p-2 rounded text-left group ${(isCompleted || isTaskDone) ? 'cursor-default opacity-70' : 'hover:bg-white/5 cursor-pointer'}`}
                               >
@@ -438,7 +373,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                       {hasReqs && !isTaskDone && (
                                           <div className="flex flex-wrap gap-1.5 mt-1.5">
                                               {task.skills && Object.entries(task.skills).map(([skill, level]) => {
-                                                  const current = unlocks.levels[skill] || 1;
+                                                  const current = effectiveSkillLevel(unlocks, skill);
                                                   const met = meetsSkillRequirement(unlocks, skill, level as number);
                                                   if (met) {
                                                       return (
@@ -466,6 +401,11 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                                       </button>
                                                   );
                                               })}
+                                              {task.items?.map(item => (
+                                                <span key={item} className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-white/5 text-gray-500 bg-black/30">
+                                                  <BookOpen size={8} /> {item}
+                                                </span>
+                                              ))}
                                               {task.quests && task.quests.map(q => {
                                                   const met = unlocks.quests.includes(q);
                                                   const cls = met
@@ -495,6 +435,32 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                                           <MapPin size={8} /> {r}
                                                       </button>
                                                   );
+                                              })}
+                                              {alternativeLabel && (
+                                                <span className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${
+                                                  taskEligibility.blockers.some(blocker => blocker.kind === 'alternative')
+                                                    ? 'border-red-500/30 text-red-400 bg-red-900/10'
+                                                    : 'border-white/5 text-gray-500 bg-black/30'
+                                                }`}>
+                                                  <BookOpen size={8} /> One of: {alternativeLabel}
+                                                </span>
+                                              )}
+                                              {[
+                                                task.combatLevel ? `Combat level ${task.combatLevel}` : undefined,
+                                                task.allQuests ? 'All quests' : undefined,
+                                                task.anySkillLevel ? `Any skill ${task.anySkillLevel}` : undefined,
+                                              ].filter((label): label is string => Boolean(label)).map(label => {
+                                                const met = !taskEligibility.blockers.some(
+                                                  blocker => blocker.label === label,
+                                                );
+                                                return (
+                                                  <span
+                                                    key={label}
+                                                    className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${met
+                                                      ? 'border-white/5 text-gray-500 bg-black/30'
+                                                      : 'border-red-500/30 text-red-400 bg-red-900/10'}`}
+                                                  ><BookOpen size={8} /> {label}</span>
+                                                );
                                               })}
                                           </div>
                                       )}

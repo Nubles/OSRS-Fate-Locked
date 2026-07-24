@@ -2,23 +2,59 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef } from 'react';
 import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState } from '../types';
 import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST } from '../data/items';
-import { EQUIPMENT_TIER_MAX } from '../config/rules';
+import { DROP_RATES, EQUIPMENT_TIER_MAX } from '../config/rules';
 import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
 import { setStartArea } from '../utils/freeAreas';
-import { migrateClogIds } from '../utils/clogIdMigrations';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { getRitual, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, GAMBIT_KEYS_PER } from '../config/economy';
 import { BANK_BY_ID } from '../data/banks';
+import { DIARY_DATA } from '../data/diaryData';
+import { ALL_DIARY_TASKS } from '../data/diaryTasks';
+import { CA_DATA } from '../data/caData';
+import { ALL_CA_TASKS, CATask } from '../data/caTasks';
+import { QUEST_DATA } from '../data/questData';
 import { UNLOCK_COST } from '../utils/gameEngine';
 import { drawFloat } from '../utils/seededRng';
 import { hashEntry, ensureChain } from '../utils/integrity';
 import { pushBackup, listBackups as readBackups, getBackupData, BackupMeta } from '../utils/backups';
+import {
+  applyPreparedReplacement,
+  applyValidatedReplacement,
+  serializeCurrent as serializeGameState,
+  type BackupWriteResult,
+  type ImportResult,
+} from '../utils/gamePersistence';
+import { CURRENT_SAVE_VERSION, parseAndMigrateSave } from '../utils/saveSchema';
 import { showToast } from '../utils/toast';
+import {
+  canEarnDiaryTier,
+  diaryTaskCompletionDecision,
+  questCompletionDecision,
+  withJournalCompletion,
+} from '../utils/journalCompletion';
+import type { CompletionResult } from '../utils/journalCompletion';
+import {
+  caTierCompletionDecision,
+  completedCAPoints,
+  newlyEarnedCATiers,
+} from '../utils/caProgress';
 
 // --- Types ---
-const CURRENT_VERSION = 1;
 const SAVE_DEBOUNCE_MS = 500;
+
+export const writeReplacementNow = (
+  storage: Pick<Storage, 'setItem'>,
+  storageKey: string,
+  data: string,
+  pendingSave: { current: number | null },
+  cancelPending: (handle: number) => void,
+): void => {
+  storage.setItem(storageKey, data);
+  if (pendingSave.current === null) return;
+  cancelPending(pendingSave.current);
+  pendingSave.current = null;
+};
 
 const generateId = (): string => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -26,6 +62,11 @@ const generateId = (): string => {
   }
   // Fallback for older browsers
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 11)}`;
+};
+
+const completionFailure = (reason: string): CompletionResult => {
+  showToast(reason);
+  return { ok: false, reason };
 };
 
 type RollEventMeta = { roll: number; threshold: number };
@@ -67,22 +108,23 @@ interface GameContextType extends GameState {
    * Visual-only randomness (particles, animation jitter) is exempt.
    */
   nextFloat: (purpose: string, index?: number) => number;
-  importSave: (data: Partial<GameState>) => void;
+  importSave: (data: unknown) => ImportResult;
   resetGame: () => void;
   /** Snapshot the current run before something overwrites it. */
-  createBackup: (reason: string) => void;
+  createBackup: (reason: string) => BackupWriteResult;
   /** Backups for the active profile, newest first. */
   listBackups: () => BackupMeta[];
   /** Restore a backup by timestamp (snapshots the current run first). */
-  restoreBackup: (ts: number) => void;
+  restoreBackup: (ts: number) => ImportResult;
   togglePin: (id: string) => void;
   saveNote: (id: string, text: string) => void;
-  toggleQuest: (id: string) => void;
-  toggleDiary: (id: string) => void;
-  toggleCA: (id: string) => void;
-  toggleTask: (id: string) => void;
+  completeQuest: (id: string, x?: number, y?: number) => CompletionResult;
+  completeDiaryTask: (id: string, x?: number, y?: number) => CompletionResult;
+  completeDiaryTier: (id: string) => CompletionResult;
+  completeCATask: (id: string, x?: number, y?: number) => CompletionResult;
+  completeCATier: (id: string) => CompletionResult;
   logCollectionItem: (itemId: number) => void;
-  getExportData: () => string | null;
+  getExportData: () => string;
   /** Equip (or clear, with itemId=null) a real item in a slot; optionally clear other slots (2h handling). */
   setLoadoutSlot: (slot: string, itemId: number | null, clearSlots?: string[]) => void;
   setLinkedAccount: (account: string) => void;
@@ -121,7 +163,7 @@ const getInitialUnlocks = (): UnlockState => ({
 });
 
 export const initialState: GameState = {
-  version: CURRENT_VERSION,
+  version: CURRENT_SAVE_VERSION,
   keys: 3,
   specialKeys: 0,
   chaosKeys: 0,
@@ -139,94 +181,9 @@ export const initialState: GameState = {
   loadout: {},
 };
 
-// --- Save Validation ---
-const isValidSaveData = (data: unknown): data is Partial<GameState> => {
-  if (typeof data !== 'object' || data === null) return false;
-  const obj = data as Record<string, unknown>;
-
-  // Validate key numeric fields if present
-  if ('keys' in obj && typeof obj.keys !== 'number') return false;
-  if ('specialKeys' in obj && typeof obj.specialKeys !== 'number') return false;
-  if ('chaosKeys' in obj && typeof obj.chaosKeys !== 'number') return false;
-  if ('fatePoints' in obj && typeof obj.fatePoints !== 'number') return false;
-
-  // Validate history is an array if present
-  if ('history' in obj && !Array.isArray(obj.history)) return false;
-
-  // Validate unlocks is an object if present
-  if ('unlocks' in obj && (typeof obj.unlocks !== 'object' || obj.unlocks === null)) return false;
-
-  return true;
-};
-
-// --- Migration & Safety Logic ---
-const migrateSave = (saveData: Partial<GameState>): GameState => {
-  // 1. Create a clean base state to ensure all expected top-level keys exist
-  const baseState = { ...initialState };
-
-  // 2. Extract unlocks for special handling
-  const { unlocks: saveUnlocks, ...saveMeta } = saveData;
-
-  // 3. Merge meta properties (keys, history, etc) onto base
-  // This ensures if new properties are added to GameState in future, they aren't lost or undefined
-  const mergedState = { ...baseState, ...saveMeta };
-
-  // 4. Handle Unlocks Migration specifically
-  const defaultUnlocks = getInitialUnlocks();
-  const loadedUnlocks: Record<string, any> = saveUnlocks || {};
-
-  // MIGRATION FIXES:
-  // Handle 'power' -> 'arcana' rename from very old saves
-  if (loadedUnlocks.power) {
-      loadedUnlocks.arcana = [...(loadedUnlocks.arcana || []), ...loadedUnlocks.power];
-      delete loadedUnlocks.power;
-  }
-
-  // Handle hypothetical 'poh' -> 'housing' rename (or vice versa)
-  // Current app uses 'housing'. If save comes in with 'poh', map it.
-  if (loadedUnlocks.poh && (!loadedUnlocks.housing || loadedUnlocks.housing.length === 0)) {
-       loadedUnlocks.housing = loadedUnlocks.poh;
-       delete loadedUnlocks.poh;
-  }
-
-  // 5. Deep merge unlocks
-  // This ensures that if we add a new table (e.g. "Sailing") in the code,
-  // old saves won't crash the app with undefined arrays.
-  mergedState.unlocks = {
-      ...defaultUnlocks,
-      ...loadedUnlocks,
-      // Deep merge nested objects to preserve user progress while adding new keys if they don't exist
-      equipment: { ...defaultUnlocks.equipment, ...(loadedUnlocks.equipment || {}) },
-      skills: { ...defaultUnlocks.skills, ...(loadedUnlocks.skills || {}) },
-      levels: { ...defaultUnlocks.levels, ...(loadedUnlocks.levels || {}) },
-      collectionLog: migrateClogIds({ ...defaultUnlocks.collectionLog, ...(loadedUnlocks.collectionLog || {}) })
-  };
-
-  // Defensive: dedupe unlock arrays so a corrupted import can't load the
-  // same region/boss/etc. twice.
-  const ARRAY_KEYS = ['regions', 'chunks', 'mobility', 'arcana', 'housing', 'merchants',
-    'minigames', 'bosses', 'storage', 'guilds', 'farming', 'slayerUnlocks', 'banks',
-    'quests', 'diaries',
-    'cas', 'completedTasks'] as const;
-  for (const k of ARRAY_KEYS) {
-    const arr = (mergedState.unlocks as any)[k];
-    if (Array.isArray(arr)) (mergedState.unlocks as any)[k] = Array.from(new Set(arr));
-  }
-
-  // 6. Ensure logical consistency
-  if (mergedState.hasSeenOnboarding === undefined) {
-       mergedState.hasSeenOnboarding = (mergedState.history && mergedState.history.length > 0);
-  }
-
-  // 7. Stamp with current version
-  mergedState.version = CURRENT_VERSION;
-
-  return mergedState;
-};
-
 // --- Reducer ---
 export type Action =
-  | { type: 'LOAD_SAVE'; payload: Partial<GameState> }
+  | { type: 'LOAD_SAVE'; payload: GameState }
   | { type: 'RESET' }
   | { type: 'TOGGLE_ANIMATIONS' }
   | { type: 'TOGGLE_ADVISORS' }
@@ -245,17 +202,151 @@ export type Action =
   | { type: 'ADD_LOG'; payload: LogEntry }
   | { type: 'TOGGLE_PIN'; payload: string }
   | { type: 'UPDATE_NOTE'; payload: { id: string; text: string } }
-  | { type: 'TOGGLE_QUEST'; payload: string }
-  | { type: 'TOGGLE_DIARY'; payload: string }
-  | { type: 'TOGGLE_CA'; payload: string }
-  | { type: 'TOGGLE_TASK'; payload: string }
+  | { type: 'COMPLETE_QUEST'; payload: string }
+  | { type: 'COMPLETE_DIARY'; payload: string }
+  | { type: 'COMPLETE_CA'; payload: string }
+  | { type: 'COMPLETE_TASK'; payload: string }
   | { type: 'SET_GAME_MODE'; payload: { modeId: string; customRules?: GameModeRules } }
   | { type: 'SET_LOADOUT_SLOT'; payload: { slot: string; itemId: number | null; clearSlots?: string[] } }
   | { type: 'SET_LINKED_ACCOUNT'; payload: string }
   | { type: 'SET_RIVAL'; payload: RivalState }
   | { type: 'CLEAR_RIVAL' }
   | { type: 'ACK_RIVAL'; payload: number }
-  | { type: 'LOG_ITEM'; payload: number };
+  | { type: 'LOG_ITEM'; payload: number }
+  | { type: 'COMMIT_STATE'; payload: GameState & { lastEvent: GameEvent | null } };
+
+export type TransitionAction = Exclude<Action, { type: 'COMMIT_STATE' }>;
+
+type DiceRoller = (purpose: string, index?: number, max?: number) => number;
+type RollResultAction = Extract<TransitionAction, { type: 'ROLL_RESULT' }>;
+
+/**
+ * Resolves a key roll exclusively from the supplied state snapshot.
+ * The caller advances that snapshot atomically before resolving another roll.
+ */
+export const prepareKeyRollAction = (
+  state: GameState,
+  source: string,
+  threshold: number,
+  nextDice: DiceRoller,
+  x?: number,
+  y?: number,
+): RollResultAction => {
+  let roll = nextDice('roll', 0);
+  const advantageRoll = nextDice('roll', 1);
+
+  if (state.activeBuff === 'LUCK') {
+    roll = Math.min(roll, advantageRoll);
+  }
+
+  const mode = resolveModeRules(state.gameModeId, state.customMode);
+  let omniBonus = 0;
+  let effectiveThreshold = threshold;
+  if (mode.regionModifiers) {
+    const bonuses = getActiveRegionBonuses(state.unlocks.regions);
+    effectiveThreshold = Math.max(1, Math.min(100, threshold + bonuses.successBonus));
+    omniBonus = bonuses.omniBonus;
+  }
+
+  const success = roll <= effectiveThreshold;
+  let omni = false;
+  let pity = false;
+
+  if (success) {
+    let omniChance = mode.omniChanceBase + omniBonus;
+    if (source === DropSource.QUEST_GRANDMASTER) omniChance = Math.max(omniChance, 20);
+    else if (source === DropSource.DIARY_ELITE) omniChance = Math.max(omniChance, 10);
+    else if (source === 'Diary Section Complete') omniChance = Math.max(omniChance, 10);
+    else if (source === 'CA Tier Complete') omniChance = Math.max(omniChance, 10);
+    else if (source === DropSource.PET) omniChance = Math.max(omniChance, 25);
+    else if (source === DropSource.RAID) omniChance = Math.max(omniChance, 15);
+    else if (source === DropSource.BOSS_HIGH) omniChance = Math.max(omniChance, 10);
+
+    if (nextDice('roll', 2) <= omniChance) omni = true;
+  } else if (mode.pityEnabled && state.fatePoints + 1 >= mode.pityThreshold) {
+    pity = true;
+  }
+
+  return {
+    type: 'ROLL_RESULT',
+    payload: { success, omni, pity, roll, threshold: effectiveThreshold, source, x, y },
+  };
+};
+
+export const prepareCATaskCompletionActions = (
+  state: GameState & { lastEvent: GameEvent | null },
+  task: CATask,
+  nextDice: DiceRoller,
+  x?: number,
+  y?: number,
+): {
+  result: CompletionResult;
+  actions: TransitionAction[];
+} => {
+  if (state.unlocks.completedTasks.includes(task.id)) {
+    return {
+      result: { ok: false, reason: 'Already completed' },
+      actions: [],
+    };
+  }
+  const tier = CA_DATA[task.tierId];
+  if (!tier) {
+    return {
+      result: { ok: false, reason: 'Unknown Combat Achievement tier' },
+      actions: [],
+    };
+  }
+
+  const completedIds = [...state.unlocks.completedTasks, task.id];
+  const points = completedCAPoints(completedIds);
+  const crossedTiers = newlyEarnedCATiers(points, state.unlocks.cas);
+  return {
+    result: { ok: true },
+    actions: [
+      { type: 'COMPLETE_TASK', payload: task.id },
+      prepareKeyRollAction(
+        state,
+        tier.difficulty,
+        DROP_RATES[tier.difficulty],
+        nextDice,
+        x,
+        y,
+      ),
+      ...crossedTiers.map(tierId => ({
+        type: 'COMPLETE_CA' as const,
+        payload: tierId,
+      })),
+    ],
+  };
+};
+
+type LevelUpAction = Extract<TransitionAction, { type: 'LEVEL_UP' }>;
+
+/**
+ * Preserve the established level reward RNG context by deciding the reward
+ * before LEVEL_UP can append history, while applying it after the level state.
+ */
+export const prepareLevelUpActions = (
+  state: GameState,
+  skill: string,
+  chaosRoll: number,
+  nextDice: DiceRoller,
+): {
+  levelAction: LevelUpAction;
+  rewardAction: RollResultAction;
+} => {
+  const newLevel = (state.unlocks.levels[skill] || 1) + 1;
+  const rollChance = Math.ceil(newLevel / 5);
+  return {
+    levelAction: { type: 'LEVEL_UP', payload: { skill, chaosRoll } },
+    rewardAction: prepareKeyRollAction(
+      state,
+      `${skill} Level ${newLevel}`,
+      rollChance,
+      nextDice,
+    ),
+  };
+};
 
 // Wrap the raw reducer so any history entries appended during a dispatch
 // are chained (prevHash + hash) before the new state is returned. This
@@ -310,14 +401,8 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
   const now = Date.now();
 
   switch (action.type) {
-    case 'LOAD_SAVE': {
-      const migratedState = migrateSave(action.payload);
-      return {
-        ...state,
-        ...migratedState,
-        lastEvent: null
-      };
-    }
+    case 'LOAD_SAVE':
+      return { ...action.payload, lastEvent: null };
 
     case 'RESET':
       return { ...initialState, lastEvent: null };
@@ -678,44 +763,34 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       };
     }
 
-    case 'TOGGLE_QUEST': {
+    case 'COMPLETE_QUEST': {
       const questId = action.payload;
-      const isCompleted = state.unlocks.quests.includes(questId);
-      const newQuests = isCompleted
-        ? state.unlocks.quests.filter(q => q !== questId)
-        : [...state.unlocks.quests, questId];
+      const unlocks = withJournalCompletion(state.unlocks, 'quests', questId);
+      return unlocks === state.unlocks ? state : { ...state, unlocks };
+    }
 
+    case 'COMPLETE_DIARY': {
+      const id = action.payload;
+      const unlocks = withJournalCompletion(state.unlocks, 'diaries', id);
+      return unlocks === state.unlocks ? state : { ...state, unlocks };
+    }
+
+    case 'COMPLETE_CA': {
+      const id = action.payload;
+      if (state.unlocks.cas.includes(id)) return state;
       return {
         ...state,
-        unlocks: { ...state.unlocks, quests: newQuests }
+        unlocks: {
+          ...state.unlocks,
+          cas: [...state.unlocks.cas, id],
+        },
       };
     }
 
-    case 'TOGGLE_DIARY': {
-      const id = action.payload;
-      const isCompleted = state.unlocks.diaries.includes(id);
-      const newDiaries = isCompleted
-        ? state.unlocks.diaries.filter(d => d !== id)
-        : [...state.unlocks.diaries, id];
-      return { ...state, unlocks: { ...state.unlocks, diaries: newDiaries } };
-    }
-
-    case 'TOGGLE_CA': {
-      const id = action.payload;
-      const isCompleted = state.unlocks.cas.includes(id);
-      const newCAs = isCompleted
-        ? state.unlocks.cas.filter(c => c !== id)
-        : [...state.unlocks.cas, id];
-      return { ...state, unlocks: { ...state.unlocks, cas: newCAs } };
-    }
-
-    case 'TOGGLE_TASK': {
+    case 'COMPLETE_TASK': {
       const taskId = action.payload;
-      const isCompleted = state.unlocks.completedTasks.includes(taskId);
-      const newTasks = isCompleted
-        ? state.unlocks.completedTasks.filter(t => t !== taskId)
-        : [...state.unlocks.completedTasks, taskId];
-      return { ...state, unlocks: { ...state.unlocks, completedTasks: newTasks } };
+      const unlocks = withJournalCompletion(state.unlocks, 'completedTasks', taskId);
+      return unlocks === state.unlocks ? state : { ...state, unlocks };
     }
 
     case 'SET_RIVAL':
@@ -764,20 +839,33 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 };
 
 export const gameReducer = (state: GameState & { lastEvent: GameEvent | null }, action: Action): GameState & { lastEvent: GameEvent | null } => {
+  if (action.type === 'COMMIT_STATE') return action.payload;
   const next = rawReducer(state, action);
   if (next.history === state.history) return next;
   return { ...next, history: chainAppendedHistory(state.history, next.history) };
+};
+
+/**
+ * Computes reducer work once, including generated event IDs, timestamps, and
+ * history hashes. React later receives this exact state instead of replaying
+ * the transition against a potentially stale render snapshot.
+ */
+export const prepareGameTransition = (
+  state: GameState & { lastEvent: GameEvent | null },
+  action: TransitionAction,
+): {
+  state: GameState & { lastEvent: GameEvent | null };
+  commit: Extract<Action, { type: 'COMMIT_STATE' }>;
+} => {
+  const next = gameReducer(state, action);
+  return { state: next, commit: { type: 'COMMIT_STATE', payload: next } };
 };
 
 // --- Context ---
 const GameContext = createContext<GameContextType | null>(null);
 
 export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: string }> = ({ children, storageKey }) => {
-  // Load the save synchronously in the reducer initializer so the very first
-  // render already reflects the persisted run. This matters for the reveal
-  // hooks (useUnlockReveal / useAchievementReveal), which capture their
-  // baseline on mount — if the save arrived later via an effect, every page
-  // reload would diff against an empty baseline and spam "unlocked!" reveals.
+  const initialLoadWarningRef = useRef<string | null>(null);
   const [state, dispatch] = useReducer(
     gameReducer,
     storageKey,
@@ -785,15 +873,26 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
       try {
         const saved = localStorage.getItem(key);
         if (saved) {
-          const parsed = JSON.parse(saved);
-          if (isValidSaveData(parsed)) return { ...migrateSave(parsed), lastEvent: null };
-          console.warn('Save data failed validation, starting fresh');
+          const parsed = parseAndMigrateSave(saved, initialState);
+          if (parsed.ok === true) return { ...parsed.state, lastEvent: null };
+          initialLoadWarningRef.current = 'Saved run data was invalid, so a fresh run was started.';
+          console.warn('Stored save failed validation', parsed.code, parsed.path ?? 'root');
         }
-      } catch (e) { console.error('Failed to load save', e); }
+      } catch {
+        initialLoadWarningRef.current = 'Saved run data could not be read, so a fresh run was started.';
+        console.warn('Stored save could not be read');
+      }
       return { ...initialState, lastEvent: null };
     },
   );
   const saveTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const warning = initialLoadWarningRef.current;
+    if (!warning) return;
+    initialLoadWarningRef.current = null;
+    showToast(warning);
+  }, []);
 
   // Keep the free-area baseline in sync with the run's mode, synchronously so
   // the unlock helpers (chunkUnlocked, journal status, …) read the right set on
@@ -805,10 +904,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
   // latest persisted shape without re-creating on every state change.
   const stateRef = useRef(state);
   stateRef.current = state;
-  const serializeCurrent = useCallback((): string => {
-    const { lastEvent, ...persist } = stateRef.current;
-    return JSON.stringify(persist);
-  }, []);
+  const serializeCurrent = useCallback(
+    (): string => serializeGameState(stateRef.current),
+    [],
+  );
 
   // Debounced persistence - saves all persistent state fields
   useEffect(() => {
@@ -816,8 +915,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
       clearTimeout(saveTimeoutRef.current);
     }
     saveTimeoutRef.current = window.setTimeout(() => {
-      const { lastEvent, ...persistState } = state;
-      localStorage.setItem(storageKey, JSON.stringify(persistState));
+      localStorage.setItem(storageKey, serializeGameState(state));
     }, SAVE_DEBOUNCE_MS);
 
     return () => {
@@ -838,6 +936,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
 
   // --- Actions ---
 
+  const commitAction = useCallback((action: TransitionAction) => {
+    const transition = prepareGameTransition(stateRef.current, action);
+    stateRef.current = transition.state;
+    dispatch(transition.commit);
+    return transition.state;
+  }, []);
+
   // Gameplay RNG choke point (see GameContextType.nextFloat). Reads through
   // stateRef so one render's callbacks always draw against the latest chain
   // tip; the tip changes with every appended history entry, which is what
@@ -850,151 +955,216 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
   }, []);
   const nextDice = useCallback((purpose: string, index = 0, max = 100): number =>
     Math.floor(nextFloat(purpose, index) * max) + 1, [nextFloat]);
-  const setSeed = useCallback((seed: string) => dispatch({ type: 'SET_SEED', payload: seed }), []);
+  const setSeed = useCallback((seed: string) =>
+    commitAction({ type: 'SET_SEED', payload: seed }), [commitAction]);
 
   const rollForKey = useCallback((source: string, threshold: number, x?: number, y?: number) => {
-    let roll = nextDice('roll', 0);
-    const advantageRoll = nextDice('roll', 1);
-
-    if (state.activeBuff === 'LUCK') {
-      roll = Math.min(roll, advantageRoll);
-    }
-
-    const mode = resolveModeRules(state.gameModeId, state.customMode);
-
-    // Region passives (active only when the mode enables them) shift the
-    // effective success threshold and Omni chance.
-    let omniBonus = 0;
-    let effectiveThreshold = threshold;
-    if (mode.regionModifiers) {
-      const bonuses = getActiveRegionBonuses(state.unlocks.regions);
-      effectiveThreshold = Math.max(1, Math.min(100, threshold + bonuses.successBonus));
-      omniBonus = bonuses.omniBonus;
-    }
-
-    const success = roll <= effectiveThreshold;
-    let omni = false;
-    let pity = false;
-
-    if (success) {
-      let omniChance = mode.omniChanceBase + omniBonus;
-      // High-effort sources keep their elevated Omni odds on top of the mode base.
-      if (source === DropSource.QUEST_GRANDMASTER) omniChance = Math.max(omniChance, 20);
-      else if (source === DropSource.DIARY_ELITE) omniChance = Math.max(omniChance, 10);
-      else if (source === "Diary Section Complete") omniChance = Math.max(omniChance, 10);
-      else if (source === "CA Tier Complete") omniChance = Math.max(omniChance, 10);
-      else if (source === DropSource.PET) omniChance = Math.max(omniChance, 25);
-      else if (source === DropSource.RAID) omniChance = Math.max(omniChance, 15);
-      else if (source === DropSource.BOSS_HIGH) omniChance = Math.max(omniChance, 10);
-
-      if (nextDice('roll', 2) <= omniChance) omni = true;
-    } else {
-      if (mode.pityEnabled && state.fatePoints + 1 >= mode.pityThreshold) pity = true;
-    }
-
-    // Pass the effective threshold so logs and stats reflect the real odds.
-    dispatch({ type: 'ROLL_RESULT', payload: { success, omni, pity, roll, threshold: effectiveThreshold, source, x, y } });
-  }, [state.activeBuff, state.fatePoints, state.gameModeId, state.customMode, state.unlocks.regions, nextDice]);
+    const current = stateRef.current;
+    commitAction(prepareKeyRollAction(current, source, threshold, nextDice, x, y));
+  }, [commitAction, nextDice]);
 
   const unlockContent = useCallback((table: TableType, item: string, costType: 'key' | 'specialKey' | 'chaosKey', cost: number) => {
-    dispatch({ type: 'UNLOCK', payload: { table, item, costType, cost } });
-  }, []);
+    commitAction({ type: 'UNLOCK', payload: { table, item, costType, cost } });
+  }, [commitAction]);
 
   const performRitual = useCallback((type: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE') => {
-    if (type === 'LUCK') dispatch({ type: 'RITUAL_LUCK' });
-    if (type === 'GREED') dispatch({ type: 'RITUAL_GREED' });
-    if (type === 'CHAOS') dispatch({ type: 'RITUAL_CHAOS' });
-    if (type === 'TRANSMUTE') dispatch({ type: 'RITUAL_TRANSMUTE' });
-  }, []);
+    if (type === 'LUCK') commitAction({ type: 'RITUAL_LUCK' });
+    if (type === 'GREED') commitAction({ type: 'RITUAL_GREED' });
+    if (type === 'CHAOS') commitAction({ type: 'RITUAL_CHAOS' });
+    if (type === 'TRANSMUTE') commitAction({ type: 'RITUAL_TRANSMUTE' });
+  }, [commitAction]);
 
   /** Void Gambit: stake ALL fate on a coin flip (RNG here — reducer stays pure). */
   const performGambit = useCallback(() => {
-    const stake = state.fatePoints;
+    const stake = stateRef.current.fatePoints;
     const min = getRitual('GAMBIT').fateCost ?? 15;
     if (stake < min) return;
     const won = nextFloat('gambit') < 0.5;
     const keysWon = Math.max(1, Math.floor(stake / GAMBIT_KEYS_PER));
-    dispatch({ type: 'RITUAL_GAMBIT', payload: { won, stake, keysWon } });
-  }, [state.fatePoints, nextFloat]);
+    commitAction({ type: 'RITUAL_GAMBIT', payload: { won, stake, keysWon } });
+  }, [commitAction, nextFloat]);
 
   /** Cartographer: unlock the chosen frontier chunk (Chunked mode only). */
   const performCartographer = useCallback((chunkKey: string, label: string) => {
-    dispatch({ type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey, label } });
-  }, []);
+    commitAction({ type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey, label } });
+  }, [commitAction]);
 
   const levelUpSkill = useCallback((skill: string) => {
     // Pre-compute RNG outside reducer to maintain reducer purity
     const chaosRoll = nextFloat('levelup');
-    dispatch({ type: 'LEVEL_UP', payload: { skill, chaosRoll } });
-
-    const newLevel = (state.unlocks.levels[skill] || 1) + 1;
-    const rollChance = Math.ceil(newLevel / 5); // Level ÷ 5 curve (max 20% at 99) — rebalanced 2026
-
-    rollForKey(`${skill} Level ${newLevel}`, rollChance);
-  }, [state.unlocks.levels, rollForKey, nextFloat]);
+    const prepared = prepareLevelUpActions(stateRef.current, skill, chaosRoll, nextDice);
+    commitAction(prepared.levelAction);
+    commitAction(prepared.rewardAction);
+  }, [commitAction, nextDice, nextFloat]);
 
   const logCollectionItem = useCallback((itemId: number) => {
-    dispatch({ type: 'LOG_ITEM', payload: itemId });
-  }, []);
+    commitAction({ type: 'LOG_ITEM', payload: itemId });
+  }, [commitAction]);
 
   const setLoadoutSlot = useCallback((slot: string, itemId: number | null, clearSlots?: string[]) => {
-    dispatch({ type: 'SET_LOADOUT_SLOT', payload: { slot, itemId, clearSlots } });
-  }, []);
+    commitAction({ type: 'SET_LOADOUT_SLOT', payload: { slot, itemId, clearSlots } });
+  }, [commitAction]);
   const setLinkedAccount = useCallback((account: string) => {
-    dispatch({ type: 'SET_LINKED_ACCOUNT', payload: account });
-  }, []);
+    commitAction({ type: 'SET_LINKED_ACCOUNT', payload: account });
+  }, [commitAction]);
 
-  const setRival = useCallback((rival: RivalState) => dispatch({ type: 'SET_RIVAL', payload: rival }), []);
-  const clearRival = useCallback(() => dispatch({ type: 'CLEAR_RIVAL' }), []);
-  const ackRival = useCallback((lead: number) => dispatch({ type: 'ACK_RIVAL', payload: lead }), []);
+  const setRival = useCallback((rival: RivalState) =>
+    commitAction({ type: 'SET_RIVAL', payload: rival }), [commitAction]);
+  const clearRival = useCallback(() => commitAction({ type: 'CLEAR_RIVAL' }), [commitAction]);
+  const ackRival = useCallback((lead: number) =>
+    commitAction({ type: 'ACK_RIVAL', payload: lead }), [commitAction]);
 
-  const completeOnboarding = useCallback(() => dispatch({ type: 'COMPLETE_ONBOARDING' }), []);
+  const completeOnboarding = useCallback(() =>
+    commitAction({ type: 'COMPLETE_ONBOARDING' }), [commitAction]);
   const setGameMode = useCallback((modeId: string, customRules?: GameModeRules) =>
-    dispatch({ type: 'SET_GAME_MODE', payload: { modeId, customRules } }), []);
-  const toggleAnimations = useCallback(() => dispatch({ type: 'TOGGLE_ANIMATIONS' }), []);
-  const toggleAdvisors = useCallback(() => dispatch({ type: 'TOGGLE_ADVISORS' }), []);
-  const toggleRevealAll = useCallback(() => dispatch({ type: 'TOGGLE_REVEAL_ALL' }), []);
-  const importSave = useCallback((data: Partial<GameState>) => {
-    if (isValidSaveData(data)) {
-      dispatch({ type: 'LOAD_SAVE', payload: data });
-    } else {
-      console.error('Import rejected: invalid save data');
-      showToast('Import failed — save data is malformed');
-    }
+    commitAction({ type: 'SET_GAME_MODE', payload: { modeId, customRules } }), [commitAction]);
+  const toggleAnimations = useCallback(() => commitAction({ type: 'TOGGLE_ANIMATIONS' }), [commitAction]);
+  const toggleAdvisors = useCallback(() => commitAction({ type: 'TOGGLE_ADVISORS' }), [commitAction]);
+  const toggleRevealAll = useCallback(() => commitAction({ type: 'TOGGLE_REVEAL_ALL' }), [commitAction]);
+  const replaceState = useCallback((replacement: GameState) => {
+    stateRef.current = { ...replacement, lastEvent: null };
+    dispatch({ type: 'LOAD_SAVE', payload: replacement });
   }, []);
-  const createBackup = useCallback((reason: string) => {
-    pushBackup(storageKey, serializeCurrent(), reason);
-  }, [storageKey, serializeCurrent]);
+  const writeReplacement = useCallback((data: string) => {
+    writeReplacementNow(
+      localStorage,
+      storageKey,
+      data,
+      saveTimeoutRef,
+      handle => window.clearTimeout(handle),
+    );
+  }, [storageKey]);
+
+  const importSave = useCallback((data: unknown): ImportResult =>
+    applyPreparedReplacement(data, {
+      current: stateRef.current,
+      defaults: initialState,
+      writeBackup: current => pushBackup(storageKey, current, 'Before import'),
+      writeReplacement,
+      replace: replaceState,
+    }), [replaceState, storageKey, writeReplacement]);
+
+  const createBackup = useCallback((reason: string): BackupWriteResult =>
+    pushBackup(storageKey, serializeCurrent(), reason), [storageKey, serializeCurrent]);
 
   const listBackups = useCallback(() => readBackups(storageKey), [storageKey]);
 
-  const restoreBackup = useCallback((ts: number) => {
+  const restoreBackup = useCallback((ts: number): ImportResult => {
     const data = getBackupData(storageKey, ts);
-    if (!data) return;
-    // Snapshot the run we're about to replace so a restore is itself undoable.
-    pushBackup(storageKey, serializeCurrent(), 'Before restore');
-    try {
-      dispatch({ type: 'LOAD_SAVE', payload: JSON.parse(data) });
-    } catch {
-      console.error('Restore failed: backup data was unreadable');
+    if (data === null) {
+      return { ok: false, code: 'invalid_json', message: 'Backup was not found.' };
     }
-  }, [storageKey, serializeCurrent]);
+    return applyValidatedReplacement(parseAndMigrateSave(data, initialState), {
+      current: stateRef.current,
+      writeBackup: current => pushBackup(storageKey, current, 'Before restore'),
+      writeReplacement,
+      replace: replaceState,
+    });
+  }, [replaceState, storageKey, writeReplacement]);
 
   const resetGame = useCallback(() => {
     // Auto-snapshot so an accidental reset is recoverable.
     pushBackup(storageKey, serializeCurrent(), 'Before reset');
-    dispatch({ type: 'RESET' });
-  }, [storageKey, serializeCurrent]);
-  const togglePin = useCallback((id: string) => dispatch({ type: 'TOGGLE_PIN', payload: id }), []);
-  const saveNote = useCallback((id: string, text: string) => dispatch({ type: 'UPDATE_NOTE', payload: { id, text } }), []);
-  const toggleQuest = useCallback((id: string) => dispatch({ type: 'TOGGLE_QUEST', payload: id }), []);
-  const toggleDiary = useCallback((id: string) => dispatch({ type: 'TOGGLE_DIARY', payload: id }), []);
-  const toggleCA = useCallback((id: string) => dispatch({ type: 'TOGGLE_CA', payload: id }), []);
-  const toggleTask = useCallback((id: string) => dispatch({ type: 'TOGGLE_TASK', payload: id }), []);
+    commitAction({ type: 'RESET' });
+  }, [commitAction, storageKey, serializeCurrent]);
+  const togglePin = useCallback((id: string) => commitAction({ type: 'TOGGLE_PIN', payload: id }), [commitAction]);
+  const saveNote = useCallback((id: string, text: string) =>
+    commitAction({ type: 'UPDATE_NOTE', payload: { id, text } }), [commitAction]);
+  const completeQuest = useCallback((id: string, x?: number, y?: number): CompletionResult => {
+    const snapshot = stateRef.current;
+    const quest = QUEST_DATA[id];
+    if (!quest) return completionFailure('Unknown quest');
 
-  const getExportData = useCallback((): string | null => {
-    return localStorage.getItem(storageKey);
-  }, [storageKey]);
+    const result = questCompletionDecision(quest, snapshot.unlocks, snapshot.gameModeId);
+    if (result.ok === false) return completionFailure(result.reason);
+
+    commitAction({ type: 'COMPLETE_QUEST', payload: id });
+    rollForKey(quest.difficulty, DROP_RATES[quest.difficulty], x, y);
+    return result;
+  }, [commitAction, rollForKey]);
+
+  const completeDiaryTask = useCallback((
+    id: string,
+    x?: number,
+    y?: number,
+  ): CompletionResult => {
+    const snapshot = stateRef.current;
+    const task = ALL_DIARY_TASKS.find(candidate => candidate.id === id);
+    if (!task) return completionFailure('Unknown Diary task');
+    const diary = DIARY_DATA[task.tierId];
+    if (!diary) return completionFailure('Unknown Diary tier');
+
+    const result = diaryTaskCompletionDecision(
+      task,
+      snapshot.unlocks,
+      snapshot.gameModeId,
+    );
+    if (result.ok === false) return completionFailure(result.reason);
+
+    commitAction({ type: 'COMPLETE_TASK', payload: id });
+    rollForKey(diary.difficulty, DROP_RATES[diary.difficulty], x, y);
+
+    const current = stateRef.current;
+    if (
+      !current.unlocks.diaries.includes(task.tierId)
+      && canEarnDiaryTier(
+        task.tierId,
+        current.unlocks.completedTasks,
+        ALL_DIARY_TASKS,
+      )
+    ) {
+      commitAction({ type: 'COMPLETE_DIARY', payload: task.tierId });
+    }
+    return result;
+  }, [commitAction, rollForKey]);
+
+  const completeDiaryTier = useCallback((id: string): CompletionResult => {
+    const snapshot = stateRef.current;
+    if (!DIARY_DATA[id]) return completionFailure('Unknown Diary tier');
+    if (snapshot.unlocks.diaries.includes(id)) {
+      return completionFailure('Already completed');
+    }
+    if (!canEarnDiaryTier(id, snapshot.unlocks.completedTasks, ALL_DIARY_TASKS)) {
+      return completionFailure('Complete all individual tasks in this section first');
+    }
+
+    commitAction({ type: 'COMPLETE_DIARY', payload: id });
+    return { ok: true };
+  }, [commitAction]);
+
+  const completeCATask = useCallback((
+    id: string,
+    x?: number,
+    y?: number,
+  ): CompletionResult => {
+    const task = ALL_CA_TASKS.find(candidate => candidate.id === id);
+    if (!task) return completionFailure('Unknown Combat Achievement task');
+
+    const prepared = prepareCATaskCompletionActions(
+      stateRef.current,
+      task,
+      nextDice,
+      x,
+      y,
+    );
+    if (prepared.result.ok === false) {
+      return completionFailure(prepared.result.reason);
+    }
+    for (const action of prepared.actions) commitAction(action);
+    return prepared.result;
+  }, [commitAction, nextDice]);
+
+  const completeCATier = useCallback((id: string): CompletionResult => {
+    const snapshot = stateRef.current;
+    const points = completedCAPoints(snapshot.unlocks.completedTasks);
+    const result = caTierCompletionDecision(id, points, snapshot.unlocks.cas);
+    if (result.ok === false) return completionFailure(result.reason);
+
+    commitAction({ type: 'COMPLETE_CA', payload: id });
+    return result;
+  }, [commitAction]);
+
+  const getExportData = useCallback((): string => serializeCurrent(), [serializeCurrent]);
 
   const contextValue = useMemo(() => ({
     ...state,
@@ -1018,10 +1188,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     restoreBackup,
     togglePin,
     saveNote,
-    toggleQuest,
-    toggleDiary,
-    toggleCA,
-    toggleTask,
+    completeQuest,
+    completeDiaryTask,
+    completeDiaryTier,
+    completeCATask,
+    completeCATier,
     logCollectionItem,
     getExportData,
     setLoadoutSlot,
@@ -1051,10 +1222,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     restoreBackup,
     togglePin,
     saveNote,
-    toggleQuest,
-    toggleDiary,
-    toggleCA,
-    toggleTask,
+    completeQuest,
+    completeDiaryTask,
+    completeDiaryTier,
+    completeCATask,
+    completeCATier,
     logCollectionItem,
     getExportData,
     setLoadoutSlot,
