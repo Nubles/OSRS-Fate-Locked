@@ -157,13 +157,36 @@ describe('rankSkillBottlenecks', () => {
     expect(ranged?.targetLevel).toBe(21);
     expect(ranged?.newDiaryIds).toContain('Ardougne Medium');
   });
+  it('indexes the nearest skill level that crosses a combat-only diary gate', () => {
+    const ranked = rankSkillBottlenecks(lowSkills({
+      skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10])),
+      levels: {
+        ...Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])),
+        Attack: 13, Strength: 40, Defence: 1, Hitpoints: 10,
+        Prayer: 1, Ranged: 1, Magic: 1,
+      },
+      regions: ['Canifis'],
+      quests: Object.keys(QUEST_DATA),
+      diaries: Object.keys(DIARY_DATA).filter(diary => diary !== 'Morytania Easy'),
+      completedTasks: ALL_DIARY_TASKS
+        .filter(task => task.tierId !== 'Morytania Easy' || task.id !== 'mor_easy_3')
+        .map(task => task.id),
+    }));
+    const attack = ranked.find(candidate => candidate.id === 'Attack');
+
+    expect(attack?.targetLevel).toBe(14);
+    expect(attack?.newDiaryIds).toContain('Morytania Easy');
+  });
+
   it('reuses diary status baselines instead of rescanning for every threshold', () => {
     const statusSpy = vi.mocked(journalStatus.getDiaryStatus);
     statusSpy.mockClear();
 
-    rankSkillBottlenecks(lowSkills());
+    // Every regional and quest gate is open, so diary candidates survive the
+    // cheap blocker prefilter and exercise the actual status-check cache.
+    rankSkillBottlenecks(regionsAndQuestsDone());
 
     expect(statusSpy.mock.calls.length).toBeGreaterThan(0);
-    expect(statusSpy.mock.calls.length).toBeLessThan(2500);
+    expect(statusSpy.mock.calls.length).toBeLessThanOrEqual(60);
   });
 });

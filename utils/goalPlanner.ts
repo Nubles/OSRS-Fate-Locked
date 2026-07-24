@@ -34,6 +34,8 @@ export interface PlanStep {
   label: string;
   /** Secondary text (e.g. "Lv 50 (have 32)", "12 QP needed"). */
   detail?: string;
+  /** Unlock table ids that can satisfy a composite step. */
+  relatedIds?: string[];
   /** Already satisfied in the current unlocks snapshot. */
   done: boolean;
 }
@@ -118,11 +120,50 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
       detail: 'Level ' + required + ' (have ' + effectiveCombatLevel(unlocks) + ')', done: false,
     };
   }
+
+  const requirement = blocker.requirement;
+  if (requirement?.type === 'combined') {
+    const levels = requirement.skills.map(skill => [
+      skill, effectiveSkillLevel(unlocks, skill),
+    ] as const);
+    const have = levels.reduce((sum, [, level]) => sum + level, 0);
+    return {
+      kind: 'skill', id: 'combined:' + requirement.skills.join('+'),
+      label: requirement.skills.join(' + ') + ' combined',
+      relatedIds: requirement.skills,
+      detail: 'Level ' + requirement.level + ' combined (have ' + have + ': '
+        + levels.map(([skill, level]) => skill + ' ' + level).join(' + ') + ')',
+      done: false,
+    };
+  }
+  if (requirement?.type === 'anyOf') {
+    return {
+      kind: 'skill', id: 'any-of:' + requirement.skills.join('|'),
+      label: requirement.skills.join(' or '),
+      relatedIds: requirement.skills,
+      detail: 'Lv ' + requirement.level + ' in either (have '
+        + requirement.skills.map(skill => (
+          skill + ' ' + effectiveSkillLevel(unlocks, skill)
+        )).join(', ') + ')',
+      done: false,
+    };
+  }
+  if (requirement?.type === 'any') {
+    return {
+      kind: 'skill', id: 'Any skill', label: 'Any skill',
+      detail: 'Lv ' + requirement.level, done: false,
+    };
+  }
+
   const match = blocker.label.match(/^(.*) (\d+)$/);
-  const skill = match?.[1] ?? blocker.label;
-  const required = Number(match?.[2] ?? 1);
+  const skill = requirement?.type === 'single'
+    ? requirement.skill
+    : (match?.[1] ?? blocker.label);
+  const required = requirement?.type === 'single'
+    ? requirement.level
+    : Number(match?.[2] ?? 1);
   return {
-    kind: 'skill', id: skill, label: skill,
+    kind: 'skill', id: skill, label: skill, relatedIds: [skill],
     detail: 'Lv ' + required + ' (have ' + effectiveSkillLevel(unlocks, skill) + ')', done: false,
   };
 }

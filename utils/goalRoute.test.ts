@@ -109,6 +109,34 @@ describe('buildGoalRoute — quest and engine-item goals', () => {
     expect(pureQuest.quests[pureQuest.quests.length - 1].name).toBe("Cook's Assistant");
   });
 
+  it('retains direct and transitive quest alternative routes', () => {
+    const direct = buildGoalRoute('Enter the Abyss', stateWith({ quests: ['Rune Mysteries'] }))!;
+    expect(direct.regions.map(region => region.name)).not.toContain('One of:');
+    expect(direct.alternatives).toEqual([
+      expect.objectContaining({
+        routes: expect.arrayContaining([
+          expect.objectContaining({ name: 'East Ardougne' }),
+          expect.objectContaining({ name: "Wizards' Guild" }),
+        ]),
+      }),
+    ]);
+
+    const transitive = buildGoalRoute('Temple of the Eye', stateWith())!;
+    expect(transitive.alternatives).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: expect.stringContaining('East Ardougne') }),
+    ]));
+  });
+
+  it('retains canonical alternatives for strategy-backed quest goals', () => {
+    const route = buildGoalRoute('Desert Treasure II', stateWith())!;
+
+    expect(route.kind).toBe('strategy');
+    expect(route.description).toContain('Unlocks 4 new bosses');
+    expect(route.alternatives).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: expect.stringContaining('East Ardougne') }),
+    ]));
+  });
+
   it('routes Resource Engine items through their sources', () => {
     const route = buildGoalRoute('Ranarr Weed', stateWith())!;
     expect(route.kind).toBe('engine-item');

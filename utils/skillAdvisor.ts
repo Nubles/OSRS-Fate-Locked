@@ -19,7 +19,7 @@ import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { computeUnlockImpact, prepareUnlockImpactContext } from './unlockImpact';
 import { EligibilityBlocker, evaluateDiaryTierEligibility, getDiaryStatus } from './journalStatus';
-import { effectiveSkillLevel } from './slayerReach';
+import { effectiveCombatLevel, effectiveSkillLevel } from './slayerReach';
 
 export interface RankedSkill {
   id: string;          // skill name
@@ -49,17 +49,24 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
     status === 'AVAILABLE' || status === 'COMPLETED'
   );
 
+  const combatSkillNames = [
+    'Attack', 'Strength', 'Defence', 'Hitpoints', 'Prayer', 'Ranged', 'Magic',
+  ] as const;
+  const combatSkills = new Set<string>(combatSkillNames);
+  const combatRequirements = new Set<number>();
+
   // Build the threshold index once. The previous skill-first scan revisited
   // all 492 tasks and all quest requirements for every skill.
   const thresholdsBySkill = new Map<string, Set<number>>(
     SKILLS_LIST.map(skill => [skill, new Set<number>()]),
   );
   const addThreshold = (skill: string, level: number) => {
-    const current = unlocks.levels[skill] ?? 1;
+    const current = unlocks.levels[skill] ?? (skill === 'Hitpoints' ? 10 : 1);
     if (level > current && level <= 99) thresholdsBySkill.get(skill)?.add(level);
   };
   for (const quest of Object.values(QUEST_DATA)) {
     for (const [skill, level] of Object.entries(quest.skills)) addThreshold(skill, level);
+    if (quest.combatLevel !== undefined) combatRequirements.add(quest.combatLevel);
   }
   for (const task of ALL_DIARY_TASKS) {
     for (const requirement of [task, ...(task.oneOf ?? [])]) {
@@ -84,12 +91,31 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
           addThreshold(skill, requirement.combinedSkillLevel.level - otherLevels);
         }
       }
+      if (requirement.combatLevel !== undefined) {
+        combatRequirements.add(requirement.combatLevel);
+      }
     }
   }
 
-  const combatSkills = new Set([
-    'Attack', 'Strength', 'Defence', 'Hitpoints', 'Prayer', 'Ranged', 'Magic',
-  ]);
+  for (const requiredCombatLevel of combatRequirements) {
+    if (effectiveCombatLevel(unlocks) >= requiredCombatLevel) continue;
+    for (const skill of combatSkillNames) {
+      const current = unlocks.levels[skill] ?? (skill === 'Hitpoints' ? 10 : 1);
+      const candidateTier = Math.max(unlocks.skills[skill] ?? 0, 1);
+      const methodCap = Math.min(99, candidateTier * 10);
+      for (let level = current + 1; level <= methodCap; level += 1) {
+        const simulated = {
+          ...unlocks,
+          levels: { ...unlocks.levels, [skill]: level },
+          skills: { ...unlocks.skills, [skill]: candidateTier },
+        };
+        if (effectiveCombatLevel(simulated) >= requiredCombatLevel) {
+          addThreshold(skill, level);
+          break;
+        }
+      }
+    }
+  }
   const blockerCanChange = (
     blocker: EligibilityBlocker,
     skill: string,

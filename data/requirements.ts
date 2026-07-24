@@ -1,5 +1,13 @@
 import { TableType } from '../types';
 
+export interface ContentAlternativeRequirement {
+  label: string;
+  routes: Array<{
+    label: string;
+    blockers: Array<{ kind: string; label: string }>;
+  }>;
+}
+
 export interface ContentRequirement {
   id: string;
   category: TableType;
@@ -9,6 +17,7 @@ export interface ContentRequirement {
   diaries?: string[];    // Specific Achievement Diary tier IDs — must match DIARY_DATA entries.
   description?: string;
   items?: string[];      // Optional specific item requirements
+  alternatives?: ContentAlternativeRequirement[]; // One complete route is sufficient.
 }
 
 export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {

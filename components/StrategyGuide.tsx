@@ -50,6 +50,7 @@ export const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameMo
     });
 
     const missingQuests = (req.quests || []).filter(q => !unlocks.quests.includes(q));
+    const missingAlternatives = req.alternatives ?? [];
 
     const isCategoryUnlocked = (() => {
         if (req.category === TableType.QUESTS || req.category === TableType.AGILITY_COURSES || req.category === TableType.DIARIES) return true;
@@ -70,7 +71,8 @@ export const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameMo
         }
     })();
 
-    const totalReqs = req.regions.length + Object.keys(req.skills).length + (req.quests?.length || 0) + 1;
+    const totalReqs = req.regions.length + Object.keys(req.skills).length
+        + (req.quests?.length || 0) + (req.alternatives?.length || 0) + 1;
     const metReqs = (req.regions.length - missingRegions.length) + 
                     (Object.keys(req.skills).length - missingSkills.length) + 
                     ((req.quests?.length || 0) - missingQuests.length) +
@@ -79,14 +81,31 @@ export const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameMo
     const completionPercent = totalReqs === 0 ? 100 : Math.round((metReqs / totalReqs) * 100);
 
     return {
-        isFullyPlayable: missingRegions.length === 0 && missingSkills.length === 0 && missingQuests.length === 0 && isCategoryUnlocked,
+        isFullyPlayable: missingRegions.length === 0 && missingSkills.length === 0
+            && missingQuests.length === 0 && missingAlternatives.length === 0 && isCategoryUnlocked,
         missingRegions,
         missingSkills,
         missingQuests,
+        missingAlternatives,
         isCategoryUnlocked,
         completionPercent
     };
 };
+
+export const alternativeRequirementText = (
+    alternative: NonNullable<ContentRequirement['alternatives']>[number],
+): string => 'One of: ' + alternative.routes.map(route => route.label).join(' or ');
+
+export const AlternativeRequirementChip: React.FC<{
+    alternative: NonNullable<ContentRequirement['alternatives']>[number];
+    locked: boolean;
+}> = ({ alternative, locked }) => (
+    <div className={`flex items-center gap-1.5 px-2 py-1.5 rounded border text-xs font-mono transition-colors ${locked ? 'bg-red-900/20 border-red-500/30 text-red-400' : 'bg-green-900/10 border-green-500/20 text-green-500/70'}`}>
+        <Target size={12} />
+        <span>{alternativeRequirementText(alternative)}</span>
+        {locked ? <Lock size={10} /> : <Check size={10} />}
+    </div>
+);
 
 export const calculateProphecyScore = (req: ContentRequirement, analysis: any) => {
     let score = 0;
@@ -96,6 +115,7 @@ export const calculateProphecyScore = (req: ContentRequirement, analysis: any) =
         if (!s.isUnlocked) score += 50;
     });
     score += analysis.missingQuests.length * 20;
+    score += analysis.missingAlternatives.length * 20;
     if (!analysis.isCategoryUnlocked) score += 30;
     return score;
 };
@@ -138,8 +158,20 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                     .map(blocker => blocker.label),
                 skills,
                 quests: eligibility.blockers
-                    .filter(blocker => blocker.kind === 'quest' || blocker.kind === 'alternative')
+                    .filter(blocker => blocker.kind === 'quest')
                     .map(blocker => blocker.label),
+                alternatives: eligibility.blockers
+                    .filter(blocker => blocker.kind === 'alternative')
+                    .map(blocker => ({
+                        label: blocker.label,
+                        routes: blocker.routes.map(route => ({
+                            label: route.label,
+                            blockers: route.blockers.map(routeBlocker => ({
+                                kind: routeBlocker.kind,
+                                label: routeBlocker.label,
+                            })),
+                        })),
+                    })),
                 description: `Region: ${d.region} | Difficulty: ${d.difficulty.replace('Diary (', '').replace(')', '')}`
             };
         });
@@ -322,7 +354,7 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                                     </div>
                                 ) : (
                                     filteredPlanner.map(content => {
-                                        const { missingRegions, missingSkills, missingQuests, isCategoryUnlocked, completionPercent } = content.analysis;
+                                        const { missingRegions, missingSkills, missingQuests, missingAlternatives, isCategoryUnlocked, completionPercent } = content.analysis;
                                         const isPinned = pinnedGoals.includes(content.uniqueId);
                                         const progressColor = completionPercent > 75 ? 'bg-green-500' : completionPercent > 40 ? 'bg-yellow-500' : 'bg-red-500';
                                         
@@ -365,6 +397,13 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                                                             const isMissing = missingQuests.includes(q);
                                                             return <div key={q} className={`flex items-center gap-1.5 px-2 py-1.5 rounded border text-xs font-mono transition-colors ${isMissing ? 'bg-red-900/20 border-red-500/30 text-red-400' : 'bg-green-900/10 border-green-500/20 text-green-500/70'}`}><ScrollText size={12} />{q}{isMissing ? <Lock size={10} /> : <Check size={10} />}</div>
                                                         })}
+                                                        {(content.alternatives ?? []).map(alternative => (
+                                                            <AlternativeRequirementChip
+                                                                key={alternative.label}
+                                                                alternative={alternative}
+                                                                locked={missingAlternatives.includes(alternative)}
+                                                            />
+                                                        ))}
                                                     </div>
                                                 </div>
                                             </div>

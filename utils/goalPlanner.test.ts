@@ -216,6 +216,36 @@ describe('planForTarget — diaries', () => {
     ]);
   });
 
+  it('keeps combined and limited-any routes tied to their real skills', () => {
+    const plan = planForTarget('diary', 'Falador Hard', maxedUnlocks({
+      regions: ["Warriors' Guild"],
+      skills: { Attack: 6, Strength: 6 },
+      levels: { Attack: 60, Strength: 60 },
+      completedTasks: ALL_DIARY_TASKS
+        .filter(task => task.tierId !== 'Falador Hard' || task.id !== 'fal_hard_10')
+        .map(task => task.id),
+    }))!;
+
+    expect(plan.alternativeSteps).toEqual([
+      expect.objectContaining({
+        routes: [
+          expect.objectContaining({
+            blockers: [expect.objectContaining({
+              relatedIds: ['Attack', 'Strength'],
+              detail: expect.stringContaining('have 120'),
+            })],
+          }),
+          expect.objectContaining({
+            blockers: [expect.objectContaining({
+              relatedIds: ['Attack', 'Strength'],
+              detail: expect.stringContaining('Attack 60'),
+            })],
+          }),
+        ],
+      }),
+    ]);
+  });
+
   it('does not require miniquests for the Quest cape diary task', () => {
     const plan = planForTarget('diary', 'Lumbridge Elite', maxedUnlocks({
       regions: ['Draynor Village'],

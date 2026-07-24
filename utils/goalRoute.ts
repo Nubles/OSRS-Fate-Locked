@@ -177,9 +177,9 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
     const neededNames = new Set<string>([
       ...plan.questSteps.map(step => step.id),
       ...plan.regionSteps.map(step => step.label),
-      ...plan.skillSteps.map(step => step.id),
+      ...plan.skillSteps.flatMap(step => step.relatedIds ?? [step.id]),
       ...plan.alternativeSteps.flatMap(step => step.routes.flatMap(route => (
-        route.blockers.map(blocker => blocker.id)
+        route.blockers.flatMap(blocker => blocker.relatedIds ?? [blocker.id])
       ))),
     ]);
     const totalSteps = eligibility.evidence.length + eligibility.blockers.length;
@@ -200,6 +200,82 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       percentage: eligibility.eligible || eligibility.status === 'COMPLETED'
         ? 100
         : totalSteps === 0 ? 0 : Math.round((completedSteps / totalSteps) * 100),
+    };
+  }
+
+  // Pure quest goals use the canonical planner so direct and transitive one-of
+  // access routes stay structured instead of being flattened into fake regions.
+  if (QUEST_DATA[goalId] && !STRATEGY_DATABASE[goalId]) {
+    const quest = QUEST_DATA[goalId];
+    const plan = planForTarget('quest', goalId, unlocks, gameModeId);
+    if (!plan) return null;
+    const quests: RouteItem[] = plan.questSteps.map(step => ({
+      name: step.label, met: step.done, detail: step.detail,
+    }));
+    const regions: RouteItem[] = plan.regionSteps.map(step => ({
+      name: step.label, met: step.done, detail: step.detail,
+    }));
+    const alternatives: RouteAlternative[] = plan.alternativeSteps.map(step => ({
+      name: step.label,
+      met: step.done,
+      routes: step.routes.map(route => ({
+        name: route.label,
+        met: route.blockers.length === 0,
+        detail: route.label + (route.blockers.length > 0
+          ? ': ' + route.blockers.map(blocker => (
+            blocker.label + (blocker.detail ? ' ' + blocker.detail : '')
+          )).join(' + ')
+          : ''),
+      })),
+    }));
+    const skills: RouteSkill[] = plan.skillSteps.map(step => {
+      const needLevel = Number(step.detail?.match(/\d+/)?.[0] ?? 1);
+      const isCombat = step.id === 'Combat level';
+      const haveLevel = isCombat
+        ? effectiveCombatLevel(unlocks)
+        : effectiveSkillLevel(unlocks, step.id);
+      const tierHave = isCombat ? 0 : (unlocks.skills[step.id] ?? 0);
+      return {
+        skill: step.id,
+        needLevel,
+        haveLevel,
+        unlocked: isCombat || tierHave > 0,
+        tierNeeded: isCombat ? 0 : tierForLevel(needLevel),
+        tierHave,
+        met: step.done,
+      };
+    });
+    const neededNames = new Set<string>([
+      ...plan.questSteps.map(step => step.id),
+      ...plan.regionSteps.map(step => step.label),
+      ...plan.skillSteps.flatMap(step => step.relatedIds ?? [step.id]),
+      ...plan.alternativeSteps.flatMap(step => step.routes.flatMap(route => (
+        route.blockers.flatMap(blocker => blocker.relatedIds ?? [blocker.id])
+      ))),
+    ]);
+    const qpNeed = Number(plan.qpStep?.detail?.match(/\d+/)?.[0] ?? 0);
+    const qpHave = unlocks.quests.reduce(
+      (total, id) => total + (QUEST_DATA[id]?.points ?? 0), 0,
+    );
+    const totalSteps = Math.max(1, plan.steps.length);
+    const completedSteps = plan.alreadyDone
+      ? totalSteps
+      : plan.steps.filter(step => step.done).length;
+    return {
+      goalId,
+      kind: 'quest',
+      description: quest.series ? 'Series: ' + quest.series : undefined,
+      quests,
+      regions,
+      skills,
+      alternatives,
+      diaries: [],
+      questPoints: qpNeed > 0 ? { need: qpNeed, have: qpHave, met: qpHave >= qpNeed } : undefined,
+      sources: [],
+      tables: suggestTables(neededNames, unlocks),
+      totalSteps,
+      completedSteps,
+      percentage: Math.round((completedSteps / totalSteps) * 100),
     };
   }
 
@@ -291,6 +367,27 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
     met: unlocks.diaries.includes(d),
   }));
 
+  // Strategy-backed quest goals retain their curated strategy requirements,
+  // while canonical planning contributes structured access choices from every
+  // direct or transitive quest in the chain.
+  const canonicalQuestPlan = QUEST_DATA[goalId]
+    ? planForTarget('quest', goalId, unlocks, gameModeId)
+    : null;
+  const alternatives: RouteAlternative[] = (canonicalQuestPlan?.alternativeSteps ?? [])
+    .map(step => ({
+      name: step.label,
+      met: step.done,
+      routes: step.routes.map(route => ({
+        name: route.label,
+        met: route.blockers.length === 0,
+        detail: route.label + (route.blockers.length > 0
+          ? ': ' + route.blockers.map(blocker => (
+            blocker.label + (blocker.detail ? ' ' + blocker.detail : '')
+          )).join(' + ')
+          : ''),
+      })),
+    }));
+
   const haveQp = unlocks.quests.reduce((acc, id) => acc + (QUEST_DATA[id]?.points ?? 0), 0);
   const questPoints = qpNeed > 0 ? { need: qpNeed, have: haveQp, met: haveQp >= qpNeed } : undefined;
 
@@ -307,17 +404,24 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
     }
   }
   for (const s of skills) if (!s.met) neededNames.add(s.skill);
+  for (const blocker of canonicalQuestPlan?.alternativeSteps.flatMap(step => (
+    step.routes.flatMap(route => route.blockers)
+  )) ?? []) {
+    for (const id of blocker.relatedIds ?? [blocker.id]) neededNames.add(id);
+  }
   const tables = suggestTables(neededNames, unlocks);
 
   // ── Totals ────────────────────────────────────────────────────────────────
-  const items: { met: boolean }[] = [...quests, ...regions, ...skills, ...diaries];
+  const items: { met: boolean }[] = [
+    ...quests, ...regions, ...skills, ...alternatives, ...diaries,
+  ];
   if (questPoints) items.push({ met: questPoints.met });
   const total = Math.max(1, items.length);
   const done = items.filter(i => i.met).length;
 
   return {
     goalId, kind, description: req.description,
-    quests, regions, skills, alternatives: [], diaries, questPoints,
+    quests, regions, skills, alternatives, diaries, questPoints,
     sources: [], tables,
     totalSteps: total, completedSteps: done,
     percentage: Math.round((done / total) * 100),

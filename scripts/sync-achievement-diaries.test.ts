@@ -192,6 +192,19 @@ describe('Achievement Diary source parser', () => {
 });
 
 describe('offline generated Diary verification', () => {
+  it('rejects malformed item evidence and duplicate combined-skill members', () => {
+    const malformedItems: any = structuredClone(SIX_TASK_SNAPSHOT);
+    malformedItems.tasks[0].items = [42];
+    expect(() => renderDiaryTasks(malformedItems)).toThrow(/items.*non-empty string/i);
+
+    const duplicateCombined: any = structuredClone(SIX_TASK_SNAPSHOT);
+    duplicateCombined.tasks[0].oneOf = [
+      { combinedSkillLevel: { skills: ['Attack', 'Attack'], level: 130 } },
+      { label: 'Other route' },
+    ];
+    expect(() => renderDiaryTasks(duplicateCombined)).toThrow(/combinedSkillLevel.*duplicate/i);
+  });
+
   it('reports generated output drift without rewriting the supplied output', () => {
     const output = 'sentinel old output';
 
@@ -525,11 +538,11 @@ describe('Achievement Diary id-classification audit', () => {
         { label: 'Hardwood Grove', regions: ['Tai Bwo Wannai'] },
         {
           label: 'Kharazi Jungle (machete)', regions: ['Kharazi Jungle'],
-          quests: ["Legends' Quest"], items: ['Machete'],
+          items: ['Machete', "Started Legends' Quest"],
         },
         {
           label: 'Kharazi Jungle (vine shortcut)', regions: ['Kharazi Jungle'],
-          quests: ["Legends' Quest"], skills: { Agility: 79 },
+          items: ["Started Legends' Quest"], skills: { Agility: 79 },
         },
       ],
     });
@@ -537,10 +550,22 @@ describe('Achievement Diary id-classification audit', () => {
       regions: [],
       oneOf: expect.arrayContaining([
         expect.objectContaining({ label: 'Hardwood Grove', regions: ['Tai Bwo Wannai'] }),
-        expect.objectContaining({ label: 'Kharazi Jungle (machete)', items: ['Machete'] }),
-        expect.objectContaining({ label: 'Kharazi Jungle (vine shortcut)', skills: { Agility: 79 } }),
+        expect.objectContaining({
+          label: 'Kharazi Jungle (machete)',
+          items: ['Machete', "Started Legends' Quest"],
+        }),
+        expect.objectContaining({
+          label: 'Kharazi Jungle (vine shortcut)',
+          items: ["Started Legends' Quest"], skills: { Agility: 79 },
+        }),
       ]),
     });
+    for (const id of ['kar_med_8', 'kar_med_9']) {
+      const kharaziRoutes = byId.get(id).oneOf.filter(
+        option => option.label.startsWith('Kharazi Jungle'),
+      );
+      expect(kharaziRoutes.every(option => option.quests === undefined)).toBe(true);
+    }
     expect(byId.get('kar_med_19')).toMatchObject({
       regions: [],
       oneOf: [
@@ -578,6 +603,13 @@ describe('Achievement Diary id-classification audit', () => {
         { label: 'Pre-cooked', items: ['Cooked oomlie wrap'] },
         expect.objectContaining({ label: 'Cook it yourself', skills: { Cooking: 50 } }),
       ],
+    });
+    expect(byId.get('kar_hard_3').oneOf.find(
+      option => option.label === 'Cook it yourself',
+    ).regions).toBeUndefined();
+    expect(byId.get('mor_elite_1')).toMatchObject({
+      skills: { Fishing: 96, Strength: 76 },
+      quests: ['In Aid of the Myreque', 'Barbarian Training'],
     });
     expect(byId.get('var_med_7')).toMatchObject({
       skills: {},

@@ -23,9 +23,15 @@ export type DiaryStatusUnlocks =
   Omit<UnlockState, 'cas' | 'completedTasks'>
   & Partial<Pick<UnlockState, 'cas' | 'completedTasks'>>;
 
+export type SkillEligibilityRequirement =
+  | { type: 'single'; skill: string; level: number }
+  | { type: 'any'; level: number }
+  | { type: 'combined'; skills: string[]; level: number }
+  | { type: 'anyOf'; skills: string[]; level: number };
+
 export type DirectEligibilityBlocker =
   | { kind: 'region'; label: string }
-  | { kind: 'skill'; label: string }
+  | { kind: 'skill'; label: string; requirement?: SkillEligibilityRequirement }
   | { kind: 'combat'; label: string }
   | { kind: 'quest'; label: string };
 
@@ -134,7 +140,10 @@ export function evaluateQuestEligibility(
       ? qp >= required
       : meetsSkillRequirement(unlocks, skill, required);
     if (met) evidence.push(skill + ' ' + required);
-    else blockers.push({ kind: 'skill', label: skill + ' ' + required });
+    else blockers.push({
+      kind: 'skill', label: skill + ' ' + required,
+      requirement: { type: 'single', skill, level: required },
+    });
   }
   if (quest.combatLevel !== undefined) {
     if (effectiveCombatLevel(unlocks) >= quest.combatLevel) evidence.push('Combat level ' + quest.combatLevel);
@@ -229,7 +238,10 @@ const evaluateDiaryRequirement = (
   for (const [skill, required] of Object.entries(requirement.skills ?? {})) {
     const label = skill + ' ' + required;
     if (meetsSkillRequirement(unlocks, skill, required)) evidence.push(label);
-    else blockers.push({ kind: 'skill', label });
+    else blockers.push({
+      kind: 'skill', label,
+      requirement: { type: 'single', skill, level: required },
+    });
   }
   for (const quest of requirement.quests ?? []) {
     if (unlocks.quests.includes(quest)) evidence.push(quest);
@@ -260,7 +272,10 @@ const evaluateDiaryRequirement = (
     ));
     const label = 'Any skill ' + requirement.anySkillLevel;
     if (anySkillMet) evidence.push(label);
-    else blockers.push({ kind: 'skill', label });
+    else blockers.push({
+      kind: 'skill', label,
+      requirement: { type: 'any', level: requirement.anySkillLevel },
+    });
   }
   if (requirement.combinedSkillLevel) {
     const { skills, level } = requirement.combinedSkillLevel;
@@ -269,13 +284,19 @@ const evaluateDiaryRequirement = (
       (sum, skill) => sum + effectiveSkillLevel(unlocks, skill), 0,
     );
     if (total >= level) evidence.push(label);
-    else blockers.push({ kind: 'skill', label });
+    else blockers.push({
+      kind: 'skill', label,
+      requirement: { type: 'combined', skills, level },
+    });
   }
   if (requirement.anyOfSkillsLevel) {
     const { skills, level } = requirement.anyOfSkillsLevel;
     const label = skills.join(' or ') + ' ' + level;
     if (skills.some(skill => meetsSkillRequirement(unlocks, skill, level))) evidence.push(label);
-    else blockers.push({ kind: 'skill', label });
+    else blockers.push({
+      kind: 'skill', label,
+      requirement: { type: 'anyOf', skills, level },
+    });
   }
 
   return { eligible: blockers.length === 0, blockers, evidence };

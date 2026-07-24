@@ -4295,10 +4295,8 @@
         {
           "label": "Kharazi Jungle (machete)",
           "items": [
-            "Machete"
-          ],
-          "quests": [
-            "Legends' Quest"
+            "Machete",
+            "Started Legends' Quest"
           ],
           "regions": [
             "Kharazi Jungle"
@@ -4309,11 +4307,11 @@
           "skills": {
             "Agility": 79
           },
-          "quests": [
-            "Legends' Quest"
-          ],
           "regions": [
             "Kharazi Jungle"
+          ],
+          "items": [
+            "Started Legends' Quest"
           ]
         }
       ],
@@ -4351,10 +4349,8 @@
         {
           "label": "Kharazi Jungle (machete)",
           "items": [
-            "Machete"
-          ],
-          "quests": [
-            "Legends' Quest"
+            "Machete",
+            "Started Legends' Quest"
           ],
           "regions": [
             "Kharazi Jungle"
@@ -4365,11 +4361,11 @@
           "skills": {
             "Agility": 79
           },
-          "quests": [
-            "Legends' Quest"
-          ],
           "regions": [
             "Kharazi Jungle"
+          ],
+          "items": [
+            "Started Legends' Quest"
           ]
         }
       ],
@@ -4640,9 +4636,6 @@
           "items": [
             "Palm leaf",
             "Raw oomlie"
-          ],
-          "regions": [
-            "Kharazi Jungle"
           ]
         }
       ]
@@ -7067,7 +7060,8 @@
         "Strength": 76
       },
       "quests": [
-        "In Aid of the Myreque"
+        "In Aid of the Myreque",
+        "Barbarian Training"
       ],
       "regions": [
         "Burgh de Rott"

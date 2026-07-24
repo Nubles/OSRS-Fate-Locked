@@ -60,7 +60,10 @@ describe('journal completion decisions', () => {
     const result = evaluateDiaryTaskEligibility(task, unlocked(), 'vanilla');
     expect(result.eligible).toBe(false);
     expect(result.blockers).toEqual([
-      { kind: 'skill', label: 'Crafting 36' },
+      {
+        kind: 'skill', label: 'Crafting 36',
+        requirement: { type: 'single', skill: 'Crafting', level: 36 },
+      },
       { kind: 'quest', label: 'Doric\'s Quest' },
       { kind: 'region', label: 'Falador' },
     ]);

@@ -247,6 +247,13 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
     if (requirement[field] !== undefined && !Array.isArray(requirement[field])) {
       throw new Error('Invalid Diary requirement ' + field + ': ' + context);
     }
+    if (requirement[field]?.some(value => (
+      typeof value !== 'string' || value.trim() === ''
+    ))) {
+      throw new Error(
+        'Invalid Diary requirement ' + field + ' entry (expected a non-empty string): ' + context,
+      );
+    }
   }
   for (const field of ['combatLevel', 'anySkillLevel']) {
     if (requirement[field] !== undefined
@@ -266,6 +273,9 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
       || !Number.isInteger(predicate.level) || predicate.level < 1
     )) {
       throw new Error('Invalid Diary requirement ' + field + ': ' + context);
+    }
+    if (predicate && new Set(predicate.skills).size !== predicate.skills.length) {
+      throw new Error('Invalid Diary requirement ' + field + ' duplicate skills: ' + context);
     }
   }
   const hasRequirement = Boolean(

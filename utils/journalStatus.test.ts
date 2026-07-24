@@ -424,7 +424,7 @@ describe('audited diary route eligibility', () => {
 
   it('allows either Karamja tree location without requiring the other location', () => {
     const shared = {
-      quests: ['Jungle Potion', "Legends' Quest"],
+      quests: ['Jungle Potion'],
       skills: { Woodcutting: 10 },
       levels: { Woodcutting: 50 },
     };
@@ -451,7 +451,7 @@ describe('audited diary route eligibility', () => {
     const result = evaluateDiaryTaskEligibility(task('kar_med_8'), unlocked({
       skills: { Woodcutting: 4, Agility: 1 },
       levels: { Woodcutting: 35, Agility: 1 },
-      quests: ['Jungle Potion', "Legends' Quest"],
+      quests: ['Jungle Potion'],
       regions: ['Kharazi Jungle'],
     }));
 
