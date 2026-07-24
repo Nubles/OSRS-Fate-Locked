@@ -288,6 +288,13 @@ const normalizeUnlocks = (
   }
   const inspected = inspectRecord(value, allowed, 'invalid_unlocks', 'unlocks');
   if (inspected.ok === false) return inspected;
+  if (sourceVersion === CURRENT_SAVE_VERSION) {
+    for (const key of CURRENT_UNLOCK_KEYS) {
+      if (!own(inspected.value, key)) {
+        return invalid('invalid_unlocks', `unlocks.${key}`);
+      }
+    }
+  }
   const defaultRecord = defaults as unknown as Record<string, unknown>;
   const equipment = mergeBoundedIntegerRecord(
     readOwn(defaultRecord, 'equipment'),

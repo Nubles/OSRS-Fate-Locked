@@ -90,7 +90,7 @@ export interface ProfileDeletionTransactionResult {
 }
 
 export const deleteProfileTransaction = (
-  storage: Pick<Storage, 'removeItem' | 'setItem'>,
+  storage: Pick<Storage, 'getItem' | 'removeItem' | 'setItem'>,
   metadataKey: string,
   current: ProfileMetadataCell,
   profileId: string,
@@ -109,14 +109,32 @@ export const deleteProfileTransaction = (
     ? profiles[0].id
     : previous.activeProfileId;
   const updated: ProfileMetadata = { profiles, activeProfileId };
+  const snapshots = new Map<string, string>();
+  for (const key of profileOwnedKeys(profileId)) {
+    const value = storage.getItem(key);
+    if (value !== null) snapshots.set(key, value);
+  }
   const deletion = deleteProfileStorage(storage, profileId);
   const commit = commitProfileMetadata(storage, metadataKey, current, () => updated);
 
   if (!commit.ok) {
+    const rollbackFailed: string[] = [];
+    for (const key of deletion.removed) {
+      const value = snapshots.get(key);
+      if (value === undefined) continue;
+      try {
+        storage.setItem(key, value);
+      } catch {
+        rollbackFailed.push(key);
+      }
+    }
     return {
       status: 'metadata_write_failed',
       metadata: commit.metadata,
-      storage: deletion,
+      storage: {
+        removed: rollbackFailed,
+        failed: [...new Set([...deletion.failed, ...rollbackFailed])],
+      },
     };
   }
 

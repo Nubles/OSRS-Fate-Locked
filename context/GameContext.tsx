@@ -43,6 +43,19 @@ import {
 // --- Types ---
 const SAVE_DEBOUNCE_MS = 500;
 
+export const writeReplacementNow = (
+  storage: Pick<Storage, 'setItem'>,
+  storageKey: string,
+  data: string,
+  pendingSave: { current: number | null },
+  cancelPending: (handle: number) => void,
+): void => {
+  storage.setItem(storageKey, data);
+  if (pendingSave.current === null) return;
+  cancelPending(pendingSave.current);
+  pendingSave.current = null;
+};
+
 const generateId = (): string => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
@@ -1012,14 +1025,24 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     stateRef.current = { ...replacement, lastEvent: null };
     dispatch({ type: 'LOAD_SAVE', payload: replacement });
   }, []);
+  const writeReplacement = useCallback((data: string) => {
+    writeReplacementNow(
+      localStorage,
+      storageKey,
+      data,
+      saveTimeoutRef,
+      handle => window.clearTimeout(handle),
+    );
+  }, [storageKey]);
 
   const importSave = useCallback((data: unknown): ImportResult =>
     applyPreparedReplacement(data, {
       current: stateRef.current,
       defaults: initialState,
       writeBackup: current => pushBackup(storageKey, current, 'Before import'),
+      writeReplacement,
       replace: replaceState,
-    }), [replaceState, storageKey]);
+    }), [replaceState, storageKey, writeReplacement]);
 
   const createBackup = useCallback((reason: string): BackupWriteResult =>
     pushBackup(storageKey, serializeCurrent(), reason), [storageKey, serializeCurrent]);
@@ -1034,9 +1057,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     return applyValidatedReplacement(parseAndMigrateSave(data, initialState), {
       current: stateRef.current,
       writeBackup: current => pushBackup(storageKey, current, 'Before restore'),
+      writeReplacement,
       replace: replaceState,
     });
-  }, [replaceState, storageKey]);
+  }, [replaceState, storageKey, writeReplacement]);
 
   const resetGame = useCallback(() => {
     // Auto-snapshot so an accidental reset is recoverable.

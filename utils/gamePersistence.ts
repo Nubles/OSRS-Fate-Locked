@@ -6,9 +6,11 @@ import {
   type SaveWarning,
 } from './saveSchema';
 
+export type ImportErrorCode = SaveErrorCode | 'storage_unavailable';
+
 export type ImportResult =
   | { ok: true; warnings: SaveWarning[] }
-  | { ok: false; code: SaveErrorCode; message: string; path?: string };
+  | { ok: false; code: ImportErrorCode; message: string; path?: string };
 
 export const ACCEPTED_WARNING_CLOSE_DELAY_MS = 1_500;
 
@@ -85,6 +87,7 @@ export const prepareReplacement = (
 type ReplacementCallbacks = {
   current: GameState & { lastEvent?: unknown };
   writeBackup: (data: string) => BackupWriteResult;
+  writeReplacement: (data: string) => void;
   replace: (state: GameState) => void;
 };
 
@@ -97,6 +100,12 @@ const STORAGE_WARNING: SaveWarning = {
   message: 'The current run could not be saved as a protective backup.',
 };
 
+const replacementStorageFailure = (): ImportResult => ({
+  ok: false,
+  code: 'storage_unavailable',
+  message: 'The replacement run could not be saved. Your current run is unchanged.',
+});
+
 export const applyValidatedReplacement = (
   prepared: SaveValidationResult,
   options: ReplacementCallbacks,
@@ -104,6 +113,11 @@ export const applyValidatedReplacement = (
   if (prepared.ok === false) return prepared;
 
   const backup = options.writeBackup(serializeCurrent(options.current));
+  try {
+    options.writeReplacement(serializeCurrent(prepared.state));
+  } catch {
+    return replacementStorageFailure();
+  }
   options.replace(prepared.state);
 
   const warnings = [...prepared.warnings];

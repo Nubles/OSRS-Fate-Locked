@@ -121,6 +121,7 @@ describe('transactional replacement', () => {
     const result = applyPreparedReplacement({ ...cloneState(), keys: -1 }, {
       current: cloneState({ keys: 3 }), defaults: initialState,
       writeBackup: () => { events.push('backup'); return { stored: true }; },
+      writeReplacement: () => undefined,
       replace: () => { events.push('replace'); },
     });
     expect(result).toMatchObject({ ok: false, code: 'invalid_number', path: 'keys' });
@@ -132,10 +133,35 @@ describe('transactional replacement', () => {
     const result = applyPreparedReplacement(cloneState({ keys: 9 }), {
       current: cloneState({ keys: 3 }), defaults: initialState,
       writeBackup: data => { events.push('backup:' + JSON.parse(data).keys); return { stored: true }; },
+      writeReplacement: data => { events.push('persist:' + JSON.parse(data).keys); },
       replace: state => { events.push('replace:' + state.keys); },
     });
     expect(result).toEqual({ ok: true, warnings: [] });
-    expect(events).toEqual(['backup:3', 'replace:9']);
+    expect(events).toEqual(['backup:3', 'persist:9', 'replace:9']);
+  });
+
+  it('reports failure before in-memory replacement when the durable write throws', () => {
+    const events: string[] = [];
+    const result = applyPreparedReplacement(cloneState({ keys: 9 }), {
+      current: cloneState({ keys: 3 }),
+      defaults: initialState,
+      writeBackup: data => {
+        events.push('backup:' + JSON.parse(data).keys);
+        return { stored: true };
+      },
+      writeReplacement: data => {
+        events.push('persist:' + JSON.parse(data).keys);
+        throw new Error('quota');
+      },
+      replace: state => { events.push('replace:' + state.keys); },
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      code: 'storage_unavailable',
+      message: 'The replacement run could not be saved. Your current run is unchanged.',
+    });
+    expect(events).toEqual(['backup:3', 'persist:9']);
   });
 
   it('replaces valid input with a storage warning when the protective backup fails', () => {
@@ -143,6 +169,7 @@ describe('transactional replacement', () => {
     const result = applyPreparedReplacement(cloneState({ keys: 9 }), {
       current: cloneState({ keys: 3 }), defaults: initialState,
       writeBackup: () => ({ stored: false, reason: 'storage_unavailable' }),
+      writeReplacement: () => undefined,
       replace: state => { replacements.push(state.keys); },
     });
     expect(result).toEqual({ ok: true, warnings: [{
@@ -156,6 +183,7 @@ describe('transactional replacement', () => {
     const result = applyPreparedReplacement(cloneState({ keys: 9 }), {
       current: cloneState({ keys: 3 }), defaults: initialState,
       writeBackup: () => ({ stored: false, reason }),
+      writeReplacement: () => undefined,
       replace: () => undefined,
     });
     expect(result).toEqual({ ok: true, warnings: [] });
@@ -167,6 +195,7 @@ describe('transactional replacement', () => {
     const result = applyPreparedReplacement(historical, {
       current: cloneState(), defaults: initialState,
       writeBackup: () => ({ stored: false, reason: 'storage_unavailable' }),
+      writeReplacement: () => undefined,
       replace: () => undefined,
     });
     expect(result.ok).toBe(true);
@@ -183,6 +212,7 @@ describe('transactional replacement', () => {
     const result = applyValidatedReplacement(parseAndMigrateSave('{not json', initialState), {
       current: cloneState({ keys: 3 }),
       writeBackup: () => { events.push('backup'); return { stored: true }; },
+      writeReplacement: () => undefined,
       replace: () => { events.push('replace'); },
     });
     expect(result).toMatchObject({ ok: false, code: 'invalid_json' });
@@ -201,6 +231,7 @@ describe('transactional replacement', () => {
       const result = applyValidatedReplacement(prepared, {
         current: cloneState(),
         writeBackup: current => pushBackup(storageKey, current, 'Before restore'),
+        writeReplacement: () => undefined,
         replace: () => undefined,
       });
       expect(result.ok).toBe(false);

@@ -87,6 +87,7 @@ describe('profile deletion transaction', () => {
   it('removes sidecars before persisting metadata and preserves active replacement', () => {
     const operations: string[] = [];
     const result = deleteProfileTransaction({
+      getItem: () => null,
       removeItem: (key) => {
         operations.push('remove:' + key);
       },
@@ -117,6 +118,7 @@ describe('profile deletion transaction', () => {
     const failingKeys = [expectedKeys('target')[1], expectedKeys('target')[4]];
     let persisted = false;
     const result = deleteProfileTransaction({
+      getItem: () => null,
       removeItem: (key) => {
         if (failingKeys.includes(key)) throw new Error('blocked');
       },
@@ -130,8 +132,50 @@ describe('profile deletion transaction', () => {
     expect(result.storage.failed).toEqual(failingKeys);
   });
 
+  it('restores every owned value when metadata persistence fails', () => {
+    const targetKeys = expectedKeys('target');
+    const originalEntries = [
+      ...targetKeys.map((key) => [key, `value:${key}`] as const),
+      ['FATE_PROFILES', JSON.stringify(metadata)] as const,
+      ['FATE_PROFILE_other', 'other-save'] as const,
+    ];
+    const store = new Map<string, string>(originalEntries);
+    const reads: string[] = [];
+    const removals: string[] = [];
+    const writes: string[] = [];
+    const current = { current: metadata };
+
+    const result = deleteProfileTransaction({
+      getItem: (key) => {
+        reads.push(key);
+        return store.get(key) ?? null;
+      },
+      removeItem: (key) => {
+        removals.push(key);
+        store.delete(key);
+      },
+      setItem: (key, value) => {
+        writes.push(key);
+        if (key === 'FATE_PROFILES') throw new Error('quota');
+        store.set(key, value);
+      },
+    }, 'FATE_PROFILES', current, 'target');
+
+    expect(reads).toEqual(targetKeys);
+    expect(removals).toEqual(targetKeys);
+    expect(writes).toEqual(['FATE_PROFILES', ...targetKeys]);
+    expect([...store.entries()].sort()).toEqual([...originalEntries].sort());
+    expect(result).toEqual({
+      status: 'metadata_write_failed',
+      metadata,
+      storage: { removed: [], failed: [] },
+    });
+    expect(current.current).toBe(metadata);
+  });
+
   it('returns previous React metadata when metadata persistence fails', () => {
     const result = deleteProfileTransaction({
+      getItem: () => null,
       removeItem: () => undefined,
       setItem: () => {
         throw new Error('quota');
@@ -141,7 +185,7 @@ describe('profile deletion transaction', () => {
     expect(result).toEqual({
       status: 'metadata_write_failed',
       metadata,
-      storage: { removed: expectedKeys('target'), failed: [] },
+      storage: { removed: [], failed: [] },
     });
     expect(result.metadata).toBe(metadata);
   });
@@ -153,6 +197,10 @@ describe('profile deletion transaction', () => {
     };
     const operations: string[] = [];
     const result = deleteProfileTransaction({
+      getItem: (key) => {
+        operations.push('get:' + key);
+        return null;
+      },
       removeItem: (key) => operations.push('remove:' + key),
       setItem: (key) => operations.push('set:' + key),
     }, 'FATE_PROFILES', { current: single }, 'target');
@@ -253,7 +301,11 @@ describe('synchronous profile metadata transactions', () => {
         activeProfileId: 'target',
       },
     };
-    const storage = { removeItem: () => undefined, setItem: () => undefined };
+    const storage = {
+      getItem: () => null,
+      removeItem: () => undefined,
+      setItem: () => undefined,
+    };
 
     const first = deleteProfileTransaction(storage, 'FATE_PROFILES', current, 'target');
     const second = deleteProfileTransaction(storage, 'FATE_PROFILES', current, 'other');
@@ -265,7 +317,11 @@ describe('synchronous profile metadata transactions', () => {
 
   it('preserves a same-tick prior mutation when deletion commits', () => {
     const current = { current: metadata };
-    const storage = { removeItem: () => undefined, setItem: () => undefined };
+    const storage = {
+      getItem: () => null,
+      removeItem: () => undefined,
+      setItem: () => undefined,
+    };
     commitProfileMetadata(storage, 'FATE_PROFILES', current, (previous) => ({
       ...previous,
       profiles: [

@@ -241,6 +241,22 @@ describe('save schema compatibility', () => {
     expectRejected(truncated, 'invalid_field', field);
   });
 
+  it('requires every current-version unlock member instead of defaulting truncated progress', () => {
+    const requiredUnlockKeys = [
+      'equipment', 'skills', 'levels',
+      'regions', 'chunks', 'mobility', 'arcana', 'housing', 'merchants',
+      'minigames', 'bosses', 'storage', 'guilds', 'farming', 'slayerUnlocks',
+      'banks', 'quests', 'diaries', 'cas', 'completedTasks', 'collectionLog',
+    ] as const;
+
+    expectRejected(candidate({ unlocks: {} }), 'invalid_unlocks', 'unlocks.equipment');
+    for (const key of requiredUnlockKeys) {
+      const truncated = clone(fullStateFixture());
+      delete truncated.unlocks[key];
+      expectRejected(truncated, 'invalid_unlocks', `unlocks.${key}`);
+    }
+  });
+
   it('fills absent optional fields from fresh defaults and never shares mutable defaults', () => {
     const input = clone(fullStateFixture()) as unknown as Record<string, unknown>;
     for (const key of [
