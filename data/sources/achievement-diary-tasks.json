@@ -89,7 +89,8 @@
     "unresolvedExistingRows": 0,
     "unresolvedDuplicateIds": 0,
     "unknownReferences": 0,
-    "combatLevelRequirementsRecordedOnly": 9
+    "combatLevelRequirementsStructured": 9,
+    "allQuestsRequirementsStructured": 2
   },
   "tasks": [
     {
@@ -364,15 +365,23 @@
       "ordinal": 6,
       "description": "Claim buckets of sand from Bert in Yanille.",
       "skills": {},
-      "quests": [
-        "The Hand in the Sand"
-      ],
+      "quests": [],
       "regions": [
         "Yanille"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of The Hand in the Sand (unless playing as Ultimate Ironman ) Bucket"
+      "sourceRequirements": "Completion of The Hand in the Sand (unless playing as Ultimate Ironman ) Bucket",
+      "oneOf": [
+        {
+          "label": "Ultimate Ironman exemption"
+        },
+        {
+          "quests": [
+            "The Hand in the Sand"
+          ]
+        }
+      ]
     },
     {
       "id": "ard_med_7",
@@ -1812,7 +1821,7 @@
       "ordinal": 4,
       "description": "Place a Scarecrow in the Falador farm flower patch.",
       "skills": {
-        "Farming": 47
+        "Farming": 23
       },
       "quests": [],
       "regions": [
@@ -1820,7 +1829,18 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "23 Farming ( Ironman accounts require 47 Farming or the ability to kill gryphons ) Bronze spear, watermelon, and a hay sack (you can fill an empty sack with hay at the hay bale in the chicken coop nearby.)"
+      "sourceRequirements": "23 Farming ( Ironman accounts require 47 Farming or the ability to kill gryphons ) Bronze spear, watermelon, and a hay sack (you can fill an empty sack with hay at the hay bale in the chicken coop nearby.)",
+      "oneOf": [
+        {
+          "label": "Grow watermelons",
+          "skills": {
+            "Farming": 47
+          }
+        },
+        {
+          "label": "Obtain a watermelon from gryphons"
+        }
+      ]
     },
     {
       "id": "fal_med_5",
@@ -2283,7 +2303,16 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of all quests or level 99 in any skill Any Cape of Accomplishment (except for joke skillcapes or the Max cape )"
+      "sourceRequirements": "Completion of all quests or level 99 in any skill Any Cape of Accomplishment (except for joke skillcapes or the Max cape )",
+      "oneOf": [
+        {
+          "allQuests": true
+        },
+        {
+          "label": "Skillcape",
+          "anySkillLevel": 99
+        }
+      ]
     },
     {
       "id": "fal_elite_5",
@@ -2421,15 +2450,23 @@
       "ordinal": 6,
       "description": "Collect 5 Snape grass on Waterbirth Island.",
       "skills": {},
-      "quests": [
-        "The Fremennik Trials"
-      ],
+      "quests": [],
       "regions": [
         "Waterbirth Island"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Waterbirth teleport tablet to directly access the island, or either 1000 coins or quest completion of The Fremennik Trials to travel via Jarvald"
+      "sourceRequirements": "Waterbirth teleport tablet to directly access the island, or either 1000 coins or quest completion of The Fremennik Trials to travel via Jarvald",
+      "oneOf": [
+        {
+          "label": "Waterbirth teleport or coins"
+        },
+        {
+          "quests": [
+            "The Fremennik Trials"
+          ]
+        }
+      ]
     },
     {
       "id": "frem_easy_7",
@@ -2475,15 +2512,25 @@
       "ordinal": 9,
       "description": "Enter the Troll Stronghold.",
       "skills": {},
-      "quests": [
-        "Troll Stronghold"
-      ],
+      "quests": [],
       "regions": [
         "Burthorpe"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of the Troll Stronghold, or completion of the Easy Combat Achievements for Ghommal's hilt 1"
+      "sourceRequirements": "Partial completion of the Troll Stronghold, or completion of the Easy Combat Achievements for Ghommal's hilt 1",
+      "oneOf": [
+        {
+          "quests": [
+            "Troll Stronghold"
+          ]
+        },
+        {
+          "cas": [
+            "Easy"
+          ]
+        }
+      ]
     },
     {
       "id": "frem_easy_10",
@@ -2646,10 +2693,7 @@
       "tierId": "Fremennik Medium",
       "ordinal": 8,
       "description": "Visit the Lighthouse from Waterbirth island.",
-      "skills": {
-        "Agility": 85,
-        "Prayer": 43
-      },
+      "skills": {},
       "quests": [
         "Horror from the Deep"
       ],
@@ -2659,7 +2703,17 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Visit the Lighthouse from Waterbirth Island.",
-      "sourceRequirements": "Completion of Horror from the Deep Food and 43 Prayer for protection prayers recommended Way of getting past the two-man doors at the dungeon entrance (help from another player, pet rock and rune thrownaxes, or 85 Agility for the rock shortcut )"
+      "sourceRequirements": "Completion of Horror from the Deep Food and 43 Prayer for protection prayers recommended Way of getting past the two-man doors at the dungeon entrance (help from another player, pet rock and rune thrownaxes, or 85 Agility for the rock shortcut )",
+      "oneOf": [
+        {
+          "label": "Two-player door route"
+        },
+        {
+          "skills": {
+            "Agility": 85
+          }
+        }
+      ]
     },
     {
       "id": "frem_med_9",
@@ -2864,16 +2918,24 @@
       "tierId": "Fremennik Elite",
       "ordinal": 1,
       "description": "Kill each of the Dagannoth Kings.",
-      "skills": {
-        "Agility": 85
-      },
+      "skills": {},
       "quests": [],
       "regions": [
         "Waterbirth Island"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Way of getting past the two-player doors at the dungeon entrance (help from another player, pet rock and rune thrownaxes, or 85 Agility for the rock shortcut ) See the strategy guide"
+      "sourceRequirements": "Way of getting past the two-player doors at the dungeon entrance (help from another player, pet rock and rune thrownaxes, or 85 Agility for the rock shortcut ) See the strategy guide",
+      "oneOf": [
+        {
+          "label": "Two-player door route"
+        },
+        {
+          "skills": {
+            "Agility": 85
+          }
+        }
+      ]
     },
     {
       "id": "frem_elite_2",
@@ -2947,15 +3009,25 @@
         "Ranged": 70,
         "Strength": 70
       },
-      "quests": [
-        "Troll Stronghold"
-      ],
+      "quests": [],
       "regions": [
         "Burthorpe"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of the Troll Stronghold, or completion of the Easy Combat Achievements for Ghommal's hilt 1 70 Agility, 70 Strength, 70 Hitpoints, and 70 Ranged (only Hitpoints is boostable ) See the boss overview (or see the individual strategy guides for Kree'arra, General Graardor, Commander Zilyana, and K'ril Tsutsaroth )"
+      "sourceRequirements": "Partial completion of the Troll Stronghold, or completion of the Easy Combat Achievements for Ghommal's hilt 1 70 Agility, 70 Strength, 70 Hitpoints, and 70 Ranged (only Hitpoints is boostable ) See the boss overview (or see the individual strategy guides for Kree'arra, General Graardor, Commander Zilyana, and K'ril Tsutsaroth )",
+      "oneOf": [
+        {
+          "quests": [
+            "Troll Stronghold"
+          ]
+        },
+        {
+          "cas": [
+            "Easy"
+          ]
+        }
+      ]
     },
     {
       "id": "frem_elite_6",
@@ -2967,15 +3039,25 @@
       "skills": {
         "Slayer": 83
       },
-      "quests": [
-        "Troll Stronghold"
-      ],
+      "quests": [],
       "regions": [
         "Burthorpe"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of the Troll Stronghold, or completion of the Easy Combat Achievements for Ghommal's hilt 1 83 Slayer Weaponry"
+      "sourceRequirements": "Partial completion of the Troll Stronghold, or completion of the Easy Combat Achievements for Ghommal's hilt 1 83 Slayer Weaponry",
+      "oneOf": [
+        {
+          "quests": [
+            "Troll Stronghold"
+          ]
+        },
+        {
+          "cas": [
+            "Easy"
+          ]
+        }
+      ]
     },
     {
       "id": "kan_easy_1",
@@ -3226,7 +3308,7 @@
       "ordinal": 4,
       "description": "Use the grapple shortcut to get from the water obelisk to Catherby shore.",
       "skills": {
-        "Agility": 70,
+        "Agility": 36,
         "Ranged": 39,
         "Strength": 22
       },
@@ -3236,7 +3318,17 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "36 Agility, 22 Strength, and 39 Ranged Mith grapple and any crossbow Dusty key or 70 Agility Protection from dragonfire recommended"
+      "sourceRequirements": "36 Agility, 22 Strength, and 39 Ranged Mith grapple and any crossbow Dusty key or 70 Agility Protection from dragonfire recommended",
+      "oneOf": [
+        {
+          "label": "Dusty key"
+        },
+        {
+          "skills": {
+            "Agility": 70
+          }
+        }
+      ]
     },
     {
       "id": "kan_med_5",
@@ -3503,7 +3595,6 @@
       "ordinal": 5,
       "description": "Charge a Water Orb.",
       "skills": {
-        "Agility": 70,
         "Magic": 56
       },
       "quests": [],
@@ -3512,7 +3603,17 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "56 Magic Dusty key or 70 Agility Unpowered orb and means to cast Charge Water Orb ( ) Protection from dragonfire recommended"
+      "sourceRequirements": "56 Magic Dusty key or 70 Agility Unpowered orb and means to cast Charge Water Orb ( ) Protection from dragonfire recommended",
+      "oneOf": [
+        {
+          "label": "Dusty key"
+        },
+        {
+          "skills": {
+            "Agility": 70
+          }
+        }
+      ]
     },
     {
       "id": "kan_hard_6",
@@ -3669,15 +3770,24 @@
         "Fishing": 76
       },
       "quests": [
-        "Family Crest",
-        "Barbarian Training"
+        "Family Crest"
       ],
       "regions": [
         "Catherby"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Family Crest 76 Fishing and 80 Cooking Harpoon (or Barbarian Fishing ) and cooking gauntlets"
+      "sourceRequirements": "Completion of Family Crest 76 Fishing and 80 Cooking Harpoon (or Barbarian Fishing ) and cooking gauntlets",
+      "oneOf": [
+        {
+          "label": "Harpoon"
+        },
+        {
+          "quests": [
+            "Barbarian Training"
+          ]
+        }
+      ]
     },
     {
       "id": "kan_elite_4",
@@ -3866,15 +3976,23 @@
       "ordinal": 7,
       "description": "Use the Fishing spots north of the banana plantation.",
       "skills": {},
-      "quests": [
-        "Barbarian Training"
-      ],
+      "quests": [],
       "regions": [
         "Musa Point"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Harpoon (or bare-handed fishing ), lobster pot, small fishing net, or a fishing rod with bait, depending on the spot you fish at"
+      "sourceRequirements": "Harpoon (or bare-handed fishing ), lobster pot, small fishing net, or a fishing rod with bait, depending on the spot you fish at",
+      "oneOf": [
+        {
+          "label": "Fishing equipment"
+        },
+        {
+          "quests": [
+            "Barbarian Training"
+          ]
+        }
+      ]
     },
     {
       "id": "kar_easy_8",
@@ -3931,9 +4049,7 @@
       "tierId": "Karamja Medium",
       "ordinal": 1,
       "description": "Claim a ticket from the Agility Arena in Brimhaven.",
-      "skills": {
-        "Agility": 40
-      },
+      "skills": {},
       "quests": [],
       "regions": [
         "Brimhaven"
@@ -4060,19 +4176,31 @@
       "ordinal": 8,
       "description": "Cut a log from a teak tree.",
       "skills": {
-        "Agility": 79,
         "Woodcutting": 35
       },
       "quests": [
-        "Jungle Potion",
-        "Legends' Quest"
+        "Jungle Potion"
       ],
       "regions": [
         "Tai Bwo Wannai"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Jungle Potion 35 Woodcutting Any axe 100 trading sticks and having helped in Tai Bwo Wannai Cleanup (if using the Hardwood Grove ) Machete or 79 Agility, and having started Legends' Quest (if using the Kharazi Jungle )"
+      "sourceRequirements": "Completion of Jungle Potion 35 Woodcutting Any axe 100 trading sticks and having helped in Tai Bwo Wannai Cleanup (if using the Hardwood Grove ) Machete or 79 Agility, and having started Legends' Quest (if using the Kharazi Jungle )",
+      "oneOf": [
+        {
+          "label": "Hardwood Grove"
+        },
+        {
+          "label": "Kharazi Jungle",
+          "skills": {
+            "Agility": 79
+          },
+          "quests": [
+            "Legends' Quest"
+          ]
+        }
+      ]
     },
     {
       "id": "kar_med_9",
@@ -4082,19 +4210,31 @@
       "ordinal": 9,
       "description": "Cut a log from a mahogany tree.",
       "skills": {
-        "Agility": 79,
         "Woodcutting": 50
       },
       "quests": [
-        "Jungle Potion",
-        "Legends' Quest"
+        "Jungle Potion"
       ],
       "regions": [
         "Tai Bwo Wannai"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Jungle Potion 50 Woodcutting Any axe 100 trading sticks and having helped in Tai Bwo Wannai Cleanup (if using the Hardwood Grove ) Machete or 79 Agility, and having started Legends' Quest (if using the Kharazi Jungle )"
+      "sourceRequirements": "Completion of Jungle Potion 50 Woodcutting Any axe 100 trading sticks and having helped in Tai Bwo Wannai Cleanup (if using the Hardwood Grove ) Machete or 79 Agility, and having started Legends' Quest (if using the Kharazi Jungle )",
+      "oneOf": [
+        {
+          "label": "Hardwood Grove"
+        },
+        {
+          "label": "Kharazi Jungle",
+          "skills": {
+            "Agility": 79
+          },
+          "quests": [
+            "Legends' Quest"
+          ]
+        }
+      ]
     },
     {
       "id": "kar_med_10",
@@ -4272,15 +4412,24 @@
         "Mining": 40
       },
       "quests": [
-        "Jungle Potion",
-        "Shilo Village"
+        "Jungle Potion"
       ],
       "regions": [
         "Shilo Village"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Jungle Potion, and either completion of Shilo Village or items for Tai Bwo Wannai Cleanup 40 Mining Any pickaxe"
+      "sourceRequirements": "Completion of Jungle Potion, and either completion of Shilo Village or items for Tai Bwo Wannai Cleanup 40 Mining Any pickaxe",
+      "oneOf": [
+        {
+          "quests": [
+            "Shilo Village"
+          ]
+        },
+        {
+          "label": "Tai Bwo Wannai Cleanup access"
+        }
+      ]
     },
     {
       "id": "kar_hard_1",
@@ -4420,9 +4569,7 @@
       "tierId": "Karamja Hard",
       "ordinal": 8,
       "description": "Collect 5 palm leaves.",
-      "skills": {
-        "Agility": 79
-      },
+      "skills": {},
       "quests": [
         "Legends' Quest"
       ],
@@ -4431,7 +4578,17 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of Legends' Quest Any axe and machete, or 79 Agility for the vine shortcut"
+      "sourceRequirements": "Partial completion of Legends' Quest Any axe and machete, or 79 Agility for the vine shortcut",
+      "oneOf": [
+        {
+          "label": "Axe and machete"
+        },
+        {
+          "skills": {
+            "Agility": 79
+          }
+        }
+      ]
     },
     {
       "id": "kar_hard_9",
@@ -4451,7 +4608,18 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Shilo Village 100 Combat level and 50 Slayer, or a Slayer cape"
+      "sourceRequirements": "Completion of Shilo Village 100 Combat level and 50 Slayer, or a Slayer cape",
+      "oneOf": [
+        {
+          "combatLevel": 100
+        },
+        {
+          "label": "Slayer cape",
+          "skills": {
+            "Slayer": 99
+          }
+        }
+      ]
     },
     {
       "id": "kar_hard_10",
@@ -5488,9 +5656,7 @@
       "tierId": "Lumbridge Easy",
       "ordinal": 10,
       "description": "Bake some Bread on the Lumbridge kitchen range.",
-      "skills": {
-        "Cooking": 34
-      },
+      "skills": {},
       "quests": [
         "Cook's Assistant"
       ],
@@ -5717,7 +5883,8 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Lost City 70 Combat level Dramen or Lunar staff to enter Zanaris"
+      "sourceRequirements": "Completion of Lost City 70 Combat level Dramen or Lunar staff to enter Zanaris",
+      "combatLevel": 70
     },
     {
       "id": "lum_med_11",
@@ -6070,7 +6237,8 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of all quests Quest point cape"
+      "sourceRequirements": "Completion of all quests Quest point cape",
+      "allQuests": true
     },
     {
       "id": "mor_easy_1",
@@ -6100,15 +6268,23 @@
       "skills": {
         "Cooking": 12
       },
-      "quests": [
-        "Ghosts Ahoy"
-      ],
+      "quests": [],
       "regions": [
         "Port Phasmatys"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "12 Cooking Thin snail 2 Ecto-tokens or quest completion of Ghosts Ahoy to walk into Port Phasmatys, or enough coins for a charter ship."
+      "sourceRequirements": "12 Cooking Thin snail 2 Ecto-tokens or quest completion of Ghosts Ahoy to walk into Port Phasmatys, or enough coins for a charter ship.",
+      "oneOf": [
+        {
+          "quests": [
+            "Ghosts Ahoy"
+          ]
+        },
+        {
+          "label": "Ecto-tokens or charter ship"
+        }
+      ]
     },
     {
       "id": "mor_easy_3",
@@ -6124,7 +6300,8 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "20 Combat level"
+      "sourceRequirements": "20 Combat level",
+      "combatLevel": 20
     },
     {
       "id": "mor_easy_4",
@@ -6200,7 +6377,7 @@
       "ordinal": 8,
       "description": "Place a Scarecrow in the Morytania flower patch.",
       "skills": {
-        "Farming": 47
+        "Farming": 23
       },
       "quests": [],
       "regions": [
@@ -6208,7 +6385,18 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "23 Farming ( Ironman accounts require 47 Farming or the ability to kill gryphons ) Bronze spear, watermelon, and a hay sack"
+      "sourceRequirements": "23 Farming ( Ironman accounts require 47 Farming or the ability to kill gryphons ) Bronze spear, watermelon, and a hay sack",
+      "oneOf": [
+        {
+          "label": "Grow watermelons",
+          "skills": {
+            "Farming": 47
+          }
+        },
+        {
+          "label": "Obtain a watermelon from gryphons"
+        }
+      ]
     },
     {
       "id": "mor_easy_9",
@@ -6768,11 +6956,7 @@
       "ordinal": 6,
       "description": "Loot the Barrows chest while wearing any complete barrows set.",
       "skills": {
-        "Attack": 70,
-        "Defence": 70,
-        "Magic": 70,
-        "Ranged": 70,
-        "Strength": 70
+        "Defence": 70
       },
       "quests": [],
       "regions": [
@@ -6780,7 +6964,35 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "70 Defence Various other skill requirements depending on the set used, none of which can be boosted: 70 Attack and 70 Magic for Ahrim's 70 Attack and 70 Strength for Dharok's or Torag's 70 Attack for Guthan's or Verac's 70 Ranged for Karil's"
+      "sourceRequirements": "70 Defence Various other skill requirements depending on the set used, none of which can be boosted: 70 Attack and 70 Magic for Ahrim's 70 Attack and 70 Strength for Dharok's or Torag's 70 Attack for Guthan's or Verac's 70 Ranged for Karil's",
+      "oneOf": [
+        {
+          "label": "Ahrim's set",
+          "skills": {
+            "Attack": 70,
+            "Magic": 70
+          }
+        },
+        {
+          "label": "Dharok's or Torag's set",
+          "skills": {
+            "Attack": 70,
+            "Strength": 70
+          }
+        },
+        {
+          "label": "Guthan's or Verac's set",
+          "skills": {
+            "Attack": 70
+          }
+        },
+        {
+          "label": "Karil's set",
+          "skills": {
+            "Ranged": 70
+          }
+        }
+      ]
     },
     {
       "id": "var_easy_1",
@@ -7175,7 +7387,8 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "40 Combat level"
+      "sourceRequirements": "40 Combat level",
+      "combatLevel": 40
     },
     {
       "id": "var_med_10",
@@ -7562,7 +7775,8 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "40 Combat level"
+      "sourceRequirements": "40 Combat level",
+      "combatLevel": 40
     },
     {
       "id": "west_easy_3",
@@ -7648,7 +7862,8 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Teleport to the Pest Control outpost.",
-      "sourceRequirements": "40 Combat level"
+      "sourceRequirements": "40 Combat level",
+      "combatLevel": 40
     },
     {
       "id": "west_easy_10",
@@ -7837,7 +8052,8 @@
       ],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "70 Combat level"
+      "sourceRequirements": "70 Combat level",
+      "combatLevel": 70
     },
     {
       "id": "western_med_7",
@@ -8025,7 +8241,8 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "100 Combat level"
+      "sourceRequirements": "100 Combat level",
+      "combatLevel": 100
     },
     {
       "id": "west_hard_4",
@@ -8318,7 +8535,8 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "40 Combat level, 22 Prayer, 42 Attack, 42 Strength, 42 Defence, 42 Hitpoints, 42 Ranged, and 42 Magic Any void helm ( melee, ranger, or mage helm ) Void knight top, robe, and gloves"
+      "sourceRequirements": "40 Combat level, 22 Prayer, 42 Attack, 42 Strength, 42 Defence, 42 Hitpoints, 42 Ranged, and 42 Magic Any void helm ( melee, ranger, or mage helm ) Void knight top, robe, and gloves",
+      "combatLevel": 40
     },
     {
       "id": "west_elite_6",
@@ -8606,10 +8824,7 @@
       "tierId": "Wilderness Medium",
       "ordinal": 3,
       "description": "Enter the Wilderness Godwars Dungeon.",
-      "skills": {
-        "Agility": 60,
-        "Strength": 60
-      },
+      "skills": {},
       "quests": [],
       "regions": [
         "Wilderness God Wars Dungeon"
@@ -8617,7 +8832,19 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Enter the Wilderness God Wars Dungeon.",
-      "sourceRequirements": "60 Agility or 60 Strength God equipment recommended if going further inside"
+      "sourceRequirements": "60 Agility or 60 Strength God equipment recommended if going further inside",
+      "oneOf": [
+        {
+          "skills": {
+            "Agility": 60
+          }
+        },
+        {
+          "skills": {
+            "Strength": 60
+          }
+        }
+      ]
     },
     {
       "id": "wild_med_1",
@@ -8696,9 +8923,7 @@
       "ordinal": 8,
       "description": "Kill a Bloodveld in the Wilderness Godwars Dungeon.",
       "skills": {
-        "Agility": 60,
-        "Slayer": 50,
-        "Strength": 60
+        "Slayer": 50
       },
       "quests": [],
       "regions": [
@@ -8707,7 +8932,19 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Kill a Bloodveld in the Wilderness God Wars Dungeon.",
-      "sourceRequirements": "60 Agility or 60 Strength, and 50 Slayer Weaponry and god equipment"
+      "sourceRequirements": "60 Agility or 60 Strength, and 50 Slayer Weaponry and god equipment",
+      "oneOf": [
+        {
+          "skills": {
+            "Agility": 60
+          }
+        },
+        {
+          "skills": {
+            "Strength": 60
+          }
+        }
+      ]
     },
     {
       "id": "wilderness_med_9",
@@ -8752,9 +8989,7 @@
       "tierId": "Wilderness Medium",
       "ordinal": 11,
       "description": "Open the Muddy Chest in the lava maze.",
-      "skills": {
-        "Agility": 82
-      },
+      "skills": {},
       "quests": [],
       "regions": [
         "Lava Maze"
@@ -8762,7 +8997,17 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Open a Muddy Chest.",
-      "sourceRequirements": "Muddy key Knife, Wilderness sword 1, or a slashing weapon (Or with 82 Agility using the Stepping Stone shortcut North of the Lava Maze)"
+      "sourceRequirements": "Muddy key Knife, Wilderness sword 1, or a slashing weapon (Or with 82 Agility using the Stepping Stone shortcut North of the Lava Maze)",
+      "oneOf": [
+        {
+          "label": "Slashing route"
+        },
+        {
+          "skills": {
+            "Agility": 82
+          }
+        }
+      ]
     },
     {
       "id": "wild_hard_1",
@@ -8897,15 +9142,25 @@
       "skills": {
         "Agility": 64
       },
-      "quests": [
-        "Troll Stronghold"
-      ],
+      "quests": [],
       "regions": [
         "Wilderness"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "64 Agility Partial completion of Troll Stronghold, or completion of the Easy Combat Achievements for Ghommal's hilt 1"
+      "sourceRequirements": "64 Agility Partial completion of Troll Stronghold, or completion of the Easy Combat Achievements for Ghommal's hilt 1",
+      "oneOf": [
+        {
+          "quests": [
+            "Troll Stronghold"
+          ]
+        },
+        {
+          "cas": [
+            "Easy"
+          ]
+        }
+      ]
     },
     {
       "id": "wild_hard_9",
@@ -8915,9 +9170,7 @@
       "ordinal": 9,
       "description": "Kill a Spiritual warrior in the Wilderness Godwars Dungeon.",
       "skills": {
-        "Agility": 60,
-        "Slayer": 68,
-        "Strength": 60
+        "Slayer": 68
       },
       "quests": [],
       "regions": [
@@ -8926,7 +9179,19 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Kill a Spiritual warrior in the Wilderness God Wars Dungeon.",
-      "sourceRequirements": "60 Agility or 60 Strength, and 68 Slayer Weaponry and god equipment"
+      "sourceRequirements": "60 Agility or 60 Strength, and 68 Slayer Weaponry and god equipment",
+      "oneOf": [
+        {
+          "skills": {
+            "Agility": 60
+          }
+        },
+        {
+          "skills": {
+            "Strength": 60
+          }
+        }
+      ]
     },
     {
       "id": "wild_hard_10",
@@ -9047,9 +9312,7 @@
       "ordinal": 6,
       "description": "Slay a spiritual mage inside the wilderness Godwars Dungeon.",
       "skills": {
-        "Agility": 60,
-        "Slayer": 83,
-        "Strength": 60
+        "Slayer": 83
       },
       "quests": [],
       "regions": [
@@ -9058,7 +9321,19 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Slay a spiritual mage inside the wilderness God Wars Dungeon.",
-      "sourceRequirements": "60 Agility or 60 Strength, and 83 Slayer Weaponry and god equipment"
+      "sourceRequirements": "60 Agility or 60 Strength, and 83 Slayer Weaponry and god equipment",
+      "oneOf": [
+        {
+          "skills": {
+            "Agility": 60
+          }
+        },
+        {
+          "skills": {
+            "Strength": 60
+          }
+        }
+      ]
     },
     {
       "id": "wild_elite_7",

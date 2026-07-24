@@ -13,6 +13,7 @@ import {
     GUILDS_LIST, FARMING_PATCH_LIST, MISTHALIN_AREAS, REGION_GROUPS
 } from '../constants';
 import { CheckCircle, XCircle, Lock, Map, BookOpen, AlertCircle, Compass, Target, Search, ScrollText, Filter, Pin, SlidersHorizontal, Check, ArrowUpRight, TrendingUp, Sparkles, BrainCircuit } from 'lucide-react';
+import { evaluateDiaryTierEligibility } from '../utils/journalStatus';
 
 const ROOT_UNLOCKS = {
     [TableType.EQUIPMENT]: new Set(EQUIPMENT_SLOTS),
@@ -123,12 +124,23 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
         });
         Object.values(DIARY_DATA).forEach(d => {
             if (unlocks.diaries.includes(d.id)) return;
+            const eligibility = evaluateDiaryTierEligibility(d, unlocks, gameModeId);
+            const skills = Object.fromEntries(eligibility.blockers
+                .filter(blocker => blocker.kind === 'skill' || blocker.kind === 'combat')
+                .map(blocker => {
+                    const parsed = blocker.label.match(/^(.*) (\d+)$/);
+                    return parsed ? [parsed[1], Number(parsed[2])] : [blocker.label, 1];
+                }));
             database[d.id] = {
                 id: d.id,
                 category: TableType.DIARIES,
-                regions: [...d.requiredRegions],
-                skills: d.skills,
-                quests: d.quests,
+                regions: eligibility.blockers
+                    .filter(blocker => blocker.kind === 'region')
+                    .map(blocker => blocker.label),
+                skills,
+                quests: eligibility.blockers
+                    .filter(blocker => blocker.kind === 'quest' || blocker.kind === 'alternative')
+                    .map(blocker => blocker.label),
                 description: `Region: ${d.region} | Difficulty: ${d.difficulty.replace('Diary (', '').replace(')', '')}`
             };
         });
@@ -137,7 +149,7 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
             database[key] = { ...val, id: key };
         });
         return database;
-    }, [unlocks]);
+    }, [unlocks, gameModeId]);
 
     const contentAnalysis = useMemo(() => {
         return Object.entries(allContent)

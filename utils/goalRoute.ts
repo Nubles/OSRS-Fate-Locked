@@ -8,6 +8,9 @@ import { isAreaReachable } from './reachability';
 import { calculateSupplyChain } from './supplyChain';
 import { getPoolAndStateKey, isValidUnlock } from './gameEngine';
 import { tierForLevel } from './skillTiers';
+import { planForTarget } from './goalPlanner';
+import { evaluateDiaryTierEligibility } from './journalStatus';
+import { combatLevel } from './slayerReach';
 
 /**
  * Route to goal — the planning brain behind a pinned goal.
@@ -130,6 +133,63 @@ export function expandQuestChain(seeds: string[]): string[] {
 export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute | null {
   const unlocks = gameState.unlocks;
   const gameModeId = gameState.gameModeId;
+  const diary = DIARY_DATA[goalId];
+  if (diary) {
+    const plan = planForTarget('diary', goalId, unlocks, gameModeId);
+    if (!plan) return null;
+    const eligibility = evaluateDiaryTierEligibility(diary, unlocks, gameModeId);
+    const quests: RouteItem[] = plan.questSteps.map(step => ({
+      name: step.label,
+      met: step.done,
+      detail: step.detail,
+    }));
+    const regions: RouteItem[] = plan.regionSteps.map(step => ({
+      name: step.label,
+      met: step.done,
+      detail: step.detail,
+    }));
+    const skills: RouteSkill[] = plan.skillSteps.map(step => {
+      const needLevel = Number(step.detail?.match(/\d+/)?.[0] ?? 1);
+      const isCombat = step.id === 'Combat level';
+      const haveLevel = isCombat
+        ? combatLevel(unlocks.levels)
+        : (unlocks.levels[step.id] ?? 1);
+      const tierHave = isCombat ? 0 : (unlocks.skills[step.id] ?? 0);
+      return {
+        skill: step.id,
+        needLevel,
+        haveLevel,
+        unlocked: isCombat || tierHave > 0,
+        tierNeeded: isCombat ? 0 : tierForLevel(needLevel),
+        tierHave,
+        met: step.done,
+      };
+    });
+    const neededNames = new Set<string>([
+      ...plan.questSteps.map(step => step.id),
+      ...plan.regionSteps.map(step => step.label),
+      ...plan.skillSteps.map(step => step.id),
+    ]);
+    const totalSteps = eligibility.evidence.length + eligibility.blockers.length;
+    const completedSteps = eligibility.evidence.length;
+    return {
+      goalId,
+      kind: 'diary',
+      description: `${diary.region} - ${diary.tier}`,
+      quests,
+      regions,
+      skills,
+      diaries: [],
+      sources: [],
+      tables: suggestTables(neededNames, unlocks),
+      totalSteps,
+      completedSteps,
+      percentage: eligibility.eligible || eligibility.status === 'COMPLETED'
+        ? 100
+        : totalSteps === 0 ? 0 : Math.round((completedSteps / totalSteps) * 100),
+    };
+  }
+
   const { req, kind } = resolveRequirement(goalId);
 
   // ── Resource Engine item goals: route = its sources + tables ─────────────

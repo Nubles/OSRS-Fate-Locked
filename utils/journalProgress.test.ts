@@ -1,11 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { questUnmet, diaryUnmet, isAlmostThere } from './journalProgress';
 import { QUEST_DATA, type QuestData } from '../data/questData';
-import type { DiaryTier } from '../data/diaryData';
+import { DIARY_DATA, type DiaryTier } from '../data/diaryData';
+import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import type { UnlockState } from '../types';
 
 const u = (o: Partial<UnlockState>): UnlockState =>
-  ({ regions: [], quests: [], skills: {}, levels: {}, guilds: [], ...o } as UnlockState);
+  ({ regions: [], quests: [], skills: {}, levels: {}, guilds: [], diaries: [],
+    cas: [], completedTasks: [], ...o } as UnlockState);
 
 const quest = (over: Partial<QuestData>): QuestData =>
   ({ id: 'q', name: 'Q', regions: [], skills: {}, prereqs: [], points: 1, ...over } as unknown as QuestData);
@@ -52,10 +54,31 @@ describe('questUnmet', () => {
 describe('diaryUnmet', () => {
   const diary = (over: Partial<DiaryTier>): DiaryTier =>
     ({ id: 'D', region: 'Misthalin', tier: 'Easy', skills: {}, quests: [], requiredRegions: [], difficulty: '' as any, ...over });
-  it('dedupes regions and reports unmet ones', () => {
+  it('ignores legacy aggregate requirements when no canonical tasks exist', () => {
     const d = diary({ region: 'Kandarin', requiredRegions: ['Kandarin', 'Asgarnia'] });
-    const unmet = diaryUnmet(d, u({ regions: ['Asgarnia'] }));
-    expect(unmet).toEqual([{ kind: 'region', label: 'Kandarin' }]);
+    expect(diaryUnmet(d, u({ regions: ['Asgarnia'] }))).toEqual([]);
+  });
+  it('derives blockers from canonical remaining tasks instead of the stale aggregate', () => {
+    const taskSkills = ALL_DIARY_TASKS.flatMap(task => Object.keys(task.skills ?? {}));
+    const unlocks = u({
+      skills: Object.fromEntries(taskSkills.map(skill => [skill, 10])),
+      levels: Object.fromEntries(taskSkills.map(skill => [skill, 99])),
+      regions: [...new Set(ALL_DIARY_TASKS.flatMap(task => task.regions ?? []))],
+      quests: Object.keys(QUEST_DATA).filter(quest => quest !== 'Biohazard'),
+      cas: ['Easy', 'Medium', 'Hard', 'Elite', 'Master', 'Grandmaster'],
+      completedTasks: ALL_DIARY_TASKS
+        .filter(task => task.tierId !== 'Ardougne Easy' || task.id !== 'ard_easy_6')
+        .map(task => task.id),
+    });
+
+    expect(diaryUnmet(DIARY_DATA['Ardougne Easy'], unlocks)).toEqual([
+      { kind: 'quest', label: 'Biohazard' },
+    ]);
+    expect(diaryUnmet({
+      ...DIARY_DATA['Ardougne Easy'],
+      quests: ['Impossible aggregate quest'],
+      requiredRegions: ['Impossible aggregate region'],
+    }, unlocks)).toEqual([{ kind: 'quest', label: 'Biohazard' }]);
   });
 });
 

@@ -36,8 +36,8 @@ export interface UnlockImpact {
   cascadeScore: number;
   /**
    * Every quest id completed in the final cascade snapshot (base completions +
-   * the whole chain the candidate unblocks). Lets callers run their own
-   * skill-aware diary checks, which `getDiaryStatus` deliberately skips.
+   * the whole chain the candidate unblocks). Lets callers inspect or extend
+   * the canonical post-cascade eligibility snapshot.
    */
   finalQuestIds: string[];
 }

@@ -8,6 +8,7 @@
 import {
   QuestData, QuestLocationRequirement, QuestRequirementOption, QUEST_DATA,
 } from '../data/questData';
+import { ALL_DIARY_TASKS, DiaryTaskRequirementOption } from '../data/diaryTasks';
 import { DiaryTier } from '../data/diaryData';
 import { UnlockState } from '../types';
 import { chunkKey, isChunkUnlocked } from './chunkAdjacency';
@@ -15,13 +16,14 @@ import { isAreaReachable } from './reachability';
 import { combatLevel } from './slayerReach';
 
 export type QuestStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
-export type DiaryStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_QUEST';
+export type DiaryStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
 
 export type EligibilityBlocker =
   | { kind: 'region'; label: string }
   | { kind: 'skill'; label: string }
   | { kind: 'combat'; label: string }
-  | { kind: 'quest'; label: string };
+  | { kind: 'quest'; label: string }
+  | { kind: 'alternative'; label: string };
 
 export interface QuestEligibility {
   eligible: boolean;
@@ -143,18 +145,6 @@ export function getQuestStatus(
   return evaluateQuestEligibility(quest, unlocks, gameModeId).status;
 }
 
-export function getDiaryStatus(diary: DiaryTier, unlocks: any, gameModeId?: string): DiaryStatus {
-  if (unlocks.diaries.includes(diary.id)) return 'COMPLETED';
-
-  const missingRegion = diary.requiredRegions.some(r => !isAreaReachable(r, unlocks, gameModeId));
-  if (missingRegion) return 'LOCKED_REGION';
-
-  const missingQuest = diary.quests.some((qid: string) => !unlocks.quests.includes(qid));
-  if (missingQuest) return 'LOCKED_QUEST';
-
-  return 'AVAILABLE';
-}
-
 /**
  * Counts how many of `tasks` the player can complete right now:
  *   • not yet done
@@ -169,6 +159,11 @@ export interface DoableTask {
   skills?: Record<string, number>;
   quests?: string[];
   regions?: string[];
+  cas?: string[];
+  combatLevel?: number;
+  allQuests?: true;
+  anySkillLevel?: number;
+  oneOf?: DiaryTaskRequirementOption[];
 }
 
 export interface DoableDiaryTask extends DoableTask {
@@ -181,31 +176,99 @@ export interface DiaryTaskEligibility {
   evidence: string[];
 }
 
+const requirementOptionParts = (option: DiaryTaskRequirementOption): string[] => [
+  ...Object.entries(option.skills ?? {}).map(([skill, level]) => skill + ' ' + level),
+  ...(option.quests ?? []),
+  ...(option.cas ?? []).map(tier => tier + ' Combat Achievements'),
+  ...(option.regions ?? []),
+  ...(option.combatLevel ? ['Combat level ' + option.combatLevel] : []),
+  ...(option.allQuests ? ['All quests'] : []),
+  ...(option.anySkillLevel ? ['Any skill ' + option.anySkillLevel] : []),
+];
+
+export const diaryRequirementOptionLabel = (
+  option: DiaryTaskRequirementOption,
+): string => {
+  const requirements = requirementOptionParts(option).join(' + ');
+  if (option.label && requirements) return option.label + ': ' + requirements;
+  return option.label ?? requirements;
+};
+
+const evaluateDiaryRequirement = (
+  requirement: Omit<DoableTask, 'id' | 'oneOf'>,
+  unlocks: UnlockState,
+  gameModeId?: string,
+): DiaryTaskEligibility => {
+  const blockers: EligibilityBlocker[] = [];
+  const evidence: string[] = [];
+
+  for (const [skill, required] of Object.entries(requirement.skills ?? {})) {
+    const label = skill + ' ' + required;
+    if (meetsSkillRequirement(unlocks, skill, required)) evidence.push(label);
+    else blockers.push({ kind: 'skill', label });
+  }
+  for (const quest of requirement.quests ?? []) {
+    if (unlocks.quests.includes(quest)) evidence.push(quest);
+    else blockers.push({ kind: 'quest', label: quest });
+  }
+  for (const tier of requirement.cas ?? []) {
+    const label = tier + ' Combat Achievements';
+    if (unlocks.cas.includes(tier)) evidence.push(label);
+    else blockers.push({ kind: 'combat', label });
+  }
+  for (const region of requirement.regions ?? []) {
+    if (isAreaReachable(region, unlocks, gameModeId)) evidence.push(region);
+    else blockers.push({ kind: 'region', label: region });
+  }
+  if (requirement.combatLevel !== undefined) {
+    const label = 'Combat level ' + requirement.combatLevel;
+    if (combatLevel(unlocks.levels) >= requirement.combatLevel) evidence.push(label);
+    else blockers.push({ kind: 'combat', label });
+  }
+  if (requirement.allQuests) {
+    const allCompleted = Object.keys(QUEST_DATA).every(quest => unlocks.quests.includes(quest));
+    if (allCompleted) evidence.push('All quests');
+    else blockers.push({ kind: 'quest', label: 'All quests' });
+  }
+  if (requirement.anySkillLevel !== undefined) {
+    const anySkillMet = Object.keys(unlocks.levels).some(skill => (
+      meetsSkillRequirement(unlocks, skill, requirement.anySkillLevel!)
+    ));
+    const label = 'Any skill ' + requirement.anySkillLevel;
+    if (anySkillMet) evidence.push(label);
+    else blockers.push({ kind: 'skill', label });
+  }
+
+  return { eligible: blockers.length === 0, blockers, evidence };
+};
+
 export function evaluateDiaryTaskEligibility(
   task: DoableTask,
   unlocks: UnlockState,
   gameModeId?: string,
 ): DiaryTaskEligibility {
-  const blockers: EligibilityBlocker[] = [];
-  const evidence: string[] = [];
+  const shared = evaluateDiaryRequirement(task, unlocks, gameModeId);
+  if (!task.oneOf?.length) return shared;
 
-  for (const [skill, required] of Object.entries(task.skills ?? {})) {
-    if (meetsSkillRequirement(unlocks, skill, required)) {
-      evidence.push(skill + ' ' + required);
-    } else {
-      blockers.push({ kind: 'skill', label: skill + ' ' + required });
-    }
-  }
-  for (const quest of task.quests ?? []) {
-    if (unlocks.quests.includes(quest)) evidence.push(quest);
-    else blockers.push({ kind: 'quest', label: quest });
-  }
-  for (const region of task.regions ?? []) {
-    if (isAreaReachable(region, unlocks, gameModeId)) evidence.push(region);
-    else blockers.push({ kind: 'region', label: region });
+  const routeResults = task.oneOf.map(option => (
+    evaluateDiaryRequirement(option, unlocks, gameModeId)
+  ));
+  const metRouteIndex = routeResults.findIndex(result => result.eligible);
+  if (metRouteIndex >= 0) {
+    const routeLabel = diaryRequirementOptionLabel(task.oneOf[metRouteIndex]);
+    return {
+      eligible: shared.eligible,
+      blockers: shared.blockers,
+      evidence: [...shared.evidence, ...(routeLabel ? [routeLabel] : [])],
+    };
   }
 
-  return { eligible: blockers.length === 0, blockers, evidence };
+  const alternativeLabel = task.oneOf.map(diaryRequirementOptionLabel).join(' or ');
+  const blockers = [
+    ...shared.blockers,
+    { kind: 'alternative' as const, label: alternativeLabel },
+  ];
+  return { eligible: false, blockers, evidence: shared.evidence };
 }
 
 export function taskEligibilityBlockers(
@@ -214,6 +277,56 @@ export function taskEligibilityBlockers(
   gameModeId?: string,
 ): EligibilityBlocker[] {
   return evaluateDiaryTaskEligibility(task, unlocks, gameModeId).blockers;
+}
+
+export interface DiaryTierEligibility {
+  eligible: boolean;
+  status: DiaryStatus;
+  blockers: EligibilityBlocker[];
+  evidence: string[];
+}
+
+const uniqueBlockers = (blockers: EligibilityBlocker[]): EligibilityBlocker[] => {
+  const seen = new Set<string>();
+  return blockers.filter(blocker => {
+    const key = blocker.kind + '|' + blocker.label;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
+export function evaluateDiaryTierEligibility(
+  diary: Pick<DiaryTier, 'id'>,
+  unlocks: UnlockState,
+  gameModeId?: string,
+): DiaryTierEligibility {
+  if (unlocks.diaries.includes(diary.id)) {
+    return { eligible: true, status: 'COMPLETED', blockers: [], evidence: ['Completed'] };
+  }
+
+  const taskResults = ALL_DIARY_TASKS
+    .filter(task => task.tierId === diary.id && !unlocks.completedTasks.includes(task.id))
+    .map(task => evaluateDiaryTaskEligibility(task, unlocks, gameModeId));
+  const blockers = uniqueBlockers(taskResults.flatMap(result => result.blockers));
+  const evidence = [...new Set(taskResults.flatMap(result => result.evidence))];
+  const status: DiaryStatus = blockers.some(blocker => blocker.kind === 'region')
+    ? 'LOCKED_REGION'
+    : blockers.some(blocker => blocker.kind === 'skill' || blocker.kind === 'combat')
+      ? 'LOCKED_SKILL'
+      : blockers.some(blocker => blocker.kind === 'quest' || blocker.kind === 'alternative')
+        ? 'LOCKED_QUEST'
+        : 'AVAILABLE';
+
+  return { eligible: status === 'AVAILABLE', status, blockers, evidence };
+}
+
+export function getDiaryStatus(
+  diary: DiaryTier,
+  unlocks: UnlockState,
+  gameModeId?: string,
+): DiaryStatus {
+  return evaluateDiaryTierEligibility(diary, unlocks, gameModeId).status;
 }
 
 export function countDoableTasks(tasks: DoableTask[], unlocks: UnlockState, gameModeId?: string): number {

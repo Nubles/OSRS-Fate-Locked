@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { SKILLS_LIST } from '../constants';
 import { QUEST_DATA } from '../data/questData';
 import { rankSkillBottlenecks } from './skillAdvisor';
+import { ALL_DIARY_TASKS } from '../data/diaryTasks';
+import { DIARY_DATA } from '../data/diaryData';
 
 // Fixture: skills unlocked but levels LOW (1), so skill thresholds genuinely
 // gate content. Regions empty, no quests done.
@@ -108,11 +110,7 @@ describe('rankSkillBottlenecks', () => {
     const base = lowSkills({
       skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Smithing' ? 1 : 10])),
       levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Agility' ? 1 : 99])),
-      regions: [
-        'Asgarnia', 'Kandarin', 'Karamja', 'Kharidian Desert', 'Morytania',
-        'Fremennik', 'Tirannwn', 'Wilderness', 'Kourend & Kebos', 'Varlamore',
-        'Islands & Others', 'The Open Seas',
-      ],
+      regions: [...new Set(ALL_DIARY_TASKS.flatMap(task => task.regions ?? []))],
       quests: Object.keys(QUEST_DATA),
     });
     const capable = {
@@ -135,5 +133,22 @@ describe('rankSkillBottlenecks', () => {
     // At least one skill should now bring a diary tier within reach via skills,
     // OR quests — the advisor should still produce results.
     expect(ranked.length).toBeGreaterThan(0);
+  });
+
+  it('discovers skill thresholds from canonical diary tasks, not stale aggregates', () => {
+    const ranked = rankSkillBottlenecks(lowSkills({
+      skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10])),
+      levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Ranged' ? 20 : 99])),
+      regions: [...new Set(ALL_DIARY_TASKS.flatMap(task => task.regions ?? []))],
+      quests: Object.keys(QUEST_DATA),
+      diaries: Object.keys(DIARY_DATA).filter(diary => diary !== 'Ardougne Medium'),
+      completedTasks: ALL_DIARY_TASKS
+        .filter(task => task.tierId !== 'Ardougne Medium' || task.id !== 'ard_med_2')
+        .map(task => task.id),
+    }));
+    const ranged = ranked.find(candidate => candidate.id === 'Ranged');
+
+    expect(ranged?.targetLevel).toBe(21);
+    expect(ranged?.newDiaryIds).toContain('Ardougne Medium');
   });
 });

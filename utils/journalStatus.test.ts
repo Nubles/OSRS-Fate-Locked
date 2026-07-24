@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { QUEST_DATA, QuestData } from '../data/questData';
+import { ALL_DIARY_TASKS } from '../data/diaryTasks';
+import { DIARY_DATA } from '../data/diaryData';
 import { DropSource, UnlockState } from '../types';
 import { combatLevel } from './slayerReach';
 import {
   countDoableDiaryTasks, countDoableTasks, countMetSkillRequirements,
-  evaluateQuestEligibility, getQuestStatus, meetsSkillRequirement,
+  evaluateDiaryTaskEligibility, evaluateQuestEligibility, getDiaryStatus, getQuestStatus,
+  meetsSkillRequirement,
 } from './journalStatus';
 
 const unlocked = (over: Partial<UnlockState> = {}): UnlockState => ({
@@ -158,5 +161,169 @@ describe('skill-method caps', () => {
     expect(countDoableDiaryTasks(tasks, unlocked({
       ...eligible, diaries: ['Test Diary'],
     }))).toBe(0);
+  });
+});
+describe('diary alternative requirement routes', () => {
+  it('accepts either skill route without requiring both', () => {
+    const task = {
+      id: 'gwd-entry',
+      oneOf: [
+        { skills: { Agility: 60 } },
+        { skills: { Strength: 60 } },
+      ],
+    };
+
+    expect(evaluateDiaryTaskEligibility(task as any, unlocked()).blockers)
+      .toEqual([{ kind: 'alternative', label: 'Agility 60 or Strength 60' }]);
+    expect(evaluateDiaryTaskEligibility(task as any, unlocked({
+      skills: { Agility: 6 },
+      levels: { Agility: 60 },
+    })).eligible).toBe(true);
+    expect(evaluateDiaryTaskEligibility(task as any, unlocked({
+      skills: { Strength: 6 },
+      levels: { Strength: 60 },
+    })).eligible).toBe(true);
+  });
+
+  it('accepts either a quest or completed Combat Achievement tier', () => {
+    const task = {
+      id: 'trollheim-entry',
+      oneOf: [
+        { quests: ['Troll Stronghold'] },
+        { cas: ['Easy'] },
+      ],
+    };
+
+    expect(evaluateDiaryTaskEligibility(task as any, unlocked()).eligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task as any, unlocked({
+      quests: ['Troll Stronghold'],
+    })).eligible).toBe(true);
+    expect(evaluateDiaryTaskEligibility(task as any, unlocked({
+      cas: ['Easy'],
+    })).eligible).toBe(true);
+  });
+
+  it('keeps common requirements mandatory when an untracked route is non-blocking', () => {
+    const task = {
+      id: 'hardwood',
+      skills: { Woodcutting: 35 },
+      quests: ['Jungle Potion'],
+      oneOf: [
+        { label: 'Hardwood Grove' },
+        {
+          label: 'Kharazi Jungle',
+          skills: { Agility: 79 },
+          quests: ["Legends' Quest"],
+        },
+      ],
+    };
+    const common = {
+      skills: { Woodcutting: 4 },
+      levels: { Woodcutting: 35 },
+      quests: ['Jungle Potion'],
+    };
+
+    expect(evaluateDiaryTaskEligibility(task as any, unlocked()).eligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task as any, unlocked(common)).eligible).toBe(true);
+  });
+});
+describe('manual diary task requirements', () => {
+  it('checks combat-level gates through the canonical combat formula', () => {
+    const task = { id: 'combat-task', combatLevel: 70 };
+    const low = unlocked({
+      levels: {
+        Attack: 40, Strength: 40, Defence: 40, Hitpoints: 40,
+        Prayer: 40, Ranged: 40, Magic: 40,
+      },
+    });
+    const high = unlocked({
+      levels: {
+        Attack: 60, Strength: 60, Defence: 60, Hitpoints: 60,
+        Prayer: 60, Ranged: 60, Magic: 60,
+      },
+    });
+
+    expect(combatLevel(low.levels)).toBeLessThan(70);
+    expect(evaluateDiaryTaskEligibility(task as any, low).blockers)
+      .toContainEqual({ kind: 'combat', label: 'Combat level 70' });
+    expect(combatLevel(high.levels)).toBeGreaterThanOrEqual(70);
+    expect(evaluateDiaryTaskEligibility(task as any, high).eligible).toBe(true);
+  });
+
+  it('checks all-quests and any-skill routes without pseudo quest ids', () => {
+    const task = {
+      id: 'cape-emote',
+      oneOf: [
+        { allQuests: true },
+        { label: 'Skillcape', anySkillLevel: 99 },
+      ],
+    };
+
+    expect(evaluateDiaryTaskEligibility(task as any, unlocked({ skills: {}, levels: {} })).eligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task as any, unlocked({
+      quests: Object.keys(QUEST_DATA),
+    })).eligible).toBe(true);
+    expect(evaluateDiaryTaskEligibility(task as any, unlocked({
+      skills: { Cooking: 10 },
+      levels: { Cooking: 99 },
+    })).eligible).toBe(true);
+  });
+});
+
+describe('canonical diary tier eligibility', () => {
+  const canonicalUnlocks = () => {
+    const taskSkills = ALL_DIARY_TASKS.flatMap(task => [
+      ...Object.keys(task.skills ?? {}),
+      ...(task.oneOf ?? []).flatMap(option => Object.keys(option.skills ?? {})),
+    ]);
+    const regions = [
+      ...ALL_DIARY_TASKS.flatMap(task => task.regions ?? []),
+      ...Object.values(DIARY_DATA).flatMap(diary => [diary.region, ...diary.requiredRegions]),
+    ];
+    const quests = [
+      ...Object.keys(QUEST_DATA),
+      ...ALL_DIARY_TASKS.flatMap(task => task.quests ?? []),
+      ...Object.values(DIARY_DATA).flatMap(diary => diary.quests),
+    ];
+    return unlocked({
+      skills: Object.fromEntries(taskSkills.map(skill => [skill, 10])),
+      levels: Object.fromEntries(taskSkills.map(skill => [skill, 99])),
+      regions: [...new Set(regions)],
+      quests: [...new Set(quests)],
+      cas: ['Easy', 'Medium', 'Hard', 'Elite', 'Master', 'Grandmaster'],
+    });
+  };
+
+  it('ignores all 48 stale aggregate requirement payloads', () => {
+    const unlocks = canonicalUnlocks();
+
+    for (const diary of Object.values(DIARY_DATA)) {
+      expect(getDiaryStatus(diary, unlocks)).toBe('AVAILABLE');
+      expect(getDiaryStatus({
+        ...diary,
+        region: 'Impossible aggregate region',
+        skills: { NotASkill: 99 },
+        quests: ['Impossible aggregate quest'],
+        requiredRegions: ['Impossible aggregate region'],
+      }, unlocks)).toBe('AVAILABLE');
+    }
+  });
+
+  it('uses Biohazard and West Ardougne from ard_easy_6, not the stale aggregate', () => {
+    const base = canonicalUnlocks();
+    const withoutBiohazard = {
+      ...base,
+      quests: base.quests.filter(quest => quest !== 'Biohazard'),
+      completedTasks: ALL_DIARY_TASKS
+        .filter(task => task.tierId !== 'Ardougne Easy' || task.id !== 'ard_easy_6')
+        .map(task => task.id),
+    };
+
+    expect(getDiaryStatus(DIARY_DATA['Ardougne Easy'], withoutBiohazard))
+      .toBe('LOCKED_QUEST');
+    expect(getDiaryStatus(DIARY_DATA['Ardougne Easy'], {
+      ...withoutBiohazard,
+      quests: [...withoutBiohazard.quests, 'Biohazard'],
+    })).toBe('AVAILABLE');
   });
 });

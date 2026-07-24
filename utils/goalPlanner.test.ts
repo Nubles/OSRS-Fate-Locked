@@ -3,6 +3,7 @@ import { SKILLS_LIST } from '../constants';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { REGION_GROUPS } from '../data/items';
+import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { planForTarget, listGoalTargets } from './goalPlanner';
 import { getQuestStatus } from './journalStatus';
 
@@ -137,9 +138,12 @@ describe('planForTarget — diaries', () => {
     const base = maxedUnlocks();
     for (const d of Object.values(DIARY_DATA)) {
       const plan = planForTarget('diary', d.id, base)!;
-      // Every gating quest (if incomplete) should appear in the quest steps.
+      // Every shared canonical task quest (if incomplete) should appear.
       const stepIds = new Set(plan.questSteps.map((s) => s.id));
-      for (const qid of d.quests) {
+      const taskQuests = ALL_DIARY_TASKS
+        .filter(task => task.tierId === d.id)
+        .flatMap(task => task.allQuests ? Object.keys(QUEST_DATA) : (task.quests ?? []));
+      for (const qid of taskQuests) {
         if (QUEST_DATA[qid] && !base.quests.includes(qid)) {
           expect(stepIds.has(qid)).toBe(true);
         }
@@ -154,6 +158,19 @@ describe('planForTarget — diaries', () => {
     expect(plan.skillSteps).toEqual([]);
   });
 
+  it('plans canonical remaining task gates instead of stale aggregate gates', () => {
+    const plan = planForTarget('diary', 'Ardougne Easy', maxedUnlocks({
+      regions: [...new Set(ALL_DIARY_TASKS.flatMap(task => task.regions ?? []))],
+      quests: Object.keys(QUEST_DATA).filter(quest => quest !== 'Biohazard'),
+      completedTasks: ALL_DIARY_TASKS
+        .filter(task => task.tierId !== 'Ardougne Easy' || task.id !== 'ard_easy_6')
+        .map(task => task.id),
+    }))!;
+
+    expect(plan.alreadyReachable).toBe(false);
+    expect(plan.questSteps.map(step => step.id)).toContain('Biohazard');
+    expect(plan.questSteps.map(step => step.id)).not.toContain('Plague City');
+  });
   it('keeps a stored completed diary done with no reconstructed backlog', () => {
     const diary = Object.values(DIARY_DATA)[0];
     const plan = planForTarget('diary', diary.id, maxedUnlocks({

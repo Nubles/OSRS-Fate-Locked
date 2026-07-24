@@ -145,12 +145,26 @@ describe('Achievement Diary source parser', () => {
   });
 
   it('renders frozen ids deterministically in Diary tier and ordinal order', () => {
-    const first = renderDiaryTasks(SIX_TASK_SNAPSHOT);
-    const second = renderDiaryTasks(structuredClone(SIX_TASK_SNAPSHOT));
+    const snapshot: any = structuredClone(SIX_TASK_SNAPSHOT);
+    snapshot.tasks[0].oneOf = [
+      { label: 'Dusty key' },
+      { skills: { Agility: 70 }, combatLevel: 100, allQuests: true, anySkillLevel: 99 },
+      { quests: ['Ratcatchers'], cas: ['Easy'], regions: ['Asgarnia'] },
+    ];
+    snapshot.tasks[0].combatLevel = 70;
+    snapshot.tasks[0].allQuests = true;
+    const first = renderDiaryTasks(snapshot);
+    const second = renderDiaryTasks(structuredClone(snapshot));
 
     expect(second).toBe(first);
     expect(first).toContain('// Generated from data/sources/achievement-diary-tasks.json.');
     expect(first.indexOf("id: 'fal_easy_1'")).toBeLessThan(first.indexOf("id: 'fal_med_1'"));
+    expect(first).toContain('export interface DiaryTaskRequirementOption {');
+    expect(first).toContain('oneOf?: DiaryTaskRequirementOption[];');
+    expect(first).toContain(
+      "oneOf: [{ label: 'Dusty key' }, { skills: { 'Agility': 70 }, combatLevel: 100, allQuests: true, anySkillLevel: 99 }, "
+      + "{ quests: ['Ratcatchers'], cas: ['Easy'], regions: ['Asgarnia'] }], combatLevel: 70, allQuests: true",
+    );
     expect(first.indexOf("id: 'fal_med_1'")).toBeLessThan(first.indexOf("id: 'fal_med_3'"));
     expect(first).toContain("description: 'Smith some blurite limbs on Doric\\'s anvil'");
   });
@@ -380,6 +394,116 @@ describe('Achievement Diary id-classification audit', () => {
     expect(() => validateAudit(snapshot)).toThrow(/unknown.*NotASkill/i);
   });
 
+  it('rejects unknown references nested inside an alternative route', () => {
+    const snapshot = loadSnapshot();
+    snapshot.tasks[0].oneOf = [
+      { label: 'Untracked route' },
+      { skills: { NotASkill: 1 } },
+    ];
+
+    expect(() => validateAudit(snapshot)).toThrow(/unknown.*NotASkill/i);
+  });
+
+  it('stores every audited alternative route without cumulative mandatory gates', () => {
+    const snapshot = loadSnapshot();
+    const byId = new Map(snapshot.tasks.map(task => [task.id, task]));
+    const alternativeIds = snapshot.tasks
+      .filter(task => task.oneOf?.length)
+      .map(task => task.id)
+      .sort();
+
+    expect(alternativeIds).toEqual([
+      'ard_med_6',
+      'fal_elite_4',
+      'fal_med_4',
+      'frem_easy_6',
+      'frem_easy_9',
+      'frem_elite_1',
+      'frem_elite_5',
+      'frem_elite_6',
+      'frem_med_8',
+      'kan_elite_3',
+      'kan_hard_5',
+      'kan_med_4',
+      'kar_easy_7',
+      'kar_hard_8',
+      'kar_hard_9',
+      'kar_med_19',
+      'kar_med_8',
+      'kar_med_9',
+      'mor_easy_2',
+      'mor_easy_8',
+      'mor_elite_6',
+      'wild_easy_2',
+      'wild_elite_6',
+      'wild_hard_8',
+      'wild_hard_9',
+      'wild_med_3',
+      'wild_med_7',
+    ]);
+    expect(byId.get('kar_med_8')).toMatchObject({
+      skills: { Woodcutting: 35 },
+      quests: ['Jungle Potion'],
+      oneOf: [
+        { label: 'Hardwood Grove' },
+        {
+          label: 'Kharazi Jungle',
+          skills: { Agility: 79 },
+          quests: ["Legends' Quest"],
+        },
+      ],
+    });
+    expect(byId.get('wild_med_3')).toMatchObject({
+      skills: { Slayer: 50 },
+      oneOf: [
+        { skills: { Agility: 60 } },
+        { skills: { Strength: 60 } },
+      ],
+    });
+    expect(byId.get('frem_easy_9')).toMatchObject({
+      quests: [],
+      oneOf: [
+        { quests: ['Troll Stronghold'] },
+        { cas: ['Easy'] },
+      ],
+    });
+    expect(byId.get('fal_elite_4')).toMatchObject({
+      oneOf: [
+        { allQuests: true },
+        { label: 'Skillcape', anySkillLevel: 99 },
+      ],
+    });
+    expect(byId.get('kar_hard_9')).toMatchObject({
+      skills: { Slayer: 50 },
+      oneOf: [
+        { combatLevel: 100 },
+        { label: 'Slayer cape', skills: { Slayer: 99 } },
+      ],
+    });
+    expect(byId.get('lum_elite_6')).toMatchObject({ allQuests: true });
+    const combatGates = snapshot.tasks.flatMap(task => [
+      ...(task.combatLevel ? [[task.id, task.combatLevel]] : []),
+      ...(task.oneOf ?? []).flatMap(option =>
+        option.combatLevel ? [[task.id, option.combatLevel]] : []),
+    ]);
+    expect(combatGates).toEqual([
+      ['kar_hard_9', 100],
+      ['lum_med_10', 70],
+      ['mor_easy_3', 20],
+      ['var_med_9', 40],
+      ['west_easy_2', 40],
+      ['west_easy_9', 40],
+      ['western_med_6', 70],
+      ['west_hard_3', 100],
+      ['west_elite_5', 40],
+    ]);
+    expect(snapshot.classification).toMatchObject({
+      combatLevelRequirementsStructured: 9,
+      allQuestsRequirementsStructured: 2,
+    });
+    expect(byId.get('kar_med_1')?.skills).toEqual({});
+    expect(byId.get('lum_easy_10')?.skills).toEqual({});
+  });
   it('preserves the historical teak-log completion id for its semantic match', () => {
     const snapshot = loadSnapshot();
     const task = snapshot.tasks.find(

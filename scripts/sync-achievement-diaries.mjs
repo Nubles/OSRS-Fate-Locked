@@ -184,20 +184,82 @@ const renderSkills = (skills) => '{ ' + Object.entries(skills)
   .map(([skill, level]) => quote(skill) + ': ' + level)
   .join(', ') + ' }';
 
+const renderRequirementProperties = (requirement) => {
+  const properties = [];
+  if (requirement.label) properties.push('label: ' + quote(requirement.label));
+  if (requirement.skills && Object.keys(requirement.skills).length > 0) {
+    properties.push('skills: ' + renderSkills(requirement.skills));
+  }
+  if (requirement.quests?.length > 0) {
+    properties.push('quests: ' + renderStringArray(requirement.quests));
+  }
+  if (requirement.cas?.length > 0) properties.push('cas: ' + renderStringArray(requirement.cas));
+  if (requirement.regions?.length > 0) {
+    properties.push('regions: ' + renderStringArray(requirement.regions));
+  }
+  if (requirement.combatLevel) properties.push('combatLevel: ' + requirement.combatLevel);
+  if (requirement.allQuests) properties.push('allQuests: true');
+  if (requirement.anySkillLevel) properties.push('anySkillLevel: ' + requirement.anySkillLevel);
+  return properties;
+};
+
+const renderRequirementOption = option => (
+  '{ ' + renderRequirementProperties(option).join(', ') + ' }'
+);
+
 const renderTask = (task) => {
+  const requirementProperties = renderRequirementProperties(task)
+    .filter(property => !property.startsWith('label: '));
+  const manualProperties = requirementProperties.filter(property => (
+    property.startsWith('combatLevel: ')
+    || property === 'allQuests: true'
+    || property.startsWith('anySkillLevel: ')
+  ));
   const properties = [
     'id: ' + quote(task.id),
     'tierId: ' + quote(task.tierId),
     'description: ' + quote(task.description),
+    ...requirementProperties.filter(property => !manualProperties.includes(property)),
   ];
-  if (task.skills && Object.keys(task.skills).length > 0) {
-    properties.push('skills: ' + renderSkills(task.skills));
+  if (task.oneOf?.length > 0) {
+    properties.push('oneOf: [' + task.oneOf.map(renderRequirementOption).join(', ') + ']');
   }
-  if (task.quests?.length > 0) properties.push('quests: ' + renderStringArray(task.quests));
-  if (task.regions?.length > 0) properties.push('regions: ' + renderStringArray(task.regions));
+  properties.push(...manualProperties);
   return '  { ' + properties.join(', ') + ' },';
 };
 
+const validateRequirementShape = (requirement, context, allowEmpty = true) => {
+  if (!requirement || typeof requirement !== 'object' || Array.isArray(requirement)) {
+    throw new Error('Invalid Diary requirement route: ' + context);
+  }
+  for (const field of ['quests', 'cas', 'regions']) {
+    if (requirement[field] !== undefined && !Array.isArray(requirement[field])) {
+      throw new Error('Invalid Diary requirement ' + field + ': ' + context);
+    }
+  }
+  for (const field of ['combatLevel', 'anySkillLevel']) {
+    if (requirement[field] !== undefined
+      && (!Number.isInteger(requirement[field]) || requirement[field] < 1)) {
+      throw new Error('Invalid Diary requirement ' + field + ': ' + context);
+    }
+  }
+  if (requirement.allQuests !== undefined && requirement.allQuests !== true) {
+    throw new Error('Invalid Diary requirement allQuests: ' + context);
+  }
+  const hasRequirement = Boolean(
+    requirement.label
+    || Object.keys(requirement.skills ?? {}).length
+    || requirement.quests?.length
+    || requirement.cas?.length
+    || requirement.regions?.length
+    || requirement.combatLevel
+    || requirement.allQuests
+    || requirement.anySkillLevel,
+  );
+  if (!allowEmpty && !hasRequirement) {
+    throw new Error('Empty Diary requirement route: ' + context);
+  }
+};
 export function validateSnapshot(snapshot) {
   if (!snapshot || typeof snapshot !== 'object') throw new Error('Diary snapshot is missing');
   if (!snapshot.source || !snapshot.verifiedAt) throw new Error('Diary snapshot source metadata is missing');
@@ -226,6 +288,15 @@ export function validateSnapshot(snapshot) {
     if (!Number.isInteger(task.ordinal) || task.ordinal < 1) {
       throw new Error('Invalid Diary task ordinal: ' + task.id);
     }
+    validateRequirementShape(task, task.id);
+    if (task.oneOf !== undefined) {
+      if (!Array.isArray(task.oneOf) || task.oneOf.length < 2) {
+        throw new Error('Diary alternative route list must contain at least two options: ' + task.id);
+      }
+      task.oneOf.forEach((option, index) => {
+        validateRequirementShape(option, task.id + ' option ' + (index + 1), false);
+      });
+    }
     const ordinalKey = task.tierId + '|' + task.ordinal;
     if (ordinals.has(ordinalKey)) throw new Error('Duplicate Diary task ordinal: ' + ordinalKey);
     ordinals.add(ordinalKey);
@@ -249,13 +320,29 @@ export function renderDiaryTasks(snapshot) {
     || left.id.localeCompare(right.id)
   ));
   const lines = [
+    'export interface DiaryTaskRequirementOption {',
+    '  label?: string;',
+    '  skills?: Record<string, number>;',
+    '  quests?: string[];',
+    '  cas?: string[];',
+    '  regions?: string[];',
+    '  combatLevel?: number;',
+    '  allQuests?: true;',
+    '  anySkillLevel?: number;',
+    '}',
+    '',
     'export interface DiaryTask {',
     '  id: string;',
     '  tierId: string;',
     '  description: string;',
     '  skills?: Record<string, number>;',
     '  quests?: string[];',
+    '  cas?: string[];',
     '  regions?: string[];',
+    '  combatLevel?: number;',
+    '  allQuests?: true;',
+    '  anySkillLevel?: number;',
+    '  oneOf?: DiaryTaskRequirementOption[];',
     '}',
     '',
     '// Generated from data/sources/achievement-diary-tasks.json.',
@@ -424,7 +511,12 @@ const loadReferenceCatalog = (projectRoot) => {
     if (nameProperty) quests.add(stringLiteralOf(nameProperty.initializer));
   }
 
-  const catalog = { skills, quests, regions };
+  const catalog = {
+    skills,
+    quests,
+    regions,
+    cas: new Set(['Easy', 'Medium', 'Hard', 'Elite', 'Master', 'Grandmaster']),
+  };
   referenceCatalogCache.set(projectRoot, catalog);
   return catalog;
 };
@@ -433,14 +525,19 @@ const findUnknownReferences = (snapshot, projectRoot) => {
   const catalog = loadReferenceCatalog(projectRoot);
   const unknown = [];
   for (const task of snapshot.tasks) {
-    for (const skill of Object.keys(task.skills ?? {})) {
-      if (!catalog.skills.has(skill)) unknown.push(task.id + ' skill ' + skill);
-    }
-    for (const quest of task.quests ?? []) {
-      if (!catalog.quests.has(quest)) unknown.push(task.id + ' quest ' + quest);
-    }
-    for (const region of task.regions ?? []) {
-      if (!catalog.regions.has(region)) unknown.push(task.id + ' region ' + region);
+    for (const requirement of [task, ...(task.oneOf ?? [])]) {
+      for (const skill of Object.keys(requirement.skills ?? {})) {
+        if (!catalog.skills.has(skill)) unknown.push(task.id + ' skill ' + skill);
+      }
+      for (const quest of requirement.quests ?? []) {
+        if (!catalog.quests.has(quest)) unknown.push(task.id + ' quest ' + quest);
+      }
+      for (const ca of requirement.cas ?? []) {
+        if (!catalog.cas.has(ca)) unknown.push(task.id + ' CA ' + ca);
+      }
+      for (const region of requirement.regions ?? []) {
+        if (!catalog.regions.has(region)) unknown.push(task.id + ' region ' + region);
+      }
     }
   }
   return unknown;

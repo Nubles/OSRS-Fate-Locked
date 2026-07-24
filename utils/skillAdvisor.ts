@@ -17,8 +17,9 @@
 import { SKILLS_LIST } from '../constants';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
+import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { computeUnlockImpact } from './unlockImpact';
-import { taskEligibilityBlockers } from './journalStatus';
+import { getDiaryStatus } from './journalStatus';
 
 export interface RankedSkill {
   id: string;          // skill name
@@ -32,14 +33,10 @@ export interface RankedSkill {
   cascadeScore: number;
 }
 
-/** A diary tier is fully completable when its aggregate task gates have no canonical blockers. */
+/** A diary tier is fully completable when its canonical remaining tasks have no blockers. */
 function diaryFullyDoable(d: DiaryTier, unlocks: any, gameModeId?: string): boolean {
-  return taskEligibilityBlockers({
-    id: d.id,
-    skills: d.skills,
-    quests: d.quests,
-    regions: d.requiredRegions,
-  }, unlocks, gameModeId).length === 0;
+  const status = getDiaryStatus(d, unlocks, gameModeId);
+  return status === 'AVAILABLE' || status === 'COMPLETED';
 }
 
 /**
@@ -62,9 +59,16 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
       const lvl = (q.skills as Record<string, number>)[skill];
       if (lvl && lvl > current) thresholds.add(lvl);
     }
-    for (const d of allDiaries) {
-      const lvl = (d.skills as Record<string, number>)[skill];
-      if (lvl && lvl > current) thresholds.add(lvl);
+    for (const task of ALL_DIARY_TASKS) {
+      const sharedLevel = task.skills?.[skill];
+      if (sharedLevel && sharedLevel > current) thresholds.add(sharedLevel);
+      for (const option of task.oneOf ?? []) {
+        const routeLevel = option.skills?.[skill];
+        if (routeLevel && routeLevel > current) thresholds.add(routeLevel);
+        if (option.anySkillLevel && option.anySkillLevel > current) {
+          thresholds.add(option.anySkillLevel);
+        }
+      }
     }
     const sorted = Array.from(thresholds).sort((a, b) => a - b);
     if (sorted.length === 0) continue;

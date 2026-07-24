@@ -14,6 +14,7 @@
 
 import { QUEST_DATA, QuestData } from '../data/questData';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
+import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { REGION_GROUPS } from '../data/items';
 import {
   evaluateQuestEligibility, getQuestStatus, getDiaryStatus,
@@ -287,7 +288,7 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
     if (!d) return null;
     const status = getDiaryStatus(d, unlocks, gameModeId);
 
-    // Merge requirements across all gating quests + the diary's own gates.
+    // Canonical tasks own diary eligibility; DIARY_DATA aggregates are display-only metadata.
     const merged = {
       order: [] as string[],
       regions: new Set<string>(),
@@ -297,7 +298,7 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
     };
     if (status !== 'COMPLETED') {
       const seen = new Set<string>();
-      for (const qid of d.quests) {
+      const mergeQuest = (qid: string) => {
         const sub = collectQuestChain(qid, unlocks, gameModeId);
         for (const region of sub.regions) merged.regions.add(region);
         for (const alternative of sub.alternatives) merged.alternatives.add(alternative);
@@ -311,20 +312,34 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
             merged.order.push(questId);
           }
         }
-      }
+      };
 
-      const blockers = taskEligibilityBlockers({
-        id: d.id,
-        skills: d.skills,
-        quests: d.quests,
-        regions: d.requiredRegions,
-      }, unlocks, gameModeId);
-      for (const blocker of blockers) {
-        if (blocker.kind === 'region') merged.regions.add(blocker.label);
-        if (blocker.kind === 'skill') {
-          for (const [skill, level] of Object.entries(d.skills)) {
-            if (blocker.label === skill + ' ' + level) {
-              merged.skills[skill] = Math.max(merged.skills[skill] ?? 0, level);
+      const tasks = ALL_DIARY_TASKS.filter(task => (
+        task.tierId === id && !unlocks.completedTasks.includes(task.id)
+      ));
+      for (const task of tasks) {
+        for (const qid of task.quests ?? []) mergeQuest(qid);
+        if (task.allQuests) {
+          for (const qid of Object.keys(QUEST_DATA)) mergeQuest(qid);
+        }
+
+        const blockers = taskEligibilityBlockers(task, unlocks, gameModeId);
+        for (const blocker of blockers) {
+          if (blocker.kind === 'region') merged.regions.add(blocker.label);
+          if (blocker.kind === 'alternative') {
+            merged.alternatives.add('One of: ' + blocker.label);
+          }
+          if (blocker.kind === 'combat' && task.combatLevel !== undefined) {
+            merged.skills['Combat level'] = Math.max(
+              merged.skills['Combat level'] ?? 0,
+              task.combatLevel,
+            );
+          }
+          if (blocker.kind === 'skill') {
+            for (const [skill, level] of Object.entries(task.skills ?? {})) {
+              if (blocker.label === skill + ' ' + level) {
+                merged.skills[skill] = Math.max(merged.skills[skill] ?? 0, level);
+              }
             }
           }
         }
