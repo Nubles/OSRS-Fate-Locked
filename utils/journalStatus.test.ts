@@ -294,6 +294,24 @@ describe('canonical diary tier eligibility', () => {
     });
   };
 
+  it('treats an omitted completed-task list as no completed tasks in a status snapshot', () => {
+    const { completedTasks, ...partialUnlocks } = canonicalUnlocks();
+    void completedTasks;
+
+    expect(getDiaryStatus(DIARY_DATA['Ardougne Easy'], partialUnlocks))
+      .toBe('AVAILABLE');
+  });
+
+  it('treats an omitted CA tier list as no completed tiers in a status snapshot', () => {
+    const { cas, ...partialUnlocks } = canonicalUnlocks();
+    void cas;
+
+    expect(getDiaryStatus(DIARY_DATA['Fremennik Easy'], {
+      ...partialUnlocks,
+      quests: partialUnlocks.quests.filter(quest => quest !== 'Troll Stronghold'),
+    })).toBe('LOCKED_QUEST');
+  });
+
   it('ignores all 48 stale aggregate requirement payloads', () => {
     const unlocks = canonicalUnlocks();
 

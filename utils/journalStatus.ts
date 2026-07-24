@@ -18,6 +18,10 @@ import { combatLevel } from './slayerReach';
 export type QuestStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
 export type DiaryStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
 
+export type DiaryStatusUnlocks =
+  Omit<UnlockState, 'cas' | 'completedTasks'>
+  & Partial<Pick<UnlockState, 'cas' | 'completedTasks'>>;
+
 export type EligibilityBlocker =
   | { kind: 'region'; label: string }
   | { kind: 'skill'; label: string }
@@ -298,16 +302,21 @@ const uniqueBlockers = (blockers: EligibilityBlocker[]): EligibilityBlocker[] =>
 
 export function evaluateDiaryTierEligibility(
   diary: Pick<DiaryTier, 'id'>,
-  unlocks: UnlockState,
+  unlocks: DiaryStatusUnlocks,
   gameModeId?: string,
 ): DiaryTierEligibility {
   if (unlocks.diaries.includes(diary.id)) {
     return { eligible: true, status: 'COMPLETED', blockers: [], evidence: ['Completed'] };
   }
 
+  const normalizedUnlocks: UnlockState = {
+    ...unlocks,
+    cas: unlocks.cas ?? [],
+    completedTasks: unlocks.completedTasks ?? [],
+  };
   const taskResults = ALL_DIARY_TASKS
-    .filter(task => task.tierId === diary.id && !unlocks.completedTasks.includes(task.id))
-    .map(task => evaluateDiaryTaskEligibility(task, unlocks, gameModeId));
+    .filter(task => task.tierId === diary.id && !normalizedUnlocks.completedTasks.includes(task.id))
+    .map(task => evaluateDiaryTaskEligibility(task, normalizedUnlocks, gameModeId));
   const blockers = uniqueBlockers(taskResults.flatMap(result => result.blockers));
   const evidence = [...new Set(taskResults.flatMap(result => result.evidence))];
   const status: DiaryStatus = blockers.some(blocker => blocker.kind === 'region')
@@ -323,7 +332,7 @@ export function evaluateDiaryTierEligibility(
 
 export function getDiaryStatus(
   diary: DiaryTier,
-  unlocks: UnlockState,
+  unlocks: DiaryStatusUnlocks,
   gameModeId?: string,
 ): DiaryStatus {
   return evaluateDiaryTierEligibility(diary, unlocks, gameModeId).status;
