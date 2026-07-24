@@ -81,6 +81,7 @@ export async function buildRuneliteBundle(
       slayer: [],
       quests: [],
     },
+    itemRules: {},
     chunks: {},
   };
   return {
