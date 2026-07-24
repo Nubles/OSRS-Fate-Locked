@@ -75,3 +75,20 @@ Each structured sub-resource owns its own first-writer token. Event append and a
 Run bundles contain unlock state and tracker status. Detected events contain the bound character name, run identity, label, timestamps, detector version, and bounded evidence. They contain **no account credentials, passwords, session cookies, chat history, inventory dump, or arbitrary telemetry**.
 
 Main bundle/state records expire after 24 hours. Event and acknowledgement records expire after seven days so an event detected while the app is closed can survive a realistic outage. Anyone with the random pairing code can read that code's records; private write tokens are required for protected writes. Use clipboard/file sync if you do not want relay data to leave the machine.
+
+## RuneLite bundle v4
+
+The app now exports `version: 4` with a canonical `rules` manifest. It includes
+the run, account, game mode, rules/content/detector versions, every unlock
+family, bank-lock state, and category-first chunk permission snapshots. Root
+fields from v3 remain for one compatibility release.
+
+Permission status is one of `ALLOWED`, `NOT_READY`, `LOCKED`, or `UNKNOWN`.
+Unknown means the app cannot safely decide and must never be converted into a
+blocking warning. RuneLite consumes these authored decisions without
+re-implementing quest, skill, merchant, bank, or activity rules.
+
+The `FLGZ:` relay payload is tested against the existing 256 KiB compressed
+limit. RuneLite continues to load v1-v3 bundles using legacy map behavior; a
+malformed v4 or unsupported future version is rejected without replacing the
+last valid snapshot.
