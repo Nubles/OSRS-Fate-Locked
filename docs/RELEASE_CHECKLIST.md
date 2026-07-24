@@ -60,7 +60,8 @@ operations.
 
 ## Deployment protection
 
-The Pages workflow cannot bypass these gates: artifact upload occurs only after
-install, tests, type checking, deterministic content verification, and build all
-succeed, and the deploy job depends on that gated build job. Do not manually
-deploy around a failed build.
+The Pages workflow accepts pushes to main only and exposes no manual dispatch.
+Workflow-level permissions are read-only; Pages and OIDC write permissions are
+scoped to the deploy job. Artifact upload occurs only after install, tests, type
+checking, deterministic content verification, and build all succeed, and the
+deploy job depends on that gated build job.

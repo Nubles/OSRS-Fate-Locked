@@ -439,13 +439,12 @@ describe('workflow contract mutation coverage', () => {
   });
 });
 describe('Pages deployment workflow contract', () => {
-  it('only permits the repository default branch to enter the Pages build', async () => {
+  it('does not expose privileged manual or alternate-branch deployment triggers', async () => {
     const workflow = await readRepositoryFile('.github/workflows/deploy.yml');
-    const jobsBlock = yamlBlock(workflow, 'jobs');
-    const buildJob = yamlBlock(jobsBlock, 'build', 2);
+    const onBlock = yamlBlock(workflow, 'on');
 
-    expect(buildJob).toMatch(
-      /^\s{4}if:\s*github\.ref == format\('refs\/heads\/\{0\}', github\.event\.repository\.default_branch\)\s*$/m,
+    expect(onBlock.replace(/\r\n/g, '\n').trim()).toBe(
+      'on:\n  push:\n    branches: [main]',
     );
   });
 
@@ -458,12 +457,12 @@ describe('Pages deployment workflow contract', () => {
     const deployJob = yamlBlock(jobsBlock, 'deploy', 2);
 
     expect(onBlock).toMatch(/^\s{2}push:\s*$/m);
-    expect(onBlock).toMatch(/^\s{4}branches:\s*\[\s*main\s*,\s*master\s*\]/m);
-    expect(onBlock).toMatch(/^\s{2}workflow_dispatch:\s*/m);
+    expect(onBlock).toMatch(/^\s{4}branches:\s*\[\s*main\s*\]/m);
+    expect(onBlock).not.toMatch(/^\s{2}workflow_dispatch:\s*/m);
 
     expect(permissionsBlock).toMatch(/^\s{2}contents:\s*read\s*$/m);
-    expect(permissionsBlock).toMatch(/^\s{2}pages:\s*write\s*$/m);
-    expect(permissionsBlock).toMatch(/^\s{2}id-token:\s*write\s*$/m);
+    expect(permissionsBlock).not.toMatch(/^\s{2}pages:\s*write\s*$/m);
+    expect(permissionsBlock).not.toMatch(/^\s{2}id-token:\s*write\s*$/m);
 
     expect(buildJob).toMatch(/^\s{4}runs-on:\s*ubuntu-latest\s*$/m);
     expect(buildJob).toMatch(/^\s{10}node-version:\s*22\s*$/m);
@@ -483,6 +482,8 @@ describe('Pages deployment workflow contract', () => {
     expectDeployBuildOperations(buildJob);
 
     expect(deployJob).toMatch(/^\s{4}needs:\s*build\s*$/m);
+    expect(deployJob).toMatch(/^\s{6}pages:\s*write\s*$/m);
+    expect(deployJob).toMatch(/^\s{6}id-token:\s*write\s*$/m);
     expect(deployJob).toMatch(/^\s{4}environment:\s*$/m);
     expect(deployJob).toContain(
       'url: ${{ steps.deployment.outputs.page_url }}',
@@ -530,6 +531,8 @@ describe('release documentation contract', () => {
     expect(checklist).toMatch(
       /generated data[\s\S]*source snapshot[\s\S]*generator/i,
     );
+    expect(checklist).toMatch(/Pages workflow[\s\S]*pushes to main[\s\S]*no manual dispatch/i);
+    expect(checklist).toMatch(/write permissions[\s\S]*deploy job/i);
   });
 
   it('links the roadmap release section to the detailed checklist', async () => {
