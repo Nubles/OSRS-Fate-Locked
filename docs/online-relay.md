@@ -41,7 +41,7 @@ Every `/events` record contains:
 | `eventId` | Stable idempotency key retained across retries and restarts. |
 | `runId`, `runRevision` | Run identity and the revision used when detection occurred. |
 | `account` | Logged-in character name used for bound-account validation. |
-| `eventType` | `SKILL_LEVEL`, `QUEST`, `COMBAT_ACHIEVEMENT`, `COLLECTION_LOG`, `CLUE_CASKET`, `BOSS_KILL`, or `RAID_COMPLETION`. |
+| `eventType` | `SKILL_LEVEL`, `QUEST`, `COMBAT_ACHIEVEMENT`, `COLLECTION_LOG`, `CLUE_CASKET`, `BOSS_KILL`, `RAID_COMPLETION`, `SLAYER_TASK`, `DIARY_TASK`, `PET_DROP`, or `MINIGAME_COMPLETION`. |
 | `canonicalLabel` | Detector label, or `null` when the plugin cannot identify it safely. |
 | `occurredAt`, `sessionSequence` | Event ordering evidence. |
 | `bundleVersion`, `rulesVersion`, `contentVersion` | App/bundle compatibility context. |
@@ -92,3 +92,27 @@ The `FLGZ:` relay payload is tested against the existing 256 KiB compressed
 limit. RuneLite continues to load v1-v3 bundles using legacy map behavior; a
 malformed v4 or unsupported future version is rejected without replacing the
 last valid snapshot.
+## Detector handling
+
+RuneLite observes and queues facts; it never rolls or performs gameplay. The app
+owns the handling policy and can downgrade a detector to review, but it never
+upgrades an unknown ID or newer version. Confirmation changes a row to Ready;
+the player must still press **Roll**.
+
+| Detector | Version | Signal | Handling | Known limitation |
+|---|---:|---|---|---|
+| `skill-level-v1` | 1 | RuneLite stat change | Ready after validation | Requires a real level increase. |
+| `quest-widget-v1` | 1 | Quest reward widget | Ready after validation | Unknown quest names require review. |
+| `combat-achievement-chat-v1` | 1 | Exact combat-task chat | Ready after validation | Depends on the canonical task label. |
+| `collection-log-chat-v1` | 1 | Collection Log chat | Ready or review | Duplicate item names require a choice. |
+| `clue-casket-loot-v1` | 1 | Checked casket identity | Ready after validation | Only supported casket tiers are accepted. |
+| `boss-loot-v1` / `raid-loot-v1` | 1 | Checked loot encounter | Ready after validation | Retained for one compatibility release. |
+| `slayer-task-v1` | 1 | Remembered assignment plus completion chat | Needs confirmation | Player chooses the Slayer master/rate; assignment must be observed first. |
+| `diary-task-v1` | 1 | Diary tier varbit transition | Needs confirmation | Player chooses the completed task from that tier. |
+| `pet-drop-v1` | 1 | New-pet chat, optionally correlated to follower ID | Needs confirmation | Unknown follower identities use a generic Pet drop review. |
+| `minigame-completion-v1` | 1 | Pest Control widget plus exact win chat | Needs confirmation | Pest Control only; both signals must occur within five seconds. |
+| `boss-kill-v2` | 2 | Checked encounter mapping plus loot event | Needs confirmation | Group encounters are never treated as personal proof. |
+
+The local **Export playtest report** action contains aggregate detector counts
+only. Promotion thresholds and current evidence status are recorded in
+[`detectors/promotion-log.md`](detectors/promotion-log.md).
