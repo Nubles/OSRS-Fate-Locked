@@ -21,10 +21,92 @@ const escapeRegExp = (value: string) =>
 
 const indentation = (line: string) => line.match(/^\s*/)?.[0].length ?? 0;
 
+type YamlEntry = {
+  key: string;
+  value: string;
+  path: string[];
+};
+
+const stripYamlComment = (line: string) => {
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+
+  for (let index = 0; index < line.length; index += 1) {
+    const characterCode = line.charCodeAt(index);
+    const previousCode = index > 0 ? line.charCodeAt(index - 1) : undefined;
+
+    if (characterCode === 34 && !inSingleQuote && previousCode !== 92) {
+      inDoubleQuote = !inDoubleQuote;
+      continue;
+    }
+
+    if (characterCode === 39 && !inDoubleQuote) {
+      if (inSingleQuote && line.charCodeAt(index + 1) === 39) {
+        index += 1;
+        continue;
+      }
+      inSingleQuote = !inSingleQuote;
+      continue;
+    }
+
+    if (
+      characterCode === 35 &&
+      !inSingleQuote &&
+      !inDoubleQuote &&
+      (index === 0 || /\s/.test(line[index - 1]))
+    ) {
+      return line.slice(0, index).trimEnd();
+    }
+  }
+
+  return line;
+};
+
 const uncommentedYamlLines = (text: string) =>
   text
     .split(/\r?\n/)
-    .filter((line) => !/^\s*#/.test(line));
+    .map(stripYamlComment)
+    .filter((line) => line.trim().length > 0);
+
+const yamlEntries = (text: string): YamlEntry[] => {
+  const entries: YamlEntry[] = [];
+  const stack: Array<{ indent: number; key: string }> = [];
+
+  for (const line of uncommentedYamlLines(text)) {
+    const indent = indentation(line);
+    const content = line.trimStart();
+    if (content.startsWith('- ')) continue;
+
+    const match = content.match(/^(?:"([^"]+)"|'([^']+)'|([A-Za-z0-9_-]+)):(?:\s*(.*))?$/);
+    if (!match) continue;
+
+    while (stack.length && stack[stack.length - 1].indent >= indent) {
+      stack.pop();
+    }
+
+    const key = match[1] ?? match[2] ?? match[3];
+    const value = (match[4] ?? '').trim();
+    const path = [...stack.map((entry) => entry.key), key];
+    entries.push({ key, value, path });
+
+    if (!value) stack.push({ indent, key });
+  }
+
+  return entries;
+};
+
+const unquoteYamlScalar = (value: string) => {
+  const trimmed = value.trim();
+  const quote = trimmed[0];
+  if (
+    trimmed.length >= 2 &&
+    (quote === '"' || quote === "'") &&
+    trimmed[trimmed.length - 1] === quote
+  ) {
+    return trimmed.slice(1, -1);
+  }
+  return trimmed;
+};
 
 const yamlBlock = (text: string, key: string, parentIndent = 0) => {
   const lines = uncommentedYamlLines(text);
@@ -47,13 +129,24 @@ const yamlBlock = (text: string, key: string, parentIndent = 0) => {
 
 const activeRunCommands = (text: string) =>
   uncommentedYamlLines(text)
-    .map((line) => line.match(/^\s*run:\s*([^#\r\n]+?)\s*$/)?.[1]?.trim())
-    .filter((command): command is string => Boolean(command));
+    .map((line) => line.match(/^\s*(?:-\s*)?run:\s*([^#\r\n]+?)\s*$/)?.[1])
+    .filter((command): command is string => Boolean(command))
+    .map(unquoteYamlScalar);
 
 const activeUses = (text: string) =>
   uncommentedYamlLines(text)
-    .map((line) => line.match(/^\s*uses:\s*([^#\r\n]+?)\s*$/)?.[1]?.trim())
-    .filter((action): action is string => Boolean(action));
+    .map((line) => line.match(/^\s*(?:-\s*)?uses:\s*([^#\r\n]+?)\s*$/)?.[1])
+    .filter((action): action is string => Boolean(action))
+    .map(unquoteYamlScalar);
+
+const activeStepOperations = (text: string) =>
+  uncommentedYamlLines(text).flatMap((line) => {
+    const command = activeRunCommands(line)[0];
+    if (command) return [`run:${command}`];
+
+    const action = activeUses(line)[0];
+    return action ? [`uses:${action}`] : [];
+  });
 
 const expectInOrder = (actualCommands: string[], commands: string[]) => {
   let cursor = -1;
@@ -69,6 +162,101 @@ const expectNoNpmInstall = (commands: string[]) => {
     commands.some((command) => /^npm\s+install(?:\s|$)/.test(command)),
     'npm install must not be used; install from the lockfile with npm ci',
   ).toBe(false);
+};
+
+const expectCiSecurityContract = (workflowText: string) => {
+  const entries = yamlEntries(workflowText);
+  const rootOn = entries.find(
+    (entry) => entry.path.length === 1 && entry.key === 'on',
+  );
+  const pullRequestTarget = entries.find(
+    (entry) =>
+      entry.path.length === 2 &&
+      entry.path[0] === 'on' &&
+      entry.key === 'pull_request_target',
+  );
+  expect(
+    Boolean(pullRequestTarget) ||
+      Boolean(rootOn?.value.includes('pull_request_target')),
+    'pull_request_target must never be configured',
+  ).toBe(false);
+
+  const topPermissions = entries.filter(
+    (entry) => entry.path.length === 1 && entry.key === 'permissions',
+  );
+  expect(topPermissions, 'exactly one top-level permissions block is required')
+    .toHaveLength(1);
+  expect(
+    topPermissions[0]?.value,
+    'top-level permissions must use a block map',
+  ).toBe('');
+
+  const permissionChildren = entries
+    .filter(
+      (entry) =>
+        entry.path.length === 2 && entry.path[0] === 'permissions',
+    )
+    .map(({ key, value }) => ({ key, value }));
+  expect(
+    permissionChildren,
+    'pull-request permissions must contain only contents: read',
+  ).toEqual([{ key: 'contents', value: 'read' }]);
+
+  const jobPermissions = entries.find(
+    (entry) =>
+      entry.path.length === 3 &&
+      entry.path[0] === 'jobs' &&
+      entry.key === 'permissions',
+  );
+  const flowJobPermissions = entries.find(
+    (entry) =>
+      entry.path[0] === 'jobs' &&
+      entry.value.startsWith('{') &&
+      /(?:^|[{,])\s*(?:"permissions"|'permissions'|permissions)\s*:/.test(
+        entry.value,
+      ),
+  );
+  expect(
+    jobPermissions ?? flowJobPermissions,
+    'pull-request jobs must not override workflow permissions',
+  ).toBeUndefined();
+
+  const environment = entries.find((entry) => entry.key === 'environment');
+  expect(environment, 'pull-request CI must not declare an environment')
+    .toBeUndefined();
+  const secrets = entries.find((entry) => entry.key === 'secrets');
+  expect(secrets, 'pull-request CI must not declare secrets').toBeUndefined();
+
+  const activeWorkflow = uncommentedYamlLines(workflowText).join('\n');
+  expect(activeWorkflow).not.toContain('${{ secrets.');
+
+  const forbiddenActions = activeUses(workflowText).filter((action) =>
+    /^actions\/(?:upload-pages-artifact|upload-artifact|deploy-pages)@/.test(
+      action,
+    ),
+  );
+  expect(
+    forbiddenActions,
+    'pull-request CI must not upload artifacts or deploy',
+  ).toEqual([]);
+};
+
+const expectDeployBuildOperations = (buildJob: string) => {
+  const commands = activeRunCommands(buildJob);
+  expectInOrder(commands, commandOrder);
+  expect(commands).toEqual(commandOrder);
+  expectNoNpmInstall(commands);
+
+  const expectedOperations = [
+    'uses:actions/checkout@v4',
+    'uses:actions/setup-node@v4',
+    ...commandOrder.map((command) => `run:${command}`),
+    'uses:actions/upload-pages-artifact@v3',
+  ];
+  expect(
+    activeStepOperations(buildJob),
+    'deploy build steps must keep every gate before artifact upload',
+  ).toEqual(expectedOperations);
 };
 
 describe('CI workflow contract', () => {
@@ -127,21 +315,129 @@ describe('CI workflow contract', () => {
   });
 
   it('does not grant or invoke deployment behavior in pull-request CI', async () => {
-    const workflow = uncommentedYamlLines(
+    expectCiSecurityContract(
       await readRepositoryFile('.github/workflows/ci.yml'),
-    ).join('\n');
-
-    expect(workflow).not.toMatch(/^\s*pull_request_target:\s*$/m);
-    expect(workflow).not.toMatch(/^\s*[\w-]+:\s*write\s*$/m);
-    expect(workflow).not.toMatch(/^\s*environment:\s*/m);
-    expect(workflow).not.toMatch(/^\s*secrets:\s*/m);
-    expect(workflow).not.toContain('${{ secrets.');
-    expect(workflow).not.toContain('actions/upload-pages-artifact@');
-    expect(workflow).not.toContain('actions/deploy-pages@');
-    expect(workflow).not.toContain('actions/upload-artifact@');
+    );
   });
 });
 
+describe('workflow contract mutation coverage', () => {
+  const forbiddenCiMutations: Array<[string, (workflow: string) => string]> = [
+    [
+      'an empty pull_request_target event',
+      (workflow) => workflow.replace(/on:\r?\n/, 'on:\n  pull_request_target:\n'),
+    ],
+    [
+      'a flow-map pull_request_target event',
+      (workflow) => workflow.replace(/on:\r?\n/, 'on:\n  pull_request_target: {}\n'),
+    ],
+    [
+      'a mapped pull_request_target event',
+      (workflow) =>
+        workflow.replace(
+          /on:\r?\n/ ,
+          'on:\n  pull_request_target:\n    branches: [main]\n',
+        ),
+    ],
+    [
+      'top-level permissions write-all',
+      (workflow) =>
+        workflow.replace(
+          /permissions:\r?\n  contents: read/ ,
+          'permissions: write-all',
+        ),
+    ],
+    [
+      'a top-level inline write permission',
+      (workflow) =>
+        workflow.replace(
+          /permissions:\r?\n  contents: read/ ,
+          'permissions: { contents: read, issues: write }',
+        ),
+    ],
+    [
+      'an additional top-level block write permission',
+      (workflow) =>
+        workflow.replace(
+          /permissions:\r?\n  contents: read/ ,
+          'permissions:\n  contents: read\n  issues: write',
+        ),
+    ],
+    [
+      'job-level permissions write-all',
+      (workflow) =>
+        workflow.replace(
+          /  quality:\r?\n/ ,
+          '  quality:\n    permissions: write-all\n',
+        ),
+    ],
+    [
+      'a job-level inline write permission',
+      (workflow) =>
+        workflow.replace(
+          /  quality:\r?\n/ ,
+          '  quality:\n    permissions: { contents: read, actions: write }\n',
+        ),
+    ],
+    [
+      'any job-level permissions override',
+      (workflow) =>
+        workflow.replace(
+          /  quality:\r?\n/ ,
+          '  quality:\n    permissions:\n      contents: read\n',
+        ),
+    ],
+    [
+      'a quoted pull_request_target event',
+      (workflow) =>
+        workflow.replace(
+          /on:\r?\n/ ,
+          'on:\n  "pull_request_target": {}\n',
+        ),
+    ],
+    [
+      'a flow-style on map containing pull_request_target',
+      (workflow) =>
+        workflow.replace(
+          /on:\r?\n  pull_request:\r?\n    branches: \[main, master\]\r?\n  workflow_dispatch:/,
+          'on: { pull_request: {}, pull_request_target: {} }',
+        ),
+    ],
+    [
+      'a quoted inline upload action',
+      (workflow) =>
+        workflow.replace(
+          /    steps:\r?\n/ ,
+          '    steps:\n      - uses: "actions/upload-pages-artifact@v3"\n',
+        ),
+    ],
+  ];
+
+  it.each(forbiddenCiMutations)('rejects %s', async (_name, mutate) => {
+    const workflow = await readRepositoryFile('.github/workflows/ci.yml');
+    const mutated = mutate(workflow);
+    expect(mutated).not.toBe(workflow);
+    expect(() => expectCiSecurityContract(mutated)).toThrow();
+  });
+
+  it('rejects a Pages artifact upload moved ahead of the quality gates', async () => {
+    const workflow = await readRepositoryFile('.github/workflows/deploy.yml');
+    const uploadPattern =
+      /      - name: Upload artifact\r?\n        uses: actions\/upload-pages-artifact@v3\r?\n        with:\r?\n          path: \.\/dist\r?\n?/;
+    const uploadStep = workflow.match(uploadPattern)?.[0];
+    expect(uploadStep, 'upload step fixture missing').toBeTruthy();
+
+    const withoutUpload = workflow.replace(uploadPattern, '');
+    const mutated = withoutUpload.replace(
+      /      - name: Run tests/ ,
+      uploadStep!.trimEnd() + '\n\n      - name: Run tests',
+    );
+    const buildJob = yamlBlock(yamlBlock(mutated, 'jobs'), 'build', 2);
+
+    expect(mutated).not.toBe(workflow);
+    expect(() => expectDeployBuildOperations(buildJob)).toThrow();
+  });
+});
 describe('Pages deployment workflow contract', () => {
   it('gates the existing Pages deployment behind the same quality commands', async () => {
     const workflow = await readRepositoryFile('.github/workflows/deploy.yml');
@@ -174,10 +470,7 @@ describe('Pages deployment workflow contract', () => {
       /uses: actions\/upload-pages-artifact@v3\n\s+with:\n\s+path: \.\/dist/,
     );
 
-    const commands = activeRunCommands(buildJob);
-    expectInOrder(commands, commandOrder);
-    expect(commands).toEqual(commandOrder);
-    expectNoNpmInstall(commands);
+    expectDeployBuildOperations(buildJob);
 
     expect(deployJob).toMatch(/^\s{4}needs:\s*build\s*$/m);
     expect(deployJob).toMatch(/^\s{4}environment:\s*$/m);
