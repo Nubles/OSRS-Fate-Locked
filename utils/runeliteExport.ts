@@ -4,7 +4,12 @@
  * clipboard, and downloads it. Shared by the map's RL button and the header's
  * dedicated RuneLite button so both behave identically.
  */
-import { buildRuneliteBundle } from './runeliteBundle';
+import {
+  buildRuneliteBundle,
+  CONTENT_VERSION,
+  DETECTOR_CONTRACT_VERSION,
+  RULES_VERSION,
+} from './runeliteBundle';
 import { gearService } from '../services/GearService';
 import { chunkContentService } from '../services/ChunkContentService';
 import { showToast } from './toast';
@@ -34,6 +39,8 @@ async function compressForClipboard(json: string): Promise<string> {
 }
 
 export interface RuneliteRunInput {
+  runId: string;
+  runRevision: number;
   keys: number;
   specialKeys: number;
   chaosKeys: number;
@@ -44,7 +51,10 @@ export interface RuneliteRunInput {
   /** The run's game mode — needed so the plugin can tell a genuinely-empty
    *  Chunked run (0 chunks unlocked) apart from a non-Chunked bundle; an
    *  empty unlockedChunks array alone is ambiguous between the two. */
-  gameModeId?: string;
+  gameModeId: string;
+  rulesVersion?: string;
+  contentVersion?: number;
+  detectorContractVersion?: number;
 }
 
 /**
@@ -84,6 +94,14 @@ export async function buildBundlePayload(
     run.gameModeId === 'chunked' ? (unlocks.chunks ?? []) : undefined,
     banksLocked ? (unlocks.banks ?? []) : undefined,
     banksLocked,
+    {
+      runId: run.runId,
+      runRevision: run.runRevision,
+      gameModeId: run.gameModeId,
+      rulesVersion: run.rulesVersion ?? RULES_VERSION,
+      contentVersion: run.contentVersion ?? CONTENT_VERSION,
+      detectorContractVersion: run.detectorContractVersion ?? DETECTOR_CONTRACT_VERSION,
+    },
   );
   const json = JSON.stringify(payload);
   const compressed = await compressForClipboard(json);

@@ -12,7 +12,7 @@ import { ALL_CHUNKS, CHUNKED_START, chunkKey } from '../utils/chunkAdjacency';
  * (the reducer just consumes pre-rolled values), so every case is deterministic.
  */
 
-const base = () => ({ ...initialState, lastEvent: null });
+const base = () => ({ ...initialState, runId: 'test-run', runRevision: 0, lastEvent: null });
 
 const roll = (over: Partial<{ success: boolean; omni: boolean; pity: boolean; roll: number; threshold: number; source: string }>) =>
   ({ type: 'ROLL_RESULT' as const, payload: { success: false, omni: false, pity: false, roll: 50, threshold: 50, source: 'Test', ...over } });

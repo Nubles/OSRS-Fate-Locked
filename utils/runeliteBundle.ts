@@ -7,6 +7,19 @@ import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
 
+export const RULES_VERSION = '1';
+export const CONTENT_VERSION = 1;
+export const DETECTOR_CONTRACT_VERSION = 1;
+
+export interface RuneliteBundleIdentity {
+  runId: string;
+  runRevision: number;
+  gameModeId: string;
+  rulesVersion: string;
+  contentVersion: number;
+  detectorContractVersion: number;
+}
+
 export interface RuneliteRunState {
   keys: number;
   specialKeys: number;
@@ -30,6 +43,8 @@ export async function buildRuneliteBundle(
   unlockedBanks?: string[],
   /** Whether the run locks banks individually (rules.bankLocks). */
   bankLocks?: boolean,
+  /** Stable run and detector contract identity for durable event delivery. */
+  identity?: RuneliteBundleIdentity,
 ) {
   // Dynamic import keeps the ~53 kB chunk-content dataset out of the eager
   // startup bundle — it's only ever needed here, at export time, and every
@@ -37,6 +52,7 @@ export async function buildRuneliteBundle(
   const { CHUNK_CONTENT_LITE } = await import('../data/chunkContentLite');
   return {
     version: 3,
+    ...(identity ?? {}),
     exportedAt: new Date().toISOString(),
     chunkOffset: { cx: 0, cy: 0 },
     chunks: REGION_CHUNKS,

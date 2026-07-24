@@ -41,4 +41,26 @@ describe('buildRuneliteBundle — unlockedChunks presence', () => {
     expect(on.bankLocks).toBe(true);
     expect(on.unlockedBanks).toEqual(['12850']);
   });
-});
+
+  it('exports stable run and contract identity at the bundle root', async () => {
+    const bundle = await buildRuneliteBundle(
+      [], state, undefined, undefined, undefined, undefined, false,
+      {
+        runId: 'run-1',
+        runRevision: 9,
+        gameModeId: 'vanilla',
+        rulesVersion: '1',
+        contentVersion: 1,
+        detectorContractVersion: 1,
+      },
+    ) as any;
+
+    expect(bundle).toMatchObject({
+      runId: 'run-1',
+      runRevision: 9,
+      gameModeId: 'vanilla',
+      rulesVersion: '1',
+      contentVersion: 1,
+      detectorContractVersion: 1,
+    });
+  });});

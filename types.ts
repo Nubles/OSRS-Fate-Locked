@@ -132,6 +132,10 @@ export interface UnlockState {
 
 export interface GameState {
   version?: number;
+  /** Stable identity for one run across exports, restarts, and relay delivery. */
+  runId: string;
+  /** Monotonic revision of persistent run state. */
+  runRevision: number;
   keys: number;
   specialKeys: number;
   chaosKeys: number;

@@ -27,6 +27,28 @@ const generateId = (): string => {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 11)}`;
 };
 
+type RunIdRandomSource = {
+  randomUUID?: () => string;
+  getRandomValues?: (bytes: Uint8Array) => Uint8Array;
+};
+
+const uuidFromBytes = (bytes: Uint8Array): string => {
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+};
+
+const newRunId = (source: RunIdRandomSource | undefined = globalThis.crypto): string => {
+  if (source?.randomUUID) return source.randomUUID();
+  const bytes = new Uint8Array(16);
+  if (source?.getRandomValues) source.getRandomValues(bytes);
+  else for (let index = 0; index < bytes.length; index++) bytes[index] = Math.floor(Math.random() * 256);
+  return uuidFromBytes(bytes);
+};
+
+export const newRunIdForTest = (source: RunIdRandomSource): string => newRunId(source);
+
 type RollEventMeta = { roll: number; threshold: number };
 type UnlockEventMeta = { item: string; cost: number; category?: TableType };
 type RitualEventMeta = { type: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE' | 'GAMBIT' | 'CARTOGRAPHER'; won?: boolean; chunk?: string };
@@ -119,7 +141,7 @@ const getInitialUnlocks = (): UnlockState => ({
   collectionLog: {}
 });
 
-export const initialState: GameState = {
+export const initialState: Omit<GameState, 'runId' | 'runRevision'> = {
   version: CURRENT_VERSION,
   keys: 3,
   specialKeys: 0,
@@ -138,6 +160,17 @@ export const initialState: GameState = {
   loadout: {},
 };
 
+const createFreshState = (): GameState => ({
+  ...initialState,
+  unlocks: getInitialUnlocks(),
+  history: [],
+  pinnedGoals: [],
+  userNotes: {},
+  loadout: {},
+  runId: newRunId(),
+  runRevision: 0,
+});
+
 // --- Save Validation ---
 const isValidSaveData = (data: unknown): data is Partial<GameState> => {
   if (typeof data !== 'object' || data === null) return false;
@@ -148,6 +181,8 @@ const isValidSaveData = (data: unknown): data is Partial<GameState> => {
   if ('specialKeys' in obj && typeof obj.specialKeys !== 'number') return false;
   if ('chaosKeys' in obj && typeof obj.chaosKeys !== 'number') return false;
   if ('fatePoints' in obj && typeof obj.fatePoints !== 'number') return false;
+  if ('runId' in obj && (typeof obj.runId !== 'string' || obj.runId.trim().length === 0)) return false;
+  if ('runRevision' in obj && (!Number.isSafeInteger(obj.runRevision) || (obj.runRevision as number) < 0)) return false;
 
   // Validate history is an array if present
   if ('history' in obj && !Array.isArray(obj.history)) return false;
@@ -161,7 +196,7 @@ const isValidSaveData = (data: unknown): data is Partial<GameState> => {
 // --- Migration & Safety Logic ---
 const migrateSave = (saveData: Partial<GameState>): GameState => {
   // 1. Create a clean base state to ensure all expected top-level keys exist
-  const baseState = { ...initialState };
+  const baseState = createFreshState();
 
   // 2. Extract unlocks for special handling
   const { unlocks: saveUnlocks, ...saveMeta } = saveData;
@@ -217,8 +252,12 @@ const migrateSave = (saveData: Partial<GameState>): GameState => {
        mergedState.hasSeenOnboarding = (mergedState.history && mergedState.history.length > 0);
   }
 
-  // 7. Stamp with current version
+  // 7. Stamp with current version and durable identity fields.
   mergedState.version = CURRENT_VERSION;
+  mergedState.runId = typeof mergedState.runId === 'string' && mergedState.runId.trim()
+    ? mergedState.runId : newRunId();
+  mergedState.runRevision = Number.isSafeInteger(mergedState.runRevision)
+    && mergedState.runRevision >= 0 ? mergedState.runRevision : 0;
 
   return mergedState;
 };
@@ -319,7 +358,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     }
 
     case 'RESET':
-      return { ...initialState, lastEvent: null };
+      return { ...createFreshState(), lastEvent: null };
 
     case 'TOGGLE_ANIMATIONS':
       return { ...state, animationsEnabled: !state.animationsEnabled };
@@ -763,10 +802,17 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 };
 
 export const gameReducer = (state: GameState & { lastEvent: GameEvent | null }, action: Action): GameState & { lastEvent: GameEvent | null } => {
-  const next = rawReducer(state, action);
-  if (next.history === state.history) return next;
-  return { ...next, history: chainAppendedHistory(state.history, next.history) };
+  const rawNext = rawReducer(state, action);
+  if (rawNext === state) return state;
+  const next = rawNext.history === state.history
+    ? rawNext
+    : { ...rawNext, history: chainAppendedHistory(state.history, rawNext.history) };
+  if (action.type === 'LOAD_SAVE' || action.type === 'RESET') return next;
+  return { ...next, runRevision: state.runRevision + 1 };
 };
+
+export const migrateSaveForTest = (save: Partial<GameState>): GameState => migrateSave(save);
+export const gameReducerForTest = gameReducer;
 
 // --- Context ---
 const GameContext = createContext<GameContextType | null>(null);
@@ -789,7 +835,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
           console.warn('Save data failed validation, starting fresh');
         }
       } catch (e) { console.error('Failed to load save', e); }
-      return { ...initialState, lastEvent: null };
+      return { ...createFreshState(), lastEvent: null };
     },
   );
   const saveTimeoutRef = useRef<number | null>(null);

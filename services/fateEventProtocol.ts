@@ -127,7 +127,7 @@ export function parseFateEvent(input: unknown): FateEventEnvelope | null {
     account: input.account,
     runRevision: input.runRevision,
     eventType: input.eventType as FateEventType,
-    canonicalLabel: input.canonicalLabel,
+    canonicalLabel: input.canonicalLabel as string | null,
     occurredAt: input.occurredAt,
     sessionSequence: input.sessionSequence,
     bundleVersion: input.bundleVersion,
