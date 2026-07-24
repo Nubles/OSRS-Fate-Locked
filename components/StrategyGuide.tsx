@@ -13,7 +13,7 @@ import {
     GUILDS_LIST, FARMING_PATCH_LIST, MISTHALIN_AREAS, REGION_GROUPS
 } from '../constants';
 import { CheckCircle, XCircle, Lock, Map, BookOpen, AlertCircle, Compass, Target, Search, ScrollText, Filter, Pin, SlidersHorizontal, Check, ArrowUpRight, TrendingUp, Sparkles, BrainCircuit } from 'lucide-react';
-import { evaluateDiaryTierEligibility } from '../utils/journalStatus';
+import { evaluateDiaryTierEligibility, meetsSkillRequirement } from '../utils/journalStatus';
 
 const ROOT_UNLOCKS = {
     [TableType.EQUIPMENT]: new Set(EQUIPMENT_SLOTS),
@@ -41,9 +41,7 @@ const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameModeId?: 
     });
     
     const missingSkills = Object.entries(req.skills).filter(([skill, level]) => {
-        const currentLevel = unlocks.levels[skill] || 1;
-        const isUnlocked = (unlocks.skills[skill] || 0) > 0;
-        return !isUnlocked || currentLevel < (level as number);
+        return !meetsSkillRequirement(unlocks, skill, level as number);
     }).map(([skill, level]) => {
         const currentLevel = unlocks.levels[skill] || 1;
         const isUnlocked = (unlocks.skills[skill] || 0) > 0;
