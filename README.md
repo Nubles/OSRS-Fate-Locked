@@ -26,7 +26,8 @@ Bad luck is cushioned by **Fate Points** (a pity timer) and the **Void Altar**, 
 - **Integrity & verification** — a tamper-evident hash chain over the run history, a deterministic run ID, invariant replay, and exportable verified bundles, so a completed run can be shared and checked.
 - **Shareable run card & timelapse** — generate an image of your run, or play its history back as a narrated timelapse.
 - **Profiles** — multiple independent runs in one browser.
-- **RuneLite companion plugin** — see [`runelite-plugin/`](./runelite-plugin) for an in-game overlay of your authored chunks.
+- **RuneLite companion plugin** — marks locked content in-game, explains the current chunk, and can durably queue supported completions for the web Roll Inbox.
+- **Explicit-player Roll Inbox** — exact RuneLite detections are checked against the app's canonical rules and shown by category. Nothing rolls on detection, render, retry, or restart; the player always presses **Roll**.
 
 ## Tech stack
 
@@ -62,9 +63,13 @@ To enable it on a fresh fork: **Settings → Pages → Build and deployment → 
 
 - [`docs/RESOURCE_ENGINE.md`](./docs/RESOURCE_ENGINE.md) — the Resource Engine: data shape, the supply-chain analyzer, the three wiki-sourced generator scripts (`scripts/buildCraftables.mjs`, `scripts/buildPotions.mjs`, `scripts/buildSourceEnrichment.ts`), the enrichment merge pattern, the integrity-test contract, and the workflow for adding curated items.
 
-## RuneLite plugin
+## RuneLite plugin and Roll Inbox
 
-`runelite-plugin/` contains a Java RuneLite plugin that renders your authored Fate Locked chunks on the in-game world map and minimap, and warns when you enter a locked region. Build it with `./gradlew shadowJar` and sideload the JAR — see [`runelite-plugin/README.md`](./runelite-plugin/README.md).
+The companion [RuneLite plugin](https://github.com/Nubles/RS3-Fate-Locked-Runelite) renders the tracker rules in-game, warns before locked actions, and—only when the player enables Online sync—queues supported completions for the app.
+
+RuneLite detects and retries delivery; the app validates the run, account, revision, detector, and canonical rate. The event waits in **Sync & Roll → Roll Inbox** until the player chooses **Roll**, **Not eligible**, Review, or Dismiss. There is no Roll button in RuneLite and no background path to the dice engine.
+
+Online sync is a checkbox that defaults to off. Event/ack records expire after seven days; bundle and heartbeat records expire after 24 hours. See [the relay protocol](./docs/online-relay.md) for fields, endpoints, ownership, and privacy limits.
 
 ## Disclaimer
 
