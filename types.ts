@@ -102,6 +102,12 @@ export interface RollIntent {
   target: string;
 }
 
+export interface GameEventMeta {
+  fateEventId?: string;
+  detectorId?: string;
+  detectorVersion?: number;
+}
+
 export type DetectedProgress =
   | { kind: 'SKILL_LEVEL'; skill: string; level: number }
   | { kind: 'QUEST'; questId: string }
