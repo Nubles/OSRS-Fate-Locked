@@ -439,6 +439,16 @@ describe('workflow contract mutation coverage', () => {
   });
 });
 describe('Pages deployment workflow contract', () => {
+  it('only permits the repository default branch to enter the Pages build', async () => {
+    const workflow = await readRepositoryFile('.github/workflows/deploy.yml');
+    const jobsBlock = yamlBlock(workflow, 'jobs');
+    const buildJob = yamlBlock(jobsBlock, 'build', 2);
+
+    expect(buildJob).toMatch(
+      /^\s{4}if:\s*github\.ref == format\('refs\/heads\/\{0\}', github\.event\.repository\.default_branch\)\s*$/m,
+    );
+  });
+
   it('gates the existing Pages deployment behind the same quality commands', async () => {
     const workflow = await readRepositoryFile('.github/workflows/deploy.yml');
     const onBlock = yamlBlock(workflow, 'on');
