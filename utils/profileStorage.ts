@@ -133,7 +133,7 @@ export const deleteProfileTransaction = (
       metadata: commit.metadata,
       storage: {
         removed: rollbackFailed,
-        failed: [...new Set([...deletion.failed, ...rollbackFailed])],
+        failed: deletion.failed,
       },
     };
   }
@@ -150,7 +150,13 @@ export const profileDeletionNotice = (
 ): string | null => {
   if (result.status === 'last_profile') return 'Cannot delete the last profile';
   if (result.status === 'metadata_write_failed') {
-    return 'Profile deletion could not be saved. Your profile list is unchanged.';
+    const residual = result.storage.removed;
+    if (residual.length === 0) {
+      return 'Profile deletion could not be saved. Your profile list is unchanged.';
+    }
+    return 'Profile deletion could not be saved. Your profile list is unchanged, but this profile data could not be restored: '
+      + residual.join(', ')
+      + '.';
   }
   if (result.storage.failed.length === 0) return null;
   const count = result.storage.failed.length;

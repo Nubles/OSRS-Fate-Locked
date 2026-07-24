@@ -211,6 +211,7 @@ const mergeBoundedIntegerRecord = (
   path: string,
   min: number,
   max: number,
+  requireDefaultKeys = false,
 ): Outcome<Record<string, number>> => {
   const base = dynamicRecord(defaults, 'invalid_unlocks', path, MAX_IDENTIFIER_ARRAY);
   if (base.ok === false) return base;
@@ -229,6 +230,11 @@ const mergeBoundedIntegerRecord = (
     const value = boundedInteger(readOwn(source, key), pathOf(path, key), min, max);
     if (value.ok === false) return value;
     out[key] = value.value;
+  }
+  if (requireDefaultKeys) {
+    for (const key of Object.getOwnPropertyNames(base.value)) {
+      if (!own(overlay.value, key)) return invalid('invalid_unlocks', pathOf(path, key));
+    }
   }
   return { ok: true, value: out };
 };
@@ -302,6 +308,7 @@ const normalizeUnlocks = (
     'unlocks.equipment',
     0,
     EQUIPMENT_TIER_MAX,
+    sourceVersion === CURRENT_SAVE_VERSION,
   );
   if (equipment.ok === false) return equipment;
   const skills = mergeBoundedIntegerRecord(
@@ -310,6 +317,7 @@ const normalizeUnlocks = (
     'unlocks.skills',
     0,
     10,
+    sourceVersion === CURRENT_SAVE_VERSION,
   );
   if (skills.ok === false) return skills;
   const levels = mergeBoundedIntegerRecord(
@@ -318,6 +326,7 @@ const normalizeUnlocks = (
     'unlocks.levels',
     1,
     99,
+    sourceVersion === CURRENT_SAVE_VERSION,
   );
   if (levels.ok === false) return levels;
 

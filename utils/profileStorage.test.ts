@@ -173,6 +173,42 @@ describe('profile deletion transaction', () => {
     expect(current.current).toBe(metadata);
   });
 
+  it('separates failed removals from profile data lost during rollback', () => {
+    const targetKeys = expectedKeys('target');
+    const initialRemoveFailure = targetKeys[1];
+    const rollbackFailures = [targetKeys[0], targetKeys[3]];
+    const store = new Map(targetKeys.map((key) => [key, `value:${key}`]));
+
+    const result = deleteProfileTransaction({
+      getItem: (key) => store.get(key) ?? null,
+      removeItem: (key) => {
+        if (key === initialRemoveFailure) throw new Error('remove blocked');
+        store.delete(key);
+      },
+      setItem: (key, value) => {
+        if (key === 'FATE_PROFILES' || rollbackFailures.includes(key)) {
+          throw new Error('write blocked');
+        }
+        store.set(key, value);
+      },
+    }, 'FATE_PROFILES', { current: metadata }, 'target');
+
+    expect(result).toEqual({
+      status: 'metadata_write_failed',
+      metadata,
+      storage: {
+        removed: rollbackFailures,
+        failed: [initialRemoveFailure],
+      },
+    });
+    expect(store.has(initialRemoveFailure)).toBe(true);
+    for (const key of rollbackFailures) expect(store.has(key)).toBe(false);
+    for (const key of targetKeys) {
+      if (key === initialRemoveFailure || rollbackFailures.includes(key)) continue;
+      expect(store.get(key)).toBe(`value:${key}`);
+    }
+  });
+
   it('returns previous React metadata when metadata persistence fails', () => {
     const result = deleteProfileTransaction({
       getItem: () => null,
@@ -229,8 +265,30 @@ describe('profile deletion notice policy', () => {
     expect(profileDeletionNotice({
       status: 'metadata_write_failed',
       metadata,
-      storage: { removed: expectedKeys('target'), failed: [] },
+      storage: { removed: [], failed: [] },
     })).toBe('Profile deletion could not be saved. Your profile list is unchanged.');
+  });
+
+  it('names only profile data that remained deleted after rollback', () => {
+    const targetKeys = expectedKeys('target');
+    const initialRemoveFailure = targetKeys[1];
+    const rollbackFailures = [targetKeys[0], targetKeys[3]];
+    const notice = profileDeletionNotice({
+      status: 'metadata_write_failed',
+      metadata,
+      storage: {
+        removed: rollbackFailures,
+        failed: [initialRemoveFailure],
+      },
+    });
+
+    expect(notice).toBe(
+      'Profile deletion could not be saved. Your profile list is unchanged, but this profile data could not be restored: '
+      + rollbackFailures.join(', ')
+      + '.',
+    );
+    expect(notice).not.toContain(initialRemoveFailure);
+    expect(notice).not.toContain('value:');
   });
 
   it('preserves last-profile messaging and stays quiet after a clean delete', () => {

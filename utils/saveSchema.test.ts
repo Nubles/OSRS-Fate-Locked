@@ -257,6 +257,39 @@ describe('save schema compatibility', () => {
     }
   });
 
+  it('requires canonical nested unlock record keys on current-version saves', () => {
+    const defaults = defaultsFixture();
+    const fixedRecords = ['equipment', 'skills', 'levels'] as const;
+
+    for (const record of fixedRecords) {
+      const canonicalKeys = Object.keys(defaults.unlocks[record]);
+      const empty = clone(fullStateFixture());
+      empty.unlocks[record] = {};
+      expectRejected(empty, 'invalid_unlocks', `unlocks.${record}.${canonicalKeys[0]}`);
+
+      for (const key of canonicalKeys) {
+        const truncated = clone(fullStateFixture());
+        delete truncated.unlocks[record][key];
+        expectRejected(truncated, 'invalid_unlocks', `unlocks.${record}.${key}`);
+      }
+    }
+  });
+
+  it('continues filling canonical nested unlock keys for versionless legacy saves', () => {
+    const legacy = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    delete legacy.version;
+    const unlocks = legacy.unlocks as Record<string, unknown>;
+    unlocks.equipment = {};
+    unlocks.skills = {};
+    unlocks.levels = {};
+
+    const accepted = expectAccepted(validateAndMigrateSave(legacy, defaultsFixture()));
+    expect(accepted.sourceVersion).toBe(0);
+    expect(accepted.state.unlocks.equipment).toEqual(defaultsFixture().unlocks.equipment);
+    expect(accepted.state.unlocks.skills).toEqual(defaultsFixture().unlocks.skills);
+    expect(accepted.state.unlocks.levels).toEqual(defaultsFixture().unlocks.levels);
+  });
+
   it('fills absent optional fields from fresh defaults and never shares mutable defaults', () => {
     const input = clone(fullStateFixture()) as unknown as Record<string, unknown>;
     for (const key of [
