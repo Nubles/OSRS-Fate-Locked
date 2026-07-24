@@ -174,7 +174,10 @@ describe('diary alternative requirement routes', () => {
     };
 
     expect(evaluateDiaryTaskEligibility(task as any, unlocked()).blockers)
-      .toEqual([{ kind: 'alternative', label: 'Agility 60 or Strength 60' }]);
+      .toEqual([expect.objectContaining({
+        kind: 'alternative', label: 'Agility 60 or Strength 60',
+        blockerKinds: ['skill'],
+      })]);
     expect(evaluateDiaryTaskEligibility(task as any, unlocked({
       skills: { Agility: 6 },
       levels: { Agility: 60 },
@@ -226,17 +229,62 @@ describe('diary alternative requirement routes', () => {
     expect(evaluateDiaryTaskEligibility(task as any, unlocked()).eligible).toBe(false);
     expect(evaluateDiaryTaskEligibility(task as any, unlocked(common)).eligible).toBe(true);
   });
+
+  it('supports combined and limited-any skill alternatives', () => {
+    const task = {
+      id: 'warriors-guild',
+      oneOf: [
+        { combinedSkillLevel: { skills: ['Attack', 'Strength'], level: 130 } },
+        { anyOfSkillsLevel: { skills: ['Attack', 'Strength'], level: 99 } },
+      ],
+    };
+
+    expect(evaluateDiaryTaskEligibility(task as any, unlocked({
+      skills: { Attack: 7, Strength: 7 }, levels: { Attack: 65, Strength: 65 },
+    })).eligible).toBe(true);
+    expect(evaluateDiaryTaskEligibility(task as any, unlocked({
+      skills: { Attack: 10, Strength: 1 }, levels: { Attack: 99, Strength: 1 },
+    })).eligible).toBe(true);
+    expect(evaluateDiaryTaskEligibility(task as any, unlocked({
+      skills: { Attack: 6, Strength: 6 }, levels: { Attack: 60, Strength: 60 },
+    })).eligible).toBe(false);
+  });
+
+  it('keeps common and route item requirements visible but non-blocking', () => {
+    const task = {
+      id: 'muddy-chest',
+      items: ['Muddy key'],
+      oneOf: [
+        { label: 'Slashing route', items: ['Knife or slashing weapon'] },
+        { skills: { Agility: 82 } },
+      ],
+    };
+
+    const result = evaluateDiaryTaskEligibility(task as any, unlocked());
+
+    expect(result.eligible).toBe(true);
+    expect(result.evidence).toContain('Muddy key');
+    expect(result.evidence).toContain('Slashing route: Knife or slashing weapon');
+  });
 });
 describe('manual diary task requirements', () => {
   it('checks combat-level gates through the canonical combat formula', () => {
     const task = { id: 'combat-task', combatLevel: 70 };
     const low = unlocked({
+      skills: {
+        Attack: 4, Strength: 4, Defence: 4, Hitpoints: 4,
+        Prayer: 4, Ranged: 4, Magic: 4,
+      },
       levels: {
         Attack: 40, Strength: 40, Defence: 40, Hitpoints: 40,
         Prayer: 40, Ranged: 40, Magic: 40,
       },
     });
     const high = unlocked({
+      skills: {
+        Attack: 6, Strength: 6, Defence: 6, Hitpoints: 6,
+        Prayer: 6, Ranged: 6, Magic: 6,
+      },
       levels: {
         Attack: 60, Strength: 60, Defence: 60, Hitpoints: 60,
         Prayer: 60, Ranged: 60, Magic: 60,
@@ -248,6 +296,18 @@ describe('manual diary task requirements', () => {
       .toContainEqual({ kind: 'combat', label: 'Combat level 70' });
     expect(combatLevel(high.levels)).toBeGreaterThanOrEqual(70);
     expect(evaluateDiaryTaskEligibility(task as any, high).eligible).toBe(true);
+  });
+
+  it('caps every combat component by its unlocked method tier', () => {
+    const combatSkills = ['Attack', 'Strength', 'Defence', 'Hitpoints', 'Prayer', 'Ranged', 'Magic'];
+    const capped = unlocked({
+      skills: Object.fromEntries(combatSkills.map(skill => [skill, 1])),
+      levels: Object.fromEntries(combatSkills.map(skill => [skill, 99])),
+    });
+
+    expect(combatLevel(capped.levels)).toBeGreaterThan(70);
+    expect(evaluateDiaryTaskEligibility({ id: 'combat-task', combatLevel: 70 }, capped).blockers)
+      .toContainEqual({ kind: 'combat', label: 'Combat level 70' });
   });
 
   it('checks all-quests and any-skill routes without pseudo quest ids', () => {
@@ -270,6 +330,18 @@ describe('manual diary task requirements', () => {
   });
 });
 
+  it('does not require optional miniquests for all-quests gates', () => {
+    const questCapeQuests = Object.values(QUEST_DATA)
+      .filter(quest => quest.points > 0)
+      .map(quest => quest.id);
+    const result = evaluateDiaryTaskEligibility(
+      { id: 'quest-cape', allQuests: true },
+      unlocked({ quests: questCapeQuests }),
+    );
+
+    expect(result.eligible).toBe(true);
+  });
+
 describe('canonical diary tier eligibility', () => {
   const canonicalUnlocks = () => {
     const taskSkills = ALL_DIARY_TASKS.flatMap(task => [
@@ -282,6 +354,7 @@ describe('canonical diary tier eligibility', () => {
     ];
     const quests = [
       ...Object.keys(QUEST_DATA),
+
       ...ALL_DIARY_TASKS.flatMap(task => task.quests ?? []),
       ...Object.values(DIARY_DATA).flatMap(diary => diary.quests),
     ];
@@ -343,5 +416,99 @@ describe('canonical diary tier eligibility', () => {
       ...withoutBiohazard,
       quests: [...withoutBiohazard.quests, 'Biohazard'],
     })).toBe('AVAILABLE');
+  });
+});
+
+describe('audited diary route eligibility', () => {
+  const task = (id: string) => ALL_DIARY_TASKS.find(candidate => candidate.id === id)!;
+
+  it('allows either Karamja tree location without requiring the other location', () => {
+    const shared = {
+      quests: ['Jungle Potion', "Legends' Quest"],
+      skills: { Woodcutting: 10 },
+      levels: { Woodcutting: 50 },
+    };
+
+    expect(evaluateDiaryTaskEligibility(task('kar_med_8'), unlocked({
+      ...shared,
+      regions: ['Kharazi Jungle'],
+    })).eligible).toBe(true);
+    expect(evaluateDiaryTaskEligibility(task('kar_med_9'), unlocked({
+      ...shared,
+      regions: ['Tai Bwo Wannai'],
+      quests: ['Jungle Potion'],
+    })).eligible).toBe(true);
+  });
+
+  it('allows Tai Bwo Wannai Cleanup without Shilo Village access', () => {
+    expect(evaluateDiaryTaskEligibility(task('kar_med_19'), unlocked({
+      skills: { Mining: 4 }, levels: { Mining: 40 },
+      quests: ['Jungle Potion'], regions: ['Tai Bwo Wannai'],
+    })).eligible).toBe(true);
+  });
+
+  it('does not require 79 Agility on the Kharazi machete route', () => {
+    const result = evaluateDiaryTaskEligibility(task('kar_med_8'), unlocked({
+      skills: { Woodcutting: 4, Agility: 1 },
+      levels: { Woodcutting: 35, Agility: 1 },
+      quests: ['Jungle Potion', "Legends' Quest"],
+      regions: ['Kharazi Jungle'],
+    }));
+
+    expect(result.eligible).toBe(true);
+  });
+
+  it('requires the higher Fishing and Strength levels on the bare-handed shark route', () => {
+    const bareHandedTask = {
+      ...task('kan_elite_3'),
+      oneOf: [task('kan_elite_3').oneOf!.find(option => option.label === 'Bare-handed fishing')!],
+    };
+    const common = {
+      quests: ['Family Crest', 'Barbarian Training'], regions: ['Catherby'],
+      skills: { Cooking: 10, Fishing: 10, Strength: 10 },
+    };
+    expect(evaluateDiaryTaskEligibility(bareHandedTask, unlocked({
+      ...common, levels: { Cooking: 80, Fishing: 95, Strength: 76 },
+    })).eligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(bareHandedTask, unlocked({
+      ...common, levels: { Cooking: 80, Fishing: 96, Strength: 76 },
+    })).eligible).toBe(true);
+  });
+
+  it('allows a pre-cooked oomlie wrap without the cooking route', () => {
+    expect(evaluateDiaryTaskEligibility(task('kar_hard_3'), unlocked()).eligible)
+      .toBe(true);
+  });
+
+  it('allows an existing or mounted Digsite pendant without crafting Magic', () => {
+    expect(evaluateDiaryTaskEligibility(task('var_med_7'), unlocked({
+      quests: ['The Dig Site'], regions: ['Digsite'],
+      skills: { Magic: 1 }, levels: { Magic: 1 },
+    })).eligible).toBe(true);
+  });
+
+  it('accepts each Warriors Guild skill route', () => {
+    expect(evaluateDiaryTaskEligibility(task('fal_hard_10'), unlocked({
+      regions: ["Warriors' Guild"],
+      skills: { Attack: 7, Strength: 7 }, levels: { Attack: 65, Strength: 65 },
+    })).eligible).toBe(true);
+    expect(evaluateDiaryTaskEligibility(task('fal_hard_10'), unlocked({
+      regions: ["Warriors' Guild"],
+      skills: { Attack: 10, Strength: 1 }, levels: { Attack: 99, Strength: 1 },
+    })).eligible).toBe(true);
+  });
+
+  it('accepts every exact Raiments level route', () => {
+    const cases = [
+      ['fal_hard_1', 42], ['fal_elite_1', 55],
+      ['lum_elite_5', 38], ['var_elite_5', 52],
+    ] as const;
+    for (const [id, level] of cases) {
+      const diaryTask = task(id);
+      expect(evaluateDiaryTaskEligibility(diaryTask, unlocked({
+        skills: { Runecraft: 10 }, levels: { Runecraft: level },
+        regions: diaryTask.regions ?? [], quests: diaryTask.quests ?? [],
+      })).eligible, id).toBe(true);
+    }
   });
 });

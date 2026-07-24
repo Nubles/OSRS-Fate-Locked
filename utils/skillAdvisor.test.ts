@@ -1,9 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+vi.mock('./journalStatus', async () => {
+  const actual = await vi.importActual<typeof import('./journalStatus')>('./journalStatus');
+  return { ...actual, getDiaryStatus: vi.fn(actual.getDiaryStatus) };
+});
 import { SKILLS_LIST } from '../constants';
 import { QUEST_DATA } from '../data/questData';
 import { rankSkillBottlenecks } from './skillAdvisor';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { DIARY_DATA } from '../data/diaryData';
+import * as journalStatus from './journalStatus';
 
 // Fixture: skills unlocked but levels LOW (1), so skill thresholds genuinely
 // gate content. Regions empty, no quests done.
@@ -150,5 +156,14 @@ describe('rankSkillBottlenecks', () => {
 
     expect(ranged?.targetLevel).toBe(21);
     expect(ranged?.newDiaryIds).toContain('Ardougne Medium');
+  });
+  it('reuses diary status baselines instead of rescanning for every threshold', () => {
+    const statusSpy = vi.mocked(journalStatus.getDiaryStatus);
+    statusSpy.mockClear();
+
+    rankSkillBottlenecks(lowSkills());
+
+    expect(statusSpy.mock.calls.length).toBeGreaterThan(0);
+    expect(statusSpy.mock.calls.length).toBeLessThan(2500);
   });
 });

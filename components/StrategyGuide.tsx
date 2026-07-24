@@ -14,6 +14,7 @@ import {
 } from '../constants';
 import { CheckCircle, XCircle, Lock, Map, BookOpen, AlertCircle, Compass, Target, Search, ScrollText, Filter, Pin, SlidersHorizontal, Check, ArrowUpRight, TrendingUp, Sparkles, BrainCircuit } from 'lucide-react';
 import { evaluateDiaryTierEligibility, meetsSkillRequirement } from '../utils/journalStatus';
+import { effectiveSkillLevel } from '../utils/slayerReach';
 
 const ROOT_UNLOCKS = {
     [TableType.EQUIPMENT]: new Set(EQUIPMENT_SLOTS),
@@ -30,7 +31,7 @@ const ROOT_UNLOCKS = {
     [TableType.FARMING_LAYERS]: new Set(FARMING_PATCH_LIST),
 };
 
-const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameModeId?: string) => {
+export const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameModeId?: string) => {
     const missingRegions = req.regions.filter(r => {
         if (isAreaReachable(r, unlocks, gameModeId)) return false;
         if (REGION_GROUPS[r]) {
@@ -43,7 +44,7 @@ const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameModeId?: 
     const missingSkills = Object.entries(req.skills).filter(([skill, level]) => {
         return !meetsSkillRequirement(unlocks, skill, level as number);
     }).map(([skill, level]) => {
-        const currentLevel = unlocks.levels[skill] || 1;
+        const currentLevel = effectiveSkillLevel(unlocks, skill);
         const isUnlocked = (unlocks.skills[skill] || 0) > 0;
         return { skill, reqLevel: level as number, currentLevel, isUnlocked };
     });
@@ -87,7 +88,7 @@ const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameModeId?: 
     };
 };
 
-const calculateProphecyScore = (req: ContentRequirement, analysis: any) => {
+export const calculateProphecyScore = (req: ContentRequirement, analysis: any) => {
     let score = 0;
     score += analysis.missingRegions.length * 100;
     analysis.missingSkills.forEach((s: any) => {

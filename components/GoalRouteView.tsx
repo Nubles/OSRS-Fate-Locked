@@ -76,6 +76,24 @@ export const GoalRouteView: React.FC<{ goalId: string }> = ({ goalId }) => {
           </div>
         )}
 
+        {route.alternatives.length > 0 && (
+          <div className="md:col-span-2">
+            <Head icon={<Route size={11} />} label="Alternative routes" done={met(route.alternatives)} total={route.alternatives.length} />
+            {route.alternatives.map(alternative => (
+              <div key={alternative.name} className="mb-1.5">
+                <div className="text-[10px] text-gray-300 font-semibold">Choose one:</div>
+                {alternative.routes.map(route => (
+                  <div key={route.name} className="flex items-start gap-1.5 py-px ml-2">
+                    <Tick met={route.met} />
+                    <span className={route.met ? 'text-green-300/80' : 'text-gray-300'}>{route.name}</span>
+                    {route.detail && !route.met && <span className="text-gray-600 text-[9px]">({route.detail})</span>}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
+
         {route.skills.length > 0 && (
           <div>
             <Head icon={<Swords size={11} />} label="Skill tiers" done={met(route.skills)} total={route.skills.length} />

@@ -57,7 +57,7 @@ describe('slayerReachability', () => {
   });
 
   it('reports ready counts per master', () => {
-    const u = base({ skills: { Slayer: 5 }, levels: { Slayer: 99, Attack: 99, Strength: 99, Defence: 99, Hitpoints: 99 }, quests: ['Priest in Peril'] });
+    const u = base({ skills: { Slayer: 10, Attack: 10, Strength: 10, Defence: 10, Hitpoints: 10 }, levels: { Slayer: 99, Attack: 99, Strength: 99, Defence: 99, Hitpoints: 99 }, quests: ['Priest in Peril'] });
     const r = slayerReachability(MASTERS, u, locate);
     // Crawling + Bigfella ready (unlocked chunks); Banshees area-locked
     expect(r.masters[0].ready).toBe(2);

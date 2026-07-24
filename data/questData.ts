@@ -1303,3 +1303,16 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_NOVICE
   }
 };
+/** Canonical quest-point-cape membership: quests award points; optional miniquests do not. */
+export const QUEST_CAPE_QUEST_IDS: readonly string[] = Object.freeze(
+  Object.values(QUEST_DATA)
+    .filter(quest => quest.points > 0)
+    .map(quest => quest.id),
+);
+
+export const hasCompletedQuestCapeRequirements = (
+  completedQuestIds: readonly string[],
+): boolean => {
+  const completed = new Set(completedQuestIds);
+  return QUEST_CAPE_QUEST_IDS.every(id => completed.has(id));
+};

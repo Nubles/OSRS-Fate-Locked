@@ -12,15 +12,16 @@
  * so it's always consistent with what the rest of the Journal shows.
  */
 
-import { QUEST_DATA, QuestData } from '../data/questData';
+import { QUEST_CAPE_QUEST_IDS, QUEST_DATA, QuestData } from '../data/questData';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { REGION_GROUPS } from '../data/items';
 import {
   evaluateQuestEligibility, getQuestStatus, getDiaryStatus,
-  questRequirementOptionLabel, taskEligibilityBlockers,
+  questRequirementOptionLabel, taskEligibilityBlockers, DirectEligibilityBlocker,
 } from './journalStatus';
 import { isAreaReachable } from './reachability';
+import { effectiveCombatLevel, effectiveSkillLevel } from './slayerReach';
 
 export type GoalKind = 'quest' | 'diary' | 'region';
 
@@ -37,6 +38,19 @@ export interface PlanStep {
   done: boolean;
 }
 
+export interface AlternativePlanRoute {
+  label: string;
+  blockers: PlanStep[];
+}
+
+export interface AlternativePlanStep {
+  kind: 'alternative';
+  id: string;
+  label: string;
+  done: boolean;
+  routes: AlternativePlanRoute[];
+}
+
 export interface GoalPlan {
   targetKind: GoalKind;
   targetId: string;
@@ -51,10 +65,12 @@ export interface GoalPlan {
   regionSteps: PlanStep[];
   /** Skill levels to train (highest required across the whole chain). */
   skillSteps: PlanStep[];
+  /** Requirements where any one complete route is sufficient. */
+  alternativeSteps: AlternativePlanStep[];
   /** Optional quest-point shortfall note. */
   qpStep?: PlanStep;
   /** Flat, sensibly-ordered roadmap: regions → skills → QP → quests. */
-  steps: PlanStep[];
+  steps: Array<PlanStep | AlternativePlanStep>;
   /** Number of steps not yet satisfied. */
   remaining: number;
 }
@@ -77,6 +93,40 @@ function currentQuestPoints(unlocks: any): number {
   );
 }
 
+function requirementOptionPlanSteps(option: any): PlanStep[] {
+  return [
+    ...(option.regions ?? []).map((label: string): PlanStep => ({
+      kind: 'region', id: label, label, done: false,
+    })),
+    ...(option.guilds ?? []).map((label: string): PlanStep => ({
+      kind: 'region', id: label, label, done: false,
+    })),
+    ...(option.locations ?? []).map((location: any): PlanStep => ({
+      kind: 'region', id: location.label, label: location.label, done: false,
+    })),
+  ];
+}
+
+function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): PlanStep {
+  if (blocker.kind === 'region' || blocker.kind === 'quest') {
+    return { kind: blocker.kind, id: blocker.label, label: blocker.label, done: false };
+  }
+  if (blocker.kind === 'combat') {
+    const required = Number(blocker.label.match(/\d+/)?.[0] ?? 1);
+    return {
+      kind: 'skill', id: 'Combat level', label: 'Combat level',
+      detail: 'Level ' + required + ' (have ' + effectiveCombatLevel(unlocks) + ')', done: false,
+    };
+  }
+  const match = blocker.label.match(/^(.*) (\d+)$/);
+  const skill = match?.[1] ?? blocker.label;
+  const required = Number(match?.[2] ?? 1);
+  return {
+    kind: 'skill', id: skill, label: skill,
+    detail: 'Lv ' + required + ' (have ' + effectiveSkillLevel(unlocks, skill) + ')', done: false,
+  };
+}
+
 /**
  * Walk the prereq DAG of `rootQuestId` (post-order, so prerequisites come
  * before the quests that depend on them) and accumulate every requirement
@@ -88,7 +138,7 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
   const order: string[] = []; // incomplete quests, dependency order
   const visited = new Set<string>();
   const regions = new Set<string>();
-  const alternatives = new Set<string>();
+  const alternatives = new Map<string, AlternativePlanStep>();
   const skills: Record<string, number> = {};
   let qpRequired = 0;
 
@@ -114,7 +164,14 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
     for (const blocker of eligibility.blockers) {
       if (blocker.kind === 'region') {
         if (alternativeLabel && blocker.label === alternativeLabel) {
-          alternatives.add('One of: ' + blocker.label);
+          const label = 'One of: ' + blocker.label;
+          alternatives.set(label, {
+            kind: 'alternative', id: 'alternative:' + qid + ':' + label, label, done: false,
+            routes: (q.oneOf ?? []).map(option => ({
+              label: questRequirementOptionLabel(option),
+              blockers: requirementOptionPlanSteps(option),
+            })),
+          });
         } else {
           regions.add(blocker.label);
         }
@@ -147,7 +204,7 @@ function buildPlanFromRequirements(
   targetId: string,
   targetLabel: string,
   reqs: {
-    order: string[]; regions: Set<string>; alternatives: Set<string>;
+    order: string[]; regions: Set<string>; alternatives: Map<string, AlternativePlanStep>;
     skills: Record<string, number>; qpRequired: number;
   },
   unlocks: any,
@@ -155,36 +212,31 @@ function buildPlanFromRequirements(
   alreadyDone: boolean,
 ): GoalPlan {
   // Region steps.
-  const regionSteps: PlanStep[] = [
-    ...Array.from(reqs.regions).map((region): PlanStep => ({
-      kind: 'region',
-      id: region,
-      label: region,
-      done: false,
-    })),
-    ...Array.from(reqs.alternatives).map((label): PlanStep => ({
-      kind: 'region',
-      id: `alternative:${label}`,
-      label,
-      detail: 'Unlock any listed route',
-      done: false,
-    })),
-  ].sort((a, b) => Number(a.done) - Number(b.done) || a.label.localeCompare(b.label));
+  const regionSteps: PlanStep[] = Array.from(reqs.regions).map((region): PlanStep => ({
+    kind: 'region', id: region, label: region, done: false,
+  })).sort((a, b) => a.label.localeCompare(b.label));
+  const alternativeSteps = [...reqs.alternatives.values()]
+    .sort((a, b) => a.label.localeCompare(b.label));
 
   // Skill steps.
   const skillSteps: PlanStep[] = Object.entries(reqs.skills)
     .map(([skill, lvl]): PlanStep => {
       const done = false;
-      const have = unlocks.levels[skill] ?? 1;
+      const rawLevel = skill === 'Combat level'
+        ? effectiveCombatLevel(unlocks)
+        : (unlocks.levels[skill] ?? 1);
+      const have = skill === 'Combat level'
+        ? rawLevel
+        : effectiveSkillLevel(unlocks, skill);
       const tier = unlocks.skills[skill] ?? 0;
       const unlocked = tier > 0;
       const methodCap = Math.min(99, tier * 10);
       const detail = skill === 'Combat level'
-        ? `Level ${lvl}`
+        ? `Level ${lvl} (have ${have})`
         : !unlocked
           ? `Lv ${lvl} (locked)`
-          : have >= lvl && methodCap < lvl
-            ? `Lv ${lvl} (have ${have}; method cap ${methodCap})`
+          : rawLevel >= lvl && methodCap < lvl
+            ? `Lv ${lvl} (have ${rawLevel}; method cap ${methodCap})`
             : `Lv ${lvl} (have ${have})`;
       return {
         kind: 'skill',
@@ -236,9 +288,10 @@ function buildPlanFromRequirements(
     }
   }
 
-  const steps: PlanStep[] = [
+  const steps: Array<PlanStep | AlternativePlanStep> = [
     ...regionSteps,
     ...skillSteps,
+    ...alternativeSteps,
     ...(qpStep ? [qpStep] : []),
     ...questSteps,
   ];
@@ -253,6 +306,7 @@ function buildPlanFromRequirements(
     questSteps,
     regionSteps,
     skillSteps,
+    alternativeSteps,
     qpStep,
     steps,
     remaining,
@@ -292,7 +346,7 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
     const merged = {
       order: [] as string[],
       regions: new Set<string>(),
-      alternatives: new Set<string>(),
+      alternatives: new Map<string, AlternativePlanStep>(),
       skills: {} as Record<string, number>,
       qpRequired: 0,
     };
@@ -301,7 +355,7 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
       const mergeQuest = (qid: string) => {
         const sub = collectQuestChain(qid, unlocks, gameModeId);
         for (const region of sub.regions) merged.regions.add(region);
-        for (const alternative of sub.alternatives) merged.alternatives.add(alternative);
+        for (const [key, alternative] of sub.alternatives) merged.alternatives.set(key, alternative);
         for (const [skill, level] of Object.entries(sub.skills)) {
           merged.skills[skill] = Math.max(merged.skills[skill] ?? 0, level);
         }
@@ -320,14 +374,23 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
       for (const task of tasks) {
         for (const qid of task.quests ?? []) mergeQuest(qid);
         if (task.allQuests) {
-          for (const qid of Object.keys(QUEST_DATA)) mergeQuest(qid);
+          for (const qid of QUEST_CAPE_QUEST_IDS) mergeQuest(qid);
         }
 
         const blockers = taskEligibilityBlockers(task, unlocks, gameModeId);
         for (const blocker of blockers) {
           if (blocker.kind === 'region') merged.regions.add(blocker.label);
           if (blocker.kind === 'alternative') {
-            merged.alternatives.add('One of: ' + blocker.label);
+            const label = 'One of: ' + blocker.label;
+            merged.alternatives.set(label, {
+              kind: 'alternative', id: 'alternative:' + task.id, label, done: false,
+              routes: blocker.routes.map(route => ({
+                label: route.label,
+                blockers: route.blockers.map(routeBlocker => (
+                  planStepForBlocker(routeBlocker, unlocks)
+                )),
+              })),
+            });
           }
           if (blocker.kind === 'combat' && task.combatLevel !== undefined) {
             merged.skills['Combat level'] = Math.max(
@@ -369,6 +432,7 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
     questSteps: [],
     regionSteps: [regionStep],
     skillSteps: [],
+    alternativeSteps: [],
     steps: [regionStep],
     remaining: isUnlocked ? 0 : 1,
   };

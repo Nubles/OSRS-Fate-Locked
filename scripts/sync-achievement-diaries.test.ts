@@ -414,26 +414,37 @@ describe('Achievement Diary id-classification audit', () => {
 
     expect(alternativeIds).toEqual([
       'ard_med_6',
+      'fal_elite_1',
       'fal_elite_4',
+      'fal_hard_1',
+      'fal_hard_10',
       'fal_med_4',
       'frem_easy_6',
       'frem_easy_9',
       'frem_elite_1',
       'frem_elite_5',
       'frem_elite_6',
+      'frem_med_6',
       'frem_med_8',
       'kan_elite_3',
       'kan_hard_5',
       'kan_med_4',
       'kar_easy_7',
+      'kar_hard_3',
       'kar_hard_8',
       'kar_hard_9',
       'kar_med_19',
       'kar_med_8',
       'kar_med_9',
+      'kou_hard_7',
+      'lum_elite_5',
       'mor_easy_2',
       'mor_easy_8',
       'mor_elite_6',
+      'var_elite_5',
+      'var_hard_1',
+      'var_hard_5',
+      'var_med_7',
       'wild_easy_2',
       'wild_elite_6',
       'wild_hard_8',
@@ -441,18 +452,6 @@ describe('Achievement Diary id-classification audit', () => {
       'wild_med_3',
       'wild_med_7',
     ]);
-    expect(byId.get('kar_med_8')).toMatchObject({
-      skills: { Woodcutting: 35 },
-      quests: ['Jungle Potion'],
-      oneOf: [
-        { label: 'Hardwood Grove' },
-        {
-          label: 'Kharazi Jungle',
-          skills: { Agility: 79 },
-          quests: ["Legends' Quest"],
-        },
-      ],
-    });
     expect(byId.get('wild_med_3')).toMatchObject({
       skills: { Slayer: 50 },
       oneOf: [
@@ -516,6 +515,112 @@ describe('Achievement Diary id-classification audit', () => {
     });
     expect(snapshot.retired.map(candidate => candidate.id)).not.toContain('west_med_5');
   });
+  it('stores reviewed route-local, outfit, possession, and combined-skill alternatives', () => {
+    const snapshot = loadSnapshot();
+    const byId = new Map(snapshot.tasks.map(task => [task.id, task]));
+
+    expect(byId.get('kar_med_8')).toMatchObject({
+      regions: [],
+      oneOf: [
+        { label: 'Hardwood Grove', regions: ['Tai Bwo Wannai'] },
+        {
+          label: 'Kharazi Jungle (machete)', regions: ['Kharazi Jungle'],
+          quests: ["Legends' Quest"], items: ['Machete'],
+        },
+        {
+          label: 'Kharazi Jungle (vine shortcut)', regions: ['Kharazi Jungle'],
+          quests: ["Legends' Quest"], skills: { Agility: 79 },
+        },
+      ],
+    });
+    expect(byId.get('kar_med_9')).toMatchObject({
+      regions: [],
+      oneOf: expect.arrayContaining([
+        expect.objectContaining({ label: 'Hardwood Grove', regions: ['Tai Bwo Wannai'] }),
+        expect.objectContaining({ label: 'Kharazi Jungle (machete)', items: ['Machete'] }),
+        expect.objectContaining({ label: 'Kharazi Jungle (vine shortcut)', skills: { Agility: 79 } }),
+      ]),
+    });
+    expect(byId.get('kar_med_19')).toMatchObject({
+      regions: [],
+      oneOf: [
+        { label: 'Shilo Village', quests: ['Shilo Village'], regions: ['Shilo Village'] },
+        expect.objectContaining({ label: 'Tai Bwo Wannai Cleanup', regions: ['Tai Bwo Wannai'] }),
+      ],
+    });
+    expect(byId.get('kan_elite_3')).toMatchObject({
+      skills: { Cooking: 80 },
+      oneOf: [
+        expect.objectContaining({ label: 'Harpoon', skills: { Fishing: 76 } }),
+        expect.objectContaining({
+          label: 'Bare-handed fishing',
+          skills: { Fishing: 96, Strength: 76 },
+          quests: ['Barbarian Training'],
+        }),
+      ],
+    });
+    expect(byId.get('wild_med_7')).toMatchObject({
+      items: ['Muddy key'],
+      oneOf: [
+        expect.objectContaining({ label: 'Slashing route', items: ['Knife or slashing weapon'] }),
+        { label: 'Stepping Stone shortcut', skills: { Agility: 82 } },
+      ],
+    });
+    expect(byId.get('fal_hard_10')).toMatchObject({
+      oneOf: [
+        { combinedSkillLevel: { skills: ['Attack', 'Strength'], level: 130 } },
+        { anyOfSkillsLevel: { skills: ['Attack', 'Strength'], level: 99 } },
+      ],
+    });
+    expect(byId.get('kar_hard_3')).toMatchObject({
+      skills: {}, regions: [],
+      oneOf: [
+        { label: 'Pre-cooked', items: ['Cooked oomlie wrap'] },
+        expect.objectContaining({ label: 'Cook it yourself', skills: { Cooking: 50 } }),
+      ],
+    });
+    expect(byId.get('var_med_7')).toMatchObject({
+      skills: {},
+      oneOf: [
+        expect.objectContaining({ label: 'Existing Digsite pendant' }),
+        expect.objectContaining({ label: 'Mounted Digsite pendant' }),
+        expect.objectContaining({ label: 'Craft a Digsite pendant', skills: { Magic: 49 } }),
+      ],
+    });
+    expect(byId.get('frem_med_6')).toMatchObject({
+      skills: {},
+      oneOf: [
+        { label: 'Bare-handed', skills: { Hunter: 45 } },
+        expect.objectContaining({ label: 'Butterfly net', skills: { Hunter: 35 } }),
+      ],
+    });
+    expect(byId.get('var_hard_1')).toMatchObject({ skills: { Hunter: 66 } });
+
+    const raimentRoutes = {
+      fal_hard_1: [56, 42],
+      fal_elite_1: [88, 77, 66, 55],
+      lum_elite_5: [76, 57, 38],
+      var_elite_5: [78, 52],
+    };
+    for (const [id, levels] of Object.entries(raimentRoutes)) {
+      const task = byId.get(id);
+      expect(task?.skills).toEqual({});
+      expect(task?.oneOf?.map(option => option.skills?.Runecraft)).toEqual(levels);
+    }
+    expect(byId.get('kou_hard_7')?.oneOf).toHaveLength(2);
+    expect(byId.get('var_hard_5')?.oneOf).toHaveLength(2);
+  });
+
+  it('derives combat and all-quests audit counters instead of trusting metadata', () => {
+    const combatSnapshot = loadSnapshot();
+    combatSnapshot.classification.combatLevelRequirementsStructured -= 1;
+    expect(() => validateAudit(combatSnapshot)).toThrow(/combatLevelRequirementsStructured.*derived/i);
+
+    const questSnapshot = loadSnapshot();
+    questSnapshot.classification.allQuestsRequirementsStructured -= 1;
+    expect(() => validateAudit(questSnapshot)).toThrow(/allQuestsRequirementsStructured.*derived/i);
+  });
+
 
   it('rejects a fabricated historical id even when classification counts still reconcile', () => {
     const snapshot = loadSnapshot();

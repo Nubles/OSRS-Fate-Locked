@@ -2039,9 +2039,7 @@
       "tierId": "Falador Hard",
       "ordinal": 1,
       "description": "Craft 140 Mind runes simultaneously from Essence without the use of Extracts.",
-      "skills": {
-        "Runecraft": 56
-      },
+      "skills": {},
       "quests": [],
       "regions": [
         "Ice Mountain"
@@ -2049,7 +2047,24 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 140 Mind runes simultaneously.",
-      "sourceRequirements": "56 Runecraft 42 Runecraft with 3+ Raiments of the Eye pieces 28 pure, daeyalt, or rune essence (less may suffice at higher Runecraft levels) Access to the Mind Altar ( mind talisman / tiara, catalytic talisman / tiara, or the Abyss )"
+      "sourceRequirements": "56 Runecraft 42 Runecraft with 3+ Raiments of the Eye pieces 28 pure, daeyalt, or rune essence (less may suffice at higher Runecraft levels) Access to the Mind Altar ( mind talisman / tiara, catalytic talisman / tiara, or the Abyss )",
+      "oneOf": [
+        {
+          "label": "No Raiments",
+          "skills": {
+            "Runecraft": 56
+          }
+        },
+        {
+          "label": "3+ Raiments of the Eye pieces",
+          "skills": {
+            "Runecraft": 42
+          },
+          "items": [
+            "3+ Raiments of the Eye pieces"
+          ]
+        }
+      ]
     },
     {
       "id": "fal_hard_2",
@@ -2211,7 +2226,27 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "130 combined levels in Attack and Strength, or level 99 in either"
+      "sourceRequirements": "130 combined levels in Attack and Strength, or level 99 in either",
+      "oneOf": [
+        {
+          "combinedSkillLevel": {
+            "skills": [
+              "Attack",
+              "Strength"
+            ],
+            "level": 130
+          }
+        },
+        {
+          "anyOfSkillsLevel": {
+            "skills": [
+              "Attack",
+              "Strength"
+            ],
+            "level": 99
+          }
+        }
+      ]
     },
     {
       "id": "fal_hard_11",
@@ -2240,9 +2275,7 @@
       "tierId": "Falador Elite",
       "ordinal": 1,
       "description": "Craft 252 Air Runes simultaneously from Essence without the use of Extracts.",
-      "skills": {
-        "Runecraft": 88
-      },
+      "skills": {},
       "quests": [],
       "regions": [
         "Port Sarim"
@@ -2250,7 +2283,42 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 252 Air Runes simultaneously.",
-      "sourceRequirements": "88 Runecraft 77 Runecraft with 2 Raiments of the Eye pieces 66 Runecraft with 3 Raiments of the Eye pieces 55 Runecraft with 4 Raiments of the Eye pieces 28 pure, daeyalt, or rune essence (less may suffice at higher Runecraft levels) Access to the Air Altar ( air talisman / tiara, elemental talisman / tiara, or the Abyss )"
+      "sourceRequirements": "88 Runecraft 77 Runecraft with 2 Raiments of the Eye pieces 66 Runecraft with 3 Raiments of the Eye pieces 55 Runecraft with 4 Raiments of the Eye pieces 28 pure, daeyalt, or rune essence (less may suffice at higher Runecraft levels) Access to the Air Altar ( air talisman / tiara, elemental talisman / tiara, or the Abyss )",
+      "oneOf": [
+        {
+          "label": "No Raiments",
+          "skills": {
+            "Runecraft": 88
+          }
+        },
+        {
+          "label": "2 Raiments of the Eye pieces",
+          "skills": {
+            "Runecraft": 77
+          },
+          "items": [
+            "2 Raiments of the Eye pieces"
+          ]
+        },
+        {
+          "label": "3 Raiments of the Eye pieces",
+          "skills": {
+            "Runecraft": 66
+          },
+          "items": [
+            "3 Raiments of the Eye pieces"
+          ]
+        },
+        {
+          "label": "4 Raiments of the Eye pieces",
+          "skills": {
+            "Runecraft": 55
+          },
+          "items": [
+            "4 Raiments of the Eye pieces"
+          ]
+        }
+      ]
     },
     {
       "id": "fal_elite_2",
@@ -2655,16 +2723,32 @@
       "tierId": "Fremennik Medium",
       "ordinal": 6,
       "description": "Catch a Snowy knight.",
-      "skills": {
-        "Hunter": 45
-      },
+      "skills": {},
       "quests": [],
       "regions": [
         "Rellekka"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "45 Hunter 35 Hunter with a butterfly net and jar"
+      "sourceRequirements": "45 Hunter 35 Hunter with a butterfly net and jar",
+      "oneOf": [
+        {
+          "label": "Bare-handed",
+          "skills": {
+            "Hunter": 45
+          }
+        },
+        {
+          "label": "Butterfly net",
+          "skills": {
+            "Hunter": 35
+          },
+          "items": [
+            "Butterfly net",
+            "Butterfly jar"
+          ]
+        }
+      ]
     },
     {
       "id": "frem_med_7",
@@ -3766,8 +3850,7 @@
       "ordinal": 3,
       "description": "Fish and Cook 5 Sharks in Catherby using the Cooking gauntlets.",
       "skills": {
-        "Cooking": 80,
-        "Fishing": 76
+        "Cooking": 80
       },
       "quests": [
         "Family Crest"
@@ -3780,13 +3863,27 @@
       "sourceRequirements": "Completion of Family Crest 76 Fishing and 80 Cooking Harpoon (or Barbarian Fishing ) and cooking gauntlets",
       "oneOf": [
         {
-          "label": "Harpoon"
+          "label": "Harpoon",
+          "skills": {
+            "Fishing": 76
+          },
+          "items": [
+            "Harpoon"
+          ]
         },
         {
+          "label": "Bare-handed fishing",
+          "skills": {
+            "Fishing": 96,
+            "Strength": 76
+          },
           "quests": [
             "Barbarian Training"
           ]
         }
+      ],
+      "items": [
+        "Cooking gauntlets"
       ]
     },
     {
@@ -4181,25 +4278,47 @@
       "quests": [
         "Jungle Potion"
       ],
-      "regions": [
-        "Tai Bwo Wannai"
-      ],
+      "regions": [],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Jungle Potion 35 Woodcutting Any axe 100 trading sticks and having helped in Tai Bwo Wannai Cleanup (if using the Hardwood Grove ) Machete or 79 Agility, and having started Legends' Quest (if using the Kharazi Jungle )",
       "oneOf": [
         {
-          "label": "Hardwood Grove"
+          "label": "Hardwood Grove",
+          "regions": [
+            "Tai Bwo Wannai"
+          ],
+          "items": [
+            "100 trading sticks and Tai Bwo Wannai Cleanup access"
+          ]
         },
         {
-          "label": "Kharazi Jungle",
+          "label": "Kharazi Jungle (machete)",
+          "items": [
+            "Machete"
+          ],
+          "quests": [
+            "Legends' Quest"
+          ],
+          "regions": [
+            "Kharazi Jungle"
+          ]
+        },
+        {
+          "label": "Kharazi Jungle (vine shortcut)",
           "skills": {
             "Agility": 79
           },
           "quests": [
             "Legends' Quest"
+          ],
+          "regions": [
+            "Kharazi Jungle"
           ]
         }
+      ],
+      "items": [
+        "Any axe"
       ]
     },
     {
@@ -4215,25 +4334,47 @@
       "quests": [
         "Jungle Potion"
       ],
-      "regions": [
-        "Tai Bwo Wannai"
-      ],
+      "regions": [],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Jungle Potion 50 Woodcutting Any axe 100 trading sticks and having helped in Tai Bwo Wannai Cleanup (if using the Hardwood Grove ) Machete or 79 Agility, and having started Legends' Quest (if using the Kharazi Jungle )",
       "oneOf": [
         {
-          "label": "Hardwood Grove"
+          "label": "Hardwood Grove",
+          "regions": [
+            "Tai Bwo Wannai"
+          ],
+          "items": [
+            "100 trading sticks and Tai Bwo Wannai Cleanup access"
+          ]
         },
         {
-          "label": "Kharazi Jungle",
+          "label": "Kharazi Jungle (machete)",
+          "items": [
+            "Machete"
+          ],
+          "quests": [
+            "Legends' Quest"
+          ],
+          "regions": [
+            "Kharazi Jungle"
+          ]
+        },
+        {
+          "label": "Kharazi Jungle (vine shortcut)",
           "skills": {
             "Agility": 79
           },
           "quests": [
             "Legends' Quest"
+          ],
+          "regions": [
+            "Kharazi Jungle"
           ]
         }
+      ],
+      "items": [
+        "Any axe"
       ]
     },
     {
@@ -4414,20 +4555,28 @@
       "quests": [
         "Jungle Potion"
       ],
-      "regions": [
-        "Shilo Village"
-      ],
+      "regions": [],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Jungle Potion, and either completion of Shilo Village or items for Tai Bwo Wannai Cleanup 40 Mining Any pickaxe",
       "oneOf": [
         {
+          "label": "Shilo Village",
           "quests": [
+            "Shilo Village"
+          ],
+          "regions": [
             "Shilo Village"
           ]
         },
         {
-          "label": "Tai Bwo Wannai Cleanup access"
+          "label": "Tai Bwo Wannai Cleanup",
+          "items": [
+            "Tai Bwo Wannai Cleanup supplies"
+          ],
+          "regions": [
+            "Tai Bwo Wannai"
+          ]
         }
       ]
     },
@@ -4470,16 +4619,33 @@
       "tierId": "Karamja Hard",
       "ordinal": 3,
       "description": "Eat an oomlie wrap.",
-      "skills": {
-        "Cooking": 50
-      },
+      "skills": {},
       "quests": [],
-      "regions": [
-        "Kharazi Jungle"
-      ],
+      "regions": [],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Cooked oomlie wrap, or the requirements to make it ( 50 Cooking, a palm leaf, and a raw oomlie )"
+      "sourceRequirements": "Cooked oomlie wrap, or the requirements to make it ( 50 Cooking, a palm leaf, and a raw oomlie )",
+      "oneOf": [
+        {
+          "label": "Pre-cooked",
+          "items": [
+            "Cooked oomlie wrap"
+          ]
+        },
+        {
+          "label": "Cook it yourself",
+          "skills": {
+            "Cooking": 50
+          },
+          "items": [
+            "Palm leaf",
+            "Raw oomlie"
+          ],
+          "regions": [
+            "Kharazi Jungle"
+          ]
+        }
+      ]
     },
     {
       "id": "kar_hard_4",
@@ -5292,7 +5458,21 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Xeric's talisman charged with a lizardman fang, or a mounted xeric's talisman inside any player-owned house (see the House party worlds)"
+      "sourceRequirements": "Xeric's talisman charged with a lizardman fang, or a mounted xeric's talisman inside any player-owned house (see the House party worlds)",
+      "oneOf": [
+        {
+          "label": "Held Xeric talisman",
+          "items": [
+            "Charged Xeric's talisman"
+          ]
+        },
+        {
+          "label": "Mounted Xeric talisman",
+          "items": [
+            "Mounted Xeric's talisman or house-party access"
+          ]
+        }
+      ]
     },
     {
       "id": "kou_hard_8",
@@ -6211,9 +6391,7 @@
       "tierId": "Lumbridge Elite",
       "ordinal": 5,
       "description": "Craft 140 or more Water runes simultaneously from Essence without the use of Extracts.",
-      "skills": {
-        "Runecraft": 76
-      },
+      "skills": {},
       "quests": [],
       "regions": [
         "Lumbridge"
@@ -6221,7 +6399,33 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 140 or more Water runes simultaneously.",
-      "sourceRequirements": "76 Runecraft 57 Runecraft with 3 Raiments of the Eye pieces 38 Runecraft with 4 Raiments of the Eye pieces (random chance, not guaranteed) 28 pure, daeyalt, or rune essence (less may suffice at higher Runecraft levels) Access to the Water Altar ( water talisman / tiara, elemental talisman / tiara, or the Abyss )"
+      "sourceRequirements": "76 Runecraft 57 Runecraft with 3 Raiments of the Eye pieces 38 Runecraft with 4 Raiments of the Eye pieces (random chance, not guaranteed) 28 pure, daeyalt, or rune essence (less may suffice at higher Runecraft levels) Access to the Water Altar ( water talisman / tiara, elemental talisman / tiara, or the Abyss )",
+      "oneOf": [
+        {
+          "label": "No Raiments",
+          "skills": {
+            "Runecraft": 76
+          }
+        },
+        {
+          "label": "3 Raiments of the Eye pieces",
+          "skills": {
+            "Runecraft": 57
+          },
+          "items": [
+            "3 Raiments of the Eye pieces"
+          ]
+        },
+        {
+          "label": "4 Raiments of the Eye pieces",
+          "skills": {
+            "Runecraft": 38
+          },
+          "items": [
+            "4 Raiments of the Eye pieces (random chance)"
+          ]
+        }
+      ]
     },
     {
       "id": "lum_elite_6",
@@ -7342,9 +7546,7 @@
       "tierId": "Varrock Medium",
       "ordinal": 7,
       "description": "Teleport to the digsite using a Digsite pendant.",
-      "skills": {
-        "Magic": 49
-      },
+      "skills": {},
       "quests": [
         "The Dig Site"
       ],
@@ -7353,7 +7555,31 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of The Dig Site Digsite pendant, or a mounted digsite pendant inside any player-owned house (see the House party worlds) Creating the digsite pendant for the first time requires 49 Magic, the clean necklace, and means to cast Lvl-3 Enchant ( )"
+      "sourceRequirements": "Completion of The Dig Site Digsite pendant, or a mounted digsite pendant inside any player-owned house (see the House party worlds) Creating the digsite pendant for the first time requires 49 Magic, the clean necklace, and means to cast Lvl-3 Enchant ( )",
+      "oneOf": [
+        {
+          "label": "Existing Digsite pendant",
+          "items": [
+            "Digsite pendant"
+          ]
+        },
+        {
+          "label": "Mounted Digsite pendant",
+          "items": [
+            "Mounted Digsite pendant or house-party access"
+          ]
+        },
+        {
+          "label": "Craft a Digsite pendant",
+          "skills": {
+            "Magic": 49
+          },
+          "items": [
+            "Clean necklace",
+            "Lvl-3 Enchant runes"
+          ]
+        }
+      ]
     },
     {
       "id": "var_med_8",
@@ -7473,7 +7699,7 @@
       "ordinal": 1,
       "description": "Trade furs with the Fancy Dress Seller for a spottier cape and equip it.",
       "skills": {
-        "Hunter": 69
+        "Hunter": 66
       },
       "quests": [],
       "regions": [
@@ -7481,7 +7707,25 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "66 Hunter 800 coins 2 dashing kebbit fur (requires 69 Hunter if playing as Ironman )"
+      "sourceRequirements": "66 Hunter 800 coins 2 dashing kebbit fur (requires 69 Hunter if playing as Ironman )",
+      "oneOf": [
+        {
+          "label": "Existing furs",
+          "items": [
+            "2 dashing kebbit fur",
+            "800 coins"
+          ]
+        },
+        {
+          "label": "Catch the furs yourself",
+          "skills": {
+            "Hunter": 69
+          },
+          "items": [
+            "800 coins"
+          ]
+        }
+      ]
     },
     {
       "id": "var_hard_2",
@@ -7551,7 +7795,21 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Skull sceptre, or the required items to create it"
+      "sourceRequirements": "Skull sceptre, or the required items to create it",
+      "oneOf": [
+        {
+          "label": "Existing skull sceptre",
+          "items": [
+            "Skull sceptre"
+          ]
+        },
+        {
+          "label": "Create a skull sceptre",
+          "items": [
+            "Four skull sceptre pieces"
+          ]
+        }
+      ]
     },
     {
       "id": "var_hard_6",
@@ -7731,9 +7989,7 @@
       "tierId": "Varrock Elite",
       "ordinal": 5,
       "description": "Craft 100 or more earth runes simultaneously from Essence without the use of Extracts.",
-      "skills": {
-        "Runecraft": 78
-      },
+      "skills": {},
       "quests": [],
       "regions": [
         "Varrock"
@@ -7741,7 +7997,24 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 100 or more earth runes simultaneously.",
-      "sourceRequirements": "78 Runecraft 52 Runecraft with 2+ Raiments of the Eye pieces 28 pure, daeyalt, or rune essence (fewer may suffice with more Raiments of the Eye pieces) Access to the Earth Altar ( earth talisman / tiara, elemental talisman / tiara, or the Abyss )"
+      "sourceRequirements": "78 Runecraft 52 Runecraft with 2+ Raiments of the Eye pieces 28 pure, daeyalt, or rune essence (fewer may suffice with more Raiments of the Eye pieces) Access to the Earth Altar ( earth talisman / tiara, elemental talisman / tiara, or the Abyss )",
+      "oneOf": [
+        {
+          "label": "No Raiments",
+          "skills": {
+            "Runecraft": 78
+          }
+        },
+        {
+          "label": "2+ Raiments of the Eye pieces",
+          "skills": {
+            "Runecraft": 52
+          },
+          "items": [
+            "2+ Raiments of the Eye pieces"
+          ]
+        }
+      ]
     },
     {
       "id": "west_easy_1",
@@ -9000,13 +9273,20 @@
       "sourceRequirements": "Muddy key Knife, Wilderness sword 1, or a slashing weapon (Or with 82 Agility using the Stepping Stone shortcut North of the Lava Maze)",
       "oneOf": [
         {
-          "label": "Slashing route"
+          "label": "Slashing route",
+          "items": [
+            "Knife or slashing weapon"
+          ]
         },
         {
+          "label": "Stepping Stone shortcut",
           "skills": {
             "Agility": 82
           }
         }
+      ],
+      "items": [
+        "Muddy key"
       ]
     },
     {

@@ -7,6 +7,7 @@ import { Map, CheckCircle2, Lock, Sparkles, BookOpen, ChevronDown, CheckSquare, 
 import { chunkForPlace, showChunkOnMap } from '../utils/chunkLocations';
 import { diaryUnmet, isAlmostThere } from '../utils/journalProgress';
 import { isAreaReachable } from '../utils/reachability';
+import { effectiveSkillLevel } from '../utils/slayerReach';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SkillTrainingPopover, SkillPopoverState } from './SkillTrainingPopover';
@@ -334,7 +335,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                             ? task.oneOf.map(diaryRequirementOptionLabel).join(' or ')
                             : undefined;
                           const hasReqs = Boolean(
-                            Object.keys(task.skills ?? {}).length || task.quests?.length
+                            Object.keys(task.skills ?? {}).length || task.items?.length || task.quests?.length
                             || task.regions?.length || task.oneOf?.length || task.combatLevel
                             || task.allQuests || task.anySkillLevel,
                           );
@@ -372,7 +373,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                       {hasReqs && !isTaskDone && (
                                           <div className="flex flex-wrap gap-1.5 mt-1.5">
                                               {task.skills && Object.entries(task.skills).map(([skill, level]) => {
-                                                  const current = unlocks.levels[skill] || 1;
+                                                  const current = effectiveSkillLevel(unlocks, skill);
                                                   const met = meetsSkillRequirement(unlocks, skill, level as number);
                                                   if (met) {
                                                       return (
@@ -400,6 +401,11 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                                       </button>
                                                   );
                                               })}
+                                              {task.items?.map(item => (
+                                                <span key={item} className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-white/5 text-gray-500 bg-black/30">
+                                                  <BookOpen size={8} /> {item}
+                                                </span>
+                                              ))}
                                               {task.quests && task.quests.map(q => {
                                                   const met = unlocks.quests.includes(q);
                                                   const cls = met

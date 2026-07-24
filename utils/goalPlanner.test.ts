@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { SKILLS_LIST } from '../constants';
-import { QUEST_DATA } from '../data/questData';
+import { QUEST_CAPE_QUEST_IDS, QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { REGION_GROUPS } from '../data/items';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
@@ -122,11 +122,15 @@ describe('planForTarget — quests', () => {
       quests: ['Rune Mysteries'],
     }))!;
 
-    expect(plan.regionSteps).toEqual([
+    expect(plan.regionSteps).toEqual([]);
+    expect(plan.alternativeSteps).toEqual([
       expect.objectContaining({
         done: false,
         label: "One of: East Ardougne or Tree Gnome Stronghold or Wizards' Guild",
-        detail: 'Unlock any listed route',
+        routes: expect.arrayContaining([
+          expect.objectContaining({ label: 'East Ardougne' }),
+          expect.objectContaining({ label: "Wizards' Guild" }),
+        ]),
       }),
     ]);
     expect(plan.alreadyReachable).toBe(false);
@@ -142,7 +146,7 @@ describe('planForTarget — diaries', () => {
       const stepIds = new Set(plan.questSteps.map((s) => s.id));
       const taskQuests = ALL_DIARY_TASKS
         .filter(task => task.tierId === d.id)
-        .flatMap(task => task.allQuests ? Object.keys(QUEST_DATA) : (task.quests ?? []));
+        .flatMap(task => task.allQuests ? [...QUEST_CAPE_QUEST_IDS] : (task.quests ?? []));
       for (const qid of taskQuests) {
         if (QUEST_DATA[qid] && !base.quests.includes(qid)) {
           expect(stepIds.has(qid)).toBe(true);
@@ -180,6 +184,49 @@ describe('planForTarget — diaries', () => {
     expect(plan.alreadyDone).toBe(true);
     expect(plan.remaining).toBe(0);
     expect(plan.steps).toEqual([]);
+  });
+  it('keeps blocked one-of requirements as nested alternative routes', () => {
+    const plan = planForTarget('diary', 'Karamja Hard', maxedUnlocks({
+      regions: ['Shilo Village'],
+      quests: ['Shilo Village'],
+      skills: { Slayer: 5 },
+      levels: {
+        Attack: 1, Strength: 1, Defence: 1, Hitpoints: 10,
+        Ranged: 1, Prayer: 1, Magic: 1, Slayer: 50,
+      },
+      completedTasks: ALL_DIARY_TASKS
+        .filter(task => task.tierId !== 'Karamja Hard' || task.id !== 'kar_hard_9')
+        .map(task => task.id),
+    }))!;
+
+    expect(plan.regionSteps).toEqual([]);
+    expect(plan.skillSteps).toEqual([]);
+    expect(plan.alternativeSteps).toEqual([
+      expect.objectContaining({
+        label: expect.stringContaining('Combat level 100'),
+        routes: [
+          expect.objectContaining({
+            blockers: [expect.objectContaining({ kind: 'skill', id: 'Combat level' })],
+          }),
+          expect.objectContaining({
+            blockers: [expect.objectContaining({ kind: 'skill', id: 'Slayer' })],
+          }),
+        ],
+      }),
+    ]);
+  });
+
+  it('does not require miniquests for the Quest cape diary task', () => {
+    const plan = planForTarget('diary', 'Lumbridge Elite', maxedUnlocks({
+      regions: ['Draynor Village'],
+      quests: [...QUEST_CAPE_QUEST_IDS],
+      completedTasks: ALL_DIARY_TASKS
+        .filter(task => task.tierId !== 'Lumbridge Elite' || task.id !== 'lum_elite_6')
+        .map(task => task.id),
+    }))!;
+
+    expect(plan.alreadyReachable).toBe(true);
+    expect(plan.questSteps).toEqual([]);
   });
 });
 

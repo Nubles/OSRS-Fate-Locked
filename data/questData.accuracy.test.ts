@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { QUEST_DATA } from './questData';
+import * as questDataModule from './questData';
 
 describe('audited current quest requirements', () => {
   it('uses the real Porcine route', () => {
@@ -58,5 +59,19 @@ describe('audited current quest requirements', () => {
       skills: { Slayer: 51, Construction: 48, Sailing: 45, Hunter: 45, Woodcutting: 40, Crafting: 34 },
       prereqs: ['Pandemonium'],
     });
+  });
+});
+
+describe('quest cape eligibility', () => {
+  it('exports only quest-point-cape quests and excludes optional miniquests', () => {
+    const questCapeIds = (questDataModule as any).QUEST_CAPE_QUEST_IDS as string[] | undefined;
+
+    expect(questCapeIds).toBeDefined();
+    expect(questCapeIds).toContain("Cook's Assistant");
+    expect(questCapeIds).toContain('The Ides of Milk');
+    expect(questCapeIds).not.toContain('Barbarian Training');
+    expect(questCapeIds).not.toContain("Alfred Grimhand's Barcrawl");
+    expect(questCapeIds).not.toContain('Mage Arena II');
+    expect(questCapeIds?.every(id => QUEST_DATA[id].points > 0)).toBe(true);
   });
 });

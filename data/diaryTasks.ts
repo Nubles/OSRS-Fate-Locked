@@ -1,12 +1,15 @@
 export interface DiaryTaskRequirementOption {
   label?: string;
   skills?: Record<string, number>;
+  items?: string[];
   quests?: string[];
   cas?: string[];
   regions?: string[];
   combatLevel?: number;
   allQuests?: true;
   anySkillLevel?: number;
+  combinedSkillLevel?: { skills: string[]; level: number };
+  anyOfSkillsLevel?: { skills: string[]; level: number };
 }
 
 export interface DiaryTask {
@@ -14,12 +17,15 @@ export interface DiaryTask {
   tierId: string;
   description: string;
   skills?: Record<string, number>;
+  items?: string[];
   quests?: string[];
   cas?: string[];
   regions?: string[];
   combatLevel?: number;
   allQuests?: true;
   anySkillLevel?: number;
+  combinedSkillLevel?: { skills: string[]; level: number };
+  anyOfSkillsLevel?: { skills: string[]; level: number };
   oneOf?: DiaryTaskRequirementOption[];
 }
 
@@ -132,7 +138,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'fal_med_12', tierId: 'Falador Medium', description: 'Chop and burn some Willow logs in Taverley.', skills: { 'Firemaking': 30, 'Woodcutting': 30 }, regions: ['Taverley'] },
   { id: 'fal_med_13', tierId: 'Falador Medium', description: 'Craft a fruit basket on the Falador Farm loom.', skills: { 'Crafting': 36, 'Farming': 30 }, regions: ['Port Sarim'] },
   { id: 'fal_med_14', tierId: 'Falador Medium', description: 'Teleport to Falador.', skills: { 'Magic': 37 }, regions: ['Falador'] },
-  { id: 'fal_hard_1', tierId: 'Falador Hard', description: 'Craft 140 Mind runes simultaneously from Essence without the use of Extracts.', skills: { 'Runecraft': 56 }, regions: ['Ice Mountain'] },
+  { id: 'fal_hard_1', tierId: 'Falador Hard', description: 'Craft 140 Mind runes simultaneously from Essence without the use of Extracts.', regions: ['Ice Mountain'], oneOf: [{ label: 'No Raiments', skills: { 'Runecraft': 56 } }, { label: '3+ Raiments of the Eye pieces', skills: { 'Runecraft': 42 }, items: ['3+ Raiments of the Eye pieces'] }] },
   { id: 'fal_hard_2', tierId: 'Falador Hard', description: 'Change your family crest to the Saradomin symbol.', skills: { 'Construction': 16, 'Prayer': 70 }, regions: ['Falador'] },
   { id: 'fal_hard_3', tierId: 'Falador Hard', description: 'Kill the Giant Mole beneath Falador Park.', regions: ['Falador'] },
   { id: 'fal_hard_4', tierId: 'Falador Hard', description: 'Kill a Skeletal Wyvern in the Asgarnia Ice Dungeon.', skills: { 'Slayer': 72 }, regions: ['Asgarnian Ice Dungeon'] },
@@ -141,9 +147,9 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'fal_hard_7', tierId: 'Falador Hard', description: 'Kill the Blue Dragon under the Heroes\' Guild.', quests: ['Heroes\' Quest'], regions: ['Heroes\' Guild'] },
   { id: 'fal_hard_8', tierId: 'Falador Hard', description: 'Crack a wall safe within Rogues\' Den.', skills: { 'Thieving': 50 }, regions: ['Burthorpe'] },
   { id: 'fal_hard_9', tierId: 'Falador Hard', description: 'Recharge your prayer in the Port Sarim church while wearing full Proselyte.', skills: { 'Defence': 30, 'Prayer': 20 }, quests: ['The Slug Menace'], regions: ['Port Sarim'] },
-  { id: 'fal_hard_10', tierId: 'Falador Hard', description: 'Enter the Warriors\' Guild.', regions: ['Warriors\' Guild'] },
+  { id: 'fal_hard_10', tierId: 'Falador Hard', description: 'Enter the Warriors\' Guild.', regions: ['Warriors\' Guild'], oneOf: [{ combinedSkillLevel: { skills: ['Attack', 'Strength'], level: 130 } }, { anyOfSkillsLevel: { skills: ['Attack', 'Strength'], level: 99 } }] },
   { id: 'fal_hard_11', tierId: 'Falador Hard', description: 'Equip a dwarven helmet within the dwarven mines.', skills: { 'Defence': 50 }, quests: ['Grim Tales'], regions: ['Dwarven Mine'] },
-  { id: 'fal_elite_1', tierId: 'Falador Elite', description: 'Craft 252 Air Runes simultaneously from Essence without the use of Extracts.', skills: { 'Runecraft': 88 }, regions: ['Port Sarim'] },
+  { id: 'fal_elite_1', tierId: 'Falador Elite', description: 'Craft 252 Air Runes simultaneously from Essence without the use of Extracts.', regions: ['Port Sarim'], oneOf: [{ label: 'No Raiments', skills: { 'Runecraft': 88 } }, { label: '2 Raiments of the Eye pieces', skills: { 'Runecraft': 77 }, items: ['2 Raiments of the Eye pieces'] }, { label: '3 Raiments of the Eye pieces', skills: { 'Runecraft': 66 }, items: ['3 Raiments of the Eye pieces'] }, { label: '4 Raiments of the Eye pieces', skills: { 'Runecraft': 55 }, items: ['4 Raiments of the Eye pieces'] }] },
   { id: 'fal_elite_2', tierId: 'Falador Elite', description: 'Purchase a White 2h Sword from Sir Vyvin.', quests: ['Wanted!'], regions: ['Falador'] },
   { id: 'fal_elite_3', tierId: 'Falador Elite', description: 'Find at least 3 magic roots at once when digging up your magic tree in Falador.', skills: { 'Farming': 91, 'Woodcutting': 75 }, regions: ['Falador'] },
   { id: 'fal_elite_4', tierId: 'Falador Elite', description: 'Perform a skillcape or quest cape emote at the top of Falador Castle.', regions: ['Falador'], oneOf: [{ allQuests: true }, { label: 'Skillcape', anySkillLevel: 99 }] },
@@ -164,7 +170,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'frem_med_3', tierId: 'Fremennik Medium', description: 'Mine some coal in Rellekka.', skills: { 'Mining': 30 }, quests: ['The Fremennik Trials'], regions: ['Rellekka'] },
   { id: 'frem_med_4', tierId: 'Fremennik Medium', description: 'Steal from the Rellekka Fish stalls.', skills: { 'Thieving': 42 }, quests: ['The Fremennik Trials'], regions: ['Rellekka'] },
   { id: 'frem_med_5', tierId: 'Fremennik Medium', description: 'Travel to Miscellania by Fairy ring.', quests: ['The Fremennik Trials', 'Fairytale II - Cure a Queen'], regions: ['Miscellania & Etceteria'] },
-  { id: 'frem_med_6', tierId: 'Fremennik Medium', description: 'Catch a Snowy knight.', skills: { 'Hunter': 45 }, regions: ['Rellekka'] },
+  { id: 'frem_med_6', tierId: 'Fremennik Medium', description: 'Catch a Snowy knight.', regions: ['Rellekka'], oneOf: [{ label: 'Bare-handed', skills: { 'Hunter': 45 } }, { label: 'Butterfly net', skills: { 'Hunter': 35 }, items: ['Butterfly net', 'Butterfly jar'] }] },
   { id: 'frem_med_7', tierId: 'Fremennik Medium', description: 'Pick up your Pet Rock from your POH Menagerie.', skills: { 'Construction': 37 }, quests: ['The Fremennik Trials'], regions: ['Rellekka'] },
   { id: 'frem_med_8', tierId: 'Fremennik Medium', description: 'Visit the Lighthouse from Waterbirth island.', quests: ['Horror from the Deep'], regions: ['Lighthouse'], oneOf: [{ label: 'Two-player door route' }, { skills: { 'Agility': 85 } }] },
   { id: 'frem_med_9', tierId: 'Fremennik Medium', description: 'Mine some gold at the Arzinian mine.', skills: { 'Defence': 30, 'Mining': 40 }, quests: ['Between a Rock...'], regions: ['Keldagrim'] },
@@ -221,7 +227,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'kan_hard_11', tierId: 'Kandarin Hard', description: 'Smith an Adamant spear at Otto\'s Grotto.', skills: { 'Smithing': 75 }, regions: ['Otto\'s Grotto'] },
   { id: 'kan_elite_1', tierId: 'Kandarin Elite', description: 'Read the Blackboard at Barbarian Assault after reaching level 5 in every role.', regions: ['Barbarian Outpost'] },
   { id: 'kan_elite_2', tierId: 'Kandarin Elite', description: 'Pick some Dwarf weed from the herb patch at Catherby.', skills: { 'Farming': 79 }, regions: ['Catherby'] },
-  { id: 'kan_elite_3', tierId: 'Kandarin Elite', description: 'Fish and Cook 5 Sharks in Catherby using the Cooking gauntlets.', skills: { 'Cooking': 80, 'Fishing': 76 }, quests: ['Family Crest'], regions: ['Catherby'], oneOf: [{ label: 'Harpoon' }, { quests: ['Barbarian Training'] }] },
+  { id: 'kan_elite_3', tierId: 'Kandarin Elite', description: 'Fish and Cook 5 Sharks in Catherby using the Cooking gauntlets.', skills: { 'Cooking': 80 }, items: ['Cooking gauntlets'], quests: ['Family Crest'], regions: ['Catherby'], oneOf: [{ label: 'Harpoon', skills: { 'Fishing': 76 }, items: ['Harpoon'] }, { label: 'Bare-handed fishing', skills: { 'Fishing': 96, 'Strength': 76 }, quests: ['Barbarian Training'] }] },
   { id: 'kan_elite_4', tierId: 'Kandarin Elite', description: 'Mix a Stamina Mix on top of the Seers\' Village bank.', skills: { 'Agility': 60, 'Herblore': 86 }, regions: ['Seers\' Village'] },
   { id: 'kan_elite_5', tierId: 'Kandarin Elite', description: 'Smith a Rune Hasta at Otto\'s Grotto.', skills: { 'Smithing': 90 }, regions: ['Otto\'s Grotto'] },
   { id: 'kan_elite_6', tierId: 'Kandarin Elite', description: 'Construct a Pyre ship from Magic Logs.', skills: { 'Crafting': 85, 'Firemaking': 85 }, regions: ['Otto\'s Grotto'] },
@@ -243,8 +249,8 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'kar_med_5', tierId: 'Karamja Medium', description: 'Earn 100% favour in the village of Tai Bwo Wannai.', skills: { 'Woodcutting': 10 }, quests: ['Jungle Potion'], regions: ['Tai Bwo Wannai'] },
   { id: 'kar_med_6', tierId: 'Karamja Medium', description: 'Cook a spider on a stick.', skills: { 'Cooking': 16 }, regions: ['Tai Bwo Wannai'] },
   { id: 'kar_med_7', tierId: 'Karamja Medium', description: 'Charter the Lady of the Waves from Cairn Isle to Port Khazard.', quests: ['Shilo Village'], regions: ['Tai Bwo Wannai'] },
-  { id: 'kar_med_8', tierId: 'Karamja Medium', description: 'Cut a log from a teak tree.', skills: { 'Woodcutting': 35 }, quests: ['Jungle Potion'], regions: ['Tai Bwo Wannai'], oneOf: [{ label: 'Hardwood Grove' }, { label: 'Kharazi Jungle', skills: { 'Agility': 79 }, quests: ['Legends\' Quest'] }] },
-  { id: 'kar_med_9', tierId: 'Karamja Medium', description: 'Cut a log from a mahogany tree.', skills: { 'Woodcutting': 50 }, quests: ['Jungle Potion'], regions: ['Tai Bwo Wannai'], oneOf: [{ label: 'Hardwood Grove' }, { label: 'Kharazi Jungle', skills: { 'Agility': 79 }, quests: ['Legends\' Quest'] }] },
+  { id: 'kar_med_8', tierId: 'Karamja Medium', description: 'Cut a log from a teak tree.', skills: { 'Woodcutting': 35 }, items: ['Any axe'], quests: ['Jungle Potion'], oneOf: [{ label: 'Hardwood Grove', items: ['100 trading sticks and Tai Bwo Wannai Cleanup access'], regions: ['Tai Bwo Wannai'] }, { label: 'Kharazi Jungle (machete)', items: ['Machete'], quests: ['Legends\' Quest'], regions: ['Kharazi Jungle'] }, { label: 'Kharazi Jungle (vine shortcut)', skills: { 'Agility': 79 }, quests: ['Legends\' Quest'], regions: ['Kharazi Jungle'] }] },
+  { id: 'kar_med_9', tierId: 'Karamja Medium', description: 'Cut a log from a mahogany tree.', skills: { 'Woodcutting': 50 }, items: ['Any axe'], quests: ['Jungle Potion'], oneOf: [{ label: 'Hardwood Grove', items: ['100 trading sticks and Tai Bwo Wannai Cleanup access'], regions: ['Tai Bwo Wannai'] }, { label: 'Kharazi Jungle (machete)', items: ['Machete'], quests: ['Legends\' Quest'], regions: ['Kharazi Jungle'] }, { label: 'Kharazi Jungle (vine shortcut)', skills: { 'Agility': 79 }, quests: ['Legends\' Quest'], regions: ['Kharazi Jungle'] }] },
   { id: 'kar_med_10', tierId: 'Karamja Medium', description: 'Catch a karambwan.', skills: { 'Fishing': 65 }, quests: ['Tai Bwo Wannai Trio'], regions: ['Tai Bwo Wannai'] },
   { id: 'kar_med_11', tierId: 'Karamja Medium', description: 'Exchange gems for a machete.', quests: ['Jungle Potion'], regions: ['Tai Bwo Wannai'] },
   { id: 'kar_med_12', tierId: 'Karamja Medium', description: 'Use the gnome glider to travel to Karamja.', quests: ['The Grand Tree'], regions: ['Brimhaven'] },
@@ -254,10 +260,10 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'kar_med_16', tierId: 'Karamja Medium', description: 'Cross the lava using the stepping stones within Brimhaven Dungeon.', skills: { 'Agility': 12, 'Woodcutting': 10 }, regions: ['Brimhaven'] },
   { id: 'kar_med_17', tierId: 'Karamja Medium', description: 'Climb the stairs within Brimhaven Dungeon.', skills: { 'Woodcutting': 10 }, regions: ['Brimhaven'] },
   { id: 'kar_med_18', tierId: 'Karamja Medium', description: 'Charter a ship from the shipyard in the far east of Karamja.', quests: ['The Grand Tree'], regions: ['Musa Point'] },
-  { id: 'kar_med_19', tierId: 'Karamja Medium', description: 'Mine a red topaz from a gem rock.', skills: { 'Mining': 40 }, quests: ['Jungle Potion'], regions: ['Shilo Village'], oneOf: [{ quests: ['Shilo Village'] }, { label: 'Tai Bwo Wannai Cleanup access' }] },
+  { id: 'kar_med_19', tierId: 'Karamja Medium', description: 'Mine a red topaz from a gem rock.', skills: { 'Mining': 40 }, quests: ['Jungle Potion'], oneOf: [{ label: 'Shilo Village', quests: ['Shilo Village'], regions: ['Shilo Village'] }, { label: 'Tai Bwo Wannai Cleanup', items: ['Tai Bwo Wannai Cleanup supplies'], regions: ['Tai Bwo Wannai'] }] },
   { id: 'kar_hard_1', tierId: 'Karamja Hard', description: 'Become the Champion of the Fight Pits.', regions: ['Mor Ul Rek (TzHaar City)'] },
   { id: 'kar_hard_2', tierId: 'Karamja Hard', description: 'Kill a Ket-Zek in the Fight Caves.', regions: ['Mor Ul Rek (TzHaar City)'] },
-  { id: 'kar_hard_3', tierId: 'Karamja Hard', description: 'Eat an oomlie wrap.', skills: { 'Cooking': 50 }, regions: ['Kharazi Jungle'] },
+  { id: 'kar_hard_3', tierId: 'Karamja Hard', description: 'Eat an oomlie wrap.', oneOf: [{ label: 'Pre-cooked', items: ['Cooked oomlie wrap'] }, { label: 'Cook it yourself', skills: { 'Cooking': 50 }, items: ['Palm leaf', 'Raw oomlie'], regions: ['Kharazi Jungle'] }] },
   { id: 'kar_hard_4', tierId: 'Karamja Hard', description: 'Craft some nature runes from Essence.', skills: { 'Runecraft': 44 }, regions: ['Tai Bwo Wannai'] },
   { id: 'kar_hard_5', tierId: 'Karamja Hard', description: 'Cook a karambwan thoroughly.', skills: { 'Cooking': 30 }, quests: ['Tai Bwo Wannai Trio'], regions: ['Tai Bwo Wannai'] },
   { id: 'kar_hard_6', tierId: 'Karamja Hard', description: 'Kill a deathwing in the dungeon under the Kharazi Jungle.', skills: { 'Agility': 50, 'Mining': 52, 'Strength': 50, 'Thieving': 50 }, quests: ['Legends\' Quest'], regions: ['Kharazi Jungle'] },
@@ -301,7 +307,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'kou_hard_4', tierId: 'Kourend Hard', description: 'Mine some Lovakite.', skills: { 'Mining': 65 }, regions: ['Lovakengj'] },
   { id: 'kou_hard_5', tierId: 'Kourend Hard', description: 'Plant some Logavano seeds at the Tithe Farm.', skills: { 'Farming': 74 }, regions: ['Hosidius'] },
   { id: 'kou_hard_6', tierId: 'Kourend Hard', description: 'Kill a Zombie in the Shayzien Crypts.', regions: ['Shayzien'] },
-  { id: 'kou_hard_7', tierId: 'Kourend Hard', description: 'Teleport to Xeric\'s Heart using Xeric\'s Talisman.', regions: ['Kourend Castle'] },
+  { id: 'kou_hard_7', tierId: 'Kourend Hard', description: 'Teleport to Xeric\'s Heart using Xeric\'s Talisman.', regions: ['Kourend Castle'], oneOf: [{ label: 'Held Xeric talisman', items: ['Charged Xeric\'s talisman'] }, { label: 'Mounted Xeric talisman', items: ['Mounted Xeric\'s talisman or house-party access'] }] },
   { id: 'kou_hard_8', tierId: 'Kourend Hard', description: 'Deliver an artefact to Captain Khaled.', skills: { 'Thieving': 49 }, regions: ['Piscarilius'] },
   { id: 'kou_hard_9', tierId: 'Kourend Hard', description: 'Kill a Wyrm in the Karuulm Slayer Dungeon.', skills: { 'Slayer': 62 }, regions: ['Mount Karuulm'] },
   { id: 'kou_hard_10', tierId: 'Kourend Hard', description: 'Cast Monster Examine on a Troll south of Mount Quidamortem.', skills: { 'Magic': 66 }, quests: ['Dream Mentor'], regions: ['Mount Quidamortem'] },
@@ -352,7 +358,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'lum_elite_2', tierId: 'Lumbridge Elite', description: 'Grapple across a pylon on the Dorgesh-Kaan Agility Course.', skills: { 'Agility': 70, 'Ranged': 70, 'Strength': 70 }, quests: ['Death to the Dorgeshuun'], regions: ['Lumbridge'] },
   { id: 'lum_elite_3', tierId: 'Lumbridge Elite', description: 'Chop some magic logs at the Mage Training Arena.', skills: { 'Woodcutting': 75 }, regions: ['Mage Training Arena'] },
   { id: 'lum_elite_4', tierId: 'Lumbridge Elite', description: 'Smith an Adamant platebody down Draynor sewer.', skills: { 'Smithing': 88 }, regions: ['Draynor Village'] },
-  { id: 'lum_elite_5', tierId: 'Lumbridge Elite', description: 'Craft 140 or more Water runes simultaneously from Essence without the use of Extracts.', skills: { 'Runecraft': 76 }, regions: ['Lumbridge'] },
+  { id: 'lum_elite_5', tierId: 'Lumbridge Elite', description: 'Craft 140 or more Water runes simultaneously from Essence without the use of Extracts.', regions: ['Lumbridge'], oneOf: [{ label: 'No Raiments', skills: { 'Runecraft': 76 } }, { label: '3 Raiments of the Eye pieces', skills: { 'Runecraft': 57 }, items: ['3 Raiments of the Eye pieces'] }, { label: '4 Raiments of the Eye pieces', skills: { 'Runecraft': 38 }, items: ['4 Raiments of the Eye pieces (random chance)'] }] },
   { id: 'lum_elite_6', tierId: 'Lumbridge Elite', description: 'Perform the Quest cape emote in the Wise Old Man\'s house.', regions: ['Draynor Village'], allQuests: true },
   { id: 'mor_easy_1', tierId: 'Morytania Easy', description: 'Craft any Snelm from scratch in Morytania.', skills: { 'Crafting': 15 }, regions: ['Canifis'] },
   { id: 'mor_easy_2', tierId: 'Morytania Easy', description: 'Cook a thin Snail on the Port Phasmatys range.', skills: { 'Cooking': 12 }, regions: ['Port Phasmatys'], oneOf: [{ quests: ['Ghosts Ahoy'] }, { label: 'Ecto-tokens or charter ship' }] },
@@ -412,18 +418,18 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'var_med_4', tierId: 'Varrock Medium', description: 'Use the spirit tree north of Varrock.', quests: ['Tree Gnome Village'], regions: ['Varrock'] },
   { id: 'var_med_5', tierId: 'Varrock Medium', description: 'Perform the 4 emotes from the Stronghold of Security.', regions: ['Barbarian Village'] },
   { id: 'var_med_6', tierId: 'Varrock Medium', description: 'Enter the Tolna dungeon after completing A Soul\'s Bane.', quests: ['A Soul\'s Bane'], regions: ['Varrock'] },
-  { id: 'var_med_7', tierId: 'Varrock Medium', description: 'Teleport to the digsite using a Digsite pendant.', skills: { 'Magic': 49 }, quests: ['The Dig Site'], regions: ['Digsite'] },
+  { id: 'var_med_7', tierId: 'Varrock Medium', description: 'Teleport to the digsite using a Digsite pendant.', quests: ['The Dig Site'], regions: ['Digsite'], oneOf: [{ label: 'Existing Digsite pendant', items: ['Digsite pendant'] }, { label: 'Mounted Digsite pendant', items: ['Mounted Digsite pendant or house-party access'] }, { label: 'Craft a Digsite pendant', skills: { 'Magic': 49 }, items: ['Clean necklace', 'Lvl-3 Enchant runes'] }] },
   { id: 'var_med_8', tierId: 'Varrock Medium', description: 'Cast the teleport to Varrock spell.', skills: { 'Magic': 25 }, regions: ['Varrock'] },
   { id: 'var_med_9', tierId: 'Varrock Medium', description: 'Get a Slayer task from Vannaka.', regions: ['Edgeville'], combatLevel: 40 },
   { id: 'var_med_10', tierId: 'Varrock Medium', description: 'Make 20 Mahogany Planks in one go.', regions: ['Varrock'] },
   { id: 'var_med_11', tierId: 'Varrock Medium', description: 'Pick a White tree fruit.', skills: { 'Farming': 25 }, quests: ['Garden of Tranquillity'], regions: ['Varrock'] },
   { id: 'var_med_12', tierId: 'Varrock Medium', description: 'Use the balloon to travel from Varrock.', skills: { 'Farming': 30, 'Firemaking': 40 }, quests: ['Enlightened Journey'], regions: ['Varrock'] },
   { id: 'var_med_13', tierId: 'Varrock Medium', description: 'Complete a lap of the Varrock Agility course.', skills: { 'Agility': 30 }, regions: ['Varrock'] },
-  { id: 'var_hard_1', tierId: 'Varrock Hard', description: 'Trade furs with the Fancy Dress Seller for a spottier cape and equip it.', skills: { 'Hunter': 69 }, regions: ['Varrock'] },
+  { id: 'var_hard_1', tierId: 'Varrock Hard', description: 'Trade furs with the Fancy Dress Seller for a spottier cape and equip it.', skills: { 'Hunter': 66 }, regions: ['Varrock'], oneOf: [{ label: 'Existing furs', items: ['2 dashing kebbit fur', '800 coins'] }, { label: 'Catch the furs yourself', skills: { 'Hunter': 69 }, items: ['800 coins'] }] },
   { id: 'var_hard_2', tierId: 'Varrock Hard', description: 'Speak to Orlando Smith when you have achieved 153 Kudos.', regions: ['Varrock'] },
   { id: 'var_hard_3', tierId: 'Varrock Hard', description: 'Make a Waka canoe near Edgeville.', skills: { 'Woodcutting': 57 }, regions: ['Edgeville'] },
   { id: 'var_hard_4', tierId: 'Varrock Hard', description: 'Teleport to Paddewwa.', skills: { 'Magic': 54 }, quests: ['Desert Treasure I'], regions: ['Edgeville'] },
-  { id: 'var_hard_5', tierId: 'Varrock Hard', description: 'Teleport to Barbarian Village with a skull sceptre.', regions: ['Barbarian Village'] },
+  { id: 'var_hard_5', tierId: 'Varrock Hard', description: 'Teleport to Barbarian Village with a skull sceptre.', regions: ['Barbarian Village'], oneOf: [{ label: 'Existing skull sceptre', items: ['Skull sceptre'] }, { label: 'Create a skull sceptre', items: ['Four skull sceptre pieces'] }] },
   { id: 'var_hard_6', tierId: 'Varrock Hard', description: 'Chop some yew logs in Varrock and burn them at the top of the Varrock church.', skills: { 'Firemaking': 60, 'Woodcutting': 60 }, regions: ['Varrock'] },
   { id: 'var_hard_7', tierId: 'Varrock Hard', description: 'Have the Varrock estate agent decorate your house with Fancy Stone.', skills: { 'Construction': 50 }, regions: ['Varrock'] },
   { id: 'var_hard_8', tierId: 'Varrock Hard', description: 'Collect at least 2 yew roots from the Tree patch in Varrock Palace.', skills: { 'Farming': 68, 'Woodcutting': 60 }, regions: ['Varrock'] },
@@ -433,7 +439,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'var_elite_2', tierId: 'Varrock Elite', description: 'Use Lunar magic to make 20 mahogany planks at the Lumberyard.', skills: { 'Magic': 86 }, quests: ['Dream Mentor'], regions: ['Varrock'] },
   { id: 'var_elite_3', tierId: 'Varrock Elite', description: 'Bake a summer pie in the Cooking Guild.', skills: { 'Cooking': 95 }, regions: ['Varrock'] },
   { id: 'var_elite_4', tierId: 'Varrock Elite', description: 'Smith and fletch ten rune darts within Varrock.', skills: { 'Fletching': 81, 'Smithing': 89 }, quests: ['The Tourist Trap'], regions: ['Varrock'] },
-  { id: 'var_elite_5', tierId: 'Varrock Elite', description: 'Craft 100 or more earth runes simultaneously from Essence without the use of Extracts.', skills: { 'Runecraft': 78 }, regions: ['Varrock'] },
+  { id: 'var_elite_5', tierId: 'Varrock Elite', description: 'Craft 100 or more earth runes simultaneously from Essence without the use of Extracts.', regions: ['Varrock'], oneOf: [{ label: 'No Raiments', skills: { 'Runecraft': 78 } }, { label: '2+ Raiments of the Eye pieces', skills: { 'Runecraft': 52 }, items: ['2+ Raiments of the Eye pieces'] }] },
   { id: 'west_easy_1', tierId: 'Western Easy', description: 'Catch a Copper Longtail.', skills: { 'Hunter': 9 }, regions: ['Feldip Hills'] },
   { id: 'west_easy_2', tierId: 'Western Easy', description: 'Complete a novice game of Pest Control.', regions: ['Void Knights\' Outpost'], combatLevel: 40 },
   { id: 'west_easy_3', tierId: 'Western Easy', description: 'Mine some Iron Ore near Piscatoris.', skills: { 'Mining': 15 }, regions: ['Piscatoris Fishing Colony'] },
@@ -500,7 +506,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'wild_med_3', tierId: 'Wilderness Medium', description: 'Kill a Bloodveld in the Wilderness Godwars Dungeon.', skills: { 'Slayer': 50 }, regions: ['Wilderness God Wars Dungeon'], oneOf: [{ skills: { 'Agility': 60 } }, { skills: { 'Strength': 60 } }] },
   { id: 'wilderness_med_9', tierId: 'Wilderness Medium', description: 'Talk to the Emblem Trader in Edgeville about emblems. (He\'s just north of the bank)', regions: ['Wilderness'] },
   { id: 'wilderness_med_10', tierId: 'Wilderness Medium', description: 'Smith a Golden helmet in the Resource Area.', skills: { 'Smithing': 50 }, quests: ['Between a Rock...'], regions: ['Wilderness'] },
-  { id: 'wild_med_7', tierId: 'Wilderness Medium', description: 'Open the Muddy Chest in the lava maze.', regions: ['Lava Maze'], oneOf: [{ label: 'Slashing route' }, { skills: { 'Agility': 82 } }] },
+  { id: 'wild_med_7', tierId: 'Wilderness Medium', description: 'Open the Muddy Chest in the lava maze.', items: ['Muddy key'], regions: ['Lava Maze'], oneOf: [{ label: 'Slashing route', items: ['Knife or slashing weapon'] }, { label: 'Stepping Stone shortcut', skills: { 'Agility': 82 } }] },
   { id: 'wild_hard_1', tierId: 'Wilderness Hard', description: 'Cast any of the 3 God spells against another player in the Wilderness.', skills: { 'Magic': 60 }, quests: ['Mage Arena I'], regions: ['Mage Arena'] },
   { id: 'wild_hard_2', tierId: 'Wilderness Hard', description: 'Charge an Air Orb.', skills: { 'Magic': 66 }, regions: ['Wilderness'] },
   { id: 'wild_hard_3', tierId: 'Wilderness Hard', description: 'Catch a Black Salamander in the Wilderness.', skills: { 'Hunter': 67 }, regions: ['Wilderness'] },

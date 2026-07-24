@@ -190,6 +190,7 @@ const renderRequirementProperties = (requirement) => {
   if (requirement.skills && Object.keys(requirement.skills).length > 0) {
     properties.push('skills: ' + renderSkills(requirement.skills));
   }
+  if (requirement.items?.length > 0) properties.push('items: ' + renderStringArray(requirement.items));
   if (requirement.quests?.length > 0) {
     properties.push('quests: ' + renderStringArray(requirement.quests));
   }
@@ -200,6 +201,16 @@ const renderRequirementProperties = (requirement) => {
   if (requirement.combatLevel) properties.push('combatLevel: ' + requirement.combatLevel);
   if (requirement.allQuests) properties.push('allQuests: true');
   if (requirement.anySkillLevel) properties.push('anySkillLevel: ' + requirement.anySkillLevel);
+  if (requirement.combinedSkillLevel) {
+    properties.push('combinedSkillLevel: { skills: '
+      + renderStringArray(requirement.combinedSkillLevel.skills)
+      + ', level: ' + requirement.combinedSkillLevel.level + ' }');
+  }
+  if (requirement.anyOfSkillsLevel) {
+    properties.push('anyOfSkillsLevel: { skills: '
+      + renderStringArray(requirement.anyOfSkillsLevel.skills)
+      + ', level: ' + requirement.anyOfSkillsLevel.level + ' }');
+  }
   return properties;
 };
 
@@ -232,7 +243,7 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
   if (!requirement || typeof requirement !== 'object' || Array.isArray(requirement)) {
     throw new Error('Invalid Diary requirement route: ' + context);
   }
-  for (const field of ['quests', 'cas', 'regions']) {
+  for (const field of ['items', 'quests', 'cas', 'regions']) {
     if (requirement[field] !== undefined && !Array.isArray(requirement[field])) {
       throw new Error('Invalid Diary requirement ' + field + ': ' + context);
     }
@@ -246,15 +257,29 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
   if (requirement.allQuests !== undefined && requirement.allQuests !== true) {
     throw new Error('Invalid Diary requirement allQuests: ' + context);
   }
+  for (const field of ['combinedSkillLevel', 'anyOfSkillsLevel']) {
+    const predicate = requirement[field];
+    if (predicate !== undefined && (
+      !predicate || typeof predicate !== 'object' || Array.isArray(predicate)
+      || !Array.isArray(predicate.skills) || predicate.skills.length < 1
+      || predicate.skills.some(skill => typeof skill !== 'string' || !skill)
+      || !Number.isInteger(predicate.level) || predicate.level < 1
+    )) {
+      throw new Error('Invalid Diary requirement ' + field + ': ' + context);
+    }
+  }
   const hasRequirement = Boolean(
     requirement.label
+    || requirement.items?.length
     || Object.keys(requirement.skills ?? {}).length
     || requirement.quests?.length
     || requirement.cas?.length
     || requirement.regions?.length
     || requirement.combatLevel
     || requirement.allQuests
-    || requirement.anySkillLevel,
+    || requirement.anySkillLevel
+    || requirement.combinedSkillLevel
+    || requirement.anyOfSkillsLevel,
   );
   if (!allowEmpty && !hasRequirement) {
     throw new Error('Empty Diary requirement route: ' + context);
@@ -323,12 +348,15 @@ export function renderDiaryTasks(snapshot) {
     'export interface DiaryTaskRequirementOption {',
     '  label?: string;',
     '  skills?: Record<string, number>;',
+    '  items?: string[];',
     '  quests?: string[];',
     '  cas?: string[];',
     '  regions?: string[];',
     '  combatLevel?: number;',
     '  allQuests?: true;',
     '  anySkillLevel?: number;',
+    '  combinedSkillLevel?: { skills: string[]; level: number };',
+    '  anyOfSkillsLevel?: { skills: string[]; level: number };',
     '}',
     '',
     'export interface DiaryTask {',
@@ -336,12 +364,15 @@ export function renderDiaryTasks(snapshot) {
     '  tierId: string;',
     '  description: string;',
     '  skills?: Record<string, number>;',
+    '  items?: string[];',
     '  quests?: string[];',
     '  cas?: string[];',
     '  regions?: string[];',
     '  combatLevel?: number;',
     '  allQuests?: true;',
     '  anySkillLevel?: number;',
+    '  combinedSkillLevel?: { skills: string[]; level: number };',
+    '  anyOfSkillsLevel?: { skills: string[]; level: number };',
     '  oneOf?: DiaryTaskRequirementOption[];',
     '}',
     '',
@@ -526,7 +557,12 @@ const findUnknownReferences = (snapshot, projectRoot) => {
   const unknown = [];
   for (const task of snapshot.tasks) {
     for (const requirement of [task, ...(task.oneOf ?? [])]) {
-      for (const skill of Object.keys(requirement.skills ?? {})) {
+      const referencedSkills = [
+        ...Object.keys(requirement.skills ?? {}),
+        ...(requirement.combinedSkillLevel?.skills ?? []),
+        ...(requirement.anyOfSkillsLevel?.skills ?? []),
+      ];
+      for (const skill of referencedSkills) {
         if (!catalog.skills.has(skill)) unknown.push(task.id + ' skill ' + skill);
       }
       for (const quest of requirement.quests ?? []) {
@@ -560,6 +596,8 @@ export const validateAudit = (
     renamedOrReplacedAliases: 0,
     retiredExistingIds: 0,
     newCanonicalIds: 0,
+    combatLevelRequirementsStructured: 0,
+    allQuestsRequirementsStructured: 0,
   };
   const addHistoricalId = (id, source) => {
     if (historicalIds.has(id)) {
@@ -598,6 +636,11 @@ export const validateAudit = (
     }
   }
 
+  const structuredRequirements = snapshot.tasks.flatMap(task => [task, ...(task.oneOf ?? [])]);
+  derived.combatLevelRequirementsStructured = structuredRequirements
+    .filter(requirement => requirement.combatLevel !== undefined).length;
+  derived.allQuestsRequirementsStructured = structuredRequirements
+    .filter(requirement => requirement.allQuests).length;
   for (const retired of snapshot.retired) {
     if (!retired.id || retired.classification !== 'retired') {
       throw new Error('Diary retired classification is incomplete');
@@ -669,6 +712,8 @@ export const validateAudit = (
     ['retiredExistingIds', audit.retiredExistingIds, derived.retiredExistingIds],
     ['newCanonicalIds', audit.newCanonicalIds, derived.newCanonicalIds],
     ['unknownReferences', audit.unknownReferences, unknownReferences.length],
+    ['combatLevelRequirementsStructured', audit.combatLevelRequirementsStructured, derived.combatLevelRequirementsStructured],
+    ['allQuestsRequirementsStructured', audit.allQuestsRequirementsStructured, derived.allQuestsRequirementsStructured],
   ];
   const mismatches = reportedComparisons
     .filter(([, reported, actual]) => reported !== actual)

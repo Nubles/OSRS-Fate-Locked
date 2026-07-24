@@ -10,7 +10,7 @@ import { getPoolAndStateKey, isValidUnlock } from './gameEngine';
 import { tierForLevel } from './skillTiers';
 import { planForTarget } from './goalPlanner';
 import { evaluateDiaryTierEligibility } from './journalStatus';
-import { combatLevel } from './slayerReach';
+import { effectiveCombatLevel, effectiveSkillLevel } from './slayerReach';
 
 /**
  * Route to goal — the planning brain behind a pinned goal.
@@ -56,6 +56,12 @@ export interface TableSuggestion {
   odds: number;
 }
 
+export interface RouteAlternative {
+  name: string;
+  met: boolean;
+  routes: RouteItem[];
+}
+
 export interface GoalRoute {
   goalId: string;
   kind: 'strategy' | 'quest' | 'diary' | 'engine-item';
@@ -63,6 +69,7 @@ export interface GoalRoute {
   quests: RouteItem[];
   regions: RouteItem[];
   skills: RouteSkill[];
+  alternatives: RouteAlternative[];
   diaries: RouteItem[];
   questPoints?: { need: number; have: number; met: boolean };
   sources: RouteSource[];
@@ -94,17 +101,6 @@ function resolveRequirement(goalId: string): { req: ContentRequirement | null; k
         id: quest.name, category: TableType.QUESTS, regions: quest.regions,
         skills: quest.skills, quests: quest.prereqs,
         description: quest.series ? `Series: ${quest.series}` : undefined,
-      },
-    };
-  }
-  const diary = DIARY_DATA[goalId];
-  if (diary) {
-    return {
-      kind: 'diary',
-      req: {
-        id: diary.id, category: TableType.DIARIES, regions: diary.requiredRegions,
-        skills: diary.skills, quests: diary.quests,
-        description: `${diary.region} · ${diary.tier}`,
       },
     };
   }
@@ -148,12 +144,25 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       met: step.done,
       detail: step.detail,
     }));
+    const alternatives: RouteAlternative[] = plan.alternativeSteps.map(step => ({
+      name: step.label,
+      met: step.done,
+      routes: step.routes.map(route => ({
+        name: route.label,
+        met: route.blockers.length === 0,
+        detail: route.label + (route.blockers.length > 0
+          ? ': ' + route.blockers.map(blocker => (
+            blocker.label + (blocker.detail ? ' ' + blocker.detail : '')
+          )).join(' + ')
+          : ''),
+      })),
+    }));
     const skills: RouteSkill[] = plan.skillSteps.map(step => {
       const needLevel = Number(step.detail?.match(/\d+/)?.[0] ?? 1);
       const isCombat = step.id === 'Combat level';
       const haveLevel = isCombat
-        ? combatLevel(unlocks.levels)
-        : (unlocks.levels[step.id] ?? 1);
+        ? effectiveCombatLevel(unlocks)
+        : effectiveSkillLevel(unlocks, step.id);
       const tierHave = isCombat ? 0 : (unlocks.skills[step.id] ?? 0);
       return {
         skill: step.id,
@@ -169,6 +178,9 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       ...plan.questSteps.map(step => step.id),
       ...plan.regionSteps.map(step => step.label),
       ...plan.skillSteps.map(step => step.id),
+      ...plan.alternativeSteps.flatMap(step => step.routes.flatMap(route => (
+        route.blockers.map(blocker => blocker.id)
+      ))),
     ]);
     const totalSteps = eligibility.evidence.length + eligibility.blockers.length;
     const completedSteps = eligibility.evidence.length;
@@ -179,6 +191,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       quests,
       regions,
       skills,
+      alternatives,
       diaries: [],
       sources: [],
       tables: suggestTables(neededNames, unlocks),
@@ -212,7 +225,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
     const done = sources.filter(s => s.available).length;
     return {
       goalId, kind: 'engine-item', description: 'Resource Engine item',
-      quests: [], regions: [], skills: [], diaries: [], sources, tables,
+      quests: [], regions: [], skills: [], alternatives: [], diaries: [], sources, tables,
       totalSteps: total, completedSteps: done,
       percentage: sources.some(s => s.available) ? 100 : Math.round((done / total) * 100),
     };
@@ -263,7 +276,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
   const skills: RouteSkill[] = [...skillNeed.entries()]
     .sort((a, b) => b[1] - a[1])
     .map(([skill, need]) => {
-      const have = unlocks.levels[skill] ?? 1;
+      const have = effectiveSkillLevel(unlocks, skill);
       const tierHave = unlocks.skills[skill] ?? 0;
       const unlocked = tierHave > 0;
       return {
@@ -304,7 +317,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
 
   return {
     goalId, kind, description: req.description,
-    quests, regions, skills, diaries, questPoints,
+    quests, regions, skills, alternatives: [], diaries, questPoints,
     sources: [], tables,
     totalSteps: total, completedSteps: done,
     percentage: Math.round((done / total) * 100),

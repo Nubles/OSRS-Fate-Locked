@@ -13,6 +13,7 @@ import {
   meetsSkillRequirement,
   questRequirementOptionLabel,
 } from '../utils/journalStatus';
+import { effectiveSkillLevel } from '../utils/slayerReach';
 import { DropSource, UnlockState } from '../types';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { QuestAdvisorPanel } from './QuestAdvisorPanel';
@@ -243,7 +244,7 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId, curre
                               met = currentQP >= reqLevel;
                               currentLevel = currentQP;
                           } else {
-                              currentLevel = unlocks.levels[skill] || 1;
+                              currentLevel = effectiveSkillLevel(unlocks, skill);
                               const skillUnlocked = (unlocks.skills[skill] || 0) > 0;
                               isLocked = !skillUnlocked;
                               met = meetsSkillRequirement(unlocks, skill, reqLevel);
