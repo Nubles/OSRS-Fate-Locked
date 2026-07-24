@@ -96,6 +96,32 @@ export interface LogEntry {
   hash?: string;
 }
 
+export interface RollIntent {
+  source: string;
+  threshold: number;
+  target: string;
+}
+
+export type DetectedProgress =
+  | { kind: 'SKILL_LEVEL'; skill: string; level: number }
+  | { kind: 'QUEST'; questId: string }
+  | { kind: 'CA_TASK'; taskId: string }
+  | { kind: 'COLLECTION_ITEM'; itemId: number }
+  | { kind: 'NONE' };
+
+export interface EventCandidate {
+  label: string;
+  target: string;
+}
+
+export type EventClassification =
+  | { state: 'READY'; intent: RollIntent; progress: DetectedProgress }
+  | {
+      state: 'NEEDS_CONFIRMATION' | 'BLOCKED' | 'DUPLICATE';
+      reason: string;
+      candidates?: EventCandidate[];
+    };
+
 export interface UnlockState {
   equipment: Record<string, number>; // Store Tier level (0-9)
   skills: Record<string, number>; // Name -> Tier (1-10)
