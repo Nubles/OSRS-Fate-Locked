@@ -39,6 +39,10 @@ const event = (
     CLUE_CASKET: 'clue-casket-loot-v1',
     BOSS_KILL: 'boss-loot-v1',
     RAID_COMPLETION: 'raid-loot-v1',
+    SLAYER_TASK: 'slayer-task-v1',
+    DIARY_TASK: 'diary-task-v1',
+    PET_DROP: 'pet-drop-v1',
+    MINIGAME_COMPLETION: 'minigame-completion-v1',
   }[eventType],
   detectorVersion: 1,
   confidence: 'EXACT',
@@ -59,11 +63,11 @@ describe('classifyFateEvent', () => {
       .toBe('NEEDS_CONFIRMATION');
   });
 
-  it('blocks an unsupported detector or version', () => {
+  it('requires confirmation for an unsupported detector or version', () => {
     expect(classifyFateEvent(event('QUEST', 'Dragon Slayer I', { detectorId: 'mystery' }), state()).state)
-      .toBe('BLOCKED');
+      .toBe('NEEDS_CONFIRMATION');
     expect(classifyFateEvent(event('QUEST', 'Dragon Slayer I', { detectorVersion: 2 }), state()).state)
-      .toBe('BLOCKED');
+      .toBe('NEEDS_CONFIRMATION');
   });
 
   it('recognises an event already recorded in roll history', () => {
@@ -172,4 +176,9 @@ describe('classifyFateEvent', () => {
       progress: { kind: 'SKILL_LEVEL', skill: 'Attack', level: 73 },
     });
   });
-});
+
+  it('does not trust a confirmation-only detector confidence claim', () => {
+    expect(classifyFateEvent(event('PET_DROP', 'Vorki', {
+      detectorId: 'pet-drop-v1', detectorVersion: 1, confidence: 'EXACT',
+    }), state()).state).toBe('NEEDS_CONFIRMATION');
+  });});

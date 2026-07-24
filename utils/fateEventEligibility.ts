@@ -1,4 +1,5 @@
 import { DROP_RATES } from '../config/rules';
+import { policyFor } from '../config/detectorPolicies';
 import { ALL_CA_TASKS, type CATask } from '../data/caTasks';
 import { BOSS_TIERS, TIER_SOURCE } from '../data/bossKeyTiers';
 import { COLLECTION_LOG_DATA, type CollectionLogItem } from '../data/collectionLogData';
@@ -18,7 +19,6 @@ import {
 } from '../types';
 import {
   CONTENT_VERSION,
-  DETECTOR_CONTRACT_VERSION,
   RULES_VERSION,
 } from './runeliteBundle';
 
@@ -70,15 +70,7 @@ const BOSS_INDEX = new Map(
   Object.keys(BOSS_TIERS).map((name) => [normalize(name), name]),
 );
 
-const APPROVED_DETECTORS: Record<FateEventType, string> = {
-  SKILL_LEVEL: 'skill-level-v1',
-  QUEST: 'quest-widget-v1',
-  COMBAT_ACHIEVEMENT: 'combat-achievement-chat-v1',
-  COLLECTION_LOG: 'collection-log-chat-v1',
-  CLUE_CASKET: 'clue-casket-loot-v1',
-  BOSS_KILL: 'boss-loot-v1',
-  RAID_COMPLETION: 'raid-loot-v1',
-};
+
 
 const CA_SOURCES: Record<string, DropSource> = {
   Easy: DropSource.CA_EASY,
@@ -237,17 +229,18 @@ export function classifyFateEvent(
   if (event.rulesVersion !== RULES_VERSION || event.contentVersion !== CONTENT_VERSION) {
     return needsConfirmation('The plugin and app rules do not match.');
   }
+  const policy = policyFor(event.detectorId);
   if (
-    event.detectorVersion !== DETECTOR_CONTRACT_VERSION
-    || APPROVED_DETECTORS[event.eventType] !== event.detectorId
+    !policy
+    || event.detectorVersion > policy.maxApprovedVersion
+    || !policy.eventTypes.includes(event.eventType)
   ) {
-    return { state: 'BLOCKED', reason: 'Detector is not supported by this app version.' };
-  }
-  if (state.history.some((entry) => entry.meta?.fateEventId === event.eventId)) {
+    return needsConfirmation('Detector version is not approved for exact handling.');
+  }  if (state.history.some((entry) => entry.meta?.fateEventId === event.eventId)) {
     return { state: 'DUPLICATE', reason: 'This event has already been rolled.' };
   }
-  if (event.confidence !== 'EXACT') {
-    return needsConfirmation('The plugin could not identify this event exactly.');
+  if (policy.handling !== 'EXACT' || event.confidence !== 'EXACT') {
+    return needsConfirmation('Detector version is not approved for exact handling.');
   }
 
   switch (event.eventType) {
@@ -264,6 +257,8 @@ export function classifyFateEvent(
     case 'BOSS_KILL':
     case 'RAID_COMPLETION':
       return classifyBoss(event);
+    default:
+      return needsConfirmation('Review this detected event.');
   }
 }
 export function classifyFateEventCandidate(

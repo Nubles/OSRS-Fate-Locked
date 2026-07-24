@@ -1,5 +1,6 @@
 import type { GameModeRules } from '../config/gameModes';
 import { QUEST_DATA } from '../data/questData';
+import { DETECTOR_POLICIES, type DetectorPolicy } from '../config/detectorPolicies';
 import { gearService } from '../services/GearService';
 import {
   chunkContentService,
@@ -50,6 +51,7 @@ export interface RuneliteRulesManifest {
     quests: string[];
   };
   itemRules: Record<string, { tier: number; slot: string }>;
+  detectorPolicies: DetectorPolicy[];
   chunks: Record<string, ChunkPermissionSnapshot>;
 }
 
@@ -171,6 +173,9 @@ export async function buildRuneliteRulesManifest(
       quests: sorted(unlocks.quests),
     },
     itemRules,
+    detectorPolicies: DETECTOR_POLICIES.map((policy) => ({
+      ...policy, eventTypes: [...policy.eventTypes],
+    })),
     chunks,
   };
 }
