@@ -464,15 +464,66 @@ describe('audited diary route eligibility', () => {
       oneOf: [task('kan_elite_3').oneOf!.find(option => option.label === 'Bare-handed fishing')!],
     };
     const common = {
-      quests: ['Family Crest', 'Barbarian Training'], regions: ['Catherby'],
+      quests: ['Family Crest'], regions: ['Catherby'],
       skills: { Cooking: 10, Fishing: 10, Strength: 10 },
     };
     expect(evaluateDiaryTaskEligibility(bareHandedTask, unlocked({
       ...common, levels: { Cooking: 80, Fishing: 95, Strength: 76 },
     })).eligible).toBe(false);
     expect(evaluateDiaryTaskEligibility(bareHandedTask, unlocked({
+      ...common, levels: { Cooking: 80, Fishing: 96, Strength: 75 },
+    })).eligible).toBe(false);
+    const eligible = evaluateDiaryTaskEligibility(bareHandedTask, unlocked({
       ...common, levels: { Cooking: 80, Fishing: 96, Strength: 76 },
-    })).eligible).toBe(true);
+    }));
+    expect(eligible.eligible).toBe(true);
+    expect(eligible.blockers).not.toContainEqual({
+      kind: 'quest', label: 'Barbarian Training',
+    });
+    expect(eligible.evidence.join(' ')).toContain('Access to Barbarian Fishing');
+  });
+
+  it('models Morytania bare-handed fishing access as evidence while retaining its gates', () => {
+    const common = {
+      quests: ['In Aid of the Myreque'], regions: ['Burgh de Rott'],
+      skills: { Fishing: 10, Strength: 10 },
+      levels: { Fishing: 96, Strength: 76 },
+    };
+    const eligible = evaluateDiaryTaskEligibility(task('mor_elite_1'), unlocked(common));
+
+    expect(eligible.eligible).toBe(true);
+    expect(eligible.blockers).not.toContainEqual({
+      kind: 'quest', label: 'Barbarian Training',
+    });
+    expect(eligible.evidence).toContain('Access to Barbarian Fishing');
+
+    const missingQuest = evaluateDiaryTaskEligibility(task('mor_elite_1'), unlocked({
+      ...common, quests: [],
+    }));
+    expect(missingQuest.blockers).toContainEqual({
+      kind: 'quest', label: 'In Aid of the Myreque',
+    });
+
+    const lowFishing = evaluateDiaryTaskEligibility(task('mor_elite_1'), unlocked({
+      ...common, levels: { Fishing: 95, Strength: 76 },
+    }));
+    expect(lowFishing.blockers).toContainEqual(expect.objectContaining({
+      kind: 'skill', label: 'Fishing 96',
+    }));
+
+    const lowStrength = evaluateDiaryTaskEligibility(task('mor_elite_1'), unlocked({
+      ...common, levels: { Fishing: 96, Strength: 75 },
+    }));
+    expect(lowStrength.blockers).toContainEqual(expect.objectContaining({
+      kind: 'skill', label: 'Strength 76',
+    }));
+
+    const missingRegion = evaluateDiaryTaskEligibility(task('mor_elite_1'), unlocked({
+      ...common, regions: [],
+    }));
+    expect(missingRegion.blockers).toContainEqual({
+      kind: 'region', label: 'Burgh de Rott',
+    });
   });
 
   it('allows a pre-cooked oomlie wrap without the cooking route', () => {

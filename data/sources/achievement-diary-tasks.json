@@ -3877,8 +3877,8 @@
             "Fishing": 96,
             "Strength": 76
           },
-          "quests": [
-            "Barbarian Training"
+          "items": [
+            "Access to Barbarian Fishing"
           ]
         }
       ],
@@ -7060,15 +7060,17 @@
         "Strength": 76
       },
       "quests": [
-        "In Aid of the Myreque",
-        "Barbarian Training"
+        "In Aid of the Myreque"
       ],
       "regions": [
         "Burgh de Rott"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of In Aid of the Myreque Access to Barbarian Fishing 96 Fishing and 76 Strength (both are boostable ) Shark lure recommended If you are boosting with the Dragon harpoon special attack, you need to bank the harpoon before catching the shark. Having it in the inventory will use it by default and it will not count as bare handed."
+      "sourceRequirements": "Completion of In Aid of the Myreque Access to Barbarian Fishing 96 Fishing and 76 Strength (both are boostable ) Shark lure recommended If you are boosting with the Dragon harpoon special attack, you need to bank the harpoon before catching the shark. Having it in the inventory will use it by default and it will not count as bare handed.",
+      "items": [
+        "Access to Barbarian Fishing"
+      ]
     },
     {
       "id": "mor_elite_2",
