@@ -20,6 +20,11 @@ import { chunkContentService, EntityHit, EntityKind } from '../services/ChunkCon
 import { EntityLocations } from './EntityLocations';
 import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { isAreaReachable } from '../utils/reachability';
+import {
+  completedCAPoints,
+  earnedCATiers,
+  isCATierId,
+} from '../utils/caProgress';
 
 interface OracleSearchProps {
   onClose: () => void;
@@ -170,6 +175,10 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
     () => (worldReady && query.length >= 2 ? chunkContentService.searchEntities(query, 6) : []),
     [query, worldReady],
   );
+  const earnedCATierIds = useMemo(
+    () => earnedCATiers(completedCAPoints(unlocks.completedTasks), unlocks.cas),
+    [unlocks.completedTasks, unlocks.cas],
+  );
 
   // Check Unlock Status
   const getStatus = (item: SearchItem) => {
@@ -234,7 +243,8 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
         detail = isUnlocked ? "Completed" : "Incomplete";
         break;
       case TableType.COMBAT_ACHIEVEMENTS:
-        isUnlocked = unlocks.cas.includes(item.id as string);
+        const caTierId = item.id as string;
+        isUnlocked = isCATierId(caTierId) && earnedCATierIds.includes(caTierId);
         detail = isUnlocked ? "Completed" : "Incomplete";
         break;
       case 'COLLECTION_LOG_ITEM':
