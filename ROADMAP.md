@@ -6,34 +6,26 @@ contributor. Last updated: July 2026.
 
 ---
 
-## 1. Ship the Plugin Hub update (highest value, ~10 minutes)
+## 1. Ship the Plugin Hub maintenance update
 
-The Hub currently serves commit `dc3823c` of
+Plugin Hub currently pins `fdca20aad7ffcf159b62210f7492f110c185afee` from
 [Nubles/RS3-Fate-Locked-Runelite](https://github.com/Nubles/RS3-Fate-Locked-Runelite).
-Everything since is CI-green and unreleased:
+The next maintenance submission pins `f450bbd87cee74d26d24061d034368ad9f0c0c86`.
 
-- Chunked-mode chunk-coordinate lock state (`unlockedChunks` in the bundle)
-- Roll detection: quests (reward widget), diary tiers (varbits), combat
-  achievements (chat), collection log (chat), boss/raid kills (LootReceived)
-- Suggestion relay: plugin → app `{source, label, ts}` pushes on `/suggest`
-- Connection heartbeat: `{ts, version}` ack on `/state` after each relay
-  import (powers the web app's "Connect RuneLite" card)
-- `onVarbitChanged` hot-path fix (48 client calls → 1 set lookup per event)
-- World-map tooltip now lists the hovered chunk's contents
+That maintenance-only release contains four already-reviewed improvements:
 
-**To ship:** sync your fork of `runelite/plugin-hub`, edit
-`plugins/fate-locked-ironman`, set `commit=` to the current HEAD of the
-plugin repo (`git rev-parse HEAD`, full 40 chars), open the PR.
+- an optional current-chunk content overlay;
+- a warning when opening an individually locked bank;
+- nearest usable bank and shop lines in the HUD; and
+- lock resolution aligned with the web app, including each mode's free baseline.
 
-**Reviewer question to expect:** "there's new outbound traffic since the last
-release" — the `/suggest` and `/state` POSTs. Answer: both sit behind the
-same `onlineSync` opt-in boolean whose `@ConfigItem` carries the mandated
-IP-address warning; both are documented in the plugin repo's CONTRIBUTING
-(§ Online sync). No consent → `pollRelay()`/`pushSuggestion()` return on
-their first line and no request is ever made.
+It does not include the Roll Inbox, automatic rolling, or Strict Mode. Online
+sync remains explicit opt-in and makes no request while disabled.
+
+**To ship:** update `plugins/fate-locked-ironman` so its single `commit=` line
+uses `f450bbd87cee74d26d24061d034368ad9f0c0c86`, then open the maintenance PR.
 
 ## 1b. Shipped — July 2026 sprint (onboarding, safety, community)
-
 Four features landed together; each has unit tests and follows the existing
 always-mounted-driver / choke-point conventions.
 
