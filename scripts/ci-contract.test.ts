@@ -495,3 +495,38 @@ describe('local release command contract', () => {
     expect(packageJson.scripts?.typecheck).toBe('tsc --noEmit');
   });
 });
+
+describe('release documentation contract', () => {
+  it('documents the exact maintainer release gate and handoff', async () => {
+    const checklist = await readRepositoryFile('docs/RELEASE_CHECKLIST.md');
+
+    expect(checklist).toMatch(
+      /dependency metadata[\s\S]*npm ci --no-audit --no-fund/i,
+    );
+    expectInOrder(checklist.split(/\r?\n/).map((line) => line.trim()), [
+      'npm test',
+      'npx tsc --noEmit',
+      'npm run content:verify',
+      'npm run build',
+    ]);
+    expect(checklist).toContain('CI / quality');
+    expect(checklist).toMatch(
+      /repository maintainer[\s\S]*manually[\s\S]*branch protection/i,
+    );
+    expect(checklist).toMatch(
+      /content:verify[\s\S]*offline[\s\S]*read-only/i,
+    );
+    expect(checklist).toMatch(/content:check[\s\S]*network-backed/i);
+    expect(checklist).toMatch(
+      /generated data[\s\S]*source snapshot[\s\S]*generator/i,
+    );
+  });
+
+  it('links the roadmap release section to the detailed checklist', async () => {
+    const roadmap = await readRepositoryFile('ROADMAP.md');
+
+    expect(roadmap).toContain(
+      '[release verification checklist](docs/RELEASE_CHECKLIST.md)',
+    );
+  });
+});

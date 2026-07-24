@@ -53,7 +53,9 @@ npm run clog:sync     # or: npm run content:sync
 
 ## Verification and maintenance commands
 
-Use the command that matches the intended operation:
+Use the command that matches the intended operation. The exact release order and
+GitHub handoff live in the [release verification checklist](RELEASE_CHECKLIST.md);
+this section defines only the content-command boundaries.
 
 - `npm run content:verify` is the deterministic gate used by pull-request and
   deploy CI. It is fully offline and read-only: it validates committed quest,
