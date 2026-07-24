@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Loader2, Search, Sparkles, Dice5, CheckCircle2, AlertTriangle, RefreshCw, Lock } from 'lucide-react';
 import { useGame } from '../context/GameContext';
-import { SuggestionQueue } from './SuggestionQueue';
+import { RollInbox } from './RollInbox';
 import { RuneLiteOnboarding } from './RuneLiteOnboarding';
 
 /**
@@ -210,6 +210,8 @@ export function AutoRollPanel() {
         </div>
       </div>
 
+      <RollInbox />
+
       {/* Username input — locked to the bound account once set */}
       <div className="flex items-center gap-2 max-w-md">
         <div className={`flex items-center gap-2 flex-1 bg-black/40 border rounded-lg px-3 py-2 ${linkedAccount ? 'border-white/10' : 'border-white/15 focus-within:border-fuchsia-500/60'}`}>
@@ -364,7 +366,6 @@ export function AutoRollPanel() {
       )}
 
       <RuneLiteOnboarding />
-      <SuggestionQueue />
     </div>
   );
 }

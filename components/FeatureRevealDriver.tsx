@@ -12,7 +12,7 @@ import { flashSelector } from '../utils/flash';
  * The per-profile seen-set persists in localStorage so a reload never
  * re-toasts, and its *first* write silently seeds everything already visible
  * — that's how mature runs and imported saves auto-graduate without a
- * firework show. Must stay ALWAYS-MOUNTED (same rule as SuggestionBanner):
+ * firework show. Must stay ALWAYS-MOUNTED (same rule as RollInboxDriver):
  * a lazily-mounted watcher would miss reveals earned on other tabs.
  */
 export const FeatureRevealDriver: React.FC = () => {

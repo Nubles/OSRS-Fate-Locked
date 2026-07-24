@@ -19,7 +19,7 @@ import { TransmutationEffect } from './components/TransmutationEffect';
 import { ClarityEffect, GreedEffect, ChaosEffect } from './components/RitualEffects';
 import { EffectsLayer } from './components/EffectsLayer';
 import { OnlineSyncDriver } from './components/OnlineSyncDriver';
-import { SuggestionBanner } from './components/SuggestionBanner';
+import { RollInboxDriver } from './components/RollInboxDriver';
 import { CoachStrip } from './components/CoachStrip';
 import { FeatureRevealDriver } from './components/FeatureRevealDriver';
 import { BackupNagBanner } from './components/BackupNagBanner';
@@ -647,9 +647,9 @@ const GameLayout = () => {
     <div className="min-h-screen bg-osrs-bg text-osrs-text pb-6 font-sans selection:bg-osrs-gold selection:text-black relative">
       <EffectsLayer />
       <OnlineSyncDriver />
-      <SuggestionBanner />
+      <RollInboxDriver />
       {/* Progressive-disclosure watcher — always mounted (same rule as
-          SuggestionBanner): reveals earned anywhere must toast from here. */}
+          RollInboxDriver): detected events must queue from every screen. */}
       <FeatureRevealDriver />
 
 

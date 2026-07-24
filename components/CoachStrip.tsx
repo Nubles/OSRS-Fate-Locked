@@ -3,7 +3,7 @@ import { Lightbulb, ArrowRight, X } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { resolveModeRules } from '../config/gameModes';
 import { relaySync } from '../services/relaySync';
-import { suggestSync } from '../services/suggestSync';
+import { getRollInboxStore } from '../services/rollInboxRuntime';
 import { isRollEntry } from '../utils/logEntry';
 import { LogEntry } from '../types';
 
@@ -32,8 +32,8 @@ const TOUR_DONE_KEY = 'fate_tour_done_v1';
 const nav = (target: string) => window.dispatchEvent(new CustomEvent('fate:nav', { detail: { target } }));
 
 export const CoachStrip: React.FC = () => {
-  const { keys, fatePoints, history, gameModeId, customMode } = useGame() as {
-    keys: number; fatePoints: number; history: LogEntry[]; gameModeId?: string; customMode?: any;
+  const { keys, fatePoints, history, runId, gameModeId, customMode } = useGame() as {
+    keys: number; fatePoints: number; history: LogEntry[]; runId: string; gameModeId?: string; customMode?: any;
   };
 
   const [dismissed, setDismissed] = useState<string | null>(() => {
@@ -43,9 +43,14 @@ export const CoachStrip: React.FC = () => {
     try { return localStorage.getItem(TOUR_DONE_KEY) === '1'; } catch { return false; }
   });
 
-  // Pending RuneLite suggestions (only meaningful while sync is on).
-  const [pendingCount, setPendingCount] = useState(() => suggestSync.getPending().length);
-  useEffect(() => suggestSync.subscribePending(() => setPendingCount(suggestSync.getPending().length)), []);
+  const inboxStore = useMemo(() => getRollInboxStore(runId), [runId]);
+  const countPending = () => inboxStore.list().filter((row) =>
+    row.state !== 'COMPLETED' && row.state !== 'DISMISSED' && row.state !== 'DUPLICATE').length;
+  const [pendingCount, setPendingCount] = useState(countPending);
+  useEffect(() => {
+    setPendingCount(countPending());
+    return inboxStore.subscribe(() => setPendingCount(countPending()));
+  }, [inboxStore]);
   const [, forceRelay] = useState(0);
   useEffect(() => relaySync.subscribe(() => forceRelay((n) => n + 1)), []);
 
@@ -73,11 +78,11 @@ export const CoachStrip: React.FC = () => {
         act: () => nav('ctrl:SPEND'),
       };
     }
-    if (relaySync.enabled && pendingCount > 0) {
+    if (pendingCount > 0) {
       return {
-        id: 'suggest',
-        text: `RuneLite spotted ${pendingCount} completion${pendingCount > 1 ? 's' : ''} that may be worth a roll.`,
-        cta: 'See suggestions',
+        id: 'roll-inbox',
+        text: `${pendingCount} RuneLite detection${pendingCount > 1 ? 's are' : ' is'} waiting for your decision.`,
+        cta: 'Open Roll Inbox',
         act: () => nav('tab:AUTOROLL'),
       };
     }

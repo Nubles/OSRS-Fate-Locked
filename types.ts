@@ -122,11 +122,9 @@ export interface EventCandidate {
 
 export type EventClassification =
   | { state: 'READY'; intent: RollIntent; progress: DetectedProgress }
-  | {
-      state: 'NEEDS_CONFIRMATION' | 'BLOCKED' | 'DUPLICATE';
-      reason: string;
-      candidates?: EventCandidate[];
-    };
+  | { state: 'NEEDS_CONFIRMATION'; reason: string; candidates?: EventCandidate[] }
+  | { state: 'BLOCKED'; reason: string; candidates?: EventCandidate[] }
+  | { state: 'DUPLICATE'; reason: string; candidates?: EventCandidate[] };
 
 export interface UnlockState {
   equipment: Record<string, number>; // Store Tier level (0-9)

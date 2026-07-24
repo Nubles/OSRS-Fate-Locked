@@ -49,10 +49,20 @@ for (const task of ALL_CA_TASKS) {
   addToIndex(CA_INDEX, task.name, task);
 }
 
-const COLLECTION_INDEX = new Map<string, CollectionLogItem[]>();
+interface CollectionMatch {
+  item: CollectionLogItem;
+  location: string;
+}
+
+const COLLECTION_INDEX = new Map<string, CollectionMatch[]>();
 for (const tab of Object.values(COLLECTION_LOG_DATA)) {
   for (const page of Object.values(tab.pages)) {
-    for (const item of page.items) addToIndex(COLLECTION_INDEX, item.name, item);
+    for (const item of page.items) {
+      addToIndex(COLLECTION_INDEX, item.name, {
+        item,
+        location: `${tab.name} · ${page.name}`,
+      });
+    }
   }
 }
 
@@ -170,10 +180,14 @@ function classifyCollectionLog(event: FateEventEnvelope): EventClassification {
       matches.length
         ? 'More than one Collection Log item has this name.'
         : 'Collection Log item is not in the current rules.',
-      candidates(matches, (item) => item.name, (item) => String(item.id)),
+      candidates(
+        matches,
+        (match) => `${match.item.name} · ${match.location}`,
+        (match) => String(match.item.id),
+      ),
     );
   }
-  const item = matches[0];
+  const { item } = matches[0];
   return ready(DropSource.COLLECTION_LOG, item.name, {
     kind: 'COLLECTION_ITEM',
     itemId: item.id,
@@ -251,4 +265,38 @@ export function classifyFateEvent(
     case 'RAID_COMPLETION':
       return classifyBoss(event);
   }
+}
+export function classifyFateEventCandidate(
+  event: FateEventEnvelope,
+  state: GameState,
+  target: string,
+): EventClassification {
+  if (event.eventType === 'COLLECTION_LOG') {
+    const gate = classifyFateEvent(
+      { ...event, confidence: 'EXACT', canonicalLabel: null },
+      state,
+    );
+    if (
+      gate.state !== 'NEEDS_CONFIRMATION'
+      || gate.reason !== 'Choose the Collection Log item.'
+    ) {
+      return gate;
+    }
+    const match = [...COLLECTION_INDEX.values()]
+      .flat()
+      .find((candidate) => String(candidate.item.id) === target);
+    return match
+      ? ready(DropSource.COLLECTION_LOG, match.item.name, {
+          kind: 'COLLECTION_ITEM',
+          itemId: match.item.id,
+        })
+      : needsConfirmation('The selected Collection Log item is no longer available.');
+  }
+  if (event.eventType === 'QUEST' || event.eventType === 'COMBAT_ACHIEVEMENT') {
+    return classifyFateEvent(
+      { ...event, confidence: 'EXACT', canonicalLabel: target },
+      state,
+    );
+  }
+  return needsConfirmation('This event does not support candidate review.');
 }
