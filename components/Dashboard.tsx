@@ -314,6 +314,20 @@ export const Dashboard: React.FC = () => {
   const { unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId, customMode } = useGame();
   const activeMode = getGameMode(gameModeId);
   const [activeTab, setActiveTab] = useState('CHARACTER');
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('open') !== 'roll-inbox') return;
+    setActiveTab('AUTOROLL');
+    params.delete('open');
+    params.delete('code');
+    const query = params.toString();
+    window.history.replaceState(
+      null,
+      '',
+      `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`,
+    );
+  }, []);
   // Progressive disclosure: tabs reveal as the run earns them (Character is
   // always visible; a palette/advisor jump to a still-hidden tab shows it too,
   // since navigation is intent). See utils/featureGates.ts.
