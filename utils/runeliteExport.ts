@@ -1,5 +1,5 @@
 /**
- * One-call "export my run for the RuneLite plugin": builds the v3 bundle (with
+ * One-call "export my run for the RuneLite plugin": builds the v4 bundle (with
  * item tiers + slayer index when the datasets are loaded), copies it to the
  * clipboard, and downloads it. Shared by the map's RL button and the header's
  * dedicated RuneLite button so both behave identically.
@@ -16,6 +16,7 @@ import { showToast } from './toast';
 import { UnlockState } from '../types';
 import { bankLocksActive } from './reachability';
 import type { GameModeRules } from '../config/gameModes';
+import { buildRuneliteRulesManifest } from './runeliteRulesManifest';
 
 /**
  * gzip+base64 a string for the clipboard, prefixed "FLGZ:" so the plugin knows
@@ -53,13 +54,15 @@ export interface RuneliteRunInput {
    *  Chunked run (0 chunks unlocked) apart from a non-Chunked bundle; an
    *  empty unlockedChunks array alone is ambiguous between the two. */
   gameModeId: string;
+  /** Custom-mode rules are included in the canonical manifest when applicable. */
+  customMode?: GameModeRules;
   rulesVersion?: string;
   contentVersion?: number;
   detectorContractVersion?: number;
 }
 
 /**
- * Build the v3 bundle for the current run and return it both as plain JSON (for
+ * Build the v4 bundle for the current run and return it both as plain JSON (for
  * the readable file download) and as the compressed FLGZ form (clipboard / relay).
  * Shared by the clipboard/file export and the online relay push.
  */
@@ -89,7 +92,8 @@ export async function buildBundlePayload(
     linkedAccount: run.linkedAccount,
     equipment: unlocks.equipment,
   };
-  const banksLocked = bankLocksActive(run.gameModeId);
+  const rules = await buildRuneliteRulesManifest({ unlocks, run });
+  const banksLocked = bankLocksActive(run.gameModeId, run.customMode);
   const payload = await buildRuneliteBundle(
     unlocks.regions, state, itemTiers, slayerChunks,
     run.gameModeId === 'chunked' ? (unlocks.chunks ?? []) : undefined,
@@ -103,6 +107,7 @@ export async function buildBundlePayload(
       contentVersion: run.contentVersion ?? CONTENT_VERSION,
       detectorContractVersion: run.detectorContractVersion ?? DETECTOR_CONTRACT_VERSION,
     },
+    rules,
   );
   const json = JSON.stringify(payload);
   const compressed = await compressForClipboard(json);

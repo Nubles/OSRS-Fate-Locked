@@ -1,4 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import chunkContentJson from '../public/chunk-content.json?raw';
+import { initialState } from '../context/GameContext';
+import { buildBundlePayload } from './runeliteExport';
 import { buildRuneliteBundle, RuneliteRunState } from './runeliteBundle';
 
 const state: RuneliteRunState = {
@@ -6,6 +9,20 @@ const state: RuneliteRunState = {
 };
 
 describe('buildRuneliteBundle — unlockedChunks presence', () => {
+  it('emits bundle v4 with the shared rules manifest', async () => {
+    const bundle = await buildRuneliteBundle(
+      ['Misthalin'], state, undefined, undefined, undefined, undefined, false,
+      {
+        runId: 'run-1', runRevision: 9, gameModeId: 'vanilla',
+        rulesVersion: '1', contentVersion: 1, detectorContractVersion: 1,
+      },
+    ) as any;
+
+    expect(bundle.version).toBe(4);
+    expect(bundle.rules.runId).toBe('run-1');
+    expect(bundle.chunks).toBeDefined();
+    expect(bundle.chunkContent).toBeDefined();
+  });
   it('omits unlockedChunks entirely when not passed (non-chunked mode)', async () => {
     const bundle = await buildRuneliteBundle([], state) as any;
     expect('unlockedChunks' in bundle).toBe(false);
@@ -63,4 +80,34 @@ describe('buildRuneliteBundle — unlockedChunks presence', () => {
       contentVersion: 1,
       detectorContractVersion: 1,
     });
+  });
+  it('fits the complete rules snapshot inside the relay limit', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('chunk-content.json')) {
+        return new Response(chunkContentJson, {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      return new Response('{}', { status: 404 });
+    }));
+
+    try {
+      const { compressed } = await buildBundlePayload(initialState.unlocks, {
+        runId: 'run-size',
+        runRevision: 1,
+        keys: 3,
+        specialKeys: 0,
+        chaosKeys: 0,
+        fatePoints: 0,
+        activeBuff: 'NONE',
+        gameModeId: 'vanilla',
+      });
+      expect(compressed.startsWith('FLGZ:')).toBe(true);
+      expect(new TextEncoder().encode(compressed).byteLength)
+        .toBeLessThan(256 * 1024);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });});

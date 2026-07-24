@@ -1,11 +1,12 @@
 /**
- * Build the RuneLite plugin bundle (the v3 shape the map's RL-export button
+ * Build the RuneLite plugin bundle (the v4 shape the map's RL-export button
  * produces) from the current run. Uses the shipped chunk baselines (a player
  * isn't authoring, so map drafts don't apply).
  */
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
+import type { RuneliteRulesManifest } from './runeliteRulesManifest';
 
 export const RULES_VERSION = '1';
 export const CONTENT_VERSION = 1;
@@ -45,15 +46,48 @@ export async function buildRuneliteBundle(
   bankLocks?: boolean,
   /** Stable run and detector contract identity for durable event delivery. */
   identity?: RuneliteBundleIdentity,
+  /** Canonical rules snapshot consumed by v4-aware plugins. */
+  rules?: RuneliteRulesManifest,
 ) {
   // Dynamic import keeps the ~53 kB chunk-content dataset out of the eager
   // startup bundle — it's only ever needed here, at export time, and every
   // caller is already async.
   const { CHUNK_CONTENT_LITE } = await import('../data/chunkContentLite');
+  const exportedAt = rules?.exportedAt ?? new Date().toISOString();
+  const fallbackRules: RuneliteRulesManifest = {
+    rulesVersion: identity?.rulesVersion ?? RULES_VERSION,
+    contentVersion: identity?.contentVersion ?? CONTENT_VERSION,
+    detectorContractVersion: identity?.detectorContractVersion ?? DETECTOR_CONTRACT_VERSION,
+    runId: identity?.runId ?? 'legacy-export',
+    runRevision: identity?.runRevision ?? 0,
+    account: state.linkedAccount?.trim() || null,
+    gameModeId: identity?.gameModeId ?? (unlockedChunks !== undefined ? 'chunked' : 'vanilla'),
+    exportedAt,
+    bankLocks: !!bankLocks,
+    unlocks: {
+      regions: [...unlockedRegions].sort(),
+      chunks: [...(unlockedChunks ?? [])].sort(),
+      skills: {},
+      levels: {},
+      equipment: { ...(state.equipment ?? {}) },
+      banks: [...(unlockedBanks ?? [])].sort(),
+      merchants: [],
+      bosses: [],
+      minigames: [],
+      mobility: [],
+      arcana: [],
+      guilds: [],
+      farming: [],
+      slayer: [],
+      quests: [],
+    },
+    chunks: {},
+  };
   return {
-    version: 3,
+    version: 4,
+    rules: rules ?? fallbackRules,
     ...(identity ?? {}),
-    exportedAt: new Date().toISOString(),
+    exportedAt,
     chunkOffset: { cx: 0, cy: 0 },
     chunks: REGION_CHUNKS,
     subAreaChunks: SUB_AREA_CHUNKS,
