@@ -3,6 +3,7 @@ import { policyFor } from '../config/detectorPolicies';
 import { ALL_CA_TASKS, type CATask } from '../data/caTasks';
 import { BOSS_TIERS, TIER_SOURCE } from '../data/bossKeyTiers';
 import { COLLECTION_LOG_DATA, type CollectionLogItem } from '../data/collectionLogData';
+import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { QUEST_DATA, type QuestData } from '../data/questData';
 import {
   normalizeAccountName,
@@ -70,7 +71,17 @@ const BOSS_INDEX = new Map(
   Object.keys(BOSS_TIERS).map((name) => [normalize(name), name]),
 );
 
-
+const SLAYER_SOURCES = [
+  DropSource.SLAYER_BEGINNER,
+  DropSource.SLAYER_MAZCHNA,
+  DropSource.SLAYER_VANNAKA,
+  DropSource.SLAYER_CHAELDAR,
+  DropSource.SLAYER_KONAR,
+  DropSource.SLAYER_NIEVE,
+  DropSource.SLAYER_KRYSTILIA,
+  DropSource.SLAYER_DURADEL,
+  DropSource.SLAYER_BOSS,
+];
 
 const CA_SOURCES: Record<string, DropSource> = {
   Easy: DropSource.CA_EASY,
@@ -96,6 +107,35 @@ function candidates<T>(
   target: (value: T) => string,
 ): EventCandidate[] {
   return values.slice(0, 8).map((value) => ({ label: label(value), target: target(value) }));
+}
+
+function confirmationCandidates(event: FateEventEnvelope): EventCandidate[] | undefined {
+  if (event.eventType === 'SLAYER_TASK') {
+    return SLAYER_SOURCES.map((source) => ({ label: source, target: source }));
+  }
+  if (event.eventType === 'DIARY_TASK') {
+    const tierId = typeof event.evidence.tierId === 'string'
+      ? event.evidence.tierId
+      : event.canonicalLabel;
+    const matches = ALL_DIARY_TASKS.filter((task) => task.tierId === tierId);
+    return matches.length
+      ? matches.map((task) => ({ label: task.description, target: task.id }))
+      : undefined;
+  }
+  if (event.eventType === 'PET_DROP') {
+    const label = event.canonicalLabel ?? 'Pet drop';
+    return [{ label, target: label }];
+  }
+  if (
+    event.eventType === 'MINIGAME_COMPLETION'
+    || event.eventType === 'BOSS_KILL'
+    || event.eventType === 'RAID_COMPLETION'
+  ) {
+    return event.canonicalLabel
+      ? [{ label: event.canonicalLabel, target: event.canonicalLabel }]
+      : undefined;
+  }
+  return undefined;
 }
 
 function needsConfirmation(
@@ -240,7 +280,10 @@ export function classifyFateEvent(
     return { state: 'DUPLICATE', reason: 'This event has already been rolled.' };
   }
   if (policy.handling !== 'EXACT' || event.confidence !== 'EXACT') {
-    return needsConfirmation('Detector version is not approved for exact handling.');
+    return needsConfirmation(
+      'Detector version is not approved for exact handling.',
+      confirmationCandidates(event),
+    );
   }
 
   switch (event.eventType) {
@@ -266,6 +309,54 @@ export function classifyFateEventCandidate(
   state: GameState,
   target: string,
 ): EventClassification {
+  const gate = classifyFateEvent(event, state);
+  if (
+    gate.state !== 'NEEDS_CONFIRMATION'
+    || gate.reason !== 'Detector version is not approved for exact handling.'
+  ) {
+    if (
+      event.eventType !== 'COLLECTION_LOG'
+      && event.eventType !== 'QUEST'
+      && event.eventType !== 'COMBAT_ACHIEVEMENT'
+    ) return gate;
+  }
+
+  if (event.eventType === 'SLAYER_TASK') {
+    if (!SLAYER_SOURCES.includes(target as DropSource)) {
+      return needsConfirmation('Choose the Slayer master used for this assignment.');
+    }
+    return ready(target, event.canonicalLabel ?? 'Slayer task', { kind: 'NONE' });
+  }
+  if (event.eventType === 'DIARY_TASK') {
+    const task = ALL_DIARY_TASKS.find((candidate) => candidate.id === target);
+    if (!task) return needsConfirmation('Choose a diary task from the detected tier.');
+    const tier = task.tierId.split(' ').at(-1);
+    const source = {
+      Easy: DropSource.DIARY_EASY,
+      Medium: DropSource.DIARY_MEDIUM,
+      Hard: DropSource.DIARY_HARD,
+      Elite: DropSource.DIARY_ELITE,
+    }[tier ?? ''];
+    return source
+      ? ready(source, task.description, { kind: 'DIARY_TASK', taskId: task.id })
+      : needsConfirmation('Diary tier is not in the current rules.');
+  }
+  if (event.eventType === 'PET_DROP') {
+    const label = event.canonicalLabel ?? 'Pet drop';
+    return target === label
+      ? ready(DropSource.PET, label, { kind: 'NONE' })
+      : needsConfirmation('Confirm the detected pet.');
+  }
+  if (event.eventType === 'MINIGAME_COMPLETION') {
+    return event.canonicalLabel && target === event.canonicalLabel
+      ? ready(DropSource.ACTIVITY_MINIGAME, target, { kind: 'NONE' })
+      : needsConfirmation('Confirm the completed minigame.');
+  }
+  if (event.eventType === 'BOSS_KILL' || event.eventType === 'RAID_COMPLETION') {
+    return target === event.canonicalLabel
+      ? classifyBoss({ ...event, canonicalLabel: target })
+      : needsConfirmation('Confirm the detected boss or raid.');
+  }
   if (event.eventType === 'COLLECTION_LOG') {
     const gate = classifyFateEvent(
       { ...event, confidence: 'EXACT', canonicalLabel: null },

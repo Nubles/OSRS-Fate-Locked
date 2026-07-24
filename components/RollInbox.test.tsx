@@ -139,18 +139,19 @@ describe('RollInbox', () => {
     expect(ambiguous).toBeTruthy();
 
     const user = userEvent.setup();
-    setup(event('COLLECTION_LOG', ambiguous!));
+    const { store } = setup(event('COLLECTION_LOG', ambiguous!));
     expect(await screen.findByRole('button', { name: 'Review' })).toBeTruthy();
     const options = screen.getAllByRole('option');
     await user.selectOptions(screen.getByRole('combobox'), options[1]);
     await user.click(screen.getByRole('button', { name: 'Review' }));
     expect(await screen.findByRole('button', { name: /^Roll$/ })).toBeTruthy();
+    expect(store.list()[0].reviewOutcome).toBe('CORRECTED');
   });
 
-  it('dismisses blocked and duplicate rows without presenting Roll', async () => {
+  it('dismisses unsupported and duplicate rows without presenting Roll', async () => {
     const user = userEvent.setup();
     const blocked = setup(event('QUEST', 'Dragon Slayer I', { detectorVersion: 99 }));
-    expect(await screen.findByText('Detector is not supported by this app version.')).toBeTruthy();
+    expect(await screen.findByText('Detector version is not approved for exact handling.')).toBeTruthy();
     expect(screen.queryByRole('button', { name: /^Roll$/ })).toBeNull();
     await user.click(screen.getByRole('button', { name: 'Dismiss' }));
     expect(blocked.store.list()[0].state).toBe('DISMISSED');

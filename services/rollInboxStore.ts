@@ -9,17 +9,25 @@ export type RollInboxState =
   | 'DISMISSED'
   | 'DUPLICATE';
 
+export type RollInboxReviewOutcome = 'CONFIRMED_UNCHANGED' | 'CORRECTED';
+
 export interface RollInboxRow {
   event: FateEventEnvelope;
   state: RollInboxState;
   reason?: string;
+  reviewOutcome?: RollInboxReviewOutcome;
   updatedAt: number;
 }
 
 export interface RollInboxStore {
   ingest(events: FateEventEnvelope[]): void;
   list(): RollInboxRow[];
-  transition(eventId: string, state: RollInboxState, reason?: string): boolean;
+  transition(
+    eventId: string,
+    state: RollInboxState,
+    reason?: string,
+    reviewOutcome?: RollInboxReviewOutcome,
+  ): boolean;
   subscribe(listener: () => void): () => void;
 }
 
@@ -88,13 +96,19 @@ export function createRollInboxStore(
       return sorted(rows).map(row => ({ ...row, event: { ...row.event } }));
     },
 
-    transition(eventId, state, reason) {
+    transition(eventId, state, reason, reviewOutcome) {
       const index = rows.findIndex(row => row.event.eventId === eventId);
       if (index < 0 || rows[index].state === state && rows[index].reason === reason) {
         return false;
       }
       rows = rows.map((row, rowIndex) => rowIndex === index
-        ? { ...row, state, reason, updatedAt: Date.now() }
+        ? {
+            ...row,
+            state,
+            reason,
+            reviewOutcome: reviewOutcome ?? row.reviewOutcome,
+            updatedAt: Date.now(),
+          }
         : row);
       save();
       return true;

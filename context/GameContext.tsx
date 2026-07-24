@@ -425,6 +425,16 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
           },
         };
       }
+      if (progress.kind === 'DIARY_TASK') {
+        if (state.unlocks.diaries.includes(progress.taskId)) return state;
+        return {
+          ...state,
+          unlocks: {
+            ...state.unlocks,
+            diaries: [...state.unlocks.diaries, progress.taskId],
+          },
+        };
+      }
       const current = state.unlocks.collectionLog[progress.itemId] ?? 0;
       if (current >= 1) return state;
       return {

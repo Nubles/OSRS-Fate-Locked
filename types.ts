@@ -112,6 +112,7 @@ export type DetectedProgress =
   | { kind: 'SKILL_LEVEL'; skill: string; level: number }
   | { kind: 'QUEST'; questId: string }
   | { kind: 'CA_TASK'; taskId: string }
+  | { kind: 'DIARY_TASK'; taskId: string }
   | { kind: 'COLLECTION_ITEM'; itemId: number }
   | { kind: 'NONE' };
 

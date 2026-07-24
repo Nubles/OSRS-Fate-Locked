@@ -4,7 +4,7 @@ import { initialState } from '../context/GameContext';
 import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
 import type { FateEventEnvelope, FateEventType } from '../services/fateEventProtocol';
 import { DropSource, type GameState } from '../types';
-import { classifyFateEvent } from './fateEventEligibility';
+import { classifyFateEvent, classifyFateEventCandidate } from './fateEventEligibility';
 
 const state = (overrides: Partial<GameState> = {}): GameState => ({
   ...initialState,
@@ -181,4 +181,42 @@ describe('classifyFateEvent', () => {
     expect(classifyFateEvent(event('PET_DROP', 'Vorki', {
       detectorId: 'pet-drop-v1', detectorVersion: 1, confidence: 'EXACT',
     }), state()).state).toBe('NEEDS_CONFIRMATION');
-  });});
+  });
+
+  it('offers player-review choices for confirmation-only detector events', () => {
+    const slayer = classifyFateEvent(event('SLAYER_TASK', 'Abyssal demons', {
+      detectorId: 'slayer-task-v1', confidence: 'UNCERTAIN',
+    }), state());
+    expect(slayer).toMatchObject({
+      state: 'NEEDS_CONFIRMATION',
+      candidates: expect.arrayContaining([
+        expect.objectContaining({ target: 'Slayer (Duradel/Kuradal)' }),
+      ]),
+    });
+
+    const pet = classifyFateEvent(event('PET_DROP', 'Pet kraken', {
+      detectorId: 'pet-drop-v1', confidence: 'UNCERTAIN',
+    }), state());
+    expect(pet).toMatchObject({
+      state: 'NEEDS_CONFIRMATION',
+      candidates: [{ label: 'Pet kraken', target: 'Pet kraken' }],
+    });
+  });
+
+  it('turns an explicit confirmation into a ready intent', () => {
+    const slayerEvent = event('SLAYER_TASK', 'Abyssal demons', {
+      detectorId: 'slayer-task-v1', confidence: 'UNCERTAIN',
+    });
+    expect(classifyFateEventCandidate(
+      slayerEvent,
+      state(),
+      'Slayer (Duradel/Kuradal)',
+    )).toMatchObject({
+      state: 'READY',
+      intent: {
+        source: 'Slayer (Duradel/Kuradal)',
+        target: 'Abyssal demons',
+      },
+    });
+  });
+});

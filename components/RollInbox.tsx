@@ -9,6 +9,7 @@ import {
   X,
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
+import { DetectorPlaytestExport } from './DetectorPlaytestExport';
 import { fateEventRelay } from '../services/fateEventRelay';
 import type { EventAcknowledgement } from '../services/fateEventProtocol';
 import {
@@ -101,7 +102,8 @@ export function RollInboxView({
 
   useEffect(() => store.subscribe(() => refresh((value) => value + 1)), [store]);
 
-  const active = store.list().filter((row) => !TERMINAL.has(row.state));
+  const allRows = store.list();
+  const active = allRows.filter((row) => !TERMINAL.has(row.state));
   const classified = useMemo(
     () => active.map((row) => ({
       row,
@@ -151,7 +153,13 @@ export function RollInboxView({
     const target = selection[row.event.eventId]
       ?? classification.candidates?.[0]?.target;
     if (!target) return;
-    store.transition(row.event.eventId, 'READY', `${CONFIRMED_PREFIX}${target}`);
+    const originalTarget = classification.candidates?.[0]?.target;
+    store.transition(
+      row.event.eventId,
+      'READY',
+      `${CONFIRMED_PREFIX}${target}`,
+      target === originalTarget ? 'CONFIRMED_UNCHANGED' : 'CORRECTED',
+    );
   };
 
   const sourceLabel = (classification: EventClassification, row: RollInboxRow) =>
@@ -204,6 +212,7 @@ export function RollInboxView({
           <Radio size={10} />
           {connected ? 'Listening' : 'Offline · inbox kept locally'}
         </span>
+        <DetectorPlaytestExport inbox={allRows} history={game.state.history} />
       </div>
 
       {active.length === 0 ? (
