@@ -496,6 +496,7 @@ export const Dashboard: React.FC = () => {
                     };
                     
                     const isMainActionable = canUnlockStart || canLevel;
+                    const oddsDescriptionId = `skill-roll-odds-${skill.toLowerCase().replace(/\s+/g, '-')}`;
                     const tierColorText = isUnlocked ? 'text-gray-200' : 'text-gray-500';
 
                     if (searchQuery && !skill.toLowerCase().includes(searchQuery.toLowerCase())) return null;
@@ -514,6 +515,7 @@ export const Dashboard: React.FC = () => {
                            `}
                            role="button"
                            tabIndex={isMainActionable ? 0 : -1}
+                           aria-describedby={canLevel ? oddsDescriptionId : undefined}
                         >
                             {/* Note Trigger */}
                             <div className="absolute top-1 right-1 z-30">
@@ -555,7 +557,7 @@ export const Dashboard: React.FC = () => {
                                     <div className="text-[9px] text-gray-400 font-mono leading-none mt-0.5">
                                         {isUnlocked ? `Lvl ${level}/99` : 'Locked'}
                                     </div>
-                                    <SkillRollOdds currentLevel={level} isUnlocked={isUnlocked} />
+                                    <SkillRollOdds currentLevel={level} isUnlocked={isUnlocked} descriptionId={oddsDescriptionId} />
                                     <div className="text-[8px] text-gray-500 mt-0.5 leading-none">
                                         Methods: <span className="text-gray-400">{methodRange}</span>
                                     </div>

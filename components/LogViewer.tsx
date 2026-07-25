@@ -87,7 +87,7 @@ const getLogStyle = (entry: LogEntry) => {
 };
 
 // --- Row Component ---
-const LogRow = ({ index, style, data }: ListChildComponentProps<{ entries: LogEntry[] }>) => {
+export const LogRow = ({ index, style, data }: ListChildComponentProps<{ entries: LogEntry[] }>) => {
   const entry = data.entries[index];
   const styles = getLogStyle(entry);
   const Icon = styles.icon;

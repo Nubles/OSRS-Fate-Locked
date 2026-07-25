@@ -372,9 +372,14 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     case 'ROLL_RESULT': {
       const { success, omni, pity, roll, baseThreshold, threshold, source, x, y } = action.payload;
       const rollText = formatKeyRollValue(roll);
-      const chanceText = baseThreshold === threshold
-        ? formatKeyPercent(threshold)
-        : `${formatKeyPercent(baseThreshold)} base, ${formatKeyPercent(threshold)} effective`;
+      const thresholdsMatch = baseThreshold === threshold;
+      const thresholdText = formatKeyPercent(threshold);
+      const comparisonChanceText = thresholdsMatch
+        ? thresholdText
+        : `${thresholdText} effective; ${formatKeyPercent(baseThreshold)} base`;
+      const inlineChanceText = thresholdsMatch
+        ? thresholdText
+        : `${thresholdText} effective (${formatKeyPercent(baseThreshold)} base)`;
       const isGreed = state.activeBuff === 'GREED';
 
       let newState = { ...state, activeBuff: state.activeBuff === 'LUCK' || state.activeBuff === 'GREED' ? 'NONE' : state.activeBuff } as GameState & { lastEvent: GameEvent | null };
@@ -390,7 +395,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
              timestamp: now,
              type: 'ROLL_OMNI',
              message: 'LEGENDARY DROP! You found an Omni-Key!',
-             details: `Critical Success! Rolled ${rollText} vs ${formatKeyPercent(threshold)}; ${chanceText}.`,
+             details: `Critical Success! Rolled ${rollText} vs ${comparisonChanceText}.`,
              meta: { roll, baseThreshold, threshold, source },
              result: 'SUCCESS',
              source,
@@ -408,7 +413,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
              timestamp: now,
              type: 'ROLL_SUCCESS',
              message: `Key Found!${isGreed ? ' (Doubled)' : ''}`,
-             details: `Rolled ${rollText} (≤ ${formatKeyPercent(threshold)}; ${chanceText}).`,
+             details: `Rolled ${rollText} (≤ ${comparisonChanceText}).`,
              meta: { roll, baseThreshold, threshold, source },
              result: 'SUCCESS',
              source,
@@ -428,7 +433,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
                 timestamp: now,
                 type: 'PITY',
                 message: 'MAX FATE REACHED! Pity Key granted.',
-                details: `Rolled ${rollText} at ${chanceText}, but Fate intervened.`,
+                details: `Rolled ${rollText} at ${inlineChanceText}, but Fate intervened.`,
                 meta: { roll, baseThreshold, threshold, source },
                 result: 'SUCCESS',
                 source,
@@ -452,7 +457,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
                 timestamp: now,
                 type: 'ROLL_FAIL',
                 message: `No Key.${isGreed ? ` (Greed refunded ${greedRefund} Fate)` : ''}`,
-                details: `Rolled ${rollText} (> ${formatKeyPercent(threshold)}; ${chanceText}). Fate: ${newState.fatePoints}/${resolveModeRules(state.gameModeId, state.customMode).pityThreshold}`,
+                details: `Rolled ${rollText} (> ${comparisonChanceText}). Fate: ${newState.fatePoints}/${resolveModeRules(state.gameModeId, state.customMode).pityThreshold}`,
                 meta: { roll, baseThreshold, threshold, source },
                 result: 'FAIL',
                 source,

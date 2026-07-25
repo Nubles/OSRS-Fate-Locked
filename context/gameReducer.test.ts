@@ -107,6 +107,72 @@ describe('ROLL_RESULT', () => {
     }
   });
 
+  it('shows a matching threshold once in every roll result sentence', () => {
+    const cases = [
+      {
+        state: gameReducer(base(), roll({
+          success: true, omni: true, roll: 1, baseThreshold: 2.2, threshold: 2.2,
+        })),
+        expected: 'Critical Success! Rolled 1.0 vs 2.2%.',
+      },
+      {
+        state: gameReducer(base(), roll({
+          success: true, roll: 1, baseThreshold: 2.2, threshold: 2.2,
+        })),
+        expected: 'Rolled 1.0 (≤ 2.2%).',
+      },
+      {
+        state: gameReducer(base(), roll({
+          roll: 84.7, baseThreshold: 2.2, threshold: 2.2,
+        })),
+        expected: 'Rolled 84.7 (> 2.2%). Fate: 1/50',
+      },
+      {
+        state: gameReducer({ ...base(), fatePoints: 49 }, roll({
+          pity: true, roll: 84.7, baseThreshold: 2.2, threshold: 2.2,
+        })),
+        expected: 'Rolled 84.7 at 2.2%, but Fate intervened.',
+      },
+    ];
+
+    for (const { state, expected } of cases) {
+      expect(state.history.at(-1)?.details).toBe(expected);
+    }
+  });
+
+  it('names differing effective and base thresholds once in every roll result sentence', () => {
+    const cases = [
+      {
+        state: gameReducer(base(), roll({
+          success: true, omni: true, roll: 1, baseThreshold: 2.2, threshold: 3.2,
+        })),
+        expected: 'Critical Success! Rolled 1.0 vs 3.2% effective; 2.2% base.',
+      },
+      {
+        state: gameReducer(base(), roll({
+          success: true, roll: 1, baseThreshold: 2.2, threshold: 3.2,
+        })),
+        expected: 'Rolled 1.0 (≤ 3.2% effective; 2.2% base).',
+      },
+      {
+        state: gameReducer(base(), roll({
+          roll: 84.7, baseThreshold: 2.2, threshold: 3.2,
+        })),
+        expected: 'Rolled 84.7 (> 3.2% effective; 2.2% base). Fate: 1/50',
+      },
+      {
+        state: gameReducer({ ...base(), fatePoints: 49 }, roll({
+          pity: true, roll: 84.7, baseThreshold: 2.2, threshold: 3.2,
+        })),
+        expected: 'Rolled 84.7 at 3.2% effective (2.2% base), but Fate intervened.',
+      },
+    ];
+
+    for (const { state, expected } of cases) {
+      expect(state.history.at(-1)?.details).toBe(expected);
+    }
+  });
+
   it('every roll branch produces a log entry that isRollEntry recognises', () => {
     // Regression test: StatsModal and scribe.ts used to filter for type === 'ROLL'
     // (which the reducer never emitted) and silently computed everything from an

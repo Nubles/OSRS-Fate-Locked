@@ -6,7 +6,7 @@ import { SkillRollOdds } from './SkillRollOdds';
 describe('SkillRollOdds', () => {
   it('shows the exact chance for the next level', () => {
     const html = renderToStaticMarkup(
-      <SkillRollOdds currentLevel={41} isUnlocked />,
+      <SkillRollOdds currentLevel={41} isUnlocked descriptionId="attack-key-roll-description" />,
     );
 
     expect(html).toContain('Next Lv 42');
@@ -17,7 +17,7 @@ describe('SkillRollOdds', () => {
 
   it('shows the maximum eligible chance at level 98', () => {
     const html = renderToStaticMarkup(
-      <SkillRollOdds currentLevel={98} isUnlocked />,
+      <SkillRollOdds currentLevel={98} isUnlocked descriptionId="attack-key-roll-description" />,
     );
 
     expect(html).toContain('Next Lv 99');
@@ -26,10 +26,26 @@ describe('SkillRollOdds', () => {
 
   it('shows nothing for locked or maxed skills', () => {
     expect(renderToStaticMarkup(
-      <SkillRollOdds currentLevel={41} isUnlocked={false} />,
+      <SkillRollOdds currentLevel={41} isUnlocked={false} descriptionId="attack-key-roll-description" />,
     )).toBe('');
     expect(renderToStaticMarkup(
-      <SkillRollOdds currentLevel={99} isUnlocked />,
+      <SkillRollOdds currentLevel={99} isUnlocked descriptionId="attack-key-roll-description" />,
     )).toBe('');
+  });
+  it('exposes the Chaos explanation through the card description relationship', () => {
+    const descriptionId = 'attack-key-roll-description';
+    const html = renderToStaticMarkup(
+      <div role="button" tabIndex={0} aria-describedby={descriptionId}>
+        <SkillRollOdds
+          currentLevel={41}
+          isUnlocked
+          descriptionId={descriptionId}
+        />
+      </div>,
+    );
+
+    expect(html).toContain(`aria-describedby="${descriptionId}"`);
+    expect(html).toContain(`id="${descriptionId}"`);
+    expect(html).toContain('Every level also has a separate 2% Chaos Key chance.');
   });
 });
