@@ -20,6 +20,14 @@ import com.fatelocked.guardian.StrictModeGuard;
 import com.fatelocked.guardian.StrictModePause;
 import com.fatelocked.guardian.StrictModeAuditEntry;
 import com.fatelocked.guardian.StrictModeAuditLog;
+import com.fatelocked.guardian.StrictModeAuditPresenter;
+import com.fatelocked.guardian.travel.RuneLiteTravelAvailability;
+import com.fatelocked.guardian.travel.TravelActionResolver;
+import com.fatelocked.guardian.travel.TravelAlternativeFinder;
+import com.fatelocked.guardian.travel.TravelAvailability;
+import com.fatelocked.guardian.travel.TravelBlockNoticeStore;
+import com.fatelocked.guardian.travel.TravelGuardianCoordinator;
+import com.fatelocked.guardian.travel.TravelRuleEvaluator;
 import com.fatelocked.detectors.BossRaidDetector;
 import com.fatelocked.detectors.CollectionLogDetector;
 import com.fatelocked.detectors.ClueCasketDetector;
@@ -70,6 +78,7 @@ import net.runelite.client.config.ConfigManager;
 import net.runelite.client.RuneLite;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.input.KeyManager;
+import net.runelite.client.input.MouseManager;
 import net.runelite.client.util.HotkeyListener;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
@@ -148,6 +157,7 @@ public class FateLockedPlugin extends Plugin
     @Inject private WorldMapPointManager worldMapPointManager;
     @Inject private InfoBoxManager infoBoxManager;
     @Inject private KeyManager keyManager;
+    @Inject private MouseManager mouseManager;
     @Inject private OkHttpClient okHttpClient;
     @Inject private ConfigManager configManager;
 
@@ -188,6 +198,15 @@ private final BossRaidDetector bossRaidDetector = new BossRaidDetector();
         new StrictModeClickHandler(new StrictModeGuard());
     private volatile Instant rulesImportedAt;
     private final StrictModePause strictPause = new StrictModePause(Clock.systemUTC());
+    private TravelActionResolver travelActionResolver;
+    private TravelRuleEvaluator travelRuleEvaluator;
+    private TravelAvailability travelAvailability;
+    private TravelAlternativeFinder travelAlternativeFinder;
+    private TravelBlockNoticeStore travelNoticeStore;
+    private TravelGuardianCoordinator travelGuardianCoordinator;
+    private TravelGuardianPluginShell travelGuardianShell;
+    private FateLockedTravelBlockOverlay travelBlockOverlay;
+    private TravelGuardianOverlayLifecycle travelOverlayLifecycle;
 
     /** How long the locked-entry screen flash lasts. */
     public static final long LOCKED_FLASH_MS = 1600;
@@ -356,16 +375,49 @@ if (!DATA_DIR.exists()) DATA_DIR.mkdirs();
             log.warn("Could not open Strict Mode audit log", ex);
             strictAuditLog = null;
         }
+        travelActionResolver = new TravelActionResolver();
+        travelRuleEvaluator = new TravelRuleEvaluator();
+        travelAvailability = new RuneLiteTravelAvailability(client);
+        travelAlternativeFinder = new TravelAlternativeFinder();
+        travelNoticeStore = new TravelBlockNoticeStore(Clock.systemUTC());
+        travelGuardianCoordinator = new TravelGuardianCoordinator(
+            travelActionResolver,
+            travelRuleEvaluator,
+            travelAlternativeFinder,
+            travelNoticeStore,
+            strictClickHandler);
+        travelGuardianShell = new TravelGuardianPluginShell(
+            travelGuardianCoordinator,
+            travelAvailability,
+            this::writeTravelChat,
+            this::writeTravelAudit,
+            this::handleGenericGuard,
+            (stage, error) -> log.debug(
+                "Travel Guardian {} failed: {}", stage, error.getMessage()),
+            Clock.systemUTC());
+        travelBlockOverlay = new FateLockedTravelBlockOverlay(
+            travelNoticeStore,
+            config::strictMode,
+            strictPause::isPaused,
+            this::pauseStrictModeForSixtySeconds);
+
         overlayManager.add(worldMapOverlay);
         overlayManager.add(sceneOverlay);
         overlayManager.add(minimapOverlay);
         overlayManager.add(hudOverlay);
         overlayManager.add(contentOverlay);
         overlayManager.add(flashOverlay);
+        travelBlockOverlay.setPauseGuardian(this::pauseStrictModeForSixtySeconds);
+        travelOverlayLifecycle = new TravelGuardianOverlayLifecycle(
+            () -> overlayManager.add(travelBlockOverlay),
+            () -> mouseManager.registerMouseListener(travelBlockOverlay),
+            () -> mouseManager.unregisterMouseListener(travelBlockOverlay),
+            () -> overlayManager.remove(travelBlockOverlay));
+        travelOverlayLifecycle.start();
 
         panel.setCallbacks(this::applyPastedBundle, () -> clientThread.invoke(this::reloadBundle));
         panel.setGuardianCallbacks(
-            () -> { strictPause.pauseFor(Duration.ofSeconds(60)); updateStrictModePanel(); },
+            this::pauseStrictModeForSixtySeconds,
             () -> { strictPause.resume(); updateStrictModePanel(); },
             () -> configManager.setConfiguration(
                 FateLockedConfig.GROUP, "strictModeIntroSeen", true));
@@ -391,6 +443,18 @@ if (!DATA_DIR.exists()) DATA_DIR.mkdirs();
     @Override
     protected void shutDown()
     {
+        if (travelOverlayLifecycle != null)
+        {
+            try
+            {
+                travelOverlayLifecycle.stop();
+            }
+            catch (RuntimeException ex)
+            {
+                log.debug("Could not fully clean up Travel Guardian overlay: {}",
+                    ex.getMessage());
+            }
+        }
         overlayManager.remove(worldMapOverlay);
         overlayManager.remove(sceneOverlay);
         overlayManager.remove(minimapOverlay);
@@ -986,12 +1050,26 @@ java.util.Optional<DetectedEvent> detected =
     @Subscribe
     public void onMenuOptionClicked(MenuOptionClicked event)
     {
-        GuardedAction action = guardedActionFactory.from(event.getMenuEntry(), client);
         FateLockedBundle current = bundle;
         boolean accountMatch = currentAccountMatches(current);
+        FateRuleEngine rules = new FateRuleEngine(current, accountMatch, false);
         GuardContext context = new GuardContext(
-            config.strictMode(), strictPause.isPaused(), accountMatch, rulesAreFresh(),
-            new FateRuleEngine(current, accountMatch, false));
+            config.strictMode(), strictPause.isPaused(), accountMatch,
+            rulesAreFresh(), rules);
+        CanonicalChunk origin = null;
+        Player local = client.getLocalPlayer();
+        if (local != null && local.getWorldLocation() != null)
+        {
+            origin = CanonicalChunk.of(local.getWorldLocation());
+        }
+        travelGuardianShell.handle(event, client, origin, context, rules);
+    }
+
+    private void handleGenericGuard(
+        MenuOptionClicked event, GuardContext context)
+    {
+        GuardedAction action = guardedActionFactory.from(
+            event.getMenuEntry(), client);
         GuardResult result = strictClickHandler.handle(event, action, context);
         if (result.getOutcome() != GuardResult.Outcome.BLOCK) return;
 
@@ -1003,7 +1081,7 @@ java.util.Optional<DetectedEvent> detected =
         ChatMessageBuilder message = new ChatMessageBuilder()
             .append(ChatColorType.HIGHLIGHT).append("[Fate Locked] ")
             .append(ChatColorType.NORMAL).append(
-                "Prevented: " + target + " — " + reason + ".");
+                "Prevented: " + target + " \u2014 " + reason + ".");
         chatMessageManager.queue(QueuedMessage.builder()
             .type(ChatMessageType.GAMEMESSAGE)
             .runeLiteFormattedMessage(message.build())
@@ -1026,18 +1104,39 @@ java.util.Optional<DetectedEvent> detected =
         }
     }
 
+    private void writeTravelChat(String text)
+    {
+        String prefix = "[Fate Guardian] ";
+        String content = text.startsWith(prefix)
+            ? text.substring(prefix.length()) : text;
+        ChatMessageBuilder message = new ChatMessageBuilder()
+            .append(ChatColorType.HIGHLIGHT).append(prefix)
+            .append(ChatColorType.NORMAL).append(content);
+        chatMessageManager.queue(QueuedMessage.builder()
+            .type(ChatMessageType.GAMEMESSAGE)
+            .runeLiteFormattedMessage(message.build())
+            .build());
+    }
+
+    private void writeTravelAudit(StrictModeAuditEntry entry) throws IOException
+    {
+        if (strictAuditLog == null) return;
+        strictAuditLog.append(entry);
+        updateStrictAuditPanel();
+    }
+
     private void updateStrictAuditPanel()
     {
-        List<String> lines = new ArrayList<>();
-        if (strictAuditLog != null)
-        {
-            for (StrictModeAuditEntry entry : strictAuditLog.recent(5))
-            {
-                lines.add(entry.getTarget() + " — " + entry.getReason());
-            }
-        }
-        panel.updateRecentPrevented(lines);
+        panel.updateRecentPrevented(
+            StrictModeAuditPresenter.recentPrevented(
+                strictAuditLog == null ? null : strictAuditLog.recent(5)));
     }
+    void pauseStrictModeForSixtySeconds()
+    {
+        strictPause.pauseFor(Duration.ofSeconds(60));
+        updateStrictModePanel();
+    }
+
     private void updateStrictModePanel()
     {
         panel.updateStrictMode(

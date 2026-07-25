@@ -92,6 +92,43 @@ The `FLGZ:` relay payload is tested against the existing 256 KiB compressed
 limit. RuneLite continues to load v1-v3 bundles using legacy map behavior; a
 malformed v4 or unsupported future version is rejected without replacing the
 last valid snapshot.
+
+## Travel Guardian and `knownMobility`
+
+`rules.knownMobility` is the authority list: it declares which canonical
+mobility names the snapshot can classify. It is not the player's unlock list.
+`rules.unlocks.mobility` is the Allowed subset. A full authored manifest emits
+the sorted canonical mobility list as authority; a typed fallback emits that
+authority only when the caller supplied mobility state. No authority is an
+empty `knownMobility` list, so RuneLite returns Unknown instead of guessing
+Locked.
+
+Travel Guardian remains part of the existing Strict Mode checkbox, which is
+off by default. RuneLite may prevent travel only for a fresh snapshot bound to
+the logged-in account, an exactly recognised canonical destination, and a
+proven Locked destination or known mobility rule. Allowed, Not ready, Unknown,
+stale, wrong-account, legacy, malformed, and unsupported snapshots fail open.
+The shared Strict Mode pause lasts 60 seconds and applies to travel as well as
+every other guarded category.
+
+Travel prevention does not add a relay endpoint or event type. The four-second
+banner, ten-second per-action chat suppression, and bounded audit record stay
+local. Suggested alternatives are computed only from an Allowed destination
+plus locally verified item, real-level, and spellbook state. RuneLite never
+activates a suggestion, clicks, paths, moves the player, or performs gameplay.
+
+### Operator release safety
+
+The Worker treats the bundle as an opaque payload; a Travel Guardian mirror
+does not require a relay deployment. Before release, pin `runelite-plugin/` to
+a reachable standalone commit, require byte-identical mirror verification, the
+full standalone Gradle gate, app tests, TypeScript type-check, production
+build, and the live RuneLite matrix. Do not advance the Hub pin if any Allowed
+or Unknown action is consumed, stale/wrong-account data blocks travel, chat
+floods, the pause fails to resume automatically, or a suggested alternative
+is not actually available. Keep the last valid snapshot active when a later
+import is malformed.
+
 ## Detector handling
 
 RuneLite observes and queues facts; it never rolls or performs gameplay. The app
