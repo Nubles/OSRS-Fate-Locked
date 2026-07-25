@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { Key, Sparkles } from 'lucide-react';
 import { LootBeam } from './LootBeam';
+import { formatKeyPercent, formatKeyRollValue } from '../utils/keyRoll';
 import { eventRarity, rarityColor, rarityRank } from '../utils/rarity';
 
 interface Particle {
@@ -132,7 +133,7 @@ export const EffectsLayer: React.FC = () => {
                  {f.type === 'OMNI' ? 'OMNI-KEY!' : f.type === 'PITY' ? 'PITY KEY!' : f.type === 'SUCCESS' ? 'SUCCESS!' : 'MISS'}
              </span>
              <span className="text-xs text-white opacity-90 font-mono bg-black/60 px-2 py-0.5 rounded-full mt-1 border border-white/10 shadow-xl backdrop-blur-sm">
-                 {f.roll} {f.type === 'FAIL' ? '>' : '≤'} {f.threshold}
+                 {formatKeyRollValue(f.roll)} {f.type === 'FAIL' ? '>' : '≤'} {formatKeyPercent(f.threshold)}
              </span>
         </div>
       ))}
