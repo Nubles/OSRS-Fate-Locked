@@ -12,6 +12,16 @@ describe('SkillRollOdds', () => {
     expect(html).toContain('Next Lv 42');
     expect(html).toContain('8.4% Key');
     expect(html).toContain('separate 2% Chaos Key chance');
+    expect(html).toContain('pointer-events-auto');
+  });
+
+  it('shows the maximum eligible chance at level 98', () => {
+    const html = renderToStaticMarkup(
+      <SkillRollOdds currentLevel={98} isUnlocked />,
+    );
+
+    expect(html).toContain('Next Lv 99');
+    expect(html).toContain('19.8% Key');
   });
 
   it('shows nothing for locked or maxed skills', () => {
