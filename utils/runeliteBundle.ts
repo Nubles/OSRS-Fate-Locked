@@ -5,6 +5,7 @@
  */
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
+import { MOBILITY_LIST } from '../data/items';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
 import type { RuneliteRulesManifest } from './runeliteRulesManifest';
 
@@ -64,6 +65,7 @@ export async function buildRuneliteBundle(
     gameModeId: identity?.gameModeId ?? (unlockedChunks !== undefined ? 'chunked' : 'vanilla'),
     exportedAt,
     bankLocks: !!bankLocks,
+    knownMobility: [...MOBILITY_LIST].sort(),
     unlocks: {
       regions: [...unlockedRegions].sort(),
       chunks: [...(unlockedChunks ?? [])].sort(),
