@@ -14,7 +14,7 @@ export const SkillRollOdds: React.FC<Props> = ({ currentLevel, isUnlocked }) => 
 
   return (
     <div
-      className="text-[8px] text-blue-300/80 mt-0.5 leading-none whitespace-nowrap"
+      className="pointer-events-auto text-[8px] text-blue-300/80 mt-0.5 leading-none whitespace-nowrap"
       title={`Next level Key chance: ${chance}. Every level also has a separate 2% Chaos Key chance.`}
     >
       Next Lv {nextLevel} &middot; {chance} Key
