@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { Key, Sparkles } from 'lucide-react';
 import { LootBeam } from './LootBeam';
+import { formatKeyPercent, formatKeyRollValue } from '../utils/keyRoll';
 import { eventRarity, rarityColor, rarityRank } from '../utils/rarity';
 
 interface Particle {
@@ -12,13 +13,15 @@ interface Particle {
   type: 'key' | 'omni';
 }
 
+type RollFeedbackType = 'SUCCESS' | 'FAIL' | 'OMNI' | 'PITY';
+
 interface RollFeedback {
   id: string;
   x: number;
   y: number;
   roll: number;
   threshold: number;
-  type: 'SUCCESS' | 'FAIL' | 'OMNI' | 'PITY';
+  type: RollFeedbackType;
 }
 
 interface Beam {
@@ -28,6 +31,16 @@ interface Beam {
   color: string;
   intense: boolean;
 }
+
+export const RollFeedbackComparison: React.FC<Pick<RollFeedback, 'roll' | 'threshold' | 'type'>> = ({
+  roll,
+  threshold,
+  type,
+}) => (
+  <span className="text-xs text-white opacity-90 font-mono bg-black/60 px-2 py-0.5 rounded-full mt-1 border border-white/10 shadow-xl backdrop-blur-sm">
+    {formatKeyRollValue(roll)} {type === 'FAIL' || type === 'PITY' ? '>' : '≤'} {formatKeyPercent(threshold)}
+  </span>
+);
 
 export const EffectsLayer: React.FC = () => {
   const { lastEvent, animationsEnabled } = useGame();
@@ -88,7 +101,7 @@ export const EffectsLayer: React.FC = () => {
     }, 1000);
   };
 
-  const spawnFeedback = (x: number, y: number, roll: number, threshold: number, type: 'SUCCESS' | 'FAIL' | 'OMNI' | 'PITY') => {
+  const spawnFeedback = (x: number, y: number, roll: number, threshold: number, type: RollFeedbackType) => {
     const id = Math.random().toString();
     setRollFeedback(prev => [...prev, { id, x, y, roll, threshold, type }]);
     setTimeout(() => {
@@ -131,9 +144,7 @@ export const EffectsLayer: React.FC = () => {
              <span className={`text-2xl font-black tracking-wide ${f.type === 'OMNI' ? 'text-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.8)]' : f.type === 'SUCCESS' ? 'text-green-400 drop-shadow-[0_0_5px_rgba(34,197,94,0.8)]' : f.type === 'PITY' ? 'text-amber-400 drop-shadow-[0_0_5px_rgba(251,191,36,0.8)]' : 'text-red-400 drop-shadow-[0_0_2px_rgba(239,68,68,0.5)]'}`}>
                  {f.type === 'OMNI' ? 'OMNI-KEY!' : f.type === 'PITY' ? 'PITY KEY!' : f.type === 'SUCCESS' ? 'SUCCESS!' : 'MISS'}
              </span>
-             <span className="text-xs text-white opacity-90 font-mono bg-black/60 px-2 py-0.5 rounded-full mt-1 border border-white/10 shadow-xl backdrop-blur-sm">
-                 {f.roll} {f.type === 'FAIL' ? '>' : '≤'} {f.threshold}
-             </span>
+             <RollFeedbackComparison roll={f.roll} threshold={f.threshold} type={f.type} />
         </div>
       ))}
     </>

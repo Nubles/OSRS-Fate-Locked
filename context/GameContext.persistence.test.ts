@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { parseAndMigrateSave } from '../utils/saveSchema';
+import { serializeCurrent } from '../utils/gamePersistence';
 import * as GameContext from './GameContext';
 
 type DurableWriter = (
@@ -36,5 +38,57 @@ describe('explicit replacement persistence', () => {
       .toThrow('quota');
     expect(events).toEqual(['write']);
     expect(pending.current).toBe(23);
+  });
+});
+
+describe('roll history persistence', () => {
+  it('round-trips a production decimal roll through the strict save schema', () => {
+    const rolled = GameContext.gameReducer(
+      { ...structuredClone(GameContext.initialState), lastEvent: null },
+      {
+        type: 'ROLL_RESULT',
+        payload: {
+          success: true,
+          omni: false,
+          pity: false,
+          roll: 8.2,
+          baseThreshold: 8.2,
+          threshold: 9.2,
+          source: 'Attack Level 41',
+        },
+      },
+    );
+
+    const parsed = parseAndMigrateSave(
+      serializeCurrent(rolled),
+      GameContext.initialState,
+    );
+
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok === false) throw new Error(`${parsed.code}: ${parsed.path ?? ''}`);
+    expect(parsed.state.history.at(-1)).toMatchObject({
+      rollValue: 8.2,
+      baseThreshold: 8.2,
+      threshold: 9.2,
+    });
+  });
+
+  it('continues accepting legacy roll history without a base threshold', () => {
+    const legacy = structuredClone(GameContext.initialState);
+    legacy.history = [{
+      id: 'legacy-roll',
+      timestamp: 1,
+      type: 'ROLL_SUCCESS',
+      message: 'Key Found!',
+      rollValue: 8,
+      threshold: 9,
+    }];
+
+    const parsed = parseAndMigrateSave(JSON.stringify(legacy), GameContext.initialState);
+
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok === false) throw new Error(`${parsed.code}: ${parsed.path ?? ''}`);
+    expect(parsed.state.history[0]).toMatchObject({ rollValue: 8, threshold: 9 });
+    expect(parsed.state.history[0]).not.toHaveProperty('baseThreshold');
   });
 });

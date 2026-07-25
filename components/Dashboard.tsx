@@ -20,6 +20,7 @@ import { TableType } from '../types';
 import { wikiService } from '../services/WikiService';
 import { NoteTrigger } from './NoteTrigger';
 import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
+import { SkillRollOdds } from './SkillRollOdds';
 // RegionMap is the single heaviest component in the app (map surface,
 // authoring tool, chunk overlays + their data). It only renders on the World
 // tab, so keep it out of the initial bundle.
@@ -503,6 +504,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                     };
                     
                     const isMainActionable = canUnlockStart || canLevel;
+                    const oddsDescriptionId = `skill-roll-odds-${skill.toLowerCase().replace(/\s+/g, '-')}`;
                     const tierColorText = isUnlocked ? 'text-gray-200' : 'text-gray-500';
 
                     if (searchQuery && !skill.toLowerCase().includes(searchQuery.toLowerCase())) return null;
@@ -513,7 +515,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                            data-skill-card={skill}
                            onClick={isMainActionable ? handleMainClick : undefined}
                            className={`
-                                flex flex-col p-2 rounded bg-[#1f1f1f] border border-white/5 text-left transition-all duration-150 relative overflow-hidden group min-h-[60px]
+                                flex flex-col p-2 rounded bg-[#1f1f1f] border border-white/5 text-left transition-all duration-150 relative overflow-hidden group min-h-[68px]
                                 ${canLevel ? 'hover:bg-[#2a2a2a] cursor-pointer ring-1 ring-green-500/20 hover:ring-green-500/40' : ''}
                                 ${canUnlockStart ? 'ring-1 ring-purple-400/40 hover:ring-purple-400/70 hover:bg-purple-900/10 cursor-pointer' : ''}
                                 ${levelingSkill === skill ? 'animate-pulse bg-green-900/40' : ''}
@@ -521,6 +523,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                            `}
                            role="button"
                            tabIndex={isMainActionable ? 0 : -1}
+                           aria-describedby={canLevel ? oddsDescriptionId : undefined}
                         >
                             {/* Note Trigger */}
                             <div className="absolute top-1 right-1 z-30">
@@ -562,6 +565,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                                     <div className="text-[9px] text-gray-400 font-mono leading-none mt-0.5">
                                         {isUnlocked ? `Lvl ${level}/99` : 'Locked'}
                                     </div>
+                                    <SkillRollOdds currentLevel={level} isUnlocked={isUnlocked} descriptionId={oddsDescriptionId} />
                                     <div className="text-[8px] text-gray-500 mt-0.5 leading-none">
                                         Methods: <span className="text-gray-400">{methodRange}</span>
                                     </div>

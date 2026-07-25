@@ -213,15 +213,20 @@ describe('replayInvariants', () => {
     expect(violations.some(v => v.kind === 'FATE_OVERFLOW')).toBe(true);
   });
 
-  it('flags a roll value outside 1-100', () => {
-    const low = replayInvariants([fail({ rollValue: 0 })], 0).violations;
-    const high = replayInvariants([fail({ rollValue: 101 })], 0).violations;
-    expect(low.some(v => v.kind === 'ROLL_OUT_OF_RANGE')).toBe(true);
+  it('flags roll values outside 0.1-100.0', () => {
+    const zero = replayInvariants([fail({ rollValue: 0 })], 0).violations;
+    const high = replayInvariants([fail({ rollValue: 100.1 })], 0).violations;
+    expect(zero.some(v => v.kind === 'ROLL_OUT_OF_RANGE')).toBe(true);
     expect(high.some(v => v.kind === 'ROLL_OUT_OF_RANGE')).toBe(true);
   });
 
-  it('accepts an in-range roll value', () => {
-    const { violations } = replayInvariants([fail({ rollValue: 100 }), success({ rollValue: 1 })], 0);
+  it('accepts decimal and legacy integer roll values in range', () => {
+    const { violations } = replayInvariants([
+      fail({ rollValue: 0.1 }),
+      fail({ rollValue: 8.2 }),
+      success({ rollValue: 1 }),
+      success({ rollValue: 100 }),
+    ], 0);
     expect(violations.some(v => v.kind === 'ROLL_OUT_OF_RANGE')).toBe(false);
   });
 });

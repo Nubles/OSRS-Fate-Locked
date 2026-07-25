@@ -5,6 +5,7 @@ import {
   EARN_METHODS, KEY_TYPES, SPEND_TABLES, RITUALS,
   SKILLS_TIER_CAP, LEVEL_ROLL_MAX, earnRange,
 } from './economy';
+import { skillLevelKeyChance } from '../utils/keyRoll';
 
 /**
  * This is the anti-drift guarantee: the Codex / onboarding render from
@@ -39,7 +40,9 @@ describe('economy ↔ engine consistency', () => {
   it('represents Level Ups as the dynamic Level ÷ 5 curve', () => {
     const lvl = EARN_METHODS.find(m => m.category === 'Level Ups');
     expect(lvl?.dynamic).toBe(true);
-    expect(LEVEL_ROLL_MAX).toBe(Math.ceil(99 / 5));
+    expect(LEVEL_ROLL_MAX).toBe(19.8);
+    expect(LEVEL_ROLL_MAX).toBe(skillLevelKeyChance(99));
+    expect(lvl?.tiers[0].rateLabel).toBe('Level ÷ 5 (up to 19.8% at level 99)');
   });
 
   it('earnRange returns the min/max of a method’s fixed tiers', () => {

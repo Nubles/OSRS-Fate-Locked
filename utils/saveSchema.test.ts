@@ -399,6 +399,16 @@ describe('save schema numeric and enum boundaries', () => {
     value => { expectRejected(candidate({ keys: value }), 'invalid_number', 'keys'); },
   );
 
+  it('bounds base thresholds like effective history thresholds', () => {
+    for (const key of ['baseThreshold', 'threshold'] as const) {
+      for (const value of [-1, MAX_COUNTER + 1]) {
+        expectRejected(candidate({
+          history: [{ ...fullStateFixture().history[0], [key]: value }],
+        }), 'invalid_history', `history[0].${key}`);
+      }
+    }
+  });
+
   it.each([0, 100, 1.5, Number.NaN])(
     'rejects impossible skill levels: %s',
     level => { expectRejected(candidate({}, { levels: { Attack: level } }), 'invalid_number', 'unlocks.levels.Attack'); },

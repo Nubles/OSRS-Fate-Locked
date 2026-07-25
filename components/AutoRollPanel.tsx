@@ -151,7 +151,7 @@ export function AutoRollPanel() {
   useEffect(() => { if (linkedAccount) onFetch(); /* eslint-disable-line react-hooks/exhaustive-deps */ }, []);
 
   // "Auto-roll": walk each unlocked skill up to its real level through the LIVE
-  // level-up engine — every level fires its key roll (chance = ceil(level/5)%),
+  // level-up engine — every level fires its exact level/5 Key roll,
   // the 2% chaos-key chance and the omni chance — so the run earns exactly the
   // keys those levels would have. Runs in batches for a responsive slot-machine
   // feel; tallies the keys/omni/chaos earned at the end.
