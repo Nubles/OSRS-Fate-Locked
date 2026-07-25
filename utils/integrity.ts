@@ -114,7 +114,7 @@ export interface ReplayState {
 }
 
 // Given the history alone, re-derive the running state and flag anything
-// physically impossible (negative keys, fate over cap, roll outside 1-100).
+// physically impossible (negative keys, fate over cap, roll outside 0.1-100.0).
 // Doesn't prove the *roll values* are honest — a determined editor can
 // rewrite consistently — but catches naive tampering and any inconsistency
 // introduced by hand-editing isolated fields.
@@ -141,8 +141,12 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3): { violatio
 
   for (let i = 0; i < history.length; i++) {
     const e = history[i];
-    if (e.rollValue !== undefined && (e.rollValue < 1 || e.rollValue > 100)) {
-      violations.push({ index: i, kind: 'ROLL_OUT_OF_RANGE', message: `roll ${e.rollValue} out of 1-100` });
+    if (e.rollValue !== undefined && (e.rollValue < 0.1 || e.rollValue > 100)) {
+      violations.push({
+        index: i,
+        kind: 'ROLL_OUT_OF_RANGE',
+        message: `roll ${e.rollValue} out of 0.1-100.0`,
+      });
     }
     switch (e.type) {
       case 'ROLL_OMNI':

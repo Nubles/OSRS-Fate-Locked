@@ -7,6 +7,7 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 import { X, TrendingUp, TrendingDown, Skull, Key, Shield, Activity, BarChart3, LineChart as LineChartIcon, PieChart, List, ArrowUpDown, ArrowUp, ArrowDown, Sparkles } from 'lucide-react';
 import { isRollEntry } from '../utils/logEntry';
 import { buildFateReport } from '../utils/fateReport';
+import { buildRollDistribution } from '../utils/rollDistribution';
 // Charts (recharts, ~300 KB) live in their own lazily-loaded chunk so opening
 // Stats to see the overview/breakdown/fate tabs doesn't pay the recharts tax.
 const StatsChartsView = lazyWithRetry(() => import('./StatsChartsView'));
@@ -63,14 +64,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({ onClose }) => {
     const luckScore = actualSuccesses - expectedSuccesses;
     const luckPercent = expectedSuccesses > 0 ? ((actualSuccesses - expectedSuccesses) / expectedSuccesses) * 100 : 0;
 
-    // Roll Distribution (Buckets of 5)
-    const buckets = Array.from({ length: 20 }, (_, i) => ({ range: `${i * 5 + 1}-${(i + 1) * 5}`, count: 0, min: i * 5 + 1 }));
-    rolls.forEach(r => {
-        if (r.rollValue) {
-            const bucketIdx = Math.min(19, Math.floor((r.rollValue - 1) / 5));
-            buckets[bucketIdx].count++;
-        }
-    });
+    const buckets = buildRollDistribution(rolls);
 
     // Dry Streak Calc
     let maxDry = 0;
