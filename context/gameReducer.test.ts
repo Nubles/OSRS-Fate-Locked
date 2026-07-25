@@ -23,8 +23,27 @@ import { ALL_CA_TASKS } from '../data/caTasks';
 
 const base = () => ({ ...initialState, lastEvent: null });
 
-const roll = (over: Partial<{ success: boolean; omni: boolean; pity: boolean; roll: number; threshold: number; source: string }>) =>
-  ({ type: 'ROLL_RESULT' as const, payload: { success: false, omni: false, pity: false, roll: 50, threshold: 50, source: 'Test', ...over } });
+const roll = (over: Partial<{
+  success: boolean;
+  omni: boolean;
+  pity: boolean;
+  roll: number;
+  baseThreshold: number;
+  threshold: number;
+  source: string;
+}>) => ({
+  type: 'ROLL_RESULT' as const,
+  payload: {
+    success: false,
+    omni: false,
+    pity: false,
+    roll: 50,
+    baseThreshold: 50,
+    threshold: 50,
+    source: 'Test',
+    ...over,
+  },
+});
 
 // --- ROLL_RESULT ------------------------------------------------------------
 
@@ -60,6 +79,43 @@ describe('ROLL_RESULT', () => {
     expect(s.keys).toBe(initialState.keys + 2);
   });
 
+  it('preserves decimal roll, base chance, and effective chance in every result shape', () => {
+    const cases = [
+      {
+        state: gameReducer(base(), roll({
+          success: true, roll: 8.2, baseThreshold: 8.2, threshold: 9.2,
+        })),
+        expectedRoll: 8.2,
+      },
+      {
+        state: gameReducer(base(), roll({
+          success: true, omni: true, roll: 8.2, baseThreshold: 8.2, threshold: 9.2,
+        })),
+        expectedRoll: 8.2,
+      },
+      {
+        state: gameReducer(base(), roll({
+          roll: 9.3, baseThreshold: 8.2, threshold: 9.2,
+        })),
+        expectedRoll: 9.3,
+      },
+      {
+        state: gameReducer({ ...base(), fatePoints: 49 }, roll({
+          pity: true, roll: 9.3, baseThreshold: 8.2, threshold: 9.2,
+        })),
+        expectedRoll: 9.3,
+      },
+    ];
+
+    for (const { state, expectedRoll } of cases) {
+      const entry = state.history.at(-1)!;
+      expect(entry.rollValue).toBe(expectedRoll);
+      expect(entry.baseThreshold).toBe(8.2);
+      expect(entry.threshold).toBe(9.2);
+      expect(entry.meta).toMatchObject({ baseThreshold: 8.2, threshold: 9.2 });
+    }
+  });
+
   it('every roll branch produces a log entry that isRollEntry recognises', () => {
     // Regression test: StatsModal and scribe.ts used to filter for type === 'ROLL'
     // (which the reducer never emitted) and silently computed everything from an
@@ -85,7 +141,8 @@ describe('ROLL_RESULT', () => {
   });
 
   it('consumes one Luck buff on the first of two queued rolls', () => {
-    const dice = (_purpose: string, index = 0) => index === 1 ? 10 : 90;
+    const dice = (_purpose: string, index = 0, max = 100) =>
+      index === 1 ? max / 10 : max * 0.9;
     const start = { ...base(), activeBuff: 'LUCK' as const };
 
     const firstAction = prepareKeyRollAction(start, 'First queued roll', 20, dice);
@@ -99,7 +156,7 @@ describe('ROLL_RESULT', () => {
   });
 
   it('grants only one pity when two queued failures start at the pity boundary', () => {
-    const dice = () => 100;
+    const dice = (_purpose: string, _index = 0, max = 100) => max;
     const start = { ...base(), fatePoints: 49 };
 
     const firstAction = prepareKeyRollAction(start, 'First queued failure', 20, dice);
@@ -196,8 +253,9 @@ describe('ROLL_RESULT', () => {
       { context: 'genesis', index: 2 },
     ]);
     expect(prepared.rewardAction.payload).toMatchObject({
-      roll: 6,
-      threshold: 20,
+      roll: 5.7,
+      baseThreshold: 19.8,
+      threshold: 19.8,
       source: 'Attack Level 99',
       success: true,
     });
