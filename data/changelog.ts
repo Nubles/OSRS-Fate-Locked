@@ -8,6 +8,22 @@ export interface ChangelogRelease {
 }
 
 export const CHANGELOG_RELEASES = [{
+  id: '2026-07-25-exact-skill-key-odds',
+  title: 'Exact Skill Key Odds',
+  date: '25 July 2026',
+  sections: {
+    added: [
+      'Skill cards now show the exact Key chance for the next level.',
+    ],
+    changed: [
+      'Skill level-up Key odds now use exact Level ÷ 5 values, including decimal chances such as 8.2% at level 41.',
+      'Roll feedback, history, timelapses, and statistics now display Key rolls and chances to one decimal place.',
+    ],
+    fixed: [
+      'Mode-modified rolls now show their base and effective chances clearly, and decimal roll details persist correctly after reloading.',
+    ],
+  },
+}, {
   id: '2026-07-23-tracker-accuracy',
   title: 'Tracker Accuracy & Combat Powers',
   date: '23 July 2026',
