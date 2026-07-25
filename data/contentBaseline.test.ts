@@ -9,7 +9,7 @@ import { DIARY_DATA } from './diaryData';
 import { ALL_DIARY_TASKS } from './diaryTasks';
 import { ALL_CA_TASKS } from './caTasks';
 import { CA_DATA } from './caData';
-import { LATEST_CHANGELOG } from './changelog';
+import { CHANGELOG_RELEASES } from './changelog';
 import diarySource from './sources/achievement-diary-tasks.json';
 import caSource from './sources/combat-achievement-tasks.json';
 import legacyDiaryIds from './sources/achievement-diary-legacy-ids.json';
@@ -201,7 +201,12 @@ describe('deterministic current content baseline', () => {
   });
 
   it('describes only the game-data and save-integrity work that has landed', () => {
-    const wording = Object.values(LATEST_CHANGELOG.sections)
+    const trackerRelease = CHANGELOG_RELEASES.find(
+      release => release.id === '2026-07-23-tracker-accuracy',
+    );
+    expect(trackerRelease).toBeDefined();
+
+    const wording = Object.values(trackerRelease!.sections)
       .flatMap(lines => lines ?? [])
       .join(' ');
 
