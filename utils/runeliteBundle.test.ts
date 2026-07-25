@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import chunkContentJson from '../public/chunk-content.json?raw';
 import { initialState } from '../context/GameContext';
+import { MOBILITY_LIST } from '../data/items';
 import { buildBundlePayload } from './runeliteExport';
 import { buildRuneliteBundle, RuneliteRunState } from './runeliteBundle';
 
@@ -22,7 +23,28 @@ describe('buildRuneliteBundle — unlockedChunks presence', () => {
     expect(bundle.rules.runId).toBe('run-1');
     expect(bundle.chunks).toBeDefined();
     expect(bundle.chunkContent).toBeDefined();
+    expect(bundle.rules.knownMobility).toEqual([]);
+    expect(bundle.rules.unlocks.mobility).toEqual([]);
   });
+
+  it('preserves authored mobility unlocks in the typed fallback', async () => {
+    const bundle = await buildRuneliteBundle(
+      ['Misthalin'], state, undefined, undefined, undefined, undefined, false,
+      {
+        runId: 'run-2', runRevision: 10, gameModeId: 'vanilla',
+        rulesVersion: '1', contentVersion: 1, detectorContractVersion: 1,
+      },
+      undefined,
+      ['Spirit Trees', 'Fairy Rings'],
+    ) as any;
+
+    expect(bundle.rules.knownMobility).toEqual([...MOBILITY_LIST].sort());
+    expect(bundle.rules.unlocks.mobility).toEqual([
+      'Fairy Rings',
+      'Spirit Trees',
+    ]);
+  });
+
   it('omits unlockedChunks entirely when not passed (non-chunked mode)', async () => {
     const bundle = await buildRuneliteBundle([], state) as any;
     expect('unlockedChunks' in bundle).toBe(false);

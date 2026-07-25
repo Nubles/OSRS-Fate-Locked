@@ -108,6 +108,7 @@ export async function buildBundlePayload(
       detectorContractVersion: run.detectorContractVersion ?? DETECTOR_CONTRACT_VERSION,
     },
     rules,
+    unlocks.mobility,
   );
   const json = JSON.stringify(payload);
   const compressed = await compressForClipboard(json);

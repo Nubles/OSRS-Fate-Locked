@@ -49,6 +49,8 @@ export async function buildRuneliteBundle(
   identity?: RuneliteBundleIdentity,
   /** Canonical rules snapshot consumed by v4-aware plugins. */
   rules?: RuneliteRulesManifest,
+  /** Mobility subset for a typed fallback; undefined means no authority. */
+  fallbackMobility?: readonly string[],
 ) {
   // Dynamic import keeps the ~53 kB chunk-content dataset out of the eager
   // startup bundle — it's only ever needed here, at export time, and every
@@ -65,7 +67,9 @@ export async function buildRuneliteBundle(
     gameModeId: identity?.gameModeId ?? (unlockedChunks !== undefined ? 'chunked' : 'vanilla'),
     exportedAt,
     bankLocks: !!bankLocks,
-    knownMobility: [...MOBILITY_LIST].sort(),
+    knownMobility: fallbackMobility === undefined
+      ? []
+      : [...MOBILITY_LIST].sort(),
     unlocks: {
       regions: [...unlockedRegions].sort(),
       chunks: [...(unlockedChunks ?? [])].sort(),
@@ -76,7 +80,7 @@ export async function buildRuneliteBundle(
       merchants: [],
       bosses: [],
       minigames: [],
-      mobility: [],
+      mobility: [...(fallbackMobility ?? [])].sort(),
       arcana: [],
       guilds: [],
       farming: [],
