@@ -14,8 +14,27 @@ import { ALL_CHUNKS, CHUNKED_START, chunkKey } from '../utils/chunkAdjacency';
 
 const base = () => ({ ...initialState, lastEvent: null });
 
-const roll = (over: Partial<{ success: boolean; omni: boolean; pity: boolean; roll: number; threshold: number; source: string }>) =>
-  ({ type: 'ROLL_RESULT' as const, payload: { success: false, omni: false, pity: false, roll: 50, threshold: 50, source: 'Test', ...over } });
+const roll = (over: Partial<{
+  success: boolean;
+  omni: boolean;
+  pity: boolean;
+  roll: number;
+  baseThreshold: number;
+  threshold: number;
+  source: string;
+}>) => ({
+  type: 'ROLL_RESULT' as const,
+  payload: {
+    success: false,
+    omni: false,
+    pity: false,
+    roll: 50,
+    baseThreshold: 50,
+    threshold: 50,
+    source: 'Test',
+    ...over,
+  },
+});
 
 // --- ROLL_RESULT ------------------------------------------------------------
 
@@ -49,6 +68,43 @@ describe('ROLL_RESULT', () => {
   it('a Greed-buffed success grants two keys', () => {
     const s = gameReducer({ ...base(), activeBuff: 'GREED' as const }, roll({ success: true }));
     expect(s.keys).toBe(initialState.keys + 2);
+  });
+
+  it('preserves decimal roll, base chance, and effective chance in every result shape', () => {
+    const cases = [
+      {
+        state: gameReducer(base(), roll({
+          success: true, roll: 8.2, baseThreshold: 8.2, threshold: 9.2,
+        })),
+        expectedRoll: 8.2,
+      },
+      {
+        state: gameReducer(base(), roll({
+          success: true, omni: true, roll: 8.2, baseThreshold: 8.2, threshold: 9.2,
+        })),
+        expectedRoll: 8.2,
+      },
+      {
+        state: gameReducer(base(), roll({
+          roll: 9.3, baseThreshold: 8.2, threshold: 9.2,
+        })),
+        expectedRoll: 9.3,
+      },
+      {
+        state: gameReducer({ ...base(), fatePoints: 49 }, roll({
+          pity: true, roll: 9.3, baseThreshold: 8.2, threshold: 9.2,
+        })),
+        expectedRoll: 9.3,
+      },
+    ];
+
+    for (const { state, expectedRoll } of cases) {
+      const entry = state.history.at(-1)!;
+      expect(entry.rollValue).toBe(expectedRoll);
+      expect(entry.baseThreshold).toBe(8.2);
+      expect(entry.threshold).toBe(9.2);
+      expect(entry.meta).toMatchObject({ baseThreshold: 8.2, threshold: 9.2 });
+    }
   });
 
   it('every roll branch produces a log entry that isRollEntry recognises', () => {

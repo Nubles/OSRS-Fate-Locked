@@ -14,6 +14,12 @@ import { drawFloat } from '../utils/seededRng';
 import { hashEntry, ensureChain } from '../utils/integrity';
 import { pushBackup, listBackups as readBackups, getBackupData, BackupMeta } from '../utils/backups';
 import { showToast } from '../utils/toast';
+import {
+  formatKeyPercent,
+  formatKeyRollValue,
+  resolveKeyRoll,
+  skillLevelKeyChance,
+} from '../utils/keyRoll';
 
 // --- Types ---
 const CURRENT_VERSION = 1;
@@ -27,7 +33,7 @@ const generateId = (): string => {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 11)}`;
 };
 
-type RollEventMeta = { roll: number; threshold: number };
+type RollEventMeta = { roll: number; baseThreshold: number; threshold: number };
 type UnlockEventMeta = { item: string; cost: number; category?: TableType };
 type RitualEventMeta = { type: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE' | 'GAMBIT' | 'CARTOGRAPHER'; won?: boolean; chunk?: string };
 type LevelUpEventMeta = { skill: string; level: number; totalLevel: number; chaosKeyAwarded: boolean };
@@ -232,7 +238,20 @@ export type Action =
   | { type: 'TOGGLE_REVEAL_ALL' }
   | { type: 'SET_SEED'; payload: string }
   | { type: 'COMPLETE_ONBOARDING' }
-  | { type: 'ROLL_RESULT'; payload: { success: boolean; omni: boolean; pity: boolean; roll: number; threshold: number; source: string; x?: number; y?: number } }
+  | {
+    type: 'ROLL_RESULT';
+    payload: {
+      success: boolean;
+      omni: boolean;
+      pity: boolean;
+      roll: number;
+      baseThreshold: number;
+      threshold: number;
+      source: string;
+      x?: number;
+      y?: number;
+    };
+  }
   | { type: 'UNLOCK'; payload: { table: TableType; item: string; costType: 'key' | 'specialKey' | 'chaosKey'; cost: number } }
   | { type: 'RITUAL_LUCK' }
   | { type: 'RITUAL_GREED' }
@@ -351,7 +370,11 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     }
 
     case 'ROLL_RESULT': {
-      const { success, omni, pity, roll, threshold, source, x, y } = action.payload;
+      const { success, omni, pity, roll, baseThreshold, threshold, source, x, y } = action.payload;
+      const rollText = formatKeyRollValue(roll);
+      const chanceText = baseThreshold === threshold
+        ? formatKeyPercent(threshold)
+        : `${formatKeyPercent(baseThreshold)} base, ${formatKeyPercent(threshold)} effective`;
       const isGreed = state.activeBuff === 'GREED';
 
       let newState = { ...state, activeBuff: state.activeBuff === 'LUCK' || state.activeBuff === 'GREED' ? 'NONE' : state.activeBuff } as GameState & { lastEvent: GameEvent | null };
@@ -367,14 +390,15 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
              timestamp: now,
              type: 'ROLL_OMNI',
              message: 'LEGENDARY DROP! You found an Omni-Key!',
-             details: `Critical Success! Rolled ${roll} vs ${threshold}.`,
-             meta: { roll, threshold, source },
+             details: `Critical Success! Rolled ${rollText} vs ${formatKeyPercent(threshold)}; ${chanceText}.`,
+             meta: { roll, baseThreshold, threshold, source },
              result: 'SUCCESS',
              source,
              rollValue: roll,
+             baseThreshold,
              threshold
           });
-          newState.lastEvent = { id: generateId(), type: 'ROLL_OMNI', x, y, meta: { roll, threshold } };
+          newState.lastEvent = { id: generateId(), type: 'ROLL_OMNI', x, y, meta: { roll, baseThreshold, threshold } };
         } else {
           const amount = isGreed ? 2 : 1;
           newState.keys += amount;
@@ -384,14 +408,15 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
              timestamp: now,
              type: 'ROLL_SUCCESS',
              message: `Key Found!${isGreed ? ' (Doubled)' : ''}`,
-             details: `Rolled ${roll} (≤ ${threshold}).`,
-             meta: { roll, threshold, source },
+             details: `Rolled ${rollText} (≤ ${formatKeyPercent(threshold)}; ${chanceText}).`,
+             meta: { roll, baseThreshold, threshold, source },
              result: 'SUCCESS',
              source,
              rollValue: roll,
+             baseThreshold,
              threshold
           });
-          newState.lastEvent = { id: generateId(), type: 'ROLL_SUCCESS', x, y, meta: { roll, threshold } };
+          newState.lastEvent = { id: generateId(), type: 'ROLL_SUCCESS', x, y, meta: { roll, baseThreshold, threshold } };
         }
         newState.fatePoints = 0;
       } else {
@@ -403,14 +428,15 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
                 timestamp: now,
                 type: 'PITY',
                 message: 'MAX FATE REACHED! Pity Key granted.',
-                details: `Rolled ${roll} but Fate intervened.`,
-                meta: { roll, threshold, source },
+                details: `Rolled ${rollText} at ${chanceText}, but Fate intervened.`,
+                meta: { roll, baseThreshold, threshold, source },
                 result: 'SUCCESS',
                 source,
                 rollValue: roll,
+                baseThreshold,
                 threshold
             });
-            newState.lastEvent = { id: generateId(), type: 'ROLL_PITY', x, y, meta: { roll, threshold } };
+            newState.lastEvent = { id: generateId(), type: 'ROLL_PITY', x, y, meta: { roll, baseThreshold, threshold } };
          } else {
             newState.fatePoints += 1;
             // Greed's consolation: half the (scaled) ritual cost flows back,
@@ -426,14 +452,15 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
                 timestamp: now,
                 type: 'ROLL_FAIL',
                 message: `No Key.${isGreed ? ` (Greed refunded ${greedRefund} Fate)` : ''}`,
-                details: `Rolled ${roll} (> ${threshold}). Fate: ${newState.fatePoints}/${resolveModeRules(state.gameModeId, state.customMode).pityThreshold}`,
-                meta: { roll, threshold, source },
+                details: `Rolled ${rollText} (> ${formatKeyPercent(threshold)}; ${chanceText}). Fate: ${newState.fatePoints}/${resolveModeRules(state.gameModeId, state.customMode).pityThreshold}`,
+                meta: { roll, baseThreshold, threshold, source },
                 result: 'FAIL',
                 source,
                 rollValue: roll,
+                baseThreshold,
                 threshold
             });
-            newState.lastEvent = { id: generateId(), type: 'ROLL_FAIL', x, y, meta: { roll, threshold } };
+            newState.lastEvent = { id: generateId(), type: 'ROLL_FAIL', x, y, meta: { roll, baseThreshold, threshold } };
          }
       }
 
@@ -852,26 +879,24 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
   const setSeed = useCallback((seed: string) => dispatch({ type: 'SET_SEED', payload: seed }), []);
 
   const rollForKey = useCallback((source: string, threshold: number, x?: number, y?: number) => {
-    let roll = nextDice('roll', 0);
-    const advantageRoll = nextDice('roll', 1);
-
-    if (state.activeBuff === 'LUCK') {
-      roll = Math.min(roll, advantageRoll);
-    }
-
     const mode = resolveModeRules(state.gameModeId, state.customMode);
-
-    // Region passives (active only when the mode enables them) shift the
-    // effective success threshold and Omni chance.
+    let successBonus = 0;
     let omniBonus = 0;
-    let effectiveThreshold = threshold;
+
     if (mode.regionModifiers) {
       const bonuses = getActiveRegionBonuses(state.unlocks.regions);
-      effectiveThreshold = Math.max(1, Math.min(100, threshold + bonuses.successBonus));
+      successBonus = bonuses.successBonus;
       omniBonus = bonuses.omniBonus;
     }
 
-    const success = roll <= effectiveThreshold;
+    const result = resolveKeyRoll({
+      primaryFloat: nextFloat('roll', 0),
+      advantageFloat: nextFloat('roll', 1),
+      baseThreshold: threshold,
+      successBonus,
+      luck: state.activeBuff === 'LUCK',
+    });
+    const { roll, baseThreshold, effectiveThreshold, success } = result;
     let omni = false;
     let pity = false;
 
@@ -892,8 +917,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     }
 
     // Pass the effective threshold so logs and stats reflect the real odds.
-    dispatch({ type: 'ROLL_RESULT', payload: { success, omni, pity, roll, threshold: effectiveThreshold, source, x, y } });
-  }, [state.activeBuff, state.fatePoints, state.gameModeId, state.customMode, state.unlocks.regions, nextDice]);
+    dispatch({
+      type: 'ROLL_RESULT',
+      payload: { success, omni, pity, roll, baseThreshold, threshold: effectiveThreshold, source, x, y },
+    });
+  }, [state.activeBuff, state.fatePoints, state.gameModeId, state.customMode, state.unlocks.regions, nextFloat, nextDice]);
 
   const unlockContent = useCallback((table: TableType, item: string, costType: 'key' | 'specialKey' | 'chaosKey', cost: number) => {
     dispatch({ type: 'UNLOCK', payload: { table, item, costType, cost } });
@@ -927,7 +955,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     dispatch({ type: 'LEVEL_UP', payload: { skill, chaosRoll } });
 
     const newLevel = (state.unlocks.levels[skill] || 1) + 1;
-    const rollChance = Math.ceil(newLevel / 5); // Level ÷ 5 curve (max 20% at 99) — rebalanced 2026
+    const rollChance = skillLevelKeyChance(newLevel);
 
     rollForKey(`${skill} Level ${newLevel}`, rollChance);
   }, [state.unlocks.levels, rollForKey, nextFloat]);

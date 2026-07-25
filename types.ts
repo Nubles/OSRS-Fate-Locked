@@ -86,6 +86,7 @@ export interface LogEntry {
   source?: string;
   result?: 'SUCCESS' | 'FAIL';
   rollValue?: number;
+  baseThreshold?: number;
   threshold?: number;
   message: string;
   details?: string;
