@@ -18,6 +18,106 @@ const unlocked = (over: Partial<UnlockState> = {}): UnlockState => ({
   completedTasks: [], collectionLog: {}, ...over,
 });
 
+const questIdsWorthAtLeast = (points: number): string[] => {
+  let total = 0;
+  const questIds: string[] = [];
+  for (const quest of Object.values(QUEST_DATA)) {
+    if (quest.points <= 0) continue;
+    questIds.push(quest.id);
+    total += quest.points;
+    if (total >= points) return questIds;
+  }
+  throw new Error(`Not enough Quest Points to reach ${points}`);
+};
+
+const unlocksReadyForPryingTimes = (): UnlockState => unlocked({
+  regions: ['The Open Seas'],
+  quests: ['Pandemonium', "The Knight's Sword"],
+  skills: { Smithing: 3, Sailing: 2 },
+  levels: { Smithing: 30, Sailing: 12 },
+});
+
+describe('manual journal readiness', () => {
+  it('requires 32 canonical Quest Points for the Champions Guild task', () => {
+    const task = ALL_DIARY_TASKS.find(({ id }) => id === 'var_med_2')!;
+    const low = evaluateDiaryTaskEligibility(task, unlocked({
+      quests: ['Cook\'s Assistant'],
+      regions: ['Varrock'],
+    }));
+    expect(low.machineEligible).toBe(false);
+    expect(low.blockers).toContainEqual({
+      kind: 'quest',
+      label: 'Quest Points 32',
+    });
+
+    const enough = evaluateDiaryTaskEligibility(task, unlocked({
+      quests: questIdsWorthAtLeast(32),
+      regions: ['Varrock'],
+    }));
+    expect(enough).toMatchObject({
+      machineEligible: true,
+      eligible: true,
+      confirmable: true,
+      manualChecks: [],
+    });
+  });
+
+  it('makes 153 Kudos confirmable but not automatically doable', () => {
+    const result = evaluateDiaryTaskEligibility(
+      ALL_DIARY_TASKS.find(({ id }) => id === 'var_hard_2')!,
+      unlocked({ regions: ['Varrock'] }),
+    );
+    expect(result).toMatchObject({
+      machineEligible: true,
+      eligible: false,
+      confirmable: true,
+      manualChecks: ['153 Varrock Museum Kudos'],
+      blockers: [],
+    });
+  });
+
+  it('prefers an eligible alternative over an earlier confirmable alternative', () => {
+    const result = evaluateDiaryTaskEligibility({
+      id: 'manual-route-preference',
+      oneOf: [
+        { label: 'Manual route', manualRequirements: ['Manual check'] },
+        { label: 'Automatic route', items: ['Test item'] },
+      ],
+    }, unlocked());
+
+    expect(result).toMatchObject({
+      eligible: true,
+      confirmable: true,
+      manualChecks: [],
+      blockers: [],
+    });
+    expect(result.evidence).toContain('Automatic route: Test item');
+  });
+
+  it('keeps machine blockers ahead of manual confirmation', () => {
+    const result = evaluateDiaryTaskEligibility(
+      ALL_DIARY_TASKS.find(({ id }) => id === 'var_hard_2')!,
+      unlocked(), 'chunked',
+    );
+    expect(result.machineEligible).toBe(false);
+    expect(result.confirmable).toBe(false);
+    expect(result.manualChecks).toEqual(['153 Varrock Museum Kudos']);
+  });
+
+  it('activates Prying Times manual metadata', () => {
+    const result = evaluateQuestEligibility(
+      QUEST_DATA['Prying Times'],
+      unlocksReadyForPryingTimes(),
+    );
+    expect(result).toMatchObject({
+      machineEligible: true,
+      eligible: false,
+      confirmable: true,
+      manualChecks: ['One open Sailing task slot'],
+    });
+  });
+});
+
 describe('reported quest access', () => {
   it('requires the exact South Falador Farm chunk in Chunked mode', () => {
     const q = QUEST_DATA['A Porcine of Interest'];
