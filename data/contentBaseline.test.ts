@@ -104,6 +104,16 @@ describe('cross-surface quest eligibility contract', () => {
 });
 
 describe('deterministic current content baseline', () => {
+  it('pins first-class Quest Point and manual Diary requirements', () => {
+    const varMediumGuild = ALL_DIARY_TASKS.find(({ id }) => id === 'var_med_2')!;
+    const varHardKudos = ALL_DIARY_TASKS.find(({ id }) => id === 'var_hard_2')!;
+    expect(varMediumGuild).toMatchObject({ questPoints: 32 });
+    expect(varHardKudos).toMatchObject({
+      manualRequirements: ['153 Varrock Museum Kudos'],
+    });
+    expect(varHardKudos.quests ?? []).not.toContain('Bone Voyage');
+  });
+
   it('pins audited quest requirement fields with exact equality', () => {
     expect(questRequirementFields('A Porcine of Interest')).toEqual({
       regions: ['Misthalin'],

@@ -7460,6 +7460,7 @@
       "regions": [
         "Varrock"
       ],
+      "questPoints": 32,
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "32 Quest points"
@@ -7734,6 +7735,9 @@
       "quests": [],
       "regions": [
         "Varrock"
+      ],
+      "manualRequirements": [
+        "153 Varrock Museum Kudos"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
