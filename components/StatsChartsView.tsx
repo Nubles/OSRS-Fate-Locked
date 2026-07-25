@@ -86,7 +86,7 @@ export const StatsChartsView: React.FC<Props> = ({ stats }) => (
     <div className="bg-[#1f1f1f] border border-white/5 rounded-lg p-4 h-[300px] flex flex-col">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2">
-          <BarChart3 size={14} /> Roll Distribution (1-100)
+          <BarChart3 size={14} /> Roll Distribution (0.1–100.0)
         </h3>
         <div className="flex gap-2 text-[9px] font-bold uppercase">
           <span className="text-green-500 flex items-center gap-1"><span className="w-2 h-2 bg-green-500 rounded-full"></span> Good</span>
