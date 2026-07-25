@@ -168,9 +168,9 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose }) => {
                                         <div>
                                             <h4 className="font-bold text-gray-200">The Roll</h4>
                                             <p className="text-sm text-gray-400 mt-1">
-                                                Click the corresponding button in the app. It rolls 1-100.
+                                                The app draws to 0.1% precision, from 0.1 to 100.0.
                                                 <br/>
-                                                <span className="text-green-400">Success:</span> Roll under the threshold to get a Key.
+                                                <span className="text-green-400">Success:</span> Roll at or under the threshold to get a Key.
                                                 <br/>
                                                 <span className="text-red-400">Fail:</span> Gain Fate Points.
                                             </p>
@@ -269,10 +269,10 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose }) => {
                                 <h3 className="text-blue-300 font-bold uppercase tracking-widest mb-4 flex items-center gap-2"><Dices size={18}/> A single roll, start to finish</h3>
                                 <ol className="space-y-3 text-sm text-gray-300">
                                     <li><b className="text-white">1.</b> You finish <b>Dragon Slayer II</b> — a <b className="text-purple-400">Master</b> quest — and tick it off in the Journal.</li>
-                                    <li><b className="text-white">2.</b> The app rolls <span className="font-mono">1–100</span> against its <b className="text-purple-400">95%</b> threshold. You roll <span className="font-mono text-green-400">42</span> → a Key!</li>
+                                    <li><b className="text-white">2.</b> The app draws to <span className="font-mono">0.1%</span> precision against its <b className="text-purple-400">95.0%</b> threshold. You roll <span className="font-mono text-green-400">42.0</span> → a Key!</li>
                                     <li><b className="text-white">3.</b> Every success then rolls for an upgrade. In {activeMode.name} mode that's a <b className="text-purple-400">{rules.omniChanceBase}%</b> Omni chance (up to 20% on this very quest). Miss it and you bank a Standard Key; hit it and you <i>also</i> pocket an <b className="text-purple-400">Omni-Key</b>.</li>
                                     <li><b className="text-white">4.</b> Take the Key to <b className="text-osrs-gold">Spend Keys</b>, choose the <b>Skills</b> table, and unlock a random skill tier — say Slayer. Those new Slayer levels open fresh tasks to roll on.</li>
-                                    <li className="text-gray-500 text-xs pt-1">Roll <span className="font-mono">96–100</span> instead and you'd get no Key — but you'd gain a Fate Point{rules.pityEnabled ? <>, inching toward a guaranteed Key at <b>{rules.pityThreshold}</b></> : ''}.</li>
+                                    <li className="text-gray-500 text-xs pt-1">Roll <span className="font-mono">95.1–100.0</span> instead and you'd get no Key — but you'd gain a Fate Point{rules.pityEnabled ? <>, inching toward a guaranteed Key at <b>{rules.pityThreshold}</b></> : ''}.</li>
                                 </ol>
                             </div>
 

@@ -589,7 +589,7 @@ export const ActionSection: React.FC = () => {
             label="Skill Rolling"
             accent="text-blue-500"
             desc={<>Click unlocked skills in the <span className="text-blue-200">Dashboard</span> to roll.</>}
-            rate={`Chance = Level / 5 (Max ${LEVEL_ROLL_MAX}%)`}
+            rate={`Chance = Level / 5 (up to ${LEVEL_ROLL_MAX.toFixed(1)}%)`}
             badge="bg-blue-900/20 border-blue-900/30 text-blue-400"
           />
           <InfoChip

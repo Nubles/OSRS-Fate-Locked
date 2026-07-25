@@ -19,11 +19,12 @@ import {
   GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST,
 } from '../data/items';
 
+import { skillLevelKeyChance } from '../utils/keyRoll';
 const WIKI = 'https://oldschool.runescape.wiki/images/';
 
 // ── Skill levelling is the one dynamic rate (computed per attempt) ───────────
 export const SKILLS_TIER_CAP = 10;     // tiers per skill (1 Key each)
-export const LEVEL_ROLL_MAX = 20;      // ceil(99/5) — the cap of the Level ÷ 5 curve
+export const LEVEL_ROLL_MAX = skillLevelKeyChance(99);
 export const LEVEL_CHAOS_CHANCE = 2;   // % chance of a Chaos Key on any level up
 
 // ── Xtreme Start anti-softlock insurance ──────────────────────────────────
@@ -201,7 +202,7 @@ export const EARN_METHODS: EarnMethod[] = [
       {
         tier: 'Per level gained',
         rate: LEVEL_ROLL_MAX,
-        rateLabel: `Level ÷ 5 (max ${LEVEL_ROLL_MAX}%)`,
+        rateLabel: `Level ÷ 5 (up to ${LEVEL_ROLL_MAX.toFixed(1)}% at level 99)`,
         bonus: `${LEVEL_CHAOS_CHANCE}% chance of a Chaos Key on every level, at any level.`,
       },
     ],
