@@ -1,4 +1,5 @@
 import { LogEntry } from '../types';
+import { formatKeyPercent, formatKeyRollValue } from './keyRoll';
 
 // Narrator voice — short, slightly dramatic, never cringe. Each returns a
 // single sentence to display under the event card during playback.
@@ -7,7 +8,11 @@ export const narrate = (e: LogEntry): string => {
     case 'ROLL_OMNI':
       return `The dice glow gold — an Omni-Key materialises${e.source ? ` from ${e.source}` : ''}.`;
     case 'ROLL_SUCCESS':
-      return `${e.source ?? 'The source'} yields a key. ${e.rollValue ?? '?'} vs ${e.threshold ?? '?'}.`;
+      return `${e.source ?? 'The source'} yields a key. ${
+        e.rollValue === undefined ? '?' : formatKeyRollValue(e.rollValue)
+      } vs ${
+        e.threshold === undefined ? '?' : formatKeyPercent(e.threshold)
+      }.`;
     case 'PITY':
       return `Fate, grown heavy at 50, tips the scales. A key regardless.`;
     case 'ROLL_FAIL':

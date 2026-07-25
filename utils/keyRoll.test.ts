@@ -80,6 +80,32 @@ describe('resolveKeyRoll', () => {
       luck: true,
     })).toMatchObject({ roll: 1.1, success: true });
   });
+
+  it('clamps thresholds at both bounds and applies negative bonuses', () => {
+    expect(resolveKeyRoll({
+      primaryFloat: 0,
+      advantageFloat: 0,
+      baseThreshold: -2,
+      successBonus: -3,
+      luck: false,
+    })).toMatchObject({ baseThreshold: 0, effectiveThreshold: 0, success: false });
+
+    expect(resolveKeyRoll({
+      primaryFloat: 0.02,
+      advantageFloat: 0,
+      baseThreshold: 5,
+      successBonus: -2,
+      luck: false,
+    })).toMatchObject({ baseThreshold: 5, effectiveThreshold: 3, roll: 2.1, success: true });
+
+    expect(resolveKeyRoll({
+      primaryFloat: 0.999,
+      advantageFloat: 0,
+      baseThreshold: 102,
+      successBonus: 3,
+      luck: false,
+    })).toMatchObject({ baseThreshold: 100, effectiveThreshold: 100, roll: 100, success: true });
+  });
 });
 
 describe('decimal roll formatting', () => {

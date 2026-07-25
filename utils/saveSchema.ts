@@ -398,7 +398,7 @@ const normalizeUnlocks = (
 
 
 const HISTORY_KEYS = new Set([
-  'id', 'timestamp', 'type', 'source', 'result', 'rollValue', 'threshold',
+  'id', 'timestamp', 'type', 'source', 'result', 'rollValue', 'baseThreshold', 'threshold',
   'message', 'details', 'meta', 'prevHash', 'hash',
 ]);
 const HISTORY_TYPES = new Set([
@@ -512,7 +512,7 @@ const normalizeHistoryEntry = (value: unknown, index: number): Outcome<LogEntry>
     if (typeof result !== 'string' || !HISTORY_RESULTS.has(result)) return invalid('invalid_history', `${path}.result`);
     entry.result = result as LogEntry['result'];
   }
-  for (const key of ['rollValue', 'threshold'] as const) {
+  for (const key of ['rollValue', 'baseThreshold', 'threshold'] as const) {
     if (!own(inspected.value, key)) continue;
     const number = boundedFinite(readOwn(inspected.value, key), `${path}.${key}`, 0, MAX_COUNTER, 'invalid_history');
     if (number.ok === false) return number;

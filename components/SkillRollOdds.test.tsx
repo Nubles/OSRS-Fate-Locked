@@ -32,10 +32,10 @@ describe('SkillRollOdds', () => {
       <SkillRollOdds currentLevel={99} isUnlocked descriptionId="attack-key-roll-description" />,
     )).toBe('');
   });
-  it('exposes the Chaos explanation through the card description relationship', () => {
+  it('reveals one visible Chaos explanation from parent hover or keyboard focus', () => {
     const descriptionId = 'attack-key-roll-description';
     const html = renderToStaticMarkup(
-      <div role="button" tabIndex={0} aria-describedby={descriptionId}>
+      <div className="group" role="button" tabIndex={0} aria-describedby={descriptionId}>
         <SkillRollOdds
           currentLevel={41}
           isUnlocked
@@ -46,6 +46,12 @@ describe('SkillRollOdds', () => {
 
     expect(html).toContain(`aria-describedby="${descriptionId}"`);
     expect(html).toContain(`id="${descriptionId}"`);
+    expect(html).toContain('role="tooltip"');
+    expect(html).toContain('group-hover:opacity-100');
+    expect(html).toContain('group-focus-visible:opacity-100');
+    expect(html).toContain('group-focus-within:opacity-100');
+    expect(html).not.toContain('sr-only');
+    expect(html).not.toContain('title=');
     expect(html).toContain('Every level also has a separate 2% Chaos Key chance.');
   });
 });
