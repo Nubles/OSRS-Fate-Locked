@@ -6,7 +6,7 @@ import { chunkContentService } from '../services/ChunkContentService';
 import { chunkReachability } from '../utils/chunkReach';
 import { chunkForPlace, chunkUnlocked, placeOf, showChunkOnMap } from '../utils/chunkLocations';
 import { questLocations } from '../utils/questLocations';
-import { questChunkStatus, doabilityBucket, DoabilityBucket, entryBlockedGate, QuestChunkStatus } from '../utils/questDoability';
+import { questChunkStatus, doabilityBucket, DoabilityBucket, entryBlockedGate, hasCanonicalQuestLocationEvidence, QuestChunkStatus } from '../utils/questDoability';
 import {
   evaluateQuestEligibility, questRequirementOptionLabel,
 } from '../utils/journalStatus';
@@ -109,10 +109,10 @@ export const evaluateQuestDoability = (
     bucket = 'DONE';
   } else if (canonicalRegionBlockers.length > 0) {
     bucket = 'LOCKED';
-  } else if (chunk) {
-    bucket = doabilityBucket(false, reqsMet, chunk);
   } else {
-    bucket = reqsMet ? 'DOABLE' : 'REQS';
+    bucket = doabilityBucket(
+      false, reqsMet, chunk, hasCanonicalQuestLocationEvidence(quest),
+    );
   }
 
   const lockedAreas = bucket !== 'LOCKED'

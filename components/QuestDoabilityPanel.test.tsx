@@ -36,6 +36,27 @@ const reachableChunk: QuestChunkStatus = {
 };
 
 describe('evaluateQuestDoability', () => {
+  it('does not report an evidence-free quest as doable', () => {
+    const quest: QuestData = {
+      id: 'Unknown location quest',
+      name: 'Unknown location quest',
+      regions: [],
+      skills: {},
+      prereqs: [],
+      points: 0,
+      difficulty: DropSource.QUEST_NOVICE,
+    };
+    expect(evaluateQuestDoability(quest, unlocks(), null).bucket).toBe('NO_DATA');
+  });
+
+  it('keeps explicit canonical access authoritative without chunk data', () => {
+    const quest = QUEST_DATA['A Porcine of Interest'];
+    expect(evaluateQuestDoability(
+      quest,
+      unlocks({ regions: ['Draynor Village'] }),
+      null,
+    ).bucket).toBe('LOCKED');
+  });
   it('locks Enter the Abyss behind its alternative provider requirement', () => {
     const row = evaluateQuestDoability(
       QUEST_DATA['Enter the Abyss'],
