@@ -107,7 +107,7 @@ export const hasCanonicalQuestLocationEvidence = (quest: QuestData): boolean =>
 /**
  * Combine chunk access with the journal's requirement status into one verdict.
  * @param completed   quest already done
- * @param reqsMet     getQuestStatus(...) === 'AVAILABLE'
+ * @param reqsMet     canonical eligibility.eligible
  */
 export function doabilityBucket(
   completed: boolean,

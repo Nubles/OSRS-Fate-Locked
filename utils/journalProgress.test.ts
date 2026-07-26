@@ -49,6 +49,18 @@ describe('questUnmet', () => {
       },
     }))).toEqual([{ kind: 'skill', label: 'Combat level 85' }]);
   });
+
+  it('keeps Prying Times behind its manual Sailing confirmation', () => {
+    expect(questUnmet(QUEST_DATA['Prying Times'], u({
+      regions: ['The Open Seas'],
+      quests: ['Pandemonium', "The Knight's Sword"],
+      skills: { Smithing: 3, Sailing: 2 },
+      levels: { Smithing: 30, Sailing: 12 },
+    }))).toEqual([{
+      kind: 'manual',
+      label: 'Confirm: One open Sailing task slot',
+    }]);
+  });
 });
 
 describe('diaryUnmet', () => {
@@ -79,6 +91,20 @@ describe('diaryUnmet', () => {
       quests: ['Impossible aggregate quest'],
       requiredRegions: ['Impossible aggregate region'],
     }, unlocks)).toEqual([{ kind: 'quest', label: 'Biohazard' }]);
+  });
+
+  it('reports the remaining Varrock Kudos confirmation after machine gates pass', () => {
+    const completedTasks = ALL_DIARY_TASKS
+      .filter(task => task.tierId !== 'Varrock Hard' || task.id !== 'var_hard_2')
+      .map(task => task.id);
+
+    expect(diaryUnmet(DIARY_DATA['Varrock Hard'], u({
+      regions: ['Varrock'],
+      completedTasks,
+    }))).toEqual([{
+      kind: 'manual',
+      label: 'Confirm: 153 Varrock Museum Kudos',
+    }]);
   });
 });
 
