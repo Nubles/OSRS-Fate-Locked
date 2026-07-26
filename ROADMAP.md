@@ -9,7 +9,8 @@ contributor. Last updated: July 2026.
 ## 1. Ship the Plugin Hub update (highest value, ~10 minutes)
 
 The Hub currently serves commit `dc3823c` of
-[Nubles/RS3-Fate-Locked-Runelite](https://github.com/Nubles/RS3-Fate-Locked-Runelite).
+[Nubles/OSRS-Fate-Locked-Runelite](https://github.com/Nubles/OSRS-Fate-Locked-Runelite). The canonical standalone source is pinned at
+`5cc1ffc4e4f684a99211f12342a69ceb6d16de30`.
 Everything since is CI-green and unreleased:
 
 - Chunked-mode chunk-coordinate lock state (`unlockedChunks` in the bundle)
@@ -165,10 +166,7 @@ Follow-ups:
   Auto-clear on roll lives in the ALWAYS-MOUNTED `SuggestionBanner`, not the
   lazily-mounted queue (also a real bug: tab components miss rolls made
   elsewhere).
-- **Plugin mirror:** the plugin's source of truth is the standalone repo;
-  `runelite-plugin/` in this repo is a byte-for-byte mirror with CRLF line
-  endings. After any plugin change: copy the files over converting LF→CRLF,
-  commit both repos.
+- **Plugin mirror:** [Nubles/OSRS-Fate-Locked-Runelite](https://github.com/Nubles/OSRS-Fate-Locked-Runelite) is the source of truth at `5cc1ffc4e4f684a99211f12342a69ceb6d16de30`; `runelite-plugin/` is a byte-for-byte mirror pinned by `runelite-plugin/SOURCE_COMMIT`. Run `npm run runelite:mirror-check` against the standalone checkout before committing either repository.
 
 ## 4. Gotchas that cost real debugging time
 
