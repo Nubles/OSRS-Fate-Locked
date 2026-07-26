@@ -65,13 +65,19 @@ export const evaluateQuestDoability = (
       .filter(blocker => blocker.kind === 'skill')
       .map(blocker => blocker.label),
   );
+  const questPointsRequirement = quest.skills['Quest Points'];
+  const hasQuestPointsBlocker = !completed
+    && questPointsRequirement !== undefined
+    && currentQP < questPointsRequirement;
   const missingSkills: QuestDoabilityEvaluation['missingSkills'] = [];
   for (const [skill, lvl] of Object.entries(quest.skills)) {
-    if (!skillBlockers.has(skill + ' ' + lvl)) continue;
     if (skill === 'Quest Points') {
-      missingSkills.push({ skill, lvl, have: currentQP });
+      if (hasQuestPointsBlocker) {
+        missingSkills.push({ skill, lvl, have: currentQP });
+      }
       continue;
     }
+    if (!skillBlockers.has(skill + ' ' + lvl)) continue;
     const tier = unlocks.skills[skill] ?? 0;
     const unlocked = tier > 0;
     missingSkills.push({
@@ -91,9 +97,9 @@ export const evaluateQuestDoability = (
     });
   }
 
-  const missingPrereqs = eligibility.blockers
-    .filter(blocker => blocker.kind === 'quest')
-    .map(blocker => blocker.label);
+  const missingPrereqs = completed
+    ? []
+    : quest.prereqs.filter(prereq => !unlocks.quests.includes(prereq));
   const reqsMet = eligibility.status === 'AVAILABLE' || completed;
   const alternativeLabel = quest.oneOf?.length
     ? quest.oneOf.map(questRequirementOptionLabel).join(' or ')

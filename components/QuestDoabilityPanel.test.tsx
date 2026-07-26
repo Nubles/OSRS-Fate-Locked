@@ -35,6 +35,18 @@ const reachableChunk: QuestChunkStatus = {
   blockers: [],
 };
 
+const questIdsWorthAtLeast = (points: number): string[] => {
+  const completed: string[] = [];
+  let total = 0;
+  for (const quest of Object.values(QUEST_DATA)) {
+    if (quest.points <= 0) continue;
+    completed.push(quest.id);
+    total += quest.points;
+    if (total >= points) return completed;
+  }
+  throw new Error(`Not enough Quest Points to reach ${points}`);
+};
+
 describe('evaluateQuestDoability', () => {
   it('does not report an evidence-free quest as doable', () => {
     const quest: QuestData = {
@@ -114,5 +126,70 @@ describe('evaluateQuestDoability', () => {
     expect(questDoabilitySkillBlockerLabel(row.missingSkills[0])).toBe(
       'Woodcutting 15 (method cap 10)',
     );
+  });
+
+  it('shows Quest Points requirements as a skill blocker instead of a prerequisite', () => {
+    const row = evaluateQuestDoability(
+      QUEST_DATA['Black Knights\' Fortress'],
+      unlocks({ regions: ['Asgarnia'] }),
+      reachableChunk,
+    );
+
+    expect(row.missingSkills).toContainEqual({
+      skill: 'Quest Points', lvl: 12, have: 0,
+    });
+    expect(questDoabilitySkillBlockerLabel(row.missingSkills[0])).toBe(
+      'Quest Points 12',
+    );
+    expect(row.missingPrereqs).not.toContain('Quest Points 12');
+  });
+
+  it('does not confuse a missing prerequisite with satisfied Quest Points', () => {
+    const quest: QuestData = {
+      id: 'Quest Points collision',
+      name: 'Quest Points collision',
+      regions: ['Asgarnia'],
+      skills: { 'Quest Points': 12 },
+      prereqs: ['Quest Points 12'],
+      points: 0,
+      difficulty: DropSource.QUEST_NOVICE,
+    };
+
+    const row = evaluateQuestDoability(
+      quest,
+      unlocks({
+        regions: ['Asgarnia'],
+        quests: questIdsWorthAtLeast(12),
+      }),
+      reachableChunk,
+    );
+
+    expect(row.missingSkills).toEqual([]);
+    expect(row.missingPrereqs).toEqual(['Quest Points 12']);
+  });
+
+  it('hides unmet requirements for completed quests', () => {
+    const quest: QuestData = {
+      id: 'Completed Quest Points collision',
+      name: 'Completed Quest Points collision',
+      regions: ['Asgarnia'],
+      skills: { 'Quest Points': 12 },
+      prereqs: ['Unmet prerequisite'],
+      points: 0,
+      difficulty: DropSource.QUEST_NOVICE,
+    };
+
+    const row = evaluateQuestDoability(
+      quest,
+      unlocks({
+        regions: ['Asgarnia'],
+        quests: [quest.id],
+      }),
+      reachableChunk,
+    );
+
+    expect(row.bucket).toBe('DONE');
+    expect(row.missingSkills).toEqual([]);
+    expect(row.missingPrereqs).toEqual([]);
   });
 });
