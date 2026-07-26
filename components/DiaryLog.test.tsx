@@ -114,4 +114,32 @@ describe('DiaryLog access evidence', () => {
     expect(completionChildren).not.toContain(skillOpeningTag);
     expect(row).not.toMatch(/^<button\b/);
   });
+
+  it('shows the canonical Quest Points requirement before Champions Guild completion', () => {
+    const markup = renderToStaticMarkup(
+      <DiaryLog searchTerm="Champions" suspendModals />,
+    );
+    const row = elementMarkup(markup, '<div data-diary-task-row="var_med_2"');
+    const completion = elementMarkup(
+      row,
+      '<button aria-label="Complete diary task: Enter the Champions&#x27; Guild."',
+    );
+
+    expect(completion).toContain('Quest Points 32');
+    expect(completion).toContain('border-red-500/30');
+  });
+
+  it('shows the Varrock Kudos confirmation before completion is attempted', () => {
+    const markup = renderToStaticMarkup(
+      <DiaryLog searchTerm="153 Kudos" suspendModals />,
+    );
+    const row = elementMarkup(markup, '<div data-diary-task-row="var_hard_2"');
+    const completion = elementMarkup(
+      row,
+      '<button aria-label="Complete diary task: Speak to Orlando Smith when you have achieved 153 Kudos."',
+    );
+
+    expect(completion).toContain('Confirm: 153 Varrock Museum Kudos');
+    expect(completion).toContain('border-cyan-500/30');
+  });
 });

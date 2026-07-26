@@ -344,7 +344,8 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                           const hasReqs = Boolean(
                             Object.keys(task.skills ?? {}).length || task.items?.length || task.quests?.length
                             || task.regions?.length || task.oneOf?.length || task.combatLevel
-                            || task.allQuests || task.anySkillLevel,
+                            || task.allQuests || task.anySkillLevel || task.questPoints !== undefined
+                            || task.manualRequirements?.length,
                           );
                           const skillRequirements = Object.entries(task.skills ?? {});
                           const unmetSkillRequirements = skillRequirements.filter(([skill, level]) =>
@@ -399,6 +400,16 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                           </span>
                                         );
                                       })}
+                                      {task.questPoints !== undefined && (() => {
+                                        const label = `Quest Points ${task.questPoints}`;
+                                        const met = !taskEligibility.blockers.some(blocker => blocker.label === label);
+                                        return <span className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${met ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}><BookOpen size={8} /> {label}</span>;
+                                      })()}
+                                      {task.manualRequirements?.map(requirement => (
+                                        <span key={requirement} className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-cyan-500/30 text-cyan-300 bg-cyan-900/10">
+                                          <BookOpen size={8} /> Confirm: {requirement}
+                                        </span>
+                                      ))}
                                       {alternativeLabel && (
                                         <span className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${taskEligibility.blockers.some(blocker => blocker.kind === 'alternative') ? 'border-red-500/30 text-red-400 bg-red-900/10' : 'border-white/5 text-gray-500 bg-black/30'}`}>
                                           <BookOpen size={8} /> One of: {alternativeLabel}
