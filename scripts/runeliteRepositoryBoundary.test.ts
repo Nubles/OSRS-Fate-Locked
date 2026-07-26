@@ -1,10 +1,19 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const repositoryRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const atRoot = (relativePath: string) => join(repositoryRoot, relativePath);
+
+const workflowDirectory = atRoot('.github/workflows');
+const prohibitedPluginWorkflowPattern =
+  /(?:actions\/setup-java@|(?:^|[^\w])(?:\.\/)?gradlew?(?:\s|$)|\bmvnw?(?:\s|$)|\bjava\s+-jar\b|\brunelite(?:-plugin)?\b|\bplugin[\s-]?hub\b|\.jar\b|\b(?:java|plugin)[\s-](?:build|release|download)\b)/i;
+
+const workflowFiles = () =>
+  readdirSync(workflowDirectory, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && /\.ya?ml$/i.test(entry.name))
+    .map((entry) => entry.name);
 
 describe('RuneLite repository ownership boundary', () => {
   it.each([
@@ -17,6 +26,13 @@ describe('RuneLite repository ownership boundary', () => {
     expect(existsSync(atRoot(relativePath))).toBe(false);
   });
 
+  it('does not retain Java plugin build or distribution workflows under any filename', () => {
+    const prohibitedWorkflows = workflowFiles().filter((fileName) =>
+      prohibitedPluginWorkflowPattern.test(readFileSync(join(workflowDirectory, fileName), 'utf8')),
+    );
+
+    expect(prohibitedWorkflows).toEqual([]);
+  });
   it('does not expose a mirror verification npm command', () => {
     const packageJson = JSON.parse(readFileSync(atRoot('package.json'), 'utf8')) as {
       scripts?: Record<string, string>;
