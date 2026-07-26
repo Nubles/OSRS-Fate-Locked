@@ -169,9 +169,9 @@ Follow-ups:
   fires VarbitChanged, so pure event-filtering misses its completion. The
   plugin baselines all 48 once on the first event after LOGGED_IN, then
   filters by `ev.getVarbitId()`.
-- **GitHub Actions is the plugin's only build.** There's no local Gradle in
-  the dev environment — CI is the compile check, so keep plugin commits
-  small and watch the Actions tab after each push.
+- **Plugin verification belongs in the standalone repository.** In the
+  standalone checkout, run `gradle clean test jar --no-daemon`; plugin CI,
+  releases, and Plugin Hub work also occur there, never in the companion app.
 - **Dataset fetch cool-downs:** GearService/MonsterService fast-fail for 60s
   after a failed load (`init(force)` bypasses for Retry buttons). Without
   this, the relay driver re-fetched on every state change while offline.
