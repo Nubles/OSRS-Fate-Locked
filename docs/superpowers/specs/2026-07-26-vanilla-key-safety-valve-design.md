@@ -190,6 +190,44 @@ The clue section displays the current onboarding stage until three standard clue
 
 Rate reference and Codex surfaces render these rules from shared economy configuration rather than duplicating literals.
 
+## Codex Coverage
+
+The permanent Vanilla rules are documented in the existing Codex sections rather than adding another top-level tab:
+
+- **Key Economy** explains that bossing is a bounded 114-standard-key safety reserve, not an unlimited completion engine.
+- **Drop Rates** renders every boss class's diminishing sequence and standard-key reserve, including Brutus.
+- **Drop Rates** also renders the shared clue onboarding minimums of 25%, 15%, and 10%, followed by normal tier rates.
+- **Unlocks** explains location-aware Standard and Chaos pools, empty-pool behavior, and the deliberate Omni bypass.
+- **Areas** states that Vanilla named-area unlocks are scattered while adjacency is exclusive to Chunked.
+
+These sections read the same typed schedules, caps, onboarding minimums, and location rules used by the engine. Consistency tests fail if a displayed value drifts from gameplay configuration. When the active mode is not Vanilla, Vanilla-only rules are labelled as inapplicable rather than presented as the current run's behavior.
+
+## What's New Release History
+
+The balance release is included in the authored **What's New** data under a **Balance** section. Its player-facing notes summarize:
+
+- bounded, diminishing boss-key reserves;
+- Brutus's single early-game key opportunity;
+- the shared first-three-clue-key boost;
+- location-aware boss and minigame random pools; and
+- corrected Vanilla area wording.
+
+What's New is a dated release history rather than a latest-release-only dialog:
+
+- releases are stored newest-first with stable ID, title, date, and optional Added, Changed, Fixed, and Balance sections;
+- the latest release is expanded when the dialog opens;
+- older releases appear as collapsed, independently expandable dated sections;
+- empty content sections are omitted;
+- manually opening What's New always exposes the complete authored history;
+- automatic opening still occurs only when the latest stable release ID differs from the browser-local last-seen ID;
+- dismissing records only the latest release ID as seen;
+- expanding an older release does not change seen state; and
+- adding or correcting older history without changing the latest release ID does not trigger automatic reopening.
+
+Release expansion state is local to the open dialog and is not added to profile or save serialization. Release headers are buttons with `aria-expanded` and `aria-controls`, and expanded content remains keyboard navigable.
+
+This history model supersedes the latest-release-only presentation in the 2026-07-23 tracker-fixes changelog design wherever the two documents conflict.
+
 ## Failure and Concurrency Handling
 
 - The reducer recomputes remaining reserve at award time.
@@ -244,6 +282,18 @@ Rate reference and Codex surfaces render these rules from shared economy configu
 - Vanilla enables the new economy.
 - Chunked and Custom behavior is unchanged.
 
+### Codex and What's New
+
+- Codex values are sourced from the same Vanilla schedules used by gameplay.
+- Vanilla-only Codex copy is not presented as active rules in other modes.
+- The balance release contains the approved Balance notes.
+- Releases render newest-first with the latest expanded initially.
+- Older releases expand and collapse independently with accessible state.
+- Empty Added, Changed, Fixed, or Balance sections are omitted.
+- Manual opening displays the full release history.
+- Auto-open and last-seen state depend only on the latest stable release ID.
+- Adding older history without changing the latest ID does not auto-open the dialog.
+
 ## Acceptance Criteria
 
 - Vanilla offers no more than 114 standard keys through named boss reserves. Greed is clamped within that total; separately awarded Omni-Keys do not count against it.
@@ -251,5 +301,7 @@ Rate reference and Codex surfaces render these rules from shared economy configu
 - The first three standard clue keys receive the approved shared minimum chances, and later clues use existing rates.
 - A Vanilla random roll cannot award a geographically inaccessible boss or minigame.
 - Vanilla rules no longer claim that named-area unlocks are adjacent.
+- The Codex documents every permanent balance rule from shared gameplay configuration.
+- What's New includes the balance release and provides expandable, dated access to all authored releases.
 - Existing saves load without losing unlocks or currency.
 - Chunked and Custom behavior remain unchanged.
