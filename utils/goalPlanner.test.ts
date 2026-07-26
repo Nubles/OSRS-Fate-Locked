@@ -321,3 +321,55 @@ describe('listGoalTargets', () => {
     expect(plan.alreadyReachable).toBe(false);
     expect(plan.needsConfirmation).toBe(true);
   });
+
+  it('deduplicates identical manual checks across diary tasks', () => {
+    const syntheticLength = ALL_DIARY_TASKS.length;
+    const syntheticSharedTask = {
+      id: 'goal_planner_shared_manual_a',
+      tierId: 'Ardougne Easy',
+      description: 'Synthetic shared check source A',
+      regions: ['Ardougne'],
+      manualRequirements: ['Shared manual check'],
+    };
+    const syntheticDuplicateTask = {
+      id: 'goal_planner_shared_manual_b',
+      tierId: 'Ardougne Easy',
+      description: 'Synthetic shared check source B',
+      regions: ['Ardougne'],
+      manualRequirements: ['Shared manual check'],
+    };
+    const syntheticUniqueTask = {
+      id: 'goal_planner_unique_manual',
+      tierId: 'Ardougne Easy',
+      description: 'Synthetic unique check source',
+      regions: ['Ardougne'],
+      manualRequirements: ['Unique manual check'],
+    };
+
+    ALL_DIARY_TASKS.push(syntheticSharedTask, syntheticDuplicateTask, syntheticUniqueTask);
+    try {
+      const plan = planForTarget('diary', 'Ardougne Easy', maxedUnlocks({
+        regions: ['Ardougne'],
+      }))!;
+
+      const syntheticManual = plan.manualSteps.filter((step) =>
+        step.detail?.startsWith('Required for Synthetic'),
+      );
+      expect(syntheticManual).toEqual([
+        expect.objectContaining({
+          kind: 'manual',
+          label: 'Confirm: Shared manual check',
+          detail: 'Required for Synthetic shared check source A',
+          done: false,
+        }),
+        expect.objectContaining({
+          kind: 'manual',
+          label: 'Confirm: Unique manual check',
+          detail: 'Required for Synthetic unique check source',
+          done: false,
+        }),
+      ]);
+    } finally {
+      ALL_DIARY_TASKS.length = syntheticLength;
+    }
+  });

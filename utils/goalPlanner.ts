@@ -91,6 +91,23 @@ interface Selectable {
 
 const UNLOCKABLE_REGIONS = Object.keys(REGION_GROUPS);
 
+function addManualStep(
+  manualSteps: Map<string, PlanStep>,
+  check: string,
+  sourceId: string,
+  detail: string,
+) {
+  if (manualSteps.has(check)) return;
+  manualSteps.set(check, {
+    kind: 'manual',
+    id: `manual:${sourceId}:${check}`,
+    label: `Confirm: ${check}`,
+    detail,
+    done: false,
+  });
+}
+
+
 /** Total quest points the player currently has. */
 function currentQuestPoints(unlocks: any): number {
   return (unlocks.quests as string[]).reduce(
@@ -199,16 +216,7 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
 
 
     for (const check of eligibility.manualChecks) {
-      const key = `${qid}|${check}`;
-      if (!manualSteps.has(key)) {
-        manualSteps.set(key, {
-          kind: 'manual',
-          id: `manual:${qid}:${check}`,
-          label: `Confirm: ${check}`,
-          detail: `Required for ${q.name}`,
-          done: false,
-        });
-      }
+      addManualStep(manualSteps, check, qid, `Required for ${q.name}`);
     }
     // Canonical quest blockers decide every requirement. Walking quest blockers
     // first preserves dependency order without rebuilding prerequisite logic.
@@ -447,18 +455,8 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
         }
 
         for (const check of eligibility.manualChecks) {
-          const key = `${task.id}|${check}`;
-          if (!merged.manualSteps.has(key)) {
-            merged.manualSteps.set(key, {
-              kind: 'manual',
-              id: `manual:${task.id}:${check}`,
-              label: `Confirm: ${check}`,
-              detail: `Required for ${task.description}`,
-              done: false,
-            });
-          }
+          addManualStep(merged.manualSteps, check, task.id, `Required for ${task.description}`);
         }
-
         const blockers = eligibility.blockers;
         for (const blocker of blockers) {
           if (blocker.kind === 'region') merged.regions.add(blocker.label);
@@ -550,3 +548,5 @@ export function listGoalTargets(): Selectable[] {
 }
 
 export type { Selectable as GoalTarget };
+
+
