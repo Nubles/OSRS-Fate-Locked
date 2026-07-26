@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   gameReducerForTest,
+  prepareDetectedEventAcceptanceAction,
   migrateSaveForTest,
   newRunIdForTest,
 } from './GameContext';
@@ -114,5 +115,47 @@ describe('detected progress reconciliation', () => {
       detectorId: 'quest-widget-v1',
       detectorVersion: 1,
     });
+  });
+
+  it('accepts detected progress and its prepared roll in one revision', () => {
+    const initial = { ...start(), runRevision: 11 };
+    const action = prepareDetectedEventAcceptanceAction(
+      initial,
+      { kind: 'QUEST', questId: 'Dragon Slayer I' },
+      { source: 'Quest (Experienced)', threshold: 75, target: 'Dragon Slayer I' },
+      () => 999,
+      { fateEventId: 'evt-atomic', detectorId: 'quest-widget-v1', detectorVersion: 1 },
+    );
+    const next = gameReducerForTest(initial, action);
+
+    expect(next.runRevision).toBe(12);
+    expect(next.unlocks.quests).toContain('Dragon Slayer I');
+    expect(next.history).toHaveLength(1);
+    expect(next.history[0].meta?.fateEventId).toBe('evt-atomic');
+  });
+
+  it('cannot partially reconcile when roll preparation fails', () => {
+    const initial = start();
+
+    expect(() => prepareDetectedEventAcceptanceAction(
+      initial,
+      { kind: 'QUEST', questId: 'Dragon Slayer I' },
+      { source: 'Quest (Experienced)', threshold: 75, target: 'Dragon Slayer I' },
+      () => { throw new Error('rng unavailable'); },
+      { fateEventId: 'evt-failed' },
+    )).toThrow('rng unavailable');
+    expect(initial.runRevision).toBe(0);
+    expect(initial.unlocks.quests).not.toContain('Dragon Slayer I');
+    expect(initial.history).toHaveLength(0);
+  });
+
+  it('reconciles diary task IDs as completed tasks, not completed tiers', () => {
+    const next = gameReducerForTest(start(), {
+      type: 'SYNC_DETECTED_PROGRESS',
+      payload: { kind: 'DIARY_TASK', taskId: 'Ardougne Easy:0' },
+    });
+
+    expect(next.unlocks.completedTasks).toContain('Ardougne Easy:0');
+    expect(next.unlocks.diaries).not.toContain('Ardougne Easy:0');
   });
 });

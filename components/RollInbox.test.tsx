@@ -9,6 +9,7 @@ import type { FateEventEnvelope, FateEventType } from '../services/fateEventProt
 import { createRollInboxStore } from '../services/rollInboxStore';
 import type { GameState } from '../types';
 import { RollInboxView, type RollInboxGame } from './RollInbox';
+import { classifyRollInboxDriverRow } from './RollInboxDriver';
 
 class MemoryStorage {
   values = new Map<string, string>();
@@ -175,5 +176,36 @@ describe('RollInbox', () => {
 
     const refreshed = createRollInboxStore(storage, 'run-1');
     expect(refreshed.list()[0].state).toBe('COMPLETED');
+  });
+
+  it('returns a persisted READY row to review after an unrelated revision change', async () => {
+    const storage = new MemoryStorage();
+    const store = createRollInboxStore(storage, 'run-1');
+    store.ingest([event()]);
+    store.transition('evt-1', 'READY');
+    const acceptDetectedEvent = vi.fn();
+    const acknowledge = vi.fn().mockResolvedValue(true);
+    const first = gameState({ runRevision: 7 });
+    expect(classifyRollInboxDriverRow(store.list()[0], { ...first, runRevision: 8 })).toMatchObject({
+      state: 'NEEDS_CONFIRMATION',
+      reason: 'The run changed after this event was detected.',
+    });
+    const view = render(
+      <RollInboxView store={store} game={{ state: first, acceptDetectedEvent }} acknowledge={acknowledge} />,
+    );
+    expect(await screen.findByRole('button', { name: /^Roll$/ })).toBeTruthy();
+
+    view.rerender(
+      <RollInboxView
+        store={store}
+        game={{ state: { ...first, runRevision: 8 }, acceptDetectedEvent }}
+        acknowledge={acknowledge}
+      />,
+    );
+
+    expect(await screen.findByText('The run changed after this event was detected.')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^Roll$/ })).toBeNull();
+    expect(store.list()[0].event.runRevision).toBe(7);
+    expect(acceptDetectedEvent).not.toHaveBeenCalled();
   });
 });

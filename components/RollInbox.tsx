@@ -61,9 +61,7 @@ function classificationFor(
   row: RollInboxRow,
   state: GameState,
 ): EventClassification {
-  const event = row.state === 'READY'
-    ? { ...row.event, runRevision: state.runRevision }
-    : row.event;
+  const event = row.event;
   if (row.state === 'READY' && row.reason?.startsWith(CONFIRMED_PREFIX)) {
     return classifyFateEventCandidate(
       event,

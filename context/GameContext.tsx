@@ -224,6 +224,19 @@ const createFreshState = (): GameState => ({
 });
 
 // --- Reducer ---
+interface PreparedRollResult {
+  success: boolean;
+  omni: boolean;
+  pity: boolean;
+  roll: number;
+  baseThreshold: number;
+  threshold: number;
+  source: string;
+  x?: number;
+  y?: number;
+  meta?: DetectedGameEventMeta;
+}
+
 export type Action =
   | { type: 'LOAD_SAVE'; payload: GameState }
   | { type: 'RESET' }
@@ -232,20 +245,10 @@ export type Action =
   | { type: 'TOGGLE_REVEAL_ALL' }
   | { type: 'SET_SEED'; payload: string }
   | { type: 'COMPLETE_ONBOARDING' }
+  | { type: 'ROLL_RESULT'; payload: PreparedRollResult }
   | {
-    type: 'ROLL_RESULT';
-    payload: {
-      success: boolean;
-      omni: boolean;
-      pity: boolean;
-      roll: number;
-      baseThreshold: number;
-      threshold: number;
-      source: string;
-      x?: number;
-      y?: number;
-      meta?: DetectedGameEventMeta;
-    };
+    type: 'ACCEPT_DETECTED_EVENT';
+    payload: { progress: DetectedProgress; rollResult: PreparedRollResult };
   }
   | { type: 'SYNC_DETECTED_PROGRESS'; payload: DetectedProgress }
   | { type: 'UNLOCK'; payload: { table: TableType; item: string; costType: 'key' | 'specialKey' | 'chaosKey'; cost: number } }
@@ -330,6 +333,25 @@ export const prepareKeyRollAction = (
     type: 'ROLL_RESULT',
     payload: { success, omni, pity, roll, baseThreshold, threshold: effectiveThreshold, source, x, y, meta },
   };
+};
+
+export const prepareDetectedEventAcceptanceAction = (
+  state: GameState,
+  progress: DetectedProgress,
+  intent: RollIntent,
+  nextDice: DiceRoller,
+  meta: DetectedGameEventMeta,
+): Extract<TransitionAction, { type: 'ACCEPT_DETECTED_EVENT' }> => {
+  const rollResult = prepareKeyRollAction(
+    state,
+    intent.source,
+    intent.threshold,
+    nextDice,
+    undefined,
+    undefined,
+    meta,
+  ).payload;
+  return { type: 'ACCEPT_DETECTED_EVENT', payload: { progress, rollResult } };
 };
 
 export const prepareCATaskCompletionActions = (
@@ -495,6 +517,16 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       return { ...state, rngSeed: action.payload || undefined };
     }
 
+    case 'ACCEPT_DETECTED_EVENT': {
+      const progressed = rawReducer(state, {
+        type: 'SYNC_DETECTED_PROGRESS',
+        payload: action.payload.progress,
+      });
+      return rawReducer(progressed, {
+        type: 'ROLL_RESULT',
+        payload: action.payload.rollResult,
+      });
+    }
     case 'SYNC_DETECTED_PROGRESS': {
       const progress = action.payload;
       if (progress.kind === 'NONE') return state;
@@ -512,12 +544,12 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         return { ...state, unlocks: { ...state.unlocks, completedTasks: [...state.unlocks.completedTasks, progress.taskId] } };
       }
       if (progress.kind === 'DIARY_TASK') {
-        if (state.unlocks.diaries.includes(progress.taskId)) return state;
+        if (state.unlocks.completedTasks.includes(progress.taskId)) return state;
         return {
           ...state,
           unlocks: {
             ...state.unlocks,
-            diaries: [...state.unlocks.diaries, progress.taskId],
+            completedTasks: [...state.unlocks.completedTasks, progress.taskId],
           },
         };
       }
@@ -1117,16 +1149,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     intent: RollIntent,
     meta: DetectedGameEventMeta,
   ) => {
-    commitAction({ type: 'SYNC_DETECTED_PROGRESS', payload: progress });
-    commitAction(prepareKeyRollAction(
+    const action = prepareDetectedEventAcceptanceAction(
       stateRef.current,
-      intent.source,
-      intent.threshold,
+      progress,
+      intent,
       nextDice,
-      undefined,
-      undefined,
       meta,
-    ));
+    );
+    commitAction(action);
   }, [commitAction, nextDice]);
 
   const logCollectionItem = useCallback((itemId: number) => {

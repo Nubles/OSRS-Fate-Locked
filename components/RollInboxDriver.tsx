@@ -15,10 +15,8 @@ const POLL_MS = 5_000;
 const TERMINAL = new Set(['COMPLETED', 'DISMISSED', 'DUPLICATE']);
 const CONFIRMED_PREFIX = 'candidate:';
 
-function classifyRow(row: RollInboxRow, state: GameState): EventClassification {
-  const event = row.state === 'READY'
-    ? { ...row.event, runRevision: state.runRevision }
-    : row.event;
+export function classifyRollInboxDriverRow(row: RollInboxRow, state: GameState): EventClassification {
+  const event = row.event;
   if (row.state === 'READY' && row.reason?.startsWith(CONFIRMED_PREFIX)) {
     return classifyFateEventCandidate(
       event,
@@ -58,7 +56,7 @@ export function RollInboxDriver() {
       const current = stateRef.current;
       for (const row of store.list()) {
         if (TERMINAL.has(row.state)) continue;
-        const classification = classifyRow(row, current);
+        const classification = classifyRollInboxDriverRow(row, current);
         if (classification.state === 'READY') {
           store.transition(row.event.eventId, 'READY', row.reason);
         } else {
