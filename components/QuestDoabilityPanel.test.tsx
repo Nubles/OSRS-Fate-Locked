@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { QuestData, QUEST_DATA } from '../data/questData';
 import { DropSource, UnlockState } from '../types';
 import { QuestChunkStatus } from '../utils/questDoability';
-import { evaluateQuestDoability, questDoabilitySkillBlockerLabel } from './QuestDoabilityPanel';
+import {
+  evaluateQuestDoability,
+  questDoabilityRequirementLabels,
+  questDoabilitySkillBlockerLabel,
+} from './QuestDoabilityPanel';
 
 const unlocks = (over: Partial<UnlockState> = {}): UnlockState => ({
   equipment: {},
@@ -191,5 +195,27 @@ describe('evaluateQuestDoability', () => {
     expect(row.bucket).toBe('DONE');
     expect(row.missingSkills).toEqual([]);
     expect(row.missingPrereqs).toEqual([]);
+  });
+
+  it('keeps Prying Times in REQS until its manual Sailing check is confirmed', () => {
+    const row = evaluateQuestDoability(
+      QUEST_DATA['Prying Times'],
+      unlocks({
+        regions: ['The Open Seas'],
+        quests: ['Pandemonium', "The Knight's Sword"],
+        skills: { Smithing: 3, Sailing: 2 },
+        levels: { Smithing: 30, Sailing: 12 },
+      }),
+      reachableChunk,
+    );
+
+    expect(row.bucket).toBe('REQS');
+    expect(row.reqsMet).toBe(false);
+    expect(row.manualChecks).toEqual(['One open Sailing task slot']);
+    expect(row.missingSkills).toEqual([]);
+    expect(row.missingPrereqs).toEqual([]);
+    expect(questDoabilityRequirementLabels(row)).toEqual([
+      'Confirm: One open Sailing task slot',
+    ]);
   });
 });

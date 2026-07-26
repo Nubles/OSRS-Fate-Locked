@@ -41,6 +41,7 @@ export interface QuestDoabilityEvaluation {
   }[];
   missingPrereqs: string[];
   lockedAreas: string[];
+  manualChecks: string[];
 }
 
 interface Row extends QuestDoabilityEvaluation {
@@ -100,7 +101,8 @@ export const evaluateQuestDoability = (
   const missingPrereqs = completed
     ? []
     : quest.prereqs.filter(prereq => !unlocks.quests.includes(prereq));
-  const reqsMet = eligibility.status === 'AVAILABLE' || completed;
+  const reqsMet = eligibility.eligible || completed;
+  const manualChecks = completed ? [] : eligibility.manualChecks;
   const alternativeLabel = quest.oneOf?.length
     ? quest.oneOf.map(questRequirementOptionLabel).join(' or ')
     : '';
@@ -135,6 +137,7 @@ export const evaluateQuestDoability = (
     missingSkills,
     missingPrereqs,
     lockedAreas,
+    manualChecks,
   };
 };
 
@@ -148,6 +151,14 @@ export const questDoabilitySkillBlockerLabel = (
     : '';
   return `${blocker.skill} ${blocker.lvl}${capSuffix}`;
 };
+
+export const questDoabilityRequirementLabels = (
+  row: QuestDoabilityEvaluation,
+): string[] => [
+  ...row.missingSkills.map(questDoabilitySkillBlockerLabel),
+  ...row.missingPrereqs.map(prereq => `\u2726 ${prereq}`),
+  ...row.manualChecks.map(check => `Confirm: ${check}`),
+];
 export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
   const { unlocks, gameModeId } = useGame();
   const [ready, setReady] = useState(chunkContentService.ready);
@@ -243,8 +254,8 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
                       {r.bucket === 'DOABLE' && <span className="text-emerald-400 flex items-center gap-1 justify-end"><CheckCircle2 size={11} /> ready</span>}
                       {r.bucket === 'REQS' && (
                         <span className="text-amber-300/90">
-                          {r.missingSkills.map(questDoabilitySkillBlockerLabel).concat(r.missingPrereqs.map(p => `✦ ${p}`)).slice(0, 3).join(', ')}
-                          {(r.missingSkills.length + r.missingPrereqs.length) > 3 ? '…' : ''}
+                          {questDoabilityRequirementLabels(r).slice(0, 3).join(', ')}
+                          {questDoabilityRequirementLabels(r).length > 3 ? '…' : ''}
                         </span>
                       )}
                       {r.bucket === 'LOCKED' && (
