@@ -118,13 +118,14 @@ describe('detected progress reconciliation', () => {
   });
 
   it('accepts detected progress and its prepared roll in one revision', () => {
-    const initial = { ...start(), runRevision: 11 };
+    const initial = { ...start(), runId: 'run-1', runRevision: 11, linkedAccount: 'Nubles' };
     const action = prepareDetectedEventAcceptanceAction(
       initial,
       { kind: 'QUEST', questId: 'Dragon Slayer I' },
       { source: 'Quest (Experienced)', threshold: 75, target: 'Dragon Slayer I' },
       () => 999,
       { fateEventId: 'evt-atomic', detectorId: 'quest-widget-v1', detectorVersion: 1 },
+      { runId: 'run-1', account: 'Nubles', runRevision: 11 },
     );
     const next = gameReducerForTest(initial, action);
 
@@ -143,10 +144,39 @@ describe('detected progress reconciliation', () => {
       { source: 'Quest (Experienced)', threshold: 75, target: 'Dragon Slayer I' },
       () => { throw new Error('rng unavailable'); },
       { fateEventId: 'evt-failed' },
+      { runId: initial.runId, account: 'Nubles', runRevision: 0 },
     )).toThrow('rng unavailable');
     expect(initial.runRevision).toBe(0);
     expect(initial.unlocks.quests).not.toContain('Dragon Slayer I');
     expect(initial.history).toHaveLength(0);
+  });
+
+  it.each([
+    ['run id', { runId: 'run-2' }],
+    ['account', { linkedAccount: 'Other' }],
+    ['revision', { runRevision: 12 }],
+  ] as const)('authoritatively rejects acceptance after the live %s changes', (_field, override) => {
+    const original = {
+      ...start(),
+      runId: 'run-1',
+      runRevision: 11,
+      linkedAccount: 'Nubles',
+    };
+    const action = prepareDetectedEventAcceptanceAction(
+      original,
+      { kind: 'QUEST', questId: 'Dragon Slayer I' },
+      { source: 'Quest (Experienced)', threshold: 75, target: 'Dragon Slayer I' },
+      () => 999,
+      { fateEventId: 'evt-stale' },
+      { runId: 'run-1', account: 'Nubles', runRevision: 11 },
+    );
+    const current = { ...original, ...override };
+
+    const next = gameReducerForTest(current, action);
+
+    expect(next).toBe(current);
+    expect(next.unlocks.quests).not.toContain('Dragon Slayer I');
+    expect(next.history).toHaveLength(0);
   });
 
   it('reconciles diary task IDs as completed tasks, not completed tiers', () => {

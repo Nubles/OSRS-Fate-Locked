@@ -19,6 +19,7 @@ import {
 import { getRollInboxStore } from '../services/rollInboxRuntime';
 import { relaySync } from '../services/relaySync';
 import type {
+  DetectedEventIdentity,
   DetectedProgress,
   EventClassification,
   GameEventMeta,
@@ -35,7 +36,8 @@ export interface RollInboxGame {
     progress: DetectedProgress,
     intent: Extract<EventClassification, { state: 'READY' }>['intent'],
     meta: GameEventMeta,
-  ) => void;
+    expected: DetectedEventIdentity,
+  ) => boolean;
 }
 
 interface RollInboxViewProps {
@@ -127,7 +129,7 @@ export function RollInboxView({
   const roll = (row: RollInboxRow, classification: EventClassification) => {
     if (classification.state !== 'READY' || rolling.current.has(row.event.eventId)) return;
     rolling.current.add(row.event.eventId);
-    game.acceptDetectedEvent(
+    const accepted = game.acceptDetectedEvent(
       classification.progress,
       classification.intent,
       {
@@ -135,7 +137,16 @@ export function RollInboxView({
         detectorId: row.event.detectorId,
         detectorVersion: row.event.detectorVersion,
       },
+      {
+        runId: row.event.runId,
+        account: row.event.account,
+        runRevision: row.event.runRevision,
+      },
     );
+    if (!accepted) {
+      rolling.current.delete(row.event.eventId);
+      return;
+    }
     store.transition(row.event.eventId, 'COMPLETED');
     void acknowledge([terminalAck(row.event.eventId, 'COMPLETED')]);
   };

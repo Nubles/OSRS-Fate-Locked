@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import worker from './worker.js';
+import { FATE_EVENT_TYPES } from '../../services/fateEventProtocol';
 
 class MemoryKv {
   records = new Map<string, string>();
@@ -20,7 +21,7 @@ class MemoryKv {
   }
 }
 
-const event = (eventId: string) => ({
+const event = (eventId: string, overrides: Record<string, unknown> = {}) => ({
   protocolVersion: 1,
   eventId,
   runId: 'run-1',
@@ -37,6 +38,7 @@ const event = (eventId: string) => ({
   detectorVersion: 1,
   confidence: 'EXACT',
   evidence: {},
+  ...overrides,
 });
 
 describe('Fate relay event resources', () => {
@@ -118,5 +120,75 @@ describe('Fate relay event resources', () => {
       .rejects.toThrow('simulated put failure');
     const retry = await post('/r/ABCD/events', { events: [event('evt-1')] });
     expect(await retry.json()).toMatchObject({ accepted: ['evt-1'], duplicates: [] });
+  });
+
+  it.each(FATE_EVENT_TYPES)('accepts supported event type %s', async (eventType) => {
+    const response = await post('/r/ABCD/events', {
+      events: [event(`evt-${eventType}`, { eventType })],
+    });
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).accepted).toEqual([`evt-${eventType}`]);
+  });
+
+  it('preserves a full unacknowledged queue, reports retryable capacity, and accepts new events after ack pruning', async () => {
+    const initial = Array.from({ length: 100 }, (_, index) => event(`evt-${index}`));
+    const first = await post('/r/ABCD/events', { events: initial });
+    const eventToken = (await first.json()).token;
+
+    const full = await post('/r/ABCD/events', {
+      token: eventToken,
+      events: [event('evt-100')],
+    });
+    expect(full.status).toBe(429);
+    expect(await full.json()).toMatchObject({ capacity: ['evt-100'] });
+    expect((await get('/r/ABCD/events').then(response => response.json())).events)
+      .toHaveLength(100);
+
+    const acknowledgements = Array.from({ length: 50 }, (_, index) => ({
+      eventId: `evt-${index}`,
+      state: 'COMPLETED',
+      acknowledgedAt: Date.now() + index,
+    }));
+    expect((await post('/r/ABCD/acks', { acknowledgements })).status).toBe(200);
+    expect((await get('/r/ABCD/events').then(response => response.json())).events
+      .map((item: { eventId: string }) => item.eventId))
+      .toEqual(Array.from({ length: 50 }, (_, index) => `evt-${index + 50}`));
+
+    const refill = Array.from({ length: 50 }, (_, index) => event(`evt-${index + 100}`));
+    const retry = await post('/r/ABCD/events', { token: eventToken, events: refill });
+    expect(retry.status).toBe(200);
+    expect((await retry.json()).accepted).toHaveLength(50);
+    expect((await get('/r/ABCD/events').then(response => response.json())).events
+      .map((item: { eventId: string }) => item.eventId))
+      .toEqual(Array.from({ length: 100 }, (_, index) => `evt-${index + 50}`));
+  });
+
+  it('retains the newest 100 acknowledgements after compaction', async () => {
+    const acknowledgement = (index: number) => ({
+      eventId: `evt-${index}`,
+      state: 'COMPLETED',
+      acknowledgedAt: 1_000 + index,
+    });
+    const first = await post('/r/ABCD/acks', {
+      acknowledgements: Array.from({ length: 100 }, (_, index) => acknowledgement(index)),
+    });
+    const token = (await first.json()).token;
+    expect((await post('/r/ABCD/acks', {
+      token,
+      acknowledgements: Array.from({ length: 5 }, (_, index) => acknowledgement(index + 100)),
+    })).status).toBe(200);
+
+    const retained = await get('/r/ABCD/acks').then(response => response.json());
+    expect(retained.acknowledgements.map((ack: { eventId: string }) => ack.eventId))
+      .toEqual(Array.from({ length: 100 }, (_, index) => `evt-${index + 5}`));
+
+    expect((await post('/r/ABCD/acks', {
+      token,
+      acknowledgements: Array.from({ length: 5 }, (_, index) => acknowledgement(index)),
+    })).status).toBe(200);
+    const afterOldRetry = await get('/r/ABCD/acks').then(response => response.json());
+    expect(afterOldRetry.acknowledgements.map((ack: { eventId: string }) => ack.eventId))
+      .toEqual(Array.from({ length: 100 }, (_, index) => `evt-${index + 5}`));
   });
 });

@@ -60,7 +60,7 @@ const event = (
 function setup(envelope = event(), state = gameState(), storage = new MemoryStorage()) {
   const store = createRollInboxStore(storage, state.runId);
   store.ingest([envelope]);
-  const acceptDetectedEvent = vi.fn();
+  const acceptDetectedEvent = vi.fn().mockReturnValue(true);
   const acknowledge = vi.fn().mockResolvedValue(true);
   const game: RollInboxGame = {
     state,
@@ -90,6 +90,7 @@ describe('RollInbox', () => {
       { kind: 'QUEST', questId: 'Dragon Slayer I' },
       expect.objectContaining({ source: 'Quest (Experienced)', threshold: 75 }),
       expect.objectContaining({ fateEventId: 'evt-1' }),
+      expect.objectContaining({ runId: 'run-1', account: 'Nubles', runRevision: 7 }),
     );
     expect(acknowledge).toHaveBeenCalledWith([
       expect.objectContaining({ eventId: 'evt-1', state: 'COMPLETED' }),
@@ -183,7 +184,7 @@ describe('RollInbox', () => {
     const store = createRollInboxStore(storage, 'run-1');
     store.ingest([event()]);
     store.transition('evt-1', 'READY');
-    const acceptDetectedEvent = vi.fn();
+    const acceptDetectedEvent = vi.fn().mockReturnValue(true);
     const acknowledge = vi.fn().mockResolvedValue(true);
     const first = gameState({ runRevision: 7 });
     expect(classifyRollInboxDriverRow(store.list()[0], { ...first, runRevision: 8 })).toMatchObject({
@@ -207,5 +208,49 @@ describe('RollInbox', () => {
     expect(screen.queryByRole('button', { name: /^Roll$/ })).toBeNull();
     expect(store.list()[0].event.runRevision).toBe(7);
     expect(acceptDetectedEvent).not.toHaveBeenCalled();
+  });
+
+  it('does not roll, reconcile, complete, or acknowledge when live identity changes before click', async () => {
+    const store = createRollInboxStore(new MemoryStorage(), 'run-1');
+    store.ingest([event()]);
+    let live = gameState();
+    const applied = vi.fn();
+    const acceptDetectedEvent = vi.fn((
+      _progress: unknown,
+      _intent: unknown,
+      _meta: unknown,
+      expected: { runId: string; account: string; runRevision: number } | undefined,
+    ) => {
+      if (
+        !expected
+        || expected.runId !== live.runId
+        || expected.account !== live.linkedAccount
+        || expected.runRevision !== live.runRevision
+      ) return false;
+      applied();
+      return true;
+    });
+    const acknowledge = vi.fn().mockResolvedValue(true);
+    render(
+      <RollInboxView
+        store={store}
+        game={{ state: live, acceptDetectedEvent }}
+        acknowledge={acknowledge}
+      />,
+    );
+    expect(await screen.findByRole('button', { name: /^Roll$/ })).toBeTruthy();
+
+    live = { ...live, runRevision: live.runRevision + 1 };
+    await userEvent.setup().click(screen.getByRole('button', { name: /^Roll$/ }));
+
+    expect(acceptDetectedEvent).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({ fateEventId: 'evt-1' }),
+      expect.objectContaining({ runId: 'run-1', account: 'Nubles', runRevision: 7 }),
+    );
+    expect(applied).not.toHaveBeenCalled();
+    expect(store.list()[0].state).toBe('RECEIVED');
+    expect(acknowledge).not.toHaveBeenCalled();
   });
 });

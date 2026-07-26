@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { fateEventRelay } from '../services/fateEventRelay';
-import type { EventAcknowledgement } from '../services/fateEventProtocol';
+import {
+  MAX_EVENTS_PER_BATCH,
+  type EventAcknowledgement,
+} from '../services/fateEventProtocol';
 import { getRollInboxStore } from '../services/rollInboxRuntime';
 import type { RollInboxRow } from '../services/rollInboxStore';
 import { relaySync } from '../services/relaySync';
@@ -38,6 +41,19 @@ function acknowledgementFor(row: RollInboxRow): EventAcknowledgement | null {
   };
 }
 
+export function buildAcknowledgementBatches(
+  rows: readonly RollInboxRow[],
+): EventAcknowledgement[][] {
+  const acknowledgements = rows
+    .map(acknowledgementFor)
+    .filter((item): item is EventAcknowledgement => item !== null);
+  const batches: EventAcknowledgement[][] = [];
+  for (let index = 0; index < acknowledgements.length; index += MAX_EVENTS_PER_BATCH) {
+    batches.push(acknowledgements.slice(index, index + MAX_EVENTS_PER_BATCH));
+  }
+  return batches;
+}
+
 export function RollInboxDriver() {
   const game = useGame();
   const store = useMemo(() => getRollInboxStore(game.runId), [game.runId]);
@@ -64,11 +80,8 @@ export function RollInboxDriver() {
         }
       }
 
-      const acknowledgements = store.list()
-        .map(acknowledgementFor)
-        .filter((item): item is EventAcknowledgement => item !== null);
-      if (acknowledgements.length > 0) {
-        await fateEventRelay.acknowledge(acknowledgements);
+      for (const batch of buildAcknowledgementBatches(store.list())) {
+        if (!await fateEventRelay.acknowledge(batch)) break;
       }
     } finally {
       running.current = false;

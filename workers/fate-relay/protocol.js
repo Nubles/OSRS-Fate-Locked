@@ -11,6 +11,10 @@ const EVENT_TYPES = new Set([
   'CLUE_CASKET',
   'BOSS_KILL',
   'RAID_COMPLETION',
+  'SLAYER_TASK',
+  'DIARY_TASK',
+  'PET_DROP',
+  'MINIGAME_COMPLETION',
 ]);
 const ACK_STATES = new Set(['COMPLETED', 'DISMISSED', 'DUPLICATE']);
 
@@ -63,6 +67,7 @@ export function appendUnique(existing, incoming) {
   const seen = new Set(records.map(entry => entry.eventId));
   const accepted = [];
   const duplicates = [];
+  const capacity = [];
   for (const entry of incoming) {
     if (seen.has(entry.eventId)) {
       duplicates.push(entry.eventId);
@@ -70,7 +75,41 @@ export function appendUnique(existing, incoming) {
       seen.add(entry.eventId);
       records.push(entry);
       accepted.push(entry.eventId);
+    } else {
+      capacity.push(entry.eventId);
     }
   }
-  return { records, accepted, duplicates };
+  return { records, accepted, duplicates, capacity };
+}
+
+export function appendUniqueNewest(existing, incoming) {
+  const records = existing.slice(-MAX_RECORDS);
+  const seen = new Set(records.map(entry => entry.eventId));
+  const accepted = [];
+  const duplicates = [];
+  for (const entry of incoming) {
+    if (seen.has(entry.eventId)) {
+      duplicates.push(entry.eventId);
+    } else {
+      seen.add(entry.eventId);
+      records.push(entry);
+      accepted.push(entry.eventId);
+    }
+  }
+  const retained = records.length <= MAX_RECORDS
+    ? records
+    : records
+      .map((entry, index) => ({ entry, index }))
+      .sort((left, right) => (
+        left.entry.acknowledgedAt - right.entry.acknowledgedAt
+        || left.index - right.index
+      ))
+      .slice(-MAX_RECORDS)
+      .map(({ entry }) => entry);
+  return {
+    records: retained,
+    accepted,
+    duplicates,
+    capacity: [],
+  };
 }

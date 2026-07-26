@@ -109,6 +109,12 @@ export interface GameEventMeta {
   detectorVersion?: number;
 }
 
+export interface DetectedEventIdentity {
+  runId: string;
+  account: string;
+  runRevision: number;
+}
+
 export type DetectedProgress =
   | { kind: 'SKILL_LEVEL'; skill: string; level: number }
   | { kind: 'QUEST'; questId: string }

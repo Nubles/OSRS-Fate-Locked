@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef } from 'react';
-import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState, type DetectedProgress, type GameEventMeta as DetectedGameEventMeta, type RollIntent } from '../types';
+import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState, type DetectedEventIdentity, type DetectedProgress, type GameEventMeta as DetectedGameEventMeta, type RollIntent } from '../types';
 import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST } from '../data/items';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from '../config/rules';
 import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
@@ -27,6 +27,7 @@ import {
 } from '../utils/gamePersistence';
 import { CURRENT_SAVE_VERSION, parseAndMigrateSave, validateAndMigrateSave } from '../utils/saveSchema';
 import { showToast } from '../utils/toast';
+import { normalizeAccountName } from '../services/fateEventProtocol';
 import {
   canEarnDiaryTier,
   diaryTaskCompletionDecision,
@@ -115,7 +116,12 @@ type GameEvent = {
 interface GameContextType extends GameState {
   lastEvent: GameEvent | null;
   rollForKey: (source: string, threshold: number, x?: number, y?: number, meta?: DetectedGameEventMeta) => void;
-  acceptDetectedEvent: (progress: DetectedProgress, intent: RollIntent, meta: DetectedGameEventMeta) => void;
+  acceptDetectedEvent: (
+    progress: DetectedProgress,
+    intent: RollIntent,
+    meta: DetectedGameEventMeta,
+    expected: DetectedEventIdentity,
+  ) => boolean;
   unlockContent: (table: TableType, item: string, costType: 'key' | 'specialKey' | 'chaosKey', cost: number) => void;
   performRitual: (type: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE') => void;
   performGambit: () => void;
@@ -248,7 +254,11 @@ export type Action =
   | { type: 'ROLL_RESULT'; payload: PreparedRollResult }
   | {
     type: 'ACCEPT_DETECTED_EVENT';
-    payload: { progress: DetectedProgress; rollResult: PreparedRollResult };
+    payload: {
+      progress: DetectedProgress;
+      rollResult: PreparedRollResult;
+      expected: DetectedEventIdentity;
+    };
   }
   | { type: 'SYNC_DETECTED_PROGRESS'; payload: DetectedProgress }
   | { type: 'UNLOCK'; payload: { table: TableType; item: string; costType: 'key' | 'specialKey' | 'chaosKey'; cost: number } }
@@ -335,12 +345,21 @@ export const prepareKeyRollAction = (
   };
 };
 
+export const detectedEventIdentityMatches = (
+  state: Pick<GameState, 'runId' | 'runRevision' | 'linkedAccount'>,
+  expected: DetectedEventIdentity,
+): boolean => Boolean(state.linkedAccount)
+  && state.runId === expected.runId
+  && state.runRevision === expected.runRevision
+  && normalizeAccountName(state.linkedAccount!) === normalizeAccountName(expected.account);
+
 export const prepareDetectedEventAcceptanceAction = (
   state: GameState,
   progress: DetectedProgress,
   intent: RollIntent,
   nextDice: DiceRoller,
   meta: DetectedGameEventMeta,
+  expected: DetectedEventIdentity,
 ): Extract<TransitionAction, { type: 'ACCEPT_DETECTED_EVENT' }> => {
   const rollResult = prepareKeyRollAction(
     state,
@@ -351,7 +370,7 @@ export const prepareDetectedEventAcceptanceAction = (
     undefined,
     meta,
   ).payload;
-  return { type: 'ACCEPT_DETECTED_EVENT', payload: { progress, rollResult } };
+  return { type: 'ACCEPT_DETECTED_EVENT', payload: { progress, rollResult, expected } };
 };
 
 export const prepareCATaskCompletionActions = (
@@ -518,6 +537,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     }
 
     case 'ACCEPT_DETECTED_EVENT': {
+      if (!detectedEventIdentityMatches(state, action.payload.expected)) return state;
       const progressed = rawReducer(state, {
         type: 'SYNC_DETECTED_PROGRESS',
         payload: action.payload.progress,
@@ -1148,15 +1168,23 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     progress: DetectedProgress,
     intent: RollIntent,
     meta: DetectedGameEventMeta,
-  ) => {
-    const action = prepareDetectedEventAcceptanceAction(
-      stateRef.current,
-      progress,
-      intent,
-      nextDice,
-      meta,
-    );
-    commitAction(action);
+    expected: DetectedEventIdentity,
+  ): boolean => {
+    const current = stateRef.current;
+    if (!detectedEventIdentityMatches(current, expected)) return false;
+    try {
+      const action = prepareDetectedEventAcceptanceAction(
+        current,
+        progress,
+        intent,
+        nextDice,
+        meta,
+        expected,
+      );
+      return commitAction(action) !== current;
+    } catch {
+      return false;
+    }
   }, [commitAction, nextDice]);
 
   const logCollectionItem = useCallback((itemId: number) => {

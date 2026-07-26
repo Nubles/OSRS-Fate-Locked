@@ -6,6 +6,7 @@ import {
   EVENT_TTL_SECONDS,
   MAX_REQUEST_BYTES,
   appendUnique,
+  appendUniqueNewest,
   validAcknowledgement,
   validEvent,
 } from './protocol.js';
@@ -32,10 +33,10 @@ function json(body, headers, status = 200, extraHeaders = {}) {
 
 function structuredResource(resource) {
   if (resource === '/events') {
-    return { field: 'events', validate: validEvent };
+    return { field: 'events', validate: validEvent, retainNewest: false };
   }
   if (resource === '/acks') {
-    return { field: 'acknowledgements', validate: validAcknowledgement };
+    return { field: 'acknowledgements', validate: validAcknowledgement, retainNewest: true };
   }
   return null;
 }
@@ -92,18 +93,40 @@ export default {
         }
         const token = existing?.token || body.token || crypto.randomUUID();
         const version = (existing?.version || 0) + 1;
-        const appended = appendUnique(existing?.records || [], incoming);
+        const appended = structured.retainNewest
+          ? appendUniqueNewest(existing?.records || [], incoming)
+          : appendUnique(existing?.records || [], incoming);
         await env.RELAY.put(key, JSON.stringify({
           version,
           token,
           records: appended.records,
         }), { expirationTtl: EVENT_TTL_SECONDS });
+
+        if (resource === '/acks') {
+          const eventKey = `r:${match[1]}/events`;
+          const eventQueue = await env.RELAY.get(eventKey, { type: 'json' });
+          if (eventQueue) {
+            const acknowledged = new Set(incoming.map(entry => entry.eventId));
+            const retained = (eventQueue.records || [])
+              .filter(entry => !acknowledged.has(entry.eventId));
+            if (retained.length !== (eventQueue.records || []).length) {
+              await env.RELAY.put(eventKey, JSON.stringify({
+                ...eventQueue,
+                version: (eventQueue.version || 0) + 1,
+                records: retained,
+              }), { expirationTtl: EVENT_TTL_SECONDS });
+            }
+          }
+        }
+
+        const atCapacity = appended.capacity.length > 0;
         return json({
           version,
           token,
           accepted: appended.accepted,
           duplicates: appended.duplicates,
-        }, headers);
+          ...(atCapacity ? { capacity: appended.capacity } : {}),
+        }, headers, atCapacity ? 429 : 200, atCapacity ? { 'Retry-After': '5' } : {});
       }
 
       if (!body || typeof body.payload !== 'string') {
