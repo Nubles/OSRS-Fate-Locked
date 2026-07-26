@@ -17,6 +17,7 @@ import {
   countDoableTasks, diaryRequirementOptionLabel, evaluateDiaryTaskEligibility,
   evaluateDiaryTierEligibility, getDiaryStatus, meetsSkillRequirement,
 } from '../utils/journalStatus';
+import { requestManualAttestation } from '../utils/manualAttestation';
 
 // Doable-now counting lives in utils/journalStatus (shared with the
 // insights band) — see countDoableTasks there.
@@ -155,7 +156,14 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
 
   const handleTaskToggle = (task: DiaryTask, e: React.MouseEvent) => {
       e.stopPropagation();
-      completeDiaryTask(task.id, e.clientX, e.clientY);
+      const eligibility = evaluateDiaryTaskEligibility(task, unlocks, gameModeId);
+      const attestation = requestManualAttestation(
+        task.description,
+        eligibility,
+        message => window.confirm(message),
+      );
+      if (attestation === null) return;
+      completeDiaryTask(task.id, e.clientX, e.clientY, attestation);
   };
 
   return (
