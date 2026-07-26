@@ -53,4 +53,32 @@ describe('RuneLite mirror verifier', () => {
     expect(result.status).toBe(1);
     expect(result.stdout).toContain(`${kind}: ${relativePath}`);
   });
+
+  it.each([
+    { scenario: 'changed', sourceContents: 'canonical metadata', mirrorContents: 'drifted metadata', reportKind: 'changed' },
+    { scenario: 'deleted from the mirror', sourceContents: 'canonical metadata', mirrorContents: null, reportKind: 'added' },
+  ] as const)('fails when runelite-plugin.properties is $scenario', ({ sourceContents, mirrorContents, reportKind }) => {
+    const source = tempTree('fate-source-metadata-');
+    const mirror = tempTree('fate-mirror-metadata-');
+    const relativePath = 'runelite-plugin.properties';
+    write(source, relativePath, sourceContents);
+    if (mirrorContents !== null) write(mirror, relativePath, mirrorContents);
+
+    const result = spawnSync(
+      process.execPath,
+      [resolve('scripts/check-runelite-mirror.mjs')],
+      {
+        cwd: resolve('.'),
+        env: {
+          ...process.env,
+          RUNELITE_SOURCE_DIR: source,
+          RUNELITE_MIRROR_DIR: mirror,
+        },
+        encoding: 'utf8',
+      },
+    );
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain(`${reportKind}: ${relativePath}`);
+  });
 });

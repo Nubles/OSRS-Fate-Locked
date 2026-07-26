@@ -6,6 +6,7 @@ const COMPARED = [
   'build.gradle',
   'settings.gradle',
   'gradle.properties',
+  'runelite-plugin.properties',
   'README.md',
   'CONTRIBUTING.md',
   'src/main/java',

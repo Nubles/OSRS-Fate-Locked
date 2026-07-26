@@ -6,32 +6,15 @@ contributor. Last updated: July 2026.
 
 ---
 
-## 1. Ship the Plugin Hub update (highest value, ~10 minutes)
+## 1. RuneLite Plugin Hub release (shipped)
 
-The Hub currently serves commit `dc3823c` of
-[Nubles/OSRS-Fate-Locked-Runelite](https://github.com/Nubles/OSRS-Fate-Locked-Runelite). The canonical standalone source is pinned at
-`5cc1ffc4e4f684a99211f12342a69ceb6d16de30`.
-Everything since is CI-green and unreleased:
-
-- Chunked-mode chunk-coordinate lock state (`unlockedChunks` in the bundle)
-- Roll detection: quests (reward widget), diary tiers (varbits), combat
-  achievements (chat), collection log (chat), boss/raid kills (LootReceived)
-- Suggestion relay: plugin → app `{source, label, ts}` pushes on `/suggest`
-- Connection heartbeat: `{ts, version}` ack on `/state` after each relay
-  import (powers the web app's "Connect RuneLite" card)
-- `onVarbitChanged` hot-path fix (48 client calls → 1 set lookup per event)
-- World-map tooltip now lists the hovered chunk's contents
-
-**To ship:** sync your fork of `runelite/plugin-hub`, edit
-`plugins/fate-locked-ironman`, set `commit=` to the current HEAD of the
-plugin repo (`git rev-parse HEAD`, full 40 chars), open the PR.
-
-**Reviewer question to expect:** "there's new outbound traffic since the last
-release" — the `/suggest` and `/state` POSTs. Answer: both sit behind the
-same `onlineSync` opt-in boolean whose `@ConfigItem` carries the mandated
-IP-address warning; both are documented in the plugin repo's CONTRIBUTING
-(§ Online sync). No consent → `pollRelay()`/`pushSuggestion()` return on
-their first line and no request is ever made.
+The Plugin Hub entry for
+[Nubles/OSRS-Fate-Locked-Runelite](https://github.com/Nubles/OSRS-Fate-Locked-Runelite)
+already resolves to the canonical release commit
+`5cc1ffc4e4f684a99211f12342a69ceb6d16de30`. No additional Plugin Hub pin PR
+is required for this release. Future plugin releases must update the standalone
+repository first, then refresh `runelite-plugin/SOURCE_COMMIT`, the mirror, and
+parity CI together.
 
 ## 1b. Shipped — July 2026 sprint (onboarding, safety, community)
 
