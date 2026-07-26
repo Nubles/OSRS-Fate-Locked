@@ -14,9 +14,10 @@ import { drawFloat } from '../utils/seededRng';
 import { hashEntry, ensureChain } from '../utils/integrity';
 import { pushBackup, listBackups as readBackups, getBackupData, BackupMeta } from '../utils/backups';
 import { showToast } from '../utils/toast';
+import { normalizeBossStandardKeysAwarded, normalizeClueStandardKeysAwarded } from '../utils/vanillaKeyProgress';
 
 // --- Types ---
-const CURRENT_VERSION = 1;
+const CURRENT_VERSION = 2;
 const SAVE_DEBOUNCE_MS = 500;
 
 const generateId = (): string => {
@@ -128,6 +129,8 @@ export const initialState: GameState = {
   activeBuff: 'NONE',
   unlocks: getInitialUnlocks(),
   history: [],
+  bossStandardKeysAwarded: {},
+  clueStandardKeysAwarded: 0,
   animationsEnabled: true,
   advisorsEnabled: false,
   hasSeenOnboarding: false,
@@ -169,6 +172,8 @@ const migrateSave = (saveData: Partial<GameState>): GameState => {
   // 3. Merge meta properties (keys, history, etc) onto base
   // This ensures if new properties are added to GameState in future, they aren't lost or undefined
   const mergedState = { ...baseState, ...saveMeta };
+  mergedState.bossStandardKeysAwarded = normalizeBossStandardKeysAwarded(mergedState.bossStandardKeysAwarded);
+  mergedState.clueStandardKeysAwarded = normalizeClueStandardKeysAwarded(mergedState.clueStandardKeysAwarded);
 
   // 4. Handle Unlocks Migration specifically
   const defaultUnlocks = getInitialUnlocks();

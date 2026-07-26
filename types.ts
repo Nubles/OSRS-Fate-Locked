@@ -135,6 +135,10 @@ export interface GameState {
   keys: number;
   specialKeys: number;
   chaosKeys: number;
+  /** Vanilla boss standard keys already awarded, by canonical boss name. */
+  bossStandardKeysAwarded?: Record<string, number>;
+  /** Vanilla clue standard keys already awarded across every clue tier. */
+  clueStandardKeysAwarded?: number;
   fatePoints: number;
   activeBuff: 'NONE' | 'LUCK' | 'GREED';
   unlocks: UnlockState;

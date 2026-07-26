@@ -366,6 +366,26 @@ describe('LOAD_SAVE migration', () => {
     expect(s.unlocks.regions).toEqual(['Karamja', 'Falador']);
     expect(s.unlocks.bosses).toEqual(['Zulrah']);
   });
+
+  it('migrates missing and malformed Vanilla key counters', () => {
+    const loaded = gameReducer(base(), {
+      type: 'LOAD_SAVE',
+      payload: {
+        ...base(),
+        bossStandardKeysAwarded: { Brutus: 5, Unknown: 3 },
+        clueStandardKeysAwarded: -4,
+      },
+    });
+
+    expect(loaded).toMatchObject({
+      bossStandardKeysAwarded: { Brutus: 1 },
+      clueStandardKeysAwarded: 0,
+    });
+
+    const { bossStandardKeysAwarded: _bossStandardKeysAwarded, clueStandardKeysAwarded: _clueStandardKeysAwarded, ...oldSave } = base();
+    const missing = gameReducer(base(), { type: 'LOAD_SAVE', payload: oldSave });
+    expect(missing).toMatchObject({ bossStandardKeysAwarded: {}, clueStandardKeysAwarded: 0 });
+  });
 });
 
 describe('SET_GAME_MODE', () => {
