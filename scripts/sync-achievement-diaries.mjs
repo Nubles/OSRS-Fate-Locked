@@ -58,6 +58,10 @@ const textContent = (html) => decodeHtml(
     .replace(/<[^>]+>/g, ' '),
 ).replace(/\s+/g, ' ').trim();
 
+const normalizeGeneratedText = (value) => String(value)
+  .replace(/\r\n/g, '\n')
+  .replace(/\r/g, '\n')
+
 const elementsOf = (html, tag) => {
   const elements = [];
   const tags = new RegExp('<\\/?' + tag + '\\b[^>]*>', 'gi');
@@ -447,10 +451,10 @@ export function checkGeneratedDiary(
   migrationOutput = renderTaskIdMigrations(snapshot),
 ) {
   const errors = [];
-  if (diaryOutput !== renderDiaryTasks(snapshot)) {
+  if (normalizeGeneratedText(diaryOutput) !== renderDiaryTasks(snapshot)) {
     errors.push('data/diaryTasks.ts is out of date');
   }
-  if (migrationOutput !== renderTaskIdMigrations(snapshot)) {
+  if (normalizeGeneratedText(migrationOutput) !== renderTaskIdMigrations(snapshot)) {
     errors.push('utils/taskIdMigrations.ts is out of date');
   }
   return { ok: errors.length === 0, errors };
