@@ -25,7 +25,7 @@ const eligibilityBlockerToUnmet = (blocker: EligibilityBlocker): Unmet => {
   if (blocker.kind === 'combat') {
     return { kind: 'skill', label: blocker.label };
   }
-  if (blocker.kind === 'skill' && blocker.label.startsWith('Quest Points ')) {
+  if (blocker.label.startsWith('Quest Points ')) {
     return { kind: 'qp', label: blocker.label.slice('Quest Points '.length) + ' QP' };
   }
   return { kind: blocker.kind, label: blocker.label };

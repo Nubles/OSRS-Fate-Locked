@@ -117,6 +117,17 @@ describe('planForTarget — quests', () => {
     expect(plan.alreadyReachable).toBe(false);
   });
 
+  it('includes a Quest Point step for a quest requirement', () => {
+    const plan = planForTarget('quest', 'Black Knights\' Fortress', maxedUnlocks())!;
+
+    expect(plan.qpStep).toEqual(expect.objectContaining({
+      kind: 'qp',
+      id: 'Quest Points',
+      detail: expect.stringContaining('12 QP'),
+      done: false,
+    }));
+    expect(plan.questSteps.map(step => step.id)).not.toContain('Quest Points 12');
+  });
   it('surfaces an actionable alternative-access step for oneOf quests', () => {
     const plan = planForTarget('quest', 'Enter the Abyss', maxedUnlocks({
       quests: ['Rune Mysteries'],
@@ -153,6 +164,21 @@ describe('planForTarget — diaries', () => {
         }
       }
     }
+  });
+  it('includes the canonical 32 Quest Point step for Varrock Medium', () => {
+    const plan = planForTarget('diary', 'Varrock Medium', maxedUnlocks({
+      regions: ['Varrock'],
+      completedTasks: ALL_DIARY_TASKS
+        .filter(task => task.tierId !== 'Varrock Medium' || task.id !== 'var_med_2')
+        .map(task => task.id),
+    }))!;
+
+    expect(plan.qpStep).toEqual(expect.objectContaining({
+      kind: 'qp',
+      id: 'Quest Points',
+      detail: expect.stringContaining('32 QP'),
+      done: false,
+    }));
   });
   it('delegates diary skill gates and omits requirements already met', () => {
     const diary = Object.values(DIARY_DATA).find(candidate =>

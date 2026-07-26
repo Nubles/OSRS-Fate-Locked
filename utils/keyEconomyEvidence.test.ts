@@ -142,6 +142,17 @@ describe('buildKeyEconomyEvidence', () => {
     }
   });
 
+  it('excludes malformed thresholds and blank sources from the sample', () => {
+    const report = buildKeyEconomyEvidence([
+      roll({ threshold: Number.POSITIVE_INFINITY }),
+      roll({ threshold: Number.NaN }),
+      roll({ source: '   ' }),
+      roll({ source: 'Boss (Mid)', threshold: 20 }),
+    ], validInput);
+
+    expect(report.totals.attempts).toBe(1);
+    expect(report.sources.map(source => source.source)).toEqual(['Boss (Mid)']);
+  });
   it('infers Fate Points for historical rolls without metadata', () => {
     expect(buildKeyEconomyEvidence([
       roll({ type: 'ROLL_FAIL', result: 'FAIL', meta: undefined }),

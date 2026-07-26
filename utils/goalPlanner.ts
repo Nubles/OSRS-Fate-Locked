@@ -214,6 +214,11 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
     const eligibility = evaluateQuestEligibility(q, unlocks, gameModeId);
     if (eligibility.status === 'COMPLETED') return;
 
+    const questPointRequirement = q.skills['Quest Points'];
+    if (questPointRequirement !== undefined) {
+      qpRequired = Math.max(qpRequired, questPointRequirement);
+    }
+
 
     for (const check of eligibility.manualChecks) {
       addManualStep(manualSteps, check, qid, `Required for ${q.name}`);
@@ -221,7 +226,7 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
     // Canonical quest blockers decide every requirement. Walking quest blockers
     // first preserves dependency order without rebuilding prerequisite logic.
     for (const blocker of eligibility.blockers) {
-      if (blocker.kind === 'quest') visit(blocker.label);
+      if (blocker.kind === 'quest' && QUEST_DATA[blocker.label]) visit(blocker.label);
     }
 
     const alternativeLabel = q.oneOf
@@ -450,6 +455,9 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
 
       for (const [task, eligibility] of taskResults) {
         for (const qid of task.quests ?? []) mergeQuest(qid);
+        if (task.questPoints !== undefined) {
+          merged.qpRequired = Math.max(merged.qpRequired, task.questPoints);
+        }
         if (task.allQuests) {
           for (const qid of QUEST_CAPE_QUEST_IDS) mergeQuest(qid);
         }

@@ -79,8 +79,10 @@ const scoreableRolls = (history: readonly LogEntry[]): LogEntry[] =>
   history.filter(entry =>
     isRollEntry(entry)
     && typeof entry.threshold === 'number'
+    && Number.isFinite(entry.threshold)
     && entry.threshold > 0
-    && Boolean(entry.source)
+    && typeof entry.source === 'string'
+    && entry.source.trim().length > 0
   );
 
 const fateEarned = (entry: LogEntry): number => {
