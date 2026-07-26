@@ -548,5 +548,3 @@ export function listGoalTargets(): Selectable[] {
 }
 
 export type { Selectable as GoalTarget };
-
-

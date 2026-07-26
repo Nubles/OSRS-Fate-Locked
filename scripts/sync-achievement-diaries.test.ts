@@ -241,6 +241,17 @@ describe('offline generated Diary verification', () => {
     });
   });
 
+  it('accepts equivalent CRLF output for both generated files', () => {
+    const diaryOutput = renderDiaryTasks(SIX_TASK_SNAPSHOT).replace(/\r?\n/g, '\r\n');
+    const migrationOutput = renderTaskIdMigrations(SIX_TASK_SNAPSHOT).replace(/\r?\n/g, '\r\n');
+
+    expect(checkGeneratedDiary(
+      SIX_TASK_SNAPSHOT,
+      diaryOutput,
+      migrationOutput,
+    )).toEqual({ ok: true, errors: [] });
+  });
+
   it('reports every generated-file mismatch in one result', () => {
     expect(checkGeneratedDiary(
       SIX_TASK_SNAPSHOT,

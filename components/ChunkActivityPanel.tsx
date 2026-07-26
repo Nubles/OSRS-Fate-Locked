@@ -879,4 +879,3 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     </div>
   );
 };
-
