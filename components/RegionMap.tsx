@@ -48,8 +48,8 @@ const CLUE_PREFIX = 'Clue: ';
 
 // ── Live shooting-star feed ────────────────────────────────────────────────
 // Crowdsourced active-star data (starminers) sends no CORS header, so the app
-// reads it through a user-hosted proxy (a tiny Cloudflare Worker — see
-// runelite-plugin/../docs). The URL comes from a Vite env var or a localStorage
+// reads it through a user-hosted proxy (a tiny Cloudflare Worker; deployment
+// details live in docs/star-feed-proxy.md). The URL comes from a Vite env var or a localStorage
 // override so it can be set without rebuilding.
 // Default proxy shipped for everyone (a Cloudflare Worker that re-serves the
 // starminers feed with CORS). A per-browser localStorage override or a build-time

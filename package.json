@@ -9,7 +9,6 @@
     "models:export": "node scripts/export-models.mjs",
     "clog:sync": "node scripts/sync-collection-log.mjs",
     "ca:sync": "node scripts/sync-combat-achievements.mjs",
-    "runelite:mirror-check": "node scripts/check-runelite-mirror.mjs",
     "diary:sync": "node scripts/sync-achievement-diaries.mjs",
     "diary:verify": "node scripts/sync-achievement-diaries.mjs --check",
     "content:check": "node scripts/check-content-sync.mjs",
