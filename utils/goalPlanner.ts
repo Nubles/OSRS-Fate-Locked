@@ -17,8 +17,8 @@ import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { REGION_GROUPS } from '../data/items';
 import {
-  evaluateQuestEligibility, getQuestStatus, getDiaryStatus,
-  questRequirementOptionLabel, taskEligibilityBlockers, DirectEligibilityBlocker,
+  evaluateQuestEligibility, getDiaryStatus,
+  evaluateDiaryTaskEligibility, questRequirementOptionLabel, DirectEligibilityBlocker,
 } from './journalStatus';
 import { isAreaReachable } from './reachability';
 import { effectiveCombatLevel, effectiveSkillLevel } from './slayerReach';
@@ -27,7 +27,7 @@ export type GoalKind = 'quest' | 'diary' | 'region';
 
 export interface PlanStep {
   /** What kind of thing this step is. */
-  kind: 'quest' | 'region' | 'skill' | 'qp';
+  kind: 'quest' | 'region' | 'skill' | 'qp' | 'manual';
   /** Stable id: quest id, region name, skill name, or 'Quest Points'. */
   id: string;
   /** Display label. */
@@ -61,6 +61,10 @@ export interface GoalPlan {
   alreadyReachable: boolean;
   /** Target is already fully COMPLETED/unlocked. */
   alreadyDone: boolean;
+  /** Machine gates pass, but player must verify outstanding manual checks. */
+  needsConfirmation: boolean;
+  /** Manual confirmations required before the target can be completed. */
+  manualSteps: PlanStep[];
   /** Quests to complete, in dependency order (prereqs first). */
   questSteps: PlanStep[];
   /** Regions to unlock. */
@@ -181,6 +185,7 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
   const regions = new Set<string>();
   const alternatives = new Map<string, AlternativePlanStep>();
   const skills: Record<string, number> = {};
+  const manualSteps = new Map<string, PlanStep>();
   let qpRequired = 0;
 
   const visit = (qid: string) => {
@@ -192,6 +197,19 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
     const eligibility = evaluateQuestEligibility(q, unlocks, gameModeId);
     if (eligibility.status === 'COMPLETED') return;
 
+
+    for (const check of eligibility.manualChecks) {
+      const key = `${qid}|${check}`;
+      if (!manualSteps.has(key)) {
+        manualSteps.set(key, {
+          kind: 'manual',
+          id: `manual:${qid}:${check}`,
+          label: `Confirm: ${check}`,
+          detail: `Required for ${q.name}`,
+          done: false,
+        });
+      }
+    }
     // Canonical quest blockers decide every requirement. Walking quest blockers
     // first preserves dependency order without rebuilding prerequisite logic.
     for (const blocker of eligibility.blockers) {
@@ -237,7 +255,7 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
   };
 
   visit(rootQuestId);
-  return { order, regions, alternatives, skills, qpRequired };
+  return { order, regions, alternatives, manualSteps, skills, qpRequired };
 }
 
 function buildPlanFromRequirements(
@@ -246,11 +264,12 @@ function buildPlanFromRequirements(
   targetLabel: string,
   reqs: {
     order: string[]; regions: Set<string>; alternatives: Map<string, AlternativePlanStep>;
-    skills: Record<string, number>; qpRequired: number;
+    manualSteps: Map<string, PlanStep>; skills: Record<string, number>; qpRequired: number;
   },
   unlocks: any,
   alreadyReachable: boolean,
   alreadyDone: boolean,
+  needsConfirmation: boolean,
 ): GoalPlan {
   // Region steps.
   const regionSteps: PlanStep[] = Array.from(reqs.regions).map((region): PlanStep => ({
@@ -258,6 +277,7 @@ function buildPlanFromRequirements(
   })).sort((a, b) => a.label.localeCompare(b.label));
   const alternativeSteps = [...reqs.alternatives.values()]
     .sort((a, b) => a.label.localeCompare(b.label));
+  const manualSteps = [...reqs.manualSteps.values()];
 
   // Skill steps.
   const skillSteps: PlanStep[] = Object.entries(reqs.skills)
@@ -334,6 +354,7 @@ function buildPlanFromRequirements(
     ...skillSteps,
     ...alternativeSteps,
     ...(qpStep ? [qpStep] : []),
+    ...manualSteps,
     ...questSteps,
   ];
   const remaining = steps.filter((s) => !s.done).length;
@@ -345,6 +366,8 @@ function buildPlanFromRequirements(
     alreadyReachable,
     alreadyDone,
     questSteps,
+    needsConfirmation,
+    manualSteps,
     regionSteps,
     skillSteps,
     alternativeSteps,
@@ -365,7 +388,7 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
   if (kind === 'quest') {
     const q: QuestData | undefined = QUEST_DATA[id];
     if (!q) return null;
-    const status = getQuestStatus(q, unlocks, gameModeId);
+    const eligibility = evaluateQuestEligibility(q, unlocks, gameModeId);
     const reqs = collectQuestChain(id, unlocks, gameModeId);
     return buildPlanFromRequirements(
       'quest',
@@ -373,8 +396,9 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
       q.name,
       reqs,
       unlocks,
-      status === 'AVAILABLE' || status === 'COMPLETED',
-      status === 'COMPLETED',
+      eligibility.status === 'COMPLETED' || eligibility.eligible,
+      eligibility.status === 'COMPLETED',
+      eligibility.confirmable && !eligibility.eligible && eligibility.manualChecks.length > 0,
     );
   }
 
@@ -384,10 +408,16 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
     const status = getDiaryStatus(d, unlocks, gameModeId);
 
     // Canonical tasks own diary eligibility; DIARY_DATA aggregates are display-only metadata.
+    const tasks = ALL_DIARY_TASKS.filter(task => (
+      task.tierId === id && !unlocks.completedTasks.includes(task.id)
+    ));
+    const taskResults = tasks.map(task => [task, evaluateDiaryTaskEligibility(task, unlocks, gameModeId)] as const);
+
     const merged = {
       order: [] as string[],
       regions: new Set<string>(),
       alternatives: new Map<string, AlternativePlanStep>(),
+      manualSteps: new Map<string, PlanStep>(),
       skills: {} as Record<string, number>,
       qpRequired: 0,
     };
@@ -397,6 +427,7 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
         const sub = collectQuestChain(qid, unlocks, gameModeId);
         for (const region of sub.regions) merged.regions.add(region);
         for (const [key, alternative] of sub.alternatives) merged.alternatives.set(key, alternative);
+        for (const [key, step] of sub.manualSteps) merged.manualSteps.set(key, step);
         for (const [skill, level] of Object.entries(sub.skills)) {
           merged.skills[skill] = Math.max(merged.skills[skill] ?? 0, level);
         }
@@ -409,16 +440,26 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
         }
       };
 
-      const tasks = ALL_DIARY_TASKS.filter(task => (
-        task.tierId === id && !unlocks.completedTasks.includes(task.id)
-      ));
-      for (const task of tasks) {
+      for (const [task, eligibility] of taskResults) {
         for (const qid of task.quests ?? []) mergeQuest(qid);
         if (task.allQuests) {
           for (const qid of QUEST_CAPE_QUEST_IDS) mergeQuest(qid);
         }
 
-        const blockers = taskEligibilityBlockers(task, unlocks, gameModeId);
+        for (const check of eligibility.manualChecks) {
+          const key = `${task.id}|${check}`;
+          if (!merged.manualSteps.has(key)) {
+            merged.manualSteps.set(key, {
+              kind: 'manual',
+              id: `manual:${task.id}:${check}`,
+              label: `Confirm: ${check}`,
+              detail: `Required for ${task.description}`,
+              done: false,
+            });
+          }
+        }
+
+        const blockers = eligibility.blockers;
         for (const blocker of blockers) {
           if (blocker.kind === 'region') merged.regions.add(blocker.label);
           if (blocker.kind === 'alternative') {
@@ -456,8 +497,9 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
       id,
       merged,
       unlocks,
-      status === 'AVAILABLE' || status === 'COMPLETED',
+      status === 'COMPLETED' || taskResults.every(([, eligibility]) => eligibility.eligible),
       status === 'COMPLETED',
+      status !== 'COMPLETED' && taskResults.every(([, eligibility]) => eligibility.machineEligible) && taskResults.some(([, eligibility]) => eligibility.manualChecks.length > 0),
     );
   }
 
@@ -470,6 +512,8 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
     targetLabel: id,
     alreadyReachable: isUnlocked,
     alreadyDone: isUnlocked,
+    needsConfirmation: false,
+    manualSteps: [],
     questSteps: [],
     regionSteps: [regionStep],
     skillSteps: [],

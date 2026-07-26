@@ -287,3 +287,37 @@ describe('listGoalTargets', () => {
     expect(counts.region).toBe(Object.keys(REGION_GROUPS).length);
   });
 });
+  it('plans Prying Times as a manual confirmation followed by quest completion', () => {
+    const plan = planForTarget('quest', 'Prying Times', maxedUnlocks({
+      regions: ['The Open Seas'],
+      quests: ['Pandemonium', "The Knight's Sword"],
+    }))!;
+
+    expect(plan.alreadyReachable).toBe(false);
+    expect(plan.needsConfirmation).toBe(true);
+    expect(plan.manualSteps).toEqual([expect.objectContaining({
+      kind: 'manual',
+      label: 'Confirm: One open Sailing task slot',
+      detail: 'Required for Prying Times',
+      done: false,
+    })]);
+    expect(plan.steps.map(step => step.kind)).toEqual(['manual', 'quest']);
+    expect(plan.remaining).toBe(2);
+  });
+
+  it('adds the remaining Varrock Kudos check to a diary plan', () => {
+    const completedTasks = ALL_DIARY_TASKS
+      .filter(task => task.tierId !== 'Varrock Hard' || task.id !== 'var_hard_2')
+      .map(task => task.id);
+    const plan = planForTarget('diary', 'Varrock Hard', maxedUnlocks({
+      regions: ['Varrock'],
+      completedTasks,
+    }))!;
+
+    expect(plan.manualSteps).toContainEqual(expect.objectContaining({
+      kind: 'manual',
+      label: 'Confirm: 153 Varrock Museum Kudos',
+    }));
+    expect(plan.alreadyReachable).toBe(false);
+    expect(plan.needsConfirmation).toBe(true);
+  });
