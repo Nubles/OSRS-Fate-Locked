@@ -1,4 +1,5 @@
 import type { GameModeRules } from '../config/gameModes';
+import { MOBILITY_LIST } from '../data/items';
 import { QUEST_DATA } from '../data/questData';
 import { DETECTOR_POLICIES, type DetectorPolicy } from '../config/detectorPolicies';
 import { gearService } from '../services/GearService';
@@ -31,6 +32,7 @@ export interface RuneliteRulesManifest {
   gameModeId: string;
   exportedAt: string;
   bankLocks: boolean;
+  knownMobility: string[];
   unlocks: {
     regions: string[];
     chunks: string[];
@@ -153,6 +155,7 @@ export async function buildRuneliteRulesManifest(
     gameModeId: input.run.gameModeId,
     exportedAt: input.exportedAt ?? new Date().toISOString(),
     bankLocks: bankLocksActive(input.run.gameModeId, input.run.customMode),
+    knownMobility: sorted(MOBILITY_LIST),
     unlocks: {
       regions: sorted(unlocks.regions),
       chunks: sorted(unlocks.chunks),

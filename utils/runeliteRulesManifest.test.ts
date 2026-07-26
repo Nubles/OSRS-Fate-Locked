@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { initialState } from '../context/GameContext';
+import { MOBILITY_LIST } from '../data/items';
 import type { ChunkContent } from '../services/ChunkContentService';
 import {
   buildRuneliteRulesManifest,
@@ -34,6 +35,7 @@ describe('buildRuneliteRulesManifest', () => {
         ...initialState.unlocks,
         regions: ['Asgarnia', 'Misthalin'],
         merchants: ['General Stores'],
+        mobility: ['Spirit Trees', 'Fairy Rings'],
         slayerUnlocks: ['Bigger and Badder'],
         banks: ['12850'],
       },
@@ -84,6 +86,11 @@ describe('buildRuneliteRulesManifest', () => {
       quests: expect.any(Array),
     }));
     expect(manifest.itemRules['4151']).toEqual({ tier: 7, slot: 'Weapon' });
+    expect(manifest.knownMobility).toEqual([...MOBILITY_LIST].sort());
+    expect(manifest.unlocks.mobility).toEqual([
+      'Fairy Rings',
+      'Spirit Trees',
+    ]);
     expect(manifest.chunks['50,50']).toBeDefined();
     expect(Object.keys(manifest.chunks['50,50'].categories)).toEqual([
       'BANKS',

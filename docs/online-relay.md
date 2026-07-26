@@ -88,6 +88,11 @@ Unknown means the app cannot safely decide and must never be converted into a
 blocking warning. RuneLite consumes these authored decisions without
 re-implementing quest, skill, merchant, bank, or activity rules.
 
+`rules.knownMobility` declares the mobility methods the app can evaluate, while
+`rules.unlocks.mobility` is the unlocked subset. Typed fallback exports retain
+that authority only when mobility state was explicitly supplied; otherwise the
+known set is empty so Travel Guardian fails open instead of inventing authority.
+
 The `FLGZ:` relay payload is tested against the existing 256 KiB compressed
 limit. RuneLite continues to load v1-v3 bundles using legacy map behavior; a
 malformed v4 or unsupported future version is rejected without replacing the
