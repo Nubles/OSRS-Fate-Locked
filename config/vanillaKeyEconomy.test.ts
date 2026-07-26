@@ -4,6 +4,7 @@ import {
   VANILLA_BOSS_STANDARD_KEY_TOTAL,
   effectiveVanillaClueRate,
   vanillaBossKeyStage,
+  vanillaBossKeySchedule,
 } from './vanillaKeyEconomy';
 
 describe('Vanilla key economy', () => {
@@ -40,5 +41,15 @@ describe('Vanilla key economy', () => {
     expect(effectiveVanillaClueRate(5, 1)).toBe(15);
     expect(effectiveVanillaClueRate(8, 2)).toBe(10);
     expect(effectiveVanillaClueRate(20, 3)).toBe(20);
+  });
+
+  it('rejects an ordinary unknown boss name', () => {
+    expect(() => vanillaBossKeySchedule('Unknown')).toThrow('Missing boss key tier for "Unknown".');
+  });
+
+  it.each(['constructor', 'toString'])('rejects inherited property name %s', (bossName) => {
+    expect(() => vanillaBossKeySchedule(bossName)).toThrow(
+      `Missing boss key tier for "${bossName}".`,
+    );
   });
 });

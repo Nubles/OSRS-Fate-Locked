@@ -22,7 +22,7 @@ export const CLUE_ONBOARDING_MINIMUMS = [25, 15, 10] as const;
 export const vanillaBossKeySchedule = (bossName: string): readonly number[] => {
   if (bossName === BRUTUS_BOSS_NAME) return VANILLA_BOSS_KEY_RATES.brutus;
 
-  if (!BOSS_TIERS[bossName]) {
+  if (!Object.prototype.hasOwnProperty.call(BOSS_TIERS, bossName)) {
     throw new Error(`Missing boss key tier for "${bossName}".`);
   }
 
