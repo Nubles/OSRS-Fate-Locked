@@ -26,8 +26,9 @@ const pluginDistributionSignaturePattern =
 const distributionBehaviorPattern =
   /\b(?:build|fetch|download|release|mirror|publish|upload|curl|wget|gradle|mvn|setup-java)\b/i;
 const jvmBinaryDistributionBehaviorPattern =
-  /\b(?:fetch|download|release|mirror|publish|upload|curl|wget)\b/i;
+  /\b(?:build|fetch|download|release|mirror|publish|upload|distribution)\b/i;
 const standalonePluginArtifactPattern = /\b[\w.-]*plugin[\w.-]*\.(?:zip|jar|class)\b/i;
+const remoteJvmBinaryArtifactPattern = /\bhttps?:\/\/[^\s'"`]+\.(?:jar|class)\b/i;
 const jvmBinaryArtifactPattern = /\b[^\s'"`]+\.(?:jar|class)\b/i;
 const retainedWebAppIntegrationPaths = [
   'components/RuneLiteOnboarding.tsx',
@@ -46,6 +47,7 @@ type CommandSurface = { relativePath: string; content: string };
 
 const isProhibitedPluginDistribution = (content: string) =>
   content.split(/\r?\n/).some((commandLine) =>
+    remoteJvmBinaryArtifactPattern.test(commandLine) ||
     (jvmBinaryArtifactPattern.test(commandLine) && jvmBinaryDistributionBehaviorPattern.test(commandLine)) ||
     (pluginDistributionSignaturePattern.test(commandLine) &&
       (distributionBehaviorPattern.test(commandLine) || standalonePluginArtifactPattern.test(commandLine))),
@@ -131,7 +133,24 @@ describe('RuneLite repository ownership boundary', () => {
   it.each([
     ['scripts/release-prebuilt.mjs', 'curl -LO https://cdn.example/fatelocked-0.1.0-all.jar'],
     ['automation/publish.yml', 'run: wget https://cdn.example/fatelocked-0.1.0.class'],
+    [
+      'scripts/release-prebuilt.ps1',
+      'Invoke-WebRequest -Uri https://cdn.example/fatelocked-0.1.0-all.jar -OutFile fatelocked.jar',
+    ],
+    ['automation/release.yml', 'asset: https://cdn.example/fatelocked-0.1.0-all.JAR'],
   ])('rejects a generic-name JVM binary distribution command at %s', (_relativePath, content) => {
+    expect(isProhibitedPluginDistribution(content)).toBe(true);
+  });
+  it.each([
+    ['build', 'build artifacts/fatelocked.jar'],
+    ['fetch', 'fetch artifacts/fatelocked.jar'],
+    ['download', 'download artifacts/fatelocked.jar'],
+    ['release', 'release artifacts/fatelocked.jar'],
+    ['mirror', 'mirror artifacts/fatelocked.jar'],
+    ['publish', 'publish artifacts/fatelocked.jar'],
+    ['upload', 'upload artifacts/fatelocked.jar'],
+    ['distribution', 'distribution artifacts/fatelocked.jar'],
+  ])('rejects a local JVM binary used by the %s behavior', (_behavior, content) => {
     expect(isProhibitedPluginDistribution(content)).toBe(true);
   });
   it.each([
