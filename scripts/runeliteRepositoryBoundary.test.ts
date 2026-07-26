@@ -25,7 +25,10 @@ const pluginDistributionSignaturePattern =
   /(?:\brune\s*lite(?:[-_\s]*(?:plugin|client))?\b|\brunelite(?:[-_\s]*(?:plugin|client))?\b|\bnet\.runelite\b|\b[\w-]*plugin[\w-]*\.(?:zip|jar|class)\b|\bplugin[-_\s]+(?:hub|manifest|metadata|distribution)\b)/i;
 const distributionBehaviorPattern =
   /\b(?:build|fetch|download|release|mirror|publish|upload|curl|wget|gradle|mvn|setup-java)\b/i;
+const jvmBinaryDistributionBehaviorPattern =
+  /\b(?:fetch|download|release|mirror|publish|upload|curl|wget)\b/i;
 const standalonePluginArtifactPattern = /\b[\w.-]*plugin[\w.-]*\.(?:zip|jar|class)\b/i;
+const jvmBinaryArtifactPattern = /\b[^\s'"`]+\.(?:jar|class)\b/i;
 const retainedWebAppIntegrationPaths = [
   'components/RuneLiteOnboarding.tsx',
   'components/RollInbox.tsx',
@@ -43,8 +46,9 @@ type CommandSurface = { relativePath: string; content: string };
 
 const isProhibitedPluginDistribution = (content: string) =>
   content.split(/\r?\n/).some((commandLine) =>
-    pluginDistributionSignaturePattern.test(commandLine) &&
-    (distributionBehaviorPattern.test(commandLine) || standalonePluginArtifactPattern.test(commandLine)),
+    (jvmBinaryArtifactPattern.test(commandLine) && jvmBinaryDistributionBehaviorPattern.test(commandLine)) ||
+    (pluginDistributionSignaturePattern.test(commandLine) &&
+      (distributionBehaviorPattern.test(commandLine) || standalonePluginArtifactPattern.test(commandLine))),
   );
 const isProhibitedPluginSourceArtifact = (relativePath: string, content: string) =>
   jvmOrBuildArtifactPattern.test(relativePath) ||
@@ -124,6 +128,12 @@ describe('RuneLite repository ownership boundary', () => {
     expect(isProhibitedPluginDistribution(content)).toBe(true);
   });
 
+  it.each([
+    ['scripts/release-prebuilt.mjs', 'curl -LO https://cdn.example/fatelocked-0.1.0-all.jar'],
+    ['automation/publish.yml', 'run: wget https://cdn.example/fatelocked-0.1.0.class'],
+  ])('rejects a generic-name JVM binary distribution command at %s', (_relativePath, content) => {
+    expect(isProhibitedPluginDistribution(content)).toBe(true);
+  });
   it.each([
     ['renamed-source/GuardianPlugin.kt', 'package net.runelite.client.plugins;'],
     ['renamed-output/GuardianPlugin.class', ''],
