@@ -1,5 +1,5 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import evidenceProtocol from '../docs/key-economy-evidence.md?raw';
 import type { LogEntry } from '../types';
 import {
   buildKeyEconomyEvidence,
@@ -34,10 +34,7 @@ const validInput: KeyEconomyEvidenceInput = {
 
 describe('key economy evidence protocol', () => {
   it('publishes the fixed privacy and sample gate', () => {
-    const doc = readFileSync(
-      new URL('../docs/key-economy-evidence.md', import.meta.url),
-      'utf8',
-    );
+    const doc = evidenceProtocol;
 
     for (const phrase of [
       'at least 10 independent runs',

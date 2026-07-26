@@ -4,6 +4,7 @@ import {
   buildKeyEconomyEvidence,
   stageForCompletion,
   type EvidenceStage,
+  type KeyEconomyEvidenceInput,
 } from '../utils/keyEconomyEvidence';
 
 export interface KeyEconomyEvidenceExportProps {
@@ -25,6 +26,44 @@ const STAGE_NAMES: Record<EvidenceStage, string> = {
   late: 'Late',
 };
 
+export interface KeyEconomyEvidenceDownloadEnvironment {
+  randomUUID: () => string;
+  createObjectURL: (blob: Blob) => string;
+  revokeObjectURL: (url: string) => void;
+  createAnchor: () => Pick<HTMLAnchorElement, 'href' | 'download' | 'click'>;
+}
+
+type KeyEconomyEvidenceDownloadInput = Omit<KeyEconomyEvidenceInput, 'reportId'>;
+
+export const downloadKeyEconomyEvidence = (
+  history: readonly LogEntry[],
+  input: KeyEconomyEvidenceDownloadInput,
+  environment?: KeyEconomyEvidenceDownloadEnvironment,
+) => {
+  const browserEnvironment = environment ?? {
+    randomUUID: () => crypto.randomUUID(),
+    createObjectURL: (blob: Blob) => URL.createObjectURL(blob),
+    revokeObjectURL: (url: string) => URL.revokeObjectURL(url),
+    createAnchor: () => document.createElement('a'),
+  };
+  const report = buildKeyEconomyEvidence(history, {
+    ...input,
+    reportId: browserEnvironment.randomUUID(),
+  });
+  const blob = new Blob([JSON.stringify(report, null, 2)], {
+    type: 'application/json',
+  });
+  const url = browserEnvironment.createObjectURL(blob);
+  const anchor = browserEnvironment.createAnchor();
+  anchor.href = url;
+  anchor.download = `fate-key-evidence-${report.reportId}.json`;
+  try {
+    anchor.click();
+  } finally {
+    browserEnvironment.revokeObjectURL(url);
+  }
+  return report;
+};
 export const KeyEconomyEvidenceExport: React.FC<KeyEconomyEvidenceExportProps> = ({
   history,
   gameMode,
@@ -40,22 +79,12 @@ export const KeyEconomyEvidenceExport: React.FC<KeyEconomyEvidenceExportProps> =
   const exportReport = () => {
     if (!canExport) return;
 
-    const report = buildKeyEconomyEvidence(history, {
-      reportId: crypto.randomUUID(),
+    downloadKeyEconomyEvidence(history, {
       gameMode,
       stage,
       observedHours: parsedHours,
       appVersion,
     });
-    const blob = new Blob([JSON.stringify(report, null, 2)], {
-      type: 'application/json',
-    });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `fate-key-evidence-${report.reportId}.json`;
-    anchor.click();
-    URL.revokeObjectURL(url);
   };
 
   return (
