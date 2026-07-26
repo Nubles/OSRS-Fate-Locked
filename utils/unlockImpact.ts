@@ -19,7 +19,7 @@
 
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
-import { getQuestStatus, getDiaryStatus } from './journalStatus';
+import { evaluateQuestEligibility, getDiaryStatus } from './journalStatus';
 
 export interface UnlockImpact {
   /** Quests LOCKED → AVAILABLE in one step. */
@@ -51,6 +51,7 @@ export interface UnlockImpactContext {
   baseQuestStatus: Map<string, string>;
   baseDiaryStatus: Map<string, string>;
   baseAvailableIds: Set<string>;
+  baseCompletedQuestIds: Set<string>;
 }
 
 export function prepareUnlockImpactContext(
@@ -59,8 +60,11 @@ export function prepareUnlockImpactContext(
 ): UnlockImpactContext {
   const allQuests = Object.values(QUEST_DATA);
   const allDiaries = Object.values(DIARY_DATA);
+  const baseQuestEligibility = new Map(
+    allQuests.map(q => [q.id, evaluateQuestEligibility(q, baseUnlocks, gameModeId)]),
+  );
   const baseQuestStatus = new Map<string, string>(
-    allQuests.map(q => [q.id, getQuestStatus(q, baseUnlocks, gameModeId)]),
+    allQuests.map(q => [q.id, baseQuestEligibility.get(q.id)!.status]),
   );
   const baseDiaryStatus = new Map<string, string>(
     allDiaries.map(d => [d.id, getDiaryStatus(d, baseUnlocks, gameModeId)]),
@@ -70,8 +74,14 @@ export function prepareUnlockImpactContext(
     allDiaries,
     baseQuestStatus,
     baseDiaryStatus,
+    baseCompletedQuestIds: new Set(
+      allQuests.filter(q => baseQuestStatus.get(q.id) === 'COMPLETED').map(q => q.id),
+    ),
     baseAvailableIds: new Set(
-      allQuests.filter(q => baseQuestStatus.get(q.id) === 'AVAILABLE').map(q => q.id),
+      allQuests.filter(q => {
+        const eligibility = baseQuestEligibility.get(q.id)!;
+        return eligibility.status === 'AVAILABLE' && eligibility.eligible;
+      }).map(q => q.id),
     ),
   };
 }
@@ -96,7 +106,7 @@ export function computeUnlockImpact(
 ): UnlockImpact {
   const context = options.context ?? prepareUnlockImpactContext(baseUnlocks, gameModeId);
   const {
-    allQuests, baseQuestStatus, baseDiaryStatus, baseAvailableIds,
+    allQuests, baseCompletedQuestIds, baseDiaryStatus, baseAvailableIds,
   } = context;
   const selectedDiaryIds = options.diaryIds === undefined
     ? null
@@ -106,11 +116,11 @@ export function computeUnlockImpact(
     : context.allDiaries.filter(diary => selectedDiaryIds.has(diary.id));
 
   const directQuestNames = allQuests
-    .filter(
-      (q) =>
-        !isOpen(baseQuestStatus.get(q.id)) &&
-        getQuestStatus(q, simulatedUnlocks, gameModeId) === 'AVAILABLE',
-    )
+    .filter(q => {
+      if (baseCompletedQuestIds.has(q.id) || baseAvailableIds.has(q.id)) return false;
+      const eligibility = evaluateQuestEligibility(q, simulatedUnlocks, gameModeId);
+      return eligibility.status === 'AVAILABLE' && eligibility.eligible;
+    })
     .map((q) => q.name);
 
   const directDiaryIds = allDiaries
@@ -123,16 +133,19 @@ export function computeUnlockImpact(
 
   // ── CASCADE (fixpoint) ───────────────────────────────────────────────────
   // Seed the completed set with whatever the simulation already "did".
-  // Greedily complete only previously-LOCKED quests that the chain unblocks.
-  const completed = new Set<string>(simulatedUnlocks.quests);
+  // Greedily complete only quests the canonical eligibility evaluator says are automatic.
+  const initialCompletedQuestIds = new Set<string>(simulatedUnlocks.quests);
+  const completed = new Set(initialCompletedQuestIds);
   let changed = true;
   while (changed) {
     changed = false;
     const snap = { ...simulatedUnlocks, quests: Array.from(completed) };
     for (const q of allQuests) {
       if (completed.has(q.id)) continue;
-      if (baseAvailableIds.has(q.id)) continue; // don't claim the existing backlog
-      if (getQuestStatus(q, snap, gameModeId) === 'AVAILABLE') {
+      if (baseCompletedQuestIds.has(q.id)) continue;
+      if (baseAvailableIds.has(q.id)) continue; // don't claim the existing automatic backlog
+      const eligibility = evaluateQuestEligibility(q, snap, gameModeId);
+      if (eligibility.status === 'AVAILABLE' && eligibility.eligible) {
         completed.add(q.id);
         changed = true;
       }
@@ -141,7 +154,12 @@ export function computeUnlockImpact(
   const finalSnap = { ...simulatedUnlocks, quests: Array.from(completed) };
 
   const cascadeQuestNames = allQuests
-    .filter((q) => !isOpen(baseQuestStatus.get(q.id)) && completed.has(q.id))
+    .filter((q) => (
+      !baseCompletedQuestIds.has(q.id) &&
+      !baseAvailableIds.has(q.id) &&
+      !initialCompletedQuestIds.has(q.id) &&
+      completed.has(q.id)
+    ))
     .map((q) => q.name);
 
   const cascadeDiaryIds = allDiaries
