@@ -15,6 +15,9 @@ import { hashEntry, ensureChain } from '../utils/integrity';
 import { pushBackup, listBackups as readBackups, getBackupData, BackupMeta } from '../utils/backups';
 import { showToast } from '../utils/toast';
 import { normalizeBossStandardKeysAwarded, normalizeClueStandardKeysAwarded } from '../utils/vanillaKeyProgress';
+import { effectiveVanillaClueRate, vanillaBossKeyStage } from '../config/vanillaKeyEconomy';
+import type { KeyRollContext } from '../config/vanillaKeyEconomy';
+import { resolveKeyRoll } from '../utils/keyRoll';
 
 // --- Types ---
 const CURRENT_VERSION = 2;
@@ -45,7 +48,13 @@ type GameEvent = {
 
 interface GameContextType extends GameState {
   lastEvent: GameEvent | null;
-  rollForKey: (source: string, threshold: number, x?: number, y?: number) => void;
+  rollForKey: (
+    source: string,
+    threshold: number,
+    x?: number,
+    y?: number,
+    context?: KeyRollContext,
+  ) => void;
   unlockContent: (table: TableType, item: string, costType: 'key' | 'specialKey' | 'chaosKey', cost: number) => void;
   performRitual: (type: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE') => void;
   performGambit: () => void;
@@ -237,7 +246,7 @@ export type Action =
   | { type: 'TOGGLE_REVEAL_ALL' }
   | { type: 'SET_SEED'; payload: string }
   | { type: 'COMPLETE_ONBOARDING' }
-  | { type: 'ROLL_RESULT'; payload: { success: boolean; omni: boolean; pity: boolean; roll: number; threshold: number; source: string; x?: number; y?: number } }
+  | { type: 'ROLL_RESULT'; payload: { success: boolean; omni: boolean; pity: boolean; roll: number; threshold: number; source: string; x?: number; y?: number; context?: KeyRollContext } }
   | { type: 'UNLOCK'; payload: { table: TableType; item: string; costType: 'key' | 'specialKey' | 'chaosKey'; cost: number } }
   | { type: 'RITUAL_LUCK' }
   | { type: 'RITUAL_GREED' }
@@ -356,16 +365,83 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     }
 
     case 'ROLL_RESULT': {
-      const { success, omni, pity, roll, threshold, source, x, y } = action.payload;
-      const isGreed = state.activeBuff === 'GREED';
+      const { success, omni, pity, roll, threshold, source, x, y, context } = action.payload;
+      const activeBuff = state.activeBuff;
+      const vanillaBossContext = state.gameModeId === 'vanilla' && context?.kind === 'boss'
+        ? context
+        : null;
+      const vanillaClueContext = state.gameModeId === 'vanilla' && context?.kind === 'clue'
+        ? context
+        : null;
+      const recordedBossAwarded = vanillaBossContext
+        ? state.bossStandardKeysAwarded?.[vanillaBossContext.bossName] ?? 0
+        : 0;
+      const bossStage = vanillaBossContext
+        ? vanillaBossKeyStage(vanillaBossContext.bossName, recordedBossAwarded)
+        : null;
 
-      let newState = { ...state, activeBuff: state.activeBuff === 'LUCK' || state.activeBuff === 'GREED' ? 'NONE' : state.activeBuff } as GameState & { lastEvent: GameEvent | null };
+      // This is the reducer-side backstop for a callback that started before
+      // another accepted roll exhausted the boss. Rejection must leave every
+      // part of the state — including the active buff and history chain — intact.
+      if (bossStage?.capped) return state;
+
+      const requestedStandardKeys =
+        success || pity
+          ? success && !omni && activeBuff === 'GREED' ? 2 : 1
+          : 0;
+      const standardKeysAwarded = bossStage
+        ? Math.min(requestedStandardKeys, bossStage.remaining)
+        : requestedStandardKeys;
+      const isGreed = activeBuff === 'GREED';
+      const remainingStage = bossStage
+        ? bossStage.remaining - standardKeysAwarded
+        : null;
+      const outcome = omni
+        ? 'omni'
+        : pity
+          ? 'pity'
+          : isGreed
+            ? 'greed'
+            : 'normal';
+      const rollMeta = context
+        ? {
+            roll,
+            threshold,
+            source,
+            context,
+            ...(context.kind === 'boss'
+              ? { bossName: context.bossName, bossClass: context.bossClass }
+              : { clueTier: context.clueTier }),
+            effectiveRate: threshold,
+            standardKeysAwarded,
+            currentStage: bossStage?.awarded ?? null,
+            remainingStage,
+            remainingReserve: remainingStage,
+            outcome,
+            exhausted: bossStage ? remainingStage === 0 : false,
+          }
+        : { roll, threshold, source };
+
+      let newState = {
+        ...state,
+        activeBuff: activeBuff === 'LUCK' || activeBuff === 'GREED' ? 'NONE' : activeBuff,
+      } as GameState & { lastEvent: GameEvent | null };
       const newHistory = [...state.history];
+
+      if (vanillaBossContext && standardKeysAwarded > 0) {
+        newState.bossStandardKeysAwarded = {
+          ...(state.bossStandardKeysAwarded ?? {}),
+          [vanillaBossContext.bossName]: bossStage!.awarded + standardKeysAwarded,
+        };
+      }
+      if (vanillaClueContext && standardKeysAwarded > 0) {
+        newState.clueStandardKeysAwarded = (state.clueStandardKeysAwarded ?? 0) + standardKeysAwarded;
+      }
 
       if (success) {
         if (omni) {
           newState.specialKeys += 1;
-          newState.keys += 1;
+          newState.keys += standardKeysAwarded;
 
           newHistory.push({
              id: generateId(),
@@ -373,7 +449,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
              type: 'ROLL_OMNI',
              message: 'LEGENDARY DROP! You found an Omni-Key!',
              details: `Critical Success! Rolled ${roll} vs ${threshold}.`,
-             meta: { roll, threshold, source },
+             meta: rollMeta,
              result: 'SUCCESS',
              source,
              rollValue: roll,
@@ -381,16 +457,20 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
           });
           newState.lastEvent = { id: generateId(), type: 'ROLL_OMNI', x, y, meta: { roll, threshold } };
         } else {
-          const amount = isGreed ? 2 : 1;
-          newState.keys += amount;
+          newState.keys += standardKeysAwarded;
+          const greedMessage = isGreed
+            ? standardKeysAwarded === 2
+              ? ' (Doubled)'
+              : ` (Greed awarded ${standardKeysAwarded} Standard Key${standardKeysAwarded === 1 ? '' : 's'})`
+            : '';
 
           newHistory.push({
              id: generateId(),
              timestamp: now,
              type: 'ROLL_SUCCESS',
-             message: `Key Found!${isGreed ? ' (Doubled)' : ''}`,
+             message: `Key Found!${greedMessage}`,
              details: `Rolled ${roll} (≤ ${threshold}).`,
-             meta: { roll, threshold, source },
+             meta: rollMeta,
              result: 'SUCCESS',
              source,
              rollValue: roll,
@@ -401,7 +481,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         newState.fatePoints = 0;
       } else {
          if (pity) {
-            newState.keys += 1;
+            newState.keys += standardKeysAwarded;
             newState.fatePoints = 0;
             newHistory.push({
                 id: generateId(),
@@ -409,7 +489,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
                 type: 'PITY',
                 message: 'MAX FATE REACHED! Pity Key granted.',
                 details: `Rolled ${roll} but Fate intervened.`,
-                meta: { roll, threshold, source },
+                meta: rollMeta,
                 result: 'SUCCESS',
                 source,
                 rollValue: roll,
@@ -432,7 +512,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
                 type: 'ROLL_FAIL',
                 message: `No Key.${isGreed ? ` (Greed refunded ${greedRefund} Fate)` : ''}`,
                 details: `Rolled ${roll} (> ${threshold}). Fate: ${newState.fatePoints}/${resolveModeRules(state.gameModeId, state.customMode).pityThreshold}`,
-                meta: { roll, threshold, source },
+                meta: rollMeta,
                 result: 'FAIL',
                 source,
                 rollValue: roll,
@@ -852,31 +932,65 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     const tip = s.history[s.history.length - 1]?.hash ?? 'genesis';
     return drawFloat(s.rngSeed, tip, purpose, index);
   }, []);
-  const nextDice = useCallback((purpose: string, index = 0, max = 100): number =>
-    Math.floor(nextFloat(purpose, index) * max) + 1, [nextFloat]);
   const setSeed = useCallback((seed: string) => dispatch({ type: 'SET_SEED', payload: seed }), []);
 
-  const rollForKey = useCallback((source: string, threshold: number, x?: number, y?: number) => {
-    let roll = nextDice('roll', 0);
-    const advantageRoll = nextDice('roll', 1);
+  const rollForKey = useCallback((source: string, threshold: number, x?: number, y?: number, context?: KeyRollContext) => {
+    // Take exactly one snapshot before any gameplay draw so preflight, buffs,
+    // Fate, region passives, and deterministic RNG all describe the same run.
+    const snapshot = stateRef.current;
+    const vanillaBossContext = snapshot.gameModeId === 'vanilla' && context?.kind === 'boss'
+      ? context
+      : null;
+    const vanillaClueContext = snapshot.gameModeId === 'vanilla' && context?.kind === 'clue'
+      ? context
+      : null;
+    const recordedBossAwarded = vanillaBossContext
+      ? snapshot.bossStandardKeysAwarded?.[vanillaBossContext.bossName] ?? 0
+      : 0;
+    const bossStage = vanillaBossContext
+      ? vanillaBossKeyStage(vanillaBossContext.bossName, recordedBossAwarded)
+      : null;
 
-    if (state.activeBuff === 'LUCK') {
-      roll = Math.min(roll, advantageRoll);
-    }
+    // A capped boss does not consume any draw (and therefore cannot change a
+    // seeded run's chain), buff, Fate, pity, or history.
+    if (bossStage?.capped) return;
 
-    const mode = resolveModeRules(state.gameModeId, state.customMode);
+    const awarded = bossStage?.awarded ?? recordedBossAwarded;
+    const clueAwarded = vanillaClueContext ? snapshot.clueStandardKeysAwarded ?? 0 : 0;
+    const purpose =
+      context?.kind === 'boss'
+        ? `roll:boss:${context.bossName}:${awarded}`
+        : context?.kind === 'clue'
+          ? `roll:clue:${context.clueTier}:${clueAwarded}`
+          : 'roll';
+
+    let baseThreshold = threshold;
+    if (bossStage) baseThreshold = bossStage.currentRate ?? threshold;
+    else if (vanillaClueContext) baseThreshold = effectiveVanillaClueRate(threshold, clueAwarded);
+
+    const mode = resolveModeRules(snapshot.gameModeId, snapshot.customMode);
 
     // Region passives (active only when the mode enables them) shift the
     // effective success threshold and Omni chance.
     let omniBonus = 0;
-    let effectiveThreshold = threshold;
+    let effectiveThreshold = baseThreshold;
     if (mode.regionModifiers) {
-      const bonuses = getActiveRegionBonuses(state.unlocks.regions);
-      effectiveThreshold = Math.max(1, Math.min(100, threshold + bonuses.successBonus));
+      const bonuses = getActiveRegionBonuses(snapshot.unlocks.regions);
+      effectiveThreshold = Math.max(1, Math.min(100, baseThreshold + bonuses.successBonus));
       omniBonus = bonuses.omniBonus;
     }
 
-    const success = roll <= effectiveThreshold;
+    const resolveRoll = (index: number): { roll: number; success: boolean } => {
+      if (context) return resolveKeyRoll(nextFloat(purpose, index), effectiveThreshold);
+      const roll = Math.floor(nextFloat('roll', index) * 100) + 1;
+      return { roll, success: roll <= effectiveThreshold };
+    };
+    let { roll, success } = resolveRoll(0);
+    const advantageRoll = resolveRoll(1);
+    if (snapshot.activeBuff === 'LUCK' && advantageRoll.roll < roll) {
+      ({ roll, success } = advantageRoll);
+    }
+
     let omni = false;
     let pity = false;
 
@@ -891,15 +1005,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
       else if (source === DropSource.RAID) omniChance = Math.max(omniChance, 15);
       else if (source === DropSource.BOSS_HIGH) omniChance = Math.max(omniChance, 10);
 
-      if (nextDice('roll', 2) <= omniChance) omni = true;
+      if (Math.floor(nextFloat(purpose, 2) * 100) + 1 <= omniChance) omni = true;
     } else {
-      if (mode.pityEnabled && state.fatePoints + 1 >= mode.pityThreshold) pity = true;
+      if (mode.pityEnabled && snapshot.fatePoints + 1 >= mode.pityThreshold) pity = true;
     }
 
     // Pass the effective threshold so logs and stats reflect the real odds.
-    dispatch({ type: 'ROLL_RESULT', payload: { success, omni, pity, roll, threshold: effectiveThreshold, source, x, y } });
-  }, [state.activeBuff, state.fatePoints, state.gameModeId, state.customMode, state.unlocks.regions, nextDice]);
-
+    dispatch({ type: 'ROLL_RESULT', payload: { success, omni, pity, roll, threshold: effectiveThreshold, source, x, y, context } });
+  }, [nextFloat]);
   const unlockContent = useCallback((table: TableType, item: string, costType: 'key' | 'specialKey' | 'chaosKey', cost: number) => {
     dispatch({ type: 'UNLOCK', payload: { table, item, costType, cost } });
   }, []);

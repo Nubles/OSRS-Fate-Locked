@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { gameReducer, initialState } from './GameContext';
 import { TableType, LogEntry } from '../types';
+import type { KeyRollContext } from '../config/vanillaKeyEconomy';
 import { isRollEntry } from '../utils/logEntry';
 import { XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL } from '../config/economy';
 import { isValidUnlock } from '../utils/gameEngine';
@@ -14,8 +15,11 @@ import { ALL_CHUNKS, CHUNKED_START, chunkKey } from '../utils/chunkAdjacency';
 
 const base = () => ({ ...initialState, lastEvent: null });
 
-const roll = (over: Partial<{ success: boolean; omni: boolean; pity: boolean; roll: number; threshold: number; source: string }>) =>
-  ({ type: 'ROLL_RESULT' as const, payload: { success: false, omni: false, pity: false, roll: 50, threshold: 50, source: 'Test', ...over } });
+const roll = (
+  over: Partial<{ success: boolean; omni: boolean; pity: boolean; roll: number; threshold: number; source: string }>,
+  context?: KeyRollContext,
+) =>
+  ({ type: 'ROLL_RESULT' as const, payload: { success: false, omni: false, pity: false, roll: 50, threshold: 50, source: 'Test', ...over, context } });
 
 // --- ROLL_RESULT ------------------------------------------------------------
 
@@ -76,6 +80,170 @@ describe('ROLL_RESULT', () => {
   });
 });
 
+// --- ROLL_RESULT — Vanilla key safety valve ---------------------------------
+
+describe('ROLL_RESULT — Vanilla key safety valve', () => {
+  const bossContext = {
+    kind: 'boss' as const,
+    bossName: 'Zulrah',
+    bossClass: 'mid' as const,
+  };
+  const clueContext = { kind: 'clue' as const, clueTier: 'Elite' };
+  const vanillaState = () => ({ ...base(), gameModeId: 'vanilla' });
+
+  it.each([
+    ['normal success', { success: true, omni: false, pity: false }, 1],
+    ['standard with Omni', { success: true, omni: true, pity: false }, 1],
+    ['pity award', { success: false, omni: false, pity: true }, 1],
+  ])('%s consumes one boss allowance', (_label, outcome, expected) => {
+    const next = gameReducer(vanillaState(), roll(outcome, bossContext));
+
+    expect(next.bossStandardKeysAwarded?.Zulrah).toBe(expected);
+  });
+
+  it('awards two Standard Keys under Greed while two boss allowances remain', () => {
+    const next = gameReducer(
+      { ...vanillaState(), activeBuff: 'GREED' },
+      roll({ success: true }, bossContext),
+    );
+
+    expect(next.keys).toBe(initialState.keys + 2);
+    expect(next.bossStandardKeysAwarded?.Zulrah).toBe(2);
+    expect(next.history.at(-1)?.meta).toMatchObject({
+      standardKeysAwarded: 2,
+      outcome: 'greed',
+      exhausted: true,
+    });
+  });
+
+  it('clamps a Greed award to the single remaining boss allowance', () => {
+    const next = gameReducer(
+      {
+        ...vanillaState(),
+        activeBuff: 'GREED',
+        bossStandardKeysAwarded: { Zulrah: 1 },
+      },
+      roll({ success: true }, bossContext),
+    );
+
+    expect(next.keys).toBe(initialState.keys + 1);
+    expect(next.bossStandardKeysAwarded?.Zulrah).toBe(2);
+    expect(next.history.at(-1)?.meta).toMatchObject({
+      standardKeysAwarded: 1,
+      outcome: 'greed',
+      exhausted: true,
+    });
+  });
+
+  it('keeps the Omni currency independent while consuming one Standard allowance', () => {
+    const next = gameReducer(vanillaState(), roll({ success: true, omni: true }, bossContext));
+
+    expect(next.keys).toBe(initialState.keys + 1);
+    expect(next.specialKeys).toBe(initialState.specialKeys + 1);
+    expect(next.bossStandardKeysAwarded?.Zulrah).toBe(1);
+  });
+
+  it('rejects a stale capped boss action without mutating any roll state', () => {
+    const capped = {
+      ...vanillaState(),
+      keys: 11,
+      fatePoints: 49,
+      activeBuff: 'GREED' as const,
+      rngSeed: 'capped-zulrah',
+      bossStandardKeysAwarded: { Zulrah: 2 },
+      history: [{ id: 'prior', timestamp: 1, type: 'ROLL_FAIL' as const, message: 'No Key.' }],
+    };
+
+    const next = gameReducer(capped, roll({ success: false, pity: true }, bossContext));
+
+    expect(next).toBe(capped);
+  });
+
+  it('still records Fate and pity on a non-capped boss failure', () => {
+    const failed = gameReducer(
+      { ...vanillaState(), fatePoints: 49 },
+      roll({ success: false, pity: false }, bossContext),
+    );
+    const pitied = gameReducer(
+      { ...vanillaState(), fatePoints: 49 },
+      roll({ success: false, pity: true }, bossContext),
+    );
+
+    expect(failed.fatePoints).toBe(50);
+    expect(failed.bossStandardKeysAwarded?.Zulrah).toBeUndefined();
+    expect(pitied.fatePoints).toBe(0);
+    expect(pitied.keys).toBe(initialState.keys + 1);
+    expect(pitied.bossStandardKeysAwarded?.Zulrah).toBe(1);
+  });
+
+  it.each([
+    ['normal', { success: true, omni: false, pity: false }, 'NONE', 1],
+    ['pity', { success: false, omni: false, pity: true }, 'NONE', 1],
+    ['Greed', { success: true, omni: false, pity: false }, 'GREED', 2],
+    ['standard with Omni', { success: true, omni: true, pity: false }, 'NONE', 1],
+  ] as const)('%s clue award tracks its actual Standard Key amount', (_label, outcome, activeBuff, expected) => {
+    const next = gameReducer(
+      { ...vanillaState(), activeBuff },
+      roll(outcome, clueContext),
+    );
+
+    expect(next.keys).toBe(initialState.keys + expected);
+    expect(next.clueStandardKeysAwarded).toBe(expected);
+  });
+
+  it('does not change Vanilla progression counters for non-Vanilla boss or clue rolls', () => {
+    const nonVanilla = {
+      ...base(),
+      gameModeId: 'hardcore',
+      bossStandardKeysAwarded: { Zulrah: 1 },
+      clueStandardKeysAwarded: 4,
+    };
+
+    const boss = gameReducer(nonVanilla, roll({ success: true }, bossContext));
+    const clue = gameReducer(nonVanilla, roll({ success: true }, clueContext));
+
+    expect(boss.bossStandardKeysAwarded).toEqual({ Zulrah: 1 });
+    expect(boss.clueStandardKeysAwarded).toBe(4);
+    expect(clue.bossStandardKeysAwarded).toEqual({ Zulrah: 1 });
+    expect(clue.clueStandardKeysAwarded).toBe(4);
+  });
+
+  it('records exact Vanilla roll identity and award accounting in history metadata', () => {
+    const next = gameReducer(
+      {
+        ...vanillaState(),
+        bossStandardKeysAwarded: { Zulrah: 1 },
+      },
+      roll({ success: true, threshold: 15 }, bossContext),
+    );
+
+    expect(next.history.at(-1)?.meta).toMatchObject({
+      context: bossContext,
+      bossName: 'Zulrah',
+      bossClass: 'mid',
+      effectiveRate: 15,
+      standardKeysAwarded: 1,
+      currentStage: 1,
+      remainingStage: 0,
+      remainingReserve: 0,
+      outcome: 'normal',
+      exhausted: true,
+    });
+  });
+
+  it('leaves Combat Achievements and collection logging functional at a capped boss', () => {
+    const capped = {
+      ...vanillaState(),
+      bossStandardKeysAwarded: { Zulrah: 2 },
+    };
+
+    const ca = gameReducer(capped, { type: 'TOGGLE_CA', payload: 'Easy' });
+    const collection = gameReducer(capped, { type: 'LOG_ITEM', payload: 4151 });
+
+    expect(ca.unlocks.cas).toContain('Easy');
+    expect(collection.unlocks.collectionLog[4151]).toBe(1);
+  });
+});
 // --- UNLOCK -----------------------------------------------------------------
 
 describe('UNLOCK', () => {
