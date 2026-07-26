@@ -18,6 +18,13 @@ const archivedBoundaryReferencePath = (relativePath: string) =>
 const textFilePattern = /\.(?:[cm]?[jt]sx?|json|md|ya?ml|toml|ini|properties|xml|txt)$/i;
 const staleMirrorOrSourcePinPattern =
   /(?:\brunelite-plugin(?:\/|\b)|\bSOURCE_COMMIT\b|\brunelite:mirror-check\b|byte-for-byte (?:CRLF )?mirror|Nubles\/RS3-Fate-Locked-Runelite)/i;
+const companionRepositoryPattern =
+  /\b(?:this\s+(?:(?:companion|web(?:\s+app)?)\s+)?(?:repository|repo)|(?:the\s+)?(?:companion|web(?:\s+app)?)\s+(?:repository|repo))\b/i;
+const pluginOwnershipActionPattern =
+  /\b(?:build(?:s|ing)?|built|publish(?:es|ed|ing)?|releas(?:e|es|ed|ing)|download(?:s|ed|ing)?|mirror(?:s|ed|ing)?)\b/i;
+const pluginOwnershipSubjectPattern = /\b(?:java|rune\s*lite|runelite|plugin|jar)\b/i;
+const negatedPluginOwnershipActionPattern =
+  /\b(?:do not|does not|don't|never|must not|cannot|can't|no)\b[^.!?]{0,100}\b(?:build(?:s|ing)?|built|publish(?:es|ed|ing)?|releas(?:e|es|ed|ing)|download(?:s|ed|ing)?|mirror(?:s|ed|ing)?)\b/i;
 const jvmOrBuildArtifactPattern =
   /(?:^|\/)(?:[^/]+\.(?:java|kt|kts|class|jar)|(?:build|settings)\.gradle(?:\.kts)?|gradlew(?:\.bat)?|mvnw(?:\.cmd)?|pom\.xml|SOURCE_COMMIT|runelite-plugin\.properties|plugin-hub\.json)$|(?:^|\/)(?:\.gradle|gradle)(?:\/|$)/i;
 const pluginMetadataPathPattern = /(?:^|\/)(?:runelite[-_.]?plugin|plugin)\.properties$/i;
@@ -29,7 +36,15 @@ const jvmBinaryDistributionBehaviorPattern =
   /\b(?:build|fetch|download|release|mirror|publish|upload|distribution)\b/i;
 const standalonePluginArtifactPattern = /\b[\w.-]*plugin[\w.-]*\.(?:zip|jar|class)\b/i;
 const remoteJvmBinaryArtifactPattern = /\bhttps?:\/\/[^\s'"`]+\.(?:jar|class)\b/i;
+const fateLockedPluginJvmContextPattern =
+  /(?:\bfate[-_\s]?locked\b|\bfatelocked\b|\brune\s*lite\b|\brunelite\b|\bnet\.runelite\b|\b[\w.-]*plugin[\w.-]*\.(?:jar|class)\b|Nubles\/OSRS-Fate-Locked-Runelite)/i;
 const jvmBinaryArtifactPattern = /\b[^\s'"`]+\.(?:jar|class)\b/i;
+const yamlWorkflowPattern = /^\s*jobs\s*:/im;
+const workflowPluginSignaturePattern =
+  /(?:Nubles\/OSRS-Fate-Locked-Runelite|\bnet\.runelite\b|\brune\s*lite[-_\s]+(?:companion[-_\s]+)?plugin\b|\brunelite[-_\s]+(?:companion[-_\s]+)?plugin\b)/i;
+const workflowJavaSetupPattern = /\bactions\/setup-java@/i;
+const workflowJvmBuildCommandPattern =
+  /^\s*(?:(?:-\s*)?run:\s*(?:[>|]\s*)?)?(?:\.?[\\/])?(?:gradlew(?:\.bat)?|gradle|mvnw(?:\.cmd)?|mvn)\b[^\r\n]*\b(?:clean|test|build|jar|shadowJar|package|install|deploy)\b/im;
 const retainedWebAppIntegrationPaths = [
   'components/RuneLiteOnboarding.tsx',
   'components/RollInbox.tsx',
@@ -45,13 +60,34 @@ const retainedWebAppIntegrationPaths = [
 
 type CommandSurface = { relativePath: string; content: string };
 
-const isProhibitedPluginDistribution = (content: string) =>
-  content.split(/\r?\n/).some((commandLine) =>
-    remoteJvmBinaryArtifactPattern.test(commandLine) ||
-    (jvmBinaryArtifactPattern.test(commandLine) && jvmBinaryDistributionBehaviorPattern.test(commandLine)) ||
-    (pluginDistributionSignaturePattern.test(commandLine) &&
-      (distributionBehaviorPattern.test(commandLine) || standalonePluginArtifactPattern.test(commandLine))),
+const hasCompanionOwnedPluginInstruction = (content: string) =>
+  content.split(/[.!?;](?:\s+|$)|\r?\n\s*\r?\n/).some(
+    (instruction) =>
+      companionRepositoryPattern.test(instruction) &&
+      pluginOwnershipActionPattern.test(instruction) &&
+      pluginOwnershipSubjectPattern.test(instruction) &&
+      !negatedPluginOwnershipActionPattern.test(instruction),
   );
+const hasProhibitedActiveOwnership = (content: string) =>
+  staleMirrorOrSourcePinPattern.test(content) || hasCompanionOwnedPluginInstruction(content);
+const hasSplitWorkflowPluginBuild = (content: string) =>
+  yamlWorkflowPattern.test(content) &&
+  workflowPluginSignaturePattern.test(content) &&
+  workflowJavaSetupPattern.test(content) &&
+  workflowJvmBuildCommandPattern.test(content);
+const isProhibitedPluginDistribution = (content: string) =>
+  content.split(/\r?\n/).some((commandLine) => {
+    const remoteJvmBinary = remoteJvmBinaryArtifactPattern.test(commandLine);
+
+    return (
+      (remoteJvmBinary && fateLockedPluginJvmContextPattern.test(commandLine)) ||
+      (!remoteJvmBinary &&
+        jvmBinaryArtifactPattern.test(commandLine) &&
+        jvmBinaryDistributionBehaviorPattern.test(commandLine)) ||
+      (pluginDistributionSignaturePattern.test(commandLine) &&
+        (distributionBehaviorPattern.test(commandLine) || standalonePluginArtifactPattern.test(commandLine)))
+    );
+  }) || hasSplitWorkflowPluginBuild(content);
 const isProhibitedPluginSourceArtifact = (relativePath: string, content: string) =>
   jvmOrBuildArtifactPattern.test(relativePath) ||
   (pluginMetadataPathPattern.test(relativePath) && pluginDistributionSignaturePattern.test(content)) ||
@@ -103,18 +139,52 @@ describe('RuneLite repository ownership boundary', () => {
     expect(packageJson.scripts).not.toHaveProperty('runelite:mirror-check');
   });
 
-  it('documents standalone ownership without companion mirror instructions', () => {
-    const activeDocs = [
-      'README.md',
-      'ROADMAP.md',
-      '.claude/skills/fate-locked-workflow/SKILL.md',
-    ].map((relativePath) => readFileSync(atRoot(relativePath), 'utf8')).join('\n');
+  it.each([
+    'README.md',
+    'ROADMAP.md',
+    '.claude/skills/fate-locked-workflow/SKILL.md',
+  ])('documents approved standalone ownership in %s', (relativePath) => {
+    const content = readFileSync(atRoot(relativePath), 'utf8');
 
-    expect(activeDocs).toContain('https://github.com/Nubles/OSRS-Fate-Locked-Runelite');
-    expect(activeDocs).not.toMatch(/runelite-plugin\/SOURCE_COMMIT/);
-    expect(activeDocs).not.toMatch(/byte-for-byte (?:CRLF )?mirror/i);
-    expect(activeDocs).not.toContain('runelite:mirror-check');
-    expect(activeDocs).not.toContain('Nubles/RS3-Fate-Locked-Runelite');
+    expect(content).toMatch(/(?:https:\/\/github\.com\/)?Nubles\/OSRS-Fate-Locked-Runelite\b/i);
+    expect(content).toMatch(/\b(?:plugin source|builds?|releases?|Plugin Hub)\b/i);
+    expect(content).toMatch(
+      /(?:\b(?:only|exclusively)\b[\s\S]{0,240}\b(?:standalone repository|OSRS-Fate-Locked-Runelite)\b|\b(?:standalone repository|OSRS-Fate-Locked-Runelite)\b[\s\S]{0,240}\b(?:only|exclusively|owns)\b)/i,
+    );
+    expect(hasProhibitedActiveOwnership(content)).toBe(false);
+  });
+
+  it.each([
+    'Build and publish the Java plugin from this companion repository.',
+    'RuneLite plugin artifacts are released and downloaded from the web app repository.',
+    'Mirror the plugin sources into this companion repo before publishing.',
+  ])('rejects companion-owned plugin instructions: %s', (instruction) => {
+    const content = [
+      'Plugin source, builds, and releases live exclusively in the standalone repository:',
+      'https://github.com/Nubles/OSRS-Fate-Locked-Runelite.',
+      instruction,
+    ].join('\n');
+
+    expect(hasProhibitedActiveOwnership(content)).toBe(true);
+  });
+  it('allows an explicit prohibition on companion-owned plugin builds', () => {
+    const content = [
+      'Plugin source, builds, and releases live exclusively in the standalone repository:',
+      'https://github.com/Nubles/OSRS-Fate-Locked-Runelite.',
+      'Do not build or publish the Java plugin from this companion repository.',
+    ].join('\n');
+
+    expect(hasProhibitedActiveOwnership(content)).toBe(false);
+  });
+
+  it('allows companion web-app build prose that points the plugin elsewhere', () => {
+    const content = [
+      'Plugin source, builds, and releases live exclusively in the standalone repository:',
+      'https://github.com/Nubles/OSRS-Fate-Locked-Runelite.',
+      'This companion repository builds and releases the web app; the RuneLite plugin remains external.',
+    ].join('\n');
+
+    expect(hasProhibitedActiveOwnership(content)).toBe(false);
   });
 
   it('does not leave removed companion paths in active application source', () => {
@@ -140,6 +210,12 @@ describe('RuneLite repository ownership boundary', () => {
     ['automation/release.yml', 'asset: https://cdn.example/fatelocked-0.1.0-all.JAR'],
   ])('rejects a generic-name JVM binary distribution command at %s', (_relativePath, content) => {
     expect(isProhibitedPluginDistribution(content)).toBe(true);
+  });
+  it('allows an unrelated remote PlantUML JAR reference', () => {
+    const content =
+      "const plantUmlJar = 'https://github.com/plantuml/plantuml/releases/download/v1.2026.5/plantuml.jar';";
+
+    expect(isProhibitedPluginDistribution(content)).toBe(false);
   });
   it.each([
     ['build', 'build artifacts/fatelocked.jar'],
@@ -169,6 +245,32 @@ describe('RuneLite repository ownership boundary', () => {
 
     expect(isProhibitedPluginDistribution(content)).toBe(false);
   });
+  it('rejects a split-step standalone plugin build workflow', () => {
+    const content = [
+      'jobs:',
+      '  plugin:',
+      '    steps:',
+      '      - uses: actions/checkout@v4',
+      '        with:',
+      '          repository: Nubles/OSRS-Fate-Locked-Runelite',
+      '      - uses: actions/setup-java@v4',
+      '      - run: gradle clean test jar --no-daemon',
+    ].join('\n');
+
+    expect(isProhibitedPluginDistribution(content)).toBe(true);
+  });
+  it('allows an unrelated setup-java Gradle workflow', () => {
+    const content = [
+      'jobs:',
+      '  verify-java-service:',
+      '    steps:',
+      '      - uses: actions/checkout@v4',
+      '      - uses: actions/setup-java@v4',
+      '      - run: gradle clean test jar --no-daemon',
+    ].join('\n');
+
+    expect(isProhibitedPluginDistribution(content)).toBe(false);
+  });
   it('allows a generic web-app release download without a RuneLite or plugin signature', () => {
     const content = "await download('https://cdn.example/fate-locked-webapp.zip');";
 
@@ -190,7 +292,7 @@ describe('RuneLite repository ownership boundary', () => {
       (relativePath) =>
         !archivedBoundaryReferencePath(relativePath) &&
         textFilePattern.test(relativePath) &&
-        staleMirrorOrSourcePinPattern.test(readFileSync(atRoot(relativePath), 'utf8')),
+        hasProhibitedActiveOwnership(readFileSync(atRoot(relativePath), 'utf8')),
     );
 
     expect(staleActiveReferences).toEqual([]);
