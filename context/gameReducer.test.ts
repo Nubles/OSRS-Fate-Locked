@@ -53,11 +53,17 @@ describe('ROLL_RESULT', () => {
     expect(s.keys).toBe(initialState.keys + 1);
     expect(s.fatePoints).toBe(0);
     expect(s.history).toHaveLength(1);
+    expect(s.history.at(-1)?.meta?.fatePointsEarned).toBe(0);
   });
 
   it('a failed roll accumulates a fate point and grants no key', () => {
-    const s = gameReducer(base(), roll({ success: false }));
-    expect(s.fatePoints).toBe(initialState.fatePoints + 1);
+    const previous = base();
+    const s = gameReducer(previous, roll({ success: false }));
+    expect(s.history.at(-1)).toMatchObject({
+      type: 'ROLL_FAIL',
+      meta: { fatePointsEarned: 1 },
+    });
+    expect(s.fatePoints).toBe(previous.fatePoints + 1);
     expect(s.keys).toBe(initialState.keys);
   });
 
@@ -66,12 +72,17 @@ describe('ROLL_RESULT', () => {
     expect(s.specialKeys).toBe(initialState.specialKeys + 1);
     expect(s.keys).toBe(initialState.keys + 1);
     expect(s.fatePoints).toBe(0);
+    expect(s.history.at(-1)?.meta?.fatePointsEarned).toBe(0);
   });
 
   it('a pity key is granted on a failed roll flagged as pity', () => {
     const s = gameReducer({ ...base(), fatePoints: 49 }, roll({ success: false, pity: true }));
     expect(s.keys).toBe(initialState.keys + 1);
     expect(s.fatePoints).toBe(0);
+    expect(s.history.at(-1)).toMatchObject({
+      type: 'PITY',
+      meta: { fatePointsEarned: 1 },
+    });
   });
 
   it('a Greed-buffed success grants two keys', () => {
@@ -436,8 +447,10 @@ describe('rituals', () => {
   it('a failed roll under GREED refunds half the ritual cost (plus the normal fate point)', () => {
     const armed = gameReducer({ ...base(), fatePoints: 15 }, { type: 'RITUAL_GREED' }); // 0 left
     const s = gameReducer(armed, roll({ success: false }));
+    const expectedGreedRefund = 8;
     // +1 normal fail fate, +8 refund (ceil(15 × 0.5)); buff consumed.
     expect(s.fatePoints).toBe(9);
+    expect(s.history.at(-1)?.meta?.fatePointsEarned).toBe(1 + expectedGreedRefund);
     expect(s.activeBuff).toBe('NONE');
     expect(s.keys).toBe(initialState.keys);
   });
