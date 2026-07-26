@@ -15,6 +15,10 @@ export const FATE_EVENT_TYPES = [
   'CLUE_CASKET',
   'BOSS_KILL',
   'RAID_COMPLETION',
+  'SLAYER_TASK',
+  'DIARY_TASK',
+  'PET_DROP',
+  'MINIGAME_COMPLETION',
 ] as const;
 
 export type FateEventType = typeof FATE_EVENT_TYPES[number];
