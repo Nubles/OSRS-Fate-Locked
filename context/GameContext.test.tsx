@@ -10,7 +10,7 @@ describe('run identity and revision', () => {
     const first = migrateSaveForTest({ history: [] });
     const second = migrateSaveForTest(first);
 
-    expect(first.runId).toMatch(/^[0-9a-f-]{36}$/i);
+    expect(first.runId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
     expect(first.runRevision).toBe(0);
     expect(second.runId).toBe(first.runId);
   });

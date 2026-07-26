@@ -664,6 +664,8 @@ const normalizeRival = (value: unknown): Outcome<RivalState> => {
 };
 
 
+const RFC_4122_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 const TOP_LEVEL_KEYS = new Set([
   'version', 'runId', 'runRevision', 'keys', 'specialKeys', 'chaosKeys', 'fatePoints', 'activeBuff',
   'unlocks', 'history', 'animationsEnabled', 'advisorsEnabled', 'revealAllFeatures',
@@ -756,7 +758,7 @@ const normalizeState = (
   const selectedRunId = readPreferred(input, defaultRecord, 'runId');
   if (!selectedRunId.present) return invalid('invalid_field', 'runId');
   const runId = stringValue(selectedRunId.value, 'runId', MAX_IDENTIFIER_CHARS);
-  if (runId.ok === false || runId.value.trim().length === 0) {
+  if (runId.ok === false || !RFC_4122_V4.test(runId.value)) {
     return invalid('invalid_field', 'runId');
   }
   const selectedRunRevision = readPreferred(input, defaultRecord, 'runRevision');
