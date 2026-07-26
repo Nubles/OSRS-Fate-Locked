@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -18,8 +18,14 @@ const archivedBoundaryReferencePath = (relativePath: string) =>
 const textFilePattern = /\.(?:[cm]?[jt]sx?|json|md|ya?ml|toml|ini|properties|xml|txt)$/i;
 const staleMirrorOrSourcePinPattern =
   /(?:\brunelite-plugin(?:\/|\b)|\bSOURCE_COMMIT\b|\brunelite:mirror-check\b|byte-for-byte (?:CRLF )?mirror|Nubles\/RS3-Fate-Locked-Runelite)/i;
-const prohibitedPluginSourceArtifactPattern =
-  /(?:^|\/)(?:[^/]+\.(?:java|jar)|(?:build|settings)\.gradle(?:\.kts)?|gradlew(?:\.bat)?|mvnw(?:\.cmd)?|pom\.xml|SOURCE_COMMIT|runelite-plugin\.properties|plugin-hub\.json)$|(?:^|\/)(?:\.gradle|gradle)(?:\/|$)/i;
+const jvmOrBuildArtifactPattern =
+  /(?:^|\/)(?:[^/]+\.(?:java|kt|kts|class|jar)|(?:build|settings)\.gradle(?:\.kts)?|gradlew(?:\.bat)?|mvnw(?:\.cmd)?|pom\.xml|SOURCE_COMMIT|runelite-plugin\.properties|plugin-hub\.json)$|(?:^|\/)(?:\.gradle|gradle)(?:\/|$)/i;
+const pluginMetadataPathPattern = /(?:^|\/)(?:runelite[-_.]?plugin|plugin)\.properties$/i;
+const pluginDistributionSignaturePattern =
+  /(?:\brune\s*lite(?:[-_\s]*(?:plugin|client))?\b|\brunelite(?:[-_\s]*(?:plugin|client))?\b|\bnet\.runelite\b|\b[\w-]*plugin[\w-]*\.(?:zip|jar|class)\b|\bplugin[-_\s]+(?:hub|manifest|metadata|distribution)\b)/i;
+const distributionBehaviorPattern =
+  /\b(?:build|fetch|download|release|mirror|publish|upload|curl|wget|gradle|mvn|setup-java)\b/i;
+const standalonePluginArtifactPattern = /\b[\w.-]*plugin[\w.-]*\.(?:zip|jar|class)\b/i;
 const retainedWebAppIntegrationPaths = [
   'components/RuneLiteOnboarding.tsx',
   'components/RollInbox.tsx',
@@ -33,14 +39,38 @@ const retainedWebAppIntegrationPaths = [
   'workers/fate-relay/worker.js',
 ];
 
-const workflowDirectory = atRoot('.github/workflows');
-const prohibitedPluginWorkflowPattern =
-  /(?:actions\/setup-java@|(?:^|[^\w])(?:\.\/)?gradlew?(?:\s|$)|\bmvnw?(?:\s|$)|\bjava\s+-jar\b|\brunelite(?:-plugin)?\b|\bplugin[\s-]?hub\b|\.jar\b|\b(?:java|plugin)[\s-](?:build|release|download)\b)/i;
+type CommandSurface = { relativePath: string; content: string };
 
-const workflowFiles = () =>
-  readdirSync(workflowDirectory, { withFileTypes: true })
-    .filter((entry) => entry.isFile() && /\.ya?ml$/i.test(entry.name))
-    .map((entry) => entry.name);
+const isProhibitedPluginDistribution = (content: string) =>
+  content.split(/\r?\n/).some((commandLine) =>
+    pluginDistributionSignaturePattern.test(commandLine) &&
+    (distributionBehaviorPattern.test(commandLine) || standalonePluginArtifactPattern.test(commandLine)),
+  );
+const isProhibitedPluginSourceArtifact = (relativePath: string, content: string) =>
+  jvmOrBuildArtifactPattern.test(relativePath) ||
+  (pluginMetadataPathPattern.test(relativePath) && pluginDistributionSignaturePattern.test(content)) ||
+  isProhibitedPluginDistribution(relativePath);
+const trackedCommandSurfaces = (): CommandSurface[] => {
+  const trackedCommandFiles = trackedFiles().filter(
+    (relativePath) =>
+      !archivedBoundaryReferencePath(relativePath) &&
+      (relativePath.startsWith('scripts/') || /\.ya?ml$/i.test(relativePath)),
+  );
+  const packageJson = JSON.parse(readFileSync(atRoot('package.json'), 'utf8')) as {
+    scripts?: Record<string, string>;
+  };
+
+  return [
+    ...trackedCommandFiles.map((relativePath) => ({
+      relativePath,
+      content: readFileSync(atRoot(relativePath), 'utf8'),
+    })),
+    ...Object.entries(packageJson.scripts ?? {}).map(([scriptName, command]) => ({
+      relativePath: `package.json#scripts.${scriptName}`,
+      content: command,
+    })),
+  ];
+};
 
 describe('RuneLite repository ownership boundary', () => {
   it.each([
@@ -53,12 +83,12 @@ describe('RuneLite repository ownership boundary', () => {
     expect(existsSync(atRoot(relativePath))).toBe(false);
   });
 
-  it('does not retain Java plugin build or distribution workflows under any filename', () => {
-    const prohibitedWorkflows = workflowFiles().filter((fileName) =>
-      prohibitedPluginWorkflowPattern.test(readFileSync(join(workflowDirectory, fileName), 'utf8')),
+  it('does not retain plugin distribution commands in tracked scripts, packages, or workflows under renamed paths', () => {
+    const prohibitedCommandSurfaces = trackedCommandSurfaces().filter(({ content }) =>
+      isProhibitedPluginDistribution(content),
     );
 
-    expect(prohibitedWorkflows).toEqual([]);
+    expect(prohibitedCommandSurfaces).toEqual([]);
   });
   it('does not expose a mirror verification npm command', () => {
     const packageJson = JSON.parse(readFileSync(atRoot('package.json'), 'utf8')) as {
@@ -85,11 +115,42 @@ describe('RuneLite repository ownership boundary', () => {
     expect(readFileSync(atRoot('components/RegionMap.tsx'), 'utf8')).not.toMatch(/runelite-plugin(?:\/|\b)/i);
   });
 
-  it('rejects tracked Java, Gradle, and RuneLite plugin-source artifacts under renamed paths', () => {
+  it.each([
+    ['scripts/refresh-external.mjs', "await fetch('https://downloads.example.net/net.runelite.client-1.0.zip');"],
+    ['scripts/ship-assets.mjs', "await download('https://cdn.example/fate-locked-plugin.zip');"],
+    ['package.json', '{"scripts":{"package":"node scripts/create-release.mjs --publish plugin-bundle.zip"}}'],
+    ['automation/release.yml', 'run: curl -LO https://cdn.example/fate-locked-plugin.zip'],
+  ])('rejects a renamed plugin distribution command at %s', (_relativePath, content) => {
+    expect(isProhibitedPluginDistribution(content)).toBe(true);
+  });
+
+  it.each([
+    ['renamed-source/GuardianPlugin.kt', 'package net.runelite.client.plugins;'],
+    ['renamed-output/GuardianPlugin.class', ''],
+    ['renamed-metadata/plugin.properties', 'displayName=RuneLite Companion Plugin'],
+  ])('rejects a tracked JVM or RuneLite plugin metadata artifact at %s', (relativePath, content) => {
+    expect(isProhibitedPluginSourceArtifact(relativePath, content)).toBe(true);
+  });
+
+  it('does not combine unrelated script lines into a plugin distribution command', () => {
+    const content = [
+      "await fetch('https://cdn.example/fate-locked-webapp.zip');",
+      '// Builds the RuneLite bundle payload used by the web app.',
+    ].join('\n');
+
+    expect(isProhibitedPluginDistribution(content)).toBe(false);
+  });
+  it('allows a generic web-app release download without a RuneLite or plugin signature', () => {
+    const content = "await download('https://cdn.example/fate-locked-webapp.zip');";
+
+    expect(isProhibitedPluginDistribution(content)).toBe(false);
+  });
+
+  it('rejects tracked Java, Gradle, Kotlin, class, and RuneLite plugin-source artifacts under renamed paths', () => {
     const prohibitedArtifacts = trackedFiles().filter(
       (relativePath) =>
         !retainedWebAppIntegrationPaths.includes(relativePath) &&
-        prohibitedPluginSourceArtifactPattern.test(relativePath),
+        isProhibitedPluginSourceArtifact(relativePath, readFileSync(atRoot(relativePath), 'utf8')),
     );
 
     expect(prohibitedArtifacts).toEqual([]);
