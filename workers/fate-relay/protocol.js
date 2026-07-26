@@ -83,8 +83,10 @@ export function appendUnique(existing, incoming) {
 }
 
 export function appendUniqueNewest(existing, incoming) {
-  const records = existing.slice(-MAX_RECORDS);
-  const seen = new Set(records.map(entry => entry.eventId));
+  const recordsById = new Map(
+    existing.slice(-MAX_RECORDS).map(entry => [entry.eventId, entry]),
+  );
+  const seen = new Set(recordsById.keys());
   const accepted = [];
   const duplicates = [];
   for (const entry of incoming) {
@@ -92,22 +94,13 @@ export function appendUniqueNewest(existing, incoming) {
       duplicates.push(entry.eventId);
     } else {
       seen.add(entry.eventId);
-      records.push(entry);
       accepted.push(entry.eventId);
     }
+    recordsById.delete(entry.eventId);
+    recordsById.set(entry.eventId, entry);
   }
-  const retained = records.length <= MAX_RECORDS
-    ? records
-    : records
-      .map((entry, index) => ({ entry, index }))
-      .sort((left, right) => (
-        left.entry.acknowledgedAt - right.entry.acknowledgedAt
-        || left.index - right.index
-      ))
-      .slice(-MAX_RECORDS)
-      .map(({ entry }) => entry);
   return {
-    records: retained,
+    records: [...recordsById.values()].slice(-MAX_RECORDS),
     accepted,
     duplicates,
     capacity: [],

@@ -164,7 +164,7 @@ describe('Fate relay event resources', () => {
       .toEqual(Array.from({ length: 100 }, (_, index) => `evt-${index + 50}`));
   });
 
-  it('retains the newest 100 acknowledgements after compaction', async () => {
+  it('retains the newest 100 server receipts after compaction', async () => {
     const acknowledgement = (index: number) => ({
       eventId: `evt-${index}`,
       state: 'COMPLETED',
@@ -189,6 +189,44 @@ describe('Fate relay event resources', () => {
     })).status).toBe(200);
     const afterOldRetry = await get('/r/ABCD/acks').then(response => response.json());
     expect(afterOldRetry.acknowledgements.map((ack: { eventId: string }) => ack.eventId))
-      .toEqual(Array.from({ length: 100 }, (_, index) => `evt-${index + 5}`));
+      .toEqual([
+        ...Array.from({ length: 95 }, (_, index) => `evt-${index + 10}`),
+        ...Array.from({ length: 5 }, (_, index) => `evt-${index}`),
+      ]);
+  });
+
+  it('rotates every retried acknowledgement into the observable window after offline compaction', async () => {
+    const acknowledgement = (index: number) => ({
+      eventId: `evt-${index}`,
+      state: 'COMPLETED',
+      acknowledgedAt: 1_000 + index,
+    });
+    const batches = [
+      Array.from({ length: 100 }, (_, index) => acknowledgement(index)),
+      Array.from({ length: 100 }, (_, index) => acknowledgement(index + 100)),
+      Array.from({ length: 5 }, (_, index) => acknowledgement(index + 200)),
+    ];
+    let token: string | undefined;
+
+    for (const acknowledgements of batches) {
+      expect(acknowledgements.length).toBeLessThanOrEqual(100);
+      const response = await post('/r/ABCD/acks', { token, acknowledgements });
+      token = (await response.json()).token;
+    }
+
+    const observable = new Set<string>();
+    for (let cycle = 0; cycle < 2; cycle += 1) {
+      for (const acknowledgements of batches) {
+        const response = await post('/r/ABCD/acks', { token, acknowledgements });
+        token = (await response.json()).token;
+        const visible = await get('/r/ABCD/acks').then(result => result.json());
+        expect(visible.acknowledgements).toHaveLength(100);
+        for (const ack of visible.acknowledgements) observable.add(ack.eventId);
+      }
+    }
+
+    expect(observable.size).toBe(205);
+    expect(Array.from({ length: 205 }, (_, index) => `evt-${index}`)
+      .every(eventId => observable.has(eventId))).toBe(true);
   });
 });
