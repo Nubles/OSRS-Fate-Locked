@@ -228,6 +228,30 @@ describe('skill-method caps', () => {
     }))).toBe(1);
   });
 
+  it('blocks lum_easy_7 at cap 10 and permits level 15 in the next method band', () => {
+    const task = ALL_DIARY_TASKS.find(({ id }) => id === 'lum_easy_7')!;
+    const common = {
+      regions: ['Lumbridge'],
+      levels: { Woodcutting: 15, Firemaking: 15 },
+    };
+
+    expect(evaluateDiaryTaskEligibility(task, unlocked({
+      ...common,
+      skills: { Woodcutting: 1, Firemaking: 1 },
+    }))).toMatchObject({
+      machineEligible: false,
+      eligible: false,
+    });
+
+    expect(evaluateDiaryTaskEligibility(task, unlocked({
+      ...common,
+      skills: { Woodcutting: 2, Firemaking: 2 },
+    }))).toMatchObject({
+      machineEligible: true,
+      eligible: true,
+    });
+  });
+
   it('applies method caps to diary consumer counts', () => {
     const tasks = [{
       id: 'wc15', tierId: 'Test Diary',
