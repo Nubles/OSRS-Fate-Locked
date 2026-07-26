@@ -2,13 +2,14 @@ import React, { useMemo } from 'react';
 import { BookOpen, Map as MapIcon, Swords, ChevronRight, Sparkles, Target, PartyPopper } from 'lucide-react';
 import { WikiIcon } from './WikiIcon';
 import { useGame } from '../context/GameContext';
-import { QUEST_DATA } from '../data/questData';
-import { DIARY_DATA } from '../data/diaryData';
+import { QUEST_DATA, type QuestData } from '../data/questData';
+import { DIARY_DATA, type DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
+import type { UnlockState } from '../types';
 import { CA_DATA } from '../data/caData';
 import { ALL_CA_TASKS } from '../data/caTasks';
 import {
-  countDoableDiaryTasks, getQuestStatus, getDiaryStatus,
+  countDoableDiaryTasks, evaluateQuestEligibility, getDiaryStatus,
 } from '../utils/journalStatus';
 import {
   CA_TIER_ORDER,
@@ -36,6 +37,55 @@ interface Recommendation {
   detail: string;
 }
 
+export interface JournalQuestRecommendationAnalysis {
+  available: number;
+  candidates: QuestData[];
+  best: { name: string; nq: number; nd: number; impact: number } | null;
+}
+
+export function analyzeJournalQuestRecommendations(
+  allQuests: QuestData[],
+  allDiaries: DiaryTier[],
+  unlocks: UnlockState,
+  gameModeId?: string,
+): JournalQuestRecommendationAnalysis {
+  const baseQ = new Map(allQuests.map(quest => [
+    quest.id,
+    evaluateQuestEligibility(quest, unlocks, gameModeId),
+  ]));
+  const candidates = allQuests.filter(quest => (
+    !unlocks.quests.includes(quest.id) && baseQ.get(quest.id)!.eligible
+  ));
+  const wasOpen = (questId: string) => {
+    const result = baseQ.get(questId);
+    return result?.status === 'COMPLETED' || result?.eligible === true;
+  };
+  const baseD = new Map(allDiaries.map(diary => [
+    diary.id,
+    getDiaryStatus(diary, unlocks, gameModeId),
+  ]));
+
+  let best: JournalQuestRecommendationAnalysis['best'] = null;
+  for (const quest of candidates) {
+    const sim = { ...unlocks, quests: [...unlocks.quests, quest.id] };
+    let nq = 0;
+    for (const otherQuest of allQuests) {
+      if (otherQuest.id === quest.id || wasOpen(otherQuest.id)) continue;
+      if (evaluateQuestEligibility(otherQuest, sim, gameModeId).eligible) nq++;
+    }
+    let nd = 0;
+    for (const diary of allDiaries) {
+      const status = baseD.get(diary.id);
+      if (status === 'AVAILABLE' || status === 'COMPLETED') continue;
+      if (getDiaryStatus(diary, sim, gameModeId) === 'AVAILABLE') nd++;
+    }
+    const impact = nq * 2 + nd;
+    if (!best || impact > best.impact) best = { name: quest.name, nq, nd, impact };
+  }
+
+  return { available: candidates.length, candidates, best };
+}
+
 /**
  * Picks the single best next action. Prefers the available quest with the
  * highest DIRECT unlock impact (cheap 1-step simulation), then doable diary
@@ -43,34 +93,8 @@ interface Recommendation {
  * when nothing is left.
  */
 function recommendNextAction(unlocks: any, diaryDoable: number, caLeft: number, gameModeId?: string): Recommendation {
-  const allQuests = Object.values(QUEST_DATA);
-  const allDiaries = Object.values(DIARY_DATA);
-
-  // Base statuses once — reused across the candidate loop.
-  const baseQ = new Map(allQuests.map((q) => [q.id, getQuestStatus(q, unlocks, gameModeId)]));
-  const baseD = new Map(allDiaries.map((d) => [d.id, getDiaryStatus(d, unlocks, gameModeId)]));
-  const wasOpen = (s: string | undefined) => s === 'AVAILABLE' || s === 'COMPLETED';
-
-  const available = allQuests.filter((q) => baseQ.get(q.id) === 'AVAILABLE');
-
-  let best: { name: string; nq: number; nd: number; impact: number } | null = null;
-  for (const q of available) {
-    const sim = { ...unlocks, quests: [...unlocks.quests, q.id] };
-    let nq = 0;
-    for (const oq of allQuests) {
-      if (oq.id === q.id) continue;
-      if (wasOpen(baseQ.get(oq.id))) continue;
-      if (getQuestStatus(oq, sim, gameModeId) === 'AVAILABLE') nq++;
-    }
-    let nd = 0;
-    for (const d of allDiaries) {
-      if (wasOpen(baseD.get(d.id))) continue;
-      if (getDiaryStatus(d, sim, gameModeId) === 'AVAILABLE') nd++;
-    }
-    const impact = nq * 2 + nd;
-    if (!best || impact > best.impact) best = { name: q.name, nq, nd, impact };
-  }
-
+  const { best } = analyzeJournalQuestRecommendations(Object.values(QUEST_DATA), Object.values(DIARY_DATA), unlocks, gameModeId);
+  // Canonical automatic eligibility is analyzed once by the shared helper.
   if (best && best.impact > 0) {
     const parts: string[] = [];
     if (best.nq > 0) parts.push(`${best.nq} quest${best.nq !== 1 ? 's' : ''}`);
@@ -95,9 +119,9 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
   const stats = useMemo(() => {
     // ── Quests available ─────────────────────────────────────────────────────
     const allQuests = Object.values(QUEST_DATA);
-    const questsAvailable = allQuests.filter(
-      (q) => getQuestStatus(q, unlocks, gameModeId) === 'AVAILABLE',
-    ).length;
+    const questAnalysis = analyzeJournalQuestRecommendations(
+      allQuests, Object.values(DIARY_DATA), unlocks, gameModeId);
+    const questsAvailable = questAnalysis.available;
     const questsTotal    = allQuests.length;
     const questsDone     = unlocks.quests.length;
 

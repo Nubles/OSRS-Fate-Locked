@@ -1,7 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
-import { getQuestStatus, getDiaryStatus } from '../utils/journalStatus';
+import { ALL_DIARY_TASKS } from '../data/diaryTasks';
+import type { UnlockState } from '../types';
+import {
+  evaluateDiaryTaskEligibility,
+  evaluateQuestEligibility,
+} from '../utils/journalStatus';
 
 export interface UnlockRevealData {
   /** Display names of quests just marked complete. */
@@ -10,10 +15,67 @@ export interface UnlockRevealData {
   newRegions: string[];
   /** Boss IDs that just appeared in unlocks.bosses. */
   newBosses: string[];
-  /** Quests that just transitioned from LOCKED_* → AVAILABLE. */
+  /** Quests that just transitioned to automatic eligibility. */
   newQuestsAvailable: Array<{ id: string; name: string }>;
-  /** Diary tier IDs that just transitioned to AVAILABLE. */
+  /** Diary tier IDs that just transitioned to automatic eligibility. */
   newDiaryTiersAvailable: string[];
+}
+
+const diaryTierIsAutomaticallyEligible = (
+  tierId: string,
+  unlocks: UnlockState,
+  gameModeId?: string,
+): boolean => ALL_DIARY_TASKS
+  .filter(task => (
+    task.tierId === tierId && !unlocks.completedTasks.includes(task.id)
+  ))
+  .every(task => evaluateDiaryTaskEligibility(task, unlocks, gameModeId).eligible);
+
+export function getUnlockRevealTransition(
+  previous: UnlockState,
+  current: UnlockState,
+  gameModeId?: string,
+): UnlockRevealData | null {
+  const completedQuests = current.quests.filter(
+    questId => !previous.quests.includes(questId),
+  );
+  const newRegions = current.regions.filter(
+    region => !previous.regions.includes(region),
+  );
+  const newBosses = current.bosses.filter(
+    boss => !previous.bosses.includes(boss),
+  );
+
+  // Diary task / CA task ticks do not initiate a reveal by themselves.
+  if (completedQuests.length === 0 && newRegions.length === 0 && newBosses.length === 0) {
+    return null;
+  }
+
+  const newQuestsAvailable = Object.values(QUEST_DATA)
+    .filter(quest => !current.quests.includes(quest.id))
+    .filter(quest => (
+      !evaluateQuestEligibility(quest, previous, gameModeId).eligible
+      && evaluateQuestEligibility(quest, current, gameModeId).eligible
+    ))
+    .map(quest => ({ id: quest.id, name: quest.name }));
+
+  const newDiaryTiersAvailable = Object.values(DIARY_DATA)
+    .filter(diary => !current.diaries.includes(diary.id))
+    .filter(diary => (
+      !diaryTierIsAutomaticallyEligible(diary.id, previous, gameModeId)
+      && diaryTierIsAutomaticallyEligible(diary.id, current, gameModeId)
+    ))
+    .map(diary => diary.id);
+
+  return {
+    completedQuests: completedQuests.map(
+      questId => QUEST_DATA[questId]?.name ?? questId,
+    ),
+    newRegions,
+    newBosses,
+    newQuestsAvailable,
+    newDiaryTiersAvailable,
+  };
 }
 
 /**
@@ -24,63 +86,22 @@ export interface UnlockRevealData {
  * task ticks do not produce a reveal.
  */
 export function useUnlockReveal(
-  unlocks: any,
+  unlocks: UnlockState,
   gameModeId?: string,
 ): [UnlockRevealData | null, () => void] {
-  const prevRef = useRef<any | null>(null);
+  const prevRef = useRef<UnlockState | null>(null);
   const [reveal, setReveal] = useState<UnlockRevealData | null>(null);
 
   useEffect(() => {
-    const prev = prevRef.current;
+    const previous = prevRef.current;
     prevRef.current = unlocks;
 
     // First mount — establish baseline, no reveal.
-    if (!prev) return;
+    if (!previous) return;
 
-    const completedQuests = (unlocks.quests as string[]).filter(
-      (q) => !(prev.quests as string[]).includes(q),
-    );
-    const newRegions = (unlocks.regions as string[]).filter(
-      (r) => !(prev.regions as string[]).includes(r),
-    );
-    const newBosses = (unlocks.bosses as string[]).filter(
-      (b) => !(prev.bosses as string[]).includes(b),
-    );
-
-    // Diary task / CA task ticks don't change quests / regions / bosses —
-    // bail out early so we don't run O(n) comparisons on every tick.
-    if (completedQuests.length === 0 && newRegions.length === 0 && newBosses.length === 0) return;
-
-    // Quests that just became AVAILABLE (locked before → available now).
-    const newQuestsAvailable = Object.values(QUEST_DATA)
-      .filter((q) => !unlocks.quests.includes(q.id))
-      .filter(
-        (q) =>
-          getQuestStatus(q, prev, gameModeId) !== 'AVAILABLE' &&
-          getQuestStatus(q, unlocks, gameModeId) === 'AVAILABLE',
-      )
-      .map((q) => ({ id: q.id, name: q.name }));
-
-    // Diary tiers that just became AVAILABLE.
-    const newDiaryTiersAvailable = Object.values(DIARY_DATA)
-      .filter((d) => !unlocks.diaries.includes(d.id))
-      .filter(
-        (d) =>
-          getDiaryStatus(d, prev, gameModeId) !== 'AVAILABLE' &&
-          getDiaryStatus(d, unlocks, gameModeId) === 'AVAILABLE',
-      )
-      .map((d) => d.id);
-
-    setReveal({
-      completedQuests: completedQuests.map(
-        (qid) => QUEST_DATA[qid]?.name ?? qid,
-      ),
-      newRegions,
-      newBosses,
-      newQuestsAvailable,
-      newDiaryTiersAvailable,
-    });
-  }, [unlocks]);
+    const nextReveal = getUnlockRevealTransition(previous, unlocks, gameModeId);
+    if (nextReveal) setReveal(nextReveal);
+  }, [unlocks, gameModeId]);
 
   const dismiss = () => setReveal(null);
   return [reveal, dismiss];

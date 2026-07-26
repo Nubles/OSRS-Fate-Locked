@@ -58,6 +58,8 @@ import { getActivityRegion } from '../data/activityRegions';
 import { isAreaReachable, bankLocksActive } from '../utils/reachability';
 import { BANKS, BANK_IDS, BANK_BY_ID } from '../data/banks';
 import { getActivityReq, ActivityReq } from '../data/activityRequirements';
+import { evaluateActivityReadiness, type ActivityReadiness } from '../utils/activityReadiness';
+import { ActivityReadinessBadge } from './ActivityReadinessBadge';
 import { RegionAdvisorPanel } from './RegionAdvisorPanel';
 import { FrontierAdvisorPanel } from './FrontierAdvisorPanel';
 import { SkillAdvisorPanel } from './SkillAdvisorPanel';
@@ -168,6 +170,7 @@ interface UnlockCardProps {
   subText?: string;
   region?: string;
   req?: ActivityReq;
+  readiness?: ActivityReadiness;
   suspendModals?: boolean;
 }
 
@@ -180,6 +183,7 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
   subText,
   region,
   req,
+  readiness,
   suspendModals = false,
 }) => {
   // Image priority: a hand-picked sprite/icon → the item's real OSRS wiki image
@@ -261,6 +265,7 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
                     ))}
                 </div>
             )}
+            {readiness && <ActivityReadinessBadge readiness={readiness} />}
             {req?.note && (
                 <div className="text-[9px] text-gray-500 italic leading-tight mt-0.5">{req.note}</div>
             )}
@@ -374,12 +379,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   // that item, filtered and highlighted via the existing search machinery.
   useEffect(() => {
     const onNav = (e: Event) => {
-      const { target = '', query } = (e as CustomEvent<{ target?: string; query?: string }>).detail ?? {};
+      const {
+        target = '',
+        query,
+        activityCategory: requestedActivityCategory,
+      } = (e as CustomEvent<{
+        target?: string;
+        query?: string;
+        activityCategory?: string;
+      }>).detail ?? {};
       if (target.startsWith('tab:')) {
         // "tab:JOURNAL/QUESTS" also selects a Journal sub-tab — without this a
         // quest jump would land on whichever sub-tab the player last had open.
         const [tab, subTab] = target.slice(4).split('/');
         setActiveTab(tab);
+        if (requestedActivityCategory && tab === 'ACTIVITIES') {
+          setActivityCategory(requestedActivityCategory);
+        }
+        if (tab === 'WORLD') setWorldView('LIST');
         if (subTab && tab === 'JOURNAL') setJournalSubTab(subTab as 'QUESTS' | 'DIARIES' | 'CA' | 'DOABLE');
         if (query) setSearchQuery(query);
         return;
@@ -613,6 +630,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
             const isUnlocked = unlocked.includes(item);
             const canUnlock = !isUnlocked && specialKeys > 0;
             const sub = detailsMap ? detailsMap[item] : undefined;
+            const req = getActivityReq(label);
+            const readiness = evaluateActivityReadiness(
+              isUnlocked,
+              req,
+              unlocks,
+              gameModeId,
+            );
 
             // Filter logic: Show if unlocked OR can unlock (Omni)
             if (showOnlyActionable && !isUnlocked && !canUnlock) return null;
@@ -628,7 +652,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                     onClick={() => handleSpecialUnlock(type, item)}
                     subText={sub}
                     region={getActivityRegion(label)}
-                    req={getActivityReq(label)}
+                    req={req}
+                    readiness={readiness}
                 />
             );
         })}

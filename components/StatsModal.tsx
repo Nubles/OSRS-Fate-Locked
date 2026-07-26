@@ -9,6 +9,8 @@ import { isRollEntry } from '../utils/logEntry';
 import { buildFateReport } from '../utils/fateReport';
 import { buildRollDistribution } from '../utils/rollDistribution';
 import { LogEntry } from '../types';
+import { completionPercent } from '../utils/completion';
+import { KeyEconomyEvidenceExport } from './KeyEconomyEvidenceExport';
 // Charts (recharts, ~300 KB) live in their own lazily-loaded chunk so opening
 // Stats to see the overview/breakdown/fate tabs doesn't pay the recharts tax.
 const StatsChartsView = lazyWithRetry(() => import('./StatsChartsView'));
@@ -93,7 +95,7 @@ export const buildStats = (history: LogEntry[]) => {
 export const StatsModal: React.FC<StatsModalProps> = ({ onClose }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
-  const { history } = useGame();
+  const { history, unlocks, gameModeId } = useGame();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'asc' | 'desc' }>({ key: 'attempts', direction: 'desc' });
   const fateReport = useMemo(() => buildFateReport(history), [history]);
@@ -381,6 +383,12 @@ export const StatsModal: React.FC<StatsModalProps> = ({ onClose }) => {
                                     </tbody>
                                 </table>
                             </div>
+                            <KeyEconomyEvidenceExport
+                                history={history}
+                                gameMode={gameModeId ?? 'vanilla'}
+                                completionPercent={completionPercent(unlocks)}
+                                appVersion={__BUILD_ID__}
+                            />
                         </>
                     )}
                 </div>

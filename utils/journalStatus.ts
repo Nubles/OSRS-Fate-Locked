@@ -47,7 +47,31 @@ export type EligibilityBlocker = DirectEligibilityBlocker | {
   routes: AlternativeEligibilityRoute[];
 };
 
-export interface QuestEligibility {
+export interface ManualEligibility {
+  machineEligible: boolean;
+  manualChecks: string[];
+  confirmable: boolean;
+}
+
+const uniqueStrings = (values: readonly string[]): string[] => [
+  ...new Set(values),
+];
+
+const readinessFields = (
+  blockers: readonly EligibilityBlocker[],
+  manualChecks: readonly string[],
+): ManualEligibility & { eligible: boolean } => {
+  const machineEligible = blockers.length === 0;
+  const checks = uniqueStrings(manualChecks);
+  return {
+    machineEligible,
+    manualChecks: checks,
+    confirmable: machineEligible,
+    eligible: machineEligible && checks.length === 0,
+  };
+};
+
+export interface QuestEligibility extends ManualEligibility {
   eligible: boolean;
   status: QuestStatus;
   blockers: EligibilityBlocker[];
@@ -119,7 +143,12 @@ export function evaluateQuestEligibility(
   gameModeId?: string,
 ): QuestEligibility {
   if (unlocks.quests.includes(quest.id)) {
-    return { eligible: true, status: 'COMPLETED', blockers: [], evidence: ['Completed'] };
+    return {
+      ...readinessFields([], []),
+      status: 'COMPLETED',
+      blockers: [],
+      evidence: ['Completed'],
+    };
   }
   const blockers: EligibilityBlocker[] = [];
   const evidence: string[] = [];
@@ -136,14 +165,18 @@ export function evaluateQuestEligibility(
   }
   const qp = currentQuestPoints(unlocks);
   for (const [skill, required] of Object.entries(quest.skills)) {
-    const met = skill === 'Quest Points'
-      ? qp >= required
-      : meetsSkillRequirement(unlocks, skill, required);
-    if (met) evidence.push(skill + ' ' + required);
-    else blockers.push({
-      kind: 'skill', label: skill + ' ' + required,
-      requirement: { type: 'single', skill, level: required },
-    });
+    const label = skill + ' ' + required;
+    if (skill === 'Quest Points') {
+      if (qp >= required) evidence.push(label);
+      else blockers.push({ kind: 'quest', label });
+    } else if (meetsSkillRequirement(unlocks, skill, required)) {
+      evidence.push(label);
+    } else {
+      blockers.push({
+        kind: 'skill', label,
+        requirement: { type: 'single', skill, level: required },
+      });
+    }
   }
   if (quest.combatLevel !== undefined) {
     if (effectiveCombatLevel(unlocks) >= quest.combatLevel) evidence.push('Combat level ' + quest.combatLevel);
@@ -157,7 +190,8 @@ export function evaluateQuestEligibility(
     : blockers.some(x => x.kind === 'skill' || x.kind === 'combat') ? 'LOCKED_SKILL'
     : blockers.some(x => x.kind === 'quest') ? 'LOCKED_QUEST'
     : 'AVAILABLE';
-  return { eligible: status === 'AVAILABLE', status, blockers, evidence };
+  const manual = readinessFields(blockers, quest.manualRequirements ?? []);
+  return { ...manual, status, blockers, evidence };
 }
 
 export function getQuestStatus(
@@ -184,6 +218,8 @@ export interface DoableTask {
   quests?: string[];
   regions?: string[];
   cas?: string[];
+  questPoints?: number;
+  manualRequirements?: string[];
   combatLevel?: number;
   allQuests?: true;
   anySkillLevel?: number;
@@ -196,7 +232,7 @@ export interface DoableDiaryTask extends DoableTask {
   tierId: string;
 }
 
-export interface DiaryTaskEligibility {
+export interface DiaryTaskEligibility extends ManualEligibility {
   eligible: boolean;
   blockers: EligibilityBlocker[];
   evidence: string[];
@@ -246,6 +282,11 @@ const evaluateDiaryRequirement = (
   for (const quest of requirement.quests ?? []) {
     if (unlocks.quests.includes(quest)) evidence.push(quest);
     else blockers.push({ kind: 'quest', label: quest });
+  }
+  if (requirement.questPoints !== undefined) {
+    const label = 'Quest Points ' + requirement.questPoints;
+    if (currentQuestPoints(unlocks) >= requirement.questPoints) evidence.push(label);
+    else blockers.push({ kind: 'quest', label });
   }
   for (const tier of requirement.cas ?? []) {
     const label = tier + ' Combat Achievements';
@@ -299,7 +340,8 @@ const evaluateDiaryRequirement = (
     });
   }
 
-  return { eligible: blockers.length === 0, blockers, evidence };
+  const manual = readinessFields(blockers, requirement.manualRequirements ?? []);
+  return { ...manual, blockers, evidence };
 };
 
 export function evaluateDiaryTaskEligibility(
@@ -313,11 +355,21 @@ export function evaluateDiaryTaskEligibility(
   const routeResults = task.oneOf.map(option => (
     evaluateDiaryRequirement(option, unlocks, gameModeId)
   ));
-  const metRouteIndex = routeResults.findIndex(result => result.eligible);
-  if (metRouteIndex >= 0) {
-    const routeLabel = diaryRequirementOptionLabel(task.oneOf[metRouteIndex]);
+  const eligibleRouteIndex = routeResults.findIndex(result => result.eligible);
+  const confirmableRouteIndex = routeResults.findIndex(result => result.confirmable);
+  const selectedRouteIndex = eligibleRouteIndex >= 0
+    ? eligibleRouteIndex
+    : confirmableRouteIndex;
+  if (selectedRouteIndex >= 0) {
+    const route = routeResults[selectedRouteIndex];
+    const routeLabel = diaryRequirementOptionLabel(task.oneOf[selectedRouteIndex]);
+    const manualChecks = uniqueStrings([
+      ...shared.manualChecks,
+      ...route.manualChecks,
+    ]);
+    const manual = readinessFields(shared.blockers, manualChecks);
     return {
-      eligible: shared.eligible,
+      ...manual,
       blockers: shared.blockers,
       evidence: [...shared.evidence, ...(routeLabel ? [routeLabel] : [])],
     };
@@ -335,7 +387,8 @@ export function evaluateDiaryTaskEligibility(
     ...shared.blockers,
     { kind: 'alternative', label: alternativeLabel, blockerKinds, routes },
   ];
-  return { eligible: false, blockers, evidence: shared.evidence };
+  const manual = readinessFields(blockers, shared.manualChecks);
+  return { ...manual, blockers, evidence: shared.evidence };
 }
 
 export function taskEligibilityBlockers(
@@ -419,7 +472,7 @@ export function getDiaryStatus(
 export function countDoableTasks(tasks: DoableTask[], unlocks: UnlockState, gameModeId?: string): number {
   return tasks.filter(task => {
     if (unlocks.completedTasks.includes(task.id)) return false;
-    return taskEligibilityBlockers(task, unlocks, gameModeId).length === 0;
+    return evaluateDiaryTaskEligibility(task, unlocks, gameModeId).eligible;
   }).length;
 }
 

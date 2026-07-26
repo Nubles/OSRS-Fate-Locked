@@ -13,6 +13,7 @@ import {
   meetsSkillRequirement,
   questRequirementOptionLabel,
 } from '../utils/journalStatus';
+import { requestManualAttestation } from '../utils/manualAttestation';
 import { effectiveSkillLevel } from '../utils/slayerReach';
 import { DropSource, UnlockState } from '../types';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
@@ -484,7 +485,14 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
 
   const handleQuestToggle = (e: React.MouseEvent, quest: QuestData) => {
       e.stopPropagation();
-      const result = completeQuest(quest.id, e.clientX, e.clientY);
+      const eligibility = evaluateQuestEligibility(quest, unlocks, gameModeId);
+      const attestation = requestManualAttestation(
+        quest.name,
+        eligibility,
+        message => window.confirm(message),
+      );
+      if (attestation === null) return;
+      const result = completeQuest(quest.id, e.clientX, e.clientY, attestation);
       if (!result.ok) return;
 
       // Celebration overlay (QuestCompleteOverlay) shows the wiki reward scroll.

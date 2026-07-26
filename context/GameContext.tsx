@@ -33,7 +33,7 @@ import {
   questCompletionDecision,
   withJournalCompletion,
 } from '../utils/journalCompletion';
-import type { CompletionResult } from '../utils/journalCompletion';
+import type { CompletionAttestation, CompletionResult } from '../utils/journalCompletion';
 import {
   caTierCompletionDecision,
   completedCAPoints,
@@ -124,8 +124,8 @@ interface GameContextType extends GameState {
   restoreBackup: (ts: number) => ImportResult;
   togglePin: (id: string) => void;
   saveNote: (id: string, text: string) => void;
-  completeQuest: (id: string, x?: number, y?: number) => CompletionResult;
-  completeDiaryTask: (id: string, x?: number, y?: number) => CompletionResult;
+  completeQuest: (id: string, x?: number, y?: number, attestation?: CompletionAttestation) => CompletionResult;
+  completeDiaryTask: (id: string, x?: number, y?: number, attestation?: CompletionAttestation) => CompletionResult;
   completeDiaryTier: (id: string) => CompletionResult;
   completeCATask: (id: string, x?: number, y?: number) => CompletionResult;
   completeCATier: (id: string) => CompletionResult;
@@ -483,7 +483,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
              type: 'ROLL_OMNI',
              message: 'LEGENDARY DROP! You found an Omni-Key!',
              details: `Critical Success! Rolled ${rollText} vs ${comparisonChanceText}.`,
-             meta: { roll, baseThreshold, threshold, source },
+             meta: { roll, baseThreshold, threshold, source, fatePointsEarned: 0 },
              result: 'SUCCESS',
              source,
              rollValue: roll,
@@ -501,7 +501,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
              type: 'ROLL_SUCCESS',
              message: `Key Found!${isGreed ? ' (Doubled)' : ''}`,
              details: `Rolled ${rollText} (≤ ${comparisonChanceText}).`,
-             meta: { roll, baseThreshold, threshold, source },
+             meta: { roll, baseThreshold, threshold, source, fatePointsEarned: 0 },
              result: 'SUCCESS',
              source,
              rollValue: roll,
@@ -521,7 +521,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
                 type: 'PITY',
                 message: 'MAX FATE REACHED! Pity Key granted.',
                 details: `Rolled ${rollText} at ${inlineChanceText}, but Fate intervened.`,
-                meta: { roll, baseThreshold, threshold, source },
+                meta: { roll, baseThreshold, threshold, source, fatePointsEarned: 1 },
                 result: 'SUCCESS',
                 source,
                 rollValue: roll,
@@ -545,7 +545,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
                 type: 'ROLL_FAIL',
                 message: `No Key.${isGreed ? ` (Greed refunded ${greedRefund} Fate)` : ''}`,
                 details: `Rolled ${rollText} (> ${comparisonChanceText}). Fate: ${newState.fatePoints}/${resolveModeRules(state.gameModeId, state.customMode).pityThreshold}`,
-                meta: { roll, baseThreshold, threshold, source },
+                meta: { roll, baseThreshold, threshold, source, fatePointsEarned: 1 + greedRefund },
                 result: 'FAIL',
                 source,
                 rollValue: roll,
@@ -1103,12 +1103,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
   const togglePin = useCallback((id: string) => commitAction({ type: 'TOGGLE_PIN', payload: id }), [commitAction]);
   const saveNote = useCallback((id: string, text: string) =>
     commitAction({ type: 'UPDATE_NOTE', payload: { id, text } }), [commitAction]);
-  const completeQuest = useCallback((id: string, x?: number, y?: number): CompletionResult => {
+  const completeQuest = useCallback((id: string, x?: number, y?: number, attestation: CompletionAttestation = {}): CompletionResult => {
     const snapshot = stateRef.current;
     const quest = QUEST_DATA[id];
     if (!quest) return completionFailure('Unknown quest');
 
-    const result = questCompletionDecision(quest, snapshot.unlocks, snapshot.gameModeId);
+    const result = questCompletionDecision(quest, snapshot.unlocks, snapshot.gameModeId, attestation);
     if (result.ok === false) return completionFailure(result.reason);
 
     commitAction({ type: 'COMPLETE_QUEST', payload: id });
@@ -1120,6 +1120,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     id: string,
     x?: number,
     y?: number,
+    attestation: CompletionAttestation = {},
   ): CompletionResult => {
     const snapshot = stateRef.current;
     const task = ALL_DIARY_TASKS.find(candidate => candidate.id === id);
@@ -1131,6 +1132,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
       task,
       snapshot.unlocks,
       snapshot.gameModeId,
+      attestation,
     );
     if (result.ok === false) return completionFailure(result.reason);
 

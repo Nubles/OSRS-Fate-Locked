@@ -117,6 +117,17 @@ describe('planForTarget — quests', () => {
     expect(plan.alreadyReachable).toBe(false);
   });
 
+  it('includes a Quest Point step for a quest requirement', () => {
+    const plan = planForTarget('quest', 'Black Knights\' Fortress', maxedUnlocks())!;
+
+    expect(plan.qpStep).toEqual(expect.objectContaining({
+      kind: 'qp',
+      id: 'Quest Points',
+      detail: expect.stringContaining('12 QP'),
+      done: false,
+    }));
+    expect(plan.questSteps.map(step => step.id)).not.toContain('Quest Points 12');
+  });
   it('surfaces an actionable alternative-access step for oneOf quests', () => {
     const plan = planForTarget('quest', 'Enter the Abyss', maxedUnlocks({
       quests: ['Rune Mysteries'],
@@ -153,6 +164,21 @@ describe('planForTarget — diaries', () => {
         }
       }
     }
+  });
+  it('includes the canonical 32 Quest Point step for Varrock Medium', () => {
+    const plan = planForTarget('diary', 'Varrock Medium', maxedUnlocks({
+      regions: ['Varrock'],
+      completedTasks: ALL_DIARY_TASKS
+        .filter(task => task.tierId !== 'Varrock Medium' || task.id !== 'var_med_2')
+        .map(task => task.id),
+    }))!;
+
+    expect(plan.qpStep).toEqual(expect.objectContaining({
+      kind: 'qp',
+      id: 'Quest Points',
+      detail: expect.stringContaining('32 QP'),
+      done: false,
+    }));
   });
   it('delegates diary skill gates and omits requirements already met', () => {
     const diary = Object.values(DIARY_DATA).find(candidate =>
@@ -287,3 +313,89 @@ describe('listGoalTargets', () => {
     expect(counts.region).toBe(Object.keys(REGION_GROUPS).length);
   });
 });
+  it('plans Prying Times as a manual confirmation followed by quest completion', () => {
+    const plan = planForTarget('quest', 'Prying Times', maxedUnlocks({
+      regions: ['The Open Seas'],
+      quests: ['Pandemonium', "The Knight's Sword"],
+    }))!;
+
+    expect(plan.alreadyReachable).toBe(false);
+    expect(plan.needsConfirmation).toBe(true);
+    expect(plan.manualSteps).toEqual([expect.objectContaining({
+      kind: 'manual',
+      label: 'Confirm: One open Sailing task slot',
+      detail: 'Required for Prying Times',
+      done: false,
+    })]);
+    expect(plan.steps.map(step => step.kind)).toEqual(['manual', 'quest']);
+    expect(plan.remaining).toBe(2);
+  });
+
+  it('adds the remaining Varrock Kudos check to a diary plan', () => {
+    const completedTasks = ALL_DIARY_TASKS
+      .filter(task => task.tierId !== 'Varrock Hard' || task.id !== 'var_hard_2')
+      .map(task => task.id);
+    const plan = planForTarget('diary', 'Varrock Hard', maxedUnlocks({
+      regions: ['Varrock'],
+      completedTasks,
+    }))!;
+
+    expect(plan.manualSteps).toContainEqual(expect.objectContaining({
+      kind: 'manual',
+      label: 'Confirm: 153 Varrock Museum Kudos',
+    }));
+    expect(plan.alreadyReachable).toBe(false);
+    expect(plan.needsConfirmation).toBe(true);
+  });
+
+  it('deduplicates identical manual checks across diary tasks', () => {
+    const syntheticLength = ALL_DIARY_TASKS.length;
+    const syntheticSharedTask = {
+      id: 'goal_planner_shared_manual_a',
+      tierId: 'Ardougne Easy',
+      description: 'Synthetic shared check source A',
+      regions: ['Ardougne'],
+      manualRequirements: ['Shared manual check'],
+    };
+    const syntheticDuplicateTask = {
+      id: 'goal_planner_shared_manual_b',
+      tierId: 'Ardougne Easy',
+      description: 'Synthetic shared check source B',
+      regions: ['Ardougne'],
+      manualRequirements: ['Shared manual check'],
+    };
+    const syntheticUniqueTask = {
+      id: 'goal_planner_unique_manual',
+      tierId: 'Ardougne Easy',
+      description: 'Synthetic unique check source',
+      regions: ['Ardougne'],
+      manualRequirements: ['Unique manual check'],
+    };
+
+    ALL_DIARY_TASKS.push(syntheticSharedTask, syntheticDuplicateTask, syntheticUniqueTask);
+    try {
+      const plan = planForTarget('diary', 'Ardougne Easy', maxedUnlocks({
+        regions: ['Ardougne'],
+      }))!;
+
+      const syntheticManual = plan.manualSteps.filter((step) =>
+        step.detail?.startsWith('Required for Synthetic'),
+      );
+      expect(syntheticManual).toEqual([
+        expect.objectContaining({
+          kind: 'manual',
+          label: 'Confirm: Shared manual check',
+          detail: 'Required for Synthetic shared check source A',
+          done: false,
+        }),
+        expect.objectContaining({
+          kind: 'manual',
+          label: 'Confirm: Unique manual check',
+          detail: 'Required for Synthetic unique check source',
+          done: false,
+        }),
+      ]);
+    } finally {
+      ALL_DIARY_TASKS.length = syntheticLength;
+    }
+  });

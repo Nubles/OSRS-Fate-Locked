@@ -54,6 +54,10 @@ npm run dev
 
 The app runs at `http://localhost:5173`. All state is stored in the browser's `localStorage` — no backend, no API keys.
 
+Fate Analytics can export a voluntary local aggregate for the
+[key-economy evidence protocol](./docs/key-economy-evidence.md). Nothing is
+uploaded automatically.
+
 ## Other scripts
 
 ```bash

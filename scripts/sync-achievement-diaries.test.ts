@@ -153,6 +153,8 @@ describe('Achievement Diary source parser', () => {
     ];
     snapshot.tasks[0].combatLevel = 70;
     snapshot.tasks[0].allQuests = true;
+    snapshot.tasks[0].questPoints = 32;
+    snapshot.tasks[0].manualRequirements = ['Confirm external progress'];
     const first = renderDiaryTasks(snapshot);
     const second = renderDiaryTasks(structuredClone(snapshot));
 
@@ -161,9 +163,14 @@ describe('Achievement Diary source parser', () => {
     expect(first.indexOf("id: 'fal_easy_1'")).toBeLessThan(first.indexOf("id: 'fal_med_1'"));
     expect(first).toContain('export interface DiaryTaskRequirementOption {');
     expect(first).toContain('oneOf?: DiaryTaskRequirementOption[];');
+    expect(first).toContain('questPoints?: number;');
+    expect(first).toContain('manualRequirements?: string[];');
     expect(first).toContain(
       "oneOf: [{ label: 'Dusty key' }, { skills: { 'Agility': 70 }, combatLevel: 100, allQuests: true, anySkillLevel: 99 }, "
       + "{ quests: ['Ratcatchers'], cas: ['Easy'], regions: ['Asgarnia'] }], combatLevel: 70, allQuests: true",
+    );
+    expect(first).toContain(
+      "questPoints: 32, manualRequirements: ['Confirm external progress']",
     );
     expect(first.indexOf("id: 'fal_med_1'")).toBeLessThan(first.indexOf("id: 'fal_med_3'"));
     expect(first).toContain("description: 'Smith some blurite limbs on Doric\\'s anvil'");
@@ -205,6 +212,16 @@ describe('offline generated Diary verification', () => {
     expect(() => renderDiaryTasks(duplicateCombined)).toThrow(/combinedSkillLevel.*duplicate/i);
   });
 
+  it('rejects malformed Quest Point and manual requirements', () => {
+    const badQuestPoints: any = structuredClone(SIX_TASK_SNAPSHOT);
+    badQuestPoints.tasks[0].questPoints = 0;
+    expect(() => renderDiaryTasks(badQuestPoints)).toThrow(/questPoints/i);
+
+    const badManual: any = structuredClone(SIX_TASK_SNAPSHOT);
+    badManual.tasks[0].manualRequirements = [''];
+    expect(() => renderDiaryTasks(badManual)).toThrow(/manualRequirements.*non-empty string/i);
+  });
+
   it('reports generated output drift without rewriting the supplied output', () => {
     const output = 'sentinel old output';
 
@@ -222,6 +239,17 @@ describe('offline generated Diary verification', () => {
       ok: true,
       errors: [],
     });
+  });
+
+  it('accepts equivalent CRLF output for both generated files', () => {
+    const diaryOutput = renderDiaryTasks(SIX_TASK_SNAPSHOT).replace(/\r?\n/g, '\r\n');
+    const migrationOutput = renderTaskIdMigrations(SIX_TASK_SNAPSHOT).replace(/\r?\n/g, '\r\n');
+
+    expect(checkGeneratedDiary(
+      SIX_TASK_SNAPSHOT,
+      diaryOutput,
+      migrationOutput,
+    )).toEqual({ ok: true, errors: [] });
   });
 
   it('reports every generated-file mismatch in one result', () => {

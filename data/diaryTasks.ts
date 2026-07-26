@@ -5,6 +5,8 @@ export interface DiaryTaskRequirementOption {
   quests?: string[];
   cas?: string[];
   regions?: string[];
+  questPoints?: number;
+  manualRequirements?: string[];
   combatLevel?: number;
   allQuests?: true;
   anySkillLevel?: number;
@@ -21,6 +23,8 @@ export interface DiaryTask {
   quests?: string[];
   cas?: string[];
   regions?: string[];
+  questPoints?: number;
+  manualRequirements?: string[];
   combatLevel?: number;
   allQuests?: true;
   anySkillLevel?: number;
@@ -413,7 +417,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'var_easy_13', tierId: 'Varrock Easy', description: 'Catch some trout in the River Lum at Barbarian Village.', skills: { 'Fishing': 20 }, regions: ['Barbarian Village'] },
   { id: 'var_easy_14', tierId: 'Varrock Easy', description: 'Steal from the Tea stall in Varrock.', skills: { 'Thieving': 5 }, regions: ['Varrock'] },
   { id: 'var_med_1', tierId: 'Varrock Medium', description: 'Have the Apothecary in Varrock make you a strength potion.', regions: ['Varrock'] },
-  { id: 'var_med_2', tierId: 'Varrock Medium', description: 'Enter the Champions\' Guild.', regions: ['Varrock'] },
+  { id: 'var_med_2', tierId: 'Varrock Medium', description: 'Enter the Champions\' Guild.', regions: ['Varrock'], questPoints: 32 },
   { id: 'var_med_3', tierId: 'Varrock Medium', description: 'Select a colour for your kitten.', quests: ['Gertrude\'s Cat', 'Garden of Tranquillity'], regions: ['Varrock'] },
   { id: 'var_med_4', tierId: 'Varrock Medium', description: 'Use the spirit tree north of Varrock.', quests: ['Tree Gnome Village'], regions: ['Varrock'] },
   { id: 'var_med_5', tierId: 'Varrock Medium', description: 'Perform the 4 emotes from the Stronghold of Security.', regions: ['Barbarian Village'] },
@@ -426,7 +430,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'var_med_12', tierId: 'Varrock Medium', description: 'Use the balloon to travel from Varrock.', skills: { 'Farming': 30, 'Firemaking': 40 }, quests: ['Enlightened Journey'], regions: ['Varrock'] },
   { id: 'var_med_13', tierId: 'Varrock Medium', description: 'Complete a lap of the Varrock Agility course.', skills: { 'Agility': 30 }, regions: ['Varrock'] },
   { id: 'var_hard_1', tierId: 'Varrock Hard', description: 'Trade furs with the Fancy Dress Seller for a spottier cape and equip it.', skills: { 'Hunter': 66 }, regions: ['Varrock'], oneOf: [{ label: 'Existing furs', items: ['2 dashing kebbit fur', '800 coins'] }, { label: 'Catch the furs yourself', skills: { 'Hunter': 69 }, items: ['800 coins'] }] },
-  { id: 'var_hard_2', tierId: 'Varrock Hard', description: 'Speak to Orlando Smith when you have achieved 153 Kudos.', regions: ['Varrock'] },
+  { id: 'var_hard_2', tierId: 'Varrock Hard', description: 'Speak to Orlando Smith when you have achieved 153 Kudos.', regions: ['Varrock'], manualRequirements: ['153 Varrock Museum Kudos'] },
   { id: 'var_hard_3', tierId: 'Varrock Hard', description: 'Make a Waka canoe near Edgeville.', skills: { 'Woodcutting': 57 }, regions: ['Edgeville'] },
   { id: 'var_hard_4', tierId: 'Varrock Hard', description: 'Teleport to Paddewwa.', skills: { 'Magic': 54 }, quests: ['Desert Treasure I'], regions: ['Edgeville'] },
   { id: 'var_hard_5', tierId: 'Varrock Hard', description: 'Teleport to Barbarian Village with a skull sceptre.', regions: ['Barbarian Village'], oneOf: [{ label: 'Existing skull sceptre', items: ['Skull sceptre'] }, { label: 'Create a skull sceptre', items: ['Four skull sceptre pieces'] }] },
