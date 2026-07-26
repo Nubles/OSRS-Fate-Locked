@@ -40,6 +40,20 @@ describe('RuneLite repository ownership boundary', () => {
     expect(packageJson.scripts).not.toHaveProperty('runelite:mirror-check');
   });
 
+  it('documents standalone ownership without companion mirror instructions', () => {
+    const activeDocs = [
+      'README.md',
+      'ROADMAP.md',
+      '.claude/skills/fate-locked-workflow/SKILL.md',
+    ].map((relativePath) => readFileSync(atRoot(relativePath), 'utf8')).join('\n');
+
+    expect(activeDocs).toContain('https://github.com/Nubles/OSRS-Fate-Locked-Runelite');
+    expect(activeDocs).not.toMatch(/runelite-plugin\/SOURCE_COMMIT/);
+    expect(activeDocs).not.toMatch(/byte-for-byte (?:CRLF )?mirror/i);
+    expect(activeDocs).not.toContain('runelite:mirror-check');
+    expect(activeDocs).not.toContain('Nubles/RS3-Fate-Locked-Runelite');
+  });
+
   it.each([
     'components/RuneLiteOnboarding.tsx',
     'components/RollInbox.tsx',

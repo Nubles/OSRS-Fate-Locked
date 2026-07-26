@@ -80,7 +80,12 @@ To enable it on a fresh fork: **Settings → Pages → Build and deployment → 
 
 ## RuneLite plugin and Roll Inbox
 
-The companion [RuneLite plugin](https://github.com/Nubles/OSRS-Fate-Locked-Runelite) renders the tracker rules in-game, warns before locked actions, and—only when the player enables Online sync—queues supported completions for the app. The standalone repository is the source of truth at [`5cc1ffc4e4f684a99211f12342a69ceb6d16de30`](https://github.com/Nubles/OSRS-Fate-Locked-Runelite/commit/5cc1ffc4e4f684a99211f12342a69ceb6d16de30); `runelite-plugin/` is its CI-verified mirror, pinned by `runelite-plugin/SOURCE_COMMIT`.
+The companion [RuneLite plugin](https://github.com/Nubles/OSRS-Fate-Locked-Runelite)
+renders the tracker rules in-game, warns before locked actions, and—only when
+the player enables Online sync—queues supported completions for the app. Plugin
+source, installation instructions, builds, and releases live exclusively in
+the standalone repository. This web app remains responsible for exporting the
+rules bundle and operating the confirmation-first Roll Inbox.
 
 RuneLite detects and retries delivery; the app validates the run, account, revision, detector, and canonical rate. The event waits in **Sync & Roll → Roll Inbox** until the player chooses **Roll**, **Not eligible**, Review, or Dismiss. There is no Roll button in RuneLite and no background path to the dice engine.
 

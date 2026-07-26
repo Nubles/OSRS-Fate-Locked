@@ -12,9 +12,8 @@ The Plugin Hub entry for
 [Nubles/OSRS-Fate-Locked-Runelite](https://github.com/Nubles/OSRS-Fate-Locked-Runelite)
 already resolves to the canonical release commit
 `5cc1ffc4e4f684a99211f12342a69ceb6d16de30`. No additional Plugin Hub pin PR
-is required for this release. Future plugin releases must update the standalone
-repository first, then refresh `runelite-plugin/SOURCE_COMMIT`, the mirror, and
-parity CI together.
+is required for this release. Future plugin releases are built and published
+only from `OSRS-Fate-Locked-Runelite`.
 
 ## 1b. Shipped — July 2026 sprint (onboarding, safety, community)
 
@@ -149,7 +148,7 @@ Follow-ups:
   Auto-clear on roll lives in the ALWAYS-MOUNTED `SuggestionBanner`, not the
   lazily-mounted queue (also a real bug: tab components miss rolls made
   elsewhere).
-- **Plugin mirror:** [Nubles/OSRS-Fate-Locked-Runelite](https://github.com/Nubles/OSRS-Fate-Locked-Runelite) is the source of truth at `5cc1ffc4e4f684a99211f12342a69ceb6d16de30`; `runelite-plugin/` is a byte-for-byte mirror pinned by `runelite-plugin/SOURCE_COMMIT`. Run `npm run runelite:mirror-check` against the standalone checkout before committing either repository.
+- **Plugin boundary:** [Nubles/OSRS-Fate-Locked-Runelite](https://github.com/Nubles/OSRS-Fate-Locked-Runelite) owns the plugin source, builds, and releases. The app exports rules bundles and processes plugin events, but contains no Java plugin or download pipeline.
 
 ## 4. Gotchas that cost real debugging time
 

@@ -7,9 +7,9 @@ description: How to work on the Fate Locked Ironman project (web app + RuneLite 
 
 You are working on a two-repo project: the web app (`Nubles/OSRS-Fate-Locked`,
 React/TS/Vite, deployed to GitHub Pages on every push to main) and a RuneLite
-plugin (`Nubles/RS3-Fate-Locked-Runelite`, Java, compiled ONLY by its GitHub
-Actions CI). `runelite-plugin/` in the web repo is a byte-for-byte CRLF mirror
-of the plugin repo — never the source of truth.
+plugin (`Nubles/OSRS-Fate-Locked-Runelite`, Java). Plugin source, Gradle tests,
+CI, releases, and Plugin Hub work occur only in the standalone repository. The
+web app exports rules bundles and processes plugin events through the relay.
 
 ## Before anything else
 
@@ -74,11 +74,9 @@ fresh-profile bugs. When comparing "before" behavior, build the prior commit
 (`git stash -u; git checkout <sha>; npx vite build; git checkout main;
 git stash pop`) instead of trusting a stale baseline number.
 
-For plugin changes: there is NO local build. Push small commits and poll
-`https://api.github.com/repos/Nubles/RS3-Fate-Locked-Runelite/actions/runs?per_page=1`
-(unauthenticated, ~15s interval is fine) until `conclusion: success` before
-claiming anything compiles. Only after CI is green: copy changed files into
-the web repo's `runelite-plugin/` converting LF→CRLF, and commit the mirror.
+For plugin changes: work only in the standalone `Nubles/OSRS-Fate-Locked-Runelite`
+checkout. Run `gradle clean test jar --no-daemon`, then use its CI, release, and
+Plugin Hub workflows there. Do not copy plugin files into this web repository.
 
 For data changes: the test suite is the contract. Run the documented sync
 scripts (`npm run content:sync`, `node scripts/sync-chunk-content.mjs`,
