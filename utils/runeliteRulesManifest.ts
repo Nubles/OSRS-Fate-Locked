@@ -1,5 +1,6 @@
 import type { GameModeRules } from '../config/gameModes';
 import { QUEST_DATA } from '../data/questData';
+import { gearService } from '../services/GearService';
 import {
   chunkContentService,
   type ChunkContent,
@@ -46,6 +47,7 @@ export interface RuneliteRulesManifest {
     slayer: string[];
     quests: string[];
   };
+  itemRules: Record<string, { tier: number; slot: string }>;
   chunks: Record<string, ChunkPermissionSnapshot>;
 }
 
@@ -58,6 +60,11 @@ export interface RulesContentSource {
   questSections(): Record<string, string[]>;
 }
 
+export interface ItemRuleSource {
+  init(): Promise<void>;
+  ready: boolean;
+  itemRuleExport(): Record<string, { tier: number; slot: string }>;
+}
 export interface RulesManifestRunInput {
   runId: string;
   runRevision: number;
@@ -74,6 +81,7 @@ export interface RulesManifestInput {
   run: RulesManifestRunInput;
   exportedAt?: string;
   contentService?: RulesContentSource;
+  itemRuleSource?: ItemRuleSource;
 }
 
 const sorted = (values: readonly string[] | undefined): string[] =>
@@ -89,6 +97,15 @@ export async function buildRuneliteRulesManifest(
   input: RulesManifestInput,
 ): Promise<RuneliteRulesManifest> {
   const service = input.contentService ?? chunkContentService;
+  const items = input.itemRuleSource ?? gearService;
+  let itemRules: Record<string, { tier: number; slot: string }> = {};
+  try {
+    await items.init();
+    if (items.ready) {
+      itemRules = Object.fromEntries(Object.entries(items.itemRuleExport())
+        .sort(([left], [right]) => left.localeCompare(right)));
+    }
+  } catch { /* unavailable item rules remain Unknown */ }
   const loaded = await service.init();
   const completed = new Set(input.unlocks.quests);
   const known = new Set([
@@ -151,6 +168,7 @@ export async function buildRuneliteRulesManifest(
       slayer: sorted(unlocks.slayerUnlocks),
       quests: sorted(unlocks.quests),
     },
+    itemRules,
     chunks,
   };
 }

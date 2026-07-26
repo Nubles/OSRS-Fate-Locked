@@ -45,6 +45,8 @@ const baseUnlocks = (): UnlockState => ({
 
 const defaultsFixture = (): GameState => ({
   version: CURRENT_SAVE_VERSION,
+  runId: 'fixture-run',
+  runRevision: 0,
   keys: 3,
   specialKeys: 0,
   chaosKeys: 0,
@@ -67,6 +69,8 @@ const defaultsFixture = (): GameState => ({
 
 const fullStateFixture = (): GameState => ({
   version: CURRENT_SAVE_VERSION,
+  runId: 'fixture-run',
+  runRevision: 0,
   keys: 17,
   specialKeys: 2,
   chaosKeys: 3,

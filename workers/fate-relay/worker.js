@@ -1,31 +1,17 @@
 /**
- * Fate Locked online relay — a tiny outbound-only sync buffer.
- *
- * The web app POSTs the run bundle under a pairing code; the RuneLite plugin
- * GETs it by that code and imports it. Neither side runs a server (Hub-safe):
- * both just talk to this Worker. Entries are ephemeral (24h TTL).
- *
- *   POST /r/:code        { token?, payload }  → { version, token }   (write; token-gated)
- *   GET  /r/:code        → { version, payload }  (read; 304 with If-None-Match)
- *   POST /r/:code/state  { token?, payload }  → live game state (optional reverse)
- *   GET  /r/:code/state  → { version, payload }
- *   POST /r/:code/suggest { token?, payload } → plugin-detected "may be worth
- *                                                a roll" suggestions (see below)
- *   GET  /r/:code/suggest → { version, payload }
- *
- * /suggest carries the OTHER direction: the RuneLite plugin (not the web app)
- * is the writer, appending small roll suggestions ({source, label, ts} JSON,
- * plugin-side) as it detects boss kills, collection log entries, etc. The web
- * app is a read-only poller that tracks its own "last seen" timestamp
- * client-side — it never writes here, so there's no lock-step coordination
- * needed between the two directions. Same size cap, same 24h TTL, same
- * first-writer-claims-the-token model as every other sub-resource.
- *
- * Requires a KV namespace bound as `RELAY` (see wrangler.toml).
+ * Fate Locked online relay — outbound-only bundle sync plus durable event queues.
+ * Legacy /r/:code, /state, and /suggest resources remain compatible.
  */
-const TTL_SECONDS = 86400;          // 24h — this is a transit buffer, not storage
-const MAX_PAYLOAD = 256 * 1024;     // 256 KB cap
-const CODE_RE = /^\/r\/([A-Za-z0-9-]{4,40})(\/state|\/suggest)?$/;
+import {
+  EVENT_TTL_SECONDS,
+  MAX_REQUEST_BYTES,
+  appendUnique,
+  validAcknowledgement,
+  validEvent,
+} from './protocol.js';
+
+const TTL_SECONDS = 86400;
+const CODE_RE = /^\/r\/([A-Za-z0-9-]{4,40})(\/state|\/suggest|\/events|\/acks)?$/;
 
 function cors(origin) {
   return {
@@ -37,45 +23,103 @@ function cors(origin) {
   };
 }
 
+function json(body, headers, status = 200, extraHeaders = {}) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...headers, 'Content-Type': 'application/json', ...extraHeaders },
+  });
+}
+
+function structuredResource(resource) {
+  if (resource === '/events') {
+    return { field: 'events', validate: validEvent };
+  }
+  if (resource === '/acks') {
+    return { field: 'acknowledgements', validate: validAcknowledgement };
+  }
+  return null;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const h = cors(request.headers.get('Origin'));
+    const headers = cors(request.headers.get('Origin'));
 
-    if (request.method === 'OPTIONS') return new Response(null, { headers: h });
+    if (request.method === 'OPTIONS') return new Response(null, { headers });
 
-    const m = url.pathname.match(CODE_RE);
-    if (!m) return new Response('not found', { status: 404, headers: h });
-    const key = `r:${m[1]}${m[2] || ''}`;
+    const match = url.pathname.match(CODE_RE);
+    if (!match) return new Response('not found', { status: 404, headers });
+    const resource = match[2] || '';
+    const key = `r:${match[1]}${resource}`;
+    const structured = structuredResource(resource);
 
     if (request.method === 'GET') {
-      const rec = await env.RELAY.get(key, { type: 'json' });
-      if (!rec) return new Response('{}', { status: 404, headers: { ...h, 'Content-Type': 'application/json' } });
-      if (request.headers.get('If-None-Match') === String(rec.version)) {
-        return new Response(null, { status: 304, headers: { ...h, ETag: String(rec.version) } });
+      const stored = await env.RELAY.get(key, { type: 'json' });
+      if (!stored) return json({}, headers, 404);
+      if (request.headers.get('If-None-Match') === String(stored.version)) {
+        return new Response(null, {
+          status: 304,
+          headers: { ...headers, ETag: String(stored.version) },
+        });
       }
-      return new Response(JSON.stringify({ version: rec.version, payload: rec.payload }),
-        { headers: { ...h, 'Content-Type': 'application/json', ETag: String(rec.version) } });
+      const body = structured
+        ? { version: stored.version, [structured.field]: stored.records || [] }
+        : { version: stored.version, payload: stored.payload };
+      return json(body, headers, 200, { ETag: String(stored.version) });
     }
 
     if (request.method === 'POST') {
-      const body = await request.json().catch(() => null);
-      if (!body || typeof body.payload !== 'string') return new Response('bad request', { status: 400, headers: h });
-      if (body.payload.length > MAX_PAYLOAD) return new Response('payload too large', { status: 413, headers: h });
-
-      const existing = await env.RELAY.get(key, { type: 'json' });
-      // First writer claims the code; later writes must present the same token.
-      if (existing && existing.token && existing.token !== body.token) {
-        return new Response('forbidden', { status: 403, headers: h });
+      const rawBody = await request.text();
+      if (new TextEncoder().encode(rawBody).byteLength > MAX_REQUEST_BYTES) {
+        return new Response('payload too large', { status: 413, headers });
       }
-      const token = (existing && existing.token) || body.token || crypto.randomUUID();
-      const version = ((existing && existing.version) || 0) + 1;
+      let body;
+      try {
+        body = JSON.parse(rawBody);
+      } catch {
+        return new Response('bad request', { status: 400, headers });
+      }
+
+      if (structured) {
+        const incoming = body && body[structured.field];
+        if (!Array.isArray(incoming) || incoming.length > 100
+          || !incoming.every(structured.validate)) {
+          return new Response('bad request', { status: 400, headers });
+        }
+        const existing = await env.RELAY.get(key, { type: 'json' });
+        if (existing?.token && existing.token !== body.token) {
+          return new Response('forbidden', { status: 403, headers });
+        }
+        const token = existing?.token || body.token || crypto.randomUUID();
+        const version = (existing?.version || 0) + 1;
+        const appended = appendUnique(existing?.records || [], incoming);
+        await env.RELAY.put(key, JSON.stringify({
+          version,
+          token,
+          records: appended.records,
+        }), { expirationTtl: EVENT_TTL_SECONDS });
+        return json({
+          version,
+          token,
+          accepted: appended.accepted,
+          duplicates: appended.duplicates,
+        }, headers);
+      }
+
+      if (!body || typeof body.payload !== 'string') {
+        return new Response('bad request', { status: 400, headers });
+      }
+      const existing = await env.RELAY.get(key, { type: 'json' });
+      if (existing?.token && existing.token !== body.token) {
+        return new Response('forbidden', { status: 403, headers });
+      }
+      const token = existing?.token || body.token || crypto.randomUUID();
+      const version = (existing?.version || 0) + 1;
       await env.RELAY.put(key, JSON.stringify({ version, payload: body.payload, token }),
         { expirationTtl: TTL_SECONDS });
-      return new Response(JSON.stringify({ version, token }),
-        { headers: { ...h, 'Content-Type': 'application/json' } });
+      return json({ version, token }, headers);
     }
 
-    return new Response('method not allowed', { status: 405, headers: h });
+    return new Response('method not allowed', { status: 405, headers });
   },
 };

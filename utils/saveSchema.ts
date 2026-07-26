@@ -665,7 +665,7 @@ const normalizeRival = (value: unknown): Outcome<RivalState> => {
 
 
 const TOP_LEVEL_KEYS = new Set([
-  'version', 'keys', 'specialKeys', 'chaosKeys', 'fatePoints', 'activeBuff',
+  'version', 'runId', 'runRevision', 'keys', 'specialKeys', 'chaosKeys', 'fatePoints', 'activeBuff',
   'unlocks', 'history', 'animationsEnabled', 'advisorsEnabled', 'revealAllFeatures',
   'hasSeenOnboarding', 'pinnedGoals', 'userNotes', 'gameModeId', 'customMode',
   'gameModeLocked', 'rngSeed', 'loadout', 'rival', 'linkedAccount',
@@ -753,9 +753,21 @@ const normalizeState = (
   if (!selectedNotes.present) return invalid('invalid_field', 'userNotes');
   const userNotes = normalizeNotes(selectedNotes.value);
   if (userNotes.ok === false) return userNotes;
+  const selectedRunId = readPreferred(input, defaultRecord, 'runId');
+  if (!selectedRunId.present) return invalid('invalid_field', 'runId');
+  const runId = stringValue(selectedRunId.value, 'runId', MAX_IDENTIFIER_CHARS);
+  if (runId.ok === false || runId.value.trim().length === 0) {
+    return invalid('invalid_field', 'runId');
+  }
+  const selectedRunRevision = readPreferred(input, defaultRecord, 'runRevision');
+  if (!selectedRunRevision.present) return invalid('invalid_number', 'runRevision');
+  const runRevision = boundedInteger(selectedRunRevision.value, 'runRevision', 0, MAX_COUNTER);
+  if (runRevision.ok === false) return runRevision;
 
   const state: GameState = {
     version: CURRENT_SAVE_VERSION,
+    runId: runId.value,
+    runRevision: runRevision.value,
     keys: keys.value,
     specialKeys: specialKeys.value,
     chaosKeys: chaosKeys.value,
@@ -820,7 +832,10 @@ const normalizeState = (
     ok: true,
     value: {
       state,
-      migrated: sourceVersion === 0 || unlocks.value.migrated,
+      migrated: sourceVersion === 0
+        || unlocks.value.migrated
+        || !own(input, 'runId')
+        || !own(input, 'runRevision'),
     },
   };
 };

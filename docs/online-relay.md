@@ -1,53 +1,94 @@
 # Online sync relay (optional)
 
-Lets the web app push your run to the RuneLite plugin **over the internet** —
-no clipboard, no files, works across machines. Both sides only make **outbound**
-HTTPS calls to a tiny Cloudflare Worker keyed by a short **pairing code**, so the
-plugin stays Plugin-Hub-compliant (it never runs a server). Entries auto-expire
-after 24h.
+Online sync connects the web tracker and RuneLite using outbound HTTPS requests to a small Cloudflare Worker. It is optional and off by default. Clipboard and local-file imports remain fully supported.
 
-## Deploy the Worker (one-time)
+## Ownership and consent
+
+The boundary is intentionally strict:
+
+- **RuneLite detects and queues facts.** It writes a durable local outbox entry for a supported in-game event and retries delivery after restarts or temporary failures.
+- **The web app validates.** It checks the run, bound account, revision, detector contract, and canonical app data before showing an event in the Roll Inbox.
+- **Only the player rolls.** Ingesting, rendering, retrying, or reviewing an event never invokes the dice engine. A normal roll happens only after the player presses **Roll** in the web app.
+- **The relay stores records; it does not decide anything.** It cannot classify an event, alter a run, or roll.
+
+The RuneLite **Enable online sync** checkbox defaults to off and carries RuneLite's third-party network warning. With it off, the plugin makes no relay requests and does not append detected events to the local network outbox.
+
+## Deploy the Worker
 
 From `workers/fate-relay/`:
 
-1. `npm i -g wrangler` (if needed), then `wrangler login`.
-2. Create the KV store: `wrangler kv namespace create RELAY` → copy the `id`
-   into `wrangler.toml`.
-3. `wrangler deploy` → you get a URL like
-   `https://fate-relay.<you>.workers.dev`.
+1. Install Wrangler and sign in.
+2. Create the `RELAY` KV namespace and place its ID in `wrangler.toml`.
+3. Run `wrangler deploy`.
 
-## Point the app at it
+The app defaults to `https://fate-relay.fatelocked.workers.dev`. A deployment can override it with `VITE_FATE_RELAY`; local development can set `fate_relay_base` in browser storage.
 
-The web app defaults to `https://fate-relay.fatelocked.workers.dev`.
-Override per-deploy with `VITE_FATE_RELAY=https://fate-relay.<you>.workers.dev`,
-or at runtime via `localStorage.setItem('fate_relay_base', '<url>')`.
+## Pairing
 
-## How it works
+1. Enable Online sync in the web app. It creates a random pairing code and a private write token retained by that browser.
+2. Enable Online sync in RuneLite and paste the pairing code.
+3. RuneLite polls for the run bundle and delivers detected events. The app polls the event inbox and posts terminal acknowledgements.
 
-- Web app: **Online sync** → generates a pairing code (+ a private write-token
-  kept only in your browser) and auto-POSTs your bundle on every change.
-- Plugin: paste the **code** into *Online sync code*; it polls the relay every
-  few seconds and imports on change. The code only grants **reads** — without
-  the write-token nobody else can overwrite your slot.
+Both clients are outbound-only. The plugin never opens a local server.
+
+## v1 detected-event envelope
+
+Every `/events` record contains:
+
+| Field | Meaning |
+|---|---|
+| `protocolVersion` | Event protocol version (`1`). |
+| `eventId` | Stable idempotency key retained across retries and restarts. |
+| `runId`, `runRevision` | Run identity and the revision used when detection occurred. |
+| `account` | Logged-in character name used for bound-account validation. |
+| `eventType` | `SKILL_LEVEL`, `QUEST`, `COMBAT_ACHIEVEMENT`, `COLLECTION_LOG`, `CLUE_CASKET`, `BOSS_KILL`, or `RAID_COMPLETION`. |
+| `canonicalLabel` | Detector label, or `null` when the plugin cannot identify it safely. |
+| `occurredAt`, `sessionSequence` | Event ordering evidence. |
+| `bundleVersion`, `rulesVersion`, `contentVersion` | App/bundle compatibility context. |
+| `detectorId`, `detectorVersion` | Approved detector contract identity. |
+| `confidence` | `EXACT` or `UNCERTAIN`; the app still performs canonical validation. |
+| `evidence` | Small bounded detector-specific facts such as skill and level. |
+
+Batches are bounded to 100 events, each event to 8 KiB, and evidence to 32 keys. The app treats wrong-run/account events as blocked and stale or ambiguous data as needing review. Existing quest/task/level/Collection Log progress is not used to silently consume a pending roll.
 
 ## API
 
-| Method | Path | Body | Notes |
+| Method | Path | Body / response | Retention and ownership |
 |---|---|---|---|
-| `POST` | `/r/:code` | `{ token?, payload }` | Write the run bundle. First write claims the code's token; later writes must match it. |
-| `GET` | `/r/:code` | — | Read `{ version, payload }`; `304` with `If-None-Match: <version>`. |
-| `POST` | `/r/:code/suggest` | `{ token?, payload }` | **Plugin → app.** Roll suggestions the plugin detected (quest / diary / CA completions), a JSON array of `{source, label, ts}` capped at 20. The plugin is the sole writer; its token persists in plugin config. |
-| `GET` | `/r/:code/suggest` | — | The web app polls this every ~15s and shows the items as toasts + the persistent Sync & Roll queue. |
-| `POST` | `/r/:code/state` | `{ token?, payload }` | **Plugin → app.** Heartbeat: `{ts, version}` after each successful relay import. |
-| `GET` | `/r/:code/state` | — | The web app's Connect RuneLite card polls this to show "plugin connected — last import X ago". |
+| `POST` | `/r/:code` | `{ token?, payload }` | App writes the run bundle; 24-hour TTL. |
+| `GET` | `/r/:code` | `{ version, payload }` | Plugin reads; supports `If-None-Match`. |
+| `POST` | `/r/:code/events` | `{ token?, events: FateEventEnvelope[] }` | Plugin appends idempotently by `eventId`; seven-day TTL. |
+| `GET` | `/r/:code/events` | `{ events }` | App reads the bounded event queue. |
+| `POST` | `/r/:code/acks` | `{ token, acknowledgements }` | App writes `COMPLETED`, `DISMISSED`, or `DUPLICATE`; seven-day TTL. |
+| `GET` | `/r/:code/acks` | `{ acknowledgements }` | Plugin removes terminal events from its durable outbox. |
+| `POST/GET` | `/r/:code/state` | Heartbeat `{ ts, version }` | Plugin writes, app reads; 24-hour TTL. |
+| `POST/GET` | `/r/:code/suggest` | Legacy suggestion array | Kept for one compatibility release; the app no longer consumes it. |
 
-Each sub-resource is an independent record with its own version, first-writer
-token and 24h TTL — the two directions never contend for a write-token. The
-main channel's `payload` is the `FLGZ:`-prefixed gzip+base64 bundle (same
-compact form the clipboard copy uses). Max 256 KB per record.
+Each structured sub-resource owns its own first-writer token. Event append and acknowledgement operations are idempotent, so retrying the same `eventId` does not create another inbox item or roll.
 
-## Privacy
+## Migration from `/suggest`
 
-Payloads contain your chunk unlocks + run state — **no account credentials**.
-Data is ephemeral (24h) and reachable only with the random pairing code. Use the
-clipboard/file paths instead if you'd rather nothing leave your machine.
+`/suggest` was a transient reminder channel with timestamp-based deduplication. The durable Roll Inbox supersedes it with stable event IDs, persisted plugin delivery, canonical app validation, explicit terminal states, and acknowledgements. The Worker keeps `/suggest` compatible for one release so older installed plugins do not fail, but current app code does not poll it.
+
+## Privacy and retention
+
+Run bundles contain unlock state and tracker status. Detected events contain the bound character name, run identity, label, timestamps, detector version, and bounded evidence. They contain **no account credentials, passwords, session cookies, chat history, inventory dump, or arbitrary telemetry**.
+
+Main bundle/state records expire after 24 hours. Event and acknowledgement records expire after seven days so an event detected while the app is closed can survive a realistic outage. Anyone with the random pairing code can read that code's records; private write tokens are required for protected writes. Use clipboard/file sync if you do not want relay data to leave the machine.
+
+## RuneLite bundle v4
+
+The app now exports `version: 4` with a canonical `rules` manifest. It includes
+the run, account, game mode, rules/content/detector versions, every unlock
+family, bank-lock state, and category-first chunk permission snapshots. Root
+fields from v3 remain for one compatibility release.
+
+Permission status is one of `ALLOWED`, `NOT_READY`, `LOCKED`, or `UNKNOWN`.
+Unknown means the app cannot safely decide and must never be converted into a
+blocking warning. RuneLite consumes these authored decisions without
+re-implementing quest, skill, merchant, bank, or activity rules.
+
+The `FLGZ:` relay payload is tested against the existing 256 KiB compressed
+limit. RuneLite continues to load v1-v3 bundles using legacy map behavior; a
+malformed v4 or unsupported future version is rejected without replacing the
+last valid snapshot.

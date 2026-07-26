@@ -48,6 +48,11 @@ describe('buildRuneliteRulesManifest', () => {
       },
       exportedAt: '2026-07-24T10:00:00.000Z',
       contentService: contentSource,
+      itemRuleSource: {
+        init: async () => {},
+        ready: true,
+        itemRuleExport: () => ({ '4151': { tier: 7, slot: 'Weapon' } }),
+      },
     });
 
     expect(manifest).toMatchObject({
@@ -78,6 +83,7 @@ describe('buildRuneliteRulesManifest', () => {
       slayer: ['Bigger and Badder'],
       quests: expect.any(Array),
     }));
+    expect(manifest.itemRules['4151']).toEqual({ tier: 7, slot: 'Weapon' });
     expect(manifest.chunks['50,50']).toBeDefined();
     expect(Object.keys(manifest.chunks['50,50'].categories)).toEqual([
       'BANKS',
@@ -101,6 +107,11 @@ describe('buildRuneliteRulesManifest', () => {
         gameModeId: 'vanilla',
       },
       contentService: contentSource,
+      itemRuleSource: {
+        init: async () => {},
+        ready: true,
+        itemRuleExport: () => ({ '4151': { tier: 7, slot: 'Weapon' } }),
+      },
     });
 
     expect(manifest.unlocks.regions).toEqual(['A', 'Z']);

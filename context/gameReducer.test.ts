@@ -21,7 +21,7 @@ import { ALL_CA_TASKS } from '../data/caTasks';
  * (the reducer just consumes pre-rolled values), so every case is deterministic.
  */
 
-const base = () => ({ ...initialState, lastEvent: null });
+const base = () => ({ ...initialState, runId: 'test-run', runRevision: 0, lastEvent: null });
 
 const roll = (over: Partial<{
   success: boolean;

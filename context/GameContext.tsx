@@ -25,7 +25,7 @@ import {
   type BackupWriteResult,
   type ImportResult,
 } from '../utils/gamePersistence';
-import { CURRENT_SAVE_VERSION, parseAndMigrateSave } from '../utils/saveSchema';
+import { CURRENT_SAVE_VERSION, parseAndMigrateSave, validateAndMigrateSave } from '../utils/saveSchema';
 import { showToast } from '../utils/toast';
 import {
   canEarnDiaryTier,
@@ -69,6 +69,28 @@ const generateId = (): string => {
   // Fallback for older browsers
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 11)}`;
 };
+
+type RunIdRandomSource = {
+  randomUUID?: () => string;
+  getRandomValues?: (bytes: Uint8Array) => Uint8Array;
+};
+
+const uuidFromBytes = (bytes: Uint8Array): string => {
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+};
+
+const newRunId = (source: RunIdRandomSource | undefined = globalThis.crypto): string => {
+  if (source?.randomUUID) return source.randomUUID();
+  const bytes = new Uint8Array(16);
+  if (source?.getRandomValues) source.getRandomValues(bytes);
+  else for (let index = 0; index < bytes.length; index++) bytes[index] = Math.floor(Math.random() * 256);
+  return uuidFromBytes(bytes);
+};
+
+export const newRunIdForTest = (source: RunIdRandomSource): string => newRunId(source);
 
 const completionFailure = (reason: string): CompletionResult => {
   showToast(reason);
@@ -170,6 +192,8 @@ const getInitialUnlocks = (): UnlockState => ({
 
 export const initialState: GameState = {
   version: CURRENT_SAVE_VERSION,
+  runId: newRunId(),
+  runRevision: 0,
   keys: 3,
   specialKeys: 0,
   chaosKeys: 0,
@@ -186,6 +210,17 @@ export const initialState: GameState = {
   gameModeLocked: false,
   loadout: {},
 };
+
+const createFreshState = (): GameState => ({
+  ...initialState,
+  unlocks: getInitialUnlocks(),
+  history: [],
+  pinnedGoals: [],
+  userNotes: {},
+  loadout: {},
+  runId: newRunId(),
+  runRevision: 0,
+});
 
 // --- Reducer ---
 export type Action =
@@ -425,7 +460,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       return { ...action.payload, lastEvent: null };
 
     case 'RESET':
-      return { ...initialState, lastEvent: null };
+      return { ...createFreshState(), lastEvent: null };
 
     case 'TOGGLE_ANIMATIONS':
       return { ...state, animationsEnabled: !state.animationsEnabled };
@@ -873,9 +908,13 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 
 export const gameReducer = (state: GameState & { lastEvent: GameEvent | null }, action: Action): GameState & { lastEvent: GameEvent | null } => {
   if (action.type === 'COMMIT_STATE') return action.payload;
-  const next = rawReducer(state, action);
-  if (next.history === state.history) return next;
-  return { ...next, history: chainAppendedHistory(state.history, next.history) };
+  const rawNext = rawReducer(state, action);
+  if (rawNext === state) return state;
+  const next = rawNext.history === state.history
+    ? rawNext
+    : { ...rawNext, history: chainAppendedHistory(state.history, rawNext.history) };
+  if (action.type === 'LOAD_SAVE' || action.type === 'RESET') return next;
+  return { ...next, runRevision: state.runRevision + 1 };
 };
 
 /**
@@ -883,6 +922,14 @@ export const gameReducer = (state: GameState & { lastEvent: GameEvent | null }, 
  * history hashes. React later receives this exact state instead of replaying
  * the transition against a potentially stale render snapshot.
  */
+export const migrateSaveForTest = (save: Partial<GameState>): GameState => {
+  const result = validateAndMigrateSave(save, createFreshState());
+  if (result.ok === false) throw new Error(result.message);
+  return result.state;
+};
+
+export const gameReducerForTest = gameReducer;
+
 export const prepareGameTransition = (
   state: GameState & { lastEvent: GameEvent | null },
   action: TransitionAction,
@@ -906,7 +953,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
       try {
         const saved = localStorage.getItem(key);
         if (saved) {
-          const parsed = parseAndMigrateSave(saved, initialState);
+          const parsed = parseAndMigrateSave(saved, createFreshState());
           if (parsed.ok === true) return { ...parsed.state, lastEvent: null };
           initialLoadWarningRef.current = 'Saved run data was invalid, so a fresh run was started.';
           console.warn('Stored save failed validation', parsed.code, parsed.path ?? 'root');
@@ -915,7 +962,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
         initialLoadWarningRef.current = 'Saved run data could not be read, so a fresh run was started.';
         console.warn('Stored save could not be read');
       }
-      return { ...initialState, lastEvent: null };
+      return { ...createFreshState(), lastEvent: null };
     },
   );
   const saveTimeoutRef = useRef<number | null>(null);
@@ -1071,7 +1118,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
   const importSave = useCallback((data: unknown): ImportResult =>
     applyPreparedReplacement(data, {
       current: stateRef.current,
-      defaults: initialState,
+      defaults: createFreshState(),
       writeBackup: current => pushBackup(storageKey, current, 'Before import'),
       writeReplacement,
       replace: replaceState,
@@ -1087,7 +1134,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     if (data === null) {
       return { ok: false, code: 'invalid_json', message: 'Backup was not found.' };
     }
-    return applyValidatedReplacement(parseAndMigrateSave(data, initialState), {
+    return applyValidatedReplacement(parseAndMigrateSave(data, createFreshState()), {
       current: stateRef.current,
       writeBackup: current => pushBackup(storageKey, current, 'Before restore'),
       writeReplacement,
