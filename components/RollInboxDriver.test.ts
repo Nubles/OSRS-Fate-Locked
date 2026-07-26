@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { MAX_EVENTS_PER_BATCH, type FateEventEnvelope } from '../services/fateEventProtocol';
 import type { RollInboxRow, RollInboxState } from '../services/rollInboxStore';
-import { buildAcknowledgementBatches } from './RollInboxDriver';
+import { nextAcknowledgementBatch } from './RollInboxDriver';
 
 const row = (index: number, state: RollInboxState): RollInboxRow => ({
   event: {
@@ -27,17 +27,24 @@ const row = (index: number, state: RollInboxState): RollInboxRow => ({
 });
 
 describe('RollInboxDriver acknowledgement batching', () => {
-  it('bounds every post at 100 and includes every terminal row without starving newer acknowledgements', () => {
+  it('advances through bounded terminal slices and wraps after the tail', () => {
     const terminal = Array.from({ length: 205 }, (_, index) => row(index, 'COMPLETED'));
     const active = Array.from({ length: 7 }, (_, index) => row(index + 205, 'READY'));
+    const rows = [...terminal, ...active];
 
-    const batches = buildAcknowledgementBatches([...terminal, ...active]);
+    const first = nextAcknowledgementBatch(rows, null);
+    const second = nextAcknowledgementBatch(rows, first.at(-1)!.eventId);
+    const third = nextAcknowledgementBatch(rows, second.at(-1)!.eventId);
+    const wrapped = nextAcknowledgementBatch(rows, third.at(-1)!.eventId);
 
-    expect(batches.map((batch) => batch.length)).toEqual([100, 100, 5]);
-    expect(batches.every((batch) => batch.length <= MAX_EVENTS_PER_BATCH)).toBe(true);
-    expect(batches.flat().map((ack) => ack.eventId)).toEqual(
+    expect([first, second, third, wrapped].map((batch) => batch.length))
+      .toEqual([100, 100, 5, 100]);
+    expect([first, second, third, wrapped]
+      .every((batch) => batch.length <= MAX_EVENTS_PER_BATCH)).toBe(true);
+    expect([...first, ...second, ...third].map((ack) => ack.eventId)).toEqual(
       Array.from({ length: 205 }, (_, index) => `evt-${index}`),
     );
-    expect(batches.at(-1)?.at(-1)?.eventId).toBe('evt-204');
+    expect(wrapped.map((ack) => ack.eventId))
+      .toEqual(Array.from({ length: 100 }, (_, index) => `evt-${index}`));
   });
 });

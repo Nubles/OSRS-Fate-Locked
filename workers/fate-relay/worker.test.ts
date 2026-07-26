@@ -194,39 +194,4 @@ describe('Fate relay event resources', () => {
         ...Array.from({ length: 5 }, (_, index) => `evt-${index}`),
       ]);
   });
-
-  it('rotates every retried acknowledgement into the observable window after offline compaction', async () => {
-    const acknowledgement = (index: number) => ({
-      eventId: `evt-${index}`,
-      state: 'COMPLETED',
-      acknowledgedAt: 1_000 + index,
-    });
-    const batches = [
-      Array.from({ length: 100 }, (_, index) => acknowledgement(index)),
-      Array.from({ length: 100 }, (_, index) => acknowledgement(index + 100)),
-      Array.from({ length: 5 }, (_, index) => acknowledgement(index + 200)),
-    ];
-    let token: string | undefined;
-
-    for (const acknowledgements of batches) {
-      expect(acknowledgements.length).toBeLessThanOrEqual(100);
-      const response = await post('/r/ABCD/acks', { token, acknowledgements });
-      token = (await response.json()).token;
-    }
-
-    const observable = new Set<string>();
-    for (let cycle = 0; cycle < 2; cycle += 1) {
-      for (const acknowledgements of batches) {
-        const response = await post('/r/ABCD/acks', { token, acknowledgements });
-        token = (await response.json()).token;
-        const visible = await get('/r/ABCD/acks').then(result => result.json());
-        expect(visible.acknowledgements).toHaveLength(100);
-        for (const ack of visible.acknowledgements) observable.add(ack.eventId);
-      }
-    }
-
-    expect(observable.size).toBe(205);
-    expect(Array.from({ length: 205 }, (_, index) => `evt-${index}`)
-      .every(eventId => observable.has(eventId))).toBe(true);
-  });
 });

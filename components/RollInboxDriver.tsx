@@ -41,17 +41,21 @@ function acknowledgementFor(row: RollInboxRow): EventAcknowledgement | null {
   };
 }
 
-export function buildAcknowledgementBatches(
+export function nextAcknowledgementBatch(
   rows: readonly RollInboxRow[],
-): EventAcknowledgement[][] {
+  afterEventId: string | null,
+): EventAcknowledgement[] {
   const acknowledgements = rows
     .map(acknowledgementFor)
     .filter((item): item is EventAcknowledgement => item !== null);
-  const batches: EventAcknowledgement[][] = [];
-  for (let index = 0; index < acknowledgements.length; index += MAX_EVENTS_PER_BATCH) {
-    batches.push(acknowledgements.slice(index, index + MAX_EVENTS_PER_BATCH));
-  }
-  return batches;
+  if (acknowledgements.length === 0) return [];
+  const cursorIndex = afterEventId === null
+    ? -1
+    : acknowledgements.findIndex(item => item.eventId === afterEventId);
+  const start = cursorIndex < 0 || cursorIndex === acknowledgements.length - 1
+    ? 0
+    : cursorIndex + 1;
+  return acknowledgements.slice(start, start + MAX_EVENTS_PER_BATCH);
 }
 
 export function RollInboxDriver() {
@@ -60,6 +64,7 @@ export function RollInboxDriver() {
   const stateRef = useRef<GameState>(game);
   stateRef.current = game;
   const running = useRef(false);
+  const acknowledgementCursor = useRef<string | null>(null);
   const [, relayRevision] = useState(0);
 
   useEffect(() => relaySync.subscribe(() => relayRevision((value) => value + 1)), []);
@@ -80,8 +85,9 @@ export function RollInboxDriver() {
         }
       }
 
-      for (const batch of buildAcknowledgementBatches(store.list())) {
-        if (!await fateEventRelay.acknowledge(batch)) break;
+      const batch = nextAcknowledgementBatch(store.list(), acknowledgementCursor.current);
+      if (batch.length > 0 && await fateEventRelay.acknowledge(batch)) {
+        acknowledgementCursor.current = batch.at(-1)!.eventId;
       }
     } finally {
       running.current = false;
