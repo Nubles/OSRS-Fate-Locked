@@ -155,7 +155,6 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
   };
 
   const handleTaskToggle = (task: DiaryTask, e: React.MouseEvent) => {
-      e.stopPropagation();
       const eligibility = evaluateDiaryTaskEligibility(task, unlocks, gameModeId);
       const attestation = requestManualAttestation(
         task.description,
@@ -347,133 +346,118 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                             || task.regions?.length || task.oneOf?.length || task.combatLevel
                             || task.allQuests || task.anySkillLevel,
                           );
+                          const skillRequirements = Object.entries(task.skills ?? {});
+                          const unmetSkillRequirements = skillRequirements.filter(([skill, level]) =>
+                            !meetsSkillRequirement(unlocks, skill, level as number),
+                          );
+                          const regionRequirements = (task.regions ?? []).map((region) => ({
+                            region,
+                            chunk: chunkForPlace(region),
+                          }));
+                          const hasRequirementActions = unmetSkillRequirements.length > 0
+                            || regionRequirements.length > 0;
+                          const completionLabel = task.description
+                            ? `Complete diary task: ${task.description}`
+                            : 'Complete diary task';
                           
                           if (searchTerm && !task.description.toLowerCase().includes(searchTerm.toLowerCase()) && !diary.id.toLowerCase().includes(searchTerm.toLowerCase())) return null;
 
                           return (
-                              <button 
-                                key={task.id}
+                            <div
+                              key={task.id}
+                              data-diary-task-row={task.id}
+                              className={`w-full flex flex-wrap items-start gap-2 p-2 rounded group ${(isCompleted || isTaskDone) ? 'cursor-default opacity-70' : 'hover:bg-white/5'}`}
+                            >
+                              <button
                                 onClick={(e) => handleTaskToggle(task, e)}
                                 disabled={isCompleted || isTaskDone}
-                                className={`w-full flex items-start gap-3 p-2 rounded text-left group ${(isCompleted || isTaskDone) ? 'cursor-default opacity-70' : 'hover:bg-white/5 cursor-pointer'}`}
+                                aria-label={completionLabel}
+                                className={`min-w-0 flex-1 flex items-start gap-3 text-left ${(isCompleted || isTaskDone) ? 'cursor-default' : 'cursor-pointer'}`}
                               >
-                                  <div className={`mt-0.5 ${isTaskDone ? 'text-green-400' : 'text-gray-600 group-hover:text-gray-400'}`}>
-                                      {isTaskDone ? <CheckSquare size={14} /> : <Square size={14} />}
-                                  </div>
-                                  <div className="flex-1">
-                                      <div className="flex items-center justify-between gap-2">
-                                          <span className={`text-xs ${isTaskDone ? 'text-gray-400 line-through' : 'text-gray-300'}`}>{task.description}</span>
-                                          <a 
-                                            href={getDiaryWikiLink(task.tierId)}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-gray-500 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
-                                            onClick={(e) => e.stopPropagation()}
-                                            title="Open Wiki"
-                                          >
-                                            <ExternalLink size={10} />
-                                          </a>
-                                      </div>
-                                      
-                                      {/* Requirement chips. Met chips render in dim
-                                          gray so failing ones (red) stand out as the
-                                          actual blockers. */}
-                                      {hasReqs && !isTaskDone && (
-                                          <div className="flex flex-wrap gap-1.5 mt-1.5">
-                                              {task.skills && Object.entries(task.skills).map(([skill, level]) => {
-                                                  const current = effectiveSkillLevel(unlocks, skill);
-                                                  const met = meetsSkillRequirement(unlocks, skill, level as number);
-                                                  if (met) {
-                                                      return (
-                                                          <span key={skill} className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-white/5 text-gray-500 bg-black/30">
-                                                              <BookOpen size={8} /> {skill} {level as number}
-                                                          </span>
-                                                      );
-                                                  }
-                                                  return (
-                                                      <button
-                                                          key={skill}
-                                                          onClick={(e) => {
-                                                              e.stopPropagation();
-                                                              setSkillPopover({
-                                                                  skill,
-                                                                  requiredLevel: level as number,
-                                                                  currentLevel: current,
-                                                                  anchorRect: e.currentTarget.getBoundingClientRect(),
-                                                              });
-                                                          }}
-                                                          className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-red-500/30 text-red-400 bg-red-900/10 hover:bg-red-900/20 hover:border-red-400/40 transition-colors cursor-pointer"
-                                                          title={`Training guide: ${skill}`}
-                                                      >
-                                                          <BookOpen size={8} /> {skill} {level as number} <TrendingUp size={7} className="opacity-60" />
-                                                      </button>
-                                                  );
-                                              })}
-                                              {task.items?.map(item => (
-                                                <span key={item} className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-white/5 text-gray-500 bg-black/30">
-                                                  <BookOpen size={8} /> {item}
-                                                </span>
-                                              ))}
-                                              {task.quests && task.quests.map(q => {
-                                                  const met = unlocks.quests.includes(q);
-                                                  const cls = met
-                                                      ? 'border-white/5 text-gray-500 bg-black/30'
-                                                      : 'border-red-500/30 text-red-400 bg-red-900/10';
-                                                  return (
-                                                      <span key={q} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${cls}`}>
-                                                          <BookOpen size={8} /> {q}
-                                                      </span>
-                                                  );
-                                              })}
-                                              {task.regions && task.regions.map(r => {
-                                                  const isUnlocked = isAreaReachable(r, unlocks, gameModeId);
-                                                  const cls = isUnlocked
-                                                      ? 'border-white/5 text-gray-500 bg-black/30 hover:bg-white/5'
-                                                      : 'border-red-500/30 text-red-400 bg-red-900/10 hover:bg-red-900/20';
-                                                  const chunk = chunkForPlace(r);
-                                                  // Where the task is done — click to jump the map there.
-                                                  return (
-                                                      <button
-                                                          key={r}
-                                                          onClick={(e) => { e.stopPropagation(); if (chunk) showChunkOnMap(chunk.cx, chunk.cy); }}
-                                                          disabled={!chunk}
-                                                          title={chunk ? `Show ${r} on the map` : r}
-                                                          className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 transition-colors ${cls} ${chunk ? 'cursor-pointer' : 'cursor-default'}`}
-                                                      >
-                                                          <MapPin size={8} /> {r}
-                                                      </button>
-                                                  );
-                                              })}
-                                              {alternativeLabel && (
-                                                <span className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${
-                                                  taskEligibility.blockers.some(blocker => blocker.kind === 'alternative')
-                                                    ? 'border-red-500/30 text-red-400 bg-red-900/10'
-                                                    : 'border-white/5 text-gray-500 bg-black/30'
-                                                }`}>
-                                                  <BookOpen size={8} /> One of: {alternativeLabel}
-                                                </span>
-                                              )}
-                                              {[
-                                                task.combatLevel ? `Combat level ${task.combatLevel}` : undefined,
-                                                task.allQuests ? 'All quests' : undefined,
-                                                task.anySkillLevel ? `Any skill ${task.anySkillLevel}` : undefined,
-                                              ].filter((label): label is string => Boolean(label)).map(label => {
-                                                const met = !taskEligibility.blockers.some(
-                                                  blocker => blocker.label === label,
-                                                );
-                                                return (
-                                                  <span
-                                                    key={label}
-                                                    className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${met
-                                                      ? 'border-white/5 text-gray-500 bg-black/30'
-                                                      : 'border-red-500/30 text-red-400 bg-red-900/10'}`}
-                                                  ><BookOpen size={8} /> {label}</span>
-                                                );
-                                              })}
-                                          </div>
+                                <div className={`mt-0.5 ${isTaskDone ? 'text-green-400' : 'text-gray-600 group-hover:text-gray-400'}`}>
+                                  {isTaskDone ? <CheckSquare size={14} /> : <Square size={14} />}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <span className={`text-xs ${isTaskDone ? 'text-gray-400 line-through' : 'text-gray-300'}`}>{task.description}</span>
+                                  {hasReqs && !isTaskDone && (
+                                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                      {skillRequirements.filter(([skill, level]) => meetsSkillRequirement(unlocks, skill, level as number)).map(([skill, level]) => (
+                                        <span key={skill} className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-white/5 text-gray-500 bg-black/30">
+                                          <BookOpen size={8} /> {skill} {level as number}
+                                        </span>
+                                      ))}
+                                      {task.items?.map(item => (
+                                        <span key={item} className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-white/5 text-gray-500 bg-black/30">
+                                          <BookOpen size={8} /> {item}
+                                        </span>
+                                      ))}
+                                      {task.quests?.map(q => {
+                                        const met = unlocks.quests.includes(q);
+                                        return (
+                                          <span key={q} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${met ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}>
+                                            <BookOpen size={8} /> {q}
+                                          </span>
+                                        );
+                                      })}
+                                      {alternativeLabel && (
+                                        <span className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${taskEligibility.blockers.some(blocker => blocker.kind === 'alternative') ? 'border-red-500/30 text-red-400 bg-red-900/10' : 'border-white/5 text-gray-500 bg-black/30'}`}>
+                                          <BookOpen size={8} /> One of: {alternativeLabel}
+                                        </span>
                                       )}
-                                  </div>
+                                      {[task.combatLevel ? `Combat level ${task.combatLevel}` : undefined, task.allQuests ? 'All quests' : undefined, task.anySkillLevel ? `Any skill ${task.anySkillLevel}` : undefined].filter((label): label is string => Boolean(label)).map(label => {
+                                        const met = !taskEligibility.blockers.some(blocker => blocker.label === label);
+                                        return <span key={label} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${met ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}><BookOpen size={8} /> {label}</span>;
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
                               </button>
+
+                              <a
+                                href={getDiaryWikiLink(task.tierId)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={`Open Wiki for diary task: ${task.description}`}
+                                className="shrink-0 text-gray-500 hover:text-white transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                title="Open Wiki"
+                              >
+                                <ExternalLink size={10} />
+                              </a>
+
+                              {hasRequirementActions && !isTaskDone && (
+                                <div className="basis-full flex flex-wrap gap-1.5">
+                                  {unmetSkillRequirements.map(([skill, level]) => {
+                                    const current = effectiveSkillLevel(unlocks, skill);
+                                    return (
+                                      <button
+                                        key={skill}
+                                        onClick={(e) => setSkillPopover({ skill, requiredLevel: level as number, currentLevel: current, anchorRect: e.currentTarget.getBoundingClientRect() })}
+                                        className="text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 border-red-500/30 text-red-400 bg-red-900/10 hover:bg-red-900/20 hover:border-red-400/40 transition-colors cursor-pointer"
+                                        title={`Training guide: ${skill}`}
+                                      >
+                                        <BookOpen size={8} /> {skill} {level as number} <TrendingUp size={7} className="opacity-60" />
+                                      </button>
+                                    );
+                                  })}
+                                  {regionRequirements.map(({ region, chunk }) => {
+                                    const isUnlocked = isAreaReachable(region, unlocks, gameModeId);
+                                    const cls = isUnlocked ? 'border-white/5 text-gray-500 bg-black/30 hover:bg-white/5' : 'border-red-500/30 text-red-400 bg-red-900/10 hover:bg-red-900/20';
+                                    return (
+                                      <button
+                                        key={region}
+                                        onClick={() => { if (chunk) showChunkOnMap(chunk.cx, chunk.cy); }}
+                                        disabled={!chunk}
+                                        title={chunk ? `Show ${region} on the map` : region}
+                                        aria-label={chunk ? `Show ${region} on the map` : `${region} is unavailable on the map`}
+                                        className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 transition-colors ${cls} ${chunk ? 'cursor-pointer' : 'cursor-default'}`}
+                                      >
+                                        <MapPin size={8} /> {region}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
                           );
                       })}
                   </div>
