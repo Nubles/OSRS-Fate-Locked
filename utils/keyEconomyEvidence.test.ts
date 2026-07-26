@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { LogEntry } from '../types';
 import {
@@ -30,6 +31,27 @@ const validInput: KeyEconomyEvidenceInput = {
   observedHours: 12,
   appVersion: 'test-build',
 };
+
+describe('key economy evidence protocol', () => {
+  it('publishes the fixed privacy and sample gate', () => {
+    const doc = readFileSync(
+      new URL('../docs/key-economy-evidence.md', import.meta.url),
+      'utf8',
+    );
+
+    for (const phrase of [
+      'at least 10 independent runs',
+      'at least 500 scoreable attempts',
+      'three materially different source categories',
+      'median keys/hour',
+      'interquartile range',
+      'exact timestamps',
+      'Nothing is uploaded automatically',
+    ]) {
+      expect(doc).toContain(phrase);
+    }
+});
+  });
 
 describe('stageForCompletion', () => {
   it.each([
