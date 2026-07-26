@@ -379,12 +379,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   // that item, filtered and highlighted via the existing search machinery.
   useEffect(() => {
     const onNav = (e: Event) => {
-      const { target = '', query } = (e as CustomEvent<{ target?: string; query?: string }>).detail ?? {};
+      const {
+        target = '',
+        query,
+        activityCategory: requestedActivityCategory,
+      } = (e as CustomEvent<{
+        target?: string;
+        query?: string;
+        activityCategory?: string;
+      }>).detail ?? {};
       if (target.startsWith('tab:')) {
         // "tab:JOURNAL/QUESTS" also selects a Journal sub-tab — without this a
         // quest jump would land on whichever sub-tab the player last had open.
         const [tab, subTab] = target.slice(4).split('/');
         setActiveTab(tab);
+        if (requestedActivityCategory && tab === 'ACTIVITIES') {
+          setActivityCategory(requestedActivityCategory);
+        }
+        if (tab === 'WORLD') setWorldView('LIST');
         if (subTab && tab === 'JOURNAL') setJournalSubTab(subTab as 'QUESTS' | 'DIARIES' | 'CA' | 'DOABLE');
         if (query) setSearchQuery(query);
         return;

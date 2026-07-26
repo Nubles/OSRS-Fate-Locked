@@ -11,6 +11,7 @@ import { wikiService } from '../services/WikiService';
 import { showToast } from '../utils/toast';
 import { Sparkles, Dices, HelpCircle, Dna, Lock, Sprout, TrendingUp, AlertTriangle, Check, Key } from 'lucide-react';
 import { COMBAT_POWERS_DESCRIPTION, COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
+import { openDashboardPool } from '../utils/dashboardPoolNavigation';
 import { ALL_CHUNK_KEYS, chunkLabel } from '../utils/chunkAdjacency';
 
 // --- Inner Components ---
@@ -57,6 +58,7 @@ interface SpendCardProps {
   icon?: any;
   iconSrc?: string;
   onClick: () => void;
+  onViewPool: () => void;
   priceDisplay?: string;
   index?: number;
   animate?: boolean;
@@ -79,8 +81,8 @@ const OSRS_GACHA_ICONS = {
   BANKS: 'https://oldschool.runescape.wiki/images/Bank_icon.png',
 };
 
-const SpendCard: React.FC<SpendCardProps> = ({
-  type, label, subLabel, unlocked, total, disabled, keysAvailable, complete, icon: Icon, iconSrc, onClick, priceDisplay = "1", index = 0, animate = false,
+export const SpendCard: React.FC<SpendCardProps> = ({
+  type, label, subLabel, unlocked, total, disabled, keysAvailable, complete, icon: Icon, iconSrc, onClick, onViewPool, priceDisplay = "1", index = 0, animate = false,
 }) => {
   const a = ACCENTS[type] ?? DEFAULT_ACCENT;
   const isClickable = !disabled && keysAvailable && !complete;
@@ -89,11 +91,16 @@ const SpendCard: React.FC<SpendCardProps> = ({
   const dim = isLocked ? 'opacity-30' : 'opacity-100';
 
   return (
-    <button
-      onClick={onClick}
-      disabled={!isClickable}
+    <div
       style={animate ? { animationDelay: `${index * 30}ms` } : undefined}
-      className={`relative overflow-hidden rounded-lg border-2 w-full text-left group flex flex-col p-2.5 h-full min-h-[104px] transition-all duration-200 ${animate ? 'animate-fade-in-up' : ''} active:scale-[0.98]
+      className={`h-full ${animate ? 'animate-fade-in-up' : ''}`}
+    >
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={!isClickable}
+        aria-label={`Roll ${label}`}
+        className={`relative overflow-hidden rounded-lg border-2 w-full text-left group flex flex-col p-2.5 min-h-[104px] transition-all duration-200 active:scale-[0.98]
         ${isClickable
           ? `bg-[#1f1c17] border-[#3a352c] ${a.hoverBorder} ${a.hoverShadow} hover:-translate-y-1`
           : complete
@@ -147,7 +154,15 @@ const SpendCard: React.FC<SpendCardProps> = ({
                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600 font-mono">Need Keys</span>
            </div>
       )}
-    </button>
+      </button>
+      <button
+        type="button"
+        onClick={onViewPool}
+        className="mt-1.5 w-full text-[9px] font-bold uppercase tracking-wider text-gray-400 hover:text-white"
+      >
+        View pool
+      </button>
+    </div>
   );
 };
 
@@ -382,6 +397,7 @@ export const GachaSection: React.FC = () => {
             disabled={!c.can}
             keysAvailable={keys > 0}
             complete={!c.can}
+            onViewPool={() => openDashboardPool(c.type)}
             iconSrc={c.iconSrc}
             icon={c.icon}
             onClick={() => handleUnlock(c.type)}
