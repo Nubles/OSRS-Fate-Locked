@@ -3,7 +3,7 @@ import { SKILLS_LIST } from '../constants';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { DIARY_DATA } from '../data/diaryData';
 import { QUEST_DATA } from '../data/questData';
-import { selectJournalNextBestActions } from './JournalNextBest';
+import { journalNextBestQuestAction, selectJournalNextBestActions } from './JournalNextBest';
 
 const pryingTimesUnlocks = () => ({
   equipment: {},
@@ -44,9 +44,9 @@ describe('Journal next-best diary readiness', () => {
     );
   });
 
-  it('keeps manually pending quests and diary tiers out of the ready count', () => {
-    const prying = selectJournalNextBestActions(pryingTimesUnlocks())
-      .find(action => action.id === 'Prying Times');
+  it('classifies Prying Times as close while its Sailing task needs confirmation', () => {
+    const prying = journalNextBestQuestAction(
+      QUEST_DATA['Prying Times'], pryingTimesUnlocks());
 
     expect(prying).toEqual(expect.objectContaining({
       unmet: 1,
@@ -54,19 +54,26 @@ describe('Journal next-best diary readiness', () => {
     }));
   });
 
+  it('caps the ready-or-close feed at eight actions', () => {
+    expect(selectJournalNextBestActions(pryingTimesUnlocks())).toHaveLength(8);
+  });
+
   it('shows Varrock Hard as close while Kudos needs confirmation', () => {
-    const action = selectJournalNextBestActions({
+    const actions = selectJournalNextBestActions({
       ...pryingTimesUnlocks(),
       regions: ['Varrock'],
-      quests: [],
+      quests: Object.keys(QUEST_DATA),
+      diaries: Object.keys(DIARY_DATA).filter(diary => diary !== 'Varrock Hard'),
       completedTasks: ALL_DIARY_TASKS
         .filter(task => task.tierId !== 'Varrock Hard' || task.id !== 'var_hard_2')
         .map(task => task.id),
-    }).find(action => action.id === 'Varrock Hard');
+    });
 
-    expect(action).toEqual(expect.objectContaining({
-      unmet: 1,
-      firstBlocker: 'Confirm: 153 Varrock Museum Kudos',
-    }));
+    expect(actions).toEqual([
+      expect.objectContaining({
+        unmet: 1,
+        firstBlocker: 'Confirm: 153 Varrock Museum Kudos',
+      }),
+    ]);
   });
 });

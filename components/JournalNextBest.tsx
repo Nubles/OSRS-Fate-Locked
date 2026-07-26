@@ -162,6 +162,7 @@ export const selectJournalNextBestActions = (
       a.unmet - b.unmet ||
       a.diffRank - b.diffRank ||
       a.name.localeCompare(b.name))
+    .slice(0, 8);
 };
 
 /**
