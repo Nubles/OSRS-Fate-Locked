@@ -223,6 +223,15 @@ class ChunkContentService {
     return this.promise;
   }
 
+  allChunkCoords(): { cx: number; cy: number }[] {
+    return Object.keys(this.doc?.chunks ?? {})
+      .map((id) => {
+        const value = Number(id);
+        return { cx: Math.floor(value / 256), cy: value % 256 };
+      })
+      .sort((left, right) => left.cx - right.cx || left.cy - right.cy);
+  }
+
   contentFor(cx: number, cy: number): ChunkContent | null {
     const e = this.doc?.chunks[String(cx * 256 + cy)];
     return e ? decode(e) : null;

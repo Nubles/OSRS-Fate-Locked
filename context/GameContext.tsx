@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef } from 'react';
-import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState } from '../types';
+import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState, type DetectedEventIdentity, type DetectedProgress, type GameEventMeta as DetectedGameEventMeta, type RollIntent } from '../types';
 import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST } from '../data/items';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from '../config/rules';
 import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
@@ -25,8 +25,9 @@ import {
   type BackupWriteResult,
   type ImportResult,
 } from '../utils/gamePersistence';
-import { CURRENT_SAVE_VERSION, parseAndMigrateSave } from '../utils/saveSchema';
+import { CURRENT_SAVE_VERSION, parseAndMigrateSave, validateAndMigrateSave } from '../utils/saveSchema';
 import { showToast } from '../utils/toast';
+import { normalizeAccountName } from '../services/fateEventProtocol';
 import {
   canEarnDiaryTier,
   diaryTaskCompletionDecision,
@@ -70,6 +71,28 @@ const generateId = (): string => {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 11)}`;
 };
 
+type RunIdRandomSource = {
+  randomUUID?: () => string;
+  getRandomValues?: (bytes: Uint8Array) => Uint8Array;
+};
+
+const uuidFromBytes = (bytes: Uint8Array): string => {
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+};
+
+const newRunId = (source: RunIdRandomSource | undefined = globalThis.crypto): string => {
+  if (source?.randomUUID) return source.randomUUID();
+  const bytes = new Uint8Array(16);
+  if (source?.getRandomValues) source.getRandomValues(bytes);
+  else for (let index = 0; index < bytes.length; index++) bytes[index] = Math.floor(Math.random() * 256);
+  return uuidFromBytes(bytes);
+};
+
+export const newRunIdForTest = (source: RunIdRandomSource): string => newRunId(source);
+
 const completionFailure = (reason: string): CompletionResult => {
   showToast(reason);
   return { ok: false, reason };
@@ -80,7 +103,7 @@ type UnlockEventMeta = { item: string; cost: number; category?: TableType };
 type RitualEventMeta = { type: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE' | 'GAMBIT' | 'CARTOGRAPHER'; won?: boolean; chunk?: string };
 type LevelUpEventMeta = { skill: string; level: number; totalLevel: number; chaosKeyAwarded: boolean };
 
-type GameEventMeta = RollEventMeta | UnlockEventMeta | RitualEventMeta | LevelUpEventMeta;
+type GameEventMeta = (RollEventMeta & DetectedGameEventMeta) | UnlockEventMeta | RitualEventMeta | LevelUpEventMeta;
 
 type GameEvent = {
   id: string;
@@ -92,7 +115,13 @@ type GameEvent = {
 
 interface GameContextType extends GameState {
   lastEvent: GameEvent | null;
-  rollForKey: (source: string, threshold: number, x?: number, y?: number) => void;
+  rollForKey: (source: string, threshold: number, x?: number, y?: number, meta?: DetectedGameEventMeta) => void;
+  acceptDetectedEvent: (
+    progress: DetectedProgress,
+    intent: RollIntent,
+    meta: DetectedGameEventMeta,
+    expected: DetectedEventIdentity,
+  ) => boolean;
   unlockContent: (table: TableType, item: string, costType: 'key' | 'specialKey' | 'chaosKey', cost: number) => void;
   performRitual: (type: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE') => void;
   performGambit: () => void;
@@ -170,6 +199,8 @@ const getInitialUnlocks = (): UnlockState => ({
 
 export const initialState: GameState = {
   version: CURRENT_SAVE_VERSION,
+  runId: newRunId(),
+  runRevision: 0,
   keys: 3,
   specialKeys: 0,
   chaosKeys: 0,
@@ -187,7 +218,31 @@ export const initialState: GameState = {
   loadout: {},
 };
 
+const createFreshState = (): GameState => ({
+  ...initialState,
+  unlocks: getInitialUnlocks(),
+  history: [],
+  pinnedGoals: [],
+  userNotes: {},
+  loadout: {},
+  runId: newRunId(),
+  runRevision: 0,
+});
+
 // --- Reducer ---
+interface PreparedRollResult {
+  success: boolean;
+  omni: boolean;
+  pity: boolean;
+  roll: number;
+  baseThreshold: number;
+  threshold: number;
+  source: string;
+  x?: number;
+  y?: number;
+  meta?: DetectedGameEventMeta;
+}
+
 export type Action =
   | { type: 'LOAD_SAVE'; payload: GameState }
   | { type: 'RESET' }
@@ -196,20 +251,16 @@ export type Action =
   | { type: 'TOGGLE_REVEAL_ALL' }
   | { type: 'SET_SEED'; payload: string }
   | { type: 'COMPLETE_ONBOARDING' }
+  | { type: 'ROLL_RESULT'; payload: PreparedRollResult }
   | {
-    type: 'ROLL_RESULT';
+    type: 'ACCEPT_DETECTED_EVENT';
     payload: {
-      success: boolean;
-      omni: boolean;
-      pity: boolean;
-      roll: number;
-      baseThreshold: number;
-      threshold: number;
-      source: string;
-      x?: number;
-      y?: number;
+      progress: DetectedProgress;
+      rollResult: PreparedRollResult;
+      expected: DetectedEventIdentity;
     };
   }
+  | { type: 'SYNC_DETECTED_PROGRESS'; payload: DetectedProgress }
   | { type: 'UNLOCK'; payload: { table: TableType; item: string; costType: 'key' | 'specialKey' | 'chaosKey'; cost: number } }
   | { type: 'RITUAL_LUCK' }
   | { type: 'RITUAL_GREED' }
@@ -250,6 +301,7 @@ export const prepareKeyRollAction = (
   nextDice: DiceRoller,
   x?: number,
   y?: number,
+  meta?: DetectedGameEventMeta,
 ): RollResultAction => {
   const mode = resolveModeRules(state.gameModeId, state.customMode);
   let successBonus = 0;
@@ -289,8 +341,36 @@ export const prepareKeyRollAction = (
 
   return {
     type: 'ROLL_RESULT',
-    payload: { success, omni, pity, roll, baseThreshold, threshold: effectiveThreshold, source, x, y },
+    payload: { success, omni, pity, roll, baseThreshold, threshold: effectiveThreshold, source, x, y, meta },
   };
+};
+
+export const detectedEventIdentityMatches = (
+  state: Pick<GameState, 'runId' | 'runRevision' | 'linkedAccount'>,
+  expected: DetectedEventIdentity,
+): boolean => Boolean(state.linkedAccount)
+  && state.runId === expected.runId
+  && state.runRevision === expected.runRevision
+  && normalizeAccountName(state.linkedAccount!) === normalizeAccountName(expected.account);
+
+export const prepareDetectedEventAcceptanceAction = (
+  state: GameState,
+  progress: DetectedProgress,
+  intent: RollIntent,
+  nextDice: DiceRoller,
+  meta: DetectedGameEventMeta,
+  expected: DetectedEventIdentity,
+): Extract<TransitionAction, { type: 'ACCEPT_DETECTED_EVENT' }> => {
+  const rollResult = prepareKeyRollAction(
+    state,
+    intent.source,
+    intent.threshold,
+    nextDice,
+    undefined,
+    undefined,
+    meta,
+  ).payload;
+  return { type: 'ACCEPT_DETECTED_EVENT', payload: { progress, rollResult, expected } };
 };
 
 export const prepareCATaskCompletionActions = (
@@ -425,7 +505,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       return { ...action.payload, lastEvent: null };
 
     case 'RESET':
-      return { ...initialState, lastEvent: null };
+      return { ...createFreshState(), lastEvent: null };
 
     case 'TOGGLE_ANIMATIONS':
       return { ...state, animationsEnabled: !state.animationsEnabled };
@@ -456,8 +536,50 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       return { ...state, rngSeed: action.payload || undefined };
     }
 
+    case 'ACCEPT_DETECTED_EVENT': {
+      if (!detectedEventIdentityMatches(state, action.payload.expected)) return state;
+      const progressed = rawReducer(state, {
+        type: 'SYNC_DETECTED_PROGRESS',
+        payload: action.payload.progress,
+      });
+      return rawReducer(progressed, {
+        type: 'ROLL_RESULT',
+        payload: action.payload.rollResult,
+      });
+    }
+    case 'SYNC_DETECTED_PROGRESS': {
+      const progress = action.payload;
+      if (progress.kind === 'NONE') return state;
+      if (progress.kind === 'SKILL_LEVEL') {
+        const current = state.unlocks.levels[progress.skill] ?? 1;
+        if (progress.level <= current) return state;
+        return { ...state, unlocks: { ...state.unlocks, levels: { ...state.unlocks.levels, [progress.skill]: progress.level } } };
+      }
+      if (progress.kind === 'QUEST') {
+        if (state.unlocks.quests.includes(progress.questId)) return state;
+        return { ...state, unlocks: { ...state.unlocks, quests: [...state.unlocks.quests, progress.questId] } };
+      }
+      if (progress.kind === 'CA_TASK') {
+        if (state.unlocks.completedTasks.includes(progress.taskId)) return state;
+        return { ...state, unlocks: { ...state.unlocks, completedTasks: [...state.unlocks.completedTasks, progress.taskId] } };
+      }
+      if (progress.kind === 'DIARY_TASK') {
+        if (state.unlocks.completedTasks.includes(progress.taskId)) return state;
+        return {
+          ...state,
+          unlocks: {
+            ...state.unlocks,
+            completedTasks: [...state.unlocks.completedTasks, progress.taskId],
+          },
+        };
+      }
+      const current = state.unlocks.collectionLog[progress.itemId] ?? 0;
+      if (current >= 1) return state;
+      return { ...state, unlocks: { ...state.unlocks, collectionLog: { ...state.unlocks.collectionLog, [progress.itemId]: 1 } } };
+    }
+
     case 'ROLL_RESULT': {
-      const { success, omni, pity, roll, baseThreshold, threshold, source, x, y } = action.payload;
+      const { success, omni, pity, roll, baseThreshold, threshold, source, x, y, meta } = action.payload;
       const rollText = formatKeyRollValue(roll);
       const thresholdsMatch = baseThreshold === threshold;
       const thresholdText = formatKeyPercent(threshold);
@@ -483,14 +605,14 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
              type: 'ROLL_OMNI',
              message: 'LEGENDARY DROP! You found an Omni-Key!',
              details: `Critical Success! Rolled ${rollText} vs ${comparisonChanceText}.`,
-             meta: { roll, baseThreshold, threshold, source, fatePointsEarned: 0 },
+             meta: { roll, baseThreshold, threshold, source, fatePointsEarned: 0, ...meta },
              result: 'SUCCESS',
              source,
              rollValue: roll,
              baseThreshold,
              threshold
           });
-          newState.lastEvent = { id: generateId(), type: 'ROLL_OMNI', x, y, meta: { roll, baseThreshold, threshold } };
+          newState.lastEvent = { id: generateId(), type: 'ROLL_OMNI', x, y, meta: { roll, baseThreshold, threshold, ...meta } };
         } else {
           const amount = isGreed ? 2 : 1;
           newState.keys += amount;
@@ -501,14 +623,14 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
              type: 'ROLL_SUCCESS',
              message: `Key Found!${isGreed ? ' (Doubled)' : ''}`,
              details: `Rolled ${rollText} (≤ ${comparisonChanceText}).`,
-             meta: { roll, baseThreshold, threshold, source, fatePointsEarned: 0 },
+             meta: { roll, baseThreshold, threshold, source, fatePointsEarned: 0, ...meta },
              result: 'SUCCESS',
              source,
              rollValue: roll,
              baseThreshold,
              threshold
           });
-          newState.lastEvent = { id: generateId(), type: 'ROLL_SUCCESS', x, y, meta: { roll, baseThreshold, threshold } };
+          newState.lastEvent = { id: generateId(), type: 'ROLL_SUCCESS', x, y, meta: { roll, baseThreshold, threshold, ...meta } };
         }
         newState.fatePoints = 0;
       } else {
@@ -521,14 +643,14 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
                 type: 'PITY',
                 message: 'MAX FATE REACHED! Pity Key granted.',
                 details: `Rolled ${rollText} at ${inlineChanceText}, but Fate intervened.`,
-                meta: { roll, baseThreshold, threshold, source, fatePointsEarned: 1 },
+                meta: { roll, baseThreshold, threshold, source, fatePointsEarned: 1, ...meta },
                 result: 'SUCCESS',
                 source,
                 rollValue: roll,
                 baseThreshold,
                 threshold
             });
-            newState.lastEvent = { id: generateId(), type: 'ROLL_PITY', x, y, meta: { roll, baseThreshold, threshold } };
+            newState.lastEvent = { id: generateId(), type: 'ROLL_PITY', x, y, meta: { roll, baseThreshold, threshold, ...meta } };
          } else {
             newState.fatePoints += 1;
             // Greed's consolation: half the (scaled) ritual cost flows back,
@@ -545,14 +667,14 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
                 type: 'ROLL_FAIL',
                 message: `No Key.${isGreed ? ` (Greed refunded ${greedRefund} Fate)` : ''}`,
                 details: `Rolled ${rollText} (> ${comparisonChanceText}). Fate: ${newState.fatePoints}/${resolveModeRules(state.gameModeId, state.customMode).pityThreshold}`,
-                meta: { roll, baseThreshold, threshold, source, fatePointsEarned: 1 + greedRefund },
+                meta: { roll, baseThreshold, threshold, source, fatePointsEarned: 1 + greedRefund, ...meta },
                 result: 'FAIL',
                 source,
                 rollValue: roll,
                 baseThreshold,
                 threshold
             });
-            newState.lastEvent = { id: generateId(), type: 'ROLL_FAIL', x, y, meta: { roll, baseThreshold, threshold } };
+            newState.lastEvent = { id: generateId(), type: 'ROLL_FAIL', x, y, meta: { roll, baseThreshold, threshold, ...meta } };
          }
       }
 
@@ -873,9 +995,13 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 
 export const gameReducer = (state: GameState & { lastEvent: GameEvent | null }, action: Action): GameState & { lastEvent: GameEvent | null } => {
   if (action.type === 'COMMIT_STATE') return action.payload;
-  const next = rawReducer(state, action);
-  if (next.history === state.history) return next;
-  return { ...next, history: chainAppendedHistory(state.history, next.history) };
+  const rawNext = rawReducer(state, action);
+  if (rawNext === state) return state;
+  const next = rawNext.history === state.history
+    ? rawNext
+    : { ...rawNext, history: chainAppendedHistory(state.history, rawNext.history) };
+  if (action.type === 'LOAD_SAVE' || action.type === 'RESET') return next;
+  return { ...next, runRevision: state.runRevision + 1 };
 };
 
 /**
@@ -883,6 +1009,14 @@ export const gameReducer = (state: GameState & { lastEvent: GameEvent | null }, 
  * history hashes. React later receives this exact state instead of replaying
  * the transition against a potentially stale render snapshot.
  */
+export const migrateSaveForTest = (save: Partial<GameState>): GameState => {
+  const result = validateAndMigrateSave(save, createFreshState());
+  if (result.ok === false) throw new Error(result.message);
+  return result.state;
+};
+
+export const gameReducerForTest = gameReducer;
+
 export const prepareGameTransition = (
   state: GameState & { lastEvent: GameEvent | null },
   action: TransitionAction,
@@ -906,7 +1040,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
       try {
         const saved = localStorage.getItem(key);
         if (saved) {
-          const parsed = parseAndMigrateSave(saved, initialState);
+          const parsed = parseAndMigrateSave(saved, createFreshState());
           if (parsed.ok === true) return { ...parsed.state, lastEvent: null };
           initialLoadWarningRef.current = 'Saved run data was invalid, so a fresh run was started.';
           console.warn('Stored save failed validation', parsed.code, parsed.path ?? 'root');
@@ -915,7 +1049,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
         initialLoadWarningRef.current = 'Saved run data could not be read, so a fresh run was started.';
         console.warn('Stored save could not be read');
       }
-      return { ...initialState, lastEvent: null };
+      return { ...createFreshState(), lastEvent: null };
     },
   );
   const saveTimeoutRef = useRef<number | null>(null);
@@ -991,9 +1125,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
   const setSeed = useCallback((seed: string) =>
     commitAction({ type: 'SET_SEED', payload: seed }), [commitAction]);
 
-  const rollForKey = useCallback((source: string, threshold: number, x?: number, y?: number) => {
+  const rollForKey = useCallback((source: string, threshold: number, x?: number, y?: number, meta?: DetectedGameEventMeta) => {
     const current = stateRef.current;
-    commitAction(prepareKeyRollAction(current, source, threshold, nextDice, x, y));
+    commitAction(prepareKeyRollAction(current, source, threshold, nextDice, x, y, meta));
   }, [commitAction, nextDice]);
 
   const unlockContent = useCallback((table: TableType, item: string, costType: 'key' | 'specialKey' | 'chaosKey', cost: number) => {
@@ -1029,6 +1163,29 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     commitAction(prepared.levelAction);
     commitAction(prepared.rewardAction);
   }, [commitAction, nextDice, nextFloat]);
+
+  const acceptDetectedEvent = useCallback((
+    progress: DetectedProgress,
+    intent: RollIntent,
+    meta: DetectedGameEventMeta,
+    expected: DetectedEventIdentity,
+  ): boolean => {
+    const current = stateRef.current;
+    if (!detectedEventIdentityMatches(current, expected)) return false;
+    try {
+      const action = prepareDetectedEventAcceptanceAction(
+        current,
+        progress,
+        intent,
+        nextDice,
+        meta,
+        expected,
+      );
+      return commitAction(action) !== current;
+    } catch {
+      return false;
+    }
+  }, [commitAction, nextDice]);
 
   const logCollectionItem = useCallback((itemId: number) => {
     commitAction({ type: 'LOG_ITEM', payload: itemId });
@@ -1071,7 +1228,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
   const importSave = useCallback((data: unknown): ImportResult =>
     applyPreparedReplacement(data, {
       current: stateRef.current,
-      defaults: initialState,
+      defaults: createFreshState(),
       writeBackup: current => pushBackup(storageKey, current, 'Before import'),
       writeReplacement,
       replace: replaceState,
@@ -1087,7 +1244,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     if (data === null) {
       return { ok: false, code: 'invalid_json', message: 'Backup was not found.' };
     }
-    return applyValidatedReplacement(parseAndMigrateSave(data, initialState), {
+    return applyValidatedReplacement(parseAndMigrateSave(data, createFreshState()), {
       current: stateRef.current,
       writeBackup: current => pushBackup(storageKey, current, 'Before restore'),
       writeReplacement,
@@ -1204,6 +1361,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
   const contextValue = useMemo(() => ({
     ...state,
     rollForKey,
+    acceptDetectedEvent,
     unlockContent,
     performRitual,
     performGambit,
@@ -1238,6 +1396,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
   }), [
     state,
     rollForKey,
+    acceptDetectedEvent,
     unlockContent,
     performRitual,
     performGambit,

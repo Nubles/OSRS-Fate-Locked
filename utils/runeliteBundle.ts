@@ -1,12 +1,27 @@
 /**
- * Build the RuneLite plugin bundle (the v3 shape the map's RL-export button
+ * Build the RuneLite plugin bundle (the v4 shape the map's RL-export button
  * produces) from the current run. Uses the shipped chunk baselines (a player
  * isn't authoring, so map drafts don't apply).
  */
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
+import { MOBILITY_LIST } from '../data/items';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
+import type { RuneliteRulesManifest } from './runeliteRulesManifest';
 import { getFreeAreas } from './freeAreas';
+
+export const RULES_VERSION = '1';
+export const CONTENT_VERSION = 1;
+export const DETECTOR_CONTRACT_VERSION = 1;
+
+export interface RuneliteBundleIdentity {
+  runId: string;
+  runRevision: number;
+  gameModeId: string;
+  rulesVersion: string;
+  contentVersion: number;
+  detectorContractVersion: number;
+}
 
 export interface RuneliteRunState {
   keys: number;
@@ -31,22 +46,63 @@ export async function buildRuneliteBundle(
   unlockedBanks?: string[],
   /** Whether the run locks banks individually (rules.bankLocks). */
   bankLocks?: boolean,
+  /** Stable run and detector contract identity for durable event delivery. */
+  identity?: RuneliteBundleIdentity,
+  /** Canonical rules snapshot consumed by v4-aware plugins. */
+  rules?: RuneliteRulesManifest,
+  /** Mobility subset for a typed fallback; undefined means no authority. */
+  fallbackMobility?: readonly string[],
 ) {
   // Dynamic import keeps the ~53 kB chunk-content dataset out of the eager
   // startup bundle — it's only ever needed here, at export time, and every
   // caller is already async.
   const { CHUNK_CONTENT_LITE } = await import('../data/chunkContentLite');
+  const exportedAt = rules?.exportedAt ?? new Date().toISOString();
+  const fallbackRules: RuneliteRulesManifest = {
+    rulesVersion: identity?.rulesVersion ?? RULES_VERSION,
+    contentVersion: identity?.contentVersion ?? CONTENT_VERSION,
+    detectorContractVersion: identity?.detectorContractVersion ?? DETECTOR_CONTRACT_VERSION,
+    runId: identity?.runId ?? 'legacy-export',
+    runRevision: identity?.runRevision ?? 0,
+    account: state.linkedAccount?.trim() || null,
+    gameModeId: identity?.gameModeId ?? (unlockedChunks !== undefined ? 'chunked' : 'vanilla'),
+    exportedAt,
+    bankLocks: !!bankLocks,
+    knownMobility: fallbackMobility === undefined
+      ? []
+      : [...MOBILITY_LIST].sort(),
+    unlocks: {
+      regions: [...unlockedRegions].sort(),
+      chunks: [...(unlockedChunks ?? [])].sort(),
+      skills: {},
+      levels: {},
+      equipment: { ...(state.equipment ?? {}) },
+      banks: [...(unlockedBanks ?? [])].sort(),
+      merchants: [],
+      bosses: [],
+      minigames: [],
+      mobility: [...(fallbackMobility ?? [])].sort(),
+      arcana: [],
+      guilds: [],
+      farming: [],
+      slayer: [],
+      quests: [],
+    },
+    itemRules: {},
+    detectorPolicies: [],
+    chunks: {},
+  };
   return {
-    version: 3,
-    exportedAt: new Date().toISOString(),
+    version: 4,
+    rules: rules ?? fallbackRules,
+    ...(identity ?? {}),
+    exportedAt,
     chunkOffset: { cx: 0, cy: 0 },
     chunks: REGION_CHUNKS,
     subAreaChunks: SUB_AREA_CHUNKS,
     regionGroups: { Misthalin: MISTHALIN_AREAS, ...REGION_GROUPS },
     unlockedRegions,
-    // The mode's free-start baseline (full Misthalin / Lumbridge-only / none).
-    // Without it the plugin used to assume full Misthalin, over-unlocking
-    // narrower starts in-game. Older plugins ignore the field.
+    // Preserve the current mode's explicit free-area baseline for legacy plugin paths.
     freeAreas: getFreeAreas(),
     // Chunked mode's unlock state — individual map-region chunks the player
     // has rolled, keyed "cx,cy" (matches unlocks.chunks). Included (even as

@@ -43,8 +43,12 @@ const baseUnlocks = (): UnlockState => ({
   collectionLog: {},
 });
 
+const VALID_RUN_ID = '123e4567-e89b-42d3-a456-426614174000';
+
 const defaultsFixture = (): GameState => ({
   version: CURRENT_SAVE_VERSION,
+  runId: VALID_RUN_ID,
+  runRevision: 0,
   keys: 3,
   specialKeys: 0,
   chaosKeys: 0,
@@ -67,6 +71,8 @@ const defaultsFixture = (): GameState => ({
 
 const fullStateFixture = (): GameState => ({
   version: CURRENT_SAVE_VERSION,
+  runId: VALID_RUN_ID,
+  runRevision: 0,
   keys: 17,
   specialKeys: 2,
   chaosKeys: 3,
@@ -340,6 +346,10 @@ describe('save schema structural rejection', () => {
     const accepted = expectAccepted(validateAndMigrateSave(input, defaultsFixture()));
     expect(accepted.state.keys).toBe(7);
     expect(Object.getPrototypeOf(accepted.state)).toBe(Object.prototype);
+  });
+
+  it('rejects a supplied non-RFC 4122 v4 run id', () => {
+    expectRejected(candidate({ runId: 'fixture-run' }), 'invalid_field', 'runId');
   });
 
   it('rejects unknown top-level and unlock fields', () => {

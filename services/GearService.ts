@@ -197,6 +197,14 @@ class GearService {
   tierOf(id: number): number {
     return this.tierMap.get(id) ?? 1;
   }
+  /** Exact item-id to tier and canonical slot for Strict Mode decisions. */
+  itemRuleExport(): Record<string, { tier: number; slot: string }> {
+    const out: Record<string, { tier: number; slot: string }> = {};
+    for (const [id, item] of this.byIdMap) {
+      out[id] = { tier: this.tierMap.get(id) ?? 1, slot: item.slot };
+    }
+    return out;
+  }
   /** Full item-id → tier map (string-keyed) for the RuneLite bundle export. */
   tierExport(): Record<string, number> {
     const out: Record<string, number> = {};
