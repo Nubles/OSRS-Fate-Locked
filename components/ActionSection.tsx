@@ -11,6 +11,7 @@ import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { EARN_METHODS, LEVEL_ROLL_MAX } from '../config/economy';
 import { BRUTUS_BOSS_NAME, effectiveVanillaClueRate, vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
 import { BossKeyProgress, ClueKeyProgress } from './VanillaKeyProgress';
+import { VANILLA_BOSS_SEARCH_PLACEHOLDER, vanillaBossSearchEmptyMessage } from './vanillaBossSearchCopy';
 
 // OSRS Wiki Icon URLs
 const WIKI_IMG = 'https://oldschool.runescape.wiki/images/';
@@ -570,7 +571,7 @@ export const ActionSection: React.FC = () => {
             <input
               value={bossQuery}
               onChange={(e) => setBossQuery(e.target.value)}
-              placeholder="Search bossesâ€¦"
+              placeholder={VANILLA_BOSS_SEARCH_PLACEHOLDER}
               className="w-full mb-3 bg-[#161616] border border-white/10 rounded-lg px-3 py-2 text-xs text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-white/25"
             />
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
@@ -598,7 +599,7 @@ export const ActionSection: React.FC = () => {
                 })}
             </div>
             {vanillaBosses.filter(name => name.toLowerCase().includes(bossQuery.trim().toLowerCase())).length === 0 && (
-              <div className="text-center text-gray-600 text-xs py-6">No bosses match â€œ{bossQuery}â€.</div>
+              <div className="text-center text-gray-600 text-xs py-6">{vanillaBossSearchEmptyMessage(bossQuery)}</div>
             )}
           </div>
         )}
