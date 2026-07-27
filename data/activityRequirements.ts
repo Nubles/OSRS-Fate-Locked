@@ -14,6 +14,12 @@ export interface ActivityReq {
   skills?: Record<string, number>;
   /** Required quests (canonical OSRS names; match QUEST_DATA where possible). */
   quests?: string[];
+  /** Named areas that must be reachable in the selected game mode. */
+  requiredAreas?: string[];
+  /** Minimum effective combat level. */
+  combatLevel?: number;
+  /** External progress a player must explicitly confirm after machine gates pass. */
+  manualRequirements?: string[];
   /** Any gate that isn't a skill/quest. */
   note?: string;
 }
@@ -22,7 +28,11 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   // ===== Bosses & Raids =====================================================
   'Tombs of Amascut': { quests: ['Beneath Cursed Sands'] },
   'The Gauntlet': { quests: ['Song of the Elves'] },
-  'Nex': { note: 'God Wars Dungeon access + a Frozen key from all four generals.' },
+  'Nex': {
+    manualRequirements: [
+      'A complete Frozen key from all four God Wars Dungeon generals',
+    ],
+  },
   'General Graardor': { note: 'God Wars Dungeon — 40 kill-count to enter the Bandos chamber.' },
   'Commander Zilyana': { note: 'God Wars Dungeon — 40 kill-count to enter the Saradomin chamber.' },
   "Kree'arra": { note: 'God Wars Dungeon — 40 kill-count to enter the Armadyl chamber.' },
@@ -74,7 +84,10 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Ranging Guild': { skills: { Ranged: 40 } },
   "Rogues' Den": { note: 'Free entry; the safecracking maze needs 50 Thieving & 50 Agility.' },
   "Servants' Guild": { note: 'Hire household servants (Construction).' },
-  "Warriors' Guild": { note: '99 Attack or Strength, or 130 combined.' },
+  "Warriors' Guild": {
+    requiredAreas: ["Warriors' Guild"],
+    note: '99 Attack or Strength, or 130 combined.',
+  },
   "Wizards' Guild": { skills: { Magic: 66 } },
   'Woodcutting Guild': { skills: { Woodcutting: 60 } },
 
@@ -93,7 +106,13 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Mage Arena II': { skills: { Magic: 75 }, note: 'Imbued god capes & stronger god spells.' },
 
   // ===== Minigames (hard gates only; many minigames have no requirement) =====
-  'Pest Control': { note: 'Combat level 40+ (Novice boat).' },
+  'Pest Control': {
+    requiredAreas: ["Void Knights' Outpost"],
+    combatLevel: 40,
+    note: 'Novice boat.',
+  },
+  'Barbarian Assault': { requiredAreas: ['Barbarian Outpost'] },
+  'Castle Wars': { requiredAreas: ['Castle Wars'] },
   'Soul Wars': { note: 'Combat level 40+.' },
   'Mage Arena': { skills: { Magic: 60 } },
   'Guardians of the Rift': { skills: { Runecraft: 27 }, quests: ['Temple of the Eye'] },
@@ -112,7 +131,10 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Vale Totems': { skills: { Fletching: 20 }, note: 'Vale Totems miniquest (Auburn Valley).' },
   'Barracuda Trials': { skills: { Sailing: 30 }, note: 'Trials at 30 / 55 / 72 Sailing; the 72 trial needs Regicide.' },
   'Blast Furnace': { note: '60 Smithing to use free; under 60, pay a fee.' },
-  'Nightmare Zone': { note: 'Requires several quests completed (for the dream bosses).' },
+  'Nightmare Zone': {
+    requiredAreas: ['Yanille'],
+    note: 'Requires several quests completed for the dream bosses.',
+  },
   "Sorceress's Garden": { note: 'Gardens gated by Thieving level (1 / 27 / 45 / 65 / 85).' },
   'Stealing Artefacts': { note: 'Piscarilius access (Kourend & Kebos).' },
   'Mess': { note: "Hosidius kitchen — a cook's duties in Great Kourend." },
@@ -168,7 +190,17 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'TzHaar Fight Cave': { note: 'Mor Ul Rek — high-level combat.' },
 
   // ---- Minigames with a gate -------------------------------------------------
-  'Fishing Trawler': { skills: { Fishing: 15 }, note: 'Port Khazard.' },
+  'Fishing Trawler': {
+    skills: { Fishing: 15 },
+    requiredAreas: ['Port Khazard'],
+  },
+  'Gnome Ball': { requiredAreas: ['Tree Gnome Stronghold'] },
+  'Gnome Restaurant': { requiredAreas: ['Tree Gnome Stronghold'] },
+  'TzHaar Fight Pit': {
+    requiredAreas: ['Mor Ul Rek (TzHaar City)'],
+  },
+  'Burthorpe Games Room': { requiredAreas: ['Burthorpe'] },
+  'Mage Training Arena': { requiredAreas: ['Mage Training Arena'] },
   'Mahogany Homes': { note: 'Construction (contracts tiered 1 / 20 / 50 / 70).' },
   'Forestry': { note: 'Woodcutting (Forestry events).' },
   'Tears of Guthix': { quests: ['Tears of Guthix'] },

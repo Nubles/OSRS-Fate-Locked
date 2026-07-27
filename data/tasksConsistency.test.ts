@@ -3,10 +3,11 @@ import { ALL_CA_TASKS } from './caTasks';
 import { ALL_DIARY_TASKS } from './diaryTasks';
 import { CA_DATA } from './caData';
 import { DIARY_DATA } from './diaryData';
-import { QUEST_DATA } from './questData';
+import { QUEST_DATA, QuestLocationRequirement } from './questData';
 import {
-  SKILLS_LIST, REGION_GROUPS, MISTHALIN_AREAS,
+  GUILDS_LIST, SKILLS_LIST, REGION_GROUPS, MISTHALIN_AREAS,
 } from './items';
+import { ALL_CHUNK_KEYS, chunkKey } from '../utils/chunkAdjacency';
 
 /**
  * Integrity guards for the per-task lists that drive CALog / DiaryLog.
@@ -26,17 +27,60 @@ const VALID_QUEST = new Set<string>([
   ...Object.values(QUEST_DATA).map((q) => q.name),
 ]);
 const VALID_SKILL = new Set(SKILLS_LIST);
-// Non-skill gates that appear in a quest's `skills` map and are resolved
+// Non-skill gate that remains in a quest's `skills` map and is resolved
 // specially by journalStatus / goalPlanner (computed, not a trainable skill).
-const META_SKILL = new Set(['Quest Points', 'Combat']);
+const META_SKILL = new Set(['Quest Points']);
 const VALID_REGION = new Set<string>([
   'Misthalin', ...MISTHALIN_AREAS, ...Object.keys(REGION_GROUPS),
   ...Object.values(REGION_GROUPS).flat(),
 ]);
+const VALID_GUILD = new Set(GUILDS_LIST);
+const VALID_CHUNK = new Set(ALL_CHUNK_KEYS);
 const VALID_CA_TIER = new Set(Object.keys(CA_DATA));
 const VALID_DIARY_TIER = new Set(Object.keys(DIARY_DATA));
 
 describe('CA task list references resolve', () => {
+  it('pins the current 646-task Combat Achievement baseline', () => {
+    const counts = Object.fromEntries(
+      Object.keys(CA_DATA).map(tier => [
+        tier,
+        ALL_CA_TASKS.filter(task => task.tierId === tier).length,
+      ]),
+    );
+
+    expect(ALL_CA_TASKS).toHaveLength(646);
+    expect(counts).toEqual({
+      Easy: 41,
+      Medium: 60,
+      Hard: 86,
+      Elite: 164,
+      Master: 174,
+      Grandmaster: 121,
+    });
+  });
+
+  it('pins the current Maggot King rows and updated Gauntlet times', () => {
+    const byId = new Map(ALL_CA_TASKS.map(task => [task.id, task]));
+    expect(
+      Array.from({ length: 9 }, (_, index) => {
+        const task = byId.get(`ca_${637 + index}`);
+        return [task?.id, task?.tierId, task?.name];
+      }),
+    ).toEqual([
+      ['ca_637', 'Hard', 'Maggot Squasher'],
+      ['ca_638', 'Elite', 'Maggot Exterminator'],
+      ['ca_639', 'Master', 'Camping the King'],
+      ['ca_640', 'Master', 'Maggot King Speed Chaser'],
+      ['ca_641', 'Elite', 'Trying to fit in'],
+      ['ca_642', 'Master', 'King-sized clobbering'],
+      ['ca_643', 'Master', 'Digging in'],
+      ['ca_644', 'Master', 'Cordoned Off'],
+      ['ca_645', 'Master', 'Perfect Maggot King'],
+    ]);
+    expect(byId.get('ca_107')?.description).toContain('7 minutes and 5 seconds');
+    expect(byId.get('ca_117')?.description).toContain('4 minutes and 45 seconds');
+  });
+
   it('every CA task tierId matches CA_DATA', () => {
     const bad = ALL_CA_TASKS.filter((t) => !VALID_CA_TIER.has(t.tierId))
       .map((t) => `${t.id} -> "${t.tierId}"`);
@@ -52,6 +96,11 @@ describe('CA task list references resolve', () => {
 });
 
 describe('Diary task list references resolve', () => {
+  it('pins the current 492-task Diary baseline', () => {
+    expect(ALL_DIARY_TASKS).toHaveLength(492);
+    expect(new Set(ALL_DIARY_TASKS.map(task => task.id)).size).toBe(492);
+  });
+
   it('every diary task tierId matches DIARY_DATA', () => {
     const bad = (ALL_DIARY_TASKS as any[]).filter((t) => !VALID_DIARY_TIER.has(t.tierId))
       .map((t) => `${t.id} -> "${t.tierId}"`);
@@ -91,6 +140,10 @@ describe('Diary task list references resolve', () => {
 
 describe('Quest data integrity', () => {
   const keys = new Set(Object.keys(QUEST_DATA));
+  const allLocations = (q: (typeof QUEST_DATA)[string]): QuestLocationRequirement[] => [
+    ...(q.locations ?? []),
+    ...(q.oneOf ?? []).flatMap(option => option.locations ?? []),
+  ];
 
   it('every prereq references a real quest', () => {
     const bad: string[] = [];
@@ -112,6 +165,46 @@ describe('Quest data integrity', () => {
     for (const [k, q] of Object.entries(QUEST_DATA))
       for (const r of q.regions || []) if (!VALID_REGION.has(r)) bad.push(`${k} -> "${r}"`);
     expect(bad, 'quests with unknown region tags').toEqual([]);
+  });
+
+  it('every quest location uses known standard areas and canonical chunks', () => {
+    const badAreas: string[] = [];
+    const badChunks: string[] = [];
+    for (const [questId, quest] of Object.entries(QUEST_DATA)) {
+      for (const location of allLocations(quest)) {
+        if (location.standardAreas.length === 0) badAreas.push(questId + ' -> ' + location.id + ' -> no standard areas');
+        if (location.chunkOptions.length === 0) badChunks.push(questId + ' -> ' + location.id + ' -> no chunk coordinates');
+        for (const area of location.standardAreas) {
+          if (!VALID_REGION.has(area)) badAreas.push(questId + ' -> ' + location.id + ' -> "' + area + '"');
+        }
+        for (const coord of location.chunkOptions) {
+          const key = chunkKey(coord);
+          if (!VALID_CHUNK.has(key)) badChunks.push(questId + ' -> ' + location.id + ' -> ' + key);
+        }
+      }
+    }
+    expect(badAreas, 'quest locations with unknown standard areas').toEqual([]);
+    expect(badChunks, 'quest locations with unknown chunk coordinates').toEqual([]);
+  });
+
+  it('every alternative access option references known areas, guilds, and locations', () => {
+    const bad: string[] = [];
+    for (const [questId, quest] of Object.entries(QUEST_DATA)) {
+      for (const option of quest.oneOf ?? []) {
+        for (const region of option.regions ?? []) {
+          if (!VALID_REGION.has(region)) bad.push(questId + ' -> region "' + region + '"');
+        }
+        for (const guild of option.guilds ?? []) {
+          if (!VALID_GUILD.has(guild)) bad.push(questId + ' -> guild "' + guild + '"');
+        }
+        for (const location of option.locations ?? []) {
+          if (location.standardAreas.length === 0 || location.chunkOptions.length === 0) {
+            bad.push(questId + ' -> incomplete location "' + location.id + '"');
+          }
+        }
+      }
+    }
+    expect(bad, 'quests with invalid alternative access references').toEqual([]);
   });
 
   it('every quest id matches its key', () => {

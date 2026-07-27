@@ -1,3 +1,4 @@
+import { QuestData } from '../data/questData';
 /**
  * Quest *chunk-access* doability.
  *
@@ -93,19 +94,32 @@ export function questChunkStatus(
 }
 
 export type DoabilityBucket = 'DONE' | 'DOABLE' | 'REQS' | 'STRANDED' | 'LOCKED' | 'NO_DATA';
+export const hasCanonicalQuestLocationEvidence = (quest: QuestData): boolean =>
+  quest.regions.length > 0
+  || (quest.locations?.length ?? 0) > 0
+  || (quest.oneOf?.some(option =>
+    (option.regions?.length ?? 0) > 0
+    || (option.guilds?.length ?? 0) > 0
+    || (option.locations?.length ?? 0) > 0
+  ) ?? false);
+
 
 /**
  * Combine chunk access with the journal's requirement status into one verdict.
  * @param completed   quest already done
- * @param reqsMet     getQuestStatus(...) === 'AVAILABLE'
+ * @param reqsMet     canonical eligibility.eligible
  */
 export function doabilityBucket(
   completed: boolean,
   reqsMet: boolean,
   chunk: QuestChunkStatus | null,
+  hasCanonicalLocationEvidence = false,
 ): DoabilityBucket {
   if (completed) return 'DONE';
-  if (!chunk || chunk.chunkCount === 0) return reqsMet ? 'DOABLE' : 'REQS';
+  if (!chunk || chunk.chunkCount === 0) {
+    if (!hasCanonicalLocationEvidence) return 'NO_DATA';
+    return reqsMet ? 'DOABLE' : 'REQS';
+  }
   if (chunk.access === 'LOCKED') return 'LOCKED';
   if (chunk.access === 'STRANDED') return 'STRANDED';
   return reqsMet ? 'DOABLE' : 'REQS'; // all chunks reachable — only reqs can block now

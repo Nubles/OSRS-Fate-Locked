@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { ChevronDown, ScrollText, X } from 'lucide-react';
+import { CheckCircle2, ChevronDown, RefreshCw, ScrollText, Sparkles, X } from 'lucide-react';
 import type { ChangelogRelease, ChangelogSection } from '../data/changelog';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useFocusTrap } from '../hooks/useFocusTrap';
@@ -11,14 +11,17 @@ export interface ChangelogModalProps {
   returnFocusTarget?: HTMLElement | null;
 }
 
-const SECTION_ORDER: readonly ChangelogSection[] = ['added', 'changed', 'fixed', 'balance'];
-
-const SECTION_LABELS: Record<ChangelogSection, string> = {
-  added: 'Added',
-  changed: 'Changed',
-  fixed: 'Fixed',
-  balance: 'Balance',
-};
+const SECTION_META: Array<{
+  key: ChangelogSection;
+  label: string;
+  icon: typeof Sparkles;
+  color: string;
+}> = [
+  { key: 'added', label: 'Added', icon: Sparkles, color: 'text-amber-300' },
+  { key: 'changed', label: 'Changed', icon: RefreshCw, color: 'text-cyan-300' },
+  { key: 'fixed', label: 'Fixed', icon: CheckCircle2, color: 'text-emerald-300' },
+  { key: 'balance', label: 'Balance', icon: ScrollText, color: 'text-violet-300' },
+];
 
 const MONTH_NAMES = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -44,32 +47,39 @@ export const toggleExpandedRelease = (
   return next;
 };
 
-export const ChangelogModal: React.FC<ChangelogModalProps> = ({ releases, onClose, returnFocusTarget }) => {
+export const ChangelogModal: React.FC<ChangelogModalProps> = ({
+  releases,
+  onClose,
+  returnFocusTarget,
+}) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   const [expandedReleaseIds, setExpandedReleaseIds] = useState<Set<string>>(
     () => new Set(releases[0] ? [releases[0].id] : []),
   );
 
   useFocusTrap(dialogRef, true, returnFocusTarget);
-  useEscapeKey(onClose);
+  useEscapeKey(onClose, true);
 
   return (
-    <div
-      ref={dialogRef}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="whats-new-title"
-      tabIndex={-1}
-      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
-    >
-      <div className="flex w-full max-w-2xl max-h-[85vh] flex-col overflow-hidden rounded-xl border border-amber-500/25 bg-[#171717] shadow-2xl">
-        <div className="flex items-center gap-3 border-b border-white/10 bg-[#1e1e1e] p-4 shrink-0">
+    <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="whats-new-title"
+        aria-describedby="whats-new-summary"
+        tabIndex={-1}
+        className="flex w-full max-w-2xl max-h-[85vh] flex-col overflow-hidden rounded-xl border border-amber-500/25 bg-[#171717] shadow-2xl"
+      >
+        <header className="flex items-start gap-3 border-b border-white/10 bg-[#1e1e1e] p-4 shrink-0">
           <div className="rounded-lg border border-amber-500/20 bg-amber-950/30 p-2 text-amber-300">
             <ScrollText size={19} />
           </div>
           <div className="min-w-0 flex-1">
             <h2 id="whats-new-title" className="text-lg font-bold text-gray-100">What&apos;s New</h2>
-            <p className="text-xs text-gray-500">Release notes for Fate-Locked Ironman</p>
+            <p id="whats-new-summary" className="text-xs text-gray-500">
+              Release notes for Fate-Locked Ironman, newest first.
+            </p>
           </div>
           <button
             type="button"
@@ -79,7 +89,7 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ releases, onClos
           >
             <X size={18} aria-hidden="true" />
           </button>
-        </div>
+        </header>
 
         <div className="overflow-y-auto custom-scrollbar p-3 sm:p-4">
           <div className="space-y-2">
@@ -121,14 +131,15 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ releases, onClos
                   >
                     {expanded && (
                       <div className="space-y-4">
-                        {SECTION_ORDER.map((section) => {
-                          const notes = release.sections[section];
+                        {SECTION_META.map(({ key, label, icon: Icon, color }) => {
+                          const notes = release.sections[key];
                           if (!notes?.length) return null;
 
                           return (
-                            <div key={section}>
-                              <h4 className="text-[11px] font-bold uppercase tracking-widest text-amber-300">
-                                {SECTION_LABELS[section]}
+                            <div key={key}>
+                              <h4 className={`flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest ${color}`}>
+                                <Icon size={14} aria-hidden="true" />
+                                {label}
                               </h4>
                               <ul className="mt-1.5 list-disc space-y-1 pl-4 text-sm leading-relaxed text-gray-300 marker:text-amber-500/80">
                                 {notes.map((note) => <li key={note}>{note}</li>)}
@@ -144,7 +155,19 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ releases, onClos
             })}
           </div>
         </div>
+
+        <footer className="flex justify-end border-t border-white/10 bg-[#171717] p-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-bold text-black hover:bg-amber-500"
+          >
+            Got it
+          </button>
+        </footer>
       </div>
     </div>
   );
 };
+
+export default ChangelogModal;

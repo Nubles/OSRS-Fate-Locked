@@ -11,7 +11,7 @@
  * components/BackupNagBanner.tsx.
  */
 
-const SUFFIX = '__exportNag';
+import { profileExportNagKey } from './profileStorage';
 
 export const NAG_AFTER_MS = 7 * 24 * 60 * 60 * 1000; // 7 days since last export
 export const SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;    // dismiss hides it for 7 days
@@ -25,11 +25,9 @@ interface NagRecord {
   snoozeUntil: number;
 }
 
-const keyFor = (storageKey: string): string => storageKey + SUFFIX;
-
 export const readNagRecord = (storageKey: string): NagRecord => {
   try {
-    const parsed = JSON.parse(localStorage.getItem(keyFor(storageKey)) || '');
+    const parsed = JSON.parse(localStorage.getItem(profileExportNagKey(storageKey)) || '');
     return {
       lastExport: typeof parsed?.lastExport === 'number' ? parsed.lastExport : 0,
       snoozeUntil: typeof parsed?.snoozeUntil === 'number' ? parsed.snoozeUntil : 0,
@@ -41,7 +39,7 @@ export const readNagRecord = (storageKey: string): NagRecord => {
 
 const write = (storageKey: string, rec: NagRecord): void => {
   try {
-    localStorage.setItem(keyFor(storageKey), JSON.stringify(rec));
+    localStorage.setItem(profileExportNagKey(storageKey), JSON.stringify(rec));
   } catch {
     /* best-effort — never block the export itself */
   }

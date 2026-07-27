@@ -392,7 +392,7 @@ export const ActionSection: React.FC = () => {
     Math.max(1, Math.min(100, (DROP_RATES[source] ?? 0) + regionBonus));
 
   const handleRoll = (source: string, chance: number, e: React.MouseEvent, context?: KeyRollContext) => {
-    rollForKey(source, chance, e.clientX, e.clientY, context);
+    rollForKey(source, chance, e.clientX, e.clientY, undefined, context);
   };
 
   const isVanilla = gameModeId === 'vanilla';
@@ -675,7 +675,7 @@ export const ActionSection: React.FC = () => {
             label="Skill Rolling"
             accent="text-blue-500"
             desc={<>Click unlocked skills in the <span className="text-blue-200">Dashboard</span> to roll.</>}
-            rate={`Chance = Level / 5 (Max ${LEVEL_ROLL_MAX}%)`}
+            rate={`Chance = Level / 5 (up to ${LEVEL_ROLL_MAX.toFixed(1)}%)`}
             badge="bg-blue-900/20 border-blue-900/30 text-blue-400"
           />
           <InfoChip

@@ -97,6 +97,22 @@ class RelaySyncService {
     }
   }
 
+  /** POST to an app-owned structured sub-resource using the private session token. */
+  async postOwnedSubresource(path: string, body: Record<string, unknown>): Promise<boolean> {
+    if (!this.session) return false;
+    try {
+      const suffix = path.startsWith('/') ? path : `/${path}`;
+      const res = await fetch(`${this.base()}/r/${this.session.code}${suffix}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: this.session.token, ...body }),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
   /**
    * The plugin's last-import heartbeat: after each successful relay import it
    * POSTs {ts, version} to /state. Null until the plugin's first sync (404) or

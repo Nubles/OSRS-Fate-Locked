@@ -35,6 +35,17 @@ const releaseButton = (markup: string, id: string): string =>
   markup.match(new RegExp(`<button[^>]*id="changelog-release-toggle-${id}"[^>]*>`))?.[0] ?? '';
 
 describe('ChangelogModal initial render', () => {
+  it('renders a labelled modal with two accessible close controls', () => {
+    const markup = renderModal();
+
+    expect(markup).toContain('role="dialog"');
+    expect(markup).toContain('aria-modal="true"');
+    expect(markup).toContain('aria-labelledby="whats-new-title"');
+    expect(markup).toContain('aria-describedby="whats-new-summary"');
+    expect(markup).toContain('aria-label="Close What&#x27;s New"');
+    expect(markup).toContain('Got it');
+  });
+
   it('renders every release newest-first with stable expanded controls', () => {
     const markup = renderModal();
     const latestButton = releaseButton(markup, '2026-07-26-latest');

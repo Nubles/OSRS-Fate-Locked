@@ -31,7 +31,7 @@ describe('ReferenceModal Vanilla policy', () => {
     const drops = renderCodex('drops');
     const unlocks = renderCodex('unlocks');
 
-    expect(economy).toContain('114 finite boss safety-reserve Standard Keys');
+    expect(economy).toContain('116 finite boss safety-reserve Standard Keys');
     expect(drops).toContain('Brutus: 10% (1 key)');
     expect(drops).toContain('Low: 15% (1 key)');
     expect(drops).toContain('Mid: 30% → 15% (2 keys)');

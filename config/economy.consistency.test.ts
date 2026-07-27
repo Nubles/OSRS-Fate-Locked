@@ -10,6 +10,7 @@ import { BRUTUS_BOSS_NAME } from './vanillaKeyEconomy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { BOSSES_LIST } from '../data/items';
 import { describeVanillaRandomAccessPolicy, formatVanillaBossSchedule } from '../components/ReferenceModal';
+import { skillLevelKeyChance } from '../utils/keyRoll';
 
 /**
  * This is the anti-drift guarantee: the Codex / onboarding render from
@@ -44,7 +45,9 @@ describe('economy ↔ engine consistency', () => {
   it('represents Level Ups as the dynamic Level ÷ 5 curve', () => {
     const lvl = EARN_METHODS.find(m => m.category === 'Level Ups');
     expect(lvl?.dynamic).toBe(true);
-    expect(LEVEL_ROLL_MAX).toBe(Math.ceil(99 / 5));
+    expect(LEVEL_ROLL_MAX).toBe(19.8);
+    expect(LEVEL_ROLL_MAX).toBe(skillLevelKeyChance(99));
+    expect(lvl?.tiers[0].rateLabel).toBe('Level ÷ 5 (up to 19.8% at level 99)');
   });
 
   it('earnRange returns the min/max of a method’s fixed tiers', () => {
@@ -63,6 +66,15 @@ describe('economy ↔ engine consistency', () => {
     for (const t of SPEND_TABLES) expect(t.count, t.label).toBeGreaterThan(0);
   });
 
+  it('presents Arcana as Combat Powers without changing its type', () => {
+    const table = SPEND_TABLES.find(t => t.type === TableType.ARCANA);
+    expect(TableType.ARCANA).toBe('Arcana');
+    expect(table).toMatchObject({
+      label: 'Combat Powers',
+      blurb: 'Spellbooks, prayers, and special combat systems.',
+    });
+  });
+
   it('keeps tier caps aligned with the engine', () => {
     expect(SKILLS_TIER_CAP).toBe(10); // reducer bumpTier(..., 10)
     const equip = SPEND_TABLES.find(t => t.label === 'Equipment');
@@ -73,8 +85,9 @@ describe('economy ↔ engine consistency', () => {
     expect(RITUALS.map(r => r.id).sort()).toEqual(['CARTOGRAPHER', 'CHAOS', 'GAMBIT', 'GREED', 'LUCK', 'TRANSMUTE']);
     for (const r of RITUALS) expect((r.fateCost ?? 0) + (r.keyCost ?? 0)).toBeGreaterThan(0);
   });
+
   it('keeps the finite Vanilla boss reserve and every boss schedule aligned', () => {
-    expect(VANILLA_BOSS_STANDARD_KEY_TOTAL).toBe(114);
+    expect(VANILLA_BOSS_STANDARD_KEY_TOTAL).toBe(116);
     expect(BOSSES_LIST).not.toContain(BRUTUS_BOSS_NAME);
     for (const boss of BOSSES_LIST) expect(vanillaBossKeySchedule(boss).length).toBeGreaterThan(0);
   });
@@ -83,6 +96,7 @@ describe('economy ↔ engine consistency', () => {
     expect(formatVanillaBossSchedule('Raid', VANILLA_BOSS_KEY_RATES.raid)).toBe('Raid: 65% → 32.5% → 16.25% (3 keys)');
     expect(describeVanillaRandomAccessPolicy(VANILLA_RANDOM_ACCESS_POLICY)).toContain('Standard and Chaos random unlocks respect hard location access');
   });
+
   it('derives each Codex safety-valve sentence from policy decisions', () => {
     const policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY;
     const formatted = describeVanillaRandomAccessPolicy(policy);

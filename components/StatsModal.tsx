@@ -1,4 +1,5 @@
 
+import { lazyWithRetry } from '../utils/lazyRetry';
 import React, { useMemo, useState, useRef, lazy, Suspense } from 'react';
 import { useGame } from '../context/GameContext';
 import { SectionGuide } from './SectionGuide';
@@ -6,9 +7,13 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 import { X, TrendingUp, TrendingDown, Skull, Key, Shield, Activity, BarChart3, LineChart as LineChartIcon, PieChart, List, ArrowUpDown, ArrowUp, ArrowDown, Sparkles } from 'lucide-react';
 import { isRollEntry } from '../utils/logEntry';
 import { buildFateReport } from '../utils/fateReport';
+import { buildRollDistribution } from '../utils/rollDistribution';
+import { LogEntry } from '../types';
+import { completionPercent } from '../utils/completion';
+import { KeyEconomyEvidenceExport } from './KeyEconomyEvidenceExport';
 // Charts (recharts, ~300 KB) live in their own lazily-loaded chunk so opening
 // Stats to see the overview/breakdown/fate tabs doesn't pay the recharts tax.
-const StatsChartsView = lazy(() => import('./StatsChartsView'));
+const StatsChartsView = lazyWithRetry(() => import('./StatsChartsView'));
 
 interface StatsModalProps {
   onClose: () => void;
@@ -17,93 +22,85 @@ interface StatsModalProps {
 type Tab = 'overview' | 'charts' | 'breakdown' | 'fate';
 type SortKey = 'source' | 'attempts' | 'success' | 'actualRate' | 'expectedRate';
 
+export const buildStats = (history: LogEntry[]) => {
+  const rolls = history.filter(isRollEntry).sort((a, b) => a.timestamp - b.timestamp);
+  const totalRolls = rolls.length;
+  const actualSuccesses = rolls.filter(h => h.result === 'SUCCESS').length;
+  const pityKeys = history.filter(h => h.type === 'PITY').length;
+  const sourceStats: Record<string, { attempts: number; success: number; expected: number }> = {};
+
+  let cumulativeExpected = 0;
+  let cumulativeActual = 0;
+  const luckTrend = rolls.map((roll, i) => {
+    const prob = (roll.threshold || 0) / 100;
+    cumulativeExpected += prob;
+    if (roll.result === 'SUCCESS') cumulativeActual += 1;
+
+    const source = roll.source || 'Unknown';
+    if (!sourceStats[source]) {
+      sourceStats[source] = { attempts: 0, success: 0, expected: 0 };
+    }
+    sourceStats[source].attempts++;
+    sourceStats[source].expected += prob;
+    if (roll.result === 'SUCCESS') sourceStats[source].success++;
+
+    return {
+      index: i + 1,
+      luck: cumulativeActual - cumulativeExpected,
+      actual: cumulativeActual,
+      expected: cumulativeExpected,
+      isSuccess: roll.result === 'SUCCESS',
+    };
+  });
+
+  const expectedSuccesses = cumulativeExpected;
+  const luckScore = actualSuccesses - expectedSuccesses;
+  const luckPercent = expectedSuccesses > 0
+    ? ((actualSuccesses - expectedSuccesses) / expectedSuccesses) * 100
+    : 0;
+  const buckets = buildRollDistribution(rolls);
+
+  let maxDry = 0;
+  let currentDry = 0;
+  rolls.forEach(r => {
+    if (r.result === 'FAIL') currentDry++;
+    else {
+      if (currentDry > maxDry) maxDry = currentDry;
+      currentDry = 0;
+    }
+  });
+  if (currentDry > maxDry) maxDry = currentDry;
+
+  let activeDry = 0;
+  for (let i = rolls.length - 1; i >= 0; i--) {
+    if (rolls[i].result === 'FAIL') activeDry++;
+    else break;
+  }
+
+  return {
+    totalRolls,
+    actualSuccesses,
+    pityKeys,
+    expectedSuccesses,
+    luckScore,
+    luckPercent,
+    maxDry,
+    activeDry,
+    luckTrend,
+    buckets,
+    sourceStats,
+  };
+};
+
 export const StatsModal: React.FC<StatsModalProps> = ({ onClose }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
-  const { history } = useGame();
+  const { history, unlocks, gameModeId } = useGame();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'asc' | 'desc' }>({ key: 'attempts', direction: 'desc' });
   const fateReport = useMemo(() => buildFateReport(history), [history]);
 
-  const stats = useMemo(() => {
-    const rolls = history.filter(isRollEntry).sort((a, b) => a.timestamp - b.timestamp);
-    const totalRolls = rolls.length;
-    const actualSuccesses = rolls.filter(h => h.result === 'SUCCESS').length;
-    const pityKeys = history.filter(h => h.type === 'PITY').length;
-    
-    // Aggregate data for breakdown
-    const sourceStats: Record<string, { attempts: number; success: number; expected: number }> = {};
-    
-    let cumulativeExpected = 0;
-    let cumulativeActual = 0;
-    const luckTrend = rolls.map((roll, i) => {
-        const prob = (roll.threshold || 0) / 100;
-        cumulativeExpected += prob;
-        if (roll.result === 'SUCCESS') cumulativeActual += 1;
-        
-        // Populate Source Breakdown
-        if (!sourceStats[roll.source || 'Unknown']) {
-            sourceStats[roll.source || 'Unknown'] = { attempts: 0, success: 0, expected: 0 };
-        }
-        sourceStats[roll.source || 'Unknown'].attempts++;
-        sourceStats[roll.source || 'Unknown'].expected += prob;
-        if (roll.result === 'SUCCESS') sourceStats[roll.source || 'Unknown'].success++;
-
-        return {
-            index: i + 1,
-            luck: cumulativeActual - cumulativeExpected,
-            actual: cumulativeActual,
-            expected: cumulativeExpected,
-            isSuccess: roll.result === 'SUCCESS'
-        };
-    });
-
-    const expectedSuccesses = cumulativeExpected;
-    const luckScore = actualSuccesses - expectedSuccesses;
-    const luckPercent = expectedSuccesses > 0 ? ((actualSuccesses - expectedSuccesses) / expectedSuccesses) * 100 : 0;
-
-    // Roll Distribution (Buckets of 5)
-    const buckets = Array.from({ length: 20 }, (_, i) => ({ range: `${i * 5 + 1}-${(i + 1) * 5}`, count: 0, min: i * 5 + 1 }));
-    rolls.forEach(r => {
-        if (r.rollValue) {
-            const bucketIdx = Math.min(19, Math.floor((r.rollValue - 1) / 5));
-            buckets[bucketIdx].count++;
-        }
-    });
-
-    // Dry Streak Calc
-    let maxDry = 0;
-    let currentDry = 0;
-    rolls.forEach(r => {
-        if (r.result === 'FAIL') currentDry++;
-        else {
-            if (currentDry > maxDry) maxDry = currentDry;
-            currentDry = 0;
-        }
-    });
-    if (currentDry > maxDry) maxDry = currentDry;
-
-    // Active Dry Streak (reverse check)
-    let activeDry = 0;
-    for (let i = rolls.length - 1; i >= 0; i--) {
-        if (rolls[i].result === 'FAIL') activeDry++;
-        else break;
-    }
-
-    return {
-        totalRolls,
-        actualSuccesses,
-        pityKeys,
-        expectedSuccesses,
-        luckScore,
-        luckPercent,
-        maxDry,
-        activeDry,
-        luckTrend,
-        buckets,
-        sourceStats
-    };
-  }, [history]);
+  const stats = useMemo(() => buildStats(history), [history]);
 
   // Sorting Logic for Breakdown Tab
   const sortedBreakdown = useMemo(() => {
@@ -386,6 +383,12 @@ export const StatsModal: React.FC<StatsModalProps> = ({ onClose }) => {
                                     </tbody>
                                 </table>
                             </div>
+                            <KeyEconomyEvidenceExport
+                                history={history}
+                                gameMode={gameModeId ?? 'vanilla'}
+                                completionPercent={completionPercent(unlocks)}
+                                appVersion={__BUILD_ID__}
+                            />
                         </>
                     )}
                 </div>

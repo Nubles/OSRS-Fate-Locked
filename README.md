@@ -4,6 +4,8 @@ A companion tracker for the **Fate Locked Ironman** challenge mode in Old School
 
 **Live app:** https://nubles.github.io/OSRS-Fate-Locked/
 
+![Spending a Key: the gacha table rolls, Fate is altered, and the TzHaar Fight Cave is unlocked](docs/media/hero.gif)
+
 ## The concept
 
 You begin as a fresh Ironman with nothing: no skills past level 1, no equipment slots, no map regions, no transport. To progress you:
@@ -13,6 +15,15 @@ You begin as a fresh Ironman with nothing: no skills past level 1, no equipment 
 3. **Snowball** — each unlock opens up new tasks, which earn more Keys.
 
 Bad luck is cushioned by **Fate Points** (a pity timer) and the **Void Altar**, where Fate Points can be spent on rituals. Rare **Omni-Keys** let you pick an unlock directly; **Chaos Keys** unlock from any table at random.
+
+## Screenshots
+
+| | |
+|---|---|
+| ![Farm Keys — Slayer master roll cards next to the Character dashboard](docs/media/farm-keys.png) | ![Spend Keys — unlock tables alongside the interactive world region map](docs/media/region-map.png) |
+| *Farm Keys & the Character dashboard* | *Spend Keys & the world region map* |
+| ![Spend Keys tables next to the Equipment Lab](docs/media/spend-keys.png) | ![The Journal — quest, diary and combat-achievement tracking](docs/media/journal.png) |
+| *Unlock tables & the Equipment Lab* | *The Journal: quests, diaries & combat achievements* |
 
 ## Features
 
@@ -26,7 +37,8 @@ Bad luck is cushioned by **Fate Points** (a pity timer) and the **Void Altar**, 
 - **Integrity & verification** — a tamper-evident hash chain over the run history, a deterministic run ID, invariant replay, and exportable verified bundles, so a completed run can be shared and checked.
 - **Shareable run card & timelapse** — generate an image of your run, or play its history back as a narrated timelapse.
 - **Profiles** — multiple independent runs in one browser.
-- **RuneLite companion plugin** — see [`runelite-plugin/`](./runelite-plugin) for an in-game overlay of your authored chunks.
+- **RuneLite companion plugin** — marks locked content in-game, explains the current chunk, and can durably queue supported completions for the web Roll Inbox.
+- **Explicit-player Roll Inbox** — exact RuneLite detections are checked against the app's canonical rules and shown by category. Nothing rolls on detection, render, retry, or restart; the player always presses **Roll**.
 
 ## Tech stack
 
@@ -42,6 +54,10 @@ npm run dev
 ```
 
 The app runs at `http://localhost:5173`. All state is stored in the browser's `localStorage` — no backend, no API keys.
+
+Fate Analytics can export a voluntary local aggregate for the
+[key-economy evidence protocol](./docs/key-economy-evidence.md). Nothing is
+uploaded automatically.
 
 ## Other scripts
 
@@ -62,9 +78,18 @@ To enable it on a fresh fork: **Settings → Pages → Build and deployment → 
 
 - [`docs/RESOURCE_ENGINE.md`](./docs/RESOURCE_ENGINE.md) — the Resource Engine: data shape, the supply-chain analyzer, the three wiki-sourced generator scripts (`scripts/buildCraftables.mjs`, `scripts/buildPotions.mjs`, `scripts/buildSourceEnrichment.ts`), the enrichment merge pattern, the integrity-test contract, and the workflow for adding curated items.
 
-## RuneLite plugin
+## RuneLite plugin and Roll Inbox
 
-`runelite-plugin/` contains a Java RuneLite plugin that renders your authored Fate Locked chunks on the in-game world map and minimap, and warns when you enter a locked region. Build it with `./gradlew shadowJar` and sideload the JAR — see [`runelite-plugin/README.md`](./runelite-plugin/README.md).
+The companion [RuneLite plugin](https://github.com/Nubles/OSRS-Fate-Locked-Runelite)
+renders the tracker rules in-game, warns before locked actions, and—only when
+the player enables Online sync—queues supported completions for the app. Plugin
+source, installation instructions, builds, and releases live exclusively in
+the standalone repository. This web app remains responsible for exporting the
+rules bundle and operating the confirmation-first Roll Inbox.
+
+RuneLite detects and retries delivery; the app validates the run, account, revision, detector, and canonical rate. The event waits in **Sync & Roll → Roll Inbox** until the player chooses **Roll**, **Not eligible**, Review, or Dismiss. There is no Roll button in RuneLite and no background path to the dice engine.
+
+Online sync is a checkbox that defaults to off. Event/ack records expire after seven days; bundle and heartbeat records expire after 24 hours. See [the relay protocol](./docs/online-relay.md) for fields, endpoints, ownership, and privacy limits.
 
 ## Disclaimer
 

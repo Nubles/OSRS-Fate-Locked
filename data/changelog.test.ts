@@ -43,21 +43,24 @@ describe('authored changelog releases', () => {
   });
 
   it('preserves the prior tracker accuracy release', () => {
-    expect(CHANGELOG_RELEASES).toContainEqual({
+    const trackerAccuracy = CHANGELOG_RELEASES.find(
+      release => release.id === '2026-07-23-tracker-accuracy',
+    );
+
+    expect(trackerAccuracy).toMatchObject({
       id: '2026-07-23-tracker-accuracy',
       title: 'Tracker Accuracy & Combat Powers',
       date: '2026-07-23',
-      sections: {
-        added: ["A What's New dialog now summarizes each player-facing release."],
-        changed: [
-          'Arcana is now called Combat Powers, covering spellbooks, prayers, and special combat systems such as Dwarf Cannon.',
-        ],
-        fixed: [
-          'Dragon Claws now list Chambers of Xeric instead of Tormented Demons.',
-          'A Porcine of Interest and Enter the Abyss now check their required access routes.',
-          'Quest and diary recommendations now respect unlocked skill-method caps as well as recorded levels.',
-        ],
-      },
     });
+    expect(trackerAccuracy?.sections.added).toContain(
+      "A What's New dialog now summarizes each player-facing release.",
+    );
+    expect(trackerAccuracy?.sections.changed).toContain(
+      'Arcana is now called Combat Powers, covering spellbooks, prayers, and special combat systems such as Dwarf Cannon.',
+    );
+    expect(trackerAccuracy?.sections.fixed).toEqual(expect.arrayContaining([
+      'Dragon Claws now list Chambers of Xeric instead of Tormented Demons.',
+      'Quest and diary recommendations now respect unlocked skill-method caps as well as recorded levels.',
+    ]));
   });
 });

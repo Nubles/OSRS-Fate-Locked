@@ -229,14 +229,14 @@ export const GUIDES: Record<string, Guide> = {
   },
 };
 
-interface Props { id: string; className?: string }
+interface Props { id: string; className?: string; suspendModals?: boolean }
 
-export const SectionGuide: React.FC<Props> = ({ id, className }) => {
+export const SectionGuide: React.FC<Props> = ({ id, className, suspendModals = false }) => {
   const guide = GUIDES[id];
   const [open, setOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
-  useEscapeKey(() => setOpen(false), open);
+  useEscapeKey(() => setOpen(false), open && !suspendModals);
 
   useLayoutEffect(() => {
     if (!open || !btnRef.current) return;
@@ -260,7 +260,7 @@ export const SectionGuide: React.FC<Props> = ({ id, className }) => {
       >
         <HelpCircle size={14} />
       </button>
-      {open && pos && createPortal(
+      {!suspendModals && open && pos && createPortal(
         <>
           <div className="fixed inset-0 z-[9990]" onClick={() => setOpen(false)} />
           <div

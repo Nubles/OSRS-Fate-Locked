@@ -120,6 +120,7 @@ export const NO_HARD_LOCATION_GATE = new Set<string>([
   'Mimic', // no tracked named-area gate (casket-triggered encounter)
   'Phantom Muspah', // no tracked named-area gate (Ghorrock Dungeon)
   'Amoxliatl', // no tracked named-area gate (Ruins of Tapoyauik)
+  'Maggot King', // Vampyrium (The Blood Moon Rises) is not a tracked named area
 
   // Distributed, event, or untracked-content activities.
   'Shooting Stars', // no tracked named-area gate (world event)

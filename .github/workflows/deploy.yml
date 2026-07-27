@@ -2,13 +2,10 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main, master] # Triggers on push to main or master branch
-  workflow_dispatch:          # Allows manual runs from the Actions tab
+    branches: [main] # Deploy only reviewed changes on the default branch
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: "pages"
@@ -28,13 +25,16 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        # `npm install` (not `npm ci`) — it reconciles the lockfile on the fly
-        # rather than failing on strict sync, which keeps the build robust
-        # across npm versions on the runner.
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Run tests
         run: npm test
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Verify content
+        run: npm run content:verify
 
       - name: Build
         # VITE_BASE makes the bundle's asset paths match the GitHub Pages
@@ -52,6 +52,9 @@ jobs:
           path: ./dist
 
   deploy:
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

@@ -1,4 +1,5 @@
 
+import { lazyWithRetry } from '../utils/lazyRetry';
 import React, { useRef, useEffect, useState, useMemo, lazy, Suspense } from 'react';
 import { useGame } from '../context/GameContext';
 import { Scroll, Search, Filter, Dices, Lock, Unlock, Zap, TrendingUp, AlertCircle, CheckCircle2, XCircle, Sparkles, Skull, ArrowUp, ArrowDown, Film } from 'lucide-react';
@@ -7,9 +8,10 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import { LogEntry } from '../types';
 import { isRollEntry } from '../utils/logEntry';
 import { ModalFallback } from './LoadingFallback';
+import { formatKeyPercent, formatKeyRollValue } from '../utils/keyRoll';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 
-const TimelapseModal = lazy(() => import('./TimelapseModal').then(m => ({ default: m.TimelapseModal })));
+const TimelapseModal = lazyWithRetry(() => import('./TimelapseModal').then(m => ({ default: m.TimelapseModal })));
 
 type FilterType = 'ALL' | 'ROLLS' | 'UNLOCKS' | 'RITUALS' | 'PROGRESS';
 type SortOrder = 'ASC' | 'DESC';
@@ -86,7 +88,7 @@ const getLogStyle = (entry: LogEntry) => {
 };
 
 // --- Row Component ---
-const LogRow = ({ index, style, data }: ListChildComponentProps<{ entries: LogEntry[] }>) => {
+export const LogRow = ({ index, style, data }: ListChildComponentProps<{ entries: LogEntry[] }>) => {
   const entry = data.entries[index];
   const styles = getLogStyle(entry);
   const Icon = styles.icon;
@@ -96,6 +98,7 @@ const LogRow = ({ index, style, data }: ListChildComponentProps<{ entries: LogEn
   const isRoll = isRollEntry(entry);
   const rollVal = entry.rollValue;
   const threshold = entry.threshold;
+  const baseThreshold = entry.baseThreshold;
 
   return (
     <div style={style} className="px-2 py-1">
@@ -127,12 +130,20 @@ const LogRow = ({ index, style, data }: ListChildComponentProps<{ entries: LogEn
           {isRoll && rollVal !== undefined && threshold !== undefined && (
             <div className="flex items-center gap-2 bg-black/40 px-2 py-0.5 rounded border border-white/5 shrink-0">
                <span className={`text-[10px] font-mono font-bold ${rollVal <= threshold ? 'text-green-400' : 'text-red-400'}`}>
-                 {rollVal}
+                 {formatKeyRollValue(rollVal)}
                </span>
                <span className="text-[8px] text-gray-600">vs</span>
                <span className="text-[10px] font-mono text-gray-400">
-                 {threshold}
+                 {formatKeyPercent(threshold)}
                </span>
+               {baseThreshold !== undefined && baseThreshold !== threshold && (
+                 <span
+                   className="text-[8px] font-mono text-blue-300/70"
+                   title="Base chance before mode modifiers"
+                 >
+                   ({formatKeyPercent(baseThreshold)} base)
+                 </span>
+               )}
             </div>
           )}
         </div>

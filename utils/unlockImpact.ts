@@ -19,7 +19,7 @@
 
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
-import { getQuestStatus, getDiaryStatus } from './journalStatus';
+import { evaluateQuestEligibility, getDiaryStatus } from './journalStatus';
 
 export interface UnlockImpact {
   /** Quests LOCKED → AVAILABLE in one step. */
@@ -36,14 +36,61 @@ export interface UnlockImpact {
   cascadeScore: number;
   /**
    * Every quest id completed in the final cascade snapshot (base completions +
-   * the whole chain the candidate unblocks). Lets callers run their own
-   * skill-aware diary checks, which `getDiaryStatus` deliberately skips.
+   * the whole chain the candidate unblocks). Lets callers inspect or extend
+   * the canonical post-cascade eligibility snapshot.
    */
   finalQuestIds: string[];
 }
 
 const isOpen = (status: string | undefined) =>
   status === 'AVAILABLE' || status === 'COMPLETED';
+
+export interface UnlockImpactContext {
+  allQuests: Array<(typeof QUEST_DATA)[string]>;
+  allDiaries: Array<(typeof DIARY_DATA)[string]>;
+  baseQuestStatus: Map<string, string>;
+  baseDiaryStatus: Map<string, string>;
+  baseAvailableIds: Set<string>;
+  baseCompletedQuestIds: Set<string>;
+}
+
+export function prepareUnlockImpactContext(
+  baseUnlocks: any,
+  gameModeId?: string,
+): UnlockImpactContext {
+  const allQuests = Object.values(QUEST_DATA);
+  const allDiaries = Object.values(DIARY_DATA);
+  const baseQuestEligibility = new Map(
+    allQuests.map(q => [q.id, evaluateQuestEligibility(q, baseUnlocks, gameModeId)]),
+  );
+  const baseQuestStatus = new Map<string, string>(
+    allQuests.map(q => [q.id, baseQuestEligibility.get(q.id)!.status]),
+  );
+  const baseDiaryStatus = new Map<string, string>(
+    allDiaries.map(d => [d.id, getDiaryStatus(d, baseUnlocks, gameModeId)]),
+  );
+  return {
+    allQuests,
+    allDiaries,
+    baseQuestStatus,
+    baseDiaryStatus,
+    baseCompletedQuestIds: new Set(
+      allQuests.filter(q => baseQuestStatus.get(q.id) === 'COMPLETED').map(q => q.id),
+    ),
+    baseAvailableIds: new Set(
+      allQuests.filter(q => {
+        const eligibility = baseQuestEligibility.get(q.id)!;
+        return eligibility.status === 'AVAILABLE' && eligibility.eligible;
+      }).map(q => q.id),
+    ),
+  };
+}
+
+export interface UnlockImpactOptions {
+  context?: UnlockImpactContext;
+  /** Restrict diary evaluation; an empty list skips diary work entirely. */
+  diaryIds?: readonly string[];
+}
 
 /**
  * @param baseUnlocks       Current unlocks snapshot (the "before").
@@ -55,31 +102,25 @@ export function computeUnlockImpact(
   baseUnlocks: any,
   simulatedUnlocks: any,
   gameModeId?: string,
+  options: UnlockImpactOptions = {},
 ): UnlockImpact {
-  const allQuests = Object.values(QUEST_DATA);
-  const allDiaries = Object.values(DIARY_DATA);
+  const context = options.context ?? prepareUnlockImpactContext(baseUnlocks, gameModeId);
+  const {
+    allQuests, baseCompletedQuestIds, baseDiaryStatus, baseAvailableIds,
+  } = context;
+  const selectedDiaryIds = options.diaryIds === undefined
+    ? null
+    : new Set(options.diaryIds);
+  const allDiaries = selectedDiaryIds === null
+    ? context.allDiaries
+    : context.allDiaries.filter(diary => selectedDiaryIds.has(diary.id));
 
-  // Baseline statuses — computed once.
-  const baseQuestStatus = new Map<string, string>(
-    allQuests.map((q) => [q.id, getQuestStatus(q, baseUnlocks, gameModeId)]),
-  );
-  const baseDiaryStatus = new Map<string, string>(
-    allDiaries.map((d) => [d.id, getDiaryStatus(d, baseUnlocks, gameModeId)]),
-  );
-
-  // Quests that were already actionable independent of the candidate — these
-  // are excluded from the cascade walk so impact is attributed correctly.
-  const baseAvailableIds = new Set(
-    allQuests.filter((q) => baseQuestStatus.get(q.id) === 'AVAILABLE').map((q) => q.id),
-  );
-
-  // ── DIRECT (1-step) ──────────────────────────────────────────────────────
   const directQuestNames = allQuests
-    .filter(
-      (q) =>
-        !isOpen(baseQuestStatus.get(q.id)) &&
-        getQuestStatus(q, simulatedUnlocks, gameModeId) === 'AVAILABLE',
-    )
+    .filter(q => {
+      if (baseCompletedQuestIds.has(q.id) || baseAvailableIds.has(q.id)) return false;
+      const eligibility = evaluateQuestEligibility(q, simulatedUnlocks, gameModeId);
+      return eligibility.status === 'AVAILABLE' && eligibility.eligible;
+    })
     .map((q) => q.name);
 
   const directDiaryIds = allDiaries
@@ -92,16 +133,19 @@ export function computeUnlockImpact(
 
   // ── CASCADE (fixpoint) ───────────────────────────────────────────────────
   // Seed the completed set with whatever the simulation already "did".
-  // Greedily complete only previously-LOCKED quests that the chain unblocks.
-  const completed = new Set<string>(simulatedUnlocks.quests);
+  // Greedily complete only quests the canonical eligibility evaluator says are automatic.
+  const initialCompletedQuestIds = new Set<string>(simulatedUnlocks.quests);
+  const completed = new Set(initialCompletedQuestIds);
   let changed = true;
   while (changed) {
     changed = false;
     const snap = { ...simulatedUnlocks, quests: Array.from(completed) };
     for (const q of allQuests) {
       if (completed.has(q.id)) continue;
-      if (baseAvailableIds.has(q.id)) continue; // don't claim the existing backlog
-      if (getQuestStatus(q, snap, gameModeId) === 'AVAILABLE') {
+      if (baseCompletedQuestIds.has(q.id)) continue;
+      if (baseAvailableIds.has(q.id)) continue; // don't claim the existing automatic backlog
+      const eligibility = evaluateQuestEligibility(q, snap, gameModeId);
+      if (eligibility.status === 'AVAILABLE' && eligibility.eligible) {
         completed.add(q.id);
         changed = true;
       }
@@ -110,7 +154,12 @@ export function computeUnlockImpact(
   const finalSnap = { ...simulatedUnlocks, quests: Array.from(completed) };
 
   const cascadeQuestNames = allQuests
-    .filter((q) => !isOpen(baseQuestStatus.get(q.id)) && completed.has(q.id))
+    .filter((q) => (
+      !baseCompletedQuestIds.has(q.id) &&
+      !baseAvailableIds.has(q.id) &&
+      !initialCompletedQuestIds.has(q.id) &&
+      completed.has(q.id)
+    ))
     .map((q) => q.name);
 
   const cascadeDiaryIds = allDiaries

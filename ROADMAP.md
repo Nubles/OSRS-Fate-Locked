@@ -6,31 +6,14 @@ contributor. Last updated: July 2026.
 
 ---
 
-## 1. Ship the Plugin Hub update (highest value, ~10 minutes)
+## 1. RuneLite Plugin Hub release (shipped)
 
-The Hub currently serves commit `dc3823c` of
-[Nubles/RS3-Fate-Locked-Runelite](https://github.com/Nubles/RS3-Fate-Locked-Runelite).
-Everything since is CI-green and unreleased:
-
-- Chunked-mode chunk-coordinate lock state (`unlockedChunks` in the bundle)
-- Roll detection: quests (reward widget), diary tiers (varbits), combat
-  achievements (chat), collection log (chat), boss/raid kills (LootReceived)
-- Suggestion relay: plugin → app `{source, label, ts}` pushes on `/suggest`
-- Connection heartbeat: `{ts, version}` ack on `/state` after each relay
-  import (powers the web app's "Connect RuneLite" card)
-- `onVarbitChanged` hot-path fix (48 client calls → 1 set lookup per event)
-- World-map tooltip now lists the hovered chunk's contents
-
-**To ship:** sync your fork of `runelite/plugin-hub`, edit
-`plugins/fate-locked-ironman`, set `commit=` to the current HEAD of the
-plugin repo (`git rev-parse HEAD`, full 40 chars), open the PR.
-
-**Reviewer question to expect:** "there's new outbound traffic since the last
-release" — the `/suggest` and `/state` POSTs. Answer: both sit behind the
-same `onlineSync` opt-in boolean whose `@ConfigItem` carries the mandated
-IP-address warning; both are documented in the plugin repo's CONTRIBUTING
-(§ Online sync). No consent → `pollRelay()`/`pushSuggestion()` return on
-their first line and no request is ever made.
+The Plugin Hub entry for
+[Nubles/OSRS-Fate-Locked-Runelite](https://github.com/Nubles/OSRS-Fate-Locked-Runelite)
+already resolves to the canonical release commit
+`5cc1ffc4e4f684a99211f12342a69ceb6d16de30`. No additional Plugin Hub pin PR
+is required for this release. Future plugin releases are built and published
+only from `OSRS-Fate-Locked-Runelite`.
 
 ## 1b. Shipped — July 2026 sprint (onboarding, safety, community)
 
@@ -165,10 +148,7 @@ Follow-ups:
   Auto-clear on roll lives in the ALWAYS-MOUNTED `SuggestionBanner`, not the
   lazily-mounted queue (also a real bug: tab components miss rolls made
   elsewhere).
-- **Plugin mirror:** the plugin's source of truth is the standalone repo;
-  `runelite-plugin/` in this repo is a byte-for-byte mirror with CRLF line
-  endings. After any plugin change: copy the files over converting LF→CRLF,
-  commit both repos.
+- **Plugin boundary:** [Nubles/OSRS-Fate-Locked-Runelite](https://github.com/Nubles/OSRS-Fate-Locked-Runelite) owns the plugin source, builds, and releases. The app exports rules bundles and processes plugin events, but contains no Java plugin or download pipeline.
 
 ## 4. Gotchas that cost real debugging time
 
@@ -189,22 +169,21 @@ Follow-ups:
   fires VarbitChanged, so pure event-filtering misses its completion. The
   plugin baselines all 48 once on the first event after LOGGED_IN, then
   filters by `ev.getVarbitId()`.
-- **GitHub Actions is the plugin's only build.** There's no local Gradle in
-  the dev environment — CI is the compile check, so keep plugin commits
-  small and watch the Actions tab after each push.
+- **Plugin verification belongs in the standalone repository.** In the
+  standalone checkout, run `gradle clean test jar --no-daemon`; plugin CI,
+  releases, and Plugin Hub work also occur there, never in the companion app.
 - **Dataset fetch cool-downs:** GearService/MonsterService fast-fail for 60s
   after a failed load (`init(force)` bypasses for Retry buttons). Without
   this, the relay driver re-fetched on every state change while offline.
 
-## 5. Release checklist (web app)
+## 5. Web release handoff
 
-```
-npx vitest run        # 406 tests
-npx tsc --noEmit
-npx vite build        # main chunk should stay ≈118 kB gzip
-git push              # GitHub Pages deploys from main
-```
+Use the [release verification checklist](docs/RELEASE_CHECKLIST.md) for the
+single authoritative command order, generated-data review, and GitHub handoff.
+The required GitHub check is `CI / quality`; enabling it in branch protection
+is a manual repository-maintainer setting after the workflow first appears.
 
-If the eager `dist/assets/index-*.js` grows past ~130 kB gzip, something
-that should be lazy got imported eagerly — grep the built file for content
-markers, don't trust the import graph.
+Build-size watch: if the eager `dist/assets/index-*.js` grows past about
+130 kB gzip, something that should be lazy may have been imported eagerly.
+Inspect the built file for content markers rather than relying only on the
+import graph.

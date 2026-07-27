@@ -8,6 +8,7 @@ import { ChunkActivityPanel } from './ChunkActivityPanel';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { exportRuneliteBundle } from '../utils/runeliteExport';
+import type { GameModeRules } from '../config/gameModes';
 import { consumePendingChunk, chunkUnlocked, chunkForPlace } from '../utils/chunkLocations';
 import { isFreeArea } from '../utils/freeAreas';
 import { chunkContentService, type OverlayPoint } from '../services/ChunkContentService';
@@ -16,7 +17,7 @@ import { entryBlockedGate } from '../utils/questDoability';
 import { QUEST_DATA } from '../data/questData';
 import { isChunkUnlocked, isFrontierChunk } from '../utils/chunkAdjacency';
 import { rankFrontierChunks } from '../utils/frontierAdvisor';
-import { isNamedAreaReachableViaChunks } from '../utils/reachability';
+import { isNamedAreaReachableViaChunks, isRegionUnlocked } from '../utils/reachability';
 
 type LensTone = 'good' | 'warn' | 'bad';
 const TONE_FILL: Record<LensTone, string> = { good: 'rgba(16,185,129,0.30)', warn: 'rgba(245,158,11,0.10)', bad: 'rgba(239,68,68,0.22)' };
@@ -47,8 +48,8 @@ const CLUE_PREFIX = 'Clue: ';
 
 // ── Live shooting-star feed ────────────────────────────────────────────────
 // Crowdsourced active-star data (starminers) sends no CORS header, so the app
-// reads it through a user-hosted proxy (a tiny Cloudflare Worker — see
-// runelite-plugin/../docs). The URL comes from a Vite env var or a localStorage
+// reads it through a user-hosted proxy (a tiny Cloudflare Worker; deployment
+// details live in docs/star-feed-proxy.md). The URL comes from a Vite env var or a localStorage
 // override so it can be set without rebuilding.
 // Default proxy shipped for everyone (a Cloudflare Worker that re-serves the
 // starminers feed with CORS). A per-browser localStorage override or a build-time
@@ -117,40 +118,9 @@ export { REGION_CHUNKS } from '../data/regionChunks';
 
 
 
-// Maps a leaf/sub-region back to its continent, derived once from
-// REGION_GROUPS + MISTHALIN_AREAS. Used by isRegionUnlocked to walk
-// the hierarchy.
-const PARENT_CONTINENT: Record<string, string> = (() => {
-  const parents: Record<string, string> = {};
-  for (const [continent, subs] of Object.entries(REGION_GROUPS)) {
-    for (const sub of subs) parents[sub] = continent;
-  }
-  for (const area of MISTHALIN_AREAS) parents[area] = 'Misthalin';
-  return parents;
-})();
-
-// A chunk's region is unlocked if:
-//  1. it's in ALWAYS_UNLOCKED_REGIONS, or
-//  2. it appears directly in unlocks.regions, or
-//  3. its parent continent is unlocked, or
-//  4. its parent continent is "complete" (every sibling sub-region is unlocked),
-//  5. or — if the region IS a continent — every one of its sub-regions is unlocked.
-// Rule (4) is the "continent turns fully green once all sub-areas are done"
-// rule and covers chunks tagged at the continent level too.
-const isRegionUnlocked = (region: string, unlocks: string[]): boolean => {
-  if (isFreeArea(region)) return true;
-  if (unlocks.includes(region)) return true;
-  const continent = PARENT_CONTINENT[region];
-  if (continent) {
-    if (isFreeArea(continent)) return true;
-    if (unlocks.includes(continent)) return true;
-    const siblings = continent === 'Misthalin' ? MISTHALIN_AREAS : (REGION_GROUPS[continent] ?? []);
-    if (siblings.length > 0 && siblings.every(s => unlocks.includes(s) || isFreeArea(s))) return true;
-  }
-  const children = region === 'Misthalin' ? MISTHALIN_AREAS : REGION_GROUPS[region];
-  if (children && children.length > 0 && children.every(s => unlocks.includes(s) || isFreeArea(s))) return true;
-  return false;
-};
+// Region-unlock resolution lives in utils/reachability.ts (isRegionUnlocked)
+// so the RuneLite plugin parity test can pin the exact same rules the map
+// renders with.
 
 // Every unlockable/assignable region name, deduped + alphabetised. Pulled
 // from the existing unlock data so the authoring dropdown can't introduce
@@ -399,13 +369,15 @@ const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectK
 ));
 
 interface GameSnapshot {
+  runId: string; runRevision: number;
   keys: number; specialKeys: number; chaosKeys: number;
   fatePoints: number; activeBuff: string; pinnedGoals: string[];
   /** OSRS account this run is bound to (Auto-Roll), if any. */
   linkedAccount?: string;
   /** Per-slot unlocked equipment tier, for the plugin's over-tier gear warning. */
   equipment?: Record<string, number>;
-  gameModeId?: string;
+  gameModeId: string;
+  customMode?: GameModeRules;
 }
 
 const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGameSnapshot }: { regionUnlocks: string[]; chunkUnlocks: string[]; isChunked: boolean; getGameSnapshot: () => GameSnapshot }) => {
@@ -1945,11 +1917,11 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
 }, (prev, next) => prev.regionUnlocks === next.regionUnlocks && prev.chunkUnlocks === next.chunkUnlocks && prev.isChunked === next.isChunked);
 
 export const RegionMap: React.FC = () => {
-  const { unlocks, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId } = useGame();
+  const { unlocks, runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId, customMode } = useGame();
   // Live run state for the RuneLite bundle, read lazily at export time via a
   // stable getter so MapContent's memoization (regionUnlocks-only) holds.
-  const snapRef = useRef<GameSnapshot>({ keys: 0, specialKeys: 0, chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', pinnedGoals: [] as string[] });
-  snapRef.current = { keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals: pinnedGoals ?? [], linkedAccount, equipment: unlocks.equipment, gameModeId };
+  const snapRef = useRef<GameSnapshot>({ runId, runRevision, keys: 0, specialKeys: 0, chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', pinnedGoals: [] as string[], gameModeId: gameModeId ?? 'vanilla' });
+  snapRef.current = { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals: pinnedGoals ?? [], linkedAccount, equipment: unlocks.equipment, gameModeId: gameModeId ?? 'vanilla', customMode };
   const getGameSnapshot = useCallback(() => snapRef.current, []);
   return <MapContent regionUnlocks={unlocks.regions} chunkUnlocks={unlocks.chunks ?? []} isChunked={gameModeId === 'chunked'} getGameSnapshot={getGameSnapshot} />;
 };

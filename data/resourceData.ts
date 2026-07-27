@@ -920,8 +920,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Chambers of Xeric', regions: ['Kourend & Kebos'], unlockId: 'Chambers of Xeric' }
   ],
   'Dragon Claws': [
-    { type: 'DROP', name: 'Chambers of Xeric', regions: ['Kourend & Kebos'], unlockId: 'Chambers of Xeric' },
-    { type: 'DROP', name: 'Tormented Demon', regions: ['Misthalin'], quests: ['While Guthix Sleeps'] }
+    { type: 'DROP', name: 'Chambers of Xeric', regions: ['Kourend & Kebos'], unlockId: 'Chambers of Xeric' }
   ],
   'Ancestral Robe Top': [
     { type: 'DROP', name: 'Chambers of Xeric', regions: ['Kourend & Kebos'], unlockId: 'Chambers of Xeric' }

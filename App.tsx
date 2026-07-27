@@ -1,5 +1,6 @@
 
-import React, { useState, useRef, useEffect, Component, ErrorInfo, ReactNode, lazy, Suspense } from 'react';
+import { lazyWithRetry } from './utils/lazyRetry';
+import React, { useState, useRef, useEffect, useReducer, Component, ErrorInfo, ReactNode, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { GameProvider, useGame } from './context/GameContext';
 import { usePortalHost } from './hooks/usePortalHost';
@@ -7,7 +8,7 @@ import { ProfileProvider, useProfiles } from './context/ProfileContext';
 import { ActionSection } from './components/ActionSection';
 import { GachaSection } from './components/GachaSection';
 import { Dashboard } from './components/Dashboard';
-const LogViewer = lazy(() => import('./components/LogViewer').then(m => ({ default: m.LogViewer })));
+const LogViewer = lazyWithRetry(() => import('./components/LogViewer').then(m => ({ default: m.LogViewer })));
 import { SectionGuide, GUIDES } from './components/SectionGuide';
 import { PopOnChange } from './components/PopOnChange';
 import { CommandPalette } from './components/CommandPalette';
@@ -19,7 +20,7 @@ import { TransmutationEffect } from './components/TransmutationEffect';
 import { ClarityEffect, GreedEffect, ChaosEffect } from './components/RitualEffects';
 import { EffectsLayer } from './components/EffectsLayer';
 import { OnlineSyncDriver } from './components/OnlineSyncDriver';
-import { SuggestionBanner } from './components/SuggestionBanner';
+import { RollInboxDriver } from './components/RollInboxDriver';
 import { CoachStrip } from './components/CoachStrip';
 import { FeatureRevealDriver } from './components/FeatureRevealDriver';
 import { BackupNagBanner } from './components/BackupNagBanner';
@@ -37,26 +38,34 @@ import { isChunkLoadError, reloadOnceForChunkError } from './utils/chunkLoadErro
 import { useEscapeKey } from './hooks/useEscapeKey';
 import { resolveModeRules } from './config/gameModes';
 import { showToast } from './utils/toast';
+import { importUiDecision, isCurrentImportRequest } from './utils/gamePersistence';
+import { MAX_SAVE_BYTES } from './utils/saveSchema';
 import { prefetchHeavyChunks } from './utils/prefetch';
 import { CHANGELOG_RELEASES, LATEST_CHANGELOG } from './data/changelog';
-import { readLatestSeen, markLatestSeen } from './utils/changelogState';
-import { shouldAutoOpenAfterOnboarding } from './utils/changelogModalState';
+import {
+  changelogVisibilityReducer, markChangelogSeen,
+  resolveChangelogModalRenderPolicy, shouldAutoOpenChangelog,
+  shouldEnableUnderlyingModalEscape, shouldShowChangelog,
+} from './utils/changelogState';
 
 // Heavy, conditionally-rendered modals — code-split so they (and their deps,
 // e.g. recharts in StatsModal) stay out of the initial bundle.
-const StatsModal = lazy(() => import('./components/StatsModal').then(m => ({ default: m.StatsModal })));
-const FateThread = lazy(() => import('./components/FateThread').then(m => ({ default: m.FateThread })));
-const ReferenceModal = lazy(() => import('./components/ReferenceModal').then(m => ({ default: m.ReferenceModal })));
-const OracleSearch = lazy(() => import('./components/OracleSearch').then(m => ({ default: m.OracleSearch })));
-const StrategyGuide = lazy(() => import('./components/StrategyGuide').then(m => ({ default: m.StrategyGuide })));
-const SupplyChainCalculator = lazy(() => import('./components/SupplyChainCalculator').then(m => ({ default: m.SupplyChainCalculator })));
-const GameModePicker = lazy(() => import('./components/GameModePicker').then(m => ({ default: m.GameModePicker })));
-const SyncCodeModal = lazy(() => import('./components/SyncCodeModal').then(m => ({ default: m.SyncCodeModal })));
-const ModelGallery = lazy(() => import('./components/ModelGallery').then(m => ({ default: m.ModelGallery })));
-const DiscordSettingsModal = lazy(() => import('./components/DiscordSettingsModal'));
-const ChangelogModal = lazy(() => import('./components/ChangelogModal').then(m => ({ default: m.ChangelogModal })));
-import { obfuscateFateSave, deobfuscateFateSave } from './utils/encryption';
-import { GameState } from './types';
+const StatsModal = lazyWithRetry(() => import('./components/StatsModal').then(m => ({ default: m.StatsModal })));
+const FateThread = lazyWithRetry(() => import('./components/FateThread').then(m => ({ default: m.FateThread })));
+const ReferenceModal = lazyWithRetry(() => import('./components/ReferenceModal').then(m => ({ default: m.ReferenceModal })));
+const OracleSearch = lazyWithRetry(() => import('./components/OracleSearch').then(m => ({ default: m.OracleSearch })));
+const StrategyGuide = lazyWithRetry(() => import('./components/StrategyGuide').then(m => ({ default: m.StrategyGuide })));
+const SupplyChainCalculator = lazyWithRetry(() => import('./components/SupplyChainCalculator').then(m => ({ default: m.SupplyChainCalculator })));
+const GameModePicker = lazyWithRetry(() => import('./components/GameModePicker').then(m => ({ default: m.GameModePicker })));
+const SyncCodeModal = lazyWithRetry(() => import('./components/SyncCodeModal').then(m => ({ default: m.SyncCodeModal })));
+const ModelGallery = lazyWithRetry(() => import('./components/ModelGallery').then(m => ({ default: m.ModelGallery })));
+const DiscordSettingsModal = lazyWithRetry(() => import('./components/DiscordSettingsModal'));
+const ChangelogModal = lazyWithRetry(() =>
+  import('./components/ChangelogModal').then(module => ({
+    default: module.ChangelogModal,
+  })),
+);
+import { deobfuscateFateSave, encodeFateSaveExport } from './utils/encryption';
 import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb, Radio, Settings } from 'lucide-react';
 import { exportRuneliteBundle } from './utils/runeliteExport';
 
@@ -87,7 +96,13 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
           <div className="min-h-screen bg-[#161616] flex items-center justify-center p-8">
             <div className="bg-[#1e1e1e] border border-amber-500/30 rounded-xl p-8 max-w-lg text-center">
               <h1 className="text-2xl font-bold text-amber-400 mb-2">Updating…</h1>
-              <p className="text-gray-400">A newer version was deployed — reloading to pick it up.</p>
+              <p className="text-gray-400 mb-4">The app couldn't load its code — usually a new version or a network blip.</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-6 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-bold transition-colors"
+              >
+                Reload now
+              </button>
             </div>
           </div>
         );
@@ -227,7 +242,7 @@ interface HeaderProps {
 }
 
 const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode, setShowDiscord, onOpenChangelog }: HeaderProps) => {
-  const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, revealAllFeatures, toggleRevealAll, importSave, resetGame, getExportData, createBackup, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount } = useGame();
+  const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, importSave, resetGame, getExportData, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount, runId, runRevision } = useGame();
   // Progressive disclosure — advanced tools stay hidden until the run earns them.
   const gates = useFeatureGates();
   const { storageKeyForActiveProfile } = useProfiles();
@@ -235,48 +250,121 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
   const pityCap = pityRules.pityEnabled ? pityRules.pityThreshold : 50; // 50 = visual-only fallback
   const nearPity = pityRules.pityEnabled && fatePoints >= pityRules.pityThreshold * 0.8;
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const activeFileReaderRef = useRef<FileReader | null>(null);
+  const fileReadRequestRef = useRef(0);
+  const activeProfileKeyRef = useRef(storageKeyForActiveProfile);
+  activeProfileKeyRef.current = storageKeyForActiveProfile;
+  const settingsTriggerRef = useRef<HTMLButtonElement>(null);
   const [showUtilMenu, setShowUtilMenu] = useState(false);
-  const utilityButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    fileReadRequestRef.current += 1;
+    activeFileReaderRef.current?.abort();
+    activeFileReaderRef.current = null;
+    return () => {
+      fileReadRequestRef.current += 1;
+      activeFileReaderRef.current?.abort();
+      activeFileReaderRef.current = null;
+    };
+  }, [storageKeyForActiveProfile]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const input = e.currentTarget;
+    const file = input.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const fileContent = event.target?.result as string;
-        const imported = deobfuscateFateSave(fileContent);
+    const request = {
+      id: fileReadRequestRef.current + 1,
+      source: activeProfileKeyRef.current,
+    };
+    fileReadRequestRef.current = request.id;
+    activeFileReaderRef.current?.abort();
 
-        if (imported) {
-            createBackup('Before file import');
-            importSave(imported as Partial<GameState>);
-            showToast('Fate restored successfully');
-        } else {
-            showToast('Import failed — invalid save file');
-        }
-      } catch (err) {
+    const clearInput = () => { input.value = ''; };
+    if (file.size > MAX_SAVE_BYTES) {
+      showToast('That save file is too large.');
+      clearInput();
+      return;
+    }
+
+    const reader = new FileReader();
+    activeFileReaderRef.current = reader;
+    const isCurrent = () => isCurrentImportRequest(
+      fileReadRequestRef.current,
+      activeProfileKeyRef.current,
+      request,
+    );
+    const release = () => {
+      if (activeFileReaderRef.current === reader) activeFileReaderRef.current = null;
+    };
+
+    reader.onload = (event) => {
+      if (!isCurrent()) {
+        release();
+        clearInput();
+        return;
+      }
+      try {
+        const fileContent = event.target?.result;
+        if (typeof fileContent !== 'string') {
           showToast('Import failed — could not read save data');
-          console.error(err);
+          return;
+        }
+
+        const decoded = deobfuscateFateSave(fileContent);
+        if (decoded.ok === false) {
+          showToast(decoded.message);
+          return;
+        }
+        if (!isCurrent()) return;
+
+        const decision = importUiDecision(importSave(decoded.value));
+        if (decision.error) {
+          showToast(decision.error);
+          return;
+        }
+        if (decision.success) {
+          showToast(decision.warning
+            ? `${decision.success}. ${decision.warning}`
+            : decision.success);
+        }
+      } catch {
+        if (isCurrent()) showToast('Import failed — could not read save data');
+      } finally {
+        release();
+        clearInput();
       }
     };
     reader.onerror = () => {
-      showToast('Import failed — could not read the file');
+      if (isCurrent()) showToast('Import failed — could not read the file');
+      release();
+      clearInput();
     };
-    reader.readAsText(file);
-    // Reset input
-    e.target.value = '';
+    reader.onabort = () => {
+      release();
+      clearInput();
+    };
+    try {
+      reader.readAsText(file);
+    } catch {
+      if (isCurrent()) showToast('Import failed — could not read the file');
+      release();
+      clearInput();
+    }
   };
 
   const handleExport = () => {
       const rawData = getExportData();
-      if (!rawData) return;
 
       try {
           const jsonData = JSON.parse(rawData);
-          const obfuscatedData = obfuscateFateSave(jsonData);
+          const encoded = encodeFateSaveExport(jsonData);
+          if (encoded.ok === false) {
+            showToast(encoded.message);
+            return;
+          }
 
-          const blob = new Blob([obfuscatedData], { type: 'text/plain' });
+          const blob = new Blob([encoded.value], { type: 'text/plain' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
@@ -365,7 +453,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
              </button>
 
              <button
-               onClick={() => exportRuneliteBundle(unlocks, { keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId })}
+               onClick={() => exportRuneliteBundle(unlocks, { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId: gameModeId ?? 'vanilla', customMode })}
                className="h-8 px-2.5 rounded-lg border border-amber-500/40 bg-amber-900/30 hover:bg-amber-800/40 text-amber-200 hover:text-amber-100 flex items-center gap-2 transition-colors"
                title="Export your run for the RuneLite plugin (copies to clipboard + downloads). Then use 'Import from clipboard' in the plugin."
              >
@@ -398,7 +486,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                  session at most. */}
              <div className="relative h-8">
                  <button
-                   ref={utilityButtonRef}
+                   ref={settingsTriggerRef}
                    onClick={() => setShowUtilMenu((v) => !v)}
                    className={`h-8 w-8 flex items-center justify-center bg-[#252525] border border-white/10 rounded-lg transition-colors ${showUtilMenu ? 'text-white border-white/25' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                    title="Settings & save tools"
@@ -411,8 +499,12 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                    <>
                      <div className="fixed inset-0 z-[90]" onClick={() => setShowUtilMenu(false)} />
                      <div className="absolute right-0 top-9 z-[91] w-56 bg-[#1c1c1c] border border-white/15 rounded-lg shadow-2xl py-1.5 text-[12px]">
-                        <button onClick={() => { setShowUtilMenu(false); onOpenChangelog(utilityButtonRef.current); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-amber-200">
-                           <ScrollText size={13} className="text-amber-300" /> What's New
+                        <button type="button" onClick={() => {
+                          setShowUtilMenu(false);
+                          onOpenChangelog(settingsTriggerRef.current);
+                        }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-amber-300">
+                          <ScrollText size={13} className="text-amber-300" />
+                          What's New
                         </button>
                         <div className="my-1 border-t border-white/10" />
                         <button onClick={() => { toggleAnimations(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={animationsEnabled}>
@@ -422,10 +514,6 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                         <button onClick={() => { toggleAdvisors(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={advisorsEnabled}>
                            <Lightbulb size={13} className={advisorsEnabled ? 'text-amber-400' : 'text-gray-500'} />
                            Advisor panels <span className="ml-auto text-[10px] text-gray-500">{advisorsEnabled ? 'on' : 'off'}</span>
-                        </button>
-                        <button onClick={() => { toggleRevealAll(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={!!revealAllFeatures} title="Show every tab and tool now, instead of revealing them as your run progresses">
-                           <Sparkles size={13} className={revealAllFeatures ? 'text-purple-400' : 'text-gray-500'} />
-                           Reveal all features <span className="ml-auto text-[10px] text-gray-500">{revealAllFeatures ? 'on' : 'off'}</span>
                         </button>
                         <div className="my-1 border-t border-white/10" />
                         <button onClick={() => { setShowUtilMenu(false); fileInputRef.current?.click(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white">
@@ -455,7 +543,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
 };
 
 // --- New Control Panel Component ---
-const ControlPanel = () => {
+const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = false }) => {
   const [activeTab, setActiveTab] = useState<'FARM' | 'SPEND' | 'LOG'>('FARM');
   // History reveals with the first logged event (progressive disclosure).
   const gates = useFeatureGates();
@@ -511,7 +599,7 @@ const ControlPanel = () => {
       {/* Contextual guide for the active panel */}
       <div className="flex items-center justify-end gap-1.5 px-3 py-1 bg-[#141414] border-b border-[#2a2a2a] shrink-0 text-[10px] text-gray-500">
         <span>{GUIDES[activeTab]?.title}</span>
-        <SectionGuide id={activeTab} />
+        <SectionGuide id={activeTab} suspendModals={suspendModals} />
       </div>
 
       {/* Content */}
@@ -538,46 +626,31 @@ const GameLayout = () => {
   const { lastEvent, animationsEnabled, hasSeenOnboarding, history } = useGame();
   const { recentlyCreatedId, activeProfileId, clearRecentlyCreated } = useProfiles();
 
+  const [showChangelog, dispatchChangelog] = useReducer(
+    changelogVisibilityReducer,
+    undefined,
+    () => shouldAutoOpenChangelog({
+      hasSeenOnboarding,
+      releaseIsUnseen: shouldShowChangelog(LATEST_CHANGELOG.id),
+      startupHash: typeof window === 'undefined' ? '' : window.location.hash,
+      hasPendingGameModePrompt: recentlyCreatedId === activeProfileId,
+    }),
+  );
+
+  const changelogReturnFocusTarget = useRef<HTMLElement | null>(null);
+  const openChangelog = (returnFocusTarget: HTMLElement | null = null) => {
+    changelogReturnFocusTarget.current = returnFocusTarget;
+    dispatchChangelog({ type: 'OPEN' });
+  };
+  const closeChangelog = () => {
+    markChangelogSeen(LATEST_CHANGELOG.id);
+    dispatchChangelog({ type: 'DISMISS' });
+    changelogReturnFocusTarget.current = null;
+  };
+
   // Warm the heavy lazy chunks (map, stats+charts, resource engine, …) during
   // idle time so opening them is instant instead of a visible fetch delay.
   useEffect(() => { prefetchHeavyChunks(); }, []);
-
-  const changelogAutoOpenAttempted = useRef(false);
-  const changelogReturnFocusTarget = useRef<HTMLElement | null>(null);
-  const [showChangelog, setShowChangelog] = useState(false);
-
-  useEffect(() => {
-    if (!hasSeenOnboarding || changelogAutoOpenAttempted.current) return;
-    changelogAutoOpenAttempted.current = true;
-
-    try {
-      const storedId = readLatestSeen(window.localStorage);
-      if (shouldAutoOpenAfterOnboarding(hasSeenOnboarding, LATEST_CHANGELOG.id, storedId)) {
-        changelogReturnFocusTarget.current = null;
-        setShowChangelog(true);
-      }
-    } catch {
-      // Privacy settings and quota policies can make browser storage throw.
-      // Showing the release notes remains useful even when they cannot persist.
-      changelogReturnFocusTarget.current = null;
-      setShowChangelog(true);
-    }
-  }, [hasSeenOnboarding]);
-
-  const openChangelogManually = (returnFocusTarget: HTMLElement | null) => {
-    changelogReturnFocusTarget.current = returnFocusTarget;
-    setShowChangelog(true);
-  };
-
-  const dismissChangelog = () => {
-    try {
-      markLatestSeen(window.localStorage, LATEST_CHANGELOG.id);
-    } catch {
-      // A failed write must not trap the player in the dialog.
-    }
-    setShowChangelog(false);
-    changelogReturnFocusTarget.current = null;
-  };
 
   // UI States
   const [showStats, setShowStats] = useState(false);
@@ -689,15 +762,16 @@ const GameLayout = () => {
     setShowSupplyChain(false);
     setShowGameMode(false);
     setShowSyncCode(false);
-  }, anyModalOpen);
+  }, shouldEnableUnderlyingModalEscape(anyModalOpen, showChangelog));
+  const modalRenderPolicy = resolveChangelogModalRenderPolicy(showChangelog);
 
   return (
     <div className="min-h-screen bg-osrs-bg text-osrs-text pb-6 font-sans selection:bg-osrs-gold selection:text-black relative">
       <EffectsLayer />
       <OnlineSyncDriver />
-      <SuggestionBanner />
+      <RollInboxDriver />
       {/* Progressive-disclosure watcher — always mounted (same rule as
-          SuggestionBanner): reveals earned anywhere must toast from here. */}
+          RollInboxDriver): detected events must queue from every screen. */}
       <FeatureRevealDriver />
 
 
@@ -714,19 +788,29 @@ const GameLayout = () => {
       {activeRitualAnim === 'GREED' && <GreedEffect onComplete={() => setActiveRitualAnim('NONE')} />}
       {activeRitualAnim === 'CHAOS' && <ChaosEffect onComplete={() => setActiveRitualAnim('NONE')} />}
 
-      {showAltar && <VoidAltar onClose={() => setShowAltar(false)} />}
+      {modalRenderPolicy.renderAppModals && showAltar && <VoidAltar onClose={() => setShowAltar(false)} />}
       <Suspense fallback={<ModalFallback />}>
-        {showChangelog && <ChangelogModal releases={CHANGELOG_RELEASES} onClose={dismissChangelog} returnFocusTarget={changelogReturnFocusTarget.current} />}
-        {showStats && <StatsModal onClose={() => setShowStats(false)} />}
-        {showFateThread && <FateThread onClose={() => setShowFateThread(false)} />}
-        {showReference && <ReferenceModal onClose={() => setShowReference(false)} />}
-        {showOracle && <OracleSearch onClose={() => setShowOracle(false)} />}
-        {showStrategy && <StrategyGuide onClose={() => setShowStrategy(false)} />}
-        {showSupplyChain && <SupplyChainCalculator initialQuery={supplyChainPreset} onClose={() => { setShowSupplyChain(false); setSupplyChainPreset(undefined); }} />}
-        {showGameMode && <GameModePicker onClose={() => setShowGameMode(false)} />}
-        {showSyncCode && <SyncCodeModal onClose={() => { setShowSyncCode(false); setSyncImportCode(undefined); }} initialImportCode={syncImportCode} />}
-        {showGallery && <ModelGallery onClose={() => setShowGallery(false)} />}
-        {showDiscord && <DiscordSettingsModal onClose={() => setShowDiscord(false)} />}
+        {modalRenderPolicy.renderAppModals && (
+          <>
+            {showStats && <StatsModal onClose={() => setShowStats(false)} />}
+            {showFateThread && <FateThread onClose={() => setShowFateThread(false)} />}
+            {showReference && <ReferenceModal onClose={() => setShowReference(false)} />}
+            {showOracle && <OracleSearch onClose={() => setShowOracle(false)} />}
+            {showStrategy && <StrategyGuide onClose={() => setShowStrategy(false)} />}
+            {showSupplyChain && <SupplyChainCalculator initialQuery={supplyChainPreset} onClose={() => { setShowSupplyChain(false); setSupplyChainPreset(undefined); }} />}
+            {showGameMode && <GameModePicker onClose={() => setShowGameMode(false)} />}
+            {showSyncCode && <SyncCodeModal onClose={() => { setShowSyncCode(false); setSyncImportCode(undefined); }} initialImportCode={syncImportCode} />}
+            {showGallery && <ModelGallery onClose={() => setShowGallery(false)} />}
+            {showDiscord && <DiscordSettingsModal onClose={() => setShowDiscord(false)} />}
+          </>
+        )}
+        {showChangelog && (
+          <ChangelogModal
+            releases={CHANGELOG_RELEASES}
+            onClose={closeChangelog}
+            returnFocusTarget={changelogReturnFocusTarget.current}
+          />
+        )}
       </Suspense>
 
       <Header
@@ -739,15 +823,15 @@ const GameLayout = () => {
         setShowGameMode={setShowGameMode}
         setShowSyncCode={setShowSyncCode}
         setShowDiscord={setShowDiscord}
-        onOpenChangelog={openChangelogManually}
+        onOpenChangelog={openChangelog}
       />
 
       {/* Global ⌘K command palette — navigates via fate:nav events. */}
-      <CommandPalette />
+      {modalRenderPolicy.renderGlobalDialogOverlays && <CommandPalette />}
       {/* Replayable spotlight tour — start via fate:start-tour. */}
-      <GuidedTour />
+      {modalRenderPolicy.renderGlobalDialogOverlays && <GuidedTour />}
       {/* Quest-complete celebration with the wiki reward scroll. */}
-      <QuestCompleteOverlay />
+      {modalRenderPolicy.renderGlobalDialogOverlays && <QuestCompleteOverlay />}
 
       {/* One contextual "next step" hint under the header — teaches the loop. */}
       <CoachStrip />
@@ -777,7 +861,7 @@ const GameLayout = () => {
             </div>
             <div className="flex-1 min-h-0">
               <PanelErrorBoundary name="Control panel">
-                <ControlPanel />
+                <ControlPanel suspendModals={modalRenderPolicy.suspendDashboardModals} />
               </PanelErrorBoundary>
             </div>
           </div>
@@ -786,7 +870,7 @@ const GameLayout = () => {
           <div className="lg:col-span-8 h-full min-h-[500px] flex flex-col gap-4">
              <div className="flex-1 overflow-hidden h-full">
                <PanelErrorBoundary name="Dashboard">
-                 <Dashboard />
+                 <Dashboard suspendModals={modalRenderPolicy.suspendDashboardModals} />
                </PanelErrorBoundary>
              </div>
           </div>

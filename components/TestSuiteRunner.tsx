@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useGame } from '../context/GameContext';
-import { TableType, GameState } from '../types';
+import { TableType } from '../types';
 import { Check, X, Terminal, Loader2, ShieldCheck, AlertTriangle } from 'lucide-react';
 
 interface TestSuiteRunnerProps {
@@ -12,14 +12,26 @@ type TestLog = {
   status: 'pending' | 'success' | 'error';
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
 export const TestSuiteRunner: React.FC<TestSuiteRunnerProps> = ({ onComplete }) => {
   const game = useGame();
   const [step, setStep] = useState(0);
   const [logs, setLogs] = useState<TestLog[]>([]);
   
   // Use a ref to hold the backup so it persists across renders
-  const backupRef = useRef<Partial<GameState> | null>(null);
+  const backupRef = useRef<unknown>(null);
   const hasInitialized = useRef(false);
+
+  const readVisibleState = (): Record<string, unknown> | null => {
+    try {
+      const parsed: unknown = JSON.parse(game.getExportData());
+      return isRecord(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  };
 
   const addLog = (message: string, status: 'pending' | 'success' | 'error' = 'pending') => {
     setLogs(prev => [...prev, { message, status }]);
@@ -47,17 +59,12 @@ export const TestSuiteRunner: React.FC<TestSuiteRunnerProps> = ({ onComplete }) 
           
           addLog("Initializing Void Diagnostics...");
           
-          // Create backup of pure state
-          const currentState: Partial<GameState> = {
-            keys: game.keys,
-            specialKeys: game.specialKeys,
-            chaosKeys: game.chaosKeys,
-            fatePoints: game.fatePoints,
-            activeBuff: game.activeBuff,
-            unlocks: JSON.parse(JSON.stringify(game.unlocks)),
-            history: [...game.history],
-            hasSeenOnboarding: game.hasSeenOnboarding
-          };
+          const currentState = readVisibleState();
+          if (!currentState) {
+            updateLastLog('error');
+            addLog('Could not snapshot the current run.', 'error');
+            break;
+          }
           backupRef.current = currentState;
           
           timeout = window.setTimeout(() => {
@@ -76,19 +83,31 @@ export const TestSuiteRunner: React.FC<TestSuiteRunnerProps> = ({ onComplete }) 
           if (game.keys === 3 && game.fatePoints === 0) {
             updateLastLog('success');
             addLog("Injecting Test Parameters (Keys=10, Fate=49)...");
-            // Inject scenario for Pity Test
-            game.importSave({
-                keys: 10,
-                fatePoints: 49,
-                specialKeys: 0,
-                chaosKeys: 0,
-                unlocks: {
-                    ...game.unlocks,
-                    skills: { 'Hitpoints': 10 }, // Reset skills
-                    regions: [],
-                    equipment: {}
-                }
+            const currentState = readVisibleState();
+            const currentUnlocks = currentState?.unlocks;
+            if (!currentState || !isRecord(currentUnlocks)) {
+              updateLastLog('error');
+              addLog('State Injection Failed: current state is unavailable.', 'error');
+              break;
+            }
+            const imported = game.importSave({
+              ...currentState,
+              keys: 10,
+              fatePoints: 49,
+              specialKeys: 0,
+              chaosKeys: 0,
+              unlocks: {
+                ...currentUnlocks,
+                skills: { Hitpoints: 10 },
+                regions: [],
+                equipment: {},
+              },
             });
+            if (imported.ok === false) {
+              updateLastLog('error');
+              addLog('State Injection Rejected: ' + imported.message, 'error');
+              break;
+            }
             timeout = window.setTimeout(() => setStep(3), 600);
           } else {
             updateLastLog('error');
@@ -144,7 +163,15 @@ export const TestSuiteRunner: React.FC<TestSuiteRunnerProps> = ({ onComplete }) 
               addLog("Level Up Verified.");
 
               addLog("Injecting Fate for Rituals...");
-              game.importSave({ fatePoints: 50 });
+              const currentState = readVisibleState();
+              const imported = currentState
+                ? game.importSave({ ...currentState, fatePoints: 50 })
+                : { ok: false as const, message: 'Current state is unavailable.' };
+              if (imported.ok === false) {
+                updateLastLog('error');
+                addLog('Fate Injection Rejected: ' + imported.message, 'error');
+                break;
+              }
               timeout = window.setTimeout(() => setStep(7), 600);
            } else {
               updateLastLog('error');
@@ -170,8 +197,13 @@ export const TestSuiteRunner: React.FC<TestSuiteRunnerProps> = ({ onComplete }) 
                addLog("Ritual Effects Confirmed.");
                
                addLog("Restoring User Timeline...");
-               if (backupRef.current) {
-                   game.importSave(backupRef.current);
+               const restored = backupRef.current
+                 ? game.importSave(backupRef.current)
+                 : { ok: false as const, message: 'Diagnostic backup is unavailable.' };
+               if (restored.ok === false) {
+                 updateLastLog('error');
+                 addLog('Timeline Restore Rejected: ' + restored.message, 'error');
+                 break;
                }
                timeout = window.setTimeout(() => setStep(9), 1000);
            } else {

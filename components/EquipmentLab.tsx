@@ -19,9 +19,10 @@ const slotImg = (slot: string) =>
 interface Props {
   /** Kick off the existing Omni-key upgrade flow (confirm + reveal) for a slot. */
   onUpgrade: (slot: string) => void;
+  suspendModals?: boolean;
 }
 
-export const EquipmentLab: React.FC<Props> = ({ onUpgrade }) => {
+export const EquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false }) => {
   const { unlocks, specialKeys } = useGame();
   const equipment = unlocks.equipment;
 
@@ -68,7 +69,7 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade }) => {
       {/* Header */}
       <div className="flex justify-between items-center bg-[#151515] p-2 rounded border border-white/5 mb-4 shrink-0">
         <div className="flex items-center gap-3">
-          <h3 className="text-gray-300 font-bold text-sm flex items-center gap-1.5">Equipment Lab <SectionGuide id="EQUIPMENT_LAB" /></h3>
+          <h3 className="text-gray-300 font-bold text-sm flex items-center gap-1.5">Equipment Lab <SectionGuide id="EQUIPMENT_LAB" suspendModals={suspendModals} /></h3>
           {/* Tiers / Gear mode toggle */}
           <div className="flex items-center rounded-lg border border-white/10 bg-[#1f1f1f] p-0.5">
             {(['tiers', 'gear', 'dps'] as const).map((m) => (
@@ -104,9 +105,9 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade }) => {
         </div>
       </div>
 
-      {mode === 'gear' && <GearView />}
+      {mode === 'gear' && <GearView suspendModals={suspendModals} />}
 
-      {mode === 'dps' && <DpsCalc />}
+      {mode === 'dps' && <DpsCalc suspendModals={suspendModals} />}
 
       {mode === 'tiers' && (
       <>
@@ -149,7 +150,7 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade }) => {
                   )}
                 </button>
                 <div className="absolute top-0 left-0 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <NoteTrigger id={`Equip_${slot}`} title={slot} />
+                  <NoteTrigger id={`Equip_${slot}`} title={slot} suspendModals={suspendModals} />
                 </div>
               </div>
             );
@@ -254,7 +255,7 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade }) => {
       )}
 
       {/* Slot detail popover */}
-      {selected && (
+      {!suspendModals && selected && (
         <SlotDetail
           slot={selected}
           tier={equipment[selected] || 0}

@@ -11,7 +11,7 @@
  */
 
 import { QUEST_DATA } from '../data/questData';
-import { getQuestStatus } from './journalStatus';
+import { evaluateQuestEligibility } from './journalStatus';
 import { computeUnlockImpact } from './unlockImpact';
 
 export interface RankedQuest {
@@ -37,15 +37,19 @@ export interface RankedQuest {
  * Ties broken by direct score, then alphabetically.
  *
  * @param unlocks  Current unlocks snapshot (same shape as GameContext unlocks)
+ * @param gameModeId  Active mode used by canonical quest access checks
  */
-export function rankAvailableQuests(unlocks: any): RankedQuest[] {
+export function rankAvailableQuests(unlocks: any, gameModeId?: string): RankedQuest[] {
   const allQuests = Object.values(QUEST_DATA);
-  const available = allQuests.filter((q) => getQuestStatus(q, unlocks) === 'AVAILABLE');
+  const available = allQuests.filter(
+    quest => !unlocks.quests.includes(quest.id)
+      && evaluateQuestEligibility(quest, unlocks, gameModeId).eligible,
+  );
 
   return available
     .map((candidate): RankedQuest => {
       const simulated = { ...unlocks, quests: [...unlocks.quests, candidate.id] };
-      const impact = computeUnlockImpact(unlocks, simulated);
+      const impact = computeUnlockImpact(unlocks, simulated, gameModeId);
 
       return {
         id: candidate.id,

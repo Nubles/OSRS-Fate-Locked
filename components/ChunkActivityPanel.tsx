@@ -1,10 +1,37 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { X, Lock, Check, Swords, Store, Users, Scroll, Package, BookOpen, MapPin, Sparkles, Sprout, Flag, Gamepad2, Pickaxe, Skull, Route, ChevronDown, ChevronRight, Landmark } from 'lucide-react';
+import {
+  X,
+  Lock,
+  Check,
+  Swords,
+  Store,
+  Users,
+  Scroll,
+  Package,
+  BookOpen,
+  MapPin,
+  Sparkles,
+  Sprout,
+  Flag,
+  Gamepad2,
+  Pickaxe,
+  Skull,
+  Route,
+  ChevronDown,
+  ChevronRight,
+  Landmark,
+  Compass,
+} from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { chunkContentService, ChunkContent } from '../services/ChunkContentService';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
-import { getQuestStatus, QuestStatus } from '../utils/journalStatus';
+import {
+  evaluateQuestEligibility,
+  QuestEligibility,
+  getQuestStatus,
+  QuestStatus,
+} from '../utils/journalStatus';
 import { classifyShop } from '../utils/merchantShops';
 import { resourceReqFor, resourceUsable } from '../utils/chunkResources';
 import { mobilityFor } from '../utils/chunkMobility';
@@ -203,6 +230,44 @@ interface OverviewItem { cat: string; label: string }
 // Stable display order for the grouped can/cant overview.
 const OVERVIEW_ORDER = ['Quests', 'Diaries', 'Bosses', 'Monsters', 'Minigames', 'Guilds', 'Shops', 'Resources', 'Farming', 'Travel'];
 
+export interface ChunkQuestRow {
+  name: string;
+  kind: string;
+  status: QuestStatus | null;
+  eligibility: QuestEligibility | null;
+}
+
+export const chunkQuestOverviewItem = (
+  row: ChunkQuestRow,
+  areaUnlocked: boolean,
+): { can: boolean; label: string } | null => {
+  if (!row.status || row.status === 'COMPLETED') return null;
+  const checks = row.eligibility?.manualChecks ?? [];
+  return {
+    can: areaUnlocked && row.eligibility?.eligible === true,
+    label: checks.length > 0
+      ? `${row.name} — ${checks.map(check => `Confirm: ${check}`).join(' · ')}`
+      : row.name,
+  };
+};
+
+export const chunkQuestPresentation = (
+  row: ChunkQuestRow,
+): { kind: 'completed' | 'available' | 'confirmation' | 'locked' | 'untracked'; title: string } => {
+  if (row.status === 'COMPLETED') return { kind: 'completed', title: 'Completed' };
+  if (!row.status) return { kind: 'untracked', title: 'miniquest / not tracked' };
+  if (row.status === 'AVAILABLE' && row.eligibility && !row.eligibility.eligible) {
+    return {
+      kind: 'confirmation',
+      title: row.eligibility.manualChecks.map(check => `Confirm: ${check}`).join(' · '),
+    };
+  }
+  if (row.status === 'AVAILABLE') {
+    return { kind: 'available', title: QUEST_BADGE.AVAILABLE.label };
+  }
+  return { kind: 'locked', title: QUEST_BADGE[row.status].label };
+};
+
 /** Collapsible overview block, grouped by activity type (quests / shops / …). */
 const Overview: React.FC<{ kind: 'can' | 'cant'; items: OverviewItem[] }> = ({ kind, items }) => {
   const [open, setOpen] = useState(false);
@@ -309,7 +374,8 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       .map(([name, kind]) => {
         const data = QUEST_DATA[name];
         const status = data ? getQuestStatus(data, unlocks, gameModeId) : null;
-        return { name, kind, status };
+        const eligibility = data ? evaluateQuestEligibility(data, unlocks, gameModeId) : null;
+        return { name, kind, status, eligibility };
       })
       .sort((a, b) => (a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === 'first' ? -1 : 1));
   }, [content, unlocks, gameModeId]);
@@ -389,9 +455,8 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     const push = (ok: boolean, cat: string, label: string) => (ok ? can : cant).push({ cat, label });
 
     for (const q of questRows) {
-      if (q.status === 'COMPLETED') continue;
-      if (q.status === 'AVAILABLE') push(unlocked, 'Quests', q.name);
-      else if (q.status) cant.push({ cat: 'Quests', label: q.name });
+      const item = chunkQuestOverviewItem(q, unlocked);
+      if (item) push(item.can, 'Quests', item.label);
     }
     for (const b of derived.bosses) push(unlocked && b.usable, 'Bosses', b.name);
     for (const m of derived.monsters.slice(0, 12)) {
@@ -502,16 +567,21 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
             {questRows.length > 0 && (
               <>
                 <SectionHead icon={<Sparkles size={11} />} label="Quests" count={questRows.length} />
-                <CappedList cap={8} items={questRows.map(({ name, kind, status }) => (
-                  <div key={name} className="flex items-center gap-1.5 py-px" title={status ? QUEST_BADGE[status].label : 'miniquest / not tracked'}>
-                    {status === 'COMPLETED' ? <Check size={11} className="text-green-400 shrink-0" />
-                      : status === 'AVAILABLE' ? <span className="w-[11px] text-center text-amber-300 shrink-0">●</span>
-                      : status ? <Lock size={10} className="text-gray-600 shrink-0" />
-                      : <span className="w-[11px] text-center text-gray-600 shrink-0">·</span>}
-                    <WikiLink name={name} className={`truncate hover:underline decoration-dotted underline-offset-2 ${status ? QUEST_BADGE[status].cls : 'text-gray-400'}`} />
-                    {kind === 'first' && <span className="text-[9px] px-1 rounded bg-cyan-900/60 text-cyan-300 shrink-0">starts here</span>}
-                  </div>
-                ))} />
+                <CappedList cap={8} items={questRows.map(row => {
+                  const presentation = chunkQuestPresentation(row);
+                  const { name, kind, status } = row;
+                  return (
+                    <div key={name} className="flex items-center gap-1.5 py-px" title={presentation.title}>
+                      {presentation.kind === 'completed' ? <Check size={11} className="text-green-400 shrink-0" />
+                        : presentation.kind === 'confirmation' ? <Compass size={11} className="text-fuchsia-300 shrink-0" />
+                        : status === 'AVAILABLE' ? <span className="w-[11px] text-center text-amber-300 shrink-0">—</span>
+                        : status ? <Lock size={10} className="text-gray-600 shrink-0" />
+                        : <span className="w-[11px] text-center text-gray-600 shrink-0">·</span>}
+                      <WikiLink name={name} className={`truncate hover:underline decoration-dotted underline-offset-2 ${status ? QUEST_BADGE[status].cls : 'text-gray-400'}`} />
+                      {kind === 'first' && <span className="text-[9px] px-1 rounded bg-cyan-900/60 text-cyan-300 shrink-0">starts here</span>}
+                    </div>
+                  );
+                })} />
               </>
             )}
 

@@ -1,12 +1,20 @@
 import { describe, it, expect } from 'vitest';
-import { createSnapshotFloat, gameReducer, initialState, resolveRollForKeyFromSnapshot } from './GameContext';
+import {
+  gameReducer,
+  initialState,
+  prepareGameTransition,
+  prepareLevelUpActions,
+  prepareKeyRollAction,
+  prepareCATaskCompletionActions,
+} from './GameContext';
+import { drawDice } from '../utils/seededRng';
 import { TableType, LogEntry } from '../types';
-import type { KeyRollContext } from '../config/vanillaKeyEconomy';
 import { isRollEntry } from '../utils/logEntry';
 import { XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL } from '../config/economy';
 import { isValidUnlock } from '../utils/gameEngine';
 import { ALL_CHUNKS, CHUNKED_START, chunkKey } from '../utils/chunkAdjacency';
-import { drawFloat } from '../utils/seededRng';
+import { ALL_CA_TASKS } from '../data/caTasks';
+import type { KeyRollContext } from '../config/vanillaKeyEconomy';
 
 /**
  * Tests for the core game reducer — every roll, unlock, ritual, level-up and
@@ -14,13 +22,30 @@ import { drawFloat } from '../utils/seededRng';
  * (the reducer just consumes pre-rolled values), so every case is deterministic.
  */
 
-const base = () => ({ ...initialState, lastEvent: null });
+const base = () => ({ ...initialState, runId: 'test-run', runRevision: 0, lastEvent: null });
 
-const roll = (
-  over: Partial<{ success: boolean; omni: boolean; pity: boolean; roll: number; threshold: number; source: string }>,
-  context?: KeyRollContext,
-) =>
-  ({ type: 'ROLL_RESULT' as const, payload: { success: false, omni: false, pity: false, roll: 50, threshold: 50, source: 'Test', ...over, context } });
+const roll = (over: Partial<{
+  success: boolean;
+  omni: boolean;
+  pity: boolean;
+  roll: number;
+  baseThreshold: number;
+  threshold: number;
+  source: string;
+  context: KeyRollContext;
+}>) => ({
+  type: 'ROLL_RESULT' as const,
+  payload: {
+    success: false,
+    omni: false,
+    pity: false,
+    roll: 50,
+    baseThreshold: 50,
+    threshold: 50,
+    source: 'Test',
+    ...over,
+  },
+});
 
 // --- ROLL_RESULT ------------------------------------------------------------
 
@@ -30,11 +55,17 @@ describe('ROLL_RESULT', () => {
     expect(s.keys).toBe(initialState.keys + 1);
     expect(s.fatePoints).toBe(0);
     expect(s.history).toHaveLength(1);
+    expect(s.history.at(-1)?.meta?.fatePointsEarned).toBe(0);
   });
 
   it('a failed roll accumulates a fate point and grants no key', () => {
-    const s = gameReducer(base(), roll({ success: false }));
-    expect(s.fatePoints).toBe(initialState.fatePoints + 1);
+    const previous = base();
+    const s = gameReducer(previous, roll({ success: false }));
+    expect(s.history.at(-1)).toMatchObject({
+      type: 'ROLL_FAIL',
+      meta: { fatePointsEarned: 1 },
+    });
+    expect(s.fatePoints).toBe(previous.fatePoints + 1);
     expect(s.keys).toBe(initialState.keys);
   });
 
@@ -43,17 +74,125 @@ describe('ROLL_RESULT', () => {
     expect(s.specialKeys).toBe(initialState.specialKeys + 1);
     expect(s.keys).toBe(initialState.keys + 1);
     expect(s.fatePoints).toBe(0);
+    expect(s.history.at(-1)?.meta?.fatePointsEarned).toBe(0);
   });
 
   it('a pity key is granted on a failed roll flagged as pity', () => {
     const s = gameReducer({ ...base(), fatePoints: 49 }, roll({ success: false, pity: true }));
     expect(s.keys).toBe(initialState.keys + 1);
     expect(s.fatePoints).toBe(0);
+    expect(s.history.at(-1)).toMatchObject({
+      type: 'PITY',
+      meta: { fatePointsEarned: 1 },
+    });
   });
 
   it('a Greed-buffed success grants two keys', () => {
     const s = gameReducer({ ...base(), activeBuff: 'GREED' as const }, roll({ success: true }));
     expect(s.keys).toBe(initialState.keys + 2);
+  });
+
+  it('preserves decimal roll, base chance, and effective chance in every result shape', () => {
+    const cases = [
+      {
+        state: gameReducer(base(), roll({
+          success: true, roll: 8.2, baseThreshold: 8.2, threshold: 9.2,
+        })),
+        expectedRoll: 8.2,
+      },
+      {
+        state: gameReducer(base(), roll({
+          success: true, omni: true, roll: 8.2, baseThreshold: 8.2, threshold: 9.2,
+        })),
+        expectedRoll: 8.2,
+      },
+      {
+        state: gameReducer(base(), roll({
+          roll: 9.3, baseThreshold: 8.2, threshold: 9.2,
+        })),
+        expectedRoll: 9.3,
+      },
+      {
+        state: gameReducer({ ...base(), fatePoints: 49 }, roll({
+          pity: true, roll: 9.3, baseThreshold: 8.2, threshold: 9.2,
+        })),
+        expectedRoll: 9.3,
+      },
+    ];
+
+    for (const { state, expectedRoll } of cases) {
+      const entry = state.history.at(-1)!;
+      expect(entry.rollValue).toBe(expectedRoll);
+      expect(entry.baseThreshold).toBe(8.2);
+      expect(entry.threshold).toBe(9.2);
+      expect(entry.meta).toMatchObject({ baseThreshold: 8.2, threshold: 9.2 });
+    }
+  });
+
+  it('shows a matching threshold once in every roll result sentence', () => {
+    const cases = [
+      {
+        state: gameReducer(base(), roll({
+          success: true, omni: true, roll: 1, baseThreshold: 2.2, threshold: 2.2,
+        })),
+        expected: 'Critical Success! Rolled 1.0 vs 2.2%.',
+      },
+      {
+        state: gameReducer(base(), roll({
+          success: true, roll: 1, baseThreshold: 2.2, threshold: 2.2,
+        })),
+        expected: 'Rolled 1.0 (≤ 2.2%).',
+      },
+      {
+        state: gameReducer(base(), roll({
+          roll: 84.7, baseThreshold: 2.2, threshold: 2.2,
+        })),
+        expected: 'Rolled 84.7 (> 2.2%). Fate: 1/50',
+      },
+      {
+        state: gameReducer({ ...base(), fatePoints: 49 }, roll({
+          pity: true, roll: 84.7, baseThreshold: 2.2, threshold: 2.2,
+        })),
+        expected: 'Rolled 84.7 at 2.2%, but Fate intervened.',
+      },
+    ];
+
+    for (const { state, expected } of cases) {
+      expect(state.history.at(-1)?.details).toBe(expected);
+    }
+  });
+
+  it('names differing effective and base thresholds once in every roll result sentence', () => {
+    const cases = [
+      {
+        state: gameReducer(base(), roll({
+          success: true, omni: true, roll: 1, baseThreshold: 2.2, threshold: 3.2,
+        })),
+        expected: 'Critical Success! Rolled 1.0 vs 3.2% effective; 2.2% base.',
+      },
+      {
+        state: gameReducer(base(), roll({
+          success: true, roll: 1, baseThreshold: 2.2, threshold: 3.2,
+        })),
+        expected: 'Rolled 1.0 (≤ 3.2% effective; 2.2% base).',
+      },
+      {
+        state: gameReducer(base(), roll({
+          roll: 84.7, baseThreshold: 2.2, threshold: 3.2,
+        })),
+        expected: 'Rolled 84.7 (> 3.2% effective; 2.2% base). Fate: 1/50',
+      },
+      {
+        state: gameReducer({ ...base(), fatePoints: 49 }, roll({
+          pity: true, roll: 84.7, baseThreshold: 2.2, threshold: 3.2,
+        })),
+        expected: 'Rolled 84.7 at 3.2% effective (2.2% base), but Fate intervened.',
+      },
+    ];
+
+    for (const { state, expected } of cases) {
+      expect(state.history.at(-1)?.details).toBe(expected);
+    }
   });
 
   it('every roll branch produces a log entry that isRollEntry recognises', () => {
@@ -79,102 +218,139 @@ describe('ROLL_RESULT', () => {
     expect(gameReducer({ ...base(), activeBuff: 'LUCK' as const }, roll({ success: false })).activeBuff).toBe('NONE');
     expect(gameReducer({ ...base(), activeBuff: 'GREED' as const }, roll({ success: true })).activeBuff).toBe('NONE');
   });
-});
 
-// --- rollForKey snapshot resolution -----------------------------------------
+  it('consumes one Luck buff on the first of two queued rolls', () => {
+    const dice = (_purpose: string, index = 0, max = 100) =>
+      index === 1 ? max / 10 : max * 0.9;
+    const start = { ...base(), activeBuff: 'LUCK' as const };
 
-describe('rollForKey snapshot resolution', () => {
-  const bossContext = {
-    kind: 'boss' as const,
-    bossName: 'Zulrah',
-    bossClass: 'mid' as const,
-  };
-  const clueContext = { kind: 'clue' as const, clueTier: 'Elite' };
-  const seeded = (over: Partial<ReturnType<typeof base>> = {}) => ({
-    ...base(),
-    gameModeId: 'vanilla',
-    rngSeed: 'snapshot-seed',
-    history: [{ id: 'tip', timestamp: 1, type: 'ROLL_FAIL' as const, message: 'No Key.', hash: 'snapshot-tip' }],
-    ...over,
+    const firstAction = prepareKeyRollAction(start, 'First queued roll', 20, dice);
+    const first = prepareGameTransition(start, firstAction).state;
+    const secondAction = prepareKeyRollAction(first, 'Second queued roll', 20, dice);
+    const second = prepareGameTransition(first, secondAction).state;
+
+    expect(first.history.at(-1)?.type).toBe('ROLL_SUCCESS');
+    expect(first.activeBuff).toBe('NONE');
+    expect(second.history.at(-1)?.type).toBe('ROLL_FAIL');
   });
 
-  it('uses exact decimal boss resolution and an identity/stage RNG purpose in Vanilla', () => {
-    const draws: Array<[string, number]> = [];
-    const result = resolveRollForKeyFromSnapshot(
-      seeded({ bossStandardKeysAwarded: { Zulrah: 1 } }),
-      'Test',
-      1,
-      bossContext,
-      (purpose, index = 0) => {
-        draws.push([purpose, index]);
-        return [0.1498, 0.8, 0.99][index] ?? 0.99;
-      },
+  it('grants only one pity when two queued failures start at the pity boundary', () => {
+    const dice = (_purpose: string, _index = 0, max = 100) => max;
+    const start = { ...base(), fatePoints: 49 };
+
+    const firstAction = prepareKeyRollAction(start, 'First queued failure', 20, dice);
+    const first = prepareGameTransition(start, firstAction).state;
+    const secondAction = prepareKeyRollAction(first, 'Second queued failure', 20, dice);
+    const second = prepareGameTransition(first, secondAction).state;
+
+    expect(first.history.at(-1)?.type).toBe('PITY');
+    expect(first.fatePoints).toBe(0);
+    expect(second.history.at(-1)?.type).toBe('ROLL_FAIL');
+    expect(second.fatePoints).toBe(1);
+    expect(second.keys).toBe(start.keys + 1);
+  });
+
+  it('replays the same next seeded roll from identical restored state', () => {
+    const snapshot = {
+      ...base(),
+      rngSeed: 'FATE-ATOMIC',
+      history: [],
+    };
+    const restored = {
+      ...snapshot,
+      unlocks: { ...snapshot.unlocks },
+      history: [...snapshot.history],
+    };
+    const reset = {
+      ...snapshot,
+      unlocks: { ...snapshot.unlocks },
+      history: [...snapshot.history],
+    };
+    const diceFor = (state: typeof snapshot) =>
+      (purpose: string, index = 0, max = 100) =>
+        drawDice(
+          state.rngSeed,
+          state.history.at(-1)?.hash ?? 'genesis',
+          purpose,
+          index,
+          max,
+        );
+
+    const restoredAction = prepareKeyRollAction(
+      restored,
+      'Seeded replay',
+      50,
+      diceFor(restored),
+    );
+    const resetAction = prepareKeyRollAction(
+      reset,
+      'Seeded replay',
+      50,
+      diceFor(reset),
     );
 
-    expect(result).toMatchObject({ roll: 14.99, success: true, omni: false, threshold: 15 });
-    expect(draws).toEqual([
-      ['roll:boss:Zulrah:1', 0],
-      ['roll:boss:Zulrah:1', 1],
-      ['roll:boss:Zulrah:1', 2],
+    expect(restoredAction).toEqual(resetAction);
+  });
+  it('queues the exact prepared state without regenerating event fields', () => {
+    const start = base();
+    const prepared = prepareGameTransition(start, roll({ success: true }));
+    const committed = gameReducer(start, prepared.commit);
+
+    expect(committed).toBe(prepared.state);
+    expect(committed.lastEvent?.id).toBe(prepared.state.lastEvent?.id);
+    expect(committed.history.at(-1)?.timestamp)
+      .toBe(prepared.state.history.at(-1)?.timestamp);
+  });
+
+  it('prepares seeded level-up reward draws from the pre-level history tip', () => {
+    const seed = 'FATE-LEVEL-8';
+    const start = {
+      ...base(),
+      rngSeed: seed,
+      unlocks: {
+        ...base().unlocks,
+        levels: { ...base().unlocks.levels, Attack: 98 },
+      },
+    };
+    let currentContext = start.history.at(-1)?.hash ?? 'genesis';
+    const drawContexts: Array<{ context: string; index: number }> = [];
+    const dice = (purpose: string, index = 0, max = 100) => {
+      drawContexts.push({ context: currentContext, index });
+      return drawDice(seed, currentContext, purpose, index, max);
+    };
+
+    const prepared = prepareLevelUpActions(
+      start,
+      'Attack',
+      0.01,
+      dice,
+    );
+
+    expect(drawContexts).toEqual([
+      { context: 'genesis', index: 0 },
+      { context: 'genesis', index: 1 },
+      { context: 'genesis', index: 2 },
     ]);
-  });
+    expect(prepared.rewardAction.payload).toMatchObject({
+      roll: 5.7,
+      baseThreshold: 19.8,
+      threshold: 19.8,
+      source: 'Attack Level 99',
+      success: true,
+    });
 
-  it.each([
-    ['boss', bossContext],
-    ['clue', clueContext],
-  ] as const)('keeps non-Vanilla %s context on the legacy integer roll and Omni stream', (_kind, context) => {
-    const draws: Array<[string, number]> = [];
-    const result = resolveRollForKeyFromSnapshot(
-      seeded({ gameModeId: 'chunked', bossStandardKeysAwarded: { Zulrah: 1 } }),
-      'Test',
-      32.5,
-      context,
-      (purpose, index = 0) => {
-        draws.push([purpose, index]);
-        return [0.31, 0.9, 0.99][index] ?? 0.99;
-      },
-    );
+    const afterLevel = prepareGameTransition(start, prepared.levelAction).state;
+    const levelTip = afterLevel.history.at(-1)?.hash;
+    expect(levelTip).toBeTruthy();
+    expect(levelTip).not.toBe('genesis');
+    currentContext = levelTip!;
 
-    expect(result).toMatchObject({ roll: 32, success: true, omni: false, threshold: 32.5 });
-    expect(draws).toEqual([
-      ['roll', 0],
-      ['roll', 1],
-      ['roll', 2],
-    ]);
-  });
-
-  it('captures the seeded RNG inputs before any callback draw', () => {
-    const snapshot = seeded();
-    const nextFloat = createSnapshotFloat(snapshot);
-    snapshot.rngSeed = 'changed-seed';
-    snapshot.history = [{ id: 'changed', timestamp: 2, type: 'ROLL_FAIL', message: 'No Key.', hash: 'changed-tip' }];
-
-    expect(nextFloat('roll:boss:Zulrah:1', 0)).toBe(
-      drawFloat('snapshot-seed', 'snapshot-tip', 'roll:boss:Zulrah:1', 0),
-    );
-    expect(nextFloat('roll:boss:Zulrah:1', 2)).toBe(
-      drawFloat('snapshot-seed', 'snapshot-tip', 'roll:boss:Zulrah:1', 2),
-    );
-  });
-
-  it('returns before any random draw for a capped Vanilla boss', () => {
-    let draws = 0;
-    const result = resolveRollForKeyFromSnapshot(
-      seeded({ bossStandardKeysAwarded: { Zulrah: 2 } }),
-      'Test',
-      1,
-      bossContext,
-      () => {
-        draws += 1;
-        return 0;
-      },
-    );
-
-    expect(result).toBeNull();
-    expect(draws).toBe(0);
+    const finished = prepareGameTransition(afterLevel, prepared.rewardAction).state;
+    expect(finished.history.map(entry => entry.type))
+      .toEqual(['LEVEL_UP', 'ROLL_SUCCESS']);
+    expect(drawContexts).toHaveLength(3);
   });
 });
-// --- ROLL_RESULT — Vanilla key safety valve ---------------------------------
 
 describe('ROLL_RESULT — Vanilla key safety valve', () => {
   const bossContext = {
@@ -185,39 +361,69 @@ describe('ROLL_RESULT — Vanilla key safety valve', () => {
   const clueContext = { kind: 'clue' as const, clueTier: 'Elite' };
   const vanillaState = () => ({ ...base(), gameModeId: 'vanilla' });
 
-  it.each([
-    ['normal success', { success: true, omni: false, pity: false }, 1],
-    ['standard with Omni', { success: true, omni: true, pity: false }, 1],
-    ['pity award', { success: false, omni: false, pity: true }, 1],
-  ])('%s consumes one boss allowance', (_label, outcome, expected) => {
-    const next = gameReducer(vanillaState(), roll(outcome, bossContext));
-
-    expect(next.bossStandardKeysAwarded?.Zulrah).toBe(expected);
-  });
-
-  it('awards two Standard Keys under Greed while two boss allowances remain', () => {
-    const next = gameReducer(
-      { ...vanillaState(), activeBuff: 'GREED' },
-      roll({ success: true }, bossContext),
+  it('uses each boss reserve stage as the exact contextual base chance', () => {
+    const draws: Array<{ purpose: string; index: number; max: number }> = [];
+    const state = {
+      ...vanillaState(),
+      bossStandardKeysAwarded: { Zulrah: 1 },
+    };
+    const action = prepareKeyRollAction(
+      state,
+      'Zulrah',
+      99,
+      (purpose, index = 0, max = 100) => {
+        draws.push({ purpose, index, max });
+        return index === 0 ? 1500 : max;
+      },
+      undefined,
+      undefined,
+      undefined,
+      bossContext,
     );
 
-    expect(next.keys).toBe(initialState.keys + 2);
-    expect(next.bossStandardKeysAwarded?.Zulrah).toBe(2);
-    expect(next.history.at(-1)?.meta).toMatchObject({
-      standardKeysAwarded: 2,
-      outcome: 'greed',
-      exhausted: true,
+    expect(action).not.toBeNull();
+    expect(action?.payload).toMatchObject({
+      baseThreshold: 15,
+      threshold: 15,
+      roll: 15,
+      success: true,
+      context: bossContext,
     });
+    expect(draws).toEqual([
+      { purpose: 'roll:boss:Zulrah:1', index: 0, max: 10_000 },
+      { purpose: 'roll:boss:Zulrah:1', index: 1, max: 10_000 },
+      { purpose: 'roll:boss:Zulrah:1', index: 2, max: 100 },
+    ]);
   });
 
-  it('clamps a Greed award to the single remaining boss allowance', () => {
+  it('returns before any draw after a Vanilla boss reserve is capped', () => {
+    let draws = 0;
+    const action = prepareKeyRollAction(
+      { ...vanillaState(), bossStandardKeysAwarded: { Zulrah: 2 } },
+      'Zulrah',
+      30,
+      () => {
+        draws += 1;
+        return 1;
+      },
+      undefined,
+      undefined,
+      undefined,
+      bossContext,
+    );
+
+    expect(action).toBeNull();
+    expect(draws).toBe(0);
+  });
+
+  it('clamps a Greed success to the one remaining boss allowance', () => {
     const next = gameReducer(
       {
         ...vanillaState(),
         activeBuff: 'GREED',
         bossStandardKeysAwarded: { Zulrah: 1 },
       },
-      roll({ success: true }, bossContext),
+      roll({ success: true, context: bossContext }),
     );
 
     expect(next.keys).toBe(initialState.keys + 1);
@@ -229,86 +435,45 @@ describe('ROLL_RESULT — Vanilla key safety valve', () => {
     });
   });
 
-  it('keeps the Omni currency independent while consuming one Standard allowance', () => {
-    const next = gameReducer(vanillaState(), roll({ success: true, omni: true }, bossContext));
+  it('keeps Omni currency independent while consuming one Standard boss allowance', () => {
+    const next = gameReducer(vanillaState(), roll({
+      success: true,
+      omni: true,
+      context: bossContext,
+    }));
 
     expect(next.keys).toBe(initialState.keys + 1);
     expect(next.specialKeys).toBe(initialState.specialKeys + 1);
     expect(next.bossStandardKeysAwarded?.Zulrah).toBe(1);
   });
 
-  it('rejects a stale capped boss action without mutating any roll state', () => {
+  it('tracks the actual Standard Key award for a Greed clue result', () => {
+    const next = gameReducer(
+      { ...vanillaState(), activeBuff: 'GREED' },
+      roll({ success: true, context: clueContext }),
+    );
+
+    expect(next.keys).toBe(initialState.keys + 2);
+    expect(next.clueStandardKeysAwarded).toBe(2);
+  });
+
+  it('rejects a stale capped action without mutating roll state', () => {
     const capped = {
       ...vanillaState(),
       keys: 11,
       fatePoints: 49,
       activeBuff: 'GREED' as const,
-      rngSeed: 'capped-zulrah',
       bossStandardKeysAwarded: { Zulrah: 2 },
       history: [{ id: 'prior', timestamp: 1, type: 'ROLL_FAIL' as const, message: 'No Key.' }],
     };
 
-    const next = gameReducer(capped, roll({ success: false, pity: true }, bossContext));
-
-    expect(next).toBe(capped);
+    expect(gameReducer(capped, roll({ success: false, pity: true, context: bossContext }))).toBe(capped);
   });
 
-  it('still records Fate and pity on a non-capped boss failure', () => {
-    const failed = gameReducer(
-      { ...vanillaState(), fatePoints: 49 },
-      roll({ success: false, pity: false }, bossContext),
-    );
-    const pitied = gameReducer(
-      { ...vanillaState(), fatePoints: 49 },
-      roll({ success: false, pity: true }, bossContext),
-    );
-
-    expect(failed.fatePoints).toBe(50);
-    expect(failed.bossStandardKeysAwarded?.Zulrah).toBeUndefined();
-    expect(pitied.fatePoints).toBe(0);
-    expect(pitied.keys).toBe(initialState.keys + 1);
-    expect(pitied.bossStandardKeysAwarded?.Zulrah).toBe(1);
-  });
-
-  it.each([
-    ['normal', { success: true, omni: false, pity: false }, 'NONE', 1],
-    ['pity', { success: false, omni: false, pity: true }, 'NONE', 1],
-    ['Greed', { success: true, omni: false, pity: false }, 'GREED', 2],
-    ['standard with Omni', { success: true, omni: true, pity: false }, 'NONE', 1],
-  ] as const)('%s clue award tracks its actual Standard Key amount', (_label, outcome, activeBuff, expected) => {
+  it('records the exact boss identity and reserve accounting in history metadata', () => {
     const next = gameReducer(
-      { ...vanillaState(), activeBuff },
-      roll(outcome, clueContext),
-    );
-
-    expect(next.keys).toBe(initialState.keys + expected);
-    expect(next.clueStandardKeysAwarded).toBe(expected);
-  });
-
-  it('does not change Vanilla progression counters for non-Vanilla boss or clue rolls', () => {
-    const nonVanilla = {
-      ...base(),
-      gameModeId: 'hardcore',
-      bossStandardKeysAwarded: { Zulrah: 1 },
-      clueStandardKeysAwarded: 4,
-    };
-
-    const boss = gameReducer(nonVanilla, roll({ success: true }, bossContext));
-    const clue = gameReducer(nonVanilla, roll({ success: true }, clueContext));
-
-    expect(boss.bossStandardKeysAwarded).toEqual({ Zulrah: 1 });
-    expect(boss.clueStandardKeysAwarded).toBe(4);
-    expect(clue.bossStandardKeysAwarded).toEqual({ Zulrah: 1 });
-    expect(clue.clueStandardKeysAwarded).toBe(4);
-  });
-
-  it('records exact Vanilla roll identity and award accounting in history metadata', () => {
-    const next = gameReducer(
-      {
-        ...vanillaState(),
-        bossStandardKeysAwarded: { Zulrah: 1 },
-      },
-      roll({ success: true, threshold: 15 }, bossContext),
+      { ...vanillaState(), bossStandardKeysAwarded: { Zulrah: 1 } },
+      roll({ success: true, baseThreshold: 15, threshold: 15, context: bossContext }),
     );
 
     expect(next.history.at(-1)?.meta).toMatchObject({
@@ -325,17 +490,19 @@ describe('ROLL_RESULT — Vanilla key safety valve', () => {
     });
   });
 
-  it('leaves Combat Achievements and collection logging functional at a capped boss', () => {
-    const capped = {
-      ...vanillaState(),
-      bossStandardKeysAwarded: { Zulrah: 2 },
-    };
+  it('leaves counters unchanged outside Vanilla mode', () => {
+    const next = gameReducer(
+      {
+        ...base(),
+        gameModeId: 'hardcore',
+        bossStandardKeysAwarded: { Zulrah: 1 },
+        clueStandardKeysAwarded: 4,
+      },
+      roll({ success: true, context: bossContext }),
+    );
 
-    const ca = gameReducer(capped, { type: 'TOGGLE_CA', payload: 'Easy' });
-    const collection = gameReducer(capped, { type: 'LOG_ITEM', payload: 4151 });
-
-    expect(ca.unlocks.cas).toContain('Easy');
-    expect(collection.unlocks.collectionLog[4151]).toBe(1);
+    expect(next.bossStandardKeysAwarded).toEqual({ Zulrah: 1 });
+    expect(next.clueStandardKeysAwarded).toBe(4);
   });
 });
 // --- UNLOCK -----------------------------------------------------------------
@@ -435,8 +602,10 @@ describe('rituals', () => {
   it('a failed roll under GREED refunds half the ritual cost (plus the normal fate point)', () => {
     const armed = gameReducer({ ...base(), fatePoints: 15 }, { type: 'RITUAL_GREED' }); // 0 left
     const s = gameReducer(armed, roll({ success: false }));
+    const expectedGreedRefund = 8;
     // +1 normal fail fate, +8 refund (ceil(15 × 0.5)); buff consumed.
     expect(s.fatePoints).toBe(9);
+    expect(s.history.at(-1)?.meta?.fatePointsEarned).toBe(1 + expectedGreedRefund);
     expect(s.activeBuff).toBe('NONE');
     expect(s.keys).toBe(initialState.keys);
   });
@@ -615,38 +784,27 @@ describe('LEVEL_UP — Chunked milestone insurance', () => {
 
 // --- SET_GAME_MODE ----------------------------------------------------------
 
-describe('LOAD_SAVE migration', () => {
-  it('dedupes unlock arrays from a corrupted save', () => {
-    const corrupted: any = {
-      keys: 0,
-      unlocks: {
-        regions: ['Karamja', 'Karamja', 'Falador'],
-        bosses: ['Zulrah', 'Zulrah'],
+describe('LOAD_SAVE normalized replacement', () => {
+  it('replaces the whole accepted state without retaining current-only fields', () => {
+    const current = {
+      ...base(),
+      rival: {
+        mode: 'sim' as const,
+        personaId: 'old-rival',
+        name: 'Old rival',
+        emoji: '!',
+        keysPerDay: 1,
+        seed: 1,
+        startedAt: 1,
       },
     };
-    const s = gameReducer(base(), { type: 'LOAD_SAVE', payload: corrupted });
-    expect(s.unlocks.regions).toEqual(['Karamja', 'Falador']);
-    expect(s.unlocks.bosses).toEqual(['Zulrah']);
-  });
+    const accepted = { ...structuredClone(initialState), keys: 8 };
 
-  it('migrates missing and malformed Vanilla key counters', () => {
-    const loaded = gameReducer(base(), {
-      type: 'LOAD_SAVE',
-      payload: {
-        ...base(),
-        bossStandardKeysAwarded: { Brutus: 5, Unknown: 3 },
-        clueStandardKeysAwarded: -4,
-      },
-    });
+    const replaced = gameReducer(current, { type: 'LOAD_SAVE', payload: accepted });
 
-    expect(loaded).toMatchObject({
-      bossStandardKeysAwarded: { Brutus: 1 },
-      clueStandardKeysAwarded: 0,
-    });
-
-    const { bossStandardKeysAwarded: _bossStandardKeysAwarded, clueStandardKeysAwarded: _clueStandardKeysAwarded, ...oldSave } = base();
-    const missing = gameReducer(base(), { type: 'LOAD_SAVE', payload: oldSave });
-    expect(missing).toMatchObject({ bossStandardKeysAwarded: {}, clueStandardKeysAwarded: 0 });
+    expect(replaced.keys).toBe(8);
+    expect(replaced.rival).toBeUndefined();
+    expect(replaced.lastEvent).toBeNull();
   });
 });
 
@@ -668,6 +826,95 @@ describe('SET_GAME_MODE', () => {
     const started = { ...base(), history: [entry] };
     const s = gameReducer(started, { type: 'SET_GAME_MODE', payload: { modeId: 'hardcore' } });
     expect(s.gameModeId).toBe(initialState.gameModeId);
+  });
+});
+
+// --- journal completion -----------------------------------------------------
+
+describe('journal completion actions', () => {
+  it.each([
+    ['COMPLETE_QUEST', 'quests', 'Cook\'s Assistant'],
+    ['COMPLETE_DIARY', 'diaries', 'Falador Easy'],
+    ['COMPLETE_TASK', 'completedTasks', 'fal_easy_1'],
+  ] as const)('%s appends once and never removes historical completion',
+    (type, field, id) => {
+      const once = gameReducer(base(), { type, payload: id });
+      const twice = gameReducer(once, { type, payload: id });
+
+      expect(once.unlocks[field]).toContain(id);
+      expect(twice.unlocks[field].filter(value => value === id)).toHaveLength(1);
+    });
+
+  it('preserves unrelated journal completion fields', () => {
+    const start = gameReducer(base(), { type: 'COMPLETE_QUEST', payload: 'Cook\'s Assistant' });
+    const next = gameReducer(start, { type: 'COMPLETE_DIARY', payload: 'Falador Easy' });
+
+    expect(next.unlocks.quests).toContain('Cook\'s Assistant');
+    expect(next.unlocks.diaries).toContain('Falador Easy');
+  });
+
+  it('COMPLETE_CA appends once and never removes a historical tier', () => {
+    const once = gameReducer(base(), { type: 'COMPLETE_CA', payload: 'Easy' });
+    const twice = gameReducer(once, { type: 'COMPLETE_CA', payload: 'Easy' });
+
+    expect(once.unlocks.cas).toEqual(['Easy']);
+    expect(twice.unlocks.cas).toEqual(['Easy']);
+  });
+
+  it('prepares one task roll and every newly crossed sticky CA tier', () => {
+    const easyTasks = ALL_CA_TASKS.filter(task => task.tierId === 'Easy');
+    const mediumTasks = ALL_CA_TASKS.filter(task => task.tierId === 'Medium');
+    const candidate = easyTasks.at(-1)!;
+    const start = {
+      ...base(),
+      unlocks: {
+        ...base().unlocks,
+        completedTasks: [
+          ...easyTasks.slice(0, -1).map(task => task.id),
+          ...mediumTasks.map(task => task.id),
+        ],
+      },
+    };
+    const drawIndexes: number[] = [];
+    const prepared = prepareCATaskCompletionActions(
+      start,
+      candidate,
+      (_purpose, index = 0) => {
+        drawIndexes.push(index);
+        return 100;
+      },
+    );
+
+    expect(prepared.result).toEqual({ ok: true });
+    expect(prepared.actions.map(action => action.type)).toEqual([
+      'COMPLETE_TASK',
+      'ROLL_RESULT',
+      'COMPLETE_CA',
+      'COMPLETE_CA',
+    ]);
+    expect(prepared.actions[1]).toMatchObject({
+      payload: {
+        source: 'Combat Achievement (Easy)',
+        threshold: 8,
+      },
+    });
+    expect(drawIndexes).toEqual([0, 1]);
+
+    const finished = prepared.actions.reduce(
+      (state, action) => prepareGameTransition(state, action).state,
+      start,
+    );
+    expect(finished.unlocks.completedTasks).toContain(candidate.id);
+    expect(finished.unlocks.cas).toEqual(['Easy', 'Medium']);
+    expect(finished.history.filter(entry => entry.type === 'ROLL_FAIL')).toHaveLength(1);
+
+    const repeated = prepareCATaskCompletionActions(
+      finished,
+      candidate,
+      () => 1,
+    );
+    expect(repeated.result).toEqual({ ok: false, reason: 'Already completed' });
+    expect(repeated.actions).toEqual([]);
   });
 });
 

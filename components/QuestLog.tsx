@@ -2,15 +2,20 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { QUEST_DATA, QuestData } from '../data/questData';
-import { MISTHALIN_AREAS, WIKI_OVERRIDES } from '../constants';
+import { WIKI_OVERRIDES } from '../constants';
 import { CheckCircle2, Lock, Map, BookOpen, Sparkles, Scroll, Bookmark, Layers, List, ExternalLink, ArrowUpRight, TrendingUp, MapPin } from 'lucide-react';
 import { chunkContentService } from '../services/ChunkContentService';
-import { questLocations, refineQuestRegion, QuestLocationInfo } from '../utils/questLocations';
+import { questLocations, QuestLocationInfo } from '../utils/questLocations';
 import { showChunkOnMap } from '../utils/chunkLocations';
-import { questUnmet, isAlmostThere } from '../utils/journalProgress';
-import { isAreaReachable } from '../utils/reachability';
-import { DROP_RATES } from '../config/rules';
-import { DropSource } from '../types';
+import { isAlmostThere } from '../utils/journalProgress';
+import {
+  evaluateQuestEligibility,
+  meetsSkillRequirement,
+  questRequirementOptionLabel,
+} from '../utils/journalStatus';
+import { requestManualAttestation } from '../utils/manualAttestation';
+import { effectiveSkillLevel } from '../utils/slayerReach';
+import { DropSource, UnlockState } from '../types';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { QuestAdvisorPanel } from './QuestAdvisorPanel';
 import { rankAvailableQuests } from '../utils/questAdvisor';
@@ -20,7 +25,14 @@ import { QuestInsights } from './JournalInsights';
 
 interface QuestLogProps {
   searchTerm?: string;
+  suspendModals?: boolean;
 }
+
+export const questLogEligibility = (
+  quest: QuestData,
+  unlocks: UnlockState,
+  gameModeId?: string,
+) => evaluateQuestEligibility(quest, unlocks, gameModeId);
 
 // Helpers
 const getWikiUrl = (name: string) => {
@@ -72,34 +84,45 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId, curre
     const isAvailable = quest.status === 'AVAILABLE';
     const diffStyle = getDifficultyColor(quest.difficulty);
 
-    // "Almost there" — locked by exactly one requirement (a quick win).
-    const unmet = !isCompleted && !isAvailable ? questUnmet(quest, unlocks, gameModeId) : [];
+    const eligibility = quest.eligibility;
+
+    // "Almost there" — locked by exactly one canonical requirement (a quick win).
+    const unmet = !isCompleted && !isAvailable ? eligibility.blockers : [];
     const almost = isAlmostThere(unmet);
 
-    // Chunk-derived locations refine the coarse continent requirement: a quest
-    // tagged "Kandarin" may only actually visit the Ardougne sub-area, so we
-    // check the real chunks it touches and can grant region access from those.
+    // Chunk-derived locations remain informational map links only. Canonical
+    // access is entirely determined by evaluateQuestEligibility.
     const loc: QuestLocationInfo = questLocations(quest.name, unlocks, gameModeId);
 
     // Req-met accounting — drives the progress bar shown on LOCKED cards so
     // players can see at a glance how close they are without counting chips.
-    const gatedRegions: string[] = quest.regions.filter(
-      (r: string) => !MISTHALIN_AREAS.includes(r) && r !== 'Misthalin',
-    );
-    const authoredRegionMet = gatedRegions.every((r: string) => isAreaReachable(r, unlocks, gameModeId));
-    const region = refineQuestRegion(authoredRegionMet, loc);
-    // When chunk evidence grants access, count every gated continent as met so
-    // the progress bar agrees with the (now AVAILABLE) status.
-    const metRegions = region.met ? gatedRegions : gatedRegions.filter((r: string) => isAreaReachable(r, unlocks, gameModeId));
+    const regionReqs: string[] = quest.regions;
+    const metRegions = regionReqs.filter((region: string) =>
+      eligibility.evidence.includes(region));
+    const locationReqs = quest.locations ?? [];
+    const metLocations = locationReqs.filter((location: { label: string }) =>
+      eligibility.evidence.includes(location.label));
     const skillReqs = Object.entries(quest.skills as Record<string, number>);
-    const metSkills = skillReqs.filter(([skill, lvl]) => {
-      if (skill === 'Quest Points') return currentQP >= lvl;
-      return (unlocks.skills[skill] || 0) > 0 && (unlocks.levels[skill] || 1) >= lvl;
-    });
+    const metSkills = skillReqs.filter(([skill, lvl]) =>
+      eligibility.evidence.includes(skill + ' ' + lvl));
+    const combatReqs = quest.combatLevel === undefined ? [] : [quest.combatLevel];
+    const metCombat = combatReqs.filter((level: number) =>
+      eligibility.evidence.includes('Combat level ' + level));
     const prereqReqs: string[] = quest.prereqs || [];
-    const metPrereqs = prereqReqs.filter((qid: string) => unlocks.quests.includes(qid));
-    const totalReqs = gatedRegions.length + skillReqs.length + prereqReqs.length;
-    const totalMet = metRegions.length + metSkills.length + metPrereqs.length;
+    const metPrereqs = prereqReqs.filter((qid: string) =>
+      eligibility.evidence.includes(qid));
+    const hasAlternative = Boolean(quest.oneOf?.length);
+    const alternativeLabel = hasAlternative
+      ? quest.oneOf.map(questRequirementOptionLabel).join(' or ')
+      : '';
+    const alternativeMet = !hasAlternative || !eligibility.blockers.some(
+      (blocker: { kind: string; label: string }) =>
+        blocker.kind === 'region' && blocker.label === alternativeLabel,
+    );
+    const totalReqs = regionReqs.length + locationReqs.length + skillReqs.length +
+      combatReqs.length + prereqReqs.length + (hasAlternative ? 1 : 0);
+    const totalMet = metRegions.length + metLocations.length + metSkills.length +
+      metCombat.length + metPrereqs.length + (hasAlternative && alternativeMet ? 1 : 0);
     const reqPct = totalReqs === 0 ? 100 : Math.round((totalMet / totalReqs) * 100);
 
     return (
@@ -145,34 +168,48 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId, curre
                     quest in the list (onPrereqClick).
                   */}
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
-                      {quest.regions.map((r: string) => {
-                          const unlocked = isAreaReachable(r, unlocks, gameModeId);
-                          if (isCompleted || unlocked) {
-                              return (
-                                  <span key={r} className="text-[10px] px-1.5 rounded flex items-center gap-1 border bg-black/30 text-gray-500 border-white/5">
-                                      <Map size={8} /> {r}
-                                  </span>
-                              );
-                          }
-                          // Continent isn't unlocked, but chunk data shows the quest is
-                          // fully reachable via unlocked sub-areas → "bypassed", not a blocker.
-                          if (region.via === 'chunks') {
-                              return (
-                                  <span key={r} className="text-[10px] px-1.5 rounded flex items-center gap-1 border bg-amber-900/10 text-amber-400/80 border-amber-500/20"
-                                    title={`${r} isn't fully unlocked, but every chunk this quest needs is reachable via your unlocked sub-areas`}>
-                                      <Map size={8} /> {r} <span className="opacity-70">↳ via chunks</span>
-                                  </span>
-                              );
-                          }
+                      {quest.regions.map((region: string) => {
+                          const met = isCompleted || eligibility.evidence.includes(region);
                           return (
-                              <span key={r} className="text-[10px] px-1.5 rounded flex items-center gap-1 border bg-red-900/10 text-red-400 border-red-500/20">
-                                  <Map size={8} /> {r}
+                              <span key={region} className={'text-[10px] px-1.5 rounded flex items-center gap-1 border ' +
+                                (met
+                                  ? 'bg-black/30 text-gray-500 border-white/5'
+                                  : 'bg-red-900/10 text-red-400 border-red-500/20')}>
+                                  <Map size={8} /> {region}
                               </span>
                           );
                       })}
-                      {/* Chunk-derived sub-area locations: the precise places this quest
-                          touches, green/red by real unlock state, click → jump to map.
-                          Locked places lead (they're the actual blockers). */}
+                      {locationReqs.map((location: { id: string; label: string }) => {
+                          const met = isCompleted || eligibility.evidence.includes(location.label);
+                          return (
+                              <span key={location.id} className={'text-[10px] px-1.5 rounded flex items-center gap-1 border ' +
+                                (met
+                                  ? 'bg-black/30 text-gray-500 border-white/5'
+                                  : 'bg-red-900/10 text-red-400 border-red-500/20')}>
+                                  <MapPin size={8} /> {location.label}
+                              </span>
+                          );
+                      })}
+                      {combatReqs.map((level: number) => {
+                          const met = isCompleted || eligibility.evidence.includes('Combat level ' + level);
+                          return (
+                              <span key={'combat:' + level} className={'text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1 border ' +
+                                (met
+                                  ? 'bg-black/30 text-gray-500 border-white/5'
+                                  : 'bg-red-900/10 text-red-400 border-red-500/20')}>
+                                  <BookOpen size={8} /> Combat level {level}
+                              </span>
+                          );
+                      })}
+                      {(quest.manualRequirements ?? []).map((requirement: string) => (
+                          <span key={'manual:' + requirement}
+                            className="text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1 border bg-cyan-900/10 text-cyan-300/80 border-cyan-500/20"
+                            title="Manual requirement — shown for reference and not checked automatically">
+                              <Bookmark size={8} /> {requirement}
+                          </span>
+                      ))}
+                      {/* Informational chunk-derived locations only: click to inspect
+                          the map. These chips do not change canonical eligibility. */}
                       {!isCompleted && loc.hasData && loc.places.slice(0, 4).map((p) => (
                           <button
                               key={`loc:${p.label}`}
@@ -190,6 +227,14 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId, curre
                       {!isCompleted && loc.places.length > 4 && (
                           <span className="text-[10px] px-1 text-gray-600">+{loc.places.length - 4}</span>
                       )}
+                      {hasAlternative && (
+                        <span className={'text-[10px] px-2 py-1 rounded border ' +
+                          (alternativeMet
+                            ? 'bg-black/30 border-white/5 text-gray-500'
+                            : 'bg-red-900/20 border-red-500/30 text-red-300')}>
+                          One of: {quest.oneOf.map(questRequirementOptionLabel).join(' or ')}
+                        </span>
+                      )}
                       {Object.entries(quest.skills).map(([skill, lvl]) => {
                           const reqLevel = lvl as number;
                           let met = false;
@@ -200,10 +245,10 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId, curre
                               met = currentQP >= reqLevel;
                               currentLevel = currentQP;
                           } else {
-                              currentLevel = unlocks.levels[skill] || 1;
+                              currentLevel = effectiveSkillLevel(unlocks, skill);
                               const skillUnlocked = (unlocks.skills[skill] || 0) > 0;
                               isLocked = !skillUnlocked;
-                              met = skillUnlocked && currentLevel >= reqLevel;
+                              met = meetsSkillRequirement(unlocks, skill, reqLevel);
                           }
 
                           if (isCompleted || met) {
@@ -308,8 +353,8 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId, curre
     );
 };
 
-export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch = '' }) => {
-  const { unlocks, toggleQuest, rollForKey, advisorsEnabled, gameModeId } = useGame();
+export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch = '', suspendModals = false }) => {
+  const { unlocks, completeQuest, advisorsEnabled, gameModeId } = useGame();
   // Filter state is persisted in localStorage so returning players don't have
   // to re-apply their preferred view every session.
   const [filter, setFilter] = useLocalStorage<JournalStatus>('jrnl:quest:filter', 'ALL');
@@ -364,40 +409,15 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
   // input drives.
   const searchTerm = externalSearch || localSearch;
 
-  const getStatus = (quest: QuestData) => {
-    if (unlocks.quests.includes(quest.id)) return 'COMPLETED';
-
-    const missingRegions = quest.regions.filter(r => !isAreaReachable(r, unlocks, gameModeId));
-
-    // Refine the coarse continent gate with chunk evidence: if every chunk the
-    // quest actually visits is in an unlocked sub-area, it's reachable even when
-    // the whole authored continent isn't unlocked.
-    const region = refineQuestRegion(missingRegions.length === 0, questLocations(quest.name, unlocks, gameModeId));
-    if (!region.met) return 'LOCKED_REGION';
-
-    const missingSkills = Object.entries(quest.skills).some(([skill, lvl]) => {
-      if (skill === 'Quest Points') {
-         const currentQP = unlocks.quests.reduce((acc, qid) => acc + (QUEST_DATA[qid]?.points || 0), 0);
-         return currentQP < lvl;
-      }
-      const current = unlocks.levels[skill] || 1;
-      const isUnlocked = (unlocks.skills[skill] || 0) > 0;
-      return !isUnlocked || current < lvl;
-    });
-    if (missingSkills) return 'LOCKED_SKILL';
-
-    const missingPrereqs = quest.prereqs.some(qid => !unlocks.quests.includes(qid));
-    if (missingPrereqs) return 'LOCKED_QUEST';
-
-    return 'AVAILABLE';
-  };
-
   const allQuests = useMemo(() => {
-    return Object.values(QUEST_DATA).map(q => ({ ...q, status: getStatus(q) })).sort((a, b) => {
+    return Object.values(QUEST_DATA).map(q => {
+      const eligibility = questLogEligibility(q, unlocks, gameModeId);
+      return { ...q, status: eligibility.status, eligibility };
+    }).sort((a, b) => {
         const score = (s: string) => s === 'AVAILABLE' ? 0 : s.includes('LOCKED') ? 1 : 2;
         return score(a.status) - score(b.status) || a.name.localeCompare(b.name);
     });
-    // chunkTick: recompute statuses once the chunk index finishes loading.
+    // chunkTick: refresh informational map-location chips once the chunk index loads.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unlocks, gameModeId, chunkTick]);
 
@@ -440,9 +460,9 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
   // simulations on every keystroke while the player is searching.
   const showAdvisorStrip = advisorsEnabled && !searchTerm && filter === 'ALL' && regionFilter === 'ALL' && advisorMode;
   const rankedQuests = useMemo(
-    () => (showAdvisorStrip ? rankAvailableQuests(unlocks) : []),
+    () => (showAdvisorStrip ? rankAvailableQuests(unlocks, gameModeId) : []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [showAdvisorStrip, unlocks],
+    [showAdvisorStrip, unlocks, gameModeId],
   );
 
   const mainQuests = filteredQuests.filter(q => q.points > 0);
@@ -465,16 +485,18 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
 
   const handleQuestToggle = (e: React.MouseEvent, quest: QuestData) => {
       e.stopPropagation();
-      const isCompleted = unlocks.quests.includes(quest.id);
-      
-      if (isCompleted) return;
+      const eligibility = evaluateQuestEligibility(quest, unlocks, gameModeId);
+      const attestation = requestManualAttestation(
+        quest.name,
+        eligibility,
+        message => window.confirm(message),
+      );
+      if (attestation === null) return;
+      const result = completeQuest(quest.id, e.clientX, e.clientY, attestation);
+      if (!result.ok) return;
 
-      toggleQuest(quest.id);
       // Celebration overlay (QuestCompleteOverlay) shows the wiki reward scroll.
       window.dispatchEvent(new CustomEvent('fate:quest-complete', { detail: { name: quest.name } }));
-
-      const rate = DROP_RATES[quest.difficulty];
-      rollForKey(quest.difficulty, rate, e.clientX, e.clientY);
   };
 
   const totalQuests = Object.values(QUEST_DATA).filter(q => q.points > 0).length;
@@ -650,7 +672,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
 
       </div>
 
-      {skillPopover && (
+      {!suspendModals && skillPopover && (
         <SkillTrainingPopover
           {...skillPopover}
           onClose={() => setSkillPopover(null)}

@@ -8,6 +8,7 @@ import { RESOURCE_MAP } from '../data/resourceData';
 import { TableType } from '../types';
 import { calculateGoalProgress, GoalProgress } from '../utils/goalLogic';
 import { calculateEngineItemProgress } from '../utils/supplyChain';
+import { evaluateDiaryTierEligibility } from '../utils/journalStatus';
 import { Pin, Trash2, CheckCircle2, AlertCircle, Route } from 'lucide-react';
 import { GoalRouteView } from './GoalRouteView';
 
@@ -30,8 +31,9 @@ export const GoalTracker: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
         {pinnedGoals.map(id => {
           let req: ContentRequirement | undefined = STRATEGY_DATABASE[id];
+          const diary = DIARY_DATA[id];
 
-          // Fallback construction for items not in the manual Strategy DB (Quests/Diaries)
+          // Fallback construction for quests not in the manual Strategy DB.
           if (!req) {
              const quest = QUEST_DATA[id];
              if (quest) {
@@ -43,19 +45,7 @@ export const GoalTracker: React.FC = () => {
                      quests: quest.prereqs,
                      description: `Series: ${quest.series || 'None'}`
                  };
-             } else {
-                 const diary = DIARY_DATA[id];
-                 if (diary) {
-                     req = {
-                         id: diary.id,
-                         category: TableType.DIARIES,
-                         regions: diary.requiredRegions, // Diaries require specific extra regions sometimes
-                         skills: diary.skills,
-                         quests: diary.quests,
-                         description: `Region: ${diary.region} | Difficulty: ${diary.tier}`
-                     };
-                 }
-             }
+          }
           }
 
           // Final fallback: a Resource Engine item. Engine items don't fit
@@ -64,7 +54,19 @@ export const GoalTracker: React.FC = () => {
           // engine's own analyzer and feed the same GoalProgress shape back.
           let progress: GoalProgress;
           let description: string | undefined;
-          if (req) {
+          if (diary) {
+            const eligibility = evaluateDiaryTierEligibility(diary, unlocks, gameModeId);
+            const total = eligibility.evidence.length + eligibility.blockers.length;
+            progress = {
+              percentage: eligibility.eligible || eligibility.status === 'COMPLETED'
+                ? 100
+                : total === 0 ? 0 : Math.round((eligibility.evidence.length / total) * 100),
+              missing: eligibility.blockers.map(blocker => blocker.label),
+              totalSteps: total,
+              completedSteps: eligibility.evidence.length,
+            };
+            description = `Region: ${diary.region} | Difficulty: ${diary.tier}`;
+          } else if (req) {
             progress = calculateGoalProgress(req, unlocks, gameModeId);
             description = req.description;
           } else if (RESOURCE_MAP[id]) {

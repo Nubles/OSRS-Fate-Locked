@@ -1,3 +1,4 @@
+import { lazyWithRetry } from '../utils/lazyRetry';
 import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { 
   EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, REGION_GROUPS, MISTHALIN_AREAS, 
@@ -20,10 +21,12 @@ import { isOmniDirectUnlockAvailable } from '../utils/gameEngine';
 import { TableType } from '../types';
 import { wikiService } from '../services/WikiService';
 import { NoteTrigger } from './NoteTrigger';
+import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
+import { SkillRollOdds } from './SkillRollOdds';
 // RegionMap is the single heaviest component in the app (map surface,
 // authoring tool, chunk overlays + their data). It only renders on the World
 // tab, so keep it out of the initial bundle.
-const RegionMap = lazy(() => import('./RegionMap').then(m => ({ default: m.RegionMap })));
+const RegionMap = lazyWithRetry(() => import('./RegionMap').then(m => ({ default: m.RegionMap })));
 import { JournalNextBest } from './JournalNextBest';
 import { JournalProgressRings } from './JournalProgressRings';
 import { EquipmentLab } from './EquipmentLab';
@@ -34,13 +37,13 @@ import { rivalCompletion, standing as rivalStanding } from '../utils/rival';
 // Heavy tab/modal contents — code-split so their large data dependencies
 // (questData, diaryTasks, caTasks, collectionLogData, requirements, etc.)
 // stay out of the initial dashboard bundle.
-const GoalTracker = lazy(() => import('./GoalTracker').then(m => ({ default: m.GoalTracker })));
-const QuestLog = lazy(() => import('./QuestLog').then(m => ({ default: m.QuestLog })));
-const DiaryLog = lazy(() => import('./DiaryLog').then(m => ({ default: m.DiaryLog })));
-const CALog = lazy(() => import('./CALog').then(m => ({ default: m.CALog })));
-const QuestDoabilityPanel = lazy(() => import('./QuestDoabilityPanel').then(m => ({ default: m.QuestDoabilityPanel })));
-const CollectionLog = lazy(() => import('./CollectionLog').then(m => ({ default: m.CollectionLog })));
-const SkillDetailModal = lazy(() => import('./SkillDetailModal').then(m => ({ default: m.SkillDetailModal })));
+const GoalTracker = lazyWithRetry(() => import('./GoalTracker').then(m => ({ default: m.GoalTracker })));
+const QuestLog = lazyWithRetry(() => import('./QuestLog').then(m => ({ default: m.QuestLog })));
+const DiaryLog = lazyWithRetry(() => import('./DiaryLog').then(m => ({ default: m.DiaryLog })));
+const CALog = lazyWithRetry(() => import('./CALog').then(m => ({ default: m.CALog })));
+const QuestDoabilityPanel = lazyWithRetry(() => import('./QuestDoabilityPanel').then(m => ({ default: m.QuestDoabilityPanel })));
+const CollectionLog = lazyWithRetry(() => import('./CollectionLog').then(m => ({ default: m.CollectionLog })));
+const SkillDetailModal = lazyWithRetry(() => import('./SkillDetailModal').then(m => ({ default: m.SkillDetailModal })));
 import { PanelErrorBoundary } from './PanelErrorBoundary';
 import { MerchantShopsPanel } from './MerchantShopsPanel';
 import { SlayerReachabilityPanel } from './SlayerReachabilityPanel';
@@ -57,24 +60,26 @@ import { getActivityRegion } from '../data/activityRegions';
 import { isAreaReachable, bankLocksActive } from '../utils/reachability';
 import { BANKS, BANK_IDS, BANK_BY_ID } from '../data/banks';
 import { getActivityReq, ActivityReq } from '../data/activityRequirements';
+import { evaluateActivityReadiness, type ActivityReadiness } from '../utils/activityReadiness';
+import { ActivityReadinessBadge } from './ActivityReadinessBadge';
 import { RegionAdvisorPanel } from './RegionAdvisorPanel';
 import { FrontierAdvisorPanel } from './FrontierAdvisorPanel';
 import { SkillAdvisorPanel } from './SkillAdvisorPanel';
 
 // Code-split: the run card pulls in html2canvas only when actually opened.
-const ShareModal = lazy(() => import('./ShareModal').then(m => ({ default: m.ShareModal })));
+const ShareModal = lazyWithRetry(() => import('./ShareModal').then(m => ({ default: m.ShareModal })));
 // Goal Planner modal — pulls in the full quest/diary datasets, so load on demand.
-const GoalPlannerModal = lazy(() => import('./GoalPlannerModal').then(m => ({ default: m.GoalPlannerModal })));
+const GoalPlannerModal = lazyWithRetry(() => import('./GoalPlannerModal').then(m => ({ default: m.GoalPlannerModal })));
 // Achievements modal — pulls in the quest/diary/CA datasets via the engine.
-const AchievementsModal = lazy(() => import('./AchievementsModal').then(m => ({ default: m.AchievementsModal })));
+const AchievementsModal = lazyWithRetry(() => import('./AchievementsModal').then(m => ({ default: m.AchievementsModal })));
 // Fate Forecast modal — projects keys/time to a chosen locked unlock.
-const FateForecastModal = lazy(() => import('./FateForecastModal').then(m => ({ default: m.FateForecastModal })));
+const FateForecastModal = lazyWithRetry(() => import('./FateForecastModal').then(m => ({ default: m.FateForecastModal })));
 // Rival Ghost modal — race a simulated nemesis or a friend's run.
-const RivalModal = lazy(() => import('./RivalModal').then(m => ({ default: m.RivalModal })));
+const RivalModal = lazyWithRetry(() => import('./RivalModal').then(m => ({ default: m.RivalModal })));
 // Boss Kill Planner — DPS/TTK/readiness vs your unlocked bosses.
-const BossKillPlanner = lazy(() => import('./BossKillPlanner').then(m => ({ default: m.BossKillPlanner })));
+const BossKillPlanner = lazyWithRetry(() => import('./BossKillPlanner').then(m => ({ default: m.BossKillPlanner })));
 // Auto-Roll (prototype) — sync a run from a real account via the hiscores API.
-const AutoRollPanel = lazy(() => import('./AutoRollPanel').then(m => ({ default: m.AutoRollPanel })));
+const AutoRollPanel = lazyWithRetry(() => import('./AutoRollPanel').then(m => ({ default: m.AutoRollPanel })));
 
 // --- Constants & Helpers ---
 
@@ -167,6 +172,8 @@ interface UnlockCardProps {
   subText?: string;
   region?: string;
   req?: ActivityReq;
+  readiness?: ActivityReadiness;
+  suspendModals?: boolean;
 }
 
 const UnlockCard: React.FC<UnlockCardProps> = ({
@@ -177,7 +184,9 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
   onClick,
   subText,
   region,
-  req
+  req,
+  readiness,
+  suspendModals = false,
 }) => {
   // Image priority: a hand-picked sprite/icon → the item's real OSRS wiki image
   // (fetched + cached via WikiService) → the globe placeholder. Self-heals: if a
@@ -217,7 +226,7 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
         `}
     >
         <div className="absolute top-1 right-1 z-10">
-            <NoteTrigger id={item} title={item} />
+            <NoteTrigger id={item} title={item} suspendModals={suspendModals} />
         </div>
 
         <div className={`w-10 h-10 rounded flex items-center justify-center shrink-0 ${isUnlocked ? 'bg-black/30' : 'bg-black/20'}`}>
@@ -258,6 +267,7 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
                     ))}
                 </div>
             )}
+            {readiness && <ActivityReadinessBadge readiness={readiness} />}
             {req?.note && (
                 <div className="text-[9px] text-gray-500 italic leading-tight mt-0.5">{req.note}</div>
             )}
@@ -312,10 +322,28 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
 
 // --- Main Dashboard Component ---
 
-export const Dashboard: React.FC = () => {
+interface DashboardProps {
+  suspendModals?: boolean;
+}
+
+export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) => {
   const { unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId, customMode } = useGame();
   const activeMode = getGameMode(gameModeId);
   const [activeTab, setActiveTab] = useState('CHARACTER');
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('open') !== 'roll-inbox') return;
+    setActiveTab('AUTOROLL');
+    params.delete('open');
+    params.delete('code');
+    const query = params.toString();
+    window.history.replaceState(
+      null,
+      '',
+      `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`,
+    );
+  }, []);
   // Progressive disclosure: tabs reveal as the run earns them (Character is
   // always visible; a palette/advisor jump to a still-hidden tab shows it too,
   // since navigation is intent). See utils/featureGates.ts.
@@ -343,8 +371,8 @@ export const Dashboard: React.FC = () => {
   const [unlockReveal, dismissReveal] = useUnlockReveal(unlocks, gameModeId);
   const [achievementReveal, dismissAchievementReveal] = useAchievementReveal(unlocks);
 
-  useEscapeKey(() => setShowRunCard(false), showRunCard);
-  useEscapeKey(() => setSelectedSkillForDetails(null), selectedSkillForDetails !== null);
+  useEscapeKey(() => setShowRunCard(false), showRunCard && !suspendModals);
+  useEscapeKey(() => setSelectedSkillForDetails(null), selectedSkillForDetails !== null && !suspendModals);
 
   // The Journal summary card lives in the persistent left sidebar (App.tsx), so
   // it can't set this component's tab state directly. It dispatches a
@@ -367,12 +395,24 @@ export const Dashboard: React.FC = () => {
   // that item, filtered and highlighted via the existing search machinery.
   useEffect(() => {
     const onNav = (e: Event) => {
-      const { target = '', query } = (e as CustomEvent<{ target?: string; query?: string }>).detail ?? {};
+      const {
+        target = '',
+        query,
+        activityCategory: requestedActivityCategory,
+      } = (e as CustomEvent<{
+        target?: string;
+        query?: string;
+        activityCategory?: string;
+      }>).detail ?? {};
       if (target.startsWith('tab:')) {
         // "tab:JOURNAL/QUESTS" also selects a Journal sub-tab — without this a
         // quest jump would land on whichever sub-tab the player last had open.
         const [tab, subTab] = target.slice(4).split('/');
         setActiveTab(tab);
+        if (requestedActivityCategory && tab === 'ACTIVITIES') {
+          setActivityCategory(requestedActivityCategory);
+        }
+        if (tab === 'WORLD') setWorldView('LIST');
         if (subTab && tab === 'JOURNAL') setJournalSubTab(subTab as 'QUESTS' | 'DIARIES' | 'CA' | 'DOABLE');
         if (query) setSearchQuery(query);
         return;
@@ -462,12 +502,12 @@ export const Dashboard: React.FC = () => {
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-full overflow-y-auto pr-2 custom-scrollbar pb-10">
         {/* Equipment Lab — interactive paper-doll (click a slot for its tier
             ladder + upgrade), a target-loadout planner, and a DPS calculator. */}
-        <EquipmentLab onUpgrade={(slot) => handleSpecialUnlock(TableType.EQUIPMENT, slot)} />
+        <EquipmentLab onUpgrade={(slot) => handleSpecialUnlock(TableType.EQUIPMENT, slot)} suspendModals={suspendModals} />
 
         {/* Skills Section */}
         <div className="space-y-4">
             <div className="flex justify-between items-center bg-[#151515] p-2 rounded border border-white/5">
-                <h3 className="text-blue-400 font-bold text-sm flex items-center gap-1.5">Skills <SectionGuide id="SKILLS" /></h3>
+                <h3 className="text-blue-400 font-bold text-sm flex items-center gap-1.5">Skills <SectionGuide id="SKILLS" suspendModals={suspendModals} /></h3>
                 <span className="text-xs text-blue-400/60 font-mono">{totalSkillTiers}/{SKILLS_LIST.length * 10} Tiers</span>
             </div>
 
@@ -499,6 +539,7 @@ export const Dashboard: React.FC = () => {
                     };
                     
                     const isMainActionable = canUnlockStart || canLevel;
+                    const oddsDescriptionId = `skill-roll-odds-${skill.toLowerCase().replace(/\s+/g, '-')}`;
                     const tierColorText = isUnlocked ? 'text-gray-200' : 'text-gray-500';
 
                     if (searchQuery && !skill.toLowerCase().includes(searchQuery.toLowerCase())) return null;
@@ -509,7 +550,7 @@ export const Dashboard: React.FC = () => {
                            data-skill-card={skill}
                            onClick={isMainActionable ? handleMainClick : undefined}
                            className={`
-                                flex flex-col p-2 rounded bg-[#1f1f1f] border border-white/5 text-left transition-all duration-150 relative overflow-hidden group min-h-[60px]
+                                flex flex-col p-2 rounded bg-[#1f1f1f] border border-white/5 text-left transition-all duration-150 relative overflow-hidden group min-h-[68px]
                                 ${canLevel ? 'hover:bg-[#2a2a2a] cursor-pointer ring-1 ring-green-500/20 hover:ring-green-500/40' : ''}
                                 ${canUnlockStart ? 'ring-1 ring-purple-400/40 hover:ring-purple-400/70 hover:bg-purple-900/10 cursor-pointer' : ''}
                                 ${levelingSkill === skill ? 'animate-pulse bg-green-900/40' : ''}
@@ -517,10 +558,11 @@ export const Dashboard: React.FC = () => {
                            `}
                            role="button"
                            tabIndex={isMainActionable ? 0 : -1}
+                           aria-describedby={canLevel ? oddsDescriptionId : undefined}
                         >
                             {/* Note Trigger */}
                             <div className="absolute top-1 right-1 z-30">
-                                <NoteTrigger id={skill} title={skill} />
+                                <NoteTrigger id={skill} title={skill} suspendModals={suspendModals} />
                             </div>
 
                             {/* Omni Upgrade Button */}
@@ -558,6 +600,7 @@ export const Dashboard: React.FC = () => {
                                     <div className="text-[9px] text-gray-400 font-mono leading-none mt-0.5">
                                         {isUnlocked ? `Lvl ${level}/99` : 'Locked'}
                                     </div>
+                                    <SkillRollOdds currentLevel={level} isUnlocked={isUnlocked} descriptionId={oddsDescriptionId} />
                                     <div className="text-[8px] text-gray-500 mt-0.5 leading-none">
                                         Methods: <span className="text-gray-400">{methodRange}</span>
                                     </div>
@@ -605,6 +648,13 @@ export const Dashboard: React.FC = () => {
             const isUnlocked = unlocked.includes(item);
             const canUnlock = !isUnlocked && specialKeys > 0 && isOmniDirectUnlockAvailable(type, item, unlocks, gameModeId);
             const sub = detailsMap ? detailsMap[item] : undefined;
+            const req = getActivityReq(label);
+            const readiness = evaluateActivityReadiness(
+              isUnlocked,
+              req,
+              unlocks,
+              gameModeId,
+            );
 
             // Filter logic: Show if unlocked OR can unlock (Omni)
             if (showOnlyActionable && !isUnlocked && !canUnlock) return null;
@@ -616,10 +666,12 @@ export const Dashboard: React.FC = () => {
                     isUnlocked={isUnlocked}
                     canUnlock={canUnlock}
                     icon={iconMap ? iconMap[item] : undefined}
+                    suspendModals={suspendModals}
                     onClick={() => handleSpecialUnlock(type, item)}
                     subText={sub}
                     region={getActivityRegion(label)}
-                    req={getActivityReq(label)}
+                    req={req}
+                    readiness={readiness}
                 />
             );
         })}
@@ -667,7 +719,7 @@ export const Dashboard: React.FC = () => {
                   <div className="bg-[#1a1a1a] rounded border border-emerald-500/30 p-3 relative overflow-hidden group">
                       <div className="absolute inset-0 bg-emerald-900/5 pointer-events-none"></div>
                       <div className="absolute top-1 right-1 z-20">
-                            <NoteTrigger id="Misthalin" title="Misthalin" />
+                            <NoteTrigger id="Misthalin" title="Misthalin" suspendModals={suspendModals} />
                       </div>
                       {(() => {
                         const freeCount = MISTHALIN_AREAS.filter(a => isAreaReachable(a, unlocks, gameModeId)).length;
@@ -727,7 +779,7 @@ export const Dashboard: React.FC = () => {
                           return (
                               <div key={group} data-region-card={group} className="bg-[#1a1a1a] rounded border border-white/5 p-3 h-full relative transition-shadow duration-300">
                                   <div className="absolute top-1 right-1 z-20">
-                                        <NoteTrigger id={group} title={group} />
+                                        <NoteTrigger id={group} title={group} suspendModals={suspendModals} />
                                   </div>
                                   <div className="flex items-center gap-2 mb-2 pr-6">
                                       <img src={`https://oldschool.runescape.wiki/images/${REGION_ICONS[group] || 'Globe_icon.png'}`} className="w-5 h-5 object-contain" />
@@ -796,7 +848,7 @@ export const Dashboard: React.FC = () => {
         { id: 'FARMING',   label: 'Farming Patches',    color: 'text-green-400',  bar: 'bg-green-500',  list: FARMING_PATCH_LIST, unlocked: unlocks.farming,   type: TableType.FARMING_LAYERS, details: FARMING_UNLOCK_DETAILS },
         { id: 'MOBILITY',  label: 'Mobility',           color: 'text-amber-400',  bar: 'bg-amber-500',  list: MOBILITY_LIST,      unlocked: unlocks.mobility,  type: TableType.MOBILITY },
         { id: 'GUILDS',    label: 'Guilds',             color: 'text-teal-400',   bar: 'bg-teal-500',   list: GUILDS_LIST,        unlocked: unlocks.guilds,    type: TableType.GUILDS },
-        { id: 'ARCANA',    label: 'Arcana',             color: 'text-violet-400', bar: 'bg-violet-500', list: ARCANA_LIST,        unlocked: unlocks.arcana,    type: TableType.ARCANA },
+        { id: 'ARCANA',    label: COMBAT_POWERS_LABEL,  color: 'text-violet-400', bar: 'bg-violet-500', list: ARCANA_LIST,        unlocked: unlocks.arcana,    type: TableType.ARCANA },
         { id: 'POH',       label: 'Player Owned House', color: 'text-orange-400', bar: 'bg-orange-500', list: POH_LIST,           unlocked: unlocks.housing,   type: TableType.POH },
         { id: 'STORAGE',   label: 'Storage',            color: 'text-amber-600',  bar: 'bg-amber-600',  list: STORAGE_LIST,       unlocked: unlocks.storage,   type: TableType.STORAGE },
         { id: 'MERCHANTS', label: 'Merchants',          color: 'text-yellow-400', bar: 'bg-yellow-500', list: MERCHANTS_LIST,     unlocked: unlocks.merchants, type: TableType.MERCHANTS },
@@ -908,8 +960,8 @@ export const Dashboard: React.FC = () => {
           {advisorsEnabled && <JournalNextBest onPick={setJournalSubTab} />}
           <div className="flex-1 overflow-hidden p-2">
               <Suspense fallback={<ModalFallback />}>
-                  {journalSubTab === 'QUESTS' && <QuestLog searchTerm={searchQuery} />}
-                  {journalSubTab === 'DIARIES' && <DiaryLog searchTerm={searchQuery} />}
+                  {journalSubTab === 'QUESTS' && <QuestLog searchTerm={searchQuery} suspendModals={suspendModals} />}
+                  {journalSubTab === 'DIARIES' && <DiaryLog searchTerm={searchQuery} suspendModals={suspendModals} />}
                   {journalSubTab === 'CA' && <CALog searchTerm={searchQuery} />}
                   {journalSubTab === 'DOABLE' && <QuestDoabilityPanel searchTerm={searchQuery} />}
               </Suspense>
@@ -920,11 +972,11 @@ export const Dashboard: React.FC = () => {
   return (
     <>
     <div className="bg-osrs-panel border border-osrs-border rounded-lg shadow-lg flex flex-col h-full overflow-hidden relative">
-      {pendingSpecial && (
+      {!suspendModals && pendingSpecial && (
           <VoidReveal itemName={pendingSpecial.item} itemType={pendingSpecial.table} itemImage={pendingSpecial.image} onComplete={finalizeSpecial} animationsEnabled={animationsEnabled} />
       )}
 
-      {selectedSkillForDetails && (
+      {!suspendModals && selectedSkillForDetails && (
           <Suspense fallback={<ModalFallback />}>
               <SkillDetailModal
                   skill={selectedSkillForDetails.name}
@@ -935,7 +987,7 @@ export const Dashboard: React.FC = () => {
       )}
 
       {/* Confirmation Modal */}
-      {confirmOmni && (
+      {!suspendModals && confirmOmni && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
               <div className="bg-[#1a1a1a] border border-purple-500/50 rounded-xl shadow-2xl p-6 max-w-sm w-full relative">
                   <div className="flex items-center gap-3 mb-4">
@@ -1108,7 +1160,7 @@ export const Dashboard: React.FC = () => {
               >
                   <Filter size={14} />
               </button>
-              <SectionGuide id={activeTab} className="p-1" />
+              <SectionGuide id={activeTab} className="p-1" suspendModals={suspendModals} />
           </div>
       </div>
 
@@ -1138,44 +1190,44 @@ export const Dashboard: React.FC = () => {
           </div>
       </div>
     </div>
-    {showRunCard && (
+    {!suspendModals && showRunCard && (
       <Suspense fallback={<ModalFallback label="Building share card…" />}>
         <ShareModal onClose={() => setShowRunCard(false)} />
       </Suspense>
     )}
 
-    {showGoalPlanner && (
+    {!suspendModals && showGoalPlanner && (
       <Suspense fallback={<ModalFallback label="Loading planner…" />}>
         <GoalPlannerModal onClose={() => { setShowGoalPlanner(false); setGoalTarget(null); }} initialTarget={goalTarget} />
       </Suspense>
     )}
 
-    {showAchievements && (
+    {!suspendModals && showAchievements && (
       <Suspense fallback={<ModalFallback label="Loading achievements…" />}>
         <AchievementsModal onClose={() => setShowAchievements(false)} />
       </Suspense>
     )}
 
-    {showForecast && (
+    {!suspendModals && showForecast && (
       <Suspense fallback={<ModalFallback label="Consulting Fate…" />}>
         <FateForecastModal onClose={() => setShowForecast(false)} />
       </Suspense>
     )}
 
-    {showRival && (
+    {!suspendModals && showRival && (
       <Suspense fallback={<ModalFallback label="Summoning your rival…" />}>
         <RivalModal onClose={() => setShowRival(false)} />
       </Suspense>
     )}
 
-    {showBossPlanner && (
+    {!suspendModals && showBossPlanner && (
       <Suspense fallback={<ModalFallback label="Loading kill planner…" />}>
         <BossKillPlanner onClose={() => setShowBossPlanner(false)} />
       </Suspense>
     )}
 
     {/* Celebratory reveal when a milestone is newly earned. */}
-    {achievementReveal && (
+    {!suspendModals && achievementReveal && (
       <AchievementReveal
         data={achievementReveal}
         onDismiss={dismissAchievementReveal}
@@ -1185,7 +1237,7 @@ export const Dashboard: React.FC = () => {
 
     {/* Unlock reveal — slides in from the right when a quest or region
         unlocks and shows what new content just became available. */}
-    {unlockReveal && (
+    {!suspendModals && unlockReveal && (
       <UnlockReveal
         data={unlockReveal}
         onDismiss={dismissReveal}

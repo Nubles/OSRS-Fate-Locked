@@ -8,7 +8,7 @@ import {
 
 /**
  * Posts new unlocks to the profile's Discord webhook. Renders nothing and
- * must stay ALWAYS-MOUNTED (SuggestionBanner rule): unlocks can happen from
+ * must stay ALWAYS-MOUNTED (RollInboxDriver rule): unlocks can happen from
  * any tab. Cursor semantics: advance BEFORE sending and regardless of the
  * outcome — a flaky network may drop an announcement, but a retry loop can
  * never spam the channel or double-post. First run with no cursor seeds to

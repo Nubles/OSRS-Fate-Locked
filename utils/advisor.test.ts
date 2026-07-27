@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { SKILLS_LIST } from '../constants';
-import { computeUnlockImpact } from './unlockImpact';
+import { computeUnlockImpact, prepareUnlockImpactContext } from './unlockImpact';
 import { rankAvailableQuests } from './questAdvisor';
 import { rankLockedRegions, UNLOCKABLE_REGIONS } from './regionAdvisor';
 import { getQuestStatus } from './journalStatus';
@@ -27,6 +27,32 @@ function maxedUnlocks(over: Record<string, any> = {}) {
 }
 
 describe('computeUnlockImpact', () => {
+  it('does not auto-complete a manually pending quest after a region unlock', () => {
+    const base = maxedUnlocks({
+      skills: { Smithing: 3, Sailing: 2 },
+      levels: { Smithing: 30, Sailing: 12 },
+      quests: ['Pandemonium', "The Knight's Sword"],
+    });
+    const machineReadyButManualPending = {
+      ...base,
+      regions: ['The Open Seas'],
+    };
+    const context = prepareUnlockImpactContext(machineReadyButManualPending);
+
+    expect(context.baseAvailableIds).not.toContain('Prying Times');
+
+    const impact = computeUnlockImpact(
+      base,
+      { ...base, regions: ['The Open Seas'] },
+      undefined,
+      { diaryIds: [] },
+    );
+
+    expect(impact.directQuestNames).not.toContain('Prying Times');
+    expect(impact.cascadeQuestNames).not.toContain('Prying Times');
+    expect(impact.finalQuestIds).not.toContain('Prying Times');
+  });
+
   it('cascade always contains the direct set (score & counts)', () => {
     const base = maxedUnlocks();
     const available = Object.values(QUEST_DATA).filter(
@@ -85,6 +111,16 @@ describe('rankAvailableQuests', () => {
     for (const r of ranked) {
       expect(getQuestStatus(QUEST_DATA[r.id], base)).toBe('AVAILABLE');
     }
+  });
+
+  it('threads Chunked-mode access through quest ranking and impact', () => {
+    const before = maxedUnlocks({ chunks: ['48,50'] });
+    const after = maxedUnlocks({ chunks: ['48,50', '47,51'] });
+
+    expect(rankAvailableQuests(before, 'chunked').map(q => q.id))
+      .not.toContain('A Porcine of Interest');
+    expect(rankAvailableQuests(after, 'chunked').map(q => q.id))
+      .toContain('A Porcine of Interest');
   });
 });
 

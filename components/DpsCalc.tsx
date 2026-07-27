@@ -31,7 +31,9 @@ const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, 
 );
 const selectCls = 'bg-black/40 border border-white/10 rounded px-2 py-1.5 text-[11px] text-gray-200 focus:outline-none focus:border-red-500/40';
 
-export const DpsCalc: React.FC = () => {
+interface DpsCalcProps { suspendModals?: boolean }
+
+export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
   const { unlocks, loadout: rawLoadout } = useGame();
   const loadout = rawLoadout || {};
 
@@ -202,7 +204,7 @@ export const DpsCalc: React.FC = () => {
         </div>
       )}
 
-      {pickerOpen && (
+      {!suspendModals && pickerOpen && (
         <MonsterPicker
           currentId={monsterId}
           onClose={() => setPickerOpen(false)}

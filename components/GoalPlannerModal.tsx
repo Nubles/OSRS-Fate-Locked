@@ -7,13 +7,16 @@ import { useGame } from '../context/GameContext';
 import { wikiUrlFor } from '../constants';
 import {
   listGoalTargets, planForTarget, GoalTarget, GoalPlan, PlanStep, GoalKind,
+  AlternativePlanStep,
 } from '../utils/goalPlanner';
-import { getQuestStatus, getDiaryStatus } from '../utils/journalStatus';
+import { evaluateDiaryTaskEligibility, evaluateQuestEligibility, getDiaryStatus, getQuestStatus } from '../utils/journalStatus';
 import { isAreaReachable } from '../utils/reachability';
 import { QUEST_DATA } from '../data/questData';
-import { DIARY_DATA } from '../data/diaryData';
+import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { DIARY_DATA } from '../data/diaryData';
 import { SectionGuide } from './SectionGuide';
+import { UnlockState } from '../types';
 
 /**
  * Goal Planner — the reverse of the advisors.
@@ -38,7 +41,7 @@ const KIND_META: Record<GoalKind, { icon: React.ReactNode; label: string; color:
 };
 
 // Status of a target in the current snapshot — drives the picker dot.
-type TargetState = 'done' | 'ready' | 'locked';
+export type TargetState = 'done' | 'ready' | 'confirm' | 'locked';
 
 function targetState(t: GoalTarget, unlocks: any, gameModeId?: string): TargetState {
   if (t.kind === 'quest') {
@@ -52,9 +55,33 @@ function targetState(t: GoalTarget, unlocks: any, gameModeId?: string): TargetSt
   return isAreaReachable(t.id, unlocks, gameModeId) ? 'done' : 'locked';
 }
 
+export function goalPlannerTargetState(
+  target: GoalTarget,
+  unlocks: UnlockState,
+  gameModeId?: string,
+): TargetState {
+  if (target.kind === 'quest') {
+    const eligibility = evaluateQuestEligibility(QUEST_DATA[target.id], unlocks, gameModeId);
+    if (eligibility.status === 'COMPLETED') return 'done';
+    if (eligibility.eligible) return 'ready';
+    return eligibility.confirmable && eligibility.manualChecks.length > 0 ? 'confirm' : 'locked';
+  }
+  if (target.kind === 'diary') {
+    if (unlocks.diaries.includes(target.id)) return 'done';
+    const taskEligibilities = ALL_DIARY_TASKS.filter(task => (
+      task.tierId === target.id && !unlocks.completedTasks.includes(task.id)
+    )).map(task => evaluateDiaryTaskEligibility(task, unlocks, gameModeId));
+    if (taskEligibilities.every(eligibility => eligibility.eligible)) return 'ready';
+    return taskEligibilities.every(eligibility => eligibility.machineEligible)
+      && taskEligibilities.some(eligibility => eligibility.manualChecks.length > 0) ? 'confirm' : 'locked';
+  }
+  return isAreaReachable(target.id, unlocks, gameModeId) ? 'done' : 'locked';
+}
+
 const STATE_DOT: Record<TargetState, string> = {
   done: 'bg-emerald-500',
   ready: 'bg-amber-400',
+  confirm: 'bg-violet-400',
   locked: 'bg-gray-600',
 };
 
@@ -63,6 +90,7 @@ const STEP_ICON: Record<PlanStep['kind'], React.ReactNode> = {
   skill: <Dumbbell size={12} />,
   qp: <Star size={12} />,
   quest: <BookOpen size={12} />,
+  manual: <Compass size={12} />,
 };
 
 /** OSRS Wiki article for a step. Quest/skill/region labels map directly; the
@@ -70,6 +98,9 @@ const STEP_ICON: Record<PlanStep['kind'], React.ReactNode> = {
  *  quick-guide link at the top, so this doubles as a "how do I do this" jump. */
 const stepWikiHref = (step: PlanStep): string =>
   wikiUrlFor(step.kind === 'qp' ? 'Quest points' : step.label);
+
+export const goalPlannerStepHasWikiLink = (step: PlanStep): boolean =>
+  step.kind !== 'manual' && !step.id.startsWith('alternative:');
 
 const StepRow: React.FC<{ step: PlanStep; index?: number }> = ({ step, index }) => (
   <div
@@ -90,18 +121,28 @@ const StepRow: React.FC<{ step: PlanStep; index?: number }> = ({ step, index }) 
       </span>
     )}
     <span className="text-gray-500 shrink-0" aria-hidden>{STEP_ICON[step.kind]}</span>
-    <a
-      href={stepWikiHref(step)}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={(e) => e.stopPropagation()}
-      title={`Open ${step.label} on the OSRS Wiki`}
-      className={`text-[11px] font-semibold truncate flex-1 hover:underline transition-colors ${
-        step.done ? 'text-gray-500 line-through hover:text-gray-400' : 'text-gray-200 hover:text-cyan-300'
-      }`}
-    >
-      {step.label}
-    </a>
+    {goalPlannerStepHasWikiLink(step) ? (
+      <a
+        href={stepWikiHref(step)}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        title={`Open ${step.label} on the OSRS Wiki`}
+        className={`text-[11px] font-semibold truncate flex-1 hover:underline transition-colors ${
+          step.done ? 'text-gray-500 line-through hover:text-gray-400' : 'text-gray-200 hover:text-cyan-300'
+        }`}
+      >
+        {step.label}
+      </a>
+    ) : (
+      <span
+        className={`text-[11px] font-semibold truncate flex-1 ${
+          step.done ? 'text-gray-500 line-through' : 'text-gray-200'
+        }`}
+      >
+        {step.label}
+      </span>
+    )}
     {step.detail && (
       <span className="text-[9px] text-gray-500 font-mono shrink-0">{step.detail}</span>
     )}
@@ -133,6 +174,54 @@ const PlanSection: React.FC<{
   );
 };
 
+const AlternativeSection: React.FC<{ steps: AlternativePlanStep[] }> = ({ steps }) => {
+  if (steps.length === 0) return null;
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-1.5 px-0.5">
+        <Route size={12} className="text-gray-400" aria-hidden />
+        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-300">Alternative routes</span>
+        <span className="text-[9px] text-gray-600 font-mono">choose one</span>
+        <div className="flex-1 h-px bg-white/5" />
+      </div>
+      <div className="space-y-1.5">
+        {steps.map(step => (
+          <div key={step.id} className="rounded-md border border-white/5 bg-[#1a1a1a] px-2.5 py-2">
+            <div className="text-[10px] font-semibold text-gray-300 mb-1">{step.label}</div>
+            <div className="space-y-1">
+              {step.routes.map(route => (
+                <div key={route.label} className="flex items-start gap-1.5 text-[10px] text-gray-400">
+                  <Circle size={10} className="text-gray-600 mt-0.5 shrink-0" aria-hidden />
+                  <span>
+                    <span className="text-gray-200">{route.label}</span>
+                    {route.blockers.length > 0 && (
+                      <span className="text-gray-600"> ? {route.blockers.map(blocker => (
+                        blocker.label + (blocker.detail ? ' ' + blocker.detail : '')
+                      )).join(' + ')}</span>
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export const GoalPlanReadiness: React.FC<{ plan: GoalPlan }> = ({ plan }) => {
+  if (plan.alreadyDone) return <>{'Already complete \u2014 nothing left to do!'}</>;
+  if (plan.alreadyReachable && plan.targetKind !== 'region') {
+    return <>{'Available right now \u2014 go do it!'}</>;
+  }
+  if (plan.needsConfirmation) {
+    return <>
+      Needs confirmation: {plan.manualSteps.map(step => step.label).join(' \u00b7 ')}
+    </>;
+  }
+  return <>{plan.remaining} step{plan.remaining !== 1 ? 's' : ''} remaining</>;
+};
 export const GoalPlannerModal: React.FC<Props> = ({ onClose, initialTarget }) => {
   const { unlocks, gameModeId } = useGame();
   useEscapeKey(onClose, true);
@@ -149,10 +238,10 @@ export const GoalPlannerModal: React.FC<Props> = ({ onClose, initialTarget }) =>
       ? targets.filter((t) => t.label.toLowerCase().includes(q) || t.group.toLowerCase().includes(q))
       : targets;
     return matched
-      .map((t) => ({ t, state: targetState(t, unlocks, gameModeId) }))
+      .map((t) => ({ t, state: goalPlannerTargetState(t, unlocks, gameModeId) }))
       .sort((a, b) => {
         // Ready-to-start first, then locked, then done; alpha within.
-        const rank = (s: TargetState) => (s === 'ready' ? 0 : s === 'locked' ? 1 : 2);
+        const rank = (s: TargetState) => (s === 'ready' ? 0 : s === 'confirm' ? 1 : s === 'locked' ? 2 : 3);
         return rank(a.state) - rank(b.state) || a.t.label.localeCompare(b.t.label);
       });
   }, [targets, query, unlocks, gameModeId]);
@@ -265,7 +354,8 @@ export const GoalPlannerModal: React.FC<Props> = ({ onClose, initialTarget }) =>
                     <h3 className="text-sm font-bold text-white truncate">{plan.targetLabel}</h3>
                   </div>
 
-                  {plan.alreadyDone ? (
+                  {plan.needsConfirmation && <p className="text-[11px] text-gray-500"><GoalPlanReadiness plan={plan} /></p>}
+                  {!plan.needsConfirmation && (plan.alreadyDone ? (
                     <p className="text-[11px] text-emerald-400 flex items-center gap-1.5">
                       <CheckCircle2 size={13} /> Already complete — nothing left to do!
                     </p>
@@ -278,7 +368,7 @@ export const GoalPlannerModal: React.FC<Props> = ({ onClose, initialTarget }) =>
                       <span className="text-gray-300 font-bold">{plan.remaining}</span> step
                       {plan.remaining !== 1 ? 's' : ''} remaining
                     </p>
-                  )}
+                  ))}
 
                   {/* Progress bar */}
                   {totalSteps > 0 && (
@@ -304,12 +394,18 @@ export const GoalPlannerModal: React.FC<Props> = ({ onClose, initialTarget }) =>
                   <>
                     <PlanSection title="Regions to unlock" icon={<MapPin size={12} />} steps={plan.regionSteps} />
                     <PlanSection title="Skills to train" icon={<Dumbbell size={12} />} steps={plan.skillSteps} />
+                    <AlternativeSection steps={plan.alternativeSteps} />
                     {plan.qpStep && (
                       <PlanSection title="Quest points" icon={<Star size={12} />} steps={[plan.qpStep]} />
                     )}
                     <PlanSection
-                      title="Quests in order"
+                      title="Confirm manually"
+                      icon={<Compass size={12} />}
+                      steps={plan.manualSteps}
+                    />
+                    <PlanSection
                       icon={<ArrowRight size={12} />}
+                      title="Quests in order"
                       steps={plan.questSteps}
                       numbered
                     />

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Loader2, Search, Sparkles, Dice5, CheckCircle2, AlertTriangle, RefreshCw, Lock } from 'lucide-react';
 import { useGame } from '../context/GameContext';
-import { SuggestionQueue } from './SuggestionQueue';
+import { RollInbox } from './RollInbox';
 import { RuneLiteOnboarding } from './RuneLiteOnboarding';
 
 /**
@@ -151,7 +151,7 @@ export function AutoRollPanel() {
   useEffect(() => { if (linkedAccount) onFetch(); /* eslint-disable-line react-hooks/exhaustive-deps */ }, []);
 
   // "Auto-roll": walk each unlocked skill up to its real level through the LIVE
-  // level-up engine — every level fires its key roll (chance = ceil(level/5)%),
+  // level-up engine — every level fires its exact level/5 Key roll,
   // the 2% chaos-key chance and the omni chance — so the run earns exactly the
   // keys those levels would have. Runs in batches for a responsive slot-machine
   // feel; tallies the keys/omni/chaos earned at the end.
@@ -209,6 +209,8 @@ export function AutoRollPanel() {
           </p>
         </div>
       </div>
+
+      <RollInbox />
 
       {/* Username input — locked to the bound account once set */}
       <div className="flex items-center gap-2 max-w-md">
@@ -364,7 +366,6 @@ export function AutoRollPanel() {
       )}
 
       <RuneLiteOnboarding />
-      <SuggestionQueue />
     </div>
   );
 }

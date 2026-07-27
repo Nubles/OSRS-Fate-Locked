@@ -41,6 +41,26 @@ const PAGE_MATCH = {
 };
 
 const norm = s => s.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
+
+// Micro-rename detector: one INSERTION/DELETION apart with identical digits
+// ("Araxyte venom sack" -> "…sac"). Single substitutions are NOT renames —
+// Team cape i/x and (t)/(g) ornament kits are genuinely different items.
+// Without this pass, a micro-rename keeps the old entry AND appends the new
+// name under a fresh id — a permanent duplicate slot (happened on Araxxor).
+const lev = (a, b) => {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++)
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return d[a.length][b.length];
+};
+const digits = s => s.replace(/\D/g, '');
+const isMicroRename = (a, b) => {
+  const na = norm(a), nb = norm(b);
+  return na !== nb && digits(na) === digits(nb)
+    && Math.abs(na.length - nb.length) === 1 && lev(na, nb) === 1;
+};
 const baseNorm = s => s.toLowerCase().replace(/\s*\([^)]*\)\s*/g, ' ').replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
 const esc = s => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 const unesc = s => s.replace(/\\'/g, "'").replace(/\\\\/g, '\\');
@@ -74,7 +94,8 @@ function alignItems(appItems, wikiItems, log, page) {
   const out = [];
   for (const ai of appItems) {
     let hit = pool.find(w => !w.used && norm(w.n) === norm(ai.name)) ||
-              pool.find(w => !w.used && baseNorm(w.n) === baseNorm(ai.name));
+              pool.find(w => !w.used && baseNorm(w.n) === baseNorm(ai.name)) ||
+              pool.find(w => !w.used && isMicroRename(w.n, ai.name));
     if (hit) { hit.used = true; if (hit.n !== ai.name) log.renames.push(`[${page}] ${ai.name} -> ${hit.n}`); out.push({ id: ai.id, name: hit.n }); }
     else { log.kept.push(`[${page}] ${ai.name} (#${ai.id})`); out.push(ai); }
   }
@@ -115,6 +136,16 @@ const run = async () => {
   for (const r of log.renames) console.log('  RENAME ' + r);
   for (const a of log.adds) console.log('  ADD    ' + a);
   for (const k of log.kept) console.log('  KEEP   ' + k);
+  // A page that both KEEPs an unmatched app item and ADDs a new wiki item is
+  // the signature of a rename too big for the micro-rename pass — flag it so
+  // a human merges the pair instead of shipping a duplicate slot.
+  const pageOf = s => (s.match(/^\[([^\]]+)\]/) || [])[1];
+  const keptPages = new Set(log.kept.map(pageOf).filter(Boolean));
+  const suspect = log.adds.map(pageOf).filter(p => p && keptPages.has(p));
+  if (suspect.length) {
+    console.log(`\n[clog:sync] WARNING: possible rename(s) needing a manual merge (KEEP + ADD on the same page):`);
+    for (const p of [...new Set(suspect)]) console.log(`  ? "${p}" — merge the kept item into the added one (keep the OLD id) and add a CLOG_ID_MIGRATIONS entry`);
+  }
   if (newPages.length) {
     console.log(`\n[clog:sync] ${newPages.length} NEW wiki page(s) need a tab + empty stub, then re-run:`);
     for (const p of newPages) console.log(`  + "${p}" (${wikiPages[p].length} items)`);

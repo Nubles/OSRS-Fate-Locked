@@ -18,12 +18,14 @@ import {
   POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST,
   GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST,
 } from '../data/items';
+import { COMBAT_POWERS_DESCRIPTION, COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 
+import { skillLevelKeyChance } from '../utils/keyRoll';
 const WIKI = 'https://oldschool.runescape.wiki/images/';
 
 // ── Skill levelling is the one dynamic rate (computed per attempt) ───────────
 export const SKILLS_TIER_CAP = 10;     // tiers per skill (1 Key each)
-export const LEVEL_ROLL_MAX = 20;      // ceil(99/5) — the cap of the Level ÷ 5 curve
+export const LEVEL_ROLL_MAX = skillLevelKeyChance(99);
 export const LEVEL_CHAOS_CHANCE = 2;   // % chance of a Chaos Key on any level up
 
 // ── Xtreme Start anti-softlock insurance ──────────────────────────────────
@@ -201,7 +203,7 @@ export const EARN_METHODS: EarnMethod[] = [
       {
         tier: 'Per level gained',
         rate: LEVEL_ROLL_MAX,
-        rateLabel: `Level ÷ 5 (max ${LEVEL_ROLL_MAX}%)`,
+        rateLabel: `Level ÷ 5 (up to ${LEVEL_ROLL_MAX.toFixed(1)}% at level 99)`,
         bonus: `${LEVEL_CHAOS_CHANCE}% chance of a Chaos Key on every level, at any level.`,
       },
     ],
@@ -282,7 +284,7 @@ export const SPEND_TABLES: SpendTable[] = [
   { type: TableType.SKILLS,          label: 'Skills',     count: SKILLS_LIST.length,     tiers: SKILLS_TIER_CAP,    blurb: 'Raise a skill’s tier cap by +10 levels of usable methods.' },
   { type: TableType.REGIONS,         label: 'Areas',      count: REGIONS_LIST.length,    blurb: 'Open new map regions you’re allowed to enter.' },
   { type: TableType.MOBILITY,        label: 'Mobility',   count: MOBILITY_LIST.length,   blurb: 'Teleports, spirit trees, fairy rings and transport networks.' },
-  { type: TableType.ARCANA,          label: 'Arcana',     count: ARCANA_LIST.length,     blurb: 'Spellbooks, prayers and other arcane access.' },
+  { type: TableType.ARCANA,          label: COMBAT_POWERS_LABEL, count: ARCANA_LIST.length, blurb: COMBAT_POWERS_DESCRIPTION },
   { type: TableType.STORAGE,         label: 'Storage',    count: STORAGE_LIST.length,    blurb: 'Looting bag, rune pouch, seed box — and rare bank access.' },
   { type: TableType.POH,             label: 'Housing',    count: POH_LIST.length,        blurb: 'Player-owned house rooms and facilities.' },
   { type: TableType.MERCHANTS,       label: 'Merchants',  count: MERCHANTS_LIST.length,  blurb: 'Shops and traders you’re permitted to use.' },

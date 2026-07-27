@@ -18,7 +18,13 @@ import { TestSuiteRunner } from './TestSuiteRunner';
 
 import { chunkContentService, EntityHit, EntityKind } from '../services/ChunkContentService';
 import { EntityLocations } from './EntityLocations';
+import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { isAreaReachable } from '../utils/reachability';
+import {
+  completedCAPoints,
+  earnedCATiers,
+  isCATierId,
+} from '../utils/caProgress';
 
 interface OracleSearchProps {
   onClose: () => void;
@@ -98,7 +104,7 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
     addGroup(MINIGAMES_LIST, 'Minigame', TableType.MINIGAMES, Gamepad2, 'Requires Key in Minigames Table');
     addGroup(FARMING_PATCH_LIST, 'Farming Patch', TableType.FARMING_LAYERS, Sprout, 'Requires Key in Farming Table');
     addGroup(MOBILITY_LIST, 'Mobility', TableType.MOBILITY, Footprints, 'Requires Key in Mobility Table');
-    addGroup(ARCANA_LIST, 'Arcana', TableType.ARCANA, Zap, 'Requires Key in Arcana Table');
+    addGroup(ARCANA_LIST, COMBAT_POWERS_LABEL, TableType.ARCANA, Zap, 'Requires a Key in the Combat Powers table');
     addGroup(POH_LIST, 'Housing', TableType.POH, Home, 'Requires Key in Housing Table');
     addGroup(MERCHANTS_LIST, 'Merchant', TableType.MERCHANTS, Store, 'Requires Key in Merchants Table');
     addGroup(STORAGE_LIST, 'Storage', TableType.STORAGE, Package, 'Requires Key in Storage Table');
@@ -169,6 +175,10 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
     () => (worldReady && query.length >= 2 ? chunkContentService.searchEntities(query, 6) : []),
     [query, worldReady],
   );
+  const earnedCATierIds = useMemo(
+    () => earnedCATiers(completedCAPoints(unlocks.completedTasks), unlocks.cas),
+    [unlocks.completedTasks, unlocks.cas],
+  );
 
   // Check Unlock Status
   const getStatus = (item: SearchItem) => {
@@ -233,7 +243,8 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
         detail = isUnlocked ? "Completed" : "Incomplete";
         break;
       case TableType.COMBAT_ACHIEVEMENTS:
-        isUnlocked = unlocks.cas.includes(item.id as string);
+        const caTierId = item.id as string;
+        isUnlocked = isCATierId(caTierId) && earnedCATierIds.includes(caTierId);
         detail = isUnlocked ? "Completed" : "Incomplete";
         break;
       case 'COLLECTION_LOG_ITEM':

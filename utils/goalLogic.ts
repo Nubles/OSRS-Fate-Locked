@@ -3,6 +3,7 @@ import { ContentRequirement } from '../data/requirements';
 import { UnlockState, TableType } from '../types';
 import { REGION_GROUPS } from '../constants';
 import { isAreaReachable } from './reachability';
+import { effectiveSkillLevel } from './slayerReach';
 
 export interface GoalProgress {
   percentage: number;
@@ -39,7 +40,7 @@ export const calculateGoalProgress = (req: ContentRequirement, unlocks: UnlockSt
   // 2. Check Skills
   Object.entries(req.skills).forEach(([skill, level]) => {
     total++;
-    const currentLevel = unlocks.levels[skill] || 1;
+    const currentLevel = effectiveSkillLevel(unlocks, skill);
     const isUnlocked = (unlocks.skills[skill] || 0) > 0;
     
     if (isUnlocked && currentLevel >= level) {

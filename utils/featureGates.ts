@@ -127,13 +127,18 @@ export const FEATURE_GATES: GateDef[] = [
 
 export const ALL_FEATURE_IDS: FeatureId[] = FEATURE_GATES.map((g) => g.id);
 
-const gateOpen = (g: GateDef, s: GateInput): boolean =>
-  g.when(s) || s.history.length >= g.fallbackHistory;
-
-/** The set of features this run has revealed. */
-export function visibleFeatures(s: GateInput): Set<FeatureId> {
-  if (s.revealAllFeatures) return new Set(ALL_FEATURE_IDS);
-  return new Set(FEATURE_GATES.filter((g) => gateOpen(g, s)).map((g) => g.id));
+/**
+ * The set of features this run has revealed.
+ *
+ * Progressive disclosure is RETIRED (July 2026): every surface is visible
+ * from the first render — gating tabs behind run milestones didn't work out
+ * in practice. The gate definitions above are kept only as documentation of
+ * the old milestones and for FeatureRevealDriver's metadata lookups; this
+ * function is the single choke point every consumer reads through, so
+ * returning the full set here un-gates the whole app.
+ */
+export function visibleFeatures(_s: GateInput): Set<FeatureId> {
+  return new Set(ALL_FEATURE_IDS);
 }
 
 export const isFeatureVisible = (id: FeatureId, s: GateInput): boolean =>

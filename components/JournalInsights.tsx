@@ -4,11 +4,17 @@ import { useGame } from '../context/GameContext';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
-import { ALL_DIARY_TASKS } from '../data/diaryTasks';
-import { CA_DATA } from '../data/caData';
-import { ALL_CA_TASKS } from '../data/caTasks';
-import { DropSource } from '../types';
-import { countDoableTasks } from '../utils/journalStatus';
+import { ALL_DIARY_TASKS, DiaryTask } from '../data/diaryTasks';
+import { ALL_CA_TASKS, CATask } from '../data/caTasks';
+import {
+  CA_TASK_POINTS,
+  CA_TIER_ORDER,
+  completedCAPoints,
+  earnedCATiers,
+  isCATierId,
+} from '../utils/caProgress';
+import { DropSource, UnlockState } from '../types';
+import { countDoableDiaryTasks } from '../utils/journalStatus';
 
 /**
  * Collapsible "insights" band for each Journal sub-tab: the at-a-glance
@@ -89,42 +95,62 @@ export const QuestInsights: React.FC = () => {
 };
 
 // ── Diaries ───────────────────────────────────────────────────────────────
+export const calculateDiaryInsightStats = (
+  allTasks: readonly DiaryTask[],
+  tierIds: readonly string[],
+  unlocks: UnlockState,
+  gameModeId?: string,
+) => {
+  const doneTasks = new Set(unlocks.completedTasks);
+  const completedTiers = new Set(unlocks.diaries);
+  const tasksByTier = new Map<string, DiaryTask[]>();
+  for (const task of allTasks) {
+    if (!tasksByTier.has(task.tierId)) tasksByTier.set(task.tierId, []);
+    tasksByTier.get(task.tierId)!.push(task);
+  }
+
+  const areas = new Map<string, { done: number; total: number }>();
+  let closest: {
+    tier: string; left: number; doable: number; key: [number, number, number];
+  } | null = null;
+  for (const tier of tierIds) {
+    const area = tier.replace(/ (Easy|Medium|Hard|Elite)$/, '');
+    const tasks = tasksByTier.get(tier) ?? [];
+    const tierComplete = completedTiers.has(tier);
+    const done = tierComplete
+      ? tasks.length
+      : tasks.filter(task => doneTasks.has(task.id)).length;
+    const areaProgress = areas.get(area) ?? { done: 0, total: 0 };
+    areaProgress.done += done;
+    areaProgress.total += tasks.length;
+    areas.set(area, areaProgress);
+    const left = tasks.length - done;
+    if (tierComplete || left === 0) continue;
+    const doable = countDoableDiaryTasks(tasks, unlocks, gameModeId);
+    const key: [number, number, number] = [doable > 0 ? 0 : 1, left, -doable];
+    if (!closest
+      || key[0] < closest.key[0]
+      || (key[0] === closest.key[0]
+        && (key[1] < closest.key[1]
+          || (key[1] === closest.key[1] && key[2] < closest.key[2])))) {
+      closest = { tier, left, doable, key };
+    }
+  }
+  const sorted = [...areas.entries()].sort(
+    (left, right) => (right[1].done / Math.max(1, right[1].total))
+      - (left[1].done / Math.max(1, left[1].total)),
+  );
+  return { sorted, closest };
+};
+
 export const DiaryInsights: React.FC = () => {
-  const { unlocks } = useGame();
-  const stats = useMemo(() => {
-    const doneTasks = new Set(unlocks.completedTasks);
-    const tasksByTier = new Map<string, typeof ALL_DIARY_TASKS>();
-    for (const t of ALL_DIARY_TASKS) {
-      if (!tasksByTier.has(t.tierId)) tasksByTier.set(t.tierId, []);
-      tasksByTier.get(t.tierId)!.push(t);
-    }
-    // Area = tier id minus its trailing tier word ("Ardougne Easy" → "Ardougne").
-    // "Closest tier" weighs what the player can actually do: tiers with at
-    // least one doable-now task (levels / quests / regions met) rank above
-    // fully-blocked ones, then fewest remaining wins — so 5 tasks stuck
-    // behind level-90 reqs never beat a tier that's finishable today.
-    const areas = new Map<string, { done: number; total: number }>();
-    let closest: { tier: string; left: number; doable: number; key: [number, number, number] } | null = null;
-    for (const tier of Object.keys(DIARY_DATA)) {
-      const area = tier.replace(/ (Easy|Medium|Hard|Elite)$/, '');
-      const tasks = tasksByTier.get(tier) ?? [];
-      const done = tasks.filter(t => doneTasks.has(t.id)).length;
-      const a = areas.get(area) ?? { done: 0, total: 0 };
-      a.done += done; a.total += tasks.length;
-      areas.set(area, a);
-      const left = tasks.length - done;
-      if (left === 0) continue;
-      const doable = countDoableTasks(tasks, unlocks);
-      const key: [number, number, number] = [doable > 0 ? 0 : 1, left, -doable];
-      if (!closest
-        || key[0] < closest.key[0]
-        || (key[0] === closest.key[0] && (key[1] < closest.key[1] || (key[1] === closest.key[1] && key[2] < closest.key[2])))) {
-        closest = { tier, left, doable, key };
-      }
-    }
-    const sorted = [...areas.entries()].sort((x, y) => (y[1].done / Math.max(1, y[1].total)) - (x[1].done / Math.max(1, x[1].total)));
-    return { sorted, closest };
-  }, [unlocks]);
+  const { unlocks, gameModeId } = useGame();
+  const stats = useMemo(
+    () => calculateDiaryInsightStats(
+      ALL_DIARY_TASKS, Object.keys(DIARY_DATA), unlocks, gameModeId,
+    ),
+    [unlocks, gameModeId],
+  );
 
   return (
     <Shell storageKey="jrnl:insights:diaries" title="Diary insights" icon={<MapIcon size={11} />}
@@ -144,33 +170,55 @@ export const DiaryInsights: React.FC = () => {
 };
 
 // ── Combat Achievements ───────────────────────────────────────────────────
-const CA_POINTS: Record<string, number> = { Easy: 1, Medium: 2, Hard: 3, Elite: 4, Master: 5, Grandmaster: 6 };
 const CA_COLORS: Record<string, string> = {
   Easy: 'bg-green-600', Medium: 'bg-cyan-600', Hard: 'bg-blue-600',
   Elite: 'bg-purple-600', Master: 'bg-rose-600', Grandmaster: 'bg-amber-500',
 };
 
+export const calculateCAInsightStats = (
+  tasks: readonly Pick<CATask, 'id' | 'tierId'>[],
+  unlocks: Pick<UnlockState, 'completedTasks' | 'cas'>,
+) => {
+  const done = new Set(unlocks.completedTasks);
+  const presentTiers = new Set(tasks.map(task => task.tierId));
+  const tiers = CA_TIER_ORDER
+    .filter(tier => presentTiers.has(tier))
+    .map(tier => {
+      const tierTasks = tasks.filter(task => task.tierId === tier);
+      return {
+        tier,
+        done: tierTasks.filter(task => done.has(task.id)).length,
+        total: tierTasks.length,
+        points: CA_TASK_POINTS[tier],
+      };
+    });
+  const pointsEarned = completedCAPoints(unlocks.completedTasks, tasks);
+  const pointsTotal = tasks.reduce(
+    (sum, task) => sum + (isCATierId(task.tierId) ? CA_TASK_POINTS[task.tierId] : 0),
+    0,
+  );
+  return {
+    tiers,
+    pointsEarned,
+    pointsTotal,
+    earnedTiers: earnedCATiers(pointsEarned, unlocks.cas),
+  };
+};
+
 export const CAInsights: React.FC = () => {
   const { unlocks } = useGame();
-  const stats = useMemo(() => {
-    const done = new Set(unlocks.completedTasks);
-    const tiers = Object.keys(CA_DATA).map(tier => {
-      let d = 0, t = 0;
-      for (const task of ALL_CA_TASKS) if (task.tierId === tier) { t++; if (done.has(task.id)) d++; }
-      return { tier, done: d, total: t, pts: CA_POINTS[tier] ?? 1 };
-    });
-    const ptsEarned = tiers.reduce((a, x) => a + x.done * x.pts, 0);
-    const ptsTotal = tiers.reduce((a, x) => a + x.total * x.pts, 0);
-    return { tiers, ptsEarned, ptsTotal };
-  }, [unlocks.completedTasks]);
+  const stats = useMemo(
+    () => calculateCAInsightStats(ALL_CA_TASKS, unlocks),
+    [unlocks.completedTasks, unlocks.cas],
+  );
 
   return (
     <Shell storageKey="jrnl:insights:ca" title="CA insights" icon={<Award size={11} />}
-      summary={`${stats.ptsEarned}/${stats.ptsTotal} points`}>
+      summary={`${stats.pointsEarned}/${stats.pointsTotal} points · ${stats.earnedTiers.length}/6 rewards`}>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1.5">
-        <Bar label="CA Points" done={stats.ptsEarned} total={stats.ptsTotal} color="bg-yellow-500" suffix=" pts" />
+        <Bar label="CA Points" done={stats.pointsEarned} total={stats.pointsTotal} color="bg-yellow-500" suffix=" pts" />
         {stats.tiers.map(t => (
-          <Bar key={t.tier} label={`${t.tier} (${t.pts}pt)`} done={t.done} total={t.total} color={CA_COLORS[t.tier] ?? 'bg-gray-600'} />
+          <Bar key={t.tier} label={`${t.tier} (${t.points}pt)`} done={t.done} total={t.total} color={CA_COLORS[t.tier] ?? 'bg-gray-600'} />
         ))}
       </div>
     </Shell>

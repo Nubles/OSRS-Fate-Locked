@@ -1,5 +1,16 @@
-import { describe, it, expect } from 'vitest';
-import { encodeSyncCode, decodeSyncCode, looksLikeSyncCode } from './syncCode';
+import { afterEach, describe, it, expect, vi } from 'vitest';
+import { initialState } from '../context/GameContext';
+import { simpleHash } from './integrity';
+import { MAX_SAVE_BYTES } from './saveSchema';
+import {
+  MAX_SYNC_CODE_CHARS,
+  boundRawSyncPayload,
+  encodeSyncCode,
+  decodeSyncCode,
+  decodeAndValidateSyncCode,
+  looksLikeSyncCode,
+  type DecodeResult,
+} from './syncCode';
 
 const sampleState = {
   version: 1,
@@ -18,13 +29,81 @@ const sampleState = {
   ],
 };
 
+const toBase64Url = (bytes: Uint8Array): string => {
+  let binary = '';
+  for (let index = 0; index < bytes.length; index += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
+  }
+  return btoa(binary)
+    .split('+').join('-')
+    .split('/').join('_')
+    .replace(/=+$/, '');
+};
+
+const oldRawCode = (json: string, checksum = simpleHash(json)): string =>
+  `FLSYNC.r1.${toBase64Url(new TextEncoder().encode(json))}.${checksum}`;
+
+const oldGzipCode = async (json: string): Promise<string> => {
+  const input = new TextEncoder().encode(json);
+  const stream = new Blob([input]).stream().pipeThrough(new CompressionStream('gzip'));
+  const compressed = new Uint8Array(await new Response(stream).arrayBuffer());
+  return `FLSYNC.g1.${toBase64Url(compressed)}.${simpleHash(json)}`;
+};
+
+const expectStableFailure = (
+  result: DecodeResult,
+  code: NonNullable<DecodeResult['code']>,
+): void => {
+  expect(result).toMatchObject({ ok: false, code });
+  expect(result).not.toHaveProperty('state');
+};
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 describe('sync code codec', () => {
+  it('rejects a generated code that exceeds the encoded sync cap', async () => {
+    vi.stubGlobal('CompressionStream', undefined);
+    await expect(encodeSyncCode({ note: 'x'.repeat(1_600_000) })).rejects.toThrow(
+      'The generated sync code is too large to share.',
+    );
+  });
+
   it('round-trips an arbitrary state object', async () => {
     const code = await encodeSyncCode(sampleState);
     const result = await decodeSyncCode(code);
     expect(result.ok).toBe(true);
     expect(result.checksumOk).toBe(true);
     expect(result.state).toEqual(sampleState);
+  });
+
+  it('normalizes a decoded candidate through the canonical save schema', async () => {
+    const code = await encodeSyncCode({ keys: 7 });
+    const result = await decodeAndValidateSyncCode(code, initialState);
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.state.keys).toBe(7);
+      expect(result.state.version).toBe(initialState.version);
+      expect(result.state.unlocks).toEqual(initialState.unlocks);
+    }
+  });
+
+  it('rejects invalid nested save data before it can be previewed', async () => {
+    const candidate = structuredClone(initialState);
+    candidate.unlocks.levels.Attack = 0;
+    const result = await decodeAndValidateSyncCode(
+      await encodeSyncCode(candidate as unknown as Record<string, unknown>),
+      initialState,
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: 'invalid_number',
+      path: 'unlocks.levels.Attack',
+    });
+    expect(result).not.toHaveProperty('state');
   });
 
   it('produces a recognisable, prefixed code', async () => {
@@ -70,6 +149,79 @@ describe('sync code codec', () => {
     parts[3] = '00000000';
     const result = await decodeSyncCode(parts.join('.'));
     expect(result.ok).toBe(false);
+    expect(result.checksumOk).toBe(false);
+  });
+
+  it('accepts the encoded cap exactly and rejects one character above it', async () => {
+    const exact = await decodeSyncCode('x'.repeat(MAX_SYNC_CODE_CHARS));
+    expectStableFailure(exact, 'decode_failed');
+    const oversized = await decodeSyncCode('x'.repeat(MAX_SYNC_CODE_CHARS + 1));
+    expectStableFailure(oversized, 'too_large');
+  });
+
+  it('accepts raw decoded bytes at the expanded cap and rejects one byte above it', () => {
+    expect(boundRawSyncPayload(new Uint8Array(MAX_SAVE_BYTES))).toMatchObject({
+      ok: true,
+    });
+    expect(boundRawSyncPayload(new Uint8Array(MAX_SAVE_BYTES + 1))).toMatchObject({
+      ok: false,
+      code: 'too_large',
+    });
+  });
+
+  it('accepts compressed JSON whose decompressed UTF-8 bytes equal the save limit', async () => {
+    const note = 'x'.repeat(MAX_SAVE_BYTES - '{"note":""}'.length);
+    const json = JSON.stringify({ note });
+    expect(new TextEncoder().encode(json)).toHaveLength(MAX_SAVE_BYTES);
+    const code = await oldGzipCode(json);
+    expect(code.length).toBeLessThan(MAX_SYNC_CODE_CHARS);
+
+    const result = await decodeSyncCode(code);
+
+    expect(result).toMatchObject({ ok: true, checksumOk: true });
+    expect(result.state).toEqual({ note });
+  }, 30_000);
+
+  it('aborts a compressed payload once decompressed output crosses the save limit', async () => {
+    const json = JSON.stringify({ note: 'x'.repeat(MAX_SAVE_BYTES) });
+    const code = await oldGzipCode(json);
+    expect(code.length).toBeLessThan(MAX_SYNC_CODE_CHARS);
+    expectStableFailure(await decodeSyncCode(code), 'too_large');
+  }, 30_000);
+
+  it('decodes valid legacy raw and gzip wire-format fixtures', async () => {
+    const json = JSON.stringify(sampleState);
+    for (const code of [oldRawCode(json), await oldGzipCode(json)]) {
+      await expect(decodeSyncCode(code)).resolves.toEqual({
+        ok: true,
+        state: sampleState,
+        checksumOk: true,
+      });
+    }
+  });
+
+  it.each([
+    ['unknown method', 'FLSYNC.x1.e30.5465b825', 'decode_failed'],
+    ['malformed Base64URL alphabet', 'FLSYNC.r1.abc%25.00000000', 'decode_failed'],
+    ['impossible Base64URL length', 'FLSYNC.r1.a.00000000', 'decode_failed'],
+    ['truncated code', 'FLSYNC.r1.e30', 'decode_failed'],
+    ['empty payload', 'FLSYNC.r1..00000000', 'decode_failed'],
+    ['corrupt gzip', 'FLSYNC.g1.e30.00000000', 'decode_failed'],
+  ] as const)('rejects %s with a stable failure', async (_label, code, failureCode) => {
+    expectStableFailure(await decodeSyncCode(code), failureCode);
+  });
+
+  it('distinguishes invalid JSON from decode failures', async () => {
+    const invalidJson = '{"keys":';
+    expectStableFailure(await decodeSyncCode(oldRawCode(invalidJson)), 'invalid_json');
+
+    const invalidUtf8 = `FLSYNC.r1.${toBase64Url(new Uint8Array([0xff]))}.00000000`;
+    expectStableFailure(await decodeSyncCode(invalidUtf8), 'decode_failed');
+  });
+
+  it('rejects checksum mismatch without exposing parsed state', async () => {
+    const result = await decodeSyncCode(oldRawCode(JSON.stringify(sampleState), '00000000'));
+    expectStableFailure(result, 'decode_failed');
     expect(result.checksumOk).toBe(false);
   });
 });

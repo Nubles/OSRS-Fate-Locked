@@ -9,14 +9,19 @@
     "models:export": "node scripts/export-models.mjs",
     "clog:sync": "node scripts/sync-collection-log.mjs",
     "ca:sync": "node scripts/sync-combat-achievements.mjs",
+    "diary:sync": "node scripts/sync-achievement-diaries.mjs",
+    "diary:verify": "node scripts/sync-achievement-diaries.mjs --check",
     "content:check": "node scripts/check-content-sync.mjs",
     "chunks:sync": "node scripts/sync-chunk-content.mjs",
     "content:sync": "node scripts/sync-collection-log.mjs && node scripts/sync-combat-achievements.mjs && node scripts/check-content-sync.mjs",
+    "content:verify": "npm run diary:verify && vitest run data/contentBaseline.test.ts data/tasksConsistency.test.ts utils/taskIdMigrations.test.ts utils/caProgress.test.ts",
     "dev": "node scripts/gen-model-manifest.mjs && vite",
     "build": "node scripts/gen-model-manifest.mjs && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "release:verify": "npm test && npm run typecheck && npm run content:verify && npm run build"
   },
   "dependencies": {
     "@google/model-viewer": "^4.3.0",
@@ -30,6 +35,8 @@
     "recharts": "^2.12.0"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@vitejs/plugin-react": "^4.2.1",

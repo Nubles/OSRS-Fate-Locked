@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { questChunkStatus, doabilityBucket, entryBlockedGate } from './questDoability';
+import { DropSource } from '../types';
+import { QuestData } from '../data/questData';
+import {
+  questChunkStatus, doabilityBucket, entryBlockedGate, hasCanonicalQuestLocationEvidence,
+} from './questDoability';
 
 const reach = (...ids: number[]) => new Set(ids.map(String));
 const allUnlocked = () => true;
@@ -60,6 +64,15 @@ describe('entryBlockedGate', () => {
 
 describe('doabilityBucket', () => {
   const reachable = { chunkCount: 2, reachable: 2, access: 'REACHABLE' as const, startReachable: true, blockers: [] };
+  const baseQuest: QuestData = {
+    id: 'Base quest',
+    name: 'Base quest',
+    regions: [],
+    skills: {},
+    prereqs: [],
+    points: 0,
+    difficulty: DropSource.QUEST_NOVICE,
+  };
   it('completed → DONE regardless', () => {
     expect(doabilityBucket(true, false, reachable)).toBe('DONE');
   });
@@ -75,8 +88,34 @@ describe('doabilityBucket', () => {
   it('stranded chunk → STRANDED', () => {
     expect(doabilityBucket(false, true, { ...reachable, access: 'STRANDED' })).toBe('STRANDED');
   });
-  it('no chunk data falls back to reqs', () => {
-    expect(doabilityBucket(false, true, null)).toBe('DOABLE');
-    expect(doabilityBucket(false, false, null)).toBe('REQS');
+  it('uses NO_DATA only when canonical and chunk evidence are both absent', () => {
+    expect(doabilityBucket(false, true, null, false)).toBe('NO_DATA');
+    expect(doabilityBucket(false, false, null, false)).toBe('NO_DATA');
+    expect(doabilityBucket(false, true, null, true)).toBe('DOABLE');
+    expect(doabilityBucket(false, false, null, true)).toBe('REQS');
+  });
+
+  it('recognises every canonical location shape', () => {
+    expect(hasCanonicalQuestLocationEvidence({
+      ...baseQuest, regions: ['Misthalin'],
+    })).toBe(true);
+    expect(hasCanonicalQuestLocationEvidence({
+      ...baseQuest, regions: [], locations: [{
+        id: 'south-falador-farm',
+        label: 'South Falador Farm',
+        standardAreas: ['Asgarnia'],
+        chunkOptions: [{ cx: 47, cy: 51 }],
+      }],
+    })).toBe(true);
+    expect(hasCanonicalQuestLocationEvidence({
+      ...baseQuest, regions: [], oneOf: [{ guilds: ["Wizards' Guild"] }],
+    })).toBe(true);
+    expect(hasCanonicalQuestLocationEvidence({
+      ...baseQuest, regions: [],
+    })).toBe(false);
+  });
+  it('no chunk data with canonical evidence falls back to reqs', () => {
+    expect(doabilityBucket(false, true, null, true)).toBe('DOABLE');
+    expect(doabilityBucket(false, false, null, true)).toBe('REQS');
   });
 });

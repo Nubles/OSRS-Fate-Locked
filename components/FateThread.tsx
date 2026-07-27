@@ -5,6 +5,7 @@ import { TableType } from '../types';
 import { categoryColor } from '../utils/rarity';
 import { X, Play, ZoomIn, ZoomOut, Sparkles, Maximize2 } from 'lucide-react';
 
+import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 interface Props { onClose: () => void; }
 
 interface FNode {
@@ -47,7 +48,7 @@ export const FateThread: React.FC<Props> = ({ onClose }) => {
       [TableType.MINIGAMES, 'Minigames', unlocks.minigames],
       [TableType.GUILDS, 'Guilds', unlocks.guilds],
       [TableType.MOBILITY, 'Mobility', unlocks.mobility],
-      [TableType.ARCANA, 'Arcana', unlocks.arcana],
+      [TableType.ARCANA, COMBAT_POWERS_LABEL, unlocks.arcana],
       [TableType.POH, 'Housing', unlocks.housing],
       [TableType.STORAGE, 'Storage', unlocks.storage],
       [TableType.MERCHANTS, 'Merchants', unlocks.merchants],
