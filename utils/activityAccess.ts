@@ -18,10 +18,11 @@ export const getActivityAccess = (
     return { eligible: true, requiredAreas: [], explanation: '' };
   }
 
-  const requiredAreas = ACTIVITY_ACCESS_AREAS[activity];
-  if (!requiredAreas) {
+  if (!Object.prototype.hasOwnProperty.call(ACTIVITY_ACCESS_AREAS, activity)) {
     return { eligible: false, requiredAreas: [], explanation: 'Missing location declaration' };
   }
+
+  const requiredAreas = ACTIVITY_ACCESS_AREAS[activity];
 
   const eligible = requiredAreas.some((area) => isAreaReachable(area, unlocks, modeId));
   return {

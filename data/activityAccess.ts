@@ -22,6 +22,7 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
   Skotizo: ['Catacombs of Kourend'],
   'Thermonuclear Smoke Devil': ['Castle Wars'],
   "Calvar'ion": ['Graveyard of Shadows'],
+  'Crazy Archaeologist': ['Forgotten Cemetery'],
   Scorpia: ["Scorpia's Cave"],
   'The Hueycoatl': ['Darkfrost'],
   'Moons of Peril': ['Cam Torum'],
@@ -72,7 +73,7 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
   "Giants' Foundry": ['Al Kharid'],
   'Gnome Ball': ['Tree Gnome Stronghold'],
   'Gnome Restaurant': ['Tree Gnome Stronghold'],
-  'Guardians of the Rift': ['Al Kharid'],
+  'Guardians of the Rift': ["Wizards' Tower"],
   'Mage Training Arena': ['Mage Training Arena'],
   'Mastering Mixology': ['Aldarin'],
   Mess: ['Hosidius'],
@@ -108,7 +109,6 @@ export const NO_HARD_LOCATION_GATE = new Set<string>([
   'Callisto', // no tracked named-area gate (Wilderness bear cave)
   'Chaos Elemental', // no tracked named-area gate (roaming Wilderness boss)
   'Chaos Fanatic', // no tracked named-area gate (Wilderness altar site)
-  'Crazy Archaeologist', // no tracked named-area gate (Wilderness ruin)
   'Spindel', // no tracked named-area gate (Wilderness spider cave)
   'Venenatis', // no tracked named-area gate (Wilderness spider cave)
   "Vet'ion", // no tracked named-area gate (Wilderness skeleton cave)

@@ -60,6 +60,27 @@ describe('getActivityAccess', () => {
     expect(getActivityAccess('Obor', makeUnlocks({ regions: ['Edgeville'] }), 'vanilla').eligible).toBe(true);
   });
 
+  it("requires Wizards' Tower for Guardians of the Rift rather than Al Kharid", () => {
+    setStartArea('none');
+
+    expect(getActivityAccess('Guardians of the Rift', makeUnlocks(), 'vanilla').eligible).toBe(false);
+    expect(getActivityAccess('Guardians of the Rift', makeUnlocks({ regions: ['Al Kharid'] }), 'vanilla').eligible).toBe(
+      false,
+    );
+    expect(
+      getActivityAccess('Guardians of the Rift', makeUnlocks({ regions: ["Wizards' Tower"] }), 'vanilla').eligible,
+    ).toBe(true);
+  });
+
+  it('requires Forgotten Cemetery for Crazy Archaeologist', () => {
+    setStartArea('none');
+
+    expect(getActivityAccess('Crazy Archaeologist', makeUnlocks(), 'vanilla').eligible).toBe(false);
+    expect(
+      getActivityAccess('Crazy Archaeologist', makeUnlocks({ regions: ['Forgotten Cemetery'] }), 'vanilla').eligible,
+    ).toBe(true);
+  });
+
   it('allows any declared geographic gateway', () => {
     setStartArea('none');
 
@@ -123,5 +144,17 @@ describe('getActivityAccess', () => {
       requiredAreas: [],
       explanation: 'Missing location declaration',
     });
+  });
+
+  it('fails closed for inherited object property names', () => {
+    setStartArea('none');
+
+    for (const activity of ['toString', '__proto__']) {
+      expect(getActivityAccess(activity, makeUnlocks(), 'vanilla')).toEqual({
+        eligible: false,
+        requiredAreas: [],
+        explanation: 'Missing location declaration',
+      });
+    }
   });
 });
