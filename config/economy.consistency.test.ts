@@ -98,7 +98,8 @@ describe('economy ↔ engine consistency', () => {
 
     const noGeography: VanillaRandomAccessPolicy = { ...policy, requiresTrackedHardGeography: false };
     expect(describeVanillaRandomAccessPolicy(noGeography)).not.toContain('hard location access');
-    expect(describeVanillaRandomAccessPolicy(noGeography)).toContain('Omni-Key direct unlocks can be selected even without location access with a warning');
+    expect(describeVanillaRandomAccessPolicy(noGeography)).toContain('Omni-Key direct unlocks can be selected even without location access.');
+    expect(describeVanillaRandomAccessPolicy(noGeography)).not.toContain('with a warning');
     expect(describeVanillaRandomAccessPolicy(noGeography)).not.toContain('that filter');
 
     const noFilteredTables: VanillaRandomAccessPolicy = { ...policy, filteredTables: [] };
@@ -138,5 +139,6 @@ describe('economy ↔ engine consistency', () => {
       omniDirect: { allowsLocationIneligible: false, warnsPlayer: true },
     };
     expect(describeVanillaRandomAccessPolicy(restrictedOmni)).not.toContain('bypass that filter');
+    expect(describeVanillaRandomAccessPolicy(restrictedOmni)).not.toContain('with a warning');
   });
 });

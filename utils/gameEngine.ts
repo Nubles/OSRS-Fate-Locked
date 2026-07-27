@@ -75,10 +75,12 @@ export const isRandomUnlockEligible = (
     item: string,
     unlocks: UnlockState,
     modeId: string,
+    randomCost: 'key' | 'chaosKey' = 'key',
     policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY,
 ): boolean => {
     if (!isValidUnlock(table, item, unlocks)) return false;
     if (modeId !== 'vanilla') return true;
+    if (!policy.randomCosts.includes(randomCost)) return true;
     if (!policy.filteredTables.some(candidate => candidate === table)) return true;
     if (!policy.requiresTrackedHardGeography) return true;
     return getActivityAccess(item, unlocks, modeId).eligible;

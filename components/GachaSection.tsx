@@ -196,7 +196,7 @@ export const GachaSection: React.FC = () => {
     if (keys <= 0) return;
     const { pool, stateKey } = getPoolAndStateKey(table);
     const candidates = pool.map(item => ({ table, item }));
-    const validPool = pool.filter(item => isRandomUnlockEligible(table, item, unlocks, gameModeId));
+    const validPool = pool.filter(item => isRandomUnlockEligible(table, item, unlocks, gameModeId, 'key'));
     
     if (validPool.length === 0) {
         validateEmptyRandomPoolHandling(gameModeId, 'key');
@@ -246,7 +246,7 @@ export const GachaSection: React.FC = () => {
           const { pool, stateKey } = getPoolAndStateKey(table);
           pool.forEach(item => {
               candidates.push({ item, table });
-              if (isRandomUnlockEligible(table, item, unlocks, gameModeId)) {
+              if (isRandomUnlockEligible(table, item, unlocks, gameModeId, 'chaosKey')) {
                   globalPool.push({ item, tableType: table, stateKey });
               }
           });

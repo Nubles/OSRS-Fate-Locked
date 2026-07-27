@@ -60,9 +60,9 @@ export const describeVanillaRandomAccessPolicy = (
   const omni = policy.omniDirect.allowsLocationIneligible
     ? hasLocationFilter
       ? `Omni-Key direct unlocks bypass that filter${policy.omniDirect.warnsPlayer ? ' with a warning' : ''}.`
-      : `Omni-Key direct unlocks can be selected even without location access${policy.omniDirect.warnsPlayer ? ' with a warning' : ''}.`
+      : 'Omni-Key direct unlocks can be selected even without location access.'
     : hasLocationFilter
-      ? `Omni-Key direct unlocks respect that filter${policy.omniDirect.warnsPlayer ? ' with a warning' : ''}.`
+      ? 'Omni-Key direct unlocks respect that filter.'
       : 'Omni-Key direct unlocks remain subject to their ordinary availability rules.';
 
   return [randomAccess, emptyPool, omni].filter(Boolean).join(' ');

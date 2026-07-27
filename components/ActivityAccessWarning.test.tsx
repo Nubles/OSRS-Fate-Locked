@@ -54,10 +54,15 @@ describe('ActivityAccessWarning', () => {
       ...VANILLA_RANDOM_ACCESS_POLICY,
       omniDirect: { allowsLocationIneligible: false, warnsPlayer: true },
     };
+    const noGeography: VanillaRandomAccessPolicy = {
+      ...VANILLA_RANDOM_ACCESS_POLICY,
+      requiresTrackedHardGeography: false,
+    };
 
     expect(shouldShowActivityAccessWarning(TableType.BOSSES, true, 'vanilla')).toBe(true);
     expect(shouldShowActivityAccessWarning(TableType.BOSSES, true, 'vanilla', silent)).toBe(false);
     expect(shouldShowActivityAccessWarning(TableType.BOSSES, true, 'vanilla', restricted)).toBe(false);
+    expect(shouldShowActivityAccessWarning(TableType.BOSSES, true, 'vanilla', noGeography)).toBe(false);
   });
   it('does not warn when the direct selection is accessible or outside vanilla', () => {
     const accessible = renderToStaticMarkup(

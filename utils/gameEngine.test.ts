@@ -75,8 +75,18 @@ describe('isRandomUnlockEligible', () => {
       filteredTables: [],
     };
 
-    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', makeUnlocks(), 'vanilla', noGeography)).toBe(true);
-    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', makeUnlocks(), 'vanilla', noFilteredTables)).toBe(true);
+    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', makeUnlocks(), 'vanilla', 'key', noGeography)).toBe(true);
+    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', makeUnlocks(), 'vanilla', 'key', noFilteredTables)).toBe(true);
+  });
+
+  it('applies hard geography only to configured random costs', () => {
+    const standardOnly: VanillaRandomAccessPolicy = {
+      ...VANILLA_RANDOM_ACCESS_POLICY,
+      randomCosts: ['key'],
+    };
+
+    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', makeUnlocks(), 'vanilla', 'key', standardOnly)).toBe(false);
+    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', makeUnlocks(), 'vanilla', 'chaosKey', standardOnly)).toBe(true);
   });
 });
 
