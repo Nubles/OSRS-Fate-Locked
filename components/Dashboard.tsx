@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { VoidReveal } from './VoidReveal';
 import { ActivityAccessWarning } from './ActivityAccessWarning';
+import { isOmniDirectUnlockAvailable } from '../utils/gameEngine';
 import { TableType } from '../types';
 import { wikiService } from '../services/WikiService';
 import { NoteTrigger } from './NoteTrigger';
@@ -421,6 +422,7 @@ export const Dashboard: React.FC = () => {
       // Chunked mode has no named-region unlocks (chunks are the only territory
       // currency) — belt-and-braces guard in case a caller misses the UI gate.
       if (table === TableType.REGIONS && gameModeId === 'chunked') return;
+      if (!isOmniDirectUnlockAvailable(table, name, unlocks, gameModeId)) return;
       setConfirmOmni({ table, item: name });
   };
 
@@ -428,6 +430,7 @@ export const Dashboard: React.FC = () => {
       if (!confirmOmni) return;
       const { table, item } = confirmOmni;
       setConfirmOmni(null);
+      if (!isOmniDirectUnlockAvailable(table, item, unlocks, gameModeId)) return;
 
       let imageUrl = undefined;
       
@@ -600,7 +603,7 @@ export const Dashboard: React.FC = () => {
             const label = nameMap?.[item] ?? item;
             if (searchQuery && !label.toLowerCase().includes(searchQuery.toLowerCase())) return null;
             const isUnlocked = unlocked.includes(item);
-            const canUnlock = !isUnlocked && specialKeys > 0;
+            const canUnlock = !isUnlocked && specialKeys > 0 && isOmniDirectUnlockAvailable(type, item, unlocks, gameModeId);
             const sub = detailsMap ? detailsMap[item] : undefined;
 
             // Filter logic: Show if unlocked OR can unlock (Omni)

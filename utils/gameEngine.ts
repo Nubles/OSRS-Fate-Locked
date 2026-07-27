@@ -4,7 +4,7 @@ import { SKILLS_LIST, EQUIPMENT_SLOTS, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST,
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { ALL_CHUNK_KEYS, isFrontierChunk } from './chunkAdjacency';
 import { BANK_IDS } from '../data/banks';
-import { VANILLA_RANDOM_ACCESS_POLICY } from '../data/activityAccess';
+import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { getActivityAccess } from './activityAccess';
 
 export const rollDice = (max: number = 100) => Math.floor(Math.random() * max) + 1;
@@ -75,10 +75,26 @@ export const isRandomUnlockEligible = (
     item: string,
     unlocks: UnlockState,
     modeId: string,
+    policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY,
 ): boolean => {
     if (!isValidUnlock(table, item, unlocks)) return false;
     if (modeId !== 'vanilla') return true;
-    if (!VANILLA_RANDOM_ACCESS_POLICY.filteredTables.some(candidate => candidate === table)) return true;
+    if (!policy.filteredTables.some(candidate => candidate === table)) return true;
+    if (!policy.requiresTrackedHardGeography) return true;
+    return getActivityAccess(item, unlocks, modeId).eligible;
+};
+
+/** Whether an Omni direct selection may be confirmed under the shared Vanilla policy. */
+export const isOmniDirectUnlockAvailable = (
+    table: TableType,
+    item: string,
+    unlocks: UnlockState,
+    modeId: string,
+    policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY,
+): boolean => {
+    if (modeId !== 'vanilla') return true;
+    if (!policy.filteredTables.some(candidate => candidate === table)) return true;
+    if (!policy.requiresTrackedHardGeography || policy.omniDirect.allowsLocationIneligible) return true;
     return getActivityAccess(item, unlocks, modeId).eligible;
 };
 

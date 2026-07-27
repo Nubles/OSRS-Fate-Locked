@@ -153,3 +153,25 @@ export const VANILLA_RANDOM_ACCESS_POLICY = {
   emptyEligiblePool: { noUnlock: true, retainsKey: true, preservesRngProgression: true },
   omniDirect: { allowsLocationIneligible: true, warnsPlayer: true },
 } as const satisfies VanillaRandomAccessPolicy;
+
+/** Reject unsupported empty-pool rules before a caller can create an undefined selection. */
+export const validateVanillaRandomAccessPolicy = (
+  policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY,
+): VanillaRandomAccessPolicy => {
+  const empty = policy.emptyEligiblePool;
+  if (!empty.noUnlock || !empty.retainsKey || !empty.preservesRngProgression) {
+    throw new Error('Vanilla empty random pools must reject without spending a key or consuming RNG.');
+  }
+  return policy;
+};
+
+/** Validate the configured Standard/Chaos empty-pool invariant for an attempted random draw. */
+export const validateEmptyRandomPoolHandling = (
+  modeId: string,
+  cost: 'key' | 'chaosKey',
+  policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY,
+): void => {
+  if (modeId === 'vanilla' && policy.randomCosts.includes(cost)) {
+    validateVanillaRandomAccessPolicy(policy);
+  }
+};

@@ -1,9 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TableType, UnlockState } from '../types';
+import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { setStartArea } from './freeAreas';
 import {
   describeRandomPoolBlockers,
   isRandomUnlockEligible,
+  isOmniDirectUnlockAvailable,
   isValidUnlock,
   pickRandomPoolEntry,
 } from './gameEngine';
@@ -61,6 +63,33 @@ describe('isRandomUnlockEligible', () => {
     expect(isRandomUnlockEligible(TableType.REGIONS, 'Morytania', lockedState, 'vanilla')).toBe(
       isValidUnlock(TableType.REGIONS, 'Morytania', lockedState),
     );
+  });
+
+  it('uses the shared table scope and hard-geography decisions when filtering a vanilla pool', () => {
+    const noGeography: VanillaRandomAccessPolicy = {
+      ...VANILLA_RANDOM_ACCESS_POLICY,
+      requiresTrackedHardGeography: false,
+    };
+    const noFilteredTables: VanillaRandomAccessPolicy = {
+      ...VANILLA_RANDOM_ACCESS_POLICY,
+      filteredTables: [],
+    };
+
+    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', makeUnlocks(), 'vanilla', noGeography)).toBe(true);
+    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', makeUnlocks(), 'vanilla', noFilteredTables)).toBe(true);
+  });
+});
+
+describe('isOmniDirectUnlockAvailable', () => {
+  it('uses the shared Omni allow decision for inaccessible direct selections', () => {
+    const restricted: VanillaRandomAccessPolicy = {
+      ...VANILLA_RANDOM_ACCESS_POLICY,
+      omniDirect: { allowsLocationIneligible: false, warnsPlayer: true },
+    };
+
+    expect(isOmniDirectUnlockAvailable(TableType.BOSSES, 'Giant Mole', makeUnlocks(), 'vanilla', restricted)).toBe(false);
+    expect(isOmniDirectUnlockAvailable(TableType.BOSSES, 'Giant Mole', makeUnlocks({ regions: ['Falador'] }), 'vanilla', restricted)).toBe(true);
+    expect(isOmniDirectUnlockAvailable(TableType.BOSSES, 'Giant Mole', makeUnlocks(), 'vanilla')).toBe(true);
   });
 });
 

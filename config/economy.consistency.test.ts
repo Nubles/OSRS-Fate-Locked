@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from './rules';
-import { DropSource } from '../types';
+import { DropSource, TableType } from '../types';
 import {
   EARN_METHODS, KEY_TYPES, SPEND_TABLES, RITUALS,
   SKILLS_TIER_CAP, LEVEL_ROLL_MAX, earnRange,
@@ -98,6 +98,16 @@ describe('economy ↔ engine consistency', () => {
 
     const noGeography: VanillaRandomAccessPolicy = { ...policy, requiresTrackedHardGeography: false };
     expect(describeVanillaRandomAccessPolicy(noGeography)).not.toContain('hard location access');
+    expect(describeVanillaRandomAccessPolicy(noGeography)).toContain('Omni-Key direct unlocks can be selected even without location access with a warning');
+    expect(describeVanillaRandomAccessPolicy(noGeography)).not.toContain('that filter');
+
+    const noFilteredTables: VanillaRandomAccessPolicy = { ...policy, filteredTables: [] };
+    expect(describeVanillaRandomAccessPolicy(noFilteredTables)).not.toContain('random unlocks respect hard location access');
+    expect(describeVanillaRandomAccessPolicy(noFilteredTables)).toContain('Omni-Key direct unlocks can be selected even without location access');
+
+    const minigamesOnly: VanillaRandomAccessPolicy = { ...policy, filteredTables: [TableType.MINIGAMES] };
+    expect(describeVanillaRandomAccessPolicy(minigamesOnly)).toContain('hard location access for Minigames');
+    expect(describeVanillaRandomAccessPolicy(minigamesOnly)).not.toContain('Bosses and Minigames');
 
     const noEmptyPoolGuard: VanillaRandomAccessPolicy = {
       ...policy,

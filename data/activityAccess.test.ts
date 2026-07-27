@@ -3,6 +3,7 @@ import {
   ACTIVITY_ACCESS_AREAS,
   NO_HARD_LOCATION_GATE,
   VANILLA_RANDOM_ACCESS_POLICY,
+  validateVanillaRandomAccessPolicy,
 } from './activityAccess';
 import { BOSSES_LIST, MINIGAMES_LIST, REGIONS_LIST } from './items';
 import { MISTHALIN_AREAS } from '../constants';
@@ -65,5 +66,18 @@ describe('vanilla activity access declarations', () => {
       emptyEligiblePool: { noUnlock: true, retainsKey: true, preservesRngProgression: true },
       omniDirect: { allowsLocationIneligible: true, warnsPlayer: true },
     });
+  });
+
+  it('rejects unsafe empty-pool configurations before gameplay can select from them', () => {
+    for (const emptyEligiblePool of [
+      { noUnlock: false, retainsKey: true, preservesRngProgression: true },
+      { noUnlock: true, retainsKey: false, preservesRngProgression: true },
+      { noUnlock: true, retainsKey: true, preservesRngProgression: false },
+    ]) {
+      expect(() => validateVanillaRandomAccessPolicy({
+        ...VANILLA_RANDOM_ACCESS_POLICY,
+        emptyEligiblePool,
+      })).toThrow('must reject without spending a key or consuming RNG');
+    }
   });
 });

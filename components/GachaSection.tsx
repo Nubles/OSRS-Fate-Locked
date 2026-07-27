@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { TableType } from '../types';
 import { useGame } from '../context/GameContext';
 import { bankLocksActive } from '../utils/reachability';
+import { validateEmptyRandomPoolHandling } from '../data/activityAccess';
 import { BANK_IDS, BANK_BY_ID } from '../data/banks';
 import { checkUnlockAvailability, describeRandomPoolBlockers, getPoolAndStateKey, isRandomUnlockEligible, pickRandomPoolEntry, UNLOCK_COST } from '../utils/gameEngine';
 import { REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, POH_LIST, MERCHANTS_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST, UTILITY_ITEM_IDS } from '../constants';
@@ -198,6 +199,7 @@ export const GachaSection: React.FC = () => {
     const validPool = pool.filter(item => isRandomUnlockEligible(table, item, unlocks, gameModeId));
     
     if (validPool.length === 0) {
+        validateEmptyRandomPoolHandling(gameModeId, 'key');
         const blockers = describeRandomPoolBlockers(candidates, unlocks, gameModeId);
         if (blockers.sample.length > 0) {
             const suffix = blockers.remaining === 1 ? '' : 's';
@@ -251,6 +253,7 @@ export const GachaSection: React.FC = () => {
       });
 
       if (globalPool.length === 0) {
+        validateEmptyRandomPoolHandling(gameModeId, 'chaosKey');
           const blockers = describeRandomPoolBlockers(candidates, unlocks, gameModeId);
           if (blockers.sample.length > 0) {
               const suffix = blockers.remaining === 1 ? '' : 's';

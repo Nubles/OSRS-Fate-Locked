@@ -45,8 +45,10 @@ export const describeVanillaRandomAccessPolicy = (
   policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY,
 ): string => {
   const costs = policy.randomCosts.includes('chaosKey') ? 'Standard and Chaos' : 'Standard';
-  const randomAccess = policy.requiresTrackedHardGeography
-    ? `${costs} random unlocks respect hard location access.`
+  const tableScope = policy.filteredTables.join(' and ');
+  const hasLocationFilter = policy.requiresTrackedHardGeography && tableScope.length > 0;
+  const randomAccess = hasLocationFilter
+    ? `${costs} random unlocks respect hard location access for ${tableScope}.`
     : '';
   const emptyPool = policy.emptyEligiblePool.noUnlock
     ? [
@@ -56,8 +58,12 @@ export const describeVanillaRandomAccessPolicy = (
       ].filter(Boolean).join('; ') + '.'
     : '';
   const omni = policy.omniDirect.allowsLocationIneligible
-    ? `Omni-Key direct unlocks bypass that filter${policy.omniDirect.warnsPlayer ? ' with a warning' : ''}.`
-    : `Omni-Key direct unlocks respect that filter${policy.omniDirect.warnsPlayer ? ' with a warning' : ''}.`;
+    ? hasLocationFilter
+      ? `Omni-Key direct unlocks bypass that filter${policy.omniDirect.warnsPlayer ? ' with a warning' : ''}.`
+      : `Omni-Key direct unlocks can be selected even without location access${policy.omniDirect.warnsPlayer ? ' with a warning' : ''}.`
+    : hasLocationFilter
+      ? `Omni-Key direct unlocks respect that filter${policy.omniDirect.warnsPlayer ? ' with a warning' : ''}.`
+      : 'Omni-Key direct unlocks remain subject to their ordinary availability rules.';
 
   return [randomAccess, emptyPool, omni].filter(Boolean).join(' ');
 };
