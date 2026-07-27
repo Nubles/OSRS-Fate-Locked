@@ -9,22 +9,35 @@ const FOCUSABLE_SELECTOR = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(',');
 
+/** Prefers an explicit persistent trigger over the active element captured at mount. */
+export const resolveFocusRestorationTarget = <Target>(
+  explicitTarget: Target | null | undefined,
+  previouslyFocused: Target | null,
+): Target | null => explicitTarget ?? previouslyFocused;
+
 /**
  * Traps keyboard focus inside the referenced element while `active` is true:
  *  - focuses the first focusable child on mount,
  *  - cycles Tab / Shift+Tab within the element instead of escaping behind it,
- *  - restores focus to the previously-focused element on unmount.
+ *  - restores focus to an explicit persistent target, or the previously-focused element, on unmount.
  *
  * The referenced element should have `tabIndex={-1}` so it can receive focus
  * as a fallback when it contains no focusable children.
  */
-export const useFocusTrap = (ref: RefObject<HTMLElement>, active = true): void => {
+export const useFocusTrap = (
+  ref: RefObject<HTMLElement>,
+  active = true,
+  returnFocusTarget?: HTMLElement | null,
+): void => {
   useEffect(() => {
     if (!active) return;
     const node = ref.current;
     if (!node) return;
 
     const previouslyFocused = document.activeElement as HTMLElement | null;
+    // Capture the target while the trap activates: a menu item can disappear
+    // before this effect runs, but a persistent trigger remains focusable.
+    const focusRestoreTarget = resolveFocusRestorationTarget(returnFocusTarget, previouslyFocused);
 
     const focusable = () =>
       Array.from(node.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR))
@@ -57,8 +70,8 @@ export const useFocusTrap = (ref: RefObject<HTMLElement>, active = true): void =
     node.addEventListener('keydown', onKeyDown);
     return () => {
       node.removeEventListener('keydown', onKeyDown);
-      if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
-        previouslyFocused.focus();
+      if (focusRestoreTarget && typeof focusRestoreTarget.focus === 'function') {
+        focusRestoreTarget.focus();
       }
     };
   }, [ref, active]);

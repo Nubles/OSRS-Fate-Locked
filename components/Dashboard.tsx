@@ -16,6 +16,8 @@ import {
   ExternalLink, Unlock, Lock, Compass, ChevronDown, ChevronsUp, AlertCircle, BookOpen, ScrollText, Globe, List, Filter, Info, Share2, MapPin, Route, Trophy, Skull
 } from 'lucide-react';
 import { VoidReveal } from './VoidReveal';
+import { ActivityAccessWarning } from './ActivityAccessWarning';
+import { isOmniDirectUnlockAvailable } from '../utils/gameEngine';
 import { TableType } from '../types';
 import { wikiService } from '../services/WikiService';
 import { NoteTrigger } from './NoteTrigger';
@@ -460,6 +462,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       // Chunked mode has no named-region unlocks (chunks are the only territory
       // currency) — belt-and-braces guard in case a caller misses the UI gate.
       if (table === TableType.REGIONS && gameModeId === 'chunked') return;
+      if (!isOmniDirectUnlockAvailable(table, name, unlocks, gameModeId)) return;
       setConfirmOmni({ table, item: name });
   };
 
@@ -467,6 +470,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       if (!confirmOmni) return;
       const { table, item } = confirmOmni;
       setConfirmOmni(null);
+      if (!isOmniDirectUnlockAvailable(table, item, unlocks, gameModeId)) return;
 
       let imageUrl = undefined;
       
@@ -642,7 +646,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
             const label = nameMap?.[item] ?? item;
             if (searchQuery && !label.toLowerCase().includes(searchQuery.toLowerCase())) return null;
             const isUnlocked = unlocked.includes(item);
-            const canUnlock = !isUnlocked && specialKeys > 0;
+            const canUnlock = !isUnlocked && specialKeys > 0 && isOmniDirectUnlockAvailable(type, item, unlocks, gameModeId);
             const sub = detailsMap ? detailsMap[item] : undefined;
             const req = getActivityReq(label);
             const readiness = evaluateActivityReadiness(
@@ -999,6 +1003,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                   <p className="text-gray-300 text-sm leading-relaxed mb-6">
                       Are you sure you want to use <b>1 Omni-Key</b> to explicitly unlock <span className="text-white font-bold">{confirmOmni.item}</span>?
                   </p>
+
+                  <ActivityAccessWarning
+                      activity={confirmOmni.item}
+                      table={confirmOmni.table}
+                      unlocks={unlocks}
+                      modeId={gameModeId}
+                  />
 
                   <div className="flex gap-3">
                       <button 

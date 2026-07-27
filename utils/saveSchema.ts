@@ -4,8 +4,16 @@ import { EQUIPMENT_SLOTS } from '../data/items';
 import type { GameState, LogEntry, RivalState, UnlockState } from '../types';
 import { migrateClogIds } from './clogIdMigrations';
 import { migrateCompletedTaskIds } from './taskIdMigrations';
+import {
+  isKnownVanillaBoss,
+  normalizeBossStandardKeysAwarded,
+  normalizeClueStandardKeysAwarded,
+} from './vanillaKeyProgress';
+import { vanillaBossKeyStage } from '../config/vanillaKeyEconomy';
 
-export const CURRENT_SAVE_VERSION = 1;
+/** Version 3 strictly validates persisted Vanilla key-progression counters. */
+export const CURRENT_SAVE_VERSION = 3;
+const MIN_SUPPORTED_SAVE_VERSION = 1;
 export const MAX_SAVE_BYTES = 5 * 1024 * 1024;
 export const MAX_HISTORY_ENTRIES = 100_000;
 export const MAX_IDENTIFIER_ARRAY = 25_000;
@@ -668,6 +676,7 @@ const RFC_4122_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-
 
 const TOP_LEVEL_KEYS = new Set([
   'version', 'runId', 'runRevision', 'keys', 'specialKeys', 'chaosKeys', 'fatePoints', 'activeBuff',
+  'bossStandardKeysAwarded', 'clueStandardKeysAwarded',
   'unlocks', 'history', 'animationsEnabled', 'advisorsEnabled', 'revealAllFeatures',
   'hasSeenOnboarding', 'pinnedGoals', 'userNotes', 'gameModeId', 'customMode',
   'gameModeLocked', 'rngSeed', 'loadout', 'rival', 'linkedAccount',
@@ -696,13 +705,17 @@ export const validateAndMigrateSave = (
   if (inspected.ok === false) return inspected;
   const hasVersion = own(input, 'version');
   const rawVersion = hasVersion ? readOwn(input, 'version') : undefined;
-  if (hasVersion && (typeof rawVersion !== 'number' || !Number.isSafeInteger(rawVersion))) {
-    return invalid('invalid_number', 'version');
+  let sourceVersion = 0;
+  if (hasVersion) {
+    if (typeof rawVersion !== 'number' || !Number.isSafeInteger(rawVersion)) {
+      return invalid('invalid_number', 'version');
+    }
+    if (rawVersion < MIN_SUPPORTED_SAVE_VERSION || rawVersion > CURRENT_SAVE_VERSION) {
+      return invalid('unsupported_version', 'version');
+    }
+    sourceVersion = rawVersion;
   }
-  if (hasVersion && rawVersion !== CURRENT_SAVE_VERSION) {
-    return invalid('unsupported_version', 'version');
-  }
-  return normalizeAndRevalidate(input, defaults, hasVersion ? CURRENT_SAVE_VERSION : 0);
+  return normalizeAndRevalidate(input, defaults, sourceVersion);
 };
 
 const normalizeState = (
@@ -710,11 +723,17 @@ const normalizeState = (
   defaults: GameState,
   sourceVersion: number,
 ): Outcome<{ state: GameState; migrated: boolean }> => {
-  if (sourceVersion === CURRENT_SAVE_VERSION) {
-    for (const key of [
+  if (sourceVersion >= MIN_SUPPORTED_SAVE_VERSION) {
+    const required = [
       'keys', 'specialKeys', 'chaosKeys', 'fatePoints', 'activeBuff',
       'unlocks', 'history', 'pinnedGoals', 'userNotes',
-    ]) {
+    ];
+    // Versions 1 and 2 are permissive migration formats; v3 requires these
+    // counters at the strict save boundary.
+    if (sourceVersion === CURRENT_SAVE_VERSION) {
+      required.push('bossStandardKeysAwarded', 'clueStandardKeysAwarded');
+    }
+    for (const key of required) {
       if (!own(input, key)) return invalid('invalid_field', key);
     }
   }
@@ -733,6 +752,54 @@ const normalizeState = (
   if (chaosKeys.ok === false) return chaosKeys;
   const fatePoints = counter('fatePoints');
   if (fatePoints.ok === false) return fatePoints;
+
+  const selectedBossProgress = readPreferred(input, defaultRecord, 'bossStandardKeysAwarded');
+  if (!selectedBossProgress.present) return invalid('invalid_field', 'bossStandardKeysAwarded');
+  const selectedClueProgress = readPreferred(input, defaultRecord, 'clueStandardKeysAwarded');
+  if (!selectedClueProgress.present) return invalid('invalid_field', 'clueStandardKeysAwarded');
+
+  let bossStandardKeysAwarded: Record<string, number>;
+  let clueStandardKeysAwarded: number;
+  if (sourceVersion === CURRENT_SAVE_VERSION) {
+    const strictBossProgress = inspectRecord(
+      selectedBossProgress.value,
+      null,
+      'invalid_field',
+      'bossStandardKeysAwarded',
+    );
+    if (strictBossProgress.ok === false) return strictBossProgress;
+
+    bossStandardKeysAwarded = {};
+    for (const bossName of Object.getOwnPropertyNames(strictBossProgress.value)) {
+      const path = pathOf('bossStandardKeysAwarded', bossName);
+      if (!isKnownVanillaBoss(bossName)) return invalid('invalid_field', path);
+      const awarded = boundedInteger(
+        readOwn(strictBossProgress.value, bossName),
+        path,
+        0,
+        vanillaBossKeyStage(bossName, 0).cap,
+      );
+      if (awarded.ok === false) return awarded;
+      bossStandardKeysAwarded[bossName] = awarded.value;
+    }
+
+    const strictClueProgress = boundedInteger(
+      selectedClueProgress.value,
+      'clueStandardKeysAwarded',
+      0,
+      MAX_COUNTER,
+    );
+    if (strictClueProgress.ok === false) return strictClueProgress;
+    clueStandardKeysAwarded = strictClueProgress.value;
+  } else {
+    // Versions 1 and 2 were permissive import formats. Keep their documented
+    // migration behavior, then persist the sanitized result as strict v3.
+    bossStandardKeysAwarded = normalizeBossStandardKeysAwarded(selectedBossProgress.value);
+    clueStandardKeysAwarded = Math.min(
+      normalizeClueStandardKeysAwarded(selectedClueProgress.value),
+      MAX_COUNTER,
+    );
+  }
 
   const selectedBuff = readPreferred(input, defaultRecord, 'activeBuff');
   if (!selectedBuff.present
@@ -774,6 +841,8 @@ const normalizeState = (
     specialKeys: specialKeys.value,
     chaosKeys: chaosKeys.value,
     fatePoints: fatePoints.value,
+    bossStandardKeysAwarded,
+    clueStandardKeysAwarded,
     activeBuff: selectedBuff.value,
     unlocks: unlocks.value.value,
     history: history.value,
@@ -834,10 +903,12 @@ const normalizeState = (
     ok: true,
     value: {
       state,
-      migrated: sourceVersion === 0
+      migrated: sourceVersion < CURRENT_SAVE_VERSION
         || unlocks.value.migrated
         || !own(input, 'runId')
-        || !own(input, 'runRevision'),
+        || !own(input, 'runRevision')
+        || !own(input, 'bossStandardKeysAwarded')
+        || !own(input, 'clueStandardKeysAwarded'),
     },
   };
 };

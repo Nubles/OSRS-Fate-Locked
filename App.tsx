@@ -41,9 +41,9 @@ import { showToast } from './utils/toast';
 import { importUiDecision, isCurrentImportRequest } from './utils/gamePersistence';
 import { MAX_SAVE_BYTES } from './utils/saveSchema';
 import { prefetchHeavyChunks } from './utils/prefetch';
-import { LATEST_CHANGELOG } from './data/changelog';
+import { CHANGELOG_RELEASES, LATEST_CHANGELOG } from './data/changelog';
 import {
-  changelogVisibilityReducer, markChangelogSeen, resolveChangelogRestoreTarget,
+  changelogVisibilityReducer, markChangelogSeen,
   resolveChangelogModalRenderPolicy, shouldAutoOpenChangelog,
   shouldEnableUnderlyingModalEscape, shouldShowChangelog,
 } from './utils/changelogState';
@@ -66,7 +66,7 @@ const ChangelogModal = lazyWithRetry(() =>
   })),
 );
 import { deobfuscateFateSave, encodeFateSaveExport } from './utils/encryption';
-import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb, Radio, Settings, Newspaper } from 'lucide-react';
+import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb, Radio, Settings } from 'lucide-react';
 import { exportRuneliteBundle } from './utils/runeliteExport';
 
 // --- Error Boundary ---
@@ -238,7 +238,7 @@ interface HeaderProps {
   setShowGameMode: (show: boolean) => void;
   setShowSyncCode: (show: boolean) => void;
   setShowDiscord: (show: boolean) => void;
-  onOpenChangelog: () => void;
+  onOpenChangelog: (returnFocusTarget: HTMLElement | null) => void;
 }
 
 const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode, setShowDiscord, onOpenChangelog }: HeaderProps) => {
@@ -500,12 +500,10 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                      <div className="fixed inset-0 z-[90]" onClick={() => setShowUtilMenu(false)} />
                      <div className="absolute right-0 top-9 z-[91] w-56 bg-[#1c1c1c] border border-white/15 rounded-lg shadow-2xl py-1.5 text-[12px]">
                         <button type="button" onClick={() => {
-                          const restoreTarget = resolveChangelogRestoreTarget('manual', settingsTriggerRef.current);
-                          restoreTarget?.focus();
                           setShowUtilMenu(false);
-                          onOpenChangelog();
+                          onOpenChangelog(settingsTriggerRef.current);
                         }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-amber-300">
-                          <Newspaper size={13} className="text-amber-400" />
+                          <ScrollText size={13} className="text-amber-300" />
                           What's New
                         </button>
                         <div className="my-1 border-t border-white/10" />
@@ -639,10 +637,18 @@ const GameLayout = () => {
     }),
   );
 
-  const openChangelog = () => dispatchChangelog({ type: 'OPEN' });
+  const changelogReturnFocusTarget = useRef<HTMLElement | null>(null);
+  const changelogAutoOpenedRelease = useRef<string | null>(
+    showChangelog ? LATEST_CHANGELOG.id : null,
+  );
+  const openChangelog = (returnFocusTarget: HTMLElement | null = null) => {
+    changelogReturnFocusTarget.current = returnFocusTarget;
+    dispatchChangelog({ type: 'OPEN' });
+  };
   const closeChangelog = () => {
     markChangelogSeen(LATEST_CHANGELOG.id);
     dispatchChangelog({ type: 'DISMISS' });
+    changelogReturnFocusTarget.current = null;
   };
 
   // Warm the heavy lazy chunks (map, stats+charts, resource engine, …) during
@@ -740,12 +746,44 @@ const GameLayout = () => {
   // the onboarding wizard rather than `createProfile`. Catch that finish-line:
   // when onboarding flips to complete on a still-empty run, prompt the mode pick.
   const prevOnboarded = useRef(hasSeenOnboarding);
+  const onboardingJustCompleted = !prevOnboarded.current && hasSeenOnboarding && history.length === 0;
   useEffect(() => {
-    if (!prevOnboarded.current && hasSeenOnboarding && history.length === 0) {
+    if (onboardingJustCompleted) {
       setShowGameMode(true);
     }
     prevOnboarded.current = hasSeenOnboarding;
-  }, [hasSeenOnboarding, history.length]);
+  }, [hasSeenOnboarding, onboardingJustCompleted]);
+
+  const startupHash = typeof window === 'undefined' ? '' : window.location.hash;
+  const hasPendingSyncPrompt = showSyncCode
+    || (startupHash.startsWith('#sync=') && startupHash.length > '#sync='.length);
+  const hasPendingGameModePrompt = showGameMode
+    || recentlyCreatedId === activeProfileId
+    || onboardingJustCompleted;
+  useEffect(() => {
+    if (
+      showChangelog
+      || changelogAutoOpenedRelease.current === LATEST_CHANGELOG.id
+      || !shouldAutoOpenChangelog({
+        hasSeenOnboarding,
+        releaseIsUnseen: shouldShowChangelog(LATEST_CHANGELOG.id),
+        startupHash,
+        hasPendingGameModePrompt,
+        hasPendingSyncPrompt,
+      })
+    ) return;
+
+    changelogAutoOpenedRelease.current = LATEST_CHANGELOG.id;
+    dispatchChangelog({ type: 'OPEN' });
+  }, [
+    activeProfileId,
+    hasPendingGameModePrompt,
+    hasPendingSyncPrompt,
+    hasSeenOnboarding,
+    recentlyCreatedId,
+    showChangelog,
+    startupHash,
+  ]);
 
   // Escape closes whichever top-level modal is open.
   const anyModalOpen = showStats || showReference || showAltar
@@ -802,7 +840,11 @@ const GameLayout = () => {
           </>
         )}
         {showChangelog && (
-          <ChangelogModal release={LATEST_CHANGELOG} onClose={closeChangelog} />
+          <ChangelogModal
+            releases={CHANGELOG_RELEASES}
+            onClose={closeChangelog}
+            returnFocusTarget={changelogReturnFocusTarget.current}
+          />
         )}
       </Suspense>
 

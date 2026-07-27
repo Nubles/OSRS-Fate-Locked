@@ -1,5 +1,7 @@
 const KEY_ROLL_UNITS = 1000;
+const EXACT_KEY_ROLL_UNITS = 10_000;
 const UNITS_PER_PERCENT = 10;
+const EXACT_UNITS_PER_PERCENT = 100;
 
 export interface KeyRollInput {
   primaryFloat: number;
@@ -13,6 +15,11 @@ export interface KeyRollResolution {
   roll: number;
   baseThreshold: number;
   effectiveThreshold: number;
+  success: boolean;
+}
+
+export interface ExactKeyRollResolution {
+  roll: number;
   success: boolean;
 }
 
@@ -30,18 +37,41 @@ const normalizedFloat = (value: number): number => {
 const rollFromFloat = (value: number): number =>
   (Math.floor(normalizedFloat(value) * KEY_ROLL_UNITS) + 1) / UNITS_PER_PERCENT;
 
+const exactRollFromFloat = (value: number): number =>
+  (Math.floor(normalizedFloat(value) * EXACT_KEY_ROLL_UNITS) + 1) / EXACT_UNITS_PER_PERCENT;
+
+const decimalPlaces = (value: number): number =>
+  Math.round(value * EXACT_UNITS_PER_PERCENT) % UNITS_PER_PERCENT === 0 ? 1 : 2;
+
+export const normalizePercent = (value: number): number =>
+  Math.round(clamp(Number.isFinite(value) ? value : 0, 0, 100) * EXACT_UNITS_PER_PERCENT)
+  / EXACT_UNITS_PER_PERCENT;
+
 export const skillLevelKeyChance = (level: number): number => {
   const finiteLevel = Number.isFinite(level) ? Math.trunc(level) : 1;
   return clamp(finiteLevel, 1, 99) / 5;
 };
 
 export const formatKeyPercent = (percent: number): string =>
-  `${percent.toFixed(1)}%`;
+  `${percent.toFixed(decimalPlaces(percent))}%`;
 
 export const formatKeyRollValue = (roll: number): string =>
-  roll.toFixed(1);
+  roll.toFixed(decimalPlaces(roll));
 
-export const resolveKeyRoll = (input: KeyRollInput): KeyRollResolution => {
+/** Standard level and mode-aware roll resolution (one decimal place). */
+export function resolveKeyRoll(input: KeyRollInput): KeyRollResolution;
+/** Exact two-decimal resolution for contextual Vanilla boss and clue rolls. */
+export function resolveKeyRoll(randomFloat: number, thresholdPercent: number): ExactKeyRollResolution;
+export function resolveKeyRoll(
+  inputOrRandomFloat: KeyRollInput | number,
+  thresholdPercent?: number,
+): KeyRollResolution | ExactKeyRollResolution {
+  if (typeof inputOrRandomFloat === 'number') {
+    const roll = exactRollFromFloat(inputOrRandomFloat);
+    return { roll, success: roll <= normalizePercent(thresholdPercent ?? 0) };
+  }
+
+  const input = inputOrRandomFloat;
   const baseThreshold = roundToTenth(clamp(input.baseThreshold, 0, 100));
   const effectiveThreshold = roundToTenth(
     clamp(baseThreshold + input.successBonus, 0, 100),
@@ -56,4 +86,4 @@ export const resolveKeyRoll = (input: KeyRollInput): KeyRollResolution => {
     effectiveThreshold,
     success: roll <= effectiveThreshold,
   };
-};
+}

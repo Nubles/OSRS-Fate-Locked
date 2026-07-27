@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   formatKeyPercent,
   formatKeyRollValue,
+  normalizePercent,
   resolveKeyRoll,
   skillLevelKeyChance,
 } from './keyRoll';
@@ -21,7 +22,7 @@ describe('skillLevelKeyChance', () => {
   });
 });
 
-describe('resolveKeyRoll', () => {
+describe('resolveKeyRoll standard mode-aware rolls', () => {
   it('honours the exact 8.2% boundary', () => {
     expect(resolveKeyRoll({
       primaryFloat: 0.081,
@@ -108,10 +109,29 @@ describe('resolveKeyRoll', () => {
   });
 });
 
+describe('resolveKeyRoll exact Vanilla contextual rolls', () => {
+  it('keeps exact 32.5% and 16.25% boundaries', () => {
+    expect(resolveKeyRoll(0.3249, 32.5)).toEqual({ roll: 32.5, success: true });
+    expect(resolveKeyRoll(0.325, 32.5)).toEqual({ roll: 32.51, success: false });
+    expect(resolveKeyRoll(0.1624, 16.25)).toEqual({ roll: 16.25, success: true });
+    expect(resolveKeyRoll(0.1625, 16.25)).toEqual({ roll: 16.26, success: false });
+  });
+
+  it('preserves whole-number probability boundaries and clamps malformed inputs', () => {
+    expect(resolveKeyRoll(0.2499, 25)).toEqual({ roll: 25, success: true });
+    expect(resolveKeyRoll(0.25, 25)).toEqual({ roll: 25.01, success: false });
+    expect(resolveKeyRoll(-1, -4)).toEqual({ roll: 0.01, success: false });
+    expect(resolveKeyRoll(4, 140)).toEqual({ roll: 100, success: true });
+    expect(normalizePercent(16.255)).toBe(16.26);
+  });
+});
+
 describe('decimal roll formatting', () => {
-  it('always exposes one decimal place', () => {
+  it('keeps one decimal place for level rolls and two where the contextual rate needs it', () => {
     expect(formatKeyPercent(8.2)).toBe('8.2%');
     expect(formatKeyPercent(15)).toBe('15.0%');
+    expect(formatKeyPercent(16.25)).toBe('16.25%');
     expect(formatKeyRollValue(42)).toBe('42.0');
+    expect(formatKeyRollValue(16.25)).toBe('16.25');
   });
 });

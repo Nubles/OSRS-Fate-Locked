@@ -9,6 +9,9 @@ import { wikiService } from '../services/WikiService';
 import { resolveModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { EARN_METHODS, LEVEL_ROLL_MAX } from '../config/economy';
+import { BRUTUS_BOSS_NAME, effectiveVanillaClueRate, vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
+import { BossKeyProgress, ClueKeyProgress } from './VanillaKeyProgress';
+import { VANILLA_BOSS_SEARCH_PLACEHOLDER, vanillaBossSearchEmptyMessage } from './vanillaBossSearchCopy';
 
 // OSRS Wiki Icon URLs
 const WIKI_IMG = 'https://oldschool.runescape.wiki/images/';
@@ -326,6 +329,32 @@ const BossRollCard: React.FC<{ name: string; displayRate: number; bonus: number;
   );
 };
 
+const VanillaBossRollCard: React.FC<{
+  name: string;
+  displayRate: number;
+  style: TierStyle;
+  stage: ReturnType<typeof vanillaBossKeyStage>;
+  onClick: (e: React.MouseEvent) => void;
+}> = ({ name, displayRate, style, stage, onClick }) => {
+  const { isRolling, triggerRoll } = useRollSuspense(onClick);
+  const capped = stage.capped;
+
+  return (
+    <button
+      onClick={triggerRoll}
+      disabled={isRolling || capped}
+      className={`w-full text-left rounded-lg border p-2.5 flex items-start justify-between gap-2 transition-all ${style.bg} ${style.border} ${!capped ? style.hover : ''} ${isRolling ? 'opacity-60 cursor-wait' : ''} ${capped ? 'opacity-60 cursor-not-allowed' : ''}`}
+    >
+      <div className="min-w-0 flex-1">
+        <span className={`block text-xs font-semibold truncate ${style.text}`}>{name}</span>
+        <BossKeyProgress stage={stage} />
+      </div>
+      <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border shrink-0 ${style.pill}`}>
+        {capped ? 'CAPPED' : `${displayRate}%`}
+      </span>
+    </button>
+  );
+};
 // --- Info chip (non-interactive navigational hint) ---
 const InfoChip: React.FC<{
   icon: React.ReactNode;
@@ -348,7 +377,7 @@ const InfoChip: React.FC<{
 type FarmSubTab = 'SLAYER' | 'CLUES' | 'BOSSING' | 'ACTIVITIES';
 
 export const ActionSection: React.FC = () => {
-  const { rollForKey, unlocks, gameModeId, customMode, animationsEnabled } = useGame();
+  const { rollForKey, unlocks, gameModeId, customMode, animationsEnabled, bossStandardKeysAwarded, clueStandardKeysAwarded } = useGame();
   const [subTab, setSubTab] = useState<FarmSubTab>('SLAYER');
   const [bossQuery, setBossQuery] = useState('');
 
@@ -362,9 +391,16 @@ export const ActionSection: React.FC = () => {
   const effectiveRate = (source: string) =>
     Math.max(1, Math.min(100, (DROP_RATES[source] ?? 0) + regionBonus));
 
-  const handleRoll = (source: string, chance: number, e: React.MouseEvent) => {
-    rollForKey(source, chance, e.clientX, e.clientY);
+  const handleRoll = (source: string, chance: number, e: React.MouseEvent, context?: KeyRollContext) => {
+    rollForKey(source, chance, e.clientX, e.clientY, undefined, context);
   };
+
+  const isVanilla = gameModeId === 'vanilla';
+  const vanillaBosses = [
+    BRUTUS_BOSS_NAME,
+    ...unlocks.bosses.filter(name => BOSSES_LIST.includes(name)),
+  ];
+  const clueKeysAwarded = clueStandardKeysAwarded ?? 0;
 
   const slayers = useMemo(() => {
     const isWGSComplete = unlocks.quests.includes('While Guthix Sleeps');
@@ -447,7 +483,7 @@ export const ActionSection: React.FC = () => {
   const tabs: { id: FarmSubTab; label: string; icon: string; count: number }[] = [
     { id: 'SLAYER', label: 'Slayer', icon: OSRS_ICONS.SLAYER, count: slayers.length },
     { id: 'CLUES', label: 'Clues', icon: OSRS_ICONS.CLUE, count: CLUE_SCROLLS.length },
-    { id: 'BOSSING', label: 'Bossing', icon: OSRS_ICONS.BOSS, count: BOSSES_LIST.length },
+    { id: 'BOSSING', label: 'Bossing', icon: OSRS_ICONS.BOSS, count: isVanilla ? vanillaBosses.length : BOSSES_LIST.length },
     { id: 'ACTIVITIES', label: 'Activities', icon: OSRS_ICONS.ACTIVITY, count: ACTIVITY_ROLLS.length },
   ];
 
@@ -500,24 +536,74 @@ export const ActionSection: React.FC = () => {
         )}
         {subTab === 'CLUES' && (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-            {CLUE_SCROLLS.map((clue, i) => (
-              <div
-                key={clue.tier}
-                className={animationsEnabled ? 'animate-fade-in-up' : ''}
-                style={animationsEnabled ? { animationDelay: `${i * 35}ms` } : undefined}
-              >
-                <ClueScrollCard
-                  tier={clue.tier}
-                  displayRate={effectiveRate(clue.source)}
-                  bonus={regionBonus}
-                  itemId={clue.itemId}
-                  onClick={(e) => handleRoll(clue.source, DROP_RATES[clue.source], e)}
-                />
-              </div>
-            ))}
+            {CLUE_SCROLLS.map((clue, i) => {
+              const baseRate = DROP_RATES[clue.source];
+              const displayRate = isVanilla
+                ? effectiveVanillaClueRate(baseRate, clueKeysAwarded)
+                : effectiveRate(clue.source);
+
+              return (
+                <div
+                  key={clue.tier}
+                  className={animationsEnabled ? 'animate-fade-in-up' : ''}
+                  style={animationsEnabled ? { animationDelay: `${i * 35}ms` } : undefined}
+                >
+                  <ClueScrollCard
+                    tier={clue.tier}
+                    displayRate={displayRate}
+                    bonus={isVanilla ? 0 : regionBonus}
+                    itemId={clue.itemId}
+                    onClick={(e) => handleRoll(
+                      clue.source,
+                      baseRate,
+                      e,
+                      isVanilla ? { kind: 'clue', clueTier: clue.tier } : undefined,
+                    )}
+                  />
+                  {isVanilla && <ClueKeyProgress awarded={clueKeysAwarded} baseRate={baseRate} />}
+                </div>
+              );
+            })}
           </div>
         )}
-        {subTab === 'BOSSING' && (
+        {subTab === 'BOSSING' && isVanilla && (
+          <div>
+            <input
+              value={bossQuery}
+              onChange={(e) => setBossQuery(e.target.value)}
+              placeholder={VANILLA_BOSS_SEARCH_PLACEHOLDER}
+              className="w-full mb-3 bg-[#161616] border border-white/10 rounded-lg px-3 py-2 text-xs text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-white/25"
+            />
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
+              {vanillaBosses
+                .filter(name => name.toLowerCase().includes(bossQuery.trim().toLowerCase()))
+                .map(name => {
+                  const bossClass = name === BRUTUS_BOSS_NAME ? 'brutus' : bossTier(name);
+                  const source = bossClass === 'brutus' ? TIER_SOURCE.low : TIER_SOURCE[bossClass];
+                  const stage = vanillaBossKeyStage(name, bossStandardKeysAwarded?.[name] ?? 0);
+
+                  return (
+                    <VanillaBossRollCard
+                      key={name}
+                      name={name}
+                      displayRate={stage.currentRate ?? 0}
+                      style={bossClass === 'brutus' ? TIER_STYLE.low : TIER_STYLE[bossClass]}
+                      stage={stage}
+                      onClick={(e) => handleRoll(source, stage.currentRate ?? 0, e, {
+                        kind: 'boss',
+                        bossName: name,
+                        bossClass,
+                      })}
+                    />
+                  );
+                })}
+            </div>
+            {vanillaBosses.filter(name => name.toLowerCase().includes(bossQuery.trim().toLowerCase())).length === 0 && (
+              <div className="text-center text-gray-600 text-xs py-6">{vanillaBossSearchEmptyMessage(bossQuery)}</div>
+            )}
+          </div>
+        )}
+        {subTab === 'BOSSING' && !isVanilla && (
           <div>
             <input
               value={bossQuery}

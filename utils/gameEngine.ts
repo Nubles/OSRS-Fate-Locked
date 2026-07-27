@@ -4,6 +4,8 @@ import { SKILLS_LIST, EQUIPMENT_SLOTS, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST,
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { ALL_CHUNK_KEYS, isFrontierChunk } from './chunkAdjacency';
 import { BANK_IDS } from '../data/banks';
+import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
+import { getActivityAccess } from './activityAccess';
 
 export const rollDice = (max: number = 100) => Math.floor(Math.random() * max) + 1;
 
@@ -50,6 +52,82 @@ export const isValidUnlock = (table: TableType, item: string, unlocks: UnlockSta
     if (table === TableType.CHUNKS) return isFrontierChunk(item, unlocks.chunks ?? []);
     if (table === TableType.BANKS) return !(unlocks.banks ?? []).includes(item);
     return true;
+};
+
+/** A table item considered while building a random Standard or Chaos pool. */
+export interface RandomUnlockCandidate {
+    table: TableType;
+    item: string;
+}
+
+/** A deterministic small sample of currently valid items blocked by location access. */
+export interface RandomPoolBlockerSummary {
+    sample: string[];
+    remaining: number;
+}
+
+/**
+ * Applies the Vanilla exact-area policy only to random boss and minigame
+ * unlocks. All other modes and tables retain their existing validity rules.
+ */
+export const isRandomUnlockEligible = (
+    table: TableType,
+    item: string,
+    unlocks: UnlockState,
+    modeId: string,
+    randomCost: 'key' | 'chaosKey' = 'key',
+    policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY,
+): boolean => {
+    if (!isValidUnlock(table, item, unlocks)) return false;
+    if (modeId !== 'vanilla') return true;
+    if (!policy.randomCosts.includes(randomCost)) return true;
+    if (!policy.filteredTables.some(candidate => candidate === table)) return true;
+    if (!policy.requiresTrackedHardGeography) return true;
+    return getActivityAccess(item, unlocks, modeId).eligible;
+};
+
+/** Whether an Omni direct selection may be confirmed under the shared Vanilla policy. */
+export const isOmniDirectUnlockAvailable = (
+    table: TableType,
+    item: string,
+    unlocks: UnlockState,
+    modeId: string,
+    policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY,
+): boolean => {
+    if (modeId !== 'vanilla') return true;
+    if (!policy.filteredTables.some(candidate => candidate === table)) return true;
+    if (!policy.requiresTrackedHardGeography || policy.omniDirect.allowsLocationIneligible) return true;
+    return getActivityAccess(item, unlocks, modeId).eligible;
+};
+
+/**
+ * Describe valid items excluded only by the Vanilla location policy. The
+ * caller supplies the candidate order, so the examples are stable and this
+ * helper never consumes gameplay RNG.
+ */
+export const describeRandomPoolBlockers = (
+    candidates: readonly RandomUnlockCandidate[],
+    unlocks: UnlockState,
+    modeId: string,
+    randomCost: 'key' | 'chaosKey',
+    sampleSize = 3,
+    policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY,
+): RandomPoolBlockerSummary => {
+    const blockers = candidates.flatMap(({ table, item }) => {
+        if (!isValidUnlock(table, item, unlocks) || isRandomUnlockEligible(table, item, unlocks, modeId, randomCost, policy)) return [];
+
+        const { explanation } = getActivityAccess(item, unlocks, modeId);
+        return [`${item} — ${explanation.replace(/^Needs\b/, 'needs')}`];
+    });
+    const sample = blockers.slice(0, sampleSize);
+
+    return { sample, remaining: blockers.length - sample.length };
+};
+
+/** Draw from a non-empty random pool without touching RNG for an empty pool. */
+export const pickRandomPoolEntry = <T>(pool: readonly T[], nextFloat: () => number): T | undefined => {
+    if (pool.length === 0) return undefined;
+    return pool[Math.floor(nextFloat() * pool.length)];
 };
 
 export const getPoolAndStateKey = (table: TableType) => {

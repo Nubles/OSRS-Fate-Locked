@@ -340,3 +340,15 @@ export const RITUALS: Ritual[] = [
 ];
 
 export const getRitual = (id: Ritual['id']): Ritual => RITUALS.find(r => r.id === id)!;
+
+export {
+  BRUTUS_BOSS_NAME,
+  CLUE_ONBOARDING_MINIMUMS,
+  effectiveVanillaClueRate,
+  clueOnboardingMinimum,
+  VANILLA_BOSS_KEY_RATES,
+  VANILLA_BOSS_STANDARD_KEY_TOTAL,
+  vanillaBossKeySchedule,
+  vanillaBossKeyStage,
+} from './vanillaKeyEconomy';
+export type { KeyRollContext, VanillaBossClass } from './vanillaKeyEconomy';
