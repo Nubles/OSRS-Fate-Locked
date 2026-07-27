@@ -104,6 +104,27 @@ describe('isOmniDirectUnlockAvailable', () => {
 });
 
 describe('describeRandomPoolBlockers', () => {
+  it('describes blockers for the configured Chaos cost without applying them to Standard', () => {
+    const candidates = [{ table: TableType.MINIGAMES, item: 'Pest Control' }];
+    const chaosOnly: VanillaRandomAccessPolicy = {
+      ...VANILLA_RANDOM_ACCESS_POLICY,
+      randomCosts: ['chaosKey'],
+    };
+
+    expect(
+      describeRandomPoolBlockers(candidates, makeUnlocks(), 'vanilla', 'chaosKey', 3, chaosOnly),
+    ).toEqual({
+      sample: ["Pest Control — needs Void Knights' Outpost"],
+      remaining: 0,
+    });
+    expect(
+      describeRandomPoolBlockers(candidates, makeUnlocks(), 'vanilla', 'key', 3, chaosOnly),
+    ).toEqual({
+      sample: [],
+      remaining: 0,
+    });
+  });
+
   it('returns the first blocked activities in candidate order without drawing RNG', () => {
     const random = vi.spyOn(Math, 'random');
 
@@ -116,6 +137,7 @@ describe('describeRandomPoolBlockers', () => {
         ],
         makeUnlocks(),
         'vanilla',
+        'key',
         1,
       ),
     ).toEqual({

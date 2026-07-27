@@ -200,7 +200,7 @@ export const GachaSection: React.FC = () => {
     
     if (validPool.length === 0) {
         validateEmptyRandomPoolHandling(gameModeId, 'key');
-        const blockers = describeRandomPoolBlockers(candidates, unlocks, gameModeId);
+        const blockers = describeRandomPoolBlockers(candidates, unlocks, gameModeId, 'key');
         if (blockers.sample.length > 0) {
             const suffix = blockers.remaining === 1 ? '' : 's';
             showToast(`No accessible unlocks remain in this category. ${blockers.sample.join('; ')}. ${blockers.remaining} more location-locked unlock${suffix} remain.`);
@@ -254,7 +254,7 @@ export const GachaSection: React.FC = () => {
 
       if (globalPool.length === 0) {
         validateEmptyRandomPoolHandling(gameModeId, 'chaosKey');
-          const blockers = describeRandomPoolBlockers(candidates, unlocks, gameModeId);
+          const blockers = describeRandomPoolBlockers(candidates, unlocks, gameModeId, 'chaosKey');
           if (blockers.sample.length > 0) {
               const suffix = blockers.remaining === 1 ? '' : 's';
               showToast(`Fate has no accessible unlocks to offer. ${blockers.sample.join('; ')}. ${blockers.remaining} more location-locked unlock${suffix} remain.`);

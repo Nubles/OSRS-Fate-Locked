@@ -109,10 +109,12 @@ export const describeRandomPoolBlockers = (
     candidates: readonly RandomUnlockCandidate[],
     unlocks: UnlockState,
     modeId: string,
+    randomCost: 'key' | 'chaosKey',
     sampleSize = 3,
+    policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY,
 ): RandomPoolBlockerSummary => {
     const blockers = candidates.flatMap(({ table, item }) => {
-        if (!isValidUnlock(table, item, unlocks) || isRandomUnlockEligible(table, item, unlocks, modeId)) return [];
+        if (!isValidUnlock(table, item, unlocks) || isRandomUnlockEligible(table, item, unlocks, modeId, randomCost, policy)) return [];
 
         const { explanation } = getActivityAccess(item, unlocks, modeId);
         return [`${item} — ${explanation.replace(/^Needs\b/, 'needs')}`];
