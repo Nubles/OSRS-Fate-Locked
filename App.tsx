@@ -38,6 +38,9 @@ import { useEscapeKey } from './hooks/useEscapeKey';
 import { resolveModeRules } from './config/gameModes';
 import { showToast } from './utils/toast';
 import { prefetchHeavyChunks } from './utils/prefetch';
+import { CHANGELOG_RELEASES, LATEST_CHANGELOG } from './data/changelog';
+import { readLatestSeen, markLatestSeen } from './utils/changelogState';
+import { shouldAutoOpenAfterOnboarding } from './utils/changelogModalState';
 
 // Heavy, conditionally-rendered modals — code-split so they (and their deps,
 // e.g. recharts in StatsModal) stay out of the initial bundle.
@@ -51,6 +54,7 @@ const GameModePicker = lazy(() => import('./components/GameModePicker').then(m =
 const SyncCodeModal = lazy(() => import('./components/SyncCodeModal').then(m => ({ default: m.SyncCodeModal })));
 const ModelGallery = lazy(() => import('./components/ModelGallery').then(m => ({ default: m.ModelGallery })));
 const DiscordSettingsModal = lazy(() => import('./components/DiscordSettingsModal'));
+const ChangelogModal = lazy(() => import('./components/ChangelogModal').then(m => ({ default: m.ChangelogModal })));
 import { obfuscateFateSave, deobfuscateFateSave } from './utils/encryption';
 import { GameState } from './types';
 import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb, Radio, Settings } from 'lucide-react';
@@ -219,9 +223,10 @@ interface HeaderProps {
   setShowGameMode: (show: boolean) => void;
   setShowSyncCode: (show: boolean) => void;
   setShowDiscord: (show: boolean) => void;
+  setShowChangelog: (show: boolean) => void;
 }
 
-const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode, setShowDiscord }: HeaderProps) => {
+const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode, setShowDiscord, setShowChangelog }: HeaderProps) => {
   const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, revealAllFeatures, toggleRevealAll, importSave, resetGame, getExportData, createBackup, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount } = useGame();
   // Progressive disclosure — advanced tools stay hidden until the run earns them.
   const gates = useFeatureGates();
@@ -404,6 +409,10 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                    <>
                      <div className="fixed inset-0 z-[90]" onClick={() => setShowUtilMenu(false)} />
                      <div className="absolute right-0 top-9 z-[91] w-56 bg-[#1c1c1c] border border-white/15 rounded-lg shadow-2xl py-1.5 text-[12px]">
+                        <button onClick={() => { setShowUtilMenu(false); setShowChangelog(true); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-amber-200">
+                           <ScrollText size={13} className="text-amber-300" /> What's New
+                        </button>
+                        <div className="my-1 border-t border-white/10" />
                         <button onClick={() => { toggleAnimations(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={animationsEnabled}>
                            {animationsEnabled ? <PlayCircle size={13} className="text-green-400" /> : <PauseCircle size={13} className="text-gray-500" />}
                            Animations <span className="ml-auto text-[10px] text-gray-500">{animationsEnabled ? 'on' : 'off'}</span>
@@ -530,6 +539,34 @@ const GameLayout = () => {
   // Warm the heavy lazy chunks (map, stats+charts, resource engine, …) during
   // idle time so opening them is instant instead of a visible fetch delay.
   useEffect(() => { prefetchHeavyChunks(); }, []);
+
+  const changelogAutoOpenAttempted = useRef(false);
+  const [showChangelog, setShowChangelog] = useState(false);
+
+  useEffect(() => {
+    if (!hasSeenOnboarding || changelogAutoOpenAttempted.current) return;
+    changelogAutoOpenAttempted.current = true;
+
+    try {
+      const storedId = readLatestSeen(window.localStorage);
+      if (shouldAutoOpenAfterOnboarding(hasSeenOnboarding, LATEST_CHANGELOG.id, storedId)) {
+        setShowChangelog(true);
+      }
+    } catch {
+      // Privacy settings and quota policies can make browser storage throw.
+      // Showing the release notes remains useful even when they cannot persist.
+      setShowChangelog(true);
+    }
+  }, [hasSeenOnboarding]);
+
+  const dismissChangelog = () => {
+    try {
+      markLatestSeen(window.localStorage, LATEST_CHANGELOG.id);
+    } catch {
+      // A failed write must not trap the player in the dialog.
+    }
+    setShowChangelog(false);
+  };
 
   // UI States
   const [showStats, setShowStats] = useState(false);
@@ -668,6 +705,7 @@ const GameLayout = () => {
 
       {showAltar && <VoidAltar onClose={() => setShowAltar(false)} />}
       <Suspense fallback={<ModalFallback />}>
+        {showChangelog && <ChangelogModal releases={CHANGELOG_RELEASES} onClose={dismissChangelog} />}
         {showStats && <StatsModal onClose={() => setShowStats(false)} />}
         {showFateThread && <FateThread onClose={() => setShowFateThread(false)} />}
         {showReference && <ReferenceModal onClose={() => setShowReference(false)} />}
@@ -690,6 +728,7 @@ const GameLayout = () => {
         setShowGameMode={setShowGameMode}
         setShowSyncCode={setShowSyncCode}
         setShowDiscord={setShowDiscord}
+        setShowChangelog={setShowChangelog}
       />
 
       {/* Global ⌘K command palette — navigates via fate:nav events. */}
