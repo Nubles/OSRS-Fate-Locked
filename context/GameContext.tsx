@@ -319,6 +319,112 @@ const chainAppendedHistory = (prev: GameState['history'], next: GameState['histo
 const ritualFateCost = (id: 'LUCK' | 'GREED' | 'CHAOS' | 'CARTOGRAPHER', mult: number): number =>
   Math.round((getRitual(id).fateCost ?? 0) * mult);
 
+type SnapshotFloat = (purpose: string, index?: number) => number;
+
+export type RollForKeySnapshotResult = {
+  success: boolean;
+  omni: boolean;
+  pity: boolean;
+  roll: number;
+  threshold: number;
+};
+
+/**
+ * Captures the seeded RNG inputs at callback entry. A roll can dispatch only
+ * after its three potential draws, so reading stateRef for each draw would let
+ * an intervening render mix chain tips into a single roll.
+ */
+export const createSnapshotFloat = (
+  snapshot: Pick<GameState, 'rngSeed' | 'history'>,
+  unseeded: () => number = Math.random,
+): SnapshotFloat => {
+  const seed = snapshot.rngSeed;
+  const tip = snapshot.history[snapshot.history.length - 1]?.hash ?? 'genesis';
+  return (purpose: string, index = 0): number =>
+    seed ? drawFloat(seed, tip, purpose, index) : unseeded();
+};
+
+/**
+ * Resolves the callback-owned roll from one captured game-state snapshot.
+ * Vanilla boss/clue context opts into progression-specific exact resolution;
+ * all other rolls deliberately retain the legacy integer `roll` stream.
+ */
+export const resolveRollForKeyFromSnapshot = (
+  snapshot: GameState,
+  source: string,
+  threshold: number,
+  context?: KeyRollContext,
+  nextSnapshotFloat: SnapshotFloat = createSnapshotFloat(snapshot),
+): RollForKeySnapshotResult | null => {
+  const vanillaBossContext = snapshot.gameModeId === 'vanilla' && context?.kind === 'boss'
+    ? context
+    : null;
+  const vanillaClueContext = snapshot.gameModeId === 'vanilla' && context?.kind === 'clue'
+    ? context
+    : null;
+  const recordedBossAwarded = vanillaBossContext
+    ? snapshot.bossStandardKeysAwarded?.[vanillaBossContext.bossName] ?? 0
+    : 0;
+  const bossStage = vanillaBossContext
+    ? vanillaBossKeyStage(vanillaBossContext.bossName, recordedBossAwarded)
+    : null;
+
+  // Return before obtaining the snapshot RNG function's first draw.
+  if (bossStage?.capped) return null;
+
+  const clueAwarded = vanillaClueContext ? snapshot.clueStandardKeysAwarded ?? 0 : 0;
+  const isVanillaContext = vanillaBossContext !== null || vanillaClueContext !== null;
+  const purpose = vanillaBossContext
+    ? `roll:boss:${vanillaBossContext.bossName}:${bossStage!.awarded}`
+    : vanillaClueContext
+      ? `roll:clue:${vanillaClueContext.clueTier}:${clueAwarded}`
+      : 'roll';
+
+  let baseThreshold = threshold;
+  if (bossStage) baseThreshold = bossStage.currentRate ?? threshold;
+  else if (vanillaClueContext) baseThreshold = effectiveVanillaClueRate(threshold, clueAwarded);
+
+  const mode = resolveModeRules(snapshot.gameModeId, snapshot.customMode);
+  let omniBonus = 0;
+  let effectiveThreshold = baseThreshold;
+  if (mode.regionModifiers) {
+    const bonuses = getActiveRegionBonuses(snapshot.unlocks.regions);
+    effectiveThreshold = Math.max(1, Math.min(100, baseThreshold + bonuses.successBonus));
+    omniBonus = bonuses.omniBonus;
+  }
+
+  const resolveRoll = (index: number): { roll: number; success: boolean } => {
+    const random = nextSnapshotFloat(purpose, index);
+    if (isVanillaContext) return resolveKeyRoll(random, effectiveThreshold);
+    const roll = Math.floor(random * 100) + 1;
+    return { roll, success: roll <= effectiveThreshold };
+  };
+  let { roll, success } = resolveRoll(0);
+  const advantageRoll = resolveRoll(1);
+  if (snapshot.activeBuff === 'LUCK' && advantageRoll.roll < roll) {
+    ({ roll, success } = advantageRoll);
+  }
+
+  let omni = false;
+  let pity = false;
+  if (success) {
+    let omniChance = mode.omniChanceBase + omniBonus;
+    // High-effort sources keep their elevated Omni odds on top of the mode base.
+    if (source === DropSource.QUEST_GRANDMASTER) omniChance = Math.max(omniChance, 20);
+    else if (source === DropSource.DIARY_ELITE) omniChance = Math.max(omniChance, 10);
+    else if (source === 'Diary Section Complete') omniChance = Math.max(omniChance, 10);
+    else if (source === 'CA Tier Complete') omniChance = Math.max(omniChance, 10);
+    else if (source === DropSource.PET) omniChance = Math.max(omniChance, 25);
+    else if (source === DropSource.RAID) omniChance = Math.max(omniChance, 15);
+    else if (source === DropSource.BOSS_HIGH) omniChance = Math.max(omniChance, 10);
+
+    if (Math.floor(nextSnapshotFloat(purpose, 2) * 100) + 1 <= omniChance) omni = true;
+  } else if (mode.pityEnabled && snapshot.fatePoints + 1 >= mode.pityThreshold) {
+    pity = true;
+  }
+
+  return { success, omni, pity, roll, threshold: effectiveThreshold };
+};
 const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: Action): GameState & { lastEvent: GameEvent | null } => {
   const now = Date.now();
 
@@ -935,84 +1041,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
   const setSeed = useCallback((seed: string) => dispatch({ type: 'SET_SEED', payload: seed }), []);
 
   const rollForKey = useCallback((source: string, threshold: number, x?: number, y?: number, context?: KeyRollContext) => {
-    // Take exactly one snapshot before any gameplay draw so preflight, buffs,
-    // Fate, region passives, and deterministic RNG all describe the same run.
     const snapshot = stateRef.current;
-    const vanillaBossContext = snapshot.gameModeId === 'vanilla' && context?.kind === 'boss'
-      ? context
-      : null;
-    const vanillaClueContext = snapshot.gameModeId === 'vanilla' && context?.kind === 'clue'
-      ? context
-      : null;
-    const recordedBossAwarded = vanillaBossContext
-      ? snapshot.bossStandardKeysAwarded?.[vanillaBossContext.bossName] ?? 0
-      : 0;
-    const bossStage = vanillaBossContext
-      ? vanillaBossKeyStage(vanillaBossContext.bossName, recordedBossAwarded)
-      : null;
-
-    // A capped boss does not consume any draw (and therefore cannot change a
-    // seeded run's chain), buff, Fate, pity, or history.
-    if (bossStage?.capped) return;
-
-    const awarded = bossStage?.awarded ?? recordedBossAwarded;
-    const clueAwarded = vanillaClueContext ? snapshot.clueStandardKeysAwarded ?? 0 : 0;
-    const purpose =
-      context?.kind === 'boss'
-        ? `roll:boss:${context.bossName}:${awarded}`
-        : context?.kind === 'clue'
-          ? `roll:clue:${context.clueTier}:${clueAwarded}`
-          : 'roll';
-
-    let baseThreshold = threshold;
-    if (bossStage) baseThreshold = bossStage.currentRate ?? threshold;
-    else if (vanillaClueContext) baseThreshold = effectiveVanillaClueRate(threshold, clueAwarded);
-
-    const mode = resolveModeRules(snapshot.gameModeId, snapshot.customMode);
-
-    // Region passives (active only when the mode enables them) shift the
-    // effective success threshold and Omni chance.
-    let omniBonus = 0;
-    let effectiveThreshold = baseThreshold;
-    if (mode.regionModifiers) {
-      const bonuses = getActiveRegionBonuses(snapshot.unlocks.regions);
-      effectiveThreshold = Math.max(1, Math.min(100, baseThreshold + bonuses.successBonus));
-      omniBonus = bonuses.omniBonus;
-    }
-
-    const resolveRoll = (index: number): { roll: number; success: boolean } => {
-      if (context) return resolveKeyRoll(nextFloat(purpose, index), effectiveThreshold);
-      const roll = Math.floor(nextFloat('roll', index) * 100) + 1;
-      return { roll, success: roll <= effectiveThreshold };
-    };
-    let { roll, success } = resolveRoll(0);
-    const advantageRoll = resolveRoll(1);
-    if (snapshot.activeBuff === 'LUCK' && advantageRoll.roll < roll) {
-      ({ roll, success } = advantageRoll);
-    }
-
-    let omni = false;
-    let pity = false;
-
-    if (success) {
-      let omniChance = mode.omniChanceBase + omniBonus;
-      // High-effort sources keep their elevated Omni odds on top of the mode base.
-      if (source === DropSource.QUEST_GRANDMASTER) omniChance = Math.max(omniChance, 20);
-      else if (source === DropSource.DIARY_ELITE) omniChance = Math.max(omniChance, 10);
-      else if (source === "Diary Section Complete") omniChance = Math.max(omniChance, 10);
-      else if (source === "CA Tier Complete") omniChance = Math.max(omniChance, 10);
-      else if (source === DropSource.PET) omniChance = Math.max(omniChance, 25);
-      else if (source === DropSource.RAID) omniChance = Math.max(omniChance, 15);
-      else if (source === DropSource.BOSS_HIGH) omniChance = Math.max(omniChance, 10);
-
-      if (Math.floor(nextFloat(purpose, 2) * 100) + 1 <= omniChance) omni = true;
-    } else {
-      if (mode.pityEnabled && snapshot.fatePoints + 1 >= mode.pityThreshold) pity = true;
-    }
+    const result = resolveRollForKeyFromSnapshot(snapshot, source, threshold, context);
+    if (!result) return;
 
     // Pass the effective threshold so logs and stats reflect the real odds.
-    dispatch({ type: 'ROLL_RESULT', payload: { success, omni, pity, roll, threshold: effectiveThreshold, source, x, y, context } });
-  }, [nextFloat]);
+    dispatch({ type: 'ROLL_RESULT', payload: { ...result, source, x, y, context } });
+  }, []);
   const unlockContent = useCallback((table: TableType, item: string, costType: 'key' | 'specialKey' | 'chaosKey', cost: number) => {
     dispatch({ type: 'UNLOCK', payload: { table, item, costType, cost } });
   }, []);

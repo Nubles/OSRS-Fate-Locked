@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { gameReducer, initialState } from './GameContext';
+import { createSnapshotFloat, gameReducer, initialState, resolveRollForKeyFromSnapshot } from './GameContext';
 import { TableType, LogEntry } from '../types';
 import type { KeyRollContext } from '../config/vanillaKeyEconomy';
 import { isRollEntry } from '../utils/logEntry';
 import { XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL } from '../config/economy';
 import { isValidUnlock } from '../utils/gameEngine';
 import { ALL_CHUNKS, CHUNKED_START, chunkKey } from '../utils/chunkAdjacency';
+import { drawFloat } from '../utils/seededRng';
 
 /**
  * Tests for the core game reducer — every roll, unlock, ritual, level-up and
@@ -80,6 +81,99 @@ describe('ROLL_RESULT', () => {
   });
 });
 
+// --- rollForKey snapshot resolution -----------------------------------------
+
+describe('rollForKey snapshot resolution', () => {
+  const bossContext = {
+    kind: 'boss' as const,
+    bossName: 'Zulrah',
+    bossClass: 'mid' as const,
+  };
+  const clueContext = { kind: 'clue' as const, clueTier: 'Elite' };
+  const seeded = (over: Partial<ReturnType<typeof base>> = {}) => ({
+    ...base(),
+    gameModeId: 'vanilla',
+    rngSeed: 'snapshot-seed',
+    history: [{ id: 'tip', timestamp: 1, type: 'ROLL_FAIL' as const, message: 'No Key.', hash: 'snapshot-tip' }],
+    ...over,
+  });
+
+  it('uses exact decimal boss resolution and an identity/stage RNG purpose in Vanilla', () => {
+    const draws: Array<[string, number]> = [];
+    const result = resolveRollForKeyFromSnapshot(
+      seeded({ bossStandardKeysAwarded: { Zulrah: 1 } }),
+      'Test',
+      1,
+      bossContext,
+      (purpose, index = 0) => {
+        draws.push([purpose, index]);
+        return [0.1498, 0.8, 0.99][index] ?? 0.99;
+      },
+    );
+
+    expect(result).toMatchObject({ roll: 14.99, success: true, omni: false, threshold: 15 });
+    expect(draws).toEqual([
+      ['roll:boss:Zulrah:1', 0],
+      ['roll:boss:Zulrah:1', 1],
+      ['roll:boss:Zulrah:1', 2],
+    ]);
+  });
+
+  it.each([
+    ['boss', bossContext],
+    ['clue', clueContext],
+  ] as const)('keeps non-Vanilla %s context on the legacy integer roll and Omni stream', (_kind, context) => {
+    const draws: Array<[string, number]> = [];
+    const result = resolveRollForKeyFromSnapshot(
+      seeded({ gameModeId: 'chunked', bossStandardKeysAwarded: { Zulrah: 1 } }),
+      'Test',
+      32.5,
+      context,
+      (purpose, index = 0) => {
+        draws.push([purpose, index]);
+        return [0.31, 0.9, 0.99][index] ?? 0.99;
+      },
+    );
+
+    expect(result).toMatchObject({ roll: 32, success: true, omni: false, threshold: 32.5 });
+    expect(draws).toEqual([
+      ['roll', 0],
+      ['roll', 1],
+      ['roll', 2],
+    ]);
+  });
+
+  it('captures the seeded RNG inputs before any callback draw', () => {
+    const snapshot = seeded();
+    const nextFloat = createSnapshotFloat(snapshot);
+    snapshot.rngSeed = 'changed-seed';
+    snapshot.history = [{ id: 'changed', timestamp: 2, type: 'ROLL_FAIL', message: 'No Key.', hash: 'changed-tip' }];
+
+    expect(nextFloat('roll:boss:Zulrah:1', 0)).toBe(
+      drawFloat('snapshot-seed', 'snapshot-tip', 'roll:boss:Zulrah:1', 0),
+    );
+    expect(nextFloat('roll:boss:Zulrah:1', 2)).toBe(
+      drawFloat('snapshot-seed', 'snapshot-tip', 'roll:boss:Zulrah:1', 2),
+    );
+  });
+
+  it('returns before any random draw for a capped Vanilla boss', () => {
+    let draws = 0;
+    const result = resolveRollForKeyFromSnapshot(
+      seeded({ bossStandardKeysAwarded: { Zulrah: 2 } }),
+      'Test',
+      1,
+      bossContext,
+      () => {
+        draws += 1;
+        return 0;
+      },
+    );
+
+    expect(result).toBeNull();
+    expect(draws).toBe(0);
+  });
+});
 // --- ROLL_RESULT — Vanilla key safety valve ---------------------------------
 
 describe('ROLL_RESULT — Vanilla key safety valve', () => {
