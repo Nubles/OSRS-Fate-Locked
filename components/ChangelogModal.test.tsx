@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { ChangelogRelease } from '../data/changelog';
 import { shouldAutoOpenAfterOnboarding } from '../utils/changelogModalState';
+import { resolveFocusRestorationTarget } from '../hooks/useFocusTrap';
 import { ChangelogModal, toggleExpandedRelease } from './ChangelogModal';
 
 const releases: readonly ChangelogRelease[] = [
@@ -84,6 +85,16 @@ describe('changelog auto-open eligibility', () => {
     expect(shouldAutoOpenAfterOnboarding(false, latestId, null)).toBe(false);
     expect(shouldAutoOpenAfterOnboarding(true, latestId, latestId)).toBe(false);
     expect(shouldAutoOpenAfterOnboarding(true, latestId, '2026-07-23-previous')).toBe(true);
+  });
+});
+
+describe('ChangelogModal focus restoration', () => {
+  it('prefers the persistent manual trigger and otherwise retains auto-open focus', () => {
+    const utilityButton = { id: 'utility-button' };
+    const activeBody = { id: 'document-body' };
+
+    expect(resolveFocusRestorationTarget(utilityButton, activeBody)).toBe(utilityButton);
+    expect(resolveFocusRestorationTarget(null, activeBody)).toBe(activeBody);
   });
 });
 

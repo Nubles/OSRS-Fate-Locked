@@ -7,6 +7,8 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 export interface ChangelogModalProps {
   releases: readonly ChangelogRelease[];
   onClose: () => void;
+  /** Persistent control to receive focus after a manual close. */
+  returnFocusTarget?: HTMLElement | null;
 }
 
 const SECTION_ORDER: readonly ChangelogSection[] = ['added', 'changed', 'fixed', 'balance'];
@@ -42,13 +44,13 @@ export const toggleExpandedRelease = (
   return next;
 };
 
-export const ChangelogModal: React.FC<ChangelogModalProps> = ({ releases, onClose }) => {
+export const ChangelogModal: React.FC<ChangelogModalProps> = ({ releases, onClose, returnFocusTarget }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   const [expandedReleaseIds, setExpandedReleaseIds] = useState<Set<string>>(
     () => new Set(releases[0] ? [releases[0].id] : []),
   );
 
-  useFocusTrap(dialogRef);
+  useFocusTrap(dialogRef, true, returnFocusTarget);
   useEscapeKey(onClose);
 
   return (

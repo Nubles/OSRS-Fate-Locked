@@ -223,10 +223,10 @@ interface HeaderProps {
   setShowGameMode: (show: boolean) => void;
   setShowSyncCode: (show: boolean) => void;
   setShowDiscord: (show: boolean) => void;
-  setShowChangelog: (show: boolean) => void;
+  onOpenChangelog: (returnFocusTarget: HTMLElement | null) => void;
 }
 
-const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode, setShowDiscord, setShowChangelog }: HeaderProps) => {
+const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode, setShowDiscord, onOpenChangelog }: HeaderProps) => {
   const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, revealAllFeatures, toggleRevealAll, importSave, resetGame, getExportData, createBackup, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount } = useGame();
   // Progressive disclosure — advanced tools stay hidden until the run earns them.
   const gates = useFeatureGates();
@@ -236,6 +236,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
   const nearPity = pityRules.pityEnabled && fatePoints >= pityRules.pityThreshold * 0.8;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showUtilMenu, setShowUtilMenu] = useState(false);
+  const utilityButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -397,6 +398,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                  session at most. */}
              <div className="relative h-8">
                  <button
+                   ref={utilityButtonRef}
                    onClick={() => setShowUtilMenu((v) => !v)}
                    className={`h-8 w-8 flex items-center justify-center bg-[#252525] border border-white/10 rounded-lg transition-colors ${showUtilMenu ? 'text-white border-white/25' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                    title="Settings & save tools"
@@ -409,7 +411,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                    <>
                      <div className="fixed inset-0 z-[90]" onClick={() => setShowUtilMenu(false)} />
                      <div className="absolute right-0 top-9 z-[91] w-56 bg-[#1c1c1c] border border-white/15 rounded-lg shadow-2xl py-1.5 text-[12px]">
-                        <button onClick={() => { setShowUtilMenu(false); setShowChangelog(true); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-amber-200">
+                        <button onClick={() => { setShowUtilMenu(false); onOpenChangelog(utilityButtonRef.current); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-amber-200">
                            <ScrollText size={13} className="text-amber-300" /> What's New
                         </button>
                         <div className="my-1 border-t border-white/10" />
@@ -541,6 +543,7 @@ const GameLayout = () => {
   useEffect(() => { prefetchHeavyChunks(); }, []);
 
   const changelogAutoOpenAttempted = useRef(false);
+  const changelogReturnFocusTarget = useRef<HTMLElement | null>(null);
   const [showChangelog, setShowChangelog] = useState(false);
 
   useEffect(() => {
@@ -550,14 +553,21 @@ const GameLayout = () => {
     try {
       const storedId = readLatestSeen(window.localStorage);
       if (shouldAutoOpenAfterOnboarding(hasSeenOnboarding, LATEST_CHANGELOG.id, storedId)) {
+        changelogReturnFocusTarget.current = null;
         setShowChangelog(true);
       }
     } catch {
       // Privacy settings and quota policies can make browser storage throw.
       // Showing the release notes remains useful even when they cannot persist.
+      changelogReturnFocusTarget.current = null;
       setShowChangelog(true);
     }
   }, [hasSeenOnboarding]);
+
+  const openChangelogManually = (returnFocusTarget: HTMLElement | null) => {
+    changelogReturnFocusTarget.current = returnFocusTarget;
+    setShowChangelog(true);
+  };
 
   const dismissChangelog = () => {
     try {
@@ -566,6 +576,7 @@ const GameLayout = () => {
       // A failed write must not trap the player in the dialog.
     }
     setShowChangelog(false);
+    changelogReturnFocusTarget.current = null;
   };
 
   // UI States
@@ -705,7 +716,7 @@ const GameLayout = () => {
 
       {showAltar && <VoidAltar onClose={() => setShowAltar(false)} />}
       <Suspense fallback={<ModalFallback />}>
-        {showChangelog && <ChangelogModal releases={CHANGELOG_RELEASES} onClose={dismissChangelog} />}
+        {showChangelog && <ChangelogModal releases={CHANGELOG_RELEASES} onClose={dismissChangelog} returnFocusTarget={changelogReturnFocusTarget.current} />}
         {showStats && <StatsModal onClose={() => setShowStats(false)} />}
         {showFateThread && <FateThread onClose={() => setShowFateThread(false)} />}
         {showReference && <ReferenceModal onClose={() => setShowReference(false)} />}
@@ -728,7 +739,7 @@ const GameLayout = () => {
         setShowGameMode={setShowGameMode}
         setShowSyncCode={setShowSyncCode}
         setShowDiscord={setShowDiscord}
-        setShowChangelog={setShowChangelog}
+        onOpenChangelog={openChangelogManually}
       />
 
       {/* Global ⌘K command palette — navigates via fate:nav events. */}
