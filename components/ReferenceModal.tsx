@@ -5,12 +5,14 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { GAME_MODES, getGameMode, resolveModeRules } from '../config/gameModes';
 import { REGION_MODIFIERS } from '../config/regionModifiers';
-import { EARN_METHODS, KEY_TYPES, RITUALS, SPEND_TABLES, UNLOCK_KEY_COST } from '../config/economy';
+import { CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, KEY_TYPES, RITUALS, SPEND_TABLES, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL } from '../config/economy';
+import { VANILLA_RANDOM_ACCESS_POLICY } from '../data/activityAccess';
 import { TableType } from '../types';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 
 interface ReferenceModalProps {
   onClose: () => void;
+  initialTab?: TabId;
 }
 
 type TabId = 'core' | 'economy' | 'modes' | 'drops' | 'altar' | 'region' | 'unlocks' | 'equipment' | 'storage';
@@ -34,10 +36,21 @@ const ALTAR_UI: Record<string, { icon: any; color: string; border: string }> = {
   TRANSMUTE: { icon: Sparkles, color: 'text-purple-400', border: 'border-purple-500/30' },
 };
 
-export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose }) => {
+export const formatVanillaBossSchedule = (label: string, rates: readonly number[]): string =>
+  `${label}: ${rates.map(rate => `${rate}%`).join(' → ')} (${rates.length} ${rates.length === 1 ? 'key' : 'keys'})`;
+
+export const describeVanillaRandomAccessPolicy = (
+  policy: typeof VANILLA_RANDOM_ACCESS_POLICY = VANILLA_RANDOM_ACCESS_POLICY,
+): string => {
+  const costs = policy.randomCosts.includes('chaosKey') ? 'Standard and Chaos' : 'Standard';
+  const bypass = policy.omniDirectBypasses ? 'Omni-Key direct unlocks bypass that filter with a warning.' : '';
+  return `${costs} random unlocks respect hard location access; empty eligible pool means no unlock occurs. ${bypass}`;
+};
+
+export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initialTab = 'core' }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
-  const [activeTab, setActiveTab] = useState<TabId>('core');
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab);
 
   // Live rules for the current run — the codex shows the player's actual
   // numbers, not generic defaults.
@@ -45,6 +58,16 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose }) => {
   const activeMode = getGameMode(gameModeId);
   const rules = resolveModeRules(gameModeId, customMode);
   const ritualCost = (base: number) => Math.round(base * rules.ritualCostMultiplier);
+  const vanillaPolicyLabel = gameModeId === 'vanilla'
+    ? 'Vanilla-only rules'
+    : 'Vanilla-only (not active for this run)';
+  const vanillaBossSchedules = [
+    ['Brutus', VANILLA_BOSS_KEY_RATES.brutus],
+    ['Low', VANILLA_BOSS_KEY_RATES.low],
+    ['Mid', VANILLA_BOSS_KEY_RATES.mid],
+    ['High', VANILLA_BOSS_KEY_RATES.high],
+    ['Raid', VANILLA_BOSS_KEY_RATES.raid],
+  ] as const;
 
   // Chunked mode unlocks individual map chunks, not named regions — swap the
   // "Areas" entry for the real table/count/blurb so the Codex matches what
@@ -220,6 +243,11 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose }) => {
                             <div>
                                 <h1 className="text-3xl font-black text-white mb-2">The Key Economy</h1>
                                 <p className="text-gray-400 text-lg">Every action feeds one loop: earn Keys, spend Keys, unlock more ways to earn.</p>
+                                <p className="text-xs text-amber-300 mt-2 font-bold">{vanillaPolicyLabel}</p>
+                            </div>
+
+                            <div className="bg-amber-950/20 p-4 rounded-xl border border-amber-500/30 text-sm text-gray-300">
+                                <b className="text-amber-300">{VANILLA_BOSS_STANDARD_KEY_TOTAL} finite boss safety-reserve Standard Keys.</b> Vanilla boss encounters pay from this capped reserve, so repeated farming cannot create unlimited Standard Keys.
                             </div>
 
                             {/* The loop */}
@@ -387,6 +415,15 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose }) => {
                              <div>
                                 <h1 className="text-3xl font-black text-white mb-2">RNG & Drop Rates</h1>
                                 <p className="text-gray-400">How to obtain the Keys of Fate.</p>
+                                <p className="text-xs text-amber-300 mt-2 font-bold">{vanillaPolicyLabel}</p>
+                             </div>
+
+                            <div className="bg-amber-950/20 p-4 rounded-xl border border-amber-500/30">
+                                <h3 className="font-bold text-amber-300 mb-2">Vanilla boss reserve schedules</h3>
+                                <ul className="text-sm text-gray-300 space-y-1">
+                                    {vanillaBossSchedules.map(([label, rates]) => <li key={label}>{formatVanillaBossSchedule(label, rates)}</li>)}
+                                </ul>
+                                <p className="text-xs text-gray-400 mt-3">All clue tiers share onboarding minimums of <b>{CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`).join(' → ')}</b> for the first three Standard Keys, then use their normal tier rate.</p>
                             </div>
 
                             <div className="bg-[#222] rounded-xl border border-white/5 overflow-hidden">
@@ -554,6 +591,11 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose }) => {
                             <div>
                                 <h1 className="text-3xl font-black text-white mb-2">Unlock Systems</h1>
                                 <p className="text-gray-400">What do Keys actually do?</p>
+                                <p className="text-xs text-amber-300 mt-2 font-bold">{vanillaPolicyLabel}</p>
+                            </div>
+
+                            <div className="bg-amber-950/20 p-4 rounded-xl border border-amber-500/30 text-sm text-gray-300">
+                                {describeVanillaRandomAccessPolicy()}
                             </div>
 
                             {/* Key types */}
@@ -635,9 +677,9 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose }) => {
                                             <p className="text-sm text-gray-400 mt-1 leading-relaxed">
                                                 You start in <b>Misthalin</b> (Lumbridge/Varrock/Draynor).
                                                 <br/>
-                                                1 Key = Unlock a random adjacent or logical region chunk (e.g. "Catherby", "Fremennik Province").
+                                                1 Key = Unlock a random named area (e.g. "Catherby", "Fremennik Province"). Vanilla named-area rolls can be scattered.
                                                 <br/>
-                                                You can only enter unlocked regions.
+                                                Only Chunked mode enforces adjacent expansion. You can only enter unlocked regions.
                                             </p>
                                         )}
                                     </div>

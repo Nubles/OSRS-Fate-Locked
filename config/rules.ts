@@ -11,8 +11,8 @@ export const DROP_RATES: Record<string, number> = {
   [DropSource.QUEST_GRANDMASTER]: 100,
   
   // Rebalanced 2026: the bulk repeatable sources (CAs 637 tasks, diaries 485,
-  // collection log 1,905 slots, level-ups) were ~2x over-funding the 805-key
-  // sink. Trimmed so total one-time earn ≈ 1.2x the sink — keys stay scarce, and
+  // collection log 1,905 slots, level-ups) were rebalanced for the 950 paid-unlock model.
+  // The finite boss reserve keeps repeatable farming bounded; one-time income stays scarce.
   // slayer & clues remain the flexible top-up income. See config/economy.ts.
   [DropSource.CA_EASY]: 8,
   [DropSource.CA_MEDIUM]: 15,

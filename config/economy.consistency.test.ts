@@ -4,7 +4,12 @@ import { DropSource } from '../types';
 import {
   EARN_METHODS, KEY_TYPES, SPEND_TABLES, RITUALS,
   SKILLS_TIER_CAP, LEVEL_ROLL_MAX, earnRange,
+  VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, vanillaBossKeySchedule,
 } from './economy';
+import { BRUTUS_BOSS_NAME } from './vanillaKeyEconomy';
+import { VANILLA_RANDOM_ACCESS_POLICY } from '../data/activityAccess';
+import { BOSSES_LIST } from '../data/items';
+import { describeVanillaRandomAccessPolicy, formatVanillaBossSchedule } from '../components/ReferenceModal';
 
 /**
  * This is the anti-drift guarantee: the Codex / onboarding render from
@@ -67,5 +72,15 @@ describe('economy ↔ engine consistency', () => {
   it('defines all six Void Altar rituals with a cost', () => {
     expect(RITUALS.map(r => r.id).sort()).toEqual(['CARTOGRAPHER', 'CHAOS', 'GAMBIT', 'GREED', 'LUCK', 'TRANSMUTE']);
     for (const r of RITUALS) expect((r.fateCost ?? 0) + (r.keyCost ?? 0)).toBeGreaterThan(0);
+  });
+  it('keeps the finite Vanilla boss reserve and every boss schedule aligned', () => {
+    expect(VANILLA_BOSS_STANDARD_KEY_TOTAL).toBe(114);
+    expect(BOSSES_LIST).not.toContain(BRUTUS_BOSS_NAME);
+    for (const boss of BOSSES_LIST) expect(vanillaBossKeySchedule(boss).length).toBeGreaterThan(0);
+  });
+
+  it('formats Codex policy directly from the shared Vanilla configuration', () => {
+    expect(formatVanillaBossSchedule('Raid', VANILLA_BOSS_KEY_RATES.raid)).toBe('Raid: 65% → 32.5% → 16.25% (3 keys)');
+    expect(describeVanillaRandomAccessPolicy(VANILLA_RANDOM_ACCESS_POLICY)).toContain('Standard and Chaos random unlocks respect hard location access');
   });
 });
