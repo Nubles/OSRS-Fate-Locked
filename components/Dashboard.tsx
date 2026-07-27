@@ -15,6 +15,7 @@ import {
   ExternalLink, Unlock, Lock, Compass, ChevronDown, ChevronsUp, AlertCircle, BookOpen, ScrollText, Globe, List, Filter, Info, Share2, MapPin, Route, Trophy, Skull
 } from 'lucide-react';
 import { VoidReveal } from './VoidReveal';
+import { ActivityAccessWarning } from './ActivityAccessWarning';
 import { TableType } from '../types';
 import { wikiService } from '../services/WikiService';
 import { NoteTrigger } from './NoteTrigger';
@@ -947,6 +948,13 @@ export const Dashboard: React.FC = () => {
                   <p className="text-gray-300 text-sm leading-relaxed mb-6">
                       Are you sure you want to use <b>1 Omni-Key</b> to explicitly unlock <span className="text-white font-bold">{confirmOmni.item}</span>?
                   </p>
+
+                  <ActivityAccessWarning
+                      activity={confirmOmni.item}
+                      table={confirmOmni.table}
+                      unlocks={unlocks}
+                      modeId={gameModeId}
+                  />
 
                   <div className="flex gap-3">
                       <button 

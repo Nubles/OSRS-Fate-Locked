@@ -4,7 +4,7 @@ import { TableType } from '../types';
 import { useGame } from '../context/GameContext';
 import { bankLocksActive } from '../utils/reachability';
 import { BANK_IDS, BANK_BY_ID } from '../data/banks';
-import { checkUnlockAvailability, getPoolAndStateKey, isValidUnlock, UNLOCK_COST } from '../utils/gameEngine';
+import { checkUnlockAvailability, describeRandomPoolBlockers, getPoolAndStateKey, isRandomUnlockEligible, pickRandomPoolEntry, UNLOCK_COST } from '../utils/gameEngine';
 import { REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, POH_LIST, MERCHANTS_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST, UTILITY_ITEM_IDS } from '../constants';
 import { VoidReveal } from './VoidReveal';
 import { wikiService } from '../services/WikiService';
@@ -194,15 +194,23 @@ export const GachaSection: React.FC = () => {
     if (pendingReveal) return; // Guard: Do not allow another roll while reveal is pending
     if (keys <= 0) return;
     const { pool, stateKey } = getPoolAndStateKey(table);
-    const validPool = pool.filter(item => isValidUnlock(table, item, unlocks));
+    const candidates = pool.map(item => ({ table, item }));
+    const validPool = pool.filter(item => isRandomUnlockEligible(table, item, unlocks, gameModeId));
     
     if (validPool.length === 0) {
-        showToast('Nothing left to unlock in this category!');
+        const blockers = describeRandomPoolBlockers(candidates, unlocks, gameModeId);
+        if (blockers.sample.length > 0) {
+            const suffix = blockers.remaining === 1 ? '' : 's';
+            showToast(`No accessible unlocks remain in this category. ${blockers.sample.join('; ')}. ${blockers.remaining} more location-locked unlock${suffix} remain.`);
+        } else {
+            showToast('Nothing left to unlock in this category!');
+        }
         return;
     }
 
     // Seeded-run choke point: table picks must draw through nextFloat.
-    const item = validPool[Math.floor(nextFloat('gacha') * validPool.length)];
+    const item = pickRandomPoolEntry(validPool, () => nextFloat('gacha'));
+    if (item === undefined) return;
     const cost = UNLOCK_COST;
     let imageUrl = getUnlockImage(stateKey, item);
 
@@ -230,23 +238,32 @@ export const GachaSection: React.FC = () => {
       ];
 
       const globalPool: { item: string, tableType: TableType, stateKey: string }[] = [];
+      const candidates: { item: string, table: TableType }[] = [];
 
       allTables.forEach(table => {
           const { pool, stateKey } = getPoolAndStateKey(table);
-          // Pass Infinity for keys because Chaos Key bypasses key cost
-          const validItems = pool.filter(item => isValidUnlock(table, item, unlocks));
-          validItems.forEach(item => {
-              globalPool.push({ item, tableType: table, stateKey });
+          pool.forEach(item => {
+              candidates.push({ item, table });
+              if (isRandomUnlockEligible(table, item, unlocks, gameModeId)) {
+                  globalPool.push({ item, tableType: table, stateKey });
+              }
           });
       });
 
       if (globalPool.length === 0) {
-          showToast('Fate has nothing left to offer you — all content unlocked!');
+          const blockers = describeRandomPoolBlockers(candidates, unlocks, gameModeId);
+          if (blockers.sample.length > 0) {
+              const suffix = blockers.remaining === 1 ? '' : 's';
+              showToast(`Fate has no accessible unlocks to offer. ${blockers.sample.join('; ')}. ${blockers.remaining} more location-locked unlock${suffix} remain.`);
+          } else {
+              showToast('Fate has nothing left to offer you — all content unlocked!');
+          }
           return;
       }
 
       // Pick a random item from the global pool (seeded-run choke point).
-      const selection = globalPool[Math.floor(nextFloat('chaos') * globalPool.length)];
+      const selection = pickRandomPoolEntry(globalPool, () => nextFloat('chaos'));
+      if (!selection) return;
       
       let imageUrl = getUnlockImage(selection.stateKey, selection.item);
 
