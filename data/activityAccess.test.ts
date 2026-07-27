@@ -61,7 +61,9 @@ describe('vanilla activity access declarations', () => {
     expect(VANILLA_RANDOM_ACCESS_POLICY).toEqual({
       filteredTables: [TableType.BOSSES, TableType.MINIGAMES],
       randomCosts: ['key', 'chaosKey'],
-      omniDirectBypasses: true,
+      requiresTrackedHardGeography: true,
+      emptyEligiblePool: { noUnlock: true, retainsKey: true, preservesRngProgression: true },
+      omniDirect: { allowsLocationIneligible: true, warnsPlayer: true },
     });
   });
 });

@@ -131,8 +131,25 @@ export const NO_HARD_LOCATION_GATE = new Set<string>([
 ]);
 
 /** Policy metadata consumed by vanilla random-unlock and omni-direct flows. */
+export interface VanillaRandomAccessPolicy {
+  readonly filteredTables: readonly TableType[];
+  readonly randomCosts: readonly ('key' | 'chaosKey')[];
+  readonly requiresTrackedHardGeography: boolean;
+  readonly emptyEligiblePool: {
+    readonly noUnlock: boolean;
+    readonly retainsKey: boolean;
+    readonly preservesRngProgression: boolean;
+  };
+  readonly omniDirect: {
+    readonly allowsLocationIneligible: boolean;
+    readonly warnsPlayer: boolean;
+  };
+}
+
 export const VANILLA_RANDOM_ACCESS_POLICY = {
   filteredTables: [TableType.BOSSES, TableType.MINIGAMES],
   randomCosts: ['key', 'chaosKey'],
-  omniDirectBypasses: true,
-} as const;
+  requiresTrackedHardGeography: true,
+  emptyEligiblePool: { noUnlock: true, retainsKey: true, preservesRngProgression: true },
+  omniDirect: { allowsLocationIneligible: true, warnsPlayer: true },
+} as const satisfies VanillaRandomAccessPolicy;

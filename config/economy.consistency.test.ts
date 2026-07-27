@@ -7,7 +7,7 @@ import {
   VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, vanillaBossKeySchedule,
 } from './economy';
 import { BRUTUS_BOSS_NAME } from './vanillaKeyEconomy';
-import { VANILLA_RANDOM_ACCESS_POLICY } from '../data/activityAccess';
+import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { BOSSES_LIST } from '../data/items';
 import { describeVanillaRandomAccessPolicy, formatVanillaBossSchedule } from '../components/ReferenceModal';
 
@@ -82,5 +82,51 @@ describe('economy ↔ engine consistency', () => {
   it('formats Codex policy directly from the shared Vanilla configuration', () => {
     expect(formatVanillaBossSchedule('Raid', VANILLA_BOSS_KEY_RATES.raid)).toBe('Raid: 65% → 32.5% → 16.25% (3 keys)');
     expect(describeVanillaRandomAccessPolicy(VANILLA_RANDOM_ACCESS_POLICY)).toContain('Standard and Chaos random unlocks respect hard location access');
+  });
+  it('derives each Codex safety-valve sentence from policy decisions', () => {
+    const policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY;
+    const formatted = describeVanillaRandomAccessPolicy(policy);
+    expect(formatted).toContain('Standard and Chaos random unlocks respect hard location access');
+    expect(formatted).toContain('empty eligible pool means no unlock occurs');
+    expect(formatted).toContain('no key is spent');
+    expect(formatted).toContain('no RNG progression');
+    expect(formatted).toContain('bypass that filter with a warning');
+
+    const standardOnly: VanillaRandomAccessPolicy = { ...policy, randomCosts: ['key'] };
+    expect(describeVanillaRandomAccessPolicy(standardOnly)).toContain('Standard random unlocks respect hard location access');
+    expect(describeVanillaRandomAccessPolicy(standardOnly)).not.toContain('Standard and Chaos');
+
+    const noGeography: VanillaRandomAccessPolicy = { ...policy, requiresTrackedHardGeography: false };
+    expect(describeVanillaRandomAccessPolicy(noGeography)).not.toContain('hard location access');
+
+    const noEmptyPoolGuard: VanillaRandomAccessPolicy = {
+      ...policy,
+      emptyEligiblePool: { noUnlock: false, retainsKey: true, preservesRngProgression: true },
+    };
+    expect(describeVanillaRandomAccessPolicy(noEmptyPoolGuard)).not.toContain('empty eligible pool');
+
+    const consumingEmptyPool: VanillaRandomAccessPolicy = {
+      ...policy,
+      emptyEligiblePool: { noUnlock: true, retainsKey: false, preservesRngProgression: true },
+    };
+    expect(describeVanillaRandomAccessPolicy(consumingEmptyPool)).not.toContain('no key is spent');
+
+    const advancingEmptyPool: VanillaRandomAccessPolicy = {
+      ...policy,
+      emptyEligiblePool: { noUnlock: true, retainsKey: true, preservesRngProgression: false },
+    };
+    expect(describeVanillaRandomAccessPolicy(advancingEmptyPool)).not.toContain('no RNG progression');
+
+    const silentOmni: VanillaRandomAccessPolicy = {
+      ...policy,
+      omniDirect: { allowsLocationIneligible: true, warnsPlayer: false },
+    };
+    expect(describeVanillaRandomAccessPolicy(silentOmni)).not.toContain('with a warning');
+
+    const restrictedOmni: VanillaRandomAccessPolicy = {
+      ...policy,
+      omniDirect: { allowsLocationIneligible: false, warnsPlayer: true },
+    };
+    expect(describeVanillaRandomAccessPolicy(restrictedOmni)).not.toContain('bypass that filter');
   });
 });

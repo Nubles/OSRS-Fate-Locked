@@ -6,7 +6,7 @@ import { useGame } from '../context/GameContext';
 import { GAME_MODES, getGameMode, resolveModeRules } from '../config/gameModes';
 import { REGION_MODIFIERS } from '../config/regionModifiers';
 import { CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, KEY_TYPES, RITUALS, SPEND_TABLES, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL } from '../config/economy';
-import { VANILLA_RANDOM_ACCESS_POLICY } from '../data/activityAccess';
+import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { TableType } from '../types';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 
@@ -36,15 +36,30 @@ const ALTAR_UI: Record<string, { icon: any; color: string; border: string }> = {
   TRANSMUTE: { icon: Sparkles, color: 'text-purple-400', border: 'border-purple-500/30' },
 };
 
-export const formatVanillaBossSchedule = (label: string, rates: readonly number[]): string =>
-  `${label}: ${rates.map(rate => `${rate}%`).join(' → ')} (${rates.length} ${rates.length === 1 ? 'key' : 'keys'})`;
+export const formatVanillaBossSchedule = (bossClass: string, rates: readonly number[]): string => {
+  const label = `${bossClass.slice(0, 1).toUpperCase()}${bossClass.slice(1)}`;
+  return `${label}: ${rates.map(rate => `${rate}%`).join(' → ')} (${rates.length} ${rates.length === 1 ? 'key' : 'keys'})`;
+};
 
 export const describeVanillaRandomAccessPolicy = (
-  policy: typeof VANILLA_RANDOM_ACCESS_POLICY = VANILLA_RANDOM_ACCESS_POLICY,
+  policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY,
 ): string => {
   const costs = policy.randomCosts.includes('chaosKey') ? 'Standard and Chaos' : 'Standard';
-  const bypass = policy.omniDirectBypasses ? 'Omni-Key direct unlocks bypass that filter with a warning.' : '';
-  return `${costs} random unlocks respect hard location access; empty eligible pool means no unlock occurs. ${bypass}`;
+  const randomAccess = policy.requiresTrackedHardGeography
+    ? `${costs} random unlocks respect hard location access.`
+    : '';
+  const emptyPool = policy.emptyEligiblePool.noUnlock
+    ? [
+        'An empty eligible pool means no unlock occurs',
+        policy.emptyEligiblePool.retainsKey ? 'no key is spent' : '',
+        policy.emptyEligiblePool.preservesRngProgression ? 'no RNG progression is consumed' : '',
+      ].filter(Boolean).join('; ') + '.'
+    : '';
+  const omni = policy.omniDirect.allowsLocationIneligible
+    ? `Omni-Key direct unlocks bypass that filter${policy.omniDirect.warnsPlayer ? ' with a warning' : ''}.`
+    : `Omni-Key direct unlocks respect that filter${policy.omniDirect.warnsPlayer ? ' with a warning' : ''}.`;
+
+  return [randomAccess, emptyPool, omni].filter(Boolean).join(' ');
 };
 
 export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initialTab = 'core' }) => {
@@ -61,13 +76,6 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
   const vanillaPolicyLabel = gameModeId === 'vanilla'
     ? 'Vanilla-only rules'
     : 'Vanilla-only (not active for this run)';
-  const vanillaBossSchedules = [
-    ['Brutus', VANILLA_BOSS_KEY_RATES.brutus],
-    ['Low', VANILLA_BOSS_KEY_RATES.low],
-    ['Mid', VANILLA_BOSS_KEY_RATES.mid],
-    ['High', VANILLA_BOSS_KEY_RATES.high],
-    ['Raid', VANILLA_BOSS_KEY_RATES.raid],
-  ] as const;
 
   // Chunked mode unlocks individual map chunks, not named regions — swap the
   // "Areas" entry for the real table/count/blurb so the Codex matches what
@@ -421,7 +429,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             <div className="bg-amber-950/20 p-4 rounded-xl border border-amber-500/30">
                                 <h3 className="font-bold text-amber-300 mb-2">Vanilla boss reserve schedules</h3>
                                 <ul className="text-sm text-gray-300 space-y-1">
-                                    {vanillaBossSchedules.map(([label, rates]) => <li key={label}>{formatVanillaBossSchedule(label, rates)}</li>)}
+                                    {Object.entries(VANILLA_BOSS_KEY_RATES).map(([bossClass, rates]) => <li key={bossClass}>{formatVanillaBossSchedule(bossClass, rates)}</li>)}
                                 </ul>
                                 <p className="text-xs text-gray-400 mt-3">All clue tiers share onboarding minimums of <b>{CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`).join(' → ')}</b> for the first three Standard Keys, then use their normal tier rate.</p>
                             </div>
