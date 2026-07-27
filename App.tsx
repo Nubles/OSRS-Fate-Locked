@@ -638,6 +638,9 @@ const GameLayout = () => {
   );
 
   const changelogReturnFocusTarget = useRef<HTMLElement | null>(null);
+  const changelogAutoOpenedRelease = useRef<string | null>(
+    showChangelog ? LATEST_CHANGELOG.id : null,
+  );
   const openChangelog = (returnFocusTarget: HTMLElement | null = null) => {
     changelogReturnFocusTarget.current = returnFocusTarget;
     dispatchChangelog({ type: 'OPEN' });
@@ -743,12 +746,44 @@ const GameLayout = () => {
   // the onboarding wizard rather than `createProfile`. Catch that finish-line:
   // when onboarding flips to complete on a still-empty run, prompt the mode pick.
   const prevOnboarded = useRef(hasSeenOnboarding);
+  const onboardingJustCompleted = !prevOnboarded.current && hasSeenOnboarding && history.length === 0;
   useEffect(() => {
-    if (!prevOnboarded.current && hasSeenOnboarding && history.length === 0) {
+    if (onboardingJustCompleted) {
       setShowGameMode(true);
     }
     prevOnboarded.current = hasSeenOnboarding;
-  }, [hasSeenOnboarding, history.length]);
+  }, [hasSeenOnboarding, onboardingJustCompleted]);
+
+  const startupHash = typeof window === 'undefined' ? '' : window.location.hash;
+  const hasPendingSyncPrompt = showSyncCode
+    || (startupHash.startsWith('#sync=') && startupHash.length > '#sync='.length);
+  const hasPendingGameModePrompt = showGameMode
+    || recentlyCreatedId === activeProfileId
+    || onboardingJustCompleted;
+  useEffect(() => {
+    if (
+      showChangelog
+      || changelogAutoOpenedRelease.current === LATEST_CHANGELOG.id
+      || !shouldAutoOpenChangelog({
+        hasSeenOnboarding,
+        releaseIsUnseen: shouldShowChangelog(LATEST_CHANGELOG.id),
+        startupHash,
+        hasPendingGameModePrompt,
+        hasPendingSyncPrompt,
+      })
+    ) return;
+
+    changelogAutoOpenedRelease.current = LATEST_CHANGELOG.id;
+    dispatchChangelog({ type: 'OPEN' });
+  }, [
+    activeProfileId,
+    hasPendingGameModePrompt,
+    hasPendingSyncPrompt,
+    hasSeenOnboarding,
+    recentlyCreatedId,
+    showChangelog,
+    startupHash,
+  ]);
 
   // Escape closes whichever top-level modal is open.
   const anyModalOpen = showStats || showReference || showAltar

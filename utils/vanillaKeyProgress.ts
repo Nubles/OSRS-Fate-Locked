@@ -3,6 +3,8 @@ import { BRUTUS_BOSS_NAME, vanillaBossKeyStage } from '../config/vanillaKeyEcono
 
 const KNOWN_BOSS_NAMES = new Set([...BOSSES_LIST, BRUTUS_BOSS_NAME]);
 
+export const isKnownVanillaBoss = (bossName: string): boolean => KNOWN_BOSS_NAMES.has(bossName);
+
 export const normalizeBossStandardKeysAwarded = (value: unknown): Record<string, number> => {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return {};
 

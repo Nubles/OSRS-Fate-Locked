@@ -5,12 +5,14 @@ import type { GameState, LogEntry, RivalState, UnlockState } from '../types';
 import { migrateClogIds } from './clogIdMigrations';
 import { migrateCompletedTaskIds } from './taskIdMigrations';
 import {
+  isKnownVanillaBoss,
   normalizeBossStandardKeysAwarded,
   normalizeClueStandardKeysAwarded,
 } from './vanillaKeyProgress';
+import { vanillaBossKeyStage } from '../config/vanillaKeyEconomy';
 
-/** Version 2 adds Vanilla key-progression counters while retaining v1 imports. */
-export const CURRENT_SAVE_VERSION = 2;
+/** Version 3 strictly validates persisted Vanilla key-progression counters. */
+export const CURRENT_SAVE_VERSION = 3;
 const MIN_SUPPORTED_SAVE_VERSION = 1;
 export const MAX_SAVE_BYTES = 5 * 1024 * 1024;
 export const MAX_HISTORY_ENTRIES = 100_000;
@@ -726,8 +728,8 @@ const normalizeState = (
       'keys', 'specialKeys', 'chaosKeys', 'fatePoints', 'activeBuff',
       'unlocks', 'history', 'pinnedGoals', 'userNotes',
     ];
-    // Version 1 exports remain strict, but the new progress counters are
-    // injected from safe defaults while those exports are promoted to v2.
+    // Versions 1 and 2 are permissive migration formats; v3 requires these
+    // counters at the strict save boundary.
     if (sourceVersion === CURRENT_SAVE_VERSION) {
       required.push('bossStandardKeysAwarded', 'clueStandardKeysAwarded');
     }
@@ -753,10 +755,51 @@ const normalizeState = (
 
   const selectedBossProgress = readPreferred(input, defaultRecord, 'bossStandardKeysAwarded');
   if (!selectedBossProgress.present) return invalid('invalid_field', 'bossStandardKeysAwarded');
-  const bossStandardKeysAwarded = normalizeBossStandardKeysAwarded(selectedBossProgress.value);
   const selectedClueProgress = readPreferred(input, defaultRecord, 'clueStandardKeysAwarded');
   if (!selectedClueProgress.present) return invalid('invalid_field', 'clueStandardKeysAwarded');
-  const clueStandardKeysAwarded = normalizeClueStandardKeysAwarded(selectedClueProgress.value);
+
+  let bossStandardKeysAwarded: Record<string, number>;
+  let clueStandardKeysAwarded: number;
+  if (sourceVersion === CURRENT_SAVE_VERSION) {
+    const strictBossProgress = inspectRecord(
+      selectedBossProgress.value,
+      null,
+      'invalid_field',
+      'bossStandardKeysAwarded',
+    );
+    if (strictBossProgress.ok === false) return strictBossProgress;
+
+    bossStandardKeysAwarded = {};
+    for (const bossName of Object.getOwnPropertyNames(strictBossProgress.value)) {
+      const path = pathOf('bossStandardKeysAwarded', bossName);
+      if (!isKnownVanillaBoss(bossName)) return invalid('invalid_field', path);
+      const awarded = boundedInteger(
+        readOwn(strictBossProgress.value, bossName),
+        path,
+        0,
+        vanillaBossKeyStage(bossName, 0).cap,
+      );
+      if (awarded.ok === false) return awarded;
+      bossStandardKeysAwarded[bossName] = awarded.value;
+    }
+
+    const strictClueProgress = boundedInteger(
+      selectedClueProgress.value,
+      'clueStandardKeysAwarded',
+      0,
+      MAX_COUNTER,
+    );
+    if (strictClueProgress.ok === false) return strictClueProgress;
+    clueStandardKeysAwarded = strictClueProgress.value;
+  } else {
+    // Versions 1 and 2 were permissive import formats. Keep their documented
+    // migration behavior, then persist the sanitized result as strict v3.
+    bossStandardKeysAwarded = normalizeBossStandardKeysAwarded(selectedBossProgress.value);
+    clueStandardKeysAwarded = Math.min(
+      normalizeClueStandardKeysAwarded(selectedClueProgress.value),
+      MAX_COUNTER,
+    );
+  }
 
   const selectedBuff = readPreferred(input, defaultRecord, 'activeBuff');
   if (!selectedBuff.present
