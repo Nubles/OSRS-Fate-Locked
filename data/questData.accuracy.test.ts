@@ -43,7 +43,7 @@ describe('audited current quest requirements', () => {
       prereqs: ['Children of the Sun', 'Shield of Arrav'],
     });
     expect(QUEST_DATA['Ethically Acquired Antiquities'].locations?.map(x => x.id)).toEqual([
-      'civitas-illa-fortis', 'port-sarim', 'varrock-museum',
+      'grand-museum', 'fortis-cothon', 'port-sarim-jail', 'port-sarim-betty', 'varrock-museum',
     ]);
     expect(QUEST_DATA['The Curse of Arrav']).toMatchObject({
       skills: { Agility: 61, Ranged: 62, Strength: 58, Thieving: 62, Mining: 64, Slayer: 37 },
@@ -78,6 +78,1717 @@ describe('audited current quest requirements', () => {
       skills: { Slayer: 51, Construction: 48, Sailing: 45, Hunter: 45, Woodcutting: 40, Crafting: 34 },
       prereqs: ['Pandemonium'],
     });
+  });
+
+  it('pins the complete machine and balance projection for all 44 changed A-F quests', () => {
+    const ids = [
+          "A Porcine of Interest",
+          "A Soul's Bane",
+          "A Tail of Two Cats",
+          "Animal Magnetism",
+          "Another Slice of H.A.M.",
+          "At First Light",
+          "Below Ice Mountain",
+          "Between a Rock...",
+          "Biohazard",
+          "Black Knights' Fortress",
+          "Bone Voyage",
+          "Cabin Fever",
+          "Children of the Sun",
+          "Client of Kourend",
+          "Cold War",
+          "Contact!",
+          "Cook's Assistant",
+          "Creature of Fenkenstrain",
+          "Current Affairs",
+          "Darkness of Hallowvale",
+          "Death on the Isle",
+          "Death Plateau",
+          "Defender of Varrock",
+          "Demon Slayer",
+          "Desert Treasure I",
+          "Desert Treasure II",
+          "Devious Minds",
+          "Doric's Quest",
+          "Dragon Slayer I",
+          "Dragon Slayer II",
+          "Druidic Ritual",
+          "Dwarf Cannon",
+          "Eagles' Peak",
+          "Elemental Workshop I",
+          "Elemental Workshop II",
+          "Enakhra's Lament",
+          "Enlightened Journey",
+          "Ernest the Chicken",
+          "Ethically Acquired Antiquities",
+          "Fairytale I - Growing Pains",
+          "Fairytale II - Cure a Queen",
+          "Family Crest",
+          "Fishing Contest",
+          "Forgettable Tale..."
+    ] as const;
+    const project = (id: typeof ids[number]) => {
+      const quest = QUEST_DATA[id];
+      return {
+        kind: quest.kind,
+        accessPolicy: quest.accessPolicy,
+        regions: quest.regions,
+        locations: quest.locations?.map(location => ({
+          id: location.id,
+          label: location.label,
+          standardAreas: location.standardAreas,
+          chunkOptions: location.chunkOptions,
+        })) ?? null,
+        skills: quest.skills,
+        combatLevel: quest.combatLevel ?? null,
+        prereqs: quest.prereqs,
+        oneOf: quest.oneOf ?? null,
+        manualRequirements: quest.manualRequirements ?? null,
+        points: quest.points,
+        difficulty: quest.difficulty,
+      };
+    };
+
+    const actual = Object.fromEntries(ids.map(id => [id, project(id)]));
+    const expected = {
+          "A Porcine of Interest": {
+                "kind": "quest",
+                "accessPolicy": "locations",
+                "regions": [
+                      "Misthalin",
+                      "Asgarnia"
+                ],
+                "locations": [
+                      {
+                            "id": "draynor-village",
+                            "label": "Draynor Village",
+                            "standardAreas": [
+                                  "Draynor Village"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 48,
+                                        "cy": 50
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "south-falador-farm",
+                            "label": "South Falador Farm",
+                            "standardAreas": [
+                                  "Falador"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 47,
+                                        "cy": 51
+                                  }
+                            ]
+                      }
+                ],
+                "skills": {},
+                "combatLevel": null,
+                "prereqs": [],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 1,
+                "difficulty": "Quest (Novice)"
+          },
+          "A Soul's Bane": {
+                "kind": "quest",
+                "accessPolicy": "locations",
+                "regions": [
+                      "Misthalin"
+                ],
+                "locations": [
+                      {
+                            "id": "soul-bane-rift",
+                            "label": "Rift east of Varrock",
+                            "standardAreas": [
+                                  "Varrock"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 51,
+                                        "cy": 53
+                                  }
+                            ]
+                      }
+                ],
+                "skills": {},
+                "combatLevel": null,
+                "prereqs": [],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 1,
+                "difficulty": "Quest (Intermediate)"
+          },
+          "A Tail of Two Cats": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Asgarnia",
+                      "Misthalin",
+                      "Kharidian Desert"
+                ],
+                "locations": null,
+                "skills": {},
+                "combatLevel": null,
+                "prereqs": [
+                      "Icthlarin's Little Helper"
+                ],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 2,
+                "difficulty": "Quest (Intermediate)"
+          },
+          "Animal Magnetism": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Misthalin",
+                      "Asgarnia",
+                      "Morytania"
+                ],
+                "locations": null,
+                "skills": {
+                      "Slayer": 18,
+                      "Crafting": 19,
+                      "Ranged": 30,
+                      "Woodcutting": 35
+                },
+                "combatLevel": null,
+                "prereqs": [
+                      "The Restless Ghost",
+                      "Ernest the Chicken",
+                      "Priest in Peril"
+                ],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 1,
+                "difficulty": "Quest (Intermediate)"
+          },
+          "Another Slice of H.A.M.": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Misthalin",
+                      "Asgarnia"
+                ],
+                "locations": null,
+                "skills": {
+                      "Attack": 15,
+                      "Prayer": 25
+                },
+                "combatLevel": null,
+                "prereqs": [
+                      "Death to the Dorgeshuun",
+                      "The Dig Site",
+                      "The Giant Dwarf"
+                ],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 1,
+                "difficulty": "Quest (Intermediate)"
+          },
+          "At First Light": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Varlamore"
+                ],
+                "locations": null,
+                "skills": {
+                      "Hunter": 46,
+                      "Herblore": 30,
+                      "Construction": 27
+                },
+                "combatLevel": null,
+                "prereqs": [
+                      "Children of the Sun",
+                      "Eagles' Peak"
+                ],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 1,
+                "difficulty": "Quest (Intermediate)"
+          },
+          "Below Ice Mountain": {
+                "kind": "quest",
+                "accessPolicy": "locations",
+                "regions": [
+                      "Asgarnia",
+                      "Misthalin"
+                ],
+                "locations": [
+                      {
+                            "id": "west-falador",
+                            "label": "West Falador",
+                            "standardAreas": [
+                                  "Falador"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 46,
+                                        "cy": 52
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "falador-north-gate",
+                            "label": "Falador north gate",
+                            "standardAreas": [
+                                  "Falador"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 46,
+                                        "cy": 53
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "goblin-village",
+                            "label": "Goblin Village",
+                            "standardAreas": [
+                                  "Goblin Village"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 46,
+                                        "cy": 54
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "edgeville",
+                            "label": "Edgeville",
+                            "standardAreas": [
+                                  "Edgeville"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 48,
+                                        "cy": 54
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "varrock-south-gate",
+                            "label": "Varrock south gate",
+                            "standardAreas": [
+                                  "Varrock"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 50,
+                                        "cy": 52
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "varrock-square",
+                            "label": "Varrock square",
+                            "standardAreas": [
+                                  "Varrock"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 50,
+                                        "cy": 53
+                                  }
+                            ]
+                      }
+                ],
+                "skills": {
+                      "Quest Points": 16
+                },
+                "combatLevel": null,
+                "prereqs": [],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 1,
+                "difficulty": "Quest (Novice)"
+          },
+          "Between a Rock...": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Fremennik",
+                      "Asgarnia",
+                      "Kandarin"
+                ],
+                "locations": null,
+                "skills": {
+                      "Defence": 30,
+                      "Mining": 40,
+                      "Smithing": 50
+                },
+                "combatLevel": null,
+                "prereqs": [
+                      "Dwarf Cannon",
+                      "Fishing Contest"
+                ],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 2,
+                "difficulty": "Quest (Experienced)"
+          },
+          "Biohazard": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Kandarin",
+                      "Asgarnia",
+                      "Misthalin"
+                ],
+                "locations": null,
+                "skills": {},
+                "combatLevel": null,
+                "prereqs": [
+                      "Plague City"
+                ],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 3,
+                "difficulty": "Quest (Novice)"
+          },
+          "Black Knights' Fortress": {
+                "kind": "quest",
+                "accessPolicy": "locations",
+                "regions": [
+                      "Asgarnia"
+                ],
+                "locations": [
+                      {
+                            "id": "west-falador",
+                            "label": "West Falador",
+                            "standardAreas": [
+                                  "Falador"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 46,
+                                        "cy": 52
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "black-knights-fortress",
+                            "label": "Black Knights' Fortress",
+                            "standardAreas": [
+                                  "Edgeville"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 47,
+                                        "cy": 54
+                                  }
+                            ]
+                      }
+                ],
+                "skills": {
+                      "Quest Points": 12
+                },
+                "combatLevel": null,
+                "prereqs": [],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 3,
+                "difficulty": "Quest (Intermediate)"
+          },
+          "Bone Voyage": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Misthalin",
+                      "Islands & Others",
+                      "Asgarnia",
+                      "Kourend & Kebos"
+                ],
+                "locations": null,
+                "skills": {},
+                "combatLevel": null,
+                "prereqs": [
+                      "The Dig Site"
+                ],
+                "oneOf": null,
+                "manualRequirements": [
+                      "100 Kudos"
+                ],
+                "points": 1,
+                "difficulty": "Quest (Intermediate)"
+          },
+          "Cabin Fever": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Islands & Others",
+                      "Morytania"
+                ],
+                "locations": null,
+                "skills": {
+                      "Ranged": 40,
+                      "Smithing": 50,
+                      "Crafting": 45,
+                      "Agility": 42
+                },
+                "combatLevel": null,
+                "prereqs": [
+                      "Pirate's Treasure",
+                      "Rum Deal"
+                ],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 2,
+                "difficulty": "Quest (Experienced)"
+          },
+          "Children of the Sun": {
+                "kind": "quest",
+                "accessPolicy": "locations",
+                "regions": [
+                      "Misthalin"
+                ],
+                "locations": [
+                      {
+                            "id": "varrock-square",
+                            "label": "Varrock square",
+                            "standardAreas": [
+                                  "Varrock"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 50,
+                                        "cy": 53
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "varrock-palace",
+                            "label": "Varrock Palace",
+                            "standardAreas": [
+                                  "Varrock"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 50,
+                                        "cy": 54
+                                  }
+                            ]
+                      }
+                ],
+                "skills": {},
+                "combatLevel": null,
+                "prereqs": [],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 1,
+                "difficulty": "Quest (Novice)"
+          },
+          "Client of Kourend": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Kourend & Kebos"
+                ],
+                "locations": null,
+                "skills": {},
+                "combatLevel": null,
+                "prereqs": [
+                      "X Marks the Spot"
+                ],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 1,
+                "difficulty": "Quest (Novice)"
+          },
+          "Cold War": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Fremennik",
+                      "Kandarin",
+                      "Misthalin"
+                ],
+                "locations": null,
+                "skills": {
+                      "Hunter": 10,
+                      "Agility": 30,
+                      "Crafting": 30,
+                      "Construction": 34,
+                      "Thieving": 15
+                },
+                "combatLevel": null,
+                "prereqs": [],
+                "oneOf": null,
+                "manualRequirements": [
+                      "Access to a crafting table 3"
+                ],
+                "points": 1,
+                "difficulty": "Quest (Intermediate)"
+          },
+          "Contact!": {
+                "kind": "quest",
+                "accessPolicy": "locations",
+                "regions": [
+                      "Kharidian Desert"
+                ],
+                "locations": [
+                      {
+                            "id": "sophanem",
+                            "label": "Sophanem",
+                            "standardAreas": [
+                                  "Sophanem"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 51,
+                                        "cy": 43
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "al-kharid-palace",
+                            "label": "Al Kharid Palace",
+                            "standardAreas": [
+                                  "Al Kharid"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 51,
+                                        "cy": 49
+                                  }
+                            ]
+                      }
+                ],
+                "skills": {},
+                "combatLevel": null,
+                "prereqs": [
+                      "Prince Ali Rescue",
+                      "Icthlarin's Little Helper"
+                ],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 1,
+                "difficulty": "Quest (Experienced)"
+          },
+          "Cook's Assistant": {
+                "kind": "quest",
+                "accessPolicy": "locations",
+                "regions": [
+                      "Misthalin"
+                ],
+                "locations": [
+                      {
+                            "id": "lumbridge-castle",
+                            "label": "Lumbridge Castle",
+                            "standardAreas": [
+                                  "Lumbridge"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 50,
+                                        "cy": 50
+                                  }
+                            ]
+                      }
+                ],
+                "skills": {},
+                "combatLevel": null,
+                "prereqs": [],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 1,
+                "difficulty": "Quest (Novice)"
+          },
+          "Creature of Fenkenstrain": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Morytania"
+                ],
+                "locations": null,
+                "skills": {
+                      "Crafting": 20,
+                      "Thieving": 25
+                },
+                "combatLevel": null,
+                "prereqs": [
+                      "Priest in Peril"
+                ],
+                "oneOf": null,
+                "manualRequirements": [
+                      "Started The Restless Ghost"
+                ],
+                "points": 2,
+                "difficulty": "Quest (Intermediate)"
+          },
+          "Current Affairs": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "The Open Seas",
+                      "Kandarin"
+                ],
+                "locations": null,
+                "skills": {
+                      "Sailing": 22,
+                      "Fishing": 10
+                },
+                "combatLevel": null,
+                "prereqs": [
+                      "Pandemonium"
+                ],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 1,
+                "difficulty": "Quest (Novice)"
+          },
+          "Darkness of Hallowvale": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Morytania",
+                      "Misthalin"
+                ],
+                "locations": null,
+                "skills": {
+                      "Construction": 5,
+                      "Mining": 20,
+                      "Thieving": 22,
+                      "Agility": 26,
+                      "Crafting": 32,
+                      "Magic": 33,
+                      "Strength": 40
+                },
+                "combatLevel": null,
+                "prereqs": [
+                      "In Aid of the Myreque"
+                ],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 2,
+                "difficulty": "Quest (Experienced)"
+          },
+          "Death on the Isle": {
+                "kind": "quest",
+                "accessPolicy": "locations",
+                "regions": [
+                      "Varlamore"
+                ],
+                "locations": [
+                      {
+                            "id": "villa-lucens",
+                            "label": "Villa Lucens",
+                            "standardAreas": [
+                                  "Aldarin"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 22,
+                                        "cy": 45
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "aldarin-mansion",
+                            "label": "Northern Aldarin mansion",
+                            "standardAreas": [
+                                  "Aldarin"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 21,
+                                        "cy": 46
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "villa-lucens-theatre",
+                            "label": "Villa Lucens Theatre",
+                            "standardAreas": [
+                                  "Aldarin"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 23,
+                                        "cy": 45
+                                  }
+                            ]
+                      }
+                ],
+                "skills": {
+                      "Thieving": 34,
+                      "Agility": 32
+                },
+                "combatLevel": null,
+                "prereqs": [
+                      "Children of the Sun"
+                ],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 2,
+                "difficulty": "Quest (Intermediate)"
+          },
+          "Death Plateau": {
+                "kind": "quest",
+                "accessPolicy": "locations",
+                "regions": [
+                      "Asgarnia"
+                ],
+                "locations": [
+                      {
+                            "id": "burthorpe",
+                            "label": "Burthorpe",
+                            "standardAreas": [
+                                  "Burthorpe"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 45,
+                                        "cy": 55
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "warriors-guild",
+                            "label": "Warriors' Guild",
+                            "standardAreas": [
+                                  "Warriors' Guild"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 44,
+                                        "cy": 55
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "death-plateau",
+                            "label": "Death Plateau",
+                            "standardAreas": [
+                                  "Burthorpe"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 44,
+                                        "cy": 56
+                                  }
+                            ]
+                      }
+                ],
+                "skills": {},
+                "combatLevel": null,
+                "prereqs": [],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 1,
+                "difficulty": "Quest (Novice)"
+          },
+          "Defender of Varrock": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Misthalin",
+                      "Asgarnia"
+                ],
+                "locations": null,
+                "skills": {
+                      "Smithing": 55,
+                      "Hunter": 52
+                },
+                "combatLevel": null,
+                "prereqs": [
+                      "Shield of Arrav",
+                      "Romeo & Juliet",
+                      "Demon Slayer",
+                      "Temple of Ikov",
+                      "Below Ice Mountain",
+                      "Family Crest",
+                      "Garden of Tranquillity",
+                      "What Lies Below"
+                ],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 2,
+                "difficulty": "Quest (Experienced)"
+          },
+          "Demon Slayer": {
+                "kind": "quest",
+                "accessPolicy": "locations",
+                "regions": [
+                      "Misthalin"
+                ],
+                "locations": [
+                      {
+                            "id": "varrock-square",
+                            "label": "Varrock square",
+                            "standardAreas": [
+                                  "Varrock"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 50,
+                                        "cy": 53
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "varrock-palace",
+                            "label": "Varrock Palace",
+                            "standardAreas": [
+                                  "Varrock"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 50,
+                                        "cy": 54
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "wizards-tower",
+                            "label": "Wizards' Tower",
+                            "standardAreas": [
+                                  "Wizards' Tower"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 48,
+                                        "cy": 49
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "varrock-south-gate",
+                            "label": "Varrock south gate",
+                            "standardAreas": [
+                                  "Varrock"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 50,
+                                        "cy": 52
+                                  }
+                            ]
+                      }
+                ],
+                "skills": {},
+                "combatLevel": null,
+                "prereqs": [],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 3,
+                "difficulty": "Quest (Novice)"
+          },
+          "Desert Treasure I": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Kharidian Desert",
+                      "Asgarnia",
+                      "Kandarin",
+                      "Morytania",
+                      "Misthalin"
+                ],
+                "locations": null,
+                "skills": {
+                      "Thieving": 53,
+                      "Firemaking": 50,
+                      "Slayer": 10,
+                      "Magic": 50
+                },
+                "combatLevel": null,
+                "prereqs": [
+                      "The Dig Site",
+                      "Temple of Ikov",
+                      "The Tourist Trap",
+                      "Troll Stronghold",
+                      "Priest in Peril",
+                      "Waterfall Quest"
+                ],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 3,
+                "difficulty": "Quest (Master)"
+          },
+          "Desert Treasure II": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Kharidian Desert",
+                      "Asgarnia",
+                      "Fremennik",
+                      "Kourend & Kebos",
+                      "Misthalin"
+                ],
+                "locations": null,
+                "skills": {
+                      "Magic": 75,
+                      "Firemaking": 75,
+                      "Thieving": 70,
+                      "Herblore": 62,
+                      "Runecraft": 60,
+                      "Construction": 60
+                },
+                "combatLevel": null,
+                "prereqs": [
+                      "Desert Treasure I",
+                      "Secrets of the North",
+                      "Enakhra's Lament",
+                      "Temple of the Eye",
+                      "The Garden of Death",
+                      "Below Ice Mountain"
+                ],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 5,
+                "difficulty": "Quest (Grandmaster)"
+          },
+          "Devious Minds": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Misthalin",
+                      "Asgarnia",
+                      "Wilderness"
+                ],
+                "locations": null,
+                "skills": {
+                      "Smithing": 65,
+                      "Runecraft": 50,
+                      "Fletching": 50
+                },
+                "combatLevel": null,
+                "prereqs": [
+                      "Wanted!",
+                      "Troll Stronghold",
+                      "Doric's Quest"
+                ],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 1,
+                "difficulty": "Quest (Experienced)"
+          },
+          "Doric's Quest": {
+                "kind": "quest",
+                "accessPolicy": "locations",
+                "regions": [
+                      "Asgarnia"
+                ],
+                "locations": [
+                      {
+                            "id": "dorics-hut",
+                            "label": "Doric's hut",
+                            "standardAreas": [
+                                  "Ice Mountain"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 46,
+                                        "cy": 53
+                                  }
+                            ]
+                      }
+                ],
+                "skills": {},
+                "combatLevel": null,
+                "prereqs": [],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 1,
+                "difficulty": "Quest (Novice)"
+          },
+          "Dragon Slayer I": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Misthalin",
+                      "Asgarnia",
+                      "Karamja"
+                ],
+                "locations": null,
+                "skills": {
+                      "Quest Points": 32
+                },
+                "combatLevel": null,
+                "prereqs": [],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 2,
+                "difficulty": "Quest (Experienced)"
+          },
+          "Dragon Slayer II": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Misthalin",
+                      "Asgarnia",
+                      "Kandarin",
+                      "Fremennik",
+                      "Kourend & Kebos",
+                      "Karamja",
+                      "Kharidian Desert",
+                      "Morytania",
+                      "Islands & Others"
+                ],
+                "locations": null,
+                "skills": {
+                      "Magic": 75,
+                      "Smithing": 70,
+                      "Mining": 68,
+                      "Crafting": 62,
+                      "Agility": 60,
+                      "Thieving": 60,
+                      "Construction": 50,
+                      "Hitpoints": 50,
+                      "Quest Points": 200
+                },
+                "combatLevel": null,
+                "prereqs": [
+                      "Legends' Quest",
+                      "Dream Mentor",
+                      "A Tail of Two Cats",
+                      "Animal Magnetism",
+                      "Ghosts Ahoy",
+                      "Bone Voyage",
+                      "Client of Kourend"
+                ],
+                "oneOf": null,
+                "manualRequirements": [
+                      "Started the pyre ship portion of Barbarian Training"
+                ],
+                "points": 5,
+                "difficulty": "Quest (Grandmaster)"
+          },
+          "Druidic Ritual": {
+                "kind": "quest",
+                "accessPolicy": "locations",
+                "regions": [
+                      "Asgarnia"
+                ],
+                "locations": [
+                      {
+                            "id": "north-taverley",
+                            "label": "North Taverley",
+                            "standardAreas": [
+                                  "Taverley"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 45,
+                                        "cy": 54
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "south-taverley",
+                            "label": "South Taverley",
+                            "standardAreas": [
+                                  "Taverley"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 45,
+                                        "cy": 53
+                                  }
+                            ]
+                      }
+                ],
+                "skills": {},
+                "combatLevel": null,
+                "prereqs": [],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 4,
+                "difficulty": "Quest (Novice)"
+          },
+          "Dwarf Cannon": {
+                "kind": "quest",
+                "accessPolicy": "locations",
+                "regions": [
+                      "Kandarin",
+                      "Asgarnia"
+                ],
+                "locations": [
+                      {
+                            "id": "coal-truck-mine",
+                            "label": "Coal Truck Mine",
+                            "standardAreas": [
+                                  "Seers' Village"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 40,
+                                        "cy": 54
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "baxtorian-falls",
+                            "label": "Baxtorian Falls",
+                            "standardAreas": [
+                                  "Baxtorian Falls"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 39,
+                                        "cy": 54
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "asgarnian-road",
+                            "label": "Asgarnian road by the Dwarven Mine",
+                            "standardAreas": [
+                                  "Dwarven Mine"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 47,
+                                        "cy": 53
+                                  }
+                            ]
+                      }
+                ],
+                "skills": {},
+                "combatLevel": null,
+                "prereqs": [],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 1,
+                "difficulty": "Quest (Novice)"
+          },
+          "Eagles' Peak": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Kandarin",
+                      "Misthalin"
+                ],
+                "locations": null,
+                "skills": {
+                      "Hunter": 27
+                },
+                "combatLevel": null,
+                "prereqs": [],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 2,
+                "difficulty": "Quest (Novice)"
+          },
+          "Elemental Workshop I": {
+                "kind": "quest",
+                "accessPolicy": "locations",
+                "regions": [
+                      "Kandarin"
+                ],
+                "locations": [
+                      {
+                            "id": "elemental-workshop",
+                            "label": "Elemental Workshop in Seers' Village",
+                            "standardAreas": [
+                                  "Seers' Village"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 42,
+                                        "cy": 54
+                                  }
+                            ]
+                      }
+                ],
+                "skills": {
+                      "Mining": 20,
+                      "Smithing": 20,
+                      "Crafting": 20
+                },
+                "combatLevel": null,
+                "prereqs": [],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 1,
+                "difficulty": "Quest (Novice)"
+          },
+          "Elemental Workshop II": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Kandarin",
+                      "Misthalin"
+                ],
+                "locations": null,
+                "skills": {
+                      "Magic": 20,
+                      "Smithing": 30
+                },
+                "combatLevel": null,
+                "prereqs": [
+                      "Elemental Workshop I"
+                ],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 1,
+                "difficulty": "Quest (Intermediate)"
+          },
+          "Enakhra's Lament": {
+                "kind": "quest",
+                "accessPolicy": "locations",
+                "regions": [
+                      "Kharidian Desert"
+                ],
+                "locations": [
+                      {
+                            "id": "desert-quarry-and-temple",
+                            "label": "Desert Quarry and Enakhra's Temple",
+                            "standardAreas": [
+                                  "Kharidian Desert"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 49,
+                                        "cy": 45
+                                  }
+                            ]
+                      }
+                ],
+                "skills": {
+                      "Crafting": 50,
+                      "Firemaking": 45,
+                      "Magic": 39,
+                      "Prayer": 43
+                },
+                "combatLevel": null,
+                "prereqs": [],
+                "oneOf": null,
+                "manualRequirements": [
+                      "Must be on the standard spellbook"
+                ],
+                "points": 2,
+                "difficulty": "Quest (Experienced)"
+          },
+          "Enlightened Journey": {
+                "kind": "quest",
+                "accessPolicy": "locations",
+                "regions": [
+                      "Asgarnia",
+                      "Kandarin",
+                      "Misthalin"
+                ],
+                "locations": [
+                      {
+                            "id": "west-entrana",
+                            "label": "West Entrana",
+                            "standardAreas": [
+                                  "Entrana"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 43,
+                                        "cy": 52
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "south-taverley",
+                            "label": "South Taverley",
+                            "standardAreas": [
+                                  "Taverley"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 45,
+                                        "cy": 53
+                                  }
+                            ]
+                      }
+                ],
+                "skills": {
+                      "Firemaking": 20,
+                      "Farming": 30,
+                      "Crafting": 36,
+                      "Quest Points": 20
+                },
+                "combatLevel": null,
+                "prereqs": [],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 1,
+                "difficulty": "Quest (Intermediate)"
+          },
+          "Ernest the Chicken": {
+                "kind": "quest",
+                "accessPolicy": "locations",
+                "regions": [
+                      "Misthalin"
+                ],
+                "locations": [
+                      {
+                            "id": "draynor-manor",
+                            "label": "Draynor Manor",
+                            "standardAreas": [
+                                  "Draynor Village"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 48,
+                                        "cy": 52
+                                  }
+                            ]
+                      }
+                ],
+                "skills": {},
+                "combatLevel": null,
+                "prereqs": [],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 4,
+                "difficulty": "Quest (Novice)"
+          },
+          "Ethically Acquired Antiquities": {
+                "kind": "quest",
+                "accessPolicy": "locations",
+                "regions": [
+                      "Varlamore",
+                      "Asgarnia",
+                      "Misthalin"
+                ],
+                "locations": [
+                      {
+                            "id": "grand-museum",
+                            "label": "Grand Museum in Civitas illa Fortis",
+                            "standardAreas": [
+                                  "Civitas illa Fortis"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 26,
+                                        "cy": 49
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "fortis-cothon",
+                            "label": "Fortis Cothon",
+                            "standardAreas": [
+                                  "Civitas illa Fortis"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 27,
+                                        "cy": 48
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "port-sarim-jail",
+                            "label": "Port Sarim jail",
+                            "standardAreas": [
+                                  "Port Sarim"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 47,
+                                        "cy": 49
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "port-sarim-betty",
+                            "label": "Betty's shop in Port Sarim",
+                            "standardAreas": [
+                                  "Port Sarim"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 47,
+                                        "cy": 50
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "varrock-museum",
+                            "label": "Varrock Museum",
+                            "standardAreas": [
+                                  "Varrock"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 50,
+                                        "cy": 53
+                                  }
+                            ]
+                      }
+                ],
+                "skills": {
+                      "Thieving": 25
+                },
+                "combatLevel": null,
+                "prereqs": [
+                      "Children of the Sun",
+                      "Shield of Arrav"
+                ],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 1,
+                "difficulty": "Quest (Novice)"
+          },
+          "Fairytale I - Growing Pains": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Misthalin",
+                      "Asgarnia",
+                      "Morytania",
+                      "Islands & Others"
+                ],
+                "locations": null,
+                "skills": {},
+                "combatLevel": null,
+                "prereqs": [
+                      "Lost City",
+                      "Nature Spirit"
+                ],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 2,
+                "difficulty": "Quest (Intermediate)"
+          },
+          "Fairytale II - Cure a Queen": {
+                "kind": "quest",
+                "accessPolicy": "locations",
+                "regions": [
+                      "Islands & Others",
+                      "Misthalin",
+                      "Kandarin",
+                      "Tirannwn"
+                ],
+                "locations": [
+                      {
+                            "id": "draynor-village",
+                            "label": "Draynor Village",
+                            "standardAreas": [
+                                  "Draynor Village"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 48,
+                                        "cy": 50
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "zanaris",
+                            "label": "Zanaris",
+                            "standardAreas": [
+                                  "Zanaris"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 50,
+                                        "cy": 49
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "poison-waste",
+                            "label": "Poison Waste",
+                            "standardAreas": [
+                                  "Poison Waste"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 34,
+                                        "cy": 48
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "horseshoe-mine",
+                            "label": "Horseshoe Mine",
+                            "standardAreas": [
+                                  "Kandarin"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 42,
+                                        "cy": 50
+                                  }
+                            ]
+                      }
+                ],
+                "skills": {
+                      "Thieving": 40,
+                      "Farming": 49,
+                      "Herblore": 57
+                },
+                "combatLevel": null,
+                "prereqs": [
+                      "Fairytale I - Growing Pains"
+                ],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 2,
+                "difficulty": "Quest (Experienced)"
+          },
+          "Family Crest": {
+                "kind": "quest",
+                "accessPolicy": "locations",
+                "regions": [
+                      "Asgarnia",
+                      "Kandarin",
+                      "Misthalin",
+                      "Kharidian Desert"
+                ],
+                "locations": [
+                      {
+                            "id": "dimintheis-house",
+                            "label": "Dimintheis's house in south-east Varrock",
+                            "standardAreas": [
+                                  "Varrock"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 51,
+                                        "cy": 53
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "witchaven",
+                            "label": "Witchaven",
+                            "standardAreas": [
+                                  "Witchaven"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 42,
+                                        "cy": 51
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "catherby",
+                            "label": "Caleb's house in Catherby",
+                            "standardAreas": [
+                                  "Catherby"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 44,
+                                        "cy": 53
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "dwarven-mine-boot",
+                            "label": "Boot in the Dwarven Mine",
+                            "standardAreas": [
+                                  "Dwarven Mine"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 48,
+                                        "cy": 54
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "north-al-kharid",
+                            "label": "North Al Kharid",
+                            "standardAreas": [
+                                  "Al Kharid"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 51,
+                                        "cy": 50
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "al-kharid-mine",
+                            "label": "Al Kharid mine",
+                            "standardAreas": [
+                                  "Al Kharid"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 51,
+                                        "cy": 51
+                                  }
+                            ]
+                      },
+                      {
+                            "id": "jolly-boar-inn",
+                            "label": "Jolly Boar Inn",
+                            "standardAreas": [
+                                  "Varrock"
+                            ],
+                            "chunkOptions": [
+                                  {
+                                        "cx": 51,
+                                        "cy": 54
+                                  }
+                            ]
+                      }
+                ],
+                "skills": {
+                      "Mining": 40,
+                      "Smithing": 40,
+                      "Magic": 59,
+                      "Crafting": 40
+                },
+                "combatLevel": null,
+                "prereqs": [],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 1,
+                "difficulty": "Quest (Experienced)"
+          },
+          "Fishing Contest": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Kandarin"
+                ],
+                "locations": null,
+                "skills": {
+                      "Fishing": 10
+                },
+                "combatLevel": null,
+                "prereqs": [],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 1,
+                "difficulty": "Quest (Novice)"
+          },
+          "Forgettable Tale...": {
+                "kind": "quest",
+                "accessPolicy": "regions",
+                "regions": [
+                      "Fremennik",
+                      "Asgarnia",
+                      "Kandarin"
+                ],
+                "locations": null,
+                "skills": {
+                      "Cooking": 22,
+                      "Farming": 17
+                },
+                "combatLevel": null,
+                "prereqs": [
+                      "The Giant Dwarf",
+                      "Fishing Contest"
+                ],
+                "oneOf": null,
+                "manualRequirements": null,
+                "points": 2,
+                "difficulty": "Quest (Intermediate)"
+          }
+    };
+
+    expect(actual).toEqual(expected);
   });
 
   it('pins the complete machine and balance projection for all 19 miniquests', () => {

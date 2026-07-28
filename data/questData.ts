@@ -67,16 +67,25 @@ const LOCATIONS = {
 export const QUEST_DATA: Record<string, QuestData> = {
   // --- F2P Quests ---
   'Cook\'s Assistant': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Cook\'s Assistant', name: 'Cook\'s Assistant',
-    regions: ['Misthalin'],
+    regions: ["Misthalin"],
+    locations: [
+      { id: "lumbridge-castle", label: "Lumbridge Castle", standardAreas: ["Lumbridge"], chunkOptions: [{ cx: 50, cy: 50 }] },
+    ],
     skills: {}, prereqs: [], points: 1, series: 'Recipe for Disaster',
     difficulty: DropSource.QUEST_NOVICE
   },
   'Demon Slayer': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Demon Slayer', name: 'Demon Slayer',
-    regions: ['Misthalin'],
+    regions: ["Misthalin"],
+    locations: [
+      { id: "varrock-square", label: "Varrock square", standardAreas: ["Varrock"], chunkOptions: [{ cx: 50, cy: 53 }] },
+      { id: "varrock-palace", label: "Varrock Palace", standardAreas: ["Varrock"], chunkOptions: [{ cx: 50, cy: 54 }] },
+      { id: "wizards-tower", label: "Wizards' Tower", standardAreas: ["Wizards' Tower"], chunkOptions: [{ cx: 48, cy: 49 }] },
+      { id: "varrock-south-gate", label: "Varrock south gate", standardAreas: ["Varrock"], chunkOptions: [{ cx: 50, cy: 52 }] },
+    ],
     skills: {}, prereqs: [], points: 3, series: 'Demon Slayer',
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -109,9 +118,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_NOVICE
   },
   'Ernest the Chicken': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Ernest the Chicken', name: 'Ernest the Chicken',
-    regions: ['Misthalin'],
+    regions: ["Misthalin"],
+    locations: [
+      { id: "draynor-manor", label: "Draynor Manor", standardAreas: ["Draynor Village"], chunkOptions: [{ cx: 48, cy: 52 }] },
+    ],
     skills: {}, prereqs: [], points: 4,
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -137,16 +149,23 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_NOVICE
   },
   'Doric\'s Quest': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Doric\'s Quest', name: 'Doric\'s Quest',
-    regions: ['Asgarnia'], 
-    skills: { 'Mining': 15 }, prereqs: [], points: 1,
+    regions: ["Asgarnia"],
+    locations: [
+      { id: "dorics-hut", label: "Doric's hut", standardAreas: ["Ice Mountain"], chunkOptions: [{ cx: 46, cy: 53 }] },
+    ],
+    skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
   'Black Knights\' Fortress': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Black Knights\' Fortress', name: 'Black Knights\' Fortress',
-    regions: ['Asgarnia'],
+    regions: ["Asgarnia"],
+    locations: [
+      { id: "west-falador", label: "West Falador", standardAreas: ["Falador"], chunkOptions: [{ cx: 46, cy: 52 }] },
+      { id: "black-knights-fortress", label: "Black Knights' Fortress", standardAreas: ["Edgeville"], chunkOptions: [{ cx: 47, cy: 54 }] },
+    ],
     skills: { 'Quest Points': 12 }, prereqs: [], points: 3,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -187,7 +206,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Dragon Slayer I', name: 'Dragon Slayer I',
     regions: ['Misthalin', 'Asgarnia', 'Karamja'],
-    skills: { 'Quest Points': 32, 'Crafting': 8 }, prereqs: [], points: 2, series: 'Dragonkin',
+    skills: {"Quest Points":32}, prereqs: [], points: 2, series: 'Dragonkin',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Rune Mysteries': {
@@ -205,9 +224,17 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_NOVICE
   },
   'Below Ice Mountain': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Below Ice Mountain', name: 'Below Ice Mountain',
-    regions: ['Asgarnia'],
+    regions: ["Asgarnia","Misthalin"],
+    locations: [
+      { id: "west-falador", label: "West Falador", standardAreas: ["Falador"], chunkOptions: [{ cx: 46, cy: 52 }] },
+      { id: "falador-north-gate", label: "Falador north gate", standardAreas: ["Falador"], chunkOptions: [{ cx: 46, cy: 53 }] },
+      { id: "goblin-village", label: "Goblin Village", standardAreas: ["Goblin Village"], chunkOptions: [{ cx: 46, cy: 54 }] },
+      { id: "edgeville", label: "Edgeville", standardAreas: ["Edgeville"], chunkOptions: [{ cx: 48, cy: 54 }] },
+      { id: "varrock-south-gate", label: "Varrock south gate", standardAreas: ["Varrock"], chunkOptions: [{ cx: 50, cy: 52 }] },
+      { id: "varrock-square", label: "Varrock square", standardAreas: ["Varrock"], chunkOptions: [{ cx: 50, cy: 53 }] },
+    ],
     skills: { 'Quest Points': 16 }, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -228,9 +255,13 @@ export const QUEST_DATA: Record<string, QuestData> = {
 
   // --- P2P Quests ---
   'Druidic Ritual': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Druidic Ritual', name: 'Druidic Ritual',
-    regions: ['Asgarnia'],
+    regions: ["Asgarnia"],
+    locations: [
+      { id: "north-taverley", label: "North Taverley", standardAreas: ["Taverley"], chunkOptions: [{ cx: 45, cy: 54 }] },
+      { id: "south-taverley", label: "South Taverley", standardAreas: ["Taverley"], chunkOptions: [{ cx: 45, cy: 53 }] },
+    ],
     skills: {}, prereqs: [], points: 4,
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -270,9 +301,18 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Family Crest': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Family Crest', name: 'Family Crest',
-    regions: ['Asgarnia', 'Kandarin', 'Misthalin', 'Kharidian Desert'],
+    regions: ["Asgarnia","Kandarin","Misthalin","Kharidian Desert"],
+    locations: [
+      { id: "dimintheis-house", label: "Dimintheis's house in south-east Varrock", standardAreas: ["Varrock"], chunkOptions: [{ cx: 51, cy: 53 }] },
+      { id: "witchaven", label: "Witchaven", standardAreas: ["Witchaven"], chunkOptions: [{ cx: 42, cy: 51 }] },
+      { id: "catherby", label: "Caleb's house in Catherby", standardAreas: ["Catherby"], chunkOptions: [{ cx: 44, cy: 53 }] },
+      { id: "dwarven-mine-boot", label: "Boot in the Dwarven Mine", standardAreas: ["Dwarven Mine"], chunkOptions: [{ cx: 48, cy: 54 }] },
+      { id: "north-al-kharid", label: "North Al Kharid", standardAreas: ["Al Kharid"], chunkOptions: [{ cx: 51, cy: 50 }] },
+      { id: "al-kharid-mine", label: "Al Kharid mine", standardAreas: ["Al Kharid"], chunkOptions: [{ cx: 51, cy: 51 }] },
+      { id: "jolly-boar-inn", label: "Jolly Boar Inn", standardAreas: ["Varrock"], chunkOptions: [{ cx: 51, cy: 54 }] },
+    ],
     skills: { 'Mining': 40, 'Smithing': 40, 'Magic': 59, 'Crafting': 40 }, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -286,7 +326,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Fishing Contest': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Fishing Contest', name: 'Fishing Contest',
-    regions: ['Kandarin', 'Asgarnia'],
+    regions: ["Kandarin"],
     skills: { 'Fishing': 10 }, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -370,7 +410,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Biohazard': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Biohazard', name: 'Biohazard',
-    regions: ['Kandarin', 'Asgarnia'],
+    regions: ["Kandarin","Asgarnia","Misthalin"],
     skills: {}, prereqs: ['Plague City'], points: 3, series: 'Elf',
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -424,9 +464,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Dwarf Cannon': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Dwarf Cannon', name: 'Dwarf Cannon',
-    regions: ['Kandarin', 'Asgarnia'],
+    regions: ["Kandarin","Asgarnia"],
+    locations: [
+      { id: "coal-truck-mine", label: "Coal Truck Mine", standardAreas: ["Seers' Village"], chunkOptions: [{ cx: 40, cy: 54 }] },
+      { id: "baxtorian-falls", label: "Baxtorian Falls", standardAreas: ["Baxtorian Falls"], chunkOptions: [{ cx: 39, cy: 54 }] },
+      { id: "asgarnian-road", label: "Asgarnian road by the Dwarven Mine", standardAreas: ["Dwarven Mine"], chunkOptions: [{ cx: 47, cy: 53 }] },
+    ],
     skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -476,9 +521,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Elemental Workshop I': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Elemental Workshop I', name: 'Elemental Workshop I',
-    regions: ['Kandarin'],
+    regions: ["Kandarin"],
+    locations: [
+      { id: "elemental-workshop", label: "Elemental Workshop in Seers' Village", standardAreas: ["Seers' Village"], chunkOptions: [{ cx: 42, cy: 54 }] },
+    ],
     skills: { 'Mining': 20, 'Smithing': 20, 'Crafting': 20 }, prereqs: [], points: 1, series: 'Elemental Workshop',
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -497,9 +545,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Death Plateau': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Death Plateau', name: 'Death Plateau',
-    regions: ['Asgarnia'],
+    regions: ["Asgarnia"],
+    locations: [
+      { id: "burthorpe", label: "Burthorpe", standardAreas: ["Burthorpe"], chunkOptions: [{ cx: 45, cy: 55 }] },
+      { id: "warriors-guild", label: "Warriors' Guild", standardAreas: ["Warriors' Guild"], chunkOptions: [{ cx: 44, cy: 55 }] },
+      { id: "death-plateau", label: "Death Plateau", standardAreas: ["Burthorpe"], chunkOptions: [{ cx: 44, cy: 56 }] },
+    ],
     skills: {}, prereqs: [], points: 1, series: 'Troll',
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -591,7 +644,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Creature of Fenkenstrain', name: 'Creature of Fenkenstrain',
     regions: ['Morytania'],
-    skills: { 'Crafting': 20, 'Thieving': 25 }, prereqs: ['Priest in Peril', 'The Restless Ghost'], points: 2,
+    skills: { 'Crafting': 20, 'Thieving': 25 }, prereqs: ["Priest in Peril"],
+    manualRequirements: ["Started The Restless Ghost"], points: 2,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Roving Elves': {
@@ -625,7 +679,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Between a Rock...': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Between a Rock...', name: 'Between a Rock...',
-    regions: ['Fremennik'],
+    regions: ["Fremennik","Asgarnia","Kandarin"],
     skills: { 'Defence': 30, 'Mining': 40, 'Smithing': 50 }, prereqs: ['Dwarf Cannon', 'Fishing Contest'], points: 2,
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -646,7 +700,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Desert Treasure I': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Desert Treasure I', name: 'Desert Treasure I',
-    regions: ['Kharidian Desert', 'Asgarnia', 'Kandarin', 'Morytania', 'Wilderness'],
+    regions: ["Kharidian Desert","Asgarnia","Kandarin","Morytania","Misthalin"],
     skills: { 'Thieving': 53, 'Firemaking': 50, 'Slayer': 10, 'Magic': 50 }, prereqs: ['The Dig Site', 'Temple of Ikov', 'The Tourist Trap', 'Troll Stronghold', 'Priest in Peril', 'Waterfall Quest'], points: 3, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_MASTER
   },
@@ -702,7 +756,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Forgettable Tale...': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Forgettable Tale...', name: 'Forgettable Tale of a Drunken Dwarf',
-    regions: ['Fremennik'],
+    regions: ["Fremennik","Asgarnia","Kandarin"],
     skills: { 'Cooking': 22, 'Farming': 17 }, prereqs: ['The Giant Dwarf', 'Fishing Contest'], points: 2, series: 'Red Axe',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -716,7 +770,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'A Tail of Two Cats': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'A Tail of Two Cats', name: 'A Tail of Two Cats',
-    regions: ['Asgarnia', 'Misthalin'],
+    regions: ["Asgarnia","Misthalin","Kharidian Desert"],
     skills: {}, prereqs: ['Icthlarin\'s Little Helper'], points: 2, series: 'Dragonkin',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -772,7 +826,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Devious Minds': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Devious Minds', name: 'Devious Minds',
-    regions: ['Misthalin', 'Asgarnia'],
+    regions: ["Misthalin","Asgarnia","Wilderness"],
     skills: { 'Smithing': 65, 'Runecraft': 50, 'Fletching': 50 }, prereqs: ['Wanted!', 'Troll Stronghold', 'Doric\'s Quest'], points: 1, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -784,23 +838,27 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Enakhra\'s Lament': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Enakhra\'s Lament', name: 'Enakhra\'s Lament',
-    regions: ['Kharidian Desert'],
-    skills: { 'Crafting': 50, 'Firemaking': 45, 'Magic': 39, 'Prayer': 43 }, prereqs: [], points: 2, series: 'Mahjarrat',
+    regions: ["Kharidian Desert"],
+    locations: [
+      { id: "desert-quarry-and-temple", label: "Desert Quarry and Enakhra's Temple", standardAreas: ["Kharidian Desert"], chunkOptions: [{ cx: 49, cy: 45 }] },
+    ],
+    skills: { 'Crafting': 50, 'Firemaking': 45, 'Magic': 39, 'Prayer': 43 }, prereqs: [],
+    manualRequirements: ["Must be on the standard spellbook"], points: 2, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Cabin Fever': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Cabin Fever', name: 'Cabin Fever',
-    regions: ['Islands & Others'],
+    regions: ["Islands & Others","Morytania"],
     skills: { 'Ranged': 40, 'Smithing': 50, 'Crafting': 45, 'Agility': 42 }, prereqs: ['Pirate\'s Treasure', 'Rum Deal'], points: 2, series: 'Pirate',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Fairytale I - Growing Pains': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Fairytale I - Growing Pains', name: 'Fairytale I - Growing Pains',
-    regions: ['Misthalin'],
+    regions: ["Misthalin","Asgarnia","Morytania","Islands & Others"],
     skills: {}, prereqs: ['Lost City', 'Nature Spirit'], points: 2, series: 'Fairy Tale',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -885,9 +943,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'A Soul\'s Bane': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'A Soul\'s Bane', name: 'A Soul\'s Bane',
-    regions: ['Misthalin'],
+    regions: ["Misthalin"],
+    locations: [
+      { id: "soul-bane-rift", label: "Rift east of Varrock", standardAreas: ["Varrock"], chunkOptions: [{ cx: 51, cy: 53 }] },
+    ],
     skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -920,9 +981,15 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Fairytale II - Cure a Queen': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Fairytale II - Cure a Queen', name: 'Fairytale II - Cure a Queen',
-    regions: ['Islands & Others'],
+    regions: ["Islands & Others","Misthalin","Kandarin","Tirannwn"],
+    locations: [
+      { id: "draynor-village", label: "Draynor Village", standardAreas: ["Draynor Village"], chunkOptions: [{ cx: 48, cy: 50 }] },
+      { id: "zanaris", label: "Zanaris", standardAreas: ["Zanaris"], chunkOptions: [{ cx: 50, cy: 49 }] },
+      { id: "poison-waste", label: "Poison Waste", standardAreas: ["Poison Waste"], chunkOptions: [{ cx: 34, cy: 48 }] },
+      { id: "horseshoe-mine", label: "Horseshoe Mine", standardAreas: ["Kandarin"], chunkOptions: [{ cx: 42, cy: 50 }] },
+    ],
     skills: { 'Thieving': 40, 'Farming': 49, 'Herblore': 57 }, prereqs: ['Fairytale I - Growing Pains'], points: 2, series: 'Fairy Tale',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -943,7 +1010,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Darkness of Hallowvale': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Darkness of Hallowvale', name: 'Darkness of Hallowvale',
-    regions: ['Morytania'],
+    regions: ["Morytania","Misthalin"],
     skills: { 'Construction': 5, 'Mining': 20, 'Thieving': 22, 'Agility': 26, 'Crafting': 32, 'Magic': 33, 'Strength': 40 }, prereqs: ['In Aid of the Myreque'], points: 2, series: 'Myreque',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -957,7 +1024,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Elemental Workshop II': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Elemental Workshop II', name: 'Elemental Workshop II',
-    regions: ['Kandarin'],
+    regions: ["Kandarin","Misthalin"],
     skills: { 'Magic': 20, 'Smithing': 30 }, prereqs: ['Elemental Workshop I'], points: 1, series: 'Elemental Workshop',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -969,38 +1036,47 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Enlightened Journey': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Enlightened Journey', name: 'Enlightened Journey',
-    regions: ['Asgarnia', 'Kandarin', 'Misthalin'],
-    skills: { 'Firemaking': 20, 'Farming': 30, 'Crafting': 36 }, prereqs: [], points: 1,
+    regions: ["Asgarnia","Kandarin","Misthalin"],
+    locations: [
+      { id: "west-entrana", label: "West Entrana", standardAreas: ["Entrana"], chunkOptions: [{ cx: 43, cy: 52 }] },
+      { id: "south-taverley", label: "South Taverley", standardAreas: ["Taverley"], chunkOptions: [{ cx: 45, cy: 53 }] },
+    ],
+    skills: {"Firemaking":20,"Farming":30,"Crafting":36,"Quest Points":20}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Eagles\' Peak': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Eagles\' Peak', name: 'Eagles\' Peak',
-    regions: ['Kandarin'],
+    regions: ["Kandarin","Misthalin"],
     skills: { 'Hunter': 27 }, prereqs: [], points: 2,
     difficulty: DropSource.QUEST_NOVICE
   },
   'Animal Magnetism': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Animal Magnetism', name: 'Animal Magnetism',
-    regions: ['Misthalin'],
+    regions: ["Misthalin","Asgarnia","Morytania"],
     skills: { 'Slayer': 18, 'Crafting': 19, 'Ranged': 30, 'Woodcutting': 35 }, prereqs: ['The Restless Ghost', 'Ernest the Chicken', 'Priest in Peril'], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Contact!': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Contact!', name: 'Contact!',
-    regions: ['Kharidian Desert'],
+    regions: ["Kharidian Desert"],
+    locations: [
+      { id: "sophanem", label: "Sophanem", standardAreas: ["Sophanem"], chunkOptions: [{ cx: 51, cy: 43 }] },
+      { id: "al-kharid-palace", label: "Al Kharid Palace", standardAreas: ["Al Kharid"], chunkOptions: [{ cx: 51, cy: 49 }] },
+    ],
     skills: {}, prereqs: ['Prince Ali Rescue', 'Icthlarin\'s Little Helper'], points: 1, series: 'Kharidian',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Cold War': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Cold War', name: 'Cold War',
-    regions: ['Fremennik'],
-    skills: { 'Hunter': 10, 'Agility': 30, 'Crafting': 30, 'Construction': 34, 'Thieving': 15 }, prereqs: [], points: 1, series: 'Penguin',
+    regions: ["Fremennik","Kandarin","Misthalin"],
+    skills: { 'Hunter': 10, 'Agility': 30, 'Crafting': 30, 'Construction': 34, 'Thieving': 15 }, prereqs: [],
+    manualRequirements: ["Access to a crafting table 3"], points: 1, series: 'Penguin',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'The Fremennik Isles': {
@@ -1041,7 +1117,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Another Slice of H.A.M.': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Another Slice of H.A.M.', name: 'Another Slice of H.A.M.',
-    regions: ['Misthalin'],
+    regions: ["Misthalin","Asgarnia"],
     skills: { 'Attack': 15, 'Prayer': 25 }, prereqs: ['Death to the Dorgeshuun', 'The Dig Site', 'The Giant Dwarf'], points: 1, series: 'Dorgeshuun',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -1077,7 +1153,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Client of Kourend', name: 'Client of Kourend',
     regions: ['Kourend & Kebos'],
-    skills: {}, prereqs: [], points: 1, series: 'Great Kourend',
+    skills: {}, prereqs: ["X Marks the Spot"], points: 1, series: 'Great Kourend',
     difficulty: DropSource.QUEST_NOVICE
   },
   'Rag and Bone Man II': {
@@ -1090,8 +1166,9 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Bone Voyage': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Bone Voyage', name: 'Bone Voyage',
-    regions: ['Misthalin', 'Islands & Others'],
-    skills: {}, prereqs: ['The Dig Site'], points: 1,
+    regions: ["Misthalin","Islands & Others","Asgarnia","Kourend & Kebos"],
+    skills: {}, prereqs: ['The Dig Site'],
+    manualRequirements: ["100 Kudos"], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'The Queen of Thieves': {
@@ -1111,8 +1188,9 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Dragon Slayer II': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Dragon Slayer II', name: 'Dragon Slayer II',
-    regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Fremennik', 'Kourend & Kebos'],
-    skills: { 'Magic': 75, 'Smithing': 70, 'Mining': 68, 'Crafting': 62, 'Agility': 60, 'Thieving': 60, 'Construction': 50, 'Hitpoints': 50, 'Quest Points': 200 }, prereqs: ['Legends\' Quest', 'Dream Mentor', 'A Tail of Two Cats', 'Animal Magnetism', 'Ghosts Ahoy', 'Bone Voyage', 'Client of Kourend'], points: 5, series: 'Dragonkin',
+    regions: ["Misthalin","Asgarnia","Kandarin","Fremennik","Kourend & Kebos","Karamja","Kharidian Desert","Morytania","Islands & Others"],
+    skills: { 'Magic': 75, 'Smithing': 70, 'Mining': 68, 'Crafting': 62, 'Agility': 60, 'Thieving': 60, 'Construction': 50, 'Hitpoints': 50, 'Quest Points': 200 }, prereqs: ['Legends\' Quest', 'Dream Mentor', 'A Tail of Two Cats', 'Animal Magnetism', 'Ghosts Ahoy', 'Bone Voyage', 'Client of Kourend'],
+    manualRequirements: ["Started the pyre ship portion of Barbarian Training"], points: 5, series: 'Dragonkin',
     difficulty: DropSource.QUEST_GRANDMASTER
   },
   'Tale of the Righteous': {
@@ -1172,11 +1250,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_MASTER
   },
   'A Porcine of Interest': {
-    kind: 'quest', accessPolicy: 'regions-and-locations',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'A Porcine of Interest', name: 'A Porcine of Interest',
-    regions: ['Misthalin'],
-    locations: [LOCATIONS.draynorVillage, LOCATIONS.southFaladorFarm],
-    skills: { 'Slayer': 1 }, prereqs: [], points: 1,
+    regions: ["Misthalin","Asgarnia"],
+    locations: [
+      { id: "draynor-village", label: "Draynor Village", standardAreas: ["Draynor Village"], chunkOptions: [{ cx: 48, cy: 50 }] },
+      { id: "south-falador-farm", label: "South Falador Farm", standardAreas: ["Falador"], chunkOptions: [{ cx: 47, cy: 51 }] },
+    ],
+    skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
   'Getting Ahead': {
@@ -1245,7 +1326,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Desert Treasure II': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Desert Treasure II', name: 'Desert Treasure II - The Fallen Empire',
-    regions: ['Kharidian Desert', 'Asgarnia', 'Fremennik', 'Kourend & Kebos', 'Morytania'],
+    regions: ["Kharidian Desert","Asgarnia","Fremennik","Kourend & Kebos","Misthalin"],
     skills: { 'Magic': 75, 'Firemaking': 75, 'Thieving': 70, 'Herblore': 62, 'Runecraft': 60, 'Construction': 60 }, prereqs: ['Desert Treasure I', 'Secrets of the North', 'Enakhra\'s Lament', 'Temple of the Eye', 'The Garden of Death', 'Below Ice Mountain'], points: 5, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_GRANDMASTER
   },
@@ -1257,16 +1338,20 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Children of the Sun': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Children of the Sun', name: 'Children of the Sun',
-    regions: ['Misthalin'],
+    regions: ["Misthalin"],
+    locations: [
+      { id: "varrock-square", label: "Varrock square", standardAreas: ["Varrock"], chunkOptions: [{ cx: 50, cy: 53 }] },
+      { id: "varrock-palace", label: "Varrock Palace", standardAreas: ["Varrock"], chunkOptions: [{ cx: 50, cy: 54 }] },
+    ],
     skills: {}, prereqs: [], points: 1, series: 'Twilight Emissaries',
     difficulty: DropSource.QUEST_NOVICE
   },
   'Defender of Varrock': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Defender of Varrock', name: 'Defender of Varrock',
-    regions: ['Misthalin'],
+    regions: ["Misthalin","Asgarnia"],
     skills: { 'Smithing': 55, 'Hunter': 52 }, prereqs: ['Shield of Arrav', 'Romeo & Juliet', 'Demon Slayer', 'Temple of Ikov', 'Below Ice Mountain', 'Family Crest', 'Garden of Tranquillity', 'What Lies Below'], points: 2, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -1281,7 +1366,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'At First Light', name: 'At First Light',
     regions: ['Varlamore'],
-    skills: { 'Hunter': 46, 'Herblore': 30, 'Construction': 27 }, prereqs: ['Children of the Sun'], points: 1,
+    skills: { 'Hunter': 46, 'Herblore': 30, 'Construction': 27 }, prereqs: ["Children of the Sun","Eagles' Peak"], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Perilous Moons': {
@@ -1313,9 +1398,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Death on the Isle': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Death on the Isle', name: 'Death on the Isle',
-    regions: ['Varlamore'],
+    regions: ["Varlamore"],
+    locations: [
+      { id: "villa-lucens", label: "Villa Lucens", standardAreas: ["Aldarin"], chunkOptions: [{ cx: 22, cy: 45 }] },
+      { id: "aldarin-mansion", label: "Northern Aldarin mansion", standardAreas: ["Aldarin"], chunkOptions: [{ cx: 21, cy: 46 }] },
+      { id: "villa-lucens-theatre", label: "Villa Lucens Theatre", standardAreas: ["Aldarin"], chunkOptions: [{ cx: 23, cy: 45 }] },
+    ],
     skills: { 'Thieving': 34, 'Agility': 32 }, prereqs: ['Children of the Sun'], points: 2,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -1327,10 +1417,16 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Ethically Acquired Antiquities': {
-    kind: 'quest', accessPolicy: 'regions-and-locations',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Ethically Acquired Antiquities', name: 'Ethically Acquired Antiquities',
-    regions: ['Varlamore'],
-    locations: [LOCATIONS.civitas, LOCATIONS.portSarim, LOCATIONS.varrockMuseum],
+    regions: ["Varlamore","Asgarnia","Misthalin"],
+    locations: [
+      { id: "grand-museum", label: "Grand Museum in Civitas illa Fortis", standardAreas: ["Civitas illa Fortis"], chunkOptions: [{ cx: 26, cy: 49 }] },
+      { id: "fortis-cothon", label: "Fortis Cothon", standardAreas: ["Civitas illa Fortis"], chunkOptions: [{ cx: 27, cy: 48 }] },
+      { id: "port-sarim-jail", label: "Port Sarim jail", standardAreas: ["Port Sarim"], chunkOptions: [{ cx: 47, cy: 49 }] },
+      { id: "port-sarim-betty", label: "Betty's shop in Port Sarim", standardAreas: ["Port Sarim"], chunkOptions: [{ cx: 47, cy: 50 }] },
+      { id: "varrock-museum", label: "Varrock Museum", standardAreas: ["Varrock"], chunkOptions: [{ cx: 50, cy: 53 }] },
+    ],
     skills: { 'Thieving': 25 }, prereqs: ['Children of the Sun', 'Shield of Arrav'], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -1381,7 +1477,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Current Affairs': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Current Affairs', name: 'Current Affairs',
-    regions: ['The Open Seas'],
+    regions: ["The Open Seas","Kandarin"],
     skills: { 'Sailing': 22, 'Fishing': 10 }, prereqs: ['Pandemonium'], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },

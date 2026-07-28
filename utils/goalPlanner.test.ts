@@ -101,10 +101,10 @@ describe('planForTarget — quests', () => {
     for (const r of plan.regionSteps) expect(r.done).toBe(false);
   });
   it('does not mark a cap-blocked skill requirement complete', () => {
-    const plan = planForTarget('quest', 'Doric\'s Quest', maxedUnlocks({
-      regions: ['Asgarnia'],
-      skills: { Mining: 1 },
-      levels: { Mining: 15 },
+    const plan = planForTarget('quest', 'Elemental Workshop I', maxedUnlocks({
+      regions: ["Seers' Village"],
+      skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Mining' ? 1 : 10])),
+      levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Mining' ? 20 : 99])),
     }))!;
 
     expect(plan.skillSteps).toEqual([

@@ -7,6 +7,36 @@ import {
   validateQuestRequirementAudit,
 } from './questRequirementAudit';
 
+const expectReviewedBatch = (start: string, end?: string) => {
+  const rows = audit.entries.filter(entry =>
+    entry.kind === 'quest' &&
+    entry.id.localeCompare(start) >= 0 &&
+    (end === undefined || entry.id.localeCompare(end) < 0));
+
+  expect(rows.length).toBeGreaterThan(0);
+  expect(rows.flatMap(entry => {
+    const quest = QUEST_DATA[entry.id];
+    if (!quest) return [`${entry.id}:missing-runtime`];
+    if (!entry.source.url.startsWith('https://oldschool.runescape.wiki/w/')) {
+      return [`${entry.id}:unstable-source-url`];
+    }
+    if (!Number.isInteger(entry.source.revision) || entry.source.revision <= 0) {
+      return [`${entry.id}:missing-source-revision`];
+    }
+    if (entry.chunkSourceCommit !== 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926') {
+      return [`${entry.id}:wrong-chunk-source`];
+    }
+    if (entry.requirementFingerprint !== questRequirementFingerprint(quest)) {
+      return [`${entry.id}:stale-fingerprint`];
+    }
+    if (entry.status === 'unresolved' &&
+        (!entry.discrepancy || !entry.conservativeReason)) {
+      return [`${entry.id}:unexplained-unresolved`];
+    }
+    return [];
+  })).toEqual([]);
+};
+
 describe('official quest and miniquest audit coverage', () => {
   it('matches official, runtime, and audit IDs one-to-one', () => {
     expect(validateQuestRequirementAudit(QUEST_DATA, official, audit).errors)
@@ -28,6 +58,19 @@ describe('official quest and miniquest audit coverage', () => {
         ? []
         : [quest.id];
     })).toEqual([]);
+  });
+
+  it('reviews every A-F quest', () => expectReviewedBatch('A', 'G'));
+
+  it('leaves only the concrete A-F alternative-requirement conflict unresolved', () => {
+    expect(audit.entries
+      .filter(entry =>
+        entry.kind === 'quest' &&
+        entry.id.localeCompare('A') >= 0 &&
+        entry.id.localeCompare('G') < 0 &&
+        entry.status === 'unresolved')
+      .map(entry => entry.id))
+      .toEqual(['Desert Treasure I']);
   });
 
   it('has reviewed evidence and matching requirements for all 19 miniquests', () => {
@@ -56,8 +99,8 @@ describe('official quest and miniquest audit coverage', () => {
     const byId = new Map(audit.entries.map(entry => [entry.id, entry]));
     const cases = [
       {
-        id: 'Cook\'s Assistant',
-        discrepancy: ['regions policy', 'Misthalin', 'Lumbridge Castle', '50,50'],
+        id: 'Desert Treasure I',
+        discrepancy: ['regions policy', 'Kharidian Desert', 'Bedabin Camp', '49,47', 'The Dig Site'],
       },
       {
         id: 'Pandemonium',
@@ -109,9 +152,10 @@ describe('official quest and miniquest audit coverage', () => {
 
   it('rejects generic procedural unresolved placeholders', () => {
     const generic = structuredClone(audit);
-    generic.entries[0].discrepancy =
+    const unresolved = generic.entries.find(entry => entry.id === 'Desert Treasure I')!;
+    unresolved.discrepancy =
       'Pending review of the permanent Wiki and Chunk Picker sources.';
-    generic.entries[0].conservativeReason =
+    unresolved.conservativeReason =
       'Retained until Tasks 6-11 finish the review.';
 
     expect(validateQuestRequirementAudit(QUEST_DATA, official, generic).errors)

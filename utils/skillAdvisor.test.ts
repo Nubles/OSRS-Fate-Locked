@@ -95,21 +95,22 @@ describe('rankSkillBottlenecks', () => {
 
   it('threads Chunked mode through quest impact simulations', () => {
     const base = lowSkills({
-      skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Slayer' ? 0 : 10])),
-      levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Slayer' ? 0 : 99])),
-      regions: ['Misthalin', 'Draynor Village', 'Falador'],
-      chunks: ['46,51', '48,50'],
+      skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Mining' ? 2 : 99])),
+      levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Mining' ? 19 : 99])),
+      regions: ['Kandarin', "Seers' Village"],
+      chunks: ['41,54'],
     });
-    const exact = { ...base, chunks: ['46,51', '48,50', '47,51'] };
+    const exact = { ...base, chunks: ['42,54'] };
 
     const before = rankSkillBottlenecks(base, 'chunked')
-      .find(candidate => candidate.id === 'Slayer')!;
+      .find(candidate => candidate.id === 'Mining')!;
     const after = rankSkillBottlenecks(exact, 'chunked')
-      .find(candidate => candidate.id === 'Slayer')!;
+      .find(candidate => candidate.id === 'Mining')!;
 
-    expect(before).toBeUndefined();
-    expect(after.targetLevel).toBe(1);
-    expect(after.newQuestNames).toContain('A Porcine of Interest');
+    expect(before.targetLevel).toBe(20);
+    expect(before.newQuestNames).not.toContain('Elemental Workshop I');
+    expect(after.targetLevel).toBe(20);
+    expect(after.newQuestNames).toContain('Elemental Workshop I');
   });
 
   it('does not credit a diary while another skill is blocked by its method cap', () => {

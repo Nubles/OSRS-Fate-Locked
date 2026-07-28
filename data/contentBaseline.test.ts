@@ -153,9 +153,9 @@ describe('deterministic current content baseline', () => {
 
   it('pins audited quest requirement fields with exact equality', () => {
     expect(questRequirementFields('A Porcine of Interest')).toEqual({
-      regions: ['Misthalin'],
+      regions: ['Misthalin', 'Asgarnia'],
       locations: ['draynor-village', 'south-falador-farm'],
-      skills: { Slayer: 1 },
+      skills: {},
       combatLevel: undefined,
       prereqs: [],
       oneOf: undefined,
@@ -167,8 +167,8 @@ describe('deterministic current content baseline', () => {
       manualRequirements: undefined,
     });
     expect(questRequirementFields('Ethically Acquired Antiquities')).toEqual({
-      regions: ['Varlamore'],
-      locations: ['civitas-illa-fortis', 'port-sarim', 'varrock-museum'],
+      regions: ['Varlamore', 'Asgarnia', 'Misthalin'],
+      locations: ['grand-museum', 'fortis-cothon', 'port-sarim-jail', 'port-sarim-betty', 'varrock-museum'],
       skills: { Thieving: 25 }, combatLevel: undefined,
       prereqs: ['Children of the Sun', 'Shield of Arrav'], oneOf: undefined,
       manualRequirements: undefined,
@@ -211,7 +211,7 @@ describe('deterministic current content baseline', () => {
       manualRequirements: ['One open Sailing task slot'],
     });
     expect(questRequirementFields('Current Affairs')).toEqual({
-      regions: ['The Open Seas'], locations: undefined,
+      regions: ['The Open Seas', 'Kandarin'], locations: undefined,
       skills: { Sailing: 22, Fishing: 10 }, combatLevel: undefined,
       prereqs: ['Pandemonium'], oneOf: undefined, manualRequirements: undefined,
     });
