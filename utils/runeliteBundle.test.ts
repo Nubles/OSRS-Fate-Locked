@@ -42,3 +42,46 @@ describe('buildRuneliteBundle — unlockedChunks presence', () => {
     expect(on.unlockedBanks).toEqual(['12850']);
   });
 });
+
+describe('buildRuneliteBundle \u2014 canonical area names', () => {
+  it('exports a legacy Elf Camp unlock as Iorwerth Camp', async () => {
+    const bundle = await buildRuneliteBundle(['Elf Camp'], state);
+    expect(bundle.unlockedRegions).toEqual(['Iorwerth Camp']);
+  });
+
+  it('deduplicates mixed legacy and canonical Elf Camp unlocks', async () => {
+    const bundle = await buildRuneliteBundle([
+      'Prifddinas',
+      'Elf Camp',
+      'Iorwerth Camp',
+      'Lletya',
+    ], state);
+    expect(bundle.unlockedRegions).toEqual([
+      'Prifddinas',
+      'Iorwerth Camp',
+      'Lletya',
+    ]);
+  });
+
+  it('exports canonical Tirannwn children and retains the Iorwerth overlay', async () => {
+    const bundle = await buildRuneliteBundle([], state) as any;
+    expect(bundle.version).toBe(3);
+    expect(bundle.chunkOffset).toEqual({ cx: 0, cy: 0 });
+    expect(bundle.regionGroups.Tirannwn).toEqual([
+      'Prifddinas',
+      'Lletya',
+      'Tyras Camp',
+      'Isafdar',
+      'Zul-Andra',
+      'Arandar',
+      'Gwenith',
+      'Iorwerth Camp',
+      'Poison Waste',
+    ]);
+    expect(bundle.regionGroups.Tirannwn).not.toContain('Elf Camp');
+    expect(bundle.subAreaChunks['Iorwerth Camp']).toEqual([
+      { cx: 33, cy: 50 },
+      { cx: 34, cy: 50 },
+    ]);
+  });
+});

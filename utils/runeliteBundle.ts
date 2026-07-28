@@ -7,6 +7,7 @@ import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
 import { getFreeAreas } from './freeAreas';
+import { canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
 
 export interface RuneliteRunState {
   keys: number;
@@ -32,6 +33,7 @@ export async function buildRuneliteBundle(
   /** Whether the run locks banks individually (rules.bankLocks). */
   bankLocks?: boolean,
 ) {
+  const canonicalRegions = canonicalizeAreaUnlocks(unlockedRegions).regions;
   // Dynamic import keeps the ~53 kB chunk-content dataset out of the eager
   // startup bundle — it's only ever needed here, at export time, and every
   // caller is already async.
@@ -43,7 +45,7 @@ export async function buildRuneliteBundle(
     chunks: REGION_CHUNKS,
     subAreaChunks: SUB_AREA_CHUNKS,
     regionGroups: { Misthalin: MISTHALIN_AREAS, ...REGION_GROUPS },
-    unlockedRegions,
+    unlockedRegions: canonicalRegions,
     // The mode's free-start baseline (full Misthalin / Lumbridge-only / none).
     // Without it the plugin used to assume full Misthalin, over-unlocking
     // narrower starts in-game. Older plugins ignore the field.
