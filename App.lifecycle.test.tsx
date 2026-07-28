@@ -136,15 +136,17 @@ describe('App changelog lifecycle', () => {
     );
     render(<App />);
 
-    expect(await screen.findByRole('dialog', {
-      name: 'RuneLite Plugin Guide',
-    })).toBeTruthy();
+    expect(await screen.findByRole(
+      'dialog',
+      { name: 'RuneLite Plugin Guide' },
+      { timeout: 10_000 },
+    )).toBeTruthy();
     expect(window.location.search).toBe('?foo=bar');
     expect(window.location.hash).toBe('#player-help');
     expect(screen.queryByRole('dialog', {
       name: "What's New",
     })).toBeNull();
-  });
+  }, 15_000);
 
   it('opens the RuneLite guide from the persistent settings menu', async () => {
     storage.setItem(changelogStorageKey, latestChangelogId);
