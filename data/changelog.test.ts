@@ -19,12 +19,12 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-07-28-runelite-plugin-guide');
+    expect(LATEST_CHANGELOG.id).toBe('2026-07-28-runelite-guide');
   });
 
   it('announces the complete player-facing RuneLite guide', () => {
     expect(LATEST_CHANGELOG).toMatchObject({
-      id: '2026-07-28-runelite-plugin-guide',
+      id: '2026-07-28-runelite-guide',
       title: 'RuneLite Plugin Guide',
       date: '2026-07-28',
     });

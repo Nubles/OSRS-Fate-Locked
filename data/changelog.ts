@@ -19,7 +19,7 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-07-28-runelite-plugin-guide',
+    id: '2026-07-28-runelite-guide',
     title: 'RuneLite Plugin Guide',
     date: '2026-07-28',
     sections: {

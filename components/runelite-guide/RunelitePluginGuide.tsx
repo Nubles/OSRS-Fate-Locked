@@ -197,8 +197,8 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="runelite-plugin-guide-title"
-        aria-describedby="runelite-plugin-guide-summary"
+        aria-labelledby="runelite-guide-title"
+        aria-describedby="runelite-guide-summary"
         tabIndex={-1}
         className="h-full overflow-y-auto bg-[#111] text-gray-200 custom-scrollbar"
       >
@@ -211,7 +211,7 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-400">
                 Player handbook
               </p>
-              <h1 id="runelite-plugin-guide-title" className="truncate font-serif text-lg font-black text-white sm:text-xl">
+              <h1 id="runelite-guide-title" className="truncate font-serif text-lg font-black text-white sm:text-xl">
                 RuneLite Plugin Guide
               </h1>
             </div>
@@ -273,7 +273,7 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({
                 One plugin · one panel · actual screenshots
               </p>
               <p
-                id="runelite-plugin-guide-summary"
+                id="runelite-guide-summary"
                 className="mt-3 max-w-4xl text-base leading-relaxed text-gray-300 sm:text-lg"
               >
                 Learn how the Plugin Hub build connects to the Fate Locked companion, how to read

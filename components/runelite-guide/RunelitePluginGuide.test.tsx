@@ -22,7 +22,7 @@ describe('RunelitePluginGuide', () => {
 
     expect(html).toContain('role="dialog"');
     expect(html).toContain('aria-modal="true"');
-    expect(html).toContain('aria-labelledby="runelite-plugin-guide-title"');
+    expect(html).toContain('aria-labelledby="runelite-guide-title"');
     expect(html).toContain('Five-minute setup');
     expect(html).toContain('Vanilla');
     expect(html).toContain('Chunked mode is not finished');
