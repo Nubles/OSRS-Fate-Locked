@@ -129,4 +129,56 @@ describe('App changelog lifecycle', () => {
       name: "What's New",
     })).toBeNull();
   });
+
+  it('opens the RuneLite guide from a direct query and preserves unrelated URL state', async () => {
+    window.history.replaceState(
+      null, '', '/?open=runelite-guide&foo=bar#player-help',
+    );
+    render(<App />);
+
+    expect(await screen.findByRole('dialog', {
+      name: 'RuneLite Plugin Guide',
+    })).toBeTruthy();
+    expect(window.location.search).toBe('?foo=bar');
+    expect(window.location.hash).toBe('#player-help');
+    expect(screen.queryByRole('dialog', {
+      name: "What's New",
+    })).toBeNull();
+  });
+
+  it('opens the RuneLite guide from the persistent settings menu', async () => {
+    storage.setItem(changelogStorageKey, latestChangelogId);
+    const user = userEvent.setup();
+    render(<App />);
+
+    const settings = screen.getByRole('button', {
+      name: 'Settings & save tools',
+    });
+    await user.click(settings);
+    await user.click(screen.getByRole('button', {
+      name: 'RuneLite Plugin Guide',
+    }));
+
+    const guideDialog = await screen.findByRole('dialog', {
+      name: 'RuneLite Plugin Guide',
+    });
+    expect(guideDialog).toBeTruthy();
+    await user.click(within(guideDialog).getAllByRole('button', {
+      name: 'Close RuneLite Plugin Guide',
+    })[0]);
+    expect(document.activeElement).toBe(settings);
+  });
+
+  it('maps the command event to the RuneLite guide', async () => {
+    storage.setItem(changelogStorageKey, latestChangelogId);
+    render(<App />);
+
+    window.dispatchEvent(new CustomEvent('fate:nav', {
+      detail: { target: 'open:runelite-guide' },
+    }));
+
+    expect(await screen.findByRole('dialog', {
+      name: 'RuneLite Plugin Guide',
+    })).toBeTruthy();
+  });
 });
