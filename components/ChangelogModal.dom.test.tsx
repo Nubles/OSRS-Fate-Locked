@@ -25,7 +25,7 @@ const linkedReleases: readonly ChangelogRelease[] = [
       added: ['Added note'],
       changed: [
         {
-          text: 'The RuneLite Plugin Hub update is awaiting RuneLite review and is not live yet. Follow the review in',
+          text: 'The RuneLite Plugin Hub update has been approved and is now live. View the merged',
           link: {
             label: 'Plugin Hub PR #14395',
             href: 'https://github.com/runelite/plugin-hub/pull/14395',
@@ -179,7 +179,7 @@ describe('ChangelogModal linked notes', () => {
     expect(link?.target).toBe('_blank');
     expect(link?.rel.split(/\s+/).sort()).toEqual(['noopener', 'noreferrer']);
     expect(link?.closest('li')?.textContent).toBe(
-      'The RuneLite Plugin Hub update is awaiting RuneLite review and is not live yet. Follow the review in Plugin Hub PR #14395.',
+      'The RuneLite Plugin Hub update has been approved and is now live. View the merged Plugin Hub PR #14395.',
     );
     expect(host.textContent).toContain('Added note');
   });

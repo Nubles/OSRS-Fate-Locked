@@ -1,8 +1,8 @@
-# RuneLite Review Status Link Implementation Plan
+# RuneLite Plugin Hub Status Link Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a safe, clickable Plugin Hub review link to the existing RuneLite What's New release so players know the plugin update is not live yet.
+**Goal:** Add a safe, clickable Plugin Hub review link to the existing RuneLite What's New release so players know the approved plugin update is live.
 
 **Architecture:** Extend the authored changelog note type with one explicit linked-note variant while preserving all existing string notes. Render that variant as plain text plus one safe external anchor in the existing modal, then publish through the mandatory player-facing release gate.
 
@@ -10,25 +10,25 @@
 
 ## Global Constraints
 
-- The notice says the RuneLite Plugin Hub update is awaiting RuneLite review and is not live yet.
+- The notice says the RuneLite Plugin Hub update has been approved and is now live.
 - Only `Plugin Hub PR #14395` is linked.
 - The destination is `https://github.com/runelite/plugin-hub/pull/14395`.
 - The link opens in a new tab with `rel=noopener noreferrer`.
 - Existing plain-string changelog notes retain their current rendering.
 - No Markdown or HTML parsing is introduced.
-- When the Plugin Hub update goes live, a new player-facing release must replace the temporary status.
+- The status must be rechecked immediately before publishing so stale review wording is never deployed.
 - No production dependency is added.
 
 ---
 
 ## File map
 
-- `data/changelog.ts`: linked-note type and authored pending-review notice.
+- `data/changelog.ts`: linked-note type and authored approved-and-live notice.
 - `data/changelog.test.ts`: exact copy and destination contract.
 - `components/ChangelogModal.tsx`: string-or-link note rendering.
 - `components/ChangelogModal.dom.test.tsx`: accessible link, new-tab, safety, punctuation, and string-note coverage.
 
-### Task 1: Author the pending-review note
+### Task 1: Author the Plugin Hub status note
 
 **Files:**
 - Modify: `data/changelog.test.ts`
@@ -45,7 +45,7 @@ Add this assertion to the RuneLite release test:
 
 ```ts
 expect(LATEST_CHANGELOG.sections.changed).toContainEqual({
-  text: 'The RuneLite Plugin Hub update is awaiting RuneLite review and is not live yet. Follow the review in',
+  text: 'The RuneLite Plugin Hub update has been approved and is now live. View the merged',
   link: {
     label: 'Plugin Hub PR #14395',
     href: 'https://github.com/runelite/plugin-hub/pull/14395',
@@ -61,7 +61,7 @@ Run:
 npx vitest run data/changelog.test.ts
 ```
 
-Expected: failure because the pending-review linked note is absent.
+Expected: failure because the linked status note is absent.
 
 - [ ] **Step 3: Add the linked-note type and authored entry**
 
@@ -116,7 +116,7 @@ Keep the existing `added: ['Added note']` string fixture and add:
 ```ts
 changed: [
   {
-    text: 'The RuneLite Plugin Hub update is awaiting RuneLite review and is not live yet. Follow the review in',
+    text: 'The RuneLite Plugin Hub update has been approved and is now live. View the merged',
     link: {
       label: 'Plugin Hub PR #14395',
       href: 'https://github.com/runelite/plugin-hub/pull/14395',
@@ -138,7 +138,7 @@ expect(link?.textContent).toBe('Plugin Hub PR #14395');
 expect(link?.target).toBe('_blank');
 expect(link?.rel.split(/\s+/).sort()).toEqual(['noopener', 'noreferrer']);
 expect(link?.closest('li')?.textContent).toBe(
-  'The RuneLite Plugin Hub update is awaiting RuneLite review and is not live yet. Follow the review in Plugin Hub PR #14395.',
+  'The RuneLite Plugin Hub update has been approved and is now live. View the merged Plugin Hub PR #14395.',
 );
 expect(host.textContent).toContain('Added note');
 ```
@@ -201,7 +201,7 @@ git add -- components/ChangelogModal.tsx components/ChangelogModal.dom.test.tsx
 git commit -m "feat: render safe changelog links"
 ```
 
-### Task 3: Verify, publish, and deploy the review notice
+### Task 3: Verify, publish, and deploy the status notice
 
 **Files:**
 - Verify: all branch changes
@@ -244,10 +244,10 @@ unrelated main-worktree files appear.
 Push `fix/runelite-review-status-link` and open a pull request titled:
 
 ```text
-Show RuneLite Plugin Hub review status
+Show RuneLite Plugin Hub live status
 ```
 
-The body states that the plugin update is not live, links the official review,
+The body states that the approved plugin update is live, links the merged review,
 describes safe new-tab rendering, and lists the exact verification results.
 
 - [ ] **Step 4: Wait for hosted CI and merge**
@@ -266,7 +266,7 @@ https://nubles.github.io/OSRS-Fate-Locked/version.json
 ```
 
 Verify `version.json` contains the merge commit and the deployed JavaScript
-contains the pending-review text, PR label, and official PR URL.
+contains the approved-and-live text, PR label, and official PR URL.
 
 - [ ] **Step 6: Refresh the local preview**
 

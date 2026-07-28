@@ -1,18 +1,18 @@
-# RuneLite Review Status Link Design
+# RuneLite Plugin Hub Status Link Design
 
 ## Goal
 
-Tell players that the submitted RuneLite Plugin Hub update is still awaiting
-RuneLite review, is not live yet, and can be followed through the official
-review pull request.
+Tell players that RuneLite approved the submitted Plugin Hub update, that the
+plugin is now live, and that the merged pull request remains available as the
+official review record.
 
 ## Player-facing copy
 
 Add this note to the existing **RuneLite Companion Update** release under
 **Changed**:
 
-> The RuneLite Plugin Hub update is awaiting RuneLite review and is not live
-> yet. Follow the review in Plugin Hub PR #14395.
+> The RuneLite Plugin Hub update has been approved and is now live. View the
+> merged Plugin Hub PR #14395.
 
 Only **Plugin Hub PR #14395** is the link. It points to:
 
@@ -46,7 +46,7 @@ note text and destination. No other changelog layout or interaction changes.
 
 Tests prove that:
 
-- the newest RuneLite release contains the exact pending-review wording and
+- the newest RuneLite release contains the exact approved-and-live wording and
   official Plugin Hub PR destination;
 - the modal renders the link with the expected accessible text;
 - the link opens in a new tab with safe external-link attributes; and
@@ -55,9 +55,8 @@ Tests prove that:
 Run the complete release gate, hosted pull-request CI, and GitHub Pages deploy
 before confirming the notice is live.
 
-## Status transition
+## Confirmed status
 
-This notice is intentionally temporary. When RuneLite approves and publishes
-the Plugin Hub update, add a new player-facing What's New release announcing
-that it is live and replace the pending wording as part of that reviewed
-update. The mandatory changelog gate applies to that transition too.
+RuneLite merged Plugin Hub PR #14395 on 28 July 2026, and the official Plugin
+Hub page lists Fate Locked Ironman with active installs. The notice therefore
+uses final approved-and-live wording rather than a temporary review state.

@@ -46,7 +46,7 @@ describe('authored changelog releases', () => {
       'The complete RuneLite experience now lives in one panel with collapsible sections.',
     ]));
     expect(LATEST_CHANGELOG.sections.changed).toContainEqual({
-      text: 'The RuneLite Plugin Hub update is awaiting RuneLite review and is not live yet. Follow the review in',
+      text: 'The RuneLite Plugin Hub update has been approved and is now live. View the merged',
       link: {
         label: 'Plugin Hub PR #14395',
         href: 'https://github.com/runelite/plugin-hub/pull/14395',
