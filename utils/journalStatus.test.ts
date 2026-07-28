@@ -227,9 +227,9 @@ describe('reported quest access', () => {
   });
 
   it.each([
-    ['East Ardougne', { regions: ['East Ardougne'] }],
-    ['Tree Gnome Stronghold', { regions: ['Tree Gnome Stronghold'] }],
-    ["Wizards' Guild", { guilds: ["Wizards' Guild"] }],
+    ['East Ardougne', { regions: ['Wilderness', 'East Ardougne'] }],
+    ['Tree Gnome Stronghold', { regions: ['Wilderness', 'Tree Gnome Stronghold'] }],
+    ["Wizards' Guild", { regions: ['Wilderness'], guilds: ["Wizards' Guild"] }],
   ])('allows Enter the Abyss through %s', (_name, route) => {
     expect(getQuestStatus(QUEST_DATA['Enter the Abyss'], unlocked({
       quests: ['Rune Mysteries'], ...route,
@@ -238,7 +238,7 @@ describe('reported quest access', () => {
 
   it('locks Enter the Abyss without a third provider', () => {
     expect(getQuestStatus(QUEST_DATA['Enter the Abyss'],
-      unlocked({ quests: ['Rune Mysteries'] }))).toBe('LOCKED_REGION');
+      unlocked({ quests: ['Rune Mysteries'], regions: ['Wilderness'] }))).toBe('LOCKED_REGION');
   });
 
   it('checks and labels location-based alternative routes', () => {

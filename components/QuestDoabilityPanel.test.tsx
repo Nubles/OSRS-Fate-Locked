@@ -78,7 +78,7 @@ describe('evaluateQuestDoability', () => {
   it('locks Enter the Abyss behind its alternative provider requirement', () => {
     const row = evaluateQuestDoability(
       QUEST_DATA['Enter the Abyss'],
-      unlocks({ quests: ['Rune Mysteries'] }),
+      unlocks({ quests: ['Rune Mysteries'], regions: ['Wilderness'] }),
       reachableChunk,
     );
 
@@ -94,7 +94,7 @@ describe('evaluateQuestDoability', () => {
       QUEST_DATA['Enter the Abyss'],
       unlocks({
         quests: ['Rune Mysteries'],
-        regions: ['East Ardougne'],
+        regions: ['Wilderness', 'East Ardougne'],
       }),
       reachableChunk,
     );

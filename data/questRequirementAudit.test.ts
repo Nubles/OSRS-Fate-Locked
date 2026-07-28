@@ -30,6 +30,28 @@ describe('official quest and miniquest audit coverage', () => {
     })).toEqual([]);
   });
 
+  it('has reviewed evidence and matching requirements for all 19 miniquests', () => {
+    const rows = audit.entries.filter(entry => entry.kind === 'miniquest');
+    expect(rows).toHaveLength(19);
+    expect(rows.flatMap(entry => {
+      if (entry.status !== 'unresolved') return [];
+      return entry.discrepancy && entry.conservativeReason ? [] : [entry.id];
+    })).toEqual([]);
+    expect(rows.flatMap(entry => {
+      const quest = QUEST_DATA[entry.id];
+      return entry.requirementFingerprint === questRequirementFingerprint(quest)
+        ? []
+        : [entry.id];
+    })).toEqual([]);
+  });
+
+  it('leaves only the two concrete miniquest evidence conflicts unresolved', () => {
+    expect(audit.entries
+      .filter(entry => entry.kind === 'miniquest' && entry.status === 'unresolved')
+      .map(entry => entry.id))
+      .toEqual(['Bear Your Soul', 'The Enchanted Key']);
+  });
+
   it('records concrete source gaps for every generated discrepancy category', () => {
     const byId = new Map(audit.entries.map(entry => [entry.id, entry]));
     const cases = [

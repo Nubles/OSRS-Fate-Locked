@@ -41,6 +41,27 @@ const LOCATIONS = {
   portSarim: { id: 'port-sarim', label: 'Port Sarim', standardAreas: ['Port Sarim'], chunkOptions: [{ cx: 47, cy: 50 }] },
   varrockMuseum: { id: 'varrock-museum', label: 'Varrock Museum', standardAreas: ['Varrock'], chunkOptions: [{ cx: 50, cy: 53 }] },
   pandemonium: { id: 'the-pandemonium', label: 'The Pandemonium', standardAreas: ['The Pandemonium'], chunkOptions: [{ cx: 47, cy: 46 }] },
+  barbarianOutpost: { id: 'barbarian-outpost', label: 'Barbarian Outpost', standardAreas: ['Barbarian Outpost'], chunkOptions: [{ cx: 39, cy: 55 }] },
+  blueMoonInn: { id: 'blue-moon-inn', label: 'Blue Moon Inn', standardAreas: ['Varrock'], chunkOptions: [{ cx: 50, cy: 53 }] },
+  grandTreeBar: { id: 'grand-tree-bar', label: 'Blurberry Bar in the Grand Tree', standardAreas: ['Tree Gnome Stronghold'], chunkOptions: [{ cx: 38, cy: 54 }] },
+  brimhavenBar: { id: 'brimhaven-bar', label: "Dead Man's Chest in Brimhaven", standardAreas: ['Brimhaven'], chunkOptions: [{ cx: 43, cy: 49 }] },
+  yanilleBar: { id: 'yanille-bar', label: 'Dragon Inn in Yanille', standardAreas: ['Yanille'], chunkOptions: [{ cx: 39, cy: 48 }] },
+  eastArdougneBar: { id: 'east-ardougne-bar', label: 'Flying Horse Inn in East Ardougne', standardAreas: ['East Ardougne'], chunkOptions: [{ cx: 40, cy: 51 }] },
+  seersVillageBar: { id: 'seers-village-bar', label: "Forester's Arms in Seers' Village", standardAreas: ["Seers' Village"], chunkOptions: [{ cx: 42, cy: 54 }] },
+  jollyBoarInn: { id: 'jolly-boar-inn', label: 'Jolly Boar Inn', standardAreas: ['Varrock'], chunkOptions: [{ cx: 51, cy: 54 }] },
+  musaPointBar: { id: 'musa-point-bar', label: 'Karamja Spirits Bar at Musa Point', standardAreas: ['Musa Point'], chunkOptions: [{ cx: 45, cy: 49 }] },
+  faladorBar: { id: 'falador-bar', label: 'Rising Sun Inn in Falador', standardAreas: ['Falador'], chunkOptions: [{ cx: 46, cy: 52 }] },
+  portSarimBar: { id: 'port-sarim-bar', label: 'Rusty Anchor in Port Sarim', standardAreas: ['Port Sarim'], chunkOptions: [{ cx: 47, cy: 50 }] },
+  varrockPalace: { id: 'varrock-palace', label: "Marlo at Varrock's Estate Agent", standardAreas: ['Varrock'], chunkOptions: [{ cx: 50, cy: 54 }] },
+  varrockCenter: { id: 'varrock-center', label: "Old Man Yarlo's house in Varrock", standardAreas: ['Varrock'], chunkOptions: [{ cx: 50, cy: 53 }] },
+  lumberYard: { id: 'lumber-yard', label: 'Lumber Yard', standardAreas: ['Varrock'], chunkOptions: [{ cx: 51, cy: 54 }] },
+  eastVarrockGate: { id: 'east-varrock-gate', label: "Dimintheis's house in south-east Varrock", standardAreas: ['Varrock'], chunkOptions: [{ cx: 51, cy: 53 }] },
+  alKharidMine: { id: 'al-kharid-mine', label: 'Al Kharid mine', standardAreas: ['Al Kharid'], chunkOptions: [{ cx: 51, cy: 51 }] },
+  eastCatherby: { id: 'east-catherby', label: "Caleb's house in Catherby", standardAreas: ['Catherby'], chunkOptions: [{ cx: 44, cy: 53 }] },
+  barrows: { id: 'barrows', label: 'Barrows', standardAreas: ['Barrows'], chunkOptions: [{ cx: 55, cy: 51 }] },
+  necropolisMainTemple: { id: 'necropolis-main-temple', label: 'Necropolis main temple', standardAreas: ['Sophanem'], chunkOptions: [{ cx: 52, cy: 42 }] },
+  abandonedMine: { id: 'abandoned-mine', label: "Haunted Mine and Tarn's Lair", standardAreas: ['Haunted Mine'], chunkOptions: [{ cx: 53, cy: 50 }] },
+  skippysCamp: { id: 'skippys-camp', label: "Skippy's camp south-east of Rimmington", standardAreas: ['Rimmington'], chunkOptions: [{ cx: 46, cy: 49 }] },
 } satisfies Record<string, QuestLocationRequirement>;
 
 export const QUEST_DATA: Record<string, QuestData> = {
@@ -1388,16 +1409,22 @@ export const QUEST_DATA: Record<string, QuestData> = {
 
   // --- Miniquests ---
   'Alfred Grimhand\'s Barcrawl': {
-    kind: 'miniquest', accessPolicy: 'regions',
+    kind: 'miniquest', accessPolicy: 'locations',
     id: 'Alfred Grimhand\'s Barcrawl', name: 'Alfred Grimhand\'s Barcrawl',
-    regions: ['Kandarin'], // Barbarian Outpost start
+    regions: ['Kandarin', 'Misthalin', 'Karamja', 'Asgarnia'],
+    locations: [
+      LOCATIONS.barbarianOutpost, LOCATIONS.blueMoonInn, LOCATIONS.grandTreeBar,
+      LOCATIONS.brimhavenBar, LOCATIONS.yanilleBar, LOCATIONS.eastArdougneBar,
+      LOCATIONS.seersVillageBar, LOCATIONS.jollyBoarInn, LOCATIONS.musaPointBar,
+      LOCATIONS.faladorBar, LOCATIONS.portSarimBar,
+    ],
     skills: {}, prereqs: [], points: 0,
     difficulty: DropSource.QUEST_NOVICE
   },
   'Barbarian Training': {
     kind: 'miniquest', accessPolicy: 'regions',
     id: 'Barbarian Training', name: 'Barbarian Training',
-    regions: ['Kandarin'], // Otto's Grotto
+    regions: ['Kandarin'],
     skills: { 'Fishing': 55, 'Firemaking': 35, 'Strength': 35, 'Agility': 15, 'Farming': 15, 'Crafting': 11, 'Smithing': 5, 'Herblore': 4 },
     prereqs: ['Tai Bwo Wannai Trio'], points: 0,
     difficulty: DropSource.QUEST_EXPERIENCED
@@ -1405,35 +1432,38 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Bear Your Soul': {
     kind: 'miniquest', accessPolicy: 'regions',
     id: 'Bear Your Soul', name: 'Bear Your Soul',
-    regions: ['Kourend & Kebos'],
-    skills: {}, prereqs: ['Client of Kourend'], points: 0, series: 'Great Kourend',
+    regions: ['Kourend & Kebos', 'Asgarnia'],
+    skills: {}, prereqs: [], points: 0, series: 'Great Kourend',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Curse of the Empty Lord': {
     kind: 'miniquest', accessPolicy: 'regions',
     id: 'Curse of the Empty Lord', name: 'Curse of the Empty Lord',
-    regions: ['Misthalin'], // Starts in Varrock/Canifis connection or general ghostly robe hunt
-    skills: {}, prereqs: ['Desert Treasure I'], points: 0, series: 'Mahjarrat',
+    regions: ['Asgarnia', 'Kandarin', 'Wilderness'],
+    skills: { 'Thieving': 53 }, prereqs: [],
+    manualRequirements: ['Started Desert Treasure I', 'Started The Restless Ghost'],
+    points: 0, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Daddy\'s Home': {
-    kind: 'miniquest', accessPolicy: 'regions',
+    kind: 'miniquest', accessPolicy: 'locations',
     id: 'Daddy\'s Home', name: 'Daddy\'s Home',
-    regions: ['Misthalin'], // Varrock
+    regions: ['Misthalin'],
+    locations: [LOCATIONS.varrockPalace, LOCATIONS.varrockCenter, LOCATIONS.lumberYard],
     skills: {}, prereqs: [], points: 0,
     difficulty: DropSource.QUEST_NOVICE
   },
   'The Enchanted Key': {
     kind: 'miniquest', accessPolicy: 'regions',
     id: 'The Enchanted Key', name: 'The Enchanted Key',
-    regions: ['Misthalin'], // Start
+    regions: ['Fremennik', 'Kandarin', 'Tirannwn', 'Asgarnia', 'Misthalin', 'Kharidian Desert'],
     skills: {}, prereqs: ['Making History'], points: 0,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Enter the Abyss': {
     kind: 'miniquest', accessPolicy: 'regions',
     id: 'Enter the Abyss', name: 'Enter the Abyss',
-    regions: ['Misthalin'],
+    regions: ['Misthalin', 'Wilderness'],
     oneOf: [
       { regions: ['East Ardougne'] },
       { regions: ['Tree Gnome Stronghold'] },
@@ -1443,60 +1473,65 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Family Pest': {
-    kind: 'miniquest', accessPolicy: 'regions',
+    kind: 'miniquest', accessPolicy: 'locations',
     id: 'Family Pest', name: 'Family Pest',
-    regions: ['Misthalin'], // Lumbridge/Varrock
+    regions: ['Misthalin', 'Kharidian Desert', 'Kandarin'],
+    locations: [
+      LOCATIONS.eastVarrockGate, LOCATIONS.alKharidMine,
+      LOCATIONS.eastCatherby, LOCATIONS.lumberYard,
+    ],
     skills: {}, prereqs: ['Family Crest'], points: 0,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'The Frozen Door': {
     kind: 'miniquest', accessPolicy: 'regions',
     id: 'The Frozen Door', name: 'The Frozen Door',
-    regions: ['Asgarnia'], // God Wars Dungeon
-    skills: { 'Agility': 70, 'Strength': 70, 'Ranged': 70, 'Hitpoints': 70 }, 
-    prereqs: ['Desert Treasure I'], // GWD reqs usually imply access
-    points: 0,
+    regions: ['Asgarnia'],
+    skills: { 'Agility': 70, 'Strength': 70, 'Ranged': 70, 'Hitpoints': 70 },
+    prereqs: ['Desert Treasure I'], points: 0,
     difficulty: DropSource.QUEST_MASTER
   },
   'The General\'s Shadow': {
     kind: 'miniquest', accessPolicy: 'regions',
     id: 'The General\'s Shadow', name: 'The General\'s Shadow',
-    regions: ['Kandarin'], // Fight Arena/Gnome area
+    regions: ['Fremennik', 'Kandarin', 'Karamja', 'Asgarnia', 'Kharidian Desert'],
     skills: {}, prereqs: ['Fight Arena', 'Curse of the Empty Lord'], points: 0, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'His Faithful Servants': {
-    kind: 'miniquest', accessPolicy: 'regions',
+    kind: 'miniquest', accessPolicy: 'locations',
     id: 'His Faithful Servants', name: 'His Faithful Servants',
-    regions: ['Morytania'], // Barrows
+    regions: ['Morytania'], locations: [LOCATIONS.barrows],
     skills: {}, prereqs: ['Priest in Peril'], points: 0, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Hopespear\'s Will': {
     kind: 'miniquest', accessPolicy: 'regions',
     id: 'Hopespear\'s Will', name: 'Hopespear\'s Will',
-    regions: ['Asgarnia'], // Goblin Village
-    skills: { 'Prayer': 50 }, prereqs: ['Land of the Goblins'], points: 0,
+    regions: ['Kandarin'],
+    skills: { 'Prayer': 50 },
+    prereqs: ['Desert Treasure I', 'Fairytale II - Cure a Queen', 'Land of the Goblins'],
+    manualRequirements: ['Started The Restless Ghost'], points: 0,
     difficulty: DropSource.QUEST_MASTER
   },
   'In Search of Knowledge': {
     kind: 'miniquest', accessPolicy: 'regions',
     id: 'In Search of Knowledge', name: 'In Search of Knowledge',
-    regions: ['Kourend & Kebos'], // Arceuus
-    skills: {}, prereqs: ['Client of Kourend'], points: 0,
+    regions: ['Kourend & Kebos'],
+    skills: {}, prereqs: [], points: 0,
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Into the Tombs': {
-    kind: 'miniquest', accessPolicy: 'regions',
+    kind: 'miniquest', accessPolicy: 'locations',
     id: 'Into the Tombs', name: 'Into the Tombs',
-    regions: ['Kharidian Desert'],
+    regions: ['Kharidian Desert'], locations: [LOCATIONS.necropolisMainTemple],
     skills: {}, prereqs: ['Beneath Cursed Sands'], points: 0, series: 'Kharidian',
     difficulty: DropSource.QUEST_MASTER
   },
   'Lair of Tarn Razorlor': {
-    kind: 'miniquest', accessPolicy: 'regions',
+    kind: 'miniquest', accessPolicy: 'locations',
     id: 'Lair of Tarn Razorlor', name: 'Lair of Tarn Razorlor',
-    regions: ['Morytania'], // Haunted Mine
+    regions: ['Morytania'], locations: [LOCATIONS.abandonedMine],
     skills: { 'Slayer': 40 }, prereqs: ['Haunted Mine'], points: 0,
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -1511,13 +1546,17 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'miniquest', accessPolicy: 'regions',
     id: 'Mage Arena II', name: 'Mage Arena II',
     regions: ['Wilderness'],
-    skills: { 'Magic': 75 }, prereqs: ['Mage Arena I'], points: 0,
+    skills: { 'Magic': 75 }, prereqs: ['Mage Arena I'],
+    manualRequirements: [
+      'Cast Claws of Guthix, Flames of Zamorak, and Saradomin Strike 100 times each inside the Mage Arena',
+    ],
+    points: 0,
     difficulty: DropSource.QUEST_MASTER
   },
   'Skippy and the Mogres': {
-    kind: 'miniquest', accessPolicy: 'regions',
+    kind: 'miniquest', accessPolicy: 'locations',
     id: 'Skippy and the Mogres', name: 'Skippy and the Mogres',
-    regions: ['Asgarnia'], // Mudskipper Point
+    regions: ['Asgarnia'], locations: [LOCATIONS.skippysCamp],
     skills: { 'Cooking': 20 }, prereqs: [], points: 0,
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -1525,7 +1564,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'miniquest', accessPolicy: 'regions',
     id: 'Vale Totems', name: 'Vale Totems',
     regions: ['Varlamore'],
-    skills: {}, prereqs: ['Children of the Sun'], points: 0,
+    skills: { 'Fletching': 20 }, prereqs: ['Children of the Sun'], points: 0,
     difficulty: DropSource.QUEST_NOVICE
   }
 };

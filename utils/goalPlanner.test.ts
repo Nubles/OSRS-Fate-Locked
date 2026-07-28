@@ -131,6 +131,7 @@ describe('planForTarget — quests', () => {
   it('surfaces an actionable alternative-access step for oneOf quests', () => {
     const plan = planForTarget('quest', 'Enter the Abyss', maxedUnlocks({
       quests: ['Rune Mysteries'],
+      regions: ['Wilderness'],
     }))!;
 
     expect(plan.regionSteps).toEqual([]);
