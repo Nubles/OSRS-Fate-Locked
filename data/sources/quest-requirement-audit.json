@@ -2436,7 +2436,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\",\"Kharidian Desert\",\"Kandarin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":51,\"cy\":53}],\"id\":\"east-varrock-gate\",\"label\":\"Dimintheis's house in south-east Varrock\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":51}],\"id\":\"al-kharid-mine\",\"label\":\"Al Kharid mine\",\"standardAreas\":[\"Al Kharid\"]},{\"chunkOptions\":[{\"cx\":44,\"cy\":53}],\"id\":\"east-catherby\",\"label\":\"Caleb's house in Catherby\",\"standardAreas\":[\"Catherby\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":54}],\"id\":\"lumber-yard\",\"label\":\"Lumber Yard\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{},\"prereqs\":[\"Family Crest\"],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\",\"Kharidian Desert\",\"Kandarin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":51,\"cy\":53}],\"id\":\"east-varrock-gate\",\"label\":\"Dimintheis's house in south-east Varrock\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":51}],\"id\":\"al-kharid-mine\",\"label\":\"Al Kharid mine\",\"standardAreas\":[\"Al Kharid\"]},{\"chunkOptions\":[{\"cx\":44,\"cy\":53}],\"id\":\"east-catherby\",\"label\":\"Caleb's house in Catherby\",\"standardAreas\":[\"Catherby\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":54}],\"id\":\"jolly-boar-inn\",\"label\":\"Jolly Boar Inn\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{},\"prereqs\":[\"Family Crest\"],\"points\":0}",
       "chunkEvidence": [
         {
           "chunkId": "44,53",
@@ -2464,7 +2464,7 @@
           "500,000 coins are required at the end; coin possession is not machine-enforced."
         ],
         "travel": [
-          "Dimintheis in Varrock, Avan at Al Kharid mine, Caleb in Catherby, and Johnathon at the Jolly Boar Inn are all unavoidable and match the four pinned rows."
+          "The Wiki route requires Dimintheis in Varrock, Avan at Al Kharid mine, Caleb in Catherby, and Johnathon at the Jolly Boar Inn. The pinned picker calls the shared 51,54 chunk Lumber Yard; runtime names the unavoidable Jolly Boar Inn stop."
         ],
         "instances": [],
         "partialCompletion": []
@@ -3407,8 +3407,8 @@
         "revisionTimestamp": "2026-07-18T06:11:34Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Morytania\"],\"locations\":[{\"chunkOptions\":[{\"cx\":53,\"cy\":50}],\"id\":\"abandoned-mine\",\"label\":\"Haunted Mine and Tarn's Lair\",\"standardAreas\":[\"Haunted Mine\"]}],\"skills\":{\"Slayer\":40},\"prereqs\":[\"Haunted Mine\"],\"points\":0}",
+      "accessPolicy": "regions",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Morytania\"],\"skills\":{\"Slayer\":40},\"prereqs\":[\"Haunted Mine\"],\"points\":0}",
       "chunkEvidence": [
         {
           "chunkId": "53,50",
@@ -3421,7 +3421,7 @@
           "Coins for the optional banker and combat supplies are not machine-enforced."
         ],
         "travel": [
-          "The Haunted Mine entrance route and the Slayer-ring shortcut both lead to Tarn's Lair; the pinned Abandoned Mine first row supports the exact entrance gate."
+          "The Wiki permits either the Haunted Mine entrance route or the Slayer-ring shortcut. The pinned picker establishes only the Abandoned Mine first row, so it cannot justify an exact location gate; the conservative Morytania region policy covers both routes."
         ],
         "instances": [
           "Tarn's two-form boss fight occurs in an instance within the lair."

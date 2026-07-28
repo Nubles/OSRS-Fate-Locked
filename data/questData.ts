@@ -1478,7 +1478,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Misthalin', 'Kharidian Desert', 'Kandarin'],
     locations: [
       LOCATIONS.eastVarrockGate, LOCATIONS.alKharidMine,
-      LOCATIONS.eastCatherby, LOCATIONS.lumberYard,
+      LOCATIONS.eastCatherby, LOCATIONS.jollyBoarInn,
     ],
     skills: {}, prereqs: ['Family Crest'], points: 0,
     difficulty: DropSource.QUEST_INTERMEDIATE
@@ -1529,9 +1529,9 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_MASTER
   },
   'Lair of Tarn Razorlor': {
-    kind: 'miniquest', accessPolicy: 'locations',
+    kind: 'miniquest', accessPolicy: 'regions',
     id: 'Lair of Tarn Razorlor', name: 'Lair of Tarn Razorlor',
-    regions: ['Morytania'], locations: [LOCATIONS.abandonedMine],
+    regions: ['Morytania'],
     skills: { 'Slayer': 40 }, prereqs: ['Haunted Mine'], points: 0,
     difficulty: DropSource.QUEST_EXPERIENCED
   },
