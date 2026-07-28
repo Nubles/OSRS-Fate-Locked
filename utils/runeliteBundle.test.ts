@@ -123,6 +123,49 @@ describe('buildRuneliteBundle — unlockedChunks presence', () => {
       detectorContractVersion: 1,
     });
   });
+  it('exports completed quest, miniquest, and legacy RFD identities unchanged', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('chunk-content.json')) {
+        return new Response(chunkContentJson, {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      return new Response('{}', { status: 404 });
+    }));
+
+    try {
+      const { json } = await buildBundlePayload({
+        ...initialState.unlocks,
+        quests: [
+          "Witch's Potion",
+          'In Search of Knowledge',
+          'RFD: The Cook',
+          'RFD: Finale',
+        ],
+      }, {
+        runId: 'run-completed-identities',
+        runRevision: 4,
+        keys: 3,
+        specialKeys: 0,
+        chaosKeys: 0,
+        fatePoints: 0,
+        activeBuff: 'NONE',
+        gameModeId: 'vanilla',
+      });
+      const bundle = JSON.parse(json);
+
+      expect(bundle.rules.unlocks.quests).toEqual([
+        'In Search of Knowledge',
+        'RFD: Finale',
+        'RFD: The Cook',
+        "Witch's Potion",
+      ]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
   it('fits the complete rules snapshot inside the relay limit', async () => {
     vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);

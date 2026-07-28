@@ -52,6 +52,24 @@ describe('journal completion decisions', () => {
     )).toEqual({ ok: false, reason: "Requires: Sinclair Mansion, Seers' Village" });
   });
 
+  it('keeps Murder Mystery blocked until both of its chunks are accessible', () => {
+    const quest = QUEST_DATA['Murder Mystery'];
+    const oneLocation = unlocked({
+      regions: ['Kandarin'],
+      chunks: ['42,55'],
+    });
+
+    expect(questCompletionDecision(quest, oneLocation, 'chunked')).toEqual({
+      ok: false,
+      reason: "Requires: Seers' Village",
+    });
+    expect(questCompletionDecision(
+      quest,
+      { ...oneLocation, chunks: ['42,55', '42,54'] },
+      'chunked',
+    )).toEqual({ ok: true });
+  });
+
   it('accepts a Diary task only when task skills quests and regions are met', () => {
     const task: DiaryTask = {
       id: 'x',
@@ -187,6 +205,41 @@ describe('journal completion decisions', () => {
       'chunked',
       { manualConfirmed: true },
     ).ok).toBe(false);
+  });
+
+  it('checks The Slug Menace machine requirements before manual attestation', () => {
+    const quest = QUEST_DATA['The Slug Menace'];
+    const shared = {
+      skills: { Crafting: 3, Runecraft: 3, Slayer: 3, Thieving: 3 },
+      levels: { Crafting: 30, Runecraft: 30, Slayer: 30, Thieving: 30 },
+      quests: ['Sea Slug', 'Wanted!'],
+    };
+    const machineBlocked = unlocked({
+      ...shared,
+      regions: ['Kandarin'],
+    });
+
+    expect(questCompletionDecision(
+      quest,
+      machineBlocked,
+      'vanilla',
+      { manualConfirmed: true },
+    )).toEqual({ ok: false, reason: 'Requires: Asgarnia' });
+
+    const machineReady = unlocked({
+      ...shared,
+      regions: ['Kandarin', 'Asgarnia'],
+    });
+    expect(questCompletionDecision(quest, machineReady, 'vanilla')).toEqual({
+      ok: false,
+      reason: 'Confirm: Access to all required elemental altars through one route: surface altars with Misthalin and Kharidian Desert; the Abyss with Wilderness and Enter the Abyss completed; or Guardians of the Rift with Misthalin and Temple of the Eye completed',
+    });
+    expect(questCompletionDecision(
+      quest,
+      machineReady,
+      'vanilla',
+      { manualConfirmed: true },
+    )).toEqual({ ok: true });
   });
 
   it('accepts the Kudos task only after confirmation', () => {

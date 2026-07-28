@@ -200,6 +200,31 @@ describe('save schema compatibility', () => {
     });
   });
 
+  it('loads version-3 quest and miniquest completion IDs without reclassification', () => {
+    const completedIds = [
+      "Witch's Potion",
+      'In Search of Knowledge',
+      'RFD: The Cook',
+      'RFD: Dwarf',
+      'RFD: Goblins',
+      'RFD: Pirate Pete',
+      'RFD: Lumbridge Guide',
+      'RFD: Evil Dave',
+      'RFD: Skrach Uglogwee',
+      'RFD: Sir Amik Varze',
+      'RFD: King Awowogei',
+      'RFD: Finale',
+    ];
+    const current = fullStateFixture();
+    current.version = 3;
+    current.unlocks.quests = completedIds;
+
+    const result = expectAccepted(validateAndMigrateSave(current, defaultsFixture()));
+
+    expect(result.sourceVersion).toBe(3);
+    expect(result.state.version).toBe(3);
+    expect(result.state.unlocks.quests).toEqual(completedIds);
+  });
   it('renames a lone Elf Camp unlock without refunding a key', () => {
     const input = candidate({}, {
       regions: ['Prifddinas', 'Elf Camp', 'Lletya'],
