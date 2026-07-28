@@ -260,7 +260,7 @@ The initial release targets these captures:
 2. Disconnected plugin panel.
 3. Companion pairing confirmation.
 4. Connected panel status.
-5. Unified panel with all seven headings visible.
+5. Unified panel showing the first five headings, with Warnings and Rendering continuing below the crop.
 6. Current Chunk expanded.
 7. Guardian expanded, including pause and recent actions.
 8. Roll Inbox expanded.

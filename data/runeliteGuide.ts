@@ -240,7 +240,7 @@ export const RUNELITE_GUIDE_SCREENSHOTS: readonly GuideScreenshot[] = [
     id: 'unified-panel',
     src: '/guides/runelite/05-unified-panel.png',
     title: 'One plugin, one unified panel',
-    alt: 'Complete Fate Locked RuneLite sidebar with connection summary and collapsible sections.',
+    alt: 'Fate Locked RuneLite sidebar showing the connection summary and first five collapsible section headings.',
     callouts: [
       callout(
         'connection-summary',
@@ -271,8 +271,8 @@ export const RUNELITE_GUIDE_SCREENSHOTS: readonly GuideScreenshot[] = [
         4,
         0.2,
         0.91,
-        'Independent sections',
-        'Roll inbox, Run, Bundle, Warnings, and Rendering expand or collapse without opening another panel.',
+        'Continue in the same panel',
+        'This capture shows Current chunk, Guardian, Roll inbox, Run, and Bundle. Scroll down in the same sidebar for Warnings and Rendering.',
       ),
     ],
   },
