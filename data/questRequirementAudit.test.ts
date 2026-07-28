@@ -62,6 +62,19 @@ describe('official quest and miniquest audit coverage', () => {
 
   it('reviews every A-F quest', () => expectReviewedBatch('A', 'G'));
 
+  it('reviews every G-M quest', () => expectReviewedBatch('G', 'N'));
+
+  it('leaves no unexplained G-M review placeholders', () => {
+    expect(audit.entries
+      .filter(entry =>
+        entry.kind === 'quest' &&
+        entry.id.localeCompare('G') >= 0 &&
+        entry.id.localeCompare('N') < 0 &&
+        entry.status === 'unresolved')
+      .map(entry => entry.id))
+      .toEqual([]);
+  });
+
   it('leaves only the concrete A-F alternative-requirement conflict unresolved', () => {
     expect(audit.entries
       .filter(entry =>
@@ -111,8 +124,8 @@ describe('official quest and miniquest audit coverage', () => {
         discrepancy: ['manual requirement', 'One open Sailing task slot'],
       },
       {
-        id: 'Holy Grail',
-        discrepancy: ['prerequisite', 'Merlin\'s Crystal'],
+        id: 'Nature Spirit',
+        discrepancy: ['prerequisite', 'Priest in Peril'],
       },
     ];
 

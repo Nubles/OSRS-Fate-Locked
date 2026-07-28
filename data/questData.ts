@@ -135,9 +135,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Imp Catcher': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Imp Catcher', name: 'Imp Catcher',
     regions: ['Misthalin'],
+    locations: [
+      { id: 'wizards-tower', label: "Wizards' Tower", standardAreas: ["Wizards' Tower"], chunkOptions: [{ cx: 48, cy: 49 }] },
+    ],
     skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -189,9 +192,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Goblin Diplomacy': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Goblin Diplomacy', name: 'Goblin Diplomacy',
     regions: ['Asgarnia'],
+    locations: [
+      { id: 'goblin-village', label: 'Goblin Village', standardAreas: ['Goblin Village'], chunkOptions: [{ cx: 46, cy: 54 }] },
+    ],
     skills: {}, prereqs: [], points: 5,
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -217,9 +223,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_NOVICE
   },
   'Misthalin Mystery': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Misthalin Mystery', name: 'Misthalin Mystery',
     regions: ['Misthalin'],
+    locations: [
+      { id: 'misthalin-mystery-island', label: "Abigail and Hewey's island", standardAreas: ['Lumbridge'], chunkOptions: [{ cx: 50, cy: 49 }] },
+    ],
     skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -282,15 +291,15 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Merlin\'s Crystal': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Merlin\'s Crystal', name: 'Merlin\'s Crystal',
-    regions: ['Kandarin'],
+    regions: ['Kandarin', 'Asgarnia', 'Misthalin'],
     skills: {}, prereqs: [], points: 6, series: 'Camelot',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Heroes\' Quest': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Heroes\' Quest', name: 'Heroes\' Quest',
-    regions: ['Asgarnia', 'Misthalin', 'Kandarin', 'Karamja'],
-    skills: { 'Quest Points': 55, 'Cooking': 53, 'Fishing': 53, 'Herblore': 25, 'Mining': 50 }, prereqs: ['Shield of Arrav', 'Lost City', 'Merlin\'s Crystal', 'Dragon Slayer I', 'Druidic Ritual'], points: 1,
+    regions: ['Asgarnia', 'Misthalin', 'Kandarin', 'Karamja', 'Wilderness', 'Islands & Others'],
+    skills: { 'Quest Points': 55, 'Cooking': 53, 'Fishing': 53, 'Herblore': 25, 'Mining': 50 }, prereqs: ['Shield of Arrav', 'Lost City', 'Merlin\'s Crystal', 'Dragon Slayer I'], points: 1,
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Scorpion Catcher': {
@@ -331,9 +340,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_NOVICE
   },
   'Monk\'s Friend': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Monk\'s Friend', name: 'Monk\'s Friend',
     regions: ['Kandarin'],
+    locations: [
+      { id: 'ardougne-monastery', label: 'Ardougne Monastery', standardAreas: ['East Ardougne'], chunkOptions: [{ cx: 40, cy: 50 }] },
+    ],
     skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -418,7 +430,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Jungle Potion', name: 'Jungle Potion',
     regions: ['Karamja'],
-    skills: { 'Herblore': 3 }, prereqs: [], points: 1,
+    skills: { 'Herblore': 3 }, prereqs: ['Druidic Ritual'], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
   'The Grand Tree': {
@@ -499,16 +511,21 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Gertrude\'s Cat': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Gertrude\'s Cat', name: 'Gertrude\'s Cat',
     regions: ['Misthalin'],
+    locations: [
+      { id: 'west-varrock', label: "Gertrude's house in west Varrock", standardAreas: ['Varrock'], chunkOptions: [{ cx: 49, cy: 53 }] },
+      { id: 'varrock-square', label: 'Varrock square', standardAreas: ['Varrock'], chunkOptions: [{ cx: 50, cy: 53 }] },
+      LOCATIONS.lumberYard,
+    ],
     skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
   'Legends\' Quest': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Legends\' Quest', name: 'Legends\' Quest',
-    regions: ['Kandarin'],
+    regions: ['Kandarin', 'Karamja'],
     skills: { 'Quest Points': 107, 'Herblore': 45, 'Prayer': 42, 'Strength': 50, 'Agility': 50, 'Thieving': 50, 'Crafting': 50, 'Smithing': 50, 'Mining': 52, 'Woodcutting': 50, 'Magic': 56 }, 
     prereqs: ['Family Crest', 'Heroes\' Quest', 'Shilo Village', 'Underground Pass', 'Waterfall Quest'], points: 4,
     difficulty: DropSource.QUEST_MASTER
@@ -602,7 +619,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Horror from the Deep', name: 'Horror from the Deep',
     regions: ['Fremennik'],
-    skills: { 'Agility': 35 }, prereqs: [], points: 2,
+    skills: { 'Agility': 35 }, prereqs: ["Alfred Grimhand's Barcrawl"], points: 2,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Throne of Miscellania': {
@@ -615,14 +632,17 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Monkey Madness I': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Monkey Madness I', name: 'Monkey Madness I',
-    regions: ['Kandarin', 'Islands & Others'],
+    regions: ['Kandarin', 'Karamja', 'Islands & Others'],
     skills: {}, prereqs: ['The Grand Tree', 'Tree Gnome Village'], points: 3, series: 'Gnome',
     difficulty: DropSource.QUEST_MASTER
   },
   'Haunted Mine': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Haunted Mine', name: 'Haunted Mine',
     regions: ['Morytania'],
+    locations: [
+      LOCATIONS.abandonedMine,
+    ],
     skills: { 'Crafting': 35 }, prereqs: ['Priest in Peril'], points: 2,
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -673,6 +693,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Mountain Daughter', name: 'Mountain Daughter',
     regions: ['Fremennik'],
+    oneOf: [{ regions: ['Asgarnia'] }, { regions: ['Kandarin'] }],
     skills: { 'Agility': 20 }, prereqs: [], points: 2,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -749,7 +770,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Mourning\'s End Part I': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Mourning\'s End Part I', name: 'Mourning\'s End Part I',
-    regions: ['Tirannwn'],
+    regions: ['Tirannwn', 'Kandarin'],
     skills: { 'Ranged': 60, 'Thieving': 50 }, prereqs: ['Roving Elves', 'Big Chompy Bird Hunting', 'Sheep Herder'], points: 2, series: 'Elf',
     difficulty: DropSource.QUEST_MASTER
   },
@@ -763,7 +784,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Garden of Tranquillity': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Garden of Tranquillity', name: 'Garden of Tranquillity',
-    regions: ['Misthalin'],
+    regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Morytania'],
     skills: { 'Farming': 25 }, prereqs: ['Creature of Fenkenstrain'], points: 2,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -784,7 +805,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Mourning\'s End Part II': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Mourning\'s End Part II', name: 'Mourning\'s End Part II',
-    regions: ['Tirannwn'],
+    regions: ['Tirannwn', 'Kandarin'],
     skills: { 'Agility': 65 }, prereqs: ['Mourning\'s End Part I'], points: 2, series: 'Elf',
     difficulty: DropSource.QUEST_MASTER
   },
@@ -805,7 +826,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Making History': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Making History', name: 'Making History',
-    regions: ['Kandarin'],
+    regions: ['Kandarin', 'Fremennik', 'Morytania'],
     skills: {}, prereqs: ['Priest in Peril', 'The Restless Ghost'], points: 3,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -936,7 +957,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'In Aid of the Myreque', name: 'In Aid of the Myreque',
     regions: ['Morytania'],
-    skills: { 'Crafting': 25, 'Magic': 7, 'Mining': 15 },
+    skills: { 'Agility': 25, 'Crafting': 25, 'Magic': 7, 'Mining': 15 },
     prereqs: ['In Search of the Myreque'],
     points: 2,
     series: 'Myreque',
@@ -997,7 +1018,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Lunar Diplomacy', name: 'Lunar Diplomacy',
     regions: ['Fremennik'],
-    skills: { 'Crafting': 61, 'Defence': 40, 'Firemaking': 49, 'Magic': 65, 'Mining': 60, 'Woodcutting': 55 }, prereqs: ['The Fremennik Trials', 'Lost City', 'Rune Mysteries', 'Shilo Village'], points: 2, series: 'Fremennik',
+    skills: { 'Herblore': 5, 'Crafting': 61, 'Defence': 40, 'Firemaking': 49, 'Magic': 65, 'Mining': 60, 'Woodcutting': 55 }, prereqs: ['The Fremennik Trials', 'Lost City', 'Rune Mysteries', 'Shilo Village'], points: 2, series: 'Fremennik',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'The Eyes of Glouphrie': {
@@ -1031,7 +1052,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'My Arm\'s Big Adventure': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'My Arm\'s Big Adventure', name: 'My Arm\'s Big Adventure',
-    regions: ['Asgarnia'],
+    regions: ['Asgarnia', 'Kandarin', 'Karamja'],
+    manualRequirements: ['60% Tai Bwo Wannai favour before starting the quest'],
     skills: { 'Woodcutting': 10, 'Farming': 29 }, prereqs: ['Eadgar\'s Ruse', 'The Feud', 'Jungle Potion'], points: 1, series: 'Troll',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -1138,14 +1160,15 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'King\'s Ransom': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'King\'s Ransom', name: 'King\'s Ransom',
-    regions: ['Kandarin'],
+    regions: ['Kandarin', 'Asgarnia'],
     skills: { 'Magic': 45, 'Defence': 65 }, prereqs: ['Black Knights\' Fortress', 'Holy Grail', 'Murder Mystery', 'One Small Favour'], points: 1, series: 'Camelot',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Monkey Madness II': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Monkey Madness II', name: 'Monkey Madness II',
-    regions: ['Islands & Others'],
+    regions: ['Islands & Others', 'Kandarin', 'Asgarnia'],
+    manualRequirements: ['Unlocked the Gnome Stronghold balloon route'],
     skills: { 'Slayer': 69, 'Crafting': 70, 'Hunter': 60, 'Agility': 55, 'Thieving': 55, 'Firemaking': 60 }, prereqs: ['Monkey Madness I', 'Enlightened Journey', 'The Eyes of Glouphrie', 'Troll Stronghold', 'Watchtower', 'RFD: King Awowogei'], points: 4, series: 'Gnome',
     difficulty: DropSource.QUEST_GRANDMASTER
   },
@@ -1210,7 +1233,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Making Friends with My Arm': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Making Friends with My Arm', name: 'Making Friends with My Arm',
-    regions: ['Asgarnia', 'Fremennik'],
+    regions: ['Asgarnia', 'Fremennik', 'Misthalin'],
     skills: { 'Firemaking': 66, 'Mining': 72, 'Construction': 35, 'Agility': 68 }, prereqs: ['My Arm\'s Big Adventure', 'Swan Song', 'Cold War', 'Romeo & Juliet'], points: 2, series: 'Troll',
     difficulty: DropSource.QUEST_MASTER
   },
@@ -1284,7 +1307,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Land of the Goblins': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Land of the Goblins', name: 'Land of the Goblins',
-    regions: ['Kandarin'],
+    regions: ['Kandarin', 'Misthalin', 'Asgarnia'],
     skills: { 'Agility': 38, 'Thieving': 45, 'Fishing': 40, 'Herblore': 48 }, prereqs: ['Another Slice of H.A.M.', 'Fishing Contest'], points: 2, series: 'Dorgeshuun',
     difficulty: DropSource.QUEST_EXPERIENCED
   },

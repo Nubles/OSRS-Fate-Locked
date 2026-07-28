@@ -2501,6 +2501,683 @@ describe('audited current quest requirements', () => {
 
     expect(actual).toEqual(expected);
   });
+  it('pins the complete machine and balance projection for all 24 changed G-M quests', () => {
+    const ids = [
+  "Garden of Tranquillity",
+  "Gertrude's Cat",
+  "Goblin Diplomacy",
+  "Haunted Mine",
+  "Heroes' Quest",
+  "Horror from the Deep",
+  "Imp Catcher",
+  "In Aid of the Myreque",
+  "Jungle Potion",
+  "King's Ransom",
+  "Land of the Goblins",
+  "Legends' Quest",
+  "Lunar Diplomacy",
+  "Making Friends with My Arm",
+  "Making History",
+  "Merlin's Crystal",
+  "Misthalin Mystery",
+  "Monk's Friend",
+  "Monkey Madness I",
+  "Monkey Madness II",
+  "Mountain Daughter",
+  "Mourning's End Part I",
+  "Mourning's End Part II",
+  "My Arm's Big Adventure"
+] as const;
+    const actual = Object.fromEntries(ids.map(id => {
+      const quest = QUEST_DATA[id];
+      return [id, { kind: quest.kind, accessPolicy: quest.accessPolicy, regions: quest.regions, locations: quest.locations?.map(location => ({ id: location.id, label: location.label, standardAreas: location.standardAreas, chunkOptions: location.chunkOptions })) ?? null, skills: quest.skills, combatLevel: quest.combatLevel ?? null, prereqs: quest.prereqs, oneOf: quest.oneOf ?? null, manualRequirements: quest.manualRequirements ?? null, points: quest.points, difficulty: quest.difficulty }];
+    }));
+    const expected = {
+  "Garden of Tranquillity": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Misthalin",
+      "Asgarnia",
+      "Kandarin",
+      "Morytania"
+    ],
+    "locations": null,
+    "skills": {
+      "Farming": 25
+    },
+    "combatLevel": null,
+    "prereqs": [
+      "Creature of Fenkenstrain"
+    ],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 2,
+    "difficulty": "Quest (Intermediate)"
+  },
+  "Gertrude's Cat": {
+    "kind": "quest",
+    "accessPolicy": "locations",
+    "regions": [
+      "Misthalin"
+    ],
+    "locations": [
+      {
+        "id": "west-varrock",
+        "label": "Gertrude's house in west Varrock",
+        "standardAreas": [
+          "Varrock"
+        ],
+        "chunkOptions": [
+          {
+            "cx": 49,
+            "cy": 53
+          }
+        ]
+      },
+      {
+        "id": "varrock-square",
+        "label": "Varrock square",
+        "standardAreas": [
+          "Varrock"
+        ],
+        "chunkOptions": [
+          {
+            "cx": 50,
+            "cy": 53
+          }
+        ]
+      },
+      {
+        "id": "lumber-yard",
+        "label": "Lumber Yard",
+        "standardAreas": [
+          "Varrock"
+        ],
+        "chunkOptions": [
+          {
+            "cx": 51,
+            "cy": 54
+          }
+        ]
+      }
+    ],
+    "skills": {},
+    "combatLevel": null,
+    "prereqs": [],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 1,
+    "difficulty": "Quest (Novice)"
+  },
+  "Goblin Diplomacy": {
+    "kind": "quest",
+    "accessPolicy": "locations",
+    "regions": [
+      "Asgarnia"
+    ],
+    "locations": [
+      {
+        "id": "goblin-village",
+        "label": "Goblin Village",
+        "standardAreas": [
+          "Goblin Village"
+        ],
+        "chunkOptions": [
+          {
+            "cx": 46,
+            "cy": 54
+          }
+        ]
+      }
+    ],
+    "skills": {},
+    "combatLevel": null,
+    "prereqs": [],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 5,
+    "difficulty": "Quest (Novice)"
+  },
+  "Haunted Mine": {
+    "kind": "quest",
+    "accessPolicy": "locations",
+    "regions": [
+      "Morytania"
+    ],
+    "locations": [
+      {
+        "id": "abandoned-mine",
+        "label": "Haunted Mine and Tarn's Lair",
+        "standardAreas": [
+          "Haunted Mine"
+        ],
+        "chunkOptions": [
+          {
+            "cx": 53,
+            "cy": 50
+          }
+        ]
+      }
+    ],
+    "skills": {
+      "Crafting": 35
+    },
+    "combatLevel": null,
+    "prereqs": [
+      "Priest in Peril"
+    ],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 2,
+    "difficulty": "Quest (Experienced)"
+  },
+  "Heroes' Quest": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Asgarnia",
+      "Misthalin",
+      "Kandarin",
+      "Karamja",
+      "Wilderness",
+      "Islands & Others"
+    ],
+    "locations": null,
+    "skills": {
+      "Quest Points": 55,
+      "Cooking": 53,
+      "Fishing": 53,
+      "Herblore": 25,
+      "Mining": 50
+    },
+    "combatLevel": null,
+    "prereqs": [
+      "Shield of Arrav",
+      "Lost City",
+      "Merlin's Crystal",
+      "Dragon Slayer I"
+    ],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 1,
+    "difficulty": "Quest (Experienced)"
+  },
+  "Horror from the Deep": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Fremennik"
+    ],
+    "locations": null,
+    "skills": {
+      "Agility": 35
+    },
+    "combatLevel": null,
+    "prereqs": [
+      "Alfred Grimhand's Barcrawl"
+    ],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 2,
+    "difficulty": "Quest (Intermediate)"
+  },
+  "Imp Catcher": {
+    "kind": "quest",
+    "accessPolicy": "locations",
+    "regions": [
+      "Misthalin"
+    ],
+    "locations": [
+      {
+        "id": "wizards-tower",
+        "label": "Wizards' Tower",
+        "standardAreas": [
+          "Wizards' Tower"
+        ],
+        "chunkOptions": [
+          {
+            "cx": 48,
+            "cy": 49
+          }
+        ]
+      }
+    ],
+    "skills": {},
+    "combatLevel": null,
+    "prereqs": [],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 1,
+    "difficulty": "Quest (Novice)"
+  },
+  "In Aid of the Myreque": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Morytania"
+    ],
+    "locations": null,
+    "skills": {
+      "Agility": 25,
+      "Crafting": 25,
+      "Magic": 7,
+      "Mining": 15
+    },
+    "combatLevel": null,
+    "prereqs": [
+      "In Search of the Myreque"
+    ],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 2,
+    "difficulty": "Quest (Intermediate)"
+  },
+  "Jungle Potion": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Karamja"
+    ],
+    "locations": null,
+    "skills": {
+      "Herblore": 3
+    },
+    "combatLevel": null,
+    "prereqs": [
+      "Druidic Ritual"
+    ],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 1,
+    "difficulty": "Quest (Novice)"
+  },
+  "King's Ransom": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Kandarin",
+      "Asgarnia"
+    ],
+    "locations": null,
+    "skills": {
+      "Magic": 45,
+      "Defence": 65
+    },
+    "combatLevel": null,
+    "prereqs": [
+      "Black Knights' Fortress",
+      "Holy Grail",
+      "Murder Mystery",
+      "One Small Favour"
+    ],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 1,
+    "difficulty": "Quest (Experienced)"
+  },
+  "Land of the Goblins": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Kandarin",
+      "Misthalin",
+      "Asgarnia"
+    ],
+    "locations": null,
+    "skills": {
+      "Agility": 38,
+      "Thieving": 45,
+      "Fishing": 40,
+      "Herblore": 48
+    },
+    "combatLevel": null,
+    "prereqs": [
+      "Another Slice of H.A.M.",
+      "Fishing Contest"
+    ],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 2,
+    "difficulty": "Quest (Experienced)"
+  },
+  "Legends' Quest": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Kandarin",
+      "Karamja"
+    ],
+    "locations": null,
+    "skills": {
+      "Quest Points": 107,
+      "Herblore": 45,
+      "Prayer": 42,
+      "Strength": 50,
+      "Agility": 50,
+      "Thieving": 50,
+      "Crafting": 50,
+      "Smithing": 50,
+      "Mining": 52,
+      "Woodcutting": 50,
+      "Magic": 56
+    },
+    "combatLevel": null,
+    "prereqs": [
+      "Family Crest",
+      "Heroes' Quest",
+      "Shilo Village",
+      "Underground Pass",
+      "Waterfall Quest"
+    ],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 4,
+    "difficulty": "Quest (Master)"
+  },
+  "Lunar Diplomacy": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Fremennik"
+    ],
+    "locations": null,
+    "skills": {
+      "Herblore": 5,
+      "Crafting": 61,
+      "Defence": 40,
+      "Firemaking": 49,
+      "Magic": 65,
+      "Mining": 60,
+      "Woodcutting": 55
+    },
+    "combatLevel": null,
+    "prereqs": [
+      "The Fremennik Trials",
+      "Lost City",
+      "Rune Mysteries",
+      "Shilo Village"
+    ],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 2,
+    "difficulty": "Quest (Experienced)"
+  },
+  "Making Friends with My Arm": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Asgarnia",
+      "Fremennik",
+      "Misthalin"
+    ],
+    "locations": null,
+    "skills": {
+      "Firemaking": 66,
+      "Mining": 72,
+      "Construction": 35,
+      "Agility": 68
+    },
+    "combatLevel": null,
+    "prereqs": [
+      "My Arm's Big Adventure",
+      "Swan Song",
+      "Cold War",
+      "Romeo & Juliet"
+    ],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 2,
+    "difficulty": "Quest (Master)"
+  },
+  "Making History": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Kandarin",
+      "Fremennik",
+      "Morytania"
+    ],
+    "locations": null,
+    "skills": {},
+    "combatLevel": null,
+    "prereqs": [
+      "Priest in Peril",
+      "The Restless Ghost"
+    ],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 3,
+    "difficulty": "Quest (Intermediate)"
+  },
+  "Merlin's Crystal": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Kandarin",
+      "Asgarnia",
+      "Misthalin"
+    ],
+    "locations": null,
+    "skills": {},
+    "combatLevel": null,
+    "prereqs": [],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 6,
+    "difficulty": "Quest (Intermediate)"
+  },
+  "Misthalin Mystery": {
+    "kind": "quest",
+    "accessPolicy": "locations",
+    "regions": [
+      "Misthalin"
+    ],
+    "locations": [
+      {
+        "id": "misthalin-mystery-island",
+        "label": "Abigail and Hewey's island",
+        "standardAreas": [
+          "Lumbridge"
+        ],
+        "chunkOptions": [
+          {
+            "cx": 50,
+            "cy": 49
+          }
+        ]
+      }
+    ],
+    "skills": {},
+    "combatLevel": null,
+    "prereqs": [],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 1,
+    "difficulty": "Quest (Novice)"
+  },
+  "Monk's Friend": {
+    "kind": "quest",
+    "accessPolicy": "locations",
+    "regions": [
+      "Kandarin"
+    ],
+    "locations": [
+      {
+        "id": "ardougne-monastery",
+        "label": "Ardougne Monastery",
+        "standardAreas": [
+          "East Ardougne"
+        ],
+        "chunkOptions": [
+          {
+            "cx": 40,
+            "cy": 50
+          }
+        ]
+      }
+    ],
+    "skills": {},
+    "combatLevel": null,
+    "prereqs": [],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 1,
+    "difficulty": "Quest (Novice)"
+  },
+  "Monkey Madness I": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Kandarin",
+      "Karamja",
+      "Islands & Others"
+    ],
+    "locations": null,
+    "skills": {},
+    "combatLevel": null,
+    "prereqs": [
+      "The Grand Tree",
+      "Tree Gnome Village"
+    ],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 3,
+    "difficulty": "Quest (Master)"
+  },
+  "Monkey Madness II": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Islands & Others",
+      "Kandarin",
+      "Asgarnia"
+    ],
+    "locations": null,
+    "skills": {
+      "Slayer": 69,
+      "Crafting": 70,
+      "Hunter": 60,
+      "Agility": 55,
+      "Thieving": 55,
+      "Firemaking": 60
+    },
+    "combatLevel": null,
+    "prereqs": [
+      "Monkey Madness I",
+      "Enlightened Journey",
+      "The Eyes of Glouphrie",
+      "Troll Stronghold",
+      "Watchtower",
+      "RFD: King Awowogei"
+    ],
+    "oneOf": null,
+    "manualRequirements": [
+      "Unlocked the Gnome Stronghold balloon route"
+    ],
+    "points": 4,
+    "difficulty": "Quest (Grandmaster)"
+  },
+  "Mountain Daughter": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Fremennik"
+    ],
+    "locations": null,
+    "skills": {
+      "Agility": 20
+    },
+    "combatLevel": null,
+    "prereqs": [],
+    "oneOf": [
+      {
+        "regions": [
+          "Asgarnia"
+        ]
+      },
+      {
+        "regions": [
+          "Kandarin"
+        ]
+      }
+    ],
+    "manualRequirements": null,
+    "points": 2,
+    "difficulty": "Quest (Intermediate)"
+  },
+  "Mourning's End Part I": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Tirannwn",
+      "Kandarin"
+    ],
+    "locations": null,
+    "skills": {
+      "Ranged": 60,
+      "Thieving": 50
+    },
+    "combatLevel": null,
+    "prereqs": [
+      "Roving Elves",
+      "Big Chompy Bird Hunting",
+      "Sheep Herder"
+    ],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 2,
+    "difficulty": "Quest (Master)"
+  },
+  "Mourning's End Part II": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Tirannwn",
+      "Kandarin"
+    ],
+    "locations": null,
+    "skills": {
+      "Agility": 65
+    },
+    "combatLevel": null,
+    "prereqs": [
+      "Mourning's End Part I"
+    ],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 2,
+    "difficulty": "Quest (Master)"
+  },
+  "My Arm's Big Adventure": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Asgarnia",
+      "Kandarin",
+      "Karamja"
+    ],
+    "locations": null,
+    "skills": {
+      "Woodcutting": 10,
+      "Farming": 29
+    },
+    "combatLevel": null,
+    "prereqs": [
+      "Eadgar's Ruse",
+      "The Feud",
+      "Jungle Potion"
+    ],
+    "oneOf": null,
+    "manualRequirements": [
+      "60% Tai Bwo Wannai favour before starting the quest"
+    ],
+    "points": 1,
+    "difficulty": "Quest (Experienced)"
+  }
+};
+    expect(actual).toEqual(expected);
+  });
 });
 
 describe('quest cape eligibility', () => {
