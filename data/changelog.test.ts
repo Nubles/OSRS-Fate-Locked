@@ -45,6 +45,13 @@ describe('authored changelog releases', () => {
       'RuneLite reads your app-authored run rules while detected gameplay events remain local to RuneLite.',
       'The complete RuneLite experience now lives in one panel with collapsible sections.',
     ]));
+    expect(LATEST_CHANGELOG.sections.changed).toContainEqual({
+      text: 'The RuneLite Plugin Hub update is awaiting RuneLite review and is not live yet. Follow the review in',
+      link: {
+        label: 'Plugin Hub PR #14395',
+        href: 'https://github.com/runelite/plugin-hub/pull/14395',
+      },
+    });
     expect(LATEST_CHANGELOG.sections.fixed).toEqual(expect.arrayContaining([
       'RuneLite controls no longer appear clipped or overlap adjacent colour settings.',
       'Run balances are now labelled Keys, Omni Keys, and Chaos Keys.',
