@@ -80,6 +80,16 @@ describe('changelog state', () => {
     })).toBe(false);
   });
 
+  it('defers an unseen release while the direct RuneLite guide owns startup', () => {
+    expect(shouldAutoOpenChangelog({
+      hasSeenOnboarding: true,
+      releaseIsUnseen: true,
+      startupHash: '',
+      hasPendingGameModePrompt: false,
+      hasPendingGuidePrompt: true,
+    })).toBe(false);
+  });
+
   it('auto-opens only an unseen release on an otherwise clear startup', () => {
     const clearStartup = {
       hasSeenOnboarding: true,

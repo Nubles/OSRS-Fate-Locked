@@ -15,8 +15,15 @@ import { useGame } from '../context/GameContext';
  * (mirrors the existing `open-resource-engine` pattern), so no prop-drilling.
  */
 
-export const navTo = (target: string) =>
-  window.dispatchEvent(new CustomEvent('fate:nav', { detail: { target } }));
+export const navTo = (
+  target: string,
+  returnFocusTarget: HTMLElement | null = null,
+) => window.dispatchEvent(new CustomEvent('fate:nav', {
+  detail: {
+    target,
+    ...(returnFocusTarget ? { returnFocusTarget } : {}),
+  },
+}));
 
 interface Cmd {
   id: string;
@@ -38,9 +45,13 @@ export const CommandPalette: React.FC = () => {
   const [sel, setSel] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const returnFocusTargetRef = useRef<HTMLElement | null>(null);
 
   const commands: Cmd[] = useMemo(() => {
-    const go = (target: string) => () => { navTo(target); setOpen(false); };
+    const go = (target: string) => () => {
+      navTo(target, returnFocusTargetRef.current);
+      setOpen(false);
+    };
     return [
       // Navigate — dashboard tabs
       { id: 'tab-char', title: 'Character', subtitle: 'Gear, skills, Equipment Lab & DPS', group: 'Navigate', icon: User, keywords: 'character gear equipment skills dps loadout combat', run: go('tab:CHARACTER') },
@@ -67,6 +78,7 @@ export const CommandPalette: React.FC = () => {
       { id: 'open-altar', title: 'Void Altar', subtitle: 'Spend Fate Points on rituals', group: 'Account', icon: Wand2, keywords: 'void altar ritual fate points sacrifice', run: go('open:altar') },
       { id: 'open-share', title: 'Share Run', subtitle: 'Generate a shareable card', group: 'Account', icon: Share2, keywords: 'share run card image export', run: go('open:share') },
       { id: 'open-sync', title: 'Sync Code', subtitle: 'Back up / move your run', group: 'Account', icon: RefreshCw, keywords: 'sync code backup export import transfer', run: go('open:sync') },
+      { id: 'open-runelite-guide', title: 'RuneLite Plugin Guide', subtitle: 'Install, connect, configure and troubleshoot RuneLite', group: 'Account', icon: BookOpen, keywords: 'runelite plugin connect guardian warnings rendering', run: go('open:runelite-guide') },
       { id: 'open-ref', title: 'Reference / Codex', subtitle: 'Rules & equipment tiers', group: 'Account', icon: BookOpen, keywords: 'reference codex rules help tiers how', run: go('open:reference') },
       { id: 'open-mode', title: 'Game Mode', subtitle: 'Vanilla, Hardcore, Custom…', group: 'Account', icon: Settings2, keywords: 'game mode ruleset difficulty hardcore custom', run: go('open:gamemode') },
       { id: 'open-gallery', title: '3D Model Gallery', subtitle: 'Review every boss 3D model', group: 'Account', icon: Film, keywords: '3d model gallery review bosses preview', run: go('open:gallery') },
@@ -132,12 +144,26 @@ export const CommandPalette: React.FC = () => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        setOpen((o) => !o);
+        setOpen((wasOpen) => {
+          if (!wasOpen) {
+            returnFocusTargetRef.current =
+              document.querySelector<HTMLElement>('[data-tour="palette"]');
+          }
+          return !wasOpen;
+        });
       } else if (e.key === 'Escape') {
         setOpen(false);
       }
     };
-    const onOpen = () => setOpen(true);
+    const onOpen = (event: Event) => {
+      const detail = (event as CustomEvent<{
+        returnFocusTarget?: HTMLElement | null;
+      }>).detail;
+      returnFocusTargetRef.current =
+        detail?.returnFocusTarget
+        ?? document.querySelector<HTMLElement>('[data-tour="palette"]');
+      setOpen(true);
+    };
     window.addEventListener('keydown', onKey);
     window.addEventListener('fate:open-palette', onOpen);
     return () => {
@@ -160,7 +186,7 @@ export const CommandPalette: React.FC = () => {
   useLayoutEffect(() => {
     if (!open) return;
     const el = listRef.current?.querySelector<HTMLElement>(`[data-idx="${sel}"]`);
-    el?.scrollIntoView({ block: 'nearest' });
+    el?.scrollIntoView?.({ block: 'nearest' });
   }, [sel, open, results]);
 
   const onListKey = (e: React.KeyboardEvent) => {

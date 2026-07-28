@@ -19,7 +19,18 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-07-28-tirannwn-area-accuracy');
+    expect(LATEST_CHANGELOG.id).toBe('2026-07-28-runelite-guide');
+  });
+
+  it('announces the complete player-facing RuneLite guide', () => {
+    expect(LATEST_CHANGELOG).toMatchObject({
+      id: '2026-07-28-runelite-guide',
+      title: 'RuneLite Plugin Guide',
+      date: '2026-07-28',
+    });
+    expect(LATEST_CHANGELOG.sections.added).toContain(
+      'A complete RuneLite Plugin Guide now covers installation, connection, every panel section and setting, overlays, privacy, recommended configurations, and troubleshooting with annotated screenshots from the live plugin.',
+    );
   });
 
   it('contains only non-empty, supported sections', () => {
@@ -62,15 +73,18 @@ describe('authored changelog releases', () => {
   });
 
   it('describes the Tirannwn area migration in player language', () => {
-    expect(LATEST_CHANGELOG).toMatchObject({
+    const tirannwnAccuracy = CHANGELOG_RELEASES.find(
+      release => release.id === '2026-07-28-tirannwn-area-accuracy',
+    );
+    expect(tirannwnAccuracy).toMatchObject({
       id: '2026-07-28-tirannwn-area-accuracy',
       title: 'Tirannwn Area Accuracy',
       date: '2026-07-28',
     });
-    expect(LATEST_CHANGELOG.sections.changed).toContain(
+    expect(tirannwnAccuracy?.sections.changed).toContain(
       'Elf Camp is now treated as Iorwerth Camp everywhere and no longer appears in new area rolls.',
     );
-    expect(LATEST_CHANGELOG.sections.fixed).toEqual(expect.arrayContaining([
+    expect(tirannwnAccuracy?.sections.fixed).toEqual(expect.arrayContaining([
       'Existing saves with both camp names now keep one unlock and receive one regular Key refund.',
       'Tirannwn completion totals and RuneLite exports now use the canonical Iorwerth Camp unlock.',
     ]));

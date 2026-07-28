@@ -52,6 +52,7 @@ interface ChangelogStartupContext {
   startupHash: string;
   hasPendingGameModePrompt: boolean;
   hasPendingSyncPrompt?: boolean;
+  hasPendingGuidePrompt?: boolean;
 }
 
 const SYNC_HASH_PREFIX = '#sync=';
@@ -62,11 +63,13 @@ export const shouldAutoOpenChangelog = ({
   startupHash,
   hasPendingGameModePrompt,
   hasPendingSyncPrompt = false,
+  hasPendingGuidePrompt = false,
 }: ChangelogStartupContext): boolean =>
   hasSeenOnboarding
   && releaseIsUnseen
   && !hasPendingGameModePrompt
   && !hasPendingSyncPrompt
+  && !hasPendingGuidePrompt
   && !(startupHash.startsWith(SYNC_HASH_PREFIX)
     && startupHash.length > SYNC_HASH_PREFIX.length)
   && parseRunelitePairFragment(startupHash) == null;

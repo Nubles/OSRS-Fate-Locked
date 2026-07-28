@@ -19,6 +19,16 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-07-28-runelite-guide',
+    title: 'RuneLite Plugin Guide',
+    date: '2026-07-28',
+    sections: {
+      added: [
+        'A complete RuneLite Plugin Guide now covers installation, connection, every panel section and setting, overlays, privacy, recommended configurations, and troubleshooting with annotated screenshots from the live plugin.',
+      ],
+    },
+  },
+  {
     id: '2026-07-28-tirannwn-area-accuracy',
     title: 'Tirannwn Area Accuracy',
     date: '2026-07-28',
