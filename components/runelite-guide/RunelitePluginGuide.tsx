@@ -75,14 +75,14 @@ const FiveMinuteSetup: React.FC<{
     aria-labelledby="runelite-guide-quick-start"
   >
     <div className="flex items-center gap-3 bg-[#1b1b1b] px-4 py-3">
-      <span className="rounded-xl bg-amber-400/15 p-2 text-amber-300">
+      <span className="rounded-lg bg-amber-400/15 p-2 text-amber-300">
         <Clock3 className="h-5 w-5" aria-hidden="true" />
       </span>
       <div>
         <p className="text-xs font-black uppercase tracking-[0.18em] text-amber-300">
           Start here
         </p>
-        <h2 id="runelite-guide-quick-start" className="font-serif text-2xl font-black text-white">
+        <h2 id="runelite-guide-quick-start" className="font-sans text-2xl font-black text-white">
           Five-minute setup
         </h2>
       </div>
@@ -100,7 +100,7 @@ const FiveMinuteSetup: React.FC<{
             type="button"
             aria-label={`Jump to ${title}`}
             onClick={() => onNavigate(chapterId)}
-            className="group h-full w-full rounded-lg border border-white/10 bg-black/20 p-3 text-left transition-colors hover:border-amber-400/35 hover:bg-amber-400/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+            className="group h-full w-full rounded-lg border border-white/10 bg-[#252525] p-3 text-left transition-colors hover:border-amber-400/35 hover:bg-amber-400/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
           >
             <span className="text-xs font-black text-amber-300">STEP {number}</span>
             <strong className="mt-1 block text-sm text-white group-hover:text-amber-100">

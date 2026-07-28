@@ -148,6 +148,22 @@ describe('RunelitePluginGuide navigation and focus', () => {
     ]));
     expect(host.querySelector('[data-guide-overview]')).toBeTruthy();
     expect(host.querySelector('[data-guide-quick-start]')).toBeTruthy();
+    const quickStart = host.querySelector<HTMLElement>('[data-guide-quick-start]');
+    const quickStartHeading = host.querySelector<HTMLElement>('#runelite-guide-quick-start');
+    const quickStartIcon = quickStart?.querySelector<HTMLElement>('div > span');
+    const quickStartActions = Array.from(quickStart?.querySelectorAll<HTMLButtonElement>('button') ?? []);
+    if (!quickStartHeading || !quickStartIcon || quickStartActions.length !== 5) {
+      throw new Error('Missing quick-start presentation elements');
+    }
+    expect(quickStartHeading.className).toContain('font-sans');
+    expect(quickStartHeading.className).not.toContain('font-serif');
+    expect(quickStartIcon.className).toContain('rounded-lg');
+    expect(quickStartIcon.className).not.toContain('rounded-xl');
+    for (const action of quickStartActions) {
+      expect(action.className).toContain('rounded-lg');
+      expect(action.className).toContain('bg-[#252525]');
+      expect(action.className).not.toContain('bg-black/20');
+    }
 
     const mobileContents = host.querySelector<HTMLDetailsElement>(
       '[data-runelite-guide-mobile-contents]',
