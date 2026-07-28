@@ -33,7 +33,7 @@ export const GuideScreenshot: React.FC<GuideScreenshotProps> = ({ screenshot }) 
           <h3 id={titleId} className="font-sans text-sm font-bold text-gray-100">
             {screenshot.title}
           </h3>
-          <p className="mt-1 text-xs text-gray-500">Captured from the live Plugin Hub build.</p>
+          <p className="mt-1 text-xs text-gray-400">Captured from the live Plugin Hub build.</p>
         </div>
         <a
           className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-amber-300 transition-colors hover:border-amber-400/40 hover:bg-amber-400/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
@@ -49,7 +49,7 @@ export const GuideScreenshot: React.FC<GuideScreenshotProps> = ({ screenshot }) 
       <div className="relative flex min-h-48 items-center justify-center overflow-hidden bg-black p-2 sm:p-3">
         {imageFailed ? (
           <div
-            className="flex min-h-48 w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-white/15 px-6 text-center text-gray-400"
+            className="flex min-h-48 w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-white/15 px-6 text-center text-gray-400"
             role="status"
           >
             <ImageOff className="h-8 w-8 text-gray-500" aria-hidden="true" />

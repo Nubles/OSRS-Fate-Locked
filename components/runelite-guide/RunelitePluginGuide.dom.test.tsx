@@ -53,6 +53,28 @@ const openGuide = async (host: HTMLDivElement) => {
   return opener;
 };
 
+const unmount = async (host: HTMLDivElement) => {
+  const index = mountedRoots.findIndex(entry => entry.host === host);
+  if (index < 0) return;
+  const [{ root }] = mountedRoots.splice(index, 1);
+  await act(async () => {
+    root.unmount();
+  });
+  host.remove();
+};
+
+const runOpenGuideLifecycle = async (
+  callback: (host: HTMLDivElement) => Promise<void>,
+) => {
+  const host = await mount();
+  await openGuide(host);
+  try {
+    await callback(host);
+  } finally {
+    await unmount(host);
+  }
+};
+
 afterEach(async () => {
   vi.restoreAllMocks();
   for (const { host, root } of mountedRoots.splice(0).reverse()) {
@@ -97,6 +119,13 @@ describe('RunelitePluginGuide navigation and focus', () => {
       block: 'start',
     });
     expect(guardianLink.getAttribute('aria-current')).toBe('location');
+    expect(guardianLink.className).toContain('border-amber-400/40');
+    expect(guardianLink.className).toContain('bg-amber-400/10');
+
+    const inactiveLink = host.querySelector<HTMLAnchorElement>(
+      'a[href="#runelite-guide-what-it-does"]',
+    );
+    expect(inactiveLink?.className).toContain('border-transparent');
 
     await act(async () => {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
@@ -149,6 +178,19 @@ describe('RunelitePluginGuide navigation and focus', () => {
     expect(host.querySelector('[data-guide-overview]')).toBeTruthy();
     expect(host.querySelector('[data-guide-quick-start]')).toBeTruthy();
     const quickStart = host.querySelector<HTMLElement>('[data-guide-quick-start]');
+    const informativeLabels = [
+      ...Array.from(
+        host.querySelectorAll<HTMLElement>(
+          '[data-runelite-guide-nav] > p, [data-guide-nav-group] > h2, [data-runelite-guide-nav] a > span:first-child',
+        ),
+      ),
+      host.querySelector<HTMLElement>('[data-runelite-guide-footer] p:last-child'),
+    ].filter((node): node is HTMLElement => Boolean(node));
+    expect(informativeLabels.length).toBeGreaterThan(0);
+    for (const label of informativeLabels) {
+      expect(label.className).toContain('text-gray-400');
+      expect(label.className).not.toMatch(/\btext-gray-(500|600)\b/);
+    }
     const quickStartHeading = host.querySelector<HTMLElement>('#runelite-guide-quick-start');
     const quickStartIcon = quickStart?.querySelector<HTMLElement>('div > span');
     const quickStartActions = Array.from(quickStart?.querySelectorAll<HTMLButtonElement>('button') ?? []);
@@ -182,30 +224,25 @@ describe('RunelitePluginGuide navigation and focus', () => {
     expect(scrollIntoView).toHaveBeenCalled();
   });
 
-  it('locks document overflow while open and restores existing styles on close', async () => {
+  it('restores document overflow when an open guide lifecycle exits early', async () => {
     const previousRootOverflow = document.documentElement.style.overflow;
     const previousBodyOverflow = document.body.style.overflow;
     document.documentElement.style.overflow = 'auto';
     document.body.style.overflow = 'scroll';
+    const sentinel = new Error('forced lifecycle failure');
 
     try {
-      const host = await mount();
-      await openGuide(host);
-
-      expect(document.documentElement.style.overflow).toBe('hidden');
-      expect(document.body.style.overflow).toBe('hidden');
-
-      const close = host.querySelector<HTMLButtonElement>(
-        '[data-runelite-guide-header] button[aria-label="Close RuneLite Plugin Guide"]',
-      );
-      if (!close) throw new Error('Missing guide close action');
-      await act(async () => {
-        close.click();
-      });
-
+      await expect(runOpenGuideLifecycle(async () => {
+        expect(document.documentElement.style.overflow).toBe('hidden');
+        expect(document.body.style.overflow).toBe('hidden');
+        throw sentinel;
+      })).rejects.toBe(sentinel);
       expect(document.documentElement.style.overflow).toBe('auto');
       expect(document.body.style.overflow).toBe('scroll');
     } finally {
+      for (const { host } of [...mountedRoots].reverse()) {
+        await unmount(host);
+      }
       document.documentElement.style.overflow = previousRootOverflow;
       document.body.style.overflow = previousBodyOverflow;
     }

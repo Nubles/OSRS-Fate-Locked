@@ -50,5 +50,11 @@ describe('GuideSettingsTable', () => {
     expect(markup).toContain('data-default-value="Off"');
     expect(markup).toContain('data-guide-setting-card="enabled"');
     expect(markup).toContain('data-guide-setting-card="optional"');
+    const fieldLabels = markup.match(/<dt class="[^"]*">/g) ?? [];
+    expect(fieldLabels).toHaveLength(6);
+    for (const label of fieldLabels) {
+      expect(label).toContain('text-gray-400');
+      expect(label).not.toContain('text-gray-500');
+    }
   });
 });

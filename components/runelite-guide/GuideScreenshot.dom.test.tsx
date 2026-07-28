@@ -75,6 +75,9 @@ describe('GuideScreenshot', () => {
     expect(panel?.className).toContain('border-osrs-border');
     expect(panelHeader).toBeTruthy();
     expect(title?.className).toContain('font-sans');
+    const sourceNote = panelHeader?.querySelector<HTMLElement>('p');
+    expect(sourceNote?.className).toContain('text-gray-400');
+    expect(sourceNote?.className).not.toContain('text-gray-500');
     expect(calloutRows).toHaveLength(screenshot.callouts.length);
     expect(imageStage).toBeTruthy();
     expect(imageStage?.contains(host.querySelector('img'))).toBe(true);
@@ -107,6 +110,9 @@ describe('GuideScreenshot', () => {
     expect(host.textContent).toContain('Image unavailable');
     expect(host.textContent).toContain('1. Connect tracker');
     expect(host.querySelectorAll('[data-guide-marker]')).toHaveLength(0);
+    const failure = host.querySelector<HTMLElement>('[role="status"]');
+    expect(failure?.className).toContain('rounded-lg');
+    expect(failure?.className).not.toContain('rounded-xl');
   });
 
   it('keeps screenshot assets inside the deployed GitHub Pages project path', () => {

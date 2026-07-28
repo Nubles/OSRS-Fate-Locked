@@ -41,19 +41,19 @@ export const GuideSettingsTable: React.FC<GuideSettingsTableProps> = ({ settings
           data-guide-setting-fields
         >
           <div>
-            <dt className="text-[10px] font-black uppercase tracking-wide text-gray-500">
+            <dt className="text-[10px] font-black uppercase tracking-wide text-gray-400">
               What it does
             </dt>
             <dd className="mt-1 leading-relaxed text-gray-300">{setting.purpose}</dd>
           </div>
           <div>
-            <dt className="text-[10px] font-black uppercase tracking-wide text-gray-500">
+            <dt className="text-[10px] font-black uppercase tracking-wide text-gray-400">
               What you see
             </dt>
             <dd className="mt-1 leading-relaxed text-gray-300">{setting.visibleResult}</dd>
           </div>
           <div>
-            <dt className="text-[10px] font-black uppercase tracking-wide text-gray-500">
+            <dt className="text-[10px] font-black uppercase tracking-wide text-gray-400">
               Change it when
             </dt>
             <dd className="mt-1 leading-relaxed text-gray-400">{setting.changeWhen}</dd>

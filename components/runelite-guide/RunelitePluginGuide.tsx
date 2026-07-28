@@ -126,13 +126,13 @@ const ContentsLink: React.FC<{
       event.preventDefault();
       onNavigate(chapter.id);
     }}
-    className={`group flex items-start gap-3 rounded-lg px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
+    className={`group flex items-start gap-3 rounded-lg border px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
       activeChapter === chapter.id
-        ? 'bg-amber-400/12 font-bold text-amber-200'
-        : 'text-gray-400 hover:bg-white/5 hover:text-white'
+        ? 'border-amber-400/40 bg-amber-400/10 font-bold text-amber-200'
+        : 'border-transparent text-gray-400 hover:bg-white/5 hover:text-white'
     }`}
   >
-    <span className="w-5 shrink-0 text-right text-xs font-black text-gray-600 group-aria-[current=location]:text-amber-400">
+    <span className="w-5 shrink-0 text-right text-xs font-black text-gray-400 group-aria-[current=location]:text-amber-400">
       {chapter.number}
     </span>
     <span>{chapter.title}</span>
@@ -159,13 +159,13 @@ const GuideContents: React.FC<GuideContentsProps> = ({
       ? 'h-full overflow-y-auto p-3 custom-scrollbar'
       : 'border-t border-osrs-border p-2'}
   >
-    <p className="px-2 pb-2 text-[10px] font-black uppercase tracking-[0.16em] text-gray-500">
+    <p className="px-2 pb-2 text-[10px] font-black uppercase tracking-[0.16em] text-gray-400">
       Contents
     </p>
     <div className="space-y-4">
       {GUIDE_NAV_GROUPS.map(group => (
         <section key={group.label} data-guide-nav-group={group.label}>
-          <h2 className="px-2 pb-1 text-[10px] font-black uppercase tracking-[0.14em] text-gray-600">
+          <h2 className="px-2 pb-1 text-[10px] font-black uppercase tracking-[0.14em] text-gray-400">
             {group.label}
           </h2>
           <div className="space-y-0.5">
@@ -577,7 +577,7 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({
         >
           <div>
             <p className="font-bold text-white">Ready to return to the companion?</p>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-gray-400">
               You can reopen this handbook from Help or the command palette.
             </p>
           </div>
