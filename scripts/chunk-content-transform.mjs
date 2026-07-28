@@ -248,7 +248,8 @@ export function transformChunkContent(data, sourceManifest) {
   }
   const connect = buildConnect(data), slayerMasters = buildSlayerMasters(data, audit), shortcuts = buildShortcuts(data, audit), shopItems = buildShopItems(data), drops = buildDrops(data), overlays = buildOverlays(data), skillItems = buildSkillItems(data, audit), taskUnlocks = buildTaskUnlocks(data, audit), questSections = buildQuestSections(data, audit), banks = buildBanks(data, audit), tags = buildTags(data, chunks, shopItems, drops);
    addBaseRecords(audit, 'drops', data.drops ?? {}); addBaseRecords(audit, 'shopItems', data.shopItems ?? {}); addBaseRecords(audit, 'mapOverlays', data.mapOverlays ?? {});  addBaseRecords(audit, 'searchTerms', data.searchTerms ?? {});
-  const full = { version: 8, source: 'source-chunk/chunk-picker-v2 (chunkpicker-chunkinfo-export.json, gh-pages)', chunks, connect, slayerMasters, shortcuts, shopItems, drops, overlays, skillItems, taskUnlocks, questSections, banks, tags };
+  const sourceMeta = { repository: sourceManifest.repository, commit: sourceManifest.commit, blobSha: sourceManifest.blobSha, rawSha256: sourceManifest.rawSha256, policyVersion: sourceManifest.policyVersion };
+  const full = { version: 8, source: 'source-chunk/chunk-picker-v2 (chunkpicker-chunkinfo-export.json, gh-pages)', sourceMeta, chunks, connect, slayerMasters, shortcuts, shopItems, drops, overlays, skillItems, taskUnlocks, questSections, banks, tags };
   const liteSource = buildLite(full, audit); const finalAudit = audit.finish();
   return { full, liteSource, audit: finalAudit };
 }

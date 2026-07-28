@@ -13,6 +13,9 @@ import { CHANGELOG_RELEASES } from './changelog';
 import diarySource from './sources/achievement-diary-tasks.json';
 import caSource from './sources/combat-achievement-tasks.json';
 import legacyDiaryIds from './sources/achievement-diary-legacy-ids.json';
+import chunkSource from './sources/chunk-content-source.json';
+import chunkAudit from './sources/chunk-content-transform-audit.json';
+import fullChunkContent from '../public/chunk-content.json';
 import { rankAvailableQuests } from '../utils/questAdvisor';
 import { planForTarget } from '../utils/goalPlanner';
 import { questCompletionDecision } from '../utils/journalCompletion';
@@ -104,6 +107,40 @@ describe('cross-surface quest eligibility contract', () => {
 });
 
 describe('deterministic current content baseline', () => {
+  it('pins the reviewed Chunk Picker source and complete transform totals', () => {
+    expect(chunkSource).toMatchObject({
+      commit: 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926',
+      blobSha: '6674e5c62cd7a6ec90267def278aca5bc1f05a06',
+      rawSha256: '95E4864651E2A9C7D4555C4EBBE4DD4AB5E71B881FF18BC966799CD22D48C167',
+    });
+    expect(fullChunkContent.sourceMeta).toEqual({
+      repository: 'source-chunk/chunk-picker-v2',
+      commit: 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926',
+      blobSha: '6674e5c62cd7a6ec90267def278aca5bc1f05a06',
+      rawSha256: '95E4864651E2A9C7D4555C4EBBE4DD4AB5E71B881FF18BC966799CD22D48C167',
+      policyVersion: 1,
+    });
+    expect(Object.keys(fullChunkContent.chunks)).toHaveLength(936);
+    expect(Object.keys(fullChunkContent.connect)).toHaveLength(1104);
+    expect(Object.keys(fullChunkContent.questSections)).toHaveLength(134);
+    expect(fullChunkContent.banks).toHaveLength(100);
+    expect(Object.keys(fullChunkContent.tags)).toHaveLength(26);
+    expect((chunkAudit as { unclassified?: unknown[] }).unclassified ?? []).toEqual([]);
+  });
+
+  it('contains the refreshed reviewed Sailing-era data', () => {
+    expect(fullChunkContent.drops['Maggot King']).toContain('Adamantite ore');
+    expect(fullChunkContent.drops['Maggot King']).toContain('Brimstone key');
+    expect(fullChunkContent.skillItems.Crafting['Tarnished 2h sword loot'])
+      .toEqual([
+        ['Adamant 2h sword', '4/10'],
+        ['Mithril 2h sword', '1/10'],
+        ['Rune 2h sword', '5/10'],
+      ]);
+    expect(fullChunkContent.skillItems.Slayer['Shellbane gryphon']
+      .some(([, rate]) => rate === '1/75')).toBe(true);
+  });
+
   it('pins first-class Quest Point and manual Diary requirements', () => {
     const varMediumGuild = ALL_DIARY_TASKS.find(({ id }) => id === 'var_med_2')!;
     const varHardKudos = ALL_DIARY_TASKS.find(({ id }) => id === 'var_hard_2')!;

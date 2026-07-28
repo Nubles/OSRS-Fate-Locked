@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import chunkContentJson from '../public/chunk-content.json?raw';
 import { initialState } from '../context/GameContext';
 import { MOBILITY_LIST } from '../data/items';
+import fullChunkContent from '../public/chunk-content.json';
 import { buildBundlePayload } from './runeliteExport';
 import { buildRuneliteBundle, RuneliteRunState } from './runeliteBundle';
 
@@ -71,6 +72,25 @@ describe('buildRuneliteBundle — unlockedChunks presence', () => {
     expect(Object.keys(bundle.chunkContent).length).toBeGreaterThan(100);
   });
 
+  it('exports a v4 lite bundle whose records are capped subsets of the full snapshot', async () => {
+    const bundle = await buildRuneliteBundle([], state) as any;
+    expect(bundle.version).toBe(4);
+
+    for (const [coords, lite] of Object.entries(bundle.chunkContent) as [string, any][]) {
+      const [cx, cy] = coords.split(',').map(Number);
+      const full = (fullChunkContent as any).chunks[String(cx * 256 + cy)];
+      expect(full, `missing full record for lite chunk ${coords}`).toBeDefined();
+      expect((lite.mon ?? []).length).toBeLessThanOrEqual(6);
+      expect((lite.shop ?? []).length).toBeLessThanOrEqual(8);
+      expect((lite.farm ?? []).length).toBeLessThanOrEqual(8);
+      expect((lite.poi ?? []).length).toBeLessThanOrEqual(8);
+      for (const name of lite.mon ?? []) expect(full.m.map(([item]: [string]) => item)).toContain(name);
+      for (const name of lite.shop ?? []) expect(full.s ?? []).toContain(name);
+      for (const name of [...(lite.farm ?? []), ...(lite.poi ?? [])]) {
+        expect(full.o.map(([item]: [string]) => item)).toContain(name);
+      }
+    }
+  });
   it('emits bankLocks + unlockedBanks only when banks are locked', async () => {
     const off = await buildRuneliteBundle([], state) as any;
     expect('bankLocks' in off).toBe(false);

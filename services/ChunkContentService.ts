@@ -99,6 +99,13 @@ const TASK_CATEGORY: Record<EntityKind, TaskUnlockCategory> = {
 interface RawDoc {
   version: number;
   source: string;
+  sourceMeta?: {
+    repository: string;
+    commit: string;
+    blobSha: string;
+    rawSha256: string;
+    policyVersion: number;
+  };
   chunks: Record<string, RawEntry>;
   connect?: ConnectGraph;
   slayerMasters?: SlayerMasters;
@@ -196,7 +203,7 @@ export interface EntityHit {
 
 // Bump when public/chunk-content.json changes so the fetch URL changes and
 // browsers don't serve a stale cached copy (the filename itself never changes).
-const DATA_REV = 8;
+const DATA_REV = 9;
 
 class ChunkContentService {
   private doc: RawDoc | null = null;
@@ -205,6 +212,10 @@ class ChunkContentService {
   error: string | null = null;
 
   get ready() { return this.doc != null; }
+
+  sourceMetadata(): RawDoc['sourceMeta'] | null {
+    return this.doc?.sourceMeta ?? null;
+  }
 
   /** Idempotent lazy init; resolves false (and sets .error) on failure. */
   init(): Promise<boolean> {
