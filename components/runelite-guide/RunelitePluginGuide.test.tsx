@@ -52,6 +52,18 @@ describe('RunelitePluginGuide', () => {
     );
     expect(html).toContain('data-guide-troubleshooting=');
     expect(html).toContain('data-guide-glossary-row=');
+    const officialSupportPanel = html.match(
+      /<section(?=[^>]*aria-labelledby="runelite-guide-support-links")(?=[^>]*class="([^"]*)")[^>]*>/,
+    );
+    expect(officialSupportPanel?.[1]).toContain('rounded-lg');
+    expect(officialSupportPanel?.[1]).not.toContain('rounded-xl');
+
+    const officialSupportHeading = html.match(
+      /<h3(?=[^>]*id="runelite-guide-support-links")(?=[^>]*class="([^"]*)")[^>]*>/,
+    );
+    expect(officialSupportHeading?.[1]).toContain('text-lg');
+    expect(officialSupportHeading?.[1]).not.toContain('font-serif');
+
 
     for (const section of RUNELITE_PANEL_SECTIONS) {
       expect(decodedHtml).toContain(section);

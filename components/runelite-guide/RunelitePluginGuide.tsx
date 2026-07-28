@@ -239,10 +239,10 @@ const Troubleshooting: React.FC = () => (
       </details>
     ))}
     <section
-      className="rounded-xl border border-amber-400/20 bg-amber-400/[0.055] p-4"
+      className="rounded-lg border border-amber-400/20 bg-amber-400/[0.055] p-4"
       aria-labelledby="runelite-guide-support-links"
     >
-      <h3 id="runelite-guide-support-links" className="font-serif text-lg font-bold text-white">
+      <h3 id="runelite-guide-support-links" className="text-lg font-bold text-white">
         Official links
       </h3>
       <div className="mt-3 grid gap-3 lg:grid-cols-3">
