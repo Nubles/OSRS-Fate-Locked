@@ -34,6 +34,26 @@ const context = (
 });
 
 describe('buildChunkPermissionSnapshot', () => {
+  it("uses canonical Witch's Potion access instead of the chunk activity entry", () => {
+    const locked = buildChunkPermissionSnapshot(
+      content({ quests: { "Witch's Potion": 'first' } }),
+      { cx: 50, cy: 50 },
+      context(),
+    );
+    const available = buildChunkPermissionSnapshot(
+      content({ quests: { "Witch's Potion": 'first' } }),
+      { cx: 50, cy: 50 },
+      context({
+        unlocks: {
+          ...initialState.unlocks,
+          regions: ['Rimmington'],
+        },
+      }),
+    );
+
+    expect(locked.categories.QUESTS?.[0].status).toBe('LOCKED');
+    expect(available.categories.QUESTS?.[0].status).toBe('ALLOWED');
+  });
   it('uses compact category-specific rows', () => {
     const view = buildChunkPermissionSnapshot(
       content({

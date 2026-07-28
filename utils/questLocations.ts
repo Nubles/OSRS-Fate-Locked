@@ -1,20 +1,10 @@
 /**
- * Chunk-derived quest locations — refine a quest's region requirement using the
- * actual chunks the quest touches, instead of only its hand-authored (and
- * continent-coarse) `regions` list.
+ * Chunk-derived quest locations for map links and display evidence only.
  *
- * The chunk-content dataset records, per chunk, which quests **start** there
- * ('first') or have a **step** there ('step'). Joining that to our sub-area
- * unlock model lets us:
- *   • show the precise sub-areas a quest needs (Ardougne, not all of Kandarin),
- *     each green/red by its real unlock state, and
- *   • loosen the region gate: if every chunk a quest visits sits in an unlocked
- *     sub-area, the quest isn't region-locked even when its authored continent
- *     isn't fully unlocked.
- *
- * The loosening is deliberately conservative — it only ever *grants* region
- * access when chunk evidence fully supports it, so it can't mark a quest
- * available that the player can't actually reach.
+ * The chunk-content dataset records where a quest starts or has a step. Those
+ * records can make the Journal more precise, but they are incomplete evidence
+ * and never override the reviewed requirements enforced by
+ * `evaluateQuestEligibility`.
  *
  * Content data: ChunkContentService (credit: source-chunk/chunk-picker-v2).
  */
@@ -81,17 +71,15 @@ export function questLocations(questName: string, unlocks: UnlockState, gameMode
 }
 
 /**
- * Is the quest's region requirement met, refined by chunk evidence?
- *   • 'authored' — all gated continents in `regions` are unlocked (old behaviour)
- *   • 'chunks'   — continents aren't all unlocked, but every chunk the quest
- *                  visits is in an unlocked sub-area, so it's reachable anyway
- *   • 'locked'   — neither; some place the quest needs is still locked
+ * Compatibility helper for legacy display callers. Canonical authored access is
+ * the only source of `met`; chunk evidence may be shown separately through the
+ * supplied `QuestLocationInfo`, but can never promote a blocked quest.
  */
 export function refineQuestRegion(
   authoredMet: boolean,
-  info: QuestLocationInfo,
-): { met: boolean; via: 'authored' | 'chunks' | 'locked' } {
-  if (authoredMet) return { met: true, via: 'authored' };
-  if (info.hasData && info.allUnlocked) return { met: true, via: 'chunks' };
-  return { met: false, via: 'locked' };
+  _info: QuestLocationInfo,
+): { met: boolean; via: 'authored' | 'locked' } {
+  return authoredMet
+    ? { met: true, via: 'authored' }
+    : { met: false, via: 'locked' };
 }

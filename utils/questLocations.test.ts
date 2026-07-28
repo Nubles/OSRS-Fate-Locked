@@ -49,7 +49,7 @@ describe('summariseQuestPlaces', () => {
   });
 });
 
-describe('refineQuestRegion', () => {
+describe('refineQuestRegion display evidence', () => {
   const locked = summariseQuestPlaces([LUMBRIDGE, FALADOR], unlocksWith([]));
   const reachable = summariseQuestPlaces([LUMBRIDGE, FALADOR], unlocksWith(['Falador']));
 
@@ -57,8 +57,8 @@ describe('refineQuestRegion', () => {
     expect(refineQuestRegion(true, locked)).toEqual({ met: true, via: 'authored' });
   });
 
-  it('loosens to met when every chunk is in an unlocked sub-area', () => {
-    expect(refineQuestRegion(false, reachable)).toEqual({ met: true, via: 'chunks' });
+  it('cannot promote a canonically blocked quest from chunk evidence', () => {
+    expect(refineQuestRegion(false, reachable)).toEqual({ met: false, via: 'locked' });
   });
 
   it('stays locked when a needed place is still locked', () => {

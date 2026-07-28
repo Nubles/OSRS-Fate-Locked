@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SKILLS_LIST } from '../constants';
 import { questLogEligibility } from '../components/QuestLog';
-import {
-  journalNextBestQuestAction, selectJournalNextBestActions,
-} from '../components/JournalNextBest';
+import { journalNextBestQuestAction } from '../components/JournalNextBest';
 import { QUEST_DATA } from './questData';
 import { DIARY_DATA } from './diaryData';
 import { ALL_DIARY_TASKS } from './diaryTasks';
@@ -19,6 +17,7 @@ import fullChunkContent from '../public/chunk-content.json';
 import { rankAvailableQuests } from '../utils/questAdvisor';
 import { planForTarget } from '../utils/goalPlanner';
 import { questCompletionDecision } from '../utils/journalCompletion';
+import { prepareUnlockImpactContext } from '../utils/unlockImpact';
 import { CA_TASK_POINTS, CA_TIER_ORDER } from '../utils/caProgress';
 import { DIARY_TASK_ID_MIGRATIONS } from '../utils/taskIdMigrations';
 
@@ -51,6 +50,48 @@ const porcineOnlyUnlocks = (chunks: string[]) => ({
   diaries: Object.keys(DIARY_DATA),
 });
 
+const maxedQuestUnlocks = (
+  targetId: string,
+  overrides: Record<string, unknown> = {},
+) => ({
+  ...maxedChunkedUnlocks([]),
+  quests: Object.keys(QUEST_DATA).filter(id => id !== targetId),
+  diaries: Object.keys(DIARY_DATA),
+  ...overrides,
+});
+
+const crossSurfaceReadiness = (
+  id: string,
+  unlocks: ReturnType<typeof maxedQuestUnlocks>,
+  gameModeId?: string,
+) => {
+  const quest = QUEST_DATA[id];
+  const questLog = questLogEligibility(quest, unlocks, gameModeId);
+  const impact = prepareUnlockImpactContext(unlocks, gameModeId);
+  const advisorAvailable = rankAvailableQuests(unlocks, gameModeId)
+    .some(candidate => candidate.id === quest.id);
+  const plan = planForTarget('quest', quest.id, unlocks, gameModeId)!;
+  const nextBest = journalNextBestQuestAction(quest, unlocks, gameModeId)!;
+  const completion = questCompletionDecision(quest, unlocks, gameModeId);
+  const label = (ready: boolean) => ready ? 'READY' : 'BLOCKED';
+
+  return {
+    machineStatuses: [
+      questLog.status,
+      impact.questStatusById.get(quest.id),
+    ],
+    finalReadiness: [
+      label(questLog.eligible),
+      label(advisorAvailable),
+      label(plan.alreadyReachable),
+      label(nextBest.unmet === 0),
+      label(completion.ok),
+      label(impact.baseAvailableIds.has(quest.id)),
+    ],
+    firstBlocker: nextBest.firstBlocker,
+  };
+};
+
 const questRequirementFields = (id: string) => {
   const quest = QUEST_DATA[id];
   return {
@@ -67,45 +108,139 @@ const questRequirementFields = (id: string) => {
 describe('cross-surface quest eligibility contract', () => {
   it.each([
     {
-      expected: 'LOCKED_REGION',
-      unlocks: porcineOnlyUnlocks(['46,51', '48,50']),
-      blocker: 'South Falador Farm',
+      label: "Witch's Potion before Rimmington",
+      id: "Witch's Potion",
+      gameModeId: 'chunked',
+      unlocks: maxedQuestUnlocks("Witch's Potion", { chunks: [] }),
+      expectedStatus: 'LOCKED_REGION',
+      expectedReadiness: 'BLOCKED',
+      firstBlocker: 'Rimmington',
     },
     {
-      expected: 'AVAILABLE',
-      unlocks: porcineOnlyUnlocks(['46,51', '48,50', '47,51']),
-      blocker: undefined,
+      label: "Witch's Potion after Rimmington",
+      id: "Witch's Potion",
+      gameModeId: 'chunked',
+      unlocks: maxedQuestUnlocks("Witch's Potion", { chunks: ['46,50'] }),
+      expectedStatus: 'AVAILABLE',
+      expectedReadiness: 'READY',
+      firstBlocker: undefined,
+    },
+    {
+      label: 'Murder Mystery before Sinclair Mansion',
+      id: 'Murder Mystery',
+      gameModeId: 'chunked',
+      unlocks: maxedQuestUnlocks('Murder Mystery', { chunks: [] }),
+      expectedStatus: 'LOCKED_REGION',
+      expectedReadiness: 'BLOCKED',
+      firstBlocker: 'Sinclair Mansion',
+    },
+    {
+      label: "Murder Mystery after Sinclair Mansion but before Seers' Village",
+      id: 'Murder Mystery',
+      gameModeId: 'chunked',
+      unlocks: maxedQuestUnlocks('Murder Mystery', { chunks: ['42,55'] }),
+      expectedStatus: 'LOCKED_REGION',
+      expectedReadiness: 'BLOCKED',
+      firstBlocker: "Seers' Village",
+    },
+    {
+      label: "Murder Mystery after Sinclair Mansion and Seers' Village",
+      id: 'Murder Mystery',
+      gameModeId: 'chunked',
+      unlocks: maxedQuestUnlocks('Murder Mystery', { chunks: ['42,55', '42,54'] }),
+      expectedStatus: 'AVAILABLE',
+      expectedReadiness: 'READY',
+      firstBlocker: undefined,
+    },
+    {
+      label: 'A Porcine of Interest before South Falador Farm',
+      id: 'A Porcine of Interest',
+      gameModeId: 'chunked',
+      unlocks: porcineOnlyUnlocks(['48,50']),
+      expectedStatus: 'LOCKED_REGION',
+      expectedReadiness: 'BLOCKED',
+      firstBlocker: 'South Falador Farm',
+    },
+    {
+      label: 'A Porcine of Interest after both audited locations',
+      id: 'A Porcine of Interest',
+      gameModeId: 'chunked',
+      unlocks: porcineOnlyUnlocks(['48,50', '47,51']),
+      expectedStatus: 'AVAILABLE',
+      expectedReadiness: 'READY',
+      firstBlocker: undefined,
+    },
+    {
+      label: 'Mountain Daughter before either alternative route',
+      id: 'Mountain Daughter',
+      gameModeId: undefined,
+      unlocks: maxedQuestUnlocks('Mountain Daughter', { regions: ['Fremennik'] }),
+      expectedStatus: 'LOCKED_REGION',
+      expectedReadiness: 'BLOCKED',
+      firstBlocker: 'Asgarnia or Kandarin',
+    },
+    {
+      label: 'Mountain Daughter after the Asgarnia alternative route',
+      id: 'Mountain Daughter',
+      gameModeId: undefined,
+      unlocks: maxedQuestUnlocks('Mountain Daughter', {
+        regions: ['Fremennik', 'Asgarnia'],
+      }),
+      expectedStatus: 'AVAILABLE',
+      expectedReadiness: 'READY',
+      firstBlocker: undefined,
+    },
+    {
+      label: 'The Frozen Door before its prerequisite',
+      id: 'The Frozen Door',
+      gameModeId: undefined,
+      unlocks: maxedQuestUnlocks('The Frozen Door', {
+        regions: ['Asgarnia'],
+        quests: Object.keys(QUEST_DATA).filter(
+          id => id !== 'The Frozen Door' && id !== 'Desert Treasure I',
+        ),
+      }),
+      expectedStatus: 'LOCKED_QUEST',
+      expectedReadiness: 'BLOCKED',
+      firstBlocker: 'Desert Treasure I',
+    },
+    {
+      label: 'The Frozen Door after its prerequisite',
+      id: 'The Frozen Door',
+      gameModeId: undefined,
+      unlocks: maxedQuestUnlocks('The Frozen Door', { regions: ['Asgarnia'] }),
+      expectedStatus: 'AVAILABLE',
+      expectedReadiness: 'READY',
+      firstBlocker: undefined,
     },
   ] as const)(
-    'keeps A Porcine of Interest $expected across every Journal surface',
-    ({ expected, unlocks, blocker }) => {
-      const quest = QUEST_DATA['A Porcine of Interest'];
-      const advisorAvailable = rankAvailableQuests(unlocks, 'chunked')
-        .some(candidate => candidate.id === quest.id);
-      const plan = planForTarget('quest', quest.id, unlocks, 'chunked')!;
-      const nextBest = journalNextBestQuestAction(quest, unlocks, 'chunked')!;
-      const selectedActions = selectJournalNextBestActions(unlocks, 'chunked');
-      const selected = selectedActions.find(action => action.id === quest.id)!;
-      const completion = questCompletionDecision(quest, unlocks, 'chunked');
+    'keeps $label consistent across every quest consumer',
+    ({
+      id, unlocks, gameModeId, expectedStatus, expectedReadiness, firstBlocker,
+    }) => {
+      const actual = crossSurfaceReadiness(id, unlocks, gameModeId);
 
-      const statuses = [
-        questLogEligibility(quest, unlocks, 'chunked').status,
-        advisorAvailable ? 'AVAILABLE' : 'LOCKED_REGION',
-        plan.alreadyReachable ? 'AVAILABLE' : 'LOCKED_REGION',
-        selected.unmet === 0 ? 'AVAILABLE' : 'LOCKED_REGION',
-        completion.ok ? 'AVAILABLE' : 'LOCKED_REGION',
-      ];
-
-      expect(statuses).toEqual(Array(5).fill(expected));
-      expect(selectedActions).toEqual([nextBest]);
-      expect(selected.firstBlocker).toBe(blocker);
-      expect(plan.regionSteps.map(step => step.label)).toEqual(
-        blocker ? [blocker] : [],
+      expect(actual.machineStatuses).toEqual(
+        Array(2).fill(expectedStatus),
       );
+      expect(actual.finalReadiness).toEqual(
+        Array(6).fill(expectedReadiness),
+      );
+      expect(actual.firstBlocker).toBe(firstBlocker);
     },
   );
-});
 
+  it('keeps a machine-ready manual quest pending on every completion surface', () => {
+    const unlocks = maxedQuestUnlocks('The Slug Menace', {
+      regions: ['Kandarin', 'Asgarnia'],
+    });
+    const actual = crossSurfaceReadiness('The Slug Menace', unlocks);
+
+    expect(actual.machineStatuses).toEqual(['AVAILABLE', 'AVAILABLE']);
+    expect(actual.finalReadiness).toEqual(Array(6).fill('BLOCKED'));
+    expect(actual.firstBlocker).toMatch(/^Confirm: Access to all required elemental altars/);
+  });
+});
 describe('deterministic current content baseline', () => {
   it('pins the reviewed Chunk Picker source and complete transform totals', () => {
     expect(chunkSource).toMatchObject({
