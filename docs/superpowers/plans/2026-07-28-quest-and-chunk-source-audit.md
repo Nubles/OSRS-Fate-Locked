@@ -1643,4 +1643,3 @@ git commit -m "docs: publish verified quest and chunk audit"
 - Every production behavior change has a preceding failing test.
 - Every generated artifact has an offline deterministic check.
 - Every audit batch ends with a separately reviewable commit.
-

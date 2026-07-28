@@ -1,5 +1,11 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,6 +22,14 @@ const verifyScript = resolve(
   repositoryRoot,
   'scripts/verify-player-facing-changelog.mjs',
 );
+const contentSyncDocumentation = readFileSync(
+  resolve(repositoryRoot, 'docs/CONTENT_SYNC.md'),
+  'utf8',
+);
+const packageJson = JSON.parse(readFileSync(
+  resolve(repositoryRoot, 'package.json'),
+  'utf8',
+)) as { scripts: Record<string, string> };
 
 const runGit = (cwd: string, args: string[]) =>
   execFileSync('git', args, { cwd, stdio: 'ignore' });
@@ -155,5 +169,47 @@ describe('player-facing changelog Git comparison', () => {
     } finally {
       rmSync(cwd, { recursive: true, force: true });
     }
+  });
+});
+
+describe('quest and chunk audit release contracts', () => {
+  it('documents every source-review command and its network boundary', () => {
+    expect(contentSyncDocumentation).toMatch(
+      /chunks:source-check[\s\S]{0,250}networked[\s\S]{0,250}informational/i,
+    );
+    expect(contentSyncDocumentation).toMatch(
+      /chunks:verify[\s\S]{0,250}offline[\s\S]{0,250}deterministic/i,
+    );
+    expect(contentSyncDocumentation).toMatch(
+      /quests:source-refresh[\s\S]{0,250}networked[\s\S]{0,250}(revision|drift)/i,
+    );
+    expect(contentSyncDocumentation).toMatch(
+      /quests:verify[\s\S]{0,250}offline[\s\S]{0,250}deterministic/i,
+    );
+    expect(contentSyncDocumentation).toMatch(
+      /content:verify[\s\S]{0,250}offline[\s\S]{0,250}(aggregate|aggregates)/i,
+    );
+  });
+
+  it('documents the pinned sources, reviewed ledgers, and compatibility policy', () => {
+    expect(contentSyncDocumentation).toContain('data/sources/chunk-content-source.json');
+    expect(contentSyncDocumentation).toContain('data/sources/chunk-content-transform-audit.json');
+    expect(contentSyncDocumentation).toContain('data/sources/quest-list.json');
+    expect(contentSyncDocumentation).toContain('data/sources/quest-requirement-audit.json');
+    expect(contentSyncDocumentation).toMatch(/oldid/i);
+    expect(contentSyncDocumentation).toMatch(/Recipe for Disaster|RFD/i);
+    expect(contentSyncDocumentation).toMatch(/normal CI[\s\S]{0,250}offline/i);
+  });
+
+  it('runs quest verification once in the offline aggregate release order', () => {
+    const contentVerify = packageJson.scripts['content:verify'];
+
+    expect(contentVerify).toBe(
+      'npm run diary:verify && npm run chunks:verify && npm run quests:verify && vitest run data/contentBaseline.test.ts data/tasksConsistency.test.ts utils/taskIdMigrations.test.ts utils/caProgress.test.ts',
+    );
+    expect(contentVerify).not.toContain('data/questRequirementAudit.test.ts');
+    expect(packageJson.scripts['release:verify']).toBe(
+      'npm run changelog:verify && npm test && npm run typecheck && npm run content:verify && npm run build',
+    );
   });
 });

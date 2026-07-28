@@ -19,6 +19,25 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-07-28-quest-chunk-audit',
+    title: 'Verified Quest & Chunk Requirements',
+    date: '2026-07-28',
+    sections: {
+      added: [
+        'Learning the Ropes and The Blood Moon Rises are now included in the official quest list.',
+      ],
+      changed: [
+        'All 190 quests and 19 miniquests now have reviewed requirement evidence; three remaining source discrepancies are documented and conservatively gated.',
+        'The reviewed Chunk Picker source is now pinned, and chunk data refreshes are generated deterministically.',
+      ],
+      fixed: [
+        "Witch's Potion now checks Rimmington.",
+        "Murder Mystery now checks Sinclair Mansion and Seers' Village.",
+        'Quest completion remains strict: unmet machine requirements cannot be bypassed by manual confirmation, and rejected and repeated completions grant no extra rolls.',
+      ],
+    },
+  },
+  {
     id: '2026-07-28-tirannwn-area-accuracy',
     title: 'Tirannwn Area Accuracy',
     date: '2026-07-28',

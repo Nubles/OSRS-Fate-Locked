@@ -418,6 +418,26 @@ describe('deterministic current content baseline', () => {
     expect(wording).not.toMatch(/plugin|relay|balance/i);
   });
 
+  it('publishes the reviewed quest and chunk audit without overstating its scope', () => {
+    const auditRelease = CHANGELOG_RELEASES[0];
+    const wording = Object.values(auditRelease.sections)
+      .flatMap(lines => lines ?? [])
+      .map(note => typeof note === 'string' ? note : note.text)
+      .join(' ');
+
+    expect(auditRelease.id).toBe('2026-07-28-quest-chunk-audit');
+    expect(wording).toMatch(/Witch's Potion[^.]*Rimmington/i);
+    expect(wording).toMatch(/Murder Mystery[^.]*Sinclair Mansion[^.]*Seers' Village/i);
+    expect(wording).toMatch(/190 quests and 19 miniquests[^.]*reviewed requirement evidence/i);
+    expect(wording).toMatch(/three[^.]*source discrepancies[^.]*documented[^.]*conservatively/i);
+    expect(wording).toMatch(/Chunk Picker[^.]*pinned[^.]*deterministic/i);
+    expect(wording).toMatch(/unmet machine requirements[^.]*manual confirmation/i);
+    expect(wording).toMatch(/rejected and repeated completions[^.]*extra rolls/i);
+    expect(wording).toMatch(/Learning the Ropes/i);
+    expect(wording).toMatch(/The Blood Moon Rises/i);
+    expect(wording).not.toMatch(/inventory tracking|completion override|key rates?|Fate Points?|pity|balance changes?/i);
+  });
+
   it('pins 646 Combat Achievements, tier counts, thresholds, and provenance', () => {
     const tiers = ['Easy', 'Medium', 'Hard', 'Elite', 'Master', 'Grandmaster'] as const;
     expect(ALL_CA_TASKS).toHaveLength(646);

@@ -1,7 +1,7 @@
 # Quest, Miniquest, and Chunk Source Audit Design
 
-**Date:** 2026-07-28  
-**Status:** Approved for implementation planning  
+**Date:** 2026-07-28
+**Status:** Approved for implementation planning
 **Repository:** `Nubles/OSRS-Fate-Locked`
 
 ## Goal
@@ -421,4 +421,3 @@ The work is complete when:
 - all named downstream surfaces agree with canonical eligibility;
 - completion remains strict and key balance is unchanged;
 - offline CI and the full release verification gate pass.
-

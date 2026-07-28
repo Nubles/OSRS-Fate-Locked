@@ -54,19 +54,74 @@ npm run clog:sync     # or: npm run content:sync
 ## Verification and maintenance commands
 
 Use the command that matches the intended operation. The exact release order and
-GitHub handoff live in the [release verification checklist](RELEASE_CHECKLIST.md);
-this section defines only the content-command boundaries.
+GitHub handoff live in the [release verification checklist](RELEASE_CHECKLIST.md).
 
-- `npm run content:verify` is the deterministic gate used by pull-request and
-  deploy CI. It is fully offline and read-only: it validates committed quest,
-  Achievement Diary, and Combat Achievement data, then checks that generated
-  Diary files are byte-for-byte current without writing anything.
-- `npm run content:check` is a network-backed freshness inspection. It may
-  contact the OSRS Wiki and update `docs/SYNC_STATUS.md`, so it is kept out of
+- `npm run chunks:source-check` is a networked, informational check for movement
+  of the Chunk Picker branch. It never changes the approved pin.
+- `npm run chunks:verify` is an offline, deterministic check of the committed
+  compressed source, its manifest, the transformation ledger, and generated
+  chunk outputs.
+- `npm run quests:source-refresh` is a networked maintenance command that fetches
+  the official quest list and current Wiki revisions so revision drift can be
+  reviewed explicitly.
+- `npm run quests:verify` is an offline, deterministic check of the committed
+  official list, stable page revisions, evidence audit, and runtime fingerprints.
+- `npm run content:verify` is the offline, deterministic aggregate used by
+  pull-request and deploy CI. It includes Diary, chunk, quest, and baseline
+  verification and is read-only.
+- `npm run content:check` is a separate network-backed freshness inspection. It
+  may contact the OSRS Wiki and update `docs/SYNC_STATUS.md`, so it stays out of
   required CI.
-- `npm run content:sync`, `npm run diary:sync`, and `npm run ca:sync`
-  are explicit maintenance writes. Run them only when updating reviewed source
-  material, and review their generated changes in their own diff.
+- `npm run content:sync`, `npm run diary:sync`, and `npm run ca:sync` are explicit
+  maintenance writes. Review their generated changes in their own diff.
+
+Normal CI stays offline so a network outage, upstream edit, or moving branch
+cannot change a required result. Networked commands only surface possible drift;
+a maintainer must review and commit any source-pin or revision update.
+
+## Pinned Chunk Picker and quest evidence workflow
+
+### Chunk data
+
+The reviewed Chunk Picker pin is recorded in
+`data/sources/chunk-content-source.json`; the exact compressed upstream export is
+`data/sources/chunkpicker-chunkinfo-export.json.gz`. The pin includes the
+repository, branch, commit, blob, byte count, and raw SHA-256. Never replace it
+with a moving branch response.
+
+`data/sources/chunk-content-transform-audit.json` is the transformation ledger.
+Before accepting a source refresh, review every `normalized`, `excluded`, and
+`unresolved` record and confirm each source category balances exactly. An
+exclusion is a documented policy decision, not permission to delete all
+unmapped entries. Run `npm run chunks:verify` after regeneration to prove the
+committed outputs still match the pin and ledger without network access.
+
+To consider a newer upstream version, first run the informational
+`npm run chunks:source-check`. Review the new commit and raw export separately,
+update the manifest and deterministic gzip only after approval, regenerate the
+full and RuneLite-lite outputs, then review the ledger diff before committing.
+
+### Quest and miniquest evidence
+
+`data/sources/quest-list.json` is the reviewed official inventory: 190 quests and
+19 miniquests. `data/sources/quest-requirement-audit.json` records one matching
+source and requirement decision for every canonical journal ID, including the
+three documented evidence discrepancies that retain conservative runtime gates.
+Runtime requirements remain in `data/questData.ts`.
+
+Each Wiki source URL is pinned to a stable `oldid` and matching revision
+metadata. When official coverage or a page changes, run
+`npm run quests:source-refresh`, inspect every list/revision diff, open the new
+stable revisions, compare the pinned Chunk Picker evidence, and update the
+runtime record, audit fingerprint, and focused regression together. Do not
+replace a precise unresolved discrepancy or conservative reason with a generic
+placeholder. Finish with `npm run quests:verify`, which reads only committed
+files.
+
+Recipe for Disaster keeps its ten existing `RFD:` completion IDs for old-save,
+completion, and key compatibility. `RFD: Finale` is the audit parent, while the
+nine child page `oldid` revisions and Chunk Picker subpaths support the preserved
+child IDs. Do not collapse or rename those runtime IDs during a source refresh.
 
 Generated data is never hand-edited. Update its committed source snapshot or
 its generator, run the appropriate sync command, and review the resulting diff.
