@@ -15,8 +15,15 @@ import { useGame } from '../context/GameContext';
  * (mirrors the existing `open-resource-engine` pattern), so no prop-drilling.
  */
 
-export const navTo = (target: string) =>
-  window.dispatchEvent(new CustomEvent('fate:nav', { detail: { target } }));
+export const navTo = (
+  target: string,
+  returnFocusTarget: HTMLElement | null = null,
+) => window.dispatchEvent(new CustomEvent('fate:nav', {
+  detail: {
+    target,
+    ...(returnFocusTarget ? { returnFocusTarget } : {}),
+  },
+}));
 
 interface Cmd {
   id: string;
@@ -38,9 +45,13 @@ export const CommandPalette: React.FC = () => {
   const [sel, setSel] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const returnFocusTargetRef = useRef<HTMLElement | null>(null);
 
   const commands: Cmd[] = useMemo(() => {
-    const go = (target: string) => () => { navTo(target); setOpen(false); };
+    const go = (target: string) => () => {
+      navTo(target, returnFocusTargetRef.current);
+      setOpen(false);
+    };
     return [
       // Navigate — dashboard tabs
       { id: 'tab-char', title: 'Character', subtitle: 'Gear, skills, Equipment Lab & DPS', group: 'Navigate', icon: User, keywords: 'character gear equipment skills dps loadout combat', run: go('tab:CHARACTER') },
@@ -133,12 +144,26 @@ export const CommandPalette: React.FC = () => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        setOpen((o) => !o);
+        setOpen((wasOpen) => {
+          if (!wasOpen) {
+            returnFocusTargetRef.current =
+              document.querySelector<HTMLElement>('[data-tour="palette"]');
+          }
+          return !wasOpen;
+        });
       } else if (e.key === 'Escape') {
         setOpen(false);
       }
     };
-    const onOpen = () => setOpen(true);
+    const onOpen = (event: Event) => {
+      const detail = (event as CustomEvent<{
+        returnFocusTarget?: HTMLElement | null;
+      }>).detail;
+      returnFocusTargetRef.current =
+        detail?.returnFocusTarget
+        ?? document.querySelector<HTMLElement>('[data-tour="palette"]');
+      setOpen(true);
+    };
     window.addEventListener('keydown', onKey);
     window.addEventListener('fate:open-palette', onOpen);
     return () => {

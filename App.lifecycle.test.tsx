@@ -169,16 +169,27 @@ describe('App changelog lifecycle', () => {
     expect(document.activeElement).toBe(settings);
   });
 
-  it('maps the command event to the RuneLite guide', async () => {
+  it('opens the RuneLite guide from the command palette and returns focus to Jump to', async () => {
     storage.setItem(changelogStorageKey, latestChangelogId);
+    const user = userEvent.setup();
     render(<App />);
 
-    window.dispatchEvent(new CustomEvent('fate:nav', {
-      detail: { target: 'open:runelite-guide' },
+    const paletteTrigger = screen.getByTitle(/Command palette/i);
+    await user.click(paletteTrigger);
+    await user.type(
+      screen.getByPlaceholderText(/Jump to a tab, tool or action/i),
+      'guardian warnings rendering',
+    );
+    await user.click(await screen.findByRole('button', {
+      name: /RuneLite Plugin Guide.*Install, connect, configure and troubleshoot RuneLite/i,
     }));
 
-    expect(await screen.findByRole('dialog', {
+    const guideDialog = await screen.findByRole('dialog', {
       name: 'RuneLite Plugin Guide',
-    })).toBeTruthy();
-  });
+    });
+    await user.click(within(guideDialog).getAllByRole('button', {
+      name: 'Close RuneLite Plugin Guide',
+    })[0]);
+    expect(document.activeElement).toBe(paletteTrigger);
+  }, 15_000);
 });

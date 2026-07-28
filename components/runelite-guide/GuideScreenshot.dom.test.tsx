@@ -58,9 +58,15 @@ describe('GuideScreenshot', () => {
   it('renders an authentic image with responsive markers and accessible callouts', async () => {
     const host = await mount();
     const markers = host.querySelectorAll<HTMLElement>('[data-guide-marker]');
+    const imageStage = host.querySelector<HTMLElement>('[data-guide-image-stage]');
+    const markerLayer = host.querySelector<HTMLElement>('[data-guide-marker-layer]');
     const original = host.querySelector<HTMLAnchorElement>('a');
 
     expect(host.querySelector('img')?.getAttribute('src')).toBe('/guides/runelite/demo.png');
+    expect(imageStage).toBeTruthy();
+    expect(imageStage?.contains(host.querySelector('img'))).toBe(true);
+    expect(markerLayer?.parentElement).toBe(imageStage);
+    expect(markerLayer?.className).toContain('inset-0');
     expect(markers).toHaveLength(2);
     expect(markers[0]?.style.left).toBe('25%');
     expect(markers[0]?.style.top).toBe('40%');

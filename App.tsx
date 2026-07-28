@@ -457,7 +457,11 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
 
              <button
                data-tour="palette"
-               onClick={() => window.dispatchEvent(new CustomEvent('fate:open-palette'))}
+               onClick={event => window.dispatchEvent(new CustomEvent('fate:open-palette', {
+                 detail: {
+                   returnFocusTarget: event.currentTarget,
+                 },
+               }))}
                className="h-8 px-2.5 rounded-lg border border-white/10 bg-[#252525] hover:bg-white/5 hover:border-white/20 text-gray-400 hover:text-white flex items-center gap-2 transition-colors group"
                title="Command palette — jump to anything"
              >
@@ -771,7 +775,18 @@ const GameLayout = () => {
   // Command-palette navigation: open the modals this layout owns.
   React.useEffect(() => {
     const onNav = (e: Event) => {
-      const target = (e as CustomEvent<{ target?: string }>).detail?.target ?? '';
+      const detail = (e as CustomEvent<{
+        target?: string;
+        returnFocusTarget?: HTMLElement | null;
+      }>).detail;
+      const target = detail?.target ?? '';
+      if (target === 'open:runelite-guide') {
+        openRuneliteGuide(
+          detail?.returnFocusTarget
+          ?? document.querySelector<HTMLElement>('[data-tour="palette"]'),
+        );
+        return;
+      }
       const map: Record<string, (v: boolean) => void> = {
         'open:altar': setShowAltar,
         'open:stats': setShowStats,
@@ -783,7 +798,6 @@ const GameLayout = () => {
         'open:gamemode': setShowGameMode,
         'open:sync': setShowSyncCode,
         'open:gallery': setShowGallery,
-        'open:runelite-guide': setShowRuneliteGuide,
       };
       map[target]?.(true);
     };

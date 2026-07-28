@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   RUNELITE_GUIDE_CHAPTERS,
   RUNELITE_GUIDE_PRESETS,
+  RUNELITE_GUIDE_RESOURCES,
   RUNELITE_GUIDE_SCREENSHOTS,
   RUNELITE_GUIDE_SETTINGS,
   RUNELITE_PANEL_SECTIONS,
@@ -24,6 +25,8 @@ describe('RunelitePluginGuide', () => {
     expect(html).toContain('aria-modal="true"');
     expect(html).toContain('aria-labelledby="runelite-guide-title"');
     expect(html).toContain('Five-minute setup');
+    expect(html).toContain('Jump to Install');
+    expect(html).toContain('Jump to Connect');
     expect(html).toContain('Vanilla');
     expect(html).toContain('Chunked mode is not finished');
 
@@ -47,6 +50,13 @@ describe('RunelitePluginGuide', () => {
     for (const preset of RUNELITE_GUIDE_PRESETS) {
       expect(decodedHtml).toContain(preset.title);
     }
+
+    for (const resource of RUNELITE_GUIDE_RESOURCES) {
+      expect(html).toContain(`href="${resource.href}"`);
+    }
+    expect(html.match(/rel="noopener noreferrer"/g)?.length).toBeGreaterThanOrEqual(
+      RUNELITE_GUIDE_RESOURCES.length,
+    );
 
     expect(html).toContain('Troubleshooting');
     expect(html).toContain('Glossary');

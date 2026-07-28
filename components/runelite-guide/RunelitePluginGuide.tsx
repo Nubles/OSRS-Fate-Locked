@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { BookOpen, Clock3, X } from 'lucide-react';
+import { BookOpen, Clock3, ExternalLink, X } from 'lucide-react';
 import {
   RUNELITE_GUIDE_CHAPTERS,
   RUNELITE_GUIDE_CHAPTER_IDS,
   RUNELITE_GUIDE_GLOSSARY,
   RUNELITE_GUIDE_PRESETS,
+  RUNELITE_GUIDE_RESOURCES,
   RUNELITE_GUIDE_SCREENSHOTS,
   RUNELITE_GUIDE_SETTINGS,
   RUNELITE_GUIDE_TROUBLESHOOTING,
@@ -26,7 +27,9 @@ const screenshotsById = new Map(
   RUNELITE_GUIDE_SCREENSHOTS.map(screenshot => [screenshot.id, screenshot]),
 );
 
-const FiveMinuteSetup: React.FC = () => (
+const FiveMinuteSetup: React.FC<{
+  readonly onNavigate: (chapterId: GuideChapterId) => void;
+}> = ({ onNavigate }) => (
   <section
     className="rounded-2xl border border-amber-400/25 bg-amber-400/[0.07] p-5 sm:p-6"
     aria-labelledby="runelite-guide-quick-start"
@@ -45,17 +48,26 @@ const FiveMinuteSetup: React.FC = () => (
       </div>
     </div>
     <ol className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-      {[
-        ['1', 'Install', 'Find Fate Locked Ironman in RuneLite’s Plugin Hub and install it.'],
-        ['2', 'Open', 'Select the Fate Locked side-panel icon in RuneLite.'],
-        ['3', 'Connect', 'Choose Connect tracker to open the private confirmation page.'],
-        ['4', 'Confirm', 'Select the intended companion profile and wait for Connected.'],
-        ['5', 'Play Vanilla', 'Expand the panel sections you need and keep the run in Vanilla.'],
-      ].map(([number, title, body]) => (
-        <li key={number} className="rounded-xl border border-white/10 bg-black/20 p-4">
-          <span className="text-xs font-black text-amber-300">STEP {number}</span>
-          <strong className="mt-1 block text-sm text-white">{title}</strong>
-          <span className="mt-1 block text-xs leading-relaxed text-gray-400">{body}</span>
+      {([
+        ['1', 'Install', 'Find Fate Locked Ironman in RuneLite’s Plugin Hub and install it.', 'install-plugin-hub'],
+        ['2', 'Open', 'Select the Fate Locked side-panel icon in RuneLite.', 'unified-panel'],
+        ['3', 'Connect', 'Choose Connect tracker to open the private confirmation page.', 'connect-tracker'],
+        ['4', 'Confirm', 'Select the intended companion profile and wait for Connected.', 'connection-privacy'],
+        ['5', 'Play Vanilla', 'Expand the panel sections you need and keep the run in Vanilla.', 'recommended-configurations'],
+      ] as const).map(([number, title, body, chapterId]) => (
+        <li key={number}>
+          <button
+            type="button"
+            aria-label={`Jump to ${title}`}
+            onClick={() => onNavigate(chapterId)}
+            className="group h-full w-full rounded-xl border border-white/10 bg-black/20 p-4 text-left transition-colors hover:border-amber-400/35 hover:bg-amber-400/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+          >
+            <span className="text-xs font-black text-amber-300">STEP {number}</span>
+            <strong className="mt-1 block text-sm text-white group-hover:text-amber-100">
+              {title}
+            </strong>
+            <span className="mt-1 block text-xs leading-relaxed text-gray-400">{body}</span>
+          </button>
         </li>
       ))}
     </ol>
@@ -128,6 +140,33 @@ const Troubleshooting: React.FC = () => (
         </div>
       </details>
     ))}
+    <section
+      className="rounded-xl border border-amber-400/20 bg-amber-400/[0.055] p-4"
+      aria-labelledby="runelite-guide-support-links"
+    >
+      <h3 id="runelite-guide-support-links" className="font-serif text-lg font-bold text-white">
+        Official links
+      </h3>
+      <div className="mt-3 grid gap-3 lg:grid-cols-3">
+        {RUNELITE_GUIDE_RESOURCES.map(resource => (
+          <a
+            key={resource.id}
+            href={resource.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group rounded-lg border border-white/10 bg-black/20 p-3 transition-colors hover:border-amber-400/35 hover:bg-amber-400/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+          >
+            <span className="flex items-center gap-2 text-sm font-bold text-amber-200">
+              {resource.label}
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+            </span>
+            <span className="mt-1 block text-xs leading-relaxed text-gray-400">
+              {resource.description}
+            </span>
+          </a>
+        ))}
+      </div>
+    </section>
   </div>
 );
 
@@ -286,7 +325,7 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({
             </div>
 
             <div className="mt-6">
-              <FiveMinuteSetup />
+              <FiveMinuteSetup onNavigate={navigateTo} />
             </div>
 
             <div className="mt-8 space-y-8">

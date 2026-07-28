@@ -166,7 +166,7 @@ the Install and Connect chapters. It then contains these chapters in order:
     - Clipboard import is empty or malformed.
     - File auto-reload uses the wrong folder or filename pattern.
     - Strict Mode does not block an uncertain action by design.
-    - Where to link the Plugin Hub listing, merged review, and support issue.
+    - Where to link the Plugin Hub listing, current review, and support issue.
 
 16. **Glossary**
     - Authored, bundle, chunk, frontier, locked, unauthored, relay, local
@@ -248,6 +248,10 @@ If a gameplay warning cannot be safely reproduced, the guide uses a genuine
 idle-plugin screenshot and explains the verified behaviour beside it. It must
 not present a simulated warning as a real capture.
 
+When the demo account is signed out, overlay chapters use authentic settings-
+panel captures and label them as controls. They must not imply that a control
+crop is a logged-in gameplay scene.
+
 ## Screenshot inventory
 
 The initial release targets these captures:
@@ -264,9 +268,8 @@ The initial release targets these captures:
 10. Bundle recovery controls.
 11. Warnings controls, using multiple overlapping crops if needed.
 12. Rendering controls, using multiple overlapping crops if needed.
-13. World map tint and hover tooltip.
-14. Scene/minimap/HUD/content overlay view.
-15. A genuine locked warning or prevented-action view when safely available.
+13. World-map hover-tooltip and color controls.
+14. Scene/minimap/HUD and locked-border controls.
 
 `public/guides/runelite/manifest.json` records for each capture:
 

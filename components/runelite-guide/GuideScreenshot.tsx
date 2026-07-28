@@ -28,7 +28,10 @@ export const GuideScreenshot: React.FC<GuideScreenshotProps> = ({ screenshot }) 
             </p>
           </div>
         ) : (
-          <>
+          <div
+            data-guide-image-stage
+            className="relative inline-block max-h-[38rem] max-w-full align-middle"
+          >
             <img
               className="block max-h-[38rem] max-w-full rounded-lg object-contain"
               src={screenshot.src}
@@ -37,7 +40,11 @@ export const GuideScreenshot: React.FC<GuideScreenshotProps> = ({ screenshot }) 
               decoding="async"
               onError={() => setImageFailed(true)}
             />
-            <div className="pointer-events-none absolute inset-3 sm:inset-5" aria-hidden="true">
+            <div
+              data-guide-marker-layer
+              className="pointer-events-none absolute inset-0"
+              aria-hidden="true"
+            >
               {screenshot.callouts.map(item => (
                 <span
                   key={item.id}
@@ -49,7 +56,7 @@ export const GuideScreenshot: React.FC<GuideScreenshotProps> = ({ screenshot }) 
                 </span>
               ))}
             </div>
-          </>
+          </div>
         )}
       </div>
 

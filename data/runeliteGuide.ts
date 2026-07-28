@@ -76,6 +76,13 @@ export interface GuideGlossaryItem {
   readonly definition: string;
 }
 
+export interface GuideExternalResource {
+  readonly id: 'plugin-hub' | 'plugin-hub-review' | 'support';
+  readonly label: string;
+  readonly description: string;
+  readonly href: string;
+}
+
 export const RUNELITE_PANEL_SECTIONS = [
   'Current chunk',
   'Guardian',
@@ -85,6 +92,27 @@ export const RUNELITE_PANEL_SECTIONS = [
   'Warnings',
   'Rendering',
 ] as const;
+
+export const RUNELITE_GUIDE_RESOURCES: readonly GuideExternalResource[] = [
+  {
+    id: 'plugin-hub',
+    label: 'Official Plugin Hub manifest',
+    description: 'Open RuneLite’s merged manifest entry for Fate Locked Ironman.',
+    href: 'https://github.com/runelite/plugin-hub/blob/master/plugins/fate-locked-ironman',
+  },
+  {
+    id: 'plugin-hub-review',
+    label: 'Merged Plugin Hub review PR #14395',
+    description: 'Read the RuneLite review that approved and merged this unified Plugin Hub update.',
+    href: 'https://github.com/runelite/plugin-hub/pull/14395',
+  },
+  {
+    id: 'support',
+    label: 'Report a companion issue',
+    description: 'Open a private-data-safe issue form in the Fate Locked companion repository.',
+    href: 'https://github.com/Nubles/OSRS-Fate-Locked/issues/new/choose',
+  },
+];
 
 const callout = (
   id: string,
@@ -475,8 +503,8 @@ export const RUNELITE_GUIDE_SCREENSHOTS: readonly GuideScreenshot[] = [
   {
     id: 'world-map-tooltip',
     src: '/guides/runelite/13-world-map-tooltip.png',
-    title: 'World-map tooltip and colors',
-    alt: 'Actual RuneLite rendering controls for the world-map hover tooltip and overlay colors.',
+    title: 'World-map tooltip controls',
+    alt: 'Authentic RuneLite settings-panel controls for the world-map hover tooltip and overlay colors.',
     callouts: [
       callout(
         'world-map-tooltip',
@@ -507,8 +535,8 @@ export const RUNELITE_GUIDE_SCREENSHOTS: readonly GuideScreenshot[] = [
   {
     id: 'scene-minimap-hud',
     src: '/guides/runelite/14-scene-minimap-hud.png',
-    title: 'Scene and minimap controls',
-    alt: 'Actual RuneLite controls that enable the world map, player scene, minimap, and border overlays.',
+    title: 'Scene and minimap overlay controls',
+    alt: 'Authentic RuneLite settings-panel controls that enable world-map, player-scene, minimap, and border overlays.',
     callouts: [
       callout(
         'draw-world-map',
@@ -1214,9 +1242,10 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
   {
     id: 'in-game-overlays',
     number: 13,
-    title: 'In-game overlays',
-    summary: 'Warnings and rendering settings combine into a readable set of RuneLite-native game, map, and HUD layers.',
+    title: 'In-game overlay controls',
+    summary: 'Authentic settings-panel captures show which RuneLite-native game, map, and HUD layers you can enable.',
     paragraphs: [
+      'These screenshots show the real Plugin Hub controls, not simulated gameplay. The visible overlays appear only while logged in and are described here without fabricating a warning or game scene.',
       'Show in-game HUD controls run totals and current status. Show "in this chunk" box adds a separate draggable content view, while native infoboxes use RuneLite’s normal infobox row.',
       'World-map tint, markers, and hover tooltip are separate from the scene and minimap tints. Locked borders and nearby shading provide extra travel context without changing the rules.',
     ],
@@ -1246,7 +1275,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
     summary: 'Connection, bundle, display, and Strict Mode problems can be diagnosed from the unified panel.',
     paragraphs: [
       'Begin with Connection, Last sync, Account, and Current chunk. Those four rows explain most cases without deleting settings or replacing a valid bundle.',
-      'For support, link the official Plugin Hub listing, the merged RuneLite review, and the project support issue. Exclude pairing requests, Run IDs, local paths, and unrelated chat.',
+      'Use the resource links below for the official Plugin Hub listing, the current RuneLite review, and companion support. Exclude pairing requests, Run IDs, local paths, and unrelated chat.',
     ],
     bullets: RUNELITE_GUIDE_TROUBLESHOOTING.map(item => item.symptom),
     screenshotIds: ['panel-disconnected', 'panel-connected'],
