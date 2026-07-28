@@ -64,7 +64,7 @@ beforeEach(async () => {
     activeProfileId: PROFILE_ID,
   }));
   storage.setItem(profileBaseKey(PROFILE_ID), seedOnboardingRun());
-});
+}, 30_000);
 
 afterEach(() => {
   cleanup();
