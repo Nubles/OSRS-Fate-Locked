@@ -26,6 +26,9 @@ export const CHANGELOG_RELEASES = [
       added: [
         'A complete RuneLite Plugin Guide now covers installation, connection, every panel section and setting, overlays, privacy, recommended configurations, and troubleshooting with annotated screenshots from the live plugin.',
       ],
+      fixed: [
+        'Annotated RuneLite handbook screenshots now load correctly when the companion is hosted on GitHub Pages.',
+      ],
     },
   },
   {

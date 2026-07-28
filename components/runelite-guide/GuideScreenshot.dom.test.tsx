@@ -3,7 +3,10 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { GuideScreenshot as GuideScreenshotData } from '../../data/runeliteGuide';
-import { GuideScreenshot } from './GuideScreenshot';
+import {
+  GuideScreenshot,
+  resolveGuideScreenshotSrc,
+} from './GuideScreenshot';
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -90,5 +93,16 @@ describe('GuideScreenshot', () => {
     expect(host.textContent).toContain('Image unavailable');
     expect(host.textContent).toContain('1. Connect tracker');
     expect(host.querySelectorAll('[data-guide-marker]')).toHaveLength(0);
+  });
+
+  it('keeps screenshot assets inside the deployed GitHub Pages project path', () => {
+    expect(resolveGuideScreenshotSrc(
+      '/guides/runelite/demo.png',
+      '/OSRS-Fate-Locked/',
+    )).toBe('/OSRS-Fate-Locked/guides/runelite/demo.png');
+    expect(resolveGuideScreenshotSrc(
+      'guides/runelite/demo.png',
+      '/',
+    )).toBe('/guides/runelite/demo.png');
   });
 });
