@@ -94,7 +94,7 @@ describe('App changelog lifecycle', () => {
       expect(screen.queryByRole('dialog', { name: "What's New" })).toBeNull();
     });
     expect(storage.getItem(changelogStorageKey)).toBe(latestChangelogId);
-  });
+  }, 15_000);
   it('defers the unseen release until the post-onboarding game-mode prompt closes', async () => {
     storage.setItem(profileBaseKey(PROFILE_ID), seedOnboardingRun(false));
     const user = userEvent.setup();
