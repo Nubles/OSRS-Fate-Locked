@@ -2,6 +2,7 @@
 
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { GameState } from '../types';
 import {
   GameProvider,
   gameReducerForTest,
@@ -77,23 +78,94 @@ describe('run identity and revision', () => {
 });
 
 describe('quest completion integration', () => {
-  const keyRollHistory = (game: Game) => game.history.filter(entry =>
+  type ProviderSnapshot = {
+    state: GameState;
+    lastEvent: Game['lastEvent'];
+  };
+
+  const persistedState = (game: Game): GameState =>
+    JSON.parse(game.getExportData()) as GameState;
+
+  const providerSnapshot = (game: Game): ProviderSnapshot => ({
+    state: persistedState(game),
+    lastEvent: structuredClone(game.lastEvent),
+  });
+
+  const keyRollHistory = (state: GameState) => state.history.filter(entry =>
     ['ROLL_SUCCESS', 'ROLL_FAIL', 'ROLL_OMNI', 'PITY'].includes(entry.type),
   );
 
-  const completionSnapshot = (game: Game) => ({
-    quests: [...game.unlocks.quests],
-    keys: game.keys,
-    specialKeys: game.specialKeys,
-    chaosKeys: game.chaosKeys,
-    fatePoints: game.fatePoints,
-    activeBuff: game.activeBuff,
-    equipment: { ...game.unlocks.equipment },
-    collectionLog: { ...game.unlocks.collectionLog },
-    keyRollHistory: structuredClone(keyRollHistory(game)),
-    hasInventory: Object.prototype.hasOwnProperty.call(game.unlocks, 'inventory'),
-    hasItems: Object.prototype.hasOwnProperty.call(game.unlocks, 'items'),
-  });
+  const stableStateProjection = (state: GameState, removeAcceptedDeltas: boolean) => {
+    const {
+      runRevision: _runRevision,
+      fatePoints: _fatePoints,
+      history,
+      unlocks,
+      ...stable
+    } = state;
+    return {
+      ...stable,
+      unlocks: {
+        ...unlocks,
+        quests: removeAcceptedDeltas
+          ? unlocks.quests.slice(0, -1)
+          : unlocks.quests,
+      },
+      history: removeAcceptedDeltas ? history.slice(0, -1) : history,
+    };
+  };
+
+  const expectAcceptedCompletion = (
+    before: ProviderSnapshot,
+    after: ProviderSnapshot,
+    id: string,
+    source: string,
+    threshold: number,
+  ) => {
+    expect(after.state.runRevision).toBe(before.state.runRevision + 2);
+    expect(after.state.unlocks.quests).toEqual([...before.state.unlocks.quests, id]);
+    expect(after.state.history.slice(0, -1)).toEqual(before.state.history);
+    expect(after.state.history).toHaveLength(before.state.history.length + 1);
+    expect(keyRollHistory(after.state)).toHaveLength(keyRollHistory(before.state).length + 1);
+    expect(after.state.history.at(-1)).toMatchObject({
+      type: 'ROLL_FAIL',
+      source,
+      result: 'FAIL',
+      rollValue: 100,
+      baseThreshold: threshold,
+      threshold,
+      meta: {
+        roll: 100,
+        baseThreshold: threshold,
+        threshold,
+        source,
+        fatePointsEarned: 1,
+      },
+    });
+    expect(after.state).toMatchObject({
+      keys: before.state.keys,
+      specialKeys: before.state.specialKeys,
+      chaosKeys: before.state.chaosKeys,
+      bossStandardKeysAwarded: before.state.bossStandardKeysAwarded,
+      clueStandardKeysAwarded: before.state.clueStandardKeysAwarded,
+      fatePoints: before.state.fatePoints + 1,
+      activeBuff: before.state.activeBuff,
+    });
+    expect(stableStateProjection(after.state, true)).toEqual(
+      stableStateProjection(before.state, false),
+    );
+    expect(after.lastEvent).toEqual({
+      id: expect.any(String),
+      type: 'ROLL_FAIL',
+      x: undefined,
+      y: undefined,
+      meta: {
+        roll: 100,
+        baseThreshold: threshold,
+        threshold,
+      },
+    });
+  };
 
   const renderStoredGame = (storageKey: string, save: unknown) => {
     localStorage.setItem(storageKey, JSON.stringify(save));
@@ -109,11 +181,11 @@ describe('quest completion integration', () => {
     };
   };
 
-  it("does not complete or roll for Witch's Potion with only Asgarnia", () => {
+  it("leaves the complete run unchanged when Witch's Potion is machine-blocked", () => {
     const current = renderStoredGame('blocked-witch-completion', {
       unlocks: { regions: ['Asgarnia'] },
     });
-    const before = completionSnapshot(current());
+    const before = providerSnapshot(current());
     let result: ReturnType<Game['completeQuest']> | undefined;
 
     act(() => {
@@ -126,91 +198,84 @@ describe('quest completion integration', () => {
     });
 
     expect(result).toEqual({ ok: false, reason: 'Requires: Rimmington' });
-    expect(completionSnapshot(current())).toEqual(before);
-    expect(current().unlocks.quests).not.toContain("Witch's Potion");
-    expect(keyRollHistory(current())).toEqual([]);
+    expect(providerSnapshot(current())).toEqual(before);
   });
 
-  it('completes a valid quest with exactly one roll and makes its repeat a no-op', () => {
+  it('leaves the complete run unchanged when Murder Mystery is machine-blocked', () => {
+    const current = renderStoredGame('blocked-murder-mystery-completion', {
+      unlocks: { regions: ['Kandarin'] },
+    });
+    const before = providerSnapshot(current());
+    let result: ReturnType<Game['completeQuest']> | undefined;
+
+    act(() => {
+      result = current().completeQuest(
+        'Murder Mystery',
+        undefined,
+        undefined,
+        { manualConfirmed: true },
+      );
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      reason: "Requires: Sinclair Mansion, Seers' Village",
+    });
+    expect(providerSnapshot(current())).toEqual(before);
+  });
+
+  it('completes a valid quest with exactly one roll and makes its repeat a full-state no-op', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.999);
     const current = renderStoredGame('valid-quest-completion', {
       unlocks: { regions: ['Asgarnia', 'Rimmington'] },
     });
-    const before = completionSnapshot(current());
+    const before = providerSnapshot(current());
     let first: ReturnType<Game['completeQuest']> | undefined;
 
     act(() => { first = current().completeQuest("Witch's Potion"); });
 
-    const afterFirst = completionSnapshot(current());
+    const afterFirst = providerSnapshot(current());
     expect(first).toEqual({ ok: true });
-    expect(afterFirst.quests.filter(id => id === "Witch's Potion")).toEqual([
+    expectAcceptedCompletion(
+      before,
+      afterFirst,
       "Witch's Potion",
-    ]);
-    expect(afterFirst).toMatchObject({
-      keys: before.keys,
-      specialKeys: before.specialKeys,
-      chaosKeys: before.chaosKeys,
-      fatePoints: before.fatePoints + 1,
-      activeBuff: before.activeBuff,
-      equipment: before.equipment,
-      collectionLog: before.collectionLog,
-      hasInventory: false,
-      hasItems: false,
-    });
-    expect(afterFirst.keyRollHistory).toHaveLength(before.keyRollHistory.length + 1);
-    expect(afterFirst.keyRollHistory.at(-1)).toMatchObject({
-      type: 'ROLL_FAIL',
-      source: 'Quest (Novice)',
-      result: 'FAIL',
-      rollValue: 100,
-    });
+      'Quest (Novice)',
+      25,
+    );
 
     let repeated: ReturnType<Game['completeQuest']> | undefined;
     act(() => { repeated = current().completeQuest("Witch's Potion"); });
 
     expect(repeated).toEqual({ ok: false, reason: 'Already completed' });
-    expect(completionSnapshot(current())).toEqual(afterFirst);
+    expect(providerSnapshot(current())).toEqual(afterFirst);
   });
 
-  it('completes a valid miniquest with exactly one roll and makes its repeat a no-op', () => {
+  it('completes a valid miniquest with exactly one roll and makes its repeat a full-state no-op', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.999);
     const current = renderStoredGame('valid-miniquest-completion', {
       unlocks: { regions: ['Kourend & Kebos'] },
     });
-    const before = completionSnapshot(current());
+    const before = providerSnapshot(current());
     let first: ReturnType<Game['completeQuest']> | undefined;
 
     act(() => { first = current().completeQuest('In Search of Knowledge'); });
 
-    const afterFirst = completionSnapshot(current());
+    const afterFirst = providerSnapshot(current());
     expect(first).toEqual({ ok: true });
-    expect(afterFirst.quests.filter(id => id === 'In Search of Knowledge')).toEqual([
+    expectAcceptedCompletion(
+      before,
+      afterFirst,
       'In Search of Knowledge',
-    ]);
-    expect(afterFirst).toMatchObject({
-      keys: before.keys,
-      specialKeys: before.specialKeys,
-      chaosKeys: before.chaosKeys,
-      fatePoints: before.fatePoints + 1,
-      activeBuff: before.activeBuff,
-      equipment: before.equipment,
-      collectionLog: before.collectionLog,
-      hasInventory: false,
-      hasItems: false,
-    });
-    expect(afterFirst.keyRollHistory).toHaveLength(before.keyRollHistory.length + 1);
-    expect(afterFirst.keyRollHistory.at(-1)).toMatchObject({
-      type: 'ROLL_FAIL',
-      source: 'Quest (Experienced)',
-      result: 'FAIL',
-      rollValue: 100,
-    });
+      'Quest (Experienced)',
+      75,
+    );
 
     let repeated: ReturnType<Game['completeQuest']> | undefined;
     act(() => { repeated = current().completeQuest('In Search of Knowledge'); });
 
     expect(repeated).toEqual({ ok: false, reason: 'Already completed' });
-    expect(completionSnapshot(current())).toEqual(afterFirst);
+    expect(providerSnapshot(current())).toEqual(afterFirst);
   });
 });
 
