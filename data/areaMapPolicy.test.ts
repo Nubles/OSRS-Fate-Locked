@@ -5,6 +5,7 @@ import { REGIONS_LIST } from './items';
 import {
   AREA_ALIASES,
   AREA_REFERENCES,
+  type AreaReference,
   INTENTIONALLY_UNMAPPABLE_AREAS,
   canonicalAreaName,
   canonicalizeAreaUnlocks,
@@ -18,34 +19,76 @@ const AUTHORED_CHUNKS = new Set(
     .map(({ cx, cy }) => `${cx},${cy}`),
 );
 
-const EXPECTED_EXCEPTIONAL_NAMES = [
+const EXPECTED_SURFACE_REFERENCE_NAMES = [
+  "Giants' Plateau",
+  "Heroes' Guild",
+  'Ice Mountain',
+  "Otto's Grotto",
+  'Ranging Guild',
+  'Resource Area',
+];
+
+const EXPECTED_ENTRANCE_REFERENCE_NAMES = [
   'Asgarnian Ice Dungeon',
   'Braindeath Island',
   'Catacombs of Kourend',
   'Dwarven Mine',
-  'Elf Camp',
-  "Giants' Plateau",
-  "Heroes' Guild",
-  'Ice Mountain',
   'Keldagrim',
   'Mor Ul Rek (TzHaar City)',
   'Motherlode Mine',
-  "Otto's Grotto",
-  'Ranging Guild',
-  'Resource Area',
-  'Tutorial Island',
   'Wilderness God Wars Dungeon',
   'Zanaris',
 ];
 
+const EMPTY_REFERENCE_FOR_TYPE_CHECK: AreaReference = {
+  kind: 'surface',
+  // @ts-expect-error AreaReference chunks must contain at least one coordinate.
+  chunks: [],
+  reason: 'Compile-time non-empty tuple check.',
+};
+void EMPTY_REFERENCE_FOR_TYPE_CHECK;
+
 describe('area map policy', () => {
-  it('classifies the exact seventeen audited exceptional names', () => {
-    const exceptional = new Set([
-      ...Object.keys(AREA_ALIASES),
-      ...Object.keys(AREA_REFERENCES),
-      ...Object.keys(INTENTIONALLY_UNMAPPABLE_AREAS),
+  it('pins the exact legacy alias mapping', () => {
+    expect(AREA_ALIASES).toEqual({
+      'Elf Camp': 'Iorwerth Camp',
+    });
+  });
+
+  it('pins the exact surface and entrance reference classifications', () => {
+    const surface = Object.entries(AREA_REFERENCES)
+      .filter(([, policy]) => policy.kind === 'surface')
+      .map(([name]) => name);
+    const entrance = Object.entries(AREA_REFERENCES)
+      .filter(([, policy]) => policy.kind === 'entrance')
+      .map(([name]) => name);
+
+    expect(sorted(surface)).toEqual(EXPECTED_SURFACE_REFERENCE_NAMES);
+    expect(sorted(entrance)).toEqual(EXPECTED_ENTRANCE_REFERENCE_NAMES);
+  });
+
+  it('pins the exact intentionally unmappable area set', () => {
+    expect(sorted(Object.keys(INTENTIONALLY_UNMAPPABLE_AREAS))).toEqual([
+      'Tutorial Island',
     ]);
-    expect(sorted(exceptional)).toEqual(sorted(EXPECTED_EXCEPTIONAL_NAMES));
+  });
+
+  it('requires every reference to have at least one coordinate', () => {
+    for (const [name, policy] of Object.entries(AREA_REFERENCES)) {
+      expect(policy.chunks.length, name).toBeGreaterThan(0);
+    }
+  });
+
+  it('requires every reference to have a nonblank reason', () => {
+    for (const [name, policy] of Object.entries(AREA_REFERENCES)) {
+      expect(policy.reason.trim(), name).not.toBe('');
+    }
+  });
+
+  it('requires every exemption to have a nonblank reason', () => {
+    for (const [name, reason] of Object.entries(INTENTIONALLY_UNMAPPABLE_AREAS)) {
+      expect(reason.trim(), name).not.toBe('');
+    }
   });
 
   it('gives every rollable area exactly one current geography route', () => {

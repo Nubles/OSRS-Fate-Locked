@@ -6,7 +6,7 @@ export const AREA_ALIASES = {
 
 export interface AreaReference {
   kind: 'surface' | 'entrance';
-  chunks: readonly ChunkCoord[];
+  chunks: readonly [ChunkCoord, ...ChunkCoord[]];
   reason: string;
 }
 
