@@ -103,4 +103,62 @@ describe('transformChunkContent', () => {
     expect(result.liteSource).toContain('"mon":["Monster 0","Monster 1","Monster 2","Monster 3","Monster 4","Monster 5"]');
     expect(result.audit.events.filter((event) => event.reason === 'lite-cap')).toHaveLength(4);
   });
+  it('merges task-unlock variants and gives each source record one terminal audit outcome', () => {
+    const result = transformChunkContent({
+      walkableChunks: [],
+      chunks: {},
+      slayerMonsters: {},
+      taskUnlocks: {
+        Items: {
+          'Medallion fragment#1': { 256: [{ 'Quest One Complete the quest': true }] },
+          'Medallion fragment#2': { 256: [{ 'Quest Two Complete the quest': true }] },
+        },
+      },
+    }, manifest);
+    expect(result.full.taskUnlocks).toEqual({
+      Items: { 'Medallion fragment': { 256: ['Quest One', 'Quest Two'] } },
+    });
+    const terminal = result.audit.events.filter((event) => event.terminal && event.category === 'taskUnlocks');
+    expect(terminal.map((event) => event.sourceKey).sort()).toEqual([
+      'Items/Medallion fragment#1/256',
+      'Items/Medallion fragment#2/256',
+    ]);
+    expect(terminal.map((event) => event.targetKeys)).toEqual([
+      ['Medallion fragment/256'],
+      ['Medallion fragment/256'],
+    ]);
+    expect(result.audit.categoryTotals.taskUnlocks).toEqual({
+      source: 2, imported: 0, normalized: 2, excluded: 0, unresolved: 0,
+    });
+  });
+
+  it('accounts independently for duplicate banks and nested consumed records', () => {
+    const result = transformChunkContent({
+      walkableChunks: [], chunks: {}, slayerMonsters: {},
+      rollingChunks: { bank: ['256', '256'] },
+      slayerMasterTasks: { Turael: { Goblin: {}, Rat: {} } },
+      challenges: { Agility: { Gap: { Category: ['Shortcut'], Objects: [] }, Course: { Category: [], Objects: [] } } },
+      skillItems: { Mining: { Rocks: { Tin: { first: '1/1' } }, Clay: { Clay: { first: '1/1' } } } },
+    }, manifest);
+    const keys = (category) => result.audit.events.filter((event) => event.terminal && event.category === category).map((event) => event.sourceKey).sort();
+    expect(result.full.banks).toEqual(['256']);
+    expect(keys('banks')).toEqual(['256@0', '256@1']);
+    expect(result.audit.events).toEqual(expect.arrayContaining([
+      expect.objectContaining({ category: 'banks', sourceKey: '256@1', disposition: 'normalized', reason: 'duplicate-deduped', targetKeys: ['256'] }),
+    ]));
+    expect(keys('slayerMasterTasks')).toEqual(['Turael/Goblin', 'Turael/Rat']);
+    expect(keys('challenges')).toEqual(['Agility/Course', 'Agility/Gap']);
+    expect(keys('skillItems')).toEqual(['Mining/Clay', 'Mining/Rocks']);
+    const terminalKeys = result.audit.events
+      .filter((event) => event.terminal)
+      .map((event) => `${event.category}/${event.sourceKey}`)
+      .sort();
+    expect(terminalKeys).toEqual([
+      'banks/256@0', 'banks/256@1',
+      'challenges/Agility/Course', 'challenges/Agility/Gap',
+      'skillItems/Mining/Clay', 'skillItems/Mining/Rocks',
+      'slayerMasterTasks/Turael/Goblin', 'slayerMasterTasks/Turael/Rat',
+    ]);
+    expect(new Set(terminalKeys)).toHaveLength(terminalKeys.length);
+  });
 });

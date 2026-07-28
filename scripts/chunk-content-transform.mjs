@@ -10,8 +10,28 @@ const stripWiki = (value) => String(value).replace(/~\|/g, '').replace(/\|~/g, '
 const tidyReq = (value) => stripWiki(value).replace(/\s+/g, ' ').replace(/\s+Complete the quest$/i, '').replace(/\s+\d[a-z0-9]*$/i, '').trim();
 const numericSort = (a, b) => +a - +b;
 
-function createAudit(sourceManifest) {
+function buildSourceInventory(data) {
+  const keys = [];
+  const add = (category, sourceKey) => keys.push(`${category}\u0000${sourceKey}`);
+  (data.walkableChunks ?? []).forEach((_, index) => add('walkableChunks', String(index)));
+  for (const key of Object.keys(data.slayerMonsters ?? {})) add('slayerMonsters', key);
+  for (const key of Object.keys(data.chunks ?? {})) add('chunks', key);
+  for (const key of Object.keys(data.questSections ?? {})) add('questSections', key);
+  for (const [category, entities] of Object.entries(data.taskUnlocks ?? {})) for (const [name, value] of Object.entries(entities)) for (const location of (Array.isArray(value) ? ['*'] : Object.keys(value ?? {}))) add('taskUnlocks', `${category}/${name}/${location}`);
+  for (const [master, tasks] of Object.entries(data.slayerMasterTasks ?? {})) for (const monster of Object.keys(tasks)) add('slayerMasterTasks', `${master}/${monster}`);
+  for (const [skill, challenges] of Object.entries(data.challenges ?? {})) for (const name of Object.keys(challenges)) add('challenges', `${skill}/${name}`);
+  for (const key of Object.keys(data.drops ?? {})) add('drops', key);
+  for (const key of Object.keys(data.shopItems ?? {})) add('shopItems', key);
+  for (const key of Object.keys(data.mapOverlays ?? {})) add('mapOverlays', key);
+  for (const [skill, methods] of Object.entries(data.skillItems ?? {})) for (const method of Object.keys(methods)) add('skillItems', `${skill}/${method}`);
+  for (const key of Object.keys(data.searchTerms ?? {})) add('searchTerms', key);
+  (data.rollingChunks?.bank ?? []).forEach((raw, index) => add('banks', `${raw}@${index}`));
+  return keys;
+}
+
+function createAudit(sourceManifest, inventory) {
   const events = [];
+  const expected = new Set(inventory);
   const add = (category, sourceKey, disposition, reason, targetKeys = [], terminal = true, detail) => {
     if (!REASONS.has(reason)) throw new Error(`Unknown chunk transform audit reason: ${reason}`);
     const event = { category, sourceKey: String(sourceKey), terminal, disposition, reason, targetKeys: [...targetKeys].map(String).sort() };
@@ -19,17 +39,19 @@ function createAudit(sourceManifest) {
     events.push(event);
   };
   const finish = () => {
+    const terminals = new Map();
+    for (const event of events) if (event.terminal) {
+      const key = `${event.category}\u0000${event.sourceKey}`;
+      if (!expected.has(key)) throw new Error(`Unexpected terminal chunk transform event: ${key}`);
+      if (terminals.has(key)) throw new Error(`Duplicate terminal chunk transform event: ${key}`);
+      terminals.set(key, event);
+    }
+    for (const key of expected) if (!terminals.has(key)) throw new Error(`Missing terminal chunk transform event: ${key}`);
     events.sort((a, b) => a.category.localeCompare(b.category) || a.sourceKey.localeCompare(b.sourceKey) || a.disposition.localeCompare(b.disposition) || a.reason.localeCompare(b.reason));
     const categoryTotals = {};
-    for (const event of events) {
-      if (!event.terminal) continue;
-      const total = categoryTotals[event.category] ??= { source: 0, imported: 0, normalized: 0, excluded: 0, unresolved: 0 };
-      total.source++;
-      total[event.disposition]++;
-    }
-    for (const [category, total] of Object.entries(categoryTotals)) {
-      if (total.source !== total.imported + total.normalized + total.excluded + total.unresolved) throw new Error(`Unbalanced chunk transform audit category: ${category}`);
-    }
+    for (const key of expected) { const [category] = key.split('\u0000'); const total = categoryTotals[category] ??= { source: 0, imported: 0, normalized: 0, excluded: 0, unresolved: 0 }; total.source++; }
+    for (const event of terminals.values()) categoryTotals[event.category][event.disposition]++;
+    for (const [category, total] of Object.entries(categoryTotals)) if (total.source !== total.imported + total.normalized + total.excluded + total.unresolved) throw new Error(`Unbalanced chunk transform audit category: ${category}`);
     return { schemaVersion: 1, policyVersion: 1, sourceCommit: sourceManifest.commit, categoryTotals, events };
   };
   return { add, finish };
@@ -72,22 +94,61 @@ function buildConnect(data) {
   return Object.fromEntries([...adj.entries()].map(([id, set]) => [id, [...set].sort()]));
 }
 
-function buildSlayerMasters(data) {
+function buildSlayerMasters(data, audit) {
   const out = {};
   for (const [master, tasks] of Object.entries(data.slayerMasterTasks ?? {})) {
     const result = {};
-    for (const [monster, info] of Object.entries(tasks)) { const entry = { weight: info.Weight ?? 1 }; if (info.CombatLevel != null) entry.combat = info.CombatLevel; if (info.Level != null) entry.slayer = info.Level; const req = Object.keys(info.Tasks ?? {}).map(stripWiki); if (req.length) entry.req = req; result[cleanName(monster)] = entry; }
+    for (const [monster, info] of Object.entries(tasks)) {
+      const name = cleanName(monster); const entry = { weight: info.Weight ?? 1 };
+      if (info.CombatLevel != null) entry.combat = info.CombatLevel;
+      if (info.Level != null) entry.slayer = info.Level;
+      const req = Object.keys(info.Tasks ?? {}).map(stripWiki); if (req.length) entry.req = req;
+      const duplicate = Object.hasOwn(result, name); result[name] = entry;
+      audit.add('slayerMasterTasks', `${master}/${monster}`, duplicate || monster.includes('#') ? 'normalized' : 'imported', duplicate ? 'duplicate-deduped' : monster.includes('#') ? 'variant-name-cleaned' : 'base-record', [`${master}/${name}`]);
+    }
     out[master] = result;
   }
   return out;
 }
 
-function buildShortcuts(data) { const out = []; for (const [skill, challenges] of Object.entries(data.challenges ?? {})) for (const [name, info] of Object.entries(challenges)) if ((info.Category ?? []).includes('Shortcut')) out.push({ name: stripWiki(name), skill, level: info.Level ?? 1, objects: (info.Objects ?? []).map(cleanName), chunks: info.Chunks ?? [] }); return out; }
+function buildShortcuts(data, audit) {
+  const out = [];
+  for (const [skill, challenges] of Object.entries(data.challenges ?? {})) for (const [name, info] of Object.entries(challenges)) {
+    const sourceKey = `${skill}/${name}`;
+    if (!(info.Category ?? []).includes('Shortcut')) { audit.add('challenges', sourceKey, 'excluded', 'non-walkable-content', []); continue; }
+    const target = `${skill}/${stripWiki(name)}`;
+    out.push({ name: stripWiki(name), skill, level: info.Level ?? 1, objects: (info.Objects ?? []).map(cleanName), chunks: info.Chunks ?? [] });
+    audit.add('challenges', sourceKey, name.includes('#') ? 'normalized' : 'imported', name.includes('#') ? 'variant-name-cleaned' : 'base-record', [target]);
+  }
+  return out;
+}
 function buildDrops(data) { const out = {}; for (const [monster, table] of Object.entries(data.drops ?? {})) { const items = [...new Set(Object.keys(table).map(cleanName))].sort(); if (items.length) out[cleanName(monster)] = items; } return out; }
 function buildShopItems(data) { const out = {}; for (const [shop, items] of Object.entries(data.shopItems ?? {})) out[shop.replace(/\.$/, '')] = Object.keys(items).map(cleanName).sort(); return out; }
 function buildOverlays(data) { const out = {}; for (const [raw, points] of Object.entries(data.mapOverlays ?? {})) { if (!Array.isArray(points) || !points.length) continue; const cat = raw.split('|')[0].trim(); out[cat] = points.map((point) => { const item = { x: point.x, y: point.y, cx: Math.floor(point.x / 64), cy: Math.floor(point.y / 64) }; if (point.type) item.t = point.type; if (point.text) item.h = stripWiki(point.text); return item; }); } return out; }
-function buildSkillItems(data) { const out = {}; for (const [skill, methods] of Object.entries(data.skillItems ?? {})) { const result = {}; for (const [method, items] of Object.entries(methods)) { const list = []; for (const [item, stages] of Object.entries(items)) list.push([cleanName(item), [...new Set(Object.values(stages))].join(', ')]); if (list.length) result[cleanName(stripWiki(method))] = list; } if (Object.keys(result).length) out[stripWiki(skill)] = result; } return out; }
-function buildBanks(data) { const set = new Set(); for (const raw of data.rollingChunks?.bank ?? []) { const base = String(raw).split('-')[0]; if (/^\d+$/.test(base)) set.add(base); } return [...set].sort(numericSort); }
+function buildSkillItems(data, audit) {
+  const out = {};
+  for (const [skill, methods] of Object.entries(data.skillItems ?? {})) {
+    const result = {};
+    for (const [method, items] of Object.entries(methods)) {
+      const list = []; for (const [item, stages] of Object.entries(items)) list.push([cleanName(item), [...new Set(Object.values(stages))].join(', ')]);
+      const target = `${stripWiki(skill)}/${cleanName(stripWiki(method))}`;
+      if (list.length) result[cleanName(stripWiki(method))] = list;
+      audit.add('skillItems', `${skill}/${method}`, list.length ? (method.includes('#') ? 'normalized' : 'imported') : 'excluded', list.length ? (method.includes('#') ? 'variant-name-cleaned' : 'base-record') : 'non-walkable-content', list.length ? [target] : []);
+    }
+    if (Object.keys(result).length) out[stripWiki(skill)] = result;
+  }
+  return out;
+}
+function buildBanks(data, audit) {
+  const set = new Set();
+  for (const [index, raw] of (data.rollingChunks?.bank ?? []).entries()) {
+    const sourceKey = `${raw}@${index}`, base = String(raw).split('-')[0];
+    if (!/^\d+$/.test(base)) { audit.add('banks', sourceKey, 'excluded', 'non-walkable-content', []); continue; }
+    const duplicate = set.has(base); set.add(base);
+    audit.add('banks', sourceKey, duplicate || String(raw).includes('-') ? 'normalized' : 'imported', duplicate ? 'duplicate-deduped' : String(raw).includes('-') ? 'subarea-suffix-collapsed' : 'base-record', [base]);
+  }
+  return [...set].sort(numericSort);
+}
 function buildTags(data, chunkRecs, shopItems, drops) { const add = (map, name, id) => { const set = map.get(name) ?? new Set(); set.add(id); map.set(name, set); }; const Monsters = new Map(), NPCs = new Map(), Objects = new Map(), items = new Map(); for (const [id, entry] of Object.entries(chunkRecs)) { for (const monster of entry.m ?? []) { add(Monsters, monster[0], id); for (const item of drops[monster[0]] ?? []) add(items, item, id); } for (const name of entry.p ?? []) add(NPCs, name, id); for (const object of entry.o ?? []) add(Objects, object[0], id); for (const shop of entry.s ?? []) for (const item of shopItems[shop] ?? []) add(items, item, id); } const maps = { Items: items, Monsters, NPCs, Objects }, out = {}; for (const [key, names] of Object.entries(data.searchTerms ?? {})) { const [tag, type] = key.split('|'), map = maps[type]; if (!tag || !map) continue; const set = out[tag] ?? new Set(); for (const raw of Object.keys(names)) for (const id of map.get(cleanName(raw)) ?? []) set.add(id); if (set.size) out[tag] = set; } return Object.fromEntries(Object.entries(out).map(([tag, set]) => [tag, [...set].sort(numericSort)])); }
 
 function cleanReqs(values, audit, sourceKey, category) {
@@ -124,14 +185,22 @@ function buildTaskUnlocks(data, audit) {
   for (const [category, entities] of Object.entries(data.taskUnlocks ?? {})) {
     const result = {};
     for (const [rawName, value] of Object.entries(entities)) {
-      const name = cleanName(rawName); const locations = Array.isArray(value) ? [['*', value]] : Object.entries(value ?? {});
-      if (rawName.includes('#')) audit.add('taskUnlocks', `${category}/${rawName}`, 'normalized', 'variant-name-cleaned', [name], false);
-      const byChunk = {};
+      const name = cleanName(rawName), locations = Array.isArray(value) ? [['*', value]] : Object.entries(value ?? {}), byChunk = result[name] ?? {};
       for (const [location, requirements] of locations) {
         const sourceKey = `${category}/${rawName}/${location}`;
         if (!Array.isArray(requirements)) { audit.add('taskUnlocks', sourceKey, 'excluded', 'non-walkable-content', []); continue; }
-        if (location !== '*') { const base = String(location).split('-')[0]; if (!/^\d+$/.test(base)) { audit.add('taskUnlocks', sourceKey, 'unresolved', 'named-location-unmappable', []); continue; } const reqs = cleanReqs(requirements, audit, sourceKey, 'taskUnlocks'); if (reqs.length) byChunk[base] = [...new Set([...(byChunk[base] ?? []), ...reqs])].sort(); audit.add('taskUnlocks', sourceKey, String(location).includes('-') ? 'normalized' : 'imported', String(location).includes('-') ? 'subarea-suffix-collapsed' : 'base-record', reqs.length ? [base] : []); }
-        else { const reqs = cleanReqs(requirements, audit, sourceKey, 'taskUnlocks'); if (reqs.length) byChunk['*'] = reqs; audit.add('taskUnlocks', sourceKey, 'imported', 'base-record', reqs.length ? ['*'] : []); }
+        if (location !== '*') {
+          const base = String(location).split('-')[0];
+          if (!/^\d+$/.test(base)) { audit.add('taskUnlocks', sourceKey, 'unresolved', 'named-location-unmappable', []); continue; }
+          const reqs = cleanReqs(requirements, audit, sourceKey, 'taskUnlocks'), duplicate = Boolean(byChunk[base]);
+          if (reqs.length) byChunk[base] = [...new Set([...(byChunk[base] ?? []), ...reqs])].sort();
+          const normalized = rawName.includes('#') || String(location).includes('-') || duplicate;
+          audit.add('taskUnlocks', sourceKey, normalized ? 'normalized' : 'imported', duplicate ? 'duplicate-deduped' : rawName.includes('#') ? 'variant-name-cleaned' : String(location).includes('-') ? 'subarea-suffix-collapsed' : 'base-record', reqs.length ? [`${name}/${base}`] : []);
+        } else {
+          const reqs = cleanReqs(requirements, audit, sourceKey, 'taskUnlocks'), duplicate = Boolean(byChunk['*']);
+          if (reqs.length) byChunk['*'] = [...new Set([...(byChunk['*'] ?? []), ...reqs])].sort();
+          audit.add('taskUnlocks', sourceKey, rawName.includes('#') || duplicate ? 'normalized' : 'imported', duplicate ? 'duplicate-deduped' : rawName.includes('#') ? 'variant-name-cleaned' : 'base-record', reqs.length ? [`${name}/*`] : []);
+        }
       }
       if (Object.keys(byChunk).length) result[name] = byChunk;
     }
@@ -139,7 +208,6 @@ function buildTaskUnlocks(data, audit) {
   }
   return out;
 }
-
 function addBaseRecords(audit, category, value) {
   const entries = Array.isArray(value) ? value.map((item, index) => [String(index), item]) : Object.entries(value ?? {});
   for (const [key] of entries) audit.add(category, key, 'imported', 'base-record', [key]);
@@ -162,7 +230,7 @@ function buildLite(doc, audit) {
 }
 
 export function transformChunkContent(data, sourceManifest) {
-  const audit = createAudit(sourceManifest); const walkable = new Set((data.walkableChunks ?? []).map(String)); const slayerReq = new Map(Object.entries(data.slayerMonsters ?? {}));
+  const audit = createAudit(sourceManifest, buildSourceInventory(data)); const walkable = new Set((data.walkableChunks ?? []).map(String)); const slayerReq = new Map(Object.entries(data.slayerMonsters ?? {}));
   addBaseRecords(audit, 'walkableChunks', data.walkableChunks ?? []); addBaseRecords(audit, 'slayerMonsters', data.slayerMonsters ?? {});
   const chunks = {};
   for (const [id, chunk] of Object.entries(data.chunks ?? {})) {
@@ -178,8 +246,8 @@ export function transformChunkContent(data, sourceManifest) {
     const normalized = Object.values(chunk.Sections ?? {}).length > 0;
     audit.add('chunks', id, normalized ? 'normalized' : 'imported', normalized ? 'section-merged' : 'base-record', [id]);
   }
-  const connect = buildConnect(data), slayerMasters = buildSlayerMasters(data), shortcuts = buildShortcuts(data), shopItems = buildShopItems(data), drops = buildDrops(data), overlays = buildOverlays(data), skillItems = buildSkillItems(data), taskUnlocks = buildTaskUnlocks(data, audit), questSections = buildQuestSections(data, audit), banks = buildBanks(data), tags = buildTags(data, chunks, shopItems, drops);
-  addBaseRecords(audit, 'slayerMasterTasks', data.slayerMasterTasks ?? {}); addBaseRecords(audit, 'challenges', data.challenges ?? {}); addBaseRecords(audit, 'drops', data.drops ?? {}); addBaseRecords(audit, 'shopItems', data.shopItems ?? {}); addBaseRecords(audit, 'mapOverlays', data.mapOverlays ?? {}); addBaseRecords(audit, 'skillItems', data.skillItems ?? {}); addBaseRecords(audit, 'searchTerms', data.searchTerms ?? {}); addBaseRecords(audit, 'banks', data.rollingChunks?.bank ?? []);
+  const connect = buildConnect(data), slayerMasters = buildSlayerMasters(data, audit), shortcuts = buildShortcuts(data, audit), shopItems = buildShopItems(data), drops = buildDrops(data), overlays = buildOverlays(data), skillItems = buildSkillItems(data, audit), taskUnlocks = buildTaskUnlocks(data, audit), questSections = buildQuestSections(data, audit), banks = buildBanks(data, audit), tags = buildTags(data, chunks, shopItems, drops);
+   addBaseRecords(audit, 'drops', data.drops ?? {}); addBaseRecords(audit, 'shopItems', data.shopItems ?? {}); addBaseRecords(audit, 'mapOverlays', data.mapOverlays ?? {});  addBaseRecords(audit, 'searchTerms', data.searchTerms ?? {});
   const full = { version: 8, source: 'source-chunk/chunk-picker-v2 (chunkpicker-chunkinfo-export.json, gh-pages)', chunks, connect, slayerMasters, shortcuts, shopItems, drops, overlays, skillItems, taskUnlocks, questSections, banks, tags };
   const liteSource = buildLite(full, audit); const finalAudit = audit.finish();
   return { full, liteSource, audit: finalAudit };
