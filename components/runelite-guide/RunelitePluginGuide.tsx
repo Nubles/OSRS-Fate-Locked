@@ -192,8 +192,12 @@ const GuideContents: React.FC<GuideContentsProps> = ({
 const Presets: React.FC = () => (
   <div className="grid gap-4 lg:grid-cols-2">
     {RUNELITE_GUIDE_PRESETS.map(preset => (
-      <article key={preset.id} className="rounded-2xl border border-white/10 bg-white/[0.035] p-5">
-        <h3 className="font-serif text-xl font-bold text-white">{preset.title}</h3>
+      <article
+        key={preset.id}
+        data-guide-preset={preset.id}
+        className="rounded-lg border border-osrs-border bg-[#252525] p-4"
+      >
+        <h3 className="font-sans text-base font-bold text-white">{preset.title}</h3>
         <p className="mt-2 text-sm leading-relaxed text-gray-300">{preset.summary}</p>
         <ul className="mt-4 space-y-2 text-sm text-gray-400">
           {preset.adjustments.map(adjustment => (
@@ -211,7 +215,11 @@ const Presets: React.FC = () => (
 const Troubleshooting: React.FC = () => (
   <div className="space-y-3">
     {RUNELITE_GUIDE_TROUBLESHOOTING.map(item => (
-      <details key={item.id} className="group rounded-xl border border-white/10 bg-white/[0.035]">
+      <details
+        key={item.id}
+        data-guide-troubleshooting={item.id}
+        className="group rounded-lg border border-osrs-border bg-[#252525]"
+      >
         <summary className="cursor-pointer px-4 py-3 font-bold text-white marker:text-amber-400">
           {item.symptom}
         </summary>
@@ -244,7 +252,8 @@ const Troubleshooting: React.FC = () => (
             href={resource.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="group rounded-lg border border-white/10 bg-black/20 p-3 transition-colors hover:border-amber-400/35 hover:bg-amber-400/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+            data-guide-resource={resource.id}
+            className="group rounded-lg border border-osrs-border bg-[#1b1b1b] p-3 transition-colors hover:border-amber-400/35 hover:bg-amber-400/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
           >
             <span className="flex items-center gap-2 text-sm font-bold text-amber-200">
               {resource.label}
@@ -263,7 +272,11 @@ const Troubleshooting: React.FC = () => (
 const Glossary: React.FC = () => (
   <dl className="grid gap-3 sm:grid-cols-2">
     {RUNELITE_GUIDE_GLOSSARY.map(item => (
-      <div key={item.term} className="rounded-xl border border-white/10 bg-white/[0.035] p-4">
+      <div
+        key={item.term}
+        data-guide-glossary-row={item.term}
+        className="rounded-lg border border-osrs-border bg-[#252525] p-3"
+      >
         <dt className="font-bold text-amber-200">{item.term}</dt>
         <dd className="mt-1 text-sm leading-relaxed text-gray-400">{item.definition}</dd>
       </div>
@@ -444,34 +457,39 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({
                     key={chapter.id}
                     id={`runelite-guide-${chapter.id}`}
                     data-guide-chapter={chapter.id}
-                    className="scroll-mt-24 rounded-2xl border border-white/10 bg-[#181818] p-5 shadow-xl sm:p-7"
+                    data-guide-chapter-panel={chapter.id}
+                    className="scroll-mt-4 overflow-hidden rounded-lg border border-osrs-border bg-osrs-panel"
                     aria-labelledby={`runelite-guide-${chapter.id}-title`}
                   >
-                    <div className="flex items-start gap-4">
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-amber-400/25 bg-amber-400/10 text-sm font-black text-amber-300">
+                    <header
+                      data-guide-chapter-header={chapter.id}
+                      className="flex items-start gap-3 border-b border-osrs-border bg-[#1b1b1b] px-4 py-3"
+                    >
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-amber-400/35 bg-amber-400/10 text-xs font-black text-osrs-gold">
                         {chapter.number}
                       </span>
-                      <div>
+                      <div className="min-w-0">
                         <h2
                           id={`runelite-guide-${chapter.id}-title`}
-                          className="font-serif text-2xl font-black text-white sm:text-3xl"
+                          className="text-lg font-black text-gray-100 sm:text-xl"
                         >
                           {chapter.title}
                         </h2>
-                        <p className="mt-2 text-base leading-relaxed text-gray-300">
+                        <p className="mt-1 text-sm leading-relaxed text-gray-400">
                           {chapter.summary}
                         </p>
                       </div>
-                    </div>
+                    </header>
 
-                    <div className="mt-5 space-y-3 text-sm leading-7 text-gray-400 sm:text-base">
+                    <div className="space-y-5 p-4 sm:p-5">
+                      <div className="space-y-3 text-sm leading-7 text-gray-400 sm:text-base">
                       {chapter.paragraphs.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
                     </div>
 
                     {chapter.bullets.length > 0 && (
-                      <ul className="mt-5 grid gap-3 md:grid-cols-2">
+                      <ul className="grid gap-3 md:grid-cols-2">
                         {chapter.bullets.map(bullet => (
-                          <li key={bullet} className="flex gap-3 rounded-xl border border-white/10 bg-white/[0.025] p-3 text-sm leading-relaxed text-gray-300">
+                          <li key={bullet} className="flex gap-3 rounded-lg border border-white/10 bg-[#252525] px-3 py-2.5 text-sm leading-relaxed text-gray-300">
                             <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" aria-hidden="true" />
                             <span>{bullet}</span>
                           </li>
@@ -480,13 +498,17 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({
                     )}
 
                     {chapter.id === 'unified-panel' && (
-                      <div className="mt-6">
+                      <div>
                         <h3 className="text-sm font-black uppercase tracking-[0.16em] text-gray-500">
                           The seven collapsible sections
                         </h3>
                         <ul className="mt-3 flex flex-wrap gap-2">
                           {RUNELITE_PANEL_SECTIONS.map(section => (
-                            <li key={section} className="rounded-full border border-amber-400/20 bg-amber-400/[0.07] px-3 py-1.5 text-sm font-bold text-amber-100">
+                            <li
+                              key={section}
+                              data-guide-panel-section={section}
+                              className="rounded border border-amber-400/25 bg-amber-400/[0.07] px-2.5 py-1 text-xs font-bold text-amber-100"
+                            >
                               {section}
                             </li>
                           ))}
@@ -495,26 +517,26 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({
                     )}
 
                     {chapter.id === 'recommended-configurations' && (
-                      <div className="mt-6">
+                      <div>
                         <Presets />
                       </div>
                     )}
 
                     {chapter.id === 'troubleshooting' && (
-                      <div className="mt-6">
+                      <div>
                         <Troubleshooting />
                       </div>
                     )}
 
                     {chapter.id === 'glossary' && (
-                      <div className="mt-6">
+                      <div>
                         <Glossary />
                       </div>
                     )}
 
                     {chapterSettings.length > 0 && (
-                      <div className="mt-7">
-                        <h3 className="mb-4 font-serif text-xl font-bold text-white">
+                      <div>
+                        <h3 className="mb-4 text-base font-black text-gray-100">
                           Every {chapter.settingsSection} setting
                         </h3>
                         <GuideSettingsTable settings={chapterSettings} />
@@ -522,12 +544,13 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({
                     )}
 
                     {chapterScreenshots.length > 0 && (
-                      <div className="mt-7 grid gap-6">
+                      <div className="grid gap-6">
                         {chapterScreenshots.map(screenshot => (
                           <GuideScreenshot key={screenshot.id} screenshot={screenshot} />
                         ))}
                       </div>
                     )}
+                    </div>
                   </section>
                 );
               })}

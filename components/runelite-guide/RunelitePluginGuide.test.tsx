@@ -35,6 +35,24 @@ describe('RunelitePluginGuide', () => {
       expect(decodedHtml).toContain(chapter.title);
     }
 
+    expect(html.match(/data-guide-chapter-panel=/g)).toHaveLength(
+      RUNELITE_GUIDE_CHAPTERS.length,
+    );
+    expect(html.match(/data-guide-chapter-header=/g)).toHaveLength(
+      RUNELITE_GUIDE_CHAPTERS.length,
+    );
+    expect(html.match(/data-guide-panel-section=/g)).toHaveLength(
+      RUNELITE_PANEL_SECTIONS.length,
+    );
+    expect(html.match(/data-guide-preset=/g)).toHaveLength(
+      RUNELITE_GUIDE_PRESETS.length,
+    );
+    expect(html.match(/data-guide-resource=/g)).toHaveLength(
+      RUNELITE_GUIDE_RESOURCES.length,
+    );
+    expect(html).toContain('data-guide-troubleshooting=');
+    expect(html).toContain('data-guide-glossary-row=');
+
     for (const section of RUNELITE_PANEL_SECTIONS) {
       expect(decodedHtml).toContain(section);
     }
