@@ -4110,7 +4110,7 @@
     {
       "id": "Murder Mystery",
       "kind": "quest",
-      "status": "unresolved",
+      "status": "verified",
       "reviewedAt": "2026-07-28",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Murder_Mystery&oldid=15271664",
@@ -4118,8 +4118,8 @@
         "revisionTimestamp": "2026-07-22T01:03:06Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Kandarin\"],\"skills\":{},\"prereqs\":[],\"points\":3}",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kandarin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":42,\"cy\":55}],\"id\":\"sinclair-mansion\",\"label\":\"Sinclair Mansion\",\"standardAreas\":[\"Seers' Village\"]},{\"chunkOptions\":[{\"cx\":42,\"cy\":54}],\"id\":\"seers-village\",\"label\":\"Seers' Village\",\"standardAreas\":[\"Seers' Village\"]}],\"skills\":{},\"prereqs\":[],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "42,54",
@@ -4137,9 +4137,7 @@
         "travel": [],
         "instances": [],
         "partialCompletion": []
-      },
-      "discrepancy": "Murder Mystery uses the regions policy with runtime regions [Kandarin], while the pinned Chunk Picker records first places [Sinclair Mansion (chunk 42,55)] and step places [Seers' Village (chunk 42,54)]. Those named activity markers do not prove that every coarse runtime region is unavoidable and may omit travel, instance, or item-source steps from the stable Wiki route.",
-      "conservativeReason": "Keeping Murder Mystery's current regions policy requirements (regions [Kandarin]; exact locations [none]; skills [none]; prerequisites [none]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "My Arm's Big Adventure",
@@ -8149,7 +8147,7 @@
     {
       "id": "Witch's Potion",
       "kind": "quest",
-      "status": "unresolved",
+      "status": "verified-with-notes",
       "reviewedAt": "2026-07-28",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Witch's_Potion&oldid=15166776",
@@ -8157,17 +8155,21 @@
         "revisionTimestamp": "2026-04-06T16:44:39Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Asgarnia\"],\"skills\":{},\"prereqs\":[],\"points\":1}",
-      "chunkEvidence": [],
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Asgarnia\"],\"locations\":[{\"chunkOptions\":[{\"cx\":46,\"cy\":50}],\"id\":\"rimmington\",\"label\":\"Rimmington\",\"standardAreas\":[\"Rimmington\"]}],\"skills\":{},\"prereqs\":[],\"points\":1}",
+      "chunkEvidence": [
+        {
+          "chunkId": "46,50",
+          "role": "first",
+          "place": "Rimmington"
+        }
+      ],
       "notes": {
-        "items": [],
+        "items": ["An eye of newt may be obtained before the quest; Port Sarim travel and item possession are not machine-enforced."],
         "travel": [],
         "instances": [],
         "partialCompletion": []
-      },
-      "discrepancy": "Witch's Potion uses the regions policy with runtime regions [Asgarnia], but there is no pinned Chunk Picker first/step activity chunk for this ID. The stable Wiki route therefore has no chunk evidence to corroborate whether the retained runtime geography covers every unavoidable quest step.",
-      "conservativeReason": "Keeping Witch's Potion's current regions policy requirements (regions [Asgarnia]; exact locations [none]; skills [none]; prerequisites [none]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "X Marks the Spot",

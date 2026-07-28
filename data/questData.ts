@@ -130,9 +130,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Witch\'s Potion': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Witch\'s Potion', name: 'Witch\'s Potion',
     regions: ['Asgarnia'],
+    locations: [{
+      id: 'rimmington', label: 'Rimmington',
+      standardAreas: ['Rimmington'],
+      chunkOptions: [{ cx: 46, cy: 50 }],
+    }],
     skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -405,9 +410,18 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_NOVICE
   },
   'Murder Mystery': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Murder Mystery', name: 'Murder Mystery',
     regions: ['Kandarin'],
+    locations: [{
+      id: 'sinclair-mansion', label: 'Sinclair Mansion',
+      standardAreas: ["Seers' Village"],
+      chunkOptions: [{ cx: 42, cy: 55 }],
+    }, {
+      id: 'seers-village', label: "Seers' Village",
+      standardAreas: ["Seers' Village"],
+      chunkOptions: [{ cx: 42, cy: 54 }],
+    }],
     skills: {}, prereqs: [], points: 3,
     difficulty: DropSource.QUEST_NOVICE
   },

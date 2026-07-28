@@ -119,6 +119,33 @@ describe('manual journal readiness', () => {
 });
 
 describe('reported quest access', () => {
+  it("requires Rimmington, not all Asgarnia, for Witch's Potion", () => {
+    const quest = QUEST_DATA["Witch's Potion"];
+
+    expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Asgarnia'] })).status)
+      .toBe('LOCKED_REGION');
+    expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Rimmington'] })).status)
+      .toBe('AVAILABLE');
+    expect(evaluateQuestEligibility(quest, unlocked({ chunks: ['46,50'] }), 'chunked').status)
+      .toBe('AVAILABLE');
+  });
+
+  it("requires Sinclair Mansion and Seers' Village, not all Kandarin, for Murder Mystery", () => {
+    const quest = QUEST_DATA['Murder Mystery'];
+
+    expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Kandarin'] })).status)
+      .toBe('LOCKED_REGION');
+    expect(evaluateQuestEligibility(quest, unlocked({ regions: ["Seers' Village"] })).status)
+      .toBe('AVAILABLE');
+    expect(evaluateQuestEligibility(quest, unlocked({ chunks: ['42,55'] }), 'chunked').status)
+      .toBe('LOCKED_REGION');
+    expect(evaluateQuestEligibility(
+      quest,
+      unlocked({ chunks: ['42,55', '42,54'] }),
+      'chunked',
+    ).status).toBe('AVAILABLE');
+  });
+
   it('uses exact locations instead of descriptive regions under locations policy', () => {
     const quest = {
       id: 'Exact quest',

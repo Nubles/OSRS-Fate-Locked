@@ -38,10 +38,6 @@ describe('official quest and miniquest audit coverage', () => {
         discrepancy: ['regions policy', 'Misthalin', 'Lumbridge Castle', '50,50'],
       },
       {
-        id: 'Witch\'s Potion',
-        discrepancy: ['regions policy', 'Asgarnia', 'no pinned Chunk Picker first/step activity chunk'],
-      },
-      {
         id: 'Pandemonium',
         discrepancy: ['locations policy', 'Port Sarim', '47,50'],
       },
@@ -64,6 +60,29 @@ describe('official quest and miniquest audit coverage', () => {
       expect(entry.conservativeReason, example.id).toContain(`${entry.accessPolicy} policy`);
       expect(entry.conservativeReason, example.id).toMatch(/premature completion\/key-roll eligibility/i);
     }
+  });
+
+  it("pins reviewed Witch's Potion and Murder Mystery source evidence", () => {
+    const byId = new Map(audit.entries.map(entry => [entry.id, entry]));
+
+    expect(byId.get("Witch's Potion")).toMatchObject({
+      status: 'verified-with-notes',
+      accessPolicy: 'locations',
+      source: { revision: 15166776 },
+      chunkEvidence: [{ chunkId: '46,50', role: 'first', place: 'Rimmington' }],
+    });
+    expect(byId.get("Witch's Potion")?.notes.items).toEqual([
+      'An eye of newt may be obtained before the quest; Port Sarim travel and item possession are not machine-enforced.',
+    ]);
+    expect(byId.get('Murder Mystery')).toMatchObject({
+      status: 'verified',
+      accessPolicy: 'locations',
+      source: { revision: 15271664 },
+      chunkEvidence: [
+        { chunkId: '42,54', role: 'step', place: "Seers' Village" },
+        { chunkId: '42,55', role: 'first', place: 'Sinclair Mansion' },
+      ],
+    });
   });
 
   it('rejects generic procedural unresolved placeholders', () => {

@@ -39,6 +39,19 @@ describe('journal completion decisions', () => {
     expect(result).toEqual({ ok: false, reason: 'Requires: South Falador Farm' });
   });
 
+  it("rejects Witch's Potion and Murder Mystery before their exact locations are accessible", () => {
+    expect(questCompletionDecision(
+      QUEST_DATA["Witch's Potion"],
+      unlocked({ regions: ['Asgarnia'] }),
+      'vanilla',
+    )).toEqual({ ok: false, reason: 'Requires: Rimmington' });
+    expect(questCompletionDecision(
+      QUEST_DATA['Murder Mystery'],
+      unlocked({ regions: ['Kandarin'] }),
+      'vanilla',
+    )).toEqual({ ok: false, reason: "Requires: Sinclair Mansion, Seers' Village" });
+  });
+
   it('accepts a Diary task only when task skills quests and regions are met', () => {
     const task: DiaryTask = {
       id: 'x',

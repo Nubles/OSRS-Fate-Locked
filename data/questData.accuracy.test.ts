@@ -3,6 +3,25 @@ import { QUEST_DATA } from './questData';
 import * as questDataModule from './questData';
 
 describe('audited current quest requirements', () => {
+  it("pins Witch's Potion to Rimmington without enforcing all Asgarnia", () => {
+    expect(QUEST_DATA["Witch's Potion"]).toMatchObject({
+      kind: 'quest',
+      accessPolicy: 'locations',
+      regions: ['Asgarnia'],
+    });
+    expect(QUEST_DATA["Witch's Potion"].locations?.map(location => location.id))
+      .toEqual(['rimmington']);
+  });
+
+  it("pins Murder Mystery to Sinclair Mansion and Seers' Village", () => {
+    expect(QUEST_DATA['Murder Mystery']).toMatchObject({
+      kind: 'quest',
+      accessPolicy: 'locations',
+      regions: ['Kandarin'],
+    });
+    expect(QUEST_DATA['Murder Mystery'].locations?.map(location => location.id))
+      .toEqual(['sinclair-mansion', 'seers-village']);
+  });
   it('uses the real Porcine route', () => {
     const q = QUEST_DATA['A Porcine of Interest'];
     expect(q.regions).not.toContain('Port Sarim');
