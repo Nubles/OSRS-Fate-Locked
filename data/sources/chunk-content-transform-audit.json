@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "policyVersion": 1,
+  "policyVersion": 2,
   "sourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
   "categoryTotals": {
     "walkableChunks": {
@@ -54,29 +54,29 @@
     },
     "drops": {
       "source": 871,
-      "imported": 871,
-      "normalized": 0,
+      "imported": 738,
+      "normalized": 133,
       "excluded": 0,
       "unresolved": 0
     },
     "shopItems": {
       "source": 433,
-      "imported": 433,
-      "normalized": 0,
+      "imported": 331,
+      "normalized": 102,
       "excluded": 0,
       "unresolved": 0
     },
     "mapOverlays": {
       "source": 6,
-      "imported": 6,
-      "normalized": 0,
-      "excluded": 0,
+      "imported": 4,
+      "normalized": 1,
+      "excluded": 1,
       "unresolved": 0
     },
     "skillItems": {
       "source": 565,
-      "imported": 542,
-      "normalized": 23,
+      "imported": 531,
+      "normalized": 34,
       "excluded": 0,
       "unresolved": 0
     },
@@ -163808,21 +163808,23 @@
       "category": "drops",
       "sourceKey": "Ankou",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Ankou"
-      ]
+      ],
+      "detail": "Merged raw drop table \"Ankou\" into canonical \"Ankou\" using sorted unique item union across: Ankou, Ankou#Wilderness Slayer Cave"
     },
     {
       "category": "drops",
       "sourceKey": "Ankou#Wilderness Slayer Cave",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Ankou#Wilderness Slayer Cave"
-      ]
+        "Ankou"
+      ],
+      "detail": "Merged raw drop table \"Ankou#Wilderness Slayer Cave\" into canonical \"Ankou\" using sorted unique item union across: Ankou, Ankou#Wilderness Slayer Cave"
     },
     {
       "category": "drops",
@@ -164028,21 +164030,23 @@
       "category": "drops",
       "sourceKey": "Bandit (Pollnivneach)#Bearded",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Bandit (Pollnivneach)#Bearded"
-      ]
+        "Bandit (Pollnivneach)"
+      ],
+      "detail": "Merged raw drop table \"Bandit (Pollnivneach)#Bearded\" into canonical \"Bandit (Pollnivneach)\" using sorted unique item union across: Bandit (Pollnivneach)#Bearded, Bandit (Pollnivneach)#No beard"
     },
     {
       "category": "drops",
       "sourceKey": "Bandit (Pollnivneach)#No beard",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Bandit (Pollnivneach)#No beard"
-      ]
+        "Bandit (Pollnivneach)"
+      ],
+      "detail": "Merged raw drop table \"Bandit (Pollnivneach)#No beard\" into canonical \"Bandit (Pollnivneach)\" using sorted unique item union across: Bandit (Pollnivneach)#Bearded, Bandit (Pollnivneach)#No beard"
     },
     {
       "category": "drops",
@@ -164078,21 +164082,23 @@
       "category": "drops",
       "sourceKey": "Bandit#Level 130",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Bandit#Level 130"
-      ]
+        "Bandit"
+      ],
+      "detail": "Merged raw drop table \"Bandit#Level 130\" into canonical \"Bandit\" using sorted unique item union across: Bandit#Level 130, Bandit#Level 22"
     },
     {
       "category": "drops",
       "sourceKey": "Bandit#Level 22",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Bandit#Level 22"
-      ]
+        "Bandit"
+      ],
+      "detail": "Merged raw drop table \"Bandit#Level 22\" into canonical \"Bandit\" using sorted unique item union across: Bandit#Level 130, Bandit#Level 22"
     },
     {
       "category": "drops",
@@ -164108,41 +164114,45 @@
       "category": "drops",
       "sourceKey": "Barbarian (Barbarian Camp)#Higher level",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Barbarian (Barbarian Camp)#Higher level"
-      ]
+        "Barbarian (Barbarian Camp)"
+      ],
+      "detail": "Merged raw drop table \"Barbarian (Barbarian Camp)#Higher level\" into canonical \"Barbarian (Barbarian Camp)\" using sorted unique item union across: Barbarian (Barbarian Camp)#Higher level, Barbarian (Barbarian Camp)#Lower level"
     },
     {
       "category": "drops",
       "sourceKey": "Barbarian (Barbarian Camp)#Lower level",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Barbarian (Barbarian Camp)#Lower level"
-      ]
+        "Barbarian (Barbarian Camp)"
+      ],
+      "detail": "Merged raw drop table \"Barbarian (Barbarian Camp)#Lower level\" into canonical \"Barbarian (Barbarian Camp)\" using sorted unique item union across: Barbarian (Barbarian Camp)#Higher level, Barbarian (Barbarian Camp)#Lower level"
     },
     {
       "category": "drops",
       "sourceKey": "Barbarian#Higher level",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Barbarian#Higher level"
-      ]
+        "Barbarian"
+      ],
+      "detail": "Merged raw drop table \"Barbarian#Higher level\" into canonical \"Barbarian\" using sorted unique item union across: Barbarian#Higher level, Barbarian#Lower level"
     },
     {
       "category": "drops",
       "sourceKey": "Barbarian#Lower level",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Barbarian#Lower level"
-      ]
+        "Barbarian"
+      ],
+      "detail": "Merged raw drop table \"Barbarian#Lower level\" into canonical \"Barbarian\" using sorted unique item union across: Barbarian#Higher level, Barbarian#Lower level"
     },
     {
       "category": "drops",
@@ -164228,21 +164238,23 @@
       "category": "drops",
       "sourceKey": "Big frog#Level 10",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Big frog#Level 10"
-      ]
+        "Big frog"
+      ],
+      "detail": "Merged raw drop table \"Big frog#Level 10\" into canonical \"Big frog\" using sorted unique item union across: Big frog#Level 10, Big frog#Level 24"
     },
     {
       "category": "drops",
       "sourceKey": "Big frog#Level 24",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Big frog#Level 24"
-      ]
+        "Big frog"
+      ],
+      "detail": "Merged raw drop table \"Big frog#Level 24\" into canonical \"Big frog\" using sorted unique item union across: Big frog#Level 10, Big frog#Level 24"
     },
     {
       "category": "drops",
@@ -164298,41 +164310,45 @@
       "category": "drops",
       "sourceKey": "Black demon",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Black demon"
-      ]
+      ],
+      "detail": "Merged raw drop table \"Black demon\" into canonical \"Black demon\" using sorted unique item union across: Black demon, Black demon#Wilderness Slayer Cave"
     },
     {
       "category": "drops",
       "sourceKey": "Black demon#Wilderness Slayer Cave",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Black demon#Wilderness Slayer Cave"
-      ]
+        "Black demon"
+      ],
+      "detail": "Merged raw drop table \"Black demon#Wilderness Slayer Cave\" into canonical \"Black demon\" using sorted unique item union across: Black demon, Black demon#Wilderness Slayer Cave"
     },
     {
       "category": "drops",
       "sourceKey": "Black dragon",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Black dragon"
-      ]
+      ],
+      "detail": "Merged raw drop table \"Black dragon\" into canonical \"Black dragon\" using sorted unique item union across: Black dragon, Black dragon#Wilderness Slayer Cave"
     },
     {
       "category": "drops",
       "sourceKey": "Black dragon#Wilderness Slayer Cave",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Black dragon#Wilderness Slayer Cave"
-      ]
+        "Black dragon"
+      ],
+      "detail": "Merged raw drop table \"Black dragon#Wilderness Slayer Cave\" into canonical \"Black dragon\" using sorted unique item union across: Black dragon, Black dragon#Wilderness Slayer Cave"
     },
     {
       "category": "drops",
@@ -164348,21 +164364,23 @@
       "category": "drops",
       "sourceKey": "Black Guard#Level 25",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Black Guard#Level 25"
-      ]
+        "Black Guard"
+      ],
+      "detail": "Merged raw drop table \"Black Guard#Level 25\" into canonical \"Black Guard\" using sorted unique item union across: Black Guard#Level 25, Black Guard#Level 48"
     },
     {
       "category": "drops",
       "sourceKey": "Black Guard#Level 48",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Black Guard#Level 48"
-      ]
+        "Black Guard"
+      ],
+      "detail": "Merged raw drop table \"Black Guard#Level 48\" into canonical \"Black Guard\" using sorted unique item union across: Black Guard#Level 25, Black Guard#Level 48"
     },
     {
       "category": "drops",
@@ -164448,21 +164466,23 @@
       "category": "drops",
       "sourceKey": "Blood Blamish Snail#Pointed",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Blood Blamish Snail#Pointed"
-      ]
+        "Blood Blamish Snail"
+      ],
+      "detail": "Merged raw drop table \"Blood Blamish Snail#Pointed\" into canonical \"Blood Blamish Snail\" using sorted unique item union across: Blood Blamish Snail#Pointed, Blood Blamish Snail#Rounded"
     },
     {
       "category": "drops",
       "sourceKey": "Blood Blamish Snail#Rounded",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Blood Blamish Snail#Rounded"
-      ]
+        "Blood Blamish Snail"
+      ],
+      "detail": "Merged raw drop table \"Blood Blamish Snail#Rounded\" into canonical \"Blood Blamish Snail\" using sorted unique item union across: Blood Blamish Snail#Pointed, Blood Blamish Snail#Rounded"
     },
     {
       "category": "drops",
@@ -164618,21 +164638,23 @@
       "category": "drops",
       "sourceKey": "Bruise Blamish Snail#Pointed",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Bruise Blamish Snail#Pointed"
-      ]
+        "Bruise Blamish Snail"
+      ],
+      "detail": "Merged raw drop table \"Bruise Blamish Snail#Pointed\" into canonical \"Bruise Blamish Snail\" using sorted unique item union across: Bruise Blamish Snail#Pointed, Bruise Blamish Snail#Rounded"
     },
     {
       "category": "drops",
       "sourceKey": "Bruise Blamish Snail#Rounded",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Bruise Blamish Snail#Rounded"
-      ]
+        "Bruise Blamish Snail"
+      ],
+      "detail": "Merged raw drop table \"Bruise Blamish Snail#Rounded\" into canonical \"Bruise Blamish Snail\" using sorted unique item union across: Bruise Blamish Snail#Pointed, Bruise Blamish Snail#Rounded"
     },
     {
       "category": "drops",
@@ -165118,21 +165140,23 @@
       "category": "drops",
       "sourceKey": "Crab#Level 21",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Crab#Level 21"
-      ]
+        "Crab"
+      ],
+      "detail": "Merged raw drop table \"Crab#Level 21\" into canonical \"Crab\" using sorted unique item union across: Crab#Level 21, Crab#Level 23"
     },
     {
       "category": "drops",
       "sourceKey": "Crab#Level 23",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Crab#Level 23"
-      ]
+        "Crab"
+      ],
+      "detail": "Merged raw drop table \"Crab#Level 23\" into canonical \"Crab\" using sorted unique item union across: Crab#Level 21, Crab#Level 23"
     },
     {
       "category": "drops",
@@ -165288,11 +165312,12 @@
       "category": "drops",
       "sourceKey": "Cyclops",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Cyclops"
-      ]
+      ],
+      "detail": "Merged raw drop table \"Cyclops\" into canonical \"Cyclops\" using sorted unique item union across: Cyclops, Cyclops#Warriors' Guild Basement"
     },
     {
       "category": "drops",
@@ -165328,11 +165353,12 @@
       "category": "drops",
       "sourceKey": "Cyclops#Warriors' Guild Basement",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Cyclops#Warriors' Guild Basement"
-      ]
+        "Cyclops"
+      ],
+      "detail": "Merged raw drop table \"Cyclops#Warriors' Guild Basement\" into canonical \"Cyclops\" using sorted unique item union across: Cyclops, Cyclops#Warriors' Guild Basement"
     },
     {
       "category": "drops",
@@ -165358,21 +165384,23 @@
       "category": "drops",
       "sourceKey": "Dagannoth (Waterbirth Island)#Level 88",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Dagannoth (Waterbirth Island)#Level 88"
-      ]
+        "Dagannoth (Waterbirth Island)"
+      ],
+      "detail": "Merged raw drop table \"Dagannoth (Waterbirth Island)#Level 88\" into canonical \"Dagannoth (Waterbirth Island)\" using sorted unique item union across: Dagannoth (Waterbirth Island)#Level 88, Dagannoth (Waterbirth Island)#Level 90"
     },
     {
       "category": "drops",
       "sourceKey": "Dagannoth (Waterbirth Island)#Level 90",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Dagannoth (Waterbirth Island)#Level 90"
-      ]
+        "Dagannoth (Waterbirth Island)"
+      ],
+      "detail": "Merged raw drop table \"Dagannoth (Waterbirth Island)#Level 90\" into canonical \"Dagannoth (Waterbirth Island)\" using sorted unique item union across: Dagannoth (Waterbirth Island)#Level 88, Dagannoth (Waterbirth Island)#Level 90"
     },
     {
       "category": "drops",
@@ -165458,51 +165486,56 @@
       "category": "drops",
       "sourceKey": "Dark warrior#Level 145",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Dark warrior#Level 145"
-      ]
+        "Dark warrior"
+      ],
+      "detail": "Merged raw drop table \"Dark warrior#Level 145\" into canonical \"Dark warrior\" using sorted unique item union across: Dark warrior#Level 145, Dark warrior#Level 8, Dark warrior#Zeah"
     },
     {
       "category": "drops",
       "sourceKey": "Dark warrior#Level 8",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Dark warrior#Level 8"
-      ]
+        "Dark warrior"
+      ],
+      "detail": "Merged raw drop table \"Dark warrior#Level 8\" into canonical \"Dark warrior\" using sorted unique item union across: Dark warrior#Level 145, Dark warrior#Level 8, Dark warrior#Zeah"
     },
     {
       "category": "drops",
       "sourceKey": "Dark warrior#Zeah",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Dark warrior#Zeah"
-      ]
+        "Dark warrior"
+      ],
+      "detail": "Merged raw drop table \"Dark warrior#Zeah\" into canonical \"Dark warrior\" using sorted unique item union across: Dark warrior#Level 145, Dark warrior#Level 8, Dark warrior#Zeah"
     },
     {
       "category": "drops",
       "sourceKey": "Dark wizard#Higher level",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Dark wizard#Higher level"
-      ]
+        "Dark wizard"
+      ],
+      "detail": "Merged raw drop table \"Dark wizard#Higher level\" into canonical \"Dark wizard\" using sorted unique item union across: Dark wizard#Higher level, Dark wizard#Lower level"
     },
     {
       "category": "drops",
       "sourceKey": "Dark wizard#Lower level",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Dark wizard#Lower level"
-      ]
+        "Dark wizard"
+      ],
+      "detail": "Merged raw drop table \"Dark wizard#Lower level\" into canonical \"Dark wizard\" using sorted unique item union across: Dark wizard#Higher level, Dark wizard#Lower level"
     },
     {
       "category": "drops",
@@ -165798,21 +165831,23 @@
       "category": "drops",
       "sourceKey": "Dungeon rat#Full tail",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Dungeon rat#Full tail"
-      ]
+        "Dungeon rat"
+      ],
+      "detail": "Merged raw drop table \"Dungeon rat#Full tail\" into canonical \"Dungeon rat\" using sorted unique item union across: Dungeon rat#Full tail, Dungeon rat#Short tail"
     },
     {
       "category": "drops",
       "sourceKey": "Dungeon rat#Short tail",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Dungeon rat#Short tail"
-      ]
+        "Dungeon rat"
+      ],
+      "detail": "Merged raw drop table \"Dungeon rat#Short tail\" into canonical \"Dungeon rat\" using sorted unique item union across: Dungeon rat#Full tail, Dungeon rat#Short tail"
     },
     {
       "category": "drops",
@@ -165828,11 +165863,12 @@
       "category": "drops",
       "sourceKey": "Dwarf",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Dwarf"
-      ]
+      ],
+      "detail": "Merged raw drop table \"Dwarf\" into canonical \"Dwarf\" using sorted unique item union across: Dwarf, Dwarf#White Wolf Mountain tunnel"
     },
     {
       "category": "drops",
@@ -165848,11 +165884,12 @@
       "category": "drops",
       "sourceKey": "Dwarf#White Wolf Mountain tunnel",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Dwarf#White Wolf Mountain tunnel"
-      ]
+        "Dwarf"
+      ],
+      "detail": "Merged raw drop table \"Dwarf#White Wolf Mountain tunnel\" into canonical \"Dwarf\" using sorted unique item union across: Dwarf, Dwarf#White Wolf Mountain tunnel"
     },
     {
       "category": "drops",
@@ -165878,21 +165915,23 @@
       "category": "drops",
       "sourceKey": "Earth elemental#Normal variant",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Earth elemental#Normal variant"
-      ]
+        "Earth elemental"
+      ],
+      "detail": "Merged raw drop table \"Earth elemental#Normal variant\" into canonical \"Earth elemental\" using sorted unique item union across: Earth elemental#Normal variant, Earth elemental#Ore variant"
     },
     {
       "category": "drops",
       "sourceKey": "Earth elemental#Ore variant",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Earth elemental#Ore variant"
-      ]
+        "Earth elemental"
+      ],
+      "detail": "Merged raw drop table \"Earth elemental#Ore variant\" into canonical \"Earth elemental\" using sorted unique item union across: Earth elemental#Normal variant, Earth elemental#Ore variant"
     },
     {
       "category": "drops",
@@ -166498,21 +166537,23 @@
       "category": "drops",
       "sourceKey": "Giant bat",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Giant bat"
-      ]
+      ],
+      "detail": "Merged raw drop table \"Giant bat\" into canonical \"Giant bat\" using sorted unique item union across: Giant bat, Giant bat#Plain"
     },
     {
       "category": "drops",
       "sourceKey": "Giant bat#Plain",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Giant bat#Plain"
-      ]
+        "Giant bat"
+      ],
+      "detail": "Merged raw drop table \"Giant bat#Plain\" into canonical \"Giant bat\" using sorted unique item union across: Giant bat, Giant bat#Plain"
     },
     {
       "category": "drops",
@@ -166538,21 +166579,23 @@
       "category": "drops",
       "sourceKey": "Giant frog#Level 13",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Giant frog#Level 13"
-      ]
+        "Giant frog"
+      ],
+      "detail": "Merged raw drop table \"Giant frog#Level 13\" into canonical \"Giant frog\" using sorted unique item union across: Giant frog#Level 13, Giant frog#Level 99"
     },
     {
       "category": "drops",
       "sourceKey": "Giant frog#Level 99",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Giant frog#Level 99"
-      ]
+        "Giant frog"
+      ],
+      "detail": "Merged raw drop table \"Giant frog#Level 99\" into canonical \"Giant frog\" using sorted unique item union across: Giant frog#Level 13, Giant frog#Level 99"
     },
     {
       "category": "drops",
@@ -166578,21 +166621,23 @@
       "category": "drops",
       "sourceKey": "Giant rat",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Giant rat"
-      ]
+      ],
+      "detail": "Merged raw drop table \"Giant rat\" into canonical \"Giant rat\" using sorted unique item union across: Giant rat, Giant rat#Stronghold of Security"
     },
     {
       "category": "drops",
       "sourceKey": "Giant rat#Stronghold of Security",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Giant rat#Stronghold of Security"
-      ]
+        "Giant rat"
+      ],
+      "detail": "Merged raw drop table \"Giant rat#Stronghold of Security\" into canonical \"Giant rat\" using sorted unique item union across: Giant rat, Giant rat#Stronghold of Security"
     },
     {
       "category": "drops",
@@ -166788,21 +166833,23 @@
       "category": "drops",
       "sourceKey": "Goblin (Goblin Village)#Green",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Goblin (Goblin Village)#Green"
-      ]
+        "Goblin (Goblin Village)"
+      ],
+      "detail": "Merged raw drop table \"Goblin (Goblin Village)#Green\" into canonical \"Goblin (Goblin Village)\" using sorted unique item union across: Goblin (Goblin Village)#Green, Goblin (Goblin Village)#Red"
     },
     {
       "category": "drops",
       "sourceKey": "Goblin (Goblin Village)#Red",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Goblin (Goblin Village)#Red"
-      ]
+        "Goblin (Goblin Village)"
+      ],
+      "detail": "Merged raw drop table \"Goblin (Goblin Village)#Red\" into canonical \"Goblin (Goblin Village)\" using sorted unique item union across: Goblin (Goblin Village)#Green, Goblin (Goblin Village)#Red"
     },
     {
       "category": "drops",
@@ -166838,21 +166885,23 @@
       "category": "drops",
       "sourceKey": "Goblin#Drop table 1",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Goblin#Drop table 1"
-      ]
+        "Goblin"
+      ],
+      "detail": "Merged raw drop table \"Goblin#Drop table 1\" into canonical \"Goblin\" using sorted unique item union across: Goblin#Drop table 1, Goblin#Drop table 2"
     },
     {
       "category": "drops",
       "sourceKey": "Goblin#Drop table 2",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Goblin#Drop table 2"
-      ]
+        "Goblin"
+      ],
+      "detail": "Merged raw drop table \"Goblin#Drop table 2\" into canonical \"Goblin\" using sorted unique item union across: Goblin#Drop table 1, Goblin#Drop table 2"
     },
     {
       "category": "drops",
@@ -166878,21 +166927,23 @@
       "category": "drops",
       "sourceKey": "Gorak",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Gorak"
-      ]
+      ],
+      "detail": "Merged raw drop table \"Gorak\" into canonical \"Gorak\" using sorted unique item union across: Gorak, Gorak#Gorak Plane"
     },
     {
       "category": "drops",
       "sourceKey": "Gorak#Gorak Plane",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Gorak#Gorak Plane"
-      ]
+        "Gorak"
+      ],
+      "detail": "Merged raw drop table \"Gorak#Gorak Plane\" into canonical \"Gorak\" using sorted unique item union across: Gorak, Gorak#Gorak Plane"
     },
     {
       "category": "drops",
@@ -166918,21 +166969,23 @@
       "category": "drops",
       "sourceKey": "Greater demon",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Greater demon"
-      ]
+      ],
+      "detail": "Merged raw drop table \"Greater demon\" into canonical \"Greater demon\" using sorted unique item union across: Greater demon, Greater demon#Wilderness Slayer Cave"
     },
     {
       "category": "drops",
       "sourceKey": "Greater demon#Wilderness Slayer Cave",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Greater demon#Wilderness Slayer Cave"
-      ]
+        "Greater demon"
+      ],
+      "detail": "Merged raw drop table \"Greater demon#Wilderness Slayer Cave\" into canonical \"Greater demon\" using sorted unique item union across: Greater demon, Greater demon#Wilderness Slayer Cave"
     },
     {
       "category": "drops",
@@ -166958,21 +167011,23 @@
       "category": "drops",
       "sourceKey": "Green dragon",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Green dragon"
-      ]
+      ],
+      "detail": "Merged raw drop table \"Green dragon\" into canonical \"Green dragon\" using sorted unique item union across: Green dragon, Green dragon#Wilderness Slayer Cave"
     },
     {
       "category": "drops",
       "sourceKey": "Green dragon#Wilderness Slayer Cave",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Green dragon#Wilderness Slayer Cave"
-      ]
+        "Green dragon"
+      ],
+      "detail": "Merged raw drop table \"Green dragon#Wilderness Slayer Cave\" into canonical \"Green dragon\" using sorted unique item union across: Green dragon, Green dragon#Wilderness Slayer Cave"
     },
     {
       "category": "drops",
@@ -167238,31 +167293,34 @@
       "category": "drops",
       "sourceKey": "Hellhound",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Hellhound"
-      ]
+      ],
+      "detail": "Merged raw drop table \"Hellhound\" into canonical \"Hellhound\" using sorted unique item union across: Hellhound, Hellhound#God Wars Dungeon, Hellhound#Wilderness Slayer Cave"
     },
     {
       "category": "drops",
       "sourceKey": "Hellhound#God Wars Dungeon",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Hellhound#God Wars Dungeon"
-      ]
+        "Hellhound"
+      ],
+      "detail": "Merged raw drop table \"Hellhound#God Wars Dungeon\" into canonical \"Hellhound\" using sorted unique item union across: Hellhound, Hellhound#God Wars Dungeon, Hellhound#Wilderness Slayer Cave"
     },
     {
       "category": "drops",
       "sourceKey": "Hellhound#Wilderness Slayer Cave",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Hellhound#Wilderness Slayer Cave"
-      ]
+        "Hellhound"
+      ],
+      "detail": "Merged raw drop table \"Hellhound#Wilderness Slayer Cave\" into canonical \"Hellhound\" using sorted unique item union across: Hellhound, Hellhound#God Wars Dungeon, Hellhound#Wilderness Slayer Cave"
     },
     {
       "category": "drops",
@@ -167318,81 +167376,89 @@
       "category": "drops",
       "sourceKey": "Highwayman#Hood",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Highwayman#Hood"
-      ]
+        "Highwayman"
+      ],
+      "detail": "Merged raw drop table \"Highwayman#Hood\" into canonical \"Highwayman\" using sorted unique item union across: Highwayman#Hood, Highwayman#No hood"
     },
     {
       "category": "drops",
       "sourceKey": "Highwayman#No hood",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Highwayman#No hood"
-      ]
+        "Highwayman"
+      ],
+      "detail": "Merged raw drop table \"Highwayman#No hood\" into canonical \"Highwayman\" using sorted unique item union across: Highwayman#Hood, Highwayman#No hood"
     },
     {
       "category": "drops",
       "sourceKey": "Hill Giant",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Hill Giant"
-      ]
+      ],
+      "detail": "Merged raw drop table \"Hill Giant\" into canonical \"Hill Giant\" using sorted unique item union across: Hill Giant, Hill Giant#Kourend, Hill Giant#Plateau, Hill Giant#Varlamore"
     },
     {
       "category": "drops",
       "sourceKey": "Hill Giant#Kourend",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Hill Giant#Kourend"
-      ]
+        "Hill Giant"
+      ],
+      "detail": "Merged raw drop table \"Hill Giant#Kourend\" into canonical \"Hill Giant\" using sorted unique item union across: Hill Giant, Hill Giant#Kourend, Hill Giant#Plateau, Hill Giant#Varlamore"
     },
     {
       "category": "drops",
       "sourceKey": "Hill Giant#Plateau",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Hill Giant#Plateau"
-      ]
+        "Hill Giant"
+      ],
+      "detail": "Merged raw drop table \"Hill Giant#Plateau\" into canonical \"Hill Giant\" using sorted unique item union across: Hill Giant, Hill Giant#Kourend, Hill Giant#Plateau, Hill Giant#Varlamore"
     },
     {
       "category": "drops",
       "sourceKey": "Hill Giant#Varlamore",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Hill Giant#Varlamore"
-      ]
+        "Hill Giant"
+      ],
+      "detail": "Merged raw drop table \"Hill Giant#Varlamore\" into canonical \"Hill Giant\" using sorted unique item union across: Hill Giant, Hill Giant#Kourend, Hill Giant#Plateau, Hill Giant#Varlamore"
     },
     {
       "category": "drops",
       "sourceKey": "Hobgoblin#Armed",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Hobgoblin#Armed"
-      ]
+        "Hobgoblin"
+      ],
+      "detail": "Merged raw drop table \"Hobgoblin#Armed\" into canonical \"Hobgoblin\" using sorted unique item union across: Hobgoblin#Armed, Hobgoblin#Unarmed"
     },
     {
       "category": "drops",
       "sourceKey": "Hobgoblin#Unarmed",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Hobgoblin#Unarmed"
-      ]
+        "Hobgoblin"
+      ],
+      "detail": "Merged raw drop table \"Hobgoblin#Unarmed\" into canonical \"Hobgoblin\" using sorted unique item union across: Hobgoblin#Armed, Hobgoblin#Unarmed"
     },
     {
       "category": "drops",
@@ -167438,21 +167504,23 @@
       "category": "drops",
       "sourceKey": "Ice giant",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Ice giant"
-      ]
+      ],
+      "detail": "Merged raw drop table \"Ice giant\" into canonical \"Ice giant\" using sorted unique item union across: Ice giant, Ice giant#Wilderness Slayer Cave"
     },
     {
       "category": "drops",
       "sourceKey": "Ice giant#Wilderness Slayer Cave",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Ice giant#Wilderness Slayer Cave"
-      ]
+        "Ice giant"
+      ],
+      "detail": "Merged raw drop table \"Ice giant#Wilderness Slayer Cave\" into canonical \"Ice giant\" using sorted unique item union across: Ice giant, Ice giant#Wilderness Slayer Cave"
     },
     {
       "category": "drops",
@@ -167488,111 +167556,122 @@
       "category": "drops",
       "sourceKey": "Ice troll female#Variant 1",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Ice troll female#Variant 1"
-      ]
+        "Ice troll female"
+      ],
+      "detail": "Merged raw drop table \"Ice troll female#Variant 1\" into canonical \"Ice troll female\" using sorted unique item union across: Ice troll female#Variant 1, Ice troll female#Variant 2, Ice troll female#Variant 3"
     },
     {
       "category": "drops",
       "sourceKey": "Ice troll female#Variant 2",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Ice troll female#Variant 2"
-      ]
+        "Ice troll female"
+      ],
+      "detail": "Merged raw drop table \"Ice troll female#Variant 2\" into canonical \"Ice troll female\" using sorted unique item union across: Ice troll female#Variant 1, Ice troll female#Variant 2, Ice troll female#Variant 3"
     },
     {
       "category": "drops",
       "sourceKey": "Ice troll female#Variant 3",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Ice troll female#Variant 3"
-      ]
+        "Ice troll female"
+      ],
+      "detail": "Merged raw drop table \"Ice troll female#Variant 3\" into canonical \"Ice troll female\" using sorted unique item union across: Ice troll female#Variant 1, Ice troll female#Variant 2, Ice troll female#Variant 3"
     },
     {
       "category": "drops",
       "sourceKey": "Ice troll grunt",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Ice troll grunt"
-      ]
+      ],
+      "detail": "Merged raw drop table \"Ice troll grunt\" into canonical \"Ice troll grunt\" using sorted unique item union across: Ice troll grunt, Ice troll grunt#Quest area"
     },
     {
       "category": "drops",
       "sourceKey": "Ice troll grunt#Quest area",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Ice troll grunt#Quest area"
-      ]
+        "Ice troll grunt"
+      ],
+      "detail": "Merged raw drop table \"Ice troll grunt#Quest area\" into canonical \"Ice troll grunt\" using sorted unique item union across: Ice troll grunt, Ice troll grunt#Quest area"
     },
     {
       "category": "drops",
       "sourceKey": "Ice troll male#Variant 1",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Ice troll male#Variant 1"
-      ]
+        "Ice troll male"
+      ],
+      "detail": "Merged raw drop table \"Ice troll male#Variant 1\" into canonical \"Ice troll male\" using sorted unique item union across: Ice troll male#Variant 1, Ice troll male#Variant 2, Ice troll male#Variant 3"
     },
     {
       "category": "drops",
       "sourceKey": "Ice troll male#Variant 2",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Ice troll male#Variant 2"
-      ]
+        "Ice troll male"
+      ],
+      "detail": "Merged raw drop table \"Ice troll male#Variant 2\" into canonical \"Ice troll male\" using sorted unique item union across: Ice troll male#Variant 1, Ice troll male#Variant 2, Ice troll male#Variant 3"
     },
     {
       "category": "drops",
       "sourceKey": "Ice troll male#Variant 3",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Ice troll male#Variant 3"
-      ]
+        "Ice troll male"
+      ],
+      "detail": "Merged raw drop table \"Ice troll male#Variant 3\" into canonical \"Ice troll male\" using sorted unique item union across: Ice troll male#Variant 1, Ice troll male#Variant 2, Ice troll male#Variant 3"
     },
     {
       "category": "drops",
       "sourceKey": "Ice troll runt#Variant 1",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Ice troll runt#Variant 1"
-      ]
+        "Ice troll runt"
+      ],
+      "detail": "Merged raw drop table \"Ice troll runt#Variant 1\" into canonical \"Ice troll runt\" using sorted unique item union across: Ice troll runt#Variant 1, Ice troll runt#Variant 2, Ice troll runt#Variant 3"
     },
     {
       "category": "drops",
       "sourceKey": "Ice troll runt#Variant 2",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Ice troll runt#Variant 2"
-      ]
+        "Ice troll runt"
+      ],
+      "detail": "Merged raw drop table \"Ice troll runt#Variant 2\" into canonical \"Ice troll runt\" using sorted unique item union across: Ice troll runt#Variant 1, Ice troll runt#Variant 2, Ice troll runt#Variant 3"
     },
     {
       "category": "drops",
       "sourceKey": "Ice troll runt#Variant 3",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Ice troll runt#Variant 3"
-      ]
+        "Ice troll runt"
+      ],
+      "detail": "Merged raw drop table \"Ice troll runt#Variant 3\" into canonical \"Ice troll runt\" using sorted unique item union across: Ice troll runt#Variant 1, Ice troll runt#Variant 2, Ice troll runt#Variant 3"
     },
     {
       "category": "drops",
@@ -167688,21 +167767,23 @@
       "category": "drops",
       "sourceKey": "Iorwerth Warrior#Iorwerth Camp",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Iorwerth Warrior#Iorwerth Camp"
-      ]
+        "Iorwerth Warrior"
+      ],
+      "detail": "Merged raw drop table \"Iorwerth Warrior#Iorwerth Camp\" into canonical \"Iorwerth Warrior\" using sorted unique item union across: Iorwerth Warrior#Iorwerth Camp, Iorwerth Warrior#Iorwerth Dungeon"
     },
     {
       "category": "drops",
       "sourceKey": "Iorwerth Warrior#Iorwerth Dungeon",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Iorwerth Warrior#Iorwerth Dungeon"
-      ]
+        "Iorwerth Warrior"
+      ],
+      "detail": "Merged raw drop table \"Iorwerth Warrior#Iorwerth Dungeon\" into canonical \"Iorwerth Warrior\" using sorted unique item union across: Iorwerth Warrior#Iorwerth Camp, Iorwerth Warrior#Iorwerth Dungeon"
     },
     {
       "category": "drops",
@@ -168188,11 +168269,12 @@
       "category": "drops",
       "sourceKey": "Lesser demon",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Lesser demon"
-      ]
+      ],
+      "detail": "Merged raw drop table \"Lesser demon\" into canonical \"Lesser demon\" using sorted unique item union across: Lesser demon, Lesser demon#Wilderness Slayer Cave"
     },
     {
       "category": "drops",
@@ -168208,11 +168290,12 @@
       "category": "drops",
       "sourceKey": "Lesser demon#Wilderness Slayer Cave",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Lesser demon#Wilderness Slayer Cave"
-      ]
+        "Lesser demon"
+      ],
+      "detail": "Merged raw drop table \"Lesser demon#Wilderness Slayer Cave\" into canonical \"Lesser demon\" using sorted unique item union across: Lesser demon, Lesser demon#Wilderness Slayer Cave"
     },
     {
       "category": "drops",
@@ -168268,21 +168351,23 @@
       "category": "drops",
       "sourceKey": "Lizardman#Level 53",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Lizardman#Level 53"
-      ]
+        "Lizardman"
+      ],
+      "detail": "Merged raw drop table \"Lizardman#Level 53\" into canonical \"Lizardman\" using sorted unique item union across: Lizardman#Level 53, Lizardman#Level 62"
     },
     {
       "category": "drops",
       "sourceKey": "Lizardman#Level 62",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Lizardman#Level 62"
-      ]
+        "Lizardman"
+      ],
+      "detail": "Merged raw drop table \"Lizardman#Level 62\" into canonical \"Lizardman\" using sorted unique item union across: Lizardman#Level 53, Lizardman#Level 62"
     },
     {
       "category": "drops",
@@ -168368,21 +168453,23 @@
       "category": "drops",
       "sourceKey": "Magic axe",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Magic axe"
-      ]
+      ],
+      "detail": "Merged raw drop table \"Magic axe\" into canonical \"Magic axe\" using sorted unique item union across: Magic axe, Magic axe#Catacombs"
     },
     {
       "category": "drops",
       "sourceKey": "Magic axe#Catacombs",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Magic axe#Catacombs"
-      ]
+        "Magic axe"
+      ],
+      "detail": "Merged raw drop table \"Magic axe#Catacombs\" into canonical \"Magic axe\" using sorted unique item union across: Magic axe, Magic axe#Catacombs"
     },
     {
       "category": "drops",
@@ -168668,21 +168755,23 @@
       "category": "drops",
       "sourceKey": "Mourner#Level 108",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Mourner#Level 108"
-      ]
+        "Mourner"
+      ],
+      "detail": "Merged raw drop table \"Mourner#Level 108\" into canonical \"Mourner\" using sorted unique item union across: Mourner#Level 108, Mourner#Level 11"
     },
     {
       "category": "drops",
       "sourceKey": "Mourner#Level 11",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Mourner#Level 11"
-      ]
+        "Mourner"
+      ],
+      "detail": "Merged raw drop table \"Mourner#Level 11\" into canonical \"Mourner\" using sorted unique item union across: Mourner#Level 108, Mourner#Level 11"
     },
     {
       "category": "drops",
@@ -168708,51 +168797,56 @@
       "category": "drops",
       "sourceKey": "Mugger",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Mugger"
-      ]
+      ],
+      "detail": "Merged raw drop table \"Mugger\" into canonical \"Mugger\" using sorted unique item union across: Mugger, Mugger#Plain"
     },
     {
       "category": "drops",
       "sourceKey": "Mugger#Plain",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Mugger#Plain"
-      ]
+        "Mugger"
+      ],
+      "detail": "Merged raw drop table \"Mugger#Plain\" into canonical \"Mugger\" using sorted unique item union across: Mugger, Mugger#Plain"
     },
     {
       "category": "drops",
       "sourceKey": "Mummy#Level 103",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Mummy#Level 103"
-      ]
+        "Mummy"
+      ],
+      "detail": "Merged raw drop table \"Mummy#Level 103\" into canonical \"Mummy\" using sorted unique item union across: Mummy#Level 103, Mummy#Level 84, Mummy#Level 98"
     },
     {
       "category": "drops",
       "sourceKey": "Mummy#Level 84",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Mummy#Level 84"
-      ]
+        "Mummy"
+      ],
+      "detail": "Merged raw drop table \"Mummy#Level 84\" into canonical \"Mummy\" using sorted unique item union across: Mummy#Level 103, Mummy#Level 84, Mummy#Level 98"
     },
     {
       "category": "drops",
       "sourceKey": "Mummy#Level 98",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Mummy#Level 98"
-      ]
+        "Mummy"
+      ],
+      "detail": "Merged raw drop table \"Mummy#Level 98\" into canonical \"Mummy\" using sorted unique item union across: Mummy#Level 103, Mummy#Level 84, Mummy#Level 98"
     },
     {
       "category": "drops",
@@ -168768,21 +168862,23 @@
       "category": "drops",
       "sourceKey": "Myre Blamish Snail#Pointed",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Myre Blamish Snail#Pointed"
-      ]
+        "Myre Blamish Snail"
+      ],
+      "detail": "Merged raw drop table \"Myre Blamish Snail#Pointed\" into canonical \"Myre Blamish Snail\" using sorted unique item union across: Myre Blamish Snail#Pointed, Myre Blamish Snail#Rounded"
     },
     {
       "category": "drops",
       "sourceKey": "Myre Blamish Snail#Rounded",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Myre Blamish Snail#Rounded"
-      ]
+        "Myre Blamish Snail"
+      ],
+      "detail": "Merged raw drop table \"Myre Blamish Snail#Rounded\" into canonical \"Myre Blamish Snail\" using sorted unique item union across: Myre Blamish Snail#Pointed, Myre Blamish Snail#Rounded"
     },
     {
       "category": "drops",
@@ -168928,21 +169024,23 @@
       "category": "drops",
       "sourceKey": "Ochre Blamish Snail#Pointed",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Ochre Blamish Snail#Pointed"
-      ]
+        "Ochre Blamish Snail"
+      ],
+      "detail": "Merged raw drop table \"Ochre Blamish Snail#Pointed\" into canonical \"Ochre Blamish Snail\" using sorted unique item union across: Ochre Blamish Snail#Pointed, Ochre Blamish Snail#Rounded"
     },
     {
       "category": "drops",
       "sourceKey": "Ochre Blamish Snail#Rounded",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Ochre Blamish Snail#Rounded"
-      ]
+        "Ochre Blamish Snail"
+      ],
+      "detail": "Merged raw drop table \"Ochre Blamish Snail#Rounded\" into canonical \"Ochre Blamish Snail\" using sorted unique item union across: Ochre Blamish Snail#Pointed, Ochre Blamish Snail#Rounded"
     },
     {
       "category": "drops",
@@ -169238,18 +169336,19 @@
       "category": "drops",
       "sourceKey": "Pirate",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Pirate"
-      ]
+      ],
+      "detail": "Merged raw drop table \"Pirate\" into canonical \"Pirate\" using sorted unique item union across: Pirate, Pirate#Plain"
     },
     {
       "category": "drops",
       "sourceKey": "Pirate (Theiving)",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
         "Pirate (Theiving)"
       ]
@@ -169268,11 +169367,12 @@
       "category": "drops",
       "sourceKey": "Pirate#Plain",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Pirate#Plain"
-      ]
+        "Pirate"
+      ],
+      "detail": "Merged raw drop table \"Pirate#Plain\" into canonical \"Pirate\" using sorted unique item union across: Pirate, Pirate#Plain"
     },
     {
       "category": "drops",
@@ -169338,21 +169438,23 @@
       "category": "drops",
       "sourceKey": "Possessed pickaxe#Catacombs of Kourend",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Possessed pickaxe#Catacombs of Kourend"
-      ]
+        "Possessed pickaxe"
+      ],
+      "detail": "Merged raw drop table \"Possessed pickaxe#Catacombs of Kourend\" into canonical \"Possessed pickaxe\" using sorted unique item union across: Possessed pickaxe#Catacombs of Kourend, Possessed pickaxe#Haunted Mine"
     },
     {
       "category": "drops",
       "sourceKey": "Possessed pickaxe#Haunted Mine",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Possessed pickaxe#Haunted Mine"
-      ]
+        "Possessed pickaxe"
+      ],
+      "detail": "Merged raw drop table \"Possessed pickaxe#Haunted Mine\" into canonical \"Possessed pickaxe\" using sorted unique item union across: Possessed pickaxe#Catacombs of Kourend, Possessed pickaxe#Haunted Mine"
     },
     {
       "category": "drops",
@@ -169648,21 +169750,23 @@
       "category": "drops",
       "sourceKey": "Rogue#Level 135",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Rogue#Level 135"
-      ]
+        "Rogue"
+      ],
+      "detail": "Merged raw drop table \"Rogue#Level 135\" into canonical \"Rogue\" using sorted unique item union across: Rogue#Level 135, Rogue#Level 15"
     },
     {
       "category": "drops",
       "sourceKey": "Rogue#Level 15",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Rogue#Level 15"
-      ]
+        "Rogue"
+      ],
+      "detail": "Merged raw drop table \"Rogue#Level 15\" into canonical \"Rogue\" using sorted unique item union across: Rogue#Level 135, Rogue#Level 15"
     },
     {
       "category": "drops",
@@ -169878,21 +169982,23 @@
       "category": "drops",
       "sourceKey": "Seagull",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Seagull"
-      ]
+      ],
+      "detail": "Merged raw drop table \"Seagull\" into canonical \"Seagull\" using sorted unique item union across: Seagull, Seagull#Icyene Graveyard"
     },
     {
       "category": "drops",
       "sourceKey": "Seagull#Icyene Graveyard",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Seagull#Icyene Graveyard"
-      ]
+        "Seagull"
+      ],
+      "detail": "Merged raw drop table \"Seagull#Icyene Graveyard\" into canonical \"Seagull\" using sorted unique item union across: Seagull, Seagull#Icyene Graveyard"
     },
     {
       "category": "drops",
@@ -170168,31 +170274,34 @@
       "category": "drops",
       "sourceKey": "Skeleton (Tarn's Lair)#High level",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Skeleton (Tarn's Lair)#High level"
-      ]
+        "Skeleton (Tarn's Lair)"
+      ],
+      "detail": "Merged raw drop table \"Skeleton (Tarn's Lair)#High level\" into canonical \"Skeleton (Tarn's Lair)\" using sorted unique item union across: Skeleton (Tarn's Lair)#High level, Skeleton (Tarn's Lair)#Low level, Skeleton (Tarn's Lair)#Mid level"
     },
     {
       "category": "drops",
       "sourceKey": "Skeleton (Tarn's Lair)#Low level",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Skeleton (Tarn's Lair)#Low level"
-      ]
+        "Skeleton (Tarn's Lair)"
+      ],
+      "detail": "Merged raw drop table \"Skeleton (Tarn's Lair)#Low level\" into canonical \"Skeleton (Tarn's Lair)\" using sorted unique item union across: Skeleton (Tarn's Lair)#High level, Skeleton (Tarn's Lair)#Low level, Skeleton (Tarn's Lair)#Mid level"
     },
     {
       "category": "drops",
       "sourceKey": "Skeleton (Tarn's Lair)#Mid level",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Skeleton (Tarn's Lair)#Mid level"
-      ]
+        "Skeleton (Tarn's Lair)"
+      ],
+      "detail": "Merged raw drop table \"Skeleton (Tarn's Lair)#Mid level\" into canonical \"Skeleton (Tarn's Lair)\" using sorted unique item union across: Skeleton (Tarn's Lair)#High level, Skeleton (Tarn's Lair)#Low level, Skeleton (Tarn's Lair)#Mid level"
     },
     {
       "category": "drops",
@@ -170278,21 +170387,23 @@
       "category": "drops",
       "sourceKey": "Skeleton Mage#Level 16",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Skeleton Mage#Level 16"
-      ]
+        "Skeleton Mage"
+      ],
+      "detail": "Merged raw drop table \"Skeleton Mage#Level 16\" into canonical \"Skeleton Mage\" using sorted unique item union across: Skeleton Mage#Level 16, Skeleton Mage#Level 83"
     },
     {
       "category": "drops",
       "sourceKey": "Skeleton Mage#Level 83",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Skeleton Mage#Level 83"
-      ]
+        "Skeleton Mage"
+      ],
+      "detail": "Merged raw drop table \"Skeleton Mage#Level 83\" into canonical \"Skeleton Mage\" using sorted unique item union across: Skeleton Mage#Level 16, Skeleton Mage#Level 83"
     },
     {
       "category": "drops",
@@ -170318,31 +170429,34 @@
       "category": "drops",
       "sourceKey": "Skeleton#Armed",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Skeleton#Armed"
-      ]
+        "Skeleton"
+      ],
+      "detail": "Merged raw drop table \"Skeleton#Armed\" into canonical \"Skeleton\" using sorted unique item union across: Skeleton#Armed, Skeleton#Plain, Skeleton#Unarmed"
     },
     {
       "category": "drops",
       "sourceKey": "Skeleton#Plain",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Skeleton#Plain"
-      ]
+        "Skeleton"
+      ],
+      "detail": "Merged raw drop table \"Skeleton#Plain\" into canonical \"Skeleton\" using sorted unique item union across: Skeleton#Armed, Skeleton#Plain, Skeleton#Unarmed"
     },
     {
       "category": "drops",
       "sourceKey": "Skeleton#Unarmed",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Skeleton#Unarmed"
-      ]
+        "Skeleton"
+      ],
+      "detail": "Merged raw drop table \"Skeleton#Unarmed\" into canonical \"Skeleton\" using sorted unique item union across: Skeleton#Armed, Skeleton#Plain, Skeleton#Unarmed"
     },
     {
       "category": "drops",
@@ -170928,11 +171042,12 @@
       "category": "drops",
       "sourceKey": "Thief",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Thief"
-      ]
+      ],
+      "detail": "Merged raw drop table \"Thief\" into canonical \"Thief\" using sorted unique item union across: Thief, Thief#Plain"
     },
     {
       "category": "drops",
@@ -170948,11 +171063,12 @@
       "category": "drops",
       "sourceKey": "Thief#Plain",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Thief#Plain"
-      ]
+        "Thief"
+      ],
+      "detail": "Merged raw drop table \"Thief#Plain\" into canonical \"Thief\" using sorted unique item union across: Thief, Thief#Plain"
     },
     {
       "category": "drops",
@@ -171048,21 +171164,23 @@
       "category": "drops",
       "sourceKey": "Tortoise#With riders",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Tortoise#With riders"
-      ]
+        "Tortoise"
+      ],
+      "detail": "Merged raw drop table \"Tortoise#With riders\" into canonical \"Tortoise\" using sorted unique item union across: Tortoise#With riders, Tortoise#Without riders"
     },
     {
       "category": "drops",
       "sourceKey": "Tortoise#Without riders",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Tortoise#Without riders"
-      ]
+        "Tortoise"
+      ],
+      "detail": "Merged raw drop table \"Tortoise#Without riders\" into canonical \"Tortoise\" using sorted unique item union across: Tortoise#With riders, Tortoise#Without riders"
     },
     {
       "category": "drops",
@@ -171208,21 +171326,23 @@
       "category": "drops",
       "sourceKey": "TzHaar-Ket#Level 149",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "TzHaar-Ket#Level 149"
-      ]
+        "TzHaar-Ket"
+      ],
+      "detail": "Merged raw drop table \"TzHaar-Ket#Level 149\" into canonical \"TzHaar-Ket\" using sorted unique item union across: TzHaar-Ket#Level 149, TzHaar-Ket#Level 221"
     },
     {
       "category": "drops",
       "sourceKey": "TzHaar-Ket#Level 221",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "TzHaar-Ket#Level 221"
-      ]
+        "TzHaar-Ket"
+      ],
+      "detail": "Merged raw drop table \"TzHaar-Ket#Level 221\" into canonical \"TzHaar-Ket\" using sorted unique item union across: TzHaar-Ket#Level 149, TzHaar-Ket#Level 221"
     },
     {
       "category": "drops",
@@ -171338,21 +171458,23 @@
       "category": "drops",
       "sourceKey": "Undead one#Skeleton",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Undead one#Skeleton"
-      ]
+        "Undead one"
+      ],
+      "detail": "Merged raw drop table \"Undead one#Skeleton\" into canonical \"Undead one\" using sorted unique item union across: Undead one#Skeleton, Undead one#Zombie"
     },
     {
       "category": "drops",
       "sourceKey": "Undead one#Zombie",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Undead one#Zombie"
-      ]
+        "Undead one"
+      ],
+      "detail": "Merged raw drop table \"Undead one#Zombie\" into canonical \"Undead one\" using sorted unique item union across: Undead one#Skeleton, Undead one#Zombie"
     },
     {
       "category": "drops",
@@ -171708,41 +171830,45 @@
       "category": "drops",
       "sourceKey": "White Knight#Level 36",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "White Knight#Level 36"
-      ]
+        "White Knight"
+      ],
+      "detail": "Merged raw drop table \"White Knight#Level 36\" into canonical \"White Knight\" using sorted unique item union across: White Knight#Level 36, White Knight#Level 38, White Knight#Level 39, White Knight#Level 42"
     },
     {
       "category": "drops",
       "sourceKey": "White Knight#Level 38",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "White Knight#Level 38"
-      ]
+        "White Knight"
+      ],
+      "detail": "Merged raw drop table \"White Knight#Level 38\" into canonical \"White Knight\" using sorted unique item union across: White Knight#Level 36, White Knight#Level 38, White Knight#Level 39, White Knight#Level 42"
     },
     {
       "category": "drops",
       "sourceKey": "White Knight#Level 39",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "White Knight#Level 39"
-      ]
+        "White Knight"
+      ],
+      "detail": "Merged raw drop table \"White Knight#Level 39\" into canonical \"White Knight\" using sorted unique item union across: White Knight#Level 36, White Knight#Level 38, White Knight#Level 39, White Knight#Level 42"
     },
     {
       "category": "drops",
       "sourceKey": "White Knight#Level 42",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "White Knight#Level 42"
-      ]
+        "White Knight"
+      ],
+      "detail": "Merged raw drop table \"White Knight#Level 42\" into canonical \"White Knight\" using sorted unique item union across: White Knight#Level 36, White Knight#Level 38, White Knight#Level 39, White Knight#Level 42"
     },
     {
       "category": "drops",
@@ -172058,31 +172184,34 @@
       "category": "drops",
       "sourceKey": "Zombie (Tarn's Lair)#High level",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Zombie (Tarn's Lair)#High level"
-      ]
+        "Zombie (Tarn's Lair)"
+      ],
+      "detail": "Merged raw drop table \"Zombie (Tarn's Lair)#High level\" into canonical \"Zombie (Tarn's Lair)\" using sorted unique item union across: Zombie (Tarn's Lair)#High level, Zombie (Tarn's Lair)#Low level, Zombie (Tarn's Lair)#Mid level"
     },
     {
       "category": "drops",
       "sourceKey": "Zombie (Tarn's Lair)#Low level",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Zombie (Tarn's Lair)#Low level"
-      ]
+        "Zombie (Tarn's Lair)"
+      ],
+      "detail": "Merged raw drop table \"Zombie (Tarn's Lair)#Low level\" into canonical \"Zombie (Tarn's Lair)\" using sorted unique item union across: Zombie (Tarn's Lair)#High level, Zombie (Tarn's Lair)#Low level, Zombie (Tarn's Lair)#Mid level"
     },
     {
       "category": "drops",
       "sourceKey": "Zombie (Tarn's Lair)#Mid level",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Zombie (Tarn's Lair)#Mid level"
-      ]
+        "Zombie (Tarn's Lair)"
+      ],
+      "detail": "Merged raw drop table \"Zombie (Tarn's Lair)#Mid level\" into canonical \"Zombie (Tarn's Lair)\" using sorted unique item union across: Zombie (Tarn's Lair)#High level, Zombie (Tarn's Lair)#Low level, Zombie (Tarn's Lair)#Mid level"
     },
     {
       "category": "drops",
@@ -172168,31 +172297,34 @@
       "category": "drops",
       "sourceKey": "Zombie#Level 13",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Zombie#Level 13"
-      ]
+        "Zombie"
+      ],
+      "detail": "Merged raw drop table \"Zombie#Level 13\" into canonical \"Zombie\" using sorted unique item union across: Zombie#Level 13, Zombie#Level 18, Zombie#Level 24"
     },
     {
       "category": "drops",
       "sourceKey": "Zombie#Level 18",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Zombie#Level 18"
-      ]
+        "Zombie"
+      ],
+      "detail": "Merged raw drop table \"Zombie#Level 18\" into canonical \"Zombie\" using sorted unique item union across: Zombie#Level 13, Zombie#Level 18, Zombie#Level 24"
     },
     {
       "category": "drops",
       "sourceKey": "Zombie#Level 24",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
-        "Zombie#Level 24"
-      ]
+        "Zombie"
+      ],
+      "detail": "Merged raw drop table \"Zombie#Level 24\" into canonical \"Zombie\" using sorted unique item union across: Zombie#Level 13, Zombie#Level 18, Zombie#Level 24"
     },
     {
       "category": "drops",
@@ -172990,11 +173122,9 @@
       "category": "mapOverlays",
       "sourceKey": "Locked Slayer Task|Slayer task",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
-      "targetKeys": [
-        "Locked Slayer Task|Slayer task"
-      ]
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
     },
     {
       "category": "mapOverlays",
@@ -173010,10 +173140,10 @@
       "category": "mapOverlays",
       "sourceKey": "Puro-Puro Entrances|Crop circle",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Puro-Puro Entrances|Crop circle"
+        "Puro-Puro Entrances"
       ]
     },
     {
@@ -192990,20 +193120,20 @@
       "category": "shopItems",
       "sourceKey": "Aaron's Archery Appendages.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Aaron's Archery Appendages."
+        "Aaron's Archery Appendages"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Aemad's Adventuring Supplies.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Aemad's Adventuring Supplies."
+        "Aemad's Adventuring Supplies"
       ]
     },
     {
@@ -193040,10 +193170,10 @@
       "category": "shopItems",
       "sourceKey": "Ak-Haranu's Exotic Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Ak-Haranu's Exotic Shop."
+        "Ak-Haranu's Exotic Shop"
       ]
     },
     {
@@ -193070,30 +193200,30 @@
       "category": "shopItems",
       "sourceKey": "Aleck's Hunter Emporium.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Aleck's Hunter Emporium."
+        "Aleck's Hunter Emporium"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Ali's Discount Wares.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Ali's Discount Wares."
+        "Ali's Discount Wares"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Alice's Farming shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Alice's Farming shop."
+        "Alice's Farming shop"
       ]
     },
     {
@@ -193160,50 +193290,50 @@
       "category": "shopItems",
       "sourceKey": "Ardougne Baker's Stall.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Ardougne Baker's Stall."
+        "Ardougne Baker's Stall"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Ardougne Fur Stall.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Ardougne Fur Stall."
+        "Ardougne Fur Stall"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Ardougne Gem Stall.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Ardougne Gem Stall."
+        "Ardougne Gem Stall"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Ardougne Silver Stall.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Ardougne Silver Stall."
+        "Ardougne Silver Stall"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Ardougne Spice Stall.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Ardougne Spice Stall."
+        "Ardougne Spice Stall"
       ]
     },
     {
@@ -193240,10 +193370,10 @@
       "category": "shopItems",
       "sourceKey": "Arnold's Eclectic Supplies.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Arnold's Eclectic Supplies."
+        "Arnold's Eclectic Supplies"
       ]
     },
     {
@@ -193280,10 +193410,10 @@
       "category": "shopItems",
       "sourceKey": "Aubury's Rune Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Aubury's Rune Shop."
+        "Aubury's Rune Shop"
       ]
     },
     {
@@ -193300,10 +193430,10 @@
       "category": "shopItems",
       "sourceKey": "Authentic Throwing Weapons.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Authentic Throwing Weapons."
+        "Authentic Throwing Weapons"
       ]
     },
     {
@@ -193320,10 +193450,10 @@
       "category": "shopItems",
       "sourceKey": "Baba Yaga's Magic Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Baba Yaga's Magic Shop."
+        "Baba Yaga's Magic Shop"
       ]
     },
     {
@@ -193410,20 +193540,20 @@
       "category": "shopItems",
       "sourceKey": "Betty's Magic Emporium.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Betty's Magic Emporium."
+        "Betty's Magic Emporium"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Blades by Urbi.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Blades by Urbi."
+        "Blades by Urbi"
       ]
     },
     {
@@ -193460,10 +193590,10 @@
       "category": "shopItems",
       "sourceKey": "Bob's Brilliant Axes.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Bob's Brilliant Axes."
+        "Bob's Brilliant Axes"
       ]
     },
     {
@@ -193500,20 +193630,20 @@
       "category": "shopItems",
       "sourceKey": "Brian's Archery Supplies.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Brian's Archery Supplies."
+        "Brian's Archery Supplies"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Brian's Battleaxe Bazaar.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Brian's Battleaxe Bazaar."
+        "Brian's Battleaxe Bazaar"
       ]
     },
     {
@@ -193590,10 +193720,10 @@
       "category": "shopItems",
       "sourceKey": "Cassie's Shield Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Cassie's Shield Shop."
+        "Cassie's Shield Shop"
       ]
     },
     {
@@ -193630,10 +193760,10 @@
       "category": "shopItems",
       "sourceKey": "Contraband yak produce.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Contraband yak produce."
+        "Contraband yak produce"
       ]
     },
     {
@@ -193810,10 +193940,10 @@
       "category": "shopItems",
       "sourceKey": "Dargaud's Bow and Arrows.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Dargaud's Bow and Arrows."
+        "Dargaud's Bow and Arrows"
       ]
     },
     {
@@ -193860,10 +193990,10 @@
       "category": "shopItems",
       "sourceKey": "Darren's Wilderness Cape Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Darren's Wilderness Cape Shop."
+        "Darren's Wilderness Cape Shop"
       ]
     },
     {
@@ -193920,10 +194050,10 @@
       "category": "shopItems",
       "sourceKey": "Dodgy Mike's Second Hand Clothing.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Dodgy Mike's Second Hand Clothing."
+        "Dodgy Mike's Second Hand Clothing"
       ]
     },
     {
@@ -193940,10 +194070,10 @@
       "category": "shopItems",
       "sourceKey": "Dommik's Crafting Store.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Dommik's Crafting Store."
+        "Dommik's Crafting Store"
       ]
     },
     {
@@ -193980,10 +194110,10 @@
       "category": "shopItems",
       "sourceKey": "Drogo's Mining Emporium.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Drogo's Mining Emporium."
+        "Drogo's Mining Emporium"
       ]
     },
     {
@@ -194030,20 +194160,20 @@
       "category": "shopItems",
       "sourceKey": "Edmond's Wilderness Cape Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Edmond's Wilderness Cape Shop."
+        "Edmond's Wilderness Cape Shop"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Edward's Wilderness Cape Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Edward's Wilderness Cape Shop."
+        "Edward's Wilderness Cape Shop"
       ]
     },
     {
@@ -194220,10 +194350,10 @@
       "category": "shopItems",
       "sourceKey": "Fernahei's Fishing Hut.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Fernahei's Fishing Hut."
+        "Fernahei's Fishing Hut"
       ]
     },
     {
@@ -194260,10 +194390,10 @@
       "category": "shopItems",
       "sourceKey": "Fishing Guild Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Fishing Guild Shop."
+        "Fishing Guild Shop"
       ]
     },
     {
@@ -194300,10 +194430,10 @@
       "category": "shopItems",
       "sourceKey": "Flynn's Mace Market.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Flynn's Mace Market."
+        "Flynn's Mace Market"
       ]
     },
     {
@@ -194440,20 +194570,20 @@
       "category": "shopItems",
       "sourceKey": "Frenita's Cookery Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Frenita's Cookery Shop."
+        "Frenita's Cookery Shop"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Frincos' Fabulous Herb Store.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Frincos' Fabulous Herb Store."
+        "Frincos' Fabulous Herb Store"
       ]
     },
     {
@@ -194470,20 +194600,20 @@
       "category": "shopItems",
       "sourceKey": "Gabooty's Tai Bwo Wannai Cooperative.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Gabooty's Tai Bwo Wannai Cooperative."
+        "Gabooty's Tai Bwo Wannai Cooperative"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Gaius' Two Handed Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Gaius' Two Handed Shop."
+        "Gaius' Two Handed Shop"
       ]
     },
     {
@@ -194510,10 +194640,10 @@
       "category": "shopItems",
       "sourceKey": "Gem Trader.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Gem Trader."
+        "Gem Trader"
       ]
     },
     {
@@ -194530,10 +194660,10 @@
       "category": "shopItems",
       "sourceKey": "Gerrant's Fishy Business.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Gerrant's Fishy Business."
+        "Gerrant's Fishy Business"
       ]
     },
     {
@@ -194600,10 +194730,10 @@
       "category": "shopItems",
       "sourceKey": "Grud's Herblore Stall.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Grud's Herblore Stall."
+        "Grud's Herblore Stall"
       ]
     },
     {
@@ -194670,30 +194800,30 @@
       "category": "shopItems",
       "sourceKey": "Happy Heroes' H'emporium.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Happy Heroes' H'emporium."
+        "Happy Heroes' H'emporium"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Harpoon Joe's House of 'Rum'.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Harpoon Joe's House of 'Rum'."
+        "Harpoon Joe's House of 'Rum'"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Harry's Fishing Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Harry's Fishing Shop."
+        "Harry's Fishing Shop"
       ]
     },
     {
@@ -194710,10 +194840,10 @@
       "category": "shopItems",
       "sourceKey": "Helmet Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Helmet Shop."
+        "Helmet Shop"
       ]
     },
     {
@@ -194730,30 +194860,30 @@
       "category": "shopItems",
       "sourceKey": "Herquin's Gems.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Herquin's Gems."
+        "Herquin's Gems"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Hickton's Archery Emporium.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Hickton's Archery Emporium."
+        "Hickton's Archery Emporium"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Horvik's Armour Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Horvik's Armour Shop."
+        "Horvik's Armour Shop"
       ]
     },
     {
@@ -194770,10 +194900,10 @@
       "category": "shopItems",
       "sourceKey": "Ian's Wilderness Cape Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Ian's Wilderness Cape Shop."
+        "Ian's Wilderness Cape Shop"
       ]
     },
     {
@@ -194870,20 +195000,20 @@
       "category": "shopItems",
       "sourceKey": "Jamila's Craft Stall.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Jamila's Craft Stall."
+        "Jamila's Craft Stall"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Jatix's Herblore Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Jatix's Herblore Shop."
+        "Jatix's Herblore Shop"
       ]
     },
     {
@@ -194900,10 +195030,10 @@
       "category": "shopItems",
       "sourceKey": "Jiminua's Jungle Store.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Jiminua's Jungle Store."
+        "Jiminua's Jungle Store"
       ]
     },
     {
@@ -194930,8 +195060,8 @@
       "category": "shopItems",
       "sourceKey": "Justine's stuff for the Last Shopper Standing",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
         "Justine's stuff for the Last Shopper Standing"
       ]
@@ -194950,10 +195080,10 @@
       "category": "shopItems",
       "sourceKey": "Karamja Wines, Spirits, and Beers.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Karamja Wines, Spirits, and Beers."
+        "Karamja Wines, Spirits, and Beers"
       ]
     },
     {
@@ -195050,30 +195180,30 @@
       "category": "shopItems",
       "sourceKey": "Kourend Castle Baker's Stall.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Kourend Castle Baker's Stall."
+        "Kourend Castle Baker's Stall"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Kourend Castle Gem Stall.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Kourend Castle Gem Stall."
+        "Kourend Castle Gem Stall"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Larry's Wilderness Cape Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Larry's Wilderness Cape Shop."
+        "Larry's Wilderness Cape Shop"
       ]
     },
     {
@@ -195110,40 +195240,40 @@
       "category": "shopItems",
       "sourceKey": "Legends Guild General Store.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Legends Guild General Store."
+        "Legends Guild General Store"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Legends Guild Shop of Useful Items.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Legends Guild Shop of Useful Items."
+        "Legends Guild Shop of Useful Items"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Leon's Prototype Crossbow.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Leon's Prototype Crossbow."
+        "Leon's Prototype Crossbow"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Leprechaun Larry's Farming Supplies.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Leprechaun Larry's Farming Supplies."
+        "Leprechaun Larry's Farming Supplies"
       ]
     },
     {
@@ -195240,10 +195370,10 @@
       "category": "shopItems",
       "sourceKey": "Louie's Armoured Legs Bazaar.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Louie's Armoured Legs Bazaar."
+        "Louie's Armoured Legs Bazaar"
       ]
     },
     {
@@ -195290,20 +195420,20 @@
       "category": "shopItems",
       "sourceKey": "Lundail's Arena-side Rune Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Lundail's Arena-side Rune Shop."
+        "Lundail's Arena-side Rune Shop"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Mage Arena Staffs.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Mage Arena Staffs."
+        "Mage Arena Staffs"
       ]
     },
     {
@@ -195350,10 +195480,10 @@
       "category": "shopItems",
       "sourceKey": "Martin Thwait's Lost and Found.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Martin Thwait's Lost and Found."
+        "Martin Thwait's Lost and Found"
       ]
     },
     {
@@ -195430,20 +195560,20 @@
       "category": "shopItems",
       "sourceKey": "Moon Clan Fine Clothes.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Moon Clan Fine Clothes."
+        "Moon Clan Fine Clothes"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Moon Clan General Store.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Moon Clan General Store."
+        "Moon Clan General Store"
       ]
     },
     {
@@ -195540,20 +195670,20 @@
       "category": "shopItems",
       "sourceKey": "Nardah General Store.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Nardah General Store."
+        "Nardah General Store"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Nardah Hunter Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Nardah Hunter Shop."
+        "Nardah Hunter Shop"
       ]
     },
     {
@@ -195570,10 +195700,10 @@
       "category": "shopItems",
       "sourceKey": "Nathifa's Bake Stall.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Nathifa's Bake Stall."
+        "Nathifa's Bake Stall"
       ]
     },
     {
@@ -195590,20 +195720,20 @@
       "category": "shopItems",
       "sourceKey": "Neil's Wilderness Cape Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Neil's Wilderness Cape Shop."
+        "Neil's Wilderness Cape Shop"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Neitiznot supplies.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Neitiznot supplies."
+        "Neitiznot supplies"
       ]
     },
     {
@@ -195620,20 +195750,20 @@
       "category": "shopItems",
       "sourceKey": "Nurmof's Pickaxe Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Nurmof's Pickaxe Shop."
+        "Nurmof's Pickaxe Shop"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Obli's General Store.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Obli's General Store."
+        "Obli's General Store"
       ]
     },
     {
@@ -195650,10 +195780,10 @@
       "category": "shopItems",
       "sourceKey": "Ore seller.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Ore seller."
+        "Ore seller"
       ]
     },
     {
@@ -195770,10 +195900,10 @@
       "category": "shopItems",
       "sourceKey": "Pollnivneach general store.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Pollnivneach general store."
+        "Pollnivneach general store"
       ]
     },
     {
@@ -196020,20 +196150,20 @@
       "category": "shopItems",
       "sourceKey": "Raetul and Co's Cloth Store.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Raetul and Co's Cloth Store."
+        "Raetul and Co's Cloth Store"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Ranael's Super Skirt Store.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Ranael's Super Skirt Store."
+        "Ranael's Super Skirt Store"
       ]
     },
     {
@@ -196100,20 +196230,20 @@
       "category": "shopItems",
       "sourceKey": "Razmire Builders Merchants.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Razmire Builders Merchants."
+        "Razmire Builders Merchants"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Razmire General Store.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Razmire General Store."
+        "Razmire General Store"
       ]
     },
     {
@@ -196150,20 +196280,20 @@
       "category": "shopItems",
       "sourceKey": "Richard's Farming shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Richard's Farming shop."
+        "Richard's Farming shop"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Richard's Wilderness Cape Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Richard's Wilderness Cape Shop."
+        "Richard's Wilderness Cape Shop"
       ]
     },
     {
@@ -196190,20 +196320,20 @@
       "category": "shopItems",
       "sourceKey": "Rok's Chocs Box.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Rok's Chocs Box."
+        "Rok's Chocs Box"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Rommik's Crafty Supplies.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Rommik's Crafty Supplies."
+        "Rommik's Crafty Supplies"
       ]
     },
     {
@@ -196250,20 +196380,20 @@
       "category": "shopItems",
       "sourceKey": "Sam's Wilderness Cape Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Sam's Wilderness Cape Shop."
+        "Sam's Wilderness Cape Shop"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Sarah's Farming shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Sarah's Farming shop."
+        "Sarah's Farming shop"
       ]
     },
     {
@@ -196280,10 +196410,10 @@
       "category": "shopItems",
       "sourceKey": "Scavvo's Rune Store.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Scavvo's Rune Store."
+        "Scavvo's Rune Store"
       ]
     },
     {
@@ -196310,10 +196440,10 @@
       "category": "shopItems",
       "sourceKey": "Seddu's Adventurer's Store.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Seddu's Adventurer's Store."
+        "Seddu's Adventurer's Store"
       ]
     },
     {
@@ -196390,10 +196520,10 @@
       "category": "shopItems",
       "sourceKey": "Simon's Wilderness Cape Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Simon's Wilderness Cape Shop."
+        "Simon's Wilderness Cape Shop"
       ]
     },
     {
@@ -196440,10 +196570,10 @@
       "category": "shopItems",
       "sourceKey": "Smithing Smith's Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Smithing Smith's Shop."
+        "Smithing Smith's Shop"
       ]
     },
     {
@@ -196560,10 +196690,10 @@
       "category": "shopItems",
       "sourceKey": "The Asp & Snake Bar.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "The Asp & Snake Bar."
+        "The Asp & Snake Bar"
       ]
     },
     {
@@ -196710,10 +196840,10 @@
       "category": "shopItems",
       "sourceKey": "The Other Inn.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "The Other Inn."
+        "The Other Inn"
       ]
     },
     {
@@ -196770,10 +196900,10 @@
       "category": "shopItems",
       "sourceKey": "The Spice Is Right.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "The Spice Is Right."
+        "The Spice Is Right"
       ]
     },
     {
@@ -196810,10 +196940,10 @@
       "category": "shopItems",
       "sourceKey": "Thessalia's Fine Clothes.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Thessalia's Fine Clothes."
+        "Thessalia's Fine Clothes"
       ]
     },
     {
@@ -196910,10 +197040,10 @@
       "category": "shopItems",
       "sourceKey": "Trader Sven's Black-market Goods.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Trader Sven's Black-market Goods."
+        "Trader Sven's Black-market Goods"
       ]
     },
     {
@@ -196930,10 +197060,10 @@
       "category": "shopItems",
       "sourceKey": "Two Feet Charley's Fish Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Two Feet Charley's Fish Shop."
+        "Two Feet Charley's Fish Shop"
       ]
     },
     {
@@ -197000,10 +197130,10 @@
       "category": "shopItems",
       "sourceKey": "Valaine's Shop of Champions.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Valaine's Shop of Champions."
+        "Valaine's Shop of Champions"
       ]
     },
     {
@@ -197020,10 +197150,10 @@
       "category": "shopItems",
       "sourceKey": "Vanessa's Farming shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Vanessa's Farming shop."
+        "Vanessa's Farming shop"
       ]
     },
     {
@@ -197160,10 +197290,10 @@
       "category": "shopItems",
       "sourceKey": "Wayne's Chains! - Chainmail specialist.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Wayne's Chains! - Chainmail specialist."
+        "Wayne's Chains! - Chainmail specialist"
       ]
     },
     {
@@ -197200,20 +197330,20 @@
       "category": "shopItems",
       "sourceKey": "William's Wilderness Cape Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "William's Wilderness Cape Shop."
+        "William's Wilderness Cape Shop"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Wine Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Wine Shop."
+        "Wine Shop"
       ]
     },
     {
@@ -197250,10 +197380,10 @@
       "category": "shopItems",
       "sourceKey": "Ye olde Tea Shoppe.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Ye olde Tea Shoppe."
+        "Ye olde Tea Shoppe"
       ]
     },
     {
@@ -197290,20 +197420,20 @@
       "category": "shopItems",
       "sourceKey": "Zeke's Superior Scimitars.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Zeke's Superior Scimitars."
+        "Zeke's Superior Scimitars"
       ]
     },
     {
       "category": "shopItems",
       "sourceKey": "Zenesha's Plate Mail Body Shop.",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Zenesha's Plate Mail Body Shop."
+        "Zenesha's Plate Mail Body Shop"
       ]
     },
     {
@@ -198691,50 +198821,55 @@
       "sourceKey": "Mining/Soil#Fossil Island loot",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Mining/Soil"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Mining/Soil#Fossil Island loot\" into canonical \"Mining/Soil\" using item + stage + rate union across: Mining/Soil#Fossil Island loot, Mining/Soil#Level 1 loot, Mining/Soil#Level 2 loot, Mining/Soil#Level 3 loot, Mining/Soil#Training loot"
     },
     {
       "category": "skillItems",
       "sourceKey": "Mining/Soil#Level 1 loot",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Mining/Soil"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Mining/Soil#Level 1 loot\" into canonical \"Mining/Soil\" using item + stage + rate union across: Mining/Soil#Fossil Island loot, Mining/Soil#Level 1 loot, Mining/Soil#Level 2 loot, Mining/Soil#Level 3 loot, Mining/Soil#Training loot"
     },
     {
       "category": "skillItems",
       "sourceKey": "Mining/Soil#Level 2 loot",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Mining/Soil"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Mining/Soil#Level 2 loot\" into canonical \"Mining/Soil\" using item + stage + rate union across: Mining/Soil#Fossil Island loot, Mining/Soil#Level 1 loot, Mining/Soil#Level 2 loot, Mining/Soil#Level 3 loot, Mining/Soil#Training loot"
     },
     {
       "category": "skillItems",
       "sourceKey": "Mining/Soil#Level 3 loot",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Mining/Soil"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Mining/Soil#Level 3 loot\" into canonical \"Mining/Soil\" using item + stage + rate union across: Mining/Soil#Fossil Island loot, Mining/Soil#Level 1 loot, Mining/Soil#Level 2 loot, Mining/Soil#Level 3 loot, Mining/Soil#Training loot"
     },
     {
       "category": "skillItems",
       "sourceKey": "Mining/Soil#Training loot",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Mining/Soil"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Mining/Soil#Training loot\" into canonical \"Mining/Soil\" using item + stage + rate union across: Mining/Soil#Fossil Island loot, Mining/Soil#Level 1 loot, Mining/Soil#Level 2 loot, Mining/Soil#Level 3 loot, Mining/Soil#Training loot"
     },
     {
       "category": "skillItems",
@@ -198870,8 +199005,8 @@
       "category": "skillItems",
       "sourceKey": "Nonskill/Bird nest (egg) loot",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
         "Nonskill/Bird nest (egg) loot"
       ]
@@ -200470,21 +200605,23 @@
       "category": "skillItems",
       "sourceKey": "Slayer/Abyssal demon",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Slayer/Abyssal demon"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Slayer/Abyssal demon\" into canonical \"Slayer/Abyssal demon\" using item + stage + rate union across: Slayer/Abyssal demon, Slayer/Abyssal demon#Wilderness Slayer Cave"
     },
     {
       "category": "skillItems",
       "sourceKey": "Slayer/Abyssal demon#Wilderness Slayer Cave",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Slayer/Abyssal demon"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Slayer/Abyssal demon#Wilderness Slayer Cave\" into canonical \"Slayer/Abyssal demon\" using item + stage + rate union across: Slayer/Abyssal demon, Slayer/Abyssal demon#Wilderness Slayer Cave"
     },
     {
       "category": "skillItems",
@@ -200561,20 +200698,22 @@
       "sourceKey": "Slayer/Araxyte#Level 146",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Slayer/Araxyte"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Slayer/Araxyte#Level 146\" into canonical \"Slayer/Araxyte\" using item + stage + rate union across: Slayer/Araxyte#Level 146, Slayer/Araxyte#Level 96"
     },
     {
       "category": "skillItems",
       "sourceKey": "Slayer/Araxyte#Level 96",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Slayer/Araxyte"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Slayer/Araxyte#Level 96\" into canonical \"Slayer/Araxyte\" using item + stage + rate union across: Slayer/Araxyte#Level 146, Slayer/Araxyte#Level 96"
     },
     {
       "category": "skillItems",
@@ -200661,20 +200800,22 @@
       "sourceKey": "Slayer/Cave bug#Level 6",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Slayer/Cave bug"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Slayer/Cave bug#Level 6\" into canonical \"Slayer/Cave bug\" using item + stage + rate union across: Slayer/Cave bug#Level 6, Slayer/Cave bug#Level 96"
     },
     {
       "category": "skillItems",
       "sourceKey": "Slayer/Cave bug#Level 96",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Slayer/Cave bug"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Slayer/Cave bug#Level 96\" into canonical \"Slayer/Cave bug\" using item + stage + rate union across: Slayer/Cave bug#Level 6, Slayer/Cave bug#Level 96"
     },
     {
       "category": "skillItems",
@@ -200860,21 +201001,23 @@
       "category": "skillItems",
       "sourceKey": "Slayer/Dust devil",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Slayer/Dust devil"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Slayer/Dust devil\" into canonical \"Slayer/Dust devil\" using item + stage + rate union across: Slayer/Dust devil, Slayer/Dust devil#Wilderness Slayer Cave"
     },
     {
       "category": "skillItems",
       "sourceKey": "Slayer/Dust devil#Wilderness Slayer Cave",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Slayer/Dust devil"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Slayer/Dust devil#Wilderness Slayer Cave\" into canonical \"Slayer/Dust devil\" using item + stage + rate union across: Slayer/Dust devil, Slayer/Dust devil#Wilderness Slayer Cave"
     },
     {
       "category": "skillItems",
@@ -200960,21 +201103,23 @@
       "category": "skillItems",
       "sourceKey": "Slayer/Greater Nechryael",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Slayer/Greater Nechryael"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Slayer/Greater Nechryael\" into canonical \"Slayer/Greater Nechryael\" using item + stage + rate union across: Slayer/Greater Nechryael, Slayer/Greater Nechryael#Wilderness Slayer Cave"
     },
     {
       "category": "skillItems",
       "sourceKey": "Slayer/Greater Nechryael#Wilderness Slayer Cave",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Slayer/Greater Nechryael"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Slayer/Greater Nechryael#Wilderness Slayer Cave\" into canonical \"Slayer/Greater Nechryael\" using item + stage + rate union across: Slayer/Greater Nechryael, Slayer/Greater Nechryael#Wilderness Slayer Cave"
     },
     {
       "category": "skillItems",
@@ -201080,21 +201225,23 @@
       "category": "skillItems",
       "sourceKey": "Slayer/Jelly",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Slayer/Jelly"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Slayer/Jelly\" into canonical \"Slayer/Jelly\" using item + stage + rate union across: Slayer/Jelly, Slayer/Jelly#Wilderness Slayer Cave"
     },
     {
       "category": "skillItems",
       "sourceKey": "Slayer/Jelly#Wilderness Slayer Cave",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Slayer/Jelly"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Slayer/Jelly#Wilderness Slayer Cave\" into canonical \"Slayer/Jelly\" using item + stage + rate union across: Slayer/Jelly, Slayer/Jelly#Wilderness Slayer Cave"
     },
     {
       "category": "skillItems",
@@ -201470,61 +201617,67 @@
       "category": "skillItems",
       "sourceKey": "Slayer/Spiritual mage",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Slayer/Spiritual mage"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Slayer/Spiritual mage\" into canonical \"Slayer/Spiritual mage\" using item + stage + rate union across: Slayer/Spiritual mage, Slayer/Spiritual mage#Ancient Prison"
     },
     {
       "category": "skillItems",
       "sourceKey": "Slayer/Spiritual mage#Ancient Prison",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Slayer/Spiritual mage"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Slayer/Spiritual mage#Ancient Prison\" into canonical \"Slayer/Spiritual mage\" using item + stage + rate union across: Slayer/Spiritual mage, Slayer/Spiritual mage#Ancient Prison"
     },
     {
       "category": "skillItems",
       "sourceKey": "Slayer/Spiritual ranger",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Slayer/Spiritual ranger"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Slayer/Spiritual ranger\" into canonical \"Slayer/Spiritual ranger\" using item + stage + rate union across: Slayer/Spiritual ranger, Slayer/Spiritual ranger#Ancient Prison"
     },
     {
       "category": "skillItems",
       "sourceKey": "Slayer/Spiritual ranger#Ancient Prison",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Slayer/Spiritual ranger"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Slayer/Spiritual ranger#Ancient Prison\" into canonical \"Slayer/Spiritual ranger\" using item + stage + rate union across: Slayer/Spiritual ranger, Slayer/Spiritual ranger#Ancient Prison"
     },
     {
       "category": "skillItems",
       "sourceKey": "Slayer/Spiritual warrior",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Slayer/Spiritual warrior"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Slayer/Spiritual warrior\" into canonical \"Slayer/Spiritual warrior\" using item + stage + rate union across: Slayer/Spiritual warrior, Slayer/Spiritual warrior#Ancient Prison"
     },
     {
       "category": "skillItems",
       "sourceKey": "Slayer/Spiritual warrior#Ancient Prison",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Slayer/Spiritual warrior"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Slayer/Spiritual warrior#Ancient Prison\" into canonical \"Slayer/Spiritual warrior\" using item + stage + rate union across: Slayer/Spiritual warrior, Slayer/Spiritual warrior#Ancient Prison"
     },
     {
       "category": "skillItems",
@@ -201571,20 +201724,22 @@
       "sourceKey": "Slayer/Terror dog#Level 100",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Slayer/Terror dog"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Slayer/Terror dog#Level 100\" into canonical \"Slayer/Terror dog\" using item + stage + rate union across: Slayer/Terror dog#Level 100, Slayer/Terror dog#Level 110"
     },
     {
       "category": "skillItems",
       "sourceKey": "Slayer/Terror dog#Level 110",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Slayer/Terror dog"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Slayer/Terror dog#Level 110\" into canonical \"Slayer/Terror dog\" using item + stage + rate union across: Slayer/Terror dog#Level 100, Slayer/Terror dog#Level 110"
     },
     {
       "category": "skillItems",
@@ -201711,20 +201866,22 @@
       "sourceKey": "Slayer/Zygomite#Level 74",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Slayer/Zygomite"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Slayer/Zygomite#Level 74\" into canonical \"Slayer/Zygomite\" using item + stage + rate union across: Slayer/Zygomite#Level 74, Slayer/Zygomite#Level 86"
     },
     {
       "category": "skillItems",
       "sourceKey": "Slayer/Zygomite#Level 86",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Slayer/Zygomite"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Slayer/Zygomite#Level 86\" into canonical \"Slayer/Zygomite\" using item + stage + rate union across: Slayer/Zygomite#Level 74, Slayer/Zygomite#Level 86"
     },
     {
       "category": "skillItems",
@@ -201841,20 +201998,22 @@
       "sourceKey": "Thieving/Bandit (Pollnivneach)#Bearded",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Thieving/Bandit (Pollnivneach)"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Thieving/Bandit (Pollnivneach)#Bearded\" into canonical \"Thieving/Bandit (Pollnivneach)\" using item + stage + rate union across: Thieving/Bandit (Pollnivneach)#Bearded, Thieving/Bandit (Pollnivneach)#No beard"
     },
     {
       "category": "skillItems",
       "sourceKey": "Thieving/Bandit (Pollnivneach)#No beard",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Thieving/Bandit (Pollnivneach)"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Thieving/Bandit (Pollnivneach)#No beard\" into canonical \"Thieving/Bandit (Pollnivneach)\" using item + stage + rate union across: Thieving/Bandit (Pollnivneach)#Bearded, Thieving/Bandit (Pollnivneach)#No beard"
     },
     {
       "category": "skillItems",
@@ -202520,8 +202679,8 @@
       "category": "skillItems",
       "sourceKey": "Thieving/Pirate (Thieving)",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
         "Thieving/Pirate (Thieving)"
       ]
@@ -202570,8 +202729,8 @@
       "category": "skillItems",
       "sourceKey": "Thieving/Rusty chest",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
         "Thieving/Rusty chest"
       ]
@@ -202650,21 +202809,23 @@
       "category": "skillItems",
       "sourceKey": "Thieving/Silver stall",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Thieving/Silver stall"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Thieving/Silver stall\" into canonical \"Thieving/Silver stall\" using item + stage + rate union across: Thieving/Silver stall, Thieving/Silver stall#Keldagrim"
     },
     {
       "category": "skillItems",
       "sourceKey": "Thieving/Silver stall#Keldagrim",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "variant-name-cleaned",
+      "reason": "variant-collision-merged",
       "targetKeys": [
         "Thieving/Silver stall"
-      ]
+      ],
+      "detail": "Merged raw skill method \"Thieving/Silver stall#Keldagrim\" into canonical \"Thieving/Silver stall\" using item + stage + rate union across: Thieving/Silver stall, Thieving/Silver stall#Keldagrim"
     },
     {
       "category": "skillItems",

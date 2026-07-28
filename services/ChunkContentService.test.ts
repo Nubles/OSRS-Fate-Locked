@@ -1,5 +1,10 @@
-import { describe, it, expect } from 'vitest';
-import { aggregateContent, ChunkContent } from './ChunkContentService';
+import { beforeAll, describe, it, expect, vi } from 'vitest';
+import fullChunkContent from '../public/chunk-content.json';
+import {
+  aggregateContent,
+  ChunkContent,
+  chunkContentService,
+} from './ChunkContentService';
 
 const empty = (over: Partial<ChunkContent> = {}): ChunkContent => ({
   monsters: [], npcs: [], objects: [], shops: [],
@@ -52,5 +57,26 @@ describe('aggregateContent', () => {
     const agg = aggregateContent([]);
     expect(agg.monsters).toEqual([]);
     expect(agg.quests).toEqual({});
+  });
+});
+
+describe('generated normalized source unions', () => {
+  beforeAll(async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(
+      JSON.stringify(fullChunkContent),
+      { status: 200, headers: { 'content-type': 'application/json' } },
+    )));
+    expect(await chunkContentService.init()).toBe(true);
+  });
+
+  it('exposes merged drop items through runtime item-source lookups and tags', () => {
+    expect(chunkContentService.itemSources('Iron 2h sword')).toContain('Cyclops');
+    expect(chunkContentService.tagChunks('runecraft')).toContainEqual({ cx: 37, cy: 52 });
+  });
+
+  it('exposes merged skill stage/rate evidence and policy metadata', () => {
+    const soil = chunkContentService.skillYields('Mining').Soil;
+    expect(soil.find(([item]) => item === 'Bones')?.[1]).toContain('1 @ 1/12');
+    expect(chunkContentService.sourceMetadata()?.policyVersion).toBe(2);
   });
 });

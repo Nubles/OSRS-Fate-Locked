@@ -203,7 +203,7 @@ export interface EntityHit {
 
 // Bump when public/chunk-content.json changes so the fetch URL changes and
 // browsers don't serve a stale cached copy (the filename itself never changes).
-const DATA_REV = 9;
+const DATA_REV = 10;
 
 class ChunkContentService {
   private doc: RawDoc | null = null;

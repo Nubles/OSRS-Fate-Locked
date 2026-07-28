@@ -10,7 +10,7 @@ const manifest = {
   blobSha: '6674e5c62cd7a6ec90267def278aca5bc1f05a06',
   rawSha256: '95E4864651E2A9C7D4555C4EBBE4DD4AB5E71B881FF18BC966799CD22D48C167',
   rawBytes: 7802950,
-  policyVersion: 1,
+  policyVersion: 2,
   reviewedAt: '2026-07-28',
   sourceUrl: 'https://github.com/source-chunk/chunk-picker-v2',
   countFloors: {},
@@ -160,5 +160,179 @@ describe('transformChunkContent', () => {
       'slayerMasterTasks/Turael/Goblin', 'slayerMasterTasks/Turael/Rat',
     ]);
     expect(new Set(terminalKeys)).toHaveLength(terminalKeys.length);
+  });
+  it('merges normalized drop tables before tags are derived and audits every raw source', () => {
+    const result = transformChunkContent({
+      walkableChunks: [256],
+      chunks: {
+        256: { Monster: { 'Goblin#Armoured': 1 } },
+      },
+      slayerMonsters: {},
+      drops: {
+        'Goblin#Plain': {
+          'Bronze arrow': {},
+          Coins: {},
+        },
+        'Goblin#Armoured': {
+          Bones: {},
+          'Coins#Small stack': {},
+        },
+      },
+      searchTerms: {
+        'ammo|Items': { 'Bronze arrow': true },
+      },
+    }, manifest);
+
+    expect(result.full.drops.Goblin).toEqual(['Bones', 'Bronze arrow', 'Coins']);
+    expect(result.full.tags.ammo).toEqual(['256']);
+    expect(result.audit.events.filter((event) =>
+      event.terminal && event.category === 'drops'
+    )).toEqual([
+      expect.objectContaining({
+        sourceKey: 'Goblin#Armoured',
+        disposition: 'normalized',
+        reason: 'variant-collision-merged',
+        targetKeys: ['Goblin'],
+      }),
+      expect.objectContaining({
+        sourceKey: 'Goblin#Plain',
+        disposition: 'normalized',
+        reason: 'variant-collision-merged',
+        targetKeys: ['Goblin'],
+      }),
+    ]);
+  });
+
+  it('merges normalized skill methods without losing item, stage, or rate evidence', () => {
+    const result = transformChunkContent({
+      walkableChunks: [],
+      chunks: {},
+      slayerMonsters: {},
+      skillItems: {
+        Mining: {
+          'Soil#Level 1 loot': {
+            'Copper ore#Unnoted': {
+              1: '1/2',
+              2: '1/4',
+            },
+            Clay: { 1: '1/8' },
+          },
+          'Soil#Level 2 loot': {
+            'Copper ore': {
+              1: '1/3',
+              3: '1/6',
+            },
+            'Tin ore': { 1: '1/5' },
+          },
+        },
+      },
+    }, manifest);
+
+    expect(result.full.skillItems.Mining.Soil).toEqual([
+      ['Clay', '1/8'],
+      [
+        'Copper ore',
+        '1 @ 1/2 (Copper ore#Unnoted), 1 @ 1/3 (Copper ore), 2 @ 1/4 (Copper ore#Unnoted), 3 @ 1/6 (Copper ore)',
+      ],
+      ['Tin ore', '1/5'],
+    ]);
+    expect(result.audit.events.filter((event) =>
+      event.terminal && event.category === 'skillItems'
+    )).toEqual([
+      expect.objectContaining({
+        sourceKey: 'Mining/Soil#Level 1 loot',
+        disposition: 'normalized',
+        reason: 'variant-collision-merged',
+        targetKeys: ['Mining/Soil'],
+      }),
+      expect.objectContaining({
+        sourceKey: 'Mining/Soil#Level 2 loot',
+        disposition: 'normalized',
+        reason: 'variant-collision-merged',
+        targetKeys: ['Mining/Soil'],
+      }),
+    ]);
+  });
+
+  it('preserves singleton stage evidence even when different stages share a rate', () => {
+    const result = transformChunkContent({
+      walkableChunks: [], chunks: {}, slayerMonsters: {},
+      skillItems: {
+        Smithing: {
+          Bars: {
+            'Iron bar': { 1: '1/2', 2: '1/2' },
+            'Steel bar': { 1: '1/4' },
+          },
+        },
+      },
+    }, manifest);
+
+    expect(result.full.skillItems.Smithing.Bars).toEqual([
+      ['Iron bar', '1 @ 1/2, 2 @ 1/2'],
+      ['Steel bar', '1/4'],
+    ]);
+  });
+
+  it('preserves raw item variants that clean to one item within a skill method', () => {
+    const result = transformChunkContent({
+      walkableChunks: [], chunks: {}, slayerMonsters: {},
+      skillItems: {
+        Nonskill: {
+          'Bird nest (egg) loot': {
+            "Bird's egg#Blue": { 1: '1/3' },
+            "Bird's egg#Green": { 1: '1/3' },
+            "Bird's egg#Red": { 1: '1/3' },
+            'Bird nest (empty)': { 1: 'Always' },
+          },
+        },
+      },
+    }, manifest);
+
+    expect(result.full.skillItems.Nonskill['Bird nest (egg) loot']).toEqual([
+      ['Bird nest (empty)', 'Always'],
+      [
+        "Bird's egg",
+        "1 @ 1/3 (Bird's egg#Blue), 1 @ 1/3 (Bird's egg#Green), 1 @ 1/3 (Bird's egg#Red)",
+      ],
+    ]);
+  });
+
+  it.each([
+    {
+      category: 'slayerMasterTasks',
+      data: {
+        slayerMasterTasks: {
+          Turael: {
+            'Goblin#Plain': { Weight: 1 },
+            'Goblin#Armoured': { Weight: 2 },
+          },
+        },
+      },
+    },
+    {
+      category: 'shopItems',
+      data: {
+        shopItems: {
+          'General Store': { Tinderbox: {} },
+          'General Store.': { Hammer: {} },
+        },
+      },
+    },
+    {
+      category: 'mapOverlays',
+      data: {
+        mapOverlays: {
+          'Star|Primary': [{ x: 1, y: 2 }],
+          'Star|Secondary': [{ x: 3, y: 4 }],
+        },
+      },
+    },
+  ])('fails closed for an unreviewed $category canonical collision', ({ category, data }) => {
+    expect(() => transformChunkContent({
+      walkableChunks: [],
+      chunks: {},
+      slayerMonsters: {},
+      ...data,
+    }, manifest)).toThrow(`Unreviewed ${category} canonical collision`);
   });
 });

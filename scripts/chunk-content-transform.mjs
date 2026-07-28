@@ -2,7 +2,7 @@ const REASONS = new Set([
   'base-record', 'section-merged', 'variant-name-cleaned', 'quest-subpath-collapsed',
   'subarea-suffix-collapsed', 'named-location-unmappable', 'non-walkable-content',
   'empty-walkable-chunk', 'broad-quest-gate-suppressed', 'lite-cap',
-  'duplicate-deduped', 'role-promoted-to-first',
+  'duplicate-deduped', 'role-promoted-to-first', 'variant-collision-merged',
 ]);
 
 const cleanName = (value) => String(value).split('#')[0].trim();
@@ -52,7 +52,7 @@ function createAudit(sourceManifest, inventory) {
     for (const key of expected) { const [category] = key.split('\u0000'); const total = categoryTotals[category] ??= { source: 0, imported: 0, normalized: 0, excluded: 0, unresolved: 0 }; total.source++; }
     for (const event of terminals.values()) categoryTotals[event.category][event.disposition]++;
     for (const [category, total] of Object.entries(categoryTotals)) if (total.source !== total.imported + total.normalized + total.excluded + total.unresolved) throw new Error(`Unbalanced chunk transform audit category: ${category}`);
-    return { schemaVersion: 1, policyVersion: 1, sourceCommit: sourceManifest.commit, categoryTotals, events };
+    return { schemaVersion: 1, policyVersion: sourceManifest.policyVersion, sourceCommit: sourceManifest.commit, categoryTotals, events };
   };
   return { add, finish };
 }
@@ -94,17 +94,38 @@ function buildConnect(data) {
   return Object.fromEntries([...adj.entries()].map(([id, set]) => [id, [...set].sort()]));
 }
 
+function groupCanonical(entries, targetOf) {
+  const groups = new Map();
+  for (const entry of entries) {
+    const target = targetOf(entry);
+    const rows = groups.get(target) ?? [];
+    rows.push(entry);
+    groups.set(target, rows);
+  }
+  return groups;
+}
+
+function assertNoCanonicalCollisions(category, groups, sourceOf) {
+  for (const [target, rows] of groups) {
+    if (rows.length < 2) continue;
+    throw new Error(`Unreviewed ${category} canonical collision: ${target} <= ${rows.map(sourceOf).join(', ')}`);
+  }
+}
+
 function buildSlayerMasters(data, audit) {
   const out = {};
   for (const [master, tasks] of Object.entries(data.slayerMasterTasks ?? {})) {
+    const taskEntries = Object.entries(tasks).map(([monster, info]) => ({ monster, info }));
+    const groups = groupCanonical(taskEntries, ({ monster }) => cleanName(monster));
+    assertNoCanonicalCollisions('slayerMasterTasks', groups, ({ monster }) => `${master}/${monster}`);
     const result = {};
-    for (const [monster, info] of Object.entries(tasks)) {
+    for (const { monster, info } of taskEntries) {
       const name = cleanName(monster); const entry = { weight: info.Weight ?? 1 };
       if (info.CombatLevel != null) entry.combat = info.CombatLevel;
       if (info.Level != null) entry.slayer = info.Level;
       const req = Object.keys(info.Tasks ?? {}).map(stripWiki); if (req.length) entry.req = req;
-      const duplicate = Object.hasOwn(result, name); result[name] = entry;
-      audit.add('slayerMasterTasks', `${master}/${monster}`, duplicate || monster.includes('#') ? 'normalized' : 'imported', duplicate ? 'duplicate-deduped' : monster.includes('#') ? 'variant-name-cleaned' : 'base-record', [`${master}/${name}`]);
+      result[name] = entry;
+      audit.add('slayerMasterTasks', `${master}/${monster}`, monster.includes('#') ? 'normalized' : 'imported', monster.includes('#') ? 'variant-name-cleaned' : 'base-record', [`${master}/${name}`]);
     }
     out[master] = result;
   }
@@ -122,20 +143,147 @@ function buildShortcuts(data, audit) {
   }
   return out;
 }
-function buildDrops(data) { const out = {}; for (const [monster, table] of Object.entries(data.drops ?? {})) { const items = [...new Set(Object.keys(table).map(cleanName))].sort(); if (items.length) out[cleanName(monster)] = items; } return out; }
-function buildShopItems(data) { const out = {}; for (const [shop, items] of Object.entries(data.shopItems ?? {})) out[shop.replace(/\.$/, '')] = Object.keys(items).map(cleanName).sort(); return out; }
-function buildOverlays(data) { const out = {}; for (const [raw, points] of Object.entries(data.mapOverlays ?? {})) { if (!Array.isArray(points) || !points.length) continue; const cat = raw.split('|')[0].trim(); out[cat] = points.map((point) => { const item = { x: point.x, y: point.y, cx: Math.floor(point.x / 64), cy: Math.floor(point.y / 64) }; if (point.type) item.t = point.type; if (point.text) item.h = stripWiki(point.text); return item; }); } return out; }
+function buildDrops(data, audit) {
+  const out = {};
+  const rows = Object.entries(data.drops ?? {}).map(([rawKey, table]) => ({ rawKey, table }));
+  const groups = groupCanonical(rows, ({ rawKey }) => cleanName(rawKey));
+  for (const [target, sources] of groups) {
+    const items = [...new Set(sources.flatMap(({ table }) => Object.keys(table).map(cleanName)))].sort();
+    if (items.length) out[target] = items;
+    const collision = sources.length > 1;
+    const groupSources = sources.map(({ rawKey }) => rawKey).sort();
+    for (const { rawKey, table } of sources) {
+      const cleaned = rawKey !== target || Object.keys(table).some((item) => cleanName(item) !== item);
+      const detail = collision
+        ? `Merged raw drop table "${rawKey}" into canonical "${target}" using sorted unique item union across: ${groupSources.join(', ')}`
+        : undefined;
+      audit.add(
+        'drops',
+        rawKey,
+        collision || cleaned ? 'normalized' : items.length ? 'imported' : 'excluded',
+        collision ? 'variant-collision-merged' : cleaned ? 'variant-name-cleaned' : items.length ? 'base-record' : 'non-walkable-content',
+        items.length ? [target] : [],
+        true,
+        detail,
+      );
+    }
+  }
+  return out;
+}
+
+function buildShopItems(data, audit) {
+  const out = {};
+  const rows = Object.entries(data.shopItems ?? {}).map(([rawKey, items]) => ({ rawKey, items }));
+  const groups = groupCanonical(rows, ({ rawKey }) => rawKey.replace(/\.$/, ''));
+  assertNoCanonicalCollisions('shopItems', groups, ({ rawKey }) => rawKey);
+  for (const { rawKey, items } of rows) {
+    const target = rawKey.replace(/\.$/, '');
+    out[target] = Object.keys(items).map(cleanName).sort();
+    const normalized = rawKey !== target || Object.keys(items).some((item) => cleanName(item) !== item);
+    audit.add('shopItems', rawKey, normalized ? 'normalized' : 'imported', normalized ? 'variant-name-cleaned' : 'base-record', [target]);
+  }
+  return out;
+}
+
+function buildOverlays(data, audit) {
+  const out = {};
+  const rows = Object.entries(data.mapOverlays ?? {}).map(([rawKey, points]) => ({ rawKey, points }));
+  const groups = groupCanonical(rows, ({ rawKey }) => rawKey.split('|')[0].trim());
+  assertNoCanonicalCollisions('mapOverlays', groups, ({ rawKey }) => rawKey);
+  for (const { rawKey, points } of rows) {
+    const target = rawKey.split('|')[0].trim();
+    if (!Array.isArray(points) || !points.length) {
+      audit.add('mapOverlays', rawKey, 'excluded', 'non-walkable-content', []);
+      continue;
+    }
+    out[target] = points.map((point) => {
+      const item = { x: point.x, y: point.y, cx: Math.floor(point.x / 64), cy: Math.floor(point.y / 64) };
+      if (point.type) item.t = point.type;
+      if (point.text) item.h = stripWiki(point.text);
+      return item;
+    });
+    audit.add('mapOverlays', rawKey, rawKey === target ? 'imported' : 'normalized', rawKey === target ? 'base-record' : 'variant-name-cleaned', [target]);
+  }
+  return out;
+}
+
+function buildSkillList(sources) {
+  const byItem = new Map();
+  for (const { method, items } of sources) {
+    for (const [rawItem, stages] of Object.entries(items)) {
+      const item = cleanName(rawItem);
+      const evidence = byItem.get(item) ?? new Map();
+      for (const [stage, rate] of Object.entries(stages)) {
+        const key = `${rawItem}\u0000${stage}\u0000${rate}`;
+        const contribution = evidence.get(key) ?? {
+          rawItem,
+          stage: String(stage),
+          rate: String(rate),
+          methods: new Set(),
+        };
+        contribution.methods.add(stripWiki(method));
+        evidence.set(key, contribution);
+      }
+      byItem.set(item, evidence);
+    }
+  }
+  return [...byItem.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([item, evidence]) => {
+    const contributions = [...evidence.values()].sort((a, b) =>
+      a.stage.localeCompare(b.stage, 'en', { numeric: true }) ||
+      a.rate.localeCompare(b.rate, 'en', { numeric: true }) ||
+      a.rawItem.localeCompare(b.rawItem)
+    );
+    const rawItems = new Set(contributions.map(({ rawItem }) => rawItem));
+    if (contributions.length === 1 && rawItems.size === 1) {
+      return [item, contributions[0].rate];
+    }
+    const stageCounts = new Map();
+    for (const { stage } of contributions) stageCounts.set(stage, (stageCounts.get(stage) ?? 0) + 1);
+    const rateString = contributions.map(({ rawItem, stage, rate, methods }) => {
+      const context = rawItems.size > 1
+        ? ` (${rawItem})`
+        : stageCounts.get(stage) > 1
+          ? ` (${[...methods].sort().join(' + ')})`
+          : '';
+      return `${stage} @ ${rate}${context}`;
+    }).join(', ');
+    return [item, rateString];
+  });
+}
+
 function buildSkillItems(data, audit) {
   const out = {};
+  const rows = [];
   for (const [skill, methods] of Object.entries(data.skillItems ?? {})) {
-    const result = {};
-    for (const [method, items] of Object.entries(methods)) {
-      const list = []; for (const [item, stages] of Object.entries(items)) list.push([cleanName(item), [...new Set(Object.values(stages))].join(', ')]);
-      const target = `${stripWiki(skill)}/${cleanName(stripWiki(method))}`;
-      if (list.length) result[cleanName(stripWiki(method))] = list;
-      audit.add('skillItems', `${skill}/${method}`, list.length ? (method.includes('#') ? 'normalized' : 'imported') : 'excluded', list.length ? (method.includes('#') ? 'variant-name-cleaned' : 'base-record') : 'non-walkable-content', list.length ? [target] : []);
+    for (const [method, items] of Object.entries(methods)) rows.push({ skill, method, items });
+  }
+  const groups = groupCanonical(rows, ({ skill, method }) => `${stripWiki(skill)}\u0000${cleanName(stripWiki(method))}`);
+  for (const [canonical, sources] of groups) {
+    const [targetSkill, targetMethod] = canonical.split('\u0000');
+    const collision = sources.length > 1;
+    const list = buildSkillList(sources);
+    if (list.length) {
+      const methods = out[targetSkill] ?? {};
+      methods[targetMethod] = list;
+      out[targetSkill] = methods;
     }
-    if (Object.keys(result).length) out[stripWiki(skill)] = result;
+    const groupSources = sources.map(({ skill, method }) => `${skill}/${method}`).sort();
+    for (const { skill, method, items } of sources) {
+      const sourceKey = `${skill}/${method}`;
+      const normalized = stripWiki(skill) !== skill || cleanName(stripWiki(method)) !== method || Object.keys(items).some((item) => cleanName(item) !== item);
+      const detail = collision
+        ? `Merged raw skill method "${sourceKey}" into canonical "${targetSkill}/${targetMethod}" using item + stage + rate union across: ${groupSources.join(', ')}`
+        : undefined;
+      audit.add(
+        'skillItems',
+        sourceKey,
+        collision || normalized ? 'normalized' : list.length ? 'imported' : 'excluded',
+        collision ? 'variant-collision-merged' : normalized ? 'variant-name-cleaned' : list.length ? 'base-record' : 'non-walkable-content',
+        list.length ? [`${targetSkill}/${targetMethod}`] : [],
+        true,
+        detail,
+      );
+    }
   }
   return out;
 }
@@ -246,8 +394,8 @@ export function transformChunkContent(data, sourceManifest) {
     const normalized = Object.values(chunk.Sections ?? {}).length > 0;
     audit.add('chunks', id, normalized ? 'normalized' : 'imported', normalized ? 'section-merged' : 'base-record', [id]);
   }
-  const connect = buildConnect(data), slayerMasters = buildSlayerMasters(data, audit), shortcuts = buildShortcuts(data, audit), shopItems = buildShopItems(data), drops = buildDrops(data), overlays = buildOverlays(data), skillItems = buildSkillItems(data, audit), taskUnlocks = buildTaskUnlocks(data, audit), questSections = buildQuestSections(data, audit), banks = buildBanks(data, audit), tags = buildTags(data, chunks, shopItems, drops);
-   addBaseRecords(audit, 'drops', data.drops ?? {}); addBaseRecords(audit, 'shopItems', data.shopItems ?? {}); addBaseRecords(audit, 'mapOverlays', data.mapOverlays ?? {});  addBaseRecords(audit, 'searchTerms', data.searchTerms ?? {});
+  const connect = buildConnect(data), slayerMasters = buildSlayerMasters(data, audit), shortcuts = buildShortcuts(data, audit), shopItems = buildShopItems(data, audit), drops = buildDrops(data, audit), overlays = buildOverlays(data, audit), skillItems = buildSkillItems(data, audit), taskUnlocks = buildTaskUnlocks(data, audit), questSections = buildQuestSections(data, audit), banks = buildBanks(data, audit), tags = buildTags(data, chunks, shopItems, drops);
+  addBaseRecords(audit, 'searchTerms', data.searchTerms ?? {});
   const sourceMeta = { repository: sourceManifest.repository, commit: sourceManifest.commit, blobSha: sourceManifest.blobSha, rawSha256: sourceManifest.rawSha256, policyVersion: sourceManifest.policyVersion };
   const full = { version: 8, source: 'source-chunk/chunk-picker-v2 (chunkpicker-chunkinfo-export.json, gh-pages)', sourceMeta, chunks, connect, slayerMasters, shortcuts, shopItems, drops, overlays, skillItems, taskUnlocks, questSections, banks, tags };
   const liteSource = buildLite(full, audit); const finalAudit = audit.finish();

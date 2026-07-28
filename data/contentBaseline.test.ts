@@ -267,7 +267,7 @@ describe('deterministic current content baseline', () => {
       commit: 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926',
       blobSha: '6674e5c62cd7a6ec90267def278aca5bc1f05a06',
       rawSha256: '95E4864651E2A9C7D4555C4EBBE4DD4AB5E71B881FF18BC966799CD22D48C167',
-      policyVersion: 1,
+      policyVersion: 2,
     });
     expect(Object.keys(fullChunkContent.chunks)).toHaveLength(936);
     expect(Object.keys(fullChunkContent.connect)).toHaveLength(1104);
