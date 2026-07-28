@@ -1,0 +1,2109 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-07-28",
+  "listSource": {
+    "url": "https://oldschool.runescape.wiki/w/index.php?title=Quests%2FList&oldid=15229510",
+    "revision": 15229510,
+    "revisionTimestamp": "2026-06-08T03:59:48Z"
+  },
+  "parsedCounts": {
+    "quests": 191,
+    "miniquests": 19
+  },
+  "drift": {
+    "runtimeEntriesMissingFromLiveList": [],
+    "liveOnlyEntries": [
+      {
+        "pageTitle": "Learning the Ropes",
+        "kind": "quest",
+        "source": {
+          "url": "https://oldschool.runescape.wiki/w/index.php?title=Learning_the_Ropes&oldid=15270071",
+          "revision": 15270071,
+          "revisionTimestamp": "2026-07-20T08:11:03Z"
+        }
+      },
+      {
+        "pageTitle": "The Blood Moon Rises",
+        "kind": "quest",
+        "source": {
+          "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Blood_Moon_Rises&oldid=15276980",
+          "revision": 15276980,
+          "revisionTimestamp": "2026-07-28T01:27:16Z"
+        }
+      }
+    ],
+    "note": "The live official rows differ from the approved normalized 188/19 runtime baseline; membership remains pinned for Task 5 and reconciliation is deferred to Task 11."
+  },
+  "entries": [
+    {
+      "id": "A Kingdom Divided",
+      "kind": "quest",
+      "pageTitle": "A Kingdom Divided",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=A_Kingdom_Divided&oldid=15259353",
+        "revision": 15259353,
+        "revisionTimestamp": "2026-07-09T19:18:15Z"
+      }
+    },
+    {
+      "id": "A Night at the Theatre",
+      "kind": "quest",
+      "pageTitle": "A Night at the Theatre",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=A_Night_at_the_Theatre&oldid=15241913",
+        "revision": 15241913,
+        "revisionTimestamp": "2026-06-29T01:04:45Z"
+      }
+    },
+    {
+      "id": "A Porcine of Interest",
+      "kind": "quest",
+      "pageTitle": "A Porcine of Interest",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=A_Porcine_of_Interest&oldid=15272507",
+        "revision": 15272507,
+        "revisionTimestamp": "2026-07-22T18:36:02Z"
+      }
+    },
+    {
+      "id": "A Soul's Bane",
+      "kind": "quest",
+      "pageTitle": "A Soul's Bane",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=A_Soul's_Bane&oldid=15266914",
+        "revision": 15266914,
+        "revisionTimestamp": "2026-07-18T12:43:14Z"
+      }
+    },
+    {
+      "id": "A Tail of Two Cats",
+      "kind": "quest",
+      "pageTitle": "A Tail of Two Cats",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=A_Tail_of_Two_Cats&oldid=15276846",
+        "revision": 15276846,
+        "revisionTimestamp": "2026-07-27T20:31:25Z"
+      }
+    },
+    {
+      "id": "A Taste of Hope",
+      "kind": "quest",
+      "pageTitle": "A Taste of Hope",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=A_Taste_of_Hope&oldid=15273856",
+        "revision": 15273856,
+        "revisionTimestamp": "2026-07-24T07:59:34Z"
+      }
+    },
+    {
+      "id": "Alfred Grimhand's Barcrawl",
+      "kind": "miniquest",
+      "pageTitle": "Alfred Grimhand's Barcrawl",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Alfred_Grimhand's_Barcrawl&oldid=15237159",
+        "revision": 15237159,
+        "revisionTimestamp": "2026-06-21T16:35:10Z"
+      }
+    },
+    {
+      "id": "Animal Magnetism",
+      "kind": "quest",
+      "pageTitle": "Animal Magnetism",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Animal_Magnetism&oldid=15276580",
+        "revision": 15276580,
+        "revisionTimestamp": "2026-07-27T13:40:28Z"
+      }
+    },
+    {
+      "id": "Another Slice of H.A.M.",
+      "kind": "quest",
+      "pageTitle": "Another Slice of H.A.M.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Another_Slice_of_H.A.M.&oldid=15270666",
+        "revision": 15270666,
+        "revisionTimestamp": "2026-07-20T21:38:04Z"
+      }
+    },
+    {
+      "id": "At First Light",
+      "kind": "quest",
+      "pageTitle": "At First Light",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=At_First_Light&oldid=15271675",
+        "revision": 15271675,
+        "revisionTimestamp": "2026-07-22T01:08:01Z"
+      }
+    },
+    {
+      "id": "Barbarian Training",
+      "kind": "miniquest",
+      "pageTitle": "Barbarian Training",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Barbarian_Training&oldid=15276195",
+        "revision": 15276195,
+        "revisionTimestamp": "2026-07-26T21:36:09Z"
+      }
+    },
+    {
+      "id": "Bear Your Soul",
+      "kind": "miniquest",
+      "pageTitle": "Bear Your Soul",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Bear_Your_Soul&oldid=15237156",
+        "revision": 15237156,
+        "revisionTimestamp": "2026-06-21T16:35:01Z"
+      }
+    },
+    {
+      "id": "Below Ice Mountain",
+      "kind": "quest",
+      "pageTitle": "Below Ice Mountain",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Below_Ice_Mountain&oldid=15240942",
+        "revision": 15240942,
+        "revisionTimestamp": "2026-06-27T13:09:50Z"
+      }
+    },
+    {
+      "id": "Beneath Cursed Sands",
+      "kind": "quest",
+      "pageTitle": "Beneath Cursed Sands",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Beneath_Cursed_Sands&oldid=15265928",
+        "revision": 15265928,
+        "revisionTimestamp": "2026-07-17T08:19:06Z"
+      }
+    },
+    {
+      "id": "Between a Rock...",
+      "kind": "quest",
+      "pageTitle": "Between a Rock...",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Between_a_Rock...&oldid=15265908",
+        "revision": 15265908,
+        "revisionTimestamp": "2026-07-17T06:23:17Z"
+      }
+    },
+    {
+      "id": "Big Chompy Bird Hunting",
+      "kind": "quest",
+      "pageTitle": "Big Chompy Bird Hunting",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Big_Chompy_Bird_Hunting&oldid=15274014",
+        "revision": 15274014,
+        "revisionTimestamp": "2026-07-24T17:42:14Z"
+      }
+    },
+    {
+      "id": "Biohazard",
+      "kind": "quest",
+      "pageTitle": "Biohazard",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Biohazard&oldid=15256425",
+        "revision": 15256425,
+        "revisionTimestamp": "2026-07-07T16:30:54Z"
+      }
+    },
+    {
+      "id": "Black Knights' Fortress",
+      "kind": "quest",
+      "pageTitle": "Black Knights' Fortress",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Black_Knights'_Fortress&oldid=15266892",
+        "revision": 15266892,
+        "revisionTimestamp": "2026-07-18T10:57:42Z"
+      }
+    },
+    {
+      "id": "Bone Voyage",
+      "kind": "quest",
+      "pageTitle": "Bone Voyage",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Bone_Voyage&oldid=15262285",
+        "revision": 15262285,
+        "revisionTimestamp": "2026-07-13T04:00:01Z"
+      }
+    },
+    {
+      "id": "Cabin Fever",
+      "kind": "quest",
+      "pageTitle": "Cabin Fever",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Cabin_Fever&oldid=15271180",
+        "revision": 15271180,
+        "revisionTimestamp": "2026-07-21T06:08:27Z"
+      }
+    },
+    {
+      "id": "Children of the Sun",
+      "kind": "quest",
+      "pageTitle": "Children of the Sun",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Children_of_the_Sun&oldid=15241067",
+        "revision": 15241067,
+        "revisionTimestamp": "2026-06-27T15:21:52Z"
+      }
+    },
+    {
+      "id": "Client of Kourend",
+      "kind": "quest",
+      "pageTitle": "Client of Kourend",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Client_of_Kourend&oldid=15263161",
+        "revision": 15263161,
+        "revisionTimestamp": "2026-07-14T16:54:58Z"
+      }
+    },
+    {
+      "id": "Clock Tower",
+      "kind": "quest",
+      "pageTitle": "Clock Tower",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Clock_Tower&oldid=15166584",
+        "revision": 15166584,
+        "revisionTimestamp": "2026-04-06T15:38:47Z"
+      }
+    },
+    {
+      "id": "Cold War",
+      "kind": "quest",
+      "pageTitle": "Cold War",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Cold_War&oldid=15271161",
+        "revision": 15271161,
+        "revisionTimestamp": "2026-07-21T05:30:10Z"
+      }
+    },
+    {
+      "id": "Contact!",
+      "kind": "quest",
+      "pageTitle": "Contact!",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Contact!&oldid=15266872",
+        "revision": 15266872,
+        "revisionTimestamp": "2026-07-18T10:04:23Z"
+      }
+    },
+    {
+      "id": "Cook's Assistant",
+      "kind": "quest",
+      "pageTitle": "Cook's Assistant",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Cook's_Assistant&oldid=15240921",
+        "revision": 15240921,
+        "revisionTimestamp": "2026-06-27T13:04:37Z"
+      }
+    },
+    {
+      "id": "Creature of Fenkenstrain",
+      "kind": "quest",
+      "pageTitle": "Creature of Fenkenstrain",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Creature_of_Fenkenstrain&oldid=15166587",
+        "revision": 15166587,
+        "revisionTimestamp": "2026-04-06T15:40:28Z"
+      }
+    },
+    {
+      "id": "Current Affairs",
+      "kind": "quest",
+      "pageTitle": "Current Affairs",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Current_Affairs&oldid=15241083",
+        "revision": 15241083,
+        "revisionTimestamp": "2026-06-27T15:29:55Z"
+      }
+    },
+    {
+      "id": "Curse of the Empty Lord",
+      "kind": "miniquest",
+      "pageTitle": "Curse of the Empty Lord",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Curse_of_the_Empty_Lord&oldid=15270784",
+        "revision": 15270784,
+        "revisionTimestamp": "2026-07-20T23:21:59Z"
+      }
+    },
+    {
+      "id": "Daddy's Home",
+      "kind": "miniquest",
+      "pageTitle": "Daddy's Home",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Daddy's_Home&oldid=15233724",
+        "revision": 15233724,
+        "revisionTimestamp": "2026-06-14T23:34:03Z"
+      }
+    },
+    {
+      "id": "Darkness of Hallowvale",
+      "kind": "quest",
+      "pageTitle": "Darkness of Hallowvale",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Darkness_of_Hallowvale&oldid=15273494",
+        "revision": 15273494,
+        "revisionTimestamp": "2026-07-23T17:47:55Z"
+      }
+    },
+    {
+      "id": "Death on the Isle",
+      "kind": "quest",
+      "pageTitle": "Death on the Isle",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Death_on_the_Isle&oldid=15241076",
+        "revision": 15241076,
+        "revisionTimestamp": "2026-06-27T15:27:31Z"
+      }
+    },
+    {
+      "id": "Death Plateau",
+      "kind": "quest",
+      "pageTitle": "Death Plateau",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Death_Plateau&oldid=15265877",
+        "revision": 15265877,
+        "revisionTimestamp": "2026-07-17T05:38:14Z"
+      }
+    },
+    {
+      "id": "Death to the Dorgeshuun",
+      "kind": "quest",
+      "pageTitle": "Death to the Dorgeshuun",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Death_to_the_Dorgeshuun&oldid=15266903",
+        "revision": 15266903,
+        "revisionTimestamp": "2026-07-18T11:30:06Z"
+      }
+    },
+    {
+      "id": "Defender of Varrock",
+      "kind": "quest",
+      "pageTitle": "Defender of Varrock",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Defender_of_Varrock&oldid=15266905",
+        "revision": 15266905,
+        "revisionTimestamp": "2026-07-18T11:32:57Z"
+      }
+    },
+    {
+      "id": "Demon Slayer",
+      "kind": "quest",
+      "pageTitle": "Demon Slayer",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Demon_Slayer&oldid=15271182",
+        "revision": 15271182,
+        "revisionTimestamp": "2026-07-21T06:10:57Z"
+      }
+    },
+    {
+      "id": "Desert Treasure I",
+      "kind": "quest",
+      "pageTitle": "Desert Treasure I",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Desert_Treasure_I&oldid=15270961",
+        "revision": 15270961,
+        "revisionTimestamp": "2026-07-21T01:27:22Z"
+      }
+    },
+    {
+      "id": "Desert Treasure II",
+      "kind": "quest",
+      "pageTitle": "Desert Treasure II - The Fallen Empire",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Desert_Treasure_II_-_The_Fallen_Empire&oldid=15275383",
+        "revision": 15275383,
+        "revisionTimestamp": "2026-07-25T22:21:16Z"
+      }
+    },
+    {
+      "id": "Devious Minds",
+      "kind": "quest",
+      "pageTitle": "Devious Minds",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Devious_Minds&oldid=15265971",
+        "revision": 15265971,
+        "revisionTimestamp": "2026-07-17T11:12:13Z"
+      }
+    },
+    {
+      "id": "Doric's Quest",
+      "kind": "quest",
+      "pageTitle": "Doric's Quest",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Doric's_Quest&oldid=15240932",
+        "revision": 15240932,
+        "revisionTimestamp": "2026-06-27T13:07:17Z"
+      }
+    },
+    {
+      "id": "Dragon Slayer I",
+      "kind": "quest",
+      "pageTitle": "Dragon Slayer I",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Dragon_Slayer_I&oldid=15266013",
+        "revision": 15266013,
+        "revisionTimestamp": "2026-07-17T12:47:32Z"
+      }
+    },
+    {
+      "id": "Dragon Slayer II",
+      "kind": "quest",
+      "pageTitle": "Dragon Slayer II",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Dragon_Slayer_II&oldid=15270141",
+        "revision": 15270141,
+        "revisionTimestamp": "2026-07-20T12:42:51Z"
+      }
+    },
+    {
+      "id": "Dream Mentor",
+      "kind": "quest",
+      "pageTitle": "Dream Mentor",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Dream_Mentor&oldid=15263466",
+        "revision": 15263466,
+        "revisionTimestamp": "2026-07-14T20:34:58Z"
+      }
+    },
+    {
+      "id": "Druidic Ritual",
+      "kind": "quest",
+      "pageTitle": "Druidic Ritual",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Druidic_Ritual&oldid=15240944",
+        "revision": 15240944,
+        "revisionTimestamp": "2026-06-27T13:10:17Z"
+      }
+    },
+    {
+      "id": "Dwarf Cannon",
+      "kind": "quest",
+      "pageTitle": "Dwarf Cannon",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Dwarf_Cannon&oldid=15166602",
+        "revision": 15166602,
+        "revisionTimestamp": "2026-04-06T15:45:51Z"
+      }
+    },
+    {
+      "id": "Eadgar's Ruse",
+      "kind": "quest",
+      "pageTitle": "Eadgar's Ruse",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Eadgar's_Ruse&oldid=15256448",
+        "revision": 15256448,
+        "revisionTimestamp": "2026-07-07T17:38:17Z"
+      }
+    },
+    {
+      "id": "Eagles' Peak",
+      "kind": "quest",
+      "pageTitle": "Eagles' Peak",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Eagles'_Peak&oldid=15241038",
+        "revision": 15241038,
+        "revisionTimestamp": "2026-06-27T15:06:22Z"
+      }
+    },
+    {
+      "id": "Elemental Workshop I",
+      "kind": "quest",
+      "pageTitle": "Elemental Workshop I",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Elemental_Workshop_I&oldid=15271177",
+        "revision": 15271177,
+        "revisionTimestamp": "2026-07-21T05:52:55Z"
+      }
+    },
+    {
+      "id": "Elemental Workshop II",
+      "kind": "quest",
+      "pageTitle": "Elemental Workshop II",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Elemental_Workshop_II&oldid=15271178",
+        "revision": 15271178,
+        "revisionTimestamp": "2026-07-21T05:53:37Z"
+      }
+    },
+    {
+      "id": "Enakhra's Lament",
+      "kind": "quest",
+      "pageTitle": "Enakhra's Lament",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Enakhra's_Lament&oldid=15276619",
+        "revision": 15276619,
+        "revisionTimestamp": "2026-07-27T14:00:58Z"
+      }
+    },
+    {
+      "id": "Enlightened Journey",
+      "kind": "quest",
+      "pageTitle": "Enlightened Journey",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Enlightened_Journey&oldid=15267751",
+        "revision": 15267751,
+        "revisionTimestamp": "2026-07-19T18:09:40Z"
+      }
+    },
+    {
+      "id": "Enter the Abyss",
+      "kind": "miniquest",
+      "pageTitle": "Enter the Abyss",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Enter_the_Abyss&oldid=15166608",
+        "revision": 15166608,
+        "revisionTimestamp": "2026-04-06T15:46:41Z"
+      }
+    },
+    {
+      "id": "Ernest the Chicken",
+      "kind": "quest",
+      "pageTitle": "Ernest the Chicken",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Ernest_the_Chicken&oldid=15240928",
+        "revision": 15240928,
+        "revisionTimestamp": "2026-06-27T13:06:30Z"
+      }
+    },
+    {
+      "id": "Ethically Acquired Antiquities",
+      "kind": "quest",
+      "pageTitle": "Ethically Acquired Antiquities",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Ethically_Acquired_Antiquities&oldid=15252769",
+        "revision": 15252769,
+        "revisionTimestamp": "2026-07-04T18:34:32Z"
+      }
+    },
+    {
+      "id": "Fairytale I - Growing Pains",
+      "kind": "quest",
+      "pageTitle": "Fairytale I - Growing Pains",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Fairytale_I_-_Growing_Pains&oldid=15277839",
+        "revision": 15277839,
+        "revisionTimestamp": "2026-07-28T15:44:01Z"
+      }
+    },
+    {
+      "id": "Fairytale II - Cure a Queen",
+      "kind": "quest",
+      "pageTitle": "Fairytale II - Cure a Queen",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Fairytale_II_-_Cure_a_Queen&oldid=15266901",
+        "revision": 15266901,
+        "revisionTimestamp": "2026-07-18T11:18:07Z"
+      }
+    },
+    {
+      "id": "Family Crest",
+      "kind": "quest",
+      "pageTitle": "Family Crest",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Family_Crest&oldid=15266192",
+        "revision": 15266192,
+        "revisionTimestamp": "2026-07-17T15:38:50Z"
+      }
+    },
+    {
+      "id": "Family Pest",
+      "kind": "miniquest",
+      "pageTitle": "Family Pest",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Family_Pest&oldid=15237154",
+        "revision": 15237154,
+        "revisionTimestamp": "2026-06-21T16:34:53Z"
+      }
+    },
+    {
+      "id": "Fight Arena",
+      "kind": "quest",
+      "pageTitle": "Fight Arena",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Fight_Arena&oldid=15240956",
+        "revision": 15240956,
+        "revisionTimestamp": "2026-06-27T13:19:32Z"
+      }
+    },
+    {
+      "id": "Fishing Contest",
+      "kind": "quest",
+      "pageTitle": "Fishing Contest",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Fishing_Contest&oldid=15240950",
+        "revision": 15240950,
+        "revisionTimestamp": "2026-06-27T13:15:00Z"
+      }
+    },
+    {
+      "id": "Forgettable Tale...",
+      "kind": "quest",
+      "pageTitle": "Forgettable Tale...",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Forgettable_Tale...&oldid=15273741",
+        "revision": 15273741,
+        "revisionTimestamp": "2026-07-24T04:07:55Z"
+      }
+    },
+    {
+      "id": "Garden of Tranquillity",
+      "kind": "quest",
+      "pageTitle": "Garden of Tranquillity",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Garden_of_Tranquillity&oldid=15264105",
+        "revision": 15264105,
+        "revisionTimestamp": "2026-07-15T12:43:34Z"
+      }
+    },
+    {
+      "id": "Gertrude's Cat",
+      "kind": "quest",
+      "pageTitle": "Gertrude's Cat",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Gertrude's_Cat&oldid=15240971",
+        "revision": 15240971,
+        "revisionTimestamp": "2026-06-27T13:27:52Z"
+      }
+    },
+    {
+      "id": "Getting Ahead",
+      "kind": "quest",
+      "pageTitle": "Getting Ahead",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Getting_Ahead&oldid=15241058",
+        "revision": 15241058,
+        "revisionTimestamp": "2026-06-27T15:19:08Z"
+      }
+    },
+    {
+      "id": "Ghosts Ahoy",
+      "kind": "quest",
+      "pageTitle": "Ghosts Ahoy",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Ghosts_Ahoy&oldid=15240987",
+        "revision": 15240987,
+        "revisionTimestamp": "2026-06-27T13:47:05Z"
+      }
+    },
+    {
+      "id": "Goblin Diplomacy",
+      "kind": "quest",
+      "pageTitle": "Goblin Diplomacy",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Goblin_Diplomacy&oldid=15262349",
+        "revision": 15262349,
+        "revisionTimestamp": "2026-07-13T07:36:38Z"
+      }
+    },
+    {
+      "id": "Grim Tales",
+      "kind": "quest",
+      "pageTitle": "Grim Tales",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Grim_Tales&oldid=15270665",
+        "revision": 15270665,
+        "revisionTimestamp": "2026-07-20T21:37:57Z"
+      }
+    },
+    {
+      "id": "Haunted Mine",
+      "kind": "quest",
+      "pageTitle": "Haunted Mine",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Haunted_Mine&oldid=15264195",
+        "revision": 15264195,
+        "revisionTimestamp": "2026-07-15T13:49:18Z"
+      }
+    },
+    {
+      "id": "Hazeel Cult",
+      "kind": "quest",
+      "pageTitle": "Hazeel Cult",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Hazeel_Cult&oldid=15265539",
+        "revision": 15265539,
+        "revisionTimestamp": "2026-07-16T19:49:06Z"
+      }
+    },
+    {
+      "id": "Heroes' Quest",
+      "kind": "quest",
+      "pageTitle": "Heroes' Quest",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Heroes'_Quest&oldid=15242103",
+        "revision": 15242103,
+        "revisionTimestamp": "2026-06-29T14:14:00Z"
+      }
+    },
+    {
+      "id": "His Faithful Servants",
+      "kind": "miniquest",
+      "pageTitle": "His Faithful Servants",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=His_Faithful_Servants&oldid=15167680",
+        "revision": 15167680,
+        "revisionTimestamp": "2026-04-07T04:43:52Z"
+      }
+    },
+    {
+      "id": "Holy Grail",
+      "kind": "quest",
+      "pageTitle": "Holy Grail",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Holy_Grail&oldid=15273068",
+        "revision": 15273068,
+        "revisionTimestamp": "2026-07-23T03:02:11Z"
+      }
+    },
+    {
+      "id": "Hopespear's Will",
+      "kind": "miniquest",
+      "pageTitle": "Hopespear's Will",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Hopespear's_Will&oldid=15262386",
+        "revision": 15262386,
+        "revisionTimestamp": "2026-07-13T10:45:53Z"
+      }
+    },
+    {
+      "id": "Horror from the Deep",
+      "kind": "quest",
+      "pageTitle": "Horror from the Deep",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Horror_from_the_Deep&oldid=15270999",
+        "revision": 15270999,
+        "revisionTimestamp": "2026-07-21T02:24:42Z"
+      }
+    },
+    {
+      "id": "Icthlarin's Little Helper",
+      "kind": "quest",
+      "pageTitle": "Icthlarin's Little Helper",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Icthlarin's_Little_Helper&oldid=15264128",
+        "revision": 15264128,
+        "revisionTimestamp": "2026-07-15T12:54:13Z"
+      }
+    },
+    {
+      "id": "Imp Catcher",
+      "kind": "quest",
+      "pageTitle": "Imp Catcher",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Imp_Catcher&oldid=15266902",
+        "revision": 15266902,
+        "revisionTimestamp": "2026-07-18T11:19:08Z"
+      }
+    },
+    {
+      "id": "In Aid of the Myreque",
+      "kind": "quest",
+      "pageTitle": "In Aid of the Myreque",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=In_Aid_of_the_Myreque&oldid=15265343",
+        "revision": 15265343,
+        "revisionTimestamp": "2026-07-16T17:08:42Z"
+      }
+    },
+    {
+      "id": "In Search of Knowledge",
+      "kind": "miniquest",
+      "pageTitle": "In Search of Knowledge",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=In_Search_of_Knowledge&oldid=15237149",
+        "revision": 15237149,
+        "revisionTimestamp": "2026-06-21T16:34:35Z"
+      }
+    },
+    {
+      "id": "In Search of the Myreque",
+      "kind": "quest",
+      "pageTitle": "In Search of the Myreque",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=In_Search_of_the_Myreque&oldid=15240986",
+        "revision": 15240986,
+        "revisionTimestamp": "2026-06-27T13:46:33Z"
+      }
+    },
+    {
+      "id": "Into the Tombs",
+      "kind": "miniquest",
+      "pageTitle": "Into the Tombs",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Into_the_Tombs&oldid=15218542",
+        "revision": 15218542,
+        "revisionTimestamp": "2026-05-28T04:29:56Z"
+      }
+    },
+    {
+      "id": "Jungle Potion",
+      "kind": "quest",
+      "pageTitle": "Jungle Potion",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Jungle_Potion&oldid=15240963",
+        "revision": 15240963,
+        "revisionTimestamp": "2026-06-27T13:23:24Z"
+      }
+    },
+    {
+      "id": "King's Ransom",
+      "kind": "quest",
+      "pageTitle": "King's Ransom",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=King's_Ransom&oldid=15265993",
+        "revision": 15265993,
+        "revisionTimestamp": "2026-07-17T11:55:37Z"
+      }
+    },
+    {
+      "id": "Lair of Tarn Razorlor",
+      "kind": "miniquest",
+      "pageTitle": "Lair of Tarn Razorlor",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Lair_of_Tarn_Razorlor&oldid=15266831",
+        "revision": 15266831,
+        "revisionTimestamp": "2026-07-18T06:11:34Z"
+      }
+    },
+    {
+      "id": "Land of the Goblins",
+      "kind": "quest",
+      "pageTitle": "Land of the Goblins",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Land_of_the_Goblins&oldid=15241061",
+        "revision": 15241061,
+        "revisionTimestamp": "2026-06-27T15:19:51Z"
+      }
+    },
+    {
+      "id": "Legends' Quest",
+      "kind": "quest",
+      "pageTitle": "Legends' Quest",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Legends'_Quest&oldid=15272434",
+        "revision": 15272434,
+        "revisionTimestamp": "2026-07-22T17:46:53Z"
+      }
+    },
+    {
+      "id": "Lost City",
+      "kind": "quest",
+      "pageTitle": "Lost City",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Lost_City&oldid=15240945",
+        "revision": 15240945,
+        "revisionTimestamp": "2026-06-27T13:12:15Z"
+      }
+    },
+    {
+      "id": "Lunar Diplomacy",
+      "kind": "quest",
+      "pageTitle": "Lunar Diplomacy",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Lunar_Diplomacy&oldid=15266897",
+        "revision": 15266897,
+        "revisionTimestamp": "2026-07-18T11:12:00Z"
+      }
+    },
+    {
+      "id": "Mage Arena I",
+      "kind": "miniquest",
+      "pageTitle": "Mage Arena I",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Mage_Arena_I&oldid=15237146",
+        "revision": 15237146,
+        "revisionTimestamp": "2026-06-21T16:33:08Z"
+      }
+    },
+    {
+      "id": "Mage Arena II",
+      "kind": "miniquest",
+      "pageTitle": "Mage Arena II",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Mage_Arena_II&oldid=15274527",
+        "revision": 15274527,
+        "revisionTimestamp": "2026-07-25T14:24:53Z"
+      }
+    },
+    {
+      "id": "Making Friends with My Arm",
+      "kind": "quest",
+      "pageTitle": "Making Friends with My Arm",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Making_Friends_with_My_Arm&oldid=15265992",
+        "revision": 15265992,
+        "revisionTimestamp": "2026-07-17T11:51:06Z"
+      }
+    },
+    {
+      "id": "Making History",
+      "kind": "quest",
+      "pageTitle": "Making History",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Making_History&oldid=15265964",
+        "revision": 15265964,
+        "revisionTimestamp": "2026-07-17T11:01:40Z"
+      }
+    },
+    {
+      "id": "Meat and Greet",
+      "kind": "quest",
+      "pageTitle": "Meat and Greet",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Meat_and_Greet&oldid=15215144",
+        "revision": 15215144,
+        "revisionTimestamp": "2026-05-22T12:52:00Z"
+      }
+    },
+    {
+      "id": "Merlin's Crystal",
+      "kind": "quest",
+      "pageTitle": "Merlin's Crystal",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Merlin's_Crystal&oldid=15238195",
+        "revision": 15238195,
+        "revisionTimestamp": "2026-06-23T22:41:26Z"
+      }
+    },
+    {
+      "id": "Misthalin Mystery",
+      "kind": "quest",
+      "pageTitle": "Misthalin Mystery",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Misthalin_Mystery&oldid=15240939",
+        "revision": 15240939,
+        "revisionTimestamp": "2026-06-27T13:08:44Z"
+      }
+    },
+    {
+      "id": "Monk's Friend",
+      "kind": "quest",
+      "pageTitle": "Monk's Friend",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Monk's_Friend&oldid=15240952",
+        "revision": 15240952,
+        "revisionTimestamp": "2026-06-27T13:15:31Z"
+      }
+    },
+    {
+      "id": "Monkey Madness I",
+      "kind": "quest",
+      "pageTitle": "Monkey Madness I",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Monkey_Madness_I&oldid=15271778",
+        "revision": 15271778,
+        "revisionTimestamp": "2026-07-22T07:38:02Z"
+      }
+    },
+    {
+      "id": "Monkey Madness II",
+      "kind": "quest",
+      "pageTitle": "Monkey Madness II",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Monkey_Madness_II&oldid=15272900",
+        "revision": 15272900,
+        "revisionTimestamp": "2026-07-23T00:09:34Z"
+      }
+    },
+    {
+      "id": "Mountain Daughter",
+      "kind": "quest",
+      "pageTitle": "Mountain Daughter",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Mountain_Daughter&oldid=15272443",
+        "revision": 15272443,
+        "revisionTimestamp": "2026-07-22T17:50:41Z"
+      }
+    },
+    {
+      "id": "Mourning's End Part I",
+      "kind": "quest",
+      "pageTitle": "Mourning's End Part I",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Mourning's_End_Part_I&oldid=15173030",
+        "revision": 15173030,
+        "revisionTimestamp": "2026-04-11T22:10:36Z"
+      }
+    },
+    {
+      "id": "Mourning's End Part II",
+      "kind": "quest",
+      "pageTitle": "Mourning's End Part II",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Mourning's_End_Part_II&oldid=15265949",
+        "revision": 15265949,
+        "revisionTimestamp": "2026-07-17T10:27:14Z"
+      }
+    },
+    {
+      "id": "Murder Mystery",
+      "kind": "quest",
+      "pageTitle": "Murder Mystery",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Murder_Mystery&oldid=15271664",
+        "revision": 15271664,
+        "revisionTimestamp": "2026-07-22T01:03:06Z"
+      }
+    },
+    {
+      "id": "My Arm's Big Adventure",
+      "kind": "quest",
+      "pageTitle": "My Arm's Big Adventure",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=My_Arm's_Big_Adventure&oldid=15266883",
+        "revision": 15266883,
+        "revisionTimestamp": "2026-07-18T10:34:05Z"
+      }
+    },
+    {
+      "id": "Nature Spirit",
+      "kind": "quest",
+      "pageTitle": "Nature Spirit",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Nature_Spirit&oldid=15240977",
+        "revision": 15240977,
+        "revisionTimestamp": "2026-06-27T13:39:36Z"
+      }
+    },
+    {
+      "id": "Observatory Quest",
+      "kind": "quest",
+      "pageTitle": "Observatory Quest",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Observatory_Quest&oldid=15270070",
+        "revision": 15270070,
+        "revisionTimestamp": "2026-07-20T07:59:30Z"
+      }
+    },
+    {
+      "id": "Olaf's Quest",
+      "kind": "quest",
+      "pageTitle": "Olaf's Quest",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Olaf's_Quest&oldid=15273863",
+        "revision": 15273863,
+        "revisionTimestamp": "2026-07-24T08:54:07Z"
+      }
+    },
+    {
+      "id": "One Small Favour",
+      "kind": "quest",
+      "pageTitle": "One Small Favour",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=One_Small_Favour&oldid=15240988",
+        "revision": 15240988,
+        "revisionTimestamp": "2026-06-27T13:47:16Z"
+      }
+    },
+    {
+      "id": "Pandemonium",
+      "kind": "quest",
+      "pageTitle": "Pandemonium",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Pandemonium&oldid=15241080",
+        "revision": 15241080,
+        "revisionTimestamp": "2026-06-27T15:28:09Z"
+      }
+    },
+    {
+      "id": "Perilous Moons",
+      "kind": "quest",
+      "pageTitle": "Perilous Moons",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Perilous_Moons&oldid=15276408",
+        "revision": 15276408,
+        "revisionTimestamp": "2026-07-27T03:24:36Z"
+      }
+    },
+    {
+      "id": "Pirate's Treasure",
+      "kind": "quest",
+      "pageTitle": "Pirate's Treasure",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Pirate's_Treasure&oldid=15240936",
+        "revision": 15240936,
+        "revisionTimestamp": "2026-06-27T13:08:08Z"
+      }
+    },
+    {
+      "id": "Plague City",
+      "kind": "quest",
+      "pageTitle": "Plague City",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Plague_City&oldid=15240959",
+        "revision": 15240959,
+        "revisionTimestamp": "2026-06-27T13:22:40Z"
+      }
+    },
+    {
+      "id": "Priest in Peril",
+      "kind": "quest",
+      "pageTitle": "Priest in Peril",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Priest_in_Peril&oldid=15240978",
+        "revision": 15240978,
+        "revisionTimestamp": "2026-06-27T13:40:04Z"
+      }
+    },
+    {
+      "id": "Prince Ali Rescue",
+      "kind": "quest",
+      "pageTitle": "Prince Ali Rescue",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Prince_Ali_Rescue&oldid=15260348",
+        "revision": 15260348,
+        "revisionTimestamp": "2026-07-11T01:55:46Z"
+      }
+    },
+    {
+      "id": "Prying Times",
+      "kind": "quest",
+      "pageTitle": "Prying Times",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Prying_Times&oldid=15263595",
+        "revision": 15263595,
+        "revisionTimestamp": "2026-07-14T22:42:13Z"
+      }
+    },
+    {
+      "id": "Rag and Bone Man I",
+      "kind": "quest",
+      "pageTitle": "Rag and Bone Man I",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Rag_and_Bone_Man_I&oldid=15241026",
+        "revision": 15241026,
+        "revisionTimestamp": "2026-06-27T15:00:01Z"
+      }
+    },
+    {
+      "id": "Rag and Bone Man II",
+      "kind": "quest",
+      "pageTitle": "Rag and Bone Man II",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Rag_and_Bone_Man_II&oldid=15273866",
+        "revision": 15273866,
+        "revisionTimestamp": "2026-07-24T09:05:30Z"
+      }
+    },
+    {
+      "id": "Ratcatchers",
+      "kind": "quest",
+      "pageTitle": "Ratcatchers",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Ratcatchers&oldid=15265969",
+        "revision": 15265969,
+        "revisionTimestamp": "2026-07-17T11:05:25Z"
+      }
+    },
+    {
+      "id": "Recruitment Drive",
+      "kind": "quest",
+      "pageTitle": "Recruitment Drive",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recruitment_Drive&oldid=15274290",
+        "revision": 15274290,
+        "revisionTimestamp": "2026-07-25T03:48:21Z"
+      }
+    },
+    {
+      "id": "Regicide",
+      "kind": "quest",
+      "pageTitle": "Regicide",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Regicide&oldid=15271309",
+        "revision": 15271309,
+        "revisionTimestamp": "2026-07-21T15:50:23Z"
+      }
+    },
+    {
+      "id": "RFD: Dwarf",
+      "kind": "quest",
+      "pageTitle": "Recipe for Disaster/Freeing the Mountain Dwarf",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_the_Mountain_Dwarf&oldid=15241018",
+        "revision": 15241018,
+        "revisionTimestamp": "2026-06-27T14:54:40Z"
+      }
+    },
+    {
+      "id": "RFD: Evil Dave",
+      "kind": "quest",
+      "pageTitle": "Recipe for Disaster/Freeing Evil Dave",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_Evil_Dave&oldid=15166446",
+        "revision": 15166446,
+        "revisionTimestamp": "2026-04-06T13:33:49Z"
+      }
+    },
+    {
+      "id": "RFD: Finale",
+      "kind": "quest",
+      "pageTitle": "Recipe for Disaster/Defeating the Culinaromancer",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FDefeating_the_Culinaromancer&oldid=15211243",
+        "revision": 15211243,
+        "revisionTimestamp": "2026-05-15T17:34:19Z"
+      }
+    },
+    {
+      "id": "RFD: Goblins",
+      "kind": "quest",
+      "pageTitle": "Recipe for Disaster/Freeing the Goblin generals",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_the_Goblin_generals&oldid=15166443",
+        "revision": 15166443,
+        "revisionTimestamp": "2026-04-06T13:33:28Z"
+      }
+    },
+    {
+      "id": "RFD: King Awowogei",
+      "kind": "quest",
+      "pageTitle": "Recipe for Disaster/Freeing King Awowogei",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_King_Awowogei&oldid=15242259",
+        "revision": 15242259,
+        "revisionTimestamp": "2026-06-29T20:12:44Z"
+      }
+    },
+    {
+      "id": "RFD: Lumbridge Guide",
+      "kind": "quest",
+      "pageTitle": "Recipe for Disaster/Freeing the Lumbridge Guide",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_the_Lumbridge_Guide&oldid=15266917",
+        "revision": 15266917,
+        "revisionTimestamp": "2026-07-18T12:54:07Z"
+      }
+    },
+    {
+      "id": "RFD: Pirate Pete",
+      "kind": "quest",
+      "pageTitle": "Recipe for Disaster/Freeing Pirate Pete",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_Pirate_Pete&oldid=15266918",
+        "revision": 15266918,
+        "revisionTimestamp": "2026-07-18T12:54:43Z"
+      }
+    },
+    {
+      "id": "RFD: Sir Amik Varze",
+      "kind": "quest",
+      "pageTitle": "Recipe for Disaster/Freeing Sir Amik Varze",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_Sir_Amik_Varze&oldid=15266919",
+        "revision": 15266919,
+        "revisionTimestamp": "2026-07-18T12:55:50Z"
+      }
+    },
+    {
+      "id": "RFD: Skrach Uglogwee",
+      "kind": "quest",
+      "pageTitle": "Recipe for Disaster/Freeing Skrach Uglogwee",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_Skrach_Uglogwee&oldid=15266920",
+        "revision": 15266920,
+        "revisionTimestamp": "2026-07-18T12:57:41Z"
+      }
+    },
+    {
+      "id": "RFD: The Cook",
+      "kind": "quest",
+      "pageTitle": "Recipe for Disaster/Another Cook's Quest",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FAnother_Cook's_Quest&oldid=15241017",
+        "revision": 15241017,
+        "revisionTimestamp": "2026-06-27T14:54:12Z"
+      }
+    },
+    {
+      "id": "Romeo & Juliet",
+      "kind": "quest",
+      "pageTitle": "Romeo & Juliet",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Romeo_%26_Juliet&oldid=15270189",
+        "revision": 15270189,
+        "revisionTimestamp": "2026-07-20T15:16:22Z"
+      }
+    },
+    {
+      "id": "Roving Elves",
+      "kind": "quest",
+      "pageTitle": "Roving Elves",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Roving_Elves&oldid=15262777",
+        "revision": 15262777,
+        "revisionTimestamp": "2026-07-14T03:18:16Z"
+      }
+    },
+    {
+      "id": "Royal Trouble",
+      "kind": "quest",
+      "pageTitle": "Royal Trouble",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Royal_Trouble&oldid=15271602",
+        "revision": 15271602,
+        "revisionTimestamp": "2026-07-22T00:23:53Z"
+      }
+    },
+    {
+      "id": "Rum Deal",
+      "kind": "quest",
+      "pageTitle": "Rum Deal",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Rum_Deal&oldid=15271181",
+        "revision": 15271181,
+        "revisionTimestamp": "2026-07-21T06:09:18Z"
+      }
+    },
+    {
+      "id": "Rune Mysteries",
+      "kind": "quest",
+      "pageTitle": "Rune Mysteries",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Rune_Mysteries&oldid=15275863",
+        "revision": 15275863,
+        "revisionTimestamp": "2026-07-26T14:30:16Z"
+      }
+    },
+    {
+      "id": "Scorpion Catcher",
+      "kind": "quest",
+      "pageTitle": "Scorpion Catcher",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Scorpion_Catcher&oldid=15273835",
+        "revision": 15273835,
+        "revisionTimestamp": "2026-07-24T05:40:51Z"
+      }
+    },
+    {
+      "id": "Scrambled!",
+      "kind": "quest",
+      "pageTitle": "Scrambled!",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Scrambled!&oldid=15275586",
+        "revision": 15275586,
+        "revisionTimestamp": "2026-07-26T01:42:53Z"
+      }
+    },
+    {
+      "id": "Sea Slug",
+      "kind": "quest",
+      "pageTitle": "Sea Slug",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Sea_Slug&oldid=15240961",
+        "revision": 15240961,
+        "revisionTimestamp": "2026-06-27T13:23:01Z"
+      }
+    },
+    {
+      "id": "Secrets of the North",
+      "kind": "quest",
+      "pageTitle": "Secrets of the North",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Secrets_of_the_North&oldid=15277596",
+        "revision": 15277596,
+        "revisionTimestamp": "2026-07-28T14:58:34Z"
+      }
+    },
+    {
+      "id": "Shades of Mort'ton",
+      "kind": "quest",
+      "pageTitle": "Shades of Mort'ton",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Shades_of_Mort'ton&oldid=15240980",
+        "revision": 15240980,
+        "revisionTimestamp": "2026-06-27T13:42:48Z"
+      }
+    },
+    {
+      "id": "Shadow of the Storm",
+      "kind": "quest",
+      "pageTitle": "Shadow of the Storm",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Shadow_of_the_Storm&oldid=15271060",
+        "revision": 15271060,
+        "revisionTimestamp": "2026-07-21T03:39:33Z"
+      }
+    },
+    {
+      "id": "Shadows of Custodia",
+      "kind": "quest",
+      "pageTitle": "Shadows of Custodia",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Shadows_of_Custodia&oldid=15215306",
+        "revision": 15215306,
+        "revisionTimestamp": "2026-05-22T21:26:10Z"
+      }
+    },
+    {
+      "id": "Sheep Herder",
+      "kind": "quest",
+      "pageTitle": "Sheep Herder",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Sheep_Herder&oldid=15240958",
+        "revision": 15240958,
+        "revisionTimestamp": "2026-06-27T13:21:13Z"
+      }
+    },
+    {
+      "id": "Sheep Shearer",
+      "kind": "quest",
+      "pageTitle": "Sheep Shearer",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Sheep_Shearer&oldid=15271780",
+        "revision": 15271780,
+        "revisionTimestamp": "2026-07-22T07:39:10Z"
+      }
+    },
+    {
+      "id": "Shield of Arrav",
+      "kind": "quest",
+      "pageTitle": "Shield of Arrav",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Shield_of_Arrav&oldid=15275627",
+        "revision": 15275627,
+        "revisionTimestamp": "2026-07-26T02:36:31Z"
+      }
+    },
+    {
+      "id": "Shilo Village",
+      "kind": "quest",
+      "pageTitle": "Shilo Village",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Shilo_Village&oldid=15268035",
+        "revision": 15268035,
+        "revisionTimestamp": "2026-07-20T06:09:24Z"
+      }
+    },
+    {
+      "id": "Sins of the Father",
+      "kind": "quest",
+      "pageTitle": "Sins of the Father",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Sins_of_the_Father&oldid=15271402",
+        "revision": 15271402,
+        "revisionTimestamp": "2026-07-21T18:22:00Z"
+      }
+    },
+    {
+      "id": "Skippy and the Mogres",
+      "kind": "miniquest",
+      "pageTitle": "Skippy and the Mogres",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Skippy_and_the_Mogres&oldid=15237157",
+        "revision": 15237157,
+        "revisionTimestamp": "2026-06-21T16:35:04Z"
+      }
+    },
+    {
+      "id": "Sleeping Giants",
+      "kind": "quest",
+      "pageTitle": "Sleeping Giants",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Sleeping_Giants&oldid=15241064",
+        "revision": 15241064,
+        "revisionTimestamp": "2026-06-27T15:20:22Z"
+      }
+    },
+    {
+      "id": "Song of the Elves",
+      "kind": "quest",
+      "pageTitle": "Song of the Elves",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Song_of_the_Elves&oldid=15275342",
+        "revision": 15275342,
+        "revisionTimestamp": "2026-07-25T21:49:09Z"
+      }
+    },
+    {
+      "id": "Spirits of the Elid",
+      "kind": "quest",
+      "pageTitle": "Spirits of the Elid",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Spirits_of_the_Elid&oldid=15241013",
+        "revision": 15241013,
+        "revisionTimestamp": "2026-06-27T14:52:29Z"
+      }
+    },
+    {
+      "id": "Swan Song",
+      "kind": "quest",
+      "pageTitle": "Swan Song",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Swan_Song&oldid=15266910",
+        "revision": 15266910,
+        "revisionTimestamp": "2026-07-18T12:13:53Z"
+      }
+    },
+    {
+      "id": "Tai Bwo Wannai Trio",
+      "kind": "quest",
+      "pageTitle": "Tai Bwo Wannai Trio",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Tai_Bwo_Wannai_Trio&oldid=15265886",
+        "revision": 15265886,
+        "revisionTimestamp": "2026-07-17T05:56:30Z"
+      }
+    },
+    {
+      "id": "Tale of the Righteous",
+      "kind": "quest",
+      "pageTitle": "Tale of the Righteous",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Tale_of_the_Righteous&oldid=15272074",
+        "revision": 15272074,
+        "revisionTimestamp": "2026-07-22T12:43:34Z"
+      }
+    },
+    {
+      "id": "Tears of Guthix",
+      "kind": "quest",
+      "pageTitle": "Tears of Guthix",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Tears_of_Guthix&oldid=15271661",
+        "revision": 15271661,
+        "revisionTimestamp": "2026-07-22T01:02:27Z"
+      }
+    },
+    {
+      "id": "Temple of Ikov",
+      "kind": "quest",
+      "pageTitle": "Temple of Ikov",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Temple_of_Ikov&oldid=15240953",
+        "revision": 15240953,
+        "revisionTimestamp": "2026-06-27T13:15:42Z"
+      }
+    },
+    {
+      "id": "Temple of the Eye",
+      "kind": "quest",
+      "pageTitle": "Temple of the Eye",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Temple_of_the_Eye&oldid=15270135",
+        "revision": 15270135,
+        "revisionTimestamp": "2026-07-20T12:26:55Z"
+      }
+    },
+    {
+      "id": "The Ascent of Arceuus",
+      "kind": "quest",
+      "pageTitle": "The Ascent of Arceuus",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Ascent_of_Arceuus&oldid=15241054",
+        "revision": 15241054,
+        "revisionTimestamp": "2026-06-27T15:18:11Z"
+      }
+    },
+    {
+      "id": "The Corsair Curse",
+      "kind": "quest",
+      "pageTitle": "The Corsair Curse",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Corsair_Curse&oldid=15274320",
+        "revision": 15274320,
+        "revisionTimestamp": "2026-07-25T05:54:20Z"
+      }
+    },
+    {
+      "id": "The Curse of Arrav",
+      "kind": "quest",
+      "pageTitle": "The Curse of Arrav",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Curse_of_Arrav&oldid=15271605",
+        "revision": 15271605,
+        "revisionTimestamp": "2026-07-22T00:26:12Z"
+      }
+    },
+    {
+      "id": "The Depths of Despair",
+      "kind": "quest",
+      "pageTitle": "The Depths of Despair",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Depths_of_Despair&oldid=15241049",
+        "revision": 15241049,
+        "revisionTimestamp": "2026-06-27T15:17:23Z"
+      }
+    },
+    {
+      "id": "The Dig Site",
+      "kind": "quest",
+      "pageTitle": "The Dig Site",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Dig_Site&oldid=15264633",
+        "revision": 15264633,
+        "revisionTimestamp": "2026-07-15T22:09:30Z"
+      }
+    },
+    {
+      "id": "The Enchanted Key",
+      "kind": "miniquest",
+      "pageTitle": "The Enchanted Key",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Enchanted_Key&oldid=15237155",
+        "revision": 15237155,
+        "revisionTimestamp": "2026-06-21T16:34:58Z"
+      }
+    },
+    {
+      "id": "The Eyes of Glouphrie",
+      "kind": "quest",
+      "pageTitle": "The Eyes of Glouphrie",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Eyes_of_Glouphrie&oldid=15266891",
+        "revision": 15266891,
+        "revisionTimestamp": "2026-07-18T10:55:58Z"
+      }
+    },
+    {
+      "id": "The Feud",
+      "kind": "quest",
+      "pageTitle": "The Feud",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Feud&oldid=15265909",
+        "revision": 15265909,
+        "revisionTimestamp": "2026-07-17T06:25:01Z"
+      }
+    },
+    {
+      "id": "The Final Dawn",
+      "kind": "quest",
+      "pageTitle": "The Final Dawn",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Final_Dawn&oldid=15270090",
+        "revision": 15270090,
+        "revisionTimestamp": "2026-07-20T09:07:20Z"
+      }
+    },
+    {
+      "id": "The Forsaken Tower",
+      "kind": "quest",
+      "pageTitle": "The Forsaken Tower",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Forsaken_Tower&oldid=15270136",
+        "revision": 15270136,
+        "revisionTimestamp": "2026-07-20T12:33:28Z"
+      }
+    },
+    {
+      "id": "The Fremennik Exiles",
+      "kind": "quest",
+      "pageTitle": "The Fremennik Exiles",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Fremennik_Exiles&oldid=15265991",
+        "revision": 15265991,
+        "revisionTimestamp": "2026-07-17T11:42:42Z"
+      }
+    },
+    {
+      "id": "The Fremennik Isles",
+      "kind": "quest",
+      "pageTitle": "The Fremennik Isles",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Fremennik_Isles&oldid=15271156",
+        "revision": 15271156,
+        "revisionTimestamp": "2026-07-21T05:08:53Z"
+      }
+    },
+    {
+      "id": "The Fremennik Trials",
+      "kind": "quest",
+      "pageTitle": "The Fremennik Trials",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Fremennik_Trials&oldid=15271703",
+        "revision": 15271703,
+        "revisionTimestamp": "2026-07-22T01:56:55Z"
+      }
+    },
+    {
+      "id": "The Frozen Door",
+      "kind": "miniquest",
+      "pageTitle": "The Frozen Door",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Frozen_Door&oldid=15166745",
+        "revision": 15166745,
+        "revisionTimestamp": "2026-04-06T16:36:55Z"
+      }
+    },
+    {
+      "id": "The Garden of Death",
+      "kind": "quest",
+      "pageTitle": "The Garden of Death",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Garden_of_Death&oldid=15274502",
+        "revision": 15274502,
+        "revisionTimestamp": "2026-07-25T12:53:36Z"
+      }
+    },
+    {
+      "id": "The General's Shadow",
+      "kind": "miniquest",
+      "pageTitle": "The General's Shadow",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_General's_Shadow&oldid=15264172",
+        "revision": 15264172,
+        "revisionTimestamp": "2026-07-15T13:27:04Z"
+      }
+    },
+    {
+      "id": "The Giant Dwarf",
+      "kind": "quest",
+      "pageTitle": "The Giant Dwarf",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Giant_Dwarf&oldid=15265910",
+        "revision": 15265910,
+        "revisionTimestamp": "2026-07-17T06:32:16Z"
+      }
+    },
+    {
+      "id": "The Golem",
+      "kind": "quest",
+      "pageTitle": "The Golem",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Golem&oldid=15255943",
+        "revision": 15255943,
+        "revisionTimestamp": "2026-07-07T11:30:32Z"
+      }
+    },
+    {
+      "id": "The Grand Tree",
+      "kind": "quest",
+      "pageTitle": "The Grand Tree",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Grand_Tree&oldid=15225321",
+        "revision": 15225321,
+        "revisionTimestamp": "2026-06-04T17:08:14Z"
+      }
+    },
+    {
+      "id": "The Great Brain Robbery",
+      "kind": "quest",
+      "pageTitle": "The Great Brain Robbery",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Great_Brain_Robbery&oldid=15275553",
+        "revision": 15275553,
+        "revisionTimestamp": "2026-07-26T00:53:59Z"
+      }
+    },
+    {
+      "id": "The Hand in the Sand",
+      "kind": "quest",
+      "pageTitle": "The Hand in the Sand",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Hand_in_the_Sand&oldid=15265973",
+        "revision": 15265973,
+        "revisionTimestamp": "2026-07-17T11:14:33Z"
+      }
+    },
+    {
+      "id": "The Heart of Darkness",
+      "kind": "quest",
+      "pageTitle": "The Heart of Darkness",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Heart_of_Darkness&oldid=15270091",
+        "revision": 15270091,
+        "revisionTimestamp": "2026-07-20T09:15:15Z"
+      }
+    },
+    {
+      "id": "The Ides of Milk",
+      "kind": "quest",
+      "pageTitle": "The Ides of Milk",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Ides_of_Milk&oldid=15246426",
+        "revision": 15246426,
+        "revisionTimestamp": "2026-07-01T07:53:48Z"
+      }
+    },
+    {
+      "id": "The Knight's Sword",
+      "kind": "quest",
+      "pageTitle": "The Knight's Sword",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Knight's_Sword&oldid=15249358",
+        "revision": 15249358,
+        "revisionTimestamp": "2026-07-03T07:41:35Z"
+      }
+    },
+    {
+      "id": "The Lost Tribe",
+      "kind": "quest",
+      "pageTitle": "The Lost Tribe",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Lost_Tribe&oldid=15166753",
+        "revision": 15166753,
+        "revisionTimestamp": "2026-04-06T16:38:00Z"
+      }
+    },
+    {
+      "id": "The Path of Glouphrie",
+      "kind": "quest",
+      "pageTitle": "The Path of Glouphrie",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Path_of_Glouphrie&oldid=15265989",
+        "revision": 15265989,
+        "revisionTimestamp": "2026-07-17T11:34:14Z"
+      }
+    },
+    {
+      "id": "The Queen of Thieves",
+      "kind": "quest",
+      "pageTitle": "The Queen of Thieves",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Queen_of_Thieves&oldid=15241048",
+        "revision": 15241048,
+        "revisionTimestamp": "2026-06-27T15:17:07Z"
+      }
+    },
+    {
+      "id": "The Red Reef",
+      "kind": "quest",
+      "pageTitle": "The Red Reef",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Red_Reef&oldid=15272807",
+        "revision": 15272807,
+        "revisionTimestamp": "2026-07-22T22:26:46Z"
+      }
+    },
+    {
+      "id": "The Restless Ghost",
+      "kind": "quest",
+      "pageTitle": "The Restless Ghost",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Restless_Ghost&oldid=15268042",
+        "revision": 15268042,
+        "revisionTimestamp": "2026-07-20T06:53:41Z"
+      }
+    },
+    {
+      "id": "The Ribbiting Tale",
+      "kind": "quest",
+      "pageTitle": "The Ribbiting Tale of a Lily Pad Labour Dispute",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Ribbiting_Tale_of_a_Lily_Pad_Labour_Dispute&oldid=15270097",
+        "revision": 15270097,
+        "revisionTimestamp": "2026-07-20T09:39:24Z"
+      }
+    },
+    {
+      "id": "The Slug Menace",
+      "kind": "quest",
+      "pageTitle": "The Slug Menace",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Slug_Menace&oldid=15266884",
+        "revision": 15266884,
+        "revisionTimestamp": "2026-07-18T10:38:27Z"
+      }
+    },
+    {
+      "id": "The Tourist Trap",
+      "kind": "quest",
+      "pageTitle": "The Tourist Trap",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Tourist_Trap&oldid=15267714",
+        "revision": 15267714,
+        "revisionTimestamp": "2026-07-19T15:44:04Z"
+      }
+    },
+    {
+      "id": "Throne of Miscellania",
+      "kind": "quest",
+      "pageTitle": "Throne of Miscellania",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Throne_of_Miscellania&oldid=15264164",
+        "revision": 15264164,
+        "revisionTimestamp": "2026-07-15T13:20:03Z"
+      }
+    },
+    {
+      "id": "Tower of Life",
+      "kind": "quest",
+      "pageTitle": "Tower of Life",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Tower_of_Life&oldid=15271145",
+        "revision": 15271145,
+        "revisionTimestamp": "2026-07-21T04:31:25Z"
+      }
+    },
+    {
+      "id": "Tree Gnome Village",
+      "kind": "quest",
+      "pageTitle": "Tree Gnome Village",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Tree_Gnome_Village&oldid=15259418",
+        "revision": 15259418,
+        "revisionTimestamp": "2026-07-09T21:05:20Z"
+      }
+    },
+    {
+      "id": "Tribal Totem",
+      "kind": "quest",
+      "pageTitle": "Tribal Totem",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Tribal_Totem&oldid=15240951",
+        "revision": 15240951,
+        "revisionTimestamp": "2026-06-27T13:15:18Z"
+      }
+    },
+    {
+      "id": "Troll Romance",
+      "kind": "quest",
+      "pageTitle": "Troll Romance",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Troll_Romance&oldid=15240985",
+        "revision": 15240985,
+        "revisionTimestamp": "2026-06-27T13:46:22Z"
+      }
+    },
+    {
+      "id": "Troll Stronghold",
+      "kind": "quest",
+      "pageTitle": "Troll Stronghold",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Troll_Stronghold&oldid=15231622",
+        "revision": 15231622,
+        "revisionTimestamp": "2026-06-11T03:43:59Z"
+      }
+    },
+    {
+      "id": "Troubled Tortugans",
+      "kind": "quest",
+      "pageTitle": "Troubled Tortugans",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Troubled_Tortugans&oldid=15273864",
+        "revision": 15273864,
+        "revisionTimestamp": "2026-07-24T08:56:50Z"
+      }
+    },
+    {
+      "id": "Twilight's Promise",
+      "kind": "quest",
+      "pageTitle": "Twilight's Promise",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Twilight's_Promise&oldid=15241069",
+        "revision": 15241069,
+        "revisionTimestamp": "2026-06-27T15:22:09Z"
+      }
+    },
+    {
+      "id": "Underground Pass",
+      "kind": "quest",
+      "pageTitle": "Underground Pass",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Underground_Pass&oldid=15225189",
+        "revision": 15225189,
+        "revisionTimestamp": "2026-06-04T06:15:16Z"
+      }
+    },
+    {
+      "id": "Vale Totems",
+      "kind": "miniquest",
+      "pageTitle": "Vale Totems (miniquest)",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Vale_Totems_(miniquest)&oldid=15264448",
+        "revision": 15264448,
+        "revisionTimestamp": "2026-07-15T17:35:49Z"
+      }
+    },
+    {
+      "id": "Vampyre Slayer",
+      "kind": "quest",
+      "pageTitle": "Vampyre Slayer",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Vampyre_Slayer&oldid=15254907",
+        "revision": 15254907,
+        "revisionTimestamp": "2026-07-06T06:00:55Z"
+      }
+    },
+    {
+      "id": "Wanted!",
+      "kind": "quest",
+      "pageTitle": "Wanted!",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Wanted!&oldid=15241008",
+        "revision": 15241008,
+        "revisionTimestamp": "2026-06-27T14:50:21Z"
+      }
+    },
+    {
+      "id": "Watchtower",
+      "kind": "quest",
+      "pageTitle": "Watchtower",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Watchtower&oldid=15266880",
+        "revision": 15266880,
+        "revisionTimestamp": "2026-07-18T10:28:01Z"
+      }
+    },
+    {
+      "id": "Waterfall Quest",
+      "kind": "quest",
+      "pageTitle": "Waterfall Quest",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Waterfall_Quest&oldid=15263104",
+        "revision": 15263104,
+        "revisionTimestamp": "2026-07-14T14:14:38Z"
+      }
+    },
+    {
+      "id": "What Lies Below",
+      "kind": "quest",
+      "pageTitle": "What Lies Below",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=What_Lies_Below&oldid=15271078",
+        "revision": 15271078,
+        "revisionTimestamp": "2026-07-21T03:52:06Z"
+      }
+    },
+    {
+      "id": "While Guthix Sleeps",
+      "kind": "quest",
+      "pageTitle": "While Guthix Sleeps",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=While_Guthix_Sleeps&oldid=15270787",
+        "revision": 15270787,
+        "revisionTimestamp": "2026-07-20T23:23:02Z"
+      }
+    },
+    {
+      "id": "Witch's House",
+      "kind": "quest",
+      "pageTitle": "Witch's House",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Witch's_House&oldid=15168391",
+        "revision": 15168391,
+        "revisionTimestamp": "2026-04-07T05:02:46Z"
+      }
+    },
+    {
+      "id": "Witch's Potion",
+      "kind": "quest",
+      "pageTitle": "Witch's Potion",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Witch's_Potion&oldid=15166776",
+        "revision": 15166776,
+        "revisionTimestamp": "2026-04-06T16:44:39Z"
+      }
+    },
+    {
+      "id": "X Marks the Spot",
+      "kind": "quest",
+      "pageTitle": "X Marks the Spot",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=X_Marks_the_Spot&oldid=15240941",
+        "revision": 15240941,
+        "revisionTimestamp": "2026-06-27T13:09:23Z"
+      }
+    },
+    {
+      "id": "Zogre Flesh Eaters",
+      "kind": "quest",
+      "pageTitle": "Zogre Flesh Eaters",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Zogre_Flesh_Eaters&oldid=15276519",
+        "revision": 15276519,
+        "revisionTimestamp": "2026-07-27T09:03:01Z"
+      }
+    }
+  ]
+}
