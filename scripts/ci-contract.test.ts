@@ -8,12 +8,22 @@ const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const readRepositoryFile = (path: string) =>
   readFile(resolve(repositoryRoot, path), 'utf8');
 
-const commandOrder = [
-  'npm ci --no-audit --no-fund',
+const verificationCommands = [
   'npm test',
   'npx tsc --noEmit',
   'npm run content:verify',
   'npm run build',
+];
+
+const pullRequestCommandOrder = [
+  'npm ci --no-audit --no-fund',
+  'npm run changelog:verify',
+  ...verificationCommands,
+];
+
+const deployCommandOrder = [
+  'npm ci --no-audit --no-fund',
+  ...verificationCommands,
 ];
 
 const escapeRegExp = (value: string) =>
@@ -243,14 +253,14 @@ const expectCiSecurityContract = (workflowText: string) => {
 
 const expectDeployBuildOperations = (buildJob: string) => {
   const commands = activeRunCommands(buildJob);
-  expectInOrder(commands, commandOrder);
-  expect(commands).toEqual(commandOrder);
+  expectInOrder(commands, deployCommandOrder);
+  expect(commands).toEqual(deployCommandOrder);
   expectNoNpmInstall(commands);
 
   const expectedOperations = [
     'uses:actions/checkout@v4',
     'uses:actions/setup-node@v4',
-    ...commandOrder.map((command) => `run:${command}`),
+    ...deployCommandOrder.map((command) => `run:${command}`),
     'uses:actions/upload-pages-artifact@v3',
   ];
   expect(
@@ -304,10 +314,16 @@ describe('CI workflow contract', () => {
       'actions/checkout@v4',
       'actions/setup-node@v4',
     ]);
+    expect(qualityJob).toMatch(
+      /- name: Checkout\n\s+uses: actions\/checkout@v4\n\s+with:\n\s+fetch-depth: 0/,
+    );
+    expect(qualityJob).toMatch(
+      /- name: Verify player-facing What's New\n\s+if: github\.event_name == 'pull_request'\n\s+run: npm run changelog:verify\n\s+env:\n\s+CHANGELOG_BASE_REF: \$\{\{ github\.event\.pull_request\.base\.sha \}\}/,
+    );
 
     const commands = activeRunCommands(qualityJob);
-    expectInOrder(commands, commandOrder);
-    expect(commands).toEqual(commandOrder);
+    expectInOrder(commands, pullRequestCommandOrder);
+    expect(commands).toEqual(pullRequestCommandOrder);
     expectNoNpmInstall(commands);
     expect(qualityJob).toMatch(
       /- name: Build\n\s+run: npm run build\n\s+env:\n\s+VITE_BASE: \/\$\{\{ github\.event\.repository\.name \}\}\//,
@@ -500,8 +516,11 @@ describe('local release command contract', () => {
     };
 
     expect(packageJson.scripts?.['content:verify']).toBeTruthy();
+    expect(packageJson.scripts?.['changelog:verify']).toBe(
+      'node scripts/verify-player-facing-changelog.mjs',
+    );
     expect(packageJson.scripts?.['release:verify']).toBe(
-      'npm test && npm run typecheck && npm run content:verify && npm run build',
+      'npm run changelog:verify && npm test && npm run typecheck && npm run content:verify && npm run build',
     );
     expect(packageJson.scripts?.typecheck).toBe('tsc --noEmit');
   });
@@ -530,6 +549,9 @@ describe('release documentation contract', () => {
     expect(checklist).toMatch(/content:check[\s\S]*network-backed/i);
     expect(checklist).toMatch(
       /generated data[\s\S]*source snapshot[\s\S]*generator/i,
+    );
+    expect(checklist).toMatch(
+      /player-facing[\s\S]*data\/changelog\.ts[\s\S]*changelog:verify/i,
     );
     expect(checklist).toMatch(/Pages workflow[\s\S]*pushes to main[\s\S]*no manual dispatch/i);
     expect(checklist).toMatch(/write permissions[\s\S]*deploy job/i);

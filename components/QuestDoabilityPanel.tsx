@@ -6,7 +6,7 @@ import { chunkContentService } from '../services/ChunkContentService';
 import { chunkReachability } from '../utils/chunkReach';
 import { chunkForPlace, chunkUnlocked, placeOf, showChunkOnMap } from '../utils/chunkLocations';
 import { questLocations } from '../utils/questLocations';
-import { questChunkStatus, doabilityBucket, DoabilityBucket, entryBlockedGate, QuestChunkStatus } from '../utils/questDoability';
+import { questChunkStatus, doabilityBucket, DoabilityBucket, entryBlockedGate, hasCanonicalQuestLocationEvidence, QuestChunkStatus } from '../utils/questDoability';
 import {
   evaluateQuestEligibility, questRequirementOptionLabel,
 } from '../utils/journalStatus';
@@ -41,6 +41,7 @@ export interface QuestDoabilityEvaluation {
   }[];
   missingPrereqs: string[];
   lockedAreas: string[];
+  manualChecks: string[];
 }
 
 interface Row extends QuestDoabilityEvaluation {
@@ -65,13 +66,19 @@ export const evaluateQuestDoability = (
       .filter(blocker => blocker.kind === 'skill')
       .map(blocker => blocker.label),
   );
+  const questPointsRequirement = quest.skills['Quest Points'];
+  const hasQuestPointsBlocker = !completed
+    && questPointsRequirement !== undefined
+    && currentQP < questPointsRequirement;
   const missingSkills: QuestDoabilityEvaluation['missingSkills'] = [];
   for (const [skill, lvl] of Object.entries(quest.skills)) {
-    if (!skillBlockers.has(skill + ' ' + lvl)) continue;
     if (skill === 'Quest Points') {
-      missingSkills.push({ skill, lvl, have: currentQP });
+      if (hasQuestPointsBlocker) {
+        missingSkills.push({ skill, lvl, have: currentQP });
+      }
       continue;
     }
+    if (!skillBlockers.has(skill + ' ' + lvl)) continue;
     const tier = unlocks.skills[skill] ?? 0;
     const unlocked = tier > 0;
     missingSkills.push({
@@ -91,10 +98,11 @@ export const evaluateQuestDoability = (
     });
   }
 
-  const missingPrereqs = eligibility.blockers
-    .filter(blocker => blocker.kind === 'quest')
-    .map(blocker => blocker.label);
-  const reqsMet = eligibility.status === 'AVAILABLE' || completed;
+  const missingPrereqs = completed
+    ? []
+    : quest.prereqs.filter(prereq => !unlocks.quests.includes(prereq));
+  const reqsMet = eligibility.eligible || completed;
+  const manualChecks = completed ? [] : eligibility.manualChecks;
   const alternativeLabel = quest.oneOf?.length
     ? quest.oneOf.map(questRequirementOptionLabel).join(' or ')
     : '';
@@ -109,10 +117,10 @@ export const evaluateQuestDoability = (
     bucket = 'DONE';
   } else if (canonicalRegionBlockers.length > 0) {
     bucket = 'LOCKED';
-  } else if (chunk) {
-    bucket = doabilityBucket(false, reqsMet, chunk);
   } else {
-    bucket = reqsMet ? 'DOABLE' : 'REQS';
+    bucket = doabilityBucket(
+      false, reqsMet, chunk, hasCanonicalQuestLocationEvidence(quest),
+    );
   }
 
   const lockedAreas = bucket !== 'LOCKED'
@@ -129,6 +137,7 @@ export const evaluateQuestDoability = (
     missingSkills,
     missingPrereqs,
     lockedAreas,
+    manualChecks,
   };
 };
 
@@ -142,6 +151,14 @@ export const questDoabilitySkillBlockerLabel = (
     : '';
   return `${blocker.skill} ${blocker.lvl}${capSuffix}`;
 };
+
+export const questDoabilityRequirementLabels = (
+  row: QuestDoabilityEvaluation,
+): string[] => [
+  ...row.missingSkills.map(questDoabilitySkillBlockerLabel),
+  ...row.missingPrereqs.map(prereq => `\u2726 ${prereq}`),
+  ...row.manualChecks.map(check => `Confirm: ${check}`),
+];
 export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
   const { unlocks, gameModeId } = useGame();
   const [ready, setReady] = useState(chunkContentService.ready);
@@ -237,8 +254,8 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
                       {r.bucket === 'DOABLE' && <span className="text-emerald-400 flex items-center gap-1 justify-end"><CheckCircle2 size={11} /> ready</span>}
                       {r.bucket === 'REQS' && (
                         <span className="text-amber-300/90">
-                          {r.missingSkills.map(questDoabilitySkillBlockerLabel).concat(r.missingPrereqs.map(p => `✦ ${p}`)).slice(0, 3).join(', ')}
-                          {(r.missingSkills.length + r.missingPrereqs.length) > 3 ? '…' : ''}
+                          {questDoabilityRequirementLabels(r).slice(0, 3).join(', ')}
+                          {questDoabilityRequirementLabels(r).length > 3 ? '…' : ''}
                         </span>
                       )}
                       {r.bucket === 'LOCKED' && (

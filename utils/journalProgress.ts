@@ -10,12 +10,14 @@
 import { QuestData } from '../data/questData';
 import { DiaryTier } from '../data/diaryData';
 import { UnlockState } from '../types';
+import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import {
-  EligibilityBlocker, evaluateDiaryTierEligibility, evaluateQuestEligibility,
+  EligibilityBlocker, evaluateDiaryTaskEligibility, evaluateDiaryTierEligibility,
+  evaluateQuestEligibility,
 } from './journalStatus';
 
 export interface Unmet {
-  kind: 'region' | 'skill' | 'quest' | 'qp' | 'alternative';
+  kind: 'region' | 'skill' | 'quest' | 'qp' | 'alternative' | 'manual';
   label: string;
 }
 
@@ -23,19 +25,38 @@ const eligibilityBlockerToUnmet = (blocker: EligibilityBlocker): Unmet => {
   if (blocker.kind === 'combat') {
     return { kind: 'skill', label: blocker.label };
   }
-  if (blocker.kind === 'skill' && blocker.label.startsWith('Quest Points ')) {
+  if (blocker.label.startsWith('Quest Points ')) {
     return { kind: 'qp', label: blocker.label.slice('Quest Points '.length) + ' QP' };
   }
   return { kind: blocker.kind, label: blocker.label };
 };
 
-/** Everything blocking a quest right now (empty ⇒ doable). */
-export const questUnmet = (q: QuestData, unlocks: UnlockState, gameModeId?: string): Unmet[] =>
-  evaluateQuestEligibility(q, unlocks, gameModeId).blockers.map(eligibilityBlockerToUnmet);
+const manualChecksToUnmet = (checks: readonly string[]): Unmet[] =>
+  [...new Set(checks)].map(label => ({
+    kind: 'manual',
+    label: `Confirm: ${label}`,
+  }));
 
-/** Everything blocking a diary tier right now (empty ⇒ doable). */
-export const diaryUnmet = (d: DiaryTier, unlocks: UnlockState, gameModeId?: string): Unmet[] =>
-  evaluateDiaryTierEligibility(d, unlocks, gameModeId).blockers.map(eligibilityBlockerToUnmet);
+/** Everything blocking a quest right now (empty ⇒ automatically doable). */
+export const questUnmet = (q: QuestData, unlocks: UnlockState, gameModeId?: string): Unmet[] => {
+  const eligibility = evaluateQuestEligibility(q, unlocks, gameModeId);
+  return [
+    ...eligibility.blockers.map(eligibilityBlockerToUnmet),
+    ...manualChecksToUnmet(eligibility.manualChecks),
+  ];
+};
+
+/** Everything blocking a diary tier right now (empty ⇒ automatically doable). */
+export const diaryUnmet = (d: DiaryTier, unlocks: UnlockState, gameModeId?: string): Unmet[] => {
+  const eligibility = evaluateDiaryTierEligibility(d, unlocks, gameModeId);
+  const manualChecks = ALL_DIARY_TASKS
+    .filter(task => task.tierId === d.id && !unlocks.completedTasks.includes(task.id))
+    .flatMap(task => evaluateDiaryTaskEligibility(task, unlocks, gameModeId).manualChecks);
+  return [
+    ...eligibility.blockers.map(eligibilityBlockerToUnmet),
+    ...manualChecksToUnmet(manualChecks),
+  ];
+};
 
 /** Blocked by exactly one requirement — the quick wins worth surfacing. */
 export const isAlmostThere = (unmet: Unmet[]): boolean => unmet.length === 1;

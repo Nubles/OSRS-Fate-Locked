@@ -881,4 +881,3 @@ The completion handoff must explicitly state:
 - no `CHUNK_CONTENT_LITE` corrections were made; and
 - the next workstream is a separate evidence-backed geography-audit spec,
   followed by a separate per-chunk content-audit spec.
-

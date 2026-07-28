@@ -3,14 +3,16 @@ import React, { useState, useMemo } from 'react';
 import { TableType } from '../types';
 import { useGame } from '../context/GameContext';
 import { bankLocksActive } from '../utils/reachability';
+import { validateEmptyRandomPoolHandling } from '../data/activityAccess';
 import { BANK_IDS, BANK_BY_ID } from '../data/banks';
-import { checkUnlockAvailability, getPoolAndStateKey, isValidUnlock, UNLOCK_COST } from '../utils/gameEngine';
+import { checkUnlockAvailability, describeRandomPoolBlockers, getPoolAndStateKey, isRandomUnlockEligible, pickRandomPoolEntry, UNLOCK_COST } from '../utils/gameEngine';
 import { REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, POH_LIST, MERCHANTS_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST, UTILITY_ITEM_IDS } from '../constants';
 import { VoidReveal } from './VoidReveal';
 import { wikiService } from '../services/WikiService';
 import { showToast } from '../utils/toast';
 import { Sparkles, Dices, HelpCircle, Dna, Lock, Sprout, TrendingUp, AlertTriangle, Check, Key } from 'lucide-react';
 import { COMBAT_POWERS_DESCRIPTION, COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
+import { openDashboardPool } from '../utils/dashboardPoolNavigation';
 import { ALL_CHUNK_KEYS, chunkLabel } from '../utils/chunkAdjacency';
 
 // --- Inner Components ---
@@ -57,6 +59,7 @@ interface SpendCardProps {
   icon?: any;
   iconSrc?: string;
   onClick: () => void;
+  onViewPool: () => void;
   priceDisplay?: string;
   index?: number;
   animate?: boolean;
@@ -79,8 +82,8 @@ const OSRS_GACHA_ICONS = {
   BANKS: 'https://oldschool.runescape.wiki/images/Bank_icon.png',
 };
 
-const SpendCard: React.FC<SpendCardProps> = ({
-  type, label, subLabel, unlocked, total, disabled, keysAvailable, complete, icon: Icon, iconSrc, onClick, priceDisplay = "1", index = 0, animate = false,
+export const SpendCard: React.FC<SpendCardProps> = ({
+  type, label, subLabel, unlocked, total, disabled, keysAvailable, complete, icon: Icon, iconSrc, onClick, onViewPool, priceDisplay = "1", index = 0, animate = false,
 }) => {
   const a = ACCENTS[type] ?? DEFAULT_ACCENT;
   const isClickable = !disabled && keysAvailable && !complete;
@@ -89,11 +92,16 @@ const SpendCard: React.FC<SpendCardProps> = ({
   const dim = isLocked ? 'opacity-30' : 'opacity-100';
 
   return (
-    <button
-      onClick={onClick}
-      disabled={!isClickable}
+    <div
       style={animate ? { animationDelay: `${index * 30}ms` } : undefined}
-      className={`relative overflow-hidden rounded-lg border-2 w-full text-left group flex flex-col p-2.5 h-full min-h-[104px] transition-all duration-200 ${animate ? 'animate-fade-in-up' : ''} active:scale-[0.98]
+      className={`h-full ${animate ? 'animate-fade-in-up' : ''}`}
+    >
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={!isClickable}
+        aria-label={`Roll ${label}`}
+        className={`relative overflow-hidden rounded-lg border-2 w-full text-left group flex flex-col p-2.5 min-h-[104px] transition-all duration-200 active:scale-[0.98]
         ${isClickable
           ? `bg-[#1f1c17] border-[#3a352c] ${a.hoverBorder} ${a.hoverShadow} hover:-translate-y-1`
           : complete
@@ -147,7 +155,15 @@ const SpendCard: React.FC<SpendCardProps> = ({
                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600 font-mono">Need Keys</span>
            </div>
       )}
-    </button>
+      </button>
+      <button
+        type="button"
+        onClick={onViewPool}
+        className="mt-1.5 w-full text-[9px] font-bold uppercase tracking-wider text-gray-400 hover:text-white"
+      >
+        View pool
+      </button>
+    </div>
   );
 };
 
@@ -195,15 +211,24 @@ export const GachaSection: React.FC = () => {
     if (pendingReveal) return; // Guard: Do not allow another roll while reveal is pending
     if (keys <= 0) return;
     const { pool, stateKey } = getPoolAndStateKey(table);
-    const validPool = pool.filter(item => isValidUnlock(table, item, unlocks));
+    const candidates = pool.map(item => ({ table, item }));
+    const validPool = pool.filter(item => isRandomUnlockEligible(table, item, unlocks, gameModeId, 'key'));
     
     if (validPool.length === 0) {
-        showToast('Nothing left to unlock in this category!');
+        validateEmptyRandomPoolHandling(gameModeId, 'key');
+        const blockers = describeRandomPoolBlockers(candidates, unlocks, gameModeId, 'key');
+        if (blockers.sample.length > 0) {
+            const suffix = blockers.remaining === 1 ? '' : 's';
+            showToast(`No accessible unlocks remain in this category. ${blockers.sample.join('; ')}. ${blockers.remaining} more location-locked unlock${suffix} remain.`);
+        } else {
+            showToast('Nothing left to unlock in this category!');
+        }
         return;
     }
 
     // Seeded-run choke point: table picks must draw through nextFloat.
-    const item = validPool[Math.floor(nextFloat('gacha') * validPool.length)];
+    const item = pickRandomPoolEntry(validPool, () => nextFloat('gacha'));
+    if (item === undefined) return;
     const cost = UNLOCK_COST;
     let imageUrl = getUnlockImage(stateKey, item);
 
@@ -231,23 +256,33 @@ export const GachaSection: React.FC = () => {
       ];
 
       const globalPool: { item: string, tableType: TableType, stateKey: string }[] = [];
+      const candidates: { item: string, table: TableType }[] = [];
 
       allTables.forEach(table => {
           const { pool, stateKey } = getPoolAndStateKey(table);
-          // Pass Infinity for keys because Chaos Key bypasses key cost
-          const validItems = pool.filter(item => isValidUnlock(table, item, unlocks));
-          validItems.forEach(item => {
-              globalPool.push({ item, tableType: table, stateKey });
+          pool.forEach(item => {
+              candidates.push({ item, table });
+              if (isRandomUnlockEligible(table, item, unlocks, gameModeId, 'chaosKey')) {
+                  globalPool.push({ item, tableType: table, stateKey });
+              }
           });
       });
 
       if (globalPool.length === 0) {
-          showToast('Fate has nothing left to offer you — all content unlocked!');
+        validateEmptyRandomPoolHandling(gameModeId, 'chaosKey');
+          const blockers = describeRandomPoolBlockers(candidates, unlocks, gameModeId, 'chaosKey');
+          if (blockers.sample.length > 0) {
+              const suffix = blockers.remaining === 1 ? '' : 's';
+              showToast(`Fate has no accessible unlocks to offer. ${blockers.sample.join('; ')}. ${blockers.remaining} more location-locked unlock${suffix} remain.`);
+          } else {
+              showToast('Fate has nothing left to offer you — all content unlocked!');
+          }
           return;
       }
 
       // Pick a random item from the global pool (seeded-run choke point).
-      const selection = globalPool[Math.floor(nextFloat('chaos') * globalPool.length)];
+      const selection = pickRandomPoolEntry(globalPool, () => nextFloat('chaos'));
+      if (!selection) return;
       
       let imageUrl = getUnlockImage(selection.stateKey, selection.item);
 
@@ -382,6 +417,7 @@ export const GachaSection: React.FC = () => {
             disabled={!c.can}
             keysAvailable={keys > 0}
             complete={!c.can}
+            onViewPool={() => openDashboardPool(c.type)}
             iconSrc={c.iconSrc}
             icon={c.icon}
             onClick={() => handleUnlock(c.type)}

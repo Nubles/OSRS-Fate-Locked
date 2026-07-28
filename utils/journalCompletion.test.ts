@@ -19,6 +19,13 @@ const unlocked = (over: Partial<UnlockState> = {}): UnlockState => ({
 });
 
 describe('journal completion decisions', () => {
+  const unlocksReadyForPryingTimes = (): UnlockState => unlocked({
+    regions: ['The Open Seas'],
+    quests: ['Pandemonium', "The Knight's Sword"],
+    skills: { Smithing: 3, Sailing: 2 },
+    levels: { Smithing: 30, Sailing: 12 },
+  });
+
   it('rejects a quest completion when canonical eligibility is blocked', () => {
     const result = questCompletionDecision(
       QUEST_DATA['A Porcine of Interest'],
@@ -48,6 +55,20 @@ describe('journal completion decisions', () => {
     }), 'vanilla').ok).toBe(true);
   });
 
+  it('requires and accepts an explicit quest manual attestation', () => {
+    const task = QUEST_DATA['Prying Times'];
+    const ready = unlocksReadyForPryingTimes();
+    expect(questCompletionDecision(task, ready, 'vanilla')).toEqual({
+      ok: false,
+      reason: 'Confirm: One open Sailing task slot',
+    });
+    expect(questCompletionDecision(
+      task,
+      ready,
+      'vanilla',
+      { manualConfirmed: true },
+    )).toEqual({ ok: true });
+  });
   it('reports structured Diary-task eligibility from the shared evaluator', () => {
     const task: DiaryTask = {
       id: 'x',
@@ -144,5 +165,29 @@ describe('journal completion decisions', () => {
       ['fal_easy_1', 'fal_easy_2'],
       tasks,
     )).toBe(true);
+  });
+  it('does not let attestation bypass a machine blocker', () => {
+    const task = ALL_DIARY_TASKS.find(({ id }) => id === 'var_hard_2')!;
+    expect(diaryTaskCompletionDecision(
+      task,
+      unlocked(),
+      'chunked',
+      { manualConfirmed: true },
+    ).ok).toBe(false);
+  });
+
+  it('accepts the Kudos task only after confirmation', () => {
+    const task = ALL_DIARY_TASKS.find(({ id }) => id === 'var_hard_2')!;
+    const ready = unlocked({ regions: ['Varrock'] });
+    expect(diaryTaskCompletionDecision(task, ready, 'vanilla')).toEqual({
+      ok: false,
+      reason: 'Confirm: 153 Varrock Museum Kudos',
+    });
+    expect(diaryTaskCompletionDecision(
+      task,
+      ready,
+      'vanilla',
+      { manualConfirmed: true },
+    )).toEqual({ ok: true });
   });
 });

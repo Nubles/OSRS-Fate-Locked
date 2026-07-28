@@ -9,12 +9,14 @@ import {
   listGoalTargets, planForTarget, GoalTarget, GoalPlan, PlanStep, GoalKind,
   AlternativePlanStep,
 } from '../utils/goalPlanner';
-import { getQuestStatus, getDiaryStatus } from '../utils/journalStatus';
+import { evaluateDiaryTaskEligibility, evaluateQuestEligibility, getDiaryStatus, getQuestStatus } from '../utils/journalStatus';
 import { isAreaReachable } from '../utils/reachability';
 import { QUEST_DATA } from '../data/questData';
-import { DIARY_DATA } from '../data/diaryData';
+import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { DIARY_DATA } from '../data/diaryData';
 import { SectionGuide } from './SectionGuide';
+import { UnlockState } from '../types';
 
 /**
  * Goal Planner — the reverse of the advisors.
@@ -39,7 +41,7 @@ const KIND_META: Record<GoalKind, { icon: React.ReactNode; label: string; color:
 };
 
 // Status of a target in the current snapshot — drives the picker dot.
-type TargetState = 'done' | 'ready' | 'locked';
+export type TargetState = 'done' | 'ready' | 'confirm' | 'locked';
 
 function targetState(t: GoalTarget, unlocks: any, gameModeId?: string): TargetState {
   if (t.kind === 'quest') {
@@ -53,9 +55,33 @@ function targetState(t: GoalTarget, unlocks: any, gameModeId?: string): TargetSt
   return isAreaReachable(t.id, unlocks, gameModeId) ? 'done' : 'locked';
 }
 
+export function goalPlannerTargetState(
+  target: GoalTarget,
+  unlocks: UnlockState,
+  gameModeId?: string,
+): TargetState {
+  if (target.kind === 'quest') {
+    const eligibility = evaluateQuestEligibility(QUEST_DATA[target.id], unlocks, gameModeId);
+    if (eligibility.status === 'COMPLETED') return 'done';
+    if (eligibility.eligible) return 'ready';
+    return eligibility.confirmable && eligibility.manualChecks.length > 0 ? 'confirm' : 'locked';
+  }
+  if (target.kind === 'diary') {
+    if (unlocks.diaries.includes(target.id)) return 'done';
+    const taskEligibilities = ALL_DIARY_TASKS.filter(task => (
+      task.tierId === target.id && !unlocks.completedTasks.includes(task.id)
+    )).map(task => evaluateDiaryTaskEligibility(task, unlocks, gameModeId));
+    if (taskEligibilities.every(eligibility => eligibility.eligible)) return 'ready';
+    return taskEligibilities.every(eligibility => eligibility.machineEligible)
+      && taskEligibilities.some(eligibility => eligibility.manualChecks.length > 0) ? 'confirm' : 'locked';
+  }
+  return isAreaReachable(target.id, unlocks, gameModeId) ? 'done' : 'locked';
+}
+
 const STATE_DOT: Record<TargetState, string> = {
   done: 'bg-emerald-500',
   ready: 'bg-amber-400',
+  confirm: 'bg-violet-400',
   locked: 'bg-gray-600',
 };
 
@@ -64,6 +90,7 @@ const STEP_ICON: Record<PlanStep['kind'], React.ReactNode> = {
   skill: <Dumbbell size={12} />,
   qp: <Star size={12} />,
   quest: <BookOpen size={12} />,
+  manual: <Compass size={12} />,
 };
 
 /** OSRS Wiki article for a step. Quest/skill/region labels map directly; the
@@ -73,7 +100,7 @@ const stepWikiHref = (step: PlanStep): string =>
   wikiUrlFor(step.kind === 'qp' ? 'Quest points' : step.label);
 
 export const goalPlannerStepHasWikiLink = (step: PlanStep): boolean =>
-  !step.id.startsWith('alternative:');
+  step.kind !== 'manual' && !step.id.startsWith('alternative:');
 
 const StepRow: React.FC<{ step: PlanStep; index?: number }> = ({ step, index }) => (
   <div
@@ -183,6 +210,18 @@ const AlternativeSection: React.FC<{ steps: AlternativePlanStep[] }> = ({ steps 
   );
 };
 
+export const GoalPlanReadiness: React.FC<{ plan: GoalPlan }> = ({ plan }) => {
+  if (plan.alreadyDone) return <>{'Already complete \u2014 nothing left to do!'}</>;
+  if (plan.alreadyReachable && plan.targetKind !== 'region') {
+    return <>{'Available right now \u2014 go do it!'}</>;
+  }
+  if (plan.needsConfirmation) {
+    return <>
+      Needs confirmation: {plan.manualSteps.map(step => step.label).join(' \u00b7 ')}
+    </>;
+  }
+  return <>{plan.remaining} step{plan.remaining !== 1 ? 's' : ''} remaining</>;
+};
 export const GoalPlannerModal: React.FC<Props> = ({ onClose, initialTarget }) => {
   const { unlocks, gameModeId } = useGame();
   useEscapeKey(onClose, true);
@@ -199,10 +238,10 @@ export const GoalPlannerModal: React.FC<Props> = ({ onClose, initialTarget }) =>
       ? targets.filter((t) => t.label.toLowerCase().includes(q) || t.group.toLowerCase().includes(q))
       : targets;
     return matched
-      .map((t) => ({ t, state: targetState(t, unlocks, gameModeId) }))
+      .map((t) => ({ t, state: goalPlannerTargetState(t, unlocks, gameModeId) }))
       .sort((a, b) => {
         // Ready-to-start first, then locked, then done; alpha within.
-        const rank = (s: TargetState) => (s === 'ready' ? 0 : s === 'locked' ? 1 : 2);
+        const rank = (s: TargetState) => (s === 'ready' ? 0 : s === 'confirm' ? 1 : s === 'locked' ? 2 : 3);
         return rank(a.state) - rank(b.state) || a.t.label.localeCompare(b.t.label);
       });
   }, [targets, query, unlocks, gameModeId]);
@@ -315,7 +354,8 @@ export const GoalPlannerModal: React.FC<Props> = ({ onClose, initialTarget }) =>
                     <h3 className="text-sm font-bold text-white truncate">{plan.targetLabel}</h3>
                   </div>
 
-                  {plan.alreadyDone ? (
+                  {plan.needsConfirmation && <p className="text-[11px] text-gray-500"><GoalPlanReadiness plan={plan} /></p>}
+                  {!plan.needsConfirmation && (plan.alreadyDone ? (
                     <p className="text-[11px] text-emerald-400 flex items-center gap-1.5">
                       <CheckCircle2 size={13} /> Already complete — nothing left to do!
                     </p>
@@ -328,7 +368,7 @@ export const GoalPlannerModal: React.FC<Props> = ({ onClose, initialTarget }) =>
                       <span className="text-gray-300 font-bold">{plan.remaining}</span> step
                       {plan.remaining !== 1 ? 's' : ''} remaining
                     </p>
-                  )}
+                  ))}
 
                   {/* Progress bar */}
                   {totalSteps > 0 && (
@@ -359,8 +399,13 @@ export const GoalPlannerModal: React.FC<Props> = ({ onClose, initialTarget }) =>
                       <PlanSection title="Quest points" icon={<Star size={12} />} steps={[plan.qpStep]} />
                     )}
                     <PlanSection
-                      title="Quests in order"
+                      title="Confirm manually"
+                      icon={<Compass size={12} />}
+                      steps={plan.manualSteps}
+                    />
+                    <PlanSection
                       icon={<ArrowRight size={12} />}
+                      title="Quests in order"
                       steps={plan.questSteps}
                       numbered
                     />

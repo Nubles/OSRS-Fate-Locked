@@ -28,10 +28,6 @@ Thumbs.db
 *.njsproj
 *.sln
 
-# RuneLite plugin build artifacts
-runelite-plugin/build/
-runelite-plugin/.gradle/
-
 # Claude Code local preview config
 .claude/
 

@@ -60,7 +60,7 @@ const textContent = (html) => decodeHtml(
 
 const normalizeGeneratedText = (value) => String(value)
   .replace(/\r\n/g, '\n')
-  .replace(/\r/g, '\n');
+  .replace(/\r/g, '\n')
 
 const elementsOf = (html, tag) => {
   const elements = [];
@@ -202,6 +202,12 @@ const renderRequirementProperties = (requirement) => {
   if (requirement.regions?.length > 0) {
     properties.push('regions: ' + renderStringArray(requirement.regions));
   }
+  if (requirement.questPoints) properties.push('questPoints: ' + requirement.questPoints);
+  if (requirement.manualRequirements?.length > 0) {
+    properties.push(
+      'manualRequirements: ' + renderStringArray(requirement.manualRequirements),
+    );
+  }
   if (requirement.combatLevel) properties.push('combatLevel: ' + requirement.combatLevel);
   if (requirement.allQuests) properties.push('allQuests: true');
   if (requirement.anySkillLevel) properties.push('anySkillLevel: ' + requirement.anySkillLevel);
@@ -247,7 +253,7 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
   if (!requirement || typeof requirement !== 'object' || Array.isArray(requirement)) {
     throw new Error('Invalid Diary requirement route: ' + context);
   }
-  for (const field of ['items', 'quests', 'cas', 'regions']) {
+  for (const field of ['items', 'quests', 'cas', 'regions', 'manualRequirements']) {
     if (requirement[field] !== undefined && !Array.isArray(requirement[field])) {
       throw new Error('Invalid Diary requirement ' + field + ': ' + context);
     }
@@ -259,7 +265,7 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
       );
     }
   }
-  for (const field of ['combatLevel', 'anySkillLevel']) {
+  for (const field of ['combatLevel', 'anySkillLevel', 'questPoints']) {
     if (requirement[field] !== undefined
       && (!Number.isInteger(requirement[field]) || requirement[field] < 1)) {
       throw new Error('Invalid Diary requirement ' + field + ': ' + context);
@@ -289,6 +295,8 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
     || requirement.quests?.length
     || requirement.cas?.length
     || requirement.regions?.length
+    || requirement.questPoints
+    || requirement.manualRequirements?.length
     || requirement.combatLevel
     || requirement.allQuests
     || requirement.anySkillLevel
@@ -366,6 +374,8 @@ export function renderDiaryTasks(snapshot) {
     '  quests?: string[];',
     '  cas?: string[];',
     '  regions?: string[];',
+    '  questPoints?: number;',
+    '  manualRequirements?: string[];',
     '  combatLevel?: number;',
     '  allQuests?: true;',
     '  anySkillLevel?: number;',
@@ -382,6 +392,8 @@ export function renderDiaryTasks(snapshot) {
     '  quests?: string[];',
     '  cas?: string[];',
     '  regions?: string[];',
+    '  questPoints?: number;',
+    '  manualRequirements?: string[];',
     '  combatLevel?: number;',
     '  allQuests?: true;',
     '  anySkillLevel?: number;',

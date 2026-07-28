@@ -97,6 +97,43 @@ export interface LogEntry {
   hash?: string;
 }
 
+export interface RollIntent {
+  source: string;
+  threshold: number;
+  target: string;
+}
+
+export interface GameEventMeta {
+  fateEventId?: string;
+  detectorId?: string;
+  detectorVersion?: number;
+}
+
+export interface DetectedEventIdentity {
+  runId: string;
+  account: string;
+  runRevision: number;
+}
+
+export type DetectedProgress =
+  | { kind: 'SKILL_LEVEL'; skill: string; level: number }
+  | { kind: 'QUEST'; questId: string }
+  | { kind: 'CA_TASK'; taskId: string }
+  | { kind: 'DIARY_TASK'; taskId: string }
+  | { kind: 'COLLECTION_ITEM'; itemId: number }
+  | { kind: 'NONE' };
+
+export interface EventCandidate {
+  label: string;
+  target: string;
+}
+
+export type EventClassification =
+  | { state: 'READY'; intent: RollIntent; progress: DetectedProgress }
+  | { state: 'NEEDS_CONFIRMATION'; reason: string; candidates?: EventCandidate[] }
+  | { state: 'BLOCKED'; reason: string; candidates?: EventCandidate[] }
+  | { state: 'DUPLICATE'; reason: string; candidates?: EventCandidate[] };
+
 export interface UnlockState {
   equipment: Record<string, number>; // Store Tier level (0-9)
   skills: Record<string, number>; // Name -> Tier (1-10)
@@ -134,9 +171,17 @@ export interface UnlockState {
 export interface GameState {
   /** Canonical reducer states are stamped at the strict save boundary. */
   version: number;
+  /** Stable identity for one run across exports, restarts, and relay delivery. */
+  runId: string;
+  /** Monotonic revision of persistent run state. */
+  runRevision: number;
   keys: number;
   specialKeys: number;
   chaosKeys: number;
+  /** Vanilla boss standard keys already awarded, by canonical boss name. */
+  bossStandardKeysAwarded?: Record<string, number>;
+  /** Vanilla clue standard keys already awarded across every clue tier. */
+  clueStandardKeysAwarded?: number;
   fatePoints: number;
   activeBuff: 'NONE' | 'LUCK' | 'GREED';
   unlocks: UnlockState;

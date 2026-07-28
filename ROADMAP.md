@@ -6,31 +6,14 @@ contributor. Last updated: July 2026.
 
 ---
 
-## 1. Ship the Plugin Hub update (highest value, ~10 minutes)
+## 1. RuneLite Plugin Hub release (shipped)
 
-The Hub currently serves commit `dc3823c` of
-[Nubles/RS3-Fate-Locked-Runelite](https://github.com/Nubles/RS3-Fate-Locked-Runelite).
-Everything since is CI-green and unreleased:
-
-- Chunked-mode chunk-coordinate lock state (`unlockedChunks` in the bundle)
-- Roll detection: quests (reward widget), diary tiers (varbits), combat
-  achievements (chat), collection log (chat), boss/raid kills (LootReceived)
-- Suggestion relay: plugin → app `{source, label, ts}` pushes on `/suggest`
-- Connection heartbeat: `{ts, version}` ack on `/state` after each relay
-  import (powers the web app's "Connect RuneLite" card)
-- `onVarbitChanged` hot-path fix (48 client calls → 1 set lookup per event)
-- World-map tooltip now lists the hovered chunk's contents
-
-**To ship:** sync your fork of `runelite/plugin-hub`, edit
-`plugins/fate-locked-ironman`, set `commit=` to the current HEAD of the
-plugin repo (`git rev-parse HEAD`, full 40 chars), open the PR.
-
-**Reviewer question to expect:** "there's new outbound traffic since the last
-release" — the `/suggest` and `/state` POSTs. Answer: both sit behind the
-same `onlineSync` opt-in boolean whose `@ConfigItem` carries the mandated
-IP-address warning; both are documented in the plugin repo's CONTRIBUTING
-(§ Online sync). No consent → `pollRelay()`/`pushSuggestion()` return on
-their first line and no request is ever made.
+The Plugin Hub entry for
+[Nubles/OSRS-Fate-Locked-Runelite](https://github.com/Nubles/OSRS-Fate-Locked-Runelite)
+already resolves to the canonical release commit
+`5cc1ffc4e4f684a99211f12342a69ceb6d16de30`. No additional Plugin Hub pin PR
+is required for this release. Future plugin releases are built and published
+only from `OSRS-Fate-Locked-Runelite`.
 
 ## 1b. Shipped — July 2026 sprint (onboarding, safety, community)
 
@@ -152,23 +135,21 @@ Follow-ups:
 - **Impact engine:** `utils/unlockImpact.ts::computeUnlockImpact(base,
   simulated, gameModeId)` — shared by Quest, Region and Frontier advisors.
   Chunk-aware via gameModeId.
-- **Relay (Cloudflare Worker, `workers/fate-relay/`):** three records per
-  pairing code — `/r/:code` (app→plugin bundle), `/r/:code/suggest`
-  (plugin→app suggestions), `/r/:code/state` (plugin→app heartbeat). Each
-  has its own version + first-writer-claims write-token + 24h TTL. Full
-  contract in `docs/online-relay.md`. Deployed at
+- **Current RuneLite relay:** the browser publishes the current app-authored
+  v4 profile with `POST /r/:code`; RuneLite retrieves and validates it with
+  `GET /r/:code` and optional ETag caching. The plugin does not write to the
+  relay, and the browser receives no import receipt. Full contract in
+  `docs/online-relay.md`. Deployed at
   `fate-relay.fatelocked.workers.dev`; redeploy with `wrangler deploy` from
   `workers/fate-relay/` (KV id is committed in wrangler.toml).
-- **Suggestion lifecycle (web):** `services/suggestSync.ts`. The relay is a
-  dumb store — cleared/dismissed suggestions must go into the persisted
-  `cleared` set or the next poll resurrects them (this was a real bug).
-  Auto-clear on roll lives in the ALWAYS-MOUNTED `SuggestionBanner`, not the
-  lazily-mounted queue (also a real bug: tab components miss rolls made
-  elsewhere).
-- **Plugin mirror:** the plugin's source of truth is the standalone repo;
-  `runelite-plugin/` in this repo is a byte-for-byte mirror with CRLF line
-  endings. After any plugin change: copy the files over converting LF→CRLF,
-  commit both repos.
+- **Legacy relay compatibility only:** the Worker temporarily retains
+  `/r/:code/state`, `/r/:code/events`, `/r/:code/acks`, and
+  `/r/:code/suggest` for older installed clients. They are not part of the
+  current Hub candidate's connection and must not be presented as current
+  product behavior.
+- **Plugin boundary:** [Nubles/OSRS-Fate-Locked-Runelite](https://github.com/Nubles/OSRS-Fate-Locked-Runelite)
+  owns the plugin source, builds, releases, and local detection history. The
+  app exports rules bundles but contains no Java plugin or download pipeline.
 
 ## 4. Gotchas that cost real debugging time
 
@@ -178,10 +159,10 @@ Follow-ups:
   guess here broke CI once. Same class of bug: `CircleCheck` doesn't exist
   in this lucide-react version (it's `CheckCircle2`).
 - **Relay write-tokens must be persisted.** The worker's first-writer model
-  means an in-memory token dies with the process and 403s every later write
-  for up to 24h. The plugin persists them in config as
-  `suggestToken.<code>` / `stateToken.<code>`; the web app persists the
-  main-channel token in `fate_relay_session_v1`.
+  means an in-memory browser token dies with the page and can cause later
+  writes to fail for the record's TTL. The web app persists the current
+  main-channel token in `fate_relay_session_v1`. Current RuneLite builds
+  perform no relay writes and own no relay write-token.
 - **Quest reward scroll wording varies:** usually "You have completed The
   Corsair Curse!" with NO trailing "quest" — regexes must handle both forms
   (see `QUEST_COMPLETE_SUFFIXED` / `_BARE`).
@@ -189,9 +170,9 @@ Follow-ups:
   fires VarbitChanged, so pure event-filtering misses its completion. The
   plugin baselines all 48 once on the first event after LOGGED_IN, then
   filters by `ev.getVarbitId()`.
-- **GitHub Actions is the plugin's only build.** There's no local Gradle in
-  the dev environment — CI is the compile check, so keep plugin commits
-  small and watch the Actions tab after each push.
+- **Plugin verification belongs in the standalone repository.** In the
+  standalone checkout, run `gradle clean test jar --no-daemon`; plugin CI,
+  releases, and Plugin Hub work also occur there, never in the companion app.
 - **Dataset fetch cool-downs:** GearService/MonsterService fast-fail for 60s
   after a failed load (`init(force)` bypasses for Retry buttons). Without
   this, the relay driver re-fetched on every state change while offline.

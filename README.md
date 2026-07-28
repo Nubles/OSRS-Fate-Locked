@@ -37,7 +37,7 @@ Bad luck is cushioned by **Fate Points** (a pity timer) and the **Void Altar**, 
 - **Integrity & verification** — a tamper-evident hash chain over the run history, a deterministic run ID, invariant replay, and exportable verified bundles, so a completed run can be shared and checked.
 - **Shareable run card & timelapse** — generate an image of your run, or play its history back as a narrated timelapse.
 - **Profiles** — multiple independent runs in one browser.
-- **RuneLite companion plugin** — see [`runelite-plugin/`](./runelite-plugin) for an in-game overlay of your authored chunks.
+- **RuneLite companion plugin** — imports the active profile, marks locked content in-game, explains the current chunk, and keeps supported gameplay detections in a local history.
 
 ## Tech stack
 
@@ -53,6 +53,10 @@ npm run dev
 ```
 
 The app runs at `http://localhost:5173`. All state is stored in the browser's `localStorage` — no backend, no API keys.
+
+Fate Analytics can export a voluntary local aggregate for the
+[key-economy evidence protocol](./docs/key-economy-evidence.md). Nothing is
+uploaded automatically.
 
 ## Other scripts
 
@@ -73,9 +77,23 @@ To enable it on a fresh fork: **Settings → Pages → Build and deployment → 
 
 - [`docs/RESOURCE_ENGINE.md`](./docs/RESOURCE_ENGINE.md) — the Resource Engine: data shape, the supply-chain analyzer, the three wiki-sourced generator scripts (`scripts/buildCraftables.mjs`, `scripts/buildPotions.mjs`, `scripts/buildSourceEnrichment.ts`), the enrichment merge pattern, the integrity-test contract, and the workflow for adding curated items.
 
-## RuneLite plugin
+## RuneLite plugin connection
 
-`runelite-plugin/` contains a Java RuneLite plugin that renders your authored Fate Locked chunks on the in-game world map and minimap, and warns when you enter a locked region. Build it with `./gradlew shadowJar` and sideload the JAR — see [`runelite-plugin/README.md`](./runelite-plugin/README.md).
+The companion [RuneLite plugin](https://github.com/Nubles/OSRS-Fate-Locked-Runelite)
+renders the active profile's tracker rules in-game and warns before locked
+actions. The standalone repository exclusively owns plugin source, builds,
+releases, and Plugin Hub review.
+
+Pairing is one-way. The browser publishes an app-authored v4 profile with
+`POST /r/<code>`, then opens RuneLite with that code. The plugin retrieves and
+validates the profile with `GET /r/<code>`. It does not upload gameplay,
+account, event, acknowledgement, suggestion, or heartbeat data.
+
+The browser cannot know whether RuneLite imported the profile because the
+current Plugin Hub candidate sends no receipt. “Profile sent to RuneLite”
+therefore describes a successful browser publish, not a live connection.
+See [the relay protocol](./docs/online-relay.md) for the current boundary and
+legacy compatibility routes.
 
 ## Disclaimer
 

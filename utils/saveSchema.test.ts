@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { GameState, LogEntry, UnlockState } from '../types';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
+import { serializeCurrent } from './gamePersistence';
 import {
   CURRENT_SAVE_VERSION,
   MAX_COLLECTION_LOG_ENTRIES,
@@ -43,11 +44,17 @@ const baseUnlocks = (): UnlockState => ({
   collectionLog: {},
 });
 
+const VALID_RUN_ID = '123e4567-e89b-42d3-a456-426614174000';
+
 const defaultsFixture = (): GameState => ({
   version: CURRENT_SAVE_VERSION,
+  runId: VALID_RUN_ID,
+  runRevision: 0,
   keys: 3,
   specialKeys: 0,
   chaosKeys: 0,
+  bossStandardKeysAwarded: {},
+  clueStandardKeysAwarded: 0,
   fatePoints: 0,
   activeBuff: 'NONE',
   unlocks: baseUnlocks(),
@@ -67,9 +74,13 @@ const defaultsFixture = (): GameState => ({
 
 const fullStateFixture = (): GameState => ({
   version: CURRENT_SAVE_VERSION,
+  runId: VALID_RUN_ID,
+  runRevision: 0,
   keys: 17,
   specialKeys: 2,
   chaosKeys: 3,
+  bossStandardKeysAwarded: { Zulrah: 1 },
+  clueStandardKeysAwarded: 2,
   fatePoints: 41,
   activeBuff: 'LUCK',
   unlocks: {
@@ -178,12 +189,13 @@ const expectRejected = (
 };
 
 describe('save schema compatibility', () => {
-  it('accepts a complete current export and preserves every GameState field', () => {
+  it('accepts a complete strict v3 export and preserves every GameState field', () => {
     const current = fullStateFixture();
+    current.version = 3;
     expect(validateAndMigrateSave(current, defaultsFixture())).toEqual({
       ok: true,
       state: current,
-      sourceVersion: CURRENT_SAVE_VERSION,
+      sourceVersion: 3,
       warnings: [],
     });
   });
@@ -320,16 +332,97 @@ describe('save schema compatibility', () => {
     expect(second.warnings).toEqual([]);
   });
 
-  it('treats a missing version as legacy, accepts version 1, and rejects future versions', () => {
+  it('treats a missing version as legacy, migrates version 1, and rejects future versions', () => {
     expect(expectAccepted(validateAndMigrateSave({ keys: 1 }, defaultsFixture())).sourceVersion).toBe(0);
-    expect(expectAccepted(validateAndMigrateSave(fullStateFixture(), defaultsFixture())).sourceVersion).toBe(1);
+    expect(expectAccepted(validateAndMigrateSave(fullStateFixture(), defaultsFixture())).sourceVersion)
+      .toBe(CURRENT_SAVE_VERSION);
+
+    const versionOne = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    versionOne.version = 1;
+    delete versionOne.bossStandardKeysAwarded;
+    delete versionOne.clueStandardKeysAwarded;
+    const migrated = expectAccepted(validateAndMigrateSave(versionOne, defaultsFixture()));
+    expect(migrated.sourceVersion).toBe(1);
+    expect(migrated.state.version).toBe(3);
+    expect(migrated.state.bossStandardKeysAwarded).toEqual({});
+    expect(migrated.state.clueStandardKeysAwarded).toBe(0);
+    expect(migrated.warnings).toHaveLength(1);
+
     expectRejected({ version: 1 }, 'invalid_field', 'keys');
-    expectRejected({ version: 2 }, 'unsupported_version', 'version');
+    expectRejected({ version: CURRENT_SAVE_VERSION + 1 }, 'unsupported_version', 'version');
     expectRejected({ version: 0 }, 'unsupported_version', 'version');
   });
 
+  it('normalizes malformed Vanilla progression counters while preserving valid capped history', () => {
+    const versionOne = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    versionOne.version = 1;
+    versionOne.bossStandardKeysAwarded = { Brutus: 9, Zulrah: 1, Unknown: 3 };
+    versionOne.clueStandardKeysAwarded = -4;
+
+    const migrated = expectAccepted(validateAndMigrateSave(versionOne, defaultsFixture()));
+    expect(migrated.state.bossStandardKeysAwarded).toEqual({ Brutus: 1, Zulrah: 1 });
+    expect(migrated.state.clueStandardKeysAwarded).toBe(0);
+    expect(migrated.state.version).toBe(CURRENT_SAVE_VERSION);
+  });
+
+  it('clamps oversized legacy clue progression to the strict v3 safety bound', () => {
+    const versionTwo = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    versionTwo.version = 2;
+    versionTwo.clueStandardKeysAwarded = MAX_COUNTER + 1;
+
+    const migrated = expectAccepted(validateAndMigrateSave(versionTwo, defaultsFixture()));
+    expect(migrated.state.clueStandardKeysAwarded).toBe(MAX_COUNTER);
+    expect(migrated.state.version).toBe(CURRENT_SAVE_VERSION);
+  });
+  it('migrates the feature-branch v2 shape into v3 while supplying newer main run metadata', () => {
+    const featureBranchV2 = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    featureBranchV2.version = 2;
+    delete featureBranchV2.runId;
+    delete featureBranchV2.runRevision;
+
+    const migrated = expectAccepted(validateAndMigrateSave(featureBranchV2, defaultsFixture()));
+    expect(migrated.sourceVersion).toBe(2);
+    expect(migrated.state.version).toBe(3);
+    expect(migrated.state.runId).toBe(VALID_RUN_ID);
+    expect(migrated.state.runRevision).toBe(0);
+    expect(migrated.state.bossStandardKeysAwarded).toEqual({ Zulrah: 1 });
+    expect(migrated.state.clueStandardKeysAwarded).toBe(2);
+    expect(migrated.warnings).toHaveLength(1);
+  });
+
+  it('rejects a v3 boss counter beyond its configured reserve cap', () => {
+    const malformed = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    malformed.version = 3;
+    malformed.bossStandardKeysAwarded = { Zulrah: 3 };
+
+    expectRejected(malformed, 'invalid_number', 'bossStandardKeysAwarded.Zulrah');
+  });
+
+  it('rejects unknown and inherited boss counters in a strict v3 export', () => {
+    const unknown = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    unknown.version = 3;
+    unknown.bossStandardKeysAwarded = { Unknown: 1 };
+    expectRejected(unknown, 'invalid_field', 'bossStandardKeysAwarded.Unknown');
+
+    const inherited = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    inherited.version = 3;
+    inherited.bossStandardKeysAwarded = Object.create({ Zulrah: 1 });
+    expectRejected(inherited, 'invalid_field', 'bossStandardKeysAwarded');
+  });
+
+  it.each([-1, 1.5, Number.POSITIVE_INFINITY])(
+    'rejects malformed v3 clue counter %s instead of silently repairing it',
+    clueStandardKeysAwarded => {
+      const malformed = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+      malformed.version = 3;
+      malformed.clueStandardKeysAwarded = clueStandardKeysAwarded;
+      expectRejected(malformed, 'invalid_number', 'clueStandardKeysAwarded');
+    },
+  );
+
   it.each([
     'keys', 'specialKeys', 'chaosKeys', 'fatePoints', 'activeBuff',
+    'bossStandardKeysAwarded', 'clueStandardKeysAwarded',
     'unlocks', 'history', 'pinnedGoals', 'userNotes',
   ])('requires current-version field %s instead of defaulting it', field => {
     const truncated = clone(fullStateFixture()) as unknown as Record<string, unknown>;
@@ -436,6 +529,10 @@ describe('save schema structural rejection', () => {
     const accepted = expectAccepted(validateAndMigrateSave(input, defaultsFixture()));
     expect(accepted.state.keys).toBe(7);
     expect(Object.getPrototypeOf(accepted.state)).toBe(Object.prototype);
+  });
+
+  it('rejects a supplied non-RFC 4122 v4 run id', () => {
+    expectRejected(candidate({ runId: 'fixture-run' }), 'invalid_field', 'runId');
   });
 
   it('rejects unknown top-level and unlock fields', () => {
@@ -632,9 +729,11 @@ describe('JSON parsing boundary', () => {
     expect(invalid.message).not.toContain(secret);
   });
 
-  it('round-trips an accepted current state losslessly', () => {
-    const accepted = expectAccepted(validateAndMigrateSave(fullStateFixture(), defaultsFixture()));
-    const reparsed = expectAccepted(parseAndMigrateSave(JSON.stringify(accepted.state), defaultsFixture()));
+  it('round-trips an accepted v3 state through the production serializer losslessly', () => {
+    const current = fullStateFixture();
+    current.version = 3;
+    const accepted = expectAccepted(validateAndMigrateSave(current, defaultsFixture()));
+    const reparsed = expectAccepted(parseAndMigrateSave(serializeCurrent(accepted.state), defaultsFixture()));
     expect(reparsed.state).toEqual(accepted.state);
   });
 });

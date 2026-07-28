@@ -20,7 +20,8 @@ import { TransmutationEffect } from './components/TransmutationEffect';
 import { ClarityEffect, GreedEffect, ChaosEffect } from './components/RitualEffects';
 import { EffectsLayer } from './components/EffectsLayer';
 import { OnlineSyncDriver } from './components/OnlineSyncDriver';
-import { SuggestionBanner } from './components/SuggestionBanner';
+import { RunelitePairingDialog } from './components/RunelitePairingDialog';
+import { RollInboxDriver } from './components/RollInboxDriver';
 import { CoachStrip } from './components/CoachStrip';
 import { FeatureRevealDriver } from './components/FeatureRevealDriver';
 import { BackupNagBanner } from './components/BackupNagBanner';
@@ -41,12 +42,14 @@ import { showToast } from './utils/toast';
 import { importUiDecision, isCurrentImportRequest } from './utils/gamePersistence';
 import { MAX_SAVE_BYTES } from './utils/saveSchema';
 import { prefetchHeavyChunks } from './utils/prefetch';
-import { LATEST_CHANGELOG } from './data/changelog';
+import { CHANGELOG_RELEASES, LATEST_CHANGELOG } from './data/changelog';
 import {
-  changelogVisibilityReducer, markChangelogSeen, resolveChangelogRestoreTarget,
+  changelogVisibilityReducer, markChangelogSeen,
   resolveChangelogModalRenderPolicy, shouldAutoOpenChangelog,
   shouldEnableUnderlyingModalEscape, shouldShowChangelog,
 } from './utils/changelogState';
+import { relaySync } from './services/relaySync';
+import { parseRunelitePairFragment } from './utils/runelitePairing';
 
 // Heavy, conditionally-rendered modals — code-split so they (and their deps,
 // e.g. recharts in StatsModal) stay out of the initial bundle.
@@ -66,7 +69,7 @@ const ChangelogModal = lazyWithRetry(() =>
   })),
 );
 import { deobfuscateFateSave, encodeFateSaveExport } from './utils/encryption';
-import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb, Radio, Settings, Newspaper } from 'lucide-react';
+import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb, Radio, Settings } from 'lucide-react';
 import { exportRuneliteBundle } from './utils/runeliteExport';
 
 // --- Error Boundary ---
@@ -238,11 +241,11 @@ interface HeaderProps {
   setShowGameMode: (show: boolean) => void;
   setShowSyncCode: (show: boolean) => void;
   setShowDiscord: (show: boolean) => void;
-  onOpenChangelog: () => void;
+  onOpenChangelog: (returnFocusTarget: HTMLElement | null) => void;
 }
 
 const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode, setShowDiscord, onOpenChangelog }: HeaderProps) => {
-  const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, importSave, resetGame, getExportData, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount } = useGame();
+  const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, importSave, resetGame, getExportData, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount, runId, runRevision } = useGame();
   // Progressive disclosure — advanced tools stay hidden until the run earns them.
   const gates = useFeatureGates();
   const { storageKeyForActiveProfile } = useProfiles();
@@ -453,7 +456,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
              </button>
 
              <button
-               onClick={() => exportRuneliteBundle(unlocks, { keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId })}
+               onClick={() => exportRuneliteBundle(unlocks, { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId: gameModeId ?? 'vanilla', customMode })}
                className="h-8 px-2.5 rounded-lg border border-amber-500/40 bg-amber-900/30 hover:bg-amber-800/40 text-amber-200 hover:text-amber-100 flex items-center gap-2 transition-colors"
                title="Export your run for the RuneLite plugin (copies to clipboard + downloads). Then use 'Import from clipboard' in the plugin."
              >
@@ -500,12 +503,10 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                      <div className="fixed inset-0 z-[90]" onClick={() => setShowUtilMenu(false)} />
                      <div className="absolute right-0 top-9 z-[91] w-56 bg-[#1c1c1c] border border-white/15 rounded-lg shadow-2xl py-1.5 text-[12px]">
                         <button type="button" onClick={() => {
-                          const restoreTarget = resolveChangelogRestoreTarget('manual', settingsTriggerRef.current);
-                          restoreTarget?.focus();
                           setShowUtilMenu(false);
-                          onOpenChangelog();
+                          onOpenChangelog(settingsTriggerRef.current);
                         }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-amber-300">
-                          <Newspaper size={13} className="text-amber-400" />
+                          <ScrollText size={13} className="text-amber-300" />
                           What's New
                         </button>
                         <div className="my-1 border-t border-white/10" />
@@ -625,8 +626,10 @@ const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = f
 };
 
 const GameLayout = () => {
-  const { lastEvent, animationsEnabled, hasSeenOnboarding, history } = useGame();
-  const { recentlyCreatedId, activeProfileId, clearRecentlyCreated } = useProfiles();
+  const {
+    lastEvent, animationsEnabled, hasSeenOnboarding, history, linkedAccount,
+  } = useGame();
+  const { recentlyCreatedId, activeProfileId, activeProfileName, clearRecentlyCreated } = useProfiles();
 
   const [showChangelog, dispatchChangelog] = useReducer(
     changelogVisibilityReducer,
@@ -639,15 +642,64 @@ const GameLayout = () => {
     }),
   );
 
-  const openChangelog = () => dispatchChangelog({ type: 'OPEN' });
+  const [runelitePairCode, setRunelitePairCode] = useState<string | null>(
+    () => {
+      if (typeof window === 'undefined') return null;
+      const code = parseRunelitePairFragment(window.location.hash);
+      if (code) {
+        window.history.replaceState(
+          null, '', window.location.pathname + window.location.search,
+        );
+      }
+      return code;
+    },
+  );
+  const [runelitePairPhase, setRunelitePairPhase] = useState<
+    'confirm' | 'uploading' | 'success' | 'error'
+  >('confirm');
+  const [runelitePairError, setRunelitePairError] =
+    useState<string | undefined>(undefined);
+
+  const changelogReturnFocusTarget = useRef<HTMLElement | null>(null);
+  const changelogAutoOpenedRelease = useRef<string | null>(
+    showChangelog ? LATEST_CHANGELOG.id : null,
+  );
+  const openChangelog = (returnFocusTarget: HTMLElement | null = null) => {
+    changelogReturnFocusTarget.current = returnFocusTarget;
+    dispatchChangelog({ type: 'OPEN' });
+  };
   const closeChangelog = () => {
     markChangelogSeen(LATEST_CHANGELOG.id);
     dispatchChangelog({ type: 'DISMISS' });
+    changelogReturnFocusTarget.current = null;
   };
 
   // Warm the heavy lazy chunks (map, stats+charts, resource engine, …) during
   // idle time so opening them is instant instead of a visible fetch delay.
   useEffect(() => { prefetchHeavyChunks(); }, []);
+
+  useEffect(() => relaySync.subscribe(() => {
+    if (!runelitePairCode || relaySync.code !== runelitePairCode) return;
+    if (relaySync.status === 'synced') {
+      setRunelitePairPhase('success');
+      setRunelitePairError(undefined);
+    } else if (relaySync.status === 'error') {
+      setRunelitePairPhase('error');
+      setRunelitePairError(
+        relaySync.lastError || 'Profile could not be sent.',
+      );
+    } else {
+      setRunelitePairPhase('uploading');
+      setRunelitePairError(undefined);
+    }
+  }), [runelitePairCode]);
+
+  const closeRunelitePairing = () => {
+    if (runelitePairPhase === 'confirm'
+      || runelitePairPhase === 'success') {
+      setRunelitePairCode(null);
+    }
+  };
 
   // UI States
   const [showStats, setShowStats] = useState(false);
@@ -740,16 +792,50 @@ const GameLayout = () => {
   // the onboarding wizard rather than `createProfile`. Catch that finish-line:
   // when onboarding flips to complete on a still-empty run, prompt the mode pick.
   const prevOnboarded = useRef(hasSeenOnboarding);
+  const onboardingJustCompleted = !prevOnboarded.current && hasSeenOnboarding && history.length === 0;
   useEffect(() => {
-    if (!prevOnboarded.current && hasSeenOnboarding && history.length === 0) {
+    if (onboardingJustCompleted) {
       setShowGameMode(true);
     }
     prevOnboarded.current = hasSeenOnboarding;
-  }, [hasSeenOnboarding, history.length]);
+  }, [hasSeenOnboarding, onboardingJustCompleted]);
+
+  const startupHash = typeof window === 'undefined' ? '' : window.location.hash;
+  const hasPendingSyncPrompt = showSyncCode
+    || (startupHash.startsWith('#sync=') && startupHash.length > '#sync='.length)
+    || !!runelitePairCode;
+  const hasPendingGameModePrompt = showGameMode
+    || recentlyCreatedId === activeProfileId
+    || onboardingJustCompleted;
+  useEffect(() => {
+    if (
+      showChangelog
+      || changelogAutoOpenedRelease.current === LATEST_CHANGELOG.id
+      || !shouldAutoOpenChangelog({
+        hasSeenOnboarding,
+        releaseIsUnseen: shouldShowChangelog(LATEST_CHANGELOG.id),
+        startupHash,
+        hasPendingGameModePrompt,
+        hasPendingSyncPrompt,
+      })
+    ) return;
+
+    changelogAutoOpenedRelease.current = LATEST_CHANGELOG.id;
+    dispatchChangelog({ type: 'OPEN' });
+  }, [
+    activeProfileId,
+    hasPendingGameModePrompt,
+    hasPendingSyncPrompt,
+    hasSeenOnboarding,
+    recentlyCreatedId,
+    showChangelog,
+    startupHash,
+  ]);
 
   // Escape closes whichever top-level modal is open.
   const anyModalOpen = showStats || showReference || showAltar
-    || showOracle || showStrategy || showSupplyChain || showGameMode || showSyncCode;
+    || showOracle || showStrategy || showSupplyChain || showGameMode
+    || showSyncCode || !!runelitePairCode;
   useEscapeKey(() => {
     setShowStats(false);
     setShowReference(false);
@@ -759,6 +845,9 @@ const GameLayout = () => {
     setShowSupplyChain(false);
     setShowGameMode(false);
     setShowSyncCode(false);
+    setRunelitePairCode(null);
+    setRunelitePairPhase('confirm');
+    setRunelitePairError(undefined);
   }, shouldEnableUnderlyingModalEscape(anyModalOpen, showChangelog));
   const modalRenderPolicy = resolveChangelogModalRenderPolicy(showChangelog);
 
@@ -766,9 +855,9 @@ const GameLayout = () => {
     <div className="min-h-screen bg-osrs-bg text-osrs-text pb-6 font-sans selection:bg-osrs-gold selection:text-black relative">
       <EffectsLayer />
       <OnlineSyncDriver />
-      <SuggestionBanner />
+      <RollInboxDriver />
       {/* Progressive-disclosure watcher — always mounted (same rule as
-          SuggestionBanner): reveals earned anywhere must toast from here. */}
+          RollInboxDriver): detected events must queue from every screen. */}
       <FeatureRevealDriver />
 
 
@@ -802,7 +891,11 @@ const GameLayout = () => {
           </>
         )}
         {showChangelog && (
-          <ChangelogModal release={LATEST_CHANGELOG} onClose={closeChangelog} />
+          <ChangelogModal
+            releases={CHANGELOG_RELEASES}
+            onClose={closeChangelog}
+            returnFocusTarget={changelogReturnFocusTarget.current}
+          />
         )}
       </Suspense>
 
@@ -825,6 +918,39 @@ const GameLayout = () => {
       {modalRenderPolicy.renderGlobalDialogOverlays && <GuidedTour />}
       {/* Quest-complete celebration with the wiki reward scroll. */}
       {modalRenderPolicy.renderGlobalDialogOverlays && <QuestCompleteOverlay />}
+      {modalRenderPolicy.renderGlobalDialogOverlays && runelitePairCode && (
+        <RunelitePairingDialog
+          code={runelitePairCode}
+          replacing={relaySync.enabled}
+          profileName={activeProfileName}
+          linkedAccount={linkedAccount ?? null}
+          phase={runelitePairPhase}
+          error={runelitePairError}
+          onConfirm={() => {
+            if (!relaySync.adoptCode(runelitePairCode)) {
+              setRunelitePairPhase('confirm');
+              setRunelitePairError(
+                'This connection could not be saved. Try again.',
+              );
+              return;
+            }
+            setRunelitePairPhase('uploading');
+            setRunelitePairError(undefined);
+          }}
+          onRetry={() => {
+            if (relaySync.requestPush()) {
+              setRunelitePairPhase('uploading');
+              setRunelitePairError(undefined);
+            } else {
+              setRunelitePairPhase('error');
+              setRunelitePairError(
+                'This connection is no longer active.',
+              );
+            }
+          }}
+          onClose={closeRunelitePairing}
+        />
+      )}
 
       {/* One contextual "next step" hint under the header — teaches the loop. */}
       <CoachStrip />

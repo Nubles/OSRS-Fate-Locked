@@ -2,8 +2,9 @@ import { DiaryTask } from '../data/diaryTasks';
 import { QuestData } from '../data/questData';
 import { UnlockState } from '../types';
 import {
+  evaluateDiaryTaskEligibility,
   evaluateQuestEligibility,
-  taskEligibilityBlockers,
+  ManualEligibility,
 } from './journalStatus';
 
 export type JournalCompletionField = 'quests' | 'diaries' | 'completedTasks';
@@ -22,38 +23,57 @@ export type CompletionResult =
   | { ok: true }
   | { ok: false; reason: string };
 
+export interface CompletionAttestation {
+  manualConfirmed?: boolean;
+}
+
+const manualDecision = (
+  result: Pick<ManualEligibility, 'machineEligible' | 'manualChecks' | 'confirmable'>,
+  attestation: CompletionAttestation,
+): CompletionResult | null => {
+  if (!result.machineEligible) return null;
+  if (result.manualChecks.length === 0) return { ok: true };
+  return result.confirmable && attestation.manualConfirmed
+    ? { ok: true }
+    : { ok: false, reason: 'Confirm: ' + result.manualChecks.join(', ') };
+};
+
 export const questCompletionDecision = (
   quest: QuestData,
   unlocks: UnlockState,
   gameModeId?: string,
+  attestation: CompletionAttestation = {},
 ): CompletionResult => {
   const result = evaluateQuestEligibility(quest, unlocks, gameModeId);
   if (result.status === 'COMPLETED') {
     return { ok: false, reason: 'Already completed' };
   }
-  return result.eligible
-    ? { ok: true }
-    : {
-        ok: false,
-        reason: 'Requires: ' + result.blockers.map(blocker => blocker.label).join(', '),
-      };
+  if (!result.machineEligible) {
+    return {
+      ok: false,
+      reason: 'Requires: ' + result.blockers.map(blocker => blocker.label).join(', '),
+    };
+  }
+  return manualDecision(result, attestation)!;
 };
 
 export const diaryTaskCompletionDecision = (
   task: DiaryTask,
   unlocks: UnlockState,
   gameModeId?: string,
+  attestation: CompletionAttestation = {},
 ): CompletionResult => {
   if (unlocks.completedTasks.includes(task.id)) {
     return { ok: false, reason: 'Already completed' };
   }
-  const blockers = taskEligibilityBlockers(task, unlocks, gameModeId);
-  return blockers.length === 0
-    ? { ok: true }
-    : {
-        ok: false,
-        reason: 'Requires: ' + blockers.map(blocker => blocker.label).join(', '),
-      };
+  const result = evaluateDiaryTaskEligibility(task, unlocks, gameModeId);
+  if (!result.machineEligible) {
+    return {
+      ok: false,
+      reason: 'Requires: ' + result.blockers.map(blocker => blocker.label).join(', '),
+    };
+  }
+  return manualDecision(result, attestation)!;
 };
 
 export const canEarnDiaryTier = (

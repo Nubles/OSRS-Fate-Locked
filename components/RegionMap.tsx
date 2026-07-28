@@ -8,6 +8,7 @@ import { ChunkActivityPanel } from './ChunkActivityPanel';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { exportRuneliteBundle } from '../utils/runeliteExport';
+import type { GameModeRules } from '../config/gameModes';
 import { consumePendingChunk, chunkUnlocked, chunkForPlace } from '../utils/chunkLocations';
 import { isFreeArea } from '../utils/freeAreas';
 import { chunkContentService, type OverlayPoint } from '../services/ChunkContentService';
@@ -47,8 +48,8 @@ const CLUE_PREFIX = 'Clue: ';
 
 // ── Live shooting-star feed ────────────────────────────────────────────────
 // Crowdsourced active-star data (starminers) sends no CORS header, so the app
-// reads it through a user-hosted proxy (a tiny Cloudflare Worker — see
-// runelite-plugin/../docs). The URL comes from a Vite env var or a localStorage
+// reads it through a user-hosted proxy (a tiny Cloudflare Worker; deployment
+// details live in docs/star-feed-proxy.md). The URL comes from a Vite env var or a localStorage
 // override so it can be set without rebuilding.
 // Default proxy shipped for everyone (a Cloudflare Worker that re-serves the
 // starminers feed with CORS). A per-browser localStorage override or a build-time
@@ -368,13 +369,15 @@ const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectK
 ));
 
 interface GameSnapshot {
+  runId: string; runRevision: number;
   keys: number; specialKeys: number; chaosKeys: number;
   fatePoints: number; activeBuff: string; pinnedGoals: string[];
   /** OSRS account this run is bound to (Auto-Roll), if any. */
   linkedAccount?: string;
   /** Per-slot unlocked equipment tier, for the plugin's over-tier gear warning. */
   equipment?: Record<string, number>;
-  gameModeId?: string;
+  gameModeId: string;
+  customMode?: GameModeRules;
 }
 
 const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGameSnapshot }: { regionUnlocks: string[]; chunkUnlocks: string[]; isChunked: boolean; getGameSnapshot: () => GameSnapshot }) => {
@@ -1914,11 +1917,11 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
 }, (prev, next) => prev.regionUnlocks === next.regionUnlocks && prev.chunkUnlocks === next.chunkUnlocks && prev.isChunked === next.isChunked);
 
 export const RegionMap: React.FC = () => {
-  const { unlocks, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId } = useGame();
+  const { unlocks, runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId, customMode } = useGame();
   // Live run state for the RuneLite bundle, read lazily at export time via a
   // stable getter so MapContent's memoization (regionUnlocks-only) holds.
-  const snapRef = useRef<GameSnapshot>({ keys: 0, specialKeys: 0, chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', pinnedGoals: [] as string[] });
-  snapRef.current = { keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals: pinnedGoals ?? [], linkedAccount, equipment: unlocks.equipment, gameModeId };
+  const snapRef = useRef<GameSnapshot>({ runId, runRevision, keys: 0, specialKeys: 0, chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', pinnedGoals: [] as string[], gameModeId: gameModeId ?? 'vanilla' });
+  snapRef.current = { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals: pinnedGoals ?? [], linkedAccount, equipment: unlocks.equipment, gameModeId: gameModeId ?? 'vanilla', customMode };
   const getGameSnapshot = useCallback(() => snapRef.current, []);
   return <MapContent regionUnlocks={unlocks.regions} chunkUnlocks={unlocks.chunks ?? []} isChunked={gameModeId === 'chunked'} getGameSnapshot={getGameSnapshot} />;
 };

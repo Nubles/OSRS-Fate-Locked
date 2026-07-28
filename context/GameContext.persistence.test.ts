@@ -70,6 +70,7 @@ describe('roll history persistence', () => {
       rollValue: 8.2,
       baseThreshold: 8.2,
       threshold: 9.2,
+      meta: { fatePointsEarned: 0 },
     });
   });
 
@@ -90,5 +91,6 @@ describe('roll history persistence', () => {
     if (parsed.ok === false) throw new Error(`${parsed.code}: ${parsed.path ?? ''}`);
     expect(parsed.state.history[0]).toMatchObject({ rollValue: 8, threshold: 9 });
     expect(parsed.state.history[0]).not.toHaveProperty('baseThreshold');
+    expect(parsed.state.history[0].meta).toBeUndefined();
   });
 });

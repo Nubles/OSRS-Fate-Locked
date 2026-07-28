@@ -26,6 +26,12 @@ describe('questUnmet', () => {
     expect(questUnmet(q, u({ skills: { Cooking: 3 }, levels: { Cooking: 35 } }))).toEqual([]);
     expect(questUnmet(q, u({ skills: { Cooking: 3 }, levels: { Cooking: 20 } })).length).toBe(1);
   });
+  it('classifies a quest point shortfall as QP, not a prerequisite quest', () => {
+    expect(questUnmet(QUEST_DATA['Black Knights\' Fortress'], u({}))).toContainEqual({
+      kind: 'qp',
+      label: '12 QP',
+    });
+  });
   it('reports method-cap and alternative-access blockers', () => {
     expect(questUnmet(quest({ skills: { Woodcutting: 15 } }), u({
       skills: { Woodcutting: 1 }, levels: { Woodcutting: 15 },
@@ -48,6 +54,18 @@ describe('questUnmet', () => {
         Prayer: 60, Ranged: 60, Magic: 60,
       },
     }))).toEqual([{ kind: 'skill', label: 'Combat level 85' }]);
+  });
+
+  it('keeps Prying Times behind its manual Sailing confirmation', () => {
+    expect(questUnmet(QUEST_DATA['Prying Times'], u({
+      regions: ['The Open Seas'],
+      quests: ['Pandemonium', "The Knight's Sword"],
+      skills: { Smithing: 3, Sailing: 2 },
+      levels: { Smithing: 30, Sailing: 12 },
+    }))).toEqual([{
+      kind: 'manual',
+      label: 'Confirm: One open Sailing task slot',
+    }]);
   });
 });
 
@@ -79,6 +97,30 @@ describe('diaryUnmet', () => {
       quests: ['Impossible aggregate quest'],
       requiredRegions: ['Impossible aggregate region'],
     }, unlocks)).toEqual([{ kind: 'quest', label: 'Biohazard' }]);
+  });
+
+  it('classifies the Champions Guild requirement as a QP shortfall', () => {
+    const completedTasks = ALL_DIARY_TASKS
+      .filter(task => task.tierId !== 'Varrock Medium' || task.id !== 'var_med_2')
+      .map(task => task.id);
+
+    expect(diaryUnmet(DIARY_DATA['Varrock Medium'], u({
+      regions: ['Varrock'],
+      completedTasks,
+    }))).toEqual([{ kind: 'qp', label: '32 QP' }]);
+  });
+  it('reports the remaining Varrock Kudos confirmation after machine gates pass', () => {
+    const completedTasks = ALL_DIARY_TASKS
+      .filter(task => task.tierId !== 'Varrock Hard' || task.id !== 'var_hard_2')
+      .map(task => task.id);
+
+    expect(diaryUnmet(DIARY_DATA['Varrock Hard'], u({
+      regions: ['Varrock'],
+      completedTasks,
+    }))).toEqual([{
+      kind: 'manual',
+      label: 'Confirm: 153 Varrock Museum Kudos',
+    }]);
   });
 });
 
