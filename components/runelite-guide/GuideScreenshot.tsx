@@ -30,7 +30,7 @@ export const GuideScreenshot: React.FC<GuideScreenshotProps> = ({ screenshot }) 
         className="flex flex-wrap items-center justify-between gap-3 border-b border-osrs-border bg-[#252525] px-3 py-2.5 sm:px-4"
       >
         <div>
-          <h3 id={titleId} className="text-sm font-bold text-gray-100">
+          <h3 id={titleId} className="font-sans text-sm font-bold text-gray-100">
             {screenshot.title}
           </h3>
           <p className="mt-1 text-xs text-gray-500">Captured from the live Plugin Hub build.</p>

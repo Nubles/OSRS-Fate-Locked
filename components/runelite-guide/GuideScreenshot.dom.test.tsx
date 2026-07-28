@@ -66,6 +66,7 @@ describe('GuideScreenshot', () => {
     const original = host.querySelector<HTMLAnchorElement>('a');
     const panel = host.querySelector<HTMLElement>('[data-guide-screenshot="demo"]');
     const panelHeader = host.querySelector<HTMLElement>('[data-guide-screenshot-header]');
+    const title = host.querySelector<HTMLElement>('h3');
     const calloutRows = host.querySelectorAll<HTMLElement>('[data-guide-callout]');
 
     expect(host.querySelector('img')?.getAttribute('src')).toBe('/guides/runelite/demo.png');
@@ -73,6 +74,7 @@ describe('GuideScreenshot', () => {
     expect(panel?.className).toContain('rounded-lg');
     expect(panel?.className).toContain('border-osrs-border');
     expect(panelHeader).toBeTruthy();
+    expect(title?.className).toContain('font-sans');
     expect(calloutRows).toHaveLength(screenshot.callouts.length);
     expect(imageStage).toBeTruthy();
     expect(imageStage?.contains(host.querySelector('img'))).toBe(true);
