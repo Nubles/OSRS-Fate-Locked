@@ -26,12 +26,15 @@ const settings: readonly GuideSetting[] = [
 ];
 
 describe('GuideSettingsTable', () => {
-  it('renders every setting field in semantic rows and mobile cards', () => {
+  it('renders every setting as a compact native row with labeled fields', () => {
     const markup = renderToStaticMarkup(<GuideSettingsTable settings={settings} />);
 
-    expect(markup).toContain('<table');
-    expect(markup).toContain('scope="col"');
-    expect(markup).toContain('Default');
+    expect(markup).toContain('data-guide-settings-list="true"');
+    expect(markup.match(/data-guide-setting-card=/g)).toHaveLength(settings.length);
+    expect(markup.match(/data-guide-setting-fields=/g)).toHaveLength(settings.length);
+    expect(markup).not.toContain('<table');
+    expect(markup).not.toContain('rounded-2xl');
+    expect(markup).not.toContain('rounded-full');
     expect(markup).toContain('What it does');
     expect(markup).toContain('What you see');
     expect(markup).toContain('Change it when');
@@ -40,7 +43,9 @@ describe('GuideSettingsTable', () => {
     expect(markup).toContain('Explains a locked action.');
     expect(markup).toContain('A visible warning appears.');
     expect(markup).toContain('Turn it off when another channel is enough.');
+    expect(markup).toContain('Adds an extra notification.');
     expect(markup).toContain('RuneLite sends a native notification.');
+    expect(markup).toContain('Turn it on when RuneLite is not focused.');
     expect(markup).toContain('data-default-value="On"');
     expect(markup).toContain('data-default-value="Off"');
     expect(markup).toContain('data-guide-setting-card="enabled"');
