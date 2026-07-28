@@ -1,0 +1,206 @@
+{
+  "version": 1,
+  "pluginCommit": "1e118ec73f5a0fad17fc7b0704461a602d169041",
+  "capturedAt": "2026-07-28",
+  "entries": [
+    {
+      "id": "plugin-hub-install",
+      "filename": "01-plugin-hub-install.png",
+      "chapter": "install",
+      "purpose": "Find the live Fate Locked Ironman result in RuneLite's Plugin Hub and verify the installed Plugin Hub commit.",
+      "width": 1048,
+      "height": 535,
+      "redactions": [],
+      "annotations": [
+        { "id": "plugin-result", "marker": 1, "x": 0.86, "y": 0.36 },
+        { "id": "installed-control", "marker": 2, "x": 0.91, "y": 0.73 }
+      ]
+    },
+    {
+      "id": "panel-disconnected",
+      "filename": "02-panel-disconnected.png",
+      "chapter": "connect-tracker",
+      "purpose": "Locate the Connect tracker control and recognize the waiting-for-tracker state before a profile is confirmed.",
+      "width": 242,
+      "height": 265,
+      "redactions": [],
+      "annotations": [
+        { "id": "connect-button", "marker": 1, "x": 0.50, "y": 0.24 },
+        { "id": "connection-state", "marker": 2, "x": 0.67, "y": 0.36 }
+      ]
+    },
+    {
+      "id": "companion-confirmation",
+      "filename": "03-companion-confirmation.png",
+      "chapter": "connect-tracker",
+      "purpose": "Confirm the fictional Vanilla tracker profile in the companion app without exposing the one-time pairing request.",
+      "width": 545,
+      "height": 475,
+      "redactions": [
+        "One-time RuneLite pairing request"
+      ],
+      "annotations": [
+        { "id": "profile", "marker": 1, "x": 0.72, "y": 0.44 },
+        { "id": "privacy-copy", "marker": 2, "x": 0.39, "y": 0.31 },
+        { "id": "confirm", "marker": 3, "x": 0.76, "y": 0.83 }
+      ]
+    },
+    {
+      "id": "panel-connected",
+      "filename": "04-panel-connected.png",
+      "chapter": "connection-privacy",
+      "purpose": "Recognize a successful relay connection, the last-sync row, and the synced rules summary.",
+      "width": 242,
+      "height": 250,
+      "redactions": [],
+      "annotations": [
+        { "id": "connected", "marker": 1, "x": 0.69, "y": 0.29 },
+        { "id": "last-sync", "marker": 2, "x": 0.65, "y": 0.45 },
+        { "id": "synced-rules", "marker": 3, "x": 0.26, "y": 0.55 }
+      ]
+    },
+    {
+      "id": "unified-panel",
+      "filename": "05-unified-panel.png",
+      "chapter": "unified-panel",
+      "purpose": "Orient players to the single RuneLite sidebar panel and its collapsible sections.",
+      "width": 242,
+      "height": 508,
+      "redactions": [],
+      "annotations": [
+        { "id": "connection-summary", "marker": 1, "x": 0.50, "y": 0.21 },
+        { "id": "current-chunk", "marker": 2, "x": 0.23, "y": 0.52 },
+        { "id": "guardian", "marker": 3, "x": 0.20, "y": 0.63 },
+        { "id": "more-sections", "marker": 4, "x": 0.20, "y": 0.91 }
+      ]
+    },
+    {
+      "id": "current-chunk",
+      "filename": "06-current-chunk.png",
+      "chapter": "current-chunk",
+      "purpose": "Show where the current chunk summary appears and the signed-out prompt players see before entering the game.",
+      "width": 242,
+      "height": 165,
+      "redactions": [],
+      "annotations": [
+        { "id": "chunk-section", "marker": 1, "x": 0.23, "y": 0.48 },
+        { "id": "signed-out-prompt", "marker": 2, "x": 0.50, "y": 0.73 }
+      ]
+    },
+    {
+      "id": "guardian",
+      "filename": "07-guardian.png",
+      "chapter": "guardian",
+      "purpose": "Explain the optional Strict Mode switch, live guardian state, and 60-second pause control.",
+      "width": 242,
+      "height": 205,
+      "redactions": [],
+      "annotations": [
+        { "id": "strict-mode", "marker": 1, "x": 0.36, "y": 0.48 },
+        { "id": "guardian-state", "marker": 2, "x": 0.66, "y": 0.65 },
+        { "id": "pause", "marker": 3, "x": 0.52, "y": 0.84 }
+      ]
+    },
+    {
+      "id": "roll-inbox",
+      "filename": "08-roll-inbox.png",
+      "chapter": "roll-inbox",
+      "purpose": "Read local event, review, and warning counts in the Roll inbox.",
+      "width": 242,
+      "height": 170,
+      "redactions": [],
+      "annotations": [
+        { "id": "roll-inbox-header", "marker": 1, "x": 0.24, "y": 0.62 },
+        { "id": "review-count", "marker": 2, "x": 0.52, "y": 0.86 }
+      ]
+    },
+    {
+      "id": "run-keys",
+      "filename": "09-run-keys.png",
+      "chapter": "run-and-keys",
+      "purpose": "Distinguish regular Keys, Omni Keys, and Chaos Keys in the Run section.",
+      "width": 242,
+      "height": 185,
+      "redactions": [
+        "Fictional demo Run ID"
+      ],
+      "annotations": [
+        { "id": "run-header", "marker": 1, "x": 0.17, "y": 0.28 },
+        { "id": "keys", "marker": 2, "x": 0.50, "y": 0.70 },
+        { "id": "omni-keys", "marker": 3, "x": 0.53, "y": 0.82 },
+        { "id": "chaos-keys", "marker": 4, "x": 0.54, "y": 0.94 }
+      ]
+    },
+    {
+      "id": "bundle-recovery",
+      "filename": "10-bundle-recovery.png",
+      "chapter": "bundle-recovery",
+      "purpose": "Locate automatic bundle reload, the re-import hotkey, and manual clipboard recovery.",
+      "width": 242,
+      "height": 190,
+      "redactions": [],
+      "annotations": [
+        { "id": "auto-reload", "marker": 1, "x": 0.46, "y": 0.58 },
+        { "id": "hotkey", "marker": 2, "x": 0.77, "y": 0.75 },
+        { "id": "clipboard-import", "marker": 3, "x": 0.50, "y": 0.93 }
+      ]
+    },
+    {
+      "id": "warnings",
+      "filename": "11-warnings.png",
+      "chapter": "warnings",
+      "purpose": "Identify the warning controls that add chat and travel safety feedback.",
+      "width": 242,
+      "height": 200,
+      "redactions": [],
+      "annotations": [
+        { "id": "warnings-header", "marker": 1, "x": 0.25, "y": 0.50 },
+        { "id": "chat-on-entry", "marker": 2, "x": 0.42, "y": 0.68 },
+        { "id": "locked-chunk", "marker": 3, "x": 0.48, "y": 0.83 }
+      ]
+    },
+    {
+      "id": "rendering",
+      "filename": "12-rendering.png",
+      "chapter": "rendering",
+      "purpose": "Find the scene, player, minimap, and locked-border rendering controls.",
+      "width": 242,
+      "height": 185,
+      "redactions": [],
+      "annotations": [
+        { "id": "rendering-header", "marker": 1, "x": 0.24, "y": 0.43 },
+        { "id": "world-map", "marker": 2, "x": 0.43, "y": 0.59 },
+        { "id": "player-outline", "marker": 3, "x": 0.44, "y": 0.73 },
+        { "id": "minimap", "marker": 4, "x": 0.42, "y": 0.87 }
+      ]
+    },
+    {
+      "id": "world-map-tooltip",
+      "filename": "13-world-map-tooltip.png",
+      "chapter": "in-game-overlays",
+      "purpose": "Locate the world-map hover tooltip and the color controls it uses.",
+      "width": 242,
+      "height": 250,
+      "redactions": [],
+      "annotations": [
+        { "id": "world-map-tooltip", "marker": 1, "x": 0.48, "y": 0.39 },
+        { "id": "chunk-detail-tooltip", "marker": 2, "x": 0.49, "y": 0.50 },
+        { "id": "overlay-colors", "marker": 3, "x": 0.50, "y": 0.80 }
+      ]
+    },
+    {
+      "id": "scene-minimap-hud",
+      "filename": "14-scene-minimap-hud.png",
+      "chapter": "in-game-overlays",
+      "purpose": "Locate the scene, player, minimap, and locked-border switches that control the in-game HUD.",
+      "width": 242,
+      "height": 205,
+      "redactions": [],
+      "annotations": [
+        { "id": "draw-world-map", "marker": 1, "x": 0.42, "y": 0.56 },
+        { "id": "draw-player", "marker": 2, "x": 0.42, "y": 0.70 },
+        { "id": "draw-minimap", "marker": 3, "x": 0.42, "y": 0.84 }
+      ]
+    }
+  ]
+}
