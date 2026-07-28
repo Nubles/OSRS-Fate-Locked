@@ -1,4 +1,6 @@
+// @ts-expect-error Node types are intentionally excluded from the browser app.
 import { existsSync, readFileSync } from 'node:fs';
+// @ts-expect-error Node types are intentionally excluded from the browser app.
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -44,7 +46,7 @@ describe('RuneLite guide screenshot assets', () => {
     expect(manifest.pluginCommit)
       .toBe('1e118ec73f5a0fad17fc7b0704461a602d169041');
     expect(manifest.entries.map(entry => entry.id))
-      .toEqual(expect.arrayContaining(required));
+      .toEqual(expect.arrayContaining([...required]));
   });
 
   it.each(required)('%s is a real non-empty PNG with recorded dimensions', (id) => {
