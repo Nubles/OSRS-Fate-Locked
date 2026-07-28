@@ -49,6 +49,7 @@ const STATUSES = new Set<QuestAuditStatus>([
   'verified-with-notes',
   'unresolved',
 ]);
+const GENERIC_DISCREPANCY = /\bpending\b|field-by-field|tasks?\s+\d|not yet (?:audited|reviewed)/i;
 
 function canonicalValue(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(canonicalValue);
@@ -221,9 +222,13 @@ export function validateQuestRequirementAudit(
     if (raw.status === 'unresolved') {
       if (typeof raw.discrepancy !== 'string' || !raw.discrepancy.trim()) {
         errors.push(`audit ${raw.id}: unresolved entry requires a discrepancy`);
+      } else if (GENERIC_DISCREPANCY.test(raw.discrepancy)) {
+        errors.push(`audit ${raw.id}: unresolved entry has a generic procedural discrepancy`);
       }
       if (typeof raw.conservativeReason !== 'string' || !raw.conservativeReason.trim()) {
         errors.push(`audit ${raw.id}: unresolved entry requires a conservativeReason`);
+      } else if (!/premature completion\/key-roll eligibility/i.test(raw.conservativeReason)) {
+        errors.push(`audit ${raw.id}: conservativeReason does not explain premature completion/key-roll eligibility`);
       }
     }
   }
@@ -236,6 +241,53 @@ export function validateQuestRequirementAudit(
     if (entry?.kind !== quest.kind) errors.push(`${id}: audit kind does not match runtime`);
     if (entry?.accessPolicy !== quest.accessPolicy) {
       errors.push(`${id}: audit accessPolicy does not match runtime`);
+    }
+    if (entry?.status === 'unresolved') {
+      const discrepancy = typeof entry.discrepancy === 'string' ? entry.discrepancy : '';
+      const conservativeReason = typeof entry.conservativeReason === 'string'
+        ? entry.conservativeReason
+        : '';
+      const policyText = `${quest.accessPolicy} policy`;
+      if (!discrepancy.includes(policyText)) {
+        errors.push(`${id}: unresolved discrepancy must name the retained ${policyText}`);
+      }
+      const geographyTokens = quest.locations?.length
+        ? quest.locations.map(location => location.label)
+        : quest.regions;
+      if (geographyTokens.length && !geographyTokens.some(token => discrepancy.includes(token))) {
+        errors.push(`${id}: unresolved discrepancy must name a retained runtime region or location`);
+      }
+      const evidenceRows = Array.isArray(entry.chunkEvidence)
+        ? entry.chunkEvidence.filter(isRecord)
+        : [];
+      if (evidenceRows.length) {
+        const namesConcreteEvidence = evidenceRows.some(row =>
+          typeof row.place === 'string'
+          && typeof row.chunkId === 'string'
+          && discrepancy.includes(row.place)
+          && discrepancy.includes(row.chunkId));
+        if (!namesConcreteEvidence) {
+          errors.push(`${id}: unresolved discrepancy must name a pinned Chunk Picker place and chunk`);
+        }
+      } else if (!/no pinned Chunk Picker first\/step activity chunk/i.test(discrepancy)) {
+        errors.push(`${id}: unresolved discrepancy must state the absence of pinned chunk evidence`);
+      }
+      if (quest.manualRequirements?.length
+        && !quest.manualRequirements.some(requirement => discrepancy.includes(requirement))) {
+        errors.push(`${id}: unresolved discrepancy must name its manual requirement gap`);
+      }
+      const combinedReasoning = `${discrepancy} ${conservativeReason}`;
+      if (quest.prereqs.length
+        && !quest.prereqs.some(prerequisite => combinedReasoning.includes(prerequisite))) {
+        errors.push(`${id}: unresolved reasoning must name a retained prerequisite`);
+      }
+      if (!conservativeReason.includes(id) || !conservativeReason.includes(policyText)) {
+        errors.push(`${id}: conservativeReason must name the quest and retained policy`);
+      }
+      if (geographyTokens.length
+        && !geographyTokens.some(token => conservativeReason.includes(token))) {
+        errors.push(`${id}: conservativeReason must name a retained runtime region or location`);
+      }
     }
     if (entry?.requirementFingerprint !== questRequirementFingerprint(quest)) {
       errors.push(`${id}: requirement fingerprint does not match runtime`);

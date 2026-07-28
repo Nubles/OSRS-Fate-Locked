@@ -35,6 +35,8 @@ const WIKI_PAGE_TITLES = {
 const RFD_CHUNK_IDS = Object.fromEntries(
   Object.entries(WIKI_PAGE_TITLES).map(([id, pageTitle]) => [pageTitle, id]),
 );
+const GENERIC_DISCREPANCY = /\bpending\b|field-by-field|tasks?\s+\d|not yet (?:audited|reviewed)/i;
+
 function canonicalValue(value) {
   if (Array.isArray(value)) return value.map(canonicalValue);
   if (value && typeof value === 'object') {
@@ -154,8 +156,17 @@ function assertSnapshots(official, audit) {
     const sourceError = stableSourceError(entry.source);
     if (sourceError) errors.push(`${entry.id} audit source: ${sourceError}`);
     if (entry.chunkSourceCommit !== CHUNK_SOURCE_COMMIT) errors.push(`${entry.id}: unexpected Chunk Picker commit`);
-    if (entry.status === 'unresolved' && (!entry.discrepancy?.trim() || !entry.conservativeReason?.trim())) {
-      errors.push(`${entry.id}: unresolved entries require discrepancy and conservativeReason`);
+    if (entry.status === 'unresolved') {
+      if (!entry.discrepancy?.trim() || !entry.conservativeReason?.trim()) {
+        errors.push(`${entry.id}: unresolved entries require discrepancy and conservativeReason`);
+      } else {
+        if (GENERIC_DISCREPANCY.test(entry.discrepancy)) {
+          errors.push(`${entry.id}: unresolved discrepancy is a generic procedural placeholder`);
+        }
+        if (!/premature completion\/key-roll eligibility/i.test(entry.conservativeReason)) {
+          errors.push(`${entry.id}: conservativeReason lacks the completion/key-roll integrity consequence`);
+        }
+      }
     }
     if (JSON.stringify(entry.source) !== JSON.stringify(officialById.get(entry.id)?.source)) {
       errors.push(`${entry.id}: source differs between official list and audit`);
@@ -331,6 +342,62 @@ function chunkEvidence(runtimeIds) {
   return evidence;
 }
 
+function bracketed(values) {
+  return `[${values.length ? values.join(', ') : 'none'}]`;
+}
+
+function runtimeLocationSummary(quest) {
+  return bracketed((quest.locations ?? []).map(location => {
+    const chunks = location.chunkOptions.map(chunk => `${chunk.cx},${chunk.cy}`);
+    return `${location.label} (standard areas ${bracketed(location.standardAreas)}; chunks ${bracketed(chunks)})`;
+  }));
+}
+
+function chunkEvidenceSummary(chunkEvidence) {
+  const summarize = role => bracketed(
+    chunkEvidence
+      .filter(row => row.role === role)
+      .map(row => `${row.place} (chunk ${row.chunkId})`),
+  );
+  return `first places ${summarize('first')} and step places ${summarize('step')}`;
+}
+
+function retainedRequirementSummary(quest) {
+  const requirements = [
+    `regions ${bracketed(quest.regions)}`,
+    `exact locations ${runtimeLocationSummary(quest)}`,
+    `skills ${bracketed(Object.entries(quest.skills).map(([skill, level]) => `${skill} ${level}`))}`,
+    `prerequisites ${bracketed(quest.prereqs)}`,
+  ];
+  if (quest.combatLevel !== undefined) requirements.push(`combat level ${quest.combatLevel}`);
+  if (quest.manualRequirements?.length) {
+    requirements.push(`manual requirements ${bracketed(quest.manualRequirements)}`);
+  }
+  return requirements.join('; ');
+}
+
+function unresolvedReviewText(quest, chunkEvidence) {
+  const policy = `${quest.accessPolicy} policy`;
+  const regions = `runtime regions ${bracketed(quest.regions)}`;
+  const evidence = chunkEvidenceSummary(chunkEvidence);
+  let discrepancy;
+
+  if (quest.locations?.length) {
+    discrepancy = `${quest.id} uses the ${policy} with exact runtime locations ${runtimeLocationSummary(quest)} and ${regions}. The pinned Chunk Picker records ${evidence}, but those activity markers do not establish whether the stable Wiki route's unavoidable travel and instance steps are all covered by the exact runtime location mapping.`;
+  } else if (!chunkEvidence.length) {
+    discrepancy = `${quest.id} uses the ${policy} with ${regions}, but there is no pinned Chunk Picker first/step activity chunk for this ID. The stable Wiki route therefore has no chunk evidence to corroborate whether the retained runtime geography covers every unavoidable quest step.`;
+  } else if (quest.manualRequirements?.length) {
+    discrepancy = `${quest.id} uses the ${policy} with ${regions} and manual requirement ${bracketed(quest.manualRequirements)}. The pinned Chunk Picker records ${evidence}, but activity chunks cannot represent that manual task-state requirement or show how it interacts with the stable Wiki route.`;
+  } else if (quest.prereqs.length) {
+    discrepancy = `${quest.id} uses the ${policy} with ${regions} and prerequisite ${bracketed(quest.prereqs)}. The pinned Chunk Picker records ${evidence}, but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.`;
+  } else {
+    discrepancy = `${quest.id} uses the ${policy} with ${regions}, while the pinned Chunk Picker records ${evidence}. Those named activity markers do not prove that every coarse runtime region is unavoidable and may omit travel, instance, or item-source steps from the stable Wiki route.`;
+  }
+
+  const conservativeReason = `Keeping ${quest.id}'s current ${policy} requirements (${retainedRequirementSummary(quest)}) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces.`;
+  return { discrepancy, conservativeReason };
+}
+
 async function refresh() {
   const runtime = readRuntimeQuestData();
   const quests = Object.values(runtime);
@@ -412,6 +479,7 @@ async function refresh() {
       .map(quest => {
         const sourceEntry = entries.find(entry => entry.id === quest.id);
         const questEvidence = evidence.get(quest.id);
+        const review = unresolvedReviewText(quest, questEvidence);
         return {
           id: quest.id,
           kind: quest.kind,
@@ -428,8 +496,8 @@ async function refresh() {
             instances: [],
             partialCompletion: [],
           },
-          discrepancy: `Pending field-by-field reconciliation: retained runtime has ${quest.regions.length} region requirement(s), ${quest.locations?.length ?? 0} exact location requirement(s), ${Object.keys(quest.skills).length} skill requirement(s), and ${quest.prereqs.length} prerequisite(s); the pinned Chunk Picker supplies ${questEvidence.length} activity chunk(s).`,
-          conservativeReason: `Retained the existing ${quest.accessPolicy} access policy and requirement fingerprint until Tasks 6-11 verify unavoidable steps, travel, instances, items, and partial-completion routes against this permanent Wiki revision.`,
+          discrepancy: review.discrepancy,
+          conservativeReason: review.conservativeReason,
         };
       })
       .sort((left, right) => left.id.localeCompare(right.id)),

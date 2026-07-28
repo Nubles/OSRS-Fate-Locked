@@ -29,4 +29,54 @@ describe('official quest and miniquest audit coverage', () => {
         : [quest.id];
     })).toEqual([]);
   });
+
+  it('records concrete source gaps for every generated discrepancy category', () => {
+    const byId = new Map(audit.entries.map(entry => [entry.id, entry]));
+    const cases = [
+      {
+        id: 'Cook\'s Assistant',
+        discrepancy: ['regions policy', 'Misthalin', 'Lumbridge Castle', '50,50'],
+      },
+      {
+        id: 'Witch\'s Potion',
+        discrepancy: ['regions policy', 'Asgarnia', 'no pinned Chunk Picker first/step activity chunk'],
+      },
+      {
+        id: 'Pandemonium',
+        discrepancy: ['locations policy', 'Port Sarim', '47,50'],
+      },
+      {
+        id: 'Prying Times',
+        discrepancy: ['manual requirement', 'One open Sailing task slot'],
+      },
+      {
+        id: 'Holy Grail',
+        discrepancy: ['prerequisite', 'Merlin\'s Crystal'],
+      },
+    ];
+
+    for (const example of cases) {
+      const entry = byId.get(example.id)!;
+      for (const detail of example.discrepancy) {
+        expect(entry.discrepancy, `${example.id}: ${detail}`).toContain(detail);
+      }
+      expect(entry.conservativeReason, example.id).toContain(example.id);
+      expect(entry.conservativeReason, example.id).toContain(`${entry.accessPolicy} policy`);
+      expect(entry.conservativeReason, example.id).toMatch(/premature completion\/key-roll eligibility/i);
+    }
+  });
+
+  it('rejects generic procedural unresolved placeholders', () => {
+    const generic = structuredClone(audit);
+    generic.entries[0].discrepancy =
+      'Pending review of the permanent Wiki and Chunk Picker sources.';
+    generic.entries[0].conservativeReason =
+      'Retained until Tasks 6-11 finish the review.';
+
+    expect(validateQuestRequirementAudit(QUEST_DATA, official, generic).errors)
+      .toEqual(expect.arrayContaining([
+        expect.stringContaining('generic procedural discrepancy'),
+        expect.stringContaining('does not explain premature completion/key-roll eligibility'),
+      ]));
+  });
 });
