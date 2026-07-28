@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "repository": "source-chunk/chunk-picker-v2",
+  "branch": "gh-pages",
+  "exportPath": "chunkpicker-chunkinfo-export.json",
+  "commit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
+  "blobSha": "6674e5c62cd7a6ec90267def278aca5bc1f05a06",
+  "rawSha256": "95E4864651E2A9C7D4555C4EBBE4DD4AB5E71B881FF18BC966799CD22D48C167",
+  "rawBytes": 7802950,
+  "policyVersion": 1,
+  "reviewedAt": "2026-07-28",
+  "sourceUrl": "https://raw.githubusercontent.com/source-chunk/chunk-picker-v2/ba2fcebf8b26c84c74f8d9ab328a0ede802be926/chunkpicker-chunkinfo-export.json",
+  "countFloors": {
+    "contentChunks": 936,
+    "connections": 1104,
+    "slayerMasters": 9,
+    "shortcuts": 199,
+    "shops": 433,
+    "dropTables": 798,
+    "questSections": 134,
+    "banks": 100,
+    "tags": 26
+  }
+}

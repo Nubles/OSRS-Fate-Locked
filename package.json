@@ -13,6 +13,8 @@
     "diary:verify": "node scripts/sync-achievement-diaries.mjs --check",
     "content:check": "node scripts/check-content-sync.mjs",
     "chunks:sync": "node scripts/sync-chunk-content.mjs",
+    "chunks:source-check": "node scripts/chunk-source.mjs --check-upstream",
+    "chunks:source-verify": "vitest run scripts/chunk-source.test.ts",
     "content:sync": "node scripts/sync-collection-log.mjs && node scripts/sync-combat-achievements.mjs && node scripts/check-content-sync.mjs",
     "content:verify": "npm run diary:verify && vitest run data/contentBaseline.test.ts data/tasksConsistency.test.ts utils/taskIdMigrations.test.ts utils/caProgress.test.ts",
     "dev": "node scripts/gen-model-manifest.mjs && vite",
