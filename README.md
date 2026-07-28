@@ -84,6 +84,10 @@ renders the active profile's tracker rules in-game and warns before locked
 actions. The standalone repository exclusively owns plugin source, builds,
 releases, and Plugin Hub review.
 
+The player-facing [RuneLite Plugin Guide](https://nubles.github.io/OSRS-Fate-Locked/?open=runelite-guide)
+uses the current Plugin Hub interface to explain installation, connection,
+every panel section and setting, privacy, overlays, and troubleshooting.
+
 Pairing is one-way. The browser publishes an app-authored v4 profile with
 `POST /r/<code>`, then opens RuneLite with that code. The plugin retrieves and
 validates the profile with `GET /r/<code>`. It does not upload gameplay,
