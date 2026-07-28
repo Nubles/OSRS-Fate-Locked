@@ -1,10 +1,20 @@
 export type ChangelogSection = 'added' | 'changed' | 'fixed' | 'balance';
 
+export interface LinkedChangelogNote {
+  text: string;
+  link: {
+    label: string;
+    href: string;
+  };
+}
+
+export type ChangelogNote = string | LinkedChangelogNote;
+
 export interface ChangelogRelease {
   id: string;
   title: string;
   date: string;
-  sections: Partial<Record<ChangelogSection, readonly string[]>>;
+  sections: Partial<Record<ChangelogSection, readonly ChangelogNote[]>>;
 }
 
 export const CHANGELOG_RELEASES = [
@@ -17,6 +27,13 @@ export const CHANGELOG_RELEASES = [
         'Connect the companion to RuneLite with one guided, copyable pairing command.',
       ],
       changed: [
+        {
+          text: 'The RuneLite Plugin Hub update has been approved and is now live. View the merged',
+          link: {
+            label: 'Plugin Hub PR #14395',
+            href: 'https://github.com/runelite/plugin-hub/pull/14395',
+          },
+        },
         'RuneLite reads your app-authored run rules while detected gameplay events remain local to RuneLite.',
         'The complete RuneLite experience now lives in one panel with collapsible sections.',
       ],

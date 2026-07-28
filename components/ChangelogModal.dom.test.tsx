@@ -16,6 +16,26 @@ const releases: readonly ChangelogRelease[] = [
   },
 ];
 
+const linkedReleases: readonly ChangelogRelease[] = [
+  {
+    id: '2026-07-28-linked-note',
+    title: 'Linked release',
+    date: '2026-07-28',
+    sections: {
+      added: ['Added note'],
+      changed: [
+        {
+          text: 'The RuneLite Plugin Hub update has been approved and is now live. View the merged',
+          link: {
+            label: 'Plugin Hub PR #14395',
+            href: 'https://github.com/runelite/plugin-hub/pull/14395',
+          },
+        },
+      ],
+    },
+  },
+];
+
 const mountedRoots: Array<{ host: HTMLDivElement; root: Root }> = [];
 
 const mount = async (element: React.ReactElement) => {
@@ -48,6 +68,23 @@ const click = async (button: HTMLButtonElement): Promise<void> => {
     button.click();
   });
 };
+
+class RenderErrorBoundary extends React.Component<
+  React.PropsWithChildren,
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  render() {
+    return this.state.failed
+      ? <span data-testid="render-failed">Render failed</span>
+      : this.props.children;
+  }
+}
 
 afterEach(async () => {
   for (const { host, root } of mountedRoots.splice(0).reverse()) {
@@ -125,6 +162,28 @@ const AutoOpenHarness = ({ shouldAutoOpen }: { shouldAutoOpen: boolean }) => {
     </>
   );
 };
+
+describe('ChangelogModal linked notes', () => {
+  it('renders the review PR as a safe new-tab link while preserving string notes', async () => {
+    const { host } = await mount(
+      <RenderErrorBoundary>
+        <ChangelogModal releases={linkedReleases} onClose={() => undefined} />
+      </RenderErrorBoundary>,
+    );
+    const link = host.querySelector<HTMLAnchorElement>(
+      'a[href="https://github.com/runelite/plugin-hub/pull/14395"]',
+    );
+
+    expect(link).not.toBeNull();
+    expect(link?.textContent).toBe('Plugin Hub PR #14395');
+    expect(link?.target).toBe('_blank');
+    expect(link?.rel.split(/\s+/).sort()).toEqual(['noopener', 'noreferrer']);
+    expect(link?.closest('li')?.textContent).toBe(
+      'The RuneLite Plugin Hub update has been approved and is now live. View the merged Plugin Hub PR #14395.',
+    );
+    expect(host.textContent).toContain('Added note');
+  });
+});
 
 describe('ChangelogModal DOM focus restoration', () => {
   it('returns focus to the persistent gear after its transient menu opener unmounts', async () => {

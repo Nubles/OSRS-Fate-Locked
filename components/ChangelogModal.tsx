@@ -142,7 +142,30 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({
                                 {label}
                               </h4>
                               <ul className="mt-1.5 list-disc space-y-1 pl-4 text-sm leading-relaxed text-gray-300 marker:text-amber-500/80">
-                                {notes.map((note) => <li key={note}>{note}</li>)}
+                                {notes.map((note) => {
+                                  const noteKey = typeof note === 'string'
+                                    ? note
+                                    : `${note.text}:${note.link.href}`;
+
+                                  return (
+                                    <li key={noteKey}>
+                                      {typeof note === 'string' ? note : (
+                                        <>
+                                          {note.text}{' '}
+                                          <a
+                                            href={note.link.href}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-amber-300 underline decoration-amber-500/50 underline-offset-2 hover:text-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/80"
+                                          >
+                                            {note.link.label}
+                                          </a>
+                                          .
+                                        </>
+                                      )}
+                                    </li>
+                                  );
+                                })}
                               </ul>
                             </div>
                           );
