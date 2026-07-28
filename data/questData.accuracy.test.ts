@@ -2501,23 +2501,32 @@ describe('audited current quest requirements', () => {
 
     expect(actual).toEqual(expected);
   });
-  it('pins the complete machine and balance projection for all 24 changed G-M quests', () => {
+  it('pins the complete machine and balance projection for all 34 G-M quests', () => {
     const ids = [
   "Garden of Tranquillity",
   "Gertrude's Cat",
+  "Getting Ahead",
+  "Ghosts Ahoy",
   "Goblin Diplomacy",
+  "Grim Tales",
   "Haunted Mine",
+  "Hazeel Cult",
   "Heroes' Quest",
+  "Holy Grail",
   "Horror from the Deep",
+  "Icthlarin's Little Helper",
   "Imp Catcher",
   "In Aid of the Myreque",
+  "In Search of the Myreque",
   "Jungle Potion",
   "King's Ransom",
   "Land of the Goblins",
   "Legends' Quest",
+  "Lost City",
   "Lunar Diplomacy",
   "Making Friends with My Arm",
   "Making History",
+  "Meat and Greet",
   "Merlin's Crystal",
   "Misthalin Mystery",
   "Monk's Friend",
@@ -2526,6 +2535,7 @@ describe('audited current quest requirements', () => {
   "Mountain Daughter",
   "Mourning's End Part I",
   "Mourning's End Part II",
+  "Murder Mystery",
   "My Arm's Big Adventure"
 ] as const;
     const actual = Object.fromEntries(ids.map(id => {
@@ -2610,6 +2620,45 @@ describe('audited current quest requirements', () => {
     "points": 1,
     "difficulty": "Quest (Novice)"
   },
+  "Getting Ahead": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Kourend & Kebos"
+    ],
+    "locations": null,
+    "skills": {
+      "Construction": 26,
+      "Crafting": 30
+    },
+    "combatLevel": null,
+    "prereqs": [],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 1,
+    "difficulty": "Quest (Intermediate)"
+  },
+  "Ghosts Ahoy": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Morytania"
+    ],
+    "locations": null,
+    "skills": {
+      "Agility": 25,
+      "Cooking": 20
+    },
+    "combatLevel": null,
+    "prereqs": [
+      "Priest in Peril",
+      "The Restless Ghost"
+    ],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 2,
+    "difficulty": "Quest (Intermediate)"
+  },
   "Goblin Diplomacy": {
     "kind": "quest",
     "accessPolicy": "locations",
@@ -2638,6 +2687,29 @@ describe('audited current quest requirements', () => {
     "manualRequirements": null,
     "points": 5,
     "difficulty": "Quest (Novice)"
+  },
+  "Grim Tales": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Asgarnia"
+    ],
+    "locations": null,
+    "skills": {
+      "Farming": 45,
+      "Herblore": 52,
+      "Thieving": 58,
+      "Agility": 59,
+      "Woodcutting": 71
+    },
+    "combatLevel": null,
+    "prereqs": [
+      "Witch's House"
+    ],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 1,
+    "difficulty": "Quest (Master)"
   },
   "Haunted Mine": {
     "kind": "quest",
@@ -2672,6 +2744,21 @@ describe('audited current quest requirements', () => {
     "points": 2,
     "difficulty": "Quest (Experienced)"
   },
+  "Hazeel Cult": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Kandarin"
+    ],
+    "locations": null,
+    "skills": {},
+    "combatLevel": null,
+    "prereqs": [],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 1,
+    "difficulty": "Quest (Novice)"
+  },
   "Heroes' Quest": {
     "kind": "quest",
     "accessPolicy": "regions",
@@ -2703,6 +2790,29 @@ describe('audited current quest requirements', () => {
     "points": 1,
     "difficulty": "Quest (Experienced)"
   },
+  "Holy Grail": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Kandarin",
+      "Islands & Others",
+      "Asgarnia",
+      "Misthalin",
+      "Karamja"
+    ],
+    "locations": null,
+    "skills": {
+      "Attack": 20
+    },
+    "combatLevel": null,
+    "prereqs": [
+      "Merlin's Crystal"
+    ],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 2,
+    "difficulty": "Quest (Intermediate)"
+  },
   "Horror from the Deep": {
     "kind": "quest",
     "accessPolicy": "regions",
@@ -2716,6 +2826,23 @@ describe('audited current quest requirements', () => {
     "combatLevel": null,
     "prereqs": [
       "Alfred Grimhand's Barcrawl"
+    ],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 2,
+    "difficulty": "Quest (Intermediate)"
+  },
+  "Icthlarin's Little Helper": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Kharidian Desert"
+    ],
+    "locations": null,
+    "skills": {},
+    "combatLevel": null,
+    "prereqs": [
+      "Gertrude's Cat"
     ],
     "oneOf": null,
     "manualRequirements": null,
@@ -2767,6 +2894,25 @@ describe('audited current quest requirements', () => {
     "combatLevel": null,
     "prereqs": [
       "In Search of the Myreque"
+    ],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 2,
+    "difficulty": "Quest (Intermediate)"
+  },
+  "In Search of the Myreque": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Morytania"
+    ],
+    "locations": null,
+    "skills": {
+      "Agility": 25
+    },
+    "combatLevel": null,
+    "prereqs": [
+      "Nature Spirit"
     ],
     "oneOf": null,
     "manualRequirements": null,
@@ -2875,6 +3021,26 @@ describe('audited current quest requirements', () => {
     "points": 4,
     "difficulty": "Quest (Master)"
   },
+  "Lost City": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Misthalin",
+      "Islands & Others",
+      "Asgarnia"
+    ],
+    "locations": null,
+    "skills": {
+      "Crafting": 31,
+      "Woodcutting": 36
+    },
+    "combatLevel": null,
+    "prereqs": [],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 3,
+    "difficulty": "Quest (Intermediate)"
+  },
   "Lunar Diplomacy": {
     "kind": "quest",
     "accessPolicy": "regions",
@@ -2949,6 +3115,23 @@ describe('audited current quest requirements', () => {
     "manualRequirements": null,
     "points": 3,
     "difficulty": "Quest (Intermediate)"
+  },
+  "Meat and Greet": {
+    "kind": "quest",
+    "accessPolicy": "regions",
+    "regions": [
+      "Varlamore"
+    ],
+    "locations": null,
+    "skills": {},
+    "combatLevel": null,
+    "prereqs": [
+      "Children of the Sun"
+    ],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 1,
+    "difficulty": "Quest (Experienced)"
   },
   "Merlin's Crystal": {
     "kind": "quest",
@@ -3148,6 +3331,48 @@ describe('audited current quest requirements', () => {
     "manualRequirements": null,
     "points": 2,
     "difficulty": "Quest (Master)"
+  },
+  "Murder Mystery": {
+    "kind": "quest",
+    "accessPolicy": "locations",
+    "regions": [
+      "Kandarin"
+    ],
+    "locations": [
+      {
+        "id": "sinclair-mansion",
+        "label": "Sinclair Mansion",
+        "standardAreas": [
+          "Seers' Village"
+        ],
+        "chunkOptions": [
+          {
+            "cx": 42,
+            "cy": 55
+          }
+        ]
+      },
+      {
+        "id": "seers-village",
+        "label": "Seers' Village",
+        "standardAreas": [
+          "Seers' Village"
+        ],
+        "chunkOptions": [
+          {
+            "cx": 42,
+            "cy": 54
+          }
+        ]
+      }
+    ],
+    "skills": {},
+    "combatLevel": null,
+    "prereqs": [],
+    "oneOf": null,
+    "manualRequirements": null,
+    "points": 3,
+    "difficulty": "Quest (Novice)"
   },
   "My Arm's Big Adventure": {
     "kind": "quest",

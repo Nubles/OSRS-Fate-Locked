@@ -277,7 +277,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Lost City': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Lost City', name: 'Lost City',
-    regions: ['Misthalin', 'Islands & Others'],
+    regions: ['Misthalin', 'Islands & Others', 'Asgarnia'],
     skills: { 'Crafting': 31, 'Woodcutting': 36 }, prereqs: [], points: 3,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -366,7 +366,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Holy Grail': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Holy Grail', name: 'Holy Grail',
-    regions: ['Kandarin', 'Islands & Others'],
+    regions: ['Kandarin', 'Islands & Others', 'Asgarnia', 'Misthalin', 'Karamja'],
     skills: { 'Attack': 20 }, prereqs: ['Merlin\'s Crystal'], points: 2, series: 'Camelot',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -656,7 +656,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'In Search of the Myreque': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'In Search of the Myreque', name: 'In Search of the Myreque',
-    regions: ['Morytania', 'Misthalin'],
+    regions: ['Morytania'],
     skills: { 'Agility': 25 }, prereqs: ['Nature Spirit'], points: 2, series: 'Myreque',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },

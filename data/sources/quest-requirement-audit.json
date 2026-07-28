@@ -3183,7 +3183,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Kandarin\",\"Islands & Others\"],\"skills\":{\"Attack\":20},\"prereqs\":[\"Merlin's Crystal\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Kandarin\",\"Islands & Others\",\"Asgarnia\",\"Misthalin\",\"Karamja\"],\"skills\":{\"Attack\":20},\"prereqs\":[\"Merlin's Crystal\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "40,54",
@@ -3226,7 +3226,7 @@
           "The pinned Wiki item requirements for Holy Grail were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
         ],
         "travel": [
-          "Camelot, Entrana, and the Fisher Realm remain covered by Kandarin and Islands & Others."
+          "The unavoidable route crosses Camelot/Kandarin, Entrana and Goblin Village/Asgarnia, Draynor Manor/Misthalin, Brimhaven/Karamja, and the Fisher Realm/Islands & Others."
         ],
         "instances": [],
         "partialCompletion": []
@@ -3457,7 +3457,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Morytania\",\"Misthalin\"],\"skills\":{\"Agility\":25},\"prereqs\":[\"Nature Spirit\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Morytania\"],\"skills\":{\"Agility\":25},\"prereqs\":[\"Nature Spirit\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "54,52",
@@ -3485,7 +3485,7 @@
           "The pinned Wiki item requirements for In Search of the Myreque were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
         ],
         "travel": [
-          "Canifis, the swamp rowboat, hideout, and Barrows route is covered by Morytania and Misthalin."
+          "Canifis, the Mort Myre rowboat, Myreque Hideout, and Barrows fixed route is wholly within Morytania."
         ],
         "instances": [],
         "partialCompletion": []
@@ -3753,7 +3753,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Misthalin\",\"Islands & Others\"],\"skills\":{\"Crafting\":31,\"Woodcutting\":36},\"prereqs\":[],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Misthalin\",\"Islands & Others\",\"Asgarnia\"],\"skills\":{\"Crafting\":31,\"Woodcutting\":36},\"prereqs\":[],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "44,52",
@@ -3776,7 +3776,7 @@
           "The pinned Wiki item requirements for Lost City were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
         ],
         "travel": [
-          "The Lumbridge Swamp, Entrana, and Zanaris route remains covered by Misthalin and Islands & Others."
+          "The unavoidable route crosses Lumbridge Swamp/Misthalin, Entrana/Asgarnia, and Zanaris/Islands & Others."
         ],
         "instances": [],
         "partialCompletion": []
