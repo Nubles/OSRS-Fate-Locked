@@ -1,3 +1,8 @@
+import { execFileSync, spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   CHANGELOG_PATH,
@@ -5,6 +10,34 @@ import {
   isPlayerFacingPath,
   normalizeRepositoryPath,
 } from './player-facing-changelog.mjs';
+
+const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const verifyScript = resolve(
+  repositoryRoot,
+  'scripts/verify-player-facing-changelog.mjs',
+);
+
+const runGit = (cwd: string, args: string[]) =>
+  execFileSync('git', args, { cwd, stdio: 'ignore' });
+
+const createGateRepository = () => {
+  const cwd = mkdtempSync(join(tmpdir(), 'fate-changelog-gate-'));
+  mkdirSync(join(cwd, 'data'));
+  writeFileSync(join(cwd, 'App.tsx'), 'export const App = () => null;\n');
+  writeFileSync(join(cwd, 'data/changelog.ts'), 'export const releases = [];\n');
+  runGit(cwd, ['init']);
+  runGit(cwd, ['config', 'user.email', 'gate@example.invalid']);
+  runGit(cwd, ['config', 'user.name', 'Changelog Gate']);
+  runGit(cwd, ['add', '.']);
+  runGit(cwd, ['commit', '-m', 'fixture']);
+  return cwd;
+};
+
+const runGate = (cwd: string) =>
+  spawnSync(process.execPath, [verifyScript, 'HEAD'], {
+    cwd,
+    encoding: 'utf8',
+  });
 
 describe('player-facing changelog path classification', () => {
   it.each([
@@ -91,5 +124,36 @@ describe('player-facing changelog gate decision', () => {
       satisfied: true,
       playerFacingPaths: [],
     });
+  });
+});
+
+describe('player-facing changelog Git comparison', () => {
+  it('requires a release entry when player-facing code is deleted', () => {
+    const cwd = createGateRepository();
+
+    try {
+      rmSync(join(cwd, 'App.tsx'));
+      const result = runGate(cwd);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('- App.tsx');
+    } finally {
+      rmSync(cwd, { recursive: true, force: true });
+    }
+  });
+
+  it('requires a release entry when player-facing code moves outside product paths', () => {
+    const cwd = createGateRepository();
+
+    try {
+      mkdirSync(join(cwd, 'docs'));
+      runGit(cwd, ['mv', 'App.tsx', 'docs/App.tsx']);
+      const result = runGate(cwd);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('- App.tsx');
+    } finally {
+      rmSync(cwd, { recursive: true, force: true });
+    }
   });
 });

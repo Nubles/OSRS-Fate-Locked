@@ -24,16 +24,23 @@ try {
   changedPaths = [
     ...gitLines([
       'diff',
+      '--no-renames',
       '--name-only',
-      '--diff-filter=ACMRT',
+      '--diff-filter=ACMRTD',
       `${baseRef}...HEAD`,
     ]),
-    ...gitLines(['diff', '--name-only', '--diff-filter=ACMRT']),
+    ...gitLines([
+      'diff',
+      '--no-renames',
+      '--name-only',
+      '--diff-filter=ACMRTD',
+    ]),
     ...gitLines([
       'diff',
       '--cached',
+      '--no-renames',
       '--name-only',
-      '--diff-filter=ACMRT',
+      '--diff-filter=ACMRTD',
     ]),
     ...gitLines(['ls-files', '--others', '--exclude-standard']),
   ];
