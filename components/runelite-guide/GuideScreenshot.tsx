@@ -6,9 +6,18 @@ interface GuideScreenshotProps {
   readonly screenshot: GuideScreenshotData;
 }
 
+export const resolveGuideScreenshotSrc = (
+  src: string,
+  baseUrl = import.meta.env.BASE_URL || '/',
+): string => {
+  const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+  return `${normalizedBase}${src.replace(/^\/+/, '')}`;
+};
+
 export const GuideScreenshot: React.FC<GuideScreenshotProps> = ({ screenshot }) => {
   const [imageFailed, setImageFailed] = useState(false);
   const titleId = `runelite-guide-image-${screenshot.id}`;
+  const imageSrc = resolveGuideScreenshotSrc(screenshot.src);
 
   return (
     <figure
@@ -34,7 +43,7 @@ export const GuideScreenshot: React.FC<GuideScreenshotProps> = ({ screenshot }) 
           >
             <img
               className="block max-h-[38rem] max-w-full rounded-lg object-contain"
-              src={screenshot.src}
+              src={imageSrc}
               alt={screenshot.alt}
               loading="lazy"
               decoding="async"
@@ -70,7 +79,7 @@ export const GuideScreenshot: React.FC<GuideScreenshotProps> = ({ screenshot }) 
           </div>
           <a
             className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-amber-300 transition-colors hover:border-amber-400/40 hover:bg-amber-400/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-            href={screenshot.src}
+            href={imageSrc}
             target="_blank"
             rel="noopener noreferrer"
           >
