@@ -9,6 +9,24 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-07-28-runelite-companion-update',
+    title: 'RuneLite Companion Update',
+    date: '2026-07-28',
+    sections: {
+      added: [
+        'Connect the companion to RuneLite with one guided, copyable pairing command.',
+      ],
+      changed: [
+        'RuneLite reads your app-authored run rules while detected gameplay events remain local to RuneLite.',
+        'The complete RuneLite experience now lives in one panel with collapsible sections.',
+      ],
+      fixed: [
+        'RuneLite controls no longer appear clipped or overlap adjacent colour settings.',
+        'Run balances are now labelled Keys, Omni Keys, and Chaos Keys.',
+      ],
+    },
+  },
+  {
     id: '2026-07-26-vanilla-key-safety-valve',
     title: 'Vanilla Key Safety Valve',
     date: '2026-07-26',
