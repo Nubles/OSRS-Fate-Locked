@@ -64,19 +64,31 @@ describe('GuideScreenshot', () => {
     const imageStage = host.querySelector<HTMLElement>('[data-guide-image-stage]');
     const markerLayer = host.querySelector<HTMLElement>('[data-guide-marker-layer]');
     const original = host.querySelector<HTMLAnchorElement>('a');
+    const panel = host.querySelector<HTMLElement>('[data-guide-screenshot="demo"]');
+    const panelHeader = host.querySelector<HTMLElement>('[data-guide-screenshot-header]');
+    const calloutRows = host.querySelectorAll<HTMLElement>('[data-guide-callout]');
 
     expect(host.querySelector('img')?.getAttribute('src')).toBe('/guides/runelite/demo.png');
+    expect(panel).toBeTruthy();
+    expect(panel?.className).toContain('rounded-lg');
+    expect(panel?.className).toContain('border-osrs-border');
+    expect(panelHeader).toBeTruthy();
+    expect(calloutRows).toHaveLength(screenshot.callouts.length);
     expect(imageStage).toBeTruthy();
     expect(imageStage?.contains(host.querySelector('img'))).toBe(true);
     expect(markerLayer?.parentElement).toBe(imageStage);
     expect(markerLayer?.className).toContain('inset-0');
     expect(markers).toHaveLength(2);
+    expect(markers[0]?.className).toContain('h-6');
+    expect(markers[0]?.className).toContain('w-6');
     expect(markers[0]?.style.left).toBe('25%');
     expect(markers[0]?.style.top).toBe('40%');
     expect(host.textContent).toContain('1. Connect tracker');
     expect(host.textContent).toContain('2. Connection state');
     expect(original?.target).toBe('_blank');
     expect(original?.rel.split(/\s+/).sort()).toEqual(['noopener', 'noreferrer']);
+    expect(panel?.className).not.toContain('rounded-2xl');
+    expect(panel?.innerHTML).not.toContain('font-serif');
   });
 
   it('keeps the title and callouts when the source image is unavailable', async () => {
