@@ -79,8 +79,8 @@ describe('official quest and miniquest audit coverage', () => {
       accessPolicy: 'locations',
       source: { revision: 15271664 },
       chunkEvidence: [
-        { chunkId: '42,54', role: 'step', place: "Seers' Village" },
         { chunkId: '42,55', role: 'first', place: 'Sinclair Mansion' },
+        { chunkId: '42,54', role: 'step', place: "Seers' Village" },
       ],
     });
   });

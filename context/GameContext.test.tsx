@@ -1,11 +1,38 @@
-import { describe, expect, it } from 'vitest';
+// @vitest-environment jsdom
+
+import { act, cleanup, render } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  GameProvider,
   gameReducerForTest,
   prepareDetectedEventAcceptanceAction,
   migrateSaveForTest,
   newRunIdForTest,
+  useGame,
 } from './GameContext';
 
+
+type Game = ReturnType<typeof useGame>;
+
+const GameCapture = ({ onGame }: { onGame: (game: Game) => void }) => {
+  onGame(useGame());
+  return null;
+};
+
+beforeEach(() => {
+  const storage = new Map<string, string>();
+  vi.stubGlobal('localStorage', {
+    getItem: (key: string) => storage.get(key) ?? null,
+    setItem: (key: string, value: string) => { storage.set(key, value); },
+    removeItem: (key: string) => { storage.delete(key); },
+    clear: () => { storage.clear(); },
+  });
+});
+
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 describe('run identity and revision', () => {
   it('assigns a stable run id to an old save', () => {
     const first = migrateSaveForTest({ history: [] });
@@ -47,6 +74,53 @@ describe('run identity and revision', () => {
     expect(id).toBe('00010203-0405-4607-8809-0a0b0c0d0e0f');
   });
 });
+
+describe('quest completion integration', () => {
+  it("does not complete or roll for Witch's Potion with only Asgarnia", () => {
+    const storageKey = 'blocked-witch-completion';
+    localStorage.setItem(storageKey, JSON.stringify({
+      unlocks: { regions: ['Asgarnia'] },
+    }));
+    let game: Game | undefined;
+
+    render(
+      <GameProvider storageKey={storageKey}>
+        <GameCapture onGame={next => { game = next; }} />
+      </GameProvider>,
+    );
+    if (!game) throw new Error('Game provider did not initialize');
+
+    const before = {
+      keys: game.keys,
+      specialKeys: game.specialKeys,
+      chaosKeys: game.chaosKeys,
+      fatePoints: game.fatePoints,
+      history: structuredClone(game.history),
+      unlocks: structuredClone(game.unlocks),
+    };
+    let result: ReturnType<Game['completeQuest']> | undefined;
+    act(() => { result = game!.completeQuest("Witch's Potion"); });
+
+    expect(result).toEqual({ ok: false, reason: 'Requires: Rimmington' });
+    expect(game.unlocks.quests).not.toContain("Witch's Potion");
+    expect(game.unlocks).not.toHaveProperty('inventory');
+    expect(game.unlocks).not.toHaveProperty('items');
+    expect(game.unlocks).toEqual(before.unlocks);
+    expect(game.history).toEqual(before.history);
+    expect({
+      keys: game.keys,
+      specialKeys: game.specialKeys,
+      chaosKeys: game.chaosKeys,
+      fatePoints: game.fatePoints,
+    }).toEqual({
+      keys: before.keys,
+      specialKeys: before.specialKeys,
+      chaosKeys: before.chaosKeys,
+      fatePoints: before.fatePoints,
+    });
+  });
+});
+
 describe('detected progress reconciliation', () => {
   const start = () => ({
     ...migrateSaveForTest({ history: [] }),

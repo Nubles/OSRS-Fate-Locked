@@ -4122,14 +4122,14 @@
       "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kandarin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":42,\"cy\":55}],\"id\":\"sinclair-mansion\",\"label\":\"Sinclair Mansion\",\"standardAreas\":[\"Seers' Village\"]},{\"chunkOptions\":[{\"cx\":42,\"cy\":54}],\"id\":\"seers-village\",\"label\":\"Seers' Village\",\"standardAreas\":[\"Seers' Village\"]}],\"skills\":{},\"prereqs\":[],\"points\":3}",
       "chunkEvidence": [
         {
-          "chunkId": "42,54",
-          "role": "step",
-          "place": "Seers' Village"
-        },
-        {
           "chunkId": "42,55",
           "role": "first",
           "place": "Sinclair Mansion"
+        },
+        {
+          "chunkId": "42,54",
+          "role": "step",
+          "place": "Seers' Village"
         }
       ],
       "notes": {
