@@ -1,6 +1,7 @@
 import { CUSTOM_RULE_BOUNDS, type GameModeRules } from '../config/gameModes';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { EQUIPMENT_SLOTS } from '../data/items';
+import { canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
 import type { GameState, LogEntry, RivalState, UnlockState } from '../types';
 import { migrateClogIds } from './clogIdMigrations';
 import { migrateCompletedTaskIds } from './taskIdMigrations';
@@ -286,7 +287,7 @@ const normalizeUnlocks = (
   value: unknown,
   defaults: UnlockState,
   sourceVersion: number,
-): Outcome<{ value: UnlockState; migrated: boolean }> => {
+): Outcome<{ value: UnlockState; migrated: boolean; regularKeyRefunds: number }> => {
   const allowed = new Set(CURRENT_UNLOCK_KEYS);
   if (sourceVersion === 0) {
     allowed.add('power');
@@ -340,6 +341,10 @@ const normalizeUnlocks = (
     if (normalized.ok === false) return normalized;
     arrays[key] = normalized.value;
   }
+  const canonicalRegions = canonicalizeAreaUnlocks(arrays.regions);
+  arrays.regions = canonicalRegions.regions;
+  migrated ||= canonicalRegions.migrated;
+
   if (sourceVersion === 0 && own(inspected.value, 'power')) {
     const power = identifierArray(readOwn(inspected.value, 'power'), 'unlocks.power', 'invalid_unlocks');
     if (power.ok === false) return power;
@@ -393,7 +398,14 @@ const normalizeUnlocks = (
     completedTasks: arrays.completedTasks,
     collectionLog: collection.value.value,
   };
-  return { ok: true, value: { value: unlocks, migrated } };
+  return {
+    ok: true,
+    value: {
+      value: unlocks,
+      migrated,
+      regularKeyRefunds: canonicalRegions.duplicateAliasRefunds,
+    },
+  };
 };
 
 
@@ -756,7 +768,10 @@ const normalizeState = (
 
   const state: GameState = {
     version: CURRENT_SAVE_VERSION,
-    keys: keys.value,
+    keys: Math.min(
+      MAX_COUNTER,
+      keys.value + unlocks.value.regularKeyRefunds,
+    ),
     specialKeys: specialKeys.value,
     chaosKeys: chaosKeys.value,
     fatePoints: fatePoints.value,

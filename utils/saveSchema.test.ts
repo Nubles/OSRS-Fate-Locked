@@ -188,6 +188,102 @@ describe('save schema compatibility', () => {
     });
   });
 
+  it('renames a lone Elf Camp unlock without refunding a key', () => {
+    const input = candidate({}, {
+      regions: ['Prifddinas', 'Elf Camp', 'Lletya'],
+    });
+    const result = expectAccepted(validateAndMigrateSave(input, defaultsFixture()));
+
+    expect(result.state.keys).toBe(17);
+    expect(result.state.unlocks.regions).toEqual([
+      'Prifddinas',
+      'Iorwerth Camp',
+      'Lletya',
+    ]);
+    expect(result.warnings).toEqual([{
+      code: 'migrated',
+      message: 'Save data was migrated to the current format.',
+    }]);
+  });
+
+  it('refunds exactly one regular key when both Elf Camp names were paid for', () => {
+    const input = candidate({}, {
+      regions: ['Prifddinas', 'Elf Camp', 'Iorwerth Camp', 'Lletya'],
+    });
+    const result = expectAccepted(validateAndMigrateSave(input, defaultsFixture()));
+
+    expect(result.state.keys).toBe(18);
+    expect(result.state.unlocks.regions).toEqual([
+      'Prifddinas',
+      'Iorwerth Camp',
+      'Lletya',
+    ]);
+  });
+
+  it('does not modify a canonical Iorwerth Camp save', () => {
+    const input = candidate({}, {
+      regions: ['Prifddinas', 'Iorwerth Camp', 'Lletya'],
+    });
+    const result = expectAccepted(validateAndMigrateSave(input, defaultsFixture()));
+
+    expect(result.state.keys).toBe(17);
+    expect(result.state.unlocks.regions).toEqual([
+      'Prifddinas',
+      'Iorwerth Camp',
+      'Lletya',
+    ]);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('does not refund twice when a migrated save is revalidated', () => {
+    const input = candidate({}, {
+      regions: ['Elf Camp', 'Iorwerth Camp'],
+    });
+    const first = expectAccepted(validateAndMigrateSave(input, defaultsFixture()));
+    const second = expectAccepted(validateAndMigrateSave(first.state, defaultsFixture()));
+
+    expect(first.state.keys).toBe(18);
+    expect(second.state).toEqual(first.state);
+    expect(second.warnings).toEqual([]);
+  });
+
+  it('preserves complete history and unrelated region order during migration', () => {
+    const input = candidate({}, {
+      regions: ['Karamja', 'Elf Camp', 'Iorwerth Camp', 'Falador'],
+    }) as GameState;
+    const originalHistory = structuredClone(input.history);
+    const result = expectAccepted(validateAndMigrateSave(input, defaultsFixture()));
+
+    expect(result.state.history).toEqual(originalHistory);
+    expect(result.state.unlocks.regions).toEqual([
+      'Karamja',
+      'Iorwerth Camp',
+      'Falador',
+    ]);
+  });
+
+  it('applies the same duplicate refund to an unversioned legacy save', () => {
+    const input = candidate({}, {
+      regions: ['Elf Camp', 'Iorwerth Camp'],
+    }) as Record<string, unknown>;
+    delete input.version;
+    const result = expectAccepted(validateAndMigrateSave(input, defaultsFixture()));
+
+    expect(result.sourceVersion).toBe(0);
+    expect(result.state.keys).toBe(18);
+    expect(result.state.unlocks.regions).toEqual(['Iorwerth Camp']);
+  });
+
+  it('saturates a duplicate refund at MAX_COUNTER', () => {
+    const input = candidate({ keys: MAX_COUNTER }, {
+      regions: ['Elf Camp', 'Iorwerth Camp'],
+    });
+    const result = expectAccepted(validateAndMigrateSave(input, defaultsFixture()));
+
+    expect(result.state.keys).toBe(MAX_COUNTER);
+    expect(result.state.unlocks.regions).toEqual(['Iorwerth Camp']);
+    expect(result.warnings).toHaveLength(1);
+  });
   it('migrates supported legacy aliases exactly once without double-counting collection aliases', () => {
     const legacy = clone(fullStateFixture()) as unknown as Record<string, unknown>;
     delete legacy.version;
