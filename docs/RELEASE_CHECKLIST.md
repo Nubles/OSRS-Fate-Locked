@@ -17,13 +17,18 @@ separate operation.
    and review any dependency-metadata diff before continuing. A registry or
    network failure is not a reason to rewrite the lockfile.
 
-2. Run the full test suite.
-3. Run the TypeScript check.
-4. Run deterministic content verification.
-5. Build with the production repository base when reproducing GitHub Pages
+2. For every player-facing change, add a newest-first entry to
+   `data/changelog.ts`, then run `npm run changelog:verify`. Tests,
+   documentation, workflows, and maintainer-only scripts are exempt when they
+   are the only files changed.
+3. Run the full test suite.
+4. Run the TypeScript check.
+5. Run deterministic content verification.
+6. Build with the production repository base when reproducing GitHub Pages
    exactly.
 
    ```powershell
+   npm run changelog:verify
    npm test
    npx tsc --noEmit
    npm run content:verify
@@ -31,7 +36,7 @@ separate operation.
    npm run build
    ```
 
-6. Review whitespace, generated data, scope, and secrets before pushing:
+7. Review whitespace, generated data, scope, and secrets before pushing:
 
    - Run `git diff --check`.
    - Review the generated-data diff and confirm that generated data was updated
@@ -40,9 +45,9 @@ separate operation.
    - Check that no save data, tokens, credentials, webhooks, or environment
      dumps are present.
 
-7. Push the branch and wait for the actual GitHub check named `CI / quality`
+8. Push the branch and wait for the actual GitHub check named `CI / quality`
    to finish successfully. A local green run does not replace that result.
-8. After the workflow first appears on GitHub, a repository maintainer manually
+9. After the workflow first appears on GitHub, a repository maintainer manually
    enables branch protection and requires `CI / quality` before merge. This
    project change does not alter repository settings automatically.
 

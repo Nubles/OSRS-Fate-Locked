@@ -19,7 +19,7 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-07-26-vanilla-key-safety-valve');
+    expect(LATEST_CHANGELOG.id).toBe('2026-07-28-runelite-companion-update');
   });
 
   it('contains only non-empty, supported sections', () => {
@@ -32,8 +32,31 @@ describe('authored changelog releases', () => {
     }
   });
 
+  it('describes the complete RuneLite companion update in player language', () => {
+    expect(LATEST_CHANGELOG).toMatchObject({
+      id: '2026-07-28-runelite-companion-update',
+      title: 'RuneLite Companion Update',
+      date: '2026-07-28',
+    });
+    expect(LATEST_CHANGELOG.sections.added).toContain(
+      'Connect the companion to RuneLite with one guided, copyable pairing command.',
+    );
+    expect(LATEST_CHANGELOG.sections.changed).toEqual(expect.arrayContaining([
+      'RuneLite reads your app-authored run rules while detected gameplay events remain local to RuneLite.',
+      'The complete RuneLite experience now lives in one panel with collapsible sections.',
+    ]));
+    expect(LATEST_CHANGELOG.sections.fixed).toEqual(expect.arrayContaining([
+      'RuneLite controls no longer appear clipped or overlap adjacent colour settings.',
+      'Run balances are now labelled Keys, Omni Keys, and Chaos Keys.',
+    ]));
+  });
+
   it('records every approved Vanilla safety-valve balance change', () => {
-    expect(LATEST_CHANGELOG.sections.balance).toEqual([
+    const vanillaSafetyValve = CHANGELOG_RELEASES.find(
+      release => release.id === '2026-07-26-vanilla-key-safety-valve',
+    );
+
+    expect(vanillaSafetyValve?.sections.balance).toEqual([
       'Bosses now provide a finite, diminishing Vanilla key reserve.',
       'Brutus joins Farm Keys as a one-key early safety valve.',
       'The first three clue-earned Standard Keys share 25%, 15%, and 10% minimum chances.',

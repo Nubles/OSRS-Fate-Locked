@@ -18,10 +18,11 @@
     "dev": "node scripts/gen-model-manifest.mjs && vite",
     "build": "node scripts/gen-model-manifest.mjs && vite build",
     "preview": "vite preview",
+    "changelog:verify": "node scripts/verify-player-facing-changelog.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "release:verify": "npm test && npm run typecheck && npm run content:verify && npm run build"
+    "release:verify": "npm run changelog:verify && npm test && npm run typecheck && npm run content:verify && npm run build"
   },
   "dependencies": {
     "@google/model-viewer": "^4.3.0",
