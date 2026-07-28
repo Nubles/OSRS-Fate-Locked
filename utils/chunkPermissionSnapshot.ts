@@ -47,6 +47,7 @@ export interface ChunkPermissionContext {
   customMode?: GameModeRules;
   reachableChunks?: Set<string>;
   shortcuts?: Shortcut[];
+  /** @deprecated Ignored. Quest status is always computed canonically. */
   questStatuses?: Record<string, PermissionStatus>;
 }
 
@@ -77,8 +78,6 @@ function questStatus(
   name: string,
   context: ChunkPermissionContext,
 ): PermissionStatus {
-  const override = context.questStatuses?.[name];
-  if (override) return override;
   const quest = QUEST_DATA[name]
     ?? Object.values(QUEST_DATA).find((candidate) => candidate.name === name);
   if (!quest) return 'UNKNOWN';

@@ -53,6 +53,11 @@ describe('refineQuestRegion display evidence', () => {
   const locked = summariseQuestPlaces([LUMBRIDGE, FALADOR], unlocksWith([]));
   const reachable = summariseQuestPlaces([LUMBRIDGE, FALADOR], unlocksWith(['Falador']));
 
+  it('retains the legacy chunks result type without using it at runtime', () => {
+    const legacyVia: ReturnType<typeof refineQuestRegion>['via'] = 'chunks';
+    expect(legacyVia).toBe('chunks');
+  });
+
   it('passes through when the authored region is already met', () => {
     expect(refineQuestRegion(true, locked)).toEqual({ met: true, via: 'authored' });
   });

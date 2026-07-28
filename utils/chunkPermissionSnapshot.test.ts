@@ -34,11 +34,11 @@ const context = (
 });
 
 describe('buildChunkPermissionSnapshot', () => {
-  it("uses canonical Witch's Potion access instead of the chunk activity entry", () => {
+  it("ignores injected permission statuses and uses canonical Witch's Potion access", () => {
     const locked = buildChunkPermissionSnapshot(
       content({ quests: { "Witch's Potion": 'first' } }),
       { cx: 50, cy: 50 },
-      context(),
+      context({ questStatuses: { "Witch's Potion": 'ALLOWED' } }),
     );
     const available = buildChunkPermissionSnapshot(
       content({ quests: { "Witch's Potion": 'first' } }),
@@ -48,6 +48,7 @@ describe('buildChunkPermissionSnapshot', () => {
           ...initialState.unlocks,
           regions: ['Rimmington'],
         },
+        questStatuses: { "Witch's Potion": 'LOCKED' },
       }),
     );
 
@@ -62,7 +63,7 @@ describe('buildChunkPermissionSnapshot', () => {
         quests: { "Cook's Assistant": 'first' },
       }),
       { cx: 50, cy: 50 },
-      context({ questStatuses: { "Cook's Assistant": 'NOT_READY' } }),
+      context(),
     );
 
     expect(view.categories.BANKS).toEqual([
@@ -80,7 +81,7 @@ describe('buildChunkPermissionSnapshot', () => {
     ]);
     expect(view.categories.QUESTS?.[0]).toMatchObject({
       name: "Cook's Assistant",
-      status: 'NOT_READY',
+      status: 'ALLOWED',
     });
     expect(view.categories.COMBAT?.[0]).toMatchObject({
       name: 'Goblin',

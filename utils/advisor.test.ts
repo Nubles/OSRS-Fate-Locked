@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { SKILLS_LIST } from '../constants';
-import { computeUnlockImpact, prepareUnlockImpactContext } from './unlockImpact';
+import {
+  computeUnlockImpact, prepareUnlockImpactContext, type UnlockImpactContext,
+} from './unlockImpact';
 import { rankAvailableQuests } from './questAdvisor';
 import { rankLockedRegions, UNLOCKABLE_REGIONS } from './regionAdvisor';
 import { getQuestStatus } from './journalStatus';
@@ -27,6 +29,14 @@ function maxedUnlocks(over: Record<string, any> = {}) {
 }
 
 describe('computeUnlockImpact', () => {
+  it('preserves legacy context assignability and aliases the prepared status map', () => {
+    const prepared = prepareUnlockImpactContext(maxedUnlocks());
+    const { questStatusById: _questStatusById, ...legacyFields } = prepared;
+    const legacyContext: UnlockImpactContext = legacyFields;
+
+    expect(legacyContext.baseQuestStatus).toBe(prepared.baseQuestStatus);
+    expect(prepared.questStatusById).toBe(prepared.baseQuestStatus);
+  });
   it('does not auto-complete a manually pending quest after a region unlock', () => {
     const base = maxedUnlocks({
       skills: { Smithing: 3, Sailing: 2 },

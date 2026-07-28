@@ -48,8 +48,8 @@ const isOpen = (status: string | undefined) =>
 export interface UnlockImpactContext {
   allQuests: Array<(typeof QUEST_DATA)[string]>;
   allDiaries: Array<(typeof DIARY_DATA)[string]>;
-  /** Canonical machine status by quest id. */
-  questStatusById: Map<string, string>;
+  /** Canonical machine status by quest id when prepared by this module. */
+  questStatusById?: Map<string, string>;
   /** Compatibility name retained for existing callers. */
   baseQuestStatus: Map<string, string>;
   baseDiaryStatus: Map<string, string>;
@@ -57,10 +57,14 @@ export interface UnlockImpactContext {
   baseCompletedQuestIds: Set<string>;
 }
 
+export interface PreparedUnlockImpactContext extends UnlockImpactContext {
+  questStatusById: Map<string, string>;
+}
+
 export function prepareUnlockImpactContext(
   baseUnlocks: any,
   gameModeId?: string,
-): UnlockImpactContext {
+): PreparedUnlockImpactContext {
   const allQuests = Object.values(QUEST_DATA);
   const allDiaries = Object.values(DIARY_DATA);
   const baseQuestEligibility = new Map(

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { SKILLS_LIST } from '../constants';
 import { questLogEligibility } from '../components/QuestLog';
-import { journalNextBestQuestAction } from '../components/JournalNextBest';
+import {
+  journalNextBestQuestAction, selectJournalNextBestActions,
+} from '../components/JournalNextBest';
 import { QUEST_DATA } from './questData';
 import { DIARY_DATA } from './diaryData';
 import { ALL_DIARY_TASKS } from './diaryTasks';
@@ -239,6 +241,18 @@ describe('cross-surface quest eligibility contract', () => {
     expect(actual.machineStatuses).toEqual(['AVAILABLE', 'AVAILABLE']);
     expect(actual.finalReadiness).toEqual(Array(6).fill('BLOCKED'));
     expect(actual.firstBlocker).toMatch(/^Confirm: Access to all required elemental altars/);
+  });
+
+  it.each([
+    porcineOnlyUnlocks(['48,50']),
+    porcineOnlyUnlocks(['48,50', '47,51']),
+  ])('keeps the actual Next Best selector focused on the only incomplete quest', unlocks => {
+    const quest = QUEST_DATA['A Porcine of Interest'];
+    const selected = selectJournalNextBestActions(unlocks, 'chunked');
+
+    expect(selected).toEqual([
+      journalNextBestQuestAction(quest, unlocks, 'chunked'),
+    ]);
   });
 });
 describe('deterministic current content baseline', () => {

@@ -78,7 +78,7 @@ export function questLocations(questName: string, unlocks: UnlockState, gameMode
 export function refineQuestRegion(
   authoredMet: boolean,
   _info: QuestLocationInfo,
-): { met: boolean; via: 'authored' | 'locked' } {
+): { met: boolean; via: 'authored' | 'chunks' | 'locked' } {
   return authoredMet
     ? { met: true, via: 'authored' }
     : { met: false, via: 'locked' };
