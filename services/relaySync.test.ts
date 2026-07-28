@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+// @ts-expect-error Node types are intentionally excluded from the browser app.
+import { readFileSync } from 'node:fs';
 
 const SESSION_KEY = 'fate_relay_session_v1';
 
@@ -172,5 +174,17 @@ describe('RelaySyncService', () => {
     expect(service.enabled).toBe(false);
     expect(service.status).toBe('off');
     expect(removeItem).toHaveBeenCalledWith(SESSION_KEY);
+  });
+});
+
+describe('current RuneLite connection source boundary', () => {
+  it('contains no plugin heartbeat read or connected claim', () => {
+    const service = readFileSync('services/relaySync.ts', 'utf8');
+    const onboarding = readFileSync(
+      'components/RuneLiteOnboarding.tsx', 'utf8',
+    );
+    expect(service).not.toContain('/state');
+    expect(service).not.toContain('fetchPluginState');
+    expect(onboarding).not.toContain('Plugin connected');
   });
 });
