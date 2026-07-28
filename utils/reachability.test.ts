@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { isAreaReachable, isNamedAreaReachableViaChunks } from './reachability';
+import {
+  isAreaReachable,
+  isNamedAreaReachableViaChunks,
+  isRegionUnlocked,
+} from './reachability';
 import { setStartArea, isFreeArea } from './freeAreas';
 import { UnlockState } from '../types';
 
@@ -85,5 +89,22 @@ describe('isAreaReachable', () => {
     } finally {
       setStartArea(undefined);
     }
+  });
+});
+
+describe('canonical Tirannwn completion', () => {
+  it('completes without the removed Elf Camp duplicate', () => {
+    const canonicalChildren = [
+      'Prifddinas',
+      'Lletya',
+      'Tyras Camp',
+      'Isafdar',
+      'Zul-Andra',
+      'Arandar',
+      'Gwenith',
+      'Iorwerth Camp',
+      'Poison Waste',
+    ];
+    expect(isRegionUnlocked('Tirannwn', canonicalChildren)).toBe(true);
   });
 });

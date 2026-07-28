@@ -188,9 +188,8 @@ export const REGION_GROUPS: Record<string, string[]> = {
   , 'Weiss', 'Pirates\' Cove'
   ],
   'Tirannwn': [
-    'Prifddinas', 'Lletya', 'Tyras Camp', 'Elf Camp', 'Isafdar', 'Zul-Andra', 
-    'Arandar', 'Gwenith', 'Iorwerth Camp'
-  , 'Poison Waste'
+    'Prifddinas', 'Lletya', 'Tyras Camp', 'Isafdar', 'Zul-Andra',
+    'Arandar', 'Gwenith', 'Iorwerth Camp', 'Poison Waste'
   ],
   'Wilderness': [
     'Ferox Enclave', 'Wilderness Volcano', 'Chaos Temple', 'Rogues\' Castle', 'Lava Maze', 
