@@ -96,6 +96,10 @@ describe('RunelitePluginGuide', () => {
     expect(html).not.toContain('font-serif');
     expect(html).not.toContain('rounded-2xl');
     expect(html).not.toContain('bg-gradient-to-br');
+    const guideShell = html.match(
+      /<div(?=[^>]*data-runelite-guide-shell=)(?=[^>]*class="([^"]*)")[^>]*>/,
+    );
+    expect(guideShell?.[1]).toContain('rounded-xl');
     expect(html.match(/\brounded-xl\b/g)).toHaveLength(1);
     expect(html).toContain('data-runelite-guide-backdrop=');
     expect(html).toContain('data-runelite-guide-shell=');
