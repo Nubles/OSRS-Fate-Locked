@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { QUEST_DATA } from '../data/questData';
 import type { UnlockState } from '../types';
 import { evaluateQuestEligibility, getQuestStatus } from '../utils/journalStatus';
@@ -12,7 +12,7 @@ const pryingTimesUnlocks = (): UnlockState => ({
   equipment: {},
   skills: { Smithing: 3, Sailing: 2 },
   levels: { Smithing: 30, Sailing: 12 },
-  regions: ['The Open Seas'],
+  regions: ['The Pandemonium', 'Port Sarim', 'Rimmington'],
   mobility: [],
   arcana: [],
   housing: [],

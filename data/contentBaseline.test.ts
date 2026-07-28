@@ -195,7 +195,7 @@ describe('deterministic current content baseline', () => {
       oneOf: undefined, manualRequirements: undefined,
     });
     expect(questRequirementFields('Scrambled!')).toEqual({
-      regions: ['Varlamore'], locations: undefined,
+      regions: ['Varlamore'], locations: ['tal-teklan-dock', 'tal-teok', 'tlati-rainforest'],
       skills: { Construction: 38, Cooking: 36, Smithing: 35 },
       combatLevel: undefined, prereqs: ['Children of the Sun'],
       oneOf: undefined, manualRequirements: undefined,
@@ -205,7 +205,7 @@ describe('deterministic current content baseline', () => {
       prereqs: [], oneOf: undefined, manualRequirements: undefined,
     });
     expect(questRequirementFields('Prying Times')).toEqual({
-      regions: ['The Open Seas'], locations: undefined,
+      regions: ['The Open Seas'], locations: ['the-pandemonium', 'port-sarim-docks', 'thurgos-hut'],
       skills: { Smithing: 30, Sailing: 12 }, combatLevel: undefined,
       prereqs: ['Pandemonium', "The Knight's Sword"], oneOf: undefined,
       manualRequirements: ['One open Sailing task slot'],

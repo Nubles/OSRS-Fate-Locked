@@ -97,9 +97,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_NOVICE
   },
   'Romeo & Juliet': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Romeo & Juliet', name: 'Romeo & Juliet',
     regions: ['Misthalin'],
+    locations: [
+      { id: 'varrock-square', label: 'Varrock square', standardAreas: ['Varrock'], chunkOptions: [{ cx: 50, cy: 53 }] },
+      { id: 'juliets-house', label: "Juliet's house in west Varrock", standardAreas: ['Varrock'], chunkOptions: [{ cx: 49, cy: 53 }] },
+      { id: 'varrock-church', label: 'Varrock church', standardAreas: ['Varrock'], chunkOptions: [{ cx: 50, cy: 54 }] },
+    ],
     skills: {}, prereqs: [], points: 5,
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -114,6 +119,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Shield of Arrav', name: 'Shield of Arrav',
     regions: ['Misthalin'],
+    manualRequirements: ['A trustworthy partner in the opposite gang'],
     skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -145,9 +151,13 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_NOVICE
   },
   'Prince Ali Rescue': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Prince Ali Rescue', name: 'Prince Ali Rescue',
     regions: ['Kharidian Desert', 'Misthalin'],
+    locations: [
+      { id: 'al-kharid-palace', label: 'Al Kharid Palace', standardAreas: ['Al Kharid'], chunkOptions: [{ cx: 51, cy: 49 }] },
+      { id: 'draynor-village-and-jail', label: 'Draynor Village and the jail', standardAreas: ['Draynor Village'], chunkOptions: [{ cx: 48, cy: 50 }] },
+    ],
     skills: {}, prereqs: [], points: 3, series: 'Kharidian',
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -204,7 +214,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Pirate\'s Treasure': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Pirate\'s Treasure', name: 'Pirate\'s Treasure',
-    regions: ['Asgarnia', 'Misthalin'],
+    regions: ['Asgarnia', 'Misthalin', 'Karamja'],
     skills: {}, prereqs: [], points: 2,
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -216,9 +226,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Rune Mysteries': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Rune Mysteries', name: 'Rune Mysteries',
     regions: ['Misthalin'],
+    locations: [
+      { id: 'lumbridge-castle', label: 'Lumbridge Castle', standardAreas: ['Lumbridge'], chunkOptions: [{ cx: 50, cy: 50 }] },
+      { id: 'wizards-tower', label: "Wizards' Tower", standardAreas: ["Wizards' Tower"], chunkOptions: [{ cx: 48, cy: 49 }] },
+      { id: 'auburys-rune-shop', label: "Aubury's rune shop in Varrock", standardAreas: ['Varrock'], chunkOptions: [{ cx: 50, cy: 53 }] },
+    ],
     skills: {}, prereqs: [], points: 1, series: 'Order of Wizards',
     difficulty: DropSource.QUEST_NOVICE
   },
@@ -305,8 +320,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Scorpion Catcher': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Scorpion Catcher', name: 'Scorpion Catcher',
-    regions: ['Kandarin'],
-    skills: { 'Prayer': 31 }, prereqs: [], points: 1,
+    regions: ['Kandarin', 'Asgarnia'],
+    skills: { 'Prayer': 31 }, prereqs: ['Alfred Grimhand\'s Barcrawl'], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Family Crest': {
@@ -399,16 +414,24 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_NOVICE
   },
   'Plague City': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Plague City', name: 'Plague City',
     regions: ['Kandarin'],
+    locations: [
+      { id: 'east-ardougne-edmond', label: "Edmond's house in East Ardougne", standardAreas: ['East Ardougne'], chunkOptions: [{ cx: 39, cy: 52 }] },
+      { id: 'west-ardougne', label: 'West Ardougne', standardAreas: ['West Ardougne'], chunkOptions: [{ cx: 39, cy: 51 }] },
+    ],
     skills: {}, prereqs: [], points: 1, series: 'Elf',
     difficulty: DropSource.QUEST_NOVICE
   },
   'Sea Slug': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Sea Slug', name: 'Sea Slug',
     regions: ['Kandarin'],
+    locations: [
+      { id: 'witchaven-coast', label: 'Witchaven coast', standardAreas: ['Witchaven'], chunkOptions: [{ cx: 42, cy: 51 }] },
+      { id: 'fishing-platform', label: 'Fishing Platform', standardAreas: ['Witchaven'], chunkOptions: [{ cx: 43, cy: 51 }] },
+    ],
     skills: { 'Firemaking': 30 }, prereqs: [], points: 1, series: 'Temple Knight',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -455,9 +478,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Observatory Quest': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Observatory Quest', name: 'Observatory Quest',
     regions: ['Kandarin'],
+    locations: [
+      { id: 'observatory', label: 'Observatory and Observatory Dungeon', standardAreas: ['Observatory'], chunkOptions: [{ cx: 38, cy: 49 }] },
+    ],
     skills: {}, prereqs: [], points: 2,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -548,17 +574,25 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_NOVICE
   },
   'Priest in Peril': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Priest in Peril', name: 'Priest in Peril',
     regions: ['Misthalin', 'Morytania'],
+    locations: [
+      { id: 'varrock-palace', label: 'Varrock Palace', standardAreas: ['Varrock'], chunkOptions: [{ cx: 50, cy: 54 }] },
+      { id: 'paterdomus', label: 'Paterdomus Temple and mausoleum', standardAreas: ['Paterdomus'], chunkOptions: [{ cx: 53, cy: 54 }] },
+    ],
     skills: {}, prereqs: [], points: 1, series: 'Myreque',
     difficulty: DropSource.QUEST_NOVICE
   },
   'Nature Spirit': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Nature Spirit', name: 'Nature Spirit',
     regions: ['Morytania'],
-    skills: { 'Crafting': 18 }, prereqs: ['Priest in Peril', 'The Restless Ghost'], points: 2, series: 'Myreque',
+    locations: [
+      { id: 'paterdomus', label: 'Paterdomus and Drezel', standardAreas: ['Paterdomus'], chunkOptions: [{ cx: 53, cy: 54 }] },
+      { id: 'nature-grotto', label: 'Nature Grotto in Mort Myre Swamp', standardAreas: ['Mort Myre Swamp'], chunkOptions: [{ cx: 53, cy: 52 }] },
+    ],
+    skills: {}, prereqs: ['Priest in Peril', 'The Restless Ghost'], points: 2, series: 'Myreque',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Death Plateau': {
@@ -590,7 +624,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Regicide': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Regicide', name: 'Regicide',
-    regions: ['Tirannwn'],
+    regions: ['Tirannwn', 'Kandarin'],
     skills: { 'Agility': 56, 'Crafting': 10 }, prereqs: ['Underground Pass'], points: 3, series: 'Elf',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -602,10 +636,13 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Shades of Mort\'ton': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Shades of Mort\'ton', name: 'Shades of Mort\'ton',
     regions: ['Morytania'],
-    skills: { 'Crafting': 20, 'Herblore': 15, 'Firemaking': 5 }, prereqs: ['Priest in Peril'], points: 3,
+    locations: [
+      { id: 'mortton', label: "Mort'ton and the Flamtaer Temple", standardAreas: ["Mort'ton"], chunkOptions: [{ cx: 54, cy: 51 }] },
+    ],
+    skills: { 'Crafting': 20, 'Firemaking': 5, 'Herblore': 15 }, prereqs: ['Priest in Peril'], points: 3,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'The Fremennik Trials': {
@@ -671,8 +708,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Roving Elves': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Roving Elves', name: 'Roving Elves',
-    regions: ['Tirannwn'],
-    skills: { 'Agility': 56 }, prereqs: ['Regicide', 'Waterfall Quest'], points: 1, series: 'Elf',
+    regions: ['Tirannwn', 'Kandarin'],
+    skills: {}, prereqs: ['Regicide', 'Waterfall Quest'], points: 1, series: 'Elf',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Ghosts Ahoy': {
@@ -761,10 +798,13 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Recruitment Drive': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Recruitment Drive', name: 'Recruitment Drive',
     regions: ['Asgarnia'],
-    skills: { 'Quest Points': 12 }, prereqs: ['Black Knights\' Fortress'], points: 1, series: 'Temple Knight',
+    locations: [
+      { id: 'west-falador', label: 'White Knights\' Castle and Falador Park', standardAreas: ['Falador'], chunkOptions: [{ cx: 46, cy: 52 }] },
+    ],
+    skills: {}, prereqs: ['Black Knights\' Fortress', 'Druidic Ritual'], points: 1, series: 'Temple Knight',
     difficulty: DropSource.QUEST_NOVICE
   },
   'Mourning\'s End Part I': {
@@ -833,7 +873,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Ratcatchers': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Ratcatchers', name: 'Ratcatchers',
-    regions: ['Misthalin'],
+    regions: ['Misthalin', 'Kandarin', 'Kharidian Desert', 'Fremennik', 'Asgarnia'],
+    manualRequirements: ['Started The Giant Dwarf to access Keldagrim'],
     skills: {}, prereqs: ['Icthlarin\'s Little Helper'], points: 2,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -983,14 +1024,19 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Swan Song': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Swan Song', name: 'Swan Song',
-    regions: ['Kandarin'],
-    skills: { 'Quest Points': 100, 'Magic': 66, 'Cooking': 62, 'Fishing': 62, 'Smithing': 45, 'Firemaking': 42, 'Crafting': 40 }, prereqs: ['One Small Favour', 'Garden of Tranquillity'], points: 2,
+    regions: ['Kandarin', 'Misthalin', 'Asgarnia'],
+    skills: { 'Quest Points': 100, 'Magic': 66, 'Cooking': 62, 'Fishing': 62, 'Smithing': 45, 'Firemaking': 42, 'Crafting': 40 },
+    prereqs: ['One Small Favour', 'Garden of Tranquillity'], points: 2,
     difficulty: DropSource.QUEST_MASTER
   },
   'Royal Trouble': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Royal Trouble', name: 'Royal Trouble',
     regions: ['Fremennik'],
+    locations: [
+      { id: 'miscellania', label: 'Miscellania and its dungeon', standardAreas: ['Miscellania & Etceteria'], chunkOptions: [{ cx: 39, cy: 60 }] },
+      { id: 'etceteria', label: 'Etceteria', standardAreas: ['Miscellania & Etceteria'], chunkOptions: [{ cx: 40, cy: 60 }] },
+    ],
     skills: { 'Agility': 40, 'Slayer': 40 }, prereqs: ['Throne of Miscellania'], points: 1, series: 'Miscellania',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -1130,9 +1176,13 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Olaf\'s Quest': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Olaf\'s Quest', name: 'Olaf\'s Quest',
     regions: ['Fremennik'],
+    locations: [
+      { id: 'olafs-camp-and-cavern', label: "Olaf's camp and the Brine Rat Cavern", standardAreas: ['Rellekka'], chunkOptions: [{ cx: 42, cy: 58 }] },
+      { id: 'rellekka', label: 'Rellekka', standardAreas: ['Rellekka'], chunkOptions: [{ cx: 41, cy: 57 }] },
+    ],
     skills: { 'Firemaking': 40, 'Woodcutting': 50 }, prereqs: ['The Fremennik Trials'], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -1182,8 +1232,13 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Rag and Bone Man II': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Rag and Bone Man II', name: 'Rag and Bone Man II',
-    regions: ['Misthalin'],
-    skills: { 'Slayer': 40, 'Defence': 20 }, prereqs: ['Rag and Bone Man I'], points: 1, series: 'Rag and Bone Man',
+    regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Kharidian Desert', 'Fremennik', 'Morytania'],
+    manualRequirements: [
+      'Completed Horror from the Deep or started The Fremennik Trials for dagannoth access',
+      'Reached an experiment after starting Creature of Fenkenstrain or completing Grim Tales',
+      'Reached a listed fire giant source after partially completing Waterfall Quest or by an alternative route',
+    ],
+    skills: { 'Slayer': 40 }, prereqs: ['Rag and Bone Man I', 'Skippy and the Mogres'], points: 1, series: 'Rag and Bone Man',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Bone Voyage': {
@@ -1254,8 +1309,9 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Song of the Elves': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Song of the Elves', name: 'Song of the Elves',
-    regions: ['Tirannwn'],
-    skills: { 'Agility': 70, 'Construction': 70, 'Farming': 70, 'Herblore': 70, 'Hunter': 70, 'Mining': 70, 'Smithing': 70, 'Woodcutting': 70 }, prereqs: ['Mourning\'s End Part II', 'Making History'], points: 4, series: 'Elf',
+    regions: ['Tirannwn', 'Kandarin'],
+    skills: { 'Agility': 70, 'Construction': 70, 'Farming': 70, 'Herblore': 70, 'Hunter': 70, 'Mining': 70, 'Smithing': 70, 'Woodcutting': 70 },
+    prereqs: ['Mourning\'s End Part II', 'Making History', 'Druidic Ritual'], points: 4, series: 'Elf',
     difficulty: DropSource.QUEST_GRANDMASTER
   },
   'The Fremennik Exiles': {
@@ -1269,7 +1325,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Sins of the Father', name: 'Sins of the Father',
     regions: ['Morytania'],
-    skills: { 'Woodcutting': 62, 'Fletching': 60, 'Crafting': 56, 'Agility': 52, 'Slayer': 50, 'Attack': 50, 'Firemaking': 66, 'Magic': 49 }, prereqs: ['A Taste of Hope', 'Vampyre Slayer'], points: 2, series: 'Myreque',
+    skills: { 'Agility': 52, 'Attack': 50, 'Crafting': 56, 'Fletching': 60, 'Magic': 49, 'Slayer': 50, 'Woodcutting': 62 },
+    prereqs: ['A Taste of Hope', 'Vampyre Slayer'], points: 2, series: 'Myreque',
     difficulty: DropSource.QUEST_MASTER
   },
   'A Porcine of Interest': {
@@ -1326,9 +1383,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_MASTER
   },
   'Sleeping Giants': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Sleeping Giants', name: 'Sleeping Giants',
     regions: ['Kharidian Desert'],
+    locations: [
+      { id: 'giants-plateau-foundry', label: "Giants' Plateau and Giants' Foundry", standardAreas: ["Giants' Plateau"], chunkOptions: [{ cx: 52, cy: 49 }] },
+    ],
     skills: { 'Smithing': 15 }, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -1342,8 +1402,9 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Secrets of the North': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Secrets of the North', name: 'Secrets of the North',
-    regions: ['Fremennik', 'Kharidian Desert'],
-    skills: { 'Thieving': 64, 'Agility': 69, 'Hunter': 56 }, prereqs: ['Hazeel Cult', 'The General\'s Shadow', 'Making Friends with My Arm'], points: 2, series: 'Mahjarrat',
+    regions: ['Kandarin', 'Fremennik'],
+    skills: { 'Agility': 69, 'Thieving': 64, 'Hunter': 56 },
+    prereqs: ['Hazeel Cult', 'The General\'s Shadow', 'Making Friends with My Arm'], points: 2, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_MASTER
   },
   'Desert Treasure II': {
@@ -1393,10 +1454,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Perilous Moons': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Perilous Moons', name: 'Perilous Moons',
     regions: ['Varlamore'],
-    skills: { 'Slayer': 48, 'Hunter': 20, 'Fishing': 20, 'Runecraft': 20, 'Construction': 10 }, prereqs: ['Twilight\'s Promise'], points: 2,
+    locations: [
+      { id: 'cam-torum-and-neypotzli', label: 'Cam Torum and Neypotzli', standardAreas: ['Cam Torum'], chunkOptions: [{ cx: 22, cy: 48 }] },
+    ],
+    skills: { 'Slayer': 48, 'Hunter': 20, 'Fishing': 20, 'Runecraft': 20, 'Construction': 10 },
+    prereqs: ['Twilight\'s Promise'], points: 2,
     difficulty: DropSource.QUEST_MASTER
   },
   'The Ribbiting Tale': {
@@ -1475,9 +1540,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Scrambled!': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Scrambled!', name: 'Scrambled!',
     regions: ['Varlamore'],
+    locations: [
+      { id: 'tal-teklan-dock', label: 'Tal Teklan dock', standardAreas: ['Tlati Rainforest'], chunkOptions: [{ cx: 18, cy: 48 }] },
+      { id: 'tal-teok', label: 'Tal Teok and Tal Teklan', standardAreas: ['Tlati Rainforest'], chunkOptions: [{ cx: 19, cy: 49 }] },
+      { id: 'tlati-rainforest', label: 'Central Tlati Rainforest', standardAreas: ['Tlati Rainforest'], chunkOptions: [{ cx: 20, cy: 48 }] },
+    ],
     skills: { 'Construction': 38, 'Cooking': 36, 'Smithing': 35 }, prereqs: ['Children of the Sun'], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -1490,9 +1560,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_NOVICE
   },
   'Prying Times': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Prying Times', name: 'Prying Times',
     regions: ['The Open Seas'],
+    locations: [
+      { id: 'the-pandemonium', label: 'The Pandemonium', standardAreas: ['The Pandemonium'], chunkOptions: [{ cx: 47, cy: 46 }] },
+      { id: 'port-sarim-docks', label: 'Port Sarim docks', standardAreas: ['Port Sarim'], chunkOptions: [{ cx: 47, cy: 49 }] },
+      { id: 'thurgos-hut', label: "Thurgo's hut south of Port Sarim", standardAreas: ['Rimmington'], chunkOptions: [{ cx: 46, cy: 49 }] },
+    ],
     skills: { 'Smithing': 30, 'Sailing': 12 }, prereqs: ['Pandemonium', 'The Knight\'s Sword'],
     manualRequirements: ['One open Sailing task slot'], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE

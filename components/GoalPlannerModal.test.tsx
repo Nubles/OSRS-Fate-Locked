@@ -28,7 +28,7 @@ const pryingTimesUnlocks = (): UnlockState => ({
   equipment: {},
   skills: { Smithing: 3, Sailing: 2 },
   levels: { Smithing: 30, Sailing: 12 },
-  regions: ['The Open Seas'],
+  regions: ['The Pandemonium', 'Port Sarim', 'Rimmington'],
   mobility: [], arcana: [], housing: [], merchants: [], minigames: [],
   bosses: [], storage: [], guilds: [], farming: [], slayerUnlocks: [],
   quests: ['Pandemonium', "The Knight's Sword"],

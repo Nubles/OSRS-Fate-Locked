@@ -3403,6 +3403,1452 @@ describe('audited current quest requirements', () => {
 };
     expect(actual).toEqual(expected);
   });
+  it('pins the complete machine and balance projection for all 47 N-S quests', () => {
+    const ids = [
+      "Romeo & Juliet",
+      "Sheep Shearer",
+      "Shield of Arrav",
+      "Prince Ali Rescue",
+      "Pirate's Treasure",
+      "Rune Mysteries",
+      "Scorpion Catcher",
+      "Sheep Herder",
+      "Plague City",
+      "Sea Slug",
+      "Shilo Village",
+      "Observatory Quest",
+      "Priest in Peril",
+      "Nature Spirit",
+      "Regicide",
+      "Shades of Mort'ton",
+      "Roving Elves",
+      "One Small Favour",
+      "Recruitment Drive",
+      "Rum Deal",
+      "Shadow of the Storm",
+      "Ratcatchers",
+      "Spirits of the Elid",
+      "RFD: The Cook",
+      "RFD: Dwarf",
+      "RFD: Goblins",
+      "RFD: Pirate Pete",
+      "RFD: Lumbridge Guide",
+      "RFD: Evil Dave",
+      "RFD: Skrach Uglogwee",
+      "RFD: Sir Amik Varze",
+      "RFD: King Awowogei",
+      "RFD: Finale",
+      "Rag and Bone Man I",
+      "Swan Song",
+      "Royal Trouble",
+      "Olaf's Quest",
+      "Rag and Bone Man II",
+      "Song of the Elves",
+      "Sins of the Father",
+      "Sleeping Giants",
+      "Secrets of the North",
+      "Perilous Moons",
+      "Shadows of Custodia",
+      "Scrambled!",
+      "Pandemonium",
+      "Prying Times"
+    ] as const;
+    const actual = Object.fromEntries(ids.map(id => {
+      const quest = QUEST_DATA[id];
+      return [id, {
+        kind: quest.kind,
+        accessPolicy: quest.accessPolicy,
+        regions: quest.regions,
+        locations: quest.locations?.map(({ id, label, standardAreas, chunkOptions }) => ({ id, label, standardAreas, chunkOptions })) ?? null,
+        skills: quest.skills,
+        combatLevel: quest.combatLevel ?? null,
+        prereqs: quest.prereqs,
+        oneOf: quest.oneOf ?? null,
+        manualRequirements: quest.manualRequirements ?? null,
+        points: quest.points,
+        difficulty: quest.difficulty,
+      }];
+    }));
+    const expected = {
+      "Romeo & Juliet": {
+        "kind": "quest",
+        "accessPolicy": "locations",
+        "regions": [
+          "Misthalin"
+        ],
+        "locations": [
+          {
+            "id": "varrock-square",
+            "label": "Varrock square",
+            "standardAreas": [
+              "Varrock"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 50,
+                "cy": 53
+              }
+            ]
+          },
+          {
+            "id": "juliets-house",
+            "label": "Juliet's house in west Varrock",
+            "standardAreas": [
+              "Varrock"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 49,
+                "cy": 53
+              }
+            ]
+          },
+          {
+            "id": "varrock-church",
+            "label": "Varrock church",
+            "standardAreas": [
+              "Varrock"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 50,
+                "cy": 54
+              }
+            ]
+          }
+        ],
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 5,
+        "difficulty": "Quest (Novice)"
+      },
+      "Sheep Shearer": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Misthalin"
+        ],
+        "locations": null,
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Novice)"
+      },
+      "Shield of Arrav": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Misthalin"
+        ],
+        "locations": null,
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": [
+          "A trustworthy partner in the opposite gang"
+        ],
+        "points": 1,
+        "difficulty": "Quest (Novice)"
+      },
+      "Prince Ali Rescue": {
+        "kind": "quest",
+        "accessPolicy": "locations",
+        "regions": [
+          "Kharidian Desert",
+          "Misthalin"
+        ],
+        "locations": [
+          {
+            "id": "al-kharid-palace",
+            "label": "Al Kharid Palace",
+            "standardAreas": [
+              "Al Kharid"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 51,
+                "cy": 49
+              }
+            ]
+          },
+          {
+            "id": "draynor-village-and-jail",
+            "label": "Draynor Village and the jail",
+            "standardAreas": [
+              "Draynor Village"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 48,
+                "cy": 50
+              }
+            ]
+          }
+        ],
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 3,
+        "difficulty": "Quest (Novice)"
+      },
+      "Pirate's Treasure": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Asgarnia",
+          "Misthalin",
+          "Karamja"
+        ],
+        "locations": null,
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Novice)"
+      },
+      "Rune Mysteries": {
+        "kind": "quest",
+        "accessPolicy": "locations",
+        "regions": [
+          "Misthalin"
+        ],
+        "locations": [
+          {
+            "id": "lumbridge-castle",
+            "label": "Lumbridge Castle",
+            "standardAreas": [
+              "Lumbridge"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 50,
+                "cy": 50
+              }
+            ]
+          },
+          {
+            "id": "wizards-tower",
+            "label": "Wizards' Tower",
+            "standardAreas": [
+              "Wizards' Tower"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 48,
+                "cy": 49
+              }
+            ]
+          },
+          {
+            "id": "auburys-rune-shop",
+            "label": "Aubury's rune shop in Varrock",
+            "standardAreas": [
+              "Varrock"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 50,
+                "cy": 53
+              }
+            ]
+          }
+        ],
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Novice)"
+      },
+      "Scorpion Catcher": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kandarin",
+          "Asgarnia"
+        ],
+        "locations": null,
+        "skills": {
+          "Prayer": 31
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Alfred Grimhand's Barcrawl"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Sheep Herder": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kandarin"
+        ],
+        "locations": null,
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 4,
+        "difficulty": "Quest (Novice)"
+      },
+      "Plague City": {
+        "kind": "quest",
+        "accessPolicy": "locations",
+        "regions": [
+          "Kandarin"
+        ],
+        "locations": [
+          {
+            "id": "east-ardougne-edmond",
+            "label": "Edmond's house in East Ardougne",
+            "standardAreas": [
+              "East Ardougne"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 39,
+                "cy": 52
+              }
+            ]
+          },
+          {
+            "id": "west-ardougne",
+            "label": "West Ardougne",
+            "standardAreas": [
+              "West Ardougne"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 39,
+                "cy": 51
+              }
+            ]
+          }
+        ],
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Novice)"
+      },
+      "Sea Slug": {
+        "kind": "quest",
+        "accessPolicy": "locations",
+        "regions": [
+          "Kandarin"
+        ],
+        "locations": [
+          {
+            "id": "witchaven-coast",
+            "label": "Witchaven coast",
+            "standardAreas": [
+              "Witchaven"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 42,
+                "cy": 51
+              }
+            ]
+          },
+          {
+            "id": "fishing-platform",
+            "label": "Fishing Platform",
+            "standardAreas": [
+              "Witchaven"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 43,
+                "cy": 51
+              }
+            ]
+          }
+        ],
+        "skills": {
+          "Firemaking": 30
+        },
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Shilo Village": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Karamja"
+        ],
+        "locations": null,
+        "skills": {
+          "Crafting": 20,
+          "Agility": 32
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Jungle Potion"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Observatory Quest": {
+        "kind": "quest",
+        "accessPolicy": "locations",
+        "regions": [
+          "Kandarin"
+        ],
+        "locations": [
+          {
+            "id": "observatory",
+            "label": "Observatory and Observatory Dungeon",
+            "standardAreas": [
+              "Observatory"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 38,
+                "cy": 49
+              }
+            ]
+          }
+        ],
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Priest in Peril": {
+        "kind": "quest",
+        "accessPolicy": "locations",
+        "regions": [
+          "Misthalin",
+          "Morytania"
+        ],
+        "locations": [
+          {
+            "id": "varrock-palace",
+            "label": "Varrock Palace",
+            "standardAreas": [
+              "Varrock"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 50,
+                "cy": 54
+              }
+            ]
+          },
+          {
+            "id": "paterdomus",
+            "label": "Paterdomus Temple and mausoleum",
+            "standardAreas": [
+              "Paterdomus"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 53,
+                "cy": 54
+              }
+            ]
+          }
+        ],
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Novice)"
+      },
+      "Nature Spirit": {
+        "kind": "quest",
+        "accessPolicy": "locations",
+        "regions": [
+          "Morytania"
+        ],
+        "locations": [
+          {
+            "id": "paterdomus",
+            "label": "Paterdomus and Drezel",
+            "standardAreas": [
+              "Paterdomus"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 53,
+                "cy": 54
+              }
+            ]
+          },
+          {
+            "id": "nature-grotto",
+            "label": "Nature Grotto in Mort Myre Swamp",
+            "standardAreas": [
+              "Mort Myre Swamp"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 53,
+                "cy": 52
+              }
+            ]
+          }
+        ],
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [
+          "Priest in Peril",
+          "The Restless Ghost"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Regicide": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Tirannwn",
+          "Kandarin"
+        ],
+        "locations": null,
+        "skills": {
+          "Agility": 56,
+          "Crafting": 10
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Underground Pass"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 3,
+        "difficulty": "Quest (Experienced)"
+      },
+      "Shades of Mort'ton": {
+        "kind": "quest",
+        "accessPolicy": "locations",
+        "regions": [
+          "Morytania"
+        ],
+        "locations": [
+          {
+            "id": "mortton",
+            "label": "Mort'ton and the Flamtaer Temple",
+            "standardAreas": [
+              "Mort'ton"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 54,
+                "cy": 51
+              }
+            ]
+          }
+        ],
+        "skills": {
+          "Crafting": 20,
+          "Firemaking": 5,
+          "Herblore": 15
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Priest in Peril"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 3,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Roving Elves": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Tirannwn",
+          "Kandarin"
+        ],
+        "locations": null,
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [
+          "Regicide",
+          "Waterfall Quest"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Experienced)"
+      },
+      "One Small Favour": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kandarin",
+          "Karamja",
+          "Asgarnia",
+          "Misthalin"
+        ],
+        "locations": null,
+        "skills": {
+          "Agility": 36,
+          "Crafting": 25,
+          "Herblore": 18,
+          "Smithing": 30
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Rune Mysteries",
+          "Shilo Village"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Experienced)"
+      },
+      "Recruitment Drive": {
+        "kind": "quest",
+        "accessPolicy": "locations",
+        "regions": [
+          "Asgarnia"
+        ],
+        "locations": [
+          {
+            "id": "west-falador",
+            "label": "White Knights' Castle and Falador Park",
+            "standardAreas": [
+              "Falador"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 46,
+                "cy": 52
+              }
+            ]
+          }
+        ],
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [
+          "Black Knights' Fortress",
+          "Druidic Ritual"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Novice)"
+      },
+      "Rum Deal": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Morytania",
+          "Islands & Others"
+        ],
+        "locations": null,
+        "skills": {
+          "Farming": 40,
+          "Prayer": 47,
+          "Slayer": 42,
+          "Crafting": 42,
+          "Fishing": 50
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Zogre Flesh Eaters",
+          "Priest in Peril"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Experienced)"
+      },
+      "Shadow of the Storm": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kharidian Desert"
+        ],
+        "locations": null,
+        "skills": {
+          "Crafting": 30
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Demon Slayer",
+          "The Golem"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Ratcatchers": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Misthalin",
+          "Kandarin",
+          "Kharidian Desert",
+          "Fremennik",
+          "Asgarnia"
+        ],
+        "locations": null,
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [
+          "Icthlarin's Little Helper"
+        ],
+        "oneOf": null,
+        "manualRequirements": [
+          "Started The Giant Dwarf to access Keldagrim"
+        ],
+        "points": 2,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Spirits of the Elid": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kharidian Desert"
+        ],
+        "locations": null,
+        "skills": {
+          "Magic": 33,
+          "Ranged": 37,
+          "Mining": 37,
+          "Thieving": 37
+        },
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "RFD: The Cook": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Misthalin"
+        ],
+        "locations": null,
+        "skills": {
+          "Cooking": 10
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Cook's Assistant"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Novice)"
+      },
+      "RFD: Dwarf": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Asgarnia"
+        ],
+        "locations": null,
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [
+          "Fishing Contest"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Novice)"
+      },
+      "RFD: Goblins": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Asgarnia"
+        ],
+        "locations": null,
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [
+          "Goblin Diplomacy"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Novice)"
+      },
+      "RFD: Pirate Pete": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Misthalin",
+          "Asgarnia",
+          "Islands & Others"
+        ],
+        "locations": null,
+        "skills": {
+          "Cooking": 31
+        },
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "RFD: Lumbridge Guide": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Misthalin"
+        ],
+        "locations": null,
+        "skills": {
+          "Cooking": 40
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Big Chompy Bird Hunting",
+          "Biohazard",
+          "Demon Slayer",
+          "Murder Mystery",
+          "Nature Spirit",
+          "Priest in Peril",
+          "The Restless Ghost",
+          "Witch's House"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "RFD: Evil Dave": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Misthalin"
+        ],
+        "locations": null,
+        "skills": {
+          "Cooking": 25
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Gertrude's Cat",
+          "Shadow of the Storm"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "RFD: Skrach Uglogwee": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kandarin"
+        ],
+        "locations": null,
+        "skills": {
+          "Cooking": 41,
+          "Firemaking": 20
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Big Chompy Bird Hunting"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "RFD: Sir Amik Varze": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Asgarnia",
+          "Karamja",
+          "Misthalin",
+          "Islands & Others"
+        ],
+        "locations": null,
+        "skills": {
+          "Quest Points": 107
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Legends' Quest"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Experienced)"
+      },
+      "RFD: King Awowogei": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Islands & Others",
+          "Kandarin"
+        ],
+        "locations": null,
+        "skills": {
+          "Cooking": 70,
+          "Agility": 48
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Monkey Madness I"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Experienced)"
+      },
+      "RFD: Finale": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Misthalin"
+        ],
+        "locations": null,
+        "skills": {
+          "Quest Points": 175
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "RFD: The Cook",
+          "RFD: Dwarf",
+          "RFD: Goblins",
+          "RFD: Pirate Pete",
+          "RFD: Lumbridge Guide",
+          "RFD: Evil Dave",
+          "RFD: Skrach Uglogwee",
+          "RFD: Sir Amik Varze",
+          "RFD: King Awowogei"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Master)"
+      },
+      "Rag and Bone Man I": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Misthalin"
+        ],
+        "locations": null,
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Novice)"
+      },
+      "Swan Song": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kandarin",
+          "Misthalin",
+          "Asgarnia"
+        ],
+        "locations": null,
+        "skills": {
+          "Quest Points": 100,
+          "Magic": 66,
+          "Cooking": 62,
+          "Fishing": 62,
+          "Smithing": 45,
+          "Firemaking": 42,
+          "Crafting": 40
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "One Small Favour",
+          "Garden of Tranquillity"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Master)"
+      },
+      "Royal Trouble": {
+        "kind": "quest",
+        "accessPolicy": "locations",
+        "regions": [
+          "Fremennik"
+        ],
+        "locations": [
+          {
+            "id": "miscellania",
+            "label": "Miscellania and its dungeon",
+            "standardAreas": [
+              "Miscellania & Etceteria"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 39,
+                "cy": 60
+              }
+            ]
+          },
+          {
+            "id": "etceteria",
+            "label": "Etceteria",
+            "standardAreas": [
+              "Miscellania & Etceteria"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 40,
+                "cy": 60
+              }
+            ]
+          }
+        ],
+        "skills": {
+          "Agility": 40,
+          "Slayer": 40
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Throne of Miscellania"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Experienced)"
+      },
+      "Olaf's Quest": {
+        "kind": "quest",
+        "accessPolicy": "locations",
+        "regions": [
+          "Fremennik"
+        ],
+        "locations": [
+          {
+            "id": "olafs-camp-and-cavern",
+            "label": "Olaf's camp and the Brine Rat Cavern",
+            "standardAreas": [
+              "Rellekka"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 42,
+                "cy": 58
+              }
+            ]
+          },
+          {
+            "id": "rellekka",
+            "label": "Rellekka",
+            "standardAreas": [
+              "Rellekka"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 41,
+                "cy": 57
+              }
+            ]
+          }
+        ],
+        "skills": {
+          "Firemaking": 40,
+          "Woodcutting": 50
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "The Fremennik Trials"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Rag and Bone Man II": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Misthalin",
+          "Asgarnia",
+          "Kandarin",
+          "Kharidian Desert",
+          "Fremennik",
+          "Morytania"
+        ],
+        "locations": null,
+        "skills": {
+          "Slayer": 40
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Rag and Bone Man I",
+          "Skippy and the Mogres"
+        ],
+        "oneOf": null,
+        "manualRequirements": [
+          "Completed Horror from the Deep or started The Fremennik Trials for dagannoth access",
+          "Reached an experiment after starting Creature of Fenkenstrain or completing Grim Tales",
+          "Reached a listed fire giant source after partially completing Waterfall Quest or by an alternative route"
+        ],
+        "points": 1,
+        "difficulty": "Quest (Experienced)"
+      },
+      "Song of the Elves": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Tirannwn",
+          "Kandarin"
+        ],
+        "locations": null,
+        "skills": {
+          "Agility": 70,
+          "Construction": 70,
+          "Farming": 70,
+          "Herblore": 70,
+          "Hunter": 70,
+          "Mining": 70,
+          "Smithing": 70,
+          "Woodcutting": 70
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Mourning's End Part II",
+          "Making History",
+          "Druidic Ritual"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 4,
+        "difficulty": "Quest (Grandmaster)"
+      },
+      "Sins of the Father": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Morytania"
+        ],
+        "locations": null,
+        "skills": {
+          "Agility": 52,
+          "Attack": 50,
+          "Crafting": 56,
+          "Fletching": 60,
+          "Magic": 49,
+          "Slayer": 50,
+          "Woodcutting": 62
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "A Taste of Hope",
+          "Vampyre Slayer"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Master)"
+      },
+      "Sleeping Giants": {
+        "kind": "quest",
+        "accessPolicy": "locations",
+        "regions": [
+          "Kharidian Desert"
+        ],
+        "locations": [
+          {
+            "id": "giants-plateau-foundry",
+            "label": "Giants' Plateau and Giants' Foundry",
+            "standardAreas": [
+              "Giants' Plateau"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 52,
+                "cy": 49
+              }
+            ]
+          }
+        ],
+        "skills": {
+          "Smithing": 15
+        },
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Secrets of the North": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kandarin",
+          "Fremennik"
+        ],
+        "locations": null,
+        "skills": {
+          "Agility": 69,
+          "Thieving": 64,
+          "Hunter": 56
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Hazeel Cult",
+          "The General's Shadow",
+          "Making Friends with My Arm"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Master)"
+      },
+      "Perilous Moons": {
+        "kind": "quest",
+        "accessPolicy": "locations",
+        "regions": [
+          "Varlamore"
+        ],
+        "locations": [
+          {
+            "id": "cam-torum-and-neypotzli",
+            "label": "Cam Torum and Neypotzli",
+            "standardAreas": [
+              "Cam Torum"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 22,
+                "cy": 48
+              }
+            ]
+          }
+        ],
+        "skills": {
+          "Slayer": 48,
+          "Hunter": 20,
+          "Fishing": 20,
+          "Runecraft": 20,
+          "Construction": 10
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Twilight's Promise"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Master)"
+      },
+      "Shadows of Custodia": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Varlamore"
+        ],
+        "locations": null,
+        "skills": {
+          "Slayer": 54,
+          "Fishing": 45,
+          "Construction": 41,
+          "Hunter": 36
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Children of the Sun"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Experienced)"
+      },
+      "Scrambled!": {
+        "kind": "quest",
+        "accessPolicy": "locations",
+        "regions": [
+          "Varlamore"
+        ],
+        "locations": [
+          {
+            "id": "tal-teklan-dock",
+            "label": "Tal Teklan dock",
+            "standardAreas": [
+              "Tlati Rainforest"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 18,
+                "cy": 48
+              }
+            ]
+          },
+          {
+            "id": "tal-teok",
+            "label": "Tal Teok and Tal Teklan",
+            "standardAreas": [
+              "Tlati Rainforest"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 19,
+                "cy": 49
+              }
+            ]
+          },
+          {
+            "id": "tlati-rainforest",
+            "label": "Central Tlati Rainforest",
+            "standardAreas": [
+              "Tlati Rainforest"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 20,
+                "cy": 48
+              }
+            ]
+          }
+        ],
+        "skills": {
+          "Construction": 38,
+          "Cooking": 36,
+          "Smithing": 35
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Children of the Sun"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Pandemonium": {
+        "kind": "quest",
+        "accessPolicy": "locations",
+        "regions": [],
+        "locations": [
+          {
+            "id": "port-sarim",
+            "label": "Port Sarim",
+            "standardAreas": [
+              "Port Sarim"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 47,
+                "cy": 50
+              }
+            ]
+          }
+        ],
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Novice)"
+      },
+      "Prying Times": {
+        "kind": "quest",
+        "accessPolicy": "locations",
+        "regions": [
+          "The Open Seas"
+        ],
+        "locations": [
+          {
+            "id": "the-pandemonium",
+            "label": "The Pandemonium",
+            "standardAreas": [
+              "The Pandemonium"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 47,
+                "cy": 46
+              }
+            ]
+          },
+          {
+            "id": "port-sarim-docks",
+            "label": "Port Sarim docks",
+            "standardAreas": [
+              "Port Sarim"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 47,
+                "cy": 49
+              }
+            ]
+          },
+          {
+            "id": "thurgos-hut",
+            "label": "Thurgo's hut south of Port Sarim",
+            "standardAreas": [
+              "Rimmington"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 46,
+                "cy": 49
+              }
+            ]
+          }
+        ],
+        "skills": {
+          "Smithing": 30,
+          "Sailing": 12
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Pandemonium",
+          "The Knight's Sword"
+        ],
+        "oneOf": null,
+        "manualRequirements": [
+          "One open Sailing task slot"
+        ],
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      }
+    };
+    expect(actual).toEqual(expected);
+  });
+
 });
 
 describe('quest cape eligibility', () => {

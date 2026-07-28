@@ -61,7 +61,7 @@ describe('questUnmet', () => {
 
   it('keeps Prying Times behind its manual Sailing confirmation', () => {
     expect(questUnmet(QUEST_DATA['Prying Times'], u({
-      regions: ['The Open Seas'],
+      regions: ['The Pandemonium', 'Port Sarim', 'Rimmington'],
       quests: ['Pandemonium', "The Knight's Sword"],
       skills: { Smithing: 3, Sailing: 2 },
       levels: { Smithing: 30, Sailing: 12 },

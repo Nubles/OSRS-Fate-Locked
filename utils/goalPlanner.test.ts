@@ -69,7 +69,7 @@ describe('planForTarget — quests', () => {
   it('an AVAILABLE quest needs only itself (no region/skill backlog)', () => {
     const base = maxedUnlocks();
     const available = Object.values(QUEST_DATA).filter(
-      (q) => getQuestStatus(q, base) === 'AVAILABLE',
+      (q) => getQuestStatus(q, base) === 'AVAILABLE' && !q.manualRequirements?.length,
     );
     expect(available.length).toBeGreaterThan(0);
     for (const q of available) {
@@ -316,7 +316,7 @@ describe('listGoalTargets', () => {
 });
   it('plans Prying Times as a manual confirmation followed by quest completion', () => {
     const plan = planForTarget('quest', 'Prying Times', maxedUnlocks({
-      regions: ['The Open Seas'],
+      regions: ['The Pandemonium', 'Port Sarim', 'Rimmington'],
       quests: ['Pandemonium', "The Knight's Sword"],
     }))!;
 

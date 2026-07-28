@@ -209,7 +209,7 @@ describe('evaluateQuestDoability', () => {
     const row = evaluateQuestDoability(
       QUEST_DATA['Prying Times'],
       unlocks({
-        regions: ['The Open Seas'],
+        regions: ['The Pandemonium', 'Port Sarim', 'Rimmington'],
         quests: ['Pandemonium', "The Knight's Sword"],
         skills: { Smithing: 3, Sailing: 2 },
         levels: { Smithing: 30, Sailing: 12 },

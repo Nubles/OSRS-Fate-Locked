@@ -64,6 +64,19 @@ describe('official quest and miniquest audit coverage', () => {
 
   it('reviews every G-M quest', () => expectReviewedBatch('G', 'N'));
 
+  it('reviews every N-S quest', () => expectReviewedBatch('N', 'T'));
+
+  it('leaves no unexplained N-S review placeholders', () => {
+    expect(audit.entries
+      .filter(entry =>
+        entry.kind === 'quest' &&
+        entry.id.localeCompare('N') >= 0 &&
+        entry.id.localeCompare('T') < 0 &&
+        entry.status === 'unresolved')
+      .map(entry => entry.id))
+      .toEqual([]);
+  });
+
   it('leaves no unexplained G-M review placeholders', () => {
     expect(audit.entries
       .filter(entry =>
@@ -116,16 +129,12 @@ describe('official quest and miniquest audit coverage', () => {
         discrepancy: ['regions policy', 'Kharidian Desert', 'Bedabin Camp', '49,47', 'The Dig Site'],
       },
       {
-        id: 'Pandemonium',
-        discrepancy: ['locations policy', 'Port Sarim', '47,50'],
+        id: 'Bear Your Soul',
+        discrepancy: ['regions policy', 'Soul Altar', 'Blood Altar', '26,59'],
       },
       {
-        id: 'Prying Times',
-        discrepancy: ['manual requirement', 'One open Sailing task slot'],
-      },
-      {
-        id: 'Nature Spirit',
-        discrepancy: ['prerequisite', 'Priest in Peril'],
+        id: 'The Enchanted Key',
+        discrepancy: ['eleven fixed treasure sites', 'Falador', 'Grand Exchange', 'Jorral'],
       },
     ];
 

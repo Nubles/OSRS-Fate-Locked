@@ -4508,16 +4508,16 @@
     {
       "id": "Nature Spirit",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Nature_Spirit&oldid=15240977",
         "revision": 15240977,
         "revisionTimestamp": "2026-06-27T13:39:36Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Morytania\"],\"skills\":{\"Crafting\":18},\"prereqs\":[\"Priest in Peril\",\"The Restless Ghost\"],\"points\":2}",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Morytania\"],\"locations\":[{\"chunkOptions\":[{\"cx\":53,\"cy\":54}],\"id\":\"paterdomus\",\"label\":\"Paterdomus and Drezel\",\"standardAreas\":[\"Paterdomus\"]},{\"chunkOptions\":[{\"cx\":53,\"cy\":52}],\"id\":\"nature-grotto\",\"label\":\"Nature Grotto in Mort Myre Swamp\",\"standardAreas\":[\"Mort Myre Swamp\"]}],\"skills\":{},\"prereqs\":[\"Priest in Peril\",\"The Restless Ghost\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "53,52",
@@ -4531,27 +4531,32 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
+        "items": [
+          "The pinned Wiki item requirements for Nature Spirit were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Paterdomus and the Nature Grotto are both unavoidable; the two exact chunks replace the coarse Morytania gate.",
+          "Standard mode uses the existing Paterdomus and Mort Myre Swamp unlocks; Chunked mode uses exact chunks 53,54 and 53,52."
+        ],
+        "instances": [
+          "The Nature Grotto sequence is reached through the pinned Mort Myre entrance/activity evidence."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "Nature Spirit uses the regions policy with runtime regions [Morytania] and prerequisite [Priest in Peril, The Restless Ghost]. The pinned Chunk Picker records first places [Paterdomus (chunk 53,54)] and step places [Nature Grotto (chunk 53,52)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping Nature Spirit's current regions policy requirements (regions [Morytania]; exact locations [none]; skills [Crafting 18]; prerequisites [Priest in Peril, The Restless Ghost]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Observatory Quest",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Observatory_Quest&oldid=15270070",
         "revision": 15270070,
         "revisionTimestamp": "2026-07-20T07:59:30Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Kandarin\"],\"skills\":{},\"prereqs\":[],\"points\":2}",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kandarin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":38,\"cy\":49}],\"id\":\"observatory\",\"label\":\"Observatory and Observatory Dungeon\",\"standardAreas\":[\"Observatory\"]}],\"skills\":{},\"prereqs\":[],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "38,49",
@@ -4560,27 +4565,31 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
+        "items": [
+          "The pinned Wiki item requirements for Observatory Quest were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "The reception room, dungeon, and telescope are one fixed Observatory site represented by chunk 38,49."
+        ],
+        "instances": [
+          "The Observatory Dungeon is part of the same fixed site as the surface reception room."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "Observatory Quest uses the regions policy with runtime regions [Kandarin], while the pinned Chunk Picker records first places [Observatory (chunk 38,49)] and step places [none]. Those named activity markers do not prove that every coarse runtime region is unavoidable and may omit travel, instance, or item-source steps from the stable Wiki route.",
-      "conservativeReason": "Keeping Observatory Quest's current regions policy requirements (regions [Kandarin]; exact locations [none]; skills [none]; prerequisites [none]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Olaf's Quest",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Olaf's_Quest&oldid=15273863",
         "revision": 15273863,
         "revisionTimestamp": "2026-07-24T08:54:07Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Fremennik\"],\"skills\":{\"Firemaking\":40,\"Woodcutting\":50},\"prereqs\":[\"The Fremennik Trials\"],\"points\":1}",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Fremennik\"],\"locations\":[{\"chunkOptions\":[{\"cx\":42,\"cy\":58}],\"id\":\"olafs-camp-and-cavern\",\"label\":\"Olaf's camp and the Brine Rat Cavern\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":41,\"cy\":57}],\"id\":\"rellekka\",\"label\":\"Rellekka\",\"standardAreas\":[\"Rellekka\"]}],\"skills\":{\"Firemaking\":40,\"Woodcutting\":50},\"prereqs\":[\"The Fremennik Trials\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "41,57",
@@ -4594,19 +4603,24 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
+        "items": [
+          "The pinned Wiki item requirements for Olaf's Quest were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Olaf's camp, the eastern cavern, and the Rellekka family visit are represented by the two pinned Rellekka chunks.",
+          "Standard mode has no separate east Rellekka peninsula alias, so both truthful labels use Rellekka; Chunked mode uses exact chunks 42,58 and 41,57."
+        ],
+        "instances": [
+          "The Brine Rat Cavern and shipwreck sequence is entered from Olaf's pinned peninsula chunk."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "Olaf's Quest uses the regions policy with runtime regions [Fremennik] and prerequisite [The Fremennik Trials]. The pinned Chunk Picker records first places [Rellekka Peninsula (chunk 42,58)] and step places [Rellekka (chunk 41,57)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping Olaf's Quest's current regions policy requirements (regions [Fremennik]; exact locations [none]; skills [Firemaking 40, Woodcutting 50]; prerequisites [The Fremennik Trials]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "One Small Favour",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=One_Small_Favour&oldid=15240988",
         "revision": 15240988,
@@ -4703,19 +4717,23 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
+        "items": [
+          "The pinned Wiki item requirements for One Small Favour were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "The fixed favour chain crosses Karamja, Asgarnia, Misthalin, and Kandarin; all seventeen picker rows were reviewed and item-source markers were not promoted to extra gates."
+        ],
+        "instances": [
+          "The H.A.M. hideout, Dwarven Mine fight, and Slagilith cave were reviewed as route instances."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "One Small Favour uses the regions policy with runtime regions [Kandarin, Karamja, Asgarnia, Misthalin] and prerequisite [Rune Mysteries, Shilo Village]. The pinned Chunk Picker records first places [Shilo Village (chunk 44,46)] and step places [Rantz' Cave (chunk 41,46), Port Khazard (chunk 41,49), Ardougne Market (chunk 41,51), Seers' Village (chunk 42,54), West Catherby (chunk 43,53), Central Kharazi Jungle (chunk 44,45), White Wolf Mountain (chunk 44,54), South Taverley (chunk 45,53), Port Sarim (chunk 47,50), East Falador (chunk 47,52), Asgarnian Road (chunk 47,53), South Draynor (chunk 48,50), Lumbridge Castle Backyard (chunk 49,50), West Varrock (chunk 49,53), Groats' Farm (chunk 50,51), Varrock Center/Square (chunk 50,53)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping One Small Favour's current regions policy requirements (regions [Kandarin, Karamja, Asgarnia, Misthalin]; exact locations [none]; skills [Agility 36, Crafting 25, Herblore 18, Smithing 30]; prerequisites [Rune Mysteries, Shilo Village]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Pandemonium",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Pandemonium&oldid=15241080",
         "revision": 15241080,
@@ -4747,27 +4765,33 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
-        "partialCompletion": []
-      },
-      "discrepancy": "Pandemonium uses the locations policy with exact runtime locations [Port Sarim (standard areas [Port Sarim]; chunks [47,50])] and runtime regions [none]. The pinned Chunk Picker records first places [Port Sarim (chunk 47,50)] and step places [Shipyard (chunk 32,42), The Pandemonium (chunk 47,46), Port Sarim Jail (chunk 47,49)], but those activity markers do not establish whether the stable Wiki route's unavoidable travel and instance steps are all covered by the exact runtime location mapping.",
-      "conservativeReason": "Keeping Pandemonium's current locations policy requirements (regions [none]; exact locations [Port Sarim (standard areas [Port Sarim]; chunks [47,50])]; skills [none]; prerequisites [none]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+        "items": [
+          "The pinned Wiki item requirements for Pandemonium were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Port Sarim is the only independently unlockable start gate; the wreck, The Pandemonium, and Shipyard rows are reached through the quest's directed Sailing tutorial."
+        ],
+        "instances": [
+          "The wreck approach and onboarding voyage are quest-directed Sailing sequences, not independently unlockable completion gates."
+        ],
+        "partialCompletion": [
+          "All four picker rows were retained as evidence; only Port Sarim is enforced because the remaining rows are unlocked by the quest tutorial itself."
+        ]
+      }
     },
     {
       "id": "Perilous Moons",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Perilous_Moons&oldid=15276408",
         "revision": 15276408,
         "revisionTimestamp": "2026-07-27T03:24:36Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Varlamore\"],\"skills\":{\"Construction\":10,\"Fishing\":20,\"Hunter\":20,\"Runecraft\":20,\"Slayer\":48},\"prereqs\":[\"Twilight's Promise\"],\"points\":2}",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Varlamore\"],\"locations\":[{\"chunkOptions\":[{\"cx\":22,\"cy\":48}],\"id\":\"cam-torum-and-neypotzli\",\"label\":\"Cam Torum and Neypotzli\",\"standardAreas\":[\"Cam Torum\"]}],\"skills\":{\"Construction\":10,\"Fishing\":20,\"Hunter\":20,\"Runecraft\":20,\"Slayer\":48},\"prereqs\":[\"Twilight's Promise\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "22,48",
@@ -4776,19 +4800,23 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
+        "items": [
+          "The pinned Wiki item requirements for Perilous Moons were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "The quest starts at Cam Torum and continues through the attached Neypotzli instance, represented by the pinned entrance chunk."
+        ],
+        "instances": [
+          "Neypotzli and all three Moon arenas are attached dungeon/boss instances behind Cam Torum."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "Perilous Moons uses the regions policy with runtime regions [Varlamore] and prerequisite [Twilight's Promise]. The pinned Chunk Picker records first places [Cam Torum Entrance (chunk 22,48)] and step places [none], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping Perilous Moons's current regions policy requirements (regions [Varlamore]; exact locations [none]; skills [Slayer 48, Hunter 20, Fishing 20, Runecraft 20, Construction 10]; prerequisites [Twilight's Promise]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Pirate's Treasure",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Pirate's_Treasure&oldid=15240936",
         "revision": 15240936,
@@ -4796,7 +4824,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Asgarnia\",\"Misthalin\"],\"skills\":{},\"prereqs\":[],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Asgarnia\",\"Misthalin\",\"Karamja\"],\"skills\":{},\"prereqs\":[],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "45,49",
@@ -4820,27 +4848,29 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
+        "items": [
+          "The pinned Wiki item requirements for Pirate's Treasure were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "The compulsory rum-smuggling route crosses Port Sarim/Asgarnia, Musa Point/Karamja, Varrock/Misthalin, and Falador/Asgarnia."
+        ],
         "instances": [],
         "partialCompletion": []
-      },
-      "discrepancy": "Pirate's Treasure uses the regions policy with runtime regions [Asgarnia, Misthalin], while the pinned Chunk Picker records first places [Port Sarim (chunk 47,50)] and step places [Musa Point (chunk 45,49), West Falador (chunk 46,52), Varrock Center/Square (chunk 50,53)]. Those named activity markers do not prove that every coarse runtime region is unavoidable and may omit travel, instance, or item-source steps from the stable Wiki route.",
-      "conservativeReason": "Keeping Pirate's Treasure's current regions policy requirements (regions [Asgarnia, Misthalin]; exact locations [none]; skills [none]; prerequisites [none]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Plague City",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Plague_City&oldid=15240959",
         "revision": 15240959,
         "revisionTimestamp": "2026-06-27T13:22:40Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Kandarin\"],\"skills\":{},\"prereqs\":[],\"points\":1}",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kandarin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":39,\"cy\":52}],\"id\":\"east-ardougne-edmond\",\"label\":\"Edmond's house in East Ardougne\",\"standardAreas\":[\"East Ardougne\"]},{\"chunkOptions\":[{\"cx\":39,\"cy\":51}],\"id\":\"west-ardougne\",\"label\":\"West Ardougne\",\"standardAreas\":[\"West Ardougne\"]}],\"skills\":{},\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "39,51",
@@ -4854,27 +4884,31 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
+        "items": [
+          "The pinned Wiki item requirements for Plague City were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Edmond's East Ardougne garden and West Ardougne are the fixed quest locations represented by the two pinned chunks."
+        ],
+        "instances": [
+          "The wall tunnel and Elena's cellar are attached to the two exact Ardougne locations."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "Plague City uses the regions policy with runtime regions [Kandarin], while the pinned Chunk Picker records first places [none] and step places [West Ardougne (chunk 39,51), Combat Training Camp (chunk 39,52)]. Those named activity markers do not prove that every coarse runtime region is unavoidable and may omit travel, instance, or item-source steps from the stable Wiki route.",
-      "conservativeReason": "Keeping Plague City's current regions policy requirements (regions [Kandarin]; exact locations [none]; skills [none]; prerequisites [none]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Priest in Peril",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Priest_in_Peril&oldid=15240978",
         "revision": 15240978,
         "revisionTimestamp": "2026-06-27T13:40:04Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Misthalin\",\"Morytania\"],\"skills\":{},\"prereqs\":[],\"points\":1}",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\",\"Morytania\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":54}],\"id\":\"varrock-palace\",\"label\":\"Varrock Palace\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":53,\"cy\":54}],\"id\":\"paterdomus\",\"label\":\"Paterdomus Temple and mausoleum\",\"standardAreas\":[\"Paterdomus\"]}],\"skills\":{},\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "50,54",
@@ -4888,27 +4922,31 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
+        "items": [
+          "The pinned Wiki item requirements for Priest in Peril were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Varrock Palace and Paterdomus, including the temple and mausoleum, are the two unavoidable sites."
+        ],
+        "instances": [
+          "The temple floors and mausoleum dungeon are represented by the Paterdomus entrance chunk."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "Priest in Peril uses the regions policy with runtime regions [Misthalin, Morytania], while the pinned Chunk Picker records first places [Varrock Palace (chunk 50,54)] and step places [Paterdomus (chunk 53,54)]. Those named activity markers do not prove that every coarse runtime region is unavoidable and may omit travel, instance, or item-source steps from the stable Wiki route.",
-      "conservativeReason": "Keeping Priest in Peril's current regions policy requirements (regions [Misthalin, Morytania]; exact locations [none]; skills [none]; prerequisites [none]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Prince Ali Rescue",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Prince_Ali_Rescue&oldid=15260348",
         "revision": 15260348,
         "revisionTimestamp": "2026-07-11T01:55:46Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Kharidian Desert\",\"Misthalin\"],\"skills\":{},\"prereqs\":[],\"points\":3}",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kharidian Desert\",\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":51,\"cy\":49}],\"id\":\"al-kharid-palace\",\"label\":\"Al Kharid Palace\",\"standardAreas\":[\"Al Kharid\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":50}],\"id\":\"draynor-village-and-jail\",\"label\":\"Draynor Village and the jail\",\"standardAreas\":[\"Draynor Village\"]}],\"skills\":{},\"prereqs\":[],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "48,50",
@@ -4922,27 +4960,31 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
+        "items": [
+          "The pinned Wiki item requirements for Prince Ali Rescue were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Al Kharid Palace and the Draynor jail/rescue route are unavoidable; ingredient and furnace choices are not location gates."
+        ],
+        "instances": [
+          "The jail cell is represented by the Draynor quest location."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "Prince Ali Rescue uses the regions policy with runtime regions [Kharidian Desert, Misthalin], while the pinned Chunk Picker records first places [Al Kharid Palace (chunk 51,49)] and step places [South Draynor (chunk 48,50)]. Those named activity markers do not prove that every coarse runtime region is unavoidable and may omit travel, instance, or item-source steps from the stable Wiki route.",
-      "conservativeReason": "Keeping Prince Ali Rescue's current regions policy requirements (regions [Kharidian Desert, Misthalin]; exact locations [none]; skills [none]; prerequisites [none]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Prying Times",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Prying_Times&oldid=15263595",
         "revision": 15263595,
         "revisionTimestamp": "2026-07-14T22:42:13Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"The Open Seas\"],\"skills\":{\"Sailing\":12,\"Smithing\":30},\"prereqs\":[\"Pandemonium\",\"The Knight's Sword\"],\"manualRequirements\":[\"One open Sailing task slot\"],\"points\":1}",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"The Open Seas\"],\"locations\":[{\"chunkOptions\":[{\"cx\":47,\"cy\":46}],\"id\":\"the-pandemonium\",\"label\":\"The Pandemonium\",\"standardAreas\":[\"The Pandemonium\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":49}],\"id\":\"port-sarim-docks\",\"label\":\"Port Sarim docks\",\"standardAreas\":[\"Port Sarim\"]},{\"chunkOptions\":[{\"cx\":46,\"cy\":49}],\"id\":\"thurgos-hut\",\"label\":\"Thurgo's hut south of Port Sarim\",\"standardAreas\":[\"Rimmington\"]}],\"skills\":{\"Sailing\":12,\"Smithing\":30},\"prereqs\":[\"Pandemonium\",\"The Knight's Sword\"],\"manualRequirements\":[\"One open Sailing task slot\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "46,49",
@@ -4961,19 +5003,26 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
-        "partialCompletion": []
-      },
-      "discrepancy": "Prying Times uses the regions policy with runtime regions [The Open Seas] and manual requirement [One open Sailing task slot]. The pinned Chunk Picker records first places [The Pandemonium (chunk 47,46)] and step places [Port Sarim Church (chunk 46,49), Port Sarim Jail (chunk 47,49)], but activity chunks cannot represent that manual task-state requirement or show how it interacts with the stable Wiki route.",
-      "conservativeReason": "Keeping Prying Times's current regions policy requirements (regions [The Open Seas]; exact locations [none]; skills [Smithing 30, Sailing 12]; prerequisites [Pandemonium, The Knight's Sword]; manual requirements [One open Sailing task slot]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+        "items": [
+          "The pinned Wiki item requirements for Prying Times were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "The fixed route uses The Pandemonium, Port Sarim docks, and Thurgo's hut; the nearby sealed-crate trip is quest-directed Sailing travel.",
+          "Standard mode uses The Pandemonium, Port Sarim, and Rimmington for the truthful dock and Thurgo labels; Chunked mode uses exact chunks 47,46, 47,49, and 46,49."
+        ],
+        "instances": [
+          "The sealed-crate Sailing encounter is quest-directed from The Pandemonium."
+        ],
+        "partialCompletion": [
+          "The source-required open port task slot remains a manual readiness check."
+        ]
+      }
     },
     {
       "id": "Rag and Bone Man I",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Rag_and_Bone_Man_I&oldid=15241026",
         "revision": 15241026,
@@ -4990,19 +5039,23 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
+        "items": [
+          "The pinned Wiki item requirements for Rag and Bone Man I were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "The Odd Old Man and Draynor vinegar route remain covered by Misthalin; monster-bone sources have multiple item-source alternatives."
+        ],
         "instances": [],
-        "partialCompletion": []
-      },
-      "discrepancy": "Rag and Bone Man I uses the regions policy with runtime regions [Misthalin], while the pinned Chunk Picker records first places [none] and step places [South Draynor (chunk 48,50)]. Those named activity markers do not prove that every coarse runtime region is unavoidable and may omit travel, instance, or item-source steps from the stable Wiki route.",
-      "conservativeReason": "Keeping Rag and Bone Man I's current regions policy requirements (regions [Misthalin]; exact locations [none]; skills [none]; prerequisites [none]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+        "partialCompletion": [
+          "Required monster bones have multiple source regions; item possession and alternative bone-source routes are not machine-enforced."
+        ]
+      }
     },
     {
       "id": "Rag and Bone Man II",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Rag_and_Bone_Man_II&oldid=15273866",
         "revision": 15273866,
@@ -5010,7 +5063,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Misthalin\"],\"skills\":{\"Defence\":20,\"Slayer\":40},\"prereqs\":[\"Rag and Bone Man I\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Misthalin\",\"Asgarnia\",\"Kandarin\",\"Kharidian Desert\",\"Fremennik\",\"Morytania\"],\"skills\":{\"Slayer\":40},\"prereqs\":[\"Rag and Bone Man I\",\"Skippy and the Mogres\"],\"manualRequirements\":[\"Completed Horror from the Deep or started The Fremennik Trials for dagannoth access\",\"Reached an experiment after starting Creature of Fenkenstrain or completing Grim Tales\",\"Reached a listed fire giant source after partially completing Waterfall Quest or by an alternative route\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "48,50",
@@ -5019,19 +5072,23 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
+        "items": [
+          "The pinned Wiki item requirements for Rag and Bone Man II were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "The pinned route explicitly requires monster access across Misthalin, Asgarnia, Kandarin, the desert, Fremennik, and Morytania."
+        ],
         "instances": [],
-        "partialCompletion": []
-      },
-      "discrepancy": "Rag and Bone Man II uses the regions policy with runtime regions [Misthalin] and prerequisite [Rag and Bone Man I]. The pinned Chunk Picker records first places [none] and step places [South Draynor (chunk 48,50)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping Rag and Bone Man II's current regions policy requirements (regions [Misthalin]; exact locations [none]; skills [Slayer 40, Defence 20]; prerequisites [Rag and Bone Man I]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+        "partialCompletion": [
+          "Skippy and the Mogres is machine-enforced; the Horror/Fremennik, experiment, and fire-giant alternative access states remain explicit manual checks."
+        ]
+      }
     },
     {
       "id": "Ratcatchers",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Ratcatchers&oldid=15265969",
         "revision": 15265969,
@@ -5039,7 +5096,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Misthalin\"],\"skills\":{},\"prereqs\":[\"Icthlarin's Little Helper\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Misthalin\",\"Kandarin\",\"Kharidian Desert\",\"Fremennik\",\"Asgarnia\"],\"skills\":{},\"prereqs\":[\"Icthlarin's Little Helper\"],\"manualRequirements\":[\"Started The Giant Dwarf to access Keldagrim\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "42,58",
@@ -5078,27 +5135,33 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
-        "partialCompletion": []
-      },
-      "discrepancy": "Ratcatchers uses the regions policy with runtime regions [Misthalin] and prerequisite [Icthlarin's Little Helper]. The pinned Chunk Picker records first places [none] and step places [Rellekka Peninsula (chunk 42,58), Port Sarim (chunk 47,50), West Varrock (chunk 49,53), Varrock Palace (chunk 50,54), East Varrock Mine (chunk 51,52), East Varrock Gate (chunk 51,53), Pollnivneach (chunk 52,46)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping Ratcatchers's current regions policy requirements (regions [Misthalin]; exact locations [none]; skills [none]; prerequisites [Icthlarin's Little Helper]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+        "items": [
+          "The pinned Wiki item requirements for Ratcatchers were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "The unavoidable route crosses Varrock, Ardougne, Pollnivneach, Keldagrim, and Port Sarim, represented by five coarse regions."
+        ],
+        "instances": [
+          "Jimmy Dazzler's guarded mansion is a quest-teleported instance and is recorded without a separate unlock gate."
+        ],
+        "partialCompletion": [
+          "Starting The Giant Dwarf for Keldagrim access remains an explicit manual check."
+        ]
+      }
     },
     {
       "id": "Recruitment Drive",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Recruitment_Drive&oldid=15274290",
         "revision": 15274290,
         "revisionTimestamp": "2026-07-25T03:48:21Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Asgarnia\"],\"skills\":{\"Quest Points\":12},\"prereqs\":[\"Black Knights' Fortress\"],\"points\":1}",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Asgarnia\"],\"locations\":[{\"chunkOptions\":[{\"cx\":46,\"cy\":52}],\"id\":\"west-falador\",\"label\":\"White Knights' Castle and Falador Park\",\"standardAreas\":[\"Falador\"]}],\"skills\":{},\"prereqs\":[\"Black Knights' Fortress\",\"Druidic Ritual\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "46,52",
@@ -5107,19 +5170,24 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
+        "items": [
+          "The pinned Wiki item requirements for Recruitment Drive were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "The White Knights' Castle, Falador Park, and the transported testing instance share the pinned west Falador access chunk.",
+          "Standard mode uses Falador for the castle and park; Chunked mode uses exact chunk 46,52."
+        ],
+        "instances": [
+          "The randomized testing rooms are reached only through Sir Tiffy in Falador Park."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "Recruitment Drive uses the regions policy with runtime regions [Asgarnia] and prerequisite [Black Knights' Fortress]. The pinned Chunk Picker records first places [West Falador (chunk 46,52)] and step places [none], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping Recruitment Drive's current regions policy requirements (regions [Asgarnia]; exact locations [none]; skills [Quest Points 12]; prerequisites [Black Knights' Fortress]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Regicide",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Regicide&oldid=15271309",
         "revision": 15271309,
@@ -5127,7 +5195,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tirannwn\"],\"skills\":{\"Agility\":56,\"Crafting\":10},\"prereqs\":[\"Underground Pass\"],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tirannwn\",\"Kandarin\"],\"skills\":{\"Agility\":56,\"Crafting\":10},\"prereqs\":[\"Underground Pass\"],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "34,49",
@@ -5161,19 +5229,23 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
+        "items": [
+          "The pinned Wiki item requirements for Regicide were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "The quest starts and ends in Ardougne/Kandarin and traverses the Underground Pass into the fixed Tirannwn route."
+        ],
+        "instances": [
+          "The Underground Pass and Tirannwn cave/forest route were reviewed through the permanent walkthrough."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "Regicide uses the regions policy with runtime regions [Tirannwn] and prerequisite [Underground Pass]. The pinned Chunk Picker records first places [none] and step places [Tyras Camp (chunk 34,49), Iorwerth Camp (chunk 34,50), South Isafdar (chunk 35,49), North Isafdar (chunk 35,50), South Arandar (chunk 36,50), Melzar's Maze (chunk 45,50)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping Regicide's current regions policy requirements (regions [Tirannwn]; exact locations [none]; skills [Agility 56, Crafting 10]; prerequisites [Underground Pass]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "RFD: Dwarf",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_the_Mountain_Dwarf&oldid=15241018",
         "revision": 15241018,
@@ -5195,19 +5267,23 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
+        "items": [
+          "The pinned Wiki item requirements for RFD: Dwarf were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Compatibility-preserved Mountain Dwarf chapter evidence covers Lumbridge, Falador, and White Wolf Mountain for the Recipe for Disaster parent route."
+        ],
         "instances": [],
-        "partialCompletion": []
-      },
-      "discrepancy": "RFD: Dwarf uses the regions policy with runtime regions [Asgarnia] and prerequisite [Fishing Contest]. The pinned Chunk Picker records first places [none] and step places [White Wolf Mountain (chunk 44,54), West Falador (chunk 46,52)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping RFD: Dwarf's current regions policy requirements (regions [Asgarnia]; exact locations [none]; skills [none]; prerequisites [Fishing Contest]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+        "partialCompletion": [
+          "Compatibility exception: RFD: Dwarf remains an existing completion ID and key-bearing save state, while revision 15241018 is also supporting chapter evidence for the RFD: Finale parent audit."
+        ]
+      }
     },
     {
       "id": "RFD: Evil Dave",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_Evil_Dave&oldid=15166446",
         "revision": 15166446,
@@ -5224,19 +5300,23 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
+        "items": [
+          "The pinned Wiki item requirements for RFD: Evil Dave were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Compatibility-preserved Evil Dave chapter evidence covers Lumbridge and Edgeville for the Recipe for Disaster parent route."
+        ],
         "instances": [],
-        "partialCompletion": []
-      },
-      "discrepancy": "RFD: Evil Dave uses the regions policy with runtime regions [Misthalin] and prerequisite [Gertrude's Cat, Shadow of the Storm]. The pinned Chunk Picker records first places [none] and step places [Edgeville (chunk 48,54)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping RFD: Evil Dave's current regions policy requirements (regions [Misthalin]; exact locations [none]; skills [Cooking 25]; prerequisites [Gertrude's Cat, Shadow of the Storm]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+        "partialCompletion": [
+          "Compatibility exception: RFD: Evil Dave remains an existing completion ID and key-bearing save state, while revision 15166446 is also supporting chapter evidence for the RFD: Finale parent audit."
+        ]
+      }
     },
     {
       "id": "RFD: Finale",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FDefeating_the_Culinaromancer&oldid=15211243",
         "revision": 15211243,
@@ -5253,19 +5333,25 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
-        "partialCompletion": []
-      },
-      "discrepancy": "RFD: Finale uses the regions policy with runtime regions [Misthalin] and prerequisite [RFD: The Cook, RFD: Dwarf, RFD: Goblins, RFD: Pirate Pete, RFD: Lumbridge Guide, RFD: Evil Dave, RFD: Skrach Uglogwee, RFD: Sir Amik Varze, RFD: King Awowogei]. The pinned Chunk Picker records first places [none] and step places [Lumbridge Castle (chunk 50,50)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping RFD: Finale's current regions policy requirements (regions [Misthalin]; exact locations [none]; skills [Quest Points 175]; prerequisites [RFD: The Cook, RFD: Dwarf, RFD: Goblins, RFD: Pirate Pete, RFD: Lumbridge Guide, RFD: Evil Dave, RFD: Skrach Uglogwee, RFD: Sir Amik Varze, RFD: King Awowogei]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+        "items": [
+          "The pinned Wiki item requirements for RFD: Finale were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "The parent audit aggregates the nine frozen-council chapters and the Culinaromancer boss instance while preserving the existing Finale completion identity."
+        ],
+        "instances": [
+          "The Culinaromancer fight is the parent quest's final boss instance in Lumbridge Castle."
+        ],
+        "partialCompletion": [
+          "Compatibility exception: RFD: Finale is the audit parent only. Existing chapter completion IDs, saves, and key rewards remain unchanged; supporting child oldids are RFD: Dwarf 15241018; RFD: Evil Dave 15166446; RFD: Goblins 15166443; RFD: King Awowogei 15242259; RFD: Lumbridge Guide 15266917; RFD: Pirate Pete 15266918; RFD: Sir Amik Varze 15266919; RFD: Skrach Uglogwee 15266920; RFD: The Cook 15241017."
+        ]
+      }
     },
     {
       "id": "RFD: Goblins",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_the_Goblin_generals&oldid=15166443",
         "revision": 15166443,
@@ -5282,19 +5368,23 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
+        "items": [
+          "The pinned Wiki item requirements for RFD: Goblins were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Compatibility-preserved Goblin Generals chapter evidence covers Lumbridge and Goblin Village for the Recipe for Disaster parent route."
+        ],
         "instances": [],
-        "partialCompletion": []
-      },
-      "discrepancy": "RFD: Goblins uses the regions policy with runtime regions [Asgarnia] and prerequisite [Goblin Diplomacy]. The pinned Chunk Picker records first places [none] and step places [Goblin Village (chunk 46,54)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping RFD: Goblins's current regions policy requirements (regions [Asgarnia]; exact locations [none]; skills [none]; prerequisites [Goblin Diplomacy]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+        "partialCompletion": [
+          "Compatibility exception: RFD: Goblins remains an existing completion ID and key-bearing save state, while revision 15166443 is also supporting chapter evidence for the RFD: Finale parent audit."
+        ]
+      }
     },
     {
       "id": "RFD: King Awowogei",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_King_Awowogei&oldid=15242259",
         "revision": 15242259,
@@ -5326,19 +5416,25 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
-        "partialCompletion": []
-      },
-      "discrepancy": "RFD: King Awowogei uses the regions policy with runtime regions [Islands & Others, Kandarin] and prerequisite [Monkey Madness I]. The pinned Chunk Picker records first places [none] and step places [Marim Entrance (chunk 42,43), East Ape Atoll (chunk 43,42), Marim (chunk 43,43), Crash Island (chunk 45,42)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping RFD: King Awowogei's current regions policy requirements (regions [Islands & Others, Kandarin]; exact locations [none]; skills [Cooking 70, Agility 48]; prerequisites [Monkey Madness I]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+        "items": [
+          "The pinned Wiki item requirements for RFD: King Awowogei were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Compatibility-preserved King Awowogei chapter evidence covers Lumbridge, Ape Atoll, Crash Island, and its dungeon for the Recipe for Disaster parent route."
+        ],
+        "instances": [
+          "The Ape Atoll dungeon and Big Snake cave are supporting parent-route instances."
+        ],
+        "partialCompletion": [
+          "Compatibility exception: RFD: King Awowogei remains an existing completion ID and key-bearing save state, while revision 15242259 is also supporting chapter evidence for the RFD: Finale parent audit."
+        ]
+      }
     },
     {
       "id": "RFD: Lumbridge Guide",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_the_Lumbridge_Guide&oldid=15266917",
         "revision": 15266917,
@@ -5355,19 +5451,23 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
+        "items": [
+          "The pinned Wiki item requirements for RFD: Lumbridge Guide were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Compatibility-preserved Lumbridge Guide chapter evidence covers Lumbridge and Wizards' Tower for the Recipe for Disaster parent route."
+        ],
         "instances": [],
-        "partialCompletion": []
-      },
-      "discrepancy": "RFD: Lumbridge Guide uses the regions policy with runtime regions [Misthalin] and prerequisite [Big Chompy Bird Hunting, Biohazard, Demon Slayer, Murder Mystery, Nature Spirit, Priest in Peril, The Restless Ghost, Witch's House]. The pinned Chunk Picker records first places [none] and step places [Wizards' Tower (chunk 48,49)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping RFD: Lumbridge Guide's current regions policy requirements (regions [Misthalin]; exact locations [none]; skills [Cooking 40]; prerequisites [Big Chompy Bird Hunting, Biohazard, Demon Slayer, Murder Mystery, Nature Spirit, Priest in Peril, The Restless Ghost, Witch's House]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+        "partialCompletion": [
+          "Compatibility exception: RFD: Lumbridge Guide remains an existing completion ID and key-bearing save state, while revision 15266917 is also supporting chapter evidence for the RFD: Finale parent audit."
+        ]
+      }
     },
     {
       "id": "RFD: Pirate Pete",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_Pirate_Pete&oldid=15266918",
         "revision": 15266918,
@@ -5384,19 +5484,25 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
-        "partialCompletion": []
-      },
-      "discrepancy": "RFD: Pirate Pete uses the regions policy with runtime regions [Misthalin, Asgarnia, Islands & Others], while the pinned Chunk Picker records first places [none] and step places [Port Khazard (chunk 41,49)]. Those named activity markers do not prove that every coarse runtime region is unavoidable and may omit travel, instance, or item-source steps from the stable Wiki route.",
-      "conservativeReason": "Keeping RFD: Pirate Pete's current regions policy requirements (regions [Misthalin, Asgarnia, Islands & Others]; exact locations [none]; skills [Cooking 31]; prerequisites [none]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+        "items": [
+          "The pinned Wiki item requirements for RFD: Pirate Pete were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Compatibility-preserved Pirate Pete chapter evidence covers Lumbridge, Port Khazard, and the underwater instance for the Recipe for Disaster parent route."
+        ],
+        "instances": [
+          "The underwater crab and mudskipper areas are supporting parent-route instances entered from Port Khazard."
+        ],
+        "partialCompletion": [
+          "Compatibility exception: RFD: Pirate Pete remains an existing completion ID and key-bearing save state, while revision 15266918 is also supporting chapter evidence for the RFD: Finale parent audit."
+        ]
+      }
     },
     {
       "id": "RFD: Sir Amik Varze",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_Sir_Amik_Varze&oldid=15266919",
         "revision": 15266919,
@@ -5423,19 +5529,25 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
-        "partialCompletion": []
-      },
-      "discrepancy": "RFD: Sir Amik Varze uses the regions policy with runtime regions [Asgarnia, Karamja, Misthalin, Islands & Others] and prerequisite [Legends' Quest]. The pinned Chunk Picker records first places [none] and step places [Central Kharazi Jungle (chunk 44,45), Entrana (chunk 44,52), South Draynor (chunk 48,50)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping RFD: Sir Amik Varze's current regions policy requirements (regions [Asgarnia, Karamja, Misthalin, Islands & Others]; exact locations [none]; skills [Quest Points 107]; prerequisites [Legends' Quest]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+        "items": [
+          "The pinned Wiki item requirements for RFD: Sir Amik Varze were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Compatibility-preserved Sir Amik chapter evidence covers Lumbridge, Draynor, Kharazi Jungle, Zanaris, and the Evil Chicken lair for the Recipe for Disaster parent route."
+        ],
+        "instances": [
+          "The Evil Chicken lair in Zanaris is supporting parent-route instance evidence."
+        ],
+        "partialCompletion": [
+          "Compatibility exception: RFD: Sir Amik Varze remains an existing completion ID and key-bearing save state, while revision 15266919 is also supporting chapter evidence for the RFD: Finale parent audit."
+        ]
+      }
     },
     {
       "id": "RFD: Skrach Uglogwee",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_Skrach_Uglogwee&oldid=15266920",
         "revision": 15266920,
@@ -5457,19 +5569,23 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
+        "items": [
+          "The pinned Wiki item requirements for RFD: Skrach Uglogwee were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Compatibility-preserved Skrach Uglogwee chapter evidence covers Lumbridge, Feldip Hills, and Karamja for the Recipe for Disaster parent route."
+        ],
         "instances": [],
-        "partialCompletion": []
-      },
-      "discrepancy": "RFD: Skrach Uglogwee uses the regions policy with runtime regions [Kandarin] and prerequisite [Big Chompy Bird Hunting]. The pinned Chunk Picker records first places [none] and step places [Rantz' Cave (chunk 41,46), North Tai Bwo Wannai (chunk 43,48)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping RFD: Skrach Uglogwee's current regions policy requirements (regions [Kandarin]; exact locations [none]; skills [Cooking 41, Firemaking 20]; prerequisites [Big Chompy Bird Hunting]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+        "partialCompletion": [
+          "Compatibility exception: RFD: Skrach Uglogwee remains an existing completion ID and key-bearing save state, while revision 15266920 is also supporting chapter evidence for the RFD: Finale parent audit."
+        ]
+      }
     },
     {
       "id": "RFD: The Cook",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FAnother_Cook's_Quest&oldid=15241017",
         "revision": 15241017,
@@ -5480,27 +5596,31 @@
       "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Misthalin\"],\"skills\":{\"Cooking\":10},\"prereqs\":[\"Cook's Assistant\"],\"points\":1}",
       "chunkEvidence": [],
       "notes": {
-        "items": [],
-        "travel": [],
+        "items": [
+          "The pinned Wiki item requirements for RFD: The Cook were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Compatibility-preserved opening chapter evidence starts the parent route in Lumbridge; its ingredients may be obtained beforehand."
+        ],
         "instances": [],
-        "partialCompletion": []
-      },
-      "discrepancy": "RFD: The Cook uses the regions policy with runtime regions [Misthalin], but there is no pinned Chunk Picker first/step activity chunk for this ID. The stable Wiki route therefore has no chunk evidence to corroborate whether the retained runtime geography covers every unavoidable quest step.",
-      "conservativeReason": "Keeping RFD: The Cook's current regions policy requirements (regions [Misthalin]; exact locations [none]; skills [Cooking 10]; prerequisites [Cook's Assistant]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+        "partialCompletion": [
+          "Compatibility exception: RFD: The Cook remains an existing completion ID and key-bearing save state, while revision 15241017 is also supporting chapter evidence for the RFD: Finale parent audit."
+        ]
+      }
     },
     {
       "id": "Romeo & Juliet",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Romeo_%26_Juliet&oldid=15270189",
         "revision": 15270189,
         "revisionTimestamp": "2026-07-20T15:16:22Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Misthalin\"],\"skills\":{},\"prereqs\":[],\"points\":5}",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":53}],\"id\":\"varrock-square\",\"label\":\"Varrock square\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":53}],\"id\":\"juliets-house\",\"label\":\"Juliet's house in west Varrock\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":54}],\"id\":\"varrock-church\",\"label\":\"Varrock church\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{},\"prereqs\":[],\"points\":5}",
       "chunkEvidence": [
         {
           "chunkId": "49,53",
@@ -5519,19 +5639,22 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
+        "items": [
+          "The pinned Wiki item requirements for Romeo & Juliet were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "The entire route is confined to the three pinned west, central, and north Varrock chunks.",
+          "Standard mode uses Varrock for all three truthful labels; Chunked mode uses exact west, central, and north Varrock chunks."
+        ],
         "instances": [],
         "partialCompletion": []
-      },
-      "discrepancy": "Romeo & Juliet uses the regions policy with runtime regions [Misthalin], while the pinned Chunk Picker records first places [Varrock Center/Square (chunk 50,53)] and step places [West Varrock (chunk 49,53), Varrock Palace (chunk 50,54)]. Those named activity markers do not prove that every coarse runtime region is unavoidable and may omit travel, instance, or item-source steps from the stable Wiki route.",
-      "conservativeReason": "Keeping Romeo & Juliet's current regions policy requirements (regions [Misthalin]; exact locations [none]; skills [none]; prerequisites [none]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Roving Elves",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Roving_Elves&oldid=15262777",
         "revision": 15262777,
@@ -5539,7 +5662,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tirannwn\"],\"skills\":{\"Agility\":56},\"prereqs\":[\"Regicide\",\"Waterfall Quest\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tirannwn\",\"Kandarin\"],\"skills\":{},\"prereqs\":[\"Regicide\",\"Waterfall Quest\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "34,49",
@@ -5563,27 +5686,31 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
+        "items": [
+          "The pinned Wiki item requirements for Roving Elves were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "The fixed route crosses Isafdar/Tirannwn and Glarial's Tomb plus Baxtorian Falls/Kandarin."
+        ],
         "instances": [],
-        "partialCompletion": []
-      },
-      "discrepancy": "Roving Elves uses the regions policy with runtime regions [Tirannwn] and prerequisite [Regicide, Waterfall Quest]. The pinned Chunk Picker records first places [South Isafdar (chunk 35,49)] and step places [Tyras Camp (chunk 34,49), Glarial's Tomb (chunk 39,53), Baxtorian Falls (chunk 39,54)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping Roving Elves's current regions policy requirements (regions [Tirannwn]; exact locations [none]; skills [Agility 56]; prerequisites [Regicide, Waterfall Quest]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+        "partialCompletion": [
+          "Agility 56 is not enforced because the pinned source permits charter-ship access to the elven woods."
+        ]
+      }
     },
     {
       "id": "Royal Trouble",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Royal_Trouble&oldid=15271602",
         "revision": 15271602,
         "revisionTimestamp": "2026-07-22T00:23:53Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Fremennik\"],\"skills\":{\"Agility\":40,\"Slayer\":40},\"prereqs\":[\"Throne of Miscellania\"],\"points\":1}",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Fremennik\"],\"locations\":[{\"chunkOptions\":[{\"cx\":39,\"cy\":60}],\"id\":\"miscellania\",\"label\":\"Miscellania and its dungeon\",\"standardAreas\":[\"Miscellania & Etceteria\"]},{\"chunkOptions\":[{\"cx\":40,\"cy\":60}],\"id\":\"etceteria\",\"label\":\"Etceteria\",\"standardAreas\":[\"Miscellania & Etceteria\"]}],\"skills\":{\"Agility\":40,\"Slayer\":40},\"prereqs\":[\"Throne of Miscellania\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "39,60",
@@ -5602,19 +5729,24 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
+        "items": [
+          "The pinned Wiki item requirements for Royal Trouble were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Miscellania, Etceteria, and the attached dungeon are the unavoidable quest sites; Rellekka is a travel marker rather than a third completion gate.",
+          "Standard mode uses the existing combined Miscellania & Etceteria unlock for both truthful labels; Chunked mode requires exact chunks 39,60 and 40,60."
+        ],
+        "instances": [
+          "The Miscellania dungeon and Giant Sea Snake fight are attached to the exact island location."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "Royal Trouble uses the regions policy with runtime regions [Fremennik] and prerequisite [Throne of Miscellania]. The pinned Chunk Picker records first places [Miscellania (chunk 39,60)] and step places [Etceteria (chunk 40,60), Rellekka (chunk 41,57)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping Royal Trouble's current regions policy requirements (regions [Fremennik]; exact locations [none]; skills [Agility 40, Slayer 40]; prerequisites [Throne of Miscellania]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Rum Deal",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Rum_Deal&oldid=15271181",
         "revision": 15271181,
@@ -5631,27 +5763,31 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
+        "items": [
+          "The pinned Wiki item requirements for Rum Deal were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "The quest crosses the Ectofuntus coast and the quest-accessed Braindeath Island brewery, covered by Morytania and Islands & Others."
+        ],
+        "instances": [
+          "Braindeath Island and its brewery are quest-accessed island content."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "Rum Deal uses the regions policy with runtime regions [Morytania, Islands & Others] and prerequisite [Zogre Flesh Eaters, Priest in Peril]. The pinned Chunk Picker records first places [Ectofuntus (chunk 57,55)] and step places [none], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping Rum Deal's current regions policy requirements (regions [Morytania, Islands & Others]; exact locations [none]; skills [Farming 40, Prayer 47, Slayer 42, Crafting 42, Fishing 50]; prerequisites [Zogre Flesh Eaters, Priest in Peril]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Rune Mysteries",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Rune_Mysteries&oldid=15275863",
         "revision": 15275863,
         "revisionTimestamp": "2026-07-26T14:30:16Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Misthalin\"],\"skills\":{},\"prereqs\":[],\"points\":1}",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":50}],\"id\":\"lumbridge-castle\",\"label\":\"Lumbridge Castle\",\"standardAreas\":[\"Lumbridge\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":49}],\"id\":\"wizards-tower\",\"label\":\"Wizards' Tower\",\"standardAreas\":[\"Wizards' Tower\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":53}],\"id\":\"auburys-rune-shop\",\"label\":\"Aubury's rune shop in Varrock\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{},\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "50,50",
@@ -5665,19 +5801,22 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
+        "items": [
+          "The pinned Wiki item requirements for Rune Mysteries were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Lumbridge Castle, Wizards' Tower, and Aubury's Varrock rune shop are the three fixed hand-off locations.",
+          "Standard mode uses Lumbridge, Wizards' Tower, and Varrock; Chunked mode uses exact chunks 50,50, 48,49, and 50,53."
+        ],
         "instances": [],
         "partialCompletion": []
-      },
-      "discrepancy": "Rune Mysteries uses the regions policy with runtime regions [Misthalin], while the pinned Chunk Picker records first places [Lumbridge Castle (chunk 50,50)] and step places [Varrock Center/Square (chunk 50,53)]. Those named activity markers do not prove that every coarse runtime region is unavoidable and may omit travel, instance, or item-source steps from the stable Wiki route.",
-      "conservativeReason": "Keeping Rune Mysteries's current regions policy requirements (regions [Misthalin]; exact locations [none]; skills [none]; prerequisites [none]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Scorpion Catcher",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Scorpion_Catcher&oldid=15273835",
         "revision": 15273835,
@@ -5685,7 +5824,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Kandarin\"],\"skills\":{\"Prayer\":31},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Kandarin\",\"Asgarnia\"],\"skills\":{\"Prayer\":31},\"prereqs\":[\"Alfred Grimhand's Barcrawl\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "39,55",
@@ -5709,27 +5848,31 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
+        "items": [
+          "The pinned Wiki item requirements for Scorpion Catcher were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "The Sorcerer's Tower and Barbarian Outpost are in Kandarin while Taverley Dungeon and Edgeville Monastery require Asgarnia."
+        ],
         "instances": [],
-        "partialCompletion": []
-      },
-      "discrepancy": "Scorpion Catcher uses the regions policy with runtime regions [Kandarin], while the pinned Chunk Picker records first places [none] and step places [Barbarian Outpost (chunk 39,55), Seers' Village (chunk 42,54), South Taverley (chunk 45,53), Edgeville Monastery (chunk 47,54)]. Those named activity markers do not prove that every coarse runtime region is unavoidable and may omit travel, instance, or item-source steps from the stable Wiki route.",
-      "conservativeReason": "Keeping Scorpion Catcher's current regions policy requirements (regions [Kandarin]; exact locations [none]; skills [Prayer 31]; prerequisites [none]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+        "partialCompletion": [
+          "The dusty-key route and the Agility shortcut are alternatives; neither item possession nor the optional shortcut is forced."
+        ]
+      }
     },
     {
       "id": "Scrambled!",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Scrambled!&oldid=15275586",
         "revision": 15275586,
         "revisionTimestamp": "2026-07-26T01:42:53Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Varlamore\"],\"skills\":{\"Construction\":38,\"Cooking\":36,\"Smithing\":35},\"prereqs\":[\"Children of the Sun\"],\"points\":1}",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Varlamore\"],\"locations\":[{\"chunkOptions\":[{\"cx\":18,\"cy\":48}],\"id\":\"tal-teklan-dock\",\"label\":\"Tal Teklan dock\",\"standardAreas\":[\"Tlati Rainforest\"]},{\"chunkOptions\":[{\"cx\":19,\"cy\":49}],\"id\":\"tal-teok\",\"label\":\"Tal Teok and Tal Teklan\",\"standardAreas\":[\"Tlati Rainforest\"]},{\"chunkOptions\":[{\"cx\":20,\"cy\":48}],\"id\":\"tlati-rainforest\",\"label\":\"Central Tlati Rainforest\",\"standardAreas\":[\"Tlati Rainforest\"]}],\"skills\":{\"Construction\":38,\"Cooking\":36,\"Smithing\":35},\"prereqs\":[\"Children of the Sun\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "18,48",
@@ -5748,27 +5891,30 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
+        "items": [
+          "The pinned Wiki item requirements for Scrambled! were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Tal Teklan dock, Tal Teok, and the central Tlati Rainforest are the fixed route represented by all three picker rows.",
+          "Standard mode has no separate Tal Teklan or Tal Teok aliases, so all truthful labels use Tlati Rainforest; Chunked mode uses exact chunks 18,48, 19,49, and 20,48."
+        ],
         "instances": [],
         "partialCompletion": []
-      },
-      "discrepancy": "Scrambled! uses the regions policy with runtime regions [Varlamore] and prerequisite [Children of the Sun]. The pinned Chunk Picker records first places [Tal Teok (chunk 19,49)] and step places [Tal Teklan Dock (chunk 18,48), Central Tlati Rainforest (chunk 20,48)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping Scrambled!'s current regions policy requirements (regions [Varlamore]; exact locations [none]; skills [Construction 38, Cooking 36, Smithing 35]; prerequisites [Children of the Sun]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Sea Slug",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Sea_Slug&oldid=15240961",
         "revision": 15240961,
         "revisionTimestamp": "2026-06-27T13:23:01Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Kandarin\"],\"skills\":{\"Firemaking\":30},\"prereqs\":[],\"points\":1}",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kandarin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":42,\"cy\":51}],\"id\":\"witchaven-coast\",\"label\":\"Witchaven coast\",\"standardAreas\":[\"Witchaven\"]},{\"chunkOptions\":[{\"cx\":43,\"cy\":51}],\"id\":\"fishing-platform\",\"label\":\"Fishing Platform\",\"standardAreas\":[\"Witchaven\"]}],\"skills\":{\"Firemaking\":30},\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "42,51",
@@ -5782,19 +5928,24 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
+        "items": [
+          "The pinned Wiki item requirements for Sea Slug were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Witchaven coast and the Fishing Platform are the two fixed quest locations; the deserted-island visit is quest-directed boat travel.",
+          "Standard mode has no Fishing Platform alias, so that truthful label uses Witchaven; Chunked mode uses exact chunks 42,51 and 43,51."
+        ],
+        "instances": [
+          "The Fishing Platform and deserted-island sequence are reached by Holgart's quest boat."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "Sea Slug uses the regions policy with runtime regions [Kandarin], while the pinned Chunk Picker records first places [Witchaven (chunk 42,51)] and step places [Fishing Platform (chunk 43,51)]. Those named activity markers do not prove that every coarse runtime region is unavoidable and may omit travel, instance, or item-source steps from the stable Wiki route.",
-      "conservativeReason": "Keeping Sea Slug's current regions policy requirements (regions [Kandarin]; exact locations [none]; skills [Firemaking 30]; prerequisites [none]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Secrets of the North",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Secrets_of_the_North&oldid=15277596",
         "revision": 15277596,
@@ -5802,7 +5953,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Fremennik\",\"Kharidian Desert\"],\"skills\":{\"Agility\":69,\"Hunter\":56,\"Thieving\":64},\"prereqs\":[\"Hazeel Cult\",\"The General's Shadow\",\"Making Friends with My Arm\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Kandarin\",\"Fremennik\"],\"skills\":{\"Agility\":69,\"Hunter\":56,\"Thieving\":64},\"prereqs\":[\"Hazeel Cult\",\"The General's Shadow\",\"Making Friends with My Arm\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "40,50",
@@ -5826,27 +5977,31 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
+        "items": [
+          "The pinned Wiki item requirements for Secrets of the North were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "The actual route is Ardougne/Hazeel territory in Kandarin and Weiss/Ghorrock in Fremennik; desert state comes from the prerequisite chain, not route geography."
+        ],
+        "instances": [
+          "The Ghorrock Dungeon, assassin, and Strange Creature fights are attached to Weiss."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "Secrets of the North uses the regions policy with runtime regions [Fremennik, Kharidian Desert] and prerequisite [Hazeel Cult, The General's Shadow, Making Friends with My Arm]. The pinned Chunk Picker records first places [none] and step places [Ardougne Monastery (chunk 40,50), Tower of Life (chunk 41,50), Weiss (chunk 44,61), Ghorrock Fortress (chunk 45,61)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping Secrets of the North's current regions policy requirements (regions [Fremennik, Kharidian Desert]; exact locations [none]; skills [Thieving 64, Agility 69, Hunter 56]; prerequisites [Hazeel Cult, The General's Shadow, Making Friends with My Arm]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Shades of Mort'ton",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Shades_of_Mort'ton&oldid=15240980",
         "revision": 15240980,
         "revisionTimestamp": "2026-06-27T13:42:48Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Morytania\"],\"skills\":{\"Crafting\":20,\"Firemaking\":5,\"Herblore\":15},\"prereqs\":[\"Priest in Peril\"],\"points\":3}",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Morytania\"],\"locations\":[{\"chunkOptions\":[{\"cx\":54,\"cy\":51}],\"id\":\"mortton\",\"label\":\"Mort'ton and the Flamtaer Temple\",\"standardAreas\":[\"Mort'ton\"]}],\"skills\":{\"Crafting\":20,\"Firemaking\":5,\"Herblore\":15},\"prereqs\":[\"Priest in Peril\"],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "54,51",
@@ -5855,19 +6010,24 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
+        "items": [
+          "The pinned Wiki item requirements for Shades of Mort'ton were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "The quest is confined to Mort'ton and its Flamtaer Temple, represented by the pinned chunk.",
+          "Standard mode uses Mort'ton; Chunked mode uses exact chunk 54,51."
+        ],
+        "instances": [
+          "The temple-repair activity is part of the exact Mort'ton site."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "Shades of Mort'ton uses the regions policy with runtime regions [Morytania] and prerequisite [Priest in Peril]. The pinned Chunk Picker records first places [Mort'ton (chunk 54,51)] and step places [none], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping Shades of Mort'ton's current regions policy requirements (regions [Morytania]; exact locations [none]; skills [Crafting 20, Herblore 15, Firemaking 5]; prerequisites [Priest in Peril]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Shadow of the Storm",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Shadow_of_the_Storm&oldid=15271060",
         "revision": 15271060,
@@ -5884,19 +6044,23 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
+        "items": [
+          "The pinned Wiki item requirements for Shadow of the Storm were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Al Kharid and the Ruins of Uzer route remain within the Kharidian Desert; the furnace is an alternative item-processing stop."
+        ],
+        "instances": [
+          "The demon portal and Agrith-Naar fight are attached to the Ruins of Uzer dungeon."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "Shadow of the Storm uses the regions policy with runtime regions [Kharidian Desert] and prerequisite [Demon Slayer, The Golem]. The pinned Chunk Picker records first places [Al Kharid Palace (chunk 51,49)] and step places [none], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping Shadow of the Storm's current regions policy requirements (regions [Kharidian Desert]; exact locations [none]; skills [Crafting 30]; prerequisites [Demon Slayer, The Golem]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Shadows of Custodia",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Shadows_of_Custodia&oldid=15215306",
         "revision": 15215306,
@@ -5913,19 +6077,23 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
+        "items": [
+          "The pinned Wiki item requirements for Shadows of Custodia were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Auburnvale, Custodia Pass, and the Stalker Den remain within Varlamore; the lone bridge activity row is not treated as the whole route."
+        ],
+        "instances": [
+          "The Stalker Den is reached from the documented Auburnvale/Custodia route."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "Shadows of Custodia uses the regions policy with runtime regions [Varlamore] and prerequisite [Children of the Sun]. The pinned Chunk Picker records first places [none] and step places [Custodia Pass Bridge (chunk 20,52)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping Shadows of Custodia's current regions policy requirements (regions [Varlamore]; exact locations [none]; skills [Slayer 54, Fishing 45, Construction 41, Hunter 36]; prerequisites [Children of the Sun]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Sheep Herder",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Sheep_Herder&oldid=15240958",
         "revision": 15240958,
@@ -5936,19 +6104,21 @@
       "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Kandarin\"],\"skills\":{},\"prereqs\":[],\"points\":4}",
       "chunkEvidence": [],
       "notes": {
-        "items": [],
-        "travel": [],
+        "items": [
+          "The pinned Wiki item requirements for Sheep Herder were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "The church, enclosure, sheep, and incinerator route remains within East Ardougne/Kandarin; no picker activity row exists."
+        ],
         "instances": [],
         "partialCompletion": []
-      },
-      "discrepancy": "Sheep Herder uses the regions policy with runtime regions [Kandarin], but there is no pinned Chunk Picker first/step activity chunk for this ID. The stable Wiki route therefore has no chunk evidence to corroborate whether the retained runtime geography covers every unavoidable quest step.",
-      "conservativeReason": "Keeping Sheep Herder's current regions policy requirements (regions [Kandarin]; exact locations [none]; skills [none]; prerequisites [none]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Sheep Shearer",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Sheep_Shearer&oldid=15271780",
         "revision": 15271780,
@@ -5959,19 +6129,21 @@
       "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Misthalin\"],\"skills\":{},\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [],
       "notes": {
-        "items": [],
-        "travel": [],
+        "items": [
+          "The pinned Wiki item requirements for Sheep Shearer were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Fred's farm and Lumbridge Castle spinning wheel remain within Misthalin; pre-spun wool is an item alternative."
+        ],
         "instances": [],
         "partialCompletion": []
-      },
-      "discrepancy": "Sheep Shearer uses the regions policy with runtime regions [Misthalin], but there is no pinned Chunk Picker first/step activity chunk for this ID. The stable Wiki route therefore has no chunk evidence to corroborate whether the retained runtime geography covers every unavoidable quest step.",
-      "conservativeReason": "Keeping Sheep Shearer's current regions policy requirements (regions [Misthalin]; exact locations [none]; skills [none]; prerequisites [none]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Shield of Arrav",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Shield_of_Arrav&oldid=15275627",
         "revision": 15275627,
@@ -5979,7 +6151,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Misthalin\"],\"skills\":{},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Misthalin\"],\"skills\":{},\"prereqs\":[],\"manualRequirements\":[\"A trustworthy partner in the opposite gang\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "49,52",
@@ -6008,19 +6180,23 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
+        "items": [
+          "The pinned Wiki item requirements for Shield of Arrav were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Both gang branches and the common Reldo, museum, and King Roald steps remain within Varrock/Misthalin; branch-specific picker rows are not forced together."
+        ],
         "instances": [],
-        "partialCompletion": []
-      },
-      "discrepancy": "Shield of Arrav uses the regions policy with runtime regions [Misthalin], while the pinned Chunk Picker records first places [Varrock Palace (chunk 50,54)] and step places [Champions' Guild (chunk 49,52), West Varrock (chunk 49,53), Varrock South Gate (chunk 50,52), Varrock Center/Square (chunk 50,53)]. Those named activity markers do not prove that every coarse runtime region is unavoidable and may omit travel, instance, or item-source steps from the stable Wiki route.",
-      "conservativeReason": "Keeping Shield of Arrav's current regions policy requirements (regions [Misthalin]; exact locations [none]; skills [none]; prerequisites [none]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+        "partialCompletion": [
+          "Phoenix and Black Arm routes are alternatives; a trustworthy opposite-gang partner remains an explicit manual check."
+        ]
+      }
     },
     {
       "id": "Shilo Village",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Shilo_Village&oldid=15268035",
         "revision": 15268035,
@@ -6052,19 +6228,23 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
+        "items": [
+          "The pinned Wiki item requirements for Shilo Village were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "The full Ah Za Rhoon, Cairn Isle, and Rashiliyia tomb route remains within Karamja."
+        ],
+        "instances": [
+          "Ah Za Rhoon and both tomb dungeons are represented by their pinned Karamja entrances."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "Shilo Village uses the regions policy with runtime regions [Karamja] and prerequisite [Jungle Potion]. The pinned Chunk Picker records first places [Ah Za Rhoon (chunk 45,46)] and step places [Cairn Isle (chunk 43,46), North Tai Bwo Wannai (chunk 43,48), Karambwan Shore (chunk 45,48)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping Shilo Village's current regions policy requirements (regions [Karamja]; exact locations [none]; skills [Crafting 20, Agility 32]; prerequisites [Jungle Potion]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Sins of the Father",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Sins_of_the_Father&oldid=15271402",
         "revision": 15271402,
@@ -6072,7 +6252,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Morytania\"],\"skills\":{\"Agility\":52,\"Attack\":50,\"Crafting\":56,\"Firemaking\":66,\"Fletching\":60,\"Magic\":49,\"Slayer\":50,\"Woodcutting\":62},\"prereqs\":[\"A Taste of Hope\",\"Vampyre Slayer\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Morytania\"],\"skills\":{\"Agility\":52,\"Attack\":50,\"Crafting\":56,\"Fletching\":60,\"Magic\":49,\"Slayer\":50,\"Woodcutting\":62},\"prereqs\":[\"A Taste of Hope\",\"Vampyre Slayer\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "53,54",
@@ -6096,13 +6276,17 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
+        "items": [
+          "The pinned Wiki item requirements for Sins of the Father were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "The Slepe, Paterdomus, Meiyerditch, Darkmeyer, and instanced boss route remains within Morytania."
+        ],
+        "instances": [
+          "The laboratory, escort encounters, Darkmeyer, and Vanstrom fight were reviewed as Morytania instances."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "Sins of the Father uses the regions policy with runtime regions [Morytania] and prerequisite [A Taste of Hope, Vampyre Slayer]. The pinned Chunk Picker records first places [none] and step places [Paterdomus (chunk 53,54), Burgh de Rott (chunk 54,50), South Meiyerditch (chunk 56,50), Darkmeyer (chunk 56,52)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping Sins of the Father's current regions policy requirements (regions [Morytania]; exact locations [none]; skills [Woodcutting 62, Fletching 60, Crafting 56, Agility 52, Slayer 50, Attack 50, Firemaking 66, Magic 49]; prerequisites [A Taste of Hope, Vampyre Slayer]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Skippy and the Mogres",
@@ -6138,16 +6322,16 @@
     {
       "id": "Sleeping Giants",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Sleeping_Giants&oldid=15241064",
         "revision": 15241064,
         "revisionTimestamp": "2026-06-27T15:20:22Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Kharidian Desert\"],\"skills\":{\"Smithing\":15},\"prereqs\":[],\"points\":1}",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kharidian Desert\"],\"locations\":[{\"chunkOptions\":[{\"cx\":52,\"cy\":49}],\"id\":\"giants-plateau-foundry\",\"label\":\"Giants' Plateau and Giants' Foundry\",\"standardAreas\":[\"Giants' Plateau\"]}],\"skills\":{\"Smithing\":15},\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "52,49",
@@ -6156,19 +6340,24 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
+        "items": [
+          "The pinned Wiki item requirements for Sleeping Giants were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Giants' Plateau and the attached Giants' Foundry tutorial are represented by the pinned entrance chunk.",
+          "Standard mode uses Giants' Plateau; Chunked mode uses exact chunk 52,49."
+        ],
+        "instances": [
+          "Giants' Foundry is an attached tutorial instance behind the Giants' Plateau entrance."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "Sleeping Giants uses the regions policy with runtime regions [Kharidian Desert], while the pinned Chunk Picker records first places [Desert Battlefield (chunk 52,49)] and step places [none]. Those named activity markers do not prove that every coarse runtime region is unavoidable and may omit travel, instance, or item-source steps from the stable Wiki route.",
-      "conservativeReason": "Keeping Sleeping Giants's current regions policy requirements (regions [Kharidian Desert]; exact locations [none]; skills [Smithing 15]; prerequisites [none]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Song of the Elves",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Song_of_the_Elves&oldid=15275342",
         "revision": 15275342,
@@ -6176,7 +6365,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tirannwn\"],\"skills\":{\"Agility\":70,\"Construction\":70,\"Farming\":70,\"Herblore\":70,\"Hunter\":70,\"Mining\":70,\"Smithing\":70,\"Woodcutting\":70},\"prereqs\":[\"Mourning's End Part II\",\"Making History\"],\"points\":4}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tirannwn\",\"Kandarin\"],\"skills\":{\"Agility\":70,\"Construction\":70,\"Farming\":70,\"Herblore\":70,\"Hunter\":70,\"Mining\":70,\"Smithing\":70,\"Woodcutting\":70},\"prereqs\":[\"Mourning's End Part II\",\"Making History\",\"Druidic Ritual\"],\"points\":4}",
       "chunkEvidence": [
         {
           "chunkId": "34,47",
@@ -6240,19 +6429,23 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
+        "items": [
+          "The pinned Wiki item requirements for Song of the Elves were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "The fixed rebellion route crosses West Ardougne/Kandarin and Isafdar, Poison Waste, and Prifddinas/Tirannwn."
+        ],
+        "instances": [
+          "The Underground Pass, Temple of Light, library, and boss instances were reviewed as part of the two-region route."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "Song of the Elves uses the regions policy with runtime regions [Tirannwn] and prerequisite [Mourning's End Part II, Making History]. The pinned Chunk Picker records first places [none] and step places [Zul-Andra (chunk 34,47), West Poison Waste (chunk 34,48), Iorwerth Camp (chunk 34,50), East Poison Waste (chunk 35,48), South Isafdar (chunk 35,49), Cadarn & Trahaearn (chunk 35,51), South Arandar (chunk 36,50), Underground Pass Entrance (chunk 38,51), West Ardougne (chunk 39,51), Combat Training Camp (chunk 39,52), Glarial's Tomb (chunk 39,53), Ardougne Market (chunk 41,51)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping Song of the Elves's current regions policy requirements (regions [Tirannwn]; exact locations [none]; skills [Agility 70, Construction 70, Farming 70, Herblore 70, Hunter 70, Mining 70, Smithing 70, Woodcutting 70]; prerequisites [Mourning's End Part II, Making History]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Spirits of the Elid",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Spirits_of_the_Elid&oldid=15241013",
         "revision": 15241013,
@@ -6269,19 +6462,21 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
+        "items": [
+          "The pinned Wiki item requirements for Spirits of the Elid were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "Nardah, the River Elid waterfall dungeon, and the western crevice remain within the Kharidian Desert."
+        ],
         "instances": [],
         "partialCompletion": []
-      },
-      "discrepancy": "Spirits of the Elid uses the regions policy with runtime regions [Kharidian Desert], while the pinned Chunk Picker records first places [none] and step places [Deserted Cave (chunk 52,45)]. Those named activity markers do not prove that every coarse runtime region is unavoidable and may omit travel, instance, or item-source steps from the stable Wiki route.",
-      "conservativeReason": "Keeping Spirits of the Elid's current regions policy requirements (regions [Kharidian Desert]; exact locations [none]; skills [Magic 33, Ranged 37, Mining 37, Thieving 37]; prerequisites [none]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Swan Song",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-07-28",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-07-28T00:00:00.000Z",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Swan_Song&oldid=15266910",
         "revision": 15266910,
@@ -6289,7 +6484,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Kandarin\"],\"skills\":{\"Cooking\":62,\"Crafting\":40,\"Firemaking\":42,\"Fishing\":62,\"Magic\":66,\"Quest Points\":100,\"Smithing\":45},\"prereqs\":[\"One Small Favour\",\"Garden of Tranquillity\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Kandarin\",\"Misthalin\",\"Asgarnia\"],\"skills\":{\"Cooking\":62,\"Crafting\":40,\"Firemaking\":42,\"Fishing\":62,\"Magic\":66,\"Quest Points\":100,\"Smithing\":45},\"prereqs\":[\"One Small Favour\",\"Garden of Tranquillity\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "36,57",
@@ -6313,13 +6508,17 @@
         }
       ],
       "notes": {
-        "items": [],
-        "travel": [],
-        "instances": [],
+        "items": [
+          "The pinned Wiki item requirements for Swan Song were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+        ],
+        "travel": [
+          "The route crosses Piscatoris and Yanille/Kandarin, Draynor/Misthalin, and the Crafting Guild plus Malignius/Asgarnia."
+        ],
+        "instances": [
+          "The colony defence and Sea Troll Queen encounters occur in the Piscatoris quest area."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "Swan Song uses the regions policy with runtime regions [Kandarin] and prerequisite [One Small Favour, Garden of Tranquillity]. The pinned Chunk Picker records first places [Fishing Colony (chunk 36,57)] and step places [East Yanille (chunk 40,48), Crafting Guild (chunk 45,51), South Draynor (chunk 48,50)], but activity markers cannot establish prerequisite completion or whether prerequisite geography omitted from those markers is unavoidable in the stable Wiki route.",
-      "conservativeReason": "Keeping Swan Song's current regions policy requirements (regions [Kandarin]; exact locations [none]; skills [Quest Points 100, Magic 66, Cooking 62, Fishing 62, Smithing 45, Firemaking 42, Crafting 40]; prerequisites [One Small Favour, Garden of Tranquillity]) prevents this unresolved source gap from allowing premature completion/key-roll eligibility. Weakening those retained requirements before the permanent Wiki route and Chunk Picker evidence agree could permanently record completion and key access without satisfying conditions the runtime currently enforces."
+      }
     },
     {
       "id": "Tai Bwo Wannai Trio",

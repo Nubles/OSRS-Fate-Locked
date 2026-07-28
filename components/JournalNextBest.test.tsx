@@ -9,7 +9,7 @@ const pryingTimesUnlocks = () => ({
   equipment: {},
   skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10])),
   levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])),
-  regions: ['The Open Seas'],
+  regions: ['The Pandemonium', 'Port Sarim', 'Rimmington'],
   mobility: [], arcana: [], housing: [], merchants: [], minigames: [],
   bosses: [], storage: [], guilds: [], farming: [], slayerUnlocks: [],
   quests: ['Pandemonium', "The Knight's Sword"],
