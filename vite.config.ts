@@ -1,6 +1,7 @@
 
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { configDefaults } from 'vitest/config';
 
 // Minimal declaration so this Node-side config typechecks without pulling in
 // @types/node (which would leak Node globals into the browser app code).
@@ -29,6 +30,11 @@ export default defineConfig({
   ],
   define: { __BUILD_ID__: JSON.stringify(BUILD_ID) },
   base: process.env.VITE_BASE || '/',
+  ...{
+    test: {
+      exclude: [...configDefaults.exclude, '**/.worktrees/**'],
+    },
+  },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
