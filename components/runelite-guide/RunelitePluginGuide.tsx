@@ -295,6 +295,18 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({
     RUNELITE_GUIDE_CHAPTER_IDS[0],
   );
 
+  useEffect(() => {
+    const root = document.documentElement;
+    const previousRootOverflow = root.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+    root.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    return () => {
+      root.style.overflow = previousRootOverflow;
+      document.body.style.overflow = previousBodyOverflow;
+    };
+  }, []);
+
   useFocusTrap(dialogRef, true, returnFocusTarget);
   useEscapeKey(onClose, true);
 

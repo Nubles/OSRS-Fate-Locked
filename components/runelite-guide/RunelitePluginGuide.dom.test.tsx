@@ -181,4 +181,33 @@ describe('RunelitePluginGuide navigation and focus', () => {
     expect(mobileContents.open).toBe(false);
     expect(scrollIntoView).toHaveBeenCalled();
   });
+
+  it('locks document overflow while open and restores existing styles on close', async () => {
+    const previousRootOverflow = document.documentElement.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = 'auto';
+    document.body.style.overflow = 'scroll';
+
+    try {
+      const host = await mount();
+      await openGuide(host);
+
+      expect(document.documentElement.style.overflow).toBe('hidden');
+      expect(document.body.style.overflow).toBe('hidden');
+
+      const close = host.querySelector<HTMLButtonElement>(
+        '[data-runelite-guide-header] button[aria-label="Close RuneLite Plugin Guide"]',
+      );
+      if (!close) throw new Error('Missing guide close action');
+      await act(async () => {
+        close.click();
+      });
+
+      expect(document.documentElement.style.overflow).toBe('auto');
+      expect(document.body.style.overflow).toBe('scroll');
+    } finally {
+      document.documentElement.style.overflow = previousRootOverflow;
+      document.body.style.overflow = previousBodyOverflow;
+    }
+  });
 });

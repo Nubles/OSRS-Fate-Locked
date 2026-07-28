@@ -93,5 +93,13 @@ describe('RunelitePluginGuide', () => {
     expect(
       html.match(/aria-label="Close RuneLite Plugin Guide"/g),
     ).toHaveLength(2);
+    expect(html).not.toContain('font-serif');
+    expect(html).not.toContain('rounded-2xl');
+    expect(html).not.toContain('bg-gradient-to-br');
+    expect(html.match(/\brounded-xl\b/g)).toHaveLength(1);
+    expect(html).toContain('data-runelite-guide-backdrop=');
+    expect(html).toContain('data-runelite-guide-shell=');
+    expect(html).toContain('data-guide-overview=');
+    expect(html).toContain('data-guide-quick-start=');
   });
 });
