@@ -3707,7 +3707,7 @@
           "The stable route is wholly on Tutorial Island: Gielinor Guide, survival expert, chefs, quest guide, mining instructor, combat instructor, bank, poll booth, church, magic instructor, then mainland travel."
         ],
         "instances": [
-          "Tutorial Island has no selectable Standard area; its interiors and tutorial-only spaces therefore remain documented rather than invented as an area gate."
+          "Tutorial Island is rollable/selectable but intentionally mapping-exempt because normal accounts cannot return after leaving; its interiors and tutorial-only spaces remain documented rather than invented as a persistent area gate."
         ],
         "partialCompletion": [
           "The quest has no skill or quest prerequisite; completion remains strictly user-confirmed, while optional tutorial branches and the initial 48,48 surface chunk do not create a runtime gate."
@@ -6654,7 +6654,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Quidamortem Cave (18,55, step); South Shayzien Encampment (23,56, step); Shayzien Town Center (24,55, first); Unmarked Grave (24,61, step); Arceuus Library (25,59, step), and unavoidable travel remains represented by region gate Kourend & Kebos."
         ],
-        "instances": [],
+        "instances": [
+          "Tower of Magic prison and the unstable-altar cave beneath Mount Quidamortem."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -6681,7 +6683,9 @@
         "travel": [
           "The two valid Lumbridge Swamp Cave entrances are represented as alternative chunks 49,49 and 50,50 under one location gate; no pinned Chunk Picker activity row exists for this quest."
         ],
-        "instances": [],
+        "instances": [
+          "Lumbridge Swamp Caves and the cavern containing Juna and the Tears of Guthix chasm."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -6714,7 +6718,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Edgeville (48,54, step), and unavoidable travel remains represented by region gate Kandarin."
         ],
-        "instances": [],
+        "instances": [
+          "The Temple of Ikov dungeon, including the Chamber of Fear, ice chamber, unsteady bridge, and guardian-side chambers."
+        ],
         "partialCompletion": [
           "Level 40 Ranged is bypassable with thrown weapons, so only the unavoidable 42 Thieving gate remains."
         ]
@@ -6762,7 +6768,9 @@
         "travel": [
           "The Al Kharid, Wizards' Tower and Varrock route is represented by Kharidian Desert and Misthalin."
         ],
-        "instances": [],
+        "instances": [
+          "The Abyss centre, Wizards' Tower basement, underwater Temple of the Eye, and the Guardians of the Rift tutorial instance and altar portals."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -6800,7 +6808,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Tower of Magic (24,59, step); Dark Altar (26,60, step), and unavoidable travel remains represented by region gate Kourend & Kebos."
         ],
-        "instances": [],
+        "instances": [
+          "Tower of Magic interiors and the Karuulm Slayer Dungeon Tasakaal chamber."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -6854,7 +6864,7 @@
           "The stable route runs through Icyene Graveyard, the south Meiyerditch hideout, Castle Drakan, Slepe and Crombwick Manor, Paterdomus, Vampyrium, Ver Sinhaza and the Theatre, the ruined laboratory north-east of Burgh de Rott, Castle Drakan courtyard, and the Vampyrium finale."
         ],
         "instances": [
-          "Vampyrium, Castle Drakan interiors, the refinery portal and quest instances remain represented through the Morytania surface gate and the pinned surface activity rows."
+          "Myreque hideout, Sisterhood Sanctuary, Crombwick Manor, Paterdomus basement, Ivandis tomb tunnel, daeyalt cavern and refinery, Castle Drakan basements, laboratories and portals, Vampyrium forest, cave and castle, the ruined laboratory, and their quest-fight instances."
         ],
         "partialCompletion": [
           "Combat level 110 is recommended rather than required; no combat-level gate is recorded."
@@ -6903,7 +6913,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Corsair South Shore (39,44, step); Corsair Cove (40,44, step); Melzar's Maze (45,50, step); Falador Farm (47,51, first), and unavoidable travel remains represented by region gates Asgarnia, Kandarin."
         ],
-        "instances": [],
+        "instances": [
+          "Corsair Cove Dungeon and the instanced Ithoi confrontation."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -6936,7 +6948,9 @@
         "travel": [
           "The route through Varrock, the desert and Trollweiss Mountain is represented by Misthalin, Kharidian Desert and Fremennik."
         ],
-        "instances": [],
+        "instances": [
+          "Uzer Mastaba, Trollweiss Dungeon and rubble tunnels, Zemouregal's fort basement, base and dungeon, and the kitchen sewer."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -6974,7 +6988,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Crabclaw Caves (25,53, step); Arceuus Library (25,59, step), and unavoidable travel remains represented by region gate Kourend & Kebos."
         ],
-        "instances": [],
+        "instances": [
+          "Crabclaw Caves and the instanced Sand Snake fight."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -7007,7 +7023,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Varrock Center/Square (50,53, step), and unavoidable travel remains represented by region gate Misthalin."
         ],
-        "instances": [],
+        "instances": [
+          "Digsite Dungeon, its winch shafts, and the ancient chamber."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -7138,7 +7156,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Brimstail's Cave Entrance (37,53, first); Gnome Ball Field (37,54, step); Jorral's Outpost (38,52, step); Tree Gnome Stronghold (38,53, step); Hazelmere's Island (41,48, step), and unavoidable travel remains represented by region gate Kandarin."
         ],
-        "instances": [],
+        "instances": [
+          "Brimstail's Cave and singing-bowl chamber."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -7219,7 +7239,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Tonali Crypt Entrance (20,47, step); Sunrise Palace (26,49, first); Twilight Temple (26,50, step), and unavoidable travel remains represented by region gate Varlamore."
         ],
-        "instances": [],
+        "instances": [
+          "Twilight Temple basement, the safe-house basement, Crypt of Tonali, and the Neypotzli cavern, sun chamber, moon chamber, and encounter instances."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -7257,7 +7279,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are The Forsaken Tower (21,59, step); Lovakengj Assembly (23,58, first), and unavoidable travel remains represented by region gate Kourend & Kebos."
         ],
-        "instances": [],
+        "instances": [
+          "Forsaken Tower interiors, basement, refinery, and pylon rooms."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -7275,7 +7299,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Fremennik\"],\"skills\":{\"Crafting\":65,\"Fishing\":60,\"Mining\":60,\"Runecraft\":55,\"Slayer\":60,\"Smithing\":60},\"prereqs\":[\"The Fremennik Isles\",\"Lunar Diplomacy\",\"Mountain Daughter\",\"Heroes' Quest\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Fremennik\"],\"skills\":{\"Crafting\":65,\"Fishing\":60,\"Runecraft\":55,\"Slayer\":60,\"Smithing\":60},\"prereqs\":[\"The Fremennik Isles\",\"Lunar Diplomacy\",\"Mountain Daughter\",\"Heroes' Quest\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "32,61",
@@ -7320,9 +7344,11 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are North Moonclan (32,61, step); Astral Altar (33,60, step); Lunar Mine Entrance (33,61, step); Island of Stone (38,62, step); Fremennik Province (41,56, step); Rellekka (41,57, first); Fremennik Forest (42,56, step), and unavoidable travel remains represented by region gate Fremennik."
         ],
-        "instances": [],
+        "instances": [
+          "The basilisk market fight instance and the Island of Stone cave and Jormungand fight instance; Waterbirth Island Dungeon and the Lunar Isle mine are optional routes."
+        ],
         "partialCompletion": [
-          "Level 60 Mining is an explicit requirement and is now recorded with the other stable skill gates."
+          "Level 60 Mining belongs to the optional Lunar Isle ore route and is already recursive through Lunar Diplomacy, so it is not a direct skill gate."
         ]
       }
     },
@@ -7373,7 +7399,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Neitiznot (36,59, step); West Ice Trolls (36,60, step); Jatizso (37,59, step); East Ice Trolls (37,60, step); Rellekka (41,57, first), and unavoidable travel remains represented by region gate Fremennik."
         ],
-        "instances": [],
+        "instances": [
+          "Ice Troll Caves and the instanced Troll King fight; the Jatizso mine is optional."
+        ],
         "partialCompletion": [
           "Level 40 Agility is recommended, not required, and is not machine-enforced."
         ]
@@ -7421,7 +7449,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Fremennik Province (41,56, step); Rellekka (41,57, first); Seers' Village (42,54, step); Fremennik Forest (42,56, step), and unavoidable travel remains represented by region gate Fremennik."
         ],
-        "instances": [],
+        "instances": [
+          "Swensen's portal maze and Thorvald's basement and Koschei arena."
+        ],
         "partialCompletion": [
           "The Fletching, Woodcutting and Crafting levels describe one lyre-production route; alternate acquisition means no unavoidable skill gate remains."
         ]
@@ -7496,7 +7526,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Settlement Path (20,54, first); Xeric's Shrine (20,56, step); Molch Island (21,56, step); Ruins of Morra (22,54, step), and unavoidable travel remains represented by region gate Kourend & Kebos."
         ],
-        "instances": [],
+        "instances": [
+          "The four underground dungeons beneath the swamp settlement, Molch Island, Xeric Shrine, and the Ruins of Morra."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -7592,7 +7624,9 @@
         "travel": [
           "The Keldagrim route plus unavoidable Reldo and Thurgo consultations is represented by Fremennik, Misthalin and Asgarnia."
         ],
-        "instances": [],
+        "instances": [
+          "The Keldagrim entrance cave, underground city, and River Kelda route."
+        ],
         "partialCompletion": [
           "The Reldo and Thurgo leg may be skipped only with prior Knight's Sword progress, which already establishes those unlocks."
         ]
@@ -7630,7 +7664,9 @@
         "travel": [
           "The Uzer route and the unavoidable Varrock consultation are represented by Kharidian Desert and Misthalin."
         ],
-        "instances": [],
+        "instances": [
+          "The Uzer temple dungeon and demon portal chamber."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -7673,7 +7709,9 @@
         "travel": [
           "The Tree Gnome Stronghold, Hazelmere and Karamja Ship Yard route is represented by Kandarin and Karamja."
         ],
-        "instances": [],
+        "instances": [
+          "The Grand Tree root tunnels and Glough's trapdoor cave and black-demon tunnel."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -7716,7 +7754,9 @@
         "travel": [
           "The Morytania and Asgarnia route covers Canifis, Fenkenstrain-related travel, Harmony Island access and the monastery step; Mos Le'Harmless sailing is prerequisite-mediated."
         ],
-        "instances": [],
+        "instances": [
+          "The underwater tunnel, Fenkenstrain's windmill basement surgery, and the instanced Barrelchest fight."
+        ],
         "partialCompletion": [
           "The crafting-table route and Grand Exchange route form an explicit manual disjunction; RFD: Pirate Pete is a direct prerequisite."
         ]
@@ -7822,7 +7862,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Ralos' Rise (22,49, first); Quetzacalli Gorge (23,50, step); Twilight Trialist Tower (25,50, step); Sunrise Palace (26,49, step); Twilight Temple (26,50, step), and unavoidable travel remains represented by region gate Varlamore."
         ],
-        "instances": [],
+        "instances": [
+          "The blocked Twilight Temple passage, Ruins of Tapoyauik dungeon, and instanced Amoxliatl fight."
+        ],
         "partialCompletion": [
           "Twilight's Promise is the sole direct prerequisite; Meat and Greet is not required."
         ]
@@ -7860,7 +7902,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Lumbridge Castle (50,50, step); Groats' Farm (50,51, step), and unavoidable travel remains represented by region gate Misthalin."
         ],
-        "instances": [],
+        "instances": [
+          "The instanced bull fight."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -7903,7 +7947,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Port Sarim Church (46,49, step); West Falador (46,52, first); Varrock Palace (50,54, step), and unavoidable travel remains represented by region gates Asgarnia, Misthalin."
         ],
-        "instances": [],
+        "instances": [
+          "The Asgarnian Ice Dungeon blurite cave."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -7951,7 +7997,9 @@
         "travel": [
           "The Lumbridge, Goblin Village and Varrock route is represented by Misthalin and Asgarnia."
         ],
-        "instances": [],
+        "instances": [
+          "Lumbridge cellar tunnels, the goblin maze, Dorgeshuun Mine, and the final peace-treaty cutscene instance."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -7989,7 +8037,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Tree Gnome Village (39,49, first); Hazelmere's Island (41,48, step), and unavoidable travel remains represented by region gate Kandarin."
         ],
-        "instances": [],
+        "instances": [
+          "Tree Gnome Village Dungeon storeroom and the Poison Waste Dungeon."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -8032,7 +8082,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Kingstown (26,57, step); Piscarilius Foodhall (28,58, step); Piscarilius Bank (28,59, first), and unavoidable travel remains represented by region gate Kourend & Kebos."
         ],
-        "instances": [],
+        "instances": [
+          "The Warrens beneath Port Piscarilius and the gang route and tent interiors."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -8080,7 +8132,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Red Rock (43,39, step); Last Light (44,36, step); The Summer Shore (49,37, first); Sacred Grove West (49,38, step), and unavoidable travel remains represented by region gate The Open Seas."
         ],
-        "instances": [],
+        "instances": [
+          "The required instanced confrontation at Last Light; the preceding ship-combat route can be skipped."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -8123,7 +8177,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are West Lumbridge Swamp (49,49, step); East Lumbridge Swamp (50,49, step); Lumbridge Castle (50,50, first), and unavoidable travel remains represented by region gate Misthalin."
         ],
-        "instances": [],
+        "instances": [
+          "Wizards' Tower basement and the skull-skeleton chamber."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -8168,7 +8224,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Kandarin\",\"Asgarnia\",\"Misthalin\"],\"skills\":{\"Crafting\":30,\"Runecraft\":30,\"Slayer\":30,\"Thieving\":30},\"prereqs\":[\"Sea Slug\",\"Wanted!\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Kandarin\",\"Asgarnia\"],\"skills\":{\"Crafting\":30,\"Runecraft\":30,\"Slayer\":30,\"Thieving\":30},\"prereqs\":[\"Sea Slug\",\"Wanted!\"],\"manualRequirements\":[\"Access to all required elemental altars through one route: surface altars with Misthalin and Kharidian Desert; the Abyss with Wilderness and Enter the Abyss completed; or Guardians of the Rift with Misthalin and Temple of the Eye completed\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "38,52",
@@ -8196,11 +8252,13 @@
           "The pinned Wiki item requirements for The Slug Menace were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
         ],
         "travel": [
-          "The Falador, Witchaven, Fishing Platform and altar route is conservatively represented by Kandarin, Asgarnia and Misthalin; a desert altar route is optional."
+          "The fixed Falador, Witchaven, Fishing Platform and dungeon route is represented by Kandarin and Asgarnia; access to every required elemental altar remains an explicit manual route attestation."
         ],
-        "instances": [],
+        "instances": [
+          "Witchaven Dungeon, the Pillars of Zanash, and the Slug Prince chamber."
+        ],
         "partialCompletion": [
-          "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
+          "Altar access is an all-altars manual disjunction: surface altars require Misthalin and the Kharidian Desert as applicable; the Abyss route requires Wilderness and Enter the Abyss; the Guardians route requires Misthalin and Temple of the Eye."
         ]
       }
     },
@@ -8241,7 +8299,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Bedabin Camp (49,47, step); Rocky Desert (50,47, step); Shantay Pass (51,48, first), and unavoidable travel remains represented by region gate Kharidian Desert."
         ],
-        "instances": [],
+        "instances": [
+          "The underground Desert Mining Camp and mine-cart tunnels."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -8312,7 +8372,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Tower of Life (41,50, first), and unavoidable travel remains represented by region gate Kandarin."
         ],
-        "instances": [],
+        "instances": [
+          "Tower of Life interiors and the basement dungeon and Homunculus chamber."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -8431,7 +8493,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Warriors' Guild (44,55, step); Troll Stronghold (44,57, first); Burthorpe (45,55, step), and unavoidable travel remains represented by region gate Asgarnia."
         ],
-        "instances": [],
+        "instances": [
+          "Trollweiss Dungeon, cave and sled tunnel, and the troll-arena fight."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -8474,7 +8538,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Troll Stronghold (44,57, step); Burthorpe (45,55, first); Troll Arena (45,56, step), and unavoidable travel remains represented by region gate Asgarnia."
         ],
-        "instances": [],
+        "instances": [
+          "The troll arena, mountain cave, and Troll Stronghold and prison interiors."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -8532,7 +8598,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Remote Island (46,40, first); West Summer Shore (48,37, step); Western Great Conch (48,38, step); The Summer Shore (49,37, step); Sacred Grove West (49,38, step); The Little Pearl (52,34, step), and unavoidable travel remains represented by region gate The Open Seas."
         ],
-        "instances": [],
+        "instances": [
+          "The tracked cave and the Shellbane gryphon fight."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -8595,7 +8663,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Ralos' Rise (22,49, step); Kualti Headquarters (25,49, step); Fortis Bazaar (26,48, step); Sunrise Palace (26,49, first); Outer Fortis Docks (27,47, step); Fortis East (27,48, step); Fortis Cothon (27,49, step), and unavoidable travel remains represented by region gate Varlamore."
         ],
-        "instances": [],
+        "instances": [
+          "The crypt beneath the Civitas illa Fortis temple."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -8628,7 +8698,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Underground Pass Entrance (38,51, step), and unavoidable travel remains represented by region gates Kandarin, Tirannwn."
         ],
-        "instances": [],
+        "instances": [
+          "The fully quest-instanced Underground Pass dungeon, including Iban's lair, tomb, temple, and collapse cavern."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -8691,7 +8763,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Draynor Manor (48,52, step); Varrock Center/Square (50,53, step), and unavoidable travel remains represented by region gate Misthalin."
         ],
-        "instances": [],
+        "instances": [
+          "Draynor Manor basement and the Count Draynor coffin fight."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -8739,7 +8813,9 @@
         "travel": [
           "The fixed Falador, Taverley, Varrock and Canifis route is represented by Asgarnia, Misthalin and Morytania; random Solus trail destinations are not deterministic gates."
         ],
-        "instances": [],
+        "instances": [
+          "Taverley Dungeon Black Knight hideout, Dorgesh-Kaan Mine, the rune essence mine, and the instanced Solus confrontation."
+        ],
         "partialCompletion": [
           "Enter the Abyss is a direct prerequisite; random trail destinations are retained as passive route notes rather than deterministic geography gates."
         ]
@@ -8777,7 +8853,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are West Yanille (39,48, first); Gu'Tanoth Island (40,47, step), and unavoidable travel remains represented by region gate Kandarin."
         ],
-        "instances": [],
+        "instances": [
+          "The Skavid caves and Ogre Enclave cave."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -8820,7 +8898,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Tree Gnome Village (39,49, step); Glarial's Tomb (39,53, step); Baxtorian Falls (39,54, first), and unavoidable travel remains represented by region gate Kandarin."
         ],
-        "instances": [],
+        "instances": [
+          "Tree Gnome Village Dungeon, Glarial's Tomb, and Waterfall Dungeon."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -8868,7 +8948,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Edgeville (48,54, step); Varrock Palace (50,54, step); East Varrock Mine (51,52, first); Lumber Yard (51,54, step), and unavoidable travel remains represented by region gate Misthalin."
         ],
-        "instances": [],
+        "instances": [
+          "The Tunnel of Chaos, Dagon-hai chambers and second level, portal chamber, and the instanced Surok and King Roald confrontation."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -8886,7 +8968,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Misthalin\",\"Asgarnia\",\"Kandarin\"],\"skills\":{\"Agility\":66,\"Farming\":65,\"Firemaking\":49,\"Herblore\":65,\"Hunter\":62,\"Magic\":67,\"Quest Points\":180,\"Thieving\":72},\"prereqs\":[\"Defender of Varrock\",\"The Path of Glouphrie\",\"Fight Arena\",\"Dream Mentor\",\"The Hand in the Sand\",\"Wanted!\",\"Temple of the Eye\",\"Tears of Guthix\",\"Nature Spirit\",\"A Tail of Two Cats\"],\"manualRequirements\":[\"Warriors' Guild access with Attack + Strength at least 130, or 99 Attack, or 99 Strength\"],\"points\":5}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Misthalin\",\"Asgarnia\",\"Kandarin\"],\"skills\":{\"Agility\":66,\"Farming\":65,\"Herblore\":65,\"Hunter\":62,\"Magic\":67,\"Quest Points\":180,\"Thieving\":72},\"prereqs\":[\"Defender of Varrock\",\"The Path of Glouphrie\",\"Fight Arena\",\"Dream Mentor\",\"The Hand in the Sand\",\"Wanted!\",\"Temple of the Eye\",\"Tears of Guthix\",\"Nature Spirit\",\"A Tail of Two Cats\"],\"manualRequirements\":[\"Warriors' Guild access with Attack + Strength at least 130, or 99 Attack, or 99 Strength\"],\"points\":5}",
       "chunkEvidence": [
         {
           "chunkId": "44,55",
@@ -8926,9 +9008,11 @@
         "travel": [
           "The stable route through Taverley, the Warriors' Guild, Falador, Port Sarim, Edgeville Monastery and Draynor is represented by Misthalin, Asgarnia and Kandarin."
         ],
-        "instances": [],
+        "instances": [
+          "Black Knight Catacombs, Movario's base, Lucien's camp, the Ancient Guthixian Temple, and the Balance Elemental and tormented-demon fight sequence."
+        ],
         "partialCompletion": [
-          "The ten stable direct prerequisites are recorded exactly; Legends' Quest remains recursive. Warriors' Guild access is an explicit manual stat disjunction."
+          "The ten stable direct prerequisites are recorded exactly; Legends' Quest remains recursive. Firemaking 49 belongs to Tears of Guthix and is not a direct skill gate. Warriors' Guild access is an explicit manual stat disjunction."
         ]
       }
     },
@@ -8959,7 +9043,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are North Taverley (45,54, first), and unavoidable travel remains represented by region gate Asgarnia."
         ],
-        "instances": [],
+        "instances": [
+          "The Witch's House basement."
+        ],
         "partialCompletion": [
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
@@ -9074,7 +9160,9 @@
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Jiggig (38,47, first); West Yanille (39,48, step); East Yanille (40,48, step), and unavoidable travel remains represented by region gate Kandarin."
         ],
-        "instances": [],
+        "instances": [
+          "Jiggig Dungeon, the zogre cave, and the crypt."
+        ],
         "partialCompletion": [
           "Strength and Fletching are recommended or Ironman-alternative levels, not unavoidable requirements."
         ]

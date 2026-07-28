@@ -1095,7 +1095,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'The Slug Menace': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Slug Menace', name: 'The Slug Menace',
-    regions: ['Kandarin', 'Asgarnia', 'Misthalin'],
+    regions: ['Kandarin', 'Asgarnia'],
+    manualRequirements: ['Access to all required elemental altars through one route: surface altars with Misthalin and Kharidian Desert; the Abyss with Wilderness and Enter the Abyss completed; or Guardians of the Rift with Misthalin and Temple of the Eye completed'],
     skills: { 'Crafting': 30, 'Runecraft': 30, 'Slayer': 30, 'Thieving': 30 }, prereqs: ['Sea Slug', 'Wanted!'], points: 1, series: 'Temple Knight',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -1330,7 +1331,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Fremennik Exiles', name: 'The Fremennik Exiles',
     regions: ['Fremennik'],
-    skills: { 'Crafting': 65, 'Slayer': 60, 'Smithing': 60, 'Mining': 60, 'Fishing': 60, 'Runecraft': 55 }, prereqs: ['The Fremennik Isles', 'Lunar Diplomacy', 'Mountain Daughter', 'Heroes\' Quest'], points: 2, series: 'Fremennik',
+    skills: { 'Crafting': 65, 'Slayer': 60, 'Smithing': 60, 'Fishing': 60, 'Runecraft': 55 }, prereqs: ['The Fremennik Isles', 'Lunar Diplomacy', 'Mountain Daughter', 'Heroes\' Quest'], points: 2, series: 'Fremennik',
     difficulty: DropSource.QUEST_MASTER
   },
   'Sins of the Father': {
@@ -1496,7 +1497,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'While Guthix Sleeps', name: 'While Guthix Sleeps',
     regions: ['Misthalin', 'Asgarnia', 'Kandarin'],
-    skills: { 'Quest Points': 180, 'Thieving': 72, 'Magic': 67, 'Agility': 66, 'Farming': 65, 'Herblore': 65, 'Hunter': 62, 'Firemaking': 49 },
+    skills: { 'Quest Points': 180, 'Thieving': 72, 'Magic': 67, 'Agility': 66, 'Farming': 65, 'Herblore': 65, 'Hunter': 62 },
     manualRequirements: ["Warriors' Guild access with Attack + Strength at least 130, or 99 Attack, or 99 Strength"],
     prereqs: [
       'Defender of Varrock', 'The Path of Glouphrie', 'Fight Arena', 'Dream Mentor',

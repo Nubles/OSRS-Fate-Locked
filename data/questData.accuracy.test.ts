@@ -4906,6 +4906,15 @@ describe('audited current quest requirements', () => {
           "Learning the Ropes",
           "The Blood Moon Rises"
     ] as const;
+    const dynamicReviewedIds = [...new Set([
+      ...Object.values(QUEST_DATA)
+        .filter(quest => quest.kind === 'quest' && quest.id.localeCompare('T') >= 0)
+        .map(quest => quest.id),
+      'Learning the Ropes',
+      'The Blood Moon Rises',
+    ])].sort();
+    expect(ids).toHaveLength(55);
+    expect([...ids].sort()).toEqual(dynamicReviewedIds);
     const actual = Object.fromEntries(ids.map(id => {
       const quest = QUEST_DATA[id];
       return [id, {
@@ -5228,7 +5237,6 @@ describe('audited current quest requirements', () => {
           "Smithing": 60,
           "Fishing": 60,
           "Runecraft": 55,
-          "Mining": 60
         },
         "combatLevel": null,
         "prereqs": [
@@ -5580,7 +5588,6 @@ describe('audited current quest requirements', () => {
         "regions": [
           "Kandarin",
           "Asgarnia",
-          "Misthalin"
         ],
         "locations": null,
         "skills": {
@@ -5595,7 +5602,9 @@ describe('audited current quest requirements', () => {
           "Wanted!"
         ],
         "oneOf": null,
-        "manualRequirements": null,
+        "manualRequirements": [
+          "Access to all required elemental altars through one route: surface altars with Misthalin and Kharidian Desert; the Abyss with Wilderness and Enter the Abyss completed; or Guardians of the Rift with Misthalin and Temple of the Eye completed"
+        ],
         "points": 1,
         "difficulty": "Quest (Intermediate)"
       },
@@ -5895,7 +5904,6 @@ describe('audited current quest requirements', () => {
           "Farming": 65,
           "Herblore": 65,
           "Hunter": 62,
-          "Firemaking": 49
         },
         "combatLevel": null,
         "prereqs": [

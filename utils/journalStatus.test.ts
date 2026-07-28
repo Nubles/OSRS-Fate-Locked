@@ -116,6 +116,28 @@ describe('manual journal readiness', () => {
       manualChecks: ['One open Sailing task slot'],
     });
   });
+
+  it('keeps a legacy Wanted completion manual until a complete Slug Menace altar route is attested', () => {
+    const result = evaluateQuestEligibility(
+      QUEST_DATA['The Slug Menace'],
+      unlocked({
+        regions: ['Kandarin', 'Asgarnia'],
+        quests: ['Sea Slug', 'Wanted!'],
+        skills: { Crafting: 30, Runecraft: 30, Slayer: 30, Thieving: 30 },
+        levels: { Crafting: 30, Runecraft: 30, Slayer: 30, Thieving: 30 },
+      }),
+    );
+
+    expect(result).toMatchObject({
+      status: 'AVAILABLE',
+      machineEligible: true,
+      eligible: false,
+      confirmable: true,
+      manualChecks: [
+        'Access to all required elemental altars through one route: surface altars with Misthalin and Kharidian Desert; the Abyss with Wilderness and Enter the Abyss completed; or Guardians of the Rift with Misthalin and Temple of the Eye completed',
+      ],
+    });
+  });
 });
 
 describe('reported quest access', () => {

@@ -98,3 +98,37 @@ The RED oracle failed on exactly the two missing official IDs and the 21 reviewe
 - `git diff --check`: passed.
 
 Only existing Vite deprecation and Node local-storage-path warnings appeared; no new warnings or failures were introduced.
+
+## Review fix round 1/5
+
+This section supersedes the affected first-pass conclusions above.
+
+### Requirement corrections
+
+- **The Slug Menace:** Kandarin and Asgarnia remain unconditional. Elemental-altar access is an explicit manual all-altars disjunction: the surface route attests Misthalin plus the Kharidian Desert as applicable; the Abyss route attests Wilderness plus completed `Enter the Abyss`; the Guardians route attests Misthalin plus completed `Temple of the Eye`. `oneOf` cannot encode this safely because its option type supports geography/guild/location fields but cannot bind a route to required quest completion. A legacy-save behavior test proves that an already completed `Wanted!` does not silently satisfy this route: machine eligibility is reached, but completion remains confirmable and manual.
+- **The Fremennik Exiles:** removed direct Mining 60. The Lunar Isle ore/mine leg is optional and Mining is already recursive through the required `Lunar Diplomacy`; the unavoidable non-surface route is the basilisk market fight plus the Island of Stone cave/Jormungand instance.
+- **While Guthix Sleeps:** removed direct Firemaking 49. That level belongs to required `Tears of Guthix` and is recursive rather than a direct WGS gate. The exact ten direct prerequisites and Warriors' Guild manual stat disjunction remain unchanged.
+- **Learning the Ropes:** Tutorial Island is rollable/selectable, but intentionally mapping-exempt because normal accounts cannot return after leaving. Its tutorial-only interiors are documented rather than invented as a persistent area gate.
+
+### Exact non-surface evidence classification
+
+The 54 current T-Z main quests now classify as **45 populated / 9 surface-only**. The independent test contains a hard-coded per-ID map of the exact instance strings, so evidence removal or substitution fails even if arrays remain non-empty.
+
+Populated (45): Tale of the Righteous; Tears of Guthix; Temple of Ikov; Temple of the Eye; The Ascent of Arceuus; The Blood Moon Rises; The Corsair Curse; The Curse of Arrav; The Depths of Despair; The Dig Site; The Eyes of Glouphrie; The Final Dawn; The Forsaken Tower; The Fremennik Exiles; The Fremennik Isles; The Fremennik Trials; The Garden of Death; The Giant Dwarf; The Golem; The Grand Tree; The Great Brain Robbery; The Heart of Darkness; The Ides of Milk; The Knight's Sword; The Lost Tribe; The Path of Glouphrie; The Queen of Thieves; The Red Reef; The Restless Ghost; The Slug Menace; The Tourist Trap; Tower of Life; Troll Romance; Troll Stronghold; Troubled Tortugans; Twilight's Promise; Underground Pass; Vampyre Slayer; Wanted!; Watchtower; Waterfall Quest; What Lies Below; While Guthix Sleeps; Witch's House; Zogre Flesh Eaters.
+
+Surface-only (9): Tai Bwo Wannai Trio; The Feud; The Hand in the Sand; The Ribbiting Tale; Throne of Miscellania; Tree Gnome Village; Tribal Totem; Witch's Potion; X Marks the Spot.
+
+The exact notes explicitly pin Temple of Ikov's full dungeon route, the fully quest-instanced Underground Pass sequence, and WGS's Black Knight Catacombs, Movario's base, Lucien's camp, Ancient Guthixian Temple, Balance Elemental, and tormented-demon sequence. Optional cave routes are labelled optional rather than promoted to hard requirements.
+
+### Encoding review disposition
+
+The reported six `U+00E2/U+20AC/U+2122` mojibake mutations were not present in the committed UTF-8 JSON. A Node byte/code-point check using `JSON.parse(fs.readFileSync(path, 'utf8'))` found exactly one **U+2019** in each named note (Horror from the Deep, King's Ransom, Legends' Quest, Lunar Diplomacy, Misthalin Mystery, Murder Mystery) and no U+00E2/U+20AC/U+2122 sequence. This was a Windows display/decoding artifact, so rewriting the correct source would have been harmful. A JSON-level regression now rejects the broken code-point triplet.
+
+### Review-fix RED/GREEN evidence
+
+- RED focused set: 2 intended failures / 73 passes. The audit exposed only one prior generic instance note instead of the exact 45-entry map, and legacy Slug Menace eligibility completed automatically with no manual check.
+- GREEN focused set: 3 files / 75 tests passed, including the exact 55-ID oracle-to-dynamic-union equality, 45/9 evidence map, JSON encoding guard, and legacy Slug route behavior.
+- Final `npm run quests:verify`: 190 quests / 19 miniquests / 209 unique IDs and revisions; 19 audit tests passed.
+- Final `npm run typecheck`: passed.
+- Final full trusted serial suite: 136 files / 1,376 tests passed. Only the pre-existing Vite deprecation, local-storage-path, local Wiki-cache, and mocked GearService 404 diagnostics appeared.
+- Final staged `git diff --check`: passed.

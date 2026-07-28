@@ -7,6 +7,155 @@ import {
   validateQuestRequirementAudit,
 } from './questRequirementAudit';
 
+const EXPECTED_TZ_INSTANCE_EVIDENCE: Record<string, string[]> = {
+  'Tale of the Righteous': [
+    'Tower of Magic prison and the unstable-altar cave beneath Mount Quidamortem.',
+  ],
+  'Tears of Guthix': [
+    'Lumbridge Swamp Caves and the cavern containing Juna and the Tears of Guthix chasm.',
+  ],
+  'Temple of Ikov': [
+    'The Temple of Ikov dungeon, including the Chamber of Fear, ice chamber, unsteady bridge, and guardian-side chambers.',
+  ],
+  'Temple of the Eye': [
+    "The Abyss centre, Wizards' Tower basement, underwater Temple of the Eye, and the Guardians of the Rift tutorial instance and altar portals.",
+  ],
+  'The Ascent of Arceuus': [
+    'Tower of Magic interiors and the Karuulm Slayer Dungeon Tasakaal chamber.',
+  ],
+  'The Blood Moon Rises': [
+    'Myreque hideout, Sisterhood Sanctuary, Crombwick Manor, Paterdomus basement, Ivandis tomb tunnel, daeyalt cavern and refinery, Castle Drakan basements, laboratories and portals, Vampyrium forest, cave and castle, the ruined laboratory, and their quest-fight instances.',
+  ],
+  'The Corsair Curse': [
+    'Corsair Cove Dungeon and the instanced Ithoi confrontation.',
+  ],
+  'The Curse of Arrav': [
+    "Uzer Mastaba, Trollweiss Dungeon and rubble tunnels, Zemouregal's fort basement, base and dungeon, and the kitchen sewer.",
+  ],
+  'The Depths of Despair': [
+    'Crabclaw Caves and the instanced Sand Snake fight.',
+  ],
+  'The Dig Site': [
+    'Digsite Dungeon, its winch shafts, and the ancient chamber.',
+  ],
+  'The Eyes of Glouphrie': [
+    "Brimstail's Cave and singing-bowl chamber.",
+  ],
+  'The Final Dawn': [
+    'Twilight Temple basement, the safe-house basement, Crypt of Tonali, and the Neypotzli cavern, sun chamber, moon chamber, and encounter instances.',
+  ],
+  'The Forsaken Tower': [
+    'Forsaken Tower interiors, basement, refinery, and pylon rooms.',
+  ],
+  'The Fremennik Exiles': [
+    'The basilisk market fight instance and the Island of Stone cave and Jormungand fight instance; Waterbirth Island Dungeon and the Lunar Isle mine are optional routes.',
+  ],
+  'The Fremennik Isles': [
+    'Ice Troll Caves and the instanced Troll King fight; the Jatizso mine is optional.',
+  ],
+  'The Fremennik Trials': [
+    "Swensen's portal maze and Thorvald's basement and Koschei arena.",
+  ],
+  'The Garden of Death': [
+    'The four underground dungeons beneath the swamp settlement, Molch Island, Xeric Shrine, and the Ruins of Morra.',
+  ],
+  'The Giant Dwarf': [
+    'The Keldagrim entrance cave, underground city, and River Kelda route.',
+  ],
+  'The Golem': [
+    'The Uzer temple dungeon and demon portal chamber.',
+  ],
+  'The Grand Tree': [
+    "The Grand Tree root tunnels and Glough's trapdoor cave and black-demon tunnel.",
+  ],
+  'The Great Brain Robbery': [
+    "The underwater tunnel, Fenkenstrain's windmill basement surgery, and the instanced Barrelchest fight.",
+  ],
+  'The Heart of Darkness': [
+    'The blocked Twilight Temple passage, Ruins of Tapoyauik dungeon, and instanced Amoxliatl fight.',
+  ],
+  'The Ides of Milk': [
+    'The instanced bull fight.',
+  ],
+  "The Knight's Sword": [
+    'The Asgarnian Ice Dungeon blurite cave.',
+  ],
+  'The Lost Tribe': [
+    'Lumbridge cellar tunnels, the goblin maze, Dorgeshuun Mine, and the final peace-treaty cutscene instance.',
+  ],
+  'The Path of Glouphrie': [
+    'Tree Gnome Village Dungeon storeroom and the Poison Waste Dungeon.',
+  ],
+  'The Queen of Thieves': [
+    'The Warrens beneath Port Piscarilius and the gang route and tent interiors.',
+  ],
+  'The Red Reef': [
+    'The required instanced confrontation at Last Light; the preceding ship-combat route can be skipped.',
+  ],
+  'The Restless Ghost': [
+    "Wizards' Tower basement and the skull-skeleton chamber.",
+  ],
+  'The Slug Menace': [
+    'Witchaven Dungeon, the Pillars of Zanash, and the Slug Prince chamber.',
+  ],
+  'The Tourist Trap': [
+    'The underground Desert Mining Camp and mine-cart tunnels.',
+  ],
+  'Tower of Life': [
+    'Tower of Life interiors and the basement dungeon and Homunculus chamber.',
+  ],
+  'Troll Romance': [
+    'Trollweiss Dungeon, cave and sled tunnel, and the troll-arena fight.',
+  ],
+  'Troll Stronghold': [
+    'The troll arena, mountain cave, and Troll Stronghold and prison interiors.',
+  ],
+  'Troubled Tortugans': [
+    'The tracked cave and the Shellbane gryphon fight.',
+  ],
+  "Twilight's Promise": [
+    'The crypt beneath the Civitas illa Fortis temple.',
+  ],
+  'Underground Pass': [
+    "The fully quest-instanced Underground Pass dungeon, including Iban's lair, tomb, temple, and collapse cavern.",
+  ],
+  'Vampyre Slayer': [
+    'Draynor Manor basement and the Count Draynor coffin fight.',
+  ],
+  'Wanted!': [
+    'Taverley Dungeon Black Knight hideout, Dorgesh-Kaan Mine, the rune essence mine, and the instanced Solus confrontation.',
+  ],
+  'Watchtower': [
+    'The Skavid caves and Ogre Enclave cave.',
+  ],
+  'Waterfall Quest': [
+    "Tree Gnome Village Dungeon, Glarial's Tomb, and Waterfall Dungeon.",
+  ],
+  'What Lies Below': [
+    'The Tunnel of Chaos, Dagon-hai chambers and second level, portal chamber, and the instanced Surok and King Roald confrontation.',
+  ],
+  'While Guthix Sleeps': [
+    "Black Knight Catacombs, Movario's base, Lucien's camp, the Ancient Guthixian Temple, and the Balance Elemental and tormented-demon fight sequence.",
+  ],
+  "Witch's House": [
+    "The Witch's House basement.",
+  ],
+  'Zogre Flesh Eaters': [
+    'Jiggig Dungeon, the zogre cave, and the crypt.',
+  ],
+};
+
+const EXPECTED_TZ_SURFACE_ONLY = [
+  'Tai Bwo Wannai Trio',
+  'The Feud',
+  'The Hand in the Sand',
+  'The Ribbiting Tale',
+  'Throne of Miscellania',
+  'Tree Gnome Village',
+  'Tribal Totem',
+  "Witch's Potion",
+  'X Marks the Spot',
+];
 const expectReviewedBatch = (start: string, end?: string) => {
   const rows = audit.entries.filter(entry =>
     entry.kind === 'quest' &&
@@ -86,6 +235,23 @@ describe('official quest and miniquest audit coverage', () => {
       .toEqual([]);
   });
 
+  it('pins concrete non-surface evidence for every reviewed T-Z quest', () => {
+    const rows = audit.entries.filter(entry =>
+      entry.kind === 'quest' && entry.id.localeCompare('T') >= 0);
+    const actual = Object.fromEntries(rows
+      .filter(entry => entry.notes.instances.length > 0)
+      .map(entry => [entry.id, entry.notes.instances]));
+
+    expect(actual).toEqual(EXPECTED_TZ_INSTANCE_EVIDENCE);
+    expect(rows
+      .filter(entry => entry.notes.instances.length === 0)
+      .map(entry => entry.id))
+      .toEqual(EXPECTED_TZ_SURFACE_ONLY);
+  });
+
+  it('keeps committed quest-source JSON free of apostrophe mojibake', () => {
+    expect(JSON.stringify({ official, audit })).not.toContain('\u00e2\u20ac\u2122');
+  });
   it('leaves no unexplained N-S review placeholders', () => {
     expect(audit.entries
       .filter(entry =>
