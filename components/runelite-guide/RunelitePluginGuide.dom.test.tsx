@@ -43,6 +43,16 @@ const mount = async () => {
   return host;
 };
 
+const openGuide = async (host: HTMLDivElement) => {
+  const opener = host.querySelector<HTMLButtonElement>('[data-testid="guide-opener"]');
+  if (!opener) throw new Error('Missing guide opener');
+  opener.focus();
+  await act(async () => {
+    opener.click();
+  });
+  return opener;
+};
+
 afterEach(async () => {
   vi.restoreAllMocks();
   for (const { host, root } of mountedRoots.splice(0).reverse()) {
@@ -70,13 +80,8 @@ describe('RunelitePluginGuide navigation and focus', () => {
     });
 
     const host = await mount();
-    const opener = host.querySelector<HTMLButtonElement>('[data-testid="guide-opener"]');
-    if (!opener) throw new Error('Missing guide opener');
+    const opener = await openGuide(host);
 
-    opener.focus();
-    await act(async () => {
-      opener.click();
-    });
 
     const guardianLink = host.querySelector<HTMLAnchorElement>(
       'a[href="#runelite-guide-guardian"]',
@@ -99,5 +104,65 @@ describe('RunelitePluginGuide navigation and focus', () => {
 
     expect(host.querySelector('[role="dialog"]')).toBeNull();
     expect(document.activeElement).toBe(opener);
+  });
+
+  it('renders the bounded Fate Locked shell with grouped contents and fixed regions', async () => {
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    });
+    const host = await mount();
+    await openGuide(host);
+
+    const backdrop = host.querySelector<HTMLElement>('[data-runelite-guide-backdrop]');
+    const shell = host.querySelector<HTMLElement>('[data-runelite-guide-shell]');
+    const header = host.querySelector<HTMLElement>('[data-runelite-guide-header]');
+    const body = host.querySelector<HTMLElement>('[data-runelite-guide-body]');
+    const scrollRegion = host.querySelector<HTMLElement>('[data-runelite-guide-scroll-region]');
+    const footer = host.querySelector<HTMLElement>('[data-runelite-guide-footer]');
+    const desktopNav = host.querySelector<HTMLElement>(
+      '[data-runelite-guide-nav="desktop"]',
+    );
+    const groupLabels = new Set(
+      Array.from(host.querySelectorAll<HTMLElement>('[data-guide-nav-group]'))
+        .map(node => node.dataset.guideNavGroup),
+    );
+
+    expect(shell).toBeTruthy();
+    expect(backdrop?.className).toContain('bg-black/85');
+    expect(shell?.className).toContain('max-w-[96rem]');
+    expect(shell?.className).toContain('max-h-[92vh]');
+    expect(shell?.className).toContain('bg-[#171717]');
+    expect(shell?.className).toContain('border-amber-400/30');
+    expect(header?.parentElement).toBe(shell);
+    expect(body?.parentElement).toBe(shell);
+    expect(footer?.parentElement).toBe(shell);
+    expect(scrollRegion?.className).toContain('overflow-y-auto');
+    expect(desktopNav).toBeTruthy();
+    expect(groupLabels).toEqual(new Set([
+      'Getting started',
+      'Panel sections',
+      'Configuration',
+      'Help',
+    ]));
+    expect(host.querySelector('[data-guide-overview]')).toBeTruthy();
+    expect(host.querySelector('[data-guide-quick-start]')).toBeTruthy();
+
+    const mobileContents = host.querySelector<HTMLDetailsElement>(
+      '[data-runelite-guide-mobile-contents]',
+    );
+    const mobileGuardian = host.querySelector<HTMLAnchorElement>(
+      '[data-runelite-guide-nav="mobile"] a[href="#runelite-guide-guardian"]',
+    );
+    if (!mobileContents || !mobileGuardian) {
+      throw new Error('Missing mobile guide contents');
+    }
+    await act(async () => {
+      mobileContents.open = true;
+      mobileGuardian.click();
+    });
+    expect(mobileContents.open).toBe(false);
+    expect(scrollIntoView).toHaveBeenCalled();
   });
 });
