@@ -94,13 +94,16 @@ describe('rankSkillBottlenecks', () => {
   });
 
   it('threads Chunked mode through quest impact simulations', () => {
+    // Darkness of Hallowvale keeps Mining ranked at 20 in both snapshots;
+    // only the exact Seers' Village chunk should add Elemental Workshop I.
     const base = lowSkills({
       skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Mining' ? 2 : 99])),
       levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Mining' ? 19 : 99])),
       regions: ['Kandarin', "Seers' Village"],
-      chunks: ['41,54'],
+      quests: ['In Aid of the Myreque'],
+      chunks: ['41,54', '54,54'],
     });
-    const exact = { ...base, chunks: ['42,54'] };
+    const exact = { ...base, chunks: ['42,54', '54,54'] };
 
     const before = rankSkillBottlenecks(base, 'chunked')
       .find(candidate => candidate.id === 'Mining')!;

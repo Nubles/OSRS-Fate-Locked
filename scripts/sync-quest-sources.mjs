@@ -143,8 +143,8 @@ function assertSnapshots(official, audit) {
   }
   const questCount = official.entries.filter(entry => entry.kind === 'quest').length;
   const miniquestCount = official.entries.filter(entry => entry.kind === 'miniquest').length;
-  if (questCount !== 188 || miniquestCount !== 19 || official.entries.length !== 207) {
-    errors.push(`reviewed baseline must be 188 quests and 19 miniquests; found ${questCount}/${miniquestCount}`);
+  if (questCount !== 190 || miniquestCount !== 19 || official.entries.length !== 209) {
+    errors.push(`reviewed baseline must be 190 quests and 19 miniquests; found ${questCount}/${miniquestCount}`);
   }
 
   const officialById = new Map(official.entries.map(entry => [entry.id, entry]));
@@ -466,8 +466,8 @@ async function refresh() {
       runtimeEntriesMissingFromLiveList,
       liveOnlyEntries,
       note: hasDrift
-        ? 'The live official rows differ from the approved normalized 188/19 runtime baseline; membership remains pinned for Task 5 and reconciliation is deferred to Task 11.'
-        : 'The live official rows reconcile with the approved normalized baseline (Recipe for Disaster remains expanded into its existing parent-step IDs).',
+        ? 'The live official rows differ from the approved normalized 190/19 runtime baseline; membership remains pinned pending a reviewed reconciliation.'
+        : 'The live official rows reconcile with the approved normalized 190/19 baseline (Recipe for Disaster remains expanded into its existing parent-step IDs).',
     },
     entries,
   };

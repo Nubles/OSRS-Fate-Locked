@@ -147,10 +147,10 @@ describe('Quest data integrity', () => {
     ...(q.oneOf ?? []).flatMap(option => option.locations ?? []),
   ];
 
-  it('classifies all 207 journal entries with an explicit kind and access policy', () => {
+  it('classifies all 209 journal entries with an explicit kind and access policy', () => {
     const quests = Object.values(QUEST_DATA);
-    expect(quests).toHaveLength(207);
-    expect(quests.filter(quest => quest.kind === 'quest')).toHaveLength(188);
+    expect(quests).toHaveLength(209);
+    expect(quests.filter(quest => quest.kind === 'quest')).toHaveLength(190);
     expect(quests.filter(quest => quest.kind === 'miniquest')).toHaveLength(19);
     expect(quests.filter(quest =>
       !['quest', 'miniquest'].includes(quest.kind),

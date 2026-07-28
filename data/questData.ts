@@ -66,6 +66,13 @@ const LOCATIONS = {
 
 export const QUEST_DATA: Record<string, QuestData> = {
   // --- F2P Quests ---
+  'Learning the Ropes': {
+    kind: 'quest', accessPolicy: 'regions',
+    id: 'Learning the Ropes', name: 'Learning the Ropes',
+    regions: [],
+    skills: {}, prereqs: [], points: 1,
+    difficulty: DropSource.QUEST_NOVICE
+  },
   'Cook\'s Assistant': {
     kind: 'quest', accessPolicy: 'locations',
     id: 'Cook\'s Assistant', name: 'Cook\'s Assistant',
@@ -343,7 +350,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Tribal Totem': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Tribal Totem', name: 'Tribal Totem',
-    regions: ['Karamja'],
+    regions: ['Karamja', 'Kandarin'],
     skills: { 'Thieving': 21 }, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -368,7 +375,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Temple of Ikov', name: 'Temple of Ikov',
     regions: ['Kandarin'],
-    skills: { 'Thieving': 42, 'Ranged': 40 }, prereqs: [], points: 1, series: 'Mahjarrat',
+    skills: { 'Thieving': 42 }, prereqs: [], points: 1, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Clock Tower': {
@@ -459,7 +466,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'The Grand Tree': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Grand Tree', name: 'The Grand Tree',
-    regions: ['Kandarin'],
+    regions: ['Kandarin', 'Karamja'],
     skills: { 'Agility': 25 }, prereqs: [], points: 5, series: 'Gnome',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -649,7 +656,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Fremennik Trials', name: 'The Fremennik Trials',
     regions: ['Fremennik'],
-    skills: { 'Fletching': 25, 'Woodcutting': 40, 'Crafting': 40 }, prereqs: [], points: 3, series: 'Fremennik',
+    skills: {}, prereqs: [], points: 3, series: 'Fremennik',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Horror from the Deep': {
@@ -663,7 +670,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Throne of Miscellania', name: 'Throne of Miscellania',
     regions: ['Fremennik'],
-    skills: { 'Woodcutting': 45, 'Farming': 10, 'Mining': 30, 'Fishing': 35 }, prereqs: ['The Fremennik Trials', 'Heroes\' Quest'], points: 1, series: 'Miscellania',
+    skills: {}, prereqs: ['The Fremennik Trials', 'Heroes\' Quest'], points: 1, series: 'Miscellania',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Monkey Madness I': {
@@ -751,7 +758,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'The Golem': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Golem', name: 'The Golem',
-    regions: ['Kharidian Desert'],
+    regions: ['Kharidian Desert', 'Misthalin'],
     skills: { 'Crafting': 20, 'Thieving': 25 }, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -770,30 +777,34 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Tears of Guthix': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Tears of Guthix', name: 'Tears of Guthix',
     regions: ['Misthalin'],
-    skills: { 'Firemaking': 49, 'Crafting': 20, 'Mining': 20 }, prereqs: [], points: 1,
+    locations: [{
+      id: 'lumbridge-swamp-caves', label: 'Lumbridge Swamp Caves', standardAreas: ['Lumbridge'],
+      chunkOptions: [{ cx: 49, cy: 49 }, { cx: 50, cy: 50 }]
+    }],
+    skills: { 'Firemaking': 49, 'Crafting': 20, 'Mining': 20, 'Quest Points': 43 }, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Zogre Flesh Eaters': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Zogre Flesh Eaters', name: 'Zogre Flesh Eaters',
     regions: ['Kandarin'],
-    skills: { 'Smithing': 4, 'Herblore': 8, 'Ranged': 30, 'Strength': 10, 'Fletching': 30 }, prereqs: ['Big Chompy Bird Hunting', 'Jungle Potion'], points: 1,
+    skills: { 'Smithing': 4, 'Herblore': 8, 'Ranged': 30 }, prereqs: ['Big Chompy Bird Hunting', 'Jungle Potion'], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'The Lost Tribe': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Lost Tribe', name: 'The Lost Tribe',
-    regions: ['Misthalin'],
+    regions: ['Misthalin', 'Asgarnia'],
     skills: { 'Agility': 13, 'Mining': 17, 'Thieving': 13 }, prereqs: ['Goblin Diplomacy', 'Rune Mysteries'], points: 1, series: 'Dorgeshuun',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'The Giant Dwarf': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Giant Dwarf', name: 'The Giant Dwarf',
-    regions: ['Fremennik'],
+    regions: ['Fremennik', 'Misthalin', 'Asgarnia'],
     skills: { 'Crafting': 12, 'Firemaking': 16, 'Magic': 33, 'Thieving': 14 }, prereqs: [], points: 2, series: 'Red Axe',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -838,8 +849,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Wanted!': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Wanted!', name: 'Wanted!',
-    regions: ['Asgarnia'],
-    skills: { 'Quest Points': 32 }, prereqs: ['Recruitment Drive', 'The Lost Tribe', 'Priest in Peril'], points: 1, series: 'Temple Knight',
+    regions: ['Asgarnia', 'Misthalin', 'Morytania'],
+    skills: { 'Quest Points': 32 }, prereqs: ['Recruitment Drive', 'The Lost Tribe', 'Priest in Peril', 'Enter the Abyss'], points: 1, series: 'Temple Knight',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Mourning\'s End Part II': {
@@ -895,7 +906,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'The Hand in the Sand': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Hand in the Sand', name: 'The Hand in the Sand',
-    regions: ['Kandarin'],
+    regions: ['Kandarin', 'Karamja', 'Asgarnia'],
     skills: { 'Thieving': 17, 'Crafting': 49 }, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -1084,7 +1095,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'The Slug Menace': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Slug Menace', name: 'The Slug Menace',
-    regions: ['Kandarin'],
+    regions: ['Kandarin', 'Asgarnia', 'Misthalin'],
     skills: { 'Crafting': 30, 'Runecraft': 30, 'Slayer': 30, 'Thieving': 30 }, prereqs: ['Sea Slug', 'Wanted!'], points: 1, series: 'Temple Knight',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -1151,7 +1162,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Fremennik Isles', name: 'The Fremennik Isles',
     regions: ['Fremennik'],
-    skills: { 'Construction': 20, 'Agility': 40 }, prereqs: ['The Fremennik Trials'], points: 1, series: 'Fremennik',
+    skills: { 'Construction': 20 }, prereqs: ['The Fremennik Trials'], points: 1, series: 'Fremennik',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Tower of Life': {
@@ -1164,8 +1175,9 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'The Great Brain Robbery': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Great Brain Robbery', name: 'The Great Brain Robbery',
-    regions: ['Islands & Others'],
-    skills: { 'Crafting': 16, 'Construction': 30, 'Prayer': 50 }, prereqs: ['Creature of Fenkenstrain', 'Cabin Fever'], points: 2, series: 'Pirate',
+    regions: ['Morytania', 'Asgarnia'],
+    manualRequirements: ['Access to a player-owned house workshop and crafting table, or the Grand Exchange'],
+    skills: { 'Crafting': 16, 'Construction': 30, 'Prayer': 50 }, prereqs: ['Creature of Fenkenstrain', 'Cabin Fever', 'RFD: Pirate Pete'], points: 2, series: 'Pirate',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'What Lies Below': {
@@ -1318,7 +1330,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Fremennik Exiles', name: 'The Fremennik Exiles',
     regions: ['Fremennik'],
-    skills: { 'Crafting': 65, 'Slayer': 60, 'Smithing': 60, 'Fishing': 60, 'Runecraft': 55 }, prereqs: ['The Fremennik Isles', 'Lunar Diplomacy', 'Mountain Daughter', 'Heroes\' Quest'], points: 2, series: 'Fremennik',
+    skills: { 'Crafting': 65, 'Slayer': 60, 'Smithing': 60, 'Mining': 60, 'Fishing': 60, 'Runecraft': 55 }, prereqs: ['The Fremennik Isles', 'Lunar Diplomacy', 'Mountain Daughter', 'Heroes\' Quest'], points: 2, series: 'Fremennik',
     difficulty: DropSource.QUEST_MASTER
   },
   'Sins of the Father': {
@@ -1354,6 +1366,15 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skills: {}, prereqs: ['A Taste of Hope'], points: 2,
     difficulty: DropSource.QUEST_MASTER
   },
+  'The Blood Moon Rises': {
+    kind: 'quest', accessPolicy: 'regions',
+    id: 'The Blood Moon Rises', name: 'The Blood Moon Rises',
+    regions: ['Morytania'],
+    skills: { 'Slayer': 74, 'Woodcutting': 74, 'Smithing': 72, 'Cooking': 72, 'Fletching': 70, 'Mining': 66, 'Hunter': 65, 'Crafting': 64, 'Herblore': 64, 'Magic': 57 },
+    prereqs: ['A Night at the Theatre', 'Sins of the Father'],
+    points: 4, series: 'Myreque',
+    difficulty: DropSource.QUEST_GRANDMASTER
+  },
   'A Kingdom Divided': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'A Kingdom Divided', name: 'A Kingdom Divided',
@@ -1371,7 +1392,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Temple of the Eye': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Temple of the Eye', name: 'Temple of the Eye',
-    regions: ['Kharidian Desert'],
+    regions: ['Kharidian Desert', 'Misthalin'],
     skills: { 'Runecraft': 10 }, prereqs: ['Enter the Abyss'], points: 1, series: 'Order of Wizards',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -1468,21 +1489,28 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Ribbiting Tale', name: 'The Ribbiting Tale of a Lily Pad Labour Dispute',
     regions: ['Varlamore'],
-    skills: { 'Woodcutting': 15 }, prereqs: [], points: 1,
+    skills: { 'Woodcutting': 15 }, prereqs: ['Children of the Sun'], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
   'While Guthix Sleeps': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'While Guthix Sleeps', name: 'While Guthix Sleeps',
     regions: ['Misthalin', 'Asgarnia', 'Kandarin'],
-    skills: { 'Thieving': 72, 'Agility': 66, 'Farming': 65, 'Hunter': 62, 'Quest Points': 180 }, prereqs: ['Dream Mentor', 'Legends\' Quest', 'The Path of Glouphrie', 'Defender of Varrock'], points: 5, series: 'Mahjarrat',
+    skills: { 'Quest Points': 180, 'Thieving': 72, 'Magic': 67, 'Agility': 66, 'Farming': 65, 'Herblore': 65, 'Hunter': 62, 'Firemaking': 49 },
+    manualRequirements: ["Warriors' Guild access with Attack + Strength at least 130, or 99 Attack, or 99 Strength"],
+    prereqs: [
+      'Defender of Varrock', 'The Path of Glouphrie', 'Fight Arena', 'Dream Mentor',
+      'The Hand in the Sand', 'Wanted!', 'Temple of the Eye', 'Tears of Guthix',
+      'Nature Spirit', 'A Tail of Two Cats'
+    ],
+    points: 5, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_GRANDMASTER
   },
   'The Heart of Darkness': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Heart of Darkness', name: 'The Heart of Darkness',
     regions: ['Varlamore'],
-    skills: { 'Mining': 55, 'Thieving': 48, 'Slayer': 48, 'Agility': 46 }, prereqs: ['Twilight\'s Promise', 'Meat and Greet'], points: 2, series: 'Twilight Emissaries',
+    skills: { 'Mining': 55, 'Thieving': 48, 'Slayer': 48, 'Agility': 46 }, prereqs: ['Twilight\'s Promise'], points: 2, series: 'Twilight Emissaries',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Death on the Isle': {
@@ -1521,7 +1549,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'The Curse of Arrav': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Curse of Arrav', name: 'The Curse of Arrav',
-    regions: ['Misthalin'],
+    regions: ['Misthalin', 'Kharidian Desert', 'Fremennik'],
     skills: { 'Agility': 61, 'Ranged': 62, 'Strength': 58, 'Thieving': 62, 'Mining': 64, 'Slayer': 37 }, prereqs: ['Defender of Varrock', 'Troll Romance'], points: 2, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_MASTER
   },

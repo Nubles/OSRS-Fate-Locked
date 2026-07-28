@@ -43,10 +43,18 @@ describe('official quest and miniquest audit coverage', () => {
       .toEqual([]);
   });
 
+  it('has no unaudited official or runtime entry', () => {
+    expect(validateQuestRequirementAudit(QUEST_DATA, official, audit).errors).toEqual([]);
+    expect(audit.entries.filter(entry =>
+      entry.status === 'unresolved' &&
+      (!entry.discrepancy || !entry.conservativeReason)))
+      .toEqual([]);
+  });
+
   it('pins the current reviewed baseline by explicit kind', () => {
-    expect(official.entries.filter(entry => entry.kind === 'quest')).toHaveLength(188);
+    expect(official.entries.filter(entry => entry.kind === 'quest')).toHaveLength(190);
     expect(official.entries.filter(entry => entry.kind === 'miniquest')).toHaveLength(19);
-    expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'quest')).toHaveLength(188);
+    expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'quest')).toHaveLength(190);
     expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'miniquest')).toHaveLength(19);
   });
 
@@ -65,6 +73,18 @@ describe('official quest and miniquest audit coverage', () => {
   it('reviews every G-M quest', () => expectReviewedBatch('G', 'N'));
 
   it('reviews every N-S quest', () => expectReviewedBatch('N', 'T'));
+
+  it('reviews every T-Z quest', () => expectReviewedBatch('T'));
+
+  it('leaves no unexplained T-Z review placeholders', () => {
+    expect(audit.entries
+      .filter(entry =>
+        entry.kind === 'quest' &&
+        entry.id.localeCompare('T') >= 0 &&
+        entry.status === 'unresolved')
+      .map(entry => entry.id))
+      .toEqual([]);
+  });
 
   it('leaves no unexplained N-S review placeholders', () => {
     expect(audit.entries

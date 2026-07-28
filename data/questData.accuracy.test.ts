@@ -4848,6 +4848,1203 @@ describe('audited current quest requirements', () => {
     };
     expect(actual).toEqual(expected);
   });
+  it('pins the complete machine and balance projection for all 53 T-Z quests and both reconciled official quests', () => {
+    const ids =     [
+          "Tai Bwo Wannai Trio",
+          "Tale of the Righteous",
+          "Tears of Guthix",
+          "Temple of Ikov",
+          "Temple of the Eye",
+          "The Ascent of Arceuus",
+          "The Corsair Curse",
+          "The Curse of Arrav",
+          "The Depths of Despair",
+          "The Dig Site",
+          "The Eyes of Glouphrie",
+          "The Feud",
+          "The Final Dawn",
+          "The Forsaken Tower",
+          "The Fremennik Exiles",
+          "The Fremennik Isles",
+          "The Fremennik Trials",
+          "The Garden of Death",
+          "The Giant Dwarf",
+          "The Golem",
+          "The Grand Tree",
+          "The Great Brain Robbery",
+          "The Hand in the Sand",
+          "The Heart of Darkness",
+          "The Ides of Milk",
+          "The Knight's Sword",
+          "The Lost Tribe",
+          "The Path of Glouphrie",
+          "The Queen of Thieves",
+          "The Red Reef",
+          "The Restless Ghost",
+          "The Ribbiting Tale",
+          "The Slug Menace",
+          "The Tourist Trap",
+          "Throne of Miscellania",
+          "Tower of Life",
+          "Tree Gnome Village",
+          "Tribal Totem",
+          "Troll Romance",
+          "Troll Stronghold",
+          "Troubled Tortugans",
+          "Twilight's Promise",
+          "Underground Pass",
+          "Vampyre Slayer",
+          "Wanted!",
+          "Watchtower",
+          "Waterfall Quest",
+          "What Lies Below",
+          "While Guthix Sleeps",
+          "Witch's House",
+          "Witch's Potion",
+          "X Marks the Spot",
+          "Zogre Flesh Eaters",
+          "Learning the Ropes",
+          "The Blood Moon Rises"
+    ] as const;
+    const actual = Object.fromEntries(ids.map(id => {
+      const quest = QUEST_DATA[id];
+      return [id, {
+        kind: quest?.kind,
+        accessPolicy: quest?.accessPolicy,
+        regions: quest?.regions,
+        locations: quest?.locations?.map(({ id, label, standardAreas, chunkOptions }) => ({ id, label, standardAreas, chunkOptions })) ?? null,
+        skills: quest?.skills,
+        combatLevel: quest?.combatLevel ?? null,
+        prereqs: quest?.prereqs,
+        oneOf: quest?.oneOf ?? null,
+        manualRequirements: quest?.manualRequirements ?? null,
+        points: quest?.points,
+        difficulty: quest?.difficulty,
+      }];
+    }));
+    const expected =     {
+      "Tai Bwo Wannai Trio": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Karamja"
+        ],
+        "locations": null,
+        "skills": {
+          "Agility": 15,
+          "Cooking": 30,
+          "Fishing": 5
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Jungle Potion"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Tale of the Righteous": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kourend & Kebos"
+        ],
+        "locations": null,
+        "skills": {
+          "Strength": 16,
+          "Mining": 10
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Client of Kourend"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Tears of Guthix": {
+        "kind": "quest",
+        "accessPolicy": "locations",
+        "regions": [
+          "Misthalin"
+        ],
+        "locations": [
+          {
+            "id": "lumbridge-swamp-caves",
+            "label": "Lumbridge Swamp Caves",
+            "standardAreas": [
+              "Lumbridge"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 49,
+                "cy": 49
+              },
+              {
+                "cx": 50,
+                "cy": 50
+              }
+            ]
+          }
+        ],
+        "skills": {
+          "Firemaking": 49,
+          "Crafting": 20,
+          "Mining": 20,
+          "Quest Points": 43
+        },
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Temple of Ikov": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kandarin"
+        ],
+        "locations": null,
+        "skills": {
+          "Thieving": 42
+        },
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Temple of the Eye": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kharidian Desert",
+          "Misthalin"
+        ],
+        "locations": null,
+        "skills": {
+          "Runecraft": 10
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Enter the Abyss"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "The Ascent of Arceuus": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kourend & Kebos"
+        ],
+        "locations": null,
+        "skills": {
+          "Hunter": 12
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Client of Kourend"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "The Corsair Curse": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Asgarnia",
+          "Kandarin"
+        ],
+        "locations": null,
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "The Curse of Arrav": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Misthalin",
+          "Kharidian Desert",
+          "Fremennik"
+        ],
+        "locations": null,
+        "skills": {
+          "Agility": 61,
+          "Ranged": 62,
+          "Strength": 58,
+          "Thieving": 62,
+          "Mining": 64,
+          "Slayer": 37
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Defender of Varrock",
+          "Troll Romance"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Master)"
+      },
+      "The Depths of Despair": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kourend & Kebos"
+        ],
+        "locations": null,
+        "skills": {
+          "Agility": 18
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Client of Kourend"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "The Dig Site": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Misthalin"
+        ],
+        "locations": null,
+        "skills": {
+          "Agility": 10,
+          "Herblore": 10,
+          "Thieving": 25
+        },
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "The Eyes of Glouphrie": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kandarin"
+        ],
+        "locations": null,
+        "skills": {
+          "Construction": 5,
+          "Magic": 46
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "The Grand Tree"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "The Feud": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kharidian Desert"
+        ],
+        "locations": null,
+        "skills": {
+          "Thieving": 30
+        },
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "The Final Dawn": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Varlamore"
+        ],
+        "locations": null,
+        "skills": {
+          "Thieving": 66,
+          "Fletching": 52,
+          "Runecraft": 52
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "The Heart of Darkness",
+          "Perilous Moons"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 3,
+        "difficulty": "Quest (Master)"
+      },
+      "The Forsaken Tower": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kourend & Kebos"
+        ],
+        "locations": null,
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [
+          "Client of Kourend"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "The Fremennik Exiles": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Fremennik"
+        ],
+        "locations": null,
+        "skills": {
+          "Crafting": 65,
+          "Slayer": 60,
+          "Smithing": 60,
+          "Fishing": 60,
+          "Runecraft": 55,
+          "Mining": 60
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "The Fremennik Isles",
+          "Lunar Diplomacy",
+          "Mountain Daughter",
+          "Heroes' Quest"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Master)"
+      },
+      "The Fremennik Isles": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Fremennik"
+        ],
+        "locations": null,
+        "skills": {
+          "Construction": 20
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "The Fremennik Trials"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Experienced)"
+      },
+      "The Fremennik Trials": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Fremennik"
+        ],
+        "locations": null,
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 3,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "The Garden of Death": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kourend & Kebos"
+        ],
+        "locations": null,
+        "skills": {
+          "Farming": 20
+        },
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "The Giant Dwarf": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Fremennik",
+          "Misthalin",
+          "Asgarnia"
+        ],
+        "locations": null,
+        "skills": {
+          "Crafting": 12,
+          "Firemaking": 16,
+          "Magic": 33,
+          "Thieving": 14
+        },
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "The Golem": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kharidian Desert",
+          "Misthalin"
+        ],
+        "locations": null,
+        "skills": {
+          "Crafting": 20,
+          "Thieving": 25
+        },
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "The Grand Tree": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kandarin",
+          "Karamja"
+        ],
+        "locations": null,
+        "skills": {
+          "Agility": 25
+        },
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 5,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "The Great Brain Robbery": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Morytania",
+          "Asgarnia"
+        ],
+        "locations": null,
+        "skills": {
+          "Crafting": 16,
+          "Construction": 30,
+          "Prayer": 50
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Creature of Fenkenstrain",
+          "Cabin Fever",
+          "RFD: Pirate Pete"
+        ],
+        "oneOf": null,
+        "manualRequirements": [
+          "Access to a player-owned house workshop and crafting table, or the Grand Exchange"
+        ],
+        "points": 2,
+        "difficulty": "Quest (Experienced)"
+      },
+      "The Hand in the Sand": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kandarin",
+          "Karamja",
+          "Asgarnia"
+        ],
+        "locations": null,
+        "skills": {
+          "Thieving": 17,
+          "Crafting": 49
+        },
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "The Heart of Darkness": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Varlamore"
+        ],
+        "locations": null,
+        "skills": {
+          "Mining": 55,
+          "Thieving": 48,
+          "Slayer": 48,
+          "Agility": 46
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Twilight's Promise"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Experienced)"
+      },
+      "The Ides of Milk": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Misthalin"
+        ],
+        "locations": null,
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Novice)"
+      },
+      "The Knight's Sword": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Asgarnia",
+          "Misthalin"
+        ],
+        "locations": null,
+        "skills": {
+          "Mining": 10
+        },
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "The Lost Tribe": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Misthalin",
+          "Asgarnia"
+        ],
+        "locations": null,
+        "skills": {
+          "Agility": 13,
+          "Mining": 17,
+          "Thieving": 13
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Goblin Diplomacy",
+          "Rune Mysteries"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "The Path of Glouphrie": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kandarin"
+        ],
+        "locations": null,
+        "skills": {
+          "Strength": 60,
+          "Slayer": 56,
+          "Thieving": 56,
+          "Ranged": 47,
+          "Agility": 45
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "The Eyes of Glouphrie",
+          "Waterfall Quest",
+          "Tree Gnome Village"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Experienced)"
+      },
+      "The Queen of Thieves": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kourend & Kebos"
+        ],
+        "locations": null,
+        "skills": {
+          "Thieving": 20
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Client of Kourend"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "The Red Reef": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "The Open Seas"
+        ],
+        "locations": null,
+        "skills": {
+          "Sailing": 52,
+          "Smithing": 48
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Troubled Tortugans"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Experienced)"
+      },
+      "The Restless Ghost": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Misthalin"
+        ],
+        "locations": null,
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Novice)"
+      },
+      "The Ribbiting Tale": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Varlamore"
+        ],
+        "locations": null,
+        "skills": {
+          "Woodcutting": 15
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Children of the Sun"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Novice)"
+      },
+      "The Slug Menace": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kandarin",
+          "Asgarnia",
+          "Misthalin"
+        ],
+        "locations": null,
+        "skills": {
+          "Crafting": 30,
+          "Runecraft": 30,
+          "Slayer": 30,
+          "Thieving": 30
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Sea Slug",
+          "Wanted!"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "The Tourist Trap": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kharidian Desert"
+        ],
+        "locations": null,
+        "skills": {
+          "Fletching": 10,
+          "Smithing": 20
+        },
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Throne of Miscellania": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Fremennik"
+        ],
+        "locations": null,
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [
+          "The Fremennik Trials",
+          "Heroes' Quest"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Experienced)"
+      },
+      "Tower of Life": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kandarin"
+        ],
+        "locations": null,
+        "skills": {
+          "Construction": 10
+        },
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Novice)"
+      },
+      "Tree Gnome Village": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kandarin"
+        ],
+        "locations": null,
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Tribal Totem": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Karamja",
+          "Kandarin"
+        ],
+        "locations": null,
+        "skills": {
+          "Thieving": 21
+        },
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Troll Romance": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Asgarnia"
+        ],
+        "locations": null,
+        "skills": {
+          "Agility": 28
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Troll Stronghold"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 2,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Troll Stronghold": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Asgarnia"
+        ],
+        "locations": null,
+        "skills": {
+          "Agility": 15
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Death Plateau"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Troubled Tortugans": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "The Open Seas"
+        ],
+        "locations": null,
+        "skills": {
+          "Slayer": 51,
+          "Construction": 48,
+          "Sailing": 45,
+          "Hunter": 45,
+          "Woodcutting": 40,
+          "Crafting": 34
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Pandemonium"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Experienced)"
+      },
+      "Twilight's Promise": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Varlamore"
+        ],
+        "locations": null,
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [
+          "Children of the Sun"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Underground Pass": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kandarin",
+          "Tirannwn"
+        ],
+        "locations": null,
+        "skills": {
+          "Ranged": 25
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Biohazard"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 5,
+        "difficulty": "Quest (Experienced)"
+      },
+      "Vampyre Slayer": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Misthalin"
+        ],
+        "locations": null,
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 3,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Wanted!": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Asgarnia",
+          "Misthalin",
+          "Morytania"
+        ],
+        "locations": null,
+        "skills": {
+          "Quest Points": 32
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Recruitment Drive",
+          "The Lost Tribe",
+          "Priest in Peril",
+          "Enter the Abyss"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Watchtower": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kandarin"
+        ],
+        "locations": null,
+        "skills": {
+          "Magic": 14,
+          "Thieving": 15,
+          "Agility": 25,
+          "Herblore": 14,
+          "Mining": 40
+        },
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 4,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Waterfall Quest": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kandarin"
+        ],
+        "locations": null,
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "What Lies Below": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Misthalin"
+        ],
+        "locations": null,
+        "skills": {
+          "Runecraft": 35
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Rune Mysteries"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "While Guthix Sleeps": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Misthalin",
+          "Asgarnia",
+          "Kandarin"
+        ],
+        "locations": null,
+        "skills": {
+          "Quest Points": 180,
+          "Thieving": 72,
+          "Magic": 67,
+          "Agility": 66,
+          "Farming": 65,
+          "Herblore": 65,
+          "Hunter": 62,
+          "Firemaking": 49
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Defender of Varrock",
+          "The Path of Glouphrie",
+          "Fight Arena",
+          "Dream Mentor",
+          "The Hand in the Sand",
+          "Wanted!",
+          "Temple of the Eye",
+          "Tears of Guthix",
+          "Nature Spirit",
+          "A Tail of Two Cats"
+        ],
+        "oneOf": null,
+        "manualRequirements": [
+          "Warriors' Guild access with Attack + Strength at least 130, or 99 Attack, or 99 Strength"
+        ],
+        "points": 5,
+        "difficulty": "Quest (Grandmaster)"
+      },
+      "Witch's House": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Asgarnia"
+        ],
+        "locations": null,
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 4,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Witch's Potion": {
+        "kind": "quest",
+        "accessPolicy": "locations",
+        "regions": [
+          "Asgarnia"
+        ],
+        "locations": [
+          {
+            "id": "rimmington",
+            "label": "Rimmington",
+            "standardAreas": [
+              "Rimmington"
+            ],
+            "chunkOptions": [
+              {
+                "cx": 46,
+                "cy": 50
+              }
+            ]
+          }
+        ],
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Novice)"
+      },
+      "X Marks the Spot": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Misthalin",
+          "Asgarnia"
+        ],
+        "locations": null,
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Novice)"
+      },
+      "Zogre Flesh Eaters": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Kandarin"
+        ],
+        "locations": null,
+        "skills": {
+          "Smithing": 4,
+          "Herblore": 8,
+          "Ranged": 30
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "Big Chompy Bird Hunting",
+          "Jungle Potion"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Intermediate)"
+      },
+      "Learning the Ropes": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [],
+        "locations": null,
+        "skills": {},
+        "combatLevel": null,
+        "prereqs": [],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 1,
+        "difficulty": "Quest (Novice)"
+      },
+      "The Blood Moon Rises": {
+        "kind": "quest",
+        "accessPolicy": "regions",
+        "regions": [
+          "Morytania"
+        ],
+        "locations": null,
+        "skills": {
+          "Slayer": 74,
+          "Woodcutting": 74,
+          "Smithing": 72,
+          "Cooking": 72,
+          "Fletching": 70,
+          "Mining": 66,
+          "Hunter": 65,
+          "Crafting": 64,
+          "Herblore": 64,
+          "Magic": 57
+        },
+        "combatLevel": null,
+        "prereqs": [
+          "A Night at the Theatre",
+          "Sins of the Father"
+        ],
+        "oneOf": null,
+        "manualRequirements": null,
+        "points": 4,
+        "difficulty": "Quest (Grandmaster)"
+      }
+    };
+    expect(actual).toEqual(expected);
+  });
+
 
 });
 

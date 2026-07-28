@@ -174,7 +174,7 @@ describe('deterministic current content baseline', () => {
       manualRequirements: undefined,
     });
     expect(questRequirementFields('The Curse of Arrav')).toEqual({
-      regions: ['Misthalin'], locations: undefined,
+      regions: ['Misthalin', 'Kharidian Desert', 'Fremennik'], locations: undefined,
       skills: {
         Agility: 61, Ranged: 62, Strength: 58, Thieving: 62, Mining: 64,
         Slayer: 37,

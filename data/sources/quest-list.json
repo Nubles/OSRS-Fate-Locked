@@ -12,27 +12,8 @@
   },
   "drift": {
     "runtimeEntriesMissingFromLiveList": [],
-    "liveOnlyEntries": [
-      {
-        "pageTitle": "Learning the Ropes",
-        "kind": "quest",
-        "source": {
-          "url": "https://oldschool.runescape.wiki/w/index.php?title=Learning_the_Ropes&oldid=15270071",
-          "revision": 15270071,
-          "revisionTimestamp": "2026-07-20T08:11:03Z"
-        }
-      },
-      {
-        "pageTitle": "The Blood Moon Rises",
-        "kind": "quest",
-        "source": {
-          "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Blood_Moon_Rises&oldid=15276980",
-          "revision": 15276980,
-          "revisionTimestamp": "2026-07-28T01:27:16Z"
-        }
-      }
-    ],
-    "note": "The live official rows differ from the approved normalized 188/19 runtime baseline; membership remains pinned for Task 5 and reconciliation is deferred to Task 11."
+    "liveOnlyEntries": [],
+    "note": "The live official rows reconcile with the approved normalized 190/19 baseline (Recipe for Disaster remains expanded into its existing parent-step IDs)."
   },
   "entries": [
     {
@@ -876,6 +857,16 @@
       }
     },
     {
+      "id": "Learning the Ropes",
+      "kind": "quest",
+      "pageTitle": "Learning the Ropes",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Learning_the_Ropes&oldid=15270071",
+        "revision": 15270071,
+        "revisionTimestamp": "2026-07-20T08:11:03Z"
+      }
+    },
+    {
       "id": "Legends' Quest",
       "kind": "quest",
       "pageTitle": "Legends' Quest",
@@ -1593,6 +1584,16 @@
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Ascent_of_Arceuus&oldid=15241054",
         "revision": 15241054,
         "revisionTimestamp": "2026-06-27T15:18:11Z"
+      }
+    },
+    {
+      "id": "The Blood Moon Rises",
+      "kind": "quest",
+      "pageTitle": "The Blood Moon Rises",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Blood_Moon_Rises&oldid=15276980",
+        "revision": 15276980,
+        "revisionTimestamp": "2026-07-28T01:27:16Z"
       }
     },
     {
