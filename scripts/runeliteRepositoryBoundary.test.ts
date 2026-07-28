@@ -46,6 +46,7 @@ const workflowJavaSetupPattern = /\bactions\/setup-java@/i;
 const workflowJvmBuildCommandPattern =
   /^\s*(?:(?:-\s*)?run:\s*(?:[>|]\s*)?)?(?:\.?[\\/])?(?:gradlew(?:\.bat)?|gradle|mvnw(?:\.cmd)?|mvn)\b[^\r\n]*\b(?:clean|test|build|jar|shadowJar|package|install|deploy)\b/im;
 const retainedWebAppIntegrationPaths = [
+  'components/RunelitePairingDialog.tsx',
   'components/RuneLiteOnboarding.tsx',
   'components/RollInbox.tsx',
   'components/RollInboxDriver.tsx',
@@ -54,6 +55,7 @@ const retainedWebAppIntegrationPaths = [
   'services/relaySync.ts',
   'utils/runeliteBundle.ts',
   'utils/runeliteExport.ts',
+  'utils/runelitePairing.ts',
   'utils/runeliteRulesManifest.ts',
   'workers/fate-relay/worker.js',
 ];

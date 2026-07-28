@@ -12,18 +12,31 @@ export function OnlineSyncDriver() {
   const [, force] = useState(0);
   useEffect(() => relaySync.subscribe(() => force((n) => n + 1)), []);
   const enabled = relaySync.enabled;
+  const sessionCode = relaySync.code;
+  const pushRequestRevision = relaySync.pushRequestRevision;
   const timer = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !sessionCode) return;
     if (timer.current) window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => {
       buildBundlePayload(unlocks, { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId: gameModeId ?? 'vanilla', customMode })
-        .then(({ compressed }) => relaySync.push(compressed))
-        .catch(() => { /* surfaced via relaySync.status */ });
+        .then(({ compressed }) => {
+          if (relaySync.code !== sessionCode) return false;
+          return relaySync.push(compressed);
+        })
+        .catch((error) => {
+          if (relaySync.code === sessionCode) {
+            relaySync.reportPushFailure(error);
+          }
+        });
     }, 1500);
     return () => { if (timer.current) window.clearTimeout(timer.current); };
-  }, [enabled, unlocks, runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId, customMode]);
+  }, [
+    enabled, sessionCode, pushRequestRevision, unlocks, runId,
+    runRevision, keys, specialKeys, chaosKeys, fatePoints,
+    activeBuff, pinnedGoals, linkedAccount, gameModeId, customMode,
+  ]);
 
   return null;
 }

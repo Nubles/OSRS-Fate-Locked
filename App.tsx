@@ -20,6 +20,7 @@ import { TransmutationEffect } from './components/TransmutationEffect';
 import { ClarityEffect, GreedEffect, ChaosEffect } from './components/RitualEffects';
 import { EffectsLayer } from './components/EffectsLayer';
 import { OnlineSyncDriver } from './components/OnlineSyncDriver';
+import { RunelitePairingDialog } from './components/RunelitePairingDialog';
 import { RollInboxDriver } from './components/RollInboxDriver';
 import { CoachStrip } from './components/CoachStrip';
 import { FeatureRevealDriver } from './components/FeatureRevealDriver';
@@ -47,6 +48,8 @@ import {
   resolveChangelogModalRenderPolicy, shouldAutoOpenChangelog,
   shouldEnableUnderlyingModalEscape, shouldShowChangelog,
 } from './utils/changelogState';
+import { relaySync } from './services/relaySync';
+import { parseRunelitePairFragment } from './utils/runelitePairing';
 
 // Heavy, conditionally-rendered modals — code-split so they (and their deps,
 // e.g. recharts in StatsModal) stay out of the initial bundle.
@@ -623,8 +626,10 @@ const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = f
 };
 
 const GameLayout = () => {
-  const { lastEvent, animationsEnabled, hasSeenOnboarding, history } = useGame();
-  const { recentlyCreatedId, activeProfileId, clearRecentlyCreated } = useProfiles();
+  const {
+    lastEvent, animationsEnabled, hasSeenOnboarding, history, linkedAccount,
+  } = useGame();
+  const { recentlyCreatedId, activeProfileId, activeProfileName, clearRecentlyCreated } = useProfiles();
 
   const [showChangelog, dispatchChangelog] = useReducer(
     changelogVisibilityReducer,
@@ -636,6 +641,24 @@ const GameLayout = () => {
       hasPendingGameModePrompt: recentlyCreatedId === activeProfileId,
     }),
   );
+
+  const [runelitePairCode, setRunelitePairCode] = useState<string | null>(
+    () => {
+      if (typeof window === 'undefined') return null;
+      const code = parseRunelitePairFragment(window.location.hash);
+      if (code) {
+        window.history.replaceState(
+          null, '', window.location.pathname + window.location.search,
+        );
+      }
+      return code;
+    },
+  );
+  const [runelitePairPhase, setRunelitePairPhase] = useState<
+    'confirm' | 'uploading' | 'success' | 'error'
+  >('confirm');
+  const [runelitePairError, setRunelitePairError] =
+    useState<string | undefined>(undefined);
 
   const changelogReturnFocusTarget = useRef<HTMLElement | null>(null);
   const changelogAutoOpenedRelease = useRef<string | null>(
@@ -654,6 +677,29 @@ const GameLayout = () => {
   // Warm the heavy lazy chunks (map, stats+charts, resource engine, …) during
   // idle time so opening them is instant instead of a visible fetch delay.
   useEffect(() => { prefetchHeavyChunks(); }, []);
+
+  useEffect(() => relaySync.subscribe(() => {
+    if (!runelitePairCode || relaySync.code !== runelitePairCode) return;
+    if (relaySync.status === 'synced') {
+      setRunelitePairPhase('success');
+      setRunelitePairError(undefined);
+    } else if (relaySync.status === 'error') {
+      setRunelitePairPhase('error');
+      setRunelitePairError(
+        relaySync.lastError || 'Profile could not be sent.',
+      );
+    } else {
+      setRunelitePairPhase('uploading');
+      setRunelitePairError(undefined);
+    }
+  }), [runelitePairCode]);
+
+  const closeRunelitePairing = () => {
+    if (runelitePairPhase === 'confirm'
+      || runelitePairPhase === 'success') {
+      setRunelitePairCode(null);
+    }
+  };
 
   // UI States
   const [showStats, setShowStats] = useState(false);
@@ -756,7 +802,8 @@ const GameLayout = () => {
 
   const startupHash = typeof window === 'undefined' ? '' : window.location.hash;
   const hasPendingSyncPrompt = showSyncCode
-    || (startupHash.startsWith('#sync=') && startupHash.length > '#sync='.length);
+    || (startupHash.startsWith('#sync=') && startupHash.length > '#sync='.length)
+    || !!runelitePairCode;
   const hasPendingGameModePrompt = showGameMode
     || recentlyCreatedId === activeProfileId
     || onboardingJustCompleted;
@@ -787,7 +834,8 @@ const GameLayout = () => {
 
   // Escape closes whichever top-level modal is open.
   const anyModalOpen = showStats || showReference || showAltar
-    || showOracle || showStrategy || showSupplyChain || showGameMode || showSyncCode;
+    || showOracle || showStrategy || showSupplyChain || showGameMode
+    || showSyncCode || !!runelitePairCode;
   useEscapeKey(() => {
     setShowStats(false);
     setShowReference(false);
@@ -797,6 +845,9 @@ const GameLayout = () => {
     setShowSupplyChain(false);
     setShowGameMode(false);
     setShowSyncCode(false);
+    setRunelitePairCode(null);
+    setRunelitePairPhase('confirm');
+    setRunelitePairError(undefined);
   }, shouldEnableUnderlyingModalEscape(anyModalOpen, showChangelog));
   const modalRenderPolicy = resolveChangelogModalRenderPolicy(showChangelog);
 
@@ -867,6 +918,39 @@ const GameLayout = () => {
       {modalRenderPolicy.renderGlobalDialogOverlays && <GuidedTour />}
       {/* Quest-complete celebration with the wiki reward scroll. */}
       {modalRenderPolicy.renderGlobalDialogOverlays && <QuestCompleteOverlay />}
+      {modalRenderPolicy.renderGlobalDialogOverlays && runelitePairCode && (
+        <RunelitePairingDialog
+          code={runelitePairCode}
+          replacing={relaySync.enabled}
+          profileName={activeProfileName}
+          linkedAccount={linkedAccount ?? null}
+          phase={runelitePairPhase}
+          error={runelitePairError}
+          onConfirm={() => {
+            if (!relaySync.adoptCode(runelitePairCode)) {
+              setRunelitePairPhase('confirm');
+              setRunelitePairError(
+                'This connection could not be saved. Try again.',
+              );
+              return;
+            }
+            setRunelitePairPhase('uploading');
+            setRunelitePairError(undefined);
+          }}
+          onRetry={() => {
+            if (relaySync.requestPush()) {
+              setRunelitePairPhase('uploading');
+              setRunelitePairError(undefined);
+            } else {
+              setRunelitePairPhase('error');
+              setRunelitePairError(
+                'This connection is no longer active.',
+              );
+            }
+          }}
+          onClose={closeRunelitePairing}
+        />
+      )}
 
       {/* One contextual "next step" hint under the header — teaches the loop. */}
       <CoachStrip />

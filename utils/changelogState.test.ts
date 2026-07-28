@@ -52,6 +52,25 @@ describe('changelog state', () => {
     expect(shouldShowChangelog('r1', storage)).toBe(true);
   });
 
+  it('defers an unseen release for a valid RuneLite pairing request', () => {
+    expect(shouldAutoOpenChangelog({
+      hasSeenOnboarding: true,
+      releaseIsUnseen: true,
+      startupHash:
+        '#runelite-pair=0123456789abcdef0123456789abcdef',
+      hasPendingGameModePrompt: false,
+    })).toBe(false);
+  });
+
+  it('does not defer an unseen release for an invalid pairing fragment', () => {
+    expect(shouldAutoOpenChangelog({
+      hasSeenOnboarding: true,
+      releaseIsUnseen: true,
+      startupHash: '#runelite-pair=ABCD1234',
+      hasPendingGameModePrompt: false,
+    })).toBe(true);
+  });
+
   it('defers an unseen release while a new profile needs its game mode prompt', () => {
     expect(shouldAutoOpenChangelog({
       hasSeenOnboarding: true,

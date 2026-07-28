@@ -1,3 +1,5 @@
+import { parseRunelitePairFragment } from './runelitePairing';
+
 export const CHANGELOG_STORAGE_KEY = 'fate-locked:last-seen-changelog';
 
 export interface ChangelogStorage {
@@ -66,7 +68,8 @@ export const shouldAutoOpenChangelog = ({
   && !hasPendingGameModePrompt
   && !hasPendingSyncPrompt
   && !(startupHash.startsWith(SYNC_HASH_PREFIX)
-    && startupHash.length > SYNC_HASH_PREFIX.length);
+    && startupHash.length > SYNC_HASH_PREFIX.length)
+  && parseRunelitePairFragment(startupHash) == null;
 
 export const resolveChangelogRestoreTarget = <T>(
   source: ChangelogOpenSource,

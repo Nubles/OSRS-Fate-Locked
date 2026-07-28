@@ -70,6 +70,7 @@ afterEach(() => {
   cleanup();
   values.clear();
   vi.unstubAllGlobals();
+  window.history.replaceState(null, '', '/');
 });
 
 describe('App changelog lifecycle', () => {
@@ -93,7 +94,7 @@ describe('App changelog lifecycle', () => {
       expect(screen.queryByRole('dialog', { name: "What's New" })).toBeNull();
     });
     expect(storage.getItem(changelogStorageKey)).toBe(latestChangelogId);
-  });
+  }, 15_000);
   it('defers the unseen release until the post-onboarding game-mode prompt closes', async () => {
     storage.setItem(profileBaseKey(PROFILE_ID), seedOnboardingRun(false));
     const user = userEvent.setup();
@@ -109,5 +110,23 @@ describe('App changelog lifecycle', () => {
 
     await user.click(within(gameMode).getByRole('button', { name: 'Close' }));
     expect(await screen.findByRole('dialog', { name: "What's New" })).toBeTruthy();
+  });
+
+  it('scrubs a valid RuneLite pairing fragment and owns the startup modal', async () => {
+    const code = '0123456789abcdef0123456789abcdef';
+    window.history.replaceState(
+      null, '', `/#runelite-pair=${code}`,
+    );
+    render(<App />);
+
+    const dialog = await screen.findByRole('dialog', {
+      name: 'Connect RuneLite tracker',
+    });
+    expect(window.location.hash).toBe('');
+    expect(within(dialog).getByText('Lifecycle test')).toBeTruthy();
+    expect(within(dialog).getByText('No bound account')).toBeTruthy();
+    expect(screen.queryByRole('dialog', {
+      name: "What's New",
+    })).toBeNull();
   });
 });

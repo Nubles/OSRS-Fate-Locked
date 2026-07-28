@@ -37,8 +37,7 @@ Bad luck is cushioned by **Fate Points** (a pity timer) and the **Void Altar**, 
 - **Integrity & verification** — a tamper-evident hash chain over the run history, a deterministic run ID, invariant replay, and exportable verified bundles, so a completed run can be shared and checked.
 - **Shareable run card & timelapse** — generate an image of your run, or play its history back as a narrated timelapse.
 - **Profiles** — multiple independent runs in one browser.
-- **RuneLite companion plugin** — marks locked content in-game, explains the current chunk, and can durably queue supported completions for the web Roll Inbox.
-- **Explicit-player Roll Inbox** — exact RuneLite detections are checked against the app's canonical rules and shown by category. Nothing rolls on detection, render, retry, or restart; the player always presses **Roll**.
+- **RuneLite companion plugin** — imports the active profile, marks locked content in-game, explains the current chunk, and keeps supported gameplay detections in a local history.
 
 ## Tech stack
 
@@ -78,18 +77,23 @@ To enable it on a fresh fork: **Settings → Pages → Build and deployment → 
 
 - [`docs/RESOURCE_ENGINE.md`](./docs/RESOURCE_ENGINE.md) — the Resource Engine: data shape, the supply-chain analyzer, the three wiki-sourced generator scripts (`scripts/buildCraftables.mjs`, `scripts/buildPotions.mjs`, `scripts/buildSourceEnrichment.ts`), the enrichment merge pattern, the integrity-test contract, and the workflow for adding curated items.
 
-## RuneLite plugin and Roll Inbox
+## RuneLite plugin connection
 
 The companion [RuneLite plugin](https://github.com/Nubles/OSRS-Fate-Locked-Runelite)
-renders the tracker rules in-game, warns before locked actions, and—only when
-the player enables Online sync—queues supported completions for the app. Plugin
-source, installation instructions, builds, and releases live exclusively in
-the standalone repository. This web app remains responsible for exporting the
-rules bundle and operating the confirmation-first Roll Inbox.
+renders the active profile's tracker rules in-game and warns before locked
+actions. The standalone repository exclusively owns plugin source, builds,
+releases, and Plugin Hub review.
 
-RuneLite detects and retries delivery; the app validates the run, account, revision, detector, and canonical rate. The event waits in **Sync & Roll → Roll Inbox** until the player chooses **Roll**, **Not eligible**, Review, or Dismiss. There is no Roll button in RuneLite and no background path to the dice engine.
+Pairing is one-way. The browser publishes an app-authored v4 profile with
+`POST /r/<code>`, then opens RuneLite with that code. The plugin retrieves and
+validates the profile with `GET /r/<code>`. It does not upload gameplay,
+account, event, acknowledgement, suggestion, or heartbeat data.
 
-Online sync is a checkbox that defaults to off. Event/ack records expire after seven days; bundle and heartbeat records expire after 24 hours. See [the relay protocol](./docs/online-relay.md) for fields, endpoints, ownership, and privacy limits.
+The browser cannot know whether RuneLite imported the profile because the
+current Plugin Hub candidate sends no receipt. “Profile sent to RuneLite”
+therefore describes a successful browser publish, not a live connection.
+See [the relay protocol](./docs/online-relay.md) for the current boundary and
+legacy compatibility routes.
 
 ## Disclaimer
 

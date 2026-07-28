@@ -135,20 +135,21 @@ Follow-ups:
 - **Impact engine:** `utils/unlockImpact.ts::computeUnlockImpact(base,
   simulated, gameModeId)` — shared by Quest, Region and Frontier advisors.
   Chunk-aware via gameModeId.
-- **Relay (Cloudflare Worker, `workers/fate-relay/`):** three records per
-  pairing code — `/r/:code` (app→plugin bundle), `/r/:code/suggest`
-  (plugin→app suggestions), `/r/:code/state` (plugin→app heartbeat). Each
-  has its own version + first-writer-claims write-token + 24h TTL. Full
-  contract in `docs/online-relay.md`. Deployed at
+- **Current RuneLite relay:** the browser publishes the current app-authored
+  v4 profile with `POST /r/:code`; RuneLite retrieves and validates it with
+  `GET /r/:code` and optional ETag caching. The plugin does not write to the
+  relay, and the browser receives no import receipt. Full contract in
+  `docs/online-relay.md`. Deployed at
   `fate-relay.fatelocked.workers.dev`; redeploy with `wrangler deploy` from
   `workers/fate-relay/` (KV id is committed in wrangler.toml).
-- **Suggestion lifecycle (web):** `services/suggestSync.ts`. The relay is a
-  dumb store — cleared/dismissed suggestions must go into the persisted
-  `cleared` set or the next poll resurrects them (this was a real bug).
-  Auto-clear on roll lives in the ALWAYS-MOUNTED `SuggestionBanner`, not the
-  lazily-mounted queue (also a real bug: tab components miss rolls made
-  elsewhere).
-- **Plugin boundary:** [Nubles/OSRS-Fate-Locked-Runelite](https://github.com/Nubles/OSRS-Fate-Locked-Runelite) owns the plugin source, builds, and releases. The app exports rules bundles and processes plugin events, but contains no Java plugin or download pipeline.
+- **Legacy relay compatibility only:** the Worker temporarily retains
+  `/r/:code/state`, `/r/:code/events`, `/r/:code/acks`, and
+  `/r/:code/suggest` for older installed clients. They are not part of the
+  current Hub candidate's connection and must not be presented as current
+  product behavior.
+- **Plugin boundary:** [Nubles/OSRS-Fate-Locked-Runelite](https://github.com/Nubles/OSRS-Fate-Locked-Runelite)
+  owns the plugin source, builds, releases, and local detection history. The
+  app exports rules bundles but contains no Java plugin or download pipeline.
 
 ## 4. Gotchas that cost real debugging time
 
@@ -158,10 +159,10 @@ Follow-ups:
   guess here broke CI once. Same class of bug: `CircleCheck` doesn't exist
   in this lucide-react version (it's `CheckCircle2`).
 - **Relay write-tokens must be persisted.** The worker's first-writer model
-  means an in-memory token dies with the process and 403s every later write
-  for up to 24h. The plugin persists them in config as
-  `suggestToken.<code>` / `stateToken.<code>`; the web app persists the
-  main-channel token in `fate_relay_session_v1`.
+  means an in-memory browser token dies with the page and can cause later
+  writes to fail for the record's TTL. The web app persists the current
+  main-channel token in `fate_relay_session_v1`. Current RuneLite builds
+  perform no relay writes and own no relay write-token.
 - **Quest reward scroll wording varies:** usually "You have completed The
   Corsair Curse!" with NO trailing "quest" — regexes must handle both forms
   (see `QUEST_COMPLETE_SUFFIXED` / `_BARE`).
