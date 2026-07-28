@@ -67,6 +67,8 @@ describe('doabilityBucket', () => {
   const baseQuest: QuestData = {
     id: 'Base quest',
     name: 'Base quest',
+    kind: 'quest',
+    accessPolicy: 'regions',
     regions: [],
     skills: {},
     prereqs: [],

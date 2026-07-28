@@ -56,6 +56,8 @@ describe('evaluateQuestDoability', () => {
     const quest: QuestData = {
       id: 'Unknown location quest',
       name: 'Unknown location quest',
+      kind: 'quest',
+      accessPolicy: 'regions',
       regions: [],
       skills: {},
       prereqs: [],
@@ -106,6 +108,8 @@ describe('evaluateQuestDoability', () => {
     const quest: QuestData = {
       id: 'Method cap quest',
       name: 'Method cap quest',
+      kind: 'quest',
+      accessPolicy: 'regions',
       regions: ['Misthalin'],
       skills: { Woodcutting: 15 },
       prereqs: [],
@@ -152,6 +156,8 @@ describe('evaluateQuestDoability', () => {
     const quest: QuestData = {
       id: 'Quest Points collision',
       name: 'Quest Points collision',
+      kind: 'quest',
+      accessPolicy: 'regions',
       regions: ['Asgarnia'],
       skills: { 'Quest Points': 12 },
       prereqs: ['Quest Points 12'],
@@ -176,6 +182,8 @@ describe('evaluateQuestDoability', () => {
     const quest: QuestData = {
       id: 'Completed Quest Points collision',
       name: 'Completed Quest Points collision',
+      kind: 'quest',
+      accessPolicy: 'regions',
       regions: ['Asgarnia'],
       skills: { 'Quest Points': 12 },
       prereqs: ['Unmet prerequisite'],

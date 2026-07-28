@@ -119,6 +119,56 @@ describe('manual journal readiness', () => {
 });
 
 describe('reported quest access', () => {
+  it('uses exact locations instead of descriptive regions under locations policy', () => {
+    const quest = {
+      id: 'Exact quest',
+      name: 'Exact quest',
+      kind: 'quest',
+      accessPolicy: 'locations',
+      regions: ['Asgarnia'],
+      locations: [{
+        id: 'rimmington',
+        label: 'Rimmington',
+        standardAreas: ['Rimmington'],
+        chunkOptions: [{ cx: 46, cy: 50 }],
+      }],
+      skills: {},
+      prereqs: [],
+      points: 1,
+      difficulty: DropSource.QUEST_NOVICE,
+    } satisfies QuestData;
+    expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Asgarnia'] })))
+      .toMatchObject({ status: 'LOCKED_REGION' });
+    expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Rimmington'] })))
+      .toMatchObject({ status: 'AVAILABLE' });
+  });
+
+  it('requires both sources under regions-and-locations policy', () => {
+    const quest = {
+      id: 'Combined quest',
+      name: 'Combined quest',
+      kind: 'quest',
+      accessPolicy: 'regions-and-locations',
+      regions: ['Asgarnia'],
+      locations: [{
+        id: 'rimmington',
+        label: 'Rimmington',
+        standardAreas: ['Rimmington'],
+        chunkOptions: [{ cx: 46, cy: 50 }],
+      }],
+      skills: {},
+      prereqs: [],
+      points: 1,
+      difficulty: DropSource.QUEST_NOVICE,
+    } satisfies QuestData;
+    expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Rimmington'] })).status)
+      .toBe('LOCKED_REGION');
+    expect(evaluateQuestEligibility(
+      quest,
+      unlocked({ regions: ['Rimmington', 'Asgarnia'] }),
+    ).status).toBe('AVAILABLE');
+  });
+
   it('requires the exact South Falador Farm chunk in Chunked mode', () => {
     const q = QUEST_DATA['A Porcine of Interest'];
     const near = unlocked({ chunks: ['46,51', '48,50'] });
@@ -195,7 +245,8 @@ describe('reported quest access', () => {
 
 describe('skill-method caps', () => {
   const quest: QuestData = {
-    id: 'cap', name: 'cap', regions: ['Misthalin'],
+    id: 'cap', name: 'cap', kind: 'quest', accessPolicy: 'regions',
+    regions: ['Misthalin'],
     skills: { Woodcutting: 15 }, prereqs: [], points: 0,
     difficulty: DropSource.QUEST_NOVICE,
   };

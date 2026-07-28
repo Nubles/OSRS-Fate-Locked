@@ -10,7 +10,10 @@ const u = (o: Partial<UnlockState>): UnlockState =>
     cas: [], completedTasks: [], ...o } as UnlockState);
 
 const quest = (over: Partial<QuestData>): QuestData =>
-  ({ id: 'q', name: 'Q', regions: [], skills: {}, prereqs: [], points: 1, ...over } as unknown as QuestData);
+  ({
+    id: 'q', name: 'Q', kind: 'quest', accessPolicy: 'regions',
+    regions: [], skills: {}, prereqs: [], points: 1, ...over,
+  } as unknown as QuestData);
 
 describe('questUnmet', () => {
   it('returns nothing when everything is met', () => {

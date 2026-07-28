@@ -3,7 +3,9 @@ import { ALL_CA_TASKS } from './caTasks';
 import { ALL_DIARY_TASKS } from './diaryTasks';
 import { CA_DATA } from './caData';
 import { DIARY_DATA } from './diaryData';
-import { QUEST_DATA, QuestLocationRequirement } from './questData';
+import {
+  QUEST_CAPE_QUEST_IDS, QUEST_DATA, QuestLocationRequirement,
+} from './questData';
 import {
   GUILDS_LIST, SKILLS_LIST, REGION_GROUPS, MISTHALIN_AREAS,
 } from './items';
@@ -144,6 +146,30 @@ describe('Quest data integrity', () => {
     ...(q.locations ?? []),
     ...(q.oneOf ?? []).flatMap(option => option.locations ?? []),
   ];
+
+  it('classifies all 207 journal entries with an explicit kind and access policy', () => {
+    const quests = Object.values(QUEST_DATA);
+    expect(quests).toHaveLength(207);
+    expect(quests.filter(quest => quest.kind === 'quest')).toHaveLength(188);
+    expect(quests.filter(quest => quest.kind === 'miniquest')).toHaveLength(19);
+    expect(quests.filter(quest =>
+      !['quest', 'miniquest'].includes(quest.kind),
+    ), 'journal entries with invalid quest kinds').toEqual([]);
+    expect(quests.filter(quest =>
+      !['regions', 'locations', 'regions-and-locations'].includes(quest.accessPolicy),
+    ), 'journal entries with invalid access policies').toEqual([]);
+  });
+
+  it('keeps miniquests out of Quest Points and Quest Point Cape membership', () => {
+    const miniquestsWithPoints = Object.values(QUEST_DATA)
+      .filter(quest => quest.kind === 'miniquest' && quest.points !== 0)
+      .map(quest => quest.id);
+    const capeNonQuests = QUEST_CAPE_QUEST_IDS
+      .filter(id => QUEST_DATA[id]?.kind !== 'quest');
+
+    expect(miniquestsWithPoints, 'miniquests that award Quest Points').toEqual([]);
+    expect(capeNonQuests, 'non-quests in Quest Point Cape membership').toEqual([]);
+  });
 
   it('every prereq references a real quest', () => {
     const bad: string[] = [];

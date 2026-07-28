@@ -465,8 +465,8 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
     [showAdvisorStrip, unlocks, gameModeId],
   );
 
-  const mainQuests = filteredQuests.filter(q => q.points > 0);
-  const miniquests = filteredQuests.filter(q => q.points === 0);
+  const mainQuests = filteredQuests.filter(q => q.kind === 'quest');
+  const miniquests = filteredQuests.filter(q => q.kind === 'miniquest');
 
   const seriesGroups = useMemo(() => {
       if (!groupBySeries) return [];
@@ -499,11 +499,13 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
       window.dispatchEvent(new CustomEvent('fate:quest-complete', { detail: { name: quest.name } }));
   };
 
-  const totalQuests = Object.values(QUEST_DATA).filter(q => q.points > 0).length;
-  const totalMinis = Object.values(QUEST_DATA).filter(q => q.points === 0).length;
-  const completedMain = unlocks.quests.filter(id => (QUEST_DATA[id]?.points || 0) > 0).length;
-  const completedMinis = unlocks.quests.filter(id => (QUEST_DATA[id]?.points || 0) === 0).length;
-  const currentQP = unlocks.quests.reduce((acc, qid) => acc + (QUEST_DATA[qid]?.points || 0), 0);
+  const totalQuests = Object.values(QUEST_DATA).filter(q => q.kind === 'quest').length;
+  const totalMinis = Object.values(QUEST_DATA).filter(q => q.kind === 'miniquest').length;
+  const completedMain = unlocks.quests.filter(id => QUEST_DATA[id]?.kind === 'quest').length;
+  const completedMinis = unlocks.quests.filter(id => QUEST_DATA[id]?.kind === 'miniquest').length;
+  const currentQP = unlocks.quests.reduce((acc, qid) => acc + (
+    QUEST_DATA[qid]?.kind === 'quest' ? QUEST_DATA[qid].points : 0
+  ), 0);
 
   return (
     <div className="bg-[#121212] flex flex-col h-full rounded-lg border border-white/10 overflow-hidden">

@@ -108,10 +108,16 @@ function addManualStep(
 }
 
 
+/** Quest Points awarded by a journal entry; miniquests never award points. */
+function questPointsFor(questId: string): number {
+  const quest = QUEST_DATA[questId];
+  return quest?.kind === 'quest' ? quest.points : 0;
+}
+
 /** Total quest points the player currently has. */
 function currentQuestPoints(unlocks: any): number {
   return (unlocks.quests as string[]).reduce(
-    (acc, qid) => acc + (QUEST_DATA[qid]?.points ?? 0),
+    (acc, qid) => acc + questPointsFor(qid),
     0,
   );
 }
@@ -333,7 +339,7 @@ function buildPlanFromRequirements(
         kind: 'quest',
         id: qid,
         label: q?.name ?? qid,
-        detail: q && q.points > 0 ? `${q.points} QP` : undefined,
+        detail: q?.kind === 'quest' ? `${q.points} QP` : undefined,
         done: false,
       };
     });
@@ -343,7 +349,7 @@ function buildPlanFromRequirements(
   if (reqs.qpRequired > 0) {
     const haveQP = currentQuestPoints(unlocks);
     const chainQP = questSteps.reduce(
-      (acc, s) => acc + (QUEST_DATA[s.id]?.points ?? 0),
+      (acc, s) => acc + questPointsFor(s.id),
       0,
     );
     const projected = haveQP + chainQP;

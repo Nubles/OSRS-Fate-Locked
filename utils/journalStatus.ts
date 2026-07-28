@@ -135,7 +135,9 @@ export const questRequirementOptionLabel = (
 
 const currentQuestPoints = (unlocks: UnlockState): number =>
   unlocks.quests.reduce(
-    (total, id) => total + (QUEST_DATA[id]?.points ?? 0), 0);
+    (total, id) => total + (
+      QUEST_DATA[id]?.kind === 'quest' ? QUEST_DATA[id].points : 0
+    ), 0);
 
 export function evaluateQuestEligibility(
   quest: QuestData,
@@ -152,11 +154,17 @@ export function evaluateQuestEligibility(
   }
   const blockers: EligibilityBlocker[] = [];
   const evidence: string[] = [];
-  for (const region of quest.regions) {
+  const enforceRegions =
+    quest.accessPolicy === 'regions' ||
+    quest.accessPolicy === 'regions-and-locations';
+  const enforceLocations =
+    quest.accessPolicy === 'locations' ||
+    quest.accessPolicy === 'regions-and-locations';
+  for (const region of enforceRegions ? quest.regions : []) {
     if (isAreaReachable(region, unlocks, gameModeId)) evidence.push(region);
     else blockers.push({ kind: 'region', label: region });
   }
-  for (const location of quest.locations ?? []) {
+  for (const location of enforceLocations ? (quest.locations ?? []) : []) {
     if (locationRequirementMet(location, unlocks, gameModeId)) evidence.push(location.label);
     else blockers.push({ kind: 'region', label: location.label });
   }
