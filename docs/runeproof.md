@@ -18,6 +18,11 @@ An unlocked chunk can still be stranded. If the current run has no legal path
 to it, its shops, floor spawns, monsters, facilities, and other sources
 contribute nothing to the answer.
 
+The first production proof-grade item slice demonstrates this with the Plank
+floor spawn in the Graveyard of Shadows. RuneProof traverses the reviewed
+Lumbridge-to-Graveyard corridor one exact chunk at a time. All eight non-free
+chunks must belong to the current run; removing any intermediate chunk strands
+the spawn and the result fails closed to `UNKNOWN`.
 Dungeons, basements, interiors, quest instances, islands, and similar sections
 are child locations. A child is reachable only when:
 
@@ -74,10 +79,12 @@ source version, and run revision. It contains no inventory, bank, equipment, or
 private notes.
 
 RuneLite is intentionally display-only. It marks a summary **Fresh** only when
-its proof revision exactly matches the imported bundle's current run revision
-and it carries a non-empty source version. A positive summary without a proof
-hash is **Unverified**. A revision mismatch is **Stale**. Re-export from the
-current app run to replace a stale summary.
+its proof revision exactly matches the imported bundle's current run revision,
+it carries a non-empty source version, and a positive proof hash has the
+expected SHA-256 form. A positive summary with a missing or malformed proof
+hash is **Unverified**; a malformed v1 summary with missing required fields is
+not displayed. A revision mismatch is **Stale**. Re-export from the current app
+run to replace a stale summary.
 
 RuneLite does not replay the full proof or maintain a second solver. The app's
 export-time replay is authoritative.
