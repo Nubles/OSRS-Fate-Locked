@@ -6,7 +6,9 @@ import { createServer } from 'vite';
 import {
   computeRuneProofDocumentVersion,
   computeTrustedAcquisitionCatalogVersion,
+  createRuneProofGoalIndex,
   generatedOutputMatches,
+  renderRuneProofGoalIndex,
   renderRuneProofSourceDocument,
   renderTrustedAcquisitionSourceCatalog,
   writeGeneratedOutput,
@@ -14,6 +16,7 @@ import {
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const outputPath = resolve(root, 'public', 'runeproof-sources.json');
+const goalIndexPath = resolve(root, 'data', 'runeproof-goal-index.json');
 const trustedOutputPath = resolve(
   root, 'data', 'sources', 'runeproof-trusted-acquisition-sources.json',
 );
@@ -35,12 +38,16 @@ const vite = await createServer({
 
 let compileAcquisitionArtifacts;
 let resourceMap;
+let buildRuneProofSourceAuditWithTrustedCatalog;
 try {
   ({ compileAcquisitionArtifacts } = await vite.ssrLoadModule(
     '/utils/runeproof/acquisitionIndex.ts',
   ));
   ({ RESOURCE_MAP: resourceMap } = await vite.ssrLoadModule(
     '/data/resourceData.ts',
+  ));
+  ({ buildRuneProofSourceAuditWithTrustedCatalog } = await vite.ssrLoadModule(
+    '/data/runeProofSourceAudit.ts',
   ));
 } finally {
   await vite.close();
@@ -82,16 +89,26 @@ if (computeTrustedAcquisitionCatalogVersion(trustedCatalog)
   throw new Error('Trusted catalog sourceVersion does not match exact catalog contents');
 }
 const bytes = renderRuneProofSourceDocument(document);
+const sourceAudit = await buildRuneProofSourceAuditWithTrustedCatalog(
+  questAudit,
+  chunkAudit,
+  document,
+  trustedCatalog,
+);
+const goalIndex = createRuneProofGoalIndex(document, sourceAudit);
+const goalIndexBytes = renderRuneProofGoalIndex(goalIndex);
 const trustedBytes = renderTrustedAcquisitionSourceCatalog(trustedCatalog);
 
 if (check) {
-  const [documentCurrent, trustedCurrent] = await Promise.all([
+  const [documentCurrent, goalIndexCurrent, trustedCurrent] = await Promise.all([
     generatedOutputMatches(outputPath, bytes),
+    generatedOutputMatches(goalIndexPath, goalIndexBytes),
     generatedOutputMatches(trustedOutputPath, trustedBytes),
   ]);
-  if (!documentCurrent || !trustedCurrent) {
+  if (!documentCurrent || !goalIndexCurrent || !trustedCurrent) {
     const stale = [
       !documentCurrent && 'public/runeproof-sources.json',
+      !goalIndexCurrent && 'data/runeproof-goal-index.json',
       !trustedCurrent && 'data/sources/runeproof-trusted-acquisition-sources.json',
     ].filter(Boolean).join(', ');
     console.error(`${stale} stale; run npm run runeproof:sources`);
@@ -102,6 +119,7 @@ if (check) {
 } else {
   await Promise.all([
     writeGeneratedOutput(outputPath, bytes),
+    writeGeneratedOutput(goalIndexPath, goalIndexBytes),
     writeGeneratedOutput(trustedOutputPath, trustedBytes),
   ]);
   console.log(summary('wrote', document, trustedCatalog));

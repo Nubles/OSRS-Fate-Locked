@@ -5,11 +5,14 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   computeRuneProofDocumentVersion,
   computeTrustedAcquisitionCatalogVersion,
+  createRuneProofGoalIndex,
+  assertRuneProofJavaScriptBudget,
   generatedOutputMatches,
   renderRuneProofSourceDocument,
   renderTrustedAcquisitionSourceCatalog,
   writeGeneratedOutput,
 } from './runeproof-source-generator.mjs';
+
 
 const temporaryDirectories: string[] = [];
 afterEach(async () => {
@@ -18,6 +21,45 @@ afterEach(async () => {
 });
 
 describe('RuneProof source generator contract', () => {
+  it('derives a compact deterministic goal/display index without the proof corpus', () => {
+    const document = {
+      schemaVersion: 1,
+      sourceVersion: 'sha256-source',
+      rules: [
+        { id: 'rule:b', output: { id: 'item:b', label: 'B' } },
+        { id: 'rule:a', output: { id: 'item:a', label: 'A' } },
+      ],
+      unresolvedSources: [{ id: 'large-unresolved-corpus' }],
+      provenanceCatalog: [{ id: 'large-provenance-corpus' }],
+    };
+
+    const sourceAudit = {
+      sourceVersion: 'sha256-audit',
+      questCoverage: 'VERIFIED',
+      chunkCoverage: 'PARTIAL',
+      acquisitionCoverage: 'PARTIAL',
+    };
+    expect(createRuneProofGoalIndex(document, sourceAudit)).toEqual({
+      schemaVersion: 1,
+      sourceVersion: 'sha256-source',
+      sourceAudit,
+      rules: [
+        { id: 'rule:a', output: { id: 'item:a', label: 'A' } },
+        { id: 'rule:b', output: { id: 'item:b', label: 'B' } },
+      ],
+    });
+  });
+
+  it('rejects production JavaScript assets that exceed the RuneProof budget', () => {
+    expect(() => assertRuneProofJavaScriptBudget([
+      { path: 'assets/index.js', bytes: 120 },
+      { path: 'runeproof-sources.json', bytes: 23_000_000 },
+    ], 200)).not.toThrow();
+    expect(() => assertRuneProofJavaScriptBudget([
+      { path: 'assets/RuneProofModal.js', bytes: 201 },
+    ], 200)).toThrow(/RuneProof JavaScript budget/i);
+  });
+
   it('renders byte-identical output for the same document', () => {
     const document = { schemaVersion: 1, rules: [{ id: 'rule' }] };
     expect(renderRuneProofSourceDocument(document))

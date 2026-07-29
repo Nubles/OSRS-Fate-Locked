@@ -10,6 +10,34 @@ export function computeRuneProofDocumentVersion(document) {
 export function renderRuneProofSourceDocument(document) {
   return `${JSON.stringify(document, null, 2)}\n`;
 }
+export function createRuneProofGoalIndex(document, sourceAudit) {
+  return {
+    schemaVersion: 1,
+    sourceVersion: document.sourceVersion,
+    sourceAudit,
+    rules: [...document.rules].sort((left, right) =>
+      left.id < right.id ? -1 : left.id > right.id ? 1 : 0),
+  };
+}
+export function renderRuneProofGoalIndex(index) {
+  return `${JSON.stringify(index, null, 2)}\n`;
+}
+export function assertRuneProofJavaScriptBudget(
+  assets,
+  maxBytes = 2 * 1024 * 1024,
+) {
+  const oversized = assets
+    .filter(asset => asset.path.endsWith('.js') && asset.bytes > maxBytes)
+    .sort((left, right) => left.path < right.path ? -1 : 1);
+  if (oversized.length > 0) {
+    const details = oversized
+      .map(asset => `${asset.path} (${asset.bytes} bytes)`)
+      .join(', ');
+    throw new Error(
+      `RuneProof JavaScript budget exceeded (${maxBytes} bytes): ${details}`,
+    );
+  }
+}
 export function computeTrustedAcquisitionCatalogVersion(catalog) {
   return computeRuneProofDocumentVersion(catalog);
 }

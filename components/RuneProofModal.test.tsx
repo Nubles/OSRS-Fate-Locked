@@ -5,8 +5,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { RuneProofRunSnapshot } from '../types';
 import type { CompiledGoal } from '../utils/runeproof/goalCompiler';
 import type { AcquisitionRule, RuneProofReport, RuneProofStatus } from '../utils/runeproof/model';
-import type { RuneProofQuery } from '../utils/runeproof/engine';
-import { RuneProofModal } from './RuneProofModal';
+import { createRuneProofEngine, type RuneProofQuery } from '../utils/runeproof/engine';
+import {
+  createFailClosedRuneProofAcquisition,
+  RuneProofModal,
+} from './RuneProofModal';
+
 
 const snapshot = (runRevision = 4): RuneProofRunSnapshot => ({
   runId: 'modal-run', runRevision, gameModeId: 'chunked', equipmentTiers: {}, skillCaps: {}, currentLevels: {},
@@ -61,6 +65,49 @@ async function choose(label = 'Oak plank') {
 afterEach(() => cleanup());
 
 describe('RuneProofModal', () => {
+  it('uses a deterministic UNKNOWN engine when worker-owned evidence is unavailable', async () => {
+    const acquisition =
+      createFailClosedRuneProofAcquisition('sha256-worker-source');
+    const engine = createRuneProofEngine({
+      sourceVersion: 'sha256-worker-source',
+      sourceAudit: {
+        sourceVersion: 'audit',
+        questCoverage: 'VERIFIED',
+        chunkCoverage: 'VERIFIED',
+        acquisitionCoverage: 'VERIFIED',
+      },
+      acquisition,
+      locationGraph: {
+        startNodeId: 'surface:50,50',
+        nodes: [],
+        edges: [],
+      },
+    });
+
+    await expect(engine.evaluate({ goal: goals[0] }, snapshot())).resolves
+      .toMatchObject({
+        goalId: goals[0].id,
+        status: 'UNKNOWN',
+        coverage: 'UNKNOWN',
+        routes: [],
+        routesComplete: false,
+      });
+  });
+
+  it('keeps the compact goal search responsive while worker evidence is loading', async () => {
+    const never = new Promise<never>(() => undefined);
+    render(<RuneProofModal
+      onClose={() => undefined}
+      snapshot={snapshot()}
+      createService={() => never}
+    />);
+
+    expect(screen.getByText('Preparing current-run evidence…')).not.toBeNull();
+    const search = screen.getByRole('searchbox', { name: 'Search goals' });
+    fireEvent.change(search, { target: { value: 'air talisman' } });
+    expect(screen.getByRole('button', { name: /Air talisman/i })).not.toBeNull();
+  });
+
   it('searches items, quests, diaries, and activities in an accessible responsive dialog', () => {
     renderModal();
     expect(screen.getByRole('dialog', { name: 'RuneProof' })).not.toBeNull();

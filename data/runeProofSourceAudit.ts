@@ -1,7 +1,5 @@
-import chunkTransformAudit from './sources/chunk-content-transform-audit.json';
-import questRequirementAudit from './sources/quest-requirement-audit.json';
-import runeProofSources from '../public/runeproof-sources.json';
-import trustedAcquisitionSources from './sources/runeproof-trusted-acquisition-sources.json';
+import goalIndex from './runeproof-goal-index.json';
+
 import { sha256Hex } from '../utils/integrity';
 import type { AuditCoverage, RuneProofSourceAudit } from '../utils/runeproof/sourceGate';
 import { factId, type FactKind, type SourceKind } from '../utils/runeproof/model';
@@ -642,8 +640,22 @@ export async function buildRuneProofSourceAuditWithTrustedCatalog(
 }
 
 export function loadRuneProofSourceAudit(): Promise<RuneProofSourceAudit> {
-  return buildRuneProofSourceAuditWithTrustedCatalog(
-    questRequirementAudit, chunkTransformAudit, runeProofSources,
-    trustedAcquisitionSources,
-  );
+  const audit = (goalIndex as { sourceAudit?: unknown }).sourceAudit;
+  if (!isRecord(audit) || typeof audit.sourceVersion !== 'string'
+    || !audit.sourceVersion.trim() || !validAuditCoverage(audit.questCoverage)
+    || !validAuditCoverage(audit.chunkCoverage)
+    || !validAuditCoverage(audit.acquisitionCoverage)) {
+    return Promise.resolve(Object.freeze({
+      sourceVersion: 'unavailable',
+      questCoverage: 'UNKNOWN',
+      chunkCoverage: 'UNKNOWN',
+      acquisitionCoverage: 'UNKNOWN',
+    }));
+  }
+  return Promise.resolve(Object.freeze({
+    sourceVersion: audit.sourceVersion,
+    questCoverage: audit.questCoverage,
+    chunkCoverage: audit.chunkCoverage,
+    acquisitionCoverage: audit.acquisitionCoverage,
+  }));
 }

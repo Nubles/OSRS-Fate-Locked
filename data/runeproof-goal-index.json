@@ -1,0 +1,3984 @@
+{
+  "schemaVersion": 1,
+  "sourceVersion": "sha256-3fdaffadf9f6d86a6a68c97f0ca9c18a263cfac7f912797eadf86ade1e3cdc77",
+  "sourceAudit": {
+    "sourceVersion": "sha256-eb5b7a0170611415832c008b0e86dd2d3a455bca5563de48b9b92699657c91c7",
+    "questCoverage": "PARTIAL",
+    "chunkCoverage": "PARTIAL",
+    "acquisitionCoverage": "PARTIAL"
+  },
+  "rules": [
+    {
+      "id": "acq:item-air-talisman:drop-goblin-surface-50-50:732c2915",
+      "output": {
+        "id": "item:air-talisman",
+        "kind": "ITEM",
+        "label": "Air talisman"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-ashes:drop-imp-surface-50-50:a9040429",
+      "output": {
+        "id": "item:ashes",
+        "kind": "ITEM",
+        "label": "Ashes"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-ball-of-wool:drop-imp-surface-50-50:50428aba",
+      "output": {
+        "id": "item:ball-of-wool",
+        "kind": "ITEM",
+        "label": "Ball of wool"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-beer:drop-goblin-surface-50-50:a01c91e0",
+      "output": {
+        "id": "item:beer",
+        "kind": "ITEM",
+        "label": "Beer"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-beer:shop-the-sheared-ram-surface-50-50:f3b7a4c9",
+      "output": {
+        "id": "item:beer",
+        "kind": "ITEM",
+        "label": "Beer"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "The Sheared Ram",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:The Sheared Ram"
+      ]
+    },
+    {
+      "id": "acq:item-black-bead:drop-imp-surface-50-50:a5ff8524",
+      "output": {
+        "id": "item:black-bead",
+        "kind": "ITEM",
+        "label": "Black bead"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-blue-wizard-hat:drop-imp-surface-50-50:6130e42f",
+      "output": {
+        "id": "item:blue-wizard-hat",
+        "kind": "ITEM",
+        "label": "Blue wizard hat"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-body-rune:drop-goblin-surface-50-50:ed29b740",
+      "output": {
+        "id": "item:body-rune",
+        "kind": "ITEM",
+        "label": "Body rune"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-bones:drop-cow-surface-50-50:d2c96495",
+      "output": {
+        "id": "item:bones",
+        "kind": "ITEM",
+        "label": "Bones"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Cow",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Cow"
+      ]
+    },
+    {
+      "id": "acq:item-bones:drop-goblin-surface-50-50:e0082bf7",
+      "output": {
+        "id": "item:bones",
+        "kind": "ITEM",
+        "label": "Bones"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-bones:drop-man-surface-50-50:6a8667d6",
+      "output": {
+        "id": "item:bones",
+        "kind": "ITEM",
+        "label": "Bones"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Man",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Man"
+      ]
+    },
+    {
+      "id": "acq:item-bones:drop-ram-surface-50-50:e5aa2b9a",
+      "output": {
+        "id": "item:bones",
+        "kind": "ITEM",
+        "label": "Bones"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Ram",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Ram"
+      ]
+    },
+    {
+      "id": "acq:item-bones:drop-rat-surface-50-50:8d45abbd",
+      "output": {
+        "id": "item:bones",
+        "kind": "ITEM",
+        "label": "Bones"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Rat",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Rat"
+      ]
+    },
+    {
+      "id": "acq:item-bones:drop-woman-surface-50-50:5bf95528",
+      "output": {
+        "id": "item:bones",
+        "kind": "ITEM",
+        "label": "Bones"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Woman",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Woman"
+      ]
+    },
+    {
+      "id": "acq:item-bowl:shop-lumbridge-general-store-surface-50-50:aaf4f836",
+      "output": {
+        "id": "item:bowl",
+        "kind": "ITEM",
+        "label": "Bowl"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Lumbridge General Store",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Lumbridge General Store"
+      ]
+    },
+    {
+      "id": "acq:item-bowl:spawn-bowl-floor-spawn-surface-50-50:4c8e0ca4",
+      "output": {
+        "id": "item:bowl",
+        "kind": "ITEM",
+        "label": "Bowl"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SPAWN",
+      "sourceLabel": "Bowl floor spawn",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50"
+      ]
+    },
+    {
+      "id": "acq:item-brass-necklace:drop-goblin-surface-50-50:609117d5",
+      "output": {
+        "id": "item:brass-necklace",
+        "kind": "ITEM",
+        "label": "Brass necklace"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-bread-dough:drop-imp-surface-50-50:51c5eb2e",
+      "output": {
+        "id": "item:bread-dough",
+        "kind": "ITEM",
+        "label": "Bread dough"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-bread:drop-imp-surface-50-50:69f85adf",
+      "output": {
+        "id": "item:bread",
+        "kind": "ITEM",
+        "label": "Bread"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-bronze-arrow:drop-goblin-surface-50-50:68877e9b",
+      "output": {
+        "id": "item:bronze-arrow",
+        "kind": "ITEM",
+        "label": "Bronze arrow"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-bronze-arrow:drop-man-surface-50-50:29a6cd32",
+      "output": {
+        "id": "item:bronze-arrow",
+        "kind": "ITEM",
+        "label": "Bronze arrow"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Man",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Man"
+      ]
+    },
+    {
+      "id": "acq:item-bronze-arrow:drop-woman-surface-50-50:365677f4",
+      "output": {
+        "id": "item:bronze-arrow",
+        "kind": "ITEM",
+        "label": "Bronze arrow"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Woman",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Woman"
+      ]
+    },
+    {
+      "id": "acq:item-bronze-arrow:spawn-bronze-arrow-floor-spawn-surface-50-50:8c792342",
+      "output": {
+        "id": "item:bronze-arrow",
+        "kind": "ITEM",
+        "label": "Bronze arrow"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SPAWN",
+      "sourceLabel": "Bronze arrow floor spawn",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50"
+      ]
+    },
+    {
+      "id": "acq:item-bronze-axe:drop-goblin-surface-50-50:3e8bcc4a",
+      "output": {
+        "id": "item:bronze-axe",
+        "kind": "ITEM",
+        "label": "Bronze axe"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-bronze-axe:shop-bob-s-brilliant-axes-surface-50-50:6df6ea71",
+      "output": {
+        "id": "item:bronze-axe",
+        "kind": "ITEM",
+        "label": "Bronze axe"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Bob's Brilliant Axes",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Bob's Brilliant Axes."
+      ]
+    },
+    {
+      "id": "acq:item-bronze-bolts:drop-goblin-surface-50-50:3398cdb2",
+      "output": {
+        "id": "item:bronze-bolts",
+        "kind": "ITEM",
+        "label": "Bronze bolts"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-bronze-bolts:drop-imp-surface-50-50:570f741f",
+      "output": {
+        "id": "item:bronze-bolts",
+        "kind": "ITEM",
+        "label": "Bronze bolts"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-bronze-bolts:drop-man-surface-50-50:e6803c3d",
+      "output": {
+        "id": "item:bronze-bolts",
+        "kind": "ITEM",
+        "label": "Bronze bolts"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Man",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Man"
+      ]
+    },
+    {
+      "id": "acq:item-bronze-bolts:drop-woman-surface-50-50:ecfb2f17",
+      "output": {
+        "id": "item:bronze-bolts",
+        "kind": "ITEM",
+        "label": "Bronze bolts"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Woman",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Woman"
+      ]
+    },
+    {
+      "id": "acq:item-bronze-dagger:spawn-bronze-dagger-floor-spawn-surface-50-50:fb88441a",
+      "output": {
+        "id": "item:bronze-dagger",
+        "kind": "ITEM",
+        "label": "Bronze dagger"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SPAWN",
+      "sourceLabel": "Bronze dagger floor spawn",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50"
+      ]
+    },
+    {
+      "id": "acq:item-bronze-javelin:drop-goblin-surface-50-50:e0eabe69",
+      "output": {
+        "id": "item:bronze-javelin",
+        "kind": "ITEM",
+        "label": "Bronze javelin"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-bronze-med-helm:drop-man-surface-50-50:521388c5",
+      "output": {
+        "id": "item:bronze-med-helm",
+        "kind": "ITEM",
+        "label": "Bronze med helm"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Man",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Man"
+      ]
+    },
+    {
+      "id": "acq:item-bronze-med-helm:drop-woman-surface-50-50:4099cc6f",
+      "output": {
+        "id": "item:bronze-med-helm",
+        "kind": "ITEM",
+        "label": "Bronze med helm"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Woman",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Woman"
+      ]
+    },
+    {
+      "id": "acq:item-bronze-pickaxe:shop-bob-s-brilliant-axes-surface-50-50:ecc8cdee",
+      "output": {
+        "id": "item:bronze-pickaxe",
+        "kind": "ITEM",
+        "label": "Bronze pickaxe"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Bob's Brilliant Axes",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Bob's Brilliant Axes."
+      ]
+    },
+    {
+      "id": "acq:item-bronze-pickaxe:spawn-bronze-pickaxe-floor-spawn-surface-50-50:d1555ce2",
+      "output": {
+        "id": "item:bronze-pickaxe",
+        "kind": "ITEM",
+        "label": "Bronze pickaxe"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SPAWN",
+      "sourceLabel": "Bronze pickaxe floor spawn",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50"
+      ]
+    },
+    {
+      "id": "acq:item-bronze-scimitar:drop-goblin-surface-50-50:f15a70b6",
+      "output": {
+        "id": "item:bronze-scimitar",
+        "kind": "ITEM",
+        "label": "Bronze scimitar"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-bronze-spear:drop-goblin-surface-50-50:66b9fddb",
+      "output": {
+        "id": "item:bronze-spear",
+        "kind": "ITEM",
+        "label": "Bronze spear"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-bronze-sq-shield:drop-goblin-surface-50-50:918deb1f",
+      "output": {
+        "id": "item:bronze-sq-shield",
+        "kind": "ITEM",
+        "label": "Bronze sq shield"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-bucket-of-water:drop-imp-surface-50-50:92283a69",
+      "output": {
+        "id": "item:bucket-of-water",
+        "kind": "ITEM",
+        "label": "Bucket of water"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-bucket:drop-imp-surface-50-50:6d2d1539",
+      "output": {
+        "id": "item:bucket",
+        "kind": "ITEM",
+        "label": "Bucket"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-bucket:shop-lumbridge-general-store-surface-50-50:f6b3a624",
+      "output": {
+        "id": "item:bucket",
+        "kind": "ITEM",
+        "label": "Bucket"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Lumbridge General Store",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Lumbridge General Store"
+      ]
+    },
+    {
+      "id": "acq:item-burnt-bread:drop-imp-surface-50-50:773f427e",
+      "output": {
+        "id": "item:burnt-bread",
+        "kind": "ITEM",
+        "label": "Burnt bread"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-burnt-meat:drop-imp-surface-50-50:f1a6b959",
+      "output": {
+        "id": "item:burnt-meat",
+        "kind": "ITEM",
+        "label": "Burnt meat"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-cabbage:drop-imp-surface-50-50:a4996e0c",
+      "output": {
+        "id": "item:cabbage",
+        "kind": "ITEM",
+        "label": "Cabbage"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-cabbage:drop-man-surface-50-50:38a77552",
+      "output": {
+        "id": "item:cabbage",
+        "kind": "ITEM",
+        "label": "Cabbage"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Man",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Man"
+      ]
+    },
+    {
+      "id": "acq:item-cabbage:drop-woman-surface-50-50:17cd6694",
+      "output": {
+        "id": "item:cabbage",
+        "kind": "ITEM",
+        "label": "Cabbage"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Woman",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Woman"
+      ]
+    },
+    {
+      "id": "acq:item-cadava-berries:drop-imp-surface-50-50:9201f2c9",
+      "output": {
+        "id": "item:cadava-berries",
+        "kind": "ITEM",
+        "label": "Cadava berries"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-cake-tin:shop-lumbridge-general-store-surface-50-50:004bc3f3",
+      "output": {
+        "id": "item:cake-tin",
+        "kind": "ITEM",
+        "label": "Cake tin"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Lumbridge General Store",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Lumbridge General Store"
+      ]
+    },
+    {
+      "id": "acq:item-chaos-rune:drop-goblin-surface-50-50:78b55522",
+      "output": {
+        "id": "item:chaos-rune",
+        "kind": "ITEM",
+        "label": "Chaos rune"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-chaos-rune:drop-man-surface-50-50:12edd50d",
+      "output": {
+        "id": "item:chaos-rune",
+        "kind": "ITEM",
+        "label": "Chaos rune"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Man",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Man"
+      ]
+    },
+    {
+      "id": "acq:item-chaos-rune:drop-woman-surface-50-50:fc37e487",
+      "output": {
+        "id": "item:chaos-rune",
+        "kind": "ITEM",
+        "label": "Chaos rune"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Woman",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Woman"
+      ]
+    },
+    {
+      "id": "acq:item-chef-s-hat:drop-goblin-surface-50-50:37e2ed31",
+      "output": {
+        "id": "item:chef-s-hat",
+        "kind": "ITEM",
+        "label": "Chef's hat"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-chef-s-hat:drop-imp-surface-50-50:226e17f6",
+      "output": {
+        "id": "item:chef-s-hat",
+        "kind": "ITEM",
+        "label": "Chef's hat"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-chisel:shop-lumbridge-general-store-surface-50-50:a423fd58",
+      "output": {
+        "id": "item:chisel",
+        "kind": "ITEM",
+        "label": "Chisel"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Lumbridge General Store",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Lumbridge General Store"
+      ]
+    },
+    {
+      "id": "acq:item-clay:drop-imp-surface-50-50:ba085dbc",
+      "output": {
+        "id": "item:clay",
+        "kind": "ITEM",
+        "label": "Clay"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-clue-scroll-beginner:drop-cow-surface-50-50:548fa76b",
+      "output": {
+        "id": "item:clue-scroll-beginner",
+        "kind": "ITEM",
+        "label": "Clue scroll (beginner)"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Cow",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Cow"
+      ]
+    },
+    {
+      "id": "acq:item-clue-scroll-beginner:drop-giant-spider-surface-50-50:d0b8d690",
+      "output": {
+        "id": "item:clue-scroll-beginner",
+        "kind": "ITEM",
+        "label": "Clue scroll (beginner)"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Giant spider",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Giant spider"
+      ]
+    },
+    {
+      "id": "acq:item-clue-scroll-beginner:drop-goblin-surface-50-50:6051b655",
+      "output": {
+        "id": "item:clue-scroll-beginner",
+        "kind": "ITEM",
+        "label": "Clue scroll (beginner)"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-clue-scroll-beginner:drop-man-surface-50-50:ebee468c",
+      "output": {
+        "id": "item:clue-scroll-beginner",
+        "kind": "ITEM",
+        "label": "Clue scroll (beginner)"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Man",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Man"
+      ]
+    },
+    {
+      "id": "acq:item-clue-scroll-beginner:drop-woman-surface-50-50:c9cc6e8e",
+      "output": {
+        "id": "item:clue-scroll-beginner",
+        "kind": "ITEM",
+        "label": "Clue scroll (beginner)"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Woman",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Woman"
+      ]
+    },
+    {
+      "id": "acq:item-clue-scroll-easy:drop-goblin-surface-50-50:80cb1f71",
+      "output": {
+        "id": "item:clue-scroll-easy",
+        "kind": "ITEM",
+        "label": "Clue scroll (easy)"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-clue-scroll-easy:drop-man-surface-50-50:15301da0",
+      "output": {
+        "id": "item:clue-scroll-easy",
+        "kind": "ITEM",
+        "label": "Clue scroll (easy)"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Man",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Man"
+      ]
+    },
+    {
+      "id": "acq:item-clue-scroll-easy:drop-woman-surface-50-50:ceb2da92",
+      "output": {
+        "id": "item:clue-scroll-easy",
+        "kind": "ITEM",
+        "label": "Clue scroll (easy)"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Woman",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Woman"
+      ]
+    },
+    {
+      "id": "acq:item-coins:drop-goblin-surface-50-50:11a6a88a",
+      "output": {
+        "id": "item:coins",
+        "kind": "ITEM",
+        "label": "Coins"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-coins:drop-man-surface-50-50:a7c54fa5",
+      "output": {
+        "id": "item:coins",
+        "kind": "ITEM",
+        "label": "Coins"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Man",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Man"
+      ]
+    },
+    {
+      "id": "acq:item-coins:drop-woman-surface-50-50:4ac6c34f",
+      "output": {
+        "id": "item:coins",
+        "kind": "ITEM",
+        "label": "Coins"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Woman",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Woman"
+      ]
+    },
+    {
+      "id": "acq:item-cooked-meat:drop-imp-surface-50-50:dd30d9a5",
+      "output": {
+        "id": "item:cooked-meat",
+        "kind": "ITEM",
+        "label": "Cooked meat"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-copper-ore:drop-man-surface-50-50:0a9d54ae",
+      "output": {
+        "id": "item:copper-ore",
+        "kind": "ITEM",
+        "label": "Copper ore"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Man",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Man"
+      ]
+    },
+    {
+      "id": "acq:item-copper-ore:drop-woman-surface-50-50:948c5770",
+      "output": {
+        "id": "item:copper-ore",
+        "kind": "ITEM",
+        "label": "Copper ore"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Woman",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Woman"
+      ]
+    },
+    {
+      "id": "acq:item-cowhide:drop-cow-surface-50-50:05c62f79",
+      "output": {
+        "id": "item:cowhide",
+        "kind": "ITEM",
+        "label": "Cowhide"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Cow",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Cow"
+      ]
+    },
+    {
+      "id": "acq:item-earth-rune:drop-goblin-surface-50-50:0c08326a",
+      "output": {
+        "id": "item:earth-rune",
+        "kind": "ITEM",
+        "label": "Earth rune"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-earth-rune:drop-man-surface-50-50:0cc1ef85",
+      "output": {
+        "id": "item:earth-rune",
+        "kind": "ITEM",
+        "label": "Earth rune"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Man",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Man"
+      ]
+    },
+    {
+      "id": "acq:item-earth-rune:drop-woman-surface-50-50:814d8c2f",
+      "output": {
+        "id": "item:earth-rune",
+        "kind": "ITEM",
+        "label": "Earth rune"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Woman",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Woman"
+      ]
+    },
+    {
+      "id": "acq:item-earth-talisman:drop-man-surface-50-50:f0dd220c",
+      "output": {
+        "id": "item:earth-talisman",
+        "kind": "ITEM",
+        "label": "Earth talisman"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Man",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Man"
+      ]
+    },
+    {
+      "id": "acq:item-earth-talisman:drop-woman-surface-50-50:5b5f760e",
+      "output": {
+        "id": "item:earth-talisman",
+        "kind": "ITEM",
+        "label": "Earth talisman"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Woman",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Woman"
+      ]
+    },
+    {
+      "id": "acq:item-ecumenical-key:drop-imp-surface-50-50:d018c30e",
+      "output": {
+        "id": "item:ecumenical-key",
+        "kind": "ITEM",
+        "label": "Ecumenical key"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-egg:drop-imp-surface-50-50:4c49f9d2",
+      "output": {
+        "id": "item:egg",
+        "kind": "ITEM",
+        "label": "Egg"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-empty-bucket-pack:shop-lumbridge-general-store-surface-50-50:f1f8f976",
+      "output": {
+        "id": "item:empty-bucket-pack",
+        "kind": "ITEM",
+        "label": "Empty bucket pack"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Lumbridge General Store",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Lumbridge General Store"
+      ]
+    },
+    {
+      "id": "acq:item-empty-jug-pack:shop-lumbridge-general-store-surface-50-50:ef9156da",
+      "output": {
+        "id": "item:empty-jug-pack",
+        "kind": "ITEM",
+        "label": "Empty jug pack"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Lumbridge General Store",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Lumbridge General Store"
+      ]
+    },
+    {
+      "id": "acq:item-ensouled-goblin-head:drop-goblin-surface-50-50:307c9308",
+      "output": {
+        "id": "item:ensouled-goblin-head",
+        "kind": "ITEM",
+        "label": "Ensouled goblin head"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-ensouled-imp-head:drop-imp-surface-50-50:9bcb95dc",
+      "output": {
+        "id": "item:ensouled-imp-head",
+        "kind": "ITEM",
+        "label": "Ensouled imp head"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-fiendish-ashes:drop-imp-surface-50-50:c7aa3399",
+      "output": {
+        "id": "item:fiendish-ashes",
+        "kind": "ITEM",
+        "label": "Fiendish ashes"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-fire-rune:drop-man-surface-50-50:3e861c4f",
+      "output": {
+        "id": "item:fire-rune",
+        "kind": "ITEM",
+        "label": "Fire rune"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Man",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Man"
+      ]
+    },
+    {
+      "id": "acq:item-fire-rune:drop-woman-surface-50-50:be68d599",
+      "output": {
+        "id": "item:fire-rune",
+        "kind": "ITEM",
+        "label": "Fire rune"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Woman",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Woman"
+      ]
+    },
+    {
+      "id": "acq:item-fishing-bait:drop-man-surface-50-50:2dec110b",
+      "output": {
+        "id": "item:fishing-bait",
+        "kind": "ITEM",
+        "label": "Fishing bait"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Man",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Man"
+      ]
+    },
+    {
+      "id": "acq:item-fishing-bait:drop-woman-surface-50-50:ccce6ac5",
+      "output": {
+        "id": "item:fishing-bait",
+        "kind": "ITEM",
+        "label": "Fishing bait"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Woman",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Woman"
+      ]
+    },
+    {
+      "id": "acq:item-flyer:drop-imp-surface-50-50:d5819ecf",
+      "output": {
+        "id": "item:flyer",
+        "kind": "ITEM",
+        "label": "Flyer"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-goblin-book:drop-goblin-surface-50-50:e7160708",
+      "output": {
+        "id": "item:goblin-book",
+        "kind": "ITEM",
+        "label": "Goblin book"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-goblin-champion-scroll:drop-goblin-surface-50-50:0ddb1d35",
+      "output": {
+        "id": "item:goblin-champion-scroll",
+        "kind": "ITEM",
+        "label": "Goblin champion scroll"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-goblin-mail:drop-goblin-surface-50-50:ff774096",
+      "output": {
+        "id": "item:goblin-mail",
+        "kind": "ITEM",
+        "label": "Goblin mail"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-goblin-skull:drop-goblin-surface-50-50:8a56a988",
+      "output": {
+        "id": "item:goblin-skull",
+        "kind": "ITEM",
+        "label": "Goblin skull"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-grain:drop-imp-surface-50-50:78fc7650",
+      "output": {
+        "id": "item:grain",
+        "kind": "ITEM",
+        "label": "Grain"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-grapes:drop-goblin-surface-50-50:69b4ca16",
+      "output": {
+        "id": "item:grapes",
+        "kind": "ITEM",
+        "label": "Grapes"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-hammer:drop-goblin-surface-50-50:4f24ddf0",
+      "output": {
+        "id": "item:hammer",
+        "kind": "ITEM",
+        "label": "Hammer"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-hammer:drop-imp-surface-50-50:3eae48c9",
+      "output": {
+        "id": "item:hammer",
+        "kind": "ITEM",
+        "label": "Hammer"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-hammer:shop-lumbridge-general-store-surface-50-50:115b9ed4",
+      "output": {
+        "id": "item:hammer",
+        "kind": "ITEM",
+        "label": "Hammer"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Lumbridge General Store",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Lumbridge General Store"
+      ]
+    },
+    {
+      "id": "acq:item-herbdroptable:drop-goblin-surface-50-50:00c12185",
+      "output": {
+        "id": "item:herbdroptable",
+        "kind": "ITEM",
+        "label": "HerbDropTable+"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-herbdroptable:drop-man-surface-50-50:393abc9c",
+      "output": {
+        "id": "item:herbdroptable",
+        "kind": "ITEM",
+        "label": "HerbDropTable+"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Man",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Man"
+      ]
+    },
+    {
+      "id": "acq:item-herbdroptable:drop-woman-surface-50-50:bf81923e",
+      "output": {
+        "id": "item:herbdroptable",
+        "kind": "ITEM",
+        "label": "HerbDropTable+"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Woman",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Woman"
+      ]
+    },
+    {
+      "id": "acq:item-imp-champion-scroll:drop-imp-surface-50-50:cab80503",
+      "output": {
+        "id": "item:imp-champion-scroll",
+        "kind": "ITEM",
+        "label": "Imp champion scroll"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-iron-axe:shop-bob-s-brilliant-axes-surface-50-50:33dd22a3",
+      "output": {
+        "id": "item:iron-axe",
+        "kind": "ITEM",
+        "label": "Iron axe"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Bob's Brilliant Axes",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Bob's Brilliant Axes."
+      ]
+    },
+    {
+      "id": "acq:item-iron-battleaxe:shop-bob-s-brilliant-axes-surface-50-50:795bb2e1",
+      "output": {
+        "id": "item:iron-battleaxe",
+        "kind": "ITEM",
+        "label": "Iron battleaxe"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Bob's Brilliant Axes",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Bob's Brilliant Axes."
+      ]
+    },
+    {
+      "id": "acq:item-iron-dagger:drop-man-surface-50-50:0cb2f803",
+      "output": {
+        "id": "item:iron-dagger",
+        "kind": "ITEM",
+        "label": "Iron dagger"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Man",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Man"
+      ]
+    },
+    {
+      "id": "acq:item-iron-dagger:drop-woman-surface-50-50:cbb36cad",
+      "output": {
+        "id": "item:iron-dagger",
+        "kind": "ITEM",
+        "label": "Iron dagger"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Woman",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Woman"
+      ]
+    },
+    {
+      "id": "acq:item-iron-dagger:spawn-iron-dagger-floor-spawn-surface-50-50:d79272fe",
+      "output": {
+        "id": "item:iron-dagger",
+        "kind": "ITEM",
+        "label": "Iron dagger"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SPAWN",
+      "sourceLabel": "Iron dagger floor spawn",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50"
+      ]
+    },
+    {
+      "id": "acq:item-jug-of-water:drop-imp-surface-50-50:03c2c853",
+      "output": {
+        "id": "item:jug-of-water",
+        "kind": "ITEM",
+        "label": "Jug of water"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-jug:drop-imp-surface-50-50:475649e7",
+      "output": {
+        "id": "item:jug",
+        "kind": "ITEM",
+        "label": "Jug"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-jug:shop-lumbridge-general-store-surface-50-50:3aed05ee",
+      "output": {
+        "id": "item:jug",
+        "kind": "ITEM",
+        "label": "Jug"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Lumbridge General Store",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Lumbridge General Store"
+      ]
+    },
+    {
+      "id": "acq:item-jug:spawn-jug-floor-spawn-surface-50-50:5eab2c36",
+      "output": {
+        "id": "item:jug",
+        "kind": "ITEM",
+        "label": "Jug"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SPAWN",
+      "sourceLabel": "Jug floor spawn",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50"
+      ]
+    },
+    {
+      "id": "acq:item-key-medium:drop-man-surface-50-50:3adcb484",
+      "output": {
+        "id": "item:key-medium",
+        "kind": "ITEM",
+        "label": "Key (medium)"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Man",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Man"
+      ]
+    },
+    {
+      "id": "acq:item-knife:shop-lumbridge-general-store-surface-50-50:44871c37",
+      "output": {
+        "id": "item:knife",
+        "kind": "ITEM",
+        "label": "Knife"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Lumbridge General Store",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Lumbridge General Store"
+      ]
+    },
+    {
+      "id": "acq:item-knife:spawn-knife-floor-spawn-surface-50-50:d69ed58e",
+      "output": {
+        "id": "item:knife",
+        "kind": "ITEM",
+        "label": "Knife"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SPAWN",
+      "sourceLabel": "Knife floor spawn",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50"
+      ]
+    },
+    {
+      "id": "acq:item-larran-s-key:drop-giant-spider-surface-50-50:3bf7fea2",
+      "output": {
+        "id": "item:larran-s-key",
+        "kind": "ITEM",
+        "label": "Larran's key"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Giant spider",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Giant spider"
+      ]
+    },
+    {
+      "id": "acq:item-logs:spawn-logs-floor-spawn-surface-50-50:e66e4ce2",
+      "output": {
+        "id": "item:logs",
+        "kind": "ITEM",
+        "label": "Logs"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SPAWN",
+      "sourceLabel": "Logs floor spawn",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50"
+      ]
+    },
+    {
+      "id": "acq:item-looting-bag:drop-giant-spider-surface-50-50:51447709",
+      "output": {
+        "id": "item:looting-bag",
+        "kind": "ITEM",
+        "label": "Looting bag"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Giant spider",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Giant spider"
+      ]
+    },
+    {
+      "id": "acq:item-looting-bag:drop-imp-surface-50-50:907d5de5",
+      "output": {
+        "id": "item:looting-bag",
+        "kind": "ITEM",
+        "label": "Looting bag"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-looting-bag:drop-man-surface-50-50:76992f67",
+      "output": {
+        "id": "item:looting-bag",
+        "kind": "ITEM",
+        "label": "Looting bag"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Man",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Man"
+      ]
+    },
+    {
+      "id": "acq:item-looting-bag:drop-rat-surface-50-50:904e4d68",
+      "output": {
+        "id": "item:looting-bag",
+        "kind": "ITEM",
+        "label": "Looting bag"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Rat",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Rat"
+      ]
+    },
+    {
+      "id": "acq:item-mind-rune:drop-goblin-surface-50-50:7032a904",
+      "output": {
+        "id": "item:mind-rune",
+        "kind": "ITEM",
+        "label": "Mind rune"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-mind-rune:drop-man-surface-50-50:5a1d883f",
+      "output": {
+        "id": "item:mind-rune",
+        "kind": "ITEM",
+        "label": "Mind rune"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Man",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Man"
+      ]
+    },
+    {
+      "id": "acq:item-mind-rune:drop-woman-surface-50-50:44816469",
+      "output": {
+        "id": "item:mind-rune",
+        "kind": "ITEM",
+        "label": "Mind rune"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Woman",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Woman"
+      ]
+    },
+    {
+      "id": "acq:item-mind-rune:spawn-mind-rune-floor-spawn-surface-50-50:99cd5c8e",
+      "output": {
+        "id": "item:mind-rune",
+        "kind": "ITEM",
+        "label": "Mind rune"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SPAWN",
+      "sourceLabel": "Mind rune floor spawn",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50"
+      ]
+    },
+    {
+      "id": "acq:item-mind-talisman:drop-imp-surface-50-50:9d85b798",
+      "output": {
+        "id": "item:mind-talisman",
+        "kind": "ITEM",
+        "label": "Mind talisman"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-mithril-battleaxe:shop-bob-s-brilliant-axes-surface-50-50:9f3c73f8",
+      "output": {
+        "id": "item:mithril-battleaxe",
+        "kind": "ITEM",
+        "label": "Mithril battleaxe"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Bob's Brilliant Axes",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Bob's Brilliant Axes."
+      ]
+    },
+    {
+      "id": "acq:item-nature-rune:drop-goblin-surface-50-50:8465652d",
+      "output": {
+        "id": "item:nature-rune",
+        "kind": "ITEM",
+        "label": "Nature rune"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-newcomer-map:shop-lumbridge-general-store-surface-50-50:4ad53c2c",
+      "output": {
+        "id": "item:newcomer-map",
+        "kind": "ITEM",
+        "label": "Newcomer map"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Lumbridge General Store",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Lumbridge General Store"
+      ]
+    },
+    {
+      "id": "acq:item-nothing:drop-goblin-surface-50-50:6e55fd71",
+      "output": {
+        "id": "item:nothing",
+        "kind": "ITEM",
+        "label": "Nothing"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-nothing:drop-man-surface-50-50:d8a7f7a0",
+      "output": {
+        "id": "item:nothing",
+        "kind": "ITEM",
+        "label": "Nothing"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Man",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Man"
+      ]
+    },
+    {
+      "id": "acq:item-nothing:drop-woman-surface-50-50:ccbf4492",
+      "output": {
+        "id": "item:nothing",
+        "kind": "ITEM",
+        "label": "Nothing"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Woman",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Woman"
+      ]
+    },
+    {
+      "id": "acq:item-onion:spawn-onion-floor-spawn-surface-50-50:4a948322",
+      "output": {
+        "id": "item:onion",
+        "kind": "ITEM",
+        "label": "Onion"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SPAWN",
+      "sourceLabel": "Onion floor spawn",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50"
+      ]
+    },
+    {
+      "id": "acq:item-pot-of-flour:drop-imp-surface-50-50:59166953",
+      "output": {
+        "id": "item:pot-of-flour",
+        "kind": "ITEM",
+        "label": "Pot of flour"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-pot:drop-imp-surface-50-50:8f523320",
+      "output": {
+        "id": "item:pot",
+        "kind": "ITEM",
+        "label": "Pot"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-pot:shop-lumbridge-general-store-surface-50-50:575900f5",
+      "output": {
+        "id": "item:pot",
+        "kind": "ITEM",
+        "label": "Pot"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Lumbridge General Store",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Lumbridge General Store"
+      ]
+    },
+    {
+      "id": "acq:item-pot:spawn-pot-floor-spawn-surface-50-50:13de885a",
+      "output": {
+        "id": "item:pot",
+        "kind": "ITEM",
+        "label": "Pot"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SPAWN",
+      "sourceLabel": "Pot floor spawn",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50"
+      ]
+    },
+    {
+      "id": "acq:item-potion-apothecary:drop-imp-surface-50-50:b7d80d13",
+      "output": {
+        "id": "item:potion-apothecary",
+        "kind": "ITEM",
+        "label": "Potion (Apothecary)"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-ram-skull:drop-ram-surface-50-50:f6451140",
+      "output": {
+        "id": "item:ram-skull",
+        "kind": "ITEM",
+        "label": "Ram skull"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Ram",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Ram"
+      ]
+    },
+    {
+      "id": "acq:item-rat-bone:drop-rat-surface-50-50:309e66eb",
+      "output": {
+        "id": "item:rat-bone",
+        "kind": "ITEM",
+        "label": "Rat bone"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Rat",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Rat"
+      ]
+    },
+    {
+      "id": "acq:item-rat-s-tail:drop-rat-surface-50-50:090a1869",
+      "output": {
+        "id": "item:rat-s-tail",
+        "kind": "ITEM",
+        "label": "Rat's tail"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Rat",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Rat"
+      ]
+    },
+    {
+      "id": "acq:item-raw-beef:drop-cow-surface-50-50:f6ddce26",
+      "output": {
+        "id": "item:raw-beef",
+        "kind": "ITEM",
+        "label": "Raw beef"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Cow",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Cow"
+      ]
+    },
+    {
+      "id": "acq:item-raw-chicken:drop-imp-surface-50-50:c0b22962",
+      "output": {
+        "id": "item:raw-chicken",
+        "kind": "ITEM",
+        "label": "Raw chicken"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-red-bead:drop-imp-surface-50-50:9111e4cc",
+      "output": {
+        "id": "item:red-bead",
+        "kind": "ITEM",
+        "label": "Red bead"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-red-cape:drop-goblin-surface-50-50:2496635c",
+      "output": {
+        "id": "item:red-cape",
+        "kind": "ITEM",
+        "label": "Red cape"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-security-book:shop-lumbridge-general-store-surface-50-50:c6b07a9d",
+      "output": {
+        "id": "item:security-book",
+        "kind": "ITEM",
+        "label": "Security book"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Lumbridge General Store",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Lumbridge General Store"
+      ]
+    },
+    {
+      "id": "acq:item-shears:drop-imp-surface-50-50:9ddceda1",
+      "output": {
+        "id": "item:shears",
+        "kind": "ITEM",
+        "label": "Shears"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-shears:shop-lumbridge-general-store-surface-50-50:abe9775c",
+      "output": {
+        "id": "item:shears",
+        "kind": "ITEM",
+        "label": "Shears"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Lumbridge General Store",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Lumbridge General Store"
+      ]
+    },
+    {
+      "id": "acq:item-slayer-s-enchantment:drop-giant-spider-surface-50-50:24c0da32",
+      "output": {
+        "id": "item:slayer-s-enchantment",
+        "kind": "ITEM",
+        "label": "Slayer's enchantment"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Giant spider",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Giant spider"
+      ]
+    },
+    {
+      "id": "acq:item-spade:shop-lumbridge-general-store-surface-50-50:5447a5df",
+      "output": {
+        "id": "item:spade",
+        "kind": "ITEM",
+        "label": "Spade"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Lumbridge General Store",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Lumbridge General Store"
+      ]
+    },
+    {
+      "id": "acq:item-steel-axe:shop-bob-s-brilliant-axes-surface-50-50:b347d810",
+      "output": {
+        "id": "item:steel-axe",
+        "kind": "ITEM",
+        "label": "Steel axe"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Bob's Brilliant Axes",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Bob's Brilliant Axes."
+      ]
+    },
+    {
+      "id": "acq:item-steel-battleaxe:shop-bob-s-brilliant-axes-surface-50-50:5dc8125e",
+      "output": {
+        "id": "item:steel-battleaxe",
+        "kind": "ITEM",
+        "label": "Steel battleaxe"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Bob's Brilliant Axes",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Bob's Brilliant Axes."
+      ]
+    },
+    {
+      "id": "acq:item-tin-ore:drop-goblin-surface-50-50:8fd078fb",
+      "output": {
+        "id": "item:tin-ore",
+        "kind": "ITEM",
+        "label": "Tin ore"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-tinderbox:drop-imp-surface-50-50:63016600",
+      "output": {
+        "id": "item:tinderbox",
+        "kind": "ITEM",
+        "label": "Tinderbox"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-tinderbox:shop-lumbridge-general-store-surface-50-50:0f832fd5",
+      "output": {
+        "id": "item:tinderbox",
+        "kind": "ITEM",
+        "label": "Tinderbox"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Lumbridge General Store",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Lumbridge General Store"
+      ]
+    },
+    {
+      "id": "acq:item-twisted-banner:shop-leagues-reward-shop-surface-50-50:a50bbbaf",
+      "output": {
+        "id": "item:twisted-banner",
+        "kind": "ITEM",
+        "label": "Twisted banner"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Leagues Reward Shop",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": [
+          {
+            "op": "FACT",
+            "fact": {
+              "id": "unlock:f2p-only",
+              "kind": "UNLOCK",
+              "label": "F2P Only"
+            }
+          }
+        ]
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Leagues Reward Shop"
+      ]
+    },
+    {
+      "id": "acq:item-twisted-blueprints:shop-leagues-reward-shop-surface-50-50:4d6e6db5",
+      "output": {
+        "id": "item:twisted-blueprints",
+        "kind": "ITEM",
+        "label": "Twisted blueprints"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Leagues Reward Shop",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": [
+          {
+            "op": "FACT",
+            "fact": {
+              "id": "unlock:f2p-only",
+              "kind": "UNLOCK",
+              "label": "F2P Only"
+            }
+          }
+        ]
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Leagues Reward Shop"
+      ]
+    },
+    {
+      "id": "acq:item-twisted-horns:shop-leagues-reward-shop-surface-50-50:b250e579",
+      "output": {
+        "id": "item:twisted-horns",
+        "kind": "ITEM",
+        "label": "Twisted horns"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Leagues Reward Shop",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": [
+          {
+            "op": "FACT",
+            "fact": {
+              "id": "unlock:f2p-only",
+              "kind": "UNLOCK",
+              "label": "F2P Only"
+            }
+          }
+        ]
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Leagues Reward Shop"
+      ]
+    },
+    {
+      "id": "acq:item-twisted-relichunter-t1:shop-leagues-reward-shop-surface-50-50:2ea20de2",
+      "output": {
+        "id": "item:twisted-relichunter-t1",
+        "kind": "ITEM",
+        "label": "Twisted Relichunter (T1)"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Leagues Reward Shop",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": [
+          {
+            "op": "FACT",
+            "fact": {
+              "id": "unlock:f2p-only",
+              "kind": "UNLOCK",
+              "label": "F2P Only"
+            }
+          }
+        ]
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Leagues Reward Shop"
+      ]
+    },
+    {
+      "id": "acq:item-twisted-relichunter-t2:shop-leagues-reward-shop-surface-50-50:7fc573af",
+      "output": {
+        "id": "item:twisted-relichunter-t2",
+        "kind": "ITEM",
+        "label": "Twisted Relichunter (T2)"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Leagues Reward Shop",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": [
+          {
+            "op": "FACT",
+            "fact": {
+              "id": "unlock:f2p-only",
+              "kind": "UNLOCK",
+              "label": "F2P Only"
+            }
+          }
+        ]
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Leagues Reward Shop"
+      ]
+    },
+    {
+      "id": "acq:item-twisted-relichunter-t3:shop-leagues-reward-shop-surface-50-50:782c85b8",
+      "output": {
+        "id": "item:twisted-relichunter-t3",
+        "kind": "ITEM",
+        "label": "Twisted Relichunter (T3)"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Leagues Reward Shop",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": [
+          {
+            "op": "FACT",
+            "fact": {
+              "id": "unlock:f2p-only",
+              "kind": "UNLOCK",
+              "label": "F2P Only"
+            }
+          }
+        ]
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Leagues Reward Shop"
+      ]
+    },
+    {
+      "id": "acq:item-twisted-teleport-scroll:shop-leagues-reward-shop-surface-50-50:91b5d867",
+      "output": {
+        "id": "item:twisted-teleport-scroll",
+        "kind": "ITEM",
+        "label": "Twisted teleport scroll"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "SHOP",
+      "sourceLabel": "Leagues Reward Shop",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": [
+          {
+            "op": "FACT",
+            "fact": {
+              "id": "unlock:f2p-only",
+              "kind": "UNLOCK",
+              "label": "F2P Only"
+            }
+          }
+        ]
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:shopItems:Leagues Reward Shop"
+      ]
+    },
+    {
+      "id": "acq:item-water-rune:drop-goblin-surface-50-50:ae73b633",
+      "output": {
+        "id": "item:water-rune",
+        "kind": "ITEM",
+        "label": "Water rune"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Goblin",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Goblin#Drop table 1",
+        "transform:drops:Goblin#Drop table 2"
+      ]
+    },
+    {
+      "id": "acq:item-white-bead:drop-imp-surface-50-50:814e7376",
+      "output": {
+        "id": "item:white-bead",
+        "kind": "ITEM",
+        "label": "White bead"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    },
+    {
+      "id": "acq:item-yellow-bead:drop-imp-surface-50-50:c7da90f1",
+      "output": {
+        "id": "item:yellow-bead",
+        "kind": "ITEM",
+        "label": "Yellow bead"
+      },
+      "outputQuantity": 1,
+      "sourceKind": "DROP",
+      "sourceLabel": "Imp",
+      "locationId": "surface:50,50",
+      "requirements": {
+        "op": "ALL",
+        "terms": []
+      },
+      "repeatability": "UNKNOWN",
+      "probability": null,
+      "coverage": "PARTIAL",
+      "provenanceIds": [
+        "chunk:12850",
+        "location:surface:50,50",
+        "transform:drops:Imp"
+      ]
+    }
+  ]
+}

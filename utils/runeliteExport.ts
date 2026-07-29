@@ -144,7 +144,7 @@ export async function exportRuneliteBundle(unlocks: UnlockState, run: RuneliteRu
 }
 
 async function currentRuneProofSourceVersion(): Promise<string> {
-  const module = await import('../public/runeproof-sources.json');
+  const module = await import('../data/runeproof-goal-index.json');
   const document = module.default as { sourceVersion?: unknown };
   if (typeof document.sourceVersion !== 'string' || !document.sourceVersion.trim()) {
     throw new Error('RuneProof source version is unavailable');

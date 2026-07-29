@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, ShieldCheck, X } from 'lucide-react';
-import sourceDocument from '../public/runeproof-sources.json';
+import goalIndexJson from '../data/runeproof-goal-index.json';
 import { chunkContentService } from '../services/ChunkContentService';
 import { RuneProofService } from '../services/RuneProofService';
 import { loadRuneProofSourceAudit } from '../data/runeProofSourceAudit';
@@ -10,6 +10,7 @@ import {
   compileProductionQuestGoals, type CompiledGoal,
 } from '../utils/runeproof/goalCompiler';
 import { factId, type AcquisitionRule, type RuneProofReport } from '../utils/runeproof/model';
+import type { RuneProofSourceDocument } from '../utils/runeproof/acquisitionIndex';
 import type { RuneProofRunSnapshot } from '../types';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { ProofStatusCard } from './runeproof/ProofStatusCard';
@@ -31,8 +32,14 @@ export interface RuneProofModalProps {
   createService?: (current: () => RuneProofRunSnapshot) => Promise<OwnedProofService>;
 }
 
+const goalIndex = goalIndexJson as unknown as {
+  schemaVersion: 1;
+  sourceVersion: string;
+  rules: AcquisitionRule[];
+};
+
 const itemGoals = (): CompiledGoal[] => {
-  const labels = [...new Set((sourceDocument.rules as AcquisitionRule[]).map(rule => rule.output.label))].sort();
+  const labels = [...new Set(goalIndex.rules.map(rule => rule.output.label))].sort();
   return labels.map(label => compileItemGoal({ id: factId('ITEM', label), label }, 1));
 };
 
@@ -40,12 +47,46 @@ const productionGoals = (): CompiledGoal[] => [
   ...itemGoals(), ...compileProductionQuestGoals(), ...compileProductionDiaryGoals(), ...compileProductionActivityGoals(),
 ];
 
-const defaultRules = sourceDocument.rules as AcquisitionRule[];
+const defaultRules = goalIndex.rules;
+export function createFailClosedRuneProofAcquisition(
+  sourceVersion: string,
+): RuneProofSourceDocument {
+  const emptyFamily = () => ({
+    ruleCount: 0,
+    unresolvedCount: 0,
+    ruleIds: [],
+    unresolvedIds: [],
+    coverage: 'UNKNOWN' as const,
+  });
+  return {
+    schemaVersion: 1,
+    sourceVersion,
+    counts: { rules: 0, unresolvedSources: 0 },
+    acquisitionCoverage: 'UNKNOWN',
+    sourceFamilyCoverage: {
+      DROP: 'UNKNOWN',
+      PRODUCTION: 'UNKNOWN',
+      RESOURCE_ENGINE: 'UNKNOWN',
+      SHOP: 'UNKNOWN',
+      SPAWN: 'UNKNOWN',
+    },
+    sourceFamilyAccounting: {
+      DROP: emptyFamily(),
+      PRODUCTION: emptyFamily(),
+      RESOURCE_ENGINE: emptyFamily(),
+      SHOP: emptyFamily(),
+      SPAWN: emptyFamily(),
+    },
+    provenanceCatalog: [],
+    rules: [],
+    unresolvedSources: [],
+  };
+}
 async function createDefaultService(current: () => RuneProofRunSnapshot): Promise<OwnedProofService> {
   const loaded = await chunkContentService.init();
   if (!loaded) throw new Error(chunkContentService.error || 'Current world data could not be loaded.');
   const audit = await loadRuneProofSourceAudit();
-  const acquisition = sourceDocument as unknown as import('../utils/runeproof/acquisitionIndex').RuneProofSourceDocument;
+  const acquisition = createFailClosedRuneProofAcquisition(goalIndex.sourceVersion);
   return new RuneProofService(createRuneProofExecutor({
     sourceVersion: acquisition.sourceVersion,
     sourceAudit: audit,
@@ -56,7 +97,7 @@ async function createDefaultService(current: () => RuneProofRunSnapshot): Promis
       edges: chunkContentService.locationEdges(),
     },
   }, {
-    acquisitionUrl: `${import.meta.env.BASE_URL}runeproof-sources.json?v=${encodeURIComponent(acquisition.sourceVersion)}`,
+    acquisitionUrl: `${import.meta.env.BASE_URL}runeproof-sources.json?v=${encodeURIComponent(goalIndex.sourceVersion)}`,
   }), current);
 }
 
