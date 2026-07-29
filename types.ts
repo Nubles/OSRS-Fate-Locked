@@ -226,6 +226,38 @@ export interface GameState {
   chunkedMilestoneClaimed?: number;
 }
 
+/**
+ * Immutable, possession-free facts used for deterministic RuneProof analysis.
+ * This represents rule capabilities only; carried items and container contents
+ * deliberately do not cross the boundary from live game state.
+ */
+export interface RuneProofRunSnapshot {
+  readonly runId: string;
+  readonly runRevision: number;
+  readonly gameModeId: string | undefined;
+  readonly equipmentTiers: Readonly<Record<string, number>>;
+  readonly skillCaps: Readonly<Record<string, number>>;
+  readonly currentLevels: Readonly<Record<string, number>>;
+  readonly unlockedAreas: readonly string[];
+  readonly unlockedChunks: readonly string[];
+  readonly unlockedMobility: readonly string[];
+  readonly unlockedArcana: readonly string[];
+  readonly unlockedHousing: readonly string[];
+  readonly unlockedMerchants: readonly string[];
+  readonly unlockedMinigames: readonly string[];
+  readonly unlockedBosses: readonly string[];
+  readonly unlockedStorage: readonly string[];
+  readonly unlockedGuilds: readonly string[];
+  readonly unlockedFarming: readonly string[];
+  readonly unlockedSlayer: readonly string[];
+  readonly unlockedBanks: readonly string[];
+  readonly completedQuests: readonly string[];
+  readonly completedDiaries: readonly string[];
+  readonly completedCombatAchievements: readonly string[];
+  readonly completedTasks: readonly string[];
+  readonly collectionLog: Readonly<Record<number, number>>;
+}
+
 /** A simulated nemesis ('sim') or a friend's run snapshot ('friend') to race. */
 export interface RivalState {
   mode: 'sim' | 'friend';
