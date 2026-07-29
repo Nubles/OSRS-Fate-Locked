@@ -19,4 +19,19 @@ describe('requireRuneProofSources', () => {
       acquisitionCoverage: 'PARTIAL',
     })).toThrow('RuneProof requires verified acquisition coverage');
   });
+
+  it.each([
+    ['questCoverage', 'UNKNOWN', 'quest'],
+    ['questCoverage', 'PARTIAL', 'quest'],
+    ['chunkCoverage', 'UNKNOWN', 'chunk'],
+    ['chunkCoverage', 'PARTIAL', 'chunk'],
+  ] as const)('rejects %s %s coverage', (key, coverage, label) => {
+    expect(() => requireRuneProofSources({
+      sourceVersion: 'draft',
+      questCoverage: 'VERIFIED',
+      chunkCoverage: 'VERIFIED',
+      acquisitionCoverage: 'VERIFIED',
+      [key]: coverage,
+    })).toThrow(`RuneProof requires verified ${label} coverage`);
+  });
 });
