@@ -8,6 +8,7 @@ import {
   computeTrustedAcquisitionCatalogVersion,
   createRuneProofGoalIndex,
   assertRuneProofGeneratedOutputsCurrent,
+  assertReviewedSpawnBindings,
   generatedOutputMatches,
   renderRuneProofGoalIndex,
   renderRuneProofSourceDocument,
@@ -23,11 +24,17 @@ const trustedOutputPath = resolve(
 );
 const check = process.argv.includes('--check');
 
-const [chunkDocument, chunkAudit, questAudit] = await Promise.all([
+const [chunkDocument, chunkAudit, questAudit, reviewedAcquisitionAudit] = await Promise.all([
   readJson(resolve(root, 'public', 'chunk-content.json')),
   readJson(resolve(root, 'data', 'sources', 'chunk-content-transform-audit.json')),
   readJson(resolve(root, 'data', 'sources', 'quest-requirement-audit.json')),
+  readJson(resolve(root, 'data', 'sources', 'runeproof-reviewed-acquisition-sources.json')),
 ]);
+if (reviewedAcquisitionAudit.schemaVersion !== 1
+  || !Array.isArray(reviewedAcquisitionAudit.sources)) {
+  throw new Error('Invalid reviewed RuneProof acquisition source audit');
+}
+assertReviewedSpawnBindings(reviewedAcquisitionAudit.sources, chunkDocument);
 
 const vite = await createServer({
   root,
@@ -54,7 +61,8 @@ try {
   await vite.close();
 }
 
-const reviewedSources = Object.entries(resourceMap)
+const reviewedSources = [
+  ...Object.entries(resourceMap)
   .sort(([left], [right]) => compare(left, right))
   .flatMap(([output, sources]) => sources.map((source, index) => ({
     output,
@@ -65,7 +73,9 @@ const reviewedSources = Object.entries(resourceMap)
     provenanceIds: [
       `resource-map:${normalizeId(output)}-${shortHash(output)}:${String(index).padStart(4, '0')}`,
     ],
-  })));
+  }))),
+  ...reviewedAcquisitionAudit.sources,
+];
 
 const { document, trustedCatalog } = compileAcquisitionArtifacts({
   sourceVersion: `sha256-${'0'.repeat(64)}`,

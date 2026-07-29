@@ -843,21 +843,15 @@ describe('proof-grade location source access', () => {
   });
 
   it('exposes only explicitly audited location nodes and edges', () => {
-    expect(chunkContentService.locationNodes()).toEqual([
-      {
-        id: 'surface:50,50',
-        label: 'Lumbridge starting chunk',
-        surfaceChunk: '50,50',
-        coverage: 'PARTIAL',
-      },
-    ]);
+    expect(chunkContentService.locationNodes())
+      .toEqual(fullChunkContent.locationNodes);
     expect(chunkContentService.locationEdges()).toEqual([serviceEdge]);
   });
 
   it('returns defensive deep copies that caller mutation cannot corrupt', () => {
     const firstNodes = chunkContentService.locationNodes();
     const firstEdges = chunkContentService.locationEdges();
-    firstNodes[0].coverage = 'VERIFIED';
+    firstNodes[0].coverage = 'UNKNOWN';
     firstNodes.push(node('injected', '51,50'));
     firstEdges[0].id = 'mutated';
     firstEdges[0].provenanceIds.push('mutated:source');
@@ -873,14 +867,8 @@ describe('proof-grade location source access', () => {
       },
     });
 
-    expect(chunkContentService.locationNodes()).toEqual([
-      {
-        id: 'surface:50,50',
-        label: 'Lumbridge starting chunk',
-        surfaceChunk: '50,50',
-        coverage: 'PARTIAL',
-      },
-    ]);
+    expect(chunkContentService.locationNodes())
+      .toEqual(fullChunkContent.locationNodes);
     expect(chunkContentService.locationEdges()).toEqual([serviceEdge]);
   });
 });

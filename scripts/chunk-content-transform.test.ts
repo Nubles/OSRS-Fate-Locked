@@ -17,20 +17,35 @@ const manifest = {
 };
 
 describe('transformChunkContent', () => {
-  it('preserves the reviewed RuneProof surface location root', () => {
+  it('preserves the reviewed RuneProof Graveyard plank corridor', () => {
     const result = transformChunkContent({
       walkableChunks: [],
       chunks: {},
       slayerMonsters: {},
     }, manifest);
 
-    expect(result.full.locationNodes).toEqual([{
-      id: 'surface:50,50',
-      label: 'Lumbridge starting chunk',
-      surfaceChunk: '50,50',
-      coverage: 'PARTIAL',
-    }]);
-    expect(result.full.locationEdges).toEqual([]);
+    expect(result.full.locationNodes.map(node => [
+      node.surfaceChunk, node.coverage,
+    ])).toEqual([
+      ['50,50', 'VERIFIED'], ['50,51', 'VERIFIED'], ['50,52', 'VERIFIED'],
+      ['50,53', 'VERIFIED'], ['50,54', 'VERIFIED'], ['50,55', 'VERIFIED'],
+      ['49,55', 'VERIFIED'], ['49,56', 'VERIFIED'], ['49,57', 'VERIFIED'],
+    ]);
+    expect(result.full.locationEdges.map(edge => [
+      edge.from, edge.to, edge.bidirectional,
+    ])).toEqual([
+      ['surface:50,50', 'surface:50,51', true],
+      ['surface:50,51', 'surface:50,52', true],
+      ['surface:50,52', 'surface:50,53', true],
+      ['surface:50,53', 'surface:50,54', true],
+      ['surface:50,54', 'surface:50,55', true],
+      ['surface:50,55', 'surface:49,55', true],
+      ['surface:49,55', 'surface:49,56', true],
+      ['surface:49,56', 'surface:49,57', true],
+    ]);
+    expect(result.full.locationEdges.every(edge =>
+      edge.provenanceIds.includes('chunk-route:audit:lumbridge-graveyard-v1')))
+      .toBe(true);
   });
   it('accounts for merged sections and promotes quest starts', () => {
     const result = transformChunkContent({

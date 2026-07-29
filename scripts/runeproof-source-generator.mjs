@@ -47,6 +47,19 @@ export function assertRuneProofJavaScriptBudget(
     );
   }
 }
+export function assertReviewedSpawnBindings(sources, chunkDocument) {
+  for (const source of sources) {
+    if (source?.sourceKind !== 'SPAWN') continue;
+    const match = /^surface:(\d+),(\d+)$/.exec(source.locationId ?? '');
+    const regionId = match ? Number(match[1]) * 256 + Number(match[2]) : NaN;
+    const spawns = chunkDocument?.chunks?.[String(regionId)]?.i;
+    if (!Array.isArray(spawns) || !spawns.includes(source.output)) {
+      throw new Error(
+        `Reviewed spawn ${source.output} is not present at ${source.locationId}`,
+      );
+    }
+  }
+}
 export function computeTrustedAcquisitionCatalogVersion(catalog) {
   return computeRuneProofDocumentVersion(catalog);
 }

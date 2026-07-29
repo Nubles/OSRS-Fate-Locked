@@ -23818,6 +23818,14 @@
       ]
     },
     {
+      "id": "resource-map:runeproof-plank-graveyard-v1",
+      "kind": "RESOURCE_MAP",
+      "coverage": "VERIFIED",
+      "provenanceIds": [
+        "resource-map:sha256-171bb97f81ebb8f1159296ca82d3f71fc5428838ed84cd9489426191a2469899"
+      ]
+    },
+    {
       "id": "resource-map:runite-limbs-c3839746:0000",
       "kind": "RESOURCE_MAP",
       "coverage": "PARTIAL",
@@ -30666,5 +30674,5 @@
       ]
     }
   ],
-  "sourceVersion": "sha256-77d96d14d3766d5f86dbb04832bcd14231fa171616f0f91bda12f7b466c0625c"
+  "sourceVersion": "sha256-176658060727020ba9e4584cb06de7aa66ef0475ad542f1f7274322c358edb7e"
 }

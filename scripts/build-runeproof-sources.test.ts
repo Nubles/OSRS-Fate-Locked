@@ -8,6 +8,7 @@ import {
   createRuneProofGoalIndex,
   assertRuneProofJavaScriptBudget,
   assertRuneProofGeneratedOutputsCurrent,
+  assertReviewedSpawnBindings,
   generatedOutputMatches,
   renderRuneProofSourceDocument,
   renderTrustedAcquisitionSourceCatalog,
@@ -22,6 +23,19 @@ afterEach(async () => {
 });
 
 describe('RuneProof source generator contract', () => {
+  it('binds reviewed floor spawns to the exact checked-in chunk item', () => {
+    const source = {
+      output: 'Plank',
+      sourceKind: 'SPAWN',
+      locationId: 'surface:49,57',
+    };
+    const chunks = { 12601: { i: ['Plank'] } };
+
+    expect(() => assertReviewedSpawnBindings([source], { chunks })).not.toThrow();
+    expect(() => assertReviewedSpawnBindings([source], {
+      chunks: { 12601: { i: [] } },
+    })).toThrow(/Plank.*surface:49,57/i);
+  });
   it('derives a compact deterministic goal/display index without the proof corpus', () => {
     const document = {
       schemaVersion: 1,
