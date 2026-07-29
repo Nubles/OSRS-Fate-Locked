@@ -1,0 +1,680 @@
+import { afterAll, describe, expect, it } from 'vitest';
+import chunkDocumentJson from '../../public/chunk-content.json';
+import sourceDocumentJson from '../../public/runeproof-sources.json';
+import chunkAuditJson from '../../data/sources/chunk-content-transform-audit.json';
+import questAuditJson from '../../data/sources/quest-requirement-audit.json';
+import { RESOURCE_MAP } from '../../data/resourceData';
+import type { RuneProofRunSnapshot } from '../../types';
+import {
+  compileAcquisitionArtifacts,
+  type AcquisitionCompilerInput,
+  type ReviewedAcquisitionSource,
+  type RuneProofSourceDocument,
+} from './acquisitionIndex';
+import {
+  createRuneProofEngine,
+  createRuneProofExecutor,
+  type RuneProofEngineSources,
+} from './engine';
+import { evaluateObtainability } from './evaluator';
+import { compileItemGoal, type CompiledGoal } from './goalCompiler';
+import type {
+  AcquisitionRule,
+  FactKind,
+  FactRef,
+  RequirementExpr,
+  RuneProofReport,
+  SourceKind,
+} from './model';
+import {
+  RuneProofExportRegistry,
+  RuneProofService,
+} from '../../services/RuneProofService';
+
+const RUNS = 20;
+const START_LOCATION = 'surface:50,50';
+const empty: RequirementExpr = { op: 'ALL', terms: [] };
+const metrics: BenchmarkMetric[] = [];
+
+interface BenchmarkMetric {
+  name: string;
+  medianMs: number;
+  p95Ms: number;
+}
+
+interface ChunkSource {
+  sourceMeta?: { commit?: string };
+  locationNodes?: AcquisitionCompilerInput['locationNodes'];
+  locationEdges?: RuneProofEngineSources['locationGraph']['edges'];
+  chunks?: AcquisitionCompilerInput['chunks'];
+  shopItems?: AcquisitionCompilerInput['shopItems'];
+  drops?: AcquisitionCompilerInput['drops'];
+  taskUnlocks?: AcquisitionCompilerInput['taskUnlocks'];
+}
+
+const sourceDocument =
+  sourceDocumentJson as unknown as RuneProofSourceDocument;
+const chunkDocument = chunkDocumentJson as unknown as ChunkSource;
+const fullSources: RuneProofEngineSources = {
+  sourceVersion: sourceDocument.sourceVersion,
+  sourceAudit: {
+    sourceVersion: sourceDocument.sourceVersion,
+    questCoverage: 'VERIFIED',
+    chunkCoverage: 'PARTIAL',
+    acquisitionCoverage: sourceDocument.acquisitionCoverage,
+  },
+  acquisition: sourceDocument,
+  locationGraph: {
+    startNodeId: START_LOCATION,
+    nodes: chunkDocument.locationNodes ?? [],
+    edges: chunkDocument.locationEdges ?? [],
+  },
+};
+const ordinaryGoal = compileItemGoal(
+  { id: 'item:air-talisman', label: 'Air talisman' },
+  1,
+);
+const currentRun = snapshot();
+
+describe('RuneProof selective-solving performance acceptance', () => {
+  it('cold-compiles the complete checked-in audited source corpus 20 times', () => {
+    const input = fullCompilerInput();
+    const samples = sampleSync('cold source compilation', () => {
+      const compiled = compileAcquisitionArtifacts(input).document;
+      expect(compiled.counts).toEqual({
+        rules: sourceDocument.counts.rules,
+        unresolvedSources: sourceDocument.counts.unresolvedSources,
+      });
+      return compiled;
+    });
+
+    expect(samples).toHaveLength(RUNS);
+    expect(samples.every(document =>
+      document.sourceVersion === sourceDocument.sourceVersion,
+    )).toBe(true);
+  }, 120_000);
+
+  it('meets query budgets for the full graph and deterministic hard cases', async () => {
+    const coldReports = await sampleAsync(
+      'cold ordinary query',
+      () => createRuneProofEngine(fullSources)
+        .evaluate({ goal: ordinaryGoal }, currentRun),
+    );
+    expect(coldReports.every(report => report.status === 'OBTAINABLE_RNG'))
+      .toBe(true);
+    expect(lastMetric('cold ordinary query').p95Ms).toBeLessThan(250);
+
+    const cacheRegistry = new RuneProofExportRegistry();
+    const service = new RuneProofService(
+      createRuneProofEngine(fullSources),
+      () => currentRun,
+      cacheRegistry,
+    );
+    await service.evaluate({ goal: ordinaryGoal });
+    const cachedReports = await sampleAsync(
+      'cached ordinary query',
+      () => service.evaluate({ goal: ordinaryGoal }),
+    );
+    expect(cachedReports.every(report => report?.status === 'OBTAINABLE_RNG'))
+      .toBe(true);
+    expect(lastMetric('cached ordinary query').p95Ms).toBeLessThan(50);
+    service.dispose();
+
+    const recursive = recursiveFixture(14);
+    const recursiveReports = await sampleAsync(
+      'deep recursive production goal',
+      () => createRuneProofEngine(recursive.sources)
+        .evaluate({ goal: recursive.goal }, currentRun),
+    );
+    expect(recursiveReports.every(report =>
+      report.status === 'OBTAINABLE'
+      && Object.keys(report.routes[0].witness.steps).length === 15,
+    )).toBe(true);
+
+    const alternatives = alternativeQuestFixture(recursive);
+    const alternativeReports = await sampleAsync(
+      'quest with alternatives',
+      () => createRuneProofEngine(alternatives.sources)
+        .evaluate({ goal: alternatives.goal }, alternatives.snapshot),
+    );
+    expect(alternativeReports.every(report =>
+      report.status === 'OBTAINABLE'
+      && Object.values(report.routes[0].witness.steps).some(step =>
+        step.ruleId === 'seed:quest:benchmark-permit'),
+    )).toBe(true);
+
+    const blocker = blockerFixture(16);
+    const blockerReports = await sampleAsync(
+      'worst checked-in blocker fixture',
+      () => createRuneProofEngine(blocker.sources)
+        .evaluate({ goal: blocker.goal }, currentRun),
+    );
+    expect(blockerReports.every(report =>
+      report.status === 'BLOCKED'
+      && report.routesComplete
+      && report.blockers[0]?.factIds.length === 16,
+    )).toBe(true);
+    expect(lastMetric('worst checked-in blocker fixture').p95Ms)
+      .toBeLessThan(1_000);
+
+    const exportGoals = uniqueDirectGoals(20);
+    const exportReports = await Promise.all(
+      exportGoals.map(goal =>
+        createRuneProofEngine(fullSources).evaluate({ goal }, currentRun)),
+    );
+    expect(exportReports.every(report =>
+      report.status === 'OBTAINABLE' || report.status === 'OBTAINABLE_RNG',
+    )).toBe(true);
+    const exportBatches = await sampleAsync(
+      '20 pinned proof exports',
+      () => exportTwentyProofs(exportGoals, exportReports),
+    );
+    expect(exportBatches.every(batch =>
+      batch.length === 20
+      && batch.every(summary => summary.proofHash?.startsWith('sha256-')),
+    )).toBe(true);
+  }, 120_000);
+
+  it('fails closed at route and blocker bounds and reuses one worker source initialization', async () => {
+    const direct = rule('benchmark-route-cap', 'Route capped item');
+    const routeCap = evaluateObtainability(direct.output, {
+      rules: [...sourceDocument.rules, direct],
+      snapshot: currentRun,
+      reachableLocations: new Set([START_LOCATION]),
+      sourceVersion: sourceDocument.sourceVersion,
+      coverage: 'VERIFIED',
+      limits: { maxIterations: 1_000, maxRoutes: 0 },
+    });
+    expect(routeCap).toMatchObject({
+      status: 'UNKNOWN',
+      routes: [],
+      blockers: [],
+      routesComplete: false,
+    });
+    expect(routeCap.explanation).toContain('maxRoutes');
+
+    const blockerCap = blockerFixture(17);
+    const blockerReport = await createRuneProofEngine(blockerCap.sources)
+      .evaluate({ goal: blockerCap.goal }, currentRun);
+    expect(blockerReport).toMatchObject({
+      status: 'UNKNOWN',
+      routes: [],
+      blockers: [],
+      routesComplete: false,
+    });
+    expect(blockerReport.explanation).toContain('maxSetSize');
+
+    const originalWorker = globalThis.Worker;
+    let workerInstance: DeferredWorker | undefined;
+    try {
+      globalThis.Worker = class extends DeferredWorker {
+        constructor() {
+          super();
+          workerInstance = this;
+        }
+      } as unknown as typeof Worker;
+      const executor = createRuneProofExecutor(fullSources);
+      let firstSettled = false;
+      const first = executor.evaluate({ goal: ordinaryGoal }, currentRun)
+        .then(report => {
+          firstSettled = true;
+          return report;
+        });
+      expect(workerInstance?.messages).toHaveLength(2);
+      expect(workerInstance?.messages[0]).toMatchObject({
+        type: 'INITIALIZE',
+        sources: fullSources,
+      });
+      expect(workerInstance?.messages[1]).toMatchObject({
+        type: 'EVALUATE',
+        id: 1,
+        query: { goal: ordinaryGoal },
+        snapshot: currentRun,
+      });
+      expect(workerInstance?.messages[1]).not.toHaveProperty('sources');
+      await Promise.resolve();
+      expect(firstSettled).toBe(false);
+      workerInstance?.reply(1, unknownReport(ordinaryGoal.id));
+      expect((await first).status).toBe('UNKNOWN');
+
+      const second = executor.evaluate({ goal: ordinaryGoal }, currentRun);
+      expect(workerInstance?.messages).toHaveLength(3);
+      expect(workerInstance?.messages[2]).toMatchObject({
+        type: 'EVALUATE',
+        id: 2,
+      });
+      expect(workerInstance?.messages[2]).not.toHaveProperty('sources');
+      expect(workerInstance?.messages.filter(message =>
+        message.type === 'INITIALIZE',
+      )).toHaveLength(1);
+      workerInstance?.reply(2, unknownReport(ordinaryGoal.id));
+      expect((await second).status).toBe('UNKNOWN');
+
+      sampleVoidSync('one-time worker source initialization clone', () => {
+        structuredClone({ type: 'INITIALIZE', sources: fullSources });
+      });
+      sampleVoidSync('subsequent worker request clone', () => {
+        structuredClone({
+          type: 'EVALUATE',
+          id: 2,
+          query: { goal: ordinaryGoal },
+          snapshot: currentRun,
+        });
+      });
+      expect(lastMetric('subsequent worker request clone').p95Ms)
+        .toBeLessThan(10);
+    } finally {
+      globalThis.Worker = originalWorker;
+    }
+
+    let terminated = false;
+    try {
+      globalThis.Worker = class {
+        onmessage: ((event: MessageEvent) => void) | null = null;
+        onerror: ((event: ErrorEvent) => void) | null = null;
+        postMessage(): void {
+          throw new DOMException('cannot clone sources', 'DataCloneError');
+        }
+        terminate(): void {
+          terminated = true;
+        }
+      } as unknown as typeof Worker;
+      const selected = createRuneProofExecutor(fullSources);
+      const expected = await createRuneProofEngine(fullSources)
+        .evaluate({ goal: ordinaryGoal }, currentRun);
+      expect(await selected.evaluate({ goal: ordinaryGoal }, currentRun))
+        .toEqual(expected);
+      expect(terminated).toBe(true);
+    } finally {
+      globalThis.Worker = originalWorker;
+    }
+  });
+});
+
+afterAll(() => {
+  for (const metric of metrics) {
+    console.info(
+      `[RuneProof benchmark] ${metric.name}: median ${metric.medianMs.toFixed(3)} ms, p95 ${metric.p95Ms.toFixed(3)} ms (${RUNS} runs)`,
+    );
+  }
+});
+
+function sampleSync<T>(name: string, operation: () => T): T[] {
+  const samples: number[] = [];
+  const results: T[] = [];
+  for (let run = 0; run < RUNS; run += 1) {
+    const started = performance.now();
+    const result = operation();
+    samples.push(performance.now() - started);
+    results.push(result);
+  }
+  recordMetric(name, samples);
+  return results;
+}
+
+function sampleVoidSync(name: string, operation: () => void): void {
+  const samples: number[] = [];
+  for (let run = 0; run < RUNS; run += 1) {
+    const started = performance.now();
+    operation();
+    samples.push(performance.now() - started);
+  }
+  recordMetric(name, samples);
+}
+
+async function sampleAsync<T>(
+  name: string,
+  operation: () => Promise<T>,
+): Promise<T[]> {
+  const samples: number[] = [];
+  const results: T[] = [];
+  for (let run = 0; run < RUNS; run += 1) {
+    const started = performance.now();
+    const result = await operation();
+    samples.push(performance.now() - started);
+    results.push(result);
+  }
+  recordMetric(name, samples);
+  return results;
+}
+
+function recordMetric(name: string, samples: readonly number[]): void {
+  const ordered = [...samples].sort((left, right) => left - right);
+  const metric = {
+    name,
+    medianMs: percentile(ordered, 0.5),
+    p95Ms: percentile(ordered, 0.95),
+  };
+  const existing = metrics.findIndex(value => value.name === name);
+  if (existing >= 0) metrics.splice(existing, 1, metric);
+  else metrics.push(metric);
+}
+
+function percentile(ordered: readonly number[], value: number): number {
+  return ordered[Math.max(0, Math.ceil(ordered.length * value) - 1)];
+}
+
+function lastMetric(name: string): BenchmarkMetric {
+  const metric = metrics.find(value => value.name === name);
+  if (!metric) throw new Error(`Missing benchmark metric: ${name}`);
+  return metric;
+}
+
+function fullCompilerInput(): AcquisitionCompilerInput {
+  return {
+    sourceCommit: chunkDocument.sourceMeta?.commit ?? 'unknown',
+    locationNodes: chunkDocument.locationNodes ?? [],
+    chunks: chunkDocument.chunks ?? {},
+    shopItems: chunkDocument.shopItems ?? {},
+    drops: chunkDocument.drops ?? {},
+    taskUnlocks: chunkDocument.taskUnlocks ?? {},
+    questIds: questAuditJson.entries.map(entry => entry.id),
+    transformEvents:
+      chunkAuditJson.events as AcquisitionCompilerInput['transformEvents'],
+    productionRecipes: [],
+    reviewedSources: reviewedSources(),
+  };
+}
+
+function reviewedSources(): ReviewedAcquisitionSource[] {
+  return Object.entries(RESOURCE_MAP)
+    .sort(([left], [right]) => compareText(left, right))
+    .flatMap(([output, sources]) => sources.map((source, index) => ({
+      output,
+      sourceKind: resourceSourceKind(source),
+      sourceHost: source.name,
+      regions: [...source.regions].sort(compareText),
+      coverage: source.regions.includes('Any') ? 'UNKNOWN' : 'PARTIAL',
+      provenanceIds: [trustedSourceId(output, index)],
+    })));
+}
+
+function resourceSourceKind(
+  source: (typeof RESOURCE_MAP)[string][number],
+): SourceKind {
+  switch (source.type) {
+    case 'DROP': return 'DROP';
+    case 'SHOP': return 'SHOP';
+    case 'MERCHANT': return source.inputs ? 'PRODUCTION' : 'SHOP';
+    case 'SPAWN': return 'SPAWN';
+    case 'SKILL': return source.inputs ? 'PRODUCTION' : 'GATHERING';
+    case 'MINIGAME': return 'MINIGAME';
+    case 'QUEST': return 'QUEST_REWARD';
+    case 'PICKPOCKET': return 'PICKPOCKET';
+    case 'CLUE': return 'CLUE';
+  }
+}
+
+function recursiveFixture(depth: number): {
+  goal: CompiledGoal;
+  sources: RuneProofEngineSources;
+  rules: AcquisitionRule[];
+} {
+  const rules = [
+    rule('benchmark-recursive-00', recursiveLabel(0), {
+      sourceKind: 'SPAWN',
+    }),
+    ...Array.from({ length: depth }, (_, index) =>
+      rule(
+        `benchmark-recursive-${String(index + 1).padStart(2, '0')}`,
+        recursiveLabel(index + 1),
+        {
+          requirements: requirement('ITEM', recursiveLabel(index)),
+        },
+      )),
+  ];
+  const goal = compileItemGoal(
+    {
+      id: `item:${normalizeId(recursiveLabel(depth))}`,
+      label: recursiveLabel(depth),
+    },
+    1,
+  );
+  return { goal, sources: verifiedSources(rules), rules };
+}
+
+function alternativeQuestFixture(recursive: ReturnType<typeof recursiveFixture>): {
+  goal: CompiledGoal;
+  sources: RuneProofEngineSources;
+  snapshot: RuneProofRunSnapshot;
+} {
+  const permit = fact('QUEST', 'Benchmark permit');
+  const goal: CompiledGoal = {
+    id: 'quest:benchmark-alternatives',
+    kind: 'QUEST',
+    label: 'Benchmark alternatives',
+    requirement: {
+      op: 'ANY',
+      terms: [
+        requirement('ITEM', recursive.goal.label),
+        { op: 'FACT', fact: permit },
+      ],
+    },
+    coverage: 'VERIFIED',
+    provenanceIds: ['benchmark:quest-alternatives'],
+    sourceVersion: 'benchmark-goal-v1',
+  };
+  return {
+    goal,
+    sources: recursive.sources,
+    snapshot: snapshot({ completedQuests: [permit.label] }),
+  };
+}
+
+function blockerFixture(size: number): {
+  goal: CompiledGoal;
+  sources: RuneProofEngineSources;
+} {
+  const goal = compileItemGoal(
+    { id: 'item:bounded-blocker-goal', label: 'Bounded blocker goal' },
+    1,
+  );
+  const terms = Array.from({ length: size }, (_, index) =>
+    requirement(
+      'QUEST',
+      `Benchmark gate ${String(index + 1).padStart(2, '0')}`,
+    ));
+  const blockerRule = rule('benchmark-blocker', goal.label, {
+    requirements: { op: 'ALL', terms },
+  });
+  return { goal, sources: verifiedSources([blockerRule]) };
+}
+
+function verifiedSources(extraRules: readonly AcquisitionRule[]): RuneProofEngineSources {
+  return {
+    sourceVersion: sourceDocument.sourceVersion,
+    sourceAudit: {
+      sourceVersion: sourceDocument.sourceVersion,
+      questCoverage: 'VERIFIED',
+      chunkCoverage: 'VERIFIED',
+      acquisitionCoverage: 'VERIFIED',
+    },
+    locationGraph: {
+      ...fullSources.locationGraph,
+      nodes: fullSources.locationGraph.nodes.map(node => ({
+        ...node,
+        coverage: 'VERIFIED',
+      })),
+    },
+    acquisition: {
+      ...sourceDocument,
+      counts: {
+        rules: sourceDocument.rules.length + extraRules.length,
+        unresolvedSources: 0,
+      },
+      acquisitionCoverage: 'VERIFIED',
+      rules: [...sourceDocument.rules, ...extraRules],
+      unresolvedSources: [],
+    },
+  };
+}
+
+function uniqueDirectGoals(count: number): CompiledGoal[] {
+  const byOutput = new Map<string, FactRef>();
+  sourceDocument.rules
+    .filter(value =>
+      value.locationId === START_LOCATION
+      && value.requirements.op === 'ALL'
+      && value.requirements.terms.length === 0,
+    )
+    .forEach(value => byOutput.set(value.output.id, value.output));
+  return [...byOutput.values()]
+    .sort((left, right) => compareText(left.id, right.id))
+    .slice(0, count)
+    .map(value => compileItemGoal(
+      { id: value.id, label: value.label },
+      1,
+    ));
+}
+
+async function exportTwentyProofs(
+  goals: readonly CompiledGoal[],
+  reports: readonly RuneProofReport[],
+): Promise<Awaited<ReturnType<RuneProofExportRegistry['select']>>> {
+  const registry = new RuneProofExportRegistry();
+  goals.forEach((goal, index) => {
+    const report = reports[index];
+    registry.record(
+      goal,
+      report,
+      currentRun,
+      sourceDocument.sourceVersion,
+      async () => report,
+    );
+  });
+  return registry.select({
+    runId: currentRun.runId,
+    runRevision: currentRun.runRevision,
+    sourceVersion: sourceDocument.sourceVersion,
+    pinnedGoalIds: goals.map(goal => goal.id),
+  });
+}
+
+function rule(
+  id: string,
+  outputLabel: string,
+  overrides: Partial<AcquisitionRule> = {},
+): AcquisitionRule {
+  return {
+    id,
+    output: fact('ITEM', outputLabel),
+    outputQuantity: 1,
+    sourceKind: 'PRODUCTION',
+    sourceLabel: id,
+    locationId: START_LOCATION,
+    requirements: empty,
+    repeatability: 'REPEATABLE',
+    probability: null,
+    coverage: 'VERIFIED',
+    provenanceIds: [`benchmark:${id}`],
+    ...overrides,
+  };
+}
+
+function requirement(
+  kind: FactKind,
+  label: string,
+  quantity?: number,
+): RequirementExpr {
+  return { op: 'FACT', fact: fact(kind, label, quantity) };
+}
+
+function fact(kind: FactKind, label: string, quantity?: number): FactRef {
+  return {
+    id: `${kind.toLowerCase().replace('_', '-')}:${normalizeId(label)}`,
+    kind,
+    label,
+    ...(quantity === undefined ? {} : { quantity }),
+  };
+}
+
+function snapshot(
+  overrides: Partial<RuneProofRunSnapshot> = {},
+): RuneProofRunSnapshot {
+  return {
+    runId: 'runeproof-performance-run',
+    runRevision: 1,
+    gameModeId: 'chunked',
+    equipmentTiers: {},
+    skillCaps: {},
+    currentLevels: {},
+    unlockedAreas: [],
+    unlockedChunks: [],
+    unlockedMobility: [],
+    unlockedArcana: [],
+    unlockedHousing: [],
+    unlockedMerchants: [],
+    unlockedMinigames: [],
+    unlockedBosses: [],
+    unlockedStorage: [],
+    unlockedGuilds: [],
+    unlockedFarming: [],
+    unlockedSlayer: [],
+    unlockedBanks: [],
+    completedQuests: [],
+    completedDiaries: [],
+    completedCombatAchievements: [],
+    completedTasks: [],
+    collectionLog: {},
+    ...overrides,
+  };
+}
+
+class DeferredWorker {
+  onmessage: ((event: MessageEvent) => void) | null = null;
+  onerror: ((event: ErrorEvent) => void) | null = null;
+  messages: Record<string, unknown>[] = [];
+
+  postMessage(message: Record<string, unknown>): void {
+    this.messages.push(message);
+  }
+
+  reply(id: number, report: RuneProofReport): void {
+    this.onmessage?.({
+      data: { id, report },
+    } as MessageEvent);
+  }
+}
+
+function unknownReport(goalId: string): RuneProofReport {
+  return {
+    goalId,
+    status: 'UNKNOWN',
+    coverage: 'UNKNOWN',
+    routes: [],
+    blockers: [],
+    unavoidableBlockerFactIds: [],
+    routesComplete: false,
+  };
+}
+
+function recursiveLabel(index: number): string {
+  return `Recursive component ${String(index).padStart(2, '0')}`;
+}
+
+function normalizeId(value: string): string {
+  return value.trim().toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+const trustedSourceIds = new Map<string, string>(
+  sourceDocument.provenanceCatalog.flatMap(entry =>
+    entry.payload?.sourceIds.map(id => {
+      const match = /:(\d{4})$/.exec(id);
+      if (!match) throw new Error(`Invalid trusted source id: ${id}`);
+      return [`${entry.payload!.output}\u0000${match[1]}`, id] as const;
+    }) ?? [],
+  ),
+);
+
+function trustedSourceId(output: string, index: number): string {
+  const key = `${output}\u0000${String(index).padStart(4, '0')}`;
+  const id = trustedSourceIds.get(key);
+  if (!id) throw new Error(`Missing trusted source id: ${key}`);
+  return id;
+}
+
+function compareText(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0;
+}

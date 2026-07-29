@@ -43,6 +43,8 @@ export function createRuneProofExecutor(sources: RuneProofEngineSources): RunePr
   let worker: Worker;
   try { worker = new Worker(new URL('../../workers/runeproof.worker.ts', import.meta.url), { type: 'module' }); }
   catch { return fallback; }
+  try { worker.postMessage({ type: 'INITIALIZE', sources }); }
+  catch { worker.terminate(); return fallback; }
   let nextId = 0;
   const pending = new Map<number, { query: RuneProofQuery; snapshot: RuneProofRunSnapshot; signal?: AbortSignal; resolve: (value: RuneProofReport) => void; reject: (reason?: unknown) => void }>();
   const fallbackPending = () => {
@@ -69,7 +71,7 @@ export function createRuneProofExecutor(sources: RuneProofEngineSources): RunePr
       const abort = () => { pending.delete(id); reject(abortError()); };
       signal?.addEventListener('abort', abort, { once: true });
       pending.set(id, { query, snapshot, signal, resolve, reject });
-      try { worker.postMessage({ id, sources, query, snapshot }); }
+      try { worker.postMessage({ type: 'EVALUATE', id, query, snapshot }); }
       catch { pending.delete(id); signal?.removeEventListener('abort', abort); fallback.evaluate(query, snapshot, signal).then(resolve, reject); }
     }),
   });
