@@ -191,6 +191,36 @@ describe('RuneProof structural validation', () => {
       'Cyclic witness step',
     );
   });
+
+  it.each(['toString', '__proto__'])('rejects prototype-named child step %s', (childId) => {
+    const route = deterministicRoute();
+    route.witness.steps.root.childStepIds = [childId];
+    expect(() => assertRuneProofReport(obtainableReport(route))).toThrow(
+      'Missing witness child step',
+    );
+  });
+
+  it('rejects FactRefs whose IDs do not match their canonical kind and label', () => {
+    expect(() => assertRequirementExpr({
+      op: 'FACT',
+      fact: {
+        id: 'item:not-oak-plank',
+        kind: 'ITEM',
+        label: 'Oak plank',
+      },
+    } as never)).toThrow('Invalid FactRef');
+  });
+
+  it('accepts FactRefs with canonical IDs', () => {
+    expect(() => assertRequirementExpr({
+      op: 'FACT',
+      fact: {
+        id: 'item:oak-plank',
+        kind: 'ITEM',
+        label: 'Oak plank',
+      },
+    } as never)).not.toThrow();
+  });
 });
 
 function obtainableReport(route = deterministicRoute()): RuneProofReport {

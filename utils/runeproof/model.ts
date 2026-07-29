@@ -291,10 +291,10 @@ function assertWitnessStepGraph(steps: Record<string, WitnessStep>): void {
     if (visited.has(stepId)) {
       return;
     }
-    const step = steps[stepId];
-    if (!step) {
+    if (!hasOwn(steps, stepId)) {
       throw new Error('Missing witness child step');
     }
+    const step = steps[stepId];
     visiting.add(stepId);
     step.childStepIds.forEach(visit);
     visiting.delete(stepId);
@@ -309,9 +309,14 @@ function assertFactRef(fact: unknown): asserts fact is FactRef {
     || !isNonEmptyString(fact.id)
     || !factKinds.has(fact.kind as FactKind)
     || !isNonEmptyString(fact.label)
-    || (fact.quantity !== undefined && !isPositiveInteger(fact.quantity))) {
+    || (fact.quantity !== undefined && !isPositiveInteger(fact.quantity))
+    || fact.id !== factId(fact.kind as FactKind, fact.label)) {
     throw new Error('Invalid FactRef');
   }
+}
+
+function hasOwn(record: Record<string, unknown>, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(record, key);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
