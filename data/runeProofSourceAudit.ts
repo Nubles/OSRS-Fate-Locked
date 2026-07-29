@@ -1,11 +1,11 @@
 import chunkTransformAudit from './sources/chunk-content-transform-audit.json';
 import questRequirementAudit from './sources/quest-requirement-audit.json';
-import type {
-  AuditCoverage,
-  RuneProofSourceAudit,
-} from '../utils/runeproof/sourceGate';
+import { sha256Hex } from '../utils/integrity';
+import type { AuditCoverage, RuneProofSourceAudit } from '../utils/runeproof/sourceGate';
 
 type JsonRecord = Record<string, unknown>;
+const CHUNK_DISPOSITIONS = new Set(['imported', 'normalized', 'excluded', 'unresolved']);
+const AUXILIARY_CHUNK_EVENT_CATEGORIES = new Set(['lite']);
 
 function isRecord(value: unknown): value is JsonRecord {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -14,22 +14,15 @@ function isRecord(value: unknown): value is JsonRecord {
 function canonicalize(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(canonicalize);
   if (isRecord(value)) {
-    return Object.fromEntries(
-      Object.entries(value)
-        .sort(([left], [right]) => left.localeCompare(right))
-        .map(([key, child]) => [key, canonicalize(child)]),
-    );
+    return Object.fromEntries(Object.entries(value)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, child]) => [key, canonicalize(child)]));
   }
   return value;
 }
 
-function auditIdentity(value: unknown): string {
-  const serialized = JSON.stringify(canonicalize(value)) ?? 'undefined';
-  let hash = 0x811c9dc5;
-  for (let index = 0; index < serialized.length; index += 1) {
-    hash = Math.imul(hash ^ serialized.charCodeAt(index), 0x01000193);
-  }
-  return (hash >>> 0).toString(16).padStart(8, '0');
+function canonicalJson(value: unknown): string {
+  return JSON.stringify(canonicalize(value)) ?? 'undefined';
 }
 
 function isCount(value: unknown): value is number {
@@ -38,9 +31,7 @@ function isCount(value: unknown): value is number {
 
 function questCoverage(audit: unknown): AuditCoverage {
   if (!isRecord(audit) || audit.schemaVersion !== 1 || !Array.isArray(audit.entries)
-    || audit.entries.length === 0) {
-    return 'UNKNOWN';
-  }
+    || audit.entries.length === 0) return 'UNKNOWN';
 
   const statuses = audit.entries.map(entry => isRecord(entry) ? entry.status : undefined);
   if (!statuses.every(status =>
@@ -50,6 +41,22 @@ function questCoverage(audit: unknown): AuditCoverage {
   return statuses.includes('unresolved') ? 'PARTIAL' : 'VERIFIED';
 }
 
+function validChunkEvent(
+  event: unknown,
+  categories: Set<string>,
+): event is JsonRecord & { terminal: boolean; category: string; disposition: string } {
+  return isRecord(event)
+    && typeof event.terminal === 'boolean'
+    && typeof event.category === 'string'
+    && categories.has(event.category)
+    && typeof event.sourceKey === 'string'
+    && event.sourceKey.length > 0
+    && Array.isArray(event.targetKeys)
+    && event.targetKeys.every(targetKey => typeof targetKey === 'string')
+    && typeof event.disposition === 'string'
+    && CHUNK_DISPOSITIONS.has(event.disposition);
+}
+
 function chunkCoverage(audit: unknown): AuditCoverage {
   if (!isRecord(audit) || audit.schemaVersion !== 1
     || typeof audit.sourceCommit !== 'string' || !audit.sourceCommit
@@ -57,37 +64,46 @@ function chunkCoverage(audit: unknown): AuditCoverage {
     return 'UNKNOWN';
   }
 
-  const totals = Object.values(audit.categoryTotals);
-  if (!totals.length || !totals.every(total => {
+  const categories = Object.entries(audit.categoryTotals);
+  if (!categories.length || !categories.every(([, total]) => {
     if (!isRecord(total)) return false;
     const { source, imported, normalized, excluded, unresolved } = total;
     return [source, imported, normalized, excluded, unresolved].every(isCount)
       && source === imported + normalized + excluded + unresolved;
-  })) {
-    return 'UNKNOWN';
+  })) return 'UNKNOWN';
+
+  const categoryNames = new Set(categories.map(([category]) => category));
+  const recognizedCategories = new Set([...categoryNames, ...AUXILIARY_CHUNK_EVENT_CATEGORIES]);
+  const terminalCounts = new Map(categories.map(([category]) => [category, 0]));
+  const terminalKeys = new Set<string>();
+  let hasUnresolvedEvent = false;
+
+  for (const event of audit.events) {
+    if (!validChunkEvent(event, recognizedCategories)) return 'UNKNOWN';
+    if (event.terminal && !categoryNames.has(event.category)) return 'UNKNOWN';
+    if (event.disposition === 'unresolved') hasUnresolvedEvent = true;
+    if (!event.terminal) continue;
+
+    const terminalKey = `${event.category}\u0000${event.sourceKey}`;
+    if (terminalKeys.has(terminalKey)) return 'UNKNOWN';
+    terminalKeys.add(terminalKey);
+    terminalCounts.set(event.category, (terminalCounts.get(event.category) ?? 0) + 1);
   }
 
-  const dispositions = audit.events.map(event => isRecord(event) ? event.disposition : undefined);
-  if (!dispositions.length || !dispositions.every(disposition =>
-    disposition === 'imported' || disposition === 'normalized'
-      || disposition === 'excluded' || disposition === 'unresolved')) {
-    return 'UNKNOWN';
-  }
+  if (!audit.events.length || categories.some(([category, total]) =>
+    terminalCounts.get(category) !== (total as JsonRecord).source)) return 'UNKNOWN';
 
-  const terminalEvents = audit.events.filter(event => isRecord(event) && event.terminal === true);
-  const sourceTotal = totals.reduce((sum, total) => sum + (total as JsonRecord).source as number, 0);
-  if (sourceTotal !== terminalEvents.length) return 'UNKNOWN';
-
-  const hasUnresolvedTotals = totals.some(total => (total as JsonRecord).unresolved !== 0);
-  return hasUnresolvedTotals || dispositions.includes('unresolved') ? 'PARTIAL' : 'VERIFIED';
+  const hasUnresolvedTotals = categories.some(([, total]) =>
+    (total as JsonRecord).unresolved !== 0);
+  return hasUnresolvedTotals || hasUnresolvedEvent ? 'PARTIAL' : 'VERIFIED';
 }
 
-export function buildRuneProofSourceAudit(
+export async function buildRuneProofSourceAudit(
   questAudit: unknown,
   chunkAudit: unknown,
-): RuneProofSourceAudit {
+): Promise<RuneProofSourceAudit> {
   return Object.freeze({
-    sourceVersion: `quest-${auditIdentity(questAudit)}-chunk-${auditIdentity(chunkAudit)}`,
+    sourceVersion: `sha256-${await sha256Hex(canonicalJson({ questAudit, chunkAudit }))}`,
     questCoverage: questCoverage(questAudit),
     chunkCoverage: chunkCoverage(chunkAudit),
     // Task 5 must replace this after validating acquisition-source coverage.
@@ -95,7 +111,6 @@ export function buildRuneProofSourceAudit(
   });
 }
 
-export const runeProofSourceAudit = buildRuneProofSourceAudit(
-  questRequirementAudit,
-  chunkTransformAudit,
-);
+export function loadRuneProofSourceAudit(): Promise<RuneProofSourceAudit> {
+  return buildRuneProofSourceAudit(questRequirementAudit, chunkTransformAudit);
+}

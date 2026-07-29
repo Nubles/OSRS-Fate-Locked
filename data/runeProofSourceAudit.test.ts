@@ -4,27 +4,28 @@ import chunkTransformAudit from './sources/chunk-content-transform-audit.json';
 import questRequirementAudit from './sources/quest-requirement-audit.json';
 import {
   buildRuneProofSourceAudit,
-  runeProofSourceAudit,
+  loadRuneProofSourceAudit,
 } from './runeProofSourceAudit';
 
 describe('runeProofSourceAudit', () => {
-  it('keeps current unresolved quest and transform evidence conservative', () => {
+  it('keeps current unresolved quest and transform evidence conservative', async () => {
     expect(questRequirementAudit.entries.filter(entry => entry.status === 'unresolved'))
       .toHaveLength(3);
     expect(chunkTransformAudit.events.filter(event => event.disposition === 'unresolved'))
       .toHaveLength(140);
 
-    expect(runeProofSourceAudit).toMatchObject({
+    const audit = await loadRuneProofSourceAudit();
+    expect(audit).toMatchObject({
       questCoverage: 'PARTIAL',
       chunkCoverage: 'PARTIAL',
       acquisitionCoverage: 'PARTIAL',
     });
-    expect(() => requireRuneProofSources(runeProofSourceAudit))
+    expect(() => requireRuneProofSources(audit))
       .toThrow('RuneProof requires verified quest coverage');
   });
 
-  it('certifies fully complete synthetic audit evidence', () => {
-    const audit = buildRuneProofSourceAudit(
+  it('certifies fully complete synthetic audit evidence', async () => {
+    const audit = await buildRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       {
         schemaVersion: 1,
@@ -38,7 +39,13 @@ describe('runeProofSourceAudit', () => {
             unresolved: 0,
           },
         },
-        events: [{ terminal: true, disposition: 'imported' }],
+        events: [{
+          terminal: true,
+          category: 'drops',
+          sourceKey: 'drop-source',
+          targetKeys: ['target'],
+          disposition: 'imported',
+        }],
       },
     );
 
@@ -49,7 +56,7 @@ describe('runeProofSourceAudit', () => {
     });
   });
 
-  it('derives a distinct source version when either audit identity changes', () => {
+  it('derives a deterministic SHA-256 version that changes with either audit', async () => {
     const quest = { schemaVersion: 1, entries: [{ status: 'verified' }] };
     const chunk = {
       schemaVersion: 1,
@@ -59,20 +66,29 @@ describe('runeProofSourceAudit', () => {
           source: 1, imported: 1, normalized: 0, excluded: 0, unresolved: 0,
         },
       },
-      events: [{ terminal: true, disposition: 'imported' }],
+      events: [{
+        terminal: true,
+        category: 'drops',
+        sourceKey: 'drop-source',
+        targetKeys: ['target'],
+        disposition: 'imported',
+      }],
     };
 
-    const baseline = buildRuneProofSourceAudit(quest, chunk);
-    expect(buildRuneProofSourceAudit(
+    const baseline = await buildRuneProofSourceAudit(quest, chunk);
+    expect((await buildRuneProofSourceAudit(quest, chunk)).sourceVersion)
+      .toBe(baseline.sourceVersion);
+    expect(baseline.sourceVersion).toMatch(/^sha256-[0-9a-f]{64}$/);
+    expect((await buildRuneProofSourceAudit(
       { ...quest, entries: [{ status: 'verified-with-notes' }] }, chunk,
-    ).sourceVersion).not.toBe(baseline.sourceVersion);
-    expect(buildRuneProofSourceAudit(
+    )).sourceVersion).not.toBe(baseline.sourceVersion);
+    expect((await buildRuneProofSourceAudit(
       quest, { ...chunk, sourceCommit: 'next-chunk-source' },
-    ).sourceVersion).not.toBe(baseline.sourceVersion);
+    )).sourceVersion).not.toBe(baseline.sourceVersion);
   });
 
-  it('does not certify invalid transform accounting', () => {
-    expect(buildRuneProofSourceAudit(
+  it('does not certify invalid transform accounting', async () => {
+    expect((await buildRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       {
         schemaVersion: 1,
@@ -86,8 +102,47 @@ describe('runeProofSourceAudit', () => {
             unresolved: 0,
           },
         },
-        events: [{ terminal: true, disposition: 'imported' }],
+        events: [{
+          terminal: true,
+          category: 'drops',
+          sourceKey: 'drop-source',
+          targetKeys: ['target'],
+          disposition: 'imported',
+        }],
       },
-    ).chunkCoverage).toBe('UNKNOWN');
+    )).chunkCoverage).toBe('UNKNOWN');
+  });
+
+  it('does not ignore malformed non-terminal transform events', async () => {
+    const audit = await buildRuneProofSourceAudit(
+      { schemaVersion: 1, entries: [{ status: 'verified' }] },
+      {
+        schemaVersion: 1,
+        sourceCommit: 'chunk-source',
+        categoryTotals: {
+          drops: {
+            source: 1, imported: 1, normalized: 0, excluded: 0, unresolved: 0,
+          },
+        },
+        events: [
+          {
+            terminal: true,
+            category: 'drops',
+            sourceKey: 'drop-source',
+            targetKeys: ['target'],
+            disposition: 'imported',
+          },
+          {
+            terminal: 'true',
+            category: 'drops',
+            sourceKey: 'malformed-extra',
+            targetKeys: ['target'],
+            disposition: 'imported',
+          },
+        ],
+      },
+    );
+
+    expect(audit.chunkCoverage).toBe('UNKNOWN');
   });
 });
