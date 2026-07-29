@@ -94,7 +94,18 @@ function deterministicRoute() {
     probability: null,
     witness: {
       rootFactId: 'item:oak-plank',
-      steps: {},
+      steps: {
+        root: {
+          ruleId: 'rule:oak-plank-shop',
+          proves: {
+            id: 'item:oak-plank',
+            kind: 'ITEM' as const,
+            label: 'Oak plank',
+          },
+          chosenTerms: [],
+          childStepIds: [],
+        },
+      },
       sourceVersion: 'test',
       runId: 'test-run',
       runRevision: 1,
@@ -108,5 +119,86 @@ function rngRoute() {
     ...deterministicRoute(),
     deterministic: false,
     probability: 0.5,
+  };
+}
+
+describe('RuneProof structural validation', () => {
+  it('accepts an obtainable route with replayable proof metadata', () => {
+    expect(() => assertRuneProofReport(obtainableReport())).not.toThrow();
+  });
+
+  it('rejects a route without a replayable witness', () => {
+    const route = { ...deterministicRoute(), witness: undefined } as never;
+    expect(() => assertRuneProofReport(obtainableReport(route))).toThrow(
+      'Invalid RuneProof route',
+    );
+  });
+
+  it('rejects a witness with empty run metadata', () => {
+    const route = deterministicRoute();
+    route.witness.sourceVersion = '';
+    expect(() => assertRuneProofReport(obtainableReport(route))).toThrow(
+      'Invalid ProofWitness',
+    );
+  });
+
+  it('rejects a route with an out-of-range probability', () => {
+    const route = deterministicRoute();
+    route.probability = 1.1;
+    expect(() => assertRuneProofReport(obtainableReport(route))).toThrow(
+      'Invalid RuneProof route',
+    );
+  });
+
+  it('rejects malformed fact payloads', () => {
+    expect(() => assertRequirementExpr({
+      op: 'FACT',
+      fact: {},
+    } as never)).toThrow('Invalid FactRef');
+  });
+
+  it('rejects cyclic requirement expression graphs', () => {
+    const expression = { op: 'ALL', terms: [] as unknown[] };
+    expression.terms.push(expression);
+    expect(() => assertRequirementExpr(expression as never)).toThrow(
+      'Cyclic requirement expression',
+    );
+  });
+
+  it('rejects witness steps that refer to missing children', () => {
+    const route = deterministicRoute();
+    route.witness.steps.root.childStepIds = ['missing'];
+    expect(() => assertRuneProofReport(obtainableReport(route))).toThrow(
+      'Missing witness child step',
+    );
+  });
+
+  it('rejects cyclic witness step graphs', () => {
+    const route = deterministicRoute();
+    route.witness.steps.root.childStepIds = ['child'];
+    const steps = route.witness.steps as Record<string, unknown>;
+    steps.child = {
+      ruleId: 'rule:child',
+      proves: {
+        id: 'item:nails',
+        kind: 'ITEM',
+        label: 'Nails',
+      },
+      chosenTerms: [],
+      childStepIds: ['root'],
+    };
+    expect(() => assertRuneProofReport(obtainableReport(route))).toThrow(
+      'Cyclic witness step',
+    );
+  });
+});
+
+function obtainableReport(route = deterministicRoute()): RuneProofReport {
+  return {
+    ...baseReport(),
+    status: 'OBTAINABLE',
+    coverage: 'VERIFIED',
+    routes: [route],
+    routesComplete: true,
   };
 }
