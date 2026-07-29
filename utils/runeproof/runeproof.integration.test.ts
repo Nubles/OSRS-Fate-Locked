@@ -1,9 +1,39 @@
 import { describe, expect, it } from 'vitest';
 import { createPlankFixture, plankSource, requirement } from './fixtures/plank';
-import { evaluateRuneProof } from './engine';
+import { createRuneProofEngine, evaluateRuneProof } from './engine';
 import { verifyProof } from './proof';
+import { RuneProofExportRegistry, RuneProofService } from '../../services/RuneProofService';
 
 describe('RuneProof plank scenario', () => {
+  it('exports the exact app-authored plank summary consumed by RuneLite', async () => {
+    const fixture = createPlankFixture();
+    const registry = new RuneProofExportRegistry();
+    const service = new RuneProofService(
+      createRuneProofEngine(fixture.sources),
+      () => fixture.snapshot,
+      registry,
+    );
+
+    expect((await service.evaluate({ goal: fixture.goal }))?.status)
+      .toBe('OBTAINABLE_RNG');
+    expect(await registry.select({
+      runId: fixture.snapshot.runId,
+      runRevision: fixture.snapshot.runRevision,
+      sourceVersion: fixture.sources.sourceVersion,
+      pinnedGoalIds: [],
+    })).toEqual([{
+      goalId: 'item:plank',
+      goalLabel: 'Plank',
+      status: 'OBTAINABLE_RNG',
+      explanation: 'A current route is verified and depends on chance.',
+      routeLabels: ['Plank'],
+      blockerLabels: [],
+      unavoidableBlockerLabels: [],
+      proofHash: 'sha256-ddac76792a915e35201a32119de60ec9f4afdba372bfca8765399f669ac194b7',
+      sourceVersion: 'plank-fixture-v1',
+      runRevision: 7,
+    }]);
+  });
   it('proves the reachable verified monster drop without suggesting an unlock', async () => {
     const fixture = createPlankFixture();
     const report = await evaluateRuneProof({ goal: fixture.goal }, fixture.snapshot, fixture.sources);
