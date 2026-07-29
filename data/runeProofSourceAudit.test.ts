@@ -4,9 +4,11 @@ import { requireRuneProofSources } from '../utils/runeproof/sourceGate';
 import chunkTransformAudit from './sources/chunk-content-transform-audit.json';
 import questRequirementAudit from './sources/quest-requirement-audit.json';
 import {
-  buildRuneProofSourceAudit,
+  buildRuneProofSourceAuditWithTrustedCatalog,
   loadRuneProofSourceAudit,
 } from './runeProofSourceAudit';
+
+const trustedCatalogByDocument = new WeakMap<object, Record<string, any>>();
 
 const acquisitionFamilies = [
   'DROP', 'PRODUCTION', 'RESOURCE_ENGINE', 'SHOP', 'SPAWN',
@@ -176,22 +178,76 @@ async function acquisitionDocument(
   const contents = {
     schemaVersion: 1,
     counts: { rules: rules.length, unresolvedSources: unresolvedSources.length },
-    acquisitionCoverage: unresolvedSources.length > 0 ? 'PARTIAL' : 'VERIFIED',
+    acquisitionCoverage: unresolvedSources.length > 0
+      || Object.values(sourceFamilyCoverage).some(coverage => coverage !== 'VERIFIED')
+      ? 'PARTIAL' : 'VERIFIED',
     sourceFamilyCoverage,
     sourceFamilyAccounting: accounting,
     provenanceCatalog,
     rules,
     unresolvedSources,
   };
-  return {
+  const document = {
     ...contents,
     sourceVersion: `sha256-${await sha256Hex(canonicalJson(contents))}`,
   };
+  const trustedEntriesById = new Map<string, Record<string, any>>();
+  for (const entry of provenanceCatalog.filter(
+    candidate => candidate.kind === 'RESOURCE_MAP' || candidate.kind === 'RECIPE_AUDIT',
+  )) {
+    const sourceEntry = entry as Record<string, any>;
+    for (const rawId of sourceEntry.payload.sourceIds as string[]) {
+      const existing = trustedEntriesById.get(rawId);
+      if (existing && (existing.kind !== entry.kind || existing.coverage !== entry.coverage)) {
+        throw new Error(`Conflicting trusted fixture source ${rawId}`);
+      }
+      trustedEntriesById.set(rawId, {
+        id: rawId,
+        kind: entry.kind,
+        coverage: entry.coverage,
+        provenanceIds: [...new Set([...(existing?.provenanceIds ?? []), entry.id])].sort(),
+      });
+    }
+  }
+  const trustedContents = {
+    schemaVersion: 1,
+    entries: [...trustedEntriesById.values()].sort((left, right) =>
+      left.id.localeCompare(right.id)),
+  };
+  trustedCatalogByDocument.set(document, {
+    ...trustedContents,
+    sourceVersion: `sha256-${await sha256Hex(canonicalJson(trustedContents))}`,
+  });
+  return document;
 }
 
 async function catalogSourceId(kind: string, payload: unknown): Promise<string> {
   const prefix = kind === 'RECIPE_AUDIT' ? 'recipe-audit:' : 'resource-map:';
   return `${prefix}sha256-${await sha256Hex(canonicalJson(payload))}`;
+}
+
+async function buildFixtureRuneProofSourceAudit(
+  questAudit: unknown,
+  chunkAudit: unknown,
+  acquisitionAudit?: Record<string, any>,
+) {
+  const emptyContents = { schemaVersion: 1, entries: [] };
+  const trustedCatalog = acquisitionAudit
+    ? trustedCatalogByDocument.get(acquisitionAudit)
+    : {
+      ...emptyContents,
+      sourceVersion: `sha256-${await sha256Hex(canonicalJson(emptyContents))}`,
+    };
+  if (!trustedCatalog) throw new Error('Missing explicit trusted fixture catalog');
+  return buildRuneProofSourceAuditWithTrustedCatalog(
+    questAudit, chunkAudit, acquisitionAudit, trustedCatalog,
+  );
+}
+
+function fixtureTrustedCatalog(document: object): Record<string, any> {
+  const catalog = trustedCatalogByDocument.get(document);
+  if (!catalog) throw new Error('Missing explicit trusted fixture catalog');
+  return catalog;
 }
 
 function canonicalJson(value: unknown): string {
@@ -220,7 +276,7 @@ describe('runeProofSourceAudit', () => {
   });
 
   it('certifies fully complete synthetic audit evidence', async () => {
-    const audit = await buildRuneProofSourceAudit(
+    const audit = await buildFixtureRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       {
         schemaVersion: 1,
@@ -270,20 +326,20 @@ describe('runeProofSourceAudit', () => {
       }],
     };
 
-    const baseline = await buildRuneProofSourceAudit(quest, chunk);
-    expect((await buildRuneProofSourceAudit(quest, chunk)).sourceVersion)
+    const baseline = await buildFixtureRuneProofSourceAudit(quest, chunk);
+    expect((await buildFixtureRuneProofSourceAudit(quest, chunk)).sourceVersion)
       .toBe(baseline.sourceVersion);
     expect(baseline.sourceVersion).toMatch(/^sha256-[0-9a-f]{64}$/);
-    expect((await buildRuneProofSourceAudit(
+    expect((await buildFixtureRuneProofSourceAudit(
       { ...quest, entries: [{ status: 'verified-with-notes' }] }, chunk,
     )).sourceVersion).not.toBe(baseline.sourceVersion);
-    expect((await buildRuneProofSourceAudit(
+    expect((await buildFixtureRuneProofSourceAudit(
       quest, { ...chunk, sourceCommit: 'next-chunk-source' },
     )).sourceVersion).not.toBe(baseline.sourceVersion);
   });
 
   it('does not certify invalid transform accounting', async () => {
-    expect((await buildRuneProofSourceAudit(
+    expect((await buildFixtureRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       {
         schemaVersion: 1,
@@ -309,7 +365,7 @@ describe('runeProofSourceAudit', () => {
   });
 
   it('does not ignore malformed non-terminal transform events', async () => {
-    const audit = await buildRuneProofSourceAudit(
+    const audit = await buildFixtureRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       {
         schemaVersion: 1,
@@ -341,7 +397,7 @@ describe('runeProofSourceAudit', () => {
     expect(audit.chunkCoverage).toBe('UNKNOWN');
   });
   it('does not certify a terminal disposition distribution mismatch', async () => {
-    const audit = await buildRuneProofSourceAudit(
+    const audit = await buildFixtureRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       {
         schemaVersion: 1,
@@ -365,7 +421,7 @@ describe('runeProofSourceAudit', () => {
   });
 
   it('certifies acquisition coverage only from complete family evidence', async () => {
-    const audit = await buildRuneProofSourceAudit(
+    const audit = await buildFixtureRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       completeChunkAudit(),
       await acquisitionDocument(),
@@ -385,7 +441,7 @@ describe('runeProofSourceAudit', () => {
       reason: 'NO_PROOF_GRADE_LOCATION',
       provenanceIds: ['resource-map:legacy:0'],
     }];
-    const audit = await buildRuneProofSourceAudit(
+    const audit = await buildFixtureRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       completeChunkAudit(),
       await acquisitionDocument(undefined, unresolved),
@@ -397,7 +453,7 @@ describe('runeProofSourceAudit', () => {
   it('rejects a valid-format sourceVersion after exact contents change', async () => {
     const document = await acquisitionDocument();
     document.rules[0].probability = 0.5;
-    const audit = await buildRuneProofSourceAudit(
+    const audit = await buildFixtureRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       completeChunkAudit(),
       document,
@@ -431,7 +487,7 @@ describe('runeProofSourceAudit', () => {
     document.sourceFamilyAccounting.RESOURCE_ENGINE.ruleCount -= 1;
     document.acquisitionCoverage = 'UNKNOWN';
     await rehashDocument(document);
-    const audit = await buildRuneProofSourceAudit(
+    const audit = await buildFixtureRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       completeChunkAudit(),
       document,
@@ -446,7 +502,7 @@ describe('runeProofSourceAudit', () => {
     ) as { surfaceChunk: string };
     locationEntry.surfaceChunk = '050,50';
     await rehashDocument(document);
-    const audit = await buildRuneProofSourceAudit(
+    const audit = await buildFixtureRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       completeChunkAudit(),
       document,
@@ -457,7 +513,7 @@ describe('runeProofSourceAudit', () => {
     const document = await acquisitionDocument();
     document.provenanceCatalog.find(entry => entry.kind === 'RESOURCE_MAP')!.ruleIds = [];
     await rehashDocument(document);
-    const audit = await buildRuneProofSourceAudit(
+    const audit = await buildFixtureRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       completeChunkAudit(),
       document,
@@ -468,9 +524,9 @@ describe('runeProofSourceAudit', () => {
     const document = await acquisitionDocument();
     const production = document.rules.find(rule => rule.sourceKind === 'PRODUCTION')!;
     production.requirements = { op: 'ALL', terms: [] };
-    await rebindRulePayload(document, production);
+    await rebindRulePayload(document, production, true);
     await rehashDocument(document);
-    const audit = await buildRuneProofSourceAudit(
+    const audit = await buildFixtureRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       completeChunkAudit(),
       document,
@@ -494,10 +550,10 @@ describe('runeProofSourceAudit', () => {
         },
       ],
     };
-    await rebindRulePayload(document, production);
+    await rebindRulePayload(document, production, true);
     await rehashDocument(document);
 
-    expect((await buildRuneProofSourceAudit(
+    expect((await buildFixtureRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       completeChunkAudit(),
       document,
@@ -544,14 +600,114 @@ describe('runeProofSourceAudit', () => {
     const document = await acquisitionDocument();
     const production = document.rules.find(rule => rule.sourceKind === 'PRODUCTION')!;
     production.requirements = requirements;
-    await rebindRulePayload(document, production);
+    await rebindRulePayload(document, production, true);
     await rehashDocument(document);
 
-    expect((await buildRuneProofSourceAudit(
+    expect((await buildFixtureRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       completeChunkAudit(),
       document,
     )).acquisitionCoverage).toBe('VERIFIED');
+  });
+
+  it('rejects a forged raw source ID against the unchanged trusted catalog', async () => {
+    const document = await acquisitionDocument();
+    const production = document.rules.find(rule => rule.sourceKind === 'PRODUCTION')!;
+    const recipe = document.provenanceCatalog.find(
+      entry => entry.kind === 'RECIPE_AUDIT',
+    ) as Record<string, any>;
+    recipe.payload.sourceIds = ['recipe-audit:forged-source'];
+    await rebindRulePayload(document, production);
+    await rehashDocument(document);
+
+    expect((await buildFixtureRuneProofSourceAudit(
+      { schemaVersion: 1, entries: [{ status: 'verified' }] },
+      completeChunkAudit(),
+      document,
+    )).acquisitionCoverage).toBe('UNKNOWN');
+  });
+
+  it('rejects forged VERIFIED coverage for a trusted PARTIAL raw source', async () => {
+    const rules = structuredClone(verifiedRules);
+    rules.find(rule => rule.sourceKind === 'DROP')!.coverage = 'PARTIAL';
+    const document = await acquisitionDocument(rules);
+    const drop = document.rules.find(rule => rule.sourceKind === 'DROP')!;
+    const resource = document.provenanceCatalog.find(
+      entry => entry.kind === 'RESOURCE_MAP' && entry.ruleIds.includes(drop.id),
+    ) as Record<string, any>;
+    resource.payload.declaredCoverage = 'VERIFIED';
+    resource.coverage = 'VERIFIED';
+    drop.coverage = 'VERIFIED';
+    for (const family of ['DROP', 'RESOURCE_ENGINE']) {
+      document.sourceFamilyAccounting[family].coverage = 'VERIFIED';
+      document.sourceFamilyCoverage[family] = 'VERIFIED';
+    }
+    document.acquisitionCoverage = 'VERIFIED';
+    await rebindRulePayload(document, drop);
+    await rehashDocument(document);
+
+    expect((await buildFixtureRuneProofSourceAudit(
+      { schemaVersion: 1, entries: [{ status: 'verified' }] },
+      completeChunkAudit(),
+      document,
+    )).acquisitionCoverage).toBe('UNKNOWN');
+  });
+
+  it('rejects recipe evidence backed by a trusted RESOURCE_MAP raw source', async () => {
+    const document = await acquisitionDocument();
+    const trusted = fixtureTrustedCatalog(document);
+    const resourceRawId = trusted.entries.find(
+      (entry: Record<string, any>) => entry.kind === 'RESOURCE_MAP',
+    ).id;
+    const production = document.rules.find(rule => rule.sourceKind === 'PRODUCTION')!;
+    const recipe = document.provenanceCatalog.find(
+      entry => entry.kind === 'RECIPE_AUDIT',
+    ) as Record<string, any>;
+    recipe.payload.sourceIds = [resourceRawId];
+    await rebindRulePayload(document, production);
+    await rehashDocument(document);
+
+    expect((await buildFixtureRuneProofSourceAudit(
+      { schemaVersion: 1, entries: [{ status: 'verified' }] },
+      completeChunkAudit(),
+      document,
+    )).acquisitionCoverage).toBe('UNKNOWN');
+  });
+
+  it('rejects a self-consistent forged rule against unchanged trusted semantics', async () => {
+    const document = await acquisitionDocument();
+    const drop = document.rules.find(rule => rule.sourceKind === 'DROP')!;
+    const oldRuleId = drop.id;
+    drop.output = { id: 'item:forged-coins', kind: 'ITEM', label: 'Forged coins' };
+    drop.id = fixtureRuleId('Forged coins', drop.sourceKind, drop.sourceLabel, drop.locationId);
+    for (const entry of document.provenanceCatalog) {
+      entry.ruleIds = entry.ruleIds.map((id: string) => id === oldRuleId ? drop.id : id);
+    }
+    for (const family of ['DROP', 'RESOURCE_ENGINE']) {
+      document.sourceFamilyAccounting[family].ruleIds =
+        document.sourceFamilyAccounting[family].ruleIds.map(
+          (id: string) => id === oldRuleId ? drop.id : id,
+        );
+    }
+    await rebindRulePayload(document, drop);
+    await rehashDocument(document);
+
+    expect((await buildFixtureRuneProofSourceAudit(
+      { schemaVersion: 1, entries: [{ status: 'verified' }] },
+      completeChunkAudit(),
+      document,
+    )).acquisitionCoverage).toBe('UNKNOWN');
+  });
+
+  it('rejects an extra trusted-catalog key instead of trusting the document', async () => {
+    const document = await acquisitionDocument();
+    fixtureTrustedCatalog(document).extra = true;
+
+    expect((await buildFixtureRuneProofSourceAudit(
+      { schemaVersion: 1, entries: [{ status: 'verified' }] },
+      completeChunkAudit(),
+      document,
+    )).acquisitionCoverage).toBe('UNKNOWN');
   });
 
   it('rejects a forged recipe catalog ID after document rehashing', async () => {
@@ -568,7 +724,7 @@ describe('runeProofSourceAudit', () => {
     document.provenanceCatalog.sort((left, right) => left.id.localeCompare(right.id));
     await rehashDocument(document);
 
-    expect((await buildRuneProofSourceAudit(
+    expect((await buildFixtureRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       completeChunkAudit(),
       document,
@@ -590,7 +746,7 @@ describe('runeProofSourceAudit', () => {
     document.provenanceCatalog.sort((left, right) => left.id.localeCompare(right.id));
     await rehashDocument(document);
 
-    expect((await buildRuneProofSourceAudit(
+    expect((await buildFixtureRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       completeChunkAudit(),
       document,
@@ -612,7 +768,7 @@ describe('runeProofSourceAudit', () => {
     document.provenanceCatalog.sort((left, right) => left.id.localeCompare(right.id));
     await rehashDocument(document);
 
-    expect((await buildRuneProofSourceAudit(
+    expect((await buildFixtureRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       completeChunkAudit(),
       document,
@@ -630,7 +786,7 @@ describe('runeProofSourceAudit', () => {
     );
     await rehashDocument(document);
 
-    expect((await buildRuneProofSourceAudit(
+    expect((await buildFixtureRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       completeChunkAudit(),
       document,
@@ -642,7 +798,7 @@ describe('runeProofSourceAudit', () => {
     const locations = document.provenanceCatalog.filter(entry => entry.kind === 'LOCATION');
     expect(locations).toHaveLength(3);
 
-    expect((await buildRuneProofSourceAudit(
+    expect((await buildFixtureRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       completeChunkAudit(),
       document,
@@ -675,7 +831,7 @@ describe('runeProofSourceAudit', () => {
     mutate(document);
     await rehashDocument(document);
 
-    expect((await buildRuneProofSourceAudit(
+    expect((await buildFixtureRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       completeChunkAudit(),
       document,
@@ -702,7 +858,7 @@ describe('runeProofSourceAudit', () => {
     const document = await acquisitionDocument();
     mutate(document);
     await rehashDocument(document);
-    const audit = await buildRuneProofSourceAudit(
+    const audit = await buildFixtureRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       completeChunkAudit(),
       document,
@@ -718,7 +874,7 @@ describe('runeProofSourceAudit', () => {
     const document = await acquisitionDocument(undefined, unresolved);
     document.unresolvedSources[0].extra = true;
     await rehashDocument(document);
-    const audit = await buildRuneProofSourceAudit(
+    const audit = await buildFixtureRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       completeChunkAudit(),
       document,
@@ -752,7 +908,7 @@ describe('runeProofSourceAudit', () => {
   ])('rejects %s', async (_label, forge) => {
     const document = await acquisitionDocument();
     forge(document);
-    const audit = await buildRuneProofSourceAudit(
+    const audit = await buildFixtureRuneProofSourceAudit(
       { schemaVersion: 1, entries: [{ status: 'verified' }] },
       completeChunkAudit(),
       document,
@@ -762,7 +918,9 @@ describe('runeProofSourceAudit', () => {
 });
 
 async function rebindRulePayload(
-  document: Record<string, any>, rule: Record<string, any>,
+  document: Record<string, any>,
+  rule: Record<string, any>,
+  authorizeTrustedFixture = false,
 ): Promise<void> {
   const kind = rule.sourceKind === 'PRODUCTION' ? 'RECIPE_AUDIT' : 'RESOURCE_MAP';
   const entry = document.provenanceCatalog.find(
@@ -785,6 +943,19 @@ async function rebindRulePayload(
   rule.provenanceIds = rule.provenanceIds.map(
     (id: string) => id === oldId ? entry.id : id,
   );
+  if (authorizeTrustedFixture) {
+    const trusted = fixtureTrustedCatalog(document);
+    for (const rawId of entry.payload.sourceIds as string[]) {
+      const trustedEntry = trusted.entries.find(
+        (candidate: Record<string, any>) => candidate.id === rawId,
+      );
+      trustedEntry.provenanceIds = trustedEntry.provenanceIds.map(
+        (id: string) => id === oldId ? entry.id : id,
+      ).sort();
+    }
+    const { sourceVersion: _sourceVersion, ...trustedContents } = trusted;
+    trusted.sourceVersion = `sha256-${await sha256Hex(canonicalJson(trustedContents))}`;
+  }
   document.provenanceCatalog.sort(
     (left: Record<string, any>, right: Record<string, any>) => left.id.localeCompare(right.id),
   );

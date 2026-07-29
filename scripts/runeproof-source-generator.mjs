@@ -10,6 +10,12 @@ export function computeRuneProofDocumentVersion(document) {
 export function renderRuneProofSourceDocument(document) {
   return `${JSON.stringify(document, null, 2)}\n`;
 }
+export function computeTrustedAcquisitionCatalogVersion(catalog) {
+  return computeRuneProofDocumentVersion(catalog);
+}
+export function renderTrustedAcquisitionSourceCatalog(catalog) {
+  return `${JSON.stringify(catalog, null, 2)}\n`;
+}
 
 export async function generatedOutputMatches(outputPath, expectedBytes) {
   try {

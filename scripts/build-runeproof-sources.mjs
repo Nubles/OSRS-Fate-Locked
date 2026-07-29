@@ -5,13 +5,18 @@ import { fileURLToPath } from 'node:url';
 import { createServer } from 'vite';
 import {
   computeRuneProofDocumentVersion,
+  computeTrustedAcquisitionCatalogVersion,
   generatedOutputMatches,
   renderRuneProofSourceDocument,
+  renderTrustedAcquisitionSourceCatalog,
   writeGeneratedOutput,
 } from './runeproof-source-generator.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const outputPath = resolve(root, 'public', 'runeproof-sources.json');
+const trustedOutputPath = resolve(
+  root, 'data', 'sources', 'runeproof-trusted-acquisition-sources.json',
+);
 const check = process.argv.includes('--check');
 
 const [chunkDocument, chunkAudit, questAudit] = await Promise.all([
@@ -28,10 +33,10 @@ const vite = await createServer({
   server: { middlewareMode: true },
 });
 
-let compileAcquisitionSources;
+let compileAcquisitionArtifacts;
 let resourceMap;
 try {
-  ({ compileAcquisitionSources } = await vite.ssrLoadModule(
+  ({ compileAcquisitionArtifacts } = await vite.ssrLoadModule(
     '/utils/runeproof/acquisitionIndex.ts',
   ));
   ({ RESOURCE_MAP: resourceMap } = await vite.ssrLoadModule(
@@ -54,7 +59,7 @@ const reviewedSources = Object.entries(resourceMap)
     ],
   })));
 
-const document = compileAcquisitionSources({
+const { document, trustedCatalog } = compileAcquisitionArtifacts({
   sourceVersion: `sha256-${'0'.repeat(64)}`,
   sourceCommit: chunkDocument.sourceMeta?.commit ?? 'unknown',
   locationNodes: chunkDocument.locationNodes ?? [],
@@ -72,18 +77,34 @@ const document = compileAcquisitionSources({
 if (computeRuneProofDocumentVersion(document) !== document.sourceVersion) {
   throw new Error('Compiler sourceVersion does not match exact document contents');
 }
+if (computeTrustedAcquisitionCatalogVersion(trustedCatalog)
+  !== trustedCatalog.sourceVersion) {
+  throw new Error('Trusted catalog sourceVersion does not match exact catalog contents');
+}
 const bytes = renderRuneProofSourceDocument(document);
+const trustedBytes = renderTrustedAcquisitionSourceCatalog(trustedCatalog);
 
 if (check) {
-  if (!await generatedOutputMatches(outputPath, bytes)) {
-    console.error('public/runeproof-sources.json is stale; run npm run runeproof:sources');
+  const [documentCurrent, trustedCurrent] = await Promise.all([
+    generatedOutputMatches(outputPath, bytes),
+    generatedOutputMatches(trustedOutputPath, trustedBytes),
+  ]);
+  if (!documentCurrent || !trustedCurrent) {
+    const stale = [
+      !documentCurrent && 'public/runeproof-sources.json',
+      !trustedCurrent && 'data/sources/runeproof-trusted-acquisition-sources.json',
+    ].filter(Boolean).join(', ');
+    console.error(`${stale} stale; run npm run runeproof:sources`);
     process.exitCode = 1;
   } else {
-    console.log(summary('verified', document));
+    console.log(summary('verified', document, trustedCatalog));
   }
 } else {
-  await writeGeneratedOutput(outputPath, bytes);
-  console.log(summary('wrote', document));
+  await Promise.all([
+    writeGeneratedOutput(outputPath, bytes),
+    writeGeneratedOutput(trustedOutputPath, trustedBytes),
+  ]);
+  console.log(summary('wrote', document, trustedCatalog));
 }
 
 function sourceKind(source) {
@@ -101,12 +122,13 @@ function sourceKind(source) {
   }
 }
 
-function summary(action, result) {
+function summary(action, result, trustedCatalog) {
   return [
     `${action} RuneProof sources:`,
     `${result.rules.length} exact rules,`,
     `${result.unresolvedSources.length} unresolved legacy sources,`,
-    `coverage ${result.acquisitionCoverage}`,
+    `coverage ${result.acquisitionCoverage},`,
+    `${trustedCatalog.entries.length} trusted raw sources`,
   ].join(' ');
 }
 

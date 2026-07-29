@@ -1,6 +1,7 @@
 import chunkTransformAudit from './sources/chunk-content-transform-audit.json';
 import questRequirementAudit from './sources/quest-requirement-audit.json';
 import runeProofSources from '../public/runeproof-sources.json';
+import trustedAcquisitionSources from './sources/runeproof-trusted-acquisition-sources.json';
 import { sha256Hex } from '../utils/integrity';
 import type { AuditCoverage, RuneProofSourceAudit } from '../utils/runeproof/sourceGate';
 import { factId, type FactKind, type SourceKind } from '../utils/runeproof/model';
@@ -258,6 +259,45 @@ function validUnresolvedSource(source: unknown): source is JsonRecord {
     && validProvenanceIds(source.provenanceIds);
 }
 
+function parseTrustedAcquisitionSources(value: unknown): Map<string, JsonRecord> | null {
+  if (!isRecord(value) || !hasExactKeys(value, [
+    'entries', 'schemaVersion', 'sourceVersion',
+  ]) || value.schemaVersion !== 1
+    || typeof value.sourceVersion !== 'string'
+    || !/^sha256-[0-9a-f]{64}$/.test(value.sourceVersion)
+    || !Array.isArray(value.entries)) return null;
+  const { sourceVersion: _sourceVersion, ...contents } = value;
+  const entries = value.entries as unknown[];
+  if (entries.some(entry => !isRecord(entry) || !hasExactKeys(entry, [
+    'coverage', 'id', 'kind', 'provenanceIds',
+  ]) || typeof entry.id !== 'string' || entry.id.trim().length === 0
+    || (entry.kind !== 'RESOURCE_MAP' && entry.kind !== 'RECIPE_AUDIT')
+    || !validAuditCoverage(entry.coverage)
+    || !Array.isArray(entry.provenanceIds) || entry.provenanceIds.length === 0
+    || !entry.provenanceIds.every(id => typeof id === 'string'
+      && (entry.kind === 'RECIPE_AUDIT'
+        ? /^recipe-audit:sha256-[0-9a-f]{64}$/.test(id)
+        : /^resource-map:sha256-[0-9a-f]{64}$/.test(id)))
+    || new Set(entry.provenanceIds).size !== entry.provenanceIds.length
+    || entry.provenanceIds.some((id, index) => index > 0
+      && id <= entry.provenanceIds[index - 1]))) return null;
+  const typedEntries = entries as JsonRecord[];
+  const ids = typedEntries.map(entry => entry.id as string);
+  if (new Set(ids).size !== ids.length
+    || ids.some((id, index) => index > 0 && id <= ids[index - 1])) return null;
+  return new Map(typedEntries.map(entry => [entry.id as string, entry]));
+}
+
+async function validTrustedAcquisitionSources(
+  value: unknown,
+): Promise<Map<string, JsonRecord> | null> {
+  const trusted = parseTrustedAcquisitionSources(value);
+  if (!trusted || !isRecord(value)) return null;
+  const { sourceVersion: _sourceVersion, ...contents } = value;
+  const expectedVersion = `sha256-${await sha256Hex(canonicalJson(contents))}`;
+  return value.sourceVersion === expectedVersion ? trusted : null;
+}
+
 function validProvenancePayload(value: unknown): value is JsonRecord {
   if (!isRecord(value) || !validAuditCoverage(value.declaredCoverage)
     || !Array.isArray(value.sourceIds) || value.sourceIds.length === 0
@@ -338,12 +378,22 @@ async function validCatalogSourceEntry(
   entry: JsonRecord,
   rules: readonly JsonRecord[],
   unresolved: readonly JsonRecord[],
+  trustedSources: ReadonlyMap<string, JsonRecord>,
 ): Promise<boolean> {
   if (entry.kind !== 'RESOURCE_MAP' && entry.kind !== 'RECIPE_AUDIT') return true;
   const payload = entry.payload as JsonRecord;
   const prefix = entry.kind === 'RECIPE_AUDIT' ? 'recipe-audit:' : 'resource-map:';
   const expectedId = `${prefix}sha256-${await sha256Hex(canonicalJson(payload))}`;
-  if (entry.id !== expectedId || entry.coverage !== payload.declaredCoverage) return false;
+  let trustedCoverage: AuditCoverage = 'VERIFIED';
+  for (const sourceId of payload.sourceIds as string[]) {
+    const trusted = trustedSources.get(sourceId);
+    if (!trusted || trusted.kind !== entry.kind
+      || !(trusted.provenanceIds as string[]).includes(entry.id as string)) return false;
+    trustedCoverage = combineCoverage(trustedCoverage, trusted.coverage as AuditCoverage);
+  }
+  if (entry.id !== expectedId
+    || entry.coverage !== trustedCoverage
+    || payload.declaredCoverage !== trustedCoverage) return false;
 
   if (payload.type === 'RULE') {
     if ((entry.ruleIds as string[]).length === 0
@@ -479,7 +529,11 @@ function derivedFamilyAccounting(
   })) as unknown as Record<AcquisitionFamily, JsonRecord>;
 }
 
-async function acquisitionCoverage(audit: unknown): Promise<AuditCoverage> {
+async function acquisitionCoverage(
+  audit: unknown, trustedCatalog: unknown,
+): Promise<AuditCoverage> {
+  const trustedSources = await validTrustedAcquisitionSources(trustedCatalog);
+  if (!trustedSources) return 'UNKNOWN';
   if (audit === undefined) return 'PARTIAL';
   if (!isRecord(audit) || !hasExactKeys(audit, [
     'schemaVersion', 'sourceVersion', 'counts', 'acquisitionCoverage',
@@ -530,7 +584,7 @@ async function acquisitionCoverage(audit: unknown): Promise<AuditCoverage> {
       (source.provenanceIds as string[]).includes(id)).map(source => source.id);
     if (canonicalJson(entry.ruleIds) !== canonicalJson(expectedRuleIds)
       || canonicalJson(entry.unresolvedIds) !== canonicalJson(expectedUnresolvedIds)
-      || !await validCatalogSourceEntry(entry, rules, unresolved)) {
+      || !await validCatalogSourceEntry(entry, rules, unresolved, trustedSources)) {
       return 'UNKNOWN';
     }
   }
@@ -569,23 +623,27 @@ async function acquisitionCoverage(audit: unknown): Promise<AuditCoverage> {
         : rules.length === 0 ? 'UNKNOWN' : 'PARTIAL';
   return audit.acquisitionCoverage === derivedGlobal ? derivedGlobal : 'UNKNOWN';
 }
-export async function buildRuneProofSourceAudit(
+export async function buildRuneProofSourceAuditWithTrustedCatalog(
   questAudit: unknown,
   chunkAudit: unknown,
-  acquisitionAudit?: unknown,
+  acquisitionAudit: unknown,
+  trustedAcquisitionCatalog: unknown,
 ): Promise<RuneProofSourceAudit> {
   return Object.freeze({
     sourceVersion: `sha256-${await sha256Hex(canonicalJson({
-      questAudit, chunkAudit, acquisitionAudit,
+      questAudit, chunkAudit, acquisitionAudit, trustedAcquisitionCatalog,
     }))}`,
     questCoverage: questCoverage(questAudit),
     chunkCoverage: chunkCoverage(chunkAudit),
-    acquisitionCoverage: await acquisitionCoverage(acquisitionAudit),
+    acquisitionCoverage: await acquisitionCoverage(
+      acquisitionAudit, trustedAcquisitionCatalog,
+    ),
   });
 }
 
 export function loadRuneProofSourceAudit(): Promise<RuneProofSourceAudit> {
-  return buildRuneProofSourceAudit(
+  return buildRuneProofSourceAuditWithTrustedCatalog(
     questRequirementAudit, chunkTransformAudit, runeProofSources,
+    trustedAcquisitionSources,
   );
 }

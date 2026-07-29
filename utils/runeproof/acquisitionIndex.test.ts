@@ -3,6 +3,7 @@ import { chunkContentService } from '../../services/ChunkContentService';
 import { sha256Hex } from '../integrity';
 import {
   buildAcquisitionIndex,
+  compileAcquisitionArtifacts,
   compileAcquisitionSources,
   type AcquisitionCompilerInput,
 } from './acquisitionIndex';
@@ -254,6 +255,40 @@ describe('compileAcquisitionSources', () => {
       shopItems: { 'Lumbridge General Store': ['Different item'] },
     })).sourceVersion).not.toBe(document.sourceVersion);
   });
+  it('builds a separately hashed trusted catalog from authoritative raw sources', async () => {
+    const { document, trustedCatalog } = compileAcquisitionArtifacts(compilerInput({
+      locationNodes: [],
+      chunks: {},
+      shopItems: {},
+      drops: {},
+      reviewedSources: [{
+        output: 'Legacy item',
+        sourceKind: 'DROP',
+        sourceHost: 'Legacy monster',
+        regions: ['Misthalin'],
+        coverage: 'PARTIAL',
+        provenanceIds: ['resource-map:legacy-item:0000'],
+      }],
+    }));
+    const resourceEntry = document.provenanceCatalog.find(
+      entry => entry.kind === 'RESOURCE_MAP',
+    )!;
+    const { sourceVersion: _sourceVersion, ...trustedContents } = trustedCatalog;
+
+    expect(trustedCatalog).toEqual({
+      schemaVersion: 1,
+      sourceVersion: `sha256-${await sha256Hex(canonicalTestJson(trustedContents))}`,
+      entries: [{
+        id: 'resource-map:legacy-item:0000',
+        kind: 'RESOURCE_MAP',
+        coverage: 'PARTIAL',
+        provenanceIds: [resourceEntry.id],
+      }],
+    });
+    expect(resourceEntry.coverage).toBe('PARTIAL');
+    expect(resourceEntry.payload?.declaredCoverage).toBe('PARTIAL');
+  });
+
   it('emits byte-stable ordering regardless of input map insertion order', () => {
     const forward = compileAcquisitionSources(compilerInput({
       shopItems: { Shop: ['Z item', 'A item'] },

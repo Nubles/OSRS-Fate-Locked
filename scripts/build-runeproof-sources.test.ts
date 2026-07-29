@@ -4,8 +4,10 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   computeRuneProofDocumentVersion,
+  computeTrustedAcquisitionCatalogVersion,
   generatedOutputMatches,
   renderRuneProofSourceDocument,
+  renderTrustedAcquisitionSourceCatalog,
   writeGeneratedOutput,
 } from './runeproof-source-generator.mjs';
 
@@ -20,6 +22,23 @@ describe('RuneProof source generator contract', () => {
     const document = { schemaVersion: 1, rules: [{ id: 'rule' }] };
     expect(renderRuneProofSourceDocument(document))
       .toBe(renderRuneProofSourceDocument(structuredClone(document)));
+  });
+
+  it('independently hashes and renders the trusted acquisition catalog', () => {
+    const trustedCatalog = {
+      schemaVersion: 1,
+      sourceVersion: 'ignored',
+      entries: [{
+        id: 'resource-map:item:0000',
+        kind: 'RESOURCE_MAP',
+        coverage: 'PARTIAL',
+        provenanceIds: [`resource-map:sha256-${'a'.repeat(64)}`],
+      }],
+    };
+    expect(computeTrustedAcquisitionCatalogVersion(trustedCatalog))
+      .toMatch(/^sha256-[0-9a-f]{64}$/);
+    expect(renderTrustedAcquisitionSourceCatalog(trustedCatalog))
+      .toBe(`${JSON.stringify(trustedCatalog, null, 2)}\n`);
   });
 
   it('reports missing and stale output and accepts exact output', async () => {

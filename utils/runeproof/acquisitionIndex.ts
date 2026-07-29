@@ -151,6 +151,24 @@ export interface AcquisitionProvenanceEntry {
   parentId?: string | null;
   payload?: AcquisitionProvenancePayload;
 }
+export interface TrustedAcquisitionSourceEntry {
+  id: string;
+  kind: 'RESOURCE_MAP' | 'RECIPE_AUDIT';
+  coverage: Coverage;
+  provenanceIds: string[];
+}
+
+export interface TrustedAcquisitionSourceCatalog {
+  schemaVersion: 1;
+  sourceVersion: string;
+  entries: TrustedAcquisitionSourceEntry[];
+}
+
+export interface AcquisitionCompilerArtifacts {
+  document: RuneProofSourceDocument;
+  trustedCatalog: TrustedAcquisitionSourceCatalog;
+}
+
 export interface RuneProofSourceDocument {
   schemaVersion: 1;
   sourceVersion: string;
@@ -187,6 +205,12 @@ const SOURCE_KINDS = new Set<SourceKind>([
 export function compileAcquisitionSources(
   input: AcquisitionCompilerInput,
 ): RuneProofSourceDocument {
+  return compileAcquisitionArtifacts(input).document;
+}
+
+export function compileAcquisitionArtifacts(
+  input: AcquisitionCompilerInput,
+): AcquisitionCompilerArtifacts {
   const rules = new Map<string, AcquisitionRule>();
   const unresolved: UnresolvedAcquisitionSource[] = [];
   const outputLabels = new Map<string, string>();
@@ -330,11 +354,14 @@ export function compileAcquisitionSources(
     });
   }
 
+  const trustedRawSources = buildTrustedRawSources(input);
   const provenancePayloads = new Map<string, AcquisitionProvenancePayload>();
   const emittedRules = [...rules.values()].sort(byId).map(rule =>
-    canonicalizeRuleSourceProvenance(rule, provenancePayloads));
+    canonicalizeRuleSourceProvenance(rule, provenancePayloads, trustedRawSources));
   const unresolvedSources = dedupeUnresolved(unresolved).map(source =>
-    canonicalizeUnresolvedSourceProvenance(source, provenancePayloads));
+    canonicalizeUnresolvedSourceProvenance(
+      source, provenancePayloads, trustedRawSources,
+    ));
   const sourceFamilyAccounting = familyAccounting(emittedRules, unresolvedSources);
   const sourceFamilyCoverage = Object.fromEntries(SOURCE_FAMILIES.map(family => [
     family, sourceFamilyAccounting[family].coverage,
@@ -355,9 +382,15 @@ export function compileAcquisitionSources(
     rules: emittedRules,
     unresolvedSources,
   };
-  return {
+  const document = {
     ...contents,
     sourceVersion: `sha256-${sha256HexSync(canonicalDocumentJson(contents))}`,
+  };
+  return {
+    document,
+    trustedCatalog: buildTrustedAcquisitionSourceCatalog(
+      trustedRawSources, provenancePayloads,
+    ),
   };
 }
 
@@ -469,9 +502,96 @@ function canonicalUnresolved(
   };
 }
 
+interface TrustedRawAcquisitionSource {
+  id: string;
+  kind: 'RESOURCE_MAP' | 'RECIPE_AUDIT';
+  coverage: Coverage;
+}
+
+function buildTrustedRawSources(
+  input: AcquisitionCompilerInput,
+): Map<string, TrustedRawAcquisitionSource> {
+  const result = new Map<string, TrustedRawAcquisitionSource>();
+  const add = (
+    id: string,
+    kind: TrustedRawAcquisitionSource['kind'],
+    coverage: Coverage,
+  ) => {
+    const expectedPrefix = kind === 'RECIPE_AUDIT' ? 'recipe-audit:' : 'resource-map:';
+    if (!id.startsWith(expectedPrefix)) return;
+    const existing = result.get(id);
+    if (existing && existing.kind !== kind) {
+      throw new Error(`Conflicting trusted acquisition source kind for ${id}`);
+    }
+    result.set(id, {
+      id,
+      kind,
+      coverage: combineCoverage(existing?.coverage ?? 'VERIFIED', coverage),
+    });
+  };
+  for (const recipe of input.productionRecipes) {
+    for (const id of sortedUnique(recipe.provenanceIds)) {
+      add(id, 'RECIPE_AUDIT', validCoverage(recipe.coverage) ? recipe.coverage : 'UNKNOWN');
+    }
+  }
+  for (const source of input.reviewedSources) {
+    for (const id of sortedUnique(source.provenanceIds)) {
+      add(id, 'RESOURCE_MAP', validCoverage(source.coverage) ? source.coverage : 'UNKNOWN');
+    }
+  }
+  return result;
+}
+
+function trustedSourceCoverage(
+  sourceIds: readonly string[],
+  expectedKind: TrustedRawAcquisitionSource['kind'],
+  trustedSources: ReadonlyMap<string, TrustedRawAcquisitionSource>,
+): Coverage {
+  let coverage: Coverage = 'VERIFIED';
+  for (const id of sourceIds) {
+    const trusted = trustedSources.get(id);
+    if (!trusted || trusted.kind !== expectedKind) return 'UNKNOWN';
+    coverage = combineCoverage(coverage, trusted.coverage);
+  }
+  return coverage;
+}
+
+function buildTrustedAcquisitionSourceCatalog(
+  trustedSources: ReadonlyMap<string, TrustedRawAcquisitionSource>,
+  payloads: ReadonlyMap<string, AcquisitionProvenancePayload>,
+): TrustedAcquisitionSourceCatalog {
+  const provenanceByRawId = new Map<string, string[]>();
+  for (const [provenanceId, payload] of payloads) {
+    for (const rawId of payload.sourceIds) {
+      const trusted = trustedSources.get(rawId);
+      const kind = provenanceId.startsWith('recipe-audit:')
+        ? 'RECIPE_AUDIT' : 'RESOURCE_MAP';
+      if (!trusted || trusted.kind !== kind) continue;
+      provenanceByRawId.set(rawId, sortedUnique([
+        ...(provenanceByRawId.get(rawId) ?? []), provenanceId,
+      ]));
+    }
+  }
+  const entries = [...trustedSources.values()]
+    .filter(source => (provenanceByRawId.get(source.id)?.length ?? 0) > 0)
+    .sort((left, right) => compareText(left.id, right.id))
+    .map(source => ({
+      id: source.id,
+      kind: source.kind,
+      coverage: source.coverage,
+      provenanceIds: provenanceByRawId.get(source.id)!,
+    }));
+  const contents = { schemaVersion: 1 as const, entries };
+  return {
+    ...contents,
+    sourceVersion: `sha256-${sha256HexSync(canonicalDocumentJson(contents))}`,
+  };
+}
+
 function canonicalizeRuleSourceProvenance(
   rule: AcquisitionRule,
   payloads: Map<string, AcquisitionProvenancePayload>,
+  trustedSources: ReadonlyMap<string, TrustedRawAcquisitionSource>,
 ): AcquisitionRule {
   const recipeIds = rule.provenanceIds.filter(id => id.startsWith('recipe-audit:'));
   const resourceIds = rule.provenanceIds.filter(id => id.startsWith('resource-map:'));
@@ -488,7 +608,11 @@ function canonicalizeRuleSourceProvenance(
     requirements: canonicalRequirement(rule.requirements),
     repeatability: rule.repeatability,
     probability: rule.probability,
-    declaredCoverage: rule.coverage,
+    declaredCoverage: trustedSourceCoverage(
+      sourceIds,
+      prefix === 'recipe-audit:' ? 'RECIPE_AUDIT' : 'RESOURCE_MAP',
+      trustedSources,
+    ),
     sourceIds,
   };
   const id = catalogSourceId(prefix, payload);
@@ -505,6 +629,7 @@ function canonicalizeRuleSourceProvenance(
 function canonicalizeUnresolvedSourceProvenance(
   source: UnresolvedAcquisitionSource,
   payloads: Map<string, AcquisitionProvenancePayload>,
+  trustedSources: ReadonlyMap<string, TrustedRawAcquisitionSource>,
 ): UnresolvedAcquisitionSource {
   const recipeIds = source.provenanceIds.filter(id => id.startsWith('recipe-audit:'));
   const resourceIds = source.provenanceIds.filter(id => id.startsWith('resource-map:'));
@@ -518,7 +643,11 @@ function canonicalizeUnresolvedSourceProvenance(
     sourceLabel: source.sourceHost,
     regions: sortedUnique(source.regions),
     reason: source.reason,
-    declaredCoverage: source.coverage,
+    declaredCoverage: trustedSourceCoverage(
+      sourceIds,
+      prefix === 'recipe-audit:' ? 'RECIPE_AUDIT' : 'RESOURCE_MAP',
+      trustedSources,
+    ),
     sourceIds,
   };
   const id = catalogSourceId(prefix, payload);
