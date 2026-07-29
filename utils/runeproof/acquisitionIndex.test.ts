@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { chunkContentService } from '../../services/ChunkContentService';
+import { sha256Hex } from '../integrity';
 import {
   buildAcquisitionIndex,
   compileAcquisitionSources,
@@ -7,7 +8,6 @@ import {
 } from './acquisitionIndex';
 import { factId } from './model';
 
-const sourceVersion = 'sha256-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 const location = {
   id: 'surface:50,50',
   label: 'Lumbridge starting chunk',
@@ -19,7 +19,6 @@ function compilerInput(
   overrides: Partial<AcquisitionCompilerInput> = {},
 ): AcquisitionCompilerInput {
   return {
-    sourceVersion,
     sourceCommit: 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926',
     locationNodes: [location],
     chunks: {
@@ -216,7 +215,7 @@ describe('compileAcquisitionSources', () => {
       expect(document.unresolvedSources).toContainEqual(expect.objectContaining({
         output: 'Unbound item',
         sourceHost: 'Legacy monster',
-        coverage: 'PARTIAL',
+        coverage: 'UNKNOWN',
         reason: 'REGION_ONLY_LOCATION',
       }));
     },
@@ -231,6 +230,7 @@ describe('compileAcquisitionSources', () => {
       coverage: 'PARTIAL',
       provenanceIds: [
         'chunk:12850',
+        'location:surface:50,50',
         'transform:shopItems:Lumbridge General Store',
       ],
     });
@@ -244,6 +244,16 @@ describe('compileAcquisitionSources', () => {
     expect(index.rulesByOutput.get(factId('ITEM', 'Pot'))).toEqual([shopRule]);
   });
 
+  it('binds sourceVersion to exact canonical document contents', async () => {
+    const document = compileAcquisitionSources(compilerInput());
+    const { sourceVersion: _sourceVersion, ...contents } = document;
+    const expected = `sha256-${await sha256Hex(canonicalTestJson(contents))}`;
+
+    expect(document.sourceVersion).toBe(expected);
+    expect(compileAcquisitionSources(compilerInput({
+      shopItems: { 'Lumbridge General Store': ['Different item'] },
+    })).sourceVersion).not.toBe(document.sourceVersion);
+  });
   it('emits byte-stable ordering regardless of input map insertion order', () => {
     const forward = compileAcquisitionSources(compilerInput({
       shopItems: { Shop: ['Z item', 'A item'] },
@@ -285,28 +295,67 @@ describe('complete raw source accounting', () => {
     expect(new Set(raw.map(source => JSON.stringify(source))).size).toBe(raw.length);
   });
 
-  it('does not guess when a host-output tuple maps to multiple authored surfaces', () => {
+  it('emits one deterministic exact rule per explicitly authored host surface', () => {
     const second = {
       id: 'surface:50,51', label: 'Adjacent chunk', surfaceChunk: '50,51',
       coverage: 'VERIFIED' as const,
     };
-    const document = compileAcquisitionSources(compilerInput({
+    const input = compilerInput({
+      locationNodes: [second, location],
+      chunks: {
+        12851: { s: ['Shared shop'] },
+        12850: { s: ['Shared shop'] },
+      },
+      shopItems: { 'Shared shop': ['Shared item'] },
+      drops: {},
+      transformEvents: [],
+    });
+    const document = compileAcquisitionSources(input);
+    const rules = document.rules.filter(rule => rule.output.label === 'Shared item');
+
+    expect(rules).toHaveLength(2);
+    expect(rules.map(rule => rule.locationId)).toEqual(['surface:50,50', 'surface:50,51']);
+    expect(new Set(rules.map(rule => rule.id)).size).toBe(2);
+    expect(rules[0].provenanceIds).toContain('chunk:12850');
+    expect(rules[1].provenanceIds).toContain('chunk:12851');
+    expect(document.unresolvedSources.some(source => source.output === 'Shared item'))
+      .toBe(false);
+    expect(JSON.stringify(document)).toBe(JSON.stringify(compileAcquisitionSources({
+      ...input,
       locationNodes: [location, second],
       chunks: {
         12850: { s: ['Shared shop'] },
         12851: { s: ['Shared shop'] },
       },
-      shopItems: { 'Shared shop': ['Shared item'] },
+    })));
+  });
+
+  it('emits exact routes and preserves unbound locations as unresolved evidence', () => {
+    const document = compileAcquisitionSources(compilerInput({
+      chunks: {
+        12850: { s: ['Mixed shop'] },
+        12851: { s: ['Mixed shop'] },
+      },
+      shopItems: { 'Mixed shop': ['Mixed item'] },
       drops: {},
       transformEvents: [],
     }));
+    const rules = document.rules.filter(rule => rule.output.label === 'Mixed item');
+    const unresolved = document.unresolvedSources.filter(source =>
+      source.output === 'Mixed item');
 
-    expect(document.rules.some(rule => rule.output.label === 'Shared item')).toBe(false);
-    expect(document.unresolvedSources).toContainEqual(expect.objectContaining({
-      output: 'Shared item', reason: 'NO_PROOF_GRADE_LOCATION',
-      provenanceIds: ['chunk:12850', 'chunk:12851'],
-    }));
+    expect(rules).toHaveLength(1);
+    expect(rules[0]).toMatchObject({
+      locationId: 'surface:50,50', provenanceIds: expect.arrayContaining(['chunk:12850']),
+    });
+    expect(rules[0].provenanceIds).not.toContain('chunk:12851');
+    expect(unresolved).toHaveLength(1);
+    expect(unresolved[0]).toMatchObject({
+      regions: ['50,51'], provenanceIds: expect.arrayContaining(['chunk:12851']),
+      reason: 'NO_PROOF_GRADE_LOCATION',
+    });
   });
+
   it('publishes exact family counts and memberships derived from emitted evidence', () => {
     const document = compileAcquisitionSources(compilerInput());
     const shop = document.sourceFamilyAccounting.SHOP;
@@ -380,6 +429,34 @@ describe('strict production validation', () => {
 });
 
 describe('acquisition location validation', () => {
+  it('rejects reviewed and production binding through a child on another surface', () => {
+    const mismatchedChild = {
+      id: 'interior:mismatched', label: 'Mismatched interior', surfaceChunk: '50,51',
+      parentId: location.id, coverage: 'VERIFIED' as const,
+    };
+    const document = compileAcquisitionSources(compilerInput({
+      locationNodes: [location, mismatchedChild],
+      productionRecipes: [{
+        output: 'Bad plank', outputQuantity: 1, sourceHost: 'Bad sawmill',
+        locationId: mismatchedChild.id, inputs: { Logs: 1 },
+        requirements: { op: 'ALL', terms: [] }, repeatability: 'REPEATABLE',
+        probability: null, coverage: 'VERIFIED', provenanceIds: ['recipe-audit:bad'],
+      }],
+      reviewedSources: [{
+        output: 'Bad reward', sourceKind: 'QUEST_REWARD', sourceHost: 'Bad NPC',
+        regions: ['Misthalin'], locationId: mismatchedChild.id, outputQuantity: 1,
+        requirements: { op: 'ALL', terms: [] }, repeatability: 'ONE_TIME',
+        probability: 1, coverage: 'VERIFIED', provenanceIds: ['resource-map:bad:0'],
+      }],
+    }));
+
+    expect(document.rules.some(rule =>
+      rule.locationId === mismatchedChild.id)).toBe(false);
+    expect(document.unresolvedSources).toEqual(expect.arrayContaining([
+      expect.objectContaining({ output: 'Bad plank', reason: 'UNKNOWN_LOCATION' }),
+      expect.objectContaining({ output: 'Bad reward', reason: 'UNKNOWN_LOCATION' }),
+    ]));
+  });
   it.each([
     ['duplicate IDs', [location, { ...location }]],
     ['orphan child', [{ ...location, id: 'child', parentId: 'missing' }]],
@@ -484,7 +561,7 @@ describe('proof-grade source rejection', () => {
     expect(document.unresolvedSources).toContainEqual(expect.objectContaining({
       output: 'Legacy item',
       reason: 'REGION_ONLY_LOCATION',
-      coverage: 'PARTIAL',
+      coverage: 'UNKNOWN',
     }));
   });
 
@@ -516,7 +593,7 @@ describe('proof-grade source rejection', () => {
     expect(document.rules).toHaveLength(0);
   });
 
-  it('downgrades unresolved VERIFIED claims to PARTIAL', () => {
+  it('downgrades unresolved VERIFIED claims to UNKNOWN', () => {
     const document = compileAcquisitionSources(compilerInput({
       reviewedSources: [{
         output: 'Legacy item',
@@ -530,7 +607,7 @@ describe('proof-grade source rejection', () => {
 
     expect(document.unresolvedSources).toContainEqual(expect.objectContaining({
       output: 'Legacy item',
-      coverage: 'PARTIAL',
+      coverage: 'UNKNOWN',
     }));
   });
 });
@@ -632,3 +709,11 @@ describe('ChunkContentService RuneProof source access', () => {
       .toEqual(['Pot']);
   });
 });
+function canonicalTestJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonicalTestJson).join(',')}]`;
+  if (value && typeof value === 'object') {
+    return `{${Object.entries(value).sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, child]) => `${JSON.stringify(key)}:${canonicalTestJson(child)}`).join(',')}}`;
+  }
+  return JSON.stringify(value);
+}

@@ -70,6 +70,12 @@ export function validateLocationNodes(
   }
 
   const invalid = invalidParentIds(candidateNodes);
+  for (const node of candidateNodes.values()) {
+    if (node.parentId) {
+      const parent = candidateNodes.get(node.parentId);
+      if (parent && node.surfaceChunk !== parent.surfaceChunk) invalid.add(node.id);
+    }
+  }
   const surfaceOwners = new Map<string, string[]>();
   for (const node of candidateNodes.values()) {
     if (!node.parentId) {

@@ -1,12 +1,12 @@
 import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 
-export function computeRuneProofSourceVersion(sourceInputs) {
+export function computeRuneProofDocumentVersion(document) {
+  const { sourceVersion: _sourceVersion, ...contents } = document;
   return `sha256-${createHash('sha256')
-    .update(canonicalJson(sourceInputs))
+    .update(canonicalJson(contents))
     .digest('hex')}`;
 }
-
 export function renderRuneProofSourceDocument(document) {
   return `${JSON.stringify(document, null, 2)}\n`;
 }

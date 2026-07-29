@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
-  computeRuneProofSourceVersion,
+  computeRuneProofDocumentVersion,
   generatedOutputMatches,
   renderRuneProofSourceDocument,
   writeGeneratedOutput,
@@ -35,12 +35,17 @@ describe('RuneProof source generator contract', () => {
     await expect(generatedOutputMatches(output, bytes)).resolves.toBe(true);
   });
 
-  it('keeps sourceVersion stable for equivalent inputs and changes with evidence', () => {
-    const first = { chunks: { b: 2, a: 1 }, reviewed: ['source'] };
-    const reordered = { reviewed: ['source'], chunks: { a: 1, b: 2 } };
-    expect(computeRuneProofSourceVersion(first)).toBe(computeRuneProofSourceVersion(reordered));
-    expect(computeRuneProofSourceVersion(first)).toMatch(/^sha256-[0-9a-f]{64}$/);
-    expect(computeRuneProofSourceVersion({ ...first, reviewed: ['changed'] }))
-      .not.toBe(computeRuneProofSourceVersion(first));
+  it('hashes exact canonical document contents while excluding sourceVersion', () => {
+    const first = {
+      sourceVersion: 'ignored', rules: [{ id: 'rule' }], accounting: { b: 2, a: 1 },
+    };
+    const reordered = {
+      accounting: { a: 1, b: 2 }, rules: [{ id: 'rule' }], sourceVersion: 'also-ignored',
+    };
+    expect(computeRuneProofDocumentVersion(first))
+      .toBe(computeRuneProofDocumentVersion(reordered));
+    expect(computeRuneProofDocumentVersion(first)).toMatch(/^sha256-[0-9a-f]{64}$/);
+    expect(computeRuneProofDocumentVersion({ ...first, rules: [{ id: 'changed' }] }))
+      .not.toBe(computeRuneProofDocumentVersion(first));
   });
 });

@@ -4,7 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'vite';
 import {
-  computeRuneProofSourceVersion,
+  computeRuneProofDocumentVersion,
   generatedOutputMatches,
   renderRuneProofSourceDocument,
   writeGeneratedOutput,
@@ -54,24 +54,8 @@ const reviewedSources = Object.entries(resourceMap)
     ],
   })));
 
-const sourceInputs = {
-  chunkSourceMeta: chunkDocument.sourceMeta ?? null,
-  chunkAcquisition: {
-    locationNodes: chunkDocument.locationNodes ?? [],
-    chunks: chunkDocument.chunks ?? {},
-    shopItems: chunkDocument.shopItems ?? {},
-    drops: chunkDocument.drops ?? {},
-    taskUnlocks: chunkDocument.taskUnlocks ?? {},
-  },
-  chunkAudit,
-  questAudit,
-  productionRecipes: [],
-  reviewedSources,
-};
-const sourceVersion = computeRuneProofSourceVersion(sourceInputs);
-
 const document = compileAcquisitionSources({
-  sourceVersion,
+  sourceVersion: `sha256-${'0'.repeat(64)}`,
   sourceCommit: chunkDocument.sourceMeta?.commit ?? 'unknown',
   locationNodes: chunkDocument.locationNodes ?? [],
   chunks: chunkDocument.chunks ?? {},
@@ -85,6 +69,9 @@ const document = compileAcquisitionSources({
   productionRecipes: [],
   reviewedSources,
 });
+if (computeRuneProofDocumentVersion(document) !== document.sourceVersion) {
+  throw new Error('Compiler sourceVersion does not match exact document contents');
+}
 const bytes = renderRuneProofSourceDocument(document);
 
 if (check) {
