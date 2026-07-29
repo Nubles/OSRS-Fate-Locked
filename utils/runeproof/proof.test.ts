@@ -66,6 +66,28 @@ describe('proof certificates', () => {
       .resolves.toEqual({ valid: true, stale: false, errors: [] });
   });
 
+  it.each([
+    ['stranded surface', 'surface:60,60'],
+    ['gated child', 'child:locked-dungeon'],
+  ])('rejects a proof whose used rule is moved to an unreachable %s location', async (
+    _label,
+    locationId,
+  ) => {
+    const goal = item('Goal');
+    const original = rule('goal-source', goal);
+    const witness = await certificate(goal, {
+      root: step(original, goal),
+    });
+    const moved = { ...original, locationId };
+
+    const result = await verifyProof(input(witness, [moved]));
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain(
+      `Rule location is not reachable at step root: ${locationId}`,
+    );
+  });
+
   it('fails closed when a referenced child step is deleted', async () => {
     const pie = item('Pie');
     const flour = item('Flour');
@@ -481,7 +503,10 @@ function input(
       acquisitionRule.id,
       acquisitionRule,
     ])),
-    runFacts: new Set(runFacts),
+    runFacts: new Set([
+      `${factId('LOCATION', 'location:home')}@1`,
+      ...runFacts,
+    ]),
     runId: 'run-1',
     runRevision: 7,
     sourceVersion: 'source-v1',

@@ -94,6 +94,53 @@ describe('calculateReachability', () => {
     expect(result.coverage).toBe('VERIFIED');
   });
 
+  it('uses unlocked regions outside Chunked mode but never as a Chunked substitute', () => {
+    const world = graph(
+      [node('home', '50,50'), node('al-kharid', '51,50')],
+      [edge('walk-east', 'home', 'al-kharid')],
+    );
+    const standard = calculateReachability(world, snapshot([], [], {
+      gameModeId: 'vanilla',
+      unlockedAreas: ['Al Kharid'],
+    }));
+    const chunked = calculateReachability(world, snapshot([], [], {
+      gameModeId: 'chunked',
+      unlockedAreas: ['Al Kharid'],
+    }));
+
+    expect([...standard.reachable]).toContain('al-kharid');
+    expect([...chunked.reachable]).not.toContain('al-kharid');
+  });
+
+  it('enforces effective skill caps on a gated child-location edge', () => {
+    const dungeon = graph(
+      [
+        node('home', '50,50'),
+        node('dungeon', '50,50', { parentId: 'home' }),
+      ],
+      [edge('enter-dungeon', 'home', 'dungeon', {
+        requirements: {
+          op: 'FACT',
+          fact: {
+            id: factId('SKILL_LEVEL', 'Agility'),
+            kind: 'SKILL_LEVEL',
+            label: 'Agility',
+            quantity: 42,
+          },
+        },
+      })],
+    );
+
+    expect(calculateReachability(dungeon, snapshot([], [], {
+      skillCaps: { Agility: 1 },
+      currentLevels: { Agility: 99 },
+    })).reachable.has('dungeon')).toBe(false);
+    expect(calculateReachability(dungeon, snapshot([], [], {
+      skillCaps: { Agility: 10 },
+      currentLevels: { Agility: 99 },
+    })).reachable.has('dungeon')).toBe(true);
+  });
+
   it('reports an unlocked disconnected surface chunk as stranded', () => {
     const result = calculateReachability(
       graph([node('home', '50,50'), node('island', '60,60')], []),
@@ -619,11 +666,17 @@ describe('calculateReachability', () => {
 
     expect(calculateReachability(
       fixture,
-      snapshot(['50,50', '51,50'], [], { currentLevels: { Agility: 41 } }),
+      snapshot(['50,50', '51,50'], [], {
+        skillCaps: { Agility: 5 },
+        currentLevels: { Agility: 41 },
+      }),
     ).reachable.has('guild')).toBe(false);
     expect(calculateReachability(
       fixture,
-      snapshot(['50,50', '51,50'], [], { currentLevels: { Agility: 42 } }),
+      snapshot(['50,50', '51,50'], [], {
+        skillCaps: { Agility: 5 },
+        currentLevels: { Agility: 42 },
+      }),
     ).reachable.has('guild')).toBe(true);
   });
 

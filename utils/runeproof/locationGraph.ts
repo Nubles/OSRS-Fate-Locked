@@ -5,6 +5,9 @@ import {
   type FactRef,
   type RequirementExpr,
 } from './model';
+import { placeOf } from '../chunkLocations';
+import { isRegionUnlocked } from '../reachability';
+import { effectiveSkillLevel } from './effectiveSkillLevel';
 
 export interface LocationNodeSource {
   id: string;
@@ -159,8 +162,14 @@ export function calculateReachability(
       .filter((location) => !location.parentId)
       .map((location) => location.surfaceChunk),
   );
-  const ownedSurfaceChunks = new Set(snapshot.unlockedChunks);
-  if ([...ownedSurfaceChunks].some((chunk) => !authoredSurfaceChunks.has(chunk))) {
+  const ownedSurfaceChunks = snapshot.gameModeId === 'chunked'
+    ? new Set(snapshot.unlockedChunks)
+    : new Set([...nodes.values()]
+      .filter(location => !location.parentId
+        && surfaceLocationOwned(location, snapshot))
+      .map(location => location.surfaceChunk));
+  if (snapshot.gameModeId === 'chunked'
+    && [...ownedSurfaceChunks].some((chunk) => !authoredSurfaceChunks.has(chunk))) {
     coverage = 'UNKNOWN';
   }
   if (start && !start.parentId) {
@@ -367,7 +376,22 @@ function locationOwned(
   if (location.parentId) {
     return reachable.has(location.parentId);
   }
-  return snapshot.unlockedChunks.includes(location.surfaceChunk);
+  return surfaceLocationOwned(location, snapshot);
+}
+
+function surfaceLocationOwned(
+  location: LocationNodeSource,
+  snapshot: RuneProofRunSnapshot,
+): boolean {
+  if (snapshot.gameModeId === 'chunked') {
+    return snapshot.unlockedChunks.includes(location.surfaceChunk);
+  }
+  const [cx, cy] = location.surfaceChunk.split(',').map(Number);
+  const place = placeOf(cx, cy);
+  return Boolean(
+    (place.subArea && isRegionUnlocked(place.subArea, [...snapshot.unlockedAreas]))
+    || (place.region && isRegionUnlocked(place.region, [...snapshot.unlockedAreas])),
+  );
 }
 
 function requirementsSatisfied(
@@ -389,7 +413,7 @@ function factSatisfied(fact: FactRef, snapshot: RuneProofRunSnapshot): boolean {
     case 'QUEST':
       return includesFact(snapshot.completedQuests, fact);
     case 'SKILL_LEVEL':
-      return (snapshot.currentLevels[fact.label] ?? 0) >= (fact.quantity ?? 1);
+      return effectiveSkillLevel(snapshot, fact.label) >= (fact.quantity ?? 1);
     case 'UNLOCK':
       return unlockFacts(snapshot).some((values) => includesFact(values, fact));
     case 'CAPABILITY':

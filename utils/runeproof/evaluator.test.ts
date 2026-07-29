@@ -76,6 +76,39 @@ describe('evaluateObtainability', () => {
       ]));
   });
 
+  it.each([
+    ['tier zero', 0, 99, 1, 'BLOCKED'],
+    ['tier one', 1, 99, 11, 'BLOCKED'],
+    ['tier ten', 10, 99, 99, 'OBTAINABLE'],
+  ] as const)('enforces the effective skill cap for %s', (
+    _label,
+    tier,
+    observed,
+    required,
+    expected,
+  ) => {
+    const result = evaluateObtainability(item('Skill reward'), context([
+      rule('skill-reward', 'Skill reward', {
+        requirements: {
+          op: 'FACT',
+          fact: {
+            id: factId('SKILL_LEVEL', 'Magic'),
+            kind: 'SKILL_LEVEL',
+            label: 'Magic',
+            quantity: required,
+          },
+        },
+      }),
+    ], {
+      snapshot: snapshot({
+        skillCaps: { Magic: tier },
+        currentLevels: { Magic: observed },
+      }),
+    }));
+
+    expect(result.status).toBe(expected);
+  });
+
   it('uses ceil(required/output) and multiplies recursive ingredient quantities', () => {
     const result = evaluateObtainability(
       { ...item('Arrow'), quantity: 7 },

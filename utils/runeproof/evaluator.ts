@@ -12,6 +12,7 @@ import {
 } from './model';
 import { compareRoutes } from './ranking';
 import { analyzeCurrentRunBlockers } from './blockers';
+import { effectiveSkillLevel } from './effectiveSkillLevel';
 
 export interface EvaluationLimits {
   readonly maxIterations: number;
@@ -533,8 +534,8 @@ function snapshotSeedQuantities(
   unlocks.forEach(values => add('UNLOCK', values));
   add('CAPABILITY', snapshot.unlockedMobility);
   add('CAPABILITY', snapshot.unlockedArcana);
-  Object.entries(snapshot.currentLevels).forEach(([label, quantity]) => {
-    seeds.set(factId('SKILL_LEVEL', label), quantity);
+  Object.keys(snapshot.currentLevels).forEach(label => {
+    seeds.set(factId('SKILL_LEVEL', label), effectiveSkillLevel(snapshot, label));
   });
   reachableLocations.forEach(location => {
     seeds.set(location, Number.POSITIVE_INFINITY);

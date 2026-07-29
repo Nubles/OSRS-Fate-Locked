@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { RuneProofRunSnapshot } from '../../types';
-import { compileItemGoal } from './goalCompiler';
+import {
+  compileItemGoal,
+  compileProductionActivityGoals,
+  compileProductionDiaryGoals,
+  type CompiledGoal,
+} from './goalCompiler';
 import { createRuneProofEngine, createRuneProofExecutor, evaluateRuneProof, type RuneProofEngineSources } from './engine';
 
 const goal = compileItemGoal({ id: 'item:plank', label: 'Plank' }, 1);
@@ -56,11 +61,47 @@ describe('evaluateRuneProof', () => {
     expect(result.routes.map(route => route.witness.steps.root.ruleId)).toEqual(['plank-direct']);
   });
 
-  it('allows a verified positive witness under global PARTIAL coverage but gates a negative result as UNKNOWN', async () => {
-    expect((await evaluateRuneProof({ goal }, snapshot(), sources('PARTIAL'))).status).toBe('OBTAINABLE');
+  it('allows a verified positive witness under unrelated global PARTIAL coverage but gates a negative result as UNKNOWN', async () => {
+    const complete = sources();
+    const globallyPartial = {
+      ...complete,
+      sourceAudit: {
+        ...complete.sourceAudit,
+        acquisitionCoverage: 'PARTIAL' as const,
+      },
+    };
+    expect((await evaluateRuneProof({ goal }, snapshot(), globallyPartial)).status).toBe('OBTAINABLE');
     const noRoutes = sources('PARTIAL');
     clearRules(noRoutes);
     expect((await evaluateRuneProof({ goal }, snapshot(), noRoutes)).status).toBe('UNKNOWN');
+  });
+
+  it('returns UNKNOWN for directly incomplete production and manual goals even when modeled terms pass', async () => {
+    const activity = compileProductionActivityGoals().find(candidate =>
+      candidate.requirement.op === 'ALL' && candidate.requirement.terms.length === 0);
+    const diary = compileProductionDiaryGoals().find(candidate =>
+      candidate.label === 'Ardougne Easy');
+    expect(activity).toBeDefined();
+    expect(diary).toBeDefined();
+    const manualQuest: CompiledGoal = {
+      id: 'quest:manual-demo',
+      kind: 'QUEST',
+      label: 'Manual demo',
+      requirement: { op: 'ALL', terms: [] },
+      coverage: 'UNKNOWN',
+      provenanceIds: ['unstructured:manual-demo'],
+      sourceVersion: 'manual-demo-v1',
+    };
+    const ready = snapshot({
+      skillCaps: { Thieving: 1 },
+      currentLevels: { Thieving: 5 },
+      completedQuests: ['Rune Mysteries', 'Plague City'],
+    });
+
+    for (const incomplete of [activity!, diary!, manualQuest]) {
+      expect((await evaluateRuneProof({ goal: incomplete }, ready, sources())).status)
+        .toBe('UNKNOWN');
+    }
   });
 
   it('treats malformed source data as UNKNOWN', async () => {
@@ -76,7 +117,10 @@ describe('evaluateRuneProof', () => {
     } as unknown as import('./goalCompiler').CompiledGoal;
     const document = sources();
     clearRules(document);
-    const result = await evaluateRuneProof({ goal: questGoal }, snapshot({ currentLevels: { Magic: 12 } }), document);
+    const result = await evaluateRuneProof({ goal: questGoal }, snapshot({
+      skillCaps: { Magic: 2 },
+      currentLevels: { Magic: 12 },
+    }), document);
     expect(result.status).toBe('OBTAINABLE');
     expect(result.goalId).toBe('quest:demo-quest');
   });

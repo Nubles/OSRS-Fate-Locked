@@ -9,6 +9,7 @@ import { calculateReachability, type LocationGraph } from './locationGraph';
 import { evaluateObtainability } from './evaluator';
 import { createProofCertificate, verifyProof } from './proof';
 import type { CompiledGoal } from './goalCompiler';
+import { effectiveSkillLevel } from './effectiveSkillLevel';
 
 export interface RuneProofQuery {
   readonly goal: CompiledGoal;
@@ -148,6 +149,10 @@ export async function evaluateRuneProof(
   if (signal?.aborted) throw abortError();
   try {
     validateSources(sources);
+    if (query.goal.coverage !== 'VERIFIED') {
+      return unknown(query.goal.id,
+        'RuneProof cannot verify this goal because its requirements are incomplete.');
+    }
     const reachability = calculateReachability(sources.locationGraph, snapshot);
     const coverage = combineAll([
       query.goal.coverage,
@@ -486,7 +491,9 @@ function suppliedFacts(snapshot: RuneProofRunSnapshot, reachable: ReadonlySet<st
     snapshot.unlockedBanks, snapshot.completedDiaries, snapshot.completedCombatAchievements, snapshot.completedTasks]
     .forEach(entries => add('UNLOCK', entries));
   add('CAPABILITY', snapshot.unlockedMobility); add('CAPABILITY', snapshot.unlockedArcana);
-  Object.entries(snapshot.currentLevels).forEach(([label, quantity]) => values.add(`${factId('SKILL_LEVEL', label)}@${quantity}`));
+  Object.keys(snapshot.currentLevels).forEach(label => values.add(
+    `${factId('SKILL_LEVEL', label)}@${effectiveSkillLevel(snapshot, label)}`,
+  ));
   reachable.forEach(location => values.add(`${factId('LOCATION', location)}@1`));
   return values;
 }
