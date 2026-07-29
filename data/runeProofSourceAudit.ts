@@ -4,7 +4,9 @@ import { sha256Hex } from '../utils/integrity';
 import type { AuditCoverage, RuneProofSourceAudit } from '../utils/runeproof/sourceGate';
 
 type JsonRecord = Record<string, unknown>;
-const CHUNK_DISPOSITIONS = new Set(['imported', 'normalized', 'excluded', 'unresolved']);
+const TERMINAL_DISPOSITIONS = ['imported', 'normalized', 'excluded', 'unresolved'] as const;
+type TerminalDisposition = typeof TERMINAL_DISPOSITIONS[number];
+const CHUNK_DISPOSITIONS = new Set<TerminalDisposition>(TERMINAL_DISPOSITIONS);
 const AUXILIARY_CHUNK_EVENT_CATEGORIES = new Set(['lite']);
 
 function isRecord(value: unknown): value is JsonRecord {
@@ -75,6 +77,10 @@ function chunkCoverage(audit: unknown): AuditCoverage {
   const categoryNames = new Set(categories.map(([category]) => category));
   const recognizedCategories = new Set([...categoryNames, ...AUXILIARY_CHUNK_EVENT_CATEGORIES]);
   const terminalCounts = new Map(categories.map(([category]) => [category, 0]));
+  const terminalDispositionCounts = new Map(categories.map(([category]) => [
+    category,
+    { imported: 0, normalized: 0, excluded: 0, unresolved: 0 },
+  ]));
   const terminalKeys = new Set<string>();
   let hasUnresolvedEvent = false;
 
@@ -88,10 +94,16 @@ function chunkCoverage(audit: unknown): AuditCoverage {
     if (terminalKeys.has(terminalKey)) return 'UNKNOWN';
     terminalKeys.add(terminalKey);
     terminalCounts.set(event.category, (terminalCounts.get(event.category) ?? 0) + 1);
+    const dispositionCounts = terminalDispositionCounts.get(event.category)!;
+    dispositionCounts[event.disposition as TerminalDisposition] += 1;
   }
 
-  if (!audit.events.length || categories.some(([category, total]) =>
-    terminalCounts.get(category) !== (total as JsonRecord).source)) return 'UNKNOWN';
+  if (!audit.events.length || categories.some(([category, total]) => {
+    const declared = total as JsonRecord;
+    const counted = terminalDispositionCounts.get(category)!;
+    return terminalCounts.get(category) !== declared.source
+      || TERMINAL_DISPOSITIONS.some(disposition => counted[disposition] !== declared[disposition]);
+  })) return 'UNKNOWN';
 
   const hasUnresolvedTotals = categories.some(([, total]) =>
     (total as JsonRecord).unresolved !== 0);

@@ -145,4 +145,27 @@ describe('runeProofSourceAudit', () => {
 
     expect(audit.chunkCoverage).toBe('UNKNOWN');
   });
+  it('does not certify a terminal disposition distribution mismatch', async () => {
+    const audit = await buildRuneProofSourceAudit(
+      { schemaVersion: 1, entries: [{ status: 'verified' }] },
+      {
+        schemaVersion: 1,
+        sourceCommit: 'chunk-source',
+        categoryTotals: {
+          drops: {
+            source: 1, imported: 1, normalized: 0, excluded: 0, unresolved: 0,
+          },
+        },
+        events: [{
+          terminal: true,
+          category: 'drops',
+          sourceKey: 'drop-source',
+          targetKeys: ['target'],
+          disposition: 'normalized',
+        }],
+      },
+    );
+
+    expect(audit.chunkCoverage).toBe('UNKNOWN');
+  });
 });
