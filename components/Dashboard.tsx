@@ -10,7 +10,6 @@ import {
 } from '../constants';
 import { useGame } from '../context/GameContext';
 import { useFeatureGates } from '../hooks/useFeatureGates';
-import { buildRuneProofRunSnapshot } from '../utils/runeproof/runSnapshot';
 import type { FeatureId } from '../utils/featureGates';
 import {
   Sparkles, Search, User, Map, Swords, Package,
@@ -19,7 +18,7 @@ import {
 import { VoidReveal } from './VoidReveal';
 import { ActivityAccessWarning } from './ActivityAccessWarning';
 import { isOmniDirectUnlockAvailable } from '../utils/gameEngine';
-import { TableType, type RuneProofRunSnapshot } from '../types';
+import { TableType } from '../types';
 import { wikiService } from '../services/WikiService';
 import { NoteTrigger } from './NoteTrigger';
 import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
@@ -70,8 +69,6 @@ import { SkillAdvisorPanel } from './SkillAdvisorPanel';
 // Code-split: the run card pulls in html2canvas only when actually opened.
 const ShareModal = lazyWithRetry(() => import('./ShareModal').then(m => ({ default: m.ShareModal })));
 // Goal Planner modal — pulls in the full quest/diary datasets, so load on demand.
-const SHOW_LEGACY_GOAL_PLANNER = import.meta.env.DEV && import.meta.env.VITE_ENABLE_LEGACY_GOAL_PLANNER === 'true';
-const RuneProofModal = lazyWithRetry(() => import('./RuneProofModal').then(m => ({ default: m.RuneProofModal })));
 const GoalPlannerModal = lazyWithRetry(() => import('./GoalPlannerModal').then(m => ({ default: m.GoalPlannerModal })));
 // Achievements modal — pulls in the quest/diary/CA datasets via the engine.
 const AchievementsModal = lazyWithRetry(() => import('./AchievementsModal').then(m => ({ default: m.AchievementsModal })));
@@ -327,13 +324,10 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
 
 interface DashboardProps {
   suspendModals?: boolean;
-  runeProofSnapshot?: RuneProofRunSnapshot;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false, runeProofSnapshot }) => {
-  const game = useGame();
-  const { unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId, customMode } = game;
-  const currentRuneProofSnapshot = useMemo(() => runeProofSnapshot ?? buildRuneProofRunSnapshot(game), [game, runeProofSnapshot]);
+export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) => {
+  const { unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId, customMode } = useGame();
   const activeMode = getGameMode(gameModeId);
   const [activeTab, setActiveTab] = useState('CHARACTER');
 
@@ -361,7 +355,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false, run
   const [journalSubTab, setJournalSubTab] = useLocalStorage<'QUESTS' | 'DIARIES' | 'CA' | 'DOABLE'>('jrnl:subtab', 'QUESTS');
   const [worldView, setWorldView] = useState<'LIST' | 'MAP'>('MAP');
   const [showRunCard, setShowRunCard] = useState(false);
-  const [showRuneProof, setShowRuneProof] = useState(false);
   const [showGoalPlanner, setShowGoalPlanner] = useState(false);
   const [goalTarget, setGoalTarget] = useState<{ kind: 'quest' | 'diary' | 'region'; id: string } | null>(null);
   const [showAchievements, setShowAchievements] = useState(false);
@@ -425,7 +418,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false, run
         return;
       }
       const opens: Record<string, (v: boolean) => void> = {
-        'open:goal': setShowRuneProof,
+        'open:goal': setShowGoalPlanner,
         'open:achievements': setShowAchievements,
         'open:forecast': setShowForecast,
         'open:rival': setShowRival,
@@ -442,7 +435,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false, run
   useEffect(() => {
     const onPlanGoal = (e: Event) => {
       const d = (e as CustomEvent<{ kind?: 'quest' | 'diary' | 'region'; id?: string }>).detail;
-      if (d?.kind && d.id) { setGoalTarget({ kind: d.kind, id: d.id }); setShowRuneProof(true); }
+      if (d?.kind && d.id) { setGoalTarget({ kind: d.kind, id: d.id }); setShowGoalPlanner(true); }
     };
     window.addEventListener('fate:plan-goal', onPlanGoal);
     return () => window.removeEventListener('fate:plan-goal', onPlanGoal);
@@ -1055,12 +1048,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false, run
              </h2>
              <div className="flex flex-wrap items-center justify-end gap-3">
                <button
-                 onClick={() => setShowRuneProof(true)}
+                 onClick={() => setShowGoalPlanner(true)}
                  className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-cyan-500/30 bg-cyan-950/30 hover:bg-cyan-900/40 text-cyan-300 text-[11px] font-medium whitespace-nowrap transition-colors"
-                 title="Check current-run routes for items, quests, diaries, and activities"
+                 title="Plan the route to any quest, diary, or region"
                >
                  <Route size={12} />
-                 RuneProof
+                 Goal Planner
                </button>
                <button
                  onClick={() => setShowAchievements(true)}
@@ -1203,14 +1196,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false, run
       </Suspense>
     )}
 
-    {!suspendModals && showRuneProof && (
-      <Suspense fallback={<ModalFallback label="Loading RuneProof…" />}>
-        <RuneProofModal snapshot={currentRuneProofSnapshot} onClose={() => { setShowRuneProof(false); setGoalTarget(null); }} />
-      </Suspense>
-    )}
-
-    {!suspendModals && SHOW_LEGACY_GOAL_PLANNER && showGoalPlanner && (
-      <Suspense fallback={<ModalFallback label="Loading comparison planner…" />}>
+    {!suspendModals && showGoalPlanner && (
+      <Suspense fallback={<ModalFallback label="Loading planner…" />}>
         <GoalPlannerModal onClose={() => { setShowGoalPlanner(false); setGoalTarget(null); }} initialTarget={goalTarget} />
       </Suspense>
     )}

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { STRATEGY_DATABASE, ContentRequirement } from '../data/requirements';
 import { QUEST_DATA } from '../data/questData';
@@ -9,11 +9,14 @@ import { TableType } from '../types';
 import { calculateGoalProgress, GoalProgress } from '../utils/goalLogic';
 import { calculateEngineItemProgress } from '../utils/supplyChain';
 import { evaluateDiaryTierEligibility } from '../utils/journalStatus';
-import { Pin, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Pin, Trash2, CheckCircle2, AlertCircle, Route } from 'lucide-react';
+import { GoalRouteView } from './GoalRouteView';
 
 export const GoalTracker: React.FC = () => {
   const gameState = useGame();
   const { pinnedGoals, togglePin, unlocks, gameModeId } = gameState;
+  // Which pinned goal has its full route expanded (one at a time keeps it tidy).
+  const [routeFor, setRouteFor] = useState<string | null>(null);
 
   if (pinnedGoals.length === 0) return null;
 
@@ -84,6 +87,14 @@ export const GoalTracker: React.FC = () => {
                 <h4 className={`font-bold text-sm leading-tight pr-4 ${isComplete ? 'text-green-400' : 'text-gray-200'}`}>{id}</h4>
                 <div className="absolute top-2 right-2 flex items-center gap-1">
                   <button
+                    onClick={() => setRouteFor(r => (r === id ? null : id))}
+                    className={`transition-colors ${routeFor === id ? 'text-cyan-300' : 'text-gray-600 hover:text-cyan-300'}`}
+                    title={routeFor === id ? 'Hide route' : 'Show route to goal'}
+                    aria-label="Toggle route to goal"
+                  >
+                    <Route size={14} />
+                  </button>
+                  <button
                     onClick={() => togglePin(id)}
                     className="text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
                     title="Unpin"
@@ -117,6 +128,9 @@ export const GoalTracker: React.FC = () => {
           );
         })}
       </div>
+
+      {/* Expanded "route to goal" planning view for the selected pin. */}
+      {routeFor && pinnedGoals.includes(routeFor) && <GoalRouteView goalId={routeFor} />}
     </div>
   );
 };

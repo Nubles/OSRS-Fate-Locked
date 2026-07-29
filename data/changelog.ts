@@ -19,21 +19,6 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-07-29-runeproof',
-    title: 'RuneProof Current-Chunk Goal Engine',
-    date: '2026-07-29',
-    sections: {
-      added: [
-        'RuneProof can now verify item, quest, diary, and activity routes from the current run’s exactly reachable chunks, including gated child locations and recursive acquisition paths.',
-        'RuneProof explains minimal current blockers, unavoidable requirements, deterministic alternatives, random-only routes, and incomplete evidence without recommending future unlocks.',
-        'Selected proof summaries can be exported to RuneLite with exact run-revision and source-version freshness bindings.',
-      ],
-      changed: [
-        'Goal planning now uses proof-carrying current-run constraints instead of overlapping future-unlock heuristics.',
-      ],
-    },
-  },
-  {
     id: '2026-07-28-quest-chunk-audit',
     title: 'Verified Quest & Chunk Requirements',
     date: '2026-07-28',

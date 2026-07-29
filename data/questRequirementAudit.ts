@@ -75,10 +75,6 @@ export function questRequirementFingerprint(quest: QuestData): string {
     combatLevel: quest.combatLevel,
     prereqs: canonicalValue(quest.prereqs),
     oneOf: canonicalValue(quest.oneOf),
-    items: canonicalValue(quest.items),
-    itemAlternatives: canonicalValue(quest.itemAlternatives),
-    capabilities: canonicalValue(quest.capabilities),
-    requirementCoverage: quest.requirementCoverage,
     manualRequirements: canonicalValue(quest.manualRequirements),
     points: quest.points,
   });

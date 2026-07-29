@@ -22,15 +22,6 @@ const NONE = new Set<string>();
 
 let current: Set<string> = FULL_MISTHALIN;
 
-export const isFreeAreaForStartArea = (
-  name: string,
-  startArea?: 'misthalin' | 'lumbridge' | 'none',
-): boolean => (
-  startArea === 'lumbridge' ? LUMBRIDGE_ONLY
-    : startArea === 'none' ? NONE
-      : FULL_MISTHALIN
-).has(name);
-
 /** Set the free baseline from a mode's startArea ('lumbridge' | 'misthalin' | 'none'). */
 export const setStartArea = (startArea?: string): void => {
   current = startArea === 'lumbridge' ? LUMBRIDGE_ONLY : startArea === 'none' ? NONE : FULL_MISTHALIN;
