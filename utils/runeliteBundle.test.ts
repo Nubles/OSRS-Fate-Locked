@@ -265,20 +265,16 @@ describe('buildRuneliteBundle - RuneProof summaries', () => {
       rules,
     )).rejects.toThrow(/bundle identity/i);
   });
-  it('round-trips selected proof summaries through plain bundle JSON', async () => {
-    const summaries = [proof('item:a', 'A goal')];
+  it('does not accept caller-supplied proof summaries as verified export state', async () => {
     const { json } = await buildBundlePayload(initialState.unlocks, {
-      runId: 'run-proof', runRevision: 7, keys: 0, specialKeys: 0,
+      runId: 'run-injected-proof', runRevision: 7, keys: 0, specialKeys: 0,
       chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', gameModeId: 'vanilla',
-      runeProofSourceVersion: 'sources-v1', runeProof: summaries,
+      runeProofSourceVersion: 'sources-v1', runeProof: [proof('item:a', 'A goal')],
     } as any);
     const parsed = JSON.parse(json);
     expect(parsed.rules.runeProofSchemaVersion).toBe(1);
-    expect(parsed.rules.runeProof).toEqual(summaries);
-    expect(JSON.stringify(parsed.rules.runeProof)).not.toContain('steps');
-    expect(JSON.stringify(parsed.rules.runeProof)).not.toContain('inventory');
+    expect(parsed.rules.runeProof).toEqual([]);
   });
-
   it('selects only current evaluated selected or pinned proofs when callers do not inject summaries', async () => {
     runeProofExportRegistry.record(
       { id: 'item:feed', kind: 'ITEM', label: 'Feed goal', requirement: { op: 'FACT', fact: { id: 'item:feed', kind: 'ITEM', label: 'Feed goal' } }, coverage: 'UNKNOWN', provenanceIds: [], sourceVersion: 'goal-v1' } as any,
@@ -299,20 +295,27 @@ describe('buildRuneliteBundle - RuneProof summaries', () => {
     }]);
   });
   it('keeps twenty maximum-size display summaries inside the relay limit', async () => {
-    const summaries = Array.from({ length: 20 }, (_, index) => ({
-      ...proof(`item:goal-${index}`, `Goal ${index}`),
-      explanation: 'x'.repeat(512),
-      routeLabels: Array.from({ length: 32 }, (__, labelIndex) => `Route ${labelIndex}`),
-    }));
+    const pinnedGoals: string[] = [];
+    for (let index = 0; index < 20; index += 1) {
+      const goalId = `item:goal-${index}`;
+      pinnedGoals.push(goalId);
+      runeProofExportRegistry.record(
+        { id: goalId, kind: 'ITEM', label: `Goal ${index}`, requirement: { op: 'FACT', fact: { id: goalId, kind: 'ITEM', label: `Goal ${index}` } }, coverage: 'UNKNOWN', provenanceIds: [], sourceVersion: 'goal-v1' } as any,
+        { goalId, status: 'UNKNOWN', coverage: 'UNKNOWN', routes: [], blockers: [], unavoidableBlockerFactIds: [], routesComplete: false, explanation: 'x'.repeat(512) },
+        { runId: 'run-size-proof', runRevision: 7 } as any,
+        'sources-v1',
+      );
+    }
     const { json, compressed } = await buildBundlePayload(initialState.unlocks, {
       runId: 'run-size-proof', runRevision: 7, keys: 0, specialKeys: 0,
       chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', gameModeId: 'vanilla',
-      runeProofSourceVersion: 'sources-v1', runeProof: summaries,
-    } as any);
+      runeProofSourceVersion: 'sources-v1', pinnedGoals,
+    });
     expect(JSON.parse(json).rules.runeProof).toHaveLength(20);
     expect(new TextEncoder().encode(compressed).byteLength).toBeLessThan(256 * 1024);
   });
 });
+
 describe('buildRuneliteBundle - canonical area names', () => {
   it('canonicalizes legacy regions in both the v4 root and fallback rules', async () => {
     const bundle = await buildRuneliteBundle(['Elf Camp'], state);

@@ -33,11 +33,13 @@ describe('RuneProofService', () => {
       blockers: [], unavoidableBlockerFactIds: [], routesComplete: true,
       explanation: 'A current route is verified.',
     };
-    const engine: RuneProofEngine = { sourceVersion: 'sources-a', evaluate: async () => positive };
+    let replayCalls = 0;
+    const engine: RuneProofEngine = { sourceVersion: 'sources-a', evaluate: async () => { replayCalls += 1; return positive; } };
     const service = new RuneProofService(engine, () => snapshot(), registry);
     expect((await service.evaluate({ goal }))?.status).toBe('OBTAINABLE');
 
     const selected = await registry.select({ runId: 'run-a', runRevision: 1, sourceVersion: 'sources-a', pinnedGoalIds: [] });
+    expect(replayCalls).toBe(2);
     expect(selected).toEqual([{
       goalId: 'item:plank', goalLabel: 'Plank', status: 'OBTAINABLE',
       explanation: 'A current route is verified.', routeLabels: ['Plank'],
@@ -46,6 +48,30 @@ describe('RuneProofService', () => {
     }]);
   });
 
+  it('replays and exports a positive composite goal with its synthetic witness root', async () => {
+    const registry = new (RuneProofServiceModule as any).RuneProofExportRegistry();
+    const compositeGoal = {
+      ...goal, id: 'quest:composite', kind: 'QUEST', label: 'Composite quest',
+      requirement: { op: 'ALL', terms: [goal.requirement] },
+    } as CompiledGoal;
+    const rootFactId = 'capability:runeproof-goal-quest-composite-goal-a';
+    const witness = await createProofCertificate({
+      rootFactId,
+      steps: { root: { ruleId: 'goal:quest:composite:goal-a', proves: { id: rootFactId, kind: 'CAPABILITY', label: 'runeproof-goal-quest:composite-goal-a' }, chosenTerms: [], childStepIds: [] } },
+      sourceVersion: 'sources-a', runId: 'run-a', runRevision: 1, proofHash: '',
+    });
+    const positive = {
+      goalId: compositeGoal.id, status: 'OBTAINABLE' as const, coverage: 'VERIFIED' as const,
+      routes: [{ id: 'route-composite', deterministic: true, prerequisiteCount: 0, recursiveIngredientCount: 0, travelDistance: 0, probability: null, witness }],
+      blockers: [], unavoidableBlockerFactIds: [], routesComplete: true,
+    };
+    const engine: RuneProofEngine = { sourceVersion: 'sources-a', evaluate: async () => positive };
+    const service = new RuneProofService(engine, () => snapshot(), registry);
+
+    expect((await service.evaluate({ goal: compositeGoal }))?.status).toBe('OBTAINABLE');
+    const [selected] = await registry.select({ runId: 'run-a', runRevision: 1, sourceVersion: 'sources-a', pinnedGoalIds: [] });
+    expect(selected).toMatchObject({ goalId: compositeGoal.id, status: 'OBTAINABLE', proofHash: witness.proofHash });
+  });
   it('exports UNKNOWN when a selected certificate is malformed or stale', async () => {
     const registry = new (RuneProofServiceModule as any).RuneProofExportRegistry();
     const witness = await createProofCertificate({
@@ -86,6 +112,21 @@ describe('RuneProofService', () => {
     expect(selected.map((value: any) => value.goalId)).toEqual([...selected.map((value: any) => value.goalId)].sort());
     expect(registry.metadata(selection)).toEqual({ proofCount: 20, sourceVersion: 'sources-a' });
     expect(registry.latestSourceVersion('run-a')).toBe('sources-a');
+  });
+  it('reselects a cached goal and keeps equal-revision source records isolated', async () => {
+    const registry = new (RuneProofServiceModule as any).RuneProofExportRegistry();
+    const engine: RuneProofEngine = { sourceVersion: 'sources-a', evaluate: async query => report(query.goal.id) };
+    const service = new RuneProofService(engine, () => snapshot(), registry);
+    const otherGoal = { ...goal, id: 'item:nails', label: 'Nails' } as CompiledGoal;
+    await service.evaluate({ goal });
+    await service.evaluate({ goal: otherGoal });
+    await service.evaluate({ goal });
+    const selected = await registry.select({ runId: 'run-a', runRevision: 1, sourceVersion: 'sources-a', pinnedGoalIds: [] });
+    expect(selected.map((value: any) => value.goalId)).toEqual(['item:plank']);
+
+    registry.record(goal, { ...report(goal.id), explanation: 'other source' }, snapshot(), 'sources-b');
+    const exact = await registry.select({ runId: 'run-a', runRevision: 1, sourceVersion: 'sources-a', pinnedGoalIds: [goal.id] });
+    expect(exact[0]).toMatchObject({ goalId: goal.id, explanation: 'Verified evidence is incomplete.', sourceVersion: 'sources-a' });
   });
   it('uses a complete cache identity so different goals and revisions cannot share results', async () => {
     let calls = 0;

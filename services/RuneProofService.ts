@@ -23,24 +23,36 @@ interface RuneProofExportRecord {
   runId: string;
   runRevision: number;
   sourceVersion: string;
+  replay?: () => Promise<RuneProofReport>;
 }
 
 export class RuneProofExportRegistry {
   private readonly records = new Map<string, RuneProofExportRecord>();
   private readonly selectedByRun = new Map<string, string>();
+  private readonly latestIdentityByRun = new Map<string, { runRevision: number; sourceVersion: string }>();
 
-  record(goal: CompiledGoal, report: RuneProofReport, snapshot: RuneProofRunSnapshot, sourceVersion: string): void {
-    assertRuneProofReport(report);
-    if (report.goalId !== goal.id || !sourceVersion || sourceVersion !== sourceVersion.trim()) {
+  record(
+    goal: CompiledGoal,
+    report: RuneProofReport,
+    snapshot: RuneProofRunSnapshot,
+    sourceVersion: string,
+    replay?: () => Promise<RuneProofReport>,
+  ): void {
+    assertExportReport(goal, report);
+    if (!sourceVersion || sourceVersion !== sourceVersion.trim()) {
       throw new Error('Invalid RuneProof export record');
     }
-    const key = recordKey(snapshot.runId, goal.id);
-    const existing = this.records.get(key);
-    if (existing && existing.runRevision > snapshot.runRevision) return;
-    const record = { goal, report, runId: snapshot.runId, runRevision: snapshot.runRevision, sourceVersion };
+    const newer = [...this.records.values()].some(candidate => candidate.runId === snapshot.runId
+      && candidate.goal.id === goal.id && candidate.runRevision > snapshot.runRevision);
+    if (newer) return;
+    const key = recordKey(snapshot.runId, snapshot.runRevision, sourceVersion, goal.id);
+    const record = { goal, report, runId: snapshot.runId, runRevision: snapshot.runRevision, sourceVersion, replay };
     this.records.set(key, record);
-    const selected = this.records.get(this.selectedByRun.get(snapshot.runId) ?? '');
-    if (!selected || selected.runRevision <= snapshot.runRevision) this.selectedByRun.set(snapshot.runId, key);
+    const latest = this.latestIdentityByRun.get(snapshot.runId);
+    if (!latest || latest.runRevision <= snapshot.runRevision) {
+      this.selectedByRun.set(snapshot.runId, goal.id);
+      this.latestIdentityByRun.set(snapshot.runId, { runRevision: snapshot.runRevision, sourceVersion });
+    }
   }
 
   async select(selection: RuneProofExportSelection): Promise<RuneProofBundleSummary[]> {
@@ -57,18 +69,23 @@ export class RuneProofExportRegistry {
   }
 
   latestSourceVersion(runId: string): string | null {
-    return this.records.get(this.selectedByRun.get(runId) ?? '')?.sourceVersion ?? null;
+    return this.latestIdentityByRun.get(runId)?.sourceVersion ?? null;
   }
 
   private selectedRecords(selection: RuneProofExportSelection): RuneProofExportRecord[] {
-    const selected = this.records.get(this.selectedByRun.get(selection.runId) ?? '');
-    const byIdentity = [...this.records.values()].filter(record => record.runId === selection.runId);
+    const forRun = [...this.records.values()].filter(record => record.runId === selection.runId);
+    const exact = forRun.filter(record => record.runRevision === selection.runRevision
+      && record.sourceVersion === selection.sourceVersion);
+    const selectedGoalId = this.selectedByRun.get(selection.runId);
+    const selected = selectedGoalId === undefined ? undefined
+      : exact.find(record => record.goal.id === selectedGoalId)
+        ?? forRun.filter(record => record.goal.id === selectedGoalId).sort(newestRecordFirst)[0];
     const chosen = new Map<string, RuneProofExportRecord>();
     if (selected) chosen.set(selected.goal.id, selected);
     const requested = [...new Set(selection.pinnedGoalIds)].sort(compareText);
     for (const requestedId of requested) {
       const normalized = normalizeId(requestedId);
-      const record = byIdentity.find(candidate => candidate.goal.id === requestedId
+      const record = exact.find(candidate => candidate.goal.id === requestedId
         || candidate.goal.label === requestedId
         || normalizeId(candidate.goal.id) === normalized
         || normalizeId(candidate.goal.label) === normalized);
@@ -85,22 +102,33 @@ export class RuneProofExportRegistry {
       return unknownSummary(record.goal, selection);
     }
     try {
-      assertRuneProofReport(record.report);
-      const positive = record.report.status === 'OBTAINABLE' || record.report.status === 'OBTAINABLE_RNG';
-      const witness = record.report.routes[0]?.witness;
+      assertExportReport(record.goal, record.report);
+      const recordedPositive = positiveStatus(record.report.status);
+      let report = record.report;
+      if (recordedPositive) {
+        if (!record.replay) return unknownSummary(record.goal, selection);
+        const replayed = await record.replay();
+        assertExportReport(record.goal, replayed);
+        if (replayed.status !== record.report.status
+          || replayed.routes[0]?.witness.proofHash !== record.report.routes[0]?.witness.proofHash) {
+          return unknownSummary(record.goal, selection);
+        }
+        report = replayed;
+      }
+      const positive = positiveStatus(report.status);
+      const witness = report.routes[0]?.witness;
       if (positive && (!witness || witness.runId !== selection.runId
         || witness.runRevision !== selection.runRevision
         || witness.sourceVersion !== selection.sourceVersion
-        || witness.rootFactId !== record.goal.id
         || await hashProofWitness(witness) !== witness.proofHash)) {
         return unknownSummary(record.goal, selection);
       }
-      const blockerLabels = record.report.status === 'BLOCKED'
-        ? [...new Set(record.report.blockers.flatMap(blocker => blocker.labels))]
+      const blockerLabels = report.status === 'BLOCKED'
+        ? [...new Set(report.blockers.flatMap(blocker => blocker.labels))]
         : [];
-      const unavoidableIds = new Set(record.report.unavoidableBlockerFactIds);
-      const unavoidableBlockerLabels = record.report.status === 'BLOCKED'
-        ? [...new Set(record.report.blockers.flatMap(blocker => blocker.factIds
+      const unavoidableIds = new Set(report.unavoidableBlockerFactIds);
+      const unavoidableBlockerLabels = report.status === 'BLOCKED'
+        ? [...new Set(report.blockers.flatMap(blocker => blocker.factIds
           .map((factId, index) => unavoidableIds.has(factId) ? blocker.labels[index] : undefined)
           .filter((label): label is string => label !== undefined)))]
         : [];
@@ -108,8 +136,8 @@ export class RuneProofExportRegistry {
         ? Object.keys(witness.steps).sort(compareText).map(stepId => witness.steps[stepId].proves.label)
         : [];
       return {
-        goalId: record.goal.id, goalLabel: record.goal.label, status: record.report.status,
-        explanation: record.report.explanation ?? defaultExplanation(record.report.status),
+        goalId: record.goal.id, goalLabel: record.goal.label, status: report.status,
+        explanation: report.explanation ?? defaultExplanation(report.status),
         routeLabels, blockerLabels, unavoidableBlockerLabels,
         proofHash: positive && witness ? witness.proofHash : null,
         sourceVersion: selection.sourceVersion, runRevision: selection.runRevision,
@@ -122,6 +150,21 @@ export class RuneProofExportRegistry {
 
 export const runeProofExportRegistry = new RuneProofExportRegistry();
 
+function assertExportReport(goal: CompiledGoal, report: RuneProofReport): void {
+  if (report.goalId !== goal.id) throw new Error('Invalid RuneProof export record');
+  if (!positiveStatus(report.status)) {
+    assertRuneProofReport(report);
+    return;
+  }
+  const witnessRoot = report.routes[0]?.witness.rootFactId;
+  if (!witnessRoot || report.routes.some(route => route.witness.rootFactId !== witnessRoot)) {
+    throw new Error('Invalid RuneProof export record');
+  }
+  assertRuneProofReport({ ...report, goalId: witnessRoot });
+}
+function positiveStatus(status: RuneProofReport['status']): boolean {
+  return status === 'OBTAINABLE' || status === 'OBTAINABLE_RNG';
+}
 function unknownSummary(goal: CompiledGoal, selection: RuneProofExportSelection): RuneProofBundleSummary {
   return {
     goalId: goal.id, goalLabel: goal.label, status: 'UNKNOWN',
@@ -139,14 +182,18 @@ function defaultExplanation(status: RuneProofReport['status']): string {
     case 'UNKNOWN': return 'Verified evidence is incomplete.';
   }
 }
-function recordKey(runId: string, goalId: string): string { return `${runId}|${goalId}`; }
+function recordKey(runId: string, runRevision: number, sourceVersion: string, goalId: string): string {
+  return JSON.stringify([runId, runRevision, sourceVersion, goalId]);
+}
+function newestRecordFirst(left: RuneProofExportRecord, right: RuneProofExportRecord): number {
+  return right.runRevision - left.runRevision || compareText(right.sourceVersion, left.sourceVersion);
+}
 function recordCompare(left: RuneProofExportRecord, right: RuneProofExportRecord): number {
   return compareText(left.goal.id, right.goal.id);
 }
 function compareText(left: string, right: string): number {
   return left < right ? -1 : left > right ? 1 : 0;
 }
-
 /** App-facing, latest-request-wins facade around the pure engine or worker adapter. */
 export class RuneProofService {
   private readonly cache = new Map<string, RuneProofReport>();
@@ -166,7 +213,11 @@ export class RuneProofService {
     const sourceVersion = this.engine.sourceVersion;
     const key = `${sourceVersion}|${snapshot.runId}|${snapshot.runRevision}|${query.goal.id}|${flags(query)}`;
     const cached = this.cache.get(key);
-    if (cached) return cached;
+    if (cached) {
+      this.exportRegistry.record(query.goal, cached, snapshot, sourceVersion,
+        () => this.replay(query, snapshot, sourceVersion));
+      return cached;
+    }
     this.active?.abort();
     const controller = new AbortController();
     this.active = controller;
@@ -177,7 +228,8 @@ export class RuneProofService {
       if (this.disposed || serial !== this.serial || controller.signal.aborted
         || this.engine.sourceVersion !== sourceVersion || current.runId !== snapshot.runId
         || current.runRevision !== snapshot.runRevision) return null;
-      this.exportRegistry.record(query.goal, result, snapshot, sourceVersion);
+      this.exportRegistry.record(query.goal, result, snapshot, sourceVersion,
+        () => this.replay(query, snapshot, sourceVersion));
       this.cache.set(key, result);
       return result;
     } catch (error) {
@@ -186,6 +238,20 @@ export class RuneProofService {
     } finally {
       if (this.active === controller) this.active = null;
     }
+  }
+
+  private async replay(
+    query: RuneProofQuery,
+    recordedSnapshot: RuneProofRunSnapshot,
+    sourceVersion: string,
+  ): Promise<RuneProofReport> {
+    const current = this.currentSnapshot();
+    if (this.disposed || this.engine.sourceVersion !== sourceVersion
+      || current.runId !== recordedSnapshot.runId
+      || current.runRevision !== recordedSnapshot.runRevision) {
+      throw new Error('Stale RuneProof export replay');
+    }
+    return this.engine.evaluate(query, current);
   }
 
   dispose(): void { this.disposed = true; this.serial += 1; this.active?.abort(); this.active = null; this.cache.clear(); }

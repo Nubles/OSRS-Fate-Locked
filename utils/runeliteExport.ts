@@ -16,10 +16,7 @@ import { showToast } from './toast';
 import { UnlockState } from '../types';
 import { bankLocksActive } from './reachability';
 import type { GameModeRules } from '../config/gameModes';
-import {
-  buildRuneliteRulesManifest,
-  type RuneProofBundleSummary,
-} from './runeliteRulesManifest';
+import { buildRuneliteRulesManifest } from './runeliteRulesManifest';
 import { runeProofExportRegistry } from '../services/RuneProofService';
 
 /**
@@ -63,7 +60,6 @@ export interface RuneliteRunInput {
   rulesVersion?: string;
   contentVersion?: number;
   detectorContractVersion?: number;
-  runeProof?: readonly RuneProofBundleSummary[];
   runeProofSourceVersion?: string;
 }
 
@@ -99,7 +95,7 @@ export async function buildBundlePayload(
     equipment: unlocks.equipment,
   };
   const sourceVersion = run.runeProofSourceVersion ?? await currentRuneProofSourceVersion();
-  const runeProof = run.runeProof ?? await runeProofExportRegistry.select({
+  const runeProof = await runeProofExportRegistry.select({
     runId: run.runId, runRevision: run.runRevision, sourceVersion,
     pinnedGoalIds: run.pinnedGoals ?? [],
   });
