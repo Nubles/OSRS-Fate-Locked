@@ -3,6 +3,8 @@ import chunkDocumentJson from '../../public/chunk-content.json';
 import sourceDocumentJson from '../../public/runeproof-sources.json';
 import chunkAuditJson from '../../data/sources/chunk-content-transform-audit.json';
 import questAuditJson from '../../data/sources/quest-requirement-audit.json';
+import trustedCatalogJson from '../../data/sources/runeproof-trusted-acquisition-sources.json';
+import { loadRuneProofSourceAudit } from '../../data/runeProofSourceAudit';
 import { RESOURCE_MAP } from '../../data/resourceData';
 import type { RuneProofRunSnapshot } from '../../types';
 import {
@@ -33,6 +35,8 @@ import {
 
 const RUNS = 20;
 const START_LOCATION = 'surface:50,50';
+const PRODUCTION_ACQUISITION_URL =
+  `/runeproof-sources.json?v=${encodeURIComponent(sourceDocumentJson.sourceVersion)}`;
 const empty: RequirementExpr = { op: 'ALL', terms: [] };
 const metrics: BenchmarkMetric[] = [];
 
@@ -55,14 +59,10 @@ interface ChunkSource {
 const sourceDocument =
   sourceDocumentJson as unknown as RuneProofSourceDocument;
 const chunkDocument = chunkDocumentJson as unknown as ChunkSource;
+const productionSourceAudit = await loadRuneProofSourceAudit();
 const fullSources: RuneProofEngineSources = {
   sourceVersion: sourceDocument.sourceVersion,
-  sourceAudit: {
-    sourceVersion: sourceDocument.sourceVersion,
-    questCoverage: 'VERIFIED',
-    chunkCoverage: 'PARTIAL',
-    acquisitionCoverage: sourceDocument.acquisitionCoverage,
-  },
+  sourceAudit: productionSourceAudit,
   acquisition: sourceDocument,
   locationGraph: {
     startNodeId: START_LOCATION,
@@ -79,19 +79,22 @@ const currentRun = snapshot();
 describe('RuneProof selective-solving performance acceptance', () => {
   it('cold-compiles the complete checked-in audited source corpus 20 times', () => {
     const input = fullCompilerInput();
-    const samples = sampleSync('cold source compilation', () => {
-      const compiled = compileAcquisitionArtifacts(input).document;
-      expect(compiled.counts).toEqual({
+    const fingerprints = sampleSync('cold source compilation', () => {
+      const compiled = compileAcquisitionArtifacts(input);
+      expect(compiled.document.counts).toEqual({
         rules: sourceDocument.counts.rules,
         unresolvedSources: sourceDocument.counts.unresolvedSources,
       });
-      return compiled;
+      expect(compiled.document.sourceVersion).toBe(sourceDocument.sourceVersion);
+      expect(compiled.trustedCatalog.sourceVersion)
+        .toBe(trustedCatalogJson.sourceVersion);
+      expect(compiled.trustedCatalog.entries.map(entry => entry.id))
+        .toEqual(trustedCatalogJson.entries.map(entry => entry.id));
+      return `${compiled.document.sourceVersion}|${compiled.trustedCatalog.sourceVersion}`;
     });
 
-    expect(samples).toHaveLength(RUNS);
-    expect(samples.every(document =>
-      document.sourceVersion === sourceDocument.sourceVersion,
-    )).toBe(true);
+    expect(fingerprints).toHaveLength(RUNS);
+    expect(new Set(fingerprints).size).toBe(1);
   }, 120_000);
 
   it('meets query budgets for the full graph and deterministic hard cases', async () => {
@@ -143,7 +146,7 @@ describe('RuneProof selective-solving performance acceptance', () => {
         step.ruleId === 'seed:quest:benchmark-permit'),
     )).toBe(true);
 
-    const blocker = blockerFixture(16);
+    const blocker = cartesianBlockerFixture(7);
     const blockerReports = await sampleAsync(
       'worst checked-in blocker fixture',
       () => createRuneProofEngine(blocker.sources)
@@ -152,7 +155,8 @@ describe('RuneProof selective-solving performance acceptance', () => {
     expect(blockerReports.every(report =>
       report.status === 'BLOCKED'
       && report.routesComplete
-      && report.blockers[0]?.factIds.length === 16,
+      && report.blockers.length === 128
+      && report.blockers.every(set => set.factIds.length === 7),
     )).toBe(true);
     expect(lastMetric('worst checked-in blocker fixture').p95Ms)
       .toBeLessThan(1_000);
@@ -165,17 +169,25 @@ describe('RuneProof selective-solving performance acceptance', () => {
     expect(exportReports.every(report =>
       report.status === 'OBTAINABLE' || report.status === 'OBTAINABLE_RNG',
     )).toBe(true);
+    let replayCalls = 0;
+    const replayEngine = createRuneProofEngine(fullSources);
     const exportBatches = await sampleAsync(
       '20 pinned proof exports',
-      () => exportTwentyProofs(exportGoals, exportReports),
+      () => exportTwentyProofs(
+        exportGoals,
+        exportReports,
+        replayEngine,
+        () => { replayCalls += 1; },
+      ),
     );
     expect(exportBatches.every(batch =>
       batch.length === 20
       && batch.every(summary => summary.proofHash?.startsWith('sha256-')),
     )).toBe(true);
+    expect(replayCalls).toBe(RUNS * 20);
   }, 120_000);
 
-  it('fails closed at route and blocker bounds and reuses one worker source initialization', async () => {
+  it('fails closed at route and blocker bounds and keeps production worker dispatch small', async () => {
     const direct = rule('benchmark-route-cap', 'Route capped item');
     const routeCap = evaluateObtainability(direct.output, {
       rules: [...sourceDocument.rules, direct],
@@ -186,23 +198,25 @@ describe('RuneProof selective-solving performance acceptance', () => {
       limits: { maxIterations: 1_000, maxRoutes: 0 },
     });
     expect(routeCap).toMatchObject({
-      status: 'UNKNOWN',
-      routes: [],
-      blockers: [],
-      routesComplete: false,
+      status: 'UNKNOWN', routes: [], blockers: [], routesComplete: false,
     });
     expect(routeCap.explanation).toContain('maxRoutes');
 
-    const blockerCap = blockerFixture(17);
+    const blockerCap = cartesianBlockerFixture(8);
     const blockerReport = await createRuneProofEngine(blockerCap.sources)
       .evaluate({ goal: blockerCap.goal }, currentRun);
     expect(blockerReport).toMatchObject({
-      status: 'UNKNOWN',
-      routes: [],
-      blockers: [],
-      routesComplete: false,
+      status: 'UNKNOWN', routes: [], blockers: [], routesComplete: false,
     });
-    expect(blockerReport.explanation).toContain('maxSetSize');
+    expect(blockerReport.explanation).toContain('maxBlockerSets');
+
+    const blockerSizeCap = blockerFixture(17);
+    const blockerSizeReport = await createRuneProofEngine(blockerSizeCap.sources)
+      .evaluate({ goal: blockerSizeCap.goal }, currentRun);
+    expect(blockerSizeReport).toMatchObject({
+      status: 'UNKNOWN', routes: [], blockers: [], routesComplete: false,
+    });
+    expect(blockerSizeReport.explanation).toContain('maxSetSize');
 
     const originalWorker = globalThis.Worker;
     let workerInstance: DeferredWorker | undefined;
@@ -213,54 +227,47 @@ describe('RuneProof selective-solving performance acceptance', () => {
           workerInstance = this;
         }
       } as unknown as typeof Worker;
-      const executor = createRuneProofExecutor(fullSources);
-      let firstSettled = false;
-      const first = executor.evaluate({ goal: ordinaryGoal }, currentRun)
-        .then(report => {
-          firstSettled = true;
-          return report;
-        });
+      const executor = createRuneProofExecutor(fullSources, {
+        acquisitionUrl: PRODUCTION_ACQUISITION_URL,
+      });
+      const first = executor.evaluate({ goal: ordinaryGoal }, currentRun);
       expect(workerInstance?.messages).toHaveLength(2);
       expect(workerInstance?.messages[0]).toMatchObject({
         type: 'INITIALIZE',
-        sources: fullSources,
+        acquisitionUrl: PRODUCTION_ACQUISITION_URL,
+        sourceVersion: fullSources.sourceVersion,
+        sourceAudit: fullSources.sourceAudit,
+        locationGraph: fullSources.locationGraph,
       });
+      expect(workerInstance?.messages[0]).not.toHaveProperty('sources');
+      expect(workerInstance?.messages[0]).not.toHaveProperty('acquisition');
       expect(workerInstance?.messages[1]).toMatchObject({
-        type: 'EVALUATE',
-        id: 1,
-        query: { goal: ordinaryGoal },
+        type: 'EVALUATE', id: 1, query: { goal: ordinaryGoal },
         snapshot: currentRun,
       });
       expect(workerInstance?.messages[1]).not.toHaveProperty('sources');
-      await Promise.resolve();
-      expect(firstSettled).toBe(false);
       workerInstance?.reply(1, unknownReport(ordinaryGoal.id));
       expect((await first).status).toBe('UNKNOWN');
 
       const second = executor.evaluate({ goal: ordinaryGoal }, currentRun);
       expect(workerInstance?.messages).toHaveLength(3);
       expect(workerInstance?.messages[2]).toMatchObject({
-        type: 'EVALUATE',
-        id: 2,
+        type: 'EVALUATE', id: 2,
       });
-      expect(workerInstance?.messages[2]).not.toHaveProperty('sources');
       expect(workerInstance?.messages.filter(message =>
         message.type === 'INITIALIZE',
       )).toHaveLength(1);
       workerInstance?.reply(2, unknownReport(ordinaryGoal.id));
       expect((await second).status).toBe('UNKNOWN');
 
-      sampleVoidSync('one-time worker source initialization clone', () => {
-        structuredClone({ type: 'INITIALIZE', sources: fullSources });
+      sampleVoidSync('production worker initialization clone', () => {
+        structuredClone(workerInstance!.messages[0]);
       });
       sampleVoidSync('subsequent worker request clone', () => {
-        structuredClone({
-          type: 'EVALUATE',
-          id: 2,
-          query: { goal: ordinaryGoal },
-          snapshot: currentRun,
-        });
+        structuredClone(workerInstance!.messages[1]);
       });
+      expect(lastMetric('production worker initialization clone').p95Ms)
+        .toBeLessThan(10);
       expect(lastMetric('subsequent worker request clone').p95Ms)
         .toBeLessThan(10);
     } finally {
@@ -275,9 +282,7 @@ describe('RuneProof selective-solving performance acceptance', () => {
         postMessage(): void {
           throw new DOMException('cannot clone sources', 'DataCloneError');
         }
-        terminate(): void {
-          terminated = true;
-        }
+        terminate(): void { terminated = true; }
       } as unknown as typeof Worker;
       const selected = createRuneProofExecutor(fullSources);
       const expected = await createRuneProofEngine(fullSources)
@@ -285,6 +290,86 @@ describe('RuneProof selective-solving performance acceptance', () => {
       expect(await selected.evaluate({ goal: ordinaryGoal }, currentRun))
         .toEqual(expected);
       expect(terminated).toBe(true);
+    } finally {
+      globalThis.Worker = originalWorker;
+    }
+  });
+
+  it('latches worker errors before and during queries and uses fallback forever', async () => {
+    const originalWorker = globalThis.Worker;
+    const expected = await createRuneProofEngine(fullSources)
+      .evaluate({ goal: ordinaryGoal }, currentRun);
+    try {
+      let beforeWorker: DeferredWorker | undefined;
+      globalThis.Worker = class extends DeferredWorker {
+        constructor() { super(); beforeWorker = this; }
+      } as unknown as typeof Worker;
+      const before = createRuneProofExecutor(fullSources, {
+        acquisitionUrl: PRODUCTION_ACQUISITION_URL,
+      });
+      beforeWorker?.crash();
+      const beforeResult = before.evaluate({ goal: ordinaryGoal }, currentRun);
+      expect(beforeWorker?.terminated).toBe(true);
+      expect(beforeWorker?.messages).toHaveLength(1);
+      expect(await beforeResult).toEqual(expected);
+
+      let duringWorker: DeferredWorker | undefined;
+      globalThis.Worker = class extends DeferredWorker {
+        constructor() { super(); duringWorker = this; }
+      } as unknown as typeof Worker;
+      const during = createRuneProofExecutor(fullSources, {
+        acquisitionUrl: PRODUCTION_ACQUISITION_URL,
+      });
+      const pending = during.evaluate({ goal: ordinaryGoal }, currentRun);
+      expect(duringWorker?.messages).toHaveLength(2);
+      duringWorker?.crash();
+      expect(duringWorker?.terminated).toBe(true);
+      expect(await pending).toEqual(expected);
+      const future = during.evaluate({ goal: ordinaryGoal }, currentRun);
+      expect(duringWorker?.messages).toHaveLength(2);
+      expect(await future).toEqual(expected);
+
+      let initializationWorker: DeferredWorker | undefined;
+      globalThis.Worker = class extends DeferredWorker {
+        constructor() { super(); initializationWorker = this; }
+      } as unknown as typeof Worker;
+      const initialization = createRuneProofExecutor(fullSources, {
+        acquisitionUrl: PRODUCTION_ACQUISITION_URL,
+      });
+      const initializationPending =
+        initialization.evaluate({ goal: ordinaryGoal }, currentRun);
+      initializationWorker?.fail(
+        1,
+        'RuneProof acquisition source version mismatch',
+      );
+      expect(initializationWorker?.terminated).toBe(true);
+      expect(await initializationPending).toEqual(expected);
+      expect(await initialization.evaluate({ goal: ordinaryGoal }, currentRun))
+        .toEqual(expected);
+      expect(initializationWorker?.messages).toHaveLength(2);
+    } finally {
+      globalThis.Worker = originalWorker;
+    }
+  });
+
+  it('terminates the worker and rejects pending and future work on disposal', async () => {
+    const originalWorker = globalThis.Worker;
+    let workerInstance: DeferredWorker | undefined;
+    try {
+      globalThis.Worker = class extends DeferredWorker {
+        constructor() { super(); workerInstance = this; }
+      } as unknown as typeof Worker;
+      const executor = createRuneProofExecutor(fullSources, {
+        acquisitionUrl: PRODUCTION_ACQUISITION_URL,
+      });
+      const pending = executor.evaluate({ goal: ordinaryGoal }, currentRun);
+      expect(typeof executor.dispose).toBe('function');
+      executor.dispose?.();
+      expect(workerInstance?.terminated).toBe(true);
+      await expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+      await expect(executor.evaluate({ goal: ordinaryGoal }, currentRun))
+        .rejects.toMatchObject({ name: 'AbortError' });
+      expect(workerInstance?.messages).toHaveLength(2);
     } finally {
       globalThis.Worker = originalWorker;
     }
@@ -480,7 +565,58 @@ function blockerFixture(size: number): {
   return { goal, sources: verifiedSources([blockerRule]) };
 }
 
+function cartesianBlockerFixture(binaryBranches: number): {
+  goal: CompiledGoal;
+  sources: RuneProofEngineSources;
+} {
+  const goal = compileItemGoal(
+    { id: 'item:cartesian-blocker-goal', label: 'Cartesian blocker goal' },
+    1,
+  );
+  const terms = Array.from({ length: binaryBranches }, (_, branch) => ({
+    op: 'ANY' as const,
+    terms: [0, 1].map(choice => requirement(
+      'QUEST',
+      `Cartesian gate ${String(branch + 1).padStart(2, '0')}-${choice + 1}`,
+    )),
+  }));
+  return {
+    goal,
+    sources: verifiedSources([rule('benchmark-cartesian-blocker', goal.label, {
+      requirements: { op: 'ALL', terms },
+    })]),
+  };
+}
+
 function verifiedSources(extraRules: readonly AcquisitionRule[]): RuneProofEngineSources {
+  const families = ['DROP', 'PRODUCTION', 'RESOURCE_ENGINE', 'SHOP', 'SPAWN'] as const;
+  const sourceFamilyAccounting = Object.fromEntries(families.map(family => {
+    const current = sourceDocument.sourceFamilyAccounting[family];
+    const added = extraRules.filter(rule => rule.sourceKind === family);
+    return [family, {
+      ...current,
+      ruleCount: current.ruleCount + added.length,
+      ruleIds: [...current.ruleIds, ...added.map(rule => rule.id)],
+      unresolvedCount: 0,
+      unresolvedIds: [],
+    }];
+  })) as RuneProofSourceDocument['sourceFamilyAccounting'];
+  const provenanceCatalog = [
+    ...sourceDocument.provenanceCatalog.map(entry => ({
+      ...entry,
+      unresolvedIds: [],
+    })),
+    ...[...new Set(extraRules.flatMap(rule => rule.provenanceIds))]
+      .sort(compareText)
+      .map(id => ({
+        id,
+        kind: 'UNKNOWN' as const,
+        coverage: 'VERIFIED' as const,
+        ruleIds: extraRules.filter(rule => rule.provenanceIds.includes(id))
+          .map(rule => rule.id),
+        unresolvedIds: [],
+      })),
+  ];
   return {
     sourceVersion: sourceDocument.sourceVersion,
     sourceAudit: {
@@ -503,6 +639,8 @@ function verifiedSources(extraRules: readonly AcquisitionRule[]): RuneProofEngin
         unresolvedSources: 0,
       },
       acquisitionCoverage: 'VERIFIED',
+      sourceFamilyAccounting,
+      provenanceCatalog,
       rules: [...sourceDocument.rules, ...extraRules],
       unresolvedSources: [],
     },
@@ -530,6 +668,8 @@ function uniqueDirectGoals(count: number): CompiledGoal[] {
 async function exportTwentyProofs(
   goals: readonly CompiledGoal[],
   reports: readonly RuneProofReport[],
+  engine: ReturnType<typeof createRuneProofEngine>,
+  onReplay: () => void,
 ): Promise<Awaited<ReturnType<RuneProofExportRegistry['select']>>> {
   const registry = new RuneProofExportRegistry();
   goals.forEach((goal, index) => {
@@ -539,7 +679,10 @@ async function exportTwentyProofs(
       report,
       currentRun,
       sourceDocument.sourceVersion,
-      async () => report,
+      async () => {
+        onReplay();
+        return engine.evaluate({ goal }, currentRun);
+      },
     );
   });
   return registry.select({
@@ -624,6 +767,7 @@ class DeferredWorker {
   onmessage: ((event: MessageEvent) => void) | null = null;
   onerror: ((event: ErrorEvent) => void) | null = null;
   messages: Record<string, unknown>[] = [];
+  terminated = false;
 
   postMessage(message: Record<string, unknown>): void {
     this.messages.push(message);
@@ -633,6 +777,18 @@ class DeferredWorker {
     this.onmessage?.({
       data: { id, report },
     } as MessageEvent);
+  }
+
+  fail(id: number, error: string): void {
+    this.onmessage?.({ data: { id, error, fatal: true } } as MessageEvent);
+  }
+
+  crash(): void {
+    this.onerror?.({ message: 'worker crashed' } as ErrorEvent);
+  }
+
+  terminate(): void {
+    this.terminated = true;
   }
 }
 

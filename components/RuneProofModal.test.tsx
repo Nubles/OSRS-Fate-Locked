@@ -139,13 +139,22 @@ describe('RuneProofModal', () => {
     expect(service.dispose).not.toHaveBeenCalled();
   });
 
-  it('disposes a factory-owned service when the modal unmounts', async () => {
-    const dispose = vi.fn();
-    const service = Object.assign(serviceFor(report('OBTAINABLE')), { dispose });
-    const view = render(<RuneProofModal onClose={() => undefined} snapshot={snapshot()} goals={goals} rules={rules} createService={async () => service} />);
+  it('disposes every factory-owned service across modal reopen cycles', async () => {
+    const disposals = [vi.fn(), vi.fn()];
+    let created = 0;
+    const createService = async () => Object.assign(
+      serviceFor(report('OBTAINABLE')),
+      { dispose: disposals[created++] },
+    );
+    const first = render(<RuneProofModal onClose={() => undefined} snapshot={snapshot()} goals={goals} rules={rules} createService={createService} />);
     await act(async () => undefined);
-    view.unmount();
-    expect(dispose).toHaveBeenCalledTimes(1);
+    first.unmount();
+    const reopened = render(<RuneProofModal onClose={() => undefined} snapshot={snapshot()} goals={goals} rules={rules} createService={createService} />);
+    await act(async () => undefined);
+    reopened.unmount();
+    expect(disposals[0]).toHaveBeenCalledTimes(1);
+    expect(disposals[1]).toHaveBeenCalledTimes(1);
+    expect(created).toBe(2);
   });
 
   it('focuses search and closes via Escape, close control, and backdrop', () => {

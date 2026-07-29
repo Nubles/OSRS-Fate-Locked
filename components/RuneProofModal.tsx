@@ -55,6 +55,8 @@ async function createDefaultService(current: () => RuneProofRunSnapshot): Promis
       nodes: chunkContentService.locationNodes(),
       edges: chunkContentService.locationEdges(),
     },
+  }, {
+    acquisitionUrl: `${import.meta.env.BASE_URL}runeproof-sources.json?v=${encodeURIComponent(acquisition.sourceVersion)}`,
   }), current);
 }
 

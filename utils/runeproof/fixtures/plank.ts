@@ -128,6 +128,15 @@ function sourceDocument(
     const familyRules = rules.filter(rule => rule.sourceKind === family);
     return [family, { ruleCount: familyRules.length, unresolvedCount: 0, ruleIds: familyRules.map(rule => rule.id), unresolvedIds: [], coverage }];
   })) as RuneProofSourceDocument['sourceFamilyAccounting'];
+  const provenanceCatalog = [...new Set(rules.flatMap(rule =>
+    rule.provenanceIds))].sort().map(id => ({
+      id,
+      kind: 'UNKNOWN' as const,
+      coverage,
+      ruleIds: rules.filter(rule => rule.provenanceIds.includes(id))
+        .map(rule => rule.id),
+      unresolvedIds: [],
+    }));
   return {
     schemaVersion: 1,
     sourceVersion: SOURCE_VERSION,
@@ -135,7 +144,7 @@ function sourceDocument(
     acquisitionCoverage: coverage,
     sourceFamilyCoverage,
     sourceFamilyAccounting,
-    provenanceCatalog: [],
+    provenanceCatalog,
     rules,
     unresolvedSources: [],
   };

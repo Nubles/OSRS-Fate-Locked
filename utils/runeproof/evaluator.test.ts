@@ -319,14 +319,11 @@ describe('evaluateObtainability', () => {
     ]));
 
     expect(result.status).toBe('IMPOSSIBLE');
-    expect(result.blockers).toEqual([{
-      factIds: ['item:missing-a', 'item:missing-b'],
-      labels: ['Missing A', 'Missing B'],
-    }]);
-    expect(result.unavoidableBlockerFactIds).toEqual([
-      'item:missing-a',
-      'item:missing-b',
+    expect(result.blockers).toEqual([
+      { factIds: ['item:missing-a'], labels: ['Missing A'] },
+      { factIds: ['item:missing-b'], labels: ['Missing B'] },
     ]);
+    expect(result.unavoidableBlockerFactIds).toEqual([]);
   });
 
   it('replaces a selected acquisition rule with the exact blocker antichain', () => {
@@ -340,14 +337,11 @@ describe('evaluateObtainability', () => {
     ]));
 
     expect(result.status).toBe('IMPOSSIBLE');
-    expect(result.blockers).toEqual([{
-      factIds: ['item:missing-a', 'item:missing-b'],
-      labels: ['Missing A', 'Missing B'],
-    }]);
-    expect(result.unavoidableBlockerFactIds).toEqual([
-      'item:missing-a',
-      'item:missing-b',
+    expect(result.blockers).toEqual([
+      { factIds: ['item:missing-a'], labels: ['Missing A'] },
+      { factIds: ['item:missing-b'], labels: ['Missing B'] },
     ]);
+    expect(result.unavoidableBlockerFactIds).toEqual([]);
   });
 
 

@@ -29,8 +29,11 @@ const sources = (coverage: 'VERIFIED' | 'PARTIAL' = 'VERIFIED'): RuneProofEngine
   acquisition: {
     schemaVersion: 1, sourceVersion: 'source-a', counts: { rules: 2, unresolvedSources: 0 }, acquisitionCoverage: coverage,
     sourceFamilyCoverage: { DROP: coverage, PRODUCTION: coverage, RESOURCE_ENGINE: coverage, SHOP: coverage, SPAWN: coverage },
-    sourceFamilyAccounting: { DROP: { ruleCount: 1, unresolvedCount: 0, ruleIds: ['plank-direct'], unresolvedIds: [], coverage }, PRODUCTION: { ruleCount: 0, unresolvedCount: 0, ruleIds: [], unresolvedIds: [], coverage }, RESOURCE_ENGINE: { ruleCount: 0, unresolvedCount: 0, ruleIds: [], unresolvedIds: [], coverage }, SHOP: { ruleCount: 0, unresolvedCount: 0, ruleIds: [], unresolvedIds: [], coverage }, SPAWN: { ruleCount: 1, unresolvedCount: 0, ruleIds: ['plank-stranded'], unresolvedIds: [], coverage } },
-    provenanceCatalog: [],
+    sourceFamilyAccounting: { DROP: { ruleCount: 0, unresolvedCount: 0, ruleIds: [], unresolvedIds: [], coverage }, PRODUCTION: { ruleCount: 0, unresolvedCount: 0, ruleIds: [], unresolvedIds: [], coverage }, RESOURCE_ENGINE: { ruleCount: 0, unresolvedCount: 0, ruleIds: [], unresolvedIds: [], coverage }, SHOP: { ruleCount: 0, unresolvedCount: 0, ruleIds: [], unresolvedIds: [], coverage }, SPAWN: { ruleCount: 2, unresolvedCount: 0, ruleIds: ['plank-direct', 'plank-stranded'], unresolvedIds: [], coverage } },
+    provenanceCatalog: [
+      { id: 'rule:direct', kind: 'UNKNOWN', coverage, ruleIds: ['plank-direct'], unresolvedIds: [] },
+      { id: 'rule:stranded', kind: 'UNKNOWN', coverage, ruleIds: ['plank-stranded'], unresolvedIds: [] },
+    ],
     unresolvedSources: [],
     rules: [
       { id: 'plank-direct', output: { id: 'item:plank', kind: 'ITEM', label: 'Plank' }, outputQuantity: 1, sourceKind: 'SPAWN', sourceLabel: 'yard', locationId: 'plank-yard', requirements: { op: 'ALL', terms: [] }, repeatability: 'REPEATABLE', probability: null, coverage, provenanceIds: ['rule:direct'] },
@@ -56,8 +59,7 @@ describe('evaluateRuneProof', () => {
   it('allows a verified positive witness under global PARTIAL coverage but gates a negative result as UNKNOWN', async () => {
     expect((await evaluateRuneProof({ goal }, snapshot(), sources('PARTIAL'))).status).toBe('OBTAINABLE');
     const noRoutes = sources('PARTIAL');
-    noRoutes.acquisition.rules = [];
-    noRoutes.acquisition.counts.rules = 0;
+    clearRules(noRoutes);
     expect((await evaluateRuneProof({ goal }, snapshot(), noRoutes)).status).toBe('UNKNOWN');
   });
 
@@ -73,8 +75,7 @@ describe('evaluateRuneProof', () => {
       requirement: { op: 'ALL', terms: [{ op: 'FACT', fact: { id: 'skill-level:magic', kind: 'SKILL_LEVEL', label: 'Magic', quantity: 12 } }] },
     } as unknown as import('./goalCompiler').CompiledGoal;
     const document = sources();
-    document.acquisition.rules = [];
-    document.acquisition.counts.rules = 0;
+    clearRules(document);
     const result = await evaluateRuneProof({ goal: questGoal }, snapshot({ currentLevels: { Magic: 12 } }), document);
     expect(result.status).toBe('OBTAINABLE');
     expect(result.goalId).toBe('quest:demo-quest');
@@ -85,6 +86,30 @@ describe('evaluateRuneProof', () => {
     contradictory.acquisition.counts.unresolvedSources = 1;
     expect((await evaluateRuneProof({ goal }, snapshot(), contradictory)).status).toBe('UNKNOWN');
   });
+  it('rejects family accounting IDs assigned to the wrong source family', async () => {
+    const misassigned = sources();
+    const spawn = misassigned.acquisition.sourceFamilyAccounting.SPAWN;
+    const shop = misassigned.acquisition.sourceFamilyAccounting.SHOP;
+    spawn.ruleIds = ['plank-stranded'];
+    spawn.ruleCount = 1;
+    shop.ruleIds = ['plank-direct'];
+    shop.ruleCount = 1;
+    expect((await evaluateRuneProof({ goal }, snapshot(), misassigned)).status).toBe('UNKNOWN');
+  });
+  it('rejects duplicate family accounting IDs', async () => {
+    const duplicated = sources();
+    const spawn = duplicated.acquisition.sourceFamilyAccounting.SPAWN;
+    spawn.ruleIds = [...spawn.ruleIds, 'plank-direct'];
+    spawn.ruleCount = 3;
+    expect((await evaluateRuneProof({ goal }, snapshot(), duplicated)).status).toBe('UNKNOWN');
+  });
+  it('rejects payloads on provenance kinds that do not permit them', async () => {
+    const malformed = sources();
+    malformed.acquisition.provenanceCatalog[0].payload = {
+      type: 'RULE',
+    } as never;
+    expect((await evaluateRuneProof({ goal }, snapshot(), malformed)).status).toBe('UNKNOWN');
+  });
   it('uses the in-process engine with identical results when a Worker is unavailable', async () => {
     const document = sources();
     const inProcess = createRuneProofEngine(document);
@@ -92,3 +117,13 @@ describe('evaluateRuneProof', () => {
     expect(await selected.evaluate({ goal }, snapshot())).toEqual(await inProcess.evaluate({ goal }, snapshot()));
   });
 });
+function clearRules(document: RuneProofEngineSources): void {
+  document.acquisition.rules = [];
+  document.acquisition.counts.rules = 0;
+  document.acquisition.provenanceCatalog = [];
+  Object.values(document.acquisition.sourceFamilyAccounting)
+    .forEach(accounting => {
+      accounting.ruleCount = 0;
+      accounting.ruleIds = [];
+    });
+}

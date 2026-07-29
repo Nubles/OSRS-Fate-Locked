@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { RuneProofRunSnapshot } from '../types';
 import type { CompiledGoal } from '../utils/runeproof/goalCompiler';
 import type { RuneProofEngine, RuneProofQuery } from '../utils/runeproof/engine';
@@ -173,5 +173,25 @@ describe('RuneProofService', () => {
     sourceVersion = 'sources-b';
     pending.resolve(report(goal.id));
     expect(await result).toBeNull();
+  });
+
+  it('disposes an optional owned engine lifecycle without requiring it from injected engines', () => {
+    const dispose = vi.fn();
+    const engine: RuneProofEngine = {
+      sourceVersion: 'sources-a',
+      evaluate: async query => report(query.goal.id),
+      dispose,
+    };
+    const service = new RuneProofService(engine, () => snapshot());
+    service.dispose();
+    service.dispose();
+    expect(dispose).toHaveBeenCalledTimes(1);
+
+    const injected: RuneProofEngine = {
+      sourceVersion: 'sources-a',
+      evaluate: async query => report(query.goal.id),
+    };
+    expect(() => new RuneProofService(injected, () => snapshot()).dispose())
+      .not.toThrow();
   });
 });

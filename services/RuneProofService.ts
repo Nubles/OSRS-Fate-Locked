@@ -261,7 +261,15 @@ export class RuneProofService {
     return this.engine.evaluate(query, current);
   }
 
-  dispose(): void { this.disposed = true; this.serial += 1; this.active?.abort(); this.active = null; this.cache.clear(); }
+  dispose(): void {
+    if (this.disposed) return;
+    this.disposed = true;
+    this.serial += 1;
+    this.active?.abort();
+    this.active = null;
+    this.cache.clear();
+    this.engine.dispose?.();
+  }
 }
 
 function flags(query: RuneProofQuery): string { return `alternatives=${query.includeAlternatives !== false};blockers=${query.includeBlockers !== false}`; }

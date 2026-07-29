@@ -1178,7 +1178,7 @@ const SHA256_CONSTANTS = new Uint32Array([
   0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
 ]);
 
-function canonicalDocumentJson(value: unknown): string {
+export function canonicalDocumentJson(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(canonicalDocumentJson).join(',')}]`;
   if (value && typeof value === 'object') {
     return `{${Object.entries(value).sort(([left], [right]) => left.localeCompare(right))
@@ -1188,7 +1188,7 @@ function canonicalDocumentJson(value: unknown): string {
   return JSON.stringify(value);
 }
 
-function sha256HexSync(message: string): string {
+export function sha256HexSync(message: string): string {
   const source = new TextEncoder().encode(message);
   const paddedLength = Math.ceil((source.length + 9) / 64) * 64;
   const bytes = new Uint8Array(paddedLength);

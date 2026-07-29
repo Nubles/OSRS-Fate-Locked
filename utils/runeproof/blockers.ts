@@ -161,6 +161,10 @@ export function analyzeCurrentRunBlockers(
       const quantity = requiredFactQuantity(expression.fact, operations);
       return solveFact(expression.fact, quantity, path, true);
     }
+    if (expression.op === 'ANY') {
+      return normalizeBounded(expression.terms.flatMap(term =>
+        solveExpression(term, operations, path)));
+    }
     return expression.terms.reduce<BlockerAlternatives>(
       (alternatives, term) =>
         merge(alternatives, solveExpression(term, operations, path)),
@@ -218,17 +222,17 @@ export function analyzeCurrentRunBlockers(
       return normalizeBounded([new Set([fact.id])]);
     }
 
-    let allRules: BlockerAlternatives = [new Set()];
+    let routeAlternatives: BlockerAlternatives = [];
     for (const rule of usableCapacityRules) {
-      if (!input.reachableLocations.has(rule.locationId)) {
-        allRules = merge(allRules, [new Set()]);
-        continue;
-      }
+      if (!input.reachableLocations.has(rule.locationId)) continue;
       const operations = Math.ceil(quantity / rule.outputQuantity);
       const ruleBlockers = solveExpression(rule.requirements, operations, nextPath);
-      allRules = merge(allRules, ruleBlockers);
+      routeAlternatives = normalizeBounded([
+        ...routeAlternatives,
+        ...ruleBlockers,
+      ]);
     }
-    return normalizeBounded(allRules);
+    return normalizeBounded(routeAlternatives);
   };
 
   try {

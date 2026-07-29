@@ -72,15 +72,48 @@ describe('analyzeCurrentRunBlockers', () => {
     expect(result).toMatchObject({
       status: 'BLOCKED',
       complete: true,
-      blockers: [{
-        factIds: [questA.id, questB.id, skill.id],
-        labels: [questA.label, questB.label, skill.label],
-      }],
-      unavoidableBlockerFactIds: [questA.id, questB.id, skill.id],
+      blockers: [
+        {
+          factIds: [questB.id],
+          labels: [questB.label],
+        },
+        {
+          factIds: [questA.id, skill.id],
+          labels: [questA.label, skill.label],
+        },
+      ],
+      unavoidableBlockerFactIds: [],
     });
   });
 
-  it('blocks every currently reachable acquisition rule for the same fact', () => {
+  it('combines ALL requirements and exposes ANY requirements as choices', () => {
+    const quest = fact('QUEST', 'A');
+    const skill = fact('SKILL_LEVEL', 'B');
+    const terms = [
+      { op: 'FACT' as const, fact: quest },
+      { op: 'FACT' as const, fact: skill },
+    ];
+    expect(analyze(item('All goal'), [rule('all', 'All goal', {
+      requirements: { op: 'ALL', terms },
+    })])).toMatchObject({
+      blockers: [{
+        factIds: [quest.id, skill.id],
+        labels: [quest.label, skill.label],
+      }],
+      unavoidableBlockerFactIds: [quest.id, skill.id],
+    });
+    expect(analyze(item('Any goal'), [rule('any', 'Any goal', {
+      requirements: { op: 'ANY', terms },
+    })])).toMatchObject({
+      blockers: [
+        { factIds: [quest.id], labels: [quest.label] },
+        { factIds: [skill.id], labels: [skill.label] },
+      ],
+      unavoidableBlockerFactIds: [],
+    });
+  });
+
+  it('exposes every currently reachable acquisition rule as an alternative method', () => {
     const quest = fact('QUEST', 'Dragon Slayer');
     const skill = fact('SKILL_LEVEL', 'Smithing');
     const result = analyze(item('Goal'), [
@@ -94,11 +127,11 @@ describe('analyzeCurrentRunBlockers', () => {
         requirements: { op: 'FACT', fact: skill },
       }),
     ]);
-    expect(result.blockers).toEqual([{
-      factIds: [quest.id, skill.id],
-      labels: [quest.label, skill.label],
-    }]);
-    expect(result.unavoidableBlockerFactIds).toEqual([quest.id, skill.id]);
+    expect(result.blockers).toEqual([
+      { factIds: [quest.id], labels: [quest.label] },
+      { factIds: [skill.id], labels: [skill.label] },
+    ]);
+    expect(result.unavoidableBlockerFactIds).toEqual([]);
   });
 
   it('never recommends an unreachable location or future chunk unlock', () => {
@@ -186,6 +219,93 @@ describe('analyzeCurrentRunBlockers', () => {
     });
   });
 
+  it('uses supplied facts as the satisfied identity through ALL and ANY', () => {
+    const supplied = fact('QUEST', 'Already complete');
+    const ignoredChoice = fact('QUEST', 'Ignored choice');
+    const remaining = fact('QUEST', 'Still missing');
+    const result = analyze(item('Goal'), [rule('goal', 'Goal', {
+      requirements: {
+        op: 'ALL',
+        terms: [
+          {
+            op: 'ANY',
+            terms: [
+              { op: 'FACT', fact: supplied },
+              { op: 'FACT', fact: ignoredChoice },
+            ],
+          },
+          { op: 'FACT', fact: remaining },
+        ],
+      },
+    })], {
+      suppliedFactQuantities: new Map([[supplied.id, 1]]),
+    });
+    expect(result.blockers).toEqual([{
+      factIds: [remaining.id],
+      labels: [remaining.label],
+    }]);
+  });
+  it('uses the correct identities for zero-term ALL and ANY', () => {
+    const missing = fact('QUEST', 'Remaining');
+    const withEmptyAll = analyze(item('All identity'), [rule(
+      'all-identity',
+      'All identity',
+      {
+        requirements: {
+          op: 'ALL',
+          terms: [
+            { op: 'ALL', terms: [] },
+            { op: 'FACT', fact: missing },
+          ],
+        },
+      },
+    )]);
+    expect(withEmptyAll.blockers).toEqual([{
+      factIds: [missing.id],
+      labels: [missing.label],
+    }]);
+    expect(analyze(item('Empty any'), [rule('empty-any', 'Empty any', {
+      requirements: { op: 'ANY', terms: [] },
+    })])).toMatchObject({
+      status: 'IMPOSSIBLE',
+      blockers: [],
+      unavoidableBlockerFactIds: [],
+    });
+  });
+  it('enumerates the exact Cartesian blocker frontier and fails closed above its bound', () => {
+    const expression = (branches: number) => ({
+      op: 'ALL' as const,
+      terms: Array.from({ length: branches }, (_, branch) => ({
+        op: 'ANY' as const,
+        terms: [0, 1].map(side => ({
+          op: 'FACT' as const,
+          fact: fact('QUEST', `Branch ${branch} side ${side}`),
+        })),
+      })),
+    });
+
+    const exact = analyze(item('Goal'), [rule('goal', 'Goal', {
+      requirements: expression(7),
+    })]);
+    expect(exact).toMatchObject({
+      status: 'BLOCKED',
+      complete: true,
+      unavoidableBlockerFactIds: [],
+    });
+    expect(exact.blockers).toHaveLength(128);
+    expect(exact.blockers.every(blocker => blocker.factIds.length === 7))
+      .toBe(true);
+
+    expect(analyze(item('Goal'), [rule('goal', 'Goal', {
+      requirements: expression(8),
+    })])).toMatchObject({
+      status: 'UNKNOWN',
+      complete: false,
+      blockers: [],
+      unavoidableBlockerFactIds: [],
+      diagnostic: 'RuneProof blocker analysis exceeded maxBlockerSets=128',
+    });
+  });
   it('is stable across rule order and deeply freezes output', () => {
     const rules = [
       rule('goal', 'Goal', {
