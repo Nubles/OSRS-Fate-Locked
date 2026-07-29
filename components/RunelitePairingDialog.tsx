@@ -7,8 +7,6 @@ export interface RunelitePairingDialogProps {
   replacing: boolean;
   profileName: string;
   linkedAccount: string | null;
-  proofCount: number;
-  proofSourceVersion: string;
   phase: 'confirm' | 'uploading' | 'success' | 'error';
   error?: string;
   onConfirm(): void;
@@ -23,8 +21,6 @@ export const RunelitePairingDialog: React.FC<
   replacing,
   profileName,
   linkedAccount,
-  proofCount,
-  proofSourceVersion,
   phase,
   error,
   onConfirm,
@@ -76,18 +72,6 @@ export const RunelitePairingDialog: React.FC<
               <dt className="text-gray-500">Linked account</dt>
               <dd className="font-bold text-gray-100">
                 {linkedAccount || 'No bound account'}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-gray-500">RuneProof</dt>
-              <dd className="font-bold text-gray-100">
-                {proofCount} current {proofCount === 1 ? 'proof' : 'proofs'}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-gray-500">Proof source</dt>
-              <dd className="max-w-[15rem] truncate font-mono text-[10px] text-cyan-200" title={proofSourceVersion}>
-                {proofSourceVersion}
               </dd>
             </div>
             <div className="flex justify-between gap-4">

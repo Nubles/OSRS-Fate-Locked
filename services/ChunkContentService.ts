@@ -12,11 +12,6 @@
  * Fail-safe: if the fetch fails the map simply shows no content panel.
  */
 
-import type {
-  LocationEdgeSource,
-  LocationNodeSource,
-} from '../utils/runeproof/locationGraph';
-
 export interface ChunkMonster { name: string; count: number; slayer: number | null }
 export interface ChunkContent {
   name?: string;
@@ -130,24 +125,7 @@ interface RawDoc {
   banks?: string[];
   /** Faceted categories (food/boost/boss/…) → the chunk ids that contain them. */
   tags?: Record<string, string[]>;
-  /** Explicitly audited proof-grade locations. */
-  locationNodes?: LocationNodeSource[];
-  /** Explicitly audited, requirement-bearing proof-grade travel edges. */
-  locationEdges?: LocationEdgeSource[];
 }
-
-export type RuneProofSourceDocument = Pick<RawDoc,
-  | 'version'
-  | 'source'
-  | 'sourceMeta'
-  | 'chunks'
-  | 'shopItems'
-  | 'drops'
-  | 'taskUnlocks'
-  | 'questSections'
-  | 'locationNodes'
-  | 'locationEdges'
->;
 
 const decode = (e: RawEntry): ChunkContent => ({
   name: e.n,
@@ -225,15 +203,9 @@ export interface EntityHit {
 
 // Bump when public/chunk-content.json changes so the fetch URL changes and
 // browsers don't serve a stale cached copy (the filename itself never changes).
-const DATA_REV = 11;
+const DATA_REV = 10;
 
 class ChunkContentService {
-  /** Explicitly audited proof-grade locations; never derived from connectGraph(). */
-  locationNodes(): LocationNodeSource[] { return structuredClone(this.doc?.locationNodes ?? []); }
-
-  /** Explicitly audited requirement-bearing edges; never derived from connectGraph(). */
-  locationEdges(): LocationEdgeSource[] { return structuredClone(this.doc?.locationEdges ?? []); }
-
   private doc: RawDoc | null = null;
   private promise: Promise<boolean> | null = null;
   private index: Map<string, EntityHit> | null = null;
@@ -243,18 +215,6 @@ class ChunkContentService {
 
   sourceMetadata(): RawDoc['sourceMeta'] | null {
     return this.doc?.sourceMeta ?? null;
-  }
-
-  runeProofSourceDocument(): RuneProofSourceDocument | null {
-    if (!this.doc) return null;
-    const {
-      version, source, sourceMeta, chunks, shopItems, drops, taskUnlocks,
-      questSections, locationNodes, locationEdges,
-    } = this.doc;
-    return structuredClone({
-      version, source, sourceMeta, chunks, shopItems, drops, taskUnlocks,
-      questSections, locationNodes, locationEdges,
-    });
   }
 
   /** Idempotent lazy init; resolves false (and sets .error) on failure. */
