@@ -37,6 +37,7 @@ describe('RuneProofService', () => {
     const engine: RuneProofEngine = { sourceVersion: 'sources-a', evaluate: async () => { replayCalls += 1; return positive; } };
     const service = new RuneProofService(engine, () => snapshot(), registry);
     expect((await service.evaluate({ goal }))?.status).toBe('OBTAINABLE');
+    service.dispose();
 
     const selected = await registry.select({ runId: 'run-a', runRevision: 1, sourceVersion: 'sources-a', pinnedGoalIds: [] });
     expect(replayCalls).toBe(2);
@@ -124,8 +125,8 @@ describe('RuneProofService', () => {
     const selected = await registry.select({ runId: 'run-a', runRevision: 1, sourceVersion: 'sources-a', pinnedGoalIds: [] });
     expect(selected.map((value: any) => value.goalId)).toEqual(['item:plank']);
 
-    registry.record(goal, { ...report(goal.id), explanation: 'other source' }, snapshot(), 'sources-b');
-    const exact = await registry.select({ runId: 'run-a', runRevision: 1, sourceVersion: 'sources-a', pinnedGoalIds: [goal.id] });
+    registry.record(otherGoal, { ...report(otherGoal.id), explanation: 'other source' }, snapshot(), 'sources-b');
+    const exact = await registry.select({ runId: 'run-a', runRevision: 1, sourceVersion: 'sources-a', pinnedGoalIds: [] });
     expect(exact[0]).toMatchObject({ goalId: goal.id, explanation: 'Verified evidence is incomplete.', sourceVersion: 'sources-a' });
   });
   it('uses a complete cache identity so different goals and revisions cannot share results', async () => {

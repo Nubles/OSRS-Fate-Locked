@@ -29,6 +29,7 @@ interface RuneProofExportRecord {
 export class RuneProofExportRegistry {
   private readonly records = new Map<string, RuneProofExportRecord>();
   private readonly selectedByRun = new Map<string, string>();
+  private readonly selectedByIdentity = new Map<string, string>();
   private readonly latestIdentityByRun = new Map<string, { runRevision: number; sourceVersion: string }>();
 
   record(
@@ -51,6 +52,7 @@ export class RuneProofExportRegistry {
     const latest = this.latestIdentityByRun.get(snapshot.runId);
     if (!latest || latest.runRevision <= snapshot.runRevision) {
       this.selectedByRun.set(snapshot.runId, goal.id);
+      this.selectedByIdentity.set(selectionIdentityKey(snapshot.runId, snapshot.runRevision, sourceVersion), goal.id);
       this.latestIdentityByRun.set(snapshot.runId, { runRevision: snapshot.runRevision, sourceVersion });
     }
   }
@@ -76,7 +78,9 @@ export class RuneProofExportRegistry {
     const forRun = [...this.records.values()].filter(record => record.runId === selection.runId);
     const exact = forRun.filter(record => record.runRevision === selection.runRevision
       && record.sourceVersion === selection.sourceVersion);
-    const selectedGoalId = this.selectedByRun.get(selection.runId);
+    const selectedGoalId = this.selectedByIdentity.get(selectionIdentityKey(
+      selection.runId, selection.runRevision, selection.sourceVersion,
+    )) ?? this.selectedByRun.get(selection.runId);
     const selected = selectedGoalId === undefined ? undefined
       : exact.find(record => record.goal.id === selectedGoalId)
         ?? forRun.filter(record => record.goal.id === selectedGoalId).sort(newestRecordFirst)[0];
@@ -185,6 +189,9 @@ function defaultExplanation(status: RuneProofReport['status']): string {
 function recordKey(runId: string, runRevision: number, sourceVersion: string, goalId: string): string {
   return JSON.stringify([runId, runRevision, sourceVersion, goalId]);
 }
+function selectionIdentityKey(runId: string, runRevision: number, sourceVersion: string): string {
+  return JSON.stringify([runId, runRevision, sourceVersion]);
+}
 function newestRecordFirst(left: RuneProofExportRecord, right: RuneProofExportRecord): number {
   return right.runRevision - left.runRevision || compareText(right.sourceVersion, left.sourceVersion);
 }
@@ -246,7 +253,7 @@ export class RuneProofService {
     sourceVersion: string,
   ): Promise<RuneProofReport> {
     const current = this.currentSnapshot();
-    if (this.disposed || this.engine.sourceVersion !== sourceVersion
+    if (this.engine.sourceVersion !== sourceVersion
       || current.runId !== recordedSnapshot.runId
       || current.runRevision !== recordedSnapshot.runRevision) {
       throw new Error('Stale RuneProof export replay');
