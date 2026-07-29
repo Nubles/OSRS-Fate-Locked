@@ -42,6 +42,40 @@ describe('compareRoutes', () => {
     expect(groups[1].routes.map(candidate => candidate.id)).toEqual(['farther']);
     expect(Object.isFrozen(groups[0].routes)).toBe(true);
   });
+  it('deeply snapshots and freezes grouped routes independently of caller data', () => {
+    const source = route('source');
+    const groups = groupEquivalentRoutes([source]);
+    const grouped = groups[0].routes[0];
+
+    source.witness.rootFactId = 'item:mutated';
+    source.witness.steps.root.proves.label = 'Mutated';
+    source.witness.steps.root.chosenTerms.push('item:mutated@1');
+    source.witness.steps.root.childStepIds.push('mutated');
+    source.witness.steps.injected = {
+      ruleId: 'injected',
+      proves: { id: 'item:goal', kind: 'ITEM', label: 'Injected' },
+      chosenTerms: [],
+      childStepIds: [],
+    };
+
+    expect(grouped.witness).toMatchObject({
+      rootFactId: 'item:goal',
+      steps: { root: {
+        proves: { label: 'Goal' },
+        chosenTerms: [],
+        childStepIds: [],
+      } },
+    });
+    expect(grouped.witness.steps).not.toHaveProperty('injected');
+    expect([
+      groups, groups[0], groups[0].routes, grouped, grouped.witness,
+      grouped.witness.steps, grouped.witness.steps.root,
+      grouped.witness.steps.root.proves,
+      grouped.witness.steps.root.chosenTerms,
+      grouped.witness.steps.root.childStepIds,
+    ].every(Object.isFrozen)).toBe(true);
+  });
+
 function route(
   id: string,
   overrides: Partial<ProofRoute> = {},

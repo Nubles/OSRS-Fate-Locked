@@ -149,6 +149,54 @@ describe('evaluateObtainability', () => {
     });
   });
 
+  it('does not reuse one ONE_TIME reward across sibling ALL terms', () => {
+    const result = evaluateObtainability(item('Goal'), context([
+      rule('one-token', 'Token', {
+        outputQuantity: 1,
+        repeatability: 'ONE_TIME',
+      }),
+      rule('goal', 'Goal', {
+        requirements: {
+          op: 'ALL',
+          terms: [
+            { op: 'FACT', fact: item('Token') },
+            { op: 'FACT', fact: item('Token') },
+          ],
+        },
+      }),
+    ]));
+
+    expect(result.status).toBe('IMPOSSIBLE');
+    expect(result.routes).toEqual([]);
+  });
+
+  it('does not reuse one ONE_TIME reward through separate recursive paths', () => {
+    const result = evaluateObtainability(item('Goal'), context([
+      rule('one-token', 'Token', {
+        outputQuantity: 1,
+        repeatability: 'ONE_TIME',
+      }),
+      rule('left', 'Left part', {
+        requirements: { op: 'FACT', fact: item('Token') },
+      }),
+      rule('right', 'Right part', {
+        requirements: { op: 'FACT', fact: item('Token') },
+      }),
+      rule('goal', 'Goal', {
+        requirements: {
+          op: 'ALL',
+          terms: [
+            { op: 'FACT', fact: item('Left part') },
+            { op: 'FACT', fact: item('Right part') },
+          ],
+        },
+      }),
+    ]));
+
+    expect(result.status).toBe('IMPOSSIBLE');
+    expect(result.routes).toEqual([]);
+  });
+
   it('uses RNG only as fallback and retains known and unknown stochastic witnesses', () => {
     const rngRules = [
       rule('unknown-drop', 'Gem', {
@@ -252,6 +300,39 @@ describe('evaluateObtainability', () => {
       unavoidableBlockerFactIds: [],
     });
   });
+  it('does not call one selected ANY blocker unavoidable', () => {
+    const result = evaluateObtainability(item('Goal'), context([
+      rule('goal', 'Goal', {
+        requirements: {
+          op: 'ANY',
+          terms: [
+            { op: 'FACT', fact: item('Missing A') },
+            { op: 'FACT', fact: item('Missing B') },
+          ],
+        },
+      }),
+    ]));
+
+    expect(result.status).toBe('BLOCKED');
+    expect(result.blockers).not.toEqual([]);
+    expect(result.unavoidableBlockerFactIds).toEqual([]);
+  });
+
+  it('does not call a selected alternative-rule blocker unavoidable', () => {
+    const result = evaluateObtainability(item('Goal'), context([
+      rule('goal-from-a', 'Goal', {
+        requirements: { op: 'FACT', fact: item('Missing A') },
+      }),
+      rule('goal-from-b', 'Goal', {
+        requirements: { op: 'FACT', fact: item('Missing B') },
+      }),
+    ]));
+
+    expect(result.status).toBe('BLOCKED');
+    expect(result.blockers).not.toEqual([]);
+    expect(result.unavoidableBlockerFactIds).toEqual([]);
+  });
+
 
   it('is stable across rule order and deeply freezes defensive output', () => {
     const rules = [rule('z-shop', 'Pot'), rule('a-shop', 'Pot')];

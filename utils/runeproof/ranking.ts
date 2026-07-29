@@ -23,20 +23,20 @@ export function groupEquivalentRoutes(
   routes: readonly ProofRoute[],
 ): readonly ProofRouteDisplayGroup[] {
   const groups = new Map<string, ProofRoute[]>();
-  for (const route of [...routes].sort(compareRoutes)) {
+  for (const route of routes.map(cloneProofRoute).sort(compareRoutes)) {
     const key = displayKey(route);
     groups.set(key, [...(groups.get(key) ?? []), route]);
   }
   return Object.freeze([...groups.entries()].map(([key, groupedRoutes]) => {
     const representative = groupedRoutes[0];
-    return Object.freeze({
+    return deepFreeze({
       key,
       deterministic: representative.deterministic,
       prerequisiteCount: representative.prerequisiteCount,
       recursiveIngredientCount: representative.recursiveIngredientCount,
       travelDistance: representative.travelDistance,
       probability: representative.probability,
-      routes: Object.freeze([...groupedRoutes]),
+      routes: [...groupedRoutes],
     });
   }));
 }
@@ -49,4 +49,39 @@ function displayKey(route: ProofRoute): string {
     route.travelDistance,
     route.probability === null ? 'unknown' : route.probability,
   ].join('|');
+}
+
+function cloneProofRoute(route: ProofRoute): ProofRoute {
+  return {
+    id: route.id,
+    deterministic: route.deterministic,
+    prerequisiteCount: route.prerequisiteCount,
+    recursiveIngredientCount: route.recursiveIngredientCount,
+    travelDistance: route.travelDistance,
+    probability: route.probability,
+    witness: {
+      rootFactId: route.witness.rootFactId,
+      steps: Object.fromEntries(Object.entries(route.witness.steps).map(([id, step]) => [
+        id,
+        {
+          ruleId: step.ruleId,
+          proves: { ...step.proves },
+          chosenTerms: [...step.chosenTerms],
+          childStepIds: [...step.childStepIds],
+        },
+      ])),
+      sourceVersion: route.witness.sourceVersion,
+      runId: route.witness.runId,
+      runRevision: route.witness.runRevision,
+      proofHash: route.witness.proofHash,
+    },
+  };
+}
+
+function deepFreeze<T>(value: T): T {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    Object.values(value).forEach(child => deepFreeze(child));
+    Object.freeze(value);
+  }
+  return value;
 }

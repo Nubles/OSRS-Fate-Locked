@@ -35,6 +35,7 @@ interface Demand {
 interface InternalRoute extends ProofRoute {
   derivedFactIds: ReadonlySet<string>;
   coverage: Coverage;
+  oneTimeUsage: ReadonlyMap<string, number>;
 }
 
 interface ExpressionSolution {
@@ -77,6 +78,10 @@ export function evaluateObtainability(
   };
   const rules = [...context.rules].sort((left, right) => compareText(left.id, right.id));
   const seedQuantities = snapshotSeedQuantities(context.snapshot, context.reachableLocations);
+  const oneTimeCapacities = new Map(rules
+    .filter(rule => rule.repeatability === 'ONE_TIME')
+    .map(rule => [rule.id, rule.outputQuantity]));
+
 
   let changed = true;
   let iterations = 0;
@@ -117,11 +122,11 @@ export function evaluateObtainability(
             child.derivedFactIds.has(demand.fact.id))) {
             continue;
           }
-          changed = addRoute(
-            state,
-            ruleRoute(demand, rule, operations, solution, context),
-            limits,
-          ) || changed;
+          const route = ruleRoute(demand, rule, operations, solution, context);
+          if (!oneTimeUsageFits(route.oneTimeUsage, oneTimeCapacities)) {
+            continue;
+          }
+          changed = addRoute(state, route, limits) || changed;
           if (state.cappedBy) break;
         }
         if (state.cappedBy) break;
@@ -189,7 +194,7 @@ export function evaluateObtainability(
         factIds: blockers.map(blocker => blocker.id),
         labels: blockers.map(blocker => blocker.label),
       }],
-      unavoidableBlockerFactIds: blockers.map(blocker => blocker.id),
+      unavoidableBlockerFactIds: [],
       routesComplete: true,
     });
   }
@@ -312,6 +317,7 @@ function seedRoute(demand: Demand, context: ObtainabilityContext): InternalRoute
     probability: null,
     witness,
     derivedFactIds: new Set(),
+    oneTimeUsage: new Map(),
     coverage: 'VERIFIED',
   };
 }
@@ -326,6 +332,7 @@ function ruleRoute(
   const steps: Record<string, WitnessStep> = {};
   const childStepIds: string[] = [];
   const derivedFactIds = new Set<string>([demand.fact.id]);
+  const oneTimeUsage = new Map<string, number>();
   solution.children.forEach((child, childIndex) => {
     const prefix = `c${childIndex}:`;
     childStepIds.push(`${prefix}root`);
@@ -338,7 +345,13 @@ function ruleRoute(
       };
     }
     child.derivedFactIds.forEach(id => derivedFactIds.add(id));
+    for (const [ruleId, quantity] of child.oneTimeUsage) {
+      oneTimeUsage.set(ruleId, (oneTimeUsage.get(ruleId) ?? 0) + quantity);
+    }
   });
+  if (rule.repeatability === 'ONE_TIME') {
+    oneTimeUsage.set(rule.id, (oneTimeUsage.get(rule.id) ?? 0) + demand.quantity);
+  }
   steps.root = {
     ruleId: rule.id,
     proves: factWithQuantity(demand.fact, demand.quantity),
@@ -370,11 +383,20 @@ function ruleRoute(
     probability,
     witness,
     derivedFactIds,
+    oneTimeUsage,
     coverage: combineCoverage(
       rule.coverage,
       combineAllCoverage(solution.children.map(child => child.coverage)),
     ),
   };
+}
+
+function oneTimeUsageFits(
+  usage: ReadonlyMap<string, number>,
+  capacities: ReadonlyMap<string, number>,
+): boolean {
+  return [...usage].every(([ruleId, quantity]) =>
+    quantity <= (capacities.get(ruleId) ?? 0));
 }
 
 function isStochastic(rule: AcquisitionRule): boolean {
