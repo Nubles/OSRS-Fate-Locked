@@ -50,6 +50,10 @@ import {
 } from './utils/changelogState';
 import { relaySync } from './services/relaySync';
 import { parseRunelitePairFragment } from './utils/runelitePairing';
+import {
+  hasRuneliteGuideQuery,
+  removeRuneliteGuideQuery,
+} from './utils/runeliteGuideState';
 
 // Heavy, conditionally-rendered modals — code-split so they (and their deps,
 // e.g. recharts in StatsModal) stay out of the initial bundle.
@@ -68,9 +72,15 @@ const ChangelogModal = lazyWithRetry(() =>
     default: module.ChangelogModal,
   })),
 );
+const RunelitePluginGuide = lazyWithRetry(() =>
+  import('./components/runelite-guide/RunelitePluginGuide').then(module => ({
+    default: module.RunelitePluginGuide,
+  })),
+);
 import { deobfuscateFateSave, encodeFateSaveExport } from './utils/encryption';
 import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb, Radio, Settings } from 'lucide-react';
 import { exportRuneliteBundle } from './utils/runeliteExport';
+import { BookOpen } from 'lucide-react';
 
 // --- Error Boundary ---
 interface ErrorBoundaryState {
@@ -241,10 +251,11 @@ interface HeaderProps {
   setShowGameMode: (show: boolean) => void;
   setShowSyncCode: (show: boolean) => void;
   setShowDiscord: (show: boolean) => void;
+  onOpenRuneliteGuide: (returnFocusTarget: HTMLElement | null) => void;
   onOpenChangelog: (returnFocusTarget: HTMLElement | null) => void;
 }
 
-const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode, setShowDiscord, onOpenChangelog }: HeaderProps) => {
+const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode, setShowDiscord, onOpenRuneliteGuide, onOpenChangelog }: HeaderProps) => {
   const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, importSave, resetGame, getExportData, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount, runId, runRevision } = useGame();
   // Progressive disclosure — advanced tools stay hidden until the run earns them.
   const gates = useFeatureGates();
@@ -446,7 +457,11 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
 
              <button
                data-tour="palette"
-               onClick={() => window.dispatchEvent(new CustomEvent('fate:open-palette'))}
+               onClick={event => window.dispatchEvent(new CustomEvent('fate:open-palette', {
+                 detail: {
+                   returnFocusTarget: event.currentTarget,
+                 },
+               }))}
                className="h-8 px-2.5 rounded-lg border border-white/10 bg-[#252525] hover:bg-white/5 hover:border-white/20 text-gray-400 hover:text-white flex items-center gap-2 transition-colors group"
                title="Command palette — jump to anything"
              >
@@ -502,6 +517,13 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                    <>
                      <div className="fixed inset-0 z-[90]" onClick={() => setShowUtilMenu(false)} />
                      <div className="absolute right-0 top-9 z-[91] w-56 bg-[#1c1c1c] border border-white/15 rounded-lg shadow-2xl py-1.5 text-[12px]">
+                        <button type="button" onClick={() => {
+                          setShowUtilMenu(false);
+                          onOpenRuneliteGuide(settingsTriggerRef.current);
+                        }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-amber-300">
+                          <BookOpen size={13} className="text-amber-300" />
+                          RuneLite Plugin Guide
+                        </button>
                         <button type="button" onClick={() => {
                           setShowUtilMenu(false);
                           onOpenChangelog(settingsTriggerRef.current);
@@ -631,6 +653,21 @@ const GameLayout = () => {
   } = useGame();
   const { recentlyCreatedId, activeProfileId, activeProfileName, clearRecentlyCreated } = useProfiles();
 
+  const directGuideRequested = typeof window !== 'undefined'
+    && hasRuneliteGuideQuery(window.location.search);
+  const [showRuneliteGuide, setShowRuneliteGuide] = useState(directGuideRequested);
+  const runeliteGuideReturnFocusTarget = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!directGuideRequested) return;
+    const search = removeRuneliteGuideQuery(window.location.search);
+    window.history.replaceState(
+      null,
+      '',
+      window.location.pathname + search + window.location.hash,
+    );
+  }, []);
+
   const [showChangelog, dispatchChangelog] = useReducer(
     changelogVisibilityReducer,
     undefined,
@@ -639,6 +676,7 @@ const GameLayout = () => {
       releaseIsUnseen: shouldShowChangelog(LATEST_CHANGELOG.id),
       startupHash: typeof window === 'undefined' ? '' : window.location.hash,
       hasPendingGameModePrompt: recentlyCreatedId === activeProfileId,
+      hasPendingGuidePrompt: directGuideRequested,
     }),
   );
 
@@ -672,6 +710,15 @@ const GameLayout = () => {
     markChangelogSeen(LATEST_CHANGELOG.id);
     dispatchChangelog({ type: 'DISMISS' });
     changelogReturnFocusTarget.current = null;
+  };
+
+  const openRuneliteGuide = (returnFocusTarget: HTMLElement | null = null) => {
+    runeliteGuideReturnFocusTarget.current = returnFocusTarget;
+    setShowRuneliteGuide(true);
+  };
+  const closeRuneliteGuide = () => {
+    setShowRuneliteGuide(false);
+    runeliteGuideReturnFocusTarget.current = null;
   };
 
   // Warm the heavy lazy chunks (map, stats+charts, resource engine, …) during
@@ -728,7 +775,18 @@ const GameLayout = () => {
   // Command-palette navigation: open the modals this layout owns.
   React.useEffect(() => {
     const onNav = (e: Event) => {
-      const target = (e as CustomEvent<{ target?: string }>).detail?.target ?? '';
+      const detail = (e as CustomEvent<{
+        target?: string;
+        returnFocusTarget?: HTMLElement | null;
+      }>).detail;
+      const target = detail?.target ?? '';
+      if (target === 'open:runelite-guide') {
+        openRuneliteGuide(
+          detail?.returnFocusTarget
+          ?? document.querySelector<HTMLElement>('[data-tour="palette"]'),
+        );
+        return;
+      }
       const map: Record<string, (v: boolean) => void> = {
         'open:altar': setShowAltar,
         'open:stats': setShowStats,
@@ -817,6 +875,7 @@ const GameLayout = () => {
         startupHash,
         hasPendingGameModePrompt,
         hasPendingSyncPrompt,
+        hasPendingGuidePrompt: showRuneliteGuide,
       })
     ) return;
 
@@ -829,6 +888,7 @@ const GameLayout = () => {
     hasSeenOnboarding,
     recentlyCreatedId,
     showChangelog,
+    showRuneliteGuide,
     startupHash,
   ]);
 
@@ -836,6 +896,7 @@ const GameLayout = () => {
   const anyModalOpen = showStats || showReference || showAltar
     || showOracle || showStrategy || showSupplyChain || showGameMode
     || showSyncCode || !!runelitePairCode;
+  const topLevelGuideOpen = showChangelog || showRuneliteGuide;
   useEscapeKey(() => {
     setShowStats(false);
     setShowReference(false);
@@ -848,8 +909,8 @@ const GameLayout = () => {
     setRunelitePairCode(null);
     setRunelitePairPhase('confirm');
     setRunelitePairError(undefined);
-  }, shouldEnableUnderlyingModalEscape(anyModalOpen, showChangelog));
-  const modalRenderPolicy = resolveChangelogModalRenderPolicy(showChangelog);
+  }, shouldEnableUnderlyingModalEscape(anyModalOpen, topLevelGuideOpen));
+  const modalRenderPolicy = resolveChangelogModalRenderPolicy(topLevelGuideOpen);
 
   return (
     <div className="min-h-screen bg-osrs-bg text-osrs-text pb-6 font-sans selection:bg-osrs-gold selection:text-black relative">
@@ -867,7 +928,7 @@ const GameLayout = () => {
       <div id="reveal-bottom" className="fixed bottom-5 right-5 z-[9997] flex flex-col-reverse gap-3 items-end pointer-events-none" />
       <ToastNotification />
 
-      {!hasSeenOnboarding && <OnboardingWizard />}
+      {!hasSeenOnboarding && !topLevelGuideOpen && <OnboardingWizard />}
 
       {activeRitualAnim === 'TRANSMUTE' && <TransmutationEffect onComplete={() => setActiveRitualAnim('NONE')} />}
       {activeRitualAnim === 'LUCK' && <ClarityEffect onComplete={() => setActiveRitualAnim('NONE')} />}
@@ -890,6 +951,12 @@ const GameLayout = () => {
             {showDiscord && <DiscordSettingsModal onClose={() => setShowDiscord(false)} />}
           </>
         )}
+        {showRuneliteGuide && (
+          <RunelitePluginGuide
+            onClose={closeRuneliteGuide}
+            returnFocusTarget={runeliteGuideReturnFocusTarget.current}
+          />
+        )}
         {showChangelog && (
           <ChangelogModal
             releases={CHANGELOG_RELEASES}
@@ -909,6 +976,7 @@ const GameLayout = () => {
         setShowGameMode={setShowGameMode}
         setShowSyncCode={setShowSyncCode}
         setShowDiscord={setShowDiscord}
+        onOpenRuneliteGuide={openRuneliteGuide}
         onOpenChangelog={openChangelog}
       />
 

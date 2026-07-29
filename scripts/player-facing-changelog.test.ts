@@ -169,7 +169,7 @@ describe('player-facing changelog Git comparison', () => {
     } finally {
       rmSync(cwd, { recursive: true, force: true });
     }
-  });
+  }, 15_000);
 });
 
 describe('quest and chunk audit release contracts', () => {

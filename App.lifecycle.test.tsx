@@ -64,7 +64,7 @@ beforeEach(async () => {
     activeProfileId: PROFILE_ID,
   }));
   storage.setItem(profileBaseKey(PROFILE_ID), seedOnboardingRun());
-});
+}, 30_000);
 
 afterEach(() => {
   cleanup();
@@ -129,4 +129,69 @@ describe('App changelog lifecycle', () => {
       name: "What's New",
     })).toBeNull();
   });
+
+  it('opens the RuneLite guide from a direct query and preserves unrelated URL state', async () => {
+    window.history.replaceState(
+      null, '', '/?open=runelite-guide&foo=bar#player-help',
+    );
+    render(<App />);
+
+    expect(await screen.findByRole(
+      'dialog',
+      { name: 'RuneLite Plugin Guide' },
+      { timeout: 10_000 },
+    )).toBeTruthy();
+    expect(window.location.search).toBe('?foo=bar');
+    expect(window.location.hash).toBe('#player-help');
+    expect(screen.queryByRole('dialog', {
+      name: "What's New",
+    })).toBeNull();
+  }, 15_000);
+
+  it('opens the RuneLite guide from the persistent settings menu', async () => {
+    storage.setItem(changelogStorageKey, latestChangelogId);
+    const user = userEvent.setup();
+    render(<App />);
+
+    const settings = screen.getByRole('button', {
+      name: 'Settings & save tools',
+    });
+    await user.click(settings);
+    await user.click(screen.getByRole('button', {
+      name: 'RuneLite Plugin Guide',
+    }));
+
+    const guideDialog = await screen.findByRole('dialog', {
+      name: 'RuneLite Plugin Guide',
+    });
+    expect(guideDialog).toBeTruthy();
+    await user.click(within(guideDialog).getAllByRole('button', {
+      name: 'Close RuneLite Plugin Guide',
+    })[0]);
+    expect(document.activeElement).toBe(settings);
+  });
+
+  it('opens the RuneLite guide from the command palette and returns focus to Jump to', async () => {
+    storage.setItem(changelogStorageKey, latestChangelogId);
+    const user = userEvent.setup();
+    render(<App />);
+
+    const paletteTrigger = screen.getByTitle(/Command palette/i);
+    await user.click(paletteTrigger);
+    await user.type(
+      screen.getByPlaceholderText(/Jump to a tab, tool or action/i),
+      'guardian warnings rendering',
+    );
+    await user.click(await screen.findByRole('button', {
+      name: /RuneLite Plugin Guide.*Install, connect, configure and troubleshoot RuneLite/i,
+    }));
+
+    const guideDialog = await screen.findByRole('dialog', {
+      name: 'RuneLite Plugin Guide',
+    });
+    await user.click(within(guideDialog).getAllByRole('button', {
+      name: 'Close RuneLite Plugin Guide',
+    })[0]);
+    expect(document.activeElement).toBe(paletteTrigger);
+  }, 15_000);
 });

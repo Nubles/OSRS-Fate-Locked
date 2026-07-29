@@ -38,6 +38,29 @@ export const CHANGELOG_RELEASES = [
     },
   },
   {
+    id: '2026-07-28-runelite-guide-native-theme',
+    title: 'RuneLite Guide Visual Refresh',
+    date: '2026-07-28',
+    sections: {
+      changed: [
+        'The RuneLite Plugin Guide now uses the same compact panels, navigation, typography, and amber control styling as the Fate Locked companion while preserving every chapter, setting, and authentic screenshot.',
+      ],
+    },
+  },
+  {
+    id: '2026-07-28-runelite-guide',
+    title: 'RuneLite Plugin Guide',
+    date: '2026-07-28',
+    sections: {
+      added: [
+        'A complete RuneLite Plugin Guide now covers installation, connection, every panel section and setting, overlays, privacy, recommended configurations, and troubleshooting with annotated screenshots from the live plugin.',
+      ],
+      fixed: [
+        'Annotated RuneLite handbook screenshots now load correctly when the companion is hosted on GitHub Pages.',
+      ],
+    },
+  },
+  {
     id: '2026-07-28-tirannwn-area-accuracy',
     title: 'Tirannwn Area Accuracy',
     date: '2026-07-28',

@@ -22,6 +22,34 @@ describe('authored changelog releases', () => {
     expect(LATEST_CHANGELOG.id).toBe('2026-07-28-quest-chunk-audit');
   });
 
+  it('announces the native RuneLite guide visual refresh', () => {
+    const nativeTheme = CHANGELOG_RELEASES.find(
+      release => release.id === '2026-07-28-runelite-guide-native-theme',
+    );
+    expect(nativeTheme).toMatchObject({
+      id: '2026-07-28-runelite-guide-native-theme',
+      title: 'RuneLite Guide Visual Refresh',
+      date: '2026-07-28',
+    });
+    expect(nativeTheme?.sections.changed).toContain(
+      'The RuneLite Plugin Guide now uses the same compact panels, navigation, typography, and amber control styling as the Fate Locked companion while preserving every chapter, setting, and authentic screenshot.',
+    );
+  });
+
+  it('announces the complete player-facing RuneLite guide', () => {
+    const completeGuide = CHANGELOG_RELEASES.find(
+      release => release.id === '2026-07-28-runelite-guide',
+    );
+    expect(completeGuide).toMatchObject({
+      id: '2026-07-28-runelite-guide',
+      title: 'RuneLite Plugin Guide',
+      date: '2026-07-28',
+    });
+    expect(completeGuide?.sections.added).toContain(
+      'A complete RuneLite Plugin Guide now covers installation, connection, every panel section and setting, overlays, privacy, recommended configurations, and troubleshooting with annotated screenshots from the live plugin.',
+    );
+  });
+
   it('contains only non-empty, supported sections', () => {
     for (const release of CHANGELOG_RELEASES) {
       for (const [section, notes] of Object.entries(release.sections)) {
