@@ -3,10 +3,11 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { QUEST_DATA, QuestData } from '../data/questData';
 import { WIKI_OVERRIDES } from '../constants';
-import { CheckCircle2, Lock, Map, BookOpen, Sparkles, Scroll, Bookmark, Layers, List, ExternalLink, ArrowUpRight, TrendingUp, MapPin } from 'lucide-react';
+import { CheckCircle2, Lock, BookOpen, Sparkles, Scroll, Bookmark, Layers, List, ExternalLink, ArrowUpRight, TrendingUp } from 'lucide-react';
 import { chunkContentService } from '../services/ChunkContentService';
-import { questLocations, QuestLocationInfo } from '../utils/questLocations';
+import { questLocations } from '../utils/questLocations';
 import { showChunkOnMap } from '../utils/chunkLocations';
+import { selectQuestGeography } from '../utils/questGeographyDisplay';
 import { isAlmostThere } from '../utils/journalProgress';
 import {
   evaluateQuestEligibility,
@@ -22,6 +23,7 @@ import { rankAvailableQuests } from '../utils/questAdvisor';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SkillTrainingPopover, SkillPopoverState } from './SkillTrainingPopover';
 import { QuestInsights } from './JournalInsights';
+import { QuestGeographyChips } from './QuestGeographyChips';
 
 interface QuestLogProps {
   searchTerm?: string;
@@ -88,7 +90,7 @@ interface QuestCardProps {
     onSkillClick?: (skill: string, required: number, current: number, rect: DOMRect) => void;
 }
 
-const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId, currentQP, onToggle, highlight, onPrereqClick, onSkillClick }) => {
+export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId, currentQP, onToggle, highlight, onPrereqClick, onSkillClick }) => {
     const isCompleted = quest.status === 'COMPLETED';
     const isAvailable = quest.status === 'AVAILABLE';
     const diffStyle = getDifficultyColor(quest.difficulty);
@@ -101,14 +103,15 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId, curre
 
     // Chunk-derived locations remain informational map links only. Canonical
     // access is entirely determined by evaluateQuestEligibility.
-    const loc: QuestLocationInfo = questLocations(quest.name, unlocks, gameModeId);
+    const loc = questLocations(quest.name, unlocks, gameModeId);
+    const geography = selectQuestGeography(quest, loc.places);
 
     // Req-met accounting — drives the progress bar shown on LOCKED cards so
     // players can see at a glance how close they are without counting chips.
-    const regionReqs: string[] = quest.regions;
+    const regionReqs = geography.regions;
     const metRegions = regionReqs.filter((region: string) =>
       eligibility.evidence.includes(region));
-    const locationReqs = quest.locations ?? [];
+    const locationReqs = geography.locations;
     const metLocations = locationReqs.filter((location: { label: string }) =>
       eligibility.evidence.includes(location.label));
     const skillReqs = Object.entries(quest.skills as Record<string, number>);
@@ -177,28 +180,12 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId, curre
                     quest in the list (onPrereqClick).
                   */}
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
-                      {quest.regions.map((region: string) => {
-                          const met = isCompleted || eligibility.evidence.includes(region);
-                          return (
-                              <span key={region} className={'text-[10px] px-1.5 rounded flex items-center gap-1 border ' +
-                                (met
-                                  ? 'bg-black/30 text-gray-500 border-white/5'
-                                  : 'bg-red-900/10 text-red-400 border-red-500/20')}>
-                                  <Map size={8} /> {region}
-                              </span>
-                          );
-                      })}
-                      {locationReqs.map((location: { id: string; label: string }) => {
-                          const met = isCompleted || eligibility.evidence.includes(location.label);
-                          return (
-                              <span key={location.id} className={'text-[10px] px-1.5 rounded flex items-center gap-1 border ' +
-                                (met
-                                  ? 'bg-black/30 text-gray-500 border-white/5'
-                                  : 'bg-red-900/10 text-red-400 border-red-500/20')}>
-                                  <MapPin size={8} /> {location.label}
-                              </span>
-                          );
-                      })}
+                      <QuestGeographyChips
+                        display={geography}
+                        completed={isCompleted}
+                        evidence={eligibility.evidence}
+                        onShowChunk={showChunkOnMap}
+                      />
                       {combatReqs.map((level: number) => {
                           const met = isCompleted || eligibility.evidence.includes('Combat level ' + level);
                           return (
@@ -217,25 +204,6 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId, curre
                               <Bookmark size={8} /> {requirement}
                           </span>
                       ))}
-                      {/* Informational chunk-derived locations only: click to inspect
-                          the map. These chips do not change canonical eligibility. */}
-                      {!isCompleted && loc.hasData && loc.places.slice(0, 4).map((p) => (
-                          <button
-                              key={`loc:${p.label}`}
-                              onClick={(e) => { e.stopPropagation(); showChunkOnMap(p.cx, p.cy); }}
-                              className={`text-[10px] px-1.5 rounded flex items-center gap-1 border transition-colors cursor-pointer ${
-                                p.unlocked
-                                  ? 'bg-emerald-900/10 text-emerald-400/80 border-emerald-500/20 hover:bg-emerald-900/25'
-                                  : 'bg-red-900/10 text-red-400 border-red-500/30 hover:bg-red-900/25'}`}
-                              title={`${p.label} — ${p.unlocked ? 'unlocked' : 'locked'}${p.role === 'first' ? ' · quest starts here' : ''} (show on map)`}
-                          >
-                              <MapPin size={8} /> {p.subArea ?? p.region ?? p.label}
-                              {p.role === 'first' && <span className="text-cyan-300/80">★</span>}
-                          </button>
-                      ))}
-                      {!isCompleted && loc.places.length > 4 && (
-                          <span className="text-[10px] px-1 text-gray-600">+{loc.places.length - 4}</span>
-                      )}
                       {hasAlternative && (
                         <span className={'text-[10px] px-2 py-1 rounded border ' +
                           (alternativeMet
