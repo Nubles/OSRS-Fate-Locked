@@ -1,7 +1,9 @@
 import chunkTransformAudit from './sources/chunk-content-transform-audit.json';
 import questRequirementAudit from './sources/quest-requirement-audit.json';
+import runeProofSources from '../public/runeproof-sources.json';
 import { sha256Hex } from '../utils/integrity';
 import type { AuditCoverage, RuneProofSourceAudit } from '../utils/runeproof/sourceGate';
+import { assertRequirementExpr, factId, type RequirementExpr, type SourceKind } from '../utils/runeproof/model';
 
 type JsonRecord = Record<string, unknown>;
 const TERMINAL_DISPOSITIONS = ['imported', 'normalized', 'excluded', 'unresolved'] as const;
@@ -125,19 +127,90 @@ function chunkCoverage(audit: unknown): AuditCoverage {
   return hasUnresolvedTotals || hasUnresolvedEvent ? 'PARTIAL' : 'VERIFIED';
 }
 
+const ACQUISITION_FAMILIES = [
+  'SHOP', 'DROP', 'SPAWN', 'PRODUCTION', 'RESOURCE_ENGINE',
+] as const;
+
+const ACQUISITION_SOURCE_KINDS = new Set<SourceKind>([
+  'SHOP', 'DROP', 'SPAWN', 'PRODUCTION', 'GATHERING', 'QUEST_REWARD',
+  'MINIGAME', 'PICKPOCKET', 'CLUE',
+]);
+
+function validAuditCoverage(value: unknown): value is AuditCoverage {
+  return value === 'VERIFIED' || value === 'PARTIAL' || value === 'UNKNOWN';
+}
+
+function validVerifiedAcquisitionRule(rule: unknown): boolean {
+  if (!isRecord(rule) || typeof rule.id !== 'string' || !rule.id
+    || !isRecord(rule.output) || rule.output.kind !== 'ITEM'
+    || typeof rule.output.label !== 'string' || !rule.output.label
+    || rule.output.id !== factId('ITEM', rule.output.label)
+    || !isCount(rule.outputQuantity) || rule.outputQuantity === 0
+    || !ACQUISITION_SOURCE_KINDS.has(rule.sourceKind as SourceKind)
+    || typeof rule.sourceLabel !== 'string' || !rule.sourceLabel
+    || typeof rule.locationId !== 'string' || !rule.locationId
+    || !['REPEATABLE', 'ONE_TIME', 'UNKNOWN'].includes(rule.repeatability as string)
+    || (rule.probability !== null && (typeof rule.probability !== 'number'
+      || !Number.isFinite(rule.probability) || rule.probability < 0 || rule.probability > 1))
+    || rule.coverage !== 'VERIFIED' || !Array.isArray(rule.provenanceIds)
+    || rule.provenanceIds.length === 0
+    || !rule.provenanceIds.every(id => typeof id === 'string' && id.length > 0)) return false;
+  try {
+    assertRequirementExpr(rule.requirements as RequirementExpr);
+    return true;
+  } catch {
+    return false;
+  }
+}
+function acquisitionCoverage(audit: unknown): AuditCoverage {
+  if (audit === undefined) return 'PARTIAL';
+  if (!isRecord(audit)
+    || audit.schemaVersion !== 1
+    || !validAuditCoverage(audit.acquisitionCoverage)
+    || !isRecord(audit.sourceFamilyCoverage)
+    || !Array.isArray(audit.unresolvedSources)) return 'UNKNOWN';
+
+  const familyCoverage = ACQUISITION_FAMILIES.map(
+    family => audit.sourceFamilyCoverage[family],
+  );
+  if (!familyCoverage.every(validAuditCoverage)) return 'UNKNOWN';
+
+  for (const source of audit.unresolvedSources) {
+    if (!isRecord(source)
+      || typeof source.id !== 'string'
+      || source.id.length === 0
+      || !validAuditCoverage(source.coverage)) return 'UNKNOWN';
+  }
+  if (audit.unresolvedSources.length > 0) return 'PARTIAL';
+  if (audit.acquisitionCoverage === 'VERIFIED') {
+    if (!Array.isArray(audit.rules) || audit.rules.length === 0) return 'UNKNOWN';
+    const ruleIds = new Set<string>();
+    for (const rule of audit.rules) {
+      if (!validVerifiedAcquisitionRule(rule) || ruleIds.has(rule.id)) return 'UNKNOWN';
+      ruleIds.add(rule.id);
+    }
+    if (familyCoverage.every(coverage => coverage === 'VERIFIED')) return 'VERIFIED';
+  }
+  return audit.acquisitionCoverage === 'UNKNOWN' ? 'UNKNOWN' : 'PARTIAL';
+}
+
 export async function buildRuneProofSourceAudit(
   questAudit: unknown,
   chunkAudit: unknown,
+  acquisitionAudit?: unknown,
 ): Promise<RuneProofSourceAudit> {
   return Object.freeze({
-    sourceVersion: `sha256-${await sha256Hex(canonicalJson({ questAudit, chunkAudit }))}`,
+    sourceVersion: `sha256-${await sha256Hex(canonicalJson({
+      questAudit, chunkAudit, acquisitionAudit,
+    }))}`,
     questCoverage: questCoverage(questAudit),
     chunkCoverage: chunkCoverage(chunkAudit),
-    // Task 5 must replace this after validating acquisition-source coverage.
-    acquisitionCoverage: 'PARTIAL',
+    acquisitionCoverage: acquisitionCoverage(acquisitionAudit),
   });
 }
 
 export function loadRuneProofSourceAudit(): Promise<RuneProofSourceAudit> {
-  return buildRuneProofSourceAudit(questRequirementAudit, chunkTransformAudit);
+  return buildRuneProofSourceAudit(
+    questRequirementAudit, chunkTransformAudit, runeProofSources,
+  );
 }

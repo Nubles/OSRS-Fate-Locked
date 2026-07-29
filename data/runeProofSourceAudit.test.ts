@@ -168,4 +168,134 @@ describe('runeProofSourceAudit', () => {
 
     expect(audit.chunkCoverage).toBe('UNKNOWN');
   });
+
+  it('certifies acquisition coverage only from complete generated evidence', async () => {
+    const audit = await buildRuneProofSourceAudit(
+      { schemaVersion: 1, entries: [{ status: 'verified' }] },
+      {
+        schemaVersion: 1,
+        sourceCommit: 'chunk-source',
+        categoryTotals: {
+          drops: {
+            source: 1, imported: 1, normalized: 0, excluded: 0, unresolved: 0,
+          },
+        },
+        events: [{
+          terminal: true,
+          category: 'drops',
+          sourceKey: 'drop-source',
+          targetKeys: ['target'],
+          disposition: 'imported',
+        }],
+      },
+      {
+        schemaVersion: 1,
+        acquisitionCoverage: 'VERIFIED',
+        sourceFamilyCoverage: {
+          SHOP: 'VERIFIED',
+          DROP: 'VERIFIED',
+          SPAWN: 'VERIFIED',
+          PRODUCTION: 'VERIFIED',
+          RESOURCE_ENGINE: 'VERIFIED',
+        },
+        rules: [{
+          id: 'acq:item-pot:shop-store-surface-50-50',
+          output: { id: 'item:pot', kind: 'ITEM', label: 'Pot' },
+          outputQuantity: 1,
+          sourceKind: 'SHOP',
+          sourceLabel: 'Store',
+          locationId: 'surface:50,50',
+          requirements: { op: 'ALL', terms: [] },
+          repeatability: 'REPEATABLE',
+          probability: null,
+          coverage: 'VERIFIED',
+          provenanceIds: ['fixture:verified'],
+        }],
+        unresolvedSources: [],
+      },
+    );
+
+    expect(audit.acquisitionCoverage).toBe('VERIFIED');
+  });
+
+  it('does not promote acquisition evidence with unresolved legacy sources', async () => {
+    const audit = await buildRuneProofSourceAudit(
+      { schemaVersion: 1, entries: [{ status: 'verified' }] },
+      {
+        schemaVersion: 1,
+        sourceCommit: 'chunk-source',
+        categoryTotals: {
+          drops: {
+            source: 1, imported: 1, normalized: 0, excluded: 0, unresolved: 0,
+          },
+        },
+        events: [{
+          terminal: true,
+          category: 'drops',
+          sourceKey: 'drop-source',
+          targetKeys: ['target'],
+          disposition: 'imported',
+        }],
+      },
+      {
+        schemaVersion: 1,
+        acquisitionCoverage: 'VERIFIED',
+        sourceFamilyCoverage: {
+          SHOP: 'VERIFIED',
+          DROP: 'VERIFIED',
+          SPAWN: 'VERIFIED',
+          PRODUCTION: 'VERIFIED',
+          RESOURCE_ENGINE: 'PARTIAL',
+        },
+        unresolvedSources: [{
+          id: 'unresolved:legacy',
+          coverage: 'PARTIAL',
+        }],
+      },
+    );
+
+    expect(audit.acquisitionCoverage).toBe('PARTIAL');
+  });
+
+  it('rejects forged VERIFIED acquisition coverage over incomplete rules', async () => {
+    const audit = await buildRuneProofSourceAudit(
+      { schemaVersion: 1, entries: [{ status: 'verified' }] },
+      {
+        schemaVersion: 1,
+        sourceCommit: 'chunk-source',
+        categoryTotals: {
+          drops: {
+            source: 1, imported: 1, normalized: 0, excluded: 0, unresolved: 0,
+          },
+        },
+        events: [{
+          terminal: true,
+          category: 'drops',
+          sourceKey: 'drop-source',
+          targetKeys: ['target'],
+          disposition: 'imported',
+        }],
+      },
+      {
+        schemaVersion: 1,
+        acquisitionCoverage: 'VERIFIED',
+        sourceFamilyCoverage: {
+          SHOP: 'VERIFIED',
+          DROP: 'VERIFIED',
+          SPAWN: 'VERIFIED',
+          PRODUCTION: 'VERIFIED',
+          RESOURCE_ENGINE: 'VERIFIED',
+        },
+        rules: [{
+          id: 'acq:item-pot:shop-store-surface-50-50',
+          locationId: 'surface:50,50',
+          coverage: 'VERIFIED',
+          provenanceIds: ['fixture:partial'],
+        }],
+        unresolvedSources: [],
+      },
+    );
+
+    expect(audit.acquisitionCoverage).toBe('UNKNOWN');
+  });
 });

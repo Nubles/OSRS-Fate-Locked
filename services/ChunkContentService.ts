@@ -136,6 +136,19 @@ interface RawDoc {
   locationEdges?: LocationEdgeSource[];
 }
 
+export type RuneProofSourceDocument = Pick<RawDoc,
+  | 'version'
+  | 'source'
+  | 'sourceMeta'
+  | 'chunks'
+  | 'shopItems'
+  | 'drops'
+  | 'taskUnlocks'
+  | 'questSections'
+  | 'locationNodes'
+  | 'locationEdges'
+>;
+
 const decode = (e: RawEntry): ChunkContent => ({
   name: e.n,
   monsters: (e.m ?? []).map(([name, count, slayer]) => ({ name, count, slayer: slayer ?? null })),
@@ -230,6 +243,18 @@ class ChunkContentService {
 
   sourceMetadata(): RawDoc['sourceMeta'] | null {
     return this.doc?.sourceMeta ?? null;
+  }
+
+  runeProofSourceDocument(): RuneProofSourceDocument | null {
+    if (!this.doc) return null;
+    const {
+      version, source, sourceMeta, chunks, shopItems, drops, taskUnlocks,
+      questSections, locationNodes, locationEdges,
+    } = this.doc;
+    return structuredClone({
+      version, source, sourceMeta, chunks, shopItems, drops, taskUnlocks,
+      questSections, locationNodes, locationEdges,
+    });
   }
 
   /** Idempotent lazy init; resolves false (and sets .error) on failure. */

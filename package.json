@@ -27,7 +27,9 @@
     "typecheck": "tsc --noEmit",
     "release:verify": "npm run changelog:verify && npm test && npm run typecheck && npm run content:verify && npm run build",
     "quests:source-refresh": "node scripts/sync-quest-sources.mjs --refresh",
-    "quests:verify": "node scripts/sync-quest-sources.mjs --check && vitest run data/questRequirementAudit.test.ts"
+    "quests:verify": "node scripts/sync-quest-sources.mjs --check && vitest run data/questRequirementAudit.test.ts",
+    "runeproof:sources": "node scripts/build-runeproof-sources.mjs",
+    "runeproof:check": "node scripts/build-runeproof-sources.mjs --check"
   },
   "dependencies": {
     "@google/model-viewer": "^4.3.0",
