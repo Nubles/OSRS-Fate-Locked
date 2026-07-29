@@ -258,6 +258,38 @@ function validUnresolvedSource(source: unknown): source is JsonRecord {
     && validProvenanceIds(source.provenanceIds);
 }
 
+function validProvenancePayload(value: unknown): value is JsonRecord {
+  if (!isRecord(value) || !validAuditCoverage(value.declaredCoverage)
+    || !Array.isArray(value.sourceIds) || value.sourceIds.length === 0
+    || !value.sourceIds.every(id => typeof id === 'string' && id.trim().length > 0)
+    || new Set(value.sourceIds).size !== value.sourceIds.length
+    || typeof value.output !== 'string' || value.output.trim().length === 0
+    || !ACQUISITION_SOURCE_KINDS.has(value.sourceKind as SourceKind)
+    || typeof value.sourceLabel !== 'string' || value.sourceLabel.trim().length === 0) {
+    return false;
+  }
+  if (value.type === 'RULE') {
+    return hasExactKeys(value, [
+      'declaredCoverage', 'locationId', 'output', 'outputQuantity', 'probability',
+      'repeatability', 'requirements', 'sourceIds', 'sourceKind', 'sourceLabel', 'type',
+    ])
+      && isCount(value.outputQuantity) && value.outputQuantity > 0
+      && typeof value.locationId === 'string' && value.locationId.trim().length > 0
+      && validRequirementExpr(value.requirements)
+      && ['REPEATABLE', 'ONE_TIME', 'UNKNOWN'].includes(value.repeatability as string)
+      && (value.probability === null || (typeof value.probability === 'number'
+        && Number.isFinite(value.probability) && value.probability >= 0
+        && value.probability <= 1));
+  }
+  return value.type === 'UNRESOLVED' && hasExactKeys(value, [
+    'declaredCoverage', 'output', 'reason', 'regions', 'sourceIds', 'sourceKind',
+    'sourceLabel', 'type',
+  ])
+    && Array.isArray(value.regions) && value.regions.every(region =>
+      typeof region === 'string' && region.trim().length > 0)
+    && UNRESOLVED_REASONS.has(value.reason as string);
+}
+
 function validProvenanceEntry(entry: unknown): entry is JsonRecord {
   if (!isRecord(entry)
     || typeof entry.id !== 'string' || !entry.id.trim()
@@ -266,7 +298,9 @@ function validProvenanceEntry(entry: unknown): entry is JsonRecord {
   const expectedKeys = entry.kind === 'LOCATION'
     ? ['coverage', 'id', 'kind', 'locationId', 'parentId', 'ruleIds', 'surfaceChunk',
       'unresolvedIds']
-    : ['coverage', 'id', 'kind', 'ruleIds', 'unresolvedIds'];
+    : entry.kind === 'RESOURCE_MAP' || entry.kind === 'RECIPE_AUDIT'
+      ? ['coverage', 'id', 'kind', 'payload', 'ruleIds', 'unresolvedIds']
+      : ['coverage', 'id', 'kind', 'ruleIds', 'unresolvedIds'];
   if (!hasExactKeys(entry, expectedKeys)
     || !Array.isArray(entry.ruleIds) || !entry.ruleIds.every(id =>
       typeof id === 'string' && id.trim().length > 0)
@@ -279,8 +313,13 @@ function validProvenanceEntry(entry: unknown): entry is JsonRecord {
     case 'TRANSFORM':
       return /^transform:(shopItems|drops):.+/.test(entry.id)
         && entry.coverage === 'PARTIAL';
-    case 'RESOURCE_MAP': return /^resource-map:.+/.test(entry.id);
-    case 'RECIPE_AUDIT': return /^recipe-audit:.+/.test(entry.id);
+    case 'RESOURCE_MAP': return /^resource-map:sha256-[0-9a-f]{64}$/.test(entry.id)
+      && validProvenancePayload(entry.payload)
+      && ((entry.payload as JsonRecord).type === 'UNRESOLVED'
+        || (entry.payload as JsonRecord).sourceKind !== 'PRODUCTION');
+    case 'RECIPE_AUDIT': return /^recipe-audit:sha256-[0-9a-f]{64}$/.test(entry.id)
+      && validProvenancePayload(entry.payload)
+      && (entry.payload as JsonRecord).sourceKind === 'PRODUCTION';
     case 'LOCATION':
       return typeof entry.locationId === 'string' && entry.locationId.trim().length > 0
         && entry.id === `location:${entry.locationId}`
@@ -295,13 +334,84 @@ function validProvenanceEntry(entry: unknown): entry is JsonRecord {
   }
 }
 
-function containsPositiveProductionInput(value: JsonRecord): boolean {
+async function validCatalogSourceEntry(
+  entry: JsonRecord,
+  rules: readonly JsonRecord[],
+  unresolved: readonly JsonRecord[],
+): Promise<boolean> {
+  if (entry.kind !== 'RESOURCE_MAP' && entry.kind !== 'RECIPE_AUDIT') return true;
+  const payload = entry.payload as JsonRecord;
+  const prefix = entry.kind === 'RECIPE_AUDIT' ? 'recipe-audit:' : 'resource-map:';
+  const expectedId = `${prefix}sha256-${await sha256Hex(canonicalJson(payload))}`;
+  if (entry.id !== expectedId || entry.coverage !== payload.declaredCoverage) return false;
+
+  if (payload.type === 'RULE') {
+    if ((entry.ruleIds as string[]).length === 0
+      || (entry.unresolvedIds as string[]).length !== 0) return false;
+    return (entry.ruleIds as string[]).every(ruleId => {
+      const rule = rules.find(candidate => candidate.id === ruleId);
+      return rule !== undefined
+        && (rule.output as JsonRecord).label === payload.output
+        && rule.outputQuantity === payload.outputQuantity
+        && rule.sourceKind === payload.sourceKind
+        && rule.sourceLabel === payload.sourceLabel
+        && rule.locationId === payload.locationId
+        && canonicalJson(rule.requirements) === canonicalJson(payload.requirements)
+        && rule.repeatability === payload.repeatability
+        && rule.probability === payload.probability;
+    });
+  }
+
+  if ((entry.unresolvedIds as string[]).length === 0
+    || (entry.ruleIds as string[]).length !== 0) return false;
+  return (entry.unresolvedIds as string[]).every(unresolvedId => {
+    const source = unresolved.find(candidate => candidate.id === unresolvedId);
+    return source !== undefined
+      && source.output === payload.output
+      && source.sourceKind === payload.sourceKind
+      && source.sourceHost === payload.sourceLabel
+      && canonicalJson(source.regions) === canonicalJson(payload.regions)
+      && source.reason === payload.reason;
+  });
+}
+
+function validLocationGraph(entries: readonly JsonRecord[]): boolean {
+  const locations = entries.filter(entry => entry.kind === 'LOCATION');
+  const byId = new Map(locations.map(entry => [entry.locationId as string, entry]));
+  const state = new Map<string, 'VISITING' | 'VALID' | 'INVALID'>();
+
+  const visit = (location: JsonRecord): boolean => {
+    const id = location.locationId as string;
+    const current = state.get(id);
+    if (current === 'VALID') return true;
+    if (current === 'INVALID' || current === 'VISITING') return false;
+    state.set(id, 'VISITING');
+    const parentId = location.parentId as string | null;
+    if (parentId === null) {
+      state.set(id, 'VALID');
+      return true;
+    }
+    const parent = byId.get(parentId);
+    const valid = parentId !== id && parent !== undefined
+      && parent.surfaceChunk === location.surfaceChunk
+      && visit(parent);
+    state.set(id, valid ? 'VALID' : 'INVALID');
+    return valid;
+  };
+
+  return locations.every(visit);
+}
+
+function containsMandatoryProductionInput(value: JsonRecord): boolean {
   if (value.op === 'FACT') {
     const fact = value.fact as JsonRecord;
     return fact.kind === 'ITEM' && typeof fact.quantity === 'number'
       && Number.isInteger(fact.quantity) && fact.quantity > 0;
   }
-  return (value.terms as JsonRecord[]).some(containsPositiveProductionInput);
+  const terms = value.terms as JsonRecord[];
+  return value.op === 'ALL'
+    ? terms.some(containsMandatoryProductionInput)
+    : terms.length > 0 && terms.every(containsMandatoryProductionInput);
 }
 
 function combineCoverage(left: AuditCoverage, right: AuditCoverage): AuditCoverage {
@@ -313,7 +423,7 @@ function combineCoverage(left: AuditCoverage, right: AuditCoverage): AuditCovera
 function semanticRuleCoverage(rule: JsonRecord): AuditCoverage {
   if (rule.sourceKind === 'PRODUCTION') {
     return rule.repeatability !== 'UNKNOWN'
-      && containsPositiveProductionInput(rule.requirements as JsonRecord)
+      && containsMandatoryProductionInput(rule.requirements as JsonRecord)
       ? 'VERIFIED' : 'UNKNOWN';
   }
   return rule.repeatability === 'UNKNOWN' ? 'PARTIAL' : 'VERIFIED';
@@ -328,6 +438,8 @@ function effectiveRuleCoverage(
   const locationProvenance = `location:${rule.locationId as string}`;
   if (!provenanceIds.includes(locationProvenance)
     || catalog.get(locationProvenance)?.kind !== 'LOCATION') return 'UNKNOWN';
+  if (rule.sourceKind === 'PRODUCTION' && !provenanceIds.some(id =>
+    catalog.get(id)?.kind === 'RECIPE_AUDIT')) return 'UNKNOWN';
   for (const id of provenanceIds) {
     const entry = catalog.get(id);
     if (!entry) return 'UNKNOWN';
@@ -405,8 +517,10 @@ async function acquisitionCoverage(audit: unknown): Promise<AuditCoverage> {
     || catalogIds.some((id, index) => index > 0 && id <= catalogIds[index - 1])) return 'UNKNOWN';
   const usedProvenance = new Set([...rules, ...unresolved]
     .flatMap(source => source.provenanceIds as string[]));
-  if (usedProvenance.size !== catalogIds.length
-    || catalogIds.some(id => !usedProvenance.has(id))) return 'UNKNOWN';
+  if ([...usedProvenance].some(id => !catalogIds.includes(id))
+    || catalogEntries.some(entry => !usedProvenance.has(entry.id as string)
+      && entry.kind !== 'LOCATION')
+    || !validLocationGraph(catalogEntries)) return 'UNKNOWN';
   const catalog = new Map(catalogEntries.map(entry => [entry.id as string, entry]));
   for (const entry of catalogEntries) {
     const id = entry.id as string;
@@ -415,7 +529,8 @@ async function acquisitionCoverage(audit: unknown): Promise<AuditCoverage> {
     const expectedUnresolvedIds = unresolved.filter(source =>
       (source.provenanceIds as string[]).includes(id)).map(source => source.id);
     if (canonicalJson(entry.ruleIds) !== canonicalJson(expectedRuleIds)
-      || canonicalJson(entry.unresolvedIds) !== canonicalJson(expectedUnresolvedIds)) {
+      || canonicalJson(entry.unresolvedIds) !== canonicalJson(expectedUnresolvedIds)
+      || !await validCatalogSourceEntry(entry, rules, unresolved)) {
       return 'UNKNOWN';
     }
   }

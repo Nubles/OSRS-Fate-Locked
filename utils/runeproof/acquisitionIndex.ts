@@ -111,6 +111,35 @@ export type AcquisitionProvenanceKind =
   | 'LOCATION'
   | 'UNKNOWN';
 
+export interface AcquisitionRuleProvenancePayload {
+  type: 'RULE';
+  output: string;
+  outputQuantity: number;
+  sourceKind: SourceKind;
+  sourceLabel: string;
+  locationId: string;
+  requirements: RequirementExpr;
+  repeatability: AcquisitionRule['repeatability'];
+  probability: number | null;
+  declaredCoverage: Coverage;
+  sourceIds: string[];
+}
+
+export interface AcquisitionUnresolvedProvenancePayload {
+  type: 'UNRESOLVED';
+  output: string;
+  sourceKind: SourceKind;
+  sourceLabel: string;
+  regions: string[];
+  reason: UnresolvedAcquisitionReason;
+  declaredCoverage: Coverage;
+  sourceIds: string[];
+}
+
+export type AcquisitionProvenancePayload =
+  | AcquisitionRuleProvenancePayload
+  | AcquisitionUnresolvedProvenancePayload;
+
 export interface AcquisitionProvenanceEntry {
   id: string;
   kind: AcquisitionProvenanceKind;
@@ -120,6 +149,7 @@ export interface AcquisitionProvenanceEntry {
   locationId?: string;
   surfaceChunk?: string;
   parentId?: string | null;
+  payload?: AcquisitionProvenancePayload;
 }
 export interface RuneProofSourceDocument {
   schemaVersion: 1;
@@ -300,14 +330,17 @@ export function compileAcquisitionSources(
     });
   }
 
-  const emittedRules = [...rules.values()].sort(byId);
-  const unresolvedSources = dedupeUnresolved(unresolved);
+  const provenancePayloads = new Map<string, AcquisitionProvenancePayload>();
+  const emittedRules = [...rules.values()].sort(byId).map(rule =>
+    canonicalizeRuleSourceProvenance(rule, provenancePayloads));
+  const unresolvedSources = dedupeUnresolved(unresolved).map(source =>
+    canonicalizeUnresolvedSourceProvenance(source, provenancePayloads));
   const sourceFamilyAccounting = familyAccounting(emittedRules, unresolvedSources);
   const sourceFamilyCoverage = Object.fromEntries(SOURCE_FAMILIES.map(family => [
     family, sourceFamilyAccounting[family].coverage,
   ])) as Record<AcquisitionSourceFamily, Coverage>;
   const provenanceCatalog = buildProvenanceCatalog(
-    input, locations, emittedRules, unresolvedSources,
+    locations, emittedRules, unresolvedSources, provenancePayloads,
   );
 
   const documentCoverage = provenanceCatalog.some(entry => entry.kind === 'UNKNOWN')
@@ -434,6 +467,76 @@ function canonicalUnresolved(
     reason: source.reason,
     provenanceIds: sortedUnique(source.provenanceIds),
   };
+}
+
+function canonicalizeRuleSourceProvenance(
+  rule: AcquisitionRule,
+  payloads: Map<string, AcquisitionProvenancePayload>,
+): AcquisitionRule {
+  const recipeIds = rule.provenanceIds.filter(id => id.startsWith('recipe-audit:'));
+  const resourceIds = rule.provenanceIds.filter(id => id.startsWith('resource-map:'));
+  const prefix = recipeIds.length > 0 ? 'recipe-audit:' : 'resource-map:';
+  const sourceIds = sortedUnique(recipeIds.length > 0 ? recipeIds : resourceIds);
+  if (sourceIds.length === 0) return canonicalRule(rule);
+  const payload: AcquisitionRuleProvenancePayload = {
+    type: 'RULE',
+    output: rule.output.label,
+    outputQuantity: rule.outputQuantity,
+    sourceKind: rule.sourceKind,
+    sourceLabel: rule.sourceLabel,
+    locationId: rule.locationId,
+    requirements: canonicalRequirement(rule.requirements),
+    repeatability: rule.repeatability,
+    probability: rule.probability,
+    declaredCoverage: rule.coverage,
+    sourceIds,
+  };
+  const id = catalogSourceId(prefix, payload);
+  payloads.set(id, payload);
+  return canonicalRule({
+    ...rule,
+    provenanceIds: [
+      ...rule.provenanceIds.filter(provenanceId => !sourceIds.includes(provenanceId)),
+      id,
+    ],
+  });
+}
+
+function canonicalizeUnresolvedSourceProvenance(
+  source: UnresolvedAcquisitionSource,
+  payloads: Map<string, AcquisitionProvenancePayload>,
+): UnresolvedAcquisitionSource {
+  const recipeIds = source.provenanceIds.filter(id => id.startsWith('recipe-audit:'));
+  const resourceIds = source.provenanceIds.filter(id => id.startsWith('resource-map:'));
+  const prefix = recipeIds.length > 0 ? 'recipe-audit:' : 'resource-map:';
+  const sourceIds = sortedUnique(recipeIds.length > 0 ? recipeIds : resourceIds);
+  if (sourceIds.length === 0) return canonicalUnresolved(source);
+  const payload: AcquisitionUnresolvedProvenancePayload = {
+    type: 'UNRESOLVED',
+    output: source.output,
+    sourceKind: source.sourceKind,
+    sourceLabel: source.sourceHost,
+    regions: sortedUnique(source.regions),
+    reason: source.reason,
+    declaredCoverage: source.coverage,
+    sourceIds,
+  };
+  const id = catalogSourceId(prefix, payload);
+  payloads.set(id, payload);
+  return canonicalUnresolved({
+    ...source,
+    provenanceIds: [
+      ...source.provenanceIds.filter(provenanceId => !sourceIds.includes(provenanceId)),
+      id,
+    ],
+  });
+}
+
+function catalogSourceId(
+  prefix: 'recipe-audit:' | 'resource-map:',
+  payload: AcquisitionProvenancePayload,
+): string {
+  return `${prefix}sha256-${sha256HexSync(canonicalDocumentJson(payload))}`;
 }
 
 function acquisitionRuleId(
@@ -721,25 +824,22 @@ function recognizedProvenanceCoverage(
 }
 
 function buildProvenanceCatalog(
-  input: AcquisitionCompilerInput,
   locations: ReadonlyMap<string, LocationNodeSource>,
   rules: readonly AcquisitionRule[],
   unresolved: readonly UnresolvedAcquisitionSource[],
+  provenancePayloads: ReadonlyMap<string, AcquisitionProvenancePayload>,
 ): AcquisitionProvenanceEntry[] {
-  const usedIds = sortedUnique([...rules, ...unresolved]
+  const usedIdSet = new Set([...rules, ...unresolved]
     .flatMap(source => source.provenanceIds));
-  const recipeCoverage = provenanceCoverageById(
-    input.productionRecipes.map(recipe => ({
-      provenanceIds: recipe.provenanceIds,
-      coverage: recipe.coverage,
-    })),
-  );
-  const resourceCoverage = provenanceCoverageById(
-    input.reviewedSources.map(source => ({
-      provenanceIds: source.provenanceIds,
-      coverage: source.coverage,
-    })),
-  );
+  for (const id of [...usedIdSet]) {
+    if (!id.startsWith('location:')) continue;
+    let location = locations.get(id.slice('location:'.length));
+    while (location?.parentId) {
+      usedIdSet.add(`location:${location.parentId}`);
+      location = locations.get(location.parentId);
+    }
+  }
+  const usedIds = sortedUnique([...usedIdSet]);
 
   return usedIds.map(id => {
     const membership = {
@@ -764,32 +864,23 @@ function buildProvenanceCatalog(
       return { id, kind: 'TRANSFORM', coverage: 'PARTIAL', ...membership };
     }
     if (id.startsWith('resource-map:')) {
+      const payload = provenancePayloads.get(id);
       return {
-        id, kind: 'RESOURCE_MAP', coverage: resourceCoverage.get(id) ?? 'UNKNOWN',
-        ...membership,
+        id, kind: 'RESOURCE_MAP', coverage: payload?.declaredCoverage ?? 'UNKNOWN',
+        payload, ...membership,
       };
     }
     if (id.startsWith('recipe-audit:')) {
+      const payload = provenancePayloads.get(id);
       return {
-        id, kind: 'RECIPE_AUDIT', coverage: recipeCoverage.get(id) ?? 'UNKNOWN',
-        ...membership,
+        id, kind: 'RECIPE_AUDIT', coverage: payload?.declaredCoverage ?? 'UNKNOWN',
+        payload, ...membership,
       };
     }
     return { id, kind: 'UNKNOWN', coverage: 'UNKNOWN', ...membership };
   });
 }
 
-function provenanceCoverageById(
-  sources: readonly { provenanceIds: readonly string[]; coverage: Coverage }[],
-): Map<string, Coverage> {
-  const result = new Map<string, Coverage>();
-  for (const source of sources) {
-    for (const id of source.provenanceIds) {
-      result.set(id, combineCoverage(result.get(id) ?? 'VERIFIED', source.coverage));
-    }
-  }
-  return result;
-}
 function familyAccounting(
   rules: readonly AcquisitionRule[],
   unresolved: readonly UnresolvedAcquisitionSource[],
