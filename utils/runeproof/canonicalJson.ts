@@ -61,10 +61,17 @@ function serializeObject(value: object, active: Set<object>): string {
 }
 
 function serializeArray(value: unknown[], active: Set<object>): string {
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  const values: unknown[] = [];
   for (let index = 0; index < value.length; index += 1) {
     if (!own.call(value, index)) {
       throw new TypeError('Sparse arrays are not canonical JSON');
     }
+    const descriptor = descriptors[String(index)];
+    if (!descriptor.enumerable || !own.call(descriptor, 'value')) {
+      throw new TypeError('Canonical JSON arrays require enumerable data properties');
+    }
+    values.push(descriptor.value);
   }
   const expectedKeys = new Set([
     ...Array.from({ length: value.length }, (_, index) => String(index)),
@@ -74,7 +81,7 @@ function serializeArray(value: unknown[], active: Set<object>): string {
     typeof key !== 'string' || !expectedKeys.has(key))) {
     throw new TypeError('Non-index array properties are not canonical JSON');
   }
-  return `[${value.map(child => serialize(child, active)).join(',')}]`;
+  return `[${values.map(child => serialize(child, active)).join(',')}]`;
 }
 
 function compareText(left: string, right: string): number {

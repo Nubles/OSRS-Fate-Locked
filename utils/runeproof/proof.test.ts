@@ -221,6 +221,19 @@ describe('proof certificates', () => {
       .toContain('ONE_TIME rule one-reward proves 2 but capacity is 1');
   });
 
+  it('rejects malformed repeatability before replaying a rule', async () => {
+    const reward = item('Reward');
+    const malformedRule = rule('malformed-reward', reward, {
+      repeatability: 'UNBOUNDED' as AcquisitionRule['repeatability'],
+    });
+    const witness = await certificate(reward, {
+      root: step(malformedRule, reward),
+    });
+
+    expect((await verifyProof(input(witness, [malformedRule]))).errors)
+      .toContain('Invalid repeatability for rule malformed-reward');
+  });
+
   it('uses model assertions to reject non-canonical fact IDs and rule expressions', async () => {
     const goal = item('Goal');
     const malformedGoal = { ...goal, id: 'ITEM:Goal' };

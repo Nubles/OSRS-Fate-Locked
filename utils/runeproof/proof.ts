@@ -297,6 +297,12 @@ function validateRules(
       errors.push(`Invalid requirement expression for rule ${rule.id}`);
       continue;
     }
+    if (rule.repeatability !== 'REPEATABLE'
+      && rule.repeatability !== 'ONE_TIME'
+      && rule.repeatability !== 'UNKNOWN') {
+      errors.push(`Invalid repeatability for rule ${rule.id}`);
+      continue;
+    }
     valid.set(rule.id, rule);
   }
   return valid;

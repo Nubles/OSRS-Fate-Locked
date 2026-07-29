@@ -42,6 +42,18 @@ describe('canonicalJson', () => {
     );
   });
 
+  it('rejects accessor-backed array indices', () => {
+    const accessor = ['placeholder'];
+    Object.defineProperty(accessor, '0', {
+      enumerable: true,
+      get: () => 'computed',
+    });
+
+    expect(() => canonicalJson(accessor)).toThrow(
+      'Canonical JSON arrays require enumerable data properties',
+    );
+  });
+
   it('rejects cyclic structures', () => {
     const cyclic: { self?: unknown } = {};
     cyclic.self = cyclic;
