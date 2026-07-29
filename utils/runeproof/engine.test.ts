@@ -7,6 +7,7 @@ import {
   type CompiledGoal,
 } from './goalCompiler';
 import { createRuneProofEngine, createRuneProofExecutor, evaluateRuneProof, type RuneProofEngineSources } from './engine';
+import type { GameModeRules } from '../../config/gameModes';
 
 const goal = compileItemGoal({ id: 'item:plank', label: 'Plank' }, 1);
 
@@ -74,6 +75,63 @@ describe('evaluateRuneProof', () => {
     const noRoutes = sources('PARTIAL');
     clearRules(noRoutes);
     expect((await evaluateRuneProof({ goal }, snapshot(), noRoutes)).status).toBe('UNKNOWN');
+  });
+
+  it.each(['PARTIAL', 'UNKNOWN'] as const)(
+    'returns UNKNOWN when the selected acquisition route has %s coverage',
+    async routeCoverage => {
+      const incomplete = sources();
+      incomplete.acquisition.rules[0].coverage = routeCoverage;
+      incomplete.acquisition.provenanceCatalog[0].coverage = routeCoverage;
+
+      expect((await evaluateRuneProof({ goal }, snapshot(), incomplete)).status)
+        .toBe('UNKNOWN');
+    },
+  );
+
+  it('returns UNKNOWN for a synthetic non-item goal when the acquisition corpus is unavailable', async () => {
+    const unavailable = sources();
+    clearRules(unavailable);
+    unavailable.acquisition.acquisitionCoverage = 'UNKNOWN';
+    Object.keys(unavailable.acquisition.sourceFamilyCoverage).forEach(key => {
+      const family = key as keyof typeof unavailable.acquisition.sourceFamilyCoverage;
+      unavailable.acquisition.sourceFamilyCoverage[family] = 'UNKNOWN';
+      unavailable.acquisition.sourceFamilyAccounting[family].coverage = 'UNKNOWN';
+    });
+    const nonItemGoal: CompiledGoal = {
+      id: 'quest:verified-empty',
+      kind: 'QUEST',
+      label: 'Verified empty',
+      requirement: { op: 'ALL', terms: [] },
+      coverage: 'VERIFIED',
+      provenanceIds: ['quest-audit:verified-empty'],
+      sourceVersion: 'verified-empty-v1',
+    };
+
+    expect((await evaluateRuneProof({ goal: nonItemGoal }, snapshot(), unavailable)).status)
+      .toBe('UNKNOWN');
+  });
+
+  it('honors custom Lumbridge-only territory when evaluating an acquisition route', async () => {
+    const mappedSources = (): RuneProofEngineSources => {
+      const document = sources();
+      document.locationGraph.nodes[0].surfaceChunk = '50,50';
+      document.locationGraph.nodes[1].surfaceChunk = '50,52';
+      return document;
+    };
+    const custom = snapshot({
+      gameModeId: 'custom',
+      modeRules: customModeRules({ startArea: 'lumbridge' }),
+      unlockedChunks: [],
+    });
+
+    expect((await evaluateRuneProof({ goal }, custom, mappedSources())).status)
+      .toBe('IMPOSSIBLE');
+    expect((await evaluateRuneProof(
+      { goal },
+      { ...custom, unlockedAreas: ['Varrock'] },
+      mappedSources(),
+    )).status).toBe('OBTAINABLE');
   });
 
   it('returns UNKNOWN for directly incomplete production and manual goals even when modeled terms pass', async () => {
@@ -170,4 +228,18 @@ function clearRules(document: RuneProofEngineSources): void {
       accounting.ruleCount = 0;
       accounting.ruleIds = [];
     });
+}
+
+function customModeRules(
+  overrides: Partial<GameModeRules> = {},
+): Readonly<GameModeRules> {
+  return Object.freeze({
+    pityEnabled: true,
+    pityThreshold: 50,
+    omniChanceBase: 2,
+    ritualCostMultiplier: 1,
+    regionModifiers: false,
+    bankLocks: true,
+    ...overrides,
+  });
 }

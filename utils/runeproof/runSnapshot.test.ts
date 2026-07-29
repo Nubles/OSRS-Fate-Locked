@@ -100,4 +100,29 @@ describe('buildRuneProofRunSnapshot', () => {
     expect(Object.isFrozen(snapshot.skillCaps)).toBe(true);
     expect(Object.isFrozen(snapshot.collectionLog)).toBe(true);
   });
+
+  it('captures a frozen canonical custom mode policy independently of later edits', () => {
+    const state = gameState();
+    state.gameModeId = 'custom';
+    state.customMode = {
+      pityEnabled: false,
+      pityThreshold: 25,
+      omniChanceBase: 0,
+      ritualCostMultiplier: 2,
+      regionModifiers: true,
+      startArea: 'lumbridge',
+      chunkGranularity: true,
+      bankLocks: false,
+    };
+
+    const snapshot = buildRuneProofRunSnapshot(state);
+    state.customMode.startArea = 'none';
+    state.customMode.chunkGranularity = false;
+
+    expect(snapshot.modeRules).toMatchObject({
+      startArea: 'lumbridge',
+      chunkGranularity: true,
+    });
+    expect(Object.isFrozen(snapshot.modeRules)).toBe(true);
+  });
 });

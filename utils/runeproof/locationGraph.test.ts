@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import fullChunkContent from '../../public/chunk-content.json';
 import { chunkContentService } from '../../services/ChunkContentService';
 import type { RuneProofRunSnapshot } from '../../types';
+import type { GameModeRules } from '../../config/gameModes';
 import { factId, type RequirementExpr } from './model';
 import {
   calculateReachability,
@@ -110,6 +111,50 @@ describe('calculateReachability', () => {
 
     expect([...standard.reachable]).toContain('al-kharid');
     expect([...chunked.reachable]).not.toContain('al-kharid');
+  });
+
+  it('honors custom Lumbridge-only and no-free-area starts', () => {
+    const world = graph(
+      [node('home', '50,50'), node('varrock', '50,52')],
+      [edge('walk-north', 'home', 'varrock')],
+    );
+    const lumbridgeOnly = calculateReachability(world, snapshot([], [], {
+      gameModeId: 'custom',
+      modeRules: customModeRules({ startArea: 'lumbridge' }),
+    }));
+    const noFreeArea = calculateReachability(world, snapshot([], [], {
+      gameModeId: 'custom',
+      modeRules: customModeRules({ startArea: 'none' }),
+    }));
+    const explicitlyUnlocked = calculateReachability(world, snapshot([], [], {
+      gameModeId: 'custom',
+      modeRules: customModeRules({ startArea: 'none' }),
+      unlockedAreas: ['Lumbridge', 'Varrock'],
+    }));
+
+    expect([...lumbridgeOnly.reachable]).toEqual(['home']);
+    expect([...noFreeArea.reachable]).toEqual([]);
+    expect([...explicitlyUnlocked.reachable]).toEqual(['home', 'varrock']);
+  });
+
+  it('uses exact chunks for a custom chunk-granularity policy', () => {
+    const world = graph(
+      [node('home', '50,50'), node('varrock', '50,52')],
+      [edge('walk-north', 'home', 'varrock')],
+    );
+    const namedOnly = calculateReachability(world, snapshot([], [], {
+      gameModeId: 'custom',
+      modeRules: customModeRules({ startArea: 'none', chunkGranularity: true }),
+      unlockedAreas: ['Varrock'],
+    }));
+    const exactChunk = calculateReachability(world, snapshot(['50,52'], [], {
+      gameModeId: 'custom',
+      modeRules: customModeRules({ startArea: 'none', chunkGranularity: true }),
+      unlockedAreas: ['Varrock'],
+    }));
+
+    expect([...namedOnly.reachable]).toEqual(['home']);
+    expect([...exactChunk.reachable]).toEqual(['home', 'varrock']);
   });
 
   it('enforces effective skill caps on a gated child-location edge', () => {
@@ -839,3 +884,17 @@ describe('proof-grade location source access', () => {
     expect(chunkContentService.locationEdges()).toEqual([serviceEdge]);
   });
 });
+
+function customModeRules(
+  overrides: Partial<GameModeRules> = {},
+): Readonly<GameModeRules> {
+  return Object.freeze({
+    pityEnabled: true,
+    pityThreshold: 50,
+    omniChanceBase: 2,
+    ritualCostMultiplier: 1,
+    regionModifiers: false,
+    bankLocks: true,
+    ...overrides,
+  });
+}

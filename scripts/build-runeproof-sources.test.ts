@@ -7,6 +7,7 @@ import {
   computeTrustedAcquisitionCatalogVersion,
   createRuneProofGoalIndex,
   assertRuneProofJavaScriptBudget,
+  assertRuneProofGeneratedOutputsCurrent,
   generatedOutputMatches,
   renderRuneProofSourceDocument,
   renderTrustedAcquisitionSourceCatalog,
@@ -58,6 +59,14 @@ describe('RuneProof source generator contract', () => {
     expect(() => assertRuneProofJavaScriptBudget([
       { path: 'assets/RuneProofModal.js', bytes: 201 },
     ], 200)).toThrow(/RuneProof JavaScript budget/i);
+  });
+
+  it('rejects a release when any generated RuneProof artifact is stale', () => {
+    expect(() => assertRuneProofGeneratedOutputsCurrent({
+      'public/runeproof-sources.json': true,
+      'data/runeproof-goal-index.json': false,
+      'data/sources/runeproof-trusted-acquisition-sources.json': true,
+    })).toThrow(/data\/runeproof-goal-index\.json stale/i);
   });
 
   it('renders byte-identical output for the same document', () => {

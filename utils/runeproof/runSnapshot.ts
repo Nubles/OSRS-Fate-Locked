@@ -1,4 +1,5 @@
 import type { GameState, RuneProofRunSnapshot } from '../../types';
+import { resolveModeRules } from '../../config/gameModes';
 
 const compareKeys = (left: string, right: string): number =>
   left < right ? -1 : left > right ? 1 : 0;
@@ -22,6 +23,9 @@ export function buildRuneProofRunSnapshot(state: GameState): RuneProofRunSnapsho
     runId: state.runId,
     runRevision: state.runRevision,
     gameModeId: state.gameModeId,
+    modeRules: Object.freeze({
+      ...resolveModeRules(state.gameModeId, state.customMode),
+    }),
     equipmentTiers: freezeNumberRecord(unlocks.equipment),
     skillCaps: freezeNumberRecord(unlocks.skills),
     currentLevels: freezeNumberRecord(unlocks.levels),

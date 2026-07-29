@@ -22,6 +22,15 @@ export function createRuneProofGoalIndex(document, sourceAudit) {
 export function renderRuneProofGoalIndex(index) {
   return `${JSON.stringify(index, null, 2)}\n`;
 }
+export function assertRuneProofGeneratedOutputsCurrent(outputs) {
+  const stale = Object.entries(outputs)
+    .filter(([, current]) => current !== true)
+    .map(([path]) => path)
+    .sort();
+  if (stale.length > 0) {
+    throw new Error(`${stale.join(', ')} stale; run npm run runeproof:sources`);
+  }
+}
 export function assertRuneProofJavaScriptBudget(
   assets,
   maxBytes = 2 * 1024 * 1024,

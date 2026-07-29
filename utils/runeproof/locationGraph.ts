@@ -6,8 +6,9 @@ import {
   type RequirementExpr,
 } from './model';
 import { placeOf } from '../chunkLocations';
-import { isRegionUnlocked } from '../reachability';
+import { isRegionUnlockedForRules } from '../reachability';
 import { effectiveSkillLevel } from './effectiveSkillLevel';
+import { resolveModeRules, type GameModeRules } from '../../config/gameModes';
 
 export interface LocationNodeSource {
   id: string;
@@ -117,6 +118,7 @@ export function calculateReachability(
 ): ReachabilityResult {
   const validated = validateGraph(graph);
   let coverage = validated.coverage;
+  if (!modeRules(snapshot)) coverage = 'UNKNOWN';
   const nodes = validated.nodes;
   const traversals = new Map<string, Traversal[]>();
 
@@ -133,7 +135,8 @@ export function calculateReachability(
   const start = nodes.get(graph?.startNodeId);
   const queue: string[] = [];
 
-  if (start && !start.parentId) {
+  if (start && !start.parentId
+    && (chunkGranularity(snapshot) || surfaceLocationOwned(start, snapshot))) {
     reachable.add(start.id);
     distance.set(start.id, 0);
     queue.push(start.id);
@@ -162,13 +165,13 @@ export function calculateReachability(
       .filter((location) => !location.parentId)
       .map((location) => location.surfaceChunk),
   );
-  const ownedSurfaceChunks = snapshot.gameModeId === 'chunked'
+  const ownedSurfaceChunks = chunkGranularity(snapshot)
     ? new Set(snapshot.unlockedChunks)
     : new Set([...nodes.values()]
       .filter(location => !location.parentId
         && surfaceLocationOwned(location, snapshot))
       .map(location => location.surfaceChunk));
-  if (snapshot.gameModeId === 'chunked'
+  if (chunkGranularity(snapshot)
     && [...ownedSurfaceChunks].some((chunk) => !authoredSurfaceChunks.has(chunk))) {
     coverage = 'UNKNOWN';
   }
@@ -383,15 +386,29 @@ function surfaceLocationOwned(
   location: LocationNodeSource,
   snapshot: RuneProofRunSnapshot,
 ): boolean {
-  if (snapshot.gameModeId === 'chunked') {
+  const rules = modeRules(snapshot);
+  if (!rules) return false;
+  if (rules.chunkGranularity) {
     return snapshot.unlockedChunks.includes(location.surfaceChunk);
   }
   const [cx, cy] = location.surfaceChunk.split(',').map(Number);
   const place = placeOf(cx, cy);
   return Boolean(
-    (place.subArea && isRegionUnlocked(place.subArea, [...snapshot.unlockedAreas]))
-    || (place.region && isRegionUnlocked(place.region, [...snapshot.unlockedAreas])),
+    (place.subArea && isRegionUnlockedForRules(place.subArea, snapshot.unlockedAreas, rules))
+    || (place.region && isRegionUnlockedForRules(place.region, snapshot.unlockedAreas, rules)),
   );
+}
+
+function modeRules(
+  snapshot: RuneProofRunSnapshot,
+): Readonly<GameModeRules> | null {
+  if (snapshot.modeRules) return snapshot.modeRules;
+  if (snapshot.gameModeId === 'custom') return null;
+  return resolveModeRules(snapshot.gameModeId);
+}
+
+function chunkGranularity(snapshot: RuneProofRunSnapshot): boolean {
+  return modeRules(snapshot)?.chunkGranularity === true;
 }
 
 function requirementsSatisfied(

@@ -7,6 +7,7 @@ import {
   computeRuneProofDocumentVersion,
   computeTrustedAcquisitionCatalogVersion,
   createRuneProofGoalIndex,
+  assertRuneProofGeneratedOutputsCurrent,
   generatedOutputMatches,
   renderRuneProofGoalIndex,
   renderRuneProofSourceDocument,
@@ -105,15 +106,17 @@ if (check) {
     generatedOutputMatches(goalIndexPath, goalIndexBytes),
     generatedOutputMatches(trustedOutputPath, trustedBytes),
   ]);
-  if (!documentCurrent || !goalIndexCurrent || !trustedCurrent) {
-    const stale = [
-      !documentCurrent && 'public/runeproof-sources.json',
-      !goalIndexCurrent && 'data/runeproof-goal-index.json',
-      !trustedCurrent && 'data/sources/runeproof-trusted-acquisition-sources.json',
-    ].filter(Boolean).join(', ');
-    console.error(`${stale} stale; run npm run runeproof:sources`);
+  try {
+    assertRuneProofGeneratedOutputsCurrent({
+      'public/runeproof-sources.json': documentCurrent,
+      'data/runeproof-goal-index.json': goalIndexCurrent,
+      'data/sources/runeproof-trusted-acquisition-sources.json': trustedCurrent,
+    });
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;
-  } else {
+  }
+  if (!process.exitCode) {
     console.log(summary('verified', document, trustedCatalog));
   }
 } else {

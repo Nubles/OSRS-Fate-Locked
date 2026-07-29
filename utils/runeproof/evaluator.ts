@@ -154,17 +154,31 @@ export function evaluateObtainability(
 
   const candidates = nonDominated(state.routes.get(demandKey(requiredGoal)) ?? [])
     .sort(compareRoutes);
-  const coverage = combineCoverage(
-    context.coverage ?? 'VERIFIED',
-    combineAllCoverage(candidates.map(route => route.coverage)),
-  );
   if (candidates.length > 0) {
-    const routes = candidates.map(stripInternalRoute);
+    const verifiedCandidates = candidates.filter(route =>
+      route.coverage === 'VERIFIED');
+    if (context.coverage === 'UNKNOWN' || verifiedCandidates.length === 0) {
+      return freezeReport({
+        goalId: goal.id,
+        status: 'UNKNOWN',
+        coverage: 'UNKNOWN',
+        routes: [],
+        blockers: [],
+        unavoidableBlockerFactIds: [],
+        routesComplete: false,
+        explanation: 'RuneProof cannot verify a complete current route.',
+      });
+    }
+    const routes = verifiedCandidates.map(stripInternalRoute);
+    const positiveCoverage = combineCoverage(
+      context.coverage ?? 'VERIFIED',
+      combineAllCoverage(verifiedCandidates.map(route => route.coverage)),
+    );
     return freezeReport({
       goalId: goal.id,
       status: routes.some(route => route.deterministic)
         ? 'OBTAINABLE' : 'OBTAINABLE_RNG',
-      coverage,
+      coverage: positiveCoverage,
       routes,
       blockers: [],
       unavoidableBlockerFactIds: [],

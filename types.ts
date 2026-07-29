@@ -235,6 +235,7 @@ export interface RuneProofRunSnapshot {
   readonly runId: string;
   readonly runRevision: number;
   readonly gameModeId: string | undefined;
+  readonly modeRules?: Readonly<GameModeRules>;
   readonly equipmentTiers: Readonly<Record<string, number>>;
   readonly skillCaps: Readonly<Record<string, number>>;
   readonly currentLevels: Readonly<Record<string, number>>;

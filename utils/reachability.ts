@@ -1,5 +1,5 @@
 import { UnlockState } from '../types';
-import { isFreeArea } from './freeAreas';
+import { isFreeArea, isFreeAreaForStartArea } from './freeAreas';
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
@@ -57,20 +57,37 @@ const PARENT_CONTINENT: Record<string, string> = (() => {
  * The RuneLite plugin mirrors these exact rules (FateLockedBundle.isUnlocked);
  * utils/runelitePluginParity.test.ts pins the two together.
  */
-export const isRegionUnlocked = (region: string, unlocks: string[]): boolean => {
-  if (isFreeArea(region)) return true;
+const regionUnlocked = (
+  region: string,
+  unlocks: readonly string[],
+  free: (name: string) => boolean,
+): boolean => {
+  if (free(region)) return true;
   if (unlocks.includes(region)) return true;
   const continent = PARENT_CONTINENT[region];
   if (continent) {
-    if (isFreeArea(continent)) return true;
+    if (free(continent)) return true;
     if (unlocks.includes(continent)) return true;
     const siblings = continent === 'Misthalin' ? MISTHALIN_AREAS : (REGION_GROUPS[continent] ?? []);
-    if (siblings.length > 0 && siblings.every(s => unlocks.includes(s) || isFreeArea(s))) return true;
+    if (siblings.length > 0 && siblings.every(s => unlocks.includes(s) || free(s))) return true;
   }
   const children = region === 'Misthalin' ? MISTHALIN_AREAS : REGION_GROUPS[region];
-  if (children && children.length > 0 && children.every(s => unlocks.includes(s) || isFreeArea(s))) return true;
+  if (children && children.length > 0 && children.every(s => unlocks.includes(s) || free(s))) return true;
   return false;
 };
+
+export const isRegionUnlocked = (region: string, unlocks: string[]): boolean =>
+  regionUnlocked(region, unlocks, isFreeArea);
+
+export const isRegionUnlockedForRules = (
+  region: string,
+  unlocks: readonly string[],
+  rules: Readonly<GameModeRules>,
+): boolean => regionUnlocked(
+  region,
+  unlocks,
+  name => isFreeAreaForStartArea(name, rules.startArea),
+);
 
 /**
  * Does the run's mode lock banks individually? Off unless the mode's
