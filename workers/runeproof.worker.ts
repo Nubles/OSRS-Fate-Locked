@@ -1,6 +1,7 @@
 import {
   createRuneProofEngine,
   assertRuneProofSourceDocument,
+  assertRuneProofSourceIdentity,
   type RuneProofEngine,
   type RuneProofEngineSources,
   type RuneProofQuery,
@@ -78,12 +79,14 @@ export async function initializeRuneProofWorkerEngine(
   if (computedVersion !== request.sourceVersion) {
     throw new Error('RuneProof acquisition integrity check failed');
   }
-  return createRuneProofEngine({
+  const sources = {
     sourceVersion: request.sourceVersion,
     sourceAudit: request.sourceAudit,
     acquisition,
     locationGraph: request.locationGraph,
-  });
+  };
+  assertRuneProofSourceIdentity(sources);
+  return createRuneProofEngine(sources);
 }
 
 async function evaluate(request: EvaluateRequest): Promise<void> {

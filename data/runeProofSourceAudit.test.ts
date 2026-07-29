@@ -186,6 +186,17 @@ async function acquisitionDocument(
     provenanceCatalog,
     rules,
     unresolvedSources,
+    locationGraph: {
+      startNodeId: 'surface:50,50',
+      nodes: [{
+        id: 'surface:50,50',
+        label: 'Fixture start',
+        surfaceChunk: '50,50',
+        coverage: 'VERIFIED',
+      }],
+      edges: [],
+    },
+    travelAuditCatalog: { schemaVersion: 1, entries: [] },
   };
   const document = {
     ...contents,

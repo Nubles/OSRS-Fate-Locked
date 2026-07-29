@@ -101,6 +101,12 @@ quest, chunk, acquisition, and provenance records. A known positive witness can
 still prove a route when unrelated global coverage is partial. Negative claims
 need complete relevant coverage.
 
+The production source version also commits to the complete canonical travel
+graph: its start node, sorted locations and edges, edge requirements,
+directionality, and reviewed provenance IDs. Every production edge must be
+claimed by the checked-in travel-audit catalog. If the runtime graph differs
+from that identity, RuneProof fails closed before solving.
+
 Unsupported cycles, malformed evidence, incomplete source families, and route
 or blocker safety limits produce `UNKNOWN`. RuneProof never silently truncates
 work and presents the partial result as complete.

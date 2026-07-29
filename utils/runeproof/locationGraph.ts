@@ -33,6 +33,22 @@ export interface LocationGraph {
   edges: readonly LocationEdgeSource[];
 }
 
+export interface ReviewedTravelAuditEntry {
+  id: string;
+  coverage: 'VERIFIED';
+  edgeIds: string[];
+}
+
+export interface ReviewedTravelAuditCatalog {
+  schemaVersion: 1;
+  entries: ReviewedTravelAuditEntry[];
+}
+
+export interface BoundReviewedLocationGraph {
+  locationGraph: LocationGraph;
+  travelAuditCatalog: ReviewedTravelAuditCatalog;
+}
+
 export interface ReachabilityResult {
   reachable: ReadonlySet<string>;
   strandedSurfaceChunks: ReadonlySet<string>;
@@ -110,6 +126,100 @@ export function validateLocationNodes(
       .map(node => [node.surfaceChunk, node]),
   );
   return { nodes, surfaceNodes, coverage: valid ? 'VERIFIED' : 'UNKNOWN' };
+}
+
+export function bindReviewedLocationGraph(
+  graph: LocationGraph,
+  catalog: ReviewedTravelAuditCatalog,
+): BoundReviewedLocationGraph {
+  if (!hasExactKeys(graph, ['startNodeId', 'nodes', 'edges'])) {
+    throw new Error('Invalid reviewed travel graph shape');
+  }
+  for (const node of graph.nodes ?? []) {
+    const nodeKeys = node.parentId === undefined
+      ? ['id', 'label', 'surfaceChunk', 'coverage']
+      : ['id', 'label', 'surfaceChunk', 'parentId', 'coverage'];
+    if (!hasExactKeys(node, nodeKeys)) {
+      throw new Error('Invalid reviewed travel node shape');
+    }
+  }
+  for (const edge of graph.edges ?? []) {
+    if (!hasExactKeys(edge, [
+      'id', 'from', 'to', 'requirements', 'bidirectional', 'provenanceIds',
+    ]) || !requirementHasExactShape(edge.requirements)) {
+      throw new Error('Invalid reviewed travel edge shape');
+    }
+  }
+
+  const validated = validateGraph(graph);
+  if (validated.coverage !== 'VERIFIED') {
+    throw new Error('Reviewed travel graph is not fully validated');
+  }
+  if (!hasExactKeys(catalog, ['schemaVersion', 'entries'])
+    || catalog.schemaVersion !== 1 || !Array.isArray(catalog.entries)) {
+    throw new Error('Invalid reviewed travel-audit catalog');
+  }
+
+  const entryIds = countStringIds(catalog.entries);
+  const canonicalEntries = catalog.entries.map((entry) => {
+    if (!hasExactKeys(entry, ['id', 'coverage', 'edgeIds'])
+      || entryIds.get(entry.id) !== 1 || entry.coverage !== 'VERIFIED'
+      || !Array.isArray(entry.edgeIds) || entry.edgeIds.length === 0
+      || !entry.edgeIds.every(isNonEmptyString)
+      || new Set(entry.edgeIds).size !== entry.edgeIds.length) {
+      throw new Error('Invalid reviewed travel-audit catalog entry');
+    }
+    return {
+      id: entry.id,
+      coverage: entry.coverage,
+      edgeIds: [...entry.edgeIds].sort(compareText),
+    };
+  }).sort((left, right) => compareText(left.id, right.id));
+
+  const auditById = new Map(canonicalEntries.map(entry => [entry.id, entry]));
+  const canonicalEdges = validated.edges.map(edge => ({
+    id: edge.id,
+    from: edge.from,
+    to: edge.to,
+    requirements: cloneRequirement(edge.requirements),
+    bidirectional: edge.bidirectional,
+    provenanceIds: [...edge.provenanceIds].sort(compareText),
+  }));
+  for (const edge of canonicalEdges) {
+    if (new Set(edge.provenanceIds).size !== edge.provenanceIds.length
+      || edge.provenanceIds.some(id => !auditById.has(id))) {
+      throw new Error(`Reviewed travel provenance is missing for edge ${edge.id}`);
+    }
+  }
+  for (const entry of canonicalEntries) {
+    const claimed = canonicalEdges
+      .filter(edge => edge.provenanceIds.includes(entry.id))
+      .map(edge => edge.id)
+      .sort(compareText);
+    if (!sameStrings(entry.edgeIds, claimed)) {
+      throw new Error(`Reviewed travel edge binding mismatch for ${entry.id}`);
+    }
+  }
+
+  return {
+    locationGraph: {
+      startNodeId: graph.startNodeId,
+      nodes: [...validated.nodes.values()]
+        .sort((left, right) => compareText(left.id, right.id))
+        .map(node => ({
+          id: node.id,
+          label: node.label,
+          surfaceChunk: node.surfaceChunk,
+          ...(node.parentId === undefined ? {} : { parentId: node.parentId }),
+          coverage: node.coverage,
+        })),
+      edges: canonicalEdges,
+    },
+    travelAuditCatalog: {
+      schemaVersion: 1,
+      entries: canonicalEntries,
+    },
+  };
 }
 
 export function calculateReachability(
@@ -407,6 +517,55 @@ function entersThroughDeclaredParents(
     return true;
   }
   return from.parentId === to.id || to.parentId === from.id;
+}
+
+function requirementHasExactShape(value: unknown): value is RequirementExpr {
+  if (!isRecord(value)) return false;
+  if (value.op === 'ALL' || value.op === 'ANY') {
+    return hasExactKeys(value, ['op', 'terms'])
+      && Array.isArray(value.terms)
+      && value.terms.every(requirementHasExactShape);
+  }
+  if (value.op !== 'FACT' || !hasExactKeys(value, ['op', 'fact'])
+    || !isRecord(value.fact)) return false;
+  const factKeys = value.fact.quantity === undefined
+    ? ['id', 'kind', 'label'] : ['id', 'kind', 'label', 'quantity'];
+  return hasExactKeys(value.fact, factKeys);
+}
+
+function cloneRequirement(expression: RequirementExpr): RequirementExpr {
+  if (expression.op === 'FACT') {
+    return {
+      op: 'FACT',
+      fact: {
+        id: expression.fact.id,
+        kind: expression.fact.kind,
+        label: expression.fact.label,
+        ...(expression.fact.quantity === undefined
+          ? {} : { quantity: expression.fact.quantity }),
+      },
+    };
+  }
+  return {
+    op: expression.op,
+    terms: expression.terms.map(cloneRequirement),
+  };
+}
+
+function hasExactKeys(value: unknown, keys: readonly string[]): boolean {
+  if (!isRecord(value)) return false;
+  const actual = Object.keys(value).sort(compareText);
+  const expected = [...keys].sort(compareText);
+  return sameStrings(actual, expected);
+}
+
+function sameStrings(left: readonly string[], right: readonly string[]): boolean {
+  return left.length === right.length
+    && left.every((value, index) => value === right[index]);
+}
+
+function compareText(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0;
 }
 
 function isSurfaceChunk(value: unknown): value is string {

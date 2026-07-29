@@ -4,9 +4,16 @@ import {
   assertRequirementExpr, factId, type AcquisitionRule, type Coverage,
   type FactRef, type RuneProofReport,
 } from './model';
-import type { RuneProofSourceDocument } from './acquisitionIndex';
 import {
-  calculateReachability, missingSurfaceChunksForTargets, type LocationGraph,
+  canonicalDocumentJson,
+  sha256HexSync,
+  type RuneProofSourceDocument,
+} from './acquisitionIndex';
+import {
+  bindReviewedLocationGraph,
+  calculateReachability,
+  missingSurfaceChunksForTargets,
+  type LocationGraph,
 } from './locationGraph';
 import { evaluateObtainability } from './evaluator';
 import { createProofCertificate, verifyProof } from './proof';
@@ -242,6 +249,9 @@ const DOCUMENT_KEYS = [
   'sourceFamilyCoverage', 'sourceFamilyAccounting', 'provenanceCatalog',
   'rules', 'unresolvedSources',
 ];
+const EXACT_DOCUMENT_KEYS = [
+  ...DOCUMENT_KEYS, 'locationGraph', 'travelAuditCatalog',
+];
 const RULE_KEYS = [
   'id', 'output', 'outputQuantity', 'sourceKind', 'sourceLabel', 'locationId',
   'requirements', 'repeatability', 'probability', 'coverage', 'provenanceIds',
@@ -258,6 +268,7 @@ const PROVENANCE_UNRESOLVED_PAYLOAD_KEYS = [
   'declaredCoverage', 'sourceIds',
 ];
 const VALIDATED_SOURCE_DOCUMENTS = new WeakSet<object>();
+const VALIDATED_SOURCE_IDENTITIES = new WeakSet<object>();
 
 function validateSources(sources: RuneProofEngineSources): void {
   if (!sources || typeof sources.sourceVersion !== 'string' || !sources.sourceVersion
@@ -268,13 +279,48 @@ function validateSources(sources: RuneProofEngineSources): void {
     throw new Error('invalid source audit');
   }
   assertRuneProofSourceDocument(sources.acquisition);
+  if (!/^sha256-[0-9a-f]{64}$/.test(sources.sourceVersion)) return;
+  if (!sources.acquisition.locationGraph
+    || !sources.acquisition.travelAuditCatalog) {
+    throw new Error('location graph identity is missing');
+  }
+  if (!VALIDATED_SOURCE_IDENTITIES.has(sources.acquisition)) {
+    const { sourceVersion: _sourceVersion, ...contents } = sources.acquisition;
+    const expectedVersion = `sha256-${sha256HexSync(canonicalDocumentJson(contents))}`;
+    if (expectedVersion !== sources.sourceVersion) {
+      throw new Error('source identity integrity mismatch');
+    }
+    VALIDATED_SOURCE_IDENTITIES.add(sources.acquisition);
+  }
+  try {
+    const runtime = bindReviewedLocationGraph(
+      sources.locationGraph,
+      sources.acquisition.travelAuditCatalog,
+    );
+    if (canonicalDocumentJson(runtime.locationGraph)
+      !== canonicalDocumentJson(sources.acquisition.locationGraph)) {
+      throw new Error('mismatch');
+    }
+  } catch {
+    throw new Error('location graph identity mismatch');
+  }
+}
+
+export function assertRuneProofSourceIdentity(
+  sources: RuneProofEngineSources,
+): void {
+  validateSources(sources);
 }
 
 export function assertRuneProofSourceDocument(
   value: unknown,
 ): asserts value is RuneProofSourceDocument {
   if (isRecord(value) && VALIDATED_SOURCE_DOCUMENTS.has(value)) return;
-  if (!isRecord(value) || !hasExactKeys(value, DOCUMENT_KEYS)
+  const includesTravelIdentity = isRecord(value)
+    && ('locationGraph' in value || 'travelAuditCatalog' in value);
+  if (!isRecord(value)
+    || !hasExactKeys(value, includesTravelIdentity
+      ? EXACT_DOCUMENT_KEYS : DOCUMENT_KEYS)
     || value.schemaVersion !== 1 || !nonEmptyString(value.sourceVersion)
     || !isRecord(value.counts)
     || !hasExactKeys(value.counts, ['rules', 'unresolvedSources'])
@@ -289,6 +335,25 @@ export function assertRuneProofSourceDocument(
     throw new Error('invalid acquisition source document');
   }
   const document = value as unknown as RuneProofSourceDocument;
+  if (includesTravelIdentity) {
+    if (!document.locationGraph || !document.travelAuditCatalog) {
+      throw new Error('invalid acquisition source document');
+    }
+    try {
+      const canonicalTravel = bindReviewedLocationGraph(
+        document.locationGraph,
+        document.travelAuditCatalog,
+      );
+      if (canonicalDocumentJson(canonicalTravel.locationGraph)
+          !== canonicalDocumentJson(document.locationGraph)
+        || canonicalDocumentJson(canonicalTravel.travelAuditCatalog)
+          !== canonicalDocumentJson(document.travelAuditCatalog)) {
+        throw new Error('non-canonical');
+      }
+    } catch {
+      throw new Error('invalid acquisition source document');
+    }
+  }
   if (document.counts.rules !== document.rules.length
     || document.counts.unresolvedSources !== document.unresolvedSources.length
     || SOURCE_FAMILIES.some(family =>

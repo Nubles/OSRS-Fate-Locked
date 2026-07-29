@@ -24,11 +24,18 @@ const trustedOutputPath = resolve(
 );
 const check = process.argv.includes('--check');
 
-const [chunkDocument, chunkAudit, questAudit, reviewedAcquisitionAudit] = await Promise.all([
+const [
+  chunkDocument,
+  chunkAudit,
+  questAudit,
+  reviewedAcquisitionAudit,
+  reviewedTravelAudit,
+] = await Promise.all([
   readJson(resolve(root, 'public', 'chunk-content.json')),
   readJson(resolve(root, 'data', 'sources', 'chunk-content-transform-audit.json')),
   readJson(resolve(root, 'data', 'sources', 'quest-requirement-audit.json')),
   readJson(resolve(root, 'data', 'sources', 'runeproof-reviewed-acquisition-sources.json')),
+  readJson(resolve(root, 'data', 'sources', 'runeproof-reviewed-travel-audit.json')),
 ]);
 if (reviewedAcquisitionAudit.schemaVersion !== 1
   || !Array.isArray(reviewedAcquisitionAudit.sources)) {
@@ -81,6 +88,12 @@ const { document, trustedCatalog } = compileAcquisitionArtifacts({
   sourceVersion: `sha256-${'0'.repeat(64)}`,
   sourceCommit: chunkDocument.sourceMeta?.commit ?? 'unknown',
   locationNodes: chunkDocument.locationNodes ?? [],
+  locationGraph: {
+    startNodeId: 'surface:50,50',
+    nodes: chunkDocument.locationNodes ?? [],
+    edges: chunkDocument.locationEdges ?? [],
+  },
+  travelAuditCatalog: reviewedTravelAudit,
   chunks: chunkDocument.chunks ?? {},
   shopItems: chunkDocument.shopItems ?? {},
   drops: chunkDocument.drops ?? {},

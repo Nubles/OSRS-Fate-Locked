@@ -35,12 +35,47 @@ const corridor = [
 ];
 
 describe('production RuneProof Plank slice', () => {
+  it.each([
+    ['node label', (graph: RuneProofEngineSources['locationGraph']) => {
+      graph.nodes[0].label += ' tampered';
+    }],
+    ['edge requirements', (graph: RuneProofEngineSources['locationGraph']) => {
+      graph.edges[0].requirements = {
+        op: 'FACT',
+        fact: {
+          id: 'quest:tampered',
+          kind: 'QUEST',
+          label: 'Tampered',
+        },
+      };
+    }],
+    ['edge provenance', (graph: RuneProofEngineSources['locationGraph']) => {
+      graph.edges[0].provenanceIds = ['chunk-route:audit:tampered'];
+    }],
+  ])('fails closed when the runtime %s differs from the exact source identity', async (
+    _case,
+    mutate,
+  ) => {
+    const locationGraph = structuredClone(sources.locationGraph);
+    mutate(locationGraph);
+    const report = await evaluateRuneProof(
+      { goal },
+      snapshot(),
+      { ...sources, locationGraph },
+    );
+
+    expect(report.status).toBe('UNKNOWN');
+    expect(report.explanation).toContain('location graph identity');
+  });
+
   it('indexes and proves the audited Graveyard floor spawn', async () => {
     expect(chunkDocument.chunks['12601']?.i).toContain('Plank');
     expect(goalIndexJson.rules).toContainEqual(expect.objectContaining({
       output: expect.objectContaining({ id: 'item:plank', label: 'Plank' }),
     }));
     const report = await evaluateRuneProof({ goal }, snapshot(), sources);
+    expect(report.explanation).toBeUndefined();
+    expect(report).toMatchObject({ status: 'OBTAINABLE' });
     const root = report.routes[0]?.witness.steps.root;
     const replay = await verifyProof({
       witness: report.routes[0].witness,
@@ -51,7 +86,7 @@ describe('production RuneProof Plank slice', () => {
       ]),
       runId: 'production-plank-run',
       runRevision: 7,
-      sourceVersion: 'sha256-11f41a94ae88378d6298776592ad99e5e5c136a3caf22ae4bb929a2473e08b56',
+      sourceVersion: 'sha256-2d39e087d9bdcab72f27a0492bf6bc2abf97a33760b17ec84d80f7d8c956b382',
     });
 
     expect(report.status).toBe('OBTAINABLE');
@@ -92,18 +127,18 @@ describe('production RuneProof Plank slice', () => {
     const [summary] = await registry.select({
       runId: 'production-plank-run',
       runRevision: 7,
-      sourceVersion: 'sha256-11f41a94ae88378d6298776592ad99e5e5c136a3caf22ae4bb929a2473e08b56',
+      sourceVersion: 'sha256-2d39e087d9bdcab72f27a0492bf6bc2abf97a33760b17ec84d80f7d8c956b382',
       pinnedGoalIds: ['item:plank'],
     });
    expect(summary).toMatchObject({
       goalId: 'item:plank',
       status: 'OBTAINABLE',
       routeLabels: ['Graveyard of Shadows plank spawn'],
-      sourceVersion: 'sha256-11f41a94ae88378d6298776592ad99e5e5c136a3caf22ae4bb929a2473e08b56',
+      sourceVersion: 'sha256-2d39e087d9bdcab72f27a0492bf6bc2abf97a33760b17ec84d80f7d8c956b382',
       runRevision: 7,
     });
     expect(summary.proofHash)
-      .toBe('sha256-f2bce146dc6aa3387fd8c71a1f623a860f1dd262a919188371d00800179124f4');
+      .toBe('sha256-4c92d010f99e5e1d3742716c57dc8ad5dba679df0de6b60dac412381624c745e');
   });
 });
 

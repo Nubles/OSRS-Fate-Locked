@@ -108,6 +108,100 @@ describe('compileAcquisitionSources', () => {
     });
   });
 
+  it('binds the canonical reviewed travel graph into the exact source version', () => {
+    const locationGraph = {
+      startNodeId: location.id,
+      nodes: [
+        {
+          id: 'surface:50,51',
+          label: 'North road',
+          surfaceChunk: '50,51',
+          coverage: 'VERIFIED' as const,
+        },
+        location,
+      ],
+      edges: [{
+        id: 'walk:lumbridge:north-road',
+        from: location.id,
+        to: 'surface:50,51',
+        requirements: { op: 'ALL' as const, terms: [] },
+        bidirectional: true,
+        provenanceIds: ['travel-audit:lumbridge-road-v1'],
+      }],
+    };
+    const travelAuditCatalog = {
+      schemaVersion: 1 as const,
+      entries: [{
+        id: 'travel-audit:lumbridge-road-v1',
+        coverage: 'VERIFIED' as const,
+        edgeIds: ['walk:lumbridge:north-road'],
+      }],
+    };
+    const input = {
+      ...compilerInput(),
+      locationGraph,
+      travelAuditCatalog,
+    } as AcquisitionCompilerInput;
+    const document = compileAcquisitionSources(input);
+    const reversed = compileAcquisitionSources({
+      ...input,
+      locationGraph: {
+        ...locationGraph,
+        nodes: [...locationGraph.nodes].reverse(),
+      },
+    });
+
+    expect(document.locationGraph).toEqual({
+      ...locationGraph,
+      nodes: [location, locationGraph.nodes[0]],
+    });
+    expect(document.travelAuditCatalog).toEqual(travelAuditCatalog);
+    expect(reversed.sourceVersion).toBe(document.sourceVersion);
+    expect(compileAcquisitionSources({
+      ...input,
+      locationGraph: {
+        ...locationGraph,
+        edges: [{
+          ...locationGraph.edges[0],
+          bidirectional: false,
+        }],
+      },
+    }).sourceVersion).not.toBe(document.sourceVersion);
+  });
+
+  it('rejects production travel edges not exactly claimed by reviewed provenance', () => {
+    const locationGraph = {
+      startNodeId: location.id,
+      nodes: [location, {
+        id: 'surface:50,51',
+        label: 'North road',
+        surfaceChunk: '50,51',
+        coverage: 'VERIFIED' as const,
+      }],
+      edges: [{
+        id: 'walk:lumbridge:north-road',
+        from: location.id,
+        to: 'surface:50,51',
+        requirements: { op: 'ALL' as const, terms: [] },
+        bidirectional: true,
+        provenanceIds: ['travel-audit:unreviewed'],
+      }],
+    };
+
+    expect(() => compileAcquisitionSources({
+      ...compilerInput(),
+      locationGraph,
+      travelAuditCatalog: {
+        schemaVersion: 1,
+        entries: [{
+          id: 'travel-audit:lumbridge-road-v1',
+          coverage: 'VERIFIED',
+          edgeIds: ['walk:lumbridge:north-road'],
+        }],
+      },
+    } as AcquisitionCompilerInput)).toThrow(/travel.*provenance|reviewed.*edge/i);
+  });
+
   it('records every production input quantity for recursive evaluation', () => {
     const document = compileAcquisitionSources(compilerInput({
       productionRecipes: [{

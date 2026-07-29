@@ -3,6 +3,11 @@ import goalIndex from './runeproof-goal-index.json';
 import { sha256Hex } from '../utils/integrity';
 import type { AuditCoverage, RuneProofSourceAudit } from '../utils/runeproof/sourceGate';
 import { factId, type FactKind, type SourceKind } from '../utils/runeproof/model';
+import {
+  bindReviewedLocationGraph,
+  type LocationGraph,
+  type ReviewedTravelAuditCatalog,
+} from '../utils/runeproof/locationGraph';
 
 type JsonRecord = Record<string, unknown>;
 const TERMINAL_DISPOSITIONS = ['imported', 'normalized', 'excluded', 'unresolved'] as const;
@@ -536,7 +541,7 @@ async function acquisitionCoverage(
   if (!isRecord(audit) || !hasExactKeys(audit, [
     'schemaVersion', 'sourceVersion', 'counts', 'acquisitionCoverage',
     'sourceFamilyCoverage', 'sourceFamilyAccounting', 'provenanceCatalog',
-    'rules', 'unresolvedSources',
+    'rules', 'unresolvedSources', 'locationGraph', 'travelAuditCatalog',
   ]) || audit.schemaVersion !== 1
     || typeof audit.sourceVersion !== 'string'
     || !/^sha256-[0-9a-f]{64}$/.test(audit.sourceVersion)
@@ -551,6 +556,20 @@ async function acquisitionCoverage(
     || !Array.isArray(audit.rules) || !Array.isArray(audit.unresolvedSources)
     || audit.counts.rules !== audit.rules.length
     || audit.counts.unresolvedSources !== audit.unresolvedSources.length) return 'UNKNOWN';
+
+  let reviewedTravel;
+  try {
+    reviewedTravel = bindReviewedLocationGraph(
+      audit.locationGraph as unknown as LocationGraph,
+      audit.travelAuditCatalog as unknown as ReviewedTravelAuditCatalog,
+    );
+  } catch {
+    return 'UNKNOWN';
+  }
+  if (canonicalJson(reviewedTravel.locationGraph)
+      !== canonicalJson(audit.locationGraph)
+    || canonicalJson(reviewedTravel.travelAuditCatalog)
+      !== canonicalJson(audit.travelAuditCatalog)) return 'UNKNOWN';
 
   const { sourceVersion: _sourceVersion, ...contents } = audit;
   const expectedVersion = `sha256-${await sha256Hex(canonicalJson(contents))}`;

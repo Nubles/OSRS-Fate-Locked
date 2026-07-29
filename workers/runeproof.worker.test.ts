@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import sourceDocumentJson from '../public/runeproof-sources.json';
+import chunkDocumentJson from '../public/chunk-content.json';
 import type { RuneProofSourceDocument } from '../utils/runeproof/acquisitionIndex';
+import type { LocationGraph } from '../utils/runeproof/locationGraph';
 import { initializeRuneProofWorkerEngine } from './runeproof.worker';
 
 const document =
@@ -18,9 +20,9 @@ const request = {
   },
   locationGraph: {
     startNodeId: 'surface:50,50',
-    nodes: [],
-    edges: [],
-  },
+    nodes: chunkDocumentJson.locationNodes,
+    edges: chunkDocumentJson.locationEdges,
+  } as LocationGraph,
 };
 
 describe('RuneProof worker initialization', () => {
@@ -66,6 +68,32 @@ describe('RuneProof worker initialization', () => {
       'https://fatelocked.example/app/',
       fetcher,
     )).rejects.toThrow('integrity');
+  });
+
+  it.each([
+    ['node label', (graph: typeof request.locationGraph) => {
+      graph.nodes[0].label += ' tampered';
+    }],
+    ['edge bidirectionality', (graph: typeof request.locationGraph) => {
+      graph.edges[0].bidirectional = !graph.edges[0].bidirectional;
+    }],
+    ['edge provenance', (graph: typeof request.locationGraph) => {
+      graph.edges[0].provenanceIds = ['travel-audit:tampered'];
+    }],
+  ])('rejects runtime %s changes outside the exact production identity', async (
+    _case,
+    mutate,
+  ) => {
+    const locationGraph = structuredClone(request.locationGraph);
+    mutate(locationGraph);
+    const fetcher =
+      vi.fn(async () => response(document)) as unknown as typeof fetch;
+
+    await expect(initializeRuneProofWorkerEngine(
+      { ...request, locationGraph },
+      'https://fatelocked.example/app/',
+      fetcher,
+    )).rejects.toThrow(/location graph identity/i);
   });
 
   it.each([

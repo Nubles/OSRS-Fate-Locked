@@ -1,4 +1,10 @@
-import { validateLocationNodes, type LocationNodeSource } from './locationGraph';
+import {
+  bindReviewedLocationGraph,
+  validateLocationNodes,
+  type LocationGraph,
+  type LocationNodeSource,
+  type ReviewedTravelAuditCatalog,
+} from './locationGraph';
 import {
   assertRequirementExpr,
   factId,
@@ -74,6 +80,8 @@ export interface AcquisitionCompilerInput {
   transformEvents: AcquisitionTransformEvent[];
   productionRecipes: AuditedProductionRecipe[];
   reviewedSources: ReviewedAcquisitionSource[];
+  locationGraph?: LocationGraph;
+  travelAuditCatalog?: ReviewedTravelAuditCatalog;
 }
 
 export type UnresolvedAcquisitionReason =
@@ -179,6 +187,8 @@ export interface RuneProofSourceDocument {
   provenanceCatalog: AcquisitionProvenanceEntry[];
   rules: AcquisitionRule[];
   unresolvedSources: UnresolvedAcquisitionSource[];
+  locationGraph?: LocationGraph;
+  travelAuditCatalog?: ReviewedTravelAuditCatalog;
 }
 
 export interface AcquisitionIndex {
@@ -217,7 +227,18 @@ export function compileAcquisitionArtifacts(
   const ambiguousOutputs = new Set<string>();
   const conflictingRuleIds = new Set<string>();
   const questIds = new Set(input.questIds);
-  const validatedLocations = validateLocationNodes(input.locationNodes);
+  const hasTravelIdentity = input.locationGraph !== undefined
+    || input.travelAuditCatalog !== undefined;
+  if (hasTravelIdentity
+    && (!input.locationGraph || !input.travelAuditCatalog)) {
+    throw new Error('Reviewed travel graph and catalog must be supplied together');
+  }
+  const boundTravel = hasTravelIdentity
+    ? bindReviewedLocationGraph(input.locationGraph!, input.travelAuditCatalog!)
+    : null;
+  const validatedLocations = validateLocationNodes(
+    boundTravel?.locationGraph.nodes ?? input.locationNodes,
+  );
   const locations = validatedLocations.nodes;
   const transformProvenance = buildTransformProvenance(input.transformEvents);
 
@@ -381,6 +402,7 @@ export function compileAcquisitionArtifacts(
     provenanceCatalog,
     rules: emittedRules,
     unresolvedSources,
+    ...(boundTravel ?? {}),
   };
   const document = {
     ...contents,

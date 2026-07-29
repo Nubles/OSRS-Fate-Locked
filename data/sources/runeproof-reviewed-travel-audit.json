@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "id": "chunk-route:audit:lumbridge-graveyard-v1",
+      "coverage": "VERIFIED",
+      "edgeIds": [
+        "walk:surface:49,55:surface:49,56",
+        "walk:surface:49,56:surface:49,57",
+        "walk:surface:50,50:surface:50,51",
+        "walk:surface:50,51:surface:50,52",
+        "walk:surface:50,52:surface:50,53",
+        "walk:surface:50,53:surface:50,54",
+        "walk:surface:50,54:surface:50,55",
+        "walk:surface:50,55:surface:49,55"
+      ]
+    }
+  ]
+}

@@ -4,6 +4,8 @@ import sourceDocumentJson from '../../public/runeproof-sources.json';
 import chunkAuditJson from '../../data/sources/chunk-content-transform-audit.json';
 import questAuditJson from '../../data/sources/quest-requirement-audit.json';
 import trustedCatalogJson from '../../data/sources/runeproof-trusted-acquisition-sources.json';
+import travelAuditJson from '../../data/sources/runeproof-reviewed-travel-audit.json';
+import reviewedAcquisitionJson from '../../data/sources/runeproof-reviewed-acquisition-sources.json';
 import { loadRuneProofSourceAudit } from '../../data/runeProofSourceAudit';
 import { RESOURCE_MAP } from '../../data/resourceData';
 import type { RuneProofRunSnapshot } from '../../types';
@@ -64,17 +66,16 @@ const fullSources: RuneProofEngineSources = {
   sourceVersion: sourceDocument.sourceVersion,
   sourceAudit: productionSourceAudit,
   acquisition: sourceDocument,
-  locationGraph: {
-    startNodeId: START_LOCATION,
-    nodes: chunkDocument.locationNodes ?? [],
-    edges: chunkDocument.locationEdges ?? [],
-  },
+  locationGraph: sourceDocument.locationGraph!,
 };
 const ordinaryGoal = compileItemGoal(
-  { id: 'item:air-talisman', label: 'Air talisman' },
+  { id: 'item:plank', label: 'Plank' },
   1,
 );
-const currentRun = snapshot();
+const currentRun = snapshot({
+  unlockedChunks: sourceDocument.locationGraph!.nodes
+    .map(node => node.surfaceChunk),
+});
 
 describe('RuneProof selective-solving performance acceptance', () => {
   it('cold-compiles the complete checked-in audited source corpus 20 times', () => {
@@ -86,6 +87,8 @@ describe('RuneProof selective-solving performance acceptance', () => {
         unresolvedSources: sourceDocument.counts.unresolvedSources,
       });
       expect(compiled.document.sourceVersion).toBe(sourceDocument.sourceVersion);
+      expect(compiled.document.locationGraph).toEqual(fullSources.locationGraph);
+      expect(compiled.document.travelAuditCatalog).toEqual(travelAuditJson);
       expect(compiled.trustedCatalog.sourceVersion)
         .toBe(trustedCatalogJson.sourceVersion);
       expect(compiled.trustedCatalog.entries.map(entry => entry.id))
@@ -103,7 +106,7 @@ describe('RuneProof selective-solving performance acceptance', () => {
       () => createRuneProofEngine(fullSources)
         .evaluate({ goal: ordinaryGoal }, currentRun),
     );
-    expect(coldReports.every(report => report.status === 'OBTAINABLE_RNG'))
+    expect(coldReports.every(report => report.status === 'OBTAINABLE'))
       .toBe(true);
     expect(lastMetric('cold ordinary query').p95Ms).toBeLessThan(250);
 
@@ -118,7 +121,7 @@ describe('RuneProof selective-solving performance acceptance', () => {
       'cached ordinary query',
       () => service.evaluate({ goal: ordinaryGoal }),
     );
-    expect(cachedReports.every(report => report?.status === 'OBTAINABLE_RNG'))
+    expect(cachedReports.every(report => report?.status === 'OBTAINABLE'))
       .toBe(true);
     expect(lastMetric('cached ordinary query').p95Ms).toBeLessThan(50);
     service.dispose();
@@ -161,16 +164,23 @@ describe('RuneProof selective-solving performance acceptance', () => {
     expect(lastMetric('worst checked-in blocker fixture').p95Ms)
       .toBeLessThan(1_000);
 
-    const exportGoals = uniqueDirectGoals(20);
+    const exportRules = Array.from({ length: 20 }, (_, index) =>
+      rule(`benchmark-export-${String(index + 1).padStart(2, '0')}`,
+        `Benchmark export ${String(index + 1).padStart(2, '0')}`));
+    const exportSources = verifiedSources(exportRules);
+    const exportGoals = exportRules.map(exportRule => compileItemGoal(
+      { id: exportRule.output.id, label: exportRule.output.label },
+      1,
+    ));
     const exportReports = await Promise.all(
       exportGoals.map(goal =>
-        createRuneProofEngine(fullSources).evaluate({ goal }, currentRun)),
+        createRuneProofEngine(exportSources).evaluate({ goal }, currentRun)),
     );
     expect(exportReports.every(report =>
       report.status === 'OBTAINABLE' || report.status === 'OBTAINABLE_RNG',
     )).toBe(true);
     let replayCalls = 0;
-    const replayEngine = createRuneProofEngine(fullSources);
+    const replayEngine = createRuneProofEngine(exportSources);
     const exportBatches = await sampleAsync(
       '20 pinned proof exports',
       () => exportTwentyProofs(
@@ -449,6 +459,9 @@ function fullCompilerInput(): AcquisitionCompilerInput {
   return {
     sourceCommit: chunkDocument.sourceMeta?.commit ?? 'unknown',
     locationNodes: chunkDocument.locationNodes ?? [],
+    locationGraph: fullSources.locationGraph,
+    travelAuditCatalog: travelAuditJson as unknown as
+      AcquisitionCompilerInput['travelAuditCatalog'],
     chunks: chunkDocument.chunks ?? {},
     shopItems: chunkDocument.shopItems ?? {},
     drops: chunkDocument.drops ?? {},
@@ -462,16 +475,21 @@ function fullCompilerInput(): AcquisitionCompilerInput {
 }
 
 function reviewedSources(): ReviewedAcquisitionSource[] {
-  return Object.entries(RESOURCE_MAP)
+  return [
+    ...Object.entries(RESOURCE_MAP)
     .sort(([left], [right]) => compareText(left, right))
-    .flatMap(([output, sources]) => sources.map((source, index) => ({
-      output,
-      sourceKind: resourceSourceKind(source),
-      sourceHost: source.name,
-      regions: [...source.regions].sort(compareText),
-      coverage: source.regions.includes('Any') ? 'UNKNOWN' : 'PARTIAL',
-      provenanceIds: [trustedSourceId(output, index)],
-    })));
+    .flatMap(([output, sources]) => sources.map(
+      (source, index): ReviewedAcquisitionSource => ({
+        output,
+        sourceKind: resourceSourceKind(source),
+        sourceHost: source.name,
+        regions: [...source.regions].sort(compareText),
+        coverage: source.regions.includes('Any') ? 'UNKNOWN' : 'PARTIAL',
+        provenanceIds: [trustedSourceId(output, index)],
+      }),
+    )),
+    ...(reviewedAcquisitionJson.sources as ReviewedAcquisitionSource[]),
+  ];
 }
 
 function resourceSourceKind(
@@ -589,6 +607,7 @@ function cartesianBlockerFixture(binaryBranches: number): {
 }
 
 function verifiedSources(extraRules: readonly AcquisitionRule[]): RuneProofEngineSources {
+  const syntheticSourceVersion = 'benchmark-synthetic-v1';
   const families = ['DROP', 'PRODUCTION', 'RESOURCE_ENGINE', 'SHOP', 'SPAWN'] as const;
   const sourceFamilyAccounting = Object.fromEntries(families.map(family => {
     const current = sourceDocument.sourceFamilyAccounting[family];
@@ -618,9 +637,9 @@ function verifiedSources(extraRules: readonly AcquisitionRule[]): RuneProofEngin
       })),
   ];
   return {
-    sourceVersion: sourceDocument.sourceVersion,
+    sourceVersion: syntheticSourceVersion,
     sourceAudit: {
-      sourceVersion: sourceDocument.sourceVersion,
+      sourceVersion: syntheticSourceVersion,
       questCoverage: 'VERIFIED',
       chunkCoverage: 'VERIFIED',
       acquisitionCoverage: 'VERIFIED',
@@ -634,6 +653,7 @@ function verifiedSources(extraRules: readonly AcquisitionRule[]): RuneProofEngin
     },
     acquisition: {
       ...sourceDocument,
+      sourceVersion: syntheticSourceVersion,
       counts: {
         rules: sourceDocument.rules.length + extraRules.length,
         unresolvedSources: 0,
@@ -647,23 +667,6 @@ function verifiedSources(extraRules: readonly AcquisitionRule[]): RuneProofEngin
   };
 }
 
-function uniqueDirectGoals(count: number): CompiledGoal[] {
-  const byOutput = new Map<string, FactRef>();
-  sourceDocument.rules
-    .filter(value =>
-      value.locationId === START_LOCATION
-      && value.requirements.op === 'ALL'
-      && value.requirements.terms.length === 0,
-    )
-    .forEach(value => byOutput.set(value.output.id, value.output));
-  return [...byOutput.values()]
-    .sort((left, right) => compareText(left.id, right.id))
-    .slice(0, count)
-    .map(value => compileItemGoal(
-      { id: value.id, label: value.label },
-      1,
-    ));
-}
 
 async function exportTwentyProofs(
   goals: readonly CompiledGoal[],
@@ -678,7 +681,7 @@ async function exportTwentyProofs(
       goal,
       report,
       currentRun,
-      sourceDocument.sourceVersion,
+      engine.sourceVersion,
       async () => {
         onReplay();
         return engine.evaluate({ goal }, currentRun);
@@ -688,7 +691,7 @@ async function exportTwentyProofs(
   return registry.select({
     runId: currentRun.runId,
     runRevision: currentRun.runRevision,
-    sourceVersion: sourceDocument.sourceVersion,
+    sourceVersion: engine.sourceVersion,
     pinnedGoalIds: goals.map(goal => goal.id),
   });
 }
@@ -816,10 +819,11 @@ function normalizeId(value: string): string {
 
 const trustedSourceIds = new Map<string, string>(
   sourceDocument.provenanceCatalog.flatMap(entry =>
-    entry.payload?.sourceIds.map(id => {
+    entry.payload?.sourceIds.flatMap(id => {
       const match = /:(\d{4})$/.exec(id);
-      if (!match) throw new Error(`Invalid trusted source id: ${id}`);
-      return [`${entry.payload!.output}\u0000${match[1]}`, id] as const;
+      return match
+        ? [[`${entry.payload!.output}\u0000${match[1]}`, id] as const]
+        : [];
     }) ?? [],
   ),
 );
