@@ -17,6 +17,21 @@ const manifest = {
 };
 
 describe('transformChunkContent', () => {
+  it('preserves the reviewed RuneProof surface location root', () => {
+    const result = transformChunkContent({
+      walkableChunks: [],
+      chunks: {},
+      slayerMonsters: {},
+    }, manifest);
+
+    expect(result.full.locationNodes).toEqual([{
+      id: 'surface:50,50',
+      label: 'Lumbridge starting chunk',
+      surfaceChunk: '50,50',
+      coverage: 'PARTIAL',
+    }]);
+    expect(result.full.locationEdges).toEqual([]);
+  });
   it('accounts for merged sections and promotes quest starts', () => {
     const result = transformChunkContent({
       walkableChunks: [256],
