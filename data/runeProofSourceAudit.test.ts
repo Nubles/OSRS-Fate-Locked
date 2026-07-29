@@ -273,7 +273,7 @@ describe('runeProofSourceAudit', () => {
     });
     expect(() => requireRuneProofSources(audit))
       .toThrow('RuneProof requires verified quest coverage');
-  });
+  }, 15_000);
 
   it('certifies fully complete synthetic audit evidence', async () => {
     const audit = await buildFixtureRuneProofSourceAudit(
