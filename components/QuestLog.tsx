@@ -12,6 +12,8 @@ import { isAlmostThere } from '../utils/journalProgress';
 import {
   evaluateQuestEligibility,
   meetsSkillRequirement,
+  type QuestEligibility,
+  type QuestStatus,
   questRequirementOptionLabel,
 } from '../utils/journalStatus';
 import { requestManualAttestation } from '../utils/manualAttestation';
@@ -77,12 +79,17 @@ const getDifficultyLabel = (difficulty: DropSource) => {
 };
 
 // QuestCard Component
+export type QuestCardQuest = QuestData & {
+    status: QuestStatus;
+    eligibility: QuestEligibility;
+};
+
 interface QuestCardProps {
-    quest: any; // Augmented QuestData with status
-    unlocks: any;
+    quest: QuestCardQuest;
+    unlocks: UnlockState;
     gameModeId?: string;
     currentQP: number;
-    onToggle: (e: React.MouseEvent, quest: any) => void;
+    onToggle: (e: React.MouseEvent, quest: QuestData) => void;
     highlight?: boolean;
     /** Called when the player clicks a missing prereq quest chip — parent scrolls to it. */
     onPrereqClick?: (questId: string) => void;
@@ -104,7 +111,7 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
     // Chunk-derived locations remain informational map links only. Canonical
     // access is entirely determined by evaluateQuestEligibility.
     const loc = questLocations(quest.name, unlocks, gameModeId);
-    const geography = selectQuestGeography(quest, loc.places);
+    const geography = selectQuestGeography(quest, loc.knownStepPlaces);
 
     // Req-met accounting — drives the progress bar shown on LOCKED cards so
     // players can see at a glance how close they are without counting chips.

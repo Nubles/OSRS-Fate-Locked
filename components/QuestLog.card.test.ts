@@ -1,27 +1,46 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { QUEST_DATA } from '../data/questData';
+import { chunkContentService } from '../services/ChunkContentService';
+import type { UnlockState } from '../types';
+import { evaluateQuestEligibility, type QuestEligibility } from '../utils/journalStatus';
 import { QuestCard } from './QuestLog';
+
+const unlocks: UnlockState = {
+  equipment: {}, skills: {}, levels: {}, regions: [], chunks: [],
+  mobility: [], arcana: [], housing: [], merchants: [], minigames: [],
+  bosses: [], storage: [], guilds: [], farming: [], slayerUnlocks: [],
+  quests: [], diaries: [], cas: [], completedTasks: [], collectionLog: {},
+};
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('QuestCard geography integration', () => {
   it('renders Porcine exact chunks once and counts only its two geography gates', () => {
+    const eligibility: QuestEligibility = {
+      eligible: false,
+      machineEligible: false,
+      manualChecks: [],
+      confirmable: false,
+      status: 'LOCKED_REGION',
+      evidence: [],
+      blockers: [
+        { kind: 'region', label: 'Draynor Village' },
+        { kind: 'region', label: 'South Falador Farm' },
+      ],
+    };
     const quest = {
       ...QUEST_DATA['A Porcine of Interest'],
-      status: 'LOCKED',
-      eligibility: {
-        eligible: false,
-        evidence: [],
-        blockers: [
-          { kind: 'location', label: 'Draynor Village' },
-          { kind: 'location', label: 'South Falador Farm' },
-        ],
-      },
+      status: eligibility.status,
+      eligibility,
     };
     const html = renderToStaticMarkup(
       React.createElement(QuestCard, {
         quest,
-        unlocks: { regions: [], chunks: [], skills: {}, quests: [] },
+        unlocks,
         currentQP: 0,
         onToggle: vi.fn(),
       }),
@@ -32,5 +51,37 @@ describe('QuestCard geography integration', () => {
     expect(html).not.toContain('Misthalin');
     expect(html).not.toContain('Asgarnia');
     expect(html).toContain('0/2 reqs');
+  });
+
+  it('renders distinct same-label Known-step coordinates once each', () => {
+    vi.spyOn(chunkContentService, 'entityLocations').mockReturnValue({
+      name: 'Tale of the Righteous',
+      kind: 'quest',
+      locations: [
+        { cx: 18, cy: 55, role: 'step' },
+        { cx: 18, cy: 55, role: 'first' },
+        { cx: 19, cy: 55, role: 'step' },
+      ],
+    });
+    const eligibility = evaluateQuestEligibility(
+      QUEST_DATA['Tale of the Righteous'],
+      unlocks,
+    );
+    const quest = {
+      ...QUEST_DATA['Tale of the Righteous'],
+      status: eligibility.status,
+      eligibility,
+    };
+
+    const html = renderToStaticMarkup(
+      React.createElement(QuestCard, {
+        quest,
+        unlocks,
+        currentQP: 0,
+        onToggle: vi.fn(),
+      }),
+    );
+
+    expect(html.match(/show on map/g)).toHaveLength(2);
   });
 });

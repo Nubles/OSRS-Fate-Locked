@@ -42,6 +42,23 @@ describe('summariseQuestPlaces', () => {
     expect(info.startPlaces).toHaveLength(1);
   });
 
+  it('preserves same-label coordinates and promotes first evidence only at its coordinate', () => {
+    const info = summariseQuestPlaces([
+      { cx: 18, cy: 55, role: 'step' },
+      { cx: 18, cy: 55, role: 'step' },
+      { cx: 19, cy: 55, role: 'step' },
+      { cx: 19, cy: 55, role: 'first' },
+    ], unlocksWith(['Kourend & Kebos']));
+
+    expect(info.places).toHaveLength(1);
+    expect(info.knownStepPlaces.map(place =>
+      `${place.cx},${place.cy}:${place.role}`,
+    )).toEqual([
+      '19,55:first',
+      '18,55:step',
+    ]);
+  });
+
   it('orders start places first, then locked before unlocked', () => {
     const info = summariseQuestPlaces([LUMBRIDGE, FALADOR], unlocksWith([]));
     // Lumbridge is the start → leads; Falador (locked step) follows.

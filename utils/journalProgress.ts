@@ -59,4 +59,5 @@ export const diaryUnmet = (d: DiaryTier, unlocks: UnlockState, gameModeId?: stri
 };
 
 /** Blocked by exactly one requirement — the quick wins worth surfacing. */
-export const isAlmostThere = (unmet: Unmet[]): boolean => unmet.length === 1;
+export const isAlmostThere = <T extends { label: string }>(unmet: readonly T[]): boolean =>
+  unmet.length === 1;

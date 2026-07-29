@@ -10,8 +10,27 @@ export interface QuestGeographyDisplay {
   knownSteps: QuestPlace[];
 }
 
-const uniqueBy = <T>(values: readonly T[], keyOf: (value: T) => string): T[] =>
-  [...new Map(values.map(value => [keyOf(value), value])).values()];
+const uniqueByLast = <T>(
+  values: readonly T[],
+  keyOf: (value: T) => string,
+): T[] => {
+  const byKey = new Map<string, T>();
+  for (const value of values) byKey.set(keyOf(value), value);
+  return [...byKey.values()];
+};
+
+const uniqueByFirst = <T>(
+  values: readonly T[],
+  keyOf: (value: T) => string,
+): T[] => {
+  const seen = new Set<string>();
+  return values.filter(value => {
+    const key = keyOf(value);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
 
 export function selectQuestGeography(
   quest: Pick<QuestData, 'accessPolicy' | 'regions' | 'locations'>,
@@ -19,12 +38,12 @@ export function selectQuestGeography(
 ): QuestGeographyDisplay {
   const regions = quest.accessPolicy === 'locations'
     ? []
-    : uniqueBy(quest.regions, region => region);
+    : uniqueByLast(quest.regions, region => region);
   const locations = quest.accessPolicy === 'regions'
     ? []
-    : uniqueBy(quest.locations ?? [], location => location.id);
+    : uniqueByLast(quest.locations ?? [], location => location.id);
   const knownSteps = quest.accessPolicy === 'regions'
-    ? uniqueBy(places, step => `${step.cx},${step.cy}`)
+    ? uniqueByFirst(places, step => `${step.cx},${step.cy}`)
     : [];
 
   return { regions, locations, knownSteps };

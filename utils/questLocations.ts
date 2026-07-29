@@ -23,6 +23,8 @@ export interface QuestLocationInfo {
   hasData: boolean;
   /** Deduped places: start places first, then locked-before-unlocked. */
   places: QuestPlace[];
+  /** Coordinate-preserving places for informational Quest Log Known steps. */
+  knownStepPlaces: QuestPlace[];
   /** Subset where the quest starts. */
   startPlaces: QuestPlace[];
   /** Places still locked for this run. */
@@ -41,27 +43,46 @@ export function summariseQuestPlaces(
   gameModeId?: string,
 ): QuestLocationInfo {
   if (locations.length === 0) {
-    return { hasData: false, places: [], startPlaces: [], lockedPlaces: [], allUnlocked: false };
+    return {
+      hasData: false, places: [], knownStepPlaces: [],
+      startPlaces: [], lockedPlaces: [], allUnlocked: false,
+    };
   }
-  const seen = new Map<string, QuestPlace>();
+  const byLabel = new Map<string, QuestPlace>();
+  const byCoordinate = new Map<string, QuestPlace>();
   for (const loc of locations) {
     const place = placeOf(loc.cx, loc.cy);
     const role: 'first' | 'step' = loc.role ?? 'step';
     const unlocked = chunkUnlocked(loc.cx, loc.cy, unlocks, gameModeId);
-    const existing = seen.get(place.label);
-    if (!existing) {
-      seen.set(place.label, { ...place, unlocked, role });
+    const candidate = { ...place, unlocked, role };
+
+    const labelMatch = byLabel.get(place.label);
+    if (!labelMatch) {
+      byLabel.set(place.label, { ...candidate });
     } else if (role === 'first') {
-      existing.role = 'first'; // a start beats a mere step for the same place
+      labelMatch.role = 'first'; // preserve legacy label-level start promotion
+    }
+
+    const coordinateKey = `${loc.cx},${loc.cy}`;
+    const coordinateMatch = byCoordinate.get(coordinateKey);
+    if (!coordinateMatch) {
+      byCoordinate.set(coordinateKey, candidate);
+    } else if (role === 'first') {
+      coordinateMatch.role = 'first'; // promote only repeated evidence at this coordinate
     }
   }
-  const places = [...seen.values()].sort((a, b) =>
+  const sortPlaces = (a: QuestPlace, b: QuestPlace) =>
     Number(b.role === 'first') - Number(a.role === 'first') ||
     Number(a.unlocked) - Number(b.unlocked) || // locked first, so blockers lead
-    a.label.localeCompare(b.label));
+    a.label.localeCompare(b.label) || a.cx - b.cx || a.cy - b.cy;
+  const places = [...byLabel.values()].sort(sortPlaces);
+  const knownStepPlaces = [...byCoordinate.values()].sort(sortPlaces);
   const startPlaces = places.filter(p => p.role === 'first');
   const lockedPlaces = places.filter(p => !p.unlocked);
-  return { hasData: true, places, startPlaces, lockedPlaces, allUnlocked: lockedPlaces.length === 0 };
+  return {
+    hasData: true, places, knownStepPlaces, startPlaces, lockedPlaces,
+    allUnlocked: lockedPlaces.length === 0,
+  };
 }
 
 /** Look the quest up in the (already-initialised) chunk index, then summarise. */

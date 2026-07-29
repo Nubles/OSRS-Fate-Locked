@@ -49,6 +49,21 @@ describe('selectQuestGeography', () => {
     ]);
   });
 
+  it('retains the first metadata for duplicate Known-step coordinates', () => {
+    const quest = {
+      ...QUEST_DATA['A Porcine of Interest'],
+      accessPolicy: 'regions' as const,
+      locations: undefined,
+    };
+    const first = place(48, 50, 'First evidence');
+    const result = selectQuestGeography(quest, [
+      first,
+      { ...place(48, 50, 'Later alias'), role: 'first' },
+    ]);
+
+    expect(result.knownSteps).toEqual([first]);
+  });
+
   it('keeps both canonical kinds and suppresses raw evidence for a combined policy', () => {
     const quest = {
       ...QUEST_DATA['A Porcine of Interest'],
