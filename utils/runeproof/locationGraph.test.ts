@@ -332,13 +332,6 @@ describe('calculateReachability', () => {
         })],
       ),
     },
-    {
-      name: 'ambiguous duplicate direction',
-      fixture: graph(
-        [node('home', '50,50'), node('target', '51,50')],
-        [edge('walk-a', 'home', 'target'), edge('walk-b', 'home', 'target')],
-      ),
-    },
   ])('blocks affected traversal for malformed $name authoring', ({ fixture }) => {
     expect(() => calculateReachability(
       fixture,
@@ -430,6 +423,95 @@ describe('calculateReachability', () => {
     expect(result.coverage).toBe('VERIFIED');
   });
 
+  it('preserves parallel routes when one requirement is blocked and another passes', () => {
+    const result = calculateReachability(
+      graph(
+        [node('home', '50,50'), node('target', '51,50')],
+        [
+          edge('blocked-route', 'home', 'target', {
+            requirements: {
+              op: 'FACT',
+              fact: {
+                id: factId('QUEST', 'Missing Quest'),
+                kind: 'QUEST',
+                label: 'Missing Quest',
+              },
+            },
+          }),
+          edge('passing-route', 'home', 'target'),
+        ],
+      ),
+      snapshot(['50,50', '51,50']),
+    );
+
+    expect(result.reachable.has('target')).toBe(true);
+    expect(result.predecessorEdge.get('target')).toBe('passing-route');
+    expect(result.coverage).toBe('VERIFIED');
+  });
+
+  it('chooses the lowest stable edge id when parallel routes both pass', () => {
+    const result = calculateReachability(
+      graph(
+        [node('home', '50,50'), node('target', '51,50')],
+        [
+          edge('z-route', 'home', 'target'),
+          edge('a-route', 'home', 'target'),
+        ],
+      ),
+      snapshot(['50,50', '51,50']),
+    );
+
+    expect(result.reachable.has('target')).toBe(true);
+    expect(result.predecessorEdge.get('target')).toBe('a-route');
+    expect(result.coverage).toBe('VERIFIED');
+  });
+
+  it('allows bidirectional nested child edges in both authored directions', () => {
+    const locations = [
+      node('home', '50,50'),
+      node('dungeon', '999,999', { parentId: 'home' }),
+      node('chamber', '998,998', { parentId: 'dungeon' }),
+    ];
+    const fixtures = [
+      graph(locations, [
+        edge('home-door', 'home', 'dungeon', { bidirectional: true }),
+        edge('chamber-door', 'dungeon', 'chamber', { bidirectional: true }),
+      ]),
+      graph(locations, [
+        edge('home-door', 'dungeon', 'home', { bidirectional: true }),
+        edge('chamber-door', 'chamber', 'dungeon', { bidirectional: true }),
+      ]),
+    ];
+
+    for (const fixture of fixtures) {
+      const result = calculateReachability(fixture, snapshot(['50,50']));
+      expect([...result.reachable]).toEqual(['home', 'dungeon', 'chamber']);
+      expect(result.predecessorEdge.get('dungeon')).toBe('home-door');
+      expect(result.predecessorEdge.get('chamber')).toBe('chamber-door');
+      expect(result.coverage).toBe('VERIFIED');
+    }
+  });
+
+  it('rejects a bidirectional sibling-to-sibling shortcut', () => {
+    const result = calculateReachability(
+      graph(
+        [
+          node('home', '50,50'),
+          node('dungeon', '999,999', { parentId: 'home' }),
+          node('sibling', '998,998', { parentId: 'home' }),
+        ],
+        [
+          edge('enter-dungeon', 'home', 'dungeon'),
+          edge('sibling-shortcut', 'dungeon', 'sibling', { bidirectional: true }),
+        ],
+      ),
+      snapshot(['50,50']),
+    );
+
+    expect(result.reachable.has('dungeon')).toBe(true);
+    expect(result.reachable.has('sibling')).toBe(false);
+    expect(result.coverage).toBe('UNKNOWN');
+  });
   it('traverses a bidirectional edge in reverse', () => {
     const result = calculateReachability(
       graph(

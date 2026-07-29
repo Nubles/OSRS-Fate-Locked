@@ -169,11 +169,8 @@ function validateGraph(graph: LocationGraph): ValidatedGraph {
     candidateEdges.push(value);
   }
 
-  const ambiguousEdges = ambiguousEdgeIds(candidateEdges);
-  if (ambiguousEdges.size > 0) {
-    valid = false;
-  }
-  const edges = candidateEdges.filter((edge) => !ambiguousEdges.has(edge.id));
+  const edges = [...candidateEdges]
+    .sort((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0);
 
   const start = nodes.get(graph?.startNodeId);
   if (!start || start.parentId) {
@@ -266,50 +263,15 @@ function entersThroughDeclaredParents(
   edge: LocationEdgeSource,
   nodes: ReadonlyMap<string, LocationNodeSource>,
 ): boolean {
-  const forwardTarget = nodes.get(edge.to);
-  if (forwardTarget?.parentId && forwardTarget.parentId !== edge.from) {
+  const from = nodes.get(edge.from);
+  const to = nodes.get(edge.to);
+  if (!from || !to) {
     return false;
   }
-  if (edge.bidirectional) {
-    const reverseTarget = nodes.get(edge.from);
-    if (reverseTarget?.parentId && reverseTarget.parentId !== edge.to) {
-      return false;
-    }
+  if (!from.parentId && !to.parentId) {
+    return true;
   }
-  return true;
-}
-
-
-function ambiguousEdgeIds(edges: readonly LocationEdgeSource[]): Set<string> {
-  const directionOwners = new Map<string, string[]>();
-  for (const edge of edges) {
-    addDirectionOwner(directionOwners, edge.from, edge.to, edge.id);
-    if (edge.bidirectional) {
-      addDirectionOwner(directionOwners, edge.to, edge.from, edge.id);
-    }
-  }
-  const ambiguous = new Set<string>();
-  for (const owners of directionOwners.values()) {
-    if (owners.length > 1) {
-      owners.forEach((id) => ambiguous.add(id));
-    }
-  }
-  return ambiguous;
-}
-
-function addDirectionOwner(
-  owners: Map<string, string[]>,
-  from: string,
-  to: string,
-  edgeId: string,
-): void {
-  const key = `${from}\u0000${to}`;
-  const existing = owners.get(key);
-  if (existing) {
-    existing.push(edgeId);
-  } else {
-    owners.set(key, [edgeId]);
-  }
+  return from.parentId === to.id || to.parentId === from.id;
 }
 
 function isSurfaceChunk(value: unknown): value is string {
