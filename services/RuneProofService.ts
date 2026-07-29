@@ -137,7 +137,9 @@ export class RuneProofExportRegistry {
           .filter((label): label is string => label !== undefined)))]
         : [];
       const routeLabels = positive && witness
-        ? Object.keys(witness.steps).sort(compareText).map(stepId => witness.steps[stepId].proves.label)
+        ? [...new Set(Object.keys(witness.steps).sort(compareText)
+          .map(stepId => witness.steps[stepId].sourceLabel
+            ?? witness.steps[stepId].proves.label))]
         : [];
       return {
         goalId: record.goal.id, goalLabel: record.goal.label, status: report.status,

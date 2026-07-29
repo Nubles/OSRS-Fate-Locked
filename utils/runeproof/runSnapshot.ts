@@ -19,13 +19,15 @@ const freezeNumberRecord = (
  */
 export function buildRuneProofRunSnapshot(state: GameState): RuneProofRunSnapshot {
   const { unlocks } = state;
+  const modeRules = state.gameModeId === 'custom' && !state.customMode
+    ? undefined
+    : Object.freeze({ ...resolveModeRules(state.gameModeId, state.customMode) });
   return Object.freeze({
     runId: state.runId,
     runRevision: state.runRevision,
     gameModeId: state.gameModeId,
-    modeRules: Object.freeze({
-      ...resolveModeRules(state.gameModeId, state.customMode),
-    }),
+    modeRules,
+
     equipmentTiers: freezeNumberRecord(unlocks.equipment),
     skillCaps: freezeNumberRecord(unlocks.skills),
     currentLevels: freezeNumberRecord(unlocks.levels),

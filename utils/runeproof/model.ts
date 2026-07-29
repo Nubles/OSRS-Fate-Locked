@@ -59,6 +59,7 @@ export interface AcquisitionRule {
 
 export interface WitnessStep {
   ruleId: string;
+  sourceLabel?: string;
   proves: FactRef;
   chosenTerms: string[];
   childStepIds: string[];
@@ -271,6 +272,7 @@ function assertProofWitness(witness: unknown, goalId: string): asserts witness i
 function assertWitnessStep(step: unknown): asserts step is WitnessStep {
   if (!isRecord(step)
     || !isNonEmptyString(step.ruleId)
+    || (step.sourceLabel !== undefined && !isNonEmptyString(step.sourceLabel))
     || !Array.isArray(step.chosenTerms)
     || !step.chosenTerms.every(isNonEmptyString)
     || !Array.isArray(step.childStepIds)

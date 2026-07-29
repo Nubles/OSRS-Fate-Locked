@@ -101,6 +101,13 @@ describe('buildRuneProofRunSnapshot', () => {
     expect(Object.isFrozen(snapshot.collectionLog)).toBe(true);
   });
 
+  it('preserves an absent custom policy so reachability fails closed', () => {
+    const state = gameState();
+    state.gameModeId = 'custom';
+    state.customMode = undefined;
+
+    expect(buildRuneProofRunSnapshot(state).modeRules).toBeUndefined();
+  });
   it('captures a frozen canonical custom mode policy independently of later edits', () => {
     const state = gameState();
     state.gameModeId = 'custom';

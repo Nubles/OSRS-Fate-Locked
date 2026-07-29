@@ -170,6 +170,9 @@ export async function verifyProof(
       if (!sameFactIdentity(rule.output, step.proves)) {
         errors.push(`Rule output mismatch at step ${stepId}`);
       }
+      if (step.sourceLabel !== undefined && step.sourceLabel !== rule.sourceLabel) {
+        errors.push(`Rule source label mismatch at step ${stepId}`);
+      }
       const locationToken = `${factId('LOCATION', rule.locationId)}@1`;
       if (!runFactSatisfies(locationToken, runFacts)) {
         errors.push(`Rule location is not reachable at step ${stepId}: ${rule.locationId}`);
@@ -370,6 +373,8 @@ function isWitnessStep(value: unknown): value is WitnessStep {
   return isPlainRecord(value)
     && typeof value.ruleId === 'string'
     && value.ruleId.length > 0
+    && (value.sourceLabel === undefined
+      || (typeof value.sourceLabel === 'string' && value.sourceLabel.trim().length > 0))
     && Array.isArray(value.chosenTerms)
     && value.chosenTerms.every(term => typeof term === 'string')
     && Array.isArray(value.childStepIds)

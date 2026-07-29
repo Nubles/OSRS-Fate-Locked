@@ -65,6 +65,7 @@ function cloneProofRoute(route: ProofRoute): ProofRoute {
         id,
         {
           ruleId: step.ruleId,
+          ...(step.sourceLabel === undefined ? {} : { sourceLabel: step.sourceLabel }),
           proves: { ...step.proves },
           chosenTerms: [...step.chosenTerms],
           childStepIds: [...step.childStepIds],

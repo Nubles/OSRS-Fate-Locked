@@ -24,7 +24,7 @@ describe('RuneProofService', () => {
     const registry = new (RuneProofServiceModule as any).RuneProofExportRegistry();
     const witness = await createProofCertificate({
       rootFactId: 'item:plank',
-      steps: { root: { ruleId: 'seed:item:plank', proves: { id: 'item:plank', kind: 'ITEM', label: 'Plank' }, chosenTerms: [], childStepIds: [] } },
+      steps: { root: { ruleId: 'plank-monster-drop', ...({ sourceLabel: 'Lumberyard goblin' } as any), proves: { id: 'item:plank', kind: 'ITEM', label: 'Plank' }, chosenTerms: [], childStepIds: [] } },
       sourceVersion: 'sources-a', runId: 'run-a', runRevision: 1, proofHash: '',
     });
     const positive = {
@@ -43,7 +43,7 @@ describe('RuneProofService', () => {
     expect(replayCalls).toBe(2);
     expect(selected).toEqual([{
       goalId: 'item:plank', goalLabel: 'Plank', status: 'OBTAINABLE',
-      explanation: 'A current route is verified.', routeLabels: ['Plank'],
+      explanation: 'A current route is verified.', routeLabels: ['Lumberyard goblin'],
       blockerLabels: [], unavoidableBlockerLabels: [], proofHash: witness.proofHash,
       sourceVersion: 'sources-a', runRevision: 1,
     }]);

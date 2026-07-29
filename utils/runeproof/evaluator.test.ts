@@ -39,6 +39,22 @@ describe('evaluateObtainability', () => {
     });
   });
 
+  it('keeps a verified route when a cheaper partial route would dominate it', () => {
+    const result = evaluateObtainability(item('Plank'), context([
+      rule('partial-floor-spawn', 'Plank', {
+        sourceKind: 'SPAWN',
+        coverage: 'PARTIAL',
+      }),
+      rule('verified-drop', 'Plank', {
+        sourceKind: 'DROP',
+        probability: 0.25,
+      }),
+    ]));
+
+    expect(result.status).toBe('OBTAINABLE_RNG');
+    expect(result.routes.map(route => route.witness.steps.root.ruleId))
+      .toEqual(['verified-drop']);
+  });
   it('requires every ALL term and accepts each independently provable ANY term', () => {
     const quest = fact('QUEST', 'Cook\'s Assistant');
     const key = item('Kitchen key');

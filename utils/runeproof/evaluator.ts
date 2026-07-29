@@ -152,12 +152,12 @@ export function evaluateObtainability(
     });
   }
 
-  const candidates = nonDominated(state.routes.get(demandKey(requiredGoal)) ?? [])
-    .sort(compareRoutes);
+  const candidates = nonDominated(
+    (state.routes.get(demandKey(requiredGoal)) ?? [])
+      .filter(route => route.coverage === 'VERIFIED'),
+  ).sort(compareRoutes);
   if (candidates.length > 0) {
-    const verifiedCandidates = candidates.filter(route =>
-      route.coverage === 'VERIFIED');
-    if (context.coverage === 'UNKNOWN' || verifiedCandidates.length === 0) {
+    if (context.coverage === 'UNKNOWN') {
       return freezeReport({
         goalId: goal.id,
         status: 'UNKNOWN',
@@ -169,10 +169,10 @@ export function evaluateObtainability(
         explanation: 'RuneProof cannot verify a complete current route.',
       });
     }
-    const routes = verifiedCandidates.map(stripInternalRoute);
+    const routes = candidates.map(stripInternalRoute);
     const positiveCoverage = combineCoverage(
       context.coverage ?? 'VERIFIED',
-      combineAllCoverage(verifiedCandidates.map(route => route.coverage)),
+      combineAllCoverage(candidates.map(route => route.coverage)),
     );
     return freezeReport({
       goalId: goal.id,
@@ -310,6 +310,7 @@ function seedRoute(demand: Demand, context: ObtainabilityContext): InternalRoute
     {
       root: {
         ruleId,
+        sourceLabel: `Current run unlock: ${demand.fact.label}`,
         proves,
         chosenTerms: [],
         childStepIds: [],
@@ -363,6 +364,7 @@ function ruleRoute(
   }
   steps.root = {
     ruleId: rule.id,
+    sourceLabel: rule.sourceLabel,
     proves: factWithQuantity(demand.fact, demand.quantity),
     chosenTerms: [...solution.chosenTerms],
     childStepIds,
