@@ -1,5 +1,6 @@
 
 import { DropSource } from '../types';
+import type { Coverage } from '../utils/runeproof/model';
 
 export interface QuestLocationRequirement {
   id: string;
@@ -12,10 +13,20 @@ export interface QuestRequirementOption {
   regions?: string[];
   guilds?: string[];
   locations?: QuestLocationRequirement[];
+  skills?: Record<string, number>;
+  quests?: string[];
+  items?: ItemRequirement[];
+  capabilities?: string[];
 }
 
 export type QuestKind = 'quest' | 'miniquest';
 export type QuestAccessPolicy = 'regions' | 'locations' | 'regions-and-locations';
+
+export interface ItemRequirement {
+  item: string;
+  quantity: number;
+  consumed: boolean;
+}
 
 export interface QuestData {
   id: string;
@@ -32,6 +43,10 @@ export interface QuestData {
   series?: string;
   difficulty: DropSource;
   oneOf?: QuestRequirementOption[];
+  items?: ItemRequirement[];
+  itemAlternatives?: ItemRequirement[][];
+  capabilities?: string[];
+  requirementCoverage?: Coverage;
 }
 
 export const questAccessPolicyStructureErrors = (
