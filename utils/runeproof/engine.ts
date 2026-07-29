@@ -36,6 +36,44 @@ export function createRuneProofEngine(sources: RuneProofEngineSources): RuneProo
   });
 }
 
+/** Uses a worker when construction succeeds; every worker failure falls back to the same pure engine. */
+export function createRuneProofExecutor(sources: RuneProofEngineSources): RuneProofEngine {
+  const fallback = createRuneProofEngine(sources);
+  if (typeof Worker === 'undefined') return fallback;
+  let worker: Worker;
+  try { worker = new Worker(new URL('../../workers/runeproof.worker.ts', import.meta.url), { type: 'module' }); }
+  catch { return fallback; }
+  let nextId = 0;
+  const pending = new Map<number, { query: RuneProofQuery; snapshot: RuneProofRunSnapshot; signal?: AbortSignal; resolve: (value: RuneProofReport) => void; reject: (reason?: unknown) => void }>();
+  const fallbackPending = () => {
+    for (const [id, request] of pending) {
+      pending.delete(id);
+      fallback.evaluate(request.query, request.snapshot, request.signal).then(request.resolve, request.reject);
+    }
+  };
+  worker.onmessage = event => {
+    const response = event.data as { id: number; report?: RuneProofReport; error?: string };
+    const request = pending.get(response.id);
+    if (!request) return;
+    pending.delete(response.id);
+    if (response.error) { fallback.evaluate(request.query, request.snapshot, request.signal).then(request.resolve, request.reject); }
+    else if (response.report) request.resolve(response.report);
+    else fallback.evaluate(request.query, request.snapshot, request.signal).then(request.resolve, request.reject);
+  };
+  worker.onerror = fallbackPending;
+  return Object.freeze({
+    sourceVersion: sources.sourceVersion,
+    evaluate: (query, snapshot, signal) => new Promise<RuneProofReport>((resolve, reject) => {
+      if (signal?.aborted) { reject(abortError()); return; }
+      const id = ++nextId;
+      const abort = () => { pending.delete(id); reject(abortError()); };
+      signal?.addEventListener('abort', abort, { once: true });
+      pending.set(id, { query, snapshot, signal, resolve, reject });
+      try { worker.postMessage({ id, sources, query, snapshot }); }
+      catch { pending.delete(id); signal?.removeEventListener('abort', abort); fallback.evaluate(query, snapshot, signal).then(resolve, reject); }
+    }),
+  });
+}
 export async function evaluateRuneProof(
   query: RuneProofQuery,
   snapshot: RuneProofRunSnapshot,
@@ -55,9 +93,9 @@ export async function evaluateRuneProof(
       reachability.coverage,
     ]);
     const goal = directGoalFact(query.goal);
-    if (!goal) return unknown(query.goal.id, 'RuneProof goal does not have a directly evaluable fact');
+    const rulesForEvaluation = [...sources.acquisition.rules, ...syntheticGoalRule(query.goal, goal, reachability.reachable)];
     const evaluated = evaluateObtainability(goal, {
-      rules: sources.acquisition.rules,
+      rules: rulesForEvaluation,
       snapshot,
       reachableLocations: reachability.reachable,
       distanceByLocation: reachability.distance,
@@ -67,7 +105,7 @@ export async function evaluateRuneProof(
     if (signal?.aborted) throw abortError();
     const routes = query.includeAlternatives === false ? evaluated.routes.slice(0, 1) : evaluated.routes;
     const certified = [];
-    const rules = new Map(sources.acquisition.rules.map(rule => [rule.id, rule]));
+    const rules = new Map(rulesForEvaluation.map(rule => [rule.id, rule]));
     const runFacts = suppliedFacts(snapshot, reachability.reachable);
     for (const route of routes) {
       const witness = await createProofCertificate(JSON.parse(JSON.stringify(route.witness)));
@@ -77,7 +115,7 @@ export async function evaluateRuneProof(
       certified.push({ ...route, witness });
     }
     if (signal?.aborted) throw abortError();
-    return freeze({ ...evaluated, routes: certified, blockers: query.includeBlockers === false ? [] : evaluated.blockers });
+    return freeze({ ...evaluated, goalId: query.goal.id, routes: certified, blockers: query.includeBlockers === false ? [] : evaluated.blockers });
   } catch (error) {
     if (isAbort(error)) throw error;
     return unknown(query.goal.id, `RuneProof source validation failed: ${message(error)}`);
@@ -92,7 +130,9 @@ function validateSources(sources: RuneProofEngineSources): void {
     || !isCoverage(audit.acquisitionCoverage) || !isCoverage(sources.acquisition.acquisitionCoverage)) {
     throw new Error('invalid source audit');
   }
-  if (!Array.isArray(sources.acquisition.rules) || !Array.isArray(sources.acquisition.unresolvedSources)) {
+  if (!Array.isArray(sources.acquisition.rules) || !Array.isArray(sources.acquisition.unresolvedSources)
+    || (sources.acquisition.acquisitionCoverage === 'VERIFIED'
+      && sources.acquisition.unresolvedSources.length > 0)) {
     throw new Error('invalid acquisition source document');
   }
   const ids = new Set<string>();
@@ -111,10 +151,27 @@ function validRule(rule: AcquisitionRule): boolean {
     && (rule.probability === null || (Number.isFinite(rule.probability) && rule.probability >= 0 && rule.probability <= 1));
 }
 
-function directGoalFact(goal: CompiledGoal): FactRef | null {
-  return goal.requirement.op === 'FACT' && goal.requirement.fact.id === goal.id ? goal.requirement.fact : null;
+function directGoalFact(goal: CompiledGoal): FactRef {
+  if (goal.requirement.op === 'FACT' && goal.requirement.fact.id === goal.id) return goal.requirement.fact;
+  const label = `runeproof-goal-${goal.id}-${goal.sourceVersion}`;
+  return { id: factId('CAPABILITY', label), kind: 'CAPABILITY', label };
 }
 
+function syntheticGoalRule(
+  goal: CompiledGoal,
+  output: FactRef,
+  reachable: ReadonlySet<string>,
+): readonly AcquisitionRule[] {
+  if (goal.requirement.op === 'FACT' && goal.requirement.fact.id === goal.id) return [];
+  const locationId = [...reachable].sort()[0];
+  if (!locationId) return [];
+  return [{
+    id: `goal:${goal.id}:${goal.sourceVersion}`, output, outputQuantity: 1, sourceKind: 'QUEST_REWARD',
+    sourceLabel: goal.label, locationId, requirements: goal.requirement,
+    repeatability: 'ONE_TIME', probability: null, coverage: goal.coverage,
+    provenanceIds: [...goal.provenanceIds],
+  }];
+}
 function suppliedFacts(snapshot: RuneProofRunSnapshot, reachable: ReadonlySet<string>): Set<string> {
   const values = new Set<string>();
   const add = (kind: FactRef['kind'], entries: readonly string[]) => entries.forEach(entry => {

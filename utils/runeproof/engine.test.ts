@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { RuneProofRunSnapshot } from '../../types';
 import { compileItemGoal } from './goalCompiler';
-import { evaluateRuneProof, type RuneProofEngineSources } from './engine';
+import { createRuneProofEngine, createRuneProofExecutor, evaluateRuneProof, type RuneProofEngineSources } from './engine';
 
 const goal = compileItemGoal({ id: 'item:plank', label: 'Plank' }, 1);
 
@@ -65,5 +65,30 @@ describe('evaluateRuneProof', () => {
     const malformed = sources() as unknown as RuneProofEngineSources;
     malformed.acquisition.rules = [{ id: 'bad' }] as never;
     expect((await evaluateRuneProof({ goal }, snapshot(), malformed)).status).toBe('UNKNOWN');
+  });
+  it('evaluates a compiled quest requirement through a synthetic current-run goal rule', async () => {
+    const questGoal = {
+      id: 'quest:demo-quest', kind: 'QUEST', label: 'Demo Quest', coverage: 'VERIFIED',
+      provenanceIds: [], sourceVersion: 'goal-a',
+      requirement: { op: 'ALL', terms: [{ op: 'FACT', fact: { id: 'skill-level:magic', kind: 'SKILL_LEVEL', label: 'Magic', quantity: 12 } }] },
+    } as unknown as import('./goalCompiler').CompiledGoal;
+    const document = sources();
+    document.acquisition.rules = [];
+    document.acquisition.counts.rules = 0;
+    const result = await evaluateRuneProof({ goal: questGoal }, snapshot({ currentLevels: { Magic: 12 } }), document);
+    expect(result.status).toBe('OBTAINABLE');
+    expect(result.goalId).toBe('quest:demo-quest');
+  });
+  it('treats a VERIFIED source document with unresolved sources as malformed', async () => {
+    const contradictory = sources();
+    contradictory.acquisition.unresolvedSources = [{ id: 'unresolved:plank:deadbeef' }] as never;
+    contradictory.acquisition.counts.unresolvedSources = 1;
+    expect((await evaluateRuneProof({ goal }, snapshot(), contradictory)).status).toBe('UNKNOWN');
+  });
+  it('uses the in-process engine with identical results when a Worker is unavailable', async () => {
+    const document = sources();
+    const inProcess = createRuneProofEngine(document);
+    const selected = createRuneProofExecutor(document);
+    expect(await selected.evaluate({ goal }, snapshot())).toEqual(await inProcess.evaluate({ goal }, snapshot()));
   });
 });
