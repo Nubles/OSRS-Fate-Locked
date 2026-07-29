@@ -23,6 +23,11 @@ floor spawn in the Graveyard of Shadows. RuneProof traverses the reviewed
 Lumbridge-to-Graveyard corridor one exact chunk at a time. All eight non-free
 chunks must belong to the current run; removing any intermediate chunk strands
 the spawn and the result fails closed to `UNKNOWN`.
+
+For exact chunk runs, that `UNKNOWN` result can name the first missing chunk on
+the reviewed route. It remains a route-gap explanation, not an unlock
+recommendation or a claim that every possible route is impossible.
+
 Dungeons, basements, interiors, quest instances, islands, and similar sections
 are child locations. A child is reachable only when:
 

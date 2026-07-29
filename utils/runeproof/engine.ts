@@ -5,7 +5,9 @@ import {
   type FactRef, type RuneProofReport,
 } from './model';
 import type { RuneProofSourceDocument } from './acquisitionIndex';
-import { calculateReachability, type LocationGraph } from './locationGraph';
+import {
+  calculateReachability, missingSurfaceChunksForTargets, type LocationGraph,
+} from './locationGraph';
 import { evaluateObtainability } from './evaluator';
 import { createProofCertificate, verifyProof } from './proof';
 import type { CompiledGoal } from './goalCompiler';
@@ -172,8 +174,37 @@ export async function evaluateRuneProof(
       sourceVersion: sources.sourceVersion,
       coverage,
     });
+    const relevantRules = sources.acquisition.rules
+      .filter(rule => rule.output.id === goal.id);
+    const coverageSafe = (evaluated.status === 'BLOCKED'
+      || evaluated.status === 'IMPOSSIBLE')
+      && relevantRules.some(rule => rule.coverage !== 'VERIFIED')
+      ? unknown(
+          query.goal.id,
+          'RuneProof cannot make a negative claim from incomplete route evidence.',
+        )
+      : evaluated;
+    const relevantLocations = new Set(
+      relevantRules
+        .filter(rule => rule.coverage === 'VERIFIED'
+          && !reachability.reachable.has(rule.locationId))
+        .map(rule => rule.locationId),
+    );
+    const knownMissingChunks = missingSurfaceChunksForTargets(
+      sources.locationGraph,
+      snapshot,
+      relevantLocations,
+    );
+    const explained = coverageSafe.status === 'UNKNOWN' && knownMissingChunks.size > 0
+      ? {
+          ...coverageSafe,
+          explanation: `Known verified routes are blocked by missing current chunks: ${
+            [...knownMissingChunks].sort().join(', ')
+          }. Partial evidence means this is not a complete impossibility claim.`,
+        }
+      : coverageSafe;
     if (signal?.aborted) throw abortError();
-    const routes = query.includeAlternatives === false ? evaluated.routes.slice(0, 1) : evaluated.routes;
+    const routes = query.includeAlternatives === false ? explained.routes.slice(0, 1) : explained.routes;
     const certified = [];
     const rules = new Map(rulesForEvaluation.map(rule => [rule.id, rule]));
     const runFacts = suppliedFacts(snapshot, reachability.reachable);
@@ -185,7 +216,7 @@ export async function evaluateRuneProof(
       certified.push({ ...route, witness });
     }
     if (signal?.aborted) throw abortError();
-    return freeze({ ...evaluated, goalId: query.goal.id, routes: certified, blockers: query.includeBlockers === false ? [] : evaluated.blockers });
+    return freeze({ ...explained, goalId: query.goal.id, routes: certified, blockers: query.includeBlockers === false ? [] : explained.blockers });
   } catch (error) {
     if (isAbort(error)) throw error;
     return unknown(query.goal.id, `RuneProof source validation failed: ${message(error)}`);

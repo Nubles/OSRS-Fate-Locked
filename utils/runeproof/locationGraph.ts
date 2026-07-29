@@ -198,6 +198,69 @@ export function calculateReachability(
   };
 }
 
+/**
+ * Identifies the first known missing surface chunks on requirement-satisfied
+ * paths from the current reachable set to the supplied target locations.
+ *
+ * This is an explanation helper, not an unlock recommendation or a proof that
+ * the targets are globally impossible. It deliberately returns nothing when
+ * the graph or account mode cannot support exact chunk reasoning.
+ */
+export function missingSurfaceChunksForTargets(
+  graph: LocationGraph,
+  snapshot: RuneProofRunSnapshot,
+  targetIds: ReadonlySet<string>,
+): ReadonlySet<string> {
+  const validated = validateGraph(graph);
+  if (validated.coverage !== 'VERIFIED' || !chunkGranularity(snapshot)) {
+    return new Set();
+  }
+
+  const reachability = calculateReachability(graph, snapshot);
+  if (reachability.coverage !== 'VERIFIED') return new Set();
+
+  const traversals: Array<{ from: string; to: string }> = [];
+  for (const edge of validated.edges) {
+    if (!requirementsSatisfied(edge.requirements, snapshot)) continue;
+    traversals.push({ from: edge.from, to: edge.to });
+    if (edge.bidirectional) traversals.push({ from: edge.to, to: edge.from });
+  }
+
+  const reverse = new Map<string, string[]>();
+  for (const traversal of traversals) {
+    const previous = reverse.get(traversal.to);
+    if (previous) previous.push(traversal.from);
+    else reverse.set(traversal.to, [traversal.from]);
+  }
+
+  const ancestors = new Set(
+    [...targetIds].filter(targetId => validated.nodes.has(targetId)),
+  );
+  const queue = [...ancestors];
+  for (let cursor = 0; cursor < queue.length; cursor += 1) {
+    for (const predecessor of reverse.get(queue[cursor]) ?? []) {
+      if (ancestors.has(predecessor)) continue;
+      ancestors.add(predecessor);
+      queue.push(predecessor);
+    }
+  }
+
+  const missing = new Set<string>();
+  for (const traversal of traversals) {
+    if (!reachability.reachable.has(traversal.from)
+      || reachability.reachable.has(traversal.to)
+      || !ancestors.has(traversal.to)) {
+      continue;
+    }
+    const frontier = validated.nodes.get(traversal.to);
+    if (frontier && !frontier.parentId
+      && !surfaceLocationOwned(frontier, snapshot)) {
+      missing.add(frontier.surfaceChunk);
+    }
+  }
+  return missing;
+}
+
 function validateGraph(graph: LocationGraph): ValidatedGraph {
   let valid = isRecord(graph)
     && Array.isArray(graph.nodes)

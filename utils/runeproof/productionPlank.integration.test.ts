@@ -74,6 +74,8 @@ describe('production RuneProof Plank slice', () => {
 
     expect(report.status).toBe('UNKNOWN');
     expect(report.routes).toEqual([]);
+    expect(report.explanation).toContain('50,54');
+    expect(report.explanation).toContain('not a complete impossibility claim');
     expect(reachability.reachable.has('surface:49,57')).toBe(false);
     expect(reachability.strandedSurfaceChunks.has('49,57')).toBe(true);
   });
