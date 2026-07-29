@@ -5,6 +5,7 @@ import { MOBILITY_LIST } from '../data/items';
 import fullChunkContent from '../public/chunk-content.json';
 import { buildBundlePayload } from './runeliteExport';
 import { buildRuneliteBundle, RuneliteRunState } from './runeliteBundle';
+import { runeProofExportRegistry } from '../services/RuneProofService';
 
 const state: RuneliteRunState = {
   keys: 3, specialKeys: 0, chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', pinnedGoals: [],
@@ -198,6 +199,123 @@ describe('buildRuneliteBundle — unlockedChunks presence', () => {
   });
 });
 
+describe('buildRuneliteBundle - RuneProof summaries', () => {
+  const proof = (goalId: string, goalLabel: string) => ({
+    goalId, goalLabel, status: 'OBTAINABLE' as const,
+    explanation: 'A current route is verified.', routeLabels: ['Floor spawn'],
+    blockerLabels: [], unavoidableBlockerLabels: [],
+    proofHash: 'sha256-' + 'a'.repeat(64), sourceVersion: 'sources-v1', runRevision: 7,
+  });
+
+  it('includes the canonical proof schema in fallback bundles and increments content version', async () => {
+    const bundle = await buildRuneliteBundle([], state) as any;
+    expect(bundle.contentVersion).toBe(2);
+    expect(bundle.rules.runeProofSchemaVersion).toBe(1);
+    expect(bundle.rules.runeProof).toEqual([]);
+  });
+
+  it('normalizes supplied proof summaries at the final bundle boundary', async () => {
+    const fallback = await buildRuneliteBundle([], state) as any;
+    const rules = {
+      ...fallback.rules,
+      runId: 'run-proof', runRevision: 7, contentVersion: 2,
+      runeProofSchemaVersion: 1,
+      runeProof: [proof('quest:z', 'Z goal'), proof('item:a', 'A goal')],
+    };
+    const bundle = await buildRuneliteBundle(
+      [], state, undefined, undefined, undefined, undefined, false,
+      { runId: 'run-proof', runRevision: 7, gameModeId: 'vanilla', rulesVersion: '1', contentVersion: 2, detectorContractVersion: 1 },
+      rules,
+    ) as any;
+
+    expect(bundle.rules.runeProof.map((summary: any) => summary.goalId))
+      .toEqual(['item:a', 'quest:z']);
+    expect(Object.keys(bundle.rules.runeProof[0]).sort()).toEqual([
+      'blockerLabels', 'explanation', 'goalId', 'goalLabel', 'proofHash',
+      'routeLabels', 'runRevision', 'sourceVersion', 'status',
+      'unavoidableBlockerLabels',
+    ]);
+  });
+
+  it('fails closed on a malformed final-bundle proof payload', async () => {
+    const fallback = await buildRuneliteBundle([], state) as any;
+    const rules = {
+      ...fallback.rules,
+      runId: 'run-proof', runRevision: 7, contentVersion: 2,
+      runeProofSchemaVersion: 1,
+      runeProof: [{ ...proof('item:a', 'A goal'), bank: ['private'] }],
+    };
+    await expect(buildRuneliteBundle(
+      [], state, undefined, undefined, undefined, undefined, false,
+      { runId: 'run-proof', runRevision: 7, gameModeId: 'vanilla', rulesVersion: '1', contentVersion: 2, detectorContractVersion: 1 },
+      rules,
+    )).rejects.toThrow(/RuneProof bundle/i);
+  });
+
+  it('fails closed when bundle-root and proof-manifest run bindings differ', async () => {
+    const fallback = await buildRuneliteBundle([], state) as any;
+    const rules = {
+      ...fallback.rules,
+      runId: 'other-run', runRevision: 7, contentVersion: 2,
+      runeProofSchemaVersion: 1, runeProof: [proof('item:a', 'A goal')],
+    };
+    await expect(buildRuneliteBundle(
+      [], state, undefined, undefined, undefined, undefined, false,
+      { runId: 'run-proof', runRevision: 7, gameModeId: 'vanilla', rulesVersion: '1', contentVersion: 2, detectorContractVersion: 1 },
+      rules,
+    )).rejects.toThrow(/bundle identity/i);
+  });
+  it('does not accept caller-supplied proof summaries as verified export state', async () => {
+    const { json } = await buildBundlePayload(initialState.unlocks, {
+      runId: 'run-injected-proof', runRevision: 7, keys: 0, specialKeys: 0,
+      chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', gameModeId: 'vanilla',
+      runeProofSourceVersion: 'sources-v1', runeProof: [proof('item:a', 'A goal')],
+    } as any);
+    const parsed = JSON.parse(json);
+    expect(parsed.rules.runeProofSchemaVersion).toBe(1);
+    expect(parsed.rules.runeProof).toEqual([]);
+  });
+  it('selects only current evaluated selected or pinned proofs when callers do not inject summaries', async () => {
+    runeProofExportRegistry.record(
+      { id: 'item:feed', kind: 'ITEM', label: 'Feed goal', requirement: { op: 'FACT', fact: { id: 'item:feed', kind: 'ITEM', label: 'Feed goal' } }, coverage: 'UNKNOWN', provenanceIds: [], sourceVersion: 'goal-v1' } as any,
+      { goalId: 'item:feed', status: 'UNKNOWN', coverage: 'UNKNOWN', routes: [], blockers: [], unavoidableBlockerFactIds: [], routesComplete: false, explanation: 'Coverage is incomplete.' },
+      { runId: 'run-feed', runRevision: 3 } as any,
+      'sources-feed',
+    );
+    const { json } = await buildBundlePayload(initialState.unlocks, {
+      runId: 'run-feed', runRevision: 3, keys: 0, specialKeys: 0,
+      chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', gameModeId: 'vanilla',
+      runeProofSourceVersion: 'sources-feed', pinnedGoals: ['Feed goal'],
+    });
+    expect(JSON.parse(json).rules.runeProof).toEqual([{
+      goalId: 'item:feed', goalLabel: 'Feed goal', status: 'UNKNOWN',
+      explanation: 'Coverage is incomplete.', routeLabels: [], blockerLabels: [],
+      unavoidableBlockerLabels: [], proofHash: null,
+      sourceVersion: 'sources-feed', runRevision: 3,
+    }]);
+  });
+  it('keeps twenty maximum-size display summaries inside the relay limit', async () => {
+    const pinnedGoals: string[] = [];
+    for (let index = 0; index < 20; index += 1) {
+      const goalId = `item:goal-${index}`;
+      pinnedGoals.push(goalId);
+      runeProofExportRegistry.record(
+        { id: goalId, kind: 'ITEM', label: `Goal ${index}`, requirement: { op: 'FACT', fact: { id: goalId, kind: 'ITEM', label: `Goal ${index}` } }, coverage: 'UNKNOWN', provenanceIds: [], sourceVersion: 'goal-v1' } as any,
+        { goalId, status: 'UNKNOWN', coverage: 'UNKNOWN', routes: [], blockers: [], unavoidableBlockerFactIds: [], routesComplete: false, explanation: 'x'.repeat(512) },
+        { runId: 'run-size-proof', runRevision: 7 } as any,
+        'sources-v1',
+      );
+    }
+    const { json, compressed } = await buildBundlePayload(initialState.unlocks, {
+      runId: 'run-size-proof', runRevision: 7, keys: 0, specialKeys: 0,
+      chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', gameModeId: 'vanilla',
+      runeProofSourceVersion: 'sources-v1', pinnedGoals,
+    });
+    expect(JSON.parse(json).rules.runeProof).toHaveLength(20);
+    expect(new TextEncoder().encode(compressed).byteLength).toBeLessThan(256 * 1024);
+  });
+});
+
 describe('buildRuneliteBundle - canonical area names', () => {
   it('canonicalizes legacy regions in both the v4 root and fallback rules', async () => {
     const bundle = await buildRuneliteBundle(['Elf Camp'], state);
@@ -211,6 +329,10 @@ describe('buildRuneliteBundle - canonical area names', () => {
     const fallback = await buildRuneliteBundle(['Elf Camp'], state);
     const suppliedRules = {
       ...fallback.rules,
+      runId: 'run-alias-test',
+      runRevision: 1,
+      gameModeId: 'vanilla',
+      contentVersion: 2,
       unlocks: {
         ...fallback.rules.unlocks,
         regions: ['Elf Camp', 'Iorwerth Camp'],
@@ -225,7 +347,7 @@ describe('buildRuneliteBundle - canonical area names', () => {
         runRevision: 1,
         gameModeId: 'vanilla',
         rulesVersion: '1',
-        contentVersion: 1,
+        contentVersion: 2,
         detectorContractVersion: 1,
       },
       suppliedRules,

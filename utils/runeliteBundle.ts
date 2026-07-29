@@ -8,11 +8,15 @@ import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { MOBILITY_LIST } from '../data/items';
 import { canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
-import type { RuneliteRulesManifest } from './runeliteRulesManifest';
+import {
+  normalizeRuneProofBundleSummaries,
+  RUNEPROOF_BUNDLE_SCHEMA_VERSION,
+  type RuneliteRulesManifest,
+} from './runeliteRulesManifest';
 import { getFreeAreas } from './freeAreas';
 
 export const RULES_VERSION = '1';
-export const CONTENT_VERSION = 1;
+export const CONTENT_VERSION = 2;
 export const DETECTOR_CONTRACT_VERSION = 1;
 
 export interface RuneliteBundleIdentity {
@@ -66,6 +70,8 @@ export async function buildRuneliteBundle(
     detectorContractVersion: identity?.detectorContractVersion ?? DETECTOR_CONTRACT_VERSION,
     runId: identity?.runId ?? 'legacy-export',
     runRevision: identity?.runRevision ?? 0,
+    runeProofSchemaVersion: RUNEPROOF_BUNDLE_SCHEMA_VERSION,
+    runeProof: [],
     account: state.linkedAccount?.trim() || null,
     gameModeId: identity?.gameModeId ?? (unlockedChunks !== undefined ? 'chunked' : 'vanilla'),
     exportedAt,
@@ -94,9 +100,14 @@ export async function buildRuneliteBundle(
     detectorPolicies: [],
     chunks: {},
   };
+  if (identity && rules) validateBundleIdentity(identity, rules);
   const canonicalRules: RuneliteRulesManifest = rules
     ? {
       ...rules,
+      runeProofSchemaVersion: validateRuneProofSchema(rules),
+      runeProof: normalizeRuneProofBundleSummaries(rules.runeProof ?? [], {
+        runRevision: rules.runRevision,
+      }),
       unlocks: {
         ...rules.unlocks,
         regions: [...canonicalizeAreaUnlocks(rules.unlocks.regions).regions].sort(),
@@ -106,7 +117,12 @@ export async function buildRuneliteBundle(
   return {
     version: 4,
     rules: canonicalRules,
-    ...(identity ?? {}),
+    runId: identity?.runId ?? canonicalRules.runId,
+    runRevision: identity?.runRevision ?? canonicalRules.runRevision,
+    gameModeId: identity?.gameModeId ?? canonicalRules.gameModeId,
+    rulesVersion: identity?.rulesVersion ?? canonicalRules.rulesVersion,
+    contentVersion: identity?.contentVersion ?? canonicalRules.contentVersion,
+    detectorContractVersion: identity?.detectorContractVersion ?? canonicalRules.detectorContractVersion,
     exportedAt,
     chunkOffset: { cx: 0, cy: 0 },
     chunks: REGION_CHUNKS,
@@ -138,4 +154,23 @@ export async function buildRuneliteBundle(
     ...(bankLocks ? { bankLocks: true, unlockedBanks: unlockedBanks ?? [] } : {}),
     state,
   };
+}
+
+function validateBundleIdentity(identity: RuneliteBundleIdentity, rules: RuneliteRulesManifest): void {
+  if (identity.runId !== rules.runId || identity.runRevision !== rules.runRevision
+    || identity.gameModeId !== rules.gameModeId || identity.rulesVersion !== rules.rulesVersion
+    || identity.contentVersion !== rules.contentVersion
+    || identity.detectorContractVersion !== rules.detectorContractVersion) {
+    throw new Error('Invalid bundle identity: root and rules manifest differ');
+  }
+}
+function validateRuneProofSchema(rules: RuneliteRulesManifest): number {
+  const schema = rules.runeProofSchemaVersion;
+  if (schema === undefined && rules.runeProof === undefined) {
+    return RUNEPROOF_BUNDLE_SCHEMA_VERSION;
+  }
+  if (schema !== RUNEPROOF_BUNDLE_SCHEMA_VERSION) {
+    throw new Error(`Invalid RuneProof bundle: unsupported schema version ${String(schema)}`);
+  }
+  return schema;
 }

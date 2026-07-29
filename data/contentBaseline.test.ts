@@ -419,7 +419,9 @@ describe('deterministic current content baseline', () => {
   });
 
   it('publishes the reviewed quest and chunk audit without overstating its scope', () => {
-    const auditRelease = CHANGELOG_RELEASES[0];
+    const auditRelease = CHANGELOG_RELEASES.find(
+      release => release.id === '2026-07-28-quest-chunk-audit',
+    )!;
     const wording = Object.values(auditRelease.sections)
       .flatMap(lines => lines ?? [])
       .map(note => typeof note === 'string' ? note : note.text)

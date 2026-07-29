@@ -397,7 +397,28 @@ export function transformChunkContent(data, sourceManifest) {
   const connect = buildConnect(data), slayerMasters = buildSlayerMasters(data, audit), shortcuts = buildShortcuts(data, audit), shopItems = buildShopItems(data, audit), drops = buildDrops(data, audit), overlays = buildOverlays(data, audit), skillItems = buildSkillItems(data, audit), taskUnlocks = buildTaskUnlocks(data, audit), questSections = buildQuestSections(data, audit), banks = buildBanks(data, audit), tags = buildTags(data, chunks, shopItems, drops);
   addBaseRecords(audit, 'searchTerms', data.searchTerms ?? {});
   const sourceMeta = { repository: sourceManifest.repository, commit: sourceManifest.commit, blobSha: sourceManifest.blobSha, rawSha256: sourceManifest.rawSha256, policyVersion: sourceManifest.policyVersion };
-  const full = { version: 8, source: 'source-chunk/chunk-picker-v2 (chunkpicker-chunkinfo-export.json, gh-pages)', sourceMeta, chunks, connect, slayerMasters, shortcuts, shopItems, drops, overlays, skillItems, taskUnlocks, questSections, banks, tags };
+  const locationNodes = [
+    ['50,50', 'Lumbridge Castle'],
+    ['50,51', "Groats' Farm"],
+    ['50,52', 'Varrock South Gate'],
+    ['50,53', 'Varrock Center'],
+    ['50,54', 'Varrock Palace'],
+    ['50,55', 'Varrock Ditch'],
+    ['49,55', 'Center Wilderness Ditch'],
+    ['49,56', 'East Ferox Enclave'],
+    ['49,57', 'Graveyard of Shadows'],
+  ].map(([surfaceChunk, label]) => ({
+    id: `surface:${surfaceChunk}`, label, surfaceChunk, coverage: 'VERIFIED',
+  }));
+  const locationEdges = locationNodes.slice(1).map((node, index) => ({
+    id: `walk:${locationNodes[index].id}:${node.id}`,
+    from: locationNodes[index].id,
+    to: node.id,
+    requirements: { op: 'ALL', terms: [] },
+    bidirectional: true,
+    provenanceIds: ['chunk-route:audit:lumbridge-graveyard-v1'],
+  }));
+  const full = { version: 8, source: 'source-chunk/chunk-picker-v2 (chunkpicker-chunkinfo-export.json, gh-pages)', sourceMeta, chunks, connect, slayerMasters, shortcuts, shopItems, drops, overlays, skillItems, taskUnlocks, questSections, banks, tags, locationNodes, locationEdges };
   const liteSource = buildLite(full, audit); const finalAudit = audit.finish();
   return { full, liteSource, audit: finalAudit };
 }

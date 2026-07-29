@@ -125,4 +125,122 @@ describe('buildRuneliteRulesManifest', () => {
     expect(Object.keys(manifest.unlocks.skills)).toEqual(['Attack', 'Zeta']);
     expect(Object.keys(manifest.unlocks.equipment)).toEqual(['Head', 'Weapon']);
   });
+
+  it('exports compact RuneProof summaries in stable goal order', async () => {
+    const manifest = await buildRuneliteRulesManifest({
+      unlocks: initialState.unlocks,
+      run: { runId: 'run-proof', runRevision: 7, gameModeId: 'vanilla' },
+      contentService: contentSource,
+      itemRuleSource: { init: async () => {}, ready: true, itemRuleExport: () => ({}) },
+      runeProof: [
+        { goalId: 'quest:z', goalLabel: 'Z goal', status: 'BLOCKED', explanation: 'Missing requirements.', routeLabels: [], blockerLabels: ['A gate'], unavoidableBlockerLabels: ['A gate'], proofHash: null, sourceVersion: 'sources-v1', runRevision: 7 },
+        { goalId: 'item:a', goalLabel: 'A goal', status: 'OBTAINABLE', explanation: 'A current route is verified.', routeLabels: ['Floor spawn'], blockerLabels: [], unavoidableBlockerLabels: [], proofHash: 'sha256-' + 'a'.repeat(64), sourceVersion: 'sources-v1', runRevision: 7 },
+      ],
+    } as any);
+
+    expect((manifest as any).runeProofSchemaVersion).toBe(1);
+    expect((manifest as any).runeProof.map((summary: any) => summary.goalId))
+      .toEqual(['item:a', 'quest:z']);
+  });
+  it('canonicalizes proof label arrays into deterministic bytes', async () => {
+    const build = (routeLabels: string[]) => buildRuneliteRulesManifest({
+      unlocks: initialState.unlocks,
+      run: { runId: 'run-proof', runRevision: 7, gameModeId: 'vanilla' },
+      contentService: contentSource,
+      itemRuleSource: { init: async () => {}, ready: true, itemRuleExport: () => ({}) },
+      runeProofSourceVersion: 'sources-v1',
+      runeProof: [{
+        goalId: 'item:a', goalLabel: 'A goal', status: 'OBTAINABLE',
+        explanation: 'Verified now.', routeLabels,
+        blockerLabels: [], unavoidableBlockerLabels: [],
+        proofHash: 'sha256-' + 'a'.repeat(64), sourceVersion: 'sources-v1', runRevision: 7,
+      }],
+    } as any);
+
+    const first = await build(['Spawn', 'Shop', 'Spawn']);
+    const second = await build(['Shop', 'Spawn']);
+    expect(JSON.stringify((first as any).runeProof))
+      .toBe(JSON.stringify((second as any).runeProof));
+    expect((first as any).runeProof[0].routeLabels).toEqual(['Shop', 'Spawn']);
+  });
+
+  it('turns stale positive certificates into UNKNOWN without route claims', async () => {
+    const manifest = await buildRuneliteRulesManifest({
+      unlocks: initialState.unlocks,
+      run: { runId: 'run-proof', runRevision: 8, gameModeId: 'vanilla' },
+      contentService: contentSource,
+      itemRuleSource: { init: async () => {}, ready: true, itemRuleExport: () => ({}) },
+      runeProofSourceVersion: 'sources-v2',
+      runeProof: [{
+        goalId: 'item:a', goalLabel: 'A goal', status: 'OBTAINABLE',
+        explanation: 'Old route.', routeLabels: ['Spawn'], blockerLabels: [],
+        unavoidableBlockerLabels: [], proofHash: 'sha256-' + 'a'.repeat(64),
+        sourceVersion: 'sources-v1', runRevision: 7,
+      }],
+    } as any);
+
+    expect((manifest as any).runeProof).toEqual([{
+      goalId: 'item:a', goalLabel: 'A goal', status: 'UNKNOWN',
+      explanation: 'The selected proof is stale or could not be verified.',
+      routeLabels: [], blockerLabels: [], unavoidableBlockerLabels: [],
+      proofHash: null, sourceVersion: 'sources-v2', runRevision: 8,
+    }]);
+  });
+
+  it('preserves the semantic distinction between UNKNOWN and IMPOSSIBLE', async () => {
+    const manifest = await buildRuneliteRulesManifest({
+      unlocks: initialState.unlocks,
+      run: { runId: 'run-proof', runRevision: 7, gameModeId: 'vanilla' },
+      contentService: contentSource,
+      itemRuleSource: { init: async () => {}, ready: true, itemRuleExport: () => ({}) },
+      runeProofSourceVersion: 'sources-v1',
+      runeProof: [
+        { goalId: 'item:impossible', goalLabel: 'Impossible', status: 'IMPOSSIBLE', explanation: 'Every audited route is excluded.', routeLabels: [], blockerLabels: [], unavoidableBlockerLabels: [], proofHash: null, sourceVersion: 'sources-v1', runRevision: 7 },
+        { goalId: 'item:unknown', goalLabel: 'Unknown', status: 'UNKNOWN', explanation: 'Coverage is incomplete.', routeLabels: [], blockerLabels: [], unavoidableBlockerLabels: [], proofHash: null, sourceVersion: 'sources-v1', runRevision: 7 },
+      ],
+    } as any);
+
+    expect((manifest as any).runeProof.map((value: any) => value.status))
+      .toEqual(['IMPOSSIBLE', 'UNKNOWN']);
+  });
+
+  it('fails closed on malformed, cyclic, and privacy-unsafe proof payloads', async () => {
+    const cyclic: any[] = [];
+    cyclic.push(cyclic);
+    const invalid = [
+      { goalId: 'item:a', goalLabel: 'A', status: 'OBTAINABLE', explanation: 'ok', routeLabels: [], blockerLabels: [], unavoidableBlockerLabels: [], proofHash: 'bad', sourceVersion: 'sources-v1', runRevision: 7 },
+      { goalId: 'item:b', goalLabel: 'B', status: 'UNKNOWN', explanation: 'unknown', routeLabels: cyclic, blockerLabels: [], unavoidableBlockerLabels: [], proofHash: null, sourceVersion: 'sources-v1', runRevision: 7 },
+      { goalId: 'item:c', goalLabel: 'C', status: 'UNKNOWN', explanation: 'unknown', routeLabels: [], blockerLabels: [], unavoidableBlockerLabels: [], proofHash: null, sourceVersion: 'sources-v1', runRevision: 7, inventory: ['Coins'], futureAdvice: 'Roll a new chunk', notes: 'private' },
+    ];
+
+    for (const runeProof of invalid) {
+      await expect(buildRuneliteRulesManifest({
+        unlocks: initialState.unlocks,
+        run: { runId: 'run-proof', runRevision: 7, gameModeId: 'vanilla' },
+        contentService: contentSource,
+        itemRuleSource: { init: async () => {}, ready: true, itemRuleExport: () => ({}) },
+        runeProofSourceVersion: 'sources-v1', runeProof: [runeProof],
+      } as any)).rejects.toThrow(/RuneProof bundle/i);
+    }
+  });
+
+  it('fails closed when proof count or display text exceeds strict limits', async () => {
+    const make = (index: number) => ({
+      goalId: `item:${index}`, goalLabel: `Goal ${index}`, status: 'UNKNOWN',
+      explanation: 'Coverage incomplete.', routeLabels: [], blockerLabels: [],
+      unavoidableBlockerLabels: [], proofHash: null, sourceVersion: 'sources-v1', runRevision: 7,
+    });
+    const base = {
+      unlocks: initialState.unlocks,
+      run: { runId: 'run-proof', runRevision: 7, gameModeId: 'vanilla' },
+      contentService: contentSource,
+      itemRuleSource: { init: async () => {}, ready: true, itemRuleExport: () => ({}) },
+      runeProofSourceVersion: 'sources-v1',
+    };
+
+    await expect(buildRuneliteRulesManifest({ ...base, runeProof: Array.from({ length: 21 }, (_, index) => make(index)) } as any))
+      .rejects.toThrow(/RuneProof bundle/i);
+    await expect(buildRuneliteRulesManifest({ ...base, runeProof: [{ ...make(1), explanation: 'x'.repeat(513) }] } as any))
+      .rejects.toThrow(/RuneProof bundle/i);
+  });
 });

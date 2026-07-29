@@ -19,7 +19,24 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-07-28-quest-chunk-audit');
+    expect(LATEST_CHANGELOG.id).toBe('2026-07-29-runeproof');
+  });
+  it('announces RuneProof without promising future planning or possession tracking', () => {
+    const runeProof = CHANGELOG_RELEASES.find(
+      release => release.id === '2026-07-29-runeproof',
+    );
+    const wording = Object.values(runeProof?.sections ?? {})
+      .flatMap(lines => lines ?? [])
+      .map(note => typeof note === 'string' ? note : note.text)
+      .join(' ');
+
+    expect(runeProof).toMatchObject({
+      title: 'RuneProof Current-Chunk Goal Engine',
+      date: '2026-07-29',
+    });
+    expect(wording).toMatch(/exactly reachable chunks/i);
+    expect(wording).toMatch(/without recommending future unlocks/i);
+    expect(wording).not.toMatch(/inventory|bank contents|owns|automate gameplay/i);
   });
 
   it('announces the native RuneLite guide visual refresh', () => {

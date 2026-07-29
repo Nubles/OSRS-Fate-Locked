@@ -3,10 +3,10 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { SectionGuide } from './SectionGuide';
 import { RESOURCE_MAP, RESOURCE_CATEGORIES, ITEM_CATEGORY } from '../data/resourceData';
-import { calculateSupplyChain, isItemAvailableWithCtx, buildAvailabilityContext, computeFullBreakdown, flattenRawMaterials, flattenMultiBreakdown, findEasiestPath, getNextAchievableItems } from '../utils/supplyChain';
+import { calculateSupplyChain, isItemAvailableWithCtx, buildAvailabilityContext, computeFullBreakdown, flattenRawMaterials, flattenMultiBreakdown } from '../utils/supplyChain';
 import { wikiService } from '../services/WikiService';
 import { useFocusTrap } from '../hooks/useFocusTrap';
-import { X, Search, CheckCircle2, Lock, Box, ShoppingBag, Sword, Sprout, MapPin, Database, ExternalLink, RefreshCw, ArrowLeft, ArrowRight, Hammer, HelpCircle, Layers, Coins, Calculator, ListFilter, Star, ChevronDown, ChevronRight, Hand, ScrollText, Percent, Compass, Pin } from 'lucide-react';
+import { X, Search, CheckCircle2, Lock, Box, ShoppingBag, Sword, Sprout, MapPin, Database, ExternalLink, RefreshCw, ArrowLeft, ArrowRight, Hammer, HelpCircle, Layers, Coins, Calculator, ListFilter, Star, ChevronDown, ChevronRight, Hand, ScrollText, Percent, Pin } from 'lucide-react';
 import { WikiLink } from './WikiLink';
 import { EntityLocations } from './EntityLocations';
 import { SOURCE_TYPE_KINDS as SOURCE_KINDS } from '../utils/chunkLocations';
@@ -304,22 +304,6 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
       return flattenRawMaterials(computeFullBreakdown(selectedResult.itemName, targetQty));
   }, [selectedResult, targetQty]);
 
-  // When the selected item is fully locked, surface the source closest to
-  // being unlockable so the player has a clear next-step list rather than a
-  // wall of red "missing X" chips spread across every source card.
-  const easiestPath = useMemo(() => {
-      if (!selectedResult) return null;
-      return findEasiestPath(selectedResult.itemName, gameState);
-  }, [selectedResult, gameState]);
-
-  // Top-down recommendations: locked items the player is closest to unlocking,
-  // ranked by the effort heuristic. Shown only in the empty/index state so it
-  // doesn't compete with the detail view when an item is selected.
-  const nextAchievable = useMemo(
-      () => getNextAchievableItems(gameState, 8),
-      [gameState],
-  );
-
   const handleWikiOpen = (e: React.MouseEvent, name: string) => {
       e.stopPropagation();
       const url = `https://oldschool.runescape.wiki/w/${encodeURIComponent(name.replace(/ /g, '_'))}`;
@@ -495,41 +479,6 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
                         </div>
                     </div>
 
-                    {/* --- SHORTEST PATH PANEL (only when fully locked) --- */}
-                    {easiestPath && (
-                        <div className="mb-6 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-900/15 to-transparent p-5">
-                            <div className="flex items-center gap-2 mb-3">
-                                <Compass size={16} className="text-amber-400" />
-                                <span className="text-xs font-bold text-amber-300 uppercase tracking-widest">
-                                    Shortest path to unlock
-                                </span>
-                                <div className="flex-1 h-px bg-amber-500/10"></div>
-                                <span className="text-[10px] text-amber-400/60 font-mono">
-                                    via {easiestPath.source.type === 'SKILL' ? easiestPath.source.name : `${easiestPath.source.type.toLowerCase()}: ${easiestPath.source.name}`}
-                                </span>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {easiestPath.missing.map((reason, i) => {
-                                    // If the missing line names an item that's in RESOURCE_MAP,
-                                    // make it clickable so the player can drill into it.
-                                    const itemMatch = /^(?:Quest|Unlock):\s*(.+)$/.exec(reason);
-                                    const linkTo = itemMatch && RESOURCE_MAP[itemMatch[1]] ? itemMatch[1] : null;
-                                    return (
-                                        <button
-                                            key={i}
-                                            onClick={linkTo ? () => handleNavigate(linkTo) : undefined}
-                                            disabled={!linkTo}
-                                            className={`text-xs px-3 py-1.5 rounded-lg border flex items-center gap-2 ${linkTo ? 'bg-amber-900/20 border-amber-500/30 text-amber-200 hover:bg-amber-900/40 hover:border-amber-400 cursor-pointer' : 'bg-black/30 border-amber-500/15 text-amber-200/80 cursor-default'}`}
-                                        >
-                                            <Lock size={11} />
-                                            {reason}
-                                            {linkTo && <ArrowRight size={11} className="opacity-60" />}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
 
                     {/* --- SOURCES SECTION --- */}
                     <div className="space-y-4 mb-8">
@@ -988,34 +937,6 @@ export const SupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ on
                         </div>
                     )}
 
-                    {/* Closest to unlocking — top-down recommendations */}
-                    {nextAchievable.length > 0 && (
-                        <div className="mb-5">
-                            <div className="flex items-center gap-2 mb-2 px-2">
-                                <Compass size={14} className="text-amber-400" />
-                                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Closest to unlocking</span>
-                                <span className="text-[10px] text-gray-600 font-mono">items the engine knows you're nearly there on</span>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {nextAchievable.map(({ item, missing }) => (
-                                    <button
-                                        key={item}
-                                        onClick={() => handleNavigate(item)}
-                                        className="flex items-center gap-3 px-3 py-2 bg-[#1a1a1a] border border-amber-500/15 rounded-lg text-sm hover:bg-amber-900/10 hover:border-amber-500/30 transition-all group"
-                                    >
-                                        <ItemImage name={item} size="sm" />
-                                        <div className="flex-1 min-w-0 text-left">
-                                            <div className="text-gray-200 truncate font-medium">{item}</div>
-                                            <div className="text-[10px] text-amber-400/70 truncate font-mono" title={missing.join(' · ')}>
-                                                {missing.length === 1 ? missing[0] : `${missing[0]} · +${missing.length - 1} more`}
-                                            </div>
-                                        </div>
-                                        <ArrowRight size={12} className="text-gray-600 group-hover:text-amber-400 transition-colors shrink-0" />
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
 
                     {/* Category browser */}
                     <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-2 mb-3 -mx-1 px-1">
