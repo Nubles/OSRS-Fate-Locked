@@ -1,8 +1,14 @@
 import { createHash } from 'node:crypto';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'vite';
+import {
+  computeRuneProofSourceVersion,
+  generatedOutputMatches,
+  renderRuneProofSourceDocument,
+  writeGeneratedOutput,
+} from './runeproof-source-generator.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const outputPath = resolve(root, 'public', 'runeproof-sources.json');
@@ -62,9 +68,7 @@ const sourceInputs = {
   productionRecipes: [],
   reviewedSources,
 };
-const sourceVersion = `sha256-${createHash('sha256')
-  .update(canonicalJson(sourceInputs))
-  .digest('hex')}`;
+const sourceVersion = computeRuneProofSourceVersion(sourceInputs);
 
 const document = compileAcquisitionSources({
   sourceVersion,
@@ -81,23 +85,17 @@ const document = compileAcquisitionSources({
   productionRecipes: [],
   reviewedSources,
 });
-const bytes = `${JSON.stringify(document, null, 2)}\n`;
+const bytes = renderRuneProofSourceDocument(document);
 
 if (check) {
-  let current = null;
-  try {
-    current = await readFile(outputPath, 'utf8');
-  } catch {
-    // Report the same deterministic stale-file failure for missing output.
-  }
-  if (current !== bytes) {
+  if (!await generatedOutputMatches(outputPath, bytes)) {
     console.error('public/runeproof-sources.json is stale; run npm run runeproof:sources');
     process.exitCode = 1;
   } else {
     console.log(summary('verified', document));
   }
 } else {
-  await writeFile(outputPath, bytes, 'utf8');
+  await writeGeneratedOutput(outputPath, bytes);
   console.log(summary('wrote', document));
 }
 
@@ -123,22 +121,6 @@ function summary(action, result) {
     `${result.unresolvedSources.length} unresolved legacy sources,`,
     `coverage ${result.acquisitionCoverage}`,
   ].join(' ');
-}
-
-function canonicalJson(value) {
-  return JSON.stringify(canonicalize(value));
-}
-
-function canonicalize(value) {
-  if (Array.isArray(value)) return value.map(canonicalize);
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value)
-        .sort(([left], [right]) => compare(left, right))
-        .map(([key, child]) => [key, canonicalize(child)]),
-    );
-  }
-  return value;
 }
 
 function shortHash(value) {

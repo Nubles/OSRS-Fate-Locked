@@ -168,30 +168,36 @@ describe('compileAcquisitionSources', () => {
     });
   });
 
-  it('preserves one-time repeatability and known output metadata', () => {
+  it('classifies empty-input one-time rewards as QUEST_REWARD, not production', () => {
     const document = compileAcquisitionSources(compilerInput({
-      productionRecipes: [{
+      reviewedSources: [{
         output: 'Quest token',
-        outputQuantity: 3,
+        sourceKind: 'QUEST_REWARD',
         sourceHost: 'Duke Horacio',
+        regions: ['Misthalin'],
         locationId: 'surface:50,50',
-        inputs: {},
+        outputQuantity: 3,
         requirements: { op: 'ALL', terms: [] },
         repeatability: 'ONE_TIME',
         probability: 1,
         coverage: 'VERIFIED',
-        provenanceIds: ['quest-reward-audit:quest-token@1'],
+        provenanceIds: ['resource-map:quest-token:0'],
+      }],
+      productionRecipes: [{
+        output: 'Misclassified token', outputQuantity: 1, sourceHost: 'Duke Horacio',
+        locationId: 'surface:50,50', inputs: {}, requirements: { op: 'ALL', terms: [] },
+        repeatability: 'ONE_TIME', probability: 1, coverage: 'VERIFIED',
+        provenanceIds: ['recipe-audit:misclassified-token'],
       }],
     }));
-    const rule = document.rules.find(candidate => candidate.output.label === 'Quest token');
 
-    expect(rule).toMatchObject({
-      outputQuantity: 3,
-      repeatability: 'ONE_TIME',
-      probability: 1,
+    expect(document.rules.find(rule => rule.output.label === 'Quest token')).toMatchObject({
+      sourceKind: 'QUEST_REWARD', outputQuantity: 3, repeatability: 'ONE_TIME', probability: 1,
     });
+    expect(document.unresolvedSources).toContainEqual(expect.objectContaining({
+      output: 'Misclassified token', reason: 'INCOMPLETE_METADATA',
+    }));
   });
-
   it.each(['Any', 'Misthalin'])(
     'refuses %s-only legacy locations as proof-grade evidence',
     (region) => {
@@ -224,7 +230,7 @@ describe('compileAcquisitionSources', () => {
     expect(shopRule).toMatchObject({
       coverage: 'PARTIAL',
       provenanceIds: [
-        'chunk:ba2fcebf8b26c84c74f8d9ab328a0ede802be926:12850',
+        'chunk:12850',
         'transform:shopItems:Lumbridge General Store',
       ],
     });
@@ -252,6 +258,147 @@ describe('compileAcquisitionSources', () => {
   });
 });
 
+describe('complete raw source accounting', () => {
+  it('keeps every host-output tuple searchable when no exact location is authored', () => {
+    const document = compileAcquisitionSources(compilerInput({
+      locationNodes: [],
+      chunks: {
+        13000: { s: ['Remote shop'], m: [['Remote monster', 1]], i: ['Remote spawn'] },
+      },
+      shopItems: { 'Remote shop': ['A', 'B'] },
+      drops: { 'Remote monster': ['C', 'D'] },
+      transformEvents: [],
+    }));
+    const raw = document.unresolvedSources.filter(source =>
+      source.reason === 'NO_PROOF_GRADE_LOCATION');
+
+    expect(raw).toHaveLength(5);
+    expect(raw.map(source => [source.sourceKind, source.sourceHost, source.output]))
+      .toEqual(expect.arrayContaining([
+        ['DROP', 'Remote monster', 'C'],
+        ['DROP', 'Remote monster', 'D'],
+        ['SHOP', 'Remote shop', 'A'],
+        ['SHOP', 'Remote shop', 'B'],
+        ['SPAWN', 'Remote spawn floor spawn', 'Remote spawn'],
+      ]));
+    expect(raw.every(source => source.provenanceIds.includes('chunk:13000'))).toBe(true);
+    expect(new Set(raw.map(source => JSON.stringify(source))).size).toBe(raw.length);
+  });
+
+  it('does not guess when a host-output tuple maps to multiple authored surfaces', () => {
+    const second = {
+      id: 'surface:50,51', label: 'Adjacent chunk', surfaceChunk: '50,51',
+      coverage: 'VERIFIED' as const,
+    };
+    const document = compileAcquisitionSources(compilerInput({
+      locationNodes: [location, second],
+      chunks: {
+        12850: { s: ['Shared shop'] },
+        12851: { s: ['Shared shop'] },
+      },
+      shopItems: { 'Shared shop': ['Shared item'] },
+      drops: {},
+      transformEvents: [],
+    }));
+
+    expect(document.rules.some(rule => rule.output.label === 'Shared item')).toBe(false);
+    expect(document.unresolvedSources).toContainEqual(expect.objectContaining({
+      output: 'Shared item', reason: 'NO_PROOF_GRADE_LOCATION',
+      provenanceIds: ['chunk:12850', 'chunk:12851'],
+    }));
+  });
+  it('publishes exact family counts and memberships derived from emitted evidence', () => {
+    const document = compileAcquisitionSources(compilerInput());
+    const shop = document.sourceFamilyAccounting.SHOP;
+
+    expect(document.counts).toEqual({
+      rules: document.rules.length,
+      unresolvedSources: document.unresolvedSources.length,
+    });
+    expect(shop.ruleCount).toBe(shop.ruleIds.length);
+    expect(shop.unresolvedCount).toBe(shop.unresolvedIds.length);
+    expect(shop.ruleIds).toEqual(document.rules
+      .filter(rule => rule.sourceKind === 'SHOP').map(rule => rule.id));
+  });
+});
+
+describe('strict production validation', () => {
+  const validRecipe = {
+    output: 'Oak plank', outputQuantity: 1, sourceHost: 'Sawmill',
+    locationId: 'surface:50,50', inputs: { 'Oak logs': 1 },
+    requirements: { op: 'ALL' as const, terms: [] },
+    repeatability: 'REPEATABLE' as const, probability: null,
+    coverage: 'VERIFIED' as const, provenanceIds: ['recipe-audit:oak-plank'],
+  };
+
+  it.each([
+    ['empty inputs', { inputs: {} }],
+    ['zero input', { inputs: { Logs: 0 } }],
+    ['fractional input', { inputs: { Logs: 1.5 } }],
+    ['zero yield', { outputQuantity: 0 }],
+    ['unknown repeatability', { repeatability: 'UNKNOWN' as const }],
+    ['partial coverage', { coverage: 'PARTIAL' as const }],
+    ['missing provenance', { provenanceIds: [] }],
+    ['empty output', { output: ' ' }],
+    ['empty source host', { sourceHost: ' ' }],
+    ['invalid probability', { probability: 2 }],
+  ])('rejects %s', (_label, override) => {
+    const document = compileAcquisitionSources(compilerInput({
+      productionRecipes: [{ ...validRecipe, ...override }],
+    }));
+    expect(document.rules.some(rule => rule.sourceKind === 'PRODUCTION'
+      && rule.sourceLabel === ((override as { sourceHost?: string }).sourceHost ?? 'Sawmill')))
+      .toBe(false);
+    expect(document.unresolvedSources.some(source =>
+      source.reason === 'INCOMPLETE_METADATA')).toBe(true);
+  });
+
+  it('rejects an otherwise valid production recipe at a non-verified location', () => {
+    const document = compileAcquisitionSources(compilerInput({
+      locationNodes: [{ ...location, coverage: 'PARTIAL' }],
+      productionRecipes: [validRecipe],
+    }));
+    expect(document.rules.some(rule => rule.output.label === 'Oak plank')).toBe(false);
+    expect(document.unresolvedSources).toContainEqual(expect.objectContaining({
+      output: 'Oak plank', reason: 'INCOMPLETE_METADATA',
+    }));
+  });
+  it('rejects PRODUCTION records routed through the reviewed-source shortcut', () => {
+    const document = compileAcquisitionSources(compilerInput({
+      reviewedSources: [{
+        output: 'Shortcut plank', sourceKind: 'PRODUCTION', sourceHost: 'Sawmill',
+        regions: ['Misthalin'], locationId: 'surface:50,50', outputQuantity: 1,
+        requirements: { op: 'ALL', terms: [] }, repeatability: 'REPEATABLE',
+        probability: null, coverage: 'VERIFIED', provenanceIds: ['resource-map:shortcut:0'],
+      }],
+    }));
+    expect(document.rules.some(rule => rule.output.label === 'Shortcut plank')).toBe(false);
+    expect(document.unresolvedSources).toContainEqual(expect.objectContaining({
+      output: 'Shortcut plank', reason: 'INCOMPLETE_METADATA',
+    }));
+  });
+});
+
+describe('acquisition location validation', () => {
+  it.each([
+    ['duplicate IDs', [location, { ...location }]],
+    ['orphan child', [{ ...location, id: 'child', parentId: 'missing' }]],
+    ['cyclic children', [
+      { ...location, id: 'a', parentId: 'b' },
+      { ...location, id: 'b', parentId: 'a' },
+    ]],
+    ['non-canonical surface chunk', [{ ...location, surfaceChunk: '050,50' }]],
+    ['invalid coverage', [{ ...location, coverage: 'CERTAIN' }]],
+    ['ambiguous surface owners', [location, { ...location, id: 'duplicate' }]],
+  ])('rejects %s', (_label, locationNodes) => {
+    const document = compileAcquisitionSources(compilerInput({
+      locationNodes: locationNodes as AcquisitionCompilerInput['locationNodes'],
+    }));
+    expect(document.rules).toHaveLength(0);
+    expect(document.unresolvedSources.some(source =>
+      source.reason === 'NO_PROOF_GRADE_LOCATION')).toBe(true);
+  });
+});
 
 describe('Resource Engine family coverage', () => {
   it('counts an exact reviewed non-core method under its source origin', () => {
@@ -277,7 +424,7 @@ describe('stable acquisition identities', () => {
           outputQuantity: 1,
           sourceHost: 'Herblore',
           locationId: 'surface:50,50',
-          inputs: {},
+          inputs: { Vial: 1 },
           requirements: { op: 'ALL', terms: [] },
           repeatability: 'REPEATABLE',
           probability: null,
@@ -289,7 +436,7 @@ describe('stable acquisition identities', () => {
           outputQuantity: 1,
           sourceHost: 'Herblore',
           locationId: 'surface:50,50',
-          inputs: {},
+          inputs: { Vial: 1 },
           requirements: { op: 'ALL', terms: [] },
           repeatability: 'REPEATABLE',
           probability: null,
@@ -393,7 +540,7 @@ describe('conflicting acquisition rules', () => {
       output: 'Oak plank',
       sourceHost: 'Sawmill',
       locationId: 'surface:50,50',
-      inputs: {},
+      inputs: { Coins: 1 },
       requirements: { op: 'ALL' as const, terms: [] },
       repeatability: 'REPEATABLE' as const,
       probability: null,

@@ -1,4 +1,4 @@
-import type { LocationNodeSource } from './locationGraph';
+import { validateLocationNodes, type LocationNodeSource } from './locationGraph';
 import {
   assertRequirementExpr,
   factId,
@@ -82,7 +82,8 @@ export type UnresolvedAcquisitionReason =
   | 'UNKNOWN_LOCATION'
   | 'INCOMPLETE_METADATA'
   | 'CONFLICTING_RULE_ID'
-  | 'CONFLICTING_OUTPUT_ID';
+  | 'CONFLICTING_OUTPUT_ID'
+  | 'NO_PROOF_GRADE_LOCATION';
 
 export interface UnresolvedAcquisitionSource {
   id: string;
@@ -95,11 +96,21 @@ export interface UnresolvedAcquisitionSource {
   provenanceIds: string[];
 }
 
+export interface SourceFamilyAccounting {
+  ruleCount: number;
+  unresolvedCount: number;
+  ruleIds: string[];
+  unresolvedIds: string[];
+  coverage: Coverage;
+}
+
 export interface RuneProofSourceDocument {
   schemaVersion: 1;
   sourceVersion: string;
+  counts: { rules: number; unresolvedSources: number };
   acquisitionCoverage: Coverage;
   sourceFamilyCoverage: Record<AcquisitionSourceFamily, Coverage>;
+  sourceFamilyAccounting: Record<AcquisitionSourceFamily, SourceFamilyAccounting>;
   rules: AcquisitionRule[];
   unresolvedSources: UnresolvedAcquisitionSource[];
 }
@@ -134,105 +145,54 @@ export function compileAcquisitionSources(
   const ambiguousOutputs = new Set<string>();
   const conflictingRuleIds = new Set<string>();
   const questIds = new Set(input.questIds);
-  const locations = new Map(input.locationNodes.map(location => [location.id, location]));
+  const validatedLocations = validateLocationNodes(input.locationNodes);
+  const locations = validatedLocations.nodes;
   const transformProvenance = buildTransformProvenance(input.transformEvents);
 
-  const surfaceCounts = new Map<string, number>();
-  for (const location of input.locationNodes) {
-    if (!location.parentId) {
-      surfaceCounts.set(
-        location.surfaceChunk, (surfaceCounts.get(location.surfaceChunk) ?? 0) + 1,
-      );
-    }
-  }
+  for (const candidate of buildRawCandidates(input, transformProvenance)) {
+    const exactLocations = candidate.regionIds
+      .map(regionId => ({
+        regionId,
+        location: validatedLocations.surfaceNodes.get(surfaceChunkForRegionId(regionId)),
+      }))
+      .filter((entry): entry is { regionId: number; location: LocationNodeSource } =>
+        Boolean(entry.location));
 
-  for (const location of [...input.locationNodes]
-    .filter(candidate => !candidate.parentId
-      && surfaceCounts.get(candidate.surfaceChunk) === 1)
-    .sort(byId)) {
-    const regionId = regionIdForSurfaceChunk(location.surfaceChunk);
-    if (regionId === null) continue;
-    const chunk = input.chunks[String(regionId)];
-    if (!chunk) continue;
-    const chunkProvenance = `chunk:${input.sourceCommit}:${regionId}`;
-
-    for (const shop of sortedUnique(chunk.s ?? [])) {
-      for (const output of sortedUnique(input.shopItems[shop] ?? [])) {
-        addRule(rules, unresolved, outputLabels, ambiguousOutputs, conflictingRuleIds, {
-          id: acquisitionRuleId(output, 'SHOP', shop, location.id),
-          output: itemFact(output),
-          outputQuantity: 1,
-          sourceKind: 'SHOP',
-          sourceLabel: shop,
-          locationId: location.id,
-          requirements: requirementsFor(
-            input.taskUnlocks.Shops?.[shop]?.[String(regionId)] ?? [],
-            questIds,
-          ),
-          repeatability: 'UNKNOWN',
-          probability: null,
-          coverage: combineCoverage('PARTIAL', location.coverage),
-          provenanceIds: sortedUnique([
-            chunkProvenance,
-            ...(transformProvenance.get(`shopItems\u0000${shop}`) ?? []),
-          ]),
-        });
-      }
+    if (exactLocations.length !== 1) {
+      unresolved.push(unresolvedRawCandidate(candidate));
+      continue;
     }
 
-    for (const [monster] of [...(chunk.m ?? [])].sort(([left], [right]) =>
-      compareText(left, right))) {
-      for (const output of sortedUnique(input.drops[monster] ?? [])) {
-        addRule(rules, unresolved, outputLabels, ambiguousOutputs, conflictingRuleIds, {
-          id: acquisitionRuleId(output, 'DROP', monster, location.id),
-          output: itemFact(output),
-          outputQuantity: 1,
-          sourceKind: 'DROP',
-          sourceLabel: monster,
-          locationId: location.id,
-          requirements: requirementsFor(
-            input.taskUnlocks.Monsters?.[monster]?.[String(regionId)] ?? [],
-            questIds,
-          ),
-          repeatability: 'UNKNOWN',
-          probability: null,
-          coverage: combineCoverage('PARTIAL', location.coverage),
-          provenanceIds: sortedUnique([
-            chunkProvenance,
-            ...(transformProvenance.get(`drops\u0000${monster}`) ?? []),
-          ]),
-        });
-      }
-    }
-
-    for (const output of sortedUnique(chunk.i ?? [])) {
-      const sourceLabel = `${output} floor spawn`;
+    for (const { regionId, location } of exactLocations) {
+      const taskRequirements = candidate.sourceKind === 'SHOP'
+        ? input.taskUnlocks.Shops?.[candidate.sourceHost]?.[String(regionId)] ?? []
+        : candidate.sourceKind === 'DROP'
+          ? input.taskUnlocks.Monsters?.[candidate.sourceHost]?.[String(regionId)] ?? []
+          : input.taskUnlocks.Spawns?.[candidate.output]?.[String(regionId)] ?? [];
       addRule(rules, unresolved, outputLabels, ambiguousOutputs, conflictingRuleIds, {
-        id: acquisitionRuleId(output, 'SPAWN', sourceLabel, location.id),
-        output: itemFact(output),
-        outputQuantity: 1,
-        sourceKind: 'SPAWN',
-        sourceLabel,
-        locationId: location.id,
-        requirements: requirementsFor(
-          input.taskUnlocks.Spawns?.[output]?.[String(regionId)] ?? [],
-          questIds,
+        id: acquisitionRuleId(
+          candidate.output, candidate.sourceKind, candidate.sourceHost, location.id,
         ),
+        output: itemFact(candidate.output),
+        outputQuantity: 1,
+        sourceKind: candidate.sourceKind,
+        sourceLabel: candidate.sourceHost,
+        locationId: location.id,
+        requirements: requirementsFor(taskRequirements, questIds),
         repeatability: 'UNKNOWN',
         probability: null,
         coverage: combineCoverage('PARTIAL', location.coverage),
-        provenanceIds: [chunkProvenance],
+        provenanceIds: candidate.provenanceIds,
       });
     }
   }
-
   for (const recipe of [...input.productionRecipes].sort(productionOrder)) {
     const location = locations.get(recipe.locationId);
     if (!location) {
       unresolved.push(unresolvedProduction(recipe, 'UNKNOWN_LOCATION'));
       continue;
     }
-    if (!validProductionRecipe(recipe)) {
+    if (!validProductionRecipe(recipe) || location.coverage !== 'VERIFIED') {
       unresolved.push(unresolvedProduction(recipe, 'INCOMPLETE_METADATA'));
       continue;
     }
@@ -284,7 +244,7 @@ export function compileAcquisitionSources(
       unresolved.push(unresolvedReviewed(source, 'UNKNOWN_LOCATION'));
       continue;
     }
-    if (!validReviewedSource(source)) {
+    if (source.sourceKind === 'PRODUCTION' || !validReviewedSource(source)) {
       unresolved.push(unresolvedReviewed(source, 'INCOMPLETE_METADATA'));
       continue;
     }
@@ -309,16 +269,19 @@ export function compileAcquisitionSources(
   }
 
   const emittedRules = [...rules.values()].sort(byId);
-  const unresolvedSources = unresolved
-    .map(canonicalUnresolved)
-    .sort(byId);
-  const sourceFamilyCoverage = familyCoverage(emittedRules, unresolvedSources);
+  const unresolvedSources = dedupeUnresolved(unresolved);
+  const sourceFamilyAccounting = familyAccounting(emittedRules, unresolvedSources);
+  const sourceFamilyCoverage = Object.fromEntries(SOURCE_FAMILIES.map(family => [
+    family, sourceFamilyAccounting[family].coverage,
+  ])) as Record<AcquisitionSourceFamily, Coverage>;
 
   return {
     schemaVersion: 1,
     sourceVersion: input.sourceVersion,
+    counts: { rules: emittedRules.length, unresolvedSources: unresolvedSources.length },
     acquisitionCoverage: overallCoverage(sourceFamilyCoverage, unresolvedSources),
     sourceFamilyCoverage,
+    sourceFamilyAccounting,
     rules: emittedRules,
     unresolvedSources,
   };
@@ -484,10 +447,11 @@ function validProductionRecipe(recipe: AuditedProductionRecipe): boolean {
     || !nonEmpty(recipe.output)
     || !nonEmpty(recipe.sourceHost)
     || !validProbability(recipe.probability)
-    || !validRepeatability(recipe.repeatability)
-    || !validCoverage(recipe.coverage)
+    || (recipe.repeatability !== 'REPEATABLE' && recipe.repeatability !== 'ONE_TIME')
+    || recipe.coverage !== 'VERIFIED'
     || !validProvenance(recipe.provenanceIds)
     || !isRecord(recipe.inputs)
+    || Object.keys(recipe.inputs).length === 0
     || !Object.entries(recipe.inputs).every(([label, quantity]) =>
       nonEmpty(label) && positiveInteger(quantity))) return false;
   try {
@@ -576,6 +540,116 @@ function unresolvedId(
   return `unresolved:${identity.map(normalizeId).join('-')}:${stableFingerprint(identity)}`;
 }
 
+interface RawAcquisitionCandidate {
+  output: string;
+  sourceKind: 'SHOP' | 'DROP' | 'SPAWN';
+  sourceHost: string;
+  regionIds: number[];
+  provenanceIds: string[];
+}
+
+function buildRawCandidates(
+  input: AcquisitionCompilerInput,
+  transformProvenance: ReadonlyMap<string, string[]>,
+): RawAcquisitionCandidate[] {
+  const shopRegions = new Map<string, Set<number>>();
+  const dropRegions = new Map<string, Set<number>>();
+  const spawnRegions = new Map<string, Set<number>>();
+  for (const [regionKey, chunk] of Object.entries(input.chunks)) {
+    const regionId = Number(regionKey);
+    if (!Number.isSafeInteger(regionId) || regionId < 0) continue;
+    for (const host of sortedUnique(chunk.s ?? [])) addRegion(shopRegions, host, regionId);
+    for (const [host] of chunk.m ?? []) addRegion(dropRegions, host, regionId);
+    for (const output of sortedUnique(chunk.i ?? [])) addRegion(spawnRegions, output, regionId);
+  }
+
+  const candidates: RawAcquisitionCandidate[] = [];
+  for (const [sourceHost, outputs] of Object.entries(input.shopItems)) {
+    for (const output of sortedUnique(outputs)) {
+      candidates.push(rawCandidate(
+        output, 'SHOP', sourceHost, shopRegions.get(sourceHost),
+        transformProvenance.get(`shopItems\u0000${sourceHost}`) ?? [],
+      ));
+    }
+  }
+  for (const [sourceHost, outputs] of Object.entries(input.drops)) {
+    for (const output of sortedUnique(outputs)) {
+      candidates.push(rawCandidate(
+        output, 'DROP', sourceHost, dropRegions.get(sourceHost),
+        transformProvenance.get(`drops\u0000${sourceHost}`) ?? [],
+      ));
+    }
+  }
+  for (const [output, regions] of spawnRegions) {
+    candidates.push(rawCandidate(
+      output, 'SPAWN', `${output} floor spawn`, regions, [],
+    ));
+  }
+  return candidates.sort((left, right) => compareText(
+    `${left.sourceKind}\u0000${left.sourceHost}\u0000${left.output}`,
+    `${right.sourceKind}\u0000${right.sourceHost}\u0000${right.output}`,
+  ));
+}
+
+function addRegion(
+  regionsByHost: Map<string, Set<number>>,
+  host: string,
+  regionId: number,
+): void {
+  regionsByHost.set(host, new Set([...(regionsByHost.get(host) ?? []), regionId]));
+}
+
+function rawCandidate(
+  output: string,
+  sourceKind: RawAcquisitionCandidate['sourceKind'],
+  sourceHost: string,
+  regions: ReadonlySet<number> | undefined,
+  provenanceIds: readonly string[],
+): RawAcquisitionCandidate {
+  const regionIds = [...(regions ?? [])].sort((left, right) => left - right);
+  return {
+    output,
+    sourceKind,
+    sourceHost,
+    regionIds,
+    provenanceIds: sortedUnique([
+      ...regionIds.map(regionId => `chunk:${regionId}`),
+      ...provenanceIds,
+    ]),
+  };
+}
+
+function unresolvedRawCandidate(
+  candidate: RawAcquisitionCandidate,
+): UnresolvedAcquisitionSource {
+  return {
+    id: unresolvedId(
+      candidate.output, candidate.sourceKind, candidate.sourceHost,
+      candidate.provenanceIds,
+    ),
+    output: candidate.output,
+    sourceKind: candidate.sourceKind,
+    sourceHost: candidate.sourceHost,
+    regions: candidate.regionIds.map(surfaceChunkForRegionId),
+    coverage: 'UNKNOWN',
+    reason: 'NO_PROOF_GRADE_LOCATION',
+    provenanceIds: candidate.provenanceIds,
+  };
+}
+
+function surfaceChunkForRegionId(regionId: number): string {
+  return `${Math.floor(regionId / 256)},${regionId % 256}`;
+}
+
+function dedupeUnresolved(
+  unresolved: readonly UnresolvedAcquisitionSource[],
+): UnresolvedAcquisitionSource[] {
+  const byEvidence = new Map<string, UnresolvedAcquisitionSource>();
+  for (const source of unresolved.map(canonicalUnresolved)) {
+    byEvidence.set(JSON.stringify(source), source);
+  }
+  return [...byEvidence.values()].sort(byId);
+}
 function buildTransformProvenance(
   events: readonly AcquisitionTransformEvent[],
 ): Map<string, string[]> {
@@ -594,42 +668,48 @@ function buildTransformProvenance(
   return byTarget;
 }
 
-function regionIdForSurfaceChunk(surfaceChunk: string): number | null {
-  const match = /^(\d+),(\d+)$/.exec(surfaceChunk);
-  if (!match) return null;
-  return Number(match[1]) * 256 + Number(match[2]);
-}
-
-function familyCoverage(
+function familyAccounting(
   rules: readonly AcquisitionRule[],
   unresolved: readonly UnresolvedAcquisitionSource[],
-): Record<AcquisitionSourceFamily, Coverage> {
-  const result = {} as Record<AcquisitionSourceFamily, Coverage>;
+): Record<AcquisitionSourceFamily, SourceFamilyAccounting> {
+  const result = {} as Record<AcquisitionSourceFamily, SourceFamilyAccounting>;
   for (const family of SOURCE_FAMILIES) {
-    const familyRules = rules.filter(rule =>
-      family === 'RESOURCE_ENGINE'
-        ? rule.provenanceIds.some(provenance => provenance.startsWith('resource-map:'))
-        : rule.sourceKind === family);
-    const familyUnresolved = unresolved.filter(source =>
-      family === 'RESOURCE_ENGINE'
-        ? source.id.startsWith('unresolved:') && source.provenanceIds.some(
-          provenance => provenance.startsWith('resource-map:'),
-        )
-        : source.sourceKind === family);
-    if (familyRules.length === 0 && familyUnresolved.length === 0) {
-      result[family] = 'UNKNOWN';
-      continue;
+    const familyRules = rules.filter(rule => belongsToFamily(rule, family));
+    const familyUnresolved = unresolved.filter(source => belongsToFamily(source, family));
+    const ruleIds = familyRules.map(rule => rule.id);
+    const unresolvedIds = familyUnresolved.map(source => source.id);
+    let coverage: Coverage;
+    if (ruleIds.length === 0 && unresolvedIds.length === 0) {
+      coverage = 'UNKNOWN';
+    } else if (familyUnresolved.some(source => source.coverage === 'UNKNOWN')
+      || familyRules.some(rule => rule.coverage === 'UNKNOWN')) {
+      coverage = 'UNKNOWN';
+    } else if (familyUnresolved.length > 0
+      || familyRules.some(rule => rule.coverage === 'PARTIAL')) {
+      coverage = 'PARTIAL';
+    } else {
+      coverage = 'VERIFIED';
     }
-    let coverage = familyRules.length === 0 ? 'PARTIAL' : combineAll(
-      familyRules.map(rule => rule.coverage),
-    );
-    if (familyUnresolved.length > 0 && coverage === 'VERIFIED') coverage = 'PARTIAL';
-    if (familyUnresolved.some(source => source.coverage === 'UNKNOWN')) coverage = 'UNKNOWN';
-    result[family] = coverage;
+    result[family] = {
+      ruleCount: ruleIds.length,
+      unresolvedCount: unresolvedIds.length,
+      ruleIds,
+      unresolvedIds,
+      coverage,
+    };
   }
   return result;
 }
 
+function belongsToFamily(
+  source: Pick<AcquisitionRule, 'sourceKind' | 'provenanceIds'>
+    | Pick<UnresolvedAcquisitionSource, 'sourceKind' | 'provenanceIds'>,
+  family: AcquisitionSourceFamily,
+): boolean {
+  return family === 'RESOURCE_ENGINE'
+    ? source.provenanceIds.some(provenance => provenance.startsWith('resource-map:'))
+    : source.sourceKind === family;
+}
 function overallCoverage(
   families: Readonly<Record<AcquisitionSourceFamily, Coverage>>,
   unresolved: readonly UnresolvedAcquisitionSource[],
@@ -643,10 +723,6 @@ function overallCoverage(
 function unresolvedCoverage(coverage: Coverage): Coverage {
   return coverage === 'UNKNOWN' ? 'UNKNOWN' : 'PARTIAL';
 }
-function combineAll(values: readonly Coverage[]): Coverage {
-  return values.reduce(combineCoverage, 'VERIFIED');
-}
-
 function combineCoverage(left: Coverage, right: Coverage): Coverage {
   if (left === 'UNKNOWN' || right === 'UNKNOWN') return 'UNKNOWN';
   if (left === 'PARTIAL' || right === 'PARTIAL') return 'PARTIAL';

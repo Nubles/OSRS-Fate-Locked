@@ -128,33 +128,87 @@ function chunkCoverage(audit: unknown): AuditCoverage {
 }
 
 const ACQUISITION_FAMILIES = [
-  'SHOP', 'DROP', 'SPAWN', 'PRODUCTION', 'RESOURCE_ENGINE',
+  'DROP', 'PRODUCTION', 'RESOURCE_ENGINE', 'SHOP', 'SPAWN',
 ] as const;
+type AcquisitionFamily = typeof ACQUISITION_FAMILIES[number];
 
 const ACQUISITION_SOURCE_KINDS = new Set<SourceKind>([
   'SHOP', 'DROP', 'SPAWN', 'PRODUCTION', 'GATHERING', 'QUEST_REWARD',
   'MINIGAME', 'PICKPOCKET', 'CLUE',
 ]);
+const UNRESOLVED_REASONS = new Set([
+  'REGION_ONLY_LOCATION', 'UNKNOWN_LOCATION', 'INCOMPLETE_METADATA',
+  'CONFLICTING_RULE_ID', 'CONFLICTING_OUTPUT_ID', 'NO_PROOF_GRADE_LOCATION',
+]);
+const RULE_KEYS = [
+  'coverage', 'id', 'locationId', 'output', 'outputQuantity', 'probability',
+  'provenanceIds', 'repeatability', 'requirements', 'sourceKind', 'sourceLabel',
+];
+const UNRESOLVED_KEYS = [
+  'coverage', 'id', 'output', 'provenanceIds', 'reason', 'regions', 'sourceHost',
+  'sourceKind',
+];
 
 function validAuditCoverage(value: unknown): value is AuditCoverage {
   return value === 'VERIFIED' || value === 'PARTIAL' || value === 'UNKNOWN';
 }
 
-function validVerifiedAcquisitionRule(rule: unknown): boolean {
-  if (!isRecord(rule) || typeof rule.id !== 'string' || !rule.id
-    || !isRecord(rule.output) || rule.output.kind !== 'ITEM'
-    || typeof rule.output.label !== 'string' || !rule.output.label
+function hasExactKeys(value: JsonRecord, keys: readonly string[]): boolean {
+  const actual = Object.keys(value).sort();
+  const expected = [...keys].sort();
+  return actual.length === expected.length
+    && actual.every((key, index) => key === expected[index]);
+}
+
+function validProvenance(value: unknown): value is string[] {
+  return Array.isArray(value) && value.length > 0
+    && value.every(id => typeof id === 'string' && id.trim().length > 0)
+    && new Set(value).size === value.length;
+}
+
+function expectedRuleId(rule: JsonRecord): string {
+  const output = (rule.output as JsonRecord).label as string;
+  const sourceKind = rule.sourceKind as string;
+  const sourceLabel = rule.sourceLabel as string;
+  const locationId = rule.locationId as string;
+  return `acq:${normalizeAuditId(factId('ITEM', output))}:${[
+    sourceKind, sourceLabel, locationId,
+  ].map(normalizeAuditId).join('-')}:${stableAuditFingerprint([
+    output, sourceKind, sourceLabel, locationId,
+  ])}`;
+}
+
+function normalizeAuditId(value: string): string {
+  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function stableAuditFingerprint(values: readonly string[]): string {
+  let hash = 0x811c9dc5;
+  for (const value of values.join('\u0000')) {
+    hash ^= value.charCodeAt(0);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
+function validAcquisitionRule(rule: unknown): rule is JsonRecord {
+  if (!isRecord(rule) || !hasExactKeys(rule, RULE_KEYS)
+    || typeof rule.id !== 'string'
+    || !/^acq:[a-z0-9-]+:[a-z0-9-]+:[0-9a-f]{8}$/.test(rule.id)
+    || !isRecord(rule.output) || !hasExactKeys(rule.output, ['id', 'kind', 'label'])
+    || rule.output.kind !== 'ITEM'
+    || typeof rule.output.label !== 'string' || !rule.output.label.trim()
     || rule.output.id !== factId('ITEM', rule.output.label)
     || !isCount(rule.outputQuantity) || rule.outputQuantity === 0
     || !ACQUISITION_SOURCE_KINDS.has(rule.sourceKind as SourceKind)
-    || typeof rule.sourceLabel !== 'string' || !rule.sourceLabel
-    || typeof rule.locationId !== 'string' || !rule.locationId
+    || typeof rule.sourceLabel !== 'string' || !rule.sourceLabel.trim()
+    || typeof rule.locationId !== 'string' || !rule.locationId.trim()
+    || rule.id !== expectedRuleId(rule)
     || !['REPEATABLE', 'ONE_TIME', 'UNKNOWN'].includes(rule.repeatability as string)
     || (rule.probability !== null && (typeof rule.probability !== 'number'
       || !Number.isFinite(rule.probability) || rule.probability < 0 || rule.probability > 1))
-    || rule.coverage !== 'VERIFIED' || !Array.isArray(rule.provenanceIds)
-    || rule.provenanceIds.length === 0
-    || !rule.provenanceIds.every(id => typeof id === 'string' && id.length > 0)) return false;
+    || !validAuditCoverage(rule.coverage)
+    || !validProvenance(rule.provenanceIds)) return false;
   try {
     assertRequirementExpr(rule.requirements as RequirementExpr);
     return true;
@@ -162,38 +216,101 @@ function validVerifiedAcquisitionRule(rule: unknown): boolean {
     return false;
   }
 }
-function acquisitionCoverage(audit: unknown): AuditCoverage {
-  if (audit === undefined) return 'PARTIAL';
-  if (!isRecord(audit)
-    || audit.schemaVersion !== 1
-    || !validAuditCoverage(audit.acquisitionCoverage)
-    || !isRecord(audit.sourceFamilyCoverage)
-    || !Array.isArray(audit.unresolvedSources)) return 'UNKNOWN';
 
-  const familyCoverage = ACQUISITION_FAMILIES.map(
-    family => audit.sourceFamilyCoverage[family],
-  );
-  if (!familyCoverage.every(validAuditCoverage)) return 'UNKNOWN';
-
-  for (const source of audit.unresolvedSources) {
-    if (!isRecord(source)
-      || typeof source.id !== 'string'
-      || source.id.length === 0
-      || !validAuditCoverage(source.coverage)) return 'UNKNOWN';
-  }
-  if (audit.unresolvedSources.length > 0) return 'PARTIAL';
-  if (audit.acquisitionCoverage === 'VERIFIED') {
-    if (!Array.isArray(audit.rules) || audit.rules.length === 0) return 'UNKNOWN';
-    const ruleIds = new Set<string>();
-    for (const rule of audit.rules) {
-      if (!validVerifiedAcquisitionRule(rule) || ruleIds.has(rule.id)) return 'UNKNOWN';
-      ruleIds.add(rule.id);
-    }
-    if (familyCoverage.every(coverage => coverage === 'VERIFIED')) return 'VERIFIED';
-  }
-  return audit.acquisitionCoverage === 'UNKNOWN' ? 'UNKNOWN' : 'PARTIAL';
+function validUnresolvedSource(source: unknown): source is JsonRecord {
+  return isRecord(source) && hasExactKeys(source, UNRESOLVED_KEYS)
+    && typeof source.id === 'string'
+    && /^unresolved:[a-z0-9-]+:[0-9a-f]{8}$/.test(source.id)
+    && typeof source.output === 'string' && source.output.trim().length > 0
+    && ACQUISITION_SOURCE_KINDS.has(source.sourceKind as SourceKind)
+    && typeof source.sourceHost === 'string' && source.sourceHost.trim().length > 0
+    && Array.isArray(source.regions) && source.regions.every(region =>
+      typeof region === 'string' && region.trim().length > 0)
+    && validAuditCoverage(source.coverage)
+    && UNRESOLVED_REASONS.has(source.reason as string)
+    && validProvenance(source.provenanceIds);
 }
 
+function belongsToFamily(source: JsonRecord, family: AcquisitionFamily): boolean {
+  const provenance = source.provenanceIds as string[];
+  return family === 'RESOURCE_ENGINE'
+    ? provenance.some(id => id.startsWith('resource-map:'))
+    : source.sourceKind === family;
+}
+
+function derivedFamilyAccounting(
+  rules: readonly JsonRecord[],
+  unresolved: readonly JsonRecord[],
+): Record<AcquisitionFamily, JsonRecord> {
+  return Object.fromEntries(ACQUISITION_FAMILIES.map(family => {
+    const familyRules = rules.filter(rule => belongsToFamily(rule, family));
+    const familyUnresolved = unresolved.filter(source => belongsToFamily(source, family));
+    const coverage: AuditCoverage = familyRules.length === 0 && familyUnresolved.length === 0
+      ? 'UNKNOWN'
+      : familyRules.some(rule => rule.coverage === 'UNKNOWN')
+        || familyUnresolved.some(source => source.coverage === 'UNKNOWN')
+        ? 'UNKNOWN'
+        : familyUnresolved.length > 0
+          || familyRules.some(rule => rule.coverage === 'PARTIAL')
+          ? 'PARTIAL'
+          : 'VERIFIED';
+    return [family, {
+      ruleCount: familyRules.length,
+      unresolvedCount: familyUnresolved.length,
+      ruleIds: familyRules.map(rule => rule.id),
+      unresolvedIds: familyUnresolved.map(source => source.id),
+      coverage,
+    }];
+  })) as unknown as Record<AcquisitionFamily, JsonRecord>;
+}
+
+function acquisitionCoverage(audit: unknown): AuditCoverage {
+  if (audit === undefined) return 'PARTIAL';
+  if (!isRecord(audit) || !hasExactKeys(audit, [
+    'schemaVersion', 'sourceVersion', 'counts', 'acquisitionCoverage',
+    'sourceFamilyCoverage', 'sourceFamilyAccounting', 'rules', 'unresolvedSources',
+  ]) || audit.schemaVersion !== 1
+    || typeof audit.sourceVersion !== 'string'
+    || !/^sha256-[0-9a-f]{64}$/.test(audit.sourceVersion)
+    || !validAuditCoverage(audit.acquisitionCoverage)
+    || !isRecord(audit.counts) || !hasExactKeys(audit.counts, ['rules', 'unresolvedSources'])
+    || !isCount(audit.counts.rules) || !isCount(audit.counts.unresolvedSources)
+    || !isRecord(audit.sourceFamilyCoverage)
+    || !hasExactKeys(audit.sourceFamilyCoverage, ACQUISITION_FAMILIES)
+    || !isRecord(audit.sourceFamilyAccounting)
+    || !hasExactKeys(audit.sourceFamilyAccounting, ACQUISITION_FAMILIES)
+    || !Array.isArray(audit.rules) || !Array.isArray(audit.unresolvedSources)
+    || audit.counts.rules !== audit.rules.length
+    || audit.counts.unresolvedSources !== audit.unresolvedSources.length) return 'UNKNOWN';
+
+  if (!audit.rules.every(validAcquisitionRule)
+    || !audit.unresolvedSources.every(validUnresolvedSource)) return 'UNKNOWN';
+  const rules = audit.rules as JsonRecord[];
+  const unresolved = audit.unresolvedSources as JsonRecord[];
+  const allIds = [...rules, ...unresolved].map(source => source.id as string);
+  if (new Set(allIds).size !== allIds.length) return 'UNKNOWN';
+  if ([...rules, ...unresolved].some(source =>
+    !ACQUISITION_FAMILIES.some(family => belongsToFamily(source, family)))) return 'UNKNOWN';
+
+  const derived = derivedFamilyAccounting(rules, unresolved);
+  for (const family of ACQUISITION_FAMILIES) {
+    const declared = audit.sourceFamilyAccounting[family];
+    if (!isRecord(declared) || !hasExactKeys(declared, [
+      'coverage', 'ruleCount', 'ruleIds', 'unresolvedCount', 'unresolvedIds',
+    ]) || canonicalJson(declared) !== canonicalJson(derived[family])
+      || audit.sourceFamilyCoverage[family] !== derived[family].coverage) return 'UNKNOWN';
+  }
+
+  const familyCoverages = ACQUISITION_FAMILIES.map(
+    family => derived[family].coverage as AuditCoverage,
+  );
+  const derivedGlobal: AuditCoverage = unresolved.length > 0
+    ? 'PARTIAL'
+    : familyCoverages.every(coverage => coverage === 'VERIFIED')
+      ? 'VERIFIED'
+      : rules.length === 0 ? 'UNKNOWN' : 'PARTIAL';
+  return audit.acquisitionCoverage === derivedGlobal ? derivedGlobal : 'UNKNOWN';
+}
 export async function buildRuneProofSourceAudit(
   questAudit: unknown,
   chunkAudit: unknown,

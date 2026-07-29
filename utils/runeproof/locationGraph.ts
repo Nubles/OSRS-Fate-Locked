@@ -48,6 +48,60 @@ interface ValidatedGraph {
   coverage: Coverage;
 }
 
+export interface ValidatedLocationNodes {
+  nodes: ReadonlyMap<string, LocationNodeSource>;
+  surfaceNodes: ReadonlyMap<string, LocationNodeSource>;
+  coverage: Coverage;
+}
+
+export function validateLocationNodes(
+  sourceNodes: readonly unknown[],
+): ValidatedLocationNodes {
+  let valid = Array.isArray(sourceNodes);
+  const nodeCounts = countStringIds(sourceNodes);
+  const candidateNodes = new Map<string, LocationNodeSource>();
+
+  for (const value of sourceNodes) {
+    if (!isLocationNode(value) || nodeCounts.get(value.id) !== 1) {
+      valid = false;
+      continue;
+    }
+    candidateNodes.set(value.id, value);
+  }
+
+  const invalid = invalidParentIds(candidateNodes);
+  const surfaceOwners = new Map<string, string[]>();
+  for (const node of candidateNodes.values()) {
+    if (!node.parentId) {
+      surfaceOwners.set(node.surfaceChunk, [
+        ...(surfaceOwners.get(node.surfaceChunk) ?? []), node.id,
+      ]);
+    }
+  }
+  for (const ownerIds of surfaceOwners.values()) {
+    if (ownerIds.length > 1) ownerIds.forEach(id => invalid.add(id));
+  }
+  if (invalid.size > 0) valid = false;
+
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const node of candidateNodes.values()) {
+      if (node.parentId && invalid.has(node.parentId) && !invalid.has(node.id)) {
+        invalid.add(node.id);
+        changed = true;
+      }
+    }
+  }
+
+  const nodes = new Map([...candidateNodes].filter(([id]) => !invalid.has(id)));
+  const surfaceNodes = new Map(
+    [...nodes.values()].filter(node => !node.parentId)
+      .map(node => [node.surfaceChunk, node]),
+  );
+  return { nodes, surfaceNodes, coverage: valid ? 'VERIFIED' : 'UNKNOWN' };
+}
+
 export function calculateReachability(
   graph: LocationGraph,
   snapshot: RuneProofRunSnapshot,
