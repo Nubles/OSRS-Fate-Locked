@@ -9,6 +9,7 @@ import { ActionSection } from './components/ActionSection';
 import { GachaSection } from './components/GachaSection';
 import { Dashboard } from './components/Dashboard';
 import { buildRuneProofRunSnapshot } from './utils/runeproof/runSnapshot';
+import { runeProofExportRegistry } from './services/RuneProofService';
 const LogViewer = lazyWithRetry(() => import('./components/LogViewer').then(m => ({ default: m.LogViewer })));
 import { SectionGuide, GUIDES } from './components/SectionGuide';
 import { PopOnChange } from './components/PopOnChange';
@@ -654,6 +655,13 @@ const GameLayout = () => {
     lastEvent, animationsEnabled, hasSeenOnboarding, history, linkedAccount,
   } = game;
   const runeProofSnapshot = useMemo(() => buildRuneProofRunSnapshot(game), [game]);
+  const runeliteProofSourceVersion = runeProofExportRegistry.latestSourceVersion(game.runId)
+    ?? 'No current proof source';
+  const runeliteProofMetadata = runeProofExportRegistry.metadata({
+    runId: game.runId, runRevision: game.runRevision,
+    sourceVersion: runeliteProofSourceVersion,
+    pinnedGoalIds: game.pinnedGoals,
+  });
   const { recentlyCreatedId, activeProfileId, activeProfileName, clearRecentlyCreated } = useProfiles();
 
   const directGuideRequested = typeof window !== 'undefined'
@@ -995,6 +1003,8 @@ const GameLayout = () => {
           replacing={relaySync.enabled}
           profileName={activeProfileName}
           linkedAccount={linkedAccount ?? null}
+          proofCount={runeliteProofMetadata.proofCount}
+          proofSourceVersion={runeliteProofMetadata.sourceVersion}
           phase={runelitePairPhase}
           error={runelitePairError}
           onConfirm={() => {

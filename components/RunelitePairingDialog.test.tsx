@@ -16,6 +16,8 @@ const renderDialog = (
     replacing: false,
     profileName: 'Main profile',
     linkedAccount: 'Nubles UIM',
+    proofCount: 0,
+    proofSourceVersion: 'No current proof source',
     phase: 'confirm',
     onConfirm: vi.fn(),
     onRetry: vi.fn(),
@@ -44,6 +46,14 @@ describe('RunelitePairingDialog', () => {
     expect(props.onClose).not.toHaveBeenCalled();
   });
 
+  it('shows the compact proof count and exact source version being synced', () => {
+    renderDialog({
+      proofCount: 3,
+      proofSourceVersion: 'sha256-3fdaffad',
+    } as any);
+    expect(screen.getByText('3 current proofs')).toBeTruthy();
+    expect(screen.getByText('sha256-3fdaffad')).toBeTruthy();
+  });
   it('shows the unbound-account fallback', () => {
     renderDialog({ linkedAccount: null });
     expect(screen.getByText('No bound account')).toBeTruthy();

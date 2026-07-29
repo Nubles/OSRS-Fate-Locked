@@ -16,7 +16,11 @@ import { showToast } from './toast';
 import { UnlockState } from '../types';
 import { bankLocksActive } from './reachability';
 import type { GameModeRules } from '../config/gameModes';
-import { buildRuneliteRulesManifest } from './runeliteRulesManifest';
+import {
+  buildRuneliteRulesManifest,
+  type RuneProofBundleSummary,
+} from './runeliteRulesManifest';
+import { runeProofExportRegistry } from '../services/RuneProofService';
 
 /**
  * gzip+base64 a string for the clipboard, prefixed "FLGZ:" so the plugin knows
@@ -59,6 +63,8 @@ export interface RuneliteRunInput {
   rulesVersion?: string;
   contentVersion?: number;
   detectorContractVersion?: number;
+  runeProof?: readonly RuneProofBundleSummary[];
+  runeProofSourceVersion?: string;
 }
 
 /**
@@ -92,7 +98,14 @@ export async function buildBundlePayload(
     linkedAccount: run.linkedAccount,
     equipment: unlocks.equipment,
   };
-  const rules = await buildRuneliteRulesManifest({ unlocks, run });
+  const sourceVersion = run.runeProofSourceVersion ?? await currentRuneProofSourceVersion();
+  const runeProof = run.runeProof ?? await runeProofExportRegistry.select({
+    runId: run.runId, runRevision: run.runRevision, sourceVersion,
+    pinnedGoalIds: run.pinnedGoals ?? [],
+  });
+  const rules = await buildRuneliteRulesManifest({
+    unlocks, run, runeProof, runeProofSourceVersion: sourceVersion,
+  });
   const banksLocked = bankLocksActive(run.gameModeId, run.customMode);
   const payload = await buildRuneliteBundle(
     unlocks.regions, state, itemTiers, slayerChunks,
@@ -132,4 +145,13 @@ export async function exportRuneliteBundle(unlocks: UnlockState, run: RuneliteRu
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
   showToast('RuneLite bundle copied + downloaded');
+}
+
+async function currentRuneProofSourceVersion(): Promise<string> {
+  const module = await import('../public/runeproof-sources.json');
+  const document = module.default as { sourceVersion?: unknown };
+  if (typeof document.sourceVersion !== 'string' || !document.sourceVersion.trim()) {
+    throw new Error('RuneProof source version is unavailable');
+  }
+  return document.sourceVersion;
 }

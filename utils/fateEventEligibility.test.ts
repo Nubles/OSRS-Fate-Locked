@@ -30,7 +30,7 @@ const event = (
   sessionSequence: 1,
   bundleVersion: 1,
   rulesVersion: '1',
-  contentVersion: 1,
+  contentVersion: 2,
   detectorId: {
     SKILL_LEVEL: 'skill-level-v1',
     QUEST: 'quest-widget-v1',
