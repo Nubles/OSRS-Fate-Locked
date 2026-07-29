@@ -12,12 +12,7 @@ const STATUS: Record<RuneProofReport['status'], { title: string; detail: string;
 export function statusLabel(status: RuneProofReport['status']): string { return STATUS[status].title; }
 
 export const ProofStatusCard: React.FC<{ report: RuneProofReport }> = ({ report }) => {
-  const guidance = report.coverage === 'PARTIAL' && !report.routesComplete;
-  const status = guidance
-    ? report.status === 'BLOCKED'
-      ? { title: 'Missing known requirements', detail: 'These are the missing requirements found in the exact current-chunk catalog.', tone: 'border-orange-500/40 bg-orange-950/30 text-orange-100' }
-      : { title: 'Route found in current chunk data', detail: 'This is usable catalog guidance, but its source details are not audited enough for a proof certificate.', tone: 'border-cyan-500/40 bg-cyan-950/30 text-cyan-100' }
-    : STATUS[report.status];
+  const status = STATUS[report.status];
   return <section className={`rounded-lg border p-3 ${status.tone}`} aria-live="polite">
     <h2 className="text-sm font-bold">{status.title}</h2>
     <p className="mt-1 text-xs opacity-85">{status.detail}</p>

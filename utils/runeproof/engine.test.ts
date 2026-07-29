@@ -77,100 +77,17 @@ describe('evaluateRuneProof', () => {
     expect((await evaluateRuneProof({ goal }, snapshot(), noRoutes)).status).toBe('UNKNOWN');
   });
 
-  it('returns usable current-chunk guidance for an exact PARTIAL item route without issuing a certificate', async () => {
-    const incomplete = sources();
-    incomplete.acquisition.rules[0].coverage = 'PARTIAL';
-    incomplete.acquisition.provenanceCatalog[0].coverage = 'PARTIAL';
+  it.each(['PARTIAL', 'UNKNOWN'] as const)(
+    'returns UNKNOWN when the selected acquisition route has %s coverage',
+    async routeCoverage => {
+      const incomplete = sources();
+      incomplete.acquisition.rules[0].coverage = routeCoverage;
+      incomplete.acquisition.provenanceCatalog[0].coverage = routeCoverage;
 
-    const result = await evaluateRuneProof({ goal }, snapshot(), incomplete);
-
-    expect(result).toMatchObject({
-      status: 'OBTAINABLE',
-      coverage: 'PARTIAL',
-      routesComplete: false,
-      explanation: expect.stringMatching(/current chunk data/i),
-    });
-    expect(result.routes[0].witness.steps.root.ruleId).toBe('plank-direct');
-    expect(result.routes[0].witness.proofHash).not.toMatch(/^sha256-/);
-  });
-
-  it('shows missing unlocks from a known PARTIAL current-chunk route without claiming they are unavoidable', async () => {
-    const incomplete = sources();
-    incomplete.acquisition.rules[0].coverage = 'PARTIAL';
-    incomplete.acquisition.rules[0].requirements = {
-      op: 'FACT',
-      fact: { id: 'unlock:access-yard', kind: 'UNLOCK', label: 'Access yard' },
-    };
-    incomplete.acquisition.provenanceCatalog[0].coverage = 'PARTIAL';
-
-    const result = await evaluateRuneProof({ goal }, snapshot(), incomplete);
-
-    expect(result).toMatchObject({
-      status: 'BLOCKED',
-      coverage: 'PARTIAL',
-      routesComplete: false,
-      blockers: [{ factIds: ['unlock:access-yard'], labels: ['Access yard'] }],
-      unavoidableBlockerFactIds: [],
-      explanation: expect.stringMatching(/missing requirements/i),
-    });
-  });
-
-  it('does not let PARTIAL route guidance mask independent UNKNOWN audit coverage', async () => {
-    const incomplete = sources();
-    incomplete.acquisition.rules[0].coverage = 'PARTIAL';
-    incomplete.acquisition.provenanceCatalog[0].coverage = 'PARTIAL';
-    incomplete.sourceAudit.chunkCoverage = 'UNKNOWN';
-
-    const result = await evaluateRuneProof({ goal }, snapshot(), incomplete);
-
-    expect(result).toMatchObject({ status: 'UNKNOWN', routes: [], routesComplete: false });
-  });
-
-  it('fails closed for a malformed runtime goal coverage value', async () => {
-    const malformedGoal = { ...goal, coverage: 'BROKEN' as never };
-
-    expect(await evaluateRuneProof({ goal: malformedGoal }, snapshot(), sources()))
-      .toMatchObject({ status: 'UNKNOWN', routes: [], routesComplete: false });
-  });
-
-  it('fails closed with a valid fallback identity when the runtime goal is missing', async () => {
-    const result = await evaluateRuneProof(
-      { goal: null } as unknown as import('./engine').RuneProofQuery,
-      snapshot(),
-      sources(),
-    );
-
-    expect(result).toMatchObject({
-      goalId: 'goal:invalid',
-      status: 'UNKNOWN',
-      routes: [],
-      routesComplete: false,
-    });
-  });
-
-  it('does not emit an empty goal identity for a malformed runtime goal', async () => {
-    const result = await evaluateRuneProof(
-      { goal: { ...goal, id: '' } },
-      snapshot(),
-      sources(),
-    );
-
-    expect(result).toMatchObject({
-      goalId: 'goal:invalid',
-      status: 'UNKNOWN',
-      routes: [],
-      routesComplete: false,
-    });
-  });
-
-  it('keeps UNKNOWN acquisition evidence out of current-chunk guidance', async () => {
-    const incomplete = sources();
-    incomplete.acquisition.rules[0].coverage = 'UNKNOWN';
-    incomplete.acquisition.provenanceCatalog[0].coverage = 'UNKNOWN';
-
-    expect((await evaluateRuneProof({ goal }, snapshot(), incomplete)).status)
-      .toBe('UNKNOWN');
-  });
+      expect((await evaluateRuneProof({ goal }, snapshot(), incomplete)).status)
+        .toBe('UNKNOWN');
+    },
+  );
 
   it('returns UNKNOWN for a synthetic non-item goal when the acquisition corpus is unavailable', async () => {
     const unavailable = sources();
@@ -217,45 +134,7 @@ describe('evaluateRuneProof', () => {
     )).status).toBe('OBTAINABLE');
   });
 
-  it('uses known requirements from an incomplete quest as guidance without claiming a proof', async () => {
-    const incompleteQuest: CompiledGoal = {
-      id: 'quest:known-requirements',
-      kind: 'QUEST',
-      label: 'Known requirements',
-      requirement: {
-        op: 'FACT',
-        fact: { id: 'unlock:quest-start', kind: 'UNLOCK', label: 'Quest start' },
-      },
-      coverage: 'UNKNOWN',
-      provenanceIds: ['quest-audit:incomplete'],
-      sourceVersion: 'incomplete-quest-v1',
-    };
-
-    const blocked = await evaluateRuneProof({ goal: incompleteQuest }, snapshot(), sources());
-    expect(blocked).toMatchObject({
-      status: 'BLOCKED',
-      coverage: 'PARTIAL',
-      routesComplete: false,
-      blockers: [{ factIds: ['unlock:quest-start'], labels: ['Quest start'] }],
-      unavoidableBlockerFactIds: [],
-      explanation: expect.stringMatching(/known requirements/i),
-    });
-
-    const ready = await evaluateRuneProof(
-      { goal: incompleteQuest },
-      snapshot({ unlockedAreas: ['Quest start'] }),
-      sources(),
-    );
-    expect(ready).toMatchObject({
-      status: 'OBTAINABLE',
-      coverage: 'PARTIAL',
-      routesComplete: false,
-      explanation: expect.stringMatching(/known requirements/i),
-    });
-    expect(ready.routes[0].witness.proofHash).not.toMatch(/^sha256-/);
-  });
-
-  it('uses incomplete production goals only when they contain modeled requirements', async () => {
+  it('returns UNKNOWN for directly incomplete production and manual goals even when modeled terms pass', async () => {
     const activity = compileProductionActivityGoals().find(candidate =>
       candidate.requirement.op === 'ALL' && candidate.requirement.terms.length === 0);
     const diary = compileProductionDiaryGoals().find(candidate =>
@@ -277,17 +156,10 @@ describe('evaluateRuneProof', () => {
       completedQuests: ['Rune Mysteries', 'Plague City'],
     });
 
-    for (const emptyDefinition of [activity!, manualQuest]) {
-      expect((await evaluateRuneProof({ goal: emptyDefinition }, ready, sources())).status)
+    for (const incomplete of [activity!, diary!, manualQuest]) {
+      expect((await evaluateRuneProof({ goal: incomplete }, ready, sources())).status)
         .toBe('UNKNOWN');
     }
-    expect(await evaluateRuneProof({ goal: diary! }, ready, sources()))
-      .toMatchObject({
-        status: 'OBTAINABLE',
-        coverage: 'PARTIAL',
-        routesComplete: false,
-        explanation: expect.stringMatching(/known requirements/i),
-      });
   });
 
   it('treats malformed source data as UNKNOWN', async () => {

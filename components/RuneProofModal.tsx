@@ -9,7 +9,7 @@ import {
   compileItemGoal, compileProductionActivityGoals, compileProductionDiaryGoals,
   compileProductionQuestGoals, type CompiledGoal,
 } from '../utils/runeproof/goalCompiler';
-import { factId, type AcquisitionRule, type RequirementExpr, type RuneProofReport } from '../utils/runeproof/model';
+import { factId, type AcquisitionRule, type RuneProofReport } from '../utils/runeproof/model';
 import type { RuneProofSourceDocument } from '../utils/runeproof/acquisitionIndex';
 import type { RuneProofRunSnapshot } from '../types';
 import { useEscapeKey } from '../hooks/useEscapeKey';
@@ -45,7 +45,7 @@ const itemGoals = (): CompiledGoal[] => {
 
 const productionGoals = (): CompiledGoal[] => [
   ...itemGoals(), ...compileProductionQuestGoals(), ...compileProductionDiaryGoals(), ...compileProductionActivityGoals(),
-].filter(goal => goal.coverage === 'VERIFIED' || hasKnownRequirement(goal.requirement));
+];
 
 const defaultRules = goalIndex.rules;
 export function createFailClosedRuneProofAcquisition(
@@ -101,16 +101,8 @@ async function createDefaultService(current: () => RuneProofRunSnapshot): Promis
   }), current);
 }
 
-function hasKnownRequirement(requirement: RequirementExpr): boolean {
-  return requirement.op === 'FACT' || requirement.terms.some(hasKnownRequirement);
-}
-
 function coverageLabel(goal: CompiledGoal): string {
-  if (goal.kind === 'ITEM') return 'Current-chunk routes';
-  if (goal.coverage === 'VERIFIED') return 'Proof-ready';
-  return hasKnownRequirement(goal.requirement)
-    ? 'Known-requirement guidance'
-    : 'Not yet modeled';
+  return goal.coverage === 'VERIFIED' ? 'Verified coverage' : goal.coverage === 'PARTIAL' ? 'Partial coverage' : 'Coverage still being verified';
 }
 
 function kindLabel(goal: CompiledGoal): string { return goal.kind[0] + goal.kind.slice(1).toLowerCase(); }
@@ -212,7 +204,7 @@ export const RuneProofModal: React.FC<RuneProofModalProps> = ({
           {phase === 'error' && <p className="text-sm text-rose-200">RuneProof could not check this goal. Try again after current world data is available.</p>}
           {report && <div className="space-y-4"><ProofStatusCard report={report} /><ProofRouteList report={report} rules={rulesById} /><BlockerList report={report} />
             {report.status === 'IMPOSSIBLE' && <p className="text-xs text-gray-400">Unlocked chunks that are stranded are not currently reachable, so they cannot supply a route.</p>}
-            {proof && report.routesComplete && <div className="rounded border border-emerald-500/25 bg-emerald-950/20 p-2 text-xs text-emerald-100"><ShieldCheck size={14} className="mr-1 inline" />Proof checked for this run.
+            {proof && <div className="rounded border border-emerald-500/25 bg-emerald-950/20 p-2 text-xs text-emerald-100"><ShieldCheck size={14} className="mr-1 inline" />Proof checked for this run.
               <details className="mt-2 text-gray-400"><summary className="cursor-pointer text-gray-200">Verification details</summary><div className="mt-1">Current run revision: {proof.runRevision}<br />Source version: {proof.sourceVersion}<br />Proof record: {proof.proofHash}</div></details>
             </div>}</div>}
         </main>

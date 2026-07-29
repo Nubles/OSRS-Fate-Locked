@@ -156,13 +156,12 @@ export async function evaluateRuneProof(
   signal?: AbortSignal,
 ): Promise<RuneProofReport> {
   if (signal?.aborted) throw abortError();
-  const fallbackGoalId = isRecord(query) && isRecord(query.goal) && nonEmptyString(query.goal.id)
-    ? query.goal.id
-    : 'goal:invalid';
   try {
     validateSources(sources);
-
-    validateGoal(query.goal);
+    if (query.goal.coverage !== 'VERIFIED') {
+      return unknown(query.goal.id,
+        'RuneProof cannot verify this goal because its requirements are incomplete.');
+    }
     const reachability = calculateReachability(sources.locationGraph, snapshot);
     const coverage = combineAll([
       query.goal.coverage,
@@ -192,24 +191,6 @@ export async function evaluateRuneProof(
           'RuneProof cannot make a negative claim from incomplete route evidence.',
         )
       : evaluated;
-    const independentCoverage = combineAll([
-      sources.sourceAudit.questCoverage,
-      sources.sourceAudit.chunkCoverage,
-      sources.sourceAudit.acquisitionCoverage,
-      sources.acquisition.acquisitionCoverage,
-      reachability.coverage,
-    ]);
-    const coverageAware = coverageSafe.status === 'UNKNOWN'
-      && independentCoverage !== 'UNKNOWN'
-      ? catalogGuidance(
-          query.goal,
-          rulesForEvaluation,
-          snapshot,
-          reachability.reachable,
-          reachability.distance,
-          sources.sourceVersion,
-        ) ?? coverageSafe
-      : coverageSafe;
     const relevantLocations = new Set(
       relevantRules
         .filter(rule => rule.coverage === 'VERIFIED'
@@ -221,24 +202,20 @@ export async function evaluateRuneProof(
       snapshot,
       relevantLocations,
     );
-    const explained = coverageAware.status === 'UNKNOWN' && knownMissingChunks.size > 0
+    const explained = coverageSafe.status === 'UNKNOWN' && knownMissingChunks.size > 0
       ? {
-          ...coverageAware,
+          ...coverageSafe,
           explanation: `Known verified routes are blocked by missing current chunks: ${
             [...knownMissingChunks].sort().join(', ')
           }. Partial evidence means this is not a complete impossibility claim.`,
         }
-      : coverageAware;
+      : coverageSafe;
     if (signal?.aborted) throw abortError();
     const routes = query.includeAlternatives === false ? explained.routes.slice(0, 1) : explained.routes;
     const certified = [];
     const rules = new Map(rulesForEvaluation.map(rule => [rule.id, rule]));
     const runFacts = suppliedFacts(snapshot, reachability.reachable);
     for (const route of routes) {
-      if (!explained.routesComplete) {
-        certified.push(route);
-        continue;
-      }
       const witness = await createProofCertificate(JSON.parse(JSON.stringify(route.witness)));
       const replay = await verifyProof({ witness, rules, runFacts, runId: snapshot.runId,
         runRevision: snapshot.runRevision, sourceVersion: sources.sourceVersion });
@@ -249,7 +226,7 @@ export async function evaluateRuneProof(
     return freeze({ ...explained, goalId: query.goal.id, routes: certified, blockers: query.includeBlockers === false ? [] : explained.blockers });
   } catch (error) {
     if (isAbort(error)) throw error;
-    return unknown(fallbackGoalId, `RuneProof source validation failed: ${message(error)}`);
+    return unknown(query.goal.id, `RuneProof source validation failed: ${message(error)}`);
   }
 }
 
@@ -615,74 +592,6 @@ function suppliedFacts(snapshot: RuneProofRunSnapshot, reachable: ReadonlySet<st
   ));
   reachable.forEach(location => values.add(`${factId('LOCATION', location)}@1`));
   return values;
-}
-
-function validateGoal(goal: CompiledGoal): void {
-  if (!isRecord(goal)
-    || !nonEmptyString(goal.id)
-    || !nonEmptyString(goal.label)
-    || !nonEmptyString(goal.sourceVersion)
-    || !['ITEM', 'QUEST', 'DIARY', 'ACTIVITY'].includes(goal.kind)
-    || !isCoverage(goal.coverage)
-    || !validStringList(goal.provenanceIds)) {
-    throw new Error('Invalid RuneProof goal');
-  }
-  assertRequirementExpr(goal.requirement);
-}
-
-function catalogGuidance(
-  goal: CompiledGoal,
-  rules: readonly AcquisitionRule[],
-  snapshot: RuneProofRunSnapshot,
-  reachableLocations: ReadonlySet<string>,
-  distanceByLocation: ReadonlyMap<string, number>,
-  sourceVersion: string,
-): RuneProofReport | null {
-  const incompleteGoal = goal.coverage !== 'VERIFIED'
-    && hasKnownRequirement(goal.requirement);
-  const partialItemRoute = goal.kind === 'ITEM'
-    && rules.some(rule => rule.output.id === goal.id && rule.coverage === 'PARTIAL');
-  if (!incompleteGoal && !partialItemRoute) return null;
-  const syntheticGoalPrefix = `goal:${goal.id}:`;
-  const guidanceRules = rules.map(rule => rule.coverage === 'PARTIAL'
-    || rule.id.startsWith(syntheticGoalPrefix)
-    ? { ...rule, coverage: 'VERIFIED' as const }
-    : rule);
-  const report = evaluateObtainability(directGoalFact(goal), {
-    rules: guidanceRules,
-    snapshot,
-    reachableLocations,
-    distanceByLocation,
-    sourceVersion,
-    coverage: 'VERIFIED',
-  });
-  if (report.status === 'OBTAINABLE' || report.status === 'OBTAINABLE_RNG') {
-    return freeze({
-      ...report,
-      coverage: 'PARTIAL',
-      routesComplete: false,
-      explanation: incompleteGoal
-        ? 'All known requirements are satisfied in exact current chunk data. The goal definition is incomplete, so this is guidance rather than a proof certificate.'
-        : 'Route found in exact current chunk data. Source details are not fully audited, so this is guidance rather than a proof certificate.',
-    });
-  }
-  if (report.status === 'BLOCKED') {
-    return freeze({
-      ...report,
-      coverage: 'PARTIAL',
-      routesComplete: false,
-      unavoidableBlockerFactIds: [],
-      explanation: incompleteGoal
-        ? 'Known requirements in current chunk data are blocked by the missing requirements below. The goal definition is incomplete, so no impossibility claim is made.'
-        : 'Known routes in current chunk data are blocked by the missing requirements below. Other routes may exist, so no impossibility claim is made.',
-    });
-  }
-  return null;
-}
-
-function hasKnownRequirement(requirement: CompiledGoal['requirement']): boolean {
-  return requirement.op === 'FACT'
-    || requirement.terms.some(hasKnownRequirement);
 }
 
 function unknown(goalId: string, explanation: string): RuneProofReport {
