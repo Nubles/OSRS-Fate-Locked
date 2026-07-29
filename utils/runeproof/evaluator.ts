@@ -11,6 +11,7 @@ import {
   type WitnessStep,
 } from './model';
 import { compareRoutes } from './ranking';
+import { analyzeCurrentRunBlockers } from './blockers';
 
 export interface EvaluationLimits {
   readonly maxIterations: number;
@@ -170,43 +171,36 @@ export function evaluateObtainability(
     });
   }
 
-  if (hasUncertainty(requiredGoal, rules, context, new Set())) {
-    return freezeReport({
-      goalId: goal.id,
-      status: 'UNKNOWN',
-      coverage: 'UNKNOWN',
-      routes: [],
-      blockers: [],
-      unavoidableBlockerFactIds: [],
-      routesComplete: true,
-      explanation: 'Available evidence cannot prove the requested quantity completely.',
+  const suppliedFactQuantities = new Map(seedQuantities);
+  state.routes.forEach(routesForDemand => {
+    routesForDemand.forEach(route => {
+      const proved = route.witness.steps.root.proves;
+      suppliedFactQuantities.set(
+        proved.id,
+        Math.max(
+          suppliedFactQuantities.get(proved.id) ?? 0,
+          proved.quantity ?? 1,
+        ),
+      );
     });
-  }
-
-  const blockers = collectRootBlockers(requiredGoal, rules, context, seedQuantities);
-  if (blockers.length > 0) {
-    return freezeReport({
-      goalId: goal.id,
-      status: 'BLOCKED',
-      coverage,
-      routes: [],
-      blockers: [{
-        factIds: blockers.map(blocker => blocker.id),
-        labels: blockers.map(blocker => blocker.label),
-      }],
-      unavoidableBlockerFactIds: [],
-      routesComplete: true,
-    });
-  }
-
+  });
+  const blockerAnalysis = analyzeCurrentRunBlockers({
+    goal,
+    rules,
+    suppliedFactQuantities,
+    reachableLocations: context.reachableLocations,
+    coverage: context.coverage ?? 'VERIFIED',
+    routesComplete: true,
+  });
   return freezeReport({
     goalId: goal.id,
-    status: 'IMPOSSIBLE',
-    coverage: 'VERIFIED',
+    status: blockerAnalysis.status,
+    coverage: blockerAnalysis.status === 'UNKNOWN' ? 'UNKNOWN' : 'VERIFIED',
     routes: [],
-    blockers: [],
-    unavoidableBlockerFactIds: [],
-    routesComplete: true,
+    blockers: blockerAnalysis.blockers,
+    unavoidableBlockerFactIds: blockerAnalysis.unavoidableBlockerFactIds,
+    routesComplete: blockerAnalysis.complete,
+    explanation: blockerAnalysis.diagnostic,
   });
 }
 
@@ -547,150 +541,6 @@ function snapshotSeedQuantities(
     seeds.set(factId('LOCATION', location), Number.POSITIVE_INFINITY);
   });
   return seeds;
-}
-
-function hasUncertainty(
-  demand: Demand,
-  rules: readonly AcquisitionRule[],
-  context: ObtainabilityContext,
-  visiting: Set<string>,
-): boolean {
-  if ((context.coverage ?? 'VERIFIED') !== 'VERIFIED') return true;
-  if (visiting.has(demand.fact.id)) return false;
-  visiting.add(demand.fact.id);
-  try {
-    return rules.some(rule => {
-      if (rule.output.id !== demand.fact.id) return false;
-      if (rule.coverage !== 'VERIFIED') return true;
-      if (rule.repeatability === 'UNKNOWN'
-        && demand.quantity > rule.outputQuantity) return true;
-      const operations = operationsFor(rule, demand.quantity);
-      if (operations === null || !context.reachableLocations.has(rule.locationId)) {
-        return false;
-      }
-      return expressionHasUncertainty(
-        rule.requirements,
-        operations,
-        rules,
-        context,
-        visiting,
-      );
-    });
-  } finally {
-    visiting.delete(demand.fact.id);
-  }
-}
-
-function expressionHasUncertainty(
-  expression: RequirementExpr,
-  operations: number,
-  rules: readonly AcquisitionRule[],
-  context: ObtainabilityContext,
-  visiting: Set<string>,
-): boolean {
-  if (expression.op === 'FACT') {
-    return hasUncertainty(
-      demandFor(expression.fact, requiredFactQuantity(expression.fact, operations)),
-      rules,
-      context,
-      visiting,
-    );
-  }
-  return expression.terms.some(term =>
-    expressionHasUncertainty(term, operations, rules, context, visiting));
-}
-
-function collectRootBlockers(
-  goal: Demand,
-  rules: readonly AcquisitionRule[],
-  context: ObtainabilityContext,
-  seeds: ReadonlyMap<string, number>,
-): FactRef[] {
-  const goalRules = rules.filter(rule =>
-    rule.output.id === goal.fact.id && operationsFor(rule, goal.quantity) !== null);
-  if (goalRules.length === 0) return [];
-  const candidates: FactRef[][] = [];
-  for (const rule of goalRules) {
-    if (!context.reachableLocations.has(rule.locationId)) {
-      candidates.push([{
-        id: rule.locationId,
-        kind: 'LOCATION',
-        label: rule.locationId,
-      }]);
-      continue;
-    }
-    const operations = operationsFor(rule, goal.quantity)!;
-    const blockers = blockersForExpression(
-      rule.requirements,
-      operations,
-      rules,
-      context,
-      seeds,
-      new Set([goal.fact.id]),
-    );
-    if (blockers) candidates.push(blockers);
-  }
-  return candidates
-    .filter(candidate => candidate.length > 0)
-    .sort((left, right) =>
-      left.length - right.length
-      || compareText(
-        left.map(fact => fact.id).join('\u0000'),
-        right.map(fact => fact.id).join('\u0000'),
-      ))[0] ?? [];
-}
-
-function blockersForExpression(
-  expression: RequirementExpr,
-  operations: number,
-  rules: readonly AcquisitionRule[],
-  context: ObtainabilityContext,
-  seeds: ReadonlyMap<string, number>,
-  visiting: Set<string>,
-): FactRef[] | null {
-  if (expression.op === 'FACT') {
-    const quantity = requiredFactQuantity(expression.fact, operations);
-    if ((seeds.get(expression.fact.id) ?? 0) >= quantity) return [];
-    if (visiting.has(expression.fact.id)) return null;
-    const matching = rules.filter(rule =>
-      rule.output.id === expression.fact.id
-      && operationsFor(rule, quantity) !== null);
-    if (matching.length === 0) return [factWithQuantity(expression.fact, quantity)];
-    visiting.add(expression.fact.id);
-    try {
-      const candidates = matching.map(rule => {
-        if (!context.reachableLocations.has(rule.locationId)) {
-          return [{
-            id: rule.locationId,
-            kind: 'LOCATION' as const,
-            label: rule.locationId,
-          }];
-        }
-        return blockersForExpression(
-          rule.requirements,
-          operationsFor(rule, quantity)!,
-          rules,
-          context,
-          seeds,
-          visiting,
-        );
-      }).filter((value): value is FactRef[] => value !== null);
-      return candidates.sort((left, right) => left.length - right.length)[0] ?? null;
-    } finally {
-      visiting.delete(expression.fact.id);
-    }
-  }
-  const children = expression.terms.map(term =>
-    blockersForExpression(term, operations, rules, context, seeds, visiting));
-  if (expression.op === 'ANY') {
-    return children
-      .filter((value): value is FactRef[] => value !== null)
-      .sort((left, right) => left.length - right.length)[0] ?? null;
-  }
-  if (children.some(child => child === null)) return null;
-  const unique = new Map<string, FactRef>();
-  (children as FactRef[][]).flat().forEach(fact => unique.set(fact.id, fact));
-  return [...unique.values()].sort((left, right) => compareText(left.id, right.id));
 }
 
 function factWithQuantity(fact: FactRef, quantity: number): FactRef {

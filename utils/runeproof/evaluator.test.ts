@@ -145,7 +145,8 @@ describe('evaluateObtainability', () => {
       context([unknown]),
     )).toMatchObject({
       status: 'UNKNOWN',
-      routesComplete: true,
+      routesComplete: false,
+      unavoidableBlockerFactIds: [],
     });
   });
 
@@ -225,7 +226,7 @@ describe('evaluateObtainability', () => {
     expect(withDeterministic.routes.every(route => route.deterministic)).toBe(true);
   });
 
-  it('does not bootstrap an unsupported cycle', () => {
+  it('does not bootstrap or invent finite blockers for an unsupported cycle', () => {
     const result = evaluateObtainability(item('A'), context([
       rule('a-from-b', 'A', {
         requirements: { op: 'FACT', fact: item('B') },
@@ -235,8 +236,12 @@ describe('evaluateObtainability', () => {
       }),
     ]));
 
-    expect(result.status).toBe('IMPOSSIBLE');
+    expect(result.status).toBe('UNKNOWN');
     expect(result.routes).toEqual([]);
+    expect(result.routesComplete).toBe(false);
+    expect(result.blockers).toEqual([]);
+    expect(result.unavoidableBlockerFactIds).toEqual([]);
+    expect(result.explanation).toContain('dependency cycle');
   });
 
   it('allows a cycle when one member is independently provable', () => {
@@ -300,7 +305,7 @@ describe('evaluateObtainability', () => {
       unavoidableBlockerFactIds: [],
     });
   });
-  it('does not call one selected ANY blocker unavoidable', () => {
+  it('replaces a selected ANY path with the exact blocker antichain', () => {
     const result = evaluateObtainability(item('Goal'), context([
       rule('goal', 'Goal', {
         requirements: {
@@ -313,12 +318,18 @@ describe('evaluateObtainability', () => {
       }),
     ]));
 
-    expect(result.status).toBe('BLOCKED');
-    expect(result.blockers).not.toEqual([]);
-    expect(result.unavoidableBlockerFactIds).toEqual([]);
+    expect(result.status).toBe('IMPOSSIBLE');
+    expect(result.blockers).toEqual([{
+      factIds: ['item:missing-a', 'item:missing-b'],
+      labels: ['Missing A', 'Missing B'],
+    }]);
+    expect(result.unavoidableBlockerFactIds).toEqual([
+      'item:missing-a',
+      'item:missing-b',
+    ]);
   });
 
-  it('does not call a selected alternative-rule blocker unavoidable', () => {
+  it('replaces a selected acquisition rule with the exact blocker antichain', () => {
     const result = evaluateObtainability(item('Goal'), context([
       rule('goal-from-a', 'Goal', {
         requirements: { op: 'FACT', fact: item('Missing A') },
@@ -328,12 +339,70 @@ describe('evaluateObtainability', () => {
       }),
     ]));
 
-    expect(result.status).toBe('BLOCKED');
-    expect(result.blockers).not.toEqual([]);
-    expect(result.unavoidableBlockerFactIds).toEqual([]);
+    expect(result.status).toBe('IMPOSSIBLE');
+    expect(result.blockers).toEqual([{
+      factIds: ['item:missing-a', 'item:missing-b'],
+      labels: ['Missing A', 'Missing B'],
+    }]);
+    expect(result.unavoidableBlockerFactIds).toEqual([
+      'item:missing-a',
+      'item:missing-b',
+    ]);
   });
 
 
+  it('never exposes an unreachable location as a blocker or unlock suggestion', () => {
+    const result = evaluateObtainability(item('Goal'), context([
+      rule('remote-goal', 'Goal', { locationId: 'location:future-chunk' }),
+    ]));
+    expect(result).toMatchObject({
+      status: 'IMPOSSIBLE',
+      coverage: 'VERIFIED',
+      routesComplete: true,
+      blockers: [],
+      unavoidableBlockerFactIds: [],
+    });
+    expect(JSON.stringify(result)).not.toContain('future-chunk');
+  });
+
+  it('does not classify a missing ITEM leaf alone as BLOCKED', () => {
+    const result = evaluateObtainability(item('Goal'), context([
+      rule('goal', 'Goal', {
+        requirements: { op: 'FACT', fact: item('Missing part') },
+      }),
+    ]));
+    expect(result).toMatchObject({
+      status: 'IMPOSSIBLE',
+      coverage: 'VERIFIED',
+      routesComplete: true,
+      blockers: [{
+        factIds: ['item:missing-part'],
+        labels: ['Missing part'],
+      }],
+      unavoidableBlockerFactIds: ['item:missing-part'],
+    });
+  });
+
+  it('uses BLOCKED only for a reachable route gated by a current rule fact', () => {
+    const result = evaluateObtainability(item('Goal'), context([
+      rule('goal', 'Goal', {
+        requirements: {
+          op: 'FACT',
+          fact: fact('QUEST', 'Dragon Slayer'),
+        },
+      }),
+    ]));
+    expect(result).toMatchObject({
+      status: 'BLOCKED',
+      coverage: 'VERIFIED',
+      routesComplete: true,
+      blockers: [{
+        factIds: ['quest:dragon-slayer'],
+        labels: ['Dragon Slayer'],
+      }],
+      unavoidableBlockerFactIds: ['quest:dragon-slayer'],
+    });
+  });
   it('is stable across rule order and deeply freezes defensive output', () => {
     const rules = [rule('z-shop', 'Pot'), rule('a-shop', 'Pot')];
     const forward = evaluateObtainability(item('Pot'), context(rules));
