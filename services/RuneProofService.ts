@@ -75,7 +75,8 @@ export class RuneProofExportRegistry {
   }
 
   private selectedRecords(selection: RuneProofExportSelection): RuneProofExportRecord[] {
-    const forRun = [...this.records.values()].filter(record => record.runId === selection.runId);
+    const forRun = [...this.records.values()].filter(record =>
+      record.runId === selection.runId && exportableRecord(record.report));
     const exact = forRun.filter(record => record.runRevision === selection.runRevision
       && record.sourceVersion === selection.sourceVersion);
     const selectedGoalId = this.selectedByIdentity.get(selectionIdentityKey(
@@ -167,6 +168,9 @@ function assertExportReport(goal: CompiledGoal, report: RuneProofReport): void {
     throw new Error('Invalid RuneProof export record');
   }
   assertRuneProofReport({ ...report, goalId: witnessRoot });
+}
+function exportableRecord(report: RuneProofReport): boolean {
+  return report.coverage !== 'PARTIAL' || report.routesComplete;
 }
 function positiveStatus(status: RuneProofReport['status']): boolean {
   return status === 'OBTAINABLE' || status === 'OBTAINABLE_RNG';

@@ -97,6 +97,27 @@ describe('production RuneProof Plank slice', () => {
     expect(replay).toEqual({ valid: true, stale: false, errors: [] });
   });
 
+  it('returns production current-chunk guidance for a non-audited exact item route', async () => {
+    const airTalisman = compileItemGoal({ id: 'item:air-talisman', label: 'Air talisman' }, 1);
+    const report = await evaluateRuneProof(
+      { goal: airTalisman },
+      snapshot({ unlockedChunks: ['50,50'] }),
+      sources,
+    );
+
+    expect(report).toMatchObject({
+      status: 'OBTAINABLE_RNG',
+      coverage: 'PARTIAL',
+      routesComplete: false,
+      explanation: expect.stringMatching(/current chunk data/i),
+    });
+    expect(report.routes[0].witness.steps.root).toMatchObject({
+      sourceLabel: 'Goblin',
+      proves: { id: 'item:air-talisman' },
+    });
+    expect(report.routes[0].witness.proofHash).not.toMatch(/^sha256-/);
+  });
+
   it('fails closed when any intermediate current chunk is missing', async () => {
     const missingVarrockPalace = snapshot({
       unlockedChunks: corridor.filter(chunk => chunk !== '50,54'),

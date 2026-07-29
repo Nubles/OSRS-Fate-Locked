@@ -30,6 +30,10 @@ export const CHANGELOG_RELEASES = [
       ],
       changed: [
         'Goal planning now uses proof-carrying current-run constraints instead of overlapping future-unlock heuristics.',
+        'RuneProof goal labels now distinguish proof-ready checks, current-chunk routes, and known-requirement guidance instead of presenting a blanket verification warning.',
+      ],
+      fixed: [
+        'Partially audited item sources now produce usable current-chunk route guidance or known missing requirements. Guidance never receives a proof badge, certificate, or impossibility claim.',
       ],
     },
   },
