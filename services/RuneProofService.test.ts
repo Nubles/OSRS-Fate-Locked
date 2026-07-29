@@ -73,6 +73,48 @@ describe('RuneProofService', () => {
     const [selected] = await registry.select({ runId: 'run-a', runRevision: 1, sourceVersion: 'sources-a', pinnedGoalIds: [] });
     expect(selected).toMatchObject({ goalId: compositeGoal.id, status: 'OBTAINABLE', proofHash: witness.proofHash });
   });
+  it('never counts or exports current-chunk guidance as a proof', async () => {
+    const registry = new (RuneProofServiceModule as any).RuneProofExportRegistry();
+    const guidance = {
+      goalId: goal.id,
+      status: 'OBTAINABLE' as const,
+      coverage: 'PARTIAL' as const,
+      routes: [{
+        id: 'route-guidance', deterministic: true, prerequisiteCount: 0,
+        recursiveIngredientCount: 0, travelDistance: 0, probability: null,
+        witness: {
+          rootFactId: goal.id,
+          steps: { root: { ruleId: 'partial-route', proves: { id: goal.id, kind: 'ITEM' as const, label: goal.label }, chosenTerms: [], childStepIds: [] } },
+          sourceVersion: 'sources-a', runId: 'run-a', runRevision: 1,
+          proofHash: 'guidance-not-a-certificate',
+        },
+      }],
+      blockers: [], unavoidableBlockerFactIds: [], routesComplete: false,
+      explanation: 'Current-chunk guidance only.',
+    };
+    registry.record(goal, guidance, snapshot(), 'sources-a');
+    const selection = {
+      runId: 'run-a', runRevision: 1, sourceVersion: 'sources-a',
+      pinnedGoalIds: [goal.id],
+    };
+
+    expect(registry.metadata(selection)).toEqual({ proofCount: 0, sourceVersion: 'sources-a' });
+    expect(await registry.select(selection)).toEqual([]);
+
+    registry.record(goal, {
+      goalId: goal.id,
+      status: 'BLOCKED',
+      coverage: 'PARTIAL',
+      routes: [],
+      blockers: [{ factIds: ['unlock:shop'], labels: ['Shop access'] }],
+      unavoidableBlockerFactIds: [],
+      routesComplete: false,
+      explanation: 'Known requirements are missing.',
+    }, snapshot(), 'sources-a');
+    expect(registry.metadata(selection)).toEqual({ proofCount: 0, sourceVersion: 'sources-a' });
+    expect(await registry.select(selection)).toEqual([]);
+  });
+
   it('exports UNKNOWN when a selected certificate is malformed or stale', async () => {
     const registry = new (RuneProofServiceModule as any).RuneProofExportRegistry();
     const witness = await createProofCertificate({

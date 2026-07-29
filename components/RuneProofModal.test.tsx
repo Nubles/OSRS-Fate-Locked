@@ -120,6 +120,17 @@ describe('RuneProofModal', () => {
     }
   });
 
+  it('labels goals by usable behavior instead of showing a blanket verification warning', () => {
+    renderModal();
+
+    expect(screen.getByRole('button', { name: /Oak plankItem · Current-chunk routes/i }))
+      .not.toBeNull();
+    expect(screen.getByRole('button', { name: /Lumbridge Easy DiaryDiary · Known-requirement guidance/i }))
+      .not.toBeNull();
+    expect(screen.getByRole('button', { name: /WintertodtActivity · Proof-ready/i }))
+      .not.toBeNull();
+  });
+
   it.each([
     ['OBTAINABLE', 'Obtainable now'],
     ['OBTAINABLE_RNG', 'Obtainable now — random drop'],
@@ -148,6 +159,49 @@ describe('RuneProofModal', () => {
     const verification = screen.getByText('Verification details').closest('details');
     expect(verification?.open).toBe(false);
     expect(screen.getByText('Proof checked for this run.')).not.toBeNull();
+  });
+
+  it('shows partial current-chunk routes as guidance and never as a checked proof', async () => {
+    const guidance = {
+      ...report('OBTAINABLE'),
+      coverage: 'PARTIAL' as const,
+      routesComplete: false,
+      explanation: 'Route found in exact current chunk data.',
+    };
+    renderModal(serviceFor(guidance));
+    await choose();
+
+    expect(screen.getByRole('heading', { name: 'Route found in current chunk data' }))
+      .not.toBeNull();
+    expect(screen.getByRole('heading', { name: 'Best known route' })).not.toBeNull();
+    expect(screen.queryByText('Proof checked for this run.')).toBeNull();
+  });
+
+  it('renders synthetic guidance steps with their player-facing source labels', async () => {
+    const synthetic = {
+      ...report('OBTAINABLE'),
+      coverage: 'PARTIAL' as const,
+      routesComplete: false,
+      routes: [{
+        ...route(),
+        witness: {
+          ...route().witness,
+          steps: {
+            root: {
+              ruleId: 'goal:diary:lumbridge-easy:test',
+              sourceLabel: 'Lumbridge Easy Diary',
+              proves: { id: 'item:oak-plank', kind: 'ITEM' as const, label: 'Oak plank' },
+              chosenTerms: [], childStepIds: [],
+            },
+          },
+        },
+      }],
+    };
+    renderModal(serviceFor(synthetic));
+    await choose();
+
+    expect(screen.getAllByText('Lumbridge Easy Diary')).toHaveLength(2);
+    expect(screen.queryByText('goal:diary:lumbridge-easy:test')).toBeNull();
   });
 
   it('marks requirements shared by every blocked route as unavoidable', async () => {

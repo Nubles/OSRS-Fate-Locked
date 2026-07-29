@@ -12,7 +12,7 @@ function RouteSteps({ route, rules }: { route: ProofRoute; rules: ReadonlyMap<st
       const rule = rules.get(step.ruleId);
       const requirements = rule ? requirementLabels(rule.requirements) : [];
       return <li key={`${step.ruleId}-${index}`} className="rounded border border-white/10 bg-black/20 p-2">
-        <p className="font-medium text-gray-100">{rule?.sourceLabel ?? step.ruleId}</p>
+        <p className="font-medium text-gray-100">{rule?.sourceLabel ?? step.sourceLabel ?? step.ruleId}</p>
         {rule && <p className="mt-1 text-gray-400">Exact chunk / section: {rule.locationId}</p>}
         {requirements.length > 0 && <p className="mt-1 text-gray-400">Requires: {requirements.join(', ')}</p>}
         {step.proves.quantity && step.proves.quantity > 1 && <p className="mt-1 text-gray-400">Quantity: {step.proves.quantity}× {step.proves.label}</p>}
@@ -28,7 +28,7 @@ export const ProofRouteList: React.FC<{ report: RuneProofReport; rules: Readonly
   if (!report.routes.length) return null;
   const [best, ...alternatives] = report.routes.slice(0, 32);
   return <section aria-label="Possible routes" className="space-y-2">
-    <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-200">Best route</h2>
+    <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-200">{report.routesComplete ? 'Best route' : 'Best known route'}</h2>
     <RouteSteps route={best} rules={rules} />
     {alternatives.length > 0 && <>
       <button type="button" onClick={() => setShowAlternatives(value => !value)} aria-expanded={showAlternatives} className="text-xs font-semibold text-cyan-200 hover:text-cyan-100">

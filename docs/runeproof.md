@@ -47,6 +47,24 @@ contents, looting-bag contents, storage, or consumable stock.
 Therefore, "Obtainable" means the current rules expose a valid acquisition
 route. It does not mean the player owns the item now.
 
+## Proofs and current-chunk guidance
+
+RuneProof has two deliberately separate assurance levels:
+
+- **Verified proof** uses fully audited route facts. It is replayed for the
+  current run, receives a proof badge and SHA-256 certificate, and may support
+  complete negative claims.
+- **Current-chunk guidance** uses exact Fate Locked chunk, shop, monster, spawn,
+  and modeled requirement records whose source details are not yet fully
+  audited. It can show a best known route or the missing requirements on known
+  routes. It never receives a proof badge or certificate, never labels a
+  blocker unavoidable, and never claims the goal is impossible.
+
+Guidance is the usable fallback for the production catalog. `UNKNOWN` remains
+reserved for cases where RuneProof cannot even form safe known-route guidance,
+such as wholly unmodeled goals, unknown source identity, malformed data, or
+safety limits.
+
 ## Result meanings
 
 - **Obtainable now (`OBTAINABLE`)** — at least one complete route exists and
@@ -70,8 +88,10 @@ remain available in the app.
 
 ## Proofs, export, and freshness
 
-A positive result carries a witness containing the exact acquisition rules and
-chosen requirements used to prove the goal. The app binds that witness to:
+A complete verified positive result carries a witness containing the exact
+acquisition rules and chosen requirements used to prove the goal. Current-chunk
+guidance carries route steps for display but is not a certificate and is not
+exported as a proof. The app binds a verified witness to:
 
 - the run ID;
 - the run revision; and
@@ -98,8 +118,9 @@ export-time replay is authoritative.
 
 RuneProof source generation accounts explicitly for verified and unresolved
 quest, chunk, acquisition, and provenance records. A known positive witness can
-still prove a route when unrelated global coverage is partial. Negative claims
-need complete relevant coverage.
+still prove a route when unrelated global coverage is partial. Exact partial
+records may instead produce clearly labeled current-chunk guidance. Negative
+claims and unavoidable blockers need complete relevant coverage.
 
 The production source version also commits to the complete canonical travel
 graph: its start node, sorted locations and edges, edge requirements,
