@@ -216,10 +216,10 @@ const DATA_REV = 11;
 
 class ChunkContentService {
   /** Explicitly audited proof-grade locations; never derived from connectGraph(). */
-  locationNodes(): LocationNodeSource[] { return this.doc?.locationNodes ?? []; }
+  locationNodes(): LocationNodeSource[] { return structuredClone(this.doc?.locationNodes ?? []); }
 
   /** Explicitly audited requirement-bearing edges; never derived from connectGraph(). */
-  locationEdges(): LocationEdgeSource[] { return this.doc?.locationEdges ?? []; }
+  locationEdges(): LocationEdgeSource[] { return structuredClone(this.doc?.locationEdges ?? []); }
 
   private doc: RawDoc | null = null;
   private promise: Promise<boolean> | null = null;
