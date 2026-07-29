@@ -31,6 +31,7 @@ export const CHANGELOG_RELEASES = [
         'The reviewed Chunk Picker source is now pinned, and chunk data refreshes are generated deterministically.',
       ],
       fixed: [
+        'Quest cards now show exact required chunks once and separate incomplete Chunk Picker evidence under Known steps.',
         "Witch's Potion now checks Rimmington.",
         "Murder Mystery now checks Sinclair Mansion and Seers' Village.",
         'Quest completion remains strict: unmet machine requirements cannot be bypassed by manual confirmation, and rejected and repeated completions grant no extra rolls.',

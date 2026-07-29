@@ -60,6 +60,16 @@ describe('authored changelog releases', () => {
     }
   });
 
+  it('announces the quest location display fix in player language', () => {
+    const questChunkAudit = CHANGELOG_RELEASES.find(
+      release => release.id === '2026-07-28-quest-chunk-audit',
+    );
+
+    expect(questChunkAudit?.sections.fixed).toContain(
+      'Quest cards now show exact required chunks once and separate incomplete Chunk Picker evidence under Known steps.',
+    );
+  });
+
   it('describes the complete RuneLite companion update in player language', () => {
     const runeliteCompanion = CHANGELOG_RELEASES.find(
       release => release.id === '2026-07-28-runelite-companion-update',
