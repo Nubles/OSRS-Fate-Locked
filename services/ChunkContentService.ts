@@ -12,6 +12,11 @@
  * Fail-safe: if the fetch fails the map simply shows no content panel.
  */
 
+import type {
+  LocationEdgeSource,
+  LocationNodeSource,
+} from '../utils/runeproof/locationGraph';
+
 export interface ChunkMonster { name: string; count: number; slayer: number | null }
 export interface ChunkContent {
   name?: string;
@@ -125,6 +130,10 @@ interface RawDoc {
   banks?: string[];
   /** Faceted categories (food/boost/boss/…) → the chunk ids that contain them. */
   tags?: Record<string, string[]>;
+  /** Explicitly audited proof-grade locations. */
+  locationNodes?: LocationNodeSource[];
+  /** Explicitly audited, requirement-bearing proof-grade travel edges. */
+  locationEdges?: LocationEdgeSource[];
 }
 
 const decode = (e: RawEntry): ChunkContent => ({
@@ -203,9 +212,15 @@ export interface EntityHit {
 
 // Bump when public/chunk-content.json changes so the fetch URL changes and
 // browsers don't serve a stale cached copy (the filename itself never changes).
-const DATA_REV = 10;
+const DATA_REV = 11;
 
 class ChunkContentService {
+  /** Explicitly audited proof-grade locations; never derived from connectGraph(). */
+  locationNodes(): LocationNodeSource[] { return this.doc?.locationNodes ?? []; }
+
+  /** Explicitly audited requirement-bearing edges; never derived from connectGraph(). */
+  locationEdges(): LocationEdgeSource[] { return this.doc?.locationEdges ?? []; }
+
   private doc: RawDoc | null = null;
   private promise: Promise<boolean> | null = null;
   private index: Map<string, EntityHit> | null = null;
