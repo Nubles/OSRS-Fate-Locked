@@ -35,6 +35,7 @@ Bad luck is cushioned by **Fate Points** (a pity timer) and the **Void Altar**, 
 - **Region modifiers** — in Region Rush, every continent you unlock grants a passive bonus.
 - **Region map authoring** — paint custom region/chunk layouts, export/import as JSON.
 - **Integrity & verification** — a tamper-evident hash chain over the run history, a deterministic run ID, invariant replay, and exportable verified bundles, so a completed run can be shared and checked.
+- **RuneProof** — asks whether an item, quest, diary, or activity is possible from the current run's exactly reachable chunks. It shows verified routes, random-only routes, minimal current blockers, and an honest Unknown when the evidence cannot support a stronger answer.
 - **Shareable run card & timelapse** — generate an image of your run, or play its history back as a narrated timelapse.
 - **Profiles** — multiple independent runs in one browser.
 - **RuneLite companion plugin** — imports the active profile, marks locked content in-game, explains the current chunk, and keeps supported gameplay detections in a local history.
@@ -76,6 +77,7 @@ To enable it on a fresh fork: **Settings → Pages → Build and deployment → 
 ## Maintainer docs
 
 - [`docs/RESOURCE_ENGINE.md`](./docs/RESOURCE_ENGINE.md) — the Resource Engine: data shape, the supply-chain analyzer, the three wiki-sourced generator scripts (`scripts/buildCraftables.mjs`, `scripts/buildPotions.mjs`, `scripts/buildSourceEnrichment.ts`), the enrichment merge pattern, the integrity-test contract, and the workflow for adding curated items.
+- [`docs/runeproof.md`](./docs/runeproof.md) — RuneProof's exact current-chunk semantics, result meanings, proof/freshness contract, coverage limits, and non-goals.
 
 ## RuneLite plugin connection
 
@@ -87,6 +89,12 @@ releases, and Plugin Hub review.
 The player-facing [RuneLite Plugin Guide](https://nubles.github.io/OSRS-Fate-Locked/?open=runelite-guide)
 uses the current Plugin Hub interface to explain installation, connection,
 every panel section and setting, privacy, overlays, and troubleshooting.
+
+RuneProof solving and certificate replay happen only in the web app. A bundle
+contains compact, display-only summaries bound to the current run revision and
+RuneProof source version. RuneLite shows those summaries and whether their
+bindings are fresh; it does not re-solve the goal or automate gameplay. See
+[the RuneProof guarantees](./docs/runeproof.md) for the complete boundary.
 
 Pairing is one-way. The browser publishes an app-authored v4 profile with
 `POST /r/<code>`, then opens RuneLite with that code. The plugin retrieves and
