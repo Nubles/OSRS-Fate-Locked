@@ -5,6 +5,7 @@ import { CA_DATA } from './caData';
 import { DIARY_DATA } from './diaryData';
 import {
   QUEST_CAPE_QUEST_IDS, QUEST_DATA, QuestLocationRequirement,
+  questAccessPolicyStructureErrors,
 } from './questData';
 import {
   GUILDS_LIST, SKILLS_LIST, REGION_GROUPS, MISTHALIN_AREAS,
@@ -158,6 +159,18 @@ describe('Quest data integrity', () => {
     expect(quests.filter(quest =>
       !['regions', 'locations', 'regions-and-locations'].includes(quest.accessPolicy),
     ), 'journal entries with invalid access policies').toEqual([]);
+  });
+
+  it('keeps every current quest access policy structurally valid', () => {
+    expect(Object.values(QUEST_DATA).flatMap(quest =>
+      questAccessPolicyStructureErrors(quest).map(error => `${quest.id}: ${error}`),
+    )).toEqual([]);
+  });
+
+  it('preserves Learning the Ropes as an intentional empty-regions policy', () => {
+    const quest = QUEST_DATA['Learning the Ropes'];
+    expect(quest).toMatchObject({ accessPolicy: 'regions', regions: [] });
+    expect(questAccessPolicyStructureErrors(quest)).toEqual([]);
   });
 
   it('keeps miniquests out of Quest Points and Quest Point Cape membership', () => {

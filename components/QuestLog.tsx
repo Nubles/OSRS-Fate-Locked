@@ -34,6 +34,15 @@ export const questLogEligibility = (
   gameModeId?: string,
 ) => evaluateQuestEligibility(quest, unlocks, gameModeId);
 
+export function splitJournalEntriesByKind<T extends Pick<QuestData, 'kind'>>(
+  entries: readonly T[],
+): { quests: T[]; miniquests: T[] } {
+  return {
+    quests: entries.filter(entry => entry.kind === 'quest'),
+    miniquests: entries.filter(entry => entry.kind === 'miniquest'),
+  };
+}
+
 // Helpers
 const getWikiUrl = (name: string) => {
     // Special handling for Recipe for Disaster subquests to avoid broken links
@@ -465,8 +474,7 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
     [showAdvisorStrip, unlocks, gameModeId],
   );
 
-  const mainQuests = filteredQuests.filter(q => q.kind === 'quest');
-  const miniquests = filteredQuests.filter(q => q.kind === 'miniquest');
+  const { quests: mainQuests, miniquests } = splitJournalEntriesByKind(filteredQuests);
 
   const seriesGroups = useMemo(() => {
       if (!groupBySeries) return [];
@@ -499,8 +507,9 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
       window.dispatchEvent(new CustomEvent('fate:quest-complete', { detail: { name: quest.name } }));
   };
 
-  const totalQuests = Object.values(QUEST_DATA).filter(q => q.kind === 'quest').length;
-  const totalMinis = Object.values(QUEST_DATA).filter(q => q.kind === 'miniquest').length;
+  const allEntriesByKind = splitJournalEntriesByKind(Object.values(QUEST_DATA));
+  const totalQuests = allEntriesByKind.quests.length;
+  const totalMinis = allEntriesByKind.miniquests.length;
   const completedMain = unlocks.quests.filter(id => QUEST_DATA[id]?.kind === 'quest').length;
   const completedMinis = unlocks.quests.filter(id => QUEST_DATA[id]?.kind === 'miniquest').length;
   const currentQP = unlocks.quests.reduce((acc, qid) => acc + (

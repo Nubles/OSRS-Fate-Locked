@@ -141,6 +141,90 @@ describe('manual journal readiness', () => {
 });
 
 describe('reported quest access', () => {
+  const rimmington = {
+    id: 'rimmington',
+    label: 'Rimmington',
+    standardAreas: ['Rimmington'],
+    chunkOptions: [{ cx: 46, cy: 50 }],
+  };
+  const malformedQuest = (overrides: Partial<QuestData>): QuestData => ({
+    id: 'Malformed policy quest',
+    name: 'Malformed policy quest',
+    kind: 'quest',
+    accessPolicy: 'regions',
+    regions: ['Asgarnia'],
+    skills: {},
+    prereqs: [],
+    points: 0,
+    difficulty: DropSource.QUEST_NOVICE,
+    ...overrides,
+  });
+
+  it.each([
+    {
+      name: 'locations policy with missing locations',
+      quest: malformedQuest({
+        accessPolicy: 'locations',
+        oneOf: [{ regions: ['Misthalin'] }],
+      }),
+      error: 'locations policy requires at least one base location',
+    },
+    {
+      name: 'locations policy with empty locations',
+      quest: malformedQuest({ accessPolicy: 'locations', locations: [] }),
+      error: 'locations policy requires at least one base location',
+    },
+    {
+      name: 'regions-and-locations policy with missing locations',
+      quest: malformedQuest({ accessPolicy: 'regions-and-locations' }),
+      error: 'regions-and-locations policy requires at least one base location',
+    },
+    {
+      name: 'regions-and-locations policy with empty locations',
+      quest: malformedQuest({ accessPolicy: 'regions-and-locations', locations: [] }),
+      error: 'regions-and-locations policy requires at least one base location',
+    },
+    {
+      name: 'regions-and-locations policy with empty regions',
+      quest: malformedQuest({
+        accessPolicy: 'regions-and-locations',
+        regions: [],
+        locations: [rimmington],
+      }),
+      error: 'regions-and-locations policy requires at least one region',
+    },
+  ])('fails closed for $name', ({ quest, error }) => {
+    expect(evaluateQuestEligibility(quest, unlocked())).toMatchObject({
+      status: 'LOCKED_QUEST',
+      machineEligible: false,
+      eligible: false,
+      confirmable: false,
+      blockers: [{
+        kind: 'quest',
+        label: `Invalid quest access configuration: ${error}`,
+      }],
+    });
+  });
+
+  it('preserves completed identity before structural validation', () => {
+    const quest = malformedQuest({
+      accessPolicy: 'locations',
+      oneOf: [{ regions: ['Misthalin'] }],
+    });
+
+    expect(evaluateQuestEligibility(
+      quest,
+      unlocked({ quests: [quest.id] }),
+    )).toEqual({
+      status: 'COMPLETED',
+      machineEligible: true,
+      eligible: true,
+      confirmable: true,
+      manualChecks: [],
+      blockers: [],
+      evidence: ['Completed'],
+    });
+  });
   it("requires Rimmington, not all Asgarnia, for Witch's Potion", () => {
     const quest = QUEST_DATA["Witch's Potion"];
 
@@ -267,6 +351,7 @@ describe('reported quest access', () => {
     const quest: QuestData = {
       ...QUEST_DATA['A Porcine of Interest'],
       id: 'alternative-location', name: 'Alternative location',
+      accessPolicy: 'regions',
       regions: [], locations: [], skills: {}, prereqs: [],
       oneOf: [{ locations: [{
         id: 'test-crossing', label: 'Test crossing',
@@ -282,8 +367,9 @@ describe('reported quest access', () => {
   });
 
   it('treats an empty alternative list as no alternative requirement', () => {
-    const quest = {
+    const quest: QuestData = {
       ...QUEST_DATA['A Porcine of Interest'],
+      accessPolicy: 'regions',
       regions: ['Misthalin'],
       locations: [],
       oneOf: [],

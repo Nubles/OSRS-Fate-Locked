@@ -3,6 +3,7 @@ import type {
   QuestData,
   QuestKind,
 } from './questData';
+import { questAccessPolicyStructureErrors } from './questData';
 
 export type QuestAuditStatus =
   | 'verified'
@@ -235,6 +236,9 @@ export function validateQuestRequirementAudit(
 
   for (const [id, quest] of Object.entries(questData)) {
     if (quest.id !== id) errors.push(`runtime key ${id} does not match quest.id ${quest.id}`);
+    for (const error of questAccessPolicyStructureErrors(quest)) {
+      errors.push(`${id}: invalid quest access configuration: ${error}`);
+    }
     const official = officialById.get(id);
     const entry = auditById.get(id);
     if (official?.kind !== quest.kind) errors.push(`${id}: official kind does not match runtime`);

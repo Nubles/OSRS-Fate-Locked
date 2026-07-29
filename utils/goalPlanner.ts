@@ -109,9 +109,12 @@ function addManualStep(
 
 
 /** Quest Points awarded by a journal entry; miniquests never award points. */
+export const questPointsForEntry = (
+  quest: Pick<QuestData, 'kind' | 'points'> | undefined,
+): number => quest?.kind === 'quest' ? quest.points : 0;
+
 function questPointsFor(questId: string): number {
-  const quest = QUEST_DATA[questId];
-  return quest?.kind === 'quest' ? quest.points : 0;
+  return questPointsForEntry(QUEST_DATA[questId]);
 }
 
 /** Total quest points the player currently has. */

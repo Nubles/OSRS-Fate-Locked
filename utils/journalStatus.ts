@@ -7,7 +7,7 @@
 
 import {
   QuestData, QuestLocationRequirement, QuestRequirementOption, QUEST_DATA,
-  hasCompletedQuestCapeRequirements,
+  hasCompletedQuestCapeRequirements, questAccessPolicyStructureErrors,
 } from '../data/questData';
 import { ALL_DIARY_TASKS, DiaryTaskRequirementOption } from '../data/diaryTasks';
 import { DiaryTier } from '../data/diaryData';
@@ -150,6 +150,19 @@ export function evaluateQuestEligibility(
       status: 'COMPLETED',
       blockers: [],
       evidence: ['Completed'],
+    };
+  }
+  const configurationErrors = questAccessPolicyStructureErrors(quest);
+  if (configurationErrors.length) {
+    const blocker: EligibilityBlocker = {
+      kind: 'quest',
+      label: `Invalid quest access configuration: ${configurationErrors.join('; ')}`,
+    };
+    return {
+      ...readinessFields([blocker], quest.manualRequirements ?? []),
+      status: 'LOCKED_QUEST',
+      blockers: [blocker],
+      evidence: [],
     };
   }
   const blockers: EligibilityBlocker[] = [];

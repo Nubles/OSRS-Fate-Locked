@@ -373,3 +373,71 @@ describe('official quest and miniquest audit coverage', () => {
       ]));
   });
 });
+
+describe('quest access policy structure', () => {
+  const validationErrorsAfterRuntimeMutation = (
+    id: string,
+    mutate: (quest: (typeof QUEST_DATA)[string]) => void,
+  ): string[] => {
+    const runtime = structuredClone(QUEST_DATA);
+    const matchingAudit = structuredClone(audit);
+    mutate(runtime[id]);
+    const matchingEntry = matchingAudit.entries.find(entry => entry.id === id)!;
+    matchingEntry.accessPolicy = runtime[id].accessPolicy;
+    matchingEntry.requirementFingerprint = questRequirementFingerprint(runtime[id]);
+    return validateQuestRequirementAudit(runtime, official, matchingAudit).errors;
+  };
+
+  it.each([
+    {
+      name: 'locations policy with missing locations',
+      id: "Witch's Potion",
+      mutate: (quest: (typeof QUEST_DATA)[string]) => {
+        quest.oneOf = [{ regions: ['Misthalin'] }];
+        delete quest.locations;
+      },
+      error: "Witch's Potion: invalid quest access configuration: locations policy requires at least one base location",
+    },
+    {
+      name: 'locations policy with empty locations',
+      id: "Witch's Potion",
+      mutate: (quest: (typeof QUEST_DATA)[string]) => {
+        quest.locations = [];
+      },
+      error: "Witch's Potion: invalid quest access configuration: locations policy requires at least one base location",
+    },
+    {
+      name: 'regions-and-locations policy with missing locations',
+      id: 'A Porcine of Interest',
+      mutate: (quest: (typeof QUEST_DATA)[string]) => {
+        quest.accessPolicy = 'regions-and-locations';
+        delete quest.locations;
+      },
+      error: 'A Porcine of Interest: invalid quest access configuration: regions-and-locations policy requires at least one base location',
+    },
+    {
+      name: 'regions-and-locations policy with empty locations',
+      id: 'A Porcine of Interest',
+      mutate: (quest: (typeof QUEST_DATA)[string]) => {
+        quest.accessPolicy = 'regions-and-locations';
+        quest.locations = [];
+      },
+      error: 'A Porcine of Interest: invalid quest access configuration: regions-and-locations policy requires at least one base location',
+    },
+    {
+      name: 'regions-and-locations policy with empty regions',
+      id: 'A Porcine of Interest',
+      mutate: (quest: (typeof QUEST_DATA)[string]) => {
+        quest.accessPolicy = 'regions-and-locations';
+        quest.regions = [];
+      },
+      error: 'A Porcine of Interest: invalid quest access configuration: regions-and-locations policy requires at least one region',
+    },
+  ])('rejects a runtime record using $name even with a matching fingerprint', ({
+    id,
+    mutate,
+    error,
+  }) => {
+    expect(validationErrorsAfterRuntimeMutation(id, mutate)).toContain(error);
+  });
+});

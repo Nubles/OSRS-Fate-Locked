@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ALL_DIARY_TASKS, DiaryTask } from '../data/diaryTasks';
-import { QUEST_DATA } from '../data/questData';
-import { UnlockState } from '../types';
+import { QUEST_DATA, QuestData } from '../data/questData';
+import { DropSource, UnlockState } from '../types';
 import {
   canEarnDiaryTier,
   diaryTaskCompletionDecision,
@@ -26,6 +26,82 @@ describe('journal completion decisions', () => {
     levels: { Smithing: 30, Sailing: 12 },
   });
 
+  const malformedQuest = (overrides: Partial<QuestData>): QuestData => ({
+    id: 'Malformed policy quest',
+    name: 'Malformed policy quest',
+    kind: 'quest',
+    accessPolicy: 'regions',
+    regions: ['Asgarnia'],
+    skills: {},
+    prereqs: [],
+    points: 0,
+    difficulty: DropSource.QUEST_NOVICE,
+    ...overrides,
+  });
+
+  it.each([
+    {
+      name: 'locations policy with missing locations',
+      quest: malformedQuest({
+        accessPolicy: 'locations',
+        oneOf: [{ regions: ['Misthalin'] }],
+      }),
+      error: 'locations policy requires at least one base location',
+    },
+    {
+      name: 'locations policy with empty locations',
+      quest: malformedQuest({ accessPolicy: 'locations', locations: [] }),
+      error: 'locations policy requires at least one base location',
+    },
+    {
+      name: 'regions-and-locations policy with missing locations',
+      quest: malformedQuest({ accessPolicy: 'regions-and-locations' }),
+      error: 'regions-and-locations policy requires at least one base location',
+    },
+    {
+      name: 'regions-and-locations policy with empty locations',
+      quest: malformedQuest({ accessPolicy: 'regions-and-locations', locations: [] }),
+      error: 'regions-and-locations policy requires at least one base location',
+    },
+    {
+      name: 'regions-and-locations policy with empty regions',
+      quest: malformedQuest({
+        accessPolicy: 'regions-and-locations',
+        regions: [],
+        locations: [{
+          id: 'rimmington',
+          label: 'Rimmington',
+          standardAreas: ['Rimmington'],
+          chunkOptions: [{ cx: 46, cy: 50 }],
+        }],
+      }),
+      error: 'regions-and-locations policy requires at least one region',
+    },
+  ])('does not let manual attestation bypass $name', ({ quest, error }) => {
+    expect(questCompletionDecision(
+      quest,
+      unlocked(),
+      'vanilla',
+      { manualConfirmed: true },
+    )).toEqual({
+      ok: false,
+      reason: `Requires: Invalid quest access configuration: ${error}`,
+    });
+  });
+
+  it('keeps a malformed stored completion on the duplicate no-reward path', () => {
+    const quest = malformedQuest({
+      accessPolicy: 'locations',
+      oneOf: [{ regions: ['Misthalin'] }],
+    });
+
+    expect(questCompletionDecision(
+      quest,
+      unlocked({ quests: [quest.id] }),
+      'vanilla',
+      { manualConfirmed: true },
+    )).toEqual({ ok: false, reason: 'Already completed' });
+  });
   it('rejects a quest completion when canonical eligibility is blocked', () => {
     const result = questCompletionDecision(
       QUEST_DATA['A Porcine of Interest'],

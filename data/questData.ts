@@ -34,6 +34,27 @@ export interface QuestData {
   oneOf?: QuestRequirementOption[];
 }
 
+export const questAccessPolicyStructureErrors = (
+  quest: Pick<QuestData, 'accessPolicy' | 'regions' | 'locations'>,
+): string[] => {
+  if (quest.accessPolicy === 'locations') {
+    return quest.locations?.length
+      ? []
+      : ['locations policy requires at least one base location'];
+  }
+  if (quest.accessPolicy === 'regions-and-locations') {
+    const errors: string[] = [];
+    if (!quest.regions?.length) {
+      errors.push('regions-and-locations policy requires at least one region');
+    }
+    if (!quest.locations?.length) {
+      errors.push('regions-and-locations policy requires at least one base location');
+    }
+    return errors;
+  }
+  return [];
+};
+
 const LOCATIONS = {
   draynorVillage: { id: 'draynor-village', label: 'Draynor Village', standardAreas: ['Draynor Village'], chunkOptions: [{ cx: 48, cy: 50 }] },
   southFaladorFarm: { id: 'south-falador-farm', label: 'South Falador Farm', standardAreas: ['Falador'], chunkOptions: [{ cx: 47, cy: 51 }] },

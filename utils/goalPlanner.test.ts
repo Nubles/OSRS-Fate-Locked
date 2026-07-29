@@ -4,7 +4,7 @@ import { QUEST_CAPE_QUEST_IDS, QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { REGION_GROUPS } from '../data/items';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
-import { planForTarget, listGoalTargets } from './goalPlanner';
+import { planForTarget, listGoalTargets, questPointsForEntry } from './goalPlanner';
 import { getQuestStatus } from './journalStatus';
 
 // All skills unlocked & maxed, levels at 99 — so only regions, prereq quests,
@@ -25,6 +25,12 @@ function maxedUnlocks(over: Record<string, any> = {}) {
     ...over,
   };
 }
+
+describe('Goal Planner quest-point classification', () => {
+  it('awards no Quest Points for a nonzero-point miniquest record', () => {
+    expect(questPointsForEntry({ kind: 'miniquest', points: 7 })).toBe(0);
+  });
+});
 
 describe('planForTarget — quests', () => {
   it('orders quest steps so prereqs come before the quests that need them', () => {
