@@ -1,6 +1,6 @@
 
 import { lazyWithRetry } from './utils/lazyRetry';
-import React, { useState, useRef, useEffect, useReducer, Component, ErrorInfo, ReactNode, Suspense } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useReducer, Component, ErrorInfo, ReactNode, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { GameProvider, useGame } from './context/GameContext';
 import { usePortalHost } from './hooks/usePortalHost';
@@ -8,6 +8,7 @@ import { ProfileProvider, useProfiles } from './context/ProfileContext';
 import { ActionSection } from './components/ActionSection';
 import { GachaSection } from './components/GachaSection';
 import { Dashboard } from './components/Dashboard';
+import { buildRuneProofRunSnapshot } from './utils/runeproof/runSnapshot';
 const LogViewer = lazyWithRetry(() => import('./components/LogViewer').then(m => ({ default: m.LogViewer })));
 import { SectionGuide, GUIDES } from './components/SectionGuide';
 import { PopOnChange } from './components/PopOnChange';
@@ -648,9 +649,11 @@ const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = f
 };
 
 const GameLayout = () => {
+  const game = useGame();
   const {
     lastEvent, animationsEnabled, hasSeenOnboarding, history, linkedAccount,
-  } = useGame();
+  } = game;
+  const runeProofSnapshot = useMemo(() => buildRuneProofRunSnapshot(game), [game]);
   const { recentlyCreatedId, activeProfileId, activeProfileName, clearRecentlyCreated } = useProfiles();
 
   const directGuideRequested = typeof window !== 'undefined'
@@ -1057,7 +1060,7 @@ const GameLayout = () => {
           <div className="lg:col-span-8 h-full min-h-[500px] flex flex-col gap-4">
              <div className="flex-1 overflow-hidden h-full">
                <PanelErrorBoundary name="Dashboard">
-                 <Dashboard suspendModals={modalRenderPolicy.suspendDashboardModals} />
+                 <Dashboard suspendModals={modalRenderPolicy.suspendDashboardModals} runeProofSnapshot={runeProofSnapshot} />
                </PanelErrorBoundary>
              </div>
           </div>
