@@ -6,7 +6,8 @@ import type { AuditCoverage, RuneProofSourceAudit } from '../utils/runeproof/sou
 type JsonRecord = Record<string, unknown>;
 const TERMINAL_DISPOSITIONS = ['imported', 'normalized', 'excluded', 'unresolved'] as const;
 type TerminalDisposition = typeof TERMINAL_DISPOSITIONS[number];
-const CHUNK_DISPOSITIONS = new Set<TerminalDisposition>(TERMINAL_DISPOSITIONS);
+type ChunkCategoryTotal = Record<TerminalDisposition | 'source', number>;
+const CHUNK_DISPOSITIONS = new Set<string>(TERMINAL_DISPOSITIONS);
 const AUXILIARY_CHUNK_EVENT_CATEGORIES = new Set(['lite']);
 
 function isRecord(value: unknown): value is JsonRecord {
@@ -28,7 +29,25 @@ function canonicalJson(value: unknown): string {
 }
 
 function isCount(value: unknown): value is number {
-  return Number.isInteger(value) && value >= 0;
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0;
+}
+
+function isTerminalDisposition(value: unknown): value is TerminalDisposition {
+  return typeof value === 'string' && CHUNK_DISPOSITIONS.has(value);
+}
+
+function validChunkCategoryEntry(
+  entry: [string, unknown],
+): entry is [string, ChunkCategoryTotal] {
+  const total = entry[1];
+  if (!isRecord(total)) return false;
+  const { source, imported, normalized, excluded, unresolved } = total;
+  return isCount(source)
+    && isCount(imported)
+    && isCount(normalized)
+    && isCount(excluded)
+    && isCount(unresolved)
+    && source === imported + normalized + excluded + unresolved;
 }
 
 function questCoverage(audit: unknown): AuditCoverage {
@@ -46,7 +65,11 @@ function questCoverage(audit: unknown): AuditCoverage {
 function validChunkEvent(
   event: unknown,
   categories: Set<string>,
-): event is JsonRecord & { terminal: boolean; category: string; disposition: string } {
+): event is JsonRecord & {
+  terminal: boolean;
+  category: string;
+  disposition: TerminalDisposition;
+} {
   return isRecord(event)
     && typeof event.terminal === 'boolean'
     && typeof event.category === 'string'
@@ -55,8 +78,7 @@ function validChunkEvent(
     && event.sourceKey.length > 0
     && Array.isArray(event.targetKeys)
     && event.targetKeys.every(targetKey => typeof targetKey === 'string')
-    && typeof event.disposition === 'string'
-    && CHUNK_DISPOSITIONS.has(event.disposition);
+    && isTerminalDisposition(event.disposition);
 }
 
 function chunkCoverage(audit: unknown): AuditCoverage {
@@ -67,12 +89,7 @@ function chunkCoverage(audit: unknown): AuditCoverage {
   }
 
   const categories = Object.entries(audit.categoryTotals);
-  if (!categories.length || !categories.every(([, total]) => {
-    if (!isRecord(total)) return false;
-    const { source, imported, normalized, excluded, unresolved } = total;
-    return [source, imported, normalized, excluded, unresolved].every(isCount)
-      && source === imported + normalized + excluded + unresolved;
-  })) return 'UNKNOWN';
+  if (!categories.length || !categories.every(validChunkCategoryEntry)) return 'UNKNOWN';
 
   const categoryNames = new Set(categories.map(([category]) => category));
   const recognizedCategories = new Set([...categoryNames, ...AUXILIARY_CHUNK_EVENT_CATEGORIES]);
@@ -95,18 +112,16 @@ function chunkCoverage(audit: unknown): AuditCoverage {
     terminalKeys.add(terminalKey);
     terminalCounts.set(event.category, (terminalCounts.get(event.category) ?? 0) + 1);
     const dispositionCounts = terminalDispositionCounts.get(event.category)!;
-    dispositionCounts[event.disposition as TerminalDisposition] += 1;
+    dispositionCounts[event.disposition] += 1;
   }
 
   if (!audit.events.length || categories.some(([category, total]) => {
-    const declared = total as JsonRecord;
     const counted = terminalDispositionCounts.get(category)!;
-    return terminalCounts.get(category) !== declared.source
-      || TERMINAL_DISPOSITIONS.some(disposition => counted[disposition] !== declared[disposition]);
+    return terminalCounts.get(category) !== total.source
+      || TERMINAL_DISPOSITIONS.some(disposition => counted[disposition] !== total[disposition]);
   })) return 'UNKNOWN';
 
-  const hasUnresolvedTotals = categories.some(([, total]) =>
-    (total as JsonRecord).unresolved !== 0);
+  const hasUnresolvedTotals = categories.some(([, total]) => total.unresolved !== 0);
   return hasUnresolvedTotals || hasUnresolvedEvent ? 'PARTIAL' : 'VERIFIED';
 }
 
