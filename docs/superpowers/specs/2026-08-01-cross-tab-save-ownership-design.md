@@ -107,23 +107,27 @@ takeover, and release update local ownership state directly as well.
 
 ## Ownership States
 
-The profile provider exposes a separate ownership state rather than treating a
+The game context exposes a separate ownership state rather than treating a
 conflict as a browser-storage failure:
 
 ```ts
 type SaveOwnershipStatus = 'checking' | 'owner' | 'blocked';
+type SaveOwnershipBlockReason = 'foreign_owner' | 'storage_unavailable' | null;
 ```
 
 - `checking`: acquisition or revalidation is in progress; no profile-state
   write is allowed.
 - `owner`: this tab may write after one final synchronous lease check.
-- `blocked`: another tab owns the profile or ownership storage cannot be
-  verified safely.
+- `blocked`: profile-state writes are paused. `foreign_owner` means another
+  tab owns the lease; `storage_unavailable` means the browser could not safely
+  read or write ownership metadata.
 
 The existing `SaveStatus` continues to describe pending and failed storage
-writes. Ownership loss does not masquerade as a quota error. A blocked tab's
-newest serialized state remains in the pending-save registry so the global
-unload guard continues to protect it.
+writes. Foreign ownership does not masquerade as a quota error. Ownership
+storage failure sets the existing failed-save state and uses its recovery
+warning instead of falsely claiming that another tab is open. Every blocked
+tab's newest serialized state remains in the pending-save registry so the
+global unload guard continues to protect it.
 
 ## Save Pipeline Integration
 
@@ -153,8 +157,8 @@ writer lease is browser metadata and does not change `GameState.version` or the
 
 ## Player Experience
 
-A blocked active profile displays a persistent warning directly below the
-header:
+An active profile blocked by a `foreign_owner` displays a persistent warning
+directly below the header:
 
 > **This profile is open in another tab**
 > Changes in this tab are not being saved. Choose which tab should keep the
@@ -236,9 +240,9 @@ module contains no React state, game rules, or UI copy.
 ### `hooks/useProfileWriterLease.ts`
 
 Owns the page ID, acquisition arbitration, heartbeat, visibility recheck, and
-storage-event subscription. It exposes ownership status and explicit takeover
-to `GameProvider`. It creates one timer and one storage listener per mounted
-active profile and cleans both up on unmount.
+storage-event subscription. It exposes ownership status, the typed block reason,
+and explicit takeover to `GameProvider`. It creates one timer and one storage
+listener per mounted active profile and cleans both up on unmount.
 
 ### Pending-save registry
 
@@ -249,10 +253,10 @@ profile and driving the existing unload guard.
 ### `GameProvider`
 
 Stages current state as it does today, but routes all durable profile writes
-through verified ownership. It exposes ownership status, takeover,
-reload-latest, and whether this tab has pending changes. Explicit replacement
-operations return an ownership-conflict result without modifying storage or
-React state.
+through verified ownership. It exposes ownership status, the typed block
+reason, takeover, reload-latest, and whether this tab has pending changes.
+Explicit replacement operations return an ownership-conflict result without
+modifying storage or React state.
 
 ### Conflict banner
 
