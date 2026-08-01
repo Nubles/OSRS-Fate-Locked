@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useCallback, useMemo, useRe
 import { Profile, ProfileMetadata } from '../types';
 import { showToast } from '../utils/toast';
 import { commitProfileMetadata, deleteProfileTransaction, profileBaseKey, profileDeletionNotice } from '../utils/profileStorage';
+import { discardPendingSave } from '../utils/pendingSaves';
 
 const PROFILES_KEY = 'FATE_PROFILES';
 const LEGACY_SAVE_KEY = 'FATE_UIM_SAVE_V1';
@@ -122,7 +123,10 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const deleteProfile = useCallback((id: string) => {
     const result = deleteProfileTransaction(localStorage, PROFILES_KEY, metadataRef, id);
-    if (result.status === 'deleted') setMetadata(result.metadata);
+    if (result.status === 'deleted') {
+      discardPendingSave(profileBaseKey(id));
+      setMetadata(result.metadata);
+    }
     const notice = profileDeletionNotice(result);
     if (notice) showToast(notice);
   }, []);
