@@ -6,11 +6,15 @@ import userEvent from '@testing-library/user-event';
 
 const PROFILE_ID = 'changelog-lifecycle-profile';
 const values = new Map<string, string>();
+let failedWriteKey: string | null = null;
 const storage: Pick<Storage, 'clear' | 'getItem' | 'removeItem' | 'setItem'> = {
   clear: () => values.clear(),
   getItem: key => values.get(key) ?? null,
   removeItem: key => { values.delete(key); },
-  setItem: (key, value) => { values.set(key, String(value)); },
+  setItem: (key, value) => {
+    if (key === failedWriteKey) throw new DOMException('full', 'QuotaExceededError');
+    values.set(key, String(value));
+  },
 };
 
 let App: React.ComponentType;
@@ -21,6 +25,7 @@ let latestChangelogId: string;
 
 beforeEach(async () => {
   values.clear();
+  failedWriteKey = null;
   vi.stubGlobal('localStorage', storage);
 
   const [{ default: LoadedApp }, gameContext, persistence, profileStorage, changelogState, changelog] = await Promise.all([
@@ -193,5 +198,36 @@ describe('App changelog lifecycle', () => {
       name: 'Close RuneLite Plugin Guide',
     })[0]);
     expect(document.activeElement).toBe(paletteTrigger);
+  }, 15_000);
+
+  it('recovers the latest game action after active-profile storage fails', async () => {
+    const profileKey = profileBaseKey(PROFILE_ID);
+    const readyState = JSON.parse(seedOnboardingRun());
+    readyState.hasSeenOnboarding = true;
+    storage.setItem(profileKey, JSON.stringify(readyState));
+    storage.setItem(changelogStorageKey, latestChangelogId);
+    const originalAnimations = readyState.animationsEnabled;
+    const user = userEvent.setup();
+    render(<App />);
+
+    await new Promise(resolve => window.setTimeout(resolve, 550));
+    failedWriteKey = profileKey;
+    await user.click(screen.getByRole('button', { name: 'Settings & save tools' }));
+    await user.click(screen.getByRole('button', { name: /Animations/ }));
+
+    const alert = await screen.findByRole('alert', undefined, { timeout: 2_000 });
+    expect(alert.textContent).toContain("Progress isn't being saved");
+    expect(JSON.parse(values.get(profileKey)!).animationsEnabled).toBe(originalAnimations);
+    const protectedUnload = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(protectedUnload);
+    expect(protectedUnload.defaultPrevented).toBe(true);
+
+    failedWriteKey = null;
+    await user.click(screen.getByRole('button', { name: 'Retry save' }));
+    await waitFor(() => expect(screen.queryByRole('alert')).toBeNull());
+    expect(JSON.parse(values.get(profileKey)!).animationsEnabled).toBe(!originalAnimations);
+    const safeUnload = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(safeUnload);
+    expect(safeUnload.defaultPrevented).toBe(false);
   }, 15_000);
 });

@@ -19,7 +19,7 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-07-28-quest-chunk-audit');
+    expect(LATEST_CHANGELOG.id).toBe('2026-08-01-save-recovery');
   });
 
   it('announces the native RuneLite guide visual refresh', () => {

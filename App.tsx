@@ -25,6 +25,8 @@ import { RollInboxDriver } from './components/RollInboxDriver';
 import { CoachStrip } from './components/CoachStrip';
 import { FeatureRevealDriver } from './components/FeatureRevealDriver';
 import { BackupNagBanner } from './components/BackupNagBanner';
+import { SaveFailureBanner } from './components/SaveFailureBanner';
+import { SaveRecoveryGuard } from './components/SaveRecoveryGuard';
 import { DiscordSyncDriver } from './components/DiscordSyncDriver';
 import { downloadFateSave } from './utils/fateSaveFile';
 import { useFeatureGates } from './hooks/useFeatureGates';
@@ -963,6 +965,8 @@ const GameLayout = () => {
         onOpenChangelog={openChangelog}
       />
 
+      <SaveFailureBanner />
+
       {/* Global ⌘K command palette — navigates via fate:nav events. */}
       {modalRenderPolicy.renderGlobalDialogOverlays && <CommandPalette />}
       {/* Replayable spotlight tour — start via fate:start-tour. */}
@@ -1066,6 +1070,7 @@ function App() {
   return (
     <ErrorBoundary>
       <ProfileProvider>
+        <SaveRecoveryGuard />
         <GameProviderBridge>
           <GameLayout />
         </GameProviderBridge>

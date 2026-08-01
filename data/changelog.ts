@@ -19,6 +19,20 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-08-01-save-recovery',
+    title: 'Safer Browser Saves',
+    date: '2026-08-01',
+    sections: {
+      added: [
+        'A persistent recovery banner now appears if this browser cannot save your latest progress, with Retry save and Export backup actions.',
+      ],
+      fixed: [
+        'Failed browser writes no longer crash the app or silently discard the newest in-tab progress.',
+        'Closing the page now warns you while any profile still has progress waiting to be saved.',
+      ],
+    },
+  },
+  {
     id: '2026-07-28-quest-chunk-audit',
     title: 'Verified Quest & Chunk Requirements',
     date: '2026-07-28',
