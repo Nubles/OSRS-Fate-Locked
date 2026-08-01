@@ -1,3 +1,4 @@
+import { writerLeaseKey } from './profileWriterLease';
 import type { ProfileMetadata } from '../types';
 
 export const profileBaseKey = (profileId: string): string =>
@@ -27,6 +28,7 @@ export const profileOwnedKeys = (profileId: string): readonly string[] => {
     profileDiscordKey(storageKey),
     profileDiscordCursorKey(storageKey),
     profileFeatureSeenKey(profileId),
+    writerLeaseKey(storageKey),
   ];
 };
 
