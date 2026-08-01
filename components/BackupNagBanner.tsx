@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { useProfiles } from '../context/ProfileContext';
-import { shouldNag, snoozeNag, markExported, lastExportLabel } from '../utils/backupNag';
-import { encodeFateSaveExport } from '../utils/encryption';
+import { shouldNag, snoozeNag, lastExportLabel } from '../utils/backupNag';
+import { downloadFateSave } from '../utils/fateSaveFile';
 import { showToast } from '../utils/toast';
 import { HardDriveDownload, X } from 'lucide-react';
 
@@ -22,27 +22,13 @@ export const BackupNagBanner: React.FC = () => {
   }, [storageKey, history.length]);
 
   const handleExport = useCallback(() => {
-    const rawData = getExportData();
-    try {
-      const encoded = encodeFateSaveExport(JSON.parse(rawData));
-      if (encoded.ok === false) {
-        showToast(encoded.message);
-        return;
-      }
-      const blob = new Blob([encoded.value], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `fate_locked_${Date.now()}.fate`;
-      a.click();
-      URL.revokeObjectURL(url);
-      markExported(storageKey);
+    const result = downloadFateSave(getExportData(), storageKey);
+    if (result.ok === false) {
+      showToast(result.message);
+      return;
+    }
       setVisible(false);
       showToast('Save exported — keep the .fate file somewhere safe');
-    } catch (e) {
-      console.error('Export failed', e);
-      showToast('Export failed');
-    }
   }, [getExportData, storageKey]);
 
   const handleLater = useCallback(() => {

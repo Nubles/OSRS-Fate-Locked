@@ -26,7 +26,7 @@ import { CoachStrip } from './components/CoachStrip';
 import { FeatureRevealDriver } from './components/FeatureRevealDriver';
 import { BackupNagBanner } from './components/BackupNagBanner';
 import { DiscordSyncDriver } from './components/DiscordSyncDriver';
-import { markExported } from './utils/backupNag';
+import { downloadFateSave } from './utils/fateSaveFile';
 import { useFeatureGates } from './hooks/useFeatureGates';
 import { flashElement } from './utils/flash';
 import { OnboardingWizard } from './components/OnboardingWizard';
@@ -77,7 +77,7 @@ const RunelitePluginGuide = lazyWithRetry(() =>
     default: module.RunelitePluginGuide,
   })),
 );
-import { deobfuscateFateSave, encodeFateSaveExport } from './utils/encryption';
+import { deobfuscateFateSave } from './utils/encryption';
 import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb, Radio, Settings } from 'lucide-react';
 import { exportRuneliteBundle } from './utils/runeliteExport';
 import { BookOpen } from 'lucide-react';
@@ -368,29 +368,12 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
   };
 
   const handleExport = () => {
-      const rawData = getExportData();
-
-      try {
-          const jsonData = JSON.parse(rawData);
-          const encoded = encodeFateSaveExport(jsonData);
-          if (encoded.ok === false) {
-            showToast(encoded.message);
-            return;
-          }
-
-          const blob = new Blob([encoded.value], { type: 'text/plain' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `fate_locked_${Date.now()}.fate`;
-          a.click();
-          URL.revokeObjectURL(url);
-          markExported(storageKeyForActiveProfile); // quiets the backup nag
-          showToast('Save exported');
-      } catch (e) {
-          console.error("Export failed", e);
-          showToast('Export failed');
+      const result = downloadFateSave(getExportData(), storageKeyForActiveProfile);
+      if (result.ok === false) {
+        showToast(result.message);
+        return;
       }
+      showToast('Save exported');
   };
 
   return (
