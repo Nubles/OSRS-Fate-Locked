@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { pushBackup, listBackups, getBackupData, summarizeSave } from './backups';
 
 beforeEach(() => {
@@ -22,8 +22,8 @@ describe('backup ring', () => {
   });
 
   it('pushes and lists newest-first without the heavy data field', () => {
-    expect(pushBackup(KEY, save({ keys: 1 }), 'first')).toEqual({ stored: true });
-    expect(pushBackup(KEY, save({ keys: 2 }), 'second')).toEqual({ stored: true });
+    expect(pushBackup(KEY, save({ keys: 1 }), 'first', () => true)).toEqual({ stored: true });
+    expect(pushBackup(KEY, save({ keys: 2 }), 'second', () => true)).toEqual({ stored: true });
     const list = listBackups(KEY);
     expect(list.length).toBe(2);
     expect(list[0].reason).toBe('second');
@@ -32,13 +32,13 @@ describe('backup ring', () => {
 
   it('skips a snapshot identical to the most recent', () => {
     const data = save({ keys: 9 });
-    pushBackup(KEY, data, 'a');
-    expect(pushBackup(KEY, data, 'b')).toEqual({ stored: false, reason: 'duplicate' });
+    pushBackup(KEY, data, 'a', () => true);
+    expect(pushBackup(KEY, data, 'b', () => true)).toEqual({ stored: false, reason: 'duplicate' });
     expect(listBackups(KEY).length).toBe(1);
   });
 
   it('caps the ring at 8, evicting the oldest', () => {
-    for (let i = 0; i < 11; i++) pushBackup(KEY, save({ keys: i }), `r${i}`);
+    for (let i = 0; i < 11; i++) pushBackup(KEY, save({ keys: i }), `r${i}`, () => true);
     const list = listBackups(KEY);
     expect(list.length).toBe(8);
     expect(list[0].reason).toBe('r10');
@@ -47,14 +47,14 @@ describe('backup ring', () => {
 
   it('round-trips backup data by timestamp', () => {
     const data = save({ keys: 42 });
-    pushBackup(KEY, data, 'keep');
+    pushBackup(KEY, data, 'keep', () => true);
     const ts = listBackups(KEY)[0].ts;
     expect(getBackupData(KEY, ts)).toBe(data);
     expect(getBackupData(KEY, 0)).toBeNull();
   });
 
   it('reports empty data as an observable no-op', () => {
-    expect(pushBackup(KEY, '', 'noop')).toEqual({ stored: false, reason: 'empty' });
+    expect(pushBackup(KEY, '', 'noop', () => true)).toEqual({ stored: false, reason: 'empty' });
     expect(listBackups(KEY).length).toBe(0);
   });
 
@@ -62,7 +62,7 @@ describe('backup ring', () => {
     (globalThis as any).localStorage.setItem = () => {
       throw new DOMException('Quota exceeded', 'QuotaExceededError');
     };
-    expect(pushBackup(KEY, save(), 'quota')).toEqual({ stored: false, reason: 'storage_unavailable' });
+    expect(pushBackup(KEY, save(), 'quota', () => true)).toEqual({ stored: false, reason: 'storage_unavailable' });
   });
 
   it('reports success when the smaller-ring quota retry succeeds', () => {
@@ -73,8 +73,19 @@ describe('backup ring', () => {
       if (attempt === 1) throw new DOMException('Quota exceeded', 'QuotaExceededError');
       writes.push(value);
     };
-    expect(pushBackup(KEY, save(), 'retry')).toEqual({ stored: true });
+    expect(pushBackup(KEY, save(), 'retry', () => true)).toEqual({ stored: true });
     expect(attempt).toBe(2);
     expect(JSON.parse(writes[0])).toHaveLength(1);
+  });
+
+  it('does not read or write the backup ring without ownership', () => {
+    const getItem = vi.spyOn(localStorage, 'getItem');
+    const setItem = vi.spyOn(localStorage, 'setItem');
+    expect(pushBackup(KEY, save(), 'blocked', () => false)).toEqual({
+      stored: false,
+      reason: 'ownership_conflict',
+    });
+    expect(getItem).not.toHaveBeenCalled();
+    expect(setItem).not.toHaveBeenCalled();
   });
 });

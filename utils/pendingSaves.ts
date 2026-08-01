@@ -1,14 +1,16 @@
 export type SaveStatus = 'saved' | 'saving' | 'failed';
 
+export type PendingSaveReason = 'storage_unavailable' | 'ownership_conflict';
+
 export type PendingSaveEntry = {
   data: string;
   status: Exclude<SaveStatus, 'saved'>;
-  reason: 'storage_unavailable' | null;
+  reason: PendingSaveReason | null;
 };
 
 export type PendingSaveFlushResult =
   | { ok: true }
-  | { ok: false; reason: 'storage_unavailable' };
+  | { ok: false; reason: PendingSaveReason };
 
 const entries = new Map<string, PendingSaveEntry>();
 const listeners = new Set<() => void>();
@@ -32,9 +34,15 @@ export const stagePendingSave = (storageKey: string, data: string): void => {
 export const flushPendingSave = (
   storage: Pick<Storage, 'setItem'>,
   storageKey: string,
+  canWrite: () => boolean,
 ): PendingSaveFlushResult => {
   const entry = entries.get(storageKey);
   if (!entry) return { ok: true };
+
+  if (!canWrite()) {
+    blockPendingSave(storageKey);
+    return { ok: false, reason: 'ownership_conflict' };
+  }
 
   try {
     storage.setItem(storageKey, entry.data);
@@ -50,6 +58,23 @@ export const flushPendingSave = (
     emit();
     return { ok: false, reason: 'storage_unavailable' };
   }
+};
+
+export const blockPendingSave = (storageKey: string): void => {
+  const entry = entries.get(storageKey);
+  if (!entry) return;
+  if (
+    entry.status === 'saving'
+    && entry.reason === 'ownership_conflict'
+  ) {
+    return;
+  }
+  entries.set(storageKey, {
+    ...entry,
+    status: 'saving',
+    reason: 'ownership_conflict',
+  });
+  emit();
 };
 
 export const getPendingSave = (storageKey: string): PendingSaveEntry | null =>

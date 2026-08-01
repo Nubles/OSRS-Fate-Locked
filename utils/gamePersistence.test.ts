@@ -10,6 +10,7 @@ import {
   importUiDecision,
   isCurrentImportRequest,
   prepareReplacement,
+  SaveOwnershipConflictError,
   serializeCurrent,
 } from './gamePersistence';
 import { parseAndMigrateSave } from './saveSchema';
@@ -164,6 +165,26 @@ describe('transactional replacement', () => {
     expect(events).toEqual(['backup:3', 'persist:9']);
   });
 
+  it('does not replace in memory when durable ownership is held elsewhere', () => {
+    const replace = vi.fn();
+    const result = applyPreparedReplacement(cloneState({ keys: 9 }), {
+      current: cloneState({ keys: 3 }),
+      defaults: initialState,
+      writeBackup: () => ({ stored: true }),
+      writeReplacement: () => {
+        throw new SaveOwnershipConflictError();
+      },
+      replace,
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      code: 'ownership_conflict',
+      message: 'This profile is being saved by another tab. Take over before replacing it.',
+    });
+    expect(replace).not.toHaveBeenCalled();
+  });
+
   it('replaces valid input with a storage warning when the protective backup fails', () => {
     const replacements: number[] = [];
     const result = applyPreparedReplacement(cloneState({ keys: 9 }), {
@@ -222,7 +243,7 @@ describe('transactional replacement', () => {
   it.each([['missing', null], ['corrupt', '{not json']] as const)(
     'leaves the backup ring untouched for a %s selected backup', (_label, data) => {
       const storageKey = 'FATE_PROFILE_restore';
-      if (data !== null) pushBackup(storageKey, data, 'corrupt');
+      if (data !== null) pushBackup(storageKey, data, 'corrupt', () => true);
       const before = listBackups(storageKey);
       const selected = data === null ? getBackupData(storageKey, 0) : getBackupData(storageKey, before[0].ts);
       const prepared = selected === null
@@ -230,7 +251,7 @@ describe('transactional replacement', () => {
         : parseAndMigrateSave(selected, initialState);
       const result = applyValidatedReplacement(prepared, {
         current: cloneState(),
-        writeBackup: current => pushBackup(storageKey, current, 'Before restore'),
+        writeBackup: current => pushBackup(storageKey, current, 'Before restore', () => true),
         writeReplacement: () => undefined,
         replace: () => undefined,
       });

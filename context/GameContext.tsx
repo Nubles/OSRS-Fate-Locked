@@ -1264,7 +1264,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
   );
 
   const flushCurrentSave = useCallback((): boolean => {
-    const result = flushPendingSave(localStorage, storageKey);
+    const result = flushPendingSave(localStorage, storageKey, () => true);
     if (mountedRef.current) setSaveStatus(result.ok ? 'saved' : 'failed');
     return result.ok;
   }, [storageKey]);
@@ -1291,7 +1291,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     return () => {
       mountedRef.current = false;
       if (saveTimeoutRef.current) window.clearTimeout(saveTimeoutRef.current);
-      flushPendingSave(localStorage, storageKey);
+      flushPendingSave(localStorage, storageKey, () => true);
     };
   }, [storageKey]);
 
@@ -1307,7 +1307,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
   // since the newest entry, so idle reloads don't churn the ring.
   useEffect(() => {
     if (stateRef.current.history.length > 0) {
-      pushBackup(storageKey, serializeCurrent(), 'Session start');
+      pushBackup(storageKey, serializeCurrent(), 'Session start', () => true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey]);
@@ -1452,13 +1452,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     applyPreparedReplacement(data, {
       current: stateRef.current,
       defaults: createFreshState(),
-      writeBackup: current => pushBackup(storageKey, current, 'Before import'),
+      writeBackup: current => pushBackup(storageKey, current, 'Before import', () => true),
       writeReplacement,
       replace: replaceState,
     }), [replaceState, storageKey, writeReplacement]);
 
   const createBackup = useCallback((reason: string): BackupWriteResult =>
-    pushBackup(storageKey, serializeCurrent(), reason), [storageKey, serializeCurrent]);
+    pushBackup(storageKey, serializeCurrent(), reason, () => true), [storageKey, serializeCurrent]);
 
   const listBackups = useCallback(() => readBackups(storageKey), [storageKey]);
 
@@ -1469,7 +1469,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     }
     return applyValidatedReplacement(parseAndMigrateSave(data, createFreshState()), {
       current: stateRef.current,
-      writeBackup: current => pushBackup(storageKey, current, 'Before restore'),
+      writeBackup: current => pushBackup(storageKey, current, 'Before restore', () => true),
       writeReplacement,
       replace: replaceState,
     });
@@ -1477,7 +1477,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
 
   const resetGame = useCallback(() => {
     // Auto-snapshot so an accidental reset is recoverable.
-    pushBackup(storageKey, serializeCurrent(), 'Before reset');
+    pushBackup(storageKey, serializeCurrent(), 'Before reset', () => true);
     commitAction({ type: 'RESET' });
   }, [commitAction, storageKey, serializeCurrent]);
   const togglePin = useCallback((id: string) => commitAction({ type: 'TOGGLE_PIN', payload: id }), [commitAction]);

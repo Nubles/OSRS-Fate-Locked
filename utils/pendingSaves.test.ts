@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  blockPendingSave,
   discardPendingSave,
   flushPendingSave,
   getPendingSave,
@@ -32,7 +33,7 @@ describe('pending save registry', () => {
       .mockImplementation(() => undefined);
 
     stagePendingSave('profile-a', '{"keys":1}');
-    expect(flushPendingSave({ setItem }, 'profile-a')).toEqual({
+    expect(flushPendingSave({ setItem }, 'profile-a', () => true)).toEqual({
       ok: false,
       reason: 'storage_unavailable',
     });
@@ -40,9 +41,42 @@ describe('pending save registry', () => {
 
     stagePendingSave('profile-a', '{"keys":3}');
     expect(getSaveStatus('profile-a')).toBe('failed');
-    expect(flushPendingSave({ setItem }, 'profile-a')).toEqual({ ok: true });
+    expect(flushPendingSave({ setItem }, 'profile-a', () => true)).toEqual({ ok: true });
     expect(setItem).toHaveBeenLastCalledWith('profile-a', '{"keys":3}');
     expect(getPendingSave('profile-a')).toBeNull();
+  });
+
+  it('keeps a blocked snapshot without invoking storage', () => {
+    const setItem = vi.fn();
+    stagePendingSave('profile-a', '{"keys":9}');
+
+    expect(flushPendingSave({ setItem }, 'profile-a', () => false)).toEqual({
+      ok: false,
+      reason: 'ownership_conflict',
+    });
+    expect(setItem).not.toHaveBeenCalled();
+    expect(getPendingSave('profile-a')).toMatchObject({
+      data: '{"keys":9}',
+      status: 'saving',
+      reason: 'ownership_conflict',
+    });
+    expect(getSaveStatus('profile-a')).toBe('saving');
+  });
+
+  it('emits only when blocking changes a staged snapshot', () => {
+    stagePendingSave('profile-a', '{"keys":9}');
+    const listener = vi.fn();
+    const unsubscribe = subscribePendingSaves(listener);
+
+    blockPendingSave('profile-a');
+    blockPendingSave('profile-a');
+    unsubscribe();
+
+    expect(getPendingSave('profile-a')).toMatchObject({
+      status: 'saving',
+      reason: 'ownership_conflict',
+    });
+    expect(listener).toHaveBeenCalledTimes(1);
   });
 
   it('notifies subscribers and discards only the selected profile', () => {

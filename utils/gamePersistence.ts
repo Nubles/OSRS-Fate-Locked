@@ -6,7 +6,7 @@ import {
   type SaveWarning,
 } from './saveSchema';
 
-export type ImportErrorCode = SaveErrorCode | 'storage_unavailable';
+export type ImportErrorCode = SaveErrorCode | 'storage_unavailable' | 'ownership_conflict';
 
 export type ImportResult =
   | { ok: true; warnings: SaveWarning[] }
@@ -69,7 +69,14 @@ export const candidateMatchesSource = <T>(
 
 export type BackupWriteResult =
   | { stored: true }
-  | { stored: false; reason: 'empty' | 'duplicate' | 'storage_unavailable' };
+  | { stored: false; reason: 'empty' | 'duplicate' | 'storage_unavailable' | 'ownership_conflict' };
+
+export class SaveOwnershipConflictError extends Error {
+  constructor() {
+    super('Profile save ownership is held by another tab.');
+    this.name = 'SaveOwnershipConflictError';
+  }
+}
 
 export const serializeCurrent = (
   state: GameState & { lastEvent?: unknown },
@@ -106,6 +113,12 @@ const replacementStorageFailure = (): ImportResult => ({
   message: 'The replacement run could not be saved. Your current run is unchanged.',
 });
 
+export const ownershipConflictResult = (): ImportResult => ({
+  ok: false,
+  code: 'ownership_conflict',
+  message: 'This profile is being saved by another tab. Take over before replacing it.',
+});
+
 export const applyValidatedReplacement = (
   prepared: SaveValidationResult,
   options: ReplacementCallbacks,
@@ -115,7 +128,8 @@ export const applyValidatedReplacement = (
   const backup = options.writeBackup(serializeCurrent(options.current));
   try {
     options.writeReplacement(serializeCurrent(prepared.state));
-  } catch {
+  } catch (error) {
+    if (error instanceof SaveOwnershipConflictError) return ownershipConflictResult();
     return replacementStorageFailure();
   }
   options.replace(prepared.state);

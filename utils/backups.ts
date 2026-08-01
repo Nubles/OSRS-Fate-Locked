@@ -60,7 +60,9 @@ export const pushBackup = (
   storageKey: string,
   data: string,
   reason: string,
+  canWrite: () => boolean,
 ): BackupWriteResult => {
+  if (!canWrite()) return { stored: false, reason: 'ownership_conflict' };
   if (!data) return { stored: false, reason: 'empty' };
   const entries = readAll(storageKey);
   if (entries[0]?.data === data) return { stored: false, reason: 'duplicate' };
