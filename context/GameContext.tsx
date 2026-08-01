@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, useState } from 'react';
 import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState, type DetectedEventIdentity, type DetectedProgress, type GameEventMeta as DetectedGameEventMeta, type RollIntent } from '../types';
 import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST } from '../data/items';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from '../config/rules';
@@ -49,6 +49,15 @@ import {
 } from '../utils/keyRoll';
 import { effectiveVanillaClueRate, vanillaBossKeyStage } from '../config/vanillaKeyEconomy';
 import type { KeyRollContext } from '../config/vanillaKeyEconomy';
+import {
+  discardPendingSave,
+  flushPendingSave,
+  getPendingSave,
+  getSaveStatus,
+  stagePendingSave,
+  type SaveStatus,
+} from '../utils/pendingSaves';
+
 
 // --- Types ---
 const SAVE_DEBOUNCE_MS = 500;
@@ -118,6 +127,8 @@ type GameEvent = {
 
 interface GameContextType extends GameState {
   lastEvent: GameEvent | null;
+  saveStatus: SaveStatus;
+  retrySave: () => boolean;
   rollForKey: (
     source: string,
     threshold: number,
@@ -1204,6 +1215,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     gameReducer,
     storageKey,
     (key): GameState & { lastEvent: GameEvent | null } => {
+      const pending = getPendingSave(key);
+      if (pending) {
+        const parsed = parseAndMigrateSave(pending.data, createFreshState());
+        if (parsed.ok === true) return { ...parsed.state, lastEvent: null };
+        discardPendingSave(key);
+        console.warn('Pending save failed validation', parsed.code, parsed.path ?? 'root');
+      }
       try {
         const saved = localStorage.getItem(key);
         if (saved) {
@@ -1220,6 +1238,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     },
   );
   const saveTimeoutRef = useRef<number | null>(null);
+  const mountedRef = useRef(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>(() => getSaveStatus(storageKey));
 
   useEffect(() => {
     const warning = initialLoadWarningRef.current;
@@ -1243,19 +1263,43 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     [],
   );
 
+  const flushCurrentSave = useCallback((): boolean => {
+    const result = flushPendingSave(localStorage, storageKey);
+    if (mountedRef.current) setSaveStatus(result.ok ? 'saved' : 'failed');
+    return result.ok;
+  }, [storageKey]);
+
   // Debounced persistence - saves all persistent state fields
   useEffect(() => {
+    stagePendingSave(storageKey, serializeGameState(state));
+    setSaveStatus(getSaveStatus(storageKey));
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
     saveTimeoutRef.current = window.setTimeout(() => {
-      localStorage.setItem(storageKey, serializeGameState(state));
+      saveTimeoutRef.current = null;
+      flushCurrentSave();
     }, SAVE_DEBOUNCE_MS);
 
     return () => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     };
-  }, [state, storageKey]);
+  }, [flushCurrentSave, state, storageKey]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (saveTimeoutRef.current) window.clearTimeout(saveTimeoutRef.current);
+      flushPendingSave(localStorage, storageKey);
+    };
+  }, [storageKey]);
+
+  const retrySave = useCallback((): boolean => {
+    stagePendingSave(storageKey, serializeCurrent());
+    setSaveStatus(getSaveStatus(storageKey));
+    return flushCurrentSave();
+  }, [flushCurrentSave, serializeCurrent, storageKey]);
 
   // One automatic snapshot per session (per profile mount), so "the run was
   // fine yesterday" is always recoverable from the ring — not just the
@@ -1400,6 +1444,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
       saveTimeoutRef,
       handle => window.clearTimeout(handle),
     );
+    discardPendingSave(storageKey);
+    setSaveStatus('saved');
   }, [storageKey]);
 
   const importSave = useCallback((data: unknown): ImportResult =>
@@ -1537,6 +1583,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
 
   const contextValue = useMemo(() => ({
     ...state,
+    saveStatus,
+    retrySave,
     rollForKey,
     acceptDetectedEvent,
     unlockContent,
@@ -1572,6 +1620,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     ackRival
   }), [
     state,
+    saveStatus,
+    retrySave,
     rollForKey,
     acceptDetectedEvent,
     unlockContent,

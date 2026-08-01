@@ -39,6 +39,7 @@ describe('pending save registry', () => {
     expect(getSaveStatus('profile-a')).toBe('failed');
 
     stagePendingSave('profile-a', '{"keys":3}');
+    expect(getSaveStatus('profile-a')).toBe('failed');
     expect(flushPendingSave({ setItem }, 'profile-a')).toEqual({ ok: true });
     expect(setItem).toHaveBeenLastCalledWith('profile-a', '{"keys":3}');
     expect(getPendingSave('profile-a')).toBeNull();

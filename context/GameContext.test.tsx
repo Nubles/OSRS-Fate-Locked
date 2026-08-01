@@ -3,6 +3,7 @@
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { GameState } from '../types';
+import { resetPendingSavesForTest } from '../utils/pendingSaves';
 import {
   GameProvider,
   gameReducerForTest,
@@ -21,6 +22,7 @@ const GameCapture = ({ onGame }: { onGame: (game: Game) => void }) => {
 };
 
 beforeEach(() => {
+  resetPendingSavesForTest();
   const storage = new Map<string, string>();
   vi.stubGlobal('localStorage', {
     getItem: (key: string) => storage.get(key) ?? null,
@@ -32,9 +34,98 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  resetPendingSavesForTest();
+  vi.useRealTimers();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
+
+describe('ordinary save recovery', () => {
+  const installStorage = () => {
+    const values = new Map<string, string>();
+    let writesFail = false;
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        if (writesFail) throw new DOMException('full', 'QuotaExceededError');
+        values.set(key, value);
+      },
+      removeItem: (key: string) => { values.delete(key); },
+      clear: () => values.clear(),
+    });
+    return {
+      values,
+      failWrites: () => { writesFail = true; },
+      allowWrites: () => { writesFail = false; },
+    };
+  };
+
+  const renderGame = (storageKey: string) => {
+    let current: Game | undefined;
+    const rendered = render(
+      <GameProvider storageKey={storageKey}>
+        <GameCapture onGame={game => { current = game; }} />
+      </GameProvider>,
+    );
+    return {
+      ...rendered,
+      current: () => {
+        if (!current) throw new Error('Game provider did not initialize');
+        return current;
+      },
+    };
+  };
+
+  it('contains a failed write and retries the newest in-memory state', async () => {
+    vi.useFakeTimers();
+    const storage = installStorage();
+    storage.failWrites();
+    const game = renderGame('profile');
+
+    act(() => game.current().saveNote('goal', 'first'));
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+    expect(game.current().saveStatus).toBe('failed');
+
+    act(() => game.current().saveNote('goal', 'newest'));
+    expect(game.current().saveStatus).toBe('failed');
+    storage.allowWrites();
+    act(() => { expect(game.current().retrySave()).toBe(true); });
+
+    expect(JSON.parse(storage.values.get('profile')!).userNotes.goal).toBe('newest');
+    expect(game.current().saveStatus).toBe('saved');
+  });
+
+  it('loads a failed pending snapshot before an older stored snapshot', async () => {
+    vi.useFakeTimers();
+    const storage = installStorage();
+    const first = renderGame('profile');
+
+    act(() => first.current().saveNote('goal', 'older'));
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+    expect(JSON.parse(storage.values.get('profile')!).userNotes.goal).toBe('older');
+
+    storage.failWrites();
+    act(() => first.current().saveNote('goal', 'newest'));
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+    expect(first.current().saveStatus).toBe('failed');
+    first.unmount();
+
+    const second = renderGame('profile');
+    expect(second.current().userNotes.goal).toBe('newest');
+  });
+
+  it('flushes the newest state when unmounted inside the debounce window', () => {
+    vi.useFakeTimers();
+    const storage = installStorage();
+    const game = renderGame('profile');
+
+    act(() => game.current().saveNote('goal', 'safe on teardown'));
+    game.unmount();
+
+    expect(JSON.parse(storage.values.get('profile')!).userNotes.goal).toBe('safe on teardown');
+  });
+});
+
 describe('run identity and revision', () => {
   it('assigns a stable run id to an old save', () => {
     const first = migrateSaveForTest({ history: [] });

@@ -20,7 +20,12 @@ const emit = (): void => {
 };
 
 export const stagePendingSave = (storageKey: string, data: string): void => {
-  entries.set(storageKey, { data, status: 'saving', reason: null });
+  const existing = entries.get(storageKey);
+  entries.set(storageKey, {
+    data,
+    status: existing?.status === 'failed' ? 'failed' : 'saving',
+    reason: existing?.status === 'failed' ? 'storage_unavailable' : null,
+  });
   emit();
 };
 
