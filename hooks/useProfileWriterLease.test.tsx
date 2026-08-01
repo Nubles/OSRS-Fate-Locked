@@ -81,6 +81,24 @@ describe('useProfileWriterLease', () => {
     expect(lease.result.current.blockedReason).toBe('storage_unavailable');
   });
 
+  it('classifies claim write failures as unavailable storage', async () => {
+    const writeUnavailableStorage = {
+      getItem: () => null,
+      setItem: () => { throw new DOMException('full', 'QuotaExceededError'); },
+      removeItem: vi.fn(),
+    };
+    const lease = renderHook(() => useProfileWriterLease('profile', {
+      storage: writeUnavailableStorage,
+      ownerId: 'tab-a',
+      now: () => nowRef.current,
+    }));
+
+    await act(async () => Promise.resolve());
+
+    expect(lease.result.current.status).toBe('blocked');
+    expect(lease.result.current.blockedReason).toBe('storage_unavailable');
+  });
+
   it('becomes blocked when a foreign storage event replaces its lease', async () => {
     const lease = renderHook(() => useProfileWriterLease('profile', {
       storage,
@@ -190,6 +208,36 @@ describe('useProfileWriterLease', () => {
     expect(JSON.parse(values.get(key)!).ownerId).toBe('tab-c');
   });
 
+  it('rejects takeover when a foreign owner replaces it during arbitration', async () => {
+    const key = writerLeaseKey('profile');
+    values.set(key, JSON.stringify({
+      version: 1,
+      ownerId: 'tab-a',
+      expiresAt: nowRef.current + WRITER_LEASE_TTL_MS,
+    }));
+    const lease = renderHook(() => useProfileWriterLease('profile', {
+      storage,
+      ownerId: 'tab-b',
+      now: () => nowRef.current,
+    }));
+
+    let tookOver = true;
+    await act(async () => {
+      const result = lease.result.current.takeOver();
+      values.set(key, JSON.stringify({
+        version: 1,
+        ownerId: 'tab-c',
+        expiresAt: nowRef.current + WRITER_LEASE_TTL_MS,
+      }));
+      await vi.advanceTimersByTimeAsync(WRITER_LEASE_ARBITRATION_MS);
+      tookOver = await result;
+    });
+
+    expect(tookOver).toBe(false);
+    expect(lease.result.current.status).toBe('blocked');
+    expect(lease.result.current.blockedReason).toBe('foreign_owner');
+  });
+
   it('releases only its matching lease', async () => {
     const key = writerLeaseKey('profile');
     const lease = renderHook(() => useProfileWriterLease('profile', {
@@ -209,6 +257,28 @@ describe('useProfileWriterLease', () => {
     }));
     expect(lease.result.current.release()).toBe(false);
     expect(JSON.parse(values.get(key)!).ownerId).toBe('tab-b');
+  });
+
+  it('classifies release removal failures as unavailable storage', async () => {
+    const removeUnavailableStorage = {
+      getItem: storage.getItem,
+      setItem: storage.setItem,
+      removeItem: () => { throw new DOMException('blocked', 'SecurityError'); },
+    };
+    const lease = renderHook(() => useProfileWriterLease('profile', {
+      storage: removeUnavailableStorage,
+      ownerId: 'tab-a',
+      now: () => nowRef.current,
+    }));
+    await act(async () => vi.advanceTimersByTimeAsync(WRITER_LEASE_ARBITRATION_MS));
+
+    let released = true;
+    act(() => { released = lease.result.current.release(); });
+
+    expect(released).toBe(false);
+    expect(lease.result.current.status).toBe('blocked');
+    expect(lease.result.current.blockedReason).toBe('storage_unavailable');
+    expect(JSON.parse(values.get(writerLeaseKey('profile'))!).ownerId).toBe('tab-a');
   });
 
   it('forces takeover and cleans every timer and listener on unmount', async () => {
@@ -242,5 +312,44 @@ describe('useProfileWriterLease', () => {
     expect(removeWindow).toHaveBeenCalledWith('storage', expect.any(Function));
     expect(removeDocument).toHaveBeenCalledWith('visibilitychange', expect.any(Function));
     expect(clearIntervalSpy).toHaveBeenCalled();
+  });
+
+  it('settles and fully cleans a pending takeover on unmount', async () => {
+    const key = writerLeaseKey('profile');
+    values.set(key, JSON.stringify({
+      version: 1,
+      ownerId: 'tab-a',
+      expiresAt: nowRef.current + WRITER_LEASE_TTL_MS,
+    }));
+    const clearTimeoutSpy = vi.spyOn(window, 'clearTimeout');
+    const removeWindow = vi.spyOn(window, 'removeEventListener');
+    const removeDocument = vi.spyOn(document, 'removeEventListener');
+    const lease = renderHook(() => useProfileWriterLease('profile', {
+      storage,
+      ownerId: 'tab-b',
+      now: () => nowRef.current,
+    }));
+
+    let takeover!: Promise<boolean>;
+    act(() => { takeover = lease.result.current.takeOver(); });
+    const forcedLease = values.get(key);
+    lease.unmount();
+
+    await expect(takeover).resolves.toBe(false);
+    expect(clearTimeoutSpy).toHaveBeenCalled();
+    expect(removeWindow).toHaveBeenCalledWith('storage', expect.any(Function));
+    expect(removeDocument).toHaveBeenCalledWith(
+      'visibilitychange',
+      expect.any(Function),
+    );
+    expect(vi.getTimerCount()).toBe(0);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(
+        WRITER_LEASE_RENEW_MS + WRITER_LEASE_ARBITRATION_MS,
+      );
+    });
+    expect(values.get(key)).toBe(forcedLease);
+    expect(vi.getTimerCount()).toBe(0);
   });
 });
