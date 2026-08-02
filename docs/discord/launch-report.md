@@ -23,3 +23,4 @@
 | 6 - Rules Screening | pass | the native `Server Settings` -> `Access` -> `Server Rules` gate is enabled with the ten approved rules in source order; persisted editor state and member Preview confirmed that agreement is required before chatting or interacting |
 | 6 - AutoMod and raid protection | pass | Block Mention Spam is enabled at five unique mentions with message blocking and `#mod-alerts` alerts, mention-raid detection retained, and timeout disabled; suspected-spam blocking and alerts are enabled; Activity Alerts target `#mod-alerts`; both default CAPTCHA protections are enabled |
 | 6 - Moderator 2FA | pass | `Require 2FA for moderator actions` is enabled; activation paused for the owner's authentication handoff and was verified after the owner resumed |
+| 7 - Trusted unlock webhook | skipped-by-owner | webhook: skipped by owner; test embed: not run; secret recorded: no |
