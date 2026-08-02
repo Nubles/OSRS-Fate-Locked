@@ -230,7 +230,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                 <div className="bg-[#222] p-4 rounded-xl border border-white/5">
                                     <h4 className="font-bold text-gray-200 mb-2 flex items-center gap-2"><Shield size={16} className="text-osrs-pity"/> Fate Points</h4>
                                     <p className="text-xs text-gray-400">
-                                        Bad luck protection. Each failed roll adds 1 Fate Point.
+                                        Bad luck protection. Failed rolls award +1 to +3 Fate by difficulty.
                                         <br/><br/>
                                         {rules.pityEnabled ? (
                                           <span className="text-white font-bold">{rules.pityThreshold} Points = 1 Guaranteed (Pity) Key.</span>
@@ -314,7 +314,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     <li><b className="text-white">2.</b> The app draws to <span className="font-mono">0.1%</span> precision against its <b className="text-purple-400">95.0%</b> threshold. You roll <span className="font-mono text-green-400">42.0</span> → a Key!</li>
                                     <li><b className="text-white">3.</b> Every success then rolls for an upgrade. In {activeMode.name} mode that's a <b className="text-purple-400">{rules.omniChanceBase}%</b> Omni chance (up to 20% on this very quest). Miss it and you bank a Standard Key; hit it and you <i>also</i> pocket an <b className="text-purple-400">Omni-Key</b>.</li>
                                     <li><b className="text-white">4.</b> Take the Key to <b className="text-osrs-gold">Spend Keys</b>, choose the <b>Skills</b> table, and unlock a random skill tier — say Slayer. Those new Slayer levels open fresh tasks to roll on.</li>
-                                    <li className="text-gray-500 text-xs pt-1">Roll <span className="font-mono">95.1–100.0</span> instead and you'd get no Key — but you'd gain a Fate Point{rules.pityEnabled ? <>, inching toward a guaranteed Key at <b>{rules.pityThreshold}</b></> : ''}.</li>
+                                    <li className="text-gray-500 text-xs pt-1">Roll <span className="font-mono">95.1–100.0</span> instead and you'd get no Key — but you would gain +3 Fate{rules.pityEnabled ? <>, inching toward a guaranteed Key at <b>{rules.pityThreshold}</b></> : ''}.</li>
                                 </ol>
                             </div>
 
@@ -323,9 +323,9 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                 <div className="bg-[#222] p-5 rounded-xl border border-white/5">
                                     <h4 className="font-bold text-gray-200 mb-2 flex items-center gap-2"><Shield size={16} className="text-osrs-pity"/> Fate Points</h4>
                                     <p className="text-xs text-gray-400 leading-relaxed">
-                                        Earned <b>+1 per failed roll</b>, reset to 0 the moment you get any Key.
+                                        Earned <b>+1 to +3 Fate per failed roll</b>, with awards based on difficulty.
                                         {rules.pityEnabled
-                                            ? <> At <b className="text-white">{rules.pityThreshold}</b> they convert a failure into a guaranteed <b>Pity Key</b>.</>
+                                            ? <> At <b className="text-white">{rules.pityThreshold}</b> they grant a guaranteed <b>Pity Key</b>. Pity conversions keep any Fate overflow.</>
                                             : <> Pity is <b className="text-red-400">off</b> in {activeMode.name} mode.</>}
                                         {' '}Either way, they're the fuel for the Void Altar.
                                     </p>

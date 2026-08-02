@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GameProvider } from '../context/GameContext';
 import { ReferenceModal } from './ReferenceModal';
 
-type CodexTab = 'economy' | 'drops' | 'unlocks';
+type CodexTab = 'core' | 'economy' | 'drops' | 'unlocks';
 
 const renderCodex = (tab: CodexTab, gameModeId = 'vanilla') => {
   const save = JSON.stringify({ gameModeId });
@@ -28,6 +28,8 @@ afterEach(() => vi.unstubAllGlobals());
 describe('ReferenceModal Vanilla policy', () => {
   it('explains weighted failure Fate, Chaos milestones, and pity overflow', () => {
     const drops = renderCodex('drops');
+    const economy = renderCodex('economy');
+    const core = renderCodex('core');
 
     expect(drops).toContain('Levels 2-19: +1 Fate');
     expect(drops).toContain('Levels 20-79: +2 Fate');
@@ -38,6 +40,13 @@ describe('ReferenceModal Vanilla policy', () => {
     expect(drops).toContain('Easy / Medium: +1 Fate');
     expect(drops).toContain('Hard / Elite: +2 Fate');
     expect(drops).toContain('Master / Grandmaster: +3 Fate');
+    expect(core).toContain('Failed rolls award +1 to +3 Fate by difficulty.');
+    expect(economy).toContain('you would gain +3 Fate');
+    expect(economy).toContain('Pity conversions keep any Fate overflow.');
+    expect(core).not.toContain('Each failed roll adds 1 Fate Point.');
+    expect(economy).not.toContain('Earned +1 per failed roll');
+    expect(economy).not.toContain('reset to 0 the moment you get any Key');
+    expect(economy).not.toContain("you'd gain a Fate Point");
   });
 
   it('documents the finite reserve, schedules, access safety valve, and scattered named areas in their existing tabs', () => {
