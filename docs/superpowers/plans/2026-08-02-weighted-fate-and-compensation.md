@@ -574,4 +574,3 @@ If Steps 1-5 required a correction, stage only the files named by that correctio
     git commit -m "fix: complete fate rebalance verification"
 
 If no correction was required, do not create an empty commit.
-
