@@ -123,6 +123,15 @@ const readLock = (deps: ProfileTransactionDependencies): LockReadResult => {
   }
 };
 
+export const profileMetadataLockRetryDelay = (
+  deps: ProfileTransactionDependencies,
+): number => {
+  const observed = readLock(deps);
+  if (!observed.ok || observed.lock === null) return 0;
+  const remaining = observed.lock.expiresAt - deps.now();
+  return Math.max(0, Math.min(PROFILE_METADATA_LOCK_TTL_MS, remaining));
+};
+
 const isUnexpiredForeignLock = (
   lock: ProfileMetadataLockV1 | null,
   deps: ProfileTransactionDependencies,

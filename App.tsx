@@ -1,6 +1,6 @@
 
 import { lazyWithRetry } from './utils/lazyRetry';
-import React, { useState, useRef, useEffect, useReducer, Component, ErrorInfo, ReactNode, Suspense } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useReducer, Component, ErrorInfo, ReactNode, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { GameProvider, useGame } from './context/GameContext';
 import { usePortalHost } from './hooks/usePortalHost';
@@ -1062,7 +1062,7 @@ const ProfileEvictionBridge: React.FC<{ profileId: string }> = ({ profileId }) =
   const { registerProfileEvictionHandler } = useProfiles();
   const { stageForProfileEviction } = useGame();
 
-  useEffect(() => registerProfileEvictionHandler(removedProfileId => {
+  useLayoutEffect(() => registerProfileEvictionHandler(removedProfileId => {
     if (removedProfileId === profileId) stageForProfileEviction();
   }), [profileId, registerProfileEvictionHandler, stageForProfileEviction]);
 

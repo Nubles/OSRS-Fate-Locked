@@ -21,6 +21,7 @@ import {
 import {
   initializeProfileMetadata,
   mutateProfileMetadata,
+  profileMetadataLockRetryDelay,
   type ProfileMutation,
   type ProfileMutationFailure,
   type ProfileTransactionDependencies,
@@ -116,6 +117,7 @@ const emptyNotice = (kind: ProfileRecoveryNotice['kind']): ProfileRecoveryNotice
 
 const initializeMemoryFallback = async (
   deps: ProfileTransactionDependencies,
+  reason: ProfileMutationFailure = 'storage_unavailable',
 ): Promise<ProfileTransactionResult> => {
   const fallback = await initializeProfileMetadata({
     ...deps,
@@ -125,7 +127,7 @@ const initializeMemoryFallback = async (
   if (fallback.metadata === null) return fallback;
   return {
     ok: false,
-    reason: 'storage_unavailable',
+    reason,
     metadata: fallback.metadata,
     notice: emptyNotice('read_only'),
   };
@@ -172,31 +174,59 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const readOnlyReasonRef = useRef<ProfileMutationFailure>('unsupported_metadata');
   const [recentlyCreatedId, setRecentlyCreatedId] = useState<string | null>(null);
   const evictionHandlerRef = useRef<((profileId: string) => void) | null>(null);
+  const deferredIncomingRef = useRef<ProfileMetadata | null>(null);
   const mountedRef = useRef(false);
   const busyRereadArmedRef = useRef(false);
+  const busyRereadTimerRef = useRef<number | null>(null);
+  const busyRereadCallbackRef = useRef<() => void>(() => undefined);
+
+  const clearBusyRereadTimer = useCallback(() => {
+    if (busyRereadTimerRef.current === null) return;
+    window.clearTimeout(busyRereadTimerRef.current);
+    busyRereadTimerRef.current = null;
+  }, []);
+
+  const scheduleStartupBusyReread = useCallback(() => {
+    clearBusyRereadTimer();
+    const delay = profileMetadataLockRetryDelay(dependencies);
+    busyRereadTimerRef.current = window.setTimeout(() => {
+      busyRereadTimerRef.current = null;
+      busyRereadCallbackRef.current();
+    }, delay);
+  }, [clearBusyRereadTimer, dependencies]);
 
   const setPending = useCallback((next: ProfilePendingAction) => {
     pendingActionRef.current = next;
     setPendingAction(next);
   }, []);
 
-  const installMetadata = useCallback((next: ProfileMetadata) => {
+  const installMetadata = useCallback((next: ProfileMetadata): boolean => {
+    const current = metadataRef.current;
+    if (current !== null && next.revision < current.revision) return false;
     metadataRef.current = next;
     setMetadata(next);
+    return true;
   }, []);
 
   const applyInitializationResult = useCallback((result: ProfileTransactionResult) => {
+    const current = metadataRef.current;
+    if (result.metadata !== null && current !== null && result.metadata.revision < current.revision) return;
     if (result.metadata !== null) installMetadata(result.metadata);
     setRecoveryNotice(result.notice);
     if (result.ok === true) {
       metadataReadOnlyRef.current = false;
       setMetadataReadOnly(false);
       setMutationFailure(null);
+      busyRereadArmedRef.current = false;
+      clearBusyRereadTimer();
       return;
     }
 
     setMutationFailure(result.reason);
-    busyRereadArmedRef.current = result.reason === 'busy';
+    const retryStartup = result.reason === 'busy' && result.metadata === null;
+    busyRereadArmedRef.current = retryStartup;
+    if (retryStartup) scheduleStartupBusyReread();
+    else clearBusyRereadTimer();
     const readOnly = result.reason === 'unsupported_metadata'
       || result.reason === 'storage_unavailable'
       || result.notice?.kind === 'read_only'
@@ -204,7 +234,11 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     metadataReadOnlyRef.current = readOnly;
     setMetadataReadOnly(readOnly);
     if (readOnly) readOnlyReasonRef.current = result.reason;
-  }, [installMetadata]);
+  }, [
+    clearBusyRereadTimer,
+    installMetadata,
+    scheduleStartupBusyReread,
+  ]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -221,8 +255,10 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return () => {
       cancelled = true;
       mountedRef.current = false;
+      busyRereadArmedRef.current = false;
+      clearBusyRereadTimer();
     };
-  }, [applyInitializationResult, dependencies, setPending]);
+  }, [applyInitializationResult, clearBusyRereadTimer, dependencies, setPending]);
 
   const mergeIncomingMetadata = useCallback((
     incoming: ProfileMetadata,
@@ -230,18 +266,32 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   ) => {
     const current = metadataRef.current;
     if (current === null) {
+      deferredIncomingRef.current = null;
       installMetadata(incoming);
       if (notice !== null) setRecoveryNotice(notice);
       return;
     }
 
+    if (incoming.revision < current.revision) return;
+
     if (incoming.profiles.some(profile => profile.id === current.activeProfileId)) {
+      deferredIncomingRef.current = null;
       installMetadata({ ...incoming, activeProfileId: current.activeProfileId });
       if (notice !== null) setRecoveryNotice(notice);
       return;
     }
 
-    evictionHandlerRef.current?.(current.activeProfileId);
+    const evictionHandler = evictionHandlerRef.current;
+    if (evictionHandler === null) {
+      if (
+        deferredIncomingRef.current === null
+        || incoming.revision > deferredIncomingRef.current.revision
+      ) deferredIncomingRef.current = incoming;
+      return;
+    }
+
+    deferredIncomingRef.current = null;
+    evictionHandler(current.activeProfileId);
     const replacement = incoming.profiles.some(profile => profile.id === incoming.activeProfileId)
       ? incoming.activeProfileId
       : incoming.profiles[0].id;
@@ -252,9 +302,24 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const rereadAfterBusy = useCallback(async () => {
     if (pendingActionRef.current !== null || !busyRereadArmedRef.current) return;
     busyRereadArmedRef.current = false;
+    clearBusyRereadTimer();
     setPending('initializing');
-    const result = await initializeWithStorageFallback(dependencies);
+    let result = await initializeWithStorageFallback(dependencies);
+    if (
+      result.ok === false
+      && result.reason === 'busy'
+      && result.metadata === null
+      && metadataRef.current === null
+    ) result = await initializeMemoryFallback(dependencies, 'busy');
     if (!mountedRef.current) return;
+    if (
+      metadataReadOnlyRef.current
+      && (readOnlyReasonRef.current === 'invalid_metadata'
+        || readOnlyReasonRef.current === 'unsupported_metadata')
+    ) {
+      setPending(null);
+      return;
+    }
     if (result.metadata !== null) mergeIncomingMetadata(result.metadata, result.notice);
     if (result.ok === true) {
       setMutationFailure(null);
@@ -273,15 +338,48 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
     if (result.notice !== null) setRecoveryNotice(result.notice);
     setPending(null);
-  }, [dependencies, mergeIncomingMetadata, setPending]);
+  }, [
+    clearBusyRereadTimer,
+    dependencies,
+    mergeIncomingMetadata,
+    setPending,
+  ]);
+
+  busyRereadCallbackRef.current = () => { void rereadAfterBusy(); };
+
+  const failClosedForIncomingPrimary = useCallback((
+    reason: Extract<ProfileMutationFailure, 'invalid_metadata' | 'unsupported_metadata'>,
+    noticeKind: Extract<ProfileRecoveryNotice['kind'], 'read_only' | 'unsupported'>,
+  ) => {
+    busyRereadArmedRef.current = false;
+    clearBusyRereadTimer();
+    deferredIncomingRef.current = null;
+    metadataReadOnlyRef.current = true;
+    readOnlyReasonRef.current = reason;
+    setMetadataReadOnly(true);
+    setMutationFailure(reason);
+    setRecoveryNotice(emptyNotice(noticeKind));
+  }, [clearBusyRereadTimer]);
 
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
       if (event.key === PROFILES_KEY) {
         const current = metadataRef.current;
-        if (current === null || event.newValue === null) return;
+        if (current === null) return;
         const parsed = parseProfileMetadata(event.newValue);
-        if (parsed.status !== 'current' || parsed.metadata.revision <= current.revision) return;
+        if (parsed.status === 'unsupported') {
+          failClosedForIncomingPrimary('unsupported_metadata', 'unsupported');
+          return;
+        }
+        if (parsed.status !== 'current') {
+          failClosedForIncomingPrimary('invalid_metadata', 'read_only');
+          return;
+        }
+        const newestSeenRevision = Math.max(
+          current.revision,
+          deferredIncomingRef.current?.revision ?? -1,
+        );
+        if (parsed.metadata.revision <= newestSeenRevision) return;
         mergeIncomingMetadata(parsed.metadata, null);
         return;
       }
@@ -294,7 +392,11 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return () => {
       window.removeEventListener('storage', onStorage);
     };
-  }, [mergeIncomingMetadata, rereadAfterBusy]);
+  }, [
+    failClosedForIncomingPrimary,
+    mergeIncomingMetadata,
+    rereadAfterBusy,
+  ]);
 
   const runMutation = useCallback(async (
     action: Exclude<ProfilePendingAction, 'initializing' | null>,
@@ -318,6 +420,14 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     if (!mountedRef.current) return result;
+    if (
+      metadataReadOnlyRef.current
+      && (readOnlyReasonRef.current === 'invalid_metadata'
+        || readOnlyReasonRef.current === 'unsupported_metadata')
+    ) {
+      setPending(null);
+      return result;
+    }
     if (result.ok === true) {
       const localActiveId = metadataRef.current?.activeProfileId ?? result.metadata.activeProfileId;
       const preserveLocalSelection = action === 'rename' || action === 'delete';
@@ -387,10 +497,18 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     handler: (profileId: string) => void,
   ): (() => void) => {
     evictionHandlerRef.current = handler;
+    const deferred = deferredIncomingRef.current;
+    const current = metadataRef.current;
+    if (deferred !== null) {
+      deferredIncomingRef.current = null;
+      if (current !== null && deferred.revision > current.revision) {
+        mergeIncomingMetadata(deferred, null);
+      }
+    }
     return () => {
       if (evictionHandlerRef.current === handler) evictionHandlerRef.current = null;
     };
-  }, []);
+  }, [mergeIncomingMetadata]);
 
   const value = useMemo<ProfileContextType | null>(() => {
     if (metadata === null) return null;

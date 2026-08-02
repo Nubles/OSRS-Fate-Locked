@@ -9,6 +9,7 @@ import {
   PROFILE_METADATA_LOCK_KEY,
   PROFILE_METADATA_LOCK_TIMEOUT_MS,
   PROFILE_METADATA_LOCK_TTL_MS,
+  profileMetadataLockRetryDelay,
   releaseProfileMetadataLock,
   type ProfileTransactionDependencies,
 } from './profileMetadataTransaction';
@@ -83,6 +84,31 @@ const lockRaw = (ownerId: string, expiresAt: number): string => JSON.stringify({
 });
 
 describe('profile metadata lock', () => {
+  it.each([
+    { label: 'remaining legitimate lifetime', raw: lockRaw('tab-b', 1_500), want: 500 },
+    { label: 'expired lock', raw: lockRaw('tab-b', 999), want: 0 },
+    { label: 'missing lock', raw: null, want: 0 },
+    { label: 'malformed lock', raw: '{bad', want: 0 },
+    {
+      label: 'untrusted far-future expiry',
+      raw: lockRaw('tab-b', 99_000),
+      want: PROFILE_METADATA_LOCK_TTL_MS,
+    },
+  ])('bounds the provider retry delay for $label', ({ raw, want }) => {
+    const storage = createStorage(raw === null ? [] : [[PROFILE_METADATA_LOCK_KEY, raw]]);
+
+    expect(profileMetadataLockRetryDelay(createDependencies(storage))).toBe(want);
+  });
+
+  it('uses an immediate bounded retry when the lock cannot be read', () => {
+    const storage = createStorage();
+    storage.getItem = () => {
+      throw new DOMException('blocked', 'SecurityError');
+    };
+
+    expect(profileMetadataLockRetryDelay(createDependencies(storage))).toBe(0);
+  });
+
   it.each([
     { label: 'absent', raw: null },
     { label: 'expired', raw: lockRaw('tab-b', 999) },
