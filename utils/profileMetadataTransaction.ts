@@ -140,6 +140,7 @@ export const acquireProfileMetadataLock = async (
       if (!await waitForRetry(deps, deadline)) break;
       continue;
     }
+    if (deps.now() + PROFILE_METADATA_LOCK_ARBITRATION_MS >= deadline) break;
 
     const claim: ProfileMetadataLockV1 = {
       version: PROFILE_METADATA_LOCK_VERSION,
@@ -160,6 +161,7 @@ export const acquireProfileMetadataLock = async (
     }
 
     await deps.wait(PROFILE_METADATA_LOCK_ARBITRATION_MS);
+    if (deps.now() >= deadline) break;
     const arbitrated = readLock(deps);
     if (!arbitrated.ok) return { status: 'storage_unavailable', lock: null };
     if (isOwnedAndUnexpired(arbitrated.lock, deps)) {
@@ -227,6 +229,10 @@ export const commitProfileMetadataCandidate = (
   } catch {
     return commitFailure('backup_failed', previous);
   }
+
+  const primaryLock = readLock(deps);
+  if (!primaryLock.ok) return commitFailure('storage_unavailable', previous);
+  if (!isOwnedAndUnexpired(primaryLock.lock, deps)) return commitFailure('busy', previous);
 
   try {
     deps.storage.setItem(PROFILES_KEY, serializedCandidate);

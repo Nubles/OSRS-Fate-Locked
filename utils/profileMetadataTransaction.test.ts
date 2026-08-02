@@ -107,6 +107,55 @@ describe('profile metadata lock', () => {
     expect(storage.calls.some(call => call.startsWith('set:'))).toBe(false);
   });
 
+  it('does not begin a claim without enough time left to arbitrate', async () => {
+    const storage = createStorage();
+    const clock = createClock();
+    const getItem = storage.getItem;
+    let lockReads = 0;
+    storage.getItem = key => {
+      const value = getItem(key);
+      if (key === PROFILE_METADATA_LOCK_KEY && ++lockReads === 2) {
+        clock.set(1_000 + PROFILE_METADATA_LOCK_TIMEOUT_MS - PROFILE_METADATA_LOCK_ARBITRATION_MS + 1);
+      }
+      return value;
+    };
+
+    await expect(acquireProfileMetadataLock(createDependencies(storage, 'tab-a', clock))).resolves.toEqual({
+      status: 'busy',
+      lock: null,
+    });
+    expect(storage.calls).toEqual([
+      `get:${PROFILE_METADATA_LOCK_KEY}`,
+      `get:${PROFILE_METADATA_LOCK_KEY}`,
+    ]);
+    expect(clock.wait).not.toHaveBeenCalled();
+  });
+
+  it('does not acquire when arbitration resumes at the deadline', async () => {
+    const storage = createStorage();
+    const clock = createClock();
+    const getItem = storage.getItem;
+    let lockReads = 0;
+    storage.getItem = key => {
+      const value = getItem(key);
+      if (key === PROFILE_METADATA_LOCK_KEY && ++lockReads === 2) {
+        clock.set(1_000 + PROFILE_METADATA_LOCK_TIMEOUT_MS - PROFILE_METADATA_LOCK_ARBITRATION_MS - 1);
+      }
+      return value;
+    };
+    const wait = vi.fn(async () => { clock.set(1_000 + PROFILE_METADATA_LOCK_TIMEOUT_MS); });
+
+    await expect(acquireProfileMetadataLock({
+      ...createDependencies(storage, 'tab-a', clock),
+      wait,
+    })).resolves.toEqual({
+      status: 'busy',
+      lock: null,
+    });
+    expect(wait).toHaveBeenCalledWith(PROFILE_METADATA_LOCK_ARBITRATION_MS);
+    expect(storage.calls.filter(call => call === `set:${PROFILE_METADATA_LOCK_KEY}`)).toHaveLength(1);
+  });
+
   it('fails closed when lock storage cannot be read or written', async () => {
     const readFailure = createStorage();
     readFailure.getItem = () => { throw new DOMException('blocked', 'SecurityError'); };
@@ -140,23 +189,23 @@ describe('profile metadata lock', () => {
     const shared = createStorage();
     const clockA = createClock();
     const clockB = createClock();
-    let firstReadA = true;
-    let firstReadB = true;
+    let absentReadsA = 2;
+    let absentReadsB = 2;
     let continueA!: () => void;
     let continueB!: () => void;
     const storageA = Object.create(shared) as TestStorage;
     const storageB = Object.create(shared) as TestStorage;
     storageA.getItem = key => {
-      if (key === PROFILE_METADATA_LOCK_KEY && firstReadA) {
-        firstReadA = false;
+      if (key === PROFILE_METADATA_LOCK_KEY && absentReadsA > 0) {
+        absentReadsA -= 1;
         shared.calls.push(`get:${key}`);
         return null;
       }
       return shared.getItem(key);
     };
     storageB.getItem = key => {
-      if (key === PROFILE_METADATA_LOCK_KEY && firstReadB) {
-        firstReadB = false;
+      if (key === PROFILE_METADATA_LOCK_KEY && absentReadsB > 0) {
+        absentReadsB -= 1;
         shared.calls.push(`get:${key}`);
         return null;
       }
@@ -168,15 +217,17 @@ describe('profile metadata lock', () => {
     const pendingB = acquireProfileMetadataLock({ ...createDependencies(storageB, 'tab-b', clockB), wait: waitB });
 
     expect(waitA).toHaveBeenCalledWith(PROFILE_METADATA_LOCK_ARBITRATION_MS);
-    expect(waitB).toHaveBeenCalled();
-    continueA();
-    const resultA = await pendingA;
-    clockB.set(1_000 + PROFILE_METADATA_LOCK_TIMEOUT_MS);
+    expect(waitB).toHaveBeenCalledWith(PROFILE_METADATA_LOCK_ARBITRATION_MS);
+    expect(shared.calls.filter(call => call === `set:${PROFILE_METADATA_LOCK_KEY}`)).toHaveLength(2);
+    expect(shared.values.get(PROFILE_METADATA_LOCK_KEY)).toBe(lockRaw('tab-b', 3_000));
     continueB();
     const resultB = await pendingB;
+    clockA.set(1_000 + PROFILE_METADATA_LOCK_TIMEOUT_MS);
+    continueA();
+    const resultA = await pendingA;
 
     expect([resultA.status, resultB.status].sort()).toEqual(['acquired', 'busy']);
-    expect(shared.values.get(PROFILE_METADATA_LOCK_KEY)).toBe(lockRaw('tab-a', 3_000));
+    expect(shared.values.get(PROFILE_METADATA_LOCK_KEY)).toBe(lockRaw('tab-b', 3_000));
   });
 });
 
@@ -206,6 +257,7 @@ describe('verified profile metadata commit', () => {
       `get:${PROFILE_METADATA_LOCK_KEY}`,
       `set:${PROFILE_METADATA_BACKUP_KEY}`,
       `get:${PROFILE_METADATA_BACKUP_KEY}`,
+      `get:${PROFILE_METADATA_LOCK_KEY}`,
       `set:${PROFILES_KEY}`,
       `get:${PROFILES_KEY}`,
     ]);
@@ -240,6 +292,63 @@ describe('verified profile metadata commit', () => {
       metadata: previous,
     });
     expect(storage.calls).toEqual([`get:${PROFILE_METADATA_LOCK_KEY}`]);
+  });
+
+  it('does not write primary when ownership is replaced after backup verification', () => {
+    const previous = metadata(7);
+    const candidate = metadata(8, 'Renamed');
+    const storage = commitStorage(previous, candidate);
+    const getItem = storage.getItem;
+    storage.getItem = key => {
+      const value = getItem(key);
+      if (key === PROFILE_METADATA_BACKUP_KEY) {
+        storage.values.set(PROFILE_METADATA_LOCK_KEY, lockRaw('tab-b', 3_000));
+      }
+      return value;
+    };
+    storage.calls.length = 0;
+
+    expect(commitProfileMetadataCandidate(createDependencies(storage), previous, candidate)).toMatchObject({
+      ok: false,
+      reason: 'busy',
+      metadata: previous,
+    });
+    expect(storage.calls).toEqual([
+      `get:${PROFILE_METADATA_LOCK_KEY}`,
+      `set:${PROFILE_METADATA_BACKUP_KEY}`,
+      `get:${PROFILE_METADATA_BACKUP_KEY}`,
+      `get:${PROFILE_METADATA_LOCK_KEY}`,
+    ]);
+    expect(storage.values.get(PROFILES_KEY)).toBe(JSON.stringify(previous));
+  });
+
+  it('does not write primary when the post-backup ownership read fails', () => {
+    const previous = metadata(7);
+    const candidate = metadata(8, 'Renamed');
+    const storage = commitStorage(previous, candidate);
+    const getItem = storage.getItem;
+    let lockReads = 0;
+    storage.getItem = key => {
+      if (key === PROFILE_METADATA_LOCK_KEY && ++lockReads === 2) {
+        storage.calls.push(`get:${key}`);
+        throw new DOMException('blocked', 'SecurityError');
+      }
+      return getItem(key);
+    };
+    storage.calls.length = 0;
+
+    expect(commitProfileMetadataCandidate(createDependencies(storage), previous, candidate)).toMatchObject({
+      ok: false,
+      reason: 'storage_unavailable',
+      metadata: previous,
+    });
+    expect(storage.calls).toEqual([
+      `get:${PROFILE_METADATA_LOCK_KEY}`,
+      `set:${PROFILE_METADATA_BACKUP_KEY}`,
+      `get:${PROFILE_METADATA_BACKUP_KEY}`,
+      `get:${PROFILE_METADATA_LOCK_KEY}`,
+    ]);
+    expect(storage.values.get(PROFILES_KEY)).toBe(JSON.stringify(previous));
   });
 
   it('does not write primary when the backup write throws', () => {
@@ -312,6 +421,7 @@ describe('verified profile metadata commit', () => {
       `get:${PROFILE_METADATA_LOCK_KEY}`,
       `set:${PROFILE_METADATA_BACKUP_KEY}`,
       `get:${PROFILE_METADATA_BACKUP_KEY}`,
+      `get:${PROFILE_METADATA_LOCK_KEY}`,
       `set:${PROFILES_KEY}`,
     ]);
   });
@@ -335,6 +445,7 @@ describe('verified profile metadata commit', () => {
       `get:${PROFILE_METADATA_LOCK_KEY}`,
       `set:${PROFILE_METADATA_BACKUP_KEY}`,
       `get:${PROFILE_METADATA_BACKUP_KEY}`,
+      `get:${PROFILE_METADATA_LOCK_KEY}`,
       `set:${PROFILES_KEY}`,
       `get:${PROFILES_KEY}`,
     ]);
