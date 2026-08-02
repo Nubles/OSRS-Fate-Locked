@@ -32,6 +32,21 @@ describe('DiscordRestClient', () => {
     );
   });
 
+  it('sanitizes malformed successful response bodies', async () => {
+    const token = 'test-token-should-not-leak';
+    const secret = 'FAKE_SECRET_RESPONSE_BODY_ABC123';
+    const client = new DiscordRestClient({
+      token,
+      fetchImpl: fetchSequence([new Response(`not-json ${secret}`, { status: 200 })]),
+    });
+
+    const error = await client.request('GET', '/channels/100000000000000001/messages').catch((error: unknown) => error);
+
+    expect(error).toBeInstanceOf(DiscordApiError);
+    expect(error).toMatchObject({ method: 'GET', route: '/channels/:id/messages', status: 200 });
+    expect(String(error)).not.toContain(token);
+    expect(String(error)).not.toContain(secret);
+  });
   it('returns undefined for a no-content response', async () => {
     const client = new DiscordRestClient({ token: 'test-token', fetchImpl: fetchSequence([response(204)]) });
 

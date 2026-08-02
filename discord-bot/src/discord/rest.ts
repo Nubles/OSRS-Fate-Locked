@@ -58,7 +58,11 @@ export class DiscordRestClient {
 
       if (response.ok) {
         if (response.status === 204) return undefined as T;
-        return await response.json() as T;
+        try {
+          return await response.json() as T;
+        } catch {
+          throw new DiscordApiError(method, routeTemplate(route), response.status);
+        }
       }
 
       const canRetry = response.status === 429 || response.status >= 500;
