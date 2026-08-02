@@ -1,3 +1,4 @@
+import { FATE_LOCKED_GUILD_ID } from '../config.js';
 import type { BotConfig } from '../types.js';
 import { verifyDiscordRequest } from '../security/discord-signature.js';
 
@@ -52,7 +53,7 @@ export const handleInteractionRequest = async (
 
   if (interaction.type === 1) return json({ type: 1 });
 
-  if (interaction.guild_id !== deps.config.guildId) {
+  if (interaction.guild_id !== FATE_LOCKED_GUILD_ID) {
     return json({
       type: 4,
       data: { content: 'This app is only available in Fate Locked Ironman.', flags: 64 },

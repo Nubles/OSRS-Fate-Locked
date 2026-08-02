@@ -1,6 +1,6 @@
 import type { BotConfig, Snowflake } from './types.js';
 
-const GUILD_ID = '1533446664709341357' as const;
+export const FATE_LOCKED_GUILD_ID = '1533446664709341357' as const;
 
 const required = (env: NodeJS.ProcessEnv, name: string): string => {
   const value = env[name]?.trim();
@@ -36,7 +36,7 @@ const boolean = (env: NodeJS.ProcessEnv, name: string, defaultValue = false): bo
 
 export const loadConfig = (env: NodeJS.ProcessEnv): BotConfig => {
   const guildId = snowflake(env, 'DISCORD_GUILD_ID');
-  if (guildId !== GUILD_ID) throw new Error('DISCORD_GUILD_ID must match the Fate Locked server');
+  if (guildId !== FATE_LOCKED_GUILD_ID) throw new Error('DISCORD_GUILD_ID must match the Fate Locked server');
 
   const allowedRepositories = required(env, 'AUTOMATION_ALLOWED_REPOSITORIES')
     .split(',')

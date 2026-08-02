@@ -110,6 +110,27 @@ describe('handleInteractionRequest', () => {
   });
 });
 
+  it('rejects a matching wrong guild from a malformed injected config without routing', async () => {
+    const wrongGuildId = '100000000000000099';
+    const keyPair = nacl.sign.keyPair.fromSeed(new Uint8Array(32).fill(5));
+    const malformedConfig = {
+      ...config,
+      guildId: wrongGuildId,
+      publicKey: Buffer.from(keyPair.publicKey).toString('hex'),
+    } as unknown as BotConfig;
+    const route = vi.fn(async () => json({ routed: true }));
+    const response = await handleInteractionRequest(
+      signedInteractionRequest(`{"type":2,"guild_id":"${wrongGuildId}"}`, keyPair.publicKey, keyPair.secretKey),
+      { config: malformedConfig, route },
+    );
+
+    await expect(response.json()).resolves.toEqual({
+      type: 4,
+      data: { content: 'This app is only available in Fate Locked Ironman.', flags: 64 },
+    });
+    expect(route).not.toHaveBeenCalled();
+  });
+
 describe('handleAutomationRequest', () => {
   const body = '{"repository":"Nubles/OSRS-Fate-Locked","type":"weekly_seed"}';
   const timestamp = '1700000000';
