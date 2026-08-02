@@ -140,7 +140,7 @@ export interface EarnMethod {
   tiers: EarnTier[];
 }
 
-export const EARN_METHODS: EarnMethod[] = [
+const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
   {
     category: 'Quests',
     icon: `${WIKI}Quest_point_icon.png`,
@@ -265,7 +265,9 @@ export const EARN_METHODS: EarnMethod[] = [
       },
     ],
   },
-].map(method => ({
+];
+
+export const EARN_METHODS: EarnMethod[] = EARN_METHOD_DEFINITIONS.map(method => ({
   ...method,
   tiers: method.tiers.map(tier => tier.source
     ? { ...tier, fateOnFailure: failureFateForSource(tier.source) }
