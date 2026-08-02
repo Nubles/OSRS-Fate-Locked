@@ -320,6 +320,11 @@ export type Action =
       progress: DetectedProgress;
       rollResult: PreparedRollResult;
       expected: DetectedEventIdentity;
+      skillChaos?: {
+        chaosKeysAwarded: number;
+        guaranteedChaosKeysAwarded: number;
+        randomChaosKeysAwarded: number;
+      };
     };
   }
   | { type: 'SYNC_DETECTED_PROGRESS'; payload: DetectedProgress }
@@ -509,6 +514,21 @@ export const prepareDetectedEventAcceptanceAction = (
   meta: DetectedGameEventMeta,
   expected: DetectedEventIdentity,
 ): Extract<TransitionAction, { type: 'ACCEPT_DETECTED_EVENT' }> => {
+  const currentSkillLevel = progress.kind === 'SKILL_LEVEL'
+    ? state.unlocks.levels[progress.skill] ?? 1
+    : 0;
+  const guaranteedChaosKeysAwarded = progress.kind === 'SKILL_LEVEL' && progress.level > currentSkillLevel
+    ? Array.from({ length: Math.min(99, progress.level) - currentSkillLevel }, (_, index) => currentSkillLevel + index + 1)
+      .filter(isSkillChaosMilestone).length
+    : 0;
+  const randomChaosKeysAwarded = progress.kind === 'SKILL_LEVEL' && progress.level > currentSkillLevel
+    && nextDice('detected-skill-chaos', 0, 100) <= 2
+    ? 1
+    : 0;
+  const skillChaos = guaranteedChaosKeysAwarded || randomChaosKeysAwarded
+    ? { chaosKeysAwarded: guaranteedChaosKeysAwarded + randomChaosKeysAwarded, guaranteedChaosKeysAwarded, randomChaosKeysAwarded }
+    : undefined;
+
   const rollResult = prepareKeyRollAction(
     state,
     intent.source,
@@ -517,9 +537,9 @@ export const prepareDetectedEventAcceptanceAction = (
     nextDice,
     undefined,
     undefined,
-    meta,
+    skillChaos ? { ...meta, ...skillChaos } : meta,
   ).payload;
-  return { type: 'ACCEPT_DETECTED_EVENT', payload: { progress, rollResult, expected } };
+  return { type: 'ACCEPT_DETECTED_EVENT', payload: { progress, rollResult, expected, skillChaos } };
 };
 
 export const prepareCATaskCompletionActions = (
@@ -728,8 +748,8 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         type: 'SYNC_DETECTED_PROGRESS',
         payload: progress,
       });
-      const rewarded = guaranteedChaosAwarded
-        ? { ...progressed, chaosKeys: progressed.chaosKeys + 1 }
+      const rewarded = action.payload.skillChaos && progressed !== state
+        ? { ...progressed, chaosKeys: progressed.chaosKeys + action.payload.skillChaos.chaosKeysAwarded }
         : progressed;
       return rawReducer(rewarded, {
         type: 'ROLL_RESULT',

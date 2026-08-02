@@ -1022,7 +1022,7 @@ describe('detected progress reconciliation', () => {
     expect(next.history[0].meta?.fateEventId).toBe('evt-atomic');
   });
 
-  it('grants a detected skill milestone without consuming another RNG draw', () => {
+  it('grants a detected skill milestone with one independent chaos draw', () => {
     const initial = {
       ...start(),
       runId: 'run-1',
@@ -1045,13 +1045,58 @@ describe('detected progress reconciliation', () => {
       { fateEventId: 'evt-skill-30', detectorId: 'skill-level-v1', detectorVersion: 1 },
       { runId: 'run-1', account: 'Nubles', runRevision: 11 },
     );
-    expect(draws).toBe(2);
+    expect(draws).toBe(3);
     const next = gameReducerForTest(initial, action);
-    expect(draws).toBe(2);
+    expect(draws).toBe(3);
     expect(next.unlocks.levels.Attack).toBe(30);
     expect(next.chaosKeys).toBe(initial.chaosKeys + 1);
     expect(next.history).toHaveLength(1);
     expect(next.history[0].type).toBe('ROLL_FAIL');
+  });
+
+  it('awards every crossed detected skill milestone plus one independent chaos draw atomically', () => {
+    const initial = {
+      ...start(),
+      runId: 'run-1',
+      runRevision: 11,
+      linkedAccount: 'Nubles',
+      unlocks: {
+        ...start().unlocks,
+        levels: { ...start().unlocks.levels, Attack: 29 },
+      },
+    };
+    const draws: Array<{ purpose: string; index: number }> = [];
+    const action = prepareDetectedEventAcceptanceAction(
+      initial,
+      { kind: 'SKILL_LEVEL', skill: 'Attack', level: 41 },
+      { source: 'Attack Level 41', threshold: 8.2, failureFate: 3, target: 'Attack Level 41' },
+      (purpose, index = 0, max = 100) => {
+        draws.push({ purpose, index });
+        return purpose === 'detected-skill-chaos' ? 1 : max;
+      },
+      { fateEventId: 'evt-skill-41', detectorId: 'skill-level-v1', detectorVersion: 1 },
+      { runId: 'run-1', account: 'Nubles', runRevision: 11 },
+    );
+
+    expect(draws).toEqual([
+      { purpose: 'detected-skill-chaos', index: 0 },
+      { purpose: 'roll', index: 0 },
+      { purpose: 'roll', index: 1 },
+    ]);
+
+    const next = gameReducerForTest(initial, action);
+
+    expect(next).toMatchObject({
+      runRevision: 12,
+      chaosKeys: initial.chaosKeys + 3,
+      unlocks: { levels: { Attack: 41 } },
+    });
+    expect(next.history.at(-1)?.meta).toMatchObject({
+      chaosKeysAwarded: 3,
+      guaranteedChaosKeysAwarded: 2,
+      randomChaosKeysAwarded: 1,
+    });
+    expect(draws).toHaveLength(3);
   });
 
   it('cannot partially reconcile when roll preparation fails', () => {

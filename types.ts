@@ -127,6 +127,9 @@ export interface GameEventMeta {
   fateEventId?: string;
   detectorId?: string;
   detectorVersion?: number;
+  chaosKeysAwarded?: number;
+  guaranteedChaosKeysAwarded?: number;
+  randomChaosKeysAwarded?: number;
 }
 
 export interface DetectedEventIdentity {
