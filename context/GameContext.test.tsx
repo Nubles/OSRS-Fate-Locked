@@ -573,6 +573,7 @@ describe('ordinary save recovery', () => {
           baseThreshold: 50,
           threshold: 50,
           source: 'Session-start fixture',
+          failureFate: 1,
         },
       },
     );
@@ -772,6 +773,7 @@ describe('quest completion integration', () => {
     id: string,
     source: string,
     threshold: number,
+    failureFate = 1,
   ) => {
     expect(after.state.runRevision).toBe(before.state.runRevision + 2);
     expect(after.state.unlocks.quests).toEqual([...before.state.unlocks.quests, id]);
@@ -790,7 +792,7 @@ describe('quest completion integration', () => {
         baseThreshold: threshold,
         threshold,
         source,
-        fatePointsEarned: 1,
+        fatePointsEarned: failureFate,
       },
     });
     expect(after.state).toMatchObject({
@@ -799,7 +801,7 @@ describe('quest completion integration', () => {
       chaosKeys: before.state.chaosKeys,
       bossStandardKeysAwarded: before.state.bossStandardKeysAwarded,
       clueStandardKeysAwarded: before.state.clueStandardKeysAwarded,
-      fatePoints: before.state.fatePoints + 1,
+      fatePoints: before.state.fatePoints + failureFate,
       activeBuff: before.state.activeBuff,
     });
     expect(stableStateProjection(after.state, true)).toEqual(
@@ -920,6 +922,7 @@ describe('quest completion integration', () => {
       'In Search of Knowledge',
       'Quest (Experienced)',
       75,
+      2,
     );
 
     let repeated: ReturnType<Game['completeQuest']> | undefined;
@@ -985,6 +988,7 @@ describe('detected progress reconciliation', () => {
         baseThreshold: 75,
         threshold: 75,
         source: 'Quest (Experienced)',
+        failureFate: 2,
         meta: {
           fateEventId: 'evt-1',
           detectorId: 'quest-widget-v1',
@@ -1005,7 +1009,7 @@ describe('detected progress reconciliation', () => {
     const action = prepareDetectedEventAcceptanceAction(
       initial,
       { kind: 'QUEST', questId: 'Dragon Slayer I' },
-      { source: 'Quest (Experienced)', threshold: 75, target: 'Dragon Slayer I' },
+      { source: 'Quest (Experienced)', threshold: 75, failureFate: 2, target: 'Dragon Slayer I' },
       () => 999,
       { fateEventId: 'evt-atomic', detectorId: 'quest-widget-v1', detectorVersion: 1 },
       { runId: 'run-1', account: 'Nubles', runRevision: 11 },
@@ -1024,7 +1028,7 @@ describe('detected progress reconciliation', () => {
     expect(() => prepareDetectedEventAcceptanceAction(
       initial,
       { kind: 'QUEST', questId: 'Dragon Slayer I' },
-      { source: 'Quest (Experienced)', threshold: 75, target: 'Dragon Slayer I' },
+      { source: 'Quest (Experienced)', threshold: 75, failureFate: 2, target: 'Dragon Slayer I' },
       () => { throw new Error('rng unavailable'); },
       { fateEventId: 'evt-failed' },
       { runId: initial.runId, account: 'Nubles', runRevision: 0 },
@@ -1048,7 +1052,7 @@ describe('detected progress reconciliation', () => {
     const action = prepareDetectedEventAcceptanceAction(
       original,
       { kind: 'QUEST', questId: 'Dragon Slayer I' },
-      { source: 'Quest (Experienced)', threshold: 75, target: 'Dragon Slayer I' },
+      { source: 'Quest (Experienced)', threshold: 75, failureFate: 2, target: 'Dragon Slayer I' },
       () => 999,
       { fateEventId: 'evt-stale' },
       { runId: 'run-1', account: 'Nubles', runRevision: 11 },

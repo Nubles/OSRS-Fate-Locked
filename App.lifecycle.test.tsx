@@ -62,6 +62,7 @@ beforeEach(async () => {
             baseThreshold: 50,
             threshold: 50,
             source: 'Lifecycle test',
+            failureFate: 1,
           },
         },
       );

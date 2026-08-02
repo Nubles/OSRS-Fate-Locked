@@ -8,7 +8,7 @@ import { BookOpen, ScrollText, Crosshair, Dices } from 'lucide-react';
 import { wikiService } from '../services/WikiService';
 import { resolveModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
-import { EARN_METHODS, LEVEL_ROLL_MAX } from '../config/economy';
+import { EARN_METHODS, failureFateForSource, LEVEL_ROLL_MAX } from '../config/economy';
 import { BRUTUS_BOSS_NAME, effectiveVanillaClueRate, vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
 import { BossKeyProgress, ClueKeyProgress } from './VanillaKeyProgress';
 import { VANILLA_BOSS_SEARCH_PLACEHOLDER, vanillaBossSearchEmptyMessage } from './vanillaBossSearchCopy';
@@ -392,7 +392,7 @@ export const ActionSection: React.FC = () => {
     Math.max(1, Math.min(100, (DROP_RATES[source] ?? 0) + regionBonus));
 
   const handleRoll = (source: string, chance: number, e: React.MouseEvent, context?: KeyRollContext) => {
-    rollForKey(source, chance, e.clientX, e.clientY, undefined, context);
+    rollForKey(source, chance, failureFateForSource(source as DropSource), e.clientX, e.clientY, undefined, context);
   };
 
   const isVanilla = gameModeId === 'vanilla';

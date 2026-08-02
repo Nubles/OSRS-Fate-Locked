@@ -1,13 +1,13 @@
 
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState, type DetectedEventIdentity, type DetectedProgress, type GameEventMeta as DetectedGameEventMeta, type RollIntent } from '../types';
+import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState, type DetectedEventIdentity, type DetectedProgress, type FailureFateAward, type GameEventMeta as DetectedGameEventMeta, type RollIntent } from '../types';
 import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST } from '../data/items';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from '../config/rules';
 import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
 import { setStartArea } from '../utils/freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
-import { getRitual, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, GAMBIT_KEYS_PER } from '../config/economy';
+import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, GAMBIT_KEYS_PER } from '../config/economy';
 import { BANK_BY_ID } from '../data/banks';
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
@@ -134,7 +134,7 @@ const completionFailure = (reason: string): CompletionResult => {
 type RollEventMeta = { roll: number; baseThreshold: number; threshold: number };
 type UnlockEventMeta = { item: string; cost: number; category?: TableType };
 type RitualEventMeta = { type: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE' | 'GAMBIT' | 'CARTOGRAPHER'; won?: boolean; chunk?: string };
-type LevelUpEventMeta = { skill: string; level: number; totalLevel: number; chaosKeyAwarded: boolean };
+type LevelUpEventMeta = { skill: string; level: number; totalLevel: number; chaosKeysAwarded: number; chaosKeyAwarded: boolean };
 
 type GameEventMeta = (RollEventMeta & DetectedGameEventMeta) | UnlockEventMeta | RitualEventMeta | LevelUpEventMeta;
 
@@ -158,6 +158,7 @@ interface GameContextType extends GameState {
   rollForKey: (
     source: string,
     threshold: number,
+    failureFate: FailureFateAward,
     x?: number,
     y?: number,
     meta?: DetectedGameEventMeta,
@@ -287,6 +288,7 @@ interface PreparedRollResult {
   baseThreshold: number;
   threshold: number;
   source: string;
+  failureFate: FailureFateAward;
   x?: number;
   y?: number;
   meta?: DetectedGameEventMeta;
@@ -348,6 +350,7 @@ export function prepareKeyRollAction(
   state: GameState,
   source: string,
   threshold: number,
+  failureFate: FailureFateAward,
   nextDice: DiceRoller,
   x?: number,
   y?: number,
@@ -358,6 +361,7 @@ export function prepareKeyRollAction(
   state: GameState,
   source: string,
   threshold: number,
+  failureFate: FailureFateAward,
   nextDice: DiceRoller,
   x: number | undefined,
   y: number | undefined,
@@ -368,6 +372,7 @@ export function prepareKeyRollAction(
   state: GameState,
   source: string,
   threshold: number,
+  failureFate: FailureFateAward,
   nextDice: DiceRoller,
   x?: number,
   y?: number,
@@ -455,7 +460,7 @@ export function prepareKeyRollAction(
     else if (source === DropSource.BOSS_HIGH) omniChance = Math.max(omniChance, 10);
 
     if (nextDice(rollPurpose, 2) <= omniChance) omni = true;
-  } else if (mode.pityEnabled && state.fatePoints + 1 >= mode.pityThreshold) {
+  } else if (mode.pityEnabled && state.fatePoints + failureFate >= mode.pityThreshold) {
     pity = true;
   }
 
@@ -469,6 +474,7 @@ export function prepareKeyRollAction(
       baseThreshold,
       threshold: effectiveThreshold,
       source,
+      failureFate,
       x,
       y,
       meta,
@@ -497,6 +503,7 @@ export const prepareDetectedEventAcceptanceAction = (
     state,
     intent.source,
     intent.threshold,
+    intent.failureFate,
     nextDice,
     undefined,
     undefined,
@@ -540,6 +547,7 @@ export const prepareCATaskCompletionActions = (
         state,
         tier.difficulty,
         DROP_RATES[tier.difficulty],
+        failureFateForSource(tier.difficulty),
         nextDice,
         x,
         y,
@@ -575,6 +583,7 @@ export const prepareLevelUpActions = (
       state,
       `${skill} Level ${newLevel}`,
       rollChance,
+      failureFateForSkillLevel(newLevel),
       nextDice,
     ),
   };
@@ -711,7 +720,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     }
 
     case 'ROLL_RESULT': {
-      const { success, omni, pity, roll, baseThreshold, threshold, source, x, y, meta, context } = action.payload;
+      const { success, omni, pity, roll, baseThreshold, threshold, source, failureFate = 1, x, y, meta, context } = action.payload;
       const vanillaBossContext = state.gameModeId === 'vanilla' && context?.kind === 'boss'
         ? context
         : null;
@@ -842,14 +851,17 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         newState.fatePoints = 0;
       } else if (pity) {
         newState.keys += standardKeysAwarded;
-        newState.fatePoints = 0;
+        const pityThreshold = resolveModeRules(
+          state.gameModeId, state.customMode,
+        ).pityThreshold;
+        newState.fatePoints = state.fatePoints + failureFate - pityThreshold;
         newHistory.push({
             id: generateId(),
             timestamp: now,
             type: 'PITY',
             message: 'MAX FATE REACHED! Pity Key granted.',
             details: `Rolled ${rollText} at ${inlineChanceText}, but Fate intervened.`,
-            meta: entryMeta(1),
+            meta: entryMeta(failureFate),
             result: 'SUCCESS',
             source,
             rollValue: roll,
@@ -858,7 +870,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         });
         newState.lastEvent = { id: generateId(), type: 'ROLL_PITY', x, y, meta: eventMeta };
       } else {
-        newState.fatePoints += 1;
+        newState.fatePoints += failureFate;
         // Greed's consolation: half the (scaled) ritual cost flows back,
         // so it's double-or-something rather than double-or-nothing.
         let greedRefund = 0;
@@ -873,7 +885,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
             type: 'ROLL_FAIL',
             message: `No Key.${isGreed ? ` (Greed refunded ${greedRefund} Fate)` : ''}`,
             details: `Rolled ${rollText} (> ${comparisonChanceText}). Fate: ${newState.fatePoints}/${resolveModeRules(state.gameModeId, state.customMode).pityThreshold}`,
-            meta: entryMeta(1 + greedRefund),
+            meta: entryMeta(failureFate + greedRefund),
             result: 'FAIL',
             source,
             rollValue: roll,
@@ -1024,24 +1036,31 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       const totalLevel = Object.values(newLevels).reduce((a, b) => a + b, 0);
 
       const logs = [...state.history];
-      let chaosKeys = state.chaosKeys;
-      let chaosKeyAwarded = false;
-
-      // RNG Chaos Key Check (2% Chance)
-      // chaosRoll is pre-computed in the action creator to keep the reducer pure
       const RNG_CHAOS_CHANCE = 0.02;
+      const randomChaosAwarded = chaosRoll < RNG_CHAOS_CHANCE;
+      const guaranteedChaosAwarded = isSkillChaosMilestone(newLevel);
+      const chaosKeysAwarded =
+        Number(randomChaosAwarded) + Number(guaranteedChaosAwarded);
+      const chaosKeyAwarded = chaosKeysAwarded > 0;
+      const chaosKeys = state.chaosKeys + chaosKeysAwarded;
 
-      if (chaosRoll < RNG_CHAOS_CHANCE) {
-          chaosKeys += 1;
-          chaosKeyAwarded = true;
-          logs.push({
-              id: generateId(),
-              timestamp: now,
-              type: 'LEVEL_UP',
-              message: `Chaos Key Drop! (RNG)`,
-              details: `Fate smiled upon you at Total Level ${totalLevel}.`,
-              meta: { totalLevel, reward: 'Chaos Key' }
-          });
+      if (chaosKeyAwarded) {
+        const reward = `${chaosKeysAwarded} Chaos Key${chaosKeysAwarded === 1 ? '' : 's'}`;
+        logs.push({
+          id: generateId(),
+          timestamp: now,
+          type: 'LEVEL_UP',
+          message: `${reward} awarded!`,
+          details: guaranteedChaosAwarded
+            ? `Skill level ${newLevel} milestone${randomChaosAwarded ? ' plus a lucky roll' : ''}.`
+            : `Fate smiled upon you at Total Level ${totalLevel}.`,
+          meta: {
+            totalLevel,
+            reward,
+            chaosKeysAwarded,
+            chaosKeyAwarded,
+          },
+        });
       }
 
       // Xtreme Start anti-softlock insurance — see XTREME_MILESTONE_INTERVAL in
@@ -1087,7 +1106,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         }
       }
 
-      const eventMeta: LevelUpEventMeta = { skill, level: newLevel, totalLevel, chaosKeyAwarded };
+      const eventMeta: LevelUpEventMeta = { skill, level: newLevel, totalLevel, chaosKeysAwarded, chaosKeyAwarded };
 
       return {
         ...state,
@@ -1563,6 +1582,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
   const rollForKey = useCallback((
     source: string,
     threshold: number,
+    failureFate: FailureFateAward,
     x?: number,
     y?: number,
     meta?: DetectedGameEventMeta,
@@ -1570,8 +1590,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
   ) => {
     const current = stateRef.current;
     const action = context
-      ? prepareKeyRollAction(current, source, threshold, nextDice, x, y, meta, context)
-      : prepareKeyRollAction(current, source, threshold, nextDice, x, y, meta);
+      ? prepareKeyRollAction(current, source, threshold, failureFate, nextDice, x, y, meta, context)
+      : prepareKeyRollAction(current, source, threshold, failureFate, nextDice, x, y, meta);
     if (action) commitAction(action);
   }, [commitAction, nextDice]);
 
@@ -1752,7 +1772,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     if (result.ok === false) return completionFailure(result.reason);
 
     commitAction({ type: 'COMPLETE_QUEST', payload: id });
-    rollForKey(quest.difficulty, DROP_RATES[quest.difficulty], x, y);
+    rollForKey(quest.difficulty, DROP_RATES[quest.difficulty], failureFateForSource(quest.difficulty), x, y);
     return result;
   }, [commitAction, rollForKey]);
 
@@ -1777,7 +1797,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     if (result.ok === false) return completionFailure(result.reason);
 
     commitAction({ type: 'COMPLETE_TASK', payload: id });
-    rollForKey(diary.difficulty, DROP_RATES[diary.difficulty], x, y);
+    rollForKey(diary.difficulty, DROP_RATES[diary.difficulty], failureFateForSource(diary.difficulty), x, y);
 
     const current = stateRef.current;
     if (

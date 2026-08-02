@@ -91,6 +91,7 @@ describe('classifyFateEvent', () => {
         intent: {
           source: DropSource.QUEST_EXPERIENCED,
           threshold: DROP_RATES[DropSource.QUEST_EXPERIENCED],
+          failureFate: 2,
           target: 'Dragon Slayer I',
         },
         progress: { kind: 'QUEST', questId: 'Dragon Slayer I' },
@@ -125,6 +126,7 @@ describe('classifyFateEvent', () => {
         intent: {
           source: DropSource.COLLECTION_LOG,
           threshold: DROP_RATES[DropSource.COLLECTION_LOG],
+          failureFate: 1,
         },
         progress: { kind: 'COLLECTION_ITEM' },
       });
@@ -133,15 +135,15 @@ describe('classifyFateEvent', () => {
   });
 
   it.each([
-    ['Casket (beginner)', DropSource.CLUE_BEGINNER],
-    ['Casket (easy)', DropSource.CLUE_EASY],
-    ['Casket (medium)', DropSource.CLUE_MEDIUM],
-    ['Casket (hard)', DropSource.CLUE_HARD],
-    ['Casket (elite)', DropSource.CLUE_ELITE],
-    ['Casket (master)', DropSource.CLUE_MASTER],
-  ])('maps %s to its clue rate', (label, source) => {
+    ['Casket (beginner)', DropSource.CLUE_BEGINNER, 1],
+    ['Casket (easy)', DropSource.CLUE_EASY, 1],
+    ['Casket (medium)', DropSource.CLUE_MEDIUM, 1],
+    ['Casket (hard)', DropSource.CLUE_HARD, 2],
+    ['Casket (elite)', DropSource.CLUE_ELITE, 2],
+    ['Casket (master)', DropSource.CLUE_MASTER, 3],
+  ])('maps %s to its clue rate', (label, source, failureFate) => {
     expect(classifyFateEvent(event('CLUE_CASKET', label), state()))
-      .toMatchObject({ state: 'READY', intent: { source, threshold: DROP_RATES[source] } });
+      .toMatchObject({ state: 'READY', intent: { source, threshold: DROP_RATES[source], failureFate } });
   });
 
   it('maps a Combat Achievement task to its canonical tier', () => {
@@ -151,20 +153,21 @@ describe('classifyFateEvent', () => {
         intent: {
           source: DropSource.CA_EASY,
           threshold: DROP_RATES[DropSource.CA_EASY],
+          failureFate: 1,
         },
         progress: { kind: 'CA_TASK', taskId: 'ca_0' },
       });
   });
 
   it.each([
-    ['Bryophyta', DropSource.BOSS_LOW],
-    ['Vorkath', DropSource.BOSS_MID],
-    ['Nex', DropSource.BOSS_HIGH],
-    ['Chambers of Xeric', DropSource.RAID],
-  ])('maps %s through the canonical boss tiers', (label, source) => {
+    ['Bryophyta', DropSource.BOSS_LOW, 1],
+    ['Vorkath', DropSource.BOSS_MID, 2],
+    ['Nex', DropSource.BOSS_HIGH, 2],
+    ['Chambers of Xeric', DropSource.RAID, 3],
+  ])('maps %s through the canonical boss tiers', (label, source, failureFate) => {
     const type = source === DropSource.RAID ? 'RAID_COMPLETION' : 'BOSS_KILL';
     expect(classifyFateEvent(event(type, label), state()))
-      .toMatchObject({ state: 'READY', intent: { source, threshold: DROP_RATES[source] } });
+      .toMatchObject({ state: 'READY', intent: { source, threshold: DROP_RATES[source], failureFate } });
   });
 
   it('uses the canonical skill-level formula', () => {
@@ -172,7 +175,7 @@ describe('classifyFateEvent', () => {
       evidence: { skill: 'Attack', level: 73, previousLevel: 72 },
     }), state())).toMatchObject({
       state: 'READY',
-      intent: { source: 'Attack Level 73', threshold: 15, target: 'Attack Level 73' },
+      intent: { source: 'Attack Level 73', threshold: 15, failureFate: 2, target: 'Attack Level 73' },
       progress: { kind: 'SKILL_LEVEL', skill: 'Attack', level: 73 },
     });
   });
@@ -216,6 +219,7 @@ describe('classifyFateEvent', () => {
       intent: {
         source: 'Slayer (Duradel/Kuradal)',
         target: 'Abyssal demons',
+        failureFate: 2,
       },
     });
   });

@@ -5,6 +5,7 @@ import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
 import { Search, CheckCircle2, Lock, ListFilter, Coins, TrendingUp } from 'lucide-react';
 import { DropSource } from '../types';
 import { DROP_RATES } from '../constants';
+import { failureFateForSource } from '../config/economy';
 import { FixedSizeGrid as Grid } from 'react-window';
 import { wikiService } from '../services/WikiService';
 import { priceService } from '../services/PriceService';
@@ -198,7 +199,7 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
     const isNewUnlock = !unlocks.collectionLog[itemId];
     logCollectionItem(itemId);
     if (isNewUnlock) {
-       rollForKey(`Col. Log: ${itemName}`, DROP_RATES[DropSource.COLLECTION_LOG], e.clientX, e.clientY);
+       rollForKey(`Col. Log: ${itemName}`, DROP_RATES[DropSource.COLLECTION_LOG], failureFateForSource(DropSource.COLLECTION_LOG), e.clientX, e.clientY);
     }
   };
 

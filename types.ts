@@ -103,6 +103,7 @@ export interface LogEntry {
 export interface RollIntent {
   source: string;
   threshold: number;
+  failureFate: FailureFateAward;
   target: string;
 }
 

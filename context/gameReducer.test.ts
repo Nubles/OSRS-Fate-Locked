@@ -8,7 +8,7 @@ import {
   prepareCATaskCompletionActions,
 } from './GameContext';
 import { drawDice } from '../utils/seededRng';
-import { TableType, LogEntry } from '../types';
+import { TableType, LogEntry, type FailureFateAward } from '../types';
 import { isRollEntry } from '../utils/logEntry';
 import { XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL } from '../config/economy';
 import { isValidUnlock } from '../utils/gameEngine';
@@ -32,6 +32,7 @@ const roll = (over: Partial<{
   baseThreshold: number;
   threshold: number;
   source: string;
+  failureFate: FailureFateAward;
   context: KeyRollContext;
 }>) => ({
   type: 'ROLL_RESULT' as const,
@@ -43,6 +44,7 @@ const roll = (over: Partial<{
     baseThreshold: 50,
     threshold: 50,
     source: 'Test',
+    failureFate: 1 as FailureFateAward,
     ...over,
   },
 });
@@ -69,6 +71,16 @@ describe('ROLL_RESULT', () => {
     expect(s.keys).toBe(initialState.keys);
   });
 
+  it('adds the prepared weighted Fate award on failure', () => {
+    const previous = { ...base(), fatePoints: 10 };
+    const failed = gameReducer(previous, roll({
+      success: false,
+      failureFate: 3,
+    }));
+    expect(failed.fatePoints).toBe(13);
+    expect(failed.history.at(-1)?.meta?.fatePointsEarned).toBe(3);
+  });
+
   it('an omni roll grants both a special key and a standard key', () => {
     const s = gameReducer(base(), roll({ success: true, omni: true }));
     expect(s.specialKeys).toBe(initialState.specialKeys + 1);
@@ -87,6 +99,17 @@ describe('ROLL_RESULT', () => {
     });
   });
 
+
+  it('preserves weighted Fate overflow after a pity key', () => {
+    const pity = gameReducer({ ...base(), fatePoints: 49 }, roll({
+      success: false,
+      pity: true,
+      failureFate: 3,
+    }));
+    expect(pity.keys).toBe(initialState.keys + 1);
+    expect(pity.fatePoints).toBe(2);
+    expect(pity.history.at(-1)?.meta?.fatePointsEarned).toBe(3);
+  });
   it('a Greed-buffed success grants two keys', () => {
     const s = gameReducer({ ...base(), activeBuff: 'GREED' as const }, roll({ success: true }));
     expect(s.keys).toBe(initialState.keys + 2);
@@ -224,9 +247,9 @@ describe('ROLL_RESULT', () => {
       index === 1 ? max / 10 : max * 0.9;
     const start = { ...base(), activeBuff: 'LUCK' as const };
 
-    const firstAction = prepareKeyRollAction(start, 'First queued roll', 20, dice);
+    const firstAction = prepareKeyRollAction(start, 'First queued roll', 20, 1, dice);
     const first = prepareGameTransition(start, firstAction).state;
-    const secondAction = prepareKeyRollAction(first, 'Second queued roll', 20, dice);
+    const secondAction = prepareKeyRollAction(first, 'Second queued roll', 20, 1, dice);
     const second = prepareGameTransition(first, secondAction).state;
 
     expect(first.history.at(-1)?.type).toBe('ROLL_SUCCESS');
@@ -238,9 +261,9 @@ describe('ROLL_RESULT', () => {
     const dice = (_purpose: string, _index = 0, max = 100) => max;
     const start = { ...base(), fatePoints: 49 };
 
-    const firstAction = prepareKeyRollAction(start, 'First queued failure', 20, dice);
+    const firstAction = prepareKeyRollAction(start, 'First queued failure', 20, 1, dice);
     const first = prepareGameTransition(start, firstAction).state;
-    const secondAction = prepareKeyRollAction(first, 'Second queued failure', 20, dice);
+    const secondAction = prepareKeyRollAction(first, 'Second queued failure', 20, 1, dice);
     const second = prepareGameTransition(first, secondAction).state;
 
     expect(first.history.at(-1)?.type).toBe('PITY');
@@ -248,6 +271,20 @@ describe('ROLL_RESULT', () => {
     expect(second.history.at(-1)?.type).toBe('ROLL_FAIL');
     expect(second.fatePoints).toBe(1);
     expect(second.keys).toBe(start.keys + 1);
+  });
+
+  it('sets pity when a weighted award reaches the threshold, but not below it', () => {
+    const dice = (_purpose: string, _index = 0, max = 100) => max;
+    const reachesPity = prepareKeyRollAction(
+      { ...base(), fatePoints: 49 }, 'Weighted failure', 20, 3, dice,
+    );
+    const belowPity = prepareKeyRollAction(
+      { ...base(), fatePoints: 46 }, 'Weighted failure', 20, 3, dice,
+    );
+
+    expect(reachesPity.payload.pity).toBe(true);
+    expect(reachesPity.payload.failureFate).toBe(3);
+    expect(belowPity.payload.pity).toBe(false);
   });
 
   it('replays the same next seeded roll from identical restored state', () => {
@@ -280,12 +317,14 @@ describe('ROLL_RESULT', () => {
       restored,
       'Seeded replay',
       50,
+      1,
       diceFor(restored),
     );
     const resetAction = prepareKeyRollAction(
       reset,
       'Seeded replay',
       50,
+      1,
       diceFor(reset),
     );
 
@@ -371,6 +410,7 @@ describe('ROLL_RESULT — Vanilla key safety valve', () => {
       state,
       'Zulrah',
       99,
+      1,
       (purpose, index = 0, max = 100) => {
         draws.push({ purpose, index, max });
         return index === 0 ? 1500 : max;
@@ -402,6 +442,7 @@ describe('ROLL_RESULT — Vanilla key safety valve', () => {
       { ...vanillaState(), bossStandardKeysAwarded: { Zulrah: 2 } },
       'Zulrah',
       30,
+      1,
       () => {
         draws += 1;
         return 1;
@@ -694,6 +735,63 @@ describe('LEVEL_UP', () => {
   it('awards a chaos key when the roll lands under 2%', () => {
     const s = gameReducer(base(), { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.01 } });
     expect(s.chaosKeys).toBe(initialState.chaosKeys + 1);
+  });
+
+  it('guarantees one Chaos Key at a skill milestone', () => {
+    const state = {
+      ...base(),
+      unlocks: {
+        ...initialState.unlocks,
+        levels: { ...initialState.unlocks.levels, Attack: 29 },
+      },
+    };
+    const milestone = gameReducer(state, {
+      type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 },
+    });
+
+    expect(milestone.chaosKeys).toBe(initialState.chaosKeys + 1);
+    expect(milestone.lastEvent?.meta).toMatchObject({
+      chaosKeysAwarded: 1,
+      chaosKeyAwarded: true,
+    });
+  });
+
+  it('stacks the random and guaranteed Chaos Key awards', () => {
+    const state = {
+      ...base(),
+      unlocks: {
+        ...initialState.unlocks,
+        levels: { ...initialState.unlocks.levels, Attack: 29 },
+      },
+    };
+    const doubleDrop = gameReducer(state, {
+      type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.01 },
+    });
+
+    expect(doubleDrop.chaosKeys).toBe(initialState.chaosKeys + 2);
+    expect(doubleDrop.lastEvent?.meta).toMatchObject({
+      chaosKeysAwarded: 2,
+      chaosKeyAwarded: true,
+    });
+  });
+
+  it('does not guarantee a Chaos Key outside a skill milestone', () => {
+    const state = {
+      ...base(),
+      unlocks: {
+        ...initialState.unlocks,
+        levels: { ...initialState.unlocks.levels, Attack: 30 },
+      },
+    };
+    const nonMilestone = gameReducer(state, {
+      type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 },
+    });
+
+    expect(nonMilestone.chaosKeys).toBe(initialState.chaosKeys);
+    expect(nonMilestone.lastEvent?.meta).toMatchObject({
+      chaosKeysAwarded: 0,
+      chaosKeyAwarded: false,
+    });
   });
 });
 

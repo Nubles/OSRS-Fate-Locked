@@ -106,6 +106,7 @@ describe('roll history persistence', () => {
           baseThreshold: 8.2,
           threshold: 9.2,
           source: 'Attack Level 41',
+          failureFate: 2,
         },
       },
     );

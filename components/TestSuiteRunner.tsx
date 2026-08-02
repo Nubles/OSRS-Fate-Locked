@@ -120,7 +120,7 @@ export const TestSuiteRunner: React.FC<TestSuiteRunnerProps> = ({ onComplete }) 
              updateLastLog('success');
              addLog("Testing Pity System (Forcing Fail at 49 Fate)...");
              // 0% chance to force fail
-             game.rollForKey("TEST_PROTOCOL", 0, window.innerWidth/2, window.innerHeight/2); 
+             game.rollForKey("TEST_PROTOCOL", 0, 1, window.innerWidth/2, window.innerHeight/2);
              timeout = window.setTimeout(() => setStep(4), 1200);
           } else {
              updateLastLog('error');

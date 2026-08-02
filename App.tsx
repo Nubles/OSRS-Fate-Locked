@@ -195,9 +195,11 @@ const ToastNotification = () => {
           : 'Ritual Performed';
       }
       if (lastEvent.type === 'LEVEL_UP') {
-          // Check for Chaos Key award in metadata
-          if (lastEvent.meta && 'chaosKeyAwarded' in lastEvent.meta && lastEvent.meta.chaosKeyAwarded) {
-              msg = 'Level Up + Chaos Key!';
+          const chaosKeysAwarded = lastEvent.meta && 'chaosKeysAwarded' in lastEvent.meta
+            ? Number(lastEvent.meta.chaosKeysAwarded)
+            : Number(Boolean(lastEvent.meta && 'chaosKeyAwarded' in lastEvent.meta && lastEvent.meta.chaosKeyAwarded));
+          if (chaosKeysAwarded > 0) {
+              msg = `Level Up + ${chaosKeysAwarded === 1 ? 'Chaos Key' : `${chaosKeysAwarded} Chaos Keys`}!`;
           } else {
               msg = 'Level Up';
           }

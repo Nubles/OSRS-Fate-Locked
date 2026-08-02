@@ -1,5 +1,6 @@
 import { DROP_RATES } from '../config/rules';
 import { policyFor } from '../config/detectorPolicies';
+import { failureFateForSkillLevel, failureFateForSource } from '../config/economy';
 import { ALL_CA_TASKS, type CATask } from '../data/caTasks';
 import { BOSS_TIERS, TIER_SOURCE } from '../data/bossKeyTiers';
 import { COLLECTION_LOG_DATA, type CollectionLogItem } from '../data/collectionLogData';
@@ -156,7 +157,7 @@ function ready(
   if (!Number.isFinite(threshold)) {
     return { state: 'BLOCKED', reason: 'This roll source is not in the current rules.' };
   }
-  const intent: RollIntent = { source, threshold, target };
+  const intent: RollIntent = { source, threshold, failureFate: failureFateForSource(source as DropSource), target };
   return { state: 'READY', intent, progress };
 }
 
@@ -169,7 +170,7 @@ function classifySkill(event: FateEventEnvelope): EventClassification {
   const target = `${skill} Level ${level}`;
   return {
     state: 'READY',
-    intent: { source: target, threshold: Math.ceil((level as number) / 5), target },
+    intent: { source: target, threshold: Math.ceil((level as number) / 5), failureFate: failureFateForSkillLevel(level as number), target },
     progress: { kind: 'SKILL_LEVEL', skill, level: level as number },
   };
 }
