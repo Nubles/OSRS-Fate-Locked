@@ -679,11 +679,18 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 
     case 'ACCEPT_DETECTED_EVENT': {
       if (!detectedEventIdentityMatches(state, action.payload.expected)) return state;
+      const progress = action.payload.progress;
+      const guaranteedChaosAwarded = progress.kind === 'SKILL_LEVEL'
+        && progress.level > (state.unlocks.levels[progress.skill] ?? 1)
+        && isSkillChaosMilestone(progress.level);
       const progressed = rawReducer(state, {
         type: 'SYNC_DETECTED_PROGRESS',
-        payload: action.payload.progress,
+        payload: progress,
       });
-      return rawReducer(progressed, {
+      const rewarded = guaranteedChaosAwarded
+        ? { ...progressed, chaosKeys: progressed.chaosKeys + 1 }
+        : progressed;
+      return rawReducer(rewarded, {
         type: 'ROLL_RESULT',
         payload: action.payload.rollResult,
       });

@@ -1022,6 +1022,38 @@ describe('detected progress reconciliation', () => {
     expect(next.history[0].meta?.fateEventId).toBe('evt-atomic');
   });
 
+  it('grants a detected skill milestone without consuming another RNG draw', () => {
+    const initial = {
+      ...start(),
+      runId: 'run-1',
+      runRevision: 11,
+      linkedAccount: 'Nubles',
+      unlocks: {
+        ...start().unlocks,
+        levels: { ...start().unlocks.levels, Attack: 29 },
+      },
+    };
+    let draws = 0;
+    const action = prepareDetectedEventAcceptanceAction(
+      initial,
+      { kind: 'SKILL_LEVEL', skill: 'Attack', level: 30 },
+      { source: 'Attack Level 30', threshold: 6, failureFate: 2, target: 'Attack Level 30' },
+      (_purpose, _index, max = 100) => {
+        draws += 1;
+        return max;
+      },
+      { fateEventId: 'evt-skill-30', detectorId: 'skill-level-v1', detectorVersion: 1 },
+      { runId: 'run-1', account: 'Nubles', runRevision: 11 },
+    );
+    expect(draws).toBe(2);
+    const next = gameReducerForTest(initial, action);
+    expect(draws).toBe(2);
+    expect(next.unlocks.levels.Attack).toBe(30);
+    expect(next.chaosKeys).toBe(initial.chaosKeys + 1);
+    expect(next.history).toHaveLength(1);
+    expect(next.history[0].type).toBe('ROLL_FAIL');
+  });
+
   it('cannot partially reconcile when roll preparation fails', () => {
     const initial = start();
 
