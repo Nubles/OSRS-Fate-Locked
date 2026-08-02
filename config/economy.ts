@@ -325,7 +325,8 @@ export const KEY_TYPES: KeyTypeInfo[] = [
     accent: 'text-red-400',
     tagline: 'Surrender to entropy.',
     earn: [
-      `A rare ${LEVEL_CHAOS_CHANCE}% drop on any Level Up.`,
+      `A separate ${LEVEL_CHAOS_CHANCE}% chance on every Level Up.`,
+      `Guaranteed at skill levels ${SKILL_CHAOS_MILESTONES.join(', ')}.`,
       'Ritual of Chaos — convert Fate Points into one.',
     ],
     spend: 'Unlocks one RANDOM entry from ANY table — you don’t even pick the table.',

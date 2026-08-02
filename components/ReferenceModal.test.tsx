@@ -26,6 +26,20 @@ beforeEach(() => vi.unstubAllGlobals());
 afterEach(() => vi.unstubAllGlobals());
 
 describe('ReferenceModal Vanilla policy', () => {
+  it('explains weighted failure Fate, Chaos milestones, and pity overflow', () => {
+    const drops = renderCodex('drops');
+
+    expect(drops).toContain('Levels 2-19: +1 Fate');
+    expect(drops).toContain('Levels 20-79: +2 Fate');
+    expect(drops).toContain('Levels 80-99: +3 Fate');
+    expect(drops).toContain('30, 40, 50, 60, 70, 80, 90, 99');
+    expect(drops).toContain('separate 2% Chaos chance on every level');
+    expect(drops).toContain('overflow carries forward');
+    expect(drops).toContain('Easy / Medium: +1 Fate');
+    expect(drops).toContain('Hard / Elite: +2 Fate');
+    expect(drops).toContain('Master / Grandmaster: +3 Fate');
+  });
+
   it('documents the finite reserve, schedules, access safety valve, and scattered named areas in their existing tabs', () => {
     const economy = renderCodex('economy');
     const drops = renderCodex('drops');

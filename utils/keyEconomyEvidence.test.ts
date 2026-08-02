@@ -160,6 +160,19 @@ describe('buildKeyEconomyEvidence', () => {
     ], validInput).totals.fatePoints).toBe(2);
   });
 
+  it('totals the exact weighted Fate recorded on failed rolls', () => {
+    const report = buildKeyEconomyEvidence([
+      roll({ source: 'Boss (Mid)', meta: { fatePointsEarned: 2 } }),
+      roll({ source: 'Raid', meta: { fatePointsEarned: 3 } }),
+    ], validInput);
+
+    expect(report.totals.fatePoints).toBe(5);
+    expect(report.sources.map(({ source, fatePoints }) => ({ source, fatePoints }))).toEqual([
+      { source: 'Boss (Mid)', fatePoints: 2 },
+      { source: 'Raid', fatePoints: 3 },
+    ]);
+  });
+
   it('sorts drought sequences by timestamp and exported sources by source', () => {
     const report = buildKeyEconomyEvidence([
       roll({ source: 'Quest (Novice)', timestamp: 3, result: 'FAIL' }),

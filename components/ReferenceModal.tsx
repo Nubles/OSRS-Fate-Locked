@@ -5,7 +5,7 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { GAME_MODES, getGameMode, resolveModeRules } from '../config/gameModes';
 import { REGION_MODIFIERS } from '../config/regionModifiers';
-import { CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, KEY_TYPES, RITUALS, SPEND_TABLES, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL } from '../config/economy';
+import { CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, SKILL_CHAOS_MILESTONES, SPEND_TABLES, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL } from '../config/economy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { TableType } from '../types';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
@@ -446,6 +446,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         <tr>
                                             <th className="p-4">Activity Source</th>
                                             <th className="p-4">Drop Rate</th>
+                                            <th className="p-4">Fate on failure</th>
                                             <th className="p-4">Notes</th>
                                         </tr>
                                     </thead>
@@ -467,6 +468,19 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                                             </span>
                                                         ))}
                                                     </div>
+                                                </td>
+                                                <td className="p-4 align-top text-xs text-amber-300/80">
+                                                    {method.dynamic ? (
+                                                        <div className="space-y-1">
+                                                            <span className="block">Levels 2-19: +1 Fate</span>
+                                                            <span className="block">Levels 20-79: +2 Fate</span>
+                                                            <span className="block">Levels 80-99: +3 Fate</span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex flex-col gap-1">
+                                                            {method.tiers.map(t => <span key={t.tier}>{t.tier}: {t.rate === 100 ? 'Guaranteed' : `+${t.fateOnFailure} Fate`}</span>)}
+                                                        </div>
+                                                    )}
                                                 </td>
                                                 <td className="p-4 align-top text-gray-500 text-xs">
                                                     {method.blurb}
@@ -502,7 +516,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         <h4 className="font-bold text-red-400">Chaos Keys</h4>
                                     </div>
                                     <p className="text-xs text-gray-400 leading-relaxed">
-                                        Obtained via rare drop (2%) on Level Up.
+                                        Every level has a separate {LEVEL_CHAOS_CHANCE}% Chaos chance on every level. Guaranteed Chaos Keys also arrive at levels {SKILL_CHAOS_MILESTONES.join(', ')}.
                                         <br/><br/>
                                         Also obtainable via the Ritual of Chaos ({ritualCost(25)} Fate Points).
                                     </p>
@@ -514,7 +528,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     </div>
                                     <p className="text-xs text-gray-400 leading-relaxed">
                                         {rules.pityEnabled ? (
-                                          <>{rules.pityThreshold} failed rolls = 1 Guaranteed Key.<br/><br/>This counter resets whenever ANY key is obtained.</>
+                                          <>{rules.pityThreshold} Fate grants 1 Guaranteed Key; overflow carries forward.<br/><br/>Any successful roll resets your Fate. Easy / Medium: +1 Fate; Hard / Elite: +2 Fate; Master / Grandmaster: +3 Fate.</>
                                         ) : (
                                           <span className="text-red-400">Disabled in {activeMode.name} mode — there is no safety net. Failed rolls only build Fate for the Altar.</span>
                                         )}
