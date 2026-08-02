@@ -1,0 +1,22 @@
+{
+  "name": "fate-locked-discord-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "verify": "npm run test && npm run typecheck"
+  },
+  "dependencies": {
+    "@vercel/functions": "^3.7.6",
+    "tweetnacl": "^1.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
+  }
+}
