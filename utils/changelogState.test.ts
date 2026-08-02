@@ -117,6 +117,22 @@ describe('changelog state', () => {
     })).toBe(true);
   });
 
+  it('auto-opens a pending compensation offer even when the release was already seen', () => {
+    const clearStartup = {
+      hasSeenOnboarding: true,
+      releaseIsUnseen: false,
+      startupHash: '',
+      hasPendingGameModePrompt: false,
+      hasPendingCompensation: true,
+    };
+
+    expect(shouldAutoOpenChangelog(clearStartup)).toBe(true);
+    expect(shouldAutoOpenChangelog({ ...clearStartup, hasPendingSyncPrompt: true })).toBe(false);
+    expect(shouldAutoOpenChangelog({ ...clearStartup, hasPendingGuidePrompt: true })).toBe(false);
+    expect(shouldAutoOpenChangelog({ ...clearStartup, hasPendingGameModePrompt: true })).toBe(false);
+    expect(shouldAutoOpenChangelog({ ...clearStartup, hasSeenOnboarding: false })).toBe(false);
+  });
+
   it('targets the persistent settings trigger only for manual opens', () => {
     const settingsTrigger = { id: 'settings-trigger' };
 

@@ -11,8 +11,9 @@ describe('rarity system', () => {
   });
 
   it('level-up only beams when a chaos key dropped', () => {
-    expect(eventRarity('LEVEL_UP', { chaosKeyAwarded: false })).toBeNull();
-    expect(eventRarity('LEVEL_UP', { chaosKeyAwarded: true })).toBe('epic');
+    expect(eventRarity('LEVEL_UP', { chaosKeysAwarded: 0, chaosKeyAwarded: false })).toBeNull();
+    expect(eventRarity('LEVEL_UP', { chaosKeysAwarded: 1, chaosKeyAwarded: true })).toBe('epic');
+    expect(eventRarity('LEVEL_UP', { chaosKeysAwarded: 2, chaosKeyAwarded: true })).toBe('epic');
   });
 
   it('unlock rarity scales with category significance', () => {

@@ -5,7 +5,7 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { GAME_MODES, getGameMode, resolveModeRules } from '../config/gameModes';
 import { REGION_MODIFIERS } from '../config/regionModifiers';
-import { CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, KEY_TYPES, RITUALS, SPEND_TABLES, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL } from '../config/economy';
+import { CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, SKILL_CHAOS_MILESTONES, SPEND_TABLES, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL } from '../config/economy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { TableType } from '../types';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
@@ -230,7 +230,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                 <div className="bg-[#222] p-4 rounded-xl border border-white/5">
                                     <h4 className="font-bold text-gray-200 mb-2 flex items-center gap-2"><Shield size={16} className="text-osrs-pity"/> Fate Points</h4>
                                     <p className="text-xs text-gray-400">
-                                        Bad luck protection. Each failed roll adds 1 Fate Point.
+                                        Bad luck protection. Failed rolls award +1 to +3 Fate by difficulty.
                                         <br/><br/>
                                         {rules.pityEnabled ? (
                                           <span className="text-white font-bold">{rules.pityThreshold} Points = 1 Guaranteed (Pity) Key.</span>
@@ -314,7 +314,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     <li><b className="text-white">2.</b> The app draws to <span className="font-mono">0.1%</span> precision against its <b className="text-purple-400">95.0%</b> threshold. You roll <span className="font-mono text-green-400">42.0</span> → a Key!</li>
                                     <li><b className="text-white">3.</b> Every success then rolls for an upgrade. In {activeMode.name} mode that's a <b className="text-purple-400">{rules.omniChanceBase}%</b> Omni chance (up to 20% on this very quest). Miss it and you bank a Standard Key; hit it and you <i>also</i> pocket an <b className="text-purple-400">Omni-Key</b>.</li>
                                     <li><b className="text-white">4.</b> Take the Key to <b className="text-osrs-gold">Spend Keys</b>, choose the <b>Skills</b> table, and unlock a random skill tier — say Slayer. Those new Slayer levels open fresh tasks to roll on.</li>
-                                    <li className="text-gray-500 text-xs pt-1">Roll <span className="font-mono">95.1–100.0</span> instead and you'd get no Key — but you'd gain a Fate Point{rules.pityEnabled ? <>, inching toward a guaranteed Key at <b>{rules.pityThreshold}</b></> : ''}.</li>
+                                    <li className="text-gray-500 text-xs pt-1">Roll <span className="font-mono">95.1–100.0</span> instead and you'd get no Key — but you would gain +3 Fate{rules.pityEnabled ? <>, inching toward a guaranteed Key at <b>{rules.pityThreshold}</b></> : ''}.</li>
                                 </ol>
                             </div>
 
@@ -323,9 +323,9 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                 <div className="bg-[#222] p-5 rounded-xl border border-white/5">
                                     <h4 className="font-bold text-gray-200 mb-2 flex items-center gap-2"><Shield size={16} className="text-osrs-pity"/> Fate Points</h4>
                                     <p className="text-xs text-gray-400 leading-relaxed">
-                                        Earned <b>+1 per failed roll</b>, reset to 0 the moment you get any Key.
+                                        Earned <b>+1 to +3 Fate per failed roll</b>, with awards based on difficulty.
                                         {rules.pityEnabled
-                                            ? <> At <b className="text-white">{rules.pityThreshold}</b> they convert a failure into a guaranteed <b>Pity Key</b>.</>
+                                            ? <> At <b className="text-white">{rules.pityThreshold}</b> they grant a guaranteed <b>Pity Key</b>. Pity conversions keep any Fate overflow.</>
                                             : <> Pity is <b className="text-red-400">off</b> in {activeMode.name} mode.</>}
                                         {' '}Either way, they're the fuel for the Void Altar.
                                     </p>
@@ -446,6 +446,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         <tr>
                                             <th className="p-4">Activity Source</th>
                                             <th className="p-4">Drop Rate</th>
+                                            <th className="p-4">Fate on failure</th>
                                             <th className="p-4">Notes</th>
                                         </tr>
                                     </thead>
@@ -467,6 +468,19 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                                             </span>
                                                         ))}
                                                     </div>
+                                                </td>
+                                                <td className="p-4 align-top text-xs text-amber-300/80">
+                                                    {method.dynamic ? (
+                                                        <div className="space-y-1">
+                                                            <span className="block">Levels 2-19: +1 Fate</span>
+                                                            <span className="block">Levels 20-79: +2 Fate</span>
+                                                            <span className="block">Levels 80-99: +3 Fate</span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex flex-col gap-1">
+                                                            {method.tiers.map(t => <span key={t.tier}>{t.tier}: {t.rate === 100 ? 'Guaranteed' : `+${t.fateOnFailure} Fate`}</span>)}
+                                                        </div>
+                                                    )}
                                                 </td>
                                                 <td className="p-4 align-top text-gray-500 text-xs">
                                                     {method.blurb}
@@ -502,7 +516,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         <h4 className="font-bold text-red-400">Chaos Keys</h4>
                                     </div>
                                     <p className="text-xs text-gray-400 leading-relaxed">
-                                        Obtained via rare drop (2%) on Level Up.
+                                        Every level has a separate {LEVEL_CHAOS_CHANCE}% Chaos chance on every level. Guaranteed Chaos Keys also arrive at levels {SKILL_CHAOS_MILESTONES.join(', ')}.
                                         <br/><br/>
                                         Also obtainable via the Ritual of Chaos ({ritualCost(25)} Fate Points).
                                     </p>
@@ -514,7 +528,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     </div>
                                     <p className="text-xs text-gray-400 leading-relaxed">
                                         {rules.pityEnabled ? (
-                                          <>{rules.pityThreshold} failed rolls = 1 Guaranteed Key.<br/><br/>This counter resets whenever ANY key is obtained.</>
+                                          <>{rules.pityThreshold} Fate grants 1 Guaranteed Key; overflow carries forward.<br/><br/>Any successful roll resets your Fate. Combat Achievements: Easy / Medium: +1 Fate; Hard / Elite: +2 Fate; Master / GM: +3 Fate.</>
                                         ) : (
                                           <span className="text-red-400">Disabled in {activeMode.name} mode — there is no safety net. Failed rolls only build Fate for the Altar.</span>
                                         )}

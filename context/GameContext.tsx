@@ -1,13 +1,13 @@
 
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState, type DetectedEventIdentity, type DetectedProgress, type GameEventMeta as DetectedGameEventMeta, type RollIntent } from '../types';
+import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState, type DetectedEventIdentity, type DetectedProgress, type FailureFateAward, type FateCompensationChoice, type GameEventMeta as DetectedGameEventMeta, type RollIntent } from '../types';
 import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST } from '../data/items';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from '../config/rules';
 import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
 import { setStartArea } from '../utils/freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
-import { getRitual, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, GAMBIT_KEYS_PER } from '../config/economy';
+import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL, GREED_REFUND_FRACTION, GAMBIT_KEYS_PER } from '../config/economy';
 import { BANK_BY_ID } from '../data/banks';
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
@@ -28,8 +28,9 @@ import {
   type BackupWriteResult,
   type ImportResult,
 } from '../utils/gamePersistence';
-import { CURRENT_SAVE_VERSION, parseAndMigrateSave, validateAndMigrateSave } from '../utils/saveSchema';
+import { CURRENT_SAVE_VERSION, MAX_COUNTER, parseAndMigrateSave, validateAndMigrateSave } from '../utils/saveSchema';
 import { showToast } from '../utils/toast';
+import { LEGACY_FATE_COMPENSATION_ID } from '../utils/fateCompensation';
 import { normalizeAccountName } from '../services/fateEventProtocol';
 import {
   canEarnDiaryTier,
@@ -134,7 +135,7 @@ const completionFailure = (reason: string): CompletionResult => {
 type RollEventMeta = { roll: number; baseThreshold: number; threshold: number };
 type UnlockEventMeta = { item: string; cost: number; category?: TableType };
 type RitualEventMeta = { type: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE' | 'GAMBIT' | 'CARTOGRAPHER'; won?: boolean; chunk?: string };
-type LevelUpEventMeta = { skill: string; level: number; totalLevel: number; chaosKeyAwarded: boolean };
+type LevelUpEventMeta = { skill: string; level: number; totalLevel: number; chaosKeysAwarded: number; chaosKeyAwarded: boolean };
 
 type GameEventMeta = (RollEventMeta & DetectedGameEventMeta) | UnlockEventMeta | RitualEventMeta | LevelUpEventMeta;
 
@@ -153,11 +154,13 @@ interface GameContextType extends GameState {
   saveOwnershipBlockReason: SaveOwnershipBlockReason;
   hasPendingChanges: boolean;
   retrySave: () => boolean;
+  stageForProfileEviction: () => void;
   takeOverSaveOwnership: () => Promise<boolean>;
   reloadLatestSave: () => ImportResult;
   rollForKey: (
     source: string,
     threshold: number,
+    failureFate: FailureFateAward,
     x?: number,
     y?: number,
     meta?: DetectedGameEventMeta,
@@ -178,6 +181,7 @@ interface GameContextType extends GameState {
   toggleAdvisors: () => void;
   toggleRevealAll: () => void;
   completeOnboarding: () => void;
+  resolveFateCompensation: (choice: FateCompensationChoice) => void;
   setGameMode: (modeId: string, customRules?: GameModeRules) => void;
   /** Seeded runs — set/clear the seed (only while the run has no history). */
   setSeed: (seed: string) => void;
@@ -252,6 +256,13 @@ export const initialState: GameState = {
   specialKeys: 0,
   chaosKeys: 0,
   fatePoints: 0,
+  fateCompensation: {
+    releaseId: LEGACY_FATE_COMPENSATION_ID,
+    status: 'not_eligible',
+    chaosKeys: 0,
+    pityKeys: 0,
+    fatePoints: 0,
+  },
   activeBuff: 'NONE',
   unlocks: getInitialUnlocks(),
   history: [],
@@ -287,6 +298,7 @@ interface PreparedRollResult {
   baseThreshold: number;
   threshold: number;
   source: string;
+  failureFate: FailureFateAward;
   x?: number;
   y?: number;
   meta?: DetectedGameEventMeta;
@@ -301,6 +313,7 @@ export type Action =
   | { type: 'TOGGLE_REVEAL_ALL' }
   | { type: 'SET_SEED'; payload: string }
   | { type: 'COMPLETE_ONBOARDING' }
+  | { type: 'RESOLVE_FATE_COMPENSATION'; payload: FateCompensationChoice }
   | { type: 'ROLL_RESULT'; payload: PreparedRollResult }
   | {
     type: 'ACCEPT_DETECTED_EVENT';
@@ -308,6 +321,11 @@ export type Action =
       progress: DetectedProgress;
       rollResult: PreparedRollResult;
       expected: DetectedEventIdentity;
+      skillChaos?: {
+        chaosKeysAwarded: number;
+        guaranteedChaosKeysAwarded: number;
+        randomChaosKeysAwarded: number;
+      };
     };
   }
   | { type: 'SYNC_DETECTED_PROGRESS'; payload: DetectedProgress }
@@ -348,6 +366,7 @@ export function prepareKeyRollAction(
   state: GameState,
   source: string,
   threshold: number,
+  failureFate: FailureFateAward,
   nextDice: DiceRoller,
   x?: number,
   y?: number,
@@ -358,6 +377,7 @@ export function prepareKeyRollAction(
   state: GameState,
   source: string,
   threshold: number,
+  failureFate: FailureFateAward,
   nextDice: DiceRoller,
   x: number | undefined,
   y: number | undefined,
@@ -368,6 +388,7 @@ export function prepareKeyRollAction(
   state: GameState,
   source: string,
   threshold: number,
+  failureFate: FailureFateAward,
   nextDice: DiceRoller,
   x?: number,
   y?: number,
@@ -455,7 +476,7 @@ export function prepareKeyRollAction(
     else if (source === DropSource.BOSS_HIGH) omniChance = Math.max(omniChance, 10);
 
     if (nextDice(rollPurpose, 2) <= omniChance) omni = true;
-  } else if (mode.pityEnabled && state.fatePoints + 1 >= mode.pityThreshold) {
+  } else if (mode.pityEnabled && state.fatePoints + failureFate >= mode.pityThreshold) {
     pity = true;
   }
 
@@ -469,6 +490,7 @@ export function prepareKeyRollAction(
       baseThreshold,
       threshold: effectiveThreshold,
       source,
+      failureFate,
       x,
       y,
       meta,
@@ -493,16 +515,32 @@ export const prepareDetectedEventAcceptanceAction = (
   meta: DetectedGameEventMeta,
   expected: DetectedEventIdentity,
 ): Extract<TransitionAction, { type: 'ACCEPT_DETECTED_EVENT' }> => {
+  const currentSkillLevel = progress.kind === 'SKILL_LEVEL'
+    ? state.unlocks.levels[progress.skill] ?? 1
+    : 0;
+  const guaranteedChaosKeysAwarded = progress.kind === 'SKILL_LEVEL' && progress.level > currentSkillLevel
+    ? Array.from({ length: Math.min(99, progress.level) - currentSkillLevel }, (_, index) => currentSkillLevel + index + 1)
+      .filter(isSkillChaosMilestone).length
+    : 0;
+  const randomChaosKeysAwarded = progress.kind === 'SKILL_LEVEL' && progress.level > currentSkillLevel
+    && nextDice('detected-skill-chaos', 0, 100) <= 2
+    ? 1
+    : 0;
+  const skillChaos = guaranteedChaosKeysAwarded || randomChaosKeysAwarded
+    ? { chaosKeysAwarded: guaranteedChaosKeysAwarded + randomChaosKeysAwarded, guaranteedChaosKeysAwarded, randomChaosKeysAwarded }
+    : undefined;
+
   const rollResult = prepareKeyRollAction(
     state,
     intent.source,
     intent.threshold,
+    intent.failureFate,
     nextDice,
     undefined,
     undefined,
-    meta,
+    skillChaos ? { ...meta, ...skillChaos } : meta,
   ).payload;
-  return { type: 'ACCEPT_DETECTED_EVENT', payload: { progress, rollResult, expected } };
+  return { type: 'ACCEPT_DETECTED_EVENT', payload: { progress, rollResult, expected, skillChaos } };
 };
 
 export const prepareCATaskCompletionActions = (
@@ -540,6 +578,7 @@ export const prepareCATaskCompletionActions = (
         state,
         tier.difficulty,
         DROP_RATES[tier.difficulty],
+        failureFateForSource(tier.difficulty),
         nextDice,
         x,
         y,
@@ -575,6 +614,7 @@ export const prepareLevelUpActions = (
       state,
       `${skill} Level ${newLevel}`,
       rollChance,
+      failureFateForSkillLevel(newLevel),
       nextDice,
     ),
   };
@@ -649,6 +689,41 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     case 'COMPLETE_ONBOARDING':
       return { ...state, hasSeenOnboarding: true };
 
+    case 'RESOLVE_FATE_COMPENSATION': {
+      const offer = state.fateCompensation;
+      if (offer.status !== 'pending') return state;
+
+      const choice = action.payload;
+      const chaosKeysAwarded = choice === 'none'
+        ? 0
+        : Math.min(offer.chaosKeys, Math.max(0, MAX_COUNTER - state.chaosKeys));
+      const pityKeysAwarded = choice === 'full'
+        ? Math.min(offer.pityKeys, Math.max(0, MAX_COUNTER - state.keys))
+        : 0;
+      const fatePointsAfter = choice === 'full' ? offer.fatePoints : state.fatePoints;
+      const log: LogEntry = {
+        id: generateId(),
+        timestamp: now,
+        type: 'COMPENSATION',
+        message: `Fate compensation resolved: ${choice}`,
+        meta: {
+          choice,
+          chaosKeysAwarded,
+          pityKeysAwarded,
+          fatePointsAfter,
+        },
+      };
+
+      return {
+        ...state,
+        keys: state.keys + pityKeysAwarded,
+        chaosKeys: state.chaosKeys + chaosKeysAwarded,
+        fatePoints: fatePointsAfter,
+        fateCompensation: { ...offer, status: choice, choice },
+        history: [...state.history, log],
+      };
+    }
+
     case 'SET_GAME_MODE': {
       // The mode is permanent once chosen — or if the run already has history
       // (defensive, covers saves predating the lock flag).
@@ -670,11 +745,18 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 
     case 'ACCEPT_DETECTED_EVENT': {
       if (!detectedEventIdentityMatches(state, action.payload.expected)) return state;
+      const progress = action.payload.progress;
+      const guaranteedChaosAwarded = progress.kind === 'SKILL_LEVEL'
+        && progress.level > (state.unlocks.levels[progress.skill] ?? 1)
+        && isSkillChaosMilestone(progress.level);
       const progressed = rawReducer(state, {
         type: 'SYNC_DETECTED_PROGRESS',
-        payload: action.payload.progress,
+        payload: progress,
       });
-      return rawReducer(progressed, {
+      const rewarded = action.payload.skillChaos && progressed !== state
+        ? { ...progressed, chaosKeys: progressed.chaosKeys + action.payload.skillChaos.chaosKeysAwarded }
+        : progressed;
+      return rawReducer(rewarded, {
         type: 'ROLL_RESULT',
         payload: action.payload.rollResult,
       });
@@ -711,7 +793,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     }
 
     case 'ROLL_RESULT': {
-      const { success, omni, pity, roll, baseThreshold, threshold, source, x, y, meta, context } = action.payload;
+      const { success, omni, pity, roll, baseThreshold, threshold, source, failureFate = 1, x, y, meta, context } = action.payload;
       const vanillaBossContext = state.gameModeId === 'vanilla' && context?.kind === 'boss'
         ? context
         : null;
@@ -842,14 +924,17 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         newState.fatePoints = 0;
       } else if (pity) {
         newState.keys += standardKeysAwarded;
-        newState.fatePoints = 0;
+        const pityThreshold = resolveModeRules(
+          state.gameModeId, state.customMode,
+        ).pityThreshold;
+        newState.fatePoints = state.fatePoints + failureFate - pityThreshold;
         newHistory.push({
             id: generateId(),
             timestamp: now,
             type: 'PITY',
             message: 'MAX FATE REACHED! Pity Key granted.',
             details: `Rolled ${rollText} at ${inlineChanceText}, but Fate intervened.`,
-            meta: entryMeta(1),
+            meta: { ...entryMeta(failureFate), pityThreshold },
             result: 'SUCCESS',
             source,
             rollValue: roll,
@@ -858,7 +943,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         });
         newState.lastEvent = { id: generateId(), type: 'ROLL_PITY', x, y, meta: eventMeta };
       } else {
-        newState.fatePoints += 1;
+        newState.fatePoints += failureFate;
         // Greed's consolation: half the (scaled) ritual cost flows back,
         // so it's double-or-something rather than double-or-nothing.
         let greedRefund = 0;
@@ -873,7 +958,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
             type: 'ROLL_FAIL',
             message: `No Key.${isGreed ? ` (Greed refunded ${greedRefund} Fate)` : ''}`,
             details: `Rolled ${rollText} (> ${comparisonChanceText}). Fate: ${newState.fatePoints}/${resolveModeRules(state.gameModeId, state.customMode).pityThreshold}`,
-            meta: entryMeta(1 + greedRefund),
+            meta: entryMeta(failureFate + greedRefund),
             result: 'FAIL',
             source,
             rollValue: roll,
@@ -1024,24 +1109,31 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       const totalLevel = Object.values(newLevels).reduce((a, b) => a + b, 0);
 
       const logs = [...state.history];
-      let chaosKeys = state.chaosKeys;
-      let chaosKeyAwarded = false;
-
-      // RNG Chaos Key Check (2% Chance)
-      // chaosRoll is pre-computed in the action creator to keep the reducer pure
       const RNG_CHAOS_CHANCE = 0.02;
+      const randomChaosAwarded = chaosRoll < RNG_CHAOS_CHANCE;
+      const guaranteedChaosAwarded = isSkillChaosMilestone(newLevel);
+      const chaosKeysAwarded =
+        Number(randomChaosAwarded) + Number(guaranteedChaosAwarded);
+      const chaosKeyAwarded = chaosKeysAwarded > 0;
+      const chaosKeys = state.chaosKeys + chaosKeysAwarded;
 
-      if (chaosRoll < RNG_CHAOS_CHANCE) {
-          chaosKeys += 1;
-          chaosKeyAwarded = true;
-          logs.push({
-              id: generateId(),
-              timestamp: now,
-              type: 'LEVEL_UP',
-              message: `Chaos Key Drop! (RNG)`,
-              details: `Fate smiled upon you at Total Level ${totalLevel}.`,
-              meta: { totalLevel, reward: 'Chaos Key' }
-          });
+      if (chaosKeyAwarded) {
+        const reward = `${chaosKeysAwarded} Chaos Key${chaosKeysAwarded === 1 ? '' : 's'}`;
+        logs.push({
+          id: generateId(),
+          timestamp: now,
+          type: 'LEVEL_UP',
+          message: `${reward} awarded!`,
+          details: guaranteedChaosAwarded
+            ? `Skill level ${newLevel} milestone${randomChaosAwarded ? ' plus a lucky roll' : ''}.`
+            : `Fate smiled upon you at Total Level ${totalLevel}.`,
+          meta: {
+            totalLevel,
+            reward,
+            chaosKeysAwarded,
+            chaosKeyAwarded,
+          },
+        });
       }
 
       // Xtreme Start anti-softlock insurance — see XTREME_MILESTONE_INTERVAL in
@@ -1087,7 +1179,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         }
       }
 
-      const eventMeta: LevelUpEventMeta = { skill, level: newLevel, totalLevel, chaosKeyAwarded };
+      const eventMeta: LevelUpEventMeta = { skill, level: newLevel, totalLevel, chaosKeysAwarded, chaosKeyAwarded };
 
       return {
         ...state,
@@ -1313,6 +1405,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
   const saveTimeoutRef = useRef<number | null>(null);
   const takeoverRequestedRef = useRef(false);
   const takeoverFlushAuthorizedRef = useRef(false);
+  const profileEvictedRef = useRef(false);
   const mountedRef = useRef(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>(() => getSaveStatus(storageKey));
   useSyncExternalStore(
@@ -1345,9 +1438,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
   );
 
   const authorizeOwnedWrite = useCallback((): SaveWriteAuthorization => {
+    if (profileEvictedRef.current) {
+      return { ok: false, reason: 'ownership_conflict' };
+    }
     if (
-      takeoverRequestedRef.current
-      || saveOwnershipStatusRef.current !== 'owner'
+      !takeoverFlushAuthorizedRef.current
+      && (takeoverRequestedRef.current || saveOwnershipStatusRef.current !== 'owner')
     ) {
       return {
         ok: false,
@@ -1359,15 +1455,29 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     return authorizeOwnership();
   }, [authorizeOwnership]);
 
+  const stageForProfileEviction = useCallback((): void => {
+    profileEvictedRef.current = true;
+    if (saveTimeoutRef.current !== null) {
+      window.clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+    stagePendingSave(storageKey, serializeCurrent());
+    blockPendingSave(storageKey, 'ownership_conflict');
+    if (mountedRef.current) setSaveStatus(getSaveStatus(storageKey));
+    releaseOwnership();
+  }, [releaseOwnership, serializeCurrent, storageKey]);
+
   const flushCurrentSave = useCallback((): boolean => {
     if (
-      !takeoverFlushAuthorizedRef.current
-      && (takeoverRequestedRef.current
-        || saveOwnershipStatusRef.current !== 'owner')
+      profileEvictedRef.current
+      || (!takeoverFlushAuthorizedRef.current
+        && (takeoverRequestedRef.current
+          || saveOwnershipStatusRef.current !== 'owner'))
     ) {
       blockPendingSave(
         storageKey,
-        saveOwnershipBlockReasonRef.current === 'storage_unavailable'
+        !profileEvictedRef.current
+          && saveOwnershipBlockReasonRef.current === 'storage_unavailable'
           ? 'storage_unavailable'
           : 'ownership_conflict',
       );
@@ -1380,7 +1490,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     }
 
     const pending = getPendingSave(storageKey);
-    const result = flushPendingSave(localStorage, storageKey, authorizeOwnership);
+    const result = flushPendingSave(localStorage, storageKey, authorizeOwnedWrite);
     if (result.ok === true) {
       if (pending !== null) persistedSnapshotRef.current = pending.data;
       if (mountedRef.current) setSaveStatus('saved');
@@ -1395,7 +1505,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
       );
     }
     return result.ok;
-  }, [authorizeOwnership, storageKey]);
+  }, [authorizeOwnedWrite, storageKey]);
 
   // Debounced persistence - saves all persistent state fields
   useEffect(() => {
@@ -1413,7 +1523,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     }
 
     stagePendingSave(storageKey, snapshot);
-    if (saveOwnershipStatus !== 'owner') {
+    if (profileEvictedRef.current) {
+      blockPendingSave(storageKey, 'ownership_conflict');
+    } else if (saveOwnershipStatus !== 'owner') {
       blockPendingSave(
         storageKey,
         saveOwnershipBlockReason === 'storage_unavailable'
@@ -1430,7 +1542,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
       window.clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = null;
     }
-    if (saveOwnershipStatus !== 'owner' || takeoverRequestedRef.current) return;
+    if (
+      profileEvictedRef.current
+      || saveOwnershipStatus !== 'owner'
+      || takeoverRequestedRef.current
+    ) return;
 
     saveTimeoutRef.current = window.setTimeout(() => {
       saveTimeoutRef.current = null;
@@ -1460,10 +1576,18 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     if (needsStaging) {
       stagePendingSave(storageKey, snapshot);
     }
+    if (profileEvictedRef.current) {
+      blockPendingSave(storageKey, 'ownership_conflict');
+    }
   }, [serializeCurrent, storageKey]);
 
   const flushAndReleaseOwnership = useCallback(() => {
     stageCurrentSnapshotForLifecycle();
+    if (profileEvictedRef.current) {
+      blockPendingSave(storageKey, 'ownership_conflict');
+      releaseOwnership();
+      return;
+    }
     const flushed = getPendingSave(storageKey) !== null
       ? flushCurrentSave()
       : authorizeOwnedWrite().ok;
@@ -1498,6 +1622,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
   }, [flushCurrentSave, serializeCurrent, storageKey]);
 
   const takeOverSaveOwnership = useCallback(async (): Promise<boolean> => {
+    if (profileEvictedRef.current) return false;
     takeoverRequestedRef.current = true;
     try {
       const owned = await takeOverOwnership();
@@ -1563,6 +1688,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
   const rollForKey = useCallback((
     source: string,
     threshold: number,
+    failureFate: FailureFateAward,
     x?: number,
     y?: number,
     meta?: DetectedGameEventMeta,
@@ -1570,8 +1696,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
   ) => {
     const current = stateRef.current;
     const action = context
-      ? prepareKeyRollAction(current, source, threshold, nextDice, x, y, meta, context)
-      : prepareKeyRollAction(current, source, threshold, nextDice, x, y, meta);
+      ? prepareKeyRollAction(current, source, threshold, failureFate, nextDice, x, y, meta, context)
+      : prepareKeyRollAction(current, source, threshold, failureFate, nextDice, x, y, meta);
     if (action) commitAction(action);
   }, [commitAction, nextDice]);
 
@@ -1605,8 +1731,17 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     // Pre-compute RNG outside reducer to maintain reducer purity
     const chaosRoll = nextFloat('levelup');
     const prepared = prepareLevelUpActions(stateRef.current, skill, chaosRoll, nextDice);
-    commitAction(prepared.levelAction);
-    commitAction(prepared.rewardAction);
+    const levelState = commitAction(prepared.levelAction);
+    const levelUpMeta = levelState.lastEvent?.type === 'LEVEL_UP'
+      ? levelState.lastEvent.meta
+      : undefined;
+    commitAction({
+      ...prepared.rewardAction,
+      payload: {
+        ...prepared.rewardAction.payload,
+        meta: { ...prepared.rewardAction.payload.meta, ...levelUpMeta },
+      },
+    });
   }, [commitAction, nextDice, nextFloat]);
 
   const acceptDetectedEvent = useCallback((
@@ -1651,6 +1786,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
 
   const completeOnboarding = useCallback(() =>
     commitAction({ type: 'COMPLETE_ONBOARDING' }), [commitAction]);
+  const resolveFateCompensation = useCallback((choice: FateCompensationChoice) =>
+    commitAction({ type: 'RESOLVE_FATE_COMPENSATION', payload: choice }), [commitAction]);
   const setGameMode = useCallback((modeId: string, customRules?: GameModeRules) =>
     commitAction({ type: 'SET_GAME_MODE', payload: { modeId, customRules } }), [commitAction]);
   const toggleAnimations = useCallback(() => commitAction({ type: 'TOGGLE_ANIMATIONS' }), [commitAction]);
@@ -1752,7 +1889,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     if (result.ok === false) return completionFailure(result.reason);
 
     commitAction({ type: 'COMPLETE_QUEST', payload: id });
-    rollForKey(quest.difficulty, DROP_RATES[quest.difficulty], x, y);
+    rollForKey(quest.difficulty, DROP_RATES[quest.difficulty], failureFateForSource(quest.difficulty), x, y);
     return result;
   }, [commitAction, rollForKey]);
 
@@ -1777,7 +1914,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     if (result.ok === false) return completionFailure(result.reason);
 
     commitAction({ type: 'COMPLETE_TASK', payload: id });
-    rollForKey(diary.difficulty, DROP_RATES[diary.difficulty], x, y);
+    rollForKey(diary.difficulty, DROP_RATES[diary.difficulty], failureFateForSource(diary.difficulty), x, y);
 
     const current = stateRef.current;
     if (
@@ -1848,6 +1985,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     saveOwnershipBlockReason,
     hasPendingChanges,
     retrySave,
+    stageForProfileEviction,
     takeOverSaveOwnership,
     reloadLatestSave,
     rollForKey,
@@ -1861,6 +1999,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     toggleAdvisors,
     toggleRevealAll,
     completeOnboarding,
+    resolveFateCompensation,
     setGameMode,
     setSeed,
     nextFloat,
@@ -1890,6 +2029,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     saveOwnershipBlockReason,
     hasPendingChanges,
     retrySave,
+    stageForProfileEviction,
     takeOverSaveOwnership,
     reloadLatestSave,
     rollForKey,
@@ -1903,6 +2043,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     toggleAdvisors,
     toggleRevealAll,
     completeOnboarding,
+    resolveFateCompensation,
     setGameMode,
     setSeed,
     nextFloat,

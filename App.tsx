@@ -1,6 +1,6 @@
 
 import { lazyWithRetry } from './utils/lazyRetry';
-import React, { useState, useRef, useEffect, useReducer, Component, ErrorInfo, ReactNode, Suspense } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useReducer, Component, ErrorInfo, ReactNode, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { GameProvider, useGame } from './context/GameContext';
 import { usePortalHost } from './hooks/usePortalHost';
@@ -27,6 +27,7 @@ import { FeatureRevealDriver } from './components/FeatureRevealDriver';
 import { BackupNagBanner } from './components/BackupNagBanner';
 import { SaveConflictBanner } from './components/SaveConflictBanner';
 import { SaveFailureBanner } from './components/SaveFailureBanner';
+import { ProfileRecoveryBanner } from './components/ProfileRecoveryBanner';
 import { SaveRecoveryGuard } from './components/SaveRecoveryGuard';
 import { DiscordSyncDriver } from './components/DiscordSyncDriver';
 import { downloadFateSave } from './utils/fateSaveFile';
@@ -46,6 +47,7 @@ import { importUiDecision, isCurrentImportRequest } from './utils/gamePersistenc
 import { MAX_SAVE_BYTES } from './utils/saveSchema';
 import { prefetchHeavyChunks } from './utils/prefetch';
 import { CHANGELOG_RELEASES, LATEST_CHANGELOG } from './data/changelog';
+import type { FateCompensationChoice } from './types';
 import {
   changelogVisibilityReducer, markChangelogSeen,
   resolveChangelogModalRenderPolicy, shouldAutoOpenChangelog,
@@ -195,12 +197,22 @@ const ToastNotification = () => {
           : 'Ritual Performed';
       }
       if (lastEvent.type === 'LEVEL_UP') {
-          // Check for Chaos Key award in metadata
-          if (lastEvent.meta && 'chaosKeyAwarded' in lastEvent.meta && lastEvent.meta.chaosKeyAwarded) {
-              msg = 'Level Up + Chaos Key!';
+          const chaosKeysAwarded = lastEvent.meta && 'chaosKeysAwarded' in lastEvent.meta
+            ? Number(lastEvent.meta.chaosKeysAwarded)
+            : Number(Boolean(lastEvent.meta && 'chaosKeyAwarded' in lastEvent.meta && lastEvent.meta.chaosKeyAwarded));
+          if (chaosKeysAwarded > 0) {
+              msg = `Level Up + ${chaosKeysAwarded === 1 ? 'Chaos Key' : `${chaosKeysAwarded} Chaos Keys`}!`;
           } else {
               msg = 'Level Up';
           }
+      }
+      const mergedLevelMeta = lastEvent.meta as any;
+      if (lastEvent.type.includes('ROLL')
+        && typeof mergedLevelMeta?.skill === 'string'
+        && typeof mergedLevelMeta?.level === 'number'
+      ) {
+        const chaosKeysAwarded = Number(mergedLevelMeta.chaosKeysAwarded ?? mergedLevelMeta.chaosKeyAwarded ?? 0);
+        if (chaosKeysAwarded > 0) msg = `Level Up + ${chaosKeysAwarded === 1 ? 'Chaos Key' : `${chaosKeysAwarded} Chaos Keys`}!`;
       }
 
       setMessage(msg);
@@ -636,6 +648,7 @@ const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = f
 const GameLayout = () => {
   const {
     lastEvent, animationsEnabled, hasSeenOnboarding, history, linkedAccount,
+    fateCompensation, resolveFateCompensation,
   } = useGame();
   const { recentlyCreatedId, activeProfileId, activeProfileName, clearRecentlyCreated } = useProfiles();
 
@@ -663,6 +676,7 @@ const GameLayout = () => {
       startupHash: typeof window === 'undefined' ? '' : window.location.hash,
       hasPendingGameModePrompt: recentlyCreatedId === activeProfileId,
       hasPendingGuidePrompt: directGuideRequested,
+      hasPendingCompensation: fateCompensation.status === 'pending',
     }),
   );
 
@@ -685,17 +699,23 @@ const GameLayout = () => {
     useState<string | undefined>(undefined);
 
   const changelogReturnFocusTarget = useRef<HTMLElement | null>(null);
+  const changelogAutoOpenKey = `${activeProfileId}:${LATEST_CHANGELOG.id}`;
   const changelogAutoOpenedRelease = useRef<string | null>(
-    showChangelog ? LATEST_CHANGELOG.id : null,
+    showChangelog ? changelogAutoOpenKey : null,
   );
   const openChangelog = (returnFocusTarget: HTMLElement | null = null) => {
     changelogReturnFocusTarget.current = returnFocusTarget;
     dispatchChangelog({ type: 'OPEN' });
   };
   const closeChangelog = () => {
+    if (fateCompensation.status === 'pending') return;
     markChangelogSeen(LATEST_CHANGELOG.id);
     dispatchChangelog({ type: 'DISMISS' });
     changelogReturnFocusTarget.current = null;
+  };
+  const resolveCompensation = (choice: FateCompensationChoice) => {
+    resolveFateCompensation(choice);
+    markChangelogSeen(LATEST_CHANGELOG.id);
   };
 
   const openRuneliteGuide = (returnFocusTarget: HTMLElement | null = null) => {
@@ -854,7 +874,7 @@ const GameLayout = () => {
   useEffect(() => {
     if (
       showChangelog
-      || changelogAutoOpenedRelease.current === LATEST_CHANGELOG.id
+      || changelogAutoOpenedRelease.current === changelogAutoOpenKey
       || !shouldAutoOpenChangelog({
         hasSeenOnboarding,
         releaseIsUnseen: shouldShowChangelog(LATEST_CHANGELOG.id),
@@ -862,13 +882,16 @@ const GameLayout = () => {
         hasPendingGameModePrompt,
         hasPendingSyncPrompt,
         hasPendingGuidePrompt: showRuneliteGuide,
+        hasPendingCompensation: fateCompensation.status === 'pending',
       })
     ) return;
 
-    changelogAutoOpenedRelease.current = LATEST_CHANGELOG.id;
+    changelogAutoOpenedRelease.current = changelogAutoOpenKey;
     dispatchChangelog({ type: 'OPEN' });
   }, [
     activeProfileId,
+    changelogAutoOpenKey,
+    fateCompensation.status,
     hasPendingGameModePrompt,
     hasPendingSyncPrompt,
     hasSeenOnboarding,
@@ -947,6 +970,8 @@ const GameLayout = () => {
           <ChangelogModal
             releases={CHANGELOG_RELEASES}
             onClose={closeChangelog}
+            compensation={fateCompensation}
+            onResolveCompensation={resolveCompensation}
             returnFocusTarget={changelogReturnFocusTarget.current}
           />
         )}
@@ -965,6 +990,8 @@ const GameLayout = () => {
         onOpenRuneliteGuide={openRuneliteGuide}
         onOpenChangelog={openChangelog}
       />
+
+      <ProfileRecoveryBanner />
 
       <SaveConflictBanner />
 
@@ -1058,12 +1085,24 @@ const GameLayout = () => {
   );
 };
 
+const ProfileEvictionBridge: React.FC<{ profileId: string }> = ({ profileId }) => {
+  const { registerProfileEvictionHandler } = useProfiles();
+  const { stageForProfileEviction } = useGame();
+
+  useLayoutEffect(() => registerProfileEvictionHandler(removedProfileId => {
+    if (removedProfileId === profileId) stageForProfileEviction();
+  }), [profileId, registerProfileEvictionHandler, stageForProfileEviction]);
+
+  return null;
+};
+
 /** Bridge reads profile context and passes storageKey to GameProvider.
  *  key={activeProfileId} forces a clean remount when switching profiles. */
 const GameProviderBridge: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { activeProfileId, storageKeyForActiveProfile } = useProfiles();
   return (
     <GameProvider key={activeProfileId} storageKey={storageKeyForActiveProfile}>
+      <ProfileEvictionBridge profileId={activeProfileId} />
       {children}
     </GameProvider>
   );

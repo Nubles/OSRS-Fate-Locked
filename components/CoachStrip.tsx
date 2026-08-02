@@ -90,7 +90,7 @@ export const CoachStrip: React.FC = () => {
       return {
         id: 'pity',
         text: `${rules.pityThreshold - fatePoints} fate point${rules.pityThreshold - fatePoints === 1 ? '' : 's'} from a guaranteed pity key — even failed rolls count.`,
-        cta: 'Farm Keys',
+        cta: 'Farm Keys: harder rolls pay more Fate',
         act: () => nav('ctrl:FARM'),
       };
     }

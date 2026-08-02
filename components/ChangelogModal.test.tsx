@@ -2,6 +2,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { ChangelogRelease } from '../data/changelog';
+import type { FateCompensationState } from '../types';
 import { shouldAutoOpenAfterOnboarding } from '../utils/changelogModalState';
 import { resolveFocusRestorationTarget } from '../hooks/useFocusTrap';
 import { ChangelogModal, toggleExpandedRelease } from './ChangelogModal';
@@ -30,6 +31,15 @@ const releases: readonly ChangelogRelease[] = [
 
 const renderModal = (history: readonly ChangelogRelease[] = releases): string =>
   renderToStaticMarkup(<ChangelogModal releases={history} onClose={() => undefined} />);
+
+const pendingCompensation = (overrides: Partial<FateCompensationState> = {}): FateCompensationState => ({
+  releaseId: '2026-07-26-latest',
+  status: 'pending',
+  chaosKeys: 2,
+  pityKeys: 1,
+  fatePoints: 5,
+  ...overrides,
+});
 
 const releaseButton = (markup: string, id: string): string =>
   markup.match(new RegExp(`<button[^>]*id="changelog-release-toggle-${id}"[^>]*>`))?.[0] ?? '';
@@ -86,6 +96,40 @@ describe('ChangelogModal initial render', () => {
     expect(markup).not.toContain('Changed');
     expect(markup).not.toContain('Fixed');
     expect(markup).not.toContain('Balance');
+  });
+
+  it('shows exact pending compensation totals and all three explicit choices', () => {
+    const markup = renderToStaticMarkup(
+      <ChangelogModal
+        releases={releases}
+        onClose={() => undefined}
+        compensation={pendingCompensation()}
+        onResolveCompensation={() => undefined}
+      />,
+    );
+
+    expect(markup).toContain('2 missed Chaos Keys');
+    expect(markup).toContain('1 missed Standard Pity Key');
+    expect(markup).toContain('Resulting Fate balance: 5');
+    expect(markup).toContain('Continue without compensation');
+    expect(markup).toContain('Claim Chaos Keys only');
+    expect(markup).toContain('Claim full compensation');
+    expect(markup).toMatch(/permanent/i);
+  });
+
+  it('uses singular Key labels when pending totals are one', () => {
+    const markup = renderToStaticMarkup(
+      <ChangelogModal
+        releases={releases}
+        onClose={() => undefined}
+        compensation={pendingCompensation({ chaosKeys: 1, pityKeys: 2 })}
+        onResolveCompensation={() => undefined}
+      />,
+    );
+
+    expect(markup).toContain('1 missed Chaos Key');
+    expect(markup).not.toContain('1 missed Chaos Keys');
+    expect(markup).toContain('2 missed Standard Pity Keys');
   });
 });
 

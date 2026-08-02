@@ -164,6 +164,7 @@ const FateVisual: React.FC = () => {
            <span>Failed rolls grant <span className="text-red-400">Fate</span>.<br/>Bad luck is rewarded.</span>
         )}
       </div>
+        <span className="text-amber-300">Harder failed rolls award more Fate.</span>
     </div>
   );
 };

@@ -8,13 +8,14 @@ import {
   prepareCATaskCompletionActions,
 } from './GameContext';
 import { drawDice } from '../utils/seededRng';
-import { TableType, LogEntry } from '../types';
+import { TableType, LogEntry, type FailureFateAward } from '../types';
 import { isRollEntry } from '../utils/logEntry';
 import { XTREME_MILESTONE_INTERVAL, CHUNKED_MILESTONE_INTERVAL } from '../config/economy';
 import { isValidUnlock } from '../utils/gameEngine';
 import { ALL_CHUNKS, CHUNKED_START, chunkKey } from '../utils/chunkAdjacency';
 import { ALL_CA_TASKS } from '../data/caTasks';
 import type { KeyRollContext } from '../config/vanillaKeyEconomy';
+import { MAX_COUNTER, validateAndMigrateSave } from '../utils/saveSchema';
 
 /**
  * Tests for the core game reducer — every roll, unlock, ritual, level-up and
@@ -32,6 +33,7 @@ const roll = (over: Partial<{
   baseThreshold: number;
   threshold: number;
   source: string;
+  failureFate: FailureFateAward;
   context: KeyRollContext;
 }>) => ({
   type: 'ROLL_RESULT' as const,
@@ -43,6 +45,7 @@ const roll = (over: Partial<{
     baseThreshold: 50,
     threshold: 50,
     source: 'Test',
+    failureFate: 1 as FailureFateAward,
     ...over,
   },
 });
@@ -69,6 +72,16 @@ describe('ROLL_RESULT', () => {
     expect(s.keys).toBe(initialState.keys);
   });
 
+  it('adds the prepared weighted Fate award on failure', () => {
+    const previous = { ...base(), fatePoints: 10 };
+    const failed = gameReducer(previous, roll({
+      success: false,
+      failureFate: 3,
+    }));
+    expect(failed.fatePoints).toBe(13);
+    expect(failed.history.at(-1)?.meta?.fatePointsEarned).toBe(3);
+  });
+
   it('an omni roll grants both a special key and a standard key', () => {
     const s = gameReducer(base(), roll({ success: true, omni: true }));
     expect(s.specialKeys).toBe(initialState.specialKeys + 1);
@@ -84,6 +97,43 @@ describe('ROLL_RESULT', () => {
     expect(s.history.at(-1)).toMatchObject({
       type: 'PITY',
       meta: { fatePointsEarned: 1 },
+    });
+  });
+
+
+  it('preserves weighted Fate overflow after a pity key', () => {
+    const pity = gameReducer({ ...base(), fatePoints: 49 }, roll({
+      success: false,
+      pity: true,
+      failureFate: 3,
+    }));
+    expect(pity.keys).toBe(initialState.keys + 1);
+    expect(pity.fatePoints).toBe(2);
+    expect(pity.history.at(-1)?.meta?.fatePointsEarned).toBe(3);
+  });
+
+  it.each([10, 100])('records the active %i-Fate pity threshold for replay', (pityThreshold) => {
+    const pity = gameReducer({
+      ...base(),
+      gameModeId: 'custom',
+      customMode: {
+        pityEnabled: true,
+        pityThreshold,
+        omniChanceBase: 2,
+        ritualCostMultiplier: 1,
+        regionModifiers: false,
+      },
+      fatePoints: pityThreshold - 1,
+    }, roll({
+      success: false,
+      pity: true,
+      failureFate: 3,
+    }));
+
+    expect(pity.fatePoints).toBe(2);
+    expect(pity.history.at(-1)?.meta).toMatchObject({
+      fatePointsEarned: 3,
+      pityThreshold,
     });
   });
 
@@ -224,9 +274,9 @@ describe('ROLL_RESULT', () => {
       index === 1 ? max / 10 : max * 0.9;
     const start = { ...base(), activeBuff: 'LUCK' as const };
 
-    const firstAction = prepareKeyRollAction(start, 'First queued roll', 20, dice);
+    const firstAction = prepareKeyRollAction(start, 'First queued roll', 20, 1, dice);
     const first = prepareGameTransition(start, firstAction).state;
-    const secondAction = prepareKeyRollAction(first, 'Second queued roll', 20, dice);
+    const secondAction = prepareKeyRollAction(first, 'Second queued roll', 20, 1, dice);
     const second = prepareGameTransition(first, secondAction).state;
 
     expect(first.history.at(-1)?.type).toBe('ROLL_SUCCESS');
@@ -238,9 +288,9 @@ describe('ROLL_RESULT', () => {
     const dice = (_purpose: string, _index = 0, max = 100) => max;
     const start = { ...base(), fatePoints: 49 };
 
-    const firstAction = prepareKeyRollAction(start, 'First queued failure', 20, dice);
+    const firstAction = prepareKeyRollAction(start, 'First queued failure', 20, 1, dice);
     const first = prepareGameTransition(start, firstAction).state;
-    const secondAction = prepareKeyRollAction(first, 'Second queued failure', 20, dice);
+    const secondAction = prepareKeyRollAction(first, 'Second queued failure', 20, 1, dice);
     const second = prepareGameTransition(first, secondAction).state;
 
     expect(first.history.at(-1)?.type).toBe('PITY');
@@ -248,6 +298,20 @@ describe('ROLL_RESULT', () => {
     expect(second.history.at(-1)?.type).toBe('ROLL_FAIL');
     expect(second.fatePoints).toBe(1);
     expect(second.keys).toBe(start.keys + 1);
+  });
+
+  it('sets pity when a weighted award reaches the threshold, but not below it', () => {
+    const dice = (_purpose: string, _index = 0, max = 100) => max;
+    const reachesPity = prepareKeyRollAction(
+      { ...base(), fatePoints: 49 }, 'Weighted failure', 20, 3, dice,
+    );
+    const belowPity = prepareKeyRollAction(
+      { ...base(), fatePoints: 46 }, 'Weighted failure', 20, 3, dice,
+    );
+
+    expect(reachesPity.payload.pity).toBe(true);
+    expect(reachesPity.payload.failureFate).toBe(3);
+    expect(belowPity.payload.pity).toBe(false);
   });
 
   it('replays the same next seeded roll from identical restored state', () => {
@@ -280,12 +344,14 @@ describe('ROLL_RESULT', () => {
       restored,
       'Seeded replay',
       50,
+      1,
       diceFor(restored),
     );
     const resetAction = prepareKeyRollAction(
       reset,
       'Seeded replay',
       50,
+      1,
       diceFor(reset),
     );
 
@@ -371,6 +437,7 @@ describe('ROLL_RESULT — Vanilla key safety valve', () => {
       state,
       'Zulrah',
       99,
+      1,
       (purpose, index = 0, max = 100) => {
         draws.push({ purpose, index, max });
         return index === 0 ? 1500 : max;
@@ -402,6 +469,7 @@ describe('ROLL_RESULT — Vanilla key safety valve', () => {
       { ...vanillaState(), bossStandardKeysAwarded: { Zulrah: 2 } },
       'Zulrah',
       30,
+      1,
       () => {
         draws += 1;
         return 1;
@@ -695,6 +763,63 @@ describe('LEVEL_UP', () => {
     const s = gameReducer(base(), { type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.01 } });
     expect(s.chaosKeys).toBe(initialState.chaosKeys + 1);
   });
+
+  it('guarantees one Chaos Key at a skill milestone', () => {
+    const state = {
+      ...base(),
+      unlocks: {
+        ...initialState.unlocks,
+        levels: { ...initialState.unlocks.levels, Attack: 29 },
+      },
+    };
+    const milestone = gameReducer(state, {
+      type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 },
+    });
+
+    expect(milestone.chaosKeys).toBe(initialState.chaosKeys + 1);
+    expect(milestone.lastEvent?.meta).toMatchObject({
+      chaosKeysAwarded: 1,
+      chaosKeyAwarded: true,
+    });
+  });
+
+  it('stacks the random and guaranteed Chaos Key awards', () => {
+    const state = {
+      ...base(),
+      unlocks: {
+        ...initialState.unlocks,
+        levels: { ...initialState.unlocks.levels, Attack: 29 },
+      },
+    };
+    const doubleDrop = gameReducer(state, {
+      type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.01 },
+    });
+
+    expect(doubleDrop.chaosKeys).toBe(initialState.chaosKeys + 2);
+    expect(doubleDrop.lastEvent?.meta).toMatchObject({
+      chaosKeysAwarded: 2,
+      chaosKeyAwarded: true,
+    });
+  });
+
+  it('does not guarantee a Chaos Key outside a skill milestone', () => {
+    const state = {
+      ...base(),
+      unlocks: {
+        ...initialState.unlocks,
+        levels: { ...initialState.unlocks.levels, Attack: 30 },
+      },
+    };
+    const nonMilestone = gameReducer(state, {
+      type: 'LEVEL_UP', payload: { skill: 'Attack', chaosRoll: 0.5 },
+    });
+
+    expect(nonMilestone.chaosKeys).toBe(initialState.chaosKeys);
+    expect(nonMilestone.lastEvent?.meta).toMatchObject({
+      chaosKeysAwarded: 0,
+      chaosKeyAwarded: false,
+    });
+  });
 });
 
 // --- Xtreme Start milestone insurance ---------------------------------------
@@ -919,6 +1044,119 @@ describe('journal completion actions', () => {
 });
 
 // --- lifecycle --------------------------------------------------------------
+
+// --- fate compensation ------------------------------------------------------
+
+describe('RESOLVE_FATE_COMPENSATION', () => {
+  const pending = () => ({
+    ...base(),
+    keys: 10,
+    chaosKeys: 2,
+    fatePoints: 45,
+    fateCompensation: {
+      releaseId: '2026-08-02-weighted-fate',
+      status: 'pending' as const,
+      chaosKeys: 3,
+      pityKeys: 1,
+      fatePoints: 5,
+    },
+  });
+
+  it('starts fresh v4 runs with no legacy offer', () => {
+    expect(initialState.fateCompensation).toEqual({
+      releaseId: '2026-08-02-weighted-fate',
+      status: 'not_eligible',
+      chaosKeys: 0,
+      pityKeys: 0,
+      fatePoints: 0,
+    });
+  });
+
+  it('resolves no compensation without changing any balance', () => {
+    const previous = pending();
+    const next = gameReducer(previous, { type: 'RESOLVE_FATE_COMPENSATION', payload: 'none' });
+
+    expect(next).toMatchObject({ keys: 10, chaosKeys: 2, fatePoints: 45 });
+    expect(next.fateCompensation).toMatchObject({ status: 'none', choice: 'none' });
+    expect(next.history.at(-1)).toMatchObject({
+      type: 'COMPENSATION',
+      meta: {
+        choice: 'none',
+        chaosKeysAwarded: 0,
+        pityKeysAwarded: 0,
+        fatePointsAfter: 45,
+      },
+    });
+  });
+
+  it('resolves Chaos-only compensation without changing Standard Keys or Fate', () => {
+    const next = gameReducer(pending(), {
+      type: 'RESOLVE_FATE_COMPENSATION',
+      payload: 'chaos',
+    });
+
+    expect(next).toMatchObject({ keys: 10, chaosKeys: 5, fatePoints: 45 });
+    expect(next.fateCompensation).toMatchObject({ status: 'chaos', choice: 'chaos' });
+    expect(next.history.at(-1)?.meta).toMatchObject({
+      choice: 'chaos',
+      chaosKeysAwarded: 3,
+      pityKeysAwarded: 0,
+      fatePointsAfter: 45,
+    });
+  });
+
+  it('resolves full compensation atomically with the frozen Fate remainder', () => {
+    const next = gameReducer(pending(), {
+      type: 'RESOLVE_FATE_COMPENSATION',
+      payload: 'full',
+    });
+
+    expect(next).toMatchObject({ keys: 11, chaosKeys: 5, fatePoints: 5 });
+    expect(next.fateCompensation).toMatchObject({ status: 'full', choice: 'full' });
+    expect(next.history.at(-1)?.meta).toMatchObject({
+      choice: 'full',
+      chaosKeysAwarded: 3,
+      pityKeysAwarded: 1,
+      fatePointsAfter: 5,
+    });
+  });
+
+  it.each([
+    ['none', { keys: MAX_COUNTER, chaosKeys: MAX_COUNTER }, 0, 0, MAX_COUNTER, MAX_COUNTER],
+    ['chaos', { keys: MAX_COUNTER, chaosKeys: MAX_COUNTER - 2 }, 0, 2, MAX_COUNTER, MAX_COUNTER],
+    ['full', { keys: MAX_COUNTER - 1, chaosKeys: MAX_COUNTER - 2 }, 1, 2, MAX_COUNTER, MAX_COUNTER],
+  ] as const)('clamps %s compensation to counter headroom and leaves a save-safe state',
+    (choice, balances, pityKeysAwarded, chaosKeysAwarded, keys, chaosKeys) => {
+      const next = gameReducer({ ...pending(), ...balances, runId: initialState.runId }, {
+        type: 'RESOLVE_FATE_COMPENSATION',
+        payload: choice,
+      });
+
+      expect(next).toMatchObject({ keys, chaosKeys });
+      expect(next.history.at(-1)?.meta).toMatchObject({
+        choice,
+        pityKeysAwarded,
+        chaosKeysAwarded,
+      });
+      const { lastEvent: _lastEvent, ...persisted } = next;
+      expect(validateAndMigrateSave(persisted, initialState)).toMatchObject({ ok: true });
+    },
+  );
+
+  it('returns the unchanged resolved state on a second claim', () => {
+    const first = gameReducer(pending(), {
+      type: 'RESOLVE_FATE_COMPENSATION',
+      payload: 'full',
+    });
+    const second = gameReducer(first, {
+      type: 'RESOLVE_FATE_COMPENSATION',
+      payload: 'full',
+    });
+
+    expect(second).toBe(first);
+    expect(second.history.filter(entry => entry.type === 'COMPENSATION')).toHaveLength(1);
+  });
+});
 
 describe('lifecycle actions', () => {
   it('RESET returns to the initial state', () => {

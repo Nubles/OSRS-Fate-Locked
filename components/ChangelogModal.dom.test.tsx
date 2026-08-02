@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import React, { act, useEffect, useRef, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ChangelogRelease } from '../data/changelog';
+import type { FateCompensationChoice, FateCompensationState } from '../types';
 import { ChangelogModal } from './ChangelogModal';
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -67,6 +68,14 @@ const click = async (button: HTMLButtonElement): Promise<void> => {
   await act(async () => {
     button.click();
   });
+};
+
+const pendingCompensation: FateCompensationState = {
+  releaseId: '2026-07-26-latest',
+  status: 'pending',
+  chaosKeys: 2,
+  pityKeys: 1,
+  fatePoints: 5,
 };
 
 class RenderErrorBoundary extends React.Component<
@@ -182,6 +191,90 @@ describe('ChangelogModal linked notes', () => {
       'The RuneLite Plugin Hub update has been approved and is now live. View the merged Plugin Hub PR #14395.',
     );
     expect(host.textContent).toContain('Added note');
+  });
+});
+
+describe('ChangelogModal compensation choices', () => {
+  it('blocks every dismiss path while pending and emits each explicit choice once', async () => {
+    const onClose = vi.fn();
+    const choices: FateCompensationChoice[] = [];
+    const { host } = await mount(
+      <ChangelogModal
+        releases={releases}
+        onClose={onClose}
+        compensation={pendingCompensation}
+        onResolveCompensation={choice => choices.push(choice)}
+      />,
+    );
+
+    const headerClose = findCloseButton(host);
+    const footerClose = Array.from(host.querySelectorAll('button'))
+      .find(button => button.textContent === 'Got it') as HTMLButtonElement;
+    expect(headerClose.disabled).toBe(true);
+    expect(footerClose.disabled).toBe(true);
+    await click(headerClose);
+    await click(footerClose);
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    });
+    expect(onClose).not.toHaveBeenCalled();
+
+    for (const [label, choice] of [
+      ['Continue without compensation', 'none'],
+      ['Claim Chaos Keys only', 'chaos'],
+      ['Claim full compensation', 'full'],
+    ] as const) {
+      const button = Array.from(host.querySelectorAll('button'))
+        .find(candidate => candidate.textContent === label) as HTMLButtonElement;
+      await click(button);
+      expect(choices.at(-1)).toBe(choice);
+    }
+    expect(choices).toEqual(['none', 'chaos', 'full']);
+  });
+
+  it('restores close behavior after resolution and hides claim controls', async () => {
+    const onClose = vi.fn();
+    const { host, root } = await mount(
+      <ChangelogModal
+        releases={releases}
+        onClose={onClose}
+        compensation={pendingCompensation}
+        onResolveCompensation={() => undefined}
+      />,
+    );
+
+    await act(async () => {
+      root.render(
+        <ChangelogModal
+          releases={releases}
+          onClose={onClose}
+          compensation={{ ...pendingCompensation, status: 'full', choice: 'full' }}
+          onResolveCompensation={() => undefined}
+        />,
+      );
+    });
+
+    expect(host.textContent).not.toContain('Claim full compensation');
+    expect(findCloseButton(host).disabled).toBe(false);
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    });
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('renders no claim controls for a not-eligible offer', async () => {
+    const { host } = await mount(
+      <ChangelogModal
+        releases={releases}
+        onClose={() => undefined}
+        compensation={{ ...pendingCompensation, status: 'not_eligible' }}
+        onResolveCompensation={() => undefined}
+      />,
+    );
+
+    expect(host.textContent).not.toContain('Continue without compensation');
+    expect(host.textContent).not.toContain('Claim Chaos Keys only');
+    expect(host.textContent).not.toContain('Claim full compensation');
   });
 });
 

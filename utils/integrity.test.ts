@@ -171,6 +171,61 @@ describe('replayInvariants', () => {
     expect(final.successes).toBe(0);
   });
 
+  it('replays the exact weighted Fate award recorded on a failed roll', () => {
+    const { final } = replayInvariants([
+      fail({ meta: { fatePointsEarned: 3 } }),
+    ], 0);
+
+    expect(final.fatePoints).toBe(3);
+  });
+
+  it('uses the legacy +1 Fate fallback when a failed roll has no award metadata', () => {
+    const { final } = replayInvariants([fail()], 0);
+
+    expect(final.fatePoints).toBe(1);
+  });
+
+  it('preserves Fate overflow after a recorded weighted Pity roll', () => {
+    const history = [
+      ...Array.from({ length: 49 }, () => fail()),
+      mk({ type: 'PITY', message: 'Pity Key', meta: { fatePointsEarned: 3 } }),
+    ];
+
+    const { final, violations } = replayInvariants(history, 0);
+
+    expect(final.fatePoints).toBe(2);
+    expect(violations.some(v => v.kind === 'FATE_OVERFLOW')).toBe(false);
+  });
+
+  it.each([10, 100])('replays a valid custom %i-Fate pity threshold without false overflow', (pityThreshold) => {
+    const history = [
+      ...Array.from({ length: pityThreshold - 1 }, () => fail()),
+      mk({
+        type: 'PITY',
+        message: 'Pity Key',
+        meta: { fatePointsEarned: 3, pityThreshold },
+      }),
+    ];
+
+    const { final, violations } = replayInvariants(history, 0);
+
+    expect(final.fatePoints).toBe(2);
+    expect(violations.some(v => v.kind === 'FATE_OVERFLOW')).toBe(false);
+  });
+
+  it.each([9, 101, 12.5, Number.NaN])('falls back to the legacy 50-Fate cap for invalid pity threshold %s', (pityThreshold) => {
+    const history = [
+      ...Array.from({ length: 49 }, () => fail()),
+      mk({
+        type: 'PITY',
+        message: 'Pity Key',
+        meta: { fatePointsEarned: 3, pityThreshold },
+      }),
+    ];
+
+    expect(replayInvariants(history, 0).final.fatePoints).toBe(2);
+  });
+
   it('spends keys on an unlock', () => {
     const { final } = replayInvariants(
       [mk({ type: 'UNLOCK', message: 'Unlocked', meta: { cost: 1, costType: 'key' } })], 3,
@@ -198,6 +253,156 @@ describe('replayInvariants', () => {
     ).final;
     expect(transmute.keys).toBe(5);
     expect(transmute.specialKeys).toBe(1);
+  });
+
+  it('replays the exact Chaos Key metadata for a current level-up entry', () => {
+    const { final } = replayInvariants([
+      mk({
+        type: 'LEVEL_UP',
+        message: '2 Chaos Keys awarded!',
+        meta: { chaosKeysAwarded: 2 },
+      }),
+    ], 0);
+
+    expect(final.chaosKeys).toBe(2);
+  });
+
+  it('uses the legacy Chaos Key Drop message when level-up metadata is absent', () => {
+    const { final } = replayInvariants([
+      mk({ type: 'LEVEL_UP', message: 'Chaos Key Drop!' }),
+    ], 0);
+
+    expect(final.chaosKeys).toBe(1);
+  });
+
+  it.each(['ROLL_FAIL', 'ROLL_SUCCESS', 'ROLL_OMNI'] as const)(
+    'replays validated detected skill Chaos rewards on %s entries',
+    (type) => {
+      const { final } = replayInvariants([mk({
+        type,
+        message: 'Detected skill roll',
+        meta: {
+          detectorId: 'skill-level-v1',
+          chaosKeysAwarded: 2,
+        },
+      })], 0);
+
+      expect(final.chaosKeys).toBe(2);
+    },
+  );
+
+  it.each([-1, 1.5, Number.NaN, Number.POSITIVE_INFINITY])(
+    'ignores invalid detected skill Chaos award %s',
+    (chaosKeysAwarded) => {
+      const { final } = replayInvariants([fail({
+        meta: {
+          detectorId: 'skill-level-v1',
+          chaosKeysAwarded,
+        },
+      })], 0);
+
+      expect(final.chaosKeys).toBe(0);
+    },
+  );
+
+  it('does not apply Chaos metadata from an arbitrary non-skill roll', () => {
+    const { final } = replayInvariants([fail({
+      meta: {
+        detectorId: 'quest-widget-v1',
+        chaosKeysAwarded: 2,
+      },
+    })], 0);
+
+    expect(final.chaosKeys).toBe(0);
+  });
+
+  it('does not double-count level rewards merged onto their following roll', () => {
+    const { final } = replayInvariants([
+      mk({
+        type: 'LEVEL_UP',
+        message: '2 Chaos Keys awarded!',
+        meta: { chaosKeysAwarded: 2 },
+      }),
+      fail({
+        meta: {
+          skill: 'Attack',
+          level: 30,
+          chaosKeysAwarded: 2,
+        },
+      }),
+    ], 0);
+
+    expect(final.chaosKeys).toBe(2);
+  });
+
+  it('replays tampered Chaos metadata exactly so the chain check can expose the edit', () => {
+    const original = ensureChain([
+      mk({ type: 'LEVEL_UP', message: '2 Chaos Keys awarded!', meta: { chaosKeysAwarded: 2 } }),
+    ]);
+    const tampered = [{ ...original[0], meta: { chaosKeysAwarded: 20 } }];
+
+    expect(replayInvariants(tampered, 0).final.chaosKeys).toBe(20);
+    expect(verifyChain(tampered).ok).toBe(false);
+  });
+
+  it('replays full compensation awards and the recorded Fate remainder', () => {
+    const { final } = replayInvariants([mk({
+      type: 'COMPENSATION',
+      message: 'Fate compensation resolved: full',
+      meta: {
+        choice: 'full',
+        chaosKeysAwarded: 3,
+        pityKeysAwarded: 1,
+        fatePointsAfter: 5,
+      },
+    })], 0);
+
+    expect(final.keys).toBe(1);
+    expect(final.chaosKeys).toBe(3);
+    expect(final.fatePoints).toBe(5);
+  });
+
+  it('replays Chaos-only compensation without replacing Fate', () => {
+    const { final } = replayInvariants([
+      fail(),
+      fail(),
+      mk({
+        type: 'COMPENSATION',
+        message: 'Fate compensation resolved: chaos',
+        meta: {
+          choice: 'chaos',
+          chaosKeysAwarded: 2,
+          pityKeysAwarded: 0,
+          fatePointsAfter: 2,
+        },
+      }),
+    ], 0);
+
+    expect(final.keys).toBe(0);
+    expect(final.chaosKeys).toBe(2);
+    expect(final.fatePoints).toBe(2);
+  });
+
+  it('changes replayed balances when compensation award metadata is tampered', () => {
+    const entry = mk({
+      type: 'COMPENSATION',
+      message: 'Fate compensation resolved: full',
+      meta: {
+        choice: 'full',
+        chaosKeysAwarded: 3,
+        pityKeysAwarded: 1,
+        fatePointsAfter: 5,
+      },
+    });
+    const expected = replayInvariants([entry], 0).final;
+    const tampered = replayInvariants([{
+      ...entry,
+      meta: { ...entry.meta, chaosKeysAwarded: 30 },
+    }], 0).final;
+
+    expect(expected).toMatchObject({ keys: 1, chaosKeys: 3, fatePoints: 5 });
+    expect(tampered).not.toEqual(expected);
+    expect(tampered.chaosKeys).toBe(30);
   });
 
   it('flags negative keys when over-spending', () => {

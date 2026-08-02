@@ -573,6 +573,7 @@ describe('ordinary save recovery', () => {
           baseThreshold: 50,
           threshold: 50,
           source: 'Session-start fixture',
+          failureFate: 1,
         },
       },
     );
@@ -616,7 +617,7 @@ describe('ordinary save recovery', () => {
     const rewritten = storage.values.get('profile')!;
     expect(rewritten).not.toBe(legacyData);
     expect(JSON.parse(rewritten)).toMatchObject({
-      version: 3,
+      version: 4,
       userNotes: { goal: 'legacy migration' },
     });
     expect(getPendingSave('profile')).toBeNull();
@@ -728,6 +729,38 @@ describe('run identity and revision', () => {
   });
 });
 
+
+describe('level-up feedback integration', () => {
+  it('keeps the exact Chaos reward metadata on the final observable event', () => {
+    const storageKey = 'level-up-feedback';
+    const seeded = {
+      ...structuredClone(initialState),
+      unlocks: {
+        ...initialState.unlocks,
+        levels: { ...initialState.unlocks.levels, Attack: 29 },
+      },
+    };
+    localStorage.setItem(storageKey, serializeCurrent(seeded));
+    const random = vi.spyOn(Math, 'random')
+      .mockReturnValueOnce(0.01)
+      .mockReturnValue(0.99);
+    let current: Game | undefined;
+
+    render(
+      <GameProvider storageKey={storageKey}>
+        <GameCapture onGame={game => { current = game; }} />
+      </GameProvider>,
+    );
+
+    act(() => current?.levelUpSkill('Attack'));
+
+    expect(current?.lastEvent).toMatchObject({
+      type: 'ROLL_FAIL',
+      meta: { chaosKeysAwarded: 2, chaosKeyAwarded: true },
+    });
+    expect(random).toHaveBeenCalledTimes(3);
+  });
+});
 describe('quest completion integration', () => {
   type ProviderSnapshot = {
     state: GameState;
@@ -772,6 +805,7 @@ describe('quest completion integration', () => {
     id: string,
     source: string,
     threshold: number,
+    failureFate = 1,
   ) => {
     expect(after.state.runRevision).toBe(before.state.runRevision + 2);
     expect(after.state.unlocks.quests).toEqual([...before.state.unlocks.quests, id]);
@@ -790,7 +824,7 @@ describe('quest completion integration', () => {
         baseThreshold: threshold,
         threshold,
         source,
-        fatePointsEarned: 1,
+        fatePointsEarned: failureFate,
       },
     });
     expect(after.state).toMatchObject({
@@ -799,7 +833,7 @@ describe('quest completion integration', () => {
       chaosKeys: before.state.chaosKeys,
       bossStandardKeysAwarded: before.state.bossStandardKeysAwarded,
       clueStandardKeysAwarded: before.state.clueStandardKeysAwarded,
-      fatePoints: before.state.fatePoints + 1,
+      fatePoints: before.state.fatePoints + failureFate,
       activeBuff: before.state.activeBuff,
     });
     expect(stableStateProjection(after.state, true)).toEqual(
@@ -920,6 +954,7 @@ describe('quest completion integration', () => {
       'In Search of Knowledge',
       'Quest (Experienced)',
       75,
+      2,
     );
 
     let repeated: ReturnType<Game['completeQuest']> | undefined;
@@ -985,6 +1020,7 @@ describe('detected progress reconciliation', () => {
         baseThreshold: 75,
         threshold: 75,
         source: 'Quest (Experienced)',
+        failureFate: 2,
         meta: {
           fateEventId: 'evt-1',
           detectorId: 'quest-widget-v1',
@@ -1005,7 +1041,7 @@ describe('detected progress reconciliation', () => {
     const action = prepareDetectedEventAcceptanceAction(
       initial,
       { kind: 'QUEST', questId: 'Dragon Slayer I' },
-      { source: 'Quest (Experienced)', threshold: 75, target: 'Dragon Slayer I' },
+      { source: 'Quest (Experienced)', threshold: 75, failureFate: 2, target: 'Dragon Slayer I' },
       () => 999,
       { fateEventId: 'evt-atomic', detectorId: 'quest-widget-v1', detectorVersion: 1 },
       { runId: 'run-1', account: 'Nubles', runRevision: 11 },
@@ -1018,13 +1054,90 @@ describe('detected progress reconciliation', () => {
     expect(next.history[0].meta?.fateEventId).toBe('evt-atomic');
   });
 
+  it('grants a detected skill milestone with one independent chaos draw', () => {
+    const initial = {
+      ...start(),
+      runId: 'run-1',
+      runRevision: 11,
+      linkedAccount: 'Nubles',
+      unlocks: {
+        ...start().unlocks,
+        levels: { ...start().unlocks.levels, Attack: 29 },
+      },
+    };
+    let draws = 0;
+    const action = prepareDetectedEventAcceptanceAction(
+      initial,
+      { kind: 'SKILL_LEVEL', skill: 'Attack', level: 30 },
+      { source: 'Attack Level 30', threshold: 6, failureFate: 2, target: 'Attack Level 30' },
+      (_purpose, _index, max = 100) => {
+        draws += 1;
+        return max;
+      },
+      { fateEventId: 'evt-skill-30', detectorId: 'skill-level-v1', detectorVersion: 1 },
+      { runId: 'run-1', account: 'Nubles', runRevision: 11 },
+    );
+    expect(draws).toBe(3);
+    const next = gameReducerForTest(initial, action);
+    expect(draws).toBe(3);
+    expect(next.unlocks.levels.Attack).toBe(30);
+    expect(next.chaosKeys).toBe(initial.chaosKeys + 1);
+    expect(next.history).toHaveLength(1);
+    expect(next.history[0].type).toBe('ROLL_FAIL');
+  });
+
+  it('awards every crossed detected skill milestone plus one independent chaos draw atomically', () => {
+    const initial = {
+      ...start(),
+      runId: 'run-1',
+      runRevision: 11,
+      linkedAccount: 'Nubles',
+      unlocks: {
+        ...start().unlocks,
+        levels: { ...start().unlocks.levels, Attack: 29 },
+      },
+    };
+    const draws: Array<{ purpose: string; index: number }> = [];
+    const action = prepareDetectedEventAcceptanceAction(
+      initial,
+      { kind: 'SKILL_LEVEL', skill: 'Attack', level: 41 },
+      { source: 'Attack Level 41', threshold: 8.2, failureFate: 3, target: 'Attack Level 41' },
+      (purpose, index = 0, max = 100) => {
+        draws.push({ purpose, index });
+        return purpose === 'detected-skill-chaos' ? 1 : max;
+      },
+      { fateEventId: 'evt-skill-41', detectorId: 'skill-level-v1', detectorVersion: 1 },
+      { runId: 'run-1', account: 'Nubles', runRevision: 11 },
+    );
+
+    expect(draws).toEqual([
+      { purpose: 'detected-skill-chaos', index: 0 },
+      { purpose: 'roll', index: 0 },
+      { purpose: 'roll', index: 1 },
+    ]);
+
+    const next = gameReducerForTest(initial, action);
+
+    expect(next).toMatchObject({
+      runRevision: 12,
+      chaosKeys: initial.chaosKeys + 3,
+      unlocks: { levels: { Attack: 41 } },
+    });
+    expect(next.history.at(-1)?.meta).toMatchObject({
+      chaosKeysAwarded: 3,
+      guaranteedChaosKeysAwarded: 2,
+      randomChaosKeysAwarded: 1,
+    });
+    expect(draws).toHaveLength(3);
+  });
+
   it('cannot partially reconcile when roll preparation fails', () => {
     const initial = start();
 
     expect(() => prepareDetectedEventAcceptanceAction(
       initial,
       { kind: 'QUEST', questId: 'Dragon Slayer I' },
-      { source: 'Quest (Experienced)', threshold: 75, target: 'Dragon Slayer I' },
+      { source: 'Quest (Experienced)', threshold: 75, failureFate: 2, target: 'Dragon Slayer I' },
       () => { throw new Error('rng unavailable'); },
       { fateEventId: 'evt-failed' },
       { runId: initial.runId, account: 'Nubles', runRevision: 0 },
@@ -1048,7 +1161,7 @@ describe('detected progress reconciliation', () => {
     const action = prepareDetectedEventAcceptanceAction(
       original,
       { kind: 'QUEST', questId: 'Dragon Slayer I' },
-      { source: 'Quest (Experienced)', threshold: 75, target: 'Dragon Slayer I' },
+      { source: 'Quest (Experienced)', threshold: 75, failureFate: 2, target: 'Dragon Slayer I' },
       () => 999,
       { fateEventId: 'evt-stale' },
       { runId: 'run-1', account: 'Nubles', runRevision: 11 },

@@ -1,4 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
+// @vitest-environment jsdom
+
+import React from 'react';
+import { act, cleanup, render } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   SaveAuthorizationError,
   SaveOwnershipConflictError,
@@ -7,6 +11,14 @@ import { parseAndMigrateSave } from '../utils/saveSchema';
 import { serializeCurrent } from '../utils/gamePersistence';
 import type { SaveWriteAuthorization } from '../utils/profileWriterLease';
 import * as GameContext from './GameContext';
+import {
+  getPendingSave,
+  resetPendingSavesForTest,
+} from '../utils/pendingSaves';
+import {
+  writerLeaseKey,
+  WRITER_LEASE_ARBITRATION_MS,
+} from '../utils/profileWriterLease';
 
 type DurableWriter = (
   storage: Pick<Storage, 'setItem'>,
@@ -106,6 +118,7 @@ describe('roll history persistence', () => {
           baseThreshold: 8.2,
           threshold: 9.2,
           source: 'Attack Level 41',
+          failureFate: 2,
         },
       },
     );
@@ -143,5 +156,97 @@ describe('roll history persistence', () => {
     expect(parsed.state.history[0]).toMatchObject({ rollValue: 8, threshold: 9 });
     expect(parsed.state.history[0]).not.toHaveProperty('baseThreshold');
     expect(parsed.state.history[0].meta).toBeUndefined();
+  });
+});
+
+describe('forced profile eviction persistence', () => {
+  const storageKey = 'FATE_PROFILE_target';
+  const values = new Map<string, string>();
+  const baseWrites: string[] = [];
+  let pendingObservedAtRelease: ReturnType<typeof getPendingSave> = null;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    values.clear();
+    baseWrites.length = 0;
+    pendingObservedAtRelease = null;
+    resetPendingSavesForTest();
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        if (key === storageKey) baseWrites.push(value);
+        values.set(key, value);
+      },
+      removeItem: (key: string) => {
+        if (key === writerLeaseKey(storageKey)) {
+          pendingObservedAtRelease = getPendingSave(storageKey);
+        }
+        values.delete(key);
+      },
+      clear: () => values.clear(),
+    });
+  });
+
+  afterEach(() => {
+    cleanup();
+    resetPendingSavesForTest();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it('stages and blocks the newest snapshot before releasing ownership and prevents later writes', async () => {
+    type Game = ReturnType<typeof GameContext.useGame>;
+    let current: Game | undefined;
+    const Capture = ({ onGame }: { onGame: (game: Game) => void }) => {
+      onGame(GameContext.useGame());
+      return null;
+    };
+    render(React.createElement(
+      GameContext.GameProvider,
+      {
+        storageKey,
+        leaseOptions: { ownerId: 'evicted-tab' },
+        children: React.createElement(Capture, {
+          onGame: (game: Game) => { current = game; },
+        }),
+      },
+    ));
+    const game = () => {
+      if (!current) throw new Error('Game provider did not initialize');
+      return current;
+    };
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(WRITER_LEASE_ARBITRATION_MS);
+    });
+    expect(game().saveOwnershipStatus).toBe('owner');
+
+    act(() => {
+      game().saveNote('latest', 'newest snapshot');
+      game().stageForProfileEviction();
+    });
+
+    const pending = getPendingSave(storageKey);
+    expect(pending).toMatchObject({
+      status: 'saving',
+      reason: 'ownership_conflict',
+    });
+    expect(JSON.parse(pending?.data ?? '{}').userNotes.latest).toBe('newest snapshot');
+    expect(pendingObservedAtRelease).toMatchObject({
+      reason: 'ownership_conflict',
+    });
+    expect(values.has(writerLeaseKey(storageKey))).toBe(false);
+
+    act(() => {
+      game().saveNote('later', 'must not write');
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1_000);
+    });
+
+    expect(game().retrySave()).toBe(false);
+    expect(baseWrites).toEqual([]);
+    expect(getPendingSave(storageKey)?.reason).toBe('ownership_conflict');
   });
 });

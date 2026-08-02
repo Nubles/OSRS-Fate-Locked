@@ -5,6 +5,8 @@ import {
   EARN_METHODS, KEY_TYPES, SPEND_TABLES, RITUALS,
   SKILLS_TIER_CAP, LEVEL_ROLL_MAX, earnRange,
   VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, vanillaBossKeySchedule,
+  FAILURE_FATE_BY_SOURCE, SKILL_CHAOS_MILESTONES,
+  failureFateForSkillLevel, failureFateForSource, isSkillChaosMilestone,
 } from './economy';
 import { BRUTUS_BOSS_NAME } from './vanillaKeyEconomy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
@@ -48,6 +50,49 @@ describe('economy ↔ engine consistency', () => {
     expect(LEVEL_ROLL_MAX).toBe(19.8);
     expect(LEVEL_ROLL_MAX).toBe(skillLevelKeyChance(99));
     expect(lvl?.tiers[0].rateLabel).toBe('Level ÷ 5 (up to 19.8% at level 99)');
+  });
+
+  it('awards failure Fate by the approved skill-level bands', () => {
+    expect([
+      failureFateForSkillLevel(2),
+      failureFateForSkillLevel(19),
+      failureFateForSkillLevel(20),
+      failureFateForSkillLevel(79),
+      failureFateForSkillLevel(80),
+      failureFateForSkillLevel(99),
+    ]).toEqual([1, 1, 2, 2, 3, 3]);
+  });
+
+  it('awards failure Fate for every fixed source and defaults dynamic or custom sources conservatively', () => {
+    const expected: ReadonlyArray<readonly [DropSource, 1 | 2 | 3]> = [
+      [DropSource.QUEST_NOVICE, 1], [DropSource.QUEST_INTERMEDIATE, 1], [DropSource.QUEST_EXPERIENCED, 2], [DropSource.QUEST_MASTER, 3], [DropSource.QUEST_GRANDMASTER, 1],
+      [DropSource.DIARY_EASY, 1], [DropSource.DIARY_MEDIUM, 1], [DropSource.DIARY_HARD, 2], [DropSource.DIARY_ELITE, 3],
+      [DropSource.CA_EASY, 1], [DropSource.CA_MEDIUM, 1], [DropSource.CA_HARD, 2], [DropSource.CA_ELITE, 2], [DropSource.CA_MASTER, 3], [DropSource.CA_GRANDMASTER, 3],
+      [DropSource.CLUE_BEGINNER, 1], [DropSource.CLUE_EASY, 1], [DropSource.CLUE_MEDIUM, 1], [DropSource.CLUE_HARD, 2], [DropSource.CLUE_ELITE, 2], [DropSource.CLUE_MASTER, 3],
+      [DropSource.SLAYER_BEGINNER, 1], [DropSource.SLAYER_MAZCHNA, 1], [DropSource.SLAYER_VANNAKA, 1], [DropSource.SLAYER_CHAELDAR, 1], [DropSource.SLAYER_KONAR, 2], [DropSource.SLAYER_NIEVE, 2], [DropSource.SLAYER_KRYSTILIA, 2], [DropSource.SLAYER_DURADEL, 2], [DropSource.SLAYER_BOSS, 3],
+      [DropSource.BOSS_LOW, 1], [DropSource.BOSS_MID, 2], [DropSource.BOSS_HIGH, 2], [DropSource.RAID, 3], [DropSource.ACTIVITY_MINIGAME, 1], [DropSource.PET, 1], [DropSource.COLLECTION_LOG, 1],
+    ];
+
+    for (const [source, award] of expected) {
+      expect(failureFateForSource(source), `failure Fate for ${source}`).toBe(award);
+    }
+    expect(failureFateForSource(DropSource.LEVEL_UP)).toBe(1);
+    expect(failureFateForSource(DropSource.CUSTOM)).toBe(1);
+  });
+
+  it('maps every non-guaranteed documented source explicitly and displays its failure Fate', () => {
+    for (const tier of fixedTiers) {
+      if (tier.rate !== 100) {
+        expect(Object.hasOwn(FAILURE_FATE_BY_SOURCE, tier.source!), `missing explicit failure Fate for ${tier.source}`).toBe(true);
+      }
+      expect(tier.fateOnFailure).toBe(failureFateForSource(tier.source!));
+    }
+  });
+
+  it('defines Chaos milestones exactly and recognizes only milestone levels', () => {
+    expect(SKILL_CHAOS_MILESTONES).toEqual([30, 40, 50, 60, 70, 80, 90, 99]);
+    expect(isSkillChaosMilestone(70)).toBe(true);
+    expect(isSkillChaosMilestone(79)).toBe(false);
   });
 
   it('earnRange returns the min/max of a method’s fixed tiers', () => {

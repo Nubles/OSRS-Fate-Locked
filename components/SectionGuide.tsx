@@ -78,6 +78,7 @@ export const GUIDES: Record<string, Guide> = {
     bullets: [
       'Roll slayer tasks, clue scrolls and other sources for a chance at a key.',
       'Higher-effort content has better key odds.',
+      'Harder failed rolls award more Fate.',
       'Fate Points build on failed rolls; max them for a guaranteed pity key.',
     ],
   },
