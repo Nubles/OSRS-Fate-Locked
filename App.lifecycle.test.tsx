@@ -7,8 +7,10 @@ import userEvent from '@testing-library/user-event';
 const PROFILE_ID = 'changelog-lifecycle-profile';
 const values = new Map<string, string>();
 let failedWriteKey: string | null = null;
-const storage: Pick<Storage, 'clear' | 'getItem' | 'removeItem' | 'setItem'> = {
+const storage: Pick<Storage, 'clear' | 'length' | 'key' | 'getItem' | 'removeItem' | 'setItem'> = {
   clear: () => values.clear(),
+  get length() { return values.size; },
+  key: index => [...values.keys()][index] ?? null,
   getItem: key => values.get(key) ?? null,
   removeItem: key => { values.delete(key); },
   setItem: (key, value) => {
@@ -95,7 +97,7 @@ describe('App changelog lifecycle', () => {
     expect(screen.queryByRole('dialog', { name: "What's New" })).toBeNull();
 
     for (let step = 0; step < 4; step += 1) {
-      await user.click(screen.getByRole('button', { name: 'Next' }));
+      await user.click(await screen.findByRole('button', { name: 'Next' }));
     }
     await user.click(screen.getByRole('button', { name: 'Enter The Void' }));
 
@@ -115,7 +117,7 @@ describe('App changelog lifecycle', () => {
     render(<App />);
 
     for (let step = 0; step < 4; step += 1) {
-      await user.click(screen.getByRole('button', { name: 'Next' }));
+      await user.click(await screen.findByRole('button', { name: 'Next' }));
     }
     await user.click(screen.getByRole('button', { name: 'Enter The Void' }));
 
@@ -167,7 +169,7 @@ describe('App changelog lifecycle', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    const settings = screen.getByRole('button', {
+    const settings = await screen.findByRole('button', {
       name: 'Settings & save tools',
     });
     await user.click(settings);
@@ -190,7 +192,7 @@ describe('App changelog lifecycle', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    const paletteTrigger = screen.getByTitle(/Command palette/i);
+    const paletteTrigger = await screen.findByTitle(/Command palette/i);
     await user.click(paletteTrigger);
     await user.type(
       screen.getByPlaceholderText(/Jump to a tab, tool or action/i),

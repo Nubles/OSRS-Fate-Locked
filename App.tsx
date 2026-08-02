@@ -1058,12 +1058,24 @@ const GameLayout = () => {
   );
 };
 
+const ProfileEvictionBridge: React.FC<{ profileId: string }> = ({ profileId }) => {
+  const { registerProfileEvictionHandler } = useProfiles();
+  const { stageForProfileEviction } = useGame();
+
+  useEffect(() => registerProfileEvictionHandler(removedProfileId => {
+    if (removedProfileId === profileId) stageForProfileEviction();
+  }), [profileId, registerProfileEvictionHandler, stageForProfileEviction]);
+
+  return null;
+};
+
 /** Bridge reads profile context and passes storageKey to GameProvider.
  *  key={activeProfileId} forces a clean remount when switching profiles. */
 const GameProviderBridge: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { activeProfileId, storageKeyForActiveProfile } = useProfiles();
   return (
     <GameProvider key={activeProfileId} storageKey={storageKeyForActiveProfile}>
+      <ProfileEvictionBridge profileId={activeProfileId} />
       {children}
     </GameProvider>
   );
