@@ -34,6 +34,8 @@ describe('authored changelog releases', () => {
     const balanceNotes = weightedFate?.sections.balance?.join(' ');
     expect(balanceNotes).toMatch(/\+1\/\+2\/\+3 Fate/);
     expect(balanceNotes).toMatch(/overflow/i);
+    expect(balanceNotes).toMatch(/active pity threshold/i);
+    expect(balanceNotes).not.toMatch(/50 Fate/i);
     expect(balanceNotes).toMatch(/guaranteed Chaos/i);
     expect(balanceNotes).toMatch(/independent 2%/i);
   });

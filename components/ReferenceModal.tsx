@@ -528,7 +528,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     </div>
                                     <p className="text-xs text-gray-400 leading-relaxed">
                                         {rules.pityEnabled ? (
-                                          <>{rules.pityThreshold} Fate grants 1 Guaranteed Key; overflow carries forward.<br/><br/>Any successful roll resets your Fate. Easy / Medium: +1 Fate; Hard / Elite: +2 Fate; Master / Grandmaster: +3 Fate.</>
+                                          <>{rules.pityThreshold} Fate grants 1 Guaranteed Key; overflow carries forward.<br/><br/>Any successful roll resets your Fate. Combat Achievements: Easy / Medium: +1 Fate; Hard / Elite: +2 Fate; Master / GM: +3 Fate.</>
                                         ) : (
                                           <span className="text-red-400">Disabled in {activeMode.name} mode — there is no safety net. Failed rolls only build Fate for the Altar.</span>
                                         )}

@@ -729,6 +729,38 @@ describe('run identity and revision', () => {
   });
 });
 
+
+describe('level-up feedback integration', () => {
+  it('keeps the exact Chaos reward metadata on the final observable event', () => {
+    const storageKey = 'level-up-feedback';
+    const seeded = {
+      ...structuredClone(initialState),
+      unlocks: {
+        ...initialState.unlocks,
+        levels: { ...initialState.unlocks.levels, Attack: 29 },
+      },
+    };
+    localStorage.setItem(storageKey, serializeCurrent(seeded));
+    const random = vi.spyOn(Math, 'random')
+      .mockReturnValueOnce(0.01)
+      .mockReturnValue(0.99);
+    let current: Game | undefined;
+
+    render(
+      <GameProvider storageKey={storageKey}>
+        <GameCapture onGame={game => { current = game; }} />
+      </GameProvider>,
+    );
+
+    act(() => current?.levelUpSkill('Attack'));
+
+    expect(current?.lastEvent).toMatchObject({
+      type: 'ROLL_FAIL',
+      meta: { chaosKeysAwarded: 2, chaosKeyAwarded: true },
+    });
+    expect(random).toHaveBeenCalledTimes(3);
+  });
+});
 describe('quest completion integration', () => {
   type ProviderSnapshot = {
     state: GameState;

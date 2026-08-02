@@ -28,7 +28,7 @@ import {
   type BackupWriteResult,
   type ImportResult,
 } from '../utils/gamePersistence';
-import { CURRENT_SAVE_VERSION, parseAndMigrateSave, validateAndMigrateSave } from '../utils/saveSchema';
+import { CURRENT_SAVE_VERSION, MAX_COUNTER, parseAndMigrateSave, validateAndMigrateSave } from '../utils/saveSchema';
 import { showToast } from '../utils/toast';
 import { LEGACY_FATE_COMPENSATION_ID } from '../utils/fateCompensation';
 import { normalizeAccountName } from '../services/fateEventProtocol';
@@ -693,8 +693,12 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       if (offer.status !== 'pending') return state;
 
       const choice = action.payload;
-      const chaosKeysAwarded = choice === 'none' ? 0 : offer.chaosKeys;
-      const pityKeysAwarded = choice === 'full' ? offer.pityKeys : 0;
+      const chaosKeysAwarded = choice === 'none'
+        ? 0
+        : Math.min(offer.chaosKeys, Math.max(0, MAX_COUNTER - state.chaosKeys));
+      const pityKeysAwarded = choice === 'full'
+        ? Math.min(offer.pityKeys, Math.max(0, MAX_COUNTER - state.keys))
+        : 0;
       const fatePointsAfter = choice === 'full' ? offer.fatePoints : state.fatePoints;
       const log: LogEntry = {
         id: generateId(),
@@ -1693,8 +1697,17 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     // Pre-compute RNG outside reducer to maintain reducer purity
     const chaosRoll = nextFloat('levelup');
     const prepared = prepareLevelUpActions(stateRef.current, skill, chaosRoll, nextDice);
-    commitAction(prepared.levelAction);
-    commitAction(prepared.rewardAction);
+    const levelState = commitAction(prepared.levelAction);
+    const levelUpMeta = levelState.lastEvent?.type === 'LEVEL_UP'
+      ? levelState.lastEvent.meta
+      : undefined;
+    commitAction({
+      ...prepared.rewardAction,
+      payload: {
+        ...prepared.rewardAction.payload,
+        meta: { ...prepared.rewardAction.payload.meta, ...levelUpMeta },
+      },
+    });
   }, [commitAction, nextDice, nextFloat]);
 
   const acceptDetectedEvent = useCallback((

@@ -15,6 +15,7 @@ import { isValidUnlock } from '../utils/gameEngine';
 import { ALL_CHUNKS, CHUNKED_START, chunkKey } from '../utils/chunkAdjacency';
 import { ALL_CA_TASKS } from '../data/caTasks';
 import type { KeyRollContext } from '../config/vanillaKeyEconomy';
+import { MAX_COUNTER, validateAndMigrateSave } from '../utils/saveSchema';
 
 /**
  * Tests for the core game reducer — every roll, unlock, ritual, level-up and
@@ -1093,6 +1094,28 @@ describe('RESOLVE_FATE_COMPENSATION', () => {
       fatePointsAfter: 5,
     });
   });
+
+  it.each([
+    ['none', { keys: MAX_COUNTER, chaosKeys: MAX_COUNTER }, 0, 0, MAX_COUNTER, MAX_COUNTER],
+    ['chaos', { keys: MAX_COUNTER, chaosKeys: MAX_COUNTER - 2 }, 0, 2, MAX_COUNTER, MAX_COUNTER],
+    ['full', { keys: MAX_COUNTER - 1, chaosKeys: MAX_COUNTER - 2 }, 1, 2, MAX_COUNTER, MAX_COUNTER],
+  ] as const)('clamps %s compensation to counter headroom and leaves a save-safe state',
+    (choice, balances, pityKeysAwarded, chaosKeysAwarded, keys, chaosKeys) => {
+      const next = gameReducer({ ...pending(), ...balances, runId: initialState.runId }, {
+        type: 'RESOLVE_FATE_COMPENSATION',
+        payload: choice,
+      });
+
+      expect(next).toMatchObject({ keys, chaosKeys });
+      expect(next.history.at(-1)?.meta).toMatchObject({
+        choice,
+        pityKeysAwarded,
+        chaosKeysAwarded,
+      });
+      const { lastEvent: _lastEvent, ...persisted } = next;
+      expect(validateAndMigrateSave(persisted, initialState)).toMatchObject({ ok: true });
+    },
+  );
 
   it('returns the unchanged resolved state on a second claim', () => {
     const first = gameReducer(pending(), {

@@ -37,9 +37,7 @@ describe('ReferenceModal Vanilla policy', () => {
     expect(drops).toContain('30, 40, 50, 60, 70, 80, 90, 99');
     expect(drops).toContain('separate 2% Chaos chance on every level');
     expect(drops).toContain('overflow carries forward');
-    expect(drops).toContain('Easy / Medium: +1 Fate');
-    expect(drops).toContain('Hard / Elite: +2 Fate');
-    expect(drops).toContain('Master / Grandmaster: +3 Fate');
+    expect(drops).toContain('Combat Achievements: Easy / Medium: +1 Fate; Hard / Elite: +2 Fate; Master / GM: +3 Fate.');
     expect(core).toContain('Failed rolls award +1 to +3 Fate by difficulty.');
     expect(economy).toContain('you would gain +3 Fate');
     expect(economy).toContain('Pity conversions keep any Fate overflow.');

@@ -25,7 +25,7 @@ export const CHANGELOG_RELEASES = [
     sections: {
       balance: [
         'Failed rolls now award +1/+2/+3 Fate based on the activity tier.',
-        'Pity Keys still cost 50 Fate, and any Fate overflow remains on the fresh bar.',
+        'Pity Keys use the active pity threshold, and any Fate overflow carries onto the fresh bar.',
         'Skill levels 30, 40, 50, 60, 70, 80, 90, and 99 now award a guaranteed Chaos Key.',
         'The independent 2% Chaos Key chance on skill levels is unchanged and can stack with a guaranteed milestone Key.',
       ],
