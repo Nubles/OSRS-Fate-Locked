@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style>
+    html, body { margin: 0; overflow: hidden; width: 512px; height: 512px; }
+    body {
+      display: grid;
+      place-items: center;
+      background: #161616;
+    }
+    .key-tile {
+      display: grid;
+      width: 420px;
+      height: 420px;
+      place-items: center;
+      border-radius: 74px;
+      background: linear-gradient(145deg, #d97706, #78350f);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), 0 16px 34px rgba(0, 0, 0, .45);
+    }
+    .key-tile img {
+      width: 275px;
+      height: 275px;
+      object-fit: contain;
+      filter: drop-shadow(0 14px 12px rgba(0, 0, 0, .62));
+    }
+  </style>
+</head>
+<body>
+  <div class="key-tile"><img src="./crystal-key.png" alt="Crystal key"></div>
+</body>
+</html>
