@@ -2,7 +2,7 @@ import { CUSTOM_RULE_BOUNDS, type GameModeRules } from '../config/gameModes';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { EQUIPMENT_SLOTS } from '../data/items';
 import { canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
-import type { GameState, LogEntry, RivalState, UnlockState } from '../types';
+import type { FateCompensationState, GameState, LogEntry, RivalState, UnlockState } from '../types';
 import { migrateClogIds } from './clogIdMigrations';
 import { migrateCompletedTaskIds } from './taskIdMigrations';
 import {
@@ -12,8 +12,9 @@ import {
 } from './vanillaKeyProgress';
 import { vanillaBossKeyStage } from '../config/vanillaKeyEconomy';
 
-/** Version 3 strictly validates persisted Vanilla key-progression counters. */
-export const CURRENT_SAVE_VERSION = 3;
+import { calculateLegacyFateCompensation, LEGACY_FATE_COMPENSATION_ID } from './fateCompensation';
+/** Version 4 freezes and strictly validates one-time Fate compensation. */
+export const CURRENT_SAVE_VERSION = 4;
 const MIN_SUPPORTED_SAVE_VERSION = 1;
 export const MAX_SAVE_BYTES = 5 * 1024 * 1024;
 export const MAX_HISTORY_ENTRIES = 100_000;
@@ -303,7 +304,7 @@ const normalizeUnlocks = (
   }
   const inspected = inspectRecord(value, allowed, 'invalid_unlocks', 'unlocks');
   if (inspected.ok === false) return inspected;
-  if (sourceVersion === CURRENT_SAVE_VERSION) {
+  if (sourceVersion >= 3) {
     for (const key of CURRENT_UNLOCK_KEYS) {
       if (!own(inspected.value, key)) {
         return invalid('invalid_unlocks', `unlocks.${key}`);
@@ -317,7 +318,7 @@ const normalizeUnlocks = (
     'unlocks.equipment',
     0,
     EQUIPMENT_TIER_MAX,
-    sourceVersion === CURRENT_SAVE_VERSION,
+    sourceVersion >= 3,
   );
   if (equipment.ok === false) return equipment;
   const skills = mergeBoundedIntegerRecord(
@@ -326,7 +327,7 @@ const normalizeUnlocks = (
     'unlocks.skills',
     0,
     10,
-    sourceVersion === CURRENT_SAVE_VERSION,
+    sourceVersion >= 3,
   );
   if (skills.ok === false) return skills;
   const levels = mergeBoundedIntegerRecord(
@@ -335,7 +336,7 @@ const normalizeUnlocks = (
     'unlocks.levels',
     1,
     99,
-    sourceVersion === CURRENT_SAVE_VERSION,
+    sourceVersion >= 3,
   );
   if (levels.ok === false) return levels;
 
@@ -423,7 +424,7 @@ const HISTORY_KEYS = new Set([
 ]);
 const HISTORY_TYPES = new Set([
   'UNLOCK', 'PITY', 'ALTAR', 'ROLL_SUCCESS', 'ROLL_FAIL', 'ROLL_OMNI',
-  'LEVEL_UP', 'XTREME_MILESTONE',
+  'LEVEL_UP', 'XTREME_MILESTONE', 'COMPENSATION',
 ]);
 const HISTORY_RESULTS = new Set(['SUCCESS', 'FAIL']);
 const MAX_METADATA_DEPTH = 16;
@@ -684,6 +685,73 @@ const normalizeRival = (value: unknown): Outcome<RivalState> => {
 };
 
 
+const FATE_COMPENSATION_KEYS = new Set([
+  'releaseId', 'status', 'chaosKeys', 'pityKeys', 'fatePoints', 'choice',
+]);
+const FATE_COMPENSATION_STATUSES = new Set([
+  'pending', 'not_eligible', 'none', 'chaos', 'full',
+]);
+const FATE_COMPENSATION_CHOICES = new Set(['none', 'chaos', 'full']);
+
+const normalizeFateCompensation = (value: unknown): Outcome<FateCompensationState> => {
+  const path = 'fateCompensation';
+  const inspected = inspectRecord(value, FATE_COMPENSATION_KEYS, 'invalid_field', path);
+  if (inspected.ok === false) return inspected;
+  for (const required of ['releaseId', 'status', 'chaosKeys', 'pityKeys', 'fatePoints']) {
+    if (!own(inspected.value, required)) return invalid('invalid_field', pathOf(path, required));
+  }
+
+  const releaseId = readOwn(inspected.value, 'releaseId');
+  if (releaseId !== LEGACY_FATE_COMPENSATION_ID) {
+    return invalid('invalid_field', `${path}.releaseId`);
+  }
+  const status = readOwn(inspected.value, 'status');
+  if (typeof status !== 'string' || !FATE_COMPENSATION_STATUSES.has(status)) {
+    return invalid('invalid_field', `${path}.status`);
+  }
+  const chaosKeys = boundedInteger(
+    readOwn(inspected.value, 'chaosKeys'), `${path}.chaosKeys`, 0, MAX_COUNTER,
+  );
+  if (chaosKeys.ok === false) return chaosKeys;
+  const pityKeys = boundedInteger(
+    readOwn(inspected.value, 'pityKeys'), `${path}.pityKeys`, 0, MAX_COUNTER,
+  );
+  if (pityKeys.ok === false) return pityKeys;
+  const fatePoints = boundedInteger(
+    readOwn(inspected.value, 'fatePoints'), `${path}.fatePoints`, 0, MAX_COUNTER,
+  );
+  if (fatePoints.ok === false) return fatePoints;
+
+  const rawChoice = own(inspected.value, 'choice')
+    ? readOwn(inspected.value, 'choice')
+    : undefined;
+  if (rawChoice !== undefined
+    && (typeof rawChoice !== 'string' || !FATE_COMPENSATION_CHOICES.has(rawChoice))) {
+    return invalid('invalid_field', `${path}.choice`);
+  }
+  if ((status === 'pending' || status === 'not_eligible') && rawChoice !== undefined) {
+    return invalid('invalid_field', `${path}.choice`);
+  }
+  if ((status === 'none' || status === 'chaos' || status === 'full')
+    && rawChoice !== status) {
+    return invalid('invalid_field', `${path}.choice`);
+  }
+
+  return {
+    ok: true,
+    value: {
+      releaseId,
+      status: status as FateCompensationState['status'],
+      chaosKeys: chaosKeys.value,
+      pityKeys: pityKeys.value,
+      fatePoints: fatePoints.value,
+      ...(rawChoice === undefined
+        ? {}
+        : { choice: rawChoice as FateCompensationState['choice'] }),
+    },
+  };
+};
+
 const RFC_4122_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const TOP_LEVEL_KEYS = new Set([
@@ -692,7 +760,7 @@ const TOP_LEVEL_KEYS = new Set([
   'unlocks', 'history', 'animationsEnabled', 'advisorsEnabled', 'revealAllFeatures',
   'hasSeenOnboarding', 'pinnedGoals', 'userNotes', 'gameModeId', 'customMode',
   'gameModeLocked', 'rngSeed', 'loadout', 'rival', 'linkedAccount',
-  'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed',
+  'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'fateCompensation',
 ]);
 
 export const parseAndMigrateSave = (
@@ -740,10 +808,13 @@ const normalizeState = (
       'keys', 'specialKeys', 'chaosKeys', 'fatePoints', 'activeBuff',
       'unlocks', 'history', 'pinnedGoals', 'userNotes',
     ];
-    // Versions 1 and 2 are permissive migration formats; v3 requires these
-    // counters at the strict save boundary.
-    if (sourceVersion === CURRENT_SAVE_VERSION) {
+    // Versions 1 and 2 are permissive migration formats; v3+ require these
+    // counters at the strict save boundary, while v4 also requires its offer.
+    if (sourceVersion >= 3) {
       required.push('bossStandardKeysAwarded', 'clueStandardKeysAwarded');
+    }
+    if (sourceVersion === CURRENT_SAVE_VERSION) {
+      required.push('fateCompensation');
     }
     for (const key of required) {
       if (!own(input, key)) return invalid('invalid_field', key);
@@ -772,7 +843,7 @@ const normalizeState = (
 
   let bossStandardKeysAwarded: Record<string, number>;
   let clueStandardKeysAwarded: number;
-  if (sourceVersion === CURRENT_SAVE_VERSION) {
+  if (sourceVersion >= 3) {
     const strictBossProgress = inspectRecord(
       selectedBossProgress.value,
       null,
@@ -805,7 +876,7 @@ const normalizeState = (
     clueStandardKeysAwarded = strictClueProgress.value;
   } else {
     // Versions 1 and 2 were permissive import formats. Keep their documented
-    // migration behavior, then persist the sanitized result as strict v3.
+    // migration behavior, then persist the sanitized result as strict v4.
     bossStandardKeysAwarded = normalizeBossStandardKeysAwarded(selectedBossProgress.value);
     clueStandardKeysAwarded = Math.min(
       normalizeClueStandardKeysAwarded(selectedClueProgress.value),
@@ -826,6 +897,35 @@ const normalizeState = (
   if (!selectedHistory.present) return invalid('invalid_history', 'history');
   const history = normalizeHistory(selectedHistory.value);
   if (history.ok === false) return history;
+  let fateCompensation: FateCompensationState;
+  if (sourceVersion < CURRENT_SAVE_VERSION) {
+    const calculated = calculateLegacyFateCompensation({
+      unlocks: unlocks.value.value,
+      history: history.value,
+      fatePoints: fatePoints.value,
+    });
+    const eligible = calculated.chaosKeys > 0
+      || calculated.pityKeys > 0
+      || calculated.fatePoints !== fatePoints.value;
+    fateCompensation = eligible
+      ? {
+        releaseId: LEGACY_FATE_COMPENSATION_ID,
+        status: 'pending',
+        ...calculated,
+      }
+      : {
+        releaseId: LEGACY_FATE_COMPENSATION_ID,
+        status: 'not_eligible',
+        chaosKeys: 0,
+        pityKeys: 0,
+        fatePoints: 0,
+      };
+  } else {
+    const checked = normalizeFateCompensation(readOwn(input, 'fateCompensation'));
+    if (checked.ok === false) return checked;
+    fateCompensation = checked.value;
+  }
+
   const selectedGoals = readPreferred(input, defaultRecord, 'pinnedGoals');
   if (!selectedGoals.present) return invalid('invalid_field', 'pinnedGoals');
   const pinnedGoals = identifierArray(selectedGoals.value, 'pinnedGoals', 'invalid_field');
@@ -856,6 +956,7 @@ const normalizeState = (
     specialKeys: specialKeys.value,
     chaosKeys: chaosKeys.value,
     fatePoints: fatePoints.value,
+    fateCompensation,
     bossStandardKeysAwarded,
     clueStandardKeysAwarded,
     activeBuff: selectedBuff.value,

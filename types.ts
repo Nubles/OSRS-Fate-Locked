@@ -50,6 +50,22 @@ export enum DropSource {
 
   CUSTOM = 'Custom',
 }
+export type FateCompensationChoice = 'none' | 'chaos' | 'full';
+
+export type FateCompensationStatus =
+  | 'pending'
+  | 'not_eligible'
+  | FateCompensationChoice;
+
+export interface FateCompensationState {
+  releaseId: string;
+  status: FateCompensationStatus;
+  chaosKeys: number;
+  pityKeys: number;
+  fatePoints: number;
+  choice?: FateCompensationChoice;
+}
+
 
 
 /** Fate awarded when a key roll fails. */
@@ -85,7 +101,7 @@ export interface LogEntry {
   // outcomes; the bare 'ROLL' literal was a footgun (consumers filtered for
   // it expecting all rolls and got nothing). Use isRollEntry() in utils
   // instead of comparing to 'ROLL'.
-  type: 'UNLOCK' | 'PITY' | 'ALTAR' | 'ROLL_SUCCESS' | 'ROLL_FAIL' | 'ROLL_OMNI' | 'LEVEL_UP' | 'XTREME_MILESTONE';
+  type: 'UNLOCK' | 'PITY' | 'ALTAR' | 'ROLL_SUCCESS' | 'ROLL_FAIL' | 'ROLL_OMNI' | 'LEVEL_UP' | 'XTREME_MILESTONE' | 'COMPENSATION';
   source?: string;
   result?: 'SUCCESS' | 'FAIL';
   rollValue?: number;
@@ -187,6 +203,8 @@ export interface GameState {
   /** Vanilla clue standard keys already awarded across every clue tier. */
   clueStandardKeysAwarded?: number;
   fatePoints: number;
+  /** Frozen one-time offer for the weighted-Fate balance release. */
+  fateCompensation: FateCompensationState;
   activeBuff: 'NONE' | 'LUCK' | 'GREED';
   unlocks: UnlockState;
   history: LogEntry[];

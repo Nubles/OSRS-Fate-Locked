@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState, type DetectedEventIdentity, type DetectedProgress, type FailureFateAward, type GameEventMeta as DetectedGameEventMeta, type RollIntent } from '../types';
+import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState, type DetectedEventIdentity, type DetectedProgress, type FailureFateAward, type FateCompensationChoice, type GameEventMeta as DetectedGameEventMeta, type RollIntent } from '../types';
 import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST } from '../data/items';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from '../config/rules';
 import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
@@ -30,6 +30,7 @@ import {
 } from '../utils/gamePersistence';
 import { CURRENT_SAVE_VERSION, parseAndMigrateSave, validateAndMigrateSave } from '../utils/saveSchema';
 import { showToast } from '../utils/toast';
+import { LEGACY_FATE_COMPENSATION_ID } from '../utils/fateCompensation';
 import { normalizeAccountName } from '../services/fateEventProtocol';
 import {
   canEarnDiaryTier,
@@ -179,6 +180,7 @@ interface GameContextType extends GameState {
   toggleAdvisors: () => void;
   toggleRevealAll: () => void;
   completeOnboarding: () => void;
+  resolveFateCompensation: (choice: FateCompensationChoice) => void;
   setGameMode: (modeId: string, customRules?: GameModeRules) => void;
   /** Seeded runs — set/clear the seed (only while the run has no history). */
   setSeed: (seed: string) => void;
@@ -253,6 +255,13 @@ export const initialState: GameState = {
   specialKeys: 0,
   chaosKeys: 0,
   fatePoints: 0,
+  fateCompensation: {
+    releaseId: LEGACY_FATE_COMPENSATION_ID,
+    status: 'not_eligible',
+    chaosKeys: 0,
+    pityKeys: 0,
+    fatePoints: 0,
+  },
   activeBuff: 'NONE',
   unlocks: getInitialUnlocks(),
   history: [],
@@ -303,6 +312,7 @@ export type Action =
   | { type: 'TOGGLE_REVEAL_ALL' }
   | { type: 'SET_SEED'; payload: string }
   | { type: 'COMPLETE_ONBOARDING' }
+  | { type: 'RESOLVE_FATE_COMPENSATION'; payload: FateCompensationChoice }
   | { type: 'ROLL_RESULT'; payload: PreparedRollResult }
   | {
     type: 'ACCEPT_DETECTED_EVENT';
@@ -657,6 +667,37 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 
     case 'COMPLETE_ONBOARDING':
       return { ...state, hasSeenOnboarding: true };
+
+    case 'RESOLVE_FATE_COMPENSATION': {
+      const offer = state.fateCompensation;
+      if (offer.status !== 'pending') return state;
+
+      const choice = action.payload;
+      const chaosKeysAwarded = choice === 'none' ? 0 : offer.chaosKeys;
+      const pityKeysAwarded = choice === 'full' ? offer.pityKeys : 0;
+      const fatePointsAfter = choice === 'full' ? offer.fatePoints : state.fatePoints;
+      const log: LogEntry = {
+        id: generateId(),
+        timestamp: now,
+        type: 'COMPENSATION',
+        message: `Fate compensation resolved: ${choice}`,
+        meta: {
+          choice,
+          chaosKeysAwarded,
+          pityKeysAwarded,
+          fatePointsAfter,
+        },
+      };
+
+      return {
+        ...state,
+        keys: state.keys + pityKeysAwarded,
+        chaosKeys: state.chaosKeys + chaosKeysAwarded,
+        fatePoints: fatePointsAfter,
+        fateCompensation: { ...offer, status: choice, choice },
+        history: [...state.history, log],
+      };
+    }
 
     case 'SET_GAME_MODE': {
       // The mode is permanent once chosen — or if the run already has history
@@ -1678,6 +1719,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
 
   const completeOnboarding = useCallback(() =>
     commitAction({ type: 'COMPLETE_ONBOARDING' }), [commitAction]);
+  const resolveFateCompensation = useCallback((choice: FateCompensationChoice) =>
+    commitAction({ type: 'RESOLVE_FATE_COMPENSATION', payload: choice }), [commitAction]);
   const setGameMode = useCallback((modeId: string, customRules?: GameModeRules) =>
     commitAction({ type: 'SET_GAME_MODE', payload: { modeId, customRules } }), [commitAction]);
   const toggleAnimations = useCallback(() => commitAction({ type: 'TOGGLE_ANIMATIONS' }), [commitAction]);
@@ -1888,6 +1931,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     toggleAdvisors,
     toggleRevealAll,
     completeOnboarding,
+    resolveFateCompensation,
     setGameMode,
     setSeed,
     nextFloat,
@@ -1930,6 +1974,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     toggleAdvisors,
     toggleRevealAll,
     completeOnboarding,
+    resolveFateCompensation,
     setGameMode,
     setSeed,
     nextFloat,

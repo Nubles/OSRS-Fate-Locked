@@ -1018,6 +1018,97 @@ describe('journal completion actions', () => {
 
 // --- lifecycle --------------------------------------------------------------
 
+// --- fate compensation ------------------------------------------------------
+
+describe('RESOLVE_FATE_COMPENSATION', () => {
+  const pending = () => ({
+    ...base(),
+    keys: 10,
+    chaosKeys: 2,
+    fatePoints: 45,
+    fateCompensation: {
+      releaseId: '2026-08-02-weighted-fate',
+      status: 'pending' as const,
+      chaosKeys: 3,
+      pityKeys: 1,
+      fatePoints: 5,
+    },
+  });
+
+  it('starts fresh v4 runs with no legacy offer', () => {
+    expect(initialState.fateCompensation).toEqual({
+      releaseId: '2026-08-02-weighted-fate',
+      status: 'not_eligible',
+      chaosKeys: 0,
+      pityKeys: 0,
+      fatePoints: 0,
+    });
+  });
+
+  it('resolves no compensation without changing any balance', () => {
+    const previous = pending();
+    const next = gameReducer(previous, { type: 'RESOLVE_FATE_COMPENSATION', payload: 'none' });
+
+    expect(next).toMatchObject({ keys: 10, chaosKeys: 2, fatePoints: 45 });
+    expect(next.fateCompensation).toMatchObject({ status: 'none', choice: 'none' });
+    expect(next.history.at(-1)).toMatchObject({
+      type: 'COMPENSATION',
+      meta: {
+        choice: 'none',
+        chaosKeysAwarded: 0,
+        pityKeysAwarded: 0,
+        fatePointsAfter: 45,
+      },
+    });
+  });
+
+  it('resolves Chaos-only compensation without changing Standard Keys or Fate', () => {
+    const next = gameReducer(pending(), {
+      type: 'RESOLVE_FATE_COMPENSATION',
+      payload: 'chaos',
+    });
+
+    expect(next).toMatchObject({ keys: 10, chaosKeys: 5, fatePoints: 45 });
+    expect(next.fateCompensation).toMatchObject({ status: 'chaos', choice: 'chaos' });
+    expect(next.history.at(-1)?.meta).toMatchObject({
+      choice: 'chaos',
+      chaosKeysAwarded: 3,
+      pityKeysAwarded: 0,
+      fatePointsAfter: 45,
+    });
+  });
+
+  it('resolves full compensation atomically with the frozen Fate remainder', () => {
+    const next = gameReducer(pending(), {
+      type: 'RESOLVE_FATE_COMPENSATION',
+      payload: 'full',
+    });
+
+    expect(next).toMatchObject({ keys: 11, chaosKeys: 5, fatePoints: 5 });
+    expect(next.fateCompensation).toMatchObject({ status: 'full', choice: 'full' });
+    expect(next.history.at(-1)?.meta).toMatchObject({
+      choice: 'full',
+      chaosKeysAwarded: 3,
+      pityKeysAwarded: 1,
+      fatePointsAfter: 5,
+    });
+  });
+
+  it('returns the unchanged resolved state on a second claim', () => {
+    const first = gameReducer(pending(), {
+      type: 'RESOLVE_FATE_COMPENSATION',
+      payload: 'full',
+    });
+    const second = gameReducer(first, {
+      type: 'RESOLVE_FATE_COMPENSATION',
+      payload: 'full',
+    });
+
+    expect(second).toBe(first);
+    expect(second.history.filter(entry => entry.type === 'COMPENSATION')).toHaveLength(1);
+  });
+});
+
 describe('lifecycle actions', () => {
   it('RESET returns to the initial state', () => {
     const dirty = { ...base(), keys: 99, fatePoints: 40, specialKeys: 5 };

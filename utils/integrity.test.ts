@@ -200,6 +200,66 @@ describe('replayInvariants', () => {
     expect(transmute.specialKeys).toBe(1);
   });
 
+  it('replays full compensation awards and the recorded Fate remainder', () => {
+    const { final } = replayInvariants([mk({
+      type: 'COMPENSATION',
+      message: 'Fate compensation resolved: full',
+      meta: {
+        choice: 'full',
+        chaosKeysAwarded: 3,
+        pityKeysAwarded: 1,
+        fatePointsAfter: 5,
+      },
+    })], 0);
+
+    expect(final.keys).toBe(1);
+    expect(final.chaosKeys).toBe(3);
+    expect(final.fatePoints).toBe(5);
+  });
+
+  it('replays Chaos-only compensation without replacing Fate', () => {
+    const { final } = replayInvariants([
+      fail(),
+      fail(),
+      mk({
+        type: 'COMPENSATION',
+        message: 'Fate compensation resolved: chaos',
+        meta: {
+          choice: 'chaos',
+          chaosKeysAwarded: 2,
+          pityKeysAwarded: 0,
+          fatePointsAfter: 2,
+        },
+      }),
+    ], 0);
+
+    expect(final.keys).toBe(0);
+    expect(final.chaosKeys).toBe(2);
+    expect(final.fatePoints).toBe(2);
+  });
+
+  it('changes replayed balances when compensation award metadata is tampered', () => {
+    const entry = mk({
+      type: 'COMPENSATION',
+      message: 'Fate compensation resolved: full',
+      meta: {
+        choice: 'full',
+        chaosKeysAwarded: 3,
+        pityKeysAwarded: 1,
+        fatePointsAfter: 5,
+      },
+    });
+    const expected = replayInvariants([entry], 0).final;
+    const tampered = replayInvariants([{
+      ...entry,
+      meta: { ...entry.meta, chaosKeysAwarded: 30 },
+    }], 0).final;
+
+    expect(expected).toMatchObject({ keys: 1, chaosKeys: 3, fatePoints: 5 });
+    expect(tampered).not.toEqual(expected);
+    expect(tampered.chaosKeys).toBe(30);
+  });
+
   it('flags negative keys when over-spending', () => {
     const { violations } = replayInvariants(
       [mk({ type: 'UNLOCK', message: 'Unlocked', meta: { cost: 5, costType: 'key' } })], 0,

@@ -187,6 +187,32 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3): { violatio
       case 'LEVEL_UP':
         if (/Chaos Key Drop/.test(e.message)) s.chaosKeys += 1;
         break;
+      case 'COMPENSATION': {
+        const choice = e.meta?.choice;
+        if (choice === 'chaos' || choice === 'full') {
+          const chaosAwarded = e.meta?.chaosKeysAwarded;
+          if (typeof chaosAwarded === 'number'
+            && Number.isSafeInteger(chaosAwarded)
+            && chaosAwarded >= 0) {
+            s.chaosKeys += chaosAwarded;
+          }
+        }
+        if (choice === 'full') {
+          const pityAwarded = e.meta?.pityKeysAwarded;
+          if (typeof pityAwarded === 'number'
+            && Number.isSafeInteger(pityAwarded)
+            && pityAwarded >= 0) {
+            s.keys += pityAwarded;
+          }
+          const fateAfter = e.meta?.fatePointsAfter;
+          if (typeof fateAfter === 'number'
+            && Number.isSafeInteger(fateAfter)
+            && fateAfter >= 0) {
+            s.fatePoints = fateAfter;
+          }
+        }
+        break;
+      }
       case 'XTREME_MILESTONE':
         s.keys += typeof e.meta?.gained === 'number' ? e.meta.gained : 1;
         break;

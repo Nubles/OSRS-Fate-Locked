@@ -19,6 +19,7 @@ import {
   type SaveErrorCode,
   type SaveValidationResult,
 } from './saveSchema';
+import { LEGACY_FATE_COMPENSATION_ID } from './fateCompensation';
 
 const baseUnlocks = (): UnlockState => ({
   equipment: { Head: 0, Body: 0 },
@@ -56,6 +57,13 @@ const defaultsFixture = (): GameState => ({
   bossStandardKeysAwarded: {},
   clueStandardKeysAwarded: 0,
   fatePoints: 0,
+  fateCompensation: {
+    releaseId: LEGACY_FATE_COMPENSATION_ID,
+    status: 'not_eligible',
+    chaosKeys: 0,
+    pityKeys: 0,
+    fatePoints: 0,
+  },
   activeBuff: 'NONE',
   unlocks: baseUnlocks(),
   history: [],
@@ -82,6 +90,14 @@ const fullStateFixture = (): GameState => ({
   bossStandardKeysAwarded: { Zulrah: 1 },
   clueStandardKeysAwarded: 2,
   fatePoints: 41,
+  fateCompensation: {
+    releaseId: LEGACY_FATE_COMPENSATION_ID,
+    status: 'full',
+    chaosKeys: 2,
+    pityKeys: 1,
+    fatePoints: 5,
+    choice: 'full',
+  },
   activeBuff: 'LUCK',
   unlocks: {
     equipment: { Head: 9, Body: 4 },
@@ -189,14 +205,79 @@ const expectRejected = (
 };
 
 describe('save schema compatibility', () => {
-  it('accepts a complete strict v3 export and preserves every GameState field', () => {
+  it('accepts a complete strict v4 export and preserves every GameState field', () => {
     const current = fullStateFixture();
-    current.version = 3;
+    current.version = 4;
     expect(validateAndMigrateSave(current, defaultsFixture())).toEqual({
       ok: true,
       state: current,
-      sourceVersion: 3,
+      sourceVersion: 4,
       warnings: [],
+    });
+  });
+
+  it('migrates a v3 run into a frozen pending compensation offer', () => {
+    const legacy = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    legacy.version = 3;
+    delete legacy.fateCompensation;
+    legacy.fatePoints = 45;
+    const unlocks = legacy.unlocks as Record<string, unknown>;
+    unlocks.levels = { Attack: 30, Hitpoints: 10 };
+    legacy.history = [
+      ...Array.from({ length: 40 }, (_, index) => ({
+        id: `novice-${index}`,
+        timestamp: index,
+        type: 'ROLL_FAIL',
+        source: 'Quest (Novice)',
+        message: 'No Key.',
+        meta: { fatePointsEarned: 1 },
+      })),
+      ...Array.from({ length: 5 }, (_, index) => ({
+        id: `master-${index}`,
+        timestamp: 40 + index,
+        type: 'ROLL_FAIL',
+        source: 'Quest (Master)',
+        message: 'No Key.',
+        meta: { fatePointsEarned: 1 },
+      })),
+    ];
+
+    const result = expectAccepted(validateAndMigrateSave(legacy, defaultsFixture()));
+
+    expect(result.sourceVersion).toBe(3);
+    expect(result.state.version).toBe(4);
+    expect(result.state.fateCompensation).toEqual({
+      releaseId: LEGACY_FATE_COMPENSATION_ID,
+      status: 'pending',
+      chaosKeys: 1,
+      pityKeys: 1,
+      fatePoints: 5,
+    });
+  });
+
+  it('migrates a zero-benefit v3 run directly to not eligible', () => {
+    const legacy = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    legacy.version = 3;
+    delete legacy.fateCompensation;
+    legacy.fatePoints = 1;
+    (legacy.unlocks as Record<string, unknown>).levels = { Attack: 1, Hitpoints: 10 };
+    legacy.history = [{
+      id: 'legacy-fail',
+      timestamp: 1,
+      type: 'ROLL_FAIL',
+      source: 'Quest (Novice)',
+      message: 'No Key.',
+      meta: { fatePointsEarned: 1 },
+    }];
+
+    const result = expectAccepted(validateAndMigrateSave(legacy, defaultsFixture()));
+
+    expect(result.state.fateCompensation).toEqual({
+      releaseId: LEGACY_FATE_COMPENSATION_ID,
+      status: 'not_eligible',
+      chaosKeys: 0,
+      pityKeys: 0,
+      fatePoints: 0,
     });
   });
 
@@ -222,7 +303,7 @@ describe('save schema compatibility', () => {
     const result = expectAccepted(validateAndMigrateSave(current, defaultsFixture()));
 
     expect(result.sourceVersion).toBe(3);
-    expect(result.state.version).toBe(3);
+    expect(result.state.version).toBe(CURRENT_SAVE_VERSION);
     expect(result.state.unlocks.quests).toEqual(completedIds);
   });
   it('renames a lone Elf Camp unlock without refunding a key', () => {
@@ -368,7 +449,7 @@ describe('save schema compatibility', () => {
     delete versionOne.clueStandardKeysAwarded;
     const migrated = expectAccepted(validateAndMigrateSave(versionOne, defaultsFixture()));
     expect(migrated.sourceVersion).toBe(1);
-    expect(migrated.state.version).toBe(3);
+    expect(migrated.state.version).toBe(CURRENT_SAVE_VERSION);
     expect(migrated.state.bossStandardKeysAwarded).toEqual({});
     expect(migrated.state.clueStandardKeysAwarded).toBe(0);
     expect(migrated.warnings).toHaveLength(1);
@@ -399,7 +480,7 @@ describe('save schema compatibility', () => {
     expect(migrated.state.clueStandardKeysAwarded).toBe(MAX_COUNTER);
     expect(migrated.state.version).toBe(CURRENT_SAVE_VERSION);
   });
-  it('migrates the feature-branch v2 shape into v3 while supplying newer main run metadata', () => {
+  it('migrates the feature-branch v2 shape into v4 while supplying newer main run metadata', () => {
     const featureBranchV2 = clone(fullStateFixture()) as unknown as Record<string, unknown>;
     featureBranchV2.version = 2;
     delete featureBranchV2.runId;
@@ -407,7 +488,7 @@ describe('save schema compatibility', () => {
 
     const migrated = expectAccepted(validateAndMigrateSave(featureBranchV2, defaultsFixture()));
     expect(migrated.sourceVersion).toBe(2);
-    expect(migrated.state.version).toBe(3);
+    expect(migrated.state.version).toBe(CURRENT_SAVE_VERSION);
     expect(migrated.state.runId).toBe(VALID_RUN_ID);
     expect(migrated.state.runRevision).toBe(0);
     expect(migrated.state.bossStandardKeysAwarded).toEqual({ Zulrah: 1 });
@@ -448,7 +529,7 @@ describe('save schema compatibility', () => {
   it.each([
     'keys', 'specialKeys', 'chaosKeys', 'fatePoints', 'activeBuff',
     'bossStandardKeysAwarded', 'clueStandardKeysAwarded',
-    'unlocks', 'history', 'pinnedGoals', 'userNotes',
+    'unlocks', 'history', 'pinnedGoals', 'userNotes', 'fateCompensation',
   ])('requires current-version field %s instead of defaulting it', field => {
     const truncated = clone(fullStateFixture()) as unknown as Record<string, unknown>;
     delete truncated[field];
@@ -679,6 +760,83 @@ describe('save schema numeric and enum boundaries', () => {
   });
 });
 
+describe('fate compensation validation', () => {
+  const offer = (over: Record<string, unknown> = {}) => ({
+    releaseId: LEGACY_FATE_COMPENSATION_ID,
+    status: 'pending',
+    chaosKeys: 1,
+    pityKeys: 2,
+    fatePoints: 3,
+    ...over,
+  });
+
+  it('rejects an unknown release id', () => {
+    expectRejected(
+      candidate({ fateCompensation: offer({ releaseId: 'unknown-release' }) }),
+      'invalid_field',
+      'fateCompensation.releaseId',
+    );
+  });
+
+  it.each([
+    [{ status: 'waiting' }, 'fateCompensation.status'],
+    [{ choice: 'partial', status: 'chaos' }, 'fateCompensation.choice'],
+    [{ choice: 'full', status: 'chaos' }, 'fateCompensation.choice'],
+  ] as const)('rejects invalid compensation enum %o', (over, path) => {
+    expectRejected(candidate({ fateCompensation: offer(over) }), 'invalid_field', path);
+  });
+
+  it.each([-1, 1.5, Number.POSITIVE_INFINITY, MAX_COUNTER + 1])(
+    'rejects invalid compensation award value %s',
+    value => {
+      for (const field of ['chaosKeys', 'pityKeys', 'fatePoints'] as const) {
+        expectRejected(
+          candidate({ fateCompensation: offer({ [field]: value }) }),
+          'invalid_number',
+          `fateCompensation.${field}`,
+        );
+      }
+    },
+  );
+
+  it.each(['none', 'chaos', 'full'] as const)(
+    'requires a choice for resolved status %s',
+    status => {
+      expectRejected(
+        candidate({ fateCompensation: offer({ status }) }),
+        'invalid_field',
+        'fateCompensation.choice',
+      );
+    },
+  );
+
+  it.each(['pending', 'not_eligible'] as const)(
+    'rejects status %s when it already has a choice',
+    status => {
+      expectRejected(
+        candidate({ fateCompensation: offer({ status, choice: 'full' }) }),
+        'invalid_field',
+        'fateCompensation.choice',
+      );
+    },
+  );
+
+  it('accepts compensation history metadata in a resolved v4 save', () => {
+    const accepted = expectAccepted(validateAndMigrateSave(candidate({
+      history: [{
+        id: 'compensation',
+        timestamp: 1,
+        type: 'COMPENSATION',
+        message: 'Fate compensation resolved: full',
+        meta: { choice: 'full', chaosKeysAwarded: 2, pityKeysAwarded: 1, fatePointsAfter: 5 },
+      }],
+    }), defaultsFixture()));
+
+    expect(accepted.state.history[0].type).toBe('COMPENSATION');
+  });
+});
+
+
 describe('save schema resource limits', () => {
   it('accepts 100,000 history entries and rejects 100,001', { timeout: 30_000 }, () => {
     const entry: LogEntry = {
@@ -754,11 +912,12 @@ describe('JSON parsing boundary', () => {
     expect(invalid.message).not.toContain(secret);
   });
 
-  it('round-trips an accepted v3 state through the production serializer losslessly', () => {
+  it('round-trips a resolved v4 choice without recalculating eligibility', () => {
     const current = fullStateFixture();
-    current.version = 3;
+    current.version = 4;
     const accepted = expectAccepted(validateAndMigrateSave(current, defaultsFixture()));
     const reparsed = expectAccepted(parseAndMigrateSave(serializeCurrent(accepted.state), defaultsFixture()));
     expect(reparsed.state).toEqual(accepted.state);
+    expect(reparsed.state.fateCompensation).toEqual(current.fateCompensation);
   });
 });

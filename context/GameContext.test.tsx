@@ -617,7 +617,7 @@ describe('ordinary save recovery', () => {
     const rewritten = storage.values.get('profile')!;
     expect(rewritten).not.toBe(legacyData);
     expect(JSON.parse(rewritten)).toMatchObject({
-      version: 3,
+      version: 4,
       userNotes: { goal: 'legacy migration' },
     });
     expect(getPendingSave('profile')).toBeNull();
