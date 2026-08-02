@@ -1060,6 +1060,345 @@ describe('typed profile metadata mutations', () => {
   });
 });
 
+const deletableMetadata = (activeProfileId: 'alpha' | 'beta' = 'alpha'): ProfileMetadata => ({
+  version: 1,
+  revision: 7,
+  profiles: [
+    { id: 'alpha', name: 'Alpha', createdAt: 1 },
+    { id: 'beta', name: 'Beta', createdAt: 2 },
+  ],
+  activeProfileId,
+});
+
+const alphaOwnedKeys = [
+  'FATE_PROFILE_alpha',
+  'FATE_PROFILE_alpha__backups',
+  'FATE_PROFILE_alpha__exportNag',
+  'FATE_PROFILE_alpha__discord',
+  'FATE_PROFILE_alpha__discordCursor',
+  'fate_features_seen_v1_alpha',
+  'FATE_PROFILE_alpha__writer',
+] as const;
+
+const profileOwnedRemovalCalls = (storage: TestStorage): string[] =>
+  storage.calls.filter(call => alphaOwnedKeys.some(key => call === `remove:${key}`));
+
+describe('coordinated profile deletion', () => {
+  it.each([
+    {
+      label: 'missing profile',
+      current: deletableMetadata(),
+      profileId: 'missing',
+      reason: 'not_found',
+      extraEntries: [] as Array<readonly [string, string]>,
+    },
+    {
+      label: 'last profile',
+      current: metadata(7),
+      profileId: 'alpha',
+      reason: 'last_profile',
+      extraEntries: [] as Array<readonly [string, string]>,
+    },
+    {
+      label: 'profile with an unexpired writer lease',
+      current: deletableMetadata(),
+      profileId: 'alpha',
+      reason: 'profile_in_use',
+      extraEntries: [[
+        'FATE_PROFILE_alpha__writer',
+        JSON.stringify({ version: 1, ownerId: 'game-tab', expiresAt: 9_000 }),
+      ]] as Array<readonly [string, string]>,
+    },
+  ] as const)('rejects a $label without removing profile data or changing metadata', async ({
+    current,
+    profileId,
+    reason,
+    extraEntries,
+  }) => {
+    const raw = JSON.stringify(current);
+    const originalBackup = JSON.stringify(metadata(6, 'Earlier backup'));
+    const storage = createStorage([
+      [PROFILES_KEY, raw],
+      [PROFILE_METADATA_BACKUP_KEY, originalBackup],
+      ...extraEntries,
+    ]);
+
+    await expect(mutateProfileMetadata(createDependencies(storage), {
+      type: 'delete',
+      profileId,
+    })).resolves.toEqual({
+      ok: false,
+      reason,
+      metadata: current,
+      notice: null,
+    });
+    expect(profileOwnedRemovalCalls(storage)).toEqual([]);
+    expect(storage.values.get(PROFILES_KEY)).toBe(raw);
+    expect(storage.values.get(PROFILE_METADATA_BACKUP_KEY)).toBe(originalBackup);
+    expect(storage.values.has(PROFILE_METADATA_LOCK_KEY)).toBe(false);
+  });
+
+  it.each([
+    ['expired', JSON.stringify({ version: 1, ownerId: 'game-tab', expiresAt: 1_000 })],
+    ['malformed', '{broken'],
+  ])('does not let an %s writer lease block deletion', async (_label, leaseRaw) => {
+    const current = deletableMetadata();
+    const storage = createStorage([
+      [PROFILES_KEY, JSON.stringify(current)],
+      ...alphaOwnedKeys.map(key => [key, `secret:${key}`] as const),
+      ['FATE_PROFILE_alpha__writer', leaseRaw],
+    ]);
+    const expected: ProfileMetadata = {
+      version: 1,
+      revision: 8,
+      profiles: [current.profiles[1]],
+      activeProfileId: 'beta',
+    };
+
+    await expect(mutateProfileMetadata(createDependencies(storage), {
+      type: 'delete',
+      profileId: 'alpha',
+    })).resolves.toEqual({
+      ok: true,
+      metadata: expected,
+      notice: null,
+      deleteDetails: { removedEntries: 7, removalFailures: 0, rollbackFailures: 0 },
+    });
+    expect(storage.values.get(PROFILES_KEY)).toBe(JSON.stringify(expected));
+    expect(storage.values.has(PROFILE_METADATA_LOCK_KEY)).toBe(false);
+  });
+
+  it('verifies the previous registry backup before removing only the seven owned keys', async () => {
+    const current = deletableMetadata();
+    const oldBackup = JSON.stringify(metadata(4, 'Old backup'));
+    const unrelatedEntries = [
+      ['FATE_PROFILE_beta', 'beta-save'],
+      ['FATE_PROFILE_alpha_misleading', 'misleading'],
+      ['FATE_PROFILES_custom', 'unregistered'],
+    ] as const;
+    const storage = createStorage([
+      [PROFILES_KEY, JSON.stringify(current)],
+      [PROFILE_METADATA_BACKUP_KEY, oldBackup],
+      ...alphaOwnedKeys.map(key => [key, `secret:${key}`] as const),
+      ...unrelatedEntries,
+    ]);
+    const expected: ProfileMetadata = {
+      version: 1,
+      revision: 8,
+      profiles: [current.profiles[1]],
+      activeProfileId: 'beta',
+    };
+
+    await expect(mutateProfileMetadata(createDependencies(storage), {
+      type: 'delete',
+      profileId: 'alpha',
+    })).resolves.toEqual({
+      ok: true,
+      metadata: expected,
+      notice: null,
+      deleteDetails: { removedEntries: 7, removalFailures: 0, rollbackFailures: 0 },
+    });
+
+    const backupWrite = storage.calls.indexOf(`set:${PROFILE_METADATA_BACKUP_KEY}`);
+    const backupReadback = storage.calls.indexOf(`get:${PROFILE_METADATA_BACKUP_KEY}`, backupWrite);
+    const firstRemoval = storage.calls.indexOf(`remove:${alphaOwnedKeys[0]}`);
+    expect(backupWrite).toBeGreaterThan(-1);
+    expect(backupReadback).toBeGreaterThan(backupWrite);
+    expect(firstRemoval).toBeGreaterThan(backupReadback);
+    expect(profileOwnedRemovalCalls(storage)).toEqual(alphaOwnedKeys.map(key => `remove:${key}`));
+    for (const key of alphaOwnedKeys) expect(storage.values.has(key)).toBe(false);
+    for (const [key, value] of unrelatedEntries) expect(storage.values.get(key)).toBe(value);
+    expect(storage.values.get(PROFILE_METADATA_BACKUP_KEY)).toBe(JSON.stringify(current));
+    expect(storage.values.get(PROFILES_KEY)).toBe(JSON.stringify(expected));
+  });
+
+  it('keeps profile data untouched when the safety backup cannot be verified', async () => {
+    const current = deletableMetadata();
+    const storage = createStorage([
+      [PROFILES_KEY, JSON.stringify(current)],
+      ...alphaOwnedKeys.map(key => [key, `secret:${key}`] as const),
+    ]);
+    const getItem = storage.getItem;
+    storage.getItem = key => key === PROFILE_METADATA_BACKUP_KEY
+      ? (storage.calls.push(`get:${key}`), '{mismatch')
+      : getItem(key);
+
+    await expect(mutateProfileMetadata(createDependencies(storage), {
+      type: 'delete',
+      profileId: 'alpha',
+    })).resolves.toEqual({
+      ok: false,
+      reason: 'backup_failed',
+      metadata: current,
+      notice: null,
+      deleteDetails: { removedEntries: 0, removalFailures: 0, rollbackFailures: 0 },
+    });
+    expect(profileOwnedRemovalCalls(storage)).toEqual([]);
+    for (const key of alphaOwnedKeys) expect(storage.values.get(key)).toBe(`secret:${key}`);
+    expect(storage.values.get(PROFILES_KEY)).toBe(JSON.stringify(current));
+    expect(storage.values.has(PROFILE_METADATA_LOCK_KEY)).toBe(false);
+  });
+
+  it('counts removal failures without touching unrelated data or leaking storage contents', async () => {
+    const current = deletableMetadata('beta');
+    const failingKeys = [alphaOwnedKeys[1], alphaOwnedKeys[4]];
+    const storage = createStorage([
+      [PROFILES_KEY, JSON.stringify(current)],
+      ...alphaOwnedKeys.map(key => [key, `secret:${key}`] as const),
+      ['FATE_PROFILE_beta', 'beta-secret'],
+      ['FATE_PROFILE_alpha_misleading', 'misleading-secret'],
+    ]);
+    const removeItem = storage.removeItem;
+    storage.removeItem = key => {
+      if (failingKeys.includes(key as typeof failingKeys[number])) {
+        storage.calls.push(`remove:${key}`);
+        throw new DOMException('blocked', 'SecurityError');
+      }
+      removeItem(key);
+    };
+
+    const result = await mutateProfileMetadata(createDependencies(storage), {
+      type: 'delete',
+      profileId: 'alpha',
+    });
+
+    expect(result).toMatchObject({
+      ok: true,
+      metadata: { revision: 8, activeProfileId: 'beta' },
+      deleteDetails: { removedEntries: 5, removalFailures: 2, rollbackFailures: 0 },
+    });
+    expect(JSON.stringify(result)).not.toContain('FATE_PROFILE_alpha');
+    expect(JSON.stringify(result)).not.toContain('secret:');
+    expect(storage.values.get('FATE_PROFILE_beta')).toBe('beta-secret');
+    expect(storage.values.get('FATE_PROFILE_alpha_misleading')).toBe('misleading-secret');
+    for (const key of failingKeys) expect(storage.values.get(key)).toBe(`secret:${key}`);
+  });
+
+  it.each(['throw', 'mismatch'] as const)(
+    'restores every successfully removed stored value after a primary %s',
+    async failure => {
+      const current = deletableMetadata();
+      const originalEntries = alphaOwnedKeys.map(key => [key, `secret:${key}`] as const);
+      const storage = createStorage([
+        [PROFILES_KEY, JSON.stringify(current)],
+        ...originalEntries,
+        ['FATE_PROFILE_beta', 'beta-secret'],
+      ]);
+      const getItem = storage.getItem;
+      const setItem = storage.setItem;
+      storage.getItem = key => {
+        if (failure === 'mismatch' && key === PROFILES_KEY && storage.calls.includes(`set:${PROFILES_KEY}`)) {
+          storage.calls.push(`get:${key}`);
+          storage.values.set(PROFILES_KEY, JSON.stringify({ ...current, revision: 99 }));
+          return storage.values.get(PROFILES_KEY) ?? null;
+        }
+        return getItem(key);
+      };
+      storage.setItem = (key, value) => {
+        if (failure === 'throw' && key === PROFILES_KEY) {
+          storage.calls.push(`set:${key}`);
+          throw new DOMException('full', 'QuotaExceededError');
+        }
+        setItem(key, value);
+      };
+
+      const result = await mutateProfileMetadata(createDependencies(storage), {
+        type: 'delete',
+        profileId: 'alpha',
+      });
+
+      expect(result).toEqual({
+        ok: false,
+        reason: 'verification_failed',
+        metadata: current,
+        notice: null,
+        deleteDetails: { removedEntries: 7, removalFailures: 0, rollbackFailures: 0 },
+      });
+      for (const [key, value] of originalEntries) expect(storage.values.get(key)).toBe(value);
+      expect(storage.values.get('FATE_PROFILE_beta')).toBe('beta-secret');
+      expect(storage.values.get(PROFILE_METADATA_BACKUP_KEY)).toBe(JSON.stringify(current));
+      expect(storage.values.has(PROFILE_METADATA_LOCK_KEY)).toBe(false);
+    },
+  );
+
+  it('restores only originally stored values that were successfully removed', async () => {
+    const current = deletableMetadata();
+    const removalFailure = alphaOwnedKeys[1];
+    const storedAndRemoved = [alphaOwnedKeys[0], alphaOwnedKeys[3]];
+    const storage = createStorage([
+      [PROFILES_KEY, JSON.stringify(current)],
+      ...storedAndRemoved.map(key => [key, `secret:${key}`] as const),
+      [removalFailure, `secret:${removalFailure}`],
+    ]);
+    const removeItem = storage.removeItem;
+    storage.removeItem = key => {
+      if (key === removalFailure) {
+        storage.calls.push(`remove:${key}`);
+        throw new DOMException('blocked', 'SecurityError');
+      }
+      removeItem(key);
+    };
+    const setItem = storage.setItem;
+    const rollbackWrites: string[] = [];
+    storage.setItem = (key, value) => {
+      if (key === PROFILES_KEY) {
+        storage.calls.push(`set:${key}`);
+        throw new DOMException('full', 'QuotaExceededError');
+      }
+      if (alphaOwnedKeys.includes(key as typeof alphaOwnedKeys[number])) rollbackWrites.push(key);
+      setItem(key, value);
+    };
+
+    const result = await mutateProfileMetadata(createDependencies(storage), {
+      type: 'delete',
+      profileId: 'alpha',
+    });
+
+    expect(result).toMatchObject({
+      ok: false,
+      reason: 'verification_failed',
+      metadata: current,
+      deleteDetails: { removedEntries: 6, removalFailures: 1, rollbackFailures: 0 },
+    });
+    expect(rollbackWrites).toEqual(storedAndRemoved);
+    expect(storage.values.get(removalFailure)).toBe(`secret:${removalFailure}`);
+  });
+
+  it('counts rollback failures without exposing raw keys or stored values', async () => {
+    const current = deletableMetadata();
+    const rollbackFailures = [alphaOwnedKeys[0], alphaOwnedKeys[3]];
+    const storage = createStorage([
+      [PROFILES_KEY, JSON.stringify(current)],
+      ...alphaOwnedKeys.map(key => [key, `secret:${key}`] as const),
+    ]);
+    const setItem = storage.setItem;
+    storage.setItem = (key, value) => {
+      if (key === PROFILES_KEY || rollbackFailures.includes(key as typeof rollbackFailures[number])) {
+        storage.calls.push(`set:${key}`);
+        throw new DOMException('full', 'QuotaExceededError');
+      }
+      setItem(key, value);
+    };
+
+    const result = await mutateProfileMetadata(createDependencies(storage), {
+      type: 'delete',
+      profileId: 'alpha',
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      reason: 'verification_failed',
+      metadata: current,
+      notice: null,
+      deleteDetails: { removedEntries: 7, removalFailures: 0, rollbackFailures: 2 },
+    });
+    expect(JSON.stringify(result)).not.toContain('FATE_PROFILE_alpha');
+    expect(JSON.stringify(result)).not.toContain('secret:');
+    for (const key of rollbackFailures) expect(storage.values.has(key)).toBe(false);
+    expect(storage.values.has(PROFILE_METADATA_LOCK_KEY)).toBe(false);
+  });
+});
+
 const profileSaveWrites = (storage: TestStorage): string[] =>
   storage.calls.filter(call => call.startsWith('set:FATE_PROFILE_'));
 

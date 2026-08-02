@@ -13,6 +13,8 @@ import {
   type ProfileRecoveryEnvelopeV1,
   type ProfileRecoveryNotice,
 } from './profileMetadata';
+import { deleteProfileStorage, profileBaseKey, profileOwnedKeys } from './profileStorage';
+import { readWriterLease } from './profileWriterLease';
 
 export { PROFILE_METADATA_LOCK_KEY };
 
@@ -62,13 +64,20 @@ export type ProfileLockResult =
 
 export type ProfileLockReleaseResult = 'released' | 'not_owner' | 'storage_unavailable';
 
+export type ProfileDeleteDetails = {
+  removedEntries: number;
+  removalFailures: number;
+  rollbackFailures: number;
+};
+
 export type ProfileTransactionResult =
-  | { ok: true; metadata: ProfileMetadata; notice: ProfileRecoveryNotice | null }
+  | { ok: true; metadata: ProfileMetadata; notice: ProfileRecoveryNotice | null; deleteDetails?: ProfileDeleteDetails }
   | {
     ok: false;
     reason: ProfileMutationFailure;
     metadata: ProfileMetadata | null;
     notice: ProfileRecoveryNotice | null;
+    deleteDetails?: ProfileDeleteDetails;
   };
 
 type LockReadResult =
@@ -282,7 +291,14 @@ const transactionFailure = (
   reason: ProfileMutationFailure,
   metadata: ProfileMetadata | null,
   notice: ProfileRecoveryNotice | null,
-): ProfileTransactionResult => ({ ok: false, reason, metadata, notice });
+  deleteDetails?: ProfileDeleteDetails,
+): ProfileTransactionResult => ({
+  ok: false,
+  reason,
+  metadata,
+  notice,
+  ...(deleteDetails === undefined ? {} : { deleteDetails }),
+});
 
 const readOnlyNotice = (notice: ProfileRecoveryNotice | null): ProfileRecoveryNotice => ({
   kind: 'read_only',
@@ -317,9 +333,20 @@ const withRecoveryNotice = (
   notice: ProfileRecoveryNotice | null,
 ): ProfileTransactionResult => {
   if ('reason' in result) {
-    return { ok: false, reason: result.reason, metadata: result.metadata, notice };
+    return {
+      ok: false,
+      reason: result.reason,
+      metadata: result.metadata,
+      notice,
+      ...(result.deleteDetails === undefined ? {} : { deleteDetails: result.deleteDetails }),
+    };
   }
-  return { ok: true, metadata: result.metadata, notice };
+  return {
+    ok: true,
+    metadata: result.metadata,
+    notice,
+    ...(result.deleteDetails === undefined ? {} : { deleteDetails: result.deleteDetails }),
+  };
 };
 
 const readNewestProfileMetadata = (
@@ -488,6 +515,152 @@ export const initializeProfileMetadata = (
   );
 });
 
+const emptyDeleteDetails = (): ProfileDeleteDetails => ({
+  removedEntries: 0,
+  removalFailures: 0,
+  rollbackFailures: 0,
+});
+
+const executeProfileDelete = (
+  deps: ProfileTransactionDependencies,
+  resolution: WritableProfileMetadataResolution,
+  profileId: string,
+): ProfileTransactionResult => {
+  const previous = resolution.metadata;
+  const profileIndex = previous.profiles.findIndex(profile => profile.id === profileId);
+  if (profileIndex < 0) {
+    return transactionFailure('not_found', previous, resolution.notice);
+  }
+  if (previous.profiles.length <= 1) {
+    return transactionFailure('last_profile', previous, resolution.notice);
+  }
+
+  const writerLease = readWriterLease(deps.storage, profileBaseKey(profileId));
+  if (!writerLease.ok) {
+    return transactionFailure('storage_unavailable', previous, resolution.notice);
+  }
+  if (writerLease.lease !== null && writerLease.lease.expiresAt > deps.now()) {
+    return transactionFailure('profile_in_use', previous, resolution.notice);
+  }
+
+  const profiles = previous.profiles.filter(profile => profile.id !== profileId);
+  const candidate = validateCandidate({
+    ...previous,
+    revision: previous.revision + 1,
+    profiles,
+    activeProfileId: previous.activeProfileId === profileId
+      ? profiles[0].id
+      : previous.activeProfileId,
+  });
+  if (candidate === null) {
+    return transactionFailure('invalid_metadata', previous, resolution.notice);
+  }
+
+  let serializedPrevious: string;
+  let serializedCandidate: string;
+  try {
+    serializedPrevious = JSON.stringify(previous);
+    serializedCandidate = JSON.stringify(candidate);
+  } catch {
+    return transactionFailure('invalid_metadata', previous, resolution.notice);
+  }
+
+  const snapshots = new Map<string, string>();
+  try {
+    for (const key of profileOwnedKeys(profileId)) {
+      const value = deps.storage.getItem(key);
+      if (value !== null) snapshots.set(key, value);
+    }
+  } catch {
+    return transactionFailure('storage_unavailable', previous, resolution.notice, emptyDeleteDetails());
+  }
+
+  const backupOwnershipFailure = currentOwnershipFailure(deps);
+  if (backupOwnershipFailure !== null) {
+    return transactionFailure(
+      backupOwnershipFailure,
+      previous,
+      resolution.notice,
+      emptyDeleteDetails(),
+    );
+  }
+  try {
+    deps.storage.setItem(PROFILE_METADATA_BACKUP_KEY, serializedPrevious);
+    if (deps.storage.getItem(PROFILE_METADATA_BACKUP_KEY) !== serializedPrevious) {
+      return transactionFailure('backup_failed', previous, resolution.notice, emptyDeleteDetails());
+    }
+  } catch {
+    return transactionFailure('backup_failed', previous, resolution.notice, emptyDeleteDetails());
+  }
+
+  const removalOwnershipFailure = currentOwnershipFailure(deps);
+  if (removalOwnershipFailure !== null) {
+    return transactionFailure(
+      removalOwnershipFailure,
+      previous,
+      resolution.notice,
+      emptyDeleteDetails(),
+    );
+  }
+
+  const deletion = deleteProfileStorage(deps.storage, profileId);
+  const baseDetails: ProfileDeleteDetails = {
+    removedEntries: deletion.removed.length,
+    removalFailures: deletion.failed.length,
+    rollbackFailures: 0,
+  };
+
+  const rollback = (): ProfileDeleteDetails => {
+    const removed = new Set(deletion.removed);
+    let rollbackFailures = 0;
+    for (const [key, value] of snapshots) {
+      if (!removed.has(key)) continue;
+      try {
+        deps.storage.setItem(key, value);
+      } catch {
+        rollbackFailures += 1;
+      }
+    }
+    return { ...baseDetails, rollbackFailures };
+  };
+
+  const primaryOwnershipFailure = currentOwnershipFailure(deps);
+  if (primaryOwnershipFailure !== null) {
+    return transactionFailure(
+      primaryOwnershipFailure,
+      previous,
+      resolution.notice,
+      rollback(),
+    );
+  }
+
+  try {
+    deps.storage.setItem(PROFILES_KEY, serializedCandidate);
+    if (deps.storage.getItem(PROFILES_KEY) !== serializedCandidate) {
+      return transactionFailure(
+        'verification_failed',
+        previous,
+        resolution.notice,
+        rollback(),
+      );
+    }
+  } catch {
+    return transactionFailure(
+      'verification_failed',
+      previous,
+      resolution.notice,
+      rollback(),
+    );
+  }
+
+  return {
+    ok: true,
+    metadata: candidate,
+    notice: resolution.notice,
+    deleteDetails: baseDetails,
+  };
+};
+
 const planProfileMutation = (
   previous: ProfileMetadata,
   mutation: ProfileMutation,
@@ -548,6 +721,10 @@ export const mutateProfileMetadata = (
   deps: ProfileTransactionDependencies,
   mutation: ProfileMutation,
 ): Promise<ProfileTransactionResult> => runWithLockedProfileMetadata(deps, resolution => {
+  if (mutation.type === 'delete') {
+    return executeProfileDelete(deps, resolution, mutation.profileId);
+  }
+
   const plan = planProfileMutation(resolution.metadata, mutation);
   if (plan.status === 'failure') {
     return transactionFailure(plan.reason, resolution.metadata, resolution.notice);
