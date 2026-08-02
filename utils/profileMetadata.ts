@@ -257,7 +257,7 @@ export const discoverProfileSaveIds = (storage: ProfileMetadataStorageReader): s
     const match = key === null ? null : PROFILE_SAVE_KEY.exec(key);
     if (match) ids.push(match[1]);
   }
-  return ids.sort((left, right) => left.localeCompare(right));
+  return ids.sort((left, right) => (left > right ? 1 : left < right ? -1 : 0));
 };
 
 const recoveryHints = (raw: string | null): RecoveryHints => {
@@ -341,12 +341,9 @@ const recoveryArchive = (
 
 const reconstructProfiles = (input: ResolveProfileMetadataInput): ReconstructedProfiles => {
   const hints = mergedRecoveryHints(input.primary, input.backup);
-  const profiles: Profile[] = [];
-  const usedNames = new Set<string>();
-  let generatedNames = 0;
+  const accepted: Array<{ id: string; hint: RecoveryProfileHint | undefined }> = [];
   let unreadableSaves = 0;
   let overflowSaves = 0;
-  let nextGeneratedName = 1;
 
   for (const id of discoverProfileSaveIds(input.storage)) {
     const raw = input.storage.getItem(`FATE_PROFILE_${id}`);
@@ -354,23 +351,32 @@ const reconstructProfiles = (input: ResolveProfileMetadataInput): ReconstructedP
       unreadableSaves += 1;
       continue;
     }
-    if (profiles.length >= MAX_RECOVERED_PROFILES) {
+    if (accepted.length >= MAX_RECOVERED_PROFILES) {
       overflowSaves += 1;
       continue;
     }
+    accepted.push({ id, hint: hints.profiles.get(id) });
+  }
 
-    const hint = hints.profiles.get(id);
+  const reservedNames = new Set<string>();
+  for (const { hint } of accepted) {
+    if (hint?.name !== undefined) reservedNames.add(hint.name);
+  }
+
+  let generatedNames = 0;
+  let nextGeneratedName = 1;
+  const profiles = accepted.map(({ id, hint }) => {
     let name = hint?.name;
-    if (name === undefined || usedNames.has(name)) {
+    if (name === undefined) {
       do {
         name = `Recovered Profile ${nextGeneratedName}`;
         nextGeneratedName += 1;
-      } while (usedNames.has(name));
+      } while (reservedNames.has(name));
+      reservedNames.add(name);
       generatedNames += 1;
     }
-    usedNames.add(name);
-    profiles.push({ id, name, createdAt: hint?.createdAt ?? input.now });
-  }
+    return { id, name, createdAt: hint?.createdAt ?? input.now };
+  });
 
   const activeProfileId = hints.activeProfileId !== null && profiles.some(profile => profile.id === hints.activeProfileId)
     ? hints.activeProfileId
@@ -498,10 +504,19 @@ export const resolveProfileMetadata = (
       ? { fromKey: LEGACY_SAVE_KEY, toProfileId: metadata.activeProfileId }
       : null,
   };
+  const notice = recovered.unreadableSaves > 0 || recovered.overflowSaves > 0
+    ? recoveryNotice(
+      'partial',
+      recovered.recoveredProfiles,
+      recovered.generatedNames,
+      recovered.unreadableSaves,
+      recovered.overflowSaves,
+    )
+    : input.primary === null && input.backup === null ? null : recoveryNotice('partial');
   return {
     mode: 'repair',
     metadata,
     repair,
-    notice: input.primary === null && input.backup === null ? null : recoveryNotice('partial'),
+    notice,
   };
 };

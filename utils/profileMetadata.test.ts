@@ -351,3 +351,71 @@ describe('profile metadata recovery planning', () => {
     });
   });
 });
+describe('profile metadata recovery regressions', () => {
+  it('reports unreadable exact saves when creating a fresh profile', () => {
+    const result = resolveProfileMetadata(recoveryInput({
+      primary: null,
+      storage: recoveryStorage([['FATE_PROFILE_alpha', 'invalid:alpha']]),
+    }));
+
+    expect(result).toMatchObject({
+      mode: 'repair',
+      metadata: { profiles: [{ id: 'generated', name: 'Main Account', createdAt: 1234 }] },
+      notice: {
+        kind: 'partial',
+        recoveredProfiles: 0,
+        generatedNames: 0,
+        unreadableSaves: 1,
+        overflowSaves: 0,
+      },
+    });
+  });
+
+  it('reserves recovered names before assigning generated labels', () => {
+    const result = resolveProfileMetadata(recoveryInput({
+      primary: JSON.stringify({
+        profiles: [
+          { id: 'alpha', createdAt: 1 },
+          { id: 'beta', name: 'Recovered Profile 2', createdAt: 2 },
+          { id: 'zulu', name: 'Recovered Profile 1', createdAt: 3 },
+        ],
+        unrelated: true,
+      }),
+      backup: null,
+      storage: recoveryStorage([
+        ['FATE_PROFILE_zulu', 'valid:zulu'],
+        ['FATE_PROFILE_alpha', 'valid:alpha'],
+        ['FATE_PROFILE_beta', 'valid:beta'],
+      ]),
+    }));
+
+    expect(result).toMatchObject({
+      metadata: {
+        profiles: [
+          { id: 'alpha', name: 'Recovered Profile 3', createdAt: 1 },
+          { id: 'beta', name: 'Recovered Profile 2', createdAt: 2 },
+          { id: 'zulu', name: 'Recovered Profile 1', createdAt: 3 },
+        ],
+      },
+      notice: { generatedNames: 1 },
+    });
+  });
+
+  it('uses code-unit order for mixed-case recovered profile IDs', () => {
+    const result = resolveProfileMetadata(recoveryInput({
+      primary: null,
+      storage: recoveryStorage([
+        ['FATE_PROFILE_a', 'valid:a'],
+        ['FATE_PROFILE_Z', 'valid:Z'],
+        ['FATE_PROFILE_A', 'valid:A'],
+      ]),
+    }));
+
+    expect(result.metadata.profiles).toEqual([
+      { id: 'A', name: 'Recovered Profile 1', createdAt: 1234 },
+      { id: 'Z', name: 'Recovered Profile 2', createdAt: 1234 },
+      { id: 'a', name: 'Recovered Profile 3', createdAt: 1234 },
+    ]);
+    expect(result.metadata.activeProfileId).toBe('A');
+  });
+});
