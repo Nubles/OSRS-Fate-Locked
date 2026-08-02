@@ -772,15 +772,12 @@ describe('profile metadata startup', () => {
 });
 
 describe('unsupported profile metadata startup', () => {
-  it.each([
-    { source: 'primary', primaryFuture: true },
-    { source: 'backup', primaryFuture: false },
-  ])('archives a future $source but never rewrites either registry copy', async ({ primaryFuture }) => {
+  it('archives a future primary but never rewrites either registry copy', async () => {
     const supported = metadata(4, 'Supported');
     const supportedRaw = JSON.stringify(supported);
     const futureRaw = JSON.stringify({ version: 2, revision: 9, futureField: true });
-    const primaryRaw = primaryFuture ? futureRaw : supportedRaw;
-    const backupRaw = primaryFuture ? supportedRaw : futureRaw;
+    const primaryRaw = futureRaw;
+    const backupRaw = supportedRaw;
     const storage = createStorage([
       [PROFILES_KEY, primaryRaw],
       [PROFILE_METADATA_BACKUP_KEY, backupRaw],
@@ -811,6 +808,27 @@ describe('unsupported profile metadata startup', () => {
     }));
     expect(storage.values.get(PROFILES_KEY)).toBe(primaryRaw);
     expect(storage.values.get(PROFILE_METADATA_BACKUP_KEY)).toBe(backupRaw);
+    expect(storage.values.has(PROFILE_METADATA_LOCK_KEY)).toBe(false);
+  });
+
+  it('uses a supported current primary without touching a future backup', async () => {
+    const supported = metadata(4, 'Supported');
+    const supportedRaw = JSON.stringify(supported);
+    const futureRaw = JSON.stringify({ version: 2, revision: 9, futureField: true });
+    const storage = createStorage([
+      [PROFILES_KEY, supportedRaw],
+      [PROFILE_METADATA_BACKUP_KEY, futureRaw],
+    ]);
+
+    await expect(initializeProfileMetadata(createDependencies(storage))).resolves.toEqual({
+      ok: true,
+      metadata: supported,
+      notice: null,
+    });
+    expect(registryDurabilityCalls(storage)).toEqual([]);
+    expect(storage.values.get(PROFILES_KEY)).toBe(supportedRaw);
+    expect(storage.values.get(PROFILE_METADATA_BACKUP_KEY)).toBe(futureRaw);
+    expect(storage.values.has(PROFILE_METADATA_RECOVERY_KEY)).toBe(false);
     expect(storage.values.has(PROFILE_METADATA_LOCK_KEY)).toBe(false);
   });
 
@@ -1267,7 +1285,7 @@ describe('coordinated profile deletion', () => {
     expect(storage.values.has(PROFILE_METADATA_LOCK_KEY)).toBe(false);
   });
 
-  it('counts removal failures without touching unrelated data or leaking storage contents', async () => {
+  it('fails closed on thrown removals and restores successfully removed data', async () => {
     const current = deletableMetadata('beta');
     const failingKeys = [alphaOwnedKeys[1], alphaOwnedKeys[4]];
     const storage = createStorage([
@@ -1290,16 +1308,114 @@ describe('coordinated profile deletion', () => {
       profileId: 'alpha',
     });
 
-    expect(result).toMatchObject({
-      ok: true,
-      metadata: { revision: 8, activeProfileId: 'beta' },
+    expect(result).toEqual({
+      ok: false,
+      reason: 'storage_unavailable',
+      metadata: current,
+      notice: null,
       deleteDetails: { removedEntries: 5, removalFailures: 2, rollbackFailures: 0 },
     });
     expect(JSON.stringify(result)).not.toContain('FATE_PROFILE_alpha');
     expect(JSON.stringify(result)).not.toContain('secret:');
+    expect(storage.values.get(PROFILES_KEY)).toBe(JSON.stringify(current));
     expect(storage.values.get('FATE_PROFILE_beta')).toBe('beta-secret');
     expect(storage.values.get('FATE_PROFILE_alpha_misleading')).toBe('misleading-secret');
-    for (const key of failingKeys) expect(storage.values.get(key)).toBe(`secret:${key}`);
+    for (const key of alphaOwnedKeys) expect(storage.values.get(key)).toBe(`secret:${key}`);
+  });
+
+  it('fails closed when a removal silently leaves stored data behind', async () => {
+    const current = deletableMetadata('beta');
+    const silentFailure = alphaOwnedKeys[0];
+    const storage = createStorage([
+      [PROFILES_KEY, JSON.stringify(current)],
+      ...alphaOwnedKeys.map(key => [key, `secret:${key}`] as const),
+      ['FATE_PROFILE_beta', 'beta-secret'],
+    ]);
+    const removeItem = storage.removeItem;
+    storage.removeItem = key => {
+      if (key === silentFailure) {
+        storage.calls.push(`remove:${key}`);
+        return;
+      }
+      removeItem(key);
+    };
+
+    const result = await mutateProfileMetadata(createDependencies(storage), {
+      type: 'delete',
+      profileId: 'alpha',
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      reason: 'storage_unavailable',
+      metadata: current,
+      notice: null,
+      deleteDetails: { removedEntries: 6, removalFailures: 1, rollbackFailures: 0 },
+    });
+    expect(storage.values.get(PROFILES_KEY)).toBe(JSON.stringify(current));
+    expect(storage.values.get('FATE_PROFILE_beta')).toBe('beta-secret');
+    for (const key of alphaOwnedKeys) expect(storage.values.get(key)).toBe(`secret:${key}`);
+  });
+
+  it('restores a stored value when removeItem deletes it before throwing', async () => {
+    const current = deletableMetadata('beta');
+    const thrownKey = alphaOwnedKeys[0];
+    const storage = createStorage([
+      [PROFILES_KEY, JSON.stringify(current)],
+      ...alphaOwnedKeys.map(key => [key, `secret:${key}`] as const),
+    ]);
+    const removeItem = storage.removeItem;
+    storage.removeItem = key => {
+      if (key === thrownKey) {
+        removeItem(key);
+        throw new DOMException('blocked after delete', 'SecurityError');
+      }
+      removeItem(key);
+    };
+
+    const result = await mutateProfileMetadata(createDependencies(storage), {
+      type: 'delete',
+      profileId: 'alpha',
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      reason: 'storage_unavailable',
+      metadata: current,
+      notice: null,
+      deleteDetails: { removedEntries: 7, removalFailures: 1, rollbackFailures: 0 },
+    });
+    for (const key of alphaOwnedKeys) expect(storage.values.get(key)).toBe(`secret:${key}`);
+  });
+
+  it('does not fail deletion when removeItem throws only for an originally absent key', async () => {
+    const current = deletableMetadata('beta');
+    const storedKeys = [alphaOwnedKeys[0], alphaOwnedKeys[3]];
+    const absentKey = alphaOwnedKeys[1];
+    const storage = createStorage([
+      [PROFILES_KEY, JSON.stringify(current)],
+      ...storedKeys.map(key => [key, `secret:${key}`] as const),
+    ]);
+    const removeItem = storage.removeItem;
+    storage.removeItem = key => {
+      if (key === absentKey) {
+        storage.calls.push(`remove:${key}`);
+        throw new DOMException('blocked', 'SecurityError');
+      }
+      removeItem(key);
+    };
+
+    const result = await mutateProfileMetadata(createDependencies(storage), {
+      type: 'delete',
+      profileId: 'alpha',
+    });
+
+    expect(result).toMatchObject({
+      ok: true,
+      metadata: { revision: 8, activeProfileId: 'beta' },
+      deleteDetails: { removedEntries: 2, removalFailures: 0, rollbackFailures: 0 },
+    });
+    for (const key of storedKeys) expect(storage.values.has(key)).toBe(false);
   });
 
   it.each(['throw', 'mismatch'] as const)(
@@ -1384,7 +1500,7 @@ describe('coordinated profile deletion', () => {
 
     expect(result).toMatchObject({
       ok: false,
-      reason: 'verification_failed',
+      reason: 'storage_unavailable',
       metadata: current,
       deleteDetails: { removedEntries: 2, removalFailures: 1, rollbackFailures: 0 },
     });

@@ -208,6 +208,20 @@ describe('profile metadata recovery planning', () => {
     expect(result.repair).toBeNull();
   });
 
+  it('uses a valid current primary when the backup has a future version', () => {
+    const result = resolveProfileMetadata(recoveryInput({
+      primary: JSON.stringify(current()),
+      backup: JSON.stringify({ ...current(), version: 2 }),
+    }));
+
+    expect(result).toEqual({
+      mode: 'durable',
+      metadata: current(),
+      repair: null,
+      notice: null,
+    });
+  });
+
   it('requests legacy migration through a repair plan', () => {
     const result = resolveProfileMetadata(recoveryInput({
       primary: JSON.stringify(legacy()),

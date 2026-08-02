@@ -659,17 +659,36 @@ const executeProfileDelete = (
   }
 
   const deletion = deleteProfileStorage(deps.storage, profileId);
+  const removalThrows = new Set(deletion.failed.filter(key => snapshots.has(key)));
+  const failedRemovalKeys = new Set<string>();
+  const rollbackKeys = new Set<string>();
+  const verifiedRemovedKeys = new Set<string>();
+  for (const key of snapshots.keys()) {
+    let removed: boolean;
+    try {
+      removed = deps.storage.getItem(key) === null;
+    } catch {
+      failedRemovalKeys.add(key);
+      rollbackKeys.add(key);
+      continue;
+    }
+    if (removed) {
+      verifiedRemovedKeys.add(key);
+      rollbackKeys.add(key);
+    }
+    if (removalThrows.has(key) || !removed) failedRemovalKeys.add(key);
+  }
+
   const baseDetails: ProfileDeleteDetails = {
-    removedEntries: deletion.removed.filter(key => snapshots.has(key)).length,
-    removalFailures: deletion.failed.length,
+    removedEntries: verifiedRemovedKeys.size,
+    removalFailures: failedRemovalKeys.size,
     rollbackFailures: 0,
   };
 
   const rollback = (): ProfileDeleteDetails => {
-    const removed = new Set(deletion.removed);
     let rollbackFailures = 0;
     for (const [key, value] of snapshots) {
-      if (!removed.has(key)) continue;
+      if (!rollbackKeys.has(key)) continue;
       try {
         deps.storage.setItem(key, value);
         if (deps.storage.getItem(key) !== value) {
@@ -681,6 +700,15 @@ const executeProfileDelete = (
     }
     return { ...baseDetails, rollbackFailures };
   };
+
+  if (failedRemovalKeys.size > 0) {
+    return transactionFailure(
+      'storage_unavailable',
+      previous,
+      resolution.notice,
+      rollback(),
+    );
+  }
 
   if (transactionAborted(deps)) {
     return transactionFailure(

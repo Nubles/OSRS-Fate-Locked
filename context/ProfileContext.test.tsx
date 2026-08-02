@@ -400,6 +400,7 @@ describe('ProfileProvider validated async state', () => {
       reason: 'backup_failed',
       metadata,
       notice: null,
+      deleteDetails: { removedEntries: 5, removalFailures: 2, rollbackFailures: 0 },
     });
 
     await act(async () => { await rendered.current().deleteProfile('other'); });
