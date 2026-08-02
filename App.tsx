@@ -27,6 +27,7 @@ import { FeatureRevealDriver } from './components/FeatureRevealDriver';
 import { BackupNagBanner } from './components/BackupNagBanner';
 import { SaveConflictBanner } from './components/SaveConflictBanner';
 import { SaveFailureBanner } from './components/SaveFailureBanner';
+import { ProfileRecoveryBanner } from './components/ProfileRecoveryBanner';
 import { SaveRecoveryGuard } from './components/SaveRecoveryGuard';
 import { DiscordSyncDriver } from './components/DiscordSyncDriver';
 import { downloadFateSave } from './utils/fateSaveFile';
@@ -965,6 +966,8 @@ const GameLayout = () => {
         onOpenRuneliteGuide={openRuneliteGuide}
         onOpenChangelog={openChangelog}
       />
+
+      <ProfileRecoveryBanner />
 
       <SaveConflictBanner />
 
