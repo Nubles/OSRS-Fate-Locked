@@ -4,6 +4,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { useEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ProfileSwitcher } from '../components/ProfileSwitcher';
+import { ProfileRecoveryBanner } from '../components/ProfileRecoveryBanner';
 import type { ProfileMetadata } from '../types';
 import {
   getPendingSave,
@@ -417,6 +418,38 @@ describe('ProfileProvider validated async state', () => {
 
     expect(getPendingSave(targetKey)).toBeNull();
     expect(rendered.current().profiles.map(profile => profile.id)).toEqual(['target']);
+  });
+
+  it('warns without exposing storage details when delete rollback cannot restore data', async () => {
+    const targetKey = profileBaseKey('other');
+    const privateValue = 'private-save-payload';
+    stagePendingSave(targetKey, privateValue);
+    let current: Profiles | undefined;
+    render(
+      <ProfileProvider>
+        <Task6ProfileCapture onProfiles={profiles => { current = profiles; }} />
+        <ProfileRecoveryBanner />
+      </ProfileProvider>,
+    );
+    await settleTask6Initialization();
+    if (!current) throw new Error('Profile provider did not initialize');
+
+    vi.spyOn(ProfileTransactions, 'mutateProfileMetadata').mockResolvedValueOnce({
+      ok: false,
+      reason: 'storage_unavailable',
+      metadata,
+      notice: null,
+      deleteDetails: { removedEntries: 2, removalFailures: 1, rollbackFailures: 2 },
+    });
+
+    await act(async () => { await current!.deleteProfile('other'); });
+
+    const warning = screen.getByRole('alert').textContent ?? '';
+    expect(warning).toContain('2 profile entries could not be restored during rollback.');
+    expect(warning).not.toContain(targetKey);
+    expect(warning).not.toContain(privateValue);
+    expect(getPendingSave(targetKey)?.data).toBe(privateValue);
+    expect(current.recoveryNotice).toMatchObject({ kind: 'partial', rollbackFailures: 2 });
   });
 
   it('rejects stale delete success after a newer validated event and retains pending data', async () => {

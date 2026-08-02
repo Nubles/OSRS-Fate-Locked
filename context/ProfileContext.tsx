@@ -522,6 +522,13 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setMutationFailure(null);
       busyRereadArmedRef.current = false;
     } else {
+      const failureNotice = result.deleteDetails !== undefined
+        && result.deleteDetails.rollbackFailures > 0
+        ? {
+            ...(result.notice ?? emptyNotice('partial')),
+            rollbackFailures: result.deleteDetails.rollbackFailures,
+          }
+        : result.notice;
       if (result.reason === 'not_found' && result.metadata !== null) {
         try {
           const parsed = parseProfileMetadata(JSON.stringify(result.metadata));
@@ -537,14 +544,14 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
       setMutationFailure(result.reason);
       const readOnly = result.reason === 'unsupported_metadata'
-        || result.notice?.kind === 'read_only'
-        || result.notice?.kind === 'unsupported';
+        || failureNotice?.kind === 'read_only'
+        || failureNotice?.kind === 'unsupported';
       if (readOnly) {
         metadataReadOnlyRef.current = true;
         readOnlyReasonRef.current = result.reason;
         setMetadataReadOnly(true);
       }
-      if (result.notice !== null) setRecoveryNotice(result.notice);
+      if (failureNotice !== null) setRecoveryNotice(failureNotice);
       busyRereadArmedRef.current = result.reason === 'busy';
     }
     setPending(null);
