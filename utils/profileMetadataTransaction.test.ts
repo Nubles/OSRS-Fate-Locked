@@ -1758,3 +1758,266 @@ describe('legacy copy validation ordering', () => {
     expect(profileSaveWrites(storage)).toEqual([]);
   });
 });
+
+const abortableDependencies = (
+  storage: TestStorage,
+  shouldAbort: () => boolean,
+) => ({
+  ...createDependencies(storage),
+  shouldAbort,
+});
+
+describe('profile transaction cancellation boundaries', () => {
+  it('aborts after the locked reread before replacing a recovery envelope', async () => {
+    const recovered = metadata(3, 'Recovered');
+    const primaryRaw = '{broken';
+    const backupRaw = JSON.stringify(recovered);
+    const storage = createStorage([
+      [PROFILES_KEY, primaryRaw],
+      [PROFILE_METADATA_BACKUP_KEY, backupRaw],
+      [PROFILE_METADATA_RECOVERY_KEY, 'existing-recovery'],
+    ]);
+    let aborted = false;
+    const getItem = storage.getItem;
+    storage.getItem = key => {
+      const value = getItem(key);
+      if (key === LEGACY_SAVE_KEY) aborted = true;
+      return value;
+    };
+
+    await expect(initializeProfileMetadata(
+      abortableDependencies(storage, () => aborted),
+    )).resolves.toMatchObject({ ok: false, reason: 'busy' });
+
+    expect(storage.values.get(PROFILE_METADATA_RECOVERY_KEY)).toBe('existing-recovery');
+    expect(storage.values.get(PROFILE_METADATA_BACKUP_KEY)).toBe(backupRaw);
+    expect(storage.values.get(PROFILES_KEY)).toBe(primaryRaw);
+    expect(nonLockWrites(storage)).toEqual([]);
+  });
+
+  it('does not report no-write success after cancellation during the locked reread', async () => {
+    const current = metadata(7);
+    const raw = JSON.stringify(current);
+    const storage = createStorage([[PROFILES_KEY, raw]]);
+    let aborted = false;
+    const getItem = storage.getItem;
+    storage.getItem = key => {
+      const value = getItem(key);
+      if (key === LEGACY_SAVE_KEY) aborted = true;
+      return value;
+    };
+
+    await expect(initializeProfileMetadata(
+      abortableDependencies(storage, () => aborted),
+    )).resolves.toEqual({
+      ok: false,
+      reason: 'busy',
+      metadata: current,
+      notice: null,
+    });
+    expect(storage.values.get(PROFILES_KEY)).toBe(raw);
+    expect(nonLockWrites(storage)).toEqual([]);
+  });
+
+  it('aborts after the legacy execution reread before copying the save', async () => {
+    const storage = createStorage([[LEGACY_SAVE_KEY, 'valid:legacy']]);
+    let aborted = false;
+    let legacyReads = 0;
+    const getItem = storage.getItem;
+    storage.getItem = key => {
+      const value = getItem(key);
+      if (key === LEGACY_SAVE_KEY && ++legacyReads === 2) aborted = true;
+      return value;
+    };
+
+    await expect(initializeProfileMetadata(
+      abortableDependencies(storage, () => aborted),
+    )).resolves.toMatchObject({ ok: false, reason: 'busy' });
+    expect(storage.values.has('FATE_PROFILE_tab-a-profile')).toBe(false);
+    expect(storage.values.has(PROFILE_METADATA_BACKUP_KEY)).toBe(false);
+    expect(storage.values.has(PROFILES_KEY)).toBe(false);
+    expect(profileSaveWrites(storage)).toEqual([]);
+  });
+
+  it('aborts immediately before the metadata backup write', async () => {
+    const current = metadata(7);
+    const raw = JSON.stringify(current);
+    const storage = createStorage([
+      [PROFILES_KEY, raw],
+      [PROFILE_METADATA_BACKUP_KEY, 'existing-backup'],
+    ]);
+    let sourcesRead = false;
+    let aborted = false;
+    const getItem = storage.getItem;
+    storage.getItem = key => {
+      const value = getItem(key);
+      if (key === LEGACY_SAVE_KEY) sourcesRead = true;
+      if (key === PROFILE_METADATA_LOCK_KEY && sourcesRead) aborted = true;
+      return value;
+    };
+
+    await expect(mutateProfileMetadata(
+      abortableDependencies(storage, () => aborted),
+      { type: 'rename', profileId: 'alpha', name: 'Renamed' },
+    )).resolves.toMatchObject({ ok: false, reason: 'busy' });
+    expect(storage.values.get(PROFILE_METADATA_BACKUP_KEY)).toBe('existing-backup');
+    expect(storage.values.get(PROFILES_KEY)).toBe(raw);
+  });
+
+  it('aborts immediately before the metadata primary write', async () => {
+    const current = metadata(7);
+    const raw = JSON.stringify(current);
+    const storage = createStorage([
+      [PROFILES_KEY, raw],
+      [PROFILE_METADATA_BACKUP_KEY, raw],
+    ]);
+    let backupVerified = false;
+    let aborted = false;
+    const getItem = storage.getItem;
+    storage.getItem = key => {
+      const value = getItem(key);
+      if (
+        key === PROFILE_METADATA_BACKUP_KEY
+        && storage.calls.includes(`set:${PROFILE_METADATA_BACKUP_KEY}`)
+      ) backupVerified = true;
+      if (key === PROFILE_METADATA_LOCK_KEY && backupVerified) aborted = true;
+      return value;
+    };
+
+    await expect(mutateProfileMetadata(
+      abortableDependencies(storage, () => aborted),
+      { type: 'rename', profileId: 'alpha', name: 'Renamed' },
+    )).resolves.toMatchObject({ ok: false, reason: 'busy' });
+    expect(storage.values.get(PROFILE_METADATA_BACKUP_KEY)).toBe(raw);
+    expect(storage.values.get(PROFILES_KEY)).toBe(raw);
+  });
+
+  it('aborts immediately before the deletion backup write', async () => {
+    const current = deletableMetadata();
+    const raw = JSON.stringify(current);
+    const storage = createStorage([
+      [PROFILES_KEY, raw],
+      [PROFILE_METADATA_BACKUP_KEY, 'existing-backup'],
+      ...alphaOwnedKeys.map(key => [key, `secret:${key}`] as const),
+    ]);
+    let snapshotsRead = false;
+    let aborted = false;
+    const getItem = storage.getItem;
+    storage.getItem = key => {
+      const value = getItem(key);
+      if (key === 'FATE_PROFILE_alpha') snapshotsRead = true;
+      if (key === PROFILE_METADATA_LOCK_KEY && snapshotsRead) aborted = true;
+      return value;
+    };
+
+    await expect(mutateProfileMetadata(
+      abortableDependencies(storage, () => aborted),
+      { type: 'delete', profileId: 'alpha' },
+    )).resolves.toMatchObject({ ok: false, reason: 'busy' });
+    expect(storage.values.get(PROFILE_METADATA_BACKUP_KEY)).toBe('existing-backup');
+    expect(storage.values.get(PROFILES_KEY)).toBe(raw);
+    expect(profileOwnedRemovalCalls(storage)).toEqual([]);
+  });
+
+  it('aborts immediately before exact owned-key removal', async () => {
+    const current = deletableMetadata();
+    const raw = JSON.stringify(current);
+    const storage = createStorage([
+      [PROFILES_KEY, raw],
+      [PROFILE_METADATA_BACKUP_KEY, raw],
+      ...alphaOwnedKeys.map(key => [key, `secret:${key}`] as const),
+    ]);
+    let backupVerified = false;
+    let removalOwnershipChecked = false;
+    let aborted = false;
+    const getItem = storage.getItem;
+    storage.getItem = key => {
+      const value = getItem(key);
+      if (
+        key === PROFILE_METADATA_BACKUP_KEY
+        && storage.calls.includes(`set:${PROFILE_METADATA_BACKUP_KEY}`)
+      ) backupVerified = true;
+      if (key === PROFILE_METADATA_LOCK_KEY && backupVerified) removalOwnershipChecked = true;
+      if (key === 'FATE_PROFILE_alpha__writer' && removalOwnershipChecked) aborted = true;
+      return value;
+    };
+
+    await expect(mutateProfileMetadata(
+      abortableDependencies(storage, () => aborted),
+      { type: 'delete', profileId: 'alpha' },
+    )).resolves.toMatchObject({ ok: false, reason: 'busy' });
+    expect(profileOwnedRemovalCalls(storage)).toEqual([]);
+    for (const key of alphaOwnedKeys) expect(storage.values.get(key)).toBe(`secret:${key}`);
+    expect(storage.values.get(PROFILES_KEY)).toBe(raw);
+  });
+
+  it('rolls back all removed values when cancellation is observed before delete primary commit', async () => {
+    const current = deletableMetadata();
+    const raw = JSON.stringify(current);
+    const storage = createStorage([
+      [PROFILES_KEY, raw],
+      [PROFILE_METADATA_BACKUP_KEY, raw],
+      ...alphaOwnedKeys.map(key => [key, `secret:${key}`] as const),
+    ]);
+    let aborted = false;
+    const removeItem = storage.removeItem;
+    storage.removeItem = key => {
+      removeItem(key);
+      if (alphaOwnedKeys.includes(key as typeof alphaOwnedKeys[number])) aborted = true;
+    };
+
+    await expect(mutateProfileMetadata(
+      abortableDependencies(storage, () => aborted),
+      { type: 'delete', profileId: 'alpha' },
+    )).resolves.toEqual({
+      ok: false,
+      reason: 'busy',
+      metadata: current,
+      notice: null,
+      deleteDetails: { removedEntries: 7, removalFailures: 0, rollbackFailures: 0 },
+    });
+    for (const key of alphaOwnedKeys) expect(storage.values.get(key)).toBe(`secret:${key}`);
+    expect(storage.values.get(PROFILES_KEY)).toBe(raw);
+  });
+
+  it('counts rollback failures when cancellation follows delete removals', async () => {
+    const current = deletableMetadata();
+    const raw = JSON.stringify(current);
+    const rollbackFailureKey = alphaOwnedKeys[0];
+    const storage = createStorage([
+      [PROFILES_KEY, raw],
+      [PROFILE_METADATA_BACKUP_KEY, raw],
+      ...alphaOwnedKeys.map(key => [key, `secret:${key}`] as const),
+    ]);
+    let aborted = false;
+    const removeItem = storage.removeItem;
+    storage.removeItem = key => {
+      removeItem(key);
+      if (alphaOwnedKeys.includes(key as typeof alphaOwnedKeys[number])) aborted = true;
+    };
+    const setItem = storage.setItem;
+    storage.setItem = (key, value) => {
+      if (aborted && key === rollbackFailureKey) {
+        storage.calls.push(`set:${key}`);
+        throw new DOMException('full', 'QuotaExceededError');
+      }
+      setItem(key, value);
+    };
+
+    await expect(mutateProfileMetadata(
+      abortableDependencies(storage, () => aborted),
+      { type: 'delete', profileId: 'alpha' },
+    )).resolves.toEqual({
+      ok: false,
+      reason: 'busy',
+      metadata: current,
+      notice: null,
+      deleteDetails: { removedEntries: 7, removalFailures: 0, rollbackFailures: 1 },
+    });
+    expect(storage.values.has(rollbackFailureKey)).toBe(false);
+    for (const key of alphaOwnedKeys.slice(1)) {
+      expect(storage.values.get(key)).toBe(`secret:${key}`);
+    }
+    expect(storage.values.get(PROFILES_KEY)).toBe(raw);
+  });
+});

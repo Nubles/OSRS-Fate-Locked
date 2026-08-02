@@ -37,6 +37,7 @@ export interface ProfileTransactionDependencies {
   wait: (milliseconds: number) => Promise<void>;
   validateGameSave: GameSaveValidator;
   createProfileId: () => string;
+  shouldAbort?: () => boolean;
 }
 export type ProfileMutation =
   | { type: 'create'; profile: Profile }
@@ -218,6 +219,10 @@ export const releaseProfileMetadataLock = (
   }
 };
 
+const transactionAborted = (
+  deps: ProfileTransactionDependencies,
+): boolean => deps.shouldAbort?.() === true;
+
 const commitFailure = (
   reason: ProfileMutationFailure,
   previous: ProfileMetadata,
@@ -251,6 +256,7 @@ export const commitProfileMetadataCandidate = (
   const lock = readLock(deps);
   if (!lock.ok) return commitFailure('storage_unavailable', previous);
   if (!isOwnedAndUnexpired(lock.lock, deps)) return commitFailure('busy', previous);
+  if (transactionAborted(deps)) return commitFailure('busy', previous);
 
   try {
     deps.storage.setItem(PROFILE_METADATA_BACKUP_KEY, serializedPrevious);
@@ -264,6 +270,7 @@ export const commitProfileMetadataCandidate = (
   const primaryLock = readLock(deps);
   if (!primaryLock.ok) return commitFailure('storage_unavailable', previous);
   if (!isOwnedAndUnexpired(primaryLock.lock, deps)) return commitFailure('busy', previous);
+  if (transactionAborted(deps)) return commitFailure('busy', previous);
 
   try {
     deps.storage.setItem(PROFILES_KEY, serializedCandidate);
@@ -321,9 +328,11 @@ const readOnlyNotice = (notice: ProfileRecoveryNotice | null): ProfileRecoveryNo
 const currentOwnershipFailure = (
   deps: ProfileTransactionDependencies,
 ): Extract<ProfileMutationFailure, 'busy' | 'storage_unavailable'> | null => {
+  if (transactionAborted(deps)) return 'busy';
   const current = readLock(deps);
   if (!current.ok) return 'storage_unavailable';
-  return isOwnedAndUnexpired(current.lock, deps) ? null : 'busy';
+  if (!isOwnedAndUnexpired(current.lock, deps)) return 'busy';
+  return transactionAborted(deps) ? 'busy' : null;
 };
 
 const noWriteSuccess = (
@@ -331,6 +340,7 @@ const noWriteSuccess = (
   metadata: ProfileMetadata,
   notice: ProfileRecoveryNotice | null,
 ): ProfileTransactionResult => {
+  if (transactionAborted(deps)) return transactionFailure('busy', metadata, notice);
   const ownershipFailure = currentOwnershipFailure(deps);
   return ownershipFailure === null
     ? { ok: true, metadata, notice }
@@ -394,6 +404,7 @@ const verifyRecoveryEnvelope = (
     const serialized = JSON.stringify(envelope);
     const ownershipFailure = currentOwnershipFailure(deps);
     if (ownershipFailure !== null) return ownershipFailure;
+    if (transactionAborted(deps)) return 'busy';
     deps.storage.setItem(PROFILE_METADATA_RECOVERY_KEY, serialized);
     return deps.storage.getItem(PROFILE_METADATA_RECOVERY_KEY) === serialized
       ? 'verified'
@@ -413,8 +424,14 @@ const runWithLockedProfileMetadata = async (
   }
 
   try {
+    if (transactionAborted(deps)) {
+      return transactionFailure('busy', null, null);
+    }
     const sources = readNewestProfileMetadata(deps);
     if (!sources.ok) return transactionFailure('storage_unavailable', null, null);
+    if (transactionAborted(deps)) {
+      return transactionFailure('busy', sources.resolution.metadata, sources.resolution.notice);
+    }
 
     const { resolution } = sources;
     const archive = resolution.mode === 'read_only'
@@ -444,6 +461,9 @@ const runWithLockedProfileMetadata = async (
         resolution.notice,
       );
     }
+    if (transactionAborted(deps)) {
+      return transactionFailure('busy', resolution.metadata, resolution.notice);
+    }
 
     try {
       return operation(resolution);
@@ -465,9 +485,11 @@ const executeLegacyCopy = (
   try {
     const latest = deps.storage.getItem(copy.fromKey);
     if (latest === null || !deps.validateGameSave(latest)) return 'verification_failed';
+    if (transactionAborted(deps)) return 'busy';
     const ownershipFailure = currentOwnershipFailure(deps);
     if (ownershipFailure !== null) return ownershipFailure;
     const targetKey = `FATE_PROFILE_${copy.toProfileId}`;
+    if (transactionAborted(deps)) return 'busy';
     deps.storage.setItem(targetKey, latest);
     return deps.storage.getItem(targetKey) === latest ? null : 'verification_failed';
   } catch {
@@ -601,6 +623,9 @@ const executeProfileDelete = (
       emptyDeleteDetails(),
     );
   }
+  if (transactionAborted(deps)) {
+    return transactionFailure('busy', previous, resolution.notice, emptyDeleteDetails());
+  }
   try {
     deps.storage.setItem(PROFILE_METADATA_BACKUP_KEY, serializedPrevious);
     if (deps.storage.getItem(PROFILE_METADATA_BACKUP_KEY) !== serializedPrevious) {
@@ -629,6 +654,9 @@ const executeProfileDelete = (
       emptyDeleteDetails(),
     );
   }
+  if (transactionAborted(deps)) {
+    return transactionFailure('busy', previous, resolution.notice, emptyDeleteDetails());
+  }
 
   const deletion = deleteProfileStorage(deps.storage, profileId);
   const baseDetails: ProfileDeleteDetails = {
@@ -654,10 +682,27 @@ const executeProfileDelete = (
     return { ...baseDetails, rollbackFailures };
   };
 
+  if (transactionAborted(deps)) {
+    return transactionFailure(
+      'busy',
+      previous,
+      resolution.notice,
+      rollback(),
+    );
+  }
+
   const primaryOwnershipFailure = currentOwnershipFailure(deps);
   if (primaryOwnershipFailure !== null) {
     return transactionFailure(
       primaryOwnershipFailure,
+      previous,
+      resolution.notice,
+      rollback(),
+    );
+  }
+  if (transactionAborted(deps)) {
+    return transactionFailure(
+      'busy',
       previous,
       resolution.notice,
       rollback(),

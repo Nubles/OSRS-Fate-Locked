@@ -12,8 +12,10 @@ import {
 import { profileBaseKey } from '../utils/profileStorage';
 import { ProfileProvider, useProfiles } from './ProfileContext';
 import {
+  LEGACY_SAVE_KEY,
   PROFILE_METADATA_BACKUP_KEY,
   PROFILE_METADATA_LOCK_KEY,
+  PROFILE_METADATA_RECOVERY_KEY,
   PROFILES_KEY,
 } from '../utils/profileMetadata';
 import * as ProfileTransactions from '../utils/profileMetadataTransaction';
@@ -475,6 +477,46 @@ describe('ProfileProvider validated async state', () => {
     expect(rendered.current().recentlyCreatedId).toBeNull();
   });
 
+  it('cancels a real in-flight mutation when a valid newer primary event arrives', async () => {
+    const rendered = renderTask6Profiles();
+    await settleTask6Initialization();
+    storage.values.set(PROFILE_METADATA_BACKUP_KEY, 'existing-backup');
+    storage.values.set(PROFILE_METADATA_RECOVERY_KEY, 'existing-recovery');
+    storage.values.set(profileBaseKey('target'), 'existing-save');
+    let mutation!: Promise<ProfileTransactionResult>;
+
+    act(() => { mutation = rendered.current().renameProfile('target', 'Stale rename'); });
+    const newest = task6Metadata({
+      revision: 3,
+      profiles: [{ ...metadata.profiles[0], name: 'Newest target' }, metadata.profiles[1]],
+      activeProfileId: 'other',
+    });
+    storage.values.set(PROFILES_KEY, JSON.stringify(newest));
+    const expected = new Map(
+      [...storage.values].filter(([key]) => key !== PROFILE_METADATA_LOCK_KEY),
+    );
+
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: PROFILES_KEY,
+        newValue: JSON.stringify(newest),
+      }));
+    });
+    let result!: ProfileTransactionResult;
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(PROFILE_METADATA_LOCK_ARBITRATION_MS);
+      result = await mutation;
+    });
+
+    expect(result).toMatchObject({ ok: false, reason: 'busy' });
+    expect(rendered.current().profiles).toEqual(newest.profiles);
+    expect(rendered.current().activeProfileId).toBe('target');
+    expect(new Map(
+      [...storage.values].filter(([key]) => key !== PROFILE_METADATA_LOCK_KEY),
+    )).toEqual(expected);
+    expect(storage.values.has(PROFILE_METADATA_LOCK_KEY)).toBe(false);
+  });
+
   it('ignores equal and lower current metadata events', async () => {
     const rendered = renderTask6Profiles();
     await settleTask6Initialization();
@@ -868,6 +910,50 @@ describe('ProfileProvider validated async state', () => {
     expect(initialize).toHaveBeenCalledTimes(2);
   });
 
+  it('keeps a valid primary event as the winner when it cancels a bounded startup reread', async () => {
+    vi.spyOn(ProfileTransactions, 'initializeProfileMetadata').mockResolvedValueOnce({
+      ok: false,
+      reason: 'busy',
+      metadata: null,
+      notice: null,
+    });
+    const rendered = renderTask6Profiles();
+    await act(async () => { await Promise.resolve(); });
+
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: PROFILE_METADATA_LOCK_KEY,
+        newValue: null,
+      }));
+    });
+    const incoming = task6Metadata({
+      revision: 4,
+      profiles: [{ ...metadata.profiles[0], name: 'Reread event winner' }, metadata.profiles[1]],
+      activeProfileId: 'other',
+    });
+    const raw = JSON.stringify(incoming);
+    storage.values.set(PROFILES_KEY, raw);
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: PROFILES_KEY,
+        newValue: raw,
+      }));
+    });
+
+    expect(rendered.current().profiles).toEqual(incoming.profiles);
+    expect(rendered.current().activeProfileId).toBe('other');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(PROFILE_METADATA_LOCK_ARBITRATION_MS);
+    });
+
+    expect(rendered.current().profiles).toEqual(incoming.profiles);
+    expect(rendered.current().activeProfileId).toBe('other');
+    expect(rendered.current().pendingAction).toBeNull();
+    expect(rendered.current().mutationFailure).toBeNull();
+    expect(storage.values.get(PROFILES_KEY)).toBe(raw);
+    expect(storage.values.has(PROFILE_METADATA_LOCK_KEY)).toBe(false);
+  });
+
   it.each([
     {
       label: 'unsupported future metadata',
@@ -898,6 +984,93 @@ describe('ProfileProvider validated async state', () => {
     expect(screen.getByRole('alert').textContent).toContain('Refresh');
     expect(screen.queryByText('Profile children')).toBeNull();
     expect(storage.values.get(PROFILES_KEY)).toBe(raw);
+  });
+
+  it.each([
+    {
+      label: 'unsupported future metadata',
+      raw: JSON.stringify({
+        version: 2,
+        revision: 9,
+        profiles: metadata.profiles,
+        activeProfileId: 'other',
+      }),
+    },
+    { label: 'invalid metadata', raw: '{bad' },
+    {
+      label: 'legacy metadata',
+      raw: JSON.stringify({ profiles: metadata.profiles, activeProfileId: 'other' }),
+    },
+  ])('aborts real startup transaction side effects when $label arrives during arbitration', async ({ raw }) => {
+    storage.values.set(PROFILES_KEY, '{initially-broken');
+    storage.values.set(PROFILE_METADATA_BACKUP_KEY, JSON.stringify(metadata));
+    storage.values.set(PROFILE_METADATA_RECOVERY_KEY, 'existing-recovery');
+    storage.values.set(LEGACY_SAVE_KEY, serializeCurrent(initialState));
+    storage.values.set(profileBaseKey('target'), 'existing-profile-save');
+    renderTask6Profiles();
+
+    storage.values.set(PROFILES_KEY, raw);
+    const expected = new Map(
+      [...storage.values].filter(([key]) => key !== PROFILE_METADATA_LOCK_KEY),
+    );
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: PROFILES_KEY,
+        newValue: raw,
+      }));
+    });
+
+    expect(screen.getByRole('alert').textContent).toContain('Refresh');
+    expect(screen.queryByText('Profile children')).toBeNull();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(PROFILE_METADATA_LOCK_ARBITRATION_MS);
+    });
+
+    expect(screen.getByRole('alert').textContent).toContain('Refresh');
+    expect(screen.queryByText('Profile children')).toBeNull();
+    expect(new Map(
+      [...storage.values].filter(([key]) => key !== PROFILE_METADATA_LOCK_KEY),
+    )).toEqual(expected);
+    expect(storage.values.has(PROFILE_METADATA_LOCK_KEY)).toBe(false);
+  });
+
+  it('installs a valid primary event while startup arbitration is still in flight', async () => {
+    storage.values.set(PROFILE_METADATA_BACKUP_KEY, 'existing-backup');
+    storage.values.set(PROFILE_METADATA_RECOVERY_KEY, 'existing-recovery');
+    const rendered = renderTask6Profiles();
+    const incoming = task6Metadata({
+      revision: 4,
+      profiles: [{ ...metadata.profiles[0], name: 'Startup event winner' }, metadata.profiles[1]],
+      activeProfileId: 'other',
+    });
+    const raw = JSON.stringify(incoming);
+    storage.values.set(PROFILES_KEY, raw);
+    const expected = new Map(
+      [...storage.values].filter(([key]) => key !== PROFILE_METADATA_LOCK_KEY),
+    );
+
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: PROFILES_KEY,
+        newValue: raw,
+      }));
+    });
+
+    expect(rendered.current().profiles).toEqual(incoming.profiles);
+    expect(rendered.current().activeProfileId).toBe('other');
+    expect(screen.getByText('Profile children')).toBeTruthy();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(PROFILE_METADATA_LOCK_ARBITRATION_MS);
+    });
+
+    expect(rendered.current().profiles).toEqual(incoming.profiles);
+    expect(rendered.current().activeProfileId).toBe('other');
+    expect(rendered.current().pendingAction).toBeNull();
+    expect(rendered.current().mutationFailure).toBeNull();
+    expect(new Map(
+      [...storage.values].filter(([key]) => key !== PROFILE_METADATA_LOCK_KEY),
+    )).toEqual(expected);
+    expect(storage.values.has(PROFILE_METADATA_LOCK_KEY)).toBe(false);
   });
 
   it('retries once when a crashed startup lock reaches its expiry', async () => {
