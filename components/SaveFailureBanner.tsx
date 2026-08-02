@@ -7,22 +7,25 @@ import {
   downloadFateSave,
   type FateSaveDownloadResult,
 } from '../utils/fateSaveFile';
+import type { SaveOwnershipBlockReason } from '../utils/profileWriterLease';
 import { showToast } from '../utils/toast';
 
 interface SaveFailureBannerViewProps {
   saveStatus: SaveStatus;
+  ownershipBlockReason: SaveOwnershipBlockReason;
   retrySave: () => boolean;
   exportBackup: () => FateSaveDownloadResult;
 }
 
 export const SaveFailureBannerView: FC<SaveFailureBannerViewProps> = ({
   saveStatus,
+  ownershipBlockReason,
   retrySave,
   exportBackup,
 }) => {
   const [retrying, setRetrying] = useState(false);
 
-  if (saveStatus !== 'failed') return null;
+  if (saveStatus !== 'failed' || ownershipBlockReason === 'foreign_owner') return null;
 
   const handleRetry = async () => {
     setRetrying(true);
@@ -84,7 +87,12 @@ export const SaveFailureBannerView: FC<SaveFailureBannerViewProps> = ({
 };
 
 export const SaveFailureBanner: FC = () => {
-  const { saveStatus, retrySave, getExportData } = useGame();
+  const {
+    saveStatus,
+    saveOwnershipBlockReason,
+    retrySave,
+    getExportData,
+  } = useGame();
   const { storageKeyForActiveProfile } = useProfiles();
   const exportBackup = useCallback(
     () => downloadFateSave(getExportData(), storageKeyForActiveProfile),
@@ -94,6 +102,7 @@ export const SaveFailureBanner: FC = () => {
   return (
     <SaveFailureBannerView
       saveStatus={saveStatus}
+      ownershipBlockReason={saveOwnershipBlockReason}
       retrySave={retrySave}
       exportBackup={exportBackup}
     />

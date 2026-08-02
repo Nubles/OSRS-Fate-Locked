@@ -16,6 +16,7 @@ describe('SaveFailureBannerView', () => {
     render(
       <SaveFailureBannerView
         saveStatus="failed"
+        ownershipBlockReason={null}
         retrySave={retrySave}
         exportBackup={exportBackup}
       />,
@@ -39,6 +40,7 @@ describe('SaveFailureBannerView', () => {
     render(
       <SaveFailureBannerView
         saveStatus="failed"
+        ownershipBlockReason={null}
         retrySave={() => false}
         exportBackup={exportBackup}
       />,
@@ -54,6 +56,7 @@ describe('SaveFailureBannerView', () => {
     const { rerender } = render(
       <SaveFailureBannerView
         saveStatus="failed"
+        ownershipBlockReason={null}
         retrySave={() => false}
         exportBackup={() => ({ ok: true })}
       />,
@@ -63,11 +66,39 @@ describe('SaveFailureBannerView', () => {
     rerender(
       <SaveFailureBannerView
         saveStatus="saved"
+        ownershipBlockReason={null}
         retrySave={() => true}
         exportBackup={() => ({ ok: true })}
       />,
     );
 
     expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('suppresses the storage warning for a foreign owner conflict', () => {
+    render(
+      <SaveFailureBannerView
+        saveStatus="failed"
+        ownershipBlockReason="foreign_owner"
+        retrySave={() => false}
+        exportBackup={() => ({ ok: true })}
+      />,
+    );
+
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('keeps the storage warning for unavailable ownership storage', () => {
+    render(
+      <SaveFailureBannerView
+        saveStatus="failed"
+        ownershipBlockReason="storage_unavailable"
+        retrySave={() => false}
+        exportBackup={() => ({ ok: true })}
+      />,
+    );
+
+    expect(screen.getByRole('alert').textContent).toContain("Progress isn't being saved");
+    expect(screen.getByRole('alert').textContent).not.toContain('another tab');
   });
 });
