@@ -51,6 +51,9 @@ export enum DropSource {
   CUSTOM = 'Custom',
 }
 
+
+/** Fate awarded when a key roll fails. */
+export type FailureFateAward = 1 | 2 | 3;
 export enum TableType {
   EQUIPMENT = 'Equipment',
   SKILLS = 'Skills',

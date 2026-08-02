@@ -10,7 +10,7 @@
  * When you change a drop rate, change it in `config/rules.ts` (DROP_RATES) — the
  * tables below read from it, so they update for free.
  */
-import { DropSource, TableType } from '../types';
+import { DropSource, TableType, type FailureFateAward } from '../types';
 import { BANK_IDS } from '../data/banks';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from './rules';
 import {
@@ -28,6 +28,61 @@ export const SKILLS_TIER_CAP = 10;     // tiers per skill (1 Key each)
 export const LEVEL_ROLL_MAX = skillLevelKeyChance(99);
 export const LEVEL_CHAOS_CHANCE = 2;   // % chance of a Chaos Key on any level up
 
+
+/** Fate awarded after a failed roll from a fixed source. */
+export const FAILURE_FATE_BY_SOURCE: Partial<Record<DropSource, FailureFateAward>> = {
+  [DropSource.QUEST_NOVICE]: 1,
+  [DropSource.QUEST_INTERMEDIATE]: 1,
+  [DropSource.QUEST_EXPERIENCED]: 2,
+  [DropSource.QUEST_MASTER]: 3,
+  [DropSource.QUEST_GRANDMASTER]: 1,
+  [DropSource.DIARY_EASY]: 1,
+  [DropSource.DIARY_MEDIUM]: 1,
+  [DropSource.DIARY_HARD]: 2,
+  [DropSource.DIARY_ELITE]: 3,
+  [DropSource.CA_EASY]: 1,
+  [DropSource.CA_MEDIUM]: 1,
+  [DropSource.CA_HARD]: 2,
+  [DropSource.CA_ELITE]: 2,
+  [DropSource.CA_MASTER]: 3,
+  [DropSource.CA_GRANDMASTER]: 3,
+  [DropSource.CLUE_BEGINNER]: 1,
+  [DropSource.CLUE_EASY]: 1,
+  [DropSource.CLUE_MEDIUM]: 1,
+  [DropSource.CLUE_HARD]: 2,
+  [DropSource.CLUE_ELITE]: 2,
+  [DropSource.CLUE_MASTER]: 3,
+  [DropSource.SLAYER_BEGINNER]: 1,
+  [DropSource.SLAYER_MAZCHNA]: 1,
+  [DropSource.SLAYER_VANNAKA]: 1,
+  [DropSource.SLAYER_CHAELDAR]: 1,
+  [DropSource.SLAYER_KONAR]: 2,
+  [DropSource.SLAYER_NIEVE]: 2,
+  [DropSource.SLAYER_KRYSTILIA]: 2,
+  [DropSource.SLAYER_DURADEL]: 2,
+  [DropSource.SLAYER_BOSS]: 3,
+  [DropSource.BOSS_LOW]: 1,
+  [DropSource.BOSS_MID]: 2,
+  [DropSource.BOSS_HIGH]: 2,
+  [DropSource.RAID]: 3,
+  [DropSource.ACTIVITY_MINIGAME]: 1,
+  [DropSource.PET]: 1,
+  [DropSource.COLLECTION_LOG]: 1,
+};
+
+/** Conservative fallback protects custom and future sources from being over-valued. */
+export const failureFateForSource = (source: DropSource): FailureFateAward =>
+  FAILURE_FATE_BY_SOURCE[source] ?? 1;
+
+export const failureFateForSkillLevel = (level: number): FailureFateAward =>
+  level >= 80 ? 3 : level >= 20 ? 2 : 1;
+
+export const SKILL_CHAOS_MILESTONES = [30, 40, 50, 60, 70, 80, 90, 99] as const;
+
+const SKILL_CHAOS_MILESTONE_SET = new Set<number>(SKILL_CHAOS_MILESTONES);
+
+export const isSkillChaosMilestone = (level: number): boolean =>
+  SKILL_CHAOS_MILESTONE_SET.has(level);
 // ── Xtreme Start anti-softlock insurance ──────────────────────────────────
 // Xtreme Start frees only Lumbridge, which rules out slayer/clues/most quests
 // & diaries/CAs as key sources — level-ups are the only thing left, and a run
@@ -67,6 +122,8 @@ export interface EarnTier {
   rateLabel?: string;
   /** Elevated Omni-Key chance for this tier (applies when above the mode base). */
   omni?: number;
+  /** Fate awarded when this fixed-rate roll fails. */
+  fateOnFailure?: FailureFateAward;
   /** Extra payout note, e.g. the Level Up Chaos chance. */
   bonus?: string;
 }
@@ -204,11 +261,16 @@ export const EARN_METHODS: EarnMethod[] = [
         tier: 'Per level gained',
         rate: LEVEL_ROLL_MAX,
         rateLabel: `Level ÷ 5 (up to ${LEVEL_ROLL_MAX.toFixed(1)}% at level 99)`,
-        bonus: `${LEVEL_CHAOS_CHANCE}% chance of a Chaos Key on every level, at any level.`,
+        bonus: `Failure Fate: +1 at levels 2-19, +2 at 20-79, +3 at 80-99. ${LEVEL_CHAOS_CHANCE}% chance of a Chaos Key on every level, plus guaranteed Chaos Keys at levels ${SKILL_CHAOS_MILESTONES.join(', ')}.`,
       },
     ],
   },
-];
+].map(method => ({
+  ...method,
+  tiers: method.tiers.map(tier => tier.source
+    ? { ...tier, fateOnFailure: failureFateForSource(tier.source) }
+    : tier),
+}));
 
 /** Min/max fixed success rate across all tiers of a method (for summary chips). */
 export const earnRange = (m: EarnMethod): [number, number] => {
