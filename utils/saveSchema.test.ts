@@ -354,6 +354,53 @@ describe('save schema compatibility', () => {
       message: 'Save data was migrated to the current format.',
     }]);
   });
+  it.each([
+    ["Heroes' Guild", 'Taverley'],
+    ['Ice Mountain', 'Goblin Village'],
+    ['Ranging Guild', 'Hemenster'],
+    ["Otto's Grotto", 'Baxtorian Falls'],
+    ['Resource Area', 'Mage Arena'],
+  ])('migrates %s to %s without refunding an alias-only save', (alias, canonical) => {
+    const result = expectAccepted(validateAndMigrateSave(
+      candidate({}, { regions: [alias] }),
+      defaultsFixture(),
+    ));
+    expect(result.state.keys).toBe(17);
+    expect(result.state.unlocks.regions).toEqual([canonical]);
+    expect(result.warnings).toHaveLength(1);
+  });
+  it('refunds every redundant overlapping unlock once and preserves history', () => {
+    const input = candidate({}, {
+      regions: [
+        'Falador',
+        "Otto's Grotto", 'Baxtorian Falls',
+        "Heroes' Guild", 'Taverley',
+        'Resource Area', 'Mage Arena',
+      ],
+    }) as GameState;
+    const history = structuredClone(input.history);
+    const first = expectAccepted(validateAndMigrateSave(input, defaultsFixture()));
+    const second = expectAccepted(validateAndMigrateSave(first.state, defaultsFixture()));
+    expect(first.state.keys).toBe(20);
+    expect(first.state.unlocks.regions).toEqual([
+      'Falador', 'Baxtorian Falls', 'Taverley', 'Mage Arena',
+    ]);
+    expect(first.state.history).toEqual(history);
+    expect(second.state).toEqual(first.state);
+    expect(second.warnings).toEqual([]);
+  });
+  it('does not mint keys for a repeated identical alias and saturates real refunds', () => {
+    const repeated = expectAccepted(validateAndMigrateSave(
+      candidate({}, { regions: ["Otto's Grotto", "Otto's Grotto"] }),
+      defaultsFixture(),
+    ));
+    const saturated = expectAccepted(validateAndMigrateSave(
+      candidate({ keys: MAX_COUNTER }, { regions: ["Otto's Grotto", 'Baxtorian Falls'] }),
+      defaultsFixture(),
+    ));
+    expect(repeated.state.keys).toBe(17);
+    expect(saturated.state.keys).toBe(MAX_COUNTER);
+  });
 
   it('freezes bounded over-limit Pity compensation through a v3-to-v4 save round trip', () => {
     const legacy = clone(fullStateFixture()) as unknown as Record<string, unknown>;

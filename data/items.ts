@@ -153,16 +153,16 @@ export const MISTHALIN_AREAS = [
 
 export const REGION_GROUPS: Record<string, string[]> = {
   'Asgarnia': [
-    'Falador', 'Port Sarim', 'Rimmington', 'Taverley', 'Burthorpe', 'Warriors\' Guild', 
-    'Heroes\' Guild', 'Crafting Guild', 'Dwarven Mine', 'Ice Mountain', 'Asgarnian Ice Dungeon', 
-    'Motherlode Mine', 'Goblin Village', 'Mudskipper Point', 'Void Knights\' Outpost', 'Entrana'
+    'Falador', 'Port Sarim', 'Rimmington', 'Taverley', 'Burthorpe', "Warriors' Guild",
+    'Crafting Guild', 'Dwarven Mine', 'Asgarnian Ice Dungeon', 'Motherlode Mine',
+    'Goblin Village', 'Mudskipper Point', "Void Knights' Outpost", 'Entrana',
   ],
   'Kandarin': [
-    'East Ardougne', 'West Ardougne', 'Catherby', 'Seers\' Village', 'Camelot', 'Yanille', 
-    'Port Khazard', 'Hemenster', 'Fishing Guild', 'Ranging Guild', 'Legends\' Guild', 
-    'Tree Gnome Stronghold', 'Gnome Village', 'Witchaven', 'Piscatoris Fishing Colony', 
-    'Feldip Hills', 'Baxtorian Falls', 'Otto\'s Grotto', 'Barbarian Outpost', 'Fight Arena'
-  , 'Castle Wars', 'Corsair Cove', 'Eagles\' Peak', 'Observatory', 'Ourania Altar'
+    'East Ardougne', 'West Ardougne', 'Catherby', "Seers' Village", 'Camelot', 'Yanille',
+    'Port Khazard', 'Hemenster', 'Fishing Guild', "Legends' Guild",
+    'Tree Gnome Stronghold', 'Gnome Village', 'Witchaven', 'Piscatoris Fishing Colony',
+    'Feldip Hills', 'Baxtorian Falls', 'Barbarian Outpost', 'Fight Arena',
+    'Castle Wars', 'Corsair Cove', "Eagles' Peak", 'Observatory', 'Ourania Altar',
   ],
   'Karamja': [
     'Musa Point', 'Brimhaven', 'Tai Bwo Wannai', 'Shilo Village', 'Kharazi Jungle', 
@@ -192,10 +192,10 @@ export const REGION_GROUPS: Record<string, string[]> = {
     'Arandar', 'Gwenith', 'Iorwerth Camp', 'Poison Waste'
   ],
   'Wilderness': [
-    'Ferox Enclave', 'Wilderness Volcano', 'Chaos Temple', 'Rogues\' Castle', 'Lava Maze', 
-    'Wilderness Bandit Camp', 'Dark Warriors\' Fortress', 'Graveyard of Shadows', 'Forgotten Cemetery',
-    'Resource Area', 'Mage Arena', 'Scorpia\'s Cave', 'Fountain of Rune', 'Wilderness God Wars Dungeon'
-  , 'Daimon\'s Crater'
+    'Ferox Enclave', 'Wilderness Volcano', 'Chaos Temple', "Rogues' Castle", 'Lava Maze',
+    "Wilderness Bandit Camp", "Dark Warriors' Fortress", 'Graveyard of Shadows',
+    'Forgotten Cemetery', 'Mage Arena', "Scorpia's Cave", 'Fountain of Rune',
+    'Wilderness God Wars Dungeon', "Daimon's Crater",
   ],
   'Kourend & Kebos': [
     'Kourend Castle', 'Hosidius', 'Piscarilius', 'Shayzien', 'Lovakengj', 'Arceuus', 

@@ -3,12 +3,14 @@ import { REGION_CHUNKS } from './regionChunks';
 import { SUB_AREA_CHUNKS } from './subAreaChunks';
 import { REGIONS_LIST } from './items';
 import {
+  AREA_ALIAS_POLICIES,
   AREA_ALIASES,
   AREA_REFERENCES,
   type AreaReference,
   INTENTIONALLY_UNMAPPABLE_AREAS,
   canonicalAreaName,
   canonicalizeAreaUnlocks,
+  displayAreaName,
 } from './areaMapPolicy';
 
 const sorted = (values: Iterable<string>) => [...values].sort();
@@ -19,14 +21,6 @@ const AUTHORED_CHUNKS = new Set(
     .map(({ cx, cy }) => `${cx},${cy}`),
 );
 
-const EXPECTED_SURFACE_REFERENCE_NAMES = [
-  "Giants' Plateau",
-  "Heroes' Guild",
-  'Ice Mountain',
-  "Otto's Grotto",
-  'Ranging Guild',
-  'Resource Area',
-];
 
 const EXPECTED_ENTRANCE_REFERENCE_NAMES = [
   'Asgarnian Ice Dungeon',
@@ -52,6 +46,11 @@ describe('area map policy', () => {
   it('pins the exact legacy alias mapping', () => {
     expect(AREA_ALIASES).toEqual({
       'Elf Camp': 'Iorwerth Camp',
+      "Heroes' Guild": 'Taverley',
+      'Ice Mountain': 'Goblin Village',
+      'Ranging Guild': 'Hemenster',
+      "Otto's Grotto": 'Baxtorian Falls',
+      'Resource Area': 'Mage Arena',
     });
   });
 
@@ -63,8 +62,22 @@ describe('area map policy', () => {
       .filter(([, policy]) => policy.kind === 'entrance')
       .map(([name]) => name);
 
-    expect(sorted(surface)).toEqual(EXPECTED_SURFACE_REFERENCE_NAMES);
+    expect(sorted(surface)).toEqual(["Giants' Plateau"]);
     expect(sorted(entrance)).toEqual(EXPECTED_ENTRANCE_REFERENCE_NAMES);
+  });
+  it('maps every surface overlap onto chunks owned by its canonical area', () => {
+    for (const [alias, policy] of Object.entries(AREA_ALIAS_POLICIES)) {
+      if (policy.kind !== 'surface-overlap') continue;
+      const owned = new Set(
+        (SUB_AREA_CHUNKS[policy.canonical] ?? []).map(({ cx, cy }) => `${cx},${cy}`),
+      );
+      expect(policy.chunks.every(({ cx, cy }) => owned.has(`${cx},${cy}`)), alias).toBe(true);
+    }
+  });
+  it('uses canonical surface-overlap display names', () => {
+    expect(displayAreaName("Otto's Grotto")).toBe("Baxtorian Falls \u00b7 Otto's Grotto");
+    expect(displayAreaName('Baxtorian Falls')).toBe("Baxtorian Falls \u00b7 Otto's Grotto");
+    expect(displayAreaName('Iorwerth Camp')).toBe('Iorwerth Camp');
   });
 
   it('pins the exact intentionally unmappable area set', () => {
@@ -150,6 +163,24 @@ describe('area map policy', () => {
       regions: ['Prifddinas', 'Iorwerth Camp'],
       duplicateAliasRefunds: 0,
       migrated: false,
+    });
+    expect(canonicalizeAreaUnlocks([
+      "Otto's Grotto",
+      'Baxtorian Falls',
+      "Heroes' Guild",
+      'Taverley',
+    ])).toEqual({
+      regions: ['Baxtorian Falls', 'Taverley'],
+      duplicateAliasRefunds: 2,
+      migrated: true,
+    });
+    expect(canonicalizeAreaUnlocks([
+      "Otto's Grotto",
+      "Otto's Grotto",
+    ])).toEqual({
+      regions: ['Baxtorian Falls'],
+      duplicateAliasRefunds: 0,
+      migrated: true,
     });
   });
 });

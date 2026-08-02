@@ -2,11 +2,12 @@ import { describe, it, expect } from 'vitest';
 import {
   BOSSES_LIST, MINIGAMES_LIST, GUILDS_LIST, MOBILITY_LIST, ARCANA_LIST,
   POH_LIST, MERCHANTS_LIST, STORAGE_LIST, FARMING_PATCH_LIST, SKILLS_LIST,
-  EQUIPMENT_SLOTS, REGION_GROUPS, MISTHALIN_AREAS,
+  EQUIPMENT_SLOTS, REGION_GROUPS, REGIONS_LIST, MISTHALIN_AREAS,
   SLAYER_UNLOCKS_LIST,
 } from './items';
 import { COLLECTION_LOG_DATA } from './collectionLogData';
 import { ACTIVITY_REGIONS } from './activityRegions';
+import { AREA_ALIASES } from './areaMapPolicy';
 
 /**
  * Data-consistency tests.
@@ -56,6 +57,13 @@ describe('content lists have no duplicate entries', () => {
 // --- region definitions -----------------------------------------------------
 
 describe('region definitions', () => {
+  it('contains 176 unique canonical rollable regions', () => {
+    expect(REGIONS_LIST).toHaveLength(176);
+    expect(new Set(REGIONS_LIST).size).toBe(176);
+    for (const alias of Object.keys(AREA_ALIASES)) {
+      expect(REGIONS_LIST, alias).not.toContain(alias);
+    }
+  });
   it('every sub-region name is globally unique across all continents', () => {
     const all = [...Object.values(REGION_GROUPS).flat(), ...MISTHALIN_AREAS];
     const seen = new Set<string>();
