@@ -21,7 +21,9 @@ export class DiscordApiError extends Error {
   }
 }
 
-const routeTemplate = (route: string): string => (route.split('?', 1)[0] ?? route).replace(/\d{17,20}/g, ':id');
+const routeTemplate = (route: string): string => (route.split('?', 1)[0] ?? route)
+  .replace(/\d{17,20}/g, ':id')
+  .replace(/(\/webhooks\/:id\/)[^/]+/, '$1:token');
 const fallbackDelayMs = (attempt: number): number => Math.min(1_000 * 2 ** attempt, 10_000);
 
 export class DiscordRestClient {
@@ -42,10 +44,10 @@ export class DiscordRestClient {
     this.maxRetries = Math.max(0, Math.min(options.maxRetries ?? 3, 5));
   }
 
-  async request<T>(method: string, route: string, body?: unknown): Promise<T> {
+  async request<T>(method: string, route: string, body?: unknown, maxRetries = this.maxRetries): Promise<T> {
     if (!route.startsWith('/')) throw new Error('Discord route must start with /');
 
-    for (let attempt = 0; attempt <= this.maxRetries; attempt += 1) {
+    for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
       const response = await this.fetchImpl(`${DISCORD_API_BASE}${route}`, {
         method,
         headers: {
@@ -66,7 +68,7 @@ export class DiscordRestClient {
       }
 
       const canRetry = response.status === 429 || response.status >= 500;
-      if (!canRetry || attempt === this.maxRetries) {
+      if (!canRetry || attempt === maxRetries) {
         throw new DiscordApiError(method, routeTemplate(route), response.status);
       }
 
@@ -91,9 +93,10 @@ export class DiscordRestClient {
     const boundedLimit = Math.max(1, Math.min(Math.floor(limit), 100));
     return this.request('GET', `/channels/${channelId}/messages?limit=${boundedLimit}`);
   }
+  editOriginalInteractionResponse(applicationId: string, interactionToken: string, body: unknown): Promise<DiscordMessage> { return this.request('PATCH', `/webhooks/${applicationId}/${interactionToken}/messages/@original`, body); }
   createMessage(channelId: string, body: unknown): Promise<DiscordMessage> { return this.request('POST', `/channels/${channelId}/messages`, body); }
   editMessage(channelId: string, messageId: string, body: unknown): Promise<DiscordMessage> { return this.request('PATCH', `/channels/${channelId}/messages/${messageId}`, body); }
-  createForumPost(channelId: string, body: unknown): Promise<DiscordChannel> { return this.request('POST', `/channels/${channelId}/threads`, body); }
+  createForumPost(channelId: string, body: unknown): Promise<DiscordChannel> { return this.request('POST', `/channels/${channelId}/threads`, body, 0); }
   editThread(threadId: string, body: unknown): Promise<DiscordChannel> { return this.request('PATCH', `/channels/${threadId}`, body); }
   getGuildMember(guildId: string, userId: string): Promise<DiscordGuildMember> { return this.request('GET', `/guilds/${guildId}/members/${userId}`); }
   async addGuildMemberRole(guildId: string, userId: string, roleId: string): Promise<void> { await this.request('PUT', `/guilds/${guildId}/members/${userId}/roles/${roleId}`); }

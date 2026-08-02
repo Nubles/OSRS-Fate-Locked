@@ -104,6 +104,26 @@ describe('DiscordRestClient', () => {
     const error = await client.getChannelMessages('100000000000000001').catch((error: unknown) => error);
     expect(error).toMatchObject({ route: '/channels/:id/messages' });
   });
+  it('does not retry a forum post after a transient failure', async () => {
+    const fetchImpl = fetchSequence([response(500, { message: 'failed' })]);
+    const client = new DiscordRestClient({ token: 'test-token', fetchImpl, sleep: async () => undefined });
+
+    await expect(client.createForumPost('100000000000000001', { name: 'journal' })).rejects.toMatchObject({ status: 500 });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+  it('edits an interaction original response without exposing its token in errors', async () => {
+    const token = 'private-interaction-token';
+    const client = new DiscordRestClient({
+      token: 'test-token',
+      fetchImpl: fetchSequence([response(403, { message: 'not allowed' })]),
+      maxRetries: 0,
+    });
+
+    const error = await client.editOriginalInteractionResponse('100000000000000001', token, { content: 'hello' }).catch((reason: unknown) => reason);
+
+    expect(error).toMatchObject({ route: '/webhooks/:id/:token/messages/@original' });
+    expect(String(error)).not.toContain(token);
+  });
   it('stops after the configured retry budget', async () => {
     const fetchImpl = fetchSequence([
       response(500, { message: 'one' }),

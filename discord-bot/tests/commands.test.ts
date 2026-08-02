@@ -54,6 +54,17 @@ describe('routeInteraction', () => {
     });
   });
 
+  it('opens the journal modal only for /journal create', async () => {
+    await expect(routeInteraction(command('journal', [{ type: 1, name: 'create' }]), config)).resolves.toMatchObject({
+      type: 9,
+      data: { custom_id: 'journal:create:v1' },
+    });
+    await expect(routeInteraction(command('journal'), config)).resolves.toMatchObject({
+      type: 4,
+      data: { flags: 64 },
+    });
+  });
+
   it('rejects unknown command, component, and modal IDs ephemerally', async () => {
     for (const interaction of [command('tracker-preview'), { type: 3, data: { custom_id: 'tracker' } }, { type: 5, data: { custom_id: 'verify:approve' } }]) {
       await expect(routeInteraction(interaction, config)).resolves.toMatchObject({
