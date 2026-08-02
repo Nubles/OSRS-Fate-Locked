@@ -62,6 +62,16 @@ describe('parseProfileMetadata', () => {
     }))).toEqual({ status: 'unsupported', version: 2 });
   });
 
+  it('preserves a future schema with fields unknown to this version', () => {
+    expect(parseProfileMetadata(JSON.stringify({
+      version: 2,
+      revision: 9,
+      profiles: legacy().profiles,
+      activeProfileId: 'alpha',
+      futureField: { preserved: true },
+    }))).toEqual({ status: 'unsupported', version: 2 });
+  });
+
   it.each(['alpha_beta', 'alpha/beta', 'alpha beta', 'a'.repeat(129)])(
     'rejects a profile ID that is unsafe for storage: %s',
     id => {

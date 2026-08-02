@@ -126,6 +126,14 @@ export const parseProfileMetadata = (raw: string | null): ProfileMetadataParseRe
   }
   if (!isPlainRecord(parsed)) return invalid('invalid_root');
 
+  const versionDescriptor = Object.getOwnPropertyDescriptor(parsed, 'version');
+  if (versionDescriptor && 'value' in versionDescriptor
+    && typeof versionDescriptor.value === 'number'
+    && Number.isSafeInteger(versionDescriptor.value)
+    && versionDescriptor.value > PROFILE_METADATA_VERSION) {
+    return { status: 'unsupported', version: versionDescriptor.value };
+  }
+
   const currentCandidate = own(parsed, 'version') || own(parsed, 'revision');
   const root = inspectRecord(
     parsed,
