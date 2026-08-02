@@ -15,3 +15,6 @@
 | 4 - Categories and channels | pass | five public categories and STAFF COMMAND match the required order and channel types; retained prerequisite channels were moved rather than duplicated |
 | 4 - Permission overrides | pass | protected public areas are member-read-only with explicit Moderator posting; staff is hidden from `@everyone`; Fatekeeper sees only `#verification-queue` in staff |
 | 4 - View Server As Role | pass | `@everyone`, Fatekeeper, Verified Runner, and Moderator each matched `permission-matrix.md`; no unsaved settings remained |
+| 5 - Channel topics and Notice Board content | pass | all 20 text and forum topics were saved and reopened for source comparison; the approved community header, welcome opening, rules and verification guidance, role descriptions, and pre-launch notice are published |
+| 5 - Forum configuration | pass | all three forums use list view and required tags; member and staff-only tags, source guidance/templates, and the run-journal required-tag flow were verified; the clearly labelled staff test post was removed |
+| 5 - Pins and content inspection | pass | exactly one primary message is pinned in `#welcome`, `#rules-and-safety`, and `#roles-and-pings`; `#announcements` has no pins; the welcome attachment, four public links, and fan-project disclaimer are present |
