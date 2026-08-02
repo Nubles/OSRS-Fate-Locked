@@ -99,7 +99,10 @@ export const ProfileSwitcher: React.FC = () => {
 
   const handleRename = async (id: string) => {
     const trimmed = editName.trim();
-    if (!trimmed) { setEditingId(null); return; }
+    if (!trimmed) {
+      setFeedback('Enter a profile name before saving.');
+      return;
+    }
     const result = await runAction(() => renameProfile(id, trimmed));
     if (result?.ok !== true) return;
     setEditName('');
@@ -121,11 +124,16 @@ export const ProfileSwitcher: React.FC = () => {
     setOpen(false);
   };
 
+  const handleTriggerClick = () => {
+    if (actionGuardRef.current || pendingAction !== null) return;
+    setOpen(current => !current);
+  };
+
   return (
     <div className="relative" ref={dropdownRef}>
       <button
         type="button"
-        onClick={() => setOpen(!open)}
+        onClick={handleTriggerClick}
         aria-label={`Switch profile. Current profile: ${activeProfileName}`}
         aria-expanded={open}
         data-profile-switcher-trigger

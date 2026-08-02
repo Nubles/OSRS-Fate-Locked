@@ -128,6 +128,29 @@ describe('ProfileSwitcher', () => {
     await act(async () => { pending.resolve(success()); });
   });
 
+  it('does not let the trigger hide a create form while its transaction is unresolved', async () => {
+    const pending = deferred<ProfileTransactionResult>();
+    profileContext.current = context({ createProfile: vi.fn(() => pending.promise) });
+    render(<ProfileSwitcher />);
+    await openCreate();
+    const input = screen.getByRole('textbox', { name: 'New profile name' });
+    await userEvent.type(input, 'New runner');
+
+    fireEvent.submit(input.closest('form') as HTMLFormElement);
+    fireEvent.click(screen.getByRole('button', { name: 'Switch profile. Current profile: Alpha' }));
+
+    expect(screen.getByRole('textbox', { name: 'New profile name' })).toHaveProperty('value', 'New runner');
+
+    await act(async () => {
+      pending.resolve(failure('backup_failed'));
+    });
+
+    expect(screen.getByRole('textbox', { name: 'New profile name' })).toHaveProperty('value', 'New runner');
+    expect(screen.getByRole('alert').textContent).toBe(
+      'The safety backup could not be verified. Your profile list is unchanged.',
+    );
+  });
+
   it('keeps the exact create input and form open after a failed transaction', async () => {
     profileContext.current = context({
       createProfile: vi.fn().mockResolvedValue(failure('backup_failed')),
@@ -199,6 +222,24 @@ describe('ProfileSwitcher', () => {
     );
   });
 
+  it('keeps a blank rename actionable without starting a transaction', async () => {
+    const renameProfile = vi.fn().mockResolvedValue(success());
+    profileContext.current = context({ renameProfile });
+    render(<ProfileSwitcher />);
+    await openRename();
+    const input = screen.getByRole('textbox', { name: 'Rename Alpha' });
+    await userEvent.clear(input);
+    await userEvent.type(input, '   ');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Save profile name' }));
+
+    expect(renameProfile).not.toHaveBeenCalled();
+    expect(screen.getByRole('textbox', { name: 'Rename Alpha' })).toHaveProperty('value', '   ');
+    expect(screen.getByRole('alert').textContent).toBe(
+      'Enter a profile name before saving.',
+    );
+  });
+
   it('clears and closes rename UI only after verified success', async () => {
     profileContext.current = context();
     render(<ProfileSwitcher />);
@@ -258,6 +299,23 @@ describe('ProfileSwitcher', () => {
     expect(screen.getByText('Profiles')).toBeTruthy();
     expect(screen.getByRole('alert').textContent).toBe(
       'That profile is open in another tab. Switch away from it in every tab, then try again.',
+    );
+  });
+
+  it('does not let the trigger hide an open form while context reports a pending action', async () => {
+    profileContext.current = context();
+    const { rerender } = render(<ProfileSwitcher />);
+    await openCreate();
+    const input = screen.getByRole('textbox', { name: 'New profile name' });
+    await userEvent.type(input, 'Retained runner');
+
+    profileContext.current = context({ pendingAction: 'create' });
+    rerender(<ProfileSwitcher />);
+    fireEvent.click(screen.getByRole('button', { name: 'Switch profile. Current profile: Alpha' }));
+
+    expect(screen.getByRole('textbox', { name: 'New profile name' })).toHaveProperty(
+      'value',
+      'Retained runner',
     );
   });
 
