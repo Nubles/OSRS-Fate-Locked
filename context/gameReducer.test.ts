@@ -111,6 +111,32 @@ describe('ROLL_RESULT', () => {
     expect(pity.fatePoints).toBe(2);
     expect(pity.history.at(-1)?.meta?.fatePointsEarned).toBe(3);
   });
+
+  it.each([10, 100])('records the active %i-Fate pity threshold for replay', (pityThreshold) => {
+    const pity = gameReducer({
+      ...base(),
+      gameModeId: 'custom',
+      customMode: {
+        pityEnabled: true,
+        pityThreshold,
+        omniChanceBase: 2,
+        ritualCostMultiplier: 1,
+        regionModifiers: false,
+      },
+      fatePoints: pityThreshold - 1,
+    }, roll({
+      success: false,
+      pity: true,
+      failureFate: 3,
+    }));
+
+    expect(pity.fatePoints).toBe(2);
+    expect(pity.history.at(-1)?.meta).toMatchObject({
+      fatePointsEarned: 3,
+      pityThreshold,
+    });
+  });
+
   it('a Greed-buffed success grants two keys', () => {
     const s = gameReducer({ ...base(), activeBuff: 'GREED' as const }, roll({ success: true }));
     expect(s.keys).toBe(initialState.keys + 2);

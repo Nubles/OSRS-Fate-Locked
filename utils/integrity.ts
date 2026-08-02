@@ -1,5 +1,5 @@
 import { LogEntry } from '../types';
-import type { GameModeRules } from '../config/gameModes';
+import { CUSTOM_RULE_BOUNDS, type GameModeRules } from '../config/gameModes';
 
 /** The ruleset a run was played under, recorded in the verified bundle. */
 export interface RunMode {
@@ -125,6 +125,28 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3): { violatio
       ? award
       : 1;
   };
+  const validPityThreshold = (value: unknown): number | null =>
+    typeof value === 'number'
+      && Number.isSafeInteger(value)
+      && value >= CUSTOM_RULE_BOUNDS.pityThreshold.min
+      && value <= CUSTOM_RULE_BOUNDS.pityThreshold.max
+      ? value
+      : null;
+  const recordedPityThreshold = (entry: LogEntry): number =>
+    validPityThreshold(entry.meta?.pityThreshold) ?? 50;
+  const fateCap = history
+    .filter(entry => entry.type === 'PITY')
+    .map(entry => validPityThreshold(entry.meta?.pityThreshold))
+    .find((threshold): threshold is number => threshold !== null) ?? 50;
+  const detectedSkillChaosAward = (entry: LogEntry): number => {
+    const award = entry.meta?.chaosKeysAwarded;
+    return entry.meta?.detectorId === 'skill-level-v1'
+      && typeof award === 'number'
+      && Number.isSafeInteger(award)
+      && award >= 0
+      ? award
+      : 0;
+  };
   const s: ReplayState = {
     keys: startKeys,
     specialKeys: 0,
@@ -142,7 +164,7 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3): { violatio
     if (s.specialKeys < 0) violations.push({ index: idx, kind: 'SPECIAL_NEGATIVE', message: `specialKeys went negative` });
     if (s.chaosKeys < 0) violations.push({ index: idx, kind: 'CHAOS_NEGATIVE', message: `chaosKeys went negative` });
     if (s.fatePoints < 0) violations.push({ index: idx, kind: 'FATE_NEGATIVE', message: `fatePoints went negative` });
-    if (s.fatePoints > 50) violations.push({ index: idx, kind: 'FATE_OVERFLOW', message: `fatePoints above cap (${s.fatePoints})` });
+    if (s.fatePoints > fateCap) violations.push({ index: idx, kind: 'FATE_OVERFLOW', message: `fatePoints above cap (${s.fatePoints})` });
   };
 
   for (let i = 0; i < history.length; i++) {
@@ -156,22 +178,25 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3): { violatio
     }
     switch (e.type) {
       case 'ROLL_OMNI':
+        s.chaosKeys += detectedSkillChaosAward(e);
         s.specialKeys += 1;
         s.keys += 1;
         s.fatePoints = 0;
         s.rolls += 1; s.successes += 1; s.omnis += 1;
         break;
       case 'ROLL_SUCCESS':
+        s.chaosKeys += detectedSkillChaosAward(e);
         s.keys += (e.details && /\(Doubled\)/.test(e.message) ? 2 : 1);
         s.fatePoints = 0;
         s.rolls += 1; s.successes += 1;
         break;
       case 'PITY':
         s.keys += 1;
-        s.fatePoints = Math.max(0, s.fatePoints + recordedFateAward(e) - 50);
+        s.fatePoints = Math.max(0, s.fatePoints + recordedFateAward(e) - recordedPityThreshold(e));
         s.rolls += 1; s.pities += 1;
         break;
       case 'ROLL_FAIL':
+        s.chaosKeys += detectedSkillChaosAward(e);
         s.fatePoints += recordedFateAward(e);
         s.rolls += 1;
         break;

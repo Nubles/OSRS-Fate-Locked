@@ -933,7 +933,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
             type: 'PITY',
             message: 'MAX FATE REACHED! Pity Key granted.',
             details: `Rolled ${rollText} at ${inlineChanceText}, but Fate intervened.`,
-            meta: entryMeta(failureFate),
+            meta: { ...entryMeta(failureFate), pityThreshold },
             result: 'SUCCESS',
             source,
             rollValue: roll,

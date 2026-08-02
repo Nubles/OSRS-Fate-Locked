@@ -87,6 +87,30 @@ afterEach(() => {
 });
 
 describe('App changelog lifecycle', () => {
+  it.each([
+    [28, 'Level Up + Chaos Key!'],
+    [29, 'Level Up + 2 Chaos Keys!'],
+  ] as const)('shows level reward feedback after the provider finishes the level %i roll', async (currentLevel, expectedMessage) => {
+    const profileKey = profileBaseKey(PROFILE_ID);
+    const readyState = JSON.parse(seedOnboardingRun());
+    readyState.hasSeenOnboarding = true;
+    readyState.animationsEnabled = false;
+    readyState.unlocks.skills.Attack = 1;
+    readyState.unlocks.levels.Attack = currentLevel;
+    storage.setItem(profileKey, JSON.stringify(readyState));
+    storage.setItem(changelogStorageKey, latestChangelogId);
+    vi.spyOn(Math, 'random')
+      .mockReturnValueOnce(0.01)
+      .mockReturnValue(0.99);
+    render(<App />);
+
+    const attackCard = document.querySelector<HTMLElement>('[data-skill-card="Attack"]');
+    expect(attackCard).toBeTruthy();
+    fireEvent.click(attackCard!);
+
+    expect(await screen.findByText(expectedMessage)).toBeTruthy();
+  });
+
   it('auto-opens one unseen release after onboarding completes', async () => {
     const user = userEvent.setup();
     render(<App />);

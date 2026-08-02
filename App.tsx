@@ -205,6 +205,14 @@ const ToastNotification = () => {
               msg = 'Level Up';
           }
       }
+      const mergedLevelMeta = lastEvent.meta as any;
+      if (lastEvent.type.includes('ROLL')
+        && typeof mergedLevelMeta?.skill === 'string'
+        && typeof mergedLevelMeta?.level === 'number'
+      ) {
+        const chaosKeysAwarded = Number(mergedLevelMeta.chaosKeysAwarded ?? mergedLevelMeta.chaosKeyAwarded ?? 0);
+        if (chaosKeysAwarded > 0) msg = `Level Up + ${chaosKeysAwarded === 1 ? 'Chaos Key' : `${chaosKeysAwarded} Chaos Keys`}!`;
+      }
 
       setMessage(msg);
       // A won key's natural next beat is spending it — hand the player there
