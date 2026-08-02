@@ -281,6 +281,37 @@ describe('save schema compatibility', () => {
     });
   });
 
+
+  it('freezes conservative fractional metadata through a v3-to-v4 save round trip', () => {
+    const legacy = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    legacy.version = 3;
+    delete legacy.fateCompensation;
+    legacy.fatePoints = 1;
+    (legacy.unlocks as Record<string, unknown>).levels = { Attack: 1, Hitpoints: 10 };
+    legacy.history = [{
+      id: 'fractional-fate',
+      timestamp: 1,
+      type: 'ROLL_FAIL',
+      source: 'Attack Level 80',
+      message: 'No Key.',
+      meta: { fatePointsEarned: 1.5 },
+    }];
+
+    const migrated = expectAccepted(validateAndMigrateSave(legacy, defaultsFixture()));
+    const reloaded = expectAccepted(parseAndMigrateSave(
+      serializeCurrent(migrated.state),
+      defaultsFixture(),
+    ));
+
+    expect(migrated.state.fateCompensation).toEqual({
+      releaseId: LEGACY_FATE_COMPENSATION_ID,
+      status: 'pending',
+      chaosKeys: 0,
+      pityKeys: 0,
+      fatePoints: 3,
+    });
+    expect(reloaded.state).toEqual(migrated.state);
+  });
   it('loads version-3 quest and miniquest completion IDs without reclassification', () => {
     const completedIds = [
       "Witch's Potion",
@@ -322,6 +353,36 @@ describe('save schema compatibility', () => {
       code: 'migrated',
       message: 'Save data was migrated to the current format.',
     }]);
+  });
+
+  it('freezes bounded over-limit Pity compensation through a v3-to-v4 save round trip', () => {
+    const legacy = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    legacy.version = 3;
+    delete legacy.fateCompensation;
+    legacy.fatePoints = MAX_COUNTER;
+    legacy.history = Array.from({ length: 51 }, (_, index) => ({
+      id: `max-fate-${index}`,
+      timestamp: index,
+      type: 'ROLL_FAIL',
+      source: 'Quest (Master)',
+      message: 'No Key.',
+      meta: { fatePointsEarned: MAX_COUNTER },
+    }));
+
+    const migrated = expectAccepted(validateAndMigrateSave(legacy, defaultsFixture()));
+    const reloaded = expectAccepted(parseAndMigrateSave(
+      serializeCurrent(migrated.state),
+      defaultsFixture(),
+    ));
+
+    expect(migrated.state.fateCompensation).toEqual({
+      releaseId: LEGACY_FATE_COMPENSATION_ID,
+      status: 'pending',
+      chaosKeys: 8,
+      pityKeys: MAX_COUNTER,
+      fatePoints: 49,
+    });
+    expect(reloaded.state).toEqual(migrated.state);
   });
 
   it('refunds exactly one regular key when both Elf Camp names were paid for', () => {

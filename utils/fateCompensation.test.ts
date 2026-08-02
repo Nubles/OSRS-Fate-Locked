@@ -174,7 +174,24 @@ describe('calculateLegacyFateCompensation', () => {
     });
   });
 
-  it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, -4])(
+  it('keeps an unknown Level-suffixed legacy source at its original +1 Fate', () => {
+    const unknownLevelFailure = entry('ROLL_FAIL', 'Mystery Level 80');
+
+    expect(calculateLegacyFateCompensation(state([unknownLevelFailure]))).toMatchObject({
+      pityKeys: 0,
+      fatePoints: 1,
+    });
+  });
+
+  it.each([
+    Number.NaN,
+    Number.POSITIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+    -4,
+    1.5,
+    2_147_483_648,
+    Number.MAX_SAFE_INTEGER + 1,
+  ])(
     'falls back conservatively for invalid recorded Fate metadata: %s',
     fatePointsEarned => {
       const invalidMetadata = entry('ROLL_FAIL', 'Mystery Event', { fatePointsEarned });
@@ -186,6 +203,32 @@ describe('calculateLegacyFateCompensation', () => {
     },
   );
 
+
+  it('bounds replayed Pity Key compensation at the save counter limit', () => {
+    const result = calculateLegacyFateCompensation(state(
+      failures(51, DropSource.QUEST_MASTER).map(failure => ({
+        ...failure,
+        meta: { fatePointsEarned: 2_147_483_647 },
+      })),
+    ));
+
+    expect(result).toMatchObject({
+      pityKeys: 2_147_483_647,
+      fatePoints: 49,
+    });
+  });
+
+  it('bounds replayed Fate compensation at the save counter limit', () => {
+    const result = calculateLegacyFateCompensation(state([
+      entry('PITY', DropSource.QUEST_MASTER, { fatePointsEarned: 2_147_483_647 }),
+      entry('PITY', DropSource.QUEST_MASTER, { fatePointsEarned: 2_147_483_647 }),
+    ]));
+
+    expect(result).toMatchObject({
+      pityKeys: 0,
+      fatePoints: 2_147_483_647,
+    });
+  });
   it('returns zero compensation without history or reached milestones', () => {
     expect(calculateLegacyFateCompensation(state())).toEqual({
       chaosKeys: 0,

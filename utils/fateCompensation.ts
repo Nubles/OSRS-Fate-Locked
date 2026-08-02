@@ -15,13 +15,18 @@ export interface LegacyFateCompensation {
 }
 
 const LEGACY_PITY_THRESHOLD = 50;
+// Matches saveSchema's MAX_COUNTER without importing its migration dependency.
+const MAX_COMPENSATION_COUNTER = 2_147_483_647;
 const DROP_SOURCES = new Set<string>(Object.values(DropSource));
 const SKILL_LEVEL_SOURCE = / Level (-?\d+)$/;
 const CANONICAL_SKILLS = new Set<string>(SKILLS_LIST);
 
 const validRecordedFate = (entry: LogEntry): number | undefined => {
   const recorded = entry.meta?.fatePointsEarned;
-  return typeof recorded === 'number' && Number.isFinite(recorded) && recorded >= 0
+  return typeof recorded === 'number'
+    && Number.isSafeInteger(recorded)
+    && recorded >= 0
+    && recorded <= MAX_COMPENSATION_COUNTER
     ? recorded
     : undefined;
 };
@@ -38,10 +43,13 @@ const recognizedFailureFate = (entry: LogEntry): FailureFateAward => {
     return failureFateForSource(DropSource.COLLECTION_LOG);
   }
 
-  const skillLevel = source.match(SKILL_LEVEL_SOURCE)?.[1];
-  if (skillLevel === undefined) return 1;
+  const skillLevel = source.match(SKILL_LEVEL_SOURCE);
+  if (skillLevel === null) return 1;
 
-  const parsed = Number(skillLevel);
+  const skill = source.slice(0, -skillLevel[0].length);
+  if (!CANONICAL_SKILLS.has(skill)) return 1;
+
+  const parsed = Number(skillLevel[1]);
   if (!Number.isFinite(parsed)) return 1;
 
   return failureFateForSkillLevel(Math.min(99, Math.max(2, parsed)));
@@ -90,8 +98,8 @@ export const calculateLegacyFateCompensation = (
   }
 
   return {
-    chaosKeys: reachedChaosMilestones(state.unlocks.levels),
-    pityKeys: Math.max(0, pityKeys),
-    fatePoints: Math.max(0, fatePoints),
+    chaosKeys: Math.min(MAX_COMPENSATION_COUNTER, reachedChaosMilestones(state.unlocks.levels)),
+    pityKeys: Math.min(MAX_COMPENSATION_COUNTER, Math.max(0, pityKeys)),
+    fatePoints: Math.min(MAX_COMPENSATION_COUNTER, Math.max(0, fatePoints)),
   };
 };
