@@ -17,6 +17,7 @@ This change covers:
 - pity-threshold calculation and overflow;
 - skill-level Fate bands;
 - guaranteed skill-level Chaos Key milestones;
+- optional one-time compensation for existing profiles;
 - history and analytics metadata;
 - the in-app economy reference and player-facing changelog; and
 - focused automated tests.
@@ -95,6 +96,58 @@ milestone set. It will then add the guaranteed award and the existing random
 award independently, allowing a total of zero, one, or two Chaos Keys depending
 on the level and random result.
 
+## Existing-Profile Compensation
+
+Every profile created before this balance update receives its own one-time,
+frozen compensation calculation when it is first loaded under the new save
+version. Calculating and storing the offer during migration prevents activity
+completed under the new rules from being counted as legacy eligibility.
+
+The offer contains:
+
+- one missed Chaos Key for each level 30, 40, 50, 60, 70, 80, 90, or 99 already
+  reached in each skill;
+- the number of additional Standard Pity Keys the legacy roll history would
+  have produced under the new weighted Fate schedule; and
+- the counterfactual Fate balance remaining after those 50-point conversions.
+
+The 2% Chaos Key result on any historical milestone does not reduce the
+guaranteed Chaos compensation because the two rewards are independent.
+
+The Fate calculator replays recognized roll entries in chronological order.
+Weighted failure awards accumulate against a 50-point bar. Each ordinary or
+Omni success resets the bar. A newly discovered crossing on a historical failed
+roll counts one missed Pity Key, subtracts 50 Fate, and carries its remainder
+forward.
+
+An existing Pity entry accounts for the Standard Key already received and is
+never granted again. If its replayed bar reaches 50, it subtracts 50 and retains
+the overflow. If earlier counterfactual crossings leave it below 50, the
+already-received Key resets that replayed bar to zero. Legacy sources that cannot
+be classified safely remain worth their original +1 Fate rather than receiving
+a guessed bonus.
+
+The player must make one of three explicit choices before leaving the update
+notice and returning to play:
+
+1. **No compensation:** change no balances and begin using the new rates.
+2. **Chaos Keys only:** add the calculated Chaos Keys while leaving Standard
+   Keys and Fate unchanged.
+3. **Full compensation:** add the calculated Chaos Keys and missed Standard
+   Pity Keys, then replace the current Fate bar with the calculated remainder.
+
+For example, if the old balance is 45 and the weighted recalculation contributes
+10 additional Fate, full compensation grants one Standard Pity Key and leaves 5
+Fate. If the recalculated bar never reaches 50, it grants no Pity Key and applies
+only the recalculated Fate balance. Options one and two never alter the Fate bar
+or grant retroactive Standard Pity Keys.
+
+The decision is permanent, stored per profile, and recorded in history with the
+selected option and awarded amounts. Reopening What's New cannot grant the same
+compensation again. A pending offer causes the update notice to open for that
+profile even when the general release notice has already been seen on another
+profile.
+
 ## Player-Facing Updates
 
 The in-app economy reference will describe the three failure-Fate bands and the
@@ -103,14 +156,24 @@ Fate or that Chaos Keys only come from the 2% level roll will be corrected where
 it describes the economy rule.
 
 A player-facing changelog entry will announce the weighted Fate schedule, pity
-overflow, and guaranteed Chaos milestones.
+overflow, and guaranteed Chaos milestones. Its expanded release panel will show
+the current profile's frozen compensation totals and the three choices. The
+close controls remain unavailable until a pending eligible profile chooses an
+option, including the explicit no-compensation option.
 
 ## Compatibility
 
-No save-schema migration is required. Fate and Chaos Key balances remain numeric
-counters, while new history entries will continue using the existing extensible
-metadata object. Historical entries that lack an exact `fatePointsEarned` value
-retain the analytics fallback of one Fate for a failed or pity roll.
+The save schema advances by one version so every legacy profile can store a
+frozen compensation offer and its pending or resolved decision. New profiles
+start resolved with no legacy offer. Existing profiles without eligible rewards
+migrate directly to the same resolved state, so they are not blocked by a
+zero-value decision and cannot retrigger compensation through profile switching.
+
+Fate and Key balances remain numeric counters, while new history entries
+continue using the existing extensible metadata object. Historical entries that
+lack an exact `fatePointsEarned` value retain the analytics fallback of one Fate
+for a failed or pity roll. Strict save validation covers the new compensation
+shape and rejects invalid or inflated award values.
 
 The deterministic run transition remains reproducible because the guaranteed
 milestone award uses no new random draw, and the existing 2% draw remains in its
@@ -129,8 +192,22 @@ Focused tests will verify:
 - guaranteed 100% sources do not award failure Fate;
 - only levels 30, 40, 50, 60, 70, 80, 90, and 99 guarantee a Chaos Key;
 - milestone and 2% random rewards stack to two Chaos Keys;
-- non-milestone levels retain only the 2% chance; and
+- non-milestone levels retain only the 2% chance;
+- legacy profiles receive a frozen compensation offer exactly once;
+- each attained historical skill milestone contributes one missed Chaos Key;
+- random historical Chaos drops do not reduce that entitlement;
+- history replay counts only additional Pity Keys and preserves 50-point
+  rollover;
+- unrecognized legacy sources receive no guessed weighted bonus;
+- no-compensation changes no balances;
+- Chaos-only compensation changes only the Chaos Key balance;
+- full compensation grants both Key types and applies the recalculated Fate
+  remainder;
+- resolved offers cannot be claimed again, including after export/import;
+- each profile receives and resolves its own offer;
+- a pending offer opens and gates the final update notice; and
 - the in-app economy content stays consistent with the engine configuration.
 
-Relevant reducer, economy-consistency, detected-event, history/analytics, and UI
-copy tests will be run alongside type checking and the production build.
+Relevant reducer, economy-consistency, detected-event, save-migration,
+history/analytics, changelog UI, and player-copy tests will be run alongside type
+checking and the production build.
