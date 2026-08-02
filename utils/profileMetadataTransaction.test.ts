@@ -1059,3 +1059,206 @@ describe('typed profile metadata mutations', () => {
     expect(storage.values.get(PROFILES_KEY)).toBe(JSON.stringify(expected));
   });
 });
+
+const profileSaveWrites = (storage: TestStorage): string[] =>
+  storage.calls.filter(call => call.startsWith('set:FATE_PROFILE_'));
+
+const nonLockWrites = (storage: TestStorage): string[] =>
+  storage.calls.filter(call => call.startsWith('set:') && call !== `set:${PROFILE_METADATA_LOCK_KEY}`);
+
+describe('profile transaction ownership rechecks', () => {
+  it('does not replace a recovery envelope after its owned lock expires during resolution', async () => {
+    const recovered = metadata(3, 'Recovered');
+    const primaryRaw = '{broken';
+    const backupRaw = JSON.stringify(recovered);
+    const storage = createStorage([
+      [PROFILES_KEY, primaryRaw],
+      [PROFILE_METADATA_BACKUP_KEY, backupRaw],
+      [PROFILE_METADATA_RECOVERY_KEY, 'older-envelope'],
+    ]);
+    const clock = createClock();
+    const getItem = storage.getItem;
+    storage.getItem = key => {
+      const value = getItem(key);
+      if (key === PROFILE_METADATA_BACKUP_KEY) clock.set(1_000 + PROFILE_METADATA_LOCK_TTL_MS);
+      return value;
+    };
+
+    await expect(initializeProfileMetadata(createDependencies(storage, 'tab-a', clock))).resolves.toEqual({
+      ok: false,
+      reason: 'busy',
+      metadata: recovered,
+      notice: {
+        kind: 'repaired',
+        recoveredProfiles: 0,
+        generatedNames: 0,
+        unreadableSaves: 0,
+        overflowSaves: 0,
+        rollbackFailures: 0,
+      },
+    });
+    expect(storage.values.get(PROFILE_METADATA_RECOVERY_KEY)).toBe('older-envelope');
+    expect(storage.values.get(PROFILES_KEY)).toBe(primaryRaw);
+    expect(storage.values.get(PROFILE_METADATA_BACKUP_KEY)).toBe(backupRaw);
+    expect(nonLockWrites(storage)).toEqual([]);
+  });
+
+  it('does not replace a recovery envelope after lock ownership changes during resolution', async () => {
+    const recovered = metadata(3, 'Recovered');
+    const primaryRaw = '{broken';
+    const backupRaw = JSON.stringify(recovered);
+    const foreignLock = lockRaw('tab-b', 9_000);
+    const storage = createStorage([
+      [PROFILES_KEY, primaryRaw],
+      [PROFILE_METADATA_BACKUP_KEY, backupRaw],
+      [PROFILE_METADATA_RECOVERY_KEY, 'older-envelope'],
+    ]);
+    const getItem = storage.getItem;
+    storage.getItem = key => {
+      const value = getItem(key);
+      if (key === PROFILE_METADATA_BACKUP_KEY) {
+        storage.values.set(PROFILE_METADATA_LOCK_KEY, foreignLock);
+      }
+      return value;
+    };
+
+    await expect(initializeProfileMetadata(createDependencies(storage))).resolves.toMatchObject({
+      ok: false,
+      reason: 'busy',
+      metadata: recovered,
+    });
+    expect(storage.values.get(PROFILE_METADATA_RECOVERY_KEY)).toBe('older-envelope');
+    expect(storage.values.get(PROFILES_KEY)).toBe(primaryRaw);
+    expect(storage.values.get(PROFILE_METADATA_BACKUP_KEY)).toBe(backupRaw);
+    expect(storage.values.get(PROFILE_METADATA_LOCK_KEY)).toBe(foreignLock);
+    expect(nonLockWrites(storage)).toEqual([]);
+  });
+
+  it('does not report durable startup success after its lock expires during resolution', async () => {
+    const current = metadata(7);
+    const raw = JSON.stringify(current);
+    const storage = createStorage([[PROFILES_KEY, raw]]);
+    const clock = createClock();
+    const getItem = storage.getItem;
+    storage.getItem = key => {
+      const value = getItem(key);
+      if (key === LEGACY_SAVE_KEY) clock.set(1_000 + PROFILE_METADATA_LOCK_TTL_MS);
+      return value;
+    };
+
+    await expect(initializeProfileMetadata(createDependencies(storage, 'tab-a', clock))).resolves.toEqual({
+      ok: false,
+      reason: 'busy',
+      metadata: current,
+      notice: null,
+    });
+    expect(storage.values.get(PROFILES_KEY)).toBe(raw);
+    expect(nonLockWrites(storage)).toEqual([]);
+  });
+
+  it('does not report an idempotent create success after lock ownership changes', async () => {
+    const created = { id: 'beta', name: 'Beta', createdAt: 2 };
+    const current: ProfileMetadata = {
+      version: 1,
+      revision: 4,
+      profiles: [{ id: 'alpha', name: 'Alpha', createdAt: 1 }, created],
+      activeProfileId: 'beta',
+    };
+    const raw = JSON.stringify(current);
+    const foreignLock = lockRaw('tab-b', 9_000);
+    const storage = createStorage([[PROFILES_KEY, raw]]);
+    const retried = {
+      id: 'beta',
+      get name() {
+        storage.values.set(PROFILE_METADATA_LOCK_KEY, foreignLock);
+        return 'Beta';
+      },
+      createdAt: 2,
+    } as Profile;
+
+    await expect(mutateProfileMetadata(
+      createDependencies(storage),
+      { type: 'create', profile: retried },
+    )).resolves.toEqual({
+      ok: false,
+      reason: 'busy',
+      metadata: current,
+      notice: null,
+    });
+    expect(storage.values.get(PROFILES_KEY)).toBe(raw);
+    expect(storage.values.get(PROFILE_METADATA_LOCK_KEY)).toBe(foreignLock);
+    expect(nonLockWrites(storage)).toEqual([]);
+  });
+
+  it('does not copy a legacy save after lock ownership changes during its execution reread', async () => {
+    const foreignLock = lockRaw('tab-b', 9_000);
+    const storage = createStorage([[LEGACY_SAVE_KEY, 'valid:legacy']]);
+    const getItem = storage.getItem;
+    let legacyReads = 0;
+    storage.getItem = key => {
+      const value = getItem(key);
+      if (key === LEGACY_SAVE_KEY && ++legacyReads === 2) {
+        storage.values.set(PROFILE_METADATA_LOCK_KEY, foreignLock);
+      }
+      return value;
+    };
+
+    await expect(initializeProfileMetadata(createDependencies(storage))).resolves.toMatchObject({
+      ok: false,
+      reason: 'busy',
+    });
+    expect(storage.values.has('FATE_PROFILE_tab-a-profile')).toBe(false);
+    expect(storage.values.has(PROFILES_KEY)).toBe(false);
+    expect(storage.values.has(PROFILE_METADATA_BACKUP_KEY)).toBe(false);
+    expect(storage.values.get(PROFILE_METADATA_LOCK_KEY)).toBe(foreignLock);
+    expect(profileSaveWrites(storage)).toEqual([]);
+  });
+});
+
+describe('legacy copy validation ordering', () => {
+  it('rejects an invalid generated repair candidate before copying the legacy save', async () => {
+    const storage = createStorage([[LEGACY_SAVE_KEY, 'valid:legacy']]);
+    const deps = {
+      ...createDependencies(storage),
+      createProfileId: () => 'unsafe/id',
+    };
+
+    await expect(initializeProfileMetadata(deps)).resolves.toMatchObject({
+      ok: false,
+      reason: 'invalid_metadata',
+    });
+    expect(storage.values.has('FATE_PROFILE_unsafe/id')).toBe(false);
+    expect(storage.values.has(PROFILES_KEY)).toBe(false);
+    expect(storage.values.has(PROFILE_METADATA_BACKUP_KEY)).toBe(false);
+    expect(profileSaveWrites(storage)).toEqual([]);
+  });
+
+  it.each([
+    {
+      label: 'create',
+      mutation: {
+        type: 'create',
+        profile: { id: 'unsafe/id', name: 'Unsafe', createdAt: 2 },
+      } as const,
+    },
+    {
+      label: 'rename',
+      mutation: {
+        type: 'rename',
+        profileId: 'tab-a-profile',
+        name: '   ',
+      } as const,
+    },
+  ])('rejects an invalid $label candidate before copying a valid legacy save', async ({ mutation }) => {
+    const storage = createStorage([[LEGACY_SAVE_KEY, 'valid:legacy']]);
+
+    await expect(mutateProfileMetadata(createDependencies(storage), mutation)).resolves.toMatchObject({
+      ok: false,
+      reason: 'invalid_metadata',
+    });
+    expect(storage.values.has('FATE_PROFILE_tab-a-profile')).toBe(false);
+    expect(storage.values.has(PROFILES_KEY)).toBe(false);
+    expect(storage.values.has(PROFILE_METADATA_BACKUP_KEY)).toBe(false);
+    expect(profileSaveWrites(storage)).toEqual([]);
+  });
+});

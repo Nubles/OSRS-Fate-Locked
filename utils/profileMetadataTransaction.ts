@@ -274,6 +274,10 @@ type ProfileMutationPlan =
   | { status: 'unchanged' }
   | { status: 'failure'; reason: ProfileMutationFailure };
 
+type RecoveryEnvelopeResult =
+  | 'verified'
+  | Extract<ProfileMutationFailure, 'busy' | 'storage_unavailable' | 'backup_failed'>;
+
 const transactionFailure = (
   reason: ProfileMutationFailure,
   metadata: ProfileMetadata | null,
@@ -288,6 +292,25 @@ const readOnlyNotice = (notice: ProfileRecoveryNotice | null): ProfileRecoveryNo
   overflowSaves: notice?.overflowSaves ?? 0,
   rollbackFailures: notice?.rollbackFailures ?? 0,
 });
+
+const currentOwnershipFailure = (
+  deps: ProfileTransactionDependencies,
+): Extract<ProfileMutationFailure, 'busy' | 'storage_unavailable'> | null => {
+  const current = readLock(deps);
+  if (!current.ok) return 'storage_unavailable';
+  return isOwnedAndUnexpired(current.lock, deps) ? null : 'busy';
+};
+
+const noWriteSuccess = (
+  deps: ProfileTransactionDependencies,
+  metadata: ProfileMetadata,
+  notice: ProfileRecoveryNotice | null,
+): ProfileTransactionResult => {
+  const ownershipFailure = currentOwnershipFailure(deps);
+  return ownershipFailure === null
+    ? { ok: true, metadata, notice }
+    : transactionFailure(ownershipFailure, metadata, notice);
+};
 
 const withRecoveryNotice = (
   result: ProfileTransactionResult,
@@ -330,13 +353,17 @@ const readNewestProfileMetadata = (
 const verifyRecoveryEnvelope = (
   deps: ProfileTransactionDependencies,
   envelope: ProfileRecoveryEnvelopeV1,
-): boolean => {
+): RecoveryEnvelopeResult => {
   try {
     const serialized = JSON.stringify(envelope);
+    const ownershipFailure = currentOwnershipFailure(deps);
+    if (ownershipFailure !== null) return ownershipFailure;
     deps.storage.setItem(PROFILE_METADATA_RECOVERY_KEY, serialized);
-    return deps.storage.getItem(PROFILE_METADATA_RECOVERY_KEY) === serialized;
+    return deps.storage.getItem(PROFILE_METADATA_RECOVERY_KEY) === serialized
+      ? 'verified'
+      : 'backup_failed';
   } catch {
-    return false;
+    return 'backup_failed';
   }
 };
 
@@ -363,11 +390,14 @@ const runWithLockedProfileMetadata = async (
       }
       : resolution.repair?.archive ?? null;
 
-    if (archive !== null && !verifyRecoveryEnvelope(deps, archive)) {
+    const archiveResult = archive === null ? 'verified' : verifyRecoveryEnvelope(deps, archive);
+    if (archiveResult !== 'verified') {
       return transactionFailure(
-        'backup_failed',
+        archiveResult,
         resolution.metadata,
-        readOnlyNotice(resolution.notice),
+        archiveResult === 'backup_failed'
+          ? readOnlyNotice(resolution.notice)
+          : resolution.notice,
       );
     }
 
@@ -392,18 +422,20 @@ const runWithLockedProfileMetadata = async (
 const executeLegacyCopy = (
   deps: ProfileTransactionDependencies,
   resolution: WritableProfileMetadataResolution,
-): boolean => {
+): ProfileMutationFailure | null => {
   const copy = resolution.repair?.legacyCopy;
-  if (copy === null || copy === undefined) return true;
+  if (copy === null || copy === undefined) return null;
 
   try {
     const latest = deps.storage.getItem(copy.fromKey);
-    if (latest === null || !deps.validateGameSave(latest)) return false;
+    if (latest === null || !deps.validateGameSave(latest)) return 'verification_failed';
+    const ownershipFailure = currentOwnershipFailure(deps);
+    if (ownershipFailure !== null) return ownershipFailure;
     const targetKey = `FATE_PROFILE_${copy.toProfileId}`;
     deps.storage.setItem(targetKey, latest);
-    return deps.storage.getItem(targetKey) === latest;
+    return deps.storage.getItem(targetKey) === latest ? null : 'verification_failed';
   } catch {
-    return false;
+    return 'verification_failed';
   }
 };
 
@@ -416,19 +448,15 @@ const validateCandidate = (candidate: ProfileMetadata): ProfileMetadata | null =
   }
 };
 
-const commitValidatedCandidate = (
+const commitCandidate = (
   deps: ProfileTransactionDependencies,
   previous: ProfileMetadata,
   candidate: ProfileMetadata,
   notice: ProfileRecoveryNotice | null,
-): ProfileTransactionResult => {
-  const validated = validateCandidate(candidate);
-  if (validated === null) return transactionFailure('invalid_metadata', previous, notice);
-  return withRecoveryNotice(
-    commitProfileMetadataCandidate(deps, previous, validated),
-    notice,
-  );
-};
+): ProfileTransactionResult => withRecoveryNotice(
+  commitProfileMetadataCandidate(deps, previous, candidate),
+  notice,
+);
 
 const repairCandidate = (metadata: ProfileMetadata): ProfileMetadata => ({
   ...metadata,
@@ -439,17 +467,23 @@ export const initializeProfileMetadata = (
   deps: ProfileTransactionDependencies,
 ): Promise<ProfileTransactionResult> => runWithLockedProfileMetadata(deps, resolution => {
   if (resolution.mode === 'durable') {
-    return { ok: true, metadata: resolution.metadata, notice: resolution.notice };
+    return noWriteSuccess(deps, resolution.metadata, resolution.notice);
   }
 
-  if (!executeLegacyCopy(deps, resolution)) {
-    return transactionFailure('verification_failed', resolution.metadata, resolution.notice);
+  const candidate = validateCandidate(repairCandidate(resolution.metadata));
+  if (candidate === null) {
+    return transactionFailure('invalid_metadata', resolution.metadata, resolution.notice);
   }
 
-  return commitValidatedCandidate(
+  const copyFailure = executeLegacyCopy(deps, resolution);
+  if (copyFailure !== null) {
+    return transactionFailure(copyFailure, resolution.metadata, resolution.notice);
+  }
+
+  return commitCandidate(
     deps,
     resolution.metadata,
-    repairCandidate(resolution.metadata),
+    candidate,
     resolution.notice,
   );
 });
@@ -519,26 +553,28 @@ export const mutateProfileMetadata = (
     return transactionFailure(plan.reason, resolution.metadata, resolution.notice);
   }
 
-  if (resolution.mode === 'repair' && !executeLegacyCopy(deps, resolution)) {
-    return transactionFailure('verification_failed', resolution.metadata, resolution.notice);
+  if (plan.status === 'unchanged' && resolution.mode === 'durable') {
+    return noWriteSuccess(deps, resolution.metadata, resolution.notice);
   }
 
-  if (plan.status === 'unchanged') {
-    if (resolution.mode === 'durable') {
-      return { ok: true, metadata: resolution.metadata, notice: resolution.notice };
-    }
-    return commitValidatedCandidate(
-      deps,
-      resolution.metadata,
-      repairCandidate(resolution.metadata),
-      resolution.notice,
-    );
+  const candidate = validateCandidate(
+    plan.status === 'unchanged'
+      ? repairCandidate(resolution.metadata)
+      : plan.candidate,
+  );
+  if (candidate === null) {
+    return transactionFailure('invalid_metadata', resolution.metadata, resolution.notice);
   }
 
-  return commitValidatedCandidate(
+  const copyFailure = resolution.mode === 'repair' ? executeLegacyCopy(deps, resolution) : null;
+  if (copyFailure !== null) {
+    return transactionFailure(copyFailure, resolution.metadata, resolution.notice);
+  }
+
+  return commitCandidate(
     deps,
     resolution.metadata,
-    plan.candidate,
+    candidate,
     resolution.notice,
   );
 });
