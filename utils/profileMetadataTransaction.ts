@@ -1,9 +1,16 @@
-import type { ProfileMetadata } from '../types';
+import type { Profile, ProfileMetadata } from '../types';
 import {
   PROFILE_METADATA_BACKUP_KEY,
+  LEGACY_SAVE_KEY,
+  MAX_PROFILES,
+  PROFILE_METADATA_RECOVERY_KEY,
   PROFILE_METADATA_LOCK_KEY,
   PROFILES_KEY,
   type GameSaveValidator,
+  parseProfileMetadata,
+  resolveProfileMetadata,
+  type ProfileMetadataResolution,
+  type ProfileRecoveryEnvelopeV1,
   type ProfileRecoveryNotice,
 } from './profileMetadata';
 
@@ -29,6 +36,12 @@ export interface ProfileTransactionDependencies {
   validateGameSave: GameSaveValidator;
   createProfileId: () => string;
 }
+export type ProfileMutation =
+  | { type: 'create'; profile: Profile }
+  | { type: 'rename'; profileId: string; name: string }
+  | { type: 'select'; profileId: string }
+  | { type: 'delete'; profileId: string };
+
 
 export type ProfileMutationFailure =
   | 'busy'
@@ -245,3 +258,287 @@ export const commitProfileMetadataCandidate = (
 
   return { ok: true, metadata: candidate, notice: null };
 };
+
+type WritableProfileMetadataResolution = Exclude<ProfileMetadataResolution, { mode: 'read_only' }>;
+
+type ResolvedProfileMetadataSources = {
+  ok: true;
+  primary: string | null;
+  backup: string | null;
+  capturedAt: number;
+  resolution: ProfileMetadataResolution;
+} | { ok: false };
+
+type ProfileMutationPlan =
+  | { status: 'candidate'; candidate: ProfileMetadata }
+  | { status: 'unchanged' }
+  | { status: 'failure'; reason: ProfileMutationFailure };
+
+const transactionFailure = (
+  reason: ProfileMutationFailure,
+  metadata: ProfileMetadata | null,
+  notice: ProfileRecoveryNotice | null,
+): ProfileTransactionResult => ({ ok: false, reason, metadata, notice });
+
+const readOnlyNotice = (notice: ProfileRecoveryNotice | null): ProfileRecoveryNotice => ({
+  kind: 'read_only',
+  recoveredProfiles: notice?.recoveredProfiles ?? 0,
+  generatedNames: notice?.generatedNames ?? 0,
+  unreadableSaves: notice?.unreadableSaves ?? 0,
+  overflowSaves: notice?.overflowSaves ?? 0,
+  rollbackFailures: notice?.rollbackFailures ?? 0,
+});
+
+const withRecoveryNotice = (
+  result: ProfileTransactionResult,
+  notice: ProfileRecoveryNotice | null,
+): ProfileTransactionResult => {
+  if ('reason' in result) {
+    return { ok: false, reason: result.reason, metadata: result.metadata, notice };
+  }
+  return { ok: true, metadata: result.metadata, notice };
+};
+
+const readNewestProfileMetadata = (
+  deps: ProfileTransactionDependencies,
+): ResolvedProfileMetadataSources => {
+  try {
+    const primary = deps.storage.getItem(PROFILES_KEY);
+    const backup = deps.storage.getItem(PROFILE_METADATA_BACKUP_KEY);
+    const legacySave = deps.storage.getItem(LEGACY_SAVE_KEY);
+    const capturedAt = deps.now();
+    return {
+      ok: true,
+      primary,
+      backup,
+      capturedAt,
+      resolution: resolveProfileMetadata({
+        primary,
+        backup,
+        legacySave,
+        storage: deps.storage,
+        now: capturedAt,
+        validateGameSave: deps.validateGameSave,
+        createProfileId: deps.createProfileId,
+      }),
+    };
+  } catch {
+    return { ok: false };
+  }
+};
+
+const verifyRecoveryEnvelope = (
+  deps: ProfileTransactionDependencies,
+  envelope: ProfileRecoveryEnvelopeV1,
+): boolean => {
+  try {
+    const serialized = JSON.stringify(envelope);
+    deps.storage.setItem(PROFILE_METADATA_RECOVERY_KEY, serialized);
+    return deps.storage.getItem(PROFILE_METADATA_RECOVERY_KEY) === serialized;
+  } catch {
+    return false;
+  }
+};
+
+const runWithLockedProfileMetadata = async (
+  deps: ProfileTransactionDependencies,
+  operation: (resolution: WritableProfileMetadataResolution) => ProfileTransactionResult,
+): Promise<ProfileTransactionResult> => {
+  const lock = await acquireProfileMetadataLock(deps);
+  if (lock.status !== 'acquired') {
+    return transactionFailure(lock.status, null, null);
+  }
+
+  try {
+    const sources = readNewestProfileMetadata(deps);
+    if (!sources.ok) return transactionFailure('storage_unavailable', null, null);
+
+    const { resolution } = sources;
+    const archive = resolution.mode === 'read_only'
+      ? {
+        version: 1 as const,
+        capturedAt: sources.capturedAt,
+        primary: sources.primary,
+        backup: sources.backup,
+      }
+      : resolution.repair?.archive ?? null;
+
+    if (archive !== null && !verifyRecoveryEnvelope(deps, archive)) {
+      return transactionFailure(
+        'backup_failed',
+        resolution.metadata,
+        readOnlyNotice(resolution.notice),
+      );
+    }
+
+    if (resolution.mode === 'read_only') {
+      return transactionFailure(
+        'unsupported_metadata',
+        resolution.metadata,
+        resolution.notice,
+      );
+    }
+
+    try {
+      return operation(resolution);
+    } catch {
+      return transactionFailure('invalid_metadata', resolution.metadata, resolution.notice);
+    }
+  } finally {
+    releaseProfileMetadataLock(deps);
+  }
+};
+
+const executeLegacyCopy = (
+  deps: ProfileTransactionDependencies,
+  resolution: WritableProfileMetadataResolution,
+): boolean => {
+  const copy = resolution.repair?.legacyCopy;
+  if (copy === null || copy === undefined) return true;
+
+  try {
+    const latest = deps.storage.getItem(copy.fromKey);
+    if (latest === null || !deps.validateGameSave(latest)) return false;
+    const targetKey = `FATE_PROFILE_${copy.toProfileId}`;
+    deps.storage.setItem(targetKey, latest);
+    return deps.storage.getItem(targetKey) === latest;
+  } catch {
+    return false;
+  }
+};
+
+const validateCandidate = (candidate: ProfileMetadata): ProfileMetadata | null => {
+  try {
+    const parsed = parseProfileMetadata(JSON.stringify(candidate));
+    return parsed.status === 'current' ? parsed.metadata : null;
+  } catch {
+    return null;
+  }
+};
+
+const commitValidatedCandidate = (
+  deps: ProfileTransactionDependencies,
+  previous: ProfileMetadata,
+  candidate: ProfileMetadata,
+  notice: ProfileRecoveryNotice | null,
+): ProfileTransactionResult => {
+  const validated = validateCandidate(candidate);
+  if (validated === null) return transactionFailure('invalid_metadata', previous, notice);
+  return withRecoveryNotice(
+    commitProfileMetadataCandidate(deps, previous, validated),
+    notice,
+  );
+};
+
+const repairCandidate = (metadata: ProfileMetadata): ProfileMetadata => ({
+  ...metadata,
+  revision: metadata.revision + 1,
+});
+
+export const initializeProfileMetadata = (
+  deps: ProfileTransactionDependencies,
+): Promise<ProfileTransactionResult> => runWithLockedProfileMetadata(deps, resolution => {
+  if (resolution.mode === 'durable') {
+    return { ok: true, metadata: resolution.metadata, notice: resolution.notice };
+  }
+
+  if (!executeLegacyCopy(deps, resolution)) {
+    return transactionFailure('verification_failed', resolution.metadata, resolution.notice);
+  }
+
+  return commitValidatedCandidate(
+    deps,
+    resolution.metadata,
+    repairCandidate(resolution.metadata),
+    resolution.notice,
+  );
+});
+
+const planProfileMutation = (
+  previous: ProfileMetadata,
+  mutation: ProfileMutation,
+): ProfileMutationPlan => {
+  switch (mutation.type) {
+    case 'create': {
+      const existing = previous.profiles.find(profile => profile.id === mutation.profile.id);
+      if (existing !== undefined) {
+        return existing.name === mutation.profile.name && existing.createdAt === mutation.profile.createdAt
+          ? { status: 'unchanged' }
+          : { status: 'failure', reason: 'invalid_metadata' };
+      }
+      if (previous.profiles.length >= MAX_PROFILES) {
+        return { status: 'failure', reason: 'max_profiles' };
+      }
+      return {
+        status: 'candidate',
+        candidate: {
+          ...previous,
+          revision: previous.revision + 1,
+          profiles: [...previous.profiles, mutation.profile],
+          activeProfileId: mutation.profile.id,
+        },
+      };
+    }
+    case 'rename':
+      if (!previous.profiles.some(profile => profile.id === mutation.profileId)) {
+        return { status: 'failure', reason: 'not_found' };
+      }
+      return {
+        status: 'candidate',
+        candidate: {
+          ...previous,
+          revision: previous.revision + 1,
+          profiles: previous.profiles.map(profile => profile.id === mutation.profileId
+            ? { ...profile, name: mutation.name }
+            : profile),
+        },
+      };
+    case 'select':
+      if (!previous.profiles.some(profile => profile.id === mutation.profileId)) {
+        return { status: 'failure', reason: 'not_found' };
+      }
+      return {
+        status: 'candidate',
+        candidate: {
+          ...previous,
+          revision: previous.revision + 1,
+          activeProfileId: mutation.profileId,
+        },
+      };
+    case 'delete':
+      return { status: 'failure', reason: 'invalid_metadata' };
+  }
+};
+
+export const mutateProfileMetadata = (
+  deps: ProfileTransactionDependencies,
+  mutation: ProfileMutation,
+): Promise<ProfileTransactionResult> => runWithLockedProfileMetadata(deps, resolution => {
+  const plan = planProfileMutation(resolution.metadata, mutation);
+  if (plan.status === 'failure') {
+    return transactionFailure(plan.reason, resolution.metadata, resolution.notice);
+  }
+
+  if (resolution.mode === 'repair' && !executeLegacyCopy(deps, resolution)) {
+    return transactionFailure('verification_failed', resolution.metadata, resolution.notice);
+  }
+
+  if (plan.status === 'unchanged') {
+    if (resolution.mode === 'durable') {
+      return { ok: true, metadata: resolution.metadata, notice: resolution.notice };
+    }
+    return commitValidatedCandidate(
+      deps,
+      resolution.metadata,
+      repairCandidate(resolution.metadata),
+      resolution.notice,
+    );
+  }
+
+  return commitValidatedCandidate(
+    deps,
+    resolution.metadata,
+    plan.candidate,
+    resolution.notice,
+  );
+});
