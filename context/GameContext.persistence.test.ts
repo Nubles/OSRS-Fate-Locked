@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { SaveOwnershipConflictError } from '../utils/gamePersistence';
 import { parseAndMigrateSave } from '../utils/saveSchema';
 import { serializeCurrent } from '../utils/gamePersistence';
 import * as GameContext from './GameContext';
@@ -9,6 +10,7 @@ type DurableWriter = (
   data: string,
   pending: { current: number | null },
   cancel: (handle: number) => void,
+  canWrite: () => boolean,
 ) => void;
 
 describe('explicit replacement persistence', () => {
@@ -23,7 +25,7 @@ describe('explicit replacement persistence', () => {
     const pending = { current: 17 };
     writeReplacementNow({
       setItem: (_key, data) => { events.push('write:' + JSON.parse(data).keys); },
-    }, 'profile', '{"keys":9}', pending, handle => { events.push('cancel:' + handle); });
+    }, 'profile', '{"keys":9}', pending, handle => { events.push('cancel:' + handle); }, () => true);
     expect(events).toEqual(['write:9', 'cancel:17']);
     expect(pending.current).toBeNull();
 
@@ -34,9 +36,18 @@ describe('explicit replacement persistence', () => {
         events.push('write');
         throw new Error('quota');
       },
-    }, 'profile', '{"keys":9}', pending, handle => { events.push('cancel:' + handle); }))
+    }, 'profile', '{"keys":9}', pending, handle => { events.push('cancel:' + handle); }, () => true))
       .toThrow('quota');
     expect(events).toEqual(['write']);
+    expect(pending.current).toBe(23);
+
+    events.length = 0;
+    expect(() => writeReplacementNow({
+      setItem: () => { events.push('write'); },
+    }, 'profile', '{"keys":9}', pending, handle => {
+      events.push('cancel:' + handle);
+    }, () => false)).toThrow(SaveOwnershipConflictError);
+    expect(events).toEqual([]);
     expect(pending.current).toBe(23);
   });
 });

@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, useState } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState, type DetectedEventIdentity, type DetectedProgress, type GameEventMeta as DetectedGameEventMeta, type RollIntent } from '../types';
 import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST } from '../data/items';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from '../config/rules';
@@ -22,6 +22,8 @@ import {
   applyPreparedReplacement,
   applyValidatedReplacement,
   serializeCurrent as serializeGameState,
+  SaveOwnershipConflictError,
+  ownershipConflictResult,
   type BackupWriteResult,
   type ImportResult,
 } from '../utils/gamePersistence';
@@ -50,13 +52,24 @@ import {
 import { effectiveVanillaClueRate, vanillaBossKeyStage } from '../config/vanillaKeyEconomy';
 import type { KeyRollContext } from '../config/vanillaKeyEconomy';
 import {
+  blockPendingSave,
   discardPendingSave,
   flushPendingSave,
   getPendingSave,
+  getPendingSaveRevision,
   getSaveStatus,
   stagePendingSave,
+  subscribePendingSaves,
   type SaveStatus,
 } from '../utils/pendingSaves';
+import {
+  useProfileWriterLease,
+  type ProfileWriterLeaseOptions,
+} from '../hooks/useProfileWriterLease';
+import type {
+  SaveOwnershipBlockReason,
+  SaveOwnershipStatus,
+} from '../utils/profileWriterLease';
 
 
 // --- Types ---
@@ -68,7 +81,9 @@ export const writeReplacementNow = (
   data: string,
   pendingSave: { current: number | null },
   cancelPending: (handle: number) => void,
+  canWrite: () => boolean,
 ): void => {
+  if (!canWrite()) throw new SaveOwnershipConflictError();
   storage.setItem(storageKey, data);
   if (pendingSave.current === null) return;
   cancelPending(pendingSave.current);
@@ -128,7 +143,12 @@ type GameEvent = {
 interface GameContextType extends GameState {
   lastEvent: GameEvent | null;
   saveStatus: SaveStatus;
+  saveOwnershipStatus: SaveOwnershipStatus;
+  saveOwnershipBlockReason: SaveOwnershipBlockReason;
+  hasPendingChanges: boolean;
   retrySave: () => boolean;
+  takeOverSaveOwnership: () => Promise<boolean>;
+  reloadLatestSave: () => ImportResult;
   rollForKey: (
     source: string,
     threshold: number,
@@ -1208,13 +1228,53 @@ export const prepareGameTransition = (
 
 // --- Context ---
 const GameContext = createContext<GameContextType | null>(null);
+const subscribeToPendingSaveChanges = (listener: () => void): (() => void) => {
+  let subscribed = true;
+  // Avoid a synchronous external-store render interrupting state updates
+  // queued by other passive effects in the same commit.
+  const unsubscribe = subscribePendingSaves(() => {
+    queueMicrotask(() => {
+      if (subscribed) listener();
+    });
+  });
+  return () => {
+    subscribed = false;
+    unsubscribe();
+  };
+};
 
-export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: string }> = ({ children, storageKey }) => {
+type GameProviderProps = {
+  children: React.ReactNode;
+  storageKey: string;
+  leaseOptions?: ProfileWriterLeaseOptions;
+};
+
+export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey, leaseOptions }) => {
   const initialLoadWarningRef = useRef<string | null>(null);
+  const persistedSnapshotRef = useRef<string | null>(null);
+  const {
+    status: saveOwnershipStatus,
+    blockedReason: saveOwnershipBlockReason,
+    verify: verifyOwnership,
+    takeOver: takeOverOwnership,
+    release: releaseOwnership,
+  } = useProfileWriterLease(storageKey, leaseOptions);
+  const saveOwnershipStatusRef = useRef(saveOwnershipStatus);
+  saveOwnershipStatusRef.current = saveOwnershipStatus;
+  const saveOwnershipBlockReasonRef = useRef(saveOwnershipBlockReason);
+  saveOwnershipBlockReasonRef.current = saveOwnershipBlockReason;
   const [state, dispatch] = useReducer(
     gameReducer,
     storageKey,
     (key): GameState & { lastEvent: GameEvent | null } => {
+      let saved: string | null = null;
+      let durableReadFailed = false;
+      try {
+        saved = localStorage.getItem(key);
+        persistedSnapshotRef.current = saved;
+      } catch {
+        durableReadFailed = true;
+      }
       const pending = getPendingSave(key);
       if (pending) {
         const parsed = parseAndMigrateSave(pending.data, createFreshState());
@@ -1222,24 +1282,29 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
         discardPendingSave(key);
         console.warn('Pending save failed validation', parsed.code, parsed.path ?? 'root');
       }
-      try {
-        const saved = localStorage.getItem(key);
-        if (saved) {
-          const parsed = parseAndMigrateSave(saved, createFreshState());
-          if (parsed.ok === true) return { ...parsed.state, lastEvent: null };
-          initialLoadWarningRef.current = 'Saved run data was invalid, so a fresh run was started.';
-          console.warn('Stored save failed validation', parsed.code, parsed.path ?? 'root');
-        }
-      } catch {
+      if (durableReadFailed) {
         initialLoadWarningRef.current = 'Saved run data could not be read, so a fresh run was started.';
         console.warn('Stored save could not be read');
+      } else if (saved) {
+        const parsed = parseAndMigrateSave(saved, createFreshState());
+        if (parsed.ok === true) return { ...parsed.state, lastEvent: null };
+        initialLoadWarningRef.current = 'Saved run data was invalid, so a fresh run was started.';
+        console.warn('Stored save failed validation', parsed.code, parsed.path ?? 'root');
       }
       return { ...createFreshState(), lastEvent: null };
     },
   );
   const saveTimeoutRef = useRef<number | null>(null);
+  const takeoverRequestedRef = useRef(false);
+  const takeoverFlushAuthorizedRef = useRef(false);
   const mountedRef = useRef(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>(() => getSaveStatus(storageKey));
+  useSyncExternalStore(
+    subscribeToPendingSaveChanges,
+    getPendingSaveRevision,
+    getPendingSaveRevision,
+  );
+  const hasPendingChanges = getPendingSave(storageKey) !== null;
 
   useEffect(() => {
     const warning = initialLoadWarningRef.current;
@@ -1263,37 +1328,109 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     [],
   );
 
+  const canWriteOwned = useCallback((): boolean =>
+    saveOwnershipStatusRef.current === 'owner' && verifyOwnership(), [verifyOwnership]);
+
   const flushCurrentSave = useCallback((): boolean => {
-    const result = flushPendingSave(localStorage, storageKey, () => true);
-    if (mountedRef.current) setSaveStatus(result.ok ? 'saved' : 'failed');
+    if (
+      saveOwnershipStatusRef.current !== 'owner'
+      && !takeoverFlushAuthorizedRef.current
+    ) {
+      blockPendingSave(storageKey);
+      if (mountedRef.current) {
+        setSaveStatus(saveOwnershipBlockReasonRef.current === 'storage_unavailable'
+          ? 'failed'
+          : getSaveStatus(storageKey));
+      }
+      return false;
+    }
+
+    const pending = getPendingSave(storageKey);
+    const result = flushPendingSave(localStorage, storageKey, verifyOwnership);
+    if (result.ok === true) {
+      if (pending !== null) persistedSnapshotRef.current = pending.data;
+      if (mountedRef.current) setSaveStatus('saved');
+      return true;
+    }
+    if (mountedRef.current) {
+      setSaveStatus(
+        result.reason === 'storage_unavailable'
+        || saveOwnershipBlockReasonRef.current === 'storage_unavailable'
+          ? 'failed'
+          : getSaveStatus(storageKey),
+      );
+    }
     return result.ok;
-  }, [storageKey]);
+  }, [storageKey, verifyOwnership]);
 
   // Debounced persistence - saves all persistent state fields
   useEffect(() => {
-    stagePendingSave(storageKey, serializeGameState(state));
-    setSaveStatus(getSaveStatus(storageKey));
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
+    const snapshot = serializeGameState(state);
+    const existingPending = getPendingSave(storageKey);
+    if (snapshot === persistedSnapshotRef.current && existingPending === null) {
+      if (saveTimeoutRef.current !== null) {
+        window.clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
+      }
+      setSaveStatus('saved');
+      return;
     }
+
+    stagePendingSave(storageKey, snapshot);
+    if (saveOwnershipStatus !== 'owner') {
+      blockPendingSave(storageKey);
+    }
+    if (saveOwnershipBlockReason === 'storage_unavailable') {
+      setSaveStatus('failed');
+    } else {
+      setSaveStatus(getSaveStatus(storageKey));
+    }
+    if (saveTimeoutRef.current !== null) {
+      window.clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+    if (saveOwnershipStatus !== 'owner' || takeoverRequestedRef.current) return;
+
     saveTimeoutRef.current = window.setTimeout(() => {
       saveTimeoutRef.current = null;
       flushCurrentSave();
     }, SAVE_DEBOUNCE_MS);
 
     return () => {
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      if (saveTimeoutRef.current !== null) {
+        window.clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
+      }
     };
-  }, [flushCurrentSave, state, storageKey]);
+  }, [
+    flushCurrentSave,
+    saveOwnershipBlockReason,
+    saveOwnershipStatus,
+    state,
+    storageKey,
+  ]);
+
+  const flushAndReleaseOwnership = useCallback(() => {
+    const flushed = getPendingSave(storageKey) !== null
+      ? flushCurrentSave()
+      : canWriteOwned();
+    if (flushed && getPendingSave(storageKey) === null) releaseOwnership();
+  }, [canWriteOwned, flushCurrentSave, releaseOwnership, storageKey]);
 
   useEffect(() => {
     mountedRef.current = true;
+    const onPageHide = () => flushAndReleaseOwnership();
+    window.addEventListener('pagehide', onPageHide);
     return () => {
       mountedRef.current = false;
-      if (saveTimeoutRef.current) window.clearTimeout(saveTimeoutRef.current);
-      flushPendingSave(localStorage, storageKey, () => true);
+      window.removeEventListener('pagehide', onPageHide);
+      if (saveTimeoutRef.current !== null) {
+        window.clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
+      }
+      flushAndReleaseOwnership();
     };
-  }, [storageKey]);
+  }, [flushAndReleaseOwnership]);
 
   const retrySave = useCallback((): boolean => {
     stagePendingSave(storageKey, serializeCurrent());
@@ -1301,16 +1438,43 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     return flushCurrentSave();
   }, [flushCurrentSave, serializeCurrent, storageKey]);
 
+  const takeOverSaveOwnership = useCallback(async (): Promise<boolean> => {
+    takeoverRequestedRef.current = true;
+    try {
+      const owned = await takeOverOwnership();
+      if (!owned) return false;
+      takeoverFlushAuthorizedRef.current = true;
+      try {
+        stagePendingSave(storageKey, serializeCurrent());
+        setSaveStatus(getSaveStatus(storageKey));
+        return flushCurrentSave();
+      } finally {
+        takeoverFlushAuthorizedRef.current = false;
+      }
+    } finally {
+      takeoverRequestedRef.current = false;
+    }
+  }, [flushCurrentSave, serializeCurrent, storageKey, takeOverOwnership]);
+
+  const pushOwnedBackup = useCallback((data: string, reason: string): BackupWriteResult =>
+    pushBackup(storageKey, data, reason, canWriteOwned), [canWriteOwned, storageKey]);
+
   // One automatic snapshot per session (per profile mount), so "the run was
   // fine yesterday" is always recoverable from the ring — not just the
   // pre-import/pre-reset moments. pushBackup no-ops when nothing changed
   // since the newest entry, so idle reloads don't churn the ring.
+  const sessionBackupFinishedRef = useRef(false);
   useEffect(() => {
-    if (stateRef.current.history.length > 0) {
-      pushBackup(storageKey, serializeCurrent(), 'Session start', () => true);
+    if (saveOwnershipStatus !== 'owner' || sessionBackupFinishedRef.current) return;
+    if (stateRef.current.history.length === 0) {
+      sessionBackupFinishedRef.current = true;
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storageKey]);
+    const result = pushOwnedBackup(serializeCurrent(), 'Session start');
+    if (result.stored === true || result.reason !== 'ownership_conflict') {
+      sessionBackupFinishedRef.current = true;
+    }
+  }, [pushOwnedBackup, saveOwnershipStatus, serializeCurrent]);
 
   // --- Actions ---
 
@@ -1436,6 +1600,35 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
     stateRef.current = { ...replacement, lastEvent: null };
     dispatch({ type: 'LOAD_SAVE', payload: replacement });
   }, []);
+  const reloadLatestSave = useCallback((): ImportResult => {
+    let durable: string | null;
+    try {
+      durable = localStorage.getItem(storageKey);
+    } catch {
+      return {
+        ok: false,
+        code: 'storage_unavailable',
+        message: 'The latest saved run could not be read. Your current run is unchanged.',
+      };
+    }
+    if (durable === null) {
+      return {
+        ok: false,
+        code: 'invalid_json',
+        message: 'No saved run was found. Your current run is unchanged.',
+      };
+    }
+    const parsed = parseAndMigrateSave(durable, createFreshState());
+    if (parsed.ok === false) return parsed;
+
+    const accepted = serializeGameState(parsed.state);
+    persistedSnapshotRef.current = accepted;
+    discardPendingSave(storageKey);
+    setSaveStatus('saved');
+    replaceState(parsed.state);
+    return { ok: true, warnings: parsed.warnings };
+  }, [replaceState, storageKey]);
+
   const writeReplacement = useCallback((data: string) => {
     writeReplacementNow(
       localStorage,
@@ -1443,43 +1636,48 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
       data,
       saveTimeoutRef,
       handle => window.clearTimeout(handle),
+      canWriteOwned,
     );
+    persistedSnapshotRef.current = data;
     discardPendingSave(storageKey);
     setSaveStatus('saved');
-  }, [storageKey]);
+  }, [canWriteOwned, storageKey]);
 
-  const importSave = useCallback((data: unknown): ImportResult =>
-    applyPreparedReplacement(data, {
+  const importSave = useCallback((data: unknown): ImportResult => {
+    if (!canWriteOwned()) return ownershipConflictResult();
+    return applyPreparedReplacement(data, {
       current: stateRef.current,
       defaults: createFreshState(),
-      writeBackup: current => pushBackup(storageKey, current, 'Before import', () => true),
+      writeBackup: current => pushOwnedBackup(current, 'Before import'),
       writeReplacement,
       replace: replaceState,
-    }), [replaceState, storageKey, writeReplacement]);
+    });
+  }, [canWriteOwned, pushOwnedBackup, replaceState, writeReplacement]);
 
   const createBackup = useCallback((reason: string): BackupWriteResult =>
-    pushBackup(storageKey, serializeCurrent(), reason, () => true), [storageKey, serializeCurrent]);
+    pushOwnedBackup(serializeCurrent(), reason), [pushOwnedBackup, serializeCurrent]);
 
   const listBackups = useCallback(() => readBackups(storageKey), [storageKey]);
 
   const restoreBackup = useCallback((ts: number): ImportResult => {
+    if (!canWriteOwned()) return ownershipConflictResult();
     const data = getBackupData(storageKey, ts);
     if (data === null) {
       return { ok: false, code: 'invalid_json', message: 'Backup was not found.' };
     }
     return applyValidatedReplacement(parseAndMigrateSave(data, createFreshState()), {
       current: stateRef.current,
-      writeBackup: current => pushBackup(storageKey, current, 'Before restore', () => true),
+      writeBackup: current => pushOwnedBackup(current, 'Before restore'),
       writeReplacement,
       replace: replaceState,
     });
-  }, [replaceState, storageKey, writeReplacement]);
+  }, [canWriteOwned, pushOwnedBackup, replaceState, storageKey, writeReplacement]);
 
   const resetGame = useCallback(() => {
     // Auto-snapshot so an accidental reset is recoverable.
-    pushBackup(storageKey, serializeCurrent(), 'Before reset', () => true);
+    pushOwnedBackup(serializeCurrent(), 'Before reset');
     commitAction({ type: 'RESET' });
-  }, [commitAction, storageKey, serializeCurrent]);
+  }, [commitAction, pushOwnedBackup, serializeCurrent]);
   const togglePin = useCallback((id: string) => commitAction({ type: 'TOGGLE_PIN', payload: id }), [commitAction]);
   const saveNote = useCallback((id: string, text: string) =>
     commitAction({ type: 'UPDATE_NOTE', payload: { id, text } }), [commitAction]);
@@ -1584,7 +1782,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
   const contextValue = useMemo(() => ({
     ...state,
     saveStatus,
+    saveOwnershipStatus,
+    saveOwnershipBlockReason,
+    hasPendingChanges,
     retrySave,
+    takeOverSaveOwnership,
+    reloadLatestSave,
     rollForKey,
     acceptDetectedEvent,
     unlockContent,
@@ -1621,7 +1824,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode; storageKey: str
   }), [
     state,
     saveStatus,
+    saveOwnershipStatus,
+    saveOwnershipBlockReason,
+    hasPendingChanges,
     retrySave,
+    takeOverSaveOwnership,
+    reloadLatestSave,
     rollForKey,
     acceptDetectedEvent,
     unlockContent,
