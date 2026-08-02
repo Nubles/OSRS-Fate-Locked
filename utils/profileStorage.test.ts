@@ -77,6 +77,8 @@ describe('profile-owned storage registry', () => {
 });
 
 const metadata: ProfileMetadata = {
+  version: 1,
+  revision: 0,
   profiles: [
     { id: 'target', name: 'Target', createdAt: 1 },
     { id: 'other', name: 'Other', createdAt: 2 },
@@ -95,6 +97,8 @@ describe('profile deletion transaction', () => {
       setItem: (key, value) => {
         operations.push('set:' + key);
         expect(JSON.parse(value)).toEqual({
+          version: 1,
+          revision: 1,
           profiles: [metadata.profiles[1]],
           activeProfileId: 'other',
         });
@@ -108,6 +112,8 @@ describe('profile deletion transaction', () => {
     expect(result).toEqual({
       status: 'deleted',
       metadata: {
+        version: 1,
+        revision: 1,
         profiles: [metadata.profiles[1]],
         activeProfileId: 'other',
       },
@@ -229,6 +235,8 @@ describe('profile deletion transaction', () => {
 
   it('keeps last-profile protection ahead of every storage mutation', () => {
     const single: ProfileMetadata = {
+      version: 1,
+      revision: 0,
       profiles: [metadata.profiles[0]],
       activeProfileId: 'target',
     };
@@ -315,6 +323,8 @@ describe('synchronous profile metadata transactions', () => {
     };
 
     const created = commitProfileMetadata(storage, 'FATE_PROFILES', current, (previous) => ({
+      version: previous.version,
+      revision: previous.revision,
       profiles: [
         ...previous.profiles,
         { id: 'new', name: 'New', createdAt: 3 },
@@ -356,6 +366,8 @@ describe('synchronous profile metadata transactions', () => {
     const third = { id: 'third', name: 'Third', createdAt: 3 };
     const current = {
       current: {
+        version: 1 as const,
+        revision: 0,
         profiles: [...metadata.profiles, third],
         activeProfileId: 'target',
       },
@@ -371,7 +383,12 @@ describe('synchronous profile metadata transactions', () => {
 
     expect(first.status).toBe('deleted');
     expect(second.status).toBe('deleted');
-    expect(current.current).toEqual({ profiles: [third], activeProfileId: 'third' });
+    expect(current.current).toEqual({
+      version: 1,
+      revision: 2,
+      profiles: [third],
+      activeProfileId: 'third',
+    });
   });
 
   it('preserves a same-tick prior mutation when deletion commits', () => {

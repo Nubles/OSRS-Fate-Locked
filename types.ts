@@ -250,6 +250,8 @@ export interface Profile {
 }
 
 export interface ProfileMetadata {
+  version: 1;
+  revision: number;
   profiles: Profile[];
   activeProfileId: string;
 }

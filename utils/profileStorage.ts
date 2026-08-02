@@ -70,7 +70,12 @@ export const commitProfileMetadata = (
   update: ProfileMetadataUpdate,
 ): ProfileMetadataCommitResult => {
   const previous = current.current;
-  const next = update(previous);
+  const updated = update(previous);
+  const next: ProfileMetadata = {
+    ...updated,
+    version: previous.version,
+    revision: previous.revision + 1,
+  };
   try {
     storage.setItem(metadataKey, JSON.stringify(next));
   } catch {
@@ -110,7 +115,12 @@ export const deleteProfileTransaction = (
   const activeProfileId = previous.activeProfileId === profileId
     ? profiles[0].id
     : previous.activeProfileId;
-  const updated: ProfileMetadata = { profiles, activeProfileId };
+  const updated: ProfileMetadata = {
+    version: previous.version,
+    revision: previous.revision,
+    profiles,
+    activeProfileId,
+  };
   const snapshots = new Map<string, string>();
   for (const key of profileOwnedKeys(profileId)) {
     const value = storage.getItem(key);

@@ -4,21 +4,20 @@ import { Profile, ProfileMetadata } from '../types';
 import { showToast } from '../utils/toast';
 import { commitProfileMetadata, deleteProfileTransaction, profileBaseKey, profileDeletionNotice } from '../utils/profileStorage';
 import { discardPendingSave } from '../utils/pendingSaves';
+import {
+  LEGACY_SAVE_KEY,
+  MAX_PROFILES,
+  PROFILES_KEY,
+  PROFILE_METADATA_VERSION,
+  sanitizeProfileName,
+} from '../utils/profileMetadata';
 
-const PROFILES_KEY = 'FATE_PROFILES';
-const LEGACY_SAVE_KEY = 'FATE_UIM_SAVE_V1';
-const MAX_PROFILES = 10;
-const MAX_NAME_LENGTH = 30;
 
 const generateId = (): string => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
   }
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 11)}`;
-};
-
-const sanitizeName = (name: string): string => {
-  return name.trim().slice(0, MAX_NAME_LENGTH) || 'Unnamed Profile';
 };
 
 /** One-time initialization: migrate legacy save or create default profile */
@@ -46,6 +45,8 @@ const initializeProfiles = (): ProfileMetadata => {
   }
 
   const metadata: ProfileMetadata = {
+    version: PROFILE_METADATA_VERSION,
+    revision: 0,
     profiles: [defaultProfile],
     activeProfileId: newId,
   };
@@ -95,7 +96,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
     const newProfile: Profile = {
       id: generateId(),
-      name: sanitizeName(name),
+      name: sanitizeProfileName(name),
       createdAt: Date.now(),
     };
     const result = commitMetadata((previous) => ({
@@ -112,7 +113,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [commitMetadata]);
 
   const renameProfile = useCallback((id: string, newName: string) => {
-    const sanitized = sanitizeName(newName);
+    const sanitized = sanitizeProfileName(newName);
     commitMetadata((previous) => ({
       ...previous,
       profiles: previous.profiles.map((profile) =>

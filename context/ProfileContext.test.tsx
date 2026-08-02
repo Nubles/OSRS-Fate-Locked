@@ -14,6 +14,8 @@ import { ProfileProvider, useProfiles } from './ProfileContext';
 type Profiles = ReturnType<typeof useProfiles>;
 
 const metadata: ProfileMetadata = {
+  version: 1,
+  revision: 0,
   profiles: [
     { id: 'target', name: 'Target', createdAt: 1 },
     { id: 'other', name: 'Other', createdAt: 2 },

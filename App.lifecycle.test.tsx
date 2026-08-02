@@ -71,6 +71,8 @@ beforeEach(async () => {
   };
 
   storage.setItem('FATE_PROFILES', JSON.stringify({
+    version: 1,
+    revision: 0,
     profiles: [{ id: PROFILE_ID, name: 'Lifecycle test', createdAt: 1 }],
     activeProfileId: PROFILE_ID,
   }));
