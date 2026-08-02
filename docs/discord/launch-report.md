@@ -1,7 +1,7 @@
 # Fate Locked Discord Launch Report
 
 - Server: Fate Locked Ironman
-- Configuration status: not started
+- Configuration status: in progress
 - Public invite: withheld until launch checks pass
 - Webhook secret recorded: no
 - Paid features purchased: no
@@ -10,3 +10,4 @@
 
 | Task | Status | Evidence |
 |---|---|---|
+| 3 - Community server creation | pass | server ID: `1533446664709341357`; banner: deferred-no-boost |
