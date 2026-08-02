@@ -1,9 +1,12 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { resetPendingSavesForTest } from './utils/pendingSaves';
+import {
+  getPendingSave,
+  resetPendingSavesForTest,
+} from './utils/pendingSaves';
 
 const PROFILE_ID = 'changelog-lifecycle-profile';
 const values = new Map<string, string>();
@@ -150,6 +153,137 @@ describe('App changelog lifecycle', () => {
     })).toBeTruthy();
     expect(screen.queryByText('Something went wrong')).toBeNull();
     expect(storage.getItem('FATE_PROFILES')).toBe(futureRaw);
+  }, 15_000);
+
+  it('uses the production eviction bridge before switching after a newer registry removes the active profile', async () => {
+    const replacementId = 'replacement-run';
+    const profileKey = profileBaseKey(PROFILE_ID);
+    const readyState = JSON.parse(seedOnboardingRun());
+    readyState.hasSeenOnboarding = true;
+    const initialRegistry = {
+      version: 1,
+      revision: 0,
+      profiles: [
+        { id: PROFILE_ID, name: 'Lifecycle test', createdAt: 1 },
+        { id: replacementId, name: 'Replacement', createdAt: 2 },
+      ],
+      activeProfileId: PROFILE_ID,
+    };
+    values.clear();
+    storage.setItem('FATE_PROFILES', JSON.stringify(initialRegistry));
+    storage.setItem(profileKey, JSON.stringify(readyState));
+    storage.setItem(changelogStorageKey, latestChangelogId);
+    const user = userEvent.setup();
+    render(<App />);
+
+    await screen.findByRole('button', { name: 'Settings & save tools' });
+    await new Promise(resolve => window.setTimeout(resolve, 550));
+    const durableBeforeEviction = storage.getItem(profileKey);
+    expect(getPendingSave(profileKey)).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Settings & save tools' }));
+    const animations = screen.getByRole('button', { name: /Animations/ });
+    await user.click(animations);
+    const expectedAnimations = !readyState.animationsEnabled;
+    expect(animations.getAttribute('aria-pressed')).toBe(String(expectedAnimations));
+
+    const incoming = {
+      version: 1,
+      revision: 1,
+      profiles: [{ id: replacementId, name: 'Replacement', createdAt: 2 }],
+      activeProfileId: replacementId,
+    };
+    const incomingRaw = JSON.stringify(incoming);
+    storage.setItem('FATE_PROFILES', incomingRaw);
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'FATE_PROFILES',
+        oldValue: JSON.stringify(initialRegistry),
+        newValue: incomingRaw,
+      }));
+    });
+
+    const pending = getPendingSave(profileKey);
+    expect(pending).toMatchObject({
+      status: 'saving',
+      reason: 'ownership_conflict',
+    });
+    expect(JSON.parse(pending?.data ?? '{}').animationsEnabled).toBe(expectedAnimations);
+    expect(await screen.findByRole('button', {
+      name: 'Switch profile. Current profile: Replacement',
+    })).toBeTruthy();
+    expect(storage.getItem('FATE_PROFILES')).toBe(incomingRaw);
+
+    await new Promise(resolve => window.setTimeout(resolve, 650));
+    expect(storage.getItem(profileKey)).toBe(durableBeforeEviction);
+    expect(getPendingSave(profileKey)?.reason).toBe('ownership_conflict');
+    expect(screen.queryByText('Something went wrong')).toBeNull();
+  }, 15_000);
+
+  it('uses the production eviction bridge when a real not_found result removes the local selection', async () => {
+    const replacementId = 'not-found-replacement';
+    const profileKey = profileBaseKey(PROFILE_ID);
+    const readyState = JSON.parse(seedOnboardingRun());
+    readyState.hasSeenOnboarding = true;
+    const initialRegistry = {
+      version: 1,
+      revision: 0,
+      profiles: [
+        { id: PROFILE_ID, name: 'Lifecycle test', createdAt: 1 },
+        { id: replacementId, name: 'Replacement', createdAt: 2 },
+      ],
+      activeProfileId: PROFILE_ID,
+    };
+    values.clear();
+    storage.setItem('FATE_PROFILES', JSON.stringify(initialRegistry));
+    storage.setItem(profileKey, JSON.stringify(readyState));
+    storage.setItem(changelogStorageKey, latestChangelogId);
+    const user = userEvent.setup();
+    render(<App />);
+
+    await screen.findByRole('button', { name: 'Settings & save tools' });
+    await new Promise(resolve => window.setTimeout(resolve, 550));
+    expect(getPendingSave(profileKey)).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Settings & save tools' }));
+    const animations = screen.getByRole('button', { name: /Animations/ });
+    await user.click(animations);
+    const expectedAnimations = !readyState.animationsEnabled;
+
+    const durable = {
+      version: 1,
+      revision: 4,
+      profiles: [{ id: replacementId, name: 'Replacement', createdAt: 2 }],
+      activeProfileId: replacementId,
+    };
+    const durableRaw = JSON.stringify(durable);
+    storage.setItem('FATE_PROFILES', durableRaw);
+
+    await user.click(screen.getByRole('button', {
+      name: 'Switch profile. Current profile: Lifecycle test',
+    }));
+    await user.click(screen.getByRole('button', { name: 'Rename Lifecycle test' }));
+    const renameInput = screen.getByRole('textbox', { name: 'Rename Lifecycle test' });
+    await user.clear(renameInput);
+    await user.type(renameInput, 'Too late');
+    await user.click(screen.getByRole('button', { name: 'Save profile name' }));
+
+    expect(await screen.findByText('Your active profile was removed in another tab'))
+      .toBeTruthy();
+    expect(await screen.findByRole('button', {
+      name: 'Switch profile. Current profile: Replacement',
+    })).toBeTruthy();
+    const pending = getPendingSave(profileKey);
+    expect(pending).toMatchObject({
+      status: 'saving',
+      reason: 'ownership_conflict',
+    });
+    expect(JSON.parse(pending?.data ?? '{}').animationsEnabled).toBe(expectedAnimations);
+    expect(storage.getItem('FATE_PROFILES')).toBe(durableRaw);
+    const durableAtEviction = storage.getItem(profileKey);
+
+    await new Promise(resolve => window.setTimeout(resolve, 650));
+    expect(storage.getItem(profileKey)).toBe(durableAtEviction);
+    expect(getPendingSave(profileKey)?.reason).toBe('ownership_conflict');
+    expect(screen.queryByText('Something went wrong')).toBeNull();
   }, 15_000);
 
   it('auto-opens one unseen release after onboarding completes', async () => {

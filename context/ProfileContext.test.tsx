@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { useEffect, useLayoutEffect } from 'react';
+import { useEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ProfileSwitcher } from '../components/ProfileSwitcher';
 import type { ProfileMetadata } from '../types';
@@ -27,7 +27,7 @@ import {
   type ProfileTransactionResult,
 } from '../utils/profileMetadataTransaction';
 import { serializeCurrent } from '../utils/gamePersistence';
-import { GameProvider, initialState, useGame } from './GameContext';
+import { initialState } from './GameContext';
 
 type Profiles = ReturnType<typeof useProfiles>;
 
@@ -1402,118 +1402,15 @@ describe('ProfileProvider validated async state', () => {
     unsubscribe();
   });
 
-  it('stages and blocks the newest game state before a forced-removal selection change', async () => {
-    type Game = ReturnType<typeof useGame>;
-    const targetKey = profileBaseKey('target');
-    const saved = structuredClone(initialState);
-    saved.hasSeenOnboarding = true;
-    storage.values.set(targetKey, serializeCurrent(saved));
-    const baseWrites: string[] = [];
-    const setItem = storage.setItem;
-    storage.setItem = (key: string, value: string) => {
-      if (key === targetKey) baseWrites.push(value);
-      setItem(key, value);
-    };
-    let profiles: Profiles | undefined;
-    let game: Game | undefined;
-    const observations: Array<{
-      phase: 'before' | 'after';
-      activeProfileId: string;
-      pendingReason: string | null;
-    }> = [];
-
-    const EvictionBridge = ({ profileId }: { profileId: string }) => {
-      const currentProfiles = useProfiles();
-      const currentGame = useGame();
-      game = currentGame;
-      useLayoutEffect(() => currentProfiles.registerProfileEvictionHandler(removedId => {
-        if (removedId !== profileId) return;
-        observations.push({
-          phase: 'before',
-          activeProfileId: currentProfiles.activeProfileId,
-          pendingReason: getPendingSave(targetKey)?.reason ?? null,
-        });
-        currentGame.stageForProfileEviction();
-        observations.push({
-          phase: 'after',
-          activeProfileId: currentProfiles.activeProfileId,
-          pendingReason: getPendingSave(targetKey)?.reason ?? null,
-        });
-      }), [currentGame, currentProfiles, profileId]);
-      return null;
-    };
-    const IntegratedClient = () => {
-      const currentProfiles = useProfiles();
-      profiles = currentProfiles;
-      return (
-        <GameProvider
-          key={currentProfiles.activeProfileId}
-          storageKey={currentProfiles.storageKeyForActiveProfile}
-          leaseOptions={{ ownerId: `game-${currentProfiles.activeProfileId}` }}
-        >
-          <EvictionBridge profileId={currentProfiles.activeProfileId} />
-        </GameProvider>
-      );
-    };
-
-    render(
-      <ProfileProvider>
-        <IntegratedClient />
-      </ProfileProvider>,
-    );
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(150);
-    });
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(150);
-    });
-    if (!profiles || !game) throw new Error('Integrated client did not initialize');
-    const evictedGame = game;
-    expect(evictedGame.saveOwnershipStatus).toBe('owner');
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(600);
-    });
-    expect(getPendingSave(targetKey)).toBeNull();
-    baseWrites.length = 0;
-
-    act(() => {
-      evictedGame.saveNote('latest', 'newest serialized state');
-    });
-    const incoming: ProfileMetadata = {
+  it('refreshes a real not_found result from durable metadata while preserving local selection', async () => {
+    const staleProfile = { id: 'stale', name: 'Stale', createdAt: 3 };
+    const local: ProfileMetadata = {
       version: 1,
-      revision: 1,
-      profiles: [metadata.profiles[1]],
-      activeProfileId: 'other',
+      revision: 2,
+      profiles: [...metadata.profiles, staleProfile],
+      activeProfileId: 'target',
     };
-    storage.values.set(PROFILES_KEY, JSON.stringify(incoming));
-    act(() => {
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: PROFILES_KEY,
-        newValue: JSON.stringify(incoming),
-      }));
-    });
-
-    const pending = getPendingSave(targetKey);
-    expect(observations).toEqual([
-      { phase: 'before', activeProfileId: 'target', pendingReason: null },
-      { phase: 'after', activeProfileId: 'target', pendingReason: 'ownership_conflict' },
-    ]);
-    expect(pending).toMatchObject({
-      status: 'saving',
-      reason: 'ownership_conflict',
-    });
-    expect(JSON.parse(pending?.data ?? '{}').userNotes.latest).toBe('newest serialized state');
-    expect(profiles.activeProfileId).toBe('other');
-    expect(evictedGame.retrySave()).toBe(false);
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(1_000);
-    });
-    expect(baseWrites).toEqual([]);
-    expect(getPendingSave(targetKey)?.reason).toBe('ownership_conflict');
-  });
-
-  it('refreshes the visible profile list from newer validated metadata after not_found', async () => {
+    storage.values.set(PROFILES_KEY, JSON.stringify(local));
     let current: Profiles | undefined;
     render(
       <ProfileProvider>
@@ -1526,37 +1423,105 @@ describe('ProfileProvider validated async state', () => {
       if (!current) throw new Error('Profile provider did not initialize');
       return current;
     };
-    const newer: ProfileMetadata = {
+    const durable: ProfileMetadata = {
       version: 1,
-      revision: 4,
-      profiles: [metadata.profiles[0]],
-      activeProfileId: 'target',
+      revision: 5,
+      profiles: metadata.profiles,
+      activeProfileId: 'other',
     };
-    vi.spyOn(ProfileTransactions, 'mutateProfileMetadata').mockResolvedValueOnce({
-      ok: false,
-      reason: 'not_found',
-      metadata: newer,
-      notice: null,
-    });
+    const durableRaw = JSON.stringify(durable);
+    storage.values.set(PROFILES_KEY, durableRaw);
 
     fireEvent.click(screen.getByRole('button', {
       name: 'Switch profile. Current profile: Target',
     }));
-    fireEvent.click(screen.getByRole('button', { name: 'Rename Other' }));
-    const input = screen.getByRole('textbox', { name: 'Rename Other' });
-    fireEvent.change(input, { target: { value: 'Stale rename' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Rename Stale' }));
+    const input = screen.getByRole('textbox', { name: 'Rename Stale' });
+    fireEvent.change(input, { target: { value: 'Too late' } });
     await act(async () => {
       fireEvent.submit(input.closest('form') as HTMLFormElement);
-      await Promise.resolve();
-      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(100);
     });
 
     expect(screen.getByRole('alert').textContent).toBe(
       'That profile no longer exists. The list has been refreshed.',
     );
-    expect(screen.queryByRole('textbox', { name: 'Rename Other' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Rename Target' })).toBeTruthy();
-    expect(profiles().profiles).toEqual([metadata.profiles[0]]);
+    expect(screen.queryByRole('textbox', { name: 'Rename Stale' })).toBeNull();
+    expect(profiles().profiles).toEqual(durable.profiles);
     expect(profiles().activeProfileId).toBe('target');
+    expect(storage.values.get(PROFILES_KEY)).toBe(durableRaw);
+  });
+
+  it.each([
+    { label: 'equal', revision: 5 },
+    { label: 'older', revision: 4 },
+  ])('does not install $label-revision metadata returned with not_found', async ({ revision }) => {
+    const local = task6Metadata({ revision: 5 });
+    const raw = JSON.stringify(local);
+    storage.values.set(PROFILES_KEY, raw);
+    const rendered = renderTask6Profiles();
+    await settleTask6Initialization();
+    vi.spyOn(ProfileTransactions, 'mutateProfileMetadata').mockResolvedValueOnce({
+      ok: false,
+      reason: 'not_found',
+      metadata: {
+        version: 1,
+        revision,
+        profiles: [metadata.profiles[0]],
+        activeProfileId: 'target',
+      },
+      notice: null,
+    });
+
+    await act(async () => {
+      await rendered.current().renameProfile('other', 'Missing');
+    });
+
+    expect(rendered.current().profiles).toEqual(local.profiles);
+    expect(rendered.current().activeProfileId).toBe('target');
+    expect(rendered.current().mutationFailure).toBe('not_found');
+    expect(storage.values.get(PROFILES_KEY)).toBe(raw);
+  });
+
+  it.each([
+    {
+      label: 'structurally invalid',
+      returned: {
+        version: 1,
+        revision: 20,
+        profiles: [],
+        activeProfileId: 'missing',
+      } as unknown as ProfileMetadata,
+    },
+    {
+      label: 'unsupported future-shaped',
+      returned: {
+        version: 2,
+        revision: 20,
+        profiles: [metadata.profiles[0]],
+        activeProfileId: 'target',
+        opaque: true,
+      } as unknown as ProfileMetadata,
+    },
+  ])('does not install $label metadata returned with not_found', async ({ returned }) => {
+    const raw = JSON.stringify(metadata);
+    const rendered = renderTask6Profiles();
+    await settleTask6Initialization();
+    vi.spyOn(ProfileTransactions, 'mutateProfileMetadata').mockResolvedValueOnce({
+      ok: false,
+      reason: 'not_found',
+      metadata: returned,
+      notice: null,
+    });
+
+    await act(async () => {
+      await rendered.current().renameProfile('other', 'Missing');
+    });
+
+    expect(rendered.current().profiles).toEqual(metadata.profiles);
+    expect(rendered.current().activeProfileId).toBe('target');
+    expect(rendered.current().metadataReadOnly).toBe(false);
+    expect(rendered.current().mutationFailure).toBe('not_found');
+    expect(storage.values.get(PROFILES_KEY)).toBe(raw);
   });
 });
