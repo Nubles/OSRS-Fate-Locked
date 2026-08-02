@@ -36,6 +36,10 @@ export type ProfilePendingAction =
   | 'select'
   | 'delete'
   | null;
+type ProfileStartupTerminalFailure = Extract<
+  ProfileMutationFailure,
+  'busy' | 'invalid_metadata' | 'unsupported_metadata'
+>;
 
 export interface ProfileContextType {
   profiles: Profile[];
@@ -117,7 +121,6 @@ const emptyNotice = (kind: ProfileRecoveryNotice['kind']): ProfileRecoveryNotice
 
 const initializeMemoryFallback = async (
   deps: ProfileTransactionDependencies,
-  reason: ProfileMutationFailure = 'storage_unavailable',
 ): Promise<ProfileTransactionResult> => {
   const fallback = await initializeProfileMetadata({
     ...deps,
@@ -127,7 +130,7 @@ const initializeMemoryFallback = async (
   if (fallback.metadata === null) return fallback;
   return {
     ok: false,
-    reason,
+    reason: 'storage_unavailable',
     metadata: fallback.metadata,
     notice: emptyNotice('read_only'),
   };
@@ -165,6 +168,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const [metadata, setMetadata] = useState<ProfileMetadata | null>(null);
   const metadataRef = useRef<ProfileMetadata | null>(null);
+  const [startupTerminalFailure, setStartupTerminalFailure] = useState<ProfileStartupTerminalFailure | null>(null);
+  const startupTerminalFailureRef = useRef<ProfileStartupTerminalFailure | null>(null);
   const [pendingAction, setPendingAction] = useState<ProfilePendingAction>('initializing');
   const pendingActionRef = useRef<ProfilePendingAction>('initializing');
   const [mutationFailure, setMutationFailure] = useState<ProfileMutationFailure | null>(null);
@@ -208,7 +213,25 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return true;
   }, []);
 
+  const enterStartupTerminal = useCallback((
+    reason: ProfileStartupTerminalFailure,
+    noticeKind: Extract<ProfileRecoveryNotice['kind'], 'read_only' | 'unsupported'>,
+  ) => {
+    startupTerminalFailureRef.current = reason;
+    setStartupTerminalFailure(reason);
+    busyRereadArmedRef.current = false;
+    clearBusyRereadTimer();
+    deferredIncomingRef.current = null;
+    metadataReadOnlyRef.current = true;
+    readOnlyReasonRef.current = reason;
+    setMetadataReadOnly(true);
+    setMutationFailure(reason);
+    setRecoveryNotice(emptyNotice(noticeKind));
+    setPending(null);
+  }, [clearBusyRereadTimer, setPending]);
+
   const applyInitializationResult = useCallback((result: ProfileTransactionResult) => {
+    if (startupTerminalFailureRef.current !== null) return;
     const current = metadataRef.current;
     if (result.metadata !== null && current !== null && result.metadata.revision < current.revision) return;
     if (result.metadata !== null) installMetadata(result.metadata);
@@ -304,14 +327,17 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     busyRereadArmedRef.current = false;
     clearBusyRereadTimer();
     setPending('initializing');
-    let result = await initializeWithStorageFallback(dependencies);
+    const result = await initializeWithStorageFallback(dependencies);
+    if (!mountedRef.current || startupTerminalFailureRef.current !== null) return;
     if (
       result.ok === false
       && result.reason === 'busy'
       && result.metadata === null
       && metadataRef.current === null
-    ) result = await initializeMemoryFallback(dependencies, 'busy');
-    if (!mountedRef.current) return;
+    ) {
+      enterStartupTerminal('busy', 'read_only');
+      return;
+    }
     if (
       metadataReadOnlyRef.current
       && (readOnlyReasonRef.current === 'invalid_metadata'
@@ -341,6 +367,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [
     clearBusyRereadTimer,
     dependencies,
+    enterStartupTerminal,
     mergeIncomingMetadata,
     setPending,
   ]);
@@ -351,6 +378,10 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     reason: Extract<ProfileMutationFailure, 'invalid_metadata' | 'unsupported_metadata'>,
     noticeKind: Extract<ProfileRecoveryNotice['kind'], 'read_only' | 'unsupported'>,
   ) => {
+    if (metadataRef.current === null) {
+      enterStartupTerminal(reason, noticeKind);
+      return;
+    }
     busyRereadArmedRef.current = false;
     clearBusyRereadTimer();
     deferredIncomingRef.current = null;
@@ -359,13 +390,11 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setMetadataReadOnly(true);
     setMutationFailure(reason);
     setRecoveryNotice(emptyNotice(noticeKind));
-  }, [clearBusyRereadTimer]);
+  }, [clearBusyRereadTimer, enterStartupTerminal]);
 
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
       if (event.key === PROFILES_KEY) {
-        const current = metadataRef.current;
-        if (current === null) return;
         const parsed = parseProfileMetadata(event.newValue);
         if (parsed.status === 'unsupported') {
           failClosedForIncomingPrimary('unsupported_metadata', 'unsupported');
@@ -375,6 +404,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
           failClosedForIncomingPrimary('invalid_metadata', 'read_only');
           return;
         }
+        const current = metadataRef.current;
+        if (current === null) return;
         const newestSeenRevision = Math.max(
           current.revision,
           deferredIncomingRef.current?.revision ?? -1,
@@ -425,8 +456,12 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       && (readOnlyReasonRef.current === 'invalid_metadata'
         || readOnlyReasonRef.current === 'unsupported_metadata')
     ) {
+      const reason = readOnlyReasonRef.current;
+      const notice = reason === 'unsupported_metadata'
+        ? emptyNotice('unsupported')
+        : emptyNotice('read_only');
       setPending(null);
-      return result;
+      return failedResult(reason, metadataRef.current, notice);
     }
     if (result.ok === true) {
       const localActiveId = metadataRef.current?.activeProfileId ?? result.metadata.activeProfileId;
@@ -435,10 +470,15 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
         && result.metadata.profiles.some(profile => profile.id === localActiveId)
         ? localActiveId
         : result.metadata.activeProfileId;
+      const candidate = { ...result.metadata, activeProfileId };
+      if (!installMetadata(candidate)) {
+        setMutationFailure('busy');
+        setPending(null);
+        return failedResult('busy', metadataRef.current, recoveryNotice);
+      }
       if (action === 'delete' && mutation.type === 'delete') {
         discardPendingSave(profileBaseKey(mutation.profileId));
       }
-      installMetadata({ ...result.metadata, activeProfileId });
       if (result.notice !== null) setRecoveryNotice(result.notice);
       if (action === 'create' && mutation.type === 'create') {
         setRecentlyCreatedId(mutation.profile.id);
@@ -546,6 +586,15 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     clearRecentlyCreated,
     registerProfileEvictionHandler,
   ]);
+
+  if (startupTerminalFailure !== null) {
+    const message = startupTerminalFailure === 'busy'
+      ? 'Profiles are still being updated in another tab. Refresh this page to try again.'
+      : startupTerminalFailure === 'unsupported_metadata'
+        ? 'Profile data was updated by a newer version of the app. Refresh after opening this version in the original tab.'
+        : 'Profile data changed to an invalid format while loading. Refresh this page to continue safely.';
+    return <div role="alert">{message}</div>;
+  }
 
   if (value === null) {
     return <div role="status">Loading profiles...</div>;

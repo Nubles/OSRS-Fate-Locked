@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { act, cleanup, render, screen } from '@testing-library/react';
+import { useEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ProfileMetadata } from '../types';
 import {
@@ -132,6 +133,13 @@ const task6Metadata = (overrides: Partial<ProfileMetadata> = {}): ProfileMetadat
 const Task6ProfileCapture = ({ onProfiles }: { onProfiles: (profiles: Profiles) => void }) => {
   onProfiles(useProfiles());
   return <div>Profile children</div>;
+};
+
+const SyntheticProfileWriter = () => {
+  useEffect(() => {
+    localStorage.setItem('FATE_PROFILE_synthetic', 'synthetic');
+  }, []);
+  return <div>Profile writer mounted</div>;
 };
 
 const task6Deferred = <T,>() => {
@@ -339,6 +347,45 @@ describe('ProfileProvider validated async state', () => {
     expect(rendered.current().mutationFailure).toBe('verification_failed');
   });
 
+  it('rejects stale create success after a newer validated event without success side effects', async () => {
+    const rendered = renderTask6Profiles();
+    await settleTask6Initialization();
+    const mutation = task6Deferred<ProfileTransactionResult>();
+    const mutate = vi.spyOn(ProfileTransactions, 'mutateProfileMetadata').mockReturnValueOnce(mutation.promise);
+    let creation!: Promise<ProfileTransactionResult>;
+
+    act(() => { creation = rendered.current().createProfile('Stale create'); });
+    const operation = mutate.mock.calls[0][1];
+    if (operation.type !== 'create') throw new Error('Expected create mutation');
+    const newest = task6Metadata({
+      revision: 3,
+      profiles: [{ ...metadata.profiles[0], name: 'Newest target' }, metadata.profiles[1]],
+    });
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: PROFILES_KEY,
+        newValue: JSON.stringify(newest),
+      }));
+    });
+
+    mutation.resolve({
+      ok: true,
+      metadata: task6Metadata({
+        revision: 1,
+        profiles: [...metadata.profiles, operation.profile],
+        activeProfileId: operation.profile.id,
+      }),
+      notice: null,
+    });
+    let result!: ProfileTransactionResult;
+    await act(async () => { result = await creation; });
+
+    expect(result).toEqual({ ok: false, reason: 'busy', metadata: newest, notice: null });
+    expect(rendered.current().profiles).toEqual(newest.profiles);
+    expect(rendered.current().recentlyCreatedId).toBeNull();
+    expect(rendered.current().mutationFailure).toBe('busy');
+  });
+
   it('discards pending data only after verified delete success', async () => {
     const targetKey = profileBaseKey('other');
     stagePendingSave(targetKey, 'newest');
@@ -366,6 +413,41 @@ describe('ProfileProvider validated async state', () => {
 
     expect(getPendingSave(targetKey)).toBeNull();
     expect(rendered.current().profiles.map(profile => profile.id)).toEqual(['target']);
+  });
+
+  it('rejects stale delete success after a newer validated event and retains pending data', async () => {
+    const targetKey = profileBaseKey('other');
+    stagePendingSave(targetKey, 'newest');
+    const rendered = renderTask6Profiles();
+    await settleTask6Initialization();
+    const mutation = task6Deferred<ProfileTransactionResult>();
+    vi.spyOn(ProfileTransactions, 'mutateProfileMetadata').mockReturnValueOnce(mutation.promise);
+    let deletion!: Promise<ProfileTransactionResult>;
+    act(() => { deletion = rendered.current().deleteProfile('other'); });
+    const newest = task6Metadata({
+      revision: 3,
+      profiles: [{ ...metadata.profiles[0], name: 'Newest target' }, metadata.profiles[1]],
+    });
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: PROFILES_KEY,
+        newValue: JSON.stringify(newest),
+      }));
+    });
+
+    mutation.resolve({
+      ok: true,
+      metadata: task6Metadata({ revision: 1, profiles: [metadata.profiles[0]] }),
+      notice: null,
+      deleteDetails: { removedEntries: 1, removalFailures: 0, rollbackFailures: 0 },
+    });
+    let result!: ProfileTransactionResult;
+    await act(async () => { result = await deletion; });
+
+    expect(result).toEqual({ ok: false, reason: 'busy', metadata: newest, notice: null });
+    expect(getPendingSave(targetKey)?.data).toBe('newest');
+    expect(rendered.current().profiles).toEqual(newest.profiles);
+    expect(rendered.current().mutationFailure).toBe('busy');
   });
 
   it('keeps local selection for newer remote create, rename, and select events', async () => {
@@ -497,8 +579,15 @@ describe('ProfileProvider validated async state', () => {
       }),
       notice: null,
     });
-    await act(async () => { await rename; });
+    let result!: ProfileTransactionResult;
+    await act(async () => { result = await rename; });
 
+    expect(result).toEqual({
+      ok: false,
+      reason: 'unsupported_metadata',
+      metadata,
+      notice: expect.objectContaining({ kind: 'unsupported' }),
+    });
     expect(rendered.current().profiles).toEqual(metadata.profiles);
     expect(rendered.current().activeProfileId).toBe('target');
     expect(rendered.current().metadataReadOnly).toBe(true);
@@ -779,6 +868,38 @@ describe('ProfileProvider validated async state', () => {
     expect(initialize).toHaveBeenCalledTimes(2);
   });
 
+  it.each([
+    {
+      label: 'unsupported future metadata',
+      raw: JSON.stringify({
+        version: 2,
+        revision: 9,
+        profiles: metadata.profiles,
+        activeProfileId: 'other',
+      }),
+    },
+    { label: 'invalid metadata', raw: '{bad' },
+  ])('fails closed when $label arrives before startup initialization settles', async ({ raw }) => {
+    const initialization = task6Deferred<ProfileTransactionResult>();
+    vi.spyOn(ProfileTransactions, 'initializeProfileMetadata').mockReturnValueOnce(initialization.promise);
+    renderTask6Profiles();
+    storage.values.set(PROFILES_KEY, raw);
+
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: PROFILES_KEY, newValue: raw }));
+    });
+
+    expect(screen.getByRole('alert').textContent).toContain('Refresh');
+    expect(screen.queryByText('Profile children')).toBeNull();
+
+    initialization.resolve({ ok: true, metadata, notice: null });
+    await act(async () => { await initialization.promise; });
+
+    expect(screen.getByRole('alert').textContent).toContain('Refresh');
+    expect(screen.queryByText('Profile children')).toBeNull();
+    expect(storage.values.get(PROFILES_KEY)).toBe(raw);
+  });
+
   it('retries once when a crashed startup lock reaches its expiry', async () => {
     storage.values.set(PROFILE_METADATA_LOCK_KEY, JSON.stringify({
       version: 1,
@@ -814,24 +935,23 @@ describe('ProfileProvider validated async state', () => {
     expect(initialize).toHaveBeenCalledTimes(2);
   });
 
-  it('uses one validated read-only fallback when the startup expiry retry is still busy', async () => {
+  it('stops at a recoverable terminal state when the startup expiry retry is still busy', async () => {
     storage.values.set(PROFILE_METADATA_LOCK_KEY, JSON.stringify({
       version: 1,
       ownerId: 'stuck-tab',
       expiresAt: 1_000 + PROFILE_METADATA_LOCK_TTL_MS,
     }));
-    const fallback = task6Metadata({
-      revision: 1,
-      profiles: [{ id: 'memory', name: 'Memory', createdAt: 1_000 }],
-      activeProfileId: 'memory',
-    });
     const initialize = vi.spyOn(ProfileTransactions, 'initializeProfileMetadata');
     initialize
       .mockResolvedValueOnce({ ok: false, reason: 'busy', metadata: null, notice: null })
       .mockResolvedValueOnce({ ok: false, reason: 'busy', metadata: null, notice: null })
-      .mockResolvedValueOnce({ ok: true, metadata: fallback, notice: null });
+      .mockResolvedValueOnce({ ok: true, metadata: task6Metadata({ revision: 1 }), notice: null });
 
-    const rendered = renderTask6Profiles();
+    render(
+      <ProfileProvider>
+        <SyntheticProfileWriter />
+      </ProfileProvider>,
+    );
     await act(async () => { await Promise.resolve(); });
     expect(screen.getByRole('status').textContent).toBe('Loading profiles...');
 
@@ -839,16 +959,15 @@ describe('ProfileProvider validated async state', () => {
       await vi.advanceTimersByTimeAsync(PROFILE_METADATA_LOCK_TTL_MS);
     });
 
-    expect(initialize).toHaveBeenCalledTimes(3);
-    expect(rendered.current().profiles).toEqual(fallback.profiles);
-    expect(rendered.current().metadataReadOnly).toBe(true);
-    expect(rendered.current().mutationFailure).toBe('busy');
-    expect(rendered.current().recoveryNotice?.kind).toBe('read_only');
+    expect(initialize).toHaveBeenCalledTimes(2);
+    expect(screen.getByRole('alert').textContent).toContain('Refresh');
+    expect(screen.queryByText('Profile writer mounted')).toBeNull();
+    expect([...storage.values.keys()].filter(key => key.startsWith('FATE_PROFILE_'))).toEqual([]);
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(PROFILE_METADATA_LOCK_TTL_MS * 2);
     });
-    expect(initialize).toHaveBeenCalledTimes(3);
+    expect(initialize).toHaveBeenCalledTimes(2);
   });
 
   it('does not run the startup expiry retry after unmount', async () => {
