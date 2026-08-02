@@ -9,6 +9,12 @@ import type { BotConfig } from '../src/types.js';
 type InteractionRoute = (interaction: DiscordInteraction, config: BotConfig) => Promise<JournalInteractionResponse>;
 type DeferredWorkScheduler = (work: Promise<unknown>) => void | undefined;
 
+const runAfterResponse = (afterAck: () => Promise<void>): Promise<void> => new Promise((resolve) => {
+  setTimeout(() => {
+    void Promise.resolve().then(afterAck).catch(() => undefined).then(resolve);
+  }, 0);
+});
+
 export const createInteractionsHandler = (
   config: BotConfig,
   route: InteractionRoute = routeInteraction,
@@ -26,7 +32,7 @@ export const createInteractionsHandler = (
     },
   });
 
-  if (afterAck) schedule(afterAck());
+  if (afterAck) schedule(runAfterResponse(afterAck));
   return response;
 };
 

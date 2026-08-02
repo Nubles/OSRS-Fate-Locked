@@ -1,7 +1,7 @@
 import nacl from 'tweetnacl';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createInteractionsHandler } from '../api/interactions.js';
-import type { DiscordInteraction } from '../src/handlers/interactions.js';
+import { handleJournalSubmit } from '../src/journals.js';
 import type { BotConfig } from '../src/types.js';
 
 const config: BotConfig = {
@@ -16,35 +16,33 @@ const signedRequest = (body: string, publicKey: Uint8Array, secretKey: Uint8Arra
   const timestamp = '1700000000';
   const signature = nacl.sign.detached(new TextEncoder().encode(`${timestamp}${body}`), secretKey);
   return new Request('https://example.test/api/interactions', {
-    method: 'POST',
-    headers: { 'x-signature-timestamp': timestamp, 'x-signature-ed25519': Buffer.from(signature).toString('hex') },
-    body,
+    method: 'POST', headers: { 'x-signature-timestamp': timestamp, 'x-signature-ed25519': Buffer.from(signature).toString('hex') }, body,
   });
 };
 
+const journalModalSubmit = '{"type":5,"guild_id":"1533446664709341357","token":"private-interaction-token","data":{"custom_id":"journal:create:v1","components":[{"type":1,"components":[{"type":4,"custom_id":"rsn","value":"Zezima"}]},{"type":1,"components":[{"type":4,"custom_id":"path","value":"Vanilla"}]},{"type":1,"components":[{"type":4,"custom_id":"intro","value":""}]}]}}';
+
 describe('interaction API deferred work', () => {
-  it('registers journal work with Vercel only after the interaction handler has produced the defer response', async () => {
+  it('returns the defer response before real journal work starts while Vercel tracks that work', async () => {
     const keyPair = nacl.sign.keyPair.fromSeed(new Uint8Array(32).fill(9));
     const requestConfig = { ...config, publicKey: Buffer.from(keyPair.publicKey).toString('hex') };
     const events: string[] = [];
     let scheduled: Promise<unknown> | undefined;
-    let releaseWork: (() => void) | undefined;
+    const createForumPost = vi.fn(async () => { events.push('work-start'); return { id: '100000000000000099' }; });
+    const editOriginalInteractionResponse = vi.fn(async () => ({ id: '100000000000000098' }));
     const handler = createInteractionsHandler(
       requestConfig,
-      async (_interaction: DiscordInteraction) => ({
-        type: 5,
-        data: { flags: 64 },
-        afterAck: () => new Promise<void>((resolve) => { releaseWork = () => { events.push('work'); resolve(); }; }),
-      }),
+      async (interaction) => handleJournalSubmit(interaction, { config: requestConfig, rest: { createForumPost, editOriginalInteractionResponse } }),
       (work) => { events.push('schedule'); scheduled = work; },
     );
 
-    const response = await handler(signedRequest('{"type":5,"guild_id":"1533446664709341357"}', keyPair.publicKey, keyPair.secretKey));
+    events.push('handler-called');
+    const response = await handler(signedRequest(journalModalSubmit, keyPair.publicKey, keyPair.secretKey));
+    events.push('handler-returned');
 
     await expect(response.json()).resolves.toEqual({ type: 5, data: { flags: 64 } });
-    expect(events).toEqual(['schedule']);
-    releaseWork?.();
+    expect(events).toEqual(['handler-called', 'schedule', 'handler-returned']);
     await scheduled;
-    expect(events).toEqual(['schedule', 'work']);
+    expect(events).toEqual(['handler-called', 'schedule', 'handler-returned', 'work-start']);
   });
 });
