@@ -1,8 +1,8 @@
 # Fate Locked Discord Launch Report
 
 - Server: Fate Locked Ironman
-- Configuration status: in progress
-- Public invite: withheld until launch checks pass
+- Configuration status: blocked pending a genuine non-staff account and real Discord mobile client
+- Public invite: withheld; no temporary or permanent invite was created
 - Webhook secret recorded: no
 - Paid features purchased: no
 
@@ -24,3 +24,14 @@
 | 6 - AutoMod and raid protection | pass | Block Mention Spam is enabled at five unique mentions with message blocking and `#mod-alerts` alerts, mention-raid detection retained, and timeout disabled; suspected-spam blocking and alerts are enabled; Activity Alerts target `#mod-alerts`; both default CAPTCHA protections are enabled |
 | 6 - Moderator 2FA | pass | `Require 2FA for moderator actions` is enabled; activation paused for the owner's authentication handoff and was verified after the owner resumed |
 | 7 - Trusted unlock webhook | skipped-by-owner | webhook: skipped by owner; test embed: not run; secret recorded: no |
+| 8 - Pre-invite launch audit | blocked-no-test-account | read-only role and desktop checks passed; exact public links were inspected; no permission mismatch was found; no Discord state was changed; genuine join, runtime safety, verification rehearsal, voice, and real mobile checks remain blocked; public invite withheld |
+
+## Launch Gate
+
+The server is not recorded as launched. The owner confirmed that no second Discord account is available, so the plan's explicit stop condition applies: `blocked: non-staff account required`. No temporary invite and no permanent public invite were created.
+
+A real Discord mobile client is also required. A responsive web check at 390 x 844 clipped Discord's server and channel interface, so it is evidence of an unusable responsive web surface, not a substitute for the required mobile-client test.
+
+The trusted unlock webhook remains skipped by owner. Discord currently reports zero webhooks, zero integration channels, and no apps; no Automation role exists. No webhook secret was created, read, copied, or recorded. The native server remains usable without an optional integration, but the webhook-specific checklist items are not marked passed because they were not run.
+
+See `task-8-report.md` for the complete pre-invite evidence and the exact work required to clear the launch gate.
