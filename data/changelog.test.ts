@@ -19,7 +19,20 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-08-01-cross-tab-safety');
+    expect(LATEST_CHANGELOG.id).toBe('2026-08-02-profile-metadata-integrity');
+  });
+
+  it('announces profile registry recovery and multi-tab safety', () => {
+    expect(LATEST_CHANGELOG).toMatchObject({
+      id: '2026-08-02-profile-metadata-integrity',
+      title: 'Safer Profile Management',
+      date: '2026-08-02',
+    });
+    expect(LATEST_CHANGELOG.sections.fixed).toEqual(expect.arrayContaining([
+      'Damaged profile lists now recover every valid browser save they can find instead of leaving the app on a blank screen.',
+      'Creating, renaming, switching, and deleting profiles in multiple tabs no longer silently loses profile-list changes.',
+      'Profiles that are still open in another tab cannot be deleted until that tab switches away or closes.',
+    ]));
   });
 
   it('announces the cross-tab save ownership protections', () => {
