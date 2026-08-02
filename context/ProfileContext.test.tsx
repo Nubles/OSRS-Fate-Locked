@@ -963,6 +963,83 @@ describe('ProfileProvider validated async state', () => {
         profiles: metadata.profiles,
         activeProfileId: 'other',
       }),
+      reason: 'unsupported_metadata' as const,
+      noticeKind: 'unsupported' as const,
+    },
+    {
+      label: 'invalid metadata',
+      raw: '{bad',
+      reason: 'invalid_metadata' as const,
+      noticeKind: 'read_only' as const,
+    },
+    {
+      label: 'legacy metadata',
+      raw: JSON.stringify({ profiles: metadata.profiles, activeProfileId: 'other' }),
+      reason: 'invalid_metadata' as const,
+      noticeKind: 'read_only' as const,
+    },
+  ])('preserves $label compatibility state after it cancels a bounded reread', async ({
+    raw,
+    reason,
+    noticeKind,
+  }) => {
+    const rendered = renderTask6Profiles();
+    await settleTask6Initialization();
+    storage.values.set(PROFILE_METADATA_BACKUP_KEY, 'existing-backup');
+    storage.values.set(PROFILE_METADATA_RECOVERY_KEY, 'existing-recovery');
+    storage.values.set(profileBaseKey('target'), 'existing-save');
+    const initialize = vi.spyOn(ProfileTransactions, 'initializeProfileMetadata');
+    vi.spyOn(ProfileTransactions, 'mutateProfileMetadata').mockResolvedValueOnce({
+      ok: false,
+      reason: 'busy',
+      metadata: null,
+      notice: null,
+    });
+
+    await act(async () => { await rendered.current().renameProfile('target', 'Busy'); });
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: PROFILE_METADATA_LOCK_KEY,
+        newValue: null,
+      }));
+    });
+    storage.values.set(PROFILES_KEY, raw);
+    const expected = new Map(
+      [...storage.values].filter(([key]) => key !== PROFILE_METADATA_LOCK_KEY),
+    );
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: PROFILES_KEY, newValue: raw }));
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(PROFILE_METADATA_LOCK_ARBITRATION_MS);
+    });
+
+    expect(rendered.current().metadataReadOnly).toBe(true);
+    expect(rendered.current().mutationFailure).toBe(reason);
+    expect(rendered.current().recoveryNotice?.kind).toBe(noticeKind);
+    expect(rendered.current().profiles).toEqual(metadata.profiles);
+    expect(rendered.current().activeProfileId).toBe('target');
+    expect(rendered.current().pendingAction).toBeNull();
+    expect(new Map(
+      [...storage.values].filter(([key]) => key !== PROFILE_METADATA_LOCK_KEY),
+    )).toEqual(expected);
+    expect(storage.values.has(PROFILE_METADATA_LOCK_KEY)).toBe(false);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(PROFILE_METADATA_LOCK_TTL_MS * 2);
+    });
+    expect(initialize).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    {
+      label: 'unsupported future metadata',
+      raw: JSON.stringify({
+        version: 2,
+        revision: 9,
+        profiles: metadata.profiles,
+        activeProfileId: 'other',
+      }),
     },
     { label: 'invalid metadata', raw: '{bad' },
   ])('fails closed when $label arrives before startup initialization settles', async ({ raw }) => {

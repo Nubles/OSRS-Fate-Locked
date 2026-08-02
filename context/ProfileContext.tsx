@@ -350,7 +350,12 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (operationAbortedRef.current && metadataRef.current !== null) {
       busyRereadArmedRef.current = false;
       clearBusyRereadTimer();
-      setMutationFailure(null);
+      const compatibilityReadOnly = metadataReadOnlyRef.current
+        && (readOnlyReasonRef.current === 'invalid_metadata'
+          || readOnlyReasonRef.current === 'unsupported_metadata');
+      if (!compatibilityReadOnly) {
+        setMutationFailure(null);
+      }
       setPending(null);
       return;
     }
