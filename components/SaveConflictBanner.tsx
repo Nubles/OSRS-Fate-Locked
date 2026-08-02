@@ -130,6 +130,7 @@ export const SaveConflictBannerView: FC<SaveConflictBannerViewProps> = ({
 };
 
 export const SaveConflictBanner: FC = () => {
+  const [takeoverPending, setTakeoverPending] = useState(false);
   const {
     saveOwnershipStatus,
     saveOwnershipBlockReason,
@@ -144,15 +145,26 @@ export const SaveConflictBanner: FC = () => {
     [getExportData, storageKeyForActiveProfile],
   );
 
-  if (saveOwnershipStatus !== 'blocked' || saveOwnershipBlockReason !== 'foreign_owner') {
+  const takeOverWhileVisible = useCallback(async (): Promise<boolean> => {
+    setTakeoverPending(true);
+    try {
+      return await takeOverSaveOwnership();
+    } finally {
+      setTakeoverPending(false);
+    }
+  }, [takeOverSaveOwnership]);
+  const foreignConflictActive = saveOwnershipStatus === 'blocked'
+    && saveOwnershipBlockReason === 'foreign_owner';
+
+  if (!foreignConflictActive && !takeoverPending) {
     return null;
   }
 
   return (
     <SaveConflictBannerView
-      status={saveOwnershipStatus}
+      status={takeoverPending ? 'blocked' : saveOwnershipStatus}
       hasPendingChanges={hasPendingChanges}
-      takeOver={takeOverSaveOwnership}
+      takeOver={takeOverWhileVisible}
       reloadLatest={reloadLatestSave}
       exportBackup={exportBackup}
       confirmAction={message => window.confirm(message)}

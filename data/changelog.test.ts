@@ -19,7 +19,25 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-08-01-save-recovery');
+    expect(LATEST_CHANGELOG.id).toBe('2026-08-01-cross-tab-safety');
+  });
+
+  it('announces the cross-tab save ownership protections', () => {
+    const crossTabSafety = CHANGELOG_RELEASES.find(
+      release => release.id === '2026-08-01-cross-tab-safety',
+    );
+
+    expect(crossTabSafety).toMatchObject({
+      id: '2026-08-01-cross-tab-safety',
+      title: 'Safer Multi-Tab Play',
+      date: '2026-08-01',
+    });
+    expect(crossTabSafety?.sections.added).toContain(
+      'A clear warning now appears when the same profile is open in another tab, with takeover, reload, and export recovery actions.',
+    );
+    expect(crossTabSafety?.sections.fixed).toContain(
+      'Two browser tabs can no longer silently overwrite the same profile while both appear to be saving.',
+    );
   });
 
   it('announces the native RuneLite guide visual refresh', () => {

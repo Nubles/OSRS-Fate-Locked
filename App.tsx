@@ -25,6 +25,7 @@ import { RollInboxDriver } from './components/RollInboxDriver';
 import { CoachStrip } from './components/CoachStrip';
 import { FeatureRevealDriver } from './components/FeatureRevealDriver';
 import { BackupNagBanner } from './components/BackupNagBanner';
+import { SaveConflictBanner } from './components/SaveConflictBanner';
 import { SaveFailureBanner } from './components/SaveFailureBanner';
 import { SaveRecoveryGuard } from './components/SaveRecoveryGuard';
 import { DiscordSyncDriver } from './components/DiscordSyncDriver';
@@ -964,6 +965,8 @@ const GameLayout = () => {
         onOpenRuneliteGuide={openRuneliteGuide}
         onOpenChangelog={openChangelog}
       />
+
+      <SaveConflictBanner />
 
       <SaveFailureBanner />
 

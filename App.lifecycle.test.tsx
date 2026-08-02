@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 const PROFILE_ID = 'changelog-lifecycle-profile';
@@ -20,6 +20,7 @@ const storage: Pick<Storage, 'clear' | 'getItem' | 'removeItem' | 'setItem'> = {
 let App: React.ComponentType;
 let seedOnboardingRun: (withHistory?: boolean) => string;
 let profileBaseKey: (profileId: string) => string;
+let writerLeaseKey: (storageKey: string) => string;
 let changelogStorageKey: string;
 let latestChangelogId: string;
 
@@ -27,17 +28,22 @@ beforeEach(async () => {
   values.clear();
   failedWriteKey = null;
   vi.stubGlobal('localStorage', storage);
+  vi.spyOn(globalThis.crypto, 'randomUUID')
+    .mockReturnValue('00000000-0000-4000-8000-000000000001');
+  vi.spyOn(window, 'confirm').mockReturnValue(true);
 
-  const [{ default: LoadedApp }, gameContext, persistence, profileStorage, changelogState, changelog] = await Promise.all([
+  const [{ default: LoadedApp }, gameContext, persistence, profileStorage, profileWriterLease, changelogState, changelog] = await Promise.all([
     import('./App'),
     import('./context/GameContext'),
     import('./utils/gamePersistence'),
     import('./utils/profileStorage'),
+    import('./utils/profileWriterLease'),
     import('./utils/changelogState'),
     import('./data/changelog'),
   ]);
   App = LoadedApp;
   profileBaseKey = profileStorage.profileBaseKey;
+  writerLeaseKey = profileWriterLease.writerLeaseKey;
   changelogStorageKey = changelogState.CHANGELOG_STORAGE_KEY;
   latestChangelogId = changelog.LATEST_CHANGELOG.id;
 
@@ -74,6 +80,7 @@ beforeEach(async () => {
 afterEach(() => {
   cleanup();
   values.clear();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
   window.history.replaceState(null, '', '/');
 });
@@ -226,6 +233,51 @@ describe('App changelog lifecycle', () => {
     await user.click(screen.getByRole('button', { name: 'Retry save' }));
     await waitFor(() => expect(screen.queryByRole('alert')).toBeNull());
     expect(JSON.parse(values.get(profileKey)!).animationsEnabled).toBe(!originalAnimations);
+    const safeUnload = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(safeUnload);
+    expect(safeUnload.defaultPrevented).toBe(false);
+  }, 15_000);
+
+  it('blocks a foreign-owned profile and saves only after confirmed takeover', async () => {
+    const profileKey = profileBaseKey(PROFILE_ID);
+    const readyState = JSON.parse(seedOnboardingRun());
+    readyState.hasSeenOnboarding = true;
+    storage.setItem(profileKey, JSON.stringify(readyState));
+    storage.setItem(writerLeaseKey(profileKey), JSON.stringify({
+      version: 1,
+      ownerId: 'other-tab',
+      expiresAt: Date.now() + 30_000,
+    }));
+    storage.setItem(changelogStorageKey, latestChangelogId);
+    const user = userEvent.setup();
+    render(<App />);
+
+    const conflict = await screen.findByRole('alert');
+    expect(conflict.textContent).toContain('This profile is open in another tab');
+    await user.click(screen.getByRole('button', { name: 'Settings & save tools' }));
+    await user.click(screen.getByRole('button', { name: /Animations/ }));
+    expect(screen.getByRole('button', { name: /Animations/ }).getAttribute('aria-pressed'))
+      .toBe(String(!readyState.animationsEnabled));
+    await new Promise(resolve => window.setTimeout(resolve, 550));
+    expect(JSON.parse(values.get(profileKey)!).animationsEnabled)
+      .toBe(readyState.animationsEnabled);
+
+    const protectedUnload = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(protectedUnload);
+    expect(protectedUnload.defaultPrevented).toBe(true);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Take over and save this tab' }));
+    expect(screen.getByRole('alert').textContent)
+      .toContain('This profile is open in another tab');
+    expect(screen.getByRole('button', { name: /Taking over/ }).hasAttribute('disabled'))
+      .toBe(true);
+    await waitFor(() => {
+      expect(screen.queryByText('This profile is open in another tab')).toBeNull();
+      expect(JSON.parse(values.get(profileKey)!).animationsEnabled)
+        .toBe(!readyState.animationsEnabled);
+    });
+    expect(window.confirm).toHaveBeenCalledOnce();
+
     const safeUnload = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(safeUnload);
     expect(safeUnload.defaultPrevented).toBe(false);

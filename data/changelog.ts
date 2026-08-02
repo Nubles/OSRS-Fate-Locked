@@ -19,6 +19,19 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-08-01-cross-tab-safety',
+    title: 'Safer Multi-Tab Play',
+    date: '2026-08-01',
+    sections: {
+      added: [
+        'A clear warning now appears when the same profile is open in another tab, with takeover, reload, and export recovery actions.',
+      ],
+      fixed: [
+        'Two browser tabs can no longer silently overwrite the same profile while both appear to be saving.',
+      ],
+    },
+  },
+  {
     id: '2026-08-01-save-recovery',
     title: 'Safer Browser Saves',
     date: '2026-08-01',
