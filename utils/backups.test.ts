@@ -88,4 +88,39 @@ describe('backup ring', () => {
     expect(getItem).not.toHaveBeenCalled();
     expect(setItem).not.toHaveBeenCalled();
   });
+
+  it('does not write when ownership is lost after reading the ring', () => {
+    const canWrite = vi.fn()
+      .mockReturnValueOnce(true)
+      .mockReturnValueOnce(false);
+    const getItem = vi.spyOn(localStorage, 'getItem');
+    const setItem = vi.spyOn(localStorage, 'setItem');
+
+    expect(pushBackup(KEY, save(), 'lost-before-write', canWrite)).toEqual({
+      stored: false,
+      reason: 'ownership_conflict',
+    });
+    expect(getItem).toHaveBeenCalledTimes(1);
+    expect(setItem).not.toHaveBeenCalled();
+    expect(canWrite).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not retry a quota write after ownership is lost', () => {
+    const canWrite = vi.fn()
+      .mockReturnValueOnce(true)
+      .mockReturnValueOnce(true)
+      .mockReturnValueOnce(false);
+    const getItem = vi.spyOn(localStorage, 'getItem');
+    const setItem = vi.spyOn(localStorage, 'setItem').mockImplementationOnce(() => {
+      throw new DOMException('Quota exceeded', 'QuotaExceededError');
+    });
+
+    expect(pushBackup(KEY, save(), 'lost-before-retry', canWrite)).toEqual({
+      stored: false,
+      reason: 'ownership_conflict',
+    });
+    expect(getItem).toHaveBeenCalledTimes(1);
+    expect(setItem).toHaveBeenCalledTimes(1);
+    expect(canWrite).toHaveBeenCalledTimes(3);
+  });
 });

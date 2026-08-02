@@ -26,7 +26,11 @@ export const stagePendingSave = (storageKey: string, data: string): void => {
   entries.set(storageKey, {
     data,
     status: existing?.status === 'failed' ? 'failed' : 'saving',
-    reason: existing?.status === 'failed' ? 'storage_unavailable' : null,
+    reason: existing?.status === 'failed'
+      ? 'storage_unavailable'
+      : existing?.reason === 'ownership_conflict'
+        ? 'ownership_conflict'
+        : null,
   });
   emit();
 };

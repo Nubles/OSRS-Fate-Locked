@@ -79,6 +79,25 @@ describe('pending save registry', () => {
     expect(listener).toHaveBeenCalledTimes(1);
   });
 
+  it('preserves ownership conflict when staging a newer blocked snapshot', () => {
+    stagePendingSave('profile-a', '{"keys":9}');
+    blockPendingSave('profile-a');
+    const listener = vi.fn();
+    const unsubscribe = subscribePendingSaves(listener);
+
+    stagePendingSave('profile-a', '{"keys":10}');
+    blockPendingSave('profile-a');
+    unsubscribe();
+
+    expect(getPendingSave('profile-a')).toEqual({
+      data: '{"keys":10}',
+      status: 'saving',
+      reason: 'ownership_conflict',
+    });
+    expect(getSaveStatus('profile-a')).toBe('saving');
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
   it('notifies subscribers and discards only the selected profile', () => {
     const listener = vi.fn();
     const unsubscribe = subscribePendingSaves(listener);

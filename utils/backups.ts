@@ -68,10 +68,12 @@ export const pushBackup = (
   if (entries[0]?.data === data) return { stored: false, reason: 'duplicate' };
   const entry: BackupEntry = { ts: Date.now(), reason, summary: summarizeSave(data), data };
   const next = [entry, ...entries].slice(0, MAX_BACKUPS);
+  if (!canWrite()) return { stored: false, reason: 'ownership_conflict' };
   try {
     localStorage.setItem(profileBackupKey(storageKey), JSON.stringify(next));
     return { stored: true };
   } catch {
+    if (!canWrite()) return { stored: false, reason: 'ownership_conflict' };
     try {
       localStorage.setItem(profileBackupKey(storageKey), JSON.stringify(next.slice(0, 2)));
       return { stored: true };
