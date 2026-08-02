@@ -32,6 +32,22 @@ const canonicalLinks = [
   'https://github.com/Nubles/OSRS-Fate-Locked',
   'https://github.com/Nubles/OSRS-Fate-Locked-Runelite',
 ];
+const publicDisclaimer = 'Official community for the fan-made Fate Locked Ironman mode. Not affiliated with Jagex.';
+const onboardingMappings = [
+  'What path are you following?',
+  'Vanilla -> Vanilla role',
+  'Chunked -> Chunked role',
+  'Custom -> Custom role',
+  'Spectator -> Spectator role',
+  'What do you want notifications for?',
+  'Tracker and mode updates -> Updates role',
+  'Community events -> Events role',
+  'Weekly seed -> Weekly Seed role',
+  'What would you like to explore?',
+  'Run journals -> run-journals',
+  'Technical support -> support-desk',
+  'Ideas and feedback -> ideas-and-feedback',
+];
 
 describe('Discord launch content', () => {
   it('covers every channel and role', () => {
@@ -45,6 +61,12 @@ describe('Discord launch content', () => {
     const content = readFileSync(resolve(root, 'docs/discord/server-content.md'), 'utf8');
     for (const link of canonicalLinks) expect(content).toContain(link);
     expect(content).toContain('Not affiliated with Jagex.');
+  });
+
+  it('provides the exact public disclaimer and onboarding mappings', () => {
+    const content = readFileSync(resolve(root, 'docs/discord/server-content.md'), 'utf8');
+    expect(content).toContain(publicDisclaimer);
+    for (const mapping of onboardingMappings) expect(content, `missing ${mapping}`).toContain(mapping);
   });
 
   it('contains no real webhook URL', () => {

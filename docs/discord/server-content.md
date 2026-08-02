@@ -38,7 +38,7 @@ WELCOME TO FATE LOCKED IRONMAN
 
 Start with everything locked. Earn Keys through OSRS progression. Spend them and let Fate decide which skill, region, activity, boss, bank, or equipment path opens next.
 
-This is the official community for the fan-made Fate Locked Ironman mode. It is not affiliated with Jagex.
+Official community for the fan-made Fate Locked Ironman mode. Not affiliated with Jagex.
 
 START HERE
 • Tracker: https://nubles.github.io/OSRS-Fate-Locked/
@@ -84,6 +84,38 @@ Notifications
 • Weekly Seed — weekly seed notices.
 
 Choose only the roles that describe your run and the pings you want. Custom runs must be labelled clearly in journals and showcase posts.
+```
+
+## Community Onboarding configuration
+
+Configure these three prompts exactly.
+
+### Required, multi-select
+
+```text
+What path are you following?
+Vanilla -> Vanilla role
+Chunked -> Chunked role
+Custom -> Custom role
+Spectator -> Spectator role
+```
+
+### Optional, multi-select
+
+```text
+What do you want notifications for?
+Tracker and mode updates -> Updates role
+Community events -> Events role
+Weekly seed -> Weekly Seed role
+```
+
+### Optional, multi-select
+
+```text
+What would you like to explore?
+Run journals -> run-journals
+Technical support -> support-desk
+Ideas and feedback -> ideas-and-feedback
 ```
 
 ## Forum starter posts and templates
