@@ -21,7 +21,12 @@ interface JournalRest {
 export interface JournalDeps {
   config: BotConfig;
   rest: JournalRest;
-  defer: (work: Promise<unknown>) => void;
+}
+
+export interface JournalInteractionResponse {
+  type: number;
+  data: { content?: string; components?: unknown[]; flags?: number; allowed_mentions?: unknown; custom_id?: string; title?: string };
+  afterAck?: () => Promise<void>;
 }
 
 const CONTROL_CHARACTERS = /[\u0000-\u001f\u007f-\u009f]/;
@@ -83,7 +88,8 @@ export const parseJournalSubmission = (interaction: DiscordInteraction): Journal
   const path = canonicalPath(fields.path);
   if (
     !path ||
-    rsn.length < 1 || rsn.length > 12 ||
+    fields.rsn.length > 12 ||
+    rsn.length < 1 ||
     intro.length > 500 ||
     CONTROL_CHARACTERS.test(fields.rsn) || CONTROL_CHARACTERS.test(fields.path) || CONTROL_CHARACTERS.test(intro)
   ) return null;
@@ -126,35 +132,57 @@ const interactionToken = (interaction: DiscordInteraction): string | null => {
   return typeof token === 'string' && token.length > 0 ? token : null;
 };
 
-export const handleJournalSubmit = async (interaction: DiscordInteraction, deps: JournalDeps) => {
+const retryMessage = {
+  content: 'We could not create your journal. Please try again.',
+  allowed_mentions: { parse: [] },
+};
+
+const createdWithoutLinkMessage = {
+  content: 'Your journal was created, but we could not send its link. Please open #run-journals to find it.',
+  allowed_mentions: { parse: [] },
+};
+
+export const handleJournalSubmit = async (
+  interaction: DiscordInteraction,
+  deps: JournalDeps,
+): Promise<JournalInteractionResponse> => {
   const submission = parseJournalSubmission(interaction);
   const token = interactionToken(interaction);
   if (!submission || !token) return ephemeral('Please check your journal details and try again.');
 
-  const work = Promise.resolve().then(async () => {
-    try {
-      const thread = await deps.rest.createForumPost(deps.config.channels.runJournals, {
-        name: `[${submission.path}] ${submission.rsn} — Active`,
-        auto_archive_duration: 10080,
-        applied_tags: [pathTag(deps.config, submission.path), deps.config.tags.active],
-        message: { content: journalBody(submission), allowed_mentions: { parse: [] } },
-      });
-      await deps.rest.editOriginalInteractionResponse(deps.config.applicationId, token, {
-        content: `Your run journal is ready: https://discord.com/channels/${deps.config.guildId}/${thread.id}`,
-        allowed_mentions: { parse: [] },
-      });
-    } catch {
+  return {
+    type: 5,
+    data: { flags: 64 },
+    afterAck: () => Promise.resolve().then(async () => {
+      let thread: DiscordChannel;
+      try {
+        thread = await deps.rest.createForumPost(deps.config.channels.runJournals, {
+          name: `[${submission.path}] ${submission.rsn} \u2014 Active`,
+          auto_archive_duration: 10080,
+          applied_tags: [pathTag(deps.config, submission.path), deps.config.tags.active],
+          message: { content: journalBody(submission), allowed_mentions: { parse: [] } },
+        });
+      } catch {
+        try {
+          await deps.rest.editOriginalInteractionResponse(deps.config.applicationId, token, retryMessage);
+        } catch {
+          // The interaction token cannot be safely surfaced or retried.
+        }
+        return;
+      }
+
       try {
         await deps.rest.editOriginalInteractionResponse(deps.config.applicationId, token, {
-          content: 'We could not create your journal. Please try again.',
+          content: `Your run journal is ready: https://discord.com/channels/${deps.config.guildId}/${thread.id}`,
           allowed_mentions: { parse: [] },
         });
       } catch {
-        // The interaction token cannot be safely surfaced or retried.
+        try {
+          await deps.rest.editOriginalInteractionResponse(deps.config.applicationId, token, createdWithoutLinkMessage);
+        } catch {
+          // The journal was created; never invite a duplicate retry after this point.
+        }
       }
-    }
-  });
-  deps.defer(work);
-
-  return { type: 5, data: { flags: 64 } };
+    }),
+  };
 };
