@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 
-import { act, cleanup, render, screen } from '@testing-library/react';
-import { useEffect } from 'react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { useEffect, useLayoutEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ProfileSwitcher } from '../components/ProfileSwitcher';
 import type { ProfileMetadata } from '../types';
 import {
   getPendingSave,
@@ -26,7 +27,7 @@ import {
   type ProfileTransactionResult,
 } from '../utils/profileMetadataTransaction';
 import { serializeCurrent } from '../utils/gamePersistence';
-import { initialState } from './GameContext';
+import { GameProvider, initialState, useGame } from './GameContext';
 
 type Profiles = ReturnType<typeof useProfiles>;
 
@@ -1311,5 +1312,251 @@ describe('ProfileProvider validated async state', () => {
     expect(rendered.current().mutationFailure).toBe('unsupported_metadata');
     expect(rendered.current().metadataReadOnly).toBe(true);
     expect(rendered.current().recoveryNotice?.kind).toBe('unsupported');
+  });
+
+  it('synchronizes create, rename, and delete events between two providers without stealing local selection', async () => {
+    let clientA: Profiles | undefined;
+    let clientB: Profiles | undefined;
+    render(
+      <>
+        <ProfileProvider>
+          <ProfileCapture onProfiles={profiles => { clientA = profiles; }} />
+        </ProfileProvider>
+        <ProfileProvider>
+          <ProfileCapture onProfiles={profiles => { clientB = profiles; }} />
+        </ProfileProvider>
+      </>,
+    );
+    await settleTask6Initialization();
+    const a = () => {
+      if (!clientA) throw new Error('Client A did not initialize');
+      return clientA;
+    };
+    const b = () => {
+      if (!clientB) throw new Error('Client B did not initialize');
+      return clientB;
+    };
+    const run = async (
+      start: () => Promise<ProfileTransactionResult>,
+    ): Promise<ProfileTransactionResult> => {
+      let pending!: Promise<ProfileTransactionResult>;
+      act(() => { pending = start(); });
+      let result!: ProfileTransactionResult;
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(100);
+        result = await pending;
+      });
+      return result;
+    };
+    const deliverPrimary = () => {
+      const raw = storage.values.get(PROFILES_KEY);
+      if (raw === undefined) throw new Error('Durable registry missing');
+      act(() => {
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: PROFILES_KEY,
+          newValue: raw,
+        }));
+      });
+    };
+
+    expect((await run(() => b().switchProfile('other'))).ok).toBe(true);
+    expect(a().activeProfileId).toBe('target');
+    expect(b().activeProfileId).toBe('other');
+
+    expect((await run(() => a().createProfile('Created by A'))).ok).toBe(true);
+    const createdId = a().recentlyCreatedId;
+    expect(createdId).not.toBeNull();
+    deliverPrimary();
+    expect(b().profiles.map(profile => profile.id)).toContain(createdId);
+    expect(b().activeProfileId).toBe('other');
+    expect(b().recentlyCreatedId).toBeNull();
+
+    expect((await run(() => a().renameProfile(createdId!, 'Renamed by A'))).ok).toBe(true);
+    deliverPrimary();
+    expect(b().profiles.find(profile => profile.id === createdId)?.name).toBe('Renamed by A');
+    expect(b().activeProfileId).toBe('other');
+
+    expect((await run(() => a().deleteProfile(createdId!))).ok).toBe(true);
+    deliverPrimary();
+    expect(b().profiles.some(profile => profile.id === createdId)).toBe(false);
+    expect(b().activeProfileId).toBe('other');
+    expect(b().recentlyCreatedId).toBeNull();
+
+    const evictionCalls: string[] = [];
+    const unsubscribe = b().registerProfileEvictionHandler(profileId => {
+      evictionCalls.push(profileId);
+    });
+    const durable = JSON.parse(storage.values.get(PROFILES_KEY)!) as ProfileMetadata;
+    const removal: ProfileMetadata = {
+      ...durable,
+      revision: durable.revision + 1,
+      profiles: durable.profiles.filter(profile => profile.id !== 'other'),
+      activeProfileId: 'target',
+    };
+    storage.values.set(PROFILES_KEY, JSON.stringify(removal));
+    deliverPrimary();
+
+    expect(evictionCalls).toEqual(['other']);
+    expect(b().activeProfileId).toBe('target');
+    expect(b().profiles.map(profile => profile.id)).toEqual(['target']);
+    unsubscribe();
+  });
+
+  it('stages and blocks the newest game state before a forced-removal selection change', async () => {
+    type Game = ReturnType<typeof useGame>;
+    const targetKey = profileBaseKey('target');
+    const saved = structuredClone(initialState);
+    saved.hasSeenOnboarding = true;
+    storage.values.set(targetKey, serializeCurrent(saved));
+    const baseWrites: string[] = [];
+    const setItem = storage.setItem;
+    storage.setItem = (key: string, value: string) => {
+      if (key === targetKey) baseWrites.push(value);
+      setItem(key, value);
+    };
+    let profiles: Profiles | undefined;
+    let game: Game | undefined;
+    const observations: Array<{
+      phase: 'before' | 'after';
+      activeProfileId: string;
+      pendingReason: string | null;
+    }> = [];
+
+    const EvictionBridge = ({ profileId }: { profileId: string }) => {
+      const currentProfiles = useProfiles();
+      const currentGame = useGame();
+      game = currentGame;
+      useLayoutEffect(() => currentProfiles.registerProfileEvictionHandler(removedId => {
+        if (removedId !== profileId) return;
+        observations.push({
+          phase: 'before',
+          activeProfileId: currentProfiles.activeProfileId,
+          pendingReason: getPendingSave(targetKey)?.reason ?? null,
+        });
+        currentGame.stageForProfileEviction();
+        observations.push({
+          phase: 'after',
+          activeProfileId: currentProfiles.activeProfileId,
+          pendingReason: getPendingSave(targetKey)?.reason ?? null,
+        });
+      }), [currentGame, currentProfiles, profileId]);
+      return null;
+    };
+    const IntegratedClient = () => {
+      const currentProfiles = useProfiles();
+      profiles = currentProfiles;
+      return (
+        <GameProvider
+          key={currentProfiles.activeProfileId}
+          storageKey={currentProfiles.storageKeyForActiveProfile}
+          leaseOptions={{ ownerId: `game-${currentProfiles.activeProfileId}` }}
+        >
+          <EvictionBridge profileId={currentProfiles.activeProfileId} />
+        </GameProvider>
+      );
+    };
+
+    render(
+      <ProfileProvider>
+        <IntegratedClient />
+      </ProfileProvider>,
+    );
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(150);
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(150);
+    });
+    if (!profiles || !game) throw new Error('Integrated client did not initialize');
+    const evictedGame = game;
+    expect(evictedGame.saveOwnershipStatus).toBe('owner');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(600);
+    });
+    expect(getPendingSave(targetKey)).toBeNull();
+    baseWrites.length = 0;
+
+    act(() => {
+      evictedGame.saveNote('latest', 'newest serialized state');
+    });
+    const incoming: ProfileMetadata = {
+      version: 1,
+      revision: 1,
+      profiles: [metadata.profiles[1]],
+      activeProfileId: 'other',
+    };
+    storage.values.set(PROFILES_KEY, JSON.stringify(incoming));
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: PROFILES_KEY,
+        newValue: JSON.stringify(incoming),
+      }));
+    });
+
+    const pending = getPendingSave(targetKey);
+    expect(observations).toEqual([
+      { phase: 'before', activeProfileId: 'target', pendingReason: null },
+      { phase: 'after', activeProfileId: 'target', pendingReason: 'ownership_conflict' },
+    ]);
+    expect(pending).toMatchObject({
+      status: 'saving',
+      reason: 'ownership_conflict',
+    });
+    expect(JSON.parse(pending?.data ?? '{}').userNotes.latest).toBe('newest serialized state');
+    expect(profiles.activeProfileId).toBe('other');
+    expect(evictedGame.retrySave()).toBe(false);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1_000);
+    });
+    expect(baseWrites).toEqual([]);
+    expect(getPendingSave(targetKey)?.reason).toBe('ownership_conflict');
+  });
+
+  it('refreshes the visible profile list from newer validated metadata after not_found', async () => {
+    let current: Profiles | undefined;
+    render(
+      <ProfileProvider>
+        <ProfileCapture onProfiles={profiles => { current = profiles; }} />
+        <ProfileSwitcher />
+      </ProfileProvider>,
+    );
+    await settleTask6Initialization();
+    const profiles = () => {
+      if (!current) throw new Error('Profile provider did not initialize');
+      return current;
+    };
+    const newer: ProfileMetadata = {
+      version: 1,
+      revision: 4,
+      profiles: [metadata.profiles[0]],
+      activeProfileId: 'target',
+    };
+    vi.spyOn(ProfileTransactions, 'mutateProfileMetadata').mockResolvedValueOnce({
+      ok: false,
+      reason: 'not_found',
+      metadata: newer,
+      notice: null,
+    });
+
+    fireEvent.click(screen.getByRole('button', {
+      name: 'Switch profile. Current profile: Target',
+    }));
+    fireEvent.click(screen.getByRole('button', { name: 'Rename Other' }));
+    const input = screen.getByRole('textbox', { name: 'Rename Other' });
+    fireEvent.change(input, { target: { value: 'Stale rename' } });
+    await act(async () => {
+      fireEvent.submit(input.closest('form') as HTMLFormElement);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(screen.getByRole('alert').textContent).toBe(
+      'That profile no longer exists. The list has been refreshed.',
+    );
+    expect(screen.queryByRole('textbox', { name: 'Rename Other' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Rename Target' })).toBeTruthy();
+    expect(profiles().profiles).toEqual([metadata.profiles[0]]);
+    expect(profiles().activeProfileId).toBe('target');
   });
 });

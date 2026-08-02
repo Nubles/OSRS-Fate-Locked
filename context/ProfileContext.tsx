@@ -522,6 +522,19 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setMutationFailure(null);
       busyRereadArmedRef.current = false;
     } else {
+      if (result.reason === 'not_found' && result.metadata !== null) {
+        try {
+          const parsed = parseProfileMetadata(JSON.stringify(result.metadata));
+          const currentMetadata = metadataRef.current;
+          if (
+            parsed.status === 'current'
+            && currentMetadata !== null
+            && parsed.metadata.revision > currentMetadata.revision
+          ) mergeIncomingMetadata(parsed.metadata, result.notice);
+        } catch {
+          // A failed result never installs metadata that cannot be strictly revalidated.
+        }
+      }
       setMutationFailure(result.reason);
       const readOnly = result.reason === 'unsupported_metadata'
         || result.notice?.kind === 'read_only'
@@ -536,7 +549,13 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
     setPending(null);
     return result;
-  }, [dependencies, installMetadata, recoveryNotice, setPending]);
+  }, [
+    dependencies,
+    installMetadata,
+    mergeIncomingMetadata,
+    recoveryNotice,
+    setPending,
+  ]);
 
   const createProfile = useCallback((name: string): Promise<ProfileTransactionResult> => {
     const current = metadataRef.current;

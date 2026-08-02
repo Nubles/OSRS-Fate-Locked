@@ -7,6 +7,7 @@ import {
   mutateProfileMetadata,
   PROFILE_METADATA_LOCK_ARBITRATION_MS,
   PROFILE_METADATA_LOCK_KEY,
+  PROFILE_METADATA_LOCK_RETRY_MS,
   PROFILE_METADATA_LOCK_TIMEOUT_MS,
   PROFILE_METADATA_LOCK_TTL_MS,
   profileMetadataLockRetryDelay,
@@ -18,6 +19,7 @@ import {
   PROFILE_METADATA_BACKUP_KEY,
   PROFILE_METADATA_RECOVERY_KEY,
   PROFILES_KEY,
+  parseProfileMetadata,
 } from './profileMetadata';
 
 type TestStorage = ProfileTransactionDependencies['storage'] & {
@@ -1553,6 +1555,304 @@ describe('coordinated profile deletion', () => {
     });
     expect(profileOwnedRemovalCalls(storage)).toEqual(alphaOwnedKeys.map(key => `remove:${key}`));
     for (const key of storedKeys) expect(storage.values.has(key)).toBe(false);
+  });
+});
+
+type ControlledWait = {
+  ownerId: string;
+  milliseconds: number;
+  resolve: () => void;
+};
+
+const createTwoClientTransactionHarness = (
+  entries: readonly (readonly [string, string])[],
+) => {
+  const storage = createStorage(entries);
+  const waiting: ControlledWait[] = [];
+  const dependencies = (ownerId: string): ProfileTransactionDependencies => ({
+    storage,
+    ownerId,
+    now: () => 1_000,
+    wait: milliseconds => new Promise<void>(resolve => {
+      waiting.push({ ownerId, milliseconds, resolve });
+    }),
+    validateGameSave: raw => raw.startsWith('valid:'),
+    createProfileId: () => `${ownerId}-profile`,
+  });
+  const release = async (ownerId: string, milliseconds: number): Promise<void> => {
+    const index = waiting.findIndex(wait => (
+      wait.ownerId === ownerId && wait.milliseconds === milliseconds
+    ));
+    expect(index).toBeGreaterThanOrEqual(0);
+    const [entry] = waiting.splice(index, 1);
+    entry.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+  };
+  return { storage, waiting, dependencies, release };
+};
+
+const currentStoredRegistry = (storage: TestStorage): ProfileMetadata => {
+  const parsed = parseProfileMetadata(storage.values.get(PROFILES_KEY) ?? null);
+  expect(parsed.status).toBe('current');
+  if (parsed.status !== 'current') throw new Error('Expected a current durable registry');
+  return parsed.metadata;
+};
+
+const expectUniqueProfileIds = (registry: ProfileMetadata): void => {
+  expect(new Set(registry.profiles.map(profile => profile.id)).size)
+    .toBe(registry.profiles.length);
+};
+
+describe('deterministic two-client profile transactions', () => {
+  it('preserves two distinct creates that overlap during lock arbitration', async () => {
+    const initial = metadata(0);
+    const harness = createTwoClientTransactionHarness([
+      [PROFILES_KEY, JSON.stringify(initial)],
+    ]);
+    const first = mutateProfileMetadata(harness.dependencies('client-a'), {
+      type: 'create',
+      profile: { id: 'beta', name: 'Beta', createdAt: 2 },
+    });
+    const second = mutateProfileMetadata(harness.dependencies('client-b'), {
+      type: 'create',
+      profile: { id: 'gamma', name: 'Gamma', createdAt: 3 },
+    });
+
+    expect(harness.waiting.map(wait => wait.ownerId).sort()).toEqual(['client-a', 'client-b']);
+    expect(currentStoredRegistry(harness.storage).revision).toBe(0);
+    await harness.release('client-a', PROFILE_METADATA_LOCK_ARBITRATION_MS);
+    const firstResult = await first;
+    await harness.release('client-b', PROFILE_METADATA_LOCK_RETRY_MS);
+    await harness.release('client-b', PROFILE_METADATA_LOCK_ARBITRATION_MS);
+    const secondResult = await second;
+
+    expect(firstResult).toMatchObject({ ok: true, metadata: { revision: 1 } });
+    expect(secondResult).toMatchObject({ ok: true, metadata: { revision: 2 } });
+    const durable = currentStoredRegistry(harness.storage);
+    expect(durable.revision).toBe(2);
+    expect(durable.profiles.map(profile => profile.id)).toEqual(['alpha', 'beta', 'gamma']);
+    expectUniqueProfileIds(durable);
+  });
+
+  it('preserves a rename that overlaps a distinct create', async () => {
+    const initial = metadata(4);
+    const harness = createTwoClientTransactionHarness([
+      [PROFILES_KEY, JSON.stringify(initial)],
+    ]);
+    const rename = mutateProfileMetadata(harness.dependencies('client-a'), {
+      type: 'rename',
+      profileId: 'alpha',
+      name: 'Renamed alpha',
+    });
+    const create = mutateProfileMetadata(harness.dependencies('client-b'), {
+      type: 'create',
+      profile: { id: 'beta', name: 'Beta', createdAt: 2 },
+    });
+
+    expect(harness.waiting).toHaveLength(2);
+    await harness.release('client-a', PROFILE_METADATA_LOCK_ARBITRATION_MS);
+    await rename;
+    await harness.release('client-b', PROFILE_METADATA_LOCK_RETRY_MS);
+    await harness.release('client-b', PROFILE_METADATA_LOCK_ARBITRATION_MS);
+    await create;
+
+    const durable = currentStoredRegistry(harness.storage);
+    expect(durable.revision).toBe(6);
+    expect(durable.profiles).toEqual([
+      { id: 'alpha', name: 'Renamed alpha', createdAt: 1 },
+      { id: 'beta', name: 'Beta', createdAt: 2 },
+    ]);
+    expectUniqueProfileIds(durable);
+  });
+
+  it('returns valid results for overlapping selects and persists a valid active ID', async () => {
+    const initial: ProfileMetadata = {
+      version: 1,
+      revision: 8,
+      profiles: [
+        { id: 'alpha', name: 'Alpha', createdAt: 1 },
+        { id: 'beta', name: 'Beta', createdAt: 2 },
+        { id: 'gamma', name: 'Gamma', createdAt: 3 },
+      ],
+      activeProfileId: 'alpha',
+    };
+    const harness = createTwoClientTransactionHarness([
+      [PROFILES_KEY, JSON.stringify(initial)],
+    ]);
+    const selectBeta = mutateProfileMetadata(harness.dependencies('client-a'), {
+      type: 'select',
+      profileId: 'beta',
+    });
+    const selectGamma = mutateProfileMetadata(harness.dependencies('client-b'), {
+      type: 'select',
+      profileId: 'gamma',
+    });
+
+    expect(harness.waiting).toHaveLength(2);
+    await harness.release('client-a', PROFILE_METADATA_LOCK_ARBITRATION_MS);
+    const betaResult = await selectBeta;
+    await harness.release('client-b', PROFILE_METADATA_LOCK_RETRY_MS);
+    await harness.release('client-b', PROFILE_METADATA_LOCK_ARBITRATION_MS);
+    const gammaResult = await selectGamma;
+
+    expect(betaResult).toMatchObject({ ok: true, metadata: { revision: 9, activeProfileId: 'beta' } });
+    expect(gammaResult).toMatchObject({ ok: true, metadata: { revision: 10, activeProfileId: 'gamma' } });
+    const durable = currentStoredRegistry(harness.storage);
+    expect(durable.revision).toBe(10);
+    expect(durable.profiles.some(profile => profile.id === durable.activeProfileId)).toBe(true);
+    expectUniqueProfileIds(durable);
+  });
+
+  it('does not resurrect a deleted profile when a rename overlaps it', async () => {
+    const initial: ProfileMetadata = {
+      version: 1,
+      revision: 2,
+      profiles: [
+        { id: 'alpha', name: 'Alpha', createdAt: 1 },
+        { id: 'beta', name: 'Beta', createdAt: 2 },
+        { id: 'gamma', name: 'Gamma', createdAt: 3 },
+      ],
+      activeProfileId: 'alpha',
+    };
+    const harness = createTwoClientTransactionHarness([
+      [PROFILES_KEY, JSON.stringify(initial)],
+      ['FATE_PROFILE_beta', 'beta-save'],
+      ['FATE_PROFILE_gamma', 'unrelated-save'],
+      ['FATE_PROFILE_beta_misleading', 'must-survive'],
+    ]);
+    const deletion = mutateProfileMetadata(harness.dependencies('client-a'), {
+      type: 'delete',
+      profileId: 'beta',
+    });
+    const rename = mutateProfileMetadata(harness.dependencies('client-b'), {
+      type: 'rename',
+      profileId: 'alpha',
+      name: 'Renamed alpha',
+    });
+
+    expect(harness.waiting).toHaveLength(2);
+    await harness.release('client-a', PROFILE_METADATA_LOCK_ARBITRATION_MS);
+    await deletion;
+    await harness.release('client-b', PROFILE_METADATA_LOCK_RETRY_MS);
+    await harness.release('client-b', PROFILE_METADATA_LOCK_ARBITRATION_MS);
+    await rename;
+
+    const durable = currentStoredRegistry(harness.storage);
+    expect(durable.revision).toBe(4);
+    expect(durable.profiles).toEqual([
+      { id: 'alpha', name: 'Renamed alpha', createdAt: 1 },
+      { id: 'gamma', name: 'Gamma', createdAt: 3 },
+    ]);
+    expectUniqueProfileIds(durable);
+    expect(harness.storage.values.has('FATE_PROFILE_beta')).toBe(false);
+    expect(harness.storage.values.get('FATE_PROFILE_gamma')).toBe('unrelated-save');
+    expect(harness.storage.values.get('FATE_PROFILE_beta_misleading')).toBe('must-survive');
+  });
+
+  it('does not lose a create when deletion overlaps it', async () => {
+    const initial: ProfileMetadata = {
+      version: 1,
+      revision: 11,
+      profiles: [
+        { id: 'alpha', name: 'Alpha', createdAt: 1 },
+        { id: 'beta', name: 'Beta', createdAt: 2 },
+      ],
+      activeProfileId: 'alpha',
+    };
+    const harness = createTwoClientTransactionHarness([
+      [PROFILES_KEY, JSON.stringify(initial)],
+      ['FATE_PROFILE_beta', 'beta-save'],
+      ['FATE_PROFILE_alpha', 'unrelated-save'],
+    ]);
+    const deletion = mutateProfileMetadata(harness.dependencies('client-a'), {
+      type: 'delete',
+      profileId: 'beta',
+    });
+    const create = mutateProfileMetadata(harness.dependencies('client-b'), {
+      type: 'create',
+      profile: { id: 'delta', name: 'Delta', createdAt: 4 },
+    });
+
+    expect(harness.waiting).toHaveLength(2);
+    await harness.release('client-a', PROFILE_METADATA_LOCK_ARBITRATION_MS);
+    await deletion;
+    await harness.release('client-b', PROFILE_METADATA_LOCK_RETRY_MS);
+    await harness.release('client-b', PROFILE_METADATA_LOCK_ARBITRATION_MS);
+    await create;
+
+    const durable = currentStoredRegistry(harness.storage);
+    expect(durable.revision).toBe(13);
+    expect(durable.profiles.map(profile => profile.id)).toEqual(['alpha', 'delta']);
+    expectUniqueProfileIds(durable);
+    expect(harness.storage.values.has('FATE_PROFILE_beta')).toBe(false);
+    expect(harness.storage.values.get('FATE_PROFILE_alpha')).toBe('unrelated-save');
+  });
+
+  it('blocks behind a crashed lock before expiry and progresses immediately after expiry', async () => {
+    const initial = metadata(0);
+    const storage = createStorage([
+      [PROFILES_KEY, JSON.stringify(initial)],
+      [PROFILE_METADATA_LOCK_KEY, lockRaw('crashed-client', 2_600)],
+    ]);
+    let now = 1_000;
+    const dependencies = (ownerId: string): ProfileTransactionDependencies => ({
+      ...createDependencies(storage, ownerId),
+      now: () => now,
+      wait: async milliseconds => { now += milliseconds; },
+    });
+
+    const blocked = await mutateProfileMetadata(dependencies('client-a'), {
+      type: 'create',
+      profile: { id: 'beta', name: 'Beta', createdAt: 2 },
+    });
+    expect(blocked).toEqual({ ok: false, reason: 'busy', metadata: null, notice: null });
+    expect(currentStoredRegistry(storage)).toEqual(initial);
+
+    now = 2_600;
+    const progressed = await mutateProfileMetadata(dependencies('client-b'), {
+      type: 'create',
+      profile: { id: 'beta', name: 'Beta', createdAt: 2 },
+    });
+    expect(progressed).toMatchObject({ ok: true, metadata: { revision: 1 } });
+    expect(currentStoredRegistry(storage).profiles.map(profile => profile.id))
+      .toEqual(['alpha', 'beta']);
+  });
+
+  it('reports verification_failed when a lock-ignoring client overwrites primary before readback', async () => {
+    const initial = metadata(3);
+    const oldClientRegistry: ProfileMetadata = {
+      version: 1,
+      revision: 40,
+      profiles: [
+        { id: 'alpha', name: 'Old client alpha', createdAt: 1 },
+        { id: 'legacy-client', name: 'Legacy client', createdAt: 40 },
+      ],
+      activeProfileId: 'legacy-client',
+    };
+    const storage = createStorage([[PROFILES_KEY, JSON.stringify(initial)]]);
+    const setItem = storage.setItem;
+    storage.setItem = (key, value) => {
+      setItem(key, value);
+      if (key === PROFILES_KEY) {
+        storage.values.set(PROFILES_KEY, JSON.stringify(oldClientRegistry));
+      }
+    };
+
+    const result = await mutateProfileMetadata(createDependencies(storage, 'current-client'), {
+      type: 'rename',
+      profileId: 'alpha',
+      name: 'Current client rename',
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      reason: 'verification_failed',
+      metadata: initial,
+      notice: null,
+    });
+    expect(currentStoredRegistry(storage)).toEqual(oldClientRegistry);
+    expect(storage.values.get(PROFILES_KEY)).toBe(JSON.stringify(oldClientRegistry));
   });
 });
 

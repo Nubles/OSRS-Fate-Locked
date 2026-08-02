@@ -3,6 +3,7 @@ import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { resetPendingSavesForTest } from './utils/pendingSaves';
 
 const PROFILE_ID = 'changelog-lifecycle-profile';
 const values = new Map<string, string>();
@@ -28,6 +29,7 @@ let latestChangelogId: string;
 
 beforeEach(async () => {
   values.clear();
+  resetPendingSavesForTest();
   failedWriteKey = null;
   vi.stubGlobal('localStorage', storage);
   vi.spyOn(globalThis.crypto, 'randomUUID')
@@ -83,6 +85,7 @@ beforeEach(async () => {
 
 afterEach(() => {
   cleanup();
+  resetPendingSavesForTest();
   values.clear();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
@@ -90,6 +93,65 @@ afterEach(() => {
 });
 
 describe('App changelog lifecycle', () => {
+  it('recovers a structurally malformed profile registry without blanking the dashboard', async () => {
+    const recoveredId = 'recovered-run';
+    const recoveredState = JSON.parse(seedOnboardingRun());
+    recoveredState.hasSeenOnboarding = true;
+    values.clear();
+    storage.setItem('FATE_PROFILES', JSON.stringify({
+      version: 1,
+      revision: 7,
+      profiles: 'not-an-array',
+      activeProfileId: recoveredId,
+    }));
+    storage.setItem(profileBaseKey(recoveredId), JSON.stringify(recoveredState));
+    storage.setItem(`${profileBaseKey(recoveredId)}__backups`, JSON.stringify(recoveredState));
+    storage.setItem(`${profileBaseKey(recoveredId)}_misleading`, JSON.stringify(recoveredState));
+    storage.setItem(changelogStorageKey, latestChangelogId);
+
+    render(<App />);
+
+    expect(await screen.findByRole('button', { name: 'Settings & save tools' })).toBeTruthy();
+    const recoveryHeading = await screen.findByText('Profile recovery completed');
+    expect(recoveryHeading.closest('[role="status"]')?.textContent).toContain('Recovered 1 profile.');
+    const profileTrigger = screen.getByRole('button', {
+      name: 'Switch profile. Current profile: Recovered Profile 1',
+    });
+    fireEvent.click(profileTrigger);
+    expect(screen.getAllByText('Recovered Profile 1')).toHaveLength(2);
+    expect(screen.queryByText('Recovered Profile 2')).toBeNull();
+    expect(screen.queryByText('Something went wrong')).toBeNull();
+  }, 15_000);
+
+  it('opens a supported recovered run read-only without rewriting future metadata', async () => {
+    const recoveredId = 'future-run';
+    const recoveredState = JSON.parse(seedOnboardingRun());
+    recoveredState.hasSeenOnboarding = true;
+    const futureRaw = JSON.stringify({
+      version: 2,
+      revision: 19,
+      profiles: [{ id: 'future-only', name: 'Future only', createdAt: 1 }],
+      activeProfileId: 'future-only',
+      opaque: { mustSurvive: true },
+    });
+    values.clear();
+    storage.setItem('FATE_PROFILES', futureRaw);
+    storage.setItem(profileBaseKey(recoveredId), JSON.stringify(recoveredState));
+    storage.setItem(`${profileBaseKey(recoveredId)}__discord`, JSON.stringify(recoveredState));
+    storage.setItem(changelogStorageKey, latestChangelogId);
+
+    render(<App />);
+
+    expect(await screen.findByRole('button', { name: 'Settings & save tools' })).toBeTruthy();
+    const compatibilityHeading = await screen.findByText('A newer app version saved these profiles');
+    expect(compatibilityHeading.closest('[role="alert"]')?.textContent).toContain('Recovered 1 profile.');
+    expect(screen.getByRole('button', {
+      name: 'Switch profile. Current profile: Recovered Profile 1',
+    })).toBeTruthy();
+    expect(screen.queryByText('Something went wrong')).toBeNull();
+    expect(storage.getItem('FATE_PROFILES')).toBe(futureRaw);
+  }, 15_000);
+
   it('auto-opens one unseen release after onboarding completes', async () => {
     const user = userEvent.setup();
     render(<App />);
