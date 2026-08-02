@@ -4,7 +4,7 @@ import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ProfileWriterLeaseOptions } from '../hooks/useProfileWriterLease';
 import type { GameState } from '../types';
-import type { ImportResult } from '../utils/gamePersistence';
+import { serializeCurrent, type ImportResult } from '../utils/gamePersistence';
 import {
   discardPendingSave,
   getPendingSave,
@@ -19,10 +19,12 @@ import {
 } from '../utils/profileWriterLease';
 import {
   GameProvider,
+  initialState,
   gameReducerForTest,
   prepareDetectedEventAcceptanceAction,
   migrateSaveForTest,
   newRunIdForTest,
+  subscribeToPendingSaveChanges,
   useGame,
 } from './GameContext';
 
@@ -162,6 +164,67 @@ describe('ordinary save recovery', () => {
     expect(JSON.parse(storage.values.get('profile')!).userNotes.goal).toBe('safe on teardown');
   });
 
+  it('persists a same-batch action before owner teardown releases the lease', async () => {
+    const game = renderGame('profile', { ownerId: 'tab-a' });
+    await settleOwnership();
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+
+    act(() => {
+      game.current().saveNote('goal', 'same-batch unmount');
+      game.unmount();
+    });
+
+    expect(readStoredNote('profile', 'goal')).toBe('same-batch unmount');
+    expect(storage.values.get(writerLeaseKey('profile'))).toBeUndefined();
+  });
+
+  it('persists a same-batch action before owner pagehide releases the lease', async () => {
+    const game = renderGame('profile', { ownerId: 'tab-a' });
+    await settleOwnership();
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+
+    act(() => {
+      game.current().saveNote('goal', 'same-batch pagehide');
+      window.dispatchEvent(new Event('pagehide'));
+    });
+
+    expect(readStoredNote('profile', 'goal')).toBe('same-batch pagehide');
+    expect(storage.values.get(writerLeaseKey('profile'))).toBeUndefined();
+  });
+
+  it('synchronously retains a blocked same-batch pagehide snapshot without releasing the foreign lease', async () => {
+    seedForeignWriterLease('profile', 'tab-a');
+    const foreignLease = storage.values.get(writerLeaseKey('profile'));
+    const game = renderGame('profile', { ownerId: 'tab-b' });
+    await settleOwnership();
+
+    act(() => {
+      game.current().saveNote('goal', 'blocked pagehide');
+      window.dispatchEvent(new Event('pagehide'));
+      expect(getPendingSave('profile')?.data).toContain('blocked pagehide');
+    });
+
+    expect(readStoredNote('profile', 'goal')).not.toBe('blocked pagehide');
+    expect(storage.values.get(writerLeaseKey('profile'))).toBe(foreignLease);
+  });
+
+  it('retains a failed same-batch teardown snapshot and keeps the owned lease', async () => {
+    const game = renderGame('profile', { ownerId: 'tab-a' });
+    await settleOwnership();
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+    const ownedLease = storage.values.get(writerLeaseKey('profile'));
+    storage.failWrites();
+
+    act(() => {
+      game.current().saveNote('goal', 'failed unmount');
+      game.unmount();
+    });
+
+    expect(getPendingSave('profile')?.data).toContain('failed unmount');
+    expect(readStoredNote('profile', 'goal')).not.toBe('failed unmount');
+    expect(storage.values.get(writerLeaseKey('profile'))).toBe(ownedLease);
+  });
+
   it('retains the newest blocked-tab state without writing the profile', async () => {
     seedForeignWriterLease('profile', 'tab-a');
     const game = renderGame('profile', { ownerId: 'tab-b' });
@@ -252,6 +315,46 @@ describe('ordinary save recovery', () => {
     });
   });
 
+  it('blocks every ordinary and explicit write while an owner re-arbitrates takeover', async () => {
+    const game = renderGame('profile', { ownerId: 'tab-a' });
+    await settleOwnership();
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+
+    act(() => game.current().saveNote('goal', 'wait for re-verification'));
+    const durableBefore = storage.values.get('profile');
+    const backupsBefore = storage.values.get(profileBackupKey('profile'));
+    const candidate = game.current().getExportData();
+
+    let takeover: Promise<boolean> | undefined;
+    let retryDuringArbitration = true;
+    let backupDuringArbitration: ReturnType<Game['createBackup']> | undefined;
+    let importDuringArbitration: ImportResult | undefined;
+    act(() => {
+      takeover = game.current().takeOverSaveOwnership();
+      retryDuringArbitration = game.current().retrySave();
+      backupDuringArbitration = game.current().createBackup('too soon');
+      importDuringArbitration = game.current().importSave(candidate);
+    });
+
+    expect(retryDuringArbitration).toBe(false);
+    expect(backupDuringArbitration).toEqual({
+      stored: false,
+      reason: 'ownership_conflict',
+    });
+    expect(importDuringArbitration).toMatchObject({
+      ok: false,
+      code: 'ownership_conflict',
+    });
+    expect(storage.values.get('profile')).toBe(durableBefore);
+    expect(storage.values.get(profileBackupKey('profile'))).toBe(backupsBefore);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(WRITER_LEASE_ARBITRATION_MS);
+      expect(await takeover).toBe(true);
+    });
+    expect(readStoredNote('profile', 'goal')).toBe('wait for re-verification');
+  });
+
   it('reloads the latest valid durable state and clears local pending data', async () => {
     seedForeignWriterLease('profile', 'tab-a');
     const game = renderGame('profile', { ownerId: 'tab-b' });
@@ -331,6 +434,93 @@ describe('ordinary save recovery', () => {
     expect(storage.values.get(profileBackupKey('profile'))).toBe(backupsBefore);
   });
 
+  it('backs up the captured session-start state after deferred ownership acquisition', async () => {
+    const initialSessionState = gameReducerForTest(
+      { ...structuredClone(initialState), lastEvent: null },
+      {
+        type: 'ROLL_RESULT',
+        payload: {
+          success: false,
+          omni: false,
+          pity: false,
+          roll: 99,
+          baseThreshold: 50,
+          threshold: 50,
+          source: 'Session-start fixture',
+        },
+      },
+    );
+    const initialSessionData = serializeCurrent(initialSessionState);
+    storage.values.set('profile', initialSessionData);
+    seedForeignWriterLease('profile', 'tab-a');
+    const game = renderGame('profile', { ownerId: 'tab-b' });
+    await settleOwnership();
+
+    act(() => game.current().saveNote('goal', 'edited while blocked'));
+    const writerKey = writerLeaseKey('profile');
+    storage.values.delete(writerKey);
+    act(() => window.dispatchEvent(new StorageEvent('storage', { key: writerKey })));
+    await settleOwnership();
+
+    const backups = JSON.parse(
+      storage.values.get(profileBackupKey('profile')) ?? '[]',
+    ) as Array<{ reason: string; data: string }>;
+    const sessionStart = backups.find(entry => entry.reason === 'Session start');
+    const captured = JSON.parse(sessionStart?.data ?? '{}');
+    expect(captured.runRevision).toBe(initialSessionState.runRevision);
+    expect(captured.history[0]?.message).toBe('No Key.');
+    expect(captured.userNotes.goal).toBeUndefined();
+    expect(game.current().userNotes.goal).toBe('edited while blocked');
+  });
+
+  it('rewrites a migrated save because the baseline keeps the exact durable input', async () => {
+    const legacy = structuredClone(initialState) as unknown as Record<string, unknown>;
+    legacy.version = 2;
+    delete legacy.runId;
+    delete legacy.runRevision;
+    legacy.userNotes = { goal: 'legacy migration' };
+    const legacyData = JSON.stringify(legacy);
+    storage.values.set('profile', legacyData);
+
+    const game = renderGame('profile', { ownerId: 'tab-a' });
+    expect(game.current().userNotes.goal).toBe('legacy migration');
+    await settleOwnership();
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+
+    const rewritten = storage.values.get('profile')!;
+    expect(rewritten).not.toBe(legacyData);
+    expect(JSON.parse(rewritten)).toMatchObject({
+      version: 3,
+      userNotes: { goal: 'legacy migration' },
+    });
+    expect(getPendingSave('profile')).toBeNull();
+  });
+
+  it('restages pending-ahead state against the exact durable baseline on pagehide', async () => {
+    const durableState = structuredClone(initialState);
+    durableState.userNotes = { goal: 'durable' };
+    const pendingState = structuredClone(initialState);
+    pendingState.userNotes = { goal: 'pending ahead' };
+    const durableData = serializeCurrent(durableState);
+    storage.values.set('profile', durableData);
+    stagePendingSave('profile', serializeCurrent(pendingState));
+    seedForeignWriterLease('profile', 'tab-a');
+    const foreignLease = storage.values.get(writerLeaseKey('profile'));
+    const game = renderGame('profile', { ownerId: 'tab-b' });
+    await settleOwnership();
+    expect(game.current().userNotes.goal).toBe('pending ahead');
+
+    act(() => {
+      discardPendingSave('profile');
+      window.dispatchEvent(new Event('pagehide'));
+      expect(JSON.parse(getPendingSave('profile')?.data ?? '{}').userNotes.goal)
+        .toBe('pending ahead');
+    });
+
+    expect(storage.values.get('profile')).toBe(durableData);
+    expect(storage.values.get(writerLeaseKey('profile'))).toBe(foreignLease);
+  });
+
   it('subscribes to pending changes for the active profile', async () => {
     const game = renderGame('profile');
     await settleOwnership();
@@ -354,6 +544,19 @@ describe('ordinary save recovery', () => {
       await Promise.resolve();
     });
     expect(game.current().hasPendingChanges).toBe(false);
+  });
+
+  it('ignores a queued pending notification after unsubscribe', () => {
+    const queued: Array<() => void> = [];
+    vi.stubGlobal('queueMicrotask', (task: () => void) => { queued.push(task); });
+    let notifications = 0;
+    const unsubscribe = subscribeToPendingSaveChanges(() => { notifications += 1; });
+    stagePendingSave('profile', serializeCurrent(initialState));
+    expect(queued).toHaveLength(1);
+
+    unsubscribe();
+    queued[0]();
+    expect(notifications).toBe(0);
   });
 });
 

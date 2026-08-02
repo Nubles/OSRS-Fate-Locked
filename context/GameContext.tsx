@@ -1228,7 +1228,7 @@ export const prepareGameTransition = (
 
 // --- Context ---
 const GameContext = createContext<GameContextType | null>(null);
-const subscribeToPendingSaveChanges = (listener: () => void): (() => void) => {
+export const subscribeToPendingSaveChanges = (listener: () => void): (() => void) => {
   let subscribed = true;
   // Avoid a synchronous external-store render interrupting state updates
   // queued by other passive effects in the same commit.
@@ -1294,6 +1294,16 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
       return { ...createFreshState(), lastEvent: null };
     },
   );
+  const sessionStartSnapshotRef = useRef<{
+    data: string;
+    hasHistory: boolean;
+  } | null>(null);
+  if (sessionStartSnapshotRef.current === null) {
+    sessionStartSnapshotRef.current = {
+      data: serializeGameState(state),
+      hasHistory: state.history.length > 0,
+    };
+  }
   const saveTimeoutRef = useRef<number | null>(null);
   const takeoverRequestedRef = useRef(false);
   const takeoverFlushAuthorizedRef = useRef(false);
@@ -1329,12 +1339,15 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
   );
 
   const canWriteOwned = useCallback((): boolean =>
-    saveOwnershipStatusRef.current === 'owner' && verifyOwnership(), [verifyOwnership]);
+    !takeoverRequestedRef.current
+    && saveOwnershipStatusRef.current === 'owner'
+    && verifyOwnership(), [verifyOwnership]);
 
   const flushCurrentSave = useCallback((): boolean => {
     if (
-      saveOwnershipStatusRef.current !== 'owner'
-      && !takeoverFlushAuthorizedRef.current
+      !takeoverFlushAuthorizedRef.current
+      && (takeoverRequestedRef.current
+        || saveOwnershipStatusRef.current !== 'owner')
     ) {
       blockPendingSave(storageKey);
       if (mountedRef.current) {
@@ -1410,12 +1423,30 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     storageKey,
   ]);
 
+  const stageCurrentSnapshotForLifecycle = useCallback(() => {
+    const snapshot = serializeCurrent();
+    const pending = getPendingSave(storageKey);
+    const needsStaging = pending === null
+      ? snapshot !== persistedSnapshotRef.current
+      : pending.data !== snapshot;
+    if (needsStaging) {
+      stagePendingSave(storageKey, snapshot);
+    }
+  }, [serializeCurrent, storageKey]);
+
   const flushAndReleaseOwnership = useCallback(() => {
+    stageCurrentSnapshotForLifecycle();
     const flushed = getPendingSave(storageKey) !== null
       ? flushCurrentSave()
       : canWriteOwned();
     if (flushed && getPendingSave(storageKey) === null) releaseOwnership();
-  }, [canWriteOwned, flushCurrentSave, releaseOwnership, storageKey]);
+  }, [
+    canWriteOwned,
+    flushCurrentSave,
+    releaseOwnership,
+    stageCurrentSnapshotForLifecycle,
+    storageKey,
+  ]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -1466,15 +1497,16 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
   const sessionBackupFinishedRef = useRef(false);
   useEffect(() => {
     if (saveOwnershipStatus !== 'owner' || sessionBackupFinishedRef.current) return;
-    if (stateRef.current.history.length === 0) {
+    const sessionStartSnapshot = sessionStartSnapshotRef.current!;
+    if (!sessionStartSnapshot.hasHistory) {
       sessionBackupFinishedRef.current = true;
       return;
     }
-    const result = pushOwnedBackup(serializeCurrent(), 'Session start');
+    const result = pushOwnedBackup(sessionStartSnapshot.data, 'Session start');
     if (result.stored === true || result.reason !== 'ownership_conflict') {
       sessionBackupFinishedRef.current = true;
     }
-  }, [pushOwnedBackup, saveOwnershipStatus, serializeCurrent]);
+  }, [pushOwnedBackup, saveOwnershipStatus]);
 
   // --- Actions ---
 
