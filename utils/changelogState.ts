@@ -53,6 +53,7 @@ interface ChangelogStartupContext {
   hasPendingGameModePrompt: boolean;
   hasPendingSyncPrompt?: boolean;
   hasPendingGuidePrompt?: boolean;
+  hasPendingCompensation?: boolean;
 }
 
 const SYNC_HASH_PREFIX = '#sync=';
@@ -64,9 +65,10 @@ export const shouldAutoOpenChangelog = ({
   hasPendingGameModePrompt,
   hasPendingSyncPrompt = false,
   hasPendingGuidePrompt = false,
+  hasPendingCompensation = false,
 }: ChangelogStartupContext): boolean =>
   hasSeenOnboarding
-  && releaseIsUnseen
+  && (releaseIsUnseen || hasPendingCompensation)
   && !hasPendingGameModePrompt
   && !hasPendingSyncPrompt
   && !hasPendingGuidePrompt

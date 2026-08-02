@@ -19,6 +19,20 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-08-02-weighted-fate',
+    title: 'Weighted Fate & Milestone Keys',
+    date: '2026-08-02',
+    sections: {
+      balance: [
+        'Failed rolls now award +1/+2/+3 Fate based on the activity tier.',
+        'Pity Keys still cost 50 Fate, and any Fate overflow remains on the fresh bar.',
+        'Skill levels 30, 40, 50, 60, 70, 80, 90, and 99 now award a guaranteed Chaos Key.',
+        'The independent 2% Chaos Key chance on skill levels is unchanged and can stack with a guaranteed milestone Key.',
+      ],
+    },
+  },
+
+  {
     id: '2026-08-01-cross-tab-safety',
     title: 'Safer Multi-Tab Play',
     date: '2026-08-01',

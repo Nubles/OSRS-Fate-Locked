@@ -19,7 +19,23 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-08-01-cross-tab-safety');
+    expect(LATEST_CHANGELOG.id).toBe('2026-08-02-weighted-fate');
+  });
+
+  it('announces every weighted Fate balance rule in the newest release', () => {
+    const weightedFate = CHANGELOG_RELEASES.find(
+      release => release.id === '2026-08-02-weighted-fate',
+    );
+
+    expect(weightedFate).toMatchObject({
+      id: '2026-08-02-weighted-fate',
+      date: '2026-08-02',
+    });
+    const balanceNotes = weightedFate?.sections.balance?.join(' ');
+    expect(balanceNotes).toMatch(/\+1\/\+2\/\+3 Fate/);
+    expect(balanceNotes).toMatch(/overflow/i);
+    expect(balanceNotes).toMatch(/guaranteed Chaos/i);
+    expect(balanceNotes).toMatch(/independent 2%/i);
   });
 
   it('announces the cross-tab save ownership protections', () => {

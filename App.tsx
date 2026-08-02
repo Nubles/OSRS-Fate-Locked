@@ -46,6 +46,7 @@ import { importUiDecision, isCurrentImportRequest } from './utils/gamePersistenc
 import { MAX_SAVE_BYTES } from './utils/saveSchema';
 import { prefetchHeavyChunks } from './utils/prefetch';
 import { CHANGELOG_RELEASES, LATEST_CHANGELOG } from './data/changelog';
+import type { FateCompensationChoice } from './types';
 import {
   changelogVisibilityReducer, markChangelogSeen,
   resolveChangelogModalRenderPolicy, shouldAutoOpenChangelog,
@@ -638,6 +639,7 @@ const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = f
 const GameLayout = () => {
   const {
     lastEvent, animationsEnabled, hasSeenOnboarding, history, linkedAccount,
+    fateCompensation, resolveFateCompensation,
   } = useGame();
   const { recentlyCreatedId, activeProfileId, activeProfileName, clearRecentlyCreated } = useProfiles();
 
@@ -665,6 +667,7 @@ const GameLayout = () => {
       startupHash: typeof window === 'undefined' ? '' : window.location.hash,
       hasPendingGameModePrompt: recentlyCreatedId === activeProfileId,
       hasPendingGuidePrompt: directGuideRequested,
+      hasPendingCompensation: fateCompensation.status === 'pending',
     }),
   );
 
@@ -687,17 +690,23 @@ const GameLayout = () => {
     useState<string | undefined>(undefined);
 
   const changelogReturnFocusTarget = useRef<HTMLElement | null>(null);
+  const changelogAutoOpenKey = `${activeProfileId}:${LATEST_CHANGELOG.id}`;
   const changelogAutoOpenedRelease = useRef<string | null>(
-    showChangelog ? LATEST_CHANGELOG.id : null,
+    showChangelog ? changelogAutoOpenKey : null,
   );
   const openChangelog = (returnFocusTarget: HTMLElement | null = null) => {
     changelogReturnFocusTarget.current = returnFocusTarget;
     dispatchChangelog({ type: 'OPEN' });
   };
   const closeChangelog = () => {
+    if (fateCompensation.status === 'pending') return;
     markChangelogSeen(LATEST_CHANGELOG.id);
     dispatchChangelog({ type: 'DISMISS' });
     changelogReturnFocusTarget.current = null;
+  };
+  const resolveCompensation = (choice: FateCompensationChoice) => {
+    resolveFateCompensation(choice);
+    markChangelogSeen(LATEST_CHANGELOG.id);
   };
 
   const openRuneliteGuide = (returnFocusTarget: HTMLElement | null = null) => {
@@ -856,7 +865,7 @@ const GameLayout = () => {
   useEffect(() => {
     if (
       showChangelog
-      || changelogAutoOpenedRelease.current === LATEST_CHANGELOG.id
+      || changelogAutoOpenedRelease.current === changelogAutoOpenKey
       || !shouldAutoOpenChangelog({
         hasSeenOnboarding,
         releaseIsUnseen: shouldShowChangelog(LATEST_CHANGELOG.id),
@@ -864,13 +873,16 @@ const GameLayout = () => {
         hasPendingGameModePrompt,
         hasPendingSyncPrompt,
         hasPendingGuidePrompt: showRuneliteGuide,
+        hasPendingCompensation: fateCompensation.status === 'pending',
       })
     ) return;
 
-    changelogAutoOpenedRelease.current = LATEST_CHANGELOG.id;
+    changelogAutoOpenedRelease.current = changelogAutoOpenKey;
     dispatchChangelog({ type: 'OPEN' });
   }, [
     activeProfileId,
+    changelogAutoOpenKey,
+    fateCompensation.status,
     hasPendingGameModePrompt,
     hasPendingSyncPrompt,
     hasSeenOnboarding,
@@ -949,6 +961,8 @@ const GameLayout = () => {
           <ChangelogModal
             releases={CHANGELOG_RELEASES}
             onClose={closeChangelog}
+            compensation={fateCompensation}
+            onResolveCompensation={resolveCompensation}
             returnFocusTarget={changelogReturnFocusTarget.current}
           />
         )}
