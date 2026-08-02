@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { parseProfileMetadata } from './profileMetadata';
+import { discoverProfileSaveIds, parseProfileMetadata, resolveProfileMetadata } from './profileMetadata';
 
 const profile = {
   id: 'alpha',
@@ -166,5 +166,188 @@ describe('parseProfileMetadata', () => {
 
     expect(parseObject(value)).toEqual({ status: 'invalid', reason: 'invalid_root' });
     expect(getter).not.toHaveBeenCalled();
+  });
+});
+const recoveryStorage = (entries: readonly (readonly [string, string])[]) => ({
+  length: entries.length,
+  getItem: (key: string) => entries.find(([entryKey]) => entryKey === key)?.[1] ?? null,
+  key: (index: number) => entries[index]?.[0] ?? null,
+});
+
+const recoveryInput = (overrides: Partial<Parameters<typeof resolveProfileMetadata>[0]> = {}) => ({
+  primary: JSON.stringify(current()),
+  backup: null,
+  legacySave: null,
+  storage: recoveryStorage([]),
+  now: 1234,
+  validateGameSave: (raw: string) => raw.startsWith('valid:'),
+  createProfileId: () => 'generated',
+  ...overrides,
+});
+
+describe('profile metadata recovery planning', () => {
+  it('discovers only exact profile save keys in sorted ID order', () => {
+    const storage = recoveryStorage([
+      ['FATE_PROFILE_alpha', 'valid:alpha'],
+      ['FATE_PROFILE_zulu', 'valid:zulu'],
+      ['FATE_PROFILE_alpha__backups', 'sidecar'],
+      ['FATE_PROFILE_alpha__writer', 'sidecar'],
+      ['FATE_PROFILE_alpha__discord', 'sidecar'],
+      ['FATE_PROFILE_alpha_misleading', 'not-a-profile'],
+      ['fate_features_seen_v1_alpha', 'sidecar'],
+      ['FATE_PROFILES', 'metadata'],
+    ]);
+
+    expect(discoverProfileSaveIds(storage)).toEqual(['alpha', 'zulu']);
+  });
+
+  it('uses a valid primary without requesting a write', () => {
+    const result = resolveProfileMetadata(recoveryInput());
+
+    expect(result.mode).toBe('durable');
+    expect(result.repair).toBeNull();
+  });
+
+  it('requests legacy migration through a repair plan', () => {
+    const result = resolveProfileMetadata(recoveryInput({
+      primary: JSON.stringify(legacy()),
+      backup: null,
+    }));
+
+    expect(result).toMatchObject({
+      mode: 'repair',
+      repair: { cause: 'legacy', candidate: { version: 1, revision: 0 }, archive: null },
+    });
+  });
+
+  it('prefers a valid backup when primary is corrupt', () => {
+    const result = resolveProfileMetadata(recoveryInput({
+      primary: '{bad',
+      backup: JSON.stringify(current()),
+    }));
+
+    expect(result).toMatchObject({
+      mode: 'repair',
+      repair: {
+        cause: 'backup',
+        archive: { version: 1, capturedAt: 1234, primary: '{bad', backup: JSON.stringify(current()) },
+      },
+    });
+  });
+
+  it.each([
+    { primary: JSON.stringify({ ...current(), version: 2 }), backup: JSON.stringify(current()) },
+    { primary: '{bad', backup: JSON.stringify({ ...current(), version: 2 }) },
+  ])('keeps unsupported metadata read-only', sources => {
+    const result = resolveProfileMetadata(recoveryInput(sources));
+
+    expect(result).toMatchObject({ mode: 'read_only', repair: null, notice: { kind: 'unsupported' } });
+  });
+
+  it('reconstructs validated saves in sorted order with safe legacy details', () => {
+    const malformedMetadata = JSON.stringify({
+      profiles: [
+        { id: 'zulu', name: ' Zulu Name ', createdAt: 99 },
+        { id: 'alpha', name: 'Alpha Name', createdAt: 7 },
+        { id: 'unsafe', name: ' Unsafe ', createdAt: -1 },
+      ],
+      activeProfileId: 'zulu',
+      unrelated: true,
+    });
+    const result = resolveProfileMetadata(recoveryInput({
+      primary: malformedMetadata,
+      backup: null,
+      storage: recoveryStorage([
+        ['FATE_PROFILE_zulu', 'valid:zulu'],
+        ['FATE_PROFILE_alpha', 'valid:alpha'],
+        ['FATE_PROFILE_bad', 'invalid:bad'],
+      ]),
+    }));
+
+    expect(result).toMatchObject({
+      mode: 'repair',
+      metadata: {
+        activeProfileId: 'zulu',
+        profiles: [
+          { id: 'alpha', name: 'Alpha Name', createdAt: 7 },
+          { id: 'zulu', name: 'Zulu Name', createdAt: 99 },
+        ],
+      },
+      repair: { cause: 'reconstructed' },
+      notice: { kind: 'partial', recoveredProfiles: 2, generatedNames: 0, unreadableSaves: 1, overflowSaves: 0 },
+    });
+  });
+
+  it('generates deterministic unique recovered names and uses the recovery time', () => {
+    const result = resolveProfileMetadata(recoveryInput({
+      primary: null,
+      storage: recoveryStorage([
+        ['FATE_PROFILE_zulu', 'valid:zulu'],
+        ['FATE_PROFILE_alpha', 'valid:alpha'],
+      ]),
+    }));
+
+    expect(result).toMatchObject({
+      metadata: {
+        activeProfileId: 'alpha',
+        profiles: [
+          { id: 'alpha', name: 'Recovered Profile 1', createdAt: 1234 },
+          { id: 'zulu', name: 'Recovered Profile 2', createdAt: 1234 },
+        ],
+      },
+      notice: { generatedNames: 2 },
+    });
+  });
+
+  it('counts overflow saves without deleting them', () => {
+    const entries = Array.from({ length: 101 }, (_, index) => [
+      `FATE_PROFILE_${String(index).padStart(3, '0')}`,
+      `valid:${index}`,
+    ] as const);
+    const result = resolveProfileMetadata(recoveryInput({ primary: null, storage: recoveryStorage(entries) }));
+
+    expect(result).toMatchObject({
+      notice: { recoveredProfiles: 100, overflowSaves: 1, unreadableSaves: 0 },
+    });
+    expect(result.metadata.profiles[0]).toMatchObject({ id: '000' });
+    expect(result.metadata.profiles).toHaveLength(100);
+  });
+
+  it('does not fall back to a legacy save while recovered saves exist', () => {
+    const result = resolveProfileMetadata(recoveryInput({
+      primary: null,
+      legacySave: 'valid:legacy',
+      storage: recoveryStorage([['FATE_PROFILE_alpha', 'valid:alpha']]),
+    }));
+
+    expect(result).toMatchObject({
+      metadata: { profiles: [{ id: 'alpha' }] },
+      repair: { cause: 'reconstructed', legacyCopy: null },
+    });
+  });
+
+  it('plans but does not perform a valid legacy-save copy', () => {
+    const storage = recoveryStorage([]);
+    const result = resolveProfileMetadata(recoveryInput({ primary: null, legacySave: 'valid:legacy', storage }));
+
+    expect(result).toMatchObject({
+      mode: 'repair',
+      metadata: { profiles: [{ id: 'generated', name: 'Main Account', createdAt: 1234 }] },
+      repair: { cause: 'fresh', legacyCopy: { fromKey: 'FATE_UIM_SAVE_V1', toProfileId: 'generated' } },
+    });
+    expect(storage.getItem('FATE_PROFILE_generated')).toBeNull();
+  });
+
+  it('plans a fresh account when no save is recoverable', () => {
+    const result = resolveProfileMetadata(recoveryInput({ primary: null }));
+
+    expect(result).toMatchObject({
+      mode: 'repair',
+      metadata: {
+        profiles: [{ id: 'generated', name: 'Main Account', createdAt: 1234 }],
+        activeProfileId: 'generated',
+      },
+      repair: { cause: 'fresh', legacyCopy: null },
+    });
   });
 });
