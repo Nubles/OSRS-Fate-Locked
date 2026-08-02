@@ -521,6 +521,17 @@ const emptyDeleteDetails = (): ProfileDeleteDetails => ({
   rollbackFailures: 0,
 });
 
+const currentWriterLeaseFailure = (
+  deps: ProfileTransactionDependencies,
+  profileId: string,
+): Extract<ProfileMutationFailure, 'storage_unavailable' | 'profile_in_use'> | null => {
+  const writerLease = readWriterLease(deps.storage, profileBaseKey(profileId));
+  if (!writerLease.ok) return 'storage_unavailable';
+  return writerLease.lease !== null && writerLease.lease.expiresAt > deps.now()
+    ? 'profile_in_use'
+    : null;
+};
+
 const executeProfileDelete = (
   deps: ProfileTransactionDependencies,
   resolution: WritableProfileMetadataResolution,
@@ -535,12 +546,9 @@ const executeProfileDelete = (
     return transactionFailure('last_profile', previous, resolution.notice);
   }
 
-  const writerLease = readWriterLease(deps.storage, profileBaseKey(profileId));
-  if (!writerLease.ok) {
-    return transactionFailure('storage_unavailable', previous, resolution.notice);
-  }
-  if (writerLease.lease !== null && writerLease.lease.expiresAt > deps.now()) {
-    return transactionFailure('profile_in_use', previous, resolution.notice);
+  const initialWriterLeaseFailure = currentWriterLeaseFailure(deps, profileId);
+  if (initialWriterLeaseFailure !== null) {
+    return transactionFailure(initialWriterLeaseFailure, previous, resolution.notice);
   }
 
   const profiles = previous.profiles.filter(profile => profile.id !== profileId);
@@ -603,9 +611,19 @@ const executeProfileDelete = (
     );
   }
 
+  const finalWriterLeaseFailure = currentWriterLeaseFailure(deps, profileId);
+  if (finalWriterLeaseFailure !== null) {
+    return transactionFailure(
+      finalWriterLeaseFailure,
+      previous,
+      resolution.notice,
+      emptyDeleteDetails(),
+    );
+  }
+
   const deletion = deleteProfileStorage(deps.storage, profileId);
   const baseDetails: ProfileDeleteDetails = {
-    removedEntries: deletion.removed.length,
+    removedEntries: deletion.removed.filter(key => snapshots.has(key)).length,
     removalFailures: deletion.failed.length,
     rollbackFailures: 0,
   };
@@ -617,6 +635,9 @@ const executeProfileDelete = (
       if (!removed.has(key)) continue;
       try {
         deps.storage.setItem(key, value);
+        if (deps.storage.getItem(key) !== value) {
+          rollbackFailures += 1;
+        }
       } catch {
         rollbackFailures += 1;
       }
