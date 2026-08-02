@@ -243,7 +243,7 @@ describe('transactional replacement', () => {
   it.each([['missing', null], ['corrupt', '{not json']] as const)(
     'leaves the backup ring untouched for a %s selected backup', (_label, data) => {
       const storageKey = 'FATE_PROFILE_restore';
-      if (data !== null) pushBackup(storageKey, data, 'corrupt', () => true);
+      if (data !== null) pushBackup(storageKey, data, 'corrupt', () => ({ ok: true }));
       const before = listBackups(storageKey);
       const selected = data === null ? getBackupData(storageKey, 0) : getBackupData(storageKey, before[0].ts);
       const prepared = selected === null
@@ -251,7 +251,7 @@ describe('transactional replacement', () => {
         : parseAndMigrateSave(selected, initialState);
       const result = applyValidatedReplacement(prepared, {
         current: cloneState(),
-        writeBackup: current => pushBackup(storageKey, current, 'Before restore', () => true),
+        writeBackup: current => pushBackup(storageKey, current, 'Before restore', () => ({ ok: true })),
         writeReplacement: () => undefined,
         replace: () => undefined,
       });

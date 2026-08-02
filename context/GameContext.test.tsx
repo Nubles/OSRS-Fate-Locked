@@ -12,6 +12,7 @@ import {
   stagePendingSave,
 } from '../utils/pendingSaves';
 import { profileBackupKey } from '../utils/profileStorage';
+import { parseAndMigrateSave } from '../utils/saveSchema';
 import {
   writerLeaseKey,
   WRITER_LEASE_ARBITRATION_MS,
@@ -118,6 +119,29 @@ describe('ordinary save recovery', () => {
   const readStoredNote = (storageKey: string, noteId: string): string | undefined =>
     JSON.parse(storage.values.get(storageKey) ?? '{}').userNotes?.[noteId];
 
+  const leaseStorageThatCanFailReads = () => {
+    let readsFail = false;
+    return {
+      storage: {
+        getItem: (key: string) => {
+          if (readsFail) throw new DOMException('blocked', 'SecurityError');
+          return storage.values.get(key) ?? null;
+        },
+        setItem: (key: string, value: string) => { storage.values.set(key, value); },
+        removeItem: (key: string) => { storage.values.delete(key); },
+      },
+      failReads: () => { readsFail = true; },
+    };
+  };
+
+  const seedCanonicalSave = (storageKey: string) => {
+    const parsed = parseAndMigrateSave(serializeCurrent(initialState), initialState);
+    if (parsed.ok === false) throw new Error(parsed.message);
+    const durable = serializeCurrent(parsed.state);
+    storage.values.set(storageKey, durable);
+    return durable;
+  };
+
   it('contains a failed write and retries the newest in-memory state', async () => {
     const game = renderGame('profile');
     await settleOwnership();
@@ -134,6 +158,108 @@ describe('ordinary save recovery', () => {
 
     expect(JSON.parse(storage.values.get('profile')!).userNotes.goal).toBe('newest');
     expect(game.current().saveStatus).toBe('saved');
+  });
+
+  it('shows storage failure after initial lease access fails on an unchanged durable save', async () => {
+    const durable = seedCanonicalSave('profile');
+    const leaseStorage = {
+      getItem: () => { throw new DOMException('blocked', 'SecurityError'); },
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    };
+    const game = renderGame('profile', { storage: leaseStorage, ownerId: 'tab-a' });
+
+    await act(async () => Promise.resolve());
+
+    expect(game.current().saveOwnershipStatus).toBe('blocked');
+    expect(game.current().saveOwnershipBlockReason).toBe('storage_unavailable');
+    expect(game.current().saveStatus).toBe('failed');
+    expect(game.current().hasPendingChanges).toBe(false);
+    expect(storage.values.get('profile')).toBe(durable);
+  });
+
+  it('classifies ordinary flush verification storage failure without durable mutation', async () => {
+    const durable = seedCanonicalSave('profile');
+    const lease = leaseStorageThatCanFailReads();
+    const game = renderGame('profile', { storage: lease.storage, ownerId: 'tab-a' });
+    await settleOwnership();
+    lease.failReads();
+
+    act(() => game.current().saveNote('goal', 'local only'));
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+
+    expect(storage.values.get('profile')).toBe(durable);
+    expect(getPendingSave('profile')).toMatchObject({
+      status: 'failed',
+      reason: 'storage_unavailable',
+    });
+    expect(game.current().saveOwnershipStatus).toBe('blocked');
+    expect(game.current().saveOwnershipBlockReason).toBe('storage_unavailable');
+    expect(game.current().saveStatus).toBe('failed');
+  });
+
+  it('rejects import as storage unavailable before durable backup or profile access', async () => {
+    seedCanonicalSave('profile');
+    const lease = leaseStorageThatCanFailReads();
+    const game = renderGame('profile', { storage: lease.storage, ownerId: 'tab-a' });
+    await settleOwnership();
+    const candidate = game.current().getExportData();
+    lease.failReads();
+    const getItem = vi.spyOn(localStorage, 'getItem');
+    const setItem = vi.spyOn(localStorage, 'setItem');
+
+    let result: ImportResult | undefined;
+    act(() => { result = game.current().importSave(candidate); });
+
+    expect(result).toMatchObject({ ok: false, code: 'storage_unavailable' });
+    expect(getItem).not.toHaveBeenCalled();
+    expect(setItem).not.toHaveBeenCalled();
+    expect(game.current().saveStatus).toBe('failed');
+    expect(game.current().saveOwnershipBlockReason).toBe('storage_unavailable');
+  });
+
+  it('rejects restore as storage unavailable before reading the backup ring', async () => {
+    const durable = seedCanonicalSave('profile');
+    storage.values.set(profileBackupKey('profile'), JSON.stringify([{
+      ts: 7,
+      reason: 'fixture',
+      summary: 'fixture',
+      data: durable,
+    }]));
+    const lease = leaseStorageThatCanFailReads();
+    const game = renderGame('profile', { storage: lease.storage, ownerId: 'tab-a' });
+    await settleOwnership();
+    lease.failReads();
+    const getItem = vi.spyOn(localStorage, 'getItem');
+    const setItem = vi.spyOn(localStorage, 'setItem');
+
+    let result: ImportResult | undefined;
+    act(() => { result = game.current().restoreBackup(7); });
+
+    expect(result).toMatchObject({ ok: false, code: 'storage_unavailable' });
+    expect(getItem).not.toHaveBeenCalled();
+    expect(setItem).not.toHaveBeenCalled();
+    expect(game.current().saveStatus).toBe('failed');
+    expect(game.current().saveOwnershipBlockReason).toBe('storage_unavailable');
+  });
+
+  it('rejects a manual backup as storage unavailable before backup access', async () => {
+    seedCanonicalSave('profile');
+    const lease = leaseStorageThatCanFailReads();
+    const game = renderGame('profile', { storage: lease.storage, ownerId: 'tab-a' });
+    await settleOwnership();
+    lease.failReads();
+    const getItem = vi.spyOn(localStorage, 'getItem');
+    const setItem = vi.spyOn(localStorage, 'setItem');
+
+    let result: ReturnType<Game['createBackup']> | undefined;
+    act(() => { result = game.current().createBackup('manual'); });
+
+    expect(result).toEqual({ stored: false, reason: 'storage_unavailable' });
+    expect(getItem).not.toHaveBeenCalled();
+    expect(setItem).not.toHaveBeenCalled();
+    expect(game.current().saveStatus).toBe('failed');
+    expect(game.current().saveOwnershipBlockReason).toBe('storage_unavailable');
   });
 
   it('loads a failed pending snapshot before an older stored snapshot', async () => {

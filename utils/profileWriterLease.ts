@@ -5,6 +5,10 @@ export const WRITER_LEASE_ARBITRATION_MS = 50;
 
 export type SaveOwnershipStatus = 'checking' | 'owner' | 'blocked';
 export type SaveOwnershipBlockReason = 'foreign_owner' | 'storage_unavailable' | null;
+export type SaveWriteAuthorizationReason = 'ownership_conflict' | 'storage_unavailable';
+export type SaveWriteAuthorization =
+  | { ok: true }
+  | { ok: false; reason: SaveWriteAuthorizationReason };
 export type ProfileWriterLease = {
   version: typeof WRITER_LEASE_VERSION;
   ownerId: string;

@@ -11,6 +11,7 @@
 
 import type { BackupWriteResult } from './gamePersistence';
 import { profileBackupKey } from './profileStorage';
+import type { SaveWriteAuthorization } from './profileWriterLease';
 const MAX_BACKUPS = 8;
 
 export interface BackupMeta {
@@ -60,20 +61,29 @@ export const pushBackup = (
   storageKey: string,
   data: string,
   reason: string,
-  canWrite: () => boolean,
+  authorizeWrite: () => SaveWriteAuthorization,
 ): BackupWriteResult => {
-  if (!canWrite()) return { stored: false, reason: 'ownership_conflict' };
+  const initialAuthorization = authorizeWrite();
+  if (initialAuthorization.ok === false) {
+    return { stored: false, reason: initialAuthorization.reason };
+  }
   if (!data) return { stored: false, reason: 'empty' };
   const entries = readAll(storageKey);
   if (entries[0]?.data === data) return { stored: false, reason: 'duplicate' };
   const entry: BackupEntry = { ts: Date.now(), reason, summary: summarizeSave(data), data };
   const next = [entry, ...entries].slice(0, MAX_BACKUPS);
-  if (!canWrite()) return { stored: false, reason: 'ownership_conflict' };
+  const writeAuthorization = authorizeWrite();
+  if (writeAuthorization.ok === false) {
+    return { stored: false, reason: writeAuthorization.reason };
+  }
   try {
     localStorage.setItem(profileBackupKey(storageKey), JSON.stringify(next));
     return { stored: true };
   } catch {
-    if (!canWrite()) return { stored: false, reason: 'ownership_conflict' };
+    const retryAuthorization = authorizeWrite();
+    if (retryAuthorization.ok === false) {
+      return { stored: false, reason: retryAuthorization.reason };
+    }
     try {
       localStorage.setItem(profileBackupKey(storageKey), JSON.stringify(next.slice(0, 2)));
       return { stored: true };

@@ -181,6 +181,26 @@ describe('useProfileWriterLease', () => {
     expect(lease.result.current.blockedReason).toBe('storage_unavailable');
   });
 
+  it('returns a typed storage denial while preserving boolean verification', async () => {
+    const lease = renderHook(() => useProfileWriterLease('profile', {
+      storage,
+      ownerId: 'tab-a',
+      now: () => nowRef.current,
+    }));
+    await act(async () => vi.advanceTimersByTimeAsync(WRITER_LEASE_ARBITRATION_MS));
+    storage.getItem = () => { throw new DOMException('blocked', 'SecurityError'); };
+
+    let authorization: unknown;
+    act(() => { authorization = lease.result.current.authorizeWrite(); });
+
+    expect(authorization).toEqual({
+      ok: false,
+      reason: 'storage_unavailable',
+    });
+    expect(lease.result.current.verify()).toBe(false);
+    expect(lease.result.current.blockedReason).toBe('storage_unavailable');
+  });
+
   it('invalidates a pending takeover when a newer ownership check wins', async () => {
     const key = writerLeaseKey('profile');
     values.set(key, JSON.stringify({

@@ -9,6 +9,7 @@ import {
   WRITER_LEASE_RENEW_MS,
   type SaveOwnershipBlockReason,
   type SaveOwnershipStatus,
+  type SaveWriteAuthorization,
   type WriterLeaseOwnershipResult,
   type WriterLeaseStorage,
 } from '../utils/profileWriterLease';
@@ -26,6 +27,7 @@ export interface ProfileWriterLeaseHandle {
   status: SaveOwnershipStatus;
   blockedReason: SaveOwnershipBlockReason;
   verify: () => boolean;
+  authorizeWrite: () => SaveWriteAuthorization;
   takeOver: () => Promise<boolean>;
   release: () => boolean;
 }
@@ -147,19 +149,26 @@ export const useProfileWriterLease = (
     }, arbitrationMsRef.current);
   }, [invalidateAttempt, ownerId, storageKey, updateState]);
 
-  const verify = useCallback((): boolean => {
+  const authorizeWrite = useCallback((): SaveWriteAuthorization => {
     const result = verifyWriterLease(
       storageRef.current!,
       storageKey,
       ownerId,
       nowRef.current(),
     );
-    if (result.status === 'owned') return true;
+    if (result.status === 'owned') return { ok: true };
 
     invalidateAttempt();
     updateState(blockedState(result));
-    return false;
+    return {
+      ok: false,
+      reason: result.status === 'unavailable'
+        ? 'storage_unavailable'
+        : 'ownership_conflict',
+    };
   }, [invalidateAttempt, ownerId, storageKey, updateState]);
+
+  const verify = useCallback((): boolean => authorizeWrite().ok, [authorizeWrite]);
 
   const takeOver = useCallback((): Promise<boolean> => new Promise(resolve => {
     runClaim(true, resolve);
@@ -232,6 +241,7 @@ export const useProfileWriterLease = (
     status: leaseState.status,
     blockedReason: leaseState.blockedReason,
     verify,
+    authorizeWrite,
     takeOver,
     release,
   };

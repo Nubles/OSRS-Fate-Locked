@@ -1,3 +1,5 @@
+import type { SaveWriteAuthorization } from './profileWriterLease';
+
 export type SaveStatus = 'saved' | 'saving' | 'failed';
 
 export type PendingSaveReason = 'storage_unavailable' | 'ownership_conflict';
@@ -38,14 +40,15 @@ export const stagePendingSave = (storageKey: string, data: string): void => {
 export const flushPendingSave = (
   storage: Pick<Storage, 'setItem'>,
   storageKey: string,
-  canWrite: () => boolean,
+  authorizeWrite: () => SaveWriteAuthorization,
 ): PendingSaveFlushResult => {
   const entry = entries.get(storageKey);
   if (!entry) return { ok: true };
 
-  if (!canWrite()) {
-    blockPendingSave(storageKey);
-    return { ok: false, reason: 'ownership_conflict' };
+  const authorization = authorizeWrite();
+  if (authorization.ok === false) {
+    blockPendingSave(storageKey, authorization.reason);
+    return authorization;
   }
 
   try {
@@ -64,19 +67,22 @@ export const flushPendingSave = (
   }
 };
 
-export const blockPendingSave = (storageKey: string): void => {
+export const blockPendingSave = (
+  storageKey: string,
+  reason: PendingSaveReason = 'ownership_conflict',
+): void => {
   const entry = entries.get(storageKey);
   if (!entry) return;
   if (
-    entry.status === 'saving'
-    && entry.reason === 'ownership_conflict'
+    entry.status === (reason === 'storage_unavailable' ? 'failed' : 'saving')
+    && entry.reason === reason
   ) {
     return;
   }
   entries.set(storageKey, {
     ...entry,
-    status: 'saving',
-    reason: 'ownership_conflict',
+    status: reason === 'storage_unavailable' ? 'failed' : 'saving',
+    reason,
   });
   emit();
 };

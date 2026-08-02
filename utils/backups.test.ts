@@ -22,8 +22,8 @@ describe('backup ring', () => {
   });
 
   it('pushes and lists newest-first without the heavy data field', () => {
-    expect(pushBackup(KEY, save({ keys: 1 }), 'first', () => true)).toEqual({ stored: true });
-    expect(pushBackup(KEY, save({ keys: 2 }), 'second', () => true)).toEqual({ stored: true });
+    expect(pushBackup(KEY, save({ keys: 1 }), 'first', () => ({ ok: true }))).toEqual({ stored: true });
+    expect(pushBackup(KEY, save({ keys: 2 }), 'second', () => ({ ok: true }))).toEqual({ stored: true });
     const list = listBackups(KEY);
     expect(list.length).toBe(2);
     expect(list[0].reason).toBe('second');
@@ -32,13 +32,13 @@ describe('backup ring', () => {
 
   it('skips a snapshot identical to the most recent', () => {
     const data = save({ keys: 9 });
-    pushBackup(KEY, data, 'a', () => true);
-    expect(pushBackup(KEY, data, 'b', () => true)).toEqual({ stored: false, reason: 'duplicate' });
+    pushBackup(KEY, data, 'a', () => ({ ok: true }));
+    expect(pushBackup(KEY, data, 'b', () => ({ ok: true }))).toEqual({ stored: false, reason: 'duplicate' });
     expect(listBackups(KEY).length).toBe(1);
   });
 
   it('caps the ring at 8, evicting the oldest', () => {
-    for (let i = 0; i < 11; i++) pushBackup(KEY, save({ keys: i }), `r${i}`, () => true);
+    for (let i = 0; i < 11; i++) pushBackup(KEY, save({ keys: i }), `r${i}`, () => ({ ok: true }));
     const list = listBackups(KEY);
     expect(list.length).toBe(8);
     expect(list[0].reason).toBe('r10');
@@ -47,14 +47,14 @@ describe('backup ring', () => {
 
   it('round-trips backup data by timestamp', () => {
     const data = save({ keys: 42 });
-    pushBackup(KEY, data, 'keep', () => true);
+    pushBackup(KEY, data, 'keep', () => ({ ok: true }));
     const ts = listBackups(KEY)[0].ts;
     expect(getBackupData(KEY, ts)).toBe(data);
     expect(getBackupData(KEY, 0)).toBeNull();
   });
 
   it('reports empty data as an observable no-op', () => {
-    expect(pushBackup(KEY, '', 'noop', () => true)).toEqual({ stored: false, reason: 'empty' });
+    expect(pushBackup(KEY, '', 'noop', () => ({ ok: true }))).toEqual({ stored: false, reason: 'empty' });
     expect(listBackups(KEY).length).toBe(0);
   });
 
@@ -62,7 +62,7 @@ describe('backup ring', () => {
     (globalThis as any).localStorage.setItem = () => {
       throw new DOMException('Quota exceeded', 'QuotaExceededError');
     };
-    expect(pushBackup(KEY, save(), 'quota', () => true)).toEqual({ stored: false, reason: 'storage_unavailable' });
+    expect(pushBackup(KEY, save(), 'quota', () => ({ ok: true }))).toEqual({ stored: false, reason: 'storage_unavailable' });
   });
 
   it('reports success when the smaller-ring quota retry succeeds', () => {
@@ -73,15 +73,37 @@ describe('backup ring', () => {
       if (attempt === 1) throw new DOMException('Quota exceeded', 'QuotaExceededError');
       writes.push(value);
     };
-    expect(pushBackup(KEY, save(), 'retry', () => true)).toEqual({ stored: true });
+    expect(pushBackup(KEY, save(), 'retry', () => ({ ok: true }))).toEqual({ stored: true });
     expect(attempt).toBe(2);
     expect(JSON.parse(writes[0])).toHaveLength(1);
+  });
+
+  it('reports authorization storage denial without reading or writing the backup ring', () => {
+    const getItem = vi.spyOn(localStorage, 'getItem');
+    const setItem = vi.spyOn(localStorage, 'setItem');
+
+    expect(pushBackup(
+      KEY,
+      save(),
+      'blocked',
+      () => ({ ok: false, reason: 'storage_unavailable' }),
+    )).toEqual({
+      stored: false,
+      reason: 'storage_unavailable',
+    });
+    expect(getItem).not.toHaveBeenCalled();
+    expect(setItem).not.toHaveBeenCalled();
   });
 
   it('does not read or write the backup ring without ownership', () => {
     const getItem = vi.spyOn(localStorage, 'getItem');
     const setItem = vi.spyOn(localStorage, 'setItem');
-    expect(pushBackup(KEY, save(), 'blocked', () => false)).toEqual({
+    expect(pushBackup(
+      KEY,
+      save(),
+      'blocked',
+      () => ({ ok: false, reason: 'ownership_conflict' }),
+    )).toEqual({
       stored: false,
       reason: 'ownership_conflict',
     });
@@ -91,8 +113,8 @@ describe('backup ring', () => {
 
   it('does not write when ownership is lost after reading the ring', () => {
     const canWrite = vi.fn()
-      .mockReturnValueOnce(true)
-      .mockReturnValueOnce(false);
+      .mockReturnValueOnce({ ok: true })
+      .mockReturnValueOnce({ ok: false, reason: 'ownership_conflict' });
     const getItem = vi.spyOn(localStorage, 'getItem');
     const setItem = vi.spyOn(localStorage, 'setItem');
 
@@ -107,9 +129,9 @@ describe('backup ring', () => {
 
   it('does not retry a quota write after ownership is lost', () => {
     const canWrite = vi.fn()
-      .mockReturnValueOnce(true)
-      .mockReturnValueOnce(true)
-      .mockReturnValueOnce(false);
+      .mockReturnValueOnce({ ok: true })
+      .mockReturnValueOnce({ ok: true })
+      .mockReturnValueOnce({ ok: false, reason: 'ownership_conflict' });
     const getItem = vi.spyOn(localStorage, 'getItem');
     const setItem = vi.spyOn(localStorage, 'setItem').mockImplementationOnce(() => {
       throw new DOMException('Quota exceeded', 'QuotaExceededError');

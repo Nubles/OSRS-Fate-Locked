@@ -55,6 +55,19 @@ describe('profile writer leases', () => {
     expect(claimWriterLease(storage, PROFILE, 'tab-c', 50_000).status).toBe('owned');
   });
 
+  it('replaces an unsupported lease version during a normal claim', () => {
+    values.set(writerLeaseKey(PROFILE), JSON.stringify({
+      version: 2,
+      ownerId: 'future-tab',
+      expiresAt: 50_000,
+    }));
+
+    expect(claimWriterLease(storage, PROFILE, 'tab-a', 1_000)).toMatchObject({
+      status: 'owned',
+      lease: { version: 1, ownerId: 'tab-a' },
+    });
+  });
+
   it('requires matching ownership to renew or release', () => {
     claimWriterLease(storage, PROFILE, 'tab-a', 1_000);
     expect(renewWriterLease(storage, PROFILE, 'tab-b', 2_000).status).toBe('blocked');

@@ -1,7 +1,11 @@
-import { describe, expect, it } from 'vitest';
-import { SaveOwnershipConflictError } from '../utils/gamePersistence';
+import { describe, expect, it, vi } from 'vitest';
+import {
+  SaveAuthorizationError,
+  SaveOwnershipConflictError,
+} from '../utils/gamePersistence';
 import { parseAndMigrateSave } from '../utils/saveSchema';
 import { serializeCurrent } from '../utils/gamePersistence';
+import type { SaveWriteAuthorization } from '../utils/profileWriterLease';
 import * as GameContext from './GameContext';
 
 type DurableWriter = (
@@ -10,7 +14,7 @@ type DurableWriter = (
   data: string,
   pending: { current: number | null },
   cancel: (handle: number) => void,
-  canWrite: () => boolean,
+  authorizeWrite: () => SaveWriteAuthorization,
 ) => void;
 
 describe('explicit replacement persistence', () => {
@@ -25,7 +29,7 @@ describe('explicit replacement persistence', () => {
     const pending = { current: 17 };
     writeReplacementNow({
       setItem: (_key, data) => { events.push('write:' + JSON.parse(data).keys); },
-    }, 'profile', '{"keys":9}', pending, handle => { events.push('cancel:' + handle); }, () => true);
+    }, 'profile', '{"keys":9}', pending, handle => { events.push('cancel:' + handle); }, () => ({ ok: true }));
     expect(events).toEqual(['write:9', 'cancel:17']);
     expect(pending.current).toBeNull();
 
@@ -36,7 +40,7 @@ describe('explicit replacement persistence', () => {
         events.push('write');
         throw new Error('quota');
       },
-    }, 'profile', '{"keys":9}', pending, handle => { events.push('cancel:' + handle); }, () => true))
+    }, 'profile', '{"keys":9}', pending, handle => { events.push('cancel:' + handle); }, () => ({ ok: true })))
       .toThrow('quota');
     expect(events).toEqual(['write']);
     expect(pending.current).toBe(23);
@@ -46,8 +50,44 @@ describe('explicit replacement persistence', () => {
       setItem: () => { events.push('write'); },
     }, 'profile', '{"keys":9}', pending, handle => {
       events.push('cancel:' + handle);
-    }, () => false)).toThrow(SaveOwnershipConflictError);
+    }, () => ({
+      ok: false, reason: 'ownership_conflict',
+    }))).toThrow(SaveOwnershipConflictError);
     expect(events).toEqual([]);
+    expect(pending.current).toBe(23);
+  });
+
+  it('throws a typed storage denial before touching durable state', () => {
+    const writeReplacementNow = (
+      GameContext as unknown as { writeReplacementNow?: DurableWriter }
+    ).writeReplacementNow;
+    expect(writeReplacementNow).toBeTypeOf('function');
+    if (!writeReplacementNow) return;
+
+    const setItem = vi.fn();
+    const cancelPending = vi.fn();
+    const pending = { current: 23 };
+    let thrown: unknown;
+    try {
+      writeReplacementNow(
+        { setItem },
+        'profile',
+        '{"keys":9}',
+        pending,
+        cancelPending,
+        () => ({ ok: false, reason: 'storage_unavailable' }),
+      );
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(SaveAuthorizationError);
+    expect(thrown).toMatchObject({
+      name: 'SaveAuthorizationError',
+      code: 'storage_unavailable',
+    });
+    expect(setItem).not.toHaveBeenCalled();
+    expect(cancelPending).not.toHaveBeenCalled();
     expect(pending.current).toBe(23);
   });
 });

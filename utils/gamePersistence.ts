@@ -5,6 +5,7 @@ import {
   type SaveValidationResult,
   type SaveWarning,
 } from './saveSchema';
+import type { SaveWriteAuthorizationReason } from './profileWriterLease';
 
 export type ImportErrorCode = SaveErrorCode | 'storage_unavailable' | 'ownership_conflict';
 
@@ -71,9 +72,18 @@ export type BackupWriteResult =
   | { stored: true }
   | { stored: false; reason: 'empty' | 'duplicate' | 'storage_unavailable' | 'ownership_conflict' };
 
-export class SaveOwnershipConflictError extends Error {
+export class SaveAuthorizationError extends Error {
+  constructor(public readonly code: SaveWriteAuthorizationReason) {
+    super(code === 'storage_unavailable'
+      ? 'Profile save ownership could not be verified because storage is unavailable.'
+      : 'Profile save ownership is held by another tab.');
+    this.name = 'SaveAuthorizationError';
+  }
+}
+
+export class SaveOwnershipConflictError extends SaveAuthorizationError {
   constructor() {
-    super('Profile save ownership is held by another tab.');
+    super('ownership_conflict');
     this.name = 'SaveOwnershipConflictError';
   }
 }
@@ -113,11 +123,18 @@ const replacementStorageFailure = (): ImportResult => ({
   message: 'The replacement run could not be saved. Your current run is unchanged.',
 });
 
-export const ownershipConflictResult = (): ImportResult => ({
-  ok: false,
-  code: 'ownership_conflict',
-  message: 'This profile is being saved by another tab. Take over before replacing it.',
-});
+export const saveAuthorizationFailureResult = (
+  reason: SaveWriteAuthorizationReason,
+): ImportResult => reason === 'storage_unavailable'
+  ? replacementStorageFailure()
+  : {
+      ok: false,
+      code: 'ownership_conflict',
+      message: 'This profile is being saved by another tab. Take over before replacing it.',
+    };
+
+export const ownershipConflictResult = (): ImportResult =>
+  saveAuthorizationFailureResult('ownership_conflict');
 
 export const applyValidatedReplacement = (
   prepared: SaveValidationResult,
@@ -129,7 +146,9 @@ export const applyValidatedReplacement = (
   try {
     options.writeReplacement(serializeCurrent(prepared.state));
   } catch (error) {
-    if (error instanceof SaveOwnershipConflictError) return ownershipConflictResult();
+    if (error instanceof SaveAuthorizationError) {
+      return saveAuthorizationFailureResult(error.code);
+    }
     return replacementStorageFailure();
   }
   options.replace(prepared.state);

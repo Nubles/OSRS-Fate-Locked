@@ -22,8 +22,9 @@ import {
   applyPreparedReplacement,
   applyValidatedReplacement,
   serializeCurrent as serializeGameState,
+  SaveAuthorizationError,
   SaveOwnershipConflictError,
-  ownershipConflictResult,
+  saveAuthorizationFailureResult,
   type BackupWriteResult,
   type ImportResult,
 } from '../utils/gamePersistence';
@@ -69,6 +70,7 @@ import {
 import type {
   SaveOwnershipBlockReason,
   SaveOwnershipStatus,
+  SaveWriteAuthorization,
 } from '../utils/profileWriterLease';
 
 
@@ -81,9 +83,13 @@ export const writeReplacementNow = (
   data: string,
   pendingSave: { current: number | null },
   cancelPending: (handle: number) => void,
-  canWrite: () => boolean,
+  authorizeWrite: () => SaveWriteAuthorization,
 ): void => {
-  if (!canWrite()) throw new SaveOwnershipConflictError();
+  const authorization = authorizeWrite();
+  if (authorization.ok === false) {
+    if (authorization.reason === 'ownership_conflict') throw new SaveOwnershipConflictError();
+    throw new SaveAuthorizationError(authorization.reason);
+  }
   storage.setItem(storageKey, data);
   if (pendingSave.current === null) return;
   cancelPending(pendingSave.current);
@@ -1255,7 +1261,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
   const {
     status: saveOwnershipStatus,
     blockedReason: saveOwnershipBlockReason,
-    verify: verifyOwnership,
+    authorizeWrite: authorizeOwnership,
     takeOver: takeOverOwnership,
     release: releaseOwnership,
   } = useProfileWriterLease(storageKey, leaseOptions);
@@ -1338,10 +1344,20 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     [],
   );
 
-  const canWriteOwned = useCallback((): boolean =>
-    !takeoverRequestedRef.current
-    && saveOwnershipStatusRef.current === 'owner'
-    && verifyOwnership(), [verifyOwnership]);
+  const authorizeOwnedWrite = useCallback((): SaveWriteAuthorization => {
+    if (
+      takeoverRequestedRef.current
+      || saveOwnershipStatusRef.current !== 'owner'
+    ) {
+      return {
+        ok: false,
+        reason: saveOwnershipBlockReasonRef.current === 'storage_unavailable'
+          ? 'storage_unavailable'
+          : 'ownership_conflict',
+      };
+    }
+    return authorizeOwnership();
+  }, [authorizeOwnership]);
 
   const flushCurrentSave = useCallback((): boolean => {
     if (
@@ -1349,7 +1365,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
       && (takeoverRequestedRef.current
         || saveOwnershipStatusRef.current !== 'owner')
     ) {
-      blockPendingSave(storageKey);
+      blockPendingSave(
+        storageKey,
+        saveOwnershipBlockReasonRef.current === 'storage_unavailable'
+          ? 'storage_unavailable'
+          : 'ownership_conflict',
+      );
       if (mountedRef.current) {
         setSaveStatus(saveOwnershipBlockReasonRef.current === 'storage_unavailable'
           ? 'failed'
@@ -1359,7 +1380,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     }
 
     const pending = getPendingSave(storageKey);
-    const result = flushPendingSave(localStorage, storageKey, verifyOwnership);
+    const result = flushPendingSave(localStorage, storageKey, authorizeOwnership);
     if (result.ok === true) {
       if (pending !== null) persistedSnapshotRef.current = pending.data;
       if (mountedRef.current) setSaveStatus('saved');
@@ -1374,7 +1395,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
       );
     }
     return result.ok;
-  }, [storageKey, verifyOwnership]);
+  }, [authorizeOwnership, storageKey]);
 
   // Debounced persistence - saves all persistent state fields
   useEffect(() => {
@@ -1385,13 +1406,20 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
         window.clearTimeout(saveTimeoutRef.current);
         saveTimeoutRef.current = null;
       }
-      setSaveStatus('saved');
+      setSaveStatus(saveOwnershipBlockReason === 'storage_unavailable'
+        ? 'failed'
+        : 'saved');
       return;
     }
 
     stagePendingSave(storageKey, snapshot);
     if (saveOwnershipStatus !== 'owner') {
-      blockPendingSave(storageKey);
+      blockPendingSave(
+        storageKey,
+        saveOwnershipBlockReason === 'storage_unavailable'
+          ? 'storage_unavailable'
+          : 'ownership_conflict',
+      );
     }
     if (saveOwnershipBlockReason === 'storage_unavailable') {
       setSaveStatus('failed');
@@ -1438,10 +1466,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     stageCurrentSnapshotForLifecycle();
     const flushed = getPendingSave(storageKey) !== null
       ? flushCurrentSave()
-      : canWriteOwned();
+      : authorizeOwnedWrite().ok;
     if (flushed && getPendingSave(storageKey) === null) releaseOwnership();
   }, [
-    canWriteOwned,
+    authorizeOwnedWrite,
     flushCurrentSave,
     releaseOwnership,
     stageCurrentSnapshotForLifecycle,
@@ -1488,7 +1516,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
   }, [flushCurrentSave, serializeCurrent, storageKey, takeOverOwnership]);
 
   const pushOwnedBackup = useCallback((data: string, reason: string): BackupWriteResult =>
-    pushBackup(storageKey, data, reason, canWriteOwned), [canWriteOwned, storageKey]);
+    pushBackup(storageKey, data, reason, authorizeOwnedWrite), [authorizeOwnedWrite, storageKey]);
 
   // One automatic snapshot per session (per profile mount), so "the run was
   // fine yesterday" is always recoverable from the ring — not just the
@@ -1668,15 +1696,16 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
       data,
       saveTimeoutRef,
       handle => window.clearTimeout(handle),
-      canWriteOwned,
+      authorizeOwnedWrite,
     );
     persistedSnapshotRef.current = data;
     discardPendingSave(storageKey);
     setSaveStatus('saved');
-  }, [canWriteOwned, storageKey]);
+  }, [authorizeOwnedWrite, storageKey]);
 
   const importSave = useCallback((data: unknown): ImportResult => {
-    if (!canWriteOwned()) return ownershipConflictResult();
+    const authorization = authorizeOwnedWrite();
+    if (authorization.ok === false) return saveAuthorizationFailureResult(authorization.reason);
     return applyPreparedReplacement(data, {
       current: stateRef.current,
       defaults: createFreshState(),
@@ -1684,7 +1713,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
       writeReplacement,
       replace: replaceState,
     });
-  }, [canWriteOwned, pushOwnedBackup, replaceState, writeReplacement]);
+  }, [authorizeOwnedWrite, pushOwnedBackup, replaceState, writeReplacement]);
 
   const createBackup = useCallback((reason: string): BackupWriteResult =>
     pushOwnedBackup(serializeCurrent(), reason), [pushOwnedBackup, serializeCurrent]);
@@ -1692,7 +1721,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
   const listBackups = useCallback(() => readBackups(storageKey), [storageKey]);
 
   const restoreBackup = useCallback((ts: number): ImportResult => {
-    if (!canWriteOwned()) return ownershipConflictResult();
+    const authorization = authorizeOwnedWrite();
+    if (authorization.ok === false) return saveAuthorizationFailureResult(authorization.reason);
     const data = getBackupData(storageKey, ts);
     if (data === null) {
       return { ok: false, code: 'invalid_json', message: 'Backup was not found.' };
@@ -1703,7 +1733,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
       writeReplacement,
       replace: replaceState,
     });
-  }, [canWriteOwned, pushOwnedBackup, replaceState, storageKey, writeReplacement]);
+  }, [authorizeOwnedWrite, pushOwnedBackup, replaceState, storageKey, writeReplacement]);
 
   const resetGame = useCallback(() => {
     // Auto-snapshot so an accidental reset is recoverable.

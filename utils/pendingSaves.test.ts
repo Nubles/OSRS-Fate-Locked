@@ -33,7 +33,7 @@ describe('pending save registry', () => {
       .mockImplementation(() => undefined);
 
     stagePendingSave('profile-a', '{"keys":1}');
-    expect(flushPendingSave({ setItem }, 'profile-a', () => true)).toEqual({
+    expect(flushPendingSave({ setItem }, 'profile-a', () => ({ ok: true }))).toEqual({
       ok: false,
       reason: 'storage_unavailable',
     });
@@ -41,16 +41,41 @@ describe('pending save registry', () => {
 
     stagePendingSave('profile-a', '{"keys":3}');
     expect(getSaveStatus('profile-a')).toBe('failed');
-    expect(flushPendingSave({ setItem }, 'profile-a', () => true)).toEqual({ ok: true });
+    expect(flushPendingSave({ setItem }, 'profile-a', () => ({ ok: true }))).toEqual({ ok: true });
     expect(setItem).toHaveBeenLastCalledWith('profile-a', '{"keys":3}');
     expect(getPendingSave('profile-a')).toBeNull();
+  });
+
+  it('marks authorization storage denial failed without invoking durable storage', () => {
+    const setItem = vi.fn();
+    stagePendingSave('profile-a', '{"keys":9}');
+
+    expect(flushPendingSave(
+      { setItem },
+      'profile-a',
+      () => ({ ok: false, reason: 'storage_unavailable' }),
+    )).toEqual({
+      ok: false,
+      reason: 'storage_unavailable',
+    });
+    expect(setItem).not.toHaveBeenCalled();
+    expect(getPendingSave('profile-a')).toEqual({
+      data: '{"keys":9}',
+      status: 'failed',
+      reason: 'storage_unavailable',
+    });
+    expect(getSaveStatus('profile-a')).toBe('failed');
   });
 
   it('keeps a blocked snapshot without invoking storage', () => {
     const setItem = vi.fn();
     stagePendingSave('profile-a', '{"keys":9}');
 
-    expect(flushPendingSave({ setItem }, 'profile-a', () => false)).toEqual({
+    expect(flushPendingSave(
+      { setItem },
+      'profile-a',
+      () => ({ ok: false, reason: 'ownership_conflict' }),
+    )).toEqual({
       ok: false,
       reason: 'ownership_conflict',
     });
