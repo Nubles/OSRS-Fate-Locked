@@ -72,6 +72,14 @@ describe('calculateLegacyFateCompensation', () => {
     expect(result.chaosKeys).toBe(7);
   });
 
+  it('ignores unknown and obsolete level keys when counting Chaos milestones', () => {
+    const result = calculateLegacyFateCompensation(
+      state([], { Attack: 30, 'Removed Skill': 99, 'Legacy Total': 99 }),
+    );
+
+    expect(result.chaosKeys).toBe(1);
+  });
+
   it('converts weighted legacy failures into missed Pity Keys with overflow', () => {
     const history = [
       ...failures(40, DropSource.QUEST_NOVICE),

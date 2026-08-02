@@ -171,6 +171,32 @@ describe('replayInvariants', () => {
     expect(final.successes).toBe(0);
   });
 
+  it('replays the exact weighted Fate award recorded on a failed roll', () => {
+    const { final } = replayInvariants([
+      fail({ meta: { fatePointsEarned: 3 } }),
+    ], 0);
+
+    expect(final.fatePoints).toBe(3);
+  });
+
+  it('uses the legacy +1 Fate fallback when a failed roll has no award metadata', () => {
+    const { final } = replayInvariants([fail()], 0);
+
+    expect(final.fatePoints).toBe(1);
+  });
+
+  it('preserves Fate overflow after a recorded weighted Pity roll', () => {
+    const history = [
+      ...Array.from({ length: 49 }, () => fail()),
+      mk({ type: 'PITY', message: 'Pity Key', meta: { fatePointsEarned: 3 } }),
+    ];
+
+    const { final, violations } = replayInvariants(history, 0);
+
+    expect(final.fatePoints).toBe(2);
+    expect(violations.some(v => v.kind === 'FATE_OVERFLOW')).toBe(false);
+  });
+
   it('spends keys on an unlock', () => {
     const { final } = replayInvariants(
       [mk({ type: 'UNLOCK', message: 'Unlocked', meta: { cost: 1, costType: 'key' } })], 3,
@@ -198,6 +224,36 @@ describe('replayInvariants', () => {
     ).final;
     expect(transmute.keys).toBe(5);
     expect(transmute.specialKeys).toBe(1);
+  });
+
+  it('replays the exact Chaos Key metadata for a current level-up entry', () => {
+    const { final } = replayInvariants([
+      mk({
+        type: 'LEVEL_UP',
+        message: '2 Chaos Keys awarded!',
+        meta: { chaosKeysAwarded: 2 },
+      }),
+    ], 0);
+
+    expect(final.chaosKeys).toBe(2);
+  });
+
+  it('uses the legacy Chaos Key Drop message when level-up metadata is absent', () => {
+    const { final } = replayInvariants([
+      mk({ type: 'LEVEL_UP', message: 'Chaos Key Drop!' }),
+    ], 0);
+
+    expect(final.chaosKeys).toBe(1);
+  });
+
+  it('replays tampered Chaos metadata exactly so the chain check can expose the edit', () => {
+    const original = ensureChain([
+      mk({ type: 'LEVEL_UP', message: '2 Chaos Keys awarded!', meta: { chaosKeysAwarded: 2 } }),
+    ]);
+    const tampered = [{ ...original[0], meta: { chaosKeysAwarded: 20 } }];
+
+    expect(replayInvariants(tampered, 0).final.chaosKeys).toBe(20);
+    expect(verifyChain(tampered).ok).toBe(false);
   });
 
   it('replays full compensation awards and the recorded Fate remainder', () => {

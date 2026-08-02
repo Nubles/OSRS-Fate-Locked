@@ -119,6 +119,12 @@ export interface ReplayState {
 // rewrite consistently — but catches naive tampering and any inconsistency
 // introduced by hand-editing isolated fields.
 export const replayInvariants = (history: LogEntry[], startKeys = 3): { violations: InvariantViolation[]; final: ReplayState } => {
+  const recordedFateAward = (entry: LogEntry): number => {
+    const award = entry.meta?.fatePointsEarned;
+    return typeof award === 'number' && Number.isFinite(award) && award >= 0
+      ? award
+      : 1;
+  };
   const s: ReplayState = {
     keys: startKeys,
     specialKeys: 0,
@@ -162,11 +168,11 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3): { violatio
         break;
       case 'PITY':
         s.keys += 1;
-        s.fatePoints = 0;
+        s.fatePoints = Math.max(0, s.fatePoints + recordedFateAward(e) - 50);
         s.rolls += 1; s.pities += 1;
         break;
       case 'ROLL_FAIL':
-        s.fatePoints += 1;
+        s.fatePoints += recordedFateAward(e);
         s.rolls += 1;
         break;
       case 'UNLOCK': {
@@ -184,9 +190,15 @@ export const replayInvariants = (history: LogEntry[], startKeys = 3): { violatio
         else if (/Chaos/.test(e.message)) { s.fatePoints -= 25; s.chaosKeys += 1; }
         else if (/Transmut/.test(e.message)) { s.keys -= 5; s.specialKeys += 1; }
         break;
-      case 'LEVEL_UP':
-        if (/Chaos Key Drop/.test(e.message)) s.chaosKeys += 1;
+      case 'LEVEL_UP': {
+        const chaosAwarded = e.meta?.chaosKeysAwarded;
+        if (typeof chaosAwarded === 'number'
+          && Number.isSafeInteger(chaosAwarded)
+          && chaosAwarded >= 0) {
+          s.chaosKeys += chaosAwarded;
+        } else if (/Chaos Key Drop/.test(e.message)) s.chaosKeys += 1;
         break;
+      }
       case 'COMPENSATION': {
         const choice = e.meta?.choice;
         if (choice === 'chaos' || choice === 'full') {

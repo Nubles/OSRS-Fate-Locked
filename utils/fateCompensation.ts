@@ -3,6 +3,7 @@ import {
   failureFateForSource,
   SKILL_CHAOS_MILESTONES,
 } from '../config/economy';
+import { SKILLS_LIST } from '../data/items';
 import { DropSource, type FailureFateAward, type GameState, type LogEntry } from '../types';
 
 export const LEGACY_FATE_COMPENSATION_ID = '2026-08-02-weighted-fate';
@@ -16,6 +17,7 @@ export interface LegacyFateCompensation {
 const LEGACY_PITY_THRESHOLD = 50;
 const DROP_SOURCES = new Set<string>(Object.values(DropSource));
 const SKILL_LEVEL_SOURCE = / Level (-?\d+)$/;
+const CANONICAL_SKILLS = new Set<string>(SKILLS_LIST);
 
 const validRecordedFate = (entry: LogEntry): number | undefined => {
   const recorded = entry.meta?.fatePointsEarned;
@@ -52,7 +54,8 @@ const replayAward = (entry: LogEntry): number => {
 };
 
 const reachedChaosMilestones = (levels: Readonly<Record<string, number>>): number =>
-  Object.values(levels).reduce((total, rawLevel) => {
+  Object.entries(levels).reduce((total, [skill, rawLevel]) => {
+    if (!CANONICAL_SKILLS.has(skill)) return total;
     if (!Number.isFinite(rawLevel)) return total;
     const level = Math.min(99, Math.max(1, Math.trunc(rawLevel)));
     return total + SKILL_CHAOS_MILESTONES.filter(milestone => milestone <= level).length;
