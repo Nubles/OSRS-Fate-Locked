@@ -4,6 +4,7 @@ import { ephemeral, linkButton } from '../discord/responses.js';
 import { handleJournalSubmit, journalModal, JOURNAL_MODAL_ID } from '../journals.js';
 import type { JournalInteractionResponse } from '../journals.js';
 import type { BotConfig } from '../types.js';
+import { handleVerificationComponent, handleVerificationReasonSubmit, handleVerificationSubmit, verificationModal, VERIFY_SUBMIT_MODAL_ID } from '../verification.js';
 import type { DiscordInteraction } from '../handlers/interactions.js';
 import { RULES_URL, RUNELITE_GUIDE_URL, TRACKER_URL } from './links.js';
 
@@ -41,7 +42,25 @@ export const routeInteraction = async (
       rest: new DiscordRestClient({ token: config.botToken }),
     });
   }
+  if (modalId(interaction) === VERIFY_SUBMIT_MODAL_ID) {
+    return handleVerificationSubmit(interaction, {
+      config,
+      rest: new DiscordRestClient({ token: config.botToken }),
+    }, now);
+  }
 
+  if (interaction.type === 5) {
+    return handleVerificationReasonSubmit(interaction, {
+      config,
+      rest: new DiscordRestClient({ token: config.botToken }),
+    }, now);
+  }
+  if (interaction.type === 3) {
+    return handleVerificationComponent(interaction, {
+      config,
+      rest: new DiscordRestClient({ token: config.botToken }),
+    }, now);
+  }
   switch (commandName(interaction)) {
     case 'tracker':
       return ephemeral('Open the Fate Locked tracker.', actionRow(linkButton('Fate Locked tracker', TRACKER_URL)));
@@ -54,7 +73,7 @@ export const routeInteraction = async (
     case 'journal':
       return hasCreateSubcommand(interaction) ? journalModal() : unavailable();
     case 'verify':
-      return ephemeral('Runner verification is not available yet.');
+      return verificationModal();
     default:
       return unavailable();
   }

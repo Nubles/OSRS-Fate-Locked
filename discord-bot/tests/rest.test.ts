@@ -135,4 +135,24 @@ describe('DiscordRestClient', () => {
     await expect(client.request('GET', '/channels/100000000000000001/messages')).rejects.toMatchObject({ status: 500 });
     expect(fetchImpl).toHaveBeenCalledTimes(3);
   });
+
+  it('uses scoped routes for live channel, queue-card, and role-hierarchy reads', async () => {
+    const fetchImpl = fetchSequence([
+      response(200, { id: '100000000000000001', parent_id: '100000000000000002' }),
+      response(200, { id: '100000000000000003', embeds: [] }),
+      response(200, [{ id: '100000000000000004', position: 7 }]),
+    ]);
+    const client = new DiscordRestClient({ token: 'test-token', fetchImpl });
+
+    await expect(client.getChannel('100000000000000001')).resolves.toMatchObject({ parent_id: '100000000000000002' });
+    await expect(client.getMessage('100000000000000002', '100000000000000003')).resolves.toMatchObject({ id: '100000000000000003' });
+    await expect(client.getGuildRoles('100000000000000004')).resolves.toEqual([{ id: '100000000000000004', position: 7 }]);
+
+    expect(fetchImpl).toHaveBeenNthCalledWith(1,
+      'https://discord.com/api/v10/channels/100000000000000001', expect.objectContaining({ method: 'GET' }));
+    expect(fetchImpl).toHaveBeenNthCalledWith(2,
+      'https://discord.com/api/v10/channels/100000000000000002/messages/100000000000000003', expect.objectContaining({ method: 'GET' }));
+    expect(fetchImpl).toHaveBeenNthCalledWith(3,
+      'https://discord.com/api/v10/guilds/100000000000000004/roles', expect.objectContaining({ method: 'GET' }));
+  });
 });

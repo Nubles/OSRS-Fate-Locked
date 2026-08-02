@@ -4,7 +4,15 @@ const DISCORD_API_BASE = 'https://discord.com/api/v10';
 const MAX_RETRY_AFTER_MS = 60_000;
 
 export interface DiscordMessage { id: Snowflake; [key: string]: unknown }
-export interface DiscordChannel { id: Snowflake; [key: string]: unknown }
+export interface DiscordChannel {
+  id: Snowflake;
+  parent_id?: Snowflake;
+  owner_id?: Snowflake;
+  applied_tags?: Snowflake[];
+  [key: string]: unknown;
+}
+export interface DiscordRole { id: Snowflake; position: number; [key: string]: unknown }
+
 export interface DiscordGuildMember { user?: { id: Snowflake }; roles: Snowflake[]; [key: string]: unknown }
 
 export class DiscordApiError extends Error {
@@ -94,11 +102,14 @@ export class DiscordRestClient {
     return this.request('GET', `/channels/${channelId}/messages?limit=${boundedLimit}`);
   }
   editOriginalInteractionResponse(applicationId: string, interactionToken: string, body: unknown): Promise<DiscordMessage> { return this.request('PATCH', `/webhooks/${applicationId}/${interactionToken}/messages/@original`, body); }
+  getChannel(channelId: string): Promise<DiscordChannel> { return this.request('GET', `/channels/${channelId}`); }
+  getMessage(channelId: string, messageId: string): Promise<DiscordMessage> { return this.request('GET', `/channels/${channelId}/messages/${messageId}`); }
   createMessage(channelId: string, body: unknown): Promise<DiscordMessage> { return this.request('POST', `/channels/${channelId}/messages`, body); }
   editMessage(channelId: string, messageId: string, body: unknown): Promise<DiscordMessage> { return this.request('PATCH', `/channels/${channelId}/messages/${messageId}`, body); }
   createForumPost(channelId: string, body: unknown): Promise<DiscordChannel> { return this.request('POST', `/channels/${channelId}/threads`, body, 0); }
   editThread(threadId: string, body: unknown): Promise<DiscordChannel> { return this.request('PATCH', `/channels/${threadId}`, body); }
   getGuildMember(guildId: string, userId: string): Promise<DiscordGuildMember> { return this.request('GET', `/guilds/${guildId}/members/${userId}`); }
   async addGuildMemberRole(guildId: string, userId: string, roleId: string): Promise<void> { await this.request('PUT', `/guilds/${guildId}/members/${userId}/roles/${roleId}`); }
+  getGuildRoles(guildId: string): Promise<DiscordRole[]> { return this.request('GET', `/guilds/${guildId}/roles`); }
   registerGuildCommands(applicationId: string, guildId: string, commands: unknown[]): Promise<unknown[]> { return this.request('PUT', `/applications/${applicationId}/guilds/${guildId}/commands`, commands); }
 }
