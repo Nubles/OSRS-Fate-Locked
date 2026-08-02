@@ -154,6 +154,7 @@ interface GameContextType extends GameState {
   saveOwnershipBlockReason: SaveOwnershipBlockReason;
   hasPendingChanges: boolean;
   retrySave: () => boolean;
+  stageForProfileEviction: () => void;
   takeOverSaveOwnership: () => Promise<boolean>;
   reloadLatestSave: () => ImportResult;
   rollForKey: (
@@ -1404,6 +1405,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
   const saveTimeoutRef = useRef<number | null>(null);
   const takeoverRequestedRef = useRef(false);
   const takeoverFlushAuthorizedRef = useRef(false);
+  const profileEvictedRef = useRef(false);
   const mountedRef = useRef(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>(() => getSaveStatus(storageKey));
   useSyncExternalStore(
@@ -1436,9 +1438,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
   );
 
   const authorizeOwnedWrite = useCallback((): SaveWriteAuthorization => {
+    if (profileEvictedRef.current) {
+      return { ok: false, reason: 'ownership_conflict' };
+    }
     if (
-      takeoverRequestedRef.current
-      || saveOwnershipStatusRef.current !== 'owner'
+      !takeoverFlushAuthorizedRef.current
+      && (takeoverRequestedRef.current || saveOwnershipStatusRef.current !== 'owner')
     ) {
       return {
         ok: false,
@@ -1450,15 +1455,29 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     return authorizeOwnership();
   }, [authorizeOwnership]);
 
+  const stageForProfileEviction = useCallback((): void => {
+    profileEvictedRef.current = true;
+    if (saveTimeoutRef.current !== null) {
+      window.clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+    stagePendingSave(storageKey, serializeCurrent());
+    blockPendingSave(storageKey, 'ownership_conflict');
+    if (mountedRef.current) setSaveStatus(getSaveStatus(storageKey));
+    releaseOwnership();
+  }, [releaseOwnership, serializeCurrent, storageKey]);
+
   const flushCurrentSave = useCallback((): boolean => {
     if (
-      !takeoverFlushAuthorizedRef.current
-      && (takeoverRequestedRef.current
-        || saveOwnershipStatusRef.current !== 'owner')
+      profileEvictedRef.current
+      || (!takeoverFlushAuthorizedRef.current
+        && (takeoverRequestedRef.current
+          || saveOwnershipStatusRef.current !== 'owner'))
     ) {
       blockPendingSave(
         storageKey,
-        saveOwnershipBlockReasonRef.current === 'storage_unavailable'
+        !profileEvictedRef.current
+          && saveOwnershipBlockReasonRef.current === 'storage_unavailable'
           ? 'storage_unavailable'
           : 'ownership_conflict',
       );
@@ -1471,7 +1490,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     }
 
     const pending = getPendingSave(storageKey);
-    const result = flushPendingSave(localStorage, storageKey, authorizeOwnership);
+    const result = flushPendingSave(localStorage, storageKey, authorizeOwnedWrite);
     if (result.ok === true) {
       if (pending !== null) persistedSnapshotRef.current = pending.data;
       if (mountedRef.current) setSaveStatus('saved');
@@ -1486,7 +1505,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
       );
     }
     return result.ok;
-  }, [authorizeOwnership, storageKey]);
+  }, [authorizeOwnedWrite, storageKey]);
 
   // Debounced persistence - saves all persistent state fields
   useEffect(() => {
@@ -1504,7 +1523,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     }
 
     stagePendingSave(storageKey, snapshot);
-    if (saveOwnershipStatus !== 'owner') {
+    if (profileEvictedRef.current) {
+      blockPendingSave(storageKey, 'ownership_conflict');
+    } else if (saveOwnershipStatus !== 'owner') {
       blockPendingSave(
         storageKey,
         saveOwnershipBlockReason === 'storage_unavailable'
@@ -1521,7 +1542,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
       window.clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = null;
     }
-    if (saveOwnershipStatus !== 'owner' || takeoverRequestedRef.current) return;
+    if (
+      profileEvictedRef.current
+      || saveOwnershipStatus !== 'owner'
+      || takeoverRequestedRef.current
+    ) return;
 
     saveTimeoutRef.current = window.setTimeout(() => {
       saveTimeoutRef.current = null;
@@ -1551,10 +1576,18 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     if (needsStaging) {
       stagePendingSave(storageKey, snapshot);
     }
+    if (profileEvictedRef.current) {
+      blockPendingSave(storageKey, 'ownership_conflict');
+    }
   }, [serializeCurrent, storageKey]);
 
   const flushAndReleaseOwnership = useCallback(() => {
     stageCurrentSnapshotForLifecycle();
+    if (profileEvictedRef.current) {
+      blockPendingSave(storageKey, 'ownership_conflict');
+      releaseOwnership();
+      return;
+    }
     const flushed = getPendingSave(storageKey) !== null
       ? flushCurrentSave()
       : authorizeOwnedWrite().ok;
@@ -1589,6 +1622,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
   }, [flushCurrentSave, serializeCurrent, storageKey]);
 
   const takeOverSaveOwnership = useCallback(async (): Promise<boolean> => {
+    if (profileEvictedRef.current) return false;
     takeoverRequestedRef.current = true;
     try {
       const owned = await takeOverOwnership();
@@ -1951,6 +1985,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     saveOwnershipBlockReason,
     hasPendingChanges,
     retrySave,
+    stageForProfileEviction,
     takeOverSaveOwnership,
     reloadLatestSave,
     rollForKey,
@@ -1994,6 +2029,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
     saveOwnershipBlockReason,
     hasPendingChanges,
     retrySave,
+    stageForProfileEviction,
     takeOverSaveOwnership,
     reloadLatestSave,
     rollForKey,

@@ -19,10 +19,22 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-08-02-weighted-fate');
+    expect(LATEST_CHANGELOG.id).toBe('2026-08-02-profile-metadata-integrity');
   });
 
-  it('announces every weighted Fate balance rule in the newest release', () => {
+  it('announces profile registry recovery and multi-tab safety', () => {
+    expect(LATEST_CHANGELOG).toMatchObject({
+      id: '2026-08-02-profile-metadata-integrity',
+      title: 'Safer Profile Management',
+      date: '2026-08-02',
+    });
+    expect(LATEST_CHANGELOG.sections.fixed).toEqual(expect.arrayContaining([
+      'Damaged profile lists now recover every valid browser save they can find instead of leaving the app on a blank screen.',
+      'Creating, renaming, switching, and deleting profiles in multiple tabs no longer silently loses profile-list changes.',
+      'Profiles that are still open in another tab cannot be deleted until that tab switches away or closes.',
+    ]));
+  });
+  it('announces every weighted Fate balance rule', () => {
     const weightedFate = CHANGELOG_RELEASES.find(
       release => release.id === '2026-08-02-weighted-fate',
     );
@@ -39,6 +51,7 @@ describe('authored changelog releases', () => {
     expect(balanceNotes).toMatch(/guaranteed Chaos/i);
     expect(balanceNotes).toMatch(/independent 2%/i);
   });
+
 
   it('announces the cross-tab save ownership protections', () => {
     const crossTabSafety = CHANGELOG_RELEASES.find(

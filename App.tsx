@@ -1,6 +1,6 @@
 
 import { lazyWithRetry } from './utils/lazyRetry';
-import React, { useState, useRef, useEffect, useReducer, Component, ErrorInfo, ReactNode, Suspense } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useReducer, Component, ErrorInfo, ReactNode, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { GameProvider, useGame } from './context/GameContext';
 import { usePortalHost } from './hooks/usePortalHost';
@@ -27,6 +27,7 @@ import { FeatureRevealDriver } from './components/FeatureRevealDriver';
 import { BackupNagBanner } from './components/BackupNagBanner';
 import { SaveConflictBanner } from './components/SaveConflictBanner';
 import { SaveFailureBanner } from './components/SaveFailureBanner';
+import { ProfileRecoveryBanner } from './components/ProfileRecoveryBanner';
 import { SaveRecoveryGuard } from './components/SaveRecoveryGuard';
 import { DiscordSyncDriver } from './components/DiscordSyncDriver';
 import { downloadFateSave } from './utils/fateSaveFile';
@@ -990,6 +991,8 @@ const GameLayout = () => {
         onOpenChangelog={openChangelog}
       />
 
+      <ProfileRecoveryBanner />
+
       <SaveConflictBanner />
 
       <SaveFailureBanner />
@@ -1082,12 +1085,24 @@ const GameLayout = () => {
   );
 };
 
+const ProfileEvictionBridge: React.FC<{ profileId: string }> = ({ profileId }) => {
+  const { registerProfileEvictionHandler } = useProfiles();
+  const { stageForProfileEviction } = useGame();
+
+  useLayoutEffect(() => registerProfileEvictionHandler(removedProfileId => {
+    if (removedProfileId === profileId) stageForProfileEviction();
+  }), [profileId, registerProfileEvictionHandler, stageForProfileEviction]);
+
+  return null;
+};
+
 /** Bridge reads profile context and passes storageKey to GameProvider.
  *  key={activeProfileId} forces a clean remount when switching profiles. */
 const GameProviderBridge: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { activeProfileId, storageKeyForActiveProfile } = useProfiles();
   return (
     <GameProvider key={activeProfileId} storageKey={storageKeyForActiveProfile}>
+      <ProfileEvictionBridge profileId={activeProfileId} />
       {children}
     </GameProvider>
   );

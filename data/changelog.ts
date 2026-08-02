@@ -19,6 +19,18 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-08-02-profile-metadata-integrity',
+    title: 'Safer Profile Management',
+    date: '2026-08-02',
+    sections: {
+      fixed: [
+        'Damaged profile lists now recover every valid browser save they can find instead of leaving the app on a blank screen.',
+        'Creating, renaming, switching, and deleting profiles in multiple tabs no longer silently loses profile-list changes.',
+        'Profiles that are still open in another tab cannot be deleted until that tab switches away or closes.',
+      ],
+    },
+  },
+  {
     id: '2026-08-02-weighted-fate',
     title: 'Weighted Fate & Milestone Keys',
     date: '2026-08-02',
