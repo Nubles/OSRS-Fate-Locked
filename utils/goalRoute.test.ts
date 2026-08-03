@@ -175,6 +175,32 @@ describe('buildGoalRoute — diary alternatives', () => {
     ]);
   });
 });
+
+describe('buildGoalRoute — geographic area aliases', () => {
+  it('routes Kandarin Medium Ranging Guild through canonical Areas, never Guilds', () => {
+    const route = buildGoalRoute('Kandarin Medium', stateWith({
+      skills: { Ranged: 10 },
+      levels: { Ranged: 99 },
+      completedTasks: ALL_DIARY_TASKS
+        .filter(task => task.tierId !== 'Kandarin Medium' || task.id !== 'kan_med_3')
+        .map(task => task.id),
+    }))!;
+
+    expect(route.regions).toContainEqual(expect.objectContaining({
+      name: 'Hemenster \u00b7 Ranging Guild',
+      met: false,
+    }));
+    expect(route.tables).toContainEqual(expect.objectContaining({
+      table: TableType.REGIONS,
+      needed: ['Hemenster'],
+    }));
+    expect(route.tables).not.toContainEqual(expect.objectContaining({
+      table: TableType.GUILDS,
+      needed: expect.arrayContaining(['Ranging Guild']),
+    }));
+  });
+});
+
 describe('suggestTables', () => {
   it('computes odds as needed/remaining and ranks descending', () => {
     const unlocks = stateWith().unlocks;
@@ -186,6 +212,15 @@ describe('suggestTables', () => {
     for (let i = 1; i < tables.length; i++) {
       expect(tables[i - 1].odds).toBeGreaterThanOrEqual(tables[i].odds);
     }
+  });
+
+  it('keeps real guild requirements in the Guilds table', () => {
+    const tables = suggestTables(new Set(["Heroes' Guild", 'Ranging Guild']), stateWith().unlocks);
+
+    expect(tables).toContainEqual(expect.objectContaining({
+      table: TableType.GUILDS,
+      needed: ["Heroes' Guild", 'Ranging Guild'],
+    }));
   });
 
   it('returns nothing when nothing is needed', () => {

@@ -360,14 +360,37 @@ describe('save schema compatibility', () => {
     ['Ranging Guild', 'Hemenster'],
     ["Otto's Grotto", 'Baxtorian Falls'],
     ['Resource Area', 'Mage Arena'],
-  ])('migrates %s to %s without refunding an alias-only save', (alias, canonical) => {
-    const result = expectAccepted(validateAndMigrateSave(
-      candidate({}, { regions: [alias] }),
-      defaultsFixture(),
-    ));
-    expect(result.state.keys).toBe(17);
-    expect(result.state.unlocks.regions).toEqual([canonical]);
-    expect(result.warnings).toHaveLength(1);
+  ])('preserves %s and %s across current and unversioned saves', (alias, canonical) => {
+    const variants = [
+      ['alias-only', [alias], 17, true],
+      ['owner-only', [canonical], 17, false],
+      ['mixed alias and owner', [alias, canonical], 18, true],
+    ] as const;
+    const versions = [
+      ['current', false, CURRENT_SAVE_VERSION],
+      ['unversioned', true, 0],
+    ] as const;
+
+    for (const [variant, regions, expectedKeys, aliasMigrated] of variants) {
+      for (const [versionLabel, unversioned, expectedSourceVersion] of versions) {
+        const input = candidate({}, { regions }) as Record<string, unknown>;
+        if (unversioned) delete input.version;
+        const history = structuredClone((input as unknown as GameState).history);
+
+        const first = expectAccepted(validateAndMigrateSave(input, defaultsFixture()));
+        const second = expectAccepted(validateAndMigrateSave(first.state, defaultsFixture()));
+
+        expect(first.sourceVersion, `${variant} ${versionLabel}`).toBe(expectedSourceVersion);
+        expect(first.state.keys, `${variant} ${versionLabel}`).toBe(expectedKeys);
+        expect(first.state.unlocks.regions, `${variant} ${versionLabel}`).toEqual([canonical]);
+        expect(first.state.history, `${variant} ${versionLabel}`).toEqual(history);
+        expect(first.warnings, `${variant} ${versionLabel}`).toHaveLength(
+          unversioned || aliasMigrated ? 1 : 0,
+        );
+        expect(second.state, `${variant} ${versionLabel}`).toEqual(first.state);
+        expect(second.warnings, `${variant} ${versionLabel}`).toEqual([]);
+      }
+    }
   });
   it('refunds every redundant overlapping unlock once and preserves history', () => {
     const input = candidate({}, {

@@ -16,6 +16,7 @@ import { QUEST_CAPE_QUEST_IDS, QUEST_DATA, QuestData } from '../data/questData';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { REGION_GROUPS } from '../data/items';
+import { canonicalAreaName, displayAreaName } from '../data/areaMapPolicy';
 import {
   evaluateQuestEligibility, getDiaryStatus,
   evaluateDiaryTaskEligibility, questRequirementOptionLabel, DirectEligibilityBlocker,
@@ -125,23 +126,25 @@ function currentQuestPoints(unlocks: any): number {
   );
 }
 
+function areaPlanStep(name: string): PlanStep {
+  const canonical = canonicalAreaName(name);
+  return { kind: 'region', id: canonical, label: displayAreaName(canonical), done: false };
+}
+
 function requirementOptionPlanSteps(option: any): PlanStep[] {
   return [
-    ...(option.regions ?? []).map((label: string): PlanStep => ({
-      kind: 'region', id: label, label, done: false,
-    })),
+    ...(option.regions ?? []).map(areaPlanStep),
     ...(option.guilds ?? []).map((label: string): PlanStep => ({
       kind: 'region', id: label, label, done: false,
     })),
-    ...(option.locations ?? []).map((location: any): PlanStep => ({
-      kind: 'region', id: location.label, label: location.label, done: false,
-    })),
+    ...(option.locations ?? []).map((location: any) => areaPlanStep(location.label)),
   ];
 }
 
 function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): PlanStep {
-  if (blocker.kind === 'region' || blocker.kind === 'quest') {
-    return { kind: blocker.kind, id: blocker.label, label: blocker.label, done: false };
+  if (blocker.kind === 'region') return areaPlanStep(blocker.label);
+  if (blocker.kind === 'quest') {
+    return { kind: 'quest', id: blocker.label, label: blocker.label, done: false };
   }
   if (blocker.kind === 'combat') {
     const required = Number(blocker.label.match(/\d+/)?.[0] ?? 1);
@@ -254,7 +257,7 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
             })),
           });
         } else {
-          regions.add(blocker.label);
+          regions.add(canonicalAreaName(blocker.label));
         }
         continue;
       }
@@ -294,9 +297,8 @@ function buildPlanFromRequirements(
   needsConfirmation: boolean,
 ): GoalPlan {
   // Region steps.
-  const regionSteps: PlanStep[] = Array.from(reqs.regions).map((region): PlanStep => ({
-    kind: 'region', id: region, label: region, done: false,
-  })).sort((a, b) => a.label.localeCompare(b.label));
+  const regionSteps = Array.from(reqs.regions)
+    .map(areaPlanStep).sort((a, b) => a.label.localeCompare(b.label));
   const alternativeSteps = [...reqs.alternatives.values()]
     .sort((a, b) => a.label.localeCompare(b.label));
   const manualSteps = [...reqs.manualSteps.values()];
@@ -476,7 +478,7 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
         }
         const blockers = eligibility.blockers;
         for (const blocker of blockers) {
-          if (blocker.kind === 'region') merged.regions.add(blocker.label);
+          if (blocker.kind === 'region') merged.regions.add(canonicalAreaName(blocker.label));
           if (blocker.kind === 'alternative') {
             const label = 'One of: ' + blocker.label;
             merged.alternatives.set(label, {
@@ -519,12 +521,13 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
   }
 
   // region
-  const isUnlocked = isAreaReachable(id, unlocks, gameModeId);
-  const regionStep: PlanStep = { kind: 'region', id, label: id, done: isUnlocked };
+  const canonical = canonicalAreaName(id);
+  const isUnlocked = isAreaReachable(canonical, unlocks, gameModeId);
+  const regionStep: PlanStep = { ...areaPlanStep(canonical), done: isUnlocked };
   return {
     targetKind: 'region',
-    targetId: id,
-    targetLabel: id,
+    targetId: canonical,
+    targetLabel: displayAreaName(canonical),
     alreadyReachable: isUnlocked,
     alreadyDone: isUnlocked,
     needsConfirmation: false,

@@ -291,6 +291,29 @@ describe('planForTarget — diaries', () => {
     expect(plan.alreadyReachable).toBe(true);
     expect(plan.questSteps).toEqual([]);
   });
+
+  it.each([
+    ['Falador Easy', 'fal_easy_7', 'Ice Mountain', 'Goblin Village'],
+    ['Falador Hard', 'fal_hard_7', "Heroes' Guild", 'Taverley'],
+    ['Kandarin Medium', 'kan_med_3', 'Ranging Guild', 'Hemenster'],
+    ['Wilderness Hard', 'wild_hard_4', 'Resource Area', 'Mage Arena'],
+  ])('canonicalizes %s geographic blocker %s to %s with recognizable copy', (
+    tierId,
+    taskId,
+    alias,
+    canonical,
+  ) => {
+    const plan = planForTarget('diary', tierId, maxedUnlocks({
+      completedTasks: ALL_DIARY_TASKS
+        .filter(task => task.tierId !== tierId || task.id !== taskId)
+        .map(task => task.id),
+    }))!;
+
+    expect(plan.regionSteps).toContainEqual(expect.objectContaining({
+      id: canonical,
+      label: `${canonical} \u00b7 ${alias}`,
+    }));
+  });
 });
 
 describe('planForTarget — regions', () => {

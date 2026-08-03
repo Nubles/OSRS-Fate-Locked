@@ -4,6 +4,7 @@ import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { RESOURCE_MAP } from '../data/resourceData';
 import { REGION_GROUPS } from '../constants';
+import { canonicalAreaName, displayAreaName } from '../data/areaMapPolicy';
 import { isAreaReachable } from './reachability';
 import { calculateSupplyChain } from './supplyChain';
 import { getPoolAndStateKey, isValidUnlock } from './gameEngine';
@@ -84,8 +85,9 @@ export interface GoalRoute {
 export { tierForLevel };
 
 const isRegionMet = (r: string, unlocks: UnlockState, gameModeId?: string): boolean => {
-  if (isAreaReachable(r, unlocks, gameModeId)) return true;
-  const children = REGION_GROUPS[r];
+  const canonical = canonicalAreaName(r);
+  if (isAreaReachable(canonical, unlocks, gameModeId)) return true;
+  const children = REGION_GROUPS[canonical];
   return !!children && children.some(a => isAreaReachable(a, unlocks, gameModeId));
 };
 
@@ -176,7 +178,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
     });
     const neededNames = new Set<string>([
       ...plan.questSteps.map(step => step.id),
-      ...plan.regionSteps.map(step => step.label),
+      ...plan.regionSteps.map(step => step.id),
       ...plan.skillSteps.flatMap(step => step.relatedIds ?? [step.id]),
       ...plan.alternativeSteps.flatMap(step => step.routes.flatMap(route => (
         route.blockers.flatMap(blocker => blocker.relatedIds ?? [blocker.id])
@@ -247,7 +249,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
     });
     const neededNames = new Set<string>([
       ...plan.questSteps.map(step => step.id),
-      ...plan.regionSteps.map(step => step.label),
+      ...plan.regionSteps.map(step => step.id),
       ...plan.skillSteps.flatMap(step => step.relatedIds ?? [step.id]),
       ...plan.alternativeSteps.flatMap(step => step.routes.flatMap(route => (
         route.blockers.flatMap(blocker => blocker.relatedIds ?? [blocker.id])
@@ -328,7 +330,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
   // ── Aggregate skills + regions + quest points across the whole chain ─────
   const skillNeed = new Map<string, number>();
   let qpNeed = 0;
-  const regionSet = new Set<string>(req.regions);
+  const regionSet = new Set<string>((req.regions ?? []).map(canonicalAreaName));
   const addSkills = (skills: Record<string, number>) => {
     for (const [skill, lvl] of Object.entries(skills)) {
       if (skill === 'Quest Points') { qpNeed = Math.max(qpNeed, lvl); continue; }
@@ -340,11 +342,11 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
     const q = QUEST_DATA[id];
     if (!q) continue;
     addSkills(q.skills);
-    for (const r of q.regions) regionSet.add(r);
+    for (const r of q.regions) regionSet.add(canonicalAreaName(r));
   }
 
   const regions: RouteItem[] = [...regionSet].sort().map(r => ({
-    name: r,
+    name: displayAreaName(r),
     met: isRegionMet(r, unlocks, gameModeId),
     detail: REGION_GROUPS[r] ? 'any sub-area counts' : undefined,
   }));
@@ -393,14 +395,14 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
 
   // ── Which key tables help ────────────────────────────────────────────────
   const neededNames = new Set<string>();
-  for (const r of regions) {
-    if (r.met) continue;
-    if (REGION_GROUPS[r.name]) {
-      for (const child of REGION_GROUPS[r.name]) {
+  for (const region of regionSet) {
+    if (isRegionMet(region, unlocks, gameModeId)) continue;
+    if (REGION_GROUPS[region]) {
+      for (const child of REGION_GROUPS[region]) {
         if (!isAreaReachable(child, unlocks, gameModeId)) neededNames.add(child);
       }
     } else {
-      neededNames.add(r.name);
+      neededNames.add(region);
     }
   }
   for (const s of skills) if (!s.met) neededNames.add(s.skill);
@@ -433,7 +435,7 @@ function collectNeededFromMissing(missing: string, unlocks: UnlockState, out: Se
   const region = missing.match(/^Region: (.+)$/);
   if (region) {
     for (const r of region[1].split(' or ')) {
-      const name = r.trim();
+      const name = canonicalAreaName(r.trim());
       if (REGION_GROUPS[name]) {
         for (const child of REGION_GROUPS[name]) {
           if (!isAreaReachable(child, unlocks, gameModeId)) out.add(child);
