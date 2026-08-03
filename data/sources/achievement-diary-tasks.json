@@ -1684,7 +1684,7 @@
       "skills": {},
       "quests": [],
       "regions": [
-        "Goblin Village"
+        "Ice Mountain"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -2167,7 +2167,7 @@
         "Heroes' Quest"
       ],
       "regions": [
-        "Taverley"
+        "Heroes' Guild"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -3378,7 +3378,7 @@
       },
       "quests": [],
       "regions": [
-        "Hemenster"
+        "Ranging Guild"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -3802,7 +3802,7 @@
       },
       "quests": [],
       "regions": [
-        "Baxtorian Falls"
+        "Otto's Grotto"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -3917,7 +3917,7 @@
       },
       "quests": [],
       "regions": [
-        "Baxtorian Falls"
+        "Otto's Grotto"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -9357,7 +9357,7 @@
       },
       "quests": [],
       "regions": [
-        "Mage Arena"
+        "Resource Area"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -9541,7 +9541,7 @@
       },
       "quests": [],
       "regions": [
-        "Mage Arena"
+        "Resource Area"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -9560,7 +9560,7 @@
       },
       "quests": [],
       "regions": [
-        "Mage Arena"
+        "Resource Area"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -9628,7 +9628,7 @@
       },
       "quests": [],
       "regions": [
-        "Mage Arena"
+        "Resource Area"
       ],
       "aliases": [],
       "classification": "preserved-semantic",

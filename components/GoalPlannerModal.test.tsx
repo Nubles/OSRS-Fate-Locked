@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { UnlockState } from '../types';
+import { wikiUrlFor } from '../constants';
 import { PlanStep, listGoalTargets, planForTarget } from '../utils/goalPlanner';
-import { GoalPlanReadiness, goalPlannerStepHasWikiLink, goalPlannerTargetState } from './GoalPlannerModal';
+import { GoalPlanReadiness, goalPlannerStepHasWikiLink, goalPlannerStepWikiHref, goalPlannerTargetState } from './GoalPlannerModal';
 
 const step = (id: string, label: string): PlanStep => ({
   kind: 'region',
@@ -14,6 +15,13 @@ const step = (id: string, label: string): PlanStep => ({
 describe('goalPlannerStepHasWikiLink', () => {
   it('keeps normal goal steps linked to their wiki article', () => {
     expect(goalPlannerStepHasWikiLink(step('Lumbridge', 'Lumbridge'))).toBe(true);
+  });
+
+  it('uses the canonical region id instead of an overlap display label', () => {
+    expect(goalPlannerStepWikiHref(step(
+      'Mage Arena',
+      'Mage Arena · Resource Area',
+    ))).toBe(wikiUrlFor('Mage Arena'));
   });
 
   it('does not invent a wiki article for a combined route alternative', () => {

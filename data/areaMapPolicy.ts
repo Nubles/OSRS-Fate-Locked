@@ -43,7 +43,7 @@ export const AREA_REFERENCES = {
   },
   'Dwarven Mine': {
     kind: 'entrance',
-    chunks: [{ cx: 47, cy: 53 }],
+    chunks: [{ cx: 47, cy: 53 }, { cx: 48, cy: 54 }],
     reason: 'Ice Mountain surface entrance to the underground mine.',
   },
   'Asgarnian Ice Dungeon': {
@@ -140,4 +140,53 @@ export const canonicalizeAreaUnlocks = (
     || names.some((name, index) => regions[index] !== name);
 
   return { regions, duplicateAliasRefunds, migrated };
+};
+
+/**
+ * Resolve duplicate canonical ownership only as far as the current key
+ * counter can pay its refunds. Remaining distinct aliases are intentionally
+ * retained as invisible save-state credit markers until a later validation
+ * has room to settle them.
+ */
+export interface CanonicalAreaUnlockSettlement extends CanonicalAreaUnlocks {
+  pendingAliasCredits: string[];
+}
+
+export const settleCanonicalAreaUnlocks = (
+  names: readonly string[],
+  regularKeyRefundCapacity: number,
+): CanonicalAreaUnlockSettlement => {
+  const canonical = canonicalizeAreaUnlocks(names);
+  const rawNamesByCanonical = new Map<string, string[]>();
+  const seenRawNames = new Set<string>();
+
+  for (const name of names) {
+    if (seenRawNames.has(name)) continue;
+    seenRawNames.add(name);
+    const owner = canonicalAreaName(name);
+    const rawNames = rawNamesByCanonical.get(owner) ?? [];
+    rawNames.push(name);
+    rawNamesByCanonical.set(owner, rawNames);
+  }
+
+  const credits = canonical.regions.flatMap(owner => {
+    const rawNames = rawNamesByCanonical.get(owner) ?? [];
+    if (rawNames.length < 2) return [];
+    // Prefer the canonical form as the visible unlock. If no canonical form
+    // was ever stored, treat the earliest alias as the original payment.
+    const paidIdentity = rawNames.includes(owner) ? owner : rawNames[0];
+    return rawNames.filter(name => name !== paidIdentity);
+  });
+  const refunds = Math.min(credits.length, Math.max(0, regularKeyRefundCapacity));
+  const pendingAliasCredits = credits.slice(refunds);
+  const regions = [...canonical.regions, ...pendingAliasCredits];
+  const migrated = names.length !== regions.length
+    || names.some((name, index) => regions[index] !== name);
+
+  return {
+    regions,
+    duplicateAliasRefunds: refunds,
+    pendingAliasCredits,
+    migrated,
+  };
 };

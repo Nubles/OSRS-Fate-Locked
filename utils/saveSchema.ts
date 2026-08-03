@@ -1,7 +1,7 @@
 import { CUSTOM_RULE_BOUNDS, type GameModeRules } from '../config/gameModes';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { EQUIPMENT_SLOTS } from '../data/items';
-import { canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
+import { settleCanonicalAreaUnlocks } from '../data/areaMapPolicy';
 import type { FateCompensationState, GameState, LogEntry, RivalState, UnlockState } from '../types';
 import { migrateClogIds } from './clogIdMigrations';
 import { migrateCompletedTaskIds } from './taskIdMigrations';
@@ -296,6 +296,7 @@ const normalizeUnlocks = (
   value: unknown,
   defaults: UnlockState,
   sourceVersion: number,
+  regularKeyRefundCapacity: number,
 ): Outcome<{ value: UnlockState; migrated: boolean; regularKeyRefunds: number }> => {
   const allowed = new Set(CURRENT_UNLOCK_KEYS);
   if (sourceVersion === 0) {
@@ -350,9 +351,9 @@ const normalizeUnlocks = (
     if (normalized.ok === false) return normalized;
     arrays[key] = normalized.value;
   }
-  const canonicalRegions = canonicalizeAreaUnlocks(arrays.regions);
-  arrays.regions = canonicalRegions.regions;
-  migrated ||= canonicalRegions.migrated;
+  const settledRegions = settleCanonicalAreaUnlocks(arrays.regions, regularKeyRefundCapacity);
+  arrays.regions = settledRegions.regions;
+  migrated ||= settledRegions.migrated;
 
   if (sourceVersion === 0 && own(inspected.value, 'power')) {
     const power = identifierArray(readOwn(inspected.value, 'power'), 'unlocks.power', 'invalid_unlocks');
@@ -412,7 +413,7 @@ const normalizeUnlocks = (
     value: {
       value: unlocks,
       migrated,
-      regularKeyRefunds: canonicalRegions.duplicateAliasRefunds,
+      regularKeyRefunds: settledRegions.duplicateAliasRefunds,
     },
   };
 };
@@ -891,7 +892,7 @@ const normalizeState = (
   }
   const selectedUnlocks = readPreferred(input, defaultRecord, 'unlocks');
   if (!selectedUnlocks.present) return invalid('invalid_unlocks', 'unlocks');
-  const unlocks = normalizeUnlocks(selectedUnlocks.value, defaults.unlocks, sourceVersion);
+  const unlocks = normalizeUnlocks(selectedUnlocks.value, defaults.unlocks, sourceVersion, MAX_COUNTER - keys.value);
   if (unlocks.ok === false) return unlocks;
   const selectedHistory = readPreferred(input, defaultRecord, 'history');
   if (!selectedHistory.present) return invalid('invalid_history', 'history');

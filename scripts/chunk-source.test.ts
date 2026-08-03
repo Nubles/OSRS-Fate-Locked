@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { createHash } from 'node:crypto';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { gunzip } from 'node:zlib';
+import { promisify } from 'node:util';
 import {
   checkChunkSourceDrift,
   readPinnedChunkSource,
@@ -11,6 +13,11 @@ import {
   writeApprovedChunkSource,
 } from './chunk-source.mjs';
 import { transformChunkContent } from './chunk-content-transform.mjs';
+
+
+const unzip = promisify(gunzip);
+const gitBlobSha = (raw: Buffer) => createHash('sha1')
+  .update(`blob ${raw.length}\0`).update(raw).digest('hex');
 
 describe('pinned Chunk Picker source', () => {
   it('verifies the exact reviewed commit, blob, bytes, and raw hash offline', async () => {
@@ -47,6 +54,7 @@ describe('pinned Chunk Picker source', () => {
       rawBytes: raw.length,
       rawSha256: createHash('sha256').update(raw).digest('hex').toUpperCase(),
       countFloors: { contentChunks: 1 },
+      blobSha: gitBlobSha(raw),
     });
 
     await writeFile(targetUrl, existing);
@@ -64,6 +72,90 @@ describe('pinned Chunk Picker source', () => {
       await rm(tempDir, { force: true, recursive: true });
     }
   });
+
+  it('rejects a stale Git blob hash before replacing an existing gzip', async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), 'fate-chunk-source-'));
+    const targetUrl = pathToFileURL(join(tempDir, 'chunk-source.json.gz'));
+    const existing = Buffer.from('preserve stale-manifest target');
+    const { raw, manifest } = await readPinnedChunkSource();
+    await writeFile(targetUrl, existing);
+
+    try {
+      await expect(writeApprovedChunkSource(raw, {
+        ...manifest,
+        blobSha: '0000000000000000000000000000000000000000',
+      }, targetUrl)).rejects.toThrow('Git blob SHA-1 mismatch');
+      await expect(readFile(targetUrl)).resolves.toEqual(existing);
+      expect((await readdir(tempDir)).filter(name => name.endsWith('.tmp'))).toEqual([]);
+    } finally {
+      await rm(tempDir, { force: true, recursive: true });
+    }
+  });
+
+  it('preserves the target and cleans its sibling temp file when writing fails', async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), 'fate-chunk-source-'));
+    const targetUrl = pathToFileURL(join(tempDir, 'chunk-source.json.gz'));
+    const existing = Buffer.from('preserve write-failure target');
+    const { raw, manifest } = await readPinnedChunkSource();
+    await writeFile(targetUrl, existing);
+
+    const failingWrite = {
+      readFile,
+      rename,
+      rm,
+      writeFile: async (url: URL, data: Uint8Array) => {
+        await writeFile(url, Buffer.from(data).subarray(0, 16));
+        throw new Error('simulated temp write failure');
+      },
+    };
+    try {
+      await expect(writeApprovedChunkSource(raw, manifest, targetUrl, failingWrite))
+        .rejects.toThrow('simulated temp write failure');
+      await expect(readFile(targetUrl)).resolves.toEqual(existing);
+      expect((await readdir(tempDir)).filter(name => name.endsWith('.tmp'))).toEqual([]);
+    } finally {
+      await rm(tempDir, { force: true, recursive: true });
+    }
+  });
+
+  it('preserves the target and cleans its sibling temp file when renaming fails', async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), 'fate-chunk-source-'));
+    const targetUrl = pathToFileURL(join(tempDir, 'chunk-source.json.gz'));
+    const existing = Buffer.from('preserve rename-failure target');
+    const { raw, manifest } = await readPinnedChunkSource();
+    await writeFile(targetUrl, existing);
+
+    const failingRename = {
+      readFile,
+      writeFile,
+      rm,
+      rename: async () => { throw new Error('simulated atomic rename failure'); },
+    };
+    try {
+      await expect(writeApprovedChunkSource(raw, manifest, targetUrl, failingRename))
+        .rejects.toThrow('simulated atomic rename failure');
+      await expect(readFile(targetUrl)).resolves.toEqual(existing);
+      expect((await readdir(tempDir)).filter(name => name.endsWith('.tmp'))).toEqual([]);
+    } finally {
+      await rm(tempDir, { force: true, recursive: true });
+    }
+  });
+
+  it('writes a fully validated canonical gzip artifact with OS header byte 10', async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), 'fate-chunk-source-'));
+    const targetUrl = pathToFileURL(join(tempDir, 'chunk-source.json.gz'));
+    const { raw, manifest } = await readPinnedChunkSource();
+
+    try {
+      await writeApprovedChunkSource(raw, manifest, targetUrl);
+      const compressed = await readFile(targetUrl);
+      expect([...compressed.subarray(0, 10)]).toEqual([31, 139, 8, 0, 0, 0, 0, 0, 2, 10]);
+      await expect(unzip(compressed)).resolves.toEqual(raw);
+      expect((await readdir(tempDir)).filter(name => name.endsWith('.tmp'))).toEqual([]);
+    } finally {
+      await rm(tempDir, { force: true, recursive: true });
+    }
+  }, 20_000);
 
   it('pins reviewed transform totals and the unresolved named-location backlog', async () => {
     const { data, manifest } = await readPinnedChunkSource();

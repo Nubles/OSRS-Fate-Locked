@@ -523,15 +523,45 @@ describe('save schema compatibility', () => {
     expect(result.state.unlocks.regions).toEqual(['Iorwerth Camp']);
   });
 
-  it('saturates a duplicate refund at MAX_COUNTER', () => {
+  it.each([
+    ['current', false],
+    ['unversioned', true],
+  ])('keeps an unpaid duplicate alias as a pending credit at MAX_COUNTER (%s)', (
+    _versionLabel,
+    unversioned,
+  ) => {
     const input = candidate({ keys: MAX_COUNTER }, {
       regions: ['Elf Camp', 'Iorwerth Camp'],
-    });
-    const result = expectAccepted(validateAndMigrateSave(input, defaultsFixture()));
+    }) as Record<string, unknown>;
+    if (unversioned) delete input.version;
+    const held = expectAccepted(validateAndMigrateSave(input, defaultsFixture()));
+    const spent = expectAccepted(validateAndMigrateSave({
+      ...held.state,
+      keys: MAX_COUNTER - 1,
+    }, defaultsFixture()));
+    const revalidated = expectAccepted(validateAndMigrateSave(spent.state, defaultsFixture()));
 
-    expect(result.state.keys).toBe(MAX_COUNTER);
-    expect(result.state.unlocks.regions).toEqual(['Iorwerth Camp']);
-    expect(result.warnings).toHaveLength(1);
+    expect(held.state.keys).toBe(MAX_COUNTER);
+    expect(held.state.unlocks.regions).toEqual(['Iorwerth Camp', 'Elf Camp']);
+    expect(spent.state.keys).toBe(MAX_COUNTER);
+    expect(spent.state.unlocks.regions).toEqual(['Iorwerth Camp']);
+    expect(revalidated.state).toEqual(spent.state);
+  });
+
+  it('settles only the available capacity while retaining multiple distinct pending overlap credits', () => {
+    const held = expectAccepted(validateAndMigrateSave(candidate({ keys: MAX_COUNTER - 1 }, {
+      regions: [
+        "Heroes' Guild", 'Taverley',
+        "Otto's Grotto", 'Baxtorian Falls',
+        'Resource Area', 'Mage Arena',
+      ],
+    }), defaultsFixture()));
+
+    expect(held.state.keys).toBe(MAX_COUNTER);
+    expect(held.state.unlocks.regions).toEqual([
+      'Taverley', 'Baxtorian Falls', 'Mage Arena',
+      "Otto's Grotto", 'Resource Area',
+    ]);
   });
   it('migrates supported legacy aliases exactly once without double-counting collection aliases', () => {
     const legacy = clone(fullStateFixture()) as unknown as Record<string, unknown>;

@@ -18,6 +18,7 @@ import {
   type SourceBoundCandidate,
 } from '../utils/gamePersistence';
 import { showToast } from '../utils/toast';
+import { canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
 
 interface Props {
   onClose: () => void;
@@ -60,7 +61,7 @@ const previewOf = (state: GameState): RunPreview => {
     keys: state.keys,
     specialKeys: state.specialKeys,
     chaosKeys: state.chaosKeys,
-    regions: state.unlocks.regions.length,
+    regions: canonicalizeAreaUnlocks(state.unlocks.regions).regions.length,
     quests: state.unlocks.quests.length,
     skillTiers,
     events: state.history.length,

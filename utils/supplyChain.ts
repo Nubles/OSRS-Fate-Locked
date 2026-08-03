@@ -5,6 +5,7 @@ import { REGION_GROUPS, MERCHANTS_LIST } from '../constants';
 import { isFreeArea } from './freeAreas';
 import { isNamedAreaReachableViaChunks } from './reachability';
 import { REGION_CHUNKS } from '../data/regionChunks';
+import { canonicalAreaName } from '../data/areaMapPolicy';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 
 export interface RouteStatus {
@@ -75,8 +76,10 @@ export const buildAvailabilityContext = (gs: GameState): AvailabilityContext => 
   // `ctx.regions.has(r)` check (and the isFreeArea(r) fallback) both work
   // unmodified for Chunked runs.
   const regions = gs.gameModeId === 'chunked'
-    ? new Set(ALL_NAMED_AREAS.filter((name) => isNamedAreaReachableViaChunks(name, u.chunks ?? [])))
-    : new Set(u.regions);
+    ? new Set(ALL_NAMED_AREAS
+      .filter((name) => isNamedAreaReachableViaChunks(name, u.chunks ?? []))
+      .map(canonicalAreaName))
+    : new Set(u.regions.map(canonicalAreaName));
   return {
     regions,
     quests: new Set(u.quests),
@@ -108,7 +111,10 @@ const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collect
 
   // 1. Region
   let hasRegion = false;
-  for (const r of source.regions) {
+  for (const authoredRegion of source.regions) {
+    // Resource source geography is ownership metadata rather than a map-pin
+    // instruction, so aliases intentionally resolve to their canonical owner.
+    const r = canonicalAreaName(authoredRegion);
     if (r === 'Any' || isFreeArea(r) || ctx.regions.has(r)) {
       hasRegion = true; break;
     }

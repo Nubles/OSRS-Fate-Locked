@@ -6,16 +6,18 @@ import { ALL_CHUNK_KEYS, isFrontierChunk } from './chunkAdjacency';
 import { BANK_IDS } from '../data/banks';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { getActivityAccess } from './activityAccess';
+import { canonicalAreaName, canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
 
 export const rollDice = (max: number = 100) => Math.floor(Math.random() * max) + 1;
 
 export const checkUnlockAvailability = (unlocks: UnlockState) => {
+    const canonicalRegions = canonicalizeAreaUnlocks(unlocks.regions).regions;
     const totalSkillTiers = (Object.values(unlocks.skills) as number[]).reduce((a, b) => a + b, 0);
     const totalEquipTiers = (Object.values(unlocks.equipment) as number[]).reduce((a, b) => a + b, 0);
     return {
         equipment: totalEquipTiers < (EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX),
         skills: totalSkillTiers < (SKILLS_LIST.length * 10),
-        regions: unlocks.regions.length < REGIONS_LIST.length,
+        regions: canonicalRegions.length < REGIONS_LIST.length,
         chunks: (unlocks.chunks ?? []).length < ALL_CHUNK_KEYS.length,
         mobility: unlocks.mobility.length < MOBILITY_LIST.length,
         arcana: unlocks.arcana.length < ARCANA_LIST.length,
@@ -38,7 +40,7 @@ export const isValidUnlock = (table: TableType, item: string, unlocks: UnlockSta
         return true;
     }
     if (table === TableType.EQUIPMENT) return (unlocks.equipment[item] || 0) < EQUIPMENT_TIER_MAX;
-    if (table === TableType.REGIONS) return !unlocks.regions.includes(item);
+    if (table === TableType.REGIONS) return !canonicalizeAreaUnlocks(unlocks.regions).regions.includes(canonicalAreaName(item));
     if (table === TableType.MOBILITY) return !unlocks.mobility.includes(item);
     if (table === TableType.ARCANA) return !unlocks.arcana.includes(item);
     if (table === TableType.POH) return !unlocks.housing.includes(item);

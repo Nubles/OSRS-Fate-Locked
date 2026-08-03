@@ -6,6 +6,7 @@ import { categoryColor } from '../utils/rarity';
 import { X, Play, ZoomIn, ZoomOut, Sparkles, Maximize2 } from 'lucide-react';
 
 import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
+import { canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
 interface Props { onClose: () => void; }
 
 interface FNode {
@@ -43,7 +44,7 @@ export const FateThread: React.FC<Props> = ({ onClose }) => {
     const gearNames = Object.keys(unlocks.equipment || {}).filter(s => (unlocks.equipment as any)[s] > 0);
     const defs: Array<[string, string, string[]]> = [
       [TableType.BOSSES, 'Bosses', unlocks.bosses],
-      [TableType.REGIONS, 'Regions', unlocks.regions],
+      [TableType.REGIONS, 'Regions', canonicalizeAreaUnlocks(unlocks.regions).regions],
       [TableType.CHUNKS, 'Chunks', unlocks.chunks ?? []],
       [TableType.MINIGAMES, 'Minigames', unlocks.minigames],
       [TableType.GUILDS, 'Guilds', unlocks.guilds],

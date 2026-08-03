@@ -13,6 +13,16 @@ describe('audited current quest requirements', () => {
       .toEqual(['rimmington']);
   });
 
+  it("pins Doric's hut to Falador's northern gate chunk, not Goblin Village", () => {
+    expect(QUEST_DATA["Doric's Quest"].locations).toEqual([
+      expect.objectContaining({
+        id: 'dorics-hut',
+        standardAreas: ['Falador'],
+        chunkOptions: [{ cx: 46, cy: 53 }],
+      }),
+    ]);
+  });
+
   it("pins Murder Mystery to Sinclair Mansion and Seers' Village", () => {
     expect(QUEST_DATA['Murder Mystery']).toMatchObject({
       kind: 'quest',
@@ -1081,7 +1091,7 @@ describe('audited current quest requirements', () => {
                             "id": "dorics-hut",
                             "label": "Doric's hut",
                             "standardAreas": [
-                                  "Goblin Village"
+                                  "Falador"
                             ],
                             "chunkOptions": [
                                   {
@@ -1607,7 +1617,7 @@ describe('audited current quest requirements', () => {
                             "id": "horseshoe-mine",
                             "label": "Horseshoe Mine",
                             "standardAreas": [
-                                  "Kandarin"
+                                  "Brimhaven"
                             ],
                             "chunkOptions": [
                                   {
@@ -2464,7 +2474,7 @@ describe('audited current quest requirements', () => {
             "id": "skippys-camp",
             "label": "Skippy's camp south-east of Rimmington",
             "standardAreas": [
-              "Rimmington"
+              "Port Sarim"
             ]
           }
         ],
@@ -4819,7 +4829,7 @@ describe('audited current quest requirements', () => {
             "id": "thurgos-hut",
             "label": "Thurgo's hut south of Port Sarim",
             "standardAreas": [
-              "Rimmington"
+              "Port Sarim"
             ],
             "chunkOptions": [
               {

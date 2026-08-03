@@ -11,6 +11,9 @@ import {
   GUILDS_LIST, SKILLS_LIST, REGION_GROUPS, MISTHALIN_AREAS,
 } from './items';
 import { ALL_CHUNK_KEYS, chunkKey } from '../utils/chunkAdjacency';
+import { REGION_CHUNKS } from './regionChunks';
+import { SUB_AREA_CHUNKS } from './subAreaChunks';
+import { AREA_ALIAS_POLICIES, AREA_REFERENCES } from './areaMapPolicy';
 
 /**
  * Integrity guards for the per-task lists that drive CALog / DiaryLog.
@@ -36,6 +39,7 @@ const META_SKILL = new Set(['Quest Points']);
 const VALID_REGION = new Set<string>([
   'Misthalin', ...MISTHALIN_AREAS, ...Object.keys(REGION_GROUPS),
   ...Object.values(REGION_GROUPS).flat(),
+  ...Object.keys(AREA_ALIAS_POLICIES),
 ]);
 const VALID_GUILD = new Set(GUILDS_LIST);
 const VALID_CHUNK = new Set(ALL_CHUNK_KEYS);
@@ -224,6 +228,26 @@ describe('Quest data integrity', () => {
     }
     expect(badAreas, 'quest locations with unknown standard areas').toEqual([]);
     expect(badChunks, 'quest locations with unknown chunk coordinates').toEqual([]);
+  });
+  it('assigns every quest location coordinate to one of its Standard-owned areas', () => {
+    const mismatch: string[] = [];
+    for (const [questId, quest] of Object.entries(QUEST_DATA)) {
+      for (const location of allLocations(quest)) {
+        for (const coordinate of location.chunkOptions) {
+          const key = chunkKey(coordinate);
+          const ownsCoordinate = location.standardAreas.some(area => (
+            [
+              ...(SUB_AREA_CHUNKS[area] ?? []),
+              ...(REGION_CHUNKS[area] ?? []),
+              ...(AREA_REFERENCES[area]?.chunks ?? []),
+            ].some(candidate => chunkKey(candidate) === key)
+          ));
+          if (!ownsCoordinate) mismatch.push(questId + ' -> ' + location.id + ' -> ' + key);
+        }
+      }
+    }
+
+    expect(mismatch, 'quest locations outside every listed Standard-owned area').toEqual([]);
   });
 
   it('every alternative access option references known areas, guilds, and locations', () => {

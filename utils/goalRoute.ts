@@ -9,7 +9,7 @@ import { isAreaReachable } from './reachability';
 import { calculateSupplyChain } from './supplyChain';
 import { getPoolAndStateKey, isValidUnlock } from './gameEngine';
 import { tierForLevel } from './skillTiers';
-import { planForTarget } from './goalPlanner';
+import { planForTarget, type PlanStep } from './goalPlanner';
 import { evaluateDiaryTierEligibility } from './journalStatus';
 import { effectiveCombatLevel, effectiveSkillLevel } from './slayerReach';
 
@@ -57,6 +57,12 @@ export interface TableSuggestion {
   odds: number;
 }
 
+/** A needed unlock with its authoritative gacha-table provenance. */
+export interface TableDependency {
+  table: TableType;
+  id: string;
+}
+
 export interface RouteAlternative {
   name: string;
   met: boolean;
@@ -79,6 +85,18 @@ export interface GoalRoute {
   completedSteps: number;
   percentage: number;
 }
+
+function tableDependenciesForSteps(steps: readonly PlanStep[]): TableDependency[] {
+  const dependencies: TableDependency[] = [];
+  for (const step of steps) {
+    if (!step.unlockTable) continue;
+    for (const id of step.relatedIds ?? [step.id]) {
+      dependencies.push({ table: step.unlockTable, id });
+    }
+  }
+  return dependencies;
+}
+
 
 // Tier ↔ level model now lives in one place (utils/skillTiers); re-exported
 // here so existing callers and tests keep working unchanged.
@@ -176,13 +194,11 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
         met: step.done,
       };
     });
-    const neededNames = new Set<string>([
-      ...plan.questSteps.map(step => step.id),
-      ...plan.regionSteps.map(step => step.id),
-      ...plan.skillSteps.flatMap(step => step.relatedIds ?? [step.id]),
-      ...plan.alternativeSteps.flatMap(step => step.routes.flatMap(route => (
-        route.blockers.flatMap(blocker => blocker.relatedIds ?? [blocker.id])
-      ))),
+    const dependencies = tableDependenciesForSteps([
+      ...plan.questSteps,
+      ...plan.regionSteps,
+      ...plan.skillSteps,
+      ...plan.alternativeSteps.flatMap(step => step.routes.flatMap(route => route.blockers)),
     ]);
     const totalSteps = eligibility.evidence.length + eligibility.blockers.length;
     const completedSteps = eligibility.evidence.length;
@@ -196,7 +212,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       alternatives,
       diaries: [],
       sources: [],
-      tables: suggestTables(neededNames, unlocks),
+      tables: suggestTables(dependencies, unlocks),
       totalSteps,
       completedSteps,
       percentage: eligibility.eligible || eligibility.status === 'COMPLETED'
@@ -247,13 +263,11 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
         met: step.done,
       };
     });
-    const neededNames = new Set<string>([
-      ...plan.questSteps.map(step => step.id),
-      ...plan.regionSteps.map(step => step.id),
-      ...plan.skillSteps.flatMap(step => step.relatedIds ?? [step.id]),
-      ...plan.alternativeSteps.flatMap(step => step.routes.flatMap(route => (
-        route.blockers.flatMap(blocker => blocker.relatedIds ?? [blocker.id])
-      ))),
+    const dependencies = tableDependenciesForSteps([
+      ...plan.questSteps,
+      ...plan.regionSteps,
+      ...plan.skillSteps,
+      ...plan.alternativeSteps.flatMap(step => step.routes.flatMap(route => route.blockers)),
     ]);
     const qpNeed = Number(plan.qpStep?.detail?.match(/\d+/)?.[0] ?? 0);
     const qpHave = unlocks.quests.reduce(
@@ -274,7 +288,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       diaries: [],
       questPoints: qpNeed > 0 ? { need: qpNeed, have: qpHave, met: qpHave >= qpNeed } : undefined,
       sources: [],
-      tables: suggestTables(neededNames, unlocks),
+      tables: suggestTables(dependencies, unlocks),
       totalSteps,
       completedSteps,
       percentage: Math.round((completedSteps / totalSteps) * 100),
@@ -293,12 +307,12 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       available: s.status.isAvailable,
       missing: s.status.missing,
     }));
-    const neededNames = new Set<string>();
+    const dependencies: TableDependency[] = [];
     for (const s of sources) {
       if (s.available) continue;
-      for (const m of s.missing) collectNeededFromMissing(m, unlocks, neededNames, gameModeId);
+      for (const m of s.missing) collectNeededFromMissing(m, unlocks, dependencies, gameModeId);
     }
-    const tables = suggestTables(neededNames, unlocks);
+    const tables = suggestTables(dependencies, unlocks);
     const total = Math.max(1, sources.length);
     const done = sources.filter(s => s.available).length;
     return {
@@ -394,24 +408,26 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
   const questPoints = qpNeed > 0 ? { need: qpNeed, have: haveQp, met: haveQp >= qpNeed } : undefined;
 
   // ── Which key tables help ────────────────────────────────────────────────
-  const neededNames = new Set<string>();
+  const dependencies: TableDependency[] = [];
   for (const region of regionSet) {
     if (isRegionMet(region, unlocks, gameModeId)) continue;
     if (REGION_GROUPS[region]) {
       for (const child of REGION_GROUPS[region]) {
-        if (!isAreaReachable(child, unlocks, gameModeId)) neededNames.add(child);
+        if (!isAreaReachable(child, unlocks, gameModeId)) {
+          dependencies.push({ table: TableType.REGIONS, id: child });
+        }
       }
     } else {
-      neededNames.add(region);
+      dependencies.push({ table: TableType.REGIONS, id: region });
     }
   }
-  for (const s of skills) if (!s.met) neededNames.add(s.skill);
-  for (const blocker of canonicalQuestPlan?.alternativeSteps.flatMap(step => (
-    step.routes.flatMap(route => route.blockers)
-  )) ?? []) {
-    for (const id of blocker.relatedIds ?? [blocker.id]) neededNames.add(id);
+  for (const s of skills) {
+    if (!s.met) dependencies.push({ table: TableType.SKILLS, id: s.skill });
   }
-  const tables = suggestTables(neededNames, unlocks);
+  dependencies.push(...tableDependenciesForSteps(
+    canonicalQuestPlan?.alternativeSteps.flatMap(step => step.routes.flatMap(route => route.blockers)) ?? [],
+  ));
+  const tables = suggestTables(dependencies, unlocks);
 
   // ── Totals ────────────────────────────────────────────────────────────────
   const items: { met: boolean }[] = [
@@ -430,33 +446,58 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
   };
 }
 
-/** Parse a supply-chain "missing" reason into unlockable names. */
-function collectNeededFromMissing(missing: string, unlocks: UnlockState, out: Set<string>, gameModeId?: string) {
+/** Parse a supply-chain "missing" reason into table-qualified unlocks. */
+function collectNeededFromMissing(
+  missing: string,
+  unlocks: UnlockState,
+  out: TableDependency[],
+  gameModeId?: string,
+) {
   const region = missing.match(/^Region: (.+)$/);
   if (region) {
     for (const r of region[1].split(' or ')) {
       const name = canonicalAreaName(r.trim());
       if (REGION_GROUPS[name]) {
         for (const child of REGION_GROUPS[name]) {
-          if (!isAreaReachable(child, unlocks, gameModeId)) out.add(child);
+          if (!isAreaReachable(child, unlocks, gameModeId)) {
+            out.push({ table: TableType.REGIONS, id: child });
+          }
         }
       } else {
-        out.add(name);
+        out.push({ table: TableType.REGIONS, id: name });
       }
     }
     return;
   }
-  const tagged = missing.match(/^(Unlock|Merchant|Mobility): (.+)$/);
-  if (tagged) { out.add(tagged[2].trim()); return; }
+  const tagged = missing.match(/^(Merchant|Mobility): (.+)$/);
+  if (tagged) {
+    out.push({
+      table: tagged[1] === 'Merchant' ? TableType.MERCHANTS : TableType.MOBILITY,
+      id: tagged[2].trim(),
+    });
+    return;
+  }
   const lockedSkill = missing.match(/^Skill Locked: (.+)$/);
-  if (lockedSkill) { out.add(lockedSkill[1].trim()); return; }
+  if (lockedSkill) {
+    out.push({ table: TableType.SKILLS, id: lockedSkill[1].trim() });
+  }
 }
 
 /** Rank spend tables by the chance a draw advances the goal. */
-export function suggestTables(neededNames: Set<string>, unlocks: UnlockState): TableSuggestion[] {
-  if (neededNames.size === 0) return [];
+export function suggestTables(
+  dependencies: Iterable<TableDependency>,
+  unlocks: UnlockState,
+): TableSuggestion[] {
+  const neededByTable = new Map<TableType, Set<string>>();
+  for (const { table, id } of dependencies) {
+    if (!id) continue;
+    const names = neededByTable.get(table) ?? new Set<string>();
+    names.add(id);
+    neededByTable.set(table, names);
+  }
+  if (neededByTable.size === 0) return [];
   const out: TableSuggestion[] = [];
-  for (const table of Object.values(TableType)) {
+  for (const [table, neededNames] of neededByTable) {
     let pool: string[];
     try {
       pool = getPoolAndStateKey(table).pool;

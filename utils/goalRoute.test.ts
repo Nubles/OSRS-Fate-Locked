@@ -199,12 +199,38 @@ describe('buildGoalRoute — geographic area aliases', () => {
       needed: expect.arrayContaining(['Ranging Guild']),
     }));
   });
+
+  it('suggests only the Regions table for the Mage Arena area, never the unrelated minigame name', () => {
+    const route = buildGoalRoute('Wilderness Hard', stateWith({
+      skills: { Smithing: 10 },
+      levels: { Smithing: 99 },
+      completedTasks: ALL_DIARY_TASKS
+        .filter(task => task.tierId !== 'Wilderness Hard' || task.id !== 'wild_hard_4')
+        .map(task => task.id),
+    }))!;
+
+    expect(route.regions).toContainEqual(expect.objectContaining({
+      name: 'Mage Arena · Resource Area',
+      met: false,
+    }));
+    expect(route.tables).toContainEqual(expect.objectContaining({
+      table: TableType.REGIONS,
+      needed: ['Mage Arena'],
+    }));
+    expect(route.tables).not.toContainEqual(expect.objectContaining({
+      table: TableType.MINIGAMES,
+      needed: expect.arrayContaining(['Mage Arena']),
+    }));
+  });
 });
 
 describe('suggestTables', () => {
   it('computes odds as needed/remaining and ranks descending', () => {
     const unlocks = stateWith().unlocks;
-    const tables = suggestTables(new Set(['Falador', 'Cooking']), unlocks);
+    const tables = suggestTables([
+      { table: TableType.REGIONS, id: 'Falador' },
+      { table: TableType.SKILLS, id: 'Cooking' },
+    ], unlocks);
     expect(tables.length).toBeGreaterThanOrEqual(2);
     const regions = tables.find(t => t.table === TableType.REGIONS)!;
     expect(regions.needed).toEqual(['Falador']);
@@ -215,7 +241,10 @@ describe('suggestTables', () => {
   });
 
   it('keeps real guild requirements in the Guilds table', () => {
-    const tables = suggestTables(new Set(["Heroes' Guild", 'Ranging Guild']), stateWith().unlocks);
+    const tables = suggestTables([
+      { table: TableType.GUILDS, id: "Heroes' Guild" },
+      { table: TableType.GUILDS, id: 'Ranging Guild' },
+    ], stateWith().unlocks);
 
     expect(tables).toContainEqual(expect.objectContaining({
       table: TableType.GUILDS,
@@ -224,6 +253,6 @@ describe('suggestTables', () => {
   });
 
   it('returns nothing when nothing is needed', () => {
-    expect(suggestTables(new Set(), stateWith().unlocks)).toEqual([]);
+    expect(suggestTables([], stateWith().unlocks)).toEqual([]);
   });
 });

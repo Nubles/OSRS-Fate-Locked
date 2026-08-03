@@ -1783,7 +1783,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Asgarnia\"],\"locations\":[{\"chunkOptions\":[{\"cx\":46,\"cy\":53}],\"id\":\"dorics-hut\",\"label\":\"Doric's hut\",\"standardAreas\":[\"Goblin Village\"]}],\"skills\":{},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Asgarnia\"],\"locations\":[{\"chunkOptions\":[{\"cx\":46,\"cy\":53}],\"id\":\"dorics-hut\",\"label\":\"Doric's hut\",\"standardAreas\":[\"Falador\"]}],\"skills\":{},\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "46,53",
@@ -2503,7 +2503,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Islands & Others\",\"Misthalin\",\"Kandarin\",\"Tirannwn\"],\"locations\":[{\"chunkOptions\":[{\"cx\":48,\"cy\":50}],\"id\":\"draynor-village\",\"label\":\"Draynor Village\",\"standardAreas\":[\"Draynor Village\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":49}],\"id\":\"zanaris\",\"label\":\"Zanaris\",\"standardAreas\":[\"Zanaris\"]},{\"chunkOptions\":[{\"cx\":34,\"cy\":48}],\"id\":\"poison-waste\",\"label\":\"Poison Waste\",\"standardAreas\":[\"Poison Waste\"]},{\"chunkOptions\":[{\"cx\":42,\"cy\":50}],\"id\":\"horseshoe-mine\",\"label\":\"Horseshoe Mine\",\"standardAreas\":[\"Kandarin\"]}],\"skills\":{\"Farming\":49,\"Herblore\":57,\"Thieving\":40},\"prereqs\":[\"Fairytale I - Growing Pains\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Islands & Others\",\"Misthalin\",\"Kandarin\",\"Tirannwn\"],\"locations\":[{\"chunkOptions\":[{\"cx\":48,\"cy\":50}],\"id\":\"draynor-village\",\"label\":\"Draynor Village\",\"standardAreas\":[\"Draynor Village\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":49}],\"id\":\"zanaris\",\"label\":\"Zanaris\",\"standardAreas\":[\"Zanaris\"]},{\"chunkOptions\":[{\"cx\":34,\"cy\":48}],\"id\":\"poison-waste\",\"label\":\"Poison Waste\",\"standardAreas\":[\"Poison Waste\"]},{\"chunkOptions\":[{\"cx\":42,\"cy\":50}],\"id\":\"horseshoe-mine\",\"label\":\"Horseshoe Mine\",\"standardAreas\":[\"Brimhaven\"]}],\"skills\":{\"Farming\":49,\"Herblore\":57,\"Thieving\":40},\"prereqs\":[\"Fairytale I - Growing Pains\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "34,48",
@@ -5013,7 +5013,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"The Open Seas\"],\"locations\":[{\"chunkOptions\":[{\"cx\":47,\"cy\":46}],\"id\":\"the-pandemonium\",\"label\":\"The Pandemonium\",\"standardAreas\":[\"The Pandemonium\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":49}],\"id\":\"port-sarim-docks\",\"label\":\"Port Sarim docks\",\"standardAreas\":[\"Port Sarim\"]},{\"chunkOptions\":[{\"cx\":46,\"cy\":49}],\"id\":\"thurgos-hut\",\"label\":\"Thurgo's hut south of Port Sarim\",\"standardAreas\":[\"Rimmington\"]}],\"skills\":{\"Sailing\":12,\"Smithing\":30},\"prereqs\":[\"Pandemonium\",\"The Knight's Sword\"],\"manualRequirements\":[\"One open Sailing task slot\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"The Open Seas\"],\"locations\":[{\"chunkOptions\":[{\"cx\":47,\"cy\":46}],\"id\":\"the-pandemonium\",\"label\":\"The Pandemonium\",\"standardAreas\":[\"The Pandemonium\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":49}],\"id\":\"port-sarim-docks\",\"label\":\"Port Sarim docks\",\"standardAreas\":[\"Port Sarim\"]},{\"chunkOptions\":[{\"cx\":46,\"cy\":49}],\"id\":\"thurgos-hut\",\"label\":\"Thurgo's hut south of Port Sarim\",\"standardAreas\":[\"Port Sarim\"]}],\"skills\":{\"Sailing\":12,\"Smithing\":30},\"prereqs\":[\"Pandemonium\",\"The Knight's Sword\"],\"manualRequirements\":[\"One open Sailing task slot\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "46,49",
@@ -6329,7 +6329,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Asgarnia\"],\"locations\":[{\"chunkOptions\":[{\"cx\":46,\"cy\":49}],\"id\":\"skippys-camp\",\"label\":\"Skippy's camp south-east of Rimmington\",\"standardAreas\":[\"Rimmington\"]}],\"skills\":{\"Cooking\":20},\"prereqs\":[],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Asgarnia\"],\"locations\":[{\"chunkOptions\":[{\"cx\":46,\"cy\":49}],\"id\":\"skippys-camp\",\"label\":\"Skippy's camp south-east of Rimmington\",\"standardAreas\":[\"Port Sarim\"]}],\"skills\":{\"Cooking\":20},\"prereqs\":[],\"points\":0}",
       "chunkEvidence": [
         {
           "chunkId": "46,49",
@@ -6342,7 +6342,7 @@
           "Water, nettle tea, and a hangover cure are required; their item sources are not machine-enforced."
         ],
         "travel": [
-          "Skippy's fixed coordinate south-east of Rimmington lies in chunk 46,49, matching the pinned first row even though the picker locale calls that chunk Port Sarim Church."
+          "Skippy's fixed coordinate south-east of Rimmington lies in chunk 46,49; the pinned picker locale is Port Sarim Church, so the Standard-area gate uses Port Sarim."
         ],
         "instances": [],
         "partialCompletion": []

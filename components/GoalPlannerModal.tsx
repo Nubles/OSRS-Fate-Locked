@@ -93,11 +93,12 @@ const STEP_ICON: Record<PlanStep['kind'], React.ReactNode> = {
   manual: <Compass size={12} />,
 };
 
-/** OSRS Wiki article for a step. Quest/skill/region labels map directly; the
- *  QP step links to the Quest points overview. Quest articles surface their
+/** OSRS Wiki article for a step. Region display labels can contain surface
+ *  aliases, so they link by the canonical step id. QP links to its overview;
+ *  quest articles surface their
  *  quick-guide link at the top, so this doubles as a "how do I do this" jump. */
-const stepWikiHref = (step: PlanStep): string =>
-  wikiUrlFor(step.kind === 'qp' ? 'Quest points' : step.label);
+export const goalPlannerStepWikiHref = (step: PlanStep): string =>
+  wikiUrlFor(step.kind === 'qp' ? 'Quest points' : step.kind === 'region' ? step.id : step.label);
 
 export const goalPlannerStepHasWikiLink = (step: PlanStep): boolean =>
   step.kind !== 'manual' && !step.id.startsWith('alternative:');
@@ -123,7 +124,7 @@ const StepRow: React.FC<{ step: PlanStep; index?: number }> = ({ step, index }) 
     <span className="text-gray-500 shrink-0" aria-hidden>{STEP_ICON[step.kind]}</span>
     {goalPlannerStepHasWikiLink(step) ? (
       <a
-        href={stepWikiHref(step)}
+        href={goalPlannerStepWikiHref(step)}
         target="_blank"
         rel="noopener noreferrer"
         onClick={(e) => e.stopPropagation()}

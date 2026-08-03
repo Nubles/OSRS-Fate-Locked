@@ -17,6 +17,7 @@ import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { REGION_GROUPS } from '../data/items';
 import { canonicalAreaName, displayAreaName } from '../data/areaMapPolicy';
+import { TableType } from '../types';
 import {
   evaluateQuestEligibility, getDiaryStatus,
   evaluateDiaryTaskEligibility, questRequirementOptionLabel, DirectEligibilityBlocker,
@@ -33,6 +34,8 @@ export interface PlanStep {
   id: string;
   /** Display label. */
   label: string;
+  /** Exact gacha table that can satisfy this step. */
+  unlockTable?: TableType;
   /** Secondary text (e.g. "Lv 50 (have 32)", "12 QP needed"). */
   detail?: string;
   /** Unlock table ids that can satisfy a composite step. */
@@ -128,14 +131,14 @@ function currentQuestPoints(unlocks: any): number {
 
 function areaPlanStep(name: string): PlanStep {
   const canonical = canonicalAreaName(name);
-  return { kind: 'region', id: canonical, label: displayAreaName(canonical), done: false };
+  return { kind: 'region', id: canonical, label: displayAreaName(canonical), unlockTable: TableType.REGIONS, done: false };
 }
 
 function requirementOptionPlanSteps(option: any): PlanStep[] {
   return [
     ...(option.regions ?? []).map(areaPlanStep),
     ...(option.guilds ?? []).map((label: string): PlanStep => ({
-      kind: 'region', id: label, label, done: false,
+      kind: 'region', id: label, label, unlockTable: TableType.GUILDS, done: false,
     })),
     ...(option.locations ?? []).map((location: any) => areaPlanStep(location.label)),
   ];
@@ -144,7 +147,7 @@ function requirementOptionPlanSteps(option: any): PlanStep[] {
 function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): PlanStep {
   if (blocker.kind === 'region') return areaPlanStep(blocker.label);
   if (blocker.kind === 'quest') {
-    return { kind: 'quest', id: blocker.label, label: blocker.label, done: false };
+    return { kind: 'quest', id: blocker.label, label: blocker.label, unlockTable: TableType.QUESTS, done: false };
   }
   if (blocker.kind === 'combat') {
     const required = Number(blocker.label.match(/\d+/)?.[0] ?? 1);
@@ -164,6 +167,7 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
       kind: 'skill', id: 'combined:' + requirement.skills.join('+'),
       label: requirement.skills.join(' + ') + ' combined',
       relatedIds: requirement.skills,
+      unlockTable: TableType.SKILLS,
       detail: 'Level ' + requirement.level + ' combined (have ' + have + ': '
         + levels.map(([skill, level]) => skill + ' ' + level).join(' + ') + ')',
       done: false,
@@ -174,6 +178,7 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
       kind: 'skill', id: 'any-of:' + requirement.skills.join('|'),
       label: requirement.skills.join(' or '),
       relatedIds: requirement.skills,
+      unlockTable: TableType.SKILLS,
       detail: 'Lv ' + requirement.level + ' in either (have '
         + requirement.skills.map(skill => (
           skill + ' ' + effectiveSkillLevel(unlocks, skill)
@@ -196,7 +201,7 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
     ? requirement.level
     : Number(match?.[2] ?? 1);
   return {
-    kind: 'skill', id: skill, label: skill, relatedIds: [skill],
+    kind: 'skill', id: skill, label: skill, relatedIds: [skill], unlockTable: TableType.SKILLS,
     detail: 'Lv ' + required + ' (have ' + effectiveSkillLevel(unlocks, skill) + ')', done: false,
   };
 }
@@ -329,6 +334,7 @@ function buildPlanFromRequirements(
         label: skill,
         detail,
         done,
+        unlockTable: skill === 'Combat level' ? undefined : TableType.SKILLS,
       };
     })
     .sort((a, b) => Number(a.done) - Number(b.done) || b.id.localeCompare(a.id));
@@ -346,6 +352,7 @@ function buildPlanFromRequirements(
         label: q?.name ?? qid,
         detail: q?.kind === 'quest' ? `${q.points} QP` : undefined,
         done: false,
+        unlockTable: TableType.QUESTS,
       };
     });
 

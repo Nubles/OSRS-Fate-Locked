@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TableType, UnlockState } from '../types';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
-import { REGION_GROUPS } from '../data/items';
+import { REGION_GROUPS, REGIONS_LIST } from '../data/items';
 import { setStartArea } from './freeAreas';
 import {
+  checkUnlockAvailability,
   describeRandomPoolBlockers,
   getPoolAndStateKey,
   isRandomUnlockEligible,
@@ -170,5 +171,16 @@ describe('canonical Regions unlock pool', () => {
       'Prifddinas', 'Lletya', 'Tyras Camp', 'Isafdar', 'Zul-Andra',
       'Arandar', 'Gwenith', 'Iorwerth Camp', 'Poison Waste',
     ]);
+  });
+
+  it('does not let a retained alias debt consume a Region roll slot or make its owner rollable', () => {
+    const unlocks = {
+      ...baseUnlocks,
+      regions: [...REGIONS_LIST.filter(name => name !== 'Falador'), 'Elf Camp'],
+    };
+
+    expect(checkUnlockAvailability(unlocks).regions).toBe(true);
+    expect(isValidUnlock(TableType.REGIONS, 'Iorwerth Camp', unlocks)).toBe(false);
+    expect(getPoolAndStateKey(TableType.REGIONS).pool).not.toContain('Elf Camp');
   });
 });

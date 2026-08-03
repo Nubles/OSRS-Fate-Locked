@@ -14,6 +14,7 @@ import { Sparkles, Dices, HelpCircle, Dna, Lock, Sprout, TrendingUp, AlertTriang
 import { COMBAT_POWERS_DESCRIPTION, COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { openDashboardPool } from '../utils/dashboardPoolNavigation';
 import { ALL_CHUNK_KEYS, chunkLabel } from '../utils/chunkAdjacency';
+import { canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
 
 // --- Inner Components ---
 interface Accent {
@@ -318,7 +319,7 @@ export const GachaSection: React.FC = () => {
     { type: TableType.SKILLS, label: 'Skills', subLabel: '+10 Level Cap', iconSrc: OSRS_GACHA_ICONS.SKILLS, unlocked: tierCount(unlocks.skills), total: SKILLS_LIST.length, can: canUnlock.skills },
     isChunked
       ? { type: TableType.CHUNKS, label: 'Chunks', subLabel: 'Adjacent Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: (unlocks.chunks ?? []).length, total: ALL_CHUNK_KEYS.length, can: canUnlock.chunks }
-      : { type: TableType.REGIONS, label: 'Areas', subLabel: 'New Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: (unlocks.regions ?? []).length, total: REGIONS_LIST.length, can: canUnlock.regions },
+      : { type: TableType.REGIONS, label: 'Areas', subLabel: 'New Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: canonicalizeAreaUnlocks(unlocks.regions ?? []).regions.length, total: REGIONS_LIST.length, can: canUnlock.regions },
     { type: TableType.MOBILITY, label: 'Mobility', subLabel: 'Travel Networks', iconSrc: OSRS_GACHA_ICONS.MOBILITY, unlocked: (unlocks.mobility ?? []).length, total: MOBILITY_LIST.length, can: canUnlock.mobility },
     { type: TableType.ARCANA, label: COMBAT_POWERS_LABEL, subLabel: COMBAT_POWERS_DESCRIPTION, iconSrc: OSRS_GACHA_ICONS.ARCANA, unlocked: (unlocks.arcana ?? []).length, total: ARCANA_LIST.length, can: canUnlock.arcana },
     { type: TableType.STORAGE, label: 'Storage', subLabel: 'Inventory Space', iconSrc: OSRS_GACHA_ICONS.STORAGE, unlocked: (unlocks.storage ?? []).length, total: STORAGE_LIST.length, can: canUnlock.storage },

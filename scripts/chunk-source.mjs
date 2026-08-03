@@ -1,6 +1,7 @@
-import { createHash } from 'node:crypto';
-import { fileURLToPath } from 'node:url';
-import { readFile, writeFile } from 'node:fs/promises';
+import { createHash, randomUUID } from 'node:crypto';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { basename, dirname, join } from 'node:path';
+import { readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { gunzip, gzip } from 'node:zlib';
 import { promisify } from 'node:util';
 import { assertChunkTransform, transformChunkContent } from './chunk-content-transform.mjs';
@@ -9,6 +10,14 @@ const unzip = promisify(gunzip);
 const zip = promisify(gzip);
 const manifestUrl = new URL('../data/sources/chunk-content-source.json', import.meta.url);
 const gzipUrl = new URL('../data/sources/chunkpicker-chunkinfo-export.json.gz', import.meta.url);
+
+const fileOps = Object.freeze({ readFile, writeFile, rename, rm });
+const CANONICAL_GZIP_HEADER = Object.freeze([31, 139, 8, 0, 0, 0, 0, 0, 2, 10]);
+
+const rawGitBlobSha = (raw) => createHash('sha1')
+  .update(`blob ${raw.length}\0`)
+  .update(raw)
+  .digest('hex');
 
 const pinnedManifest = Object.freeze({
   schemaVersion: 1,
@@ -56,6 +65,13 @@ function assertRaw(raw, manifest) {
   if (hash !== manifest.rawSha256) {
     throw new Error(`Pinned chunk source SHA-256 mismatch: expected ${manifest.rawSha256}, received ${hash}`);
   }
+
+  const blobSha = rawGitBlobSha(raw);
+  if (blobSha !== manifest.blobSha) {
+    throw new Error(
+      `Pinned chunk source Git blob SHA-1 mismatch: expected ${manifest.blobSha}, received ${blobSha}`,
+    );
+  }
 }
 
 async function readManifest() {
@@ -64,15 +80,52 @@ async function readManifest() {
   return manifest;
 }
 
-async function writeDeterministicGzip(raw, targetUrl = gzipUrl) {
-  await writeFile(targetUrl, await zip(raw, { level: 9, mtime: 0 }));
+const temporarySiblingUrl = (targetUrl) => {
+  const targetPath = fileURLToPath(targetUrl);
+  return pathToFileURL(join(
+    dirname(targetPath),
+    `.${basename(targetPath)}.${randomUUID()}.tmp`,
+  ));
+};
+
+const assertCanonicalGzipHeader = (compressed) => {
+  if (compressed.length < CANONICAL_GZIP_HEADER.length
+    || CANONICAL_GZIP_HEADER.some((byte, index) => compressed[index] !== byte)) {
+    throw new Error('Deterministic gzip header is not canonical');
+  }
+};
+
+async function validateGzipArtifact(compressed, raw, manifest) {
+  assertCanonicalGzipHeader(compressed);
+  const restored = await unzip(compressed);
+  assertRaw(restored, manifest);
+  if (!restored.equals(raw)) {
+    throw new Error('Deterministic gzip artifact does not round-trip to the approved raw source');
+  }
 }
 
-export async function writeApprovedChunkSource(raw, manifest, targetUrl = gzipUrl) {
+async function writeDeterministicGzip(raw, manifest, targetUrl = gzipUrl, operations = fileOps) {
+  const compressed = Buffer.from(await zip(raw, { level: 9, mtime: 0 }));
+  // zlib may stamp a platform-specific OS byte. The gzip payload remains the
+  // same, but the byte must be canonical for a cross-platform committed blob.
+  compressed[9] = CANONICAL_GZIP_HEADER[9];
+  const tempUrl = temporarySiblingUrl(targetUrl);
+
+  try {
+    await operations.writeFile(tempUrl, compressed);
+    const written = Buffer.from(await operations.readFile(tempUrl));
+    await validateGzipArtifact(written, raw, manifest);
+    await operations.rename(tempUrl, targetUrl);
+  } finally {
+    await operations.rm(tempUrl, { force: true }).catch(() => undefined);
+  }
+}
+
+export async function writeApprovedChunkSource(raw, manifest, targetUrl = gzipUrl, operations = fileOps) {
   assertRaw(raw, manifest);
   const data = JSON.parse(raw.toString('utf8'));
   assertChunkTransform(transformChunkContent(data, manifest), manifest);
-  await writeDeterministicGzip(raw, targetUrl);
+  await writeDeterministicGzip(raw, manifest, targetUrl, operations);
 }
 
 export async function readPinnedChunkSource() {
@@ -119,8 +172,8 @@ async function fetchApprovedSource() {
 }
 
 async function rewritePinnedSource() {
-  const { raw } = await readPinnedChunkSource();
-  await writeDeterministicGzip(raw);
+  const { raw, manifest } = await readPinnedChunkSource();
+  await writeApprovedChunkSource(raw, manifest);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

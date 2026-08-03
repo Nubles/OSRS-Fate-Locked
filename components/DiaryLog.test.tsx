@@ -142,4 +142,22 @@ describe('DiaryLog access evidence', () => {
     expect(completion).toContain('Confirm: 153 Varrock Museum Kudos');
     expect(completion).toContain('border-cyan-500/30');
   });
+  it.each([
+    ['mind tiara', 'Ice Mountain'],
+    ['Blue Dragon', "Heroes' Guild"],
+    ['Ranging guild', 'Ranging Guild'],
+    ['Adamant spear', "Otto's Grotto"],
+    ['Rune Hasta', "Otto's Grotto"],
+    ['Adamant scimitar', 'Resource Area'],
+    ['Dark Crab', 'Resource Area'],
+    ['rune scimitar from scratch', 'Resource Area'],
+    ['magic logs in the Resource Area', 'Resource Area'],
+  ])('keeps the %s map control on the authored %s alias chunk', (searchTerm, place) => {
+    const markup = renderToStaticMarkup(
+      <DiaryLog searchTerm={searchTerm} suspendModals />,
+    );
+    const escapedPlace = place.replace(/'/g, '&#x27;');
+
+    expect(markup).toContain(`aria-label="Show ${escapedPlace} on the map"`);
+  });
 });

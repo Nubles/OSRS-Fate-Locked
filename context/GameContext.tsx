@@ -15,6 +15,7 @@ import { CA_DATA } from '../data/caData';
 import { ALL_CA_TASKS, CATask } from '../data/caTasks';
 import { QUEST_DATA } from '../data/questData';
 import { UNLOCK_COST } from '../utils/gameEngine';
+import { canonicalAreaName, canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
 import { drawFloat } from '../utils/seededRng';
 import { hashEntry, ensureChain } from '../utils/integrity';
 import { pushBackup, listBackups as readBackups, getBackupData, BackupMeta } from '../utils/backups';
@@ -983,7 +984,12 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 
       if (table === TableType.SKILLS) newUnlocks.skills = { ...newUnlocks.skills, [item]: bumpTier(newUnlocks.skills[item] || 0, 10) };
       else if (table === TableType.EQUIPMENT) newUnlocks.equipment = { ...newUnlocks.equipment, [item]: bumpTier(newUnlocks.equipment[item] || 0, EQUIPMENT_TIER_MAX) };
-      else if (table === TableType.REGIONS) newUnlocks.regions = pushOnce(newUnlocks.regions);
+      else if (table === TableType.REGIONS) {
+        const canonical = canonicalAreaName(item);
+        if (!canonicalizeAreaUnlocks(newUnlocks.regions).regions.includes(canonical)) {
+          newUnlocks.regions = [...newUnlocks.regions, canonical];
+        }
+      }
       else if (table === TableType.MOBILITY) newUnlocks.mobility = pushOnce(newUnlocks.mobility);
       else if (table === TableType.ARCANA) newUnlocks.arcana = pushOnce(newUnlocks.arcana);
       else if (table === TableType.POH) newUnlocks.housing = pushOnce(newUnlocks.housing);

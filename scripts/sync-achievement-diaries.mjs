@@ -536,6 +536,7 @@ const loadReferenceCatalog = (projectRoot) => {
   };
   const itemsSource = parseProjectFile('data/items.ts');
   const questSource = parseProjectFile('data/questData.ts');
+  const areaMapPolicySource = parseProjectFile('data/areaMapPolicy.ts');
 
   const skills = new Set(stringArrayOf(initializerOf(itemsSource, 'SKILLS_LIST')));
   const regions = new Set([
@@ -551,6 +552,15 @@ const loadReferenceCatalog = (projectRoot) => {
     regions.add(propertyNameOf(property));
     for (const region of stringArrayOf(property.initializer)) regions.add(region);
   }
+  const areaAliases = initializerOf(areaMapPolicySource, 'AREA_ALIAS_POLICIES');
+  if (!ts.isObjectLiteralExpression(areaAliases)) {
+    throw new Error('AREA_ALIAS_POLICIES must remain an object literal');
+  }
+  for (const property of areaAliases.properties) {
+    if (!ts.isPropertyAssignment(property)) continue;
+    regions.add(propertyNameOf(property));
+  }
+
 
   const quests = new Set();
   const questData = initializerOf(questSource, 'QUEST_DATA');

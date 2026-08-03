@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { X, Search, Map, BookOpen, Skull, Gamepad2, Sprout, Footprints, Zap, Home, Store, Package, Flag, Shield, Lock, Unlock, ExternalLink, ScrollText, Swords, Box, Trophy } from 'lucide-react';
+import { X, Search, Map, MapPin, BookOpen, Skull, Gamepad2, Sprout, Footprints, Zap, Home, Store, Package, Flag, Shield, Lock, Unlock, ExternalLink, ScrollText, Swords, Box, Trophy } from 'lucide-react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { SectionGuide } from './SectionGuide';
@@ -20,7 +20,8 @@ import { chunkContentService, EntityHit, EntityKind } from '../services/ChunkCon
 import { EntityLocations } from './EntityLocations';
 import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { isAreaReachable } from '../utils/reachability';
-import { displayAreaName } from '../data/areaMapPolicy';
+import { AREA_ALIAS_POLICIES, displayAreaName } from '../data/areaMapPolicy';
+import { chunkForPlace, showChunkOnMap } from '../utils/chunkLocations';
 import {
   completedCAPoints,
   earnedCATiers,
@@ -48,6 +49,8 @@ type SearchItem = {
   icon: any;
   reqText: string;
   id?: string | number; // Optional ID for lookups (like Col Log IDs)
+  /** Exact place to show on the World map when this result is geographic. */
+  mapPlace?: string;
 };
 
 // Helper to generate Wiki URLs
@@ -106,7 +109,16 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
       type: 'Region',
       category: TableType.REGIONS,
       icon: Map,
+      mapPlace: name,
       reqText: 'Requires Key in Regions Table',
+    }));
+    Object.entries(AREA_ALIAS_POLICIES).forEach(([alias, policy]) => items.push({
+      name: alias,
+      type: 'Region',
+      category: TableType.REGIONS,
+      icon: Map,
+      reqText: `Canonical area: ${policy.canonical}`,
+      mapPlace: alias,
     }));
     addGroup(MISTHALIN_AREAS, 'Region', TableType.REGIONS, Map, 'Starting Area (Unlocked)');
     addGroup(BOSSES_LIST, 'Boss', TableType.BOSSES, Skull, 'Requires Key in Bosses Table');
@@ -360,6 +372,7 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
           {results.map((item, idx) => {
             const { isUnlocked, detail } = getStatus(item);
             const Icon = item.icon;
+            const mapChunk = item.mapPlace ? chunkForPlace(item.mapPlace) : null;
             
             return (
               <div 
@@ -380,9 +393,24 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
                             className="text-gray-600 hover:text-osrs-gold transition-colors p-0.5 rounded hover:bg-white/5 shrink-0"
                             onClick={(e) => e.stopPropagation()}
                             title="Open OSRS Wiki"
+                            aria-label={`Open ${item.name} on OSRS Wiki`}
                         >
                             <ExternalLink size={12} />
                         </a>
+                        {mapChunk && (
+                          <button
+                            type="button"
+                            aria-label={`Show ${item.mapPlace} on the map`}
+                            title={`Show ${item.mapPlace} on the map`}
+                            className="text-gray-600 hover:text-cyan-300 transition-colors p-0.5 rounded hover:bg-white/5 shrink-0"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              showChunkOnMap(mapChunk.cx, mapChunk.cy);
+                            }}
+                          >
+                            <MapPin size={12} />
+                          </button>
+                        )}
                     </div>
                     <div className="flex items-center gap-2">
                        <span className="text-xs text-gray-600 font-mono uppercase tracking-wide shrink-0">{item.type}</span>

@@ -31,11 +31,11 @@ const baseUnlocks: UnlockState = {
 };
 
 const OVERLAPS = [
-  ["Heroes' Guild", 'Taverley', '45,54'],
-  ['Ice Mountain', 'Goblin Village', '46,54'],
-  ['Ranging Guild', 'Hemenster', '41,53'],
-  ["Otto's Grotto", 'Baxtorian Falls', '39,54'],
-  ['Resource Area', 'Mage Arena', '49,61'],
+  ["Heroes' Guild", 'Taverley', '45,54', '45,53'],
+  ['Ice Mountain', 'Goblin Village', '46,54', '46,53'],
+  ['Ranging Guild', 'Hemenster', '41,53', '41,52'],
+  ["Otto's Grotto", 'Baxtorian Falls', '39,54', '39,53'],
+  ['Resource Area', 'Mage Arena', '49,61', '48,61'],
 ] as const;
 
 describe('isNamedAreaReachableViaChunks', () => {
@@ -104,10 +104,17 @@ describe('isAreaReachable', () => {
     expect(isAreaReachable(canonical, { ...baseUnlocks, regions: [alias] }, 'vanilla')).toBe(true);
   });
 
-  it.each(OVERLAPS)('%s shares Chunked reachability with %s', (alias, canonical, chunk) => {
+  it.each(OVERLAPS)('%s keeps its exact Chunked physical chunk instead of %s', (
+    alias,
+    canonical,
+    chunk,
+    sibling,
+  ) => {
     expect(isNamedAreaReachableViaChunks(alias, [chunk])).toBe(true);
-    expect(isNamedAreaReachableViaChunks(alias, []))
-      .toBe(isNamedAreaReachableViaChunks(canonical, []));
+    expect(isNamedAreaReachableViaChunks(alias, [sibling]), alias + ' via ' + sibling).toBe(false);
+    expect(isAreaReachable(alias, { ...baseUnlocks, chunks: [chunk] }, 'chunked')).toBe(true);
+    expect(isAreaReachable(alias, { ...baseUnlocks, chunks: [sibling] }, 'chunked')).toBe(false);
+    expect(isNamedAreaReachableViaChunks(canonical, [chunk])).toBe(true);
   });
 });
 

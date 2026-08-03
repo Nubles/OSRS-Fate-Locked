@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { placeOf, chunkForPlace, chunkUnlocked, summarisePlaces } from './chunkLocations';
 import { UnlockState } from '../types';
+import { AREA_ALIAS_POLICIES } from '../data/areaMapPolicy';
 
 const unlocksWith = (regions: string[] = []): UnlockState =>
   ({ regions } as unknown as UnlockState);
@@ -21,6 +22,19 @@ describe('placeOf', () => {
 
   it('labels unpainted chunks by coordinate', () => {
     expect(placeOf(1, 1).label).toBe('chunk (1, 1)');
+  });
+
+  it.each([
+    ["Heroes' Guild", { cx: 45, cy: 54 }],
+    ['Ice Mountain', { cx: 46, cy: 54 }],
+    ['Ranging Guild', { cx: 41, cy: 53 }],
+    ["Otto's Grotto", { cx: 39, cy: 54 }],
+    ['Resource Area', { cx: 49, cy: 61 }],
+    ['Elf Camp', { cx: 33, cy: 50 }],
+  ])('routes %s to its authored physical chunk', (alias, expected) => {
+    expect(chunkForPlace(alias)).toEqual(expected);
+    const policy = AREA_ALIAS_POLICIES[alias as keyof typeof AREA_ALIAS_POLICIES];
+    if (policy?.kind === 'surface-overlap') expect(policy.chunks).toContainEqual(expected);
   });
 
   it('routes an overlap alias to its exact canonical-owned physical chunk', () => {

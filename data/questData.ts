@@ -82,7 +82,7 @@ const LOCATIONS = {
   barrows: { id: 'barrows', label: 'Barrows', standardAreas: ['Barrows'], chunkOptions: [{ cx: 55, cy: 51 }] },
   necropolisMainTemple: { id: 'necropolis-main-temple', label: 'Necropolis main temple', standardAreas: ['Sophanem'], chunkOptions: [{ cx: 52, cy: 42 }] },
   abandonedMine: { id: 'abandoned-mine', label: "Haunted Mine and Tarn's Lair", standardAreas: ['Haunted Mine'], chunkOptions: [{ cx: 53, cy: 50 }] },
-  skippysCamp: { id: 'skippys-camp', label: "Skippy's camp south-east of Rimmington", standardAreas: ['Rimmington'], chunkOptions: [{ cx: 46, cy: 49 }] },
+  skippysCamp: { id: 'skippys-camp', label: "Skippy's camp south-east of Rimmington", standardAreas: ['Port Sarim'], chunkOptions: [{ cx: 46, cy: 49 }] },
 } satisfies Record<string, QuestLocationRequirement>;
 
 export const QUEST_DATA: Record<string, QuestData> = {
@@ -194,7 +194,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Doric\'s Quest', name: 'Doric\'s Quest',
     regions: ["Asgarnia"],
     locations: [
-      { id: "dorics-hut", label: "Doric's hut", standardAreas: ["Goblin Village"], chunkOptions: [{ cx: 46, cy: 53 }] },
+      { id: "dorics-hut", label: "Doric's hut", standardAreas: ["Falador"], chunkOptions: [{ cx: 46, cy: 53 }] },
     ],
     skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
@@ -1087,7 +1087,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: "draynor-village", label: "Draynor Village", standardAreas: ["Draynor Village"], chunkOptions: [{ cx: 48, cy: 50 }] },
       { id: "zanaris", label: "Zanaris", standardAreas: ["Zanaris"], chunkOptions: [{ cx: 50, cy: 49 }] },
       { id: "poison-waste", label: "Poison Waste", standardAreas: ["Poison Waste"], chunkOptions: [{ cx: 34, cy: 48 }] },
-      { id: "horseshoe-mine", label: "Horseshoe Mine", standardAreas: ["Kandarin"], chunkOptions: [{ cx: 42, cy: 50 }] },
+      { id: "horseshoe-mine", label: "Horseshoe Mine", standardAreas: ["Brimhaven"], chunkOptions: [{ cx: 42, cy: 50 }] },
     ],
     skills: { 'Thieving': 40, 'Farming': 49, 'Herblore': 57 }, prereqs: ['Fairytale I - Growing Pains'], points: 2, series: 'Fairy Tale',
     difficulty: DropSource.QUEST_EXPERIENCED
@@ -1616,7 +1616,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     locations: [
       { id: 'the-pandemonium', label: 'The Pandemonium', standardAreas: ['The Pandemonium'], chunkOptions: [{ cx: 47, cy: 46 }] },
       { id: 'port-sarim-docks', label: 'Port Sarim docks', standardAreas: ['Port Sarim'], chunkOptions: [{ cx: 47, cy: 49 }] },
-      { id: 'thurgos-hut', label: "Thurgo's hut south of Port Sarim", standardAreas: ['Rimmington'], chunkOptions: [{ cx: 46, cy: 49 }] },
+      { id: 'thurgos-hut', label: "Thurgo's hut south of Port Sarim", standardAreas: ['Port Sarim'], chunkOptions: [{ cx: 46, cy: 49 }] },
     ],
     skills: { 'Smithing': 30, 'Sailing': 12 }, prereqs: ['Pandemonium', 'The Knight\'s Sword'],
     manualRequirements: ['One open Sailing task slot'], points: 1,
