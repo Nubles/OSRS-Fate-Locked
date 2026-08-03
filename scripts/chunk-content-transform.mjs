@@ -424,13 +424,21 @@ export function transformChunkContent(data, sourceManifest, namedLocationRegistr
   return { full, liteSource, audit: finalAudit };
 }
 
-export function assertChunkTransform(result, sourceManifest) {
+export function assertChunkTransformBase(result, sourceManifest) {
   for (const [category, total] of Object.entries(result.audit.categoryTotals)) if (total.source !== total.imported + total.normalized + total.excluded + total.unresolved) throw new Error(`Unbalanced chunk transform audit category: ${category}`);
+  const floors = sourceManifest.countFloors ?? {}; const full = result.full;
+  const actual = { contentChunks: Object.keys(full.chunks).length, connections: Object.keys(full.connect).length, slayerMasters: Object.keys(full.slayerMasters).length, shortcuts: full.shortcuts.length, shops: Object.keys(full.shopItems).length, dropTables: Object.keys(full.drops).length, questSections: Object.keys(full.questSections).length, banks: full.banks.length, tags: Object.keys(full.tags).length };
+  for (const [key, floor] of Object.entries(floors)) if ((actual[key] ?? 0) < floor) throw new Error(`Chunk transform floor failed for ${key}: expected at least ${floor}, received ${actual[key] ?? 0}`);
+}
+
+export function assertNoUnresolvedTaskUnlocks(result) {
   const unresolved = result.audit.events.filter(
     (event) => event.category === 'taskUnlocks' && event.disposition === 'unresolved',
   );
   if (unresolved.length) throw new Error(`Unresolved task-unlock records: ${unresolved.length}`);
-  const floors = sourceManifest.countFloors ?? {}; const full = result.full;
-  const actual = { contentChunks: Object.keys(full.chunks).length, connections: Object.keys(full.connect).length, slayerMasters: Object.keys(full.slayerMasters).length, shortcuts: full.shortcuts.length, shops: Object.keys(full.shopItems).length, dropTables: Object.keys(full.drops).length, questSections: Object.keys(full.questSections).length, banks: full.banks.length, tags: Object.keys(full.tags).length };
-  for (const [key, floor] of Object.entries(floors)) if ((actual[key] ?? 0) < floor) throw new Error(`Chunk transform floor failed for ${key}: expected at least ${floor}, received ${actual[key] ?? 0}`);
+}
+
+export function assertChunkTransform(result, sourceManifest) {
+  assertChunkTransformBase(result, sourceManifest);
+  assertNoUnresolvedTaskUnlocks(result);
 }

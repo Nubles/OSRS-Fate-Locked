@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { assertChunkTransform, transformChunkContent } from './chunk-content-transform.mjs';
 import { buildEntranceIndex } from './named-task-unlock-locations.mjs';
+import { createHash } from 'node:crypto';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { readPinnedChunkSource, writeApprovedChunkSource } from './chunk-source.mjs';
 
 const manifest = {
   schemaVersion: 1,
@@ -16,6 +21,19 @@ const manifest = {
   sourceUrl: 'https://github.com/source-chunk/chunk-picker-v2',
   countFloors: {},
 };
+const manifestForRaw = (
+  raw: Buffer,
+  overrides: { commit?: string; countFloors?: Record<string, number> } = {},
+) => ({
+  commit: '4eb75a8454eb41cfff71b70819326e0e67bcea7c',
+  rawBytes: raw.length,
+  rawSha256: createHash('sha256').update(raw).digest('hex').toUpperCase(),
+  blobSha: createHash('sha1').update(`blob ${raw.length}\0`).update(raw).digest('hex'),
+  countFloors: {},
+  ...overrides,
+});
+
+const sourcePreflightTarget = pathToFileURL(join(tmpdir(), 'fate-task3-preflight-no-write.gz'));
 
 const mappedRegistry = {
   schemaVersion: 1,
@@ -472,5 +490,45 @@ describe('transformChunkContent', () => {
 
     expect(() => assertChunkTransform(result, manifest))
       .toThrow('Unresolved task-unlock records: 1');
+  });
+  it('runs count floors before zero-unresolved release gating in source preflight', async () => {
+    const raw = Buffer.from(JSON.stringify({
+      walkableChunks: [],
+      chunks: {},
+      slayerMonsters: {},
+      taskUnlocks: { NPCs: { Guide: { 'Unreviewed Cave': [{ 'Quest One Complete the quest': true }] } } },
+    }));
+
+    await expect(writeApprovedChunkSource(raw, manifestForRaw(raw, {
+      commit: 'not-the-reviewed-source',
+      countFloors: { contentChunks: 1 },
+    }), sourcePreflightTarget)).rejects.toThrow(
+      'Chunk transform floor failed for contentChunks: expected at least 1, received 0',
+    );
+  });
+
+  it('validates exact renamed named-key coverage before zero-unresolved release gating', async () => {
+    const { data, manifest: sourceManifest } = await readPinnedChunkSource();
+    const renamedData = JSON.parse(JSON.stringify(data));
+    const originalLocation = 'Abyssal Nexus';
+    const renamedLocation = 'Abyssal Nexus Renamed';
+    let renamed = 0;
+
+    for (const entities of Object.values(renamedData.taskUnlocks ?? {}) as Record<string, unknown>[]) {
+      for (const value of Object.values(entities) as Record<string, unknown>[]) {
+        if (Array.isArray(value) || !Object.prototype.hasOwnProperty.call(value, originalLocation)) continue;
+        value[renamedLocation] = value[originalLocation];
+        delete value[originalLocation];
+        renamed++;
+      }
+    }
+    expect(renamed).toBeGreaterThan(0);
+
+    const raw = Buffer.from(JSON.stringify(renamedData));
+    await expect(writeApprovedChunkSource(raw, manifestForRaw(raw, {
+      commit: sourceManifest.commit,
+    }), sourcePreflightTarget)).rejects.toThrow(
+      `Invalid named task-unlock registry:\nMissing named task-unlock source key: ${renamedLocation}\nUnexpected named task-unlock source key: ${originalLocation}`,
+    );
   });
 });
