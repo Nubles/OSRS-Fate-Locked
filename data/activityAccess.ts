@@ -67,7 +67,7 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
   'Soul Wars': ['Isle of Souls'],
   'Temple Trekking': ['Burgh de Rott', 'Paterdomus'],
   'TzHaar Fight Pit': ['Mor Ul Rek (TzHaar City)'],
-  'Archery Competition': ['Ranging Guild'],
+  'Archery Competition': ['Hemenster'],
   'Blast Furnace': ['Keldagrim'],
   'Fishing Trawler': ['Port Khazard'],
   "Giants' Foundry": ['Al Kharid'],

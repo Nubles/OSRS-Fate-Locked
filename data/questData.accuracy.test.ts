@@ -1081,7 +1081,7 @@ describe('audited current quest requirements', () => {
                             "id": "dorics-hut",
                             "label": "Doric's hut",
                             "standardAreas": [
-                                  "Ice Mountain"
+                                  "Goblin Village"
                             ],
                             "chunkOptions": [
                                   {

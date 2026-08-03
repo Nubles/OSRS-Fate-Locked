@@ -194,7 +194,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Doric\'s Quest', name: 'Doric\'s Quest',
     regions: ["Asgarnia"],
     locations: [
-      { id: "dorics-hut", label: "Doric's hut", standardAreas: ["Ice Mountain"], chunkOptions: [{ cx: 46, cy: 53 }] },
+      { id: "dorics-hut", label: "Doric's hut", standardAreas: ["Goblin Village"], chunkOptions: [{ cx: 46, cy: 53 }] },
     ],
     skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE

@@ -258,22 +258,51 @@ describe('cross-surface quest eligibility contract', () => {
 describe('deterministic current content baseline', () => {
   it('pins the reviewed Chunk Picker source and complete transform totals', () => {
     expect(chunkSource).toMatchObject({
-      commit: 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926',
-      blobSha: '6674e5c62cd7a6ec90267def278aca5bc1f05a06',
-      rawSha256: '95E4864651E2A9C7D4555C4EBBE4DD4AB5E71B881FF18BC966799CD22D48C167',
+      schemaVersion: 1,
+      repository: 'source-chunk/chunk-picker-v2',
+      branch: 'gh-pages',
+      commit: '4eb75a8454eb41cfff71b70819326e0e67bcea7c',
+      blobSha: 'e6591f67609a37792361df25a10835d9e36ee45f',
+      rawSha256: '370F0F51BED8938988E368C41038A05197026CD8F524C0F87C2F3E773A32B4E4',
+      rawBytes: 7510818,
+      policyVersion: 2,
+      reviewedAt: '2026-08-02',
     });
     expect(fullChunkContent.sourceMeta).toEqual({
       repository: 'source-chunk/chunk-picker-v2',
-      commit: 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926',
-      blobSha: '6674e5c62cd7a6ec90267def278aca5bc1f05a06',
-      rawSha256: '95E4864651E2A9C7D4555C4EBBE4DD4AB5E71B881FF18BC966799CD22D48C167',
+      commit: '4eb75a8454eb41cfff71b70819326e0e67bcea7c',
+      blobSha: 'e6591f67609a37792361df25a10835d9e36ee45f',
+      rawSha256: '370F0F51BED8938988E368C41038A05197026CD8F524C0F87C2F3E773A32B4E4',
       policyVersion: 2,
     });
-    expect(Object.keys(fullChunkContent.chunks)).toHaveLength(936);
-    expect(Object.keys(fullChunkContent.connect)).toHaveLength(1104);
-    expect(Object.keys(fullChunkContent.questSections)).toHaveLength(134);
-    expect(fullChunkContent.banks).toHaveLength(100);
-    expect(Object.keys(fullChunkContent.tags)).toHaveLength(26);
+    const events = (chunkAudit as { events: Array<{ category: string; disposition: string }> }).events;
+    expect({
+      contentChunks: Object.keys(fullChunkContent.chunks).length,
+      connections: Object.keys(fullChunkContent.connect).length,
+      slayerMasters: Object.keys(fullChunkContent.slayerMasters).length,
+      shortcuts: fullChunkContent.shortcuts.length,
+      shops: Object.keys(fullChunkContent.shopItems).length,
+      dropTables: Object.keys(fullChunkContent.drops).length,
+      questSections: Object.keys(fullChunkContent.questSections).length,
+      banks: fullChunkContent.banks.length,
+      tags: Object.keys(fullChunkContent.tags).length,
+      auditEvents: events.length,
+      unresolvedTaskUnlocks: events.filter(
+        (event) => event.category === 'taskUnlocks' && event.disposition === 'unresolved',
+      ).length,
+    }).toEqual({
+      contentChunks: 937,
+      connections: 1110,
+      slayerMasters: 10,
+      shortcuts: 203,
+      shops: 435,
+      dropTables: 799,
+      questSections: 134,
+      banks: 101,
+      tags: 27,
+      auditEvents: 27035,
+      unresolvedTaskUnlocks: 140,
+    });
     expect((chunkAudit as { unclassified?: unknown[] }).unclassified ?? []).toEqual([]);
   });
 

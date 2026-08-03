@@ -1783,7 +1783,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Asgarnia\"],\"locations\":[{\"chunkOptions\":[{\"cx\":46,\"cy\":53}],\"id\":\"dorics-hut\",\"label\":\"Doric's hut\",\"standardAreas\":[\"Ice Mountain\"]}],\"skills\":{},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Asgarnia\"],\"locations\":[{\"chunkOptions\":[{\"cx\":46,\"cy\":53}],\"id\":\"dorics-hut\",\"label\":\"Doric's hut\",\"standardAreas\":[\"Goblin Village\"]}],\"skills\":{},\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "46,53",
