@@ -36,6 +36,8 @@ export const createInteractionsHandler = (
   return response;
 };
 
-export default async function interactions(request: Request): Promise<Response> {
-  return createInteractionsHandler(loadConfigFromProcess())(request);
-}
+export default {
+  fetch(request: Request): Promise<Response> {
+    return createInteractionsHandler(loadConfigFromProcess())(request);
+  },
+};

@@ -42,8 +42,10 @@ export const createAutomationHandler = (config: BotConfig, discord: AutomationDi
     handleAutomationRequest(request, { config, handleEvent });
 };
 
-export default async function automation(request: Request): Promise<Response> {
-  const config = loadConfigFromProcess();
-  const discord = new DiscordRestClient({ token: config.botToken });
-  return createAutomationHandler(config, discord)(request);
-}
+export default {
+  fetch(request: Request): Promise<Response> {
+    const config = loadConfigFromProcess();
+    const discord = new DiscordRestClient({ token: config.botToken });
+    return createAutomationHandler(config, discord)(request);
+  },
+};
