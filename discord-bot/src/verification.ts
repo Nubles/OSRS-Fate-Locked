@@ -1,9 +1,9 @@
 import { FATE_LOCKED_GUILD_ID } from './config.js';
 import { markerFromBotMessage, parseVerificationMarker, verificationMarker } from './markers.js';
 import { ephemeral } from './discord/responses.js';
-import type { DiscordChannel, DiscordGuildMember, DiscordMessage, DiscordRole } from './discord/rest.js';
+import type { DiscordChannel, DiscordGuildMember, DiscordMessage, DiscordRole, DiscordUser } from './discord/rest.js';
 import type { JournalInteractionResponse } from './journals.js';
-import { signComponentId, verifyComponentId } from './security/signed-id.js';
+import { signComponentId, signReasonModalId, verifyComponentId, verifyReasonModalId } from './security/signed-id.js';
 import type { ComponentAction } from './security/signed-id.js';
 import type { DiscordInteraction } from './handlers/interactions.js';
 import type { BotConfig } from './types.js';
@@ -16,6 +16,7 @@ const JOURNAL_URL = new RegExp(`^https://(?:discord\\.com|discordapp\\.com)/chan
 
 
 export interface VerificationRest {
+  getCurrentUser(): Promise<DiscordUser>;
   getChannel(channelId: string): Promise<DiscordChannel>;
   getChannelMessages(channelId: string, limit?: number): Promise<DiscordMessage[]>;
   getMessage(channelId: string, messageId: string): Promise<DiscordMessage>;
@@ -145,19 +146,26 @@ const safeEditOriginal = async (
   }
 };
 
-const safeAudit = async (
-  deps: VerificationDeps,
-  details: { actorId: string; applicantId: string; threadId: string; action: string; outcome: string; now: Date },
-): Promise<void> => {
+type AuditDetails = { actorId: string; applicantId: string; threadId: string; action: string; outcome: string; now: Date };
+
+const safeAudit = async (deps: VerificationDeps, details: AuditDetails): Promise<boolean> => {
   const timestamp = details.now.toISOString();
   try {
     await deps.rest.createMessage(deps.config.channels.auditLog, {
       content: `Verification audit actor_id=${details.actorId} applicant_id=${details.applicantId} thread_id=${details.threadId} action=${details.action} outcome=${details.outcome} timestamp=${timestamp}`,
       allowed_mentions: { parse: [] },
     });
+    return true;
   } catch {
-    // Audit delivery must not expose interaction data or create a duplicate mutation.
+    return false;
   }
+};
+
+const auditAndEditOriginal = async (deps: VerificationDeps, details: AuditDetails, token: string, content: string): Promise<void> => {
+  const delivered = await safeAudit(deps, details);
+  await safeEditOriginal(deps, token, delivered
+    ? content
+    : `${content} The audit log could not be delivered. Do not retry; contact an administrator.`);
 };
 
 const componentButton = (
@@ -224,6 +232,12 @@ const queueCard = (
 
 const validJournal = (channel: DiscordChannel, parentId: string, ownerId: string): boolean =>
   channel.parent_id === parentId && channel.owner_id === ownerId;
+const verifiedBotId = async (deps: VerificationDeps): Promise<string | null> => {
+  try {
+    const bot = await deps.rest.getCurrentUser();
+    return typeof bot?.id === 'string' && SNOWFLAKE.test(bot.id) && bot.id === deps.config.applicationId ? bot.id : null;
+  } catch { return null; }
+};
 
 type DuplicateCheck = 'none' | 'duplicate' | 'unknown';
 
@@ -233,6 +247,7 @@ const closed = new Set(['approved', 'rejected']);
 const duplicateCheck = async (
   rest: VerificationRest,
   config: BotConfig,
+  botId: string,
   applicant: string,
   thread: string,
 ): Promise<DuplicateCheck> => {
@@ -244,7 +259,7 @@ const duplicateCheck = async (
   }
 
   for (const message of messages.slice(0, 100)) {
-    const marker = markerFromBotMessage(message, config.applicationId);
+    const marker = markerFromBotMessage(message, botId);
     if (!marker || marker.applicantId !== applicant || marker.threadId !== thread) continue;
     if (unresolved.has(marker.state)) return 'duplicate';
     if (!closed.has(marker.state)) return 'unknown';
@@ -274,8 +289,14 @@ export const handleVerificationSubmit = (
       await safeEditOriginal(deps, submission.interactionToken, 'We could not validate that run journal for your account.');
       return;
     }
+    const botId = await verifiedBotId(deps);
+    if (!botId) {
+      await auditAndEditOriginal(deps, { actorId: submission.applicantId, applicantId: submission.applicantId, threadId, action: 'submit', outcome: 'bot_identity_failed', now }, submission.interactionToken, 'The bot identity could not be verified. Please try again later.');
+      return;
+    }
 
-    const duplicate = await duplicateCheck(deps.rest, deps.config, submission.applicantId, threadId);
+
+    const duplicate = await duplicateCheck(deps.rest, deps.config, botId, submission.applicantId, threadId);
     if (duplicate === 'unknown') {
       await safeEditOriginal(deps, submission.interactionToken, 'We could not safely check the verification queue. Please try again later.');
       return;
@@ -291,27 +312,11 @@ export const handleVerificationSubmit = (
         queueCard(submission, threadId, 'open', deps.config, now),
       );
     } catch {
-      await safeAudit(deps, {
-        actorId: submission.applicantId,
-        applicantId: submission.applicantId,
-        threadId,
-        action: 'submit',
-        outcome: 'queue_create_failed',
-        now,
-      });
-      await safeEditOriginal(deps, submission.interactionToken, 'We could not create your verification request. Please try again later.');
+      await auditAndEditOriginal(deps, { actorId: submission.applicantId, applicantId: submission.applicantId, threadId, action: 'submit', outcome: 'queue_create_failed', now }, submission.interactionToken, 'We could not create your verification request. Please try again later.');
       return;
     }
 
-    await safeAudit(deps, {
-      actorId: submission.applicantId,
-      applicantId: submission.applicantId,
-      threadId,
-      action: 'submit',
-      outcome: 'queued',
-      now,
-    });
-    await safeEditOriginal(deps, submission.interactionToken, 'Your verification request has been submitted for staff review.');
+    await auditAndEditOriginal(deps, { actorId: submission.applicantId, applicantId: submission.applicantId, threadId, action: 'submit', outcome: 'queued', now }, submission.interactionToken, 'Your verification request has been submitted for staff review.');
   }));
 };
 
@@ -380,9 +385,17 @@ export const handleVerificationComponent = async (
     return deferred(() => executeFinalAction(deps, payload, actorId, messageId, token, now));
   }
 
-  const card = await currentQueueCard(deps, messageId, payload);
+  const botId = await verifiedBotId(deps);
+  if (!botId) return ephemeral('The bot identity could not be verified. Please try again later.');
+  const card = await currentQueueCard(deps, messageId, payload, botId);
   if (!card || !actionFitsState(payload.action, card.marker.state)) return staleControl();
-  return reasonModal(id);
+  return reasonModal(signReasonModalId({
+    action: payload.action,
+    applicantId: payload.applicantId,
+    threadId: payload.threadId,
+    queueMessageId: card.message.id,
+    expiresAt: Math.floor(now.getTime() / 1000) + SEVEN_DAYS_SECONDS,
+  }, deps.config.componentHmacKey));
 };
 
 interface QueueCard {
@@ -395,6 +408,9 @@ interface SignedVerificationAction {
   action: ComponentAction;
   applicantId: string;
   threadId: string;
+}
+interface SignedReasonModalAction extends SignedVerificationAction {
+  queueMessageId: string;
 }
 
 const cardFromBotMessage = (message: DiscordMessage, botId: string): QueueCard | null => {
@@ -422,10 +438,11 @@ const currentQueueCard = async (
   deps: VerificationDeps,
   messageId: string,
   action: SignedVerificationAction,
+  botId: string,
 ): Promise<QueueCard | null> => {
   try {
     const message = await deps.rest.getMessage(deps.config.channels.verificationQueue, messageId);
-    const card = cardFromBotMessage(message, deps.config.applicationId);
+    const card = cardFromBotMessage(message, botId);
     if (!card || !cardMatches(card, action)) return null;
     return card;
   } catch {
@@ -433,23 +450,6 @@ const currentQueueCard = async (
   }
 };
 
-const queueCardFromHistory = async (
-  deps: VerificationDeps,
-  action: SignedVerificationAction,
-): Promise<QueueCard | null> => {
-  let messages: DiscordMessage[];
-  try {
-    messages = await deps.rest.getChannelMessages(deps.config.channels.verificationQueue, 100);
-  } catch {
-    return null;
-  }
-
-  for (const message of messages.slice(0, 100)) {
-    const card = cardFromBotMessage(message, deps.config.applicationId);
-    if (card && cardMatches(card, action)) return card;
-  }
-  return null;
-};
 
 const queueUpdate = (
   card: QueueCard,
@@ -498,12 +498,11 @@ const editQueueState = async (
 
 const failure = async (
   deps: VerificationDeps,
-  details: { actorId: string; applicantId: string; threadId: string; action: string; outcome: string; now: Date },
+  details: AuditDetails,
   token: string,
   content: string,
 ): Promise<void> => {
-  await safeAudit(deps, details);
-  await safeEditOriginal(deps, token, content);
+  await auditAndEditOriginal(deps, details, token, content);
 };
 
 const tagsWithVerified = (thread: DiscordChannel, verifiedTag: string): string[] | null => {
@@ -560,6 +559,7 @@ const executeApproval = async (
   messageId: string,
   token: string,
   now: Date,
+  botId: string,
 ): Promise<void> => {
   let applicant: DiscordGuildMember;
   try {
@@ -589,7 +589,7 @@ const executeApproval = async (
   let bot: DiscordGuildMember;
   try {
     roles = await deps.rest.getGuildRoles(deps.config.guildId);
-    bot = await deps.rest.getGuildMember(deps.config.guildId, deps.config.applicationId);
+    bot = await deps.rest.getGuildMember(deps.config.guildId, botId);
   } catch {
     await failure(deps, { actorId, applicantId: action.applicantId, threadId: action.threadId, action: 'approve', outcome: 'hierarchy_fetch_failed', now }, token, 'The bot cannot safely manage the Verified Runner role.');
     return;
@@ -599,7 +599,7 @@ const executeApproval = async (
     return;
   }
 
-  const card = await currentQueueCard(deps, messageId, action);
+  const card = await currentQueueCard(deps, messageId, action, botId);
   if (!card || !actionFitsState('approve', card.marker.state)) {
     await staleAfterAck(deps, token);
     return;
@@ -632,8 +632,7 @@ const executeApproval = async (
     await failure(deps, { actorId, applicantId: action.applicantId, threadId: action.threadId, action: 'approve', outcome: 'card_update_failed', now }, token, 'The role and journal tag were updated, but the verification card could not be closed.');
     return;
   }
-  await safeAudit(deps, { actorId, applicantId: action.applicantId, threadId: action.threadId, action: 'approve', outcome: 'approved', now });
-  await safeEditOriginal(deps, token, 'Runner verification approved.');
+  await auditAndEditOriginal(deps, { actorId, applicantId: action.applicantId, threadId: action.threadId, action: 'approve', outcome: 'approved', now }, token, 'Runner verification approved.');
 };
 
 const executeRetryTag = async (
@@ -643,12 +642,25 @@ const executeRetryTag = async (
   messageId: string,
   token: string,
   now: Date,
+  botId: string,
 ): Promise<void> => {
-  const card = await currentQueueCard(deps, messageId, action);
+  const card = await currentQueueCard(deps, messageId, action, botId);
   if (!card || !actionFitsState('retry_tag', card.marker.state)) {
     await staleAfterAck(deps, token);
     return;
   }
+  let applicant: DiscordGuildMember;
+  try {
+    applicant = await deps.rest.getGuildMember(deps.config.guildId, action.applicantId);
+  } catch {
+    await failure(deps, { actorId, applicantId: action.applicantId, threadId: action.threadId, action: 'retry_tag', outcome: 'applicant_fetch_failed', now }, token, 'We could not verify that applicant.');
+    return;
+  }
+  if (!Array.isArray(applicant.roles) || !applicant.roles.includes(deps.config.roles.verifiedRunner)) {
+    await failure(deps, { actorId, applicantId: action.applicantId, threadId: action.threadId, action: 'retry_tag', outcome: 'applicant_role_missing', now }, token, 'The applicant no longer has the Verified Runner role; the journal tag was not changed.');
+    return;
+  }
+
 
   let journal: DiscordChannel;
   try {
@@ -681,8 +693,7 @@ const executeRetryTag = async (
     await failure(deps, { actorId, applicantId: action.applicantId, threadId: action.threadId, action: 'retry_tag', outcome: 'card_update_failed', now }, token, 'The journal tag was updated, but the verification card could not be closed.');
     return;
   }
-  await safeAudit(deps, { actorId, applicantId: action.applicantId, threadId: action.threadId, action: 'retry_tag', outcome: 'recovered', now });
-  await safeEditOriginal(deps, token, 'The verified journal tag was recovered.');
+  await auditAndEditOriginal(deps, { actorId, applicantId: action.applicantId, threadId: action.threadId, action: 'retry_tag', outcome: 'recovered', now }, token, 'The verified journal tag was recovered.');
 };
 
 const executeFinalAction = async (
@@ -693,12 +704,18 @@ const executeFinalAction = async (
   token: string,
   now: Date,
 ): Promise<void> => {
+  const botId = await verifiedBotId(deps);
+  if (!botId) {
+    await failure(deps, { actorId, applicantId: action.applicantId, threadId: action.threadId, action: action.action, outcome: 'bot_identity_failed', now }, token, 'The bot identity could not be verified. Please try again later.');
+    return;
+  }
+
   if (action.action === 'approve') {
-    await executeApproval(deps, action, actorId, messageId, token, now);
+    await executeApproval(deps, action, actorId, messageId, token, now, botId);
     return;
   }
   if (action.action === 'retry_tag') {
-    await executeRetryTag(deps, action, actorId, messageId, token, now);
+    await executeRetryTag(deps, action, actorId, messageId, token, now, botId);
     return;
   }
   await staleAfterAck(deps, token);
@@ -708,12 +725,12 @@ const reasonModalSubmission = (
   interaction: DiscordInteraction,
   config: BotConfig,
   now: Date,
-): { action: SignedVerificationAction; actorId: string; token: string; reason: string } | null => {
+): { action: SignedReasonModalAction; actorId: string; token: string; reason: string } | null => {
   if (interaction.type !== 5) return null;
   const data = object(interaction.data);
   const customId = data?.custom_id;
   const payload = typeof customId === 'string'
-    ? verifyComponentId(customId, config.componentHmacKey, Math.floor(now.getTime() / 1000))
+    ? verifyReasonModalId(customId, config.componentHmacKey, Math.floor(now.getTime() / 1000))
     : null;
   const fields = modalFields(interaction);
   const actorId = applicantId(interaction);
@@ -748,7 +765,12 @@ export const handleVerificationReasonSubmit = (
       return;
     }
 
-    const card = await queueCardFromHistory(deps, submission.action);
+    const botId = await verifiedBotId(deps);
+    if (!botId) {
+      await failure(deps, { actorId: submission.actorId, applicantId: submission.action.applicantId, threadId: submission.action.threadId, action: submission.action.action, outcome: 'bot_identity_failed', now }, submission.token, 'The bot identity could not be verified. Please try again later.');
+      return;
+    }
+    const card = await currentQueueCard(deps, submission.action.queueMessageId, submission.action, botId);
     if (!card || !actionFitsState(submission.action.action, card.marker.state)) {
       await staleAfterAck(deps, submission.token);
       return;
@@ -785,7 +807,6 @@ export const handleVerificationReasonSubmit = (
       await failure(deps, { actorId: submission.actorId, applicantId: submission.action.applicantId, threadId: submission.action.threadId, action: submission.action.action, outcome: 'card_update_failed', now }, submission.token, 'We could not update the verification card.');
       return;
     }
-    await safeAudit(deps, { actorId: submission.actorId, applicantId: submission.action.applicantId, threadId: submission.action.threadId, action: submission.action.action, outcome: state, now });
-    await safeEditOriginal(deps, submission.token, 'Verification request updated.');
+    await auditAndEditOriginal(deps, { actorId: submission.actorId, applicantId: submission.action.applicantId, threadId: submission.action.threadId, action: submission.action.action, outcome: state, now }, submission.token, 'Verification request updated.');
   }));
 };

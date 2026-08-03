@@ -3,7 +3,7 @@ import nacl from 'tweetnacl';
 import { describe, expect, it } from 'vitest';
 import { verifyAutomationRequest } from '../src/security/automation-signature.js';
 import { verifyDiscordRequest } from '../src/security/discord-signature.js';
-import { signComponentId, verifyComponentId } from '../src/security/signed-id.js';
+import { signComponentId, signReasonModalId, verifyComponentId, verifyReasonModalId } from '../src/security/signed-id.js';
 
 const hex = (bytes: Uint8Array): string => Buffer.from(bytes).toString('hex');
 
@@ -39,6 +39,22 @@ describe('signed component IDs', () => {
     expect(verifyComponentId(id, componentKey, 1_800_000_000)?.action).toBe('approve');
     expect(verifyComponentId(`${id.slice(0, -1)}x`, componentKey, 1_800_000_000)).toBeNull();
     expect(verifyComponentId(id, componentKey, 1_900_000_001)).toBeNull();
+  });
+
+  it('keeps maximum-length reason modal IDs within Discord limits', () => {
+    const componentKey = 'component-key-at-least-32-bytes-long';
+    const payload = {
+      action: 'recommend_reject' as const,
+      applicantId: '99999999999999999999',
+      threadId: '99999999999999999998',
+      queueMessageId: '99999999999999999997',
+      expiresAt: 1_900_000_000,
+    };
+
+    const id = signReasonModalId(payload, componentKey);
+
+    expect(id.length).toBeLessThanOrEqual(100);
+    expect(verifyReasonModalId(id, componentKey, 1_800_000_000)).toMatchObject(payload);
   });
 });
 

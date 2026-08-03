@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { routeInteraction } from '../src/commands/router.js';
-import { signComponentId, verifyComponentId } from '../src/security/signed-id.js';
+import { signComponentId, signReasonModalId, verifyComponentId, verifyReasonModalId } from '../src/security/signed-id.js';
 import type { BotConfig } from '../src/types.js';
 import {
   handleVerificationSubmit,
@@ -62,6 +62,7 @@ const modalSubmission = (values: Record<string, string>, ownerId = applicantId) 
 
 const restForSubmission = (overrides: Record<string, unknown> = {}): any => ({
   getChannel: vi.fn(async () => ({ id: threadId, parent_id: config.channels.runJournals, owner_id: applicantId, applied_tags: [config.tags.active] })),
+  getCurrentUser: vi.fn(async () => ({ id: config.applicationId })),
   getChannelMessages: vi.fn(async () => []),
   getMessage: vi.fn(async () => ({ id: '100000000000000030' })),
   createMessage: vi.fn(async () => ({ id: '100000000000000031' })),
@@ -201,12 +202,24 @@ const signedAction = (action: 'needs_info' | 'recommend' | 'recommend_reject' | 
   threadId,
   expiresAt: 1_900_000_000,
 }, config.componentHmacKey);
+const signedReasonAction = (action: 'needs_info' | 'recommend' | 'recommend_reject' | 'reject', messageId = queueMessageId) => signReasonModalId({
+  action,
+  applicantId,
+  threadId,
+  queueMessageId: messageId,
+  expiresAt: 1_900_000_000,
+}, config.componentHmacKey);
 
-const componentInteraction = (actorId: string, action: 'needs_info' | 'recommend' | 'recommend_reject' | 'approve' | 'reject' | 'retry_tag', payloadRoles: string[] = []) => ({
+const componentInteraction = (
+  actorId: string,
+  action: 'needs_info' | 'recommend' | 'recommend_reject' | 'approve' | 'reject' | 'retry_tag',
+  payloadRoles: string[] = [],
+  messageId = queueMessageId,
+) => ({
   type: 3,
   token: 'private-interaction-token',
   member: { user: { id: actorId }, roles: payloadRoles },
-  message: { id: queueMessageId },
+  message: { id: messageId },
   data: { custom_id: signedAction(action) },
 });
 
@@ -222,6 +235,33 @@ const restForAction = (actorId: string, actorRoles: readonly string[], state = '
     { id: '100000000000000050', position: 10 },
   ]),
 });
+describe('authenticated bot identity', () => {
+  it.each([
+    ['identity mismatch', vi.fn(async () => ({ id: '100000000000000099' }))],
+    ['identity fetch failure', vi.fn(async () => { throw new Error('identity unavailable'); })],
+  ])('stops verification queue and hierarchy work after %s', async (_case, getCurrentUser) => {
+    const submission = restForSubmission({ getCurrentUser });
+    const submitResponse = handleVerificationSubmit(modalSubmission(validFields), { config, rest: submission }, controlNow);
+    await submitResponse.afterAck?.();
+
+    expect(submission.getCurrentUser).toHaveBeenCalledTimes(1);
+    expect(submission.getChannelMessages).not.toHaveBeenCalled();
+    expect(submission.createMessage.mock.calls.some(([channelId]: [string]) => channelId === config.channels.verificationQueue)).toBe(false);
+
+    const approval = restForAction(moderatorId, [config.roles.moderator]);
+    approval.getCurrentUser = getCurrentUser;
+    const approvalResponse = await handleVerificationComponent(componentInteraction(moderatorId, 'approve'), { config, rest: approval }, controlNow);
+    await approvalResponse.afterAck?.();
+
+    expect(approval.getCurrentUser).toHaveBeenCalledTimes(2);
+    expect(approval.getGuildRoles).not.toHaveBeenCalled();
+    expect(approval.getMessage).not.toHaveBeenCalled();
+    expect(approval.addGuildMemberRole).not.toHaveBeenCalled();
+    expect(approval.editThread).not.toHaveBeenCalled();
+    expect(approval.editMessage).not.toHaveBeenCalled();
+  });
+});
+
 
 describe('live staff boundaries', () => {
   it.each(['needs_info', 'recommend', 'recommend_reject'] as const)(
@@ -238,7 +278,7 @@ describe('live staff boundaries', () => {
         },
       });
       const customId = (response as { data: { custom_id: string } }).data.custom_id;
-      expect(verifyComponentId(customId, config.componentHmacKey, 1_785_672_000)).toMatchObject({ action, applicantId, threadId });
+      expect(verifyReasonModalId(customId, config.componentHmacKey, 1_785_672_000)).toMatchObject({ action, applicantId, threadId, queueMessageId });
       expect(rest.getGuildMember).toHaveBeenCalledWith(config.guildId, fatekeeperId);
       expect(rest.getMessage).toHaveBeenCalledWith(config.channels.verificationQueue, queueMessageId);
       expect(rest.addGuildMemberRole).not.toHaveBeenCalled();
@@ -289,7 +329,17 @@ const reasonSubmission = (actorId: string, action: 'needs_info' | 'recommend' | 
   token: 'private-interaction-token',
   member: { user: { id: actorId } },
   data: {
-    custom_id: signedAction(action),
+    custom_id: signedReasonAction(action),
+    components: [{ type: 1, components: [{ type: 4, custom_id: 'reason', value: reason }] }],
+  },
+});
+
+const reasonSubmissionWithCustomId = (actorId: string, customId: string, reason: string) => ({
+  type: 5,
+  token: 'private-interaction-token',
+  member: { user: { id: actorId } },
+  data: {
+    custom_id: customId,
     components: [{ type: 1, components: [{ type: 4, custom_id: 'reason', value: reason }] }],
   },
 });
@@ -300,6 +350,49 @@ const footerText = (body: unknown): string => {
 };
 
 describe('reasoned staff actions', () => {
+
+  it('rejects a stale reason modal instead of updating a newer matching queue card', async () => {
+    const firstMessageId = '100000000000000070';
+    const secondMessageId = '100000000000000071';
+    let firstState = 'open';
+    const firstCard = () => ({
+      id: firstMessageId,
+      author: { id: config.applicationId },
+      embeds: [{ footer: { text: `FLV1 applicant=${applicantId} thread=${threadId} state=${firstState}` } }],
+    });
+    const secondCard = () => ({
+      id: secondMessageId,
+      author: { id: config.applicationId },
+      embeds: [{ footer: { text: `FLV1 applicant=${applicantId} thread=${threadId} state=open` } }],
+    });
+    const rest = restForAction(fatekeeperId, [config.roles.fatekeeper]);
+    rest.getMessage = vi.fn(async (_channelId: string, messageId: string) => {
+      if (messageId === firstMessageId) return firstCard();
+      if (messageId === secondMessageId) return secondCard();
+      throw new Error('unexpected queue card');
+    });
+    rest.getChannelMessages = vi.fn(async () => [secondCard()]);
+
+    const opening = await handleVerificationComponent(
+      componentInteraction(fatekeeperId, 'recommend', [], firstMessageId),
+      { config, rest },
+      controlNow,
+    );
+    const staleModalId = (opening as { data: { custom_id: string } }).data.custom_id;
+    firstState = 'approved';
+
+    const response = handleVerificationReasonSubmit(
+      reasonSubmissionWithCustomId(fatekeeperId, staleModalId, 'Staff already closed the earlier request.'),
+      { config, rest },
+      controlNow,
+    );
+    await response.afterAck?.();
+
+    expect(rest.getChannelMessages).not.toHaveBeenCalled();
+    expect(rest.editMessage).not.toHaveBeenCalled();
+    expect(rest.createMessage).not.toHaveBeenCalled();
+  });
+
   it('posts Needs Info to the validated journal before moving the private card state', async () => {
     const calls: string[] = [];
     const rest = restForAction(fatekeeperId, [config.roles.fatekeeper]);
@@ -458,7 +551,11 @@ describe('reasoned staff actions', () => {
     expect(verifyComponentId(retryId, config.componentHmacKey, 1_785_672_000)?.action).toBe('retry_tag');
 
     const recovered = restForAction(moderatorId, [config.roles.moderator], 'partial_tag');
-    recovered.getGuildMember = vi.fn(async () => ({ roles: [config.roles.moderator] }));
+    recovered.getGuildMember = vi.fn(async (_guildId: string, userId: string) => ({
+      roles: userId === applicantId
+        ? [config.roles.verifiedRunner]
+        : [config.roles.moderator],
+    }));
     recovered.getMessage = vi.fn(async () => queueCard('partial_tag'));
     const recoveredResponse = await handleVerificationComponent(componentInteraction(moderatorId, 'retry_tag'), { config, rest: recovered }, controlNow);
     await recoveredResponse.afterAck?.();
@@ -466,6 +563,26 @@ describe('reasoned staff actions', () => {
     expect(recovered.editThread).toHaveBeenCalledTimes(1);
     const finalCard = recovered.editMessage.mock.calls[0]?.[2] as { embeds: Array<{ footer: { text: string } }> };
     expect(finalCard.embeds[0]?.footer.text).toBe(`FLV1 applicant=${applicantId} thread=${threadId} state=approved`);
+  });
+  it('leaves a partial tag request open when the applicant no longer has Verified Runner', async () => {
+    const rest = restForAction(moderatorId, [config.roles.moderator], 'partial_tag');
+    rest.getGuildMember = vi.fn(async (_guildId: string, userId: string) => {
+      if (userId === moderatorId) return { roles: [config.roles.moderator] };
+      return { roles: [] };
+    });
+    const response = await handleVerificationComponent(
+      componentInteraction(moderatorId, 'retry_tag'),
+      { config, rest },
+      controlNow,
+    );
+    await response.afterAck?.();
+
+    expect(rest.getGuildMember).toHaveBeenCalledWith(config.guildId, applicantId);
+    expect(rest.addGuildMemberRole).not.toHaveBeenCalled();
+    expect(rest.editThread).not.toHaveBeenCalled();
+    expect(rest.editMessage).not.toHaveBeenCalled();
+    expect(rest.createMessage).toHaveBeenCalledWith(config.channels.auditLog, expect.objectContaining({ content: expect.stringContaining('outcome=applicant_role_missing') }));
+
   });
 
   it('rejects without role/tag mutation and keeps reasons out of the audit entry', async () => {
@@ -527,6 +644,80 @@ describe('approval failure containment', () => {
     expect(replay.editMessage).not.toHaveBeenCalled();
     expect(replay.editOriginalInteractionResponse).toHaveBeenCalledWith(config.applicationId, 'private-interaction-token', {
       content: 'That verification control is no longer current.',
+      allowed_mentions: { parse: [] },
+    });
+  });
+});
+
+describe('audit delivery warnings', () => {
+  it('warns an approving operator when audit delivery fails without replaying mutations', async () => {
+    const rest = restForAction(moderatorId, [config.roles.moderator]);
+    rest.createMessage = vi.fn(async (channelId: string) => {
+      if (channelId === config.channels.auditLog) throw new Error('audit unavailable');
+      return { id: '100000000000000080' };
+    });
+    const response = await handleVerificationComponent(componentInteraction(moderatorId, 'approve'), { config, rest }, controlNow);
+    await response.afterAck?.();
+
+    expect(rest.addGuildMemberRole).toHaveBeenCalledTimes(1);
+    expect(rest.editThread).toHaveBeenCalledTimes(1);
+    expect(rest.editMessage).toHaveBeenCalledTimes(1);
+    expect(rest.createMessage).toHaveBeenCalledTimes(1);
+    expect(rest.editOriginalInteractionResponse).toHaveBeenCalledWith(config.applicationId, 'private-interaction-token', {
+      content: 'Runner verification approved. The audit log could not be delivered. Do not retry; contact an administrator.',
+      allowed_mentions: { parse: [] },
+    });
+  });
+
+  it('warns a tag-recovery operator when audit delivery fails without replaying mutations', async () => {
+    const rest = restForAction(moderatorId, [config.roles.moderator], 'partial_tag');
+    rest.getGuildMember = vi.fn(async (_guildId: string, userId: string) => ({
+      roles: userId === applicantId ? [config.roles.verifiedRunner] : [config.roles.moderator],
+    }));
+    rest.createMessage = vi.fn(async (channelId: string) => {
+      if (channelId === config.channels.auditLog) throw new Error('audit unavailable');
+      return { id: '100000000000000081' };
+    });
+    const response = await handleVerificationComponent(componentInteraction(moderatorId, 'retry_tag'), { config, rest }, controlNow);
+    await response.afterAck?.();
+
+    expect(rest.addGuildMemberRole).not.toHaveBeenCalled();
+    expect(rest.editThread).toHaveBeenCalledTimes(1);
+    expect(rest.editMessage).toHaveBeenCalledTimes(1);
+    expect(rest.createMessage).toHaveBeenCalledTimes(1);
+    expect(rest.editOriginalInteractionResponse).toHaveBeenCalledWith(config.applicationId, 'private-interaction-token', {
+      content: 'The verified journal tag was recovered. The audit log could not be delivered. Do not retry; contact an administrator.',
+      allowed_mentions: { parse: [] },
+    });
+  });
+
+  it.each([
+    ['needs_info', fatekeeperId, [config.roles.fatekeeper], 1],
+    ['recommend', fatekeeperId, [config.roles.fatekeeper], 0],
+    ['recommend_reject', fatekeeperId, [config.roles.fatekeeper], 0],
+    ['reject', moderatorId, [config.roles.moderator], 0],
+  ] as const)('warns privately after failed audit delivery for %s without replaying actions', async (action, actorId, actorRoles, journalPosts) => {
+    const rest = restForAction(actorId, actorRoles);
+    let postedToJournal = 0;
+    rest.createMessage = vi.fn(async (channelId: string) => {
+      if (channelId === config.channels.auditLog) throw new Error('audit unavailable');
+      if (channelId === threadId) postedToJournal += 1;
+      return { id: '100000000000000082' };
+    });
+    const response = handleVerificationReasonSubmit(
+      reasonSubmission(actorId, action, 'A private staff reason that must not enter the warning.'),
+      { config, rest },
+      controlNow,
+    );
+    await response.afterAck?.();
+
+    expect(postedToJournal).toBe(journalPosts);
+    expect(rest.addGuildMemberRole).not.toHaveBeenCalled();
+    expect(rest.editThread).not.toHaveBeenCalled();
+    expect(rest.editMessage).toHaveBeenCalledTimes(1);
+    expect(rest.createMessage).toHaveBeenCalledTimes(journalPosts + 1);
+    expect(rest.editOriginalInteractionResponse).toHaveBeenCalledWith(config.applicationId, 'private-interaction-token', {
+      content: 'Verification request updated. The audit log could not be delivered. Do not retry; contact an administrator.',
       allowed_mentions: { parse: [] },
     });
   });

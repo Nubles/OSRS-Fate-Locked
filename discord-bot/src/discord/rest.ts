@@ -12,6 +12,7 @@ export interface DiscordChannel {
   [key: string]: unknown;
 }
 export interface DiscordRole { id: Snowflake; position: number; [key: string]: unknown }
+export interface DiscordUser { id: Snowflake; [key: string]: unknown }
 
 export interface DiscordGuildMember { user?: { id: Snowflake }; roles: Snowflake[]; [key: string]: unknown }
 
@@ -101,6 +102,7 @@ export class DiscordRestClient {
     const boundedLimit = Math.max(1, Math.min(Math.floor(limit), 100));
     return this.request('GET', `/channels/${channelId}/messages?limit=${boundedLimit}`);
   }
+  getCurrentUser(): Promise<DiscordUser> { return this.request('GET', '/users/@me'); }
   editOriginalInteractionResponse(applicationId: string, interactionToken: string, body: unknown): Promise<DiscordMessage> { return this.request('PATCH', `/webhooks/${applicationId}/${interactionToken}/messages/@original`, body); }
   getChannel(channelId: string): Promise<DiscordChannel> { return this.request('GET', `/channels/${channelId}`); }
   getMessage(channelId: string, messageId: string): Promise<DiscordMessage> { return this.request('GET', `/channels/${channelId}/messages/${messageId}`); }

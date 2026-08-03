@@ -155,4 +155,14 @@ describe('DiscordRestClient', () => {
     expect(fetchImpl).toHaveBeenNthCalledWith(3,
       'https://discord.com/api/v10/guilds/100000000000000004/roles', expect.objectContaining({ method: 'GET' }));
   });
+
+  it('reads the authenticated bot identity from Discord', async () => {
+    const fetchImpl = fetchSequence([response(200, { id: '100000000000000001' })]);
+    const client = new DiscordRestClient({ token: 'test-token', fetchImpl });
+
+    await expect(client.getCurrentUser()).resolves.toEqual({ id: '100000000000000001' });
+    expect(fetchImpl).toHaveBeenCalledWith(
+      'https://discord.com/api/v10/users/@me', expect.objectContaining({ method: 'GET' }),
+    );
+});
 });
