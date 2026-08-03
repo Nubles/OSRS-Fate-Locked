@@ -34,6 +34,12 @@ describe('authored changelog releases', () => {
     expect(LATEST_CHANGELOG.sections.fixed).toEqual(expect.arrayContaining([
       'Twenty-four boundary chunks now use the correct parent continent, fixing labels such as Falador \u00b7 Misthalin and Port Sarim \u00b7 Karamja.',
     ]));
+    expect(JSON.stringify(LATEST_CHANGELOG.sections)).toContain(
+      'Named dungeon, cave, mine, and basement task unlocks now follow their reviewed physical entrances instead of being omitted.',
+    );
+    expect(JSON.stringify(LATEST_CHANGELOG.sections)).toContain(
+      'Chunk Info now shows each reviewed entrance as locked with its chunk or available.',
+    );
   });
 
   it('preserves the profile registry recovery and multi-tab safety release', () => {

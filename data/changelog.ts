@@ -27,10 +27,12 @@ export const CHANGELOG_RELEASES = [
         "Heroes' Guild, Ice Mountain, Ranging Guild, Otto's Grotto, and the Resource Area now share their physical chunk's single area unlock.",
         'Existing saves automatically keep the canonical area and receive one regular Key for each duplicate overlap they previously purchased.',
         'Chunk data is refreshed to the reviewed 2 August Chunk Picker revision, including newly named waters around Ardeaglais, Auchrie, and Wyrmscraig.',
+        'Chunk Info now shows each reviewed entrance as locked with its chunk or available.',
       ],
       fixed: [
         "Unlocking Otto's Grotto now visibly unlocks the Baxtorian Falls chunk containing it.",
         'Twenty-four boundary chunks now use the correct parent continent, fixing labels such as Falador · Misthalin and Port Sarim · Karamja.',
+        'Named dungeon, cave, mine, and basement task unlocks now follow their reviewed physical entrances instead of being omitted.',
       ],
     },
   },
