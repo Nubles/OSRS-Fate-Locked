@@ -1,6 +1,6 @@
 import { waitUntil } from '@vercel/functions';
 import { routeInteraction } from '../src/commands/router.js';
-import { loadConfig } from '../src/config.js';
+import { loadConfigFromProcess } from '../src/config.js';
 import { handleInteractionRequest } from '../src/handlers/interactions.js';
 import type { DiscordInteraction } from '../src/handlers/interactions.js';
 import type { JournalInteractionResponse } from '../src/journals.js';
@@ -37,5 +37,5 @@ export const createInteractionsHandler = (
 };
 
 export default async function interactions(request: Request): Promise<Response> {
-  return createInteractionsHandler(loadConfig(process.env))(request);
+  return createInteractionsHandler(loadConfigFromProcess())(request);
 }

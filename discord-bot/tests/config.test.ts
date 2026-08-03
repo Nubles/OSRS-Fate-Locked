@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { loadConfig } from '../src/config.js';
+import * as configModule from '../src/config.js';
+
+const { loadConfig } = configModule;
 
 const valid = {
   DISCORD_APPLICATION_ID: '100000000000000001',
@@ -39,6 +41,27 @@ describe('loadConfig', () => {
     ]);
   });
 
+
+  it('loads the complete configuration from process environment values', () => {
+    const original = { ...process.env };
+    try {
+      Object.assign(process.env, valid);
+      const loadConfigFromProcess = (configModule as typeof configModule & {
+        loadConfigFromProcess?: () => ReturnType<typeof loadConfig>;
+      }).loadConfigFromProcess;
+
+      expect(loadConfigFromProcess).toBeTypeOf('function');
+      const config = loadConfigFromProcess!();
+
+      expect(config.applicationId).toBe('100000000000000001');
+      expect(config.guildId).toBe('1533446664709341357');
+      expect(config.channels.rules).toBe('100000000000000006');
+      expect(config.mutationsEnabled).toBe(false);
+    } finally {
+      for (const key of Object.keys(process.env)) delete process.env[key];
+      Object.assign(process.env, original);
+    }
+  });
   it.each(['DISCORD_BOT_TOKEN', 'DISCORD_PUBLIC_KEY', 'DISCORD_COMPONENT_HMAC_KEY'])(
     'rejects missing %s',
     (key) => expect(() => loadConfig({ ...valid, [key]: '' })).toThrow(key),

@@ -1,6 +1,6 @@
 import { guildCommands } from '../src/commands/definitions.js';
 import { DiscordRestClient } from '../src/discord/rest.js';
-import { loadConfig } from '../src/config.js';
+import { loadConfigFromProcess } from '../src/config.js';
 import { AnnouncementHistoryError, publishAnnouncement } from '../src/automation.js';
 import { handleAutomationRequest, type AutomationEvent } from '../src/handlers/automation.js';
 import type { BotConfig } from '../src/types.js';
@@ -43,7 +43,7 @@ export const createAutomationHandler = (config: BotConfig, discord: AutomationDi
 };
 
 export default async function automation(request: Request): Promise<Response> {
-  const config = loadConfig(process.env);
+  const config = loadConfigFromProcess();
   const discord = new DiscordRestClient({ token: config.botToken });
   return createAutomationHandler(config, discord)(request);
 }
