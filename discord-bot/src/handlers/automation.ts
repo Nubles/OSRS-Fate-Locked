@@ -42,11 +42,11 @@ export const handleAutomationRequest = async (
       now,
     )
   ) {
-    return json({ error: 'Unauthorized' }, 401);
+    return json({ ok: false, duplicate: false }, 401);
   }
 
   const event = parseEvent(rawBody);
-  if (!event) return json({ error: 'Invalid automation event' }, 400);
+  if (!event) return json({ ok: false, duplicate: false }, 400);
 
   return deps.handleEvent(event);
 };

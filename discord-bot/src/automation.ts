@@ -98,7 +98,8 @@ const canonicalReleaseUrl = (value: unknown, repository: unknown): string | null
 
   try {
     const url = new URL(value);
-    const pathPrefix = `/${repository}/releases/`;
+    const pathPrefix = `/${repository}/releases/tag/`;
+    const tagSuffix = url.pathname.slice(pathPrefix.length);
     if (
       url.protocol !== 'https:' ||
       url.hostname !== 'github.com' ||
@@ -107,7 +108,9 @@ const canonicalReleaseUrl = (value: unknown, repository: unknown): string | null
       url.port ||
       url.search ||
       url.hash ||
-      !url.pathname.startsWith(pathPrefix)
+      !url.pathname.startsWith(pathPrefix) ||
+      !tagSuffix ||
+      tagSuffix.split('/').some((segment) => segment.length === 0)
     ) return null;
     return url.toString();
   } catch {

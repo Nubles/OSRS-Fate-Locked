@@ -64,6 +64,12 @@ const signedRequest = (body: string, timestamp = '1700000000'): Request => {
   });
 };
 
+const validWeeklySeedBody = JSON.stringify({
+  type: 'weekly_seed',
+  repository: 'Nubles/OSRS-Fate-Locked',
+  sentAt: '2026-08-03T09:15:00.000Z',
+});
+
 describe('automation event envelope', () => {
   it('rejects an allow-listed repository paired with an unsupported event after HMAC verification', async () => {
     const handleEvent = vi.fn(async () => json({ accepted: true }, 202));
@@ -122,6 +128,142 @@ describe('automation event envelope', () => {
     ]) {
       expect(parseAutomationEvent({ ...base, release: { ...base.release, url } })).toBeNull();
     }
+  });
+
+  it('accepts only a non-empty tag-release URL for the matching GitHub repository', () => {
+    const base = {
+      type: 'release',
+      repository: 'Nubles/OSRS-Fate-Locked',
+      sentAt: '2026-08-03T09:15:00.000Z',
+      release: {
+        id: 43,
+        tagName: 'v1.2.4',
+        name: 'Another release',
+        url: 'https://github.com/Nubles/OSRS-Fate-Locked/releases/tag/v1.2.4',
+        body: 'Release notes',
+        publishedAt: '2026-08-03T09:00:00.000Z',
+      },
+    } as const;
+
+    expect(parseAutomationEvent(base)).toEqual(base);
+
+    for (const url of [
+      'https://github.com/Nubles/OSRS-Fate-Locked/releases/latest',
+      'https://github.com/Nubles/OSRS-Fate-Locked/releases/download/v1.2.4/asset.zip',
+      'https://github.com/Nubles/OSRS-Fate-Locked/releases/tag/',
+      'https://github.com/Nubles/OSRS-Fate-Locked/releases/tag//',
+      'https://github.com/Nubles/OSRS-Fate-Locked/releases/tag/v1.2.4?redirect=download',
+      'https://github.com/Nubles/OSRS-Fate-Locked/releases/tag/v1.2.4#download',
+    ]) {
+      expect(parseAutomationEvent({ ...base, release: { ...base.release, url } })).toBeNull();
+    }
+  });
+});
+
+describe('automation request failures', () => {
+  it('returns only safe untyped keys for a bad HMAC', async () => {
+    const request = signedRequest(validWeeklySeedBody);
+    request.headers.set('x-fate-signature', 'v1=' + '0'.repeat(64));
+    const handleEvent = vi.fn(async () => json({ accepted: true }));
+
+    const response = await handleAutomationRequest(request, { config, handleEvent }, 1_700_000_000);
+
+    expect(response.status).toBe(401);
+    const payload = await response.json();
+    expect(payload).toEqual({ ok: false, duplicate: false });
+    expect(Object.keys(payload).sort()).toEqual(['duplicate', 'ok']);
+    expect(handleEvent).not.toHaveBeenCalled();
+  });
+
+  it('returns only safe untyped keys for a replayed request', async () => {
+    const handleEvent = vi.fn(async () => json({ accepted: true }));
+
+    const response = await handleAutomationRequest(
+      signedRequest(validWeeklySeedBody, '1699999699'),
+      { config, handleEvent },
+      1_700_000_000,
+    );
+
+    expect(response.status).toBe(401);
+    const payload = await response.json();
+    expect(payload).toEqual({ ok: false, duplicate: false });
+    expect(Object.keys(payload).sort()).toEqual(['duplicate', 'ok']);
+    expect(handleEvent).not.toHaveBeenCalled();
+  });
+
+  it('returns only safe untyped keys for malformed JSON before event parsing', async () => {
+    const handleEvent = vi.fn(async () => json({ accepted: true }));
+
+    const response = await handleAutomationRequest(
+      signedRequest('{"repository":"Nubles/OSRS-Fate-Locked"'),
+      { config, handleEvent },
+      1_700_000_000,
+    );
+
+    expect(response.status).toBe(401);
+    const payload = await response.json();
+    expect(payload).toEqual({ ok: false, duplicate: false });
+    expect(Object.keys(payload).sort()).toEqual(['duplicate', 'ok']);
+    expect(handleEvent).not.toHaveBeenCalled();
+  });
+
+  it('returns only safe untyped keys for a malformed signed envelope', async () => {
+    const handleEvent = vi.fn(async () => json({ accepted: true }));
+    const body = JSON.stringify({ type: 'weekly_seed', repository: 'Nubles/OSRS-Fate-Locked' });
+
+    const response = await handleAutomationRequest(
+      signedRequest(body),
+      { config, handleEvent },
+      1_700_000_000,
+    );
+
+    expect(response.status).toBe(400);
+    const payload = await response.json();
+    expect(payload).toEqual({ ok: false, duplicate: false });
+    expect(Object.keys(payload).sort()).toEqual(['duplicate', 'ok']);
+    expect(handleEvent).not.toHaveBeenCalled();
+  });
+
+  it('returns only safe untyped keys for a wrong repository', async () => {
+    const handleEvent = vi.fn(async () => json({ accepted: true }));
+    const body = JSON.stringify({
+      type: 'weekly_seed',
+      repository: 'Nubles/not-fate-locked',
+      sentAt: '2026-08-03T09:15:00.000Z',
+    });
+
+    const response = await handleAutomationRequest(
+      signedRequest(body),
+      { config, handleEvent },
+      1_700_000_000,
+    );
+
+    expect(response.status).toBe(401);
+    const payload = await response.json();
+    expect(payload).toEqual({ ok: false, duplicate: false });
+    expect(Object.keys(payload).sort()).toEqual(['duplicate', 'ok']);
+    expect(handleEvent).not.toHaveBeenCalled();
+  });
+
+  it('returns only safe untyped keys for an unsupported event and repository pairing', async () => {
+    const handleEvent = vi.fn(async () => json({ accepted: true }));
+    const body = JSON.stringify({
+      type: 'weekly_seed',
+      repository: 'Nubles/OSRS-Fate-Locked-Runelite',
+      sentAt: '2026-08-03T09:15:00.000Z',
+    });
+
+    const response = await handleAutomationRequest(
+      signedRequest(body),
+      { config, handleEvent },
+      1_700_000_000,
+    );
+
+    expect(response.status).toBe(400);
+    const payload = await response.json();
+    expect(payload).toEqual({ ok: false, duplicate: false });
+    expect(Object.keys(payload).sort()).toEqual(['duplicate', 'ok']);
+    expect(handleEvent).not.toHaveBeenCalled();
   });
 });
 
@@ -354,7 +496,9 @@ describe('automation API', () => {
     const response = await handler(signedRequest(body, timestamp));
 
     expect(response.status).toBe(503);
-    await expect(response.json()).resolves.toEqual({ ok: false, duplicate: false, type: 'weekly_seed' });
+    const payload = await response.json();
+    expect(payload).toEqual({ ok: false, duplicate: false, type: 'weekly_seed' });
+    expect(Object.keys(payload).sort()).toEqual(['duplicate', 'ok', 'type']);
     expect(createMessage).not.toHaveBeenCalled();
   });
 });
