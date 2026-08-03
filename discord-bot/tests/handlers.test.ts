@@ -132,7 +132,7 @@ describe('handleInteractionRequest', () => {
   });
 
 describe('handleAutomationRequest', () => {
-  const body = '{"repository":"Nubles/OSRS-Fate-Locked","type":"weekly_seed"}';
+  const body = '{"repository":"Nubles/OSRS-Fate-Locked","type":"weekly_seed","sentAt":"2023-11-14T22:13:20.000Z"}';
   const timestamp = '1700000000';
   const validSignature = `v1=${createHmac('sha256', config.automationHmacKey)
     .update(`${timestamp}.${body}`)

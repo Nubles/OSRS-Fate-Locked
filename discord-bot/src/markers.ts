@@ -28,6 +28,22 @@ export const parseVerificationMarker = (value: unknown): VerificationMarker | nu
 const record = (value: unknown): Record<string, unknown> | null =>
   value !== null && typeof value === 'object' ? value as Record<string, unknown> : null;
 
+export const hasBotAuthoredFooterMarker = (message: unknown, botId: string, marker: string): boolean => {
+  const messageRecord = record(message);
+  if (!messageRecord) return false;
+
+  const author = record(messageRecord.author);
+  if (author?.id !== botId || author.bot !== true) return false;
+
+  const embeds = messageRecord.embeds;
+  if (!Array.isArray(embeds)) return false;
+
+  return embeds.some((embed) => {
+    const footer = record(record(embed)?.footer);
+    return footer?.text === marker;
+  });
+};
+
 export const markerFromBotMessage = (message: unknown, botId: string): VerificationMarker | null => {
   const messageRecord = record(message);
   if (!messageRecord) return null;

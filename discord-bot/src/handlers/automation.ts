@@ -1,7 +1,8 @@
 import { verifyAutomationRequest } from '../security/automation-signature.js';
+import { parseAutomationEvent, type AutomationEvent } from '../automation.js';
 import type { BotConfig } from '../types.js';
 
-export type AutomationEvent = Record<string, unknown> & { repository: string };
+export type { AutomationEvent } from '../automation.js';
 
 export interface AutomationDeps {
   config: BotConfig;
@@ -16,16 +17,7 @@ const json = (body: unknown, status = 200): Response =>
 
 const parseEvent = (rawBody: string): AutomationEvent | null => {
   try {
-    const event: unknown = JSON.parse(rawBody);
-    if (
-      !event ||
-      typeof event !== 'object' ||
-      !('repository' in event) ||
-      typeof event.repository !== 'string'
-    ) {
-      return null;
-    }
-    return event as AutomationEvent;
+    return parseAutomationEvent(JSON.parse(rawBody));
   } catch {
     return null;
   }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  hasBotAuthoredFooterMarker,
   markerFromBotMessage,
   releaseMarker,
   seedMarker,
@@ -40,6 +41,24 @@ describe('verification markers', () => {
       { author: { id: botId }, embeds: [{ description: exact.embeds[0]?.footer?.text }] },
     ]) {
       expect(markerFromBotMessage(message, botId)).toBeNull();
+    }
+  });
+
+  it('requires the configured bot identity for an exact announcement footer marker', () => {
+    const marker = releaseMarker('Nubles/OSRS-Fate-Locked', 44);
+    const exact = {
+      author: { id: botId, bot: true },
+      embeds: [{ footer: { text: marker } }],
+    };
+
+    expect(hasBotAuthoredFooterMarker(exact, botId, marker)).toBe(true);
+
+    for (const message of [
+      { author: { id: botId, bot: false }, embeds: exact.embeds },
+      { author: { id: applicantId, bot: true }, embeds: exact.embeds },
+      { author: { id: botId, bot: true }, embeds: [{ footer: { text: `${marker} extra` } }] },
+    ]) {
+      expect(hasBotAuthoredFooterMarker(message, botId, marker)).toBe(false);
     }
   });
 });

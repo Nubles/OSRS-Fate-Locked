@@ -1,0 +1,27 @@
+name: Announce weekly seed
+
+on:
+  schedule:
+    - cron: '15 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: discord-weekly-seed
+  cancel-in-progress: false
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Announce weekly seed
+        env:
+          DISCORD_AUTOMATION_ENDPOINT: ${{ secrets.DISCORD_AUTOMATION_ENDPOINT }}
+          DISCORD_AUTOMATION_HMAC: ${{ secrets.DISCORD_AUTOMATION_HMAC }}
+          AUTOMATION_EVENT_JSON: '{"type":"weekly_seed","repository":"Nubles/OSRS-Fate-Locked"}'
+        run: node discord-bot/scripts/send-automation-event.mjs
