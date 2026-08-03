@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { readFile, writeFile } from 'node:fs/promises';
 import { gunzip, gzip } from 'node:zlib';
 import { promisify } from 'node:util';
+import { assertChunkTransform, transformChunkContent } from './chunk-content-transform.mjs';
 
 const unzip = promisify(gunzip);
 const zip = promisify(gzip);
@@ -63,8 +64,15 @@ async function readManifest() {
   return manifest;
 }
 
-async function writeDeterministicGzip(raw) {
-  await writeFile(gzipUrl, await zip(raw, { level: 9, mtime: 0 }));
+async function writeDeterministicGzip(raw, targetUrl = gzipUrl) {
+  await writeFile(targetUrl, await zip(raw, { level: 9, mtime: 0 }));
+}
+
+export async function writeApprovedChunkSource(raw, manifest, targetUrl = gzipUrl) {
+  assertRaw(raw, manifest);
+  const data = JSON.parse(raw.toString('utf8'));
+  assertChunkTransform(transformChunkContent(data, manifest), manifest);
+  await writeDeterministicGzip(raw, targetUrl);
 }
 
 export async function readPinnedChunkSource() {
@@ -107,8 +115,7 @@ async function fetchApprovedSource() {
   }
 
   const raw = Buffer.from(await response.arrayBuffer());
-  assertRaw(raw, manifest);
-  await writeDeterministicGzip(raw);
+  await writeApprovedChunkSource(raw, manifest);
 }
 
 async function rewritePinnedSource() {

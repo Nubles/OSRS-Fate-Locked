@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest';
+import { createHash } from 'node:crypto';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import {
   checkChunkSourceDrift,
   readPinnedChunkSource,
   verifyPinnedChunkSource,
+  writeApprovedChunkSource,
 } from './chunk-source.mjs';
 import { transformChunkContent } from './chunk-content-transform.mjs';
 
@@ -31,6 +37,32 @@ describe('pinned Chunk Picker source', () => {
       questSections: expect.any(Object),
       taskUnlocks: expect.any(Object),
     });
+  });
+
+  it('does not replace an existing gzip when fetched bytes fail JSON or transform preflight', async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), 'fate-chunk-source-'));
+    const targetUrl = pathToFileURL(join(tempDir, 'chunk-source.json.gz'));
+    const existing = Buffer.from('preserve this gzip');
+    const manifestFor = (raw: Buffer) => ({
+      rawBytes: raw.length,
+      rawSha256: createHash('sha256').update(raw).digest('hex').toUpperCase(),
+      countFloors: { contentChunks: 1 },
+    });
+
+    await writeFile(targetUrl, existing);
+    try {
+      const invalidJson = Buffer.from('{');
+      await expect(writeApprovedChunkSource(invalidJson, manifestFor(invalidJson), targetUrl))
+        .rejects.toThrow(SyntaxError);
+      await expect(readFile(targetUrl)).resolves.toEqual(existing);
+
+      const transformInvalid = Buffer.from('{}');
+      await expect(writeApprovedChunkSource(transformInvalid, manifestFor(transformInvalid), targetUrl))
+        .rejects.toThrow('Chunk transform floor failed for contentChunks: expected at least 1, received 0');
+      await expect(readFile(targetUrl)).resolves.toEqual(existing);
+    } finally {
+      await rm(tempDir, { force: true, recursive: true });
+    }
   });
 
   it('pins reviewed transform totals and the unresolved named-location backlog', async () => {
