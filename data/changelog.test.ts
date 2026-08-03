@@ -19,16 +19,34 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-08-02-profile-metadata-integrity');
+    expect(LATEST_CHANGELOG.id).toBe('2026-08-02-one-physical-chunk-one-unlock');
   });
 
-  it('announces profile registry recovery and multi-tab safety', () => {
+  it('announces the latest physical-chunk unlock and source corrections', () => {
     expect(LATEST_CHANGELOG).toMatchObject({
+      id: '2026-08-02-one-physical-chunk-one-unlock',
+      title: 'One Chunk, One Unlock',
+      date: '2026-08-02',
+    });
+    expect(LATEST_CHANGELOG.sections.changed).toContain(
+      'Chunk data is refreshed to the reviewed 2 August Chunk Picker revision, including newly named waters around Ardeaglais, Auchrie, and Wyrmscraig.',
+    );
+    expect(LATEST_CHANGELOG.sections.fixed).toEqual(expect.arrayContaining([
+      'Twenty-four boundary chunks now use the correct parent continent, fixing labels such as Falador \u00b7 Misthalin and Port Sarim \u00b7 Karamja.',
+    ]));
+  });
+
+  it('preserves the profile registry recovery and multi-tab safety release', () => {
+    const profileMetadataIntegrity = CHANGELOG_RELEASES.find(
+      release => release.id === '2026-08-02-profile-metadata-integrity',
+    );
+
+    expect(profileMetadataIntegrity).toMatchObject({
       id: '2026-08-02-profile-metadata-integrity',
       title: 'Safer Profile Management',
       date: '2026-08-02',
     });
-    expect(LATEST_CHANGELOG.sections.fixed).toEqual(expect.arrayContaining([
+    expect(profileMetadataIntegrity?.sections.fixed).toEqual(expect.arrayContaining([
       'Damaged profile lists now recover every valid browser save they can find instead of leaving the app on a blank screen.',
       'Creating, renaming, switching, and deleting profiles in multiple tabs no longer silently loses profile-list changes.',
       'Profiles that are still open in another tab cannot be deleted until that tab switches away or closes.',

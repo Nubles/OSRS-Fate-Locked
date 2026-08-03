@@ -68,4 +68,15 @@ describe('sub-area chunk assignments', () => {
   it('covers the flagship example — Falador is a multi-chunk group', () => {
     expect(SUB_AREA_CHUNKS['Falador']?.length).toBeGreaterThanOrEqual(4);
   });
+  it('keeps the reviewed Open Seas island coordinates continent-only', () => {
+    const continentOnly = new Set(['39,34', '39,35', '40,34', '40,35']);
+    const paidSubAreaAssignments = Object.entries(SUB_AREA_CHUNKS).flatMap(([area, chunks]) =>
+      chunks
+        .map(({ cx, cy }) => `${cx},${cy}`)
+        .filter((chunk) => continentOnly.has(chunk))
+        .map((chunk) => `${area}: ${chunk}`),
+    );
+
+    expect(paidSubAreaAssignments).toEqual([]);
+  });
 });
