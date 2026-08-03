@@ -5,6 +5,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readPinnedChunkSource } from './chunk-source.mjs';
 import { assertChunkTransform, transformChunkContent } from './chunk-content-transform.mjs';
+import { generatedTextMatches } from './generated-text.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUTPUTS = [
@@ -18,7 +19,10 @@ function expectedFiles(result) {
 }
 
 function check(expected) {
-  const stale = expected.filter(([path, bytes]) => !existsSync(path) || readFileSync(path, 'utf8') !== bytes).map(([path]) => path);
+  const stale = expected
+    .filter(([path, text]) => !existsSync(path)
+      || !generatedTextMatches(readFileSync(path, 'utf8'), text))
+    .map(([path]) => path);
   if (stale.length) throw new Error(`Chunk content outputs are stale:\n${stale.map((path) => `  ${path}`).join('\n')}`);
 }
 
