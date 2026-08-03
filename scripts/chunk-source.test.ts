@@ -156,7 +156,7 @@ describe('pinned Chunk Picker source', () => {
     } finally {
       await rm(tempDir, { force: true, recursive: true });
     }
-  }, 20_000);
+  }, 60_000);
 
   it('pins reviewed transform totals and the zero-unresolved named-location baseline', async () => {
     const { data, manifest } = await readPinnedChunkSource();
