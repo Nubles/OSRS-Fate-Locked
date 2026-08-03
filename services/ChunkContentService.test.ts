@@ -5,6 +5,12 @@ import {
   ChunkContent,
   chunkContentService,
 } from './ChunkContentService';
+import type { ChunkEntrance } from './ChunkContentService';
+
+const DWARVEN_MINE_CHUNK = { cx: 47, cy: 52 };
+const generatedContentFixture = structuredClone(fullChunkContent);
+const rawDwarvenMineEntrances = generatedContentFixture.entrances['12084'];
+rawDwarvenMineEntrances.reverse();
 
 const empty = (over: Partial<ChunkContent> = {}): ChunkContent => ({
   monsters: [], npcs: [], objects: [], shops: [],
@@ -60,12 +66,18 @@ describe('aggregateContent', () => {
   });
 });
 
+describe('entrances before initialization', () => {
+  it('returns no entrance rows before the generated document loads', () => {
+    expect(chunkContentService.entrancesFor(DWARVEN_MINE_CHUNK.cx, DWARVEN_MINE_CHUNK.cy)).toEqual([]);
+  });
+});
+
 describe('generated normalized source unions', () => {
   beforeAll(async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => new Response(
-      JSON.stringify(fullChunkContent),
-      { status: 200, headers: { 'content-type': 'application/json' } },
-    )));
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => generatedContentFixture,
+    })));
     expect(await chunkContentService.init()).toBe(true);
   });
 
@@ -78,5 +90,56 @@ describe('generated normalized source unions', () => {
     const soil = chunkContentService.skillYields('Mining').Soil;
     expect(soil.find(([item]) => item === 'Bones')?.[1]).toContain('1 @ 1/12');
     expect(chunkContentService.sourceMetadata()?.policyVersion).toBe(2);
+    expect(chunkContentService.sourceMetadata()?.namedLocationPolicyVersion).toBe(1);
+    expect(chunkContentService.sourceMetadata()?.namedLocationReviewedAt).toBe('2026-08-03');
+  });
+  it('returns exact generated entrances in label order without exposing mutable generated rows', () => {
+    const expectedDwarvenMineEntrances: ChunkEntrance[] = [
+      {
+        location: 'Dwarven Mine',
+        label: 'Eastern Falador entrance to Dwarven Mine',
+        wikiPage: 'Dwarven_Mine',
+        requirements: [],
+      },
+      {
+        location: 'Mining Guild',
+        label: 'Entrance to Mining Guild',
+        wikiPage: 'Mining_Guild',
+        requirements: ['60 Mining'],
+      },
+      {
+        location: 'Dwarven Mine',
+        label: 'Mining Guild entrance to Dwarven Mine',
+        wikiPage: 'Dwarven_Mine',
+        requirements: ['60 Mining'],
+      },
+    ];
+    const rawBeforeLookup = structuredClone(rawDwarvenMineEntrances);
+    expect(rawBeforeLookup.map(({ label }) => label)).toEqual([
+      'Mining Guild entrance to Dwarven Mine',
+      'Entrance to Mining Guild',
+      'Eastern Falador entrance to Dwarven Mine',
+    ]);
+    const entrances = chunkContentService.entrancesFor(DWARVEN_MINE_CHUNK.cx, DWARVEN_MINE_CHUNK.cy);
+
+    expect(entrances).toEqual(expectedDwarvenMineEntrances);
+    expect(entrances.map(({ label }) => label)).toEqual([
+      'Eastern Falador entrance to Dwarven Mine',
+      'Entrance to Mining Guild',
+      'Mining Guild entrance to Dwarven Mine',
+    ]);
+    expect(rawDwarvenMineEntrances).toEqual(rawBeforeLookup);
+
+    entrances[0].label = 'Mutated label';
+    entrances[1].requirements.push('Mutated requirement');
+    entrances.pop();
+
+    expect(chunkContentService.entrancesFor(DWARVEN_MINE_CHUNK.cx, DWARVEN_MINE_CHUNK.cy))
+      .toEqual(expectedDwarvenMineEntrances);
+    expect(rawDwarvenMineEntrances).toEqual(rawBeforeLookup);
+  });
+
+  it('returns no entrance rows for an unknown chunk', () => {
+    expect(chunkContentService.entrancesFor(-1, -1)).toEqual([]);
   });
 });

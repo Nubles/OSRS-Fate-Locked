@@ -91,6 +91,12 @@ export type SkillItems = Record<string, Record<string, [string, string][]>>;
  */
 export type TaskUnlockCategory = 'Items' | 'Monsters' | 'NPCs' | 'Objects' | 'Shops' | 'Spawns';
 export type TaskUnlocks = Partial<Record<TaskUnlockCategory, Record<string, Record<string, string[]>>>>;
+export interface ChunkEntrance {
+  location: string;
+  label: string;
+  wikiPage: string;
+  requirements: string[];
+}
 /** Our entity kinds → the taskUnlocks category they map to. */
 const TASK_CATEGORY: Record<EntityKind, TaskUnlockCategory> = {
   monster: 'Monsters', npc: 'NPCs', object: 'Objects', shop: 'Shops', spawn: 'Spawns', quest: 'Items',
@@ -105,8 +111,11 @@ interface RawDoc {
     blobSha: string;
     rawSha256: string;
     policyVersion: number;
+    namedLocationPolicyVersion?: number;
+    namedLocationReviewedAt?: string;
   };
   chunks: Record<string, RawEntry>;
+  entrances?: Record<string, ChunkEntrance[]>;
   connect?: ConnectGraph;
   slayerMasters?: SlayerMasters;
   shortcuts?: Shortcut[];
@@ -246,6 +255,12 @@ class ChunkContentService {
   contentFor(cx: number, cy: number): ChunkContent | null {
     const e = this.doc?.chunks[String(cx * 256 + cy)];
     return e ? decode(e) : null;
+  }
+
+  entrancesFor(cx: number, cy: number): ChunkEntrance[] {
+    return (this.doc?.entrances?.[String(cx * 256 + cy)] ?? [])
+      .map(entrance => ({ ...entrance, requirements: [...entrance.requirements] }))
+      .sort((a, b) => a.label.localeCompare(b.label));
   }
 
   /** Region-level aggregate over a chunk list (missing chunks are skipped). */
