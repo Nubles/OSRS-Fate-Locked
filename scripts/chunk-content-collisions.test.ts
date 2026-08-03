@@ -188,9 +188,9 @@ describe('pinned normalized chunk-source collisions', () => {
       contributions.map(({ rawItem, stage, rate }) => `${rawItem}\u0000${stage}\u0000${rate}`)
     ).size, 0);
 
-    expect(rows).toHaveLength(565);
-    expect(rawContributions).toBe(7_795);
-    expect(canonicalContributions).toBe(7_747);
+    expect(rows).toHaveLength(567);
+    expect(rawContributions).toBe(7_803);
+    expect(canonicalContributions).toBe(7_755);
     expect(singletonItems.filter(({ evidence }) => evidence.size > 1)).toHaveLength(168);
     expect(singletonItems.filter(hasRepeatedRateAcrossStages)).toHaveLength(36);
     expect(canonicalItems.filter(({ evidence }) => evidence.size > 1)).toHaveLength(305);

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "policyVersion": 2,
-  "sourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
+  "sourceCommit": "4eb75a8454eb41cfff71b70819326e0e67bcea7c",
   "categoryTotals": {
     "walkableChunks": {
       "source": 1172,
@@ -18,10 +18,10 @@
       "unresolved": 0
     },
     "chunks": {
-      "source": 2230,
-      "imported": 447,
-      "normalized": 489,
-      "excluded": 1294,
+      "source": 2234,
+      "imported": 444,
+      "normalized": 493,
+      "excluded": 1297,
       "unresolved": 0
     },
     "questSections": {
@@ -32,37 +32,37 @@
       "unresolved": 0
     },
     "taskUnlocks": {
-      "source": 1670,
+      "source": 1672,
       "imported": 1011,
-      "normalized": 519,
+      "normalized": 521,
       "excluded": 0,
       "unresolved": 140
     },
     "slayerMasterTasks": {
-      "source": 357,
-      "imported": 354,
+      "source": 386,
+      "imported": 383,
       "normalized": 3,
       "excluded": 0,
       "unresolved": 0
     },
     "challenges": {
-      "source": 14631,
-      "imported": 199,
+      "source": 14692,
+      "imported": 203,
       "normalized": 0,
-      "excluded": 14432,
+      "excluded": 14489,
       "unresolved": 0
     },
     "drops": {
-      "source": 871,
-      "imported": 738,
+      "source": 872,
+      "imported": 739,
       "normalized": 133,
       "excluded": 0,
       "unresolved": 0
     },
     "shopItems": {
-      "source": 433,
-      "imported": 331,
-      "normalized": 102,
+      "source": 435,
+      "imported": 332,
+      "normalized": 103,
       "excluded": 0,
       "unresolved": 0
     },
@@ -74,8 +74,8 @@
       "unresolved": 0
     },
     "skillItems": {
-      "source": 565,
-      "imported": 531,
+      "source": 567,
+      "imported": 533,
       "normalized": 34,
       "excluded": 0,
       "unresolved": 0
@@ -88,8 +88,8 @@
       "unresolved": 0
     },
     "banks": {
-      "source": 102,
-      "imported": 100,
+      "source": 103,
+      "imported": 101,
       "normalized": 2,
       "excluded": 0,
       "unresolved": 0
@@ -104,6 +104,16 @@
       "reason": "base-record",
       "targetKeys": [
         "10039"
+      ]
+    },
+    {
+      "category": "banks",
+      "sourceKey": "10275@102",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "10275"
       ]
     },
     {
@@ -1858,6 +1868,16 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Agility/Access the basalt stepping stone ~|shortcut|~",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Agility/Access the basalt stepping stone shortcut"
+      ]
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Agility/Access the beginner stepping stones in Brimhaven Dungeon ~|shortcut|~",
       "terminal": true,
       "disposition": "imported",
@@ -2164,6 +2184,16 @@
       "reason": "base-record",
       "targetKeys": [
         "Agility/Access the estuary crossing on Mos Le'Harmless shortcut"
+      ]
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Agility/Access the extra slippery basalt stepping stone ~|shortcut|~",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Agility/Access the extra slippery basalt stepping stone shortcut"
       ]
     },
     {
@@ -3004,6 +3034,16 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Agility/Access the slippery basalt stepping stone ~|shortcut|~",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Agility/Access the slippery basalt stepping stone shortcut"
+      ]
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Agility/Access the squeeze through to God Wars Dungeon surface access ~|shortcut|~",
       "terminal": true,
       "disposition": "imported",
@@ -3402,6 +3442,16 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Agility/Access the Wyrmscraig cathedral cliffside scramble ~|shortcut|~",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Agility/Access the Wyrmscraig cathedral cliffside scramble shortcut"
+      ]
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Agility/Access the Yanille Agility ~|shortcut|~",
       "terminal": true,
       "disposition": "imported",
@@ -3745,6 +3795,14 @@
     {
       "category": "challenges",
       "sourceKey": "Attack/Wield ~|glacial temotli|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Attack/Wield ~|hallowfell|~",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -4729,6 +4787,14 @@
     {
       "category": "challenges",
       "sourceKey": "Combat/Receive a Slayer assignment from ~|Mazchna|~ in Canifis",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Combat/Receive a Slayer assignment from ~|Mortimer|~ in Wyrmscraig Cavern",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -9832,6 +9898,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Construction/Build the ~|bank chest|~ on Wyrmscraig",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Construction/Build the ~|cleaning bench|~ on Fossil Island",
       "terminal": true,
       "disposition": "excluded",
@@ -12392,6 +12466,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Crafting/~|Fallen From Grace|~ Crafting skill requirement",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Crafting/~|Family Crest|~ Crafting skill requirement",
       "terminal": true,
       "disposition": "excluded",
@@ -14232,6 +14314,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Crafting/Craft a ~|sunstone core|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Crafting/Craft a ~|teak bird house|~",
       "terminal": true,
       "disposition": "excluded",
@@ -14976,6 +15066,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Crafting/Participate in ~|golem crafting|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Crafting/Participate in ~|Trouble Brewing|~ for Crafting xp",
       "terminal": true,
       "disposition": "excluded",
@@ -15049,6 +15147,30 @@
     {
       "category": "challenges",
       "sourceKey": "Crafting/Polish a ~|tarnished spear|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Crafting/Reach the level to guaranteed cut a ~|jade|~ with a jeweller's chisel",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Crafting/Reach the level to guaranteed cut a ~|red topaz|~ with a jeweller's chisel",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Crafting/Reach the level to guaranteed cut an ~|opal|~ with a jeweller's chisel",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -29840,6 +29962,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Extra/(All Pets) Obtain ~|aggy|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Extra/(All Pets) Obtain ~|beef|~",
       "terminal": true,
       "disposition": "excluded",
@@ -29857,6 +29987,14 @@
     {
       "category": "challenges",
       "sourceKey": "Extra/(All Pets) Obtain ~|gull (pet)|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Extra/(All Pets) Obtain ~|mr mcgroot|~",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -38784,6 +38922,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Extra/(Miscellaneous) Obtain a ~|jeweller's chisel|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Extra/(Miscellaneous) Obtain a ~|left skull half|~",
       "terminal": true,
       "disposition": "excluded",
@@ -40888,6 +41034,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Extra/(Skilling Pets) Obtain ~|mr mcgroot|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Extra/(Skilling Pets) Obtain a ~|baby chinchompa|~",
       "terminal": true,
       "disposition": "excluded",
@@ -42073,6 +42227,46 @@
     {
       "category": "challenges",
       "sourceKey": "Extra/(The Leviathan) Obtain a ~|virtus robe top|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Extra/(The Mad Angel) Obtain ~|aggy|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Extra/(The Mad Angel) Obtain ~|granite dust|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Extra/(The Mad Angel) Obtain ~|hallowfell|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Extra/(The Mad Angel) Obtain a ~|jar of light|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Extra/(The Mad Angel) Obtain an ~|ardeaglais teleport|~",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -46744,6 +46938,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Extra/Bring a ~|Wyrmscraig goat|~ to Port Sarim",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Extra/Build a ~|bank chest (amenity)|~ in Deepfin Mine (x2)",
       "terminal": true,
       "disposition": "excluded",
@@ -50728,6 +50930,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Extra/Obtain a ~|jeweller's chisel|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Extra/Obtain a ~|kq head|~",
       "terminal": true,
       "disposition": "excluded",
@@ -51984,6 +52194,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Extra/Rebuild the ~|bank chest|~ on Wyrmscraig",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Extra/Rebuild the ~|cleaning bench|~ on Fossil Island",
       "terminal": true,
       "disposition": "excluded",
@@ -52688,6 +52906,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Extra/Unlock the fifth modifier for ~|Mortimer|~'s tasks at 40 tasks",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Extra/Unlock the Flamberge Blade ~|preform mould|~ from Giants' Foundry",
       "terminal": true,
       "disposition": "excluded",
@@ -52705,6 +52931,14 @@
     {
       "category": "challenges",
       "sourceKey": "Extra/Unlock the Fortis Salute emote with ~|Glory|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Extra/Unlock the fourth modifier for ~|Mortimer|~'s tasks at 25 tasks",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -52832,6 +53066,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Extra/Unlock the sixth modifier for ~|Mortimer|~'s tasks at 50 tasks",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Extra/Unlock the Slepe teleport for the ~|Drakan's medallion|~",
       "terminal": true,
       "disposition": "excluded",
@@ -52881,6 +53123,14 @@
     {
       "category": "challenges",
       "sourceKey": "Extra/Unlock the The Point! ~|preform mould|~ from Giants' Foundry",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Extra/Unlock the third modifier for ~|Mortimer|~'s tasks at 15 tasks",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -59648,6 +59898,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Hunter/Catch a ~|wyrmscraig goat|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Hunter/Catch a ~|young impling|~",
       "terminal": true,
       "disposition": "excluded",
@@ -59913,6 +60171,14 @@
     {
       "category": "challenges",
       "sourceKey": "Hunter/Trap a ~|moss lizard|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Hunter/Unlock the highest goat pit capacity for ~|goat hunting|~",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -60313,6 +60579,14 @@
     {
       "category": "challenges",
       "sourceKey": "Magic/Cast ~|ardougne teleport|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Magic/Cast ~|astral contact|~",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -61281,14 +61555,6 @@
     {
       "category": "challenges",
       "sourceKey": "Magic/Cast ~|moonclan teleport|~",
-      "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
-    },
-    {
-      "category": "challenges",
-      "sourceKey": "Magic/Cast ~|npc contact|~",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -63152,6 +63418,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Mining/~|Fallen From Grace|~ Mining skill requirement",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Mining/~|Family Crest|~ Mining skill requirement",
       "terminal": true,
       "disposition": "excluded",
@@ -63650,6 +63924,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Mining/Mine ~|sunstone rocks|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Mining/Mine ~|te salt|~",
       "terminal": true,
       "disposition": "excluded",
@@ -63851,6 +64133,14 @@
     {
       "category": "challenges",
       "sourceKey": "Mining/Mine the ~|rockslide (Mac)|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Mining/Mine the ~|sunstone monolith|~",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -64818,6 +65108,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Nonskill/10018-1 to 10018-3",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Nonskill/10023-1 to 10023-W1",
       "terminal": true,
       "disposition": "excluded",
@@ -64883,6 +65181,22 @@
     {
       "category": "challenges",
       "sourceKey": "Nonskill/10044-W3 to 10044-W4",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Nonskill/10275-1 to 10275-2",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Nonskill/10275-1 to 10275-W1",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -76586,6 +76900,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Nonskill/Gole crafting loot",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Nonskill/Gorak Plane",
       "terminal": true,
       "disposition": "excluded",
@@ -83722,6 +84044,30 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Nonskill/Search the tent on Wyrmscraig for a bronze pickaxe*",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Nonskill/Search the tent on Wyrmscraig for a chisel*",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Nonskill/Search the tent on Wyrmscraig for a hammer*",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Nonskill/Search the tents in the Imperial Guard camp in Burthorpe for some boxes.",
       "terminal": true,
       "disposition": "excluded",
@@ -86258,6 +86604,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Nonskill/Take a cattleprod from the supply",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Nonskill/Take a chain from the crate in the hideout",
       "terminal": true,
       "disposition": "excluded",
@@ -86331,6 +86685,14 @@
     {
       "category": "challenges",
       "sourceKey": "Nonskill/Take swamp tar from a tar barrel*",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Nonskill/Take wooden spikes from the supply",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -88675,6 +89037,30 @@
     {
       "category": "challenges",
       "sourceKey": "Nonskill/Wrath altar",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Nonskill/Wyrmscraig Cavern",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Nonskill/Wyrmscraig Cavern to Wyrmscraig Cavern#Water",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Nonskill/Wyrmscraig Cavern#Water",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -95019,6 +95405,70 @@
     {
       "category": "challenges",
       "sourceKey": "Quest/~|Fairytale II - Cure a Queen|~ Complete the quest",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Quest/~|Fallen From Grace|~ 1",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Quest/~|Fallen From Grace|~ 2",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Quest/~|Fallen From Grace|~ 3",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Quest/~|Fallen From Grace|~ 4",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Quest/~|Fallen From Grace|~ 5",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Quest/~|Fallen From Grace|~ 6",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Quest/~|Fallen From Grace|~ 7",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Quest/~|Fallen From Grace|~ Complete the quest",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -108752,6 +109202,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Runecraft/~|Fallen From Grace|~ Runecraft skill requirement",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Runecraft/~|Perilous Moons|~ Runecraft skill requirement",
       "terminal": true,
       "disposition": "excluded",
@@ -109592,6 +110050,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Sailing/~|Fallen From Grace|~ Sailing skill requirement",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Sailing/~|Prying Times|~ Sailing skill requirement",
       "terminal": true,
       "disposition": "excluded",
@@ -110193,6 +110659,22 @@
     {
       "category": "challenges",
       "sourceKey": "Sailing/Dock at ~|Witchaven|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Sailing/Dock at ~|Wyrmscraig Cavern|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Sailing/Dock at ~|Wyrmscraig|~",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -111480,6 +111962,22 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Sailing/Use the mooring point at ~|Wyrmscraig Cavern|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Sailing/Use the mooring point at ~|Wyrmscraig|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Sailing/Use the mooring point at ~|Ynysdail|~",
       "terminal": true,
       "disposition": "excluded",
@@ -111673,6 +112171,14 @@
     {
       "category": "challenges",
       "sourceKey": "Slayer/Receive a Slayer assignment from ~|Mazchna|~ in Canifis",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Slayer/Receive a Slayer assignment from ~|Mortimer|~ in Wyrmscraig Cavern",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -118583,9 +119089,109 @@
     {
       "category": "chunks",
       "sourceKey": "10018",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Fallen From Grace"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10018",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Rocks (Ardeaglais)"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10018",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Fallen From Grace"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10018",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Fallen From Grace"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10018",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "section-merged",
+      "targetKeys": [
+        "10018"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10018",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "section-merged",
+      "targetKeys": [
+        "10018"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10018",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "section-merged",
+      "targetKeys": [
+        "10018"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10018",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "section-merged",
+      "targetKeys": [
+        "10018"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10018",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "section-merged",
+      "targetKeys": [
+        "10018"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10018",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "section-merged",
+      "targetKeys": [
+        "10018"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10018",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "section-merged",
       "targetKeys": [
         "10018"
       ]
@@ -118593,9 +119199,29 @@
     {
       "category": "chunks",
       "sourceKey": "10019",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "section-merged",
+      "targetKeys": [
+        "10019"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10019",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "section-merged",
+      "targetKeys": [
+        "10019"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10019",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "section-merged",
       "targetKeys": [
         "10019"
       ]
@@ -120121,17 +120747,159 @@
     {
       "category": "chunks",
       "sourceKey": "10274",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Coal rocks"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10274",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Sunstone rocks"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10274",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "section-merged",
+      "targetKeys": [
+        "10274"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10274",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "section-merged",
+      "targetKeys": [
+        "10274"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10274",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "section-merged",
+      "targetKeys": [
+        "10274"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10274",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "section-merged",
+      "targetKeys": [
+        "10274"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10274",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "section-merged",
+      "targetKeys": [
+        "10274"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10274",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "empty-walkable-chunk",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "section-merged",
+      "targetKeys": [
+        "10274"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10275",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Extra slippery basalt stepping stone"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10275",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Sunstone rocks"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10275",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "section-merged",
+      "targetKeys": [
+        "10275"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10275",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "section-merged",
+      "targetKeys": [
+        "10275"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10275",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "section-merged",
+      "targetKeys": [
+        "10275"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10275",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "section-merged",
+      "targetKeys": [
+        "10275"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10275",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "section-merged",
+      "targetKeys": [
+        "10275"
+      ]
     },
     {
       "category": "chunks",
       "sourceKey": "10275",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "section-merged",
       "targetKeys": [
         "10275"
       ]
@@ -125195,6 +125963,22 @@
     {
       "category": "chunks",
       "sourceKey": "11104",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "11142",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "11143",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -163368,6 +164152,22 @@
     },
     {
       "category": "chunks",
+      "sourceKey": "Wyrmscraig Cavern",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "Wyrmscraig Cavern#Water",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "chunks",
       "sourceKey": "Wyvern Cave",
       "terminal": true,
       "disposition": "excluded",
@@ -168437,6 +169237,16 @@
       "reason": "base-record",
       "targetKeys": [
         "Lynx Tamer"
+      ]
+    },
+    {
+      "category": "drops",
+      "sourceKey": "Mad Angel",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mad Angel"
       ]
     },
     {
@@ -196648,6 +197458,16 @@
     },
     {
       "category": "shopItems",
+      "sourceKey": "Supplies's Supplies",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Supplies's Supplies"
+      ]
+    },
+    {
+      "category": "shopItems",
       "sourceKey": "Tal Teklan General Store",
       "terminal": true,
       "disposition": "imported",
@@ -197314,6 +198134,16 @@
       "reason": "base-record",
       "targetKeys": [
         "West Ardougne General Store"
+      ]
+    },
+    {
+      "category": "shopItems",
+      "sourceKey": "Where Wyrmscraig's Wear Wares Were",
+      "terminal": true,
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
+      "targetKeys": [
+        "Where Wyrmscraig's Wear Wares Were"
       ]
     },
     {
@@ -198748,6 +199578,16 @@
     },
     {
       "category": "skillItems",
+      "sourceKey": "Hunter/Wyrmscraig goat loot",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Hunter/Wyrmscraig goat loot"
+      ]
+    },
+    {
+      "category": "skillItems",
       "sourceKey": "Hunter/Young impling",
       "terminal": true,
       "disposition": "imported",
@@ -199579,6 +200419,16 @@
       "reason": "base-record",
       "targetKeys": [
         "Nonskill/Gold key loot"
+      ]
+    },
+    {
+      "category": "skillItems",
+      "sourceKey": "Nonskill/Golem crafting loot",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Nonskill/Golem crafting loot"
       ]
     },
     {
@@ -203219,12 +204069,12 @@
     },
     {
       "category": "slayerMasterTasks",
-      "sourceKey": "Chaeldar/Custodian stalker",
+      "sourceKey": "Chaeldar/Custodian stalkers",
       "terminal": true,
       "disposition": "imported",
       "reason": "base-record",
       "targetKeys": [
-        "Chaeldar/Custodian stalker"
+        "Chaeldar/Custodian stalkers"
       ]
     },
     {
@@ -203359,12 +204209,12 @@
     },
     {
       "category": "slayerMasterTasks",
-      "sourceKey": "Chaeldar/Kurasks",
+      "sourceKey": "Chaeldar/Kurask",
       "terminal": true,
       "disposition": "imported",
       "reason": "base-record",
       "targetKeys": [
-        "Chaeldar/Kurasks"
+        "Chaeldar/Kurask"
       ]
     },
     {
@@ -203689,12 +204539,12 @@
     },
     {
       "category": "slayerMasterTasks",
-      "sourceKey": "Duradel/Kurasks",
+      "sourceKey": "Duradel/Kurask",
       "terminal": true,
       "disposition": "imported",
       "reason": "base-record",
       "targetKeys": [
-        "Duradel/Kurasks"
+        "Duradel/Kurask"
       ]
     },
     {
@@ -204449,22 +205299,22 @@
     },
     {
       "category": "slayerMasterTasks",
-      "sourceKey": "Konar quo Maten/Kurasks - Iorwerth Dungeon",
+      "sourceKey": "Konar quo Maten/Kurask - Iorwerth Dungeon",
       "terminal": true,
       "disposition": "imported",
       "reason": "base-record",
       "targetKeys": [
-        "Konar quo Maten/Kurasks - Iorwerth Dungeon"
+        "Konar quo Maten/Kurask - Iorwerth Dungeon"
       ]
     },
     {
       "category": "slayerMasterTasks",
-      "sourceKey": "Konar quo Maten/Kurasks - Rellekka Slayer Cave",
+      "sourceKey": "Konar quo Maten/Kurask - Rellekka Slayer Cave",
       "terminal": true,
       "disposition": "imported",
       "reason": "base-record",
       "targetKeys": [
-        "Konar quo Maten/Kurasks - Rellekka Slayer Cave"
+        "Konar quo Maten/Kurask - Rellekka Slayer Cave"
       ]
     },
     {
@@ -205149,12 +205999,12 @@
     },
     {
       "category": "slayerMasterTasks",
-      "sourceKey": "Mazchna/Cockatrices",
+      "sourceKey": "Mazchna/Cockatrice",
       "terminal": true,
       "disposition": "imported",
       "reason": "base-record",
       "targetKeys": [
-        "Mazchna/Cockatrices"
+        "Mazchna/Cockatrice"
       ]
     },
     {
@@ -205379,6 +206229,296 @@
     },
     {
       "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Aberrant spectres",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Aberrant spectres"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Abyssal demons",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Abyssal demons"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Aquanites",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Aquanites"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Araxytes",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Araxytes"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Banshees",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Banshees"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Basilisks",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Basilisks"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Bloodvelds",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Bloodvelds"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Cave crawlers",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Cave crawlers"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Cave horrors",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Cave horrors"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Cockatrice",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Cockatrice"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Crawling Hands",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Crawling Hands"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Custodian stalkers",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Custodian stalkers"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Dark beasts",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Dark beasts"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Drakes",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Drakes"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Dust devils",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Dust devils"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Gargoyles",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Gargoyles"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Gryphons",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Gryphons"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Hydras",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Hydras"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Infernal Mages",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Infernal Mages"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Jellies",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Jellies"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Kurask",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Kurask"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Nechryael",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Nechryael"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Pyrefiends",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Pyrefiends"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Rockslugs",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Rockslugs"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Smoke devils",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Smoke devils"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Turoths",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Turoths"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Venators",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Venators"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Warped creatures",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Warped creatures"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
+      "sourceKey": "Mortimer/Wyrms",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Mortimer/Wyrms"
+      ]
+    },
+    {
+      "category": "slayerMasterTasks",
       "sourceKey": "Nieve/Aberrant spectres",
       "terminal": true,
       "disposition": "imported",
@@ -205489,12 +206629,12 @@
     },
     {
       "category": "slayerMasterTasks",
-      "sourceKey": "Nieve/Custodian stalker",
+      "sourceKey": "Nieve/Custodian stalkers",
       "terminal": true,
       "disposition": "imported",
       "reason": "base-record",
       "targetKeys": [
-        "Nieve/Custodian stalker"
+        "Nieve/Custodian stalkers"
       ]
     },
     {
@@ -205619,12 +206759,12 @@
     },
     {
       "category": "slayerMasterTasks",
-      "sourceKey": "Nieve/Kurasks",
+      "sourceKey": "Nieve/Kurask",
       "terminal": true,
       "disposition": "imported",
       "reason": "base-record",
       "targetKeys": [
-        "Nieve/Kurasks"
+        "Nieve/Kurask"
       ]
     },
     {
@@ -206299,12 +207439,12 @@
     },
     {
       "category": "slayerMasterTasks",
-      "sourceKey": "Vannaka/Cockatrices",
+      "sourceKey": "Vannaka/Cockatrice",
       "terminal": true,
       "disposition": "imported",
       "reason": "base-record",
       "targetKeys": [
-        "Vannaka/Cockatrices"
+        "Vannaka/Cockatrice"
       ]
     },
     {
@@ -206509,12 +207649,12 @@
     },
     {
       "category": "slayerMasterTasks",
-      "sourceKey": "Vannaka/Kurasks",
+      "sourceKey": "Vannaka/Kurask",
       "terminal": true,
       "disposition": "imported",
       "reason": "base-record",
       "targetKeys": [
-        "Vannaka/Kurasks"
+        "Vannaka/Kurask"
       ]
     },
     {
@@ -218839,6 +219979,16 @@
     },
     {
       "category": "taskUnlocks",
+      "sourceKey": "Monsters/Mad Angel/10018-3",
+      "terminal": true,
+      "disposition": "normalized",
+      "reason": "subarea-suffix-collapsed",
+      "targetKeys": [
+        "Mad Angel/10018"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
       "sourceKey": "Monsters/Magic axe/12605",
       "terminal": true,
       "disposition": "imported",
@@ -223311,6 +224461,16 @@
       "reason": "subarea-suffix-collapsed",
       "targetKeys": [
         "West Ardougne General Store/9779"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Where Wyrmscraig's Wear Wares Were/10275-1",
+      "terminal": true,
+      "disposition": "normalized",
+      "reason": "subarea-suffix-collapsed",
+      "targetKeys": [
+        "Where Wyrmscraig's Wear Wares Were/10275"
       ]
     },
     {
