@@ -4,5 +4,1353 @@
   "sourceRepository": "source-chunk/chunk-picker-v2",
   "sourceCommit": "4eb75a8454eb41cfff71b70819326e0e67bcea7c",
   "reviewedAt": "2026-08-03",
-  "locations": []
+  "locations": [
+    {
+      "name": "Abyssal Nexus",
+      "sourceKeys": [
+        "Abyssal Nexus"
+      ],
+      "disposition": "non-purchasable",
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Abyssal_Nexus?oldid=15169146",
+          "revision": "15169146"
+        }
+      ],
+      "note": "The Nexus is reached only from the outer Abyss or fairy ring DIP; it has no independently purchasable overworld entrance."
+    },
+    {
+      "name": "Asgarnian Ice Dungeon",
+      "sourceKeys": [
+        "Asgarnian Ice Dungeon"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "12081",
+          "x": 3008,
+          "y": 3150,
+          "label": "Entrance to Asgarnian Ice Dungeon",
+          "wikiPage": "Asgarnian_Ice_Dungeon",
+          "requirements": []
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Asgarnian_Ice_Dungeon?oldid=15241721",
+          "revision": "15241721"
+        }
+      ],
+      "note": "The Wiki entrance map pins the surface dungeon entrance at 3008,3150 in canonical chunk 12081."
+    },
+    {
+      "name": "Brutus' Arena",
+      "sourceKeys": [
+        "Brutus' Arena"
+      ],
+      "disposition": "instance-only",
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Demonic_Brutus?oldid=15214877",
+          "revision": "15214877"
+        }
+      ],
+      "note": "Demonic Brutus is fought in a generated instance, so the arena has no persistent physical entrance chunk."
+    },
+    {
+      "name": "Cerberus' Lair",
+      "sourceKeys": [
+        "Cerberus' Lair"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "11573",
+          "x": 2884,
+          "y": 3398,
+          "label": "Taverley route to Cerberus' Lair",
+          "wikiPage": "Cerberus'_Lair",
+          "requirements": [
+            "91 Slayer",
+            "Hellhound or Cerberus Slayer task"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Cerberus'_Lair?oldid=15221123",
+          "revision": "15221123"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Taverley_Dungeon?oldid=15259518",
+          "revision": "15259518"
+        }
+      ],
+      "note": "Cerberus' Lair is reached through Taverley Dungeon; the independent overworld route begins at its pinned entrance in chunk 11573."
+    },
+    {
+      "name": "Chasm of Fire",
+      "sourceKeys": [
+        "Chasm of Fire"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "5689",
+          "x": 1435,
+          "y": 3668,
+          "label": "Entrance to Chasm of Fire",
+          "wikiPage": "Chasm_of_Fire",
+          "requirements": []
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Chasm_of_Fire?oldid=15252065",
+          "revision": "15252065"
+        }
+      ],
+      "note": "The Wiki entrance map pins the chasm at 1435,3668 in canonical chunk 5689."
+    },
+    {
+      "name": "Crandor and Karamja Dungeon",
+      "sourceKeys": [
+        "Crandor and Karamja Dungeon#South"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "11313",
+          "x": 2856,
+          "y": 3168,
+          "label": "Karamja Volcano entrance to Crandor and Karamja Dungeon",
+          "wikiPage": "Crandor_and_Karamja_Dungeon",
+          "requirements": []
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Crandor_and_Karamja_Dungeon?oldid=15285344",
+          "revision": "15285344"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Rocks_(Karamja_Volcano)?oldid=14719194",
+          "revision": "14719194"
+        }
+      ],
+      "note": "The southern dungeon is entered through the Karamja Volcano rocks pinned at 2856,3168 in chunk 11313."
+    },
+    {
+      "name": "Desert Mining Camp Underground Mines",
+      "sourceKeys": [
+        "Desert Mining Camp#Underground Mines"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "13103",
+          "x": 3288,
+          "y": 3021,
+          "label": "Desert Mining Camp route to the Underground Mines",
+          "wikiPage": "Desert_Mining_Camp",
+          "requirements": [
+            "The Tourist Trap"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Desert_Mining_Camp?oldid=15264454",
+          "revision": "15264454"
+        }
+      ],
+      "note": "The underground mine is entered from the quest-gated camp at its pinned surface location in canonical chunk 13103."
+    },
+    {
+      "name": "Dorgesh-Kaan South Dungeon",
+      "sourceKeys": [
+        "Dorgesh-Kaan South Dungeon"
+      ],
+      "disposition": "non-purchasable",
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Dorgesh-Kaan_South_Dungeon?oldid=15252265",
+          "revision": "15252265"
+        }
+      ],
+      "note": "The dungeon is entered from underground Dorgesh-Kaan or by fairy ring AJQ and has no independent overworld entrance."
+    },
+    {
+      "name": "Dorgesh-Kaan Mine",
+      "sourceKeys": [
+        "Dorgesh-Kaan mine"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "12850",
+          "x": 3209,
+          "y": 3216,
+          "label": "Lumbridge Castle route to Dorgesh-Kaan Mine",
+          "wikiPage": "Dorgesh-Kaan_mine",
+          "requirements": [
+            "The Lost Tribe started"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Dorgesh-Kaan_mine?oldid=15057594",
+          "revision": "15057594"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Trapdoor_(Lumbridge_Castle)?oldid=14726910",
+          "revision": "14726910"
+        }
+      ],
+      "note": "The documented overworld route starts at the Lumbridge Castle kitchen trapdoor at 3209,3216 before continuing through the cellar tunnel."
+    },
+    {
+      "name": "Dwarven Mine",
+      "sourceKeys": [
+        "Dwarven Mine"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "multiple-entrances",
+      "entrances": [
+        {
+          "chunkId": "12085",
+          "x": 3018,
+          "y": 3450,
+          "label": "Ice Mountain entrance to Dwarven Mine",
+          "wikiPage": "Dwarven_Mine",
+          "requirements": []
+        },
+        {
+          "chunkId": "12084",
+          "x": 3060,
+          "y": 3377,
+          "label": "Eastern Falador entrance to Dwarven Mine",
+          "wikiPage": "Dwarven_Mine",
+          "requirements": []
+        },
+        {
+          "chunkId": "12084",
+          "x": 3019,
+          "y": 3340,
+          "label": "Mining Guild entrance to Dwarven Mine",
+          "wikiPage": "Dwarven_Mine",
+          "requirements": [
+            "60 Mining"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Dwarven_Mine?oldid=15241726",
+          "revision": "15241726"
+        }
+      ],
+      "note": "The Wiki publishes the main Ice Mountain entrance and both independent Falador entrances; their coordinates resolve to chunks 12085 and 12084."
+    },
+    {
+      "name": "Edgeville Dungeon",
+      "sourceKeys": [
+        "Edgeville Dungeon",
+        "Edgeville Dungeon#Wilderness"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "multiple-entrances",
+      "entrances": [
+        {
+          "chunkId": "12342",
+          "x": 3097,
+          "y": 3469,
+          "label": "Edgeville trapdoor entrance to Edgeville Dungeon",
+          "wikiPage": "Edgeville_Dungeon",
+          "requirements": []
+        },
+        {
+          "chunkId": "12341",
+          "x": 3116,
+          "y": 3452,
+          "label": "Varrock shed entrance to Edgeville Dungeon",
+          "wikiPage": "Edgeville_Dungeon",
+          "requirements": [
+            "Brass key"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Edgeville_Dungeon?oldid=15285142",
+          "revision": "15285142"
+        }
+      ],
+      "note": "Both upstream variants describe the same dungeon; its two independent overworld entrances are explicitly pinned by the Wiki."
+    },
+    {
+      "name": "Elemental Workshop",
+      "sourceKeys": [
+        "Elemental Workshop"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "10806",
+          "x": 2710,
+          "y": 3497,
+          "label": "Entrance to Elemental Workshop",
+          "wikiPage": "Elemental_Workshop_(location)",
+          "requirements": [
+            "Elemental Workshop I started",
+            "Battered key"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Elemental_Workshop_(location)?oldid=15267036",
+          "revision": "15267036"
+        }
+      ],
+      "note": "The workshop entrance is mapped at 2710,3497 in the Seers' Village surface chunk."
+    },
+    {
+      "name": "Enchanted Valley",
+      "sourceKeys": [
+        "Enchanted Valley"
+      ],
+      "disposition": "non-purchasable",
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Enchanted_Valley?oldid=15171929",
+          "revision": "15171929"
+        }
+      ],
+      "note": "The valley is accessible only by fairy ring BKQ, so it has no independently purchasable physical entrance."
+    },
+    {
+      "name": "Giants' Foundry",
+      "sourceKeys": [
+        "Giants' Foundry"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "13361",
+          "x": 3360,
+          "y": 3151,
+          "label": "Entrance to Giants' Foundry",
+          "wikiPage": "Giants'_Foundry",
+          "requirements": [
+            "Sleeping Giants"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Giants'_Foundry?oldid=15264119",
+          "revision": "15264119"
+        }
+      ],
+      "note": "The foundry's entrance is pinned at 3360,3151 beneath the Giants' Plateau in chunk 13361."
+    },
+    {
+      "name": "Grotesque Guardians' Lair",
+      "sourceKeys": [
+        "Grotesque Guardians' Lair"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "13623",
+          "x": 3428,
+          "y": 3538,
+          "label": "Slayer Tower route to Grotesque Guardians' Lair",
+          "wikiPage": "Grotesque_Guardians",
+          "requirements": [
+            "75 Slayer",
+            "Gargoyle Slayer task",
+            "Brittle key used"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Grotesque_Guardians?oldid=15281803",
+          "revision": "15281803"
+        },
+        {
+          "kind": "coordinate",
+          "source": "Explv game-cache map tiles",
+          "url": "https://github.com/Explv/osrs_map_tiles/commit/1e3d20bfccca800c7bdec6611655670323ae10f6",
+          "revision": "1e3d20bfccca800c7bdec6611655670323ae10f6"
+        }
+      ],
+      "note": "The lair is reached through the Slayer Tower rooftop; the independent overworld route is the tower in canonical chunk 13623."
+    },
+    {
+      "name": "Kalphite Cave",
+      "sourceKeys": [
+        "Kalphite Cave"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "13104",
+          "x": 3320,
+          "y": 3122,
+          "label": "Entrance to Kalphite Cave",
+          "wikiPage": "Kalphite_Cave",
+          "requirements": [
+            "Kalphite Slayer task"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Kalphite_Cave?oldid=15252214",
+          "revision": "15252214"
+        }
+      ],
+      "note": "The task-only cave entrance is mapped at 3320,3122 in canonical chunk 13104."
+    },
+    {
+      "name": "Karuulm Slayer Dungeon",
+      "sourceKeys": [
+        "Karuulm Slayer Dungeon"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "5179",
+          "x": 1311,
+          "y": 3807,
+          "label": "Entrance to Karuulm Slayer Dungeon",
+          "wikiPage": "Karuulm_Slayer_Dungeon",
+          "requirements": []
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Karuulm_Slayer_Dungeon?oldid=15252234",
+          "revision": "15252234"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Mount_Karuulm?oldid=15229213",
+          "revision": "15229213"
+        }
+      ],
+      "note": "The dungeon entrance lies at Mount Karuulm's summit, pinned at 1311,3807 in chunk 5179; heat protection applies beyond the entrance chamber."
+    },
+    {
+      "name": "Kraken Cove",
+      "sourceKeys": [
+        "Kraken Cove"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "9016",
+          "x": 2278,
+          "y": 3611,
+          "label": "Entrance to Kraken Cove",
+          "wikiPage": "Kraken_Cove",
+          "requirements": [
+            "87 Slayer",
+            "Cave kraken or Kraken Slayer task"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Kraken_Cove?oldid=15275452",
+          "revision": "15275452"
+        }
+      ],
+      "note": "The cove's surface entrance is pinned at 2278,3611 in canonical chunk 9016."
+    },
+    {
+      "name": "Lithkren Vault",
+      "sourceKeys": [
+        "Lithkren Vault"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "14142",
+          "x": 3566,
+          "y": 4003,
+          "label": "Lithkren island entrance to Lithkren Vault",
+          "wikiPage": "Lithkren_Vault",
+          "requirements": [
+            "Dragon Slayer II"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Lithkren_Vault?oldid=14973033",
+          "revision": "14973033"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Lithkren?oldid=15267164",
+          "revision": "15267164"
+        }
+      ],
+      "note": "The vault is entered by the stairs on Lithkren; the island's pinned entrance location resolves to canonical chunk 14142."
+    },
+    {
+      "name": "Lizardman Caves",
+      "sourceKeys": [
+        "Lizardman Caves"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "5175",
+          "x": 1316,
+          "y": 3568,
+          "label": "Northern entrance to Lizardman Caves",
+          "wikiPage": "Lizardman_Caves",
+          "requirements": [
+            "Lizardman Slayer task"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Lizardman_Caves?oldid=15022786",
+          "revision": "15022786"
+        },
+        {
+          "kind": "coordinate",
+          "source": "Explv game-cache map tiles",
+          "url": "https://github.com/Explv/osrs_map_tiles/commit/1e3d20bfccca800c7bdec6611655670323ae10f6",
+          "revision": "1e3d20bfccca800c7bdec6611655670323ae10f6"
+        }
+      ],
+      "note": "The Wiki specifies that only the northern-most lair is usable; the pinned game-cache map locates it at 1316,3568 in chunk 5175."
+    },
+    {
+      "name": "Mage Arena Bank",
+      "sourceKeys": [
+        "Mage Arena bank"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "12349",
+          "x": 3090,
+          "y": 3956,
+          "label": "Mage Arena lever entrance to Mage Arena Bank",
+          "wikiPage": "Mage_Arena_bank",
+          "requirements": [
+            "Enter deep Wilderness"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Mage_Arena_bank?oldid=15262209",
+          "revision": "15262209"
+        }
+      ],
+      "note": "The bank's physical lever route is pinned at 3090,3956 in the Mage Arena surface chunk."
+    },
+    {
+      "name": "Mining Guild",
+      "sourceKeys": [
+        "Mining Guild"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "12084",
+          "x": 3019,
+          "y": 3339,
+          "label": "Entrance to Mining Guild",
+          "wikiPage": "Mining_Guild",
+          "requirements": [
+            "60 Mining"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Mining_Guild?oldid=15255470",
+          "revision": "15255470"
+        }
+      ],
+      "note": "The above-ground guild entrance is explicitly mapped at 3019,3339 in canonical chunk 12084."
+    },
+    {
+      "name": "Morytania Spider Cave",
+      "sourceKeys": [
+        "Morytania Spider Nest"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "14645",
+          "x": 3657,
+          "y": 3407,
+          "label": "Entrance to Morytania Spider Cave",
+          "wikiPage": "Morytania_Spider_Cave",
+          "requirements": []
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Morytania_Spider_Cave?oldid=15211899",
+          "revision": "15211899"
+        }
+      ],
+      "note": "The upstream legacy Nest name resolves to the current Spider Cave page, whose entrance is pinned at 3657,3407."
+    },
+    {
+      "name": "Myreque Hideout (Meiyerditch)",
+      "sourceKeys": [
+        "Myreque hideout#Meiyerditch Hideout"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "14386",
+          "x": 3639,
+          "y": 3249,
+          "label": "Lumpy rug entrance to Meiyerditch Myreque Hideout",
+          "wikiPage": "Myreque_Hideout",
+          "requirements": [
+            "Darkness of Hallowvale progress"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Myreque_Hideout?oldid=15244997",
+          "revision": "15244997"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Lumpy_rug?oldid=14681938",
+          "revision": "14681938"
+        }
+      ],
+      "note": "The Meiyerditch hideout is entered through the lumpy rug pinned at 3639,3249 in South Meiyerditch chunk 14386."
+    },
+    {
+      "name": "Ogre Enclave",
+      "sourceKeys": [
+        "Ogre Enclave"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "10031",
+          "x": 2504,
+          "y": 3037,
+          "label": "Gu'Tanoth entrance to Ogre Enclave",
+          "wikiPage": "Ogre_Enclave",
+          "requirements": [
+            "Watchtower quest progress",
+            "Cave nightshade during Watchtower"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Ogre_Enclave?oldid=15267029",
+          "revision": "15267029"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Cave_entrance_(to_Ogre_Enclave)?oldid=14933245",
+          "revision": "14933245"
+        }
+      ],
+      "note": "The west Gu'Tanoth cave entrance is pinned at 2504,3037 and connects to the enclave from canonical chunk 10031."
+    },
+    {
+      "name": "RFD Dining Room",
+      "sourceKeys": [
+        "RFD Dining Room"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "12850",
+          "x": 3208,
+          "y": 3214,
+          "label": "Lumbridge Castle entrance to RFD Dining Room",
+          "wikiPage": "Recipe_for_Disaster",
+          "requirements": [
+            "Recipe for Disaster started"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Recipe_for_Disaster?oldid=15275958",
+          "revision": "15275958"
+        }
+      ],
+      "note": "The dining-room route is inside Lumbridge Castle at the quest's pinned 3208,3214 start location, so its physical ownership is chunk 12850."
+    },
+    {
+      "name": "Rogues' Den",
+      "sourceKeys": [
+        "Rogues' Den"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "11575",
+          "x": 2906,
+          "y": 3537,
+          "label": "Trapdoor entrance to Rogues' Den",
+          "wikiPage": "Rogues'_Den",
+          "requirements": []
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Rogues'_Den?oldid=15265206",
+          "revision": "15265206"
+        }
+      ],
+      "note": "The Burthorpe pub trapdoor is pinned at 2906,3537 in canonical chunk 11575."
+    },
+    {
+      "name": "Ruins of Camdozaal",
+      "sourceKeys": [
+        "Ruins of Camdozaal"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "11830",
+          "x": 2981,
+          "y": 3513,
+          "label": "Mysterious ruins entrance to Camdozaal",
+          "wikiPage": "Ruins_of_Camdozaal",
+          "requirements": [
+            "Below Ice Mountain"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Ruins_of_Camdozaal?oldid=15241730",
+          "revision": "15241730"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Mysterious_ruins?oldid=15266119",
+          "revision": "15266119"
+        }
+      ],
+      "note": "The Ice Mountain mysterious ruins are pinned at 2981,3513 and connect to Camdozaal from canonical chunk 11830."
+    },
+    {
+      "name": "Ruins of Tapoyauik",
+      "sourceKeys": [
+        "Ruins of Tapoyauik"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "6706",
+          "x": 1693.5,
+          "y": 3232,
+          "label": "Tower of Ascension entrance to Ruins of Tapoyauik",
+          "wikiPage": "Ruins_of_Tapoyauik",
+          "requirements": [
+            "The Heart of Darkness"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Ruins_of_Tapoyauik?oldid=15254238",
+          "revision": "15254238"
+        }
+      ],
+      "note": "The Wiki's exact 5-by-7 entrance rectangle is centred at 1693.5,3232, which resolves deterministically to canonical chunk 6706."
+    },
+    {
+      "name": "Shellbane Gryphon Cave",
+      "sourceKeys": [
+        "Shellbane Gryphon Cave"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "12582",
+          "x": 3176,
+          "y": 2477,
+          "label": "Entrance to Shellbane Gryphon Cave",
+          "wikiPage": "Shellbane_Gryphon_Cave",
+          "requirements": [
+            "The Curse of Arrav or elite clue access"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Shellbane_Gryphon_Cave?oldid=15212238",
+          "revision": "15212238"
+        }
+      ],
+      "note": "The cave entrance is explicitly pinned at 3176,2477 in canonical chunk 12582."
+    },
+    {
+      "name": "Slayer Tower Basement",
+      "sourceKeys": [
+        "Slayer Tower#Basement"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "13623",
+          "x": 3428,
+          "y": 3538,
+          "label": "Slayer Tower entrance to the basement",
+          "wikiPage": "Slayer_Tower",
+          "requirements": [
+            "Slayer task for basement monsters"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Slayer_Tower?oldid=15254387",
+          "revision": "15254387"
+        },
+        {
+          "kind": "coordinate",
+          "source": "Explv game-cache map tiles",
+          "url": "https://github.com/Explv/osrs_map_tiles/commit/1e3d20bfccca800c7bdec6611655670323ae10f6",
+          "revision": "1e3d20bfccca800c7bdec6611655670323ae10f6"
+        }
+      ],
+      "note": "The basement ladder is just inside Slayer Tower, whose game-cache surface location is 3428,3538 in canonical chunk 13623."
+    },
+    {
+      "name": "Smoke Devil Dungeon",
+      "sourceKeys": [
+        "Smoke Devil Dungeon"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "9519",
+          "x": 2412,
+          "y": 3061,
+          "label": "Entrance to Smoke Devil Dungeon",
+          "wikiPage": "Smoke_Devil_Dungeon",
+          "requirements": [
+            "93 Slayer",
+            "Smoke devil Slayer task"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Smoke_Devil_Dungeon?oldid=15252276",
+          "revision": "15252276"
+        }
+      ],
+      "note": "The task-gated dungeon entrance is mapped at 2412,3061 in canonical chunk 9519."
+    },
+    {
+      "name": "Sourhog Cave",
+      "sourceKeys": [
+        "Sourhog Cave"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "12596",
+          "x": 3150,
+          "y": 3347,
+          "label": "Entrance to Sourhog Cave",
+          "wikiPage": "Sourhog_Cave",
+          "requirements": [
+            "A Porcine of Interest"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Sourhog_Cave?oldid=14921878",
+          "revision": "14921878"
+        }
+      ],
+      "note": "The cave entrance is explicitly pinned at 3150,3347 in canonical chunk 12596."
+    },
+    {
+      "name": "Stronghold Slayer Cave",
+      "sourceKeys": [
+        "Stronghold Slayer Cave"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "9525",
+          "x": 2428,
+          "y": 3425,
+          "label": "Entrance to Stronghold Slayer Cave",
+          "wikiPage": "Stronghold_Slayer_Cave",
+          "requirements": []
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Stronghold_Slayer_Cave?oldid=15266160",
+          "revision": "15266160"
+        }
+      ],
+      "note": "The cave entrance near Nieve is explicitly pinned at 2428,3425 in canonical chunk 9525."
+    },
+    {
+      "name": "Task-only Wyvern Cave",
+      "sourceKeys": [
+        "Task Only Wyvern Cave"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "14652",
+          "x": 3678,
+          "y": 3854,
+          "label": "Northern task-only entrance to Wyvern Cave",
+          "wikiPage": "Wyvern_Cave",
+          "requirements": [
+            "Fossil Island access",
+            "Wyvern Slayer task"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Wyvern_Cave?oldid=15252524",
+          "revision": "15252524"
+        }
+      ],
+      "note": "The upstream task-only variant maps only to the independently pinned northern trapdoor at 3678,3854."
+    },
+    {
+      "name": "Taverley Dungeon",
+      "sourceKeys": [
+        "Taverley Dungeon"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "11573",
+          "x": 2884,
+          "y": 3398,
+          "label": "Entrance to Taverley Dungeon",
+          "wikiPage": "Taverley_Dungeon",
+          "requirements": []
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Taverley_Dungeon?oldid=15259518",
+          "revision": "15259518"
+        }
+      ],
+      "note": "The main Taverley Dungeon entrance is pinned at 2884,3398 in canonical chunk 11573."
+    },
+    {
+      "name": "Temple of Ikov",
+      "sourceKeys": [
+        "Temple of Ikov"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "multiple-entrances",
+      "entrances": [
+        {
+          "chunkId": "10549",
+          "x": 2677,
+          "y": 3405,
+          "label": "Southern entrance to Temple of Ikov",
+          "wikiPage": "Temple_of_Ikov_(dungeon)",
+          "requirements": []
+        },
+        {
+          "chunkId": "10550",
+          "x": 2659,
+          "y": 3492,
+          "label": "Northern entrance to Temple of Ikov",
+          "wikiPage": "Temple_of_Ikov_(dungeon)",
+          "requirements": [
+            "Shiny key"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Temple_of_Ikov_(dungeon)?oldid=15267044",
+          "revision": "15267044"
+        }
+      ],
+      "note": "The Wiki publishes both independent dungeon entrances at 2677,3405 and 2659,3492, resolving to chunks 10549 and 10550."
+    },
+    {
+      "name": "Temple of the Eye",
+      "sourceKeys": [
+        "Temple of the Eye"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "12337",
+          "x": 3109,
+          "y": 3160,
+          "label": "Wizards' Tower route to Temple of the Eye",
+          "wikiPage": "Temple_of_the_Eye_(location)",
+          "requirements": [
+            "Temple of the Eye"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Temple_of_the_Eye?oldid=15279929",
+          "revision": "15279929"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Wizards'_Tower?oldid=15121852",
+          "revision": "15121852"
+        }
+      ],
+      "note": "The temple portal is in the Wizards' Tower basement; the tower's pinned physical route at 3109,3160 belongs to canonical chunk 12337."
+    },
+    {
+      "name": "The Warrens",
+      "sourceKeys": [
+        "The Warrens"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "7226",
+          "x": 1813,
+          "y": 3745,
+          "label": "Manhole entrance to The Warrens",
+          "wikiPage": "The_Warrens",
+          "requirements": [
+            "The Queen of Thieves"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/The_Warrens?oldid=14925236",
+          "revision": "14925236"
+        }
+      ],
+      "note": "The Warrens manhole is explicitly pinned at 1813,3745 in canonical chunk 7226."
+    },
+    {
+      "name": "Tower of Life Basement",
+      "sourceKeys": [
+        "Tower of Life#Basement"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "10546",
+          "x": 2648,
+          "y": 3212,
+          "label": "Trapdoor entrance to Tower of Life Basement",
+          "wikiPage": "Creature_Creation",
+          "requirements": [
+            "Tower of Life"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Creature_Creation?oldid=15285845",
+          "revision": "15285845"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Trapdoor_(Tower_of_Life)?oldid=14831012",
+          "revision": "14831012"
+        }
+      ],
+      "note": "The basement is reached through the tower's ground-floor trapdoor pinned at 2648,3212 in canonical chunk 10546."
+    },
+    {
+      "name": "Varrock Sewers",
+      "sourceKeys": [
+        "Varrock Sewers"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "12854",
+          "x": 3237,
+          "y": 3458,
+          "label": "Varrock manhole entrance to Varrock Sewers",
+          "wikiPage": "Varrock_Sewers",
+          "requirements": []
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Varrock_Sewers?oldid=15273145",
+          "revision": "15273145"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Manhole?oldid=15201215",
+          "revision": "15201215"
+        }
+      ],
+      "note": "The Varrock Palace manhole is explicitly listed at 3237,3458 and resolves to canonical chunk 12854."
+    },
+    {
+      "name": "Varrock West Bank Basement",
+      "sourceKeys": [
+        "Varrock West Bank#Basement"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "12597",
+          "x": 3185,
+          "y": 3440,
+          "label": "Varrock West Bank route to the basement",
+          "wikiPage": "Varrock_west_bank",
+          "requirements": []
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Varrock_west_bank?oldid=15216009",
+          "revision": "15216009"
+        }
+      ],
+      "note": "The basement stairs are inside the bank footprint mapped from 3185,3440, whose physical surface ownership is canonical chunk 12597."
+    },
+    {
+      "name": "Wilderness Slayer Cave",
+      "sourceKeys": [
+        "Wilderness Slayer Cave"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "multiple-entrances",
+      "entrances": [
+        {
+          "chunkId": "13114",
+          "x": 3293,
+          "y": 3748,
+          "label": "Northern entrance to Wilderness Slayer Cave",
+          "wikiPage": "Wilderness_Slayer_Cave",
+          "requirements": [
+            "Enter the Wilderness"
+          ]
+        },
+        {
+          "chunkId": "12857",
+          "x": 3260,
+          "y": 3664,
+          "label": "Southern entrance to Wilderness Slayer Cave",
+          "wikiPage": "Wilderness_Slayer_Cave",
+          "requirements": [
+            "Enter the Wilderness"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Wilderness_Slayer_Cave?oldid=15252501",
+          "revision": "15252501"
+        }
+      ],
+      "note": "The Wiki publishes both independent Wilderness entrances, which resolve to canonical chunks 13114 and 12857."
+    },
+    {
+      "name": "Zanaris",
+      "sourceKeys": [
+        "Zanaris"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "12849",
+          "x": 3204,
+          "y": 3169,
+          "label": "Lumbridge Swamp shed entrance to Zanaris",
+          "wikiPage": "Zanaris",
+          "requirements": [
+            "Lost City",
+            "Dramen staff or lunar staff"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Zanaris?oldid=15278848",
+          "revision": "15278848"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Shed_(Lumbridge_Swamp)?oldid=15211731",
+          "revision": "15211731"
+        }
+      ],
+      "note": "The physical Lost City route is the Lumbridge Swamp shed pinned at 3204,3169 in canonical chunk 12849."
+    },
+    {
+      "name": "Zemouregal's Base",
+      "sourceKeys": [
+        "Zemouregal's Base"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "13366",
+          "x": 3343,
+          "y": 3515,
+          "label": "Trapdoor entrance to Zemouregal's Base",
+          "wikiPage": "Zemouregal's_Base",
+          "requirements": [
+            "Defender of Varrock",
+            "Grubby key"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Zemouregal's_Base?oldid=15211226",
+          "revision": "15211226"
+        }
+      ],
+      "note": "The base's trapdoor is explicitly pinned at 3343,3515 in canonical chunk 13366."
+    },
+    {
+      "name": "Zemouregal's Fort Basement",
+      "sourceKeys": [
+        "Zemouregal's Fortress#Basement"
+      ],
+      "disposition": "mapped",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "11324",
+          "x": 2833,
+          "y": 3858,
+          "label": "Trollweiss tunnel entrance to Zemouregal's Fort",
+          "wikiPage": "Zemouregal's_Fort",
+          "requirements": [
+            "The Curse of Arrav"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Zemouregal's_Fort?oldid=15197955",
+          "revision": "15197955"
+        }
+      ],
+      "note": "The upstream Fortress basement alias resolves to Zemouregal's Fort, accessed through the Trollweiss peak tunnel mapped at 2833,3858."
+    }
+  ]
 }

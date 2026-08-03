@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { readPinnedChunkSource } from './chunk-source.mjs';
 import {
   buildEntranceIndex,
   collectNamedTaskUnlockSourceInventory,
@@ -50,15 +51,39 @@ const context = {
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
 
 describe('named task-unlock registry', () => {
+  it('covers every named task-unlock row in the pinned production source', async () => {
+    const { data, manifest: sourceManifest } = await readPinnedChunkSource();
+    const { rows, locationKeys } = collectNamedTaskUnlockSourceInventory(data);
+    const registry = readNamedTaskUnlockRegistry();
+
+    expect(rows).toHaveLength(140);
+    expect(locationKeys).toHaveLength(47);
+    expect(() => validateNamedTaskUnlockRegistry(registry, {
+      sourceCommit: sourceManifest.commit,
+      sourceLocationKeys: locationKeys,
+      validChunkIds: new Set((data.walkableChunks ?? []).map(String)),
+    })).not.toThrow();
+
+    const entranceIndex = buildEntranceIndex(registry);
+    const indexedRows = Object.entries(entranceIndex).flatMap(([chunkId, entrances]) =>
+      entrances.map((entrance) => JSON.stringify([chunkId, entrance.location, entrance.label])),
+    );
+    expect(new Set(indexedRows).size).toBe(indexedRows.length);
+    expect(buildEntranceIndex(clone(registry))).toEqual(entranceIndex);
+  });
+
   it('reads the versioned production registry', () => {
-    expect(readNamedTaskUnlockRegistry()).toEqual({
+    const registry = readNamedTaskUnlockRegistry();
+
+    expect(registry).toMatchObject({
       schemaVersion: 1,
       policyVersion: 1,
       sourceRepository: 'source-chunk/chunk-picker-v2',
       sourceCommit: manifest.commit,
       reviewedAt: '2026-08-03',
-      locations: [],
     });
+    expect(registry.locations).toHaveLength(46);
+    expect(indexNamedTaskUnlockRegistry(registry).size).toBe(47);
   });
 
   it('collects named source locations while excluding numeric task-unlock keys', () => {
