@@ -41,6 +41,7 @@ import { FARMING_PATCH_LIST, GUILDS_LIST, MINIGAMES_LIST, MOBILITY_LIST, BOSSES_
 import type { ChunkCoord } from '../utils/mapCoords';
 import { WikiLink } from './WikiLink';
 import { displayAreaName } from '../data/areaMapPolicy';
+import { ChunkEntranceNotices } from './ChunkEntranceNotices';
 
 /**
  * What gathering a resource node yields, from the picker's per-skill item tables.
@@ -325,6 +326,9 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     return chunkContentService.contentFor(chunk.cx, chunk.cy);
   }, [mode, region, regionChunks, chunk, chunkContentService.ready]);
 
+  const entrances = mode === 'chunk' && chunkContentService.ready
+    ? chunkContentService.entrancesFor(chunk.cx, chunk.cy)
+    : [];
   // Transport links grouped by network (fairy ring / canoe / boat / …). A link
   // is only usable if both the destination area AND its transport network are
   // unlocked — an unlocked area you can't yet sail/ring to is still locked.
@@ -533,6 +537,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
           );
         })()}
 
+        <ChunkEntranceNotices mode={mode} entrances={entrances} unlocked={unlocked} />
         {mode === 'chunk' && chunkContentService.hasBank(chunk.cx, chunk.cy) && (() => {
           // In bank-locked modes each bank is its own unlock — surface this
           // chunk's bank lock state (green usable / red roll-it), matching the
