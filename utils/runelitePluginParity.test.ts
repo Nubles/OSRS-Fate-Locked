@@ -11,7 +11,7 @@
  */
 import { describe, it, expect, afterEach } from 'vitest';
 import { buildRuneliteBundle } from './runeliteBundle';
-import { isRegionUnlocked, isBankReachable, isNamedAreaReachableViaChunks } from './reachability';
+import { isAreaReachable, isRegionUnlocked, isBankReachable, isNamedAreaReachableViaChunks } from './reachability';
 import { setStartArea } from './freeAreas';
 import { isChunkUnlocked, chunkKey, CHUNKED_START_KEY } from './chunkAdjacency';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
@@ -88,6 +88,16 @@ describe('web ↔ RuneLite plugin lock parity', () => {
     for (const name of ALL_AREA_NAMES) {
       expect(sim.isUnlocked(name), name).toBe(isRegionUnlocked(name, unlocks));
     }
+  });
+
+  it("treats Otto's Grotto as its Baxtorian Falls owner unlock", async () => {
+    setStartArea('misthalin');
+    const unlocks = { regions: ['Baxtorian Falls'] } as UnlockState;
+    const bundle = await buildRuneliteBundle(unlocks.regions, state);
+    const sim = pluginSim(bundle);
+
+    expect(isAreaReachable("Otto's Grotto", unlocks, 'vanilla')).toBe(true);
+    expect(sim.isUnlocked('Baxtorian Falls')).toBe(true);
   });
 
   it('agrees on every named area — continent rolled directly (rule 3)', async () => {

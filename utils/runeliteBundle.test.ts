@@ -3,6 +3,7 @@ import chunkContentJson from '../public/chunk-content.json?raw';
 import { initialState } from '../context/GameContext';
 import { MOBILITY_LIST } from '../data/items';
 import fullChunkContent from '../public/chunk-content.json';
+import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
 import { buildBundlePayload } from './runeliteExport';
 import { buildRuneliteBundle, RuneliteRunState } from './runeliteBundle';
 
@@ -199,6 +200,27 @@ describe('buildRuneliteBundle — unlockedChunks presence', () => {
 });
 
 describe('buildRuneliteBundle - canonical area names', () => {
+  it('canonicalizes every overlapping surface alias in root and rules unlocks', async () => {
+    const aliases = [
+      "Heroes' Guild", 'Ice Mountain', 'Ranging Guild', "Otto's Grotto", 'Resource Area',
+    ];
+    const canonical = [
+      'Taverley', 'Goblin Village', 'Hemenster', 'Baxtorian Falls', 'Mage Arena',
+    ];
+    const bundle = await buildRuneliteBundle([...aliases, ...canonical], state);
+
+    expect(bundle.unlockedRegions).toEqual(canonical);
+    expect(bundle.rules.unlocks.regions).toEqual([...canonical].sort());
+    expect(Object.values(REGION_GROUPS).flat()).toHaveLength(176);
+    expect(Object.values(bundle.regionGroups).flat()).toHaveLength(185);
+    expect(bundle.regionGroups.Misthalin).toEqual(MISTHALIN_AREAS);
+    for (const alias of aliases) {
+      expect(Object.values(REGION_GROUPS).flat()).not.toContain(alias);
+      expect(Object.values(bundle.regionGroups).flat()).not.toContain(alias);
+    }
+    expect(bundle.subAreaChunks['Baxtorian Falls']).toContainEqual({ cx: 39, cy: 54 });
+  });
+
   it('canonicalizes legacy regions in both the v4 root and fallback rules', async () => {
     const bundle = await buildRuneliteBundle(['Elf Camp'], state);
 

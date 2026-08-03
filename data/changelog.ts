@@ -19,6 +19,20 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-08-02-one-physical-chunk-one-unlock',
+    title: 'One Chunk, One Unlock',
+    date: '2026-08-02',
+    sections: {
+      changed: [
+        "Heroes' Guild, Ice Mountain, Ranging Guild, Otto's Grotto, and the Resource Area now share their physical chunk's single area unlock.",
+        'Existing saves automatically keep the canonical area and receive one regular Key for each duplicate overlap they previously purchased.',
+      ],
+      fixed: [
+        "Unlocking Otto's Grotto now visibly unlocks the Baxtorian Falls chunk containing it.",
+      ],
+    },
+  },
+  {
     id: '2026-08-02-profile-metadata-integrity',
     title: 'Safer Profile Management',
     date: '2026-08-02',
