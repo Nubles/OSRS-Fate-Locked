@@ -97,12 +97,16 @@ export function validateNamedTaskUnlockRegistry(registry, context) {
         errors.push(`Unknown named task-unlock chunk ID: ${chunkId}`);
       }
 
-      if (Number.isFinite(entrance?.x) && Number.isFinite(entrance?.y)) {
-        const expectedChunkId = entranceChunkId(entrance);
-        if (chunkId !== expectedChunkId) {
-          errors.push(
-            `Named task-unlock entrance chunk mismatch for ${name} / ${entrance?.label}: expected ${expectedChunkId}, received ${chunkId}`,
-          );
+      if (record?.disposition === 'mapped') {
+        if (!Number.isFinite(entrance?.x) || !Number.isFinite(entrance?.y)) {
+          errors.push(`Named task-unlock entrance has invalid coordinates for ${name} / ${entrance?.label}`);
+        } else {
+          const expectedChunkId = entranceChunkId(entrance);
+          if (chunkId !== expectedChunkId) {
+            errors.push(
+              `Named task-unlock entrance chunk mismatch for ${name} / ${entrance?.label}: expected ${expectedChunkId}, received ${chunkId}`,
+            );
+          }
         }
       }
 

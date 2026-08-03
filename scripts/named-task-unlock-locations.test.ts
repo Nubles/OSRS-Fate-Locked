@@ -168,6 +168,50 @@ describe('named task-unlock registry', () => {
       .toThrow('Named task-unlock entrance chunk mismatch for Example Cave / Entrance to Example Cave: expected 0, received 256');
   });
 
+
+  it('rejects a mapped entrance without an x coordinate', () => {
+    const registry = clone(validRegistry);
+    delete (registry.locations[0].entrances[0] as { x?: unknown }).x;
+
+    expect(() => validateNamedTaskUnlockRegistry(registry, context))
+      .toThrow('Named task-unlock entrance has invalid coordinates for Example Cave / Entrance to Example Cave');
+  });
+
+  it('rejects a mapped entrance without a y coordinate', () => {
+    const registry = clone(validRegistry);
+    delete (registry.locations[0].entrances[0] as { y?: unknown }).y;
+
+    expect(() => validateNamedTaskUnlockRegistry(registry, context))
+      .toThrow('Named task-unlock entrance has invalid coordinates for Example Cave / Entrance to Example Cave');
+  });
+
+  it('rejects a mapped entrance with nonnumeric coordinates', () => {
+    const registry = clone(validRegistry);
+    (registry.locations[0].entrances[0] as { x: unknown }).x = 'north';
+
+    expect(() => validateNamedTaskUnlockRegistry(registry, context))
+      .toThrow('Named task-unlock entrance has invalid coordinates for Example Cave / Entrance to Example Cave');
+  });
+
+  it('indexes distinct named entrances that share one paid chunk', () => {
+    const registry = clone(validRegistry);
+    registry.locations.push({
+      name: 'Example Grotto',
+      sourceKeys: ['Example Grotto'],
+      disposition: 'mapped',
+      entrances: [{ chunkId: '256', x: 64, y: 0, label: 'Entrance to Example Grotto', wikiPage: 'Example_Grotto', requirements: [] }],
+      sources: [{ kind: 'wiki', url: 'https://oldschool.runescape.wiki/w/Example_Grotto', revision: '300' }],
+      note: 'A separate named entrance shares this physical chunk.',
+    });
+    const sharedChunkContext = { ...context, sourceLocationKeys: [...context.sourceLocationKeys, 'Example Grotto'] };
+
+    expect(() => validateNamedTaskUnlockRegistry(registry, sharedChunkContext)).not.toThrow();
+    expect(buildEntranceIndex(registry)[256]).toEqual([
+      { location: 'Example Cave', label: 'Entrance to Example Cave', wikiPage: 'Example_Cave', requirements: [] },
+      { location: 'Example Grotto', label: 'Entrance to Example Grotto', wikiPage: 'Example_Grotto', requirements: [] },
+    ]);
+  });
+
   it('deduplicates equivalent entrances and sorts labels within numeric chunks', () => {
     const registry = clone(validRegistry);
     registry.locations[0].entrances.push(clone(registry.locations[0].entrances[0]));
