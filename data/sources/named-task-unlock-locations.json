@@ -51,15 +51,45 @@
       "sourceKeys": [
         "Brutus' Arena"
       ],
-      "disposition": "instance-only",
+      "disposition": "mapped",
       "sources": [
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/The_Ides_of_Milk?oldid=15246426",
+          "revision": "15246426"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Brutus?oldid=15263932",
+          "revision": "15263932"
+        },
         {
           "kind": "wiki",
           "url": "https://oldschool.runescape.wiki/w/Demonic_Brutus?oldid=15214877",
           "revision": "15214877"
+        },
+        {
+          "kind": "coordinate",
+          "source": "OpenRS2 OSRS build 239 cache map group for region 50,51 (2026-07-29)",
+          "url": "https://archive.openrs2.org/caches/runescape/2644/archives/5/groups/12851.dat",
+          "revision": "2644"
         }
       ],
-      "note": "Demonic Brutus is fought in a generated instance, so the arena has no persistent physical entrance chunk."
+      "note": "The quest enters Brutus' instance through the cow field's north-eastern two-tile gate at 3262-3263,3294. One physical gate emits one unlock row anchored at 3263,3294 in chunk 12851; completing The Ides of Milk permanently unlocks repeatable Brutus access, while the Demonic variant additionally needs Desert Treasure II and an abyssal potato.",
+      "mappingKind": "single-entrance",
+      "entrances": [
+        {
+          "chunkId": "12851",
+          "x": 3263,
+          "y": 3294,
+          "label": "North-eastern Lumbridge cow-field gate to Brutus' Arena",
+          "wikiPage": "The_Ides_of_Milk",
+          "requirements": [
+            "The Ides of Milk completed for repeatable Brutus access",
+            "Desert Treasure II - The Fallen Empire and an abyssal potato for Demonic Brutus"
+          ]
+        }
+      ]
     },
     {
       "name": "Cerberus' Lair",
@@ -162,12 +192,13 @@
       "entrances": [
         {
           "chunkId": "13103",
-          "x": 3288,
-          "y": 3021,
-          "label": "Desert Mining Camp route to the Underground Mines",
-          "wikiPage": "Desert_Mining_Camp",
+          "x": 3301,
+          "y": 3036,
+          "label": "Mine doors to the Desert Mining Camp Underground Mines",
+          "wikiPage": "Mine_door_entrance",
           "requirements": [
-            "The Tourist Trap"
+            "The Tourist Trap",
+            "Metal key to pass the Desert Mining Camp gate"
           ]
         }
       ],
@@ -176,24 +207,99 @@
           "kind": "wiki",
           "url": "https://oldschool.runescape.wiki/w/Desert_Mining_Camp?oldid=15264454",
           "revision": "15264454"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Gate_(Desert_Mining_Camp)?oldid=14514989",
+          "revision": "14514989"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Mine_door_entrance?oldid=15222907",
+          "revision": "15222907"
+        },
+        {
+          "kind": "coordinate",
+          "source": "Explv game-cache map tile",
+          "url": "https://raw.githubusercontent.com/Explv/osrs_map_tiles/1e3d20bfccca800c7bdec6611655670323ae10f6/0/11/292/227.png",
+          "revision": "1e3d20bfccca800c7bdec6611655670323ae10f6"
         }
       ],
-      "note": "The underground mine is entered from the quest-gated camp at its pinned surface location in canonical chunk 13103."
+      "note": "The underground mine's physical surface doorway is the two-tile mine-door object at 3301-3302,3036. One physical doorway emits one unlock row anchored at 3301,3036 in chunk 13103; the route also passes the camp gate at 3273,3028-3029 with the metal key."
     },
     {
       "name": "Dorgesh-Kaan South Dungeon",
       "sourceKeys": [
         "Dorgesh-Kaan South Dungeon"
       ],
-      "disposition": "non-purchasable",
+      "disposition": "mapped",
       "sources": [
         {
           "kind": "wiki",
           "url": "https://oldschool.runescape.wiki/w/Dorgesh-Kaan_South_Dungeon?oldid=15252265",
           "revision": "15252265"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Kalphite_Lair?oldid=15211802",
+          "revision": "15211802"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Blocked_tunnel?oldid=15201831",
+          "revision": "15201831"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Dorgesh-Kaan_mine?oldid=15057594",
+          "revision": "15057594"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Trapdoor_(Lumbridge_Castle)?oldid=14726910",
+          "revision": "14726910"
+        },
+        {
+          "kind": "coordinate",
+          "source": "Explv game-cache map tile",
+          "url": "https://raw.githubusercontent.com/Explv/osrs_map_tiles/1e3d20bfccca800c7bdec6611655670323ae10f6/0/11/283/236.png",
+          "revision": "1e3d20bfccca800c7bdec6611655670323ae10f6"
+        },
+        {
+          "kind": "coordinate",
+          "source": "Explv game-cache map tile",
+          "url": "https://raw.githubusercontent.com/Explv/osrs_map_tiles/1e3d20bfccca800c7bdec6611655670323ae10f6/0/11/281/249.png",
+          "revision": "1e3d20bfccca800c7bdec6611655670323ae10f6"
         }
       ],
-      "note": "The dungeon is entered from underground Dorgesh-Kaan or by fairy ring AJQ and has no independent overworld entrance."
+      "note": "Nested surface-route policy preserves both independent origins: the Kalphite Lair tunnel entrance object at 3227,3108 in chunk 12848 leads through the blocked tunnel, and the Lumbridge Castle trapdoor at 3209,3216 in chunk 12850 leads through the mine and Dorgesh-Kaan.",
+      "mappingKind": "multiple-entrances",
+      "entrances": [
+        {
+          "chunkId": "12848",
+          "x": 3227,
+          "y": 3108,
+          "label": "Kalphite Lair surface route to Dorgesh-Kaan South Dungeon",
+          "wikiPage": "Kalphite_Lair",
+          "requirements": [
+            "Death to the Dorgeshuun",
+            "Rope for the Kalphite Lair entrance unless permanently attached",
+            "Light source"
+          ]
+        },
+        {
+          "chunkId": "12850",
+          "x": 3209,
+          "y": 3216,
+          "label": "Lumbridge Castle route through Dorgesh-Kaan to the South Dungeon",
+          "wikiPage": "Dorgesh-Kaan_South_Dungeon",
+          "requirements": [
+            "The Lost Tribe started",
+            "Death to the Dorgeshuun",
+            "Light source"
+          ]
+        }
+      ]
     },
     {
       "name": "Dorgesh-Kaan Mine",
@@ -387,15 +493,41 @@
         "Grotesque Guardians' Lair"
       ],
       "disposition": "mapped",
-      "mappingKind": "single-entrance",
+      "mappingKind": "multiple-entrances",
       "entrances": [
         {
           "chunkId": "13623",
           "x": 3428,
-          "y": 3538,
-          "label": "Slayer Tower route to Grotesque Guardians' Lair",
+          "y": 3535,
+          "label": "Slayer Tower main door route to Grotesque Guardians' Lair",
           "wikiPage": "Grotesque_Guardians",
           "requirements": [
+            "75 Slayer",
+            "Gargoyle Slayer task",
+            "Brittle key used"
+          ]
+        },
+        {
+          "chunkId": "13623",
+          "x": 3443,
+          "y": 3532,
+          "label": "Slayer Tower broken-window route to Grotesque Guardians' Lair",
+          "wikiPage": "Broken_window_(Slayer_Tower)",
+          "requirements": [
+            "18 Agility",
+            "75 Slayer",
+            "Gargoyle Slayer task",
+            "Brittle key used"
+          ]
+        },
+        {
+          "chunkId": "13623",
+          "x": 3418,
+          "y": 3533,
+          "label": "Slayer Tower ivy route to Grotesque Guardians' Lair",
+          "wikiPage": "Ivy",
+          "requirements": [
+            "81 Agility",
             "75 Slayer",
             "Gargoyle Slayer task",
             "Brittle key used"
@@ -409,13 +541,40 @@
           "revision": "15281803"
         },
         {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Slayer_Tower?oldid=15254387",
+          "revision": "15254387"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Broken_window_(Slayer_Tower)?oldid=14971064",
+          "revision": "14971064"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Ivy?oldid=15083778",
+          "revision": "15083778"
+        },
+        {
           "kind": "coordinate",
-          "source": "Explv game-cache map tiles",
-          "url": "https://github.com/Explv/osrs_map_tiles/commit/1e3d20bfccca800c7bdec6611655670323ae10f6",
+          "source": "Explv game-cache map tile",
+          "url": "https://raw.githubusercontent.com/Explv/osrs_map_tiles/1e3d20bfccca800c7bdec6611655670323ae10f6/0/11/308/289.png",
+          "revision": "1e3d20bfccca800c7bdec6611655670323ae10f6"
+        },
+        {
+          "kind": "coordinate",
+          "source": "Explv game-cache map tile",
+          "url": "https://raw.githubusercontent.com/Explv/osrs_map_tiles/1e3d20bfccca800c7bdec6611655670323ae10f6/0/11/310/289.png",
+          "revision": "1e3d20bfccca800c7bdec6611655670323ae10f6"
+        },
+        {
+          "kind": "coordinate",
+          "source": "Explv game-cache map tile",
+          "url": "https://raw.githubusercontent.com/Explv/osrs_map_tiles/1e3d20bfccca800c7bdec6611655670323ae10f6/0/11/307/289.png",
           "revision": "1e3d20bfccca800c7bdec6611655670323ae10f6"
         }
       ],
-      "note": "The lair is reached through the Slayer Tower rooftop; the independent overworld route is the tower in canonical chunk 13623."
+      "note": "All three exterior Slayer Tower routes are preserved even though they share chunk 13623: the two-tile main door at 3428-3429,3535, the 18 Agility broken window at 3443,3532, and the 81 Agility ivy at 3418,3533."
     },
     {
       "name": "Kalphite Cave",
@@ -565,8 +724,8 @@
         },
         {
           "kind": "coordinate",
-          "source": "Explv game-cache map tiles",
-          "url": "https://github.com/Explv/osrs_map_tiles/commit/1e3d20bfccca800c7bdec6611655670323ae10f6",
+          "source": "Explv game-cache map tile",
+          "url": "https://raw.githubusercontent.com/Explv/osrs_map_tiles/1e3d20bfccca800c7bdec6611655670323ae10f6/0/11/44/293.png",
           "revision": "1e3d20bfccca800c7bdec6611655670323ae10f6"
         }
       ],
@@ -731,12 +890,12 @@
       "entrances": [
         {
           "chunkId": "12850",
-          "x": 3208,
-          "y": 3214,
-          "label": "Lumbridge Castle entrance to RFD Dining Room",
+          "x": 3207,
+          "y": 3217,
+          "label": "Lumbridge Castle dining-room door",
           "wikiPage": "Recipe_for_Disaster",
           "requirements": [
-            "Recipe for Disaster started"
+            "Recipe for Disaster: Another Cook's Quest completed"
           ]
         }
       ],
@@ -745,9 +904,15 @@
           "kind": "wiki",
           "url": "https://oldschool.runescape.wiki/w/Recipe_for_Disaster?oldid=15275958",
           "revision": "15275958"
+        },
+        {
+          "kind": "coordinate",
+          "source": "Explv game-cache map tile",
+          "url": "https://raw.githubusercontent.com/Explv/osrs_map_tiles/1e3d20bfccca800c7bdec6611655670323ae10f6/0/11/280/250.png",
+          "revision": "1e3d20bfccca800c7bdec6611655670323ae10f6"
         }
       ],
-      "note": "The dining-room route is inside Lumbridge Castle at the quest's pinned 3208,3214 start location, so its physical ownership is chunk 12850."
+      "note": "The physical dining-room door is the cache object at 3207,3217 in chunk 12850, not the Cook's quest-start map pin."
     },
     {
       "name": "Rogues' Den",
@@ -818,12 +983,12 @@
       "entrances": [
         {
           "chunkId": "6706",
-          "x": 1693.5,
-          "y": 3232,
-          "label": "Tower of Ascension entrance to Ruins of Tapoyauik",
+          "x": 1693,
+          "y": 3230,
+          "label": "Stairs into the Ruins of Tapoyauik",
           "wikiPage": "Ruins_of_Tapoyauik",
           "requirements": [
-            "The Heart of Darkness"
+            "The Heart of Darkness completed"
           ]
         }
       ],
@@ -832,9 +997,15 @@
           "kind": "wiki",
           "url": "https://oldschool.runescape.wiki/w/Ruins_of_Tapoyauik?oldid=15254238",
           "revision": "15254238"
+        },
+        {
+          "kind": "coordinate",
+          "source": "Explv game-cache map tile",
+          "url": "https://raw.githubusercontent.com/Explv/osrs_map_tiles/1e3d20bfccca800c7bdec6611655670323ae10f6/0/11/91/251.png",
+          "revision": "1e3d20bfccca800c7bdec6611655670323ae10f6"
         }
       ],
-      "note": "The Wiki's exact 5-by-7 entrance rectangle is centred at 1693.5,3232, which resolves deterministically to canonical chunk 6706."
+      "note": "The Wiki entrance rectangle resolves to the exact 2-by-3 stairs object anchored at integral tile 1693,3230 in chunk 6706."
     },
     {
       "name": "Shellbane Gryphon Cave",
@@ -870,15 +1041,37 @@
         "Slayer Tower#Basement"
       ],
       "disposition": "mapped",
-      "mappingKind": "single-entrance",
+      "mappingKind": "multiple-entrances",
       "entrances": [
         {
           "chunkId": "13623",
           "x": 3428,
-          "y": 3538,
-          "label": "Slayer Tower entrance to the basement",
+          "y": 3535,
+          "label": "Slayer Tower main door route to the basement",
           "wikiPage": "Slayer_Tower",
           "requirements": [
+            "Slayer task for basement monsters"
+          ]
+        },
+        {
+          "chunkId": "13623",
+          "x": 3443,
+          "y": 3532,
+          "label": "Slayer Tower broken-window route to the basement",
+          "wikiPage": "Broken_window_(Slayer_Tower)",
+          "requirements": [
+            "18 Agility",
+            "Slayer task for basement monsters"
+          ]
+        },
+        {
+          "chunkId": "13623",
+          "x": 3418,
+          "y": 3533,
+          "label": "Slayer Tower ivy route to the basement",
+          "wikiPage": "Ivy",
+          "requirements": [
+            "81 Agility",
             "Slayer task for basement monsters"
           ]
         }
@@ -890,13 +1083,35 @@
           "revision": "15254387"
         },
         {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Broken_window_(Slayer_Tower)?oldid=14971064",
+          "revision": "14971064"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Ivy?oldid=15083778",
+          "revision": "15083778"
+        },
+        {
           "kind": "coordinate",
-          "source": "Explv game-cache map tiles",
-          "url": "https://github.com/Explv/osrs_map_tiles/commit/1e3d20bfccca800c7bdec6611655670323ae10f6",
+          "source": "Explv game-cache map tile",
+          "url": "https://raw.githubusercontent.com/Explv/osrs_map_tiles/1e3d20bfccca800c7bdec6611655670323ae10f6/0/11/308/289.png",
+          "revision": "1e3d20bfccca800c7bdec6611655670323ae10f6"
+        },
+        {
+          "kind": "coordinate",
+          "source": "Explv game-cache map tile",
+          "url": "https://raw.githubusercontent.com/Explv/osrs_map_tiles/1e3d20bfccca800c7bdec6611655670323ae10f6/0/11/310/289.png",
+          "revision": "1e3d20bfccca800c7bdec6611655670323ae10f6"
+        },
+        {
+          "kind": "coordinate",
+          "source": "Explv game-cache map tile",
+          "url": "https://raw.githubusercontent.com/Explv/osrs_map_tiles/1e3d20bfccca800c7bdec6611655670323ae10f6/0/11/307/289.png",
           "revision": "1e3d20bfccca800c7bdec6611655670323ae10f6"
         }
       ],
-      "note": "The basement ladder is just inside Slayer Tower, whose game-cache surface location is 3428,3538 in canonical chunk 13623."
+      "note": "All three exterior Slayer Tower routes are preserved in chunk 13623: the two-tile main door at 3428-3429,3535, the 18 Agility broken window at 3443,3532, and the 81 Agility ivy at 3418,3533."
     },
     {
       "name": "Smoke Devil Dungeon",
@@ -1207,9 +1422,9 @@
       "entrances": [
         {
           "chunkId": "12597",
-          "x": 3185,
-          "y": 3440,
-          "label": "Varrock West Bank route to the basement",
+          "x": 3187,
+          "y": 3433,
+          "label": "Varrock West Bank basement staircase",
           "wikiPage": "Varrock_west_bank",
           "requirements": []
         }
@@ -1219,9 +1434,15 @@
           "kind": "wiki",
           "url": "https://oldschool.runescape.wiki/w/Varrock_west_bank?oldid=15216009",
           "revision": "15216009"
+        },
+        {
+          "kind": "coordinate",
+          "source": "Explv game-cache map tile",
+          "url": "https://raw.githubusercontent.com/Explv/osrs_map_tiles/1e3d20bfccca800c7bdec6611655670323ae10f6/0/11/278/277.png",
+          "revision": "1e3d20bfccca800c7bdec6611655670323ae10f6"
         }
       ],
-      "note": "The basement stairs are inside the bank footprint mapped from 3185,3440, whose physical surface ownership is canonical chunk 12597."
+      "note": "The basement staircase is the exact cache object at 3187,3433 in chunk 12597, distinct from the bank's upstairs ladder at 3184,3447."
     },
     {
       "name": "Wilderness Slayer Cave",

@@ -12,6 +12,8 @@ export const NAMED_TASK_UNLOCK_REGISTRY_PATH = resolve(
 
 const EXCLUDED_DISPOSITIONS = new Set(['instance-only', 'non-purchasable']);
 const ALLOWED_DISPOSITIONS = new Set(['mapped', ...EXCLUDED_DISPOSITIONS]);
+const ALLOWED_MAPPING_KINDS = new Set(['single-entrance', 'multiple-entrances']);
+const ALLOWED_SOURCE_KINDS = new Set(['wiki', 'coordinate']);
 
 export function readNamedTaskUnlockRegistry(path = NAMED_TASK_UNLOCK_REGISTRY_PATH) {
   return JSON.parse(readFileSync(path, 'utf8'));
@@ -78,6 +80,15 @@ export function validateNamedTaskUnlockRegistry(registry, context) {
     if (!ALLOWED_DISPOSITIONS.has(record?.disposition)) {
       errors.push(`Invalid named task-unlock disposition for ${name}: ${received(record?.disposition)}`);
     }
+    if (record?.disposition === 'mapped' && !ALLOWED_MAPPING_KINDS.has(record?.mappingKind)) {
+      errors.push(`Invalid named task-unlock mapping kind for ${name}: ${received(record?.mappingKind)}`);
+    }
+    if (record?.mappingKind === 'single-entrance' && entrances.length !== 1) {
+      errors.push(`Single-entrance named task-unlock location has ${entrances.length} entrances: ${name}`);
+    }
+    if (record?.mappingKind === 'multiple-entrances' && entrances.length < 2) {
+      errors.push(`Multiple-entrance named task-unlock location has ${entrances.length} entrances: ${name}`);
+    }
     if (record?.disposition === 'mapped' && entrances.length === 0) {
       errors.push(`Mapped named task-unlock location has no entrances: ${name}`);
     }
@@ -87,12 +98,57 @@ export function validateNamedTaskUnlockRegistry(registry, context) {
     if (!Array.isArray(record?.sources) || record.sources.length === 0) {
       errors.push(`Named task-unlock location has no sources: ${name}`);
     }
+    for (const source of Array.isArray(record?.sources) ? record.sources : []) {
+      if (!ALLOWED_SOURCE_KINDS.has(source?.kind)) {
+        errors.push(`Invalid named task-unlock source kind for ${name}: ${received(source?.kind)}`);
+      }
+      if (typeof source?.url !== 'string' || !source.url.startsWith('https://')) {
+        errors.push(`Named task-unlock source has no permanent HTTPS URL for ${name}`);
+      }
+      if (typeof source?.revision !== 'string' || source.revision.trim() === '') {
+        errors.push(`Named task-unlock source has no revision for ${name}`);
+      }
+
+      if (source?.kind === 'wiki' && typeof source?.url === 'string') {
+        const oldid = (() => {
+          try { return new URL(source.url).searchParams.get('oldid'); } catch { return null; }
+        })();
+        if (oldid !== source?.revision) {
+          errors.push(`Named task-unlock Wiki source is not pinned to revision ${received(source?.revision)} for ${name}`);
+        }
+      }
+
+      if (source?.kind === 'coordinate') {
+        if (typeof source?.source !== 'string' || source.source.trim() === '') {
+          errors.push(`Named task-unlock coordinate source has no source name for ${name}`);
+        }
+        const isPinnedArtifact = typeof source?.url === 'string'
+          && typeof source?.revision === 'string'
+          && source.revision.trim() !== ''
+          && source.url.includes(`/${source.revision}/`)
+          && /\.(?:dat|gz|json|png)(?:$|[?#])/i.test(source.url);
+        if (!isPinnedArtifact) {
+          errors.push(`Named task-unlock coordinate source is not a pinned artifact for ${name}`);
+        }
+      }
+    }
     if (typeof record?.note !== 'string' || record.note.trim() === '') {
       errors.push(`Named task-unlock location has no note: ${name}`);
     }
 
     for (const entrance of entrances) {
       const chunkId = String(entrance?.chunkId);
+      if (typeof entrance?.label !== 'string' || entrance.label.trim() === '') {
+        errors.push(`Named task-unlock entrance has no label for ${name}`);
+      }
+      if (typeof entrance?.wikiPage !== 'string' || entrance.wikiPage.trim() === '') {
+        errors.push(`Named task-unlock entrance has no Wiki page for ${name} / ${entrance?.label}`);
+      }
+      if (!Array.isArray(entrance?.requirements)) {
+        errors.push(`Named task-unlock entrance requirements are not an array for ${name} / ${entrance?.label}`);
+      } else if (entrance.requirements.some((requirement) => typeof requirement !== 'string' || requirement.trim() === '')) {
+        errors.push(`Named task-unlock entrance has a blank requirement for ${name} / ${entrance?.label}`);
+      }
       if (!context?.validChunkIds?.has(chunkId)) {
         errors.push(`Unknown named task-unlock chunk ID: ${chunkId}`);
       }
@@ -100,6 +156,8 @@ export function validateNamedTaskUnlockRegistry(registry, context) {
       if (record?.disposition === 'mapped') {
         if (!Number.isFinite(entrance?.x) || !Number.isFinite(entrance?.y)) {
           errors.push(`Named task-unlock entrance has invalid coordinates for ${name} / ${entrance?.label}`);
+        } else if (!Number.isInteger(entrance.x) || !Number.isInteger(entrance.y)) {
+          errors.push(`Named task-unlock entrance has non-integral coordinates for ${name} / ${entrance?.label}`);
         } else {
           const expectedChunkId = entranceChunkId(entrance);
           if (chunkId !== expectedChunkId) {

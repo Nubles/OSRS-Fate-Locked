@@ -27,8 +27,13 @@ const validRegistry = {
         { chunkId: '513', x: 128, y: 64, label: 'Eastern entrance to Example Cave', wikiPage: 'Example_Cave', requirements: ['Example Quest'] },
       ],
       sources: [
-        { kind: 'wiki', url: 'https://oldschool.runescape.wiki/w/Example_Cave', revision: '100' },
-        { kind: 'coordinate', source: 'RuneLite cache', revision: 'cache-1' },
+        { kind: 'wiki', url: 'https://oldschool.runescape.wiki/w/Example_Cave?oldid=100', revision: '100' },
+        {
+          kind: 'coordinate',
+          source: 'Explv game-cache map tile',
+          url: 'https://raw.githubusercontent.com/Explv/osrs_map_tiles/1234567890abcdef1234567890abcdef12345678/0/11/1/2.png',
+          revision: '1234567890abcdef1234567890abcdef12345678',
+        },
       ],
       note: 'Two independently reachable entrances.',
     },
@@ -36,7 +41,7 @@ const validRegistry = {
       name: 'Example Instance',
       sourceKeys: ['Example Instance'],
       disposition: 'instance-only',
-      sources: [{ kind: 'wiki', url: 'https://oldschool.runescape.wiki/w/Example_Instance', revision: '200' }],
+      sources: [{ kind: 'wiki', url: 'https://oldschool.runescape.wiki/w/Example_Instance?oldid=200', revision: '200' }],
       note: 'Created only inside the activity instance.',
     },
   ],
@@ -171,6 +176,92 @@ describe('named task-unlock registry', () => {
     );
   });
 
+  it('rejects missing, invalid, or count-inconsistent mapping kinds', () => {
+    const missing = clone(validRegistry);
+    delete (missing.locations[0] as { mappingKind?: unknown }).mappingKind;
+    expect(() => validateNamedTaskUnlockRegistry(missing, context))
+      .toThrow('Invalid named task-unlock mapping kind for Example Cave: undefined');
+
+    const invalid = clone(validRegistry);
+    invalid.locations[0].mappingKind = 'portal-network';
+    expect(() => validateNamedTaskUnlockRegistry(invalid, context))
+      .toThrow('Invalid named task-unlock mapping kind for Example Cave: portal-network');
+
+    const wrongCount = clone(validRegistry);
+    wrongCount.locations[0].mappingKind = 'single-entrance';
+    expect(() => validateNamedTaskUnlockRegistry(wrongCount, context))
+      .toThrow('Single-entrance named task-unlock location has 2 entrances: Example Cave');
+  });
+
+  it('rejects unpinned, incomplete, and unsupported sources', () => {
+    const unpinnedWiki = clone(validRegistry);
+    unpinnedWiki.locations[0].sources[0].url = 'https://oldschool.runescape.wiki/w/Example_Cave';
+    expect(() => validateNamedTaskUnlockRegistry(unpinnedWiki, context))
+      .toThrow('Named task-unlock Wiki source is not pinned to revision 100 for Example Cave');
+
+    const unsupported = clone(validRegistry);
+    unsupported.locations[0].sources[0].kind = 'search-result';
+    expect(() => validateNamedTaskUnlockRegistry(unsupported, context))
+      .toThrow('Invalid named task-unlock source kind for Example Cave: search-result');
+
+    const nonHttps = clone(validRegistry);
+    nonHttps.locations[0].sources[0].url = 'http://oldschool.runescape.wiki/w/Example_Cave?oldid=100';
+    expect(() => validateNamedTaskUnlockRegistry(nonHttps, context))
+      .toThrow('Named task-unlock source has no permanent HTTPS URL for Example Cave');
+
+    const missingRevision = clone(validRegistry);
+    missingRevision.locations[0].sources[0].revision = '';
+    expect(() => validateNamedTaskUnlockRegistry(missingRevision, context))
+      .toThrow('Named task-unlock source has no revision for Example Cave');
+  });
+
+  it('rejects coordinate evidence that is generic or not pinned to its artifact revision', () => {
+    const genericCommit = clone(validRegistry);
+    genericCommit.locations[0].sources[1].url = 'https://github.com/Explv/osrs_map_tiles/commit/1234567890abcdef1234567890abcdef12345678';
+    expect(() => validateNamedTaskUnlockRegistry(genericCommit, context))
+      .toThrow('Named task-unlock coordinate source is not a pinned artifact for Example Cave');
+
+    const unpinnedArtifact = clone(validRegistry);
+    unpinnedArtifact.locations[0].sources[1].url = 'https://raw.githubusercontent.com/Explv/osrs_map_tiles/main/0/11/1/2.png';
+    expect(() => validateNamedTaskUnlockRegistry(unpinnedArtifact, context))
+      .toThrow('Named task-unlock coordinate source is not a pinned artifact for Example Cave');
+
+    const unnamed = clone(validRegistry);
+    unnamed.locations[0].sources[1].source = '';
+    expect(() => validateNamedTaskUnlockRegistry(unnamed, context))
+      .toThrow('Named task-unlock coordinate source has no source name for Example Cave');
+  });
+
+  it('rejects incomplete entrance metadata and malformed requirements', () => {
+    const blankLabel = clone(validRegistry);
+    blankLabel.locations[0].entrances[0].label = ' ';
+    expect(() => validateNamedTaskUnlockRegistry(blankLabel, context))
+      .toThrow('Named task-unlock entrance has no label for Example Cave');
+
+    const blankWikiPage = clone(validRegistry);
+    blankWikiPage.locations[0].entrances[0].wikiPage = '';
+    expect(() => validateNamedTaskUnlockRegistry(blankWikiPage, context))
+      .toThrow('Named task-unlock entrance has no Wiki page for Example Cave / Entrance to Example Cave');
+
+    const missingRequirements = clone(validRegistry);
+    delete (missingRequirements.locations[0].entrances[0] as { requirements?: unknown }).requirements;
+    expect(() => validateNamedTaskUnlockRegistry(missingRequirements, context))
+      .toThrow('Named task-unlock entrance requirements are not an array for Example Cave / Entrance to Example Cave');
+
+    const blankRequirement = clone(validRegistry);
+    blankRequirement.locations[0].entrances[0].requirements = [' '];
+    expect(() => validateNamedTaskUnlockRegistry(blankRequirement, context))
+      .toThrow('Named task-unlock entrance has a blank requirement for Example Cave / Entrance to Example Cave');
+  });
+
+  it('rejects fractional entrance coordinates', () => {
+    const registry = clone(validRegistry);
+    registry.locations[0].entrances[0].x = 64.5;
+
+    expect(() => validateNamedTaskUnlockRegistry(registry, context))
+      .toThrow('Named task-unlock entrance has non-integral coordinates for Example Cave / Entrance to Example Cave');
+  });
+
   it('rejects duplicate entrance labels within a chunk', () => {
     const registry = clone(validRegistry);
     registry.locations[0].entrances[1] = {
@@ -224,8 +315,9 @@ describe('named task-unlock registry', () => {
       name: 'Example Grotto',
       sourceKeys: ['Example Grotto'],
       disposition: 'mapped',
+      mappingKind: 'single-entrance',
       entrances: [{ chunkId: '256', x: 64, y: 0, label: 'Entrance to Example Grotto', wikiPage: 'Example_Grotto', requirements: [] }],
-      sources: [{ kind: 'wiki', url: 'https://oldschool.runescape.wiki/w/Example_Grotto', revision: '300' }],
+      sources: [{ kind: 'wiki', url: 'https://oldschool.runescape.wiki/w/Example_Grotto?oldid=300', revision: '300' }],
       note: 'A separate named entrance shares this physical chunk.',
     });
     const sharedChunkContext = { ...context, sourceLocationKeys: [...context.sourceLocationKeys, 'Example Grotto'] };
