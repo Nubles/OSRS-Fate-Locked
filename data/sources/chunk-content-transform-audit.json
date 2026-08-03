@@ -34,9 +34,9 @@
     "taskUnlocks": {
       "source": 1672,
       "imported": 1011,
-      "normalized": 521,
-      "excluded": 0,
-      "unresolved": 140
+      "normalized": 657,
+      "excluded": 4,
+      "unresolved": 0
     },
     "slayerMasterTasks": {
       "source": 386,
@@ -218541,65 +218541,101 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Aberrant spectre/Stronghold Slayer Cave",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Aberrant spectre/9525"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Monsters/Abyssal demon/Slayer Tower#Basement",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Abyssal demon/13623"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Abyssal demon/Slayer Tower#Basement",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Abyssal demon/13623"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Abyssal demon#Wilderness Slayer Cave/Wilderness Slayer Cave",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Abyssal demon/12857",
+        "Abyssal demon/13114"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Monsters/Abyssal demon#Wilderness Slayer Cave/Wilderness Slayer Cave",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
+      "targetKeys": [
+        "Abyssal demon/12857",
+        "Abyssal demon/13114"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Abyssal Sire/Abyssal Nexus",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
+      "disposition": "excluded",
+      "reason": "named-location-non-purchasable",
       "targetKeys": []
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Adamant dragon/Lithkren Vault",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Adamant dragon/14142"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Alchemical Hydra/Karuulm Slayer Dungeon",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Alchemical Hydra/5179"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Amoxliatl/Ruins of Tapoyauik",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Amoxliatl/6706"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Ancient Wyvern/Task Only Wyvern Cave",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Ancient Wyvern/14652"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -218675,49 +218711,61 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Ankou/Stronghold Slayer Cave",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Ankou/9525"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Araxxor/Morytania Spider Nest",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Araxxor/14645"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Armoured zombie (Zemouregal's Fort)/Zemouregal's Fortress#Basement",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Armoured zombie (Zemouregal's Fort)/11324"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Baby black dragon/Taverley Dungeon",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Baby black dragon/11573"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Baby blue dragon/Ruins of Tapoyauik",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Baby blue dragon/6706"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Baby tanglefoot/Zanaris",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Baby tanglefoot/12849"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -218803,9 +218851,12 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Black demon/Edgeville Dungeon#Wilderness",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Black demon/12341",
+        "Black demon/12342"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -218820,42 +218871,62 @@
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Bloodveld/Slayer Tower#Basement",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Bloodveld/13623"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Monsters/Bloodveld/Slayer Tower#Basement",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Bloodveld/13623"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Bloodveld/Stronghold Slayer Cave",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Bloodveld/9525"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Blue dragon/Ogre Enclave",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Blue dragon/10031"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Blue dragon/Ruins of Tapoyauik",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Blue dragon/6706"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Branda the Fire Queen/Asgarnian Ice Dungeon",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Branda the Fire Queen/12081"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -218881,9 +218952,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Brutal blue dragon/Ruins of Tapoyauik",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Brutal blue dragon/6706"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -218979,25 +219052,31 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Cave crawler/Ruins of Tapoyauik",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Cave crawler/6706"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Cave kraken/Kraken Cove",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Cave kraken/9016"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Cerberus/Cerberus' Lair",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Cerberus/11573"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -219013,9 +219092,12 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Chaos druid/Edgeville Dungeon#Wilderness",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Chaos druid/12341",
+        "Chaos druid/12342"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -219041,9 +219123,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Chaos Golem/Ruins of Camdozaal",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Chaos Golem/11830"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -219079,9 +219163,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Chilled jelly/Ruins of Tapoyauik",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Chilled jelly/6706"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -219097,9 +219183,12 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Chronozon/Edgeville Dungeon#Wilderness",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Chronozon/12341",
+        "Chronozon/12342"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -219175,17 +219264,22 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Deadly red spider/Edgeville Dungeon#Wilderness",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Deadly red spider/12341",
+        "Deadly red spider/12342"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Demonic Brutus/Brutus' Arena",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Demonic Brutus/12851"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -219251,33 +219345,76 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Dust devil#Wilderness Slayer Cave/Wilderness Slayer Cave",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Dust devil/12857",
+        "Dust devil/13114"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Monsters/Dust devil#Wilderness Slayer Cave/Wilderness Slayer Cave",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
+      "targetKeys": [
+        "Dust devil/12857",
+        "Dust devil/13114"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Monsters/Dwarf gang member/Dwarven Mine",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Dwarf gang member/12084",
+        "Dwarf gang member/12085"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Dwarf gang member/Dwarven Mine",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Dwarf gang member/12084",
+        "Dwarf gang member/12085"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Earth elemental#Ore variant/Elemental Workshop",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Earth elemental/10806"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Monsters/Earth elemental#Ore variant/Elemental Workshop",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
+      "targetKeys": [
+        "Earth elemental/10806"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Earth warrior/Edgeville Dungeon#Wilderness",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Earth warrior/12341",
+        "Earth warrior/12342"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -219293,9 +219430,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Eldric the Ice King/Asgarnian Ice Dungeon",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Eldric the Ice King/12081"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -219341,17 +219480,21 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Fire elemental (Royal Titans)/Asgarnian Ice Dungeon",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Fire elemental (Royal Titans)/12081"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Fire giant/Stronghold Slayer Cave",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Fire giant/9525"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -219387,17 +219530,31 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Frogeel/Tower of Life#Basement",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Frogeel/10546"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Monsters/Gargoyle/Slayer Tower#Basement",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Gargoyle/13623"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Gargoyle/Slayer Tower#Basement",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Gargoyle/13623"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -219503,17 +219660,21 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Giant bat/Crandor and Karamja Dungeon#South",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Giant bat/11313"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Giant rat (Scurrius)/Varrock Sewers",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Giant rat (Scurrius)/12854"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -219549,9 +219710,23 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Greater Nechryael#Wilderness Slayer Cave/Wilderness Slayer Cave",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Greater Nechryael/12857",
+        "Greater Nechryael/13114"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Monsters/Greater Nechryael#Wilderness Slayer Cave/Wilderness Slayer Cave",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
+      "targetKeys": [
+        "Greater Nechryael/12857",
+        "Greater Nechryael/13114"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -219606,10 +219781,22 @@
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Grotesque Guardians/Grotesque Guardians' Lair",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Grotesque Guardians/13623"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Monsters/Grotesque Guardians/Grotesque Guardians' Lair",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Grotesque Guardians/13623"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -219624,10 +219811,22 @@
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Guard (Desert Mining Camp)/Desert Mining Camp#Underground Mines",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Guard (Desert Mining Camp)/13103"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Monsters/Guard (Desert Mining Camp)/Desert Mining Camp#Underground Mines",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Guard (Desert Mining Camp)/13103"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -219653,57 +219852,73 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Guardian of Armadyl/Temple of Ikov",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Guardian of Armadyl/10549",
+        "Guardian of Armadyl/10550"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Hellhound/Stronghold Slayer Cave",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Hellhound/9525"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Ice elemental (Royal Titans)/Asgarnian Ice Dungeon",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Ice elemental (Royal Titans)/12081"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Ice giant/Ruins of Tapoyauik",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Ice giant/6706"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Ice spider/Ruins of Tapoyauik",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Ice spider/6706"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Ice spider/Temple of Ikov",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Ice spider/10549",
+        "Ice spider/10550"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Ice warrior/Ruins of Tapoyauik",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Ice warrior/6706"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -219729,9 +219944,23 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Jelly#Wilderness Slayer Cave/Wilderness Slayer Cave",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Jelly/12857",
+        "Jelly/13114"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Monsters/Jelly#Wilderness Slayer Cave/Wilderness Slayer Cave",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
+      "targetKeys": [
+        "Jelly/12857",
+        "Jelly/13114"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -219757,9 +219986,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Jubster/Tower of Life#Basement",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Jubster/10546"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -219815,25 +220046,31 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Kalphite Guardian/Kalphite Cave",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Kalphite Guardian/13104"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Kalphite Soldier/Kalphite Cave",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Kalphite Soldier/13104"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Kalphite Worker/Kalphite Cave",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Kalphite Worker/13104"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -219879,9 +220116,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Kraken/Kraken Cove",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Kraken/9016"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -219937,17 +220176,22 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Lesser demon/Temple of Ikov",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Lesser demon/10549",
+        "Lesser demon/10550"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Lizardman shaman/Lizardman Caves",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Lizardman shaman/5175"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -219963,9 +220207,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Long-tailed Wyvern/Task Only Wyvern Cave",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Long-tailed Wyvern/14652"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -220130,18 +220376,32 @@
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Nechryael/Slayer Tower#Basement",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Nechryael/13623"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Monsters/Nechryael/Slayer Tower#Basement",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Nechryael/13623"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Newtroost/Tower of Life#Basement",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Newtroost/10546"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -220267,9 +220527,12 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Poison spider/Edgeville Dungeon#Wilderness",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Poison spider/12341",
+        "Poison spider/12342"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -220325,16 +220588,16 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/River troll/Enchanted Valley",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
+      "disposition": "excluded",
+      "reason": "named-location-non-purchasable",
       "targetKeys": []
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Rock golem (monster)/Enchanted Valley",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
+      "disposition": "excluded",
+      "reason": "named-location-non-purchasable",
       "targetKeys": []
     },
     {
@@ -220351,9 +220614,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Rune dragon/Lithkren Vault",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Rune dragon/14142"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -220369,25 +220634,32 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Scorpion/Temple of Ikov",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Scorpion/10549",
+        "Scorpion/10550"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Scurrius/Varrock Sewers",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Scurrius/12854"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Shellbane gryphon/Shellbane Gryphon Cave",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Shellbane gryphon/12582"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -220413,9 +220685,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Skeletal Wyvern/Asgarnian Ice Dungeon",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Skeletal Wyvern/12081"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -220441,9 +220715,23 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Skeleton#Armed/Temple of Ikov",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Skeleton/10549",
+        "Skeleton/10550"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Monsters/Skeleton#Armed/Temple of Ikov",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
+      "targetKeys": [
+        "Skeleton/10549",
+        "Skeleton/10550"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -220459,9 +220747,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Smoke devil/Smoke Devil Dungeon",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Smoke devil/9519"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -220477,9 +220767,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Sourhog/Sourhog Cave",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Sourhog/12596"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -220495,33 +220787,41 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Spidine/Tower of Life#Basement",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Spidine/10546"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Spitting Wyvern/Task Only Wyvern Cave",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Spitting Wyvern/14652"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Swordchick/Tower of Life#Basement",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Swordchick/10546"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Taloned Wyvern/Task Only Wyvern Cave",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Taloned Wyvern/14652"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -220557,9 +220857,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Thermonuclear smoke devil/Smoke Devil Dungeon",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Thermonuclear smoke devil/9519"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -220575,9 +220877,12 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Thug/Edgeville Dungeon#Wilderness",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Thug/12341",
+        "Thug/12342"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -220653,8 +220958,8 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Tree spirit/Enchanted Valley",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
+      "disposition": "excluded",
+      "reason": "named-location-non-purchasable",
       "targetKeys": []
     },
     {
@@ -220681,9 +220986,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Unicow/Tower of Life#Basement",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Unicow/10546"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -220869,9 +221176,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Waterfiend/Kraken Cove",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Waterfiend/9016"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -221067,9 +221376,11 @@
       "category": "taskUnlocks",
       "sourceKey": "NPCs/Jim/Chasm of Fire",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Jim/5689"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -221105,17 +221416,22 @@
       "category": "taskUnlocks",
       "sourceKey": "NPCs/Moonlight moth/Ruins of Tapoyauik",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Moonlight moth/6706"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "NPCs/Movario/Dorgesh-Kaan South Dungeon",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Movario/12848",
+        "Movario/12850"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -221291,9 +221607,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Objects/Adamantite rocks/Desert Mining Camp#Underground Mines",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Adamantite rocks/13103"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -221349,9 +221667,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Objects/Amethyst crystals/Mining Guild",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Amethyst crystals/12084"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -221367,9 +221687,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Objects/Anvil (Chasm of Fire)/Chasm of Fire",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Anvil (Chasm of Fire)/5689"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -221425,9 +221747,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Objects/Anvil/The Warrens",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Anvil/7226"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -221453,9 +221777,12 @@
       "category": "taskUnlocks",
       "sourceKey": "Objects/Barrel (beer)/Temple of Ikov",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Barrel (beer)/10549",
+        "Barrel (beer)/10550"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -221561,9 +221888,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Objects/Chest (moon key)/Ruins of Tapoyauik",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Chest (moon key)/6706"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -221909,9 +222238,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Objects/Furnace (Chasm of Fire)/Chasm of Fire",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Furnace (Chasm of Fire)/5689"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -222007,17 +222338,21 @@
       "category": "taskUnlocks",
       "sourceKey": "Objects/Infernal shale deposit/Chasm of Fire",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Infernal shale deposit/5689"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Objects/Infernal shale rocks/Chasm of Fire",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Infernal shale rocks/5689"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -222133,9 +222468,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Objects/Mithril rocks/Desert Mining Camp#Underground Mines",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Mithril rocks/13103"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -222201,9 +222538,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Objects/Pool of ichor/Chasm of Fire",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Pool of ichor/5689"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -222419,9 +222758,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Objects/Range/Zemouregal's Base",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Range/13366"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -222447,17 +222788,21 @@
       "category": "taskUnlocks",
       "sourceKey": "Objects/Runite rocks/Mining Guild",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Runite rocks/12084"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Objects/Runite rocks/Ruins of Tapoyauik",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Runite rocks/6706"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -222813,9 +223158,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Objects/Tin rocks/Desert Mining Camp#Underground Mines",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Tin rocks/13103"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -223200,98 +223547,344 @@
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Crossbow Shop (Dwarven Mine)/Dwarven Mine",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Crossbow Shop (Dwarven Mine)/12084",
+        "Crossbow Shop (Dwarven Mine)/12085"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Crossbow Shop (Dwarven Mine)/Dwarven Mine",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Crossbow Shop (Dwarven Mine)/12084",
+        "Crossbow Shop (Dwarven Mine)/12085"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Culinaromancer's Chest#0 Subquests/RFD Dining Room",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Culinaromancer's Chest#0 Subquests/RFD Dining Room",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Culinaromancer's Chest#0 Subquests/RFD Dining Room",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Culinaromancer's Chest#1 Subquests/RFD Dining Room",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Culinaromancer's Chest#1 Subquests/RFD Dining Room",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Culinaromancer's Chest#1 Subquests/RFD Dining Room",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Culinaromancer's Chest#2 Subquests/RFD Dining Room",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Culinaromancer's Chest#2 Subquests/RFD Dining Room",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Culinaromancer's Chest#2 Subquests/RFD Dining Room",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Culinaromancer's Chest#3 Subquests/RFD Dining Room",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Culinaromancer's Chest#3 Subquests/RFD Dining Room",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Culinaromancer's Chest#3 Subquests/RFD Dining Room",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Culinaromancer's Chest#4 Subquests/RFD Dining Room",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Culinaromancer's Chest#4 Subquests/RFD Dining Room",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Culinaromancer's Chest#4 Subquests/RFD Dining Room",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Culinaromancer's Chest#5 Subquests/RFD Dining Room",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Culinaromancer's Chest#5 Subquests/RFD Dining Room",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Culinaromancer's Chest#5 Subquests/RFD Dining Room",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Culinaromancer's Chest#6 Subquests/RFD Dining Room",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Culinaromancer's Chest#6 Subquests/RFD Dining Room",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Culinaromancer's Chest#6 Subquests/RFD Dining Room",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Culinaromancer's Chest#7 Subquests/RFD Dining Room",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Culinaromancer's Chest#7 Subquests/RFD Dining Room",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Culinaromancer's Chest#7 Subquests/RFD Dining Room",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Culinaromancer's Chest#8 Subquests/RFD Dining Room",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Culinaromancer's Chest#8 Subquests/RFD Dining Room",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Culinaromancer's Chest#8 Subquests/RFD Dining Room",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Culinaromancer's Chest#Food/RFD Dining Room",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Culinaromancer's Chest#Food/RFD Dining Room",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Culinaromancer's Chest#Full/RFD Dining Room",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Culinaromancer's Chest#Full/RFD Dining Room",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Culinaromancer's Chest#Full/RFD Dining Room",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
+      "targetKeys": [
+        "Culinaromancer's Chest/12850"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -223457,9 +224050,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Shops/Fairy Fixit's Fairy Enchantment/Zanaris",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Fairy Fixit's Fairy Enchantment/12849"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -223725,17 +224320,21 @@
       "category": "taskUnlocks",
       "sourceKey": "Shops/Giants' Foundry Reward Shop/Giants' Foundry",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Giants' Foundry Reward Shop/13361"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Grace's Graceful Clothing/Rogues' Den",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Grace's Graceful Clothing/11575"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -223791,17 +224390,21 @@
       "category": "taskUnlocks",
       "sourceKey": "Shops/Irksol (shop)/Zanaris",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Irksol (shop)/12849"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Ivan's Supplies/Myreque hideout#Meiyerditch Hideout",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Ivan's Supplies/14386"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -223827,9 +224430,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Shops/Jukat (shop)/Zanaris",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Jukat (shop)/12849"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -223885,9 +224490,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Shops/Mage Arena Staffs./Mage Arena bank",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Mage Arena Staffs./12349"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -223923,17 +224530,21 @@
       "category": "taskUnlocks",
       "sourceKey": "Shops/Martin Thwait's Lost and Found./Rogues' Den",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Martin Thwait's Lost and Found./11575"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Mining Guild Mineral Exchange/Mining Guild",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Mining Guild Mineral Exchange/12084"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -223999,9 +224610,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Shops/Nardok's Bone Weapons/Dorgesh-Kaan mine",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Nardok's Bone Weapons/12850"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -224266,10 +224879,24 @@
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Slayer Equipment (shop)/Edgeville Dungeon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Slayer Equipment (shop)/12341",
+        "Slayer Equipment (shop)/12342"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Slayer Equipment (shop)/Edgeville Dungeon",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Slayer Equipment (shop)/12341",
+        "Slayer Equipment (shop)/12342"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -224285,33 +224912,41 @@
       "category": "taskUnlocks",
       "sourceKey": "Shops/Temple Supplies/Temple of the Eye",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Temple Supplies/12337"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Temple Supplies^Blood talisman/Temple of the Eye",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Temple Supplies^Blood talisman/12337"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Temple Supplies^Death talisman/Temple of the Eye",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Temple Supplies^Death talisman/12337"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Temple Supplies^Law talisman/Temple of the Eye",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Temple Supplies^Law talisman/12337"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -224567,9 +225202,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Spawns/Blue dragon scale/Ruins of Tapoyauik",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Blue dragon scale/6706"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -224585,25 +225222,33 @@
       "category": "taskUnlocks",
       "sourceKey": "Spawns/Bones/Ruins of Tapoyauik",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Bones/6706"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Spawns/Bones/Temple of Ikov",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Bones/10549",
+        "Bones/10550"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Spawns/Boots of lightness/Temple of Ikov",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Boots of lightness/10549",
+        "Boots of lightness/10550"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -224638,10 +225283,24 @@
     {
       "category": "taskUnlocks",
       "sourceKey": "Spawns/Broken arrow/Temple of Ikov",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Broken arrow/10549",
+        "Broken arrow/10550"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Spawns/Broken arrow/Temple of Ikov",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Broken arrow/10549",
+        "Broken arrow/10550"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -224687,9 +225346,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Spawns/Bronze pickaxe/Desert Mining Camp#Underground Mines",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Bronze pickaxe/13103"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -224955,9 +225616,12 @@
       "category": "taskUnlocks",
       "sourceKey": "Spawns/Lever (Temple of Ikov)/Temple of Ikov",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Lever (Temple of Ikov)/10549",
+        "Lever (Temple of Ikov)/10550"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -225083,9 +225747,12 @@
       "category": "taskUnlocks",
       "sourceKey": "Spawns/Red spiders' eggs/Edgeville Dungeon#Wilderness",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Red spiders' eggs/12341",
+        "Red spiders' eggs/12342"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -225111,9 +225778,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Spawns/Ruby ring/Varrock West Bank#Basement",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Ruby ring/12597"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -225129,9 +225798,12 @@
       "category": "taskUnlocks",
       "sourceKey": "Spawns/Shiny key/Temple of Ikov",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Shiny key/10549",
+        "Shiny key/10550"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -225167,17 +225839,23 @@
       "category": "taskUnlocks",
       "sourceKey": "Spawns/Staff of armadyl/Temple of Ikov",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Staff of armadyl/10549",
+        "Staff of armadyl/10550"
+      ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Spawns/Steel arrowtips/Edgeville Dungeon#Wilderness",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Steel arrowtips/12341",
+        "Steel arrowtips/12342"
+      ]
     },
     {
       "category": "taskUnlocks",
@@ -225203,9 +225881,11 @@
       "category": "taskUnlocks",
       "sourceKey": "Spawns/Unlit bug lantern/Ruins of Tapoyauik",
       "terminal": true,
-      "disposition": "unresolved",
-      "reason": "named-location-unmappable",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "named-location-mapped",
+      "targetKeys": [
+        "Unlit bug lantern/6706"
+      ]
     },
     {
       "category": "taskUnlocks",

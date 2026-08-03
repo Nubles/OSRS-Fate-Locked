@@ -13,6 +13,7 @@ import {
   writeApprovedChunkSource,
 } from './chunk-source.mjs';
 import { transformChunkContent } from './chunk-content-transform.mjs';
+import { readNamedTaskUnlockRegistry } from './named-task-unlock-locations.mjs';
 
 
 const unzip = promisify(gunzip);
@@ -157,10 +158,11 @@ describe('pinned Chunk Picker source', () => {
     }
   }, 20_000);
 
-  it('pins reviewed transform totals and the unresolved named-location backlog', async () => {
+  it('pins reviewed transform totals and the zero-unresolved named-location baseline', async () => {
     const { data, manifest } = await readPinnedChunkSource();
-    const result = transformChunkContent(data, manifest);
+    const result = transformChunkContent(data, manifest, readNamedTaskUnlockRegistry());
     const { full, audit } = result;
+    const taskUnlockTotals = audit.categoryTotals.taskUnlocks;
     expect({
       contentChunks: Object.keys(full.chunks).length,
       connections: Object.keys(full.connect).length,
@@ -186,9 +188,94 @@ describe('pinned Chunk Picker source', () => {
       questSections: 134,
       banks: 101,
       tags: 27,
-      auditEvents: 27035,
-      unresolvedTaskUnlocks: 140,
+      auditEvents: 27072,
+      unresolvedTaskUnlocks: 0,
     });
+    expect(taskUnlockTotals.source).toBe(1672);
+    expect(taskUnlockTotals.unresolved).toBe(0);
+    expect(taskUnlockTotals.imported + taskUnlockTotals.normalized + taskUnlockTotals.excluded)
+      .toBe(1672);
+    expect(taskUnlockTotals).toEqual({
+      source: 1672,
+      imported: 1011,
+      normalized: 657,
+      excluded: 4,
+      unresolved: 0,
+    });
+    expect(full.version).toBe(9);
+    expect(full.sourceMeta).toMatchObject({
+      namedLocationPolicyVersion: 1,
+      namedLocationReviewedAt: '2026-08-03',
+    });
+    expect(Object.keys(full.entrances)).toHaveLength(44);
+    expect(Object.values(full.entrances).flat()).toHaveLength(54);
+  });
+
+  it('attaches reviewed named-location requirements to every unique entrance chunk', async () => {
+    const { data, manifest } = await readPinnedChunkSource();
+    const { full, audit } = transformChunkContent(data, manifest, readNamedTaskUnlockRegistry());
+    const taskUnlocks = full.taskUnlocks as Record<string, Record<string, Record<string, string[]>>>;
+    const chunksWithRequirement = (
+      requirementsByChunk: Record<string, string[]> | undefined,
+      requirement: string,
+    ) => Object.entries(requirementsByChunk ?? {})
+      .filter(([, requirements]) => requirements.includes(requirement))
+      .map(([chunkId]) => chunkId)
+      .sort((left, right) => Number(left) - Number(right));
+
+    const representatives = [
+      ['Monsters', 'Abyssal demon', 'Abyssal demon wilderness task', ['12857', '13114']],
+      ['Shops', 'Crossbow Shop (Dwarven Mine)', 'F2P Only', ['12084', '12085']],
+      ['Objects', 'Barrel (beer)', 'Temple of Ikov', ['10549', '10550']],
+      ['Spawns', "Red spiders' eggs", 'F2P Only', ['12341', '12342']],
+      ['NPCs', 'Movario', 'Temple of Ikov', ['12848', '12850']],
+    ] as const;
+    for (const [category, entity, requirement, expectedChunks] of representatives) {
+      const actualChunks = chunksWithRequirement(taskUnlocks[category]?.[entity], requirement);
+      expect(actualChunks, `${category}/${entity}`).toEqual(expectedChunks);
+      expect(new Set(actualChunks).size, `${category}/${entity}`).toBe(actualChunks.length);
+    }
+
+    const exclusions = audit.events
+      .filter(event => event.category === 'taskUnlocks' && event.disposition === 'excluded')
+      .map(({ sourceKey, terminal, disposition, reason, targetKeys }) => ({
+        sourceKey,
+        terminal,
+        disposition,
+        reason,
+        targetKeys,
+      }))
+      .sort((left, right) => left.sourceKey.localeCompare(right.sourceKey));
+    expect(exclusions).toEqual([
+      {
+        sourceKey: 'Monsters/Abyssal Sire/Abyssal Nexus',
+        terminal: true,
+        disposition: 'excluded',
+        reason: 'named-location-non-purchasable',
+        targetKeys: [],
+      },
+      {
+        sourceKey: 'Monsters/River troll/Enchanted Valley',
+        terminal: true,
+        disposition: 'excluded',
+        reason: 'named-location-non-purchasable',
+        targetKeys: [],
+      },
+      {
+        sourceKey: 'Monsters/Rock golem (monster)/Enchanted Valley',
+        terminal: true,
+        disposition: 'excluded',
+        reason: 'named-location-non-purchasable',
+        targetKeys: [],
+      },
+      {
+        sourceKey: 'Monsters/Tree spirit/Enchanted Valley',
+        terminal: true,
+        disposition: 'excluded',
+        reason: 'named-location-non-purchasable',
+        targetKeys: [],
+      },
+    ]);
   });
 
   it('reports upstream movement without mutating the pin', async () => {

@@ -16,6 +16,8 @@ import legacyDiaryIds from './sources/achievement-diary-legacy-ids.json';
 import chunkSource from './sources/chunk-content-source.json';
 import chunkAudit from './sources/chunk-content-transform-audit.json';
 import fullChunkContent from '../public/chunk-content.json';
+import { AREA_ALIAS_POLICIES, canonicalizeAreaUnlocks } from './areaMapPolicy';
+import { SUB_AREA_CHUNKS } from './subAreaChunks';
 import { rankAvailableQuests } from '../utils/questAdvisor';
 import { planForTarget } from '../utils/goalPlanner';
 import { questCompletionDecision } from '../utils/journalCompletion';
@@ -268,14 +270,30 @@ describe('deterministic current content baseline', () => {
       policyVersion: 2,
       reviewedAt: '2026-08-02',
     });
-    expect(fullChunkContent.sourceMeta).toEqual({
+    const generatedChunkContent = fullChunkContent as typeof fullChunkContent & {
+      entrances?: Record<string, Array<{ location: string; label: string }>>;
+    };
+    expect(generatedChunkContent.sourceMeta).toEqual({
       repository: 'source-chunk/chunk-picker-v2',
       commit: '4eb75a8454eb41cfff71b70819326e0e67bcea7c',
       blobSha: 'e6591f67609a37792361df25a10835d9e36ee45f',
       rawSha256: '370F0F51BED8938988E368C41038A05197026CD8F524C0F87C2F3E773A32B4E4',
       policyVersion: 2,
+      namedLocationPolicyVersion: 1,
+      namedLocationReviewedAt: '2026-08-03',
     });
     const events = (chunkAudit as { events: Array<{ category: string; disposition: string }> }).events;
+    const taskUnlockTotals = (chunkAudit as {
+      categoryTotals: {
+        taskUnlocks: {
+          source: number;
+          imported: number;
+          normalized: number;
+          excluded: number;
+          unresolved: number;
+        };
+      };
+    }).categoryTotals.taskUnlocks;
     expect({
       contentChunks: Object.keys(fullChunkContent.chunks).length,
       connections: Object.keys(fullChunkContent.connect).length,
@@ -300,10 +318,54 @@ describe('deterministic current content baseline', () => {
       questSections: 134,
       banks: 101,
       tags: 27,
-      auditEvents: 27035,
-      unresolvedTaskUnlocks: 140,
+      auditEvents: 27072,
+      unresolvedTaskUnlocks: 0,
     });
+    expect(taskUnlockTotals.source).toBe(1672);
+    expect(taskUnlockTotals.unresolved).toBe(0);
+    expect(taskUnlockTotals.imported + taskUnlockTotals.normalized + taskUnlockTotals.excluded)
+      .toBe(1672);
+    expect(taskUnlockTotals).toEqual({
+      source: 1672,
+      imported: 1011,
+      normalized: 657,
+      excluded: 4,
+      unresolved: 0,
+    });
+    expect(fullChunkContent.version).toBe(9);
+    expect(Object.keys(generatedChunkContent.entrances ?? {})).toHaveLength(44);
+    expect(Object.values(generatedChunkContent.entrances ?? {}).flat()).toHaveLength(54);
     expect((chunkAudit as { unclassified?: unknown[] }).unclassified ?? []).toEqual([]);
+  });
+
+  it('keeps generated entrances unique and Otto\'s Grotto in Baxtorian Falls\' single physical unlock', () => {
+    const entranceIndex: Record<string, Array<{ location: string; label: string }>> =
+      (fullChunkContent as typeof fullChunkContent & {
+        entrances?: Record<string, Array<{ location: string; label: string }>>;
+      }).entrances ?? {};
+    for (const [chunkId, entrances] of Object.entries(entranceIndex)) {
+      const pairs = entrances.map(({ location, label }) => JSON.stringify([location, label]));
+      expect(new Set(pairs).size, chunkId).toBe(pairs.length);
+    }
+
+    const ottoPolicy = AREA_ALIAS_POLICIES["Otto's Grotto"];
+    expect(ottoPolicy).toEqual({
+      kind: 'surface-overlap',
+      canonical: 'Baxtorian Falls',
+      chunks: [{ cx: 39, cy: 54 }],
+    });
+    const ottoChunkIds = ottoPolicy.chunks.map(({ cx, cy }) => String(cx * 256 + cy));
+    expect(ottoChunkIds).toEqual(['10038']);
+    expect(SUB_AREA_CHUNKS[ottoPolicy.canonical]
+      .filter(({ cx, cy }) => ottoChunkIds.includes(String(cx * 256 + cy))))
+      .toEqual(ottoPolicy.chunks);
+    expect(Object.keys(fullChunkContent.chunks)
+      .filter(chunkId => ottoChunkIds.includes(chunkId))).toEqual(ottoChunkIds);
+    expect(canonicalizeAreaUnlocks(["Otto's Grotto", 'Baxtorian Falls'])).toEqual({
+      regions: ['Baxtorian Falls'],
+      duplicateAliasRefunds: 1,
+      migrated: true,
+    });
   });
 
   it('contains the refreshed reviewed Sailing-era data', () => {
