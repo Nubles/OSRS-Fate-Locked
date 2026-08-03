@@ -5,6 +5,7 @@ import { readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { gunzip, gzip } from 'node:zlib';
 import { promisify } from 'node:util';
 import { assertChunkTransform, transformChunkContent } from './chunk-content-transform.mjs';
+import { collectNamedTaskUnlockSourceInventory, readNamedTaskUnlockRegistry, validateNamedTaskUnlockRegistry } from './named-task-unlock-locations.mjs';
 
 const unzip = promisify(gunzip);
 const zip = promisify(gzip);
@@ -124,7 +125,15 @@ async function writeDeterministicGzip(raw, manifest, targetUrl = gzipUrl, operat
 export async function writeApprovedChunkSource(raw, manifest, targetUrl = gzipUrl, operations = fileOps) {
   assertRaw(raw, manifest);
   const data = JSON.parse(raw.toString('utf8'));
-  assertChunkTransform(transformChunkContent(data, manifest), manifest);
+  const namedLocationRegistry = readNamedTaskUnlockRegistry();
+  const result = transformChunkContent(data, manifest, namedLocationRegistry);
+  assertChunkTransform(result, manifest);
+  const inventory = collectNamedTaskUnlockSourceInventory(data);
+  validateNamedTaskUnlockRegistry(namedLocationRegistry, {
+    sourceCommit: manifest.commit,
+    sourceLocationKeys: inventory.locationKeys,
+    validChunkIds: new Set((data.walkableChunks ?? []).map(String)),
+  });
   await writeDeterministicGzip(raw, manifest, targetUrl, operations);
 }
 

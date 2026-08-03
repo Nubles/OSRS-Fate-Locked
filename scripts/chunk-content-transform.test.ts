@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { transformChunkContent } from './chunk-content-transform.mjs';
+import { assertChunkTransform, transformChunkContent } from './chunk-content-transform.mjs';
+import { buildEntranceIndex } from './named-task-unlock-locations.mjs';
 
 const manifest = {
   schemaVersion: 1,
@@ -16,7 +17,133 @@ const manifest = {
   countFloors: {},
 };
 
+const mappedRegistry = {
+  schemaVersion: 1,
+  policyVersion: 1,
+  sourceRepository: 'source-chunk/chunk-picker-v2',
+  sourceCommit: manifest.commit,
+  reviewedAt: '2026-08-03',
+  locations: [{
+    name: 'Example Cave',
+    sourceKeys: ['Example Cave'],
+    disposition: 'mapped',
+    mappingKind: 'multiple-entrances',
+    entrances: [
+      { chunkId: '256', x: 64, y: 0, label: 'Entrance to Example Cave', wikiPage: 'Example_Cave', requirements: [] },
+      { chunkId: '256', x: 65, y: 0, label: 'Northern entrance to Example Cave', wikiPage: 'Example_Cave', requirements: [] },
+      { chunkId: '513', x: 128, y: 64, label: 'Eastern entrance to Example Cave', wikiPage: 'Example_Cave', requirements: ['Example Quest'] },
+    ],
+    sources: [
+      { kind: 'wiki', url: 'https://oldschool.runescape.wiki/w/Example_Cave?oldid=100', revision: '100' },
+      {
+        kind: 'coordinate',
+        source: 'Explv game-cache map tile',
+        url: 'https://raw.githubusercontent.com/Explv/osrs_map_tiles/1234567890abcdef1234567890abcdef12345678/0/11/1/2.png',
+        revision: '1234567890abcdef1234567890abcdef12345678',
+      },
+    ],
+    note: 'Two independently reachable chunks, with two entrances in the western chunk.',
+  }],
+};
+
+const exclusionRegistry = (disposition: 'instance-only' | 'non-purchasable') => ({
+  schemaVersion: 1,
+  policyVersion: 1,
+  sourceRepository: 'source-chunk/chunk-picker-v2',
+  sourceCommit: manifest.commit,
+  reviewedAt: '2026-08-03',
+  locations: [{
+    name: `Example ${disposition}`,
+    sourceKeys: [`Example ${disposition}`],
+    disposition,
+    sources: [{
+      kind: 'wiki',
+      url: `https://oldschool.runescape.wiki/w/Example_${disposition}?oldid=100`,
+      revision: '100',
+    }],
+    note: `This location is ${disposition}.`,
+  }],
+});
 describe('transformChunkContent', () => {
+  it('maps named locations to every unique entrance chunk and emits entrance metadata', () => {
+    const result = transformChunkContent({
+      walkableChunks: [256, 513],
+      chunks: { 256: {}, 513: {} },
+      slayerMonsters: {},
+      taskUnlocks: {
+        Monsters: {
+          'Cave beast#1': {
+            'Example Cave': [
+              { 'Quest One Complete the quest': true },
+              { 'Quest One Complete the quest': true },
+            ],
+          },
+        },
+      },
+    }, manifest, mappedRegistry);
+
+    expect(result.full.version).toBe(9);
+    expect(result.full.sourceMeta).toMatchObject({
+      namedLocationPolicyVersion: 1,
+      namedLocationReviewedAt: '2026-08-03',
+    });
+    expect(result.full.taskUnlocks).toEqual({
+      Monsters: {
+        'Cave beast': {
+          256: ['Quest One'],
+          513: ['Quest One'],
+        },
+      },
+    });
+    expect(result.full.entrances).toEqual(buildEntranceIndex(mappedRegistry));
+    expect(result.audit.events).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        category: 'taskUnlocks',
+        sourceKey: 'Monsters/Cave beast#1/Example Cave',
+        terminal: true,
+        disposition: 'normalized',
+        reason: 'named-location-mapped',
+        targetKeys: ['Cave beast/256', 'Cave beast/513'],
+      }),
+      expect.objectContaining({
+        category: 'taskUnlocks',
+        sourceKey: 'Monsters/Cave beast#1/Example Cave',
+        terminal: false,
+        disposition: 'normalized',
+        reason: 'variant-name-cleaned',
+      }),
+      expect.objectContaining({
+        category: 'taskUnlocks',
+        sourceKey: 'Monsters/Cave beast#1/Example Cave',
+        terminal: false,
+        disposition: 'normalized',
+        reason: 'duplicate-deduped',
+      }),
+    ]));
+  });
+
+  it.each([
+    ['instance-only', 'named-location-instance-only'],
+    ['non-purchasable', 'named-location-non-purchasable'],
+  ] as const)('excludes %s named locations with the reviewed terminal reason', (disposition, reason) => {
+    const location = `Example ${disposition}`;
+    const result = transformChunkContent({
+      walkableChunks: [],
+      chunks: {},
+      slayerMonsters: {},
+      taskUnlocks: { NPCs: { Guide: { [location]: [{ 'Quest One Complete the quest': true }] } } },
+    }, manifest, exclusionRegistry(disposition));
+
+    expect(result.full.taskUnlocks).toEqual({});
+    expect(result.audit.events).toContainEqual(expect.objectContaining({
+      category: 'taskUnlocks',
+      sourceKey: `NPCs/Guide/${location}`,
+      terminal: true,
+      disposition: 'excluded',
+      reason,
+      targetKeys: [],
+    }));
+  });
   it('accounts for merged sections and promotes quest starts', () => {
     const result = transformChunkContent({
       walkableChunks: [256],
@@ -334,5 +461,16 @@ describe('transformChunkContent', () => {
       slayerMonsters: {},
       ...data,
     }, manifest)).toThrow(`Unreviewed ${category} canonical collision`);
+  });
+  it('rejects unresolved named task unlocks at the release gate', () => {
+    const result = transformChunkContent({
+      walkableChunks: [],
+      chunks: {},
+      slayerMonsters: {},
+      taskUnlocks: { NPCs: { Guide: { 'Unreviewed Cave': [{ 'Quest One Complete the quest': true }] } } },
+    }, manifest);
+
+    expect(() => assertChunkTransform(result, manifest))
+      .toThrow('Unresolved task-unlock records: 1');
   });
 });

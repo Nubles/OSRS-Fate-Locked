@@ -5,6 +5,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readPinnedChunkSource } from './chunk-source.mjs';
 import { assertChunkTransform, transformChunkContent } from './chunk-content-transform.mjs';
+import { collectNamedTaskUnlockSourceInventory, readNamedTaskUnlockRegistry, validateNamedTaskUnlockRegistry } from './named-task-unlock-locations.mjs';
 import { generatedTextMatches } from './generated-text.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -30,7 +31,14 @@ const args = process.argv.slice(2);
 if (args.some((arg) => arg !== '--check')) throw new Error('Usage: node scripts/sync-chunk-content.mjs [--check]');
 const checkOnly = args.includes('--check');
 const { manifest, data } = await readPinnedChunkSource();
-const result = transformChunkContent(data, manifest);
+const namedLocationRegistry = readNamedTaskUnlockRegistry();
+const inventory = collectNamedTaskUnlockSourceInventory(data);
+validateNamedTaskUnlockRegistry(namedLocationRegistry, {
+  sourceCommit: manifest.commit,
+  sourceLocationKeys: inventory.locationKeys,
+  validChunkIds: new Set((data.walkableChunks ?? []).map(String)),
+});
+const result = transformChunkContent(data, manifest, namedLocationRegistry);
 assertChunkTransform(result, manifest);
 const expected = expectedFiles(result);
 
