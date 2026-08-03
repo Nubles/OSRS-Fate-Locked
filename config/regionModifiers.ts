@@ -6,6 +6,7 @@
 // across every touched continent.
 
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../data/items';
+import { visibleAreaUnlocks } from '../data/areaMapPolicy';
 
 export interface RegionModifier {
   continent: string;
@@ -48,7 +49,7 @@ const subRegionsOf = (continent: string): string[] =>
  * regions, and the total stacked bonuses. Misthalin is always active (homeland).
  */
 export const getActiveRegionBonuses = (unlockedRegions: string[]) => {
-  const unlocked = new Set(unlockedRegions);
+  const unlocked = new Set(visibleAreaUnlocks(unlockedRegions));
   let successBonus = 0;
   let omniBonus = 0;
   const active: RegionModifier[] = [];

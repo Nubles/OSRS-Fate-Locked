@@ -125,4 +125,28 @@ describe('buildRuneliteRulesManifest', () => {
     expect(Object.keys(manifest.unlocks.skills)).toEqual(['Attack', 'Zeta']);
     expect(Object.keys(manifest.unlocks.equipment)).toEqual(['Head', 'Weapon']);
   });
+
+  it('exports pending overlap credits as their two canonical region owners', async () => {
+    const manifest = await buildRuneliteRulesManifest({
+      unlocks: {
+        ...initialState.unlocks,
+        regions: ['Baxtorian Falls', "Otto's Grotto", 'Taverley', "Heroes' Guild"],
+      },
+      run: {
+        runId: 'run-pending-overlaps',
+        runRevision: 3,
+        gameModeId: 'vanilla',
+      },
+      contentService: contentSource,
+      itemRuleSource: {
+        init: async () => {},
+        ready: true,
+        itemRuleExport: () => ({}),
+      },
+    });
+
+    expect(manifest.unlocks.regions).toEqual(['Baxtorian Falls', 'Taverley']);
+    expect(manifest.unlocks.regions).not.toContain("Otto's Grotto");
+    expect(manifest.unlocks.regions).not.toContain("Heroes' Guild");
+  });
 });

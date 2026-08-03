@@ -20,11 +20,101 @@ export interface ResourceSource {
   skills?: Record<string, number>; // Specific levels required to access/kill
   quests?: string[];
   unlockId?: string; // Specific unlock ID from TableType (e.g. 'Farming Guild')
+  unlockTable?: TableType; // Authoritative gacha table for this unlock when explicit
   notes?: string; // e.g. "Edgeville Dungeon"
   inputs?: Record<string, number>; // Ingredients -> Quantity
   outputYield?: number; // How many items are produced per operation (default 1)
   rarity?: string; // Drop rate / acquisition odds, e.g. "1/512", "Common", "Always"
 }
+
+/**
+ * Explicit gacha-table provenance for legacy resource sources that predate
+ * `unlockTable`. This is authored data, not a lookup through gacha pools;
+ * unknown IDs deliberately resolve to no typed dependency.
+ */
+export const RESOURCE_UNLOCK_TABLES: Readonly<Record<string, TableType>> = {
+  // Bosses
+  'Abyssal Sire': TableType.BOSSES,
+  'Alchemical Hydra': TableType.BOSSES,
+  'Araxxor': TableType.BOSSES,
+  'Artio': TableType.BOSSES,
+  'Barrows Brothers': TableType.BOSSES,
+  'Bryophyta': TableType.BOSSES,
+  'Callisto': TableType.BOSSES,
+  "Calvar'ion": TableType.BOSSES,
+  'Cerberus': TableType.BOSSES,
+  'Chambers of Xeric': TableType.BOSSES,
+  'Chaos Elemental': TableType.BOSSES,
+  'Chaos Fanatic': TableType.BOSSES,
+  'Commander Zilyana': TableType.BOSSES,
+  'Corporeal Beast': TableType.BOSSES,
+  'Crazy Archaeologist': TableType.BOSSES,
+  'Dagannoth Kings': TableType.BOSSES,
+  'Deranged Archaeologist': TableType.BOSSES,
+  'Duke Sucellus': TableType.BOSSES,
+  'Fortis Colosseum': TableType.BOSSES,
+  'General Graardor': TableType.BOSSES,
+  'Giant Mole': TableType.BOSSES,
+  'Grotesque Guardians': TableType.BOSSES,
+  'Hespori': TableType.BOSSES,
+  'Kalphite Queen': TableType.BOSSES,
+  'King Black Dragon': TableType.BOSSES,
+  'Kraken': TableType.BOSSES,
+  "Kree'arra": TableType.BOSSES,
+  "K'ril Tsutsaroth": TableType.BOSSES,
+  'Nex': TableType.BOSSES,
+  'Obor': TableType.BOSSES,
+  'Phantom Muspah': TableType.BOSSES,
+  "Phosani's Nightmare": TableType.BOSSES,
+  'Sarachnis': TableType.BOSSES,
+  'Scorpia': TableType.BOSSES,
+  'Scurrius': TableType.BOSSES,
+  'Shellbane Gryphon': TableType.BOSSES,
+  'Skotizo': TableType.BOSSES,
+  'Spindel': TableType.BOSSES,
+  'Tempoross': TableType.BOSSES,
+  'The Gauntlet': TableType.BOSSES,
+  'The Hueycoatl': TableType.BOSSES,
+  'The Leviathan': TableType.BOSSES,
+  'The Nightmare': TableType.BOSSES,
+  'The Whisperer': TableType.BOSSES,
+  'Theatre of Blood': TableType.BOSSES,
+  'Thermonuclear Smoke Devil': TableType.BOSSES,
+  'Tombs of Amascut': TableType.BOSSES,
+  'Vardorvis': TableType.BOSSES,
+  'Venenatis': TableType.BOSSES,
+  "Vet'ion": TableType.BOSSES,
+  'Vorkath': TableType.BOSSES,
+  'Wintertodt': TableType.BOSSES,
+  'Zalcano': TableType.BOSSES,
+  'Zulrah': TableType.BOSSES,
+  // Minigames
+  'Barbarian Assault': TableType.MINIGAMES,
+  'Blast Furnace': TableType.MINIGAMES,
+  'Fishing Trawler': TableType.MINIGAMES,
+  'Hallowed Sepulchre': TableType.MINIGAMES,
+  'Mage Training Arena': TableType.MINIGAMES,
+  'Mastering Mixology': TableType.MINIGAMES,
+  'Nightmare Zone': TableType.MINIGAMES,
+  'Pest Control': TableType.MINIGAMES,
+  "Sorceress's Garden": TableType.MINIGAMES,
+  'Temple Trekking': TableType.MINIGAMES,
+  'Tithe Farm': TableType.MINIGAMES,
+  'Volcanic Mine': TableType.MINIGAMES,
+};
+
+export interface ResourceUnlockDependency {
+  table: TableType;
+  id: string;
+}
+
+export const resourceUnlockDependency = (
+  source: Pick<ResourceSource, 'unlockId' | 'unlockTable'>,
+): ResourceUnlockDependency | null => {
+  if (!source.unlockId) return null;
+  const table = source.unlockTable ?? RESOURCE_UNLOCK_TABLES[source.unlockId];
+  return table ? { table, id: source.unlockId } : null;
+};
 
 export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   // --- HERBS ---

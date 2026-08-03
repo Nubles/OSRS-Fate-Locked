@@ -11,6 +11,7 @@
 
 import { computeUnlockImpact } from './unlockImpact';
 import { REGION_GROUPS } from '../data/items';
+import { visibleAreaUnlocks } from '../data/areaMapPolicy';
 
 /** All unlock-able region names (the continent keys, not sub-area strings). */
 export const UNLOCKABLE_REGIONS = Object.keys(REGION_GROUPS);
@@ -44,11 +45,13 @@ export function rankLockedRegions(unlocks: any, gameModeId?: string): RankedRegi
   // meaningful to rank here. Short-circuit rather than force a wrong model.
   if (gameModeId === 'chunked') return [];
 
-  const locked = UNLOCKABLE_REGIONS.filter((r) => !unlocks.regions.includes(r));
+  const visibleRegions = visibleAreaUnlocks(unlocks.regions);
+
+  const locked = UNLOCKABLE_REGIONS.filter((r) => !visibleRegions.includes(r));
 
   return locked
     .map((region): RankedRegion => {
-      const simulated = { ...unlocks, regions: [...unlocks.regions, region] };
+      const simulated = { ...unlocks, regions: [...visibleRegions, region] };
       const impact = computeUnlockImpact(unlocks, simulated);
 
       return {

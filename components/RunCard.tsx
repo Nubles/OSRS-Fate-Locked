@@ -11,6 +11,7 @@ import { ensureChain, verifyChain, computeRunId, replayInvariants } from '../uti
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { getGameMode } from '../config/gameModes';
 import { chunkKey, isChunkUnlocked, ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
+import { visibleAreaUnlocks } from '../data/areaMapPolicy';
 
 // ---- mini-map drawing -------------------------------------------------------
 
@@ -194,7 +195,7 @@ const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
 
   useEffect(() => {
     if (canvasRef.current) {
-      drawMiniMap(canvasRef.current, draftChunks, unlocks.regions, isChunked, unlocks.chunks ?? []);
+      drawMiniMap(canvasRef.current, draftChunks, visibleAreaUnlocks(unlocks.regions), isChunked, unlocks.chunks ?? []);
     }
   }, []);
 
@@ -418,7 +419,7 @@ export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }>
   // the always-free start chunk, already included in unlocks.chunks' effective count via +1.
   const regionsUnlocked = isChunkedMode
     ? (unlocks.chunks ?? []).length + 1
-    : unlocks.regions.length + MISTHALIN_AREAS.length;
+    : visibleAreaUnlocks(unlocks.regions).length + MISTHALIN_AREAS.length;
 
   const cardProps: CardInnerProps = {
     profileName: activeProfileName,

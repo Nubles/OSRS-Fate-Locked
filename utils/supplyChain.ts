@@ -1,5 +1,10 @@
 
-import { RESOURCE_MAP, ResourceSource } from '../data/resourceData';
+import {
+  RESOURCE_MAP,
+  resourceUnlockDependency,
+  type ResourceSource,
+  type ResourceUnlockDependency,
+} from '../data/resourceData';
 import { GameState, TableType } from '../types';
 import { REGION_GROUPS, MERCHANTS_LIST } from '../constants';
 import { isFreeArea } from './freeAreas';
@@ -11,6 +16,8 @@ import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 export interface RouteStatus {
   isAvailable: boolean;
   missing: string[]; // Reasons for lock (e.g. "Region: Kandarin", "Slayer 60")
+  /** Typed provenance accompanying generic `Unlock:` display text. */
+  unlockDependencies: ResourceUnlockDependency[];
 }
 
 export interface SupplyChainResult {
@@ -97,6 +104,25 @@ export const buildAvailabilityContext = (gs: GameState): AvailabilityContext => 
   };
 };
 
+const hasTypedUnlock = (
+  ctx: AvailabilityContext,
+  dependency: ResourceUnlockDependency,
+): boolean => {
+  const { id, table } = dependency;
+  switch (table) {
+    case TableType.BOSSES: return ctx.bosses.has(id);
+    case TableType.MINIGAMES: return ctx.minigames.has(id);
+    case TableType.FARMING_LAYERS: return ctx.farming.has(id);
+    case TableType.MERCHANTS: return ctx.merchants.has(id);
+    case TableType.GUILDS: return ctx.guilds.has(id);
+    case TableType.MOBILITY: return ctx.mobility.has(id);
+    case TableType.ARCANA: return ctx.arcana.has(id);
+    case TableType.STORAGE: return ctx.storage.has(id);
+    case TableType.POH: return ctx.housing.has(id);
+    default: return false;
+  }
+};
+
 /**
  * Analyze a single source against the context. Returns {isAvailable, missing}
  * for the detail UI; the missing array is only populated when needed (short-
@@ -104,6 +130,12 @@ export const buildAvailabilityContext = (gs: GameState): AvailabilityContext => 
  */
 const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collectMissing: boolean): RouteStatus => {
   const missing: string[] = [];
+  const unlockDependencies: ResourceUnlockDependency[] = [];
+  const result = (isAvailable: boolean): RouteStatus => ({
+    isAvailable,
+    missing,
+    unlockDependencies,
+  });
   const fail = (reason: string) => {
     if (collectMissing) missing.push(reason);
     return collectMissing; // keep going to collect all reasons when asked
@@ -124,16 +156,16 @@ const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collect
       if (hasRegion) break;
     }
   }
-  if (!hasRegion && !fail(`Region: ${source.regions.join(' or ')}`)) return { isAvailable: false, missing };
+  if (!hasRegion && !fail(`Region: ${source.regions.join(' or ')}`)) return result(false);
 
   // 2. Skills
   if (source.skills) {
     for (const [skill, req] of Object.entries(source.skills)) {
       if (!ctx.skillsUnlocked.has(skill)) {
-        if (!fail(`Skill Locked: ${skill}`)) return { isAvailable: false, missing };
+        if (!fail(`Skill Locked: ${skill}`)) return result(false);
       } else {
         const lvl = ctx.levels[skill] || 1;
-        if (lvl < (req as number) && !fail(`${skill} ${lvl}/${req}`)) return { isAvailable: false, missing };
+        if (lvl < (req as number) && !fail(`${skill} ${lvl}/${req}`)) return result(false);
       }
     }
   }
@@ -141,16 +173,21 @@ const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collect
   // 3. Quests
   if (source.quests) {
     for (const q of source.quests) {
-      if (!ctx.quests.has(q) && !fail(`Quest: ${q}`)) return { isAvailable: false, missing };
+      if (!ctx.quests.has(q) && !fail(`Quest: ${q}`)) return result(false);
     }
   }
 
   // 4. Specific unlock
   if (source.unlockId) {
     const u = source.unlockId;
-    const ok = ctx.bosses.has(u) || ctx.minigames.has(u) || ctx.farming.has(u) || ctx.merchants.has(u)
-      || ctx.guilds.has(u) || ctx.mobility.has(u) || ctx.arcana.has(u) || ctx.storage.has(u) || ctx.housing.has(u);
-    if (!ok && !fail(`Unlock: ${u}`)) return { isAvailable: false, missing };
+    const dependency = resourceUnlockDependency(source);
+    const ok = dependency
+      ? hasTypedUnlock(ctx, dependency)
+      : false;
+    if (!ok) {
+      if (dependency) unlockDependencies.push(dependency);
+      if (!fail(`Unlock: ${u}`)) return result(false);
+    }
   }
 
   // 5. Implicit merchant
@@ -158,13 +195,13 @@ const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collect
     const lower = source.name.toLowerCase();
     let cat: string | undefined = PLURAL_MAPPINGS[lower] || MERCHANT_BY_NORM_NAME.get(normalize(source.name));
     if (cat === 'Charter Ships') {
-      if (!ctx.mobility.has('Charter Ships') && !fail('Mobility: Charter Ships')) return { isAvailable: false, missing };
+      if (!ctx.mobility.has('Charter Ships') && !fail('Mobility: Charter Ships')) return result(false);
     } else if (cat) {
-      if (!ctx.merchants.has(cat) && !fail(`Merchant: ${cat}`)) return { isAvailable: false, missing };
+      if (!ctx.merchants.has(cat) && !fail(`Merchant: ${cat}`)) return result(false);
     }
   }
 
-  return { isAvailable: missing.length === 0, missing };
+  return result(missing.length === 0);
 };
 
 /** Short-circuiting boolean check; allocates no missing-reasons array. */

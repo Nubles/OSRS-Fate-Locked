@@ -18,6 +18,7 @@ import {
 } from './chunkPermissionSnapshot';
 import { entryBlockedGate } from './questDoability';
 import { bankLocksActive } from './reachability';
+import { visibleAreaUnlocks } from '../data/areaMapPolicy';
 const RULES_VERSION = '1';
 const CONTENT_VERSION = 1;
 const DETECTOR_CONTRACT_VERSION = 1;
@@ -157,7 +158,7 @@ export async function buildRuneliteRulesManifest(
     bankLocks: bankLocksActive(input.run.gameModeId, input.run.customMode),
     knownMobility: sorted(MOBILITY_LIST),
     unlocks: {
-      regions: sorted(unlocks.regions),
+      regions: sorted(visibleAreaUnlocks(unlocks.regions)),
       chunks: sorted(unlocks.chunks),
       skills: sortedNumberRecord(unlocks.skills),
       levels: sortedNumberRecord(unlocks.levels),

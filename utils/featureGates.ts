@@ -16,6 +16,7 @@
  * escape hatches — the palette can always jump anywhere.
  */
 import type { GameState, UnlockState } from '../types';
+import { visibleAreaUnlocks } from '../data/areaMapPolicy';
 
 export type FeatureId =
   | 'ctrl:LOG'        // History tab in the control panel
@@ -75,7 +76,7 @@ export const FEATURE_GATES: GateDef[] = [
   },
   {
     id: 'dash:WORLD',
-    when: (s) => (s.unlocks.regions.length + (s.unlocks.chunks?.length ?? 0)) >= 1,
+    when: (s) => (visibleAreaUnlocks(s.unlocks.regions).length + (s.unlocks.chunks?.length ?? 0)) >= 1,
     fallbackHistory: 3,
     revealMessage: 'World unlocked — see your territory on the map',
     flashSelector: DASH_TABS_SELECTOR,
@@ -111,7 +112,7 @@ export const FEATURE_GATES: GateDef[] = [
   {
     id: 'tool:supply',
     when: (s) =>
-      Object.keys(s.unlocks.skills ?? {}).length >= 1 || s.unlocks.regions.length >= 1,
+      Object.keys(s.unlocks.skills ?? {}).length >= 1 || visibleAreaUnlocks(s.unlocks.regions).length >= 1,
     fallbackHistory: 6,
     revealMessage: 'Resource Engine unlocked — what can you actually craft & gather?',
     flashSelector: '[data-reveal="tools"]',

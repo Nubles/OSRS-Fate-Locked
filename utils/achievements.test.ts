@@ -96,4 +96,12 @@ describe('achievements engine', () => {
     expect(after.size).toBeGreaterThan(base.size);
     for (const id of base) expect(after.has(id)).toBe(true);
   });
+
+  it('counts pending overlap refund markers as their two canonical regions', () => {
+    const regions = evaluateAchievements(emptyUnlocks({
+      regions: ['Baxtorian Falls', "Otto's Grotto", 'Taverley', "Heroes' Guild"],
+    })).find((achievement) => achievement.id === 'regions-5');
+
+    expect(regions?.current).toBe(2);
+  });
 });

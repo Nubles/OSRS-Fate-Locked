@@ -142,6 +142,10 @@ export const canonicalizeAreaUnlocks = (
   return { regions, duplicateAliasRefunds, migrated };
 };
 
+/** Canonical, player-visible area ownership; pending aliases remain save credit. */
+export const visibleAreaUnlocks = (names: readonly string[]): string[] =>
+  canonicalizeAreaUnlocks(names).regions;
+
 /**
  * Resolve duplicate canonical ownership only as far as the current key
  * counter can pay its refunds. Remaining distinct aliases are intentionally

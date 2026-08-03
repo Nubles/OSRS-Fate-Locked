@@ -12,6 +12,7 @@
 import type { BackupWriteResult } from './gamePersistence';
 import { profileBackupKey } from './profileStorage';
 import type { SaveWriteAuthorization } from './profileWriterLease';
+import { visibleAreaUnlocks } from '../data/areaMapPolicy';
 const MAX_BACKUPS = 8;
 
 export interface BackupMeta {
@@ -39,7 +40,7 @@ export const summarizeSave = (data: string): string => {
   try {
     const s = JSON.parse(data);
     const u = s.unlocks || {};
-    const regions = Array.isArray(u.regions) ? u.regions.length : 0;
+    const regions = Array.isArray(u.regions) ? visibleAreaUnlocks(u.regions).length : 0;
     const events = Array.isArray(s.history) ? s.history.length : 0;
     const keys = typeof s.keys === 'number' ? s.keys : 0;
     return `${keys} keys · ${regions} regions · ${events} events`;

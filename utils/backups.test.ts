@@ -21,6 +21,11 @@ describe('backup ring', () => {
     expect(summarizeSave('not json')).toBe('Unknown run');
   });
 
+  it('does not expose pending overlap credits in backup region summaries', () => {
+    const pending = JSON.stringify({ keys: 5, unlocks: { regions: ['Baxtorian Falls', "Otto's Grotto", 'Taverley', "Heroes' Guild"] }, history: [{ id: 'a' }] });
+    expect(summarizeSave(pending)).toContain('2 regions');
+  });
+
   it('pushes and lists newest-first without the heavy data field', () => {
     expect(pushBackup(KEY, save({ keys: 1 }), 'first', () => ({ ok: true }))).toEqual({ stored: true });
     expect(pushBackup(KEY, save({ keys: 2 }), 'second', () => ({ ok: true }))).toEqual({ stored: true });

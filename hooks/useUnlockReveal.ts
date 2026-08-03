@@ -7,6 +7,7 @@ import {
   evaluateDiaryTaskEligibility,
   evaluateQuestEligibility,
 } from '../utils/journalStatus';
+import { visibleAreaUnlocks } from '../data/areaMapPolicy';
 
 export interface UnlockRevealData {
   /** Display names of quests just marked complete. */
@@ -39,8 +40,8 @@ export function getUnlockRevealTransition(
   const completedQuests = current.quests.filter(
     questId => !previous.quests.includes(questId),
   );
-  const newRegions = current.regions.filter(
-    region => !previous.regions.includes(region),
+  const newRegions = visibleAreaUnlocks(current.regions).filter(
+    region => !visibleAreaUnlocks(previous.regions).includes(region),
   );
   const newBosses = current.bosses.filter(
     boss => !previous.bosses.includes(boss),

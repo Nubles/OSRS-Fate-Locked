@@ -18,7 +18,7 @@ import { QUEST_DATA } from '../data/questData';
 import { isChunkUnlocked, isFrontierChunk } from '../utils/chunkAdjacency';
 import { rankFrontierChunks } from '../utils/frontierAdvisor';
 import { isNamedAreaReachableViaChunks, isRegionUnlocked } from '../utils/reachability';
-import { displayAreaName } from '../data/areaMapPolicy';
+import { displayAreaName, visibleAreaUnlocks } from '../data/areaMapPolicy';
 
 type LensTone = 'good' | 'warn' | 'bad';
 const TONE_FILL: Record<LensTone, string> = { good: 'rgba(16,185,129,0.30)', warn: 'rgba(245,158,11,0.10)', bad: 'rgba(239,68,68,0.22)' };
@@ -1919,10 +1919,14 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
 
 export const RegionMap: React.FC = () => {
   const { unlocks, runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId, customMode } = useGame();
+  const visibleRegionUnlocks = useMemo(
+    () => visibleAreaUnlocks(unlocks.regions),
+    [unlocks.regions],
+  );
   // Live run state for the RuneLite bundle, read lazily at export time via a
   // stable getter so MapContent's memoization (regionUnlocks-only) holds.
   const snapRef = useRef<GameSnapshot>({ runId, runRevision, keys: 0, specialKeys: 0, chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', pinnedGoals: [] as string[], gameModeId: gameModeId ?? 'vanilla' });
   snapRef.current = { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals: pinnedGoals ?? [], linkedAccount, equipment: unlocks.equipment, gameModeId: gameModeId ?? 'vanilla', customMode };
   const getGameSnapshot = useCallback(() => snapRef.current, []);
-  return <MapContent regionUnlocks={unlocks.regions} chunkUnlocks={unlocks.chunks ?? []} isChunked={gameModeId === 'chunked'} getGameSnapshot={getGameSnapshot} />;
+  return <MapContent regionUnlocks={visibleRegionUnlocks} chunkUnlocks={unlocks.chunks ?? []} isChunked={gameModeId === 'chunked'} getGameSnapshot={getGameSnapshot} />;
 };

@@ -15,7 +15,7 @@ import { CA_DATA } from '../data/caData';
 import { ALL_CA_TASKS, CATask } from '../data/caTasks';
 import { QUEST_DATA } from '../data/questData';
 import { UNLOCK_COST } from '../utils/gameEngine';
-import { canonicalAreaName, canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
+import { canonicalAreaName, canonicalizeAreaUnlocks, visibleAreaUnlocks } from '../data/areaMapPolicy';
 import { drawFloat } from '../utils/seededRng';
 import { hashEntry, ensureChain } from '../utils/integrity';
 import { pushBackup, listBackups as readBackups, getBackupData, BackupMeta } from '../utils/backups';
@@ -1147,7 +1147,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       // run is still stuck at just the start area.
       let keys = state.keys;
       let xtremeMilestoneClaimed = state.xtremeMilestoneClaimed ?? 0;
-      if (state.gameModeId === 'xtreme' && state.unlocks.regions.length === 0) {
+      if (state.gameModeId === 'xtreme' && visibleAreaUnlocks(state.unlocks.regions).length === 0) {
         const eligible = Math.floor(totalLevel / XTREME_MILESTONE_INTERVAL);
         if (eligible > xtremeMilestoneClaimed) {
           const gained = eligible - xtremeMilestoneClaimed;

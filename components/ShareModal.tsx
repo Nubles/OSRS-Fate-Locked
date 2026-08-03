@@ -11,6 +11,7 @@ import { showToast } from '../utils/toast';
 import { EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, SKILLS_LIST, REGIONS_LIST, REGION_GROUPS, SLOT_CONFIG } from '../constants';
 import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { isAreaReachable } from '../utils/reachability';
+import { visibleAreaUnlocks } from '../data/areaMapPolicy';
 
 interface ShareModalProps {
   onClose: () => void;
@@ -46,7 +47,7 @@ const StatsShareCard: React.FC<ShareModalProps & { embedded?: boolean }> = ({ on
   const isChunked = gameModeId === 'chunked';
   // Chunked mode has no unlocks.regions — its "territory unlocked" stat is
   // chunk count instead.
-  const totalRegions = isChunked ? (unlocks.chunks ?? []).length : unlocks.regions.length;
+  const totalRegions = isChunked ? (unlocks.chunks ?? []).length : visibleAreaUnlocks(unlocks.regions).length;
   const totalSkillTiers = (Object.values(unlocks.skills) as number[]).reduce((a, b) => a + b, 0);
   const totalEquipTiers = (Object.values(unlocks.equipment) as number[]).reduce((a, b) => a + b, 0);
   const totalLevel = (Object.values(unlocks.levels) as number[]).reduce((a, b) => a + b, 0);

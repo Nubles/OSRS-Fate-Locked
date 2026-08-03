@@ -18,6 +18,7 @@ import { completionPercent } from './completion';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { CA_DATA } from '../data/caData';
+import { visibleAreaUnlocks } from '../data/areaMapPolicy';
 
 export type AchievementCategory =
   | 'Quests' | 'Skills' | 'Regions' | 'Equipment'
@@ -122,7 +123,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   ]),
 
   // Regions
-  ...tiers('regions', 'Regions', 'region', (u) => u.regions.length, [
+  ...tiers('regions', 'Regions', 'region', (u) => visibleAreaUnlocks(u.regions).length, [
     { title: 'Explorer', description: 'Unlock your first region', target: 1 },
     { title: 'Globetrotter', description: 'Unlock 5 regions', target: 5 },
     { title: 'World Tour', description: 'Unlock every region', target: TOTAL_REGIONS, icon: 'map' },

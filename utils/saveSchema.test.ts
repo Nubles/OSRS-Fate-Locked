@@ -548,6 +548,31 @@ describe('save schema compatibility', () => {
     expect(revalidated.state).toEqual(spent.state);
   });
 
+  it('retains capped overlap credits raw until capacity can settle exactly those aliases', () => {
+    const held = expectAccepted(validateAndMigrateSave(candidate({ keys: MAX_COUNTER }, {
+      regions: [
+        'Baxtorian Falls', "Otto's Grotto",
+        'Taverley', "Heroes' Guild",
+      ],
+    }), defaultsFixture()));
+
+    expect(held.state.keys).toBe(MAX_COUNTER);
+    expect(held.state.unlocks.regions).toEqual([
+      'Baxtorian Falls', 'Taverley',
+      "Otto's Grotto", "Heroes' Guild",
+    ]);
+
+    const released = expectAccepted(validateAndMigrateSave({
+      ...held.state,
+      keys: MAX_COUNTER - 2,
+    }, defaultsFixture()));
+
+    expect(released.state.keys).toBe(MAX_COUNTER);
+    expect(released.state.unlocks.regions).toEqual([
+      'Baxtorian Falls', 'Taverley',
+    ]);
+  });
+
   it('settles only the available capacity while retaining multiple distinct pending overlap credits', () => {
     const held = expectAccepted(validateAndMigrateSave(candidate({ keys: MAX_COUNTER - 1 }, {
       regions: [

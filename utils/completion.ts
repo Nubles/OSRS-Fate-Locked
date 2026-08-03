@@ -13,6 +13,7 @@ import {
 } from '../constants';
 import { UnlockState } from '../types';
 import { BANK_IDS } from '../data/banks';
+import { visibleAreaUnlocks } from '../data/areaMapPolicy';
 
 /** Total unlock points available for 100% completion. */
 export const COMPLETION_DENOMINATOR =
@@ -34,7 +35,7 @@ const len = (a: unknown[] | undefined) => (Array.isArray(a) ? a.length : 0);
 /** Unlock points the player has accrued. */
 export const playerUnlockPoints = (u: UnlockState): number =>
   sum(u.skills) + sum(u.equipment) +
-  len(u.regions) + len(u.mobility) + len(u.arcana) + len(u.housing) +
+  visibleAreaUnlocks(u.regions).length + len(u.mobility) + len(u.arcana) + len(u.housing) +
   len(u.merchants) + len(u.minigames) + len(u.bosses) + len(u.storage) +
   len(u.guilds) + len(u.farming) + len(u.slayerUnlocks) + len(u.banks);
 

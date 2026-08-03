@@ -308,9 +308,10 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       missing: s.status.missing,
     }));
     const dependencies: TableDependency[] = [];
-    for (const s of sources) {
-      if (s.available) continue;
-      for (const m of s.missing) collectNeededFromMissing(m, unlocks, dependencies, gameModeId);
+    for (const source of chain?.sources ?? []) {
+      if (source.status.isAvailable) continue;
+      for (const missing of source.status.missing) collectNeededFromMissing(missing, unlocks, dependencies, gameModeId);
+      dependencies.push(...source.status.unlockDependencies);
     }
     const tables = suggestTables(dependencies, unlocks);
     const total = Math.max(1, sources.length);
