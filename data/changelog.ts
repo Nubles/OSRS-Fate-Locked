@@ -30,7 +30,7 @@ export const CHANGELOG_RELEASES = [
       ],
       fixed: [
         "Unlocking Otto's Grotto now visibly unlocks the Baxtorian Falls chunk containing it.",
-        'Twenty-four boundary chunks now use the correct parent continent, fixing labels such as Falador Â· Misthalin and Port Sarim Â· Karamja.',
+        'Twenty-four boundary chunks now use the correct parent continent, fixing labels such as Falador · Misthalin and Port Sarim · Karamja.',
       ],
     },
   },
