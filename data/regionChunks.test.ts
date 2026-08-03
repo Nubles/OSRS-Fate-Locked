@@ -23,6 +23,26 @@ describe('reviewed continent chunk universe', () => {
     expect(authored).toEqual(source);
   });
 
+  it('orders every region array by cy then cx', () => {
+    const outOfOrder: string[] = [];
+    for (const [region, chunks] of Object.entries(REGION_CHUNKS)) {
+      for (let index = 1; index < chunks.length; index += 1) {
+        const previous = chunks[index - 1];
+        const current = chunks[index];
+        if (
+          previous.cy > current.cy ||
+          (previous.cy === current.cy && previous.cx > current.cx)
+        ) {
+          outOfOrder.push(
+            `${region} ${previous.cx},${previous.cy} -> ${current.cx},${current.cy}`,
+          );
+        }
+      }
+    }
+
+    expect(outOfOrder).toEqual([]);
+  });
+
   it('classifies the four newly named islands under The Open Seas', () => {
     const openSeas = new Set(REGION_CHUNKS['The Open Seas'].map(coord));
     expect([...openSeas].filter((key) => [
