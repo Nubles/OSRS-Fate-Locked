@@ -20,6 +20,7 @@ import { chunkContentService, EntityHit, EntityKind } from '../services/ChunkCon
 import { EntityLocations } from './EntityLocations';
 import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { isAreaReachable } from '../utils/reachability';
+import { displayAreaName } from '../data/areaMapPolicy';
 import {
   completedCAPoints,
   earnedCATiers,
@@ -41,6 +42,7 @@ const ENTITY_KIND_LABEL: Record<EntityKind, string> = {
 
 type SearchItem = {
   name: string;
+  displayName?: string;
   type: string;
   category: TableType | 'COLLECTION_LOG_ITEM';
   icon: any;
@@ -98,7 +100,14 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
 
     // Core Unlocks
     addGroup(SKILLS_LIST, 'Skill', TableType.SKILLS, BookOpen, 'Requires Key in Skills Table');
-    addGroup(REGIONS_LIST, 'Region', TableType.REGIONS, Map, 'Requires Key in Regions Table');
+    REGIONS_LIST.forEach((name) => items.push({
+      name,
+      displayName: displayAreaName(name),
+      type: 'Region',
+      category: TableType.REGIONS,
+      icon: Map,
+      reqText: 'Requires Key in Regions Table',
+    }));
     addGroup(MISTHALIN_AREAS, 'Region', TableType.REGIONS, Map, 'Starting Area (Unlocked)');
     addGroup(BOSSES_LIST, 'Boss', TableType.BOSSES, Skull, 'Requires Key in Bosses Table');
     addGroup(MINIGAMES_LIST, 'Minigame', TableType.MINIGAMES, Gamepad2, 'Requires Key in Minigames Table');
@@ -164,7 +173,8 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
 
     const scored: { item: SearchItem; rank: number }[] = [];
     for (const item of searchIndex) {
-      const r = score(item.name);
+      const searchName = item.displayName ?? item.name;
+      const r = score(searchName);
       if (r !== Infinity) scored.push({ item, rank: r });
     }
     scored.sort((a, b) => a.rank - b.rank || a.item.name.localeCompare(b.item.name));
@@ -202,6 +212,7 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
             detail = "Starting Area";
         } else {
             isUnlocked = isAreaReachable(item.name, unlocks, gameModeId);
+            detail = isUnlocked ? "Unlocked" : "Locked";
         }
         break;
       case TableType.MOBILITY:
@@ -361,7 +372,7 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                        <h3 className={`font-bold text-sm truncate ${isUnlocked ? 'text-white' : 'text-gray-400'}`}>{item.name}</h3>
+                        <h3 className={`font-bold text-sm truncate ${isUnlocked ? 'text-white' : 'text-gray-400'}`}>{item.displayName ?? item.name}</h3>
                         <a 
                             href={getWikiUrl(item.name)} 
                             target="_blank" 

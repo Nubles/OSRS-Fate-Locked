@@ -4,11 +4,14 @@ import { describe, expect, it, vi } from 'vitest';
 import { ALL_CA_TASKS } from '../data/caTasks';
 import { OracleSearch } from './OracleSearch';
 
+const mockQuery = vi.hoisted(() => ({ current: 'Easy Tier' }));
 const mockGame = vi.hoisted(() => ({
   current: {
     unlocks: {
       completedTasks: [] as string[],
       cas: [] as string[],
+      regions: [] as string[],
+      chunks: [] as string[],
     },
     gameModeId: 'standard',
   },
@@ -19,7 +22,7 @@ vi.mock('react', async importOriginal => {
   return {
     ...actual,
     useState<T>(initial: T) {
-      if (initial === '') return ['Easy Tier', vi.fn()];
+      if (initial === '') return [mockQuery.current, vi.fn()];
       return actual.useState(initial);
     },
   };
@@ -39,6 +42,7 @@ vi.mock('./SectionGuide', () => ({
 
 describe('OracleSearch Combat Achievement status', () => {
   it('shows a tier earned from current cumulative points as completed without a stored marker', () => {
+    mockQuery.current = 'Easy Tier';
     mockGame.current.unlocks.completedTasks = ALL_CA_TASKS
       .filter(task => task.tierId === 'Easy')
       .map(task => task.id);
@@ -49,5 +53,19 @@ describe('OracleSearch Combat Achievement status', () => {
     expect(markup).toContain('Easy Tier');
     expect(markup).toContain('Completed');
     expect(markup).not.toContain('Locked');
+  });
+});
+
+describe('OracleSearch overlap areas', () => {
+  it("finds Otto's Grotto as the unlocked Baxtorian Falls area", () => {
+    mockQuery.current = "Otto's Grotto";
+    mockGame.current.unlocks.regions = ['Baxtorian Falls'];
+    mockGame.current.unlocks.chunks = [];
+
+    const markup = renderToStaticMarkup(<OracleSearch onClose={vi.fn()} />);
+
+    expect(markup).toContain("Baxtorian Falls \u00b7 Otto&#x27;s Grotto");
+    expect(markup).toContain('Unlocked');
+    expect(markup).not.toContain('No fate found');
   });
 });

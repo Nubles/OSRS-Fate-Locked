@@ -18,6 +18,7 @@ import { QUEST_DATA } from '../data/questData';
 import { isChunkUnlocked, isFrontierChunk } from '../utils/chunkAdjacency';
 import { rankFrontierChunks } from '../utils/frontierAdvisor';
 import { isNamedAreaReachableViaChunks, isRegionUnlocked } from '../utils/reachability';
+import { displayAreaName } from '../data/areaMapPolicy';
 
 type LensTone = 'good' | 'warn' | 'bad';
 const TONE_FILL: Record<LensTone, string> = { good: 'rgba(16,185,129,0.30)', warn: 'rgba(245,158,11,0.10)', bad: 'rgba(239,68,68,0.22)' };
@@ -357,7 +358,7 @@ const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectK
             <h4 className={`font-bold text-sm border-b pb-1 ${isUnlocked ? 'text-emerald-400 border-emerald-500/30' : 'text-red-400 border-red-500/30'}`}>{region}</h4>
             <div className="flex flex-wrap gap-1">
               {subRegions.slice(0, 8).map(area => (
-                <span key={area} className={`text-[9px] px-1.5 py-0.5 rounded text-gray-300 ${(isChunked ? isNamedAreaReachableViaChunks(area, chunkUnlocks) : regionUnlocks.includes(area) || isFreeArea(area)) ? 'bg-emerald-900/40 text-emerald-300' : 'bg-white/10'}`}>{area}</span>
+                <span key={area} className={`text-[9px] px-1.5 py-0.5 rounded text-gray-300 ${(isChunked ? isNamedAreaReachableViaChunks(area, chunkUnlocks) : regionUnlocks.includes(area) || isFreeArea(area)) ? 'bg-emerald-900/40 text-emerald-300' : 'bg-white/10'}`}>{displayAreaName(area)}</span>
               ))}
               {subRegions.length > 8 && <span className="text-[9px] text-gray-500">+{subRegions.length - 8} more...</span>}
             </div>
@@ -1714,7 +1715,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
                       const count = subDraft[name]?.length ?? 0;
                       return (
                         <option key={name} value={name}>
-                          {name}{count ? ` (${count})` : ''}
+                          {displayAreaName(name)}{count ? ` (${count})` : ''}
                         </option>
                       );
                     })}
@@ -1731,7 +1732,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
                   const count = draftChunks[name]?.length ?? 0;
                   return (
                     <option key={name} value={name}>
-                      {name}{count ? ` (${count})` : ''}
+                      {displayAreaName(name)}{count ? ` (${count})` : ''}
                     </option>
                   );
                 })}

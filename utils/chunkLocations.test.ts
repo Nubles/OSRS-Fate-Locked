@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { placeOf, chunkUnlocked, summarisePlaces } from './chunkLocations';
+import { placeOf, chunkForPlace, chunkUnlocked, summarisePlaces } from './chunkLocations';
 import { UnlockState } from '../types';
 
 const unlocksWith = (regions: string[] = []): UnlockState =>
@@ -22,6 +22,22 @@ describe('placeOf', () => {
   it('labels unpainted chunks by coordinate', () => {
     expect(placeOf(1, 1).label).toBe('chunk (1, 1)');
   });
+
+  it('routes an overlap alias to its exact canonical-owned physical chunk', () => {
+    expect(chunkForPlace("Otto's Grotto")).toEqual({ cx: 39, cy: 54 });
+    expect(placeOf(39, 54).subArea).toBe('Baxtorian Falls');
+    expect(chunkForPlace("Heroes' Guild")).toEqual({ cx: 45, cy: 54 });
+    expect(placeOf(45, 54).subArea).toBe('Taverley');
+  });
+
+  it('shows recognizable overlap names without changing physical ownership', () => {
+    expect(placeOf(39, 54)).toMatchObject({
+      subArea: 'Baxtorian Falls',
+      region: 'Kandarin',
+      label: "Baxtorian Falls \u00b7 Otto's Grotto \u00b7 Kandarin",
+    });
+    expect(placeOf(45, 54).label).toBe("Taverley \u00b7 Heroes' Guild \u00b7 Asgarnia");
+  });
 });
 
 describe('chunkUnlocked', () => {
@@ -39,6 +55,11 @@ describe('chunkUnlocked', () => {
 
   it('unpainted chunks are never unlocked', () => {
     expect(chunkUnlocked(1, 1, unlocksWith(['Falador']))).toBe(false);
+  });
+
+  it('unlocks the reported physical chunk from either name', () => {
+    expect(chunkUnlocked(39, 54, unlocksWith(['Baxtorian Falls']))).toBe(true);
+    expect(chunkUnlocked(39, 54, unlocksWith(["Otto's Grotto"]))).toBe(true);
   });
 });
 

@@ -40,6 +40,7 @@ import { isAreaReachable, isBankReachable, bankLocksActive } from '../utils/reac
 import { FARMING_PATCH_LIST, GUILDS_LIST, MINIGAMES_LIST, MOBILITY_LIST, BOSSES_LIST, MISTHALIN_AREAS } from '../constants';
 import type { ChunkCoord } from '../utils/mapCoords';
 import { WikiLink } from './WikiLink';
+import { displayAreaName } from '../data/areaMapPolicy';
 
 /**
  * What gathering a resource node yields, from the picker's per-skill item tables.
@@ -487,7 +488,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
               <MapPin size={10} />
               {mode === 'region'
                 ? `${regionChunks.length} chunks`
-                : <>chunk ({chunk.cx}, {chunk.cy}){subArea && <> · <span className="text-cyan-300/90 font-semibold">{subArea}</span></>}{region && <> · {region}</>}</>}
+                : <>chunk ({chunk.cx}, {chunk.cy}){subArea && <> · <span className="text-cyan-300/90 font-semibold">{displayAreaName(subArea)}</span></>}{region && <> · {region}</>}</>}
               <span className={`px-1.5 py-px rounded font-bold ${unlocked ? 'bg-green-900/60 text-green-300' : 'bg-red-900/50 text-red-300'}`}>
                 {unlocked ? 'UNLOCKED' : 'LOCKED'}
               </span>

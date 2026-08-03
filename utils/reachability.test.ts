@@ -30,6 +30,14 @@ const baseUnlocks: UnlockState = {
   collectionLog: {},
 };
 
+const OVERLAPS = [
+  ["Heroes' Guild", 'Taverley', '45,54'],
+  ['Ice Mountain', 'Goblin Village', '46,54'],
+  ['Ranging Guild', 'Hemenster', '41,53'],
+  ["Otto's Grotto", 'Baxtorian Falls', '39,54'],
+  ['Resource Area', 'Mage Arena', '49,61'],
+] as const;
+
 describe('isNamedAreaReachableViaChunks', () => {
   it('a sub-area overlapping the free start chunk (50,50) is reachable with no unlocked chunks', () => {
     // Lumbridge's chunk list includes {cx:50, cy:50}, the always-free start chunk.
@@ -89,6 +97,17 @@ describe('isAreaReachable', () => {
     } finally {
       setStartArea(undefined);
     }
+  });
+
+  it.each(OVERLAPS)('%s shares Standard reachability with %s', (alias, canonical) => {
+    expect(isAreaReachable(alias, { ...baseUnlocks, regions: [canonical] }, 'vanilla')).toBe(true);
+    expect(isAreaReachable(canonical, { ...baseUnlocks, regions: [alias] }, 'vanilla')).toBe(true);
+  });
+
+  it.each(OVERLAPS)('%s shares Chunked reachability with %s', (alias, canonical, chunk) => {
+    expect(isNamedAreaReachableViaChunks(alias, [chunk])).toBe(true);
+    expect(isNamedAreaReachableViaChunks(alias, []))
+      .toBe(isNamedAreaReachableViaChunks(canonical, []));
   });
 });
 

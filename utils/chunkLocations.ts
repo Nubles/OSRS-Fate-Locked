@@ -4,6 +4,11 @@ import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
 import { isAreaReachable } from './reachability';
 import { UnlockState } from '../types';
 import type { ChunkCoord } from './mapCoords';
+import {
+  AREA_ALIAS_POLICIES,
+  canonicalAreaName,
+  displayAreaName,
+} from '../data/areaMapPolicy';
 
 /**
  * Where is chunk (cx, cy), and can the player go there?
@@ -33,8 +38,13 @@ for (const [name, chunks] of Object.entries(REGION_CHUNKS)) if (chunks[0]) PLACE
 for (const [name, chunks] of Object.entries(SUB_AREA_CHUNKS)) if (chunks[0]) PLACE_CHUNK[name.toLowerCase()] = chunks[0];
 
 /** A representative chunk for a named place, or null if it isn't on the map. */
-export const chunkForPlace = (name: string): ChunkCoord | null =>
-  PLACE_CHUNK[name.trim().toLowerCase()] ?? null;
+export const chunkForPlace = (name: string): ChunkCoord | null => {
+  const trimmed = name.trim();
+  const alias = AREA_ALIAS_POLICIES[trimmed as keyof typeof AREA_ALIAS_POLICIES];
+  if (alias?.kind === 'surface-overlap') return alias.chunks[0];
+  const canonical = canonicalAreaName(trimmed);
+  return PLACE_CHUNK[canonical.toLowerCase()] ?? null;
+};
 
 
 export interface ChunkPlace {
@@ -52,9 +62,10 @@ export const placeOf = (cx: number, cy: number): ChunkPlace => {
   const k = key(cx, cy);
   const subArea = CHUNK_SUB[k] ?? null;
   const region = CHUNK_REGION[k] ?? null;
-  const label = subArea && region && subArea !== region
-    ? `${subArea} · ${region}`
-    : subArea ?? region ?? `chunk (${cx}, ${cy})`;
+  const displaySubArea = subArea ? displayAreaName(subArea) : null;
+  const label = displaySubArea && region && subArea !== region
+    ? `${displaySubArea} · ${region}`
+    : displaySubArea ?? region ?? `chunk (${cx}, ${cy})`;
   return { cx, cy, subArea, region, label };
 };
 

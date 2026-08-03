@@ -7,6 +7,7 @@ import { chunkKey, isChunkUnlocked } from './chunkAdjacency';
 import { resolveModeRules } from '../config/gameModes';
 import type { GameModeRules } from '../config/gameModes';
 import { bankId } from '../data/banks';
+import { canonicalAreaName } from '../data/areaMapPolicy';
 
 /**
  * Is a named region/sub-area reachable in Chunked mode: true if ANY chunk
@@ -18,9 +19,10 @@ import { bankId } from '../data/banks';
  * source data actually has.
  */
 export const isNamedAreaReachableViaChunks = (name: string, unlockedChunkKeys: readonly string[]): boolean => {
-  const chunks = SUB_AREA_CHUNKS[name] || REGION_CHUNKS[name];
+  const canonical = canonicalAreaName(name);
+  const chunks = SUB_AREA_CHUNKS[canonical] || REGION_CHUNKS[canonical];
   if (!chunks || chunks.length === 0) return false;
-  return chunks.some(c => isChunkUnlocked(chunkKey(c), unlockedChunkKeys));
+  return chunks.some((chunk) => isChunkUnlocked(chunkKey(chunk), unlockedChunkKeys));
 };
 
 /**
@@ -30,8 +32,12 @@ export const isNamedAreaReachableViaChunks = (name: string, unlockedChunkKeys: r
  * used all over the app before Chunked mode existed.
  */
 export const isAreaReachable = (name: string, unlocks: UnlockState, gameModeId?: string): boolean => {
-  if (gameModeId === 'chunked') return isNamedAreaReachableViaChunks(name, unlocks.chunks ?? []);
-  return isFreeArea(name) || unlocks.regions.includes(name);
+  const canonical = canonicalAreaName(name);
+  if (gameModeId === 'chunked') {
+    return isNamedAreaReachableViaChunks(canonical, unlocks.chunks ?? []);
+  }
+  return isFreeArea(canonical)
+    || unlocks.regions.some((unlocked) => canonicalAreaName(unlocked) === canonical);
 };
 
 // Maps a leaf/sub-region back to its continent, derived once from
