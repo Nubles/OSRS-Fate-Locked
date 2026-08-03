@@ -239,14 +239,18 @@ describe('authenticated bot identity', () => {
   it.each([
     ['identity mismatch', vi.fn(async () => ({ id: '100000000000000099' }))],
     ['identity fetch failure', vi.fn(async () => { throw new Error('identity unavailable'); })],
-  ])('stops verification queue and hierarchy work after %s', async (_case, getCurrentUser) => {
+  ])('makes only the private interaction-response write after %s', async (_case, getCurrentUser) => {
     const submission = restForSubmission({ getCurrentUser });
     const submitResponse = handleVerificationSubmit(modalSubmission(validFields), { config, rest: submission }, controlNow);
     await submitResponse.afterAck?.();
 
     expect(submission.getCurrentUser).toHaveBeenCalledTimes(1);
     expect(submission.getChannelMessages).not.toHaveBeenCalled();
-    expect(submission.createMessage.mock.calls.some(([channelId]: [string]) => channelId === config.channels.verificationQueue)).toBe(false);
+    expect(submission.createMessage).not.toHaveBeenCalled();
+    expect(submission.editMessage).not.toHaveBeenCalled();
+    expect(submission.addGuildMemberRole).not.toHaveBeenCalled();
+    expect(submission.editThread).not.toHaveBeenCalled();
+    expect(submission.editOriginalInteractionResponse).toHaveBeenCalledTimes(1);
 
     const approval = restForAction(moderatorId, [config.roles.moderator]);
     approval.getCurrentUser = getCurrentUser;
@@ -259,6 +263,24 @@ describe('authenticated bot identity', () => {
     expect(approval.addGuildMemberRole).not.toHaveBeenCalled();
     expect(approval.editThread).not.toHaveBeenCalled();
     expect(approval.editMessage).not.toHaveBeenCalled();
+    expect(approval.createMessage).not.toHaveBeenCalled();
+    expect(approval.editOriginalInteractionResponse).toHaveBeenCalledTimes(1);
+
+    const reason = restForAction(fatekeeperId, [config.roles.fatekeeper]);
+    reason.getCurrentUser = getCurrentUser;
+    const reasonResponse = handleVerificationReasonSubmit(
+      reasonSubmission(fatekeeperId, 'recommend', 'Identity must be validated before staff action.'),
+      { config, rest: reason },
+      controlNow,
+    );
+    await reasonResponse.afterAck?.();
+
+    expect(reason.getCurrentUser).toHaveBeenCalledTimes(3);
+    expect(reason.createMessage).not.toHaveBeenCalled();
+    expect(reason.editMessage).not.toHaveBeenCalled();
+    expect(reason.addGuildMemberRole).not.toHaveBeenCalled();
+    expect(reason.editThread).not.toHaveBeenCalled();
+    expect(reason.editOriginalInteractionResponse).toHaveBeenCalledTimes(1);
   });
 });
 

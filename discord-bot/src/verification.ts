@@ -291,7 +291,7 @@ export const handleVerificationSubmit = (
     }
     const botId = await verifiedBotId(deps);
     if (!botId) {
-      await auditAndEditOriginal(deps, { actorId: submission.applicantId, applicantId: submission.applicantId, threadId, action: 'submit', outcome: 'bot_identity_failed', now }, submission.interactionToken, 'The bot identity could not be verified. Please try again later.');
+      await safeEditOriginal(deps, submission.interactionToken, 'The bot identity could not be verified. Please try again later.');
       return;
     }
 
@@ -706,7 +706,7 @@ const executeFinalAction = async (
 ): Promise<void> => {
   const botId = await verifiedBotId(deps);
   if (!botId) {
-    await failure(deps, { actorId, applicantId: action.applicantId, threadId: action.threadId, action: action.action, outcome: 'bot_identity_failed', now }, token, 'The bot identity could not be verified. Please try again later.');
+    await safeEditOriginal(deps, token, 'The bot identity could not be verified. Please try again later.');
     return;
   }
 
@@ -767,7 +767,7 @@ export const handleVerificationReasonSubmit = (
 
     const botId = await verifiedBotId(deps);
     if (!botId) {
-      await failure(deps, { actorId: submission.actorId, applicantId: submission.action.applicantId, threadId: submission.action.threadId, action: submission.action.action, outcome: 'bot_identity_failed', now }, submission.token, 'The bot identity could not be verified. Please try again later.');
+      await safeEditOriginal(deps, submission.token, 'The bot identity could not be verified. Please try again later.');
       return;
     }
     const card = await currentQueueCard(deps, submission.action.queueMessageId, submission.action, botId);
