@@ -282,6 +282,33 @@ describe('authenticated bot identity', () => {
     expect(reason.editThread).not.toHaveBeenCalled();
     expect(reason.editOriginalInteractionResponse).toHaveBeenCalledTimes(1);
   });
+
+  it.each([
+    ['identity mismatch', vi.fn(async () => ({ id: '100000000000000099' }))],
+    ['identity fetch failure', vi.fn(async () => { throw new Error('identity unavailable'); })],
+  ])('prevents partial-tag retry writes after %s', async (_case, getCurrentUser) => {
+    const retry = restForAction(moderatorId, [config.roles.moderator], 'partial_tag');
+    retry.getCurrentUser = getCurrentUser;
+
+    const response = await handleVerificationComponent(
+      componentInteraction(moderatorId, 'retry_tag'),
+      { config, rest: retry },
+      controlNow,
+    );
+    await response.afterAck?.();
+
+    expect(retry.getCurrentUser).toHaveBeenCalledTimes(1);
+    expect(retry.getMessage).not.toHaveBeenCalled();
+    expect(retry.createMessage).not.toHaveBeenCalled();
+    expect(retry.editMessage).not.toHaveBeenCalled();
+    expect(retry.addGuildMemberRole).not.toHaveBeenCalled();
+    expect(retry.editThread).not.toHaveBeenCalled();
+    expect(retry.editOriginalInteractionResponse).toHaveBeenCalledTimes(1);
+    expect(retry.editOriginalInteractionResponse).toHaveBeenCalledWith(config.applicationId, 'private-interaction-token', {
+      content: 'The bot identity could not be verified. Please try again later.',
+      allowed_mentions: { parse: [] },
+    });
+  });
 });
 
 
