@@ -1,11 +1,11 @@
 /* @vitest-environment jsdom */
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ChunkContent } from '../services/ChunkContentService';
 
 const mocks = vi.hoisted(() => {
-  const state = { content: null as ChunkContent | null, completedQuests: [] as string[], regions: [] as string[] };
+  const state = { content: null as ChunkContent | null, completedQuests: [] as string[], regions: [] as string[], bosses: [] as string[], farming: [] as string[], merchants: [] as string[], mobility: [] as string[], skills: {} as Record<string, number>, levels: {} as Record<string, number> };
   return {
     state,
     service: {
@@ -29,7 +29,7 @@ vi.mock('../context/GameContext', async () => {
   const actual = await vi.importActual<typeof import('../context/GameContext')>('../context/GameContext');
   return { ...actual, useGame: () => ({
     ...actual.initialState,
-    unlocks: { ...actual.initialState.unlocks, quests: mocks.state.completedQuests, regions: mocks.state.regions },
+    unlocks: { ...actual.initialState.unlocks, quests: mocks.state.completedQuests, regions: mocks.state.regions, bosses: mocks.state.bosses, farming: mocks.state.farming, merchants: mocks.state.merchants, mobility: mocks.state.mobility, skills: { ...actual.initialState.unlocks.skills, ...mocks.state.skills }, levels: { ...actual.initialState.unlocks.levels, ...mocks.state.levels } },
     customMode: undefined,
   }) };
 });
@@ -57,6 +57,12 @@ beforeEach(() => {
   mocks.service.init.mockImplementation(async () => true);
   mocks.state.completedQuests = [];
   mocks.state.regions = [];
+  mocks.state.bosses = [];
+  mocks.state.farming = [];
+  mocks.state.merchants = [];
+  mocks.state.mobility = [];
+  mocks.state.skills = {};
+  mocks.state.levels = {};
   mocks.state.content = { ...emptyContent(), monsters: [{ name: 'Rat', count: 3, slayer: null }] };
   mocks.service.chunkEntryRequirements.mockReturnValue(['Dragon Slayer I']);
   mocks.service.entrancesFor.mockReturnValue([{
@@ -66,6 +72,12 @@ beforeEach(() => {
     requirements: ['Example Quest'],
   }]);
   mocks.service.hasBank.mockReturnValue(true);
+  mocks.service.connectGraph.mockReset();
+  mocks.service.connectGraph.mockReturnValue({});
+  mocks.service.shopStock.mockReset();
+  mocks.service.shopStock.mockReturnValue([]);
+  mocks.service.skillYields.mockReset();
+  mocks.service.skillYields.mockReturnValue({});
 });
 
 describe('ChunkActivityPanel activity accordions', () => {
@@ -96,16 +108,80 @@ describe('ChunkActivityPanel activity accordions', () => {
       ...emptyContent(),
       monsters: [{ name: 'King Black Dragon', count: 1, slayer: null }],
     };
+    mocks.state.bosses = ['King Black Dragon'];
 
-    render(<ChunkActivityPanel {...baseProps} />);
+    render(<ChunkActivityPanel {...baseProps} unlocked={false} />);
 
     const lockedName = screen.getByText('King Black Dragon');
+    const lockedRow = lockedName.closest('div');
     expect(lockedName.closest('span')?.className).not.toContain('line-through');
-    expect(screen.getByText('Locked')).toBeTruthy();
+    expect(lockedRow).toBeTruthy();
+    expect(within(lockedRow as HTMLElement).getByText('Locked')).toBeTruthy();
 
     const drawer = screen.getByTestId('chunk-info-scroll-body').parentElement;
     expect(drawer?.className).toContain('w-80');
     expect(drawer?.className).toContain('max-w-[calc(100%-1.5rem)]');
+  });
+
+  it('clears nested shop and resource disclosures when switching chunks', async () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      shops: ['Varrock General Store'],
+      objects: [['Yew tree', 1]],
+    };
+    mocks.service.shopStock.mockReturnValue(['Bronze dagger']);
+    mocks.service.skillYields.mockReturnValue({ 'Yew tree': [['Yew logs', '1']] });
+
+    const { rerender } = render(<ChunkActivityPanel {...baseProps} />);
+    await userEvent.click(screen.getByRole('button', { name: /Shops/ }));
+    await userEvent.click(screen.getByTitle('Show stock'));
+    expect(screen.getByText('Bronze dagger')).toBeTruthy();
+
+    await userEvent.click(screen.getByTitle('Show what this yields'));
+    expect(screen.getByText('Yew logs')).toBeTruthy();
+
+    rerender(<ChunkActivityPanel {...baseProps} chunk={{ cx: 51, cy: 53 }} />);
+
+    expect(screen.queryByText('Bronze dagger')).toBeNull();
+    expect(screen.queryByText('Yew logs')).toBeNull();
+  });
+  it('shows locked chunk state in every intrinsically available activity row', async () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      monsters: [{ name: 'King Black Dragon', count: 1, slayer: null }, { name: 'Rat', count: 1, slayer: null }],
+      objects: [['Herb patch', 1], ['Yew tree', 1], ['Fairy ring', 1]],
+      shops: ['Varrock General Store'],
+      diaries: { Lumbridge: '1' },
+    };
+    mocks.state.bosses = ['King Black Dragon'];
+    mocks.state.farming = ['Herb'];
+    mocks.state.merchants = ['General Stores'];
+    mocks.state.mobility = ['Fairy Rings'];
+    mocks.state.skills = { Woodcutting: 6 };
+    mocks.state.levels = { Woodcutting: 60 };
+    mocks.state.regions = ['Misthalin', 'Varrock'];
+    mocks.service.connectGraph.mockReturnValue({ '12853': ['12854'] });
+
+    render(<ChunkActivityPanel {...baseProps} unlocked={false} />);
+
+    await userEvent.click(screen.getByRole('button', { name: /Gathering/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Shops/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Travel/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Other/ }));
+
+    const expectRowLocked = (label: string) => {
+      const row = screen.getByText(label).closest('div');
+      expect(row).toBeTruthy();
+      expect(within(row as HTMLElement).getByText('Locked')).toBeTruthy();
+    };
+
+    ['King Black Dragon', 'Rat', 'Herb patch', 'Yew tree', 'Varrock General Store', 'Fairy ring', 'Lumbridge'].forEach(expectRowLocked);
+
+    const travelSection = screen.getByRole('button', { name: /Travel/ }).closest('section') as HTMLElement;
+    const lockedDestination = within(travelSection).getAllByTitle('Chunk locked').find(element => element.tagName === 'BUTTON');
+    expect(lockedDestination).toBeTruthy();
+    expect(lockedDestination?.tagName).toBe('BUTTON');
+    expect(lockedDestination?.className).not.toContain('text-emerald');
   });
 
   it('groups quest, combat, and gathering rows while preserving locked labels', async () => {

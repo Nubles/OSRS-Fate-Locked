@@ -530,12 +530,12 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     const visibleState = resolveChunkInfoItemState(b.usable, scope);
     return (
       <div key={b.name} className="flex items-center justify-between gap-2 py-px"
-        title={hasMixedScope ? 'Availability varies across this area' : b.usable ? `${b.name} unlocked` : `Needs the "${b.name}" boss unlock`}>
+        title={hasMixedScope ? 'Availability varies across this area' : visibleState === 'available' ? `${b.name} unlocked` : b.usable ? 'Chunk locked' : `Needs the "${b.name}" boss unlock`}>
         <span className={`truncate ${rowStateCls(visibleState)}`}>
           <WikiLink name={b.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">?{b.count}</span>
         </span>
-        <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${hasMixedScope ? 'bg-white/5 text-gray-300' : b.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
-          {hasMixedScope ? 'Area' : b.usable ? 'Unlocked' : 'Locked'}
+        <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${visibleState === 'mixed' ? 'bg-white/5 text-gray-300' : visibleState === 'available' ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
+          {visibleState === 'mixed' ? 'Area' : visibleState === 'available' ? 'Unlocked' : b.usable ? 'Locked' : `Needs ${b.name}`}
         </span>
       </div>
     );
@@ -553,12 +553,16 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
           {reqs.length > 0 && <ReqBadge reqs={reqs} />}
           {m.slayer != null && (
             <span
-              className={`text-[9px] px-1 rounded font-bold ${hasMixedScope ? 'bg-white/5 text-gray-300' : met ? 'bg-green-900/60 text-green-300' : 'bg-amber-950/70 text-amber-200'}`}
-              title={hasMixedScope ? `Slayer ${m.slayer} requirement` : met ? 'Slayer requirement met' : `Needs Slayer ${m.slayer} ? you have ${slayerUnlocked ? slayerLevel : 'the skill locked'}`}
+              className={`text-[9px] px-1 rounded font-bold ${visibleState === 'mixed' ? 'bg-white/5 text-gray-300' : visibleState === 'available' ? 'bg-green-900/60 text-green-300' : met ? 'bg-red-950/70 text-red-300' : 'bg-amber-950/70 text-amber-200'}`}
+              title={hasMixedScope ? `Slayer ${m.slayer} requirement` : visibleState === 'available' ? 'Slayer requirement met' : met ? 'Chunk locked' : `Needs Slayer ${m.slayer} ? you have ${slayerUnlocked ? slayerLevel : 'the skill locked'}`}
             >
-              {hasMixedScope ? `Slay ${m.slayer}` : met ? `Slay ${m.slayer}` : `Needs Slay ${m.slayer}`}
+              {visibleState === 'mixed' || visibleState === 'available' ? `Slay ${m.slayer}` : met ? 'Locked' : `Needs Slay ${m.slayer}`}
             </span>
           )}
+          {m.slayer == null && reqs.length === 0 && visibleState === 'locked' && (
+            <span className="rounded bg-red-950/70 px-1 text-[9px] font-bold text-red-300" title="Chunk locked">Locked</span>
+          )}
+
         </span>
       </div>
     );
@@ -566,11 +570,11 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
   const farmingRows = derived?.farming.map(f => {
     const visibleState = resolveChunkInfoItemState(f.usable, scope);
     return (
-      <div key={f.name} className="flex items-center justify-between gap-2 py-px" title={hasMixedScope ? 'Availability varies across this area' : f.usable ? `${f.patch} patches unlocked` : `Needs the "${f.patch}" unlock in the Farming table`}>
+      <div key={f.name} className="flex items-center justify-between gap-2 py-px" title={hasMixedScope ? 'Availability varies across this area' : visibleState === 'available' ? `${f.patch} patches unlocked` : f.usable ? 'Chunk locked' : `Needs the "${f.patch}" unlock in the Farming table`}>
         <span className={`truncate ${rowStateCls(visibleState)}`}>
           <WikiLink name={f.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">?{f.count}</span>
         </span>
-        <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${hasMixedScope ? 'bg-white/5 text-gray-300' : f.usable ? 'bg-green-900/60 text-green-300' : 'bg-amber-950/70 text-amber-200'}`}>{hasMixedScope ? f.patch : f.usable ? f.patch : `Needs ${f.patch}`}</span>
+        <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${visibleState === 'mixed' ? 'bg-white/5 text-gray-300' : visibleState === 'available' ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>{visibleState === 'mixed' ? f.patch : visibleState === 'available' ? f.patch : f.usable ? 'Locked' : `Needs ${f.patch}`}</span>
       </div>
     );
   }) ?? [];
@@ -581,13 +585,15 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     return (
       <div key={r.name}>
         <div className="flex items-center justify-between gap-2 py-px"
-          title={hasMixedScope
+          title={visibleState === 'mixed'
             ? 'Availability varies across this area'
-            : r.usable
+            : visibleState === 'available'
               ? `${r.skill} ${r.level} ? you can gather this`
-            : (unlocks.skills?.[r.skill] ?? 0) > 0
-              ? `Needs ${r.skill} ${r.level} ? you have ${unlocks.levels?.[r.skill] ?? 1}`
-              : `${r.skill} skill not unlocked yet (needs level ${r.level})`}>
+              : r.usable
+                ? 'Chunk locked'
+                : (unlocks.skills?.[r.skill] ?? 0) > 0
+                  ? `Needs ${r.skill} ${r.level} ? you have ${unlocks.levels?.[r.skill] ?? 1}`
+                  : `${r.skill} skill not unlocked yet (needs level ${r.level})`}>
           <span className={`flex items-center gap-1 min-w-0 ${rowStateCls(visibleState)}`}>
             {yields && yields.length > 0 && (
               <button type="button" onClick={() => setOpenResource(isOpen ? null : r.name)} className="shrink-0 rounded text-gray-500 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 motion-reduce:transition-none" title="Show what this yields" aria-expanded={isOpen}>
@@ -598,8 +604,8 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
               <WikiLink name={r.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">?{r.count}</span>
             </span>
           </span>
-          <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${hasMixedScope ? 'bg-white/5 text-gray-300' : r.usable ? 'bg-green-900/60 text-green-300' : 'bg-amber-950/70 text-amber-200'}`}>
-            {hasMixedScope ? `${r.skill.slice(0, 4)} ${r.level}` : r.usable ? `${r.skill.slice(0, 4)} ${r.level}` : `Needs ${r.skill.slice(0, 4)} ${r.level}`}
+          <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${visibleState === 'mixed' ? 'bg-white/5 text-gray-300' : visibleState === 'available' ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
+            {visibleState === 'mixed' || visibleState === 'available' ? `${r.skill.slice(0, 4)} ${r.level}` : r.usable ? 'Locked' : `Needs ${r.skill.slice(0, 4)} ${r.level}`}
           </span>
         </div>
         {isOpen && yields && (
@@ -622,7 +628,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     return (
       <div key={s.name}>
         <div className="flex items-center justify-between gap-2 py-px"
-          title={hasMixedScope && s.category ? 'Availability varies across this area' : s.usable ? `${s.category} unlocked` : s.category ? `Needs the "${s.category}" merchant unlock` : 'Unclassified shop \u2014 no merchant category gate'}>
+          title={hasMixedScope && s.category ? 'Availability varies across this area' : visibleState === 'available' ? `${s.category} unlocked` : s.usable ? 'Chunk locked' : s.category ? `Needs the "${s.category}" merchant unlock` : 'Unclassified shop \u2014 no merchant category gate'}>
           <span className="flex min-w-0 items-center gap-1">
             {stock.length > 0 && (
               <button type="button" onClick={() => setOpenShop(isOpen ? null : s.name)} className="shrink-0 rounded text-gray-500 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 motion-reduce:transition-none" title="Show stock" aria-expanded={isOpen}>
@@ -632,8 +638,8 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
             <WikiLink name={s.name} className={`truncate hover:underline decoration-dotted underline-offset-2 ${rowStateCls(visibleState)}`} />
           </span>
           {s.category && (
-            <span className={`shrink-0 rounded px-1 text-[9px] ${hasMixedScope ? 'bg-white/5 text-gray-300' : s.usable ? 'bg-green-900/60 text-green-300' : 'bg-amber-950/70 text-amber-200'}`}>
-              {hasMixedScope ? s.category.replace(/ Shops?$/, '') : s.usable ? s.category.replace(/ Shops?$/, '') : `Needs ${s.category.replace(/ Shops?$/, '')}`}
+            <span className={`shrink-0 rounded px-1 text-[9px] ${visibleState === 'mixed' ? 'bg-white/5 text-gray-300' : visibleState === 'available' ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
+              {visibleState === 'mixed' ? s.category.replace(/ Shops?$/, '') : visibleState === 'available' ? s.category.replace(/ Shops?$/, '') : s.usable ? 'Locked' : `Needs ${s.category.replace(/ Shops?$/, '')}`}
             </span>
           )}
         </div>
@@ -651,12 +657,12 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     const visibleState = resolveChunkInfoItemState(t.usable, scope);
     return (
       <div key={t.name} className="flex items-center justify-between gap-2 py-px"
-        title={hasMixedScope ? 'Availability varies across this area' : t.usable ? `${t.network} network unlocked` : `Needs the "${t.network}" mobility unlock`}>
+        title={hasMixedScope ? 'Availability varies across this area' : visibleState === 'available' ? `${t.network} network unlocked` : t.usable ? 'Chunk locked' : `Needs the "${t.network}" mobility unlock`}>
         <span className={`truncate ${rowStateCls(visibleState)}`}>
           <WikiLink name={t.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="no-underline text-gray-600">x{t.count}</span>
         </span>
-        <span className={`shrink-0 rounded px-1 text-[9px] font-bold ${hasMixedScope ? 'bg-white/5 text-gray-300' : t.usable ? 'bg-green-900/60 text-green-300' : 'bg-amber-950/70 text-amber-200'}`}>
-          {hasMixedScope ? t.network.replace(/s$/, '') : t.usable ? t.network.replace(/s$/, '') : `Needs ${t.network.replace(/s$/, '')}`}
+        <span className={`shrink-0 rounded px-1 text-[9px] font-bold ${visibleState === 'mixed' ? 'bg-white/5 text-gray-300' : visibleState === 'available' ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
+          {visibleState === 'mixed' ? t.network.replace(/s$/, '') : visibleState === 'available' ? t.network.replace(/s$/, '') : t.usable ? 'Locked' : `Needs ${t.network.replace(/s$/, '')}`}
         </span>
       </div>
     );
@@ -676,12 +682,11 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
           const visibleState = resolveChunkInfoItemState(usable, scope);
           const title = hasMixedScope && g.networkUnlocked
             ? 'Availability varies across this area'
-            : usable ? 'Reachable \u2014 click to view' : !d.unlocked ? 'Area locked' : `Needs the "${g.category}" network`;
+            : visibleState === 'available' ? 'Reachable \u2014 click to view' : usable ? 'Chunk locked' : !d.unlocked ? 'Area locked' : `Needs the "${g.category}" network`;
           const classes = visibleState === 'mixed'
             ? 'border-white/10 bg-white/5 text-gray-300'
-            : usable ? 'border-emerald-600/30 bg-emerald-900/20 text-emerald-200'
-              : !d.unlocked ? 'border-red-700/30 bg-red-950/30 text-gray-500'
-                : 'border-amber-700/30 bg-amber-950/20 text-amber-200/80';
+            : visibleState === 'available' ? 'border-emerald-600/30 bg-emerald-900/20 text-emerald-200'
+              : 'border-red-700/30 bg-red-950/30 text-gray-400';
           return (
             <button
               type="button"
@@ -690,7 +695,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
               title={title}
               className={`inline-flex items-center gap-0.5 rounded border px-1 py-0.5 text-[10px] transition-colors hover:border-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 motion-reduce:transition-none ${classes}`}
             >
-              {!hasMixedScope && !usable && <Lock size={9} aria-hidden="true" />}
+              {visibleState === 'locked' && <Lock size={9} aria-hidden="true" />}
               {d.label}
             </button>
           );
@@ -709,7 +714,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       {derived.guilds.map(g => {
         const visibleState = resolveChunkInfoItemState(g.usable, scope);
         return (
-          <div key={g.name} className="flex items-center gap-1.5 py-px" title={hasMixedScope ? 'Availability varies across this area' : g.usable ? 'Guild unlocked' : 'Needs the Guilds-table unlock'}>
+          <div key={g.name} className="flex items-center gap-1.5 py-px" title={hasMixedScope ? 'Availability varies across this area' : visibleState === 'available' ? 'Guild unlocked' : g.usable ? 'Chunk locked' : 'Needs the Guilds-table unlock'}>
             {visibleState === 'available' ? <Check size={10} className="shrink-0 text-green-400" /> : visibleState === 'locked' ? <Lock size={10} className="shrink-0 text-red-400/70" /> : <span className="w-[10px] shrink-0 text-center text-gray-600">?</span>}
             <WikiLink name={g.name} className={`hover:underline decoration-dotted underline-offset-2 ${rowStateCls(visibleState)}`} />
           </div>
@@ -723,7 +728,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       {derived.minigames.map(mg => {
         const visibleState = resolveChunkInfoItemState(mg.usable, scope);
         return (
-          <div key={mg.name} className="flex items-center gap-1.5 py-px" title={hasMixedScope ? 'Availability varies across this area' : mg.usable ? 'Minigame unlocked' : 'Needs the Minigames-table unlock'}>
+          <div key={mg.name} className="flex items-center gap-1.5 py-px" title={hasMixedScope ? 'Availability varies across this area' : visibleState === 'available' ? 'Minigame unlocked' : mg.usable ? 'Chunk locked' : 'Needs the Minigames-table unlock'}>
             {visibleState === 'available' ? <Check size={10} className="shrink-0 text-green-400" /> : visibleState === 'locked' ? <Lock size={10} className="shrink-0 text-red-400/70" /> : <span className="w-[10px] shrink-0 text-center text-gray-600">?</span>}
             <WikiLink name={mg.name} className={`hover:underline decoration-dotted underline-offset-2 ${rowStateCls(visibleState)}`} />
           </div>
@@ -738,13 +743,13 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
         const visibleState = resolveChunkInfoItemState(d.reachable, scope);
         return (
           <div key={d.area} className="flex items-center justify-between gap-2 py-px"
-            title={hasMixedScope ? 'Availability varies across this area' : d.reachable ? `${d.region ?? d.area} is unlocked \u2014 these tasks are reachable` : `Locked: the ${d.region} region isn't unlocked yet`}>
+            title={hasMixedScope ? 'Availability varies across this area' : visibleState === 'available' ? `${d.region ?? d.area} is unlocked \u2014 these tasks are reachable` : d.reachable ? 'Chunk locked' : `Locked: the ${d.region} region isn't unlocked yet`}>
             <span className={`truncate ${rowStateCls(visibleState)}`}>
               <WikiLink name={`${d.area} Diary`} className="hover:underline decoration-dotted underline-offset-2">{d.area}</WikiLink> <span className="no-underline text-gray-600">({d.refs})</span>
             </span>
             {d.region && (
-              <span className={`shrink-0 rounded px-1 text-[9px] ${hasMixedScope ? 'bg-white/5 text-gray-300' : d.reachable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
-                {hasMixedScope ? 'Area' : d.reachable ? 'Reachable' : 'Locked'}
+              <span className={`shrink-0 rounded px-1 text-[9px] ${visibleState === 'mixed' ? 'bg-white/5 text-gray-300' : visibleState === 'available' ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
+                {visibleState === 'mixed' ? 'Area' : visibleState === 'available' ? 'Reachable' : 'Locked'}
               </span>
             )}
           </div>
