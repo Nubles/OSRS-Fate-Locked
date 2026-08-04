@@ -296,7 +296,6 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [openShop, setOpenShop] = useState<string | null>(null);
   const [openResource, setOpenResource] = useState<string | null>(null);
-  const [showLinks, setShowLinks] = useState(false);
   const [linksCap, setLinksCap] = useState<Record<string, number>>({});
 
   useEffect(() => {
@@ -372,7 +371,6 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
   }, [mode, chunk, regionChunks, unlocks, gameModeId, chunkContentService.ready]);
 
   const totalLinks = useMemo(() => linkGroups.reduce((a, g) => a + g.dests.length, 0), [linkGroups]);
-  const reachableLinks = useMemo(() => linkGroups.reduce((a, g) => a + (g.networkUnlocked ? g.dests.filter(d => d.unlocked).length : 0), 0), [linkGroups]);
 
   const slayerLevel = unlocks.levels['Slayer'] ?? 1;
   const slayerUnlocked = (unlocks.skills?.['Slayer'] ?? 0) > 0;
@@ -609,6 +607,176 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       </div>
     );
   }) ?? [];
+  const shopRows = derived?.shops.map(s => {
+    const stock = chunkContentService.shopStock(s.name);
+    const isOpen = openShop === s.name;
+    const visibleState = s.category ? resolveChunkInfoItemState(s.usable, scope) : 'neutral';
+    return (
+      <div key={s.name}>
+        <div className="flex items-center justify-between gap-2 py-px"
+          title={hasMixedScope && s.category ? 'Availability varies across this area' : s.usable ? `${s.category} unlocked` : s.category ? `Needs the "${s.category}" merchant unlock` : 'Unclassified shop \u2014 no merchant category gate'}>
+          <span className="flex min-w-0 items-center gap-1">
+            {stock.length > 0 && (
+              <button type="button" onClick={() => setOpenShop(isOpen ? null : s.name)} className="shrink-0 text-gray-500 hover:text-white" title="Show stock">
+                {isOpen ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+              </button>
+            )}
+            <WikiLink name={s.name} className={`truncate hover:underline decoration-dotted underline-offset-2 ${rowStateCls(visibleState)}`} />
+          </span>
+          {s.category && (
+            <span className={`shrink-0 rounded px-1 text-[9px] ${hasMixedScope ? 'bg-white/5 text-gray-300' : s.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
+              {s.category.replace(/ Shops?$/, '')}
+            </span>
+          )}
+        </div>
+        {isOpen && stock.length > 0 && (
+          <div className="mb-1 ml-4 flex flex-wrap gap-1">
+            {stock.map(it => (
+              <WikiLink key={it} name={it} className="rounded border border-white/10 bg-white/5 px-1 py-0.5 text-[9px] text-gray-400 hover:border-white/20 hover:text-white" />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }) ?? [];
+  const transportRows = derived?.transport.map(t => {
+    const visibleState = resolveChunkInfoItemState(t.usable, scope);
+    return (
+      <div key={t.name} className="flex items-center justify-between gap-2 py-px"
+        title={hasMixedScope ? 'Availability varies across this area' : t.usable ? `${t.network} network unlocked` : `Needs the "${t.network}" mobility unlock`}>
+        <span className={`truncate ${rowStateCls(visibleState)}`}>
+          <WikiLink name={t.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="no-underline text-gray-600">x{t.count}</span>
+        </span>
+        <span className={`shrink-0 rounded px-1 text-[9px] font-bold ${hasMixedScope ? 'bg-white/5 text-gray-300' : t.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
+          {t.network.replace(/s$/, '')}
+        </span>
+      </div>
+    );
+  }) ?? [];
+  const travelLinkGroups = linkGroups.map(g => (
+    <div key={g.category} className="mb-1.5 ml-1">
+      <div className="flex items-center gap-1.5 py-0.5">
+        <span className="text-[10px] font-semibold text-gray-300">{g.category}</span>
+        <span className="font-mono text-[9px] text-gray-600">{g.dests.length}</span>
+        {!g.networkUnlocked && (
+          <span className="rounded border border-amber-700/40 bg-amber-950/60 px-1 text-[8px] text-amber-300/90" title={`Needs the "${g.category}" mobility unlock`}>network locked</span>
+        )}
+      </div>
+      <div className="ml-1 flex flex-wrap gap-1">
+        {g.dests.slice(0, linksCap[g.category] ?? 8).map(d => {
+          const usable = d.unlocked && g.networkUnlocked;
+          const visibleState = resolveChunkInfoItemState(usable, scope);
+          const title = hasMixedScope && g.networkUnlocked
+            ? 'Availability varies across this area'
+            : usable ? 'Reachable \u2014 click to view' : !d.unlocked ? 'Area locked' : `Needs the "${g.category}" network`;
+          const classes = visibleState === 'mixed'
+            ? 'border-white/10 bg-white/5 text-gray-300'
+            : usable ? 'border-emerald-600/30 bg-emerald-900/20 text-emerald-200'
+              : !d.unlocked ? 'border-red-700/30 bg-red-950/30 text-gray-500'
+                : 'border-amber-700/30 bg-amber-950/20 text-amber-200/80';
+          return (
+            <button
+              type="button"
+              key={d.label}
+              onClick={() => showChunkOnMap(d.cx, d.cy)}
+              title={title}
+              className={`rounded border px-1 py-0.5 text-[9px] transition-colors hover:border-white/30 ${classes}`}
+            >{d.label}</button>
+          );
+        })}
+        {g.dests.length > (linksCap[g.category] ?? 8) && (
+          <button type="button" onClick={() => setLinksCap(c => ({ ...c, [g.category]: g.dests.length }))} className="px-1 py-0.5 text-[9px] text-cyan-400 hover:underline">
+            +{g.dests.length - (linksCap[g.category] ?? 8)} more
+          </button>
+        )}
+      </div>
+    </div>
+  ));
+  const guildRows = derived?.guilds.length ? (
+    <>
+      <SectionHead icon={<Flag size={11} />} label="Guilds" count={derived.guilds.length} />
+      {derived.guilds.map(g => {
+        const visibleState = resolveChunkInfoItemState(g.usable, scope);
+        return (
+          <div key={g.name} className="flex items-center gap-1.5 py-px" title={hasMixedScope ? 'Availability varies across this area' : g.usable ? 'Guild unlocked' : 'Needs the Guilds-table unlock'}>
+            {visibleState === 'available' ? <Check size={10} className="shrink-0 text-green-400" /> : visibleState === 'locked' ? <Lock size={10} className="shrink-0 text-red-400/70" /> : <span className="w-[10px] shrink-0 text-center text-gray-600">?</span>}
+            <WikiLink name={g.name} className={`hover:underline decoration-dotted underline-offset-2 ${rowStateCls(visibleState)}`} />
+          </div>
+        );
+      })}
+    </>
+  ) : null;
+  const minigameRows = derived?.minigames.length ? (
+    <>
+      <SectionHead icon={<Gamepad2 size={11} />} label="Minigames" count={derived.minigames.length} />
+      {derived.minigames.map(mg => {
+        const visibleState = resolveChunkInfoItemState(mg.usable, scope);
+        return (
+          <div key={mg.name} className="flex items-center gap-1.5 py-px" title={hasMixedScope ? 'Availability varies across this area' : mg.usable ? 'Minigame unlocked' : 'Needs the Minigames-table unlock'}>
+            {visibleState === 'available' ? <Check size={10} className="shrink-0 text-green-400" /> : visibleState === 'locked' ? <Lock size={10} className="shrink-0 text-red-400/70" /> : <span className="w-[10px] shrink-0 text-center text-gray-600">?</span>}
+            <WikiLink name={mg.name} className={`hover:underline decoration-dotted underline-offset-2 ${rowStateCls(visibleState)}`} />
+          </div>
+        );
+      })}
+    </>
+  ) : null;
+  const diaryRows = derived?.diaries.length ? (
+    <>
+      <SectionHead icon={<BookOpen size={11} />} label="Diary tasks here" count={derived.diaries.length} />
+      {derived.diaries.map(d => {
+        const visibleState = resolveChunkInfoItemState(d.reachable, scope);
+        return (
+          <div key={d.area} className="flex items-center justify-between gap-2 py-px"
+            title={hasMixedScope ? 'Availability varies across this area' : d.reachable ? `${d.region ?? d.area} is unlocked \u2014 these tasks are reachable` : `Locked: the ${d.region} region isn't unlocked yet`}>
+            <span className={`truncate ${rowStateCls(visibleState)}`}>
+              <WikiLink name={`${d.area} Diary`} className="hover:underline decoration-dotted underline-offset-2">{d.area}</WikiLink> <span className="no-underline text-gray-600">({d.refs})</span>
+            </span>
+            {d.region && (
+              <span className={`shrink-0 rounded px-1 text-[9px] ${hasMixedScope ? 'bg-white/5 text-gray-300' : d.reachable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
+                {hasMixedScope ? 'Area' : d.reachable ? 'Reachable' : 'Locked'}
+              </span>
+            )}
+          </div>
+        );
+      })}
+    </>
+  ) : null;
+  const objectRows = derived?.objects.length ? (
+    <>
+      <SectionHead icon={<Package size={11} />} label="Objects" count={derived.objects.length} />
+      <CappedList cap={10} items={derived.objects.map(([name, count]) => (
+        <div key={name} className={`truncate py-px ${rowStateCls('neutral')}`}><WikiLink name={name} /> <span className="text-gray-600">x{count}</span></div>
+      ))} />
+    </>
+  ) : null;
+  const clueRows = content && Object.keys(content.clues).length ? (
+    <>
+      <SectionHead icon={<Scroll size={11} />} label="Clue steps" count={Object.keys(content.clues).length} />
+      <div className="flex flex-wrap gap-1">
+        {Object.entries(content.clues).map(([tier, n]) => (
+          <span key={tier} className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[9px] capitalize text-gray-300">
+            {tier} x{n}
+          </span>
+        ))}
+      </div>
+    </>
+  ) : null;
+  const npcRows = content?.npcs.length ? (
+    <>
+      <SectionHead icon={<Users size={11} />} label="NPCs" count={content.npcs.length} />
+      <CappedList cap={6} items={content.npcs.map(n => (
+        <div key={n} className={`truncate py-px ${rowStateCls('neutral')}`}><WikiLink name={n} /></div>
+      ))} />
+    </>
+  ) : null;
+  const spawnRows = content?.spawns.length ? (
+    <>
+      <SectionHead icon={<Package size={11} />} label="Item spawns" count={content.spawns.length} />
+      <CappedList cap={6} items={content.spawns.map(s => (
+        <div key={s} className={`truncate py-px ${rowStateCls('neutral')}`}><WikiLink name={s} /></div>
+      ))} />
+    </>
+  ) : null;
 
 
   return (
@@ -702,188 +870,48 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
             )}
 
             </>
-            {derived.transport.length > 0 && (
-              <>
-                <SectionHead icon={<Route size={11} />} label="Transport" count={derived.transport.length} />
-                {derived.transport.map(t => (
-                  <div key={t.name} className="flex items-center justify-between gap-2 py-px"
-                    title={t.usable ? `${t.network} network unlocked` : `Needs the "${t.network}" mobility unlock`}>
-                    <span className={`truncate ${stateCls(t.usable)}`}>
-                      <WikiLink name={t.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">×{t.count}</span>
-                    </span>
-                    <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${t.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
-                      {t.network.replace(/s$/, '')}
-                    </span>
-                  </div>
-                ))}
-              </>
-            )}
-
-            {totalLinks > 0 && (
-              <>
-                <button onClick={() => setShowLinks(v => !v)} className="w-full flex items-center gap-1.5 mt-2 mb-0.5 text-left">
-                  {showLinks ? <ChevronDown size={11} className="text-gray-500 shrink-0" /> : <ChevronRight size={11} className="text-gray-500 shrink-0" />}
-                  <Route size={11} className="text-cyan-400 shrink-0" />
-                  <span className="text-[10px] font-bold uppercase tracking-wide text-cyan-300">Travel links</span>
-                  <span className="text-[9px] font-mono text-gray-500">
-                    <span className="text-emerald-300">{reachableLinks}</span>/{totalLinks}
-                  </span>
-                </button>
-                {showLinks && linkGroups.map(g => (
-                  <div key={g.category} className="mb-1.5 ml-1">
-                    <div className="flex items-center gap-1.5 py-0.5">
-                      <span className="text-[10px] font-semibold text-gray-300">{g.category}</span>
-                      <span className="text-[9px] font-mono text-gray-600">{g.dests.length}</span>
-                      {!g.networkUnlocked && (
-                        <span className="text-[8px] px-1 rounded bg-amber-950/60 text-amber-300/90 border border-amber-700/40" title={`Needs the "${g.category}" mobility unlock`}>network locked</span>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-1 ml-1">
-                      {g.dests.slice(0, linksCap[g.category] ?? 8).map(d => {
-                        const usable = d.unlocked && g.networkUnlocked;
-                        return (
-                          <button
-                            key={d.label}
-                            onClick={() => showChunkOnMap(d.cx, d.cy)}
-                            title={usable ? 'Reachable — click to view' : !d.unlocked ? 'Area locked' : `Needs the "${g.category}" network`}
-                            className={`text-[9px] px-1 py-0.5 rounded border transition-colors hover:border-white/30
-                              ${usable ? 'bg-emerald-900/20 border-emerald-600/30 text-emerald-200'
-                                : !d.unlocked ? 'bg-red-950/30 border-red-700/30 text-gray-500 line-through decoration-red-500/40'
-                                : 'bg-amber-950/20 border-amber-700/30 text-amber-200/80'}`}
-                          >{d.label}</button>
-                        );
-                      })}
-                      {g.dests.length > (linksCap[g.category] ?? 8) && (
-                        <button onClick={() => setLinksCap(c => ({ ...c, [g.category]: g.dests.length }))} className="text-[9px] px-1 py-0.5 text-cyan-400 hover:underline">
-                          +{g.dests.length - (linksCap[g.category] ?? 8)} more
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </>
-            )}
-
-            {derived.guilds.length > 0 && (
-              <>
-                <SectionHead icon={<Flag size={11} />} label="Guilds" count={derived.guilds.length} />
-                {derived.guilds.map(g => (
-                  <div key={g.name} className="flex items-center gap-1.5 py-px" title={g.usable ? 'Guild unlocked' : 'Needs the Guilds-table unlock'}>
-                    {g.usable ? <Check size={10} className="text-green-400 shrink-0" /> : <Lock size={10} className="text-red-400/70 shrink-0" />}
-                    <WikiLink name={g.name} className={`hover:underline decoration-dotted underline-offset-2 ${stateCls(g.usable)}`} />
-                  </div>
-                ))}
-              </>
-            )}
-
-            {derived.minigames.length > 0 && (
-              <>
-                <SectionHead icon={<Gamepad2 size={11} />} label="Minigames" count={derived.minigames.length} />
-                {derived.minigames.map(mg => (
-                  <div key={mg.name} className="flex items-center gap-1.5 py-px" title={mg.usable ? 'Minigame unlocked' : 'Needs the Minigames-table unlock'}>
-                    {mg.usable ? <Check size={10} className="text-green-400 shrink-0" /> : <Lock size={10} className="text-red-400/70 shrink-0" />}
-                    <WikiLink name={mg.name} className={`hover:underline decoration-dotted underline-offset-2 ${stateCls(mg.usable)}`} />
-                  </div>
-                ))}
-              </>
-            )}
-
             {derived.shops.length > 0 && (
-              <>
-                <SectionHead icon={<Store size={11} />} label="Shops" count={derived.shops.length} />
-                {derived.shops.map(s => {
-                  const stock = chunkContentService.shopStock(s.name);
-                  const isOpen = openShop === s.name;
-                  return (
-                    <div key={s.name}>
-                      <div className="flex items-center justify-between gap-2 py-px"
-                        title={s.usable ? `${s.category} unlocked` : s.category ? `Needs the "${s.category}" merchant unlock` : 'Unclassified shop — no merchant category gate'}>
-                        <span className="flex items-center gap-1 min-w-0">
-                          {stock.length > 0 && (
-                            <button onClick={() => setOpenShop(isOpen ? null : s.name)} className="text-gray-500 hover:text-white shrink-0" title="Show stock">
-                              {isOpen ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
-                            </button>
-                          )}
-                          <WikiLink name={s.name} className={`truncate hover:underline decoration-dotted underline-offset-2 ${s.category ? stateCls(s.usable) : 'text-gray-300'}`} />
-                        </span>
-                        {s.category && (
-                          <span className={`text-[9px] px-1 rounded shrink-0 ${s.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
-                            {s.category.replace(/ Shops?$/, '')}
-                          </span>
-                        )}
-                      </div>
-                      {isOpen && stock.length > 0 && (
-                        <div className="ml-4 mb-1 flex flex-wrap gap-1">
-                          {stock.map(it => (
-                            <WikiLink key={it} name={it} className="text-[9px] px-1 py-0.5 rounded bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:border-white/20" />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </>
+              <ChunkInfoSection
+                key={`${panelResetKey}:shops`}
+                id="shops"
+                label="Shops"
+                icon={<Store size={11} />}
+                summary={formatChunkInfoSectionSummary(sectionStats.shops!, scope)}
+                defaultOpen={defaultSection === 'shops'}
+              >
+                {shopRows}
+              </ChunkInfoSection>
             )}
-
-            {derived.objects.length > 0 && (
-              <>
-                <SectionHead icon={<Package size={11} />} label="Objects" count={derived.objects.length} />
-                <CappedList cap={10} items={derived.objects.map(([name, count]) => (
-                  <div key={name} className="text-gray-300 py-px truncate"><WikiLink name={name} /> <span className="text-gray-600">×{count}</span></div>
-                ))} />
-              </>
+            {(derived.transport.length > 0 || totalLinks > 0) && (
+              <ChunkInfoSection
+                key={`${panelResetKey}:travel`}
+                id="travel"
+                label="Travel"
+                icon={<Route size={11} />}
+                summary={formatChunkInfoSectionSummary(sectionStats.travel!, scope)}
+                defaultOpen={defaultSection === 'travel'}
+              >
+                {derived.transport.length > 0 && <><SectionHead icon={<Route size={11} />} label="Transport nodes" count={derived.transport.length} />{transportRows}</>}
+                {totalLinks > 0 && <><SectionHead icon={<Compass size={11} />} label="Destinations" count={totalLinks} />{travelLinkGroups}</>}
+              </ChunkInfoSection>
             )}
-
-            {derived.diaries.length > 0 && (
-              <>
-                <SectionHead icon={<BookOpen size={11} />} label="Diary tasks here" count={derived.diaries.length} />
-                {derived.diaries.map(d => (
-                  <div key={d.area} className="flex items-center justify-between gap-2 py-px"
-                    title={d.reachable
-                      ? `${d.region ?? d.area} is unlocked — these tasks are reachable`
-                      : `Locked: the ${d.region} region isn't unlocked yet`}>
-                    <span className={`truncate ${stateCls(d.reachable)}`}>
-                      <WikiLink name={`${d.area} Diary`} className="hover:underline decoration-dotted underline-offset-2">{d.area}</WikiLink> <span className="text-gray-600 no-underline">({d.refs})</span>
-                    </span>
-                    {d.region && (
-                      <span className={`text-[9px] px-1 rounded shrink-0 ${d.reachable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
-                        {d.reachable ? 'Reachable' : 'Locked'}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </>
-            )}
-
-            {Object.keys(content.clues).length > 0 && (
-              <>
-                <SectionHead icon={<Scroll size={11} />} label="Clue steps" />
-                <div className="flex flex-wrap gap-1">
-                  {Object.entries(content.clues).map(([tier, n]) => (
-                    <span key={tier} className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-gray-300 capitalize">
-                      {tier} ×{n}
-                    </span>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {content.npcs.length > 0 && (
-              <>
-                <SectionHead icon={<Users size={11} />} label="NPCs" count={content.npcs.length} />
-                <CappedList cap={6} items={content.npcs.map(n => (
-                  <div key={n} className="text-gray-400 py-px truncate"><WikiLink name={n} /></div>
-                ))} />
-              </>
-            )}
-
-            {content.spawns.length > 0 && (
-              <>
-                <SectionHead icon={<Package size={11} />} label="Item spawns" count={content.spawns.length} />
-                <CappedList cap={6} items={content.spawns.map(s => (
-                  <div key={s} className="text-gray-400 py-px truncate"><WikiLink name={s} /></div>
-                ))} />
-              </>
+            {(sectionStats.other?.total ?? 0) > 0 && (
+              <ChunkInfoSection
+                key={`${panelResetKey}:other`}
+                id="other"
+                label="Other"
+                icon={<Package size={11} />}
+                summary={formatChunkInfoSectionSummary(sectionStats.other!, scope)}
+                defaultOpen={defaultSection === 'other'}
+              >
+                {guildRows}
+                {minigameRows}
+                {diaryRows}
+                {objectRows}
+                {clueRows}
+                {npcRows}
+                {spawnRows}
+              </ChunkInfoSection>
             )}
                 </>
               )}

@@ -127,9 +127,69 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(screen.getByRole('button', { name: /Combat/ }).getAttribute('aria-expanded')).toBe('true');
     expect(screen.queryByRole('button', { name: /Quests/ })).toBeNull();
     expect(screen.queryByRole('button', { name: /Gathering/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Shops/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Travel/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Other/ })).toBeNull();
   });
-});
 
+  it('groups shops, travel, and reference rows without losing nested controls', async () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      shops: ['Varrock General Store', 'Odd Shop'],
+      quests: { 'Sheep Shearer': 'first' },
+      monsters: [{ name: 'Rat', count: 1, slayer: null }],
+      objects: [['Fairy ring', 1], ['Herb patch', 1], ['Yew tree', 1], ['Statue', 2]],
+      npcs: ["Cooks' Guild", 'Castle Wars', 'Shopkeeper'],
+      diaries: { Lumbridge: 'LB1' },
+      clues: { hard: 1 },
+      spawns: ['Bronze dagger'],
+    };
+    mocks.service.shopStock.mockReturnValue(['Bronze dagger']);
+    mocks.service.connectGraph.mockReturnValue({ '12853': ['12854'] });
+    const onShowChunk = vi.fn();
+    window.addEventListener('fate:show-chunk', onShowChunk);
+
+    render(<ChunkActivityPanel {...baseProps} />);
+
+    expect(screen.getByRole('button', { name: /Shops/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Travel/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Other/ })).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: /Quests|Combat|Gathering|Shops|Travel|Other/ })).toHaveLength(6);
+    expect(screen.queryByText('Travel links')).toBeNull();
+
+    await userEvent.click(screen.getByRole('button', { name: /Shops/ }));
+    await userEvent.click(screen.getAllByTitle('Show stock')[0]);
+    expect(screen.getAllByText('Bronze dagger')).toHaveLength(2);
+
+    await userEvent.click(screen.getByRole('button', { name: /Travel/ }));
+    await userEvent.click(screen.getByTitle('Needs the "Fairy Rings" network'));
+    expect(onShowChunk).toHaveBeenCalledTimes(1);
+
+    await userEvent.click(screen.getByRole('button', { name: /Other/ }));
+    expect(screen.getByText('Shopkeeper')).toBeTruthy();
+    expect(screen.getAllByText('Bronze dagger').length).toBeGreaterThan(1);
+    window.removeEventListener('fate:show-chunk', onShowChunk);
+  });
+  it('keeps Shops, Travel, and Other rows neutral in mixed area scope', async () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      shops: ['Varrock General Store'],
+      objects: [['Fairy ring', 1]],
+      npcs: ["Cooks' Guild"],
+    };
+    mocks.state.regions = ['Misthalin'];
+
+    render(<ChunkActivityPanel {...baseProps} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Whole area' }));
+    await userEvent.click(screen.getByRole('button', { name: /Travel/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Other/ }));
+
+    expect(screen.getByText('Varrock General Store').closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
+    expect(screen.getByText('Fairy ring').closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
+    expect(screen.getAllByText("Cooks' Guild")[0].closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
+  });
+
+});
 describe('ChunkActivityPanel summary hierarchy', () => {
   it('shows uniform availability and neutral chunk-owned area totals', async () => {
     render(<ChunkActivityPanel {...baseProps} />);
