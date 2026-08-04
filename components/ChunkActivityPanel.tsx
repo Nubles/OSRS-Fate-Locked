@@ -46,6 +46,7 @@ import { ChunkInfoHeader } from './chunk-info/ChunkInfoHeader';
 import { ChunkInfoAccessCard, type ChunkInfoBankState } from './chunk-info/ChunkInfoAccessCard';
 import { ChunkInfoBodyState } from './chunk-info/ChunkInfoBodyState';
 import { ChunkInfoSection } from './chunk-info/ChunkInfoSection';
+import { ChunkInfoIcon } from './chunk-info/ChunkInfoIcon';
 
 import { ChunkInfoSummary } from './chunk-info/ChunkInfoSummary';
 import {
@@ -1007,7 +1008,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
                 key={`${panelResetKey}:quests`}
                 id="quests"
                 label="Quests"
-                icon={<Sparkles size={11} />}
+                icon={<ChunkInfoIcon id="quests" fallback={<Sparkles size={11} />} />}
                 summary={formatChunkInfoSectionSummary(sectionStats.quests!, scope)}
                 defaultOpen={defaultSection === 'quests'}
               >
@@ -1071,7 +1072,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
                 key={`${panelResetKey}:combat`}
                 id="combat"
                 label="Combat"
-                icon={<Swords size={11} />}
+                icon={<ChunkInfoIcon id="combat" fallback={<Swords size={11} />} />}
                 summary={formatChunkInfoSectionSummary(sectionStats.combat!, scope)}
                 defaultOpen={defaultSection === 'combat'}
               >
@@ -1084,7 +1085,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
                 key={`${panelResetKey}:gathering`}
                 id="gathering"
                 label="Gathering"
-                icon={<Pickaxe size={11} />}
+                icon={<ChunkInfoIcon id="gathering" fallback={<Pickaxe size={11} />} />}
                 summary={formatChunkInfoSectionSummary(sectionStats.gathering!, scope)}
                 defaultOpen={defaultSection === 'gathering'}
               >
@@ -1099,7 +1100,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
                 key={`${panelResetKey}:shops`}
                 id="shops"
                 label="Shops"
-                icon={<Store size={11} />}
+                icon={<ChunkInfoIcon id="shops" fallback={<Store size={11} />} />}
                 summary={formatChunkInfoSectionSummary(sectionStats.shops!, scope)}
                 defaultOpen={defaultSection === 'shops'}
               >
@@ -1111,7 +1112,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
                 key={`${panelResetKey}:travel`}
                 id="travel"
                 label="Travel"
-                icon={<Route size={11} />}
+                icon={<ChunkInfoIcon id="travel" fallback={<Route size={11} />} />}
                 summary={formatChunkInfoSectionSummary(sectionStats.travel!, scope)}
                 defaultOpen={defaultSection === 'travel'}
               >
@@ -1124,7 +1125,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
                 key={`${panelResetKey}:other`}
                 id="other"
                 label="Other"
-                icon={<Package size={11} />}
+                icon={<ChunkInfoIcon id="other" fallback={<Package size={11} />} />}
                 summary={formatChunkInfoSectionSummary(sectionStats.other!, scope)}
                 defaultOpen={defaultSection === 'other'}
               >

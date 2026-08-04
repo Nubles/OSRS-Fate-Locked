@@ -1,5 +1,5 @@
 /* @vitest-environment jsdom */
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ChunkContent } from '../services/ChunkContentService';
@@ -561,6 +561,27 @@ describe('ChunkActivityPanel activity accordions', () => {
       .map(label => label.split(',')[0]);
     expect(accordionLabels).toEqual(['Quests', 'Combat', 'Gathering', 'Shops', 'Travel', 'Other']);
     expect(accordionLabels).toHaveLength(6);
+
+    const expectedOsrsIcons = [
+      ['quests', 'https://oldschool.runescape.wiki/images/Quest_point_icon.png'],
+      ['combat', 'https://oldschool.runescape.wiki/images/Combat_icon.png'],
+      ['gathering', 'https://oldschool.runescape.wiki/images/Stats_icon.png'],
+      ['shops', 'https://oldschool.runescape.wiki/images/General_store_icon_(historical).png'],
+      ['travel', 'https://oldschool.runescape.wiki/images/Transportations_icon.png'],
+      ['other', 'https://oldschool.runescape.wiki/images/Collection_log_icon.png'],
+    ] as const;
+
+    for (const [id, src] of expectedOsrsIcons) {
+      const image = screen.getByTestId(`chunk-info-icon-${id}`);
+      expect(image.getAttribute('src')).toBe(src);
+      expect(image.getAttribute('alt')).toBe('');
+      expect(image.getAttribute('aria-hidden')).toBe('true');
+    }
+
+    const questsButton = screen.getByRole('button', { name: /^Quests,/ });
+    fireEvent.error(screen.getByTestId('chunk-info-icon-quests'));
+    expect(within(questsButton).getByTestId('chunk-info-icon-fallback-quests')).toBeTruthy();
+    expect(questsButton.getAttribute('aria-label')).toMatch(/^Quests,/);
     expect(screen.queryByText('Travel links')).toBeNull();
 
     await userEvent.click(screen.getByRole('button', { name: /Shops/ }));
