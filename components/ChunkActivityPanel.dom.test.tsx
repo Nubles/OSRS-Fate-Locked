@@ -49,6 +49,14 @@ const baseProps = {
 afterEach(cleanup);
 beforeEach(() => {
   mocks.state.content = { ...emptyContent(), monsters: [{ name: 'Rat', count: 3, slayer: null }] };
+  mocks.service.chunkEntryRequirements.mockReturnValue(['Dragon Slayer I']);
+  mocks.service.entrancesFor.mockReturnValue([{
+    location: 'Taverley Dungeon',
+    label: 'Entrance to Taverley Dungeon',
+    wikiPage: 'Taverley_Dungeon',
+    requirements: ['Example Quest'],
+  }]);
+  mocks.service.hasBank.mockReturnValue(true);
 });
 
 describe('ChunkActivityPanel summary hierarchy', () => {
@@ -56,8 +64,10 @@ describe('ChunkActivityPanel summary hierarchy', () => {
     render(<ChunkActivityPanel {...baseProps} />);
     expect(screen.getByText('Available now')).toBeTruthy();
     expect(screen.getByText('1')).toBeTruthy();
+    expect(screen.getAllByRole('heading', { name: 'Access & facilities' })).toHaveLength(1);
     await userEvent.click(screen.getByRole('button', { name: 'Whole area' }));
     expect(screen.getByText('Indexed activities')).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Access & facilities' })).toBeNull();
     expect(screen.queryByText('Available now')).toBeNull();
   });
 });

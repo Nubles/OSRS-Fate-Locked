@@ -18,7 +18,6 @@ import {
   Route,
   ChevronDown,
   ChevronRight,
-  Landmark,
   Compass,
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
@@ -40,14 +39,17 @@ import { FARMING_PATCH_LIST, GUILDS_LIST, MINIGAMES_LIST, MOBILITY_LIST, BOSSES_
 import type { ChunkCoord } from '../utils/mapCoords';
 import { WikiLink } from './WikiLink';
 import { displayAreaName } from '../data/areaMapPolicy';
-import { ChunkEntranceNotices } from './ChunkEntranceNotices';
 import { ChunkInfoHeader } from './chunk-info/ChunkInfoHeader';
+import { ChunkInfoAccessCard, type ChunkInfoBankState } from './chunk-info/ChunkInfoAccessCard';
+import { ChunkInfoBodyState } from './chunk-info/ChunkInfoBodyState';
+
 import { ChunkInfoSummary } from './chunk-info/ChunkInfoSummary';
 import {
   buildChunkInfoDrawerSummary,
   buildChunkInfoSectionStats,
   CHUNK_INFO_SECTION_ORDER,
   getChunkInfoScope,
+  chunkContentIsEmpty,
   resolveChunkInfoItemState,
   type ChunkInfoItemState,
   type ChunkInfoSectionId,
@@ -300,6 +302,18 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
   const entrances = mode === 'chunk' && chunkContentService.ready
     ? chunkContentService.entrancesFor(chunk.cx, chunk.cy)
     : [];
+  const entryRequirements = mode === 'chunk' && chunkContentService.ready
+    ? chunkContentService.chunkEntryRequirements(chunk.cx, chunk.cy)
+    : [];
+
+  const bankState: ChunkInfoBankState = mode !== 'chunk' || !chunkContentService.ready || !chunkContentService.hasBank(chunk.cx, chunk.cy)
+    ? null
+    : !bankLocksActive(gameModeId, customMode)
+      ? 'present'
+      : isBankReachable(chunk.cx, chunk.cy, unlocks, gameModeId, customMode)
+        ? 'available'
+        : 'locked';
+
   // Transport links grouped by network (fairy ring / canoe / boat / …). A link
   // is only usable if both the destination area AND its transport network are
   // unlocked — an unlocked area you can't yet sail/ring to is still locked.
@@ -479,6 +493,9 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
   const title = mode === 'region' && region
     ? region
     : content?.name ?? `Chunk ${chunk.cx}, ${chunk.cy}`;
+  const emptyContentState = content ? chunkContentIsEmpty(content) : false;
+  const detailedContent = content && derived;
+
 
   return (
     <div className="absolute bottom-3 right-3 top-3 z-30 flex w-80 max-w-[calc(100%-1.5rem)] flex-col overflow-hidden rounded-xl border border-white/15 bg-[#16191b]/95 shadow-2xl backdrop-blur-sm">
@@ -495,56 +512,20 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       />
       {/* Body */}
       <div className="flex-1 overflow-y-auto px-3 pb-3 text-[11px] custom-scrollbar" data-testid="chunk-info-scroll-body">
-        {content && <ChunkInfoSummary summary={drawerSummary} />}
-        {!unlocked && (
-          <div className="mt-2 px-2 py-1.5 rounded bg-amber-950/50 border border-amber-700/40 text-amber-300/90 text-[10px]">
-            <Lock size={10} className="inline mr-1 -mt-px" />
-            This area is still locked — a preview of what fate could grant.
-          </div>
-        )}
-
-        {mode === 'chunk' && (() => {
-          const entry = chunkContentService.chunkEntryRequirements(chunk.cx, chunk.cy);
-          if (entry.length === 0) return null;
-          return (
-            <div className="mt-2 px-2 py-1.5 rounded bg-purple-950/50 border border-purple-700/40 text-purple-200/90 text-[10px] flex items-start gap-1.5">
-              <Lock size={10} className="shrink-0 mt-px" />
-              <span>Requires <span className="font-semibold text-purple-100">{entry.join(', ')}</span> to enter this chunk.</span>
-            </div>
-          );
-        })()}
-
-        <ChunkEntranceNotices mode={mode} entrances={entrances} unlocked={unlocked} />
-        {mode === 'chunk' && chunkContentService.hasBank(chunk.cx, chunk.cy) && (() => {
-          // In bank-locked modes each bank is its own unlock — surface this
-          // chunk's bank lock state (green usable / red roll-it), matching the
-          // per-content lock rendering the rest of the panel uses. When banks
-          // aren't locked, keep the neutral "has a bank" note.
-          if (!bankLocksActive(gameModeId, customMode)) {
-            return (
-              <div className="mt-2 px-2 py-1 rounded bg-emerald-950/40 border border-emerald-700/30 text-emerald-300/90 text-[10px] flex items-center gap-1.5">
-                <Landmark size={10} className="shrink-0" /> This chunk has a bank.
-              </div>
-            );
-          }
-          const usable = isBankReachable(chunk.cx, chunk.cy, unlocks, gameModeId, customMode);
-          return usable ? (
-            <div className="mt-2 px-2 py-1 rounded bg-emerald-950/40 border border-emerald-700/30 text-emerald-300/90 text-[10px] flex items-center gap-1.5">
-              <Landmark size={10} className="shrink-0" /> <Check size={10} className="shrink-0" /> Bank unlocked here.
-            </div>
-          ) : (
-            <div className="mt-2 px-2 py-1 rounded bg-red-950/40 border border-red-700/40 text-red-300/90 text-[10px] flex items-center gap-1.5">
-              <Landmark size={10} className="shrink-0" /> <Lock size={10} className="shrink-0" /> Bank locked — roll it under Banks in Spend Keys.
-            </div>
-          );
-        })()}
-
-        {/* Brief can / can't overview — collapsed by default. */}
-
-        {failed && <div className="mt-3 text-gray-500">Chunk content unavailable (failed to load).</div>}
-        {!failed && !content && <div className="mt-3 text-gray-500 animate-pulse">Loading chunk content…</div>}
-        {content && derived && (
+        {failed ? (
+          <ChunkInfoBodyState kind="error" />
+        ) : !content ? (
+          <ChunkInfoBodyState kind="loading" />
+        ) : (
           <>
+            {!emptyContentState && <ChunkInfoSummary summary={drawerSummary} />}
+            {mode === 'chunk' && (
+              <ChunkInfoAccessCard previewLocked={!unlocked} entryRequirements={entryRequirements} entrances={entrances} chunkUnlocked={unlocked} bankState={bankState} />
+            )}
+            {emptyContentState
+              ? <ChunkInfoBodyState kind="empty" />
+              : detailedContent && (
+                <>
             {questRows.length > 0 && (
               <>
                 <SectionHead icon={<Sparkles size={11} />} label="Quests" count={questRows.length} />
@@ -854,6 +835,8 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
                 ))} />
               </>
             )}
+                </>
+              )}
           </>
         )}
       </div>

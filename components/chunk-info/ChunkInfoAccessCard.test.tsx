@@ -65,6 +65,29 @@ describe('ChunkInfoAccessCard', () => {
     expect(screen.getByText('Bank in this chunk')).toBeTruthy();
   });
 
+  it('applies the chunk lock state to every entrance and hides absent route requirements', () => {
+    const southernEntrance: ChunkEntrance = {
+      ...entrance,
+      label: 'Southern entrance to Taverley Dungeon',
+      requirements: [],
+    };
+
+    const { container } = render(
+      <ChunkInfoAccessCard
+        previewLocked={false}
+        entryRequirements={[]}
+        entrances={[entrance, southernEntrance]}
+        chunkUnlocked={false}
+        bankState={null}
+      />,
+    );
+
+    expect(container.textContent).toContain('Locked with this chunk');
+    expect(screen.getAllByText('Locked with this chunk')).toHaveLength(2);
+    expect(container.textContent).toContain('Also requires Example Quest');
+    expect(container.textContent).not.toContain('Also requires undefined');
+  });
+
   it('renders nothing without access or facility rows', () => {
     const { container } = render(
       <ChunkInfoAccessCard
