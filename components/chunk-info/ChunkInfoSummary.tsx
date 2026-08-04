@@ -13,7 +13,7 @@ export const ChunkInfoSummary: React.FC<{ summary: ChunkInfoDrawerSummary }> = (
       ];
 
   return (
-    <div className="grid grid-cols-2 gap-2 pt-2.5" aria-label="Chunk availability summary">
+    <div role="group" className="grid grid-cols-2 gap-2 pt-2.5" aria-label={summary.kind === 'availability' ? 'Chunk availability summary' : 'Chunk indexed content summary'}>
       {tiles.map(tile => (
         <div key={tile.label} className="rounded-lg border border-white/10 bg-white/[0.035] px-2.5 py-2">
           <strong className={`block text-lg leading-none ${tile.tone}`}>{tile.value}</strong>

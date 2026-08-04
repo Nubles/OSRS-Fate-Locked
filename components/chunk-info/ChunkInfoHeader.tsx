@@ -33,7 +33,7 @@ export const ChunkInfoHeader: React.FC<Props> = ({
       </div>
     </div>
     {showModeSwitch && (
-      <div className="mt-2.5 flex gap-0.5 rounded-lg bg-black/40 p-0.5" aria-label="Chunk information scope">
+      <div role="group" className="mt-2.5 flex gap-0.5 rounded-lg bg-black/40 p-0.5" aria-label="Chunk information scope">
         {(['chunk', 'region'] as const).map(value => (
           <button
             key={value}

@@ -23,6 +23,7 @@ describe('ChunkInfoHeader', () => {
     );
     expect(screen.getByRole('heading', { name: 'Varrock West' })).toBeTruthy();
     expect(screen.getByText('Unlocked')).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Chunk information scope' })).toBeTruthy();
     await userEvent.click(screen.getByRole('button', { name: 'Whole area' }));
     await userEvent.click(screen.getByRole('button', { name: 'Close chunk info' }));
     expect(onModeChange).toHaveBeenCalledWith('region');
