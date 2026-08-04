@@ -288,7 +288,7 @@ describe('ChunkActivityPanel activity accordions', () => {
     await userEvent.click(screen.getByRole('button', { name: /Shops/ }));
     await userEvent.click(screen.getByRole('button', { name: /Travel/ }));
 
-    const expectRowLabel = (label: string, state: 'Available' | 'Unlocked' | 'No unlock gate') => {
+    const expectRowLabel = (label: string, state: 'Available' | 'Unlocked' | 'No merchant gate') => {
       const row = screen.getByText(label).closest('div');
       expect(row).toBeTruthy();
       expect(within(row as HTMLElement).getByText(state)).toBeTruthy();
@@ -298,7 +298,7 @@ describe('ChunkActivityPanel activity accordions', () => {
     expectRowLabel('Herb patch', 'Available');
     expectRowLabel('Yew tree', 'Available');
     expectRowLabel('Varrock General Store', 'Unlocked');
-    expectRowLabel('Odd Shop', 'No unlock gate');
+    expectRowLabel('Odd Shop', 'No merchant gate');
     expectRowLabel('Fairy ring', 'Available');
     expect(screen.getByText('Available now').previousElementSibling?.textContent).toBe('7');
     expect(screen.getByText('Needs unlocks').previousElementSibling?.textContent).toBe('0');
@@ -594,7 +594,7 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(screen.getByText('Fairy ring').closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
     const oddShopRow = screen.getByText('Odd Shop').closest('div');
     expect(oddShopRow).toBeTruthy();
-    expect(within(oddShopRow as HTMLElement).getByText('No unlock gate')).toBeTruthy();
+    expect(within(oddShopRow as HTMLElement).getByText('No merchant gate')).toBeTruthy();
     expect(screen.getAllByText("Cooks' Guild")[0].closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
   });
 
@@ -690,8 +690,41 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(screen.getByText('Indexed activities').previousElementSibling?.textContent).toBe('0');
     const row = screen.getByText('Odd Shop').closest('div');
     expect(row).toBeTruthy();
-    expect(within(row as HTMLElement).getByText('No unlock gate')).toBeTruthy();
+    expect(within(row as HTMLElement).getByText('No merchant gate')).toBeTruthy();
+    expect(within(row as HTMLElement).queryByText('No unlock gate')).toBeNull();
     expect(within(row as HTMLElement).queryByText('Area')).toBeNull();
+  });
+
+  it('shows source requirements for an unclassified shop without inventing a merchant gate', async () => {
+    mocks.state.content = { ...emptyContent(), shops: ['The Crypt'] };
+    mocks.service.taskRequirements.mockImplementation(
+      (name: string, kind: string, cx: number, cy: number) =>
+        name === 'The Crypt' && kind === 'shop' && cx === 56 && cy === 53
+          ? ['Sins of the Father']
+          : [],
+    );
+
+    render(
+      <ChunkActivityPanel
+        {...baseProps}
+        chunk={{ cx: 56, cy: 53 }}
+        region="Morytania"
+        subArea="Haunted Woods"
+      />,
+    );
+
+    const disclosure = screen.getByRole('button', { name: 'Shops, 1 item' });
+    if (disclosure.getAttribute('aria-expanded') === 'false') {
+      await userEvent.click(disclosure);
+    }
+
+    const row = screen.getByText('The Crypt').closest('div');
+    expect(row).toBeTruthy();
+    expect(within(row as HTMLElement).getByTitle('Access requirement: Sins of the Father')).toBeTruthy();
+    expect(within(row as HTMLElement).getByText('No merchant gate')).toBeTruthy();
+    expect(within(row as HTMLElement).queryByText('No unlock gate')).toBeNull();
+    expect(screen.getByText('Available now').previousElementSibling?.textContent).toBe('0');
+    expect(screen.getByText('Needs unlocks').previousElementSibling?.textContent).toBe('0');
   });
 });
 describe('ChunkActivityPanel summary hierarchy', () => {

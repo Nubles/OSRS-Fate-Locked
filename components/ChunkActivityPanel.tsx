@@ -756,7 +756,12 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
           {s.category ? (
             <RequirementStateBadges requirements={s.requirements} state={s.state} label={shopLabel} />
           ) : (
-            <span className="shrink-0 rounded bg-white/5 px-1 text-[9px] text-gray-300">No unlock gate</span>
+            <span className="flex shrink-0 items-center gap-1">
+              {s.requirements.length > 0 && <ReqBadge reqs={s.requirements} />}
+              <span className="rounded bg-white/5 px-1 text-[9px] text-gray-300">
+                No merchant gate
+              </span>
+            </span>
           )}
         </div>
         {isOpen && stock.length > 0 && (
