@@ -557,8 +557,8 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
         <span className={`truncate ${rowStateCls(visibleState)}`}>
           <WikiLink name={b.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">{'\u00d7'}{b.count}</span>
         </span>
-        <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${visibleState === 'mixed' ? 'bg-white/5 text-gray-300' : visibleState === 'available' ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
-          {visibleState === 'mixed' ? 'Area' : visibleState === 'available' ? 'Unlocked' : b.usable ? 'Locked' : `Needs ${b.name}`}
+        <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${hasMixedScope ? b.usable ? 'bg-emerald-950/40 text-emerald-300/80' : 'bg-amber-950/40 text-amber-300/80' : visibleState === 'available' ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
+          {hasMixedScope ? b.usable ? 'Boss unlocked' : `Needs ${b.name}` : visibleState === 'available' ? 'Unlocked' : b.usable ? 'Locked' : `Needs ${b.name}`}
         </span>
       </div>
     );
@@ -740,9 +740,12 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       {derived.guilds.map(g => {
         const visibleState = resolveChunkInfoItemState(g.usable, scope);
         return (
-          <div key={g.name} className="flex items-center gap-1.5 py-px" title={hasMixedScope ? 'Availability varies across this area' : visibleState === 'available' ? 'Guild unlocked' : g.usable ? 'Chunk locked' : 'Needs the Guilds-table unlock'}>
+          <div key={g.name} className="flex items-center justify-between gap-2 py-px" title={hasMixedScope ? 'Availability varies across this area' : visibleState === 'available' ? 'Guild unlocked' : g.usable ? 'Chunk locked' : 'Needs the Guilds-table unlock'}>
+            <span className="flex min-w-0 items-center gap-1.5">
             {visibleState === 'available' ? <Check size={10} className="shrink-0 text-green-400" /> : visibleState === 'locked' ? <Lock size={10} className="shrink-0 text-red-400/70" /> : <span className="w-[10px] shrink-0 text-center text-gray-600">{'\u00b7'}</span>}
             <WikiLink name={g.name} className={`hover:underline decoration-dotted underline-offset-2 ${rowStateCls(visibleState)}`} />
+            </span>
+            {hasMixedScope && <span className={`shrink-0 rounded px-1 text-[9px] font-bold ${g.usable ? 'bg-emerald-950/40 text-emerald-300/80' : 'bg-amber-950/40 text-amber-300/80'}`}>{g.usable ? 'Guild unlocked' : 'Needs Guild unlock'}</span>}
           </div>
         );
       })}
@@ -754,9 +757,12 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       {derived.minigames.map(mg => {
         const visibleState = resolveChunkInfoItemState(mg.usable, scope);
         return (
-          <div key={mg.name} className="flex items-center gap-1.5 py-px" title={hasMixedScope ? 'Availability varies across this area' : visibleState === 'available' ? 'Minigame unlocked' : mg.usable ? 'Chunk locked' : 'Needs the Minigames-table unlock'}>
+          <div key={mg.name} className="flex items-center justify-between gap-2 py-px" title={hasMixedScope ? 'Availability varies across this area' : visibleState === 'available' ? 'Minigame unlocked' : mg.usable ? 'Chunk locked' : 'Needs the Minigames-table unlock'}>
+            <span className="flex min-w-0 items-center gap-1.5">
             {visibleState === 'available' ? <Check size={10} className="shrink-0 text-green-400" /> : visibleState === 'locked' ? <Lock size={10} className="shrink-0 text-red-400/70" /> : <span className="w-[10px] shrink-0 text-center text-gray-600">{'\u00b7'}</span>}
             <WikiLink name={mg.name} className={`hover:underline decoration-dotted underline-offset-2 ${rowStateCls(visibleState)}`} />
+            </span>
+            {hasMixedScope && <span className={`shrink-0 rounded px-1 text-[9px] font-bold ${mg.usable ? 'bg-emerald-950/40 text-emerald-300/80' : 'bg-amber-950/40 text-amber-300/80'}`}>{mg.usable ? 'Minigame unlocked' : 'Needs Minigame unlock'}</span>}
           </div>
         );
       })}

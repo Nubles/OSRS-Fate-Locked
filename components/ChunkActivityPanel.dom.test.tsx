@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ChunkContent } from '../services/ChunkContentService';
 
 const mocks = vi.hoisted(() => {
-  const state = { content: null as ChunkContent | null, completedQuests: [] as string[], regions: [] as string[], bosses: [] as string[], farming: [] as string[], merchants: [] as string[], mobility: [] as string[], skills: {} as Record<string, number>, levels: {} as Record<string, number> };
+  const state = { content: null as ChunkContent | null, completedQuests: [] as string[], regions: [] as string[], bosses: [] as string[], guilds: [] as string[], minigames: [] as string[], farming: [] as string[], merchants: [] as string[], mobility: [] as string[], skills: {} as Record<string, number>, levels: {} as Record<string, number> };
   return {
     state,
     service: {
@@ -29,7 +29,7 @@ vi.mock('../context/GameContext', async () => {
   const actual = await vi.importActual<typeof import('../context/GameContext')>('../context/GameContext');
   return { ...actual, useGame: () => ({
     ...actual.initialState,
-    unlocks: { ...actual.initialState.unlocks, quests: mocks.state.completedQuests, regions: mocks.state.regions, bosses: mocks.state.bosses, farming: mocks.state.farming, merchants: mocks.state.merchants, mobility: mocks.state.mobility, skills: { ...actual.initialState.unlocks.skills, ...mocks.state.skills }, levels: { ...actual.initialState.unlocks.levels, ...mocks.state.levels } },
+    unlocks: { ...actual.initialState.unlocks, quests: mocks.state.completedQuests, regions: mocks.state.regions, bosses: mocks.state.bosses, guilds: mocks.state.guilds, minigames: mocks.state.minigames, farming: mocks.state.farming, merchants: mocks.state.merchants, mobility: mocks.state.mobility, skills: { ...actual.initialState.unlocks.skills, ...mocks.state.skills }, levels: { ...actual.initialState.unlocks.levels, ...mocks.state.levels } },
     customMode: undefined,
   }) };
 });
@@ -58,6 +58,8 @@ beforeEach(() => {
   mocks.state.completedQuests = [];
   mocks.state.regions = [];
   mocks.state.bosses = [];
+  mocks.state.guilds = [];
+  mocks.state.minigames = [];
   mocks.state.farming = [];
   mocks.state.merchants = [];
   mocks.state.mobility = [];
@@ -298,10 +300,30 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(screen.getByText('King Black Dragon').closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
     expect(screen.getByText('Herb patch').closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
     expect(screen.getByText('Yew tree').closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
-    expect(screen.getByText('Area')).toBeTruthy();
+    expect(screen.getByText('Needs King Black Dragon')).toBeTruthy();
     expect(screen.getByText('Sheep Shearer').closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
 
   });
+  it('retains known boss, guild, and minigame gates in mixed Whole area scope', async () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      quests: { 'Sheep Shearer': 'first' },
+      monsters: [{ name: 'King Black Dragon', count: 1, slayer: null }],
+      npcs: ["Cooks' Guild", 'Castle Wars'],
+    };
+    mocks.state.guilds = ["Cooks' Guild"];
+
+    render(<ChunkActivityPanel {...baseProps} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Whole area' }));
+    await userEvent.click(screen.getByRole('button', { name: /Combat/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Other/ }));
+
+    expect(screen.getByText('Needs King Black Dragon')).toBeTruthy();
+    expect(screen.getByText('Guild unlocked')).toBeTruthy();
+    expect(screen.getByText('Needs Minigame unlock')).toBeTruthy();
+    expect(screen.getByText('Indexed activities')).toBeTruthy();
+  });
+
 
   it('uses neutral totals for a non-chunked Whole area with mixed subarea ownership', async () => {
     mocks.state.content = {
