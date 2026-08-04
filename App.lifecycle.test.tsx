@@ -3,6 +3,7 @@ import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { DISCORD_INVITE_URL } from './constants';
 import {
   getPendingSave,
   resetPendingSavesForTest,
@@ -97,6 +98,29 @@ afterEach(() => {
 });
 
 describe('App changelog lifecycle', () => {
+  it('shows the official Discord invite without replacing Discord notifications', async () => {
+    const readyState = JSON.parse(seedOnboardingRun());
+    readyState.hasSeenOnboarding = true;
+    storage.setItem(profileBaseKey(PROFILE_ID), JSON.stringify(readyState));
+    storage.setItem(changelogStorageKey, latestChangelogId);
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    const invite = await screen.findByRole('link', {
+      name: 'Join the Fate Locked Discord',
+    });
+    expect(invite.getAttribute('href')).toBe(DISCORD_INVITE_URL);
+    expect(invite.getAttribute('target')).toBe('_blank');
+    expect(invite.getAttribute('rel')).toBe('noreferrer');
+    expect(invite.textContent).toContain('Discord');
+    expect(invite.querySelector('svg')).toBeTruthy();
+    expect(invite.querySelector('span')?.className).toContain('hidden sm:inline');
+
+    await user.click(screen.getByRole('button', { name: 'Settings & save tools' }));
+    await user.click(screen.getByRole('button', { name: 'Discord notifications' }));
+    expect(await screen.findByRole('dialog', { name: 'Discord notifications' })).toBeTruthy();
+  });
   it.each([
     [28, 'Level Up + Chaos Key!'],
     [29, 'Level Up + 2 Chaos Keys!'],
