@@ -38,6 +38,14 @@ export const resolveChunkInfoItemState = (
   ? 'mixed'
   : scope === 'available' && intrinsicAvailable ? 'available' : 'locked';
 
+export const resolveChunkInfoRequirementState = (
+  intrinsicAvailable: boolean,
+  hasUnevaluatedRequirements: boolean,
+  scope: ChunkInfoScope,
+): ChunkInfoItemState => {
+  const state = resolveChunkInfoItemState(intrinsicAvailable, scope);
+  return state === 'available' && hasUnevaluatedRequirements ? 'neutral' : state;
+};
 export const buildChunkInfoSectionStats = (
   states: readonly ChunkInfoItemState[],
 ): ChunkInfoSectionStats => {
@@ -76,19 +84,25 @@ export const buildChunkInfoDrawerSummary = (
   };
 };
 
+const formatItemCount = (count: number): string =>
+  `${count} ${count === 1 ? 'item' : 'items'}`;
+
 export const formatChunkInfoSectionSummary = (
   stats: ChunkInfoSectionStats,
   scope: ChunkInfoScope,
 ): string => {
-  if (scope === 'mixed') return `${stats.total} indexed`;
+  if (scope === 'mixed') {
+    return stats.actionable
+      ? `${stats.actionable} indexed`
+      : formatItemCount(stats.total);
+  }
   const parts = [
     stats.available ? `${stats.available} ready` : '',
     stats.locked ? `${stats.locked} locked` : '',
     stats.completed ? `${stats.completed} done` : '',
   ].filter(Boolean);
-  return parts.length ? parts.join(' · ') : `${stats.total} items`;
+  return parts.length ? parts.join(' · ') : formatItemCount(stats.total);
 };
-
 export const getDefaultChunkInfoSection = (
   ids: readonly ChunkInfoSectionId[],
 ): ChunkInfoSectionId | null => CHUNK_INFO_SECTION_ORDER.find(id => ids.includes(id)) ?? null;
