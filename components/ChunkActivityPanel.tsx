@@ -831,13 +831,26 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       <SectionHead icon={<Flag size={11} />} label="Guilds" count={derived.guilds.length} />
       {derived.guilds.map(g => {
         const visibleState = resolveChunkInfoItemState(g.usable, scope);
+        const statusLabel = visibleState === 'mixed'
+          ? g.usable ? 'Guild unlocked' : 'Needs Guild unlock'
+          : visibleState === 'available'
+            ? 'Guild unlocked'
+            : g.usable ? 'Locked' : 'Needs Guild unlock';
         return (
           <div key={g.name} className="flex items-center justify-between gap-2 py-px" title={hasMixedScope ? 'Availability varies across this area' : visibleState === 'available' ? 'Guild unlocked' : g.usable ? 'Chunk locked' : 'Needs the Guilds-table unlock'}>
             <span className="flex min-w-0 items-center gap-1.5">
-            {visibleState === 'available' ? <Check size={10} className="shrink-0 text-green-400" /> : visibleState === 'locked' ? <Lock size={10} className="shrink-0 text-red-400/70" /> : <span className="w-[10px] shrink-0 text-center text-gray-600">{'\u00b7'}</span>}
-            <WikiLink name={g.name} className={`hover:underline decoration-dotted underline-offset-2 ${rowStateCls(visibleState)}`} />
+              {visibleState === 'available'
+                ? <Check aria-hidden="true" size={10} className="shrink-0 text-green-400" />
+                : visibleState === 'locked'
+                  ? <Lock aria-hidden="true" size={10} className="shrink-0 text-red-400/70" />
+                  : <span aria-hidden="true" className="w-[10px] shrink-0 text-center text-gray-600">{'\u00b7'}</span>}
+              <WikiLink name={g.name} className={`hover:underline decoration-dotted underline-offset-2 ${rowStateCls(visibleState)}`}>
+                {g.name}{' '}<span className="sr-only">{`— ${statusLabel}`}</span>
+              </WikiLink>
             </span>
-            {hasMixedScope && <span className={`shrink-0 rounded px-1 text-[9px] font-bold ${g.usable ? 'bg-emerald-950/40 text-emerald-300/80' : 'bg-amber-950/40 text-amber-300/80'}`}>{g.usable ? 'Guild unlocked' : 'Needs Guild unlock'}</span>}
+            <span aria-hidden="true" className="shrink-0 rounded bg-white/5 px-1 text-[9px] font-bold text-gray-300">
+              {statusLabel}
+            </span>
           </div>
         );
       })}
@@ -848,13 +861,26 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       <SectionHead icon={<Gamepad2 size={11} />} label="Minigames" count={derived.minigames.length} />
       {derived.minigames.map(mg => {
         const visibleState = resolveChunkInfoItemState(mg.usable, scope);
+        const statusLabel = visibleState === 'mixed'
+          ? mg.usable ? 'Minigame unlocked' : 'Needs Minigame unlock'
+          : visibleState === 'available'
+            ? 'Minigame unlocked'
+            : mg.usable ? 'Locked' : 'Needs Minigame unlock';
         return (
           <div key={mg.name} className="flex items-center justify-between gap-2 py-px" title={hasMixedScope ? 'Availability varies across this area' : visibleState === 'available' ? 'Minigame unlocked' : mg.usable ? 'Chunk locked' : 'Needs the Minigames-table unlock'}>
             <span className="flex min-w-0 items-center gap-1.5">
-            {visibleState === 'available' ? <Check size={10} className="shrink-0 text-green-400" /> : visibleState === 'locked' ? <Lock size={10} className="shrink-0 text-red-400/70" /> : <span className="w-[10px] shrink-0 text-center text-gray-600">{'\u00b7'}</span>}
-            <WikiLink name={mg.name} className={`hover:underline decoration-dotted underline-offset-2 ${rowStateCls(visibleState)}`} />
+              {visibleState === 'available'
+                ? <Check aria-hidden="true" size={10} className="shrink-0 text-green-400" />
+                : visibleState === 'locked'
+                  ? <Lock aria-hidden="true" size={10} className="shrink-0 text-red-400/70" />
+                  : <span aria-hidden="true" className="w-[10px] shrink-0 text-center text-gray-600">{'\u00b7'}</span>}
+              <WikiLink name={mg.name} className={`hover:underline decoration-dotted underline-offset-2 ${rowStateCls(visibleState)}`}>
+                {mg.name}{' '}<span className="sr-only">{`— ${statusLabel}`}</span>
+              </WikiLink>
             </span>
-            {hasMixedScope && <span className={`shrink-0 rounded px-1 text-[9px] font-bold ${mg.usable ? 'bg-emerald-950/40 text-emerald-300/80' : 'bg-amber-950/40 text-amber-300/80'}`}>{mg.usable ? 'Minigame unlocked' : 'Needs Minigame unlock'}</span>}
+            <span aria-hidden="true" className="shrink-0 rounded bg-white/5 px-1 text-[9px] font-bold text-gray-300">
+              {statusLabel}
+            </span>
           </div>
         );
       })}

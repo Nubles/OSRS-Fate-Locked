@@ -455,6 +455,40 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(screen.getByText('Needs Minigame unlock')).toBeTruthy();
     expect(screen.getByText('Indexed activities')).toBeTruthy();
   });
+  it('exposes locked guild and minigame requirements in visible and focused text', async () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      npcs: ["Cooks' Guild", 'Castle Wars'],
+    };
+
+    render(<ChunkActivityPanel {...baseProps} />);
+    const disclosure = screen.getByRole('button', { name: /Other/ });
+    if (disclosure.getAttribute('aria-expanded') === 'false') await userEvent.click(disclosure);
+
+    expect(screen.getByText('Needs Guild unlock')).toBeTruthy();
+    expect(screen.getByText('Needs Minigame unlock')).toBeTruthy();
+    expect(screen.getByRole('link', { name: "Cooks' Guild — Needs Guild unlock" })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Castle Wars — Needs Minigame unlock' })).toBeTruthy();
+  });
+
+  it('exposes chunk-locked guild and minigame state when intrinsic gates are met', async () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      npcs: ["Cooks' Guild", 'Castle Wars'],
+    };
+    mocks.state.guilds = ["Cooks' Guild"];
+    mocks.state.minigames = ['Castle Wars'];
+
+    render(<ChunkActivityPanel {...baseProps} unlocked={false} />);
+    const disclosure = screen.getByRole('button', { name: /Other/ });
+    if (disclosure.getAttribute('aria-expanded') === 'false') await userEvent.click(disclosure);
+    const section = disclosure.closest('section');
+    expect(section).toBeTruthy();
+
+    expect(within(section as HTMLElement).getAllByText('Locked')).toHaveLength(2);
+    expect(within(section as HTMLElement).getByRole('link', { name: "Cooks' Guild — Locked" })).toBeTruthy();
+    expect(within(section as HTMLElement).getByRole('link', { name: 'Castle Wars — Locked' })).toBeTruthy();
+  });
 
 
   it('uses neutral totals for a non-chunked Whole area with mixed subarea ownership', async () => {
