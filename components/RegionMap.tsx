@@ -1909,6 +1909,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
             subArea={subArea}
             regionChunks={region ? draftChunks[region] : []}
             unlocked={unlocked}
+            individualChunkOwnership={isChunked}
             onClose={() => setSelectedChunk(null)}
           />
         );

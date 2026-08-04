@@ -9,7 +9,6 @@ import {
   Scroll,
   Package,
   BookOpen,
-  MapPin,
   Sparkles,
   Sprout,
   Flag,
@@ -42,6 +41,18 @@ import type { ChunkCoord } from '../utils/mapCoords';
 import { WikiLink } from './WikiLink';
 import { displayAreaName } from '../data/areaMapPolicy';
 import { ChunkEntranceNotices } from './ChunkEntranceNotices';
+import { ChunkInfoHeader } from './chunk-info/ChunkInfoHeader';
+import { ChunkInfoSummary } from './chunk-info/ChunkInfoSummary';
+import {
+  buildChunkInfoDrawerSummary,
+  buildChunkInfoSectionStats,
+  CHUNK_INFO_SECTION_ORDER,
+  getChunkInfoScope,
+  resolveChunkInfoItemState,
+  type ChunkInfoItemState,
+  type ChunkInfoSectionId,
+  type ChunkInfoSectionStats,
+} from './chunk-info/chunkInfoPresentation';
 
 /**
  * What gathering a resource node yields, from the picker's per-skill item tables.
@@ -143,8 +154,9 @@ interface Props {
   region: string | null;
   /** Named sub-area this chunk belongs to (e.g. 'Falador'), when known. */
   subArea?: string | null;
-  regionChunks: ChunkCoord[];
+  regionChunks: readonly ChunkCoord[];
   unlocked: boolean;
+  individualChunkOwnership: boolean;
   onClose: () => void;
 }
 
@@ -227,11 +239,6 @@ const CappedList: React.FC<{ items: React.ReactNode[]; cap: number }> = ({ items
   );
 };
 
-interface OverviewItem { cat: string; label: string }
-
-// Stable display order for the grouped can/cant overview.
-const OVERVIEW_ORDER = ['Quests', 'Diaries', 'Bosses', 'Monsters', 'Minigames', 'Guilds', 'Shops', 'Resources', 'Farming', 'Travel'];
-
 export interface ChunkQuestRow {
   name: string;
   kind: string;
@@ -270,43 +277,7 @@ export const chunkQuestPresentation = (
   return { kind: 'locked', title: QUEST_BADGE[row.status].label };
 };
 
-/** Collapsible overview block, grouped by activity type (quests / shops / …). */
-const Overview: React.FC<{ kind: 'can' | 'cant'; items: OverviewItem[] }> = ({ kind, items }) => {
-  const [open, setOpen] = useState(false);
-  if (items.length === 0) return null;
-  const can = kind === 'can';
-  const groups = new Map<string, string[]>();
-  for (const it of items) (groups.get(it.cat) ?? groups.set(it.cat, []).get(it.cat)!).push(it.label);
-  const ordered = [...groups.entries()].sort((a, b) => OVERVIEW_ORDER.indexOf(a[0]) - OVERVIEW_ORDER.indexOf(b[0]));
-  return (
-    <div className={`mt-2 rounded border ${can ? 'border-emerald-700/40 bg-emerald-950/30' : 'border-red-800/40 bg-red-950/20'}`}>
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-1.5 px-2 py-1.5 text-left"
-      >
-        {open ? <ChevronDown size={11} className="text-gray-500 shrink-0" /> : <ChevronRight size={11} className="text-gray-500 shrink-0" />}
-        {can ? <Check size={11} className="text-green-400 shrink-0" /> : <Lock size={11} className="text-red-400/80 shrink-0" />}
-        <span className={`text-[10px] font-bold uppercase tracking-wide ${can ? 'text-emerald-300' : 'text-red-300/90'}`}>
-          {can ? 'Can do here' : 'Locked for now'}
-        </span>
-        <span className="text-[10px] font-mono text-gray-500">({items.length})</span>
-      </button>
-      {open && (
-        <div className="px-2 pb-2 space-y-1">
-          {ordered.map(([cat, labels]) => (
-            <div key={cat} className="text-[10px] leading-relaxed">
-              <span className={`font-bold uppercase tracking-wide text-[9px] ${can ? 'text-emerald-400/80' : 'text-red-400/70'}`}>{cat}</span>
-              <span className="text-gray-600"> · </span>
-              <span className={can ? 'text-emerald-200/90' : 'text-red-200/70'}>{labels.join(', ')}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, regionChunks, unlocked, onClose }) => {
+export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, regionChunks, unlocked, individualChunkOwnership, onClose }) => {
   const { unlocks, gameModeId, customMode } = useGame();
   const [mode, setMode] = useState<'chunk' | 'region'>('chunk');
   const [, setLoadedTick] = useState(0);
@@ -322,7 +293,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
 
   const content: ChunkContent | null = useMemo(() => {
     if (!chunkContentService.ready) return null;
-    if (mode === 'region' && region) return chunkContentService.aggregate(regionChunks);
+    if (mode === 'region' && region) return chunkContentService.aggregate([...regionChunks]);
     return chunkContentService.contentFor(chunk.cx, chunk.cy);
   }, [mode, region, regionChunks, chunk, chunkContentService.ready]);
 
@@ -453,72 +424,78 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
   }, [content, subArea, unlocks, gameModeId]);
 
   // ── Can-do / Locked overview ───────────────────────────────────────────────
-  const overview = useMemo(() => {
-    if (!content || !derived) return { can: [] as OverviewItem[], cant: [] as OverviewItem[] };
-    const can: OverviewItem[] = [];
-    const cant: OverviewItem[] = [];
-    const push = (ok: boolean, cat: string, label: string) => (ok ? can : cant).push({ cat, label });
+  const scope = getChunkInfoScope(mode, individualChunkOwnership, unlocked);
+  const stateFor = (intrinsicAvailable: boolean): ChunkInfoItemState =>
+    resolveChunkInfoItemState(intrinsicAvailable, scope);
+  const neutralRows = (count: number): ChunkInfoItemState[] =>
+    Array.from({ length: count }, () => 'neutral');
 
-    for (const q of questRows) {
-      const item = chunkQuestOverviewItem(q, unlocked);
-      if (item) push(item.can, 'Quests', item.label);
+  const sectionStates = useMemo<Partial<Record<ChunkInfoSectionId, ChunkInfoItemState[]>>>(() => {
+    if (!content || !derived) return {};
+    const quests = questRows.map(row => {
+      if (row.status === 'COMPLETED') return 'completed' as const;
+      const item = chunkQuestOverviewItem(row, true);
+      return item ? stateFor(item.can) : 'neutral';
+    });
+    const combat = [
+      ...derived.bosses.map(boss => stateFor(boss.usable)),
+      ...derived.monsters.map(monster => stateFor(monster.slayer == null || (slayerUnlocked && slayerLevel >= monster.slayer))),
+    ];
+    const gathering = [
+      ...derived.farming.map(patch => stateFor(patch.usable)),
+      ...derived.resources.map(resource => stateFor(resource.usable)),
+    ];
+    const shops = derived.shops.map(shop => shop.category ? stateFor(shop.usable) : 'neutral');
+    const travel = [
+      ...derived.transport.map(node => stateFor(node.usable)),
+      ...linkGroups.flatMap(group => group.dests.map(destination => stateFor(group.networkUnlocked && destination.unlocked))),
+    ];
+    const other = [
+      ...derived.guilds.map(guild => stateFor(guild.usable)),
+      ...derived.minigames.map(minigame => stateFor(minigame.usable)),
+      ...derived.diaries.map(diary => stateFor(diary.reachable)),
+      ...neutralRows(derived.objects.length),
+      ...neutralRows(Object.keys(content.clues).length),
+      ...neutralRows(content.npcs.length),
+      ...neutralRows(content.spawns.length),
+    ];
+    return { quests, combat, gathering, shops, travel, other };
+  }, [content, derived, questRows, scope, slayerUnlocked, slayerLevel, linkGroups]);
+
+  const sectionStats = useMemo<Partial<Record<ChunkInfoSectionId, ChunkInfoSectionStats>>>(() => {
+    const next: Partial<Record<ChunkInfoSectionId, ChunkInfoSectionStats>> = {};
+    for (const id of CHUNK_INFO_SECTION_ORDER) {
+      const states = sectionStates[id];
+      if (states?.length) next[id] = buildChunkInfoSectionStats(states);
     }
-    for (const b of derived.bosses) push(unlocked && b.usable, 'Bosses', b.name);
-    for (const m of derived.monsters.slice(0, 12)) {
-      const met = m.slayer == null || (slayerUnlocked && slayerLevel >= m.slayer);
-      push(unlocked && met, 'Monsters', m.name);
-    }
-    for (const s of derived.shops) push(unlocked && s.usable, 'Shops', s.name);
-    for (const t of derived.transport) push(unlocked && t.usable, 'Travel', t.name);
-    for (const f of derived.farming) push(unlocked && f.usable, 'Farming', f.name);
-    for (const r of derived.resources) push(unlocked && r.usable, 'Resources', r.name);
-    for (const g of derived.guilds) push(unlocked && g.usable, 'Guilds', g.name);
-    for (const mg of derived.minigames) push(unlocked && mg.usable, 'Minigames', mg.name);
-    return { can, cant };
-  }, [content, derived, questRows, unlocked, slayerLevel, slayerUnlocked]);
+    return next;
+  }, [sectionStates]);
+
+  const drawerSummary = useMemo(
+    () => buildChunkInfoDrawerSummary(sectionStats, scope),
+    [sectionStats, scope],
+  );
 
   const title = mode === 'region' && region
     ? region
     : content?.name ?? `Chunk ${chunk.cx}, ${chunk.cy}`;
 
   return (
-    <div className="absolute top-3 right-3 bottom-3 w-72 z-30 bg-[#161616]/95 border border-white/15 rounded-xl shadow-2xl backdrop-blur-sm flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="p-3 border-b border-white/10 shrink-0">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <h3 className="text-[13px] font-bold text-white leading-tight truncate">{title}</h3>
-            <div className="flex items-center gap-1.5 mt-1 text-[10px] text-gray-500">
-              <MapPin size={10} />
-              {mode === 'region'
-                ? `${regionChunks.length} chunks`
-                : <>chunk ({chunk.cx}, {chunk.cy}){subArea && <> · <span className="text-cyan-300/90 font-semibold">{displayAreaName(subArea)}</span></>}{region && <> · {region}</>}</>}
-              <span className={`px-1.5 py-px rounded font-bold ${unlocked ? 'bg-green-900/60 text-green-300' : 'bg-red-900/50 text-red-300'}`}>
-                {unlocked ? 'UNLOCKED' : 'LOCKED'}
-              </span>
-            </div>
-          </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-white shrink-0" aria-label="Close chunk info">
-            <X size={15} />
-          </button>
-        </div>
-        {region && (
-          <div className="flex mt-2 bg-black/40 rounded-lg p-0.5 gap-0.5">
-            {(['chunk', 'region'] as const).map(m => (
-              <button
-                key={m}
-                onClick={() => setMode(m)}
-                className={`flex-1 py-1 rounded text-[10px] font-bold uppercase tracking-wide transition-colors ${mode === m ? 'bg-cyan-900/70 text-cyan-200' : 'text-gray-500 hover:text-gray-300'}`}
-              >
-                {m === 'chunk' ? 'This chunk' : 'Whole area'}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
+    <div className="absolute bottom-3 right-3 top-3 z-30 flex w-80 max-w-[calc(100%-1.5rem)] flex-col overflow-hidden rounded-xl border border-white/15 bg-[#16191b]/95 shadow-2xl backdrop-blur-sm">
+      <ChunkInfoHeader
+        title={title}
+        meta={mode === 'region'
+          ? `${regionChunks.length} chunks`
+          : <>chunk ({chunk.cx}, {chunk.cy}){subArea && <> Â· <span className="font-semibold text-cyan-300/90">{displayAreaName(subArea)}</span></>}{region && <> Â· {region}</>}</>}
+        unlocked={unlocked}
+        showModeSwitch={Boolean(region)}
+        mode={mode}
+        onModeChange={setMode}
+        onClose={onClose}
+      />
       {/* Body */}
-      <div className={`flex-1 overflow-y-auto custom-scrollbar px-3 pb-3 text-[11px] ${unlocked ? '' : 'opacity-75'}`}>
+      <div className="flex-1 overflow-y-auto px-3 pb-3 text-[11px] custom-scrollbar" data-testid="chunk-info-scroll-body">
+        {content && <ChunkInfoSummary summary={drawerSummary} />}
         {!unlocked && (
           <div className="mt-2 px-2 py-1.5 rounded bg-amber-950/50 border border-amber-700/40 text-amber-300/90 text-[10px]">
             <Lock size={10} className="inline mr-1 -mt-px" />
@@ -563,8 +540,6 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
         })()}
 
         {/* Brief can / can't overview — collapsed by default. */}
-        <Overview kind="can" items={overview.can} />
-        <Overview kind="cant" items={overview.cant} />
 
         {failed && <div className="mt-3 text-gray-500">Chunk content unavailable (failed to load).</div>}
         {!failed && !content && <div className="mt-3 text-gray-500 animate-pulse">Loading chunk content…</div>}
