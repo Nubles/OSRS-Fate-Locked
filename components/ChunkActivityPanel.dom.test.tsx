@@ -190,7 +190,7 @@ describe('ChunkActivityPanel activity accordions', () => {
       ...emptyContent(),
       monsters: [{ name: 'Rat', count: 1, slayer: null }, { name: 'Banshee', count: 1, slayer: 15 }],
       objects: [['Herb patch', 1], ['Yew tree', 1], ['Fairy ring', 1]],
-      shops: ['Varrock General Store'],
+      shops: ['Varrock General Store', 'Odd Shop'],
     };
     mocks.state.farming = ['Herb'];
     mocks.state.merchants = ['General Stores'];
@@ -207,7 +207,7 @@ describe('ChunkActivityPanel activity accordions', () => {
     await userEvent.click(screen.getByRole('button', { name: /Shops/ }));
     await userEvent.click(screen.getByRole('button', { name: /Travel/ }));
 
-    const expectRowLabel = (label: string, state: 'Available' | 'Unlocked') => {
+    const expectRowLabel = (label: string, state: 'Available' | 'Unlocked' | 'No unlock gate') => {
       const row = screen.getByText(label).closest('div');
       expect(row).toBeTruthy();
       expect(within(row as HTMLElement).getByText(state)).toBeTruthy();
@@ -217,7 +217,9 @@ describe('ChunkActivityPanel activity accordions', () => {
     expectRowLabel('Herb patch', 'Available');
     expectRowLabel('Yew tree', 'Available');
     expectRowLabel('Varrock General Store', 'Unlocked');
+    expectRowLabel('Odd Shop', 'No unlock gate');
     expectRowLabel('Fairy ring', 'Available');
+    expect(screen.getByText('Available now').previousElementSibling?.textContent).toBe('7');
     const slayerBadge = screen.getByTitle('Slayer requirement met');
     expect(slayerBadge.querySelector('svg')).toBeTruthy();
 

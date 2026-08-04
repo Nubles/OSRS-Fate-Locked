@@ -150,7 +150,7 @@ const classifyVia = (via: string | null): string => {
  * run's actual unlocks — quests via getQuestStatus, monsters via Slayer,
  * shops via their merchant category, farming patches / guilds / minigames
  * via their own unlock tables — and rendered green (usable) or red with a
- * strike-through (locked). A collapsible Can-do / Locked overview tops the
+ * state badge or icon (locked). A collapsible Can-do / Locked overview tops the
  * panel. Content data: ChunkContentService (credit: source-chunk/chunk-picker-v2).
  */
 
@@ -627,11 +627,11 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
   const shopRows = derived?.shops.map(s => {
     const stock = chunkContentService.shopStock(s.name);
     const isOpen = openShop === s.name;
-    const visibleState = s.category ? resolveChunkInfoItemState(s.usable, scope) : 'neutral';
+    const visibleState = s.category ? resolveChunkInfoItemState(s.usable, scope) : hasMixedScope ? 'mixed' : 'neutral';
     return (
       <div key={s.name}>
         <div className="flex items-center justify-between gap-2 py-px"
-          title={hasMixedScope && s.category ? 'Availability varies across this area' : visibleState === 'available' ? `${s.category} unlocked` : s.usable ? 'Chunk locked' : s.category ? `Needs the "${s.category}" merchant unlock` : 'Unclassified shop \u2014 no merchant category gate'}>
+          title={hasMixedScope ? 'Availability varies across this area' : visibleState === 'available' ? s.category ? `${s.category} unlocked` : 'Available' : s.usable ? 'Chunk locked' : s.category ? `Needs the "${s.category}" merchant unlock` : 'Unclassified shop \u2014 no merchant category gate'}>
           <span className="flex min-w-0 items-center gap-1">
             {stock.length > 0 && (
               <button type="button" onClick={() => setOpenShop(isOpen ? null : s.name)} className="shrink-0 rounded text-gray-500 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 motion-reduce:transition-none" title="Show stock" aria-expanded={isOpen}>
@@ -640,11 +640,9 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
             )}
             <WikiLink name={s.name} className={`truncate hover:underline decoration-dotted underline-offset-2 ${rowStateCls(visibleState)}`} />
           </span>
-          {s.category && (
-            <span className={`shrink-0 rounded px-1 text-[9px] ${visibleState === 'mixed' ? 'bg-white/5 text-gray-300' : visibleState === 'available' ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
-              {visibleState === 'mixed' ? s.category.replace(/ Shops?$/, '') : visibleState === 'available' ? 'Unlocked' : s.usable ? 'Locked' : `Needs ${s.category.replace(/ Shops?$/, '')}`}
-            </span>
-          )}
+          <span className={`shrink-0 rounded px-1 text-[9px] ${visibleState === 'mixed' || visibleState === 'neutral' ? 'bg-white/5 text-gray-300' : visibleState === 'available' ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
+            {!s.category ? visibleState === 'mixed' ? 'Area' : 'No unlock gate' : visibleState === 'mixed' ? s.category.replace(/ Shops?$/, '') : visibleState === 'available' ? 'Unlocked' : s.usable ? 'Locked' : `Needs ${s.category.replace(/ Shops?$/, '')}`}
+          </span>
         </div>
         {isOpen && stock.length > 0 && (
           <div className="mb-1 ml-4 flex flex-wrap gap-1">
