@@ -486,7 +486,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
         title={title}
         meta={mode === 'region'
           ? `${regionChunks.length} chunks`
-          : <>chunk ({chunk.cx}, {chunk.cy}){subArea && <> Â· <span className="font-semibold text-cyan-300/90">{displayAreaName(subArea)}</span></>}{region && <> Â· {region}</>}</>}
+          : <>chunk ({chunk.cx}, {chunk.cy}){subArea && <> {" \u00B7 "}<span className="font-semibold text-cyan-300/90">{displayAreaName(subArea)}</span></>}{region && <> {" \u00B7 "}{region}</>}</>}
         unlocked={unlocked}
         showModeSwitch={Boolean(region)}
         mode={mode}
