@@ -184,6 +184,47 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(lockedDestination?.className).not.toContain('text-emerald');
   });
 
+
+  it('labels available activity rows without relying on green styling alone', async () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      monsters: [{ name: 'Rat', count: 1, slayer: null }, { name: 'Banshee', count: 1, slayer: 15 }],
+      objects: [['Herb patch', 1], ['Yew tree', 1], ['Fairy ring', 1]],
+      shops: ['Varrock General Store'],
+    };
+    mocks.state.farming = ['Herb'];
+    mocks.state.merchants = ['General Stores'];
+    mocks.state.mobility = ['Fairy Rings'];
+    mocks.state.skills = { Slayer: 1, Woodcutting: 6 };
+    mocks.state.levels = { Slayer: 15, Woodcutting: 60 };
+    mocks.state.regions = ['Misthalin', 'Varrock'];
+    mocks.service.connectGraph.mockReturnValue({ '12853': ['12854'] });
+
+    render(<ChunkActivityPanel {...baseProps} />);
+
+    await userEvent.click(screen.getByRole('button', { name: /Combat/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Gathering/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Shops/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Travel/ }));
+
+    const expectRowLabel = (label: string, state: 'Available' | 'Unlocked') => {
+      const row = screen.getByText(label).closest('div');
+      expect(row).toBeTruthy();
+      expect(within(row as HTMLElement).getByText(state)).toBeTruthy();
+    };
+
+    expectRowLabel('Rat', 'Available');
+    expectRowLabel('Herb patch', 'Available');
+    expectRowLabel('Yew tree', 'Available');
+    expectRowLabel('Varrock General Store', 'Unlocked');
+    expectRowLabel('Fairy ring', 'Available');
+    const slayerBadge = screen.getByTitle('Slayer requirement met');
+    expect(slayerBadge.querySelector('svg')).toBeTruthy();
+
+    const travelSection = screen.getByRole('button', { name: /Travel/ }).closest('section') as HTMLElement;
+    const destination = within(travelSection).getByTitle(/Reachable/);
+    expect(destination.querySelector('svg')).toBeTruthy();
+  });
   it('groups quest, combat, and gathering rows while preserving locked labels', async () => {
     mocks.state.content = {
       ...emptyContent(),
