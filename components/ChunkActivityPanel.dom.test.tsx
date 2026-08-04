@@ -220,6 +220,7 @@ describe('ChunkActivityPanel activity accordions', () => {
     expectRowLabel('Odd Shop', 'No unlock gate');
     expectRowLabel('Fairy ring', 'Available');
     expect(screen.getByText('Available now').previousElementSibling?.textContent).toBe('7');
+    expect(screen.getByText('Needs unlocks').previousElementSibling?.textContent).toBe('0');
     const slayerBadge = screen.getByTitle('Slayer requirement met');
     expect(slayerBadge.querySelector('svg')).toBeTruthy();
 
@@ -336,7 +337,7 @@ describe('ChunkActivityPanel activity accordions', () => {
   it('keeps Shops, Travel, and Other rows neutral in mixed area scope', async () => {
     mocks.state.content = {
       ...emptyContent(),
-      shops: ['Varrock General Store'],
+      shops: ['Varrock General Store', 'Odd Shop'],
       objects: [['Fairy ring', 1]],
       npcs: ["Cooks' Guild"],
     };
@@ -349,6 +350,9 @@ describe('ChunkActivityPanel activity accordions', () => {
 
     expect(screen.getByText('Varrock General Store').closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
     expect(screen.getByText('Fairy ring').closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
+    const oddShopRow = screen.getByText('Odd Shop').closest('div');
+    expect(oddShopRow).toBeTruthy();
+    expect(within(oddShopRow as HTMLElement).getByText('Area')).toBeTruthy();
     expect(screen.getAllByText("Cooks' Guild")[0].closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
   });
 
