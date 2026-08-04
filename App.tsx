@@ -83,9 +83,10 @@ const RunelitePluginGuide = lazyWithRetry(() =>
   })),
 );
 import { deobfuscateFateSave } from './utils/encryption';
-import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb, Radio, Settings } from 'lucide-react';
+import { Key, Sparkles, Download, Upload, RotateCcw, BarChart3, HelpCircle, Dna, PlayCircle, PauseCircle, Search, Swords, ShoppingBag, ScrollText, Compass, Database, SlidersHorizontal, Link2, Lightbulb, Radio, Settings, MessageCircle } from 'lucide-react';
 import { exportRuneliteBundle } from './utils/runeliteExport';
 import { BookOpen } from 'lucide-react';
+import { DISCORD_INVITE_URL } from './constants';
 
 // --- Error Boundary ---
 interface ErrorBoundaryState {
@@ -477,6 +478,17 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                 <span className="text-[11px] font-medium hidden sm:inline">RuneLite</span>
              </button>
 
+             <a
+               href={DISCORD_INVITE_URL}
+               target="_blank"
+               rel="noreferrer"
+               aria-label="Join the Fate Locked Discord"
+               title="Join the Fate Locked Discord"
+               className="h-8 px-2.5 rounded-lg border border-indigo-400/40 bg-indigo-900/30 hover:bg-indigo-800/40 text-indigo-200 hover:text-indigo-100 flex items-center gap-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/70"
+             >
+               <MessageCircle size={13} aria-hidden="true" />
+               <span className="text-[11px] font-medium hidden sm:inline">Discord</span>
+             </a>
              <div data-reveal="tools" className="flex items-center bg-[#252525] border border-white/10 rounded-lg p-0.5 gap-0.5 h-8">
                  <button onClick={() => setShowOracle(true)} className="w-7 h-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/5 rounded transition-colors" title="Oracle — search content" aria-label="Oracle — search content"><Search size={14} /></button>
                  {gates.has('tool:strategy') && <>
