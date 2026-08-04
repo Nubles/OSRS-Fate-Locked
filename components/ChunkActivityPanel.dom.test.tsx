@@ -154,7 +154,12 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(screen.getByRole('button', { name: /Shops/ })).toBeTruthy();
     expect(screen.getByRole('button', { name: /Travel/ })).toBeTruthy();
     expect(screen.getByRole('button', { name: /Other/ })).toBeTruthy();
-    expect(screen.getAllByRole('button', { name: /Quests|Combat|Gathering|Shops|Travel|Other/ })).toHaveLength(6);
+    const accordionLabels = screen.getAllByRole('button')
+      .map(button => button.getAttribute('aria-label'))
+      .filter((label): label is string => /^(Quests|Combat|Gathering|Shops|Travel|Other),/.test(label))
+      .map(label => label.split(',')[0]);
+    expect(accordionLabels).toEqual(['Quests', 'Combat', 'Gathering', 'Shops', 'Travel', 'Other']);
+    expect(accordionLabels).toHaveLength(6);
     expect(screen.queryByText('Travel links')).toBeNull();
 
     await userEvent.click(screen.getByRole('button', { name: /Shops/ }));

@@ -173,9 +173,6 @@ const QUEST_BADGE: Record<QuestStatus, { cls: string; label: string }> = {
   LOCKED_QUEST: { cls: 'text-gray-500', label: 'locked: prerequisite quest missing' },
 };
 
-/** Green when usable, red + strike-through when locked. */
-const stateCls = (usable: boolean) =>
-  usable ? 'text-green-300' : 'text-red-400/80 line-through decoration-red-500/60';
 const rowStateCls = (state: ChunkInfoItemState): string => state === 'locked'
   ? 'text-gray-400'
   : state === 'completed'
