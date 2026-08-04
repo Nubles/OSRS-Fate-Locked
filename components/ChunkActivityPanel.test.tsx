@@ -5,6 +5,7 @@ import { evaluateQuestEligibility, getQuestStatus } from '../utils/journalStatus
 import {
   chunkQuestOverviewItem,
   chunkQuestPresentation,
+  chunkQuestStatusLabel,
   type ChunkQuestRow,
 } from './ChunkActivityPanel';
 
@@ -111,5 +112,16 @@ describe('chunk activity quest row helpers', () => {
       kind: 'untracked',
       title: 'miniquest / not tracked',
     });
+  });
+
+  it('maps quest presentation and resolved scope to visible status labels', () => {
+    expect(chunkQuestStatusLabel('completed', 'completed')).toBe('Completed');
+    expect(chunkQuestStatusLabel('confirmation', 'locked')).toBe('Confirm');
+    expect(chunkQuestStatusLabel('confirmation', 'mixed')).toBe('Confirm');
+    expect(chunkQuestStatusLabel('untracked', 'neutral')).toBe('Untracked');
+    expect(chunkQuestStatusLabel('available', 'mixed')).toBe('Varies');
+    expect(chunkQuestStatusLabel('locked', 'mixed')).toBe('Varies');
+    expect(chunkQuestStatusLabel('available', 'available')).toBe('Ready');
+    expect(chunkQuestStatusLabel('locked', 'locked')).toBe('Locked');
   });
 });

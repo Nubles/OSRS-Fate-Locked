@@ -288,6 +288,27 @@ export const chunkQuestPresentation = (
   return { kind: 'locked', title: QUEST_BADGE[row.status].label };
 };
 
+type ChunkQuestPresentationKind = ReturnType<typeof chunkQuestPresentation>['kind'];
+
+export type ChunkQuestStatusLabel =
+  | 'Completed'
+  | 'Confirm'
+  | 'Untracked'
+  | 'Varies'
+  | 'Ready'
+  | 'Locked';
+
+export const chunkQuestStatusLabel = (
+  kind: ChunkQuestPresentationKind,
+  visibleState: ChunkInfoItemState,
+): ChunkQuestStatusLabel => {
+  if (kind === 'completed') return 'Completed';
+  if (kind === 'confirmation') return 'Confirm';
+  if (kind === 'untracked') return 'Untracked';
+  if (visibleState === 'mixed') return 'Varies';
+  return visibleState === 'available' ? 'Ready' : 'Locked';
+};
+
 export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, regionChunks, unlocked, wholeAreaOwnershipMixed, onClose }) => {
   const { unlocks, gameModeId, customMode } = useGame();
   const [mode, setMode] = useState<'chunk' | 'region'>('chunk');
