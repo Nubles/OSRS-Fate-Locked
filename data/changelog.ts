@@ -24,6 +24,7 @@ export const CHANGELOG_RELEASES = [
     date: '2026-08-04',
     sections: {
       changed: [
+        'Chunk Info section headers now use familiar OSRS interface icons, with a Lucide fallback when artwork is unavailable.',
         'Chunk Info now leads with a clear availability summary and keeps detailed content in readable expandable groups.',
         'Entry requirements, entrances, and banks now share one consistent Access & facilities card.',
         'Locked content stays readable and explains its requirement without striking through the full name.',
