@@ -62,7 +62,7 @@ These totals include only entries for which the application can make a reliable 
 
 The summary is derived from the same presentation state used by the expanded sections. It must not maintain a second set of unlock rules. Category counts and total counts therefore cannot disagree.
 
-`Whole area` needs one mode-aware exception. In area-based game modes, the area's unlock state is uniform, so the available and locked totals remain valid. In chunk-based modes, the aggregate can contain content from both locked and unlocked physical chunks. The drawer must not apply the selected chunk's state to that entire aggregate. It instead shows neutral `Indexed activities` and `Content groups` totals, and its section headers use neutral counts rather than a ready/locked split. Detailed rows may still show intrinsic requirements such as Slayer or merchant gates, but they do not claim final availability based only on the selected chunk.
+`Whole area` needs one mode-aware exception. An aggregate has a uniform scope only when all physical chunks or named subareas contributing to it share the same ownership state. Chunk-based modes are always treated as mixed, and area-based modes are also mixed when sibling subareas have different ownership. Mixed aggregates show neutral `Indexed activities` and `Content groups` totals, and their section headers use neutral counts rather than a ready/locked split. Detailed rows may still show known intrinsic requirements such as Slayer, boss, guild, minigame, or merchant gates, but they do not claim final availability based only on the selected chunk or subarea.
 
 ### Access and facilities
 
@@ -78,7 +78,7 @@ Each row has an icon, a concise primary label, and supporting text only when nee
 
 Entrance Wiki links and all existing requirement semantics remain intact. Unlocking a physical chunk still controls its entrance state, and additional route requirements remain independent.
 
-`Whole area` mode does not show chunk-specific entry, entrance, or bank rows because aggregating their mixed states would be misleading. Area lock status remains visible in the header, and the summary follows the mode-aware rules above.
+`Whole area` mode does not show chunk-specific entry, entrance, or bank rows because aggregating their mixed states would be misleading. The header shows `Unlocked` or `Locked` for a uniform scope and `Varies` for mixed ownership, while the summary follows the same mode-aware scope.
 
 ### Content groups
 
