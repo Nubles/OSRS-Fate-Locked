@@ -896,18 +896,49 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
                     : chunkQuestOverviewItem(row, true)?.can
                       ? resolveChunkInfoItemState(true, scope)
                       : row.status ? resolveChunkInfoItemState(false, scope) : 'neutral';
-                  const { name, kind, status } = row;
+                  const { name, kind } = row;
+                  const statusLabel = chunkQuestStatusLabel(presentation.kind, visibleState);
+                  const accessibleDetail = presentation.kind === 'confirmation'
+                    ? presentation.title
+                    : statusLabel;
+                  const badgeClass = statusLabel === 'Completed' || statusLabel === 'Ready'
+                    ? 'bg-emerald-950/60 text-emerald-300'
+                    : statusLabel === 'Confirm'
+                      ? 'bg-fuchsia-950/60 text-fuchsia-200'
+                      : statusLabel === 'Locked'
+                        ? 'bg-rose-950/60 text-rose-200'
+                        : 'bg-white/5 text-gray-400';
                   return (
-                    <div key={name} className="flex items-center gap-1.5 py-0.5" title={hasMixedScope && presentation.kind === 'available' ? 'Availability varies across this area' : presentation.title}>
-                      {presentation.kind === 'completed' ? <Check size={11} className="shrink-0 text-emerald-400" />
-                        : presentation.kind === 'confirmation' ? <Compass size={11} className="shrink-0 text-fuchsia-300" />
-                        : visibleState === 'locked' ? <Lock size={10} className="shrink-0 text-rose-300" />
-                        : visibleState === 'available' ? <Check size={10} className="shrink-0 text-emerald-300" />
-                        : <span className="w-[11px] shrink-0 text-center text-gray-600">{'\u00b7'}</span>}
-                      <WikiLink name={name} className={`min-w-0 flex-1 truncate hover:underline decoration-dotted underline-offset-2 ${rowStateCls(visibleState)}`} />
-                      {kind === 'first' && <span className="shrink-0 rounded bg-cyan-900/60 px-1 text-[9px] text-cyan-300">starts here</span>}
-                      {presentation.kind === 'confirmation' && <span className="shrink-0 rounded bg-fuchsia-950/60 px-1 text-[9px] text-fuchsia-200">Confirm</span>}
-                      {status === null && <span className="shrink-0 text-[9px] text-gray-600">untracked</span>}
+                    <div
+                      key={name}
+                      data-quest-row
+                      className="py-0.5"
+                      title={hasMixedScope && presentation.kind === 'available'
+                        ? 'Availability varies across this area'
+                        : presentation.title}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        {presentation.kind === 'completed' ? <Check aria-hidden="true" size={11} className="shrink-0 text-emerald-400" />
+                          : presentation.kind === 'confirmation' ? <Compass aria-hidden="true" size={11} className="shrink-0 text-fuchsia-300" />
+                          : visibleState === 'locked' ? <Lock aria-hidden="true" size={10} className="shrink-0 text-rose-300" />
+                          : visibleState === 'available' ? <Check aria-hidden="true" size={10} className="shrink-0 text-emerald-300" />
+                          : <span aria-hidden="true" className="w-[11px] shrink-0 text-center text-gray-600">{`\u00b7`}</span>}
+                        <WikiLink
+                          name={name}
+                          className={`min-w-0 flex-1 truncate hover:underline decoration-dotted underline-offset-2 ${rowStateCls(visibleState)}`}
+                        >
+                          {name}<span className="sr-only">{` \u2014 ${accessibleDetail}`}</span>
+                        </WikiLink>
+                        {kind === 'first' && <span className="shrink-0 rounded bg-cyan-900/60 px-1 text-[9px] text-cyan-300">starts here</span>}
+                        <span aria-hidden="true" className={`shrink-0 rounded px-1 text-[9px] ${badgeClass}`}>
+                          {statusLabel}
+                        </span>
+                      </div>
+                      {presentation.kind === 'confirmation' && (
+                        <div aria-hidden="true" className="ml-[17px] mt-0.5 pr-1 text-[9px] leading-tight text-fuchsia-200/90">
+                          {presentation.title}
+                        </div>
+                      )}
                     </div>
                   );
                 })} />

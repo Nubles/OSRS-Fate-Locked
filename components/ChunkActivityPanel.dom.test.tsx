@@ -313,10 +313,65 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(quests.getAttribute('aria-expanded')).toBe('true');
     expect(combat.getAttribute('aria-expanded')).toBe('true');
     expect(gathering.getAttribute('aria-expanded')).toBe('true');
-    expect(screen.getByTitle('Completed').textContent).toContain('Sheep Shearer');
+    const completedQuest = screen.getByRole('link', { name: /Sheep Shearer.*Completed/ });
+    const completedRow = completedQuest.closest('[data-quest-row]');
+    expect(completedRow).toBeTruthy();
+    expect(within(completedRow as HTMLElement).getByText('Completed')).toBeTruthy();
     expect(screen.getByText('Yew tree').parentElement?.parentElement?.className).toContain('text-gray-400');
   });
 
+  it('shows locked and ready quest state in text and in the Wiki link name', () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      quests: { "Doric's Quest": 'first' },
+    };
+
+    const { unmount } = render(<ChunkActivityPanel {...baseProps} />);
+    const lockedLink = screen.getByRole('link', { name: /Doric's Quest.*Locked/ });
+    expect(within(lockedLink.closest('[data-quest-row]') as HTMLElement).getByText('Locked')).toBeTruthy();
+    unmount();
+
+    mocks.state.regions = ['Falador'];
+    render(<ChunkActivityPanel {...baseProps} />);
+    const readyLink = screen.getByRole('link', { name: /Doric's Quest.*Ready/ });
+    expect(within(readyLink.closest('[data-quest-row]') as HTMLElement).getByText('Ready')).toBeTruthy();
+  });
+  it('shows a manual-confirmation reason visibly and in the quest link name', () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      quests: { 'Prying Times': 'first' },
+    };
+    mocks.state.completedQuests = ['Pandemonium', "The Knight's Sword"];
+    mocks.state.regions = ['The Pandemonium', 'Port Sarim', 'Rimmington'];
+    mocks.state.skills = { Smithing: 3, Sailing: 2 };
+    mocks.state.levels = { Smithing: 30, Sailing: 12 };
+
+    render(<ChunkActivityPanel {...baseProps} />);
+
+    const questLink = screen.getByRole('link', {
+      name: /Prying Times.*Confirm: One open Sailing task slot/,
+    });
+    const questRow = questLink.closest('[data-quest-row]');
+    expect(questRow).toBeTruthy();
+    expect(within(questRow as HTMLElement).getByText('Confirm')).toBeTruthy();
+    expect(within(questRow as HTMLElement).getByText('Confirm: One open Sailing task slot')).toBeTruthy();
+  });
+
+  it('uses Varies for a ready quest in mixed scope and keeps untracked explicit', async () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      quests: { 'Sheep Shearer': 'first', Miniquest: 'step' },
+    };
+    mocks.state.regions = ['Misthalin'];
+
+    render(<ChunkActivityPanel {...baseProps} wholeAreaOwnershipMixed />);
+    await userEvent.click(screen.getByRole('button', { name: 'Whole area' }));
+
+    const mixedLink = screen.getByRole('link', { name: /Sheep Shearer.*Varies/ });
+    expect(within(mixedLink.closest('[data-quest-row]') as HTMLElement).getByText('Varies')).toBeTruthy();
+    const untrackedLink = screen.getByRole('link', { name: /Miniquest.*Untracked/ });
+    expect(within(untrackedLink.closest('[data-quest-row]') as HTMLElement).getByText('Untracked')).toBeTruthy();
+  });
   it('uses neutral availability wording for combat and gathering rows in mixed area scope', async () => {
     mocks.state.content = {
       ...emptyContent(),
@@ -335,7 +390,7 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(screen.getByText('Herb patch').closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
     expect(screen.getByText('Yew tree').closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
     expect(screen.getByText('Needs King Black Dragon')).toBeTruthy();
-    expect(screen.getByText('Sheep Shearer').closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
+    expect(screen.getByText('Sheep Shearer').closest('[data-quest-row]')?.getAttribute('title')).toBe('Availability varies across this area');
 
   });
   it('retains known boss, guild, and minigame gates in mixed Whole area scope', async () => {
