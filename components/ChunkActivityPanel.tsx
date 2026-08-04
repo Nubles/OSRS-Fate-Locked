@@ -498,7 +498,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
           source.cy,
         )),
       )];
-      const state: ChunkInfoItemState = scope !== 'mixed' && requirements.length > 0
+      const state: ChunkInfoItemState = scope === 'available' && requirements.length > 0
         ? 'neutral'
         : resolveChunkInfoItemState(slayerMet, scope);
 

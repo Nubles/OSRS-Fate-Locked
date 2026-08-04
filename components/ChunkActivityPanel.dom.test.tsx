@@ -538,6 +538,22 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(within(row as HTMLElement).queryByText('Available')).toBeNull();
   });
 
+  it('counts requirement-bearing monsters as locked when the selected chunk is locked', () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      monsters: [{ name: 'Rat', count: 1, slayer: null }],
+    };
+    mocks.service.taskRequirements.mockReturnValue(['Dragon Slayer I']);
+
+    render(<ChunkActivityPanel {...baseProps} unlocked={false} />);
+
+    expect(screen.getByText('Available now').previousElementSibling?.textContent).toBe('0');
+    expect(screen.getByText('Needs unlocks').previousElementSibling?.textContent).toBe('1');
+    expect(screen.getByRole('button', { name: 'Combat, 1 locked' })).toBeTruthy();
+    const row = screen.getByText('Rat').closest('div');
+    expect(row).toBeTruthy();
+    expect(within(row as HTMLElement).getByText('Dragon Slayer I')).toBeTruthy();
+  });
   it('keeps per-chunk monster requirements neutral in a uniform Whole area summary', async () => {
     mocks.state.content = {
       ...emptyContent(),
