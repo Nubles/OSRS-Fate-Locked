@@ -149,6 +149,40 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(screen.queryByText('Bronze dagger')).toBeNull();
     expect(screen.queryByText('Yew logs')).toBeNull();
   });
+
+  it('labels nested shop and resource disclosures and connects them to their content', async () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      shops: ['Varrock General Store'],
+      objects: [['Yew tree', 1]],
+    };
+    mocks.service.shopStock.mockReturnValue(['Bronze dagger']);
+    mocks.service.skillYields.mockReturnValue({ 'Yew tree': [['Yew logs', '1']] });
+
+    render(<ChunkActivityPanel {...baseProps} />);
+    const gatheringButton = screen.getByRole('button', { name: /Gathering/ });
+    if (gatheringButton.getAttribute('aria-expanded') === 'false') {
+      await userEvent.click(gatheringButton);
+    }
+    await userEvent.click(screen.getByRole('button', { name: /Shops/ }));
+
+    const resourceButton = screen.getByRole('button', { name: 'Show yields for Yew tree' });
+    const shopButton = screen.getByRole('button', { name: 'Show stock for Varrock General Store' });
+    const resourceDisclosureId = resourceButton.getAttribute('aria-controls');
+    const shopDisclosureId = shopButton.getAttribute('aria-controls');
+
+    expect(resourceDisclosureId).toBeTruthy();
+    expect(shopDisclosureId).toBeTruthy();
+    expect(resourceDisclosureId).not.toBe(shopDisclosureId);
+
+    await userEvent.click(resourceButton);
+    await userEvent.click(shopButton);
+
+    expect(document.getElementById(resourceDisclosureId!)).toBeTruthy();
+    expect(document.getElementById(shopDisclosureId!)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Hide yields for Yew tree' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Hide stock for Varrock General Store' })).toBeTruthy();
+  });
   it('shows locked chunk state in every intrinsically available activity row', async () => {
     mocks.state.content = {
       ...emptyContent(),

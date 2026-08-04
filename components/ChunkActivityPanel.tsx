@@ -605,9 +605,10 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       </div>
     );
   }) ?? [];
-  const resourceRows = derived?.resources.map(r => {
+  const resourceRows = derived?.resources.map((r, index) => {
     const yields = nodeYields(r.skill, r.name);
     const isOpen = openResource === r.name;
+    const disclosureId = `chunk-info-resource-${index}`;
     const visibleState = resolveChunkInfoItemState(r.usable, scope);
     return (
       <div key={r.name}>
@@ -623,7 +624,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
                   : `${r.skill} skill not unlocked yet (needs level ${r.level})`}>
           <span className={`flex items-center gap-1 min-w-0 ${rowStateCls(visibleState)}`}>
             {yields && yields.length > 0 && (
-              <button type="button" onClick={() => setOpenResource(isOpen ? null : r.name)} className="shrink-0 rounded text-gray-500 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 motion-reduce:transition-none" title="Show what this yields" aria-expanded={isOpen}>
+              <button type="button" onClick={() => setOpenResource(isOpen ? null : r.name)} className="shrink-0 rounded text-gray-500 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 motion-reduce:transition-none" title="Show what this yields" aria-label={isOpen ? `Hide yields for ${r.name}` : `Show yields for ${r.name}`} aria-controls={disclosureId} aria-expanded={isOpen}>
                 {isOpen ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
               </button>
             )}
@@ -636,7 +637,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
           </span>
         </div>
         {isOpen && yields && (
-          <div className="ml-4 mb-1 flex flex-wrap gap-1">
+          <div id={disclosureId} className="ml-4 mb-1 flex flex-wrap gap-1">
             {yields.map(([item, rate]) => (
               <span key={item} className="text-[9px] px-1 py-0.5 rounded bg-white/5 border border-white/10 text-gray-400 flex items-center gap-1">
                 <WikiLink name={item} className="hover:text-white" />
@@ -648,9 +649,10 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       </div>
     );
   }) ?? [];
-  const shopRows = derived?.shops.map(s => {
+  const shopRows = derived?.shops.map((s, index) => {
     const stock = chunkContentService.shopStock(s.name);
     const isOpen = openShop === s.name;
+    const disclosureId = `chunk-info-shop-${index}`;
     const visibleState = s.category ? resolveChunkInfoItemState(s.usable, scope) : hasMixedScope ? 'mixed' : 'neutral';
     return (
       <div key={s.name}>
@@ -658,7 +660,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
           title={hasMixedScope ? 'Availability varies across this area' : visibleState === 'available' ? s.category ? `${s.category} unlocked` : 'Available' : s.usable ? 'Chunk locked' : s.category ? `Needs the "${s.category}" merchant unlock` : 'Unclassified shop \u2014 no merchant category gate'}>
           <span className="flex min-w-0 items-center gap-1">
             {stock.length > 0 && (
-              <button type="button" onClick={() => setOpenShop(isOpen ? null : s.name)} className="shrink-0 rounded text-gray-500 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 motion-reduce:transition-none" title="Show stock" aria-expanded={isOpen}>
+              <button type="button" onClick={() => setOpenShop(isOpen ? null : s.name)} className="shrink-0 rounded text-gray-500 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 motion-reduce:transition-none" title="Show stock" aria-label={isOpen ? `Hide stock for ${s.name}` : `Show stock for ${s.name}`} aria-controls={disclosureId} aria-expanded={isOpen}>
                 {isOpen ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
               </button>
             )}
@@ -669,7 +671,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
           </span>
         </div>
         {isOpen && stock.length > 0 && (
-          <div className="mb-1 ml-4 flex flex-wrap gap-1">
+          <div id={disclosureId} className="mb-1 ml-4 flex flex-wrap gap-1">
             {stock.map(it => (
               <WikiLink key={it} name={it} className="rounded border border-white/10 bg-white/5 px-1 py-0.5 text-[9px] text-gray-400 hover:border-white/20 hover:text-white" />
             ))}
