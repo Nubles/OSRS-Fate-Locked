@@ -50,6 +50,26 @@ const baseProps = {
   onClose: () => undefined,
 } as const;
 
+const setRequirementAwareFixture = () => {
+  mocks.state.content = {
+    ...emptyContent(),
+    monsters: [{ name: 'Vardorvis', count: 1, slayer: null }],
+    objects: [['Allotment patch', 1]],
+    shops: ['Oziach (shop)'],
+  };
+  mocks.state.bosses = ['Vardorvis'];
+  mocks.state.farming = ['Allotment'];
+  mocks.state.merchants = ['Platebody Shops'];
+  mocks.service.taskRequirements.mockImplementation((name: string, kind: string) => {
+    const requirements: Record<string, string[]> = {
+      'monster|Vardorvis': ['Desert Treasure II - The Fallen Empire'],
+      'object|Allotment patch': ['Access the Farming Guild#Beginner tier'],
+      'shop|Oziach (shop)': ['Dragon Slayer I'],
+    };
+    return requirements[`${kind}|${name}`] ?? [];
+  });
+};
+
 afterEach(cleanup);
 beforeEach(() => {
   mocks.service.ready = true;
@@ -517,7 +537,7 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(screen.getByText('Fairy ring').closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
     const oddShopRow = screen.getByText('Odd Shop').closest('div');
     expect(oddShopRow).toBeTruthy();
-    expect(within(oddShopRow as HTMLElement).getByText('Area')).toBeTruthy();
+    expect(within(oddShopRow as HTMLElement).getByText('No unlock gate')).toBeTruthy();
     expect(screen.getAllByText("Cooks' Guild")[0].closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
   });
 
@@ -580,6 +600,42 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(within(row as HTMLElement).queryByText('Available')).toBeNull();
   });
 
+  it('keeps unevaluated boss, shop, and object requirements out of available totals', async () => {
+    setRequirementAwareFixture();
+
+    render(<ChunkActivityPanel {...baseProps} />);
+
+    expect(screen.getByText('Available now').previousElementSibling?.textContent).toBe('0');
+    expect(screen.getByText('Needs unlocks').previousElementSibling?.textContent).toBe('0');
+    await userEvent.click(screen.getByRole('button', { name: /Gathering/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Shops/ }));
+    expect(screen.getByTitle('Access requirement: Desert Treasure II - The Fallen Empire')).toBeTruthy();
+    expect(screen.getByTitle('Access requirement: Access the Farming Guild#Beginner tier')).toBeTruthy();
+    expect(screen.getByTitle('Access requirement: Dragon Slayer I')).toBeTruthy();
+  });
+
+  it('counts requirement-bearing actionable rows as locked when the chunk is locked', () => {
+    setRequirementAwareFixture();
+
+    render(<ChunkActivityPanel {...baseProps} unlocked={false} />);
+
+    expect(screen.getByText('Available now').previousElementSibling?.textContent).toBe('0');
+    expect(screen.getByText('Needs unlocks').previousElementSibling?.textContent).toBe('3');
+  });
+
+  it('keeps an unclassified shop neutral in mixed scope everywhere', async () => {
+    mocks.state.content = { ...emptyContent(), shops: ['Odd Shop'] };
+
+    render(<ChunkActivityPanel {...baseProps} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Whole area' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Shops, 1 item' }));
+
+    expect(screen.getByText('Indexed activities').previousElementSibling?.textContent).toBe('0');
+    const row = screen.getByText('Odd Shop').closest('div');
+    expect(row).toBeTruthy();
+    expect(within(row as HTMLElement).getByText('No unlock gate')).toBeTruthy();
+    expect(within(row as HTMLElement).queryByText('Area')).toBeNull();
+  });
 });
 describe('ChunkActivityPanel summary hierarchy', () => {
   it('shows uniform availability and neutral chunk-owned area totals', async () => {
