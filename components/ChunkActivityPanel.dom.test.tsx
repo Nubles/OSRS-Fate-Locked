@@ -242,6 +242,29 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(lockedDestination?.className).not.toContain('text-emerald');
   });
 
+  it('keeps reachable diary references neutral until task requirements are evaluated', async () => {
+    mocks.state.content = { ...emptyContent(), diaries: { Lumbridge: 'LB1' } };
+    mocks.state.regions = ['Misthalin'];
+
+    render(<ChunkActivityPanel {...baseProps} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Other, 1 item' }));
+
+    expect(screen.getByText('Available now').previousElementSibling?.textContent).toBe('0');
+    expect(screen.getByText('Needs unlocks').previousElementSibling?.textContent).toBe('0');
+    expect(screen.getByText('Tasks here')).toBeTruthy();
+    expect(screen.queryByText('Reachable')).toBeNull();
+    expect(screen.getByText('(LB1)')).toBeTruthy();
+  });
+
+  it('still counts diary references as locked when the selected chunk is locked', () => {
+    mocks.state.content = { ...emptyContent(), diaries: { Lumbridge: 'LB1' } };
+    mocks.state.regions = ['Misthalin'];
+
+    render(<ChunkActivityPanel {...baseProps} unlocked={false} />);
+
+    expect(screen.getByText('Needs unlocks').previousElementSibling?.textContent).toBe('1');
+  });
+
 
   it('labels available activity rows without relying on green styling alone', async () => {
     mocks.state.content = {

@@ -553,6 +553,14 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       farming: derived.farming.map(addState),
       resources: derived.resources.map(addState),
       transport: derived.transport.map(addState),
+      diaries: derived.diaries.map(diary => ({
+        ...diary,
+        state: resolveChunkInfoRequirementState(
+          diary.reachable,
+          true,
+          scope,
+        ),
+      })),
     };
   }, [derived, scope, slayerUnlocked, slayerLevel]);
 
@@ -579,7 +587,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     const other = [
       ...derived.guilds.map(guild => stateFor(guild.usable)),
       ...derived.minigames.map(minigame => stateFor(minigame.usable)),
-      ...derived.diaries.map(diary => stateFor(diary.reachable)),
+      ...activityPresentations.diaries.map(diary => diary.state),
       ...neutralRows(derived.objects.length),
       ...neutralRows(Object.keys(content.clues).length),
       ...neutralRows(content.npcs.length),
@@ -852,22 +860,44 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       })}
     </>
   ) : null;
-  const diaryRows = derived?.diaries.length ? (
+  const diaryRows = activityPresentations?.diaries.length ? (
     <>
-      <SectionHead icon={<BookOpen size={11} />} label="Diary tasks here" count={derived.diaries.length} />
-      {derived.diaries.map(d => {
-        const visibleState = resolveChunkInfoItemState(d.reachable, scope);
+      <SectionHead icon={<BookOpen size={11} />} label="Diary tasks here" count={activityPresentations.diaries.length} />
+      {activityPresentations.diaries.map(d => {
+        const statusLabel = d.state === 'mixed'
+          ? 'Area'
+          : d.state === 'locked'
+            ? 'Locked'
+            : 'Tasks here';
+
+        const title = d.state === 'mixed'
+          ? 'Availability varies across this area'
+          : d.state === 'locked'
+            ? d.reachable ? 'Chunk locked' : `Locked: the ${d.region} region isn't unlocked yet`
+            : 'Task requirements are not evaluated in this summary';
+
         return (
-          <div key={d.area} className="flex items-center justify-between gap-2 py-px"
-            title={hasMixedScope ? 'Availability varies across this area' : visibleState === 'available' ? `${d.region ?? d.area} is unlocked \u2014 these tasks are reachable` : d.reachable ? 'Chunk locked' : `Locked: the ${d.region} region isn't unlocked yet`}>
-            <span className={`truncate ${rowStateCls(visibleState)}`}>
-              <WikiLink name={`${d.area} Diary`} className="hover:underline decoration-dotted underline-offset-2">{d.area}</WikiLink> <span className="no-underline text-gray-600">({d.refs})</span>
+          <div
+            key={d.area}
+            className="flex items-center justify-between gap-2 py-px"
+            title={title}
+          >
+            <span className={`truncate ${rowStateCls(d.state)}`}>
+              <WikiLink
+                name={`${d.area} Diary`}
+                className="hover:underline decoration-dotted underline-offset-2"
+              >
+                {d.area}
+              </WikiLink>{' '}
+              <span className="no-underline text-gray-600">({d.refs})</span>
             </span>
-            {d.region && (
-              <span className={`shrink-0 rounded px-1 text-[9px] ${visibleState === 'mixed' ? 'bg-white/5 text-gray-300' : visibleState === 'available' ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
-                {visibleState === 'mixed' ? 'Area' : visibleState === 'available' ? 'Reachable' : 'Locked'}
-              </span>
-            )}
+            <span className={`shrink-0 rounded px-1 text-[9px] ${
+              d.state === 'mixed' || d.state === 'neutral'
+                ? 'bg-white/5 text-gray-300'
+                : 'bg-red-950/70 text-red-300'
+            }`}>
+              {statusLabel}
+            </span>
           </div>
         );
       })}
