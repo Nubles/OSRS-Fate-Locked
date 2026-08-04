@@ -31,6 +31,16 @@ export const CHANGELOG_RELEASES = [
     },
   },
   {
+    id: '2026-08-04-discord-community-link',
+    title: 'Official Discord Community',
+    date: '2026-08-04',
+    sections: {
+      added: [
+        'The command-centre header now includes a direct link to the official Fate Locked Ironman Discord community.',
+      ],
+    },
+  },
+  {
     id: '2026-08-02-one-physical-chunk-one-unlock',
     title: 'One Chunk, One Unlock',
     date: '2026-08-02',
