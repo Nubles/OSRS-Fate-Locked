@@ -19,27 +19,44 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-08-02-one-physical-chunk-one-unlock');
+    expect(LATEST_CHANGELOG.id).toBe('2026-08-04-polished-chunk-info');
   });
 
   it('announces the latest physical-chunk unlock and source corrections', () => {
-    expect(LATEST_CHANGELOG).toMatchObject({
+    const physicalChunkRelease = CHANGELOG_RELEASES.find(
+      release => release.id === '2026-08-02-one-physical-chunk-one-unlock',
+    );
+
+    expect(physicalChunkRelease).toMatchObject({
       id: '2026-08-02-one-physical-chunk-one-unlock',
       title: 'One Chunk, One Unlock',
       date: '2026-08-02',
     });
-    expect(LATEST_CHANGELOG.sections.changed).toContain(
+    expect(physicalChunkRelease?.sections.changed).toContain(
       'Chunk data is refreshed to the reviewed 2 August Chunk Picker revision, including newly named waters around Ardeaglais, Auchrie, and Wyrmscraig.',
     );
-    expect(LATEST_CHANGELOG.sections.fixed).toEqual(expect.arrayContaining([
+    expect(physicalChunkRelease?.sections.fixed).toEqual(expect.arrayContaining([
       'Twenty-four boundary chunks now use the correct parent continent, fixing labels such as Falador \u00b7 Misthalin and Port Sarim \u00b7 Karamja.',
     ]));
-    expect(JSON.stringify(LATEST_CHANGELOG.sections)).toContain(
+    expect(JSON.stringify(physicalChunkRelease?.sections)).toContain(
       'Named dungeon, cave, mine, and basement task unlocks now follow their reviewed physical entrances instead of being omitted.',
     );
-    expect(JSON.stringify(LATEST_CHANGELOG.sections)).toContain(
+    expect(JSON.stringify(physicalChunkRelease?.sections)).toContain(
       'Chunk Info now shows each reviewed entrance as locked with its chunk or available.',
     );
+  });
+
+  it('announces the polished Chunk Info drawer', () => {
+    expect(LATEST_CHANGELOG).toMatchObject({
+      id: '2026-08-04-polished-chunk-info',
+      title: 'Clearer Chunk Info',
+      date: '2026-08-04',
+    });
+    expect(LATEST_CHANGELOG.sections.changed).toEqual(expect.arrayContaining([
+      'Chunk Info now leads with a clear availability summary and keeps detailed content in readable expandable groups.',
+      'Entry requirements, entrances, and banks now share one consistent Access & facilities card.',
+      'Locked content stays readable and explains its requirement without striking through the full name.',
+    ]));
   });
 
   it('preserves the profile registry recovery and multi-tab safety release', () => {

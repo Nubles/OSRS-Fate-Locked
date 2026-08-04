@@ -19,6 +19,18 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-08-04-polished-chunk-info',
+    title: 'Clearer Chunk Info',
+    date: '2026-08-04',
+    sections: {
+      changed: [
+        'Chunk Info now leads with a clear availability summary and keeps detailed content in readable expandable groups.',
+        'Entry requirements, entrances, and banks now share one consistent Access & facilities card.',
+        'Locked content stays readable and explains its requirement without striking through the full name.',
+      ],
+    },
+  },
+  {
     id: '2026-08-02-one-physical-chunk-one-unlock',
     title: 'One Chunk, One Unlock',
     date: '2026-08-02',
