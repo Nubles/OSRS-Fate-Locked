@@ -22,7 +22,11 @@ describe('ChunkInfoIcon', () => {
     expect(image.getAttribute('src')).toBe(EXPECTED_ICON_URLS[id]);
     expect(image.getAttribute('alt')).toBe('');
     expect(image.getAttribute('aria-hidden')).toBe('true');
+    expect(image.className).toContain('h-4');
+    expect(image.className).toContain('w-4');
+    expect(image.className).toContain('shrink-0');
     expect(image.className).toContain('object-contain');
+    expect(image.className).toContain('[image-rendering:pixelated]');
   });
 
   it('swaps to the supplied Lucide fallback after an image error', () => {
