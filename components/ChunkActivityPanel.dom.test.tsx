@@ -69,6 +69,45 @@ beforeEach(() => {
 });
 
 describe('ChunkActivityPanel activity accordions', () => {
+  it('resets scroll position and accordion expansion when switching chunks', async () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      quests: { 'Sheep Shearer': 'first' },
+      monsters: [{ name: 'Rat', count: 3, slayer: null }],
+    };
+
+    const { rerender } = render(<ChunkActivityPanel {...baseProps} />);
+    const scrollBody = screen.getByTestId('chunk-info-scroll-body');
+    scrollBody.scrollTop = 240;
+
+    await userEvent.click(screen.getByRole('button', { name: /Combat/ }));
+    expect(screen.getByRole('button', { name: /Quests/ }).getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('button', { name: /Combat/ }).getAttribute('aria-expanded')).toBe('true');
+
+    rerender(<ChunkActivityPanel {...baseProps} chunk={{ cx: 51, cy: 53 }} />);
+
+    expect(scrollBody.scrollTop).toBe(0);
+    expect(screen.getByRole('button', { name: /Quests/ }).getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('button', { name: /Combat/ }).getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('keeps locked activities readable and shows their state in the drawer', () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      monsters: [{ name: 'King Black Dragon', count: 1, slayer: null }],
+    };
+
+    render(<ChunkActivityPanel {...baseProps} />);
+
+    const lockedName = screen.getByText('King Black Dragon');
+    expect(lockedName.closest('span')?.className).not.toContain('line-through');
+    expect(screen.getByText('Locked')).toBeTruthy();
+
+    const drawer = screen.getByTestId('chunk-info-scroll-body').parentElement;
+    expect(drawer?.className).toContain('w-80');
+    expect(drawer?.className).toContain('max-w-[calc(100%-1.5rem)]');
+  });
+
   it('groups quest, combat, and gathering rows while preserving locked labels', async () => {
     mocks.state.content = {
       ...emptyContent(),

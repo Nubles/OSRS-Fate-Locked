@@ -16,7 +16,7 @@ export const ChunkInfoSection: React.FC<Props> = ({ id, label, summary, icon, de
   const reactId = useId();
   const contentId = `chunk-info-${id}-${reactId.replace(/:/g, '')}`;
   return (
-    <section className="mb-2 overflow-hidden rounded-lg border border-white/10 bg-white/[0.025]">
+    <section className="mb-2 overflow-hidden rounded-lg border border-cyan-900/45 bg-[#1a1e20]">
       <h4>
         <button
           type="button"
@@ -32,7 +32,7 @@ export const ChunkInfoSection: React.FC<Props> = ({ id, label, summary, icon, de
           {open ? <ChevronDown size={12} className="text-gray-500" /> : <ChevronRight size={12} className="text-gray-500" />}
         </button>
       </h4>
-      <div id={contentId} hidden={!open} className="border-t border-white/[0.06] px-2.5 py-2">{children}</div>
+      <div id={contentId} hidden={!open} className="border-t border-white/10 px-2.5 py-2">{children}</div>
     </section>
   );
 };

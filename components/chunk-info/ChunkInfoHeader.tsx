@@ -15,7 +15,7 @@ interface Props {
 export const ChunkInfoHeader: React.FC<Props> = ({
   title, meta, unlocked, showModeSwitch, mode, onModeChange, onClose,
 }) => (
-  <header className="sticky top-0 z-10 shrink-0 border-b border-white/10 bg-gradient-to-b from-[#202427] to-[#171a1c] px-3.5 py-3">
+  <header className="sticky top-0 z-10 shrink-0 border-b border-cyan-900/50 bg-[#171a1c] px-3.5 py-3 shadow-[0_1px_0_rgba(34,211,238,0.08)]">
     <div className="flex items-start justify-between gap-2">
       <div className="min-w-0">
         <h3 className="truncate text-sm font-bold leading-tight text-white">{title}</h3>
@@ -27,20 +27,20 @@ export const ChunkInfoHeader: React.FC<Props> = ({
           : 'border-rose-800/60 bg-rose-950/70 text-rose-300'}`}>
           {unlocked ? 'Unlocked' : 'Locked'}
         </span>
-        <button type="button" onClick={onClose} className="rounded p-1 text-gray-500 hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400" aria-label="Close chunk info">
+        <button type="button" onClick={onClose} className="rounded p-1 text-gray-500 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 motion-reduce:transition-none" aria-label="Close chunk info">
           <X size={15} />
         </button>
       </div>
     </div>
     {showModeSwitch && (
-      <div role="group" className="mt-2.5 flex gap-0.5 rounded-lg bg-black/40 p-0.5" aria-label="Chunk information scope">
+      <div role="group" className="mt-2.5 flex gap-0.5 rounded-lg border border-white/10 bg-black/40 p-0.5" aria-label="Chunk information scope">
         {(['chunk', 'region'] as const).map(value => (
           <button
             key={value}
             type="button"
             onClick={() => onModeChange(value)}
             aria-pressed={mode === value}
-            className={`flex-1 rounded py-1.5 text-[10px] font-bold uppercase tracking-wide transition-colors motion-reduce:transition-none ${mode === value
+            className={`flex-1 rounded py-1.5 text-[10px] font-bold uppercase tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 motion-reduce:transition-none ${mode === value
               ? 'bg-cyan-900/70 text-cyan-100'
               : 'text-gray-500 hover:bg-white/5 hover:text-gray-300'}`}
           >

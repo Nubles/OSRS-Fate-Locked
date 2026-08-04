@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   X,
   Lock,
@@ -177,7 +177,9 @@ const rowStateCls = (state: ChunkInfoItemState): string => state === 'locked'
   ? 'text-gray-400'
   : state === 'completed'
     ? 'text-gray-400'
-    : state === 'available' ? 'text-gray-100' : 'text-gray-300';
+    : state === 'neutral' || state === 'mixed'
+      ? 'text-gray-300'
+      : 'text-gray-100';
 
 
 // ── Farming patches: chunk object name → FARMING_PATCH_LIST unlock ─────────
@@ -237,8 +239,9 @@ const CappedList: React.FC<{ items: React.ReactNode[]; cap: number }> = ({ items
       {shown}
       {items.length > cap && (
         <button
+          type="button"
           onClick={() => setExpanded(e => !e)}
-          className="text-[10px] text-cyan-400/80 hover:text-cyan-300 mt-0.5"
+          className="mt-0.5 rounded text-[10px] text-cyan-400/80 transition-colors hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 motion-reduce:transition-none"
         >
           {expanded ? 'show less' : `+${items.length - cap} more`}
         </button>
@@ -294,6 +297,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
   const [openShop, setOpenShop] = useState<string | null>(null);
   const [openResource, setOpenResource] = useState<string | null>(null);
   const [linksCap, setLinksCap] = useState<Record<string, number>>({});
+  const scrollBodyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let active = true;
@@ -513,6 +517,13 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
   const presentSectionIds = CHUNK_INFO_SECTION_ORDER.filter(id => (sectionStats[id]?.total ?? 0) > 0);
   const defaultSection = getDefaultChunkInfoSection(presentSectionIds);
   const panelResetKey = `${mode}:${chunk.cx},${chunk.cy}`;
+
+  useEffect(() => {
+    if (scrollBodyRef.current) scrollBodyRef.current.scrollTop = 0;
+    setOpenShop(null);
+    setOpenResource(null);
+    setLinksCap({});
+  }, [panelResetKey]);
   const hasMixedScope = scope === 'mixed';
 
   const bossRows = derived?.bosses.map(b => {
@@ -542,10 +553,10 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
           {reqs.length > 0 && <ReqBadge reqs={reqs} />}
           {m.slayer != null && (
             <span
-              className={`text-[9px] px-1 rounded font-bold ${met ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}
+              className={`text-[9px] px-1 rounded font-bold ${hasMixedScope ? 'bg-white/5 text-gray-300' : met ? 'bg-green-900/60 text-green-300' : 'bg-amber-950/70 text-amber-200'}`}
               title={hasMixedScope ? `Slayer ${m.slayer} requirement` : met ? 'Slayer requirement met' : `Needs Slayer ${m.slayer} ? you have ${slayerUnlocked ? slayerLevel : 'the skill locked'}`}
             >
-              Slay {m.slayer}
+              {hasMixedScope ? `Slay ${m.slayer}` : met ? `Slay ${m.slayer}` : `Needs Slay ${m.slayer}`}
             </span>
           )}
         </span>
@@ -559,7 +570,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
         <span className={`truncate ${rowStateCls(visibleState)}`}>
           <WikiLink name={f.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">?{f.count}</span>
         </span>
-        <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${f.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>{f.patch}</span>
+        <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${hasMixedScope ? 'bg-white/5 text-gray-300' : f.usable ? 'bg-green-900/60 text-green-300' : 'bg-amber-950/70 text-amber-200'}`}>{hasMixedScope ? f.patch : f.usable ? f.patch : `Needs ${f.patch}`}</span>
       </div>
     );
   }) ?? [];
@@ -579,7 +590,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
               : `${r.skill} skill not unlocked yet (needs level ${r.level})`}>
           <span className={`flex items-center gap-1 min-w-0 ${rowStateCls(visibleState)}`}>
             {yields && yields.length > 0 && (
-              <button onClick={() => setOpenResource(isOpen ? null : r.name)} className="text-gray-500 hover:text-white shrink-0" title="Show what this yields">
+              <button type="button" onClick={() => setOpenResource(isOpen ? null : r.name)} className="shrink-0 rounded text-gray-500 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 motion-reduce:transition-none" title="Show what this yields" aria-expanded={isOpen}>
                 {isOpen ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
               </button>
             )}
@@ -587,8 +598,8 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
               <WikiLink name={r.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">?{r.count}</span>
             </span>
           </span>
-          <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${r.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
-            {r.skill.slice(0, 4)} {r.level}
+          <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${hasMixedScope ? 'bg-white/5 text-gray-300' : r.usable ? 'bg-green-900/60 text-green-300' : 'bg-amber-950/70 text-amber-200'}`}>
+            {hasMixedScope ? `${r.skill.slice(0, 4)} ${r.level}` : r.usable ? `${r.skill.slice(0, 4)} ${r.level}` : `Needs ${r.skill.slice(0, 4)} ${r.level}`}
           </span>
         </div>
         {isOpen && yields && (
@@ -614,15 +625,15 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
           title={hasMixedScope && s.category ? 'Availability varies across this area' : s.usable ? `${s.category} unlocked` : s.category ? `Needs the "${s.category}" merchant unlock` : 'Unclassified shop \u2014 no merchant category gate'}>
           <span className="flex min-w-0 items-center gap-1">
             {stock.length > 0 && (
-              <button type="button" onClick={() => setOpenShop(isOpen ? null : s.name)} className="shrink-0 text-gray-500 hover:text-white" title="Show stock">
+              <button type="button" onClick={() => setOpenShop(isOpen ? null : s.name)} className="shrink-0 rounded text-gray-500 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 motion-reduce:transition-none" title="Show stock" aria-expanded={isOpen}>
                 {isOpen ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
               </button>
             )}
             <WikiLink name={s.name} className={`truncate hover:underline decoration-dotted underline-offset-2 ${rowStateCls(visibleState)}`} />
           </span>
           {s.category && (
-            <span className={`shrink-0 rounded px-1 text-[9px] ${hasMixedScope ? 'bg-white/5 text-gray-300' : s.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
-              {s.category.replace(/ Shops?$/, '')}
+            <span className={`shrink-0 rounded px-1 text-[9px] ${hasMixedScope ? 'bg-white/5 text-gray-300' : s.usable ? 'bg-green-900/60 text-green-300' : 'bg-amber-950/70 text-amber-200'}`}>
+              {hasMixedScope ? s.category.replace(/ Shops?$/, '') : s.usable ? s.category.replace(/ Shops?$/, '') : `Needs ${s.category.replace(/ Shops?$/, '')}`}
             </span>
           )}
         </div>
@@ -644,8 +655,8 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
         <span className={`truncate ${rowStateCls(visibleState)}`}>
           <WikiLink name={t.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="no-underline text-gray-600">x{t.count}</span>
         </span>
-        <span className={`shrink-0 rounded px-1 text-[9px] font-bold ${hasMixedScope ? 'bg-white/5 text-gray-300' : t.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
-          {t.network.replace(/s$/, '')}
+        <span className={`shrink-0 rounded px-1 text-[9px] font-bold ${hasMixedScope ? 'bg-white/5 text-gray-300' : t.usable ? 'bg-green-900/60 text-green-300' : 'bg-amber-950/70 text-amber-200'}`}>
+          {hasMixedScope ? t.network.replace(/s$/, '') : t.usable ? t.network.replace(/s$/, '') : `Needs ${t.network.replace(/s$/, '')}`}
         </span>
       </div>
     );
@@ -677,12 +688,15 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
               key={d.label}
               onClick={() => showChunkOnMap(d.cx, d.cy)}
               title={title}
-              className={`rounded border px-1 py-0.5 text-[9px] transition-colors hover:border-white/30 ${classes}`}
-            >{d.label}</button>
+              className={`inline-flex items-center gap-0.5 rounded border px-1 py-0.5 text-[10px] transition-colors hover:border-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 motion-reduce:transition-none ${classes}`}
+            >
+              {!hasMixedScope && !usable && <Lock size={9} aria-hidden="true" />}
+              {d.label}
+            </button>
           );
         })}
         {g.dests.length > (linksCap[g.category] ?? 8) && (
-          <button type="button" onClick={() => setLinksCap(c => ({ ...c, [g.category]: g.dests.length }))} className="px-1 py-0.5 text-[9px] text-cyan-400 hover:underline">
+          <button type="button" onClick={() => setLinksCap(c => ({ ...c, [g.category]: g.dests.length }))} className="rounded px-1 py-0.5 text-[9px] text-cyan-400 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 motion-reduce:transition-none">
             +{g.dests.length - (linksCap[g.category] ?? 8)} more
           </button>
         )}
@@ -777,7 +791,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
 
 
   return (
-    <div className="absolute bottom-3 right-3 top-3 z-30 flex w-80 max-w-[calc(100%-1.5rem)] flex-col overflow-hidden rounded-xl border border-white/15 bg-[#16191b]/95 shadow-2xl backdrop-blur-sm">
+    <div className="absolute bottom-3 right-3 top-3 z-30 flex w-80 max-w-[calc(100%-1.5rem)] flex-col overflow-hidden rounded-xl border border-cyan-900/50 bg-[#16191b]/95 shadow-2xl backdrop-blur-sm">
       <ChunkInfoHeader
         title={title}
         meta={mode === 'region'
@@ -790,7 +804,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
         onClose={onClose}
       />
       {/* Body */}
-      <div className="flex-1 overflow-y-auto px-3 pb-3 text-[11px] custom-scrollbar" data-testid="chunk-info-scroll-body">
+      <div ref={scrollBodyRef} className="min-w-0 flex-1 overflow-y-auto px-3 pb-3 text-[11px] custom-scrollbar" data-testid="chunk-info-scroll-body">
         {failed ? (
           <ChunkInfoBodyState kind="error" onRetry={() => setLoadAttempt(attempt => attempt + 1)} />
         ) : !chunkContentService.ready ? (
