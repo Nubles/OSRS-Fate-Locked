@@ -17,7 +17,7 @@ import { entryBlockedGate } from '../utils/questDoability';
 import { QUEST_DATA } from '../data/questData';
 import { isChunkUnlocked, isFrontierChunk } from '../utils/chunkAdjacency';
 import { rankFrontierChunks } from '../utils/frontierAdvisor';
-import { isNamedAreaReachableViaChunks, isRegionUnlocked } from '../utils/reachability';
+import { hasMixedAreaOwnership, isNamedAreaReachableViaChunks, isRegionUnlocked } from '../utils/reachability';
 import { displayAreaName, visibleAreaUnlocks } from '../data/areaMapPolicy';
 
 type LensTone = 'good' | 'warn' | 'bad';
@@ -1902,6 +1902,16 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
           : subArea
             ? isRegionUnlocked(subArea, regionUnlocks)
             : region ? isRegionUnlocked(region, regionUnlocks) : false;
+        const wholeAreaOwnershipMixed = isChunked || (
+          region != null
+          && hasMixedAreaOwnership(
+            draftChunks[region] ?? [],
+            region,
+            chunkSubArea,
+            regionUnlocks,
+          )
+        );
+
         return (
           <ChunkActivityPanel
             chunk={selectedChunk}
@@ -1909,7 +1919,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
             subArea={subArea}
             regionChunks={region ? draftChunks[region] : []}
             unlocked={unlocked}
-            individualChunkOwnership={isChunked}
+            wholeAreaOwnershipMixed={wholeAreaOwnershipMixed}
             onClose={() => setSelectedChunk(null)}
           />
         );

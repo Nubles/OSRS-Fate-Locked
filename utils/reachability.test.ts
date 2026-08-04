@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  hasMixedAreaOwnership,
   isAreaReachable,
   isNamedAreaReachableViaChunks,
   isRegionUnlocked,
@@ -132,5 +133,21 @@ describe('canonical Tirannwn completion', () => {
       'Poison Waste',
     ];
     expect(isRegionUnlocked('Tirannwn', canonicalChildren)).toBe(true);
+  });
+
+});
+describe('hasMixedAreaOwnership', () => {
+  it('detects a non-chunked parent area whose independently owned subareas disagree', () => {
+    const asgarniaChunks = [
+      { cx: 46, cy: 52 },
+      { cx: 44, cy: 52 },
+    ];
+    const subAreasByChunk = {
+      '46,52': 'Falador',
+      '44,52': 'Port Sarim',
+    };
+
+    expect(hasMixedAreaOwnership(asgarniaChunks, 'Asgarnia', subAreasByChunk, ['Falador'])).toBe(true);
+    expect(hasMixedAreaOwnership(asgarniaChunks, 'Asgarnia', subAreasByChunk, ['Falador', 'Port Sarim'])).toBe(false);
   });
 });

@@ -25,9 +25,9 @@ export type ChunkInfoDrawerSummary =
 
 export const getChunkInfoScope = (
   mode: ChunkInfoMode,
-  individualChunkOwnership: boolean,
+  wholeAreaOwnershipMixed: boolean,
   unlocked: boolean,
-): ChunkInfoScope => mode === 'region' && individualChunkOwnership
+): ChunkInfoScope => mode === 'region' && wholeAreaOwnershipMixed
   ? 'mixed'
   : unlocked ? 'available' : 'locked';
 

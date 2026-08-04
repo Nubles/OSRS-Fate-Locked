@@ -46,7 +46,7 @@ const baseProps = {
   subArea: 'Varrock',
   regionChunks: [{ cx: 50, cy: 53 }],
   unlocked: true,
-  individualChunkOwnership: true,
+  wholeAreaOwnershipMixed: true,
   onClose: () => undefined,
 } as const;
 
@@ -228,6 +228,31 @@ describe('ChunkActivityPanel activity accordions', () => {
     const destination = within(travelSection).getByTitle(/Reachable/);
     expect(destination.querySelector('svg')).toBeTruthy();
   });
+
+  it('renders restored count separators and requirement punctuation as player-facing text', async () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      monsters: [
+        { name: 'King Black Dragon', count: 2, slayer: null },
+        { name: 'Rat', count: 3, slayer: null },
+        { name: 'Banshee', count: 1, slayer: 15 },
+      ],
+      objects: [['Herb patch', 4], ['Yew tree', 5]],
+    };
+    mocks.state.skills = { Slayer: 1, Woodcutting: 6 };
+    mocks.state.levels = { Slayer: 1, Woodcutting: 40 };
+
+    render(<ChunkActivityPanel {...baseProps} />);
+    await userEvent.click(screen.getByRole('button', { name: /Gathering/ }));
+
+    expect(screen.getByText('King Black Dragon').parentElement?.textContent).toContain('\u00d72');
+    expect(screen.getByText('Rat').parentElement?.textContent).toContain('\u00d73');
+    expect(screen.getByText('Herb patch').parentElement?.textContent).toContain('\u00d74');
+    expect(screen.getByText('Yew tree').parentElement?.textContent).toContain('\u00d75');
+    expect(screen.getByTitle('Needs Slayer 15 \u2014 you have 1')).toBeTruthy();
+    expect(screen.getByText('Yew tree').closest('div')?.getAttribute('title'))
+      .toBe('Needs Woodcutting 60 \u2014 you have 40');
+  });
   it('groups quest, combat, and gathering rows while preserving locked labels', async () => {
     mocks.state.content = {
       ...emptyContent(),
@@ -274,6 +299,24 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(screen.getByText('Area')).toBeTruthy();
     expect(screen.getByText('Sheep Shearer').closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
 
+  });
+
+  it('uses neutral totals for a non-chunked Whole area with mixed subarea ownership', async () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      monsters: [{ name: 'Rat', count: 3, slayer: null }],
+    };
+
+    render(
+      <ChunkActivityPanel
+        {...baseProps}
+        wholeAreaOwnershipMixed
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Whole area' }));
+
+    expect(screen.getByText('Indexed activities')).toBeTruthy();
+    expect(screen.queryByText('Available now')).toBeNull();
   });
   it('opens Combat by default when quests are absent and omits empty groups', () => {
     mocks.state.content = {

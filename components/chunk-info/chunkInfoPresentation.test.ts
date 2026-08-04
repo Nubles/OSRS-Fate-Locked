@@ -11,7 +11,7 @@ import {
 } from './chunkInfoPresentation';
 
 describe('chunk info presentation', () => {
-  it('uses a mixed scope only for chunk-owned Whole area aggregates', () => {
+  it('uses a mixed scope only for Whole-area aggregates with mixed ownership', () => {
     expect(getChunkInfoScope('chunk', true, true)).toBe('available');
     expect(getChunkInfoScope('chunk', true, false)).toBe('locked');
     expect(getChunkInfoScope('region', false, true)).toBe('available');
