@@ -16,7 +16,7 @@ const mocks = vi.hoisted(() => {
       entrancesFor: vi.fn(() => []),
       connectGraph: vi.fn(() => ({})),
       skillYields: vi.fn(() => ({})),
-      taskRequirements: vi.fn(() => []),
+      taskRequirements: vi.fn((_name: string, _kind: string, _cx: number, _cy: number): string[] => []),
       chunkEntryRequirements: vi.fn(() => []),
       hasBank: vi.fn(() => false),
       shopStock: vi.fn(() => []),
@@ -78,6 +78,8 @@ beforeEach(() => {
   mocks.service.shopStock.mockReturnValue([]);
   mocks.service.skillYields.mockReset();
   mocks.service.skillYields.mockReturnValue({});
+  mocks.service.taskRequirements.mockReset();
+  mocks.service.taskRequirements.mockReturnValue([]);
 });
 
 describe('ChunkActivityPanel activity accordions', () => {
@@ -397,6 +399,49 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(oddShopRow).toBeTruthy();
     expect(within(oddShopRow as HTMLElement).getByText('Area')).toBeTruthy();
     expect(screen.getAllByText("Cooks' Guild")[0].closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
+  });
+
+  it('excludes monsters with unevaluated access requirements from availability totals', () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      monsters: [{ name: 'Rat', count: 1, slayer: null }],
+    };
+    mocks.service.taskRequirements.mockReturnValue(['Dragon Slayer I']);
+
+    render(<ChunkActivityPanel {...baseProps} />);
+
+    expect(screen.getByText('Available now').previousElementSibling?.textContent).toBe('0');
+    expect(screen.getByText('Needs unlocks').previousElementSibling?.textContent).toBe('0');
+    const row = screen.getByText('Rat').closest('div');
+    expect(row).toBeTruthy();
+    expect(within(row as HTMLElement).getByText('Dragon Slayer I')).toBeTruthy();
+    expect(within(row as HTMLElement).queryByText('Available')).toBeNull();
+  });
+
+  it('keeps per-chunk monster requirements neutral in a uniform Whole area summary', async () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      monsters: [{ name: 'Rat', count: 2, slayer: null }],
+    };
+    mocks.service.taskRequirements.mockImplementation(
+      (_name: string, _kind: string, cx: number, _cy: number) => cx === 51 ? ['Dragon Slayer I'] : [],
+    );
+
+    render(
+      <ChunkActivityPanel
+        {...baseProps}
+        regionChunks={[{ cx: 50, cy: 53 }, { cx: 51, cy: 53 }]}
+        wholeAreaOwnershipMixed={false}
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Whole area' }));
+
+    expect(screen.getByText('Available now').previousElementSibling?.textContent).toBe('0');
+    expect(screen.getByText('Needs unlocks').previousElementSibling?.textContent).toBe('0');
+    const row = screen.getByText('Rat').closest('div');
+    expect(row).toBeTruthy();
+    expect(within(row as HTMLElement).getByText('Dragon Slayer I')).toBeTruthy();
+    expect(within(row as HTMLElement).queryByText('Available')).toBeNull();
   });
 
 });

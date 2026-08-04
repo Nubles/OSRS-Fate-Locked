@@ -462,6 +462,29 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
   const neutralRows = (count: number): ChunkInfoItemState[] =>
     Array.from({ length: count }, () => 'neutral');
 
+  const monsterPresentations = useMemo(() => {
+    if (!derived) return [];
+    const sources = mode === 'region' ? regionChunks : [chunk];
+
+    return derived.monsters.map(monster => {
+      const slayerMet = monster.slayer == null
+        || (slayerUnlocked && slayerLevel >= monster.slayer);
+      const requirements = [...new Set(
+        sources.flatMap(source => chunkContentService.taskRequirements(
+          monster.name,
+          'monster',
+          source.cx,
+          source.cy,
+        )),
+      )];
+      const state: ChunkInfoItemState = scope !== 'mixed' && requirements.length > 0
+        ? 'neutral'
+        : resolveChunkInfoItemState(slayerMet, scope);
+
+      return { ...monster, slayerMet, requirements, state };
+    });
+  }, [derived, mode, regionChunks, chunk, slayerUnlocked, slayerLevel, scope]);
+
   const sectionStates = useMemo<Partial<Record<ChunkInfoSectionId, ChunkInfoItemState[]>>>(() => {
     if (!content || !derived) return {};
     const quests = questRows.map(row => {
@@ -471,7 +494,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     });
     const combat = [
       ...derived.bosses.map(boss => stateFor(boss.usable)),
-      ...derived.monsters.map(monster => stateFor(monster.slayer == null || (slayerUnlocked && slayerLevel >= monster.slayer))),
+      ...monsterPresentations.map(monster => monster.state),
     ];
     const gathering = [
       ...derived.farming.map(patch => stateFor(patch.usable)),
@@ -492,7 +515,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       ...neutralRows(content.spawns.length),
     ];
     return { quests, combat, gathering, shops, travel, other };
-  }, [content, derived, questRows, scope, slayerUnlocked, slayerLevel, linkGroups]);
+  }, [content, derived, questRows, scope, monsterPresentations, linkGroups]);
 
   const sectionStats = useMemo<Partial<Record<ChunkInfoSectionId, ChunkInfoSectionStats>>>(() => {
     const next: Partial<Record<ChunkInfoSectionId, ChunkInfoSectionStats>> = {};
@@ -540,10 +563,11 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       </div>
     );
   }) ?? [];
-  const monsterRows = derived?.monsters.map(m => {
-    const met = m.slayer == null || (slayerUnlocked && slayerLevel >= m.slayer);
-    const visibleState = resolveChunkInfoItemState(met, scope);
-    const reqs = mode === 'chunk' ? chunkContentService.taskRequirements(m.name, 'monster', chunk.cx, chunk.cy) : [];
+  const monsterRows = monsterPresentations.map(m => {
+    const met = m.slayerMet;
+    const visibleState = m.state;
+    const reqs = m.requirements;
+    const isRequirementNeutral = visibleState === 'neutral' && reqs.length > 0;
     return (
       <div key={m.name} className="flex items-center justify-between gap-2 py-px">
         <span className={`truncate ${rowStateCls(visibleState)}`}>
@@ -553,16 +577,16 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
           {reqs.length > 0 && <ReqBadge reqs={reqs} />}
           {m.slayer != null && (
             <span
-              className={`inline-flex items-center gap-0.5 text-[9px] px-1 rounded font-bold ${visibleState === 'mixed' ? 'bg-white/5 text-gray-300' : visibleState === 'available' ? 'bg-green-900/60 text-green-300' : met ? 'bg-red-950/70 text-red-300' : 'bg-amber-950/70 text-amber-200'}`}
-              title={hasMixedScope ? `Slayer ${m.slayer} requirement` : visibleState === 'available' ? 'Slayer requirement met' : met ? 'Chunk locked' : `Needs Slayer ${m.slayer} \u2014 you have ${slayerUnlocked ? slayerLevel : 'the skill locked'}`}
+              className={`inline-flex items-center gap-0.5 text-[9px] px-1 rounded font-bold ${visibleState === 'mixed' ? 'bg-white/5 text-gray-300' : visibleState === 'available' ? 'bg-green-900/60 text-green-300' : isRequirementNeutral && met ? 'bg-white/5 text-gray-300' : met ? 'bg-red-950/70 text-red-300' : 'bg-amber-950/70 text-amber-200'}`}
+              title={hasMixedScope ? `Slayer ${m.slayer} requirement` : visibleState === 'available' ? 'Slayer requirement met' : isRequirementNeutral ? 'Access requirements need evaluation' : met ? 'Chunk locked' : `Needs Slayer ${m.slayer} \u2014 you have ${slayerUnlocked ? slayerLevel : 'the skill locked'}`}
             >
-              {visibleState === 'mixed' ? `Slay ${m.slayer}` : visibleState === 'available' ? <><Check size={9} aria-hidden="true" />Slay {m.slayer}</> : met ? 'Locked' : `Needs Slay ${m.slayer}`}
+              {visibleState === 'mixed' || (isRequirementNeutral && met) ? `Slay ${m.slayer}` : visibleState === 'available' ? <><Check size={9} aria-hidden="true" />Slay {m.slayer}</> : met ? 'Locked' : `Needs Slay ${m.slayer}`}
             </span>
           )}
           {m.slayer == null && reqs.length === 0 && visibleState === 'locked' && (
             <span className="rounded bg-red-950/70 px-1 text-[9px] font-bold text-red-300" title="Chunk locked">Locked</span>
           )}
-          {m.slayer == null && visibleState === 'available' && (
+          {m.slayer == null && reqs.length === 0 && visibleState === 'available' && (
             <span className="rounded bg-green-900/60 px-1 text-[9px] font-bold text-green-300">Available</span>
           )}
 
