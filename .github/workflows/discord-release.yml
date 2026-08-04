@@ -1,0 +1,26 @@
+name: Announce Discord release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: discord-release-${{ github.event.release.id }}
+  cancel-in-progress: false
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Announce published release
+        env:
+          DISCORD_AUTOMATION_ENDPOINT: ${{ secrets.DISCORD_AUTOMATION_ENDPOINT }}
+          DISCORD_AUTOMATION_HMAC: ${{ secrets.DISCORD_AUTOMATION_HMAC }}
+        run: node scripts/send-release-event.mjs "$GITHUB_EVENT_PATH"

@@ -3,6 +3,9 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main] # Deploy only reviewed changes on the default branch
+    paths-ignore:
+      - 'scripts/send-release-event.mjs'
+      - '.github/workflows/discord-release.yml'
 
 permissions:
   contents: read

@@ -460,7 +460,7 @@ describe('Pages deployment workflow contract', () => {
     const onBlock = yamlBlock(workflow, 'on');
 
     expect(onBlock.replace(/\r\n/g, '\n').trim()).toBe(
-      'on:\n  push:\n    branches: [main]',
+      "on:\n  push:\n    branches: [main]\n    paths-ignore:\n      - 'scripts/send-release-event.mjs'\n      - '.github/workflows/discord-release.yml'",
     );
   });
 
