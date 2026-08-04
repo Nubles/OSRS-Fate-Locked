@@ -659,7 +659,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
                       : row.status ? resolveChunkInfoItemState(false, scope) : 'neutral';
                   const { name, kind, status } = row;
                   return (
-                    <div key={name} className="flex items-center gap-1.5 py-0.5" title={presentation.title}>
+                    <div key={name} className="flex items-center gap-1.5 py-0.5" title={hasMixedScope && presentation.kind === 'available' ? 'Availability varies across this area' : presentation.title}>
                       {presentation.kind === 'completed' ? <Check size={11} className="shrink-0 text-emerald-400" />
                         : presentation.kind === 'confirmation' ? <Compass size={11} className="shrink-0 text-fuchsia-300" />
                         : visibleState === 'locked' ? <Lock size={10} className="shrink-0 text-rose-300" />

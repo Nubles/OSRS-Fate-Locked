@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ChunkContent } from '../services/ChunkContentService';
 
 const mocks = vi.hoisted(() => {
-  const state = { content: null as ChunkContent | null, completedQuests: [] as string[] };
+  const state = { content: null as ChunkContent | null, completedQuests: [] as string[], regions: [] as string[] };
   return {
     state,
     service: {
@@ -29,7 +29,7 @@ vi.mock('../context/GameContext', async () => {
   const actual = await vi.importActual<typeof import('../context/GameContext')>('../context/GameContext');
   return { ...actual, useGame: () => ({
     ...actual.initialState,
-    unlocks: { ...actual.initialState.unlocks, quests: mocks.state.completedQuests },
+    unlocks: { ...actual.initialState.unlocks, quests: mocks.state.completedQuests, regions: mocks.state.regions },
     customMode: undefined,
   }) };
 });
@@ -56,6 +56,7 @@ beforeEach(() => {
   mocks.service.init.mockReset();
   mocks.service.init.mockImplementation(async () => true);
   mocks.state.completedQuests = [];
+  mocks.state.regions = [];
   mocks.state.content = { ...emptyContent(), monsters: [{ name: 'Rat', count: 3, slayer: null }] };
   mocks.service.chunkEntryRequirements.mockReturnValue(['Dragon Slayer I']);
   mocks.service.entrancesFor.mockReturnValue([{
@@ -97,9 +98,11 @@ describe('ChunkActivityPanel activity accordions', () => {
   it('uses neutral availability wording for combat and gathering rows in mixed area scope', async () => {
     mocks.state.content = {
       ...emptyContent(),
+      quests: { 'Sheep Shearer': 'first' },
       monsters: [{ name: 'King Black Dragon', count: 1, slayer: null }],
       objects: [['Herb patch', 1], ['Yew tree', 2]],
     };
+    mocks.state.regions = ['Misthalin'];
 
     render(<ChunkActivityPanel {...baseProps} />);
     await userEvent.click(screen.getByRole('button', { name: 'Whole area' }));
@@ -110,6 +113,7 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(screen.getByText('Herb patch').closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
     expect(screen.getByText('Yew tree').closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
     expect(screen.getByText('Area')).toBeTruthy();
+    expect(screen.getByText('Sheep Shearer').closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
 
   });
   it('opens Combat by default when quests are absent and omits empty groups', () => {
