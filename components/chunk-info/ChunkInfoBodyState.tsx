@@ -10,8 +10,8 @@ export const ChunkInfoBodyState: React.FC<Props> = ({ kind, onRetry }) => {
   if (kind === 'loading') {
     return (
       <div aria-label="Loading chunk content" className="space-y-2 pt-2.5">
-        <div className="grid grid-cols-2 gap-2"><div className="h-14 animate-pulse rounded-lg bg-white/5" /><div className="h-14 animate-pulse rounded-lg bg-white/5" /></div>
-        <div className="h-10 animate-pulse rounded-lg bg-white/5" />
+        <div className="grid grid-cols-2 gap-2"><div className="h-14 animate-pulse motion-reduce:animate-none rounded-lg bg-white/5" /><div className="h-14 animate-pulse motion-reduce:animate-none rounded-lg bg-white/5" /></div>
+        <div className="h-10 animate-pulse motion-reduce:animate-none rounded-lg bg-white/5" />
         <span className="sr-only">Loading chunk content</span>
       </div>
     );
