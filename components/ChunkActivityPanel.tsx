@@ -284,14 +284,24 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
   const [mode, setMode] = useState<'chunk' | 'region'>('chunk');
   const [, setLoadedTick] = useState(0);
   const [failed, setFailed] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [openShop, setOpenShop] = useState<string | null>(null);
   const [openResource, setOpenResource] = useState<string | null>(null);
   const [showLinks, setShowLinks] = useState(false);
   const [linksCap, setLinksCap] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    chunkContentService.init().then(ok => (ok ? setLoadedTick(t => t + 1) : setFailed(true)));
-  }, []);
+    let active = true;
+    setFailed(false);
+    chunkContentService.init()
+      .then(ok => {
+        if (!active) return;
+        if (ok) setLoadedTick(t => t + 1);
+        else setFailed(true);
+      })
+      .catch(() => { if (active) setFailed(true); });
+    return () => { active = false; };
+  }, [loadAttempt]);
 
   const content: ChunkContent | null = useMemo(() => {
     if (!chunkContentService.ready) return null;
@@ -493,7 +503,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
   const title = mode === 'region' && region
     ? region
     : content?.name ?? `Chunk ${chunk.cx}, ${chunk.cy}`;
-  const emptyContentState = content ? chunkContentIsEmpty(content) : false;
+  const emptyContentState = !content || chunkContentIsEmpty(content);
   const detailedContent = content && derived;
 
 
@@ -513,8 +523,8 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       {/* Body */}
       <div className="flex-1 overflow-y-auto px-3 pb-3 text-[11px] custom-scrollbar" data-testid="chunk-info-scroll-body">
         {failed ? (
-          <ChunkInfoBodyState kind="error" />
-        ) : !content ? (
+          <ChunkInfoBodyState kind="error" onRetry={() => setLoadAttempt(attempt => attempt + 1)} />
+        ) : !chunkContentService.ready ? (
           <ChunkInfoBodyState kind="loading" />
         ) : (
           <>

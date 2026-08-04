@@ -15,4 +15,11 @@ describe('ChunkInfoBodyState', () => {
 
     expect(screen.getByText(label)).toBeTruthy();
   });
+
+  it('announces errors and offers a retry action when one is available', () => {
+    render(<ChunkInfoBodyState kind="error" onRetry={() => undefined} />);
+
+    expect(screen.getByRole('alert').getAttribute('aria-live')).toBe('assertive');
+    expect(screen.getByRole('button', { name: 'Retry loading chunk content' })).toBeTruthy();
+  });
 });
