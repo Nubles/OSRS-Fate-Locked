@@ -72,7 +72,7 @@ describe('ChunkActivityPanel activity accordions', () => {
     mocks.state.content = {
       ...emptyContent(),
       quests: { 'Sheep Shearer': 'first' },
-      monsters: [{ name: 'Rat', count: 3, slayer: null }],
+      monsters: [{ name: 'Rat', count: 3, slayer: null }, { name: 'King Black Dragon', count: 1, slayer: null }],
       objects: [['Herb patch', 1], ['Yew tree', 2]],
     };
     mocks.state.completedQuests = ['Sheep Shearer'];
@@ -94,6 +94,24 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(screen.getByText('Yew tree').parentElement?.parentElement?.className).toContain('text-gray-400');
   });
 
+  it('uses neutral availability wording for combat and gathering rows in mixed area scope', async () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      monsters: [{ name: 'King Black Dragon', count: 1, slayer: null }],
+      objects: [['Herb patch', 1], ['Yew tree', 2]],
+    };
+
+    render(<ChunkActivityPanel {...baseProps} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Whole area' }));
+    await userEvent.click(screen.getByRole('button', { name: /Combat/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Gathering/ }));
+
+    expect(screen.getByText('King Black Dragon').closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
+    expect(screen.getByText('Herb patch').closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
+    expect(screen.getByText('Yew tree').closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
+    expect(screen.getByText('Area')).toBeTruthy();
+
+  });
   it('opens Combat by default when quests are absent and omits empty groups', () => {
     mocks.state.content = {
       ...emptyContent(),

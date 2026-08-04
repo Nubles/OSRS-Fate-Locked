@@ -518,17 +518,18 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
   const presentSectionIds = CHUNK_INFO_SECTION_ORDER.filter(id => (sectionStats[id]?.total ?? 0) > 0);
   const defaultSection = getDefaultChunkInfoSection(presentSectionIds);
   const panelResetKey = `${mode}:${chunk.cx},${chunk.cy}`;
+  const hasMixedScope = scope === 'mixed';
 
   const bossRows = derived?.bosses.map(b => {
     const visibleState = resolveChunkInfoItemState(b.usable, scope);
     return (
       <div key={b.name} className="flex items-center justify-between gap-2 py-px"
-        title={b.usable ? `${b.name} unlocked` : `Needs the "${b.name}" boss unlock`}>
+        title={hasMixedScope ? 'Availability varies across this area' : b.usable ? `${b.name} unlocked` : `Needs the "${b.name}" boss unlock`}>
         <span className={`truncate ${rowStateCls(visibleState)}`}>
           <WikiLink name={b.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">?{b.count}</span>
         </span>
-        <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${b.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
-          {b.usable ? 'Unlocked' : 'Locked'}
+        <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${hasMixedScope ? 'bg-white/5 text-gray-300' : b.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
+          {hasMixedScope ? 'Area' : b.usable ? 'Unlocked' : 'Locked'}
         </span>
       </div>
     );
@@ -547,7 +548,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
           {m.slayer != null && (
             <span
               className={`text-[9px] px-1 rounded font-bold ${met ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}
-              title={met ? 'Slayer requirement met' : `Needs Slayer ${m.slayer} ? you have ${slayerUnlocked ? slayerLevel : 'the skill locked'}`}
+              title={hasMixedScope ? `Slayer ${m.slayer} requirement` : met ? 'Slayer requirement met' : `Needs Slayer ${m.slayer} ? you have ${slayerUnlocked ? slayerLevel : 'the skill locked'}`}
             >
               Slay {m.slayer}
             </span>
@@ -559,7 +560,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
   const farmingRows = derived?.farming.map(f => {
     const visibleState = resolveChunkInfoItemState(f.usable, scope);
     return (
-      <div key={f.name} className="flex items-center justify-between gap-2 py-px" title={f.usable ? `${f.patch} patches unlocked` : `Needs the "${f.patch}" unlock in the Farming table`}>
+      <div key={f.name} className="flex items-center justify-between gap-2 py-px" title={hasMixedScope ? 'Availability varies across this area' : f.usable ? `${f.patch} patches unlocked` : `Needs the "${f.patch}" unlock in the Farming table`}>
         <span className={`truncate ${rowStateCls(visibleState)}`}>
           <WikiLink name={f.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">?{f.count}</span>
         </span>
@@ -574,8 +575,10 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     return (
       <div key={r.name}>
         <div className="flex items-center justify-between gap-2 py-px"
-          title={r.usable
-            ? `${r.skill} ${r.level} ? you can gather this`
+          title={hasMixedScope
+            ? 'Availability varies across this area'
+            : r.usable
+              ? `${r.skill} ${r.level} ? you can gather this`
             : (unlocks.skills?.[r.skill] ?? 0) > 0
               ? `Needs ${r.skill} ${r.level} ? you have ${unlocks.levels?.[r.skill] ?? 1}`
               : `${r.skill} skill not unlocked yet (needs level ${r.level})`}>
@@ -699,87 +702,6 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
             )}
 
             </>
-              {false && (<>
-                <SectionHead icon={<Sparkles size={11} />} label="Quests" count={questRows.length} />
-                <CappedList cap={8} items={questRows.map(row => {
-                  const presentation = chunkQuestPresentation(row);
-                  const { name, kind, status } = row;
-                  return (
-                    <div key={name} className="flex items-center gap-1.5 py-px" title={presentation.title}>
-                      {presentation.kind === 'completed' ? <Check size={11} className="text-green-400 shrink-0" />
-                        : presentation.kind === 'confirmation' ? <Compass size={11} className="text-fuchsia-300 shrink-0" />
-                        : status === 'AVAILABLE' ? <span className="w-[11px] text-center text-amber-300 shrink-0">—</span>
-                        : status ? <Lock size={10} className="text-gray-600 shrink-0" />
-                        : <span className="w-[11px] text-center text-gray-600 shrink-0">·</span>}
-                      <WikiLink name={name} className={`truncate hover:underline decoration-dotted underline-offset-2 ${status ? QUEST_BADGE[status].cls : 'text-gray-400'}`} />
-                      {kind === 'first' && <span className="text-[9px] px-1 rounded bg-cyan-900/60 text-cyan-300 shrink-0">starts here</span>}
-                    </div>
-                  );
-                })} />
-              </>
-            )}
-
-            {false && derived.bosses.length > 0 && (
-              <>
-                <SectionHead icon={<Skull size={11} />} label="Bosses" count={derived.bosses.length} />
-                {derived.bosses.map(b => (
-                  <div key={b.name} className="flex items-center justify-between gap-2 py-px"
-                    title={b.usable ? `${b.name} unlocked` : `Needs the "${b.name}" boss unlock`}>
-                    <span className={`truncate ${stateCls(b.usable)}`}>
-                      <WikiLink name={b.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">×{b.count}</span>
-                    </span>
-                    <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${b.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
-                      {b.usable ? 'Unlocked' : 'Locked'}
-                    </span>
-                  </div>
-                ))}
-              </>
-            )}
-
-            {false && derived.monsters.length > 0 && (
-              <>
-                <SectionHead icon={<Swords size={11} />} label="Monsters" count={derived.monsters.length} />
-                <CappedList cap={8} items={derived.monsters.map(m => {
-                  const met = m.slayer == null || (slayerUnlocked && slayerLevel >= m.slayer);
-                  // Per-chunk requirement — only meaningful for a single chunk
-                  // (region mode aggregates many chunks, so we can't pin it).
-                  const reqs = mode === 'chunk' ? chunkContentService.taskRequirements(m.name, 'monster', chunk.cx, chunk.cy) : [];
-                  return (
-                    <div key={m.name} className="flex items-center justify-between gap-2 py-px">
-                      <span className={`truncate ${stateCls(met)}`}>
-                        <WikiLink name={m.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">×{m.count}</span>
-                      </span>
-                      <span className="flex items-center gap-1 shrink-0">
-                        {reqs.length > 0 && <ReqBadge reqs={reqs} />}
-                        {m.slayer != null && (
-                          <span
-                            className={`text-[9px] px-1 rounded font-bold ${met ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}
-                            title={met ? 'Slayer requirement met' : `Needs Slayer ${m.slayer} — you have ${slayerUnlocked ? slayerLevel : 'the skill locked'}`}
-                          >
-                            Slay {m.slayer}
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                  );
-                })} />
-              </>
-            )}
-
-            {false && derived.farming.length > 0 && (
-              <>
-                <SectionHead icon={<Sprout size={11} />} label="Farming" count={derived.farming.length} />
-                {derived.farming.map(f => (
-                  <div key={f.name} className="flex items-center justify-between gap-2 py-px" title={f.usable ? `${f.patch} patches unlocked` : `Needs the "${f.patch}" unlock in the Farming table`}>
-                    <span className={`truncate ${stateCls(f.usable)}`}>
-                      <WikiLink name={f.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">×{f.count}</span>
-                    </span>
-                    <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${f.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>{f.patch}</span>
-                  </div>
-                ))}
-              </>
-            )}
-
             {derived.transport.length > 0 && (
               <>
                 <SectionHead icon={<Route size={11} />} label="Transport" count={derived.transport.length} />
@@ -900,50 +822,6 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
                     </div>
                   );
                 })}
-              </>
-            )}
-
-            {false && derived.resources.length > 0 && (
-              <>
-                <SectionHead icon={<Pickaxe size={11} />} label="Resources" count={derived.resources.length} />
-                <CappedList cap={10} items={derived.resources.map(r => {
-                  const yields = nodeYields(r.skill, r.name);
-                  const isOpen = openResource === r.name;
-                  return (
-                  <div key={r.name}>
-                    <div className="flex items-center justify-between gap-2 py-px"
-                      title={r.usable
-                        ? `${r.skill} ${r.level} — you can gather this`
-                        : (unlocks.skills?.[r.skill] ?? 0) > 0
-                          ? `Needs ${r.skill} ${r.level} — you have ${unlocks.levels?.[r.skill] ?? 1}`
-                          : `${r.skill} skill not unlocked yet (needs level ${r.level})`}>
-                      <span className={`flex items-center gap-1 min-w-0 ${stateCls(r.usable)}`}>
-                        {yields && yields.length > 0 && (
-                          <button onClick={() => setOpenResource(isOpen ? null : r.name)} className="text-gray-500 hover:text-white shrink-0" title="Show what this yields">
-                            {isOpen ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
-                          </button>
-                        )}
-                        <span className="truncate">
-                          <WikiLink name={r.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">×{r.count}</span>
-                        </span>
-                      </span>
-                      <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${r.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
-                        {r.skill.slice(0, 4)} {r.level}
-                      </span>
-                    </div>
-                    {isOpen && yields && (
-                      <div className="ml-4 mb-1 flex flex-wrap gap-1">
-                        {yields.map(([item, rate]) => (
-                          <span key={item} className="text-[9px] px-1 py-0.5 rounded bg-white/5 border border-white/10 text-gray-400 flex items-center gap-1">
-                            <WikiLink name={item} className="hover:text-white" />
-                            <span className="text-gray-600 font-mono">{rate}</span>
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  );
-                })} />
               </>
             )}
 
