@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ChunkContent } from '../services/ChunkContentService';
 
 const mocks = vi.hoisted(() => {
-  const state = { content: null as ChunkContent | null };
+  const state = { content: null as ChunkContent | null, completedQuests: [] as string[] };
   return {
     state,
     service: {
@@ -27,7 +27,11 @@ const mocks = vi.hoisted(() => {
 vi.mock('../services/ChunkContentService', () => ({ chunkContentService: mocks.service }));
 vi.mock('../context/GameContext', async () => {
   const actual = await vi.importActual<typeof import('../context/GameContext')>('../context/GameContext');
-  return { ...actual, useGame: () => ({ ...actual.initialState, customMode: undefined }) };
+  return { ...actual, useGame: () => ({
+    ...actual.initialState,
+    unlocks: { ...actual.initialState.unlocks, quests: mocks.state.completedQuests },
+    customMode: undefined,
+  }) };
 });
 
 import { ChunkActivityPanel } from './ChunkActivityPanel';
@@ -51,6 +55,7 @@ beforeEach(() => {
   mocks.service.ready = true;
   mocks.service.init.mockReset();
   mocks.service.init.mockImplementation(async () => true);
+  mocks.state.completedQuests = [];
   mocks.state.content = { ...emptyContent(), monsters: [{ name: 'Rat', count: 3, slayer: null }] };
   mocks.service.chunkEntryRequirements.mockReturnValue(['Dragon Slayer I']);
   mocks.service.entrancesFor.mockReturnValue([{
@@ -60,6 +65,47 @@ beforeEach(() => {
     requirements: ['Example Quest'],
   }]);
   mocks.service.hasBank.mockReturnValue(true);
+});
+
+describe('ChunkActivityPanel activity accordions', () => {
+  it('groups quest, combat, and gathering rows while preserving locked labels', async () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      quests: { 'Sheep Shearer': 'first' },
+      monsters: [{ name: 'Rat', count: 3, slayer: null }],
+      objects: [['Herb patch', 1], ['Yew tree', 2]],
+    };
+    mocks.state.completedQuests = ['Sheep Shearer'];
+
+    render(<ChunkActivityPanel {...baseProps} />);
+
+    const quests = screen.getByRole('button', { name: /Quests/ });
+    const combat = screen.getByRole('button', { name: /Combat/ });
+    const gathering = screen.getByRole('button', { name: /Gathering/ });
+    expect(quests.getAttribute('aria-expanded')).toBe('true');
+    expect(combat.getAttribute('aria-expanded')).toBe('false');
+    expect(gathering.getAttribute('aria-expanded')).toBe('false');
+    await userEvent.click(combat);
+    await userEvent.click(gathering);
+    expect(quests.getAttribute('aria-expanded')).toBe('true');
+    expect(combat.getAttribute('aria-expanded')).toBe('true');
+    expect(gathering.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByTitle('Completed').textContent).toContain('Sheep Shearer');
+    expect(screen.getByText('Yew tree').parentElement?.parentElement?.className).toContain('text-gray-400');
+  });
+
+  it('opens Combat by default when quests are absent and omits empty groups', () => {
+    mocks.state.content = {
+      ...emptyContent(),
+      monsters: [{ name: 'Rat', count: 3, slayer: null }],
+    };
+
+    render(<ChunkActivityPanel {...baseProps} />);
+
+    expect(screen.getByRole('button', { name: /Combat/ }).getAttribute('aria-expanded')).toBe('true');
+    expect(screen.queryByRole('button', { name: /Quests/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Gathering/ })).toBeNull();
+  });
 });
 
 describe('ChunkActivityPanel summary hierarchy', () => {

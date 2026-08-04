@@ -42,6 +42,7 @@ import { displayAreaName } from '../data/areaMapPolicy';
 import { ChunkInfoHeader } from './chunk-info/ChunkInfoHeader';
 import { ChunkInfoAccessCard, type ChunkInfoBankState } from './chunk-info/ChunkInfoAccessCard';
 import { ChunkInfoBodyState } from './chunk-info/ChunkInfoBodyState';
+import { ChunkInfoSection } from './chunk-info/ChunkInfoSection';
 
 import { ChunkInfoSummary } from './chunk-info/ChunkInfoSummary';
 import {
@@ -51,6 +52,8 @@ import {
   getChunkInfoScope,
   chunkContentIsEmpty,
   resolveChunkInfoItemState,
+  formatChunkInfoSectionSummary,
+  getDefaultChunkInfoSection,
   type ChunkInfoItemState,
   type ChunkInfoSectionId,
   type ChunkInfoSectionStats,
@@ -173,6 +176,12 @@ const QUEST_BADGE: Record<QuestStatus, { cls: string; label: string }> = {
 /** Green when usable, red + strike-through when locked. */
 const stateCls = (usable: boolean) =>
   usable ? 'text-green-300' : 'text-red-400/80 line-through decoration-red-500/60';
+const rowStateCls = (state: ChunkInfoItemState): string => state === 'locked'
+  ? 'text-gray-400'
+  : state === 'completed'
+    ? 'text-gray-400'
+    : state === 'available' ? 'text-gray-100' : 'text-gray-300';
+
 
 // ── Farming patches: chunk object name → FARMING_PATCH_LIST unlock ─────────
 const PATCH_RULES: [RegExp, string][] = [
@@ -506,6 +515,98 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
   const emptyContentState = !content || chunkContentIsEmpty(content);
   const detailedContent = content && derived;
 
+  const presentSectionIds = CHUNK_INFO_SECTION_ORDER.filter(id => (sectionStats[id]?.total ?? 0) > 0);
+  const defaultSection = getDefaultChunkInfoSection(presentSectionIds);
+  const panelResetKey = `${mode}:${chunk.cx},${chunk.cy}`;
+
+  const bossRows = derived?.bosses.map(b => {
+    const visibleState = resolveChunkInfoItemState(b.usable, scope);
+    return (
+      <div key={b.name} className="flex items-center justify-between gap-2 py-px"
+        title={b.usable ? `${b.name} unlocked` : `Needs the "${b.name}" boss unlock`}>
+        <span className={`truncate ${rowStateCls(visibleState)}`}>
+          <WikiLink name={b.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">?{b.count}</span>
+        </span>
+        <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${b.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
+          {b.usable ? 'Unlocked' : 'Locked'}
+        </span>
+      </div>
+    );
+  }) ?? [];
+  const monsterRows = derived?.monsters.map(m => {
+    const met = m.slayer == null || (slayerUnlocked && slayerLevel >= m.slayer);
+    const visibleState = resolveChunkInfoItemState(met, scope);
+    const reqs = mode === 'chunk' ? chunkContentService.taskRequirements(m.name, 'monster', chunk.cx, chunk.cy) : [];
+    return (
+      <div key={m.name} className="flex items-center justify-between gap-2 py-px">
+        <span className={`truncate ${rowStateCls(visibleState)}`}>
+          <WikiLink name={m.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">?{m.count}</span>
+        </span>
+        <span className="flex items-center gap-1 shrink-0">
+          {reqs.length > 0 && <ReqBadge reqs={reqs} />}
+          {m.slayer != null && (
+            <span
+              className={`text-[9px] px-1 rounded font-bold ${met ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}
+              title={met ? 'Slayer requirement met' : `Needs Slayer ${m.slayer} ? you have ${slayerUnlocked ? slayerLevel : 'the skill locked'}`}
+            >
+              Slay {m.slayer}
+            </span>
+          )}
+        </span>
+      </div>
+    );
+  }) ?? [];
+  const farmingRows = derived?.farming.map(f => {
+    const visibleState = resolveChunkInfoItemState(f.usable, scope);
+    return (
+      <div key={f.name} className="flex items-center justify-between gap-2 py-px" title={f.usable ? `${f.patch} patches unlocked` : `Needs the "${f.patch}" unlock in the Farming table`}>
+        <span className={`truncate ${rowStateCls(visibleState)}`}>
+          <WikiLink name={f.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">?{f.count}</span>
+        </span>
+        <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${f.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>{f.patch}</span>
+      </div>
+    );
+  }) ?? [];
+  const resourceRows = derived?.resources.map(r => {
+    const yields = nodeYields(r.skill, r.name);
+    const isOpen = openResource === r.name;
+    const visibleState = resolveChunkInfoItemState(r.usable, scope);
+    return (
+      <div key={r.name}>
+        <div className="flex items-center justify-between gap-2 py-px"
+          title={r.usable
+            ? `${r.skill} ${r.level} ? you can gather this`
+            : (unlocks.skills?.[r.skill] ?? 0) > 0
+              ? `Needs ${r.skill} ${r.level} ? you have ${unlocks.levels?.[r.skill] ?? 1}`
+              : `${r.skill} skill not unlocked yet (needs level ${r.level})`}>
+          <span className={`flex items-center gap-1 min-w-0 ${rowStateCls(visibleState)}`}>
+            {yields && yields.length > 0 && (
+              <button onClick={() => setOpenResource(isOpen ? null : r.name)} className="text-gray-500 hover:text-white shrink-0" title="Show what this yields">
+                {isOpen ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+              </button>
+            )}
+            <span className="truncate">
+              <WikiLink name={r.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">?{r.count}</span>
+            </span>
+          </span>
+          <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${r.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
+            {r.skill.slice(0, 4)} {r.level}
+          </span>
+        </div>
+        {isOpen && yields && (
+          <div className="ml-4 mb-1 flex flex-wrap gap-1">
+            {yields.map(([item, rate]) => (
+              <span key={item} className="text-[9px] px-1 py-0.5 rounded bg-white/5 border border-white/10 text-gray-400 flex items-center gap-1">
+                <WikiLink name={item} className="hover:text-white" />
+                <span className="text-gray-600 font-mono">{rate}</span>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }) ?? [];
+
 
   return (
     <div className="absolute bottom-3 right-3 top-3 z-30 flex w-80 max-w-[calc(100%-1.5rem)] flex-col overflow-hidden rounded-xl border border-white/15 bg-[#16191b]/95 shadow-2xl backdrop-blur-sm">
@@ -536,8 +637,69 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
               ? <ChunkInfoBodyState kind="empty" />
               : detailedContent && (
                 <>
+            <>
             {questRows.length > 0 && (
-              <>
+              <ChunkInfoSection
+                key={`${panelResetKey}:quests`}
+                id="quests"
+                label="Quests"
+                icon={<Sparkles size={11} />}
+                summary={formatChunkInfoSectionSummary(sectionStats.quests!, scope)}
+                defaultOpen={defaultSection === 'quests'}
+              >
+                <CappedList cap={8} items={questRows.map(row => {
+                  const presentation = chunkQuestPresentation(row);
+                  const visibleState = row.status === 'COMPLETED'
+                    ? 'completed'
+                    : chunkQuestOverviewItem(row, true)?.can
+                      ? resolveChunkInfoItemState(true, scope)
+                      : row.status ? resolveChunkInfoItemState(false, scope) : 'neutral';
+                  const { name, kind, status } = row;
+                  return (
+                    <div key={name} className="flex items-center gap-1.5 py-0.5" title={presentation.title}>
+                      {presentation.kind === 'completed' ? <Check size={11} className="shrink-0 text-emerald-400" />
+                        : presentation.kind === 'confirmation' ? <Compass size={11} className="shrink-0 text-fuchsia-300" />
+                        : visibleState === 'locked' ? <Lock size={10} className="shrink-0 text-rose-300" />
+                        : visibleState === 'available' ? <Check size={10} className="shrink-0 text-emerald-300" />
+                        : <span className="w-[11px] shrink-0 text-center text-gray-600">?</span>}
+                      <WikiLink name={name} className={`min-w-0 flex-1 truncate hover:underline decoration-dotted underline-offset-2 ${rowStateCls(visibleState)}`} />
+                      {kind === 'first' && <span className="shrink-0 rounded bg-cyan-900/60 px-1 text-[9px] text-cyan-300">starts here</span>}
+                      {presentation.kind === 'confirmation' && <span className="shrink-0 rounded bg-fuchsia-950/60 px-1 text-[9px] text-fuchsia-200">Confirm</span>}
+                      {status === null && <span className="shrink-0 text-[9px] text-gray-600">untracked</span>}
+                    </div>
+                  );
+                })} />
+              </ChunkInfoSection>
+            )}
+            {(derived.bosses.length > 0 || derived.monsters.length > 0) && (
+              <ChunkInfoSection
+                key={`${panelResetKey}:combat`}
+                id="combat"
+                label="Combat"
+                icon={<Swords size={11} />}
+                summary={formatChunkInfoSectionSummary(sectionStats.combat!, scope)}
+                defaultOpen={defaultSection === 'combat'}
+              >
+                {derived.bosses.length > 0 && <><SectionHead icon={<Skull size={11} />} label="Bosses" count={derived.bosses.length} />{bossRows}</>}
+                {derived.monsters.length > 0 && <><SectionHead icon={<Swords size={11} />} label="Monsters" count={derived.monsters.length} /><CappedList cap={8} items={monsterRows} /></>}
+              </ChunkInfoSection>
+            )}
+            {(derived.farming.length > 0 || derived.resources.length > 0) && (
+              <ChunkInfoSection
+                key={`${panelResetKey}:gathering`}
+                id="gathering"
+                label="Gathering"
+                icon={<Pickaxe size={11} />}
+                summary={formatChunkInfoSectionSummary(sectionStats.gathering!, scope)}
+                defaultOpen={defaultSection === 'gathering'}
+              >
+                {derived.farming.length > 0 && <><SectionHead icon={<Sprout size={11} />} label="Farming" count={derived.farming.length} />{farmingRows}</>}
+                {derived.resources.length > 0 && <><SectionHead icon={<Pickaxe size={11} />} label="Resources" count={derived.resources.length} /><CappedList cap={10} items={resourceRows} /></>}
+              </ChunkInfoSection>
+            )}
+
+            </>
+              {false && (<>
                 <SectionHead icon={<Sparkles size={11} />} label="Quests" count={questRows.length} />
                 <CappedList cap={8} items={questRows.map(row => {
                   const presentation = chunkQuestPresentation(row);
@@ -557,7 +719,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
               </>
             )}
 
-            {derived.bosses.length > 0 && (
+            {false && derived.bosses.length > 0 && (
               <>
                 <SectionHead icon={<Skull size={11} />} label="Bosses" count={derived.bosses.length} />
                 {derived.bosses.map(b => (
@@ -574,7 +736,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
               </>
             )}
 
-            {derived.monsters.length > 0 && (
+            {false && derived.monsters.length > 0 && (
               <>
                 <SectionHead icon={<Swords size={11} />} label="Monsters" count={derived.monsters.length} />
                 <CappedList cap={8} items={derived.monsters.map(m => {
@@ -604,7 +766,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
               </>
             )}
 
-            {derived.farming.length > 0 && (
+            {false && derived.farming.length > 0 && (
               <>
                 <SectionHead icon={<Sprout size={11} />} label="Farming" count={derived.farming.length} />
                 {derived.farming.map(f => (
@@ -741,7 +903,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
               </>
             )}
 
-            {derived.resources.length > 0 && (
+            {false && derived.resources.length > 0 && (
               <>
                 <SectionHead icon={<Pickaxe size={11} />} label="Resources" count={derived.resources.length} />
                 <CappedList cap={10} items={derived.resources.map(r => {
