@@ -1,6 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  X,
   Lock,
   Check,
   Swords,
@@ -9,7 +8,6 @@ import {
   Scroll,
   Package,
   BookOpen,
-  MapPin,
   Sparkles,
   Sprout,
   Flag,
@@ -19,11 +17,14 @@ import {
   Route,
   ChevronDown,
   ChevronRight,
-  Landmark,
   Compass,
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
-import { chunkContentService, ChunkContent } from '../services/ChunkContentService';
+import {
+  chunkContentService,
+  type ChunkContent,
+  type EntityKind,
+} from '../services/ChunkContentService';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import {
@@ -37,11 +38,30 @@ import { resourceReqFor, resourceUsable } from '../utils/chunkResources';
 import { mobilityFor } from '../utils/chunkMobility';
 import { placeOf, chunkUnlocked, showChunkOnMap } from '../utils/chunkLocations';
 import { isAreaReachable, isBankReachable, bankLocksActive } from '../utils/reachability';
-import { FARMING_PATCH_LIST, GUILDS_LIST, MINIGAMES_LIST, MOBILITY_LIST, BOSSES_LIST, MISTHALIN_AREAS } from '../constants';
+import { FARMING_PATCH_LIST, GUILDS_LIST, MINIGAMES_LIST, MOBILITY_LIST, BOSSES_LIST } from '../constants';
 import type { ChunkCoord } from '../utils/mapCoords';
 import { WikiLink } from './WikiLink';
 import { displayAreaName } from '../data/areaMapPolicy';
-import { ChunkEntranceNotices } from './ChunkEntranceNotices';
+import { ChunkInfoHeader } from './chunk-info/ChunkInfoHeader';
+import { ChunkInfoAccessCard, type ChunkInfoBankState } from './chunk-info/ChunkInfoAccessCard';
+import { ChunkInfoBodyState } from './chunk-info/ChunkInfoBodyState';
+import { ChunkInfoSection } from './chunk-info/ChunkInfoSection';
+
+import { ChunkInfoSummary } from './chunk-info/ChunkInfoSummary';
+import {
+  buildChunkInfoDrawerSummary,
+  buildChunkInfoSectionStats,
+  CHUNK_INFO_SECTION_ORDER,
+  getChunkInfoScope,
+  chunkContentIsEmpty,
+  resolveChunkInfoItemState,
+  formatChunkInfoSectionSummary,
+  resolveChunkInfoRequirementState,
+  getDefaultChunkInfoSection,
+  type ChunkInfoItemState,
+  type ChunkInfoSectionId,
+  type ChunkInfoSectionStats,
+} from './chunk-info/chunkInfoPresentation';
 
 /**
  * What gathering a resource node yields, from the picker's per-skill item tables.
@@ -81,7 +101,28 @@ const ReqBadge: React.FC<{ reqs: string[] }> = ({ reqs }) => (
   </span>
 );
 
+
+const RequirementStateBadges: React.FC<{
+  requirements: string[];
+  state: ChunkInfoItemState;
+  label: string;
+}> = ({ requirements, state, label }) => (
+  <span className="flex shrink-0 items-center gap-1">
+    {requirements.length > 0 && <ReqBadge reqs={requirements} />}
+    {state !== 'neutral' && (
+      <span className={`rounded px-1 text-[9px] font-bold ${
+        state === 'mixed'
+          ? 'bg-white/5 text-gray-300'
+          : state === 'available'
+            ? 'bg-green-900/60 text-green-300'
+            : 'bg-red-950/70 text-red-300'
+      }`}>
+        {label}
+      </span>
+    )}
+  </span>
 // Boss name → set for O(1) lookup; diary area → home region for the diary gate.
+);
 const BOSS_SET = new Set(BOSSES_LIST.map(b => b.toLowerCase()));
 const DIARY_AREA_REGION: Record<string, string> = {};
 for (const d of Object.values(DIARY_DATA)) {
@@ -134,8 +175,8 @@ const classifyVia = (via: string | null): string => {
  * run's actual unlocks — quests via getQuestStatus, monsters via Slayer,
  * shops via their merchant category, farming patches / guilds / minigames
  * via their own unlock tables — and rendered green (usable) or red with a
- * strike-through (locked). A collapsible Can-do / Locked overview tops the
- * panel. Content data: ChunkContentService (credit: source-chunk/chunk-picker-v2).
+ * state badge or icon (locked). A concise availability summary and independently
+ * expandable content groups follow. Content data: ChunkContentService (credit: source-chunk/chunk-picker-v2).
  */
 
 interface Props {
@@ -143,8 +184,10 @@ interface Props {
   region: string | null;
   /** Named sub-area this chunk belongs to (e.g. 'Falador'), when known. */
   subArea?: string | null;
-  regionChunks: ChunkCoord[];
+  regionChunks: readonly ChunkCoord[];
   unlocked: boolean;
+  /** Whole area spans independently owned chunks or subareas. */
+  wholeAreaOwnershipMixed: boolean;
   onClose: () => void;
 }
 
@@ -156,9 +199,14 @@ const QUEST_BADGE: Record<QuestStatus, { cls: string; label: string }> = {
   LOCKED_QUEST: { cls: 'text-gray-500', label: 'locked: prerequisite quest missing' },
 };
 
-/** Green when usable, red + strike-through when locked. */
-const stateCls = (usable: boolean) =>
-  usable ? 'text-green-300' : 'text-red-400/80 line-through decoration-red-500/60';
+const rowStateCls = (state: ChunkInfoItemState): string => state === 'locked'
+  ? 'text-gray-400'
+  : state === 'completed'
+    ? 'text-gray-400'
+    : state === 'neutral' || state === 'mixed'
+      ? 'text-gray-300'
+      : 'text-gray-100';
+
 
 // ── Farming patches: chunk object name → FARMING_PATCH_LIST unlock ─────────
 const PATCH_RULES: [RegExp, string][] = [
@@ -217,8 +265,9 @@ const CappedList: React.FC<{ items: React.ReactNode[]; cap: number }> = ({ items
       {shown}
       {items.length > cap && (
         <button
+          type="button"
           onClick={() => setExpanded(e => !e)}
-          className="text-[10px] text-cyan-400/80 hover:text-cyan-300 mt-0.5"
+          className="mt-0.5 rounded text-[10px] text-cyan-400/80 transition-colors hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 motion-reduce:transition-none"
         >
           {expanded ? 'show less' : `+${items.length - cap} more`}
         </button>
@@ -226,11 +275,6 @@ const CappedList: React.FC<{ items: React.ReactNode[]; cap: number }> = ({ items
     </>
   );
 };
-
-interface OverviewItem { cat: string; label: string }
-
-// Stable display order for the grouped can/cant overview.
-const OVERVIEW_ORDER = ['Quests', 'Diaries', 'Bosses', 'Monsters', 'Minigames', 'Guilds', 'Shops', 'Resources', 'Farming', 'Travel'];
 
 export interface ChunkQuestRow {
   name: string;
@@ -270,65 +314,72 @@ export const chunkQuestPresentation = (
   return { kind: 'locked', title: QUEST_BADGE[row.status].label };
 };
 
-/** Collapsible overview block, grouped by activity type (quests / shops / …). */
-const Overview: React.FC<{ kind: 'can' | 'cant'; items: OverviewItem[] }> = ({ kind, items }) => {
-  const [open, setOpen] = useState(false);
-  if (items.length === 0) return null;
-  const can = kind === 'can';
-  const groups = new Map<string, string[]>();
-  for (const it of items) (groups.get(it.cat) ?? groups.set(it.cat, []).get(it.cat)!).push(it.label);
-  const ordered = [...groups.entries()].sort((a, b) => OVERVIEW_ORDER.indexOf(a[0]) - OVERVIEW_ORDER.indexOf(b[0]));
-  return (
-    <div className={`mt-2 rounded border ${can ? 'border-emerald-700/40 bg-emerald-950/30' : 'border-red-800/40 bg-red-950/20'}`}>
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-1.5 px-2 py-1.5 text-left"
-      >
-        {open ? <ChevronDown size={11} className="text-gray-500 shrink-0" /> : <ChevronRight size={11} className="text-gray-500 shrink-0" />}
-        {can ? <Check size={11} className="text-green-400 shrink-0" /> : <Lock size={11} className="text-red-400/80 shrink-0" />}
-        <span className={`text-[10px] font-bold uppercase tracking-wide ${can ? 'text-emerald-300' : 'text-red-300/90'}`}>
-          {can ? 'Can do here' : 'Locked for now'}
-        </span>
-        <span className="text-[10px] font-mono text-gray-500">({items.length})</span>
-      </button>
-      {open && (
-        <div className="px-2 pb-2 space-y-1">
-          {ordered.map(([cat, labels]) => (
-            <div key={cat} className="text-[10px] leading-relaxed">
-              <span className={`font-bold uppercase tracking-wide text-[9px] ${can ? 'text-emerald-400/80' : 'text-red-400/70'}`}>{cat}</span>
-              <span className="text-gray-600"> · </span>
-              <span className={can ? 'text-emerald-200/90' : 'text-red-200/70'}>{labels.join(', ')}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+type ChunkQuestPresentationKind = ReturnType<typeof chunkQuestPresentation>['kind'];
+
+export type ChunkQuestStatusLabel =
+  | 'Completed'
+  | 'Confirm'
+  | 'Untracked'
+  | 'Varies'
+  | 'Ready'
+  | 'Locked';
+
+export const chunkQuestStatusLabel = (
+  kind: ChunkQuestPresentationKind,
+  visibleState: ChunkInfoItemState,
+): ChunkQuestStatusLabel => {
+  if (kind === 'completed') return 'Completed';
+  if (kind === 'confirmation') return 'Confirm';
+  if (kind === 'untracked') return 'Untracked';
+  if (visibleState === 'mixed') return 'Varies';
+  return visibleState === 'available' ? 'Ready' : 'Locked';
 };
 
-export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, regionChunks, unlocked, onClose }) => {
+export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, regionChunks, unlocked, wholeAreaOwnershipMixed, onClose }) => {
   const { unlocks, gameModeId, customMode } = useGame();
   const [mode, setMode] = useState<'chunk' | 'region'>('chunk');
   const [, setLoadedTick] = useState(0);
   const [failed, setFailed] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [openShop, setOpenShop] = useState<string | null>(null);
   const [openResource, setOpenResource] = useState<string | null>(null);
-  const [showLinks, setShowLinks] = useState(false);
   const [linksCap, setLinksCap] = useState<Record<string, number>>({});
+  const scrollBodyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    chunkContentService.init().then(ok => (ok ? setLoadedTick(t => t + 1) : setFailed(true)));
-  }, []);
+    let active = true;
+    setFailed(false);
+    chunkContentService.init()
+      .then(ok => {
+        if (!active) return;
+        if (ok) setLoadedTick(t => t + 1);
+        else setFailed(true);
+      })
+      .catch(() => { if (active) setFailed(true); });
+    return () => { active = false; };
+  }, [loadAttempt]);
 
   const content: ChunkContent | null = useMemo(() => {
     if (!chunkContentService.ready) return null;
-    if (mode === 'region' && region) return chunkContentService.aggregate(regionChunks);
+    if (mode === 'region' && region) return chunkContentService.aggregate([...regionChunks]);
     return chunkContentService.contentFor(chunk.cx, chunk.cy);
   }, [mode, region, regionChunks, chunk, chunkContentService.ready]);
 
   const entrances = mode === 'chunk' && chunkContentService.ready
     ? chunkContentService.entrancesFor(chunk.cx, chunk.cy)
     : [];
+  const entryRequirements = mode === 'chunk' && chunkContentService.ready
+    ? chunkContentService.chunkEntryRequirements(chunk.cx, chunk.cy)
+    : [];
+
+  const bankState: ChunkInfoBankState = mode !== 'chunk' || !chunkContentService.ready || !chunkContentService.hasBank(chunk.cx, chunk.cy)
+    ? null
+    : !bankLocksActive(gameModeId, customMode)
+      ? 'present'
+      : isBankReachable(chunk.cx, chunk.cy, unlocks, gameModeId, customMode)
+        ? 'available'
+        : 'locked';
+
   // Transport links grouped by network (fairy ring / canoe / boat / …). A link
   // is only usable if both the destination area AND its transport network are
   // unlocked — an unlocked area you can't yet sail/ring to is still locked.
@@ -368,7 +419,6 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
   }, [mode, chunk, regionChunks, unlocks, gameModeId, chunkContentService.ready]);
 
   const totalLinks = useMemo(() => linkGroups.reduce((a, g) => a + g.dests.length, 0), [linkGroups]);
-  const reachableLinks = useMemo(() => linkGroups.reduce((a, g) => a + (g.networkUnlocked ? g.dests.filter(d => d.unlocked).length : 0), 0), [linkGroups]);
 
   const slayerLevel = unlocks.levels['Slayer'] ?? 1;
   const slayerUnlocked = (unlocks.skills?.['Slayer'] ?? 0) > 0;
@@ -389,41 +439,49 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
   const derived = useMemo(() => {
     if (!content) return null;
 
+    const sources = mode === 'region' ? regionChunks : [chunk];
+    const requirementsFor = (name: string, kind: EntityKind): string[] => [
+      ...new Set(sources.flatMap(source =>
+        chunkContentService.taskRequirements(name, kind, source.cx, source.cy),
+      )),
+    ];
     // Shops → merchant category gate.
     const shops = content.shops.map(name => {
       const category = classifyShop(name);
       const catUnlocked = category != null && unlocks.merchants.includes(category);
-      return { name, category, usable: catUnlocked };
+      return { name, category, usable: catUnlocked, requirements: requirementsFor(name, 'shop') };
     });
 
     // Monsters split: world bosses (gated by the Bosses table) vs the rest
     // (gated per-monster on Slayer, handled at render time).
-    const bosses: { name: string; count: number; usable: boolean }[] = [];
-    const monsters: typeof content.monsters = [];
+    const bosses: Array<{ name: string; count: number; usable: boolean; requirements: string[] }> = [];
+    const monsters: Array<ChunkContent['monsters'][number] & { requirements: string[] }> = [];
     for (const m of content.monsters) {
+      const requirements = requirementsFor(m.name, 'monster');
       if (BOSS_SET.has(m.name.toLowerCase())) {
-        bosses.push({ name: m.name, count: m.count, usable: unlocks.bosses.includes(m.name) });
+        bosses.push({ name: m.name, count: m.count, usable: unlocks.bosses.includes(m.name), requirements });
       } else {
-        monsters.push(m);
+        monsters.push({ ...m, requirements });
       }
     }
 
     // Objects split four ways: Transport nodes (mobility gate), Farming patches
     // (own table), gatherable Resources (skill tier + level), and inert scenery.
-    const transport: { name: string; count: number; network: string; usable: boolean }[] = [];
-    const farming: { name: string; count: number; patch: string; usable: boolean }[] = [];
-    const resources: { name: string; count: number; skill: string; level: number; usable: boolean }[] = [];
+    const transport: Array<{ name: string; count: number; network: string; usable: boolean; requirements: string[] }> = [];
+    const farming: Array<{ name: string; count: number; patch: string; usable: boolean; requirements: string[] }> = [];
+    const resources: Array<{ name: string; count: number; skill: string; level: number; usable: boolean; requirements: string[] }> = [];
     const objects: [string, number][] = [];
     for (const [name, count] of content.objects) {
       const network = mobilityFor(name);
       const patch = farmingPatchFor(name);
       const req = resourceReqFor(name);
+      const requirements = requirementsFor(name, 'object');
       if (network && MOBILITY_LIST.includes(network)) {
-        transport.push({ name, count, network, usable: unlocks.mobility.includes(network) });
+        transport.push({ name, count, network, usable: unlocks.mobility.includes(network), requirements });
       } else if (patch && FARMING_PATCH_LIST.includes(patch)) {
-        farming.push({ name, count, patch, usable: unlocks.farming.includes(patch) });
+        farming.push({ name, count, patch, usable: unlocks.farming.includes(patch), requirements });
       } else if (req) {
-        resources.push({ name, count, skill: req.skill, level: req.level, usable: resourceUsable(req, unlocks) });
+        resources.push({ name, count, skill: req.skill, level: req.level, usable: resourceUsable(req, unlocks), requirements });
       } else {
         objects.push([name, count]);
       }
@@ -450,435 +508,637 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       .map(name => ({ name, usable: unlocks.minigames.includes(name) }));
 
     return { shops, bosses, monsters, transport, farming, resources, objects, guilds, minigames, diaries };
-  }, [content, subArea, unlocks, gameModeId]);
+  }, [content, subArea, unlocks, gameModeId, mode, regionChunks, chunk]);
 
-  // ── Can-do / Locked overview ───────────────────────────────────────────────
-  const overview = useMemo(() => {
-    if (!content || !derived) return { can: [] as OverviewItem[], cant: [] as OverviewItem[] };
-    const can: OverviewItem[] = [];
-    const cant: OverviewItem[] = [];
-    const push = (ok: boolean, cat: string, label: string) => (ok ? can : cant).push({ cat, label });
+  // Scope determines whether Whole area can make a trustworthy availability claim.
+  const scope = getChunkInfoScope(mode, wholeAreaOwnershipMixed, unlocked);
+  const stateFor = (intrinsicAvailable: boolean): ChunkInfoItemState =>
+    resolveChunkInfoItemState(intrinsicAvailable, scope);
+  const neutralRows = (count: number): ChunkInfoItemState[] =>
+    Array.from({ length: count }, () => 'neutral');
 
-    for (const q of questRows) {
-      const item = chunkQuestOverviewItem(q, unlocked);
-      if (item) push(item.can, 'Quests', item.label);
+  const activityPresentations = useMemo(() => {
+    if (!derived) return null;
+    const addState = <T extends { usable: boolean; requirements: string[] },>(item: T) => ({
+      ...item,
+      state: resolveChunkInfoRequirementState(
+        item.usable,
+        item.requirements.length > 0,
+        scope,
+      ),
+    });
+
+    return {
+      bosses: derived.bosses.map(addState),
+      monsters: derived.monsters.map(monster => {
+        const slayerMet = monster.slayer == null
+          || (slayerUnlocked && slayerLevel >= monster.slayer);
+        return {
+          ...monster,
+          slayerMet,
+          state: resolveChunkInfoRequirementState(
+            slayerMet,
+            monster.requirements.length > 0,
+            scope,
+          ),
+        };
+      }),
+      shops: derived.shops.map(shop => ({
+        ...shop,
+        state: shop.category
+          ? resolveChunkInfoRequirementState(shop.usable, shop.requirements.length > 0, scope)
+          : 'neutral' as const,
+
+      })),
+      farming: derived.farming.map(addState),
+      resources: derived.resources.map(addState),
+      transport: derived.transport.map(addState),
+      diaries: derived.diaries.map(diary => ({
+        ...diary,
+        state: resolveChunkInfoRequirementState(
+          diary.reachable,
+          true,
+          scope,
+        ),
+      })),
+    };
+  }, [derived, scope, slayerUnlocked, slayerLevel]);
+
+  const sectionStates = useMemo<Partial<Record<ChunkInfoSectionId, ChunkInfoItemState[]>>>(() => {
+    if (!content || !derived || !activityPresentations) return {};
+    const quests = questRows.map(row => {
+      if (row.status === 'COMPLETED') return 'completed' as const;
+      const item = chunkQuestOverviewItem(row, true);
+      return item ? stateFor(item.can) : 'neutral';
+    });
+    const combat = [
+      ...activityPresentations.bosses.map(boss => boss.state),
+      ...activityPresentations.monsters.map(monster => monster.state),
+    ];
+    const gathering = [
+      ...activityPresentations.farming.map(patch => patch.state),
+      ...activityPresentations.resources.map(resource => resource.state),
+    ];
+    const shops = activityPresentations.shops.map(shop => shop.state);
+    const travel = [
+      ...activityPresentations.transport.map(node => node.state),
+      ...linkGroups.flatMap(group => group.dests.map(destination => stateFor(group.networkUnlocked && destination.unlocked))),
+    ];
+    const other = [
+      ...derived.guilds.map(guild => stateFor(guild.usable)),
+      ...derived.minigames.map(minigame => stateFor(minigame.usable)),
+      ...activityPresentations.diaries.map(diary => diary.state),
+      ...neutralRows(derived.objects.length),
+      ...neutralRows(Object.keys(content.clues).length),
+      ...neutralRows(content.npcs.length),
+      ...neutralRows(content.spawns.length),
+    ];
+    return { quests, combat, gathering, shops, travel, other };
+  }, [content, derived, questRows, scope, activityPresentations, linkGroups]);
+
+  const sectionStats = useMemo<Partial<Record<ChunkInfoSectionId, ChunkInfoSectionStats>>>(() => {
+    const next: Partial<Record<ChunkInfoSectionId, ChunkInfoSectionStats>> = {};
+    for (const id of CHUNK_INFO_SECTION_ORDER) {
+      const states = sectionStates[id];
+      if (states?.length) next[id] = buildChunkInfoSectionStats(states);
     }
-    for (const b of derived.bosses) push(unlocked && b.usable, 'Bosses', b.name);
-    for (const m of derived.monsters.slice(0, 12)) {
-      const met = m.slayer == null || (slayerUnlocked && slayerLevel >= m.slayer);
-      push(unlocked && met, 'Monsters', m.name);
-    }
-    for (const s of derived.shops) push(unlocked && s.usable, 'Shops', s.name);
-    for (const t of derived.transport) push(unlocked && t.usable, 'Travel', t.name);
-    for (const f of derived.farming) push(unlocked && f.usable, 'Farming', f.name);
-    for (const r of derived.resources) push(unlocked && r.usable, 'Resources', r.name);
-    for (const g of derived.guilds) push(unlocked && g.usable, 'Guilds', g.name);
-    for (const mg of derived.minigames) push(unlocked && mg.usable, 'Minigames', mg.name);
-    return { can, cant };
-  }, [content, derived, questRows, unlocked, slayerLevel, slayerUnlocked]);
+    return next;
+  }, [sectionStates]);
+
+  const drawerSummary = useMemo(
+    () => buildChunkInfoDrawerSummary(sectionStats, scope),
+    [sectionStats, scope],
+  );
 
   const title = mode === 'region' && region
     ? region
     : content?.name ?? `Chunk ${chunk.cx}, ${chunk.cy}`;
+  const emptyContentState = !content || chunkContentIsEmpty(content);
+  const detailedContent = content && derived;
 
-  return (
-    <div className="absolute top-3 right-3 bottom-3 w-72 z-30 bg-[#161616]/95 border border-white/15 rounded-xl shadow-2xl backdrop-blur-sm flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="p-3 border-b border-white/10 shrink-0">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <h3 className="text-[13px] font-bold text-white leading-tight truncate">{title}</h3>
-            <div className="flex items-center gap-1.5 mt-1 text-[10px] text-gray-500">
-              <MapPin size={10} />
-              {mode === 'region'
-                ? `${regionChunks.length} chunks`
-                : <>chunk ({chunk.cx}, {chunk.cy}){subArea && <> · <span className="text-cyan-300/90 font-semibold">{displayAreaName(subArea)}</span></>}{region && <> · {region}</>}</>}
-              <span className={`px-1.5 py-px rounded font-bold ${unlocked ? 'bg-green-900/60 text-green-300' : 'bg-red-900/50 text-red-300'}`}>
-                {unlocked ? 'UNLOCKED' : 'LOCKED'}
-              </span>
-            </div>
-          </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-white shrink-0" aria-label="Close chunk info">
-            <X size={15} />
-          </button>
-        </div>
-        {region && (
-          <div className="flex mt-2 bg-black/40 rounded-lg p-0.5 gap-0.5">
-            {(['chunk', 'region'] as const).map(m => (
-              <button
-                key={m}
-                onClick={() => setMode(m)}
-                className={`flex-1 py-1 rounded text-[10px] font-bold uppercase tracking-wide transition-colors ${mode === m ? 'bg-cyan-900/70 text-cyan-200' : 'text-gray-500 hover:text-gray-300'}`}
-              >
-                {m === 'chunk' ? 'This chunk' : 'Whole area'}
+  const presentSectionIds = CHUNK_INFO_SECTION_ORDER.filter(id => (sectionStats[id]?.total ?? 0) > 0);
+  const defaultSection = getDefaultChunkInfoSection(presentSectionIds);
+  const panelResetKey = `${mode}:${chunk.cx},${chunk.cy}`;
+
+  useEffect(() => {
+    if (scrollBodyRef.current) scrollBodyRef.current.scrollTop = 0;
+    setOpenShop(null);
+    setOpenResource(null);
+    setLinksCap({});
+  }, [panelResetKey]);
+  const hasMixedScope = scope === 'mixed';
+
+  const bossRows = activityPresentations?.bosses.map(b => {
+    const visibleState = b.state;
+    const bossLabel = b.state === 'mixed'
+      ? b.usable ? 'Boss unlocked' : `Needs ${b.name}`
+      : b.state === 'available' ? 'Unlocked' : b.usable ? 'Locked' : `Needs ${b.name}`;
+    return (
+      <div key={b.name} className="flex items-center justify-between gap-2 py-px"
+        title={hasMixedScope ? 'Availability varies across this area' : visibleState === 'neutral' ? 'Access requirements need evaluation' : visibleState === 'available' ? `${b.name} unlocked` : b.usable ? 'Chunk locked' : `Needs the "${b.name}" boss unlock`}>
+        <span className={`truncate ${rowStateCls(visibleState)}`}>
+          <WikiLink name={b.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">{'\u00d7'}{b.count}</span>
+        </span>
+        <RequirementStateBadges requirements={b.requirements} state={b.state} label={bossLabel} />
+      </div>
+    );
+  }) ?? [];
+  const monsterRows = activityPresentations?.monsters.map(m => {
+    const met = m.slayerMet;
+    const visibleState = m.state;
+    const reqs = m.requirements;
+    const isRequirementNeutral = visibleState === 'neutral' && reqs.length > 0;
+    return (
+      <div key={m.name} className="flex items-center justify-between gap-2 py-px">
+        <span className={`truncate ${rowStateCls(visibleState)}`}>
+          <WikiLink name={m.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">{'\u00d7'}{m.count}</span>
+        </span>
+        <span className="flex items-center gap-1 shrink-0">
+          {reqs.length > 0 && <ReqBadge reqs={reqs} />}
+          {m.slayer != null && (
+            <span
+              className={`inline-flex items-center gap-0.5 text-[9px] px-1 rounded font-bold ${visibleState === 'mixed' ? 'bg-white/5 text-gray-300' : visibleState === 'available' ? 'bg-green-900/60 text-green-300' : isRequirementNeutral && met ? 'bg-white/5 text-gray-300' : met ? 'bg-red-950/70 text-red-300' : 'bg-amber-950/70 text-amber-200'}`}
+              title={hasMixedScope ? `Slayer ${m.slayer} requirement` : visibleState === 'available' ? 'Slayer requirement met' : isRequirementNeutral ? 'Access requirements need evaluation' : met ? 'Chunk locked' : `Needs Slayer ${m.slayer} \u2014 you have ${slayerUnlocked ? slayerLevel : 'the skill locked'}`}
+            >
+              {visibleState === 'mixed' || (isRequirementNeutral && met) ? `Slay ${m.slayer}` : visibleState === 'available' ? <><Check size={9} aria-hidden="true" />Slay {m.slayer}</> : met ? 'Locked' : `Needs Slay ${m.slayer}`}
+            </span>
+          )}
+          {m.slayer == null && reqs.length === 0 && visibleState === 'locked' && (
+            <span className="rounded bg-red-950/70 px-1 text-[9px] font-bold text-red-300" title="Chunk locked">Locked</span>
+          )}
+          {m.slayer == null && reqs.length === 0 && visibleState === 'available' && (
+            <span className="rounded bg-green-900/60 px-1 text-[9px] font-bold text-green-300">Available</span>
+          )}
+
+        </span>
+      </div>
+    );
+  }) ?? [];
+  const farmingRows = activityPresentations?.farming.map(f => {
+    const visibleState = f.state;
+    const farmingLabel = f.state === 'mixed'
+      ? f.patch
+      : f.state === 'available' ? 'Available' : f.usable ? 'Locked' : `Needs ${f.patch}`;
+    return (
+      <div key={f.name} className="flex items-center justify-between gap-2 py-px" title={hasMixedScope ? 'Availability varies across this area' : visibleState === 'neutral' ? 'Access requirements need evaluation' : visibleState === 'available' ? `${f.patch} patches unlocked` : f.usable ? 'Chunk locked' : `Needs the "${f.patch}" unlock in the Farming table`}>
+        <span className={`truncate ${rowStateCls(visibleState)}`}>
+          <WikiLink name={f.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">{'\u00d7'}{f.count}</span>
+        </span>
+        <RequirementStateBadges requirements={f.requirements} state={f.state} label={farmingLabel} />
+      </div>
+    );
+  }) ?? [];
+  const resourceRows = activityPresentations?.resources.map((r, index) => {
+    const yields = nodeYields(r.skill, r.name);
+    const isOpen = openResource === r.name;
+    const disclosureId = `chunk-info-resource-${index}`;
+    const visibleState = r.state;
+    const resourceLabel = r.state === 'mixed'
+      ? `${r.skill.slice(0, 4)} ${r.level}`
+      : r.state === 'available' ? 'Available' : r.usable ? 'Locked' : `Needs ${r.skill.slice(0, 4)} ${r.level}`;
+    return (
+      <div key={r.name}>
+        <div className="flex items-center justify-between gap-2 py-px"
+          title={visibleState === 'neutral' ? 'Access requirements need evaluation' : visibleState === 'mixed'
+            ? 'Availability varies across this area'
+            : visibleState === 'available'
+              ? `${r.skill} ${r.level} \u2014 you can gather this`
+              : r.usable
+                ? 'Chunk locked'
+                : (unlocks.skills?.[r.skill] ?? 0) > 0
+                  ? `Needs ${r.skill} ${r.level} \u2014 you have ${unlocks.levels?.[r.skill] ?? 1}`
+                  : `${r.skill} skill not unlocked yet (needs level ${r.level})`}>
+          <span className={`flex items-center gap-1 min-w-0 ${rowStateCls(visibleState)}`}>
+            {yields && yields.length > 0 && (
+              <button type="button" onClick={() => setOpenResource(isOpen ? null : r.name)} className="shrink-0 rounded text-gray-500 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 motion-reduce:transition-none" title="Show what this yields" aria-label={isOpen ? `Hide yields for ${r.name}` : `Show yields for ${r.name}`} aria-controls={disclosureId} aria-expanded={isOpen}>
+                {isOpen ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
               </button>
+            )}
+            <span className="truncate">
+              <WikiLink name={r.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">{'\u00d7'}{r.count}</span>
+            </span>
+          </span>
+          <RequirementStateBadges requirements={r.requirements} state={r.state} label={resourceLabel} />
+        </div>
+        {isOpen && yields && (
+          <div id={disclosureId} className="ml-4 mb-1 flex flex-wrap gap-1">
+            {yields.map(([item, rate]) => (
+              <span key={item} className="text-[9px] px-1 py-0.5 rounded bg-white/5 border border-white/10 text-gray-400 flex items-center gap-1">
+                <WikiLink name={item} className="hover:text-white" />
+                <span className="text-gray-600 font-mono">{rate}</span>
+              </span>
             ))}
           </div>
         )}
       </div>
-
-      {/* Body */}
-      <div className={`flex-1 overflow-y-auto custom-scrollbar px-3 pb-3 text-[11px] ${unlocked ? '' : 'opacity-75'}`}>
-        {!unlocked && (
-          <div className="mt-2 px-2 py-1.5 rounded bg-amber-950/50 border border-amber-700/40 text-amber-300/90 text-[10px]">
-            <Lock size={10} className="inline mr-1 -mt-px" />
-            This area is still locked — a preview of what fate could grant.
+    );
+  }) ?? [];
+  const shopRows = activityPresentations?.shops.map((s, index) => {
+    const stock = chunkContentService.shopStock(s.name);
+    const isOpen = openShop === s.name;
+    const disclosureId = `chunk-info-shop-${index}`;
+    const visibleState = s.state;
+    const shopLabel = s.category == null ? '' : s.state === 'mixed'
+      ? s.category.replace(/ Shops?$/, '')
+      : s.state === 'available' ? 'Unlocked' : s.usable ? 'Locked' : `Needs ${s.category.replace(/ Shops?$/, '')}`;
+    return (
+      <div key={s.name}>
+        <div className="flex items-center justify-between gap-2 py-px"
+          title={s.category == null ? 'Unclassified shop \u2014 no merchant category gate' : hasMixedScope ? 'Availability varies across this area' : visibleState === 'neutral' ? 'Access requirements need evaluation' : visibleState === 'available' ? `${s.category} unlocked` : s.usable ? 'Chunk locked' : `Needs the "${s.category}" merchant unlock`}>
+          <span className="flex min-w-0 items-center gap-1">
+            {stock.length > 0 && (
+              <button type="button" onClick={() => setOpenShop(isOpen ? null : s.name)} className="shrink-0 rounded text-gray-500 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 motion-reduce:transition-none" title="Show stock" aria-label={isOpen ? `Hide stock for ${s.name}` : `Show stock for ${s.name}`} aria-controls={disclosureId} aria-expanded={isOpen}>
+                {isOpen ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+              </button>
+            )}
+            <WikiLink name={s.name} className={`truncate hover:underline decoration-dotted underline-offset-2 ${rowStateCls(visibleState)}`} />
+          </span>
+          {s.category ? (
+            <RequirementStateBadges requirements={s.requirements} state={s.state} label={shopLabel} />
+          ) : (
+            <span className="flex shrink-0 items-center gap-1">
+              {s.requirements.length > 0 && <ReqBadge reqs={s.requirements} />}
+              <span className="rounded bg-white/5 px-1 text-[9px] text-gray-300">
+                No merchant gate
+              </span>
+            </span>
+          )}
+        </div>
+        {isOpen && stock.length > 0 && (
+          <div id={disclosureId} className="mb-1 ml-4 flex flex-wrap gap-1">
+            {stock.map(it => (
+              <WikiLink key={it} name={it} className="rounded border border-white/10 bg-white/5 px-1 py-0.5 text-[9px] text-gray-400 hover:border-white/20 hover:text-white" />
+            ))}
           </div>
         )}
-
-        {mode === 'chunk' && (() => {
-          const entry = chunkContentService.chunkEntryRequirements(chunk.cx, chunk.cy);
-          if (entry.length === 0) return null;
+      </div>
+    );
+  }) ?? [];
+  const transportRows = activityPresentations?.transport.map(t => {
+    const visibleState = t.state;
+    const transportLabel = t.state === 'mixed'
+      ? t.network.replace(/s$/, '')
+      : t.state === 'available' ? 'Available' : t.usable ? 'Locked' : `Needs ${t.network.replace(/s$/, '')}`;
+    return (
+      <div key={t.name} className="flex items-center justify-between gap-2 py-px"
+        title={hasMixedScope ? 'Availability varies across this area' : visibleState === 'neutral' ? 'Access requirements need evaluation' : visibleState === 'available' ? `${t.network} network unlocked` : t.usable ? 'Chunk locked' : `Needs the "${t.network}" mobility unlock`}>
+        <span className={`truncate ${rowStateCls(visibleState)}`}>
+          <WikiLink name={t.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="no-underline text-gray-600">x{t.count}</span>
+        </span>
+        <RequirementStateBadges requirements={t.requirements} state={t.state} label={transportLabel} />
+      </div>
+    );
+  }) ?? [];
+  const travelLinkGroups = linkGroups.map(g => (
+    <div key={g.category} className="mb-1.5 ml-1">
+      <div className="flex items-center gap-1.5 py-0.5">
+        <span className="text-[10px] font-semibold text-gray-300">{g.category}</span>
+        <span className="font-mono text-[9px] text-gray-600">{g.dests.length}</span>
+        {!g.networkUnlocked && (
+          <span className="rounded border border-amber-700/40 bg-amber-950/60 px-1 text-[8px] text-amber-300/90" title={`Needs the "${g.category}" mobility unlock`}>network locked</span>
+        )}
+      </div>
+      <div className="ml-1 flex flex-wrap gap-1">
+        {g.dests.slice(0, linksCap[g.category] ?? 8).map(d => {
+          const usable = d.unlocked && g.networkUnlocked;
+          const visibleState = resolveChunkInfoItemState(usable, scope);
+          const title = hasMixedScope && g.networkUnlocked
+            ? 'Availability varies across this area'
+            : visibleState === 'available' ? 'Reachable \u2014 click to view' : usable ? 'Chunk locked' : !d.unlocked ? 'Area locked' : `Needs the "${g.category}" network`;
+          const classes = visibleState === 'mixed'
+            ? 'border-white/10 bg-white/5 text-gray-300'
+            : visibleState === 'available' ? 'border-emerald-600/30 bg-emerald-900/20 text-emerald-200'
+              : 'border-red-700/30 bg-red-950/30 text-gray-400';
           return (
-            <div className="mt-2 px-2 py-1.5 rounded bg-purple-950/50 border border-purple-700/40 text-purple-200/90 text-[10px] flex items-start gap-1.5">
-              <Lock size={10} className="shrink-0 mt-px" />
-              <span>Requires <span className="font-semibold text-purple-100">{entry.join(', ')}</span> to enter this chunk.</span>
-            </div>
+            <button
+              type="button"
+              key={d.label}
+              onClick={() => showChunkOnMap(d.cx, d.cy)}
+              title={title}
+              className={`inline-flex items-center gap-0.5 rounded border px-1 py-0.5 text-[10px] transition-colors hover:border-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 motion-reduce:transition-none ${classes}`}
+            >
+              {visibleState === 'available' && <Check size={9} aria-hidden="true" />}
+              {visibleState === 'locked' && <Lock size={9} aria-hidden="true" />}
+              {d.label}
+            </button>
           );
-        })()}
+        })}
+        {g.dests.length > (linksCap[g.category] ?? 8) && (
+          <button type="button" onClick={() => setLinksCap(c => ({ ...c, [g.category]: g.dests.length }))} className="rounded px-1 py-0.5 text-[9px] text-cyan-400 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 motion-reduce:transition-none">
+            +{g.dests.length - (linksCap[g.category] ?? 8)} more
+          </button>
+        )}
+      </div>
+    </div>
+  ));
+  const guildRows = derived?.guilds.length ? (
+    <>
+      <SectionHead icon={<Flag size={11} />} label="Guilds" count={derived.guilds.length} />
+      {derived.guilds.map(g => {
+        const visibleState = resolveChunkInfoItemState(g.usable, scope);
+        const statusLabel = visibleState === 'mixed'
+          ? g.usable ? 'Guild unlocked' : 'Needs Guild unlock'
+          : visibleState === 'available'
+            ? 'Guild unlocked'
+            : g.usable ? 'Locked' : 'Needs Guild unlock';
+        return (
+          <div key={g.name} className="flex items-center justify-between gap-2 py-px" title={hasMixedScope ? 'Availability varies across this area' : visibleState === 'available' ? 'Guild unlocked' : g.usable ? 'Chunk locked' : 'Needs the Guilds-table unlock'}>
+            <span className="flex min-w-0 items-center gap-1.5">
+              {visibleState === 'available'
+                ? <Check aria-hidden="true" size={10} className="shrink-0 text-green-400" />
+                : visibleState === 'locked'
+                  ? <Lock aria-hidden="true" size={10} className="shrink-0 text-red-400/70" />
+                  : <span aria-hidden="true" className="w-[10px] shrink-0 text-center text-gray-600">{'\u00b7'}</span>}
+              <WikiLink name={g.name} className={`hover:underline decoration-dotted underline-offset-2 ${rowStateCls(visibleState)}`}>
+                {g.name}{' '}<span className="sr-only">{`— ${statusLabel}`}</span>
+              </WikiLink>
+            </span>
+            <span aria-hidden="true" className="shrink-0 rounded bg-white/5 px-1 text-[9px] font-bold text-gray-300">
+              {statusLabel}
+            </span>
+          </div>
+        );
+      })}
+    </>
+  ) : null;
+  const minigameRows = derived?.minigames.length ? (
+    <>
+      <SectionHead icon={<Gamepad2 size={11} />} label="Minigames" count={derived.minigames.length} />
+      {derived.minigames.map(mg => {
+        const visibleState = resolveChunkInfoItemState(mg.usable, scope);
+        const statusLabel = visibleState === 'mixed'
+          ? mg.usable ? 'Minigame unlocked' : 'Needs Minigame unlock'
+          : visibleState === 'available'
+            ? 'Minigame unlocked'
+            : mg.usable ? 'Locked' : 'Needs Minigame unlock';
+        return (
+          <div key={mg.name} className="flex items-center justify-between gap-2 py-px" title={hasMixedScope ? 'Availability varies across this area' : visibleState === 'available' ? 'Minigame unlocked' : mg.usable ? 'Chunk locked' : 'Needs the Minigames-table unlock'}>
+            <span className="flex min-w-0 items-center gap-1.5">
+              {visibleState === 'available'
+                ? <Check aria-hidden="true" size={10} className="shrink-0 text-green-400" />
+                : visibleState === 'locked'
+                  ? <Lock aria-hidden="true" size={10} className="shrink-0 text-red-400/70" />
+                  : <span aria-hidden="true" className="w-[10px] shrink-0 text-center text-gray-600">{'\u00b7'}</span>}
+              <WikiLink name={mg.name} className={`hover:underline decoration-dotted underline-offset-2 ${rowStateCls(visibleState)}`}>
+                {mg.name}{' '}<span className="sr-only">{`— ${statusLabel}`}</span>
+              </WikiLink>
+            </span>
+            <span aria-hidden="true" className="shrink-0 rounded bg-white/5 px-1 text-[9px] font-bold text-gray-300">
+              {statusLabel}
+            </span>
+          </div>
+        );
+      })}
+    </>
+  ) : null;
+  const diaryRows = activityPresentations?.diaries.length ? (
+    <>
+      <SectionHead icon={<BookOpen size={11} />} label="Diary tasks here" count={activityPresentations.diaries.length} />
+      {activityPresentations.diaries.map(d => {
+        const statusLabel = d.state === 'mixed'
+          ? 'Area'
+          : d.state === 'locked'
+            ? 'Locked'
+            : 'Tasks here';
 
-        <ChunkEntranceNotices mode={mode} entrances={entrances} unlocked={unlocked} />
-        {mode === 'chunk' && chunkContentService.hasBank(chunk.cx, chunk.cy) && (() => {
-          // In bank-locked modes each bank is its own unlock — surface this
-          // chunk's bank lock state (green usable / red roll-it), matching the
-          // per-content lock rendering the rest of the panel uses. When banks
-          // aren't locked, keep the neutral "has a bank" note.
-          if (!bankLocksActive(gameModeId, customMode)) {
-            return (
-              <div className="mt-2 px-2 py-1 rounded bg-emerald-950/40 border border-emerald-700/30 text-emerald-300/90 text-[10px] flex items-center gap-1.5">
-                <Landmark size={10} className="shrink-0" /> This chunk has a bank.
-              </div>
-            );
-          }
-          const usable = isBankReachable(chunk.cx, chunk.cy, unlocks, gameModeId, customMode);
-          return usable ? (
-            <div className="mt-2 px-2 py-1 rounded bg-emerald-950/40 border border-emerald-700/30 text-emerald-300/90 text-[10px] flex items-center gap-1.5">
-              <Landmark size={10} className="shrink-0" /> <Check size={10} className="shrink-0" /> Bank unlocked here.
-            </div>
-          ) : (
-            <div className="mt-2 px-2 py-1 rounded bg-red-950/40 border border-red-700/40 text-red-300/90 text-[10px] flex items-center gap-1.5">
-              <Landmark size={10} className="shrink-0" /> <Lock size={10} className="shrink-0" /> Bank locked — roll it under Banks in Spend Keys.
-            </div>
-          );
-        })()}
+        const title = d.state === 'mixed'
+          ? 'Availability varies across this area'
+          : d.state === 'locked'
+            ? d.reachable ? 'Chunk locked' : `Locked: the ${d.region} region isn't unlocked yet`
+            : 'Task requirements are not evaluated in this summary';
 
-        {/* Brief can / can't overview — collapsed by default. */}
-        <Overview kind="can" items={overview.can} />
-        <Overview kind="cant" items={overview.cant} />
+        return (
+          <div
+            key={d.area}
+            className="flex items-center justify-between gap-2 py-px"
+            title={title}
+          >
+            <span className={`truncate ${rowStateCls(d.state)}`}>
+              <WikiLink
+                name={`${d.area} Diary`}
+                className="hover:underline decoration-dotted underline-offset-2"
+              >
+                {d.area}
+              </WikiLink>{' '}
+              <span className="no-underline text-gray-600">({d.refs})</span>
+            </span>
+            <span className={`shrink-0 rounded px-1 text-[9px] ${
+              d.state === 'mixed' || d.state === 'neutral'
+                ? 'bg-white/5 text-gray-300'
+                : 'bg-red-950/70 text-red-300'
+            }`}>
+              {statusLabel}
+            </span>
+          </div>
+        );
+      })}
+    </>
+  ) : null;
+  const objectRows = derived?.objects.length ? (
+    <>
+      <SectionHead icon={<Package size={11} />} label="Objects" count={derived.objects.length} />
+      <CappedList cap={10} items={derived.objects.map(([name, count]) => (
+        <div key={name} className={`truncate py-px ${rowStateCls('neutral')}`}><WikiLink name={name} /> <span className="text-gray-600">x{count}</span></div>
+      ))} />
+    </>
+  ) : null;
+  const clueRows = content && Object.keys(content.clues).length ? (
+    <>
+      <SectionHead icon={<Scroll size={11} />} label="Clue steps" count={Object.keys(content.clues).length} />
+      <div className="flex flex-wrap gap-1">
+        {Object.entries(content.clues).map(([tier, n]) => (
+          <span key={tier} className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[9px] capitalize text-gray-300">
+            {tier} x{n}
+          </span>
+        ))}
+      </div>
+    </>
+  ) : null;
+  const npcRows = content?.npcs.length ? (
+    <>
+      <SectionHead icon={<Users size={11} />} label="NPCs" count={content.npcs.length} />
+      <CappedList cap={6} items={content.npcs.map(n => (
+        <div key={n} className={`truncate py-px ${rowStateCls('neutral')}`}><WikiLink name={n} /></div>
+      ))} />
+    </>
+  ) : null;
+  const spawnRows = content?.spawns.length ? (
+    <>
+      <SectionHead icon={<Package size={11} />} label="Item spawns" count={content.spawns.length} />
+      <CappedList cap={6} items={content.spawns.map(s => (
+        <div key={s} className={`truncate py-px ${rowStateCls('neutral')}`}><WikiLink name={s} /></div>
+      ))} />
+    </>
+  ) : null;
 
-        {failed && <div className="mt-3 text-gray-500">Chunk content unavailable (failed to load).</div>}
-        {!failed && !content && <div className="mt-3 text-gray-500 animate-pulse">Loading chunk content…</div>}
-        {content && derived && (
+
+  return (
+    <div className="absolute bottom-3 right-3 top-3 z-30 flex w-80 max-w-[calc(100%-1.5rem)] flex-col overflow-hidden rounded-xl border border-cyan-900/50 bg-[#16191b]/95 shadow-2xl backdrop-blur-sm">
+      <ChunkInfoHeader
+        title={title}
+        meta={mode === 'region'
+          ? `${regionChunks.length} chunks`
+          : <>chunk ({chunk.cx}, {chunk.cy}){subArea && <> {" \u00B7 "}<span className="font-semibold text-cyan-300/90">{displayAreaName(subArea)}</span></>}{region && <> {" \u00B7 "}{region}</>}</>}
+        status={scope}
+        showModeSwitch={Boolean(region)}
+        mode={mode}
+        onModeChange={setMode}
+        onClose={onClose}
+      />
+      {/* Body */}
+      <div ref={scrollBodyRef} className="min-w-0 flex-1 overflow-y-auto px-3 pb-3 text-[11px] custom-scrollbar" data-testid="chunk-info-scroll-body">
+        {failed ? (
+          <ChunkInfoBodyState kind="error" onRetry={() => setLoadAttempt(attempt => attempt + 1)} />
+        ) : !chunkContentService.ready ? (
+          <ChunkInfoBodyState kind="loading" />
+        ) : (
           <>
+            {!emptyContentState && <ChunkInfoSummary summary={drawerSummary} />}
+            {mode === 'chunk' && (
+              <ChunkInfoAccessCard previewLocked={!unlocked} entryRequirements={entryRequirements} entrances={entrances} chunkUnlocked={unlocked} bankState={bankState} />
+            )}
+            {emptyContentState
+              ? <ChunkInfoBodyState kind="empty" />
+              : detailedContent && (
+                <>
+            <>
             {questRows.length > 0 && (
-              <>
-                <SectionHead icon={<Sparkles size={11} />} label="Quests" count={questRows.length} />
+              <ChunkInfoSection
+                key={`${panelResetKey}:quests`}
+                id="quests"
+                label="Quests"
+                icon={<Sparkles size={11} />}
+                summary={formatChunkInfoSectionSummary(sectionStats.quests!, scope)}
+                defaultOpen={defaultSection === 'quests'}
+              >
                 <CappedList cap={8} items={questRows.map(row => {
                   const presentation = chunkQuestPresentation(row);
-                  const { name, kind, status } = row;
+                  const visibleState = row.status === 'COMPLETED'
+                    ? 'completed'
+                    : chunkQuestOverviewItem(row, true)?.can
+                      ? resolveChunkInfoItemState(true, scope)
+                      : row.status ? resolveChunkInfoItemState(false, scope) : 'neutral';
+                  const { name, kind } = row;
+                  const statusLabel = chunkQuestStatusLabel(presentation.kind, visibleState);
+                  const accessibleDetail = presentation.kind === 'confirmation'
+                    ? presentation.title
+                    : statusLabel;
+                  const badgeClass = statusLabel === 'Completed' || statusLabel === 'Ready'
+                    ? 'bg-emerald-950/60 text-emerald-300'
+                    : statusLabel === 'Confirm'
+                      ? 'bg-fuchsia-950/60 text-fuchsia-200'
+                      : statusLabel === 'Locked'
+                        ? 'bg-rose-950/60 text-rose-200'
+                        : 'bg-white/5 text-gray-400';
                   return (
-                    <div key={name} className="flex items-center gap-1.5 py-px" title={presentation.title}>
-                      {presentation.kind === 'completed' ? <Check size={11} className="text-green-400 shrink-0" />
-                        : presentation.kind === 'confirmation' ? <Compass size={11} className="text-fuchsia-300 shrink-0" />
-                        : status === 'AVAILABLE' ? <span className="w-[11px] text-center text-amber-300 shrink-0">—</span>
-                        : status ? <Lock size={10} className="text-gray-600 shrink-0" />
-                        : <span className="w-[11px] text-center text-gray-600 shrink-0">·</span>}
-                      <WikiLink name={name} className={`truncate hover:underline decoration-dotted underline-offset-2 ${status ? QUEST_BADGE[status].cls : 'text-gray-400'}`} />
-                      {kind === 'first' && <span className="text-[9px] px-1 rounded bg-cyan-900/60 text-cyan-300 shrink-0">starts here</span>}
-                    </div>
-                  );
-                })} />
-              </>
-            )}
-
-            {derived.bosses.length > 0 && (
-              <>
-                <SectionHead icon={<Skull size={11} />} label="Bosses" count={derived.bosses.length} />
-                {derived.bosses.map(b => (
-                  <div key={b.name} className="flex items-center justify-between gap-2 py-px"
-                    title={b.usable ? `${b.name} unlocked` : `Needs the "${b.name}" boss unlock`}>
-                    <span className={`truncate ${stateCls(b.usable)}`}>
-                      <WikiLink name={b.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">×{b.count}</span>
-                    </span>
-                    <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${b.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
-                      {b.usable ? 'Unlocked' : 'Locked'}
-                    </span>
-                  </div>
-                ))}
-              </>
-            )}
-
-            {derived.monsters.length > 0 && (
-              <>
-                <SectionHead icon={<Swords size={11} />} label="Monsters" count={derived.monsters.length} />
-                <CappedList cap={8} items={derived.monsters.map(m => {
-                  const met = m.slayer == null || (slayerUnlocked && slayerLevel >= m.slayer);
-                  // Per-chunk requirement — only meaningful for a single chunk
-                  // (region mode aggregates many chunks, so we can't pin it).
-                  const reqs = mode === 'chunk' ? chunkContentService.taskRequirements(m.name, 'monster', chunk.cx, chunk.cy) : [];
-                  return (
-                    <div key={m.name} className="flex items-center justify-between gap-2 py-px">
-                      <span className={`truncate ${stateCls(met)}`}>
-                        <WikiLink name={m.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">×{m.count}</span>
-                      </span>
-                      <span className="flex items-center gap-1 shrink-0">
-                        {reqs.length > 0 && <ReqBadge reqs={reqs} />}
-                        {m.slayer != null && (
-                          <span
-                            className={`text-[9px] px-1 rounded font-bold ${met ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}
-                            title={met ? 'Slayer requirement met' : `Needs Slayer ${m.slayer} — you have ${slayerUnlocked ? slayerLevel : 'the skill locked'}`}
-                          >
-                            Slay {m.slayer}
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                  );
-                })} />
-              </>
-            )}
-
-            {derived.farming.length > 0 && (
-              <>
-                <SectionHead icon={<Sprout size={11} />} label="Farming" count={derived.farming.length} />
-                {derived.farming.map(f => (
-                  <div key={f.name} className="flex items-center justify-between gap-2 py-px" title={f.usable ? `${f.patch} patches unlocked` : `Needs the "${f.patch}" unlock in the Farming table`}>
-                    <span className={`truncate ${stateCls(f.usable)}`}>
-                      <WikiLink name={f.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">×{f.count}</span>
-                    </span>
-                    <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${f.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>{f.patch}</span>
-                  </div>
-                ))}
-              </>
-            )}
-
-            {derived.transport.length > 0 && (
-              <>
-                <SectionHead icon={<Route size={11} />} label="Transport" count={derived.transport.length} />
-                {derived.transport.map(t => (
-                  <div key={t.name} className="flex items-center justify-between gap-2 py-px"
-                    title={t.usable ? `${t.network} network unlocked` : `Needs the "${t.network}" mobility unlock`}>
-                    <span className={`truncate ${stateCls(t.usable)}`}>
-                      <WikiLink name={t.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">×{t.count}</span>
-                    </span>
-                    <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${t.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
-                      {t.network.replace(/s$/, '')}
-                    </span>
-                  </div>
-                ))}
-              </>
-            )}
-
-            {totalLinks > 0 && (
-              <>
-                <button onClick={() => setShowLinks(v => !v)} className="w-full flex items-center gap-1.5 mt-2 mb-0.5 text-left">
-                  {showLinks ? <ChevronDown size={11} className="text-gray-500 shrink-0" /> : <ChevronRight size={11} className="text-gray-500 shrink-0" />}
-                  <Route size={11} className="text-cyan-400 shrink-0" />
-                  <span className="text-[10px] font-bold uppercase tracking-wide text-cyan-300">Travel links</span>
-                  <span className="text-[9px] font-mono text-gray-500">
-                    <span className="text-emerald-300">{reachableLinks}</span>/{totalLinks}
-                  </span>
-                </button>
-                {showLinks && linkGroups.map(g => (
-                  <div key={g.category} className="mb-1.5 ml-1">
-                    <div className="flex items-center gap-1.5 py-0.5">
-                      <span className="text-[10px] font-semibold text-gray-300">{g.category}</span>
-                      <span className="text-[9px] font-mono text-gray-600">{g.dests.length}</span>
-                      {!g.networkUnlocked && (
-                        <span className="text-[8px] px-1 rounded bg-amber-950/60 text-amber-300/90 border border-amber-700/40" title={`Needs the "${g.category}" mobility unlock`}>network locked</span>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-1 ml-1">
-                      {g.dests.slice(0, linksCap[g.category] ?? 8).map(d => {
-                        const usable = d.unlocked && g.networkUnlocked;
-                        return (
-                          <button
-                            key={d.label}
-                            onClick={() => showChunkOnMap(d.cx, d.cy)}
-                            title={usable ? 'Reachable — click to view' : !d.unlocked ? 'Area locked' : `Needs the "${g.category}" network`}
-                            className={`text-[9px] px-1 py-0.5 rounded border transition-colors hover:border-white/30
-                              ${usable ? 'bg-emerald-900/20 border-emerald-600/30 text-emerald-200'
-                                : !d.unlocked ? 'bg-red-950/30 border-red-700/30 text-gray-500 line-through decoration-red-500/40'
-                                : 'bg-amber-950/20 border-amber-700/30 text-amber-200/80'}`}
-                          >{d.label}</button>
-                        );
-                      })}
-                      {g.dests.length > (linksCap[g.category] ?? 8) && (
-                        <button onClick={() => setLinksCap(c => ({ ...c, [g.category]: g.dests.length }))} className="text-[9px] px-1 py-0.5 text-cyan-400 hover:underline">
-                          +{g.dests.length - (linksCap[g.category] ?? 8)} more
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </>
-            )}
-
-            {derived.guilds.length > 0 && (
-              <>
-                <SectionHead icon={<Flag size={11} />} label="Guilds" count={derived.guilds.length} />
-                {derived.guilds.map(g => (
-                  <div key={g.name} className="flex items-center gap-1.5 py-px" title={g.usable ? 'Guild unlocked' : 'Needs the Guilds-table unlock'}>
-                    {g.usable ? <Check size={10} className="text-green-400 shrink-0" /> : <Lock size={10} className="text-red-400/70 shrink-0" />}
-                    <WikiLink name={g.name} className={`hover:underline decoration-dotted underline-offset-2 ${stateCls(g.usable)}`} />
-                  </div>
-                ))}
-              </>
-            )}
-
-            {derived.minigames.length > 0 && (
-              <>
-                <SectionHead icon={<Gamepad2 size={11} />} label="Minigames" count={derived.minigames.length} />
-                {derived.minigames.map(mg => (
-                  <div key={mg.name} className="flex items-center gap-1.5 py-px" title={mg.usable ? 'Minigame unlocked' : 'Needs the Minigames-table unlock'}>
-                    {mg.usable ? <Check size={10} className="text-green-400 shrink-0" /> : <Lock size={10} className="text-red-400/70 shrink-0" />}
-                    <WikiLink name={mg.name} className={`hover:underline decoration-dotted underline-offset-2 ${stateCls(mg.usable)}`} />
-                  </div>
-                ))}
-              </>
-            )}
-
-            {derived.shops.length > 0 && (
-              <>
-                <SectionHead icon={<Store size={11} />} label="Shops" count={derived.shops.length} />
-                {derived.shops.map(s => {
-                  const stock = chunkContentService.shopStock(s.name);
-                  const isOpen = openShop === s.name;
-                  return (
-                    <div key={s.name}>
-                      <div className="flex items-center justify-between gap-2 py-px"
-                        title={s.usable ? `${s.category} unlocked` : s.category ? `Needs the "${s.category}" merchant unlock` : 'Unclassified shop — no merchant category gate'}>
-                        <span className="flex items-center gap-1 min-w-0">
-                          {stock.length > 0 && (
-                            <button onClick={() => setOpenShop(isOpen ? null : s.name)} className="text-gray-500 hover:text-white shrink-0" title="Show stock">
-                              {isOpen ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
-                            </button>
-                          )}
-                          <WikiLink name={s.name} className={`truncate hover:underline decoration-dotted underline-offset-2 ${s.category ? stateCls(s.usable) : 'text-gray-300'}`} />
+                    <div
+                      key={name}
+                      data-quest-row
+                      className="py-0.5"
+                      title={hasMixedScope && presentation.kind === 'available'
+                        ? 'Availability varies across this area'
+                        : presentation.title}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        {presentation.kind === 'completed' ? <Check aria-hidden="true" size={11} className="shrink-0 text-emerald-400" />
+                          : presentation.kind === 'confirmation' ? <Compass aria-hidden="true" size={11} className="shrink-0 text-fuchsia-300" />
+                          : visibleState === 'locked' ? <Lock aria-hidden="true" size={10} className="shrink-0 text-rose-300" />
+                          : visibleState === 'available' ? <Check aria-hidden="true" size={10} className="shrink-0 text-emerald-300" />
+                          : <span aria-hidden="true" className="w-[11px] shrink-0 text-center text-gray-600">{`\u00b7`}</span>}
+                        <WikiLink
+                          name={name}
+                          className={`min-w-0 flex-1 truncate hover:underline decoration-dotted underline-offset-2 ${rowStateCls(visibleState)}`}
+                        >
+                          {name}<span className="sr-only">{` \u2014 ${accessibleDetail}`}</span>
+                        </WikiLink>
+                        {kind === 'first' && <span className="shrink-0 rounded bg-cyan-900/60 px-1 text-[9px] text-cyan-300">starts here</span>}
+                        <span aria-hidden="true" className={`shrink-0 rounded px-1 text-[9px] ${badgeClass}`}>
+                          {statusLabel}
                         </span>
-                        {s.category && (
-                          <span className={`text-[9px] px-1 rounded shrink-0 ${s.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
-                            {s.category.replace(/ Shops?$/, '')}
-                          </span>
-                        )}
                       </div>
-                      {isOpen && stock.length > 0 && (
-                        <div className="ml-4 mb-1 flex flex-wrap gap-1">
-                          {stock.map(it => (
-                            <WikiLink key={it} name={it} className="text-[9px] px-1 py-0.5 rounded bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:border-white/20" />
-                          ))}
+                      {presentation.kind === 'confirmation' && (
+                        <div aria-hidden="true" className="ml-[17px] mt-0.5 pr-1 text-[9px] leading-tight text-fuchsia-200/90">
+                          {presentation.title}
                         </div>
                       )}
                     </div>
                   );
-                })}
-              </>
-            )}
-
-            {derived.resources.length > 0 && (
-              <>
-                <SectionHead icon={<Pickaxe size={11} />} label="Resources" count={derived.resources.length} />
-                <CappedList cap={10} items={derived.resources.map(r => {
-                  const yields = nodeYields(r.skill, r.name);
-                  const isOpen = openResource === r.name;
-                  return (
-                  <div key={r.name}>
-                    <div className="flex items-center justify-between gap-2 py-px"
-                      title={r.usable
-                        ? `${r.skill} ${r.level} — you can gather this`
-                        : (unlocks.skills?.[r.skill] ?? 0) > 0
-                          ? `Needs ${r.skill} ${r.level} — you have ${unlocks.levels?.[r.skill] ?? 1}`
-                          : `${r.skill} skill not unlocked yet (needs level ${r.level})`}>
-                      <span className={`flex items-center gap-1 min-w-0 ${stateCls(r.usable)}`}>
-                        {yields && yields.length > 0 && (
-                          <button onClick={() => setOpenResource(isOpen ? null : r.name)} className="text-gray-500 hover:text-white shrink-0" title="Show what this yields">
-                            {isOpen ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
-                          </button>
-                        )}
-                        <span className="truncate">
-                          <WikiLink name={r.name} className="hover:underline decoration-dotted underline-offset-2" /> <span className="text-gray-600 no-underline">×{r.count}</span>
-                        </span>
-                      </span>
-                      <span className={`text-[9px] px-1 rounded shrink-0 font-bold ${r.usable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
-                        {r.skill.slice(0, 4)} {r.level}
-                      </span>
-                    </div>
-                    {isOpen && yields && (
-                      <div className="ml-4 mb-1 flex flex-wrap gap-1">
-                        {yields.map(([item, rate]) => (
-                          <span key={item} className="text-[9px] px-1 py-0.5 rounded bg-white/5 border border-white/10 text-gray-400 flex items-center gap-1">
-                            <WikiLink name={item} className="hover:text-white" />
-                            <span className="text-gray-600 font-mono">{rate}</span>
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  );
                 })} />
-              </>
+              </ChunkInfoSection>
+            )}
+            {(derived.bosses.length > 0 || derived.monsters.length > 0) && (
+              <ChunkInfoSection
+                key={`${panelResetKey}:combat`}
+                id="combat"
+                label="Combat"
+                icon={<Swords size={11} />}
+                summary={formatChunkInfoSectionSummary(sectionStats.combat!, scope)}
+                defaultOpen={defaultSection === 'combat'}
+              >
+                {derived.bosses.length > 0 && <><SectionHead icon={<Skull size={11} />} label="Bosses" count={derived.bosses.length} />{bossRows}</>}
+                {derived.monsters.length > 0 && <><SectionHead icon={<Swords size={11} />} label="Monsters" count={derived.monsters.length} /><CappedList cap={8} items={monsterRows} /></>}
+              </ChunkInfoSection>
+            )}
+            {(derived.farming.length > 0 || derived.resources.length > 0) && (
+              <ChunkInfoSection
+                key={`${panelResetKey}:gathering`}
+                id="gathering"
+                label="Gathering"
+                icon={<Pickaxe size={11} />}
+                summary={formatChunkInfoSectionSummary(sectionStats.gathering!, scope)}
+                defaultOpen={defaultSection === 'gathering'}
+              >
+                {derived.farming.length > 0 && <><SectionHead icon={<Sprout size={11} />} label="Farming" count={derived.farming.length} />{farmingRows}</>}
+                {derived.resources.length > 0 && <><SectionHead icon={<Pickaxe size={11} />} label="Resources" count={derived.resources.length} /><CappedList cap={10} items={resourceRows} /></>}
+              </ChunkInfoSection>
             )}
 
-            {derived.objects.length > 0 && (
-              <>
-                <SectionHead icon={<Package size={11} />} label="Objects" count={derived.objects.length} />
-                <CappedList cap={10} items={derived.objects.map(([name, count]) => (
-                  <div key={name} className="text-gray-300 py-px truncate"><WikiLink name={name} /> <span className="text-gray-600">×{count}</span></div>
-                ))} />
-              </>
+            </>
+            {derived.shops.length > 0 && (
+              <ChunkInfoSection
+                key={`${panelResetKey}:shops`}
+                id="shops"
+                label="Shops"
+                icon={<Store size={11} />}
+                summary={formatChunkInfoSectionSummary(sectionStats.shops!, scope)}
+                defaultOpen={defaultSection === 'shops'}
+              >
+                {shopRows}
+              </ChunkInfoSection>
             )}
-
-            {derived.diaries.length > 0 && (
-              <>
-                <SectionHead icon={<BookOpen size={11} />} label="Diary tasks here" count={derived.diaries.length} />
-                {derived.diaries.map(d => (
-                  <div key={d.area} className="flex items-center justify-between gap-2 py-px"
-                    title={d.reachable
-                      ? `${d.region ?? d.area} is unlocked — these tasks are reachable`
-                      : `Locked: the ${d.region} region isn't unlocked yet`}>
-                    <span className={`truncate ${stateCls(d.reachable)}`}>
-                      <WikiLink name={`${d.area} Diary`} className="hover:underline decoration-dotted underline-offset-2">{d.area}</WikiLink> <span className="text-gray-600 no-underline">({d.refs})</span>
-                    </span>
-                    {d.region && (
-                      <span className={`text-[9px] px-1 rounded shrink-0 ${d.reachable ? 'bg-green-900/60 text-green-300' : 'bg-red-950/70 text-red-300'}`}>
-                        {d.reachable ? 'Reachable' : 'Locked'}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </>
+            {(derived.transport.length > 0 || totalLinks > 0) && (
+              <ChunkInfoSection
+                key={`${panelResetKey}:travel`}
+                id="travel"
+                label="Travel"
+                icon={<Route size={11} />}
+                summary={formatChunkInfoSectionSummary(sectionStats.travel!, scope)}
+                defaultOpen={defaultSection === 'travel'}
+              >
+                {derived.transport.length > 0 && <><SectionHead icon={<Route size={11} />} label="Transport nodes" count={derived.transport.length} />{transportRows}</>}
+                {totalLinks > 0 && <><SectionHead icon={<Compass size={11} />} label="Destinations" count={totalLinks} />{travelLinkGroups}</>}
+              </ChunkInfoSection>
             )}
-
-            {Object.keys(content.clues).length > 0 && (
-              <>
-                <SectionHead icon={<Scroll size={11} />} label="Clue steps" />
-                <div className="flex flex-wrap gap-1">
-                  {Object.entries(content.clues).map(([tier, n]) => (
-                    <span key={tier} className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-gray-300 capitalize">
-                      {tier} ×{n}
-                    </span>
-                  ))}
-                </div>
-              </>
+            {(sectionStats.other?.total ?? 0) > 0 && (
+              <ChunkInfoSection
+                key={`${panelResetKey}:other`}
+                id="other"
+                label="Other"
+                icon={<Package size={11} />}
+                summary={formatChunkInfoSectionSummary(sectionStats.other!, scope)}
+                defaultOpen={defaultSection === 'other'}
+              >
+                {guildRows}
+                {minigameRows}
+                {diaryRows}
+                {objectRows}
+                {clueRows}
+                {npcRows}
+                {spawnRows}
+              </ChunkInfoSection>
             )}
-
-            {content.npcs.length > 0 && (
-              <>
-                <SectionHead icon={<Users size={11} />} label="NPCs" count={content.npcs.length} />
-                <CappedList cap={6} items={content.npcs.map(n => (
-                  <div key={n} className="text-gray-400 py-px truncate"><WikiLink name={n} /></div>
-                ))} />
-              </>
-            )}
-
-            {content.spawns.length > 0 && (
-              <>
-                <SectionHead icon={<Package size={11} />} label="Item spawns" count={content.spawns.length} />
-                <CappedList cap={6} items={content.spawns.map(s => (
-                  <div key={s} className="text-gray-400 py-px truncate"><WikiLink name={s} /></div>
-                ))} />
-              </>
-            )}
+                </>
+              )}
           </>
         )}
       </div>

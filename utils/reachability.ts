@@ -82,6 +82,27 @@ export const isRegionUnlocked = (region: string, unlocks: string[]): boolean => 
 };
 
 /**
+ * True when a parent-area aggregate crosses both unlocked and locked ownership
+ * units. Chunks belong to their named sub-area when one is assigned; otherwise
+ * the parent region is the unit that owns them.
+ */
+export const hasMixedAreaOwnership = (
+  chunks: readonly { cx: number; cy: number }[],
+  parentRegion: string,
+  subAreasByChunk: Readonly<Record<string, string>>,
+  unlocks: string[],
+): boolean => {
+  let hasUnlocked = false;
+  let hasLocked = false;
+  for (const { cx, cy } of chunks) {
+    if (isRegionUnlocked(subAreasByChunk[`${cx},${cy}`] ?? parentRegion, unlocks)) hasUnlocked = true;
+    else hasLocked = true;
+    if (hasUnlocked && hasLocked) return true;
+  }
+  return false;
+};
+
+/**
  * Does the run's mode lock banks individually? Off unless the mode's
  * `bankLocks` rule is set (Custom mode opt-in). Kept here so every caller —
  * app map, chunk panel, plugin bundle export — reads the same source.

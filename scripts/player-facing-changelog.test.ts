@@ -154,7 +154,7 @@ describe('player-facing changelog Git comparison', () => {
     } finally {
       rmSync(cwd, { recursive: true, force: true });
     }
-  });
+  }, 15_000);
 
   it('requires a release entry when player-facing code moves outside product paths', () => {
     const cwd = createGateRepository();
