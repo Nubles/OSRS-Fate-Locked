@@ -319,6 +319,15 @@ describe('ChunkActivityPanel activity accordions', () => {
 
     expect(screen.getByText('Indexed activities')).toBeTruthy();
     expect(screen.queryByText('Available now')).toBeNull();
+    expect(screen.getByText('Varies')).toBeTruthy();
+    expect(screen.queryByText('Unlocked')).toBeNull();
+
+    cleanup();
+    render(<ChunkActivityPanel {...baseProps} unlocked={false} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Whole area' }));
+
+    expect(screen.getByText('Varies')).toBeTruthy();
+    expect(screen.queryByText('Locked')).toBeNull();
   });
   it('opens Combat by default when quests are absent and omits empty groups', () => {
     mocks.state.content = {

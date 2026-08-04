@@ -1,11 +1,17 @@
 import React from 'react';
 import { X } from 'lucide-react';
-import type { ChunkInfoMode } from './chunkInfoPresentation';
+import type { ChunkInfoMode, ChunkInfoScope } from './chunkInfoPresentation';
+
+const STATUS_DISPLAY: Record<ChunkInfoScope, { label: string; className: string }> = {
+  available: { label: 'Unlocked', className: 'border-emerald-700/50 bg-emerald-950/70 text-emerald-300' },
+  locked: { label: 'Locked', className: 'border-rose-800/60 bg-rose-950/70 text-rose-300' },
+  mixed: { label: 'Varies', className: 'border-amber-700/50 bg-amber-950/70 text-amber-300' },
+};
 
 interface Props {
   title: string;
   meta: React.ReactNode;
-  unlocked: boolean;
+  status: ChunkInfoScope;
   showModeSwitch: boolean;
   mode: ChunkInfoMode;
   onModeChange: (mode: ChunkInfoMode) => void;
@@ -13,7 +19,7 @@ interface Props {
 }
 
 export const ChunkInfoHeader: React.FC<Props> = ({
-  title, meta, unlocked, showModeSwitch, mode, onModeChange, onClose,
+  title, meta, status, showModeSwitch, mode, onModeChange, onClose,
 }) => (
   <header className="sticky top-0 z-10 shrink-0 border-b border-cyan-900/50 bg-[#171a1c] px-3.5 py-3 shadow-[0_1px_0_rgba(34,211,238,0.08)]">
     <div className="flex items-start justify-between gap-2">
@@ -22,10 +28,8 @@ export const ChunkInfoHeader: React.FC<Props> = ({
         <div className="mt-1 text-[10px] text-gray-500">{meta}</div>
       </div>
       <div className="flex shrink-0 items-center gap-2">
-        <span className={`rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${unlocked
-          ? 'border-emerald-700/50 bg-emerald-950/70 text-emerald-300'
-          : 'border-rose-800/60 bg-rose-950/70 text-rose-300'}`}>
-          {unlocked ? 'Unlocked' : 'Locked'}
+        <span className={`rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${STATUS_DISPLAY[status].className}`}>
+          {STATUS_DISPLAY[status].label}
         </span>
         <button type="button" onClick={onClose} className="rounded p-1 text-gray-500 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 motion-reduce:transition-none" aria-label="Close chunk info">
           <X size={15} />

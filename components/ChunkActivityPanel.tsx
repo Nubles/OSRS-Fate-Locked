@@ -828,7 +828,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
         meta={mode === 'region'
           ? `${regionChunks.length} chunks`
           : <>chunk ({chunk.cx}, {chunk.cy}){subArea && <> {" \u00B7 "}<span className="font-semibold text-cyan-300/90">{displayAreaName(subArea)}</span></>}{region && <> {" \u00B7 "}{region}</>}</>}
-        unlocked={unlocked}
+        status={scope}
         showModeSwitch={Boolean(region)}
         mode={mode}
         onModeChange={setMode}

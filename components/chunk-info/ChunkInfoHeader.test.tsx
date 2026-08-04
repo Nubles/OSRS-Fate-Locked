@@ -7,6 +7,25 @@ import { ChunkInfoHeader } from './ChunkInfoHeader';
 afterEach(cleanup);
 
 describe('ChunkInfoHeader', () => {
+  it.each([
+    ['available', 'Unlocked'],
+    ['locked', 'Locked'],
+    ['mixed', 'Varies'],
+  ] as const)('shows %s status as %s', (status, label) => {
+    render(
+      <ChunkInfoHeader
+        title="Varrock West"
+        meta={<>chunk (50, 53) · Misthalin</>}
+        status={status}
+        showModeSwitch={false}
+        mode="chunk"
+        onModeChange={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText(label)).toBeTruthy();
+  });
   it('shows location state and exposes close and mode controls', async () => {
     const onClose = vi.fn();
     const onModeChange = vi.fn();
@@ -14,7 +33,7 @@ describe('ChunkInfoHeader', () => {
       <ChunkInfoHeader
         title="Varrock West"
         meta={<>chunk (50, 53) · Misthalin</>}
-        unlocked
+        status="available"
         showModeSwitch
         mode="chunk"
         onModeChange={onModeChange}
