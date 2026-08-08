@@ -91,6 +91,9 @@ export function validateBankLocationRegistry(registry, { validChunkIds, validBan
   const virtualIds = new Set();
   for (const location of registry.virtualLocations) {
     assertVirtualBankId(location.id, 'Virtual bank location id');
+    if (location.cx !== null || location.cy !== null) {
+      throw new Error(`Virtual bank coordinates must be null for ${location.id}`);
+    }
     if (ids.has(location.id)) throw new Error(`Virtual bank location id collides with a physical location: ${location.id}`);
     if (overrideIds.has(location.id)) throw new Error(`Virtual bank location id collides with a label override: ${location.id}`);
     if (virtualIds.has(location.id)) throw new Error(`Duplicate virtual bank id: ${location.id}`);

@@ -43,7 +43,7 @@ export async function buildRuneliteBundle(
   slayerChunks?: Record<string, { cx: number; cy: number }[]>,
   /** Chunked mode only — unlocks.chunks, keyed "cx,cy" (see utils/chunkAdjacency.ts). */
   unlockedChunks?: string[],
-  /** Bank-locked modes — the run's unlocked bank chunk ids (unlocks.banks). */
+  /** Bank-locked modes — physical chunk ids plus stable virtual bank ids. */
   unlockedBanks?: string[],
   /** Whether the run locks banks individually (rules.bankLocks). */
   bankLocks?: boolean,
@@ -132,9 +132,9 @@ export async function buildRuneliteBundle(
     // Slayer task → chunks (complete monster coverage) for the locked-slayer
     // warning. Optional; omitted if the chunk dataset wasn't loaded.
     ...(slayerChunks ? { slayerChunks } : {}),
-    // Bank-lock state: whether banking is gated, and the bank chunk ids the
-    // player has rolled (canonical "cx*256+cy", matching the dataset's bank
-    // set / plugin hasBank). Both omitted when the run doesn't lock banks.
+    // Bank-lock state and rolled bank ids. Physical entries use canonical
+    // "cx*256+cy" ids; virtual service ids are preserved for compatible consumers.
+    // Both fields are omitted when the run does not lock banks.
     ...(bankLocks ? { bankLocks: true, unlockedBanks: unlockedBanks ?? [] } : {}),
     state,
   };

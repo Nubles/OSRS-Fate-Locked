@@ -114,9 +114,12 @@ Follow-ups:
   standing chunk's bank as unlocked (green) or locked (red "roll it in Spend
   Keys") via isBankReachable, when bankLocks is on. A map-level bank tint on
   RegionMap is still open if wanted.
-- ~~Plugin integration~~ — done: bundle exports `bankLocks` + `unlockedBanks`;
-  the plugin warns (chat + notifier) on opening a bank/deposit box in an
-  unlocked chunk (warnLockedBank toggle). Bank group ids 12 / 192.
+- ~~Physical-bank plugin integration~~ — done: the bundle exports `bankLocks` +
+  `unlockedBanks`, and the plugin warns on physical bank/deposit-box access by
+  canonical chunk id (warnLockedBank toggle; widget groups 12 / 192).
+- **Virtual Forestry plugin enforcement** — web tracking and export are shipped;
+  event-specific Woodcutting Leprechaun detection remains a companion-plugin
+  follow-up because the current warning path is chunk-based.
 - ~~Completion/stats~~ — done: banks counted in completion % (denominator +
   points), Share card tile, and the copy summary.
 - **Browsable owned-banks list** in the Dashboard (Spend card only shows X/127).

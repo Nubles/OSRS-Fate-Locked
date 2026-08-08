@@ -179,9 +179,9 @@ export interface UnlockState {
   farming: string[];
   slayerUnlocks: string[];
   /**
-   * Bank-locked modes only (rules.bankLocks) — unlocked bank locations, keyed
-   * by canonical chunk id "cx*256+cy" (see data/banks.ts). Optional so existing
-   * saves/fixtures without it default to []; ignored when bankLocks is off.
+   * Bank-locked modes only (rules.bankLocks): physical locations use canonical
+   * chunk ids ("cx*256+cy"), while locationless services use stable virtual ids.
+   * Optional so existing saves/fixtures default to []; ignored when bankLocks is off.
    */
   banks?: string[];
   quests: string[]; // List of completed Quest IDs

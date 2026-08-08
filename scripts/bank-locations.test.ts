@@ -37,6 +37,8 @@ describe('reviewed bank-location registry', () => {
     expect(registry.virtualLocations).toEqual([
       expect.objectContaining({
         id: 'woodcutting-leprechaun',
+        cx: null,
+        cy: null,
         name: 'Woodcutting Leprechaun (Forestry)',
         referenceKind: 'virtual',
         accessVia: 'Variable Forestry woodcutting area; no fixed chunk',
@@ -177,6 +179,14 @@ describe('reviewed bank-location registry', () => {
 
     expect(() => validateBankLocationRegistry(registry, TEST_VALIDATION_OPTIONS))
       .toThrow(/stable virtual bank id/i);
+  });
+
+  it.each(['cx', 'cy'])('rejects a non-null virtual %s coordinate', (coordinate) => {
+    const registry = structuredClone(readBankLocationRegistry());
+    registry.virtualLocations[0][coordinate] = 1;
+
+    expect(() => validateBankLocationRegistry(registry, TEST_VALIDATION_OPTIONS))
+      .toThrow(/virtual bank coordinates must be null/i);
   });
 
   it('rejects duplicate virtual ids', () => {
