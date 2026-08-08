@@ -3,6 +3,7 @@
 import React from 'react';
 import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { BANK_IDS } from '../data/banks';
 import { ShareModal } from './ShareModal';
 
 const mockGame = vi.hoisted(() => ({
@@ -23,7 +24,7 @@ const mockGame = vi.hoisted(() => ({
       housing: [],
       merchants: [],
       storage: [],
-      banks: [],
+      banks: [] as string[],
     },
   },
 }));
@@ -49,6 +50,7 @@ describe('ShareModal region summary', () => {
 
   beforeEach(() => {
     writeText.mockClear();
+    mockGame.current.unlocks.banks = [];
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
       value: { writeText },
@@ -79,5 +81,16 @@ describe('ShareModal region summary', () => {
     expect(summary).toContain(`Regions: ${expected} Unlocked`);
     expect(summary).not.toContain("Otto's Grotto");
     expect(summary).not.toContain("Heroes' Guild");
+  });
+
+  it('uses the generated bank pool size in the copied summary', async () => {
+    mockGame.current.unlocks.banks = ['5678', '6454'];
+    const view = render(<ShareModal onClose={vi.fn()} />);
+
+    fireEvent.click(view.getByRole('button', { name: 'Copy Summary' }));
+
+    await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
+    expect(writeText.mock.calls[0][0]).toContain(`Banks: 2/${BANK_IDS.length}`);
+    expect(BANK_IDS).toHaveLength(126);
   });
 });

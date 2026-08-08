@@ -12,6 +12,7 @@ import { EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, SKILLS_LIST, REGIONS_LIST, REGION_
 import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { isAreaReachable } from '../utils/reachability';
 import { visibleAreaUnlocks } from '../data/areaMapPolicy';
+import { BANK_IDS } from '../data/banks';
 
 interface ShareModalProps {
   onClose: () => void;
@@ -150,7 +151,7 @@ Progression: ${progressPercent}% | Total Level: ${totalLevel}
 🌍 ${isChunked ? 'Chunks' : 'Regions'}: ${totalRegions} Unlocked
 ⚔️ Gear Tiers: ${totalEquipTiers}
 🏆 Bosses: ${bossCount} | 🎲 Minigames: ${minigameCount}
-🏦 Banks: ${(unlocks.banks ?? []).length}/${100}
+🏦 Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
 #OSRS #FateLocked`;
   };
 

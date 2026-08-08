@@ -19,7 +19,7 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-08-04-polished-chunk-info');
+    expect(LATEST_CHANGELOG.id).toBe('2026-08-08-complete-bank-pool');
   });
 
   it('announces the latest physical-chunk unlock and source corrections', () => {
@@ -47,15 +47,31 @@ describe('authored changelog releases', () => {
   });
 
   it('announces the polished Chunk Info drawer', () => {
-    expect(LATEST_CHANGELOG).toMatchObject({
+    const polishedChunkInfo = CHANGELOG_RELEASES.find(
+      release => release.id === '2026-08-04-polished-chunk-info',
+    );
+
+    expect(polishedChunkInfo).toMatchObject({
       id: '2026-08-04-polished-chunk-info',
       title: 'Clearer Chunk Info',
       date: '2026-08-04',
     });
-    expect(LATEST_CHANGELOG.sections.changed).toEqual(expect.arrayContaining([
+    expect(polishedChunkInfo?.sections.changed).toEqual(expect.arrayContaining([
       'Chunk Info now leads with a clear availability summary and keeps detailed content in readable expandable groups.',
       'Entry requirements, entrances, and banks now share one consistent Access & facilities card.',
       'Locked content stays readable and explains its requirement without striking through the full name.',
+    ]));
+  });
+
+  it('announces the complete reviewed bank pool', () => {
+    expect(LATEST_CHANGELOG).toMatchObject({
+      id: '2026-08-08-complete-bank-pool',
+      title: 'Every Bank Has Its Place',
+      date: '2026-08-08',
+    });
+    expect(LATEST_CHANGELOG.sections.fixed).toEqual(expect.arrayContaining([
+      'Bank-locked modes now include every reviewed fixed-location bank, chest, deposit box, and deposit service, including Wyrmscraig and Sangvesti access.',
+      'Bank rolls now use clear facility names for reviewed underground and instanced access chunks.',
     ]));
   });
 

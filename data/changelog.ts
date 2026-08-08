@@ -19,6 +19,17 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-08-08-complete-bank-pool',
+    title: 'Every Bank Has Its Place',
+    date: '2026-08-08',
+    sections: {
+      fixed: [
+        'Bank-locked modes now include every reviewed fixed-location bank, chest, deposit box, and deposit service, including Wyrmscraig and Sangvesti access.',
+        'Bank rolls now use clear facility names for reviewed underground and instanced access chunks.',
+      ],
+    },
+  },
+  {
     id: '2026-08-04-polished-chunk-info',
     title: 'Clearer Chunk Info',
     date: '2026-08-04',
