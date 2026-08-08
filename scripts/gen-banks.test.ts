@@ -16,6 +16,7 @@ describe('bank source generator', () => {
       id: 'woodcutting-leprechaun',
       name: 'Woodcutting Leprechaun (Forestry)',
     });
+    expect(generateBankSource(doc, registry)).toContain('// 1 virtual registry entry. Each is its own unlock in bank-locked modes.');
     expect(byId['10275']).toBe('Wyrmscraig bank chest');
     expect(byId['11830']).toBe('Ruins of Camdozaal (via Ice Mountain)');
     expect(byId['14132']).toBe('Sangvesti and Castle Drakan banking');
