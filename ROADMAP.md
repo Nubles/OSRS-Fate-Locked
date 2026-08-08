@@ -94,8 +94,8 @@ referencing still-hidden surfaces.
 
 ## 2b. Bank unlocks (shipped — web side) & follow-ups
 
-Each of the 126 canonical bank/deposit-box locations is its own unlock
-(`TableType.BANKS`, `unlocks.banks[]`, keyed by canonical chunk id cx*256+cy),
+The bank pool contains 126 physical canonical bank/deposit chunks plus 1 virtual Forestry unlock.
+Each is its own unlock (`TableType.BANKS`, `unlocks.banks[]`, keyed by canonical chunk id cx*256+cy),
 mirroring the STORAGE table pattern. Data: `data/banks.ts` (regen with
 `node scripts/gen-banks.mjs` from public/chunk-content.json's `banks`).
 
@@ -118,7 +118,7 @@ Follow-ups:
   unlocked chunk (warnLockedBank toggle). Bank group ids 12 / 192.
 - ~~Completion/stats~~ — done: banks counted in completion % (denominator +
   points), Share card tile, and the copy summary.
-- **Browsable owned-banks list** in the Dashboard (Spend card only shows X/126).
+- **Browsable owned-banks list** in the Dashboard (Spend card only shows X/127).
 
 ## 3. Architecture cheat-sheet
 

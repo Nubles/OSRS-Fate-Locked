@@ -72,6 +72,7 @@ describe('authored changelog releases', () => {
     expect(LATEST_CHANGELOG.sections.fixed).toEqual(expect.arrayContaining([
       'Bank-locked modes now include every reviewed fixed-location bank, chest, deposit box, and deposit service, including Wyrmscraig and Sangvesti access.',
       'Bank rolls now use clear facility names for reviewed underground and instanced access chunks.',
+      'The temporary Forestry Woodcutting Leprechaun is represented as one virtual bank unlock without a fixed chunk.',
     ]));
   });
 
