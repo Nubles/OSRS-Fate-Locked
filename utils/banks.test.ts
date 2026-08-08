@@ -12,10 +12,24 @@ const unlocks = (over: Partial<UnlockState> = {}): UnlockState => ({
 });
 
 describe('bank data', () => {
-  it('has 100 uniquely-named, uniquely-keyed banks', () => {
-    expect(BANKS.length).toBe(100);
-    expect(new Set(BANK_IDS).size).toBe(100);
-    expect(new Set(BANKS.map(b => b.name)).size).toBe(100);
+  it('has 126 uniquely-named, uniquely-keyed banks', () => {
+    expect(BANKS.length).toBe(126);
+    expect(new Set(BANK_IDS).size).toBe(126);
+    expect(new Set(BANKS.map(b => b.name)).size).toBe(126);
+  });
+
+  it('contains every reviewed fixed-location addition with facility-first labels', () => {
+    const additions = [
+      '5678', '6454', '6458', '6711', '6712', '6961', '7225', '8499',
+      '8508', '8751', '8756', '8757', '8999', '9274', '10553', '11047',
+      '11056', '11062', '11572', '11578', '12082', '12337', '12838',
+      '12849', '14132',
+    ];
+    expect(BANK_IDS).toEqual(expect.arrayContaining(additions));
+    expect(BANK_BY_ID['10275'].name).toBe('Wyrmscraig bank chest');
+    expect(BANK_BY_ID['11830'].name).toBe('Ruins of Camdozaal (via Ice Mountain)');
+    expect(BANK_BY_ID['14132'].name).toBe('Sangvesti and Castle Drakan banking');
+    expect(BANKS.some(bank => /Woodcutting Leprechaun/i.test(bank.name))).toBe(false);
   });
 
   it('bankId encodes cx*256+cy and round-trips against a known entry', () => {
