@@ -132,6 +132,7 @@ export async function writeApprovedChunkSource(raw, manifest, targetUrl = gzipUr
   const bankLocationRegistry = registryOverrides.bankLocationRegistry ?? readBankLocationRegistry();
   validateBankLocationRegistry(bankLocationRegistry, {
     validChunkIds: new Set((data.walkableChunks ?? []).map(String)),
+    validBankIds: new Set((data.rollingChunks?.bank ?? []).map((raw) => String(raw).split('-')[0])),
   });
   const result = transformChunkContent(data, manifest, namedLocationRegistry, bankLocationRegistry);
   assertChunkTransformBase(result, manifest);

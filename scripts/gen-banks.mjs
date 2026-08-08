@@ -61,6 +61,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const registry = readBankLocationRegistry();
   validateBankLocationRegistry(registry, {
     validChunkIds: new Set(Object.keys(doc.chunks ?? {})),
+    validBankIds: new Set((doc.banks ?? []).map(String)),
   });
   const expected = generateBankSource(doc, registry);
   if (args.includes('--check')) {

@@ -42,6 +42,7 @@ validateNamedTaskUnlockRegistry(namedLocationRegistry, {
 const bankLocationRegistry = readBankLocationRegistry();
 validateBankLocationRegistry(bankLocationRegistry, {
   validChunkIds: new Set((data.walkableChunks ?? []).map(String)),
+  validBankIds: new Set((data.rollingChunks?.bank ?? []).map((raw) => String(raw).split('-')[0])),
 });
 const result = transformChunkContent(data, manifest, namedLocationRegistry, bankLocationRegistry);
 assertChunkTransform(result, manifest);

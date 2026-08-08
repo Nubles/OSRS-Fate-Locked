@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { BANKS } from '../data/banks';
 import { readPinnedChunkSource } from './chunk-source.mjs';
 import {
   bankLocationLabels,
@@ -13,13 +14,30 @@ const ADDITION_IDS = [
   '12849', '14132',
 ];
 
+const EXCLUSIONS = [
+  { name: 'Woodcutting Leprechaun', reason: 'Variable location; explicitly deferred.' },
+  { name: 'Tutorial Island bank', reason: 'Onboarding-only and absent from the walkable chunk registry.' },
+  { name: 'The Node bank', reason: 'Group Ironman onboarding-only and absent from the walkable chunk registry.' },
+  { name: 'Gravedigger Mausoleum', reason: 'Random-event-only internal service without a stable surface entrance.' },
+  { name: 'Tool leprechauns', reason: 'Produce-noting service, not a bank or deposit facility.' },
+  { name: 'Player-owned house servants', reason: 'Variable-location fetching service, not a fixed bank or deposit facility.' },
+  { name: 'Ferox Enclave mercenary', reason: 'Unnoting and token exchange service, not a deposit facility.' },
+  { name: 'Removed banks', reason: 'No longer accessible in normal play.' },
+];
+
+const TEST_VALIDATION_OPTIONS = {
+  validChunkIds: new Set(ADDITION_IDS),
+  validBankIds: new Set(['10275', '11830']),
+};
+
 describe('reviewed bank-location registry', () => {
   it('contains the exact reviewed addition set and validates against walkable chunks', async () => {
     const registry = readBankLocationRegistry();
     const { data } = await readPinnedChunkSource();
     const validChunkIds = new Set((data.walkableChunks ?? []).map(String));
+    const validBankIds = new Set((data.rollingChunks?.bank ?? []).map(String));
 
-    expect(() => validateBankLocationRegistry(registry, { validChunkIds })).not.toThrow();
+    expect(() => validateBankLocationRegistry(registry, { validChunkIds, validBankIds })).not.toThrow();
     expect(registry.locations.map(({ id }: { id: string }) => id).sort((a: string, b: string) => +a - +b))
       .toEqual([...ADDITION_IDS].sort((a, b) => +a - +b));
     expect(new Set(registry.locations.map(({ id }: { id: string }) => id)).size).toBe(25);
@@ -35,20 +53,96 @@ describe('reviewed bank-location registry', () => {
     expect(new Set(registry.locations.map(({ name }: { name: string }) => name))).toHaveLength(25);
     expect(labels.get('10275')).toBe('Wyrmscraig bank chest');
     expect(labels.get('11830')).toBe('Ruins of Camdozaal (via Ice Mountain)');
-    expect(registry.exclusions.map(({ name }: { name: string }) => name)).toContain('Woodcutting Leprechaun');
-    expect(registry.locations.some(({ name }: { name: string }) => /Woodcutting Leprechaun/i.test(name))).toBe(false);
+    expect(registry.exclusions).toEqual(EXCLUSIONS);
+
+    const locationNames = registry.locations.map(({ name }: { name: string }) => name);
+    const facilityNames = registry.locations.flatMap(({ facilities }: { facilities: string[] }) => facilities);
+    const generatedLabels = BANKS.map(({ name }) => name);
+    for (const { name } of EXCLUSIONS) {
+      expect(locationNames).not.toContain(name);
+      expect(facilityNames).not.toContain(name);
+      expect(generatedLabels).not.toContain(name);
+    }
   });
 
   it('rejects duplicate ids and coordinate mismatches', () => {
     const registry = readBankLocationRegistry();
     const duplicate = structuredClone(registry);
     duplicate.locations.push(structuredClone(duplicate.locations[0]));
-    expect(() => validateBankLocationRegistry(duplicate))
+    expect(() => validateBankLocationRegistry(duplicate, TEST_VALIDATION_OPTIONS))
       .toThrow(/duplicate bank location id/i);
 
     const mismatch = structuredClone(registry);
     mismatch.locations[0].cx += 1;
-    expect(() => validateBankLocationRegistry(mismatch))
+    expect(() => validateBankLocationRegistry(mismatch, TEST_VALIDATION_OPTIONS))
       .toThrow(/canonical chunk id mismatch/i);
+  });
+
+  it('rejects a label override with a non-canonical chunk id', () => {
+    const registry = structuredClone(readBankLocationRegistry());
+    registry.labelOverrides[0].id = '010275';
+
+    expect(() => validateBankLocationRegistry(registry, TEST_VALIDATION_OPTIONS))
+      .toThrow(/canonical chunk id/i);
+  });
+
+  it('rejects duplicate label override ids before labels can be overwritten', () => {
+    const registry = structuredClone(readBankLocationRegistry());
+    registry.labelOverrides.push({
+      id: '10275',
+      name: 'Replacement Wyrmscraig label',
+      wiki: [''],
+    });
+
+    expect(() => validateBankLocationRegistry(registry, TEST_VALIDATION_OPTIONS))
+      .toThrow(/duplicate bank label override id/i);
+  });
+
+  it('rejects a label override that does not target a known bank', () => {
+    const registry = structuredClone(readBankLocationRegistry());
+    registry.labelOverrides[0].id = '999999';
+
+    expect(() => validateBankLocationRegistry(registry, TEST_VALIDATION_OPTIONS))
+      .toThrow(/does not target a valid bank/i);
+  });
+
+  it('rejects blank facility evidence', () => {
+    const registry = structuredClone(readBankLocationRegistry());
+    registry.locations[0].facilities = [''];
+
+    expect(() => validateBankLocationRegistry(registry, TEST_VALIDATION_OPTIONS))
+      .toThrow(/facility must be a non-empty string/i);
+  });
+
+  it('rejects blank location Wiki evidence', () => {
+    const registry = structuredClone(readBankLocationRegistry());
+    registry.locations[0].wiki = [''];
+
+    expect(() => validateBankLocationRegistry(registry, TEST_VALIDATION_OPTIONS))
+      .toThrow(/Wiki evidence must be a non-empty string/i);
+  });
+
+  it('rejects blank label override Wiki evidence', () => {
+    const registry = structuredClone(readBankLocationRegistry());
+    registry.labelOverrides[0].wiki = [''];
+
+    expect(() => validateBankLocationRegistry(registry, TEST_VALIDATION_OPTIONS))
+      .toThrow(/Wiki evidence must be a non-empty string/i);
+  });
+
+  it('rejects location Wiki evidence absent from the reviewed source revisions', () => {
+    const registry = structuredClone(readBankLocationRegistry());
+    registry.locations[0].wiki = ['https://oldschool.runescape.wiki/w/Unreviewed_location'];
+
+    expect(() => validateBankLocationRegistry(registry, TEST_VALIDATION_OPTIONS))
+      .toThrow(/Wiki evidence is not covered by source revisions/i);
+  });
+
+  it('rejects label override Wiki evidence absent from the reviewed source revisions', () => {
+    const registry = structuredClone(readBankLocationRegistry());
+    registry.labelOverrides[0].wiki = ['https://oldschool.runescape.wiki/w/Unreviewed_override'];
+
+    expect(() => validateBankLocationRegistry(registry, TEST_VALIDATION_OPTIONS))
+      .toThrow(/Wiki evidence is not covered by source revisions/i);
   });
 });
