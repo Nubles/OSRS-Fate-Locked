@@ -290,15 +290,16 @@ function buildSkillItems(data, audit) {
   return out;
 }
 function buildBanks(data, audit, bankLocationRegistry) {
-  const set = new Set();
+  const upstream = new Set();
   for (const [index, raw] of (data.rollingChunks?.bank ?? []).entries()) {
     const sourceKey = `${raw}@${index}`, base = String(raw).split('-')[0];
     if (!/^\d+$/.test(base)) { audit.add('banks', sourceKey, 'excluded', 'non-walkable-content', []); continue; }
-    const duplicate = set.has(base); set.add(base);
+    const duplicate = upstream.has(base); upstream.add(base);
     audit.add('banks', sourceKey, duplicate || String(raw).includes('-') ? 'normalized' : 'imported', duplicate ? 'duplicate-deduped' : String(raw).includes('-') ? 'subarea-suffix-collapsed' : 'base-record', [base]);
   }
-  for (const location of bankLocationRegistry?.locations ?? []) set.add(String(location.id));
-  return [...set].sort(numericSort);
+  const banks = new Set(upstream);
+  for (const location of bankLocationRegistry?.locations ?? []) banks.add(String(location.id));
+  return { banks: [...banks].sort(numericSort), upstreamCount: upstream.size };
 }
 function buildTags(data, chunkRecs, shopItems, drops) { const add = (map, name, id) => { const set = map.get(name) ?? new Set(); set.add(id); map.set(name, set); }; const Monsters = new Map(), NPCs = new Map(), Objects = new Map(), items = new Map(); for (const [id, entry] of Object.entries(chunkRecs)) { for (const monster of entry.m ?? []) { add(Monsters, monster[0], id); for (const item of drops[monster[0]] ?? []) add(items, item, id); } for (const name of entry.p ?? []) add(NPCs, name, id); for (const object of entry.o ?? []) add(Objects, object[0], id); for (const shop of entry.s ?? []) for (const item of shopItems[shop] ?? []) add(items, item, id); } const maps = { Items: items, Monsters, NPCs, Objects }, out = {}; for (const [key, names] of Object.entries(data.searchTerms ?? {})) { const [tag, type] = key.split('|'), map = maps[type]; if (!tag || !map) continue; const set = out[tag] ?? new Set(); for (const raw of Object.keys(names)) for (const id of map.get(cleanName(raw)) ?? []) set.add(id); if (set.size) out[tag] = set; } return Object.fromEntries(Object.entries(out).map(([tag, set]) => [tag, [...set].sort(numericSort)])); }
 
@@ -416,19 +417,21 @@ export function transformChunkContent(data, sourceManifest, namedLocationRegistr
     const normalized = Object.values(chunk.Sections ?? {}).length > 0;
     audit.add('chunks', id, normalized ? 'normalized' : 'imported', normalized ? 'section-merged' : 'base-record', [id]);
   }
-  const connect = buildConnect(data), slayerMasters = buildSlayerMasters(data, audit), shortcuts = buildShortcuts(data, audit), shopItems = buildShopItems(data, audit), drops = buildDrops(data, audit), overlays = buildOverlays(data, audit), skillItems = buildSkillItems(data, audit), taskUnlocks = buildTaskUnlocks(data, audit, namedLocationIndex), questSections = buildQuestSections(data, audit), banks = buildBanks(data, audit, bankLocationRegistry), tags = buildTags(data, chunks, shopItems, drops);
+  const connect = buildConnect(data), slayerMasters = buildSlayerMasters(data, audit), shortcuts = buildShortcuts(data, audit), shopItems = buildShopItems(data, audit), drops = buildDrops(data, audit), overlays = buildOverlays(data, audit), skillItems = buildSkillItems(data, audit), taskUnlocks = buildTaskUnlocks(data, audit, namedLocationIndex), questSections = buildQuestSections(data, audit);
+  const { banks, upstreamCount: upstreamBankCount } = buildBanks(data, audit, bankLocationRegistry);
+  const tags = buildTags(data, chunks, shopItems, drops);
   addBaseRecords(audit, 'searchTerms', data.searchTerms ?? {});
   const sourceMeta = { repository: sourceManifest.repository, commit: sourceManifest.commit, blobSha: sourceManifest.blobSha, rawSha256: sourceManifest.rawSha256, policyVersion: sourceManifest.policyVersion, namedLocationPolicyVersion: namedLocationRegistry?.policyVersion, namedLocationReviewedAt: namedLocationRegistry?.reviewedAt };
   const entrances = buildEntranceIndex(namedLocationRegistry ?? { locations: [] });
   const full = { version: 9, source: 'source-chunk/chunk-picker-v2 (chunkpicker-chunkinfo-export.json, gh-pages)', sourceMeta, entrances, chunks, connect, slayerMasters, shortcuts, shopItems, drops, overlays, skillItems, taskUnlocks, questSections, banks, tags };
   const liteSource = buildLite(full, audit); const finalAudit = audit.finish();
-  return { full, liteSource, audit: finalAudit };
+  return { full, liteSource, audit: finalAudit, upstreamBankCount };
 }
 
 export function assertChunkTransformBase(result, sourceManifest) {
   for (const [category, total] of Object.entries(result.audit.categoryTotals)) if (total.source !== total.imported + total.normalized + total.excluded + total.unresolved) throw new Error(`Unbalanced chunk transform audit category: ${category}`);
-  const floors = sourceManifest.countFloors ?? {}; const full = result.full;
-  const actual = { contentChunks: Object.keys(full.chunks).length, connections: Object.keys(full.connect).length, slayerMasters: Object.keys(full.slayerMasters).length, shortcuts: full.shortcuts.length, shops: Object.keys(full.shopItems).length, dropTables: Object.keys(full.drops).length, questSections: Object.keys(full.questSections).length, banks: full.banks.length, tags: Object.keys(full.tags).length };
+  const floors = sourceManifest.countFloors ?? {}; const { full, upstreamBankCount } = result;
+  const actual = { contentChunks: Object.keys(full.chunks).length, connections: Object.keys(full.connect).length, slayerMasters: Object.keys(full.slayerMasters).length, shortcuts: full.shortcuts.length, shops: Object.keys(full.shopItems).length, dropTables: Object.keys(full.drops).length, questSections: Object.keys(full.questSections).length, banks: upstreamBankCount, tags: Object.keys(full.tags).length };
   for (const [key, floor] of Object.entries(floors)) if ((actual[key] ?? 0) < floor) throw new Error(`Chunk transform floor failed for ${key}: expected at least ${floor}, received ${actual[key] ?? 0}`);
 }
 

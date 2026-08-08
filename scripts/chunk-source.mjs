@@ -123,16 +123,18 @@ async function writeDeterministicGzip(raw, manifest, targetUrl = gzipUrl, operat
   }
 }
 
-export async function writeApprovedChunkSource(raw, manifest, targetUrl = gzipUrl, operations = fileOps) {
+export async function writeApprovedChunkSource(raw, manifest, targetUrl = gzipUrl, operations = fileOps, registryOverrides = {}) {
   assertRaw(raw, manifest);
   const data = JSON.parse(raw.toString('utf8'));
   const namedLocationRegistry = readNamedTaskUnlockRegistry();
-  const bankLocationRegistry = readBankLocationRegistry();
-  const result = transformChunkContent(data, manifest, namedLocationRegistry, bankLocationRegistry);
-  assertChunkTransformBase(result, manifest);
+  const upstreamResult = transformChunkContent(data, manifest, namedLocationRegistry);
+  assertChunkTransformBase(upstreamResult, manifest);
+  const bankLocationRegistry = registryOverrides.bankLocationRegistry ?? readBankLocationRegistry();
   validateBankLocationRegistry(bankLocationRegistry, {
     validChunkIds: new Set((data.walkableChunks ?? []).map(String)),
   });
+  const result = transformChunkContent(data, manifest, namedLocationRegistry, bankLocationRegistry);
+  assertChunkTransformBase(result, manifest);
   const inventory = collectNamedTaskUnlockSourceInventory(data);
   validateNamedTaskUnlockRegistry(namedLocationRegistry, {
     sourceCommit: manifest.commit,

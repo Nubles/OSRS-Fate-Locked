@@ -75,6 +75,29 @@ describe('pinned Chunk Picker source', () => {
     }
   });
 
+  it('validates a malformed bank registry before the final transform consumes it', async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), 'fate-chunk-source-'));
+    const targetUrl = pathToFileURL(join(tempDir, 'chunk-source.json.gz'));
+    const existing = Buffer.from('preserve malformed-bank-registry target');
+    const raw = Buffer.from(JSON.stringify({ walkableChunks: [], chunks: {}, slayerMonsters: {} }));
+    const manifest = {
+      rawBytes: raw.length,
+      rawSha256: createHash('sha256').update(raw).digest('hex').toUpperCase(),
+      blobSha: gitBlobSha(raw),
+      countFloors: {},
+    };
+
+    await writeFile(targetUrl, existing);
+    try {
+      await expect(writeApprovedChunkSource(raw, manifest, targetUrl, undefined, {
+        bankLocationRegistry: { schemaVersion: 1, locations: {} },
+      })).rejects.toThrow('Bank-location registry arrays are missing');
+      await expect(readFile(targetUrl)).resolves.toEqual(existing);
+    } finally {
+      await rm(tempDir, { force: true, recursive: true });
+    }
+  });
+
   it('rejects a stale Git blob hash before replacing an existing gzip', async () => {
     const tempDir = await mkdtemp(join(tmpdir(), 'fate-chunk-source-'));
     const targetUrl = pathToFileURL(join(tempDir, 'chunk-source.json.gz'));

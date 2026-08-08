@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { assertChunkTransform, transformChunkContent } from './chunk-content-transform.mjs';
+import { assertChunkTransform, assertChunkTransformBase, transformChunkContent } from './chunk-content-transform.mjs';
 import { buildEntranceIndex } from './named-task-unlock-locations.mjs';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
@@ -97,6 +97,22 @@ describe('transformChunkContent', () => {
     expect(result.audit.categoryTotals.banks).toEqual({
       source: 1, imported: 1, normalized: 0, excluded: 0, unresolved: 0,
     });
+  });
+
+  it('keeps the upstream bank floor independent from reviewed locations', () => {
+    const upstreamBanks = Array.from({ length: 76 }, (_, index) => String(1000 + index));
+    const reviewedBanks = Array.from({ length: 25 }, (_, index) => ({ id: String(2000 + index) }));
+    const floorManifest = { ...manifest, countFloors: { banks: 101 } };
+    const result = transformChunkContent({
+      walkableChunks: [],
+      chunks: {},
+      slayerMonsters: {},
+      rollingChunks: { bank: upstreamBanks },
+    }, floorManifest, null, { locations: reviewedBanks });
+
+    expect(result.full.banks).toHaveLength(101);
+    expect(() => assertChunkTransformBase(result, floorManifest))
+      .toThrow('Chunk transform floor failed for banks: expected at least 101, received 76');
   });
 
   it('maps named locations to every unique entrance chunk and emits entrance metadata', () => {
