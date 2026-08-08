@@ -83,6 +83,22 @@ const exclusionRegistry = (disposition: 'instance-only' | 'non-purchasable') => 
   }],
 });
 describe('transformChunkContent', () => {
+  it('unions reviewed bank locations without changing upstream bank audit accounting', () => {
+    const result = transformChunkContent({
+      walkableChunks: [256, 512],
+      chunks: { 256: { Nickname: 'Upstream bank' }, 512: { Nickname: 'Reviewed bank' } },
+      slayerMonsters: {},
+      rollingChunks: { bank: ['256'] },
+    }, manifest, null, {
+      locations: [{ id: '512' }],
+    });
+
+    expect(result.full.banks).toEqual(['256', '512']);
+    expect(result.audit.categoryTotals.banks).toEqual({
+      source: 1, imported: 1, normalized: 0, excluded: 0, unresolved: 0,
+    });
+  });
+
   it('maps named locations to every unique entrance chunk and emits entrance metadata', () => {
     const result = transformChunkContent({
       walkableChunks: [256, 513],

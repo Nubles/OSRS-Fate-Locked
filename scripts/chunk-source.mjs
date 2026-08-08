@@ -6,6 +6,7 @@ import { gunzip, gzip } from 'node:zlib';
 import { promisify } from 'node:util';
 import { assertChunkTransformBase, assertNoUnresolvedTaskUnlocks, transformChunkContent } from './chunk-content-transform.mjs';
 import { collectNamedTaskUnlockSourceInventory, readNamedTaskUnlockRegistry, validateNamedTaskUnlockRegistry } from './named-task-unlock-locations.mjs';
+import { readBankLocationRegistry, validateBankLocationRegistry } from './bank-locations.mjs';
 
 const unzip = promisify(gunzip);
 const zip = promisify(gzip);
@@ -126,8 +127,12 @@ export async function writeApprovedChunkSource(raw, manifest, targetUrl = gzipUr
   assertRaw(raw, manifest);
   const data = JSON.parse(raw.toString('utf8'));
   const namedLocationRegistry = readNamedTaskUnlockRegistry();
-  const result = transformChunkContent(data, manifest, namedLocationRegistry);
+  const bankLocationRegistry = readBankLocationRegistry();
+  const result = transformChunkContent(data, manifest, namedLocationRegistry, bankLocationRegistry);
   assertChunkTransformBase(result, manifest);
+  validateBankLocationRegistry(bankLocationRegistry, {
+    validChunkIds: new Set((data.walkableChunks ?? []).map(String)),
+  });
   const inventory = collectNamedTaskUnlockSourceInventory(data);
   validateNamedTaskUnlockRegistry(namedLocationRegistry, {
     sourceCommit: manifest.commit,

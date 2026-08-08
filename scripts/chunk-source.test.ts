@@ -14,6 +14,7 @@ import {
 } from './chunk-source.mjs';
 import { transformChunkContent } from './chunk-content-transform.mjs';
 import { readNamedTaskUnlockRegistry } from './named-task-unlock-locations.mjs';
+import { readBankLocationRegistry } from './bank-locations.mjs';
 
 
 const unzip = promisify(gunzip);
@@ -160,7 +161,12 @@ describe('pinned Chunk Picker source', () => {
 
   it('pins reviewed transform totals and the zero-unresolved named-location baseline', async () => {
     const { data, manifest } = await readPinnedChunkSource();
-    const result = transformChunkContent(data, manifest, readNamedTaskUnlockRegistry());
+    const result = transformChunkContent(
+      data,
+      manifest,
+      readNamedTaskUnlockRegistry(),
+      readBankLocationRegistry(),
+    );
     const { full, audit } = result;
     const taskUnlockTotals = audit.categoryTotals.taskUnlocks;
     expect({
@@ -186,7 +192,7 @@ describe('pinned Chunk Picker source', () => {
       shops: 435,
       dropTables: 799,
       questSections: 134,
-      banks: 101,
+      banks: 126,
       tags: 27,
       auditEvents: 27072,
       unresolvedTaskUnlocks: 0,

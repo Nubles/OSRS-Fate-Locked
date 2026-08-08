@@ -316,7 +316,7 @@ describe('deterministic current content baseline', () => {
       shops: 435,
       dropTables: 799,
       questSections: 134,
-      banks: 101,
+      banks: 126,
       tags: 27,
       auditEvents: 27072,
       unresolvedTaskUnlocks: 0,
@@ -332,6 +332,13 @@ describe('deterministic current content baseline', () => {
       excluded: 4,
       unresolved: 0,
     });
+    const reviewedBankIds = [
+      '5678', '6454', '6458', '6711', '6712', '6961', '7225', '8499',
+      '8508', '8751', '8756', '8757', '8999', '9274', '10553', '11047',
+      '11056', '11062', '11572', '11578', '12082', '12337', '12838',
+      '12849', '14132',
+    ];
+    expect(fullChunkContent.banks).toEqual(expect.arrayContaining(reviewedBankIds));
     expect(fullChunkContent.version).toBe(9);
     expect(Object.keys(generatedChunkContent.entrances ?? {})).toHaveLength(44);
     expect(Object.values(generatedChunkContent.entrances ?? {}).flat()).toHaveLength(54);

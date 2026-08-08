@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { readPinnedChunkSource } from './chunk-source.mjs';
 import { assertChunkTransform, transformChunkContent } from './chunk-content-transform.mjs';
 import { collectNamedTaskUnlockSourceInventory, readNamedTaskUnlockRegistry, validateNamedTaskUnlockRegistry } from './named-task-unlock-locations.mjs';
+import { readBankLocationRegistry, validateBankLocationRegistry } from './bank-locations.mjs';
 import { generatedTextMatches } from './generated-text.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -38,7 +39,11 @@ validateNamedTaskUnlockRegistry(namedLocationRegistry, {
   sourceLocationKeys: inventory.locationKeys,
   validChunkIds: new Set((data.walkableChunks ?? []).map(String)),
 });
-const result = transformChunkContent(data, manifest, namedLocationRegistry);
+const bankLocationRegistry = readBankLocationRegistry();
+validateBankLocationRegistry(bankLocationRegistry, {
+  validChunkIds: new Set((data.walkableChunks ?? []).map(String)),
+});
+const result = transformChunkContent(data, manifest, namedLocationRegistry, bankLocationRegistry);
 assertChunkTransform(result, manifest);
 const expected = expectedFiles(result);
 
