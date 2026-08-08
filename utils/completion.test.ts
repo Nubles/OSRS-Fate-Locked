@@ -6,7 +6,7 @@ describe('canonical area completion accounting', () => {
   it('pins physical-overlap area count in the global denominator', () => {
     expect(REGIONS_LIST).toHaveLength(176);
     expect(REGIONS_LIST).not.toContain('Elf Camp');
-    expect(COMPLETION_DENOMINATOR).toBe(972);
+    expect(COMPLETION_DENOMINATOR).toBe(973);
   });
 
   it('does not award completion for pending overlap refund markers', () => {
