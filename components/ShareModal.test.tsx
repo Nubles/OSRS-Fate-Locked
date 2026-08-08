@@ -91,6 +91,7 @@ describe('ShareModal region summary', () => {
 
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
     expect(writeText.mock.calls[0][0]).toContain(`Banks: 2/${BANK_IDS.length}`);
-    expect(BANK_IDS).toHaveLength(126);
+    // The pool includes 126 physical chunk entries plus the virtual registry unlock.
+    expect(BANK_IDS).toHaveLength(127);
   });
 });
