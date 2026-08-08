@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-08",
+  "sourceRevisions": [
+    { "title": "List of banks", "revision": 15282054, "url": "https://oldschool.runescape.wiki/w/List_of_banks" },
+    { "title": "Bank Deposit Box", "revision": 15267085, "url": "https://oldschool.runescape.wiki/w/Bank_Deposit_Box" },
+    { "title": "Sangvesti bank", "revision": 15262093, "url": "https://oldschool.runescape.wiki/w/Sangvesti_bank" },
+    { "title": "Castle Drakan", "revision": 15283343, "url": "https://oldschool.runescape.wiki/w/Castle_Drakan" }
+  ],
+  "locations": [
+    { "id": "5678", "cx": 22, "cy": 46, "name": "Aldarin dock deposit box", "referenceKind": "physical", "facilities": ["Aldarin dock deposit box"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "6454", "cx": 25, "cy": 54, "name": "East Woodcutting Guild deposit box", "referenceKind": "physical", "facilities": ["East Woodcutting Guild deposit box", "Ent dungeon bank chest"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box", "https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "6458", "cx": 25, "cy": 58, "name": "Arceuus bank and deposit box", "referenceKind": "physical", "facilities": ["Arceuus bank", "Arceuus deposit box"], "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks", "https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "6711", "cx": 26, "cy": 55, "name": "Saltpetre mine deposit box", "referenceKind": "physical", "facilities": ["Saltpetre mine deposit box"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "6712", "cx": 26, "cy": 56, "name": "Hosidius Kitchen bank chest", "referenceKind": "physical", "facilities": ["Hosidius Kitchen bank chest"], "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "6961", "cx": 27, "cy": 49, "name": "Fortis Cothon deposit box", "referenceKind": "physical", "facilities": ["Fortis Cothon deposit box"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "7225", "cx": 28, "cy": 57, "name": "Port Piscarilius dock deposit box", "referenceKind": "physical", "facilities": ["Port Piscarilius dock deposit box"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "8499", "cx": 33, "cy": 51, "name": "West Prifddinas dock deposit box", "referenceKind": "physical", "facilities": ["West Prifddinas dock deposit box"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "8508", "cx": 33, "cy": 60, "name": "Lunar Isle dock deposit box", "referenceKind": "physical", "facilities": ["Lunar Isle dock deposit box"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "8751", "cx": 34, "cy": 47, "name": "Zul-Andra deposit chest", "referenceKind": "physical", "facilities": ["Zul-Andra deposit chest"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "8756", "cx": 34, "cy": 52, "name": "Prifddinas north bank and Gauntlet deposit box", "referenceKind": "entrance", "accessVia": "Amlodd and Hefin access", "facilities": ["Prifddinas north bank", "Gauntlet deposit box"], "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks", "https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "8757", "cx": 34, "cy": 53, "name": "Gwenith deposit box", "referenceKind": "physical", "facilities": ["Gwenith deposit box"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "8999", "cx": 35, "cy": 39, "name": "Bank boat", "referenceKind": "physical", "facilities": ["Bank boat"], "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "9274", "cx": 36, "cy": 58, "name": "Neitiznot dock deposit box", "referenceKind": "physical", "facilities": ["Neitiznot dock deposit box"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "10553", "cx": 41, "cy": 57, "name": "Peer the Seer deposit service", "referenceKind": "npc", "facilities": ["Peer the Seer"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "11047", "cx": 43, "cy": 39, "name": "Red Rock bank chest", "referenceKind": "physical", "facilities": ["Red Rock bank chest"], "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "11056", "cx": 43, "cy": 48, "name": "Rionasta deposit service", "referenceKind": "npc", "facilities": ["Rionasta"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "11062", "cx": 43, "cy": 54, "name": "Camelot PvP bank chest", "referenceKind": "physical", "facilities": ["Camelot PvP bank chest"], "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "11572", "cx": 45, "cy": 52, "name": "Falador west deposit box", "referenceKind": "physical", "facilities": ["Falador west deposit box"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "11578", "cx": 45, "cy": 58, "name": "Ancient Prison bank", "referenceKind": "entrance", "accessVia": "God Wars Dungeon", "facilities": ["Ancient Prison bank"], "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "12082", "cx": 47, "cy": 50, "name": "Port Sarim deposit boxes", "referenceKind": "physical", "facilities": ["Port Sarim deposit boxes"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "12337", "cx": 48, "cy": 49, "name": "Guardians of the Rift bank and deposit pool", "referenceKind": "entrance", "accessVia": "Wizards' Tower route", "facilities": ["Guardians of the Rift bank chest", "Guardians of the Rift deposit pool"], "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks", "https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "12838", "cx": 50, "cy": 38, "name": "Great Conch Sacred Grove deposit box", "referenceKind": "physical", "facilities": ["Great Conch Sacred Grove deposit box"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "12849", "cx": 50, "cy": 49, "name": "Zanaris bank", "referenceKind": "entrance", "accessVia": "Lumbridge Swamp shed", "facilities": ["Zanaris bank"], "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "14132", "cx": 55, "cy": 52, "name": "Sangvesti and Castle Drakan banking", "referenceKind": "entrance", "accessVia": "Castle Drakan and Vampyrium", "facilities": ["Sangvesti bank", "Castle Drakan deposit chests"], "wiki": ["https://oldschool.runescape.wiki/w/Sangvesti_bank", "https://oldschool.runescape.wiki/w/Castle_Drakan"] }
+  ],
+  "labelOverrides": [
+    { "id": "10275", "name": "Wyrmscraig bank chest", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "11830", "name": "Ruins of Camdozaal (via Ice Mountain)", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] }
+  ],
+  "exclusions": [
+    { "name": "Woodcutting Leprechaun", "reason": "Variable location; explicitly deferred." },
+    { "name": "Tutorial Island bank", "reason": "Onboarding-only and absent from the walkable chunk registry." },
+    { "name": "The Node bank", "reason": "Group Ironman onboarding-only and absent from the walkable chunk registry." },
+    { "name": "Gravedigger Mausoleum", "reason": "Random-event-only internal service without a stable surface entrance." },
+    { "name": "Tool leprechauns", "reason": "Produce-noting service, not a bank or deposit facility." },
+    { "name": "Player-owned house servants", "reason": "Variable-location fetching service, not a fixed bank or deposit facility." },
+    { "name": "Ferox Enclave mercenary", "reason": "Unnoting and token exchange service, not a deposit facility." },
+    { "name": "Removed banks", "reason": "No longer accessible in normal play." }
+  ]
+}
