@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 const REGISTRY_URL = new URL('../data/sources/bank-locations.json', import.meta.url);
 const REFERENCE_KINDS = new Set(['physical', 'npc', 'entrance']);
 const CANONICAL_CHUNK_ID = /^(?:0|[1-9]\d*)$/;
+const VIRTUAL_BANK_ID = /^[a-z][a-z0-9-]*$/;
 
 const assertNonEmptyString = (value, label) => {
   if (typeof value !== 'string' || !value.trim()) throw new Error(`${label} must be a non-empty string`);
@@ -13,6 +14,11 @@ const assertCanonicalChunkId = (value, label) => {
   if (!CANONICAL_CHUNK_ID.test(value) || !Number.isSafeInteger(Number(value))) {
     throw new Error(`${label} must be a canonical chunk id`);
   }
+};
+
+const assertVirtualBankId = (value, label) => {
+  assertNonEmptyString(value, label);
+  if (!VIRTUAL_BANK_ID.test(value)) throw new Error(`${label} must be a stable virtual bank id`);
 };
 
 const validateWikiEvidence = (wiki, label, sourceUrls) => {
@@ -29,7 +35,7 @@ export function readBankLocationRegistry(url = REGISTRY_URL) {
 
 export function validateBankLocationRegistry(registry, { validChunkIds, validBankIds } = {}) {
   if (registry?.schemaVersion !== 1) throw new Error('Unsupported bank-location registry schema');
-  if (!Array.isArray(registry.locations) || !Array.isArray(registry.labelOverrides)
+  if (!Array.isArray(registry.locations) || !Array.isArray(registry.virtualLocations) || !Array.isArray(registry.labelOverrides)
     || !Array.isArray(registry.exclusions) || !Array.isArray(registry.sourceRevisions)) {
     throw new Error('Bank-location registry arrays are missing');
   }
@@ -82,6 +88,29 @@ export function validateBankLocationRegistry(registry, { validChunkIds, validBan
     names.add(override.name);
   }
 
+  const virtualIds = new Set();
+  for (const location of registry.virtualLocations) {
+    assertVirtualBankId(location.id, 'Virtual bank location id');
+    if (ids.has(location.id)) throw new Error(`Virtual bank location id collides with a physical location: ${location.id}`);
+    if (overrideIds.has(location.id)) throw new Error(`Virtual bank location id collides with a label override: ${location.id}`);
+    if (virtualIds.has(location.id)) throw new Error(`Duplicate virtual bank id: ${location.id}`);
+    assertNonEmptyString(location.name, `Virtual bank location ${location.id} name`);
+    if (names.has(location.name)) throw new Error(`Duplicate bank location name: ${location.name}`);
+    if (location.referenceKind !== 'virtual') {
+      throw new Error(`Unknown virtual bank reference kind for ${location.id}: ${location.referenceKind}`);
+    }
+    assertNonEmptyString(location.accessVia, `Virtual bank location ${location.id} accessVia`);
+    if (!Array.isArray(location.facilities) || !location.facilities.length) {
+      throw new Error(`Virtual bank location ${location.id} has no facilities`);
+    }
+    for (const facility of location.facilities) {
+      assertNonEmptyString(facility, `Virtual bank location ${location.id} facility`);
+    }
+    validateWikiEvidence(location.wiki, `Virtual bank location ${location.id}`, sourceUrls);
+    virtualIds.add(location.id);
+    names.add(location.name);
+  }
+
   for (const exclusion of registry.exclusions) {
     assertNonEmptyString(exclusion.name, 'Bank exclusion name');
     assertNonEmptyString(exclusion.reason, `Bank exclusion ${exclusion.name} reason`);
@@ -94,4 +123,10 @@ export function bankLocationLabels(registry) {
     ...registry.locations.map(({ id, name }) => [String(id), name]),
     ...registry.labelOverrides.map(({ id, name }) => [String(id), name]),
   ]);
+}
+
+export function bankVirtualLocations(registry) {
+  return registry.virtualLocations.map(({ id, name, accessVia, facilities, wiki }) => ({
+    id: String(id), name, accessVia, facilities, wiki,
+  }));
 }

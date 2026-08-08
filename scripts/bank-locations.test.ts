@@ -3,6 +3,7 @@ import { BANKS } from '../data/banks';
 import { readPinnedChunkSource } from './chunk-source.mjs';
 import {
   bankLocationLabels,
+  bankVirtualLocations,
   readBankLocationRegistry,
   validateBankLocationRegistry,
 } from './bank-locations.mjs';
@@ -15,7 +16,6 @@ const ADDITION_IDS = [
 ];
 
 const EXCLUSIONS = [
-  { name: 'Woodcutting Leprechaun', reason: 'Variable location; explicitly deferred.' },
   { name: 'Tutorial Island bank', reason: 'Onboarding-only and absent from the walkable chunk registry.' },
   { name: 'The Node bank', reason: 'Group Ironman onboarding-only and absent from the walkable chunk registry.' },
   { name: 'Gravedigger Mausoleum', reason: 'Random-event-only internal service without a stable surface entrance.' },
@@ -31,6 +31,31 @@ const TEST_VALIDATION_OPTIONS = {
 };
 
 describe('reviewed bank-location registry', () => {
+  it('contains the reviewed virtual Woodcutting Leprechaun unlock outside the physical registry', () => {
+    const registry = readBankLocationRegistry();
+
+    expect(registry.virtualLocations).toEqual([
+      expect.objectContaining({
+        id: 'woodcutting-leprechaun',
+        name: 'Woodcutting Leprechaun (Forestry)',
+        referenceKind: 'virtual',
+        accessVia: 'Variable Forestry woodcutting area; no fixed chunk',
+        facilities: ['Woodcutting Leprechaun'],
+        wiki: ['https://oldschool.runescape.wiki/w/Forestry_event'],
+      }),
+    ]);
+    expect(registry.locations.some((location: { id: string }) => location.id === 'woodcutting-leprechaun')).toBe(false);
+    expect(registry.exclusions.some((exclusion: { name: string }) => exclusion.name === 'Woodcutting Leprechaun')).toBe(false);
+  });
+
+  it('exposes virtual bank locations without adding them to physical labels', () => {
+    const registry = readBankLocationRegistry();
+
+    expect(bankVirtualLocations(registry)).toHaveLength(1);
+    expect(bankVirtualLocations(registry)[0].id).toBe('woodcutting-leprechaun');
+    expect(bankLocationLabels(registry).has('woodcutting-leprechaun')).toBe(false);
+  });
+
   it('contains the exact reviewed addition set and validates against walkable chunks', async () => {
     const registry = readBankLocationRegistry();
     const { data } = await readPinnedChunkSource();
@@ -141,6 +166,62 @@ describe('reviewed bank-location registry', () => {
   it('rejects label override Wiki evidence absent from the reviewed source revisions', () => {
     const registry = structuredClone(readBankLocationRegistry());
     registry.labelOverrides[0].wiki = ['https://oldschool.runescape.wiki/w/Unreviewed_override'];
+
+    expect(() => validateBankLocationRegistry(registry, TEST_VALIDATION_OPTIONS))
+      .toThrow(/Wiki evidence is not covered by source revisions/i);
+  });
+
+  it('rejects a numeric virtual id', () => {
+    const registry = structuredClone(readBankLocationRegistry());
+    registry.virtualLocations[0].id = '12345';
+
+    expect(() => validateBankLocationRegistry(registry, TEST_VALIDATION_OPTIONS))
+      .toThrow(/stable virtual bank id/i);
+  });
+
+  it('rejects duplicate virtual ids', () => {
+    const registry = structuredClone(readBankLocationRegistry());
+    registry.virtualLocations.push(structuredClone(registry.virtualLocations[0]));
+
+    expect(() => validateBankLocationRegistry(registry, TEST_VALIDATION_OPTIONS))
+      .toThrow(/duplicate virtual bank id/i);
+  });
+
+  it('rejects virtual ids that collide with physical location ids', () => {
+    const registry = structuredClone(readBankLocationRegistry());
+    registry.virtualLocations[0].id = registry.locations[0].id;
+
+    expect(() => validateBankLocationRegistry(registry, TEST_VALIDATION_OPTIONS))
+      .toThrow(/stable virtual bank id|collides with a physical location/i);
+  });
+
+  it('rejects a blank virtual access route', () => {
+    const registry = structuredClone(readBankLocationRegistry());
+    registry.virtualLocations[0].accessVia = '';
+
+    expect(() => validateBankLocationRegistry(registry, TEST_VALIDATION_OPTIONS))
+      .toThrow(/accessVia must be a non-empty string/i);
+  });
+
+  it('rejects blank virtual facilities', () => {
+    const registry = structuredClone(readBankLocationRegistry());
+    registry.virtualLocations[0].facilities = [''];
+
+    expect(() => validateBankLocationRegistry(registry, TEST_VALIDATION_OPTIONS))
+      .toThrow(/facility must be a non-empty string/i);
+  });
+
+  it('rejects blank virtual Wiki evidence', () => {
+    const registry = structuredClone(readBankLocationRegistry());
+    registry.virtualLocations[0].wiki = [''];
+
+    expect(() => validateBankLocationRegistry(registry, TEST_VALIDATION_OPTIONS))
+      .toThrow(/Wiki evidence must be a non-empty string/i);
+  });
+
+  it('rejects virtual Wiki evidence absent from the reviewed source revisions', () => {
+    const registry = structuredClone(readBankLocationRegistry());
+    registry.virtualLocations[0].wiki = ['https://oldschool.runescape.wiki/w/Unreviewed_virtual'];
 
     expect(() => validateBankLocationRegistry(registry, TEST_VALIDATION_OPTIONS))
       .toThrow(/Wiki evidence is not covered by source revisions/i);

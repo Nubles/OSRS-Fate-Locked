@@ -5,7 +5,8 @@
     { "title": "List of banks", "revision": 15282054, "url": "https://oldschool.runescape.wiki/w/List_of_banks" },
     { "title": "Bank Deposit Box", "revision": 15267085, "url": "https://oldschool.runescape.wiki/w/Bank_Deposit_Box" },
     { "title": "Sangvesti bank", "revision": 15262093, "url": "https://oldschool.runescape.wiki/w/Sangvesti_bank" },
-    { "title": "Castle Drakan", "revision": 15283343, "url": "https://oldschool.runescape.wiki/w/Castle_Drakan" }
+    { "title": "Castle Drakan", "revision": 15283343, "url": "https://oldschool.runescape.wiki/w/Castle_Drakan" },
+    { "title": "Forestry event", "revision": 14430593, "url": "https://oldschool.runescape.wiki/w/Forestry_event" }
   ],
   "locations": [
     { "id": "5678", "cx": 22, "cy": 46, "name": "Aldarin dock deposit box", "referenceKind": "physical", "facilities": ["Aldarin dock deposit box"], "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
@@ -34,12 +35,23 @@
     { "id": "12849", "cx": 50, "cy": 49, "name": "Zanaris bank", "referenceKind": "entrance", "accessVia": "Lumbridge Swamp shed", "facilities": ["Zanaris bank"], "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "14132", "cx": 55, "cy": 52, "name": "Sangvesti and Castle Drakan banking", "referenceKind": "entrance", "accessVia": "Castle Drakan and Vampyrium", "facilities": ["Sangvesti bank", "Castle Drakan deposit chests"], "wiki": ["https://oldschool.runescape.wiki/w/Sangvesti_bank", "https://oldschool.runescape.wiki/w/Castle_Drakan"] }
   ],
+  "virtualLocations": [
+    {
+      "id": "woodcutting-leprechaun",
+      "cx": null,
+      "cy": null,
+      "name": "Woodcutting Leprechaun (Forestry)",
+      "referenceKind": "virtual",
+      "accessVia": "Variable Forestry woodcutting area; no fixed chunk",
+      "facilities": ["Woodcutting Leprechaun"],
+      "wiki": ["https://oldschool.runescape.wiki/w/Forestry_event"]
+    }
+  ],
   "labelOverrides": [
     { "id": "10275", "name": "Wyrmscraig bank chest", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "11830", "name": "Ruins of Camdozaal (via Ice Mountain)", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] }
   ],
   "exclusions": [
-    { "name": "Woodcutting Leprechaun", "reason": "Variable location; explicitly deferred." },
     { "name": "Tutorial Island bank", "reason": "Onboarding-only and absent from the walkable chunk registry." },
     { "name": "The Node bank", "reason": "Group Ironman onboarding-only and absent from the walkable chunk registry." },
     { "name": "Gravedigger Mausoleum", "reason": "Random-event-only internal service without a stable surface entrance." },
