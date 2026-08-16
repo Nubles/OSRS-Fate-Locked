@@ -1650,6 +1650,18 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
+  'Fallen From Grace': {
+    kind: 'quest', accessPolicy: 'locations',
+    id: 'Fallen From Grace', name: 'Fallen From Grace',
+    regions: ['The Open Seas'],
+    locations: [
+      { id: 'auchrie', label: 'Auchrie', standardAreas: ['Wyrmscraig'], chunkOptions: [{ cx: 40, cy: 35 }] },
+      { id: 'wyrmscraig-goat-pasture', label: 'Wyrmscraig Goat Pasture', standardAreas: ['Wyrmscraig'], chunkOptions: [{ cx: 40, cy: 34 }] },
+      { id: 'ardeaglais', label: 'Ardeaglais', standardAreas: ['Wyrmscraig'], chunkOptions: [{ cx: 39, cy: 34 }] },
+    ],
+    skills: { Sailing: 62, Crafting: 60, Runecraft: 47, Mining: 53 }, prereqs: ['Pandemonium'], points: 2,
+    difficulty: DropSource.QUEST_EXPERIENCED
+  },
 
   // --- Miniquests ---
   'Alfred Grimhand\'s Barcrawl': {

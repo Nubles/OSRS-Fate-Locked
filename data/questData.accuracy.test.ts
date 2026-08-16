@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DropSource } from '../types';
 import { QUEST_DATA } from './questData';
 import * as questDataModule from './questData';
 
@@ -88,6 +89,23 @@ describe('audited current quest requirements', () => {
       skills: { Slayer: 51, Construction: 48, Sailing: 45, Hunter: 45, Woodcutting: 40, Crafting: 34 },
       prereqs: ['Pandemonium'],
     });
+  });
+
+  it('pins Fallen From Grace to canonical Wyrmscraig access points', () => {
+    expect(QUEST_DATA['Fallen From Grace']).toMatchObject({
+      kind: 'quest',
+      accessPolicy: 'locations',
+      regions: ['The Open Seas'],
+      skills: { Sailing: 62, Crafting: 60, Runecraft: 47, Mining: 53 },
+      prereqs: ['Pandemonium'],
+      points: 2,
+      difficulty: DropSource.QUEST_EXPERIENCED,
+    });
+    expect(QUEST_DATA['Fallen From Grace'].locations).toEqual([
+      { id: 'auchrie', label: 'Auchrie', standardAreas: ['Wyrmscraig'], chunkOptions: [{ cx: 40, cy: 35 }] },
+      { id: 'wyrmscraig-goat-pasture', label: 'Wyrmscraig Goat Pasture', standardAreas: ['Wyrmscraig'], chunkOptions: [{ cx: 40, cy: 34 }] },
+      { id: 'ardeaglais', label: 'Ardeaglais', standardAreas: ['Wyrmscraig'], chunkOptions: [{ cx: 39, cy: 34 }] },
+    ]);
   });
 
   it('pins the complete machine and balance projection for all 44 changed A-F quests', () => {

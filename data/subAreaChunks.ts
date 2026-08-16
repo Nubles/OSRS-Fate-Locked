@@ -183,6 +183,7 @@ export const SUB_AREA_CHUNKS: Record<string, ChunkCoord[]> = {
   'Witchaven': [{ cx: 42, cy: 51 }, { cx: 43, cy: 51 }],
   'Wizards\' Tower': [{ cx: 48, cy: 49 }],
   'Woodcutting Guild': [{ cx: 24, cy: 54 }, { cx: 25, cy: 54 }],
+  'Wyrmscraig': [{ cx: 39, cy: 34 }, { cx: 39, cy: 35 }, { cx: 40, cy: 34 }, { cx: 40, cy: 35 }],
   'Yanille': [{ cx: 39, cy: 48 }, { cx: 40, cy: 48 }],
   'Ynysdail': [{ cx: 34, cy: 54 }],
   'Zul-Andra': [{ cx: 33, cy: 47 }, { cx: 34, cy: 47 }, { cx: 35, cy: 47 }],

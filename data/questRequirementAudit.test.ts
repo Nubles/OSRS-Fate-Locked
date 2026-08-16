@@ -172,7 +172,10 @@ const expectReviewedBatch = (start: string, end?: string) => {
     if (!Number.isInteger(entry.source.revision) || entry.source.revision <= 0) {
       return [`${entry.id}:missing-source-revision`];
     }
-    if (entry.chunkSourceCommit !== 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926') {
+    const expectedChunkSourceCommit = entry.id === 'Fallen From Grace'
+      ? 'a9a5c74760eb76dbe39f90d2b04f023fc1de3746'
+      : 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926';
+    if (entry.chunkSourceCommit !== expectedChunkSourceCommit) {
       return [`${entry.id}:wrong-chunk-source`];
     }
     if (entry.requirementFingerprint !== questRequirementFingerprint(quest)) {
@@ -201,10 +204,67 @@ describe('official quest and miniquest audit coverage', () => {
   });
 
   it('pins the current reviewed baseline by explicit kind', () => {
-    expect(official.entries.filter(entry => entry.kind === 'quest')).toHaveLength(190);
+    expect(official.entries).toHaveLength(210);
+    expect(audit.entries).toHaveLength(210);
+    expect(official.entries.filter(entry => entry.kind === 'quest')).toHaveLength(191);
     expect(official.entries.filter(entry => entry.kind === 'miniquest')).toHaveLength(19);
-    expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'quest')).toHaveLength(190);
+    expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'quest')).toHaveLength(191);
     expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'miniquest')).toHaveLength(19);
+  });
+
+  it('pins schema-2 Chunk Picker provenance to the commits used by the audit entries', () => {
+    const snapshot = audit as unknown as {
+      schemaVersion: number;
+      chunkSourceCommits?: string[];
+      entries: Array<{ chunkSourceCommit: string }>;
+    };
+    expect(snapshot.schemaVersion).toBe(2);
+    expect(snapshot.chunkSourceCommits).toEqual([
+      'ba2fcebf8b26c84c74f8d9ab328a0ede802be926',
+      'a9a5c74760eb76dbe39f90d2b04f023fc1de3746',
+    ]);
+    expect([...new Set(snapshot.entries.map(entry => entry.chunkSourceCommit))])
+      .toEqual(snapshot.chunkSourceCommits);
+    expect(snapshot.entries.filter(entry =>
+      entry.chunkSourceCommit === 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926',
+    )).toHaveLength(209);
+  });
+
+  it('accepts approved schema-2 entry commits and rejects mismatched audit metadata', () => {
+    const accepted = structuredClone(audit) as any;
+    accepted.schemaVersion = 2;
+    accepted.chunkSourceCommits = [
+      'ba2fcebf8b26c84c74f8d9ab328a0ede802be926',
+      'a9a5c74760eb76dbe39f90d2b04f023fc1de3746',
+    ];
+    accepted.entries[0].chunkSourceCommit = 'a9a5c74760eb76dbe39f90d2b04f023fc1de3746';
+    expect(validateQuestRequirementAudit(QUEST_DATA, official, accepted).errors).toEqual([]);
+
+    const mismatched = structuredClone(accepted);
+    mismatched.chunkSourceCommits = ['ba2fcebf8b26c84c74f8d9ab328a0ede802be926'];
+    expect(validateQuestRequirementAudit(QUEST_DATA, official, mismatched).errors)
+      .toContain('audit chunkSourceCommits must exactly match entry Chunk Picker commits');
+
+    const unapproved = structuredClone(accepted);
+    unapproved.chunkSourceCommits = ['0000000000000000000000000000000000000000'];
+    unapproved.entries[0].chunkSourceCommit = '0000000000000000000000000000000000000000';
+    expect(validateQuestRequirementAudit(QUEST_DATA, official, unapproved).errors)
+      .toContain(`audit ${unapproved.entries[0].id}: unexpected Chunk Picker commit`);
+  });
+
+  it('pins the reviewed Fallen From Grace provenance evidence', () => {
+    const entry = audit.entries.find(candidate => candidate.id === 'Fallen From Grace');
+    expect(entry).toMatchObject({
+      status: 'verified-with-notes',
+      chunkSourceCommit: 'a9a5c74760eb76dbe39f90d2b04f023fc1de3746',
+      accessPolicy: 'locations',
+      chunkEvidence: [
+        { chunkId: '40,35', role: 'first', place: 'Auchrie' },
+        { chunkId: '40,34', role: 'step', place: 'Wyrmscraig Goat Pasture' },
+        { chunkId: '39,34', role: 'step', place: 'Ardeaglais' },
+      ],
+    });
+    expect(entry?.source.url).toMatch(/^https:\/\/oldschool\.runescape\.wiki\/w\/index\.php\?title=Fallen_From_Grace&oldid=\d+$/);
   });
 
   it('matches every runtime requirement fingerprint', () => {

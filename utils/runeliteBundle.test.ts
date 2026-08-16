@@ -211,9 +211,16 @@ describe('buildRuneliteBundle - canonical area names', () => {
 
     expect(bundle.unlockedRegions).toEqual(canonical);
     expect(bundle.rules.unlocks.regions).toEqual([...canonical].sort());
-    expect(Object.values(REGION_GROUPS).flat()).toHaveLength(176);
-    expect(Object.values(bundle.regionGroups).flat()).toHaveLength(185);
+    expect(Object.values(REGION_GROUPS).flat()).toHaveLength(177);
+    expect(Object.values(bundle.regionGroups).flat()).toHaveLength(186);
     expect(bundle.regionGroups.Misthalin).toEqual(MISTHALIN_AREAS);
+    expect(bundle.regionGroups['The Open Seas']).toContain('Wyrmscraig');
+    expect(bundle.subAreaChunks.Wyrmscraig).toEqual([
+      { cx: 39, cy: 34 },
+      { cx: 39, cy: 35 },
+      { cx: 40, cy: 34 },
+      { cx: 40, cy: 35 },
+    ]);
     for (const alias of aliases) {
       expect(Object.values(REGION_GROUPS).flat()).not.toContain(alias);
       expect(Object.values(bundle.regionGroups).flat()).not.toContain(alias);

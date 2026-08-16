@@ -217,7 +217,7 @@ export const REGION_GROUPS: Record<string, string[]> = {
     'Anglers\' Retreat', 'Minotaurs\' Rest', 'Isle of Bones', 'Laguna Aurorae', 'Charred Island',
     'Tear of the Soul', 'Wintumber Island', 'The Crown Jewel', 'Lledrith Island', 'Deepfin Point',
     'Rainbow\'s End', 'Sunbleak Island', 'Ynysdail', 'Buccaneers\' Haven', 'Drumstick Isle',
-    'Brittle Isle', 'Grimstone'
+    'Brittle Isle', 'Grimstone', 'Wyrmscraig'
   , 'Red Rock', 'Last Light', 'The Summer Shore'
   ]
 };

@@ -38,7 +38,10 @@ export interface QuestRequirementAuditEntry {
   conservativeReason?: string;
 }
 
-const CHUNK_SOURCE_COMMIT = 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926';
+const APPROVED_CHUNK_SOURCE_COMMITS = new Set([
+  'ba2fcebf8b26c84c74f8d9ab328a0ede802be926',
+  'a9a5c74760eb76dbe39f90d2b04f023fc1de3746',
+]);
 const KINDS = new Set<QuestKind>(['quest', 'miniquest']);
 const ACCESS_POLICIES = new Set<QuestAccessPolicy>([
   'regions',
@@ -144,6 +147,14 @@ export function validateQuestRequirementAudit(
   const errors: string[] = [];
   const officialEntries = recordEntries(officialList, 'official list', errors);
   const auditEntries = recordEntries(audit, 'audit', errors);
+  const auditRecord = isRecord(audit) ? audit : undefined;
+  const declaredChunkSourceCommits = auditRecord?.chunkSourceCommits;
+
+  if (auditRecord?.schemaVersion !== 2) errors.push('audit schemaVersion must be 2');
+  if (!Array.isArray(declaredChunkSourceCommits)
+    || !declaredChunkSourceCommits.every(commit => typeof commit === 'string' && commit)) {
+    errors.push('audit chunkSourceCommits must be a non-empty string array');
+  }
 
   const runtimeIds = Object.keys(questData);
   const officialIds = officialEntries.flatMap(entry =>
@@ -193,7 +204,7 @@ export function validateQuestRequirementAudit(
     if (!ACCESS_POLICIES.has(raw.accessPolicy as QuestAccessPolicy)) {
       errors.push(`audit ${raw.id}: invalid accessPolicy`);
     }
-    if (raw.chunkSourceCommit !== CHUNK_SOURCE_COMMIT) {
+    if (!APPROVED_CHUNK_SOURCE_COMMITS.has(raw.chunkSourceCommit as string)) {
       errors.push(`audit ${raw.id}: unexpected Chunk Picker commit`);
     }
     if (typeof raw.requirementFingerprint !== 'string' || !raw.requirementFingerprint) {
@@ -231,6 +242,20 @@ export function validateQuestRequirementAudit(
       } else if (!/premature completion\/key-roll eligibility/i.test(raw.conservativeReason)) {
         errors.push(`audit ${raw.id}: conservativeReason does not explain premature completion/key-roll eligibility`);
       }
+    }
+  }
+
+  if (Array.isArray(declaredChunkSourceCommits)
+    && declaredChunkSourceCommits.every(commit => typeof commit === 'string' && commit)) {
+    const referencedChunkSourceCommits = new Set(auditEntries.flatMap(entry =>
+      isRecord(entry) && typeof entry.chunkSourceCommit === 'string'
+        ? [entry.chunkSourceCommit]
+        : []));
+    const declared = new Set(declaredChunkSourceCommits);
+    if (declared.size !== declaredChunkSourceCommits.length
+      || declared.size !== referencedChunkSourceCommits.size
+      || [...declared].some(commit => !referencedChunkSourceCommits.has(commit))) {
+      errors.push('audit chunkSourceCommits must exactly match entry Chunk Picker commits');
     }
   }
 

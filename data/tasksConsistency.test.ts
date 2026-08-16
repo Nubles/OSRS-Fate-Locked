@@ -152,10 +152,10 @@ describe('Quest data integrity', () => {
     ...(q.oneOf ?? []).flatMap(option => option.locations ?? []),
   ];
 
-  it('classifies all 209 journal entries with an explicit kind and access policy', () => {
+  it('classifies all 210 journal entries with an explicit kind and access policy', () => {
     const quests = Object.values(QUEST_DATA);
-    expect(quests).toHaveLength(209);
-    expect(quests.filter(quest => quest.kind === 'quest')).toHaveLength(190);
+    expect(quests).toHaveLength(210);
+    expect(quests.filter(quest => quest.kind === 'quest')).toHaveLength(191);
     expect(quests.filter(quest => quest.kind === 'miniquest')).toHaveLength(19);
     expect(quests.filter(quest =>
       !['quest', 'miniquest'].includes(quest.kind),
@@ -163,6 +163,16 @@ describe('Quest data integrity', () => {
     expect(quests.filter(quest =>
       !['regions', 'locations', 'regions-and-locations'].includes(quest.accessPolicy),
     ), 'journal entries with invalid access policies').toEqual([]);
+  });
+
+  it('keeps Wyrmscraig as the one canonical Open Seas area', () => {
+    expect(REGION_GROUPS['The Open Seas']).toContain('Wyrmscraig');
+    expect(SUB_AREA_CHUNKS.Wyrmscraig).toEqual([
+      { cx: 39, cy: 34 },
+      { cx: 39, cy: 35 },
+      { cx: 40, cy: 34 },
+      { cx: 40, cy: 35 },
+    ]);
   });
 
   it('keeps every current quest access policy structurally valid', () => {
