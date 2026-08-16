@@ -17,12 +17,13 @@ const STATUS_META: Record<SlayerStatus, { label: string; cls: string }> = {
 const Row: React.FC<{ r: SlayerTaskRow }> = ({ r }) => {
   const meta = STATUS_META[r.status];
   const badge =
-    r.status === 'slayer-locked' && r.slayer ? `Slayer ${r.slayer}` :
-    r.status === 'combat-locked' && r.combat ? `Combat ${r.combat}` : meta.label;
+    r.masterBlocker?.label ??
+    (r.status === 'slayer-locked' && r.slayer ? `Slayer ${r.slayer}` :
+    r.status === 'combat-locked' && r.combat ? `Combat ${r.combat}` : meta.label);
   return (
     <div className="flex items-center gap-2 px-2 py-1 text-[11px] border-b border-white/5 last:border-0">
       <span className="flex-1 truncate text-gray-200">{r.monster}</span>
-      {r.slayer != null && <span className="text-[9px] text-gray-500 font-mono shrink-0">lvl {r.slayer}</span>}
+      {r.slayer != null && !r.masterBlocker && <span className="text-[9px] text-gray-500 font-mono shrink-0">lvl {r.slayer}</span>}
       {r.loc && (
         <button
           onClick={() => showChunkOnMap(r.loc!.cx, r.loc!.cy)}
@@ -65,7 +66,7 @@ export const SlayerReachabilityPanel: React.FC = () => {
       }
       return null;
     };
-    return slayerReachability(masters, unlocks, locate);
+    return slayerReachability(masters, unlocks, locate, gameModeId);
   }, [ready, unlocks, gameModeId]);
 
   if (!reach || reach.masters.length === 0) return null;
@@ -93,6 +94,7 @@ export const SlayerReachabilityPanel: React.FC = () => {
               >
                 {isOpen ? <ChevronDown size={12} className="text-gray-500" /> : <ChevronRight size={12} className="text-gray-500" />}
                 <span className="text-[12px] font-semibold text-gray-200">{m.master}</span>
+                {m.masterBlocker && <span className="text-[9px] text-rose-300">{m.masterBlocker.label}</span>}
                 <span className="ml-auto text-[10px] font-mono">
                   <span className={m.ready > 0 ? 'text-emerald-300' : 'text-gray-500'}>{m.ready}</span>
                   <span className="text-gray-600"> / {m.total} tasks</span>
