@@ -1,7 +1,7 @@
 # Wyrmscraig Content Update Design
 
-**Date:** 2026-08-16  
-**Status:** Approved in conversation  
+**Date:** 2026-08-16
+**Status:** Approved in conversation
 **Branch:** `codex/wyrmscraig-content-update` (from `main`)
 
 ## Summary
