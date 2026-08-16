@@ -379,7 +379,8 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 54: Water Battlestaves',
       'Lvl 55: Dragonstones, Slayer Helmets',
       'Lvl 57: Green D\'hide Vambraces',
-      'Lvl 60: Green D\'hide Chaps, Yew Bird Houses'
+      'Lvl 60: Green D\'hide Chaps, Yew Bird Houses',
+      'Lvl 60: Sunstone Golem Crafting (Wyrmscraig; Fallen From Grace)'
     ],
     7: [
       'Lvl 63: Green D\'hide Bodies',
@@ -910,7 +911,8 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 57: Dark Kebbits, Rumours (Adept)',
       'Lvl 58: Nature Implings',
       'Lvl 59: Red Salamanders, Yew Bird Houses',
-      'Lvl 60: Maniacal Monkeys, 4 Traps'
+      'Lvl 60: Maniacal Monkeys, 4 Traps',
+      'Lvl 60: Goat Hunting (Wyrmscraig; Sheep Herder)'
     ],
     7: [
       'Lvl 63: Red Chinchompas',
@@ -1071,6 +1073,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 50: Volcanic Mine'
     ],
     6: [
+      'Lvl 53: Sunstone Mining (Wyrmscraig; Fallen From Grace)',
       'Lvl 55: Mithril Ore',
       'Lvl 57: Motherlode Mine (Upper)',
       'Lvl 60: Lunar Ore, Daeyalt Shards',

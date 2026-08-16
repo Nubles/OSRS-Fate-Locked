@@ -44,6 +44,7 @@ const RESOURCE_RULES: [RegExp, ResourceReq][] = [
 
   // ── Mining (only explicitly-named mineable rocks — bare "rocks"/"rock"/
   //    handholds are ambiguous Agility/scenery and stay ungated) ───────────
+  [/sunstone (rocks|monolith)/i, { skill: 'Mining', level: 53 }],
   [/amethyst/i, { skill: 'Mining', level: 92 }],
   [/runite rocks/i, { skill: 'Mining', level: 85 }],
   [/nickel rocks/i, { skill: 'Mining', level: 74 }],
