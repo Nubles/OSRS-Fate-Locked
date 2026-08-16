@@ -68,15 +68,23 @@ describe('sub-area chunk assignments', () => {
   it('covers the flagship example — Falador is a multi-chunk group', () => {
     expect(SUB_AREA_CHUNKS['Falador']?.length).toBeGreaterThanOrEqual(4);
   });
-  it('keeps the reviewed Open Seas island coordinates continent-only', () => {
-    const continentOnly = new Set(['39,34', '39,35', '40,34', '40,35']);
+  it('assigns the reviewed Wyrmscraig coordinates only to its canonical Open Seas sub-area', () => {
+    const wyrmscraigChunks = ['39,34', '39,35', '40,34', '40,35'];
     const paidSubAreaAssignments = Object.entries(SUB_AREA_CHUNKS).flatMap(([area, chunks]) =>
       chunks
         .map(({ cx, cy }) => `${cx},${cy}`)
-        .filter((chunk) => continentOnly.has(chunk))
+        .filter((chunk) => wyrmscraigChunks.includes(chunk))
         .map((chunk) => `${area}: ${chunk}`),
     );
 
-    expect(paidSubAreaAssignments).toEqual([]);
+    expect(paidSubAreaAssignments).toEqual([
+      'Wyrmscraig: 39,34',
+      'Wyrmscraig: 39,35',
+      'Wyrmscraig: 40,34',
+      'Wyrmscraig: 40,35',
+    ]);
+    expect(wyrmscraigChunks.every(chunk =>
+      REGION_CHUNKS['The Open Seas'].some(({ cx, cy }) => `${cx},${cy}` === chunk),
+    )).toBe(true);
   });
 });

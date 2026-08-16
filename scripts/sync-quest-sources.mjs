@@ -16,7 +16,15 @@ const QUEST_DATA_PATH = resolve(ROOT, 'data', 'questData.ts');
 const CHUNK_SOURCE_PATH = resolve(ROOT, 'data', 'sources', 'chunkpicker-chunkinfo-export.json.gz');
 const WIKI_API = 'https://oldschool.runescape.wiki/api.php';
 const WIKI_LIST_TITLE = 'Quests/List';
-const CHUNK_SOURCE_COMMIT = 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926';
+const LEGACY_CHUNK_SOURCE_COMMIT = 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926';
+const CURRENT_CHUNK_SOURCE_COMMIT = 'a9a5c74760eb76dbe39f90d2b04f023fc1de3746';
+const APPROVED_CHUNK_SOURCE_COMMITS = new Set([
+  LEGACY_CHUNK_SOURCE_COMMIT,
+  CURRENT_CHUNK_SOURCE_COMMIT,
+]);
+const RUNTIME_QUEST_COUNT = 191;
+const RUNTIME_MINIQUEST_COUNT = 19;
+const OFFICIAL_PARSED_QUEST_COUNT = 192;
 const REVIEWED_AT = new Date().toISOString().slice(0, 10);
 const USER_AGENT = 'OSRS-Fate-Locked quest provenance refresh/1.0 (https://github.com/Nubles/OSRS-Fate-Locked)';
 const WIKI_PAGE_TITLES = {
@@ -121,12 +129,91 @@ function duplicateIds(entries) {
   return [...duplicates].sort();
 }
 
+function matchingCommitSets(declaredChunkSourceCommits, referencedChunkSourceCommits) {
+  const declared = new Set(declaredChunkSourceCommits);
+  return declared.size === declaredChunkSourceCommits.length
+    && declared.size === referencedChunkSourceCommits.size
+    && [...declared].every(commit => referencedChunkSourceCommits.has(commit));
+}
+
+function assertExistingSnapshotsForRefresh(official, audit) {
+  const errors = [];
+  if (official?.schemaVersion !== 1) errors.push('quest-list schemaVersion must be 1');
+  if (audit?.schemaVersion !== 1 && audit?.schemaVersion !== 2) {
+    errors.push('quest-requirement-audit schemaVersion must be 1 or 2 before refresh');
+  }
+  if (!Array.isArray(official?.entries)) errors.push('quest-list entries must be an array');
+  if (!Array.isArray(audit?.entries)) errors.push('quest-requirement-audit entries must be an array');
+  if (errors.length) throw new Error(errors.join('\n'));
+
+  const listSourceError = stableSourceError(official.listSource);
+  if (listSourceError) errors.push(`quest list source: ${listSourceError}`);
+  const officialDuplicates = duplicateIds(official.entries);
+  const auditDuplicates = duplicateIds(audit.entries);
+  if (officialDuplicates.length) errors.push(`duplicate official IDs: ${officialDuplicates.join(', ')}`);
+  if (auditDuplicates.length) errors.push(`duplicate audit IDs: ${auditDuplicates.join(', ')}`);
+  const officialIds = official.entries.map(entry => entry.id).sort();
+  const auditIds = audit.entries.map(entry => entry.id).sort();
+  if (JSON.stringify(officialIds) !== JSON.stringify(auditIds)) {
+    errors.push('official and audit ID sets differ');
+  }
+
+  const questCount = official.entries.filter(entry => entry.kind === 'quest').length;
+  const miniquestCount = official.entries.filter(entry => entry.kind === 'miniquest').length;
+  if (miniquestCount !== RUNTIME_MINIQUEST_COUNT
+    || ![RUNTIME_QUEST_COUNT - 1, RUNTIME_QUEST_COUNT].includes(questCount)
+    || official.entries.length !== questCount + miniquestCount) {
+    errors.push(`refresh baseline must contain either ${RUNTIME_QUEST_COUNT - 1} or ${RUNTIME_QUEST_COUNT} quests and ${RUNTIME_MINIQUEST_COUNT} miniquests; found ${questCount}/${miniquestCount}`);
+  }
+
+  const declaredChunkSourceCommits = audit.schemaVersion === 1
+    ? [audit.chunkSourceCommit]
+    : audit.chunkSourceCommits;
+  if (!Array.isArray(declaredChunkSourceCommits)
+    || !declaredChunkSourceCommits.every(commit => typeof commit === 'string' && commit)) {
+    errors.push('refresh audit chunkSourceCommits must be a non-empty string array');
+  } else if (declaredChunkSourceCommits.some(commit => !APPROVED_CHUNK_SOURCE_COMMITS.has(commit))) {
+    errors.push('refresh audit chunkSourceCommits contains an unapproved Chunk Picker commit');
+  }
+
+  const officialById = new Map(official.entries.map(entry => [entry.id, entry]));
+  const referencedChunkSourceCommits = new Set();
+  for (const entry of official.entries) {
+    const sourceError = stableSourceError(entry.source);
+    if (sourceError) errors.push(`${entry.id} official source: ${sourceError}`);
+  }
+  for (const entry of audit.entries) {
+    const sourceError = stableSourceError(entry.source);
+    if (sourceError) errors.push(`${entry.id} audit source: ${sourceError}`);
+    if (!APPROVED_CHUNK_SOURCE_COMMITS.has(entry.chunkSourceCommit)) {
+      errors.push(`${entry.id}: unexpected Chunk Picker commit`);
+    } else {
+      referencedChunkSourceCommits.add(entry.chunkSourceCommit);
+    }
+    if (JSON.stringify(entry.source) !== JSON.stringify(officialById.get(entry.id)?.source)) {
+      errors.push(`${entry.id}: source differs between official list and audit`);
+    }
+  }
+  if (Array.isArray(declaredChunkSourceCommits)
+    && declaredChunkSourceCommits.every(commit => typeof commit === 'string' && commit)
+    && !matchingCommitSets(declaredChunkSourceCommits, referencedChunkSourceCommits)) {
+    errors.push('refresh audit chunkSourceCommits must exactly match entry Chunk Picker commits');
+  }
+  if (errors.length) {
+    throw new Error(`Existing quest source snapshot validation failed:\n${errors.map(error => `  - ${error}`).join('\n')}`);
+  }
+}
+
 function assertSnapshots(official, audit) {
   const errors = [];
   if (official?.schemaVersion !== 1) errors.push('quest-list schemaVersion must be 1');
-  if (audit?.schemaVersion !== 1) errors.push('quest-requirement-audit schemaVersion must be 1');
+  if (audit?.schemaVersion !== 2) errors.push('quest-requirement-audit schemaVersion must be 2');
   if (!Array.isArray(official?.entries)) errors.push('quest-list entries must be an array');
   if (!Array.isArray(audit?.entries)) errors.push('quest-requirement-audit entries must be an array');
+  if (!Array.isArray(audit?.chunkSourceCommits)
+    || !audit.chunkSourceCommits.every(commit => typeof commit === 'string' && commit)) {
+    errors.push('quest-requirement-audit chunkSourceCommits must be a non-empty string array');
+  }
   if (errors.length) throw new Error(errors.join('\n'));
 
   const listSourceError = stableSourceError(official.listSource);
@@ -143,11 +230,18 @@ function assertSnapshots(official, audit) {
   }
   const questCount = official.entries.filter(entry => entry.kind === 'quest').length;
   const miniquestCount = official.entries.filter(entry => entry.kind === 'miniquest').length;
-  if (questCount !== 190 || miniquestCount !== 19 || official.entries.length !== 209) {
-    errors.push(`reviewed baseline must be 190 quests and 19 miniquests; found ${questCount}/${miniquestCount}`);
+  if (questCount !== RUNTIME_QUEST_COUNT
+    || miniquestCount !== RUNTIME_MINIQUEST_COUNT
+    || official.entries.length !== RUNTIME_QUEST_COUNT + RUNTIME_MINIQUEST_COUNT) {
+    errors.push(`reviewed baseline must be ${RUNTIME_QUEST_COUNT} quests and ${RUNTIME_MINIQUEST_COUNT} miniquests; found ${questCount}/${miniquestCount}`);
+  }
+  if (official.parsedCounts?.quests !== OFFICIAL_PARSED_QUEST_COUNT
+    || official.parsedCounts?.miniquests !== RUNTIME_MINIQUEST_COUNT) {
+    errors.push(`official parsed baseline must be ${OFFICIAL_PARSED_QUEST_COUNT} quests and ${RUNTIME_MINIQUEST_COUNT} miniquests; found ${official.parsedCounts?.quests}/${official.parsedCounts?.miniquests}`);
   }
 
   const officialById = new Map(official.entries.map(entry => [entry.id, entry]));
+  const referencedChunkSourceCommits = new Set();
   for (const entry of official.entries) {
     const sourceError = stableSourceError(entry.source);
     if (sourceError) errors.push(`${entry.id} official source: ${sourceError}`);
@@ -155,7 +249,11 @@ function assertSnapshots(official, audit) {
   for (const entry of audit.entries) {
     const sourceError = stableSourceError(entry.source);
     if (sourceError) errors.push(`${entry.id} audit source: ${sourceError}`);
-    if (entry.chunkSourceCommit !== CHUNK_SOURCE_COMMIT) errors.push(`${entry.id}: unexpected Chunk Picker commit`);
+    if (!APPROVED_CHUNK_SOURCE_COMMITS.has(entry.chunkSourceCommit)) {
+      errors.push(`${entry.id}: unexpected Chunk Picker commit`);
+    } else {
+      referencedChunkSourceCommits.add(entry.chunkSourceCommit);
+    }
     if (entry.status === 'unresolved') {
       if (!entry.discrepancy?.trim() || !entry.conservativeReason?.trim()) {
         errors.push(`${entry.id}: unresolved entries require discrepancy and conservativeReason`);
@@ -171,6 +269,9 @@ function assertSnapshots(official, audit) {
     if (JSON.stringify(entry.source) !== JSON.stringify(officialById.get(entry.id)?.source)) {
       errors.push(`${entry.id}: source differs between official list and audit`);
     }
+  }
+  if (!matchingCommitSets(audit.chunkSourceCommits, referencedChunkSourceCommits)) {
+    errors.push('audit chunkSourceCommits must exactly match entry Chunk Picker commits');
   }
   if (errors.length) throw new Error(`Quest source snapshot validation failed:\n${errors.map(error => `  - ${error}`).join('\n')}`);
   console.log(`Quest source snapshots valid offline: ${questCount} quests, ${miniquestCount} miniquests, ${officialIds.length} unique IDs, ${audit.entries.length} source revisions.`);
@@ -399,8 +500,27 @@ function unresolvedReviewText(quest, chunkEvidence) {
 }
 
 async function refresh() {
+  const existingOfficial = readJson(OFFICIAL_PATH, 'existing quest-list snapshot');
+  const existingAudit = readJson(AUDIT_PATH, 'existing quest-requirement-audit snapshot');
+  assertExistingSnapshotsForRefresh(existingOfficial, existingAudit);
+
   const runtime = readRuntimeQuestData();
   const quests = Object.values(runtime);
+  const existingOfficialById = new Map(existingOfficial.entries.map(entry => [entry.id, entry]));
+  const existingAuditById = new Map(existingAudit.entries.map(entry => [entry.id, entry]));
+  const preservedById = new Map();
+  for (const quest of quests) {
+    const previousAudit = existingAuditById.get(quest.id);
+    if (!previousAudit || previousAudit.requirementFingerprint !== questRequirementFingerprint(quest)) continue;
+    const previousOfficial = existingOfficialById.get(quest.id);
+    if (!previousOfficial
+      || JSON.stringify(previousOfficial.source) !== JSON.stringify(previousAudit.source)) {
+      throw new Error(`cannot preserve ${quest.id}: its prior official and audit sources disagree`);
+    }
+    preservedById.set(quest.id, { official: previousOfficial, audit: previousAudit });
+  }
+  const newOrChangedQuests = quests.filter(quest => !preservedById.has(quest.id));
+
   const parse = await wikiRequest({
     action: 'parse',
     page: WIKI_LIST_TITLE,
@@ -412,7 +532,7 @@ async function refresh() {
     throw new Error(`official quest list parse returned unexpected shape: ${JSON.stringify(Object.keys(parse.parse ?? {}))}`);
   }
   const parsedRows = parseOfficialRows(listHtml, runtime);
-  const requestedPageTitles = quests.map(quest => WIKI_PAGE_TITLES[quest.id] ?? quest.id);
+  const requestedPageTitles = newOrChangedQuests.map(quest => WIKI_PAGE_TITLES[quest.id] ?? quest.id);
   const revisionTitles = [...new Set([
     WIKI_LIST_TITLE,
     ...requestedPageTitles,
@@ -426,6 +546,8 @@ async function refresh() {
   const evidence = chunkEvidence(new Set(quests.map(quest => quest.id)));
   const entries = quests
     .map(quest => {
+      const preserved = preservedById.get(quest.id);
+      if (preserved) return preserved.official;
       const page = revisions.get(WIKI_PAGE_TITLES[quest.id] ?? quest.id);
       return {
         id: quest.id,
@@ -466,41 +588,48 @@ async function refresh() {
       runtimeEntriesMissingFromLiveList,
       liveOnlyEntries,
       note: hasDrift
-        ? 'The live official rows differ from the approved normalized 190/19 runtime baseline; membership remains pinned pending a reviewed reconciliation.'
-        : 'The live official rows reconcile with the approved normalized 190/19 baseline (Recipe for Disaster remains expanded into its existing parent-step IDs).',
+        ? `The live official rows differ from the approved normalized ${RUNTIME_QUEST_COUNT}/${RUNTIME_MINIQUEST_COUNT} runtime baseline; membership remains pinned pending a reviewed reconciliation.`
+        : `The live official rows reconcile with the approved normalized ${RUNTIME_QUEST_COUNT}/${RUNTIME_MINIQUEST_COUNT} baseline (Recipe for Disaster remains expanded into its existing parent-step IDs).`,
     },
     entries,
   };
+  const auditEntries = quests
+    .map(quest => {
+      const preserved = preservedById.get(quest.id);
+      if (preserved) return preserved.audit;
+      const sourceEntry = entries.find(entry => entry.id === quest.id);
+      const questEvidence = evidence.get(quest.id);
+      const review = unresolvedReviewText(quest, questEvidence);
+      return {
+        id: quest.id,
+        kind: quest.kind,
+        status: 'unresolved',
+        reviewedAt: REVIEWED_AT,
+        source: sourceEntry.source,
+        chunkSourceCommit: CURRENT_CHUNK_SOURCE_COMMIT,
+        accessPolicy: quest.accessPolicy,
+        requirementFingerprint: questRequirementFingerprint(quest),
+        chunkEvidence: questEvidence,
+        notes: {
+          items: [],
+          travel: [],
+          instances: [],
+          partialCompletion: [],
+        },
+        discrepancy: review.discrepancy,
+        conservativeReason: review.conservativeReason,
+      };
+    })
+    .sort((left, right) => left.id.localeCompare(right.id));
+  const referencedChunkSourceCommits = new Set(
+    auditEntries.map(entry => entry.chunkSourceCommit),
+  );
   const audit = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     reviewedAt: REVIEWED_AT,
-    chunkSourceCommit: CHUNK_SOURCE_COMMIT,
-    entries: quests
-      .map(quest => {
-        const sourceEntry = entries.find(entry => entry.id === quest.id);
-        const questEvidence = evidence.get(quest.id);
-        const review = unresolvedReviewText(quest, questEvidence);
-        return {
-          id: quest.id,
-          kind: quest.kind,
-          status: 'unresolved',
-          reviewedAt: REVIEWED_AT,
-          source: sourceEntry.source,
-          chunkSourceCommit: CHUNK_SOURCE_COMMIT,
-          accessPolicy: quest.accessPolicy,
-          requirementFingerprint: questRequirementFingerprint(quest),
-          chunkEvidence: questEvidence,
-          notes: {
-            items: [],
-            travel: [],
-            instances: [],
-            partialCompletion: [],
-          },
-          discrepancy: review.discrepancy,
-          conservativeReason: review.conservativeReason,
-        };
-      })
-      .sort((left, right) => left.id.localeCompare(right.id)),
+    chunkSourceCommits: [...APPROVED_CHUNK_SOURCE_COMMITS]
+      .filter(commit => referencedChunkSourceCommits.has(commit)),
+    entries: auditEntries,
   };
   assertSnapshots(official, audit);
   writeFileSync(OFFICIAL_PATH, `${JSON.stringify(official, null, 2)}\n`);

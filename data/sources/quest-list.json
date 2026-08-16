@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-07-28",
+  "reviewedAt": "2026-08-16",
   "listSource": {
-    "url": "https://oldschool.runescape.wiki/w/index.php?title=Quests%2FList&oldid=15229510",
-    "revision": 15229510,
-    "revisionTimestamp": "2026-06-08T03:59:48Z"
+    "url": "https://oldschool.runescape.wiki/w/index.php?title=Quests%2FList&oldid=15289823",
+    "revision": 15289823,
+    "revisionTimestamp": "2026-08-07T15:03:30Z"
   },
   "parsedCounts": {
-    "quests": 191,
+    "quests": 192,
     "miniquests": 19
   },
   "drift": {
     "runtimeEntriesMissingFromLiveList": [],
     "liveOnlyEntries": [],
-    "note": "The live official rows reconcile with the approved normalized 190/19 baseline (Recipe for Disaster remains expanded into its existing parent-step IDs)."
+    "note": "The live official rows reconcile with the approved normalized 191/19 baseline (Recipe for Disaster remains expanded into its existing parent-step IDs)."
   },
   "entries": [
     {
@@ -574,6 +574,16 @@
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Fairytale_II_-_Cure_a_Queen&oldid=15266901",
         "revision": 15266901,
         "revisionTimestamp": "2026-07-18T11:18:07Z"
+      }
+    },
+    {
+      "id": "Fallen From Grace",
+      "kind": "quest",
+      "pageTitle": "Fallen From Grace",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Fallen_From_Grace&oldid=15297013",
+        "revision": 15297013,
+        "revisionTimestamp": "2026-08-13T12:37:07Z"
       }
     },
     {

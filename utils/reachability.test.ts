@@ -72,6 +72,13 @@ describe('isAreaReachable', () => {
     expect(isAreaReachable('Al Kharid', { ...baseUnlocks, chunks: ['51,50'] }, 'chunked')).toBe(true);
   });
 
+  it('uses canonical Wyrmscraig access in Standard and Chunked modes', () => {
+    expect(isAreaReachable('Wyrmscraig', { ...baseUnlocks, regions: ['Wyrmscraig'] }, 'vanilla')).toBe(true);
+    expect(isRegionUnlocked('Wyrmscraig', ['The Open Seas'])).toBe(true);
+    expect(isAreaReachable('Wyrmscraig', { ...baseUnlocks, chunks: ['40,35'] }, 'chunked')).toBe(true);
+    expect(isAreaReachable('Wyrmscraig', { ...baseUnlocks, chunks: ['39,33'] }, 'chunked')).toBe(false);
+  });
+
   it('non-chunked mode (vanilla) pins old isFreeArea || regions.includes behavior, unaffected by chunk state', () => {
     setStartArea('misthalin');
     try {
