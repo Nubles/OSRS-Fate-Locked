@@ -9,6 +9,8 @@
 
 import { UnlockState } from '../types';
 import { SlayerMasters } from '../services/ChunkContentService';
+import { SLAYER_MASTER_REQUIREMENTS, type SlayerMasterRequirementOption } from '../data/slayerMasterRequirements';
+import { isAreaReachable } from './reachability';
 
 export type SlayerStatus =
   | 'ready'         // assignable and reachable right now
@@ -18,6 +20,11 @@ export type SlayerStatus =
   | 'area-locked'   // requirements met, but no unlocked chunk has it
   | 'no-location';  // not found in the chunk dataset
 
+export type SlayerMasterBlocker = {
+  status: Exclude<SlayerStatus, 'ready' | 'no-location'>;
+  label: string;
+};
+
 export interface SlayerTaskRow {
   monster: string;
   slayer?: number;
@@ -26,6 +33,7 @@ export interface SlayerTaskRow {
   weight: number;
   status: SlayerStatus;
   loc: { cx: number; cy: number; unlocked: boolean } | null;
+  masterBlocker?: SlayerMasterBlocker;
 }
 
 export interface SlayerMasterReach {
@@ -33,6 +41,7 @@ export interface SlayerMasterReach {
   rows: SlayerTaskRow[];
   ready: number;
   total: number;
+  masterBlocker?: SlayerMasterBlocker;
 }
 
 export interface SlayerReach {
@@ -83,7 +92,45 @@ const questFromReq = (req: string): string | null => {
   return m ? m[1].trim() : null;
 };
 
-export function slayerReachability(masters: SlayerMasters, unlocks: UnlockState, locate: LocateFn): SlayerReach {
+const masterBlocker = (
+  master: string,
+  unlocks: UnlockState,
+  gameModeId: string | undefined,
+  questSet: Set<string>,
+  combat: number,
+): SlayerMasterBlocker | undefined => {
+  const requirements = SLAYER_MASTER_REQUIREMENTS[master];
+  if (!requirements) return undefined;
+
+  const missingArea = requirements.areas?.find(area => !isAreaReachable(area, unlocks, gameModeId));
+  if (missingArea) return { status: 'area-locked', label: `Master: ${missingArea}` };
+
+  const missingQuest = requirements.quests?.find(quest => !questSet.has(quest));
+  if (missingQuest) return { status: 'quest-locked', label: `Master: ${missingQuest}` };
+
+  const optionSkillsMet = (option: SlayerMasterRequirementOption): boolean =>
+    Object.entries(option.skills ?? {}).every(([skill, level]) =>
+      effectiveSkillLevel(unlocks, skill) >= level);
+  const optionMet = (option: SlayerMasterRequirementOption): boolean =>
+    optionSkillsMet(option) && (option.combatLevel == null || combat >= option.combatLevel);
+
+  if (requirements.oneOf?.length && !requirements.oneOf.some(optionMet)) {
+    const status = requirements.oneOf.some(optionSkillsMet) ? 'combat-locked' : 'slayer-locked';
+    return {
+      status,
+      label: `Master: ${requirements.oneOf.map(option => option.label).join(' or ')}`,
+    };
+  }
+
+  return undefined;
+};
+
+export function slayerReachability(
+  masters: SlayerMasters,
+  unlocks: UnlockState,
+  locate: LocateFn,
+  gameModeId?: string,
+): SlayerReach {
   const slayerLevel = effectiveSkillLevel(unlocks, 'Slayer');
   const slayerUnlocked = (unlocks.skills?.['Slayer'] ?? 0) > 0;
   const combat = effectiveCombatLevel(unlocks);
@@ -100,24 +147,35 @@ export function slayerReachability(masters: SlayerMasters, unlocks: UnlockState,
 
   const out: SlayerMasterReach[] = [];
   for (const [master, tasks] of Object.entries(masters)) {
+    const masterGate = masterBlocker(master, unlocks, gameModeId, questSet, combat);
     const rows: SlayerTaskRow[] = [];
     for (const [monster, info] of Object.entries(tasks)) {
       const loc = locate(monster);
       let status: SlayerStatus;
-      if (!slayerUnlocked || (info.slayer != null && slayerLevel < info.slayer)) status = 'slayer-locked';
+      if (masterGate) status = masterGate.status;
+      else if (!slayerUnlocked || (info.slayer != null && slayerLevel < info.slayer)) status = 'slayer-locked';
       else if (!reqMet(info.req)) status = 'quest-locked';
       else if (info.combat != null && combat < info.combat) status = 'combat-locked';
       else if (!loc) status = 'no-location';
       else if (!loc.unlocked) status = 'area-locked';
       else status = 'ready';
 
-      rows.push({ monster, slayer: info.slayer, combat: info.combat, req: info.req, weight: info.weight, status, loc });
+      rows.push({
+        monster, slayer: info.slayer, combat: info.combat, req: info.req, weight: info.weight, status, loc,
+        ...(masterGate ? { masterBlocker: masterGate } : {}),
+      });
     }
     rows.sort((a, b) =>
       Number(b.status === 'ready') - Number(a.status === 'ready') ||
       (a.slayer ?? 0) - (b.slayer ?? 0) ||
       a.monster.localeCompare(b.monster));
-    out.push({ master, rows, ready: rows.filter(r => r.status === 'ready').length, total: rows.length });
+    out.push({
+      master,
+      rows,
+      ready: rows.filter(r => r.status === 'ready').length,
+      total: rows.length,
+      ...(masterGate ? { masterBlocker: masterGate } : {}),
+    });
   }
 
   return { combatLevel: combat, slayerLevel, slayerUnlocked, masters: out };
