@@ -177,6 +177,11 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
                       <span className={`text-[9px] px-1.5 py-0.5 rounded border font-mono font-bold uppercase tracking-wide whitespace-nowrap ${diffStyle}`}>
                           {getDifficultyLabel(quest.difficulty)}
                       </span>
+                      {quest.points > 0 && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded border font-mono font-bold tracking-wide whitespace-nowrap flex items-center gap-1 text-amber-300 border-amber-500/30 bg-amber-900/10">
+                              <Sparkles size={8} /> {quest.points} {quest.points === 1 ? 'Quest Point' : 'Quest Points'}
+                          </span>
+                      )}
                   </div>
 
                   {/*

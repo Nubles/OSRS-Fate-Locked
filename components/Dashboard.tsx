@@ -60,6 +60,7 @@ import { getActivityRegion } from '../data/activityRegions';
 import { isAreaReachable, bankLocksActive } from '../utils/reachability';
 import { BANKS, BANK_IDS, BANK_BY_ID } from '../data/banks';
 import { getActivityReq, ActivityReq } from '../data/activityRequirements';
+import { bossTier, TIER_LABEL } from '../data/bossKeyTiers';
 import { evaluateActivityReadiness, type ActivityReadiness } from '../utils/activityReadiness';
 import { ActivityReadinessBadge } from './ActivityReadinessBadge';
 import { RegionAdvisorPanel } from './RegionAdvisorPanel';
@@ -171,6 +172,7 @@ interface UnlockCardProps {
   onClick: () => void;
   subText?: string;
   region?: string;
+  bossTierLabel?: string;
   req?: ActivityReq;
   readiness?: ActivityReadiness;
   suspendModals?: boolean;
@@ -184,6 +186,7 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
   onClick,
   subText,
   region,
+  bossTierLabel,
   req,
   readiness,
   suspendModals = false,
@@ -247,6 +250,11 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
                         <ExternalLink size={12} />
                     </a>
                 )}
+                {bossTierLabel && (
+                    <span className="text-[9px] px-1 py-0.5 rounded bg-red-900/20 border border-red-500/20 text-red-300/90 leading-none font-mono whitespace-nowrap">
+                        {bossTierLabel}
+                    </span>
+                )}
             </div>
             {subText && <div className="text-[10px] text-gray-500 leading-tight mt-0.5">{subText}</div>}
             {region && (
@@ -255,8 +263,13 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
                     <span className="truncate">{region}</span>
                 </div>
             )}
-            {req && (req.skills || req.quests) && (
+            {req && (req.skills || req.quests || req.requiredAreas) && (
                 <div className="flex flex-wrap items-center gap-1 mt-1">
+                    {req.requiredAreas && req.requiredAreas.map(area => (
+                        <span key={area} className="text-[9px] px-1 py-0.5 rounded bg-emerald-900/20 border border-emerald-500/20 text-emerald-300/90 leading-none flex items-center gap-0.5" title={`Requires access to ${area}`}>
+                            <MapPin size={8} className="shrink-0" />{area}
+                        </span>
+                    ))}
                     {req.skills && Object.entries(req.skills).map(([sk, lvl]) => (
                         <span key={sk} className="text-[9px] px-1 py-0.5 rounded bg-amber-900/20 border border-amber-500/20 text-amber-300/90 leading-none font-mono" title={`Requires ${lvl} ${sk}`}>{sk} {lvl}</span>
                     ))}
@@ -271,7 +284,7 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
             {req?.note && (
                 <div className="text-[9px] text-gray-500 italic leading-tight mt-0.5">{req.note}</div>
             )}
-            {(!req || (!req.skills && !req.quests && !req.note)) && (
+            {(!req || (!req.skills && !req.quests && !req.requiredAreas && !req.note)) && (
                 <div className="text-[9px] text-gray-600 italic leading-tight mt-0.5">No unlock requirement</div>
             )}
         </div>
@@ -670,6 +683,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                     onClick={() => handleSpecialUnlock(type, item)}
                     subText={sub}
                     region={getActivityRegion(label)}
+                    bossTierLabel={type === TableType.BOSSES ? `${TIER_LABEL[bossTier(label)]} tier` : undefined}
                     req={req}
                     readiness={readiness}
                 />
