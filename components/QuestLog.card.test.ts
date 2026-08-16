@@ -85,3 +85,24 @@ describe('QuestCard geography integration', () => {
     expect(html.match(/show on map/g)).toHaveLength(2);
   });
 });
+
+describe('QuestCard reward metadata', () => {
+  const renderQuest = (quest: (typeof QUEST_DATA)[keyof typeof QUEST_DATA]) => {
+    const eligibility = evaluateQuestEligibility(quest, unlocks);
+    return renderToStaticMarkup(
+      React.createElement(QuestCard, {
+        quest: { ...quest, status: eligibility.status, eligibility },
+        unlocks,
+        currentQP: 0,
+        onToggle: vi.fn(),
+      }),
+    );
+  };
+
+  it('shows awarded quest points and omits the chip for zero-point miniquests', () => {
+    expect(renderQuest(QUEST_DATA['Sheep Shearer'])).toContain('1 Quest Point');
+    expect(renderQuest(QUEST_DATA['Sheep Shearer'])).not.toContain('1 Quest Points');
+    expect(renderQuest(QUEST_DATA['Fallen From Grace'])).toContain('2 Quest Points');
+    expect(renderQuest(QUEST_DATA["Alfred Grimhand's Barcrawl"])).not.toContain('Quest Point');
+  });
+});
