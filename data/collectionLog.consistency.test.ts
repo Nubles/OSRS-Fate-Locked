@@ -101,18 +101,32 @@ describe('collection log data integrity', () => {
     let slots = 0;
     for (const tab of Object.values(COLLECTION_LOG_DATA))
       for (const page of Object.values(tab.pages)) slots += page.items.length;
-    expect(slots).toBeGreaterThanOrEqual(1905);
+    expect(slots).toBeGreaterThanOrEqual(1913);
+  });
+
+  it('tracks the Wyrmscraig collection-log additions', () => {
+    expect(COLLECTION_LOG_DATA.Bosses.pages['The Mad Angel'].items.map(item => item.name)).toEqual([
+      'Granite dust',
+      'Hallowfell',
+      'Ardeaglais teleport',
+      'Aggy',
+      'Jar of light',
+    ]);
+    expect(COLLECTION_LOG_DATA.Other.pages['All Pets'].items.map(item => item.name))
+      .toEqual(expect.arrayContaining(['Aggy', 'Mr McGroot']));
+    expect(COLLECTION_LOG_DATA.Other.pages.Miscellaneous.items.map(item => item.name))
+      .toContain("Jeweller's chisel");
   });
 
   // Page structure mirrors the live wiki: every wiki collection-log page is
   // present (incl. Brutus, kept for log parity though it isn't an unlockable
-  // boss — see consistency.test). Bosses 56 (Maggot King, July 2026), Raids 3,
+  // boss — see consistency.test). Bosses 57 (The Mad Angel, August 2026), Raids 3,
   // Minigames 22, Other 32 (Venators, July 2026);
   // Clues 11 = the 10 Treasure-Trail tiers + Scroll Cases.
   it('has the audited page count in each tab', () => {
     const counts = Object.fromEntries(
       Object.entries(COLLECTION_LOG_DATA).map(([k, t]) => [k, Object.keys(t.pages).length])
     );
-    expect(counts).toEqual({ Bosses: 56, Raids: 3, Clues: 11, Minigames: 22, Other: 32 });
+    expect(counts).toEqual({ Bosses: 57, Raids: 3, Clues: 11, Minigames: 22, Other: 32 });
   });
 });
