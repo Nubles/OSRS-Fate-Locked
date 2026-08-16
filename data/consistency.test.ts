@@ -57,9 +57,9 @@ describe('content lists have no duplicate entries', () => {
 // --- region definitions -----------------------------------------------------
 
 describe('region definitions', () => {
-  it('contains 176 unique canonical rollable regions', () => {
-    expect(REGIONS_LIST).toHaveLength(176);
-    expect(new Set(REGIONS_LIST).size).toBe(176);
+  it('contains 177 unique canonical rollable regions', () => {
+    expect(REGIONS_LIST).toHaveLength(177);
+    expect(new Set(REGIONS_LIST).size).toBe(177);
     for (const alias of Object.keys(AREA_ALIASES)) {
       expect(REGIONS_LIST, alias).not.toContain(alias);
     }
