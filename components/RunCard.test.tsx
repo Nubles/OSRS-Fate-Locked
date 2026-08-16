@@ -35,12 +35,12 @@ describe('RunCardModal region total', () => {
     {
       label: 'pending overlap refund credits',
       regions: ['Baxtorian Falls', "Otto's Grotto", 'Taverley', "Heroes' Guild"],
-      expected: '11/185 regions',
+      expected: '11/186 regions',
     },
     {
       label: 'ordinary canonical regions',
       regions: ['Baxtorian Falls', 'Taverley'],
-      expected: '11/185 regions',
+      expected: '11/186 regions',
     },
   ])('shows $expected for $label', ({ regions, expected }) => {
     mockGame.current.unlocks.regions = regions;
