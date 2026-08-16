@@ -48,7 +48,10 @@ vi.mock('../context/GameContext', () => ({ useGame: () => mocks.game }));
 
 import { ShortcutsPanel } from './ShortcutsPanel';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 describe('ShortcutsPanel duplicate-name rows', () => {
   it('renders every same-named shortcut without a duplicate React key warning', () => {
