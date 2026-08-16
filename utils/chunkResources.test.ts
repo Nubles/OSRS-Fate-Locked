@@ -18,6 +18,8 @@ describe('resourceReqFor', () => {
       ['Coal rocks', 'Mining', 30],
       ['Runite rocks', 'Mining', 85],
       ['Amethyst crystals', 'Mining', 92],
+      ['Sunstone rocks', 'Mining', 53],
+      ['Sunstone monolith', 'Mining', 53],
       ['Fishing spot (small net, bait)', 'Fishing', 1],
       ['Fishing spot (barbarian)', 'Fishing', 48],
       ['Fishing spot (anglerfish)', 'Fishing', 82],
