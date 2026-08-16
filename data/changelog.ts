@@ -19,6 +19,20 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-08-16-wyrmscraig-content',
+    title: 'Wyrmscraig Has Arrived',
+    date: '2026-08-16',
+    sections: {
+      added: [
+        'Fallen From Grace and The Mad Angel are now tracked across quests, bosses, requirements, and the Collection Log.',
+        'Hunter, Mining, and Crafting Tier 6 now list Goat Hunting, Sunstone Mining, and Sunstone Golem Crafting with their Wyrmscraig requirements.',
+      ],
+      fixed: [
+        'The August source refresh adds the latest shortcuts, drop-table corrections, Collection Log items, and the corrected Grandmaster tier for Maggot King Speed Chaser.',
+      ],
+    },
+  },
+  {
     id: '2026-08-08-complete-bank-pool',
     title: 'Every Bank Has Its Place',
     date: '2026-08-08',
