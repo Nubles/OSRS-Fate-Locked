@@ -80,7 +80,7 @@ export const ShortcutsPanel: React.FC = () => {
             {rows.map(r => {
               const meta = STATUS_META[r.status];
               return (
-                <div key={r.name} className="flex items-center gap-2 px-3 py-1 text-[11px]">
+                <div key={`${r.skill}:${r.name}`} className="flex items-center gap-2 px-3 py-1 text-[11px]">
                   <span className="text-[9px] text-gray-500 font-mono shrink-0 w-8">L{r.level}</span>
                   <span className="flex-1 truncate text-gray-200">{r.name}</span>
                   {r.loc && (
