@@ -89,6 +89,12 @@ The reviewed Chunk Picker pin is recorded in
 repository, branch, commit, blob, byte count, and raw SHA-256. Never replace it
 with a moving branch response.
 
+The current August/Wyrmscraig pin is commit
+`a9a5c74760eb76dbe39f90d2b04f023fc1de3746`, reviewed on 2026-08-16. Its
+immutable export is additionally identified by blob `ffdcc10139dde0e11be29047c6c730fd762a33c8`
+and raw SHA-256
+`2D75BF70C9E6540CECC1631783A0293D8F28B440D429F6081B2CD4EE4C21CA59`.
+
 `data/sources/chunk-content-transform-audit.json` is the transformation ledger.
 Before accepting a source refresh, review every `normalized`, `excluded`, and
 `unresolved` record and confirm each source category balances exactly. An
@@ -103,10 +109,13 @@ full and RuneLite-lite outputs, then review the ledger diff before committing.
 
 ### Quest and miniquest evidence
 
-`data/sources/quest-list.json` is the reviewed official inventory: 190 quests and
-19 miniquests. `data/sources/quest-requirement-audit.json` records one matching
-source and requirement decision for every canonical journal ID, including the
-three documented evidence discrepancies that retain conservative runtime gates.
+`data/sources/quest-list.json` is the reviewed official inventory: 191 runtime
+quests and 19 miniquests, for 210 runtime Journal entries. The official list
+contains 192 parsed quest rows because Recipe for Disaster remains one official
+row while the runtime keeps its existing parent-step expansion.
+`data/sources/quest-requirement-audit.json` records one matching source and
+requirement decision for every canonical journal ID, including the three
+documented evidence discrepancies that retain conservative runtime gates.
 Runtime requirements remain in `data/questData.ts`.
 
 Each Wiki source URL is pinned to a stable `oldid` and matching revision
@@ -122,6 +131,14 @@ Recipe for Disaster keeps its ten existing `RFD:` completion IDs for old-save,
 completion, and key compatibility. `RFD: Finale` is the audit parent, while the
 nine child page `oldid` revisions and Chunk Picker subpaths support the preserved
 child IDs. Do not collapse or rename those runtime IDs during a source refresh.
+
+Quest-source refreshes are incremental. `scripts/sync-quest-sources.mjs` loads
+the existing official and audit snapshots and preserves each unchanged runtime
+fingerprint's reviewed Wiki revision, audit status, notes, and Chunk Picker
+commit. Only a new or changed fingerprint receives a new audit row for review;
+the Wyrmscraig refresh therefore preserved the 209 existing audit rows while
+adding the reviewed Fallen From Grace evidence. The schema-2 audit snapshot
+records both approved Chunk Picker commits so older evidence remains valid.
 
 Generated data is never hand-edited. Update its committed source snapshot or
 its generator, run the appropriate sync command, and review the resulting diff.
@@ -227,11 +244,10 @@ increase is seven, but the refresh is not a seven-row append.
 Combat Achievement tasks are generated offline from
 `data/sources/combat-achievement-tasks.json`. The reviewed baseline is pinned
 to the official [Combat Achievements](https://oldschool.runescape.wiki/w/Combat_Achievements)
-overview revision `15272408`, verified on 2026-07-23, plus the exact six tier
-page revisions and official API queries recorded in the snapshot. The overview
-still displayed 637 tasks, but its own live Globals and the tier tables had
-already advanced to 646 after the Maggot King additions; the live API data takes
-precedence over that stale summary.
+overview revision `15296909`, verified on 2026-08-16, plus the exact six tier
+page revisions and official API queries recorded in the snapshot. The overview,
+authoritative Globals, and tier tables now reconcile at 646 tasks; Maggot King
+Speed Chaser is correctly recorded as Grandmaster.
 
 Regenerate the TypeScript list without network access:
 
@@ -241,7 +257,7 @@ npm run ca:sync
 
 The command validates the stable `ca_<official-id>` identity format, source
 metadata, unique IDs, exact 646-row total, and the official tier distribution
-(41 Easy, 60 Medium, 86 Hard, 164 Elite, 174 Master, 121 Grandmaster) before
+(41 Easy, 60 Medium, 86 Hard, 164 Elite, 173 Master, 122 Grandmaster) before
 writing `data/caTasks.ts`. It aborts before writing on any drift. The generated
 module is never hand-edited. `content:check` uses the network to detect upstream
 drift but never rewrites the snapshot. To refresh, fetch the official API data,
