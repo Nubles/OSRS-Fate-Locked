@@ -67,6 +67,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Doom of Mokhaiotl': { quests: ['The Final Dawn'] },
   'Gemstone Crab': { quests: ['Children of the Sun'] },
   'Shellbane Gryphon': { skills: { Slayer: 51 }, quests: ['Troubled Tortugans'], note: 'Gryphon Slayer task.' },
+  'The Mad Angel': { quests: ['Fallen From Grace'], requiredAreas: ['Wyrmscraig'] },
   'Mimic': { note: 'From a Strange/Mysterious casket (Hard+ clue scrolls).' },
 
   // ===== Guilds =============================================================

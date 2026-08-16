@@ -4,6 +4,11 @@ import { BOSS_TIERS, TIER_SOURCE, bossTier } from './bossKeyTiers';
 import { DROP_RATES } from '../config/rules';
 
 describe('boss key tiers', () => {
+  it('registers The Mad Angel as a mid-tier boss', () => {
+    expect(BOSSES_LIST).toContain('The Mad Angel');
+    expect(BOSS_TIERS['The Mad Angel']).toBe('mid');
+  });
+
   it('classifies every boss in BOSSES_LIST', () => {
     const missing = BOSSES_LIST.filter(b => !BOSS_TIERS[b]);
     expect(missing, 'bosses with no key tier').toEqual([]);

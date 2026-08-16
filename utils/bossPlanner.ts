@@ -49,6 +49,7 @@ export interface BossPlan {
 
 /** Boss names that map to a different monster entry than their app name. */
 export const BOSS_ALIASES: Record<string, string> = {
+  'The Mad Angel': 'Mad Angel',
   'Tormented Demons': 'Tormented Demon',
   'Mimic': 'The Mimic',
   'Grotesque Guardians': 'Dusk',

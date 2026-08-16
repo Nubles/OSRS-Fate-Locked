@@ -79,6 +79,7 @@ export const ACTIVITY_REGIONS: Record<string, string> = {
   'Doom of Mokhaiotl': 'Varlamore',
   'Gemstone Crab': 'Varlamore',
   'Shellbane Gryphon': 'The Open Seas',
+  'The Mad Angel': 'The Open Seas',
 
   // ---- Minigames -----------------------------------------------------------
   'Barbarian Assault': 'Kandarin',
