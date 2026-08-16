@@ -95,27 +95,30 @@ describe('collection log data integrity', () => {
 
   // Coverage regression floor. The data is a faithful mirror of the live wiki
   // log (synced from Module:Collection_log/data.json + its display overrides),
-  // which totals 1,905 item-slots. This floor catches accidental bulk item/page
+  // which totals 1,921 item-slots. This floor catches accidental bulk item/page
   // deletion; a future wiki re-sync that adds items only raises the number.
-  it('retains full collection-log coverage (>= 1905 slots)', () => {
+  it('retains full collection-log coverage (>= 1921 slots)', () => {
     let slots = 0;
     for (const tab of Object.values(COLLECTION_LOG_DATA))
       for (const page of Object.values(tab.pages)) slots += page.items.length;
-    expect(slots).toBeGreaterThanOrEqual(1913);
+    expect(slots).toBeGreaterThanOrEqual(1921);
   });
 
   it('tracks the Wyrmscraig collection-log additions', () => {
-    expect(COLLECTION_LOG_DATA.Bosses.pages['The Mad Angel'].items.map(item => item.name)).toEqual([
-      'Granite dust',
-      'Hallowfell',
-      'Ardeaglais teleport',
-      'Aggy',
-      'Jar of light',
+    expect(COLLECTION_LOG_DATA.Bosses.pages['The Mad Angel'].items.map(item => ({ id: item.id, name: item.name }))).toEqual([
+      { id: 157001, name: 'Granite dust' },
+      { id: 157002, name: 'Hallowfell' },
+      { id: 157003, name: 'Ardeaglais teleport' },
+      { id: 157004, name: 'Aggy' },
+      { id: 157005, name: 'Jar of light' },
     ]);
-    expect(COLLECTION_LOG_DATA.Other.pages['All Pets'].items.map(item => item.name))
-      .toEqual(expect.arrayContaining(['Aggy', 'Mr McGroot']));
-    expect(COLLECTION_LOG_DATA.Other.pages.Miscellaneous.items.map(item => item.name))
-      .toContain("Jeweller's chisel");
+    expect(COLLECTION_LOG_DATA.Other.pages['All Pets'].items)
+      .toEqual(expect.arrayContaining([
+        { id: 502070, name: 'Aggy' },
+        { id: 502071, name: 'Mr McGroot' },
+      ]));
+    expect(COLLECTION_LOG_DATA.Other.pages.Miscellaneous.items)
+      .toEqual(expect.arrayContaining([{ id: 531063, name: "Jeweller's chisel" }]));
   });
 
   // Page structure mirrors the live wiki: every wiki collection-log page is
