@@ -25,7 +25,7 @@ const manifestForRaw = (
   raw: Buffer,
   overrides: { commit?: string; countFloors?: Record<string, number> } = {},
 ) => ({
-  commit: '4eb75a8454eb41cfff71b70819326e0e67bcea7c',
+  commit: 'a9a5c74760eb76dbe39f90d2b04f023fc1de3746',
   rawBytes: raw.length,
   rawSha256: createHash('sha256').update(raw).digest('hex').toUpperCase(),
   blobSha: createHash('sha1').update(`blob ${raw.length}\0`).update(raw).digest('hex'),

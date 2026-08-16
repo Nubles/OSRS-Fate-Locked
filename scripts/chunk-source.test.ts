@@ -28,24 +28,31 @@ describe('pinned Chunk Picker source', () => {
       schemaVersion: 1,
       repository: 'source-chunk/chunk-picker-v2',
       branch: 'gh-pages',
-      commit: '4eb75a8454eb41cfff71b70819326e0e67bcea7c',
-      blobSha: 'e6591f67609a37792361df25a10835d9e36ee45f',
-      rawSha256: '370F0F51BED8938988E368C41038A05197026CD8F524C0F87C2F3E773A32B4E4',
-      rawBytes: 7510818,
+      commit: 'a9a5c74760eb76dbe39f90d2b04f023fc1de3746',
+      blobSha: 'ffdcc10139dde0e11be29047c6c730fd762a33c8',
+      rawSha256: '2D75BF70C9E6540CECC1631783A0293D8F28B440D429F6081B2CD4EE4C21CA59',
+      rawBytes: 7518778,
       policyVersion: 2,
-      reviewedAt: '2026-08-02',
+      reviewedAt: '2026-08-16',
     });
   });
 
   it('loads valid JSON from the committed gzip without network access', async () => {
     const { raw, data } = await readPinnedChunkSource();
-    expect(raw).toHaveLength(7510818);
+    expect(raw).toHaveLength(7518778);
     expect(data).toMatchObject({
       chunks: expect.any(Object),
       walkableChunks: expect.any(Array),
       questSections: expect.any(Object),
       taskUnlocks: expect.any(Object),
     });
+  });
+
+  it('pins the reviewed Mad Angel medium-clue record in the raw source', async () => {
+    const { data } = await readPinnedChunkSource();
+
+    expect(data.drops['Mad Angel']['Clue scroll (medium)']).toEqual({ '1': '1/25' });
+    expect(data.drops['Mad Angel']['Clue scroll (hard)']).toBeUndefined();
   });
 
   it('does not replace an existing gzip when fetched bytes fail JSON or transform preflight', async () => {
@@ -208,25 +215,25 @@ describe('pinned Chunk Picker source', () => {
           && event.disposition === 'unresolved',
       ).length,
     }).toEqual({
-      contentChunks: 937,
+      contentChunks: 938,
       connections: 1110,
       slayerMasters: 10,
-      shortcuts: 203,
+      shortcuts: 219,
       shops: 435,
-      dropTables: 799,
+      dropTables: 800,
       questSections: 134,
       banks: 126,
       tags: 27,
-      auditEvents: 27072,
+      auditEvents: 27110,
       unresolvedTaskUnlocks: 0,
     });
-    expect(taskUnlockTotals.source).toBe(1672);
+    expect(taskUnlockTotals.source).toBe(1675);
     expect(taskUnlockTotals.unresolved).toBe(0);
     expect(taskUnlockTotals.imported + taskUnlockTotals.normalized + taskUnlockTotals.excluded)
-      .toBe(1672);
+      .toBe(1675);
     expect(taskUnlockTotals).toEqual({
-      source: 1672,
-      imported: 1011,
+      source: 1675,
+      imported: 1014,
       normalized: 657,
       excluded: 4,
       unresolved: 0,
@@ -312,7 +319,7 @@ describe('pinned Chunk Picker source', () => {
       commit: { sha: 'new-upstream-sha' },
     }), { status: 200 }));
     expect(result).toEqual({
-      pinnedCommit: '4eb75a8454eb41cfff71b70819326e0e67bcea7c',
+      pinnedCommit: 'a9a5c74760eb76dbe39f90d2b04f023fc1de3746',
       latestCommit: 'new-upstream-sha',
       moved: true,
     });
