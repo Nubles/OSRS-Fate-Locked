@@ -15,11 +15,11 @@ const deepFreeze = value => {
 };
 
 export const EXPECTED_CA_PROVENANCE = deepFreeze({
-  verifiedAt: '2026-07-23',
+  verifiedAt: '2026-08-16',
   source: {
     url: 'https://oldschool.runescape.wiki/w/Combat_Achievements',
-    revision: 15272408,
-    revisionTimestamp: '2026-07-22T17:11:33Z',
+    revision: 15296909,
+    revisionTimestamp: '2026-08-13T09:19:38Z',
     endpoint: 'https://oldschool.runescape.wiki/api.php',
     taskTableQuery: {
       action: 'parse',
@@ -34,8 +34,8 @@ export const EXPECTED_CA_PROVENANCE = deepFreeze({
       prop: 'text',
       format: 'json',
     },
-    retrievedAt: '2026-07-23T19:13:36.119Z',
-    overviewDeclaredRows: 637,
+    retrievedAt: '2026-08-16T15:14:32.746Z',
+    overviewDeclaredRows: 646,
     officialRows: 646,
     authoritativeGlobals: {
       counts: {
@@ -43,12 +43,12 @@ export const EXPECTED_CA_PROVENANCE = deepFreeze({
         Medium: 60,
         Hard: 86,
         Elite: 164,
-        Master: 174,
-        Grandmaster: 121,
+        Master: 173,
+        Grandmaster: 122,
       },
-      thresholds: [41, 161, 419, 1075, 1945, 2671],
+      thresholds: [41, 161, 419, 1075, 1940, 2672],
     },
-    discrepancy: 'The overview revision still displays 637 rows; live official Globals and tier API tables return 646 after the Maggot King additions.',
+    discrepancy: 'The overview, authoritative Globals, and six tier task tables reconcile at 646 tasks; Maggot King Speed Chaser is Grandmaster.',
     tierSources: [
       {
         tier: 'Easy',
@@ -83,14 +83,14 @@ export const EXPECTED_CA_PROVENANCE = deepFreeze({
         url: 'https://oldschool.runescape.wiki/w/Combat_Achievements/Master',
         revision: 15272564,
         revisionTimestamp: '2026-07-22T19:55:46Z',
-        officialRows: 174,
+        officialRows: 173,
       },
       {
         tier: 'Grandmaster',
         url: 'https://oldschool.runescape.wiki/w/Combat_Achievements/Grandmaster',
         revision: 15025941,
         revisionTimestamp: '2025-11-13T02:26:22Z',
-        officialRows: 121,
+        officialRows: 122,
       },
     ],
   },
@@ -174,7 +174,7 @@ export function renderCombatAchievementTasks(snapshot) {
     '',
     '// Generated from data/sources/combat-achievement-tasks.json.',
     '// Source API snapshot retrieved ' + snapshot.source.retrievedAt + '.',
-    '// Overview revision ' + snapshot.source.revision + ' is stale at 637; see snapshot metadata.',
+    '// ' + snapshot.source.discrepancy,
     '// Verified: ' + snapshot.verifiedAt + '. Run npm run ca:sync; do not hand-edit.',
     'export const ALL_CA_TASKS: CATask[] = [',
   ];

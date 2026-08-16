@@ -35,7 +35,7 @@ describe('Combat Achievement point progress', () => {
       Easy: 1, Medium: 2, Hard: 3, Elite: 4, Master: 5, Grandmaster: 6,
     });
     expect(CA_TIER_ORDER.map(tier => CA_DATA[tier].pointsRequired)).toEqual([
-      41, 161, 419, 1075, 1945, 2671,
+      41, 161, 419, 1075, 1940, 2672,
     ]);
   });
 

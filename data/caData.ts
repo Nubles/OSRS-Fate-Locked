@@ -40,14 +40,14 @@ export const CA_DATA: Record<string, CATier> = {
   },
   'Master': {
     id: 'Master',
-    pointsRequired: 1945,
+    pointsRequired: 1940,
     recommendedStats: 'Maxed Combat, 95 Slayer',
     keyUnlocks: ['Theatre of Blood', 'Inferno', 'Corrupted Gauntlet', 'Nex', 'Phosani'],
     difficulty: DropSource.CA_MASTER
   },
   'Grandmaster': {
     id: 'Grandmaster',
-    pointsRequired: 2671,
+    pointsRequired: 2672,
     recommendedStats: 'Maxed, BiS Gear',
     keyUnlocks: ['All Content (Speedruns & Perfect kills)'],
     difficulty: DropSource.CA_GRANDMASTER

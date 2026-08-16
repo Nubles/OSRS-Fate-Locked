@@ -61,8 +61,8 @@ describe('CA task list references resolve', () => {
       Medium: 60,
       Hard: 86,
       Elite: 164,
-      Master: 174,
-      Grandmaster: 121,
+      Master: 173,
+      Grandmaster: 122,
     });
   });
 
@@ -77,7 +77,7 @@ describe('CA task list references resolve', () => {
       ['ca_637', 'Hard', 'Maggot Squasher'],
       ['ca_638', 'Elite', 'Maggot Exterminator'],
       ['ca_639', 'Master', 'Camping the King'],
-      ['ca_640', 'Master', 'Maggot King Speed Chaser'],
+      ['ca_640', 'Grandmaster', 'Maggot King Speed Chaser'],
       ['ca_641', 'Elite', 'Trying to fit in'],
       ['ca_642', 'Master', 'King-sized clobbering'],
       ['ca_643', 'Master', 'Digging in'],
