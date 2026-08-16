@@ -52,6 +52,7 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
   'Doom of Mokhaiotl': ['Tlati Rainforest'],
   'Gemstone Crab': ['Tlati Rainforest'],
   'Shellbane Gryphon': ['The Great Conch'],
+  'The Mad Angel': ['Wyrmscraig'],
 
   // Minigames
   'Barbarian Assault': ['Barbarian Outpost'],

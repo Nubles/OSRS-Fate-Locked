@@ -21,6 +21,14 @@ const CONTINENTS = new Set([
 ]);
 
 describe('activity requirements + regions consistency', () => {
+  it('pins The Mad Angel access requirements and region', () => {
+    expect(ACTIVITY_REGIONS['The Mad Angel']).toBe('The Open Seas');
+    expect(ACTIVITY_REQUIREMENTS['The Mad Angel']).toEqual({
+      quests: ['Fallen From Grace'],
+      requiredAreas: ['Wyrmscraig'],
+    });
+  });
+
   it('every requirement key is a real activity item (no typos)', () => {
     for (const key of Object.keys(ACTIVITY_REQUIREMENTS)) {
       expect(ALL_ACTIVITY_ITEMS.has(key), `unknown activity "${key}"`).toBe(true);

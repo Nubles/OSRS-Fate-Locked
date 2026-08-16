@@ -16,6 +16,29 @@ const combatReady = {
 };
 
 describe('evaluateActivityReadiness', () => {
+  it('blocks The Mad Angel until Wyrmscraig and Fallen From Grace are present', () => {
+    const req = getActivityReq('The Mad Angel');
+    expect(evaluateActivityReadiness(true, req, unlocked())).toEqual({
+      status: 'NOT_READY',
+      blockers: [
+        { kind: 'area', label: 'Wyrmscraig' },
+        { kind: 'quest', label: 'Fallen From Grace' },
+      ],
+    });
+    expect(evaluateActivityReadiness(true, req, unlocked({ regions: ['Wyrmscraig'] }))).toEqual({
+      status: 'NOT_READY',
+      blockers: [{ kind: 'quest', label: 'Fallen From Grace' }],
+    });
+    expect(evaluateActivityReadiness(true, req, unlocked({ quests: ['Fallen From Grace'] }))).toEqual({
+      status: 'NOT_READY',
+      blockers: [{ kind: 'area', label: 'Wyrmscraig' }],
+    });
+    expect(evaluateActivityReadiness(true, req, unlocked({
+      regions: ['Wyrmscraig'],
+      quests: ['Fallen From Grace'],
+    }))).toEqual({ status: 'READY' });
+  });
+
   it('evaluates ownership before all other requirements', () => {
     expect(evaluateActivityReadiness(
       false,

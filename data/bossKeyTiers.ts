@@ -37,6 +37,7 @@ export const BOSS_TIERS: Record<string, BossTier> = {
   'Doom of Mokhaiotl': 'high',
 
   // ── Mid (god wars, mid-game slayer/wildy bosses, Zulrah/Vorkath…) ───────────
+  'The Mad Angel': 'mid',
   'General Graardor': 'mid',
   'Commander Zilyana': 'mid',
   "Kree'arra": 'mid',

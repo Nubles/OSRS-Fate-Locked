@@ -130,7 +130,7 @@ export const BOSSES_LIST = [
   'Phantom Muspah', 'Sarachnis', 'Scurrius', 'Zulrah', 'Wintertodt', 'Tempoross', 
   'Zalcano', 'TzHaar Fight Cave', 'Inferno', 'TzHaar-Ket-Rak\'s Challenges', 'Tormented Demons',
   'Amoxliatl', 'The Royal Titans', 'Yama', 'Doom of Mokhaiotl', 'Gemstone Crab',
-  'Shellbane Gryphon', 'Maggot King'
+  'Shellbane Gryphon', 'Maggot King', 'The Mad Angel'
 ];
 
 export const MINIGAMES_LIST = [
