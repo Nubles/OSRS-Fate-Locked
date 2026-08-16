@@ -564,17 +564,17 @@ describe('deterministic current content baseline', () => {
       Medium: 60,
       Hard: 86,
       Elite: 164,
-      Master: 174,
-      Grandmaster: 121,
+      Master: 173,
+      Grandmaster: 122,
     });
     expect(tiers.map(tier => CA_DATA[tier].pointsRequired))
-      .toEqual([41, 161, 419, 1075, 1945, 2671]);
+      .toEqual([41, 161, 419, 1075, 1940, 2672]);
     expect(caSource).toMatchObject({
-      verifiedAt: '2026-07-23',
+      verifiedAt: '2026-08-16',
       source: {
         url: 'https://oldschool.runescape.wiki/w/Combat_Achievements',
-        revision: 15272408,
-        revisionTimestamp: '2026-07-22T17:11:33Z',
+        revision: 15296909,
+        revisionTimestamp: '2026-08-13T09:19:38Z',
         officialRows: 646,
         authoritativeGlobals: {
           counts: {
@@ -582,10 +582,10 @@ describe('deterministic current content baseline', () => {
             Medium: 60,
             Hard: 86,
             Elite: 164,
-            Master: 174,
-            Grandmaster: 121,
+            Master: 173,
+            Grandmaster: 122,
           },
-          thresholds: [41, 161, 419, 1075, 1945, 2671],
+          thresholds: [41, 161, 419, 1075, 1940, 2672],
         },
       },
     });
@@ -670,12 +670,12 @@ describe('independent generated-content contract', () => {
       Easy: 1, Medium: 2, Hard: 3, Elite: 4, Master: 5, Grandmaster: 6,
     });
     expect(CA_TIER_ORDER.map(tier => CA_DATA[tier].pointsRequired)).toEqual([
-      41, 161, 419, 1075, 1945, 2671,
+      41, 161, 419, 1075, 1940, 2672,
     ]);
     expect(ALL_CA_TASKS.reduce(
       (total, task) => total + CA_TASK_POINTS[task.tierId as keyof typeof CA_TASK_POINTS],
       0,
-    )).toBe(2671);
+    )).toBe(2672);
   });
 
   it('keeps all 646 reviewed CA rows field-for-field aligned with generated data', () => {
@@ -704,7 +704,7 @@ describe('independent generated-content contract', () => {
       ['ca_637', 'Hard', 'Maggot King', 'Maggot Squasher'],
       ['ca_638', 'Elite', 'Maggot King', 'Maggot Exterminator'],
       ['ca_639', 'Master', 'Maggot King', 'Camping the King'],
-      ['ca_640', 'Master', 'Maggot King', 'Maggot King Speed Chaser'],
+      ['ca_640', 'Grandmaster', 'Maggot King', 'Maggot King Speed Chaser'],
       ['ca_641', 'Elite', 'Maggot King', 'Trying to fit in'],
       ['ca_642', 'Master', 'Maggot King', 'King-sized clobbering'],
       ['ca_643', 'Master', 'Maggot King', 'Digging in'],
@@ -743,10 +743,12 @@ describe('independent generated-content contract', () => {
         text: '{{Globals|ca <tier> tasks}} and {{Globals|ca <tier> points}}',
         contentmodel: 'wikitext', prop: 'text', format: 'json',
       },
-      retrievedAt: '2026-07-23T19:13:36.119Z',
-      overviewDeclaredRows: 637,
+      retrievedAt: '2026-08-16T15:14:32.746Z',
+      overviewDeclaredRows: 646,
     });
-    expect(caSource.source.discrepancy).toMatch(/overview.*637.*live.*646.*Maggot King/i);
+    expect(caSource.source.discrepancy).toBe(
+      'The overview, authoritative Globals, and six tier task tables reconcile at 646 tasks; Maggot King Speed Chaser is Grandmaster.',
+    );
     expect(caSource.source.tierSources.map(source => [
       source.tier, source.revision, source.revisionTimestamp, source.officialRows,
     ])).toEqual([
@@ -754,8 +756,8 @@ describe('independent generated-content contract', () => {
       ['Medium', 15135540, '2026-02-25T18:48:27Z', 60],
       ['Hard', 15272569, '2026-07-22T19:58:23Z', 86],
       ['Elite', 15272563, '2026-07-22T19:55:28Z', 164],
-      ['Master', 15272564, '2026-07-22T19:55:46Z', 174],
-      ['Grandmaster', 15025941, '2025-11-13T02:26:22Z', 121],
+      ['Master', 15272564, '2026-07-22T19:55:46Z', 173],
+      ['Grandmaster', 15025941, '2025-11-13T02:26:22Z', 122],
     ]);
   });
 });

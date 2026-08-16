@@ -9,9 +9,9 @@ export interface CATask {
 }
 
 // Generated from data/sources/combat-achievement-tasks.json.
-// Source API snapshot retrieved 2026-07-23T19:13:36.119Z.
-// Overview revision 15272408 is stale at 637; see snapshot metadata.
-// Verified: 2026-07-23. Run npm run ca:sync; do not hand-edit.
+// Source API snapshot retrieved 2026-08-16T15:14:32.746Z.
+// The overview, authoritative Globals, and six tier task tables reconcile at 646 tasks; Maggot King Speed Chaser is Grandmaster.
+// Verified: 2026-08-16. Run npm run ca:sync; do not hand-edit.
 export const ALL_CA_TASKS: CATask[] = [
   // EASY TIER (41)
   { id: 'ca_0', tierId: 'Easy', monster: 'Aberrant Spectre', name: 'Noxious Foe', description: 'Kill an Aberrant Spectre.' },
@@ -368,7 +368,7 @@ export const ALL_CA_TASKS: CATask[] = [
   { id: 'ca_634', tierId: 'Elite', monster: 'Brutus', name: 'Brutus Speed-Trialist', description: 'Kill Brutus in less than 2 seconds.' },
   { id: 'ca_638', tierId: 'Elite', monster: 'Maggot King', name: 'Maggot Exterminator', description: 'Kill the Maggot King 25 times.' },
   { id: 'ca_641', tierId: 'Elite', monster: 'Maggot King', name: 'Trying to fit in', description: 'Kill the Maggot King using only weapons that can be found in Vampyrium.' },
-  // MASTER TIER (174)
+  // MASTER TIER (173)
   { id: 'ca_11', tierId: 'Master', monster: 'Kree\'arra', name: 'Collateral Damage', description: 'Kill Kree\'arra in a private instance without ever attacking him directly.' },
   { id: 'ca_13', tierId: 'Master', monster: 'Kree\'arra', name: 'Swoop No More', description: 'Kill Kree\'arra in a private instance without taking any melee damage from the boss or his bodyguards.' },
   { id: 'ca_50', tierId: 'Master', monster: 'Skotizo', name: 'Precise Positioning', description: 'Kill Skotizo with the final source of damage being a Chinchompa explosion.' },
@@ -538,12 +538,11 @@ export const ALL_CA_TASKS: CATask[] = [
   { id: 'ca_620', tierId: 'Master', monster: 'Doom of Mokhaiotl', name: 'Mine\'s Better', description: 'Defeat the Doom of Mokhaiotl levels 1-8 whilst always wearing a shield.' },
   { id: 'ca_622', tierId: 'Master', monster: 'Doom of Mokhaiotl', name: 'Doom Chaser', description: 'Defeat the Doom of Mokhaiotl levels 1-8 in less than 10:00.' },
   { id: 'ca_639', tierId: 'Master', monster: 'Maggot King', name: 'Camping the King', description: 'Kill the Maggot King 12 times without leaving the arena.' },
-  { id: 'ca_640', tierId: 'Master', monster: 'Maggot King', name: 'Maggot King Speed Chaser', description: 'Kill the Maggot King 5 times in 9 minutes.' },
   { id: 'ca_642', tierId: 'Master', monster: 'Maggot King', name: 'King-sized clobbering', description: 'Kill the Maggot King without missing a single melee punish.' },
   { id: 'ca_643', tierId: 'Master', monster: 'Maggot King', name: 'Digging in', description: 'Kill the Maggot King without moving more than 40 tiles.' },
   { id: 'ca_644', tierId: 'Master', monster: 'Maggot King', name: 'Cordoned Off', description: 'Kill the Maggot King without moving beyond the back row of tiles.' },
   { id: 'ca_645', tierId: 'Master', monster: 'Maggot King', name: 'Perfect Maggot King', description: 'Kill the Maggot King without taking any avoidable damage or him ever being healed.' },
-  // GRANDMASTER TIER (121)
+  // GRANDMASTER TIER (122)
   { id: 'ca_14', tierId: 'Grandmaster', monster: 'Kree\'arra', name: 'The Worst Ranged Weapon', description: 'Kill Kree\'arra by only dealing damage to him with a salamander.' },
   { id: 'ca_15', tierId: 'Grandmaster', monster: 'Kree\'arra', name: 'Feather Hunter', description: 'Kill Kree\'arra 30 times in a private instance without leaving the room.' },
   { id: 'ca_21', tierId: 'Grandmaster', monster: 'General Graardor', name: 'Defence Matters', description: 'Kill General Graardor 2 times consecutively in a private instance without taking any damage from his bodyguards.' },
@@ -665,4 +664,5 @@ export const ALL_CA_TASKS: CATask[] = [
   { id: 'ca_619', tierId: 'Grandmaster', monster: 'Doom of Mokhaiotl', name: 'Darkness Is Your Ally?', description: 'Defeat the Doom of Mokhaiotl levels 1-8 without equipping a demonbane weapon.' },
   { id: 'ca_623', tierId: 'Grandmaster', monster: 'Doom of Mokhaiotl', name: 'Doom Racer', description: 'Defeat the Doom of Mokhaiotl levels 1-8 in less than 7:15.' },
   { id: 'ca_624', tierId: 'Grandmaster', monster: 'Doom of Mokhaiotl', name: 'Mopping up', description: 'Clear at least 8 acid splats in a single Volatile Earth special attack.' },
+  { id: 'ca_640', tierId: 'Grandmaster', monster: 'Maggot King', name: 'Maggot King Speed Chaser', description: 'Kill the Maggot King 5 times in 9 minutes.' },
 ];
