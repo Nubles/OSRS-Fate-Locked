@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "policyVersion": 2,
-  "sourceCommit": "4eb75a8454eb41cfff71b70819326e0e67bcea7c",
+  "sourceCommit": "a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
   "categoryTotals": {
     "walkableChunks": {
       "source": 1172,
@@ -19,9 +19,9 @@
     },
     "chunks": {
       "source": 2234,
-      "imported": 444,
+      "imported": 445,
       "normalized": 493,
-      "excluded": 1297,
+      "excluded": 1296,
       "unresolved": 0
     },
     "questSections": {
@@ -32,8 +32,8 @@
       "unresolved": 0
     },
     "taskUnlocks": {
-      "source": 1672,
-      "imported": 1011,
+      "source": 1675,
+      "imported": 1014,
       "normalized": 657,
       "excluded": 4,
       "unresolved": 0
@@ -46,15 +46,15 @@
       "unresolved": 0
     },
     "challenges": {
-      "source": 14692,
-      "imported": 203,
+      "source": 14718,
+      "imported": 219,
       "normalized": 0,
-      "excluded": 14489,
+      "excluded": 14499,
       "unresolved": 0
     },
     "drops": {
-      "source": 872,
-      "imported": 739,
+      "source": 873,
+      "imported": 740,
       "normalized": 133,
       "excluded": 0,
       "unresolved": 0
@@ -1434,12 +1434,32 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Agility/Access the (mith grapple) escape from the Water Obelisk Island ~|shortcut|~ barehanded",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Agility/Access the (mith grapple) escape from the Water Obelisk Island shortcut barehanded"
+      ]
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Agility/Access the (mith grapple) Karamja volcano ~|shortcut|~",
       "terminal": true,
       "disposition": "imported",
       "reason": "base-record",
       "targetKeys": [
         "Agility/Access the (mith grapple) Karamja volcano shortcut"
+      ]
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Agility/Access the (mith grapple) Karamja volcano ~|shortcut|~ barehanded",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Agility/Access the (mith grapple) Karamja volcano shortcut barehanded"
       ]
     },
     {
@@ -1454,6 +1474,16 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Agility/Access the (mith grapple) over the River Lum to Al Kharid ~|shortcut|~ barehanded",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Agility/Access the (mith grapple) over the River Lum to Al Kharid shortcut barehanded"
+      ]
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Agility/Access the (mith grapple) scale Catherby cliffside ~|shortcut|~",
       "terminal": true,
       "disposition": "imported",
@@ -1464,12 +1494,32 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Agility/Access the (mith grapple) scale Catherby cliffside ~|shortcut|~ barehanded",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Agility/Access the (mith grapple) scale Catherby cliffside shortcut barehanded"
+      ]
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Agility/Access the (mith grapple) scale Falador Wall ~|shortcut|~",
       "terminal": true,
       "disposition": "imported",
       "reason": "base-record",
       "targetKeys": [
         "Agility/Access the (mith grapple) scale Falador Wall shortcut"
+      ]
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Agility/Access the (mith grapple) scale Falador Wall ~|shortcut|~ barehanded",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Agility/Access the (mith grapple) scale Falador Wall shortcut barehanded"
       ]
     },
     {
@@ -1490,6 +1540,16 @@
       "reason": "base-record",
       "targetKeys": [
         "Agility/Access the (mith grapple) scale Yanille wall shortcut"
+      ]
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Agility/Access the (mith grapple) scale Yanille wall ~|shortcut|~ barehanded",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Agility/Access the (mith grapple) scale Yanille wall shortcut barehanded"
       ]
     },
     {
@@ -1808,6 +1868,26 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Agility/Access the Arceuus Library middle level railing jump ~|shortcut|~",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Agility/Access the Arceuus Library middle level railing jump shortcut"
+      ]
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Agility/Access the Arceuus Library top level railing jump ~|shortcut|~",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Agility/Access the Arceuus Library top level railing jump shortcut"
+      ]
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Agility/Access the Ardougne log balance ~|shortcut|~",
       "terminal": true,
       "disposition": "imported",
@@ -2118,6 +2198,16 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Agility/Access the Draynor Manor fence ~|shortcut|~",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Agility/Access the Draynor Manor fence shortcut"
+      ]
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Agility/Access the Draynor Manor stones to Champions' Guild ~|shortcut|~",
       "terminal": true,
       "disposition": "imported",
@@ -2288,6 +2378,16 @@
       "reason": "base-record",
       "targetKeys": [
         "Agility/Access the Fremennik Slayer Dungeon narrow crevice shortcut"
+      ]
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Agility/Access the Giant's Plateau rock scramble ~|shortcut|~",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Agility/Access the Giant's Plateau rock scramble shortcut"
       ]
     },
     {
@@ -2548,6 +2648,16 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Agility/Access the Lumbridge cow pen stones to Champions' Guild ~|shortcut|~",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Agility/Access the Lumbridge cow pen stones to Champions' Guild shortcut"
+      ]
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Agility/Access the Lumbridge Swamp Caves stepping stones ~|shortcut|~",
       "terminal": true,
       "disposition": "imported",
@@ -2622,6 +2732,16 @@
       "reason": "base-record",
       "targetKeys": [
         "Agility/Access the monkey bars under Yanille shortcut"
+      ]
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Agility/Access the Mos Le'Harmless north stepping stones ~|shortcut|~",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Agility/Access the Mos Le'Harmless north stepping stones shortcut"
       ]
     },
     {
@@ -2742,6 +2862,16 @@
       "reason": "base-record",
       "targetKeys": [
         "Agility/Access the pipe from Edgeville Dungeon to Varrock Sewers shortcut"
+      ]
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Agility/Access the pipe within Edgeville Dungeon ~|shortcut|~",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Agility/Access the pipe within Edgeville Dungeon shortcut"
       ]
     },
     {
@@ -3040,6 +3170,16 @@
       "reason": "base-record",
       "targetKeys": [
         "Agility/Access the slippery basalt stepping stone shortcut"
+      ]
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Agility/Access the Sophanem stepping stones ~|shortcut|~",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Agility/Access the Sophanem stepping stones shortcut"
       ]
     },
     {
@@ -3398,6 +3538,26 @@
       "reason": "base-record",
       "targetKeys": [
         "Agility/Access the Waterbirth Island rocks shortcut"
+      ]
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Agility/Access the west Pollnivneach ditch ~|shortcut|~",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Agility/Access the west Pollnivneach ditch shortcut"
+      ]
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Agility/Access the west Pollnivneach scramble ~|shortcut|~",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Agility/Access the west Pollnivneach scramble shortcut"
       ]
     },
     {
@@ -18994,6 +19154,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Diary/~|Combat Achievements#Grandmaster|~ Maggot King Speed Chaser",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Diary/~|Combat Achievements#Grandmaster|~ Maybe I'm the boss.",
       "terminal": true,
       "disposition": "excluded",
@@ -20851,14 +21019,6 @@
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Combat Achievements#Master|~ Lightning Lure",
-      "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
-    },
-    {
-      "category": "challenges",
-      "sourceKey": "Diary/~|Combat Achievements#Master|~ Maggot King Speed Chaser",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -29994,7 +30154,7 @@
     },
     {
       "category": "challenges",
-      "sourceKey": "Extra/(All Pets) Obtain ~|mr mcgroot|~",
+      "sourceKey": "Extra/(All Pets) Obtain ~|Mr McGroot|~",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -41034,14 +41194,6 @@
     },
     {
       "category": "challenges",
-      "sourceKey": "Extra/(Skilling Pets) Obtain ~|mr mcgroot|~",
-      "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
-    },
-    {
-      "category": "challenges",
       "sourceKey": "Extra/(Skilling Pets) Obtain a ~|baby chinchompa|~",
       "terminal": true,
       "disposition": "excluded",
@@ -51339,6 +51491,14 @@
     {
       "category": "challenges",
       "sourceKey": "Extra/Obtain a ~|swift marlin|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Extra/Obtain a ~|vampyre snelm|~",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -64388,6 +64548,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Nonskill/~|Dusuri's Star Shop|~*",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Nonskill/~|Honest Jimmy's House of Stuff.|~",
       "terminal": true,
       "disposition": "excluded",
@@ -65548,7 +65716,7 @@
     },
     {
       "category": "challenges",
-      "sourceKey": "Nonskill/11312 to 11313",
+      "sourceKey": "Nonskill/11312-1 to 11313-1",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -65956,6 +66124,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Nonskill/12340-1 to 12340-3",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Nonskill/12348-1 to 12348-2",
       "terminal": true,
       "disposition": "excluded",
@@ -66020,6 +66196,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Nonskill/12596-1 to 12596-3",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Nonskill/12601 zombie",
       "terminal": true,
       "disposition": "excluded",
@@ -66045,6 +66229,14 @@
     {
       "category": "challenges",
       "sourceKey": "Nonskill/12837-4 to 12837-1",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Nonskill/12844 to 13100-1",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -66149,6 +66341,30 @@
     {
       "category": "challenges",
       "sourceKey": "Nonskill/13358-1 to 13358-2",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Nonskill/13358-1 to 13358-3",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Nonskill/13358-3 to 13358-4",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Nonskill/13361-1 to 13617-2",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -66261,6 +66477,14 @@
     {
       "category": "challenges",
       "sourceKey": "Nonskill/15 degrees 22 minutes north, 07 degrees 31 minutes east",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Nonskill/15151-1 to 15151-2",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -67788,7 +68012,7 @@
     },
     {
       "category": "challenges",
-      "sourceKey": "Nonskill/9782 to 9783",
+      "sourceKey": "Nonskill/9782 to 9783-1",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -81596,6 +81820,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Nonskill/Other facemask types",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Nonskill/Our Own Needs",
       "terminal": true,
       "disposition": "excluded",
@@ -87660,14 +87892,6 @@
     },
     {
       "category": "challenges",
-      "sourceKey": "Nonskill/Trade in stardust*",
-      "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
-    },
-    {
-      "category": "challenges",
       "sourceKey": "Nonskill/Trade mithril limbs at the nest (nice)*",
       "terminal": true,
       "disposition": "excluded",
@@ -88261,6 +88485,14 @@
     {
       "category": "challenges",
       "sourceKey": "Nonskill/Wave on the northern wall of the Castle Drakan. Beware of double agents! (Any boater, splitbark body, Dragon sq shield)",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
+      "sourceKey": "Nonskill/Wearable facemask",
       "terminal": true,
       "disposition": "excluded",
       "reason": "non-walkable-content",
@@ -117950,6 +118182,14 @@
     },
     {
       "category": "challenges",
+      "sourceKey": "Thieving/Steal from the ~|Grand Hallowed Coffin|~",
+      "terminal": true,
+      "disposition": "excluded",
+      "reason": "non-walkable-content",
+      "targetKeys": []
+    },
+    {
+      "category": "challenges",
       "sourceKey": "Thieving/Turn-in ~|autumn sq'irkjuice|~ to Osman",
       "terminal": true,
       "disposition": "excluded",
@@ -126817,6 +127057,16 @@
       "sourceKey": "11317",
       "terminal": false,
       "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Fishing spot (cage, harpoon)"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "11317",
+      "terminal": false,
+      "disposition": "normalized",
       "reason": "section-merged",
       "targetKeys": [
         "11317"
@@ -128092,6 +128342,16 @@
       "reason": "duplicate-deduped",
       "targetKeys": [
         "Monkey (monster)"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "11568",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Fishing spot (karambwan)"
       ]
     },
     {
@@ -133501,6 +133761,16 @@
       "disposition": "normalized",
       "reason": "duplicate-deduped",
       "targetKeys": [
+        "Stepping stone (Champions' Guild south)"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "12596",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
         "Tree"
       ]
     },
@@ -137212,6 +137482,46 @@
       "reason": "duplicate-deduped",
       "targetKeys": [
         "Stepping stone (Pollnivneach)"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "13358",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Slope (Pollnivneach)"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "13358",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Ditch (Pollnivneach)"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "13358",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "section-merged",
+      "targetKeys": [
+        "13358"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "13358",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "section-merged",
+      "targetKeys": [
+        "13358"
       ]
     },
     {
@@ -141524,6 +141834,16 @@
       "reason": "duplicate-deduped",
       "targetKeys": [
         "Crab"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "15151",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "duplicate-deduped",
+      "targetKeys": [
+        "Stepping stone (Mos Le'Harmless north)"
       ]
     },
     {
@@ -152312,9 +152632,11 @@
       "category": "chunks",
       "sourceKey": "7482",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "empty-walkable-chunk",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "7482"
+      ]
     },
     {
       "category": "chunks",
@@ -172384,6 +172706,16 @@
       "reason": "base-record",
       "targetKeys": [
         "Vampyre kraken"
+      ]
+    },
+    {
+      "category": "drops",
+      "sourceKey": "Vampyre Snail",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Vampyre Snail"
       ]
     },
     {
@@ -208799,6 +209131,16 @@
     },
     {
       "category": "taskUnlocks",
+      "sourceKey": "Items/Adamant hasta^Brutal blue dragon/*",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Adamant hasta^Brutal blue dragon/*"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
       "sourceKey": "Items/Adamant med helm^Catablepon/*",
       "terminal": true,
       "disposition": "imported",
@@ -211669,6 +212011,16 @@
     },
     {
       "category": "taskUnlocks",
+      "sourceKey": "Items/Copper's crimson collar^/*",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Copper's crimson collar^/*"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
       "sourceKey": "Items/Cosmic rune^Catablepon/*",
       "terminal": true,
       "disposition": "imported",
@@ -213605,16 +213957,6 @@
       "reason": "base-record",
       "targetKeys": [
         "Fishing bait^Zombie (Wilderness)/*"
-      ]
-    },
-    {
-      "category": "taskUnlocks",
-      "sourceKey": "Items/Fox^Copper's crimson collar/*",
-      "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
-      "targetKeys": [
-        "Fox^Copper's crimson collar/*"
       ]
     },
     {
@@ -216765,6 +217107,26 @@
       "reason": "base-record",
       "targetKeys": [
         "Rune defender^Cyclops/*"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Items/Rune hasta^Brutal black dragon/*",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Rune hasta^Brutal black dragon/*"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Items/Rune hasta^Brutal red dragon/*",
+      "terminal": true,
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "Rune hasta^Brutal red dragon/*"
       ]
     },
     {
