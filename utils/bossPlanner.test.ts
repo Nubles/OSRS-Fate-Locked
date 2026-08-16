@@ -52,5 +52,6 @@ describe('boss kill planner', () => {
 
   it('exposes boss-name aliases', () => {
     expect(BOSS_ALIASES['Tormented Demons']).toBe('Tormented Demon');
+    expect(BOSS_ALIASES['The Mad Angel']).toBe('Mad Angel');
   });
 });

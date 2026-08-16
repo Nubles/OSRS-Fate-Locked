@@ -9,7 +9,7 @@ import {
 
 describe('Vanilla key economy', () => {
   it('exposes the approved finite reserve', () => {
-    expect(VANILLA_BOSS_STANDARD_KEY_TOTAL).toBe(116);
+    expect(VANILLA_BOSS_STANDARD_KEY_TOTAL).toBe(118);
   });
 
   it('uses the approved Brutus and tier schedules', () => {
