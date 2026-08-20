@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { questWalkthroughFor } from '../../data/questWalkthroughs';
+import type { ConnectGraph } from '../../services/ChunkContentService';
 import type { QuestRouteAnalysis } from '../questRoutes/analyzeQuest';
 import type { ChunkKey, ItemRef, ItemRoute, SourceKind } from '../questRoutes/model';
 import type {
@@ -29,6 +30,7 @@ const route = (
   itemName: string,
   sourceLabel: string,
   sourceKind: SourceKind,
+  overrides: Partial<ItemRoute> = {},
 ): ItemRoute => ({
   id,
   item: item(itemName),
@@ -46,6 +48,27 @@ const route = (
   skillLevelCost: 0,
   travelCost: 0,
   hasDataGap: false,
+  ...overrides,
+});
+
+const routeAt = (
+  id: string,
+  itemName: string,
+  sourceLabel: string,
+  sourceKind: SourceKind,
+  chunk: ChunkKey,
+  overrides: Partial<ItemRoute> = {},
+): ItemRoute => route(id, itemName, sourceLabel, sourceKind, {
+  chunks: [chunk],
+  steps: [{
+    id: `${id}:source`,
+    label: sourceLabel,
+    chunk,
+    gates: [],
+    requiresChunkUnlock: false,
+    hasDataGap: false,
+  }],
+  ...overrides,
 });
 
 const resolvedLocationFor = (
@@ -217,6 +240,33 @@ const earlierThanGrain = (): readonly string[] => cookStrategy().actions
   .filter(action => action.sourceOrder < 6)
   .map(action => action.id);
 
+const fallbackTravelGraph: ConnectGraph = {
+  '12850': ['12851'],
+  '12851': ['12850', '12852'],
+  '12852': ['12851', '12853'],
+  '12853': ['12852'],
+};
+
+const analysisWithOutOfOrderFlourFallbacks = (
+  strategy: QuestStrategyDefinition,
+): QuestRouteAnalysis => {
+  const analysis = analysisFor(strategy, false);
+  return {
+    ...analysis,
+    items: analysis.items.map(item => (
+      item.requirement.item.key === 'pot of flour'
+        ? {
+          ...item,
+          currentRoutes: [
+            routeAt('far-flour-spawn', 'Pot of flour', 'Far flour', 'SPAWN', '50,53'),
+            routeAt('nearby-flour-spawn', 'Pot of flour', 'Nearby flour', 'SPAWN', '50,51'),
+          ],
+        }
+        : item
+    )),
+  };
+};
+
 describe('buildRuneProofCoachModel', () => {
   it('starts with the reviewed Cook instruction and keeps analysis wording out of the journey', () => {
     const model = buildModel();
@@ -270,7 +320,7 @@ describe('buildRuneProofCoachModel', () => {
       .toBe('AVAILABLE_NEXT');
   });
 
-  it('merges duplicate eligible flour requirements and route identities into one alternative group', () => {
+  it('merges duplicate eligible flour requirements and ranks each unique alternative group', () => {
     const strategy = cookStrategy();
     const analysis = analysisFor(strategy, false);
     const duplicateFlourRequirement = itemAnalysis('Pot of flour', [
@@ -291,7 +341,25 @@ describe('buildRuneProofCoachModel', () => {
       .toEqual(['bucket of milk', 'egg', 'pot of flour']);
     expect(flourGroups).toHaveLength(1);
     expect(flourGroups[0]?.routes.map(route => route.id))
-      .toEqual(['mill-flour', 'black-knight-flour', 'windmill-flour']);
+      .toEqual(['mill-flour', 'windmill-flour', 'black-knight-flour']);
+  });
+
+  it('ranks fallback alternatives from the previous completed reviewed location without replacing the current action', () => {
+    const strategy = cookStrategy();
+    const model = buildRuneProofCoachModel({
+      strategy,
+      analysis: analysisWithOutOfOrderFlourFallbacks(strategy),
+      confirmedActionIds: new Set(['cooks-assistant:start-quest']),
+      confirmedItemKeys: new Set(),
+      completedQuestIds: new Set(),
+      connectGraph: fallbackTravelGraph,
+    });
+
+    expect(model.nextAction?.id).toBe('cooks-assistant:take-pot');
+    expect(model.alternativeSources
+      .find(source => source.itemKey === 'pot of flour')
+      ?.routes.map(route => route.id))
+      .toEqual(['nearby-flour-spawn', 'far-flour-spawn']);
   });
 
   it('renders exact gate and item blockers for the primary reviewed action', () => {

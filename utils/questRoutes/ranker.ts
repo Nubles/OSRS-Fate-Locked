@@ -161,3 +161,73 @@ export const prepareRouteRanker = (graph?: ConnectGraph): PreparedRouteRanker =>
 export const rankRoutes = (routes: readonly ItemRoute[], graph?: ConnectGraph): ItemRoute[] => (
   prepareRouteRanker(graph).rank(routes)
 );
+
+export interface RouteRankContext {
+  readonly origin?: ChunkKey;
+}
+
+type FallbackRouteRankTuple = readonly [
+  number, number, number, number, number, number, number, number, number, string,
+];
+
+const firstRouteChunkForFallback = (
+  route: Pick<ItemRoute, 'chunks' | 'steps'>,
+): ChunkKey | undefined => routeChunks(route)[0] ?? route.chunks[0];
+
+const fallbackRouteRankTuple = (
+  route: ItemRoute,
+  originTravelCost: number,
+): FallbackRouteRankTuple => [
+  route.blockers.length === 0 && !route.hasDataGap
+    ? 0
+    : !route.hasDataGap
+      ? 1
+      : 2,
+  route.deterministic ? 0 : 1,
+  originTravelCost + route.travelCost,
+  route.recursiveCost,
+  route.consumedIngredientCost,
+  route.skillUnlockCost,
+  route.skillLevelCost,
+  route.sourceKind === 'DROP' ? 1 : 0,
+  route.probability == null ? 1 : -route.probability,
+  route.id,
+] as const;
+
+const compareFallbackRouteRankTuples = (
+  left: FallbackRouteRankTuple,
+  right: FallbackRouteRankTuple,
+): number => {
+  for (let index = 0; index < left.length; index += 1) {
+    if (left[index] < right[index]) return -1;
+    if (left[index] > right[index]) return 1;
+  }
+  return 0;
+};
+
+/** Ranks secondary fallback routes from an optional prior reviewed action origin. */
+export const rankFallbackRoutes = (
+  routes: readonly ItemRoute[],
+  graph: ConnectGraph | undefined,
+  context: RouteRankContext = {},
+): ItemRoute[] => {
+  const preparedRanker = prepareRouteRanker(graph);
+  const neighbours = graphNeighbours(graph ?? {});
+  const distanceCache = new Map<string, number | null>();
+
+  return routes
+    .map(route => {
+      const evaluated = preparedRanker.evaluate(route);
+      const firstRouteChunk = firstRouteChunkForFallback(evaluated);
+      const originTravelCost = context.origin && firstRouteChunk
+        ? travelCostForChunksWithNeighbours(
+          [context.origin, firstRouteChunk],
+          neighbours,
+          distanceCache,
+        ).travelCost
+        : 0;
+      return { route: evaluated, tuple: fallbackRouteRankTuple(evaluated, originTravelCost) };
+    })
+    .sort((left, right) => compareFallbackRouteRankTuples(left.tuple, right.tuple))
+    .map(({ route }) => route);
+};

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { rankRoutes, routeRankTuple, travelCostForRoute } from './ranker';
-import type { ItemRoute } from './model';
+import { rankFallbackRoutes, rankRoutes, routeRankTuple, travelCostForRoute } from './ranker';
+import type { ChunkKey, ItemRoute } from './model';
 
 const route = (id: string, overrides: Partial<ItemRoute> = {}): ItemRoute => ({
   id,
@@ -20,6 +20,29 @@ const route = (id: string, overrides: Partial<ItemRoute> = {}): ItemRoute => ({
   hasDataGap: false,
   ...overrides,
 });
+
+const routeThrough = (
+  id: string,
+  chunks: readonly ChunkKey[],
+  overrides: Partial<ItemRoute> = {},
+): ItemRoute => route(id, {
+  chunks: [...chunks],
+  steps: chunks.map((chunk, index) => ({
+    id: `${id}:step-${index + 1}`,
+    label: id,
+    chunk,
+    gates: [],
+    requiresChunkUnlock: false,
+    hasDataGap: false,
+  })),
+  ...overrides,
+});
+
+const routeAt = (
+  id: string,
+  chunk: ChunkKey,
+  overrides: Partial<ItemRoute> = {},
+): ItemRoute => routeThrough(id, [chunk], overrides);
 
 describe('route ranking', () => {
   it('applies the approved lexicographic priorities in order', () => {
@@ -82,6 +105,94 @@ describe('route ranking', () => {
       skillLevelCost: 4,
       travelCost: 5,
     }))).toEqual([0, 0, 1, 2, 3, 4, 5, 1, 'mixed-costs']);
+  });
+});
+
+describe('fallback route ranking', () => {
+  const graph = {
+    '12850': ['12851'],
+    '12851': ['12850', '12852'],
+    '12852': ['12851', '12853'],
+    '12853': ['12852'],
+  };
+
+  it('prefers the route with the shorter journey from the prior action origin', () => {
+    const farSpawn = routeAt('far-spawn', '50,53');
+    const nearbySpawn = routeAt('nearby-spawn', '50,51');
+
+    expect(rankFallbackRoutes([farSpawn, nearbySpawn], graph, { origin: '50,50' })[0].id)
+      .toBe(nearbySpawn.id);
+  });
+
+  it('adds graph-evaluated internal travel to travel from the prior action origin', () => {
+    const nearbyWithLongInternalTravel = routeThrough(
+      'nearby-with-long-internal-travel',
+      ['50,51', '50,53'],
+    );
+    const fartherDirectSpawn = routeAt('farther-direct-spawn', '50,52');
+
+    expect(rankFallbackRoutes(
+      [nearbyWithLongInternalTravel, fartherDirectSpawn],
+      graph,
+      { origin: '50,50' },
+    )[0].id).toBe(fartherDirectSpawn.id);
+  });
+
+  it('uses the deterministic geometric fallback when the origin graph is unavailable', () => {
+    const farSpawn = routeAt('a-far-spawn', '50,53');
+    const nearbySpawn = routeAt('z-nearby-spawn', '50,51');
+
+    expect(rankFallbackRoutes([farSpawn, nearbySpawn], undefined, { origin: '50,50' })[0].id)
+      .toBe(nearbySpawn.id);
+  });
+
+  it('uses the deterministic geometric fallback when origin and route evidence are disconnected', () => {
+    const farSpawn = routeAt('a-far-spawn', '50,53');
+    const nearbySpawn = routeAt('z-nearby-spawn', '50,51');
+
+    expect(rankFallbackRoutes([farSpawn, nearbySpawn], { '12850': [] }, { origin: '50,50' })[0].id)
+      .toBe(nearbySpawn.id);
+  });
+
+  it('does not mutate source routes while computing fallback journeys', () => {
+    const farSpawn = routeAt('far-spawn', '50,53');
+    const nearbySpawn = routeAt('nearby-spawn', '50,51');
+    const routes = [farSpawn, nearbySpawn];
+    const before = JSON.stringify(routes);
+
+    expect(rankFallbackRoutes(routes, graph, { origin: '50,50' }).map(route => route.id))
+      .toEqual(['nearby-spawn', 'far-spawn']);
+    expect(JSON.stringify(routes)).toBe(before);
+  });
+
+  it('keeps a deterministic non-combat source ahead of a nearby drop', () => {
+    const nearbyDrop = routeAt('nearby-drop', '50,51', {
+      sourceKind: 'DROP',
+      deterministic: false,
+      probability: 0.9,
+    });
+    const nearbyDeterministicGather = routeAt('nearby-deterministic-gather', '50,51', {
+      sourceKind: 'GATHER',
+    });
+
+    expect(rankFallbackRoutes([nearbyDrop, nearbyDeterministicGather], graph, { origin: '50,50' })[0].id)
+      .toBe(nearbyDeterministicGather.id);
+  });
+
+  it('keeps a chance non-combat source ahead of a nearby drop before probability', () => {
+    const nearbyDrop = routeAt('nearby-drop', '50,51', {
+      sourceKind: 'DROP',
+      deterministic: false,
+      probability: 0.9,
+    });
+    const nearbyChanceGather = routeAt('nearby-chance-gather', '50,51', {
+      sourceKind: 'GATHER',
+      deterministic: false,
+      probability: 0.1,
+    });
+
+    expect(rankFallbackRoutes([nearbyDrop, nearbyChanceGather], graph, { origin: '50,50' })[0].id)
+      .toBe(nearbyChanceGather.id);
   });
 });
 

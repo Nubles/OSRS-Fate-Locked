@@ -1,5 +1,7 @@
-import type { RuneProofRouteAnalysis } from '../questRoutes/analyzeQuest';
-import type { ChunkKey } from '../questRoutes/model';
+import type { DeepReadonly, RuneProofRouteAnalysis } from '../questRoutes/analyzeQuest';
+import type { ConnectGraph } from '../../services/ChunkContentService';
+import type { ChunkKey, ItemRoute } from '../questRoutes/model';
+import { rankFallbackRoutes } from '../questRoutes/ranker';
 import {
   presentQuestAnalysis,
   type PresentedRoute,
@@ -54,6 +56,7 @@ export interface RuneProofCoachModel {
 export interface RuneProofCoachInput {
   readonly strategy: QuestStrategyDefinition;
   readonly analysis: RuneProofRouteAnalysis;
+  readonly connectGraph?: ConnectGraph;
   readonly confirmedItemKeys: ReadonlySet<string>;
   readonly confirmedActionIds: ReadonlySet<string>;
   readonly completedQuestIds: ReadonlySet<string>;
@@ -108,6 +111,32 @@ const completeActions = (
 
   [...completed].forEach(closeDependencies);
   return completed;
+};
+
+const previousCompletedOrigin = (
+  ordered: readonly StrategyAction[],
+  completed: ReadonlySet<string>,
+  primaryActionId: string | undefined,
+  evaluatedById: ReadonlyMap<string, EvaluatedWalkthroughAction>,
+): ChunkKey | undefined => {
+  const primaryIndex = primaryActionId === undefined
+    ? ordered.length
+    : ordered.findIndex(action => action.id === primaryActionId);
+
+  for (let index = primaryIndex - 1; index >= 0; index -= 1) {
+    const action = ordered[index];
+    if (!completed.has(action.id)) continue;
+
+    const location = evaluatedById.get(action.id)?.location;
+    if (
+      (location?.confidence === 'EXACT' || location?.confidence === 'REVIEWED')
+      && location.chunks[0]
+    ) {
+      return location.chunks[0];
+    }
+  }
+
+  return undefined;
 };
 
 const instructionLocationLabel = (instruction: string): string | undefined => {
@@ -181,9 +210,23 @@ const stateFor = (
   return 'DO_NOW';
 };
 
+const mutableFallbackRoute = (route: DeepReadonly<ItemRoute>): ItemRoute => ({
+  ...route,
+  item: { ...route.item },
+  chunks: [...route.chunks],
+  steps: route.steps.map(step => ({
+    ...step,
+    gates: step.gates.map(gate => ({ ...gate })),
+    blockers: step.blockers?.map(blocker => ({ ...blocker })),
+  })),
+  blockers: route.blockers.map(blocker => ({ ...blocker })),
+});
+
 const alternativeSourcesFor = (
   ordered: readonly StrategyAction[],
   analysis: RuneProofRouteAnalysis,
+  connectGraph: ConnectGraph | undefined,
+  origin: ChunkKey | undefined,
 ): readonly RuneProofAlternativeSourceGroup[] => {
   const eligibleItems: { readonly key: string; readonly name: string }[] = [];
   const eligibleItemKeys = new Set<string>();
@@ -201,7 +244,8 @@ const alternativeSourcesFor = (
   const presented = presentQuestAnalysis(analysis as Parameters<typeof presentQuestAnalysis>[0]);
   const routesByItemKey = new Map<string, {
     readonly routeIds: Set<string>;
-    readonly routes: PresentedRoute[];
+    readonly routes: ItemRoute[];
+    readonly presentedRoutesById: Map<string, PresentedRoute>;
   }>();
 
   analysis.items.forEach((item, index) => {
@@ -209,26 +253,39 @@ const alternativeSourcesFor = (
     const itemKey = item.requirement.item.key;
     if (!eligibleItemKeys.has(itemKey)) return;
 
-    const routes = presented.items[index]?.routes ?? [];
+    const presentedRoutesById = new Map<string, PresentedRoute>();
+    (presented.items[index]?.routes ?? []).forEach((route) => {
+      if (!presentedRoutesById.has(route.id)) presentedRoutesById.set(route.id, route);
+    });
     const group = routesByItemKey.get(itemKey) ?? {
       routeIds: new Set<string>(),
       routes: [],
+      presentedRoutesById: new Map<string, PresentedRoute>(),
     };
     // Presenter route IDs are stable identities, so they safely deduplicate merged evidence.
-    routes.forEach((route) => {
-      if (group.routeIds.has(route.id)) return;
-      group.routeIds.add(route.id);
-      group.routes.push(route);
-    });
+    [...item.currentRoutes, ...item.missingChunkRoutes]
+      .map(mutableFallbackRoute)
+      .forEach((route) => {
+        if (group.routeIds.has(route.id)) return;
+        const presentedRoute = presentedRoutesById.get(route.id);
+        if (!presentedRoute) return;
+        group.routeIds.add(route.id);
+        group.routes.push(route);
+        group.presentedRoutesById.set(route.id, presentedRoute);
+      });
     routesByItemKey.set(itemKey, group);
   });
 
   return eligibleItems.flatMap(({ key, name }) => {
     const group = routesByItemKey.get(key);
-    return group?.routes.length ? [{
+    const routes = group && rankFallbackRoutes(group.routes, connectGraph, { origin })
+      .map(route => group.presentedRoutesById.get(route.id))
+      .filter((route): route is PresentedRoute => route !== undefined)
+      .map((route, routeIndex) => ({ ...route, isBest: routeIndex === 0 }));
+    return routes?.length ? [{
       itemKey: key,
       itemName: name,
-      routes: [...group.routes],
+      routes,
     }] : [];
   });
 };
@@ -261,6 +318,12 @@ export function buildRuneProofCoachModel(input: RuneProofCoachInput): RuneProofC
     walkthrough?.actions.map(action => [action.definition.id, action]) ?? [],
   );
   const primaryActionId = ordered.find(action => !completed.has(action.id))?.id;
+  const alternativeOrigin = previousCompletedOrigin(
+    ordered,
+    completed,
+    primaryActionId,
+    evaluatedById,
+  );
 
   const actions = ordered.map((action): RuneProofCoachAction => {
     const evaluatedAction = evaluatedById.get(action.id);
@@ -292,7 +355,12 @@ export function buildRuneProofCoachModel(input: RuneProofCoachInput): RuneProofC
     progress: { completed: completed.size, total: ordered.length },
     nextAction,
     actions,
-    alternativeSources: alternativeSourcesFor(ordered, input.analysis),
+    alternativeSources: alternativeSourcesFor(
+      ordered,
+      input.analysis,
+      input.connectGraph,
+      alternativeOrigin,
+    ),
     mainJourneyText: ordered.map(action => action.displayText).join(' '),
     proof: {
       source: walkthrough?.source ?? input.strategy.source,
