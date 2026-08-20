@@ -67,6 +67,7 @@ import { RegionAdvisorPanel } from './RegionAdvisorPanel';
 import { FrontierAdvisorPanel } from './FrontierAdvisorPanel';
 import { SkillAdvisorPanel } from './SkillAdvisorPanel';
 import { showChunkOnMap } from '../utils/chunkLocations';
+import { runeProofAvailability } from '../utils/questRoutes/featureFlag';
 
 // Code-split: the run card pulls in html2canvas only when actually opened.
 const ShareModal = lazyWithRetry(() => import('./ShareModal').then(m => ({ default: m.ShareModal })));
@@ -342,6 +343,10 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) => {
   const { unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId, customMode } = useGame();
+  const runeProofMode = runeProofAvailability((import.meta as any).env ?? {});
+  const goalPlannerEntry = runeProofMode === 'PREVIEW'
+    ? { label: 'RuneProof', title: 'Get the next reviewed action for your run' }
+    : { label: 'Goal Planner', title: 'Plan the route to any quest, diary, or region' };
   const activeMode = getGameMode(gameModeId);
   const [activeTab, setActiveTab] = useState('CHARACTER');
 
@@ -1067,11 +1072,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                <button
                  onClick={() => setShowGoalPlanner(true)}
                  className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-cyan-500/30 bg-cyan-950/30 hover:bg-cyan-900/40 text-cyan-300 text-[11px] font-medium whitespace-nowrap transition-colors"
-                 title="Plan the route to any quest, diary, or region"
-               >
-                 <Route size={12} />
-                 Goal Planner
-               </button>
+                  title={goalPlannerEntry.title}
+                >
+                  <Route size={12} />
+                  {goalPlannerEntry.label}
+                </button>
                <button
                  onClick={() => setShowAchievements(true)}
                  className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-amber-500/30 bg-amber-950/30 hover:bg-amber-900/40 text-amber-300 text-[11px] font-medium whitespace-nowrap transition-colors"

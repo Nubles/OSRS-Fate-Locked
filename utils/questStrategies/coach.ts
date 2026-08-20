@@ -342,7 +342,9 @@ export function buildRuneProofCoachModel(input: RuneProofCoachInput): RuneProofC
         ? blockerTextFor(blockers[0], action, evaluatedAction)
         : undefined,
       preferredMethodLabel: preferredMethodLabelFor(action, evaluatedAction),
-      confirmationAllowed: action.coach.completion.kind === 'MANUAL' || state === 'NEEDS_CONFIRMATION',
+      confirmationAllowed: action.coach.completion.kind === 'MANUAL'
+        || action.coach.completion.kind === 'ITEM_CONFIRMED'
+        || state === 'NEEDS_CONFIRMATION',
     };
   });
   const nextAction = primaryActionId === undefined

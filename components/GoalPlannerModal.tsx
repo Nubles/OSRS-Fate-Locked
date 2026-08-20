@@ -30,6 +30,14 @@ import {
 import { runeProofAvailability } from '../utils/questRoutes/featureFlag';
 import { buildQuestRequirementChecklist } from '../utils/questRoutes/requirementChecklist';
 import { useRuneProofPreviewChecks } from '../hooks/useRuneProofPreviewChecks';
+import { useRuneProofPreviewActions } from '../hooks/useRuneProofPreviewActions';
+import { RuneProofCoach } from './questStrategies/RuneProofCoach';
+import { buildRuneProofCoachModel } from '../utils/questStrategies/coach';
+import {
+  questStrategyFromWalkthrough,
+  type QuestStrategyDefinition,
+} from '../utils/questStrategies/model';
+import type { ConnectGraph } from '../services/ChunkContentService';
 import {
   canonicalRuneProofAccountIdentity,
   materializeQuestRouteSnapshot,
@@ -40,6 +48,73 @@ import {
 } from '../utils/questRoutes/goalPlannerRuneProof';
 
 export type { RuneProofIntegration } from '../utils/questRoutes/goalPlannerRuneProof';
+
+type RuneProofPlannerState =
+  | (Extract<RuneProofRenderState, { unavailable: false }> & {
+      readonly strategy: QuestStrategyDefinition | null;
+      readonly connectGraph: ConnectGraph;
+    })
+  | (Extract<RuneProofRenderState, { unavailable: true }> & {
+      readonly strategy: null;
+      readonly connectGraph?: undefined;
+    });
+
+interface RuneProofCoachWorkspaceProps {
+  readonly runId: string;
+  readonly strategy: QuestStrategyDefinition;
+  readonly analysis: Extract<RuneProofRenderState, { unavailable: false }>['analysis'];
+  readonly connectGraph: ConnectGraph;
+  readonly confirmedItemKeys: ReadonlySet<string>;
+  readonly completedQuestIds: ReadonlySet<string>;
+  readonly onSetItemConfirmed: (questId: string, itemKey: string, confirmed: boolean) => void;
+  readonly onOpenWorldChunk?: (cx: number, cy: number) => void;
+}
+
+const RuneProofCoachWorkspace: React.FC<RuneProofCoachWorkspaceProps> = ({
+  runId,
+  strategy,
+  analysis,
+  connectGraph,
+  confirmedItemKeys,
+  completedQuestIds,
+  onSetItemConfirmed,
+  onOpenWorldChunk,
+}) => {
+  const previewActions = useRuneProofPreviewActions(runId, strategy);
+  const model = useMemo(() => buildRuneProofCoachModel({
+    strategy,
+    analysis,
+    connectGraph,
+    confirmedItemKeys,
+    confirmedActionIds: previewActions.confirmedActionIds,
+    completedQuestIds,
+  }), [
+    analysis,
+    completedQuestIds,
+    confirmedItemKeys,
+    connectGraph,
+    previewActions.confirmedActionIds,
+    strategy,
+  ]);
+  const handleConfirmAction = React.useCallback((actionId: string) => {
+    const action = strategy.actions.find(candidate => candidate.id === actionId);
+    if (!action) return;
+
+    if (action.coach.completion.kind === 'ITEM_CONFIRMED') {
+      onSetItemConfirmed(strategy.questId, action.coach.completion.itemKey, true);
+      return;
+    }
+    previewActions.setActionConfirmed(actionId, true);
+  }, [onSetItemConfirmed, previewActions.setActionConfirmed, strategy]);
+
+  return (
+    <RuneProofCoach
+      model={model}
+      onConfirmAction={handleConfirmAction}
+      onOpenWorldChunk={onOpenWorldChunk}
+    />
+  );
+};
 
 /**
  * Goal Planner — the reverse of the advisors.
@@ -270,7 +345,7 @@ export const GoalPlannerModal: React.FC<Props> = ({
   const loadRuneProofWalkthrough = runeProofIntegration.loadWalkthrough ?? loadQuestWalkthroughFor;
   const runeProofWalkthroughReleaseFor = runeProofIntegration.walkthroughReleaseFor ?? questWalkthroughReleaseFor;
   const runeProofRequestGeneration = React.useRef(0);
-  const [runeProofState, setRuneProofState] = useState<RuneProofRenderState | null>(null);
+  const [runeProofState, setRuneProofState] = useState<RuneProofPlannerState | null>(null);
   const cancelRuneProofRequest = React.useCallback(() => {
     runeProofRequestGeneration.current += 1;
     setRuneProofState(null);
@@ -288,7 +363,13 @@ export const GoalPlannerModal: React.FC<Props> = ({
 
   const targets = useMemo(() => listGoalTargets(), []);
   const [query, setQuery] = useState('');
-  const [selected, setSelected] = useState<{ kind: GoalKind; id: string } | null>(initialTarget ?? null);
+  const [selected, setSelected] = useState<{ kind: GoalKind; id: string } | null>(() => (
+    initialTarget
+    ?? (runeProofIntegration.availability === 'PREVIEW'
+      ? { kind: 'quest', id: "Cook's Assistant" }
+      : null)
+  ));
+  const [objectivePickerOpen, setObjectivePickerOpen] = useState(false);
   useEffect(() => { if (initialTarget) setSelected(initialTarget); }, [initialTarget]);
 
   const runeProofQuestId = selected?.kind === 'quest'
@@ -356,7 +437,14 @@ export const GoalPlannerModal: React.FC<Props> = ({
     let active = true;
     const isCurrent = () => active && runeProofRequestGeneration.current === generation;
     const showUnavailable = () => {
-      if (isCurrent()) setRuneProofState({ request, analysis: null, unavailable: true });
+      if (isCurrent()) {
+        setRuneProofState({
+          request,
+          analysis: null,
+          unavailable: true,
+          strategy: null,
+        });
+      }
     };
 
     void Promise.resolve()
@@ -386,7 +474,21 @@ export const GoalPlannerModal: React.FC<Props> = ({
           walkthrough,
         );
         const analysis = runeProofIntegration.analyze(request.questId, snapshot, walkthrough);
-        if (isCurrent()) setRuneProofState({ request, analysis, unavailable: false });
+        const strategy = questStrategyFromWalkthrough(walkthrough);
+        const connectGraph = Object.fromEntries(
+          Object.entries(snapshot.connectGraph).map(([from, destinations]) => (
+            [from, [...destinations]]
+          )),
+        );
+        if (isCurrent()) {
+          setRuneProofState({
+            request,
+            analysis,
+            unavailable: false,
+            strategy,
+            connectGraph,
+          });
+        }
       })
       .catch(showUnavailable);
 
@@ -432,6 +534,21 @@ export const GoalPlannerModal: React.FC<Props> = ({
   const totalSteps = plan ? plan.steps.length : 0;
   const doneSteps = plan ? plan.steps.filter((s) => s.done).length : 0;
   const pct = totalSteps > 0 ? Math.round((doneSteps / totalSteps) * 100) : 0;
+  const currentRuneProofState = runeProofRequest !== null
+    && runeProofState?.request === runeProofRequest
+    && runeProofState.request.key === runeProofRequest.key
+    ? runeProofState
+    : null;
+  const activeCoachState = currentRuneProofState?.unavailable === false
+    && currentRuneProofState.strategy !== null
+    ? currentRuneProofState
+    : null;
+  const coachActive = activeCoachState !== null;
+  const completedQuestIds = useMemo(() => new Set(unlocks.quests), [unlocks.quests]);
+  const selectTarget = React.useCallback((target: { kind: GoalKind; id: string }) => {
+    setSelected(target);
+    setObjectivePickerOpen(false);
+  }, []);
 
   return (
     <div
@@ -442,7 +559,9 @@ export const GoalPlannerModal: React.FC<Props> = ({
       aria-label="Goal Planner"
     >
       <div
-        className="bg-[#161616] border border-white/10 rounded-xl shadow-2xl w-full max-w-3xl h-[80vh] flex flex-col overflow-hidden"
+        className={`bg-[#161616] border border-white/10 rounded-xl shadow-2xl w-full ${
+          coachActive ? 'max-w-5xl' : 'max-w-3xl'
+        } h-[80vh] flex flex-col overflow-hidden`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -469,7 +588,11 @@ export const GoalPlannerModal: React.FC<Props> = ({
 
         <div className="flex-1 flex flex-col sm:flex-row min-h-0">
           {/* Picker column */}
-          <div className="w-full h-[34%] sm:w-[44%] sm:h-auto border-b sm:border-b-0 sm:border-r border-white/10 flex flex-col min-h-0 shrink-0">
+          <div className={`${
+            coachActive
+              ? `${objectivePickerOpen ? 'flex' : 'hidden'} sm:flex w-full h-[45%] sm:w-[32%] sm:h-auto`
+              : 'flex w-full h-[34%] sm:w-[44%] sm:h-auto'
+          } border-b sm:border-b-0 sm:border-r border-white/10 flex-col min-h-0 shrink-0`}>
             <div className="p-2.5 border-b border-white/5 shrink-0">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-3.5 h-3.5" aria-hidden />
@@ -493,7 +616,7 @@ export const GoalPlannerModal: React.FC<Props> = ({
                 return (
                   <button
                     key={`${t.kind}:${t.id}`}
-                    onClick={() => setSelected({ kind: t.kind, id: t.id })}
+                    onClick={() => selectTarget({ kind: t.kind, id: t.id })}
                     className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-left transition-colors group ${
                       isSel ? 'bg-cyan-900/25 border border-cyan-500/30' : 'border border-transparent hover:bg-white/5'
                     }`}
@@ -512,6 +635,16 @@ export const GoalPlannerModal: React.FC<Props> = ({
 
           {/* Plan column */}
           <div className="flex-1 flex flex-col min-h-0 min-w-0">
+            {coachActive ? (
+              <button
+                type="button"
+                onClick={() => setObjectivePickerOpen(open => !open)}
+                className="sm:hidden mx-4 mt-3 self-start rounded border border-cyan-400/30 bg-cyan-950/30 px-2.5 py-1.5 text-[11px] font-semibold text-cyan-200"
+                aria-expanded={objectivePickerOpen}
+              >
+                Change objective
+              </button>
+            ) : null}
             {!plan ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center px-6 gap-3">
                 <Target size={32} className="text-gray-700" aria-hidden />
@@ -520,6 +653,21 @@ export const GoalPlannerModal: React.FC<Props> = ({
                   Select any quest, diary tier, or region on the left to see exactly
                   what stands between you and it — in the order to tackle it.
                 </p>
+              </div>
+            ) : activeCoachState ? (
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
+                <RuneProofErrorBoundary key={activeCoachState.request.key}>
+                  <RuneProofCoachWorkspace
+                    runId={runId}
+                    strategy={activeCoachState.strategy}
+                    analysis={activeCoachState.analysis}
+                    connectGraph={activeCoachState.connectGraph}
+                    confirmedItemKeys={confirmedItemKeys}
+                    completedQuestIds={completedQuestIds}
+                    onSetItemConfirmed={previewChecks.setItemConfirmed}
+                    onOpenWorldChunk={onOpenWorldChunk ? handleOpenWorldChunk : undefined}
+                  />
+                </RuneProofErrorBoundary>
               </div>
             ) : (
               <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
@@ -591,13 +739,12 @@ export const GoalPlannerModal: React.FC<Props> = ({
                 )}
 
                 {runeProofRequest !== null
-                  && runeProofState?.request === runeProofRequest
-                  && runeProofState.request.key === runeProofRequest.key
+                  && currentRuneProofState !== null
                   && (
                     <RuneProofErrorBoundary key={runeProofRequest.key}>
                       <QuestRoutePanel
                         questId={runeProofRequest.questId}
-                        analysis={runeProofState.unavailable ? null : runeProofState.analysis}
+                        analysis={currentRuneProofState.unavailable ? null : currentRuneProofState.analysis}
                         checklistRows={checklistRows}
                         confirmedItemKeys={confirmedItemKeys}
                         onSetItemConfirmed={previewChecks.setItemConfirmed}

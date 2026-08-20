@@ -290,6 +290,20 @@ describe('buildRuneProofCoachModel', () => {
     expect(model.actions.filter(action => action.state === 'DO_NOW')).toHaveLength(1);
   });
 
+  it('lets the current item-backed action be confirmed from the coach', () => {
+    const model = buildModel({
+      confirmedActionIds: [
+        'cooks-assistant:start-quest',
+        'cooks-assistant:take-pot',
+        'cooks-assistant:take-bucket',
+      ],
+    });
+
+    expect(model.nextAction?.id).toBe('cooks-assistant:milk-cow');
+    expect(model.nextAction?.state).toBe('DO_NOW');
+    expect(model.nextAction?.confirmationAllowed).toBe(true);
+  });
+
   it('keeps a locked reviewed mill step primary while exposing flour alternatives secondarily', () => {
     const model = buildModel({
       confirmedActionIds: earlierThanGrain(),
