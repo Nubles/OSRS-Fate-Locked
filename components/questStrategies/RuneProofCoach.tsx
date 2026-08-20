@@ -15,6 +15,8 @@ import type {
   RuneProofCoachActionState,
   RuneProofCoachModel,
 } from '../../utils/questStrategies/coach';
+import type { ChunkKey } from '../../utils/questRoutes/model';
+import { chunkRectOnMap } from '../../utils/questRoutes/routeMapGeometry';
 import { RuneProofProofDrawer } from './RuneProofProofDrawer';
 
 export interface RuneProofCoachProps {
@@ -57,18 +59,23 @@ const ACTION_PRESENTATION: Record<RuneProofCoachActionState, ActionPresentation>
   },
 };
 
+const CHUNK_KEY_PATTERN = /^(-?\d+),(-?\d+)$/;
+
 const worldChunk = (
   chunks: RuneProofCoachAction['mapChunks'],
 ): { readonly cx: number; readonly cy: number } | undefined => {
   const firstChunk = chunks[0];
   if (!firstChunk) return undefined;
 
-  const [rawX, rawY, extra] = firstChunk.split(',');
-  const cx = Number(rawX);
-  const cy = Number(rawY);
-  return extra === undefined && Number.isInteger(cx) && Number.isInteger(cy)
-    ? { cx, cy }
-    : undefined;
+  const match = CHUNK_KEY_PATTERN.exec(firstChunk);
+  if (!match) return undefined;
+
+  const cx = Number(match[1]);
+  const cy = Number(match[2]);
+  if (!Number.isSafeInteger(cx) || !Number.isSafeInteger(cy)) return undefined;
+
+  const chunk = (String(cx) + ',' + String(cy)) as ChunkKey;
+  return chunkRectOnMap(chunk) ? { cx, cy } : undefined;
 };
 
 const StateLabel = ({ state }: { readonly state: RuneProofCoachActionState }) => {
@@ -218,25 +225,29 @@ const AlternativeSources = ({
           aria-label="Other legal sources"
           className="space-y-3 border-t border-white/10 px-3 py-3"
         >
-          {sources.map(source => (
-            <section key={source.itemKey}>
-              <h4 className="text-[11px] font-semibold text-gray-200">{source.itemName}</h4>
-              <ul className="mt-1.5 space-y-1.5">
-                {source.routes.map(route => (
-                  <li
-                    key={route.id}
-                    className="rounded border border-white/10 bg-black/15 px-2.5 py-2 text-[11px] text-gray-300"
-                  >
-                    <span className="font-semibold text-gray-100">{route.label}</span>
-                    <span className="ml-1.5 text-gray-500">{route.sourceKind}</span>
-                    <span className="ml-1.5 text-gray-500">
-                      {route.deterministic ? 'Deterministic' : route.probabilityText ?? 'Chance-based'}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
+          {sources.length > 0 ? (
+            sources.map(source => (
+              <section key={source.itemKey}>
+                <h4 className="text-[11px] font-semibold text-gray-200">{source.itemName}</h4>
+                <ul className="mt-1.5 space-y-1.5">
+                  {source.routes.map(route => (
+                    <li
+                      key={route.id}
+                      className="rounded border border-white/10 bg-black/15 px-2.5 py-2 text-[11px] text-gray-300"
+                    >
+                      <span className="font-semibold text-gray-100">{route.label}</span>
+                      <span className="ml-1.5 text-gray-500">{route.sourceKind}</span>
+                      <span className="ml-1.5 text-gray-500">
+                        {route.deterministic ? 'Deterministic' : route.probabilityText ?? 'Chance-based'}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))
+          ) : (
+            <p className="text-[11px] text-gray-500">No other reviewed legal sources are available.</p>
+          )}
         </div>
       ) : null}
     </section>
@@ -248,16 +259,20 @@ export function RuneProofCoach({
   onConfirmAction,
   onOpenWorldChunk,
 }: RuneProofCoachProps) {
+  const coachId = useId();
+  const objectiveHeadingId = 'runeproof-objective-heading-' + coachId;
+  const nextActionHeadingId = 'runeproof-next-action-heading-' + coachId;
+  const routeHeadingId = 'runeproof-route-heading-' + coachId;
   const currentActionId = model.nextAction?.id;
 
   return (
     <section
-      aria-labelledby="runeproof-objective-heading"
+      aria-labelledby={objectiveHeadingId}
       className="min-w-0 w-full space-y-4"
     >
       <header className="border-b border-white/10 pb-3">
         <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-300">RuneProof</p>
-        <h2 id="runeproof-objective-heading" className="mt-1 text-base font-bold text-gray-100">
+        <h2 id={objectiveHeadingId} className="mt-1 text-base font-bold text-gray-100">
           {model.questId}
         </h2>
         <p className="mt-1 text-xs leading-relaxed text-gray-400">{model.recommendationReason}</p>
@@ -274,9 +289,9 @@ export function RuneProofCoach({
         </div>
       </header>
 
-      <section aria-labelledby="runeproof-next-action-heading">
+      <section aria-labelledby={nextActionHeadingId}>
         <div className="mb-2 flex items-center gap-2">
-          <h3 id="runeproof-next-action-heading" className="text-sm font-bold text-gray-100">
+          <h3 id={nextActionHeadingId} className="text-sm font-bold text-gray-100">
             Next action
           </h3>
           <div className="h-px flex-1 bg-white/10" />
@@ -287,16 +302,20 @@ export function RuneProofCoach({
             onConfirmAction={onConfirmAction}
             onOpenWorldChunk={onOpenWorldChunk}
           />
-        ) : (
+        ) : model.actions.length > 0 ? (
           <p className="rounded-lg border border-emerald-400/25 bg-emerald-950/20 px-3 py-2.5 text-xs text-emerald-100">
             All reviewed actions are complete.
+          </p>
+        ) : (
+          <p className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-gray-300">
+            No reviewed actions are available for this objective.
           </p>
         )}
       </section>
 
-      <section aria-labelledby="runeproof-route-heading">
+      <section aria-labelledby={routeHeadingId}>
         <div className="mb-2 flex items-center gap-2">
-          <h3 id="runeproof-route-heading" className="text-sm font-bold text-gray-100">
+          <h3 id={routeHeadingId} className="text-sm font-bold text-gray-100">
             Route
           </h3>
           <div className="h-px flex-1 bg-white/10" />
@@ -313,9 +332,7 @@ export function RuneProofCoach({
         </ol>
       </section>
 
-      {model.alternativeSources.length > 0 ? (
-        <AlternativeSources sources={model.alternativeSources} />
-      ) : null}
+      <AlternativeSources sources={model.alternativeSources} />
 
       <RuneProofProofDrawer proof={model.proof} />
     </section>

@@ -48,7 +48,33 @@ describe('RuneProofProofDrawer', () => {
     expect(screen.getByRole('link', {
       name: "Cook's Assistant/Quick guide",
     })).toBeTruthy();
+    expect(screen.getByText('Chunk Picker reuse status: PERMISSION_RECORDED')).toBeTruthy();
+    expect(screen.getByText('Review record: review-record-1')).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 4, name: 'Provenance' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 4, name: 'Reviewed source wording' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 4, name: 'Route diagnostics' })).toBeTruthy();
     expect(screen.getByText('Bring a pot, bucket, and egg to the Cook.')).toBeTruthy();
     expect(screen.getByText('Route budget and source wording are retained for proof.')).toBeTruthy();
+  });
+
+  it('reports an unverified chunk-picker reuse status without inventing a review record', async () => {
+    const user = userEvent.setup();
+    render(
+      <RuneProofProofDrawer
+        proof={{
+          ...proof,
+          source: {
+            ...proof.source,
+            chunkPickerLicenceStatus: 'UNVERIFIED',
+            permissionReference: undefined,
+          },
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Proof and sources' }));
+
+    expect(screen.getByText('Chunk Picker reuse status: UNVERIFIED')).toBeTruthy();
+    expect(screen.queryByText(/Review record:/)).toBeNull();
   });
 });

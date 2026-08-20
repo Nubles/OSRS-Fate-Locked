@@ -40,9 +40,9 @@ export function RuneProofProofDrawer({ proof }: RuneProofProofDrawerProps) {
           className="space-y-4 border-t border-white/10 px-3 py-3 text-[11px] leading-relaxed text-gray-300"
         >
           <section>
-            <h3 className="text-[10px] font-bold uppercase tracking-widest text-cyan-300">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-cyan-300">
               Provenance
-            </h3>
+            </h4>
             <div className="mt-2 space-y-1">
               <p>
                 <a
@@ -72,6 +72,7 @@ export function RuneProofProofDrawer({ proof }: RuneProofProofDrawerProps) {
                 Chunk Picker: {proof.source.chunkPickerRepository}; commit{' '}
                 <code className="break-all text-gray-200">{proof.source.chunkPickerCommit}</code>
               </p>
+              <p>Chunk Picker reuse status: {proof.source.chunkPickerLicenceStatus}</p>
               {proof.source.permissionReference ? (
                 <p>Review record: {proof.source.permissionReference}</p>
               ) : null}
@@ -79,9 +80,9 @@ export function RuneProofProofDrawer({ proof }: RuneProofProofDrawerProps) {
           </section>
 
           <section>
-            <h3 className="text-[10px] font-bold uppercase tracking-widest text-cyan-300">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-cyan-300">
               Reviewed source wording
-            </h3>
+            </h4>
             {proof.sourceLines.length > 0 ? (
               <ol className="mt-2 space-y-2 border-l border-white/10 pl-3">
                 {proof.sourceLines.map(line => (
@@ -99,9 +100,9 @@ export function RuneProofProofDrawer({ proof }: RuneProofProofDrawerProps) {
           </section>
 
           <section>
-            <h3 className="text-[10px] font-bold uppercase tracking-widest text-cyan-300">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-cyan-300">
               Route diagnostics
-            </h3>
+            </h4>
             {proof.diagnostics.length > 0 ? (
               <ul className="mt-2 space-y-1 border-l border-white/10 pl-3">
                 {proof.diagnostics.map((diagnostic, index) => (
