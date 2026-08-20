@@ -224,7 +224,7 @@ export interface ItemSourceRecord {
 
 // Bump when public/chunk-content.json changes so the fetch URL changes and
 // browsers don't serve a stale cached copy (the filename itself never changes).
-const DATA_REV = 10;
+export const CHUNK_CONTENT_DATA_VERSION = 10;
 
 class ChunkContentService {
   private doc: RawDoc | null = null;
@@ -243,7 +243,7 @@ class ChunkContentService {
     if (this.doc) return Promise.resolve(true);
     if (!this.promise) {
       const base = (import.meta as any).env?.BASE_URL ?? '/';
-      this.promise = fetch(`${base}chunk-content.json?v=${DATA_REV}`)
+      this.promise = fetch(`${base}chunk-content.json?v=${CHUNK_CONTENT_DATA_VERSION}`)
         .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
         .then((doc: RawDoc) => { this.doc = doc; return true; })
         .catch((err: Error) => {

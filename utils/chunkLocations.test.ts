@@ -1,5 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { placeOf, chunkForPlace, chunkUnlocked, summarisePlaces } from './chunkLocations';
+// @vitest-environment jsdom
+
+import { describe, it, expect, vi } from 'vitest';
+import {
+  placeOf, chunkForPlace, chunkUnlocked, summarisePlaces, showChunkOnMap, consumePendingChunk,
+} from './chunkLocations';
 import { UnlockState } from '../types';
 import { AREA_ALIAS_POLICIES } from '../data/areaMapPolicy';
 
@@ -92,4 +96,24 @@ describe('summarisePlaces', () => {
     expect(places[1].label).toContain('Falador');
     expect(places[1].unlocked).toBe(false);
   });
+});
+
+it('requests World Map view and parks the exact chunk for one consumer', () => {
+  const nav = vi.fn();
+  const show = vi.fn();
+  window.addEventListener('fate:nav', nav);
+  window.addEventListener('fate:show-chunk', show);
+
+  showChunkOnMap(30, 43);
+
+  expect((nav.mock.calls[0][0] as CustomEvent).detail).toEqual({
+    target: 'tab:WORLD',
+    worldView: 'MAP',
+  });
+  expect((show.mock.calls[0][0] as CustomEvent).detail).toEqual({ cx: 30, cy: 43 });
+  expect(consumePendingChunk()).toEqual({ cx: 30, cy: 43 });
+  expect(consumePendingChunk()).toBeNull();
+
+  window.removeEventListener('fate:nav', nav);
+  window.removeEventListener('fate:show-chunk', show);
 });

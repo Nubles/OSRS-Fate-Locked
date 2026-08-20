@@ -66,6 +66,7 @@ import { ActivityReadinessBadge } from './ActivityReadinessBadge';
 import { RegionAdvisorPanel } from './RegionAdvisorPanel';
 import { FrontierAdvisorPanel } from './FrontierAdvisorPanel';
 import { SkillAdvisorPanel } from './SkillAdvisorPanel';
+import { showChunkOnMap } from '../utils/chunkLocations';
 
 // Code-split: the run card pulls in html2canvas only when actually opened.
 const ShareModal = lazyWithRetry(() => import('./ShareModal').then(m => ({ default: m.ShareModal })));
@@ -412,10 +413,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
         target = '',
         query,
         activityCategory: requestedActivityCategory,
+        worldView: requestedWorldView,
       } = (e as CustomEvent<{
         target?: string;
         query?: string;
         activityCategory?: string;
+        worldView?: 'LIST' | 'MAP';
       }>).detail ?? {};
       if (target.startsWith('tab:')) {
         // "tab:JOURNAL/QUESTS" also selects a Journal sub-tab — without this a
@@ -425,7 +428,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
         if (requestedActivityCategory && tab === 'ACTIVITIES') {
           setActivityCategory(requestedActivityCategory);
         }
-        if (tab === 'WORLD') setWorldView('LIST');
+        if (tab === 'WORLD') setWorldView(requestedWorldView ?? 'LIST');
         if (subTab && tab === 'JOURNAL') setJournalSubTab(subTab as 'QUESTS' | 'DIARIES' | 'CA' | 'DOABLE');
         if (query) setSearchQuery(query);
         return;
@@ -1212,7 +1215,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
 
     {!suspendModals && showGoalPlanner && (
       <Suspense fallback={<ModalFallback label="Loading planner…" />}>
-        <GoalPlannerModal onClose={() => { setShowGoalPlanner(false); setGoalTarget(null); }} initialTarget={goalTarget} />
+        <GoalPlannerModal
+          onClose={() => { setShowGoalPlanner(false); setGoalTarget(null); }}
+          onOpenWorldChunk={showChunkOnMap}
+          initialTarget={goalTarget}
+        />
       </Suspense>
     )}
 
