@@ -116,6 +116,14 @@ export interface LogEntry {
   hash?: string;
 }
 
+export interface RollAnalyticsMeta {
+  successProbability: number;
+  luckApplied: boolean;
+  drawResolution: 1000 | 10000;
+  standardKeysAwarded: number;
+  rewardKind: 'normal' | 'greed' | 'pity' | 'omni' | 'none';
+}
+
 export interface RollIntent {
   source: string;
   threshold: number;

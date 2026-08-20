@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState, type DetectedEventIdentity, type DetectedProgress, type FailureFateAward, type FateCompensationChoice, type GameEventMeta as DetectedGameEventMeta, type RollIntent } from '../types';
+import { GameState, LogEntry, UnlockState, DropSource, TableType, RivalState, type DetectedEventIdentity, type DetectedProgress, type FailureFateAward, type FateCompensationChoice, type GameEventMeta as DetectedGameEventMeta, type RollAnalyticsMeta, type RollIntent } from '../types';
 import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST } from '../data/items';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from '../config/rules';
 import { resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
@@ -821,6 +821,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       const inlineChanceText = thresholdsMatch
         ? thresholdText
         : `${thresholdText} effective (${formatKeyPercent(baseThreshold)} base)`;
+      const luckApplied = state.activeBuff === 'LUCK';
       const isGreed = state.activeBuff === 'GREED';
       const requestedStandardKeys = success || pity
         ? success && !omni && isGreed ? 2 : 1
@@ -853,6 +854,21 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
             exhausted: bossStage ? remainingStage === 0 : false,
           }
         : {};
+      const singleDrawProbability = Math.max(0, Math.min(1, threshold / 100));
+      const rawSuccessProbability = luckApplied
+        ? 1 - (1 - singleDrawProbability) ** 2
+        : singleDrawProbability;
+      const successProbability = Number(rawSuccessProbability.toFixed(12));
+      const rewardKind: RollAnalyticsMeta['rewardKind'] = success
+        ? omni ? 'omni' : isGreed ? 'greed' : 'normal'
+        : pity ? 'pity' : 'none';
+      const analyticsMeta: RollAnalyticsMeta = {
+        successProbability,
+        luckApplied,
+        drawResolution: vanillaBossContext || vanillaClueContext ? 10000 : 1000,
+        standardKeysAwarded,
+        rewardKind,
+      };
       const entryMeta = (fatePointsEarned: number) => ({
         roll,
         baseThreshold,
@@ -861,8 +877,9 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         fatePointsEarned,
         ...meta,
         ...vanillaRollMeta,
+        ...analyticsMeta,
       });
-      const eventMeta = { roll, baseThreshold, threshold, ...meta, ...vanillaRollMeta };
+      const eventMeta = { roll, baseThreshold, threshold, ...meta, ...vanillaRollMeta, ...analyticsMeta };
 
       let newState = {
         ...state,

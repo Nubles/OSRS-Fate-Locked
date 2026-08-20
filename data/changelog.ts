@@ -19,6 +19,26 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-08-20-fate-analytics-dashboard',
+    title: 'Your Fate, Explained',
+    date: '2026-08-20',
+    sections: {
+      added: [
+        'Fate Analytics now provides nine visual views covering luck over time, outcomes, roll distributions, sources, streaks, probability calibration, Key rewards, the activity calendar, and notable moments.',
+        'The activity calendar can move through older selected history, while chart summaries and accessible labels keep the same information available without relying on colour alone.',
+      ],
+      changed: [
+        'Dashboard, category table, and Fate Report now use shared filters for range, source, category, and Exact-only views.',
+        'Expected wins, luck delta, calibration, and scoreable success rates now use one clearly labelled scoreable cohort while overall attempts and genuine wins remain visible.',
+      ],
+      fixed: [
+        'Pity interventions are now separated from genuine RNG wins, and Standard Keys remain separate from Omni-Keys throughout the statistics.',
+        'Older saves and malformed history now degrade safely with coverage disclosures instead of distorting confirmed odds, rewards, or dated views.',
+        'Large histories now aggregate efficiently, and cumulative expectation bands remain within possible success counts.',
+      ],
+    },
+  },
+  {
     id: '2026-08-16-wyrmscraig-content',
     title: 'Wyrmscraig Has Arrived',
     date: '2026-08-16',

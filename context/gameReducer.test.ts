@@ -142,6 +142,36 @@ describe('ROLL_RESULT', () => {
     expect(s.keys).toBe(initialState.keys + 2);
   });
 
+  it.each([
+    ['normal', base(), roll({ success: true }), { rewardKind: 'normal', standardKeysAwarded: 1 }],
+    ['none', base(), roll({ success: false }), { rewardKind: 'none', standardKeysAwarded: 0 }],
+    ['pity', { ...base(), fatePoints: 49 }, roll({ pity: true }), { rewardKind: 'pity', standardKeysAwarded: 1 }],
+    ['omni', base(), roll({ success: true, omni: true }), { rewardKind: 'omni', standardKeysAwarded: 1 }],
+    ['greed', { ...base(), activeBuff: 'GREED' as const }, roll({ success: true }), { rewardKind: 'greed', standardKeysAwarded: 2 }],
+  ])('records universal %s analytics metadata', (_label, state, action, expected) => {
+    const result = gameReducer(state, action);
+
+    expect(result.history.at(-1)?.meta).toMatchObject({
+      successProbability: 0.5,
+      luckApplied: false,
+      drawResolution: 1000,
+      ...expected,
+    });
+  });
+
+  it('records the two-draw Luck probability before clearing the buff', () => {
+    const result = gameReducer(
+      { ...base(), activeBuff: 'LUCK' as const },
+      roll({ success: true, threshold: 20, baseThreshold: 20, roll: 10 }),
+    );
+
+    expect(result.history.at(-1)?.meta).toMatchObject({
+      luckApplied: true,
+      successProbability: 0.36,
+      drawResolution: 1000,
+    });
+  });
+
   it('preserves decimal roll, base chance, and effective chance in every result shape', () => {
     const cases = [
       {
@@ -555,6 +585,24 @@ describe('ROLL_RESULT — Vanilla key safety valve', () => {
       remainingReserve: 0,
       outcome: 'normal',
       exhausted: true,
+    });
+  });
+
+  it('records Vanilla analytics without replacing contextual roll metadata', () => {
+    const next = gameReducer(
+      { ...vanillaState(), bossStandardKeysAwarded: { Zulrah: 1 } },
+      roll({ success: true, baseThreshold: 15, threshold: 15, context: bossContext }),
+    );
+
+    expect(next.history.at(-1)?.meta).toMatchObject({
+      successProbability: 0.15,
+      luckApplied: false,
+      drawResolution: 10000,
+      standardKeysAwarded: 1,
+      rewardKind: 'normal',
+      bossName: 'Zulrah',
+      remainingReserve: 0,
+      outcome: 'normal',
     });
   });
 

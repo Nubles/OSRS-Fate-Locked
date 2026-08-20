@@ -1,22 +1,34 @@
 /**
- * Fate Report — "how lucky has this run actually been?"
+ * Fate Report — compatibility view over the shared Fate Analytics result.
  *
- * Every roll in the history carries its success threshold, so the run's
- * expected number of successes is just Σ(threshold/100) and the observed
- * deviation can be scored properly (binomial z-score via Σ p(1-p)) instead
- * of a naive win-rate comparison. Pure function — safe inside useMemo.
+ * The analytics engine owns normalization and all derived figures. This module
+ * only translates that immutable result into the legacy report shape used by
+ * the existing Fate Report UI.
  */
 
-import { LogEntry } from '../types';
-import { isRollEntry } from './logEntry';
+import type { LogEntry } from '../types';
+import {
+  buildFateAnalytics,
+  defaultFateAnalyticsQuery,
+  type AnalyticsAggregate,
+  type AnalyticsNotableRoll,
+  type FateAnalyticsQuery,
+  type FateAnalyticsResult,
+} from './fateAnalytics';
 
 export interface CategoryLuck {
   category: string;
+  totalAttempts: number;
+  genuineWins: number;
+  /** Scoreable attempt cohort used for expected wins and delta. */
   rolls: number;
   expected: number;
+  /** Genuine wins within the scoreable cohort. */
   actual: number;
   /** actual − expected (keys gained above/below expectation). */
   delta: number;
+  probabilityCoverage: number;
+  sampleLabel: AnalyticsAggregate['sampleLabel'];
 }
 
 export interface NotableRoll {
@@ -26,13 +38,17 @@ export interface NotableRoll {
 }
 
 export interface FateReport {
+  totalAttempts: number;
+  genuineWins: number;
+  /** Scoreable attempt cohort used for expected wins and delta. */
   rolls: number;
   expected: number;
+  /** Genuine wins within the scoreable cohort. */
   actual: number;
   delta: number;
   /** Standard deviations from expectation; + is lucky. */
-  zScore: number;
-  verdict: string;
+  zScore: number | null;
+  verdict: string | null;
   /** Success against the longest odds. */
   luckiest: NotableRoll | null;
   /** Failure against the shortest odds. */
@@ -42,85 +58,46 @@ export interface FateReport {
   categories: CategoryLuck[];
 }
 
-/** "Quest (Novice)" → "Quest"; "Col. Log: Vorki" → "Collection Log"; else as-is. */
-export const rollCategory = (source: string): string => {
-  if (source.toLowerCase().startsWith('col. log:')) return 'Collection Log';
-  const paren = source.indexOf(' (');
-  return paren > 0 ? source.slice(0, paren) : source;
-};
+const toReportRoll = (roll: AnalyticsNotableRoll | null): NotableRoll | null => roll === null
+  ? null
+  : { source: roll.source, threshold: roll.probability * 100, timestamp: roll.timestamp };
 
-const verdictFor = (z: number): string => {
-  if (z >= 2) return 'Blessed by Fate';
-  if (z >= 1) return 'Running hot';
-  if (z > -1) return 'Fate is fair';
-  if (z > -2) return 'Running cold';
-  return 'Forsaken by Fate';
-};
+const toCategoryLuck = (category: AnalyticsAggregate): CategoryLuck => ({
+  category: category.label,
+  totalAttempts: category.attempts,
+  genuineWins: category.genuineWins,
+  rolls: category.scoreableAttempts,
+  expected: category.expectedWins,
+  actual: category.scoreableWins,
+  delta: category.delta,
+  probabilityCoverage: category.probabilityCoverage,
+  sampleLabel: category.sampleLabel,
+});
 
-/** Null when the history has no scoreable rolls (threshold missing/zero). */
-export function buildFateReport(history: LogEntry[]): FateReport | null {
-  const rolls = history
-    .filter((h) => isRollEntry(h) && typeof h.threshold === 'number' && h.threshold > 0 && h.source)
-    .sort((a, b) => a.timestamp - b.timestamp);
-  if (rolls.length === 0) return null;
-
-  let expected = 0;
-  let variance = 0;
-  let actual = 0;
-  let luckiest: NotableRoll | null = null;
-  let cruelest: NotableRoll | null = null;
-  let drought = 0, longestDrought = 0;
-  let streak = 0, longestHotStreak = 0;
-  const byCategory = new Map<string, CategoryLuck>();
-
-  for (const r of rolls) {
-    const p = Math.min(r.threshold!, 100) / 100;
-    const won = r.result === 'SUCCESS';
-    expected += p;
-    variance += p * (1 - p);
-    if (won) actual++;
-
-    if (won) {
-      streak++; longestHotStreak = Math.max(longestHotStreak, streak);
-      drought = 0;
-      if (!luckiest || r.threshold! < luckiest.threshold) {
-        luckiest = { source: r.source!, threshold: r.threshold!, timestamp: r.timestamp };
-      }
-    } else {
-      drought++; longestDrought = Math.max(longestDrought, drought);
-      streak = 0;
-      if (!cruelest || r.threshold! > cruelest.threshold) {
-        cruelest = { source: r.source!, threshold: r.threshold!, timestamp: r.timestamp };
-      }
-    }
-
-    const cat = rollCategory(r.source!);
-    const entry = byCategory.get(cat) ?? { category: cat, rolls: 0, expected: 0, actual: 0, delta: 0 };
-    entry.rolls++;
-    entry.expected += p;
-    if (won) entry.actual++;
-    byCategory.set(cat, entry);
-  }
-
-  const delta = actual - expected;
-  // With one near-certain roll variance can be ~0 — clamp so z stays finite.
-  const zScore = delta / Math.max(Math.sqrt(variance), 0.5);
-
-  const categories = [...byCategory.values()]
-    .map((c) => ({ ...c, delta: c.actual - c.expected }))
-    .sort((a, b) => b.rolls - a.rolls);
-
+export function fateReportFromAnalytics(analytics: FateAnalyticsResult): FateReport | null {
+  if (analytics.summary.attempts === 0) return null;
   return {
-    rolls: rolls.length,
-    expected,
-    actual,
-    delta,
-    zScore,
-    verdict: verdictFor(zScore),
-    luckiest,
-    cruelest,
-    longestDrought,
-    longestHotStreak,
-    categories,
+    totalAttempts: analytics.summary.attempts,
+    genuineWins: analytics.summary.genuineWins,
+    rolls: analytics.summary.scoreableAttempts,
+    expected: analytics.summary.expectedWins,
+    actual: analytics.summary.scoreableWins,
+    delta: analytics.summary.delta,
+    zScore: analytics.summary.zScore,
+    verdict: analytics.summary.verdict,
+    luckiest: toReportRoll(analytics.notables.luckiestSuccess),
+    cruelest: toReportRoll(analytics.notables.cruelestMiss),
+    longestDrought: analytics.summary.longestDrought,
+    longestHotStreak: analytics.summary.longestHotStreak,
+    categories: analytics.categories.map(toCategoryLuck),
   };
 }
+
+export function buildFateReport(
+  history: LogEntry[],
+  query: FateAnalyticsQuery = defaultFateAnalyticsQuery(Date.now()),
+): FateReport | null {
+  return fateReportFromAnalytics(buildFateAnalytics(history, query));
+}
+
+export { rollCategory } from './fateAnalytics';

@@ -805,6 +805,7 @@ describe('quest completion integration', () => {
     id: string,
     source: string,
     threshold: number,
+    successProbability: number,
     failureFate = 1,
   ) => {
     expect(after.state.runRevision).toBe(before.state.runRevision + 2);
@@ -848,6 +849,11 @@ describe('quest completion integration', () => {
         roll: 100,
         baseThreshold: threshold,
         threshold,
+        successProbability,
+        luckApplied: false,
+        drawResolution: 1000,
+        standardKeysAwarded: 0,
+        rewardKind: 'none',
       },
     });
   };
@@ -927,6 +933,7 @@ describe('quest completion integration', () => {
       "Witch's Potion",
       'Quest (Novice)',
       25,
+      0.25,
     );
 
     let repeated: ReturnType<Game['completeQuest']> | undefined;
@@ -954,6 +961,7 @@ describe('quest completion integration', () => {
       'In Search of Knowledge',
       'Quest (Experienced)',
       75,
+      0.75,
       2,
     );
 
