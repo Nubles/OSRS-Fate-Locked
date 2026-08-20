@@ -175,35 +175,60 @@ const stateFor = (
   isPrimary: boolean,
   evaluatedAction: EvaluatedWalkthroughAction | undefined,
 ): RuneProofCoachActionState => {
+  if (!isPrimary) return 'AVAILABLE_NEXT';
   if (directBlockersFor(evaluatedAction).length > 0) return 'BLOCKED';
   if (needsConfirmation(evaluatedAction)) return 'NEEDS_CONFIRMATION';
-  return isPrimary ? 'DO_NOW' : 'AVAILABLE_NEXT';
+  return 'DO_NOW';
 };
 
 const alternativeSourcesFor = (
   ordered: readonly StrategyAction[],
   analysis: RuneProofRouteAnalysis,
 ): readonly RuneProofAlternativeSourceGroup[] => {
-  const actionByOutputItem = new Map<string, StrategyAction>();
+  const eligibleItems: { readonly key: string; readonly name: string }[] = [];
+  const eligibleItemKeys = new Set<string>();
   ordered.forEach((action) => {
     if (action.coach.fallbackPolicy === 'NONE') return;
     action.coach.fulfils.forEach(({ item }) => {
-      if (!actionByOutputItem.has(item.key)) actionByOutputItem.set(item.key, action);
+      if (eligibleItemKeys.has(item.key)) return;
+      eligibleItemKeys.add(item.key);
+      eligibleItems.push({ key: item.key, name: item.name });
     });
   });
 
   // Presentation only reads item routes, which both analysis shapes carry. A full
   // walkthrough analysis is used separately when it is available for action proof.
   const presented = presentQuestAnalysis(analysis as Parameters<typeof presentQuestAnalysis>[0]);
-  return analysis.items.flatMap((item, index) => {
-    if (item.requirement.supplyPolicy !== 'PLAYER_OBTAINED') return [];
-    if (!actionByOutputItem.has(item.requirement.item.key)) return [];
+  const routesByItemKey = new Map<string, {
+    readonly routeIds: Set<string>;
+    readonly routes: PresentedRoute[];
+  }>();
+
+  analysis.items.forEach((item, index) => {
+    if (item.requirement.supplyPolicy !== 'PLAYER_OBTAINED') return;
+    const itemKey = item.requirement.item.key;
+    if (!eligibleItemKeys.has(itemKey)) return;
 
     const routes = presented.items[index]?.routes ?? [];
-    return routes.length > 0 ? [{
-      itemKey: item.requirement.item.key,
-      itemName: item.requirement.item.name,
-      routes,
+    const group = routesByItemKey.get(itemKey) ?? {
+      routeIds: new Set<string>(),
+      routes: [],
+    };
+    // Presenter route IDs are stable identities, so they safely deduplicate merged evidence.
+    routes.forEach((route) => {
+      if (group.routeIds.has(route.id)) return;
+      group.routeIds.add(route.id);
+      group.routes.push(route);
+    });
+    routesByItemKey.set(itemKey, group);
+  });
+
+  return eligibleItems.flatMap(({ key, name }) => {
+    const group = routesByItemKey.get(key);
+    return group?.routes.length ? [{
+      itemKey: key,
+      itemName: name,
+      routes: [...group.routes],
     }] : [];
   });
 };

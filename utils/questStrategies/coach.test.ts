@@ -189,6 +189,30 @@ const buildModel = ({
   });
 };
 
+const buildFromAnalysis = (
+  strategy: QuestStrategyDefinition,
+  analysis: QuestRouteAnalysis,
+) => buildRuneProofCoachModel({
+  strategy,
+  analysis,
+  confirmedActionIds: new Set(),
+  confirmedItemKeys: new Set(),
+  completedQuestIds: new Set(),
+});
+
+const withPrimaryAction = (
+  analysis: QuestRouteAnalysis,
+  overrides: Pick<EvaluatedWalkthroughAction, 'state' | 'blockers'>,
+): QuestRouteAnalysis => ({
+  ...analysis,
+  walkthrough: {
+    ...analysis.walkthrough,
+    actions: analysis.walkthrough.actions.map((action, index) => (
+      index === 0 ? { ...action, ...overrides } : action
+    )),
+  },
+});
+
 const earlierThanGrain = (): readonly string[] => cookStrategy().actions
   .filter(action => action.sourceOrder < 6)
   .map(action => action.id);
@@ -228,6 +252,123 @@ describe('buildRuneProofCoachModel', () => {
     expect(model.alternativeSources
       .find(source => source.itemKey === 'pot of flour')
       ?.routes.some(route => route.label === 'Black Knight')).toBe(true);
+  });
+
+  it('keeps every later incomplete action available when the primary mill step is locked', () => {
+    const model = buildModel({
+      confirmedActionIds: earlierThanGrain(),
+      millLocked: true,
+    });
+
+    expect(model.actions.filter(action => (
+      action.state === 'DO_NOW'
+      || action.state === 'BLOCKED'
+      || action.state === 'NEEDS_CONFIRMATION'
+    )).map(action => action.id))
+      .toEqual(['cooks-assistant:pick-grain']);
+    expect(model.actions.find(action => action.id === 'cooks-assistant:make-flour')?.state)
+      .toBe('AVAILABLE_NEXT');
+  });
+
+  it('merges duplicate eligible flour requirements and route identities into one alternative group', () => {
+    const strategy = cookStrategy();
+    const analysis = analysisFor(strategy, false);
+    const duplicateFlourRequirement = itemAnalysis('Pot of flour', [
+      route('black-knight-flour', 'Pot of flour', 'Black Knight', 'DROP'),
+      route('windmill-flour', 'Pot of flour', 'Windmill', 'RECIPE'),
+    ]);
+    const model = buildRuneProofCoachModel({
+      strategy,
+      analysis: { ...analysis, items: [...analysis.items, duplicateFlourRequirement] },
+      confirmedActionIds: new Set(),
+      confirmedItemKeys: new Set(),
+      completedQuestIds: new Set(),
+    });
+
+    const flourGroups = model.alternativeSources
+      .filter(source => source.itemKey === 'pot of flour');
+    expect(model.alternativeSources.map(source => source.itemKey))
+      .toEqual(['bucket of milk', 'egg', 'pot of flour']);
+    expect(flourGroups).toHaveLength(1);
+    expect(flourGroups[0]?.routes.map(route => route.id))
+      .toEqual(['mill-flour', 'black-knight-flour', 'windmill-flour']);
+  });
+
+  it('renders exact gate and item blockers for the primary reviewed action', () => {
+    const strategy = cookStrategy();
+    const gateModel = buildFromAnalysis(strategy, withPrimaryAction(analysisFor(strategy, false), {
+      state: 'REQUIREMENT_MISSING',
+      blockers: [{
+        kind: 'GATE',
+        gate: { type: 'SKILL', skill: 'Mining', level: 30, label: 'Mining level 30' },
+        label: 'Mining level 30',
+      }],
+    }));
+    const itemModel = buildFromAnalysis(strategy, withPrimaryAction(analysisFor(strategy, false), {
+      state: 'REQUIREMENT_MISSING',
+      blockers: [{ kind: 'ITEM', itemKey: 'bucket', label: 'Bucket' }],
+    }));
+
+    expect(gateModel.nextAction?.blockerText).toBe('Mining level 30 is required before this step.');
+    expect(itemModel.nextAction?.blockerText).toBe('Get Bucket before this step.');
+  });
+
+  it('ignores dependency-only evaluator blockers when choosing the current action state', () => {
+    const strategy = cookStrategy();
+    const model = buildFromAnalysis(strategy, withPrimaryAction(analysisFor(strategy, false), {
+      state: 'REQUIREMENT_MISSING',
+      blockers: [{
+        kind: 'DEPENDENCY',
+        actionId: 'cooks-assistant:take-pot',
+        label: 'Take the pot first.',
+      }],
+    }));
+
+    expect(model.nextAction?.state).toBe('DO_NOW');
+    expect(model.nextAction?.blockerText).toBeUndefined();
+  });
+
+  it('requires confirmation when the evaluator has no proof for the primary action', () => {
+    const strategy = cookStrategy();
+    const analysis = analysisFor(strategy, false);
+    const model = buildFromAnalysis(strategy, {
+      ...analysis,
+      walkthrough: {
+        ...analysis.walkthrough,
+        actions: analysis.walkthrough.actions
+          .filter(action => action.definition.id !== 'cooks-assistant:start-quest'),
+      },
+    });
+
+    expect(model.nextAction?.state).toBe('NEEDS_CONFIRMATION');
+    expect(model.nextAction?.confirmationAllowed).toBe(true);
+  });
+
+  it('excludes fallback-NONE strategy outputs from alternative sources', () => {
+    const originalStrategy = cookStrategy();
+    const strategy: QuestStrategyDefinition = {
+      ...originalStrategy,
+      actions: originalStrategy.actions.map(action => (
+        action.id === 'cooks-assistant:make-flour'
+          ? { ...action, coach: { ...action.coach, fallbackPolicy: 'NONE' } }
+          : action
+      )),
+    };
+    const model = buildFromAnalysis(strategy, analysisFor(strategy, false));
+
+    expect(model.alternativeSources.map(source => source.itemKey)).not.toContain('pot of flour');
+  });
+
+  it('is deterministic across calls without mutating reviewed strategy or analysis inputs', () => {
+    const strategy = cookStrategy();
+    const analysis = analysisFor(strategy, false);
+    const inputBefore = JSON.stringify({ strategy, analysis });
+
+    const first = buildFromAnalysis(strategy, analysis);
+    const second = buildFromAnalysis(strategy, analysis);
+
+    expect(second).toEqual(first);
+    expect(JSON.stringify({ strategy, analysis })).toBe(inputBefore);
   });
 
   it('uses the reviewed mill instruction and label when the mill is available', () => {
