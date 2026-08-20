@@ -252,9 +252,10 @@ describe('Goal Planner responsive layout', () => {
     const originalBodyOverflow = document.body.style.overflow;
     document.documentElement.style.overflow = 'auto';
     document.body.style.overflow = 'scroll';
+    let view: ReturnType<typeof render> | undefined;
 
     try {
-      const view = render(
+      view = render(
         <GoalPlannerModal
           onClose={() => undefined}
           initialTarget={{ kind: 'quest', id: "Doric's Quest" }}
@@ -265,9 +266,11 @@ describe('Goal Planner responsive layout', () => {
       expect(document.body.style.overflow).toBe('hidden');
 
       view.unmount();
+      view = undefined;
       expect(document.documentElement.style.overflow).toBe('auto');
       expect(document.body.style.overflow).toBe('scroll');
     } finally {
+      view?.unmount();
       document.documentElement.style.overflow = originalRootOverflow;
       document.body.style.overflow = originalBodyOverflow;
     }
