@@ -12,6 +12,9 @@
  * Fail-safe: if the fetch fails the map simply shows no content panel.
  */
 
+import type { Coverage, RawRouteRequirement } from '../utils/questRoutes/model';
+import { classifyShop } from '../utils/shopClassification';
+
 export interface ChunkMonster { name: string; count: number; slayer: number | null }
 export interface ChunkContent {
   name?: string;
@@ -210,6 +213,15 @@ export interface EntityHit {
   locations: EntityLocation[];
 }
 
+export interface ItemSourceRecord {
+  itemName: string;
+  kind: 'spawn' | 'shop' | 'monster';
+  hostName: string;
+  cx: number;
+  cy: number;
+  rawRequirements: RawRouteRequirement[];
+}
+
 // Bump when public/chunk-content.json changes so the fetch URL changes and
 // browsers don't serve a stale cached copy (the filename itself never changes).
 const DATA_REV = 10;
@@ -377,6 +389,7 @@ class ChunkContentService {
   // dropping it), built lazily by inverting shopItems / drops and resolving each
   // host's locations through the entity index.
   private itemSrcIdx: Map<string, EntityLocation[]> | null = null;
+  private itemSourceRecordIdx: Map<string, ItemSourceRecord[]> | null = null;
   private buildItemSrcIdx(): Map<string, EntityLocation[]> {
     const idx = new Map<string, EntityLocation[]>();
     const addSources = (items: string[], host: string, kind: EntityKind) => {
@@ -399,6 +412,95 @@ class ChunkContentService {
     if (!this.doc) return [];
     if (!this.itemSrcIdx) this.itemSrcIdx = this.buildItemSrcIdx();
     return this.itemSrcIdx.get(itemName.toLowerCase()) ?? [];
+  }
+
+  private buildItemSourceRecordIdx(): Map<string, ItemSourceRecord[]> {
+    const index = new Map<string, ItemSourceRecord[]>();
+    const seen = new Set<string>();
+    const add = (record: ItemSourceRecord) => {
+      const duplicateKey = `${record.itemName}\u0000${record.kind}\u0000${record.hostName}\u0000${record.cx}\u0000${record.cy}`;
+      if (seen.has(duplicateKey)) return;
+      seen.add(duplicateKey);
+      const key = record.itemName.toLowerCase();
+      const records = index.get(key);
+      if (records) records.push(record);
+      else index.set(key, [record]);
+    };
+    const merchantRequirements = (hostName: string, kind: ItemSourceRecord['kind']): RawRouteRequirement[] => {
+      if (kind !== 'shop') return [];
+      const category = classifyShop(hostName);
+      return category
+        ? [{ raw: `Use the ${category}`, origin: 'ENTITY' }]
+        : [{ raw: `Unknown merchant category: ${hostName}`, origin: 'ENTITY' }];
+    };
+    const requirementsFor = (
+      hostName: string,
+      kind: ItemSourceRecord['kind'],
+      cx: number,
+      cy: number,
+    ): RawRouteRequirement[] => [
+      ...merchantRequirements(hostName, kind),
+      ...this.taskRequirements(hostName, kind, cx, cy)
+        .map(raw => ({ raw, origin: 'ENTITY' as const })),
+      ...this.chunkEntryRequirements(cx, cy)
+        .map(raw => ({ raw, origin: 'CHUNK_ENTRY' as const })),
+    ];
+
+    for (const [id, entry] of Object.entries(this.doc?.chunks ?? {})) {
+      const numericId = Number(id);
+      const cx = Math.floor(numericId / 256);
+      const cy = numericId % 256;
+      for (const itemName of entry.i ?? []) {
+        add({
+          itemName,
+          kind: 'spawn',
+          hostName: itemName,
+          cx,
+          cy,
+          rawRequirements: requirementsFor(itemName, 'spawn', cx, cy),
+        });
+      }
+    }
+
+    const addHostItems = (items: string[], hostName: string, kind: 'shop' | 'monster') => {
+      const hit = this.entityLocations(hostName, [kind]);
+      if (!hit) return;
+      for (const location of hit.locations) {
+        for (const itemName of items) {
+          add({
+            itemName,
+            kind,
+            hostName,
+            cx: location.cx,
+            cy: location.cy,
+            rawRequirements: requirementsFor(hostName, kind, location.cx, location.cy),
+          });
+        }
+      }
+    };
+    for (const [shop, items] of Object.entries(this.doc?.shopItems ?? {})) {
+      addHostItems(items, shop, 'shop');
+    }
+    for (const [monster, items] of Object.entries(this.doc?.drops ?? {})) {
+      addHostItems(items, monster, 'monster');
+    }
+    return index;
+  }
+
+  /** Exact spawn, shop, and drop records for an item, including access evidence. */
+  itemSourceRecords(itemName: string): readonly ItemSourceRecord[] {
+    if (!this.doc) return [];
+    if (!this.itemSourceRecordIdx) this.itemSourceRecordIdx = this.buildItemSourceRecordIdx();
+    return (this.itemSourceRecordIdx.get(itemName.toLowerCase()) ?? [])
+      .map(record => ({
+        ...record,
+        rawRequirements: record.rawRequirements.map(requirement => ({ ...requirement })),
+      }));
+  }
+
+  /** Coverage of the generated exact spawn, shop, and drop source families. */
+  itemSourceCoverage(): Coverage {
+    return this.doc ? 'COMPLETE' : 'PARTIAL';
   }
 
   /**
