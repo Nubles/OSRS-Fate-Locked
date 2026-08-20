@@ -158,6 +158,18 @@ export const routeRecipes: readonly RouteRecipe[] = validateRouteRecipes([
     sourceRevision: '15251261',
   },
   {
+    id: 'pick-wheat',
+    kind: 'GATHER',
+    output: item('Grain'),
+    outputQuantity: 1,
+    ingredients: [],
+    tools: [],
+    stations: [{ entityKind: 'object', names: ['Wheat'] }],
+    gates: [],
+    deterministic: true,
+    sourceRevision: '15183493',
+  },
+  {
     id: 'grain-to-flour',
     kind: 'RECIPE',
     output: item('Pot of flour'),
@@ -237,6 +249,7 @@ export const routeRecipes: readonly RouteRecipe[] = validateRouteRecipes([
 /** Outputs whose reviewed RECIPE/GATHER family is explicitly complete. */
 const COMPLETE_TRANSFORMATION_OUTPUTS = new Set([
   'plank',
+  'grain',
   'pot of flour',
   'bucket of milk',
   'clay',

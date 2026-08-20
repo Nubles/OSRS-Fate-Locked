@@ -54,6 +54,7 @@ describe('reviewed RuneProof recipe catalogue', () => {
       revision: recipe.sourceRevision,
     }))).toEqual([
       { id: 'logs-to-plank', kind: 'RECIPE', output: 'plank', revision: '15251261' },
+      { id: 'pick-wheat', kind: 'GATHER', output: 'grain', revision: '15183493' },
       { id: 'grain-to-flour', kind: 'RECIPE', output: 'pot of flour', revision: '15183493' },
       { id: 'milk-cow', kind: 'GATHER', output: 'bucket of milk', revision: '15281482' },
       { id: 'mine-clay', kind: 'GATHER', output: 'clay', revision: '15209138' },
@@ -61,6 +62,22 @@ describe('reviewed RuneProof recipe catalogue', () => {
       { id: 'mine-iron', kind: 'GATHER', output: 'iron ore', revision: '15281625' },
       { id: 'mine-coal', kind: 'GATHER', output: 'coal', revision: '15281599' },
     ]);
+  });
+
+  it('restores the reviewed local wheat-to-grain route', () => {
+    expect(routeRecipes).toContainEqual({
+      id: 'pick-wheat',
+      kind: 'GATHER',
+      output: { key: 'grain', name: 'Grain' },
+      outputQuantity: 1,
+      ingredients: [],
+      tools: [],
+      stations: [{ entityKind: 'object', names: ['Wheat'] }],
+      gates: [],
+      deterministic: true,
+      sourceRevision: '15183493',
+    });
+    expect(transformationCoverageFor('grain')).toBe('COMPLETE');
   });
 
   it('marks only explicitly reviewed transformation outputs complete', () => {

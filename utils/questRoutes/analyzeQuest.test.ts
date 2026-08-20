@@ -384,6 +384,29 @@ describe('analyzeQuest', () => {
     expect(analysis.items[1].state).toBe('NO_CURRENT_SOURCE');
   });
 
+  it("prefers Cook's Assistant's deterministic local wheat route over a Black Knight drop", () => {
+    const analysis = analyzeQuest("Cook's Assistant", fixture({
+      current: ['50,50', '50,51', '49,51'],
+      records: [
+        source('Pot', { hostName: 'Pot', cx: 50, cy: 50 }),
+        source('Pot of flour', { kind: 'monster', hostName: 'Black Knight', cx: 50, cy: 50 }),
+      ],
+      recipes: routeRecipes.filter(({ id }) => ['pick-wheat', 'grain-to-flour'].includes(id)),
+      entityHits: [
+        { name: 'Wheat', kind: 'object', locations: [{ cx: 49, cy: 51 }] },
+        { name: 'Hopper', kind: 'object', locations: [{ cx: 49, cy: 51 }] },
+      ],
+    }));
+    const flour = analysis.items.find(item => item.requirement.item.key === 'pot of flour');
+
+    expect(flour?.currentRoutes[0].sourceLabel).toBe('grain-to-flour');
+    expect(flour?.currentRoutes[0].deterministic).toBe(true);
+    expect(flour?.currentRoutes[0].steps.map(step => step.label)).toEqual(
+      expect.arrayContaining(['Use Hopper', 'Use Wheat', 'Pot']),
+    );
+    expect(flour?.currentRoutes[0].steps.map(step => step.label)).not.toContain('Black Knight');
+  });
+
   it('includes chunk-data and reviewed-quest revisions in generated metadata', () => {
     const analysis = analyzeQuest("Cook's Assistant", fixture({
       records: cookSources(),
