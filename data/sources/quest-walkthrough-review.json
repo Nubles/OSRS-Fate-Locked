@@ -24,8 +24,7 @@
           "kind": "EXACT_ENTITY"
         },
         "rawWikiLineIds": [
-          "cooks-assistant-walkthrough-1",
-          "cooks-assistant-walkthrough-2"
+          "cooks-assistant-walkthrough-6"
         ],
         "section": "QUEST",
         "sourceOrder": 1,
@@ -59,7 +58,9 @@
           "reviewedAt": "2026-08-20",
           "reviewer": "OpenAI Codex"
         },
-        "rawWikiLineIds": [],
+        "rawWikiLineIds": [
+          "cooks-assistant-walkthrough-2"
+        ],
         "section": "QUEST",
         "sourceOrder": 2,
         "coach": {
@@ -258,7 +259,9 @@
           },
           "kind": "EXACT_ENTITY"
         },
-        "rawWikiLineIds": [],
+        "rawWikiLineIds": [
+          "cooks-assistant-walkthrough-5"
+        ],
         "section": "QUEST",
         "sourceOrder": 6,
         "coach": {
@@ -307,9 +310,7 @@
           },
           "kind": "EXACT_ENTITY"
         },
-        "rawWikiLineIds": [
-          "cooks-assistant-walkthrough-5"
-        ],
+        "rawWikiLineIds": [],
         "section": "QUEST",
         "sourceOrder": 7,
         "coach": {
@@ -361,7 +362,7 @@
           "kind": "EXACT_ENTITY"
         },
         "rawWikiLineIds": [
-          "cooks-assistant-walkthrough-6"
+          "cooks-assistant-walkthrough-1"
         ],
         "section": "QUEST",
         "sourceOrder": 8,

@@ -7,7 +7,7 @@ export interface QuestWalkthroughRelease {
 const RELEASES: readonly QuestWalkthroughRelease[] = [
   {
     questId: "Cook's Assistant",
-    revision: 'bd08b1964f6efa99da2859ec5e95f9747d1cddd5c4a2a5f7b0d40456b3927a79',
+    revision: '15f1f8e27398aa52ee3f290bdcbc38a1a7c2232baf10fb4320d3ca0a69a37d65',
     releaseStatus: 'PREVIEW_ONLY',
   },
   {

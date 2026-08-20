@@ -90,6 +90,25 @@ describe('local walkthrough loader', () => {
       { id: 'cooks-assistant:complete', instruction: "Cook's Assistant complete.", method: undefined },
     ]);
   });
+
+  it("preserves Cook's Assistant's canonical source-line ownership", () => {
+    const walkthrough = questWalkthroughFor("Cook's Assistant")!;
+
+    expect(Object.fromEntries(walkthrough.actions.map(action => [
+      action.id,
+      action.rawWikiLineIds,
+    ]))).toEqual({
+      'cooks-assistant:start-quest': ['cooks-assistant-walkthrough-6'],
+      'cooks-assistant:take-pot': ['cooks-assistant-walkthrough-2'],
+      'cooks-assistant:take-bucket': [],
+      'cooks-assistant:milk-cow': ['cooks-assistant-walkthrough-3'],
+      'cooks-assistant:take-egg': ['cooks-assistant-walkthrough-4'],
+      'cooks-assistant:pick-grain': ['cooks-assistant-walkthrough-5'],
+      'cooks-assistant:make-flour': [],
+      'cooks-assistant:return-to-cook': ['cooks-assistant-walkthrough-1'],
+      'cooks-assistant:complete': ['cooks-assistant-walkthrough-7'],
+    });
+  });
 });
 
 const duplicateActionFixture = () => {

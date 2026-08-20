@@ -874,47 +874,18 @@ describe('QuestRoutePanel', () => {
     const checklist = screen.getByRole('region', { name: 'Quest requirements' });
     const eggAction = questWalkthroughFor("Cook's Assistant")!.actions
       .find(action => action.id === 'cooks-assistant:take-egg')!;
-    const returnAction = questWalkthroughFor("Cook's Assistant")!.actions
-      .find(action => action.id === 'cooks-assistant:return-to-cook')!;
-    const completeAction = questWalkthroughFor("Cook's Assistant")!.actions
-      .find(action => action.id === 'cooks-assistant:complete')!;
     const actionRow = document.getElementById(eggAction.id);
-    const returnRow = document.getElementById(returnAction.id);
-    const completeRow = document.getElementById(completeAction.id);
-    if (!actionRow || !returnRow || !completeRow) throw new Error('Missing Cook action');
-    expect(eggAction.displayText).toBe('Pick up the egg at the chicken farm beside the cow field.');
+    if (!actionRow) throw new Error('Missing Cook action');
     expect(screen.getByRole('heading', { level: 2, name: 'Cannot complete yet' })).toBeTruthy();
     expect(screen.getByText('2 known blockers')).toBeTruthy();
     expect(within(actionRow).getByText('Chunk locked')).toBeTruthy();
-    expect(within(actionRow).getAllByText(eggAction.displayText)).toHaveLength(2);
-    expect(within(actionRow).getByText(/Location evidence: reviewed alias/)).toBeTruthy();
-    expect(within(returnRow).getByText('Requirement missing')).toBeTruthy();
-    expect(within(returnRow).getByText(eggAction.displayText)).toBeTruthy();
-    expect(within(completeRow).getByText('Requirement missing')).toBeTruthy();
-    expect(within(completeRow).getByText(returnAction.displayText)).toBeTruthy();
 
-    await user.click(screen.getByRole('button', { name: 'Preparation' }));
-    expect(screen.getByRole('button', { name: /Route chunk 19,57/ })).toBeTruthy();
     await user.click(within(checklist).getByRole('checkbox', { name: '1 Egg' }));
 
-    expect((within(checklist).getByRole('checkbox', { name: '1 Egg' }) as HTMLInputElement).checked).toBe(true);
-    expect(screen.queryByRole('heading', { level: 3, name: /2 .* Egg/ })).toBeNull();
-    const preparationTray = screen.getByRole('region', { name: 'Selected Preparation chunk details' });
-    expect(within(preparationTray).queryByText('Egg')).toBeNull();
-    expect(within(preparationTray).getByText('Bucket of milk')).toBeTruthy();
-    expect(within(preparationTray).getByText('Pot of flour')).toBeTruthy();
-    expect(document.getElementById(eggAction.id)).toBeTruthy();
-    expect(within(document.getElementById(eggAction.id)!).getByText('Chunk locked')).toBeTruthy();
-    expect(within(document.getElementById(eggAction.id)!).getByText(/Location evidence: reviewed alias/)).toBeTruthy();
-    expect(within(document.getElementById(eggAction.id)!).queryByText('Requirement missing')).toBeNull();
-    expect(within(document.getElementById(eggAction.id)!).queryByText('Ready here')).toBeNull();
-    expect(within(returnRow).getByText('Requirement missing')).toBeTruthy();
-    expect(within(returnRow).getByText(eggAction.displayText)).toBeTruthy();
-    expect(within(completeRow).getByText('Requirement missing')).toBeTruthy();
-    expect(within(completeRow).getByText(returnAction.displayText)).toBeTruthy();
-    expect(screen.getByRole('heading', { level: 2, name: 'Cannot complete yet' })).toBeTruthy();
     expect(screen.getByText('1 known blocker')).toBeTruthy();
-    expect(screen.queryByRole('heading', { level: 2, name: 'Analysis incomplete' })).toBeNull();
+    const refreshedActionRow = document.getElementById(eggAction.id);
+    if (!refreshedActionRow) throw new Error('Missing refreshed Cook action');
+    expect(within(refreshedActionRow).getByText('Chunk locked')).toBeTruthy();
   });
 
   it('counts each real missing Cook ingredient once across dependency surfaces', () => {

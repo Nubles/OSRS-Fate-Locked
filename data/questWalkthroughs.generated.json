@@ -33,8 +33,7 @@
             "kind": "EXACT_ENTITY"
           },
           "rawWikiLineIds": [
-            "cooks-assistant-walkthrough-1",
-            "cooks-assistant-walkthrough-2"
+            "cooks-assistant-walkthrough-6"
           ],
           "section": "QUEST",
           "sourceOrder": 1
@@ -82,7 +81,9 @@
             "reviewedAt": "2026-08-20",
             "reviewer": "OpenAI Codex"
           },
-          "rawWikiLineIds": [],
+          "rawWikiLineIds": [
+            "cooks-assistant-walkthrough-2"
+          ],
           "section": "QUEST",
           "sourceOrder": 2
         },
@@ -280,7 +281,9 @@
             },
             "kind": "EXACT_ENTITY"
           },
-          "rawWikiLineIds": [],
+          "rawWikiLineIds": [
+            "cooks-assistant-walkthrough-5"
+          ],
           "section": "QUEST",
           "sourceOrder": 6
         },
@@ -330,9 +333,7 @@
             },
             "kind": "EXACT_ENTITY"
           },
-          "rawWikiLineIds": [
-            "cooks-assistant-walkthrough-5"
-          ],
+          "rawWikiLineIds": [],
           "section": "QUEST",
           "sourceOrder": 7
         },
@@ -370,7 +371,7 @@
             "kind": "EXACT_ENTITY"
           },
           "rawWikiLineIds": [
-            "cooks-assistant-walkthrough-6"
+            "cooks-assistant-walkthrough-1"
           ],
           "section": "QUEST",
           "sourceOrder": 8
@@ -410,7 +411,7 @@
       ],
       "questId": "Cook's Assistant",
       "releaseStatus": "PREVIEW_ONLY",
-      "revision": "bd08b1964f6efa99da2859ec5e95f9747d1cddd5c4a2a5f7b0d40456b3927a79",
+      "revision": "15f1f8e27398aa52ee3f290bdcbc38a1a7c2232baf10fb4320d3ca0a69a37d65",
       "source": {
         "chunkPickerCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
         "chunkPickerLicenceStatus": "UNVERIFIED",
