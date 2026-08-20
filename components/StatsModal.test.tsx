@@ -1,34 +1,51 @@
 import { describe, expect, it } from 'vitest';
-import { LogEntry } from '../types';
-import * as statsModalModule from './StatsModal';
+import { sortAnalyticsRows, type AnalyticsBreakdownRow } from './StatsModal';
 
-describe('StatsModal roll calculations', () => {
-  it('includes a sub-1.0 roll in Stats without leaving the first bucket', () => {
-    const buildStats = (
-      statsModalModule as Record<string, unknown>
-    ).buildStats as (history: LogEntry[]) => {
-      totalRolls: number;
-      expectedSuccesses: number;
-      buckets: Array<{ count: number }>;
-    };
-    expect(buildStats).toBeTypeOf('function');
+const row = (
+  source: string,
+  originalIndex: number,
+  zScore: number | null,
+  confirmedStandardKeys: number | null,
+): AnalyticsBreakdownRow => ({
+  source,
+  originalIndex,
+  attempts: 1,
+  genuineWins: 0,
+  expectedWins: 0,
+  delta: 0,
+  actualRate: null,
+  expectedRate: null,
+  pityInterventions: 0,
+  confirmedStandardKeys,
+  probabilityCoverage: 0,
+  sampleLabel: 'Limited sample',
+  zScore,
+});
 
-    const history: LogEntry[] = [{
-      id: 'sub-one-roll',
-      timestamp: 1,
-      type: 'ROLL_FAIL',
-      message: 'No Key.',
-      result: 'FAIL',
-      source: 'Attack level 2',
-      rollValue: 0.4,
-      baseThreshold: 0.4,
-      threshold: 0.4,
-    }];
+describe('StatsModal stable row sorter', () => {
+  it('keeps unavailable z-scores after available values in both directions', () => {
+    const rows = [
+      row('Unavailable', 0, null, null),
+      row('High', 1, 2, 3),
+      row('Low', 2, -1, 1),
+    ];
 
-    const stats = buildStats(history);
-    expect(stats.totalRolls).toBe(1);
-    expect(stats.expectedSuccesses).toBe(0.004);
-    expect(stats.buckets[0].count).toBe(1);
-    expect(stats.buckets.reduce((sum, bucket) => sum + bucket.count, 0)).toBe(1);
+    expect(sortAnalyticsRows(rows, 'zScore', 'asc').map(item => item.source))
+      .toEqual(['Low', 'High', 'Unavailable']);
+    expect(sortAnalyticsRows(rows, 'zScore', 'desc').map(item => item.source))
+      .toEqual(['High', 'Low', 'Unavailable']);
+  });
+
+  it('keeps unavailable rewards last and resolves equal values by original index', () => {
+    const rows = [
+      row('Unavailable', 0, null, null),
+      row('Later', 2, 0, 1),
+      row('Earlier', 1, 0, 1),
+    ];
+
+    expect(sortAnalyticsRows(rows, 'confirmedStandardKeys', 'asc').map(item => item.source))
+      .toEqual(['Earlier', 'Later', 'Unavailable']);
+    expect(sortAnalyticsRows(rows, 'confirmedStandardKeys', 'desc').map(item => item.source))
+      .toEqual(['Earlier', 'Later', 'Unavailable']);
   });
 });

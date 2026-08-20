@@ -19,20 +19,44 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-08-16-wyrmscraig-content');
+    expect(LATEST_CHANGELOG.id).toBe('2026-08-20-fate-analytics-dashboard');
+  });
+
+  it('announces the accurate Fate Analytics dashboard', () => {
+    expect(LATEST_CHANGELOG).toMatchObject({
+      id: '2026-08-20-fate-analytics-dashboard',
+      title: 'Your Fate, Explained',
+      date: '2026-08-20',
+    });
+    expect(LATEST_CHANGELOG.sections.added).toEqual(expect.arrayContaining([
+      expect.stringMatching(/nine visual views/i),
+      expect.stringMatching(/activity calendar/i),
+    ]));
+    expect(LATEST_CHANGELOG.sections.changed).toEqual(expect.arrayContaining([
+      expect.stringMatching(/shared filters/i),
+      expect.stringMatching(/scoreable/i),
+    ]));
+    expect(LATEST_CHANGELOG.sections.fixed).toEqual(expect.arrayContaining([
+      expect.stringMatching(/pity/i),
+      expect.stringMatching(/older saves/i),
+    ]));
   });
 
   it('announces the Wyrmscraig content update', () => {
-    expect(LATEST_CHANGELOG).toMatchObject({
+    const wyrmscraigRelease = CHANGELOG_RELEASES.find(
+      release => release.id === '2026-08-16-wyrmscraig-content',
+    );
+
+    expect(wyrmscraigRelease).toMatchObject({
       id: '2026-08-16-wyrmscraig-content',
       title: 'Wyrmscraig Has Arrived',
       date: '2026-08-16',
     });
-    expect(LATEST_CHANGELOG.sections.added).toEqual(expect.arrayContaining([
+    expect(wyrmscraigRelease?.sections.added).toEqual(expect.arrayContaining([
       'Fallen From Grace and The Mad Angel are now tracked across quests, bosses, requirements, and the Collection Log.',
       'Hunter, Mining, and Crafting Tier 6 now list Goat Hunting, Sunstone Mining, and Sunstone Golem Crafting with their Wyrmscraig requirements.',
     ]));
-    expect(LATEST_CHANGELOG.sections.fixed).toEqual(expect.arrayContaining([
+    expect(wyrmscraigRelease?.sections.fixed).toEqual(expect.arrayContaining([
       'The August source refresh adds the latest shortcuts, drop-table corrections, Collection Log items, and the corrected Grandmaster tier for Maggot King Speed Chaser.',
     ]));
   });
