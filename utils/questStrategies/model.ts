@@ -68,6 +68,7 @@ const hasValidPreferredMethod = (
       return isCanonicalItemKey(preferredMethod.itemKey)
         && isNonBlank(preferredMethod.sourceLabel)
         && fulfils.some(entry => entry.item.key === preferredMethod.itemKey)
+        && action.confidence === 'REVIEWED'
         && hasReviewedLocationEvidence(action);
     case 'TRANSFORMATION':
       return isNonBlank(preferredMethod.recipeId);
@@ -81,6 +82,7 @@ const hasValidCoachMetadata = (action: QuestWalkthroughActionDefinition): action
   if (
     !isRecord(coach)
     || !Array.isArray(action.items)
+    || !action.items.every(isWalkthroughItemRef)
     || !Array.isArray(coach.fulfils)
     || !coach.fulfils.every(isWalkthroughItemRef)
   ) return false;
@@ -91,7 +93,7 @@ const hasValidCoachMetadata = (action: QuestWalkthroughActionDefinition): action
   ) return false;
 
   const knownItemKeys = new Set([
-    ...action.items.filter(isWalkthroughItemRef).map(entry => entry.item.key),
+    ...action.items.map(entry => entry.item.key),
     ...coach.fulfils.map(entry => entry.item.key),
   ]);
 

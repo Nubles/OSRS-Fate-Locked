@@ -162,6 +162,24 @@ describe('questStrategyFromWalkthrough', () => {
     expect(questStrategyFromWalkthrough(walkthrough)?.actions[0].id).toBe('cooks-assistant:start-quest');
   });
 
+  it('fails closed when a strategy action has a malformed item entry', () => {
+    const walkthrough = clone(strategyWalkthroughFixture());
+    walkthrough.actions[1].items = [{
+      item: { key: 'Pot', name: 'Pot' },
+      quantity: 1,
+      supplyPolicy: 'PLAYER_OBTAINED',
+    }];
+
+    expect(questStrategyFromWalkthrough(walkthrough)).toBeNull();
+  });
+
+  it('rejects a direct source action without reviewed confidence', () => {
+    const walkthrough = clone(strategyWalkthroughFixture());
+    walkthrough.actions[1].confidence = 'EXACT';
+
+    expect(questStrategyFromWalkthrough(walkthrough)).toBeNull();
+  });
+
   it.each([
     ['missing coach metadata', walkthroughWithoutCoachMetadata()],
     ['missing dependency', walkthroughWithMissingStrategyDependency()],
