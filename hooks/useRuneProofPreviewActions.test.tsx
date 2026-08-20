@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { act, cleanup, renderHook } from '@testing-library/react';
+import { useLayoutEffect } from 'react';
+import { act, cleanup, render, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { questWalkthroughFor } from '../data/questWalkthroughs';
 import { type RuneProofStorage } from '../utils/questRoutes/previewChecks';
@@ -61,6 +62,51 @@ const alternateStrategy = (): QuestStrategyDefinition => {
       },
     ],
   };
+};
+
+interface ScopeTransitionProbeProps {
+  readonly runId: string;
+  readonly strategy: QuestStrategyDefinition;
+  readonly storage: RuneProofStorage;
+  readonly transition: boolean;
+  readonly onTransition: (confirmedActionIds: string[]) => void;
+}
+
+const ScopeTransitionProbe = ({
+  runId,
+  strategy,
+  storage,
+  transition,
+  onTransition,
+}: ScopeTransitionProbeProps) => {
+  const controls = useRuneProofPreviewActions(runId, strategy, storage);
+
+  useLayoutEffect(() => {
+    if (!transition) return;
+    onTransition([...controls.confirmedActionIds]);
+    controls.setActionConfirmed('cooks-assistant:make-flour', true);
+  }, [transition]);
+
+  return null;
+};
+
+const withThrowingDefaultStorage = (callback: (accessCount: () => number) => void): void => {
+  const descriptor = Object.getOwnPropertyDescriptor(window, 'localStorage');
+  let accesses = 0;
+  Object.defineProperty(window, 'localStorage', {
+    configurable: true,
+    get: () => {
+      accesses += 1;
+      throw new Error('local storage getter is unavailable');
+    },
+  });
+
+  try {
+    callback(() => accesses);
+  } finally {
+    if (descriptor) Object.defineProperty(window, 'localStorage', descriptor);
+    else delete (window as { localStorage?: Storage }).localStorage;
+  }
 };
 
 describe('useRuneProofPreviewActions', () => {
@@ -131,6 +177,92 @@ describe('useRuneProofPreviewActions', () => {
 
     rerender({ loadedStrategy: strategy });
     expect([...result.current.confirmedActionIds]).toEqual(['cooks-assistant:take-egg']);
+  });
+
+  it('does not resolve default storage before a strategy loads', () => {
+    withThrowingDefaultStorage(accessCount => {
+      expect(() => renderHook(() => useRuneProofPreviewActions('run-a', null))).not.toThrow();
+      expect(accessCount()).toBe(0);
+    });
+  });
+
+  it('contains a failing default storage getter once a strategy loads', () => {
+    const strategy = cookStrategy();
+
+    withThrowingDefaultStorage(accessCount => {
+      expect(() => {
+        const { result } = renderHook(() => useRuneProofPreviewActions('run-a', strategy));
+        expect([...result.current.confirmedActionIds]).toEqual([]);
+      }).not.toThrow();
+      expect(accessCount()).toBeGreaterThan(0);
+    });
+  });
+
+  it('does not expose or persist the previous run during the transition render', () => {
+    const storage = memoryStorage();
+    const strategy = cookStrategy();
+    const transitions: string[][] = [];
+    storage.values.set(runeProofPreviewActionStorageKey('run-a'), JSON.stringify({
+      "Cook's Assistant": ['cooks-assistant:take-egg'],
+    }));
+    const { rerender } = render(
+      <ScopeTransitionProbe
+        runId="run-a"
+        strategy={strategy}
+        storage={storage}
+        transition={false}
+        onTransition={confirmedActionIds => transitions.push(confirmedActionIds)}
+      />,
+    );
+
+    rerender(
+      <ScopeTransitionProbe
+        runId="run-b"
+        strategy={strategy}
+        storage={storage}
+        transition
+        onTransition={confirmedActionIds => transitions.push(confirmedActionIds)}
+      />,
+    );
+
+    expect(transitions).toEqual([[]]);
+    expect(JSON.parse(storage.values.get(runeProofPreviewActionStorageKey('run-b'))!)).toEqual({
+      "Cook's Assistant": ['cooks-assistant:make-flour'],
+    });
+  });
+
+  it('does not expose or persist the previous strategy identity during the transition render', () => {
+    const storage = memoryStorage();
+    const strategy = cookStrategy();
+    const revisedStrategy: QuestStrategyDefinition = { ...strategy, revision: 'revised' };
+    const transitions: string[][] = [];
+    storage.values.set(runeProofPreviewActionStorageKey('run-a'), JSON.stringify({
+      "Cook's Assistant": ['cooks-assistant:take-egg'],
+    }));
+    const { rerender } = render(
+      <ScopeTransitionProbe
+        runId="run-a"
+        strategy={strategy}
+        storage={storage}
+        transition={false}
+        onTransition={confirmedActionIds => transitions.push(confirmedActionIds)}
+      />,
+    );
+
+    rerender(
+      <ScopeTransitionProbe
+        runId="run-a"
+        strategy={revisedStrategy}
+        storage={storage}
+        transition
+        onTransition={confirmedActionIds => transitions.push(confirmedActionIds)}
+      />,
+    );
+
+    expect(transitions).toEqual([[]]);
+    expect(JSON.parse(storage.values.get(runeProofPreviewActionStorageKey('run-a'))!)).toEqual({
+      "Cook's Assistant": ['cooks-assistant:make-flour'],
+    });
   });
 
   it('keeps valid in-memory action changes when storage rejects writes', () => {

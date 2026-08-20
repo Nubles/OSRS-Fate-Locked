@@ -14,8 +14,26 @@ const unavailableStorage: RuneProofStorage = {
   removeItem: () => undefined,
 };
 
-const defaultStorage = (): RuneProofStorage => (
-  typeof window === 'undefined' ? unavailableStorage : window.localStorage
+const defaultStorage = (): RuneProofStorage => {
+  try {
+    return typeof window === 'undefined' ? unavailableStorage : window.localStorage;
+  } catch {
+    return unavailableStorage;
+  }
+};
+
+interface RuneProofPreviewActionState {
+  readonly runId: string;
+  readonly strategy: QuestStrategyDefinition | null;
+  readonly actions: RuneProofPreviewActions;
+}
+
+const actionsForCurrentScope = (
+  state: RuneProofPreviewActionState,
+  runId: string,
+  strategy: QuestStrategyDefinition | null,
+): RuneProofPreviewActions => (
+  state.runId === runId && state.strategy === strategy ? state.actions : {}
 );
 
 export interface RuneProofPreviewActionControls {
@@ -28,15 +46,24 @@ export function useRuneProofPreviewActions(
   strategy: QuestStrategyDefinition | null,
   storage?: RuneProofStorage,
 ): RuneProofPreviewActionControls {
-  const activeStorage = storage ?? defaultStorage();
-  const [actions, setActions] = useState<RuneProofPreviewActions>(() => (
-    strategy ? readRuneProofPreviewActions(activeStorage, runId, strategy) : {}
-  ));
+  const activeStorage = useMemo(() => (
+    strategy ? storage ?? defaultStorage() : unavailableStorage
+  ), [storage, strategy]);
+  const [state, setState] = useState<RuneProofPreviewActionState>(() => ({
+    runId,
+    strategy,
+    actions: strategy ? readRuneProofPreviewActions(activeStorage, runId, strategy) : {},
+  }));
 
   useEffect(() => {
-    setActions(strategy ? readRuneProofPreviewActions(activeStorage, runId, strategy) : {});
+    setState({
+      runId,
+      strategy,
+      actions: strategy ? readRuneProofPreviewActions(activeStorage, runId, strategy) : {},
+    });
   }, [activeStorage, runId, strategy]);
 
+  const actions = actionsForCurrentScope(state, runId, strategy);
   const confirmedActionIds = useMemo(() => new Set(
     strategy
       ? normalizeRuneProofPreviewActions(actions, strategy)[strategy.questId] ?? []
@@ -46,8 +73,8 @@ export function useRuneProofPreviewActions(
   const setActionConfirmed = useCallback((actionId: string, confirmed: boolean) => {
     if (!strategy) return;
 
-    setActions(current => {
-      const existing = current[strategy.questId] ?? [];
+    setState(current => {
+      const existing = actionsForCurrentScope(current, runId, strategy)[strategy.questId] ?? [];
       const nextActionIds = confirmed
         ? [...existing, actionId]
         : existing.filter(id => id !== actionId);
@@ -55,7 +82,7 @@ export function useRuneProofPreviewActions(
         [strategy.questId]: nextActionIds,
       }, strategy);
       writeRuneProofPreviewActions(activeStorage, runId, strategy, next);
-      return next;
+      return { runId, strategy, actions: next };
     });
   }, [activeStorage, runId, strategy]);
 
