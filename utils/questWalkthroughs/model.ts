@@ -29,6 +29,22 @@ export interface WalkthroughItemRef {
   readonly supplyPolicy: 'PLAYER_OBTAINED' | 'QUEST_PROVIDED';
 }
 
+export type QuestActionCompletionRule =
+  | { readonly kind: 'MANUAL' }
+  | { readonly kind: 'ITEM_CONFIRMED'; readonly itemKey: string }
+  | { readonly kind: 'QUEST_COMPLETED'; readonly questId: string };
+
+export type QuestActionPreferredMethod =
+  | { readonly kind: 'DIRECT_SOURCE'; readonly itemKey: string; readonly sourceLabel: string }
+  | { readonly kind: 'TRANSFORMATION'; readonly recipeId: string };
+
+export interface QuestActionCoachMetadata {
+  readonly fulfils: readonly WalkthroughItemRef[];
+  readonly completion: QuestActionCompletionRule;
+  readonly preferredMethod?: QuestActionPreferredMethod;
+  readonly fallbackPolicy: 'BLOCK_THEN_ALTERNATIVES' | 'INTERCHANGEABLE' | 'NONE';
+}
+
 export interface WalkthroughSkillRequirement {
   readonly skill: string;
   readonly level: number;
@@ -67,6 +83,7 @@ export interface QuestWalkthroughActionDefinition {
   readonly items: readonly WalkthroughItemRef[];
   readonly gates: readonly RouteGate[];
   readonly location: WalkthroughLocationDirective;
+  readonly coach?: QuestActionCoachMetadata;
 }
 
 export interface QuestWalkthroughDefinition {

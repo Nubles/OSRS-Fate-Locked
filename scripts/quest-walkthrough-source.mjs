@@ -234,6 +234,138 @@ export function validateTaskGraph(graph) {
 
 const reviewFor = (review, questId) => review?.quests?.[questId] ?? [];
 
+const assertWalkthrough = (condition, message) => {
+  if (!condition) throw new Error(message);
+};
+
+const nonBlankWalkthrough = (value, label) => {
+  assertWalkthrough(typeof value === 'string' && value.trim(), `${label} must not be blank`);
+};
+
+const canonicalWalkthroughItemKey = value => value.trim().toLocaleLowerCase('en-GB').replace(/\s+/g, ' ');
+
+const validateWalkthroughItem = (value, label) => {
+  assertWalkthrough(isRecord(value), `${label} must be an item requirement`);
+  assertWalkthrough(isRecord(value.item), `${label} item is required`);
+  nonBlankWalkthrough(value.item.key, `${label} item key`);
+  nonBlankWalkthrough(value.item.name, `${label} item name`);
+  assertWalkthrough(
+    value.item.key === canonicalWalkthroughItemKey(value.item.name),
+    `${label} item key must be canonical`,
+  );
+  assertWalkthrough(Number.isFinite(value.quantity) && value.quantity > 0, `${label} quantity must be positive`);
+  assertWalkthrough(
+    value.supplyPolicy === 'PLAYER_OBTAINED' || value.supplyPolicy === 'QUEST_PROVIDED',
+    `${label} supply policy is invalid`,
+  );
+  return value.item.key;
+};
+
+const validateReviewedDirectSource = (action, method, fulfils, label) => {
+  nonBlankWalkthrough(method.itemKey, `${label} direct source item key`);
+  assertWalkthrough(
+    method.itemKey === canonicalWalkthroughItemKey(method.itemKey),
+    `${label} direct source item key must be canonical`,
+  );
+  nonBlankWalkthrough(method.sourceLabel, `${label} direct source label`);
+  assertWalkthrough(
+    fulfils.includes(method.itemKey),
+    `${label} direct source item must be fulfilled by its action`,
+  );
+  assertWalkthrough(action.confidence === 'REVIEWED', `${label} direct source action must be reviewed`);
+  assertWalkthrough(isRecord(action.location) && action.location.kind === 'REVIEWED_ALIAS', `${label} direct source requires reviewed location evidence`);
+  nonBlankWalkthrough(action.location.alias, `${label} reviewed location alias`);
+  assertWalkthrough(Array.isArray(action.location.chunks) && action.location.chunks.length > 0, `${label} reviewed location chunks are required`);
+  action.location.chunks.forEach((chunk, index) => nonBlankWalkthrough(chunk, `${label} reviewed location chunk ${index + 1}`));
+  nonBlankWalkthrough(action.location.reviewer, `${label} reviewed location reviewer`);
+  nonBlankWalkthrough(action.location.reviewedAt, `${label} reviewed location date`);
+  nonBlankWalkthrough(action.location.evidence, `${label} reviewed location evidence`);
+  nonBlankWalkthrough(action.location.rationale, `${label} reviewed location rationale`);
+};
+
+const validateCoachMetadata = (action, questId) => {
+  const label = `${questId}: coach metadata for ${action?.id ?? 'unknown action'}`;
+  const coach = action.coach;
+  assertWalkthrough(isRecord(coach), `${label} must be an object`);
+  assertWalkthrough(Array.isArray(coach.fulfils), `${label} fulfils are required`);
+  const fulfilKeys = coach.fulfils.map((item, index) => validateWalkthroughItem(item, `${label} fulfils ${index + 1}`));
+  assertWalkthrough(
+    coach.fallbackPolicy === 'BLOCK_THEN_ALTERNATIVES'
+      || coach.fallbackPolicy === 'INTERCHANGEABLE'
+      || coach.fallbackPolicy === 'NONE',
+    `${label} fallback policy is invalid`,
+  );
+  assertWalkthrough(isRecord(coach.completion), `${label} completion is required`);
+  const actionItemKeys = Array.isArray(action.items)
+    ? action.items.map((item, index) => validateWalkthroughItem(item, `${label} action items ${index + 1}`))
+    : (() => {
+      throw new Error(`${label} action items are required`);
+    })();
+  const knownItemKeys = new Set([...actionItemKeys, ...fulfilKeys]);
+
+  switch (coach.completion.kind) {
+    case 'MANUAL':
+      break;
+    case 'ITEM_CONFIRMED':
+      nonBlankWalkthrough(coach.completion.itemKey, `${label} completion item key`);
+      assertWalkthrough(
+        coach.completion.itemKey === canonicalWalkthroughItemKey(coach.completion.itemKey),
+        `${label} completion item key must be canonical`,
+      );
+      assertWalkthrough(knownItemKeys.has(coach.completion.itemKey), `${label} completion item is not declared by the action`);
+      break;
+    case 'QUEST_COMPLETED':
+      nonBlankWalkthrough(coach.completion.questId, `${label} completion quest ID`);
+      break;
+    default:
+      throw new Error(`${label} completion kind is invalid`);
+  }
+
+  if (coach.preferredMethod === undefined) return;
+  assertWalkthrough(isRecord(coach.preferredMethod), `${label} preferred method is invalid`);
+  switch (coach.preferredMethod.kind) {
+    case 'DIRECT_SOURCE':
+      validateReviewedDirectSource(action, coach.preferredMethod, fulfilKeys, label);
+      return;
+    case 'TRANSFORMATION':
+      nonBlankWalkthrough(coach.preferredMethod.recipeId, `${label} transformation recipe ID`);
+      return;
+    default:
+      throw new Error(`${label} preferred method kind is invalid`);
+  }
+};
+
+const validateCoachActions = (questId, actions) => {
+  const hasCoachMetadata = actions.some(action => isRecord(action) && action.coach !== undefined);
+  if (!hasCoachMetadata) return;
+
+  validateTaskGraph(actions);
+  actions.forEach((action) => {
+    assertWalkthrough(isRecord(action), `${questId}: reviewed action is invalid`);
+    if (action.coach === undefined) return;
+    validateCoachMetadata(action, questId);
+  });
+
+  if (!actions.every(action => isRecord(action) && action.coach !== undefined)) return;
+  let previousSourceOrder = 0;
+  const actionsById = new Map();
+  actions.forEach((action) => {
+    nonBlankWalkthrough(action.id, `${questId}: strategy action ID`);
+    assertWalkthrough(Number.isInteger(action.sourceOrder) && action.sourceOrder > previousSourceOrder, `${questId}: strategy source order is unstable`);
+    actionsById.set(action.id, action);
+    previousSourceOrder = action.sourceOrder;
+  });
+  actions.forEach((action) => {
+    action.dependsOn.forEach((dependencyId) => {
+      const dependency = actionsById.get(dependencyId);
+      assertWalkthrough(
+        dependency.sourceOrder < action.sourceOrder,
+        `${questId}: strategy dependency must precede its action`,
+      );
+    });
+  });
+};
+
 export function compileWalkthroughCatalogue(source, review) {
   if (source?.phase !== 'SOURCE_BOOTSTRAP' && source?.phase !== 'REVIEWED') {
     throw new Error('Walkthrough source phase must be SOURCE_BOOTSTRAP or REVIEWED');
@@ -254,6 +386,7 @@ export function compileWalkthroughCatalogue(source, review) {
       sourceRecord.permissionReference = source.chunkPicker.permissionReference;
     }
     const reviewedActions = source.phase === 'REVIEWED' ? reviewFor(review, quest.questId) : [];
+    validateCoachActions(quest.questId, reviewedActions);
     const definition = {
       questId: quest.questId,
       releaseStatus: source.chunkPicker.licenceStatus === 'PERMISSION_RECORDED' && quest.releaseStatus === 'APPROVED'

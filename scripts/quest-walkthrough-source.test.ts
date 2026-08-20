@@ -8,6 +8,7 @@ import {
   stableJson,
   validateTaskGraph,
 } from './quest-walkthrough-source.mjs';
+import { questStrategyFromWalkthrough } from '../utils/questStrategies/model';
 
 const questKey = (quest: string, suffix: string) => `~|${quest}|~ ${suffix}`;
 
@@ -74,6 +75,69 @@ const cyclicTaskFixture = () => ({
     { id: 'doric-1', dependsOn: ['doric-2'] },
     { id: 'doric-2', dependsOn: ['doric-1'] },
   ],
+});
+
+const reviewedStrategySourceFixture = () => ({
+  schemaVersion: 1,
+  phase: 'REVIEWED',
+  chunkPicker: {
+    repository: 'source-chunk/chunk-picker-v2',
+    commit: 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926',
+    licenceStatus: 'UNVERIFIED',
+  },
+  wiki: {
+    licence: 'CC BY-NC-SA 3.0',
+    licenceUrl: 'https://creativecommons.org/licenses/by-nc-sa/3.0/',
+  },
+  quests: [{
+    questId: "Cook's Assistant",
+    wikiTitle: "Cook's Assistant/Quick guide",
+    wikiRevision: 15238952,
+    wikiRevisionTimestamp: '2026-06-24T23:03:17Z',
+    wikiUrl: 'https://oldschool.runescape.wiki/w/Cook%27s_Assistant/Quick_guide?oldid=15238952',
+    importedLines: [{
+      id: 'cooks-assistant-walkthrough-1',
+      section: 'Walkthrough',
+      sourceOrder: 1,
+      rawText: 'Talk to the Cook.',
+    }],
+    tasks: [],
+  }],
+});
+
+const reviewedStrategyActionFixture = () => ({
+  id: 'cooks-assistant:start-quest',
+  section: 'QUEST',
+  sourceOrder: 1,
+  kind: 'TALK_TO',
+  confidence: 'REVIEWED',
+  displayText: 'Talk to the Cook.',
+  rawWikiLineIds: ['cooks-assistant-walkthrough-1'],
+  dependsOn: [],
+  entities: [],
+  items: [],
+  gates: [],
+  location: {
+    kind: 'REVIEWED_ALIAS',
+    alias: 'Lumbridge Castle',
+    chunks: ['50,50'],
+    reviewer: 'Reviewer',
+    reviewedAt: '2026-08-20',
+    evidence: 'Reviewed guide evidence.',
+    rationale: 'Reviewed location.',
+  },
+  coach: {
+    fulfils: [],
+    completion: { kind: 'MANUAL' },
+    fallbackPolicy: 'NONE',
+  },
+});
+
+const reviewedStrategyReviewFixture = () => ({
+  schemaVersion: 1,
+  quests: {
+    "Cook's Assistant": [reviewedStrategyActionFixture()],
+  },
 });
 
 describe('pinned walkthrough source helpers', () => {
@@ -221,6 +285,45 @@ describe('pinned walkthrough source helpers', () => {
         actions: [],
       }],
     });
+  });
+
+  it.each([
+    ['missing dependency', (action: any) => { action.dependsOn = ['missing-action']; }],
+    ['blank transformation ID', (action: any) => {
+      action.coach.preferredMethod = { kind: 'TRANSFORMATION', recipeId: '   ' };
+    }],
+    ['non-canonical completion item key', (action: any) => {
+      action.coach.fulfils = [{ item: { key: 'pot', name: 'Pot' }, quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' }];
+      action.coach.completion = { kind: 'ITEM_CONFIRMED', itemKey: 'Pot' };
+    }],
+  ])('rejects reviewed coach metadata with %s', (_label, mutate) => {
+    const source = reviewedStrategySourceFixture();
+    const review = reviewedStrategyReviewFixture();
+    mutate(review.quests["Cook's Assistant"][0]);
+
+    expect(() => compileWalkthroughCatalogue(source, review)).toThrow();
+  });
+
+  it('keeps legacy reviewed walkthrough actions transport-valid but strategy-ineligible', () => {
+    const source = reviewedStrategySourceFixture();
+    const review = reviewedStrategyReviewFixture();
+    delete (review.quests["Cook's Assistant"][0] as { coach?: unknown }).coach;
+
+    const catalogue = compileWalkthroughCatalogue(source, review);
+    expect(catalogue.walkthroughs[0].actions[0]).not.toHaveProperty('coach');
+    expect(questStrategyFromWalkthrough(catalogue.walkthroughs[0])).toBeNull();
+  });
+
+  it('accepts exact location evidence in a reviewed strategy pack', () => {
+    const source = reviewedStrategySourceFixture();
+    const review = reviewedStrategyReviewFixture();
+    review.quests["Cook's Assistant"][0].confidence = 'EXACT';
+    review.quests["Cook's Assistant"][0].location = {
+      kind: 'EXACT_ENTITY',
+      entity: { kind: 'npc', name: 'Cook' },
+    };
+
+    expect(compileWalkthroughCatalogue(source, review).walkthroughs).toHaveLength(1);
   });
 });
 
