@@ -4,28 +4,17 @@
     {
       "actions": [
         {
-          "confidence": "EXACT",
-          "dependsOn": [],
-          "displayText": "The Wiki lists buying all three ingredients from the Grand Exchange as one option.",
-          "entities": [],
-          "gates": [],
-          "id": "cooks-assistant:grand-exchange-option",
-          "items": [],
-          "kind": "INFORMATION",
-          "location": {
-            "kind": "NONE"
-          },
-          "rawWikiLineIds": [
-            "cooks-assistant-walkthrough-1"
-          ],
-          "section": "PREPARE",
-          "sourceOrder": 1
-        },
-        {
           "chunkPickerTaskId": "t_7591",
+          "coach": {
+            "completion": {
+              "kind": "MANUAL"
+            },
+            "fallbackPolicy": "NONE",
+            "fulfils": []
+          },
           "confidence": "EXACT",
           "dependsOn": [],
-          "displayText": "Talk to the Cook in Lumbridge Castle to start the quest.",
+          "displayText": "Talk to the Cook in Lumbridge Castle.",
           "entities": [
             {
               "kind": "npc",
@@ -43,125 +32,324 @@
             },
             "kind": "EXACT_ENTITY"
           },
-          "rawWikiLineIds": [],
+          "rawWikiLineIds": [
+            "cooks-assistant-walkthrough-1",
+            "cooks-assistant-walkthrough-2"
+          ],
           "section": "QUEST",
           "sourceOrder": 1
         },
         {
-          "confidence": "EXACT",
-          "dependsOn": [],
-          "displayText": "Alternatively, create or gather the three ingredients yourself.",
-          "entities": [],
-          "gates": [],
-          "id": "cooks-assistant:self-source-ingredients",
-          "items": [],
-          "kind": "INFORMATION",
-          "location": {
-            "kind": "NONE"
+          "coach": {
+            "completion": {
+              "kind": "MANUAL"
+            },
+            "fallbackPolicy": "NONE",
+            "fulfils": [
+              {
+                "item": {
+                  "key": "pot",
+                  "name": "Pot"
+                },
+                "quantity": 1,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              }
+            ],
+            "preferredMethod": {
+              "itemKey": "pot",
+              "kind": "DIRECT_SOURCE",
+              "sourceLabel": "Pot"
+            }
           },
-          "rawWikiLineIds": [
-            "cooks-assistant-walkthrough-2"
-          ],
-          "section": "PREPARE",
-          "sourceOrder": 2
-        },
-        {
-          "chunkPickerTaskId": "t_7592",
-          "confidence": "UNMAPPED",
+          "confidence": "REVIEWED",
           "dependsOn": [
             "cooks-assistant:start-quest"
           ],
-          "displayText": "Prepare 1 bucket of milk through RuneProof.",
+          "displayText": "Pick up the empty pot beside the Cook in Lumbridge Castle.",
           "entities": [],
           "gates": [],
-          "id": "cooks-assistant:prepare-milk",
-          "items": [
-            {
-              "item": {
-                "key": "bucket of milk",
-                "name": "Bucket of milk"
-              },
-              "quantity": 1,
-              "supplyPolicy": "PLAYER_OBTAINED"
-            }
-          ],
+          "id": "cooks-assistant:take-pot",
+          "items": [],
           "kind": "ACQUIRE",
           "location": {
-            "kind": "NONE"
+            "alias": "Lumbridge Castle",
+            "chunks": [
+              "50,50"
+            ],
+            "evidence": "Pinned Wiki source line cooks-assistant-walkthrough-5 says the empty pot is found by the Cook in Lumbridge Castle; the pinned Chunk Picker content entry Lumbridge Castle (50,50) lists a Pot spawn.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Only chunk precision is claimed for the Pot spawn; the review does not claim an exact tile or entity.",
+            "reviewedAt": "2026-08-20",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [],
+          "section": "QUEST",
+          "sourceOrder": 2
+        },
+        {
+          "coach": {
+            "completion": {
+              "kind": "MANUAL"
+            },
+            "fallbackPolicy": "NONE",
+            "fulfils": [
+              {
+                "item": {
+                  "key": "bucket",
+                  "name": "Bucket"
+                },
+                "quantity": 1,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              }
+            ],
+            "preferredMethod": {
+              "itemKey": "bucket",
+              "kind": "DIRECT_SOURCE",
+              "sourceLabel": "Bucket"
+            }
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [
+            "cooks-assistant:take-pot"
+          ],
+          "displayText": "Pick up the bucket from the Lumbridge Castle cellar.",
+          "entities": [],
+          "gates": [],
+          "id": "cooks-assistant:take-bucket",
+          "items": [],
+          "kind": "ACQUIRE",
+          "location": {
+            "alias": "Lumbridge Castle",
+            "chunks": [
+              "50,50"
+            ],
+            "evidence": "Pinned Wiki source line cooks-assistant-walkthrough-3 names a bucket in the Lumbridge Castle cellar; the pinned Chunk Picker chunk entry names Lumbridge Castle at 50,50.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Only chunk precision is claimed for the Lumbridge Castle cellar bucket; the generic spawn index does not repeat that interior source.",
+            "reviewedAt": "2026-08-20",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [],
+          "section": "QUEST",
+          "sourceOrder": 3
+        },
+        {
+          "chunkPickerTaskId": "t_7592",
+          "coach": {
+            "completion": {
+              "itemKey": "bucket of milk",
+              "kind": "ITEM_CONFIRMED"
+            },
+            "fallbackPolicy": "BLOCK_THEN_ALTERNATIVES",
+            "fulfils": [
+              {
+                "item": {
+                  "key": "bucket of milk",
+                  "name": "Bucket of milk"
+                },
+                "quantity": 1,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              }
+            ],
+            "preferredMethod": {
+              "kind": "TRANSFORMATION",
+              "recipeId": "milk-cow"
+            }
+          },
+          "confidence": "EXACT",
+          "dependsOn": [
+            "cooks-assistant:take-bucket",
+            "cooks-assistant:start-quest"
+          ],
+          "displayText": "Use the bucket on a dairy cow in the Lumbridge cow field.",
+          "entities": [
+            {
+              "kind": "object",
+              "name": "Dairy cow"
+            }
+          ],
+          "gates": [],
+          "id": "cooks-assistant:milk-cow",
+          "items": [],
+          "kind": "USE_ITEM",
+          "location": {
+            "entity": {
+              "kind": "object",
+              "name": "Dairy cow"
+            },
+            "kind": "EXACT_ENTITY"
           },
           "rawWikiLineIds": [
             "cooks-assistant-walkthrough-3"
           ],
-          "section": "PREPARE",
-          "sourceOrder": 3
+          "section": "QUEST",
+          "sourceOrder": 4
         },
         {
           "chunkPickerTaskId": "t_7594",
-          "confidence": "UNMAPPED",
+          "coach": {
+            "completion": {
+              "itemKey": "egg",
+              "kind": "ITEM_CONFIRMED"
+            },
+            "fallbackPolicy": "BLOCK_THEN_ALTERNATIVES",
+            "fulfils": [
+              {
+                "item": {
+                  "key": "egg",
+                  "name": "Egg"
+                },
+                "quantity": 1,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              }
+            ],
+            "preferredMethod": {
+              "itemKey": "egg",
+              "kind": "DIRECT_SOURCE",
+              "sourceLabel": "Egg"
+            }
+          },
+          "confidence": "REVIEWED",
           "dependsOn": [
+            "cooks-assistant:milk-cow",
             "cooks-assistant:start-quest"
           ],
-          "displayText": "Prepare 1 egg through RuneProof.",
+          "displayText": "Pick up the egg at the chicken farm beside the cow field.",
           "entities": [],
           "gates": [],
-          "id": "cooks-assistant:prepare-egg",
-          "items": [
-            {
-              "item": {
-                "key": "egg",
-                "name": "Egg"
-              },
-              "quantity": 1,
-              "supplyPolicy": "PLAYER_OBTAINED"
-            }
-          ],
+          "id": "cooks-assistant:take-egg",
+          "items": [],
           "kind": "ACQUIRE",
           "location": {
-            "kind": "NONE"
+            "alias": "Groats' Farm",
+            "chunks": [
+              "50,51"
+            ],
+            "evidence": "Pinned Wiki source line cooks-assistant-walkthrough-4 identifies the egg at the chicken farm beside the cow field; the pinned Chunk Picker content entry Groats' Farm (50,51) lists an Egg spawn.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Only chunk precision is claimed for the Egg spawn; the review does not claim an exact tile or entity.",
+            "reviewedAt": "2026-08-20",
+            "reviewer": "OpenAI Codex"
           },
           "rawWikiLineIds": [
             "cooks-assistant-walkthrough-4"
           ],
-          "section": "PREPARE",
-          "sourceOrder": 4
+          "section": "QUEST",
+          "sourceOrder": 5
+        },
+        {
+          "coach": {
+            "completion": {
+              "kind": "MANUAL"
+            },
+            "fallbackPolicy": "NONE",
+            "fulfils": [
+              {
+                "item": {
+                  "key": "grain",
+                  "name": "Grain"
+                },
+                "quantity": 1,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              }
+            ],
+            "preferredMethod": {
+              "kind": "TRANSFORMATION",
+              "recipeId": "pick-wheat"
+            }
+          },
+          "confidence": "EXACT",
+          "dependsOn": [
+            "cooks-assistant:take-egg"
+          ],
+          "displayText": "Pick grain outside Mill Lane Mill.",
+          "entities": [
+            {
+              "kind": "object",
+              "name": "Wheat"
+            }
+          ],
+          "gates": [],
+          "id": "cooks-assistant:pick-grain",
+          "items": [],
+          "kind": "ACQUIRE",
+          "location": {
+            "entity": {
+              "kind": "object",
+              "name": "Wheat"
+            },
+            "kind": "EXACT_ENTITY"
+          },
+          "rawWikiLineIds": [],
+          "section": "QUEST",
+          "sourceOrder": 6
         },
         {
           "chunkPickerTaskId": "t_7593",
-          "confidence": "UNMAPPED",
+          "coach": {
+            "completion": {
+              "itemKey": "pot of flour",
+              "kind": "ITEM_CONFIRMED"
+            },
+            "fallbackPolicy": "BLOCK_THEN_ALTERNATIVES",
+            "fulfils": [
+              {
+                "item": {
+                  "key": "pot of flour",
+                  "name": "Pot of flour"
+                },
+                "quantity": 1,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              }
+            ],
+            "preferredMethod": {
+              "kind": "TRANSFORMATION",
+              "recipeId": "grain-to-flour"
+            }
+          },
+          "confidence": "EXACT",
           "dependsOn": [
+            "cooks-assistant:pick-grain",
             "cooks-assistant:start-quest"
           ],
-          "displayText": "Prepare 1 pot of flour through RuneProof.",
-          "entities": [],
-          "gates": [],
-          "id": "cooks-assistant:prepare-flour",
-          "items": [
+          "displayText": "Use the grain in Mill Lane Mill and collect the flour in the pot.",
+          "entities": [
             {
-              "item": {
-                "key": "pot of flour",
-                "name": "Pot of flour"
-              },
-              "quantity": 1,
-              "supplyPolicy": "PLAYER_OBTAINED"
+              "kind": "object",
+              "name": "Hopper"
             }
           ],
-          "kind": "ACQUIRE",
+          "gates": [],
+          "id": "cooks-assistant:make-flour",
+          "items": [],
+          "kind": "USE_ITEM",
           "location": {
-            "kind": "NONE"
+            "entity": {
+              "kind": "object",
+              "name": "Hopper"
+            },
+            "kind": "EXACT_ENTITY"
           },
           "rawWikiLineIds": [
             "cooks-assistant-walkthrough-5"
           ],
-          "section": "PREPARE",
-          "sourceOrder": 5
+          "section": "QUEST",
+          "sourceOrder": 7
         },
         {
           "chunkPickerTaskId": "t_7595",
+          "coach": {
+            "completion": {
+              "kind": "MANUAL"
+            },
+            "fallbackPolicy": "NONE",
+            "fulfils": []
+          },
           "confidence": "EXACT",
           "dependsOn": [
-            "cooks-assistant:prepare-milk",
-            "cooks-assistant:prepare-flour",
-            "cooks-assistant:prepare-egg"
+            "cooks-assistant:make-flour",
+            "cooks-assistant:milk-cow",
+            "cooks-assistant:take-egg"
           ],
           "displayText": "Return to the Cook with the bucket of milk, egg, and pot of flour.",
           "entities": [
@@ -185,10 +373,18 @@
             "cooks-assistant-walkthrough-6"
           ],
           "section": "QUEST",
-          "sourceOrder": 6
+          "sourceOrder": 8
         },
         {
           "chunkPickerTaskId": "t_7596",
+          "coach": {
+            "completion": {
+              "kind": "QUEST_COMPLETED",
+              "questId": "Cook's Assistant"
+            },
+            "fallbackPolicy": "NONE",
+            "fulfils": []
+          },
           "confidence": "EXACT",
           "dependsOn": [
             "cooks-assistant:return-to-cook"
@@ -209,12 +405,12 @@
             "cooks-assistant-walkthrough-7"
           ],
           "section": "QUEST",
-          "sourceOrder": 7
+          "sourceOrder": 9
         }
       ],
       "questId": "Cook's Assistant",
       "releaseStatus": "PREVIEW_ONLY",
-      "revision": "d1be79d95c8e81f93002b244fe8d4ce377087092293da2c0ff8ab92f774907db",
+      "revision": "bd08b1964f6efa99da2859ec5e95f9747d1cddd5c4a2a5f7b0d40456b3927a79",
       "source": {
         "chunkPickerCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
         "chunkPickerLicenceStatus": "UNVERIFIED",

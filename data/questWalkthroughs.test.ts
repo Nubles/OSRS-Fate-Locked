@@ -7,6 +7,7 @@ import {
 import generatedCatalogue from './questWalkthroughs.generated.json';
 import { loadQuestWalkthroughFor } from './questWalkthroughLoader';
 import { questWalkthroughReleaseFor } from './questWalkthroughRelease';
+import { questStrategyFromWalkthrough } from '../utils/questStrategies/model';
 
 const PILOT_QUEST_IDS = [
   "Cook's Assistant",
@@ -66,6 +67,28 @@ describe('local walkthrough loader', () => {
       ...release,
       revision: 'stale-review-revision',
     })).resolves.toBeUndefined();
+  });
+
+  it("materializes Cook's Assistant as the reviewed nine-action coach route", async () => {
+    const release = questWalkthroughReleaseFor("Cook's Assistant")!;
+    const walkthrough = await loadQuestWalkthroughFor('PREVIEW', release);
+    const strategy = walkthrough && questStrategyFromWalkthrough(walkthrough);
+
+    expect(strategy?.actions.map(action => ({
+      id: action.id,
+      instruction: action.displayText,
+      method: action.coach.preferredMethod,
+    }))).toEqual([
+      { id: 'cooks-assistant:start-quest', instruction: 'Talk to the Cook in Lumbridge Castle.', method: undefined },
+      { id: 'cooks-assistant:take-pot', instruction: 'Pick up the empty pot beside the Cook in Lumbridge Castle.', method: { kind: 'DIRECT_SOURCE', itemKey: 'pot', sourceLabel: 'Pot' } },
+      { id: 'cooks-assistant:take-bucket', instruction: 'Pick up the bucket from the Lumbridge Castle cellar.', method: { kind: 'DIRECT_SOURCE', itemKey: 'bucket', sourceLabel: 'Bucket' } },
+      { id: 'cooks-assistant:milk-cow', instruction: 'Use the bucket on a dairy cow in the Lumbridge cow field.', method: { kind: 'TRANSFORMATION', recipeId: 'milk-cow' } },
+      { id: 'cooks-assistant:take-egg', instruction: 'Pick up the egg at the chicken farm beside the cow field.', method: { kind: 'DIRECT_SOURCE', itemKey: 'egg', sourceLabel: 'Egg' } },
+      { id: 'cooks-assistant:pick-grain', instruction: 'Pick grain outside Mill Lane Mill.', method: { kind: 'TRANSFORMATION', recipeId: 'pick-wheat' } },
+      { id: 'cooks-assistant:make-flour', instruction: 'Use the grain in Mill Lane Mill and collect the flour in the pot.', method: { kind: 'TRANSFORMATION', recipeId: 'grain-to-flour' } },
+      { id: 'cooks-assistant:return-to-cook', instruction: 'Return to the Cook with the bucket of milk, egg, and pot of flour.', method: undefined },
+      { id: 'cooks-assistant:complete', instruction: "Cook's Assistant complete.", method: undefined },
+    ]);
   });
 });
 

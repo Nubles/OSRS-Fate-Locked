@@ -995,12 +995,12 @@ describe('quest walkthrough attachment', () => {
 
     expect(analysis.walkthrough).toMatchObject({
       questId: "Cook's Assistant",
-      status: 'INCOMPLETE',
+      status: 'BLOCKED',
       source: definition.source,
     });
     expect(analysis.walkthrough.actions).toHaveLength(definition.actions.length);
     expect(questRouteStatusForItems(analysis.items)).toBe('READY_NOW');
-    expect(analysis.status).toBe('ANALYSIS_INCOMPLETE');
+    expect(analysis.status).toBe('CANNOT_COMPLETE_YET');
     expect(analysis.generatedFrom.walkthroughRevision).toBe(definition.revision);
     expect(Object.isFrozen(analysis.walkthrough)).toBe(true);
     expect(Object.isFrozen(analysis.walkthrough.actions)).toBe(true);

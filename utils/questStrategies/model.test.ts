@@ -67,32 +67,35 @@ const strategyWalkthroughFixture = (): QuestWalkthroughDefinition => ({
     reviewedAction('cooks-assistant:start-quest', 1),
     reviewedAction('cooks-assistant:take-pot', 2, ['cooks-assistant:start-quest'], coach({
       fulfils: [{ item: item('pot', 'Pot'), quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' }],
-      completion: { kind: 'ITEM_CONFIRMED', itemKey: 'pot' },
+      completion: { kind: 'MANUAL' },
       preferredMethod: { kind: 'DIRECT_SOURCE', itemKey: 'pot', sourceLabel: 'Pot' },
     })),
     reviewedAction('cooks-assistant:take-bucket', 3, ['cooks-assistant:take-pot'], coach({
       fulfils: [{ item: item('bucket', 'Bucket'), quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' }],
-      completion: { kind: 'ITEM_CONFIRMED', itemKey: 'bucket' },
+      completion: { kind: 'MANUAL' },
       preferredMethod: { kind: 'DIRECT_SOURCE', itemKey: 'bucket', sourceLabel: 'Bucket' },
     })),
     reviewedAction('cooks-assistant:milk-cow', 4, ['cooks-assistant:take-bucket'], coach({
       fulfils: [{ item: item('bucket of milk', 'Bucket of milk'), quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' }],
       completion: { kind: 'ITEM_CONFIRMED', itemKey: 'bucket of milk' },
+      fallbackPolicy: 'BLOCK_THEN_ALTERNATIVES',
       preferredMethod: { kind: 'TRANSFORMATION', recipeId: 'milk-cow' },
     })),
     reviewedAction('cooks-assistant:take-egg', 5, ['cooks-assistant:milk-cow'], coach({
       fulfils: [{ item: item('egg', 'Egg'), quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' }],
       completion: { kind: 'ITEM_CONFIRMED', itemKey: 'egg' },
+      fallbackPolicy: 'BLOCK_THEN_ALTERNATIVES',
       preferredMethod: { kind: 'DIRECT_SOURCE', itemKey: 'egg', sourceLabel: 'Egg' },
     })),
     reviewedAction('cooks-assistant:pick-grain', 6, ['cooks-assistant:take-egg'], coach({
       fulfils: [{ item: item('grain', 'Grain'), quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' }],
-      completion: { kind: 'ITEM_CONFIRMED', itemKey: 'grain' },
+      completion: { kind: 'MANUAL' },
       preferredMethod: { kind: 'TRANSFORMATION', recipeId: 'pick-wheat' },
     })),
     reviewedAction('cooks-assistant:make-flour', 7, ['cooks-assistant:pick-grain'], coach({
       fulfils: [{ item: item('pot of flour', 'Pot of flour'), quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' }],
       completion: { kind: 'ITEM_CONFIRMED', itemKey: 'pot of flour' },
+      fallbackPolicy: 'BLOCK_THEN_ALTERNATIVES',
       preferredMethod: { kind: 'TRANSFORMATION', recipeId: 'grain-to-flour' },
     })),
     reviewedAction('cooks-assistant:return-to-cook', 8, ['cooks-assistant:make-flour']),
@@ -148,6 +151,21 @@ describe('questStrategyFromWalkthrough', () => {
       'cooks-assistant:make-flour',
       'cooks-assistant:return-to-cook',
       'cooks-assistant:complete',
+    ]);
+    expect(strategy?.actions.map(action => ({
+      id: action.id,
+      completion: action.coach.completion,
+      fallbackPolicy: action.coach.fallbackPolicy,
+    }))).toEqual([
+      { id: 'cooks-assistant:start-quest', completion: { kind: 'MANUAL' }, fallbackPolicy: 'NONE' },
+      { id: 'cooks-assistant:take-pot', completion: { kind: 'MANUAL' }, fallbackPolicy: 'NONE' },
+      { id: 'cooks-assistant:take-bucket', completion: { kind: 'MANUAL' }, fallbackPolicy: 'NONE' },
+      { id: 'cooks-assistant:milk-cow', completion: { kind: 'ITEM_CONFIRMED', itemKey: 'bucket of milk' }, fallbackPolicy: 'BLOCK_THEN_ALTERNATIVES' },
+      { id: 'cooks-assistant:take-egg', completion: { kind: 'ITEM_CONFIRMED', itemKey: 'egg' }, fallbackPolicy: 'BLOCK_THEN_ALTERNATIVES' },
+      { id: 'cooks-assistant:pick-grain', completion: { kind: 'MANUAL' }, fallbackPolicy: 'NONE' },
+      { id: 'cooks-assistant:make-flour', completion: { kind: 'ITEM_CONFIRMED', itemKey: 'pot of flour' }, fallbackPolicy: 'BLOCK_THEN_ALTERNATIVES' },
+      { id: 'cooks-assistant:return-to-cook', completion: { kind: 'MANUAL' }, fallbackPolicy: 'NONE' },
+      { id: 'cooks-assistant:complete', completion: { kind: 'QUEST_COMPLETED', questId: "Cook's Assistant" }, fallbackPolicy: 'NONE' },
     ]);
   });
 

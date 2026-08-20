@@ -808,7 +808,7 @@ describe('RuneProof Goal Planner integration', () => {
     expect(screen.queryByText('Talk to Doric to start the quest.')).toBeNull();
 
     await act(async () => { cookLoad.resolve(true); });
-    expect(await screen.findByText('Talk to the Cook in Lumbridge Castle to start the quest.'))
+    expect(await screen.findByText('Talk to the Cook in Lumbridge Castle.'))
       .toBeTruthy();
     expect(screen.queryByText('Talk to Doric to start the quest.')).toBeNull();
   });
