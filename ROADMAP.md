@@ -2,7 +2,7 @@
 
 Everything in flight, everything planned, and every gotcha learned the hard
 way — written so the project can keep moving without any particular
-contributor. Last updated: July 2026.
+contributor. Last updated: August 2026.
 
 ---
 
@@ -69,7 +69,106 @@ seed chip on the share card + stream overlay; check GuidedTour skips its
 altar step gracefully on a fresh (gated) run; CoachStrip hints could avoid
 referencing still-hidden surfaces.
 
-## 2. Near-term features (in rough value order)
+## 2. Product roadmap — RuneProof flagship
+
+The product direction is the complete A–E programme: progression intelligence,
+challenge mechanics, RuneLite automation, and community competition. RuneProof
+is the shared foundation because every later system needs the same answers:
+what the player can do now, what blocks them, what evidence proves progress,
+and what action is best next.
+
+Nothing in this section is release-approved merely because it is implemented.
+Every milestone must first pass automated checks and then a local visual/play
+review by the maintainer. Preview-only work must not enter the public bundle,
+changelog, Pages deployment, or RuneLite release until that review is explicitly
+accepted.
+
+### P0 — Local RuneProof pilot (implemented; awaiting visual acceptance)
+
+- Four reviewed quests: Cook's Assistant, Daddy's Home, Doric's Quest, and
+  Elemental Workshop I.
+- Exact obtainable-item chains, ranked alternatives, blockers, requirement
+  confirmations, quest walkthrough actions, route maps, and World-map handoff.
+- Explicit local activation only: `VITE_RUNEPROOF_PREVIEW=1` through
+  `npm run dev -- --mode runeproof-preview`.
+- Confirmations are isolated by run outside normal save/export state. The normal
+  production build replaces the private walkthrough catalogue with an empty
+  public boundary.
+- Exit gate: complete the RuneProof visual smoke matrix on desktop and narrow
+  layouts, record defects, fix and re-test, then make a separate release decision.
+
+### P1 — Progression intelligence quick wins
+
+1. Expand reviewed RuneProof coverage from the four pilots to the full F2P quest
+   set, then add members quests in small source-reviewed batches.
+2. Add an objective picker that can route to quests, diaries, bosses, items,
+   skills, regions, and collection goals through one explanation model.
+3. Surface blocker explanations and the next three useful actions on Dashboard,
+   Journal, and World without duplicating solver logic.
+4. Add route freshness/provenance badges and a maintainer audit queue for
+   incomplete or ambiguous evidence.
+5. Release only batches that remain useful when chunk data, map imagery, or a
+   remote source is unavailable.
+
+### P2 — RuneLite capture and enforcement foundation
+
+1. Define a versioned evidence envelope for detected quest, diary, CA, item,
+   skill, region, bank, and boss progress. Preserve raw evidence and confidence.
+2. Add advisory warnings for high-confidence rule violations before adding any
+   blocking behavior. Every warning needs a reason, rule source, and dismissal.
+3. Reconcile plugin evidence with the web run through an inbox: preview changes,
+   accept or reject them, and retain an audit trail. Never silently rewrite a run.
+4. Add detection coverage dashboards and replayable fixtures in the standalone
+   RuneLite repository before widening enforcement.
+5. Gate strict enforcement per mode and per detector only after local RuneLite
+   gameplay testing demonstrates low false-positive and false-negative rates.
+
+### P3 — More entertaining challenge mechanics
+
+1. Ship contracts as deterministic, shareable objective bundles built on
+   RuneProof eligibility and completion evidence.
+2. Add opt-in run modifiers with explicit scoring effects and compatibility
+   rules; start with small modifiers before economy-wide changes.
+3. Turn Rival Fate into an event-driven opponent that reacts to verified run
+   milestones without changing the player's outcomes.
+4. Add short events with previewed rewards, expiry, recovery rules, and seeded
+   determinism so interrupted runs remain valid.
+5. Prototype new modes only as versioned rulebooks; saves must retain the exact
+   ruleset used when the run began.
+
+### P4 — Community and competition
+
+1. Upgrade weekly seeds into signed challenge definitions with fixed mode,
+   modifiers, start time, end time, and scoring revision.
+2. Add privacy-safe run comparison: shared milestones, route divergence,
+   completion pace, and verified/unverified evidence labels.
+3. Add asynchronous races and shareable challenge links before real-time racing;
+   they are cheaper to operate and easier to moderate.
+4. Introduce leaderboards only after deterministic scoring, duplicate-run rules,
+   evidence grades, reporting, removal, and season archival are implemented.
+5. Keep unverified/local-only submissions visible in friendly contexts but
+   separate from enforcement-backed competitive standings.
+
+### P5 — Seasons and major expansions
+
+- Versioned seasonal rules, contracts, modifiers, scoring, rewards, and archive.
+- Curated official challenges plus community-authored challenges with validation
+  and moderation boundaries.
+- Live race rooms and spectator surfaces only after asynchronous races prove the
+  scoring and integrity model.
+- Broader RuneProof objectives and recommendation quality work driven by actual
+  route failures and player choices, not raw catalogue size alone.
+
+### Delivery order and non-negotiable gates
+
+The dependency order is P0 → P1/P2 → P3 → P4 → P5. P1 and P2 may proceed in
+parallel once their evidence contracts agree; competitive scoring must not lead
+the evidence system. Every feature follows the same ladder: deterministic unit
+tests, integration tests, separate local preview, maintainer visual/play test,
+explicit approval, then release verification and deployment. A passing build is
+not visual acceptance, and visual acceptance is not permission to publish.
+
+## 2b. Existing near-term follow-ups (in rough value order)
 
 1. ~~Map: tint the top-ranked frontier chunks~~ — done: top-5 by `sortScore`
    render cyan (`HOT_FRONTIER_FILL` in RegionMap). The plugin's world map
