@@ -77,6 +77,7 @@ const modelWithPotNext: RuneProofCoachModel = {
     itemKey: 'pot of flour',
     itemName: 'Pot of flour',
     routes: [{
+      variantCount: 4,
       id: 'black-knight-flour',
       label: 'Black Knight',
       sourceKind: 'Drop',
@@ -216,7 +217,10 @@ describe('RuneProofCoach', () => {
 
     await user.click(alternatives);
     expect(alternatives.getAttribute('aria-expanded')).toBe('true');
-    expect(screen.getByText('Black Knight')).toBeTruthy();
+    const alternativesRegion = screen.getByRole('region', { name: 'Other legal sources' });
+    expect(within(alternativesRegion).getAllByText('Black Knight')).toHaveLength(1);
+    expect(within(alternativesRegion).getByText('4 route variants')).toBeTruthy();
+    expect(within(alternativesRegion).getAllByRole('listitem')).toHaveLength(1);
 
     await user.click(proofDrawer);
     expect(proofDrawer.getAttribute('aria-expanded')).toBe('true');

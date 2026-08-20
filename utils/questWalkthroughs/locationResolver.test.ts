@@ -11,6 +11,7 @@ import {
   resolveQuestWalkthroughLocations,
   resolveWalkthroughLocations,
 } from './locationResolver';
+import { questWalkthroughFor } from '../../data/questWalkthroughs';
 
 const entitySnapshot = (
   entityLocations: readonly ExactEntityHit[],
@@ -135,6 +136,51 @@ describe('walkthrough location resolution', () => {
       confidence: 'AMBIGUOUS',
       chunks: [],
       candidateChunks: ['51,54', '52,54'],
+    });
+  });
+
+  it("narrows Cook's reviewed cow and mill entities to their local chunks", () => {
+    const walkthrough = questWalkthroughFor("Cook's Assistant")!;
+    const resolved = resolveQuestWalkthroughLocations(walkthrough, entitySnapshot([
+      {
+        name: 'Dairy cow',
+        kind: 'object',
+        locations: [{ cx: 49, cy: 52 }, { cx: 50, cy: 51 }],
+      },
+      {
+        name: 'Wheat',
+        kind: 'object',
+        locations: [{ cx: 49, cy: 51 }, { cx: 49, cy: 52 }],
+      },
+      {
+        name: 'Hopper',
+        kind: 'object',
+        locations: [{ cx: 49, cy: 51 }, { cx: 50, cy: 53 }],
+      },
+    ]));
+    const locationById = new Map(resolved.actions.map(action => [
+      action.id,
+      {
+        confidence: action.location.confidence,
+        evidenceKind: action.location.evidenceKind,
+        chunks: action.location.chunks,
+      },
+    ]));
+
+    expect(locationById.get('cooks-assistant:milk-cow')).toEqual({
+      confidence: 'REVIEWED',
+      evidenceKind: 'REVIEWED_ALIAS',
+      chunks: ['50,51'],
+    });
+    expect(locationById.get('cooks-assistant:pick-grain')).toEqual({
+      confidence: 'REVIEWED',
+      evidenceKind: 'REVIEWED_ALIAS',
+      chunks: ['49,51'],
+    });
+    expect(locationById.get('cooks-assistant:make-flour')).toEqual({
+      confidence: 'REVIEWED',
+      evidenceKind: 'REVIEWED_ALIAS',
+      chunks: ['49,51'],
     });
   });
 

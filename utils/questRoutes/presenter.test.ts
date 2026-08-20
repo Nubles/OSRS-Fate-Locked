@@ -82,6 +82,42 @@ const blocked = analysis('CANNOT_COMPLETE_YET');
 const incomplete = analysis('ANALYSIS_INCOMPLETE');
 
 describe('presentQuestAnalysis', () => {
+  it('uses the source-bearing gathering step instead of exposing an internal recipe id', () => {
+    const presented = presentQuestAnalysis(analysis('READY_NOW', [{
+      requirement: requirement('Bucket of milk'),
+      state: 'OBTAINABLE_NOW',
+      currentRoutes: [route('recipe:milk-cow', 'milk-cow', {
+        sourceKind: 'GATHER',
+        steps: [
+          {
+            id: 'recipe:milk-cow:bucket',
+            label: 'Obtain Bucket',
+            gates: [],
+            quantity: 1,
+            consumed: false,
+            requiresChunkUnlock: false,
+            hasDataGap: false,
+          },
+          {
+            id: 'recipe:milk-cow:cow',
+            label: 'Use Dairy cow',
+            chunk: '50,51',
+            gates: [],
+            sourceKind: 'GATHER',
+            requiresChunkUnlock: false,
+            hasDataGap: false,
+          },
+        ],
+      })],
+      missingChunkRoutes: [],
+      missingChunkOptions: [],
+      dataNotes: [],
+    }]));
+
+    expect(presented.items[0].routes[0].label).toBe('Use Dairy cow');
+    expect(presented.items[0].routes[0].label).not.toContain('milk-cow');
+  });
+
   it('phrases a spawn dependency as an explicit ground-item pickup', () => {
     const presented = presentQuestAnalysis(analysis('READY_NOW', [{
       requirement: requirement('Clay', 6),

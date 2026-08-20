@@ -877,12 +877,12 @@ describe('QuestRoutePanel', () => {
     const actionRow = document.getElementById(eggAction.id);
     if (!actionRow) throw new Error('Missing Cook action');
     expect(screen.getByRole('heading', { level: 2, name: 'Cannot complete yet' })).toBeTruthy();
-    expect(screen.getByText('2 known blockers')).toBeTruthy();
+    expect(screen.getByText('3 known blockers')).toBeTruthy();
     expect(within(actionRow).getByText('Chunk locked')).toBeTruthy();
 
     await user.click(within(checklist).getByRole('checkbox', { name: '1 Egg' }));
 
-    expect(screen.getByText('1 known blocker')).toBeTruthy();
+    expect(screen.getByText('2 known blockers')).toBeTruthy();
     const refreshedActionRow = document.getElementById(eggAction.id);
     if (!refreshedActionRow) throw new Error('Missing refreshed Cook action');
     expect(within(refreshedActionRow).getByText('Chunk locked')).toBeTruthy();
@@ -893,8 +893,8 @@ describe('QuestRoutePanel', () => {
       'egg', 'bucket of milk', 'pot of flour',
     ]))} />);
 
-    expect(screen.getByText('4 known blockers')).toBeTruthy();
-    expect(screen.queryByText('5 known blockers')).toBeNull();
+    expect(screen.getByText('5 known blockers')).toBeTruthy();
+    expect(screen.queryByText('6 known blockers')).toBeNull();
   });
 
   it('keeps the full walkthrough usable when the map image fails', () => {

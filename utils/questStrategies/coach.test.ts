@@ -278,6 +278,100 @@ describe('buildRuneProofCoachModel', () => {
     expect(model.proof.diagnostics).toContain('Route budget and source wording are retained for proof.');
   });
 
+  it('keeps resolver explanations out of player-facing location labels', () => {
+    const strategy = cookStrategy();
+    const analysis = analysisFor(strategy, false);
+    const withResolverExplanations: QuestRouteAnalysis = {
+      ...analysis,
+      walkthrough: {
+        ...analysis.walkthrough,
+        actions: analysis.walkthrough.actions.map(action => {
+          if (action.definition.id === 'cooks-assistant:return-to-cook') {
+            return {
+              ...action,
+              location: {
+                ...action.location,
+                explanation: 'Cook (Lumbridge) has one exact canonical chunk.',
+              },
+            };
+          }
+          if (action.definition.id === 'cooks-assistant:complete') {
+            return {
+              ...action,
+              location: {
+                ...action.location,
+                explanation: 'Explicit source chunks are authoritative.',
+              },
+            };
+          }
+          return action;
+        }),
+      },
+    };
+
+    const model = buildFromAnalysis(strategy, withResolverExplanations);
+
+    expect(model.actions.find(action => action.id === 'cooks-assistant:return-to-cook')?.locationLabel)
+      .toBeUndefined();
+    expect(model.actions.find(action => action.id === 'cooks-assistant:complete')?.locationLabel)
+      .toBeUndefined();
+    expect(model.actions.map(action => action.locationLabel).join(' '))
+      .not.toMatch(/canonical chunk|source chunks are authoritative/i);
+  });
+
+  it('uses a generic chunk blocker when no reviewed location label exists', () => {
+    const strategy = cookStrategy();
+    const analysis = analysisFor(strategy, false);
+    const blockedCompletion: QuestRouteAnalysis = {
+      ...analysis,
+      walkthrough: {
+        ...analysis.walkthrough,
+        actions: analysis.walkthrough.actions.map(action => (
+          action.definition.id === 'cooks-assistant:complete'
+            ? {
+              ...action,
+              state: 'CHUNK_LOCKED' as const,
+              location: {
+                ...action.location,
+                explanation: 'Explicit source chunks are authoritative.',
+              },
+              blockers: [{
+                kind: 'CHUNK' as const,
+                chunk: '50,50' as ChunkKey,
+                label: action.definition.displayText,
+              }],
+            }
+            : action
+        )),
+      },
+    };
+    const model = buildRuneProofCoachModel({
+      strategy,
+      analysis: blockedCompletion,
+      confirmedActionIds: new Set(
+        strategy.actions
+          .filter(action => action.id !== 'cooks-assistant:complete')
+          .map(action => action.id),
+      ),
+      confirmedItemKeys: new Set(),
+      completedQuestIds: new Set(),
+    });
+
+    expect(model.nextAction?.id).toBe('cooks-assistant:complete');
+    expect(model.nextAction?.blockerText).toBe('Unlock chunk 50,50 before this step.');
+  });
+
+  it('preserves location labels authored in reviewed instructions and aliases', () => {
+    const model = buildModel({ confirmedActionIds: earlierThanGrain() });
+
+    expect(model.actions.find(action => action.id === 'cooks-assistant:start-quest')?.locationLabel)
+      .toBe('Lumbridge Castle');
+    expect(model.actions.find(action => action.id === 'cooks-assistant:take-bucket')?.locationLabel)
+      .toBe('Lumbridge Castle cellar');
+    expect(model.actions.find(action => action.id === 'cooks-assistant:pick-grain')?.locationLabel)
+      .toBe('Mill Lane Mill');
+  });
+
   it('advances to the first unconfirmed reviewed action', () => {
     const model = buildModel({
       confirmedActionIds: [
@@ -354,8 +448,117 @@ describe('buildRuneProofCoachModel', () => {
     expect(model.alternativeSources.map(source => source.itemKey))
       .toEqual(['bucket of milk', 'egg', 'pot of flour']);
     expect(flourGroups).toHaveLength(1);
-    expect(flourGroups[0]?.routes.map(route => route.id))
-      .toEqual(['mill-flour', 'windmill-flour', 'black-knight-flour']);
+    expect(flourGroups[0]?.routes.map(candidate => ({
+      id: candidate.id,
+      variantCount: candidate.variantCount,
+    }))).toEqual([
+      { id: 'mill-flour', variantCount: 2 },
+      { id: 'black-knight-flour', variantCount: 1 },
+    ]);
+  });
+
+  it('coalesces equivalent ranked alternatives while retaining secondary Black Knight evidence', () => {
+    const strategy = cookStrategy();
+    const analysis = analysisFor(strategy, false);
+    const hopperRoutes = Array.from({ length: 32 }, (_, index) => route(
+      `hopper-${String(index).padStart(2, '0')}`,
+      'Pot of flour',
+      'grain-to-flour',
+      'RECIPE',
+      {
+        steps: [{
+          id: `hopper-${index}:station`,
+          label: 'Use Hopper',
+          chunk: '49,51',
+          gates: [],
+          sourceKind: 'RECIPE',
+          requiresChunkUnlock: false,
+          hasDataGap: false,
+        }],
+      },
+    ));
+    const blackKnightRoutes = Array.from({ length: 4 }, (_, index) => route(
+      `black-knight-${index}`,
+      'Pot of flour',
+      'Black Knight',
+      'DROP',
+    ));
+    const model = buildRuneProofCoachModel({
+      strategy,
+      analysis: {
+        ...analysis,
+        items: analysis.items.map(entry => (
+          entry.requirement.item.key === 'pot of flour'
+            ? itemAnalysis('Pot of flour', [...hopperRoutes, ...blackKnightRoutes])
+            : entry
+        )),
+      },
+      confirmedActionIds: new Set(),
+      confirmedItemKeys: new Set(),
+      completedQuestIds: new Set(),
+    });
+
+    const routes = model.alternativeSources
+      .find(source => source.itemKey === 'pot of flour')?.routes;
+    expect(routes?.map(candidate => ({
+      id: candidate.id,
+      label: candidate.label,
+      variantCount: candidate.variantCount,
+    }))).toEqual([
+      { id: 'hopper-00', label: 'Use Hopper', variantCount: 32 },
+      { id: 'black-knight-0', label: 'Black Knight', variantCount: 4 },
+    ]);
+  });
+
+  it('does not merge otherwise equivalent alternatives across current and locked access states', () => {
+    const strategy = cookStrategy();
+    const analysis = analysisFor(strategy, false);
+    const current = route('current-flour', 'Pot of flour', 'Flour spawn', 'SPAWN');
+    const locked = route('locked-flour', 'Pot of flour', 'Flour spawn', 'SPAWN', {
+      chunks: ['49,51'],
+      steps: [{
+        id: 'locked-flour:source',
+        label: 'Flour spawn',
+        chunk: '49,51',
+        gates: [],
+        sourceKind: 'SPAWN',
+        requiresChunkUnlock: true,
+        hasDataGap: false,
+      }],
+    });
+    const model = buildRuneProofCoachModel({
+      strategy,
+      analysis: {
+        ...analysis,
+        items: analysis.items.map(entry => (
+          entry.requirement.item.key === 'pot of flour'
+            ? {
+              ...itemAnalysis('Pot of flour', [current]),
+              state: 'ROUTE_BLOCKED' as const,
+              missingChunkRoutes: [locked],
+              missingChunkOptions: [{
+                chunks: ['49,51'] as ChunkKey[],
+                routeIds: [locked.id],
+                remainingGates: [],
+              }],
+            }
+            : entry
+        )),
+      },
+      confirmedActionIds: new Set(),
+      confirmedItemKeys: new Set(),
+      completedQuestIds: new Set(),
+    });
+
+    const routes = model.alternativeSources
+      .find(source => source.itemKey === 'pot of flour')?.routes;
+    expect(routes?.map(candidate => ({
+      requiresChunkUnlock: candidate.requiresChunkUnlock,
+      variantCount: candidate.variantCount,
+    }))).toEqual([
+      { requiresChunkUnlock: false, variantCount: 1 },
+      { requiresChunkUnlock: true, variantCount: 1 },
+    ]);
   });
 
   it('ranks fallback alternatives from the previous completed reviewed location without replacing the current action', () => {

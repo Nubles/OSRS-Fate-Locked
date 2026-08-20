@@ -34,7 +34,11 @@ export interface RuneProofCoachAction {
 export interface RuneProofAlternativeSourceGroup {
   readonly itemKey: string;
   readonly itemName: string;
-  readonly routes: readonly PresentedRoute[];
+  readonly routes: readonly RuneProofAlternativeRoute[];
+}
+
+export interface RuneProofAlternativeRoute extends PresentedRoute {
+  readonly variantCount: number;
 }
 
 export interface RuneProofCoachModel {
@@ -147,22 +151,20 @@ const instructionLocationLabel = (instruction: string): string | undefined => {
 
 const locationLabelFor = (
   action: StrategyAction,
-  evaluatedAction: EvaluatedWalkthroughAction | undefined,
 ): string | undefined => {
   const instructionLabel = instructionLocationLabel(action.displayText);
   if (instructionLabel) return instructionLabel;
   if (action.location.kind === 'REVIEWED_ALIAS') return action.location.alias;
-  return evaluatedAction?.location.explanation || undefined;
+  return undefined;
 };
 
 const preferredMethodLabelFor = (
   action: StrategyAction,
-  evaluatedAction: EvaluatedWalkthroughAction | undefined,
 ): string | undefined => {
   const method = action.coach.preferredMethod;
   if (!method) return undefined;
   if (method.kind === 'DIRECT_SOURCE') return method.sourceLabel;
-  return instructionLocationLabel(action.displayText) ?? locationLabelFor(action, evaluatedAction);
+  return instructionLocationLabel(action.displayText) ?? locationLabelFor(action);
 };
 
 const isKnownBlocker = (blocker: WalkthroughBlocker): blocker is KnownBlocker => (
@@ -183,12 +185,11 @@ const needsConfirmation = (evaluatedAction: EvaluatedWalkthroughAction | undefin
 const blockerTextFor = (
   blocker: KnownBlocker,
   action: StrategyAction,
-  evaluatedAction: EvaluatedWalkthroughAction | undefined,
 ): string => {
   switch (blocker.kind) {
     case 'CHUNK': {
-      const methodLabel = preferredMethodLabelFor(action, evaluatedAction)
-        ?? locationLabelFor(action, evaluatedAction);
+      const methodLabel = preferredMethodLabelFor(action)
+        ?? locationLabelFor(action);
       return methodLabel
         ? `Unlock chunk ${blocker.chunk} to use ${methodLabel}.`
         : `Unlock chunk ${blocker.chunk} before this step.`;
@@ -221,6 +222,50 @@ const mutableFallbackRoute = (route: DeepReadonly<ItemRoute>): ItemRoute => ({
   })),
   blockers: route.blockers.map(blocker => ({ ...blocker })),
 });
+
+const normalizedPresentationValue = (value: string | undefined): string => (
+  value?.trim().replace(/\s+/g, ' ').toLocaleLowerCase('en-GB') ?? ''
+);
+
+const alternativeRouteSignature = (route: PresentedRoute): string => JSON.stringify([
+  normalizedPresentationValue(route.label),
+  normalizedPresentationValue(route.sourceKind),
+  route.deterministic,
+  normalizedPresentationValue(route.probabilityText),
+  route.requiresChunkUnlock,
+  [...route.blockers]
+    .map(blocker => [
+      normalizedPresentationValue(blocker.category),
+      normalizedPresentationValue(blocker.label),
+    ])
+    .sort((left, right) => (
+      left[0].localeCompare(right[0], 'en-GB')
+      || left[1].localeCompare(right[1], 'en-GB')
+    )),
+  normalizedPresentationValue(route.dataNote),
+]);
+
+const coalesceAlternativeRoutes = (
+  rankedRoutes: readonly PresentedRoute[],
+): readonly RuneProofAlternativeRoute[] => {
+  const groups = new Map<string, { readonly route: PresentedRoute; count: number }>();
+
+  rankedRoutes.forEach((route) => {
+    const signature = alternativeRouteSignature(route);
+    const existing = groups.get(signature);
+    if (existing) {
+      existing.count += 1;
+      return;
+    }
+    groups.set(signature, { route, count: 1 });
+  });
+
+  return [...groups.values()].map(({ route, count }, index) => ({
+    ...route,
+    isBest: index === 0,
+    variantCount: count,
+  }));
+};
 
 const alternativeSourcesFor = (
   ordered: readonly StrategyAction[],
@@ -278,10 +323,10 @@ const alternativeSourcesFor = (
 
   return eligibleItems.flatMap(({ key, name }) => {
     const group = routesByItemKey.get(key);
-    const routes = group && rankFallbackRoutes(group.routes, connectGraph, { origin })
+    const rankedRoutes = group && rankFallbackRoutes(group.routes, connectGraph, { origin })
       .map(route => group.presentedRoutesById.get(route.id))
-      .filter((route): route is PresentedRoute => route !== undefined)
-      .map((route, routeIndex) => ({ ...route, isBest: routeIndex === 0 }));
+      .filter((route): route is PresentedRoute => route !== undefined);
+    const routes = rankedRoutes && coalesceAlternativeRoutes(rankedRoutes);
     return routes?.length ? [{
       itemKey: key,
       itemName: name,
@@ -336,12 +381,12 @@ export function buildRuneProofCoachModel(input: RuneProofCoachInput): RuneProofC
       id: action.id,
       instruction: action.displayText,
       state,
-      locationLabel: locationLabelFor(action, evaluatedAction),
+      locationLabel: locationLabelFor(action),
       mapChunks: [...(evaluatedAction?.location.chunks ?? [])],
       blockerText: state === 'BLOCKED' && blockers[0]
-        ? blockerTextFor(blockers[0], action, evaluatedAction)
+        ? blockerTextFor(blockers[0], action)
         : undefined,
-      preferredMethodLabel: preferredMethodLabelFor(action, evaluatedAction),
+      preferredMethodLabel: preferredMethodLabelFor(action),
       confirmationAllowed: action.coach.completion.kind === 'MANUAL'
         || action.coach.completion.kind === 'ITEM_CONFIRMED'
         || state === 'NEEDS_CONFIRMATION',

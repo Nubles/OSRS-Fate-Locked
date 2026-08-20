@@ -134,7 +134,7 @@
       },
       {
         "chunkPickerTaskId": "t_7592",
-        "confidence": "EXACT",
+        "confidence": "REVIEWED",
         "dependsOn": [
           "cooks-assistant:take-bucket",
           "cooks-assistant:start-quest"
@@ -151,11 +151,15 @@
         "items": [],
         "kind": "USE_ITEM",
         "location": {
-          "entity": {
-            "kind": "object",
-            "name": "Dairy cow"
-          },
-          "kind": "EXACT_ENTITY"
+          "alias": "Groats' Farm",
+          "chunks": [
+            "50,51"
+          ],
+          "evidence": "Pinned Wiki source line cooks-assistant-walkthrough-3 names the Lumbridge cow field; the pinned Chunk Picker content entry Groats' Farm (50,51) lists Dairy cow.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Only chunk precision is claimed for the quest-local dairy cow; the review does not claim an exact tile.",
+          "reviewedAt": "2026-08-20",
+          "reviewer": "OpenAI Codex"
         },
         "rawWikiLineIds": [
           "cooks-assistant-walkthrough-3"
@@ -237,7 +241,7 @@
         }
       },
       {
-        "confidence": "EXACT",
+        "confidence": "REVIEWED",
         "dependsOn": [
           "cooks-assistant:take-egg"
         ],
@@ -253,11 +257,15 @@
         "items": [],
         "kind": "ACQUIRE",
         "location": {
-          "entity": {
-            "kind": "object",
-            "name": "Wheat"
-          },
-          "kind": "EXACT_ENTITY"
+          "alias": "Mill Lane Mill",
+          "chunks": [
+            "49,51"
+          ],
+          "evidence": "Pinned Wiki source line cooks-assistant-walkthrough-5 names Mill Lane Mill and grain outside; the pinned Chunk Picker content entry Lumbridge Mill (49,51) lists Wheat and Hopper.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Only chunk precision is claimed for the quest-local grain; the review does not claim an exact plant or tile.",
+          "reviewedAt": "2026-08-20",
+          "reviewer": "OpenAI Codex"
         },
         "rawWikiLineIds": [
           "cooks-assistant-walkthrough-5"
@@ -287,7 +295,7 @@
       },
       {
         "chunkPickerTaskId": "t_7593",
-        "confidence": "EXACT",
+        "confidence": "REVIEWED",
         "dependsOn": [
           "cooks-assistant:pick-grain",
           "cooks-assistant:start-quest"
@@ -304,11 +312,15 @@
         "items": [],
         "kind": "USE_ITEM",
         "location": {
-          "entity": {
-            "kind": "object",
-            "name": "Hopper"
-          },
-          "kind": "EXACT_ENTITY"
+          "alias": "Mill Lane Mill",
+          "chunks": [
+            "49,51"
+          ],
+          "evidence": "Pinned Wiki source line cooks-assistant-walkthrough-5 names the hopper inside Mill Lane Mill; the pinned Chunk Picker content entry Lumbridge Mill (49,51) lists Wheat and Hopper.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Only chunk precision is claimed for the quest-local hopper; the review does not claim an exact floor or tile.",
+          "reviewedAt": "2026-08-20",
+          "reviewer": "OpenAI Codex"
         },
         "rawWikiLineIds": [],
         "section": "QUEST",

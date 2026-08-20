@@ -156,6 +156,33 @@ const loadedContent = (init: () => Promise<boolean> = async () => true) => {
   };
 };
 
+const multiLocationCookContent = () => {
+  const contentService = loadedContent();
+  const defaultLookup = contentService.entityLocations.getMockImplementation()!;
+  const multiLocationEntities = new Map<string, EntityHit>([
+    ['object|dairy cow', {
+      name: 'Dairy cow',
+      kind: 'object',
+      locations: [{ cx: 49, cy: 52 }, { cx: 50, cy: 51 }],
+    }],
+    ['object|wheat', {
+      name: 'Wheat',
+      kind: 'object',
+      locations: [{ cx: 49, cy: 51 }, { cx: 49, cy: 52 }],
+    }],
+    ['object|hopper', {
+      name: 'Hopper',
+      kind: 'object',
+      locations: [{ cx: 49, cy: 51 }, { cx: 50, cy: 53 }],
+    }],
+  ]);
+  contentService.entityLocations.mockImplementation((name, kinds) => (
+    multiLocationEntities.get(`${kinds[0]}|${name.toLowerCase()}`)
+    ?? defaultLookup(name, kinds)
+  ));
+  return contentService;
+};
+
 const runeProof = (
   contentService: ReturnType<typeof loadedContent>,
   overrides: Record<string, unknown> = {},
@@ -419,6 +446,79 @@ describe('RuneProof Goal Planner integration', () => {
     expect(onOpenWorldChunk).toHaveBeenCalledWith(50, 50);
     expect(onClose.mock.invocationCallOrder[0])
       .toBeLessThan(onOpenWorldChunk.mock.invocationCallOrder[0]);
+  });
+
+  it('keeps the local mill blocker and map handoff exact when live entities have multiple locations', async () => {
+    gameSnapshot = {
+      ...gameSnapshot,
+      unlocks: plannerUnlocks({ chunks: ['50,51'] }),
+      gameModeId: 'chunked',
+    };
+    window.localStorage.setItem(
+      runeProofPreviewStorageKey('run-a'),
+      JSON.stringify({ "Cook's Assistant": ['egg'] }),
+    );
+    const onClose = vi.fn();
+    const onOpenWorldChunk = vi.fn();
+    const contentService = multiLocationCookContent();
+    render(
+      <GoalPlannerModal
+        onClose={onClose}
+        onOpenWorldChunk={onOpenWorldChunk}
+        initialTarget={{ kind: 'quest', id: "Cook's Assistant" }}
+        runeProof={runeProof(contentService)}
+      />,
+    );
+
+    const current = await nextAction();
+    expect(current.getByText('Pick grain outside Mill Lane Mill.')).toBeTruthy();
+    expect(current.getByText('Blocked')).toBeTruthy();
+    expect(current.getByText('Unlock chunk 49,51 to use Mill Lane Mill.')).toBeTruthy();
+    await userEvent.click(current.getByRole('button', {
+      name: 'Show Pick grain outside Mill Lane Mill. on map',
+    }));
+
+    expect(contentService.entityLocations).toHaveBeenCalledWith('Wheat', ['object']);
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(onOpenWorldChunk).toHaveBeenCalledWith(49, 51);
+  });
+
+  it('keeps the local flour blocker and map handoff exact after grain is confirmed', async () => {
+    gameSnapshot = {
+      ...gameSnapshot,
+      unlocks: plannerUnlocks({ chunks: ['50,51'] }),
+      gameModeId: 'chunked',
+    };
+    window.localStorage.setItem(
+      runeProofPreviewStorageKey('run-a'),
+      JSON.stringify({ "Cook's Assistant": ['egg'] }),
+    );
+    window.localStorage.setItem(
+      runeProofPreviewActionStorageKey('run-a'),
+      JSON.stringify({ "Cook's Assistant": ['cooks-assistant:pick-grain'] }),
+    );
+    const onClose = vi.fn();
+    const onOpenWorldChunk = vi.fn();
+    render(
+      <GoalPlannerModal
+        onClose={onClose}
+        onOpenWorldChunk={onOpenWorldChunk}
+        initialTarget={{ kind: 'quest', id: "Cook's Assistant" }}
+        runeProof={runeProof(multiLocationCookContent())}
+      />,
+    );
+
+    const current = await nextAction();
+    expect(current.getByText('Use the grain in Mill Lane Mill and collect the flour in the pot.'))
+      .toBeTruthy();
+    expect(current.getByText('Blocked')).toBeTruthy();
+    expect(current.getByText('Unlock chunk 49,51 to use Mill Lane Mill.')).toBeTruthy();
+    await userEvent.click(current.getByRole('button', {
+      name: 'Show Use the grain in Mill Lane Mill and collect the flour in the pot. on map',
+    }));
+
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(onOpenWorldChunk).toHaveBeenCalledWith(49, 51);
   });
 
   it('contains coach projection failures and keeps the objective picker usable', async () => {

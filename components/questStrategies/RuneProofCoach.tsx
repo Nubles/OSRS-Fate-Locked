@@ -240,6 +240,11 @@ const AlternativeSources = ({
                       <span className="ml-1.5 text-gray-500">
                         {route.deterministic ? 'Deterministic' : route.probabilityText ?? 'Chance-based'}
                       </span>
+                      {route.variantCount > 1 && (
+                        <span className="ml-1.5 text-gray-500">
+                          {route.variantCount} route variants
+                        </span>
+                      )}
                     </li>
                   ))}
                 </ul>

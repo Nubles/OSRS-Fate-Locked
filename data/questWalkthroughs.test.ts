@@ -109,6 +109,68 @@ describe('local walkthrough loader', () => {
       'cooks-assistant:complete': ['cooks-assistant-walkthrough-7'],
     });
   });
+
+  it("pins Cook's local cow and mill actions to reviewed chunk aliases with provenance", () => {
+    const walkthrough = questWalkthroughFor("Cook's Assistant")!;
+    const actionById = new Map(walkthrough.actions.map(action => [action.id, action]));
+
+    expect([
+      'cooks-assistant:milk-cow',
+      'cooks-assistant:pick-grain',
+      'cooks-assistant:make-flour',
+    ].map(id => {
+      const action = actionById.get(id)!;
+      return {
+        id,
+        confidence: action.confidence,
+        entities: action.entities,
+        location: action.location,
+      };
+    })).toEqual([
+      {
+        id: 'cooks-assistant:milk-cow',
+        confidence: 'REVIEWED',
+        entities: [{ kind: 'object', name: 'Dairy cow' }],
+        location: {
+          kind: 'REVIEWED_ALIAS',
+          alias: "Groats' Farm",
+          chunks: ['50,51'],
+          reviewer: 'OpenAI Codex',
+          reviewedAt: '2026-08-20',
+          evidence: "Pinned Wiki source line cooks-assistant-walkthrough-3 names the Lumbridge cow field; the pinned Chunk Picker content entry Groats' Farm (50,51) lists Dairy cow.",
+          rationale: 'Only chunk precision is claimed for the quest-local dairy cow; the review does not claim an exact tile.',
+        },
+      },
+      {
+        id: 'cooks-assistant:pick-grain',
+        confidence: 'REVIEWED',
+        entities: [{ kind: 'object', name: 'Wheat' }],
+        location: {
+          kind: 'REVIEWED_ALIAS',
+          alias: 'Mill Lane Mill',
+          chunks: ['49,51'],
+          reviewer: 'OpenAI Codex',
+          reviewedAt: '2026-08-20',
+          evidence: 'Pinned Wiki source line cooks-assistant-walkthrough-5 names Mill Lane Mill and grain outside; the pinned Chunk Picker content entry Lumbridge Mill (49,51) lists Wheat and Hopper.',
+          rationale: 'Only chunk precision is claimed for the quest-local grain; the review does not claim an exact plant or tile.',
+        },
+      },
+      {
+        id: 'cooks-assistant:make-flour',
+        confidence: 'REVIEWED',
+        entities: [{ kind: 'object', name: 'Hopper' }],
+        location: {
+          kind: 'REVIEWED_ALIAS',
+          alias: 'Mill Lane Mill',
+          chunks: ['49,51'],
+          reviewer: 'OpenAI Codex',
+          reviewedAt: '2026-08-20',
+          evidence: 'Pinned Wiki source line cooks-assistant-walkthrough-5 names the hopper inside Mill Lane Mill; the pinned Chunk Picker content entry Lumbridge Mill (49,51) lists Wheat and Hopper.',
+          rationale: 'Only chunk precision is claimed for the quest-local hopper; the review does not claim an exact floor or tile.',
+        },
+      },
+    ]);
+  });
 });
 
 const duplicateActionFixture = () => {

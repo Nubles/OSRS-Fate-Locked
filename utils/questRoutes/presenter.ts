@@ -131,8 +131,12 @@ const travelNote = (route: PresentedInputRoute): string | undefined => {
 };
 
 const routeLabel = (route: PresentedInputRoute): string => {
-  if (route.sourceKind !== 'RECIPE') return route.sourceLabel;
-  return route.steps[0]?.label ?? 'Recipe route';
+  if (route.sourceKind !== 'RECIPE' && route.sourceKind !== 'GATHER') {
+    return route.sourceLabel;
+  }
+
+  return route.steps.find(step => step.sourceKind === route.sourceKind)?.label
+    ?? (route.sourceKind === 'GATHER' ? 'Gathering route' : 'Recipe route');
 };
 
 const presentRoute = (
