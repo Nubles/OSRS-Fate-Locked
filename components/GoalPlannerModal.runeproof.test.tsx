@@ -354,7 +354,11 @@ describe('RuneProof Goal Planner integration', () => {
     expect(observed?.itemSourceRecords.map(record => record.itemName)).toEqual([
       'Egg', 'Bucket', 'Grain', 'Pot',
     ]);
-    expect(observed?.recipes.map(recipe => recipe.id)).toEqual(['grain-to-flour', 'milk-cow']);
+    expect(observed?.recipes.map(recipe => recipe.id)).toEqual([
+      'grain-to-flour',
+      'milk-cow',
+      'pick-wheat',
+    ]);
     expect(observed?.entityLocations.map(hit => hit.name)).toEqual(['Dairy cow', 'Hopper']);
     expect(contentService.entityLocations).toHaveBeenCalledWith('Cook (Lumbridge)', ['npc']);
     expect(observed?.stationRequirements).toEqual(expect.arrayContaining([
