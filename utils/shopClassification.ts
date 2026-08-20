@@ -59,7 +59,7 @@ const RULES: [RegExp, string][] = [
   [/tanner|tannery|leather/i, 'Tanners'],
   [/taxiderm|stuffed (head|animal)/i, 'Taxidermists'],
   [/decant/i, 'Decanters'],
-  [/lost property/i, 'Lost Property'],
+  [/lost property|lost and found/i, 'Lost Property'],
   [/pet shop|\bpets\b/i, 'Pet Shops'],
   [/mining|\bores?\b|\blode\b/i, 'Mining Shops'],
   [/\brope\b|craft/i, 'Crafting Shops'],

@@ -19,9 +19,10 @@
     "chunks:source-check": "node scripts/chunk-source.mjs --check-upstream",
     "chunks:source-verify": "vitest run scripts/chunk-source.test.ts",
     "content:sync": "node scripts/sync-collection-log.mjs && node scripts/sync-combat-achievements.mjs && node scripts/check-content-sync.mjs",
-    "content:verify": "npm run diary:verify && npm run chunks:verify && npm run quests:verify && vitest run data/contentBaseline.test.ts data/tasksConsistency.test.ts utils/taskIdMigrations.test.ts utils/caProgress.test.ts",
+    "content:verify": "npm run diary:verify && npm run chunks:verify && npm run quests:verify && npm run quest-routes:verify && npm run walkthroughs:verify && vitest run data/contentBaseline.test.ts data/tasksConsistency.test.ts utils/taskIdMigrations.test.ts utils/caProgress.test.ts",
     "dev": "node scripts/gen-model-manifest.mjs && vite",
     "build": "node scripts/gen-model-manifest.mjs && vite build",
+    "build:runeproof-preview": "node scripts/gen-model-manifest.mjs && vite build --mode runeproof-preview --outDir dist-runeproof-preview",
     "preview": "vite preview",
     "changelog:verify": "node scripts/verify-player-facing-changelog.mjs",
     "test": "vitest run",
@@ -29,7 +30,10 @@
     "typecheck": "tsc --noEmit",
     "release:verify": "npm run changelog:verify && npm test && npm run typecheck && npm run content:verify && npm run build",
     "quests:source-refresh": "node scripts/sync-quest-sources.mjs --refresh",
-    "quests:verify": "node scripts/sync-quest-sources.mjs --check && vitest run data/questRequirementAudit.test.ts"
+    "quests:verify": "node scripts/sync-quest-sources.mjs --check && vitest run data/questRequirementAudit.test.ts",
+    "quest-routes:verify": "node scripts/check-quest-route-data.mjs",
+    "walkthroughs:refresh": "node scripts/sync-quest-walkthroughs.mjs",
+    "walkthroughs:verify": "node scripts/sync-quest-walkthroughs.mjs --check"
   },
   "dependencies": {
     "@google/model-viewer": "^4.3.0",

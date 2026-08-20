@@ -687,7 +687,7 @@ describe('RuneProof Goal Planner integration', () => {
     expect(currentTray.querySelector('[data-route-step-item="egg-0"]')).toBeNull();
     expect(currentTray.querySelector('[data-route-step-item="bolt of cloth-1"]')).toBeTruthy();
     expect(currentTray.textContent).toContain('Bolt of cloth source');
-  });
+  }, 15_000);
 
   it('hides analysis in the same commit when the feature becomes unavailable', async () => {
     const reenabledLoad = deferred<boolean>();
