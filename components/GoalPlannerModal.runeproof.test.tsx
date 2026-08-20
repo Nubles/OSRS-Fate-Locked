@@ -246,6 +246,32 @@ describe('Goal Planner responsive layout', () => {
     expect(picker?.classList.contains('sm:h-auto')).toBe(true);
     expect(plan?.classList.contains('min-w-0')).toBe(true);
   });
+
+  it('locks document scrolling behind the modal and restores the prior overflow styles', () => {
+    const originalRootOverflow = document.documentElement.style.overflow;
+    const originalBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = 'auto';
+    document.body.style.overflow = 'scroll';
+
+    try {
+      const view = render(
+        <GoalPlannerModal
+          onClose={() => undefined}
+          initialTarget={{ kind: 'quest', id: "Doric's Quest" }}
+        />,
+      );
+
+      expect(document.documentElement.style.overflow).toBe('hidden');
+      expect(document.body.style.overflow).toBe('hidden');
+
+      view.unmount();
+      expect(document.documentElement.style.overflow).toBe('auto');
+      expect(document.body.style.overflow).toBe('scroll');
+    } finally {
+      document.documentElement.style.overflow = originalRootOverflow;
+      document.body.style.overflow = originalBodyOverflow;
+    }
+  });
 });
 
 describe('goalPlannerStepHasWikiLink', () => {

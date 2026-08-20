@@ -360,6 +360,18 @@ export const GoalPlannerModal: React.FC<Props> = ({
     onOpenWorldChunk?.(cx, cy);
   }, [cancelRuneProofRequest, onClose, onOpenWorldChunk]);
   useEscapeKey(handleClose, true);
+  useEffect(() => {
+    const root = document.documentElement;
+    const previousRootOverflow = root.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+    root.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      root.style.overflow = previousRootOverflow;
+      document.body.style.overflow = previousBodyOverflow;
+    };
+  }, []);
 
   const targets = useMemo(() => listGoalTargets(), []);
   const [query, setQuery] = useState('');
