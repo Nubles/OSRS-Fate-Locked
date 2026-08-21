@@ -500,7 +500,7 @@ export const GoalPlannerModal: React.FC<Props> = ({
       .map(target => [target.id, target]),
   ), [targets]);
   const runeProofObjectiveCandidates = useMemo<readonly RuneProofObjectiveCandidate[]>(() => {
-    if (!runeProofActionsHydrated) return [];
+    if (!runeProofActionsHydrated || !previewChecks.isHydratedForRun) return [];
 
     return runeProofStrategies.flatMap((strategy) => {
       const target = targetsByQuestId.get(strategy.questId);
@@ -525,6 +525,7 @@ export const GoalPlannerModal: React.FC<Props> = ({
     gameModeId,
     previewActions.confirmedActionIdsFor,
     previewChecks.confirmedItemKeys,
+    previewChecks.isHydratedForRun,
     runeProofActionsHydrated,
     runeProofIntegration.availability,
     runeProofStrategies,
@@ -543,6 +544,7 @@ export const GoalPlannerModal: React.FC<Props> = ({
       || query.trim().length > 0
       || !runeProofCatalogueLoaded
       || !runeProofActionsHydrated
+      || !previewChecks.isHydratedForRun
       || runeProofIntegration.availability !== 'PREVIEW'
     ) return;
 
@@ -555,6 +557,7 @@ export const GoalPlannerModal: React.FC<Props> = ({
     query,
     runeProofCatalogueLoaded,
     runeProofActionsHydrated,
+    previewChecks.isHydratedForRun,
     runeProofIntegration.availability,
     runeProofRecommendations,
     selected,

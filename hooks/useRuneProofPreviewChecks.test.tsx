@@ -1,4 +1,7 @@
 // @vitest-environment jsdom
+import { useLayoutEffect } from 'react';
+import { flushSync } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { runeProofPreviewStorageKey, type RuneProofStorage } from '../utils/questRoutes/previewChecks';
@@ -41,6 +44,42 @@ describe('useRuneProofPreviewChecks', () => {
       .toEqual({ "Doric's Quest": ['clay'] });
     expect(JSON.parse(storage.values.get(runeProofPreviewStorageKey('run-a'))!))
       .toEqual({ "Cook's Assistant": ['egg', 'pot of flour'] });
+  });
+
+  it('does not display or write prior-run checks before new-run hydration', async () => {
+    const storage = memoryStorage();
+    storage.values.set(runeProofPreviewStorageKey('run-a'), JSON.stringify({
+      "Cook's Assistant": ['egg'],
+    }));
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const root = createRoot(host);
+    const CheckProbe = ({ runId, writeNewRun }: {
+      readonly runId: string;
+      readonly writeNewRun: boolean;
+    }) => {
+      const controls = useRuneProofPreviewChecks(runId, storage);
+      useLayoutEffect(() => {
+        if (writeNewRun) {
+          controls.setItemConfirmed("Cook's Assistant", 'pot of flour', true);
+        }
+      }, [controls.setItemConfirmed, writeNewRun]);
+      return <output>{[...controls.confirmedItemKeys("Cook's Assistant")].join(',')}</output>;
+    };
+
+    await act(async () => { root.render(<CheckProbe runId="run-a" writeNewRun={false} />); });
+    expect(host.querySelector('output')?.textContent).toBe('egg');
+
+    flushSync(() => { root.render(<CheckProbe runId="run-b" writeNewRun />); });
+
+    expect(host.querySelector('output')?.textContent).toBe('pot of flour');
+    expect(JSON.parse(storage.values.get(runeProofPreviewStorageKey('run-b'))!))
+      .toEqual({ "Cook's Assistant": ['pot of flour'] });
+    expect(JSON.parse(storage.values.get(runeProofPreviewStorageKey('run-a'))!))
+      .toEqual({ "Cook's Assistant": ['egg'] });
+
+    await act(async () => { root.unmount(); });
+    host.remove();
   });
 
   it('keeps valid in-memory changes when browser storage rejects writes', () => {

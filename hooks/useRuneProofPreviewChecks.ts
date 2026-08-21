@@ -17,8 +17,21 @@ const defaultStorage = (): RuneProofStorage => (
   typeof window === 'undefined' ? unavailableStorage : window.localStorage
 );
 
+interface RuneProofPreviewCheckState {
+  readonly runId: string;
+  readonly checks: RuneProofPreviewChecks;
+}
+
+const checksForCurrentRun = (
+  state: RuneProofPreviewCheckState,
+  runId: string,
+): RuneProofPreviewChecks => (
+  state.runId === runId ? state.checks : {}
+);
+
 export interface RuneProofPreviewCheckControls {
   checks: RuneProofPreviewChecks;
+  readonly isHydratedForRun: boolean;
   confirmedItemKeys(questId: string): ReadonlySet<string>;
   setItemConfirmed(questId: string, itemKey: string, confirmed: boolean): void;
 }
@@ -28,13 +41,20 @@ export function useRuneProofPreviewChecks(
   storage?: RuneProofStorage,
 ): RuneProofPreviewCheckControls {
   const activeStorage = storage ?? defaultStorage();
-  const [checks, setChecks] = useState<RuneProofPreviewChecks>(() => (
-    readRuneProofPreviewChecks(activeStorage, runId)
-  ));
+  const [state, setState] = useState<RuneProofPreviewCheckState>(() => ({
+    runId,
+    checks: readRuneProofPreviewChecks(activeStorage, runId),
+  }));
 
   useEffect(() => {
-    setChecks(readRuneProofPreviewChecks(activeStorage, runId));
+    setState({
+      runId,
+      checks: readRuneProofPreviewChecks(activeStorage, runId),
+    });
   }, [activeStorage, runId]);
+
+  const checks = checksForCurrentRun(state, runId);
+  const isHydratedForRun = state.runId === runId;
 
   const confirmedItemKeys = useCallback(
     (questId: string): ReadonlySet<string> => new Set(checks[questId] ?? []),
@@ -42,16 +62,17 @@ export function useRuneProofPreviewChecks(
   );
 
   const setItemConfirmed = useCallback((questId: string, itemKey: string, confirmed: boolean) => {
-    setChecks(current => {
-      const existing = current[questId] ?? [];
+    setState(current => {
+      const currentChecks = checksForCurrentRun(current, runId);
+      const existing = currentChecks[questId] ?? [];
       const nextKeys = confirmed
         ? [...existing, itemKey]
         : existing.filter(key => key !== itemKey);
-      const next = normalizeRuneProofPreviewChecks({ ...current, [questId]: nextKeys });
+      const next = normalizeRuneProofPreviewChecks({ ...currentChecks, [questId]: nextKeys });
       writeRuneProofPreviewChecks(activeStorage, runId, next);
-      return next;
+      return { runId, checks: next };
     });
   }, [activeStorage, runId]);
 
-  return { checks, confirmedItemKeys, setItemConfirmed };
+  return { checks, isHydratedForRun, confirmedItemKeys, setItemConfirmed };
 }
