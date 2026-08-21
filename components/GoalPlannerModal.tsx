@@ -20,8 +20,11 @@ import { UnlockState } from '../types';
 import { QuestRoutePanel } from './questRoutes/QuestRoutePanel';
 import { RuneProofErrorBoundary } from './questRoutes/RuneProofErrorBoundary';
 import { analyzeQuest } from '../utils/questRoutes/analyzeQuest';
-import { isRuneProofQuestSupported, reviewedQuestRequirements } from '../data/questItemRequirements';
-import { loadQuestWalkthroughFor } from '../data/questWalkthroughLoader';
+import { reviewedQuestRequirements } from '../data/questItemRequirements';
+import {
+  loadQuestStrategyCatalogue,
+  loadQuestWalkthroughFor,
+} from '../data/questWalkthroughLoader';
 import { questWalkthroughReleaseFor } from '../data/questWalkthroughRelease';
 import {
   CHUNK_CONTENT_DATA_VERSION,
@@ -33,10 +36,13 @@ import { useRuneProofPreviewChecks } from '../hooks/useRuneProofPreviewChecks';
 import { useRuneProofPreviewActions } from '../hooks/useRuneProofPreviewActions';
 import { RuneProofCoach } from './questStrategies/RuneProofCoach';
 import { buildRuneProofCoachModel } from '../utils/questStrategies/coach';
+import type { QuestStrategyDefinition } from '../utils/questStrategies/model';
 import {
-  questStrategyFromWalkthrough,
-  type QuestStrategyDefinition,
-} from '../utils/questStrategies/model';
+  questStrategyProgress,
+  rankRuneProofObjectives,
+  type RuneProofObjectiveCandidate,
+} from '../utils/questStrategies/objectives';
+import { RuneProofObjectivePicker } from './questStrategies/RuneProofObjectivePicker';
 import type { ConnectGraph } from '../services/ChunkContentService';
 import {
   canonicalRuneProofAccountIdentity,
@@ -59,39 +65,45 @@ type RuneProofPlannerState =
       readonly connectGraph?: undefined;
     });
 
-interface RuneProofCoachWorkspaceProps {
+interface RuneProofActionHydrationScope {
   readonly runId: string;
+  readonly strategies: readonly QuestStrategyDefinition[];
+}
+
+interface RuneProofCoachWorkspaceProps {
   readonly strategy: QuestStrategyDefinition;
   readonly analysis: Extract<RuneProofRenderState, { unavailable: false }>['analysis'];
   readonly connectGraph: ConnectGraph;
   readonly confirmedItemKeys: ReadonlySet<string>;
+  readonly confirmedActionIds: ReadonlySet<string>;
   readonly completedQuestIds: ReadonlySet<string>;
   readonly onSetItemConfirmed: (questId: string, itemKey: string, confirmed: boolean) => void;
+  readonly onSetActionConfirmed: (questId: string, actionId: string, confirmed: boolean) => void;
 }
 
 const RuneProofCoachWorkspace: React.FC<RuneProofCoachWorkspaceProps> = ({
-  runId,
   strategy,
   analysis,
   connectGraph,
   confirmedItemKeys,
+  confirmedActionIds,
   completedQuestIds,
   onSetItemConfirmed,
+  onSetActionConfirmed,
 }) => {
-  const previewActions = useRuneProofPreviewActions(runId, strategy);
   const model = useMemo(() => buildRuneProofCoachModel({
     strategy,
     analysis,
     connectGraph,
     confirmedItemKeys,
-    confirmedActionIds: previewActions.confirmedActionIds,
+    confirmedActionIds,
     completedQuestIds,
   }), [
     analysis,
     completedQuestIds,
     confirmedItemKeys,
+    confirmedActionIds,
     connectGraph,
-    previewActions.confirmedActionIds,
     strategy,
   ]);
   const handleConfirmAction = React.useCallback((actionId: string) => {
@@ -102,8 +114,8 @@ const RuneProofCoachWorkspace: React.FC<RuneProofCoachWorkspaceProps> = ({
       onSetItemConfirmed(strategy.questId, action.coach.completion.itemKey, true);
       return;
     }
-    previewActions.setActionConfirmed(actionId, true);
-  }, [onSetItemConfirmed, previewActions.setActionConfirmed, strategy]);
+    onSetActionConfirmed(strategy.questId, actionId, true);
+  }, [onSetActionConfirmed, onSetItemConfirmed, strategy]);
 
   return (
     <RuneProofCoach
@@ -140,6 +152,8 @@ const DEFAULT_RUNEPROOF: RuneProofIntegration = {
   walkthroughReleaseFor: questWalkthroughReleaseFor,
 };
 
+const EMPTY_RUNE_PROOF_STRATEGIES: readonly QuestStrategyDefinition[] = Object.freeze([]);
+
 const KIND_META: Record<GoalKind, { icon: React.ReactNode; label: string; color: string }> = {
   quest: { icon: <BookOpen size={13} />, label: 'Quest', color: 'text-blue-300' },
   diary: { icon: <Award size={13} />, label: 'Diary', color: 'text-green-300' },
@@ -148,6 +162,17 @@ const KIND_META: Record<GoalKind, { icon: React.ReactNode; label: string; color:
 
 // Status of a target in the current snapshot — drives the picker dot.
 export type TargetState = 'done' | 'ready' | 'confirm' | 'locked';
+
+const objectiveReadinessFor = (
+  state: TargetState,
+): RuneProofObjectiveCandidate['readiness'] => {
+  switch (state) {
+    case 'ready': return 'READY';
+    case 'confirm': return 'CONFIRM';
+    case 'locked':
+    case 'done': return 'BLOCKED';
+  }
+};
 
 function targetState(t: GoalTarget, unlocks: any, gameModeId?: string): TargetState {
   if (t.kind === 'quest') {
@@ -343,6 +368,14 @@ export const GoalPlannerModal: React.FC<Props> = ({
   const runeProofWalkthroughReleaseFor = runeProofIntegration.walkthroughReleaseFor ?? questWalkthroughReleaseFor;
   const runeProofRequestGeneration = React.useRef(0);
   const [runeProofState, setRuneProofState] = useState<RuneProofPlannerState | null>(null);
+  const [runeProofStrategies, setRuneProofStrategies] = useState<readonly QuestStrategyDefinition[]>(
+    EMPTY_RUNE_PROOF_STRATEGIES,
+  );
+  const [runeProofCatalogueLoaded, setRuneProofCatalogueLoaded] = useState(false);
+  const [runeProofActionsHydratedScope, setRuneProofActionsHydratedScope] = useState<
+    RuneProofActionHydrationScope | null
+  >(null);
+  const previewActions = useRuneProofPreviewActions(runId, runeProofStrategies);
   const cancelRuneProofRequest = React.useCallback(() => {
     runeProofRequestGeneration.current += 1;
     setRuneProofState(null);
@@ -372,20 +405,66 @@ export const GoalPlannerModal: React.FC<Props> = ({
 
   const targets = useMemo(() => listGoalTargets(), []);
   const [query, setQuery] = useState('');
-  const [selected, setSelected] = useState<{ kind: GoalKind; id: string } | null>(() => (
-    initialTarget
-    ?? (runeProofIntegration.availability === 'PREVIEW'
-      ? { kind: 'quest', id: "Cook's Assistant" }
-      : null)
-  ));
+  const [selected, setSelected] = useState<{ kind: GoalKind; id: string } | null>(initialTarget ?? null);
   const [objectivePickerOpen, setObjectivePickerOpen] = useState(false);
   useEffect(() => { if (initialTarget) setSelected(initialTarget); }, [initialTarget]);
 
-  const runeProofQuestId = selected?.kind === 'quest'
-    && isRuneProofQuestSupported(selected.id)
+  useEffect(() => {
+    let active = true;
+    setRuneProofStrategies(EMPTY_RUNE_PROOF_STRATEGIES);
+    setRuneProofCatalogueLoaded(false);
+
+    if (runeProofIntegration.availability !== 'PREVIEW') {
+      return () => { active = false; };
+    }
+
+    void loadQuestStrategyCatalogue(runeProofIntegration.availability)
+      .then((strategies) => {
+        if (!active) return;
+        setRuneProofStrategies(strategies);
+        setRuneProofCatalogueLoaded(true);
+      })
+      .catch(() => {
+        if (!active) return;
+        setRuneProofStrategies(EMPTY_RUNE_PROOF_STRATEGIES);
+        setRuneProofCatalogueLoaded(true);
+      });
+
+    return () => { active = false; };
+  }, [runeProofIntegration.availability]);
+
+  useEffect(() => {
+    if (
+      !runeProofCatalogueLoaded
+      || runeProofIntegration.availability !== 'PREVIEW'
+    ) {
+      setRuneProofActionsHydratedScope(null);
+      return;
+    }
+
+    // The action hook hydrates this matching run/catalogue scope in its own
+    // effect. This runs after that hook so objectives never rank its temporary
+    // empty action set as real progress.
+    setRuneProofActionsHydratedScope({ runId, strategies: runeProofStrategies });
+  }, [
+    runId,
+    runeProofCatalogueLoaded,
+    runeProofIntegration.availability,
+    runeProofStrategies,
+  ]);
+  const runeProofActionsHydrated = (
+    runeProofCatalogueLoaded
     && runeProofIntegration.availability === 'PREVIEW'
-    ? selected.id
-    : null;
+    && runeProofActionsHydratedScope?.runId === runId
+    && runeProofActionsHydratedScope.strategies === runeProofStrategies
+  );
+
+  const selectedRuneProofStrategy = useMemo(() => (
+    selected?.kind === 'quest' && runeProofIntegration.availability === 'PREVIEW'
+      ? runeProofStrategies.find(strategy => strategy.questId === selected.id)
+      : undefined
+  ), [runeProofIntegration.availability, runeProofStrategies, selected]);
+  const runeProofQuestId = selectedRuneProofStrategy?.questId ?? null;
   const selectedWalkthroughRelease = useMemo(
     () => runeProofQuestId ? runeProofWalkthroughReleaseFor(runeProofQuestId) : undefined,
     [runeProofQuestId, runeProofWalkthroughReleaseFor],
@@ -412,6 +491,70 @@ export const GoalPlannerModal: React.FC<Props> = ({
       : new Set<string>(),
     [previewChecks.checks, previewChecks.confirmedItemKeys, runeProofQuestId],
   );
+  const completedQuestIds = useMemo(() => new Set(unlocks.quests), [unlocks.quests]);
+  const targetsByQuestId = useMemo(() => new Map(
+    targets
+      .filter((target): target is GoalTarget & { readonly kind: 'quest' } => target.kind === 'quest')
+      .map(target => [target.id, target]),
+  ), [targets]);
+  const runeProofObjectiveCandidates = useMemo<readonly RuneProofObjectiveCandidate[]>(() => {
+    if (!runeProofActionsHydrated) return [];
+
+    return runeProofStrategies.flatMap((strategy) => {
+      const target = targetsByQuestId.get(strategy.questId);
+      if (!target) return [];
+
+      const state = goalPlannerTargetState(target, unlocks, gameModeId);
+      const progress = questStrategyProgress(
+        strategy,
+        previewActions.confirmedActionIdsFor(strategy.questId),
+        previewChecks.confirmedItemKeys(strategy.questId),
+        completedQuestIds,
+      );
+      return [{
+        strategy,
+        readiness: objectiveReadinessFor(state),
+        completed: state === 'done' || progress.completed === progress.total,
+        progress,
+      }];
+    });
+  }, [
+    completedQuestIds,
+    gameModeId,
+    previewActions.confirmedActionIdsFor,
+    previewChecks.confirmedItemKeys,
+    runeProofActionsHydrated,
+    runeProofIntegration.availability,
+    runeProofStrategies,
+    targetsByQuestId,
+    unlocks,
+  ]);
+  const runeProofRecommendations = useMemo(
+    () => rankRuneProofObjectives(runeProofObjectiveCandidates),
+    [runeProofObjectiveCandidates],
+  );
+
+  useEffect(() => {
+    if (
+      initialTarget
+      || selected !== null
+      || !runeProofCatalogueLoaded
+      || !runeProofActionsHydrated
+      || runeProofIntegration.availability !== 'PREVIEW'
+    ) return;
+
+    const firstRecommendation = runeProofRecommendations[0];
+    if (firstRecommendation) {
+      setSelected({ kind: 'quest', id: firstRecommendation.questId });
+    }
+  }, [
+    initialTarget,
+    runeProofCatalogueLoaded,
+    runeProofActionsHydrated,
+    runeProofIntegration.availability,
+    runeProofRecommendations,
+    selected,
+  ]);
   const runeProofRequestKey = runeProofQuestId === null
     || selectedRequirements === undefined
     || selectedWalkthroughRelease === undefined
@@ -475,6 +618,12 @@ export const GoalPlannerModal: React.FC<Props> = ({
           return;
         }
 
+        const strategy = selectedRuneProofStrategy;
+        if (!strategy || strategy.questId !== request.questId) {
+          showUnavailable();
+          return;
+        }
+
         const snapshot = materializeQuestRouteSnapshot(
           request.questId,
           runeProofAccount,
@@ -483,7 +632,6 @@ export const GoalPlannerModal: React.FC<Props> = ({
           walkthrough,
         );
         const analysis = runeProofIntegration.analyze(request.questId, snapshot, walkthrough);
-        const strategy = questStrategyFromWalkthrough(walkthrough);
         const connectGraph = Object.fromEntries(
           Object.entries(snapshot.connectGraph).map(([from, destinations]) => (
             [from, [...destinations]]
@@ -510,6 +658,7 @@ export const GoalPlannerModal: React.FC<Props> = ({
     runeProofContentService,
     runeProofIntegration,
     runeProofRequest,
+    selectedRuneProofStrategy,
   ]);
 
   // Filter + lightweight ranking: incomplete & matching first.
@@ -553,7 +702,6 @@ export const GoalPlannerModal: React.FC<Props> = ({
     ? currentRuneProofState
     : null;
   const coachActive = activeCoachState !== null;
-  const completedQuestIds = useMemo(() => new Set(unlocks.quests), [unlocks.quests]);
   const selectTarget = React.useCallback((target: { kind: GoalKind; id: string }) => {
     setSelected(target);
     setObjectivePickerOpen(false);
@@ -602,6 +750,12 @@ export const GoalPlannerModal: React.FC<Props> = ({
               ? `${objectivePickerOpen ? 'flex' : 'hidden'} sm:flex w-full h-[45%] sm:w-[32%] sm:h-auto`
               : 'flex w-full h-[34%] sm:w-[44%] sm:h-auto'
           } border-b sm:border-b-0 sm:border-r border-white/10 flex-col min-h-0 shrink-0`}>
+            {runeProofIntegration.availability === 'PREVIEW' ? (
+              <RuneProofObjectivePicker
+                recommendations={runeProofRecommendations}
+                onSelect={(questId) => selectTarget({ kind: 'quest', id: questId })}
+              />
+            ) : null}
             <div className="p-2.5 border-b border-white/5 shrink-0">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-3.5 h-3.5" aria-hidden />
@@ -667,13 +821,14 @@ export const GoalPlannerModal: React.FC<Props> = ({
               <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
                 <RuneProofErrorBoundary key={activeCoachState.request.key}>
                   <RuneProofCoachWorkspace
-                    runId={runId}
                     strategy={activeCoachState.strategy}
                     analysis={activeCoachState.analysis}
                     connectGraph={activeCoachState.connectGraph}
                     confirmedItemKeys={confirmedItemKeys}
+                    confirmedActionIds={previewActions.confirmedActionIdsFor(activeCoachState.strategy.questId)}
                     completedQuestIds={completedQuestIds}
                     onSetItemConfirmed={previewChecks.setItemConfirmed}
+                    onSetActionConfirmed={previewActions.setActionConfirmed}
                   />
                 </RuneProofErrorBoundary>
               </div>

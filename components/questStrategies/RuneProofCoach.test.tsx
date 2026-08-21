@@ -212,6 +212,18 @@ const emptyRouteModel: RuneProofCoachModel = {
 };
 
 describe('RuneProofCoach', () => {
+  it('keeps the selected route progress exposed in text and through a quest-scoped progressbar', () => {
+    render(<RuneProofCoach model={modelWithPotNext} onConfirmAction={() => undefined} />);
+
+    const progress = screen.getByRole(
+      'progressbar',
+      { name: "Cook's Assistant progress" },
+    ) as HTMLProgressElement;
+    expect(progress.value).toBe(1);
+    expect(progress.max).toBe(3);
+    expect(screen.getByText('1/3 complete')).toBeTruthy();
+  });
+
   it('puts the reviewed objective and current pot action before the compact route', () => {
     render(
       <RuneProofCoach
