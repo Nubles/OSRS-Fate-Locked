@@ -496,6 +496,51 @@ describe('RuneProof Goal Planner integration', () => {
       .toBeTruthy();
   });
 
+  it('confirms the final RuneProof step to 9/9 without completing the Journal quest', async () => {
+    const earlierActionIds = [
+      'cooks-assistant:start-quest',
+      'cooks-assistant:take-pot',
+      'cooks-assistant:take-bucket',
+      'cooks-assistant:milk-cow',
+      'cooks-assistant:take-egg',
+      'cooks-assistant:pick-grain',
+      'cooks-assistant:make-flour',
+      'cooks-assistant:return-to-cook',
+    ];
+    window.localStorage.setItem(
+      runeProofPreviewActionStorageKey('run-a'),
+      JSON.stringify({ "Cook's Assistant": earlierActionIds }),
+    );
+    const journalQuestsBefore = [...gameSnapshot.unlocks.quests];
+    const first = renderGoalPlanner({
+      availability: 'PREVIEW',
+      selectedQuest: "Cook's Assistant",
+    });
+    const user = userEvent.setup();
+
+    const current = await nextAction();
+    expect(screen.getByText('8/9 complete')).toBeTruthy();
+    expect(current.getByText("Cook's Assistant complete.")).toBeTruthy();
+    await user.click(current.getByRole('button', { name: 'Confirm quest complete' }));
+
+    await waitFor(() => expect(screen.getByText('9/9 complete')).toBeTruthy());
+    expect(screen.getByText('All reviewed actions are complete.')).toBeTruthy();
+    expect(gameSnapshot.unlocks.quests).toEqual(journalQuestsBefore);
+    expect(JSON.parse(window.localStorage.getItem(runeProofPreviewActionStorageKey('run-a')) ?? '{}'))
+      .toEqual({
+        "Cook's Assistant": [...earlierActionIds, 'cooks-assistant:complete'],
+      });
+
+    first.unmount();
+    renderGoalPlanner({
+      availability: 'PREVIEW',
+      selectedQuest: "Cook's Assistant",
+    });
+    expect(await screen.findByText('9/9 complete')).toBeTruthy();
+    expect(screen.getByText('All reviewed actions are complete.')).toBeTruthy();
+    expect(gameSnapshot.unlocks.quests).toEqual(journalQuestsBefore);
+  });
+
   it('keeps RuneProof mounted while its temporary map opens and closes', async () => {
     const onClose = vi.fn();
     const onOpenWorldChunk = vi.fn();

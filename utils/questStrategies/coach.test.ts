@@ -671,6 +671,28 @@ describe('buildRuneProofCoachModel', () => {
     expect(model.nextAction?.id).toBe('cooks-assistant:return-to-cook');
   });
 
+  it('lets RuneProof confirm the final quest-completed step without canonical quest proof', () => {
+    const strategy = cookStrategy();
+    const earlierActionIds = strategy.actions
+      .filter(action => action.id !== 'cooks-assistant:complete')
+      .map(action => action.id);
+    const beforeConfirmation = buildModel({ confirmedActionIds: earlierActionIds });
+
+    expect(beforeConfirmation.progress).toEqual({ completed: 8, total: 9 });
+    expect(beforeConfirmation.nextAction).toMatchObject({
+      id: 'cooks-assistant:complete',
+      state: 'DO_NOW',
+      confirmationAllowed: true,
+      confirmationLabel: 'Confirm quest complete',
+    });
+
+    const afterConfirmation = buildModel({
+      confirmedActionIds: [...earlierActionIds, 'cooks-assistant:complete'],
+    });
+    expect(afterConfirmation.progress).toEqual({ completed: 9, total: 9 });
+    expect(afterConfirmation.nextAction).toBeUndefined();
+  });
+
   it('uses quest completion as conservative proof for the whole reviewed strategy', () => {
     const model = buildModel({ completedQuestIds: ["Cook's Assistant"] });
 

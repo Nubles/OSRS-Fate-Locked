@@ -29,6 +29,7 @@ export interface RuneProofCoachAction {
   readonly blockerText?: string;
   readonly preferredMethodLabel?: string;
   readonly confirmationAllowed: boolean;
+  readonly confirmationLabel?: string;
 }
 
 export interface RuneProofAlternativeSourceGroup {
@@ -389,7 +390,11 @@ export function buildRuneProofCoachModel(input: RuneProofCoachInput): RuneProofC
       preferredMethodLabel: preferredMethodLabelFor(action),
       confirmationAllowed: action.coach.completion.kind === 'MANUAL'
         || action.coach.completion.kind === 'ITEM_CONFIRMED'
+        || action.coach.completion.kind === 'QUEST_COMPLETED'
         || state === 'NEEDS_CONFIRMATION',
+      confirmationLabel: action.coach.completion.kind === 'QUEST_COMPLETED'
+        ? 'Confirm quest complete'
+        : undefined,
     };
   });
   const nextAction = primaryActionId === undefined

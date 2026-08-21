@@ -159,7 +159,7 @@ const CurrentActionCard = ({
                 onClick={() => onConfirmAction(action.id)}
                 className="rounded border border-white/15 bg-white/10 px-2.5 py-1.5 text-[11px] font-semibold text-gray-100 transition-colors hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
               >
-                Mark action complete
+                {action.confirmationLabel ?? 'Mark action complete'}
               </button>
             ) : null}
           </div>
