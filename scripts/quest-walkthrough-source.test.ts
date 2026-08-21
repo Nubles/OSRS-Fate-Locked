@@ -558,8 +558,9 @@ describe('walkthrough maintenance CLI', () => {
     const { runWalkthroughSync } = await import('./sync-quest-walkthroughs.mjs');
     const taskMap = {
       ...CLI_TASK_MAPPINGS,
-      [questKey('Sheep Shearer', '1')]: 't_sheep_1',
-      [questKey('Sheep Shearer', 'Complete the quest')]: 't_sheep_2',
+      [questKey('Sheep Shearer', '1')]: 't_7702',
+      [questKey('Sheep Shearer', '2')]: 't_7703',
+      [questKey('Sheep Shearer', 'Complete the quest')]: 't_7704',
     };
     const requestedUrls: URL[] = [];
     const fetchImpl = async (input: URL | string) => {
@@ -591,7 +592,7 @@ describe('walkthrough maintenance CLI', () => {
     expect(await Promise.all(committedPaths.map(path => readFile(path, 'utf8')))).toEqual(committedBefore);
     const candidate = JSON.parse(await readFile(paths.candidate, 'utf8'));
     expect(candidate.chunkPicker.taskMappings).toHaveProperty(questKey("Cook's Assistant", '1'), 't_7591');
-    expect(candidate.chunkPicker.taskMappings).toHaveProperty(questKey('Sheep Shearer', '1'), 't_sheep_1');
+    expect(candidate.chunkPicker.taskMappings).toHaveProperty(questKey('Sheep Shearer', '1'), 't_7702');
     expect(candidate.chunkPicker.tasksMapSha256).toBe('f740b7194189f1a3ef81515ca4d4872caf91a6516a93bdf64c5d43c93d33bd8a');
     expect(candidate.quests.map((quest: any) => quest.questId)).toEqual([
       ...source.quests.map((quest: any) => quest.questId),
@@ -652,13 +653,13 @@ describe('walkthrough maintenance CLI', () => {
         { id: 'sheep-shearer-walkthrough-2', section: 'Walkthrough', sourceOrder: 2, rawText: 'Shear sheep.', text: 'Shear sheep.' },
       ],
       tasks: [
-        { id: 't_sheep_1', sourceId: questKey('Sheep Shearer', '1'), dependsOn: [] },
-        { id: 't_sheep_2', sourceId: questKey('Sheep Shearer', 'Complete the quest'), dependsOn: ['t_sheep_1'] },
+        { id: 't_7702', sourceId: questKey('Sheep Shearer', '1'), dependsOn: [] },
+        { id: 't_7704', sourceId: questKey('Sheep Shearer', 'Complete the quest'), dependsOn: ['t_7702'] },
       ],
     };
     candidate.quests.push(sheep);
-    candidate.chunkPicker.taskMappings[questKey('Sheep Shearer', '1')] = 't_sheep_1';
-    candidate.chunkPicker.taskMappings[questKey('Sheep Shearer', 'Complete the quest')] = 't_sheep_2';
+    candidate.chunkPicker.taskMappings[questKey('Sheep Shearer', '1')] = 't_7702';
+    candidate.chunkPicker.taskMappings[questKey('Sheep Shearer', 'Complete the quest')] = 't_7704';
     const review: any = cliReviewFixture(candidate);
     review.sourceLineDigests['Sheep Shearer'][sheep.importedLines[0].id] = 'stale-digest';
     const { paths } = await cliTemporaryPaths(cliSourceFixture(), review);
@@ -673,8 +674,8 @@ describe('walkthrough maintenance CLI', () => {
     await expect(runWalkthroughSync({ mode: 'promote', paths, write: () => undefined }))
       .rejects.toThrow(/does not cover every pinned task/i);
 
-    review.quests['Sheep Shearer'][0].chunkPickerTaskId = 't_sheep_1';
-    review.quests['Sheep Shearer'][1].chunkPickerTaskId = 't_sheep_2';
+    review.quests['Sheep Shearer'][0].chunkPickerTaskId = 't_7702';
+    review.quests['Sheep Shearer'][1].chunkPickerTaskId = 't_7704';
     await writeFile(paths.review, stableJson(review));
     await expect(runWalkthroughSync({ mode: 'promote', paths, write: () => undefined }))
       .rejects.toThrow(/task dependency edge/i);
@@ -795,6 +796,27 @@ describe('review-finding pinned task-map validation', () => {
       id: 'not-t_7591', sourceId: questKey("Cook's Assistant", '1'), dependsOn: [],
     }] as any;
     expect(() => validateWalkthroughSource(inconsistentTask, reviewedMembership)).toThrow(/task id.*pinned mapping/i);
+  });
+
+  it('rejects an in-roster fabricated task mapping that is absent from the immutable pinned snapshot', async () => {
+    const { validateWalkthroughSource } = await import('./sync-quest-walkthroughs.mjs');
+    const fabricatedInRosterMapping = cliSourceFixture();
+    fabricatedInRosterMapping.chunkPicker.taskMappings[questKey('Sheep Shearer', '1')] = 't-fabricated-sheep';
+
+    expect(() => validateWalkthroughSource(fabricatedInRosterMapping, reviewedMembership))
+      .toThrow(/pinned mapping/i);
+  });
+
+  it('rejects a quest task that borrows a valid mapping from another in-roster quest', async () => {
+    const { validateWalkthroughSource } = await import('./sync-quest-walkthroughs.mjs');
+    const crossQuestTask = cliSourceFixture();
+    crossQuestTask.chunkPicker.taskMappings[questKey('Sheep Shearer', '1')] = 't_7702';
+    crossQuestTask.quests[0].tasks = [{
+      id: 't_7702', sourceId: questKey('Sheep Shearer', '1'), dependsOn: [],
+    }] as any;
+
+    expect(() => validateWalkthroughSource(crossQuestTask, reviewedMembership))
+      .toThrow(/belongs to.*quest/i);
   });
 });
 

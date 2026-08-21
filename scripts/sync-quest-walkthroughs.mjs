@@ -25,13 +25,174 @@ const PINNED_COMMIT = 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926';
 const TASKS_MAP_URL = `https://raw.githubusercontent.com/source-chunk/chunk-picker-v2/${PINNED_COMMIT}/tasksMap.json`;
 const USER_AGENT = 'OSRS-Fate-Locked RuneProof walkthrough refresh/1.0 (https://github.com/Nubles/OSRS-Fate-Locked)';
 const PINNED_TASKS_MAP_SHA256 = 'f740b7194189f1a3ef81515ca4d4872caf91a6516a93bdf64c5d43c93d33bd8a';
+// Complete allowlisted F2P-and-legacy subset of TASKS_MAP_URL at PINNED_COMMIT.
+// Candidate mappings must be a subset of this immutable local provenance snapshot.
 const PINNED_TASK_MAPPINGS = Object.freeze({
+  "~|Elemental Workshop I|~ Crafting skill requirement": 't_1425',
+  "~|The Knight's Sword|~ Mining skill requirement": 't_2763',
+  "~|Elemental Workshop I|~ Mining skill requirement": 't_2768',
+  "~|Elemental Workshop I|~ Smithing skill requirement": 't_3465',
+  "~|Below Ice Mountain|~ 1": 't_7577',
+  "~|Below Ice Mountain|~ 2a": 't_7578',
+  "~|Below Ice Mountain|~ 2b": 't_7579',
+  "~|Below Ice Mountain|~ 2c1": 't_7580',
+  "~|Below Ice Mountain|~ 2c2": 't_7581',
+  "~|Below Ice Mountain|~ 2c3": 't_7582',
+  "~|Below Ice Mountain|~ 2c4": 't_7583',
+  "~|Below Ice Mountain|~ 3": 't_7584',
+  "~|Below Ice Mountain|~ 4": 't_7585',
+  "~|Below Ice Mountain|~ Complete the quest": 't_7586',
+  "~|Black Knights' Fortress|~ 1": 't_7587',
+  "~|Black Knights' Fortress|~ 2": 't_7588',
+  "~|Black Knights' Fortress|~ 3": 't_7589',
+  "~|Black Knights' Fortress|~ Complete the quest": 't_7590',
   "~|Cook's Assistant|~ 1": 't_7591',
   "~|Cook's Assistant|~ 2a": 't_7592',
   "~|Cook's Assistant|~ 2b": 't_7593',
   "~|Cook's Assistant|~ 2c": 't_7594',
   "~|Cook's Assistant|~ 3": 't_7595',
   "~|Cook's Assistant|~ Complete the quest": 't_7596',
+  "~|The Corsair Curse|~ 1": 't_7597',
+  "~|The Corsair Curse|~ 2": 't_7598',
+  "~|The Corsair Curse|~ 3": 't_7599',
+  "~|The Corsair Curse|~ 4a1": 't_7600',
+  "~|The Corsair Curse|~ 4a2": 't_7601',
+  "~|The Corsair Curse|~ 4a3": 't_7602',
+  "~|The Corsair Curse|~ 4b": 't_7603',
+  "~|The Corsair Curse|~ 4c1": 't_7604',
+  "~|The Corsair Curse|~ 4c2": 't_7605',
+  "~|The Corsair Curse|~ 4c3": 't_7606',
+  "~|The Corsair Curse|~ 5": 't_7607',
+  "~|The Corsair Curse|~ 6": 't_7608',
+  "~|The Corsair Curse|~ 7": 't_7609',
+  "~|The Corsair Curse|~ 8": 't_7610',
+  "~|The Corsair Curse|~ 9": 't_7611',
+  "~|The Corsair Curse|~ Complete the quest": 't_7612',
+  "~|Demon Slayer|~ 1": 't_7613',
+  "~|Demon Slayer|~ 2": 't_7614',
+  "~|Demon Slayer|~ 3a": 't_7615',
+  "~|Demon Slayer|~ 3b": 't_7616',
+  "~|Demon Slayer|~ 4": 't_7617',
+  "~|Demon Slayer|~ 5": 't_7618',
+  "~|Demon Slayer|~ Complete the quest": 't_7619',
+  "~|Doric's Quest|~ 1": 't_7620',
+  "~|Doric's Quest|~ 2": 't_7621',
+  "~|Doric's Quest|~ Complete the quest": 't_7622',
+  "~|Dragon Slayer I|~ 1": 't_7623',
+  "~|Dragon Slayer I|~ 2": 't_7624',
+  "~|Dragon Slayer I|~ 3": 't_7625',
+  "~|Dragon Slayer I|~ 4": 't_7626',
+  "~|Dragon Slayer I|~ 5a1": 't_7627',
+  "~|Dragon Slayer I|~ 5a2": 't_7628',
+  "~|Dragon Slayer I|~ 5b1": 't_7629',
+  "~|Dragon Slayer I|~ 5b2": 't_7630',
+  "~|Dragon Slayer I|~ 5c": 't_7631',
+  "~|Dragon Slayer I|~ 5d1": 't_7632',
+  "~|Dragon Slayer I|~ 5d2": 't_7633',
+  "~|Dragon Slayer I|~ 6": 't_7634',
+  "~|Dragon Slayer I|~ 7": 't_7635',
+  "~|Dragon Slayer I|~ 8": 't_7636',
+  "~|Dragon Slayer I|~ 9": 't_7637',
+  "~|Dragon Slayer I|~ 10": 't_7638',
+  "~|Dragon Slayer I|~ Complete the quest": 't_7639',
+  "~|Ernest the Chicken|~ 1": 't_7640',
+  "~|Ernest the Chicken|~ 2a": 't_7641',
+  "~|Ernest the Chicken|~ 2b": 't_7642',
+  "~|Ernest the Chicken|~ 3": 't_7643',
+  "~|Ernest the Chicken|~ Complete the quest": 't_7644',
+  "~|Goblin Diplomacy|~ 1": 't_7645',
+  "~|Goblin Diplomacy|~ 2": 't_7646',
+  "~|Goblin Diplomacy|~ 3": 't_7647',
+  "~|Goblin Diplomacy|~ 4": 't_7648',
+  "~|Goblin Diplomacy|~ Complete the quest": 't_7649',
+  "~|Imp Catcher|~ 1": 't_7650',
+  "~|Imp Catcher|~ 2": 't_7651',
+  "~|Imp Catcher|~ Complete the quest": 't_7652',
+  "~|The Knight's Sword|~ 1": 't_7653',
+  "~|The Knight's Sword|~ 2": 't_7654',
+  "~|The Knight's Sword|~ 3": 't_7655',
+  "~|The Knight's Sword|~ 4": 't_7656',
+  "~|The Knight's Sword|~ 5": 't_7657',
+  "~|The Knight's Sword|~ 6": 't_7658',
+  "~|The Knight's Sword|~ 7": 't_7659',
+  "~|The Knight's Sword|~ 8": 't_7660',
+  "~|The Knight's Sword|~ Complete the quest": 't_7661',
+  "~|Misthalin Mystery|~ 1": 't_7662',
+  "~|Misthalin Mystery|~ Complete the quest": 't_7663',
+  "~|Pirate's Treasure|~ 1": 't_7664',
+  "~|Pirate's Treasure|~ 2": 't_7665',
+  "~|Pirate's Treasure|~ 3": 't_7666',
+  "~|Pirate's Treasure|~ 4": 't_7667',
+  "~|Pirate's Treasure|~ 5": 't_7668',
+  "~|Pirate's Treasure|~ Complete the quest": 't_7669',
+  "~|Prince Ali Rescue|~ 1": 't_7670',
+  "~|Prince Ali Rescue|~ 2": 't_7671',
+  "~|Prince Ali Rescue|~ 3a1": 't_7672',
+  "~|Prince Ali Rescue|~ 3a2": 't_7673',
+  "~|Prince Ali Rescue|~ 3b": 't_7674',
+  "~|Prince Ali Rescue|~ 3c": 't_7675',
+  "~|Prince Ali Rescue|~ 3d1": 't_7676',
+  "~|Prince Ali Rescue|~ 3d2": 't_7677',
+  "~|Prince Ali Rescue|~ 4": 't_7678',
+  "~|Prince Ali Rescue|~ 5": 't_7679',
+  "~|Prince Ali Rescue|~ 6": 't_7680',
+  "~|Prince Ali Rescue|~ 7": 't_7681',
+  "~|Prince Ali Rescue|~ Complete the quest": 't_7682',
+  "~|The Restless Ghost|~ 1": 't_7683',
+  "~|The Restless Ghost|~ 2": 't_7684',
+  "~|The Restless Ghost|~ 3": 't_7685',
+  "~|The Restless Ghost|~ 4": 't_7686',
+  "~|The Restless Ghost|~ 5": 't_7687',
+  "~|The Restless Ghost|~ Complete the quest": 't_7688',
+  "~|Romeo & Juliet|~ 1": 't_7689',
+  "~|Romeo & Juliet|~ 2": 't_7690',
+  "~|Romeo & Juliet|~ 3": 't_7691',
+  "~|Romeo & Juliet|~ 4": 't_7692',
+  "~|Romeo & Juliet|~ 5": 't_7693',
+  "~|Romeo & Juliet|~ 6": 't_7694',
+  "~|Romeo & Juliet|~ 7": 't_7695',
+  "~|Romeo & Juliet|~ Complete the quest": 't_7696',
+  "~|Rune Mysteries|~ 1": 't_7697',
+  "~|Rune Mysteries|~ 2": 't_7698',
+  "~|Rune Mysteries|~ 3": 't_7699',
+  "~|Rune Mysteries|~ 4": 't_7700',
+  "~|Rune Mysteries|~ Complete the quest": 't_7701',
+  "~|Sheep Shearer|~ 1": 't_7702',
+  "~|Sheep Shearer|~ 2": 't_7703',
+  "~|Sheep Shearer|~ Complete the quest": 't_7704',
+  "~|Shield of Arrav|~ 1": 't_7705',
+  "~|Shield of Arrav|~ 2a1": 't_7706',
+  "~|Shield of Arrav|~ 2a2": 't_7707',
+  "~|Shield of Arrav|~ 2a3": 't_7708',
+  "~|Shield of Arrav|~ 2a4": 't_7709',
+  "~|Shield of Arrav|~ 2a5": 't_7710',
+  "~|Shield of Arrav|~ 2b1": 't_7711',
+  "~|Shield of Arrav|~ 2b2": 't_7712',
+  "~|Shield of Arrav|~ 2b3": 't_7713',
+  "~|Shield of Arrav|~ 2b4": 't_7714',
+  "~|Shield of Arrav|~ 2b5": 't_7715',
+  "~|Shield of Arrav|~ 3": 't_7716',
+  "~|Shield of Arrav|~ 4": 't_7717',
+  "~|Shield of Arrav|~ Complete the quest": 't_7718',
+  "~|Vampyre Slayer|~ 1": 't_7719',
+  "~|Vampyre Slayer|~ 2": 't_7720',
+  "~|Vampyre Slayer|~ 3": 't_7721',
+  "~|Vampyre Slayer|~ Complete the quest": 't_7722',
+  "~|Witch's Potion|~ 1": 't_7723',
+  "~|Witch's Potion|~ 2": 't_7724',
+  "~|Witch's Potion|~ Complete the quest": 't_7725',
+  "~|X Marks the Spot|~ 1": 't_7726',
+  "~|X Marks the Spot|~ 2": 't_7727',
+  "~|X Marks the Spot|~ 3": 't_7728',
+  "~|X Marks the Spot|~ 4": 't_7729',
+  "~|X Marks the Spot|~ 5": 't_7730',
+  "~|X Marks the Spot|~ Complete the quest": 't_7731',
+  "~|Elemental Workshop I|~ 1": 't_8157',
+  "~|Elemental Workshop I|~ 2": 't_8158',
+  "~|Elemental Workshop I|~ 3": 't_8159',
+  "~|Elemental Workshop I|~ 4": 't_8160',
+  "~|Elemental Workshop I|~ 5": 't_8161',
+  "~|Elemental Workshop I|~ Complete the quest": 't_8162',
   "~|Daddy's Home|~ 1": 't_9590',
   "~|Daddy's Home|~ 2": 't_9591',
   "~|Daddy's Home|~ 3a": 't_9592',
@@ -42,23 +203,17 @@ const PINNED_TASK_MAPPINGS = Object.freeze({
   "~|Daddy's Home|~ 4": 't_9597',
   "~|Daddy's Home|~ 5": 't_9598',
   "~|Daddy's Home|~ Complete the quest": 't_9599',
-  "~|Doric's Quest|~ 1": 't_7620',
-  "~|Doric's Quest|~ 2": 't_7621',
-  "~|Doric's Quest|~ Complete the quest": 't_7622',
-  "~|Elemental Workshop I|~ 1": 't_8157',
-  "~|Elemental Workshop I|~ 2": 't_8158',
-  "~|Elemental Workshop I|~ 3": 't_8159',
-  "~|Elemental Workshop I|~ 4": 't_8160',
-  "~|Elemental Workshop I|~ 5": 't_8161',
-  "~|Elemental Workshop I|~ Complete the quest": 't_8162',
-  "~|Elemental Workshop I|~ Crafting skill requirement": 't_1425',
-  "~|Elemental Workshop I|~ Mining skill requirement": 't_2768',
-  "~|Elemental Workshop I|~ Smithing skill requirement": 't_3465',
 });
 
 const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 const nonBlank = (value, label) => assert(typeof value === 'string' && value.trim(), `${label} must not be blank`);
+const taskSourceQuestId = (sourceId, label) => {
+  nonBlank(sourceId, label);
+  const match = /^~\|(.+)\|~\s/.exec(sourceId);
+  assert(match !== null, `${label} is not a Chunk Picker task source ID`);
+  return match[1];
+};
 const LEGACY_QUEST_ID = 'Elemental Workshop I';
 
 const validateF2PMembership = (membership) => {
@@ -148,13 +303,12 @@ export function validateWalkthroughSource(source, membership) {
   const sourceQuestIds = new Set();
   const mappings = source.chunkPicker.taskMappings;
   for (const [sourceId, taskId] of Object.entries(mappings)) {
-    const match = /^~\|(.+)\|~\s/.exec(sourceId);
-    assert(match !== null && roster.has(match[1]), `Chunk Picker task mapping has unsupported quest ID: ${sourceId}`);
+    const mappingQuestId = taskSourceQuestId(sourceId, 'Chunk Picker task mapping source ID');
+    assert(roster.has(mappingQuestId), `Chunk Picker task mapping has unsupported quest ID: ${sourceId}`);
     nonBlank(taskId, `Chunk Picker task mapping ${sourceId}`);
     const expectedTaskId = PINNED_TASK_MAPPINGS[sourceId];
-    if (expectedTaskId !== undefined) {
-      assert(taskId === expectedTaskId, `Chunk Picker task mapping does not match the pinned mapping for ${sourceId}`);
-    }
+    assert(expectedTaskId !== undefined, `Chunk Picker task mapping is absent from the immutable pinned mapping: ${sourceId}`);
+    assert(taskId === expectedTaskId, `Chunk Picker task mapping does not match the immutable pinned mapping for ${sourceId}`);
   }
   for (const quest of source.quests) {
     nonBlank(quest?.questId, 'Walkthrough source quest ID');
@@ -168,8 +322,11 @@ export function validateWalkthroughSource(source, membership) {
     assert(Array.isArray(quest.importedLines), `${quest.questId}: imported lines are required`);
     assert(Array.isArray(quest.tasks), `${quest.questId}: tasks are required`);
     quest.tasks.forEach((task) => {
-      const expectedTaskId = mappings[task.sourceId];
-      assert(expectedTaskId !== undefined, quest.questId + ': task source ID is not in the pinned mapping: ' + task.sourceId);
+      const sourceTaskQuestId = taskSourceQuestId(task?.sourceId, `${quest.questId}: task source ID`);
+      assert(sourceTaskQuestId === quest.questId, `${quest.questId}: task source ID belongs to ${sourceTaskQuestId}, not this quest`);
+      const expectedTaskId = PINNED_TASK_MAPPINGS[task.sourceId];
+      assert(expectedTaskId !== undefined, quest.questId + ': task source ID is not in the immutable pinned mapping: ' + task.sourceId);
+      assert(mappings[task.sourceId] === expectedTaskId, quest.questId + ': task source ID does not match the immutable pinned mapping: ' + task.sourceId);
       assert(task.id === expectedTaskId, quest.questId + ': task ID does not match pinned mapping for ' + task.sourceId);
     });
     const ids = new Set();
