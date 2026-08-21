@@ -18,14 +18,14 @@ Record the commit, local URL, browser, and exact QA-state identifiers without pa
 
 | Field | Value |
 |---|---|
-| Commit | `4d4f34c7906396b0ea918cedbf25c93c29a69a56` |
+| Commit | `7639ac1f7c52db1665175b74f321ee01b9370569` |
 | Normal-build URL | `http://127.0.0.1:4174/` |
 | Preview-build URL | `http://127.0.0.1:4175/` |
 | Browser/version | Codex in-app Browser (Chromium; browser runtime `26.818.21641`) |
 | Fresh QA state ID | `00000000-0000-4000-8000-000000000901` |
 | Mill-available QA state ID | `00000000-0000-4000-8000-000000000903` |
 | Mill-blocked QA state ID | `00000000-0000-4000-8000-000000000902` |
-| Tester/date | Codex supporting review / 2026-08-20 |
+| Tester/date | Codex supporting review / 2026-08-21 |
 
 ## Reviewed route text
 
@@ -41,7 +41,7 @@ The route timeline must preserve this exact order and player-visible wording:
 8. `Return to the Cook with the bucket of milk, egg, and pot of flour.` — chunk `50,50`
 9. `Cook's Assistant complete.` — chunk `50,50`
 
-The main journey must use only these reviewed instructions. Generic resolver output is evidence under `Other legal sources`; it must never replace or reorder this route.
+The main journey must use only these reviewed instructions. Generic resolver output is evidence under `Other legal sources`; it must never replace or reorder this route. The current card and every compact route row must visibly show the exact `Chunk x,y` listed above. If a future action has no trusted, map-valid chunk, it must show `Chunk needs review` and must not offer `Show on map`; RuneProof must never guess.
 
 ## Eleven required scenarios
 
@@ -62,7 +62,7 @@ For each scenario, mark `PASS` or `FAIL`, record the build and QA state used, an
 - Load the **Fresh** QA state in the **preview build** and select the Dashboard entry `RuneProof`. With no explicit target, the workspace must open on `Cook's Assistant`.
 - `Next action` appears before `Route`. Its single current card must show `Do now` and exactly `Talk to the Cook in Lumbridge Castle.`
 - The progress reads `0/9 complete`. Every later route row is `Available next`; no later action is presented as a second current action.
-- The current card exposes `Show on map` and `Mark action complete`; timeline rows do not duplicate these controls.
+- The current card exposes `Show on map` and `Mark action complete`; timeline rows do not duplicate these controls. The current card and all nine route rows visibly show their reviewed `Chunk x,y` label.
 - Evidence/result (capture the fresh next-action view): **Codex supporting review PASS.** Fresh import opened Cook's Assistant at `0/9 complete` with one `Do now` card for `Talk to the Cook in Lumbridge Castle.` Screenshot: `C:\Users\alexa\.codex\visualizations\2026\08\20\01a01f71-5756-78e1-9440-0f7a4df332f9\runeproof-cooks-assistant\fresh-coach-final.jpg`. Alex's PASS/FAIL boxes remain intentionally blank.
 
 ### 3. Manual progression advances one step and survives reload
@@ -119,14 +119,17 @@ For each scenario, mark `PASS` or `FAIL`, record the build and QA state used, an
 - Close the drawer and verify the technical material disappears without changing the current action.
 - Evidence/result (capture collapsed and opened proof states): **Codex supporting review PASS.** Technical proof stayed out of the main journey while collapsed; opening the disclosure showed the exact Wiki revision/date/licence, Chunk Picker commit/reuse status, reviewed wording, and route diagnostics, then closed without changing progress. Screenshot: `C:\Users\alexa\.codex\visualizations\2026\08\20\01a01f71-5756-78e1-9440-0f7a4df332f9\runeproof-cooks-assistant\proof-final.jpg`. Alex's PASS/FAIL boxes remain intentionally blank.
 
-### 8. Current-action map handoff uses the reviewed chunk
+### 8. Current-action map is temporary and returns to the exact RuneProof state
 
 - [ ] PASS  [ ] FAIL
 - On a current action with a reviewed location, choose `Show on map`.
-- RuneProof must close and the world map must open on that action's exact reviewed chunk. Verify at least the fresh action (`50,50`) and one Mill Lane action (`49,51`); the cow/egg actions map to `50,51`.
-- Return to RuneProof and verify the action/progress state is unchanged by map navigation.
+- A focused `RuneProof temporary map` must open over the still-mounted quest coach and highlight that action's exact reviewed chunk. It must not close Goal Planner, switch to the Dashboard World tab, or replace the quest coach. Verify at least the fresh action (`50,50`) and one Mill Lane action (`49,51`); the cow/egg actions map to `50,51`.
+- Close the temporary map separately with its X control, the Escape key, and the dark backdrop. Each route must return directly to the same RuneProof quest, current action, completed count, scroll position, and originating `Show on map` control.
+- At `390 × 844`, scrolling or swiping over the temporary map must not move RuneProof or the document behind it. The highlighted chunk and close control remain visible without horizontal overflow.
 - A malformed, missing, or unrelated chunk must never create a map button or send the player to a guessed location.
 - Evidence/result (capture the map handoff and selected chunk): **Codex supporting review PASS.** Fresh Cook mapped to `50,50`; the blocked Mill action mapped to the selected `Lumbridge Mill`, `chunk (49, 51)`, visibly `Locked`, with the coach progress preserved. Screenshots: `C:\Users\alexa\.codex\visualizations\2026\08\20\01a01f71-5756-78e1-9440-0f7a4df332f9\runeproof-cooks-assistant\map-handoff-50-50.png` and `C:\Users\alexa\.codex\visualizations\2026\08\20\01a01f71-5756-78e1-9440-0f7a4df332f9\runeproof-cooks-assistant\mill-map-handoff-final-commit.jpg`. Alex's PASS/FAIL boxes remain intentionally blank.
+
+- Updated evidence/result (supersedes the earlier world-map handoff evidence): **Codex supporting review PASS.** The live private preview opened a focused local OSRS map on reviewed chunk `50,50`; X, Escape, and backdrop each returned to the same `8/9 complete` Cook action with focus restored to `Show on map`. At `390 × 844`, wheel input changed neither the document position nor the RuneProof scroller. Focused integration coverage also verifies the reviewed Mill Lane `49,51` map without leaving RuneProof. Screenshots: `C:\Users\alexa\.codex\visualizations\2026\08\20\01a01f71-5756-78e1-9440-0f7a4df332f9\runeproof-temporary-map-desktop.png` and `C:\Users\alexa\.codex\visualizations\2026\08\20\01a01f71-5756-78e1-9440-0f7a4df332f9\runeproof-temporary-map-mobile.png`. Alex's PASS/FAIL boxes remain intentionally blank.
 
 ### 9. Daddy's Home remains the ordinary planner
 
@@ -143,6 +146,7 @@ For each scenario, mark `PASS` or `FAIL`, record the build and QA state used, an
 - `Next action` must visibly precede `Route`. The primary instruction, state, progress, and controls must fit without clipping or horizontal overflow.
 - Verify `Change objective`, `Show on map`, `Mark action complete`, `Other legal sources`, `Proof and sources`, and `Close` remain reachable by scrolling and keyboard focus. Opening the mobile target picker must not cover or strand the close control.
 - Expand the current route row, alternatives, and proof in turn. Text must wrap, disclosure content must stay within the viewport, and the page behind the modal must not become the scrolling surface.
+- Open the temporary map. Its map image, exact chunk label, and close control must fit the mobile viewport; wheel/touch input must not move the page or RuneProof underneath, and closing it must restore the same action and scroll position.
 - Evidence/result (capture the fresh mobile next-action view): **Codex supporting review PASS.** At exactly `390x844`, the dialog and root were width-clean, the document behind the modal was locked, and vertical scrolling moved only the coach surface while all controls/disclosures remained reachable. Screenshot: `C:\Users\alexa\.codex\visualizations\2026\08\20\01a01f71-5756-78e1-9440-0f7a4df332f9\runeproof-cooks-assistant\fresh-mobile-final-390x844-scroll-locked.jpg`. Alex's PASS/FAIL boxes remain intentionally blank.
 
 ### 11. Desktop layout at 1440 × 900
@@ -152,6 +156,7 @@ For each scenario, mark `PASS` or `FAIL`, record the build and QA state used, an
 - The visible hierarchy must read, in order: `RuneProof`, `Cook's Assistant`, recommendation/progress, `Next action`, `Route`, `Other legal sources`, then `Proof and sources`.
 - The target picker should occupy roughly one third of the workspace and must not dominate the coach. The coach must have enough width for readable instructions, while the modal remains fully on-screen.
 - Inspect scrolling, overlap, focus indication, contrast, expanded disclosures, and the close control. No content may be cut off or require horizontal scrolling.
+- Open and close the temporary map. It must retain useful local OSRS context around the highlighted chunk, remain visually subordinate to the task instruction, and return focus to the originating action without closing Goal Planner.
 - Evidence/result (capture the fresh desktop next-action view): **Codex supporting review PASS.** At exactly `1440x900`, the target list and coach retained the required hierarchy, readable proportions, internal scrolling, visible focus/controls, and no horizontal overflow. Screenshot: `C:\Users\alexa\.codex\visualizations\2026\08\20\01a01f71-5756-78e1-9440-0f7a4df332f9\runeproof-cooks-assistant\fresh-desktop-final-1440x900-scroll-locked.jpg`. Alex's PASS/FAIL boxes remain intentionally blank.
 
 ## Required visual evidence
@@ -164,15 +169,15 @@ Attach or link screenshots for all of the following, with commit and viewport in
 - blocked-mill explanation before alternatives open;
 - proof drawer open;
 - Daddy's Home ordinary-planner fallback;
-- map handoff showing a reviewed chunk.
+- desktop and mobile temporary maps showing a reviewed chunk, plus the unchanged RuneProof state after close.
 
 ## Sign-off
 
 | Gate | Status | Tester | Evidence/notes |
 |---|---|---|---|
 | All eleven real-browser scenarios | **CODEX SUPPORTING REVIEW PASS; ALEX RUN REQUIRED** | Codex | All eleven scenarios exercised locally against the normal/preview builds above; the unchecked scenario boxes are reserved for Alex's independent run. |
-| Automated gates for the same commit | **PASS** | Codex | Serial suite: 227 files / 2,754 tests; typecheck, walkthrough verification, content verification, preview build, and normal OFF build passed. `data/modelManifest.ts` remained unchanged. |
-| Codex visual review | **PASS** | Codex | Exact mobile and desktop viewports, primary/blocked routes, compact alternatives, proof, Daddy's Home fallback, and reviewed map handoffs inspected; browser console was clean. |
+| Automated gates for the same commit | **PASS** | Codex | Serial suite: 227 files / 2,756 tests; typecheck, walkthrough verification, content verification, preview build, and normal OFF build passed. `data/modelManifest.ts` remained unchanged. |
+| Codex visual review | **PASS** | Codex | Exact mobile and desktop coach layouts, all nine reviewed chunk labels, temporary map isolation/return behavior, primary/blocked routes, compact alternatives, proof, and Daddy's Home fallback inspected; browser console was clean. |
 | Alex local visual/playthrough approval | **REQUIRED — NOT GRANTED** | Alex | |
 
 Known limitations, deviations, or failures:
