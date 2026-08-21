@@ -40,6 +40,11 @@ const RELEASES: readonly QuestWalkthroughRelease[] = [
     revision: '5307348d9dab40a1801d78b06660af566112223a339dfa017f4a43306149bd5f',
     releaseStatus: 'PREVIEW_ONLY',
   },
+  {
+    questId: 'Imp Catcher',
+    revision: 'da3591ff9c30304b4589c4bd3ea59366a28d99ae266b0a0093e26f185eaba84d',
+    releaseStatus: 'PREVIEW_ONLY',
+  },
 ];
 
 const releaseByQuestId = new Map(RELEASES.map(release => [release.questId, release]));

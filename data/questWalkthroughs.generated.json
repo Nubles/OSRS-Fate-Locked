@@ -3323,6 +3323,378 @@
           "sourceOrder": 5
         }
       ]
+    },
+    {
+      "actions": [
+        {
+          "chunkPickerTaskId": "t_7650",
+          "coach": {
+            "completion": {
+              "itemKey": "black bead",
+              "kind": "ITEM_CONFIRMED"
+            },
+            "consumes": [],
+            "fallbackPolicy": "INTERCHANGEABLE",
+            "fulfils": [
+              {
+                "item": {
+                  "key": "black bead",
+                  "name": "Black bead"
+                },
+                "quantity": 1,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              }
+            ],
+            "preferredMethod": {
+              "itemKey": "black bead",
+              "kind": "DIRECT_SOURCE",
+              "sourceLabel": "Imps south-east of Falador"
+            }
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [],
+          "displayText": "Kill imps south-east of Falador until you obtain a black bead.",
+          "entities": [
+            {
+              "kind": "npc",
+              "name": "Imp"
+            }
+          ],
+          "gates": [],
+          "id": "imp-catcher:get-black-bead",
+          "items": [],
+          "kind": "KILL",
+          "location": {
+            "alias": "South-east Falador",
+            "chunks": [
+              "47,51"
+            ],
+            "evidence": "Selected Wiki quick-guide revision 14649872 source line imp-catcher-walkthrough-2 recommends free players kill imps near Falador's southern entrance; the pinned Chunk Picker content entry Falador Farm (47,51) lists Imp.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "The F2P quick-guide recommendation and pinned 47,51 Imp content support the reviewed South-east Falador method. This review claims chunk precision only, not an exact Imp tile.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [
+            "imp-catcher-walkthrough-2"
+          ],
+          "section": "QUEST",
+          "sourceOrder": 1
+        },
+        {
+          "coach": {
+            "completion": {
+              "itemKey": "red bead",
+              "kind": "ITEM_CONFIRMED"
+            },
+            "consumes": [],
+            "fallbackPolicy": "INTERCHANGEABLE",
+            "fulfils": [
+              {
+                "item": {
+                  "key": "red bead",
+                  "name": "Red bead"
+                },
+                "quantity": 1,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              }
+            ],
+            "preferredMethod": {
+              "itemKey": "red bead",
+              "kind": "DIRECT_SOURCE",
+              "sourceLabel": "Imps south-east of Falador"
+            }
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [],
+          "displayText": "Kill imps south-east of Falador until you obtain a red bead.",
+          "entities": [
+            {
+              "kind": "npc",
+              "name": "Imp"
+            }
+          ],
+          "gates": [],
+          "id": "imp-catcher:get-red-bead",
+          "items": [],
+          "kind": "KILL",
+          "location": {
+            "alias": "South-east Falador",
+            "chunks": [
+              "47,51"
+            ],
+            "evidence": "Selected Wiki quick-guide revision 14649872 source line imp-catcher-walkthrough-2 recommends free players kill imps near Falador's southern entrance; the pinned Chunk Picker content entry Falador Farm (47,51) lists Imp.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "The F2P quick-guide recommendation and pinned 47,51 Imp content support the reviewed South-east Falador method. This review claims chunk precision only, not an exact Imp tile.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [],
+          "section": "QUEST",
+          "sourceOrder": 2
+        },
+        {
+          "coach": {
+            "completion": {
+              "itemKey": "white bead",
+              "kind": "ITEM_CONFIRMED"
+            },
+            "consumes": [],
+            "fallbackPolicy": "INTERCHANGEABLE",
+            "fulfils": [
+              {
+                "item": {
+                  "key": "white bead",
+                  "name": "White bead"
+                },
+                "quantity": 1,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              }
+            ],
+            "preferredMethod": {
+              "itemKey": "white bead",
+              "kind": "DIRECT_SOURCE",
+              "sourceLabel": "Imps south-east of Falador"
+            }
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [],
+          "displayText": "Kill imps south-east of Falador until you obtain a white bead.",
+          "entities": [
+            {
+              "kind": "npc",
+              "name": "Imp"
+            }
+          ],
+          "gates": [],
+          "id": "imp-catcher:get-white-bead",
+          "items": [],
+          "kind": "KILL",
+          "location": {
+            "alias": "South-east Falador",
+            "chunks": [
+              "47,51"
+            ],
+            "evidence": "Selected Wiki quick-guide revision 14649872 source line imp-catcher-walkthrough-2 recommends free players kill imps near Falador's southern entrance; the pinned Chunk Picker content entry Falador Farm (47,51) lists Imp.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "The F2P quick-guide recommendation and pinned 47,51 Imp content support the reviewed South-east Falador method. This review claims chunk precision only, not an exact Imp tile.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [],
+          "section": "QUEST",
+          "sourceOrder": 3
+        },
+        {
+          "coach": {
+            "completion": {
+              "itemKey": "yellow bead",
+              "kind": "ITEM_CONFIRMED"
+            },
+            "consumes": [],
+            "fallbackPolicy": "INTERCHANGEABLE",
+            "fulfils": [
+              {
+                "item": {
+                  "key": "yellow bead",
+                  "name": "Yellow bead"
+                },
+                "quantity": 1,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              }
+            ],
+            "preferredMethod": {
+              "itemKey": "yellow bead",
+              "kind": "DIRECT_SOURCE",
+              "sourceLabel": "Imps south-east of Falador"
+            }
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [],
+          "displayText": "Kill imps south-east of Falador until you obtain a yellow bead.",
+          "entities": [
+            {
+              "kind": "npc",
+              "name": "Imp"
+            }
+          ],
+          "gates": [],
+          "id": "imp-catcher:get-yellow-bead",
+          "items": [],
+          "kind": "KILL",
+          "location": {
+            "alias": "South-east Falador",
+            "chunks": [
+              "47,51"
+            ],
+            "evidence": "Selected Wiki quick-guide revision 14649872 source line imp-catcher-walkthrough-2 recommends free players kill imps near Falador's southern entrance; the pinned Chunk Picker content entry Falador Farm (47,51) lists Imp.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "The F2P quick-guide recommendation and pinned 47,51 Imp content support the reviewed South-east Falador method. This review claims chunk precision only, not an exact Imp tile.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [],
+          "section": "QUEST",
+          "sourceOrder": 4
+        },
+        {
+          "chunkPickerTaskId": "t_7651",
+          "coach": {
+            "completion": {
+              "kind": "MANUAL"
+            },
+            "consumes": [
+              {
+                "item": {
+                  "key": "black bead",
+                  "name": "Black bead"
+                },
+                "quantity": 1,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              },
+              {
+                "item": {
+                  "key": "red bead",
+                  "name": "Red bead"
+                },
+                "quantity": 1,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              },
+              {
+                "item": {
+                  "key": "white bead",
+                  "name": "White bead"
+                },
+                "quantity": 1,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              },
+              {
+                "item": {
+                  "key": "yellow bead",
+                  "name": "Yellow bead"
+                },
+                "quantity": 1,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              }
+            ],
+            "fallbackPolicy": "NONE",
+            "fulfils": []
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [
+            "imp-catcher:get-black-bead",
+            "imp-catcher:get-red-bead",
+            "imp-catcher:get-white-bead",
+            "imp-catcher:get-yellow-bead"
+          ],
+          "displayText": "Take all four beads to Wizard Mizgog on the top floor of the Wizards' Tower.",
+          "entities": [
+            {
+              "kind": "npc",
+              "name": "Wizard Mizgog"
+            }
+          ],
+          "gates": [],
+          "id": "imp-catcher:give-beads-to-mizgog",
+          "items": [],
+          "kind": "TALK_TO",
+          "location": {
+            "alias": "Wizards' Tower",
+            "chunks": [
+              "48,49"
+            ],
+            "evidence": "Selected Wiki quick-guide revision 14649872 source line imp-catcher-walkthrough-3 directs talking to Wizard Mizgog on the top floor of the Wizards' Tower with all four beads; pinned Chunk Picker task t_7651 identifies Wizard Mizgog and terminal task t_7652 anchors Imp Catcher at 48,49.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Use the reviewed Wizards' Tower chunk for Mizgog's top-floor hand-off without claiming an exact tile.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [
+            "imp-catcher-walkthrough-1",
+            "imp-catcher-walkthrough-3"
+          ],
+          "section": "QUEST",
+          "sourceOrder": 5
+        },
+        {
+          "chunkPickerTaskId": "t_7652",
+          "coach": {
+            "completion": {
+              "kind": "QUEST_COMPLETED",
+              "questId": "Imp Catcher"
+            },
+            "consumes": [],
+            "fallbackPolicy": "NONE",
+            "fulfils": []
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [
+            "imp-catcher:give-beads-to-mizgog"
+          ],
+          "displayText": "Imp Catcher complete.",
+          "entities": [],
+          "gates": [],
+          "id": "imp-catcher:complete",
+          "items": [],
+          "kind": "INFORMATION",
+          "location": {
+            "alias": "Wizards' Tower",
+            "chunks": [
+              "48,49"
+            ],
+            "evidence": "Selected Wiki quick-guide revision 14649872 source line imp-catcher-walkthrough-4 records quest completion; pinned Chunk Picker terminal task t_7652 follows the Mizgog hand-off and anchors Imp Catcher at 48,49.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Keep final preview confirmation at the reviewed Wizards' Tower chunk without claiming an exact tile.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [
+            "imp-catcher-walkthrough-4"
+          ],
+          "section": "QUEST",
+          "sourceOrder": 6
+        }
+      ],
+      "questId": "Imp Catcher",
+      "releaseStatus": "PREVIEW_ONLY",
+      "revision": "da3591ff9c30304b4589c4bd3ea59366a28d99ae266b0a0093e26f185eaba84d",
+      "source": {
+        "chunkPickerCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
+        "chunkPickerLicenceStatus": "UNVERIFIED",
+        "chunkPickerRepository": "source-chunk/chunk-picker-v2",
+        "wikiLicence": "CC BY-NC-SA 3.0",
+        "wikiLicenceUrl": "https://creativecommons.org/licenses/by-nc-sa/3.0/",
+        "wikiRevision": "14649872",
+        "wikiRevisionTimestamp": "2024-05-05T03:30:56Z",
+        "wikiTitle": "Imp Catcher/Quick guide",
+        "wikiUrl": "https://oldschool.runescape.wiki/w/Imp_Catcher/Quick_guide?oldid=14649872"
+      },
+      "sourceLines": [
+        {
+          "id": "imp-catcher-walkthrough-1",
+          "rawText": "Buy them from the [[Grand Exchange]] for {{Coins|{{GEP|Red bead|1}} + {{GEP|Black bead|1}} + {{GEP|Yellow bead|1}} + {{GEP|White bead|1}}}}",
+          "section": "Walkthrough",
+          "sourceOrder": 1
+        },
+        {
+          "id": "imp-catcher-walkthrough-2",
+          "rawText": "Kill [[imp]]s, recommended for free players either near the southern entrance to [[Falador]] or the top of the [[Karamja volcano]]; or for members east of the [[Ardougne Monastery]], at the entrance of [[Chasm of Fire]], or around the [[Charcoal furnace]]",
+          "section": "Walkthrough",
+          "sourceOrder": 2
+        },
+        {
+          "id": "imp-catcher-walkthrough-3",
+          "rawText": "Talk to [[Wizard Mizgog]] on the top floor of the [[Wizards' Tower]] with all four beads in your inventory.{{Chat option|1 Give me a quest please.|1 Yes.}}",
+          "section": "Walkthrough",
+          "sourceOrder": 3
+        },
+        {
+          "id": "imp-catcher-walkthrough-4",
+          "rawText": "'''Congratulations, quest complete!'''}}",
+          "section": "Walkthrough",
+          "sourceOrder": 4
+        }
+      ]
     }
   ]
 }

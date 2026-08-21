@@ -493,3 +493,99 @@ describe('Wave 1 Rune Mysteries RuneProof pack', () => {
     ]);
   });
 });
+
+describe('Wave 1 Imp Catcher RuneProof pack', () => {
+  it('keeps the exact six-action reviewed Imp Catcher journey', () => {
+    expect(actionSummary('Imp Catcher')).toEqual([
+      ['imp-catcher:get-black-bead', '47,51', 'Kill imps south-east of Falador until you obtain a black bead.'],
+      ['imp-catcher:get-red-bead', '47,51', 'Kill imps south-east of Falador until you obtain a red bead.'],
+      ['imp-catcher:get-white-bead', '47,51', 'Kill imps south-east of Falador until you obtain a white bead.'],
+      ['imp-catcher:get-yellow-bead', '47,51', 'Kill imps south-east of Falador until you obtain a yellow bead.'],
+      ['imp-catcher:give-beads-to-mizgog', '48,49', "Take all four beads to Wizard Mizgog on the top floor of the Wizards' Tower."],
+      ['imp-catcher:complete', '48,49', 'Imp Catcher complete.'],
+    ]);
+  });
+
+  it('keeps each bead independent before the reviewed Mizgog hand-off', () => {
+    const strategy = strategyFor('Imp Catcher');
+
+    expect(strategy.source).toMatchObject({
+      wikiRevision: '14649872',
+      wikiUrl: 'https://oldschool.runescape.wiki/w/Imp_Catcher/Quick_guide?oldid=14649872',
+    });
+    expect(strategy.actions.map(action => ({
+      id: action.id,
+      dependsOn: action.dependsOn,
+      consumes: action.coach.consumes,
+      fulfils: action.coach.fulfils,
+      completion: action.coach.completion,
+      preferredMethod: action.coach.preferredMethod,
+      fallbackPolicy: action.coach.fallbackPolicy,
+    }))).toEqual([
+      {
+        id: 'imp-catcher:get-black-bead',
+        dependsOn: [],
+        consumes: [],
+        fulfils: [{ item: { key: 'black bead', name: 'Black bead' }, quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' }],
+        completion: { kind: 'ITEM_CONFIRMED', itemKey: 'black bead' },
+        preferredMethod: { kind: 'DIRECT_SOURCE', itemKey: 'black bead', sourceLabel: 'Imps south-east of Falador' },
+        fallbackPolicy: 'INTERCHANGEABLE',
+      },
+      {
+        id: 'imp-catcher:get-red-bead',
+        dependsOn: [],
+        consumes: [],
+        fulfils: [{ item: { key: 'red bead', name: 'Red bead' }, quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' }],
+        completion: { kind: 'ITEM_CONFIRMED', itemKey: 'red bead' },
+        preferredMethod: { kind: 'DIRECT_SOURCE', itemKey: 'red bead', sourceLabel: 'Imps south-east of Falador' },
+        fallbackPolicy: 'INTERCHANGEABLE',
+      },
+      {
+        id: 'imp-catcher:get-white-bead',
+        dependsOn: [],
+        consumes: [],
+        fulfils: [{ item: { key: 'white bead', name: 'White bead' }, quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' }],
+        completion: { kind: 'ITEM_CONFIRMED', itemKey: 'white bead' },
+        preferredMethod: { kind: 'DIRECT_SOURCE', itemKey: 'white bead', sourceLabel: 'Imps south-east of Falador' },
+        fallbackPolicy: 'INTERCHANGEABLE',
+      },
+      {
+        id: 'imp-catcher:get-yellow-bead',
+        dependsOn: [],
+        consumes: [],
+        fulfils: [{ item: { key: 'yellow bead', name: 'Yellow bead' }, quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' }],
+        completion: { kind: 'ITEM_CONFIRMED', itemKey: 'yellow bead' },
+        preferredMethod: { kind: 'DIRECT_SOURCE', itemKey: 'yellow bead', sourceLabel: 'Imps south-east of Falador' },
+        fallbackPolicy: 'INTERCHANGEABLE',
+      },
+      {
+        id: 'imp-catcher:give-beads-to-mizgog',
+        dependsOn: [
+          'imp-catcher:get-black-bead',
+          'imp-catcher:get-red-bead',
+          'imp-catcher:get-white-bead',
+          'imp-catcher:get-yellow-bead',
+        ],
+        consumes: [
+          { item: { key: 'black bead', name: 'Black bead' }, quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' },
+          { item: { key: 'red bead', name: 'Red bead' }, quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' },
+          { item: { key: 'white bead', name: 'White bead' }, quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' },
+          { item: { key: 'yellow bead', name: 'Yellow bead' }, quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' },
+        ],
+        fulfils: [],
+        completion: { kind: 'MANUAL' },
+        preferredMethod: undefined,
+        fallbackPolicy: 'NONE',
+      },
+      {
+        id: 'imp-catcher:complete',
+        dependsOn: ['imp-catcher:give-beads-to-mizgog'],
+        consumes: [],
+        fulfils: [],
+        completion: { kind: 'QUEST_COMPLETED', questId: 'Imp Catcher' },
+        preferredMethod: undefined,
+        fallbackPolicy: 'NONE',
+      },
+    ]);
+  });
+});

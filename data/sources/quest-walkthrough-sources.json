@@ -35,6 +35,9 @@
       "~|Elemental Workshop I|~ Crafting skill requirement": "t_1425",
       "~|Elemental Workshop I|~ Mining skill requirement": "t_2768",
       "~|Elemental Workshop I|~ Smithing skill requirement": "t_3465",
+      "~|Imp Catcher|~ 1": "t_7650",
+      "~|Imp Catcher|~ 2": "t_7651",
+      "~|Imp Catcher|~ Complete the quest": "t_7652",
       "~|Rune Mysteries|~ 1": "t_7697",
       "~|Rune Mysteries|~ 2": "t_7698",
       "~|Rune Mysteries|~ 3": "t_7699",
@@ -1560,6 +1563,113 @@
       "wikiRevisionTimestamp": "2026-05-03T11:22:42Z",
       "wikiTitle": "Rune Mysteries/Quick guide",
       "wikiUrl": "https://oldschool.runescape.wiki/w/Rune_Mysteries/Quick_guide?oldid=15205463"
+    },
+    {
+      "importedLines": [
+        {
+          "id": "imp-catcher-walkthrough-1",
+          "rawText": "Buy them from the [[Grand Exchange]] for {{Coins|{{GEP|Red bead|1}} + {{GEP|Black bead|1}} + {{GEP|Yellow bead|1}} + {{GEP|White bead|1}}}}",
+          "section": "Walkthrough",
+          "sourceOrder": 1,
+          "text": "Buy them from the Grand Exchange for 1 Red bead + 1 Black bead + 1 Yellow bead + 1 White bead"
+        },
+        {
+          "id": "imp-catcher-walkthrough-2",
+          "rawText": "Kill [[imp]]s, recommended for free players either near the southern entrance to [[Falador]] or the top of the [[Karamja volcano]]; or for members east of the [[Ardougne Monastery]], at the entrance of [[Chasm of Fire]], or around the [[Charcoal furnace]]",
+          "section": "Walkthrough",
+          "sourceOrder": 2,
+          "text": "Kill imps, recommended for free players either near the southern entrance to Falador or the top of the Karamja volcano; or for members east of the Ardougne Monastery, at the entrance of Chasm of Fire, or around the Charcoal furnace"
+        },
+        {
+          "id": "imp-catcher-walkthrough-3",
+          "rawText": "Talk to [[Wizard Mizgog]] on the top floor of the [[Wizards' Tower]] with all four beads in your inventory.{{Chat option|1 Give me a quest please.|1 Yes.}}",
+          "section": "Walkthrough",
+          "sourceOrder": 3,
+          "text": "Talk to Wizard Mizgog on the top floor of the Wizards' Tower with all four beads in your inventory.1 Yes."
+        },
+        {
+          "id": "imp-catcher-walkthrough-4",
+          "rawText": "'''Congratulations, quest complete!'''}}",
+          "section": "Walkthrough",
+          "sourceOrder": 4,
+          "text": "Congratulations, quest complete!"
+        }
+      ],
+      "questId": "Imp Catcher",
+      "tasks": [
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [],
+          "description": "Talk to Wizard Mizgog",
+          "id": "t_7650",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Wizard Mizgog"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Imp Catcher|~ 1",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_7650"
+          ],
+          "description": "Return to Wizard Mizgog with the beads",
+          "id": "t_7651",
+          "items": [
+            "Red bead",
+            "White bead",
+            "Yellow bead",
+            "Black bead"
+          ],
+          "namedAreas": [],
+          "npcs": [
+            "Wizard Mizgog"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Imp Catcher|~ 2",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [
+            {
+              "chunkId": "48,49",
+              "plane": 1,
+              "sourceId": "12337-1"
+            }
+          ],
+          "completion": true,
+          "dependsOn": [
+            "t_7651"
+          ],
+          "id": "t_7652",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [],
+          "objects": [],
+          "questPoints": 1,
+          "rewards": [
+            "Amulet of accuracy"
+          ],
+          "skills": {},
+          "sourceId": "~|Imp Catcher|~ Complete the quest",
+          "xpRewards": {
+            "Magic": 875
+          }
+        }
+      ],
+      "wikiRevision": 14649872,
+      "wikiRevisionTimestamp": "2024-05-05T03:30:56Z",
+      "wikiTitle": "Imp Catcher/Quick guide",
+      "wikiUrl": "https://oldschool.runescape.wiki/w/Imp_Catcher/Quick_guide?oldid=14649872"
     }
   ],
   "schemaVersion": 1,

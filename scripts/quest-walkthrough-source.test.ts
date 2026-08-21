@@ -512,6 +512,9 @@ const CLI_TASK_MAPPINGS = {
   "~|The Restless Ghost|~ 4": 't_7686',
   "~|The Restless Ghost|~ 5": 't_7687',
   "~|The Restless Ghost|~ Complete the quest": 't_7688',
+  "~|Imp Catcher|~ 1": 't_7650',
+  "~|Imp Catcher|~ 2": 't_7651',
+  "~|Imp Catcher|~ Complete the quest": 't_7652',
 };
 
 const EXPECTED_REVIEW_TASK_IDS = {
@@ -522,14 +525,25 @@ const EXPECTED_REVIEW_TASK_IDS = {
   'Sheep Shearer': ['t_7702', 't_7703', 't_7704'],
   'The Restless Ghost': ['t_7683', 't_7684', 't_7685', 't_7686', 't_7687', 't_7688'],
   'Rune Mysteries': ['t_7697', 't_7698', 't_7699', 't_7700', 't_7701'],
+  'Imp Catcher': ['t_7650', 't_7651', 't_7652'],
 } as const;
 
 describe('same-commit review task provenance', () => {
-  it('pins the exact 39 quest task IDs to the committed task map', () => {
+  it('pins the exact eight-quest catalogue and 42 task IDs to the committed task map', () => {
     expect(pinnedWalkthroughSource.chunkPicker.commit).toBe('ba2fcebf8b26c84c74f8d9ab328a0ede802be926');
     expect(pinnedWalkthroughSource.chunkPicker.tasksMapSha256).toBe(
       'f740b7194189f1a3ef81515ca4d4872caf91a6516a93bdf64c5d43c93d33bd8a',
     );
+    expect(pinnedWalkthroughSource.quests.map(quest => quest.questId)).toEqual([
+      "Cook's Assistant",
+      "Daddy's Home",
+      "Doric's Quest",
+      'Elemental Workshop I',
+      'Sheep Shearer',
+      'The Restless Ghost',
+      'Rune Mysteries',
+      'Imp Catcher',
+    ]);
 
     for (const quest of pinnedWalkthroughSource.quests) {
       expect(quest.tasks.map(task => task.id)).toEqual(

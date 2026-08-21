@@ -31,6 +31,12 @@ const actionChunks: Readonly<Record<string, readonly ChunkKey[]>> = {
   'the-restless-ghost:return-to-ghost': ['50,49'],
   'the-restless-ghost:use-skull': ['50,49'],
   'the-restless-ghost:complete': ['50,49'],
+  'imp-catcher:get-black-bead': ['47,51'],
+  'imp-catcher:get-red-bead': ['47,51'],
+  'imp-catcher:get-white-bead': ['47,51'],
+  'imp-catcher:get-yellow-bead': ['47,51'],
+  'imp-catcher:give-beads-to-mizgog': ['48,49'],
+  'imp-catcher:complete': ['48,49'],
 };
 
 const route = (
@@ -238,6 +244,12 @@ const runeMysteriesStrategy = (): QuestStrategyDefinition => {
   return strategy;
 };
 
+const impStrategy = (): QuestStrategyDefinition => {
+  const strategy = questStrategyFor('Imp Catcher');
+  if (!strategy) throw new Error('Imp Catcher strategy fixture did not load.');
+  return strategy;
+};
+
 const emptyAnalysisFor = (
   strategy: QuestStrategyDefinition,
 ): QuestPreparationRouteAnalysis => ({
@@ -250,6 +262,85 @@ const emptyAnalysisFor = (
     accountFingerprint: 'sheep-coach-test-account',
   },
 });
+
+const impAnalysisFor = (
+  strategy: QuestStrategyDefinition,
+  southFaladorLocked = false,
+): QuestRouteAnalysis => {
+  const actions = strategy.actions.map(action => {
+    const chunks = actionChunks[action.id] ?? [];
+    const blocked = southFaladorLocked && chunks.includes('47,51');
+    return {
+      definition: action,
+      location: {
+        confidence: 'REVIEWED' as const,
+        evidenceKind: 'REVIEWED_ALIAS' as const,
+        chunks,
+        candidateChunks: [],
+        explanation: action.location.kind === 'REVIEWED_ALIAS'
+          ? action.location.alias
+          : action.mapChunks.join(', '),
+      },
+      state: blocked ? 'CHUNK_LOCKED' as const : 'READY_HERE' as const,
+      blockers: blocked ? [{
+        kind: 'CHUNK' as const,
+        chunk: '47,51' as ChunkKey,
+        label: action.displayText,
+      }] : [],
+      itemPreparation: [],
+    };
+  });
+
+  return {
+    questId: strategy.questId,
+    status: southFaladorLocked ? 'CANNOT_COMPLETE_YET' : 'READY_NOW',
+    items: [
+      itemAnalysis('Black bead', [
+        routeAt('other-legal-imp-source', 'Black bead', 'Other legal Imps', 'DROP', '50,50'),
+      ]),
+    ],
+    generatedFrom: {
+      chunkDataVersion: 1,
+      questRevision: strategy.source.wikiRevision,
+      walkthroughRevision: strategy.source.wikiRevision,
+      accountFingerprint: 'imp-catcher-coach-test-account',
+    },
+    walkthrough: {
+      questId: strategy.questId,
+      releaseStatus: 'PREVIEW_ONLY',
+      status: southFaladorLocked ? 'BLOCKED' : 'READY',
+      actions,
+      blockers: actions.flatMap(action => action.blockers),
+      hasIncompleteEvidence: false,
+      sourceLines: strategy.sourceLines,
+      source: strategy.source,
+    },
+  };
+};
+
+const buildImpCoach = ({
+  confirmedItemKeys = new Set<string>(),
+  confirmedActionIds = new Set<string>(),
+  completedQuestIds = new Set<string>(),
+  analysis,
+  connectGraph,
+}: {
+  confirmedItemKeys?: ReadonlySet<string>;
+  confirmedActionIds?: ReadonlySet<string>;
+  completedQuestIds?: ReadonlySet<string>;
+  analysis?: QuestRouteAnalysis;
+  connectGraph?: ConnectGraph;
+} = {}) => {
+  const strategy = impStrategy();
+  return buildRuneProofCoachModel({
+    strategy,
+    analysis: analysis ?? impAnalysisFor(strategy),
+    confirmedItemKeys,
+    confirmedActionIds,
+    completedQuestIds,
+    connectGraph,
+  });
+};
 
 const restlessBlockedAnalysisFor = (
   strategy: QuestStrategyDefinition,
@@ -440,6 +531,35 @@ describe('buildRuneProofCoachModel', () => {
     expect(model.actions.find(action => action.id === 'sheep-shearer:complete')?.state)
       .not.toBe('COMPLETED');
     expect(model.nextAction?.id).toBe('sheep-shearer:return-to-fred');
+  });
+
+  it('marks an Imp Catcher bead from item evidence without ordering the other beads', () => {
+    const yellowOnly = buildImpCoach({ confirmedItemKeys: new Set(['yellow bead']) });
+
+    expect(yellowOnly.actions.find(action => action.id === 'imp-catcher:get-yellow-bead')?.state)
+      .toBe('COMPLETED');
+    expect(yellowOnly.actions.find(action => action.id === 'imp-catcher:get-black-bead')?.state)
+      .not.toBe('COMPLETED');
+  });
+
+  it('keeps the locked south-Falador bead card primary before exposing other legal Imp sources', () => {
+    const strategy = impStrategy();
+    const model = buildImpCoach({ analysis: impAnalysisFor(strategy, true) });
+
+    expect(model.nextAction).toMatchObject({
+      id: 'imp-catcher:get-black-bead',
+      state: 'BLOCKED',
+      blockerText: 'Unlock chunk 47,51 to use Imps south-east of Falador.',
+    });
+    expect(model.alternativeSources).toEqual([
+      expect.objectContaining({
+        itemKey: 'black bead',
+        routes: [expect.objectContaining({
+          id: 'other-legal-imp-source',
+          requiresChunkUnlock: false,
+        })],
+      }),
+    ]);
   });
 
   it('starts with the reviewed Cook instruction and keeps analysis wording out of the journey', () => {
