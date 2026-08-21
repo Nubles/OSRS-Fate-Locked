@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { questWalkthroughFor } from '../../data/questWalkthroughs';
+import { questStrategyFor } from '../../data/questWalkthroughs.preview-boundary';
 import type { ConnectGraph } from '../../services/ChunkContentService';
-import type { QuestRouteAnalysis } from '../questRoutes/analyzeQuest';
+import type { QuestPreparationRouteAnalysis, QuestRouteAnalysis } from '../questRoutes/analyzeQuest';
 import type { ChunkKey, ItemRef, ItemRoute, SourceKind } from '../questRoutes/model';
 import type {
   EvaluatedWalkthroughAction,
@@ -212,6 +213,25 @@ const buildModel = ({
   });
 };
 
+const sheepStrategy = (): QuestStrategyDefinition => {
+  const strategy = questStrategyFor('Sheep Shearer');
+  if (!strategy) throw new Error('Sheep Shearer strategy fixture did not load.');
+  return strategy;
+};
+
+const emptyAnalysisFor = (
+  strategy: QuestStrategyDefinition,
+): QuestPreparationRouteAnalysis => ({
+  questId: strategy.questId,
+  status: 'READY_NOW',
+  items: [],
+  generatedFrom: {
+    chunkDataVersion: 1,
+    questRevision: strategy.source.wikiRevision,
+    accountFingerprint: 'sheep-coach-test-account',
+  },
+});
+
 const buildFromAnalysis = (
   strategy: QuestStrategyDefinition,
   analysis: QuestRouteAnalysis,
@@ -268,6 +288,26 @@ const analysisWithOutOfOrderFlourFallbacks = (
 };
 
 describe('buildRuneProofCoachModel', () => {
+  it('uses ball-of-wool confirmation only to complete Sheep Shearer spin-wool', () => {
+    const strategy = sheepStrategy();
+    const model = buildRuneProofCoachModel({
+      strategy,
+      analysis: emptyAnalysisFor(strategy),
+      confirmedActionIds: new Set(),
+      confirmedItemKeys: new Set(['ball of wool']),
+      completedQuestIds: new Set(),
+    });
+
+    expect(model.progress).toEqual({ completed: 3, total: 5 });
+    expect(model.actions.find(action => action.id === 'sheep-shearer:spin-wool')?.state)
+      .toBe('COMPLETED');
+    expect(model.actions.find(action => action.id === 'sheep-shearer:return-to-fred')?.state)
+      .not.toBe('COMPLETED');
+    expect(model.actions.find(action => action.id === 'sheep-shearer:complete')?.state)
+      .not.toBe('COMPLETED');
+    expect(model.nextAction?.id).toBe('sheep-shearer:return-to-fred');
+  });
+
   it('starts with the reviewed Cook instruction and keeps analysis wording out of the journey', () => {
     const model = buildModel();
 
@@ -312,7 +352,7 @@ describe('buildRuneProofCoachModel', () => {
     const model = buildFromAnalysis(strategy, withResolverExplanations);
 
     expect(model.actions.find(action => action.id === 'cooks-assistant:return-to-cook')?.locationLabel)
-      .toBeUndefined();
+      .toBe('Lumbridge Castle');
     expect(model.actions.find(action => action.id === 'cooks-assistant:complete')?.locationLabel)
       .toBeUndefined();
     expect(model.actions.map(action => action.locationLabel).join(' '))

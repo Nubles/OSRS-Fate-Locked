@@ -25,6 +25,11 @@ const RELEASES: readonly QuestWalkthroughRelease[] = [
     revision: 'f47c094bf2e5c52d96238477993ccf8988a166d78ef5987bc89ca9a8394b5194',
     releaseStatus: 'PREVIEW_ONLY',
   },
+  {
+    questId: 'Sheep Shearer',
+    revision: '2aa93838959a1fd0c26ab45642b9bb39e5bad0321487129cdf2fb39f2bf971e2',
+    releaseStatus: 'PREVIEW_ONLY',
+  },
 ];
 
 const releaseByQuestId = new Map(RELEASES.map(release => [release.questId, release]));

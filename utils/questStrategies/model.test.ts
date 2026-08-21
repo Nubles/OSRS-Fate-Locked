@@ -351,6 +351,7 @@ describe('preview strategy boundary', () => {
       ) => Promise<readonly QuestStrategyDefinition[]>;
     };
     const release = questWalkthroughReleaseFor("Cook's Assistant")!;
+    const sheepRelease = questWalkthroughReleaseFor('Sheep Shearer')!;
 
     expect(boundary.questStrategyFor).toBeTypeOf('function');
     expect(loader.loadQuestStrategyFor).toBeTypeOf('function');
@@ -358,14 +359,20 @@ describe('preview strategy boundary', () => {
 
     expect(boundary.questStrategyCatalogue?.map(strategy => strategy.questId)).toEqual([
       "Cook's Assistant",
+      'Sheep Shearer',
     ]);
     expect(Object.isFrozen(boundary.questStrategyCatalogue)).toBe(true);
     expect(boundary.questStrategyFor?.("Cook's Assistant")?.revision).toBe(release.revision);
+    expect(boundary.questStrategyFor?.('Sheep Shearer')?.revision).toBe(sheepRelease.revision);
     expect(boundary.questStrategyFor?.("Daddy's Home")).toBeUndefined();
     await expect(loader.loadQuestStrategyFor!('OFF', release)).resolves.toBeUndefined();
     await expect(loader.loadQuestStrategyFor!('PREVIEW', release)).resolves.toMatchObject({
       questId: release.questId,
       revision: release.revision,
+    });
+    await expect(loader.loadQuestStrategyFor!('PREVIEW', sheepRelease)).resolves.toMatchObject({
+      questId: sheepRelease.questId,
+      revision: sheepRelease.revision,
     });
     await expect(loader.loadQuestStrategyFor!('PREVIEW', {
       ...release,

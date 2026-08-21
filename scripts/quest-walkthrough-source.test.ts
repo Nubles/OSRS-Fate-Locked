@@ -508,10 +508,11 @@ const EXPECTED_REVIEW_TASK_IDS = {
   "Daddy's Home": ['t_9590', 't_9591', 't_9592', 't_9593', 't_9594', 't_9595', 't_9596', 't_9597', 't_9598', 't_9599'],
   "Doric's Quest": ['t_7620', 't_7621', 't_7622'],
   'Elemental Workshop I': ['t_8157', 't_8158', 't_8159', 't_8160', 't_8161', 't_8162'],
+  'Sheep Shearer': ['t_7702', 't_7703', 't_7704'],
 } as const;
 
 describe('same-commit review task provenance', () => {
-  it('pins the exact 25 quest task IDs to the committed task map', () => {
+  it('pins the exact 28 quest task IDs to the committed task map', () => {
     expect(pinnedWalkthroughSource.chunkPicker.commit).toBe('ba2fcebf8b26c84c74f8d9ab328a0ede802be926');
     expect(pinnedWalkthroughSource.chunkPicker.tasksMapSha256).toBe(
       'f740b7194189f1a3ef81515ca4d4872caf91a6516a93bdf64c5d43c93d33bd8a',
@@ -667,12 +668,18 @@ describe('walkthrough maintenance CLI', () => {
     ];
     const committedBefore = await Promise.all(committedPaths.map(path => readFile(path, 'utf8')));
     const source = JSON.parse(committedBefore[0]);
+    source.quests = source.quests.filter((quest: any) => quest.questId !== 'Sheep Shearer');
+    Object.keys(source.chunkPicker.taskMappings)
+      .filter(sourceId => sourceId.startsWith('~|Sheep Shearer|~ '))
+      .forEach(sourceId => delete source.chunkPicker.taskMappings[sourceId]);
     const sourceRecordsBefore = structuredClone(source.quests);
     const selectedTitle = 'Sheep Shearer/Quick guide';
     const existingTitles = new Set(sourceRecordsBefore.map((quest: any) => quest.wikiTitle));
     const review = JSON.parse(committedBefore[1]);
+    delete review.quests['Sheep Shearer'];
+    delete review.sourceLineDigests['Sheep Shearer'];
+    delete review.rootRequirements?.['Sheep Shearer'];
     const { paths } = await cliTemporaryPaths(source, review);
-    await writeFile(paths.generated, committedBefore[2]);
     const { runWalkthroughSync } = await import('./sync-quest-walkthroughs.mjs');
     const taskMap = {
       ...CLI_TASK_MAPPINGS,

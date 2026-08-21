@@ -34,7 +34,10 @@
       "~|Elemental Workshop I|~ Complete the quest": "t_8162",
       "~|Elemental Workshop I|~ Crafting skill requirement": "t_1425",
       "~|Elemental Workshop I|~ Mining skill requirement": "t_2768",
-      "~|Elemental Workshop I|~ Smithing skill requirement": "t_3465"
+      "~|Elemental Workshop I|~ Smithing skill requirement": "t_3465",
+      "~|Sheep Shearer|~ 1": "t_7702",
+      "~|Sheep Shearer|~ 2": "t_7703",
+      "~|Sheep Shearer|~ Complete the quest": "t_7704"
     },
     "tasksMapSha256": "f740b7194189f1a3ef81515ca4d4872caf91a6516a93bdf64c5d43c93d33bd8a",
     "tasksMapUrl": "https://raw.githubusercontent.com/source-chunk/chunk-picker-v2/ba2fcebf8b26c84c74f8d9ab328a0ede802be926/tasksMap.json"
@@ -1075,6 +1078,159 @@
       "wikiRevisionTimestamp": "2025-01-13T14:55:34Z",
       "wikiTitle": "Elemental Workshop I/Quick guide",
       "wikiUrl": "https://oldschool.runescape.wiki/w/Elemental_Workshop_I/Quick_guide?oldid=14836472"
+    },
+    {
+      "importedLines": [
+        {
+          "id": "sheep-shearer-if-you-already-have-the-20-unnoted-balls-of-wool-1",
+          "rawText": "Fred takes the 20 [[balls of wool]].",
+          "section": "If you already have the 20 unnoted balls of wool",
+          "sourceOrder": 1,
+          "text": "Fred takes the 20 balls of wool."
+        },
+        {
+          "id": "sheep-shearer-if-you-already-have-the-20-unnoted-balls-of-wool-2",
+          "rawText": "'''Congratulations, quest complete!'''}}",
+          "section": "If you already have the 20 unnoted balls of wool",
+          "sourceOrder": 2,
+          "text": "Congratulations, quest complete!"
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-3",
+          "rawText": "He will give you [[shears]] if you do not have them.",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 3,
+          "text": "He will give you shears if you do not have them."
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-4",
+          "rawText": "Enter the sheep pen to the east, connected to his house and shear sheep for 20 [[wool]].",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 4,
+          "text": "Enter the sheep pen to the east, connected to his house and shear sheep for 20 wool."
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-5",
+          "parentLineId": "sheep-shearer-if-you-dont-have-the-balls-of-wool-4",
+          "rawText": "[[File:Ultimate ironman chat badge.png]] Ultimate Ironmen: You can deliver the balls of wool in several trips. You do not have to deliver all 20 at once.",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 5,
+          "text": "Ultimate Ironmen: You can deliver the balls of wool in several trips. You do not have to deliver all 20 at once."
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-6",
+          "parentLineId": "sheep-shearer-if-you-dont-have-the-balls-of-wool-4",
+          "rawText": "'''Note:''' You cannot shear [[Ram]]s or \"[[The Thing]]\". If you attack a ram and cannot kill it, run out of the pen until it stops targeting you.",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 6,
+          "text": "Note: You cannot shear Rams or \"The Thing\". If you attack a ram and cannot kill it, run out of the pen until it stops targeting you."
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-7",
+          "rawText": "Go to the {{FloorNumber|uk=1}} of [[Lumbridge Castle]].",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 7,
+          "text": "Go to the of Lumbridge Castle."
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-8",
+          "rawText": "Click on the [[spinning wheel]] in the southern room to spin the wool.",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 8,
+          "text": "Click on the spinning wheel in the southern room to spin the wool."
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-9",
+          "rawText": "With 20 '''un-noted''' [[balls of wool]], return to [[Fred the Farmer]].",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 9,
+          "text": "With 20 un-noted balls of wool, return to Fred the Farmer."
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-10",
+          "rawText": "Talk to [[Fred the Farmer]] and hand them in. {{Chat option|1I need to talk to you about shearing these sheep!}}",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 10,
+          "text": "Talk to Fred the Farmer and hand them in. 1I need to talk to you about shearing these sheep!"
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-11",
+          "rawText": "'''Congratulations, quest complete!'''}}",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 11,
+          "text": "Congratulations, quest complete!"
+        }
+      ],
+      "questId": "Sheep Shearer",
+      "tasks": [
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [],
+          "description": "Talk to Fred",
+          "id": "t_7702",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Fred the Farmer"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Sheep Shearer|~ 1",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_7702"
+          ],
+          "description": "Take 20 balls of wool to Fred",
+          "id": "t_7703",
+          "items": [
+            "Ball of wool"
+          ],
+          "namedAreas": [],
+          "npcs": [
+            "Fred the Farmer"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Sheep Shearer|~ 2",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [
+            {
+              "chunkId": "49,51",
+              "plane": 0,
+              "sourceId": "12595"
+            }
+          ],
+          "completion": true,
+          "dependsOn": [
+            "t_7703"
+          ],
+          "id": "t_7704",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [],
+          "objects": [],
+          "questPoints": 1,
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Sheep Shearer|~ Complete the quest",
+          "xpRewards": {
+            "Crafting": 150
+          }
+        }
+      ],
+      "wikiRevision": 14457888,
+      "wikiRevisionTimestamp": "2023-08-26T20:09:01Z",
+      "wikiTitle": "Sheep Shearer/Quick guide",
+      "wikiUrl": "https://oldschool.runescape.wiki/w/Sheep_Shearer/Quick_guide?oldid=14457888"
     }
   ],
   "schemaVersion": 1,

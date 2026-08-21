@@ -2295,6 +2295,364 @@
           "sourceOrder": 26
         }
       ]
+    },
+    {
+      "actions": [
+        {
+          "chunkPickerTaskId": "t_7702",
+          "coach": {
+            "completion": {
+              "kind": "MANUAL"
+            },
+            "consumes": [],
+            "fallbackPolicy": "NONE",
+            "fulfils": [
+              {
+                "item": {
+                  "key": "shears",
+                  "name": "Shears"
+                },
+                "quantity": 1,
+                "supplyPolicy": "QUEST_PROVIDED"
+              }
+            ]
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [],
+          "displayText": "Talk to Fred the Farmer north of Lumbridge and ask for a quest.",
+          "entities": [
+            {
+              "kind": "npc",
+              "name": "Fred the Farmer"
+            }
+          ],
+          "gates": [],
+          "id": "sheep-shearer:start-with-fred",
+          "items": [],
+          "kind": "TALK_TO",
+          "location": {
+            "alias": "Fred's farm and sheep pen",
+            "chunks": [
+              "49,51"
+            ],
+            "evidence": "Pinned Wiki source line sheep-shearer-if-you-dont-have-the-balls-of-wool-3 records Fred's quest-provided shears; pinned Chunk Picker task t_7702 records talking to Fred, while the pinned Sheep Shearer terminal task t_7704 anchors the farm at 49,51.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Only chunk precision is claimed for Fred's farm and sheep pen; the review does not claim an exact tile.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [
+            "sheep-shearer-if-you-dont-have-the-balls-of-wool-3"
+          ],
+          "section": "QUEST",
+          "sourceOrder": 1
+        },
+        {
+          "coach": {
+            "completion": {
+              "kind": "MANUAL"
+            },
+            "consumes": [],
+            "fallbackPolicy": "NONE",
+            "fulfils": [
+              {
+                "item": {
+                  "key": "wool",
+                  "name": "Wool"
+                },
+                "quantity": 20,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              }
+            ],
+            "preferredMethod": {
+              "kind": "TRANSFORMATION",
+              "recipeId": "shear-sheep"
+            }
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [
+            "sheep-shearer:start-with-fred"
+          ],
+          "displayText": "Use Fred's shears to collect 20 wool from the sheep in his pen.",
+          "entities": [
+            {
+              "kind": "npc",
+              "name": "Sheep"
+            }
+          ],
+          "gates": [],
+          "id": "sheep-shearer:shear-wool",
+          "items": [
+            {
+              "item": {
+                "key": "shears",
+                "name": "Shears"
+              },
+              "quantity": 1,
+              "supplyPolicy": "QUEST_PROVIDED"
+            }
+          ],
+          "kind": "USE_ITEM",
+          "location": {
+            "alias": "Fred's farm and sheep pen",
+            "chunks": [
+              "49,51"
+            ],
+            "evidence": "Pinned Wiki source lines sheep-shearer-if-you-dont-have-the-balls-of-wool-4 through sheep-shearer-if-you-dont-have-the-balls-of-wool-6 place shearing in Fred's east sheep pen; the pinned Sheep Shearer terminal task t_7704 anchors the Fred farm/sheep-pen route at 49,51.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Only chunk precision is claimed for Fred's farm and sheep pen; the review does not claim an exact tile.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [
+            "sheep-shearer-if-you-dont-have-the-balls-of-wool-4",
+            "sheep-shearer-if-you-dont-have-the-balls-of-wool-5",
+            "sheep-shearer-if-you-dont-have-the-balls-of-wool-6"
+          ],
+          "section": "QUEST",
+          "sourceOrder": 2
+        },
+        {
+          "coach": {
+            "completion": {
+              "itemKey": "ball of wool",
+              "kind": "ITEM_CONFIRMED"
+            },
+            "consumes": [
+              {
+                "item": {
+                  "key": "wool",
+                  "name": "Wool"
+                },
+                "quantity": 20,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              }
+            ],
+            "fallbackPolicy": "BLOCK_THEN_ALTERNATIVES",
+            "fulfils": [
+              {
+                "item": {
+                  "key": "ball of wool",
+                  "name": "Ball of wool"
+                },
+                "quantity": 20,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              }
+            ],
+            "preferredMethod": {
+              "kind": "TRANSFORMATION",
+              "recipeId": "spin-wool"
+            }
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [
+            "sheep-shearer:shear-wool"
+          ],
+          "displayText": "Spin the 20 wool into 20 balls of wool upstairs in Lumbridge Castle.",
+          "entities": [
+            {
+              "kind": "object",
+              "name": "Spinning wheel"
+            }
+          ],
+          "gates": [],
+          "id": "sheep-shearer:spin-wool",
+          "items": [],
+          "kind": "USE_ITEM",
+          "location": {
+            "alias": "Lumbridge Castle",
+            "chunks": [
+              "50,50"
+            ],
+            "evidence": "Pinned Wiki source lines sheep-shearer-if-you-dont-have-the-balls-of-wool-7 and sheep-shearer-if-you-dont-have-the-balls-of-wool-8 name Lumbridge Castle and its spinning wheel; the pinned Chunk Picker content entry identifies Lumbridge Castle at 50,50.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Only chunk precision is claimed for the Lumbridge Castle spinning wheel; the review does not claim an exact tile.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [
+            "sheep-shearer-if-you-dont-have-the-balls-of-wool-7",
+            "sheep-shearer-if-you-dont-have-the-balls-of-wool-8"
+          ],
+          "section": "QUEST",
+          "sourceOrder": 3
+        },
+        {
+          "chunkPickerTaskId": "t_7703",
+          "coach": {
+            "completion": {
+              "kind": "MANUAL"
+            },
+            "consumes": [
+              {
+                "item": {
+                  "key": "ball of wool",
+                  "name": "Ball of wool"
+                },
+                "quantity": 20,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              }
+            ],
+            "fallbackPolicy": "NONE",
+            "fulfils": []
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [
+            "sheep-shearer:spin-wool",
+            "sheep-shearer:start-with-fred"
+          ],
+          "displayText": "Return to Fred the Farmer with 20 unnoted balls of wool.",
+          "entities": [
+            {
+              "kind": "npc",
+              "name": "Fred the Farmer"
+            }
+          ],
+          "gates": [],
+          "id": "sheep-shearer:return-to-fred",
+          "items": [],
+          "kind": "TALK_TO",
+          "location": {
+            "alias": "Fred's farm and sheep pen",
+            "chunks": [
+              "49,51"
+            ],
+            "evidence": "Pinned Wiki source lines sheep-shearer-if-you-already-have-the-20-unnoted-balls-of-wool-1, sheep-shearer-if-you-dont-have-the-balls-of-wool-9, and sheep-shearer-if-you-dont-have-the-balls-of-wool-10 direct return and hand-in with 20 balls of wool; pinned Chunk Picker task t_7703 identifies Fred and the pinned Sheep Shearer route record anchors Fred's farm at 49,51.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Only chunk precision is claimed for Fred's farm and sheep pen; the review does not claim an exact tile.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [
+            "sheep-shearer-if-you-already-have-the-20-unnoted-balls-of-wool-1",
+            "sheep-shearer-if-you-dont-have-the-balls-of-wool-9",
+            "sheep-shearer-if-you-dont-have-the-balls-of-wool-10"
+          ],
+          "section": "QUEST",
+          "sourceOrder": 4
+        },
+        {
+          "chunkPickerTaskId": "t_7704",
+          "coach": {
+            "completion": {
+              "kind": "QUEST_COMPLETED",
+              "questId": "Sheep Shearer"
+            },
+            "consumes": [],
+            "fallbackPolicy": "NONE",
+            "fulfils": []
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [
+            "sheep-shearer:return-to-fred"
+          ],
+          "displayText": "Sheep Shearer complete.",
+          "entities": [],
+          "gates": [],
+          "id": "sheep-shearer:complete",
+          "items": [],
+          "kind": "INFORMATION",
+          "location": {
+            "alias": "Fred's farm and sheep pen",
+            "chunks": [
+              "49,51"
+            ],
+            "evidence": "Pinned Wiki source lines sheep-shearer-if-you-already-have-the-20-unnoted-balls-of-wool-2 and sheep-shearer-if-you-dont-have-the-balls-of-wool-11 record completion; pinned Chunk Picker terminal task t_7704 anchors Sheep Shearer at 49,51.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Only chunk precision is claimed for Fred's farm and sheep pen; the review does not claim an exact tile.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [
+            "sheep-shearer-if-you-already-have-the-20-unnoted-balls-of-wool-2",
+            "sheep-shearer-if-you-dont-have-the-balls-of-wool-11"
+          ],
+          "section": "QUEST",
+          "sourceOrder": 5
+        }
+      ],
+      "questId": "Sheep Shearer",
+      "releaseStatus": "PREVIEW_ONLY",
+      "revision": "2aa93838959a1fd0c26ab45642b9bb39e5bad0321487129cdf2fb39f2bf971e2",
+      "source": {
+        "chunkPickerCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
+        "chunkPickerLicenceStatus": "UNVERIFIED",
+        "chunkPickerRepository": "source-chunk/chunk-picker-v2",
+        "wikiLicence": "CC BY-NC-SA 3.0",
+        "wikiLicenceUrl": "https://creativecommons.org/licenses/by-nc-sa/3.0/",
+        "wikiRevision": "14457888",
+        "wikiRevisionTimestamp": "2023-08-26T20:09:01Z",
+        "wikiTitle": "Sheep Shearer/Quick guide",
+        "wikiUrl": "https://oldschool.runescape.wiki/w/Sheep_Shearer/Quick_guide?oldid=14457888"
+      },
+      "sourceLines": [
+        {
+          "id": "sheep-shearer-if-you-already-have-the-20-unnoted-balls-of-wool-1",
+          "rawText": "Fred takes the 20 [[balls of wool]].",
+          "section": "If you already have the 20 unnoted balls of wool",
+          "sourceOrder": 1
+        },
+        {
+          "id": "sheep-shearer-if-you-already-have-the-20-unnoted-balls-of-wool-2",
+          "rawText": "'''Congratulations, quest complete!'''}}",
+          "section": "If you already have the 20 unnoted balls of wool",
+          "sourceOrder": 2
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-3",
+          "rawText": "He will give you [[shears]] if you do not have them.",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 3
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-4",
+          "rawText": "Enter the sheep pen to the east, connected to his house and shear sheep for 20 [[wool]].",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 4
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-5",
+          "rawText": "[[File:Ultimate ironman chat badge.png]] Ultimate Ironmen: You can deliver the balls of wool in several trips. You do not have to deliver all 20 at once.",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 5
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-6",
+          "rawText": "'''Note:''' You cannot shear [[Ram]]s or \"[[The Thing]]\". If you attack a ram and cannot kill it, run out of the pen until it stops targeting you.",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 6
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-7",
+          "rawText": "Go to the {{FloorNumber|uk=1}} of [[Lumbridge Castle]].",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 7
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-8",
+          "rawText": "Click on the [[spinning wheel]] in the southern room to spin the wool.",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 8
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-9",
+          "rawText": "With 20 '''un-noted''' [[balls of wool]], return to [[Fred the Farmer]].",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 9
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-10",
+          "rawText": "Talk to [[Fred the Farmer]] and hand them in. {{Chat option|1I need to talk to you about shearing these sheep!}}",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 10
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-11",
+          "rawText": "'''Congratulations, quest complete!'''}}",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 11
+        }
+      ]
     }
   ]
 }
