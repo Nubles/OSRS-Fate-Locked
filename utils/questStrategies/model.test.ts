@@ -354,6 +354,7 @@ describe('preview strategy boundary', () => {
     const sheepRelease = questWalkthroughReleaseFor('Sheep Shearer')!;
     const restlessRelease = questWalkthroughReleaseFor('The Restless Ghost')!;
     const runeMysteriesRelease = questWalkthroughReleaseFor('Rune Mysteries')!;
+    const impCatcherRelease = questWalkthroughReleaseFor('Imp Catcher')!;
 
     expect(boundary.questStrategyFor).toBeTypeOf('function');
     expect(loader.loadQuestStrategyFor).toBeTypeOf('function');
@@ -364,12 +365,14 @@ describe('preview strategy boundary', () => {
       'Sheep Shearer',
       'The Restless Ghost',
       'Rune Mysteries',
+      'Imp Catcher',
     ]);
     expect(Object.isFrozen(boundary.questStrategyCatalogue)).toBe(true);
     expect(boundary.questStrategyFor?.("Cook's Assistant")?.revision).toBe(release.revision);
     expect(boundary.questStrategyFor?.('Sheep Shearer')?.revision).toBe(sheepRelease.revision);
     expect(boundary.questStrategyFor?.('The Restless Ghost')?.revision).toBe(restlessRelease.revision);
     expect(boundary.questStrategyFor?.('Rune Mysteries')?.revision).toBe(runeMysteriesRelease.revision);
+    expect(boundary.questStrategyFor?.('Imp Catcher')?.revision).toBe(impCatcherRelease.revision);
     expect(boundary.questStrategyFor?.("Daddy's Home")).toBeUndefined();
     await expect(loader.loadQuestStrategyFor!('OFF', release)).resolves.toBeUndefined();
     await expect(loader.loadQuestStrategyFor!('PREVIEW', release)).resolves.toMatchObject({
@@ -387,6 +390,10 @@ describe('preview strategy boundary', () => {
     await expect(loader.loadQuestStrategyFor!('PREVIEW', runeMysteriesRelease)).resolves.toMatchObject({
       questId: runeMysteriesRelease.questId,
       revision: runeMysteriesRelease.revision,
+    });
+    await expect(loader.loadQuestStrategyFor!('PREVIEW', impCatcherRelease)).resolves.toMatchObject({
+      questId: impCatcherRelease.questId,
+      revision: impCatcherRelease.revision,
     });
     await expect(loader.loadQuestStrategyFor!('PREVIEW', {
       ...release,
