@@ -23,7 +23,26 @@ import type { EntityHit } from '../services/ChunkContentService';
 import * as walkthroughCatalogue from '../data/questWalkthroughs';
 import { runeProofPreviewStorageKey } from '../utils/questRoutes/previewChecks';
 import { runeProofPreviewActionStorageKey } from '../utils/questStrategies/previewActions';
+import { questStrategyCatalogue } from '../data/questWalkthroughs.preview-boundary';
+import type { RuneProofAvailability } from '../utils/questRoutes/featureFlag';
+import type { QuestStrategyDefinition } from '../utils/questStrategies/model';
 
+const walkthroughLoaderControl = vi.hoisted(() => ({
+  loadCatalogue: undefined as undefined | ((
+    availability: RuneProofAvailability,
+  ) => Promise<readonly QuestStrategyDefinition[]>),
+}));
+
+vi.mock('../data/questWalkthroughLoader', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../data/questWalkthroughLoader')>();
+  return {
+    ...actual,
+    loadQuestStrategyCatalogue: (availability: RuneProofAvailability) => (
+      walkthroughLoaderControl.loadCatalogue?.(availability)
+      ?? actual.loadQuestStrategyCatalogue(availability)
+    ),
+  };
+});
 
 const analyzeQuest = (
   questId: string,
@@ -94,6 +113,8 @@ beforeEach(() => {
 });
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+  walkthroughLoaderControl.loadCatalogue = undefined;
   cleanup();
   window.localStorage.clear();
   gameSnapshot = {
@@ -394,6 +415,30 @@ describe('RuneProof Goal Planner integration', () => {
     expect(screen.getAllByText('Talk to the Cook in Lumbridge Castle.').length).toBeGreaterThan(0);
   });
 
+  it('keeps an in-progress target search selected while the preview catalogue loads', async () => {
+    const catalogue = deferred<readonly QuestStrategyDefinition[]>();
+    walkthroughLoaderControl.loadCatalogue = () => catalogue.promise;
+    const user = userEvent.setup();
+
+    render(
+      <GoalPlannerModal
+        onClose={() => undefined}
+        runeProof={runeProof(loadedContent())}
+      />,
+    );
+
+    const search = screen.getByRole('textbox');
+    await user.type(search, "Daddy's Home");
+    expect(screen.getByText('Choose a goal')).toBeTruthy();
+
+    await act(async () => { catalogue.resolve(questStrategyCatalogue); });
+
+    expect(await screen.findByRole('region', { name: 'Recommended RuneProof quests' })).toBeTruthy();
+    expect(screen.getByDisplayValue("Daddy's Home")).toBeTruthy();
+    expect(screen.getByText('Choose a goal')).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Next action' })).toBeNull();
+  });
+
   it('keeps confirmation state for every Wave 1 strategy while objectives switch', async () => {
     const user = userEvent.setup();
     const journalQuestsBefore = [...gameSnapshot.unlocks.quests];
@@ -458,6 +503,27 @@ describe('RuneProof Goal Planner integration', () => {
     expect(screen.getByRole('button', { name: 'Change objective' })).toBeTruthy();
     expect(view.container.querySelector('.max-w-5xl')).toBeTruthy();
     expect(view.container.querySelector('.max-w-3xl')).toBeNull();
+  });
+
+  it('moves mobile keyboard objective selection focus to Change objective', async () => {
+    vi.stubGlobal('matchMedia', vi.fn().mockImplementation((query: string) => ({
+      matches: query === '(max-width: 639px)',
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })));
+    const user = userEvent.setup();
+    renderGoalPlanner({ availability: 'PREVIEW', selectedQuest: "Cook's Assistant" });
+
+    await screen.findByRole('heading', { name: 'Next action' });
+    await user.click(screen.getByRole('button', { name: 'Change objective' }));
+
+    const recommendations = screen.getByRole('region', { name: 'Recommended RuneProof quests' });
+    within(recommendations).getByRole('button', { name: /Sheep Shearer/ }).focus();
+    await user.keyboard('{Enter}');
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Sheep Shearer' })).toBeTruthy();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Change objective' }));
   });
 
   it("shows the reviewed chunk on every Cook's Assistant route step", async () => {

@@ -407,6 +407,8 @@ export const GoalPlannerModal: React.FC<Props> = ({
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<{ kind: GoalKind; id: string } | null>(initialTarget ?? null);
   const [objectivePickerOpen, setObjectivePickerOpen] = useState(false);
+  const [focusChangeObjective, setFocusChangeObjective] = useState(false);
+  const changeObjectiveButtonRef = React.useRef<HTMLButtonElement>(null);
   useEffect(() => { if (initialTarget) setSelected(initialTarget); }, [initialTarget]);
 
   useEffect(() => {
@@ -538,6 +540,7 @@ export const GoalPlannerModal: React.FC<Props> = ({
     if (
       initialTarget
       || selected !== null
+      || query.trim().length > 0
       || !runeProofCatalogueLoaded
       || !runeProofActionsHydrated
       || runeProofIntegration.availability !== 'PREVIEW'
@@ -549,6 +552,7 @@ export const GoalPlannerModal: React.FC<Props> = ({
     }
   }, [
     initialTarget,
+    query,
     runeProofCatalogueLoaded,
     runeProofActionsHydrated,
     runeProofIntegration.availability,
@@ -706,6 +710,18 @@ export const GoalPlannerModal: React.FC<Props> = ({
     setSelected(target);
     setObjectivePickerOpen(false);
   }, []);
+  const selectRuneProofObjective = React.useCallback((questId: string) => {
+    setSelected({ kind: 'quest', id: questId });
+    setObjectivePickerOpen(false);
+    setFocusChangeObjective(window.matchMedia?.('(max-width: 639px)').matches === true);
+  }, []);
+
+  useEffect(() => {
+    if (!focusChangeObjective || !coachActive) return;
+
+    changeObjectiveButtonRef.current?.focus();
+    setFocusChangeObjective(false);
+  }, [coachActive, focusChangeObjective]);
 
   return (
     <div
@@ -753,7 +769,7 @@ export const GoalPlannerModal: React.FC<Props> = ({
             {runeProofIntegration.availability === 'PREVIEW' ? (
               <RuneProofObjectivePicker
                 recommendations={runeProofRecommendations}
-                onSelect={(questId) => selectTarget({ kind: 'quest', id: questId })}
+                onSelect={selectRuneProofObjective}
               />
             ) : null}
             <div className="p-2.5 border-b border-white/5 shrink-0">
@@ -800,6 +816,7 @@ export const GoalPlannerModal: React.FC<Props> = ({
           <div className="flex-1 flex flex-col min-h-0 min-w-0">
             {coachActive ? (
               <button
+                ref={changeObjectiveButtonRef}
                 type="button"
                 onClick={() => setObjectivePickerOpen(open => !open)}
                 className="sm:hidden mx-4 mt-3 self-start rounded border border-cyan-400/30 bg-cyan-950/30 px-2.5 py-1.5 text-[11px] font-semibold text-cyan-200"
