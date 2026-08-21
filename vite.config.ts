@@ -16,7 +16,8 @@ const runeProofPreviewBoundaryPlugin = (includePreview: boolean): Plugin => ({
   resolveId(source, importer) {
     if (includePreview || !importer) return null;
     const normalizedSource = normalizePath(source).replace(/\.[cm]?[jt]sx?$/, '');
-    if (!normalizedSource.endsWith('questWalkthroughs.preview-boundary')) return null;
+    if (!normalizedSource.endsWith('questWalkthroughs')
+      && !normalizedSource.endsWith('questWalkthroughs.preview-boundary')) return null;
     return this.resolve('./questWalkthroughs.public', importer, { skipSelf: true });
   },
 });
