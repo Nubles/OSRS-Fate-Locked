@@ -42,7 +42,7 @@ const RELEASES: readonly QuestWalkthroughRelease[] = [
   },
   {
     questId: 'Imp Catcher',
-    revision: 'da3591ff9c30304b4589c4bd3ea59366a28d99ae266b0a0093e26f185eaba84d',
+    revision: '0f50a69f17989b9b244ba0f47f1461c65d720eece2b9603ad14158850ad53cdd',
     releaseStatus: 'PREVIEW_ONLY',
   },
 ];

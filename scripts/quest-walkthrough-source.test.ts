@@ -469,6 +469,7 @@ import { mkdtemp, readFile, readdir, rename, unlink, writeFile } from 'node:fs/p
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import pinnedWalkthroughSource from '../data/sources/quest-walkthrough-sources.json';
+import reviewedWalkthroughReview from '../data/sources/quest-walkthrough-review.json';
 import reviewedMembership from '../data/sources/f2p-quest-membership.json';
 
 const CLI_EXISTING_QUESTS = ["Cook's Assistant", "Daddy's Home", "Doric's Quest", 'Elemental Workshop I'];
@@ -852,6 +853,46 @@ describe('walkthrough maintenance CLI', () => {
     await expect(runWalkthroughSync({ mode: 'promote', paths, write: () => undefined })).resolves.toBeUndefined();
     expect(JSON.parse(await readFile(paths.source, 'utf8')).quests.map((quest: any) => quest.questId)).toContain('Sheep Shearer');
     expect(JSON.parse(await readFile(paths.generated, 'utf8')).walkthroughs).toHaveLength(5);
+  });
+
+  it('records Imp Catcher’s initial Mizgog dialogue as an omitted prerequisite, never bead provenance', async () => {
+    const impSource = pinnedWalkthroughSource.quests.find(quest => quest.questId === 'Imp Catcher');
+    const review = reviewedWalkthroughReview as {
+      readonly quests: Record<string, readonly { readonly id: string; readonly chunkPickerTaskId?: string }[]>;
+      readonly taskCoverageExceptions?: Record<string, readonly unknown[]>;
+    };
+
+    expect(impSource?.tasks).toContainEqual(expect.objectContaining({
+      id: 't_7650',
+      description: 'Talk to Wizard Mizgog',
+      dependsOn: [],
+    }));
+    expect(impSource?.tasks.find(task => task.id === 't_7651')?.dependsOn).toEqual(['t_7650']);
+    expect(review.quests['Imp Catcher'].find(action => action.id === 'imp-catcher:get-black-bead')?.chunkPickerTaskId)
+      .toBeUndefined();
+    expect(review.quests['Imp Catcher'].find(action => action.id === 'imp-catcher:give-beads-to-mizgog')?.chunkPickerTaskId)
+      .toBe('t_7651');
+    expect(review.taskCoverageExceptions?.['Imp Catcher']).toEqual([
+      expect.objectContaining({
+        kind: 'OMITTED_PREREQUISITE',
+        taskId: 't_7650',
+        successorTaskIds: ['t_7651'],
+        evidence: expect.stringContaining('Talk to Wizard Mizgog'),
+        rationale: expect.stringContaining('six-action'),
+      }),
+    ]);
+
+    const { validateReviewAgreement } = await import('./sync-quest-walkthroughs.mjs');
+    expect(() => validateReviewAgreement(pinnedWalkthroughSource, reviewedWalkthroughReview)).not.toThrow();
+  });
+
+  it('rejects a task covered both as an omitted prerequisite and as a player action', async () => {
+    const review = structuredClone(reviewedWalkthroughReview) as any;
+    review.quests['Imp Catcher'].find((action: { id: string }) => action.id === 'imp-catcher:get-black-bead').chunkPickerTaskId = 't_7650';
+
+    const { validateReviewAgreement } = await import('./sync-quest-walkthroughs.mjs');
+    expect(() => validateReviewAgreement(pinnedWalkthroughSource, review))
+      .toThrow(/covered both as an omitted prerequisite and an action/i);
   });
 });
 describe('quick-guide parser regression coverage', () => {

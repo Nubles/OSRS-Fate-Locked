@@ -1871,7 +1871,6 @@
     ],
     "Imp Catcher": [
       {
-        "chunkPickerTaskId": "t_7650",
         "confidence": "REVIEWED",
         "dependsOn": [],
         "displayText": "Kill imps south-east of Falador until you obtain a black bead.",
@@ -3039,6 +3038,19 @@
           },
           "fallbackPolicy": "NONE"
         }
+      }
+    ]
+  },
+  "taskCoverageExceptions": {
+    "Imp Catcher": [
+      {
+        "evidence": "Pinned Chunk Picker task t_7650 is 'Talk to Wizard Mizgog' and the pinned task graph makes t_7651 depend on it; it is not a bead-acquisition task.",
+        "kind": "OMITTED_PREREQUISITE",
+        "rationale": "The approved six-action player journey has no separate start-dialogue action. Keep this initial dialogue as explicit provenance instead of binding it to any independent bead action.",
+        "successorTaskIds": [
+          "t_7651"
+        ],
+        "taskId": "t_7650"
       }
     ]
   },

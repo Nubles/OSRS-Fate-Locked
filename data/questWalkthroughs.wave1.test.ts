@@ -506,6 +506,19 @@ describe('Wave 1 Imp Catcher RuneProof pack', () => {
     ]);
   });
 
+  it('keeps raw Mizgog provenance off the independent bead actions', () => {
+    const strategy = strategyFor('Imp Catcher');
+
+    expect(strategy.actions.map(action => [action.id, action.chunkPickerTaskId])).toEqual([
+      ['imp-catcher:get-black-bead', undefined],
+      ['imp-catcher:get-red-bead', undefined],
+      ['imp-catcher:get-white-bead', undefined],
+      ['imp-catcher:get-yellow-bead', undefined],
+      ['imp-catcher:give-beads-to-mizgog', 't_7651'],
+      ['imp-catcher:complete', 't_7652'],
+    ]);
+  });
+
   it('keeps each bead independent before the reviewed Mizgog hand-off', () => {
     const strategy = strategyFor('Imp Catcher');
 

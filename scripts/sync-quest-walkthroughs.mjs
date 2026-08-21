@@ -353,6 +353,13 @@ const validateReviewShape = (review, source) => {
   assert(isRecord(review.quests), 'Walkthrough review quests are required');
   const sourceQuestIds = source.quests.map(quest => quest.questId);
   assert(sameQuestIdSet(Object.keys(review.quests), sourceQuestIds), 'Walkthrough review quest keys must exactly match source quest IDs');
+  if (review.taskCoverageExceptions !== undefined) {
+    assert(isRecord(review.taskCoverageExceptions), 'Walkthrough review task coverage exceptions must be an object');
+    Object.entries(review.taskCoverageExceptions).forEach(([questId, exceptions]) => {
+      assert(sourceQuestIds.includes(questId), `Walkthrough review has task coverage exceptions for an unknown quest: ${questId}`);
+      assert(Array.isArray(exceptions), `${questId}: task coverage exceptions must be an array`);
+    });
+  }
   assert(isRecord(review.sourceLineDigests), 'Walkthrough review source line digests are required');
   assert(sameQuestIdSet(Object.keys(review.sourceLineDigests), sourceQuestIds), 'Walkthrough review source line digest keys must exactly match source quest IDs');
   sourceQuestIds.forEach(quest => assert(Array.isArray(review.quests[quest]), `${quest}: review list is required`));
@@ -379,19 +386,60 @@ export function validateReviewAgreement(source, review) {
     }
 
     const expectedTaskIds = new Set(quest.tasks.map(task => task.id));
+    const taskById = new Map(quest.tasks.map(task => [task.id, task]));
+    const taskCoverageExceptions = review.taskCoverageExceptions?.[quest.questId] ?? [];
+    assert(Array.isArray(taskCoverageExceptions), `${quest.questId}: task coverage exceptions must be an array`);
+    const exceptionByTaskId = new Map();
+    for (const exception of taskCoverageExceptions) {
+      assert(isRecord(exception), `${quest.questId}: task coverage exception must be an object`);
+      assert(exception.kind === 'OMITTED_PREREQUISITE', `${quest.questId}: task coverage exception kind is invalid`);
+      nonBlank(exception.taskId, `${quest.questId}: omitted prerequisite task ID`);
+      assert(expectedTaskIds.has(exception.taskId), `${quest.questId}: omitted prerequisite references unknown task ${exception.taskId}`);
+      assert(!exceptionByTaskId.has(exception.taskId), `${quest.questId}: omitted prerequisite task ${exception.taskId} is declared more than once`);
+      assert(Array.isArray(exception.successorTaskIds) && exception.successorTaskIds.length > 0,
+        `${quest.questId}: omitted prerequisite ${exception.taskId} must declare successor task IDs`);
+      const successorTaskIds = new Set();
+      exception.successorTaskIds.forEach((successorTaskId) => {
+        nonBlank(successorTaskId, `${quest.questId}: omitted prerequisite successor task ID`);
+        assert(expectedTaskIds.has(successorTaskId), `${quest.questId}: omitted prerequisite ${exception.taskId} references unknown successor ${successorTaskId}`);
+        assert(!successorTaskIds.has(successorTaskId), `${quest.questId}: omitted prerequisite ${exception.taskId} repeats successor ${successorTaskId}`);
+        successorTaskIds.add(successorTaskId);
+      });
+      nonBlank(exception.evidence, `${quest.questId}: omitted prerequisite evidence`);
+      nonBlank(exception.rationale, `${quest.questId}: omitted prerequisite rationale`);
+      const sourceTask = taskById.get(exception.taskId);
+      assert(sourceTask.dependsOn.length === 0, `${quest.questId}: omitted prerequisite ${exception.taskId} must not depend on another task`);
+      const pinnedSuccessorTaskIds = quest.tasks
+        .filter(task => task.dependsOn.includes(exception.taskId))
+        .map(task => task.id)
+        .sort();
+      assert(
+        JSON.stringify([...successorTaskIds].sort()) === JSON.stringify(pinnedSuccessorTaskIds),
+        `${quest.questId}: omitted prerequisite ${exception.taskId} successor tasks do not match the pinned graph`,
+      );
+      exceptionByTaskId.set(exception.taskId, exception);
+    }
     const actionByTaskId = new Map();
     for (const action of review.quests[quest.questId]) {
       if (action.chunkPickerTaskId === undefined) continue;
       assert(expectedTaskIds.has(action.chunkPickerTaskId), `${quest.questId}: review references unknown task ${action.chunkPickerTaskId}`);
+      assert(!exceptionByTaskId.has(action.chunkPickerTaskId), `${quest.questId}: task ${action.chunkPickerTaskId} is covered both as an omitted prerequisite and an action`);
       assert(!actionByTaskId.has(action.chunkPickerTaskId), `${quest.questId}: review uses task ${action.chunkPickerTaskId} more than once`);
       actionByTaskId.set(action.chunkPickerTaskId, action);
     }
-    assert(actionByTaskId.size === expectedTaskIds.size, `${quest.questId}: review does not cover every pinned task`);
+    assert(actionByTaskId.size + exceptionByTaskId.size === expectedTaskIds.size, `${quest.questId}: review does not cover every pinned task`);
     for (const task of quest.tasks) {
       const action = actionByTaskId.get(task.id);
+      if (exceptionByTaskId.has(task.id)) continue;
       assert(action !== undefined, `${quest.questId}: review does not cover task ${task.id}`);
       for (const dependencyTaskId of task.dependsOn ?? []) {
         const dependencyAction = actionByTaskId.get(dependencyTaskId);
+        const dependencyException = exceptionByTaskId.get(dependencyTaskId);
+        if (dependencyException !== undefined) {
+          assert(dependencyException.successorTaskIds.includes(task.id),
+            `${quest.questId}: omitted prerequisite ${dependencyTaskId} does not preserve edge to ${task.id}`);
+          continue;
+        }
         assert(dependencyAction !== undefined, `${quest.questId}: review does not cover dependency task ${dependencyTaskId}`);
         assert(action.dependsOn.includes(dependencyAction.id), `${quest.questId}: task dependency edge ${dependencyTaskId} -> ${task.id} is missing from reviewed actions`);
       }
