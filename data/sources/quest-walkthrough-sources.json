@@ -35,6 +35,11 @@
       "~|Elemental Workshop I|~ Crafting skill requirement": "t_1425",
       "~|Elemental Workshop I|~ Mining skill requirement": "t_2768",
       "~|Elemental Workshop I|~ Smithing skill requirement": "t_3465",
+      "~|Rune Mysteries|~ 1": "t_7697",
+      "~|Rune Mysteries|~ 2": "t_7698",
+      "~|Rune Mysteries|~ 3": "t_7699",
+      "~|Rune Mysteries|~ 4": "t_7700",
+      "~|Rune Mysteries|~ Complete the quest": "t_7701",
       "~|Sheep Shearer|~ 1": "t_7702",
       "~|Sheep Shearer|~ 2": "t_7703",
       "~|Sheep Shearer|~ Complete the quest": "t_7704",
@@ -1414,6 +1419,147 @@
       "wikiRevisionTimestamp": "2025-11-28T02:58:15Z",
       "wikiTitle": "The Restless Ghost/Quick guide",
       "wikiUrl": "https://oldschool.runescape.wiki/w/The_Restless_Ghost/Quick_guide?oldid=15070492"
+    },
+    {
+      "importedLines": [
+        {
+          "id": "rune-mysteries-walkthrough-1",
+          "rawText": "Ask [[Duke Horacio]] in Lumbridge Castle for a quest and he'll give you an [[air talisman]]. {{Chat option|1 Have you any quests for me?|1 Yes.}}",
+          "section": "Walkthrough",
+          "sourceOrder": 1,
+          "text": "Ask Duke Horacio in Lumbridge Castle for a quest and he'll give you an air talisman. 1 Yes."
+        },
+        {
+          "id": "rune-mysteries-walkthrough-2",
+          "rawText": "Talk to [[Archmage Sedridor]] in the [[Wizards' Tower]] basement and give him the [[air talisman]]. {{Chat option|1 Okay, here you are.|2 Actually, I'm not interested.|1 Yes, certainly.}}",
+          "section": "Walkthrough",
+          "sourceOrder": 2,
+          "text": "Talk to Archmage Sedridor in the Wizards' Tower basement and give him the air talisman. 1 Yes, certainly."
+        },
+        {
+          "id": "rune-mysteries-walkthrough-3",
+          "rawText": "Talk to [[Aubury]] south of [[Varrock east bank]] in the [[Varrock rune shop]] and give him the [[research package]]. {{Chat option|1 I've been sent here with a package for you.}}",
+          "section": "Walkthrough",
+          "sourceOrder": 3,
+          "text": "Talk to Aubury south of Varrock east bank in the Varrock rune shop and give him the research package. 1 I've been sent here with a package for you."
+        },
+        {
+          "id": "rune-mysteries-walkthrough-4",
+          "rawText": "Take the [[Research notes (Rune Mysteries)|research notes]] back to Sedridor.",
+          "section": "Walkthrough",
+          "sourceOrder": 4,
+          "text": "Take the research notes back to Sedridor."
+        },
+        {
+          "id": "rune-mysteries-walkthrough-5",
+          "rawText": "'''Congratulations, quest complete!'''",
+          "section": "Walkthrough",
+          "sourceOrder": 5,
+          "text": "Congratulations, quest complete!"
+        }
+      ],
+      "questId": "Rune Mysteries",
+      "tasks": [
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [],
+          "description": "Talk to Duke Horacio",
+          "id": "t_7697",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Duke Horacio"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Rune Mysteries|~ 1",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_7697"
+          ],
+          "description": "Talk to Wizard Sedridor",
+          "id": "t_7698",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Archmage Sedridor"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Rune Mysteries|~ 2",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_7698"
+          ],
+          "description": "Talk to Aubury",
+          "id": "t_7699",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Aubury"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Rune Mysteries|~ 3",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_7699"
+          ],
+          "description": "Talk to Wizard Sedridor",
+          "id": "t_7700",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Archmage Sedridor"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Rune Mysteries|~ 4",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": true,
+          "dependsOn": [
+            "t_7700"
+          ],
+          "id": "t_7701",
+          "items": [],
+          "namedAreas": [
+            "Wizards' Tower#Basement"
+          ],
+          "npcs": [],
+          "objects": [],
+          "questPoints": 1,
+          "rewards": [
+            "Air talisman"
+          ],
+          "skills": {},
+          "sourceId": "~|Rune Mysteries|~ Complete the quest",
+          "xpRewards": {}
+        }
+      ],
+      "wikiRevision": 15205463,
+      "wikiRevisionTimestamp": "2026-05-03T11:22:42Z",
+      "wikiTitle": "Rune Mysteries/Quick guide",
+      "wikiUrl": "https://oldschool.runescape.wiki/w/Rune_Mysteries/Quick_guide?oldid=15205463"
     }
   ],
   "schemaVersion": 1,

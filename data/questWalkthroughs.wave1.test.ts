@@ -345,3 +345,151 @@ describe('Wave 1 The Restless Ghost RuneProof pack', () => {
     ]);
   });
 });
+
+describe('Wave 1 Rune Mysteries RuneProof pack', () => {
+  it('keeps the exact five-action reviewed Rune Mysteries journey', () => {
+    expect(actionSummary('Rune Mysteries')).toEqual([
+      ['rune-mysteries:start-with-duke', '50,50', 'Ask Duke Horacio in Lumbridge Castle for a quest and take the air talisman.'],
+      ['rune-mysteries:take-talisman-to-sedridor', '48,49', "Give the air talisman to Archmage Sedridor in the Wizards' Tower basement."],
+      ['rune-mysteries:take-package-to-aubury', '50,53', "Take Sedridor's research package to Aubury in the Varrock rune shop."],
+      ['rune-mysteries:return-notes-to-sedridor', '48,49', "Return Aubury's research notes to Sedridor in the Wizards' Tower basement."],
+      ['rune-mysteries:complete', '48,49', 'Rune Mysteries complete.'],
+    ]);
+  });
+
+  it('preserves every selected line, direct task edge, reviewed alias, and quest-provided hand-off', () => {
+    const strategy = strategyFor('Rune Mysteries');
+
+    expect(strategy.source).toMatchObject({
+      wikiRevision: '15205463',
+      wikiUrl: 'https://oldschool.runescape.wiki/w/Rune_Mysteries/Quick_guide?oldid=15205463',
+    });
+    expect(Object.fromEntries(strategy.actions.map(action => [action.id, action.rawWikiLineIds]))).toEqual({
+      'rune-mysteries:start-with-duke': ['rune-mysteries-walkthrough-1'],
+      'rune-mysteries:take-talisman-to-sedridor': ['rune-mysteries-walkthrough-2'],
+      'rune-mysteries:take-package-to-aubury': ['rune-mysteries-walkthrough-3'],
+      'rune-mysteries:return-notes-to-sedridor': ['rune-mysteries-walkthrough-4'],
+      'rune-mysteries:complete': ['rune-mysteries-walkthrough-5'],
+    });
+    expect(strategy.actions.flatMap(action => action.rawWikiLineIds).sort())
+      .toEqual(strategy.sourceLines.map(line => line.id).sort());
+    expect(strategy.actions.map(action => ({
+      id: action.id,
+      sourceOrder: action.sourceOrder,
+      task: action.chunkPickerTaskId,
+      dependsOn: action.dependsOn,
+      location: action.location.kind === 'REVIEWED_ALIAS'
+        ? { alias: action.location.alias, chunks: action.location.chunks }
+        : action.location,
+    }))).toEqual([
+      {
+        id: 'rune-mysteries:start-with-duke',
+        sourceOrder: 1,
+        task: 't_7697',
+        dependsOn: [],
+        location: { alias: 'Lumbridge Castle', chunks: ['50,50'] },
+      },
+      {
+        id: 'rune-mysteries:take-talisman-to-sedridor',
+        sourceOrder: 2,
+        task: 't_7698',
+        dependsOn: ['rune-mysteries:start-with-duke'],
+        location: { alias: "Wizards' Tower basement", chunks: ['48,49'] },
+      },
+      {
+        id: 'rune-mysteries:take-package-to-aubury',
+        sourceOrder: 3,
+        task: 't_7699',
+        dependsOn: ['rune-mysteries:take-talisman-to-sedridor'],
+        location: { alias: "Aubury's rune shop", chunks: ['50,53'] },
+      },
+      {
+        id: 'rune-mysteries:return-notes-to-sedridor',
+        sourceOrder: 4,
+        task: 't_7700',
+        dependsOn: ['rune-mysteries:take-package-to-aubury'],
+        location: { alias: "Wizards' Tower basement", chunks: ['48,49'] },
+      },
+      {
+        id: 'rune-mysteries:complete',
+        sourceOrder: 5,
+        task: 't_7701',
+        dependsOn: ['rune-mysteries:return-notes-to-sedridor'],
+        location: { alias: "Wizards' Tower basement", chunks: ['48,49'] },
+      },
+    ]);
+    expect(strategy.actions.map(action => ({
+      id: action.id,
+      items: action.items,
+      consumes: action.coach.consumes,
+      fulfils: action.coach.fulfils,
+      completion: action.coach.completion,
+      fallbackPolicy: action.coach.fallbackPolicy,
+    }))).toEqual([
+      {
+        id: 'rune-mysteries:start-with-duke',
+        items: [],
+        consumes: [],
+        fulfils: [{
+          item: { key: 'air talisman', name: 'Air talisman' },
+          quantity: 1,
+          supplyPolicy: 'QUEST_PROVIDED',
+        }],
+        completion: { kind: 'MANUAL' },
+        fallbackPolicy: 'NONE',
+      },
+      {
+        id: 'rune-mysteries:take-talisman-to-sedridor',
+        items: [],
+        consumes: [{
+          item: { key: 'air talisman', name: 'Air talisman' },
+          quantity: 1,
+          supplyPolicy: 'QUEST_PROVIDED',
+        }],
+        fulfils: [{
+          item: { key: 'research package', name: 'Research package' },
+          quantity: 1,
+          supplyPolicy: 'QUEST_PROVIDED',
+        }],
+        completion: { kind: 'MANUAL' },
+        fallbackPolicy: 'NONE',
+      },
+      {
+        id: 'rune-mysteries:take-package-to-aubury',
+        items: [],
+        consumes: [{
+          item: { key: 'research package', name: 'Research package' },
+          quantity: 1,
+          supplyPolicy: 'QUEST_PROVIDED',
+        }],
+        fulfils: [{
+          item: { key: 'research notes', name: 'Research notes' },
+          quantity: 1,
+          supplyPolicy: 'QUEST_PROVIDED',
+        }],
+        completion: { kind: 'MANUAL' },
+        fallbackPolicy: 'NONE',
+      },
+      {
+        id: 'rune-mysteries:return-notes-to-sedridor',
+        items: [],
+        consumes: [{
+          item: { key: 'research notes', name: 'Research notes' },
+          quantity: 1,
+          supplyPolicy: 'QUEST_PROVIDED',
+        }],
+        fulfils: [],
+        completion: { kind: 'MANUAL' },
+        fallbackPolicy: 'NONE',
+      },
+      {
+        id: 'rune-mysteries:complete',
+        items: [],
+        consumes: [],
+        fulfils: [],
+        completion: { kind: 'QUEST_COMPLETED', questId: 'Rune Mysteries' },
+        fallbackPolicy: 'NONE',
+      },
+    ]);
+  });
+});

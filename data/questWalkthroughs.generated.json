@@ -3015,6 +3015,314 @@
           "sourceOrder": 6
         }
       ]
+    },
+    {
+      "actions": [
+        {
+          "chunkPickerTaskId": "t_7697",
+          "coach": {
+            "completion": {
+              "kind": "MANUAL"
+            },
+            "consumes": [],
+            "fallbackPolicy": "NONE",
+            "fulfils": [
+              {
+                "item": {
+                  "key": "air talisman",
+                  "name": "Air talisman"
+                },
+                "quantity": 1,
+                "supplyPolicy": "QUEST_PROVIDED"
+              }
+            ]
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [],
+          "displayText": "Ask Duke Horacio in Lumbridge Castle for a quest and take the air talisman.",
+          "entities": [
+            {
+              "kind": "npc",
+              "name": "Duke Horacio"
+            }
+          ],
+          "gates": [],
+          "id": "rune-mysteries:start-with-duke",
+          "items": [],
+          "kind": "TALK_TO",
+          "location": {
+            "alias": "Lumbridge Castle",
+            "chunks": [
+              "50,50"
+            ],
+            "evidence": "Selected Wiki quick-guide revision 15205463 source line rune-mysteries-walkthrough-1 directs speaking to Duke Horacio in Lumbridge Castle and records the air talisman; pinned Chunk Picker task t_7697 identifies Duke Horacio at the reviewed Lumbridge Castle chunk.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Use the reviewed Lumbridge Castle chunk at 50,50 for Duke Horacio without claiming an exact tile.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [
+            "rune-mysteries-walkthrough-1"
+          ],
+          "section": "QUEST",
+          "sourceOrder": 1
+        },
+        {
+          "chunkPickerTaskId": "t_7698",
+          "coach": {
+            "completion": {
+              "kind": "MANUAL"
+            },
+            "consumes": [
+              {
+                "item": {
+                  "key": "air talisman",
+                  "name": "Air talisman"
+                },
+                "quantity": 1,
+                "supplyPolicy": "QUEST_PROVIDED"
+              }
+            ],
+            "fallbackPolicy": "NONE",
+            "fulfils": [
+              {
+                "item": {
+                  "key": "research package",
+                  "name": "Research package"
+                },
+                "quantity": 1,
+                "supplyPolicy": "QUEST_PROVIDED"
+              }
+            ]
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [
+            "rune-mysteries:start-with-duke"
+          ],
+          "displayText": "Give the air talisman to Archmage Sedridor in the Wizards' Tower basement.",
+          "entities": [
+            {
+              "kind": "npc",
+              "name": "Archmage Sedridor"
+            }
+          ],
+          "gates": [],
+          "id": "rune-mysteries:take-talisman-to-sedridor",
+          "items": [],
+          "kind": "TALK_TO",
+          "location": {
+            "alias": "Wizards' Tower basement",
+            "chunks": [
+              "48,49"
+            ],
+            "evidence": "Selected Wiki quick-guide revision 15205463 source line rune-mysteries-walkthrough-2 directs giving the air talisman to Archmage Sedridor in the Wizards' Tower basement; pinned Chunk Picker task t_7698 identifies Sedridor at the reviewed tower access chunk.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Use the reviewed Wizards' Tower basement chunk at 48,49 without claiming an exact tile.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [
+            "rune-mysteries-walkthrough-2"
+          ],
+          "section": "QUEST",
+          "sourceOrder": 2
+        },
+        {
+          "chunkPickerTaskId": "t_7699",
+          "coach": {
+            "completion": {
+              "kind": "MANUAL"
+            },
+            "consumes": [
+              {
+                "item": {
+                  "key": "research package",
+                  "name": "Research package"
+                },
+                "quantity": 1,
+                "supplyPolicy": "QUEST_PROVIDED"
+              }
+            ],
+            "fallbackPolicy": "NONE",
+            "fulfils": [
+              {
+                "item": {
+                  "key": "research notes",
+                  "name": "Research notes"
+                },
+                "quantity": 1,
+                "supplyPolicy": "QUEST_PROVIDED"
+              }
+            ]
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [
+            "rune-mysteries:take-talisman-to-sedridor"
+          ],
+          "displayText": "Take Sedridor's research package to Aubury in the Varrock rune shop.",
+          "entities": [
+            {
+              "kind": "npc",
+              "name": "Aubury"
+            }
+          ],
+          "gates": [],
+          "id": "rune-mysteries:take-package-to-aubury",
+          "items": [],
+          "kind": "TALK_TO",
+          "location": {
+            "alias": "Aubury's rune shop",
+            "chunks": [
+              "50,53"
+            ],
+            "evidence": "Selected Wiki quick-guide revision 15205463 source line rune-mysteries-walkthrough-3 directs taking the research package to Aubury in the Varrock rune shop; pinned Chunk Picker task t_7699 identifies Aubury at the reviewed rune-shop chunk.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Use the reviewed Aubury rune-shop chunk at 50,53 without claiming an exact tile.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [
+            "rune-mysteries-walkthrough-3"
+          ],
+          "section": "QUEST",
+          "sourceOrder": 3
+        },
+        {
+          "chunkPickerTaskId": "t_7700",
+          "coach": {
+            "completion": {
+              "kind": "MANUAL"
+            },
+            "consumes": [
+              {
+                "item": {
+                  "key": "research notes",
+                  "name": "Research notes"
+                },
+                "quantity": 1,
+                "supplyPolicy": "QUEST_PROVIDED"
+              }
+            ],
+            "fallbackPolicy": "NONE",
+            "fulfils": []
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [
+            "rune-mysteries:take-package-to-aubury"
+          ],
+          "displayText": "Return Aubury's research notes to Sedridor in the Wizards' Tower basement.",
+          "entities": [
+            {
+              "kind": "npc",
+              "name": "Archmage Sedridor"
+            }
+          ],
+          "gates": [],
+          "id": "rune-mysteries:return-notes-to-sedridor",
+          "items": [],
+          "kind": "TALK_TO",
+          "location": {
+            "alias": "Wizards' Tower basement",
+            "chunks": [
+              "48,49"
+            ],
+            "evidence": "Selected Wiki quick-guide revision 15205463 source line rune-mysteries-walkthrough-4 directs returning the research notes to Sedridor; pinned Chunk Picker task t_7700 identifies Sedridor at the reviewed tower access chunk.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Use the reviewed Wizards' Tower basement chunk at 48,49 without claiming an exact tile.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [
+            "rune-mysteries-walkthrough-4"
+          ],
+          "section": "QUEST",
+          "sourceOrder": 4
+        },
+        {
+          "chunkPickerTaskId": "t_7701",
+          "coach": {
+            "completion": {
+              "kind": "QUEST_COMPLETED",
+              "questId": "Rune Mysteries"
+            },
+            "consumes": [],
+            "fallbackPolicy": "NONE",
+            "fulfils": []
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [
+            "rune-mysteries:return-notes-to-sedridor"
+          ],
+          "displayText": "Rune Mysteries complete.",
+          "entities": [],
+          "gates": [],
+          "id": "rune-mysteries:complete",
+          "items": [],
+          "kind": "INFORMATION",
+          "location": {
+            "alias": "Wizards' Tower basement",
+            "chunks": [
+              "48,49"
+            ],
+            "evidence": "Selected Wiki quick-guide revision 15205463 source line rune-mysteries-walkthrough-5 records quest completion; pinned Chunk Picker terminal task t_7701 follows Sedridor's final hand-off at the reviewed tower access chunk.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Keep the final confirmation at the reviewed Wizards' Tower basement chunk 48,49 without claiming an exact tile.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [
+            "rune-mysteries-walkthrough-5"
+          ],
+          "section": "QUEST",
+          "sourceOrder": 5
+        }
+      ],
+      "questId": "Rune Mysteries",
+      "releaseStatus": "PREVIEW_ONLY",
+      "revision": "5307348d9dab40a1801d78b06660af566112223a339dfa017f4a43306149bd5f",
+      "source": {
+        "chunkPickerCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
+        "chunkPickerLicenceStatus": "UNVERIFIED",
+        "chunkPickerRepository": "source-chunk/chunk-picker-v2",
+        "wikiLicence": "CC BY-NC-SA 3.0",
+        "wikiLicenceUrl": "https://creativecommons.org/licenses/by-nc-sa/3.0/",
+        "wikiRevision": "15205463",
+        "wikiRevisionTimestamp": "2026-05-03T11:22:42Z",
+        "wikiTitle": "Rune Mysteries/Quick guide",
+        "wikiUrl": "https://oldschool.runescape.wiki/w/Rune_Mysteries/Quick_guide?oldid=15205463"
+      },
+      "sourceLines": [
+        {
+          "id": "rune-mysteries-walkthrough-1",
+          "rawText": "Ask [[Duke Horacio]] in Lumbridge Castle for a quest and he'll give you an [[air talisman]]. {{Chat option|1 Have you any quests for me?|1 Yes.}}",
+          "section": "Walkthrough",
+          "sourceOrder": 1
+        },
+        {
+          "id": "rune-mysteries-walkthrough-2",
+          "rawText": "Talk to [[Archmage Sedridor]] in the [[Wizards' Tower]] basement and give him the [[air talisman]]. {{Chat option|1 Okay, here you are.|2 Actually, I'm not interested.|1 Yes, certainly.}}",
+          "section": "Walkthrough",
+          "sourceOrder": 2
+        },
+        {
+          "id": "rune-mysteries-walkthrough-3",
+          "rawText": "Talk to [[Aubury]] south of [[Varrock east bank]] in the [[Varrock rune shop]] and give him the [[research package]]. {{Chat option|1 I've been sent here with a package for you.}}",
+          "section": "Walkthrough",
+          "sourceOrder": 3
+        },
+        {
+          "id": "rune-mysteries-walkthrough-4",
+          "rawText": "Take the [[Research notes (Rune Mysteries)|research notes]] back to Sedridor.",
+          "section": "Walkthrough",
+          "sourceOrder": 4
+        },
+        {
+          "id": "rune-mysteries-walkthrough-5",
+          "rawText": "'''Congratulations, quest complete!'''",
+          "section": "Walkthrough",
+          "sourceOrder": 5
+        }
+      ]
     }
   ]
 }

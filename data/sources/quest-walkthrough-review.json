@@ -1869,6 +1869,266 @@
         "sourceOrder": 26
       }
     ],
+    "Rune Mysteries": [
+      {
+        "chunkPickerTaskId": "t_7697",
+        "confidence": "REVIEWED",
+        "dependsOn": [],
+        "displayText": "Ask Duke Horacio in Lumbridge Castle for a quest and take the air talisman.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Duke Horacio"
+          }
+        ],
+        "gates": [],
+        "id": "rune-mysteries:start-with-duke",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "alias": "Lumbridge Castle",
+          "chunks": [
+            "50,50"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 15205463 source line rune-mysteries-walkthrough-1 directs speaking to Duke Horacio in Lumbridge Castle and records the air talisman; pinned Chunk Picker task t_7697 identifies Duke Horacio at the reviewed Lumbridge Castle chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use the reviewed Lumbridge Castle chunk at 50,50 for Duke Horacio without claiming an exact tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "rune-mysteries-walkthrough-1"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 1,
+        "coach": {
+          "consumes": [],
+          "fulfils": [
+            {
+              "item": {
+                "key": "air talisman",
+                "name": "Air talisman"
+              },
+              "quantity": 1,
+              "supplyPolicy": "QUEST_PROVIDED"
+            }
+          ],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      },
+      {
+        "chunkPickerTaskId": "t_7698",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "rune-mysteries:start-with-duke"
+        ],
+        "displayText": "Give the air talisman to Archmage Sedridor in the Wizards' Tower basement.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Archmage Sedridor"
+          }
+        ],
+        "gates": [],
+        "id": "rune-mysteries:take-talisman-to-sedridor",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "alias": "Wizards' Tower basement",
+          "chunks": [
+            "48,49"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 15205463 source line rune-mysteries-walkthrough-2 directs giving the air talisman to Archmage Sedridor in the Wizards' Tower basement; pinned Chunk Picker task t_7698 identifies Sedridor at the reviewed tower access chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use the reviewed Wizards' Tower basement chunk at 48,49 without claiming an exact tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "rune-mysteries-walkthrough-2"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 2,
+        "coach": {
+          "consumes": [
+            {
+              "item": {
+                "key": "air talisman",
+                "name": "Air talisman"
+              },
+              "quantity": 1,
+              "supplyPolicy": "QUEST_PROVIDED"
+            }
+          ],
+          "fulfils": [
+            {
+              "item": {
+                "key": "research package",
+                "name": "Research package"
+              },
+              "quantity": 1,
+              "supplyPolicy": "QUEST_PROVIDED"
+            }
+          ],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      },
+      {
+        "chunkPickerTaskId": "t_7699",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "rune-mysteries:take-talisman-to-sedridor"
+        ],
+        "displayText": "Take Sedridor's research package to Aubury in the Varrock rune shop.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Aubury"
+          }
+        ],
+        "gates": [],
+        "id": "rune-mysteries:take-package-to-aubury",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "alias": "Aubury's rune shop",
+          "chunks": [
+            "50,53"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 15205463 source line rune-mysteries-walkthrough-3 directs taking the research package to Aubury in the Varrock rune shop; pinned Chunk Picker task t_7699 identifies Aubury at the reviewed rune-shop chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use the reviewed Aubury rune-shop chunk at 50,53 without claiming an exact tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "rune-mysteries-walkthrough-3"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 3,
+        "coach": {
+          "consumes": [
+            {
+              "item": {
+                "key": "research package",
+                "name": "Research package"
+              },
+              "quantity": 1,
+              "supplyPolicy": "QUEST_PROVIDED"
+            }
+          ],
+          "fulfils": [
+            {
+              "item": {
+                "key": "research notes",
+                "name": "Research notes"
+              },
+              "quantity": 1,
+              "supplyPolicy": "QUEST_PROVIDED"
+            }
+          ],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      },
+      {
+        "chunkPickerTaskId": "t_7700",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "rune-mysteries:take-package-to-aubury"
+        ],
+        "displayText": "Return Aubury's research notes to Sedridor in the Wizards' Tower basement.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Archmage Sedridor"
+          }
+        ],
+        "gates": [],
+        "id": "rune-mysteries:return-notes-to-sedridor",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "alias": "Wizards' Tower basement",
+          "chunks": [
+            "48,49"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 15205463 source line rune-mysteries-walkthrough-4 directs returning the research notes to Sedridor; pinned Chunk Picker task t_7700 identifies Sedridor at the reviewed tower access chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use the reviewed Wizards' Tower basement chunk at 48,49 without claiming an exact tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "rune-mysteries-walkthrough-4"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 4,
+        "coach": {
+          "consumes": [
+            {
+              "item": {
+                "key": "research notes",
+                "name": "Research notes"
+              },
+              "quantity": 1,
+              "supplyPolicy": "QUEST_PROVIDED"
+            }
+          ],
+          "fulfils": [],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      },
+      {
+        "chunkPickerTaskId": "t_7701",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "rune-mysteries:return-notes-to-sedridor"
+        ],
+        "displayText": "Rune Mysteries complete.",
+        "entities": [],
+        "gates": [],
+        "id": "rune-mysteries:complete",
+        "items": [],
+        "kind": "INFORMATION",
+        "location": {
+          "alias": "Wizards' Tower basement",
+          "chunks": [
+            "48,49"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 15205463 source line rune-mysteries-walkthrough-5 records quest completion; pinned Chunk Picker terminal task t_7701 follows Sedridor's final hand-off at the reviewed tower access chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Keep the final confirmation at the reviewed Wizards' Tower basement chunk 48,49 without claiming an exact tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "rune-mysteries-walkthrough-5"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 5,
+        "coach": {
+          "consumes": [],
+          "fulfils": [],
+          "completion": {
+            "kind": "QUEST_COMPLETED",
+            "questId": "Rune Mysteries"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      }
+    ],
     "Sheep Shearer": [
       {
         "chunkPickerTaskId": "t_7702",
@@ -2504,6 +2764,12 @@
       "questId": "The Restless Ghost",
       "reviewedAt": "2026-08-21",
       "wikiRevision": "15070492"
+    },
+    "Rune Mysteries": {
+      "items": [],
+      "questId": "Rune Mysteries",
+      "reviewedAt": "2026-08-21",
+      "wikiRevision": "15205463"
     }
   },
   "schemaVersion": 1,
@@ -2574,6 +2840,13 @@
       "elemental-workshop-i-repairing-the-workshop-21": "d1f3a0d903a0e6d30690d44603173504c6e01a7020d74684b4f51ce6ac2d364a",
       "elemental-workshop-i-repairing-the-workshop-8": "6282016358313d2f47913b8ab844c2a79baeda4c3921103162f5fe36175e9f90",
       "elemental-workshop-i-repairing-the-workshop-9": "a4a2754b9a10f7033420b65ede3256be6ec68e700c84d3f144036cfb63f3cedf"
+    },
+    "Rune Mysteries": {
+      "rune-mysteries-walkthrough-1": "f4e4e437329899424bd39ad6554915e3556ab8e621693e4396a43d407e4cb524",
+      "rune-mysteries-walkthrough-2": "b4e8eca8351f697dc810742f022991ae406133c21d3c61ca430a49f4e2e60e0b",
+      "rune-mysteries-walkthrough-3": "aacde975bb7b048deaccdcf541711ef322f26783fc7fe07437d3981464df297a",
+      "rune-mysteries-walkthrough-4": "7dee1d1c696f418e87a336c31bb5e8fe35ebc39c36d83892895d723ed32674c6",
+      "rune-mysteries-walkthrough-5": "6d2503378aa176db9c80e5e69af2d18829fb81808b2f4f88ad5dfee6ea753207"
     },
     "Sheep Shearer": {
       "sheep-shearer-if-you-already-have-the-20-unnoted-balls-of-wool-1": "e691fa413614c71900eb9d2b691fae203dd566edccdfa55a47f6eb0d7e11d24e",

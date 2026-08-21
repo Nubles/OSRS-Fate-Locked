@@ -35,6 +35,11 @@ const RELEASES: readonly QuestWalkthroughRelease[] = [
     revision: '10713567065dfb8118da8fa8bcd91413bad41070d9f42d3bed46666e756b1c7a',
     releaseStatus: 'PREVIEW_ONLY',
   },
+  {
+    questId: 'Rune Mysteries',
+    revision: '5307348d9dab40a1801d78b06660af566112223a339dfa017f4a43306149bd5f',
+    releaseStatus: 'PREVIEW_ONLY',
+  },
 ];
 
 const releaseByQuestId = new Map(RELEASES.map(release => [release.questId, release]));

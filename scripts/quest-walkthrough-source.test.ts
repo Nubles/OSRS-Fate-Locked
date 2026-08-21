@@ -501,6 +501,11 @@ const CLI_TASK_MAPPINGS = {
   "~|Elemental Workshop I|~ Crafting skill requirement": 't_1425',
   "~|Elemental Workshop I|~ Mining skill requirement": 't_2768',
   "~|Elemental Workshop I|~ Smithing skill requirement": 't_3465',
+  "~|Rune Mysteries|~ 1": 't_7697',
+  "~|Rune Mysteries|~ 2": 't_7698',
+  "~|Rune Mysteries|~ 3": 't_7699',
+  "~|Rune Mysteries|~ 4": 't_7700',
+  "~|Rune Mysteries|~ Complete the quest": 't_7701',
   "~|The Restless Ghost|~ 1": 't_7683',
   "~|The Restless Ghost|~ 2": 't_7684',
   "~|The Restless Ghost|~ 3": 't_7685',
@@ -516,10 +521,11 @@ const EXPECTED_REVIEW_TASK_IDS = {
   'Elemental Workshop I': ['t_8157', 't_8158', 't_8159', 't_8160', 't_8161', 't_8162'],
   'Sheep Shearer': ['t_7702', 't_7703', 't_7704'],
   'The Restless Ghost': ['t_7683', 't_7684', 't_7685', 't_7686', 't_7687', 't_7688'],
+  'Rune Mysteries': ['t_7697', 't_7698', 't_7699', 't_7700', 't_7701'],
 } as const;
 
 describe('same-commit review task provenance', () => {
-  it('pins the exact 34 quest task IDs to the committed task map', () => {
+  it('pins the exact 39 quest task IDs to the committed task map', () => {
     expect(pinnedWalkthroughSource.chunkPicker.commit).toBe('ba2fcebf8b26c84c74f8d9ab328a0ede802be926');
     expect(pinnedWalkthroughSource.chunkPicker.tasksMapSha256).toBe(
       'f740b7194189f1a3ef81515ca4d4872caf91a6516a93bdf64c5d43c93d33bd8a',

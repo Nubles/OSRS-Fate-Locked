@@ -232,6 +232,12 @@ const restlessStrategy = (): QuestStrategyDefinition => {
   return strategy;
 };
 
+const runeMysteriesStrategy = (): QuestStrategyDefinition => {
+  const strategy = questStrategyFor('Rune Mysteries');
+  if (!strategy) throw new Error('Rune Mysteries strategy fixture did not load.');
+  return strategy;
+};
+
 const emptyAnalysisFor = (
   strategy: QuestStrategyDefinition,
 ): QuestPreparationRouteAnalysis => ({
@@ -349,6 +355,47 @@ const analysisWithOutOfOrderFlourFallbacks = (
 };
 
 describe('buildRuneProofCoachModel', () => {
+  it('keeps Rune Mysteries hand-offs manual until the final quest confirmation', () => {
+    const strategy = runeMysteriesStrategy();
+    const beforeFinalConfirmation = buildRuneProofCoachModel({
+      strategy,
+      analysis: emptyAnalysisFor(strategy),
+      confirmedActionIds: new Set([
+        'rune-mysteries:start-with-duke',
+        'rune-mysteries:take-talisman-to-sedridor',
+        'rune-mysteries:take-package-to-aubury',
+        'rune-mysteries:return-notes-to-sedridor',
+      ]),
+      confirmedItemKeys: new Set(),
+      completedQuestIds: new Set(),
+    });
+
+    expect(beforeFinalConfirmation.progress).toEqual({ completed: 4, total: 5 });
+    expect(beforeFinalConfirmation.nextAction).toMatchObject({
+      id: 'rune-mysteries:complete',
+      state: 'NEEDS_CONFIRMATION',
+      confirmationAllowed: true,
+      confirmationLabel: 'Confirm quest complete',
+    });
+
+    const afterFinalConfirmation = buildRuneProofCoachModel({
+      strategy,
+      analysis: emptyAnalysisFor(strategy),
+      confirmedActionIds: new Set([
+        'rune-mysteries:start-with-duke',
+        'rune-mysteries:take-talisman-to-sedridor',
+        'rune-mysteries:take-package-to-aubury',
+        'rune-mysteries:return-notes-to-sedridor',
+        'rune-mysteries:complete',
+      ]),
+      confirmedItemKeys: new Set(),
+      completedQuestIds: new Set(),
+    });
+
+    expect(afterFinalConfirmation.progress).toEqual({ completed: 5, total: 5 });
+    expect(afterFinalConfirmation.nextAction).toBeUndefined();
+  });
+
   it('blocks the Restless Ghost skull step by chunk without requiring a skeleton kill', () => {
     const strategy = restlessStrategy();
     const model = buildRuneProofCoachModel({

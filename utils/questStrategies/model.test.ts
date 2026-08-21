@@ -352,6 +352,8 @@ describe('preview strategy boundary', () => {
     };
     const release = questWalkthroughReleaseFor("Cook's Assistant")!;
     const sheepRelease = questWalkthroughReleaseFor('Sheep Shearer')!;
+    const restlessRelease = questWalkthroughReleaseFor('The Restless Ghost')!;
+    const runeMysteriesRelease = questWalkthroughReleaseFor('Rune Mysteries')!;
 
     expect(boundary.questStrategyFor).toBeTypeOf('function');
     expect(loader.loadQuestStrategyFor).toBeTypeOf('function');
@@ -360,10 +362,14 @@ describe('preview strategy boundary', () => {
     expect(boundary.questStrategyCatalogue?.map(strategy => strategy.questId)).toEqual([
       "Cook's Assistant",
       'Sheep Shearer',
+      'The Restless Ghost',
+      'Rune Mysteries',
     ]);
     expect(Object.isFrozen(boundary.questStrategyCatalogue)).toBe(true);
     expect(boundary.questStrategyFor?.("Cook's Assistant")?.revision).toBe(release.revision);
     expect(boundary.questStrategyFor?.('Sheep Shearer')?.revision).toBe(sheepRelease.revision);
+    expect(boundary.questStrategyFor?.('The Restless Ghost')?.revision).toBe(restlessRelease.revision);
+    expect(boundary.questStrategyFor?.('Rune Mysteries')?.revision).toBe(runeMysteriesRelease.revision);
     expect(boundary.questStrategyFor?.("Daddy's Home")).toBeUndefined();
     await expect(loader.loadQuestStrategyFor!('OFF', release)).resolves.toBeUndefined();
     await expect(loader.loadQuestStrategyFor!('PREVIEW', release)).resolves.toMatchObject({
@@ -373,6 +379,14 @@ describe('preview strategy boundary', () => {
     await expect(loader.loadQuestStrategyFor!('PREVIEW', sheepRelease)).resolves.toMatchObject({
       questId: sheepRelease.questId,
       revision: sheepRelease.revision,
+    });
+    await expect(loader.loadQuestStrategyFor!('PREVIEW', restlessRelease)).resolves.toMatchObject({
+      questId: restlessRelease.questId,
+      revision: restlessRelease.revision,
+    });
+    await expect(loader.loadQuestStrategyFor!('PREVIEW', runeMysteriesRelease)).resolves.toMatchObject({
+      questId: runeMysteriesRelease.questId,
+      revision: runeMysteriesRelease.revision,
     });
     await expect(loader.loadQuestStrategyFor!('PREVIEW', {
       ...release,
