@@ -18,7 +18,7 @@ Record the commit, local URL, browser, and exact QA-state identifiers without pa
 
 | Field | Value |
 |---|---|
-| Commit | `7639ac1f7c52db1665175b74f321ee01b9370569` |
+| Commit | `0ff88fed1aea5f07edd1a9fd7b33e523b6e838ae` |
 | Normal-build URL | `http://127.0.0.1:4174/` |
 | Preview-build URL | `http://127.0.0.1:4175/` |
 | Browser/version | Codex in-app Browser (Chromium; browser runtime `26.818.21641`) |
@@ -65,7 +65,7 @@ For each scenario, mark `PASS` or `FAIL`, record the build and QA state used, an
 - The current card exposes `Show on map` and `Mark action complete`; timeline rows do not duplicate these controls. The current card and all nine route rows visibly show their reviewed `Chunk x,y` label.
 - Evidence/result (capture the fresh next-action view): **Codex supporting review PASS.** Fresh import opened Cook's Assistant at `0/9 complete` with one `Do now` card for `Talk to the Cook in Lumbridge Castle.` Screenshot: `C:\Users\alexa\.codex\visualizations\2026\08\20\01a01f71-5756-78e1-9440-0f7a4df332f9\runeproof-cooks-assistant\fresh-coach-final.jpg`. Alex's PASS/FAIL boxes remain intentionally blank.
 
-### 3. Manual progression advances one step and survives reload
+### 3. Manual progression and final RuneProof completion survive reload
 
 - [ ] PASS  [ ] FAIL
 - Starting from the Fresh state, use only `Mark action complete` for each current manual action.
@@ -73,7 +73,10 @@ For each scenario, mark `PASS` or `FAIL`, record the build and QA state used, an
 - Confirming the pot advances exactly once to `Pick up the bucket from the Lumbridge Castle cellar.`; confirming the bucket advances exactly once to the milk action.
 - Continue the same check when `Pick grain outside Mill Lane Mill.` and `Return to the Cook with the bucket of milk, egg, and pot of flour.` become current.
 - After each manual confirmation, reload the page, reopen `RuneProof`, and verify that the same next action and completed count return. A confirmation must not change canonical quest completion, unlock unrelated actions, or advance two steps.
-- Evidence/result: **Codex supporting review PASS.** The coach advanced one action per confirmation through the manual route, and reload/remount checks restored the same completed count and next action from the run-scoped preview store without changing canonical quest completion. Alex's PASS/FAIL boxes remain intentionally blank.
+- After the return step, the final current card must show `Cook's Assistant complete.`, `8/9 complete`, and the distinct button `Confirm quest complete`.
+- Select `Confirm quest complete`. RuneProof must show `9/9 complete` and `All reviewed actions are complete.` Reload, reopen RuneProof, and verify that 9/9 returns.
+- This final RuneProof confirmation must not complete the Journal quest, change the key count, or trigger any reward roll.
+- Evidence/result: **Codex supporting review PASS.** The coach advanced one action per confirmation through the manual route. The live private preview showed `Confirm quest complete` at 8/9, reached 9/9, and restored 9/9 after reload from the run-scoped preview store. The Journal remained `0/210 done` and the key count remained `3` before and after confirmation. Alex's PASS/FAIL boxes remain intentionally blank.
 
 ### 4. Ingredient confirmation closes the relevant prerequisite chain
 
