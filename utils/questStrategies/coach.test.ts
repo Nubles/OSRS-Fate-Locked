@@ -542,6 +542,31 @@ describe('buildRuneProofCoachModel', () => {
       .not.toBe('COMPLETED');
   });
 
+  it('allows only ready independent Imp bead confirmations out of order', () => {
+    const model = buildImpCoach();
+
+    expect(model.actions.map(action => [action.id, action.confirmationAllowed])).toEqual([
+      ['imp-catcher:get-black-bead', true],
+      ['imp-catcher:get-red-bead', true],
+      ['imp-catcher:get-white-bead', true],
+      ['imp-catcher:get-yellow-bead', true],
+      ['imp-catcher:give-beads-to-mizgog', false],
+      ['imp-catcher:complete', false],
+    ]);
+  });
+
+  it('withholds Imp bead confirmation when their reviewed chunk is locked', () => {
+    const strategy = impStrategy();
+    const model = buildImpCoach({ analysis: impAnalysisFor(strategy, true) });
+
+    expect(model.actions.slice(0, 4).map(action => action.confirmationAllowed)).toEqual([
+      false,
+      false,
+      false,
+      false,
+    ]);
+  });
+
   it('keeps the locked south-Falador bead card primary before exposing other legal Imp sources', () => {
     const strategy = impStrategy();
     const model = buildImpCoach({ analysis: impAnalysisFor(strategy, true) });

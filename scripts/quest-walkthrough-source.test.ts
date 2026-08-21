@@ -894,6 +894,35 @@ describe('walkthrough maintenance CLI', () => {
     expect(() => validateReviewAgreement(pinnedWalkthroughSource, review))
       .toThrow(/covered both as an omitted prerequisite and an action/i);
   });
+
+  it('rejects an omitted prerequisite whose declared successor is not the pinned graph successor', async () => {
+    const review = structuredClone(reviewedWalkthroughReview) as any;
+    review.taskCoverageExceptions['Imp Catcher'][0].successorTaskIds = ['t_7652'];
+
+    const { validateReviewAgreement } = await import('./sync-quest-walkthroughs.mjs');
+    expect(() => validateReviewAgreement(pinnedWalkthroughSource, review))
+      .toThrow(/omitted prerequisite t_7650 successor tasks do not match the pinned graph/i);
+  });
+
+  it('rejects a non-root task as an omitted prerequisite', async () => {
+    const review = structuredClone(reviewedWalkthroughReview) as any;
+    review.taskCoverageExceptions['Imp Catcher'][0].taskId = 't_7651';
+    review.taskCoverageExceptions['Imp Catcher'][0].successorTaskIds = ['t_7652'];
+    review.quests['Imp Catcher'].find((action: { id: string }) => action.id === 'imp-catcher:give-beads-to-mizgog').chunkPickerTaskId = undefined;
+
+    const { validateReviewAgreement } = await import('./sync-quest-walkthroughs.mjs');
+    expect(() => validateReviewAgreement(pinnedWalkthroughSource, review))
+      .toThrow(/omitted prerequisite t_7651 must not depend on another task/i);
+  });
+
+  it('rejects Imp Catcher when the Mizgog hand-off no longer covers t_7651', async () => {
+    const review = structuredClone(reviewedWalkthroughReview) as any;
+    review.quests['Imp Catcher'].find((action: { id: string }) => action.id === 'imp-catcher:give-beads-to-mizgog').chunkPickerTaskId = undefined;
+
+    const { validateReviewAgreement } = await import('./sync-quest-walkthroughs.mjs');
+    expect(() => validateReviewAgreement(pinnedWalkthroughSource, review))
+      .toThrow(/review does not cover every pinned task/i);
+  });
 });
 describe('quick-guide parser regression coverage', () => {
   it('stops at non-walkthrough footer sections and fully normalizes nested templates', () => {

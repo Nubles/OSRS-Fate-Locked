@@ -212,6 +212,18 @@ const stateFor = (
   return 'DO_NOW';
 };
 
+const confirmationAllowedFor = (
+  action: StrategyAction,
+  completed: ReadonlySet<string>,
+  blockers: readonly KnownBlocker[],
+  isPrimary: boolean,
+): boolean => {
+  if (completed.has(action.id) || blockers.length > 0) return false;
+  if (!action.dependsOn.every(dependencyId => completed.has(dependencyId))) return false;
+  if (isPrimary) return true;
+  return action.coach.completion.kind === 'ITEM_CONFIRMED';
+};
+
 const mutableFallbackRoute = (route: DeepReadonly<ItemRoute>): ItemRoute => ({
   ...route,
   item: { ...route.item },
@@ -373,9 +385,10 @@ export function buildRuneProofCoachModel(input: RuneProofCoachInput): RuneProofC
 
   const actions = ordered.map((action): RuneProofCoachAction => {
     const evaluatedAction = evaluatedById.get(action.id);
+    const isPrimary = action.id === primaryActionId;
     const state = completed.has(action.id)
       ? 'COMPLETED'
-      : stateFor(action.id === primaryActionId, evaluatedAction);
+      : stateFor(isPrimary, evaluatedAction);
     const blockers = directBlockersFor(evaluatedAction);
 
     return {
@@ -388,10 +401,7 @@ export function buildRuneProofCoachModel(input: RuneProofCoachInput): RuneProofC
         ? blockerTextFor(blockers[0], action)
         : undefined,
       preferredMethodLabel: preferredMethodLabelFor(action),
-      confirmationAllowed: action.coach.completion.kind === 'MANUAL'
-        || action.coach.completion.kind === 'ITEM_CONFIRMED'
-        || action.coach.completion.kind === 'QUEST_COMPLETED'
-        || state === 'NEEDS_CONFIRMATION',
+      confirmationAllowed: confirmationAllowedFor(action, completed, blockers, isPrimary),
       confirmationLabel: action.coach.completion.kind === 'QUEST_COMPLETED'
         ? 'Confirm quest complete'
         : undefined,

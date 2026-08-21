@@ -173,10 +173,12 @@ const TimelineAction = ({
   action,
   index,
   isCurrent,
+  onConfirmAction,
 }: {
   readonly action: RuneProofCoachAction;
   readonly index: number;
   readonly isCurrent: boolean;
+  readonly onConfirmAction: RuneProofCoachProps['onConfirmAction'];
 }) => (
   <li className="min-w-0 rounded-md border border-white/10 bg-[#1b1b1b]">
     <details open={isCurrent}>
@@ -201,6 +203,15 @@ const TimelineAction = ({
         {action.locationLabel ? <p>Location: {action.locationLabel}</p> : null}
         {action.preferredMethodLabel ? <p>Reviewed method: {action.preferredMethodLabel}</p> : null}
         {action.blockerText ? <p className="text-amber-100">{action.blockerText}</p> : null}
+        {!isCurrent && action.confirmationAllowed ? (
+          <button
+            type="button"
+            onClick={() => onConfirmAction(action.id)}
+            className="rounded border border-white/15 bg-white/10 px-2.5 py-1.5 text-[11px] font-semibold text-gray-100 transition-colors hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+          >
+            {action.confirmationLabel ?? 'Mark action complete'}
+          </button>
+        ) : null}
         {isCurrent ? <p>Use the next action above to map or confirm this step.</p> : null}
       </div>
     </details>
@@ -358,6 +369,7 @@ export function RuneProofCoach({
               action={action}
               index={index}
               isCurrent={action.id === currentActionId}
+              onConfirmAction={onConfirmAction}
             />
           ))}
         </ol>

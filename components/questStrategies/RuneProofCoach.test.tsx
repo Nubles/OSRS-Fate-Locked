@@ -2,9 +2,13 @@
 
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { questStrategyFor } from '../../data/questWalkthroughs.preview-boundary';
 import type { ChunkKey } from '../../utils/questRoutes/model';
-import type { RuneProofCoachModel } from '../../utils/questStrategies/coach';
+import type { QuestPreparationRouteAnalysis } from '../../utils/questRoutes/analyzeQuest';
+import { buildRuneProofCoachModel, type RuneProofCoachModel } from '../../utils/questStrategies/coach';
+import type { QuestStrategyDefinition } from '../../utils/questStrategies/model';
 import { RuneProofCoach } from './RuneProofCoach';
 
 afterEach(cleanup);
@@ -32,6 +36,53 @@ const proof: RuneProofCoachModel['proof'] = {
 };
 
 const potInstruction = 'Pick up the empty pot beside the Cook in Lumbridge Castle.';
+
+const impStrategy = (): QuestStrategyDefinition => {
+  const strategy = questStrategyFor('Imp Catcher');
+  if (!strategy) throw new Error('Imp Catcher strategy fixture did not load.');
+  return strategy;
+};
+
+const impAnalysisFor = (strategy: QuestStrategyDefinition): QuestPreparationRouteAnalysis => ({
+  questId: strategy.questId,
+  status: 'READY_NOW',
+  items: [],
+  generatedFrom: {
+    chunkDataVersion: 1,
+    questRevision: strategy.source.wikiRevision,
+    accountFingerprint: 'runeproof-coach-ui-test-account',
+  },
+});
+
+const ImpCatcherYellowFirstHarness = ({
+  onPersistItem,
+}: {
+  readonly onPersistItem: (questId: string, itemKey: string, confirmed: boolean) => void;
+}) => {
+  const strategy = impStrategy();
+  const [confirmedItemKeys, setConfirmedItemKeys] = useState<ReadonlySet<string>>(() => new Set());
+  const model = buildRuneProofCoachModel({
+    strategy,
+    analysis: impAnalysisFor(strategy),
+    confirmedActionIds: new Set(),
+    confirmedItemKeys,
+    completedQuestIds: new Set(),
+  });
+
+  return (
+    <RuneProofCoach
+      model={model}
+      onConfirmAction={actionId => {
+        const action = strategy.actions.find(candidate => candidate.id === actionId);
+        if (!action || action.coach.completion.kind !== 'ITEM_CONFIRMED') return;
+
+        const itemKey = action.coach.completion.itemKey;
+        onPersistItem(strategy.questId, itemKey, true);
+        setConfirmedItemKeys(keys => new Set([...keys, itemKey]));
+      }}
+    />
+  );
+};
 
 // This is intentionally a post-start model: visible-hierarchy assertions for
 // the pot belong after cooks-assistant:start-quest is complete.
@@ -311,6 +362,32 @@ describe('RuneProofCoach', () => {
     await user.click(screen.getByRole('button', { name: 'Mark action complete' }));
 
     expect(onConfirmAction).toHaveBeenCalledWith('cooks-assistant:start-quest');
+  });
+
+  it('persists a yellow-first Imp Catcher confirmation from the route without enabling the dependent hand-off', async () => {
+    const user = userEvent.setup();
+    const onPersistItem = vi.fn();
+    render(<ImpCatcherYellowFirstHarness onPersistItem={onPersistItem} />);
+
+    const route = screen.getByRole('list', { name: 'Imp Catcher route' });
+    const yellowInstruction = 'Kill imps south-east of Falador until you obtain a yellow bead.';
+    const yellowRow = within(route).getByText(yellowInstruction).closest('li');
+    if (!yellowRow) throw new Error('Missing yellow-bead route row.');
+
+    await user.click(within(yellowRow).getByText(yellowInstruction));
+    await user.click(within(yellowRow).getByRole('button', { name: 'Mark action complete' }));
+
+    expect(onPersistItem).toHaveBeenCalledWith('Imp Catcher', 'yellow bead', true);
+    expect((screen.getByRole('progressbar', { name: 'Imp Catcher progress' }) as HTMLProgressElement).value)
+      .toBe(1);
+    expect(within(yellowRow).getByText('Completed')).toBeTruthy();
+
+    const mizgogInstruction = "Take all four beads to Wizard Mizgog on the top floor of the Wizards' Tower.";
+    const mizgogRow = within(route).getByText(mizgogInstruction).closest('li');
+    if (!mizgogRow) throw new Error('Missing Mizgog route row.');
+
+    await user.click(within(mizgogRow).getByText(mizgogInstruction));
+    expect(within(mizgogRow).queryByRole('button', { name: 'Mark action complete' })).toBeNull();
   });
 
   it('scopes objective, next-action, and route labels to each coach instance', () => {
