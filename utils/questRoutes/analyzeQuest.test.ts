@@ -15,6 +15,7 @@ import type { UnlockState } from '../../types';
 import { questRouteStatusForItems } from './questRouteStatus';
 import {
   analyzeQuest as analyzeQuestWithWalkthrough,
+  analyzeQuestPreparation,
   combineQuestRouteStatus,
   clearQuestRouteAnalysisCache,
   type QuestRouteAnalysisSnapshot,
@@ -292,6 +293,31 @@ describe('analyzeQuest', () => {
       'Saw',
       'Waxwood logs',
     ]);
+  });
+
+  it.each(['The Restless Ghost', 'Rune Mysteries'] as const)(
+    'returns an empty item analysis for the reviewed %s root',
+    (questId) => {
+      expect(() => analyzeQuestPreparation(questId, fixture())).not.toThrow();
+      expect(analyzeQuestPreparation(questId, fixture()).items).toEqual([]);
+    },
+  );
+
+  it('keeps Imp Catcher bead requirements ordered while enumerating generic Imp drop routes', () => {
+    const analysis = analyzeQuestPreparation('Imp Catcher', materializeGeneratedSnapshot(
+      'Imp Catcher',
+      ['20,47'],
+    ));
+
+    expect(analysis.items.map(entry => entry.requirement.item.key)).toEqual([
+      'black bead',
+      'red bead',
+      'white bead',
+      'yellow bead',
+    ]);
+    expect(analysis.items.every(entry => entry.currentRoutes.some(route => route.sourceLabel === 'Imp')))
+      .toBe(true);
+    expect(analysis.items.map(entry => entry.requirement.item.key)).not.toContain('imp');
   });
 
   it('keeps incomplete, obtainable, and blocked sibling analyses together', () => {

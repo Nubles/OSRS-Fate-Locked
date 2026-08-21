@@ -76,6 +76,38 @@ describe('reviewed quest item requirements', () => {
     ]));
   });
 
+  it('records the reviewed Wave 1 root requirements in source order', () => {
+    expect(reviewedQuestRequirements('Sheep Shearer')).toMatchObject({
+      wikiRevision: '15271780',
+      reviewedAt: '2026-08-21',
+      items: [{
+        item: { key: 'ball of wool', name: 'Ball of wool' },
+        quantity: 20,
+        supplyPolicy: 'PLAYER_OBTAINED',
+      }],
+    });
+    expect(reviewedQuestRequirements('The Restless Ghost')?.items).toEqual([]);
+    expect(reviewedQuestRequirements('Rune Mysteries')?.items).toEqual([]);
+    expect(reviewedQuestRequirements('Imp Catcher')?.items).toEqual([
+      expect.objectContaining({ item: { key: 'black bead', name: 'Black bead' }, quantity: 1 }),
+      expect.objectContaining({ item: { key: 'red bead', name: 'Red bead' }, quantity: 1 }),
+      expect.objectContaining({ item: { key: 'white bead', name: 'White bead' }, quantity: 1 }),
+      expect.objectContaining({ item: { key: 'yellow bead', name: 'Yellow bead' }, quantity: 1 }),
+    ]);
+    expect(reviewedQuestRequirements('The Restless Ghost')).toMatchObject({
+      wikiRevision: '15268042',
+      reviewedAt: '2026-08-21',
+    });
+    expect(reviewedQuestRequirements('Rune Mysteries')).toMatchObject({
+      wikiRevision: '15275863',
+      reviewedAt: '2026-08-21',
+    });
+    expect(reviewedQuestRequirements('Imp Catcher')).toMatchObject({
+      wikiRevision: '15266902',
+      reviewedAt: '2026-08-21',
+    });
+  });
+
   it('validates every reviewed requirement at the catalogue boundary', () => {
     expect(() => validateReviewedQuestCatalogue()).not.toThrow();
   });

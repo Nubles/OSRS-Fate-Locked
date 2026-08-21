@@ -46,6 +46,32 @@ describe('reviewed RuneProof recipe catalogue', () => {
     expect(recipesFor('plank').some((recipe) => recipe.output.key === 'oak plank')).toBe(false);
   });
 
+  it('records the deterministic Sheep Shearer item chain with exact stations and tools', () => {
+    expect(recipesFor('wool')).toContainEqual(expect.objectContaining({
+      id: 'shear-sheep',
+      kind: 'GATHER',
+      outputQuantity: 1,
+      tools: [expect.objectContaining({
+        item: { key: 'shears', name: 'Shears' },
+        consumed: false,
+      })],
+      stations: [{ entityKind: 'npc', names: ['Sheep'] }],
+      deterministic: true,
+      sourceRevision: '15271780',
+    }));
+    expect(recipesFor('ball of wool')).toContainEqual(expect.objectContaining({
+      id: 'spin-wool',
+      kind: 'RECIPE',
+      outputQuantity: 1,
+      ingredients: [{ item: { key: 'wool', name: 'Wool' }, quantity: 1 }],
+      stations: [{ entityKind: 'object', names: ['Spinning wheel'] }],
+      deterministic: true,
+      sourceRevision: '15271780',
+    }));
+    expect(transformationCoverageFor('wool')).toBe('COMPLETE');
+    expect(transformationCoverageFor('ball of wool')).toBe('COMPLETE');
+  });
+
   it('records only the reviewed pilot acquisition rules with pinned sources', () => {
     expect(routeRecipes.map((recipe) => ({
       id: recipe.id,
@@ -57,6 +83,8 @@ describe('reviewed RuneProof recipe catalogue', () => {
       { id: 'pick-wheat', kind: 'GATHER', output: 'grain', revision: '15183493' },
       { id: 'grain-to-flour', kind: 'RECIPE', output: 'pot of flour', revision: '15183493' },
       { id: 'milk-cow', kind: 'GATHER', output: 'bucket of milk', revision: '15281482' },
+      { id: 'shear-sheep', kind: 'GATHER', output: 'wool', revision: '15271780' },
+      { id: 'spin-wool', kind: 'RECIPE', output: 'ball of wool', revision: '15271780' },
       { id: 'mine-clay', kind: 'GATHER', output: 'clay', revision: '15209138' },
       { id: 'mine-copper', kind: 'GATHER', output: 'copper ore', revision: '15209140' },
       { id: 'mine-iron', kind: 'GATHER', output: 'iron ore', revision: '15281625' },

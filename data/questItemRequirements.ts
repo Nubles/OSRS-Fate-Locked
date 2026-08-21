@@ -97,6 +97,37 @@ const REVIEWED_QUESTS: Record<string, ReviewedQuestRequirements> = {
       { item: item('leather', 'Leather'), quantity: 1, supplyPolicy: 'QUEST_PROVIDED' },
     ],
   },
+  'Sheep Shearer': {
+    questId: 'Sheep Shearer',
+    wikiRevision: '15271780',
+    reviewedAt: '2026-08-21',
+    items: [
+      { item: item('ball of wool', 'Ball of wool'), quantity: 20, supplyPolicy: 'PLAYER_OBTAINED' },
+    ],
+  },
+  'The Restless Ghost': {
+    questId: 'The Restless Ghost',
+    wikiRevision: '15268042',
+    reviewedAt: '2026-08-21',
+    items: [],
+  },
+  'Rune Mysteries': {
+    questId: 'Rune Mysteries',
+    wikiRevision: '15275863',
+    reviewedAt: '2026-08-21',
+    items: [],
+  },
+  'Imp Catcher': {
+    questId: 'Imp Catcher',
+    wikiRevision: '15266902',
+    reviewedAt: '2026-08-21',
+    items: [
+      { item: item('black bead', 'Black bead'), quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' },
+      { item: item('red bead', 'Red bead'), quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' },
+      { item: item('white bead', 'White bead'), quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' },
+      { item: item('yellow bead', 'Yellow bead'), quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' },
+    ],
+  },
 };
 
 export const reviewedQuestRequirements = (
@@ -113,7 +144,6 @@ export const validateReviewedQuestCatalogue = (): void => {
     if (!quest.wikiRevision.trim()) throw new Error(`catalogue wiki revision must not be blank: ${questId}`);
     if (!/^\d{8}$/.test(quest.wikiRevision)) throw new Error(`catalogue wiki revision must be pinned: ${questId}`);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(quest.reviewedAt)) throw new Error(`catalogue reviewed date is invalid: ${questId}`);
-    if (!quest.items.length) throw new Error(`catalogue quest has no items: ${questId}`);
     quest.items.forEach(validateQuestRequirement);
   });
 };
