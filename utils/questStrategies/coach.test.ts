@@ -266,6 +266,9 @@ const emptyAnalysisFor = (
 const impAnalysisFor = (
   strategy: QuestStrategyDefinition,
   southFaladorLocked = false,
+  blackBeadCurrentRoutes: readonly ItemRoute[] = [
+    routeAt('other-legal-imp-source', 'Black bead', 'Other legal Imps', 'DROP', '50,50'),
+  ],
 ): QuestRouteAnalysis => {
   const actions = strategy.actions.map(action => {
     const chunks = actionChunks[action.id] ?? [];
@@ -295,9 +298,7 @@ const impAnalysisFor = (
     questId: strategy.questId,
     status: southFaladorLocked ? 'CANNOT_COMPLETE_YET' : 'READY_NOW',
     items: [
-      itemAnalysis('Black bead', [
-        routeAt('other-legal-imp-source', 'Black bead', 'Other legal Imps', 'DROP', '50,50'),
-      ]),
+      itemAnalysis('Black bead', blackBeadCurrentRoutes),
     ],
     generatedFrom: {
       chunkDataVersion: 1,
@@ -555,9 +556,31 @@ describe('buildRuneProofCoachModel', () => {
     ]);
   });
 
-  it('withholds Imp bead confirmation when their reviewed chunk is locked', () => {
+  it('permits only the matching Imp bead through an unlocked alternative when the reviewed chunk is locked', () => {
     const strategy = impStrategy();
     const model = buildImpCoach({ analysis: impAnalysisFor(strategy, true) });
+
+    expect(model.actions.map(action => action.confirmationAllowed)).toEqual([
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+    ]);
+  });
+
+  it('withholds a locked Imp bead when its matching alternative is still blocked', () => {
+    const strategy = impStrategy();
+    const model = buildImpCoach({ analysis: impAnalysisFor(strategy, true, [
+      routeAt('blocked-other-legal-imps', 'Black bead', 'Other legal Imps', 'DROP', '50,50', {
+        blockers: [{
+          type: 'QUEST',
+          questId: 'Priest in Peril',
+          label: 'Priest in Peril',
+        }],
+      }),
+    ]) });
 
     expect(model.actions.slice(0, 4).map(action => action.confirmationAllowed)).toEqual([
       false,

@@ -5,8 +5,8 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { questStrategyFor } from '../../data/questWalkthroughs.preview-boundary';
-import type { ChunkKey } from '../../utils/questRoutes/model';
-import type { QuestPreparationRouteAnalysis } from '../../utils/questRoutes/analyzeQuest';
+import type { ChunkKey, ItemRoute } from '../../utils/questRoutes/model';
+import type { QuestPreparationRouteAnalysis, QuestRouteAnalysis } from '../../utils/questRoutes/analyzeQuest';
 import { buildRuneProofCoachModel, type RuneProofCoachModel } from '../../utils/questStrategies/coach';
 import type { QuestStrategyDefinition } from '../../utils/questStrategies/model';
 import { RuneProofCoach } from './RuneProofCoach';
@@ -54,6 +54,86 @@ const impAnalysisFor = (strategy: QuestStrategyDefinition): QuestPreparationRout
   },
 });
 
+const unlockedBlackBeadAlternative = (): ItemRoute => ({
+  id: 'other-legal-imp-source',
+  item: { key: 'black bead', name: 'Black bead' },
+  outputQuantity: 1,
+  sourceKind: 'DROP',
+  sourceLabel: 'Other legal Imps',
+  chunks: ['50,50' as ChunkKey],
+  steps: [],
+  blockers: [],
+  deterministic: false,
+  probability: 0.25,
+  recursiveCost: 0,
+  consumedIngredientCost: 0,
+  skillUnlockCost: 0,
+  skillLevelCost: 0,
+  travelCost: 0,
+  hasDataGap: false,
+});
+
+const lockedImpAlternativeAnalysisFor = (
+  strategy: QuestStrategyDefinition,
+): QuestRouteAnalysis => {
+  const actions = strategy.actions.map(action => {
+    const chunks = action.mapChunks;
+    const blocked = chunks.includes('47,51' as ChunkKey);
+    return {
+      definition: action,
+      location: {
+        confidence: 'REVIEWED' as const,
+        evidenceKind: 'REVIEWED_ALIAS' as const,
+        chunks,
+        candidateChunks: [],
+        explanation: action.location.kind === 'REVIEWED_ALIAS'
+          ? action.location.alias
+          : chunks.join(', '),
+      },
+      state: blocked ? 'CHUNK_LOCKED' as const : 'READY_HERE' as const,
+      blockers: blocked ? [{
+        kind: 'CHUNK' as const,
+        chunk: '47,51' as ChunkKey,
+        label: action.displayText,
+      }] : [],
+      itemPreparation: [],
+    };
+  });
+
+  return {
+    questId: strategy.questId,
+    status: 'CANNOT_COMPLETE_YET',
+    items: [{
+      requirement: {
+        item: { key: 'black bead', name: 'Black bead' },
+        quantity: 1,
+        supplyPolicy: 'PLAYER_OBTAINED',
+      },
+      state: 'OBTAINABLE_NOW',
+      currentRoutes: [unlockedBlackBeadAlternative()],
+      missingChunkRoutes: [],
+      missingChunkOptions: [],
+      dataNotes: [],
+    }],
+    generatedFrom: {
+      chunkDataVersion: 1,
+      questRevision: strategy.source.wikiRevision,
+      walkthroughRevision: strategy.source.wikiRevision,
+      accountFingerprint: 'runeproof-coach-locked-alternative-ui-test-account',
+    },
+    walkthrough: {
+      questId: strategy.questId,
+      releaseStatus: 'PREVIEW_ONLY',
+      status: 'BLOCKED',
+      actions,
+      blockers: actions.flatMap(action => action.blockers),
+      hasIncompleteEvidence: false,
+      sourceLines: strategy.sourceLines,
+      source: strategy.source,
+    },
+  };
+};
+
 const ImpCatcherYellowFirstHarness = ({
   onPersistItem,
 }: {
@@ -64,6 +144,36 @@ const ImpCatcherYellowFirstHarness = ({
   const model = buildRuneProofCoachModel({
     strategy,
     analysis: impAnalysisFor(strategy),
+    confirmedActionIds: new Set(),
+    confirmedItemKeys,
+    completedQuestIds: new Set(),
+  });
+
+  return (
+    <RuneProofCoach
+      model={model}
+      onConfirmAction={actionId => {
+        const action = strategy.actions.find(candidate => candidate.id === actionId);
+        if (!action || action.coach.completion.kind !== 'ITEM_CONFIRMED') return;
+
+        const itemKey = action.coach.completion.itemKey;
+        onPersistItem(strategy.questId, itemKey, true);
+        setConfirmedItemKeys(keys => new Set([...keys, itemKey]));
+      }}
+    />
+  );
+};
+
+const ImpCatcherLockedAlternativeHarness = ({
+  onPersistItem,
+}: {
+  readonly onPersistItem: (questId: string, itemKey: string, confirmed: boolean) => void;
+}) => {
+  const strategy = impStrategy();
+  const [confirmedItemKeys, setConfirmedItemKeys] = useState<ReadonlySet<string>>(() => new Set());
+  const model = buildRuneProofCoachModel({
+    strategy,
+    analysis: lockedImpAlternativeAnalysisFor(strategy),
     confirmedActionIds: new Set(),
     confirmedItemKeys,
     completedQuestIds: new Set(),
@@ -400,6 +510,29 @@ describe('RuneProofCoach', () => {
 
     await user.click(within(mizgogRow).getByText(mizgogInstruction));
     expect(within(mizgogRow).queryByRole('button', { name: 'Mark action complete' })).toBeNull();
+  });
+
+  it('persists the black bead through an unlocked legal Imp alternative while the reviewed source stays blocked', async () => {
+    const user = userEvent.setup();
+    const onPersistItem = vi.fn();
+    render(<ImpCatcherLockedAlternativeHarness onPersistItem={onPersistItem} />);
+
+    const nextAction = screen.getByRole('heading', { name: 'Next action' }).closest('section');
+    if (!nextAction) throw new Error('Missing current Imp Catcher action section.');
+    const blocker = within(nextAction).getByRole('note');
+    const alternatives = screen.getByRole('button', { name: 'Other legal sources' });
+
+    expect(blocker.textContent).toContain('Unlock chunk 47,51 to use Imps south-east of Falador.');
+    expect(blocker.compareDocumentPosition(alternatives) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+
+    await user.click(alternatives);
+    expect(screen.getByText('Other legal Imps')).toBeTruthy();
+    await user.click(within(nextAction).getByRole('button', { name: 'Mark action complete' }));
+
+    expect(onPersistItem).toHaveBeenCalledWith('Imp Catcher', 'black bead', true);
+    expect((screen.getByRole('progressbar', { name: 'Imp Catcher progress' }) as HTMLProgressElement).value)
+      .toBe(1);
   });
 
   it('scopes objective, next-action, and route labels to each coach instance', () => {

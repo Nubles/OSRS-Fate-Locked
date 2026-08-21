@@ -212,13 +212,41 @@ const stateFor = (
   return 'DO_NOW';
 };
 
+const hasAvailableAlternativeFor = (
+  action: StrategyAction,
+  analysis: RuneProofRouteAnalysis,
+): boolean => {
+  if (
+    action.coach.completion.kind !== 'ITEM_CONFIRMED'
+    || action.coach.fallbackPolicy !== 'INTERCHANGEABLE'
+  ) return false;
+
+  const itemKey = action.coach.completion.itemKey;
+  const fulfilledQuantity = action.coach.fulfils
+    .filter(item => item.item.key === itemKey)
+    .reduce((total, item) => total + item.quantity, 0);
+  if (fulfilledQuantity <= 0) return false;
+
+  return analysis.items.some(item => (
+    item.requirement.item.key === itemKey
+    && item.requirement.supplyPolicy === 'PLAYER_OBTAINED'
+    && item.currentRoutes.some(route => (
+      route.item.key === itemKey
+      && route.outputQuantity >= fulfilledQuantity
+      && route.blockers.length === 0
+      && !route.hasDataGap
+    ))
+  ));
+};
+
 const confirmationAllowedFor = (
   action: StrategyAction,
   completed: ReadonlySet<string>,
   blockers: readonly KnownBlocker[],
   isPrimary: boolean,
+  hasAvailableAlternative: boolean,
 ): boolean => {
-  if (completed.has(action.id) || blockers.length > 0) return false;
+  if (completed.has(action.id) || (blockers.length > 0 && !hasAvailableAlternative)) return false;
   if (!action.dependsOn.every(dependencyId => completed.has(dependencyId))) return false;
   if (isPrimary) return true;
   return action.coach.completion.kind === 'ITEM_CONFIRMED';
@@ -390,6 +418,7 @@ export function buildRuneProofCoachModel(input: RuneProofCoachInput): RuneProofC
       ? 'COMPLETED'
       : stateFor(isPrimary, evaluatedAction);
     const blockers = directBlockersFor(evaluatedAction);
+    const hasAvailableAlternative = hasAvailableAlternativeFor(action, input.analysis);
 
     return {
       id: action.id,
@@ -401,7 +430,13 @@ export function buildRuneProofCoachModel(input: RuneProofCoachInput): RuneProofC
         ? blockerTextFor(blockers[0], action)
         : undefined,
       preferredMethodLabel: preferredMethodLabelFor(action),
-      confirmationAllowed: confirmationAllowedFor(action, completed, blockers, isPrimary),
+      confirmationAllowed: confirmationAllowedFor(
+        action,
+        completed,
+        blockers,
+        isPrimary,
+        hasAvailableAlternative,
+      ),
       confirmationLabel: action.coach.completion.kind === 'QUEST_COMPLETED'
         ? 'Confirm quest complete'
         : undefined,
