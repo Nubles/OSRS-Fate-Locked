@@ -2653,6 +2653,368 @@
           "sourceOrder": 11
         }
       ]
+    },
+    {
+      "actions": [
+        {
+          "chunkPickerTaskId": "t_7683",
+          "coach": {
+            "completion": {
+              "kind": "MANUAL"
+            },
+            "consumes": [],
+            "fallbackPolicy": "NONE",
+            "fulfils": []
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [],
+          "displayText": "Talk to Father Aereck in Lumbridge church to start the quest.",
+          "entities": [
+            {
+              "kind": "npc",
+              "name": "Father Aereck"
+            }
+          ],
+          "gates": [],
+          "id": "the-restless-ghost:start-with-aereck",
+          "items": [],
+          "kind": "TALK_TO",
+          "location": {
+            "alias": "Lumbridge church",
+            "chunks": [
+              "50,50"
+            ],
+            "evidence": "Selected Wiki quick-guide revision 15070492 has no standalone Father Aereck line; pinned Chunk Picker task t_7683 identifies Father Aereck, and the pinned Restless Ghost route audit anchors the Lumbridge start area at 50,50.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "The start is a task-graph-only reviewed action because the selected quick guide has no separate start line; use the reviewed Lumbridge church chunk without claiming an exact tile.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [],
+          "section": "QUEST",
+          "sourceOrder": 1
+        },
+        {
+          "chunkPickerTaskId": "t_7684",
+          "coach": {
+            "completion": {
+              "kind": "MANUAL"
+            },
+            "consumes": [],
+            "fallbackPolicy": "NONE",
+            "fulfils": [
+              {
+                "item": {
+                  "key": "ghostspeak amulet",
+                  "name": "Ghostspeak amulet"
+                },
+                "quantity": 1,
+                "supplyPolicy": "QUEST_PROVIDED"
+              }
+            ]
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [
+            "the-restless-ghost:start-with-aereck"
+          ],
+          "displayText": "Talk to Father Urhney in the western Lumbridge Swamp and take the ghostspeak amulet.",
+          "entities": [
+            {
+              "kind": "npc",
+              "name": "Father Urhney"
+            }
+          ],
+          "gates": [],
+          "id": "the-restless-ghost:get-amulet",
+          "items": [],
+          "kind": "TALK_TO",
+          "location": {
+            "alias": "Father Urhney's house",
+            "chunks": [
+              "49,49"
+            ],
+            "evidence": "Selected Wiki quick-guide revision 15070492 source line the-restless-ghost-getting-started-1 directs the hut west of Lumbridge Swamp; pinned Chunk Picker task t_7684 identifies Father Urhney, and the pinned Restless Ghost route audit anchors West Lumbridge Swamp at 49,49.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Use the reviewed house chunk for Father Urhney without claiming an exact tile.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [
+            "the-restless-ghost-getting-started-1"
+          ],
+          "section": "QUEST",
+          "sourceOrder": 2
+        },
+        {
+          "chunkPickerTaskId": "t_7685",
+          "coach": {
+            "completion": {
+              "kind": "MANUAL"
+            },
+            "consumes": [],
+            "fallbackPolicy": "NONE",
+            "fulfils": []
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [
+            "the-restless-ghost:get-amulet"
+          ],
+          "displayText": "Equip the ghostspeak amulet and talk to the ghost in Lumbridge graveyard.",
+          "entities": [
+            {
+              "kind": "npc",
+              "name": "Restless ghost"
+            }
+          ],
+          "gates": [],
+          "id": "the-restless-ghost:talk-to-ghost",
+          "items": [
+            {
+              "item": {
+                "key": "ghostspeak amulet",
+                "name": "Ghostspeak amulet"
+              },
+              "quantity": 1,
+              "supplyPolicy": "QUEST_PROVIDED"
+            }
+          ],
+          "kind": "TALK_TO",
+          "location": {
+            "alias": "Lumbridge graveyard",
+            "chunks": [
+              "50,49"
+            ],
+            "evidence": "Selected Wiki quick-guide revision 15070492 source lines the-restless-ghost-ghostspeak-amulet-2 and the-restless-ghost-ghostspeak-amulet-3 place the coffin and ghostspeak interaction in the graveyard; pinned Chunk Picker task t_7685 identifies the restless ghost and task t_7687 anchors the coffin interaction at 50,49.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Use the reviewed graveyard chunk for the coffin and ghost interaction without claiming an exact tile.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [
+            "the-restless-ghost-ghostspeak-amulet-2",
+            "the-restless-ghost-ghostspeak-amulet-3"
+          ],
+          "section": "QUEST",
+          "sourceOrder": 3
+        },
+        {
+          "chunkPickerTaskId": "t_7686",
+          "coach": {
+            "completion": {
+              "kind": "MANUAL"
+            },
+            "consumes": [],
+            "fallbackPolicy": "NONE",
+            "fulfils": [
+              {
+                "item": {
+                  "key": "ghost's skull",
+                  "name": "Ghost's skull"
+                },
+                "quantity": 1,
+                "supplyPolicy": "QUEST_PROVIDED"
+              }
+            ]
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [
+            "the-restless-ghost:talk-to-ghost"
+          ],
+          "displayText": "Search the altar in the Wizards' Tower basement for the ghost's skull, then leave without fighting the skeleton.",
+          "entities": [],
+          "gates": [],
+          "id": "the-restless-ghost:take-skull",
+          "items": [],
+          "kind": "INTERACT_OBJECT",
+          "location": {
+            "alias": "Wizards' Tower",
+            "chunks": [
+              "48,49"
+            ],
+            "evidence": "Selected Wiki quick-guide revision 15070492 source line the-restless-ghost-the-skull-4 says the altar grants the skull and the level 13 skeleton may be left; pinned Chunk Picker task t_7686 names the Wizards' Tower basement, and pinned location evidence records Wizards' Tower at 48,49.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Use the reviewed tower access chunk for the basement altar without inferring an interior tile or a kill requirement.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [
+            "the-restless-ghost-the-skull-4"
+          ],
+          "section": "QUEST",
+          "sourceOrder": 4
+        },
+        {
+          "coach": {
+            "completion": {
+              "kind": "MANUAL"
+            },
+            "consumes": [],
+            "fallbackPolicy": "NONE",
+            "fulfils": []
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [
+            "the-restless-ghost:take-skull"
+          ],
+          "displayText": "Return to the restless ghost with its skull.",
+          "entities": [],
+          "gates": [],
+          "id": "the-restless-ghost:return-to-ghost",
+          "items": [],
+          "kind": "TRAVEL",
+          "location": {
+            "alias": "Lumbridge graveyard",
+            "chunks": [
+              "50,49"
+            ],
+            "evidence": "Selected Wiki quick-guide revision 15070492 has no standalone return line: its combined source line the-restless-ghost-the-skull-5 is assigned once to use-skull; pinned Chunk Picker task t_7687 anchors the coffin interaction at 50,49.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Split the zero-source-line return travel from the combined next skull-use instruction, preserving direct task dependency and location evidence while avoiding duplicate imported lines.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [],
+          "section": "QUEST",
+          "sourceOrder": 5
+        },
+        {
+          "chunkPickerTaskId": "t_7687",
+          "coach": {
+            "completion": {
+              "kind": "MANUAL"
+            },
+            "consumes": [
+              {
+                "item": {
+                  "key": "ghost's skull",
+                  "name": "Ghost's skull"
+                },
+                "quantity": 1,
+                "supplyPolicy": "QUEST_PROVIDED"
+              }
+            ],
+            "fallbackPolicy": "NONE",
+            "fulfils": []
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [
+            "the-restless-ghost:return-to-ghost",
+            "the-restless-ghost:take-skull"
+          ],
+          "displayText": "Use the ghost's skull on the coffin in Lumbridge graveyard.",
+          "entities": [],
+          "gates": [],
+          "id": "the-restless-ghost:use-skull",
+          "items": [],
+          "kind": "USE_ITEM",
+          "location": {
+            "alias": "Lumbridge graveyard",
+            "chunks": [
+              "50,49"
+            ],
+            "evidence": "Selected Wiki quick-guide revision 15070492 source line the-restless-ghost-the-skull-5 directs using the skull on the open coffin; pinned Chunk Picker task t_7687 records that coffin use at 50,49.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Use the reviewed graveyard chunk for the terminal skull interaction without claiming an exact coffin tile.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [
+            "the-restless-ghost-the-skull-5"
+          ],
+          "section": "QUEST",
+          "sourceOrder": 6
+        },
+        {
+          "chunkPickerTaskId": "t_7688",
+          "coach": {
+            "completion": {
+              "kind": "QUEST_COMPLETED",
+              "questId": "The Restless Ghost"
+            },
+            "consumes": [],
+            "fallbackPolicy": "NONE",
+            "fulfils": []
+          },
+          "confidence": "REVIEWED",
+          "dependsOn": [
+            "the-restless-ghost:use-skull"
+          ],
+          "displayText": "The Restless Ghost complete.",
+          "entities": [],
+          "gates": [],
+          "id": "the-restless-ghost:complete",
+          "items": [],
+          "kind": "INFORMATION",
+          "location": {
+            "alias": "Lumbridge graveyard",
+            "chunks": [
+              "50,49"
+            ],
+            "evidence": "Selected Wiki quick-guide revision 15070492 source line the-restless-ghost-the-skull-6 records quest completion; pinned Chunk Picker terminal task t_7688 follows the coffin interaction at 50,49.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Keep the final confirmation at the reviewed graveyard chunk without claiming an exact tile.",
+            "reviewedAt": "2026-08-21",
+            "reviewer": "OpenAI Codex"
+          },
+          "rawWikiLineIds": [
+            "the-restless-ghost-the-skull-6"
+          ],
+          "section": "QUEST",
+          "sourceOrder": 7
+        }
+      ],
+      "questId": "The Restless Ghost",
+      "releaseStatus": "PREVIEW_ONLY",
+      "revision": "10713567065dfb8118da8fa8bcd91413bad41070d9f42d3bed46666e756b1c7a",
+      "source": {
+        "chunkPickerCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
+        "chunkPickerLicenceStatus": "UNVERIFIED",
+        "chunkPickerRepository": "source-chunk/chunk-picker-v2",
+        "wikiLicence": "CC BY-NC-SA 3.0",
+        "wikiLicenceUrl": "https://creativecommons.org/licenses/by-nc-sa/3.0/",
+        "wikiRevision": "15070492",
+        "wikiRevisionTimestamp": "2025-11-28T02:58:15Z",
+        "wikiTitle": "The Restless Ghost/Quick guide",
+        "wikiUrl": "https://oldschool.runescape.wiki/w/The_Restless_Ghost/Quick_guide?oldid=15070492"
+      },
+      "sourceLines": [
+        {
+          "id": "the-restless-ghost-getting-started-1",
+          "rawText": "Go through the [[Lumbridge Graveyard|graveyard's]] southern exit and head to the hut west of [[Lumbridge Swamp]].}}",
+          "section": "Getting started",
+          "sourceOrder": 1
+        },
+        {
+          "id": "the-restless-ghost-ghostspeak-amulet-2",
+          "rawText": "Head to the small room in the Lumbridge graveyard south of the church.",
+          "section": "Ghostspeak amulet",
+          "sourceOrder": 2
+        },
+        {
+          "id": "the-restless-ghost-ghostspeak-amulet-3",
+          "rawText": "Equip the [[Ghostspeak amulet]] and click the coffin, talk to the ghost. {{Chat option|1 Yep, now tell me what the problem is.}}}}",
+          "section": "Ghostspeak amulet",
+          "sourceOrder": 3
+        },
+        {
+          "id": "the-restless-ghost-the-skull-4",
+          "rawText": "Search the altar, and you will receive a [[ghost's skull]]. A level 13 [[Skeleton (The Restless Ghost)|skeleton]] will appear, you don't have to kill it, just leave.",
+          "section": "The skull",
+          "sourceOrder": 4
+        },
+        {
+          "id": "the-restless-ghost-the-skull-5",
+          "rawText": "Go back to the graveyard and use the skull on the coffin with it open.",
+          "section": "The skull",
+          "sourceOrder": 5
+        },
+        {
+          "id": "the-restless-ghost-the-skull-6",
+          "rawText": "'''Congratulations, quest complete!'''}}",
+          "section": "The skull",
+          "sourceOrder": 6
+        }
+      ]
     }
   ]
 }

@@ -178,3 +178,170 @@ describe('Wave 1 Sheep Shearer RuneProof pack', () => {
       .map(action => action.id)).toEqual(['sheep-shearer:complete']);
   });
 });
+
+describe('Wave 1 The Restless Ghost RuneProof pack', () => {
+  it('keeps the exact seven-action reviewed Restless Ghost journey', () => {
+    expect(actionSummary('The Restless Ghost')).toEqual([
+      ['the-restless-ghost:start-with-aereck', '50,50', 'Talk to Father Aereck in Lumbridge church to start the quest.'],
+      ['the-restless-ghost:get-amulet', '49,49', 'Talk to Father Urhney in the western Lumbridge Swamp and take the ghostspeak amulet.'],
+      ['the-restless-ghost:talk-to-ghost', '50,49', 'Equip the ghostspeak amulet and talk to the ghost in Lumbridge graveyard.'],
+      ['the-restless-ghost:take-skull', '48,49', "Search the altar in the Wizards' Tower basement for the ghost's skull, then leave without fighting the skeleton."],
+      ['the-restless-ghost:return-to-ghost', '50,49', 'Return to the restless ghost with its skull.'],
+      ['the-restless-ghost:use-skull', '50,49', "Use the ghost's skull on the coffin in Lumbridge graveyard."],
+      ['the-restless-ghost:complete', '50,49', 'The Restless Ghost complete.'],
+    ]);
+  });
+
+  it('preserves the selected source coverage, task edges, aliases, and quest-provided flow', () => {
+    const strategy = strategyFor('The Restless Ghost');
+
+    expect(strategy.source).toMatchObject({
+      wikiRevision: '15070492',
+      wikiUrl: 'https://oldschool.runescape.wiki/w/The_Restless_Ghost/Quick_guide?oldid=15070492',
+    });
+    expect(Object.fromEntries(strategy.actions.map(action => [action.id, action.rawWikiLineIds]))).toEqual({
+      'the-restless-ghost:start-with-aereck': [],
+      'the-restless-ghost:get-amulet': ['the-restless-ghost-getting-started-1'],
+      'the-restless-ghost:talk-to-ghost': [
+        'the-restless-ghost-ghostspeak-amulet-2',
+        'the-restless-ghost-ghostspeak-amulet-3',
+      ],
+      'the-restless-ghost:take-skull': ['the-restless-ghost-the-skull-4'],
+      'the-restless-ghost:return-to-ghost': [],
+      'the-restless-ghost:use-skull': ['the-restless-ghost-the-skull-5'],
+      'the-restless-ghost:complete': ['the-restless-ghost-the-skull-6'],
+    });
+    expect(strategy.actions.flatMap(action => action.rawWikiLineIds).sort())
+      .toEqual(strategy.sourceLines.map(line => line.id).sort());
+    expect(strategy.actions.map(action => ({
+      id: action.id,
+      sourceOrder: action.sourceOrder,
+      task: action.chunkPickerTaskId,
+      dependsOn: action.dependsOn,
+      location: action.location.kind === 'REVIEWED_ALIAS'
+        ? { alias: action.location.alias, chunks: action.location.chunks }
+        : action.location,
+    }))).toEqual([
+      {
+        id: 'the-restless-ghost:start-with-aereck',
+        sourceOrder: 1,
+        task: 't_7683',
+        dependsOn: [],
+        location: { alias: 'Lumbridge church', chunks: ['50,50'] },
+      },
+      {
+        id: 'the-restless-ghost:get-amulet',
+        sourceOrder: 2,
+        task: 't_7684',
+        dependsOn: ['the-restless-ghost:start-with-aereck'],
+        location: { alias: "Father Urhney's house", chunks: ['49,49'] },
+      },
+      {
+        id: 'the-restless-ghost:talk-to-ghost',
+        sourceOrder: 3,
+        task: 't_7685',
+        dependsOn: ['the-restless-ghost:get-amulet'],
+        location: { alias: 'Lumbridge graveyard', chunks: ['50,49'] },
+      },
+      {
+        id: 'the-restless-ghost:take-skull',
+        sourceOrder: 4,
+        task: 't_7686',
+        dependsOn: ['the-restless-ghost:talk-to-ghost'],
+        location: { alias: "Wizards' Tower", chunks: ['48,49'] },
+      },
+      {
+        id: 'the-restless-ghost:return-to-ghost',
+        sourceOrder: 5,
+        task: undefined,
+        dependsOn: ['the-restless-ghost:take-skull'],
+        location: { alias: 'Lumbridge graveyard', chunks: ['50,49'] },
+      },
+      {
+        id: 'the-restless-ghost:use-skull',
+        sourceOrder: 6,
+        task: 't_7687',
+        dependsOn: ['the-restless-ghost:return-to-ghost', 'the-restless-ghost:take-skull'],
+        location: { alias: 'Lumbridge graveyard', chunks: ['50,49'] },
+      },
+      {
+        id: 'the-restless-ghost:complete',
+        sourceOrder: 7,
+        task: 't_7688',
+        dependsOn: ['the-restless-ghost:use-skull'],
+        location: { alias: 'Lumbridge graveyard', chunks: ['50,49'] },
+      },
+    ]);
+    expect(strategy.actions.map(action => ({
+      id: action.id,
+      items: action.items,
+      consumes: action.coach.consumes,
+      fulfils: action.coach.fulfils,
+      completion: action.coach.completion,
+      fallbackPolicy: action.coach.fallbackPolicy,
+    }))).toEqual([
+      {
+        id: 'the-restless-ghost:start-with-aereck',
+        items: [], consumes: [], fulfils: [], completion: { kind: 'MANUAL' }, fallbackPolicy: 'NONE',
+      },
+      {
+        id: 'the-restless-ghost:get-amulet',
+        items: [],
+        consumes: [],
+        fulfils: [{
+          item: { key: 'ghostspeak amulet', name: 'Ghostspeak amulet' },
+          quantity: 1,
+          supplyPolicy: 'QUEST_PROVIDED',
+        }],
+        completion: { kind: 'MANUAL' },
+        fallbackPolicy: 'NONE',
+      },
+      {
+        id: 'the-restless-ghost:talk-to-ghost',
+        items: [{
+          item: { key: 'ghostspeak amulet', name: 'Ghostspeak amulet' },
+          quantity: 1,
+          supplyPolicy: 'QUEST_PROVIDED',
+        }],
+        consumes: [],
+        fulfils: [],
+        completion: { kind: 'MANUAL' },
+        fallbackPolicy: 'NONE',
+      },
+      {
+        id: 'the-restless-ghost:take-skull',
+        items: [],
+        consumes: [],
+        fulfils: [{
+          item: { key: "ghost's skull", name: "Ghost's skull" },
+          quantity: 1,
+          supplyPolicy: 'QUEST_PROVIDED',
+        }],
+        completion: { kind: 'MANUAL' },
+        fallbackPolicy: 'NONE',
+      },
+      {
+        id: 'the-restless-ghost:return-to-ghost',
+        items: [], consumes: [], fulfils: [], completion: { kind: 'MANUAL' }, fallbackPolicy: 'NONE',
+      },
+      {
+        id: 'the-restless-ghost:use-skull',
+        items: [],
+        consumes: [{
+          item: { key: "ghost's skull", name: "Ghost's skull" },
+          quantity: 1,
+          supplyPolicy: 'QUEST_PROVIDED',
+        }],
+        fulfils: [],
+        completion: { kind: 'MANUAL' },
+        fallbackPolicy: 'NONE',
+      },
+      {
+        id: 'the-restless-ghost:complete',
+        items: [], consumes: [], fulfils: [],
+        completion: { kind: 'QUEST_COMPLETED', questId: 'The Restless Ghost' },
+        fallbackPolicy: 'NONE',
+      },
+    ]);
+  });
+});

@@ -37,7 +37,13 @@
       "~|Elemental Workshop I|~ Smithing skill requirement": "t_3465",
       "~|Sheep Shearer|~ 1": "t_7702",
       "~|Sheep Shearer|~ 2": "t_7703",
-      "~|Sheep Shearer|~ Complete the quest": "t_7704"
+      "~|Sheep Shearer|~ Complete the quest": "t_7704",
+      "~|The Restless Ghost|~ 1": "t_7683",
+      "~|The Restless Ghost|~ 2": "t_7684",
+      "~|The Restless Ghost|~ 3": "t_7685",
+      "~|The Restless Ghost|~ 4": "t_7686",
+      "~|The Restless Ghost|~ 5": "t_7687",
+      "~|The Restless Ghost|~ Complete the quest": "t_7688"
     },
     "tasksMapSha256": "f740b7194189f1a3ef81515ca4d4872caf91a6516a93bdf64c5d43c93d33bd8a",
     "tasksMapUrl": "https://raw.githubusercontent.com/source-chunk/chunk-picker-v2/ba2fcebf8b26c84c74f8d9ab328a0ede802be926/tasksMap.json"
@@ -1231,6 +1237,183 @@
       "wikiRevisionTimestamp": "2023-08-26T20:09:01Z",
       "wikiTitle": "Sheep Shearer/Quick guide",
       "wikiUrl": "https://oldschool.runescape.wiki/w/Sheep_Shearer/Quick_guide?oldid=14457888"
+    },
+    {
+      "importedLines": [
+        {
+          "id": "the-restless-ghost-getting-started-1",
+          "rawText": "Go through the [[Lumbridge Graveyard|graveyard's]] southern exit and head to the hut west of [[Lumbridge Swamp]].}}",
+          "section": "Getting started",
+          "sourceOrder": 1,
+          "text": "Go through the graveyard's southern exit and head to the hut west of Lumbridge Swamp."
+        },
+        {
+          "id": "the-restless-ghost-ghostspeak-amulet-2",
+          "rawText": "Head to the small room in the Lumbridge graveyard south of the church.",
+          "section": "Ghostspeak amulet",
+          "sourceOrder": 2,
+          "text": "Head to the small room in the Lumbridge graveyard south of the church."
+        },
+        {
+          "id": "the-restless-ghost-ghostspeak-amulet-3",
+          "rawText": "Equip the [[Ghostspeak amulet]] and click the coffin, talk to the ghost. {{Chat option|1 Yep, now tell me what the problem is.}}}}",
+          "section": "Ghostspeak amulet",
+          "sourceOrder": 3,
+          "text": "Equip the Ghostspeak amulet and click the coffin, talk to the ghost. 1 Yep, now tell me what the problem is."
+        },
+        {
+          "id": "the-restless-ghost-the-skull-4",
+          "rawText": "Search the altar, and you will receive a [[ghost's skull]]. A level 13 [[Skeleton (The Restless Ghost)|skeleton]] will appear, you don't have to kill it, just leave.",
+          "section": "The skull",
+          "sourceOrder": 4,
+          "text": "Search the altar, and you will receive a ghost's skull. A level 13 skeleton will appear, you don't have to kill it, just leave."
+        },
+        {
+          "id": "the-restless-ghost-the-skull-5",
+          "rawText": "Go back to the graveyard and use the skull on the coffin with it open.",
+          "section": "The skull",
+          "sourceOrder": 5,
+          "text": "Go back to the graveyard and use the skull on the coffin with it open."
+        },
+        {
+          "id": "the-restless-ghost-the-skull-6",
+          "rawText": "'''Congratulations, quest complete!'''}}",
+          "section": "The skull",
+          "sourceOrder": 6,
+          "text": "Congratulations, quest complete!"
+        }
+      ],
+      "questId": "The Restless Ghost",
+      "tasks": [
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [],
+          "description": "Talk to Father Aereck",
+          "id": "t_7683",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Father Aereck"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|The Restless Ghost|~ 1",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_7683"
+          ],
+          "description": "Talk to Father Urhney",
+          "id": "t_7684",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Father Urhney"
+          ],
+          "objects": [],
+          "rewards": [
+            "Ghostspeak amulet"
+          ],
+          "skills": {},
+          "sourceId": "~|The Restless Ghost|~ 2",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_7684"
+          ],
+          "description": "Talk to the ghost in Lumbridge Graveyard",
+          "id": "t_7685",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Restless ghost"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|The Restless Ghost|~ 3",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_7685"
+          ],
+          "description": "Get the ghost's skull from Wizard's Tower",
+          "id": "t_7686",
+          "items": [],
+          "namedAreas": [
+            "Wizards' Tower#Basement"
+          ],
+          "npcs": [],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|The Restless Ghost|~ 4",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [
+            {
+              "chunkId": "50,49",
+              "plane": 1,
+              "sourceId": "12849-1"
+            }
+          ],
+          "completion": false,
+          "dependsOn": [
+            "t_7686"
+          ],
+          "description": "Use the skull on the ghost's coffin",
+          "id": "t_7687",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|The Restless Ghost|~ 5",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [
+            {
+              "chunkId": "50,49",
+              "plane": 1,
+              "sourceId": "12849-1"
+            }
+          ],
+          "completion": true,
+          "dependsOn": [
+            "t_7687"
+          ],
+          "id": "t_7688",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [],
+          "objects": [],
+          "questPoints": 1,
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|The Restless Ghost|~ Complete the quest",
+          "xpRewards": {
+            "Prayer": 1125
+          }
+        }
+      ],
+      "wikiRevision": 15070492,
+      "wikiRevisionTimestamp": "2025-11-28T02:58:15Z",
+      "wikiTitle": "The Restless Ghost/Quick guide",
+      "wikiUrl": "https://oldschool.runescape.wiki/w/The_Restless_Ghost/Quick_guide?oldid=15070492"
     }
   ],
   "schemaVersion": 1,

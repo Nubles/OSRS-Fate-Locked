@@ -30,6 +30,11 @@ const RELEASES: readonly QuestWalkthroughRelease[] = [
     revision: '2aa93838959a1fd0c26ab45642b9bb39e5bad0321487129cdf2fb39f2bf971e2',
     releaseStatus: 'PREVIEW_ONLY',
   },
+  {
+    questId: 'The Restless Ghost',
+    revision: '10713567065dfb8118da8fa8bcd91413bad41070d9f42d3bed46666e756b1c7a',
+    releaseStatus: 'PREVIEW_ONLY',
+  },
 ];
 
 const releaseByQuestId = new Map(RELEASES.map(release => [release.questId, release]));

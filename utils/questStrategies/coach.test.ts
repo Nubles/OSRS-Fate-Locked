@@ -24,6 +24,13 @@ const actionChunks: Readonly<Record<string, readonly ChunkKey[]>> = {
   'cooks-assistant:make-flour': ['49,51'],
   'cooks-assistant:return-to-cook': ['50,50'],
   'cooks-assistant:complete': ['50,50'],
+  'the-restless-ghost:start-with-aereck': ['50,50'],
+  'the-restless-ghost:get-amulet': ['49,49'],
+  'the-restless-ghost:talk-to-ghost': ['50,49'],
+  'the-restless-ghost:take-skull': ['48,49'],
+  'the-restless-ghost:return-to-ghost': ['50,49'],
+  'the-restless-ghost:use-skull': ['50,49'],
+  'the-restless-ghost:complete': ['50,49'],
 };
 
 const route = (
@@ -219,6 +226,12 @@ const sheepStrategy = (): QuestStrategyDefinition => {
   return strategy;
 };
 
+const restlessStrategy = (): QuestStrategyDefinition => {
+  const strategy = questStrategyFor('The Restless Ghost');
+  if (!strategy) throw new Error('The Restless Ghost strategy fixture did not load.');
+  return strategy;
+};
+
 const emptyAnalysisFor = (
   strategy: QuestStrategyDefinition,
 ): QuestPreparationRouteAnalysis => ({
@@ -231,6 +244,54 @@ const emptyAnalysisFor = (
     accountFingerprint: 'sheep-coach-test-account',
   },
 });
+
+const restlessBlockedAnalysisFor = (
+  strategy: QuestStrategyDefinition,
+): QuestRouteAnalysis => {
+  const actions = strategy.actions.map(action => {
+    const blocked = action.id === 'the-restless-ghost:take-skull';
+    return {
+      definition: action,
+      location: {
+        confidence: 'REVIEWED' as const,
+        evidenceKind: 'REVIEWED_ALIAS' as const,
+        chunks: actionChunks[action.id] ?? [],
+        candidateChunks: [],
+        explanation: action.location.kind === 'REVIEWED_ALIAS'
+          ? action.location.alias
+          : action.mapChunks.join(', '),
+      },
+      state: blocked ? 'CHUNK_LOCKED' as const : 'READY_HERE' as const,
+      blockers: blocked ? [{
+        kind: 'CHUNK' as const,
+        chunk: '48,49' as ChunkKey,
+        label: action.displayText,
+      }] : [],
+      itemPreparation: [],
+    };
+  });
+  return {
+    questId: strategy.questId,
+    status: 'CANNOT_COMPLETE_YET',
+    items: [],
+    generatedFrom: {
+      chunkDataVersion: 1,
+      questRevision: strategy.source.wikiRevision,
+      walkthroughRevision: strategy.source.wikiRevision,
+      accountFingerprint: 'restless-ghost-coach-test-account',
+    },
+    walkthrough: {
+      questId: strategy.questId,
+      releaseStatus: 'PREVIEW_ONLY',
+      status: 'BLOCKED',
+      actions,
+      blockers: actions.flatMap(action => action.blockers),
+      hasIncompleteEvidence: false,
+      sourceLines: strategy.sourceLines,
+      source: strategy.source,
+    },
+  };
+};
 
 const buildFromAnalysis = (
   strategy: QuestStrategyDefinition,
@@ -288,6 +349,32 @@ const analysisWithOutOfOrderFlourFallbacks = (
 };
 
 describe('buildRuneProofCoachModel', () => {
+  it('blocks the Restless Ghost skull step by chunk without requiring a skeleton kill', () => {
+    const strategy = restlessStrategy();
+    const model = buildRuneProofCoachModel({
+      strategy,
+      analysis: restlessBlockedAnalysisFor(strategy),
+      confirmedActionIds: new Set([
+        'the-restless-ghost:start-with-aereck',
+        'the-restless-ghost:get-amulet',
+        'the-restless-ghost:talk-to-ghost',
+      ]),
+      confirmedItemKeys: new Set(),
+      completedQuestIds: new Set(),
+    });
+
+    expect(model.nextAction).toMatchObject({
+      id: 'the-restless-ghost:take-skull',
+      state: 'BLOCKED',
+    });
+    expect(model.nextAction?.blockerText).toContain('Unlock chunk 48,49');
+    expect(model.nextAction?.blockerText).toContain('leave without fighting the skeleton');
+    expect(model.nextAction?.instruction).toBe(
+      "Search the altar in the Wizards' Tower basement for the ghost's skull, then leave without fighting the skeleton.",
+    );
+    expect(model.nextAction?.instruction).not.toMatch(/must kill|kill the skeleton/i);
+  });
+
   it('uses ball-of-wool confirmation only to complete Sheep Shearer spin-wool', () => {
     const strategy = sheepStrategy();
     const model = buildRuneProofCoachModel({
