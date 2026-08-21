@@ -24,67 +24,78 @@ const defaultStorage = (): RuneProofStorage => {
 
 interface RuneProofPreviewActionState {
   readonly runId: string;
-  readonly strategy: QuestStrategyDefinition | null;
+  readonly strategies: readonly QuestStrategyDefinition[];
   readonly actions: RuneProofPreviewActions;
 }
 
 const actionsForCurrentScope = (
   state: RuneProofPreviewActionState,
   runId: string,
-  strategy: QuestStrategyDefinition | null,
+  strategies: readonly QuestStrategyDefinition[],
 ): RuneProofPreviewActions => (
-  state.runId === runId && state.strategy === strategy ? state.actions : {}
+  state.runId === runId && state.strategies === strategies ? state.actions : {}
 );
 
 export interface RuneProofPreviewActionControls {
-  readonly confirmedActionIds: ReadonlySet<string>;
-  setActionConfirmed(actionId: string, confirmed: boolean): void;
+  readonly actionsByQuest: RuneProofPreviewActions;
+  confirmedActionIdsFor(questId: string): ReadonlySet<string>;
+  setActionConfirmed(questId: string, actionId: string, confirmed: boolean): void;
 }
 
 export function useRuneProofPreviewActions(
   runId: string,
-  strategy: QuestStrategyDefinition | null,
+  strategies: readonly QuestStrategyDefinition[],
   storage?: RuneProofStorage,
 ): RuneProofPreviewActionControls {
   const activeStorage = useMemo(() => (
-    strategy ? storage ?? defaultStorage() : unavailableStorage
-  ), [storage, strategy]);
+    strategies.length > 0 ? storage ?? defaultStorage() : unavailableStorage
+  ), [storage, strategies]);
   const [state, setState] = useState<RuneProofPreviewActionState>(() => ({
     runId,
-    strategy,
-    actions: strategy ? readRuneProofPreviewActions(activeStorage, runId, strategy) : {},
+    strategies,
+    actions: strategies.length > 0
+      ? readRuneProofPreviewActions(activeStorage, runId, strategies)
+      : {},
   }));
 
   useEffect(() => {
     setState({
       runId,
-      strategy,
-      actions: strategy ? readRuneProofPreviewActions(activeStorage, runId, strategy) : {},
+      strategies,
+      actions: strategies.length > 0
+        ? readRuneProofPreviewActions(activeStorage, runId, strategies)
+        : {},
     });
-  }, [activeStorage, runId, strategy]);
+  }, [activeStorage, runId, strategies]);
 
-  const actions = actionsForCurrentScope(state, runId, strategy);
-  const confirmedActionIds = useMemo(() => new Set(
-    strategy
-      ? normalizeRuneProofPreviewActions(actions, strategy)[strategy.questId] ?? []
-      : [],
-  ), [actions, strategy]);
+  const actionsByQuest = useMemo(() => normalizeRuneProofPreviewActions(
+    actionsForCurrentScope(state, runId, strategies),
+    strategies,
+  ), [runId, state, strategies]);
 
-  const setActionConfirmed = useCallback((actionId: string, confirmed: boolean) => {
-    if (!strategy) return;
+  const confirmedActionIdsFor = useCallback((questId: string): ReadonlySet<string> => (
+    new Set(actionsByQuest[questId] ?? [])
+  ), [actionsByQuest]);
 
+  const setActionConfirmed = useCallback((
+    questId: string,
+    actionId: string,
+    confirmed: boolean,
+  ) => {
     setState(current => {
-      const existing = actionsForCurrentScope(current, runId, strategy)[strategy.questId] ?? [];
+      const currentActions = actionsForCurrentScope(current, runId, strategies);
+      const existing = currentActions[questId] ?? [];
       const nextActionIds = confirmed
         ? [...existing, actionId]
         : existing.filter(id => id !== actionId);
       const next = normalizeRuneProofPreviewActions({
-        [strategy.questId]: nextActionIds,
-      }, strategy);
-      writeRuneProofPreviewActions(activeStorage, runId, strategy, next);
-      return { runId, strategy, actions: next };
+        ...currentActions,
+        [questId]: nextActionIds,
+      }, strategies);
+      writeRuneProofPreviewActions(activeStorage, runId, strategies, next);
+      return { runId, strategies, actions: next };
     });
-  }, [activeStorage, runId, strategy]);
+  }, [activeStorage, runId, strategies]);
 
-  return { confirmedActionIds, setActionConfirmed };
+  return { actionsByQuest, confirmedActionIdsFor, setActionConfirmed };
 }

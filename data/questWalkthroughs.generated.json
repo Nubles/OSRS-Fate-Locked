@@ -9,10 +9,11 @@
             "completion": {
               "kind": "MANUAL"
             },
+            "consumes": [],
             "fallbackPolicy": "NONE",
             "fulfils": []
           },
-          "confidence": "EXACT",
+          "confidence": "REVIEWED",
           "dependsOn": [],
           "displayText": "Talk to the Cook in Lumbridge Castle.",
           "entities": [
@@ -26,11 +27,15 @@
           "items": [],
           "kind": "TALK_TO",
           "location": {
-            "entity": {
-              "kind": "npc",
-              "name": "Cook (Lumbridge)"
-            },
-            "kind": "EXACT_ENTITY"
+            "alias": "Lumbridge Castle",
+            "chunks": [
+              "50,50"
+            ],
+            "evidence": "Pinned Wiki source line cooks-assistant-walkthrough-6 directs the player to talk to the Cook in Lumbridge Castle; the pinned Chunk Picker content entry identifies Lumbridge Castle at 50,50.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Only chunk precision is claimed for the Cook; the review does not claim an exact tile.",
+            "reviewedAt": "2026-08-20",
+            "reviewer": "OpenAI Codex"
           },
           "rawWikiLineIds": [
             "cooks-assistant-walkthrough-6"
@@ -43,6 +48,7 @@
             "completion": {
               "kind": "MANUAL"
             },
+            "consumes": [],
             "fallbackPolicy": "NONE",
             "fulfils": [
               {
@@ -92,6 +98,7 @@
             "completion": {
               "kind": "MANUAL"
             },
+            "consumes": [],
             "fallbackPolicy": "NONE",
             "fulfils": [
               {
@@ -141,6 +148,16 @@
               "itemKey": "bucket of milk",
               "kind": "ITEM_CONFIRMED"
             },
+            "consumes": [
+              {
+                "item": {
+                  "key": "bucket",
+                  "name": "Bucket"
+                },
+                "quantity": 1,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              }
+            ],
             "fallbackPolicy": "BLOCK_THEN_ALTERNATIVES",
             "fulfils": [
               {
@@ -197,6 +214,7 @@
               "itemKey": "egg",
               "kind": "ITEM_CONFIRMED"
             },
+            "consumes": [],
             "fallbackPolicy": "BLOCK_THEN_ALTERNATIVES",
             "fulfils": [
               {
@@ -247,6 +265,7 @@
             "completion": {
               "kind": "MANUAL"
             },
+            "consumes": [],
             "fallbackPolicy": "NONE",
             "fulfils": [
               {
@@ -302,6 +321,24 @@
               "itemKey": "pot of flour",
               "kind": "ITEM_CONFIRMED"
             },
+            "consumes": [
+              {
+                "item": {
+                  "key": "grain",
+                  "name": "Grain"
+                },
+                "quantity": 1,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              },
+              {
+                "item": {
+                  "key": "pot",
+                  "name": "Pot"
+                },
+                "quantity": 1,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              }
+            ],
             "fallbackPolicy": "BLOCK_THEN_ALTERNATIVES",
             "fulfils": [
               {
@@ -355,10 +392,36 @@
             "completion": {
               "kind": "MANUAL"
             },
+            "consumes": [
+              {
+                "item": {
+                  "key": "bucket of milk",
+                  "name": "Bucket of milk"
+                },
+                "quantity": 1,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              },
+              {
+                "item": {
+                  "key": "egg",
+                  "name": "Egg"
+                },
+                "quantity": 1,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              },
+              {
+                "item": {
+                  "key": "pot of flour",
+                  "name": "Pot of flour"
+                },
+                "quantity": 1,
+                "supplyPolicy": "PLAYER_OBTAINED"
+              }
+            ],
             "fallbackPolicy": "NONE",
             "fulfils": []
           },
-          "confidence": "EXACT",
+          "confidence": "REVIEWED",
           "dependsOn": [
             "cooks-assistant:make-flour",
             "cooks-assistant:milk-cow",
@@ -376,11 +439,15 @@
           "items": [],
           "kind": "TALK_TO",
           "location": {
-            "entity": {
-              "kind": "npc",
-              "name": "Cook (Lumbridge)"
-            },
-            "kind": "EXACT_ENTITY"
+            "alias": "Lumbridge Castle",
+            "chunks": [
+              "50,50"
+            ],
+            "evidence": "Pinned Wiki source line cooks-assistant-walkthrough-1 directs the player to return to the Cook with the three ingredients; the pinned Chunk Picker content entry identifies Lumbridge Castle at 50,50.",
+            "kind": "REVIEWED_ALIAS",
+            "rationale": "Only chunk precision is claimed for the Cook return; the review does not claim an exact tile.",
+            "reviewedAt": "2026-08-20",
+            "reviewer": "OpenAI Codex"
           },
           "rawWikiLineIds": [
             "cooks-assistant-walkthrough-1"
@@ -395,6 +462,7 @@
               "kind": "QUEST_COMPLETED",
               "questId": "Cook's Assistant"
             },
+            "consumes": [],
             "fallbackPolicy": "NONE",
             "fulfils": []
           },
@@ -423,7 +491,7 @@
       ],
       "questId": "Cook's Assistant",
       "releaseStatus": "PREVIEW_ONLY",
-      "revision": "426d462830b5d68ab53e085aea49b6b7f45e785f9f8c6974984da756c6163ea0",
+      "revision": "2311293172d8ea0d4ddc1d69e7d5e696af92951edb7e07543b502fa46671e1a1",
       "source": {
         "chunkPickerCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
         "chunkPickerLicenceStatus": "UNVERIFIED",

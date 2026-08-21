@@ -3,7 +3,7 @@
     "Cook's Assistant": [
       {
         "chunkPickerTaskId": "t_7591",
-        "confidence": "EXACT",
+        "confidence": "REVIEWED",
         "dependsOn": [],
         "displayText": "Talk to the Cook in Lumbridge Castle.",
         "entities": [
@@ -17,11 +17,15 @@
         "items": [],
         "kind": "TALK_TO",
         "location": {
-          "entity": {
-            "kind": "npc",
-            "name": "Cook (Lumbridge)"
-          },
-          "kind": "EXACT_ENTITY"
+          "alias": "Lumbridge Castle",
+          "chunks": [
+            "50,50"
+          ],
+          "evidence": "Pinned Wiki source line cooks-assistant-walkthrough-6 directs the player to talk to the Cook in Lumbridge Castle; the pinned Chunk Picker content entry identifies Lumbridge Castle at 50,50.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Only chunk precision is claimed for the Cook; the review does not claim an exact tile.",
+          "reviewedAt": "2026-08-20",
+          "reviewer": "OpenAI Codex"
         },
         "rawWikiLineIds": [
           "cooks-assistant-walkthrough-6"
@@ -29,6 +33,7 @@
         "section": "QUEST",
         "sourceOrder": 1,
         "coach": {
+          "consumes": [],
           "fulfils": [],
           "completion": {
             "kind": "MANUAL"
@@ -64,6 +69,7 @@
         "section": "QUEST",
         "sourceOrder": 2,
         "coach": {
+          "consumes": [],
           "fulfils": [
             {
               "item": {
@@ -111,6 +117,7 @@
         "section": "QUEST",
         "sourceOrder": 3,
         "coach": {
+          "consumes": [],
           "fulfils": [
             {
               "item": {
@@ -167,6 +174,16 @@
         "section": "QUEST",
         "sourceOrder": 4,
         "coach": {
+          "consumes": [
+            {
+              "item": {
+                "key": "bucket",
+                "name": "Bucket"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            }
+          ],
           "fulfils": [
             {
               "item": {
@@ -218,6 +235,7 @@
         "section": "QUEST",
         "sourceOrder": 5,
         "coach": {
+          "consumes": [],
           "fulfils": [
             {
               "item": {
@@ -273,6 +291,7 @@
         "section": "QUEST",
         "sourceOrder": 6,
         "coach": {
+          "consumes": [],
           "fulfils": [
             {
               "item": {
@@ -326,6 +345,24 @@
         "section": "QUEST",
         "sourceOrder": 7,
         "coach": {
+          "consumes": [
+            {
+              "item": {
+                "key": "grain",
+                "name": "Grain"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            },
+            {
+              "item": {
+                "key": "pot",
+                "name": "Pot"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            }
+          ],
           "fulfils": [
             {
               "item": {
@@ -349,7 +386,7 @@
       },
       {
         "chunkPickerTaskId": "t_7595",
-        "confidence": "EXACT",
+        "confidence": "REVIEWED",
         "dependsOn": [
           "cooks-assistant:make-flour",
           "cooks-assistant:milk-cow",
@@ -367,11 +404,15 @@
         "items": [],
         "kind": "TALK_TO",
         "location": {
-          "entity": {
-            "kind": "npc",
-            "name": "Cook (Lumbridge)"
-          },
-          "kind": "EXACT_ENTITY"
+          "alias": "Lumbridge Castle",
+          "chunks": [
+            "50,50"
+          ],
+          "evidence": "Pinned Wiki source line cooks-assistant-walkthrough-1 directs the player to return to the Cook with the three ingredients; the pinned Chunk Picker content entry identifies Lumbridge Castle at 50,50.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Only chunk precision is claimed for the Cook return; the review does not claim an exact tile.",
+          "reviewedAt": "2026-08-20",
+          "reviewer": "OpenAI Codex"
         },
         "rawWikiLineIds": [
           "cooks-assistant-walkthrough-1"
@@ -379,6 +420,32 @@
         "section": "QUEST",
         "sourceOrder": 8,
         "coach": {
+          "consumes": [
+            {
+              "item": {
+                "key": "bucket of milk",
+                "name": "Bucket of milk"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            },
+            {
+              "item": {
+                "key": "egg",
+                "name": "Egg"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            },
+            {
+              "item": {
+                "key": "pot of flour",
+                "name": "Pot of flour"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            }
+          ],
           "fulfils": [],
           "completion": {
             "kind": "MANUAL"
@@ -410,6 +477,7 @@
         "section": "QUEST",
         "sourceOrder": 9,
         "coach": {
+          "consumes": [],
           "fulfils": [],
           "completion": {
             "kind": "QUEST_COMPLETED",

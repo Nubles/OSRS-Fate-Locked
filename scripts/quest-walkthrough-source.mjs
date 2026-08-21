@@ -262,6 +262,33 @@ const validateWalkthroughItem = (value, label) => {
   return value.item.key;
 };
 
+const validateStaticCoachLocation = (action, label) => {
+  assertWalkthrough(isRecord(action.location), label + ' location is required');
+  const { location } = action;
+  assertWalkthrough(
+    location.kind === 'REVIEWED_ALIAS' || location.kind === 'EXPLICIT_CHUNKS',
+    label + ' requires static reviewed or explicit chunks',
+  );
+  assertWalkthrough(Array.isArray(location.chunks) && location.chunks.length > 0, label + ' static chunks are required');
+  const chunks = new Set();
+  location.chunks.forEach((chunk, index) => {
+    nonBlankWalkthrough(chunk, label + ' static chunk ' + (index + 1));
+    const match = /^(-?\d+),(-?\d+)$/.exec(chunk);
+    assertWalkthrough(match !== null && String(Number(match[1])) + ',' + String(Number(match[2])) === chunk,
+      label + ' static chunk ' + (index + 1) + ' must be canonical');
+    assertWalkthrough(!chunks.has(chunk), label + ' static chunks must not repeat');
+    chunks.add(chunk);
+  });
+
+  if (location.kind !== 'REVIEWED_ALIAS') return;
+  assertWalkthrough(action.confidence === 'REVIEWED', label + ' reviewed location must use REVIEWED confidence');
+  nonBlankWalkthrough(location.alias, label + ' reviewed location alias');
+  nonBlankWalkthrough(location.reviewer, label + ' reviewed location reviewer');
+  nonBlankWalkthrough(location.reviewedAt, label + ' reviewed location date');
+  nonBlankWalkthrough(location.evidence, label + ' reviewed location evidence');
+  nonBlankWalkthrough(location.rationale, label + ' reviewed location rationale');
+};
+
 const validateReviewedDirectSource = (action, method, fulfils, label) => {
   nonBlankWalkthrough(method.itemKey, `${label} direct source item key`);
   assertWalkthrough(
@@ -288,6 +315,11 @@ const validateCoachMetadata = (action, questId) => {
   const label = `${questId}: coach metadata for ${action?.id ?? 'unknown action'}`;
   const coach = action.coach;
   assertWalkthrough(isRecord(coach), `${label} must be an object`);
+  assertWalkthrough(Array.isArray(coach.consumes), label + ' consumes are required');
+  coach.consumes.forEach((item, index) => validateWalkthroughItem(
+    item,
+    label + ' consumes ' + (index + 1),
+  ));
   assertWalkthrough(Array.isArray(coach.fulfils), `${label} fulfils are required`);
   const fulfilKeys = coach.fulfils.map((item, index) => validateWalkthroughItem(item, `${label} fulfils ${index + 1}`));
   assertWalkthrough(
@@ -303,6 +335,7 @@ const validateCoachMetadata = (action, questId) => {
       throw new Error(`${label} action items are required`);
     })();
   const knownItemKeys = new Set([...actionItemKeys, ...fulfilKeys]);
+  validateStaticCoachLocation(action, label);
 
   switch (coach.completion.kind) {
     case 'MANUAL':
@@ -350,11 +383,31 @@ const validateCoachActions = (questId, actions) => {
   if (!actions.every(action => isRecord(action) && action.coach !== undefined)) return;
   let previousSourceOrder = 0;
   const actionsById = new Map();
+  const itemFlow = new Map();
+  const completionActions = [];
   actions.forEach((action) => {
     nonBlankWalkthrough(action.id, `${questId}: strategy action ID`);
     assertWalkthrough(Number.isInteger(action.sourceOrder) && action.sourceOrder > previousSourceOrder, `${questId}: strategy source order is unstable`);
     actionsById.set(action.id, action);
     previousSourceOrder = action.sourceOrder;
+
+    const consumedQuantities = new Map();
+    action.coach.consumes.forEach((item) => {
+      consumedQuantities.set(item.item.key, (consumedQuantities.get(item.item.key) ?? 0) + item.quantity);
+    });
+    consumedQuantities.forEach((quantity, itemKey) => {
+      assertWalkthrough(
+        (itemFlow.get(itemKey) ?? 0) >= quantity,
+        questId + ': strategy consumes ' + itemKey + ' before it is fulfilled',
+      );
+    });
+    consumedQuantities.forEach((quantity, itemKey) => {
+      itemFlow.set(itemKey, itemFlow.get(itemKey) - quantity);
+    });
+    action.coach.fulfils.forEach((item) => {
+      itemFlow.set(item.item.key, (itemFlow.get(item.item.key) ?? 0) + item.quantity);
+    });
+    if (action.coach.completion.kind === 'QUEST_COMPLETED') completionActions.push(action);
   });
   actions.forEach((action) => {
     action.dependsOn.forEach((dependencyId) => {
@@ -365,6 +418,20 @@ const validateCoachActions = (questId, actions) => {
       );
     });
   });
+  assertWalkthrough(
+    completionActions.length === 1,
+    questId + ': strategy must have exactly one final quest completion',
+  );
+  const finalAction = actions.at(-1);
+  assertWalkthrough(
+    completionActions[0] === finalAction,
+    questId + ': strategy quest completion must be final',
+  );
+  assertWalkthrough(
+    finalAction.coach.completion.kind === 'QUEST_COMPLETED'
+      && finalAction.coach.completion.questId === questId,
+    questId + ': strategy final quest completion must match its quest',
+  );
 };
 
 export function compileWalkthroughCatalogue(source, review) {

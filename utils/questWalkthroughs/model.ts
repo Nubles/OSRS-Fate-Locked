@@ -39,6 +39,7 @@ export type QuestActionPreferredMethod =
   | { readonly kind: 'TRANSFORMATION'; readonly recipeId: string };
 
 export interface QuestActionCoachMetadata {
+  readonly consumes: readonly WalkthroughItemRef[];
   readonly fulfils: readonly WalkthroughItemRef[];
   readonly completion: QuestActionCompletionRule;
   readonly preferredMethod?: QuestActionPreferredMethod;

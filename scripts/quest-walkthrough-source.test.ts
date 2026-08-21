@@ -8,7 +8,10 @@ import {
   stableJson,
   validateTaskGraph,
 } from './quest-walkthrough-source.mjs';
-import { questStrategyFromWalkthrough } from '../utils/questStrategies/model';
+import {
+  questStrategyFromWalkthrough,
+  type QuestStrategyContext,
+} from '../utils/questStrategies/model';
 
 const questKey = (quest: string, suffix: string) => `~|${quest}|~ ${suffix}`;
 
@@ -135,8 +138,9 @@ const reviewedStrategyActionFixture = () => ({
     rationale: 'Reviewed location.',
   },
   coach: {
+    consumes: [],
     fulfils: [],
-    completion: { kind: 'MANUAL' },
+    completion: { kind: 'QUEST_COMPLETED', questId: "Cook's Assistant" },
     fallbackPolicy: 'NONE',
   },
 });
@@ -146,6 +150,19 @@ const reviewedStrategyReviewFixture = () => ({
   quests: {
     "Cook's Assistant": [reviewedStrategyActionFixture()],
   },
+});
+
+const strategyContext = (): QuestStrategyContext => ({
+  membership: {
+    questId: "Cook's Assistant",
+    slug: 'cooks-assistant',
+    kind: 'quest',
+    wave: 1,
+    progressionPriority: 1,
+    wikiTitle: "Cook's Assistant/Quick guide",
+    evidenceQuestId: "Cook's Assistant",
+  },
+  rootRequirements: [],
 });
 
 describe('pinned walkthrough source helpers', () => {
@@ -312,6 +329,7 @@ describe('pinned walkthrough source helpers', () => {
 
   it.each([
     ['missing dependency', (action: any) => { action.dependsOn = ['missing-action']; }],
+    ['missing consumes', (action: any) => { delete action.coach.consumes; }],
     ['blank transformation ID', (action: any) => {
       action.coach.preferredMethod = { kind: 'TRANSFORMATION', recipeId: '   ' };
     }],
@@ -334,19 +352,65 @@ describe('pinned walkthrough source helpers', () => {
 
     const catalogue = compileWalkthroughCatalogue(source, review);
     expect(catalogue.walkthroughs[0].actions[0]).not.toHaveProperty('coach');
-    expect(questStrategyFromWalkthrough(catalogue.walkthroughs[0])).toBeNull();
+    expect(questStrategyFromWalkthrough(catalogue.walkthroughs[0], strategyContext())).toBeNull();
   });
 
-  it('accepts exact location evidence in a reviewed strategy pack', () => {
+  it.each([
+    ['a non-static exact location', (review: any) => {
+      review.quests["Cook's Assistant"][0].confidence = 'EXACT';
+      review.quests["Cook's Assistant"][0].location = {
+        kind: 'EXACT_ENTITY',
+        entity: { kind: 'npc', name: 'Cook' },
+      };
+    }],
+    ['an unproduced consumed item', (review: any) => {
+      review.quests["Cook's Assistant"][0].coach.consumes = [
+        { item: { key: 'unreviewed item', name: 'Unreviewed item' }, quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' },
+      ];
+    }],
+    ['a final completion ID mismatch', (review: any) => {
+      review.quests["Cook's Assistant"][0].coach.completion = {
+        kind: 'QUEST_COMPLETED',
+        questId: 'Sheep Shearer',
+      };
+    }],
+  ])('rejects a strategy pack with %s', (_label, mutate) => {
     const source = reviewedStrategySourceFixture();
     const review = reviewedStrategyReviewFixture();
-    review.quests["Cook's Assistant"][0].confidence = 'EXACT';
-    review.quests["Cook's Assistant"][0].location = {
-      kind: 'EXACT_ENTITY',
-      entity: { kind: 'npc', name: 'Cook' },
-    };
+    mutate(review);
 
-    expect(compileWalkthroughCatalogue(source, review).walkthroughs).toHaveLength(1);
+    expect(() => compileWalkthroughCatalogue(source, review)).toThrow();
+  });
+
+  it.each([
+    ['multiple final completions', (review: any) => {
+      const first = review.quests["Cook's Assistant"][0];
+      review.quests["Cook's Assistant"].push({
+        ...structuredClone(first),
+        id: 'cooks-assistant:duplicate-complete',
+        sourceOrder: 2,
+        dependsOn: [first.id],
+      });
+    }],
+    ['a completion before the final action', (review: any) => {
+      const first = review.quests["Cook's Assistant"][0];
+      review.quests["Cook's Assistant"].push({
+        ...structuredClone(first),
+        id: 'cooks-assistant:after-completion',
+        sourceOrder: 2,
+        dependsOn: [first.id],
+        coach: {
+          ...structuredClone(first.coach),
+          completion: { kind: 'MANUAL' },
+        },
+      });
+    }],
+  ])('rejects a strategy pack with %s', (_label, mutate) => {
+    const source = reviewedStrategySourceFixture();
+    const review = reviewedStrategyReviewFixture();
+    mutate(review);
+
+    expect(() => compileWalkthroughCatalogue(source, review)).toThrow();
   });
 });
 

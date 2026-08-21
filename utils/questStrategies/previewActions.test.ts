@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { questWalkthroughFor } from '../../data/questWalkthroughs';
 import {
   RUNEPROOF_PREVIEW_MAX_CHARS,
   runeProofPreviewStorageKey,
   type RuneProofStorage,
 } from '../questRoutes/previewChecks';
-import { questStrategyFromWalkthrough, type QuestStrategyDefinition } from './model';
+import type { QuestStrategyDefinition } from './model';
 import {
   normalizeRuneProofPreviewActions,
   readRuneProofPreviewActions,
@@ -42,75 +41,109 @@ const memoryStorage = (): RuneProofStorage & {
   };
 };
 
-const cookStrategy = (): QuestStrategyDefinition => {
-  const walkthrough = questWalkthroughFor("Cook's Assistant");
-  const strategy = walkthrough && questStrategyFromWalkthrough(walkthrough);
-  if (!strategy) throw new Error("Cook's Assistant strategy fixture did not load.");
-  return strategy;
-};
+const cookActionIds = [
+  'cooks-assistant:start-quest',
+  'cooks-assistant:take-pot',
+  'cooks-assistant:take-bucket',
+  'cooks-assistant:milk-cow',
+  'cooks-assistant:take-egg',
+  'cooks-assistant:pick-grain',
+  'cooks-assistant:make-flour',
+  'cooks-assistant:return-to-cook',
+  'cooks-assistant:complete',
+] as const;
 
-const alternateStrategy = (): QuestStrategyDefinition => {
-  const cook = cookStrategy();
-  return {
-    ...cook,
-    questId: "Doric's Quest",
-    actions: [
-      { ...cook.actions[0], id: 'dorics-quest:bring-clay', dependsOn: [] },
-      {
-        ...cook.actions[1],
-        id: 'dorics-quest:complete',
-        dependsOn: ['dorics-quest:bring-clay'],
-      },
-    ],
-  };
-};
+const strategy = (
+  questId: string,
+  actionIds: readonly string[],
+  progressionPriority: number,
+): QuestStrategyDefinition => ({
+  questId,
+  kind: 'quest',
+  rolloutWave: 1,
+  progressionPriority,
+  revision: questId.toLowerCase().replaceAll(' ', '-'),
+  source: {},
+  sourceLines: [],
+  actions: actionIds.map((id, index) => ({
+    id,
+    mapChunks: ['50,50'],
+    coach: {
+      consumes: [],
+      fulfils: [],
+      completion: index === actionIds.length - 1
+        ? { kind: 'QUEST_COMPLETED', questId }
+        : { kind: 'MANUAL' },
+      fallbackPolicy: 'NONE',
+    },
+  })) as unknown as QuestStrategyDefinition['actions'],
+} as unknown as QuestStrategyDefinition);
+
+const cookStrategy = (): QuestStrategyDefinition => strategy(
+  "Cook's Assistant",
+  cookActionIds,
+  1,
+);
+
+const sheepStrategy = (): QuestStrategyDefinition => strategy(
+  'Sheep Shearer',
+  ['sheep-shearer:start-with-fred', 'sheep-shearer:complete'],
+  2,
+);
+
+const catalogue = (): readonly QuestStrategyDefinition[] => [cookStrategy(), sheepStrategy()];
 
 describe('RuneProof preview action storage', () => {
-  it('keeps valid action IDs while removing unknown and inherited progress', () => {
-    const strategy = cookStrategy();
+  it('keeps every valid quest record while removing unknown and inherited progress', () => {
+    const strategies = catalogue();
     const inherited = Object.create({
       "Cook's Assistant": ['cooks-assistant:start-quest'],
     });
 
-    expect(normalizeRuneProofPreviewActions(inherited, strategy)).toEqual({});
+    expect(normalizeRuneProofPreviewActions(inherited, strategies)).toEqual({});
     expect(normalizeRuneProofPreviewActions({
       "Cook's Assistant": [
-      'cooks-assistant:take-egg',
-      'unknown-action',
-      'cooks-assistant:take-egg',
+        'cooks-assistant:complete',
+        'unknown-action',
+        'cooks-assistant:complete',
       ],
-    }, strategy)).toEqual({
-      "Cook's Assistant": ['cooks-assistant:take-egg'],
+      'Sheep Shearer': ['sheep-shearer:start-with-fred'],
+      'Unknown Quest': ['unknown:action'],
+    }, strategies)).toEqual({
+      "Cook's Assistant": ['cooks-assistant:complete'],
+      'Sheep Shearer': ['sheep-shearer:start-with-fred'],
     });
   });
 
   it('rejects oversized and corrupt stored progress', () => {
     const storage = memoryStorage();
-    const strategy = cookStrategy();
+    const strategies = catalogue();
     storage.values.set(
       runeProofPreviewActionStorageKey('oversized'),
       'x'.repeat(RUNEPROOF_PREVIEW_MAX_CHARS + 1),
     );
     storage.values.set(runeProofPreviewActionStorageKey('corrupt'), '{');
 
-    expect(readRuneProofPreviewActions(storage, 'oversized', strategy)).toEqual({});
-    expect(readRuneProofPreviewActions(storage, 'corrupt', strategy)).toEqual({});
+    expect(readRuneProofPreviewActions(storage, 'oversized', strategies)).toEqual({});
+    expect(readRuneProofPreviewActions(storage, 'corrupt', strategies)).toEqual({});
   });
 
-  it('keeps action progress isolated by run ID', () => {
+  it('keeps complete catalogue progress isolated by run ID', () => {
     const storage = memoryStorage();
-    const strategy = cookStrategy();
-    writeRuneProofPreviewActions(storage, 'run-a', strategy, {
-      "Cook's Assistant": ['cooks-assistant:take-egg'],
+    const strategies = catalogue();
+    writeRuneProofPreviewActions(storage, 'run-a', strategies, {
+      "Cook's Assistant": ['cooks-assistant:complete'],
+      'Sheep Shearer': ['sheep-shearer:start-with-fred'],
     });
-    writeRuneProofPreviewActions(storage, 'run-b', strategy, {
+    writeRuneProofPreviewActions(storage, 'run-b', strategies, {
       "Cook's Assistant": ['cooks-assistant:make-flour'],
     });
 
-    expect(readRuneProofPreviewActions(storage, 'run-a', strategy)).toEqual({
-      "Cook's Assistant": ['cooks-assistant:take-egg'],
+    expect(readRuneProofPreviewActions(storage, 'run-a', strategies)).toEqual({
+      "Cook's Assistant": ['cooks-assistant:complete'],
+      'Sheep Shearer': ['sheep-shearer:start-with-fred'],
     });
-    expect(readRuneProofPreviewActions(storage, 'run-b', strategy)).toEqual({
+    expect(readRuneProofPreviewActions(storage, 'run-b', strategies)).toEqual({
       "Cook's Assistant": ['cooks-assistant:make-flour'],
     });
     expect(runeProofPreviewActionStorageKey('run-a')).not.toBe(
@@ -118,46 +151,43 @@ describe('RuneProof preview action storage', () => {
     );
   });
 
-  it('returns only the current loaded strategy action IDs', () => {
-    const storage = memoryStorage();
-    const cook = cookStrategy();
-    const alternate = alternateStrategy();
-    storage.values.set(runeProofPreviewActionStorageKey('run-a'), JSON.stringify({
-      "Cook's Assistant": ['cooks-assistant:take-egg'],
-      "Doric's Quest": ['dorics-quest:bring-clay', 'cooks-assistant:take-egg'],
-    }));
-
-    expect(readRuneProofPreviewActions(storage, 'run-a', cook)).toEqual({
-      "Cook's Assistant": ['cooks-assistant:take-egg'],
-    });
-    expect(readRuneProofPreviewActions(storage, 'run-a', alternate)).toEqual({
-      "Doric's Quest": ['dorics-quest:bring-clay'],
-    });
-  });
-
   it('never reads or changes legacy item confirmation storage', () => {
     const storage = memoryStorage();
-    const strategy = cookStrategy();
+    const strategies = catalogue();
     const legacyKey = runeProofPreviewStorageKey('run-a');
     storage.values.set(legacyKey, JSON.stringify({ "Cook's Assistant": ['egg'] }));
 
-    writeRuneProofPreviewActions(storage, 'run-a', strategy, {
+    writeRuneProofPreviewActions(storage, 'run-a', strategies, {
       "Cook's Assistant": ['cooks-assistant:take-egg'],
     });
-    readRuneProofPreviewActions(storage, 'run-a', strategy);
-    writeRuneProofPreviewActions(storage, 'run-a', strategy, {});
+    readRuneProofPreviewActions(storage, 'run-a', strategies);
+    writeRuneProofPreviewActions(storage, 'run-a', strategies, {});
 
     expect(storage.values.get(legacyKey)).toBe(JSON.stringify({ "Cook's Assistant": ['egg'] }));
     expect(storage.calls.filter(call => call.key === legacyKey)).toEqual([]);
   });
 
+  it('does not overwrite persisted progress when a valid catalogue payload exceeds 64 KiB', () => {
+    const storage = memoryStorage();
+    const oversizedActionId = 'x'.repeat(RUNEPROOF_PREVIEW_MAX_CHARS);
+    const strategies = [strategy("Cook's Assistant", [oversizedActionId], 1)];
+    const key = runeProofPreviewActionStorageKey('run-a');
+    storage.values.set(key, '{"preserved":true}');
+
+    writeRuneProofPreviewActions(storage, 'run-a', strategies, {
+      "Cook's Assistant": [oversizedActionId],
+    });
+
+    expect(storage.values.get(key)).toBe('{"preserved":true}');
+  });
+
   it('removes empty action progress and contains storage failures', () => {
     const storage = memoryStorage();
-    const strategy = cookStrategy();
+    const strategies = catalogue();
     const key = runeProofPreviewActionStorageKey('run-a');
     storage.values.set(key, JSON.stringify({ "Cook's Assistant": ['cooks-assistant:take-egg'] }));
 
-    writeRuneProofPreviewActions(storage, 'run-a', strategy, {});
+    writeRuneProofPreviewActions(storage, 'run-a', strategies, {});
     expect(storage.values.has(key)).toBe(false);
 
     const unavailable: RuneProofStorage = {
@@ -165,10 +195,10 @@ describe('RuneProof preview action storage', () => {
       setItem: () => { throw new Error('write unavailable'); },
       removeItem: () => { throw new Error('remove unavailable'); },
     };
-    expect(readRuneProofPreviewActions(unavailable, 'run-a', strategy)).toEqual({});
-    expect(() => writeRuneProofPreviewActions(unavailable, 'run-a', strategy, {
+    expect(readRuneProofPreviewActions(unavailable, 'run-a', strategies)).toEqual({});
+    expect(() => writeRuneProofPreviewActions(unavailable, 'run-a', strategies, {
       "Cook's Assistant": ['cooks-assistant:take-egg'],
     })).not.toThrow();
-    expect(() => writeRuneProofPreviewActions(unavailable, 'run-a', strategy, {})).not.toThrow();
+    expect(() => writeRuneProofPreviewActions(unavailable, 'run-a', strategies, {})).not.toThrow();
   });
 });
