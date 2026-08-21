@@ -83,6 +83,16 @@ const invalidCases: Array<{
   error: string;
 }> = [
   {
+    name: 'sparse evidence file arrays',
+    mutate: document => { document.evidenceFiles = new Array(2); },
+    error: 'evidenceFiles must be a dense array',
+  },
+  {
+    name: 'sparse quest arrays',
+    mutate: document => { document.quests = new Array(23); },
+    error: 'quests must be a dense array',
+  },
+  {
     name: 'duplicate quest IDs',
     mutate: document => { document.quests[1].questId = document.quests[0].questId; },
     error: 'duplicate questId',

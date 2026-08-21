@@ -55,6 +55,13 @@ const hasOnlyKeys = (value: Record<string, unknown>, keys: readonly string[], la
   assert(unexpected.length === 0, `${label} has unexpected field(s): ${unexpected.join(', ')}`);
 };
 
+const hasDenseIndexes = (value: readonly unknown[]): boolean => {
+  for (let index = 0; index < value.length; index += 1) {
+    if (!Object.prototype.hasOwnProperty.call(value, index)) return false;
+  }
+  return true;
+};
+
 const nonBlankString: (value: unknown, label: string) => asserts value is string = (value, label) => {
   assert(typeof value === 'string' && value.trim().length > 0, `${label} must be a non-empty string`);
 };
@@ -73,10 +80,12 @@ export function validateF2PQuestMembership(value: unknown): readonly F2PQuestMem
   assert(value.schemaVersion === 1, 'schemaVersion must be 1');
   assert(value.reviewedAt === '2026-08-21', 'reviewedAt must be 2026-08-21');
   assert(Array.isArray(value.evidenceFiles), 'evidenceFiles must be an array');
+  assert(hasDenseIndexes(value.evidenceFiles), 'evidenceFiles must be a dense array');
   assert(value.evidenceFiles.length === EVIDENCE_FILES.length
     && value.evidenceFiles.every((file, index) => file === EVIDENCE_FILES[index]),
   'evidenceFiles must exactly reference the reviewed quest sources');
   assert(Array.isArray(value.quests), 'quests must be an array');
+  assert(hasDenseIndexes(value.quests), 'quests must be a dense array');
   assert(value.quests.length === EXPECTED_QUEST_IDS.length, 'quests must contain exactly 23 entries');
 
   const entries: F2PQuestMembership[] = [];
