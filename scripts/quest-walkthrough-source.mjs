@@ -262,6 +262,65 @@ const validateWalkthroughItem = (value, label) => {
   return value.item.key;
 };
 
+const validateItemRef = (value, label) => {
+  assertWalkthrough(isRecord(value), `${label} must be an item reference`);
+  nonBlankWalkthrough(value.key, `${label} key`);
+  nonBlankWalkthrough(value.name, `${label} name`);
+  assertWalkthrough(
+    value.key === canonicalWalkthroughItemKey(value.name),
+    `${label} key must be canonical`,
+  );
+  return value.key;
+};
+
+const assertOnlyFields = (value, fields, label) => {
+  const unexpected = Object.keys(value).filter(field => !fields.includes(field));
+  assertWalkthrough(unexpected.length === 0, `${label} has unexpected field(s): ${unexpected.join(', ')}`);
+};
+
+const validateReviewedRootRequirement = (value, label) => {
+  assertWalkthrough(isRecord(value), `${label} must be an item requirement`);
+  assertOnlyFields(value, ['item', 'quantity', 'supplyPolicy', 'alternatives', 'note'], label);
+  const itemKey = validateWalkthroughItem(value, label);
+  if (value.alternatives !== undefined) {
+    assertWalkthrough(Array.isArray(value.alternatives), `${label} alternatives must be an array`);
+    const alternativeKeys = new Set();
+    value.alternatives.forEach((alternative, index) => {
+      const alternativeKey = validateItemRef(alternative, `${label} alternative ${index + 1}`);
+      assertWalkthrough(!alternativeKeys.has(alternativeKey), `${label} alternatives must not repeat`);
+      alternativeKeys.add(alternativeKey);
+    });
+  }
+  if (value.note !== undefined) nonBlankWalkthrough(value.note, `${label} note`);
+  return itemKey;
+};
+
+const validateReviewedRootRequirementContexts = (review, sourceQuestIds) => {
+  if (review?.rootRequirements === undefined) return null;
+  assertWalkthrough(isRecord(review.rootRequirements), 'Reviewed root requirements must be an object');
+  const sourceQuestIdSet = new Set(sourceQuestIds);
+  const contexts = new Map();
+  Object.entries(review.rootRequirements).forEach(([questId, context]) => {
+    assertWalkthrough(sourceQuestIdSet.has(questId), `Reviewed root requirements include an unknown quest: ${questId}`);
+    assertWalkthrough(isRecord(context), `${questId}: reviewed root requirements must be an object`);
+    assertOnlyFields(context, ['questId', 'wikiRevision', 'reviewedAt', 'items'], `${questId}: reviewed root requirements`);
+    assertWalkthrough(context.questId === questId, `${questId}: reviewed root requirement quest ID must match its key`);
+    assertWalkthrough(typeof context.wikiRevision === 'string' && /^\d{8}$/.test(context.wikiRevision),
+      `${questId}: reviewed root requirement Wiki revision must be pinned`);
+    assertWalkthrough(typeof context.reviewedAt === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(context.reviewedAt),
+      `${questId}: reviewed root requirement review date is invalid`);
+    assertWalkthrough(Array.isArray(context.items), `${questId}: reviewed root requirements must include items`);
+    const itemKeys = new Set();
+    context.items.forEach((item, index) => {
+      const itemKey = validateReviewedRootRequirement(item, `${questId}: reviewed root requirement ${index + 1}`);
+      assertWalkthrough(!itemKeys.has(itemKey), `${questId}: reviewed root requirements must not repeat an item`);
+      itemKeys.add(itemKey);
+    });
+    contexts.set(questId, context.items);
+  });
+  return contexts;
+};
+
 const validateStaticCoachLocation = (action, label) => {
   assertWalkthrough(isRecord(action.location), label + ' location is required');
   const { location } = action;
@@ -369,7 +428,7 @@ const validateCoachMetadata = (action, questId) => {
   }
 };
 
-const validateCoachActions = (questId, actions) => {
+const validateCoachActions = (questId, actions, rootRequirements) => {
   const hasCoachMetadata = actions.some(action => isRecord(action) && action.coach !== undefined);
   if (!hasCoachMetadata) return;
 
@@ -381,9 +440,13 @@ const validateCoachActions = (questId, actions) => {
   });
 
   if (!actions.every(action => isRecord(action) && action.coach !== undefined)) return;
+  assertWalkthrough(Array.isArray(rootRequirements), `${questId}: reviewed root requirements are required`);
   let previousSourceOrder = 0;
   const actionsById = new Map();
   const itemFlow = new Map();
+  rootRequirements.forEach((item) => {
+    itemFlow.set(item.item.key, (itemFlow.get(item.item.key) ?? 0) + item.quantity);
+  });
   const completionActions = [];
   actions.forEach((action) => {
     nonBlankWalkthrough(action.id, `${questId}: strategy action ID`);
@@ -438,6 +501,10 @@ export function compileWalkthroughCatalogue(source, review) {
   if (source?.phase !== 'SOURCE_BOOTSTRAP' && source?.phase !== 'REVIEWED') {
     throw new Error('Walkthrough source phase must be SOURCE_BOOTSTRAP or REVIEWED');
   }
+  const rootRequirementsByQuest = validateReviewedRootRequirementContexts(
+    review,
+    (source.quests ?? []).map(quest => quest.questId),
+  );
   const walkthroughs = (source.quests ?? []).map((quest) => {
     const sourceRecord = {
       wikiTitle: quest.wikiTitle,
@@ -454,7 +521,7 @@ export function compileWalkthroughCatalogue(source, review) {
       sourceRecord.permissionReference = source.chunkPicker.permissionReference;
     }
     const reviewedActions = source.phase === 'REVIEWED' ? reviewFor(review, quest.questId) : [];
-    validateCoachActions(quest.questId, reviewedActions);
+    validateCoachActions(quest.questId, reviewedActions, rootRequirementsByQuest?.get(quest.questId));
     const definition = {
       questId: quest.questId,
       releaseStatus: source.chunkPicker.licenceStatus === 'PERMISSION_RECORDED' && quest.releaseStatus === 'APPROVED'

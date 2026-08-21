@@ -145,11 +145,25 @@ const reviewedStrategyActionFixture = () => ({
   },
 });
 
+const reviewedRootRequirementsFixture = () => ({
+  "Cook's Assistant": {
+    questId: "Cook's Assistant",
+    wikiRevision: '15240921',
+    reviewedAt: '2026-07-29',
+    items: [{
+      item: { key: 'egg', name: 'Egg' },
+      quantity: 1,
+      supplyPolicy: 'PLAYER_OBTAINED',
+    }],
+  },
+});
+
 const reviewedStrategyReviewFixture = () => ({
   schemaVersion: 1,
   quests: {
     "Cook's Assistant": [reviewedStrategyActionFixture()],
   },
+  rootRequirements: reviewedRootRequirementsFixture(),
 });
 
 const strategyContext = (): QuestStrategyContext => ({
@@ -353,6 +367,43 @@ describe('pinned walkthrough source helpers', () => {
     const catalogue = compileWalkthroughCatalogue(source, review);
     expect(catalogue.walkthroughs[0].actions[0]).not.toHaveProperty('coach');
     expect(questStrategyFromWalkthrough(catalogue.walkthroughs[0], strategyContext())).toBeNull();
+  });
+
+  it('accepts a declared reviewed root item before any action fulfils it', () => {
+    const source = reviewedStrategySourceFixture();
+    const review = reviewedStrategyReviewFixture();
+    review.quests["Cook's Assistant"][0].coach.consumes = [{
+      item: { key: 'egg', name: 'Egg' },
+      quantity: 1,
+      supplyPolicy: 'PLAYER_OBTAINED',
+    }];
+
+    const catalogue = compileWalkthroughCatalogue(source, review);
+    expect(questStrategyFromWalkthrough(catalogue.walkthroughs[0], {
+      ...strategyContext(),
+      rootRequirements: [{
+        item: { key: 'egg', name: 'Egg' },
+        quantity: 1,
+        supplyPolicy: 'PLAYER_OBTAINED',
+      }],
+    })).not.toBeNull();
+  });
+
+  it.each([
+    ['missing root context', (review: any) => { delete review.rootRequirements; }],
+    ['malformed root context', (review: any) => {
+      review.rootRequirements["Cook's Assistant"].items = [{
+        item: { key: 'egg', name: 'Egg' },
+        quantity: 0,
+        supplyPolicy: 'PLAYER_OBTAINED',
+      }];
+    }],
+  ])('rejects a coached strategy with %s', (_label, mutate) => {
+    const source = reviewedStrategySourceFixture();
+    const review = reviewedStrategyReviewFixture();
+    mutate(review);
+
+    expect(() => compileWalkthroughCatalogue(source, review)).toThrow(/root requirement/i);
   });
 
   it.each([

@@ -1870,6 +1870,39 @@
       }
     ]
   },
+  "rootRequirements": {
+    "Cook's Assistant": {
+      "items": [
+        {
+          "item": {
+            "key": "egg",
+            "name": "Egg"
+          },
+          "quantity": 1,
+          "supplyPolicy": "PLAYER_OBTAINED"
+        },
+        {
+          "item": {
+            "key": "bucket of milk",
+            "name": "Bucket of milk"
+          },
+          "quantity": 1,
+          "supplyPolicy": "PLAYER_OBTAINED"
+        },
+        {
+          "item": {
+            "key": "pot of flour",
+            "name": "Pot of flour"
+          },
+          "quantity": 1,
+          "supplyPolicy": "PLAYER_OBTAINED"
+        }
+      ],
+      "questId": "Cook's Assistant",
+      "reviewedAt": "2026-07-29",
+      "wikiRevision": "15240921"
+    }
+  },
   "schemaVersion": 1,
   "sourceLineDigests": {
     "Cook's Assistant": {
