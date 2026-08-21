@@ -659,7 +659,7 @@ describe('walkthrough maintenance CLI', () => {
     })).resolves.toBeUndefined();
   });
 
-  it('refreshes a selected membership quest only into a candidate while committed artefacts remain byte-identical', async () => {
+  it('appends only a missing selected record without fetching or changing existing records', async () => {
     const committedPaths = [
       new URL('../data/sources/quest-walkthrough-sources.json', import.meta.url),
       new URL('../data/sources/quest-walkthrough-review.json', import.meta.url),
@@ -667,6 +667,9 @@ describe('walkthrough maintenance CLI', () => {
     ];
     const committedBefore = await Promise.all(committedPaths.map(path => readFile(path, 'utf8')));
     const source = JSON.parse(committedBefore[0]);
+    const sourceRecordsBefore = structuredClone(source.quests);
+    const selectedTitle = 'Sheep Shearer/Quick guide';
+    const existingTitles = new Set(sourceRecordsBefore.map((quest: any) => quest.wikiTitle));
     const review = JSON.parse(committedBefore[1]);
     const { paths } = await cliTemporaryPaths(source, review);
     await writeFile(paths.generated, committedBefore[2]);
@@ -686,12 +689,17 @@ describe('walkthrough maintenance CLI', () => {
       if (url.searchParams.get('rvprop') === 'ids|timestamp') {
         return Response.json({ query: { pages: titles.map((title, index) => ({
           title,
-          revisions: [{ revid: 16000000 + index, timestamp: '2026-07-31T10:00:00Z' }],
+          revisions: [{
+            revid: existingTitles.has(title) ? 17000000 + index : 16000000 + index,
+            timestamp: existingTitles.has(title) ? '2026-08-21T10:00:00Z' : '2026-07-31T10:00:00Z',
+          }],
         })) } });
       }
       return Response.json({ query: { pages: [{
         title: titles[0],
-        revisions: [{ slots: { main: { content: '== Walkthrough ==\n# Talk to [[' + titles[0] + ']].' } } }],
+        revisions: [{ slots: { main: { content: '== Walkthrough ==\n# '
+          + (existingTitles.has(titles[0]) ? 'Changed existing ' : 'Talk to [[')
+          + titles[0] + (existingTitles.has(titles[0]) ? '.' : ']].') } } }],
       }] } });
     };
     const output: string[] = [];
@@ -710,10 +718,16 @@ describe('walkthrough maintenance CLI', () => {
     expect(candidate.chunkPicker.taskMappings).toHaveProperty(questKey('Sheep Shearer', '1'), 't_7702');
     expect(candidate.chunkPicker.tasksMapSha256).toBe('f740b7194189f1a3ef81515ca4d4872caf91a6516a93bdf64c5d43c93d33bd8a');
     expect(candidate.quests.map((quest: any) => quest.questId)).toEqual([
-      ...source.quests.map((quest: any) => quest.questId),
+      ...sourceRecordsBefore.map((quest: any) => quest.questId),
       'Sheep Shearer',
     ]);
-    expect(candidate.quests.every((quest: any) => quest.importedLines.length === 1)).toBe(true);
+    expect(candidate.quests.slice(0, sourceRecordsBefore.length)).toEqual(sourceRecordsBefore);
+    expect(candidate.quests[candidate.quests.length - 1]).toMatchObject({
+      questId: 'Sheep Shearer',
+      wikiTitle: selectedTitle,
+      wikiRevision: 16000000,
+      importedLines: [expect.objectContaining({ rawText: 'Talk to [[Sheep Shearer/Quick guide]].' })],
+    });
     expect(requestedUrls.filter(url => url.hostname === 'raw.githubusercontent.com')).toEqual([
       expect.objectContaining({
         href: 'https://raw.githubusercontent.com/source-chunk/chunk-picker-v2/ba2fcebf8b26c84c74f8d9ab328a0ede802be926/tasksMap.json',
@@ -723,6 +737,10 @@ describe('walkthrough maintenance CLI', () => {
       expect(url.origin).toBe('https://oldschool.runescape.wiki');
       expect(url.searchParams.get('rvstartid')).toBe(url.searchParams.get('rvendid'));
     });
+    const requestedWikiTitles = requestedUrls
+      .filter(url => url.origin === 'https://oldschool.runescape.wiki')
+      .flatMap(url => (url.searchParams.get('titles') ?? '').split('|').filter(Boolean));
+    expect(requestedWikiTitles).toEqual([selectedTitle, selectedTitle]);
     expect(output.join('\n')).toMatch(/added.*removed.*reordered.*task-changed.*unresolved/i);
   });
 

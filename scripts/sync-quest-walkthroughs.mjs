@@ -484,11 +484,12 @@ const selectedMembershipEntries = (membership, questIds) => {
 };
 
 const refreshQuestRecords = (source, membership, questIds) => {
+  if (questIds.length === 0) return source.quests;
   const sourceQuestIds = new Set(source.quests.map(quest => quest.questId));
   const additions = selectedMembershipEntries(membership, questIds)
     .filter(entry => !sourceQuestIds.has(entry.questId))
     .map(entry => ({ questId: entry.questId, wikiTitle: entry.wikiTitle }));
-  return [...source.quests, ...additions];
+  return additions;
 };
 
 const permanentWikiUrl = (title, revision) => `https://oldschool.runescape.wiki/w/${encodeURIComponent(title.replaceAll(' ', '_')).replaceAll('%2F', '/').replaceAll("'", '%27')}?oldid=${revision}`;
@@ -514,15 +515,24 @@ const diffCandidate = (before, after) => {
 };
 
 const refreshCandidate = async ({ source, membership, questIds, paths, fetchImpl, readChunkSource, tasksMapDigest, write }) => {
+  const refreshRecords = refreshQuestRecords(source, membership, questIds);
+  if (questIds.length > 0 && refreshRecords.length === 0) {
+    await writeFile(paths.candidate, stableJson(source));
+    const diff = diffCandidate(source, source);
+    write(`Candidate written: added ${diff.added}, removed ${diff.removed}, reordered ${diff.reordered}, task-changed ${diff.taskChanged}, unresolved ${diff.unresolved}.`);
+    return;
+  }
+
   const { data } = await readChunkSource();
   const taskMapResponse = await fetchResponse(source.chunkPicker.tasksMapUrl, fetchImpl, 'pinned tasksMap refresh');
   const taskMapRaw = Buffer.from(await taskMapResponse.arrayBuffer());
   const taskMapHash = tasksMapDigest(taskMapRaw);
   let tasksMap;
   try { tasksMap = JSON.parse(taskMapRaw.toString('utf8')); } catch (error) { throw new Error(`Pinned tasksMap is invalid JSON: ${error.message}`); }
-  const refreshRecords = refreshQuestRecords(source, membership, questIds);
+  const candidateRecords = questIds.length === 0 ? refreshRecords : [...source.quests, ...refreshRecords];
   const refreshQuestIds = refreshRecords.map(quest => quest.questId);
-  const taskMappings = retainedQuestMappings(tasksMap, refreshQuestIds);
+  const candidateQuestIds = candidateRecords.map(quest => quest.questId);
+  const taskMappings = retainedQuestMappings(tasksMap, candidateQuestIds);
   const taskGraphs = extractQuestTasks(data, refreshQuestIds, taskMappings);
   const refreshSource = { ...source, quests: refreshRecords };
   const revisions = await latestWikiRevisions(refreshSource, fetchImpl);
@@ -542,7 +552,7 @@ const refreshCandidate = async ({ source, membership, questIds, paths, fetchImpl
   const candidate = {
     ...source,
     chunkPicker: { ...source.chunkPicker, tasksMapUrl: TASKS_MAP_URL, tasksMapSha256: taskMapHash, taskMappings },
-    quests,
+    quests: questIds.length === 0 ? quests : [...source.quests, ...quests],
   };
   validateWalkthroughSource(candidate, membership);
   await writeFile(paths.candidate, stableJson(candidate));
