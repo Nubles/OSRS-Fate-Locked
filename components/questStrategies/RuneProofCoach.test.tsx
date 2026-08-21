@@ -166,7 +166,6 @@ describe('RuneProofCoach', () => {
       <RuneProofCoach
         model={modelWithPotNext}
         onConfirmAction={() => undefined}
-        onOpenWorldChunk={() => undefined}
       />,
     );
 
@@ -195,6 +194,27 @@ describe('RuneProofCoach', () => {
     expect(routeRows[0].querySelector('details')?.open).toBe(false);
     expect(routeRows[1].querySelector('details')?.open).toBe(true);
     expect(routeRows[2].querySelector('details')?.open).toBe(false);
+  });
+
+  it('keeps every compact route step tied to an explicit reviewed chunk', () => {
+    const modelWithUnmappedFinalStep: RuneProofCoachModel = {
+      ...modelWithPotNext,
+      actions: modelWithPotNext.actions.map((action, index) => (
+        index === 2 ? { ...action, mapChunks: [] } : action
+      )),
+    };
+    render(
+      <RuneProofCoach
+        model={modelWithUnmappedFinalStep}
+        onConfirmAction={() => undefined}
+      />,
+    );
+
+    const rows = within(screen.getByRole('list', { name: "Cook's Assistant route" }))
+      .getAllByRole('listitem');
+    expect(within(rows[0]).getByText('Chunk 50,50')).toBeTruthy();
+    expect(within(rows[1]).getByText('Chunk 50,50')).toBeTruthy();
+    expect(within(rows[2]).getByText('Chunk needs review')).toBeTruthy();
   });
 
   it('keeps legal alternatives and proof outside the primary journey until opened', async () => {
@@ -228,16 +248,17 @@ describe('RuneProofCoach', () => {
     expect(screen.getByText('Route budget and source wording are retained for proof.')).toBeTruthy();
   });
 
-  it('keeps the fresh reviewed action primary and forwards its map and confirmation controls', async () => {
+  it('opens a temporary focused map and returns focus to the same RuneProof action', async () => {
     const user = userEvent.setup();
     const onConfirmAction = vi.fn();
-    const onOpenWorldChunk = vi.fn();
+    const onHostClick = vi.fn();
     render(
-      <RuneProofCoach
-        model={freshModel}
-        onConfirmAction={onConfirmAction}
-        onOpenWorldChunk={onOpenWorldChunk}
-      />,
+      <div onClick={onHostClick}>
+        <RuneProofCoach
+          model={freshModel}
+          onConfirmAction={onConfirmAction}
+        />
+      </div>,
     );
 
     const nextActionSection = screen.getByRole('heading', { name: 'Next action' }).closest('section');
@@ -245,12 +266,50 @@ describe('RuneProofCoach', () => {
       .toBeTruthy();
     expect(screen.getAllByRole('button', { name: /on map/i })).toHaveLength(1);
 
-    await user.click(screen.getByRole('button', {
+    const showMap = screen.getByRole('button', {
       name: 'Show Talk to the Cook in Lumbridge Castle. on map',
-    }));
+    });
+    await user.click(showMap);
+
+    const map = screen.getByRole('dialog', {
+      name: 'Temporary map for Talk to the Cook in Lumbridge Castle.',
+    });
+    expect(within(map).getByText('Chunk 50,50')).toBeTruthy();
+    expect(within(map).getByText('Lumbridge Castle')).toBeTruthy();
+    expect(within(map).getByAltText('OSRS world map')).toBeTruthy();
+    const wheel = new WheelEvent('wheel', { bubbles: true, cancelable: true, deltaY: 500 });
+    expect(map.parentElement?.dispatchEvent(wheel)).toBe(false);
+    expect(wheel.defaultPrevented).toBe(true);
+
+    const closeMap = within(map).getByRole('button', {
+      name: 'Close map and return to RuneProof',
+    });
+    expect(document.activeElement).toBe(closeMap);
+    onHostClick.mockClear();
+    await user.click(closeMap);
+
+    expect(screen.queryByRole('dialog', {
+      name: 'Temporary map for Talk to the Cook in Lumbridge Castle.',
+    })).toBeNull();
+    expect(document.activeElement).toBe(showMap);
+    expect(onHostClick).not.toHaveBeenCalled();
+
+    await user.click(showMap);
+    const reopenedMap = screen.getByRole('dialog', {
+      name: 'Temporary map for Talk to the Cook in Lumbridge Castle.',
+    });
+    const backdrop = reopenedMap.parentElement;
+    if (!backdrop) throw new Error('Missing temporary map backdrop.');
+    onHostClick.mockClear();
+    await user.click(backdrop);
+    expect(screen.queryByRole('dialog', {
+      name: 'Temporary map for Talk to the Cook in Lumbridge Castle.',
+    })).toBeNull();
+    expect(document.activeElement).toBe(showMap);
+    expect(onHostClick).not.toHaveBeenCalled();
+
     await user.click(screen.getByRole('button', { name: 'Mark action complete' }));
 
-    expect(onOpenWorldChunk).toHaveBeenCalledWith(50, 50);
     expect(onConfirmAction).toHaveBeenCalledWith('cooks-assistant:start-quest');
   });
 
@@ -288,21 +347,21 @@ describe('RuneProofCoach', () => {
     [
       '50,',
       ' 50,50',
+      '050,50',
+      '50,050',
       '5e1,50',
       '9007199254740992,50',
       '999,999',
     ].forEach(chunk => {
-      const onOpenWorldChunk = vi.fn();
       const view = render(
         <RuneProofCoach
           model={modelWithCurrentChunk(chunk)}
           onConfirmAction={() => undefined}
-          onOpenWorldChunk={onOpenWorldChunk}
         />,
       );
 
       expect(screen.queryByRole('button', { name: /on map/i })).toBeNull();
-      expect(onOpenWorldChunk).not.toHaveBeenCalled();
+      expect(screen.getByText('Chunk needs review')).toBeTruthy();
       view.unmount();
     });
   });

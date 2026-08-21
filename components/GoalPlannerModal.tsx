@@ -67,7 +67,6 @@ interface RuneProofCoachWorkspaceProps {
   readonly confirmedItemKeys: ReadonlySet<string>;
   readonly completedQuestIds: ReadonlySet<string>;
   readonly onSetItemConfirmed: (questId: string, itemKey: string, confirmed: boolean) => void;
-  readonly onOpenWorldChunk?: (cx: number, cy: number) => void;
 }
 
 const RuneProofCoachWorkspace: React.FC<RuneProofCoachWorkspaceProps> = ({
@@ -78,7 +77,6 @@ const RuneProofCoachWorkspace: React.FC<RuneProofCoachWorkspaceProps> = ({
   confirmedItemKeys,
   completedQuestIds,
   onSetItemConfirmed,
-  onOpenWorldChunk,
 }) => {
   const previewActions = useRuneProofPreviewActions(runId, strategy);
   const model = useMemo(() => buildRuneProofCoachModel({
@@ -111,7 +109,6 @@ const RuneProofCoachWorkspace: React.FC<RuneProofCoachWorkspaceProps> = ({
     <RuneProofCoach
       model={model}
       onConfirmAction={handleConfirmAction}
-      onOpenWorldChunk={onOpenWorldChunk}
     />
   );
 };
@@ -677,7 +674,6 @@ export const GoalPlannerModal: React.FC<Props> = ({
                     confirmedItemKeys={confirmedItemKeys}
                     completedQuestIds={completedQuestIds}
                     onSetItemConfirmed={previewChecks.setItemConfirmed}
-                    onOpenWorldChunk={onOpenWorldChunk ? handleOpenWorldChunk : undefined}
                   />
                 </RuneProofErrorBoundary>
               </div>

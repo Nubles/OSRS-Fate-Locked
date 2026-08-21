@@ -18,11 +18,11 @@ import type {
 import type { ChunkKey } from '../../utils/questRoutes/model';
 import { chunkRectOnMap } from '../../utils/questRoutes/routeMapGeometry';
 import { RuneProofProofDrawer } from './RuneProofProofDrawer';
+import { RuneProofTemporaryMap } from './RuneProofTemporaryMap';
 
 export interface RuneProofCoachProps {
   readonly model: RuneProofCoachModel;
   readonly onConfirmAction: (actionId: string) => void;
-  readonly onOpenWorldChunk?: (cx: number, cy: number) => void;
 }
 
 interface ActionPresentation {
@@ -63,7 +63,7 @@ const CHUNK_KEY_PATTERN = /^(-?\d+),(-?\d+)$/;
 
 const worldChunk = (
   chunks: RuneProofCoachAction['mapChunks'],
-): { readonly cx: number; readonly cy: number } | undefined => {
+): ChunkKey | undefined => {
   const firstChunk = chunks[0];
   if (!firstChunk) return undefined;
 
@@ -75,7 +75,17 @@ const worldChunk = (
   if (!Number.isSafeInteger(cx) || !Number.isSafeInteger(cy)) return undefined;
 
   const chunk = (String(cx) + ',' + String(cy)) as ChunkKey;
-  return chunkRectOnMap(chunk) ? { cx, cy } : undefined;
+  if (chunk !== firstChunk) return undefined;
+  return chunkRectOnMap(chunk) ? chunk : undefined;
+};
+
+const ChunkLabel = ({ action }: { readonly action: RuneProofCoachAction }) => {
+  const chunk = worldChunk(action.mapChunks);
+  return (
+    <span className="font-mono text-[10px] font-semibold text-cyan-200">
+      {chunk ? `Chunk ${chunk}` : 'Chunk needs review'}
+    </span>
+  );
 };
 
 const StateLabel = ({ state }: { readonly state: RuneProofCoachActionState }) => {
@@ -93,13 +103,13 @@ const StateLabel = ({ state }: { readonly state: RuneProofCoachActionState }) =>
 const CurrentActionCard = ({
   action,
   onConfirmAction,
-  onOpenWorldChunk,
+  onShowMap,
 }: {
   readonly action: RuneProofCoachAction;
   readonly onConfirmAction: RuneProofCoachProps['onConfirmAction'];
-  readonly onOpenWorldChunk: RuneProofCoachProps['onOpenWorldChunk'];
+  readonly onShowMap: (action: RuneProofCoachAction, trigger: HTMLButtonElement) => void;
 }) => {
-  const mapLocation = onOpenWorldChunk ? worldChunk(action.mapChunks) : undefined;
+  const mapChunk = worldChunk(action.mapChunks);
 
   return (
     <article className="rounded-lg border border-cyan-400/30 bg-cyan-950/20 p-3">
@@ -108,6 +118,9 @@ const CurrentActionCard = ({
           <StateLabel state={action.state} />
           <p className="mt-1 break-words text-sm font-semibold leading-relaxed text-gray-100">
             {action.instruction}
+          </p>
+          <p className="mt-1">
+            <ChunkLabel action={action} />
           </p>
           {action.locationLabel ? (
             <p className="mt-1 text-[11px] text-gray-400">Location: {action.locationLabel}</p>
@@ -127,13 +140,13 @@ const CurrentActionCard = ({
           ) : null}
         </div>
 
-        {mapLocation || action.confirmationAllowed ? (
+        {mapChunk || action.confirmationAllowed ? (
           <div className="flex shrink-0 flex-wrap gap-2">
-            {mapLocation ? (
+            {mapChunk ? (
               <button
                 type="button"
                 aria-label={'Show ' + action.instruction + ' on map'}
-                onClick={() => onOpenWorldChunk?.(mapLocation.cx, mapLocation.cy)}
+                onClick={event => onShowMap(action, event.currentTarget)}
                 className="inline-flex items-center justify-center gap-1.5 rounded border border-cyan-300/40 bg-cyan-950/50 px-2.5 py-1.5 text-[11px] font-semibold text-cyan-100 transition-colors hover:bg-cyan-900/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
               >
                 <MapPin size={13} aria-hidden />
@@ -177,6 +190,9 @@ const TimelineAction = ({
           </span>
           <span className="mt-1 block">
             <StateLabel state={action.state} />
+          </span>
+          <span className="mt-1 block">
+            <ChunkLabel action={action} />
           </span>
         </span>
         <ChevronRight size={14} className="mt-0.5 shrink-0 text-gray-500" aria-hidden />
@@ -262,13 +278,23 @@ const AlternativeSources = ({
 export function RuneProofCoach({
   model,
   onConfirmAction,
-  onOpenWorldChunk,
 }: RuneProofCoachProps) {
   const coachId = useId();
   const objectiveHeadingId = 'runeproof-objective-heading-' + coachId;
   const nextActionHeadingId = 'runeproof-next-action-heading-' + coachId;
   const routeHeadingId = 'runeproof-route-heading-' + coachId;
   const currentActionId = model.nextAction?.id;
+  const [temporaryMap, setTemporaryMap] = useState<{
+    readonly action: RuneProofCoachAction;
+    readonly chunk: ChunkKey;
+    readonly returnFocusTarget: HTMLButtonElement;
+  } | null>(null);
+
+  const showTemporaryMap = (action: RuneProofCoachAction, trigger: HTMLButtonElement) => {
+    const chunk = worldChunk(action.mapChunks);
+    if (!chunk) return;
+    setTemporaryMap({ action, chunk, returnFocusTarget: trigger });
+  };
 
   return (
     <section
@@ -305,7 +331,7 @@ export function RuneProofCoach({
           <CurrentActionCard
             action={model.nextAction}
             onConfirmAction={onConfirmAction}
-            onOpenWorldChunk={onOpenWorldChunk}
+            onShowMap={showTemporaryMap}
           />
         ) : model.actions.length > 0 ? (
           <p className="rounded-lg border border-emerald-400/25 bg-emerald-950/20 px-3 py-2.5 text-xs text-emerald-100">
@@ -340,6 +366,16 @@ export function RuneProofCoach({
       <AlternativeSources sources={model.alternativeSources} />
 
       <RuneProofProofDrawer proof={model.proof} />
+
+      {temporaryMap ? (
+        <RuneProofTemporaryMap
+          instruction={temporaryMap.action.instruction}
+          locationLabel={temporaryMap.action.locationLabel}
+          chunk={temporaryMap.chunk}
+          returnFocusTarget={temporaryMap.returnFocusTarget}
+          onClose={() => setTemporaryMap(null)}
+        />
+      ) : null}
     </section>
   );
 }

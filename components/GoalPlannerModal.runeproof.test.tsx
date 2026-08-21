@@ -183,6 +183,22 @@ const multiLocationCookContent = () => {
   return contentService;
 };
 
+const reviewedCookContent = () => {
+  const contentService = multiLocationCookContent();
+  const defaultLookup = contentService.entityLocations.getMockImplementation()!;
+  contentService.entityLocations.mockImplementation((name, kinds) => {
+    if (name === 'Cook (Lumbridge)' && kinds[0] === 'npc') {
+      return {
+        name: 'Cook (Lumbridge)',
+        kind: 'npc',
+        locations: [{ cx: 50, cy: 50 }],
+      };
+    }
+    return defaultLookup(name, kinds);
+  });
+  return contentService;
+};
+
 const runeProof = (
   contentService: ReturnType<typeof loadedContent>,
   overrides: Record<string, unknown> = {},
@@ -360,6 +376,34 @@ describe('RuneProof Goal Planner integration', () => {
     expect(view.container.querySelector('.max-w-3xl')).toBeNull();
   });
 
+  it("shows the reviewed chunk on every Cook's Assistant route step", async () => {
+    renderGoalPlanner({
+      availability: 'PREVIEW',
+      selectedQuest: "Cook's Assistant",
+      contentService: reviewedCookContent(),
+    });
+
+    await screen.findByRole('heading', { name: 'Next action' });
+    const rows = within(screen.getByRole('list', { name: "Cook's Assistant route" }))
+      .getAllByRole('listitem');
+    const expectedChunks = [
+      'Chunk 50,50',
+      'Chunk 50,50',
+      'Chunk 50,50',
+      'Chunk 50,51',
+      'Chunk 50,51',
+      'Chunk 49,51',
+      'Chunk 49,51',
+      'Chunk 50,50',
+      'Chunk 50,50',
+    ];
+
+    expect(rows).toHaveLength(expectedChunks.length);
+    rows.forEach((row, index) => {
+      expect(within(row).getByText(expectedChunks[index])).toBeTruthy();
+    });
+  });
+
   it("keeps Daddy's Home on the ordinary planner path in preview", async () => {
     renderGoalPlanner({
       availability: 'PREVIEW',
@@ -452,9 +496,10 @@ describe('RuneProof Goal Planner integration', () => {
       .toBeTruthy();
   });
 
-  it('closes the modal and hands the exact reviewed current-action chunk to the map', async () => {
+  it('keeps RuneProof mounted while its temporary map opens and closes', async () => {
     const onClose = vi.fn();
     const onOpenWorldChunk = vi.fn();
+    const user = userEvent.setup();
     render(
       <GoalPlannerModal
         onClose={onClose}
@@ -465,16 +510,70 @@ describe('RuneProof Goal Planner integration', () => {
     );
 
     const current = await nextAction();
+    const plannerDialog = screen.getByRole('dialog', { name: 'Goal Planner' });
     expect(current.getByText('Talk to the Cook in Lumbridge Castle.')).toBeTruthy();
-    await userEvent.click(current.getByRole('button', { name: 'Mark action complete' }));
-    await userEvent.click(current.getByRole('button', {
+    await user.click(current.getByRole('button', { name: 'Mark action complete' }));
+    const coachScroller = current
+      .getByText('Pick up the empty pot beside the Cook in Lumbridge Castle.')
+      .closest<HTMLElement>('.custom-scrollbar');
+    if (!coachScroller) throw new Error('Missing RuneProof scroll container.');
+    coachScroller.scrollTop = 173;
+    await user.click(current.getByRole('button', {
       name: 'Show Pick up the empty pot beside the Cook in Lumbridge Castle. on map',
     }));
 
-    expect(onClose).toHaveBeenCalledOnce();
-    expect(onOpenWorldChunk).toHaveBeenCalledWith(50, 50);
-    expect(onClose.mock.invocationCallOrder[0])
-      .toBeLessThan(onOpenWorldChunk.mock.invocationCallOrder[0]);
+    const map = screen.getByRole('dialog', {
+      name: 'Temporary map for Pick up the empty pot beside the Cook in Lumbridge Castle.',
+    });
+    expect(within(map).getByText('Chunk 50,50')).toBeTruthy();
+    expect(map.getAttribute('aria-modal')).toBe('true');
+    expect(map.closest('.custom-scrollbar')).toBeNull();
+    expect(plannerDialog.getAttribute('aria-hidden')).toBe('true');
+    expect(onClose).not.toHaveBeenCalled();
+    expect(onOpenWorldChunk).not.toHaveBeenCalled();
+
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByRole('dialog', {
+      name: 'Temporary map for Pick up the empty pot beside the Cook in Lumbridge Castle.',
+    })).toBeNull();
+    expect(current.getByText('Pick up the empty pot beside the Cook in Lumbridge Castle.'))
+      .toBeTruthy();
+    expect(screen.getByText('1/9 complete')).toBeTruthy();
+    expect(coachScroller.scrollTop).toBe(173);
+    expect(plannerDialog.getAttribute('aria-hidden')).toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
+
+    const showMap = current.getByRole('button', {
+      name: 'Show Pick up the empty pot beside the Cook in Lumbridge Castle. on map',
+    });
+    await user.click(showMap);
+    const closeButtonMap = screen.getByRole('dialog', {
+      name: 'Temporary map for Pick up the empty pot beside the Cook in Lumbridge Castle.',
+    });
+    await user.click(within(closeButtonMap).getByRole('button', {
+      name: 'Close map and return to RuneProof',
+    }));
+
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByText('1/9 complete')).toBeTruthy();
+    expect(coachScroller.scrollTop).toBe(173);
+    expect(document.activeElement).toBe(showMap);
+
+    await user.click(showMap);
+    const backdropMap = screen.getByRole('dialog', {
+      name: 'Temporary map for Pick up the empty pot beside the Cook in Lumbridge Castle.',
+    });
+    const backdrop = backdropMap.parentElement;
+    if (!backdrop) throw new Error('Missing RuneProof temporary map backdrop.');
+    await user.click(backdrop);
+
+    expect(onClose).not.toHaveBeenCalled();
+    expect(current.getByText('Pick up the empty pot beside the Cook in Lumbridge Castle.'))
+      .toBeTruthy();
+    expect(screen.getByText('1/9 complete')).toBeTruthy();
+    expect(coachScroller.scrollTop).toBe(173);
+    expect(document.activeElement).toBe(showMap);
   });
 
   it('keeps the local mill blocker and map handoff exact when live entities have multiple locations', async () => {
@@ -507,9 +606,17 @@ describe('RuneProof Goal Planner integration', () => {
       name: 'Show Pick grain outside Mill Lane Mill. on map',
     }));
 
+    const map = screen.getByRole('dialog', {
+      name: 'Temporary map for Pick grain outside Mill Lane Mill.',
+    });
+    expect(within(map).getByText('Chunk 49,51')).toBeTruthy();
     expect(contentService.entityLocations).toHaveBeenCalledWith('Wheat', ['object']);
-    expect(onClose).toHaveBeenCalledOnce();
-    expect(onOpenWorldChunk).toHaveBeenCalledWith(49, 51);
+    expect(onClose).not.toHaveBeenCalled();
+    expect(onOpenWorldChunk).not.toHaveBeenCalled();
+    await userEvent.click(within(map).getByRole('button', {
+      name: 'Close map and return to RuneProof',
+    }));
+    expect(current.getByText('Unlock chunk 49,51 to use Mill Lane Mill.')).toBeTruthy();
   });
 
   it('keeps the local flour blocker and map handoff exact after grain is confirmed', async () => {
@@ -546,8 +653,16 @@ describe('RuneProof Goal Planner integration', () => {
       name: 'Show Use the grain in Mill Lane Mill and collect the flour in the pot. on map',
     }));
 
-    expect(onClose).toHaveBeenCalledOnce();
-    expect(onOpenWorldChunk).toHaveBeenCalledWith(49, 51);
+    const map = screen.getByRole('dialog', {
+      name: 'Temporary map for Use the grain in Mill Lane Mill and collect the flour in the pot.',
+    });
+    expect(within(map).getByText('Chunk 49,51')).toBeTruthy();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(onOpenWorldChunk).not.toHaveBeenCalled();
+    await userEvent.click(within(map).getByRole('button', {
+      name: 'Close map and return to RuneProof',
+    }));
+    expect(current.getByText('Unlock chunk 49,51 to use Mill Lane Mill.')).toBeTruthy();
   });
 
   it('contains coach projection failures and keeps the objective picker usable', async () => {
