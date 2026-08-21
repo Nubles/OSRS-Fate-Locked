@@ -10,14 +10,19 @@ declare const process: {
   env: Record<string, string | undefined>;
 };
 
+const runeProofPreviewModuleIds = new Set([
+  'questWalkthroughs',
+  'questWalkthroughs.preview-boundary',
+]);
+
 const runeProofPreviewBoundaryPlugin = (includePreview: boolean): Plugin => ({
   name: 'runeproof-preview-boundary',
   enforce: 'pre',
   resolveId(source, importer) {
     if (includePreview || !importer) return null;
     const normalizedSource = normalizePath(source).replace(/\.[cm]?[jt]sx?$/, '');
-    if (!normalizedSource.endsWith('questWalkthroughs')
-      && !normalizedSource.endsWith('questWalkthroughs.preview-boundary')) return null;
+    const moduleId = normalizedSource.slice(normalizedSource.lastIndexOf('/') + 1);
+    if (!runeProofPreviewModuleIds.has(moduleId)) return null;
     return this.resolve('./questWalkthroughs.public', importer, { skipSelf: true });
   },
 });
