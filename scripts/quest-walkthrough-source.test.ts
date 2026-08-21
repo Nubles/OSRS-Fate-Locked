@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   compileWalkthroughCatalogue,
   convertChunkPickerChunkId,
-  extractPilotQuestTasks,
+  extractQuestTasks,
   extractQuickGuideLines,
   sourceLineDigest,
   stableJson,
@@ -31,6 +31,14 @@ const chunkPickerFixture = () => ({
         QuestPoints: 1,
         XpReward: { Cooking: 300 },
         Chunks: ['12850-1'],
+      },
+      [questKey('Sheep Shearer', '1')]: {
+        BaseQuest: 'Sheep Shearer',
+        Description: 'Talk to Fred the Farmer',
+      },
+      [questKey('Sheep Shearer', 'Complete the quest')]: {
+        BaseQuest: 'Sheep Shearer',
+        Tasks: { [questKey('Sheep Shearer', '1')]: 'Quest' },
       },
       [questKey("Daddy's Home", '1')]: {
         BaseQuest: "Daddy's Home",
@@ -151,14 +159,13 @@ describe('pinned walkthrough source helpers', () => {
     expect(() => convertChunkPickerChunkId('12850-underground')).toThrow(/chunk.*shape/i);
   });
 
-  it('extracts only the four pilot quest challenge graphs', () => {
-    const result = extractPilotQuestTasks(chunkPickerFixture());
-    expect(Object.keys(result)).toEqual([
-      "Cook's Assistant",
-      "Daddy's Home",
-      "Doric's Quest",
-      'Elemental Workshop I',
-    ]);
+  it('extracts only explicitly selected quest challenge graphs', () => {
+    const result = extractQuestTasks(chunkPickerFixture(), ["Cook's Assistant", 'Sheep Shearer']);
+    expect(result).toEqual(expect.objectContaining({
+      "Cook's Assistant": expect.any(Array),
+      'Sheep Shearer': expect.any(Array),
+    }));
+    expect(Object.keys(result)).toEqual(["Cook's Assistant", 'Sheep Shearer']);
     expect(result["Cook's Assistant"]).toEqual([
       expect.objectContaining({
         id: questKey("Cook's Assistant", '1'),
@@ -178,19 +185,35 @@ describe('pinned walkthrough source helpers', () => {
         xpRewards: { Cooking: 300 },
       }),
     ]);
+    expect(result['Sheep Shearer']).toEqual([
+      expect.objectContaining({
+        id: questKey('Sheep Shearer', '1'),
+        description: 'Talk to Fred the Farmer',
+      }),
+      expect.objectContaining({
+        completion: true,
+        dependsOn: [questKey('Sheep Shearer', '1')],
+      }),
+    ]);
   });
 
-  it('uses same-pin task mappings without allowing a fifth quest to leak', () => {
+  it('uses same-pin task mappings without allowing an unselected quest to leak', () => {
     const source = chunkPickerFixture();
     const mapping = {
       [questKey("Cook's Assistant", '1')]: 'task-cook-1',
       [questKey('A Fifth Quest', '1')]: 'task-fifth-1',
     };
-    const first = extractPilotQuestTasks(source, mapping);
-    const second = extractPilotQuestTasks(source, mapping);
+    const first = extractQuestTasks(source, ["Cook's Assistant", 'Sheep Shearer'], mapping);
+    const second = extractQuestTasks(source, ["Cook's Assistant", 'Sheep Shearer'], mapping);
     expect(first["Cook's Assistant"][0].id).toBe('task-cook-1');
     expect(first).toEqual(second);
     expect(JSON.stringify(first)).not.toContain('A Fifth Quest');
+  });
+
+  it('rejects blank or duplicate selected quest IDs', () => {
+    expect(() => extractQuestTasks(chunkPickerFixture(), ["Cook's Assistant", "Cook's Assistant"]))
+      .toThrow(/duplicate/i);
+    expect(() => extractQuestTasks(chunkPickerFixture(), [' '])).toThrow(/blank/i);
   });
 
   it('preserves ordered quick-guide list lines and material nested notes', () => {
@@ -331,8 +354,9 @@ import { mkdtemp, readFile, readdir, rename, unlink, writeFile } from 'node:fs/p
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import pinnedWalkthroughSource from '../data/sources/quest-walkthrough-sources.json';
+import reviewedMembership from '../data/sources/f2p-quest-membership.json';
 
-const CLI_PILOTS = ["Cook's Assistant", "Daddy's Home", "Doric's Quest", 'Elemental Workshop I'];
+const CLI_EXISTING_QUESTS = ["Cook's Assistant", "Daddy's Home", "Doric's Quest", 'Elemental Workshop I'];
 const CLI_TASK_MAPPINGS = {
   "~|Cook's Assistant|~ 1": 't_7591',
   "~|Cook's Assistant|~ 2a": 't_7592',
@@ -409,7 +433,7 @@ const cliSourceFixture = (phase: 'SOURCE_BOOTSTRAP' | 'REVIEWED' = 'SOURCE_BOOTS
     licence: 'CC BY-NC-SA 3.0',
     licenceUrl: 'https://creativecommons.org/licenses/by-nc-sa/3.0/',
   },
-  quests: CLI_PILOTS.map((questId, index) => {
+  quests: CLI_EXISTING_QUESTS.map((questId, index) => {
     const wikiTitle = questId + '/Quick guide';
     const wikiRevision = 15000000 + index;
     return {
@@ -453,8 +477,8 @@ const cliReviewFixture = (source: ReturnType<typeof cliSourceFixture>) => ({
 
 const cliTemporaryPaths = async (source = cliSourceFixture(), review: any = {
   schemaVersion: 1,
-  quests: Object.fromEntries(CLI_PILOTS.map(quest => [quest, []])),
-  sourceLineDigests: Object.fromEntries(CLI_PILOTS.map(quest => [quest, {}])),
+  quests: Object.fromEntries(CLI_EXISTING_QUESTS.map(quest => [quest, []])),
+  sourceLineDigests: Object.fromEntries(CLI_EXISTING_QUESTS.map(quest => [quest, {}])),
 }) => {
   const root = await mkdtemp(join(tmpdir(), 'walkthrough-source-'));
   const paths = {
@@ -462,10 +486,12 @@ const cliTemporaryPaths = async (source = cliSourceFixture(), review: any = {
     review: join(root, 'review.json'),
     generated: join(root, 'generated.json'),
     candidate: join(root, 'candidate.json'),
+    membership: join(root, 'membership.json'),
   };
   await writeFile(paths.source, stableJson(source));
   await writeFile(paths.review, stableJson(review));
   await writeFile(paths.generated, stableJson(compileWalkthroughCatalogue(source, review)));
+  await writeFile(paths.membership, stableJson(reviewedMembership));
   return { root, paths };
 };
 
@@ -518,14 +544,27 @@ describe('walkthrough maintenance CLI', () => {
     })).resolves.toBeUndefined();
   });
 
-  it('refreshes only a candidate from injected pinned source responses', async () => {
-    const { paths } = await cliTemporaryPaths();
-    const tracked = [paths.source, paths.review, paths.generated];
-    const before = await Promise.all(tracked.map(path => readFile(path, 'utf8')));
+  it('refreshes a selected membership quest only into a candidate while committed artefacts remain byte-identical', async () => {
+    const committedPaths = [
+      new URL('../data/sources/quest-walkthrough-sources.json', import.meta.url),
+      new URL('../data/sources/quest-walkthrough-review.json', import.meta.url),
+      new URL('../data/questWalkthroughs.generated.json', import.meta.url),
+    ];
+    const committedBefore = await Promise.all(committedPaths.map(path => readFile(path, 'utf8')));
+    const source = JSON.parse(committedBefore[0]);
+    const review = JSON.parse(committedBefore[1]);
+    const { paths } = await cliTemporaryPaths(source, review);
+    await writeFile(paths.generated, committedBefore[2]);
     const { runWalkthroughSync } = await import('./sync-quest-walkthroughs.mjs');
-    const taskMap = { ...CLI_TASK_MAPPINGS, [questKey('A Fifth Quest', '1')]: 'task-fifth' };
+    const taskMap = {
+      ...CLI_TASK_MAPPINGS,
+      [questKey('Sheep Shearer', '1')]: 't_sheep_1',
+      [questKey('Sheep Shearer', 'Complete the quest')]: 't_sheep_2',
+    };
+    const requestedUrls: URL[] = [];
     const fetchImpl = async (input: URL | string) => {
       const url = new URL(String(input));
+      requestedUrls.push(url);
       if (url.hostname === 'raw.githubusercontent.com') return new Response(JSON.stringify(taskMap));
       const titles = (url.searchParams.get('titles') ?? '').split('|').filter(Boolean);
       if (url.searchParams.get('rvprop') === 'ids|timestamp') {
@@ -542,18 +581,32 @@ describe('walkthrough maintenance CLI', () => {
     const output: string[] = [];
     await runWalkthroughSync({
       mode: 'refresh',
+      questIds: ['sheep-shearer'],
       paths,
       fetchImpl,
       readChunkSource: async () => ({ data: chunkPickerFixture() }),
       tasksMapDigest: () => 'f740b7194189f1a3ef81515ca4d4872caf91a6516a93bdf64c5d43c93d33bd8a',
       write: line => output.push(line),
     });
-    expect(await Promise.all(tracked.map(path => readFile(path, 'utf8')))).toEqual(before);
+    expect(await Promise.all(committedPaths.map(path => readFile(path, 'utf8')))).toEqual(committedBefore);
     const candidate = JSON.parse(await readFile(paths.candidate, 'utf8'));
     expect(candidate.chunkPicker.taskMappings).toHaveProperty(questKey("Cook's Assistant", '1'), 't_7591');
-    expect(candidate.chunkPicker.taskMappings).not.toHaveProperty(questKey('A Fifth Quest', '1'));
+    expect(candidate.chunkPicker.taskMappings).toHaveProperty(questKey('Sheep Shearer', '1'), 't_sheep_1');
     expect(candidate.chunkPicker.tasksMapSha256).toBe('f740b7194189f1a3ef81515ca4d4872caf91a6516a93bdf64c5d43c93d33bd8a');
+    expect(candidate.quests.map((quest: any) => quest.questId)).toEqual([
+      ...source.quests.map((quest: any) => quest.questId),
+      'Sheep Shearer',
+    ]);
     expect(candidate.quests.every((quest: any) => quest.importedLines.length === 1)).toBe(true);
+    expect(requestedUrls.filter(url => url.hostname === 'raw.githubusercontent.com')).toEqual([
+      expect.objectContaining({
+        href: 'https://raw.githubusercontent.com/source-chunk/chunk-picker-v2/ba2fcebf8b26c84c74f8d9ab328a0ede802be926/tasksMap.json',
+      }),
+    ]);
+    requestedUrls.filter(url => url.searchParams.get('rvprop') === 'content').forEach((url) => {
+      expect(url.origin).toBe('https://oldschool.runescape.wiki');
+      expect(url.searchParams.get('rvstartid')).toBe(url.searchParams.get('rvendid'));
+    });
     expect(output.join('\n')).toMatch(/added.*removed.*reordered.*task-changed.*unresolved/i);
   });
 
@@ -571,7 +624,7 @@ describe('walkthrough maintenance CLI', () => {
     });
     expect(JSON.parse(await readFile(paths.source, 'utf8')).phase).toBe('REVIEWED');
     const generated = JSON.parse(await readFile(paths.generated, 'utf8'));
-    expect(generated.walkthroughs).toHaveLength(4);
+    expect(generated.walkthroughs).toHaveLength(candidate.quests.length);
     expect(generated.walkthroughs.every((walkthrough: any) => walkthrough.releaseStatus === 'PREVIEW_ONLY')).toBe(true);
     expect((await readdir(root)).some(name => name.includes('.tmp-'))).toBe(false);
 
@@ -584,6 +637,53 @@ describe('walkthrough maintenance CLI', () => {
       paths: invalidPaths.paths,
       write: () => undefined,
     })).rejects.toThrow(/licence/i);
+  });
+
+  it('promotes a selected fifth quest only after source-line digests, reviewed tasks, and dependency edges agree', async () => {
+    const candidate: any = cliSourceFixture('REVIEWED');
+    const sheep = {
+      questId: 'Sheep Shearer',
+      wikiTitle: 'Sheep Shearer/Quick guide',
+      wikiRevision: 15000004,
+      wikiRevisionTimestamp: '2026-07-31T10:00:00Z',
+      wikiUrl: 'https://oldschool.runescape.wiki/w/Sheep_Shearer/Quick_guide?oldid=15000004',
+      importedLines: [
+        { id: 'sheep-shearer-walkthrough-1', section: 'Walkthrough', sourceOrder: 1, rawText: 'Talk to Fred.', text: 'Talk to Fred.' },
+        { id: 'sheep-shearer-walkthrough-2', section: 'Walkthrough', sourceOrder: 2, rawText: 'Shear sheep.', text: 'Shear sheep.' },
+      ],
+      tasks: [
+        { id: 't_sheep_1', sourceId: questKey('Sheep Shearer', '1'), dependsOn: [] },
+        { id: 't_sheep_2', sourceId: questKey('Sheep Shearer', 'Complete the quest'), dependsOn: ['t_sheep_1'] },
+      ],
+    };
+    candidate.quests.push(sheep);
+    candidate.chunkPicker.taskMappings[questKey('Sheep Shearer', '1')] = 't_sheep_1';
+    candidate.chunkPicker.taskMappings[questKey('Sheep Shearer', 'Complete the quest')] = 't_sheep_2';
+    const review: any = cliReviewFixture(candidate);
+    review.sourceLineDigests['Sheep Shearer'][sheep.importedLines[0].id] = 'stale-digest';
+    const { paths } = await cliTemporaryPaths(cliSourceFixture(), review);
+    await writeFile(paths.candidate, stableJson(candidate));
+    const { runWalkthroughSync } = await import('./sync-quest-walkthroughs.mjs');
+
+    await expect(runWalkthroughSync({ mode: 'promote', paths, write: () => undefined }))
+      .rejects.toThrow(/source line.*digest/i);
+
+    review.sourceLineDigests['Sheep Shearer'][sheep.importedLines[0].id] = sourceLineDigest(sheep.importedLines[0]);
+    await writeFile(paths.review, stableJson(review));
+    await expect(runWalkthroughSync({ mode: 'promote', paths, write: () => undefined }))
+      .rejects.toThrow(/does not cover every pinned task/i);
+
+    review.quests['Sheep Shearer'][0].chunkPickerTaskId = 't_sheep_1';
+    review.quests['Sheep Shearer'][1].chunkPickerTaskId = 't_sheep_2';
+    await writeFile(paths.review, stableJson(review));
+    await expect(runWalkthroughSync({ mode: 'promote', paths, write: () => undefined }))
+      .rejects.toThrow(/task dependency edge/i);
+
+    review.quests['Sheep Shearer'][1].dependsOn = [review.quests['Sheep Shearer'][0].id];
+    await writeFile(paths.review, stableJson(review));
+    await expect(runWalkthroughSync({ mode: 'promote', paths, write: () => undefined })).resolves.toBeUndefined();
+    expect(JSON.parse(await readFile(paths.source, 'utf8')).quests.map((quest: any) => quest.questId)).toContain('Sheep Shearer');
+    expect(JSON.parse(await readFile(paths.generated, 'utf8')).walkthroughs).toHaveLength(5);
   });
 });
 describe('quick-guide parser regression coverage', () => {
@@ -601,14 +701,18 @@ describe('quick-guide parser regression coverage', () => {
     })).toEqual([expect.objectContaining({ text: 'Buy for 1 Egg + 1 Pot of flour coins.' })]);
   });
 });
-describe('walkthrough CLI mode parsing', () => {
-  it('defaults to offline check and rejects unknown flags', async () => {
-    const { parseWalkthroughSyncMode } = await import('./sync-quest-walkthroughs.mjs');
-    expect(parseWalkthroughSyncMode()).toBe('check');
-    expect(parseWalkthroughSyncMode('--check')).toBe('check');
-    expect(parseWalkthroughSyncMode('--refresh')).toBe('refresh');
-    expect(parseWalkthroughSyncMode('--promote')).toBe('promote');
-    expect(() => parseWalkthroughSyncMode('--other')).toThrow(/unknown command/i);
+describe('walkthrough CLI argument parsing', () => {
+  it('parses selected refresh membership slugs and rejects IDs outside refresh', async () => {
+    const { parseWalkthroughSyncArgs } = await import('./sync-quest-walkthroughs.mjs');
+    expect(parseWalkthroughSyncArgs(['--refresh', '--quest-id=sheep-shearer'])).toEqual({
+      mode: 'refresh',
+      questIds: ['sheep-shearer'],
+    });
+    expect(() => parseWalkthroughSyncArgs(['--check', '--quest-id=sheep-shearer']))
+      .toThrow(/quest-id.*refresh/i);
+    expect(() => parseWalkthroughSyncArgs(['--refresh', '--quest-id=elemental-workshop-i']))
+      .toThrow(/F2P membership/i);
+    expect(() => parseWalkthroughSyncArgs(['--other'])).toThrow(/unknown command/i);
   });
 });
 describe('promotion graph validation', () => {
@@ -680,17 +784,17 @@ describe('review-finding pinned task-map validation', () => {
     const { validateWalkthroughSource } = await import('./sync-quest-walkthroughs.mjs');
     const fabricatedDigest = cliSourceFixture();
     fabricatedDigest.chunkPicker.tasksMapSha256 = 'b'.repeat(64);
-    expect(() => validateWalkthroughSource(fabricatedDigest)).toThrow(/pinned.*sha-256/i);
+    expect(() => validateWalkthroughSource(fabricatedDigest, reviewedMembership)).toThrow(/pinned.*sha-256/i);
 
     const fifthQuest = cliSourceFixture();
     fifthQuest.chunkPicker.taskMappings[questKey('A Fifth Quest', '1')] = 'task-fifth';
-    expect(() => validateWalkthroughSource(fifthQuest)).toThrow(/task mapping/i);
+    expect(() => validateWalkthroughSource(fifthQuest, reviewedMembership)).toThrow(/task mapping/i);
 
     const inconsistentTask = cliSourceFixture();
     inconsistentTask.quests[0].tasks = [{
       id: 'not-t_7591', sourceId: questKey("Cook's Assistant", '1'), dependsOn: [],
     }] as any;
-    expect(() => validateWalkthroughSource(inconsistentTask)).toThrow(/task id.*pinned mapping/i);
+    expect(() => validateWalkthroughSource(inconsistentTask, reviewedMembership)).toThrow(/task id.*pinned mapping/i);
   });
 });
 

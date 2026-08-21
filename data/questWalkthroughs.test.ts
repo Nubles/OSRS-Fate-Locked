@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   collectWalkthroughEntityRequests,
+  questWalkthroughCatalogue,
   questWalkthroughFor,
   validateQuestWalkthroughCatalogue,
 } from './questWalkthroughs';
@@ -8,13 +9,6 @@ import generatedCatalogue from './questWalkthroughs.generated.json';
 import { loadQuestWalkthroughFor } from './questWalkthroughLoader';
 import { questWalkthroughReleaseFor } from './questWalkthroughRelease';
 import { questStrategyFromWalkthrough } from '../utils/questStrategies/model';
-
-const PILOT_QUEST_IDS = [
-  "Cook's Assistant",
-  "Daddy's Home",
-  "Doric's Quest",
-  'Elemental Workshop I',
-] as const;
 
 const validFixture = (): any => ({
   phase: 'REVIEWED',
@@ -192,18 +186,10 @@ const cyclicFixture = () => {
 };
 
 describe('quest walkthrough catalogue', () => {
-  it('contains exactly the four reviewed pilot quests', () => {
-    expect([
-      "Cook's Assistant",
-      "Daddy's Home",
-      "Doric's Quest",
-      'Elemental Workshop I',
-    ].map(questId => questWalkthroughFor(questId)?.questId)).toEqual([
-      "Cook's Assistant",
-      "Daddy's Home",
-      "Doric's Quest",
-      'Elemental Workshop I',
-    ]);
+  it('exports the generated reviewed definitions as a readonly catalogue', () => {
+    expect(questWalkthroughCatalogue.map(walkthrough => walkthrough.questId))
+      .toEqual(generatedCatalogue.walkthroughs.map(walkthrough => walkthrough.questId));
+    expect(Object.isFrozen(questWalkthroughCatalogue)).toBe(true);
   });
 
   it('rejects duplicate action IDs, missing dependency targets, and cycles', () => {
@@ -223,9 +209,8 @@ describe('quest walkthrough catalogue', () => {
     ]);
   });
 
-  for (const questId of PILOT_QUEST_IDS) {
-    it(`${questId} preserves every source line exactly once`, () => {
-      const walkthrough = questWalkthroughFor(questId)!;
+  for (const walkthrough of questWalkthroughCatalogue) {
+    it(`${walkthrough.questId} preserves every source line exactly once`, () => {
       const used = walkthrough.actions.flatMap(action => action.rawWikiLineIds).sort();
       expect(used).toEqual(walkthrough.sourceLines.map(line => line.id).sort());
       expect(walkthrough.actions.length).toBeGreaterThan(0);
@@ -308,10 +293,12 @@ describe('quest walkthrough catalogue review fixes', () => {
     mutate(fixture);
     expect(() => validateQuestWalkthroughCatalogue(fixture)).toThrow(message);
   };
-  it('requires the complete pilot quest-ID set', () => {
+  it('accepts a non-empty F2P membership subset but rejects an empty catalogue', () => {
     const catalogue = structuredClone(generatedCatalogue) as any;
-    catalogue.walkthroughs.pop();
-    expect(() => validateQuestWalkthroughCatalogue(catalogue)).toThrow(/exactly.*pilot quests/i);
+    catalogue.walkthroughs = catalogue.walkthroughs.filter((walkthrough: any) => walkthrough.questId === "Cook's Assistant");
+    expect(validateQuestWalkthroughCatalogue(catalogue)).toHaveLength(1);
+    catalogue.walkthroughs = [];
+    expect(() => validateQuestWalkthroughCatalogue(catalogue)).toThrow(/at least one/i);
   });
 
   it('rejects the temporary source-bootstrap runtime phase', () => {

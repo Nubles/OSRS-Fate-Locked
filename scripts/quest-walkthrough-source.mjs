@@ -1,12 +1,5 @@
 import { createHash } from 'node:crypto';
 
-export const PILOT_QUESTS = Object.freeze([
-  "Cook's Assistant",
-  "Daddy's Home",
-  "Doric's Quest",
-  'Elemental Workshop I',
-]);
-
 const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 
 const canonicalValue = (value) => {
@@ -64,13 +57,21 @@ const taskMapId = (tasksMap, sourceId) => {
   return undefined;
 };
 
-export function extractPilotQuestTasks(chunkPicker, tasksMap = undefined) {
+export function extractQuestTasks(chunkPicker, questIds, tasksMap = undefined) {
   const sourceTasks = chunkPicker?.challenges?.Quest;
   if (!isRecord(sourceTasks)) throw new Error('Chunk Picker export is missing challenges.Quest');
 
-  const result = Object.fromEntries(PILOT_QUESTS.map(quest => [quest, []]));
+  if (!Array.isArray(questIds)) throw new Error('Requested quest IDs must be an array');
+  const requestedQuestIds = new Set();
+  for (const questId of questIds) {
+    if (typeof questId !== 'string' || !questId.trim()) throw new Error('Requested quest ID must not be blank');
+    if (requestedQuestIds.has(questId)) throw new Error(`Requested quest ID is duplicated: ${questId}`);
+    requestedQuestIds.add(questId);
+  }
+
+  const result = Object.fromEntries(questIds.map(questId => [questId, []]));
   const selected = Object.entries(sourceTasks).filter(([, task]) => (
-    isRecord(task) && PILOT_QUESTS.includes(task.BaseQuest)
+    isRecord(task) && requestedQuestIds.has(task.BaseQuest)
   ));
   const resolvedIds = new Map(selected.map(([sourceId]) => [sourceId, taskMapId(tasksMap, sourceId) ?? sourceId]));
 

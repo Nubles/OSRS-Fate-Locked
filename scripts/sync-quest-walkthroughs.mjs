@@ -1,12 +1,12 @@
 import { createHash } from 'node:crypto';
 import { readFile, rename, unlink, writeFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readPinnedChunkSource } from './chunk-source.mjs';
 import {
-  PILOT_QUESTS,
   compileWalkthroughCatalogue,
-  extractPilotQuestTasks,
+  extractQuestTasks,
   extractQuickGuideLines,
   sourceLineDigest,
   stableJson,
@@ -19,6 +19,7 @@ const DEFAULT_PATHS = Object.freeze({
   review: resolve(ROOT, 'data', 'sources', 'quest-walkthrough-review.json'),
   candidate: resolve(ROOT, 'data', 'sources', 'quest-walkthrough-candidate.json'),
   generated: resolve(ROOT, 'data', 'questWalkthroughs.generated.json'),
+  membership: resolve(ROOT, 'data', 'sources', 'f2p-quest-membership.json'),
 });
 const PINNED_COMMIT = 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926';
 const TASKS_MAP_URL = `https://raw.githubusercontent.com/source-chunk/chunk-picker-v2/${PINNED_COMMIT}/tasksMap.json`;
@@ -58,6 +59,48 @@ const PINNED_TASK_MAPPINGS = Object.freeze({
 const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 const nonBlank = (value, label) => assert(typeof value === 'string' && value.trim(), `${label} must not be blank`);
+const LEGACY_QUEST_ID = 'Elemental Workshop I';
+
+const validateF2PMembership = (membership) => {
+  assert(membership?.schemaVersion === 1, 'F2P membership schemaVersion must be 1');
+  assert(Array.isArray(membership?.quests) && membership.quests.length > 0, 'F2P membership quests are required');
+  const questIds = new Set();
+  const slugs = new Set();
+  const priorities = new Set();
+  const entries = membership.quests.map((entry, index) => {
+    assert(isRecord(entry), `F2P membership quest ${index + 1} is invalid`);
+    nonBlank(entry.questId, `F2P membership quest ${index + 1} ID`);
+    nonBlank(entry.slug, `F2P membership quest ${index + 1} slug`);
+    assert(/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.slug), `F2P membership quest ${entry.questId} slug is invalid`);
+    assert(entry.kind === 'quest' || entry.kind === 'miniquest', `F2P membership quest ${entry.questId} kind is invalid`);
+    assert(Number.isInteger(entry.progressionPriority) && entry.progressionPriority > 0,
+      `F2P membership quest ${entry.questId} progression priority is invalid`);
+    nonBlank(entry.wikiTitle, `F2P membership quest ${entry.questId} Wiki title`);
+    assert(entry.wikiTitle === `${entry.questId}/Quick guide`, `F2P membership quest ${entry.questId} Wiki title is invalid`);
+    assert(!questIds.has(entry.questId), `F2P membership has duplicate quest ID: ${entry.questId}`);
+    assert(!slugs.has(entry.slug), `F2P membership has duplicate slug: ${entry.slug}`);
+    assert(!priorities.has(entry.progressionPriority), `F2P membership has duplicate progression priority: ${entry.progressionPriority}`);
+    questIds.add(entry.questId);
+    slugs.add(entry.slug);
+    priorities.add(entry.progressionPriority);
+    return entry;
+  });
+  return entries;
+};
+
+const membershipByQuestId = membership => new Map(validateF2PMembership(membership)
+  .map(entry => [entry.questId, entry]));
+
+const membershipBySlug = membership => new Map(validateF2PMembership(membership)
+  .map(entry => [entry.slug, entry]));
+
+const allowedQuestIds = membership => new Set([
+  ...membershipByQuestId(membership).keys(),
+  LEGACY_QUEST_ID,
+]);
+
+const DEFAULT_MEMBERSHIP = JSON.parse(readFileSync(DEFAULT_PATHS.membership, 'utf8'));
+const DEFAULT_MEMBERSHIP_BY_SLUG = membershipBySlug(DEFAULT_MEMBERSHIP);
 
 const readJson = async (path, label) => {
   let raw;
@@ -81,7 +124,9 @@ const validatePermanentWikiSource = (quest) => {
   assert(url.searchParams.get('oldid') === String(quest.wikiRevision), `${quest.questId}: Wiki URL oldid must match the revision`);
 };
 
-export function validateWalkthroughSource(source) {
+export function validateWalkthroughSource(source, membership) {
+  const membersByQuestId = membershipByQuestId(membership);
+  const roster = allowedQuestIds(membership);
   assert(source?.schemaVersion === 1, 'Walkthrough source schemaVersion must be 1');
   assert(source.phase === 'SOURCE_BOOTSTRAP' || source.phase === 'REVIEWED', 'Walkthrough source phase is invalid');
   assert(source.chunkPicker?.repository === 'source-chunk/chunk-picker-v2', 'Chunk Picker repository is invalid');
@@ -91,7 +136,6 @@ export function validateWalkthroughSource(source) {
   assert(source.chunkPicker?.tasksMapUrl === TASKS_MAP_URL, 'tasksMap URL is not pinned to the reviewed commit');
   assert(source.chunkPicker?.tasksMapSha256 === PINNED_TASKS_MAP_SHA256, 'Pinned tasksMap SHA-256 is invalid');
   assert(isRecord(source.chunkPicker?.taskMappings), 'Chunk Picker task mappings are required');
-  assert(stableJson(source.chunkPicker.taskMappings) === stableJson(PINNED_TASK_MAPPINGS), 'Pinned task mapping keys or values are invalid');
   nonBlank(source.chunkPicker?.attribution, 'Chunk Picker attribution');
   assert(source.chunkPicker?.licenceStatus === 'UNVERIFIED' || source.chunkPicker?.licenceStatus === 'PERMISSION_RECORDED', 'Chunk Picker licence status is invalid');
   if (source.chunkPicker.licenceStatus === 'PERMISSION_RECORDED') nonBlank(source.chunkPicker.permissionReference, 'Chunk Picker permission reference');
@@ -100,15 +144,31 @@ export function validateWalkthroughSource(source) {
   assert(source.wiki?.licence === 'CC BY-NC-SA 3.0', 'Wiki licence is invalid');
   assert(source.wiki?.licenceUrl === 'https://creativecommons.org/licenses/by-nc-sa/3.0/', 'Wiki licence URL is invalid');
   assert(Array.isArray(source.quests), 'Walkthrough source quests are required');
-  assert(source.quests.length === PILOT_QUESTS.length, 'Walkthrough source must contain four source quest records');
-  assert(JSON.stringify(source.quests.map(quest => quest.questId)) === JSON.stringify(PILOT_QUESTS), 'Walkthrough source quest order or IDs are invalid');
+  assert(source.quests.length > 0, 'Walkthrough source must contain at least one source quest record');
+  const sourceQuestIds = new Set();
+  const mappings = source.chunkPicker.taskMappings;
+  for (const [sourceId, taskId] of Object.entries(mappings)) {
+    const match = /^~\|(.+)\|~\s/.exec(sourceId);
+    assert(match !== null && roster.has(match[1]), `Chunk Picker task mapping has unsupported quest ID: ${sourceId}`);
+    nonBlank(taskId, `Chunk Picker task mapping ${sourceId}`);
+    const expectedTaskId = PINNED_TASK_MAPPINGS[sourceId];
+    if (expectedTaskId !== undefined) {
+      assert(taskId === expectedTaskId, `Chunk Picker task mapping does not match the pinned mapping for ${sourceId}`);
+    }
+  }
   for (const quest of source.quests) {
-    assert(quest.wikiTitle === `${quest.questId}/Quick guide`, `${quest.questId}: Wiki title is invalid`);
+    nonBlank(quest?.questId, 'Walkthrough source quest ID');
+    assert(!sourceQuestIds.has(quest.questId), `Walkthrough source has duplicate quest ID: ${quest.questId}`);
+    assert(roster.has(quest.questId), `Walkthrough source has unsupported F2P membership quest ID: ${quest.questId}`);
+    sourceQuestIds.add(quest.questId);
+    const member = membersByQuestId.get(quest.questId);
+    const expectedWikiTitle = member?.wikiTitle ?? `${LEGACY_QUEST_ID}/Quick guide`;
+    assert(quest.wikiTitle === expectedWikiTitle, `${quest.questId}: Wiki title is invalid`);
     validatePermanentWikiSource(quest);
     assert(Array.isArray(quest.importedLines), `${quest.questId}: imported lines are required`);
     assert(Array.isArray(quest.tasks), `${quest.questId}: tasks are required`);
     quest.tasks.forEach((task) => {
-      const expectedTaskId = PINNED_TASK_MAPPINGS[task.sourceId];
+      const expectedTaskId = mappings[task.sourceId];
       assert(expectedTaskId !== undefined, quest.questId + ': task source ID is not in the pinned mapping: ' + task.sourceId);
       assert(task.id === expectedTaskId, quest.questId + ': task ID does not match pinned mapping for ' + task.sourceId);
     });
@@ -126,20 +186,26 @@ export function validateWalkthroughSource(source) {
   return source;
 }
 
-const validateReviewShape = (review) => {
+const sameQuestIdSet = (left, right) => (
+  left.length === right.length
+  && left.every(questId => right.includes(questId))
+);
+
+const validateReviewShape = (review, source) => {
   assert(review?.schemaVersion === 1, 'Walkthrough review schemaVersion must be 1');
   assert(isRecord(review.quests), 'Walkthrough review quests are required');
-  assert(JSON.stringify(Object.keys(review.quests)) === JSON.stringify(PILOT_QUESTS), 'Walkthrough review must contain exactly the four pilot quest lists');
+  const sourceQuestIds = source.quests.map(quest => quest.questId);
+  assert(sameQuestIdSet(Object.keys(review.quests), sourceQuestIds), 'Walkthrough review quest keys must exactly match source quest IDs');
   assert(isRecord(review.sourceLineDigests), 'Walkthrough review source line digests are required');
-  assert(JSON.stringify(Object.keys(review.sourceLineDigests).sort()) === JSON.stringify([...PILOT_QUESTS].sort()), 'Walkthrough review source line digests must contain exactly the four pilot quests');
-  PILOT_QUESTS.forEach(quest => assert(Array.isArray(review.quests[quest]), `${quest}: review list is required`));
-  PILOT_QUESTS.forEach((quest) => {
+  assert(sameQuestIdSet(Object.keys(review.sourceLineDigests), sourceQuestIds), 'Walkthrough review source line digest keys must exactly match source quest IDs');
+  sourceQuestIds.forEach(quest => assert(Array.isArray(review.quests[quest]), `${quest}: review list is required`));
+  sourceQuestIds.forEach((quest) => {
     assert(isRecord(review.sourceLineDigests[quest]), `${quest}: source line digests are required`);
   });
 };
 
 export function validateReviewAgreement(source, review) {
-  validateReviewShape(review);
+  validateReviewShape(review, source);
   validateTaskGraph(review.quests);
   for (const quest of source.quests) {
     const expected = quest.importedLines.map(line => line.id).sort();
@@ -239,11 +305,34 @@ const flattenTaskMap = (value, result = {}) => {
   return result;
 };
 
-const retainedPilotMappings = tasksMap => Object.fromEntries(
+const retainedQuestMappings = (tasksMap, questIds) => Object.fromEntries(
   Object.entries(flattenTaskMap(tasksMap)).filter(([sourceId]) => (
-    PILOT_QUESTS.some(quest => sourceId.startsWith(`~|${quest}|~ `))
+    questIds.some(questId => sourceId.startsWith(`~|${questId}|~ `))
   )),
 );
+
+const selectedMembershipEntries = (membership, questIds) => {
+  assert(Array.isArray(questIds), 'Requested walkthrough quest IDs must be an array');
+  const bySlug = membershipBySlug(membership);
+  const selectedSlugs = new Set();
+  const selected = questIds.map((slug) => {
+    nonBlank(slug, 'Requested walkthrough quest slug');
+    assert(!selectedSlugs.has(slug), `Requested walkthrough quest slug is duplicated: ${slug}`);
+    selectedSlugs.add(slug);
+    const entry = bySlug.get(slug);
+    assert(entry !== undefined, `Requested quest slug is not in F2P membership: ${slug}`);
+    return entry;
+  });
+  return selected.sort((left, right) => left.progressionPriority - right.progressionPriority);
+};
+
+const refreshQuestRecords = (source, membership, questIds) => {
+  const sourceQuestIds = new Set(source.quests.map(quest => quest.questId));
+  const additions = selectedMembershipEntries(membership, questIds)
+    .filter(entry => !sourceQuestIds.has(entry.questId))
+    .map(entry => ({ questId: entry.questId, wikiTitle: entry.wikiTitle }));
+  return [...source.quests, ...additions];
+};
 
 const permanentWikiUrl = (title, revision) => `https://oldschool.runescape.wiki/w/${encodeURIComponent(title.replaceAll(' ', '_')).replaceAll('%2F', '/').replaceAll("'", '%27')}?oldid=${revision}`;
 
@@ -267,18 +356,21 @@ const diffCandidate = (before, after) => {
   return { added, removed, reordered, taskChanged, unresolved };
 };
 
-const refreshCandidate = async ({ source, paths, fetchImpl, readChunkSource, tasksMapDigest, write }) => {
+const refreshCandidate = async ({ source, membership, questIds, paths, fetchImpl, readChunkSource, tasksMapDigest, write }) => {
   const { data } = await readChunkSource();
   const taskMapResponse = await fetchResponse(source.chunkPicker.tasksMapUrl, fetchImpl, 'pinned tasksMap refresh');
   const taskMapRaw = Buffer.from(await taskMapResponse.arrayBuffer());
   const taskMapHash = tasksMapDigest(taskMapRaw);
   let tasksMap;
   try { tasksMap = JSON.parse(taskMapRaw.toString('utf8')); } catch (error) { throw new Error(`Pinned tasksMap is invalid JSON: ${error.message}`); }
-  const taskMappings = retainedPilotMappings(tasksMap);
-  const taskGraphs = extractPilotQuestTasks(data, taskMappings);
-  const revisions = await latestWikiRevisions(source, fetchImpl);
+  const refreshRecords = refreshQuestRecords(source, membership, questIds);
+  const refreshQuestIds = refreshRecords.map(quest => quest.questId);
+  const taskMappings = retainedQuestMappings(tasksMap, refreshQuestIds);
+  const taskGraphs = extractQuestTasks(data, refreshQuestIds, taskMappings);
+  const refreshSource = { ...source, quests: refreshRecords };
+  const revisions = await latestWikiRevisions(refreshSource, fetchImpl);
   const quests = [];
-  for (const quest of source.quests) {
+  for (const quest of refreshRecords) {
     const pin = revisions.get(quest.wikiTitle);
     const wikitext = await pinnedWikiText(source, quest.wikiTitle, pin.revision, fetchImpl);
     quests.push({
@@ -295,7 +387,7 @@ const refreshCandidate = async ({ source, paths, fetchImpl, readChunkSource, tas
     chunkPicker: { ...source.chunkPicker, tasksMapUrl: TASKS_MAP_URL, tasksMapSha256: taskMapHash, taskMappings },
     quests,
   };
-  validateWalkthroughSource(candidate);
+  validateWalkthroughSource(candidate, membership);
   await writeFile(paths.candidate, stableJson(candidate));
   const diff = diffCandidate(source, candidate);
   write(`Candidate written: added ${diff.added}, removed ${diff.removed}, reordered ${diff.reordered}, task-changed ${diff.taskChanged}, unresolved ${diff.unresolved}.`);
@@ -350,6 +442,7 @@ export const atomicWritePair = async (
 };
 export async function runWalkthroughSync({
   mode = 'check',
+  questIds = [],
   paths = DEFAULT_PATHS,
   fetchImpl = fetch,
   readChunkSource = readPinnedChunkSource,
@@ -357,19 +450,22 @@ export async function runWalkthroughSync({
   write = line => console.log(line),
 } = {}) {
   assert(mode === 'check' || mode === 'refresh' || mode === 'promote', `Unknown walkthrough sync mode: ${mode}`);
+  assert(Array.isArray(questIds), 'Requested walkthrough quest IDs must be an array');
+  assert(mode === 'refresh' || questIds.length === 0, 'Quest IDs are valid only with refresh mode');
+  const { value: membership } = await readJson(paths.membership, 'F2P membership');
+  validateF2PMembership(membership);
   const { value: source } = await readJson(paths.source, 'walkthrough source');
-  validateWalkthroughSource(source);
+  validateWalkthroughSource(source, membership);
 
   if (mode === 'refresh') {
-    await refreshCandidate({ source, paths, fetchImpl, readChunkSource, tasksMapDigest, write });
+    await refreshCandidate({ source, membership, questIds, paths, fetchImpl, readChunkSource, tasksMapDigest, write });
     return;
   }
 
   const { value: review } = await readJson(paths.review, 'walkthrough review');
-  validateReviewShape(review);
   if (mode === 'promote') {
     const { value: candidate } = await readJson(paths.candidate, 'walkthrough candidate');
-    validateWalkthroughSource(candidate);
+    validateWalkthroughSource(candidate, membership);
     validateReviewAgreement(candidate, review);
     const generated = compileWalkthroughCatalogue(candidate, review);
     await atomicWritePair(paths.source, stableJson(candidate), paths.generated, stableJson(generated));
@@ -377,8 +473,9 @@ export async function runWalkthroughSync({
     return;
   }
 
+  validateReviewShape(review, source);
   if (source.phase === 'SOURCE_BOOTSTRAP') {
-    assert(PILOT_QUESTS.every(quest => review.quests[quest].length === 0), 'SOURCE_BOOTSTRAP review lists must remain empty');
+    assert(source.quests.every(quest => review.quests[quest.questId].length === 0), 'SOURCE_BOOTSTRAP review lists must remain empty');
   } else {
     validateReviewAgreement(source, review);
   }
@@ -392,13 +489,38 @@ export async function runWalkthroughSync({
   write(`Walkthrough sources valid offline: ${source.quests.length} source quest records; phase ${source.phase}.`);
 }
 
-export const parseWalkthroughSyncMode = argument => {
-  if (argument === undefined || argument === '--check') return 'check';
-  if (argument === '--refresh') return 'refresh';
-  if (argument === '--promote') return 'promote';
-  throw new Error(`Unknown command: ${argument}`);
-};
+export function parseWalkthroughSyncArgs(argv = process.argv.slice(2)) {
+  assert(Array.isArray(argv), 'Walkthrough sync arguments must be an array');
+  let mode = 'check';
+  let modeSpecified = false;
+  const questIds = [];
+  const selectedSlugs = new Set();
+
+  for (const argument of argv) {
+    if (argument === '--check' || argument === '--refresh' || argument === '--promote') {
+      assert(!modeSpecified, `Unknown command: ${argument}`);
+      mode = argument.slice(2);
+      modeSpecified = true;
+      continue;
+    }
+    if (typeof argument === 'string' && argument.startsWith('--quest-id=')) {
+      const slug = argument.slice('--quest-id='.length);
+      nonBlank(slug, 'Requested quest slug');
+      assert(!selectedSlugs.has(slug), `Requested quest slug is duplicated: ${slug}`);
+      selectedSlugs.add(slug);
+      questIds.push(slug);
+      continue;
+    }
+    throw new Error(`Unknown command: ${argument}`);
+  }
+
+  assert(mode === 'refresh' || questIds.length === 0, '--quest-id is valid only with --refresh');
+  questIds.forEach((slug) => {
+    assert(DEFAULT_MEMBERSHIP_BY_SLUG.has(slug), `Requested quest slug is not in F2P membership: ${slug}`);
+  });
+  return { mode, questIds };
+}
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  await runWalkthroughSync({ mode: parseWalkthroughSyncMode(process.argv[2]) });
+  await runWalkthroughSync(parseWalkthroughSyncArgs());
 }

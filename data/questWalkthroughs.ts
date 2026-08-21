@@ -1,4 +1,5 @@
 import generatedCatalogue from './questWalkthroughs.generated.json';
+import { f2pQuestMembership } from './f2pQuestMembership';
 import { canonicalItemKey, chunkKey, type ChunkKey } from '../utils/questRoutes/model';
 import type {
   QuestWalkthroughActionDefinition,
@@ -10,12 +11,8 @@ import type {
 } from '../utils/questWalkthroughs/model';
 import { collectWalkthroughEntityRequests } from '../utils/questWalkthroughs/entityRequests';
 
-const PILOT_QUEST_IDS = new Set([
-  "Cook's Assistant",
-  "Daddy's Home",
-  "Doric's Quest",
-  'Elemental Workshop I',
-]);
+const LEGACY_QUEST_ID = 'Elemental Workshop I';
+const F2P_QUEST_IDS = new Set(f2pQuestMembership.map(entry => entry.questId));
 const ACTION_KINDS = new Set<WalkthroughActionKind>([
   'TALK_TO', 'ACQUIRE', 'USE_ITEM', 'INTERACT_OBJECT', 'KILL', 'TRAVEL', 'DIALOGUE', 'INFORMATION',
 ]);
@@ -199,7 +196,7 @@ const definitionPayload = (definition: Record<string, unknown>): Record<string, 
 const validateDefinition = (value: unknown, phase: RawCatalogue['phase']): QuestWalkthroughDefinition => {
   assert(isRecord(value), 'walkthrough definition must be an object');
   nonBlank(value.questId, 'quest id');
-  assert(PILOT_QUEST_IDS.has(value.questId), `unsupported quest ID: ${value.questId}`);
+  assert(F2P_QUEST_IDS.has(value.questId) || value.questId === LEGACY_QUEST_ID, `unsupported quest ID: ${value.questId}`);
   assert(value.releaseStatus === 'PREVIEW_ONLY' || value.releaseStatus === 'APPROVED', 'invalid release status');
   assert(isRecord(value.source), 'source is required');
   nonBlank(value.source.wikiTitle, 'wiki title');
@@ -309,6 +306,7 @@ export const validateQuestWalkthroughCatalogue = (value: unknown): readonly Ques
   assert(isRecord(value), 'walkthrough catalogue must be an object');
   assert(value.phase === 'REVIEWED', 'walkthrough catalogue phase must be REVIEWED');
   assert(Array.isArray(value.walkthroughs), 'walkthrough catalogue walkthroughs are required');
+  assert(value.walkthroughs.length > 0, 'walkthrough catalogue must contain at least one definition');
   const questIds = new Set<string>();
   const definitions = value.walkthroughs.map((definition) => {
     const parsed = validateDefinition(definition, value.phase as RawCatalogue['phase']);
@@ -316,7 +314,6 @@ export const validateQuestWalkthroughCatalogue = (value: unknown): readonly Ques
     questIds.add(parsed.questId);
     return parsed;
   });
-  assert(questIds.size === PILOT_QUEST_IDS.size && [...PILOT_QUEST_IDS].every(questId => questIds.has(questId)), 'walkthrough catalogue must contain exactly the four pilot quests');
   return definitions;
 };
 
@@ -328,8 +325,10 @@ const deepFreeze = <T>(value: T): T => {
   return value;
 };
 
-const walkthroughs = deepFreeze(validateQuestWalkthroughCatalogue(generatedCatalogue));
-const walkthroughByQuestId = new Map(walkthroughs.map(walkthrough => [walkthrough.questId, walkthrough]));
+export const questWalkthroughCatalogue: readonly QuestWalkthroughDefinition[] = deepFreeze(
+  validateQuestWalkthroughCatalogue(generatedCatalogue),
+);
+const walkthroughByQuestId = new Map(questWalkthroughCatalogue.map(walkthrough => [walkthrough.questId, walkthrough]));
 
 export const questWalkthroughFor = (questId: string): QuestWalkthroughDefinition | undefined => walkthroughByQuestId.get(questId);
 
