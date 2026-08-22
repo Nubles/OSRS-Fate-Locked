@@ -37,6 +37,8 @@ describe('RuneProofObjectivePicker', () => {
     render(<RuneProofObjectivePicker recommendations={recommendations} onSelect={onSelect} />);
 
     const region = screen.getByRole('region', { name: 'Recommended RuneProof quests' });
+    expect(region.className).toContain('max-h-[55%]');
+    expect(region.className).toContain('overflow-y-auto');
     expect(within(region).getAllByRole('button')).toHaveLength(3);
     expect(within(region).getByText('Ready')).toBeTruthy();
     expect(within(region).getByText('Needs confirmation')).toBeTruthy();

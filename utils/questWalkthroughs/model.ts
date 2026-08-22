@@ -87,22 +87,48 @@ export interface QuestWalkthroughActionDefinition {
   readonly coach?: QuestActionCoachMetadata;
 }
 
+export interface WikiWalkthroughSource {
+  readonly wikiTitle: string;
+  readonly wikiRevision: string;
+  readonly wikiRevisionTimestamp: string;
+  readonly wikiUrl: string;
+  readonly wikiLicence: 'CC BY-NC-SA 3.0';
+  readonly wikiLicenceUrl: string;
+}
+
+/** Source-backed preview data that retains its original Chunk Picker provenance. */
+export interface ChunkPickerWalkthroughSource extends WikiWalkthroughSource {
+  readonly kind?: 'CHUNK_PICKER_REVIEW';
+  readonly chunkPickerRepository: 'source-chunk/chunk-picker-v2';
+  readonly chunkPickerCommit: string;
+  readonly chunkPickerLicenceStatus: 'UNVERIFIED' | 'PERMISSION_RECORDED';
+  readonly permissionReference?: string;
+}
+
+/**
+ * A public guide written and checked by Fate Locked without reusing the private
+ * Chunk Picker task mapping or review record.
+ */
+export interface IndependentReviewWalkthroughSource extends WikiWalkthroughSource {
+  readonly kind: 'INDEPENDENT_REVIEW';
+  readonly author: string;
+  readonly authoredAt: string;
+  readonly methodology: string;
+}
+
+export type QuestWalkthroughSource =
+  | ChunkPickerWalkthroughSource
+  | IndependentReviewWalkthroughSource;
+
+export const isIndependentReviewWalkthroughSource = (
+  source: QuestWalkthroughSource,
+): source is IndependentReviewWalkthroughSource => source.kind === 'INDEPENDENT_REVIEW';
+
 export interface QuestWalkthroughDefinition {
   readonly questId: string;
   readonly revision: string;
   readonly releaseStatus: 'PREVIEW_ONLY' | 'APPROVED';
-  readonly source: {
-    readonly wikiTitle: string;
-    readonly wikiRevision: string;
-    readonly wikiRevisionTimestamp: string;
-    readonly wikiUrl: string;
-    readonly wikiLicence: 'CC BY-NC-SA 3.0';
-    readonly wikiLicenceUrl: string;
-    readonly chunkPickerRepository: 'source-chunk/chunk-picker-v2';
-    readonly chunkPickerCommit: string;
-    readonly chunkPickerLicenceStatus: 'UNVERIFIED' | 'PERMISSION_RECORDED';
-    readonly permissionReference?: string;
-  };
+  readonly source: QuestWalkthroughSource;
   readonly sourceLines: readonly {
     readonly id: string;
     readonly section: string;

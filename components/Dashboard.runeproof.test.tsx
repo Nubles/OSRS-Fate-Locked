@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { UnlockState } from '../types';
 
 const featureState = vi.hoisted(() => ({
-  availability: 'OFF' as 'OFF' | 'PREVIEW',
+  availability: 'PUBLIC' as 'OFF' | 'PUBLIC' | 'PREVIEW',
 }));
 
 const freshUnlocks = (): UnlockState => ({
@@ -42,17 +42,17 @@ import { Dashboard } from './Dashboard';
 
 afterEach(() => {
   cleanup();
-  featureState.availability = 'OFF';
+  featureState.availability = 'PUBLIC';
 });
 
 describe('Dashboard RuneProof entry', () => {
-  it('preserves the existing Goal Planner label and title while preview is off', () => {
-    featureState.availability = 'OFF';
+  it('labels the production entry RuneProof for the public pack', () => {
+    featureState.availability = 'PUBLIC';
     render(<Dashboard suspendModals />);
 
-    expect(screen.getByRole('button', { name: 'Goal Planner' }).getAttribute('title'))
-      .toBe('Plan the route to any quest, diary, or region');
-    expect(screen.queryByRole('button', { name: 'RuneProof' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'RuneProof' }).getAttribute('title'))
+      .toBe('Get the next reviewed action for your run');
+    expect(screen.queryByRole('button', { name: 'Goal Planner' })).toBeNull();
   });
 
   it('labels the same Dashboard entry RuneProof in private preview', () => {

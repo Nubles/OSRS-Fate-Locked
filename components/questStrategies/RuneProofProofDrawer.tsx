@@ -1,6 +1,7 @@
 import { ChevronDown, ExternalLink, FileText } from 'lucide-react';
 import { useId, useState } from 'react';
 import type { RuneProofCoachModel } from '../../utils/questStrategies/coach';
+import { isIndependentReviewWalkthroughSource } from '../../utils/questWalkthroughs/model';
 
 export interface RuneProofProofDrawerProps {
   readonly proof: RuneProofCoachModel['proof'];
@@ -9,6 +10,7 @@ export interface RuneProofProofDrawerProps {
 export function RuneProofProofDrawer({ proof }: RuneProofProofDrawerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const panelId = 'runeproof-proof-' + useId();
+  const isIndependentGuide = isIndependentReviewWalkthroughSource(proof.source);
 
   return (
     <section className="rounded-lg border border-white/10 bg-[#171717]">
@@ -68,20 +70,29 @@ export function RuneProofProofDrawer({ proof }: RuneProofProofDrawerProps) {
                   {proof.source.wikiLicence}
                 </a>
               </p>
-              <p>
-                Chunk Picker: {proof.source.chunkPickerRepository}; commit{' '}
-                <code className="break-all text-gray-200">{proof.source.chunkPickerCommit}</code>
-              </p>
-              <p>Chunk Picker reuse status: {proof.source.chunkPickerLicenceStatus}</p>
-              {proof.source.permissionReference ? (
-                <p>Review record: {proof.source.permissionReference}</p>
-              ) : null}
+              {isIndependentGuide ? (
+                <>
+                  <p>Independently authored by {proof.source.author} on {proof.source.authoredAt}.</p>
+                  <p>{proof.source.methodology}</p>
+                </>
+              ) : (
+                <>
+                  <p>
+                    Chunk Picker: {proof.source.chunkPickerRepository}; commit{' '}
+                    <code className="break-all text-gray-200">{proof.source.chunkPickerCommit}</code>
+                  </p>
+                  <p>Chunk Picker reuse status: {proof.source.chunkPickerLicenceStatus}</p>
+                  {proof.source.permissionReference ? (
+                    <p>Review record: {proof.source.permissionReference}</p>
+                  ) : null}
+                </>
+              )}
             </div>
           </section>
 
           <section>
             <h4 className="text-[10px] font-bold uppercase tracking-widest text-cyan-300">
-              Reviewed source wording
+              {isIndependentGuide ? 'Guide notes' : 'Reviewed source wording'}
             </h4>
             {proof.sourceLines.length > 0 ? (
               <ol className="mt-2 space-y-2 border-l border-white/10 pl-3">
@@ -95,7 +106,11 @@ export function RuneProofProofDrawer({ proof }: RuneProofProofDrawerProps) {
                 ))}
               </ol>
             ) : (
-              <p className="mt-2 text-gray-500">No pinned source wording recorded.</p>
+              <p className="mt-2 text-gray-500">
+                {isIndependentGuide
+                  ? 'No additional public guide notes recorded.'
+                  : 'No pinned source wording recorded.'}
+              </p>
             )}
           </section>
 

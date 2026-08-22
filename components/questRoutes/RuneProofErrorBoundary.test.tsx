@@ -14,14 +14,14 @@ const BrokenPanel = (): React.ReactNode => {
 };
 
 describe('RuneProofErrorBoundary', () => {
-  it('contains a panel failure and leaves the surrounding planner usable', () => {
+  it('contains a panel failure and leaves the surrounding RuneProof workspace usable', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const preventExpectedError = (event: ErrorEvent) => event.preventDefault();
     window.addEventListener('error', preventExpectedError);
     try {
       render(
         <div>
-          <span>Goal Planner remains</span>
+          <span>RuneProof remains</span>
           <RuneProofErrorBoundary>
             <BrokenPanel />
           </RuneProofErrorBoundary>
@@ -31,8 +31,8 @@ describe('RuneProofErrorBoundary', () => {
       window.removeEventListener('error', preventExpectedError);
     }
 
-    expect(screen.getByText('Goal Planner remains')).toBeTruthy();
-    expect(screen.getByText('RuneProof preview is unavailable. The Goal Planner is still available.'))
+    expect(screen.getByText('RuneProof remains')).toBeTruthy();
+    expect(screen.getByText('RuneProof is temporarily unavailable. Choose another reviewed RuneProof quest.'))
       .toBeTruthy();
     expect(screen.queryByText(/sensitive internal route failure/i)).toBeNull();
   });

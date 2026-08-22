@@ -75,6 +75,7 @@ const presentedMixed = (): PresentedQuestWalkthrough => {
     questActions: actions.filter(candidate => candidate.section === 'QUEST'),
     actions,
     attribution: {
+      kind: 'CHUNK_PICKER_REVIEW',
       wikiLabel: "Old School RuneScape Wiki — Doric's Quest/Quick guide (revision 15240921)",
       wikiUrl: 'https://oldschool.runescape.wiki/w/index.php?title=Doric%27s_Quest/Quick_guide&oldid=15240921',
       licenceLabel: 'Wiki licence: CC BY-NC-SA 3.0',
@@ -164,6 +165,30 @@ describe('QuestWalkthrough', () => {
     expect(within(region).getByText(/PREVIEW_ONLY; Chunk Picker reuse: UNVERIFIED/)).toBeTruthy();
     expect(container.querySelectorAll('[data-runeproof-walkthrough-attribution]')).toHaveLength(1);
     expect(region.lastElementChild?.hasAttribute('data-runeproof-walkthrough-attribution')).toBe(true);
+  });
+
+  it('renders independent public-guide attribution without Chunk Picker provenance', () => {
+    const walkthrough: PresentedQuestWalkthrough = {
+      ...presentedMixed(),
+      attribution: {
+        kind: 'INDEPENDENT_REVIEW',
+        wikiLabel: "Old School RuneScape Wiki — Cook's Assistant/Quick guide (revision 15238952)",
+        wikiUrl: 'https://oldschool.runescape.wiki/w/Cook%27s_Assistant/Quick_guide?oldid=15238952',
+        licenceLabel: 'Wiki licence: CC BY-NC-SA 3.0',
+        licenceUrl: 'https://creativecommons.org/licenses/by-nc-sa/3.0/',
+        author: 'Fate Locked',
+        authoredAt: '2026-08-22',
+        methodology: 'Independently authored quest steps and F2P chunk locations.',
+        reuseStatusText: 'APPROVED; independently authored guide.',
+      },
+    };
+
+    render(<QuestWalkthrough walkthrough={walkthrough} onShowActionOnMap={() => undefined} />);
+
+    const region = screen.getByRole('region', { name: 'Quest walkthrough' });
+    expect(within(region).getByText(/Independently authored by Fate Locked on 2026-08-22/)).toBeTruthy();
+    expect(within(region).getByText(/Independently authored quest steps and F2P chunk locations/)).toBeTruthy();
+    expect(within(region).queryByText(/Chunk Picker/i)).toBeNull();
   });
 
   it('keeps long instructions readable without hiding the row controls', () => {

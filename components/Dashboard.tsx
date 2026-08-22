@@ -344,7 +344,7 @@ interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) => {
   const { unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId, customMode } = useGame();
   const runeProofMode = runeProofAvailability((import.meta as any).env ?? {});
-  const goalPlannerEntry = runeProofMode === 'PREVIEW'
+  const goalPlannerEntry = runeProofMode !== 'OFF'
     ? { label: 'RuneProof', title: 'Get the next reviewed action for your run' }
     : { label: 'Goal Planner', title: 'Plan the route to any quest, diary, or region' };
   const activeMode = getGameMode(gameModeId);

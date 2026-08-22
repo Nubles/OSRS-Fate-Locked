@@ -51,6 +51,7 @@ const emptyWalkthrough: PresentedQuestWalkthrough = {
   questActions: [],
   actions: [],
   attribution: {
+    kind: 'CHUNK_PICKER_REVIEW',
     wikiLabel: 'Wiki revision',
     wikiUrl: 'https://example.test/wiki',
     licenceLabel: 'CC BY-NC-SA 3.0',

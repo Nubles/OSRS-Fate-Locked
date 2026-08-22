@@ -1,9 +1,10 @@
 import type { ChunkKey } from '../questRoutes/model';
-import type {
-  EvaluatedWalkthroughAction,
-  QuestWalkthroughAnalysis,
-  ResolvedWalkthroughLocation,
-  WalkthroughBlocker,
+import {
+  isIndependentReviewWalkthroughSource,
+  type EvaluatedWalkthroughAction,
+  type QuestWalkthroughAnalysis,
+  type ResolvedWalkthroughLocation,
+  type WalkthroughBlocker,
 } from './model';
 
 export interface PresentedWalkthroughAction {
@@ -30,20 +31,33 @@ export interface PresentedWalkthroughAction {
   readonly canShowOnMap: boolean;
 }
 
+interface PresentedWalkthroughAttributionBase {
+  readonly wikiLabel: string;
+  readonly wikiUrl: string;
+  readonly licenceLabel: string;
+  readonly licenceUrl: string;
+  readonly reuseStatusText: string;
+}
+
+export type PresentedWalkthroughAttribution =
+  | (PresentedWalkthroughAttributionBase & {
+      readonly kind: 'CHUNK_PICKER_REVIEW';
+      readonly chunkPickerLabel: string;
+      readonly chunkPickerCommit: string;
+    })
+  | (PresentedWalkthroughAttributionBase & {
+      readonly kind: 'INDEPENDENT_REVIEW';
+      readonly author: string;
+      readonly authoredAt: string;
+      readonly methodology: string;
+    });
+
 export interface PresentedQuestWalkthrough {
   readonly questId: string;
   readonly prepareActions: readonly PresentedWalkthroughAction[];
   readonly questActions: readonly PresentedWalkthroughAction[];
   readonly actions: readonly PresentedWalkthroughAction[];
-  readonly attribution: {
-    readonly wikiLabel: string;
-    readonly wikiUrl: string;
-    readonly licenceLabel: string;
-    readonly licenceUrl: string;
-    readonly chunkPickerLabel: string;
-    readonly chunkPickerCommit: string;
-    readonly reuseStatusText: string;
-  };
+  readonly attribution: PresentedWalkthroughAttribution;
 }
 
 const walkthroughBlockerIdentity = (blocker: WalkthroughBlocker): string => {
@@ -268,20 +282,34 @@ export const presentQuestWalkthrough = (
     ));
   const prepareActions = actions.filter(action => action.section === 'PREPARE');
   const questActions = actions.filter(action => action.section === 'QUEST');
+  const attributionBase = {
+    wikiLabel: `Old School RuneScape Wiki — ${analysis.source.wikiTitle} (revision ${analysis.source.wikiRevision})`,
+    wikiUrl: analysis.source.wikiUrl,
+    licenceLabel: `Wiki licence: ${analysis.source.wikiLicence}`,
+    licenceUrl: analysis.source.wikiLicenceUrl,
+  };
+  const attribution: PresentedWalkthroughAttribution = isIndependentReviewWalkthroughSource(analysis.source)
+    ? {
+        ...attributionBase,
+        kind: 'INDEPENDENT_REVIEW',
+        author: analysis.source.author,
+        authoredAt: analysis.source.authoredAt,
+        methodology: analysis.source.methodology,
+        reuseStatusText: `${analysis.releaseStatus}; independently authored guide.`,
+      }
+    : {
+        ...attributionBase,
+        kind: 'CHUNK_PICKER_REVIEW',
+        chunkPickerLabel: `Chunk Picker — ${analysis.source.chunkPickerRepository}`,
+        chunkPickerCommit: analysis.source.chunkPickerCommit,
+        reuseStatusText: `${analysis.releaseStatus}; Chunk Picker reuse: ${analysis.source.chunkPickerLicenceStatus}.`,
+      };
 
   return deepFreeze({
     questId: analysis.questId,
     prepareActions,
     questActions,
     actions,
-    attribution: {
-      wikiLabel: `Old School RuneScape Wiki — ${analysis.source.wikiTitle} (revision ${analysis.source.wikiRevision})`,
-      wikiUrl: analysis.source.wikiUrl,
-      licenceLabel: `Wiki licence: ${analysis.source.wikiLicence}`,
-      licenceUrl: analysis.source.wikiLicenceUrl,
-      chunkPickerLabel: `Chunk Picker — ${analysis.source.chunkPickerRepository}`,
-      chunkPickerCommit: analysis.source.chunkPickerCommit,
-      reuseStatusText: `${analysis.releaseStatus}; Chunk Picker reuse: ${analysis.source.chunkPickerLicenceStatus}.`,
-    },
+    attribution,
   });
 };

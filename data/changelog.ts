@@ -19,6 +19,21 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-08-22-runeproof-wave-one',
+    title: 'RuneProof Begins',
+    date: '2026-08-22',
+    sections: {
+      added: [
+        "RuneProof launches with five reviewed F2P quest guides: Cook's Assistant, Sheep Shearer, The Restless Ghost, Rune Mysteries, and Imp Catcher.",
+        'Every step shows its chunk, and temporary maps close straight back to the same quest and active step.',
+      ],
+      changed: [
+        'RuneProof now recommends a reachable local Imp source instead of waiting for Falador when another unlocked source is available.',
+        'RuneProof confirmation tracks guide progress only: it does not complete your Journal quest or grant Keys, Fate rolls, or rewards.',
+      ],
+    },
+  },
+  {
     id: '2026-08-20-fate-analytics-dashboard',
     title: 'Your Fate, Explained',
     date: '2026-08-20',

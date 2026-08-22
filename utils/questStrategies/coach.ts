@@ -1,6 +1,7 @@
 import type { DeepReadonly, RuneProofRouteAnalysis } from '../questRoutes/analyzeQuest';
 import type { ConnectGraph } from '../../services/ChunkContentService';
 import type { ChunkKey, ItemRoute } from '../questRoutes/model';
+import { placeOf } from '../chunkLocations';
 import { rankFallbackRoutes } from '../questRoutes/ranker';
 import {
   presentQuestAnalysis,
@@ -205,38 +206,78 @@ const blockerTextFor = (
 const stateFor = (
   isPrimary: boolean,
   evaluatedAction: EvaluatedWalkthroughAction | undefined,
+  hasAvailableAlternative: boolean,
 ): RuneProofCoachActionState => {
   if (!isPrimary) return 'AVAILABLE_NEXT';
-  if (directBlockersFor(evaluatedAction).length > 0) return 'BLOCKED';
+  if (directBlockersFor(evaluatedAction).length > 0 && !hasAvailableAlternative) return 'BLOCKED';
   if (needsConfirmation(evaluatedAction)) return 'NEEDS_CONFIRMATION';
   return 'DO_NOW';
 };
 
-const hasAvailableAlternativeFor = (
+const mutableFallbackRoute = (route: DeepReadonly<ItemRoute>): ItemRoute => ({
+  ...route,
+  item: { ...route.item },
+  chunks: [...route.chunks],
+  steps: route.steps.map(step => ({
+    ...step,
+    gates: step.gates.map(gate => ({ ...gate })),
+    blockers: step.blockers?.map(blocker => ({ ...blocker })),
+  })),
+  blockers: route.blockers.map(blocker => ({ ...blocker })),
+});
+
+const availableAlternativeFor = (
   action: StrategyAction,
   analysis: RuneProofRouteAnalysis,
-): boolean => {
+  connectGraph: ConnectGraph | undefined,
+  origin: ChunkKey | undefined,
+): ItemRoute | undefined => {
   if (
     action.coach.completion.kind !== 'ITEM_CONFIRMED'
     || action.coach.fallbackPolicy !== 'INTERCHANGEABLE'
-  ) return false;
+  ) return undefined;
 
   const itemKey = action.coach.completion.itemKey;
   const fulfilledQuantity = action.coach.fulfils
     .filter(item => item.item.key === itemKey)
     .reduce((total, item) => total + item.quantity, 0);
-  if (fulfilledQuantity <= 0) return false;
+  if (fulfilledQuantity <= 0) return undefined;
 
-  return analysis.items.some(item => (
+  const candidates = analysis.items.flatMap(item => (
     item.requirement.item.key === itemKey
-    && item.requirement.supplyPolicy === 'PLAYER_OBTAINED'
-    && item.currentRoutes.some(route => (
-      route.item.key === itemKey
-      && route.outputQuantity >= fulfilledQuantity
-      && route.blockers.length === 0
-      && !route.hasDataGap
-    ))
+      && item.requirement.supplyPolicy === 'PLAYER_OBTAINED'
+      ? item.currentRoutes
+        .filter(route => (
+          route.item.key === itemKey
+          && route.outputQuantity >= fulfilledQuantity
+          && route.blockers.length === 0
+          && !route.hasDataGap
+        ))
+        .map(mutableFallbackRoute)
+      : []
   ));
+
+  return rankFallbackRoutes(candidates, connectGraph, { origin })[0];
+};
+
+const promotedLocationLabel = (route: ItemRoute): string | undefined => {
+  const chunk = route.chunks[0];
+  if (!chunk) return undefined;
+  const [cx, cy] = chunk.split(',').map(Number);
+  if (!Number.isFinite(cx) || !Number.isFinite(cy)) return `chunk ${chunk}`;
+  return placeOf(cx, cy).label.split(' · ')[0];
+};
+
+const promotedInstruction = (
+  action: StrategyAction,
+  route: ItemRoute,
+): string => {
+  const location = promotedLocationLabel(route) ?? `chunk ${route.chunks[0]}`;
+  if (route.sourceKind === 'DROP' && action.displayText.toLocaleLowerCase('en-GB').includes('imps')) {
+    const itemName = route.item.name.toLocaleLowerCase('en-GB');
+    return `Kill imps in ${location} until you obtain a ${itemName}.`;
+  }
+  return `Obtain ${route.item.name} from ${route.sourceLabel} in ${location}.`;
 };
 
 const confirmationAllowedFor = (
@@ -251,18 +292,6 @@ const confirmationAllowedFor = (
   if (isPrimary) return true;
   return action.coach.completion.kind === 'ITEM_CONFIRMED';
 };
-
-const mutableFallbackRoute = (route: DeepReadonly<ItemRoute>): ItemRoute => ({
-  ...route,
-  item: { ...route.item },
-  chunks: [...route.chunks],
-  steps: route.steps.map(step => ({
-    ...step,
-    gates: step.gates.map(gate => ({ ...gate })),
-    blockers: step.blockers?.map(blocker => ({ ...blocker })),
-  })),
-  blockers: route.blockers.map(blocker => ({ ...blocker })),
-});
 
 const normalizedPresentationValue = (value: string | undefined): string => (
   value?.trim().replace(/\s+/g, ' ').toLocaleLowerCase('en-GB') ?? ''
@@ -414,28 +443,42 @@ export function buildRuneProofCoachModel(input: RuneProofCoachInput): RuneProofC
   const actions = ordered.map((action): RuneProofCoachAction => {
     const evaluatedAction = evaluatedById.get(action.id);
     const isPrimary = action.id === primaryActionId;
+    const availableAlternative = availableAlternativeFor(
+      action,
+      input.analysis,
+      input.connectGraph,
+      alternativeOrigin,
+    );
+    const blockers = directBlockersFor(evaluatedAction);
+    const useAvailableAlternative = blockers.length > 0 && availableAlternative !== undefined;
     const state = completed.has(action.id)
       ? 'COMPLETED'
-      : stateFor(isPrimary, evaluatedAction);
-    const blockers = directBlockersFor(evaluatedAction);
-    const hasAvailableAlternative = hasAvailableAlternativeFor(action, input.analysis);
+      : stateFor(isPrimary, evaluatedAction, useAvailableAlternative);
 
     return {
       id: action.id,
-      instruction: action.displayText,
+      instruction: useAvailableAlternative
+        ? promotedInstruction(action, availableAlternative)
+        : action.displayText,
       state,
-      locationLabel: locationLabelFor(action),
-      mapChunks: [...(evaluatedAction?.location.chunks ?? [])],
+      locationLabel: useAvailableAlternative
+        ? promotedLocationLabel(availableAlternative)
+        : locationLabelFor(action),
+      mapChunks: useAvailableAlternative
+        ? [...availableAlternative.chunks]
+        : [...(evaluatedAction?.location.chunks ?? [])],
       blockerText: state === 'BLOCKED' && blockers[0]
         ? blockerTextFor(blockers[0], action)
         : undefined,
-      preferredMethodLabel: preferredMethodLabelFor(action),
+      preferredMethodLabel: useAvailableAlternative
+        ? availableAlternative.sourceLabel
+        : preferredMethodLabelFor(action),
       confirmationAllowed: confirmationAllowedFor(
         action,
         completed,
         blockers,
         isPrimary,
-        hasAvailableAlternative,
+        availableAlternative !== undefined,
       ),
       confirmationLabel: action.coach.completion.kind === 'QUEST_COMPLETED'
         ? 'Confirm quest complete'

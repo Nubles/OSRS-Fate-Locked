@@ -9,7 +9,6 @@ import {
   type F2PQuestMembership,
 } from '../../data/f2pQuestMembership';
 import { reviewedQuestRequirements } from '../../data/questItemRequirements';
-import { questWalkthroughReleaseFor } from '../../data/questWalkthroughRelease';
 import type {
   QuestActionCoachMetadata,
   QuestWalkthroughActionDefinition,
@@ -233,8 +232,7 @@ const legacyStrategyContextFor = (
 ): QuestStrategyContext | null => {
   const membership = f2pQuestMembershipFor(walkthrough.questId);
   const rootRequirements = reviewedQuestRequirements(walkthrough.questId);
-  const release = questWalkthroughReleaseFor(walkthrough.questId);
-  if (!membership || !rootRequirements || !release || release.revision !== walkthrough.revision) {
+  if (!membership || !rootRequirements) {
     return null;
   }
   return { membership, rootRequirements: rootRequirements.items };

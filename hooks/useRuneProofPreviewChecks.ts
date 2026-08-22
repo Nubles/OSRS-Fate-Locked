@@ -13,9 +13,13 @@ const unavailableStorage: RuneProofStorage = {
   removeItem: () => undefined,
 };
 
-const defaultStorage = (): RuneProofStorage => (
-  typeof window === 'undefined' ? unavailableStorage : window.localStorage
-);
+const defaultStorage = (): RuneProofStorage => {
+  try {
+    return typeof window === 'undefined' ? unavailableStorage : window.localStorage;
+  } catch {
+    return unavailableStorage;
+  }
+};
 
 interface RuneProofPreviewCheckState {
   readonly runId: string;

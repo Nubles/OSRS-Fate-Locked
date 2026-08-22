@@ -83,19 +83,20 @@ review by the maintainer. Preview-only work must not enter the public bundle,
 changelog, Pages deployment, or RuneLite release until that review is explicitly
 accepted.
 
-### P0 — Local RuneProof pilot (implemented; awaiting visual acceptance)
+### P0 — RuneProof Wave 1 release candidate (in progress)
 
-- Four reviewed quests: Cook's Assistant, Daddy's Home, Doric's Quest, and
-  Elemental Workshop I.
+- Five independently reviewed F2P guides: Cook's Assistant, Sheep Shearer,
+  The Restless Ghost, Rune Mysteries, and Imp Catcher.
 - Exact obtainable-item chains, ranked alternatives, blockers, requirement
   confirmations, quest walkthrough actions, route maps, and World-map handoff.
-- Explicit local activation only: `VITE_RUNEPROOF_PREVIEW=1` through
-  `npm run dev -- --mode runeproof-preview`.
-- Confirmations are isolated by run outside normal save/export state. The normal
-  production build replaces the private walkthrough catalogue with an empty
-  public boundary.
-- Exit gate: complete the RuneProof visual smoke matrix on desktop and narrow
-  layouts, record defects, fix and re-test, then make a separate release decision.
+- The normal build exposes only the independently authored public pack. Daddy's
+  Home, Doric's Quest, Elemental Workshop I, and future unfinished guides remain
+  private to the explicit `runeproof-preview` build mode.
+- Confirmations remain isolated by run outside Journal completion, Keys, Fate
+  rolls, rewards, exports, sync, and canonical save state.
+- Exit gate: pass the complete release verifier, serve the production build
+  locally, obtain the maintainer's final visual/play approval, and only then make
+  a separate push, merge, deployment, and announcement decision.
 
 ### P1 — Progression intelligence quick wins
 

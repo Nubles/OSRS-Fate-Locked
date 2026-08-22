@@ -31,7 +31,7 @@ export function RuneProofObjectivePicker({
     <section
       role="region"
       aria-label="Recommended RuneProof quests"
-      className="border-b border-cyan-400/20 bg-cyan-950/10 p-2.5"
+      className="max-h-[55%] shrink-0 overflow-y-auto custom-scrollbar border-b border-cyan-400/20 bg-cyan-950/10 p-2.5"
     >
       <h3 className="px-0.5 text-[10px] font-bold uppercase tracking-widest text-cyan-200">
         Recommended RuneProof quests

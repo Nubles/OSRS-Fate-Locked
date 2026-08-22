@@ -25,7 +25,7 @@ import {
   loadQuestStrategyCatalogue,
   loadQuestWalkthroughFor,
 } from '../data/questWalkthroughLoader';
-import { questWalkthroughReleaseFor } from '../data/questWalkthroughRelease';
+import type { QuestWalkthroughRelease } from '../data/questWalkthroughRelease';
 import {
   CHUNK_CONTENT_DATA_VERSION,
   chunkContentService,
@@ -149,7 +149,6 @@ const DEFAULT_RUNEPROOF: RuneProofIntegration = {
   contentService: chunkContentService,
   analyze: analyzeQuest,
   loadWalkthrough: loadQuestWalkthroughFor,
-  walkthroughReleaseFor: questWalkthroughReleaseFor,
 };
 
 const EMPTY_RUNE_PROOF_STRATEGIES: readonly QuestStrategyDefinition[] = Object.freeze([]);
@@ -363,9 +362,9 @@ export const GoalPlannerModal: React.FC<Props> = ({
   const { unlocks, gameModeId, runId } = useGame();
   const previewChecks = useRuneProofPreviewChecks(runId);
   const runeProofIntegration = runeProof ?? DEFAULT_RUNEPROOF;
+  const runeProofEnabled = runeProofIntegration.availability !== 'OFF';
   const runeProofContentService = runeProofIntegration.contentService;
   const loadRuneProofWalkthrough = runeProofIntegration.loadWalkthrough ?? loadQuestWalkthroughFor;
-  const runeProofWalkthroughReleaseFor = runeProofIntegration.walkthroughReleaseFor ?? questWalkthroughReleaseFor;
   const runeProofRequestGeneration = React.useRef(0);
   const [runeProofState, setRuneProofState] = useState<RuneProofPlannerState | null>(null);
   const [runeProofStrategies, setRuneProofStrategies] = useState<readonly QuestStrategyDefinition[]>(
@@ -416,7 +415,7 @@ export const GoalPlannerModal: React.FC<Props> = ({
     setRuneProofStrategies(EMPTY_RUNE_PROOF_STRATEGIES);
     setRuneProofCatalogueLoaded(false);
 
-    if (runeProofIntegration.availability !== 'PREVIEW') {
+    if (!runeProofEnabled) {
       return () => { active = false; };
     }
 
@@ -433,12 +432,12 @@ export const GoalPlannerModal: React.FC<Props> = ({
       });
 
     return () => { active = false; };
-  }, [runeProofIntegration.availability]);
+  }, [runeProofEnabled, runeProofIntegration.availability]);
 
   useEffect(() => {
     if (
       !runeProofCatalogueLoaded
-      || runeProofIntegration.availability !== 'PREVIEW'
+      || !runeProofEnabled
     ) {
       setRuneProofActionsHydratedScope(null);
       return;
@@ -451,26 +450,41 @@ export const GoalPlannerModal: React.FC<Props> = ({
   }, [
     runId,
     runeProofCatalogueLoaded,
-    runeProofIntegration.availability,
+    runeProofEnabled,
     runeProofStrategies,
   ]);
   const runeProofActionsHydrated = (
     runeProofCatalogueLoaded
-    && runeProofIntegration.availability === 'PREVIEW'
+    && runeProofEnabled
     && runeProofActionsHydratedScope?.runId === runId
     && runeProofActionsHydratedScope.strategies === runeProofStrategies
   );
+  const runeProofQuestIds = useMemo(
+    () => new Set(runeProofStrategies.map(strategy => strategy.questId)),
+    [runeProofStrategies],
+  );
+  const visibleTargets = useMemo(
+    () => runeProofEnabled
+      ? targets.filter(target => target.kind === 'quest' && runeProofQuestIds.has(target.id))
+      : targets,
+    [runeProofEnabled, runeProofQuestIds, targets],
+  );
 
   const selectedRuneProofStrategy = useMemo(() => (
-    selected?.kind === 'quest' && runeProofIntegration.availability === 'PREVIEW'
+    selected?.kind === 'quest' && runeProofEnabled
       ? runeProofStrategies.find(strategy => strategy.questId === selected.id)
       : undefined
-  ), [runeProofIntegration.availability, runeProofStrategies, selected]);
+  ), [runeProofEnabled, runeProofStrategies, selected]);
   const runeProofQuestId = selectedRuneProofStrategy?.questId ?? null;
-  const selectedWalkthroughRelease = useMemo(
-    () => runeProofQuestId ? runeProofWalkthroughReleaseFor(runeProofQuestId) : undefined,
-    [runeProofQuestId, runeProofWalkthroughReleaseFor],
-  );
+  const selectedWalkthroughRelease = useMemo<QuestWalkthroughRelease | undefined>(() => {
+    if (!runeProofQuestId || !selectedRuneProofStrategy) return undefined;
+    const injectedRelease = runeProofIntegration.walkthroughReleaseFor?.(runeProofQuestId);
+    return injectedRelease ?? {
+      questId: runeProofQuestId,
+      revision: selectedRuneProofStrategy.revision,
+      releaseStatus: runeProofIntegration.availability === 'PUBLIC' ? 'APPROVED' : 'PREVIEW_ONLY',
+    };
+  }, [runeProofIntegration, runeProofQuestId, selectedRuneProofStrategy]);
   const selectedRequirements = useMemo(
     () => runeProofQuestId ? reviewedQuestRequirements(runeProofQuestId) : undefined,
     [runeProofQuestId],
@@ -527,7 +541,7 @@ export const GoalPlannerModal: React.FC<Props> = ({
     previewChecks.confirmedItemKeys,
     previewChecks.isHydratedForRun,
     runeProofActionsHydrated,
-    runeProofIntegration.availability,
+    runeProofEnabled,
     runeProofStrategies,
     targetsByQuestId,
     unlocks,
@@ -539,26 +553,26 @@ export const GoalPlannerModal: React.FC<Props> = ({
 
   useEffect(() => {
     if (
-      initialTarget
-      || selected !== null
-      || query.trim().length > 0
-      || !runeProofCatalogueLoaded
+      !runeProofCatalogueLoaded
       || !runeProofActionsHydrated
       || !previewChecks.isHydratedForRun
-      || runeProofIntegration.availability !== 'PREVIEW'
+      || !runeProofEnabled
     ) return;
 
+    if (selected?.kind === 'quest' && runeProofQuestIds.has(selected.id)) return;
+    if (selected === null && query.trim().length > 0) return;
+
     const firstRecommendation = runeProofRecommendations[0];
-    if (firstRecommendation) {
-      setSelected({ kind: 'quest', id: firstRecommendation.questId });
-    }
+    setSelected(firstRecommendation
+      ? { kind: 'quest', id: firstRecommendation.questId }
+      : null);
   }, [
-    initialTarget,
     query,
     runeProofCatalogueLoaded,
     runeProofActionsHydrated,
     previewChecks.isHydratedForRun,
-    runeProofIntegration.availability,
+    runeProofEnabled,
+    runeProofQuestIds,
     runeProofRecommendations,
     selected,
   ]);
@@ -672,8 +686,8 @@ export const GoalPlannerModal: React.FC<Props> = ({
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     const matched = q
-      ? targets.filter((t) => t.label.toLowerCase().includes(q) || t.group.toLowerCase().includes(q))
-      : targets;
+      ? visibleTargets.filter((t) => t.label.toLowerCase().includes(q) || t.group.toLowerCase().includes(q))
+      : visibleTargets;
     return matched
       .map((t) => ({ t, state: goalPlannerTargetState(t, unlocks, gameModeId) }))
       .sort((a, b) => {
@@ -681,11 +695,17 @@ export const GoalPlannerModal: React.FC<Props> = ({
         const rank = (s: TargetState) => (s === 'ready' ? 0 : s === 'confirm' ? 1 : s === 'locked' ? 2 : 3);
         return rank(a.state) - rank(b.state) || a.t.label.localeCompare(b.t.label);
       });
-  }, [targets, query, unlocks, gameModeId]);
+  }, [visibleTargets, query, unlocks, gameModeId]);
+
+  const visibleSelection = runeProofEnabled
+    ? selected?.kind === 'quest' && runeProofQuestIds.has(selected.id) ? selected : null
+    : selected;
 
   const plan: GoalPlan | null = useMemo(
-    () => (selected ? planForTarget(selected.kind, selected.id, unlocks, gameModeId) : null),
-    [selected, unlocks, gameModeId],
+    () => (visibleSelection
+      ? planForTarget(visibleSelection.kind, visibleSelection.id, unlocks, gameModeId)
+      : null),
+    [visibleSelection, unlocks, gameModeId],
   );
 
   const checklistRows = useMemo(() => {
@@ -709,6 +729,10 @@ export const GoalPlannerModal: React.FC<Props> = ({
     ? currentRuneProofState
     : null;
   const coachActive = activeCoachState !== null;
+  const runeProofWorkspaceActive = runeProofEnabled || coachActive;
+  const runeProofRouteLoading = runeProofEnabled
+    && plan !== null
+    && currentRuneProofState === null;
   const selectTarget = React.useCallback((target: { kind: GoalKind; id: string }) => {
     setSelected(target);
     setObjectivePickerOpen(false);
@@ -732,11 +756,11 @@ export const GoalPlannerModal: React.FC<Props> = ({
       onClick={handleClose}
       role="dialog"
       aria-modal="true"
-      aria-label="Goal Planner"
+      aria-label={runeProofEnabled ? 'RuneProof' : 'Goal Planner'}
     >
       <div
         className={`bg-[#161616] border border-white/10 rounded-xl shadow-2xl w-full ${
-          coachActive ? 'max-w-5xl' : 'max-w-3xl'
+          runeProofWorkspaceActive ? 'max-w-5xl' : 'max-w-3xl'
         } h-[80vh] flex flex-col overflow-hidden`}
         onClick={(e) => e.stopPropagation()}
       >
@@ -747,10 +771,13 @@ export const GoalPlannerModal: React.FC<Props> = ({
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="text-base font-bold text-white leading-none flex items-center gap-1.5">
-              Goal Planner <SectionGuide id="GOAL_PLANNER" />
+              {runeProofEnabled ? 'RuneProof' : 'Goal Planner'}
+              {!runeProofEnabled ? <SectionGuide id="GOAL_PLANNER" /> : null}
             </h2>
             <p className="text-[11px] text-gray-500 mt-1">
-              Pick a target — get the full ordered roadmap to unlock it.
+              {runeProofEnabled
+                ? 'Choose a RuneProof quest and follow its verified route.'
+                : 'Pick a target — get the full ordered roadmap to unlock it.'}
             </p>
           </div>
           <button
@@ -765,11 +792,11 @@ export const GoalPlannerModal: React.FC<Props> = ({
         <div className="flex-1 flex flex-col sm:flex-row min-h-0">
           {/* Picker column */}
           <div className={`${
-            coachActive
+            runeProofWorkspaceActive
               ? `${objectivePickerOpen ? 'flex' : 'hidden'} sm:flex w-full h-[45%] sm:w-[32%] sm:h-auto`
               : 'flex w-full h-[34%] sm:w-[44%] sm:h-auto'
           } border-b sm:border-b-0 sm:border-r border-white/10 flex-col min-h-0 shrink-0`}>
-            {runeProofIntegration.availability === 'PREVIEW' ? (
+            {runeProofEnabled ? (
               <RuneProofObjectivePicker
                 recommendations={runeProofRecommendations}
                 onSelect={selectRuneProofObjective}
@@ -781,7 +808,9 @@ export const GoalPlannerModal: React.FC<Props> = ({
                 <input
                   autoFocus
                   type="text"
-                  placeholder="Search quests, diaries, regions…"
+                  placeholder={runeProofEnabled
+                    ? 'Search RuneProof quests…'
+                    : 'Search quests, diaries, regions…'}
                   className="bg-black/30 border border-white/10 rounded-lg py-1.5 pl-8 pr-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/40 w-full transition-colors"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -793,7 +822,7 @@ export const GoalPlannerModal: React.FC<Props> = ({
                 <p className="text-[11px] text-gray-600 italic text-center py-6">No matches.</p>
               )}
               {results.map(({ t, state }) => {
-                const isSel = selected?.kind === t.kind && selected?.id === t.id;
+                const isSel = visibleSelection?.kind === t.kind && visibleSelection?.id === t.id;
                 const meta = KIND_META[t.kind];
                 return (
                   <button
@@ -817,7 +846,7 @@ export const GoalPlannerModal: React.FC<Props> = ({
 
           {/* Plan column */}
           <div className="flex-1 flex flex-col min-h-0 min-w-0">
-            {coachActive ? (
+            {runeProofWorkspaceActive ? (
               <button
                 ref={changeObjectiveButtonRef}
                 type="button"
@@ -831,10 +860,24 @@ export const GoalPlannerModal: React.FC<Props> = ({
             {!plan ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center px-6 gap-3">
                 <Target size={32} className="text-gray-700" aria-hidden />
-                <p className="text-sm text-gray-500 font-semibold">Choose a goal</p>
+                <p className="text-sm text-gray-500 font-semibold">
+                  {runeProofEnabled ? 'Choose a RuneProof quest' : 'Choose a goal'}
+                </p>
                 <p className="text-[11px] text-gray-600 max-w-[260px]">
-                  Select any quest, diary tier, or region on the left to see exactly
-                  what stands between you and it — in the order to tackle it.
+                  {runeProofEnabled
+                    ? 'Only quests with a RuneProof route appear here.'
+                    : 'Select any quest, diary tier, or region on the left to see exactly what stands between you and it — in the order to tackle it.'}
+                </p>
+              </div>
+            ) : runeProofRouteLoading ? (
+              <div
+                className="flex-1 flex flex-col items-center justify-center text-center px-6 gap-2"
+                role="status"
+                aria-live="polite"
+              >
+                <Route size={28} className="text-cyan-500/60" aria-hidden />
+                <p className="text-sm font-semibold text-gray-300">
+                  Loading {plan.targetLabel} RuneProof route…
                 </p>
               </div>
             ) : activeCoachState ? (

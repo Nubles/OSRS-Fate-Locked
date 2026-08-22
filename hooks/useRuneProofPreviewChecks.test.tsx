@@ -19,7 +19,35 @@ const memoryStorage = (): RuneProofStorage & { values: Map<string, string> } => 
   };
 };
 
+const withThrowingDefaultStorage = (callback: (accessCount: () => number) => void): void => {
+  const descriptor = Object.getOwnPropertyDescriptor(window, 'localStorage');
+  let accesses = 0;
+  Object.defineProperty(window, 'localStorage', {
+    configurable: true,
+    get: () => {
+      accesses += 1;
+      throw new Error('local storage getter is unavailable');
+    },
+  });
+
+  try {
+    callback(() => accesses);
+  } finally {
+    if (descriptor) Object.defineProperty(window, 'localStorage', descriptor);
+    else delete (window as { localStorage?: Storage }).localStorage;
+  }
+};
+
 describe('useRuneProofPreviewChecks', () => {
+  it('falls back when the browser localStorage getter throws', () => {
+    withThrowingDefaultStorage(accessCount => {
+      const { result } = renderHook(() => useRuneProofPreviewChecks('run-a'));
+
+      expect(result.current.checks).toEqual({});
+      expect(accessCount()).toBeGreaterThan(0);
+    });
+  });
+
   it('loads, persists, and switches confirmation state by run id', () => {
     const storage = memoryStorage();
     storage.values.set(runeProofPreviewStorageKey('run-a'), JSON.stringify({

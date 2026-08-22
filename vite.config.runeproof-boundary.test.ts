@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ConfigEnv, Plugin, UserConfig } from 'vite';
 import viteConfig from './vite.config';
 
@@ -20,6 +20,10 @@ const normalBoundaryPlugin = async (): Promise<Plugin> => {
 };
 
 describe('RuneProof normal-build module boundary', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it('redirects only the two private catalogue module IDs', async () => {
     const boundaryPlugin = await normalBoundaryPlugin();
     const resolve = vi.fn(() => 'public-safe-module');
@@ -38,5 +42,20 @@ describe('RuneProof normal-build module boundary', () => {
     expect(await resolveId.call({ resolve }, './notquestWalkthroughs', importer)).toBeNull();
     expect(resolve).toHaveBeenCalledTimes(4);
     expect(resolve).toHaveBeenCalledWith('./questWalkthroughs.public', importer, { skipSelf: true });
+  });
+
+  it('keeps the private catalogue excluded when a preview flag is inherited', async () => {
+    vi.stubEnv('VITE_RUNEPROOF_PREVIEW', '1');
+    const boundaryPlugin = await normalBoundaryPlugin();
+    const resolve = vi.fn(() => 'public-safe-module');
+    const resolveId = boundaryPlugin.resolveId as (source: string, importer: string) => unknown;
+
+    expect(await resolveId.call({ resolve }, './questWalkthroughs', '/virtual/data/questWalkthroughLoader.ts'))
+      .toBe('public-safe-module');
+    expect(resolve).toHaveBeenCalledWith(
+      './questWalkthroughs.public',
+      '/virtual/data/questWalkthroughLoader.ts',
+      { skipSelf: true },
+    );
   });
 });

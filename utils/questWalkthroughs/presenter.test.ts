@@ -216,6 +216,37 @@ describe('quest walkthrough presentation', () => {
     expect(presented.attribution.reuseStatusText).toContain('UNVERIFIED');
   });
 
+  it('presents an independently authored public guide without Chunk Picker attribution', () => {
+    const independent = {
+      ...analysis([action('public-guide', 1, 'READY_HERE')]),
+      questId: "Cook's Assistant",
+      releaseStatus: 'APPROVED' as const,
+      source: {
+        kind: 'INDEPENDENT_REVIEW' as const,
+        author: 'Fate Locked',
+        authoredAt: '2026-08-22',
+        methodology: 'Independently authored quest steps and F2P chunk locations.',
+        wikiTitle: "Cook's Assistant/Quick guide",
+        wikiRevision: '15240921',
+        wikiRevisionTimestamp: '2026-08-22T00:00:00Z',
+        wikiUrl: 'https://oldschool.runescape.wiki/w/Cook%27s_Assistant/Quick_guide?oldid=15240921',
+        wikiLicence: 'CC BY-NC-SA 3.0' as const,
+        wikiLicenceUrl: 'https://creativecommons.org/licenses/by-nc-sa/3.0/',
+      },
+    } as QuestWalkthroughAnalysis;
+
+    const presented = presentQuestWalkthrough(independent, new Set());
+
+    expect(presented.attribution).toMatchObject({
+      kind: 'INDEPENDENT_REVIEW',
+      author: 'Fate Locked',
+      authoredAt: '2026-08-22',
+      methodology: 'Independently authored quest steps and F2P chunk locations.',
+    });
+    expect('chunkPickerLabel' in presented.attribution).toBe(false);
+    expect('chunkPickerCommit' in presented.attribution).toBe(false);
+  });
+
   it('presents every folded Elemental Workshop source line as pinned human-readable wording', () => {
     const definition = questWalkthroughFor('Elemental Workshop I')!;
     const makeKey = definition.actions.find(

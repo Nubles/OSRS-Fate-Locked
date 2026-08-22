@@ -21,6 +21,7 @@ import { ALL_CHUNK_KEYS, parseChunkKey } from '../utils/chunkAdjacency';
 import { chunkUnlocked } from '../utils/chunkLocations';
 import type { EntityHit } from '../services/ChunkContentService';
 import * as walkthroughCatalogue from '../data/questWalkthroughs';
+import type { QuestWalkthroughDefinition } from '../utils/questWalkthroughs/model';
 import { runeProofPreviewStorageKey } from '../utils/questRoutes/previewChecks';
 import { runeProofPreviewActionStorageKey } from '../utils/questStrategies/previewActions';
 import { questStrategyCatalogue } from '../data/questWalkthroughs.preview-boundary';
@@ -47,8 +48,9 @@ vi.mock('../data/questWalkthroughLoader', async (importOriginal) => {
 const analyzeQuest = (
   questId: string,
   snapshot: QuestRouteAnalysisSnapshot,
+  suppliedWalkthrough?: QuestWalkthroughDefinition,
 ) => {
-  const walkthrough = walkthroughCatalogue.questWalkthroughFor(questId);
+  const walkthrough = suppliedWalkthrough ?? walkthroughCatalogue.questWalkthroughFor(questId);
   if (!walkthrough) throw new Error(`Missing walkthrough fixture for ${questId}`);
   return analyzeQuestWithWalkthrough(questId, snapshot, walkthrough);
 };
@@ -246,7 +248,7 @@ const renderGoalPlanner = ({
   selectedQuest,
   contentService = loadedContent(),
 }: {
-  availability: 'PREVIEW' | 'OFF';
+  availability: 'PUBLIC' | 'PREVIEW' | 'OFF';
   selectedQuest: string;
   contentService?: ReturnType<typeof loadedContent>;
 }) => render(
@@ -298,6 +300,7 @@ describe('Goal Planner responsive layout', () => {
       <GoalPlannerModal
         onClose={() => undefined}
         initialTarget={{ kind: 'quest', id: "Doric's Quest" }}
+        runeProof={runeProof(loadedContent(), { availability: 'OFF' })}
       />,
     );
 
@@ -328,6 +331,7 @@ describe('Goal Planner responsive layout', () => {
         <GoalPlannerModal
           onClose={() => undefined}
           initialTarget={{ kind: 'quest', id: "Doric's Quest" }}
+          runeProof={runeProof(loadedContent(), { availability: 'OFF' })}
         />,
       );
 
@@ -392,6 +396,32 @@ it('does not invent a wiki article for a manual confirmation', () => {
 });
 
 describe('RuneProof Goal Planner integration', () => {
+  it('uses the five independently authored guides in public RuneProof and hides preview-only quests', async () => {
+    const view = renderGoalPlanner({
+      availability: 'PUBLIC',
+      selectedQuest: "Daddy's Home",
+    });
+
+    expect(await screen.findByRole('heading', { level: 2, name: "Cook's Assistant" })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Next action' })).toBeTruthy();
+    expect(view.container.textContent).toContain('Choose a RuneProof quest and follow its verified route.');
+    expect(view.container.textContent).not.toContain('reviewed RuneProof route');
+    expect(screen.getAllByText('Speak with the Cook in Lumbridge Castle to begin.')).toHaveLength(2);
+    await waitFor(() => {
+      const visibleTargets = Array.from(view.container.querySelectorAll<HTMLButtonElement>('button.group'))
+        .map(button => button.textContent?.split('Quest')[0]?.trim())
+        .sort();
+      expect(visibleTargets).toEqual([
+        "Cook's Assistant",
+        'Imp Catcher',
+        'Rune Mysteries',
+        'Sheep Shearer',
+        'The Restless Ghost',
+      ]);
+    });
+    expect(view.container.textContent).not.toContain("Daddy's Home");
+  });
+
   it("selects the first ranked private-preview objective without changing the off-mode empty state", async () => {
     const off = render(
       <GoalPlannerModal
@@ -429,18 +459,18 @@ describe('RuneProof Goal Planner integration', () => {
 
     const search = screen.getByRole('textbox');
     await user.type(search, "Daddy's Home");
-    expect(screen.getByText('Choose a goal')).toBeTruthy();
+    expect(screen.getByText('Choose a RuneProof quest')).toBeTruthy();
 
     await act(async () => { catalogue.resolve(questStrategyCatalogue); });
 
     expect(await screen.findByRole('region', { name: 'Recommended RuneProof quests' })).toBeTruthy();
     expect(screen.getByDisplayValue("Daddy's Home")).toBeTruthy();
-    expect(screen.getByText('Choose a goal')).toBeTruthy();
+    expect(screen.getByText('Choose a RuneProof quest')).toBeTruthy();
+    expect(screen.getByText('No matches.')).toBeTruthy();
     expect(screen.queryByRole('heading', { name: 'Next action' })).toBeNull();
   });
 
   it('keeps confirmation state for every Wave 1 strategy while objectives switch', async () => {
-    const user = userEvent.setup();
     const journalQuestsBefore = [...gameSnapshot.unlocks.quests];
     const objectives = [
       { questId: "Cook's Assistant", total: 9 },
@@ -463,9 +493,8 @@ describe('RuneProof Goal Planner integration', () => {
 
     const search = screen.getByRole('textbox');
     for (const objective of objectives) {
-      await user.clear(search);
-      await user.type(search, objective.questId);
-      await user.click(goalPlannerTargetButton(objective.questId));
+      fireEvent.change(search, { target: { value: objective.questId } });
+      fireEvent.click(goalPlannerTargetButton(objective.questId));
       await screen.findByRole('heading', { name: objective.questId });
 
       const progress = screen.getByRole('progressbar', { name: `${objective.questId} progress` });
@@ -473,14 +502,13 @@ describe('RuneProof Goal Planner integration', () => {
       expect(progress).toHaveProperty('value', 0);
 
       const current = await nextAction();
-      await user.click(current.getByRole('button', { name: 'Mark action complete' }));
+      fireEvent.click(current.getByRole('button', { name: 'Mark action complete' }));
       await waitFor(() => expect(progress).toHaveProperty('value', 1));
     }
 
     for (const objective of objectives) {
-      await user.clear(search);
-      await user.type(search, objective.questId);
-      await user.click(goalPlannerTargetButton(objective.questId));
+      fireEvent.change(search, { target: { value: objective.questId } });
+      fireEvent.click(goalPlannerTargetButton(objective.questId));
       await screen.findByRole('heading', { name: objective.questId });
 
       expect(screen.getByRole('progressbar', { name: `${objective.questId} progress` }))
@@ -503,6 +531,54 @@ describe('RuneProof Goal Planner integration', () => {
     expect(screen.getByRole('button', { name: 'Change objective' })).toBeTruthy();
     expect(view.container.querySelector('.max-w-5xl')).toBeTruthy();
     expect(view.container.querySelector('.max-w-3xl')).toBeNull();
+  });
+
+  it('brands the reviewed preview as RuneProof without renaming the ordinary Goal Planner', async () => {
+    const preview = renderGoalPlanner({
+      availability: 'PREVIEW',
+      selectedQuest: "Cook's Assistant",
+    });
+
+    const runeProofDialog = await screen.findByRole('dialog', { name: 'RuneProof' });
+    expect(within(runeProofDialog).getByRole('heading', { level: 2, name: 'RuneProof' })).toBeTruthy();
+    expect(screen.getByPlaceholderText('Search RuneProof quests…')).toBeTruthy();
+    preview.unmount();
+
+    renderGoalPlanner({
+      availability: 'OFF',
+      selectedQuest: "Cook's Assistant",
+    });
+
+    const plannerDialog = screen.getByRole('dialog', { name: 'Goal Planner' });
+    expect(within(plannerDialog).getByRole('heading', { level: 2, name: 'Goal Planner' })).toBeTruthy();
+    expect(screen.getByPlaceholderText('Search quests, diaries, regions…')).toBeTruthy();
+  });
+
+  it('shows only reviewed quests and replaces an untreated initial RuneProof target', async () => {
+    const view = renderGoalPlanner({
+      availability: 'PREVIEW',
+      selectedQuest: "Daddy's Home",
+    });
+
+    expect(await screen.findByRole('heading', { level: 2, name: "Cook's Assistant" })).toBeTruthy();
+    await waitFor(() => {
+      const visibleTargets = Array.from(view.container.querySelectorAll<HTMLButtonElement>('button.group'))
+        .map(button => button.textContent?.split('Quest')[0]?.trim())
+        .sort();
+      expect(visibleTargets).toEqual([
+        "Cook's Assistant",
+        'Imp Catcher',
+        'Rune Mysteries',
+        'Sheep Shearer',
+        'The Restless Ghost',
+      ]);
+    });
+    expect(view.container.textContent).not.toContain("Daddy's Home");
+
+    const search = screen.getByRole('textbox');
+    await userEvent.type(search, "Daddy's Home");
+    expect(view.container.querySelectorAll('button.group')).toHaveLength(0);
+    expect(screen.getByText('No matches.')).toBeTruthy();
   });
 
   it('moves mobile keyboard objective selection focus to Change objective', async () => {
@@ -554,23 +630,23 @@ describe('RuneProof Goal Planner integration', () => {
     });
   });
 
-  it("keeps Daddy's Home on the ordinary planner path in preview", async () => {
+  it("replaces a direct Daddy's Home target with a reviewed RuneProof quest", async () => {
     renderGoalPlanner({
       availability: 'PREVIEW',
       selectedQuest: "Daddy's Home",
     });
 
-    expect(await screen.findByRole('heading', { level: 3, name: "Daddy's Home" })).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: 'Next action' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Change objective' })).toBeNull();
+    expect(await screen.findByRole('heading', { level: 2, name: "Cook's Assistant" })).toBeTruthy();
+    expect(screen.queryByText("Daddy's Home")).toBeNull();
+    expect(screen.getByRole('button', { name: 'Change objective' })).toBeTruthy();
   });
 
   it('cannot render stale Cook coach output after rapidly switching targets', async () => {
     const cookLoad = deferred<boolean>();
-    const daddyLoad = deferred<boolean>();
+    const sheepLoad = deferred<boolean>();
     let request = 0;
     const contentService = loadedContent(() => (
-      request++ === 0 ? cookLoad.promise : daddyLoad.promise
+      request++ === 0 ? cookLoad.promise : sheepLoad.promise
     ));
     const view = renderGoalPlanner({
       availability: 'PREVIEW',
@@ -578,14 +654,17 @@ describe('RuneProof Goal Planner integration', () => {
       contentService,
     });
 
-    screen.getByRole('button', { name: /Daddy's Home/ }).click();
+    await waitFor(() => {
+      expect(view.container.querySelectorAll('button.group').length).toBeGreaterThan(0);
+    });
+    goalPlannerTargetButton('Sheep Shearer').click();
     await act(async () => { cookLoad.resolve(true); });
     expect(screen.queryByRole('heading', { name: 'Next action' })).toBeNull();
     expect(view.container.textContent).not.toContain('Pick up the empty pot beside the Cook');
 
-    await act(async () => { daddyLoad.resolve(true); });
-    expect(await screen.findByRole('heading', { level: 3, name: "Daddy's Home" })).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: 'Next action' })).toBeNull();
+    await act(async () => { sheepLoad.resolve(true); });
+    expect(await screen.findByRole('heading', { level: 2, name: 'Sheep Shearer' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Next action' })).toBeTruthy();
   });
 
   it('persists isolated action progress across a true close and reopen', async () => {
@@ -744,7 +823,7 @@ describe('RuneProof Goal Planner integration', () => {
     );
 
     const current = await nextAction();
-    const plannerDialog = screen.getByRole('dialog', { name: 'Goal Planner' });
+    const plannerDialog = screen.getByRole('dialog', { name: 'RuneProof' });
     expect(current.getByText('Talk to the Cook in Lumbridge Castle.')).toBeTruthy();
     await user.click(current.getByRole('button', { name: 'Mark action complete' }));
     const coachScroller = current
@@ -916,17 +995,17 @@ describe('RuneProof Goal Planner integration', () => {
     );
 
     expect((await screen.findByRole('status')).textContent).toContain(
-      'RuneProof preview is unavailable. The Goal Planner is still available.',
+      'RuneProof is temporarily unavailable. Choose another reviewed RuneProof quest.',
     );
-    await userEvent.click(screen.getByRole('button', { name: 'Change objective' }));
-    await userEvent.click(screen.getByRole('button', { name: /Daddy's Home/ }));
+    const recommendations = screen.getByRole('region', { name: 'Recommended RuneProof quests' });
+    expect(within(recommendations).queryByRole('button', { name: /Daddy's Home/ })).toBeNull();
+    await userEvent.click(within(recommendations).getByRole('button', { name: /Sheep Shearer/ }));
 
-    expect(await screen.findByRole('heading', { level: 3, name: "Daddy's Home" })).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: 'Next action' })).toBeNull();
+    expect((await screen.findByRole('status')).textContent).toContain('RuneProof is temporarily unavailable.');
     expect(consoleError).toHaveBeenCalled();
   });
 
-  it('keeps explicit unsupported targets selected while preview recommendations load', async () => {
+  it('keeps unsupported targets in Goal Planner but replaces them in RuneProof', async () => {
     const unsupportedQuest = listGoalTargets().find(target => (
       target.kind === 'quest' && !isRuneProofQuestSupported(target.id)
     ))!;
@@ -953,9 +1032,10 @@ describe('RuneProof Goal Planner integration', () => {
         />,
       );
 
-      expect(preview.container.textContent).toContain(target.label);
+      expect(await screen.findByRole('heading', { level: 2, name: "Cook's Assistant" })).toBeTruthy();
+      expect(preview.container.textContent).not.toContain(target.label);
       expect(await screen.findByRole('region', { name: 'Recommended RuneProof quests' })).toBeTruthy();
-      expect(contentService.initCalls).toBe(0);
+      expect(contentService.initCalls).toBe(1);
       expect(screen.queryByRole('region', { name: `${target.id} main path map` })).toBeNull();
       cleanup();
     }
@@ -964,7 +1044,13 @@ describe('RuneProof Goal Planner integration', () => {
   it('leaves a reviewed quest unchanged when RuneProof is off', () => {
     const contentService = loadedContent();
     const initialTarget = { kind: 'quest' as const, id: "Cook's Assistant" };
-    const existing = render(<GoalPlannerModal onClose={() => undefined} initialTarget={initialTarget} />);
+    const existing = render(
+      <GoalPlannerModal
+        onClose={() => undefined}
+        initialTarget={initialTarget}
+        runeProof={runeProof(contentService, { availability: 'OFF' })}
+      />,
+    );
     const existingMarkup = existing.container.innerHTML;
     cleanup();
 
@@ -1078,34 +1164,6 @@ describe('RuneProof Goal Planner integration', () => {
       'Dairy cow',
       'Hopper',
     ]);
-  });
-
-  it('keeps an explicit unsupported Doric target on the ordinary planner path', async () => {
-    const contentService = loadedContent();
-    renderGoalPlanner({
-      availability: 'PREVIEW',
-      selectedQuest: "Doric's Quest",
-      contentService,
-    });
-
-    expect(await screen.findByRole('heading', { level: 3, name: "Doric's Quest" })).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: 'Next action' })).toBeNull();
-    expect(contentService.initCalls).toBe(0);
-    expect(contentService.entityLocations).not.toHaveBeenCalled();
-  });
-
-  it("does not load an unsupported Daddy's Home walkthrough", async () => {
-    const contentService = loadedContent();
-    renderGoalPlanner({
-      availability: 'PREVIEW',
-      selectedQuest: "Daddy's Home",
-      contentService,
-    });
-
-    expect(await screen.findByRole('heading', { level: 3, name: "Daddy's Home" })).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: 'Next action' })).toBeNull();
-    expect(contentService.initCalls).toBe(0);
-    expect(contentService.entityLocations).not.toHaveBeenCalled();
   });
 
   it('isolates a missing walkthrough entity from recipe stations and route analysis', async () => {
@@ -1285,7 +1343,7 @@ describe('RuneProof Goal Planner integration', () => {
 
     await act(async () => { second.resolve(true); });
     await waitFor(() => {
-      expect(view.container.querySelector('h2')?.textContent).toContain('Goal Planner');
+      expect(view.container.querySelector('h2')?.textContent).toContain('RuneProof');
       expect(screen.getByRole('heading', { level: 2, name: 'Sheep Shearer' })).toBeTruthy();
       expect(screen.queryByRole('heading', { level: 2, name: "Cook's Assistant" })).toBeNull();
     });
@@ -1306,18 +1364,23 @@ describe('RuneProof Goal Planner integration', () => {
     );
 
     await screen.findByRole('heading', { name: 'Next action' });
+    const dialogPanel = screen.getByRole('dialog', { name: 'RuneProof' }).firstElementChild;
+    expect(dialogPanel?.className).toContain('max-w-5xl');
 
     flushSync(() => { goalPlannerTargetButton('Sheep Shearer').click(); });
     expect(screen.queryByRole('heading', { name: 'Next action' })).toBeNull();
+    expect(screen.getByRole('status').textContent).toContain('Loading Sheep Shearer RuneProof route');
+    expect(screen.queryByText('Quests in order')).toBeNull();
+    expect(dialogPanel?.className).toContain('max-w-5xl');
 
     await act(async () => { nextLoad.resolve(true); });
     await waitFor(() => {
-      expect(view.container.querySelector('h2')?.textContent).toContain('Goal Planner');
+      expect(view.container.querySelector('h2')?.textContent).toContain('RuneProof');
       expect(screen.getByRole('heading', { level: 2, name: 'Sheep Shearer' })).toBeTruthy();
     });
   });
 
-  it('keeps legacy map state isolated when leaving the primary coach for an unsupported target', async () => {
+  it('keeps legacy map state isolated when switching reviewed RuneProof quests', async () => {
     const contentService = loadedContent();
     renderGoalPlanner({
       availability: 'PREVIEW',
@@ -1330,15 +1393,15 @@ describe('RuneProof Goal Planner integration', () => {
       name: "Cook's Assistant main path map",
     })).toBeNull();
 
-    flushSync(() => { goalPlannerTargetButton("Daddy's Home").click(); });
+    flushSync(() => { goalPlannerTargetButton('Sheep Shearer').click(); });
     expect(screen.queryByRole('region', {
       name: "Cook's Assistant main path map",
     })).toBeNull();
     expect(screen.queryByRole('region', { name: 'Selected route chunk details' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Show Egg on map' })).toBeNull();
-    expect(await screen.findByRole('heading', { level: 3, name: "Daddy's Home" })).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: 'Next action' })).toBeNull();
-    expect(contentService.initCalls).toBe(1);
+    expect(await screen.findByRole('heading', { level: 2, name: 'Sheep Shearer' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Next action' })).toBeTruthy();
+    expect(contentService.initCalls).toBe(2);
     expect(document.querySelectorAll('[data-runeproof-route-map]')).toHaveLength(0);
   });
 
@@ -1408,14 +1471,15 @@ describe('RuneProof Goal Planner integration', () => {
       />,
     );
 
-    expect(await screen.findByRole('heading', { level: 3, name: "Daddy's Home" })).toBeTruthy();
+    expect(await screen.findByRole('heading', { level: 2, name: "Cook's Assistant" })).toBeTruthy();
+    expect(screen.queryByText("Daddy's Home")).toBeNull();
     expect(screen.queryByRole('region', { name: "Daddy's Home main path map" })).toBeNull();
     expect(screen.queryByRole('button', { name: /Open chunk .* on world map/ })).toBeNull();
     expect(onClose).not.toHaveBeenCalled();
     expect(onOpenWorldChunk).not.toHaveBeenCalled();
   });
 
-  it('does not render a dead world-map handoff when navigation is omitted', async () => {
+  it('keeps an unsupported direct target hidden when navigation is omitted', async () => {
     render(
       <GoalPlannerModal
         onClose={vi.fn()}
@@ -1424,7 +1488,8 @@ describe('RuneProof Goal Planner integration', () => {
       />,
     );
 
-    expect(await screen.findByRole('heading', { level: 3, name: "Daddy's Home" })).toBeTruthy();
+    expect(await screen.findByRole('heading', { level: 2, name: "Cook's Assistant" })).toBeTruthy();
+    expect(screen.queryByText("Daddy's Home")).toBeNull();
     expect(screen.queryByRole('region', { name: "Daddy's Home main path map" })).toBeNull();
     expect(screen.queryByRole('button', { name: /Open chunk .* on world map/ })).toBeNull();
   });
@@ -1450,7 +1515,7 @@ describe('RuneProof Goal Planner integration', () => {
     expect(screen.queryByRole('heading', { level: 2, name: 'Sheep Shearer' })).toBeNull();
 
     await act(async () => { cookLoad.resolve(true); });
-    expect(view.container.querySelector('h2')?.textContent).toContain('Goal Planner');
+    expect(view.container.querySelector('h2')?.textContent).toContain('RuneProof');
     expect(await screen.findByRole('heading', { level: 2, name: "Cook's Assistant" })).toBeTruthy();
     expect(screen.queryByRole('heading', { level: 2, name: 'Sheep Shearer' })).toBeNull();
   });

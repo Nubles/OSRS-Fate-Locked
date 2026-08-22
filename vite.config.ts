@@ -1,5 +1,5 @@
 
-import { defineConfig, loadEnv, normalizePath, type Plugin } from 'vite';
+import { defineConfig, normalizePath, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { configDefaults } from 'vitest/config';
 
@@ -30,8 +30,7 @@ const runeProofPreviewBoundaryPlugin = (includePreview: boolean): Plugin => ({
 // `base` controls the public path assets are served from. GitHub Pages project
 // sites live at /<repo-name>/, so CI injects the real repo name via VITE_BASE.
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
-  const includeRuneProofPreview = mode === 'test' || env.VITE_RUNEPROOF_PREVIEW === '1';
+  const includeRuneProofPreview = mode === 'test' || mode === 'runeproof-preview';
   const buildId = process.env.BUILD_ID || String(Date.now());
 
   return {

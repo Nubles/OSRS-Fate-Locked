@@ -1,12 +1,15 @@
-export type RuneProofAvailability = 'OFF' | 'PREVIEW';
+export type RuneProofAvailability = 'OFF' | 'PUBLIC' | 'PREVIEW';
 
 export const runeProofAvailability = (
   env: Record<string, string | boolean | undefined>,
 ): RuneProofAvailability => (
-  env.VITE_RUNEPROOF_PREVIEW === '1' ? 'PREVIEW' : 'OFF'
+  env.MODE === 'runeproof-preview' ? 'PREVIEW' : 'PUBLIC'
 );
 
 export const canRenderQuestWalkthrough = (
   availability: RuneProofAvailability,
-  _releaseStatus: 'PREVIEW_ONLY' | 'APPROVED',
-): boolean => availability === 'PREVIEW';
+  releaseStatus: 'PREVIEW_ONLY' | 'APPROVED',
+): boolean => (
+  availability === 'PREVIEW'
+  || (availability === 'PUBLIC' && releaseStatus === 'APPROVED')
+);

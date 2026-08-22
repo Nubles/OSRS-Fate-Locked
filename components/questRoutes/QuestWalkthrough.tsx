@@ -142,10 +142,17 @@ export const QuestWalkthrough = ({
           {walkthrough.attribution.licenceLabel}
         </a>
       </p>
-      <p>
-        {walkthrough.attribution.chunkPickerLabel}; commit{' '}
-        <code className="break-all">{walkthrough.attribution.chunkPickerCommit}</code>
-      </p>
+      {walkthrough.attribution.kind === 'CHUNK_PICKER_REVIEW' ? (
+        <p>
+          {walkthrough.attribution.chunkPickerLabel}; commit{' '}
+          <code className="break-all">{walkthrough.attribution.chunkPickerCommit}</code>
+        </p>
+      ) : (
+        <p>
+          Independently authored by {walkthrough.attribution.author} on {walkthrough.attribution.authoredAt}.
+          {' '}{walkthrough.attribution.methodology}
+        </p>
+      )}
       <p>{walkthrough.attribution.reuseStatusText}</p>
     </footer>
   </section>

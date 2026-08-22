@@ -590,15 +590,20 @@ describe('buildRuneProofCoachModel', () => {
     ]);
   });
 
-  it('keeps the locked south-Falador bead card primary before exposing other legal Imp sources', () => {
+  it('promotes an unlocked equivalent Imp source into the main bead step', () => {
     const strategy = impStrategy();
     const model = buildImpCoach({ analysis: impAnalysisFor(strategy, true) });
 
     expect(model.nextAction).toMatchObject({
       id: 'imp-catcher:get-black-bead',
-      state: 'BLOCKED',
-      blockerText: 'Unlock chunk 47,51 to use Imps south-east of Falador.',
+      state: 'DO_NOW',
+      mapChunks: ['50,50'],
+      preferredMethodLabel: 'Other legal Imps',
     });
+    expect(model.nextAction?.instruction).toContain('Kill imps');
+    expect(model.nextAction?.instruction).toContain('Lumbridge');
+    expect(model.nextAction?.instruction).toContain('black bead');
+    expect(model.nextAction?.blockerText).toBeUndefined();
     expect(model.alternativeSources).toEqual([
       expect.objectContaining({
         itemKey: 'black bead',

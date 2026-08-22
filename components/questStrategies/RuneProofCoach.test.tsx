@@ -512,19 +512,19 @@ describe('RuneProofCoach', () => {
     expect(within(mizgogRow).queryByRole('button', { name: 'Mark action complete' })).toBeNull();
   });
 
-  it('persists the black bead through an unlocked legal Imp alternative while the reviewed source stays blocked', async () => {
+  it('promotes and persists the black bead through an unlocked legal Imp source', async () => {
     const user = userEvent.setup();
     const onPersistItem = vi.fn();
     render(<ImpCatcherLockedAlternativeHarness onPersistItem={onPersistItem} />);
 
     const nextAction = screen.getByRole('heading', { name: 'Next action' }).closest('section');
     if (!nextAction) throw new Error('Missing current Imp Catcher action section.');
-    const blocker = within(nextAction).getByRole('note');
     const alternatives = screen.getByRole('button', { name: 'Other legal sources' });
 
-    expect(blocker.textContent).toContain('Unlock chunk 47,51 to use Imps south-east of Falador.');
-    expect(blocker.compareDocumentPosition(alternatives) & Node.DOCUMENT_POSITION_FOLLOWING)
-      .toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(within(nextAction).getByText('Do now')).toBeTruthy();
+    expect(within(nextAction).getByText('Kill imps in Lumbridge until you obtain a black bead.')).toBeTruthy();
+    expect(within(nextAction).getByText('Chunk 50,50')).toBeTruthy();
+    expect(within(nextAction).queryByRole('note')).toBeNull();
 
     await user.click(alternatives);
     expect(screen.getByText('Other legal Imps')).toBeTruthy();
