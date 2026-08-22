@@ -1,0 +1,3260 @@
+{
+  "quests": {
+    "Cook's Assistant": [
+      {
+        "chunkPickerTaskId": "t_7591",
+        "confidence": "REVIEWED",
+        "dependsOn": [],
+        "displayText": "Talk to the Cook in Lumbridge Castle.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Cook (Lumbridge)"
+          }
+        ],
+        "gates": [],
+        "id": "cooks-assistant:start-quest",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "alias": "Lumbridge Castle",
+          "chunks": [
+            "50,50"
+          ],
+          "evidence": "Pinned Wiki source line cooks-assistant-walkthrough-6 directs the player to talk to the Cook in Lumbridge Castle; the pinned Chunk Picker content entry identifies Lumbridge Castle at 50,50.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Only chunk precision is claimed for the Cook; the review does not claim an exact tile.",
+          "reviewedAt": "2026-08-20",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "cooks-assistant-walkthrough-6"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 1,
+        "coach": {
+          "consumes": [],
+          "fulfils": [],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "cooks-assistant:start-quest"
+        ],
+        "displayText": "Pick up the empty pot beside the Cook in Lumbridge Castle.",
+        "entities": [],
+        "gates": [],
+        "id": "cooks-assistant:take-pot",
+        "items": [],
+        "kind": "ACQUIRE",
+        "location": {
+          "alias": "Lumbridge Castle",
+          "chunks": [
+            "50,50"
+          ],
+          "evidence": "Pinned Wiki source line cooks-assistant-walkthrough-5 says the empty pot is found by the Cook in Lumbridge Castle; the pinned Chunk Picker content entry Lumbridge Castle (50,50) lists a Pot spawn.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Only chunk precision is claimed for the Pot spawn; the review does not claim an exact tile or entity.",
+          "reviewedAt": "2026-08-20",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "cooks-assistant-walkthrough-2"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 2,
+        "coach": {
+          "consumes": [],
+          "fulfils": [
+            {
+              "item": {
+                "key": "pot",
+                "name": "Pot"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            }
+          ],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE",
+          "preferredMethod": {
+            "kind": "DIRECT_SOURCE",
+            "itemKey": "pot",
+            "sourceLabel": "Pot"
+          }
+        }
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "cooks-assistant:take-pot"
+        ],
+        "displayText": "Pick up the bucket from the Lumbridge Castle cellar.",
+        "entities": [],
+        "gates": [],
+        "id": "cooks-assistant:take-bucket",
+        "items": [],
+        "kind": "ACQUIRE",
+        "location": {
+          "alias": "Lumbridge Castle",
+          "chunks": [
+            "50,50"
+          ],
+          "evidence": "Pinned Wiki source line cooks-assistant-walkthrough-3 names a bucket in the Lumbridge Castle cellar; the pinned Chunk Picker chunk entry names Lumbridge Castle at 50,50.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Only chunk precision is claimed for the Lumbridge Castle cellar bucket; the generic spawn index does not repeat that interior source.",
+          "reviewedAt": "2026-08-20",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [],
+        "section": "QUEST",
+        "sourceOrder": 3,
+        "coach": {
+          "consumes": [],
+          "fulfils": [
+            {
+              "item": {
+                "key": "bucket",
+                "name": "Bucket"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            }
+          ],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE",
+          "preferredMethod": {
+            "kind": "DIRECT_SOURCE",
+            "itemKey": "bucket",
+            "sourceLabel": "Bucket"
+          }
+        }
+      },
+      {
+        "chunkPickerTaskId": "t_7592",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "cooks-assistant:take-bucket",
+          "cooks-assistant:start-quest"
+        ],
+        "displayText": "Use the bucket on a dairy cow in the Lumbridge cow field.",
+        "entities": [
+          {
+            "kind": "object",
+            "name": "Dairy cow"
+          }
+        ],
+        "gates": [],
+        "id": "cooks-assistant:milk-cow",
+        "items": [],
+        "kind": "USE_ITEM",
+        "location": {
+          "alias": "Groats' Farm",
+          "chunks": [
+            "50,51"
+          ],
+          "evidence": "Pinned Wiki source line cooks-assistant-walkthrough-3 names the Lumbridge cow field; the pinned Chunk Picker content entry Groats' Farm (50,51) lists Dairy cow.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Only chunk precision is claimed for the quest-local dairy cow; the review does not claim an exact tile.",
+          "reviewedAt": "2026-08-20",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "cooks-assistant-walkthrough-3"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 4,
+        "coach": {
+          "consumes": [
+            {
+              "item": {
+                "key": "bucket",
+                "name": "Bucket"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            }
+          ],
+          "fulfils": [
+            {
+              "item": {
+                "key": "bucket of milk",
+                "name": "Bucket of milk"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            }
+          ],
+          "completion": {
+            "kind": "ITEM_CONFIRMED",
+            "itemKey": "bucket of milk"
+          },
+          "fallbackPolicy": "BLOCK_THEN_ALTERNATIVES",
+          "preferredMethod": {
+            "kind": "TRANSFORMATION",
+            "recipeId": "milk-cow"
+          }
+        }
+      },
+      {
+        "chunkPickerTaskId": "t_7594",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "cooks-assistant:milk-cow",
+          "cooks-assistant:start-quest"
+        ],
+        "displayText": "Pick up the egg at the chicken farm beside the cow field.",
+        "entities": [],
+        "gates": [],
+        "id": "cooks-assistant:take-egg",
+        "items": [],
+        "kind": "ACQUIRE",
+        "location": {
+          "alias": "Groats' Farm",
+          "chunks": [
+            "50,51"
+          ],
+          "evidence": "Pinned Wiki source line cooks-assistant-walkthrough-4 identifies the egg at the chicken farm beside the cow field; the pinned Chunk Picker content entry Groats' Farm (50,51) lists an Egg spawn.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Only chunk precision is claimed for the Egg spawn; the review does not claim an exact tile or entity.",
+          "reviewedAt": "2026-08-20",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "cooks-assistant-walkthrough-4"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 5,
+        "coach": {
+          "consumes": [],
+          "fulfils": [
+            {
+              "item": {
+                "key": "egg",
+                "name": "Egg"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            }
+          ],
+          "completion": {
+            "kind": "ITEM_CONFIRMED",
+            "itemKey": "egg"
+          },
+          "fallbackPolicy": "BLOCK_THEN_ALTERNATIVES",
+          "preferredMethod": {
+            "kind": "DIRECT_SOURCE",
+            "itemKey": "egg",
+            "sourceLabel": "Egg"
+          }
+        }
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "cooks-assistant:take-egg"
+        ],
+        "displayText": "Pick grain outside Mill Lane Mill.",
+        "entities": [
+          {
+            "kind": "object",
+            "name": "Wheat"
+          }
+        ],
+        "gates": [],
+        "id": "cooks-assistant:pick-grain",
+        "items": [],
+        "kind": "ACQUIRE",
+        "location": {
+          "alias": "Mill Lane Mill",
+          "chunks": [
+            "49,51"
+          ],
+          "evidence": "Pinned Wiki source line cooks-assistant-walkthrough-5 names Mill Lane Mill and grain outside; the pinned Chunk Picker content entry Lumbridge Mill (49,51) lists Wheat and Hopper.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Only chunk precision is claimed for the quest-local grain; the review does not claim an exact plant or tile.",
+          "reviewedAt": "2026-08-20",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "cooks-assistant-walkthrough-5"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 6,
+        "coach": {
+          "consumes": [],
+          "fulfils": [
+            {
+              "item": {
+                "key": "grain",
+                "name": "Grain"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            }
+          ],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE",
+          "preferredMethod": {
+            "kind": "TRANSFORMATION",
+            "recipeId": "pick-wheat"
+          }
+        }
+      },
+      {
+        "chunkPickerTaskId": "t_7593",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "cooks-assistant:pick-grain",
+          "cooks-assistant:start-quest"
+        ],
+        "displayText": "Use the grain in Mill Lane Mill and collect the flour in the pot.",
+        "entities": [
+          {
+            "kind": "object",
+            "name": "Hopper"
+          }
+        ],
+        "gates": [],
+        "id": "cooks-assistant:make-flour",
+        "items": [],
+        "kind": "USE_ITEM",
+        "location": {
+          "alias": "Mill Lane Mill",
+          "chunks": [
+            "49,51"
+          ],
+          "evidence": "Pinned Wiki source line cooks-assistant-walkthrough-5 names the hopper inside Mill Lane Mill; the pinned Chunk Picker content entry Lumbridge Mill (49,51) lists Wheat and Hopper.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Only chunk precision is claimed for the quest-local hopper; the review does not claim an exact floor or tile.",
+          "reviewedAt": "2026-08-20",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [],
+        "section": "QUEST",
+        "sourceOrder": 7,
+        "coach": {
+          "consumes": [
+            {
+              "item": {
+                "key": "grain",
+                "name": "Grain"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            },
+            {
+              "item": {
+                "key": "pot",
+                "name": "Pot"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            }
+          ],
+          "fulfils": [
+            {
+              "item": {
+                "key": "pot of flour",
+                "name": "Pot of flour"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            }
+          ],
+          "completion": {
+            "kind": "ITEM_CONFIRMED",
+            "itemKey": "pot of flour"
+          },
+          "fallbackPolicy": "BLOCK_THEN_ALTERNATIVES",
+          "preferredMethod": {
+            "kind": "TRANSFORMATION",
+            "recipeId": "grain-to-flour"
+          }
+        }
+      },
+      {
+        "chunkPickerTaskId": "t_7595",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "cooks-assistant:make-flour",
+          "cooks-assistant:milk-cow",
+          "cooks-assistant:take-egg"
+        ],
+        "displayText": "Return to the Cook with the bucket of milk, egg, and pot of flour.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Cook (Lumbridge)"
+          }
+        ],
+        "gates": [],
+        "id": "cooks-assistant:return-to-cook",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "alias": "Lumbridge Castle",
+          "chunks": [
+            "50,50"
+          ],
+          "evidence": "Pinned Wiki source line cooks-assistant-walkthrough-1 directs the player to return to the Cook with the three ingredients; the pinned Chunk Picker content entry identifies Lumbridge Castle at 50,50.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Only chunk precision is claimed for the Cook return; the review does not claim an exact tile.",
+          "reviewedAt": "2026-08-20",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "cooks-assistant-walkthrough-1"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 8,
+        "coach": {
+          "consumes": [
+            {
+              "item": {
+                "key": "bucket of milk",
+                "name": "Bucket of milk"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            },
+            {
+              "item": {
+                "key": "egg",
+                "name": "Egg"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            },
+            {
+              "item": {
+                "key": "pot of flour",
+                "name": "Pot of flour"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            }
+          ],
+          "fulfils": [],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      },
+      {
+        "chunkPickerTaskId": "t_7596",
+        "confidence": "EXACT",
+        "dependsOn": [
+          "cooks-assistant:return-to-cook"
+        ],
+        "displayText": "Cook's Assistant complete.",
+        "entities": [],
+        "gates": [],
+        "id": "cooks-assistant:complete",
+        "items": [],
+        "kind": "INFORMATION",
+        "location": {
+          "chunks": [
+            "50,50"
+          ],
+          "kind": "EXPLICIT_CHUNKS"
+        },
+        "rawWikiLineIds": [
+          "cooks-assistant-walkthrough-7"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 9,
+        "coach": {
+          "consumes": [],
+          "fulfils": [],
+          "completion": {
+            "kind": "QUEST_COMPLETED",
+            "questId": "Cook's Assistant"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      }
+    ],
+    "Daddy's Home": [
+      {
+        "chunkPickerTaskId": "t_9590",
+        "confidence": "EXACT",
+        "dependsOn": [],
+        "displayText": "Talk to Marlo at the Varrock Estate Agent to start the miniquest.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Marlo"
+          }
+        ],
+        "gates": [],
+        "id": "daddys-home:start-with-marlo",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "entity": {
+            "kind": "npc",
+            "name": "Marlo"
+          },
+          "kind": "EXACT_ENTITY"
+        },
+        "rawWikiLineIds": [],
+        "section": "QUEST",
+        "sourceOrder": 1
+      },
+      {
+        "confidence": "AMBIGUOUS",
+        "dependsOn": [
+          "daddys-home:start-with-marlo"
+        ],
+        "displayText": "Pick up the nearby saw if you did not bring one.",
+        "entities": [],
+        "gates": [],
+        "id": "daddys-home:pick-up-saw-if-needed",
+        "items": [
+          {
+            "item": {
+              "key": "saw",
+              "name": "Saw"
+            },
+            "quantity": 1,
+            "supplyPolicy": "QUEST_PROVIDED"
+          }
+        ],
+        "kind": "ACQUIRE",
+        "location": {
+          "kind": "NONE"
+        },
+        "rawWikiLineIds": [
+          "daddys-home-walkthrough-1"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 1
+      },
+      {
+        "confidence": "EXACT",
+        "dependsOn": [
+          "daddys-home:start-with-marlo"
+        ],
+        "displayText": "Talk to Old Man Yarlo in his house south-west of Aubury's Rune Shop.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Old Man Yarlo"
+          }
+        ],
+        "gates": [],
+        "id": "daddys-home:talk-to-yarlo",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "entity": {
+            "kind": "npc",
+            "name": "Old Man Yarlo"
+          },
+          "kind": "EXACT_ENTITY"
+        },
+        "rawWikiLineIds": [
+          "daddys-home-walkthrough-2"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 2
+      },
+      {
+        "chunkPickerTaskId": "t_9591",
+        "confidence": "EXACT",
+        "dependsOn": [
+          "daddys-home:talk-to-yarlo",
+          "daddys-home:start-with-marlo"
+        ],
+        "displayText": "Remove all seven old hotspots: the broken chair, rotten carpet, two stools, two tables, and campbed.",
+        "entities": [],
+        "gates": [],
+        "id": "daddys-home:remove-old-furniture",
+        "items": [],
+        "kind": "INTERACT_OBJECT",
+        "location": {
+          "chunks": [
+            "50,53"
+          ],
+          "kind": "EXPLICIT_CHUNKS"
+        },
+        "rawWikiLineIds": [
+          "daddys-home-walkthrough-3",
+          "daddys-home-walkthrough-4",
+          "daddys-home-walkthrough-5",
+          "daddys-home-walkthrough-6",
+          "daddys-home-walkthrough-7",
+          "daddys-home-walkthrough-8"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 3
+      },
+      {
+        "confidence": "EXACT",
+        "dependsOn": [
+          "daddys-home:remove-old-furniture"
+        ],
+        "displayText": "Talk to Old Man Yarlo again; you may skip his lecture.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Old Man Yarlo"
+          }
+        ],
+        "gates": [],
+        "id": "daddys-home:yarlo-briefing",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "entity": {
+            "kind": "npc",
+            "name": "Old Man Yarlo"
+          },
+          "kind": "EXACT_ENTITY"
+        },
+        "rawWikiLineIds": [
+          "daddys-home-walkthrough-9"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 9
+      },
+      {
+        "chunkPickerTaskId": "t_9594",
+        "confidence": "EXACT",
+        "dependsOn": [
+          "daddys-home:yarlo-briefing",
+          "daddys-home:remove-old-furniture"
+        ],
+        "displayText": "Search the marked kitchen crates for 3 waxwood logs.",
+        "entities": [
+          {
+            "kind": "object",
+            "name": "Crates (Daddy's Home)"
+          }
+        ],
+        "gates": [],
+        "id": "daddys-home:search-waxwood-crates",
+        "items": [
+          {
+            "item": {
+              "key": "waxwood logs",
+              "name": "Waxwood logs"
+            },
+            "quantity": 3,
+            "supplyPolicy": "QUEST_PROVIDED"
+          }
+        ],
+        "kind": "ACQUIRE",
+        "location": {
+          "chunks": [
+            "50,53"
+          ],
+          "kind": "EXPLICIT_CHUNKS"
+        },
+        "rawWikiLineIds": [
+          "daddys-home-walkthrough-10"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 10
+      },
+      {
+        "chunkPickerTaskId": "t_9595",
+        "confidence": "EXACT",
+        "dependsOn": [
+          "daddys-home:search-waxwood-crates"
+        ],
+        "displayText": "Talk to the Sawmill operator and turn the 3 waxwood logs into waxwood planks.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Sawmill operator"
+          }
+        ],
+        "gates": [],
+        "id": "daddys-home:sawmill-waxwood",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "chunks": [
+            "51,54"
+          ],
+          "kind": "EXPLICIT_CHUNKS"
+        },
+        "rawWikiLineIds": [
+          "daddys-home-walkthrough-11",
+          "daddys-home-walkthrough-12"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 11
+      },
+      {
+        "confidence": "UNMAPPED",
+        "dependsOn": [
+          "daddys-home:yarlo-briefing"
+        ],
+        "displayText": "Prepare 10 planks, 16 construction nails, and 5 bolts of cloth through RuneProof.",
+        "entities": [],
+        "gates": [],
+        "id": "daddys-home:prepare-building-supplies",
+        "items": [
+          {
+            "item": {
+              "key": "plank",
+              "name": "Plank"
+            },
+            "quantity": 10,
+            "supplyPolicy": "PLAYER_OBTAINED"
+          },
+          {
+            "item": {
+              "key": "nails",
+              "name": "Nails"
+            },
+            "quantity": 16,
+            "supplyPolicy": "PLAYER_OBTAINED"
+          },
+          {
+            "item": {
+              "key": "bolt of cloth",
+              "name": "Bolt of cloth"
+            },
+            "quantity": 5,
+            "supplyPolicy": "PLAYER_OBTAINED"
+          }
+        ],
+        "kind": "ACQUIRE",
+        "location": {
+          "kind": "NONE"
+        },
+        "rawWikiLineIds": [
+          "daddys-home-walkthrough-13",
+          "daddys-home-walkthrough-14"
+        ],
+        "section": "PREPARE",
+        "sourceOrder": 13
+      },
+      {
+        "confidence": "EXACT",
+        "dependsOn": [
+          "daddys-home:yarlo-briefing"
+        ],
+        "displayText": "Ask Old Man Yarlo for a hammer and saw if you did not bring them.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Old Man Yarlo"
+          }
+        ],
+        "gates": [],
+        "id": "daddys-home:acquire-tools",
+        "items": [
+          {
+            "item": {
+              "key": "hammer",
+              "name": "Hammer"
+            },
+            "quantity": 1,
+            "supplyPolicy": "QUEST_PROVIDED"
+          },
+          {
+            "item": {
+              "key": "saw",
+              "name": "Saw"
+            },
+            "quantity": 1,
+            "supplyPolicy": "QUEST_PROVIDED"
+          }
+        ],
+        "kind": "ACQUIRE",
+        "location": {
+          "entity": {
+            "kind": "npc",
+            "name": "Old Man Yarlo"
+          },
+          "kind": "EXACT_ENTITY"
+        },
+        "rawWikiLineIds": [
+          "daddys-home-walkthrough-16"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 16
+      },
+      {
+        "chunkPickerTaskId": "t_9592",
+        "confidence": "EXACT",
+        "dependsOn": [
+          "daddys-home:yarlo-briefing",
+          "daddys-home:prepare-building-supplies",
+          "daddys-home:acquire-tools",
+          "daddys-home:remove-old-furniture"
+        ],
+        "displayText": "Lay the new carpet.",
+        "entities": [],
+        "gates": [],
+        "id": "daddys-home:lay-carpet",
+        "items": [],
+        "kind": "INTERACT_OBJECT",
+        "location": {
+          "chunks": [
+            "50,53"
+          ],
+          "kind": "EXPLICIT_CHUNKS"
+        },
+        "rawWikiLineIds": [],
+        "section": "QUEST",
+        "sourceOrder": 15
+      },
+      {
+        "chunkPickerTaskId": "t_9593",
+        "confidence": "EXACT",
+        "dependsOn": [
+          "daddys-home:yarlo-briefing",
+          "daddys-home:prepare-building-supplies",
+          "daddys-home:acquire-tools",
+          "daddys-home:remove-old-furniture"
+        ],
+        "displayText": "Build the new wooden furniture at the white translucent hotspots.",
+        "entities": [],
+        "gates": [],
+        "id": "daddys-home:build-furniture",
+        "items": [],
+        "kind": "INTERACT_OBJECT",
+        "location": {
+          "chunks": [
+            "50,53"
+          ],
+          "kind": "EXPLICIT_CHUNKS"
+        },
+        "rawWikiLineIds": [
+          "daddys-home-walkthrough-15"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 15
+      },
+      {
+        "chunkPickerTaskId": "t_9596",
+        "confidence": "EXACT",
+        "dependsOn": [
+          "daddys-home:sawmill-waxwood",
+          "daddys-home:prepare-building-supplies",
+          "daddys-home:acquire-tools"
+        ],
+        "displayText": "Build the waxwood bed.",
+        "entities": [],
+        "gates": [],
+        "id": "daddys-home:build-bed",
+        "items": [],
+        "kind": "INTERACT_OBJECT",
+        "location": {
+          "chunks": [
+            "50,53"
+          ],
+          "kind": "EXPLICIT_CHUNKS"
+        },
+        "rawWikiLineIds": [],
+        "section": "QUEST",
+        "sourceOrder": 15
+      },
+      {
+        "chunkPickerTaskId": "t_9597",
+        "confidence": "EXACT",
+        "dependsOn": [
+          "daddys-home:lay-carpet",
+          "daddys-home:build-furniture",
+          "daddys-home:build-bed"
+        ],
+        "displayText": "Talk to Old Man Yarlo after all three construction branches are complete.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Old Man Yarlo"
+          }
+        ],
+        "gates": [],
+        "id": "daddys-home:return-to-yarlo",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "entity": {
+            "kind": "npc",
+            "name": "Old Man Yarlo"
+          },
+          "kind": "EXACT_ENTITY"
+        },
+        "rawWikiLineIds": [
+          "daddys-home-walkthrough-17"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 17
+      },
+      {
+        "chunkPickerTaskId": "t_9598",
+        "confidence": "EXACT",
+        "dependsOn": [
+          "daddys-home:return-to-yarlo"
+        ],
+        "displayText": "Return to Marlo and claim your reward.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Marlo"
+          }
+        ],
+        "gates": [],
+        "id": "daddys-home:return-to-marlo",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "entity": {
+            "kind": "npc",
+            "name": "Marlo"
+          },
+          "kind": "EXACT_ENTITY"
+        },
+        "rawWikiLineIds": [
+          "daddys-home-walkthrough-18"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 18
+      },
+      {
+        "chunkPickerTaskId": "t_9599",
+        "confidence": "EXACT",
+        "dependsOn": [
+          "daddys-home:return-to-marlo"
+        ],
+        "displayText": "Daddy's Home complete.",
+        "entities": [],
+        "gates": [],
+        "id": "daddys-home:complete",
+        "items": [],
+        "kind": "INFORMATION",
+        "location": {
+          "chunks": [
+            "50,54"
+          ],
+          "kind": "EXPLICIT_CHUNKS"
+        },
+        "rawWikiLineIds": [
+          "daddys-home-walkthrough-19"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 19
+      }
+    ],
+    "Doric's Quest": [
+      {
+        "confidence": "EXACT",
+        "dependsOn": [],
+        "displayText": "The Wiki lists buying the required materials from the Grand Exchange as one option.",
+        "entities": [],
+        "gates": [],
+        "id": "dorics-quest:grand-exchange-option",
+        "items": [],
+        "kind": "INFORMATION",
+        "location": {
+          "kind": "NONE"
+        },
+        "rawWikiLineIds": [
+          "dorics-quest-walkthrough-1"
+        ],
+        "section": "PREPARE",
+        "sourceOrder": 1
+      },
+      {
+        "chunkPickerTaskId": "t_7620",
+        "confidence": "EXACT",
+        "dependsOn": [],
+        "displayText": "Talk to Doric to start the quest.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Doric"
+          }
+        ],
+        "gates": [],
+        "id": "dorics-quest:start-quest",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "entity": {
+            "kind": "npc",
+            "name": "Doric"
+          },
+          "kind": "EXACT_ENTITY"
+        },
+        "rawWikiLineIds": [],
+        "section": "QUEST",
+        "sourceOrder": 1
+      },
+      {
+        "confidence": "UNMAPPED",
+        "dependsOn": [
+          "dorics-quest:start-quest"
+        ],
+        "displayText": "Prepare 2 iron ore, 4 copper ore, and 6 clay through RuneProof.",
+        "entities": [],
+        "gates": [],
+        "id": "dorics-quest:prepare-materials",
+        "items": [
+          {
+            "item": {
+              "key": "iron ore",
+              "name": "Iron ore"
+            },
+            "quantity": 2,
+            "supplyPolicy": "PLAYER_OBTAINED"
+          },
+          {
+            "item": {
+              "key": "copper ore",
+              "name": "Copper ore"
+            },
+            "quantity": 4,
+            "supplyPolicy": "PLAYER_OBTAINED"
+          },
+          {
+            "item": {
+              "key": "clay",
+              "name": "Clay"
+            },
+            "quantity": 6,
+            "supplyPolicy": "PLAYER_OBTAINED"
+          }
+        ],
+        "kind": "ACQUIRE",
+        "location": {
+          "kind": "NONE"
+        },
+        "rawWikiLineIds": [
+          "dorics-quest-walkthrough-2",
+          "dorics-quest-walkthrough-3",
+          "dorics-quest-walkthrough-4"
+        ],
+        "section": "PREPARE",
+        "sourceOrder": 2
+      },
+      {
+        "confidence": "EXACT",
+        "dependsOn": [
+          "dorics-quest:prepare-materials"
+        ],
+        "displayText": "Low-level players should beware of aggressive scorpions and bring food if required.",
+        "entities": [],
+        "gates": [],
+        "id": "dorics-quest:mining-safety",
+        "items": [],
+        "kind": "INFORMATION",
+        "location": {
+          "kind": "NONE"
+        },
+        "rawWikiLineIds": [
+          "dorics-quest-walkthrough-5"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 5
+      },
+      {
+        "chunkPickerTaskId": "t_7621",
+        "confidence": "EXACT",
+        "dependsOn": [
+          "dorics-quest:start-quest",
+          "dorics-quest:prepare-materials"
+        ],
+        "displayText": "Return to Doric with the un-noted iron ore, copper ore, and clay.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Doric"
+          }
+        ],
+        "gates": [],
+        "id": "dorics-quest:return-to-doric",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "entity": {
+            "kind": "npc",
+            "name": "Doric"
+          },
+          "kind": "EXACT_ENTITY"
+        },
+        "rawWikiLineIds": [
+          "dorics-quest-walkthrough-6"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 6
+      },
+      {
+        "chunkPickerTaskId": "t_7622",
+        "confidence": "EXACT",
+        "dependsOn": [
+          "dorics-quest:return-to-doric"
+        ],
+        "displayText": "Doric's Quest complete.",
+        "entities": [],
+        "gates": [],
+        "id": "dorics-quest:complete",
+        "items": [],
+        "kind": "INFORMATION",
+        "location": {
+          "chunks": [
+            "46,53"
+          ],
+          "kind": "EXPLICIT_CHUNKS"
+        },
+        "rawWikiLineIds": [
+          "dorics-quest-walkthrough-7"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 7
+      }
+    ],
+    "Elemental Workshop I": [
+      {
+        "chunkPickerTaskId": "t_8157",
+        "confidence": "EXACT",
+        "dependsOn": [],
+        "displayText": "In Seers' Village, search the eastern bookcase in the house south of the anvil for a battered book.",
+        "entities": [
+          {
+            "kind": "object",
+            "name": "Bookcase (Elemental Workshop I)"
+          }
+        ],
+        "gates": [],
+        "id": "elemental-workshop-i:find-battered-book",
+        "items": [],
+        "kind": "INTERACT_OBJECT",
+        "location": {
+          "chunks": [
+            "42,54"
+          ],
+          "kind": "EXPLICIT_CHUNKS"
+        },
+        "rawWikiLineIds": [
+          "elemental-workshop-i-getting-started-1",
+          "elemental-workshop-i-getting-started-2"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 1
+      },
+      {
+        "chunkPickerTaskId": "t_8158",
+        "confidence": "UNMAPPED",
+        "dependsOn": [
+          "elemental-workshop-i:find-battered-book"
+        ],
+        "displayText": "Read the battered book, slash it with a knife to get the battered key, and keep the book.",
+        "entities": [],
+        "gates": [],
+        "id": "elemental-workshop-i:make-battered-key",
+        "items": [
+          {
+            "item": {
+              "key": "knife",
+              "name": "Knife"
+            },
+            "quantity": 1,
+            "supplyPolicy": "QUEST_PROVIDED"
+          }
+        ],
+        "kind": "USE_ITEM",
+        "location": {
+          "kind": "NONE"
+        },
+        "rawWikiLineIds": [
+          "elemental-workshop-i-getting-started-3",
+          "elemental-workshop-i-getting-started-4",
+          "elemental-workshop-i-getting-started-5"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 3
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "elemental-workshop-i:make-battered-key"
+        ],
+        "displayText": "Open the odd-looking wall with the key and go down the stairs into the Elemental Workshop.",
+        "entities": [],
+        "gates": [],
+        "id": "elemental-workshop-i:enter-workshop",
+        "items": [],
+        "kind": "TRAVEL",
+        "location": {
+          "alias": "Elemental Workshop",
+          "chunks": [
+            "42,54"
+          ],
+          "evidence": "Chunk Picker task t_8157 explicitly pins the Seers' Village bookcase/access chunk to 42,54, while tasks t_8159 through t_8162 name the Elemental Workshop instance without a numeric chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use 42,54 only as the reviewed surface access chunk for the named Elemental Workshop instance; this does not infer interior coordinates from Wiki prose.",
+          "reviewedAt": "2026-07-31",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "elemental-workshop-i-getting-started-6",
+          "elemental-workshop-i-getting-started-7"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 6
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "elemental-workshop-i:enter-workshop"
+        ],
+        "displayText": "Go into the room to the north.",
+        "entities": [],
+        "gates": [],
+        "id": "elemental-workshop-i:go-to-north-room",
+        "items": [],
+        "kind": "TRAVEL",
+        "location": {
+          "alias": "Elemental Workshop",
+          "chunks": [
+            "42,54"
+          ],
+          "evidence": "Chunk Picker task t_8157 explicitly pins the Seers' Village bookcase/access chunk to 42,54, while tasks t_8159 through t_8162 name the Elemental Workshop instance without a numeric chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use 42,54 only as the reviewed surface access chunk for the named Elemental Workshop instance; this does not infer interior coordinates from Wiki prose.",
+          "reviewedAt": "2026-07-31",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "elemental-workshop-i-repairing-the-workshop-8"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 8
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "elemental-workshop-i:go-to-north-room"
+        ],
+        "displayText": "Turn the water control east of the water wheel.",
+        "entities": [],
+        "gates": [],
+        "id": "elemental-workshop-i:turn-east-water-control",
+        "items": [],
+        "kind": "INTERACT_OBJECT",
+        "location": {
+          "alias": "Elemental Workshop",
+          "chunks": [
+            "42,54"
+          ],
+          "evidence": "Chunk Picker task t_8157 explicitly pins the Seers' Village bookcase/access chunk to 42,54, while tasks t_8159 through t_8162 name the Elemental Workshop instance without a numeric chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use 42,54 only as the reviewed surface access chunk for the named Elemental Workshop instance; this does not infer interior coordinates from Wiki prose.",
+          "reviewedAt": "2026-07-31",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "elemental-workshop-i-repairing-the-workshop-9"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 9
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "elemental-workshop-i:turn-east-water-control"
+        ],
+        "displayText": "Turn the water control west of the water wheel.",
+        "entities": [],
+        "gates": [],
+        "id": "elemental-workshop-i:turn-west-water-control",
+        "items": [],
+        "kind": "INTERACT_OBJECT",
+        "location": {
+          "alias": "Elemental Workshop",
+          "chunks": [
+            "42,54"
+          ],
+          "evidence": "Chunk Picker task t_8157 explicitly pins the Seers' Village bookcase/access chunk to 42,54, while tasks t_8159 through t_8162 name the Elemental Workshop instance without a numeric chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use 42,54 only as the reviewed surface access chunk for the named Elemental Workshop instance; this does not infer interior coordinates from Wiki prose.",
+          "reviewedAt": "2026-07-31",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "elemental-workshop-i-repairing-the-workshop-10"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 10
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "elemental-workshop-i:turn-west-water-control"
+        ],
+        "displayText": "Pull the lever beside the water wheel.",
+        "entities": [],
+        "gates": [],
+        "id": "elemental-workshop-i:pull-water-wheel-lever",
+        "items": [],
+        "kind": "INTERACT_OBJECT",
+        "location": {
+          "alias": "Elemental Workshop",
+          "chunks": [
+            "42,54"
+          ],
+          "evidence": "Chunk Picker task t_8157 explicitly pins the Seers' Village bookcase/access chunk to 42,54, while tasks t_8159 through t_8162 name the Elemental Workshop instance without a numeric chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use 42,54 only as the reviewed surface access chunk for the named Elemental Workshop instance; this does not infer interior coordinates from Wiki prose.",
+          "reviewedAt": "2026-07-31",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "elemental-workshop-i-repairing-the-workshop-11"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 11
+      },
+      {
+        "confidence": "EXACT",
+        "dependsOn": [
+          "elemental-workshop-i:enter-workshop"
+        ],
+        "displayText": "Optional: defeat one of each actual elemental for the Kandarin Easy task; the transformed earth rock does not count.",
+        "entities": [],
+        "gates": [],
+        "id": "elemental-workshop-i:optional-diary-note",
+        "items": [],
+        "kind": "INFORMATION",
+        "location": {
+          "kind": "NONE"
+        },
+        "rawWikiLineIds": [
+          "elemental-workshop-i-repairing-the-workshop-12"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 12
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "elemental-workshop-i:enter-workshop"
+        ],
+        "displayText": "If needed, search the crate north of the central staircase for leather.",
+        "entities": [
+          {
+            "kind": "object",
+            "name": "Crate (Elemental Workshop I, leather)"
+          }
+        ],
+        "gates": [],
+        "id": "elemental-workshop-i:acquire-leather",
+        "items": [
+          {
+            "item": {
+              "key": "leather",
+              "name": "Leather"
+            },
+            "quantity": 1,
+            "supplyPolicy": "QUEST_PROVIDED"
+          }
+        ],
+        "kind": "ACQUIRE",
+        "location": {
+          "alias": "Elemental Workshop",
+          "chunks": [
+            "42,54"
+          ],
+          "evidence": "Chunk Picker task t_8157 explicitly pins the Seers' Village bookcase/access chunk to 42,54, while tasks t_8159 through t_8162 name the Elemental Workshop instance without a numeric chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use 42,54 only as the reviewed surface access chunk for the named Elemental Workshop instance; this does not infer interior coordinates from Wiki prose.",
+          "reviewedAt": "2026-07-31",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "elemental-workshop-i-repairing-the-workshop-13"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 13
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "elemental-workshop-i:enter-workshop"
+        ],
+        "displayText": "If needed, search the stacked crates by the west-room entrance for a needle.",
+        "entities": [
+          {
+            "kind": "object",
+            "name": "Crate (Elemental Workshop I, needle)"
+          }
+        ],
+        "gates": [],
+        "id": "elemental-workshop-i:acquire-needle",
+        "items": [
+          {
+            "item": {
+              "key": "needle",
+              "name": "Needle"
+            },
+            "quantity": 1,
+            "supplyPolicy": "QUEST_PROVIDED"
+          }
+        ],
+        "kind": "ACQUIRE",
+        "location": {
+          "alias": "Elemental Workshop",
+          "chunks": [
+            "42,54"
+          ],
+          "evidence": "Chunk Picker task t_8157 explicitly pins the Seers' Village bookcase/access chunk to 42,54, while tasks t_8159 through t_8162 name the Elemental Workshop instance without a numeric chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use 42,54 only as the reviewed surface access chunk for the named Elemental Workshop instance; this does not infer interior coordinates from Wiki prose.",
+          "reviewedAt": "2026-07-31",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "elemental-workshop-i-repairing-the-workshop-14"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 14
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "elemental-workshop-i:enter-workshop"
+        ],
+        "displayText": "Go to the eastern room.",
+        "entities": [],
+        "gates": [],
+        "id": "elemental-workshop-i:go-to-east-room",
+        "items": [],
+        "kind": "TRAVEL",
+        "location": {
+          "alias": "Elemental Workshop",
+          "chunks": [
+            "42,54"
+          ],
+          "evidence": "Chunk Picker task t_8157 explicitly pins the Seers' Village bookcase/access chunk to 42,54, while tasks t_8159 through t_8162 name the Elemental Workshop instance without a numeric chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use 42,54 only as the reviewed surface access chunk for the named Elemental Workshop instance; this does not infer interior coordinates from Wiki prose.",
+          "reviewedAt": "2026-07-31",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "elemental-workshop-i-repairing-the-workshop-15"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 15
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "elemental-workshop-i:acquire-leather",
+          "elemental-workshop-i:acquire-needle",
+          "elemental-workshop-i:go-to-east-room"
+        ],
+        "displayText": "Repair the bellows with a needle, thread, and leather.",
+        "entities": [],
+        "gates": [
+          {
+            "label": "20 Crafting",
+            "level": 20,
+            "skill": "Crafting",
+            "type": "SKILL"
+          }
+        ],
+        "id": "elemental-workshop-i:repair-bellows",
+        "items": [
+          {
+            "item": {
+              "key": "needle",
+              "name": "Needle"
+            },
+            "quantity": 1,
+            "supplyPolicy": "QUEST_PROVIDED"
+          },
+          {
+            "item": {
+              "key": "thread",
+              "name": "Thread"
+            },
+            "quantity": 1,
+            "supplyPolicy": "PLAYER_OBTAINED"
+          },
+          {
+            "item": {
+              "key": "leather",
+              "name": "Leather"
+            },
+            "quantity": 1,
+            "supplyPolicy": "QUEST_PROVIDED"
+          }
+        ],
+        "kind": "USE_ITEM",
+        "location": {
+          "alias": "Elemental Workshop",
+          "chunks": [
+            "42,54"
+          ],
+          "evidence": "Chunk Picker task t_8157 explicitly pins the Seers' Village bookcase/access chunk to 42,54, while tasks t_8159 through t_8162 name the Elemental Workshop instance without a numeric chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use 42,54 only as the reviewed surface access chunk for the named Elemental Workshop instance; this does not infer interior coordinates from Wiki prose.",
+          "reviewedAt": "2026-07-31",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "elemental-workshop-i-repairing-the-workshop-16"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 16
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "elemental-workshop-i:repair-bellows"
+        ],
+        "displayText": "Pull the lever beside the bellows.",
+        "entities": [],
+        "gates": [],
+        "id": "elemental-workshop-i:pull-bellows-lever",
+        "items": [],
+        "kind": "INTERACT_OBJECT",
+        "location": {
+          "alias": "Elemental Workshop",
+          "chunks": [
+            "42,54"
+          ],
+          "evidence": "Chunk Picker task t_8157 explicitly pins the Seers' Village bookcase/access chunk to 42,54, while tasks t_8159 through t_8162 name the Elemental Workshop instance without a numeric chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use 42,54 only as the reviewed surface access chunk for the named Elemental Workshop instance; this does not infer interior coordinates from Wiki prose.",
+          "reviewedAt": "2026-07-31",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "elemental-workshop-i-repairing-the-workshop-17"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 17
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "elemental-workshop-i:enter-workshop"
+        ],
+        "displayText": "Search the north-east boxes in the middle room for a stone bowl.",
+        "entities": [
+          {
+            "kind": "object",
+            "name": "Boxes (Elemental Workshop)"
+          }
+        ],
+        "gates": [],
+        "id": "elemental-workshop-i:acquire-stone-bowl",
+        "items": [],
+        "kind": "ACQUIRE",
+        "location": {
+          "alias": "Elemental Workshop",
+          "chunks": [
+            "42,54"
+          ],
+          "evidence": "Chunk Picker task t_8157 explicitly pins the Seers' Village bookcase/access chunk to 42,54, while tasks t_8159 through t_8162 name the Elemental Workshop instance without a numeric chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use 42,54 only as the reviewed surface access chunk for the named Elemental Workshop instance; this does not infer interior coordinates from Wiki prose.",
+          "reviewedAt": "2026-07-31",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "elemental-workshop-i-repairing-the-workshop-18"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 18
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "elemental-workshop-i:acquire-stone-bowl"
+        ],
+        "displayText": "Go to the southern room.",
+        "entities": [],
+        "gates": [],
+        "id": "elemental-workshop-i:go-to-south-room",
+        "items": [],
+        "kind": "TRAVEL",
+        "location": {
+          "alias": "Elemental Workshop",
+          "chunks": [
+            "42,54"
+          ],
+          "evidence": "Chunk Picker task t_8157 explicitly pins the Seers' Village bookcase/access chunk to 42,54, while tasks t_8159 through t_8162 name the Elemental Workshop instance without a numeric chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use 42,54 only as the reviewed surface access chunk for the named Elemental Workshop instance; this does not infer interior coordinates from Wiki prose.",
+          "reviewedAt": "2026-07-31",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "elemental-workshop-i-repairing-the-workshop-19"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 19
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "elemental-workshop-i:go-to-south-room"
+        ],
+        "displayText": "Use the stone bowl on the southern lava trough.",
+        "entities": [],
+        "gates": [],
+        "id": "elemental-workshop-i:fill-bowl-with-lava",
+        "items": [],
+        "kind": "USE_ITEM",
+        "location": {
+          "alias": "Elemental Workshop",
+          "chunks": [
+            "42,54"
+          ],
+          "evidence": "Chunk Picker task t_8157 explicitly pins the Seers' Village bookcase/access chunk to 42,54, while tasks t_8159 through t_8162 name the Elemental Workshop instance without a numeric chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use 42,54 only as the reviewed surface access chunk for the named Elemental Workshop instance; this does not infer interior coordinates from Wiki prose.",
+          "reviewedAt": "2026-07-31",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "elemental-workshop-i-repairing-the-workshop-20"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 20
+      },
+      {
+        "chunkPickerTaskId": "t_8159",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "elemental-workshop-i:pull-water-wheel-lever",
+          "elemental-workshop-i:pull-bellows-lever",
+          "elemental-workshop-i:fill-bowl-with-lava",
+          "elemental-workshop-i:make-battered-key"
+        ],
+        "displayText": "Use the bowl of lava on the furnace after restoring the water wheel and bellows.",
+        "entities": [
+          {
+            "kind": "object",
+            "name": "Furnace"
+          }
+        ],
+        "gates": [],
+        "id": "elemental-workshop-i:start-furnace",
+        "items": [],
+        "kind": "USE_ITEM",
+        "location": {
+          "alias": "Elemental Workshop",
+          "chunks": [
+            "42,54"
+          ],
+          "evidence": "Chunk Picker task t_8157 explicitly pins the Seers' Village bookcase/access chunk to 42,54, while tasks t_8159 through t_8162 name the Elemental Workshop instance without a numeric chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use 42,54 only as the reviewed surface access chunk for the named Elemental Workshop instance; this does not infer interior coordinates from Wiki prose.",
+          "reviewedAt": "2026-07-31",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "elemental-workshop-i-repairing-the-workshop-21"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 21
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "elemental-workshop-i:start-furnace"
+        ],
+        "displayText": "Go to the western room and mine an elemental rock.",
+        "entities": [
+          {
+            "kind": "object",
+            "name": "Elemental rock"
+          }
+        ],
+        "gates": [
+          {
+            "label": "20 Mining",
+            "level": 20,
+            "skill": "Mining",
+            "type": "SKILL"
+          }
+        ],
+        "id": "elemental-workshop-i:mine-elemental-rock",
+        "items": [
+          {
+            "item": {
+              "key": "pickaxe",
+              "name": "Pickaxe"
+            },
+            "quantity": 1,
+            "supplyPolicy": "PLAYER_OBTAINED"
+          }
+        ],
+        "kind": "INTERACT_OBJECT",
+        "location": {
+          "alias": "Elemental Workshop",
+          "chunks": [
+            "42,54"
+          ],
+          "evidence": "Chunk Picker task t_8157 explicitly pins the Seers' Village bookcase/access chunk to 42,54, while tasks t_8159 through t_8162 name the Elemental Workshop instance without a numeric chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use 42,54 only as the reviewed surface access chunk for the named Elemental Workshop instance; this does not infer interior coordinates from Wiki prose.",
+          "reviewedAt": "2026-07-31",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "elemental-workshop-i-finishing-up-22"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 22
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "elemental-workshop-i:mine-elemental-rock"
+        ],
+        "displayText": "Defeat the Earth elemental and pick up its elemental ore; gather two extras only if preparing for Elemental Workshop II.",
+        "entities": [],
+        "gates": [],
+        "id": "elemental-workshop-i:defeat-earth-elemental",
+        "items": [],
+        "kind": "KILL",
+        "location": {
+          "alias": "Elemental Workshop",
+          "chunks": [
+            "42,54"
+          ],
+          "evidence": "Chunk Picker task t_8157 explicitly pins the Seers' Village bookcase/access chunk to 42,54, while tasks t_8159 through t_8162 name the Elemental Workshop instance without a numeric chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use 42,54 only as the reviewed surface access chunk for the named Elemental Workshop instance; this does not infer interior coordinates from Wiki prose.",
+          "reviewedAt": "2026-07-31",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "elemental-workshop-i-finishing-up-23"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 23
+      },
+      {
+        "chunkPickerTaskId": "t_8160",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "elemental-workshop-i:defeat-earth-elemental",
+          "elemental-workshop-i:start-furnace"
+        ],
+        "displayText": "Use the elemental ore and 4 coal on the southern furnace to make elemental metal.",
+        "entities": [
+          {
+            "kind": "object",
+            "name": "Furnace"
+          }
+        ],
+        "gates": [
+          {
+            "label": "20 Smithing",
+            "level": 20,
+            "skill": "Smithing",
+            "type": "SKILL"
+          }
+        ],
+        "id": "elemental-workshop-i:smelt-elemental-metal",
+        "items": [
+          {
+            "item": {
+              "key": "coal",
+              "name": "Coal"
+            },
+            "quantity": 4,
+            "supplyPolicy": "PLAYER_OBTAINED"
+          }
+        ],
+        "kind": "USE_ITEM",
+        "location": {
+          "alias": "Elemental Workshop",
+          "chunks": [
+            "42,54"
+          ],
+          "evidence": "Chunk Picker task t_8157 explicitly pins the Seers' Village bookcase/access chunk to 42,54, while tasks t_8159 through t_8162 name the Elemental Workshop instance without a numeric chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use 42,54 only as the reviewed surface access chunk for the named Elemental Workshop instance; this does not infer interior coordinates from Wiki prose.",
+          "reviewedAt": "2026-07-31",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "elemental-workshop-i-finishing-up-24"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 24
+      },
+      {
+        "chunkPickerTaskId": "t_8161",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "elemental-workshop-i:smelt-elemental-metal"
+        ],
+        "displayText": "With the slashed book, use the elemental metal on the workbench to make an elemental shield.",
+        "entities": [],
+        "gates": [],
+        "id": "elemental-workshop-i:create-shield",
+        "items": [
+          {
+            "item": {
+              "key": "hammer",
+              "name": "Hammer"
+            },
+            "quantity": 1,
+            "supplyPolicy": "PLAYER_OBTAINED"
+          }
+        ],
+        "kind": "USE_ITEM",
+        "location": {
+          "alias": "Elemental Workshop",
+          "chunks": [
+            "42,54"
+          ],
+          "evidence": "Chunk Picker task t_8157 explicitly pins the Seers' Village bookcase/access chunk to 42,54, while tasks t_8159 through t_8162 name the Elemental Workshop instance without a numeric chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use 42,54 only as the reviewed surface access chunk for the named Elemental Workshop instance; this does not infer interior coordinates from Wiki prose.",
+          "reviewedAt": "2026-07-31",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "elemental-workshop-i-finishing-up-25"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 25
+      },
+      {
+        "chunkPickerTaskId": "t_8162",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "elemental-workshop-i:create-shield"
+        ],
+        "displayText": "Elemental Workshop I complete.",
+        "entities": [],
+        "gates": [],
+        "id": "elemental-workshop-i:complete",
+        "items": [],
+        "kind": "INFORMATION",
+        "location": {
+          "alias": "Elemental Workshop",
+          "chunks": [
+            "42,54"
+          ],
+          "evidence": "Chunk Picker task t_8157 explicitly pins the Seers' Village bookcase/access chunk to 42,54, while tasks t_8159 through t_8162 name the Elemental Workshop instance without a numeric chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use 42,54 only as the reviewed surface access chunk for the named Elemental Workshop instance; this does not infer interior coordinates from Wiki prose.",
+          "reviewedAt": "2026-07-31",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "elemental-workshop-i-finishing-up-26"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 26
+      }
+    ],
+    "Imp Catcher": [
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [],
+        "displayText": "Kill imps south-east of Falador until you obtain a black bead.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Imp"
+          }
+        ],
+        "gates": [],
+        "id": "imp-catcher:get-black-bead",
+        "items": [],
+        "kind": "KILL",
+        "location": {
+          "alias": "South-east Falador",
+          "chunks": [
+            "47,51"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 14649872 source line imp-catcher-walkthrough-2 recommends free players kill imps near Falador's southern entrance; the pinned Chunk Picker content entry Falador Farm (47,51) lists Imp.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "The F2P quick-guide recommendation and pinned 47,51 Imp content support the reviewed South-east Falador method. This review claims chunk precision only, not an exact Imp tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "imp-catcher-walkthrough-2"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 1,
+        "coach": {
+          "consumes": [],
+          "fulfils": [
+            {
+              "item": {
+                "key": "black bead",
+                "name": "Black bead"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            }
+          ],
+          "completion": {
+            "kind": "ITEM_CONFIRMED",
+            "itemKey": "black bead"
+          },
+          "fallbackPolicy": "INTERCHANGEABLE",
+          "preferredMethod": {
+            "kind": "DIRECT_SOURCE",
+            "itemKey": "black bead",
+            "sourceLabel": "Imps south-east of Falador"
+          }
+        }
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [],
+        "displayText": "Kill imps south-east of Falador until you obtain a red bead.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Imp"
+          }
+        ],
+        "gates": [],
+        "id": "imp-catcher:get-red-bead",
+        "items": [],
+        "kind": "KILL",
+        "location": {
+          "alias": "South-east Falador",
+          "chunks": [
+            "47,51"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 14649872 source line imp-catcher-walkthrough-2 recommends free players kill imps near Falador's southern entrance; the pinned Chunk Picker content entry Falador Farm (47,51) lists Imp.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "The F2P quick-guide recommendation and pinned 47,51 Imp content support the reviewed South-east Falador method. This review claims chunk precision only, not an exact Imp tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [],
+        "section": "QUEST",
+        "sourceOrder": 2,
+        "coach": {
+          "consumes": [],
+          "fulfils": [
+            {
+              "item": {
+                "key": "red bead",
+                "name": "Red bead"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            }
+          ],
+          "completion": {
+            "kind": "ITEM_CONFIRMED",
+            "itemKey": "red bead"
+          },
+          "fallbackPolicy": "INTERCHANGEABLE",
+          "preferredMethod": {
+            "kind": "DIRECT_SOURCE",
+            "itemKey": "red bead",
+            "sourceLabel": "Imps south-east of Falador"
+          }
+        }
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [],
+        "displayText": "Kill imps south-east of Falador until you obtain a white bead.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Imp"
+          }
+        ],
+        "gates": [],
+        "id": "imp-catcher:get-white-bead",
+        "items": [],
+        "kind": "KILL",
+        "location": {
+          "alias": "South-east Falador",
+          "chunks": [
+            "47,51"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 14649872 source line imp-catcher-walkthrough-2 recommends free players kill imps near Falador's southern entrance; the pinned Chunk Picker content entry Falador Farm (47,51) lists Imp.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "The F2P quick-guide recommendation and pinned 47,51 Imp content support the reviewed South-east Falador method. This review claims chunk precision only, not an exact Imp tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [],
+        "section": "QUEST",
+        "sourceOrder": 3,
+        "coach": {
+          "consumes": [],
+          "fulfils": [
+            {
+              "item": {
+                "key": "white bead",
+                "name": "White bead"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            }
+          ],
+          "completion": {
+            "kind": "ITEM_CONFIRMED",
+            "itemKey": "white bead"
+          },
+          "fallbackPolicy": "INTERCHANGEABLE",
+          "preferredMethod": {
+            "kind": "DIRECT_SOURCE",
+            "itemKey": "white bead",
+            "sourceLabel": "Imps south-east of Falador"
+          }
+        }
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [],
+        "displayText": "Kill imps south-east of Falador until you obtain a yellow bead.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Imp"
+          }
+        ],
+        "gates": [],
+        "id": "imp-catcher:get-yellow-bead",
+        "items": [],
+        "kind": "KILL",
+        "location": {
+          "alias": "South-east Falador",
+          "chunks": [
+            "47,51"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 14649872 source line imp-catcher-walkthrough-2 recommends free players kill imps near Falador's southern entrance; the pinned Chunk Picker content entry Falador Farm (47,51) lists Imp.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "The F2P quick-guide recommendation and pinned 47,51 Imp content support the reviewed South-east Falador method. This review claims chunk precision only, not an exact Imp tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [],
+        "section": "QUEST",
+        "sourceOrder": 4,
+        "coach": {
+          "consumes": [],
+          "fulfils": [
+            {
+              "item": {
+                "key": "yellow bead",
+                "name": "Yellow bead"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            }
+          ],
+          "completion": {
+            "kind": "ITEM_CONFIRMED",
+            "itemKey": "yellow bead"
+          },
+          "fallbackPolicy": "INTERCHANGEABLE",
+          "preferredMethod": {
+            "kind": "DIRECT_SOURCE",
+            "itemKey": "yellow bead",
+            "sourceLabel": "Imps south-east of Falador"
+          }
+        }
+      },
+      {
+        "chunkPickerTaskId": "t_7651",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "imp-catcher:get-black-bead",
+          "imp-catcher:get-red-bead",
+          "imp-catcher:get-white-bead",
+          "imp-catcher:get-yellow-bead"
+        ],
+        "displayText": "Take all four beads to Wizard Mizgog on the top floor of the Wizards' Tower.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Wizard Mizgog"
+          }
+        ],
+        "gates": [],
+        "id": "imp-catcher:give-beads-to-mizgog",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "alias": "Wizards' Tower",
+          "chunks": [
+            "48,49"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 14649872 source line imp-catcher-walkthrough-3 directs talking to Wizard Mizgog on the top floor of the Wizards' Tower with all four beads; pinned Chunk Picker task t_7651 identifies Wizard Mizgog and terminal task t_7652 anchors Imp Catcher at 48,49.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use the reviewed Wizards' Tower chunk for Mizgog's top-floor hand-off without claiming an exact tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "imp-catcher-walkthrough-1",
+          "imp-catcher-walkthrough-3"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 5,
+        "coach": {
+          "consumes": [
+            {
+              "item": {
+                "key": "black bead",
+                "name": "Black bead"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            },
+            {
+              "item": {
+                "key": "red bead",
+                "name": "Red bead"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            },
+            {
+              "item": {
+                "key": "white bead",
+                "name": "White bead"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            },
+            {
+              "item": {
+                "key": "yellow bead",
+                "name": "Yellow bead"
+              },
+              "quantity": 1,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            }
+          ],
+          "fulfils": [],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      },
+      {
+        "chunkPickerTaskId": "t_7652",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "imp-catcher:give-beads-to-mizgog"
+        ],
+        "displayText": "Imp Catcher complete.",
+        "entities": [],
+        "gates": [],
+        "id": "imp-catcher:complete",
+        "items": [],
+        "kind": "INFORMATION",
+        "location": {
+          "alias": "Wizards' Tower",
+          "chunks": [
+            "48,49"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 14649872 source line imp-catcher-walkthrough-4 records quest completion; pinned Chunk Picker terminal task t_7652 follows the Mizgog hand-off and anchors Imp Catcher at 48,49.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Keep final preview confirmation at the reviewed Wizards' Tower chunk without claiming an exact tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "imp-catcher-walkthrough-4"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 6,
+        "coach": {
+          "consumes": [],
+          "fulfils": [],
+          "completion": {
+            "kind": "QUEST_COMPLETED",
+            "questId": "Imp Catcher"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      }
+    ],
+    "Rune Mysteries": [
+      {
+        "chunkPickerTaskId": "t_7697",
+        "confidence": "REVIEWED",
+        "dependsOn": [],
+        "displayText": "Ask Duke Horacio in Lumbridge Castle for a quest and take the air talisman.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Duke Horacio"
+          }
+        ],
+        "gates": [],
+        "id": "rune-mysteries:start-with-duke",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "alias": "Lumbridge Castle",
+          "chunks": [
+            "50,50"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 15205463 source line rune-mysteries-walkthrough-1 directs speaking to Duke Horacio in Lumbridge Castle and records the air talisman; pinned Chunk Picker task t_7697 identifies Duke Horacio at the reviewed Lumbridge Castle chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use the reviewed Lumbridge Castle chunk at 50,50 for Duke Horacio without claiming an exact tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "rune-mysteries-walkthrough-1"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 1,
+        "coach": {
+          "consumes": [],
+          "fulfils": [
+            {
+              "item": {
+                "key": "air talisman",
+                "name": "Air talisman"
+              },
+              "quantity": 1,
+              "supplyPolicy": "QUEST_PROVIDED"
+            }
+          ],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      },
+      {
+        "chunkPickerTaskId": "t_7698",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "rune-mysteries:start-with-duke"
+        ],
+        "displayText": "Give the air talisman to Archmage Sedridor in the Wizards' Tower basement.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Archmage Sedridor"
+          }
+        ],
+        "gates": [],
+        "id": "rune-mysteries:take-talisman-to-sedridor",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "alias": "Wizards' Tower basement",
+          "chunks": [
+            "48,49"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 15205463 source line rune-mysteries-walkthrough-2 directs giving the air talisman to Archmage Sedridor in the Wizards' Tower basement; pinned Chunk Picker task t_7698 identifies Sedridor at the reviewed tower access chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use the reviewed Wizards' Tower basement chunk at 48,49 without claiming an exact tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "rune-mysteries-walkthrough-2"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 2,
+        "coach": {
+          "consumes": [
+            {
+              "item": {
+                "key": "air talisman",
+                "name": "Air talisman"
+              },
+              "quantity": 1,
+              "supplyPolicy": "QUEST_PROVIDED"
+            }
+          ],
+          "fulfils": [
+            {
+              "item": {
+                "key": "research package",
+                "name": "Research package"
+              },
+              "quantity": 1,
+              "supplyPolicy": "QUEST_PROVIDED"
+            }
+          ],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      },
+      {
+        "chunkPickerTaskId": "t_7699",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "rune-mysteries:take-talisman-to-sedridor"
+        ],
+        "displayText": "Take Sedridor's research package to Aubury in the Varrock rune shop.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Aubury"
+          }
+        ],
+        "gates": [],
+        "id": "rune-mysteries:take-package-to-aubury",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "alias": "Aubury's rune shop",
+          "chunks": [
+            "50,53"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 15205463 source line rune-mysteries-walkthrough-3 directs taking the research package to Aubury in the Varrock rune shop; pinned Chunk Picker task t_7699 identifies Aubury at the reviewed rune-shop chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use the reviewed Aubury rune-shop chunk at 50,53 without claiming an exact tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "rune-mysteries-walkthrough-3"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 3,
+        "coach": {
+          "consumes": [
+            {
+              "item": {
+                "key": "research package",
+                "name": "Research package"
+              },
+              "quantity": 1,
+              "supplyPolicy": "QUEST_PROVIDED"
+            }
+          ],
+          "fulfils": [
+            {
+              "item": {
+                "key": "research notes",
+                "name": "Research notes"
+              },
+              "quantity": 1,
+              "supplyPolicy": "QUEST_PROVIDED"
+            }
+          ],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      },
+      {
+        "chunkPickerTaskId": "t_7700",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "rune-mysteries:take-package-to-aubury"
+        ],
+        "displayText": "Return Aubury's research notes to Sedridor in the Wizards' Tower basement.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Archmage Sedridor"
+          }
+        ],
+        "gates": [],
+        "id": "rune-mysteries:return-notes-to-sedridor",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "alias": "Wizards' Tower basement",
+          "chunks": [
+            "48,49"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 15205463 source line rune-mysteries-walkthrough-4 directs returning the research notes to Sedridor; pinned Chunk Picker task t_7700 identifies Sedridor at the reviewed tower access chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use the reviewed Wizards' Tower basement chunk at 48,49 without claiming an exact tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "rune-mysteries-walkthrough-4"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 4,
+        "coach": {
+          "consumes": [
+            {
+              "item": {
+                "key": "research notes",
+                "name": "Research notes"
+              },
+              "quantity": 1,
+              "supplyPolicy": "QUEST_PROVIDED"
+            }
+          ],
+          "fulfils": [],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      },
+      {
+        "chunkPickerTaskId": "t_7701",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "rune-mysteries:return-notes-to-sedridor"
+        ],
+        "displayText": "Rune Mysteries complete.",
+        "entities": [],
+        "gates": [],
+        "id": "rune-mysteries:complete",
+        "items": [],
+        "kind": "INFORMATION",
+        "location": {
+          "alias": "Wizards' Tower basement",
+          "chunks": [
+            "48,49"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 15205463 source line rune-mysteries-walkthrough-5 records quest completion; pinned Chunk Picker terminal task t_7701 follows Sedridor's final hand-off at the reviewed tower access chunk.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Keep the final confirmation at the reviewed Wizards' Tower basement chunk 48,49 without claiming an exact tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "rune-mysteries-walkthrough-5"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 5,
+        "coach": {
+          "consumes": [],
+          "fulfils": [],
+          "completion": {
+            "kind": "QUEST_COMPLETED",
+            "questId": "Rune Mysteries"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      }
+    ],
+    "Sheep Shearer": [
+      {
+        "chunkPickerTaskId": "t_7702",
+        "confidence": "REVIEWED",
+        "dependsOn": [],
+        "displayText": "Talk to Fred the Farmer north of Lumbridge and ask for a quest.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Fred the Farmer"
+          }
+        ],
+        "gates": [],
+        "id": "sheep-shearer:start-with-fred",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "alias": "Fred's farm and sheep pen",
+          "chunks": [
+            "49,51"
+          ],
+          "evidence": "Pinned Wiki source line sheep-shearer-if-you-dont-have-the-balls-of-wool-3 records Fred's quest-provided shears; pinned Chunk Picker task t_7702 records talking to Fred, while the pinned Sheep Shearer terminal task t_7704 anchors the farm at 49,51.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Only chunk precision is claimed for Fred's farm and sheep pen; the review does not claim an exact tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "sheep-shearer-if-you-dont-have-the-balls-of-wool-3"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 1,
+        "coach": {
+          "consumes": [],
+          "fulfils": [
+            {
+              "item": {
+                "key": "shears",
+                "name": "Shears"
+              },
+              "quantity": 1,
+              "supplyPolicy": "QUEST_PROVIDED"
+            }
+          ],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "sheep-shearer:start-with-fred"
+        ],
+        "displayText": "Use Fred's shears to collect 20 wool from the sheep in his pen.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Sheep"
+          }
+        ],
+        "gates": [],
+        "id": "sheep-shearer:shear-wool",
+        "items": [
+          {
+            "item": {
+              "key": "shears",
+              "name": "Shears"
+            },
+            "quantity": 1,
+            "supplyPolicy": "QUEST_PROVIDED"
+          }
+        ],
+        "kind": "USE_ITEM",
+        "location": {
+          "alias": "Fred's farm and sheep pen",
+          "chunks": [
+            "49,51"
+          ],
+          "evidence": "Pinned Wiki source lines sheep-shearer-if-you-dont-have-the-balls-of-wool-4 through sheep-shearer-if-you-dont-have-the-balls-of-wool-6 place shearing in Fred's east sheep pen; the pinned Sheep Shearer terminal task t_7704 anchors the Fred farm/sheep-pen route at 49,51.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Only chunk precision is claimed for Fred's farm and sheep pen; the review does not claim an exact tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "sheep-shearer-if-you-dont-have-the-balls-of-wool-4",
+          "sheep-shearer-if-you-dont-have-the-balls-of-wool-5",
+          "sheep-shearer-if-you-dont-have-the-balls-of-wool-6"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 2,
+        "coach": {
+          "consumes": [],
+          "fulfils": [
+            {
+              "item": {
+                "key": "wool",
+                "name": "Wool"
+              },
+              "quantity": 20,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            }
+          ],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE",
+          "preferredMethod": {
+            "kind": "TRANSFORMATION",
+            "recipeId": "shear-sheep"
+          }
+        }
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "sheep-shearer:shear-wool"
+        ],
+        "displayText": "Spin the 20 wool into 20 balls of wool upstairs in Lumbridge Castle.",
+        "entities": [
+          {
+            "kind": "object",
+            "name": "Spinning wheel"
+          }
+        ],
+        "gates": [],
+        "id": "sheep-shearer:spin-wool",
+        "items": [],
+        "kind": "USE_ITEM",
+        "location": {
+          "alias": "Lumbridge Castle",
+          "chunks": [
+            "50,50"
+          ],
+          "evidence": "Pinned Wiki source lines sheep-shearer-if-you-dont-have-the-balls-of-wool-7 and sheep-shearer-if-you-dont-have-the-balls-of-wool-8 name Lumbridge Castle and its spinning wheel; the pinned Chunk Picker content entry identifies Lumbridge Castle at 50,50.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Only chunk precision is claimed for the Lumbridge Castle spinning wheel; the review does not claim an exact tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "sheep-shearer-if-you-dont-have-the-balls-of-wool-7",
+          "sheep-shearer-if-you-dont-have-the-balls-of-wool-8"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 3,
+        "coach": {
+          "consumes": [
+            {
+              "item": {
+                "key": "wool",
+                "name": "Wool"
+              },
+              "quantity": 20,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            }
+          ],
+          "fulfils": [
+            {
+              "item": {
+                "key": "ball of wool",
+                "name": "Ball of wool"
+              },
+              "quantity": 20,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            }
+          ],
+          "completion": {
+            "kind": "ITEM_CONFIRMED",
+            "itemKey": "ball of wool"
+          },
+          "fallbackPolicy": "BLOCK_THEN_ALTERNATIVES",
+          "preferredMethod": {
+            "kind": "TRANSFORMATION",
+            "recipeId": "spin-wool"
+          }
+        }
+      },
+      {
+        "chunkPickerTaskId": "t_7703",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "sheep-shearer:spin-wool",
+          "sheep-shearer:start-with-fred"
+        ],
+        "displayText": "Return to Fred the Farmer with 20 unnoted balls of wool.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Fred the Farmer"
+          }
+        ],
+        "gates": [],
+        "id": "sheep-shearer:return-to-fred",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "alias": "Fred's farm and sheep pen",
+          "chunks": [
+            "49,51"
+          ],
+          "evidence": "Pinned Wiki source lines sheep-shearer-if-you-already-have-the-20-unnoted-balls-of-wool-1, sheep-shearer-if-you-dont-have-the-balls-of-wool-9, and sheep-shearer-if-you-dont-have-the-balls-of-wool-10 direct return and hand-in with 20 balls of wool; pinned Chunk Picker task t_7703 identifies Fred and the pinned Sheep Shearer route record anchors Fred's farm at 49,51.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Only chunk precision is claimed for Fred's farm and sheep pen; the review does not claim an exact tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "sheep-shearer-if-you-already-have-the-20-unnoted-balls-of-wool-1",
+          "sheep-shearer-if-you-dont-have-the-balls-of-wool-9",
+          "sheep-shearer-if-you-dont-have-the-balls-of-wool-10"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 4,
+        "coach": {
+          "consumes": [
+            {
+              "item": {
+                "key": "ball of wool",
+                "name": "Ball of wool"
+              },
+              "quantity": 20,
+              "supplyPolicy": "PLAYER_OBTAINED"
+            }
+          ],
+          "fulfils": [],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      },
+      {
+        "chunkPickerTaskId": "t_7704",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "sheep-shearer:return-to-fred"
+        ],
+        "displayText": "Sheep Shearer complete.",
+        "entities": [],
+        "gates": [],
+        "id": "sheep-shearer:complete",
+        "items": [],
+        "kind": "INFORMATION",
+        "location": {
+          "alias": "Fred's farm and sheep pen",
+          "chunks": [
+            "49,51"
+          ],
+          "evidence": "Pinned Wiki source lines sheep-shearer-if-you-already-have-the-20-unnoted-balls-of-wool-2 and sheep-shearer-if-you-dont-have-the-balls-of-wool-11 record completion; pinned Chunk Picker terminal task t_7704 anchors Sheep Shearer at 49,51.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Only chunk precision is claimed for Fred's farm and sheep pen; the review does not claim an exact tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "sheep-shearer-if-you-already-have-the-20-unnoted-balls-of-wool-2",
+          "sheep-shearer-if-you-dont-have-the-balls-of-wool-11"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 5,
+        "coach": {
+          "consumes": [],
+          "fulfils": [],
+          "completion": {
+            "kind": "QUEST_COMPLETED",
+            "questId": "Sheep Shearer"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      }
+    ],
+    "The Restless Ghost": [
+      {
+        "chunkPickerTaskId": "t_7683",
+        "confidence": "REVIEWED",
+        "dependsOn": [],
+        "displayText": "Talk to Father Aereck in Lumbridge church to start the quest.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Father Aereck"
+          }
+        ],
+        "gates": [],
+        "id": "the-restless-ghost:start-with-aereck",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "alias": "Lumbridge church",
+          "chunks": [
+            "50,50"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 15070492 has no standalone Father Aereck line; pinned Chunk Picker task t_7683 identifies Father Aereck, and the pinned Restless Ghost route audit anchors the Lumbridge start area at 50,50.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "The start is a task-graph-only reviewed action because the selected quick guide has no separate start line; use the reviewed Lumbridge church chunk without claiming an exact tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [],
+        "section": "QUEST",
+        "sourceOrder": 1,
+        "coach": {
+          "consumes": [],
+          "fulfils": [],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      },
+      {
+        "chunkPickerTaskId": "t_7684",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "the-restless-ghost:start-with-aereck"
+        ],
+        "displayText": "Talk to Father Urhney in the western Lumbridge Swamp and take the ghostspeak amulet.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Father Urhney"
+          }
+        ],
+        "gates": [],
+        "id": "the-restless-ghost:get-amulet",
+        "items": [],
+        "kind": "TALK_TO",
+        "location": {
+          "alias": "Father Urhney's house",
+          "chunks": [
+            "49,49"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 15070492 source line the-restless-ghost-getting-started-1 directs the hut west of Lumbridge Swamp; pinned Chunk Picker task t_7684 identifies Father Urhney, and the pinned Restless Ghost route audit anchors West Lumbridge Swamp at 49,49.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use the reviewed house chunk for Father Urhney without claiming an exact tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "the-restless-ghost-getting-started-1"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 2,
+        "coach": {
+          "consumes": [],
+          "fulfils": [
+            {
+              "item": {
+                "key": "ghostspeak amulet",
+                "name": "Ghostspeak amulet"
+              },
+              "quantity": 1,
+              "supplyPolicy": "QUEST_PROVIDED"
+            }
+          ],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      },
+      {
+        "chunkPickerTaskId": "t_7685",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "the-restless-ghost:get-amulet"
+        ],
+        "displayText": "Equip the ghostspeak amulet and talk to the ghost in Lumbridge graveyard.",
+        "entities": [
+          {
+            "kind": "npc",
+            "name": "Restless ghost"
+          }
+        ],
+        "gates": [],
+        "id": "the-restless-ghost:talk-to-ghost",
+        "items": [
+          {
+            "item": {
+              "key": "ghostspeak amulet",
+              "name": "Ghostspeak amulet"
+            },
+            "quantity": 1,
+            "supplyPolicy": "QUEST_PROVIDED"
+          }
+        ],
+        "kind": "TALK_TO",
+        "location": {
+          "alias": "Lumbridge graveyard",
+          "chunks": [
+            "50,49"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 15070492 source lines the-restless-ghost-ghostspeak-amulet-2 and the-restless-ghost-ghostspeak-amulet-3 place the coffin and ghostspeak interaction in the graveyard; pinned Chunk Picker task t_7685 identifies the restless ghost and task t_7687 anchors the coffin interaction at 50,49.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use the reviewed graveyard chunk for the coffin and ghost interaction without claiming an exact tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "the-restless-ghost-ghostspeak-amulet-2",
+          "the-restless-ghost-ghostspeak-amulet-3"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 3,
+        "coach": {
+          "consumes": [],
+          "fulfils": [],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      },
+      {
+        "chunkPickerTaskId": "t_7686",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "the-restless-ghost:talk-to-ghost"
+        ],
+        "displayText": "Search the altar in the Wizards' Tower basement for the ghost's skull, then leave without fighting the skeleton.",
+        "entities": [],
+        "gates": [],
+        "id": "the-restless-ghost:take-skull",
+        "items": [],
+        "kind": "INTERACT_OBJECT",
+        "location": {
+          "alias": "Wizards' Tower",
+          "chunks": [
+            "48,49"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 15070492 source line the-restless-ghost-the-skull-4 says the altar grants the skull and the level 13 skeleton may be left; pinned Chunk Picker task t_7686 names the Wizards' Tower basement, and pinned location evidence records Wizards' Tower at 48,49.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use the reviewed tower access chunk for the basement altar without inferring an interior tile or a kill requirement.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "the-restless-ghost-the-skull-4"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 4,
+        "coach": {
+          "consumes": [],
+          "fulfils": [
+            {
+              "item": {
+                "key": "ghost's skull",
+                "name": "Ghost's skull"
+              },
+              "quantity": 1,
+              "supplyPolicy": "QUEST_PROVIDED"
+            }
+          ],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      },
+      {
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "the-restless-ghost:take-skull"
+        ],
+        "displayText": "Return to the restless ghost with its skull.",
+        "entities": [],
+        "gates": [],
+        "id": "the-restless-ghost:return-to-ghost",
+        "items": [],
+        "kind": "TRAVEL",
+        "location": {
+          "alias": "Lumbridge graveyard",
+          "chunks": [
+            "50,49"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 15070492 has no standalone return line: its combined source line the-restless-ghost-the-skull-5 is assigned once to use-skull; pinned Chunk Picker task t_7687 anchors the coffin interaction at 50,49.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Split the zero-source-line return travel from the combined next skull-use instruction, preserving direct task dependency and location evidence while avoiding duplicate imported lines.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [],
+        "section": "QUEST",
+        "sourceOrder": 5,
+        "coach": {
+          "consumes": [],
+          "fulfils": [],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      },
+      {
+        "chunkPickerTaskId": "t_7687",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "the-restless-ghost:return-to-ghost",
+          "the-restless-ghost:take-skull"
+        ],
+        "displayText": "Use the ghost's skull on the coffin in Lumbridge graveyard.",
+        "entities": [],
+        "gates": [],
+        "id": "the-restless-ghost:use-skull",
+        "items": [],
+        "kind": "USE_ITEM",
+        "location": {
+          "alias": "Lumbridge graveyard",
+          "chunks": [
+            "50,49"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 15070492 source line the-restless-ghost-the-skull-5 directs using the skull on the open coffin; pinned Chunk Picker task t_7687 records that coffin use at 50,49.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Use the reviewed graveyard chunk for the terminal skull interaction without claiming an exact coffin tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "the-restless-ghost-the-skull-5"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 6,
+        "coach": {
+          "consumes": [
+            {
+              "item": {
+                "key": "ghost's skull",
+                "name": "Ghost's skull"
+              },
+              "quantity": 1,
+              "supplyPolicy": "QUEST_PROVIDED"
+            }
+          ],
+          "fulfils": [],
+          "completion": {
+            "kind": "MANUAL"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      },
+      {
+        "chunkPickerTaskId": "t_7688",
+        "confidence": "REVIEWED",
+        "dependsOn": [
+          "the-restless-ghost:use-skull"
+        ],
+        "displayText": "The Restless Ghost complete.",
+        "entities": [],
+        "gates": [],
+        "id": "the-restless-ghost:complete",
+        "items": [],
+        "kind": "INFORMATION",
+        "location": {
+          "alias": "Lumbridge graveyard",
+          "chunks": [
+            "50,49"
+          ],
+          "evidence": "Selected Wiki quick-guide revision 15070492 source line the-restless-ghost-the-skull-6 records quest completion; pinned Chunk Picker terminal task t_7688 follows the coffin interaction at 50,49.",
+          "kind": "REVIEWED_ALIAS",
+          "rationale": "Keep the final confirmation at the reviewed graveyard chunk without claiming an exact tile.",
+          "reviewedAt": "2026-08-21",
+          "reviewer": "OpenAI Codex"
+        },
+        "rawWikiLineIds": [
+          "the-restless-ghost-the-skull-6"
+        ],
+        "section": "QUEST",
+        "sourceOrder": 7,
+        "coach": {
+          "consumes": [],
+          "fulfils": [],
+          "completion": {
+            "kind": "QUEST_COMPLETED",
+            "questId": "The Restless Ghost"
+          },
+          "fallbackPolicy": "NONE"
+        }
+      }
+    ]
+  },
+  "taskCoverageExceptions": {
+    "Imp Catcher": [
+      {
+        "evidence": "Pinned Chunk Picker task t_7650 is 'Talk to Wizard Mizgog' and the pinned task graph makes t_7651 depend on it; it is not a bead-acquisition task.",
+        "kind": "OMITTED_PREREQUISITE",
+        "rationale": "The approved six-action player journey has no separate start-dialogue action. Keep this initial dialogue as explicit provenance instead of binding it to any independent bead action.",
+        "successorTaskIds": [
+          "t_7651"
+        ],
+        "taskId": "t_7650"
+      }
+    ]
+  },
+  "rootRequirements": {
+    "Cook's Assistant": {
+      "items": [
+        {
+          "item": {
+            "key": "egg",
+            "name": "Egg"
+          },
+          "quantity": 1,
+          "supplyPolicy": "PLAYER_OBTAINED"
+        },
+        {
+          "item": {
+            "key": "bucket of milk",
+            "name": "Bucket of milk"
+          },
+          "quantity": 1,
+          "supplyPolicy": "PLAYER_OBTAINED"
+        },
+        {
+          "item": {
+            "key": "pot of flour",
+            "name": "Pot of flour"
+          },
+          "quantity": 1,
+          "supplyPolicy": "PLAYER_OBTAINED"
+        }
+      ],
+      "questId": "Cook's Assistant",
+      "reviewedAt": "2026-07-29",
+      "wikiRevision": "15240921"
+    },
+    "Sheep Shearer": {
+      "items": [
+        {
+          "item": {
+            "key": "ball of wool",
+            "name": "Ball of wool"
+          },
+          "quantity": 20,
+          "supplyPolicy": "PLAYER_OBTAINED"
+        }
+      ],
+      "questId": "Sheep Shearer",
+      "reviewedAt": "2026-08-21",
+      "wikiRevision": "15271780"
+    },
+    "The Restless Ghost": {
+      "items": [],
+      "questId": "The Restless Ghost",
+      "reviewedAt": "2026-08-21",
+      "wikiRevision": "15070492"
+    },
+    "Rune Mysteries": {
+      "items": [],
+      "questId": "Rune Mysteries",
+      "reviewedAt": "2026-08-21",
+      "wikiRevision": "15205463"
+    },
+    "Imp Catcher": {
+      "items": [
+        {
+          "item": {
+            "key": "black bead",
+            "name": "Black bead"
+          },
+          "quantity": 1,
+          "supplyPolicy": "PLAYER_OBTAINED"
+        },
+        {
+          "item": {
+            "key": "red bead",
+            "name": "Red bead"
+          },
+          "quantity": 1,
+          "supplyPolicy": "PLAYER_OBTAINED"
+        },
+        {
+          "item": {
+            "key": "white bead",
+            "name": "White bead"
+          },
+          "quantity": 1,
+          "supplyPolicy": "PLAYER_OBTAINED"
+        },
+        {
+          "item": {
+            "key": "yellow bead",
+            "name": "Yellow bead"
+          },
+          "quantity": 1,
+          "supplyPolicy": "PLAYER_OBTAINED"
+        }
+      ],
+      "questId": "Imp Catcher",
+      "reviewedAt": "2026-08-21",
+      "wikiRevision": "14649872"
+    }
+  },
+  "schemaVersion": 1,
+  "sourceLineDigests": {
+    "Cook's Assistant": {
+      "cooks-assistant-walkthrough-1": "7ea5e36f54bae4c07fc16acfc9a1c0fae707160f6f3df3e41bb9203bbb4d4425",
+      "cooks-assistant-walkthrough-2": "9892b331c7722d4204ecdf6ec01789a01bd099b1adba302a0830ac580c7b0f24",
+      "cooks-assistant-walkthrough-3": "be4bf900de70baaaf0d3dabdd66cc43f3e18c3b3c12834244fa1acd724b2228b",
+      "cooks-assistant-walkthrough-4": "9f3f7dc7a4976ab4dd51e58003747d0b19cde63d3208567b5ccffce4f9424d0a",
+      "cooks-assistant-walkthrough-5": "f6c2b34c5141e7d2013ac60b4b479697952ceffecc82f353290074392785eee7",
+      "cooks-assistant-walkthrough-6": "a0c3f43e4037c7575f2888ab43f580a8097a8c36fca377591cbcafc7b49cbe37",
+      "cooks-assistant-walkthrough-7": "e1aa87f909c9bb8c2990e9ed6fca6fc35776f834019b907cfbcbe72a6e8644a9"
+    },
+    "Daddy's Home": {
+      "daddys-home-walkthrough-1": "ef06f3cdbed05a3971f8964b5b92f0670a507b6cbe57803333b13cbc7f7066b2",
+      "daddys-home-walkthrough-10": "9374dced4c265bdac063afd298c74ce80d6e6c8a4dc1493c9eed1ee7e0bf8993",
+      "daddys-home-walkthrough-11": "669e09e9ce9e2636f06f97bc585a2cfafac4a1a72da784ba95dae65c319d5836",
+      "daddys-home-walkthrough-12": "5fbef15f5debaee445647d66e3e7fe8766ad6e0b6a944e4fd914d6afc99b9cb7",
+      "daddys-home-walkthrough-13": "b6e9804412c0db1203d6179a292d2bc7cba8ab7718ee232ff7c9cc5feb5bb927",
+      "daddys-home-walkthrough-14": "1719d6af7efd4d9d38b2c06d222930655a422265dc0c731afb1a6f62eb6ea61a",
+      "daddys-home-walkthrough-15": "0849e4e24cb1d0deeaaf4bb23c4cad929b38d3fbb42c6a374980dc66af910607",
+      "daddys-home-walkthrough-16": "6b4333b481c9f59f40c971faae6174ffdbd9e76d3969e3b138143d56964b961c",
+      "daddys-home-walkthrough-17": "a381f69a511340c8946b3a69e2aabb7899eafd5dea2c3555df1685e1f5159060",
+      "daddys-home-walkthrough-18": "a8ffe07779eac62c75800998eb7bca0781260b39440b96405ed1c9c453c48441",
+      "daddys-home-walkthrough-19": "7a3b3b02bf83bf06a68d2e6b0986cebbfe5fd7abdaf591861a7ee04d9bb761b7",
+      "daddys-home-walkthrough-2": "ecc5d91701d16df674592a56ee3286a3c4e34113f75c9931527e0f0b1bb96637",
+      "daddys-home-walkthrough-3": "bfeb13589d82bfc8c92e92b55d715b0d019d20eb7fb926d487f75a5e335815f9",
+      "daddys-home-walkthrough-4": "b622379bf81d8cb18e88e4c0fbb8f11640a75f08dd04a6899a38787b7aa50087",
+      "daddys-home-walkthrough-5": "1f793d59f1349f352daab1670cabedd54aa33ab84e605b23088aa81075c6d55d",
+      "daddys-home-walkthrough-6": "ece9c62f33acd189a78e355ef8d26c77a1a9116cfdf9e06f30798630acbcc684",
+      "daddys-home-walkthrough-7": "2d3986ae37dee3d0354e4b9bbbdd32a0dcf1f46fada8bad729efd1210ef7b9d8",
+      "daddys-home-walkthrough-8": "a7ec188800cacefde842a4fff48bb19634593ed204ea80a85166bbb0099b5a51",
+      "daddys-home-walkthrough-9": "c2bd1918ad7feeeb7dbefaf29c636c8d7c5ee546c93e13d77851183d01da4d3f"
+    },
+    "Doric's Quest": {
+      "dorics-quest-walkthrough-1": "23fedf062f29e8e413754d31641fbecbfbac40c786ca10c0018d1ebf3606cc76",
+      "dorics-quest-walkthrough-2": "1dda7b06e94b5eaab269a24dcde77ab329a7e608f197bd5e8c69f00170e799e9",
+      "dorics-quest-walkthrough-3": "bcfc4b51d1dd1ba5ce7656efb74fbea4c65cfd1dc7c34fd6f2363281c26bdc60",
+      "dorics-quest-walkthrough-4": "1652dfb7672b1fa09da81d22dfc4fc17770735a24096ddfcd7286177eab88024",
+      "dorics-quest-walkthrough-5": "ccf0c7a9ac2149a646f4dfbb52520c7b985bbed8406316f91c4f0d1abe2b86a8",
+      "dorics-quest-walkthrough-6": "3d012ae1aa81c663f30ad632305e2f54d5e85791ae23f25c4e38e3595b706193",
+      "dorics-quest-walkthrough-7": "e1aa87f909c9bb8c2990e9ed6fca6fc35776f834019b907cfbcbe72a6e8644a9"
+    },
+    "Elemental Workshop I": {
+      "elemental-workshop-i-finishing-up-22": "fc8b0d1fe1472b11774fc0f17dc369cfed48e2fcc2c8799ec93b31d5a417e933",
+      "elemental-workshop-i-finishing-up-23": "9d133956f818ef93d68f9449980b8af3492647ad4fb657e8896e2f868f276938",
+      "elemental-workshop-i-finishing-up-24": "6678e52cd63f00b4ca902c69696a40847255a1c32e8555b1f4e4e00e61483960",
+      "elemental-workshop-i-finishing-up-25": "9e98ed9fc8c0dfe8eed076a736fbc8b6ef17bd1f25fe671e2921659b5def1437",
+      "elemental-workshop-i-finishing-up-26": "6d2503378aa176db9c80e5e69af2d18829fb81808b2f4f88ad5dfee6ea753207",
+      "elemental-workshop-i-getting-started-1": "8582afcb6dcbbff00e83e888327409fe3cbf9ddea1282ab67ba5263536a9049a",
+      "elemental-workshop-i-getting-started-2": "d5eb49c0227507ab3d5d9b17a2741af6c031d7dfdb1bb6ef8b78a79385883a3f",
+      "elemental-workshop-i-getting-started-3": "a7d99994d42ee6a6a537d418efc7722523c7985eebe95d4701c1e1b0a33cbe2c",
+      "elemental-workshop-i-getting-started-4": "6cb64e0949f146ba4f2eabda6aa3e22ee09ff28a9b8a3da9c524ef6775c72971",
+      "elemental-workshop-i-getting-started-5": "415cf5b67956ab2776e5289bf2b3cbd822120bfbe9090f986ce622f21596a290",
+      "elemental-workshop-i-getting-started-6": "2872b005e80fb3402ea2d1a5f6c5a28c0c44b89bb79f824de408dbef6dd2b188",
+      "elemental-workshop-i-getting-started-7": "2da8e91de8495ebaf24c4e5b27d37abc75555fd8f8976631f722ac1dd97bea85",
+      "elemental-workshop-i-repairing-the-workshop-10": "ccdd5c6831cf1c6020d5a2b3a4a7c5a4234089ea51741abd0ed0f42bde5afbe4",
+      "elemental-workshop-i-repairing-the-workshop-11": "f7776e1def1c745b4000c5abb169ae0944c8ba1bd5efd59bef4db74a63d20119",
+      "elemental-workshop-i-repairing-the-workshop-12": "189c43d3c0b4f2656e2fb5be1050ca6cf9bc023bf784f1ee8787df1e2bad5408",
+      "elemental-workshop-i-repairing-the-workshop-13": "bb9d2e3e46fbe8e3cc947962939cb590c961fe8a3bd25cc68be7813e015308f9",
+      "elemental-workshop-i-repairing-the-workshop-14": "68b4ab6c03883685adf106071802b345d04a6fa2f99a3bc09dde9232b359f29d",
+      "elemental-workshop-i-repairing-the-workshop-15": "927c3938b00580b04293397207d74d8667df81ab5c48293e2351be836aac9708",
+      "elemental-workshop-i-repairing-the-workshop-16": "dcb88eb0ca67dd97a5fcbaa38bd45ebce051e6497f089dfee9083805d90fca8e",
+      "elemental-workshop-i-repairing-the-workshop-17": "3a65b8f049969c813381e6742c1de6a97c4cbb54e32813c9dcbfa82d0fe27118",
+      "elemental-workshop-i-repairing-the-workshop-18": "d306e7bc29cd7cf991758813a0436bf18f541f9d3f72e178f2b2e770653afcb7",
+      "elemental-workshop-i-repairing-the-workshop-19": "051cc6cdefb7c7976fd1a2c9a96b3eec04ce7b649bbac57f252d91cb4f0d42ff",
+      "elemental-workshop-i-repairing-the-workshop-20": "4f78bea4a8e64338f144ce17c8af4cc739b5692766a4e4e8ef6d231179c69b93",
+      "elemental-workshop-i-repairing-the-workshop-21": "d1f3a0d903a0e6d30690d44603173504c6e01a7020d74684b4f51ce6ac2d364a",
+      "elemental-workshop-i-repairing-the-workshop-8": "6282016358313d2f47913b8ab844c2a79baeda4c3921103162f5fe36175e9f90",
+      "elemental-workshop-i-repairing-the-workshop-9": "a4a2754b9a10f7033420b65ede3256be6ec68e700c84d3f144036cfb63f3cedf"
+    },
+    "Rune Mysteries": {
+      "rune-mysteries-walkthrough-1": "f4e4e437329899424bd39ad6554915e3556ab8e621693e4396a43d407e4cb524",
+      "rune-mysteries-walkthrough-2": "b4e8eca8351f697dc810742f022991ae406133c21d3c61ca430a49f4e2e60e0b",
+      "rune-mysteries-walkthrough-3": "aacde975bb7b048deaccdcf541711ef322f26783fc7fe07437d3981464df297a",
+      "rune-mysteries-walkthrough-4": "7dee1d1c696f418e87a336c31bb5e8fe35ebc39c36d83892895d723ed32674c6",
+      "rune-mysteries-walkthrough-5": "6d2503378aa176db9c80e5e69af2d18829fb81808b2f4f88ad5dfee6ea753207"
+    },
+    "Sheep Shearer": {
+      "sheep-shearer-if-you-already-have-the-20-unnoted-balls-of-wool-1": "e691fa413614c71900eb9d2b691fae203dd566edccdfa55a47f6eb0d7e11d24e",
+      "sheep-shearer-if-you-already-have-the-20-unnoted-balls-of-wool-2": "e1aa87f909c9bb8c2990e9ed6fca6fc35776f834019b907cfbcbe72a6e8644a9",
+      "sheep-shearer-if-you-dont-have-the-balls-of-wool-3": "c86b96daa921f5d11bec89e26585c2f666cdb5d529b3e45471940e315cc91ef4",
+      "sheep-shearer-if-you-dont-have-the-balls-of-wool-4": "250c52302642892e1ed4baacfe62a7c172ad6b8de285330fab0191934deea3ad",
+      "sheep-shearer-if-you-dont-have-the-balls-of-wool-5": "3a138c1d1429f911aaeda55e5258d26bfa9ae8e0bcd7d63501130bbcdaa365bb",
+      "sheep-shearer-if-you-dont-have-the-balls-of-wool-6": "c8d5468dee8c331ab914ab03236f1824d4be36d44df4868954eb42b791116c71",
+      "sheep-shearer-if-you-dont-have-the-balls-of-wool-7": "108c13edca98b71afc7eb3462b99a12fe21c931ce0da8a8f0ce410dca330b3f8",
+      "sheep-shearer-if-you-dont-have-the-balls-of-wool-8": "d6a50f7147ecdcd92ca995a9f91e650ff6aba116911533f980342835bc308e07",
+      "sheep-shearer-if-you-dont-have-the-balls-of-wool-9": "aae4a61a7cd66c6c96708e689368c8cb4e6bd60231ca10fa1dd3fa3076436120",
+      "sheep-shearer-if-you-dont-have-the-balls-of-wool-10": "67a93bbfd737a459f46438f04cabd4b304915d4e668681616c2a779e64b40234",
+      "sheep-shearer-if-you-dont-have-the-balls-of-wool-11": "e1aa87f909c9bb8c2990e9ed6fca6fc35776f834019b907cfbcbe72a6e8644a9"
+    },
+    "The Restless Ghost": {
+      "the-restless-ghost-getting-started-1": "630a7ff6b6af1da4de8a39fcb9fe46f8a375cc13192f3b731fdc7e1715dd5ac8",
+      "the-restless-ghost-ghostspeak-amulet-2": "67c66d6125f34133196ffb822c8ec7de95a3e659f0a52112380ae0639f7dca8a",
+      "the-restless-ghost-ghostspeak-amulet-3": "b8194258afe5138a131cc494d102f8a86a29c571db6b7825d2f16f374218baa1",
+      "the-restless-ghost-the-skull-4": "26f24dbce5d7ee9b9302d03b91695a7e5a68fe0c08767b7900d9d933bce99982",
+      "the-restless-ghost-the-skull-5": "d47d789de07031bcb339a55bb656aa1d1c3a126743bd49aa98e53cbacde6d069",
+      "the-restless-ghost-the-skull-6": "e1aa87f909c9bb8c2990e9ed6fca6fc35776f834019b907cfbcbe72a6e8644a9"
+    },
+    "Imp Catcher": {
+      "imp-catcher-walkthrough-1": "54126f9c3b0413f879d0a5ab9a1376aa78082586bbc4243c51c89fbbb1127dc0",
+      "imp-catcher-walkthrough-2": "e6d1f2892ea9b08c4bbb7403373554721e7160624a3d82f263385a28c6c95cef",
+      "imp-catcher-walkthrough-3": "7044ff4903fb35ec8539d13ed2b66060fed0d20df214e9a1ac4d6e9beca26003",
+      "imp-catcher-walkthrough-4": "e1aa87f909c9bb8c2990e9ed6fca6fc35776f834019b907cfbcbe72a6e8644a9"
+    }
+  }
+}

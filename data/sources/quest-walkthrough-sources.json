@@ -1,0 +1,1682 @@
+{
+  "chunkPicker": {
+    "attribution": "Quest challenge data from Chunk Picker by the source-chunk contributors (commit ba2fcebf8b26c84c74f8d9ab328a0ede802be926).",
+    "branch": "gh-pages",
+    "commit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
+    "exportPath": "chunkpicker-chunkinfo-export.json",
+    "licenceStatus": "UNVERIFIED",
+    "repository": "source-chunk/chunk-picker-v2",
+    "taskMappings": {
+      "~|Cook's Assistant|~ 1": "t_7591",
+      "~|Cook's Assistant|~ 2a": "t_7592",
+      "~|Cook's Assistant|~ 2b": "t_7593",
+      "~|Cook's Assistant|~ 2c": "t_7594",
+      "~|Cook's Assistant|~ 3": "t_7595",
+      "~|Cook's Assistant|~ Complete the quest": "t_7596",
+      "~|Daddy's Home|~ 1": "t_9590",
+      "~|Daddy's Home|~ 2": "t_9591",
+      "~|Daddy's Home|~ 3a": "t_9592",
+      "~|Daddy's Home|~ 3b": "t_9593",
+      "~|Daddy's Home|~ 3c1": "t_9594",
+      "~|Daddy's Home|~ 3c2": "t_9595",
+      "~|Daddy's Home|~ 3c3": "t_9596",
+      "~|Daddy's Home|~ 4": "t_9597",
+      "~|Daddy's Home|~ 5": "t_9598",
+      "~|Daddy's Home|~ Complete the quest": "t_9599",
+      "~|Doric's Quest|~ 1": "t_7620",
+      "~|Doric's Quest|~ 2": "t_7621",
+      "~|Doric's Quest|~ Complete the quest": "t_7622",
+      "~|Elemental Workshop I|~ 1": "t_8157",
+      "~|Elemental Workshop I|~ 2": "t_8158",
+      "~|Elemental Workshop I|~ 3": "t_8159",
+      "~|Elemental Workshop I|~ 4": "t_8160",
+      "~|Elemental Workshop I|~ 5": "t_8161",
+      "~|Elemental Workshop I|~ Complete the quest": "t_8162",
+      "~|Elemental Workshop I|~ Crafting skill requirement": "t_1425",
+      "~|Elemental Workshop I|~ Mining skill requirement": "t_2768",
+      "~|Elemental Workshop I|~ Smithing skill requirement": "t_3465",
+      "~|Imp Catcher|~ 1": "t_7650",
+      "~|Imp Catcher|~ 2": "t_7651",
+      "~|Imp Catcher|~ Complete the quest": "t_7652",
+      "~|Rune Mysteries|~ 1": "t_7697",
+      "~|Rune Mysteries|~ 2": "t_7698",
+      "~|Rune Mysteries|~ 3": "t_7699",
+      "~|Rune Mysteries|~ 4": "t_7700",
+      "~|Rune Mysteries|~ Complete the quest": "t_7701",
+      "~|Sheep Shearer|~ 1": "t_7702",
+      "~|Sheep Shearer|~ 2": "t_7703",
+      "~|Sheep Shearer|~ Complete the quest": "t_7704",
+      "~|The Restless Ghost|~ 1": "t_7683",
+      "~|The Restless Ghost|~ 2": "t_7684",
+      "~|The Restless Ghost|~ 3": "t_7685",
+      "~|The Restless Ghost|~ 4": "t_7686",
+      "~|The Restless Ghost|~ 5": "t_7687",
+      "~|The Restless Ghost|~ Complete the quest": "t_7688"
+    },
+    "tasksMapSha256": "f740b7194189f1a3ef81515ca4d4872caf91a6516a93bdf64c5d43c93d33bd8a",
+    "tasksMapUrl": "https://raw.githubusercontent.com/source-chunk/chunk-picker-v2/ba2fcebf8b26c84c74f8d9ab328a0ede802be926/tasksMap.json"
+  },
+  "phase": "REVIEWED",
+  "quests": [
+    {
+      "importedLines": [
+        {
+          "id": "cooks-assistant-walkthrough-1",
+          "rawText": "Buy from the [[Grand Exchange]] for {{Coins|{{GEP|Pot of flour|1}} + {{GEP|Bucket of milk|1}} + {{GEP|Egg|1}}}}",
+          "section": "Walkthrough",
+          "sourceOrder": 1,
+          "text": "Buy from the Grand Exchange for 1 Pot of flour + 1 Bucket of milk + 1 Egg"
+        },
+        {
+          "id": "cooks-assistant-walkthrough-2",
+          "rawText": "Create them yourself:",
+          "section": "Walkthrough",
+          "sourceOrder": 2,
+          "text": "Create them yourself:"
+        },
+        {
+          "id": "cooks-assistant-walkthrough-3",
+          "parentLineId": "cooks-assistant-walkthrough-2",
+          "rawText": "[[Bucket of milk]]: use a [[bucket]] (found in the cellar of [[Lumbridge castle]]) on a [[dairy cow]] in the [[Lumbridge cow field]].",
+          "section": "Walkthrough",
+          "sourceOrder": 3,
+          "text": "Bucket of milk: use a bucket (found in the cellar of Lumbridge castle) on a dairy cow in the Lumbridge cow field."
+        },
+        {
+          "id": "cooks-assistant-walkthrough-4",
+          "parentLineId": "cooks-assistant-walkthrough-2",
+          "rawText": "[[Egg]]: spawns at the chicken farm north-west of the cow field.",
+          "section": "Walkthrough",
+          "sourceOrder": 4,
+          "text": "Egg: spawns at the chicken farm north-west of the cow field."
+        },
+        {
+          "id": "cooks-assistant-walkthrough-5",
+          "parentLineId": "cooks-assistant-walkthrough-2",
+          "rawText": "[[Pot of flour]]: with an [[empty pot]] (found by the Cook in Lumbridge Castle), head to the [[Mill Lane Mill]] next to the cow pens and pick some [[grain]] from outside. Climb up to the top floor of the mill and use the grain with the hopper, then pull the lever. Climb down and take the flour from the flour bin with an [[empty pot]].",
+          "section": "Walkthrough",
+          "sourceOrder": 5,
+          "text": "Pot of flour: with an empty pot (found by the Cook in Lumbridge Castle), head to the Mill Lane Mill next to the cow pens and pick some grain from outside. Climb up to the top floor of the mill and use the grain with the hopper, then pull the lever. Climb down and take the flour from the flour bin with an empty pot."
+        },
+        {
+          "id": "cooks-assistant-walkthrough-6",
+          "rawText": "Talk to the [[Cook (Lumbridge)|Cook]] in [[Lumbridge Castle]]'s kitchen with all the items in your inventory. {{Chat option|1What's Wrong?|1Can I help?}}",
+          "section": "Walkthrough",
+          "sourceOrder": 6,
+          "text": "Talk to the Cook in Lumbridge Castle's kitchen with all the items in your inventory. 1Can I help?"
+        },
+        {
+          "id": "cooks-assistant-walkthrough-7",
+          "rawText": "'''Congratulations, quest complete!'''}}",
+          "section": "Walkthrough",
+          "sourceOrder": 7,
+          "text": "Congratulations, quest complete!"
+        }
+      ],
+      "questId": "Cook's Assistant",
+      "tasks": [
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [],
+          "description": "Talk to Cook",
+          "id": "t_7591",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Cook (Lumbridge)"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Cook's Assistant|~ 1",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_7591"
+          ],
+          "description": "Take a bucket of milk to Cook",
+          "id": "t_7592",
+          "items": [
+            "Bucket of milk"
+          ],
+          "namedAreas": [],
+          "npcs": [
+            "Cook (Lumbridge)"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Cook's Assistant|~ 2a",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_7591"
+          ],
+          "description": "Take a pot of flour to Cook",
+          "id": "t_7593",
+          "items": [
+            "Pot of flour"
+          ],
+          "namedAreas": [],
+          "npcs": [
+            "Cook (Lumbridge)"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Cook's Assistant|~ 2b",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_7591"
+          ],
+          "description": "Take an egg to Cook",
+          "id": "t_7594",
+          "items": [
+            "Egg"
+          ],
+          "namedAreas": [],
+          "npcs": [
+            "Cook (Lumbridge)"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Cook's Assistant|~ 2c",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_7592",
+            "t_7593",
+            "t_7594"
+          ],
+          "description": "Return to Cook",
+          "id": "t_7595",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Cook (Lumbridge)"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Cook's Assistant|~ 3",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [
+            {
+              "chunkId": "50,50",
+              "plane": 1,
+              "sourceId": "12850-1"
+            }
+          ],
+          "completion": true,
+          "dependsOn": [
+            "t_7595"
+          ],
+          "id": "t_7596",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [],
+          "objects": [],
+          "questPoints": 1,
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Cook's Assistant|~ Complete the quest",
+          "xpRewards": {
+            "Cooking": 300
+          }
+        }
+      ],
+      "wikiRevision": 15238952,
+      "wikiRevisionTimestamp": "2026-06-24T23:03:17Z",
+      "wikiTitle": "Cook's Assistant/Quick guide",
+      "wikiUrl": "https://oldschool.runescape.wiki/w/Cook%27s_Assistant/Quick_guide?oldid=15238952"
+    },
+    {
+      "importedLines": [
+        {
+          "id": "daddys-home-walkthrough-1",
+          "rawText": "Pick up a [[saw]] here if you didn't bring one.",
+          "section": "Walkthrough",
+          "sourceOrder": 1,
+          "text": "Pick up a saw here if you didn't bring one."
+        },
+        {
+          "id": "daddys-home-walkthrough-2",
+          "rawText": "Talk to [[Old Man Yarlo]] in his house south-west of [[Aubury's Rune Shop]].",
+          "section": "Walkthrough",
+          "sourceOrder": 2,
+          "text": "Talk to Old Man Yarlo in his house south-west of Aubury's Rune Shop."
+        },
+        {
+          "id": "daddys-home-walkthrough-3",
+          "rawText": "Remove all of the old furniture in the house, for a total of 7 hotspots: 6 pieces of furniture and a rug.",
+          "section": "Walkthrough",
+          "sourceOrder": 3,
+          "text": "Remove all of the old furniture in the house, for a total of 7 hotspots: 6 pieces of furniture and a rug."
+        },
+        {
+          "id": "daddys-home-walkthrough-4",
+          "parentLineId": "daddys-home-walkthrough-3",
+          "rawText": "one broken chair",
+          "section": "Walkthrough",
+          "sourceOrder": 4,
+          "text": "one broken chair"
+        },
+        {
+          "id": "daddys-home-walkthrough-5",
+          "parentLineId": "daddys-home-walkthrough-3",
+          "rawText": "one rotten carpet",
+          "section": "Walkthrough",
+          "sourceOrder": 5,
+          "text": "one rotten carpet"
+        },
+        {
+          "id": "daddys-home-walkthrough-6",
+          "parentLineId": "daddys-home-walkthrough-3",
+          "rawText": "two broken stools",
+          "section": "Walkthrough",
+          "sourceOrder": 6,
+          "text": "two broken stools"
+        },
+        {
+          "id": "daddys-home-walkthrough-7",
+          "parentLineId": "daddys-home-walkthrough-3",
+          "rawText": "two broken tables",
+          "section": "Walkthrough",
+          "sourceOrder": 7,
+          "text": "two broken tables"
+        },
+        {
+          "id": "daddys-home-walkthrough-8",
+          "parentLineId": "daddys-home-walkthrough-3",
+          "rawText": "one campbed",
+          "section": "Walkthrough",
+          "sourceOrder": 8,
+          "text": "one campbed"
+        },
+        {
+          "id": "daddys-home-walkthrough-9",
+          "rawText": "Talk to Old Man Yarlo again. {{Chat option|2Skip Yarlo's lecture. He'll offer it later if you like.}}",
+          "section": "Walkthrough",
+          "sourceOrder": 9,
+          "text": "Talk to Old Man Yarlo again. 2Skip Yarlo's lecture. He'll offer it later if you like."
+        },
+        {
+          "id": "daddys-home-walkthrough-10",
+          "rawText": "Search the [[crates (Daddy's Home)|crates]] with the black symbol on them west of the range for 3 [[waxwood log]]s.",
+          "section": "Walkthrough",
+          "sourceOrder": 10,
+          "text": "Search the crates with the black symbol on them west of the range for 3 waxwood logs."
+        },
+        {
+          "id": "daddys-home-walkthrough-11",
+          "rawText": "Go to the [[Varrock sawmill]] and talk to the [[Sawmill operator]]. {{Chat option|1I need some waxwood planks for Old Man Yarlo.}}",
+          "section": "Walkthrough",
+          "sourceOrder": 11,
+          "text": "Go to the Varrock sawmill and talk to the Sawmill operator. 1I need some waxwood planks for Old Man Yarlo."
+        },
+        {
+          "id": "daddys-home-walkthrough-12",
+          "parentLineId": "daddys-home-walkthrough-11",
+          "rawText": "Make 3 [[waxwood plank]]s using the waxwood logs.",
+          "section": "Walkthrough",
+          "sourceOrder": 12,
+          "text": "Make 3 waxwood planks using the waxwood logs."
+        },
+        {
+          "id": "daddys-home-walkthrough-13",
+          "parentLineId": "daddys-home-walkthrough-11",
+          "rawText": "Make 10 [[plank]]s now if you don't already have them.",
+          "section": "Walkthrough",
+          "sourceOrder": 13,
+          "text": "Make 10 planks now if you don't already have them."
+        },
+        {
+          "id": "daddys-home-walkthrough-14",
+          "parentLineId": "daddys-home-walkthrough-11",
+          "rawText": "Purchase your [[steel nails]] and five [[bolts of cloth]] now if you need them.",
+          "section": "Walkthrough",
+          "sourceOrder": 14,
+          "text": "Purchase your steel nails and five bolts of cloth now if you need them."
+        },
+        {
+          "id": "daddys-home-walkthrough-15",
+          "rawText": "Go to Old Man Yarlo's home and build the new furniture (all white translucent objects).",
+          "section": "Walkthrough",
+          "sourceOrder": 15,
+          "text": "Go to Old Man Yarlo's home and build the new furniture (all white translucent objects)."
+        },
+        {
+          "id": "daddys-home-walkthrough-16",
+          "parentLineId": "daddys-home-walkthrough-15",
+          "rawText": "Talk to Old Man Yarlo for a [[hammer]] and a [[saw]] if you didn't bring them. {{Chat option|3I need some tools.|1Yes please.}}",
+          "section": "Walkthrough",
+          "sourceOrder": 16,
+          "text": "Talk to Old Man Yarlo for a hammer and a saw if you didn't bring them. 1Yes please."
+        },
+        {
+          "id": "daddys-home-walkthrough-17",
+          "rawText": "Talk to Old Man Yarlo.",
+          "section": "Walkthrough",
+          "sourceOrder": 17,
+          "text": "Talk to Old Man Yarlo."
+        },
+        {
+          "id": "daddys-home-walkthrough-18",
+          "rawText": "Talk to Marlo to claim your reward. {{Chat option|1Yeah, what have you got for me?}}",
+          "section": "Walkthrough",
+          "sourceOrder": 18,
+          "text": "Talk to Marlo to claim your reward. 1Yeah, what have you got for me?"
+        },
+        {
+          "id": "daddys-home-walkthrough-19",
+          "rawText": "'''Congratulations, miniquest complete!'''}}",
+          "section": "Walkthrough",
+          "sourceOrder": 19,
+          "text": "Congratulations, miniquest complete!"
+        }
+      ],
+      "questId": "Daddy's Home",
+      "tasks": [
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [],
+          "description": "Talk to Marlo",
+          "id": "t_9590",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Marlo"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Daddy's Home|~ 1",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [
+            {
+              "chunkId": "50,53",
+              "plane": 1,
+              "sourceId": "12853-1"
+            }
+          ],
+          "completion": false,
+          "dependsOn": [
+            "t_9590"
+          ],
+          "description": "Talk to Old Man Yarlo and remove the old furniture",
+          "id": "t_9591",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Daddy's Home|~ 2",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [
+            {
+              "chunkId": "50,53",
+              "plane": 1,
+              "sourceId": "12853-1"
+            }
+          ],
+          "completion": false,
+          "dependsOn": [
+            "t_9591"
+          ],
+          "description": "Build the carpet",
+          "id": "t_9592",
+          "items": [
+            "Bolt of cloth",
+            "Hammer",
+            "Saw"
+          ],
+          "namedAreas": [],
+          "npcs": [],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Daddy's Home|~ 3a",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [
+            {
+              "chunkId": "50,53",
+              "plane": 1,
+              "sourceId": "12853-1"
+            }
+          ],
+          "completion": false,
+          "dependsOn": [
+            "t_9591"
+          ],
+          "description": "Build the wooden furniture",
+          "id": "t_9593",
+          "items": [
+            "Plank",
+            "Nails[+]",
+            "Hammer",
+            "Saw"
+          ],
+          "namedAreas": [],
+          "npcs": [],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Daddy's Home|~ 3b",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [
+            {
+              "chunkId": "50,53",
+              "plane": 1,
+              "sourceId": "12853-1"
+            }
+          ],
+          "completion": false,
+          "dependsOn": [
+            "t_9591"
+          ],
+          "description": "Search crates in the kitchen for waxwood logs",
+          "id": "t_9594",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Daddy's Home|~ 3c1",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [
+            {
+              "chunkId": "51,54",
+              "plane": 1,
+              "sourceId": "13110-1"
+            }
+          ],
+          "completion": false,
+          "dependsOn": [
+            "t_9594"
+          ],
+          "description": "Turn the waxwood logs into planks",
+          "id": "t_9595",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Sawmill operator"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Daddy's Home|~ 3c2",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [
+            {
+              "chunkId": "50,53",
+              "plane": 1,
+              "sourceId": "12853-1"
+            }
+          ],
+          "completion": false,
+          "dependsOn": [
+            "t_9595"
+          ],
+          "description": "Build the waxwood bed",
+          "id": "t_9596",
+          "items": [
+            "Bolt of cloth",
+            "Hammer",
+            "Saw"
+          ],
+          "namedAreas": [],
+          "npcs": [],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Daddy's Home|~ 3c3",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_9592",
+            "t_9593",
+            "t_9596"
+          ],
+          "description": "Talk to Old Man Yarlo",
+          "id": "t_9597",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Old Man Yarlo"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Daddy's Home|~ 4",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_9597"
+          ],
+          "description": "Talk to Marlo",
+          "id": "t_9598",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Marlo"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Daddy's Home|~ 5",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [
+            {
+              "chunkId": "50,54",
+              "plane": 1,
+              "sourceId": "12854-1"
+            }
+          ],
+          "completion": true,
+          "dependsOn": [
+            "t_9598"
+          ],
+          "id": "t_9599",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [],
+          "objects": [],
+          "questPoints": 0,
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Daddy's Home|~ Complete the quest",
+          "xpRewards": {
+            "Construction": 944
+          }
+        }
+      ],
+      "wikiRevision": 15237160,
+      "wikiRevisionTimestamp": "2026-06-21T16:36:01Z",
+      "wikiTitle": "Daddy's Home/Quick guide",
+      "wikiUrl": "https://oldschool.runescape.wiki/w/Daddy%27s_Home/Quick_guide?oldid=15237160"
+    },
+    {
+      "importedLines": [
+        {
+          "id": "dorics-quest-walkthrough-1",
+          "rawText": "Buy from the [[Grand Exchange]] for: {{Coins|{{GEP|Iron ore|2}} + {{GEP|Copper ore|4}} + {{GEP|Clay|6}}}}",
+          "section": "Walkthrough",
+          "sourceOrder": 1,
+          "text": "Buy from the Grand Exchange for: 2 Iron ore + 4 Copper ore + 6 Clay"
+        },
+        {
+          "id": "dorics-quest-walkthrough-2",
+          "rawText": "Head to the [[Dwarven Mine]] on the south side of the Ice mountain (east from the quest start) with a [[pickaxe]] (Doric will give you a [[bronze pickaxe]] at the start of the quest):",
+          "section": "Walkthrough",
+          "sourceOrder": 2,
+          "text": "Head to the Dwarven Mine on the south side of the Ice mountain (east from the quest start) with a pickaxe (Doric will give you a bronze pickaxe at the start of the quest):"
+        },
+        {
+          "id": "dorics-quest-walkthrough-3",
+          "parentLineId": "dorics-quest-walkthrough-2",
+          "rawText": "2 [[iron ore]]s and 4 [[copper ore]]s can be mined at a spot just south-east of the ladder down into the mine.",
+          "section": "Walkthrough",
+          "sourceOrder": 3,
+          "text": "2 iron ores and 4 copper ores can be mined at a spot just south-east of the ladder down into the mine."
+        },
+        {
+          "id": "dorics-quest-walkthrough-4",
+          "parentLineId": "dorics-quest-walkthrough-2",
+          "rawText": "6 [[clay]] can be mined south of the iron and copper, near the [[Agility]] [[shortcut]].",
+          "section": "Walkthrough",
+          "sourceOrder": 4,
+          "text": "6 clay can be mined south of the iron and copper, near the Agility shortcut."
+        },
+        {
+          "id": "dorics-quest-walkthrough-5",
+          "parentLineId": "dorics-quest-walkthrough-2",
+          "rawText": "Players with very low combat levels should be wary of the aggressive [[Scorpion|Scorpions]] and [[King Scorpion|King Scorpions]]. Bring food if required.",
+          "section": "Walkthrough",
+          "sourceOrder": 5,
+          "text": "Players with very low combat levels should be wary of the aggressive Scorpions and King Scorpions. Bring food if required."
+        },
+        {
+          "id": "dorics-quest-walkthrough-6",
+          "rawText": "Talk to [[Doric]] with the '''un-noted''' items in your inventory. {{Chat option|1I wanted to use your anvils.|1Yes, I will get you the materials.}}",
+          "section": "Walkthrough",
+          "sourceOrder": 6,
+          "text": "Talk to Doric with the un-noted items in your inventory. 1Yes, I will get you the materials."
+        },
+        {
+          "id": "dorics-quest-walkthrough-7",
+          "rawText": "'''Congratulations, quest complete!'''}}",
+          "section": "Walkthrough",
+          "sourceOrder": 7,
+          "text": "Congratulations, quest complete!"
+        }
+      ],
+      "questId": "Doric's Quest",
+      "tasks": [
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [],
+          "description": "Talk to Doric",
+          "id": "t_7620",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Doric"
+          ],
+          "objects": [],
+          "rewards": [
+            "Bronze pickaxe"
+          ],
+          "skills": {},
+          "sourceId": "~|Doric's Quest|~ 1",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_7620"
+          ],
+          "description": "Take the ores to Doric",
+          "id": "t_7621",
+          "items": [
+            "Iron ore",
+            "Copper ore",
+            "Clay"
+          ],
+          "namedAreas": [],
+          "npcs": [
+            "Doric"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Doric's Quest|~ 2",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [
+            {
+              "chunkId": "46,53",
+              "plane": 1,
+              "sourceId": "11829-1"
+            }
+          ],
+          "completion": true,
+          "dependsOn": [
+            "t_7621"
+          ],
+          "id": "t_7622",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [],
+          "objects": [],
+          "questPoints": 1,
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Doric's Quest|~ Complete the quest",
+          "xpRewards": {
+            "Mining": 1300
+          }
+        }
+      ],
+      "wikiRevision": 14457895,
+      "wikiRevisionTimestamp": "2023-08-26T20:09:15Z",
+      "wikiTitle": "Doric's Quest/Quick guide",
+      "wikiUrl": "https://oldschool.runescape.wiki/w/Doric%27s_Quest/Quick_guide?oldid=14457895"
+    },
+    {
+      "importedLines": [
+        {
+          "id": "elemental-workshop-i-getting-started-1",
+          "rawText": "In [[Seers' Village]], go to the house immediately south of the anvil.",
+          "section": "Getting Started",
+          "sourceOrder": 1,
+          "text": "In Seers' Village, go to the house immediately south of the anvil."
+        },
+        {
+          "id": "elemental-workshop-i-getting-started-2",
+          "rawText": "Search the [[bookcase (Elemental Workshop I)|bookcase]] on the eastern wall to find a [[battered book]].",
+          "section": "Getting Started",
+          "sourceOrder": 2,
+          "text": "Search the bookcase on the eastern wall to find a battered book."
+        },
+        {
+          "id": "elemental-workshop-i-getting-started-3",
+          "rawText": "Read the book, then use a [[knife]] on it to get a [[Battered key]].",
+          "section": "Getting Started",
+          "sourceOrder": 3,
+          "text": "Read the book, then use a knife on it to get a Battered key."
+        },
+        {
+          "id": "elemental-workshop-i-getting-started-4",
+          "parentLineId": "elemental-workshop-i-getting-started-3",
+          "rawText": "There is a knife spawn in the house north of the church if you forgot to bring one.",
+          "section": "Getting Started",
+          "sourceOrder": 4,
+          "text": "There is a knife spawn in the house north of the church if you forgot to bring one."
+        },
+        {
+          "id": "elemental-workshop-i-getting-started-5",
+          "parentLineId": "elemental-workshop-i-getting-started-3",
+          "rawText": "'''Note:''' You'll need the book later, so don't get rid of it.",
+          "section": "Getting Started",
+          "sourceOrder": 5,
+          "text": "Note: You'll need the book later, so don't get rid of it."
+        },
+        {
+          "id": "elemental-workshop-i-getting-started-6",
+          "rawText": "Go to the building with anvil and open the Odd looking wall in the north (with the key in inventory).",
+          "section": "Getting Started",
+          "sourceOrder": 6,
+          "text": "Go to the building with anvil and open the Odd looking wall in the north (with the key in inventory)."
+        },
+        {
+          "id": "elemental-workshop-i-getting-started-7",
+          "rawText": "Go down the stairs.",
+          "section": "Getting Started",
+          "sourceOrder": 7,
+          "text": "Go down the stairs."
+        },
+        {
+          "id": "elemental-workshop-i-repairing-the-workshop-8",
+          "rawText": "Go into the room to the north.",
+          "section": "Repairing the Workshop",
+          "sourceOrder": 8,
+          "text": "Go into the room to the north."
+        },
+        {
+          "id": "elemental-workshop-i-repairing-the-workshop-9",
+          "rawText": "Turn the water controls east of the water wheel.",
+          "section": "Repairing the Workshop",
+          "sourceOrder": 9,
+          "text": "Turn the water controls east of the water wheel."
+        },
+        {
+          "id": "elemental-workshop-i-repairing-the-workshop-10",
+          "rawText": "Turn the water controls west of the water wheel.",
+          "section": "Repairing the Workshop",
+          "sourceOrder": 10,
+          "text": "Turn the water controls west of the water wheel."
+        },
+        {
+          "id": "elemental-workshop-i-repairing-the-workshop-11",
+          "rawText": "Pull the lever by the water wheel.",
+          "section": "Repairing the Workshop",
+          "sourceOrder": 11,
+          "text": "Pull the lever by the water wheel."
+        },
+        {
+          "id": "elemental-workshop-i-repairing-the-workshop-12",
+          "rawText": "(Optional) Kill one of each of the Elemental to complete Kandarin Easy Task. For the Earth Elemental, you must defeat one of the actual Elementals walking around; the rock that turns into the Elemental won't count towards the requirement.",
+          "section": "Repairing the Workshop",
+          "sourceOrder": 12,
+          "text": "(Optional) Kill one of each of the Elemental to complete Kandarin Easy Task. For the Earth Elemental, you must defeat one of the actual Elementals walking around; the rock that turns into the Elemental won't count towards the requirement."
+        },
+        {
+          "id": "elemental-workshop-i-repairing-the-workshop-13",
+          "rawText": "(Optional) To obtain [[leather]], search a [[Crate (Elemental Workshop I, leather)|crate]] north of the staircase in the middle room.",
+          "section": "Repairing the Workshop",
+          "sourceOrder": 13,
+          "text": "(Optional) To obtain leather, search a crate north of the staircase in the middle room."
+        },
+        {
+          "id": "elemental-workshop-i-repairing-the-workshop-14",
+          "rawText": "(Optional) To obtain a [[needle]], search the [[Crate (Elemental Workshop I, needle)|two stacked crates]] on the left as you enter the west room.",
+          "section": "Repairing the Workshop",
+          "sourceOrder": 14,
+          "text": "(Optional) To obtain a needle, search the two stacked crates on the left as you enter the west room."
+        },
+        {
+          "id": "elemental-workshop-i-repairing-the-workshop-15",
+          "rawText": "Go to the eastern room.",
+          "section": "Repairing the Workshop",
+          "sourceOrder": 15,
+          "text": "Go to the eastern room."
+        },
+        {
+          "id": "elemental-workshop-i-repairing-the-workshop-16",
+          "rawText": "With a [[needle]], [[thread]], and [[leather]], fix the bellows.",
+          "section": "Repairing the Workshop",
+          "sourceOrder": 16,
+          "text": "With a needle, thread, and leather, fix the bellows."
+        },
+        {
+          "id": "elemental-workshop-i-repairing-the-workshop-17",
+          "rawText": "Pull the lever by the bellows.",
+          "section": "Repairing the Workshop",
+          "sourceOrder": 17,
+          "text": "Pull the lever by the bellows."
+        },
+        {
+          "id": "elemental-workshop-i-repairing-the-workshop-18",
+          "rawText": "Go to the middle room and search the [[Boxes (Elemental Workshop)|boxes]] in the north-east to get [[a stone bowl]].",
+          "section": "Repairing the Workshop",
+          "sourceOrder": 18,
+          "text": "Go to the middle room and search the boxes in the north-east to get a stone bowl."
+        },
+        {
+          "id": "elemental-workshop-i-repairing-the-workshop-19",
+          "rawText": "Go to the south room.",
+          "section": "Repairing the Workshop",
+          "sourceOrder": 19,
+          "text": "Go to the south room."
+        },
+        {
+          "id": "elemental-workshop-i-repairing-the-workshop-20",
+          "rawText": "Use a stone bowl on the lava trough to the south.",
+          "section": "Repairing the Workshop",
+          "sourceOrder": 20,
+          "text": "Use a stone bowl on the lava trough to the south."
+        },
+        {
+          "id": "elemental-workshop-i-repairing-the-workshop-21",
+          "rawText": "Use the bowl of lava on the [[Furnace]] in the room.",
+          "section": "Repairing the Workshop",
+          "sourceOrder": 21,
+          "text": "Use the bowl of lava on the Furnace in the room."
+        },
+        {
+          "id": "elemental-workshop-i-finishing-up-22",
+          "rawText": "Go to the western room and mine an [[elemental rock]].",
+          "section": "Finishing up",
+          "sourceOrder": 22,
+          "text": "Go to the western room and mine an elemental rock."
+        },
+        {
+          "id": "elemental-workshop-i-finishing-up-23",
+          "rawText": "Kill the [[Earth elemental]] and pick up the [[elemental ore]] it drops (get 2 more ores if you are planning to do [[Elemental Workshop II/Quick guide|Elemental Workshop II]]).",
+          "section": "Finishing up",
+          "sourceOrder": 23,
+          "text": "Kill the Earth elemental and pick up the elemental ore it drops (get 2 more ores if you are planning to do Elemental Workshop II)."
+        },
+        {
+          "id": "elemental-workshop-i-finishing-up-24",
+          "rawText": "Use the elemental ore and four [[coal]] on the furnace in the southern room. You will get an [[Elemental metal]].",
+          "section": "Finishing up",
+          "sourceOrder": 24,
+          "text": "Use the elemental ore and four coal on the furnace in the southern room. You will get an Elemental metal."
+        },
+        {
+          "id": "elemental-workshop-i-finishing-up-25",
+          "rawText": "With the [[slashed book]], go to the middle room and smith an [[elemental shield]] by using the [[Elemental Bar|elemental metal]] on the workbench.",
+          "section": "Finishing up",
+          "sourceOrder": 25,
+          "text": "With the slashed book, go to the middle room and smith an elemental shield by using the elemental metal on the workbench."
+        },
+        {
+          "id": "elemental-workshop-i-finishing-up-26",
+          "rawText": "'''Congratulations, quest complete!'''",
+          "section": "Finishing up",
+          "sourceOrder": 26,
+          "text": "Congratulations, quest complete!"
+        }
+      ],
+      "questId": "Elemental Workshop I",
+      "tasks": [
+        {
+          "chunks": [
+            {
+              "chunkId": "42,54",
+              "plane": 1,
+              "sourceId": "10806-1"
+            }
+          ],
+          "completion": false,
+          "dependsOn": [],
+          "description": "Search the bookcase in Seers' Village",
+          "id": "t_8157",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Elemental Workshop I|~ 1",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_8157"
+          ],
+          "description": "Obtain the key from the book",
+          "id": "t_8158",
+          "items": [
+            "Knife"
+          ],
+          "namedAreas": [],
+          "npcs": [],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Elemental Workshop I|~ 2",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_8158"
+          ],
+          "description": "Enter the elemental workshop and start up the furnace.",
+          "id": "t_8159",
+          "items": [
+            "Thread"
+          ],
+          "namedAreas": [
+            "Elemental Workshop"
+          ],
+          "npcs": [],
+          "objects": [],
+          "rewards": [],
+          "skills": {
+            "Crafting": 20
+          },
+          "sourceId": "~|Elemental Workshop I|~ 3",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_8159"
+          ],
+          "description": "Mine an elemental ore, and smelt the bar",
+          "id": "t_8160",
+          "items": [
+            "Coal",
+            "Pickaxe[+]"
+          ],
+          "namedAreas": [
+            "Elemental Workshop"
+          ],
+          "npcs": [],
+          "objects": [],
+          "rewards": [],
+          "skills": {
+            "Mining": 20,
+            "Smithing": 20
+          },
+          "sourceId": "~|Elemental Workshop I|~ 4",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_8160"
+          ],
+          "description": "Create an elemental shield",
+          "id": "t_8161",
+          "items": [
+            "Hammer"
+          ],
+          "namedAreas": [
+            "Elemental Workshop"
+          ],
+          "npcs": [],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Elemental Workshop I|~ 5",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": true,
+          "dependsOn": [
+            "t_8161"
+          ],
+          "id": "t_8162",
+          "items": [],
+          "namedAreas": [
+            "Elemental Workshop"
+          ],
+          "npcs": [],
+          "objects": [],
+          "questPoints": 1,
+          "rewards": [
+            "Elemental shield"
+          ],
+          "skills": {},
+          "sourceId": "~|Elemental Workshop I|~ Complete the quest",
+          "xpRewards": {
+            "Crafting": 5000,
+            "Smithing": 5000
+          }
+        }
+      ],
+      "wikiRevision": 14836472,
+      "wikiRevisionTimestamp": "2025-01-13T14:55:34Z",
+      "wikiTitle": "Elemental Workshop I/Quick guide",
+      "wikiUrl": "https://oldschool.runescape.wiki/w/Elemental_Workshop_I/Quick_guide?oldid=14836472"
+    },
+    {
+      "importedLines": [
+        {
+          "id": "sheep-shearer-if-you-already-have-the-20-unnoted-balls-of-wool-1",
+          "rawText": "Fred takes the 20 [[balls of wool]].",
+          "section": "If you already have the 20 unnoted balls of wool",
+          "sourceOrder": 1,
+          "text": "Fred takes the 20 balls of wool."
+        },
+        {
+          "id": "sheep-shearer-if-you-already-have-the-20-unnoted-balls-of-wool-2",
+          "rawText": "'''Congratulations, quest complete!'''}}",
+          "section": "If you already have the 20 unnoted balls of wool",
+          "sourceOrder": 2,
+          "text": "Congratulations, quest complete!"
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-3",
+          "rawText": "He will give you [[shears]] if you do not have them.",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 3,
+          "text": "He will give you shears if you do not have them."
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-4",
+          "rawText": "Enter the sheep pen to the east, connected to his house and shear sheep for 20 [[wool]].",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 4,
+          "text": "Enter the sheep pen to the east, connected to his house and shear sheep for 20 wool."
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-5",
+          "parentLineId": "sheep-shearer-if-you-dont-have-the-balls-of-wool-4",
+          "rawText": "[[File:Ultimate ironman chat badge.png]] Ultimate Ironmen: You can deliver the balls of wool in several trips. You do not have to deliver all 20 at once.",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 5,
+          "text": "Ultimate Ironmen: You can deliver the balls of wool in several trips. You do not have to deliver all 20 at once."
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-6",
+          "parentLineId": "sheep-shearer-if-you-dont-have-the-balls-of-wool-4",
+          "rawText": "'''Note:''' You cannot shear [[Ram]]s or \"[[The Thing]]\". If you attack a ram and cannot kill it, run out of the pen until it stops targeting you.",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 6,
+          "text": "Note: You cannot shear Rams or \"The Thing\". If you attack a ram and cannot kill it, run out of the pen until it stops targeting you."
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-7",
+          "rawText": "Go to the {{FloorNumber|uk=1}} of [[Lumbridge Castle]].",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 7,
+          "text": "Go to the of Lumbridge Castle."
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-8",
+          "rawText": "Click on the [[spinning wheel]] in the southern room to spin the wool.",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 8,
+          "text": "Click on the spinning wheel in the southern room to spin the wool."
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-9",
+          "rawText": "With 20 '''un-noted''' [[balls of wool]], return to [[Fred the Farmer]].",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 9,
+          "text": "With 20 un-noted balls of wool, return to Fred the Farmer."
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-10",
+          "rawText": "Talk to [[Fred the Farmer]] and hand them in. {{Chat option|1I need to talk to you about shearing these sheep!}}",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 10,
+          "text": "Talk to Fred the Farmer and hand them in. 1I need to talk to you about shearing these sheep!"
+        },
+        {
+          "id": "sheep-shearer-if-you-dont-have-the-balls-of-wool-11",
+          "rawText": "'''Congratulations, quest complete!'''}}",
+          "section": "If you don't have the balls of wool",
+          "sourceOrder": 11,
+          "text": "Congratulations, quest complete!"
+        }
+      ],
+      "questId": "Sheep Shearer",
+      "tasks": [
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [],
+          "description": "Talk to Fred",
+          "id": "t_7702",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Fred the Farmer"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Sheep Shearer|~ 1",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_7702"
+          ],
+          "description": "Take 20 balls of wool to Fred",
+          "id": "t_7703",
+          "items": [
+            "Ball of wool"
+          ],
+          "namedAreas": [],
+          "npcs": [
+            "Fred the Farmer"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Sheep Shearer|~ 2",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [
+            {
+              "chunkId": "49,51",
+              "plane": 0,
+              "sourceId": "12595"
+            }
+          ],
+          "completion": true,
+          "dependsOn": [
+            "t_7703"
+          ],
+          "id": "t_7704",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [],
+          "objects": [],
+          "questPoints": 1,
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Sheep Shearer|~ Complete the quest",
+          "xpRewards": {
+            "Crafting": 150
+          }
+        }
+      ],
+      "wikiRevision": 14457888,
+      "wikiRevisionTimestamp": "2023-08-26T20:09:01Z",
+      "wikiTitle": "Sheep Shearer/Quick guide",
+      "wikiUrl": "https://oldschool.runescape.wiki/w/Sheep_Shearer/Quick_guide?oldid=14457888"
+    },
+    {
+      "importedLines": [
+        {
+          "id": "the-restless-ghost-getting-started-1",
+          "rawText": "Go through the [[Lumbridge Graveyard|graveyard's]] southern exit and head to the hut west of [[Lumbridge Swamp]].}}",
+          "section": "Getting started",
+          "sourceOrder": 1,
+          "text": "Go through the graveyard's southern exit and head to the hut west of Lumbridge Swamp."
+        },
+        {
+          "id": "the-restless-ghost-ghostspeak-amulet-2",
+          "rawText": "Head to the small room in the Lumbridge graveyard south of the church.",
+          "section": "Ghostspeak amulet",
+          "sourceOrder": 2,
+          "text": "Head to the small room in the Lumbridge graveyard south of the church."
+        },
+        {
+          "id": "the-restless-ghost-ghostspeak-amulet-3",
+          "rawText": "Equip the [[Ghostspeak amulet]] and click the coffin, talk to the ghost. {{Chat option|1 Yep, now tell me what the problem is.}}}}",
+          "section": "Ghostspeak amulet",
+          "sourceOrder": 3,
+          "text": "Equip the Ghostspeak amulet and click the coffin, talk to the ghost. 1 Yep, now tell me what the problem is."
+        },
+        {
+          "id": "the-restless-ghost-the-skull-4",
+          "rawText": "Search the altar, and you will receive a [[ghost's skull]]. A level 13 [[Skeleton (The Restless Ghost)|skeleton]] will appear, you don't have to kill it, just leave.",
+          "section": "The skull",
+          "sourceOrder": 4,
+          "text": "Search the altar, and you will receive a ghost's skull. A level 13 skeleton will appear, you don't have to kill it, just leave."
+        },
+        {
+          "id": "the-restless-ghost-the-skull-5",
+          "rawText": "Go back to the graveyard and use the skull on the coffin with it open.",
+          "section": "The skull",
+          "sourceOrder": 5,
+          "text": "Go back to the graveyard and use the skull on the coffin with it open."
+        },
+        {
+          "id": "the-restless-ghost-the-skull-6",
+          "rawText": "'''Congratulations, quest complete!'''}}",
+          "section": "The skull",
+          "sourceOrder": 6,
+          "text": "Congratulations, quest complete!"
+        }
+      ],
+      "questId": "The Restless Ghost",
+      "tasks": [
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [],
+          "description": "Talk to Father Aereck",
+          "id": "t_7683",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Father Aereck"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|The Restless Ghost|~ 1",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_7683"
+          ],
+          "description": "Talk to Father Urhney",
+          "id": "t_7684",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Father Urhney"
+          ],
+          "objects": [],
+          "rewards": [
+            "Ghostspeak amulet"
+          ],
+          "skills": {},
+          "sourceId": "~|The Restless Ghost|~ 2",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_7684"
+          ],
+          "description": "Talk to the ghost in Lumbridge Graveyard",
+          "id": "t_7685",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Restless ghost"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|The Restless Ghost|~ 3",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_7685"
+          ],
+          "description": "Get the ghost's skull from Wizard's Tower",
+          "id": "t_7686",
+          "items": [],
+          "namedAreas": [
+            "Wizards' Tower#Basement"
+          ],
+          "npcs": [],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|The Restless Ghost|~ 4",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [
+            {
+              "chunkId": "50,49",
+              "plane": 1,
+              "sourceId": "12849-1"
+            }
+          ],
+          "completion": false,
+          "dependsOn": [
+            "t_7686"
+          ],
+          "description": "Use the skull on the ghost's coffin",
+          "id": "t_7687",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|The Restless Ghost|~ 5",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [
+            {
+              "chunkId": "50,49",
+              "plane": 1,
+              "sourceId": "12849-1"
+            }
+          ],
+          "completion": true,
+          "dependsOn": [
+            "t_7687"
+          ],
+          "id": "t_7688",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [],
+          "objects": [],
+          "questPoints": 1,
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|The Restless Ghost|~ Complete the quest",
+          "xpRewards": {
+            "Prayer": 1125
+          }
+        }
+      ],
+      "wikiRevision": 15070492,
+      "wikiRevisionTimestamp": "2025-11-28T02:58:15Z",
+      "wikiTitle": "The Restless Ghost/Quick guide",
+      "wikiUrl": "https://oldschool.runescape.wiki/w/The_Restless_Ghost/Quick_guide?oldid=15070492"
+    },
+    {
+      "importedLines": [
+        {
+          "id": "rune-mysteries-walkthrough-1",
+          "rawText": "Ask [[Duke Horacio]] in Lumbridge Castle for a quest and he'll give you an [[air talisman]]. {{Chat option|1 Have you any quests for me?|1 Yes.}}",
+          "section": "Walkthrough",
+          "sourceOrder": 1,
+          "text": "Ask Duke Horacio in Lumbridge Castle for a quest and he'll give you an air talisman. 1 Yes."
+        },
+        {
+          "id": "rune-mysteries-walkthrough-2",
+          "rawText": "Talk to [[Archmage Sedridor]] in the [[Wizards' Tower]] basement and give him the [[air talisman]]. {{Chat option|1 Okay, here you are.|2 Actually, I'm not interested.|1 Yes, certainly.}}",
+          "section": "Walkthrough",
+          "sourceOrder": 2,
+          "text": "Talk to Archmage Sedridor in the Wizards' Tower basement and give him the air talisman. 1 Yes, certainly."
+        },
+        {
+          "id": "rune-mysteries-walkthrough-3",
+          "rawText": "Talk to [[Aubury]] south of [[Varrock east bank]] in the [[Varrock rune shop]] and give him the [[research package]]. {{Chat option|1 I've been sent here with a package for you.}}",
+          "section": "Walkthrough",
+          "sourceOrder": 3,
+          "text": "Talk to Aubury south of Varrock east bank in the Varrock rune shop and give him the research package. 1 I've been sent here with a package for you."
+        },
+        {
+          "id": "rune-mysteries-walkthrough-4",
+          "rawText": "Take the [[Research notes (Rune Mysteries)|research notes]] back to Sedridor.",
+          "section": "Walkthrough",
+          "sourceOrder": 4,
+          "text": "Take the research notes back to Sedridor."
+        },
+        {
+          "id": "rune-mysteries-walkthrough-5",
+          "rawText": "'''Congratulations, quest complete!'''",
+          "section": "Walkthrough",
+          "sourceOrder": 5,
+          "text": "Congratulations, quest complete!"
+        }
+      ],
+      "questId": "Rune Mysteries",
+      "tasks": [
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [],
+          "description": "Talk to Duke Horacio",
+          "id": "t_7697",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Duke Horacio"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Rune Mysteries|~ 1",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_7697"
+          ],
+          "description": "Talk to Wizard Sedridor",
+          "id": "t_7698",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Archmage Sedridor"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Rune Mysteries|~ 2",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_7698"
+          ],
+          "description": "Talk to Aubury",
+          "id": "t_7699",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Aubury"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Rune Mysteries|~ 3",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_7699"
+          ],
+          "description": "Talk to Wizard Sedridor",
+          "id": "t_7700",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Archmage Sedridor"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Rune Mysteries|~ 4",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": true,
+          "dependsOn": [
+            "t_7700"
+          ],
+          "id": "t_7701",
+          "items": [],
+          "namedAreas": [
+            "Wizards' Tower#Basement"
+          ],
+          "npcs": [],
+          "objects": [],
+          "questPoints": 1,
+          "rewards": [
+            "Air talisman"
+          ],
+          "skills": {},
+          "sourceId": "~|Rune Mysteries|~ Complete the quest",
+          "xpRewards": {}
+        }
+      ],
+      "wikiRevision": 15205463,
+      "wikiRevisionTimestamp": "2026-05-03T11:22:42Z",
+      "wikiTitle": "Rune Mysteries/Quick guide",
+      "wikiUrl": "https://oldschool.runescape.wiki/w/Rune_Mysteries/Quick_guide?oldid=15205463"
+    },
+    {
+      "importedLines": [
+        {
+          "id": "imp-catcher-walkthrough-1",
+          "rawText": "Buy them from the [[Grand Exchange]] for {{Coins|{{GEP|Red bead|1}} + {{GEP|Black bead|1}} + {{GEP|Yellow bead|1}} + {{GEP|White bead|1}}}}",
+          "section": "Walkthrough",
+          "sourceOrder": 1,
+          "text": "Buy them from the Grand Exchange for 1 Red bead + 1 Black bead + 1 Yellow bead + 1 White bead"
+        },
+        {
+          "id": "imp-catcher-walkthrough-2",
+          "rawText": "Kill [[imp]]s, recommended for free players either near the southern entrance to [[Falador]] or the top of the [[Karamja volcano]]; or for members east of the [[Ardougne Monastery]], at the entrance of [[Chasm of Fire]], or around the [[Charcoal furnace]]",
+          "section": "Walkthrough",
+          "sourceOrder": 2,
+          "text": "Kill imps, recommended for free players either near the southern entrance to Falador or the top of the Karamja volcano; or for members east of the Ardougne Monastery, at the entrance of Chasm of Fire, or around the Charcoal furnace"
+        },
+        {
+          "id": "imp-catcher-walkthrough-3",
+          "rawText": "Talk to [[Wizard Mizgog]] on the top floor of the [[Wizards' Tower]] with all four beads in your inventory.{{Chat option|1 Give me a quest please.|1 Yes.}}",
+          "section": "Walkthrough",
+          "sourceOrder": 3,
+          "text": "Talk to Wizard Mizgog on the top floor of the Wizards' Tower with all four beads in your inventory.1 Yes."
+        },
+        {
+          "id": "imp-catcher-walkthrough-4",
+          "rawText": "'''Congratulations, quest complete!'''}}",
+          "section": "Walkthrough",
+          "sourceOrder": 4,
+          "text": "Congratulations, quest complete!"
+        }
+      ],
+      "questId": "Imp Catcher",
+      "tasks": [
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [],
+          "description": "Talk to Wizard Mizgog",
+          "id": "t_7650",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [
+            "Wizard Mizgog"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Imp Catcher|~ 1",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [],
+          "completion": false,
+          "dependsOn": [
+            "t_7650"
+          ],
+          "description": "Return to Wizard Mizgog with the beads",
+          "id": "t_7651",
+          "items": [
+            "Red bead",
+            "White bead",
+            "Yellow bead",
+            "Black bead"
+          ],
+          "namedAreas": [],
+          "npcs": [
+            "Wizard Mizgog"
+          ],
+          "objects": [],
+          "rewards": [],
+          "skills": {},
+          "sourceId": "~|Imp Catcher|~ 2",
+          "xpRewards": {}
+        },
+        {
+          "chunks": [
+            {
+              "chunkId": "48,49",
+              "plane": 1,
+              "sourceId": "12337-1"
+            }
+          ],
+          "completion": true,
+          "dependsOn": [
+            "t_7651"
+          ],
+          "id": "t_7652",
+          "items": [],
+          "namedAreas": [],
+          "npcs": [],
+          "objects": [],
+          "questPoints": 1,
+          "rewards": [
+            "Amulet of accuracy"
+          ],
+          "skills": {},
+          "sourceId": "~|Imp Catcher|~ Complete the quest",
+          "xpRewards": {
+            "Magic": 875
+          }
+        }
+      ],
+      "wikiRevision": 14649872,
+      "wikiRevisionTimestamp": "2024-05-05T03:30:56Z",
+      "wikiTitle": "Imp Catcher/Quick guide",
+      "wikiUrl": "https://oldschool.runescape.wiki/w/Imp_Catcher/Quick_guide?oldid=14649872"
+    }
+  ],
+  "schemaVersion": 1,
+  "wiki": {
+    "apiEndpoint": "https://oldschool.runescape.wiki/api.php",
+    "attribution": "Quick-guide text from the Old School RuneScape Wiki and its contributors.",
+    "licence": "CC BY-NC-SA 3.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by-nc-sa/3.0/"
+  }
+}

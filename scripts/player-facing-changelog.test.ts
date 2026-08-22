@@ -205,7 +205,7 @@ describe('quest and chunk audit release contracts', () => {
     const contentVerify = packageJson.scripts['content:verify'];
 
     expect(contentVerify).toBe(
-      'npm run diary:verify && npm run chunks:verify && npm run quests:verify && vitest run data/contentBaseline.test.ts data/tasksConsistency.test.ts utils/taskIdMigrations.test.ts utils/caProgress.test.ts',
+      'npm run diary:verify && npm run chunks:verify && npm run quests:verify && npm run quest-routes:verify && npm run walkthroughs:verify && vitest run data/contentBaseline.test.ts data/tasksConsistency.test.ts utils/taskIdMigrations.test.ts utils/caProgress.test.ts',
     );
     expect(contentVerify).not.toContain('data/questRequirementAudit.test.ts');
     expect(packageJson.scripts['release:verify']).toBe(

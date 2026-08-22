@@ -9,6 +9,7 @@ clog_*
 # Build output
 dist/
 dist-ssr/
+dist-runeproof-preview/
 
 # Logs & local env
 *.log
@@ -18,6 +19,7 @@ yarn-error.log*
 *.local
 .env
 .env.*
+!.env.runeproof-preview
 
 # OS / editor cruft
 .DS_Store

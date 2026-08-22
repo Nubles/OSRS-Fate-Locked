@@ -1,0 +1,217 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-21",
+  "evidenceFiles": [
+    "data/sources/quest-list.json",
+    "data/sources/quest-requirement-audit.json"
+  ],
+  "quests": [
+    {
+      "questId": "Cook's Assistant",
+      "slug": "cooks-assistant",
+      "kind": "quest",
+      "wave": 1,
+      "progressionPriority": 1,
+      "wikiTitle": "Cook's Assistant/Quick guide",
+      "evidenceQuestId": "Cook's Assistant"
+    },
+    {
+      "questId": "Sheep Shearer",
+      "slug": "sheep-shearer",
+      "kind": "quest",
+      "wave": 1,
+      "progressionPriority": 2,
+      "wikiTitle": "Sheep Shearer/Quick guide",
+      "evidenceQuestId": "Sheep Shearer"
+    },
+    {
+      "questId": "The Restless Ghost",
+      "slug": "the-restless-ghost",
+      "kind": "quest",
+      "wave": 1,
+      "progressionPriority": 3,
+      "wikiTitle": "The Restless Ghost/Quick guide",
+      "evidenceQuestId": "The Restless Ghost"
+    },
+    {
+      "questId": "Rune Mysteries",
+      "slug": "rune-mysteries",
+      "kind": "quest",
+      "wave": 1,
+      "progressionPriority": 4,
+      "wikiTitle": "Rune Mysteries/Quick guide",
+      "evidenceQuestId": "Rune Mysteries"
+    },
+    {
+      "questId": "Imp Catcher",
+      "slug": "imp-catcher",
+      "kind": "quest",
+      "wave": 1,
+      "progressionPriority": 5,
+      "wikiTitle": "Imp Catcher/Quick guide",
+      "evidenceQuestId": "Imp Catcher"
+    },
+    {
+      "questId": "Daddy's Home",
+      "slug": "daddys-home",
+      "kind": "miniquest",
+      "wave": 2,
+      "progressionPriority": 6,
+      "wikiTitle": "Daddy's Home/Quick guide",
+      "evidenceQuestId": "Daddy's Home"
+    },
+    {
+      "questId": "X Marks the Spot",
+      "slug": "x-marks-the-spot",
+      "kind": "quest",
+      "wave": 2,
+      "progressionPriority": 7,
+      "wikiTitle": "X Marks the Spot/Quick guide",
+      "evidenceQuestId": "X Marks the Spot"
+    },
+    {
+      "questId": "Romeo & Juliet",
+      "slug": "romeo-juliet",
+      "kind": "quest",
+      "wave": 2,
+      "progressionPriority": 8,
+      "wikiTitle": "Romeo & Juliet/Quick guide",
+      "evidenceQuestId": "Romeo & Juliet"
+    },
+    {
+      "questId": "Demon Slayer",
+      "slug": "demon-slayer",
+      "kind": "quest",
+      "wave": 2,
+      "progressionPriority": 9,
+      "wikiTitle": "Demon Slayer/Quick guide",
+      "evidenceQuestId": "Demon Slayer"
+    },
+    {
+      "questId": "Ernest the Chicken",
+      "slug": "ernest-the-chicken",
+      "kind": "quest",
+      "wave": 2,
+      "progressionPriority": 10,
+      "wikiTitle": "Ernest the Chicken/Quick guide",
+      "evidenceQuestId": "Ernest the Chicken"
+    },
+    {
+      "questId": "Doric's Quest",
+      "slug": "dorics-quest",
+      "kind": "quest",
+      "wave": 3,
+      "progressionPriority": 11,
+      "wikiTitle": "Doric's Quest/Quick guide",
+      "evidenceQuestId": "Doric's Quest"
+    },
+    {
+      "questId": "Goblin Diplomacy",
+      "slug": "goblin-diplomacy",
+      "kind": "quest",
+      "wave": 3,
+      "progressionPriority": 12,
+      "wikiTitle": "Goblin Diplomacy/Quick guide",
+      "evidenceQuestId": "Goblin Diplomacy"
+    },
+    {
+      "questId": "Witch's Potion",
+      "slug": "witchs-potion",
+      "kind": "quest",
+      "wave": 3,
+      "progressionPriority": 13,
+      "wikiTitle": "Witch's Potion/Quick guide",
+      "evidenceQuestId": "Witch's Potion"
+    },
+    {
+      "questId": "The Knight's Sword",
+      "slug": "the-knights-sword",
+      "kind": "quest",
+      "wave": 3,
+      "progressionPriority": 14,
+      "wikiTitle": "The Knight's Sword/Quick guide",
+      "evidenceQuestId": "The Knight's Sword"
+    },
+    {
+      "questId": "Black Knights' Fortress",
+      "slug": "black-knights-fortress",
+      "kind": "quest",
+      "wave": 3,
+      "progressionPriority": 15,
+      "wikiTitle": "Black Knights' Fortress/Quick guide",
+      "evidenceQuestId": "Black Knights' Fortress"
+    },
+    {
+      "questId": "Vampyre Slayer",
+      "slug": "vampyre-slayer",
+      "kind": "quest",
+      "wave": 4,
+      "progressionPriority": 16,
+      "wikiTitle": "Vampyre Slayer/Quick guide",
+      "evidenceQuestId": "Vampyre Slayer"
+    },
+    {
+      "questId": "Prince Ali Rescue",
+      "slug": "prince-ali-rescue",
+      "kind": "quest",
+      "wave": 4,
+      "progressionPriority": 17,
+      "wikiTitle": "Prince Ali Rescue/Quick guide",
+      "evidenceQuestId": "Prince Ali Rescue"
+    },
+    {
+      "questId": "Pirate's Treasure",
+      "slug": "pirates-treasure",
+      "kind": "quest",
+      "wave": 4,
+      "progressionPriority": 18,
+      "wikiTitle": "Pirate's Treasure/Quick guide",
+      "evidenceQuestId": "Pirate's Treasure"
+    },
+    {
+      "questId": "Misthalin Mystery",
+      "slug": "misthalin-mystery",
+      "kind": "quest",
+      "wave": 4,
+      "progressionPriority": 19,
+      "wikiTitle": "Misthalin Mystery/Quick guide",
+      "evidenceQuestId": "Misthalin Mystery"
+    },
+    {
+      "questId": "Below Ice Mountain",
+      "slug": "below-ice-mountain",
+      "kind": "quest",
+      "wave": 4,
+      "progressionPriority": 20,
+      "wikiTitle": "Below Ice Mountain/Quick guide",
+      "evidenceQuestId": "Below Ice Mountain"
+    },
+    {
+      "questId": "The Corsair Curse",
+      "slug": "the-corsair-curse",
+      "kind": "quest",
+      "wave": 5,
+      "progressionPriority": 21,
+      "wikiTitle": "The Corsair Curse/Quick guide",
+      "evidenceQuestId": "The Corsair Curse"
+    },
+    {
+      "questId": "Shield of Arrav",
+      "slug": "shield-of-arrav",
+      "kind": "quest",
+      "wave": 5,
+      "progressionPriority": 22,
+      "wikiTitle": "Shield of Arrav/Quick guide",
+      "evidenceQuestId": "Shield of Arrav"
+    },
+    {
+      "questId": "Dragon Slayer I",
+      "slug": "dragon-slayer-i",
+      "kind": "quest",
+      "wave": 5,
+      "progressionPriority": 23,
+      "wikiTitle": "Dragon Slayer I/Quick guide",
+      "evidenceQuestId": "Dragon Slayer I"
+    }
+  ]
+}

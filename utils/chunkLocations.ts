@@ -110,7 +110,9 @@ export const consumePendingChunk = (): { cx: number; cy: number } | null => {
 /** Jump the app to this chunk: switch to the World tab + open its panel. */
 export const showChunkOnMap = (cx: number, cy: number) => {
   pendingChunk = { cx, cy };
-  window.dispatchEvent(new CustomEvent('fate:nav', { detail: { target: 'tab:WORLD' } }));
+  window.dispatchEvent(new CustomEvent('fate:nav', {
+    detail: { target: 'tab:WORLD', worldView: 'MAP' },
+  }));
   window.dispatchEvent(new CustomEvent('fate:show-chunk', { detail: { cx, cy } }));
 };
 

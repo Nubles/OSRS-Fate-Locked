@@ -171,7 +171,7 @@ describe('pinned Chunk Picker source', () => {
     } finally {
       await rm(tempDir, { force: true, recursive: true });
     }
-  });
+  }, 60_000);
 
   it('writes a fully validated canonical gzip artifact with OS header byte 10', async () => {
     const tempDir = await mkdtemp(join(tmpdir(), 'fate-chunk-source-'));

@@ -36,6 +36,9 @@ describe('classifyShop', () => {
       ['Garden Centre', 'Farming Shops'],
       ["Rufus' Meat Emporium", 'Food Shops'],
       ["Aemad's Adventuring Supplies", 'General Stores'],
+      ["Durrik's Goods", 'General Stores'],
+      ["Gunslik's Assorted Items", 'General Stores'],
+      ["Bob's Brilliant Axes", 'Axe Shops'],
     ];
     for (const [name, want] of cases) {
       expect(classifyShop(name), name).toBe(want ?? null);

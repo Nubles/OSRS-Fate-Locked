@@ -19,24 +19,44 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-08-20-fate-analytics-dashboard');
+    expect(LATEST_CHANGELOG.id).toBe('2026-08-22-runeproof-wave-one');
+  });
+
+  it('announces the first public RuneProof quest pack accurately', () => {
+    expect(LATEST_CHANGELOG).toMatchObject({
+      id: '2026-08-22-runeproof-wave-one',
+      title: 'RuneProof Begins',
+      date: '2026-08-22',
+    });
+    expect(LATEST_CHANGELOG.sections.added).toEqual(expect.arrayContaining([
+      expect.stringMatching(/five reviewed F2P quest guides/i),
+      expect.stringMatching(/temporary maps/i),
+    ]));
+    expect(LATEST_CHANGELOG.sections.changed).toEqual(expect.arrayContaining([
+      expect.stringMatching(/reachable.*imp source/i),
+      expect.stringMatching(/does not complete.*Journal/i),
+    ]));
   });
 
   it('announces the accurate Fate Analytics dashboard', () => {
-    expect(LATEST_CHANGELOG).toMatchObject({
+    const fateAnalytics = CHANGELOG_RELEASES.find(
+      release => release.id === '2026-08-20-fate-analytics-dashboard',
+    );
+
+    expect(fateAnalytics).toMatchObject({
       id: '2026-08-20-fate-analytics-dashboard',
       title: 'Your Fate, Explained',
       date: '2026-08-20',
     });
-    expect(LATEST_CHANGELOG.sections.added).toEqual(expect.arrayContaining([
+    expect(fateAnalytics?.sections.added).toEqual(expect.arrayContaining([
       expect.stringMatching(/nine visual views/i),
       expect.stringMatching(/activity calendar/i),
     ]));
-    expect(LATEST_CHANGELOG.sections.changed).toEqual(expect.arrayContaining([
+    expect(fateAnalytics?.sections.changed).toEqual(expect.arrayContaining([
       expect.stringMatching(/shared filters/i),
       expect.stringMatching(/scoreable/i),
     ]));
-    expect(LATEST_CHANGELOG.sections.fixed).toEqual(expect.arrayContaining([
+    expect(fateAnalytics?.sections.fixed).toEqual(expect.arrayContaining([
       expect.stringMatching(/pity/i),
       expect.stringMatching(/older saves/i),
     ]));

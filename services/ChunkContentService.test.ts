@@ -8,7 +8,11 @@ import {
 import type { ChunkEntrance } from './ChunkContentService';
 
 const DWARVEN_MINE_CHUNK = { cx: 47, cy: 52 };
-const generatedContentFixture = structuredClone(fullChunkContent);
+const generatedContentFixture = structuredClone(fullChunkContent) as any;
+generatedContentFixture.chunks['1'] = {
+  s: ["Durrik's Goods", "Gunslik's Assorted Items", 'Unreviewed audit shop'],
+};
+generatedContentFixture.shopItems['Unreviewed audit shop'] = ['RuneProof audit token'];
 const rawDwarvenMineEntrances = generatedContentFixture.entrances['12084'];
 rawDwarvenMineEntrances.reverse();
 
@@ -70,6 +74,10 @@ describe('entrances before initialization', () => {
   it('returns no entrance rows before the generated document loads', () => {
     expect(chunkContentService.entrancesFor(DWARVEN_MINE_CHUNK.cx, DWARVEN_MINE_CHUNK.cy)).toEqual([]);
   });
+
+  it('reports partial exact-item coverage before the generated document loads', () => {
+    expect(chunkContentService.itemSourceCoverage()).toBe('PARTIAL');
+  });
 });
 
 describe('generated normalized source unions', () => {
@@ -84,6 +92,45 @@ describe('generated normalized source unions', () => {
   it('exposes merged drop items through runtime item-source lookups and tags', () => {
     expect(chunkContentService.itemSources('Iron 2h sword')).toContain('Cyclops');
     expect(chunkContentService.tagChunks('runecraft')).toContainEqual({ cx: 37, cy: 52 });
+  });
+
+  it('preserves exact host, chunk, and access evidence', () => {
+    expect(chunkContentService.itemSourceRecords('Plank')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          itemName: 'Plank',
+          kind: expect.stringMatching(/spawn|shop|monster/),
+          hostName: expect.any(String),
+          cx: expect.any(Number),
+          cy: expect.any(Number),
+          rawRequirements: expect.any(Array),
+        }),
+      ]),
+    );
+    expect(chunkContentService.itemSourceCoverage()).toBe('COMPLETE');
+  });
+
+  it('does not expose mutable cached access evidence', () => {
+    const records = chunkContentService.itemSourceRecords('RuneProof audit token');
+    (records[0].rawRequirements as { raw: string; origin: 'ENTITY' | 'CHUNK_ENTRY' }[]).push({
+      raw: 'Mutated by consumer',
+      origin: 'ENTITY',
+    });
+
+    expect(chunkContentService.itemSourceRecords('RuneProof audit token')[0].rawRequirements)
+      .not.toContainEqual({ raw: 'Mutated by consumer', origin: 'ENTITY' });
+  });
+
+  it('fails closed for an unclassified synthetic merchant', () => {
+    expect(chunkContentService.itemSourceRecords('RuneProof audit token')).toEqual([
+      expect.objectContaining({
+        hostName: 'Unreviewed audit shop',
+        rawRequirements: [{
+          raw: 'Unknown merchant category: Unreviewed audit shop',
+          origin: 'ENTITY',
+        }],
+      }),
+    ]);
   });
 
   it('exposes merged skill stage/rate evidence and policy metadata', () => {
