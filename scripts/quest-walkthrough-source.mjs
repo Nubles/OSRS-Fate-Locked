@@ -497,15 +497,39 @@ const validateCoachActions = (questId, actions, rootRequirements) => {
   );
 };
 
-export function compileWalkthroughCatalogue(source, review) {
+export function compileWalkthroughCatalogue(source, review, catalogue = undefined) {
   if (source?.phase !== 'SOURCE_BOOTSTRAP' && source?.phase !== 'REVIEWED') {
     throw new Error('Walkthrough source phase must be SOURCE_BOOTSTRAP or REVIEWED');
+  }
+  if (catalogue !== undefined) {
+    const entries = Array.isArray(catalogue?.entries) ? catalogue.entries : [];
+    const byQuestId = new Map(entries.map(entry => [entry.questId, entry]));
+    for (const quest of source.quests ?? []) {
+      const entry = byQuestId.get(quest.questId);
+      assertWalkthrough(entry !== undefined,
+        `Walkthrough compiler received unknown RuneProof catalogue quest ID: ${quest.questId}`);
+      assertWalkthrough(entry.slug === slug(quest.questId),
+        `Walkthrough compiler catalogue slug mismatch for ${quest.questId}`);
+      assertWalkthrough(entry.kind === 'quest' || entry.kind === 'miniquest',
+        `Walkthrough compiler catalogue kind is invalid for ${quest.questId}`);
+    }
+    for (const questId of Object.keys(review?.quests ?? {})) {
+      assertWalkthrough(byQuestId.has(questId),
+        `Walkthrough review contains unknown RuneProof catalogue quest ID: ${questId}`);
+    }
   }
   const rootRequirementsByQuest = validateReviewedRootRequirementContexts(
     review,
     (source.quests ?? []).map(quest => quest.questId),
   );
-  const walkthroughs = (source.quests ?? []).map((quest) => {
+  const trustedQuests = source.phase === 'REVIEWED'
+    ? (source.quests ?? []).filter(quest => (
+        Object.prototype.hasOwnProperty.call(review?.quests ?? {}, quest.questId)
+        && Array.isArray(review.quests[quest.questId])
+        && review.quests[quest.questId].length > 0
+      ))
+    : (source.quests ?? []);
+  const walkthroughs = trustedQuests.map((quest) => {
     const sourceRecord = {
       wikiTitle: quest.wikiTitle,
       wikiRevision: String(quest.wikiRevision),

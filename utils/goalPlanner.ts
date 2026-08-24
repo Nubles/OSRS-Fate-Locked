@@ -17,7 +17,7 @@ import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { REGION_GROUPS } from '../data/items';
 import { canonicalAreaName, displayAreaName } from '../data/areaMapPolicy';
-import { TableType } from '../types';
+import { TableType, type UnlockState } from '../types';
 import {
   evaluateQuestEligibility, getDiaryStatus,
   evaluateDiaryTaskEligibility, questRequirementOptionLabel, DirectEligibilityBlocker,
@@ -122,9 +122,9 @@ function questPointsFor(questId: string): number {
 }
 
 /** Total quest points the player currently has. */
-function currentQuestPoints(unlocks: any): number {
-  return (unlocks.quests as string[]).reduce(
-    (acc, qid) => acc + questPointsFor(qid),
+export function currentQuestPoints(unlocks: Pick<UnlockState, 'quests'>): number {
+  return unlocks.quests.reduce(
+    (total, questId) => total + questPointsForEntry(QUEST_DATA[questId]),
     0,
   );
 }

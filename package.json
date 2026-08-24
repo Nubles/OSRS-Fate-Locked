@@ -19,7 +19,7 @@
     "chunks:source-check": "node scripts/chunk-source.mjs --check-upstream",
     "chunks:source-verify": "vitest run scripts/chunk-source.test.ts",
     "content:sync": "node scripts/sync-collection-log.mjs && node scripts/sync-combat-achievements.mjs && node scripts/check-content-sync.mjs",
-    "content:verify": "npm run diary:verify && npm run chunks:verify && npm run quests:verify && npm run quest-routes:verify && npm run walkthroughs:verify && vitest run data/contentBaseline.test.ts data/tasksConsistency.test.ts utils/taskIdMigrations.test.ts utils/caProgress.test.ts",
+    "content:verify": "npm run diary:verify && npm run chunks:verify && npm run quests:verify && npm run quest-routes:verify && npm run walkthroughs:verify && npm run runeproof:catalogue:verify && npm run runeproof:coverage:verify && vitest run data/contentBaseline.test.ts data/tasksConsistency.test.ts utils/taskIdMigrations.test.ts utils/caProgress.test.ts",
     "dev": "node scripts/gen-model-manifest.mjs && vite",
     "build": "node scripts/gen-model-manifest.mjs && vite build",
     "build:runeproof-preview": "node scripts/gen-model-manifest.mjs && vite build --mode runeproof-preview --outDir dist-runeproof-preview",
@@ -33,7 +33,16 @@
     "quests:verify": "node scripts/sync-quest-sources.mjs --check && vitest run data/questRequirementAudit.test.ts",
     "quest-routes:verify": "node scripts/check-quest-route-data.mjs",
     "walkthroughs:refresh": "node scripts/sync-quest-walkthroughs.mjs",
-    "walkthroughs:verify": "node scripts/sync-quest-walkthroughs.mjs --check"
+    "walkthroughs:verify": "node scripts/sync-quest-walkthroughs.mjs --check",
+    "runeproof:catalogue:sync": "node scripts/sync-runeproof-catalogue.mjs",
+    "runeproof:catalogue:verify": "node scripts/sync-runeproof-catalogue.mjs --check && vitest run scripts/runeproof-catalogue-source.test.ts data/runeProofQuestCatalogue.test.ts",
+    "runeproof:coverage:sync": "node scripts/runeproof-coverage.mjs",
+    "runeproof:coverage:verify": "node scripts/runeproof-coverage.mjs --check && vitest run scripts/runeproof-coverage.test.ts",
+    "runeproof:performance:record": "RUNEPROOF_RECORD_REFERENCE_PROFILE=1 vitest run --config vitest.runeproof-performance.config.ts",
+    "runeproof:performance:measure": "vitest run --config vitest.runeproof-performance.config.ts",
+    "runeproof:performance:enforce-reference": "RUNEPROOF_ENFORCE_REFERENCE_PROFILE=1 vitest run --config vitest.runeproof-performance.config.ts",
+    "runeproof:performance:verify": "vitest run utils/questStrategies/performance.test.ts",
+    "runeproof:verify": "npm run runeproof:catalogue:verify && npm run runeproof:coverage:verify && npm run runeproof:performance:verify && vitest run data/runeProofPackRelease.test.ts data/questWalkthroughLoader.test.ts vite.config.runeproof-boundary.test.ts scripts/runeproof-public-bundle.test.ts"
   },
   "dependencies": {
     "@google/model-viewer": "^4.3.0",

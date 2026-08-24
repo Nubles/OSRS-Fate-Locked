@@ -12,6 +12,7 @@ import {
   questStrategyFromWalkthrough,
   type QuestStrategyContext,
 } from '../utils/questStrategies/model';
+import { runeProofCatalogueFor } from '../data/runeProofQuestCatalogue';
 
 const questKey = (quest: string, suffix: string) => `~|${quest}|~ ${suffix}`;
 
@@ -167,15 +168,7 @@ const reviewedStrategyReviewFixture = () => ({
 });
 
 const strategyContext = (): QuestStrategyContext => ({
-  membership: {
-    questId: "Cook's Assistant",
-    slug: 'cooks-assistant',
-    kind: 'quest',
-    wave: 1,
-    progressionPriority: 1,
-    wikiTitle: "Cook's Assistant/Quick guide",
-    evidenceQuestId: "Cook's Assistant",
-  },
+  catalogue: runeProofCatalogueFor("Cook's Assistant")!,
   rootRequirements: [],
 });
 
@@ -341,6 +334,19 @@ describe('pinned walkthrough source helpers', () => {
     });
   });
 
+  it('does not promote a high-confidence generated candidate without review', () => {
+    const source: any = reviewedStrategySourceFixture();
+    source.quests[0].generatedCandidate = {
+      confidence: 'HIGH',
+      displayText: 'A generated route must not become trusted content.',
+    };
+    const catalogue = compileWalkthroughCatalogue(source, {
+      schemaVersion: 1,
+      quests: {},
+    });
+    expect(catalogue.walkthroughs).toEqual([]);
+  });
+
   it.each([
     ['missing dependency', (action: any) => { action.dependsOn = ['missing-action']; }],
     ['missing consumes', (action: any) => { delete action.coach.consumes; }],
@@ -470,7 +476,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import pinnedWalkthroughSource from '../data/sources/quest-walkthrough-sources.json';
 import reviewedWalkthroughReview from '../data/sources/quest-walkthrough-review.json';
-import reviewedMembership from '../data/sources/f2p-quest-membership.json';
+import reviewedCatalogue from '../data/sources/runeproof-quest-catalogue.json';
 
 const CLI_EXISTING_QUESTS = ["Cook's Assistant", "Daddy's Home", "Doric's Quest", 'Elemental Workshop I'];
 const CLI_TASK_MAPPINGS = {
@@ -635,7 +641,7 @@ const cliTemporaryPaths = async (source = cliSourceFixture(), review: any = {
   await writeFile(paths.source, stableJson(source));
   await writeFile(paths.review, stableJson(review));
   await writeFile(paths.generated, stableJson(compileWalkthroughCatalogue(source, review)));
-  await writeFile(paths.membership, stableJson(reviewedMembership));
+  await writeFile(paths.membership, stableJson(reviewedCatalogue));
   return { root, paths };
 };
 
@@ -777,6 +783,52 @@ describe('walkthrough maintenance CLI', () => {
       .flatMap(url => (url.searchParams.get('titles') ?? '').split('|').filter(Boolean));
     expect(requestedWikiTitles).toEqual([selectedTitle, selectedTitle]);
     expect(output.join('\n')).toMatch(/added.*removed.*reordered.*task-changed.*unresolved/i);
+  });
+
+  it('refreshes an explicitly selected record that already exists without duplicating it', async () => {
+    const source = cliSourceFixture();
+    const { paths } = await cliTemporaryPaths(source);
+    const { runWalkthroughSync } = await import('./sync-quest-walkthroughs.mjs');
+    const requestedUrls: URL[] = [];
+    const fetchImpl = async (input: URL | string) => {
+      const url = new URL(String(input));
+      requestedUrls.push(url);
+      if (url.hostname === 'raw.githubusercontent.com') {
+        return Response.json(CLI_TASK_MAPPINGS);
+      }
+      if (url.searchParams.get('rvprop') === 'ids|timestamp') {
+        return Response.json({ query: { pages: [{
+          title: "Cook's Assistant/Quick guide",
+          revisions: [{ revid: 17000001, timestamp: '2026-08-22T10:00:00Z' }],
+        }] } });
+      }
+      return Response.json({ query: { pages: [{
+        title: "Cook's Assistant/Quick guide",
+        revisions: [{ slots: { main: { content: '== Walkthrough ==\n# Follow the explicitly refreshed route.' } } }],
+      }] } });
+    };
+
+    await runWalkthroughSync({
+      mode: 'refresh',
+      questIds: ['cooks-assistant'],
+      paths,
+      fetchImpl,
+      readChunkSource: async () => ({ data: chunkPickerFixture() }),
+      tasksMapDigest: () => 'f740b7194189f1a3ef81515ca4d4872caf91a6516a93bdf64c5d43c93d33bd8a',
+      write: () => undefined,
+    });
+
+    const candidate = JSON.parse(await readFile(paths.candidate, 'utf8'));
+    expect(candidate.quests).toHaveLength(source.quests.length);
+    expect(candidate.quests.filter((quest: any) => quest.questId === "Cook's Assistant"))
+      .toEqual([expect.objectContaining({
+        wikiRevision: 17000001,
+        importedLines: [expect.objectContaining({
+          rawText: 'Follow the explicitly refreshed route.',
+        })],
+      })]);
+    expect(requestedUrls.filter(url => url.origin === 'https://oldschool.runescape.wiki'))
+      .toHaveLength(2);
   });
 
   it('promotes only complete agreement atomically and retains the licence gate', async () => {
@@ -948,9 +1000,21 @@ describe('walkthrough CLI argument parsing', () => {
     });
     expect(() => parseWalkthroughSyncArgs(['--check', '--quest-id=sheep-shearer']))
       .toThrow(/quest-id.*refresh/i);
-    expect(() => parseWalkthroughSyncArgs(['--refresh', '--quest-id=elemental-workshop-i']))
-      .toThrow(/F2P membership/i);
+    expect(parseWalkthroughSyncArgs(['--refresh', '--quest-id=elemental-workshop-i']))
+      .toEqual({ mode: 'refresh', questIds: ['elemental-workshop-i'] });
+    expect(() => parseWalkthroughSyncArgs(['--refresh', '--quest-id=unknown-211th']))
+      .toThrow(/RuneProof catalogue/i);
     expect(() => parseWalkthroughSyncArgs(['--other'])).toThrow(/unknown command/i);
+  });
+});
+
+describe('generic RuneProof catalogue trust boundary', () => {
+  it('rejects an unknown 211th source identity', async () => {
+    const { validateWalkthroughSource } = await import('./sync-quest-walkthroughs.mjs');
+    const changed: any = structuredClone(pinnedWalkthroughSource);
+    changed.quests[0].questId = 'Unknown 211th Quest';
+    expect(() => validateWalkthroughSource(changed, reviewedCatalogue))
+      .toThrow(/unknown RuneProof catalogue quest ID/i);
   });
 });
 describe('promotion graph validation', () => {
@@ -1022,17 +1086,17 @@ describe('review-finding pinned task-map validation', () => {
     const { validateWalkthroughSource } = await import('./sync-quest-walkthroughs.mjs');
     const fabricatedDigest = cliSourceFixture();
     fabricatedDigest.chunkPicker.tasksMapSha256 = 'b'.repeat(64);
-    expect(() => validateWalkthroughSource(fabricatedDigest, reviewedMembership)).toThrow(/pinned.*sha-256/i);
+    expect(() => validateWalkthroughSource(fabricatedDigest, reviewedCatalogue)).toThrow(/pinned.*sha-256/i);
 
     const fifthQuest = cliSourceFixture();
     fifthQuest.chunkPicker.taskMappings[questKey('A Fifth Quest', '1')] = 'task-fifth';
-    expect(() => validateWalkthroughSource(fifthQuest, reviewedMembership)).toThrow(/task mapping/i);
+    expect(() => validateWalkthroughSource(fifthQuest, reviewedCatalogue)).toThrow(/task mapping/i);
 
     const inconsistentTask = cliSourceFixture();
     inconsistentTask.quests[0].tasks = [{
       id: 'not-t_7591', sourceId: questKey("Cook's Assistant", '1'), dependsOn: [],
     }] as any;
-    expect(() => validateWalkthroughSource(inconsistentTask, reviewedMembership)).toThrow(/task id.*pinned mapping/i);
+    expect(() => validateWalkthroughSource(inconsistentTask, reviewedCatalogue)).toThrow(/task id.*pinned mapping/i);
   });
 
   it('rejects an in-roster fabricated task mapping that is absent from the immutable pinned snapshot', async () => {
@@ -1040,7 +1104,7 @@ describe('review-finding pinned task-map validation', () => {
     const fabricatedInRosterMapping = cliSourceFixture();
     fabricatedInRosterMapping.chunkPicker.taskMappings[questKey('Sheep Shearer', '1')] = 't-fabricated-sheep';
 
-    expect(() => validateWalkthroughSource(fabricatedInRosterMapping, reviewedMembership))
+    expect(() => validateWalkthroughSource(fabricatedInRosterMapping, reviewedCatalogue))
       .toThrow(/pinned mapping/i);
   });
 
@@ -1052,7 +1116,7 @@ describe('review-finding pinned task-map validation', () => {
       id: 't_7702', sourceId: questKey('Sheep Shearer', '1'), dependsOn: [],
     }] as any;
 
-    expect(() => validateWalkthroughSource(crossQuestTask, reviewedMembership))
+    expect(() => validateWalkthroughSource(crossQuestTask, reviewedCatalogue))
       .toThrow(/belongs to.*quest/i);
   });
 });

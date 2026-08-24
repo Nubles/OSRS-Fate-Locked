@@ -10,9 +10,12 @@ declare const process: {
   env: Record<string, string | undefined>;
 };
 
-const runeProofPreviewModuleIds = new Set([
-  'questWalkthroughs',
-  'questWalkthroughs.preview-boundary',
+const runeProofPreviewModuleRedirects = new Map([
+  ['questWalkthroughs', 'questWalkthroughs.public'],
+  ['questWalkthroughs.preview-boundary', 'questWalkthroughs.public'],
+  ['runeProofPacks.preview-boundary', 'runeProofPacks.public'],
+  ['runeProofPackRelease.preview', 'runeProofPackRelease.public'],
+  ['runeProofPlatformReviewHarness.preview', 'runeProofPlatformReviewHarness.public'],
 ]);
 
 const runeProofPreviewBoundaryPlugin = (includePreview: boolean): Plugin => ({
@@ -22,8 +25,9 @@ const runeProofPreviewBoundaryPlugin = (includePreview: boolean): Plugin => ({
     if (includePreview || !importer) return null;
     const normalizedSource = normalizePath(source).replace(/\.[cm]?[jt]sx?$/, '');
     const moduleId = normalizedSource.slice(normalizedSource.lastIndexOf('/') + 1);
-    if (!runeProofPreviewModuleIds.has(moduleId)) return null;
-    return this.resolve('./questWalkthroughs.public', importer, { skipSelf: true });
+    const publicModuleId = runeProofPreviewModuleRedirects.get(moduleId);
+    if (!publicModuleId) return null;
+    return this.resolve(`./${publicModuleId}`, importer, { skipSelf: true });
   },
 });
 
@@ -55,6 +59,12 @@ export default defineConfig(({ mode }) => {
       outDir: 'dist',
       assetsDir: 'assets',
       rollupOptions: {
+        input: includeRuneProofPreview
+          ? {
+              app: `${process.cwd()}/index.html`,
+              'runeproof-platform-review-harness': `${process.cwd()}/data/runeProofPlatformReviewHarness.preview.ts`,
+            }
+          : undefined,
         output: {
           manualChunks: {
             // Stable vendor code — split out so it caches across app deploys.

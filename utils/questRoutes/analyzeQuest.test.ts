@@ -43,7 +43,12 @@ const analyzeQuest = (
 ) => {
   const walkthrough = walkthroughCatalogue.questWalkthroughFor(questId);
   if (!walkthrough) throw new Error(`RuneProof has no reviewed walkthrough for ${questId}.`);
-  return analyzeQuestWithWalkthrough(questId, snapshot, walkthrough);
+  const reviewedRequirements = reviewedQuestRequirements(questId);
+  if (!reviewedRequirements) throw new Error(`Missing reviewed requirements for ${questId}.`);
+  return analyzeQuestWithWalkthrough(questId, {
+    ...snapshot,
+    reviewedRequirements,
+  }, walkthrough);
 };
 
 const unlocks = (overrides: Partial<UnlockState> = {}): UnlockState => ({
@@ -153,6 +158,7 @@ const fixture = ({
   connectGraph?: ConnectGraph;
 } = {}): QuestRouteAnalysisSnapshot => ({
   chunkDataVersion,
+  reviewedRequirements: reviewedQuestRequirements("Cook's Assistant")!,
   unlockedChunks: [...current],
   unlocks: { ...account, chunks: [...(account.chunks ?? [])] },
   itemSourceRecords: records,
@@ -242,6 +248,7 @@ const materializeGeneratedSnapshot = (
 
   return {
     chunkDataVersion: generatedChunkContent.version,
+    reviewedRequirements: catalogue,
     unlockedChunks: [...current],
     unlocks: {
       skills: { ...account.skills },
@@ -298,8 +305,12 @@ describe('analyzeQuest', () => {
   it.each(['The Restless Ghost', 'Rune Mysteries'] as const)(
     'returns an empty item analysis for the reviewed %s root',
     (questId) => {
-      expect(() => analyzeQuestPreparation(questId, fixture())).not.toThrow();
-      expect(analyzeQuestPreparation(questId, fixture()).items).toEqual([]);
+      const snapshot = {
+        ...fixture(),
+        reviewedRequirements: reviewedQuestRequirements(questId)!,
+      };
+      expect(() => analyzeQuestPreparation(questId, snapshot)).not.toThrow();
+      expect(analyzeQuestPreparation(questId, snapshot).items).toEqual([]);
     },
   );
 
@@ -466,6 +477,106 @@ describe('analyzeQuest', () => {
 
     expect(questRouteStatusForItems(analyzeQuest("Cook's Assistant", fixture({ records: cookSources() })).items))
       .toBe('READY_NOW');
+  });
+
+  it.each([
+    ['reviewed date', (changed: any) => { changed.reviewedAt = '2026-08-23'; }],
+    ['item key', (changed: any) => { changed.items[0].item.key = 'example item'; }],
+    ['item name', (changed: any) => { changed.items[0].item.name = 'Example item'; }],
+    ['quantity', (changed: any) => { changed.items[0].quantity = 2; }],
+    ['supply policy', (changed: any) => { changed.items[0].supplyPolicy = 'QUEST_PROVIDED'; }],
+    ['alternative key', (changed: any) => {
+      changed.items[0].alternatives[0].key = 'alternate example item';
+    }],
+    ['alternative name', (changed: any) => {
+      changed.items[0].alternatives[0].name = 'Alternate example item';
+    }],
+    ['note', (changed: any) => { changed.items[0].note = 'Changed reviewed note.'; }],
+  ] as const)(
+    'does not reuse cached analysis after injected %s changes at the same wiki revision',
+    (_label, mutate) => {
+    const walkthrough = walkthroughCatalogue.questWalkthroughFor("Cook's Assistant")!;
+    const commonSnapshot = fixture({
+      records: [
+        ...cookSources(),
+        source('Example item'),
+        source('Alternate example item'),
+      ],
+    });
+    const firstRequirements = {
+      questId: "Cook's Assistant",
+      wikiRevision: '15240921',
+      reviewedAt: '2026-08-22',
+      items: [{
+        item: { key: 'egg', name: 'Egg' },
+        quantity: 1,
+        supplyPolicy: 'PLAYER_OBTAINED' as const,
+        alternatives: [{ key: 'egg alternative', name: 'Egg alternative' }],
+        note: 'Original reviewed note.',
+      }],
+    };
+    const changedRequirements: any = structuredClone(firstRequirements);
+    mutate(changedRequirements);
+    const first = analyzeQuestWithWalkthrough("Cook's Assistant", {
+      ...commonSnapshot,
+      reviewedRequirements: firstRequirements,
+    }, walkthrough);
+    const changed = analyzeQuestWithWalkthrough("Cook's Assistant", {
+      ...commonSnapshot,
+      reviewedRequirements: changedRequirements,
+    }, walkthrough);
+
+    expect(changed).not.toBe(first);
+    expect(changed.items).toHaveLength(1);
+    expect(changed.items[0].requirement).toEqual(changedRequirements.items[0]);
+    },
+  );
+
+  it('does not reuse cached analysis after only the injected wiki revision changes', () => {
+    const walkthrough = walkthroughCatalogue.questWalkthroughFor("Cook's Assistant")!;
+    const commonSnapshot = fixture({ records: cookSources() });
+    const reviewed = reviewedQuestRequirements("Cook's Assistant")!;
+    const first = analyzeQuestWithWalkthrough("Cook's Assistant", {
+      ...commonSnapshot,
+      reviewedRequirements: structuredClone(reviewed),
+    }, walkthrough);
+    const changed = analyzeQuestWithWalkthrough("Cook's Assistant", {
+      ...commonSnapshot,
+      reviewedRequirements: { ...structuredClone(reviewed), wikiRevision: 'same-content-next-revision' },
+    }, walkthrough);
+
+    expect(changed).not.toBe(first);
+    expect(changed.items).toEqual(first.items);
+  });
+
+  it('uses a deterministic requirement fingerprint independent of object property insertion order', () => {
+    const walkthrough = walkthroughCatalogue.questWalkthroughFor("Cook's Assistant")!;
+    const commonSnapshot = fixture({ records: cookSources() });
+    const reviewed = reviewedQuestRequirements("Cook's Assistant")!;
+    const reordered = {
+      items: reviewed.items.map(requirement => ({
+        supplyPolicy: requirement.supplyPolicy,
+        quantity: requirement.quantity,
+        item: { name: requirement.item.name, key: requirement.item.key },
+        ...(requirement.note === undefined ? {} : { note: requirement.note }),
+        ...(requirement.alternatives === undefined ? {} : {
+          alternatives: requirement.alternatives.map(item => ({ name: item.name, key: item.key })),
+        }),
+      })),
+      reviewedAt: reviewed.reviewedAt,
+      wikiRevision: reviewed.wikiRevision,
+      questId: reviewed.questId,
+    };
+    const first = analyzeQuestWithWalkthrough("Cook's Assistant", {
+      ...commonSnapshot,
+      reviewedRequirements: structuredClone(reviewed),
+    }, walkthrough);
+    const reorderedResult = analyzeQuestWithWalkthrough("Cook's Assistant", {
+      ...commonSnapshot,
+      reviewedRequirements: reordered,
+    }, walkthrough);
+
+    expect(reorderedResult).toBe(first);
   });
 
   it('keeps omitted Egg source and transformation evidence locally incomplete', () => {
@@ -984,9 +1095,15 @@ describe('analyzeQuest', () => {
     });
   });
 
-  it('rejects quests outside the reviewed catalogue', () => {
-    expect(() => analyzeQuest('Dragon Slayer I', fixture()))
-      .toThrow('Dragon Slayer I');
+  it('rejects a mismatched injected requirement identity', () => {
+    const walkthrough = walkthroughCatalogue.questWalkthroughFor("Cook's Assistant")!;
+    expect(() => analyzeQuestWithWalkthrough("Cook's Assistant", {
+      ...fixture(),
+      reviewedRequirements: {
+        ...reviewedQuestRequirements("Cook's Assistant")!,
+        questId: 'Dragon Slayer I',
+      },
+    }, walkthrough)).toThrow('Cook\'s Assistant');
   });
 
 describe('quest walkthrough attachment', () => {

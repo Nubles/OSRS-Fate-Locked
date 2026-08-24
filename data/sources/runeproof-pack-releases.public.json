@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "catalogueRevision": "50a73f201153b2a4bcbeff994d54bf639c2879c33968ab06d674c3c6df221a0d",
+  "entries": [
+    {
+      "questId": "Cook's Assistant",
+      "packRevision": "runeproof-public-cooks-assistant-v1",
+      "catalogueRevision": "50a73f201153b2a4bcbeff994d54bf639c2879c33968ab06d674c3c6df221a0d",
+      "lifecycle": "PUBLIC_APPROVED"
+    },
+    {
+      "questId": "Sheep Shearer",
+      "packRevision": "runeproof-public-sheep-shearer-v1",
+      "catalogueRevision": "50a73f201153b2a4bcbeff994d54bf639c2879c33968ab06d674c3c6df221a0d",
+      "lifecycle": "PUBLIC_APPROVED"
+    },
+    {
+      "questId": "The Restless Ghost",
+      "packRevision": "runeproof-public-the-restless-ghost-v1",
+      "catalogueRevision": "50a73f201153b2a4bcbeff994d54bf639c2879c33968ab06d674c3c6df221a0d",
+      "lifecycle": "PUBLIC_APPROVED"
+    },
+    {
+      "questId": "Rune Mysteries",
+      "packRevision": "runeproof-public-rune-mysteries-v1",
+      "catalogueRevision": "50a73f201153b2a4bcbeff994d54bf639c2879c33968ab06d674c3c6df221a0d",
+      "lifecycle": "PUBLIC_APPROVED"
+    },
+    {
+      "questId": "Imp Catcher",
+      "packRevision": "runeproof-public-imp-catcher-v1",
+      "catalogueRevision": "50a73f201153b2a4bcbeff994d54bf639c2879c33968ab06d674c3c6df221a0d",
+      "lifecycle": "PUBLIC_APPROVED"
+    }
+  ]
+}

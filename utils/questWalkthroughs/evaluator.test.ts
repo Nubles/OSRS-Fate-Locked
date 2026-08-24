@@ -61,6 +61,12 @@ const snapshot = (
   unlockOverrides: Partial<QuestRouteAnalysisSnapshot['unlocks']> = {},
 ): QuestRouteAnalysisSnapshot => ({
   chunkDataVersion: 1,
+  reviewedRequirements: {
+    questId: 'Test Quest',
+    wikiRevision: 'fixture-revision',
+    reviewedAt: '2026-08-22',
+    items: [],
+  },
   unlockedChunks,
   unlocks: {
     skills: {}, levels: {}, regions: [], chunks: [], quests: [], guilds: [], merchants: [],

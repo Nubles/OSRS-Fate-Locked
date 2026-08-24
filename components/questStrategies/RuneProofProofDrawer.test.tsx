@@ -3,8 +3,12 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
-import type { RuneProofCoachModel } from '../../utils/questStrategies/coach';
+import type {
+  RuneProofCoachModel,
+  RuneProofPackCoachModel,
+} from '../../utils/questStrategies/coach';
 import type { ChunkPickerWalkthroughSource } from '../../utils/questWalkthroughs/model';
+import { branchingPack } from '../../utils/questStrategies/testFixtures';
 import { RuneProofProofDrawer } from './RuneProofProofDrawer';
 
 afterEach(cleanup);
@@ -39,6 +43,7 @@ describe('RuneProofProofDrawer', () => {
     const user = userEvent.setup();
     render(
       <RuneProofProofDrawer
+        variant="LEGACY"
         proof={{
           source: {
             kind: 'INDEPENDENT_REVIEW',
@@ -68,7 +73,7 @@ describe('RuneProofProofDrawer', () => {
 
   it('keeps revision, raw source wording, and diagnostics hidden until its accessible disclosure opens', async () => {
     const user = userEvent.setup();
-    render(<RuneProofProofDrawer proof={proof} />);
+    render(<RuneProofProofDrawer variant="LEGACY" proof={proof} />);
 
     const disclosure = screen.getByRole('button', { name: 'Proof and sources' });
     expect(disclosure.getAttribute('aria-expanded')).toBe('false');
@@ -96,6 +101,7 @@ describe('RuneProofProofDrawer', () => {
     const user = userEvent.setup();
     render(
       <RuneProofProofDrawer
+        variant="LEGACY"
         proof={{
           ...proof,
           source: {
@@ -111,5 +117,29 @@ describe('RuneProofProofDrawer', () => {
 
     expect(screen.getByText('Chunk Picker reuse status: UNVERIFIED')).toBeTruthy();
     expect(screen.queryByText(/Review record:/)).toBeNull();
+  });
+
+  it('renders generic pack sources, evidence decisions, and maintainer diagnostics', async () => {
+    const user = userEvent.setup();
+    const packProof: RuneProofPackCoachModel['proof'] = {
+      sources: branchingPack.sources,
+      evidence: branchingPack.evidence,
+      diagnostics: ['Pack diagnostic for maintainers.'],
+    };
+    render(<RuneProofProofDrawer variant="PACK" proof={packProof} />);
+
+    await user.click(screen.getByRole('button', { name: 'Proof and sources' }));
+
+    expect(screen.getByText('source:example')).toBeTruthy();
+    expect(screen.getByText('INDEPENDENT_REVIEW')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'urn:runeproof:fixture-review' })).toBeTruthy();
+    expect(screen.getByText('Revision: review-v1')).toBeTruthy();
+    expect(screen.getByText('Author: Fixture reviewer')).toBeTruthy();
+    expect(screen.getByText('Literal compiler fixture review.')).toBeTruthy();
+    expect(screen.getByText('review:example')).toBeTruthy();
+    expect(screen.getByText('Source: source:example')).toBeTruthy();
+    expect(screen.getByText('Locator: fixture:root')).toBeTruthy();
+    expect(screen.getByText('Reviewed for compiler tests.')).toBeTruthy();
+    expect(screen.getByText('Pack diagnostic for maintainers.')).toBeTruthy();
   });
 });

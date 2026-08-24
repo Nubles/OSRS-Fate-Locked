@@ -19,6 +19,8 @@ const pullRequestCommandOrder = [
   'npm ci --no-audit --no-fund',
   'npm run changelog:verify',
   ...verificationCommands,
+  'npm run build:runeproof-preview',
+  'git diff --exit-code',
 ];
 
 const deployCommandOrder = [
@@ -327,6 +329,12 @@ describe('CI workflow contract', () => {
     expectNoNpmInstall(commands);
     expect(qualityJob).toMatch(
       /- name: Build\n\s+run: npm run build\n\s+env:\n\s+VITE_BASE: \/\$\{\{ github\.event\.repository\.name \}\}\//,
+    );
+    expect(qualityJob).toMatch(
+      /- name: Build RuneProof private preview\n\s+run: npm run build:runeproof-preview\n\s+env:\n\s+VITE_BASE: \/\$\{\{ github\.event\.repository\.name \}\}\//,
+    );
+    expect(qualityJob).toMatch(
+      /- name: Verify builds leave tracked source unchanged\n\s+run: git diff --exit-code/,
     );
   });
 

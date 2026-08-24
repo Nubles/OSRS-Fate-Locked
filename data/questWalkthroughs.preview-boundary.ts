@@ -1,5 +1,5 @@
-import { f2pQuestMembershipFor } from './f2pQuestMembership';
 import { reviewedQuestRequirements } from './questItemRequirements';
+import { runeProofCatalogueFor } from './runeProofQuestCatalogue';
 import { questWalkthroughReleaseFor } from './questWalkthroughRelease';
 import { questWalkthroughCatalogue } from './questWalkthroughs';
 import {
@@ -17,13 +17,13 @@ const deepFreeze = <T>(value: T): T => {
 
 const compileQuestStrategyCatalogue = (): readonly QuestStrategyDefinition[] => (
   questWalkthroughCatalogue.flatMap((walkthrough) => {
-    const membership = f2pQuestMembershipFor(walkthrough.questId);
+    const catalogue = runeProofCatalogueFor(walkthrough.questId);
     const roots = reviewedQuestRequirements(walkthrough.questId);
     const release = questWalkthroughReleaseFor(walkthrough.questId);
-    if (!membership || !roots || !release || release.revision !== walkthrough.revision) return [];
+    if (!catalogue || !roots || !release || release.revision !== walkthrough.revision) return [];
 
     const strategy = questStrategyFromWalkthrough(walkthrough, {
-      membership,
+      catalogue,
       rootRequirements: roots.items,
     });
     return strategy ? [strategy] : [];

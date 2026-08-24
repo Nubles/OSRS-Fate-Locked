@@ -24,24 +24,38 @@ describe('RuneProof normal-build module boundary', () => {
     vi.unstubAllEnvs();
   });
 
-  it('redirects only the two private catalogue module IDs', async () => {
+  it('redirects every exact private module ID with or without an extension', async () => {
     const boundaryPlugin = await normalBoundaryPlugin();
-    const resolve = vi.fn(() => 'public-safe-module');
+    const resolve = vi.fn((source: string) => `public-safe:${source}`);
     const resolveId = boundaryPlugin.resolveId as (source: string, importer: string) => unknown;
     const importer = '/virtual/data/questWalkthroughLoader.ts';
 
-    for (const source of [
-      './questWalkthroughs',
-      './questWalkthroughs.ts',
-      './questWalkthroughs.preview-boundary',
-      './questWalkthroughs.preview-boundary.ts',
-    ]) {
-      expect(await resolveId.call({ resolve }, source, importer)).toBe('public-safe-module');
+    const redirects = new Map([
+      ['questWalkthroughs', 'questWalkthroughs.public'],
+      ['questWalkthroughs.preview-boundary', 'questWalkthroughs.public'],
+      ['runeProofPacks.preview-boundary', 'runeProofPacks.public'],
+      ['runeProofPackRelease.preview', 'runeProofPackRelease.public'],
+      ['runeProofPlatformReviewHarness.preview', 'runeProofPlatformReviewHarness.public'],
+    ]);
+    for (const [privateId, publicId] of redirects) {
+      for (const extension of ['', '.ts']) {
+        expect(await resolveId.call(
+          { resolve },
+          `./${privateId}${extension}`,
+          importer,
+        )).toBe(`public-safe:./${publicId}`);
+      }
     }
 
-    expect(await resolveId.call({ resolve }, './notquestWalkthroughs', importer)).toBeNull();
-    expect(resolve).toHaveBeenCalledTimes(4);
-    expect(resolve).toHaveBeenCalledWith('./questWalkthroughs.public', importer, { skipSelf: true });
+    for (const nearMatch of [
+      './notquestWalkthroughs',
+      './runeProofPacks.preview-boundary-extra',
+      './runeProofPackRelease.preview.json',
+      './runeProofPlatformReviewHarness.previewed',
+    ]) {
+      expect(await resolveId.call({ resolve }, nearMatch, importer)).toBeNull();
+    }
+    expect(resolve).toHaveBeenCalledTimes(10);
   });
 
   it('keeps the private catalogue excluded when a preview flag is inherited', async () => {
@@ -57,5 +71,25 @@ describe('RuneProof normal-build module boundary', () => {
       '/virtual/data/questWalkthroughLoader.ts',
       { skipSelf: true },
     );
+  });
+
+  it('keeps private manifest and harness imports owned by the preview aggregator', async () => {
+    const sources = import.meta.glob([
+      './data/**/*.{ts,tsx}',
+      './utils/**/*.{ts,tsx}',
+      './hooks/**/*.{ts,tsx}',
+      './components/**/*.{ts,tsx}',
+    ], { eager: true, import: 'default', query: '?raw' });
+    const violations: string[] = [];
+    for (const [path, value] of Object.entries(sources)) {
+      if (/\.test\.[jt]sx?$/.test(path) || typeof value !== 'string') continue;
+      const source = value;
+      if (/from\s+['"][^'"]*runeProofPackRelease\.preview(?:\.[cm]?[jt]s)?['"]|import\(['"][^'"]*runeProofPackRelease\.preview(?:\.[cm]?[jt]s)?['"]\)/.test(source)
+        || /from\s+['"][^'"]*runeProofPlatformReviewHarness\.preview(?:\.[cm]?[jt]s)?['"]|import\(['"][^'"]*runeProofPlatformReviewHarness\.preview(?:\.[cm]?[jt]s)?['"]\)/.test(source)) {
+        const owner = path.replace(/^\.\//, '');
+        if (owner !== 'data/runeProofPacks.preview-boundary.ts') violations.push(owner);
+      }
+    }
+    expect(violations).toEqual([]);
   });
 });

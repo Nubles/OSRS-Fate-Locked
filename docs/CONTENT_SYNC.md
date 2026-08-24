@@ -66,6 +66,11 @@ GitHub handoff live in the [release verification checklist](RELEASE_CHECKLIST.md
   reviewed explicitly.
 - `npm run quests:verify` is an offline, deterministic check of the committed
   official list, stable page revisions, evidence audit, and runtime fingerprints.
+- `npm run runeproof:catalogue:verify` is an offline, deterministic check of the
+  committed 210-objective RuneProof catalogue and all pinned local inputs.
+- `npm run runeproof:coverage:verify` is an offline, deterministic check of the
+  per-objective coverage matrix, exact pack-validation evidence, and exact
+  preview/public release revisions.
 - `npm run content:verify` is the offline, deterministic aggregate used by
   pull-request and deploy CI. It includes Diary, chunk, quest, and baseline
   verification and is read-only.
@@ -142,6 +147,34 @@ records both approved Chunk Picker commits so older evidence remains valid.
 
 Generated data is never hand-edited. Update its committed source snapshot or
 its generator, run the appropriate sync command, and review the resulting diff.
+
+### RuneProof catalogue and coverage
+
+Regenerate and verify the RuneProof catalogue and coverage report with:
+
+```bash
+npm run runeproof:catalogue:sync
+npm run runeproof:catalogue:verify
+npm run runeproof:coverage:sync
+npm run runeproof:coverage:verify
+```
+
+Catalogue sync reads only pinned local quest, requirement-audit, F2P-membership,
+and reviewed complexity-override sources. It does not contact the network.
+Coverage sync derives one row for every catalogue objective from the committed
+pack-validation evidence and exact preview/public manifests. It reports gaps;
+it does not bless, promote, or fabricate absent packs or conditional semantics.
+
+Milestone 1 intentionally retains 205 pack gaps. Final 210-pack enforcement is
+a separate read-only gate and must be requested explicitly:
+
+```bash
+node scripts/runeproof-coverage.mjs --check --require-complete
+```
+
+That final gate requires all 210 packs to be compiler-valid, every conditional
+dimension to be inspected, and every required dimension to be modelled and
+validated. It is not enabled by `content:verify` at Milestone 1.
 
 ## What's automatic vs. what needs a human — and why
 

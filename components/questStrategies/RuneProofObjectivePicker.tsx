@@ -25,7 +25,12 @@ export function RuneProofObjectivePicker({
   recommendations,
   onSelect,
 }: RuneProofObjectivePickerProps) {
-  if (recommendations.length === 0) return null;
+  const visibleRecommendations = recommendations.filter(recommendation => (
+    recommendation.readiness === 'READY'
+    || recommendation.readiness === 'CONFIRM'
+    || recommendation.readiness === 'BLOCKED'
+  )).slice(0, 3);
+  if (visibleRecommendations.length === 0) return null;
 
   return (
     <section
@@ -37,7 +42,7 @@ export function RuneProofObjectivePicker({
         Recommended RuneProof quests
       </h3>
       <div className="mt-2 space-y-1.5">
-        {recommendations.map(recommendation => (
+        {visibleRecommendations.map(recommendation => (
           <button
             key={recommendation.questId}
             type="button"

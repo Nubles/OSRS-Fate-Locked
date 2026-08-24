@@ -1,14 +1,33 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { questStrategyFor } from '../../data/questWalkthroughs.preview-boundary';
 import type { ChunkKey, ItemRoute } from '../../utils/questRoutes/model';
 import type { QuestPreparationRouteAnalysis, QuestRouteAnalysis } from '../../utils/questRoutes/analyzeQuest';
-import { buildRuneProofCoachModel, type RuneProofCoachModel } from '../../utils/questStrategies/coach';
+import {
+  buildRuneProofCoachModel,
+  buildRuneProofPackCoachModel,
+  type RuneProofCoachCompletionTarget,
+  type RuneProofCoachModel,
+  type RuneProofPackCoachAction,
+  type RuneProofPackCoachModel,
+} from '../../utils/questStrategies/coach';
 import type { QuestStrategyDefinition } from '../../utils/questStrategies/model';
+import {
+  branchOption,
+  branchNeedsReviewPack,
+  branchingPack,
+  combatPack,
+  emptyProgressFor,
+  fullyConfirmedProgress,
+  acquiredItemPack,
+  initialItemModel,
+  itemQuantityPack,
+  readyRequirementSnapshot,
+} from '../../utils/questStrategies/testFixtures';
 import { RuneProofCoach } from './RuneProofCoach';
 
 afterEach(cleanup);
@@ -151,6 +170,7 @@ const ImpCatcherYellowFirstHarness = ({
 
   return (
     <RuneProofCoach
+      variant="LEGACY"
       model={model}
       onConfirmAction={actionId => {
         const action = strategy.actions.find(candidate => candidate.id === actionId);
@@ -181,6 +201,7 @@ const ImpCatcherLockedAlternativeHarness = ({
 
   return (
     <RuneProofCoach
+      variant="LEGACY"
       model={model}
       onConfirmAction={actionId => {
         const action = strategy.actions.find(candidate => candidate.id === actionId);
@@ -323,7 +344,7 @@ const emptyRouteModel: RuneProofCoachModel = {
 
 describe('RuneProofCoach', () => {
   it('keeps the selected route progress exposed in text and through a quest-scoped progressbar', () => {
-    render(<RuneProofCoach model={modelWithPotNext} onConfirmAction={() => undefined} />);
+    render(<RuneProofCoach variant="LEGACY" model={modelWithPotNext} onConfirmAction={() => undefined} />);
 
     const progress = screen.getByRole(
       'progressbar',
@@ -337,6 +358,7 @@ describe('RuneProofCoach', () => {
   it('puts the reviewed objective and current pot action before the compact route', () => {
     render(
       <RuneProofCoach
+        variant="LEGACY"
         model={modelWithPotNext}
         onConfirmAction={() => undefined}
       />,
@@ -378,6 +400,7 @@ describe('RuneProofCoach', () => {
     };
     render(
       <RuneProofCoach
+        variant="LEGACY"
         model={modelWithUnmappedFinalStep}
         onConfirmAction={() => undefined}
       />,
@@ -394,6 +417,7 @@ describe('RuneProofCoach', () => {
     const user = userEvent.setup();
     render(
       <RuneProofCoach
+        variant="LEGACY"
         model={modelWithPotNext}
         onConfirmAction={() => undefined}
       />,
@@ -428,6 +452,7 @@ describe('RuneProofCoach', () => {
     render(
       <div onClick={onHostClick}>
         <RuneProofCoach
+          variant="LEGACY"
           model={freshModel}
           onConfirmAction={onConfirmAction}
         />
@@ -538,8 +563,8 @@ describe('RuneProofCoach', () => {
   it('scopes objective, next-action, and route labels to each coach instance', () => {
     render(
       <>
-        <RuneProofCoach model={modelWithPotNext} onConfirmAction={() => undefined} />
-        <RuneProofCoach model={modelWithPotNext} onConfirmAction={() => undefined} />
+        <RuneProofCoach variant="LEGACY" model={modelWithPotNext} onConfirmAction={() => undefined} />
+        <RuneProofCoach variant="LEGACY" model={modelWithPotNext} onConfirmAction={() => undefined} />
       </>,
     );
 
@@ -577,6 +602,7 @@ describe('RuneProofCoach', () => {
     ].forEach(chunk => {
       const view = render(
         <RuneProofCoach
+          variant="LEGACY"
           model={modelWithCurrentChunk(chunk)}
           onConfirmAction={() => undefined}
         />,
@@ -590,7 +616,7 @@ describe('RuneProofCoach', () => {
 
   it('keeps an empty alternatives disclosure before proof in the coach sequence', async () => {
     const user = userEvent.setup();
-    render(<RuneProofCoach model={emptyRouteModel} onConfirmAction={() => undefined} />);
+    render(<RuneProofCoach variant="LEGACY" model={emptyRouteModel} onConfirmAction={() => undefined} />);
 
     const alternatives = screen.getByRole('button', { name: 'Other legal sources' });
     const proofDrawer = screen.getByRole('button', { name: 'Proof and sources' });
@@ -605,7 +631,7 @@ describe('RuneProofCoach', () => {
   });
 
   it('renders a completed route without a current action', () => {
-    render(<RuneProofCoach model={completedModel} onConfirmAction={() => undefined} />);
+    render(<RuneProofCoach variant="LEGACY" model={completedModel} onConfirmAction={() => undefined} />);
 
     expect(screen.getByText('All reviewed actions are complete.')).toBeTruthy();
     expect(screen.queryByRole('button', { name: /on map/i })).toBeNull();
@@ -614,7 +640,7 @@ describe('RuneProofCoach', () => {
   });
 
   it('renders an empty route without treating it as a completed journey', () => {
-    render(<RuneProofCoach model={emptyRouteModel} onConfirmAction={() => undefined} />);
+    render(<RuneProofCoach variant="LEGACY" model={emptyRouteModel} onConfirmAction={() => undefined} />);
 
     expect(screen.getByText('No reviewed actions are available for this objective.')).toBeTruthy();
     expect(within(screen.getByRole('list', { name: "Cook's Assistant route" }))
@@ -623,11 +649,406 @@ describe('RuneProofCoach', () => {
 
   it('explains empty proof arrays after opening the proof disclosure', async () => {
     const user = userEvent.setup();
-    render(<RuneProofCoach model={emptyRouteModel} onConfirmAction={() => undefined} />);
+    render(<RuneProofCoach variant="LEGACY" model={emptyRouteModel} onConfirmAction={() => undefined} />);
 
     await user.click(screen.getByRole('button', { name: 'Proof and sources' }));
 
     expect(screen.getByText('No pinned source wording recorded.')).toBeTruthy();
     expect(screen.getByText('No route diagnostics recorded.')).toBeTruthy();
+  });
+});
+
+const surfacePackAction: RuneProofPackCoachAction = {
+  id: 'pack:surface',
+  instruction: 'Cross the reviewed surface path.',
+  state: 'COMPLETED',
+  locationLabel: 'Surface path',
+  mapChunks: ['47,51', '48,51'],
+  preferredMethodLabel: 'Reviewed surface method',
+  confirmationAllowed: false,
+  current: false,
+  completionTarget: { kind: 'CHECKPOINT', id: 'surface:checkpoint' },
+  reviewedLocation: {
+    kind: 'SURFACE',
+    label: 'Surface path',
+    plane: 0,
+    mapChunks: ['47,51', '48,51'],
+  },
+  unblockActions: [],
+  requirementAdvisories: [],
+};
+
+const instancePackAction = (
+  completionTarget: RuneProofCoachCompletionTarget = { kind: 'ACTION', id: 'pack:guardian' },
+  overrides: Partial<RuneProofPackCoachAction> = {},
+): RuneProofPackCoachAction => ({
+  id: 'pack:guardian',
+  instruction: 'Defeat the guardian in its reviewed arena.',
+  state: 'BLOCKED',
+  locationLabel: 'Guardian arena',
+  mapChunks: ['50,50', '51,50'],
+  preferredMethodLabel: 'Evidence-backed guardian method',
+  blockerText: 'Requires Mining level 99.',
+  confirmationAllowed: false,
+  current: true,
+  completionTarget,
+  reviewedLocation: {
+    kind: 'INSTANCE',
+    label: 'Guardian arena',
+    instanceId: 'guardian-arena',
+    plane: 1,
+    entranceChunks: ['50,50', '51,50'],
+    mapChunks: ['50,50', '51,50'],
+  },
+  unblockActions: ['Raise Mining to 99.'],
+  requirementAdvisories: [
+    'Transport ferry is one-way from 47,51 to 50,50; review a separate return route.',
+  ],
+  ...overrides,
+});
+
+const emptyProjection = () => ({
+  actionIds: [] as string[],
+  itemKeys: [] as string[],
+  manualIds: [] as string[],
+  checkpointIds: [] as string[],
+});
+
+const packCoachModel = (
+  overrides: Partial<RuneProofPackCoachModel> = {},
+): RuneProofPackCoachModel => {
+  const doNow = instancePackAction();
+  return {
+    questId: 'Pack Quest',
+    proofState: 'BLOCKED',
+    branch: {
+      selectedBranchId: 'local',
+      recommendedBranchId: 'local',
+      recommendationReason: 'The local route keeps reviewed unlock cost lowest.',
+      pinned: true,
+      options: [
+        branchOption('local', { selected: true, recommended: true, pinned: true }),
+        branchOption('remote', { state: 'BLOCKED' }),
+      ],
+    },
+    progress: {
+      completed: 1,
+      total: 2,
+      activeConfirmations: emptyProjection(),
+      inactiveConfirmations: emptyProjection(),
+    },
+    doNow,
+    actions: [surfacePackAction, doNow],
+    initialItems: [initialItemModel({
+      quantity: 2,
+      evidenceIds: ['review:milk'],
+      options: [
+        { itemKey: 'bucket of milk', label: 'Bucket of milk', confirmed: false },
+        { itemKey: 'milk substitute', label: 'Milk substitute', confirmed: false },
+      ],
+    })],
+    manualConfirmations: [{
+      id: 'manual:preflight',
+      prompt: 'Confirm the reviewed preflight consequence.',
+      scopes: ['PREFLIGHT'],
+      evidenceIds: ['review:preflight'],
+      confirmed: false,
+    }],
+    currentCombatCards: [{
+      actionId: 'pack:guardian',
+      id: 'combat:guardian',
+      title: 'Guardian readiness',
+      encounterSummary: 'One reviewed guardian encounter.',
+      phases: ['Opening'],
+      mandatoryMechanics: ['Avoid the marked tile.'],
+      recommendedCapabilities: ['A reviewed damage option'],
+      recommendedSupplies: ['Food'],
+      deathEscapeReentryNotes: ['Escape through the entrance.', 'Re-enter there.'],
+      deterministicBlockers: ['Requires Mining level 99.'],
+      confirmationId: 'combat:guardian:ready',
+      confirmed: false,
+    }],
+    reviewedAlternatives: [{
+      id: 'alternative:tunnel',
+      label: 'Reviewed tunnel method',
+      state: 'CONFIRM',
+      blockerReasons: [],
+      unblockActions: [],
+      evidenceIds: ['review:tunnel-method'],
+      reviewedLocation: {
+        kind: 'SURFACE',
+        label: 'Tunnel entrance',
+        plane: 0,
+        mapChunks: ['49,50'],
+      },
+      manualConfirmations: [{
+        id: 'manual:tunnel',
+        prompt: 'Confirm the reviewed tunnel timing.',
+        scopes: ['ALTERNATIVE'],
+        evidenceIds: ['review:tunnel-method'],
+        confirmed: false,
+      }],
+    }],
+    alternativeSources: [],
+    mainJourneyText: 'Cross the reviewed surface path. Defeat the guardian.',
+    proof: {
+      sources: branchingPack.sources,
+      evidence: branchingPack.evidence,
+      diagnostics: ['Maintainer pack diagnostic.'],
+    },
+    ...overrides,
+  };
+};
+
+const packCallbacks = () => ({
+  onSetCompletion: vi.fn(),
+  onSelectBranch: vi.fn(),
+  onSetItemConfirmed: vi.fn(),
+  onSetManualConfirmed: vi.fn(),
+});
+
+describe('RuneProof PACK coach', () => {
+  it('renders reviewed pack semantics in order and maps only the instance entrance', async () => {
+    const user = userEvent.setup();
+    const callbacks = packCallbacks();
+    render(<RuneProofCoach variant="PACK" model={packCoachModel()} {...callbacks} />);
+
+    const header = screen.getByRole('heading', { name: 'Pack Quest' });
+    expect(screen.getByText('Proof state: Blocked')).toBeTruthy();
+    expect(screen.getByText('1/2 complete')).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Quest route' })).toBeTruthy();
+    expect(screen.getByText('2 × Bucket of milk')).toBeTruthy();
+    expect(screen.getByText('Confirm the reviewed preflight consequence.')).toBeTruthy();
+    expect(screen.getByRole('article', { name: 'Guardian readiness' })).toBeTruthy();
+
+    const doNowHeading = screen.getByRole('heading', { name: 'Do now' });
+    const doNow = doNowHeading.closest('section');
+    if (!doNow) throw new Error('Missing Do now section.');
+    expect(within(doNow).getByText('Instance: guardian-arena')).toBeTruthy();
+    expect(within(doNow).getByText('Entrance chunks: 50,50 · 51,50')).toBeTruthy();
+    expect(within(doNow).getByText('Plane: 1')).toBeTruthy();
+    expect(within(doNow).getByText('Reviewed method: Evidence-backed guardian method'))
+      .toBeTruthy();
+
+    const timeline = screen.getByRole('list', { name: 'Pack Quest route' });
+    expect(within(timeline).getByText('Surface chunks: 47,51 · 48,51')).toBeTruthy();
+    expect(within(timeline).getByText('Plane: 0')).toBeTruthy();
+    const guidance = screen.getByRole('region', { name: 'Current action guidance' });
+    expect(within(guidance).getByText('Requires Mining level 99.')).toBeTruthy();
+    expect(within(guidance).getByText('Raise Mining to 99.')).toBeTruthy();
+    expect(within(guidance).getByText(
+      'Transport ferry is one-way from 47,51 to 50,50; review a separate return route.',
+    )).toBeTruthy();
+    expect(screen.getByText('Reviewed tunnel method')).toBeTruthy();
+    expect(screen.getAllByText('Needs confirmation').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/review:tunnel-method/).length).toBeGreaterThan(0);
+
+    const initialItems = screen.getByRole('region', { name: 'Reviewed initial items' });
+    const combat = screen.getByRole('article', { name: 'Guardian readiness' });
+    const alternative = screen.getByRole('article', { name: 'Reviewed tunnel method' });
+    const proof = screen.getByRole('button', { name: 'Proof and sources' });
+    expect(header.compareDocumentPosition(initialItems) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(initialItems.compareDocumentPosition(combat) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(combat.compareDocumentPosition(doNow) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(doNow.compareDocumentPosition(timeline) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(timeline.compareDocumentPosition(guidance) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(guidance.compareDocumentPosition(alternative) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(alternative.compareDocumentPosition(proof) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+
+    await user.click(within(doNow).getByRole('button', {
+      name: 'Show entrance for Defeat the guardian in its reviewed arena. on map',
+    }));
+    const map = screen.getByRole('dialog', {
+      name: 'Temporary map for Entrance for Defeat the guardian in its reviewed arena.',
+    });
+    expect(within(map).getByText('Chunk 50,50')).toBeTruthy();
+    expect(within(map).getByText(
+      'Entrance: Guardian arena · Instance: guardian-arena · Plane: 1',
+    )).toBeTruthy();
+    expect(within(map).getByText(/Instance: guardian-arena/)).toBeTruthy();
+    expect(within(map).getByText(/Plane: 1/)).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Pack Quest' })).toBeTruthy();
+    expect(within(map).queryByText('Chunk 51,50')).toBeNull();
+    expect(within(map).queryByText('Chunk 47,51')).toBeNull();
+  });
+
+  it('routes branch, root-item, generic manual, combat, and alternative writes by exact ID', () => {
+    const callbacks = packCallbacks();
+    render(<RuneProofCoach variant="PACK" model={packCoachModel()} {...callbacks} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Use Remote route' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Milk substitute' }));
+    fireEvent.click(screen.getByRole('checkbox', {
+      name: 'Confirm the reviewed preflight consequence.',
+    }));
+    fireEvent.click(screen.getByRole('checkbox', {
+      name: /I am ready to follow this reviewed guide/i,
+    }));
+    fireEvent.click(screen.getByRole('checkbox', {
+      name: 'Confirm the reviewed tunnel timing.',
+    }));
+
+    expect(callbacks.onSelectBranch).toHaveBeenCalledWith('remote');
+    expect(callbacks.onSetItemConfirmed).toHaveBeenCalledWith('milk substitute', true);
+    expect(callbacks.onSetManualConfirmed.mock.calls).toEqual([
+      ['manual:preflight', true],
+      ['combat:guardian:ready', true],
+      ['manual:tunnel', true],
+    ]);
+  });
+
+  it('clears a pending branch-focus request when the objective changes', () => {
+    const callbacks = packCallbacks();
+    const first = packCoachModel();
+    const { rerender } = render(
+      <RuneProofCoach variant="PACK" model={first} {...callbacks} />,
+    );
+    const remoteButton = screen.getByRole('button', { name: 'Use Remote route' });
+    remoteButton.focus();
+    fireEvent.click(remoteButton);
+
+    const second = packCoachModel({
+      questId: 'Another Pack Quest',
+      branch: {
+        ...first.branch,
+        selectedBranchId: 'remote',
+        options: first.branch.options.map(option => ({
+          ...option,
+          selected: option.id === 'remote',
+        })),
+      },
+    });
+    rerender(<RuneProofCoach variant="PACK" model={second} {...callbacks} />);
+
+    expect(document.activeElement).not.toBe(
+      screen.getByRole('article', { name: 'Remote route' }),
+    );
+  });
+
+  it.each((() => {
+    const readyPack = acquiredItemPack();
+    const blockedPack = itemQuantityPack({ reviewedQuantity: 2, requiredQuantity: 2 });
+    const needsReviewPack = branchNeedsReviewPack(combatPack, 'main');
+    return [
+      {
+        expected: 'READY' as const,
+        model: buildRuneProofPackCoachModel({
+          pack: readyPack,
+          progress: emptyProgressFor(readyPack, 'run-a'),
+          requirementSnapshot: readyRequirementSnapshot(),
+          completedQuestIds: new Set<string>(),
+        }),
+      },
+      {
+        expected: 'CONFIRM' as const,
+        model: buildRuneProofPackCoachModel({
+          pack: combatPack,
+          progress: emptyProgressFor(combatPack, 'run-a'),
+          requirementSnapshot: readyRequirementSnapshot(),
+          completedQuestIds: new Set<string>(),
+        }),
+      },
+      {
+        expected: 'BLOCKED' as const,
+        model: buildRuneProofPackCoachModel({
+          pack: blockedPack,
+          progress: emptyProgressFor(blockedPack, 'run-a'),
+          requirementSnapshot: readyRequirementSnapshot(),
+          completedQuestIds: new Set<string>(),
+        }),
+      },
+      {
+        expected: 'NEEDS_REVIEW' as const,
+        model: buildRuneProofPackCoachModel({
+          pack: needsReviewPack,
+          progress: emptyProgressFor(needsReviewPack, 'run-a'),
+          requirementSnapshot: readyRequirementSnapshot(),
+          completedQuestIds: new Set<string>(),
+        }),
+      },
+      {
+        expected: 'COMPLETE' as const,
+        model: buildRuneProofPackCoachModel({
+          pack: readyPack,
+          progress: fullyConfirmedProgress(readyPack, 'main'),
+          requirementSnapshot: readyRequirementSnapshot(),
+          completedQuestIds: new Set<string>(),
+        }),
+      },
+    ];
+  })())('keeps the single-branch $expected golden view free of a selector', ({ expected, model }) => {
+    expect(model.proofState).toBe(expected);
+    expect(model.branch.options).toHaveLength(1);
+    render(<RuneProofCoach variant="PACK" model={model} {...packCallbacks()} />);
+    expect(screen.queryByRole('group', { name: 'Quest route' })).toBeNull();
+  });
+
+  it.each([
+    { kind: 'ACTION', id: 'target:id' },
+    { kind: 'ITEM', id: 'target:id' },
+    { kind: 'MANUAL', id: 'target:id' },
+    { kind: 'CHECKPOINT', id: 'target:id' },
+  ] as const)('writes and controls the exact $kind completion target', (target) => {
+    const action = instancePackAction(target, {
+      state: 'DO_NOW',
+      blockerText: undefined,
+      confirmationAllowed: true,
+      unblockActions: [],
+      requirementAdvisories: [],
+    });
+    const callbacks = packCallbacks();
+    const base = packCoachModel({ doNow: action, actions: [action] });
+    const wrongNamespace = emptyProjection();
+    const wrongKey = target.kind === 'ACTION' ? 'itemKeys'
+      : target.kind === 'ITEM' ? 'manualIds'
+        : target.kind === 'MANUAL' ? 'checkpointIds'
+          : 'actionIds';
+    wrongNamespace[wrongKey].push(target.id);
+    const { rerender } = render(
+      <RuneProofCoach
+        variant="PACK"
+        model={{
+          ...base,
+          progress: { ...base.progress, activeConfirmations: wrongNamespace },
+        }}
+        {...callbacks}
+      />,
+    );
+    const completion = screen.getByRole('checkbox', {
+      name: 'Confirm Defeat the guardian in its reviewed arena.',
+    }) as HTMLInputElement;
+    expect(completion.checked).toBe(false);
+    fireEvent.click(completion);
+    fireEvent.click(completion);
+    expect(callbacks.onSetCompletion.mock.calls).toEqual([
+      [target, true],
+      [target, true],
+    ]);
+
+    const active = emptyProjection();
+    const exactKey = target.kind === 'ACTION' ? 'actionIds'
+      : target.kind === 'ITEM' ? 'itemKeys'
+        : target.kind === 'MANUAL' ? 'manualIds'
+          : 'checkpointIds';
+    active[exactKey].push(target.id);
+    const confirmed = packCoachModel({
+      doNow: action,
+      actions: [action],
+      progress: { ...base.progress, activeConfirmations: active },
+    });
+    rerender(<RuneProofCoach variant="PACK" model={confirmed} {...callbacks} />);
+    const persisted = screen.getByRole('checkbox', {
+      name: 'Confirm Defeat the guardian in its reviewed arena.',
+    }) as HTMLInputElement;
+    expect(persisted.checked).toBe(true);
+    fireEvent.click(persisted);
+    expect(callbacks.onSetCompletion).toHaveBeenLastCalledWith(target, false);
   });
 });

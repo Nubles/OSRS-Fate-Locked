@@ -1,6 +1,6 @@
-import { f2pQuestMembershipFor } from './f2pQuestMembership';
 import { reviewedQuestRequirements } from './questItemRequirements';
 import { publicQuestWalkthroughReleaseFor } from './questWalkthroughPublicRelease';
+import { runeProofCatalogueFor } from './runeProofQuestCatalogue';
 import {
   questStrategyFromWalkthrough,
   type QuestStrategyDefinition,
@@ -117,14 +117,14 @@ const publicDefinition = (
   actions: readonly QuestWalkthroughActionDefinition[],
 ): QuestWalkthroughDefinition => {
   const release = publicQuestWalkthroughReleaseFor(questId);
-  const membership = f2pQuestMembershipFor(questId);
-  if (!release || !membership) throw new Error(`Missing public RuneProof release metadata for ${questId}.`);
+  const catalogue = runeProofCatalogueFor(questId);
+  if (!release || !catalogue) throw new Error(`Missing public RuneProof release metadata for ${questId}.`);
 
   return {
     questId,
     revision: release.revision,
     releaseStatus: release.releaseStatus,
-    source: independentlyAuthoredSource(membership.wikiTitle, wikiRevision, wikiRevisionTimestamp),
+    source: independentlyAuthoredSource(catalogue.wikiTitle, wikiRevision, wikiRevisionTimestamp),
     sourceLines: [],
     actions,
   };
@@ -503,12 +503,13 @@ export const questWalkthroughFor = (
 
 const compileQuestStrategyCatalogue = (): readonly QuestStrategyDefinition[] => (
   questWalkthroughCatalogue.flatMap((walkthrough) => {
-    const membership = f2pQuestMembershipFor(walkthrough.questId);
+    const catalogue = runeProofCatalogueFor(walkthrough.questId);
     const roots = reviewedQuestRequirements(walkthrough.questId);
-    if (!membership || !roots) return [];
+    const release = publicQuestWalkthroughReleaseFor(walkthrough.questId);
+    if (!catalogue || !roots || !release || release.revision !== walkthrough.revision) return [];
 
     const strategy = questStrategyFromWalkthrough(walkthrough, {
-      membership,
+      catalogue,
       rootRequirements: roots.items,
     });
     return strategy ? [strategy] : [];

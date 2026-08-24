@@ -49,3 +49,11 @@ jobs:
         run: npm run build
         env:
           VITE_BASE: /${{ github.event.repository.name }}/
+
+      - name: Build RuneProof private preview
+        run: npm run build:runeproof-preview
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/
+
+      - name: Verify builds leave tracked source unchanged
+        run: git diff --exit-code

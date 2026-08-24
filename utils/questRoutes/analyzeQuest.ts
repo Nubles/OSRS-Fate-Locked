@@ -4,7 +4,7 @@ import type {
   QuestWalkthroughAnalysis,
   QuestWalkthroughDefinition,
 } from '../questWalkthroughs/model';
-import { reviewedQuestRequirements } from '../../data/questItemRequirements';
+import type { ReviewedQuestRequirements } from '../../data/questItemRequirements';
 import type {
   ExactEntityHit,
   RouteRecipe,
@@ -24,6 +24,7 @@ import type {
   ChunkKey,
   ItemSourceFamilyCoverage,
   ItemRouteAnalysis,
+  QuestItemRequirement,
   RawRouteRequirement,
   RouteGate,
 } from './model';
@@ -105,6 +106,7 @@ export interface QuestRouteItemSourceCoverage extends ItemSourceFamilyCoverage {
 /** Plain, fully materialized route evidence captured after content initialization. */
 export interface QuestRouteAnalysisSnapshot {
   readonly chunkDataVersion: number;
+  readonly reviewedRequirements: DeepReadonly<ReviewedQuestRequirements>;
   readonly gameModeId?: string;
   readonly unlockedChunks: readonly ChunkKey[];
   readonly unlocks: QuestRouteAccountSnapshot;
@@ -184,6 +186,18 @@ const normalizedConnectGraph = (
   .map(([from, destinations]) => [from, normalizedList(destinations)]);
 
 const contentStateFingerprint = (snapshot: QuestRouteAnalysisSnapshot): string => JSON.stringify({
+  reviewedRequirements: {
+    questId: snapshot.reviewedRequirements.questId,
+    wikiRevision: snapshot.reviewedRequirements.wikiRevision,
+    reviewedAt: snapshot.reviewedRequirements.reviewedAt,
+    items: snapshot.reviewedRequirements.items.map(requirement => ({
+      item: serializedItem(requirement.item),
+      quantity: requirement.quantity,
+      supplyPolicy: requirement.supplyPolicy,
+      alternatives: (requirement.alternatives ?? []).map(serializedItem),
+      note: requirement.note ?? null,
+    })),
+  },
   itemSourceRecords: snapshot.itemSourceRecords.map(record => ({
     itemName: record.itemName,
     kind: record.kind,
@@ -460,14 +474,16 @@ const analyzeQuestItems = (
   questId: string,
   snapshot: QuestRouteAnalysisSnapshot,
 ): {
-  readonly reviewed: NonNullable<ReturnType<typeof reviewedQuestRequirements>>;
+  readonly reviewed: DeepReadonly<ReviewedQuestRequirements>;
   readonly items: readonly QuestItemRouteAnalysis[];
   readonly itemStatus: QuestRouteStatus;
   readonly accountFingerprint: string;
   readonly contentFingerprint: string;
 } => {
-  const reviewed = reviewedQuestRequirements(questId);
-  if (!reviewed) throw new Error(`RuneProof has no reviewed item catalogue for ${questId}.`);
+  const reviewed = snapshot.reviewedRequirements;
+  if (reviewed.questId !== questId) {
+    throw new Error(`RuneProof reviewed requirement identity does not match ${questId}.`);
+  }
 
   const accountFingerprint = accountStateFingerprint(
     snapshot.gameModeId,
@@ -481,7 +497,16 @@ const analyzeQuestItems = (
     `${accountFingerprint}\0${contentFingerprint}`,
   );
   const items = reviewed.items.map((requirement) => {
-    const analysis = resolveItemRequirement(requirement, resolver.resolution);
+    const mutableRequirement: QuestItemRequirement = {
+      item: { ...requirement.item },
+      quantity: requirement.quantity,
+      supplyPolicy: requirement.supplyPolicy,
+      ...(requirement.alternatives === undefined ? {} : {
+        alternatives: requirement.alternatives.map(alternative => ({ ...alternative })),
+      }),
+      ...(requirement.note === undefined ? {} : { note: requirement.note }),
+    };
+    const analysis = resolveItemRequirement(mutableRequirement, resolver.resolution);
     const currentRoutes = rankRoutes(analysis.currentRoutes, resolver.connectGraph);
     const missingChunkRoutes = rankRoutes(
       analysis.missingChunkRoutes,
@@ -537,8 +562,9 @@ export const analyzeQuest = (
   if (walkthroughDefinition.questId !== questId) {
     throw new Error(`RuneProof walkthrough identity does not match ${questId}.`);
   }
-  const reviewedForCache = reviewedQuestRequirements(questId);
-  if (!reviewedForCache) throw new Error(`RuneProof has no reviewed item catalogue for ${questId}.`);
+  if (snapshot.reviewedRequirements.questId !== questId) {
+    throw new Error(`RuneProof reviewed requirement identity does not match ${questId}.`);
+  }
   const accountFingerprintForCache = accountStateFingerprint(
     snapshot.gameModeId,
     snapshot.unlockedChunks,
@@ -548,7 +574,7 @@ export const analyzeQuest = (
   const cacheKey = JSON.stringify([
     questId,
     snapshot.chunkDataVersion,
-    reviewedForCache.wikiRevision,
+    snapshot.reviewedRequirements.wikiRevision,
     walkthroughDefinition.revision,
     accountFingerprintForCache,
     contentFingerprintForCache,

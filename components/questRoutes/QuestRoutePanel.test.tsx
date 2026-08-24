@@ -397,6 +397,7 @@ const evaluatedCookAnalysisWithMissingItems = (
   ));
   const snapshot: QuestRouteAnalysisSnapshot = {
     chunkDataVersion: 17,
+    reviewedRequirements: reviewedQuestRequirements("Cook's Assistant")!,
     unlockedChunks: ['50,50'],
     unlocks: {
       skills: {},
@@ -976,6 +977,7 @@ describe('QuestRoutePanel', () => {
     };
     const snapshot: QuestRouteAnalysisSnapshot = {
       chunkDataVersion: 17,
+      reviewedRequirements: reviewedQuestRequirements('Elemental Workshop I')!,
       unlockedChunks: ['42,54'],
       unlocks: {
         skills: {},

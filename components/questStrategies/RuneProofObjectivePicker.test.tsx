@@ -50,4 +50,34 @@ describe('RuneProofObjectivePicker', () => {
 
     expect(onSelect).toHaveBeenCalledWith('Sheep Shearer');
   });
+
+  it('defensively caps direct recommendation inputs at three', () => {
+    render(
+      <RuneProofObjectivePicker
+        recommendations={[
+          ...recommendations,
+          { ...recommendations[0], questId: 'Fourth quest' },
+          { ...recommendations[0], questId: 'Fifth quest' },
+        ]}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    expect(screen.getAllByRole('button')).toHaveLength(3);
+    expect(screen.queryByText('Fourth quest')).toBeNull();
+    expect(screen.queryByText('Fifth quest')).toBeNull();
+  });
+
+  it('never renders review-only or complete rows as recommendations', () => {
+    const malformed = [
+      ...recommendations,
+      { ...recommendations[0], questId: 'Review only', readiness: 'NEEDS_REVIEW' },
+      { ...recommendations[0], questId: 'Already complete', readiness: 'COMPLETE' },
+    ] as unknown as readonly RuneProofObjectiveRecommendation[];
+
+    render(<RuneProofObjectivePicker recommendations={malformed} onSelect={vi.fn()} />);
+
+    expect(screen.queryByText('Review only')).toBeNull();
+    expect(screen.queryByText('Already complete')).toBeNull();
+  });
 });

@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "profiles": [
+    {
+      "id": "milestone-1-local",
+      "nodeVersion": "v24.19.0",
+      "platform": "linux",
+      "arch": "x64",
+      "cpuModel": "INTEL(R) XEON(R) PLATINUM 8573C",
+      "logicalCpuCount": 9,
+      "warmups": 5,
+      "samples": 25,
+      "operations": {
+        "branch-switch-8-branches-160-actions": {
+          "medianMilliseconds": 0.746,
+          "p95Milliseconds": 1.731,
+          "ceilingMilliseconds": 5
+        },
+        "catalogue-preflight-210": {
+          "medianMilliseconds": 0.285,
+          "p95Milliseconds": 0.551,
+          "ceilingMilliseconds": 5
+        },
+        "catalogue-search-filter-210": {
+          "medianMilliseconds": 0.016,
+          "p95Milliseconds": 0.026,
+          "ceilingMilliseconds": 5
+        },
+        "progress-index-parse-serialize-210": {
+          "medianMilliseconds": 1.012,
+          "p95Milliseconds": 1.506,
+          "ceilingMilliseconds": 5
+        },
+        "recommendations-rank-top-3": {
+          "medianMilliseconds": 0.032,
+          "p95Milliseconds": 0.045,
+          "ceilingMilliseconds": 5
+        },
+        "selected-pack-coach-100-actions": {
+          "medianMilliseconds": 0.287,
+          "p95Milliseconds": 0.416,
+          "ceilingMilliseconds": 5
+        }
+      }
+    }
+  ]
+}

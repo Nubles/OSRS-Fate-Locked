@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { F2PQuestMembership } from '../../data/f2pQuestMembership';
+import type { RuneProofCatalogueEntry } from '../../data/runeProofQuestCatalogue';
 import { questWalkthroughReleaseFor } from '../../data/questWalkthroughRelease';
 import * as previewBoundary from '../../data/questWalkthroughs.preview-boundary';
 import * as walkthroughLoader from '../../data/questWalkthroughLoader';
@@ -13,14 +13,25 @@ import {
 
 const item = (key: string, name: string) => ({ key, name });
 
-const membership = (): F2PQuestMembership => ({
+const catalogue = (): RuneProofCatalogueEntry => ({
   questId: "Cook's Assistant",
   slug: 'cooks-assistant',
   kind: 'quest',
-  wave: 1,
+  membership: 'F2P',
+  milestone: 1,
   progressionPriority: 1,
   wikiTitle: "Cook's Assistant/Quick guide",
-  evidenceQuestId: "Cook's Assistant",
+  sourceRevision: '15240921',
+  sourceRevisionTimestamp: '2026-06-27T13:04:37Z',
+  requirementStatus: 'VERIFIED_WITH_NOTES',
+  requirementComplexity: {
+    schemaVersion: 1,
+    score: 0,
+    baselineMilestone: 3,
+    assignedMilestone: 3,
+    dimensions: {},
+    flags: [],
+  },
 });
 
 const rootRequirements = (): readonly QuestItemRequirement[] => [
@@ -30,7 +41,7 @@ const rootRequirements = (): readonly QuestItemRequirement[] => [
 ];
 
 const strategyContext = (overrides: Partial<QuestStrategyContext> = {}): QuestStrategyContext => ({
-  membership: membership(),
+  catalogue: catalogue(),
   rootRequirements: rootRequirements(),
   ...overrides,
 });
@@ -186,6 +197,7 @@ describe('questStrategyFromWalkthrough', () => {
     expect(strategy).toMatchObject({
       questId: "Cook's Assistant",
       kind: 'quest',
+      membership: 'F2P',
       rolloutWave: 1,
       progressionPriority: 1,
     });
@@ -291,23 +303,22 @@ describe('questStrategyFromWalkthrough', () => {
     expect(questStrategyFromWalkthrough(walkthrough, strategyContext())).toBeNull();
   });
 
-  it('fails closed when the context membership does not match the walkthrough', () => {
-    const mismatchedMembership: F2PQuestMembership = {
-      ...membership(),
+  it('fails closed when the context catalogue does not match the walkthrough', () => {
+    const mismatchedCatalogue: RuneProofCatalogueEntry = {
+      ...catalogue(),
       questId: 'Sheep Shearer',
       slug: 'sheep-shearer',
       progressionPriority: 2,
       wikiTitle: 'Sheep Shearer/Quick guide',
-      evidenceQuestId: 'Sheep Shearer',
     };
 
     expect(questStrategyFromWalkthrough(
       strategyWalkthroughFixture(),
-      strategyContext({ membership: mismatchedMembership }),
+      strategyContext({ catalogue: mismatchedCatalogue }),
     )).toBeNull();
   });
 
-  it('fails closed when an explicit context omits membership', () => {
+  it('fails closed when an explicit context omits the catalogue', () => {
     expect(questStrategyFromWalkthrough(
       strategyWalkthroughFixture(),
       { rootRequirements: rootRequirements() } as QuestStrategyContext,

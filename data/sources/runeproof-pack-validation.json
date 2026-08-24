@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "catalogueRevision": "50a73f201153b2a4bcbeff994d54bf639c2879c33968ab06d674c3c6df221a0d",
+  "packs": [
+    {
+      "questId": "Cook's Assistant",
+      "packRevision": "runeproof-public-cooks-assistant-v1",
+      "blockingFindingIds": [],
+      "findingDimensions": {},
+      "semanticDisposition": {
+        "preflight": "VALIDATED",
+        "coreRoute": "VALIDATED",
+        "locations": "VALIDATED",
+        "transport": "NOT_REQUIRED",
+        "instances": "NOT_REQUIRED",
+        "items": "VALIDATED",
+        "branches": "NOT_REQUIRED",
+        "combatManual": "VALIDATED",
+        "evidence": "VALIDATED",
+        "progressMigration": "VALIDATED",
+        "completion": "VALIDATED"
+      }
+    },
+    {
+      "questId": "Sheep Shearer",
+      "packRevision": "runeproof-public-sheep-shearer-v1",
+      "blockingFindingIds": [],
+      "findingDimensions": {},
+      "semanticDisposition": {
+        "preflight": "VALIDATED",
+        "coreRoute": "VALIDATED",
+        "locations": "VALIDATED",
+        "transport": "NOT_REQUIRED",
+        "instances": "NOT_REQUIRED",
+        "items": "VALIDATED",
+        "branches": "NOT_REQUIRED",
+        "combatManual": "VALIDATED",
+        "evidence": "VALIDATED",
+        "progressMigration": "VALIDATED",
+        "completion": "VALIDATED"
+      }
+    },
+    {
+      "questId": "The Restless Ghost",
+      "packRevision": "runeproof-public-the-restless-ghost-v1",
+      "blockingFindingIds": [],
+      "findingDimensions": {},
+      "semanticDisposition": {
+        "preflight": "VALIDATED",
+        "coreRoute": "VALIDATED",
+        "locations": "VALIDATED",
+        "transport": "NOT_REQUIRED",
+        "instances": "NOT_REQUIRED",
+        "items": "VALIDATED",
+        "branches": "NOT_REQUIRED",
+        "combatManual": "VALIDATED",
+        "evidence": "VALIDATED",
+        "progressMigration": "VALIDATED",
+        "completion": "VALIDATED"
+      }
+    },
+    {
+      "questId": "Rune Mysteries",
+      "packRevision": "runeproof-public-rune-mysteries-v1",
+      "blockingFindingIds": [],
+      "findingDimensions": {},
+      "semanticDisposition": {
+        "preflight": "VALIDATED",
+        "coreRoute": "VALIDATED",
+        "locations": "VALIDATED",
+        "transport": "NOT_REQUIRED",
+        "instances": "NOT_REQUIRED",
+        "items": "VALIDATED",
+        "branches": "NOT_REQUIRED",
+        "combatManual": "VALIDATED",
+        "evidence": "VALIDATED",
+        "progressMigration": "VALIDATED",
+        "completion": "VALIDATED"
+      }
+    },
+    {
+      "questId": "Imp Catcher",
+      "packRevision": "runeproof-public-imp-catcher-v1",
+      "blockingFindingIds": [],
+      "findingDimensions": {},
+      "semanticDisposition": {
+        "preflight": "VALIDATED",
+        "coreRoute": "VALIDATED",
+        "locations": "VALIDATED",
+        "transport": "NOT_REQUIRED",
+        "instances": "NOT_REQUIRED",
+        "items": "VALIDATED",
+        "branches": "NOT_REQUIRED",
+        "combatManual": "VALIDATED",
+        "evidence": "VALIDATED",
+        "progressMigration": "VALIDATED",
+        "completion": "VALIDATED"
+      }
+    }
+  ]
+}

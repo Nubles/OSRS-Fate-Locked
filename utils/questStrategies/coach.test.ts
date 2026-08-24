@@ -10,7 +10,27 @@ import type {
   ResolvedWalkthroughLocation,
 } from '../questWalkthroughs/model';
 import { questStrategyFromWalkthrough, type QuestStrategyDefinition } from './model';
-import { buildRuneProofCoachModel } from './coach';
+import type { RuneProofCompiledPack } from './packModel';
+import {
+  buildLegacyRuneProofCoachModel,
+  buildRuneProofCoachModel,
+  buildRuneProofPackCoachModel,
+} from './coach';
+import {
+  acquiredItemPack,
+  branchNeedsReviewPack,
+  branchingPack,
+  combatPack,
+  emptyProgressFor,
+  everyBranchNeedsReviewPack,
+  fullyConfirmedProgress,
+  initialItemPack,
+  itemQuantityPack,
+  manualAnyPack,
+  manualGatePack,
+  readyRequirementSnapshot,
+  spentItemPack,
+} from './testFixtures';
 
 const item = (name: string): ItemRef => ({ key: name.toLocaleLowerCase('en-GB'), name });
 
@@ -319,6 +339,39 @@ const impAnalysisFor = (
   };
 };
 
+const legacyImpPack = (
+  includeExplicitAlternative: boolean,
+): RuneProofCompiledPack => {
+  const strategy = impStrategy();
+  const pack: any = structuredClone(combatPack);
+  pack.questId = strategy.questId;
+  pack.catalogue.questId = strategy.questId;
+  pack.catalogue.slug = 'imp-catcher';
+  pack.completion.canonicalQuestId = strategy.questId;
+  const action = pack.branches[0].actions[0];
+  action.id = 'imp-catcher:get-black-bead';
+  action.instruction = 'Use the pack-authored black-bead route.';
+  delete action.preferredMethod;
+  action.location = {
+    kind: 'SURFACE',
+    label: 'Pack-reviewed black-bead location',
+    chunks: ['0,0'],
+    plane: 0,
+    evidenceIds: ['review:example'],
+  };
+  action.alternatives = includeExplicitAlternative ? [{
+    id: 'legacy-alternative:imp-catcher:get-black-bead',
+    label: 'Accepted legacy interchangeable route',
+    kind: 'QUEST_ROUTE',
+    evidenceIds: ['review:example'],
+    requirements: { kind: 'ALL', requirements: [] },
+    location: structuredClone(action.location),
+  }] : [];
+  delete action.combat;
+  pack.completion.branchActionIds.main = action.id;
+  return pack;
+};
+
 const buildImpCoach = ({
   confirmedItemKeys = new Set<string>(),
   confirmedActionIds = new Set<string>(),
@@ -447,6 +500,10 @@ const analysisWithOutOfOrderFlourFallbacks = (
 };
 
 describe('buildRuneProofCoachModel', () => {
+  it('retains the legacy projector as an exact named alias', () => {
+    expect(buildLegacyRuneProofCoachModel).toBe(buildRuneProofCoachModel);
+  });
+
   it('keeps Rune Mysteries hand-offs manual until the final quest confirmation', () => {
     const strategy = runeMysteriesStrategy();
     const beforeFinalConfirmation = buildRuneProofCoachModel({
@@ -1046,5 +1103,785 @@ describe('buildRuneProofCoachModel', () => {
     expect(model.progress).toEqual({ completed: 9, total: 9 });
     expect(model.nextAction).toBeUndefined();
     expect(model.actions.every(action => action.state === 'COMPLETED')).toBe(true);
+  });
+});
+
+describe('branch-aware RuneProof coach', () => {
+  it('selects the recommended branch and exactly one current action', () => {
+    const model = buildRuneProofPackCoachModel({
+      pack: branchingPack,
+      progress: emptyProgressFor(branchingPack, 'run-a'),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+    });
+    expect(model.branch).toMatchObject({
+      selectedBranchId: 'local',
+      recommendedBranchId: 'local',
+      pinned: false,
+    });
+    expect(model.actions.filter(action => action.current)).toHaveLength(1);
+    expect(model.doNow?.id).toBe(model.actions.find(action => action.current)?.id);
+  });
+
+  it('keeps incompatible branch confirmation stored but inactive', () => {
+    const model = buildRuneProofPackCoachModel({
+      pack: branchingPack,
+      progress: {
+        ...emptyProgressFor(branchingPack, 'run-a'),
+        selectedBranchId: 'remote',
+        confirmedActionIds: ['shared:start', 'local:step', 'remote:step'],
+      },
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+    });
+    expect(model.branch.selectedBranchId).toBe('remote');
+    expect(model.progress.inactiveConfirmations.actionIds).toEqual(['local:step']);
+    expect(model.progress.activeConfirmations.actionIds)
+      .toEqual(['shared:start', 'remote:step']);
+  });
+
+  it('keeps pack and current-action gates in the selected coach', () => {
+    const pack: any = structuredClone(branchingPack);
+    pack.preflight = {
+      kind: 'SKILL_LEVEL',
+      id: 'skill:mining:99',
+      skill: 'Mining',
+      level: 99,
+      evidenceIds: ['quest-data:Example'],
+    };
+    const model = buildRuneProofPackCoachModel({
+      pack,
+      progress: emptyProgressFor(pack, 'run-a'),
+      requirementSnapshot: readyRequirementSnapshot({ levels: { Mining: 1 } }),
+      completedQuestIds: new Set(),
+    });
+    expect(model.proofState).toBe('BLOCKED');
+    expect(model.doNow?.blockerText).toMatch(/Mining 99/);
+    expect(model.doNow?.unblockActions).toContain('Raise Mining to 99.');
+  });
+
+  it('uses only an explicit legacy reviewed alternative to promote route copy and map chunks', () => {
+    const strategy = impStrategy();
+    const pack: any = legacyImpPack(true);
+    const action = pack.branches[0].actions[0];
+    action.preferredMethod = {
+      id: 'method:original-imps',
+      label: 'Original reviewed Imps',
+      kind: 'DIRECT_SOURCE',
+      evidenceIds: ['review:example'],
+    };
+    const model = buildRuneProofPackCoachModel({
+      pack,
+      progress: emptyProgressFor(pack, 'run-a'),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+      legacyProjection: {
+        strategy,
+        analysis: impAnalysisFor(strategy, true),
+      },
+    });
+
+    expect(model.doNow?.instruction).toMatch(/^Kill imps in Lumbridge.*black bead/i);
+    expect(model.doNow?.mapChunks).toEqual(['50,50']);
+    expect(model.doNow?.preferredMethodLabel).toBe('Other legal Imps');
+    expect(model.doNow?.reviewedLocation).toMatchObject({
+      kind: 'SURFACE',
+      label: 'Pack-reviewed black-bead location',
+      mapChunks: ['0,0'],
+    });
+    expect(model.alternativeSources.map(source => source.itemKey)).toEqual(['black bead']);
+  });
+
+  it('keeps pack-authored guidance while the matching pack action is blocked', () => {
+    const strategy = impStrategy();
+    const pack: any = legacyImpPack(true);
+    pack.preflight = {
+      kind: 'SKILL_LEVEL',
+      id: 'skill:mining:99:legacy-pack-gate',
+      skill: 'Mining',
+      level: 99,
+      evidenceIds: ['review:example'],
+    };
+    const model = buildRuneProofPackCoachModel({
+      pack,
+      progress: emptyProgressFor(pack, 'run-a'),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+      legacyProjection: {
+        strategy,
+        analysis: impAnalysisFor(strategy, true),
+      },
+    });
+
+    expect(model.proofState).toBe('BLOCKED');
+    expect(model.doNow).toMatchObject({
+      instruction: 'Use the pack-authored black-bead route.',
+      locationLabel: 'Pack-reviewed black-bead location',
+      mapChunks: ['0,0'],
+      preferredMethodLabel: undefined,
+    });
+    expect(model.alternativeSources).toEqual([]);
+  });
+
+  it('keeps pack-authored guidance while the exact legacy alternative is blocked', () => {
+    const strategy = impStrategy();
+    const pack: any = legacyImpPack(true);
+    pack.branches[0].actions[0].alternatives[0].requirements = {
+      kind: 'SKILL_LEVEL',
+      id: 'skill:mining:99:legacy-alternative-gate',
+      skill: 'Mining',
+      level: 99,
+      evidenceIds: ['review:example'],
+    };
+    const model = buildRuneProofPackCoachModel({
+      pack,
+      progress: emptyProgressFor(pack, 'run-a'),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+      legacyProjection: {
+        strategy,
+        analysis: impAnalysisFor(strategy, true),
+      },
+    });
+
+    expect(model.proofState).toBe('READY');
+    expect(model.reviewedAlternatives).toContainEqual(expect.objectContaining({
+      id: 'legacy-alternative:imp-catcher:get-black-bead',
+      state: 'BLOCKED',
+    }));
+    expect(model.doNow).toMatchObject({
+      instruction: 'Use the pack-authored black-bead route.',
+      locationLabel: 'Pack-reviewed black-bead location',
+      mapChunks: ['0,0'],
+      preferredMethodLabel: undefined,
+    });
+    expect(model.alternativeSources).toEqual([]);
+  });
+
+  it('keeps pack-authored labels and omits legacy sources without the explicit alternative', () => {
+    const strategy = impStrategy();
+    const pack = legacyImpPack(false);
+    const model = buildRuneProofPackCoachModel({
+      pack,
+      progress: emptyProgressFor(pack, 'run-a'),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+      legacyProjection: {
+        strategy,
+        analysis: impAnalysisFor(strategy, true, [
+          routeAt(
+            'generic-unreviewed-imps',
+            'Black bead',
+            'Generic unreviewed Imps',
+            'DROP',
+            '50,50',
+          ),
+        ]),
+      },
+    });
+
+    expect(model.doNow).toMatchObject({
+      instruction: 'Use the pack-authored black-bead route.',
+      locationLabel: 'Pack-reviewed black-bead location',
+      mapChunks: ['0,0'],
+      preferredMethodLabel: undefined,
+    });
+    expect(model.alternativeSources).toEqual([]);
+  });
+
+  it('requires exact pack and legacy-analysis identity before enriching the action', () => {
+    const strategy = impStrategy();
+    const pack = legacyImpPack(true);
+    const analysis = {
+      ...impAnalysisFor(strategy, true),
+      questId: 'A Different Quest',
+    };
+    const model = buildRuneProofPackCoachModel({
+      pack,
+      progress: emptyProgressFor(pack, 'run-a'),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+      legacyProjection: { strategy, analysis },
+    });
+
+    expect(model.doNow).toMatchObject({
+      instruction: 'Use the pack-authored black-bead route.',
+      locationLabel: 'Pack-reviewed black-bead location',
+      mapChunks: ['0,0'],
+      preferredMethodLabel: undefined,
+    });
+    expect(model.alternativeSources).toEqual([]);
+  });
+
+  it('does not enrich from a legacy action that is not the playable legacy next action', () => {
+    const strategy = impStrategy();
+    const pack: any = legacyImpPack(true);
+    const action = pack.branches[0].actions[0];
+    action.id = 'imp-catcher:get-red-bead';
+    action.instruction = 'Use the pack-authored red-bead route.';
+    action.alternatives[0].id = 'legacy-alternative:imp-catcher:get-red-bead';
+    pack.completion.branchActionIds.main = action.id;
+    const model = buildRuneProofPackCoachModel({
+      pack,
+      progress: emptyProgressFor(pack, 'run-a'),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+      legacyProjection: {
+        strategy,
+        analysis: impAnalysisFor(strategy),
+      },
+    });
+
+    expect(model.doNow).toMatchObject({
+      instruction: 'Use the pack-authored red-bead route.',
+      locationLabel: 'Pack-reviewed black-bead location',
+      mapChunks: ['0,0'],
+      preferredMethodLabel: undefined,
+    });
+    expect(model.alternativeSources).toEqual([]);
+  });
+
+  it('does not enrich from a blocked legacy next action without a playable fallback', () => {
+    const strategy = impStrategy();
+    const pack = legacyImpPack(true);
+    const model = buildRuneProofPackCoachModel({
+      pack,
+      progress: emptyProgressFor(pack, 'run-a'),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+      legacyProjection: {
+        strategy,
+        analysis: impAnalysisFor(strategy, true, []),
+      },
+    });
+
+    expect(model.doNow).toMatchObject({
+      instruction: 'Use the pack-authored black-bead route.',
+      locationLabel: 'Pack-reviewed black-bead location',
+      mapChunks: ['0,0'],
+      preferredMethodLabel: undefined,
+    });
+    expect(model.alternativeSources).toEqual([]);
+  });
+
+  it('omits legacy sources when an explicit alternative has no playable route', () => {
+    const strategy = impStrategy();
+    const pack: any = legacyImpPack(true);
+    pack.branches[0].requirements = {
+      kind: 'UNRESOLVED_EVIDENCE',
+      id: 'unresolved:imp-route',
+      evidenceId: 'audit:imp-route',
+      reason: 'The Imp Catcher route still needs review.',
+      evidenceIds: ['review:example'],
+    };
+    const model = buildRuneProofPackCoachModel({
+      pack,
+      progress: emptyProgressFor(pack, 'run-a'),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+      legacyProjection: {
+        strategy,
+        analysis: impAnalysisFor(strategy, true),
+      },
+    });
+
+    expect(model.proofState).toBe('NEEDS_REVIEW');
+    expect(model.doNow).toBeUndefined();
+    expect(model.alternativeSources).toEqual([]);
+  });
+
+  it('keeps an instance labelled as an entrance over a legacy surface label', () => {
+    const strategy = cookStrategy();
+    const pack: any = structuredClone(combatPack);
+    const action = pack.branches[0].actions[0];
+    action.id = 'cooks-assistant:start-quest';
+    action.alternatives = [];
+    delete action.combat;
+    pack.completion.branchActionIds.main = action.id;
+    const model = buildRuneProofPackCoachModel({
+      pack,
+      progress: emptyProgressFor(pack, 'run-a'),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+      legacyProjection: {
+        strategy,
+        analysis: analysisFor(strategy, false),
+      },
+    });
+
+    expect(model.doNow?.locationLabel).toBe('Guardian arena entrance');
+    expect(model.doNow?.reviewedLocation).toMatchObject({
+      kind: 'INSTANCE',
+      instanceId: 'guardian-arena',
+      plane: 1,
+      entranceChunks: ['50,50'],
+      mapChunks: ['50,50'],
+    });
+  });
+
+  it('proves only the exact reviewed quantity for a confirmed root item', () => {
+    const oneCoin = itemQuantityPack({ reviewedQuantity: 1, requiredQuantity: 2 });
+    const twoCoins = itemQuantityPack({ reviewedQuantity: 2, requiredQuantity: 2 });
+    const progressFor = (pack: RuneProofCompiledPack) => ({
+      ...emptyProgressFor(pack, 'run-a'),
+      confirmedItemKeys: ['coins'],
+    });
+    expect(buildRuneProofPackCoachModel({
+      pack: oneCoin,
+      progress: progressFor(oneCoin),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+    }).proofState).toBe('BLOCKED');
+    expect(buildRuneProofPackCoachModel({
+      pack: twoCoins,
+      progress: progressFor(twoCoins),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+    }).proofState).toBe('CONFIRM');
+  });
+
+  it('projects canonical and alternative root-item proof without double counting', () => {
+    const pack = initialItemPack({
+      canonicalItemKey: 'bucket of milk',
+      alternativeItemKey: 'milk substitute',
+      reviewedQuantity: 2,
+    });
+    const empty = buildRuneProofPackCoachModel({
+      pack,
+      progress: emptyProgressFor(pack, 'run-a'),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+    });
+    expect(empty.initialItems[0]).toMatchObject({
+      canonicalItemKey: 'bucket of milk',
+      quantity: 2,
+    });
+    expect(empty.initialItems[0].options.map(option => option.itemKey))
+      .toEqual(['bucket of milk', 'milk substitute']);
+
+    const alternative = buildRuneProofPackCoachModel({
+      pack,
+      progress: {
+        ...emptyProgressFor(pack, 'run-a'),
+        confirmedItemKeys: ['milk substitute'],
+      },
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+    });
+    expect(alternative.initialItems[0].options)
+      .toContainEqual(expect.objectContaining({ itemKey: 'milk substitute', confirmed: true }));
+    expect(alternative.doNow?.blockerText).toBeUndefined();
+
+    const both = buildRuneProofPackCoachModel({
+      pack,
+      progress: {
+        ...emptyProgressFor(pack, 'run-a'),
+        confirmedItemKeys: ['bucket of milk', 'milk substitute'],
+      },
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+    });
+    expect(both.doNow?.blockerText).toBeUndefined();
+    expect(both.initialItems[0].provenQuantity).toBe(2);
+  });
+
+  it.each(['PREFLIGHT', 'ACTION'] as const)(
+    'keeps a %s manual requirement actionable and prevents target-only completion',
+    (scope) => {
+      const pack = manualGatePack(scope);
+      const targetOnly = buildRuneProofPackCoachModel({
+        pack,
+        progress: {
+          ...emptyProgressFor(pack, 'run-a'),
+          confirmedActionIds: ['manual-gate:action'],
+        },
+        requirementSnapshot: readyRequirementSnapshot(),
+        completedQuestIds: new Set(),
+      });
+      expect(targetOnly.proofState).toBe('CONFIRM');
+      expect(targetOnly.manualConfirmations).toContainEqual(expect.objectContaining({
+        id: `manual:${scope.toLowerCase()}`,
+        confirmed: false,
+      }));
+      expect(targetOnly.proofState).not.toBe('COMPLETE');
+      if (scope === 'PREFLIGHT') {
+        expect(targetOnly.doNow).toBeUndefined();
+        expect(targetOnly.actions.every(action => action.current === false)).toBe(true);
+      }
+    },
+  );
+
+  it('does not leak completed action manuals when no action is current', () => {
+    const pack = manualGatePack('ACTION');
+    const model = buildRuneProofPackCoachModel({
+      pack,
+      progress: {
+        ...emptyProgressFor(pack, 'run-a'),
+        selectedBranchId: 'main',
+        confirmedActionIds: ['manual-gate:action'],
+        manualConfirmationIds: ['manual:action'],
+      },
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+    });
+
+    expect(model.proofState).toBe('COMPLETE');
+    expect(model.manualConfirmations).toEqual([]);
+  });
+
+  it('does not project a losing manual choice from ANY', () => {
+    const pack = manualAnyPack();
+    const model = buildRuneProofPackCoachModel({
+      pack,
+      progress: {
+        ...fullyConfirmedProgress(pack, 'main'),
+        manualConfirmationIds: ['manual:first'],
+      },
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+    });
+    expect(model.manualConfirmations).toEqual([
+      expect.objectContaining({ id: 'manual:first', confirmed: true }),
+    ]);
+    expect(model.proofState).toBe('COMPLETE');
+  });
+
+  it('selects an already-confirmed manual alternative from ANY', () => {
+    const pack = manualAnyPack();
+    const model = buildRuneProofPackCoachModel({
+      pack,
+      progress: {
+        ...fullyConfirmedProgress(pack, 'main'),
+        manualConfirmationIds: ['manual:second'],
+      },
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+    });
+    expect(model.manualConfirmations).toEqual([
+      expect.objectContaining({ id: 'manual:second', confirmed: true }),
+    ]);
+    expect(model.proofState).toBe('COMPLETE');
+  });
+
+  it('merges identical selected manual scopes in fixed traversal order', () => {
+    const pack: any = structuredClone(combatPack);
+    const sharedManual = {
+      kind: 'MANUAL_CONFIRMATION',
+      id: 'requirement:manual:shared',
+      confirmationId: 'manual:shared',
+      prompt: 'Confirm the shared reviewed condition.',
+      evidenceIds: ['review:example'],
+    };
+    pack.preflight = structuredClone(sharedManual);
+    pack.branches[0].requirements = structuredClone(sharedManual);
+    pack.branches[0].actions[0].requirements = structuredClone(sharedManual);
+    pack.branches[0].actions[0].alternatives = [{
+      id: 'alternative:shared-manual',
+      label: 'Shared manual alternative',
+      kind: 'QUEST_ROUTE',
+      evidenceIds: ['review:example'],
+      requirements: structuredClone(sharedManual),
+    }];
+    const model = buildRuneProofPackCoachModel({
+      pack,
+      progress: emptyProgressFor(pack, 'run-a'),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+    });
+
+    expect(model.manualConfirmations).toEqual([
+      expect.objectContaining({
+        id: 'manual:shared',
+        scopes: ['PREFLIGHT', 'BRANCH', 'ACTION', 'ALTERNATIVE'],
+      }),
+    ]);
+    expect(model.reviewedAlternatives[0].manualConfirmations).toEqual([
+      expect.objectContaining({
+        id: 'manual:shared',
+        scopes: ['PREFLIGHT', 'BRANCH', 'ACTION', 'ALTERNATIVE'],
+      }),
+    ]);
+  });
+
+  it.each(['CONSUME', 'RETURN'] as const)(
+    'does not use a %s item to satisfy a later gate',
+    (effectKind) => {
+      const pack = spentItemPack(effectKind);
+      const model = buildRuneProofPackCoachModel({
+        pack,
+        progress: {
+          ...emptyProgressFor(pack, 'run-a'),
+          confirmedItemKeys: ['quest token'],
+          confirmedCheckpointIds: ['payment-complete'],
+        },
+        requirementSnapshot: readyRequirementSnapshot(),
+        completedQuestIds: new Set(),
+      });
+      expect(model.doNow?.id).toBe('example:needs-token-again');
+      expect(model.proofState).toBe('BLOCKED');
+      expect(model.doNow?.blockerText).toMatch(/quest token/i);
+    },
+  );
+
+  it('replays effects for an item-confirmed action before the next gate', () => {
+    const pack = acquiredItemPack();
+    const model = buildRuneProofPackCoachModel({
+      pack,
+      progress: {
+        ...emptyProgressFor(pack, 'run-a'),
+        confirmedItemKeys: ['quest token'],
+      },
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+    });
+    expect(model.doNow?.id).toBe('example:use-acquired-token');
+    expect(model.proofState).toBe('CONFIRM');
+    expect(model.doNow?.blockerText).toBeUndefined();
+  });
+
+  it('projects no current action when every branch needs review', () => {
+    const pack = everyBranchNeedsReviewPack();
+    const model = buildRuneProofPackCoachModel({
+      pack,
+      progress: emptyProgressFor(pack, 'run-a'),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+    });
+    expect(model).toMatchObject({
+      proofState: 'NEEDS_REVIEW',
+      doNow: undefined,
+      branch: {
+        selectedBranchId: undefined,
+        recommendedBranchId: undefined,
+      },
+    });
+  });
+
+  it('keeps a pinned route visible but suppresses play when its evidence regresses', () => {
+    const pack = branchNeedsReviewPack(branchingPack, 'local');
+    const model = buildRuneProofPackCoachModel({
+      pack,
+      progress: {
+        ...emptyProgressFor(pack, 'run-a'),
+        selectedBranchId: 'local',
+      },
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+    });
+    expect(model).toMatchObject({
+      proofState: 'NEEDS_REVIEW',
+      doNow: undefined,
+      branch: { selectedBranchId: 'local', pinned: true },
+    });
+    expect(model.actions.every(action => action.current === false)).toBe(true);
+  });
+
+  it('keeps an unresolved current action visible without advancing past it', () => {
+    const pack: any = structuredClone(combatPack);
+    pack.branches[0].actions[0].requirements = {
+      kind: 'UNRESOLVED_EVIDENCE',
+      id: 'unresolved:guardian-entry',
+      evidenceId: 'audit:guardian-entry',
+      reason: 'Guardian entry evidence needs review.',
+      evidenceIds: ['review:example'],
+    };
+    const model = buildRuneProofPackCoachModel({
+      pack,
+      progress: emptyProgressFor(pack, 'run-a'),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+    });
+
+    expect(model.proofState).toBe('NEEDS_REVIEW');
+    expect(model.doNow?.id).toBe('combat:guardian');
+    expect(model.actions.filter(candidate => candidate.current).map(candidate => candidate.id))
+      .toEqual(['combat:guardian']);
+  });
+
+  it.each([
+    {
+      label: 'missing',
+      evidenceIds: undefined,
+      diagnostic: 'Combat action "combat:guardian" has no reviewed evidence IDs.',
+    },
+    {
+      label: 'empty',
+      evidenceIds: [],
+      diagnostic: 'Combat action "combat:guardian" has no reviewed evidence IDs.',
+    },
+    {
+      label: 'unknown',
+      evidenceIds: ['review:example', 'review:missing-combat'],
+      diagnostic: 'Combat action "combat:guardian" references missing evidence: review:missing-combat.',
+    },
+  ])('fails closed without combat guidance for $label evidence', ({ evidenceIds, diagnostic }) => {
+    const pack: any = structuredClone(combatPack);
+    pack.branches[0].actions[0].combat.evidenceIds = evidenceIds;
+    const model = buildRuneProofPackCoachModel({
+      pack,
+      progress: emptyProgressFor(pack, 'run-a'),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+    });
+
+    expect(model.proofState).toBe('NEEDS_REVIEW');
+    expect(model.currentCombatCards).toEqual([]);
+    expect(model.proof.diagnostics).toContain(diagnostic);
+  });
+
+  it('uses CONFIRM for subjective combat and never says impossible', () => {
+    const model = buildRuneProofPackCoachModel({
+      pack: combatPack,
+      progress: emptyProgressFor(combatPack, 'run-a'),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+    });
+    expect(model.proofState).toBe('CONFIRM');
+    expect(model.currentCombatCards).toHaveLength(1);
+    expect(JSON.stringify(model).toLowerCase()).not.toContain('impossible');
+    expect(model.currentCombatCards[0]).toMatchObject({
+      confirmed: false,
+      confirmationId: 'combat:guardian:ready',
+    });
+  });
+
+  it('keeps all known combat gates and excludes subjective prompts from deterministic blockers', () => {
+    const pack: any = structuredClone(combatPack);
+    pack.preflight = {
+      kind: 'SKILL_LEVEL',
+      id: 'skill:mining:99',
+      skill: 'Mining',
+      level: 99,
+      evidenceIds: ['review:example'],
+    };
+    pack.branches[0].requirements = {
+      kind: 'MANUAL_CONFIRMATION',
+      id: 'manual:branch-route',
+      confirmationId: 'manual:branch-route',
+      prompt: 'Confirm subjective branch comfort.',
+      evidenceIds: ['review:example'],
+    };
+    pack.branches[0].actions[0].requirements = {
+      kind: 'ALL',
+      requirements: [
+        {
+          kind: 'CHUNK_ACCESS',
+          id: 'chunk:99,99',
+          chunk: '99,99',
+          plane: 0,
+          evidenceIds: ['review:example'],
+        },
+        {
+          kind: 'MANUAL_CONFIRMATION',
+          id: 'manual:combat-comfort',
+          confirmationId: 'manual:combat-comfort',
+          prompt: 'Confirm subjective combat comfort.',
+          evidenceIds: ['review:example'],
+        },
+      ],
+    };
+    const model = buildRuneProofPackCoachModel({
+      pack,
+      progress: emptyProgressFor(pack, 'run-a'),
+      requirementSnapshot: readyRequirementSnapshot({ levels: { Mining: 1 } }),
+      completedQuestIds: new Set(),
+    });
+
+    expect(model.proofState).toBe('BLOCKED');
+    expect(model.currentCombatCards[0].deterministicBlockers).toEqual([
+      'Requires Mining 99; effective level is 1.',
+      'Requires chunk 99,99 on plane 0.',
+    ]);
+    expect(model.currentCombatCards[0].deterministicBlockers.join(' '))
+      .not.toMatch(/subjective|comfort/i);
+  });
+
+  it('keeps combat current when its action target is confirmed without readiness', () => {
+    const fightActionId = combatPack.branches[0].actions[0].id;
+    const model = buildRuneProofPackCoachModel({
+      pack: combatPack,
+      progress: {
+        ...emptyProgressFor(combatPack, 'run-a'),
+        confirmedActionIds: [fightActionId],
+      },
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+    });
+    expect(model.proofState).toBe('CONFIRM');
+    expect(model.doNow?.id).toBe(fightActionId);
+    expect(model.currentCombatCards).toHaveLength(1);
+    expect(model.progress.completed).toBe(0);
+  });
+
+  it('projects COMPLETE from canonical state or isolated full-route confirmation', () => {
+    const canonical = buildRuneProofPackCoachModel({
+      pack: branchingPack,
+      progress: emptyProgressFor(branchingPack, 'run-a'),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(['Example Quest']),
+    });
+    expect(canonical.proofState).toBe('COMPLETE');
+
+    const isolated = buildRuneProofPackCoachModel({
+      pack: branchingPack,
+      progress: fullyConfirmedProgress(branchingPack, 'local'),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+    });
+    expect(isolated.proofState).toBe('COMPLETE');
+  });
+
+  it('keeps canonical completion above unresolved branch evidence', () => {
+    const pack = everyBranchNeedsReviewPack();
+    const model = buildRuneProofPackCoachModel({
+      pack,
+      progress: emptyProgressFor(pack, 'run-a'),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set([pack.questId]),
+    });
+    expect(model.proofState).toBe('COMPLETE');
+  });
+
+  it('keeps isolated composite completion above later evidence regression', () => {
+    const pack = branchNeedsReviewPack(branchingPack, 'local');
+    const model = buildRuneProofPackCoachModel({
+      pack,
+      progress: fullyConfirmedProgress(pack, 'local'),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+    });
+    expect(model.proofState).toBe('COMPLETE');
+  });
+
+  it('normalizes observed canonical snapshot state before branch ranking', () => {
+    const model = buildRuneProofPackCoachModel({
+      pack: branchingPack,
+      progress: emptyProgressFor(branchingPack, 'run-a'),
+      requirementSnapshot: readyRequirementSnapshot({ observedCanonicalCompletion: true }),
+      completedQuestIds: new Set(),
+    });
+
+    expect(model.branch.selectedBranchId).toBe('local');
+    expect(model.proofState).not.toBe('COMPLETE');
+  });
+
+  it('does not freeze or otherwise mutate caller-owned pack requirements', () => {
+    const pack = structuredClone(combatPack);
+    expect(Object.isFrozen(pack.preflight)).toBe(false);
+    expect(Object.isFrozen(pack.branches[0].requirements)).toBe(false);
+    expect(Object.isFrozen(pack.branches[0].actions[0].requirements)).toBe(false);
+    const before = JSON.stringify(pack);
+
+    buildRuneProofPackCoachModel({
+      pack,
+      progress: emptyProgressFor(pack, 'run-a'),
+      requirementSnapshot: readyRequirementSnapshot(),
+      completedQuestIds: new Set(),
+    });
+
+    expect(JSON.stringify(pack)).toBe(before);
+    expect(Object.isFrozen(pack.preflight)).toBe(false);
+    expect(Object.isFrozen(pack.branches[0].requirements)).toBe(false);
+    expect(Object.isFrozen(pack.branches[0].actions[0].requirements)).toBe(false);
   });
 });

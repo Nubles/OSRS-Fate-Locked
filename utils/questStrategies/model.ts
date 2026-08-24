@@ -4,11 +4,11 @@ import {
   type ChunkKey,
   type QuestItemRequirement,
 } from '../questRoutes/model';
-import {
-  f2pQuestMembershipFor,
-  type F2PQuestMembership,
-} from '../../data/f2pQuestMembership';
 import { reviewedQuestRequirements } from '../../data/questItemRequirements';
+import {
+  runeProofCatalogueFor,
+  type RuneProofCatalogueEntry,
+} from '../../data/runeProofQuestCatalogue';
 import type {
   QuestActionCoachMetadata,
   QuestWalkthroughActionDefinition,
@@ -21,14 +21,16 @@ export type QuestStrategyAction = QuestWalkthroughActionDefinition & {
 };
 
 export interface QuestStrategyContext {
-  readonly membership: F2PQuestMembership;
+  readonly catalogue: RuneProofCatalogueEntry;
   readonly rootRequirements: readonly QuestItemRequirement[];
 }
 
 export interface QuestStrategyDefinition {
   readonly questId: string;
-  readonly kind: F2PQuestMembership['kind'];
-  readonly rolloutWave: F2PQuestMembership['wave'];
+  readonly kind: RuneProofCatalogueEntry['kind'];
+  readonly membership: RuneProofCatalogueEntry['membership'];
+  /** Compatibility name retained while existing consumers migrate. */
+  readonly rolloutWave: RuneProofCatalogueEntry['milestone'];
   readonly progressionPriority: number;
   readonly revision: string;
   readonly source: QuestWalkthroughDefinition['source'];
@@ -177,20 +179,27 @@ const hasValidCoachMetadata = (action: QuestWalkthroughActionDefinition): action
   return hasValidPreferredMethod(action, coach.fulfils);
 };
 
-const isMatchingMembership = (
+const isMatchingCatalogue = (
   value: unknown,
   questId: string,
-): value is F2PQuestMembership => (
+): value is RuneProofCatalogueEntry => (
   isRecord(value)
   && value.questId === questId
   && isNonBlank(value.slug)
   && (value.kind === 'quest' || value.kind === 'miniquest')
-  && (value.wave === 1 || value.wave === 2 || value.wave === 3 || value.wave === 4 || value.wave === 5)
+  && (value.membership === 'F2P' || value.membership === 'MEMBERS')
+  && (value.milestone === 1 || value.milestone === 2 || value.milestone === 3
+    || value.milestone === 4 || value.milestone === 5)
   && typeof value.progressionPriority === 'number'
   && Number.isInteger(value.progressionPriority)
   && value.progressionPriority > 0
   && isNonBlank(value.wikiTitle)
-  && value.evidenceQuestId === questId
+  && isNonBlank(value.sourceRevision)
+  && isNonBlank(value.sourceRevisionTimestamp)
+  && (value.requirementStatus === 'VERIFIED'
+    || value.requirementStatus === 'VERIFIED_WITH_NOTES'
+    || value.requirementStatus === 'UNRESOLVED')
+  && isRecord(value.requirementComplexity)
 );
 
 const addItemQuantity = (
@@ -230,12 +239,12 @@ const hasValidItemFlow = (
 const legacyStrategyContextFor = (
   walkthrough: QuestWalkthroughDefinition,
 ): QuestStrategyContext | null => {
-  const membership = f2pQuestMembershipFor(walkthrough.questId);
+  const catalogue = runeProofCatalogueFor(walkthrough.questId);
   const rootRequirements = reviewedQuestRequirements(walkthrough.questId);
-  if (!membership || !rootRequirements) {
+  if (!catalogue || !rootRequirements) {
     return null;
   }
-  return { membership, rootRequirements: rootRequirements.items };
+  return { catalogue, rootRequirements: rootRequirements.items };
 };
 
 /**
@@ -256,7 +265,7 @@ export function questStrategyFromWalkthrough(
   const resolvedContext = context ?? (arguments.length === 1 ? legacyStrategyContextFor(walkthrough) : null);
   if (
     !isRecord(resolvedContext)
-    || !isMatchingMembership(resolvedContext.membership, walkthrough.questId)
+    || !isMatchingCatalogue(resolvedContext.catalogue, walkthrough.questId)
     || !Array.isArray(resolvedContext.rootRequirements)
   ) return null;
 
@@ -318,9 +327,10 @@ export function questStrategyFromWalkthrough(
 
   return Object.freeze({
     questId: walkthrough.questId,
-    kind: resolvedContext.membership.kind,
-    rolloutWave: resolvedContext.membership.wave,
-    progressionPriority: resolvedContext.membership.progressionPriority,
+    kind: resolvedContext.catalogue.kind,
+    membership: resolvedContext.catalogue.membership,
+    rolloutWave: resolvedContext.catalogue.milestone,
+    progressionPriority: resolvedContext.catalogue.progressionPriority,
     revision: walkthrough.revision,
     source: walkthrough.source,
     sourceLines: walkthrough.sourceLines,

@@ -1,6 +1,6 @@
 import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, parseChunkKey } from '../chunkAdjacency';
 import { chunkUnlocked } from '../chunkLocations';
-import { reviewedQuestRequirements } from '../../data/questItemRequirements';
+import type { ReviewedQuestRequirements } from '../../data/questItemRequirements';
 import {
   routeRecipes,
   transformationCoverageFor,
@@ -10,12 +10,19 @@ import {
 import { collectWalkthroughEntityRequests } from '../questWalkthroughs/entityRequests';
 import type { QuestWalkthroughDefinition } from '../questWalkthroughs/model';
 import type {
+  DeepReadonly,
   QuestRouteAnalysisSnapshot,
   QuestRouteStationRequirement,
   RuneProofRouteAnalysis,
 } from './analyzeQuest';
 import type { RuneProofAvailability } from './featureFlag';
-import type { QuestWalkthroughRelease } from '../../data/questWalkthroughRelease';
+import type {
+  RuneProofCatalogueSummary,
+  RuneProofLoadedPack,
+  RuneProofPlatformReviewHarness,
+} from '../../data/questWalkthroughLoader';
+import type { RuneProofPackRelease } from '../../data/runeProofPackRelease';
+import type { RuneProofStorage } from './previewChecks';
 import type {
   ConnectGraph,
   EntityHit,
@@ -35,30 +42,26 @@ export interface RuneProofContentService {
 }
 
 export interface RuneProofIntegration {
-  availability: RuneProofAvailability;
-  chunkDataVersion: number;
-  contentService: RuneProofContentService;
-  analyze: (
+  readonly availability: RuneProofAvailability;
+  readonly chunkDataVersion: number;
+  readonly contentService: RuneProofContentService;
+  readonly analyze: (
     questId: string,
     snapshot: QuestRouteAnalysisSnapshot,
     walkthrough: QuestWalkthroughDefinition,
   ) => RuneProofRouteAnalysis;
-  loadWalkthrough?: (
+  readonly loadCatalogue?: (
     availability: RuneProofAvailability,
-    release: QuestWalkthroughRelease,
-  ) => Promise<QuestWalkthroughDefinition | undefined>;
-  walkthroughReleaseFor?: (questId: string) => QuestWalkthroughRelease | undefined;
+  ) => Promise<readonly RuneProofCatalogueSummary[]>;
+  readonly loadPack?: (
+    availability: RuneProofAvailability,
+    release: RuneProofPackRelease,
+  ) => Promise<RuneProofLoadedPack | undefined>;
+  readonly loadReviewHarness?: (
+    availability: RuneProofAvailability,
+  ) => Promise<RuneProofPlatformReviewHarness | undefined>;
+  readonly progressStorage?: RuneProofStorage;
 }
-
-export interface RuneProofRequestIdentity {
-  readonly key: string;
-  readonly questId: string;
-  readonly walkthroughRelease: QuestWalkthroughRelease;
-}
-
-export type RuneProofRenderState =
-  | { request: RuneProofRequestIdentity; analysis: RuneProofRouteAnalysis; unavailable: false }
-  | { request: RuneProofRequestIdentity; analysis: null; unavailable: true };
 
 const compareCodeUnit = (left: string, right: string): number => (
   left < right ? -1 : left > right ? 1 : 0
@@ -129,9 +132,12 @@ export const materializeQuestRouteSnapshot = (
   contentService: RuneProofContentService,
   chunkDataVersion: number,
   walkthrough: QuestWalkthroughDefinition,
+  reviewedRequirements: ReviewedQuestRequirements,
 ): QuestRouteAnalysisSnapshot => {
-  const catalogue = reviewedQuestRequirements(questId);
-  if (!catalogue) throw new Error(`RuneProof has no reviewed item catalogue for ${questId}.`);
+  if (reviewedRequirements.questId !== questId) {
+    throw new Error(`RuneProof reviewed requirement identity does not match ${questId}.`);
+  }
+  const catalogue = structuredClone(reviewedRequirements);
 
   const pending = catalogue.items.flatMap(requirement => [
     requirement.item,
@@ -250,6 +256,7 @@ export const materializeQuestRouteSnapshot = (
   return {
     ...account,
     chunkDataVersion,
+    reviewedRequirements: deepFreeze(catalogue),
     itemSourceRecords: [...records.values()],
     recipes: reviewedRecipes,
     entityLocations,
@@ -257,4 +264,12 @@ export const materializeQuestRouteSnapshot = (
     sourceCoverage: [...sourceCoverage.values()],
     connectGraph,
   };
+};
+
+const deepFreeze = <T>(value: T): DeepReadonly<T> => {
+  if (value !== null && typeof value === 'object' && !Object.isFrozen(value)) {
+    Object.values(value).forEach(entry => deepFreeze(entry));
+    Object.freeze(value);
+  }
+  return value as DeepReadonly<T>;
 };
