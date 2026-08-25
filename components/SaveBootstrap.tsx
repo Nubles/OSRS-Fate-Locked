@@ -2,6 +2,10 @@ import React, { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { GameState } from '../types';
 import { createFreshState } from '../context/GameContext';
 import {
+  useProfileWriterLease,
+  type ProfileWriterLeaseOptions,
+} from '../hooks/useProfileWriterLease';
+import {
   getPendingSave,
   type PendingSaveEntry,
 } from '../utils/pendingSaves';
@@ -15,8 +19,11 @@ import {
   openRecoveryDatabase,
 } from '../utils/recoveryDatabase';
 import type {
+  RecoveryCheckpoint,
+  RecoveryHead,
   RecoveryRepository,
 } from '../utils/recoveryTypes';
+import type { SaveWriteAuthorization } from '../utils/profileWriterLease';
 import { checksumSave } from '../utils/saveIntegrity';
 import {
   resolveSaveRecovery,
@@ -24,6 +31,7 @@ import {
   type SaveRecoveryInput,
   type ValidatedRecoveryCandidate,
 } from '../utils/saveRecovery';
+import { MAX_SAVE_BYTES } from '../utils/saveSchema';
 import {
   SaveRecoveryScreen,
   type RecoveryActionResult,
@@ -48,6 +56,7 @@ export interface SaveBootstrapReplacement {
 }
 
 export interface SaveBootstrapDependencies {
+  leaseOptions?: ProfileWriterLeaseOptions;
   createFreshState: () => GameState;
   readPending: (storageKey: string) => string | null;
   readPrimary: (storageKey: string) => string | null;
@@ -59,13 +68,20 @@ export interface SaveBootstrapDependencies {
   archiveCorruptEvidence?: (
     storageKey: string,
     evidence: CorruptSaveEvidence,
+    authorizeWrite?: () => SaveWriteAuthorization,
   ) => RecoveryActionResult | Promise<RecoveryActionResult>;
   replaceSave?: (
     replacement: SaveBootstrapReplacement,
+    authorizeWrite?: () => SaveWriteAuthorization,
+  ) => RecoveryActionResult | Promise<RecoveryActionResult>;
+  resetRecovery?: (
+    replacement: SaveBootstrapReplacement,
+    authorizeWrite?: () => SaveWriteAuthorization,
   ) => RecoveryActionResult | Promise<RecoveryActionResult>;
   exportRecovery?: (
     storageKey: string,
     decision: Exclude<SaveRecoveryDecision, ReadyDecision | { kind: 'empty' }>,
+    options?: RecoveryExportOptions,
   ) => RecoveryActionResult | Promise<RecoveryActionResult>;
 }
 
@@ -86,29 +102,72 @@ const readStorage = (key: string): string | null => {
   return window.localStorage.getItem(key);
 };
 
-const writeStorageVerified = (key: string, data: string): boolean => {
+const writeAuthorizationFailure = (
+  authorization: SaveWriteAuthorization,
+): RecoveryActionResult => ({
+  ok: false,
+  message: ('reason' in authorization && authorization.reason === 'ownership_conflict')
+    ? 'The recovery action stopped because writer ownership changed.'
+    : 'The recovery action stopped because save storage is unavailable.',
+});
+
+const checkWriteAuthorization = (
+  authorizeWrite?: () => SaveWriteAuthorization,
+): RecoveryActionResult | null => {
+  if (authorizeWrite === undefined) return null;
+  const authorization = authorizeWrite();
+  if (authorization.ok) return null;
+  return writeAuthorizationFailure(authorization);
+};
+
+const writeStorageVerified = (
+  key: string,
+  data: string,
+  authorizeWrite?: () => SaveWriteAuthorization,
+): RecoveryActionResult => {
+  const beforeWrite = checkWriteAuthorization(authorizeWrite);
+  if (beforeWrite !== null) return beforeWrite;
   try {
     window.localStorage.setItem(key, data);
-    return window.localStorage.getItem(key) === data;
+    const afterWrite = checkWriteAuthorization(authorizeWrite);
+    if (afterWrite !== null) return afterWrite;
+    return window.localStorage.getItem(key) === data
+      ? { ok: true }
+      : { ok: false, message: 'The replacement save could not be written.' };
   } catch {
-    return false;
+    return { ok: false, message: 'The replacement save could not be written.' };
   }
 };
 
 const productionArchiveCorruptEvidence = async (
   storageKey: string,
   evidence: CorruptSaveEvidence,
-): Promise<RecoveryActionResult> => archiveCorruptSave(window.localStorage, storageKey, evidence);
+  authorizeWrite?: () => SaveWriteAuthorization,
+): Promise<RecoveryActionResult> => {
+  if (authorizeWrite === undefined) {
+    return { ok: false, message: 'Recovery writer ownership could not be verified.' };
+  }
+  return archiveCorruptSave(
+    window.localStorage,
+    storageKey,
+    evidence,
+    { authorizeWrite },
+  );
+};
 
 const productionReplaceSave = async (
   replacement: SaveBootstrapReplacement,
+  authorizeWrite?: () => SaveWriteAuthorization,
 ): Promise<RecoveryActionResult> => {
-  if (!writeStorageVerified(replacement.storageKey, replacement.data)) {
-    return { ok: false, message: 'The replacement save could not be written.' };
+  if (authorizeWrite === undefined) {
+    return { ok: false, message: 'Recovery writer ownership could not be verified.' };
   }
-
   try {
     const checksum = replacement.checksum ?? await checksumSave(replacement.data);
+    const afterChecksum = checkWriteAuthorization(authorizeWrite);
+    if (afterChecksum !== null) return afterChecksum;
+    const written = writeStorageVerified(replacement.storageKey, replacement.data, authorizeWrite);
+    if (written && 'ok' in written && written.ok === false) return written;
     const metadata = JSON.stringify({
       version: 1,
       persistenceRevision: replacement.persistenceRevision,
@@ -116,7 +175,11 @@ const productionReplaceSave = async (
       checksum,
     });
     const metadataKey = profileMirrorMetadataKey(replacement.storageKey);
+    const beforeMetadata = checkWriteAuthorization(authorizeWrite);
+    if (beforeMetadata !== null) return beforeMetadata;
     window.localStorage.setItem(metadataKey, metadata);
+    const afterMetadata = checkWriteAuthorization(authorizeWrite);
+    if (afterMetadata !== null) return afterMetadata;
     if (window.localStorage.getItem(metadataKey) !== metadata) {
       return { ok: false, message: 'The replacement save metadata could not be verified.' };
     }
@@ -126,39 +189,228 @@ const productionReplaceSave = async (
   return { ok: true };
 };
 
-const productionExportRecovery = async (
+const recoveryJournalFailure = (result: { stored: false; reason: string }): RecoveryActionResult => ({
+  ok: false,
+  message: result.reason === 'ownership_conflict'
+    ? 'The recovery journal could not be reset because writer ownership changed.'
+    : 'The recovery journal could not be reset.',
+});
+
+const nextJournalRevision = (
+  head: RecoveryHead | null,
+  checkpoints: readonly RecoveryCheckpoint[],
+): number => {
+  let highest = head?.persistenceRevision ?? -1;
+  for (const checkpoint of checkpoints) {
+    if (checkpoint.persistenceRevision > highest) highest = checkpoint.persistenceRevision;
+  }
+  return highest + 1;
+};
+
+export interface RecoveryResetOptions {
+  openRepository?: () => RecoveryRepository | PromiseLike<RecoveryRepository>;
+  now?: () => number;
+}
+
+export const productionResetRecovery = async (
+  replacement: SaveBootstrapReplacement,
+  authorizeWrite?: () => SaveWriteAuthorization,
+  options: RecoveryResetOptions = {},
+): Promise<RecoveryActionResult> => {
+  if (authorizeWrite === undefined) {
+    return { ok: false, message: 'Recovery writer ownership could not be verified.' };
+  }
+  let repository: RecoveryRepository | null = null;
+  try {
+    const beforeOpen = checkWriteAuthorization(authorizeWrite);
+    if (beforeOpen !== null) return beforeOpen;
+    repository = await (options.openRepository?.() ?? openProductionRepository());
+    if (repository === unavailableRecoveryRepository) return { ok: true };
+    const afterOpen = checkWriteAuthorization(authorizeWrite);
+    if (afterOpen !== null) return afterOpen;
+    const [head, checkpoints] = await Promise.all([
+      repository.getHead(replacement.profileId),
+      repository.listCheckpoints(replacement.profileId),
+    ]);
+    const afterRead = checkWriteAuthorization(authorizeWrite);
+    if (afterRead !== null) return afterRead;
+    const checksum = replacement.checksum ?? await checksumSave(replacement.data);
+    const afterChecksum = checkWriteAuthorization(authorizeWrite);
+    if (afterChecksum !== null) return afterChecksum;
+    const freshHead: RecoveryHead = {
+      profileId: replacement.profileId,
+      persistenceRevision: nextJournalRevision(head, checkpoints),
+      runId: replacement.state.runId,
+      runRevision: replacement.state.runRevision,
+      capturedAt: replacement.capturedAt ?? options.now?.() ?? Date.now(),
+      checksum,
+      data: replacement.data,
+    };
+    const headResult = await repository.putHead(freshHead, authorizeWrite);
+    if (headResult.stored === false) return recoveryJournalFailure(headResult);
+    const afterHead = checkWriteAuthorization(authorizeWrite);
+    if (afterHead !== null) return afterHead;
+    const revisions = checkpoints.map(checkpoint => checkpoint.persistenceRevision);
+    if (revisions.length > 0) {
+      const deleteResult = await repository.deleteCheckpoints(
+        replacement.profileId,
+        revisions,
+        authorizeWrite,
+      );
+      if (deleteResult.stored === false) return recoveryJournalFailure(deleteResult);
+      const afterDelete = checkWriteAuthorization(authorizeWrite);
+      if (afterDelete !== null) return afterDelete;
+    }
+    return { ok: true };
+  } catch {
+    return { ok: false, message: 'The recovery journal could not be reset.' };
+  } finally {
+    try {
+      repository?.close();
+    } catch {
+      // Closing an already-aborted recovery connection is harmless at startup.
+    }
+  }
+};
+
+export interface RecoveryExportOptions {
+  isCurrentRequest?: () => boolean;
+  buildArchive?: typeof buildCorruptSaveArchive;
+  now?: () => number;
+  document?: Document;
+  url?: typeof URL;
+  blob?: typeof Blob;
+}
+
+type RecoveryExportPayload = {
+  version: 1;
+  capturedAt: number;
+  evidence: Awaited<ReturnType<typeof buildCorruptSaveArchive>>;
+  candidates: unknown[];
+  rawCandidates: unknown[];
+  truncated?: true;
+};
+
+const exportValueMaxBytes = Math.max(0, Math.floor((MAX_SAVE_BYTES - 4096) / 2));
+
+const exportByteLength = (value: string): number => new TextEncoder().encode(value).byteLength;
+
+const boundedExportCandidate = async (
+  data: string,
+  buildArchive: typeof buildCorruptSaveArchive,
+): Promise<{ data: string | null; hash?: string; bytes?: number }> => {
+  const archive = await buildArchive(
+    { primary: data, mirrorMetadata: null },
+    { maxBytes: exportValueMaxBytes },
+  );
+  return {
+    data: archive.primary,
+    ...(archive.primaryHash ? { hash: archive.primaryHash, bytes: archive.primaryBytes } : {}),
+  };
+};
+
+const addExportItem = (
+  payload: RecoveryExportPayload,
+  field: 'candidates' | 'rawCandidates',
+  item: unknown,
+): RecoveryExportPayload => {
+  const next = {
+    ...payload,
+    [field]: [...payload[field], item],
+  } as RecoveryExportPayload;
+  if (exportByteLength(JSON.stringify(next)) <= MAX_SAVE_BYTES) return next;
+  return { ...payload, truncated: true };
+};
+
+export const productionExportRecovery = async (
   storageKey: string,
   decision: Exclude<SaveRecoveryDecision, ReadyDecision | { kind: 'empty' }>,
+  options: RecoveryExportOptions = {},
 ): Promise<RecoveryActionResult> => {
-  if (typeof document === 'undefined' || typeof URL === 'undefined' || typeof Blob === 'undefined') {
+  const documentRef = options.document ?? (typeof document === 'undefined' ? undefined : document);
+  const urlRef = options.url ?? (typeof URL === 'undefined' ? undefined : URL);
+  const blobRef = options.blob ?? (typeof Blob === 'undefined' ? undefined : Blob);
+  const isCurrentRequest = options.isCurrentRequest ?? (() => true);
+  if (documentRef === undefined || urlRef === undefined || blobRef === undefined) {
     return { ok: false, message: 'Recovery export is unavailable in this browser.' };
   }
   try {
+    if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
+    const buildArchive = options.buildArchive ?? buildCorruptSaveArchive;
     const primary = decision.kind === 'recovery_required' ? decision.primaryRaw : null;
-    const mirrorMetadata = readStorage(profileMirrorMetadataKey(storageKey));
-    const bounded = await buildCorruptSaveArchive({ primary, mirrorMetadata });
+    let mirrorMetadata: string | null = null;
+    try {
+      mirrorMetadata = readStorage(profileMirrorMetadataKey(storageKey));
+    } catch {
+      // Export still retains the decision evidence when mirror storage is unavailable.
+    }
+    const bounded = await buildArchive(
+      { primary, mirrorMetadata },
+      { maxBytes: exportValueMaxBytes },
+    );
     const candidates = decision.kind === 'recovery_required'
-      ? decision.candidates.map(candidate => ({
-        source: candidate.source,
-        persistenceRevision: candidate.persistenceRevision,
-        capturedAt: candidate.capturedAt,
-        runId: candidate.runId,
-        runRevision: candidate.runRevision,
-        data: candidate.data,
+      ? await Promise.all(decision.candidates.map(async candidate => {
+        const boundedCandidate = await boundedExportCandidate(candidate.data, buildArchive);
+        return {
+          source: candidate.source,
+          persistenceRevision: candidate.persistenceRevision,
+          capturedAt: candidate.capturedAt,
+          runId: candidate.runId,
+          runRevision: candidate.runRevision,
+          data: boundedCandidate.data,
+          ...(boundedCandidate.hash
+            ? { dataHash: boundedCandidate.hash, dataBytes: boundedCandidate.bytes }
+            : {}),
+        };
       }))
       : [];
-    const payload = JSON.stringify({
+    const rawCandidates = decision.kind === 'unsupported'
+      ? await Promise.all(decision.rawCandidates.map(async rawCandidate => {
+        const boundedCandidate = await boundedExportCandidate(rawCandidate, buildArchive);
+        return boundedCandidate.data ?? {
+          hash: boundedCandidate.hash,
+          bytes: boundedCandidate.bytes,
+        };
+      }))
+      : [];
+    if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
+    let payload: RecoveryExportPayload = {
       version: 1,
-      capturedAt: Date.now(),
+      capturedAt: options.now?.() ?? Date.now(),
       evidence: bounded,
-      candidates,
-    });
-    const url = URL.createObjectURL(new Blob([payload], { type: 'application/json' }));
-    const anchor = document.createElement('a');
+      candidates: [],
+      rawCandidates: [],
+    };
+    for (const candidate of candidates) payload = addExportItem(payload, 'candidates', candidate);
+    for (const rawCandidate of rawCandidates) payload = addExportItem(payload, 'rawCandidates', rawCandidate);
+    let serialized = JSON.stringify(payload);
+    if (exportByteLength(serialized) > MAX_SAVE_BYTES) {
+      payload = {
+        version: 1,
+        capturedAt: payload.capturedAt,
+        evidence: {
+          version: 1,
+          capturedAt: payload.evidence.capturedAt,
+          primary: null,
+          mirrorMetadata: null,
+        },
+        candidates: [],
+        rawCandidates: [],
+        truncated: true,
+      };
+      serialized = JSON.stringify(payload);
+    }
+    if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
+    const url = urlRef.createObjectURL(new blobRef([serialized], { type: 'application/json' }));
+    const anchor = documentRef.createElement('a');
     anchor.href = url;
-    anchor.download = `fate_locked_recovery_${Date.now()}.json`;
+    anchor.download = `fate_locked_recovery_${payload.capturedAt}.json`;
+    if (!isCurrentRequest()) {
+      urlRef.revokeObjectURL(url);
+      return { ok: false, message: 'This profile is no longer active.' };
+    }
     anchor.click();
-    URL.revokeObjectURL(url);
+    urlRef.revokeObjectURL(url);
     return { ok: true };
   } catch {
     return { ok: false, message: 'Recovery export failed.' };
@@ -185,6 +437,7 @@ export const productionSaveBootstrapDependencies: SaveBootstrapDependencies = {
   resolveSaveRecovery,
   archiveCorruptEvidence: productionArchiveCorruptEvidence,
   replaceSave: productionReplaceSave,
+  resetRecovery: productionResetRecovery,
   exportRecovery: productionExportRecovery,
 };
 
@@ -244,6 +497,27 @@ export interface SaveBootstrapProps {
   dependencies?: SaveBootstrapDependencies;
   children: (result: SaveBootstrapResult) => ReactNode;
 }
+
+const SaveRecoveryLeaseGate: React.FC<{
+  storageKey: string;
+  leaseOptions?: ProfileWriterLeaseOptions;
+  children: (authorizeWrite: () => SaveWriteAuthorization) => ReactNode;
+}> = ({ storageKey, leaseOptions, children }) => {
+  const lease = useProfileWriterLease(storageKey, leaseOptions);
+  useEffect(() => () => {
+    lease.release();
+  }, [lease.release]);
+  if (lease.status !== 'owner') {
+    return (
+      <div role="status" aria-live="polite">
+        {lease.status === 'blocked'
+          ? 'Another browser tab owns this save.'
+          : 'Checking save write ownership…'}
+      </div>
+    );
+  }
+  return <>{children(lease.authorizeWrite)}</>;
+};
 
 /**
  * Resolves all durable save candidates before rendering the GameProvider.
@@ -342,82 +616,113 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
     const isCurrentRequest = () => requestRef.current === activeView.request;
     const archiveCorruptEvidence = dependencies.archiveCorruptEvidence ?? productionArchiveCorruptEvidence;
     const replaceSave = dependencies.replaceSave ?? productionReplaceSave;
+    const resetRecovery = dependencies.resetRecovery;
     const exportRecovery = dependencies.exportRecovery ?? productionExportRecovery;
     return (
-      <SaveRecoveryScreen
-        decision={activeView.decision}
-        archiveCorruptEvidence={async () => {
-          if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
-          const result = await archiveCorruptEvidence(
-            storageKey,
-            {
-              primary: activeView.decision.kind === 'recovery_required'
-                ? activeView.decision.primaryRaw
-                : null,
-              mirrorMetadata: activeView.mirrorMetadataRaw,
-            },
-          );
-          return isCurrentRequest()
-            ? result
-            : { ok: false, message: 'This profile is no longer active.' };
-        }}
-        onExportRecovery={() => exportRecovery(storageKey, activeView.decision)}
-        onRecover={async (candidate: ValidatedRecoveryCandidate) => {
-          if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
-          const replacement: SaveBootstrapReplacement = {
-            profileId,
-            storageKey,
-            data: candidate.data,
-            state: candidate.state,
-            persistenceRevision: candidate.persistenceRevision,
-            capturedAt: candidate.capturedAt,
-            checksum: candidate.checksum,
-          };
-          const result = await replaceSave(replacement);
-          if (result && 'ok' in result && result.ok === false) return result;
-          if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
-          setView({
-            identity,
-            phase: 'ready',
-            result: {
-              initialState: candidate.state,
-              initialData: candidate.data,
-              persistenceRevision: candidate.persistenceRevision,
-              source: 'recovery',
-              needsJournalImport: true,
-            },
-          });
-          return { ok: true };
-        }}
-        onStartFresh={async () => {
-          if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
-          const state = dependencies.createFreshState();
-          const data = JSON.stringify(state);
-          const result = await replaceSave({
-            profileId,
-            storageKey,
-            data,
-            state,
-            persistenceRevision: 0,
-            capturedAt: null,
-            checksum: null,
-          });
-          if (result && 'ok' in result && result.ok === false) return result;
-          if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
-          setView({
-            identity,
-            phase: 'ready',
-            result: {
-              initialState: state,
-              initialData: data,
-              persistenceRevision: 0,
-              source: 'empty',
-              needsJournalImport: false,
-            },
-          });
-          return { ok: true };
-        }}
-      />
+      <SaveRecoveryLeaseGate storageKey={storageKey} leaseOptions={dependencies.leaseOptions}>
+        {authorizeWrite => (
+          <SaveRecoveryScreen
+            decision={activeView.decision}
+            authorizeWrite={authorizeWrite}
+            archiveCorruptEvidence={async () => {
+              if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
+              const beforeArchive = checkWriteAuthorization(authorizeWrite);
+              if (beforeArchive !== null) return beforeArchive;
+              const result = await archiveCorruptEvidence(
+                storageKey,
+                {
+                  primary: activeView.decision.kind === 'recovery_required'
+                    ? activeView.decision.primaryRaw
+                    : null,
+                  mirrorMetadata: activeView.mirrorMetadataRaw,
+                },
+                authorizeWrite,
+              );
+              if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
+              const afterArchive = checkWriteAuthorization(authorizeWrite);
+              return afterArchive ?? result;
+            }}
+            onExportRecovery={async () => {
+              if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
+              const result = await exportRecovery(storageKey, activeView.decision, { isCurrentRequest });
+              return isCurrentRequest()
+                ? result
+                : { ok: false, message: 'This profile is no longer active.' };
+            }}
+            onRecover={async (candidate: ValidatedRecoveryCandidate) => {
+              if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
+              const replacement: SaveBootstrapReplacement = {
+                profileId,
+                storageKey,
+                data: candidate.data,
+                state: candidate.state,
+                persistenceRevision: candidate.persistenceRevision,
+                capturedAt: candidate.capturedAt,
+                checksum: candidate.checksum,
+              };
+              const beforeReplace = checkWriteAuthorization(authorizeWrite);
+              if (beforeReplace !== null) return beforeReplace;
+              const result = await replaceSave(replacement, authorizeWrite);
+              if (result && 'ok' in result && result.ok === false) return result;
+              if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
+              const afterReplace = checkWriteAuthorization(authorizeWrite);
+              if (afterReplace !== null) return afterReplace;
+              setView({
+                identity,
+                phase: 'ready',
+                result: {
+                  initialState: candidate.state,
+                  initialData: candidate.data,
+                  persistenceRevision: candidate.persistenceRevision,
+                  source: 'recovery',
+                  needsJournalImport: true,
+                },
+              });
+              return { ok: true };
+            }}
+            onStartFresh={async () => {
+              if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
+              const state = dependencies.createFreshState();
+              const data = JSON.stringify(state);
+              const replacement: SaveBootstrapReplacement = {
+                profileId,
+                storageKey,
+                data,
+                state,
+                persistenceRevision: 0,
+                capturedAt: null,
+                checksum: null,
+              };
+              const beforeReset = checkWriteAuthorization(authorizeWrite);
+              if (beforeReset !== null) return beforeReset;
+              if (resetRecovery !== undefined) {
+                const reset = await resetRecovery(replacement, authorizeWrite);
+                if (reset && 'ok' in reset && reset.ok === false) return reset;
+                if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
+                const afterReset = checkWriteAuthorization(authorizeWrite);
+                if (afterReset !== null) return afterReset;
+              }
+              const result = await replaceSave(replacement, authorizeWrite);
+              if (result && 'ok' in result && result.ok === false) return result;
+              if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
+              const afterReplace = checkWriteAuthorization(authorizeWrite);
+              if (afterReplace !== null) return afterReplace;
+              setView({
+                identity,
+                phase: 'ready',
+                result: {
+                  initialState: state,
+                  initialData: data,
+                  persistenceRevision: 0,
+                  source: 'empty',
+                  needsJournalImport: false,
+                },
+              });
+              return { ok: true };
+            }}
+          />
+        )}
+      </SaveRecoveryLeaseGate>
     );
   }
   if (activeView.phase === 'error') {

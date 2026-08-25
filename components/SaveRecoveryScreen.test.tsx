@@ -90,6 +90,70 @@ describe('SaveRecoveryScreen', () => {
     expect(current.onStartFresh).not.toHaveBeenCalled();
   });
 
+  it('exposes the fresh-run confirmation as a focused modal dialog', async () => {
+    const current = actions();
+    const user = userEvent.setup();
+    render(<SaveRecoveryScreen decision={corruptDecision()} {...current} />);
+
+    const trigger = screen.getByRole('button', { name: 'Start a new run' });
+    trigger.focus();
+    await user.click(trigger);
+
+    const dialog = screen.getByRole('alertdialog');
+    expect(dialog.getAttribute('aria-modal')).toBe('true');
+    expect(dialog.getAttribute('aria-describedby')).toBe('fresh-run-description');
+    expect(document.activeElement).toBe(dialog);
+
+    await user.click(screen.getByRole('button', { name: 'Keep recovery options' }));
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it('does not invoke a recovery mutation after writer ownership is lost', async () => {
+    const current = actions();
+    const authorizeWrite = vi.fn(() => ({ ok: false as const, reason: 'ownership_conflict' as const }));
+    const user = userEvent.setup();
+    render(
+      <SaveRecoveryScreen
+        decision={corruptDecision()}
+        authorizeWrite={authorizeWrite}
+        {...current}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Recover latest safe save' }));
+
+    expect(authorizeWrite).toHaveBeenCalledOnce();
+    expect(current.archiveCorruptEvidence).not.toHaveBeenCalled();
+    expect(current.onRecover).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert').textContent).toContain('writer ownership');
+  });
+
+  it('reauthorizes before replacing a save after asynchronous archival', async () => {
+    const current = actions();
+    let checks = 0;
+    const authorizeWrite = vi.fn(() => {
+      checks += 1;
+      return checks === 1
+        ? { ok: true as const }
+        : { ok: false as const, reason: 'ownership_conflict' as const };
+    });
+    const user = userEvent.setup();
+    render(
+      <SaveRecoveryScreen
+        decision={corruptDecision()}
+        authorizeWrite={authorizeWrite}
+        {...current}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Recover latest safe save' }));
+
+    expect(authorizeWrite).toHaveBeenCalledTimes(2);
+    expect(current.archiveCorruptEvidence).toHaveBeenCalledOnce();
+    expect(current.onRecover).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert').textContent).toContain('writer ownership');
+  });
+
   it('summarizes the newest checkpoint and lets the player select an older one', async () => {
     const current = actions();
     const user = userEvent.setup();

@@ -5,6 +5,7 @@ import {
 } from './storageRecovery';
 import { checksumSave } from './saveIntegrity';
 import { MAX_SAVE_BYTES } from './saveSchema';
+import type { SaveWriteAuthorization } from './profileWriterLease';
 
 export const profileBaseKey = (profileId: string): string =>
   `FATE_PROFILE_${profileId}`;
@@ -44,6 +45,7 @@ export interface CorruptSaveArchiveOptions {
   now?: () => number;
   checksum?: (data: string) => Promise<string>;
   maxBytes?: number;
+  authorizeWrite?: () => SaveWriteAuthorization;
 }
 
 export type CorruptSaveArchiveResult =
@@ -51,6 +53,24 @@ export type CorruptSaveArchiveResult =
   | { ok: false; message: string };
 
 const byteLength = (value: string): number => new TextEncoder().encode(value).byteLength;
+
+const archiveAuthorizationFailure = (
+  authorization: SaveWriteAuthorization,
+): CorruptSaveArchiveResult => ({
+  ok: false,
+  message: ('reason' in authorization && authorization.reason === 'ownership_conflict')
+    ? 'Save ownership changed before recovery evidence could be archived.'
+    : 'Recovery storage is unavailable.',
+});
+
+const checkArchiveAuthorization = (
+  authorizeWrite: CorruptSaveArchiveOptions['authorizeWrite'],
+): CorruptSaveArchiveResult | null => {
+  if (authorizeWrite === undefined) return null;
+  const authorization = authorizeWrite();
+  if (authorization.ok) return null;
+  return archiveAuthorizationFailure(authorization);
+};
 
 const boundedEvidence = async (
   value: string | null,
@@ -102,7 +122,11 @@ export const archiveCorruptSave = async (
   options: CorruptSaveArchiveOptions = {},
 ): Promise<CorruptSaveArchiveResult> => {
   try {
+    const initialAuthorization = checkArchiveAuthorization(options.authorizeWrite);
+    if (initialAuthorization !== null) return initialAuthorization;
     const archive = await buildCorruptSaveArchive(evidence, options);
+    const postBuildAuthorization = checkArchiveAuthorization(options.authorizeWrite);
+    if (postBuildAuthorization !== null) return postBuildAuthorization;
     const serialized = JSON.stringify(archive);
     const key = profileCorruptArchiveKey(storageKey);
     storage.setItem(key, serialized);

@@ -140,4 +140,38 @@ describe('corrupt-save archive', () => {
       message: 'Corrupt save evidence could not be archived.',
     });
   });
+
+  it('reauthorizes after asynchronous archive construction before writing evidence', async () => {
+    const values = new Map<string, string>();
+    let checks = 0;
+    const authorizeWrite = () => {
+      checks += 1;
+      return checks === 1
+        ? { ok: true as const }
+        : { ok: false as const, reason: 'ownership_conflict' as const };
+    };
+
+    const result = await archiveCorruptSave(
+      {
+        getItem: key => values.get(key) ?? null,
+        setItem: (key, value) => { values.set(key, value); },
+      },
+      'FATE_PROFILE_alpha',
+      { primary: '{"broken":true}', mirrorMetadata: null },
+      {
+        checksum: async value => {
+          await Promise.resolve();
+          return value;
+        },
+        authorizeWrite,
+      },
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      message: 'Save ownership changed before recovery evidence could be archived.',
+    });
+    expect(values).toEqual(new Map());
+    expect(checks).toBe(2);
+  });
 });

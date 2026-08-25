@@ -1,6 +1,8 @@
 import { AlertTriangle, CheckCircle2, Download, ShieldAlert } from 'lucide-react';
-import { useMemo, useState, type FC } from 'react';
+import { useMemo, useRef, useState, type FC } from 'react';
 import { visibleAreaUnlocks } from '../data/areaMapPolicy';
+import { useFocusTrap } from '../hooks/useFocusTrap';
+import type { SaveWriteAuthorization } from '../utils/profileWriterLease';
 import type { ValidatedRecoveryCandidate, SaveRecoveryDecision } from '../utils/saveRecovery';
 
 export type RecoveryActionResult =
@@ -22,6 +24,7 @@ export interface SaveRecoveryScreenProps {
   exportRecovery?: RecoveryAction;
   archiveCorruptEvidence?: RecoveryAction;
   archiveCorrupt?: RecoveryAction;
+  authorizeWrite?: () => SaveWriteAuthorization;
   /** Test/integration seam: the screen never writes this directly. */
   writePrimary?: RecoveryAction;
 }
@@ -39,6 +42,19 @@ const actionResult = async (action: RecoveryAction | undefined): Promise<{ ok: t
   } catch (error) {
     return failureResult(safeFailureMessage(error, 'The requested recovery action could not be completed.'));
   }
+};
+
+const authorizationResult = (
+  authorizeWrite: SaveRecoveryScreenProps['authorizeWrite'],
+): { ok: true } | { ok: false; message: string } => {
+  if (authorizeWrite === undefined) return { ok: true };
+  const authorization = authorizeWrite();
+  if (authorization.ok) return { ok: true };
+  return failureResult(
+    ('reason' in authorization && authorization.reason === 'ownership_conflict')
+      ? 'The recovery action stopped because writer ownership changed.'
+      : 'The recovery action stopped because save storage is unavailable.',
+  );
 };
 
 const orderedCandidates = (candidates: readonly ValidatedRecoveryCandidate[]): ValidatedRecoveryCandidate[] => (
@@ -106,6 +122,7 @@ export const SaveRecoveryScreen: FC<SaveRecoveryScreenProps> = ({
   exportRecovery,
   archiveCorruptEvidence,
   archiveCorrupt,
+  authorizeWrite,
 }) => {
   const candidates = useMemo(
     () => decision.kind === 'recovery_required' ? orderedCandidates(decision.candidates) : [],
@@ -116,6 +133,10 @@ export const SaveRecoveryScreen: FC<SaveRecoveryScreenProps> = ({
   const [confirmingFresh, setConfirmingFresh] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const freshDialogRef = useRef<HTMLDivElement>(null);
+  const freshTriggerRef = useRef<HTMLButtonElement>(null);
+  const freshReturnFocusRef = useRef<HTMLElement | null>(null);
+  useFocusTrap(freshDialogRef, confirmingFresh, freshReturnFocusRef.current);
 
   const selected = candidates[selectedIndex] ?? null;
   const freshAction = onStartFresh ?? startFresh;
@@ -126,9 +147,21 @@ export const SaveRecoveryScreen: FC<SaveRecoveryScreenProps> = ({
     if (busy || selected === null || !onRecover) return;
     setBusy(true);
     setError(null);
+    const initialAuthorization = authorizationResult(authorizeWrite);
+    if (initialAuthorization.ok === false) {
+      setError(initialAuthorization.message);
+      setBusy(false);
+      return;
+    }
     const archived = await actionResult(archiveAction);
     if (archived.ok === false) {
       setError(archived.message);
+      setBusy(false);
+      return;
+    }
+    const postArchiveAuthorization = authorizationResult(authorizeWrite);
+    if (postArchiveAuthorization.ok === false) {
+      setError(postArchiveAuthorization.message);
       setBusy(false);
       return;
     }
@@ -142,6 +175,10 @@ export const SaveRecoveryScreen: FC<SaveRecoveryScreenProps> = ({
       }
     })();
     if (result.ok === false) setError(result.message);
+    else {
+      const finalAuthorization = authorizationResult(authorizeWrite);
+      if (finalAuthorization.ok === false) setError(finalAuthorization.message);
+    }
     setBusy(false);
   };
 
@@ -149,15 +186,31 @@ export const SaveRecoveryScreen: FC<SaveRecoveryScreenProps> = ({
     if (busy || !freshAction) return;
     setBusy(true);
     setError(null);
+    const initialAuthorization = authorizationResult(authorizeWrite);
+    if (initialAuthorization.ok === false) {
+      setError(initialAuthorization.message);
+      setBusy(false);
+      return;
+    }
     const archived = await actionResult(archiveAction);
     if (archived.ok === false) {
       setError(archived.message);
       setBusy(false);
       return;
     }
+    const postArchiveAuthorization = authorizationResult(authorizeWrite);
+    if (postArchiveAuthorization.ok === false) {
+      setError(postArchiveAuthorization.message);
+      setBusy(false);
+      return;
+    }
     const result = await actionResult(freshAction);
     if (result.ok === false) setError(result.message);
-    else setConfirmingFresh(false);
+    else {
+      const finalAuthorization = authorizationResult(authorizeWrite);
+      if (finalAuthorization.ok === false) setError(finalAuthorization.message);
+      else setConfirmingFresh(false);
+    }
     setBusy(false);
   };
 
@@ -273,19 +326,31 @@ export const SaveRecoveryScreen: FC<SaveRecoveryScreenProps> = ({
               </div>
 
               <div className="border-t border-white/10 pt-4">
-                {!confirmingFresh ? (
-                  <button
-                    type="button"
-                    onClick={() => setConfirmingFresh(true)}
-                    disabled={busy}
-                    className={classNames.destructive}
+                <button
+                  type="button"
+                  ref={freshTriggerRef}
+                  onClick={() => {
+                    freshReturnFocusRef.current = freshTriggerRef.current;
+                    setConfirmingFresh(true);
+                  }}
+                  disabled={busy || confirmingFresh}
+                  aria-hidden={confirmingFresh}
+                  className={confirmingFresh ? 'sr-only' : classNames.destructive}
+                >
+                  Start a new run
+                </button>
+                {confirmingFresh && (
+                  <div
+                    ref={freshDialogRef}
+                    className="rounded-lg border border-red-400/30 bg-red-950/20 p-4"
+                    role="alertdialog"
+                    aria-modal="true"
+                    aria-labelledby="fresh-run-title"
+                    aria-describedby="fresh-run-description"
+                    tabIndex={-1}
                   >
-                    Start a new run
-                  </button>
-                ) : (
-                  <div className="rounded-lg border border-red-400/30 bg-red-950/20 p-4" role="alertdialog" aria-labelledby="fresh-run-title">
                     <h2 id="fresh-run-title" className="text-sm font-bold text-red-100">Start over without recovering this run?</h2>
-                    <p className="mt-1 text-sm text-red-100/80">This preserves no recoverable checkpoint as the active run.</p>
+                    <p id="fresh-run-description" className="mt-1 text-sm text-red-100/80">This preserves no recoverable checkpoint as the active run.</p>
                     <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                       <button
                         type="button"

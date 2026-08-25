@@ -6,11 +6,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { initialState } from '../context/GameContext';
 import type { RecoveryRepository } from '../utils/recoveryTypes';
 import type { SaveRecoveryDecision } from '../utils/saveRecovery';
+import { resolveSaveRecovery } from '../utils/saveRecovery';
+import { checksumSave } from '../utils/saveIntegrity';
 import {
   SaveBootstrap,
+  productionResetRecovery,
+  productionExportRecovery,
   type SaveBootstrapDependencies,
   type SaveBootstrapResult,
 } from './SaveBootstrap';
+import { MAX_SAVE_BYTES } from '../utils/saveSchema';
 
 const deferred = <T,>() => {
   let resolve!: (value: T) => void;
@@ -51,7 +56,18 @@ const dependencies = (
   overrides: Partial<SaveBootstrapDependencies> = {},
 ): SaveBootstrapDependencies => {
   const repo = repository();
+  const leaseValues = new Map<string, string>();
   return {
+    leaseOptions: {
+      ownerId: 'save-bootstrap-test-owner',
+      arbitrationMs: 0,
+      renewMs: 60_000,
+      storage: {
+        getItem: key => leaseValues.get(key) ?? null,
+        setItem: (key, value) => { leaseValues.set(key, value); },
+        removeItem: key => { leaseValues.delete(key); },
+      },
+    },
     createFreshState: () => ({ ...initialState }),
     readPending: () => null,
     readPrimary: () => null,
@@ -279,6 +295,171 @@ describe('SaveBootstrap', () => {
     expect(replaceSave).not.toHaveBeenCalled();
     expect(screen.getByRole('alert').textContent).toContain('could not be archived');
     expect(screen.queryByText('game mounted')).toBeNull();
+  });
+
+  it('does not download an export after the bootstrap request becomes stale', async () => {
+    const decision: Extract<SaveRecoveryDecision, { kind: 'unsupported' }> = {
+      kind: 'unsupported',
+      rawCandidates: ['{"version":999,"future":true}'],
+    };
+    const download = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    let current = true;
+    const result = await productionExportRecovery('FATE_PROFILE_alpha', decision, {
+      isCurrentRequest: () => current,
+      buildArchive: async () => {
+        current = false;
+        return {
+          version: 1 as const,
+          capturedAt: 1,
+          primary: null,
+          mirrorMetadata: null,
+        };
+      },
+    });
+
+    expect(result).toEqual({ ok: false, message: 'This profile is no longer active.' });
+    expect(download).not.toHaveBeenCalled();
+    download.mockRestore();
+  });
+
+  it('keeps future-version evidence in a bounded exported Blob', async () => {
+    const blobs: Blob[] = [];
+    const createObjectUrl = vi.spyOn(URL, 'createObjectURL').mockImplementation((blob: Blob | MediaSource) => {
+      blobs.push(blob as Blob);
+      return 'blob:recovery-test';
+    });
+    const revokeObjectUrl = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    const download = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    const futureEvidence = '{"version":999,"future":"keep this evidence"}';
+    const result = await productionExportRecovery('FATE_PROFILE_alpha', {
+      kind: 'unsupported',
+      rawCandidates: [futureEvidence, 'x'.repeat(MAX_SAVE_BYTES * 2)],
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(blobs).toHaveLength(1);
+    const text = await blobs[0].text();
+    expect(new TextEncoder().encode(text).byteLength).toBeLessThanOrEqual(MAX_SAVE_BYTES);
+    const payload = JSON.parse(text) as { rawCandidates?: string[] };
+    expect(payload.rawCandidates).toContain(futureEvidence);
+    expect(download).toHaveBeenCalledOnce();
+    expect(revokeObjectUrl).toHaveBeenCalledOnce();
+    createObjectUrl.mockRestore();
+    revokeObjectUrl.mockRestore();
+    download.mockRestore();
+  });
+
+  it('resets the conflicting recovery journal before confirming a fresh run', async () => {
+    const archiveCorruptEvidence = vi.fn(async () => ({ ok: true as const }));
+    let journalConflicting = true;
+    const resetRecovery = vi.fn(async () => {
+      journalConflicting = false;
+      return { ok: true as const };
+    });
+    const replaceSave = vi.fn(async () => ({ ok: true as const }));
+    const decision: Extract<SaveRecoveryDecision, { kind: 'recovery_required' }> = {
+      kind: 'recovery_required',
+      primaryRaw: '{"broken":true}',
+      candidates: [],
+      cause: 'conflicting_runs',
+    };
+    const deps = dependencies({
+      resolveSaveRecovery: vi.fn(async () => journalConflicting ? decision : { kind: 'empty' as const }),
+      archiveCorruptEvidence,
+      resetRecovery,
+      replaceSave,
+    });
+    const user = userEvent.setup();
+
+    render(
+      <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {() => <div>game mounted</div>}
+      </SaveBootstrap>,
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Start a new run' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm start a new run' }));
+
+    expect(resetRecovery).toHaveBeenCalledOnce();
+    expect(replaceSave).toHaveBeenCalledOnce();
+    expect(resetRecovery.mock.invocationCallOrder[0]).toBeLessThan(replaceSave.mock.invocationCallOrder[0]);
+    expect(await screen.findByText('game mounted')).toBeTruthy();
+
+    const firstMount = screen.getByText('game mounted');
+    expect(firstMount).toBeTruthy();
+    cleanup();
+    render(
+      <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {() => <div>game mounted</div>}
+      </SaveBootstrap>,
+    );
+    expect(await screen.findByText('game mounted')).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Saved progress needs recovery' })).toBeNull();
+  });
+
+  it('writes a fresh journal head and removes old checkpoints so reload resolves cleanly', async () => {
+    const freshState = { ...initialState, runId: '00000000-0000-4000-8000-000000000001' };
+    const freshData = JSON.stringify(freshState);
+    const freshChecksum = await checksumSave(freshData);
+    let head = {
+      profileId: 'alpha',
+      persistenceRevision: 4,
+      runId: 'old-run',
+      runRevision: 4,
+      capturedAt: 10,
+      checksum: 'b'.repeat(64),
+      data: '{"old":true}',
+    };
+    let checkpoints = [{
+      ...head,
+      reason: 'interval' as const,
+    }];
+    const journal = repository();
+    journal.getHead = vi.fn(async () => head);
+    journal.listCheckpoints = vi.fn(async () => checkpoints);
+    journal.putHead = vi.fn(async record => {
+      head = record;
+      return { stored: true as const };
+    });
+    journal.deleteCheckpoints = vi.fn(async (_profileId, revisions) => {
+      checkpoints = checkpoints.filter(checkpoint => !revisions.includes(checkpoint.persistenceRevision));
+      return { stored: true as const };
+    });
+
+    const reset = await productionResetRecovery(
+      {
+        profileId: 'alpha',
+        storageKey: 'FATE_PROFILE_alpha',
+        data: freshData,
+        state: freshState,
+        persistenceRevision: 0,
+        capturedAt: null,
+        checksum: freshChecksum,
+      },
+      () => ({ ok: true as const }),
+      { openRepository: async () => journal, now: () => 100 },
+    );
+
+    expect(reset).toEqual({ ok: true });
+    expect(head.runId).toBe('00000000-0000-4000-8000-000000000001');
+    expect(head.persistenceRevision).toBe(5);
+    expect(checkpoints).toEqual([]);
+    const reloadDecision = await resolveSaveRecovery({
+      profileId: 'alpha',
+      pendingRaw: null,
+      primaryRaw: freshData,
+      mirrorMetadataRaw: JSON.stringify({
+        version: 1,
+        persistenceRevision: head.persistenceRevision,
+        capturedAt: head.capturedAt,
+        checksum: freshChecksum,
+      }),
+      defaults: initialState,
+      head,
+      checkpoints,
+    });
+    expect(reloadDecision.kind).toBe('ready');
+    expect(reloadDecision.kind === 'ready' ? reloadDecision.state.runId : null).toBe('00000000-0000-4000-8000-000000000001');
   });
 
   it('cancels the previous profile bootstrap and ignores its late result', async () => {
