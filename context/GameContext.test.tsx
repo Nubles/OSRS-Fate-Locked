@@ -301,6 +301,20 @@ describe('ordinary save recovery', () => {
     expect(current!.hasPendingChanges).toBe(true);
   });
 
+  it('records a coordinator dual-store failure as storage-unavailable while still owner', async () => {
+    const coordinator = fakeCoordinator([], { fail: true });
+    const game = renderCoordinatorGame(coordinator);
+    await settleOwnership();
+
+    act(() => game.current().saveNote('goal', 'storage unavailable'));
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+
+    expect(getPendingSave('profile')).toMatchObject({
+      status: 'failed',
+      reason: 'storage_unavailable',
+    });
+  });
+
   it('mirrors the newest same-batch pagehide state before releasing coordinator ownership', async () => {
     const events: string[] = [];
     const coordinator = fakeCoordinator(events);

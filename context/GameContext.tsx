@@ -1683,11 +1683,13 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       persistedSnapshotRef.current = pending?.data ?? current;
       discardPendingSave(storageKey);
     } else if (result.primary === 'failed') {
+      const pendingReason = saveOwnershipBlockReasonRef.current === 'storage_unavailable'
+        || saveOwnershipStatusRef.current === 'owner'
+        ? 'storage_unavailable'
+        : 'ownership_conflict';
       blockPendingSave(
         storageKey,
-        saveOwnershipBlockReasonRef.current === 'storage_unavailable'
-          ? 'storage_unavailable'
-          : 'ownership_conflict',
+        pendingReason,
       );
     }
     return result;
