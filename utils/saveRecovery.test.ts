@@ -168,6 +168,50 @@ describe('pure startup save recovery arbitration', () => {
     });
   });
 
+  it('preserves a higher verified mirror revision when mirror and head bytes match', async () => {
+    const shared = await record({ persistenceRevision: 5, runRevision: 5, note: 'same bytes' });
+    const mirror = { ...shared, persistenceRevision: 6, capturedAt: BASE_CAPTURED_AT + 1 };
+
+    const decision = await resolveSaveRecovery(fixture({
+      primaryRaw: mirror.data,
+      mirrorMetadataRaw: await metadata({ data: mirror.data, ...mirror }),
+      head: shared,
+    }));
+
+    expect(decision).toMatchObject({
+      kind: 'ready',
+      source: 'mirror',
+      reason: 'lifecycle_mirror',
+      persistenceRevision: 6,
+      needsJournalImport: true,
+      data: shared.data,
+    });
+  });
+
+  it('preserves a higher verified mirror revision when mirror and checkpoint bytes match', async () => {
+    const shared = await record({ persistenceRevision: 5, runRevision: 5, note: 'same bytes' });
+    const safeCheckpoint: RecoveryCheckpoint = {
+      ...shared,
+      reason: 'interval',
+    };
+    const mirror = { ...shared, persistenceRevision: 6, capturedAt: BASE_CAPTURED_AT + 1 };
+
+    const decision = await resolveSaveRecovery(fixture({
+      primaryRaw: mirror.data,
+      mirrorMetadataRaw: await metadata({ data: mirror.data, ...mirror }),
+      checkpoints: [safeCheckpoint],
+    }));
+
+    expect(decision).toMatchObject({
+      kind: 'ready',
+      source: 'mirror',
+      reason: 'lifecycle_mirror',
+      persistenceRevision: 6,
+      needsJournalImport: true,
+      data: shared.data,
+    });
+  });
+
   it('recognizes a lifecycle mirror whose stale sidecar still matches the head', async () => {
     const head = await record({ persistenceRevision: 5, runRevision: 5, note: 'head' });
     const primary = await record({ persistenceRevision: 6, runRevision: 6, note: 'same-batch lifecycle' });

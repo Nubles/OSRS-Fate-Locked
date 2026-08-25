@@ -386,7 +386,18 @@ export const resolveSaveRecovery = async (
   if (head !== null) {
     // Identical bytes are already durable in the journal, irrespective of a
     // missing or stale sidecar.
-    if (hasSameBytes(primary, head)) return readyDecision(head, 'normal', false);
+    if (hasSameBytes(primary, head)) {
+      if (sidecarMatchesPrimary) {
+        if (primary.persistenceRevision > head.persistenceRevision) {
+          return readyDecision(primary, 'lifecycle_mirror', true);
+        }
+        if (primary.persistenceRevision < head.persistenceRevision) {
+          return readyDecision(head, 'interrupted_mirror', false);
+        }
+        return readyDecision(primary, 'normal', false);
+      }
+      return readyDecision(head, 'normal', false);
+    }
 
     const sidecarMatchesHead = mirrorMetadata !== null
       && mirrorMetadata.persistenceRevision === head.persistenceRevision
@@ -429,6 +440,14 @@ export const resolveSaveRecovery = async (
       checkpointCandidate => checkpointCandidate.data === primary.data,
     ) ?? null;
     if (matchingCheckpoint !== null) {
+      if (sidecarMatchesPrimary) {
+        if (primary.persistenceRevision > matchingCheckpoint.persistenceRevision) {
+          return readyDecision(primary, 'lifecycle_mirror', true);
+        }
+        if (primary.persistenceRevision === matchingCheckpoint.persistenceRevision) {
+          return readyDecision(primary, 'normal', false);
+        }
+      }
       const sequencedPrimary = cloneWithSequence(primary, matchingCheckpoint);
       return readyDecision(sequencedPrimary, 'normal', true);
     }
