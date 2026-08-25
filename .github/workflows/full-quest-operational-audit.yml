@@ -27,12 +27,13 @@ jobs:
         run: npm ci
 
       - name: Run full quest audit
-        run: node scripts/full-quest-operational-audit.mjs
+        run: node scripts/run-full-quest-operational-audit.mjs
 
       - name: Upload audit evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: full-quest-operational-audit
           path: audit-output/
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 7
