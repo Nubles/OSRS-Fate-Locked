@@ -134,7 +134,7 @@ checkpoint over the current owner.
 
 ## Recovery Database
 
-Use a versioned database named `fate-locked-recovery-v1` with two stores.
+Use a versioned database named `fate-locked-recovery-v1` with three stores.
 
 ### `heads`
 
@@ -161,6 +161,12 @@ interface RecoveryCheckpoint extends RecoveryHead {
   reason: 'interval' | 'session-start' | 'pre-replacement' | 'legacy-import';
 }
 ```
+
+### `metadata`
+
+Small versioned records keyed by string store idempotent migration completion
+and repository housekeeping. Metadata never contains game state and is never a
+recovery candidate.
 
 The persisted game JSON remains byte-for-byte compatible with current exports.
 Journal metadata is not inserted into `GameState`, so loading an old save does
