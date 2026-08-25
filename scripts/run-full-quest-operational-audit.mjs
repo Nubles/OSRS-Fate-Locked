@@ -1,9 +1,14 @@
 const originalFetch = globalThis.fetch;
+const CHUNK_EXPORT_URL = 'https://raw.githubusercontent.com/source-chunk/chunk-picker-v2/refs/heads/gh-pages/chunkpicker-chunkinfo-export.json';
 
 globalThis.fetch = async (input, init) => {
-  const response = await originalFetch(input, init);
-  const url = typeof input === 'string' ? input : input?.url || '';
-  if (!url.includes('tasksMap.json')) return response;
+  const requestedUrl = typeof input === 'string' ? input : input?.url || '';
+  if (!requestedUrl.includes('tasksMap.json')) return originalFetch(input, init);
+
+  const response = await originalFetch(CHUNK_EXPORT_URL, init);
+  if (!response.ok) {
+    throw new Error(`Chunk Picker export failed: ${response.status} ${response.statusText}`);
+  }
 
   const text = await response.text();
   const data = JSON.parse(text.replace(/^\uFEFF/, ''));
