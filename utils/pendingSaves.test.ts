@@ -46,6 +46,49 @@ describe('pending save registry', () => {
     expect(getPendingSave('profile-a')).toBeNull();
   });
 
+  it('reclaims a legacy disposable cache, preserves user data, and retries once', () => {
+    const values = new Map<string, string>([
+      ['fate_clog_sync_v1', 'large retired disposable cache'],
+      ['FATE_PROFILE_existing', '{"keys":2}'],
+      ['user_note', 'keep me'],
+    ]);
+    const storage = {
+      setItem: vi.fn((key: string, value: string) => {
+        if (values.has('fate_clog_sync_v1')) {
+          throw new DOMException('full', 'QuotaExceededError');
+        }
+        values.set(key, value);
+      }),
+      removeItem: vi.fn((key: string) => { values.delete(key); }),
+    };
+
+    stagePendingSave('FATE_PROFILE_quota', '{"keys":3}');
+
+    expect(flushPendingSave(storage, 'FATE_PROFILE_quota', () => ({ ok: true })))
+      .toEqual({ ok: true });
+    expect(values.get('FATE_PROFILE_quota')).toBe('{"keys":3}');
+    expect(values.has('fate_clog_sync_v1')).toBe(false);
+    expect(values.get('FATE_PROFILE_existing')).toBe('{"keys":2}');
+    expect(values.get('user_note')).toBe('keep me');
+    expect(storage.setItem).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not discard caches for a non-quota storage failure', () => {
+    const storage = {
+      setItem: vi.fn(() => {
+        throw new DOMException('blocked', 'SecurityError');
+      }),
+      removeItem: vi.fn(),
+    };
+
+    stagePendingSave('FATE_PROFILE_blocked', '{"keys":4}');
+
+    expect(flushPendingSave(storage, 'FATE_PROFILE_blocked', () => ({ ok: true })))
+      .toEqual({ ok: false, reason: 'storage_unavailable' });
+    expect(storage.removeItem).not.toHaveBeenCalled();
+    expect(storage.setItem).toHaveBeenCalledTimes(1);
+  });
+
   it('marks authorization storage denial failed without invoking durable storage', () => {
     const setItem = vi.fn();
     stagePendingSave('profile-a', '{"keys":9}');

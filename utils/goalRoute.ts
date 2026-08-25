@@ -26,7 +26,7 @@ import { effectiveCombatLevel, effectiveSkillLevel } from './slayerReach';
 export interface RouteItem {
   name: string;
   met: boolean;
-  /** Optional context, e.g. "needs Asgarnia · any sub-area" or "prereq of X". */
+  /** Optional context, e.g. "all tracked sub-areas required" or "prereq of X". */
   detail?: string;
 }
 
@@ -104,9 +104,7 @@ export { tierForLevel };
 
 const isRegionMet = (r: string, unlocks: UnlockState, gameModeId?: string): boolean => {
   const canonical = canonicalAreaName(r);
-  if (isAreaReachable(canonical, unlocks, gameModeId)) return true;
-  const children = REGION_GROUPS[canonical];
-  return !!children && children.some(a => isAreaReachable(a, unlocks, gameModeId));
+  return isAreaReachable(canonical, unlocks, gameModeId);
 };
 
 /** Resolve a pinned goal id the same way GoalTracker does. */
@@ -363,7 +361,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
   const regions: RouteItem[] = [...regionSet].sort().map(r => ({
     name: displayAreaName(r),
     met: isRegionMet(r, unlocks, gameModeId),
-    detail: REGION_GROUPS[r] ? 'any sub-area counts' : undefined,
+    detail: REGION_GROUPS[r] ? 'all tracked sub-areas required' : undefined,
   }));
 
   const skills: RouteSkill[] = [...skillNeed.entries()]

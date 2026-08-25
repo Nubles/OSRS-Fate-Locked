@@ -19,6 +19,18 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-08-25-region-storage-recovery',
+    title: 'Regions & Saves Recovered',
+    date: '2026-08-25',
+    sections: {
+      fixed: [
+        'Completed continents now consistently unlock their quests and diaries, including Wilderness diary tasks.',
+        'Full browser storage no longer crashes the app during reload while recording optional interface state.',
+        'When a profile save reaches the browser limit, disposable caches are cleared and the profile save is retried safely.',
+      ],
+    },
+  },
+  {
     id: '2026-08-22-runeproof-wave-one',
     title: 'RuneProof Begins',
     date: '2026-08-22',

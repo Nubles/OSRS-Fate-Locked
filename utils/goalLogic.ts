@@ -1,7 +1,6 @@
 
 import { ContentRequirement } from '../data/requirements';
 import { UnlockState, TableType } from '../types';
-import { REGION_GROUPS } from '../constants';
 import { isAreaReachable } from './reachability';
 import { effectiveSkillLevel } from './slayerReach';
 
@@ -20,18 +19,7 @@ export const calculateGoalProgress = (req: ContentRequirement, unlocks: UnlockSt
   // 1. Check Regions
   req.regions.forEach(r => {
     total++;
-    let isUnlocked = false;
-
-    // Direct check or free-area (Misthalin / Xtreme-start Lumbridge) check,
-    // or chunk-reachable in Chunked mode.
-    if (isAreaReachable(r, unlocks, gameModeId)) {
-      isUnlocked = true;
-    }
-    // Region Group check (e.g. Asgarnia is unlocked if Falador is unlocked)
-    else if (REGION_GROUPS[r]) {
-      const hasSubRegion = REGION_GROUPS[r].some((area: string) => isAreaReachable(area, unlocks, gameModeId));
-      if (hasSubRegion) isUnlocked = true;
-    }
+    const isUnlocked = isAreaReachable(r, unlocks, gameModeId);
 
     if (isUnlocked) completed++;
     else missing.push(`Region: ${r}`);
