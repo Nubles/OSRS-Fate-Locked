@@ -10,7 +10,7 @@ import { isAreaReachable } from '../utils/reachability';
 import { 
     EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST, 
     POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, STORAGE_LIST, 
-    GUILDS_LIST, FARMING_PATCH_LIST, MISTHALIN_AREAS, REGION_GROUPS
+    GUILDS_LIST, FARMING_PATCH_LIST, MISTHALIN_AREAS
 } from '../constants';
 import { CheckCircle, XCircle, Lock, Map, BookOpen, AlertCircle, Compass, Target, Search, ScrollText, Filter, Pin, SlidersHorizontal, Check, ArrowUpRight, TrendingUp, Sparkles, BrainCircuit } from 'lucide-react';
 import { evaluateDiaryTierEligibility, meetsSkillRequirement } from '../utils/journalStatus';
@@ -33,12 +33,7 @@ const ROOT_UNLOCKS = {
 
 export const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameModeId?: string) => {
     const missingRegions = req.regions.filter(r => {
-        if (isAreaReachable(r, unlocks, gameModeId)) return false;
-        if (REGION_GROUPS[r]) {
-            const hasSubRegion = REGION_GROUPS[r].some((area: string) => isAreaReachable(area, unlocks, gameModeId));
-            if (hasSubRegion) return false;
-        }
-        return true;
+        return !isAreaReachable(r, unlocks, gameModeId);
     });
     
     const missingSkills = Object.entries(req.skills).filter(([skill, level]) => {

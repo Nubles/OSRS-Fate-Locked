@@ -11,6 +11,18 @@ import {
   subscribePendingSaves,
 } from './pendingSaves';
 
+const DISPOSABLE_CACHE_KEYS = [
+  'fate_osrs_mapping_v1',
+  'fate_osrs_prices_v1',
+  'fate_osrs_monsters_v1',
+  'fate_osrs_monsters_v2',
+  'fate_osrs_gear_v1',
+  'fate_uim_wiki_cache_v2',
+  'fate_uim_wiki_cache_v3',
+  'fate_clog_sync_v1',
+  'fate_clog_sync_v2',
+] as const;
+
 describe('pending save registry', () => {
   beforeEach(resetPendingSavesForTest);
 
@@ -44,6 +56,90 @@ describe('pending save registry', () => {
     expect(flushPendingSave({ setItem }, 'profile-a', () => ({ ok: true }))).toEqual({ ok: true });
     expect(setItem).toHaveBeenLastCalledWith('profile-a', '{"keys":3}');
     expect(getPendingSave('profile-a')).toBeNull();
+  });
+
+  it('reclaims a legacy disposable cache, preserves user data, and retries once', () => {
+    const values = new Map<string, string>([
+      ['fate_clog_sync_v1', 'large retired disposable cache'],
+      ['FATE_PROFILE_existing', '{"keys":2}'],
+      ['user_note', 'keep me'],
+    ]);
+    const storage = {
+      setItem: vi.fn((key: string, value: string) => {
+        if (values.has('fate_clog_sync_v1')) {
+          throw new DOMException('full', 'QuotaExceededError');
+        }
+        values.set(key, value);
+      }),
+      removeItem: vi.fn((key: string) => { values.delete(key); }),
+    };
+
+    stagePendingSave('FATE_PROFILE_quota', '{"keys":3}');
+
+    expect(flushPendingSave(storage, 'FATE_PROFILE_quota', () => ({ ok: true })))
+      .toEqual({ ok: true });
+    expect(values.get('FATE_PROFILE_quota')).toBe('{"keys":3}');
+    expect(values.has('fate_clog_sync_v1')).toBe(false);
+    expect(values.get('FATE_PROFILE_existing')).toBe('{"keys":2}');
+    expect(values.get('user_note')).toBe('keep me');
+    expect(storage.setItem).toHaveBeenCalledTimes(2);
+  });
+
+  it.each(DISPOSABLE_CACHE_KEYS)(
+    'can reclaim %s when it is the cache consuming the remaining quota',
+    (cacheKey) => {
+      const values = new Map<string, string>([[cacheKey, 'large disposable cache']]);
+      const storage = {
+        setItem: vi.fn((key: string, value: string) => {
+          if (values.has(cacheKey)) throw new DOMException('full', 'QuotaExceededError');
+          values.set(key, value);
+        }),
+        removeItem: vi.fn((key: string) => { values.delete(key); }),
+      };
+
+      stagePendingSave('FATE_PROFILE_quota', '{"keys":5}');
+
+      expect(flushPendingSave(storage, 'FATE_PROFILE_quota', () => ({ ok: true })))
+        .toEqual({ ok: true });
+      expect(values.get('FATE_PROFILE_quota')).toBe('{"keys":5}');
+      expect(values.has(cacheKey)).toBe(false);
+    },
+  );
+
+  it('keeps the newest snapshot pending when cache cleanup cannot free enough space', () => {
+    const storage = {
+      setItem: vi.fn(() => {
+        throw new DOMException('still full', 'QuotaExceededError');
+      }),
+      removeItem: vi.fn(),
+    };
+
+    stagePendingSave('FATE_PROFILE_quota', '{"keys":6}');
+
+    expect(flushPendingSave(storage, 'FATE_PROFILE_quota', () => ({ ok: true })))
+      .toEqual({ ok: false, reason: 'storage_unavailable' });
+    expect(getPendingSave('FATE_PROFILE_quota')).toEqual({
+      data: '{"keys":6}',
+      status: 'failed',
+      reason: 'storage_unavailable',
+    });
+    expect(storage.setItem).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not discard caches for a non-quota storage failure', () => {
+    const storage = {
+      setItem: vi.fn(() => {
+        throw new DOMException('blocked', 'SecurityError');
+      }),
+      removeItem: vi.fn(),
+    };
+
+    stagePendingSave('FATE_PROFILE_blocked', '{"keys":4}');
+
+    expect(flushPendingSave(storage, 'FATE_PROFILE_blocked', () => ({ ok: true })))
+      .toEqual({ ok: false, reason: 'storage_unavailable' });
+    expect(storage.removeItem).not.toHaveBeenCalled();
+    expect(storage.setItem).toHaveBeenCalledTimes(1);
   });
 
   it('marks authorization storage denial failed without invoking durable storage', () => {

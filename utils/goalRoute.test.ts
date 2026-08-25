@@ -3,6 +3,7 @@ import { buildGoalRoute, expandQuestChain, tierForLevel, suggestTables } from '.
 import { QUEST_DATA } from '../data/questData';
 import { GameState, TableType } from '../types';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
+import { REGION_GROUPS } from '../constants';
 
 /** Minimal game state with the bits the route builder reads. */
 const stateWith = (over: Partial<any> = {}): GameState => ({
@@ -85,7 +86,7 @@ describe('buildGoalRoute — strategy goal (Recipe for Disaster ≈ Barrows Glov
   it('marks met requirements as the run progresses', () => {
     const route = buildGoalRoute('Recipe for Disaster', stateWith({
       quests: ['Desert Treasure I'],
-      regions: ['Al Kharid'],
+      regions: [...REGION_GROUPS['Kharidian Desert']],
       skills: { Cooking: 7 },
       levels: { Cooking: 70 },
     }))!;
@@ -93,7 +94,11 @@ describe('buildGoalRoute — strategy goal (Recipe for Disaster ≈ Barrows Glov
     expect(route.regions.find(r => r.name === 'Kharidian Desert')!.met).toBe(true);
     expect(route.skills.find(s => s.skill === 'Cooking')!.met).toBe(true);
     // an unlocked region is no longer "needed" by any table suggestion
-    for (const t of route.tables) expect(t.needed).not.toContain('Al Kharid');
+    for (const t of route.tables) {
+      for (const child of REGION_GROUPS['Kharidian Desert']) {
+        expect(t.needed).not.toContain(child);
+      }
+    }
   });
 });
 

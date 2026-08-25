@@ -3,6 +3,7 @@ import { QUEST_DATA, QuestData } from '../data/questData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { DIARY_DATA } from '../data/diaryData';
 import { DropSource, UnlockState } from '../types';
+import { REGION_GROUPS } from '../data/items';
 import { combatLevel } from './slayerReach';
 import {
   countDoableDiaryTasks, countDoableTasks, countMetSkillRequirements,
@@ -38,6 +39,24 @@ const unlocksReadyForPryingTimes = (): UnlockState => unlocked({
 });
 
 describe('manual journal readiness', () => {
+  it('allows a Wilderness diary task after every Wilderness child area is unlocked', () => {
+    const task = ALL_DIARY_TASKS.find(({ id }) => id === 'wilderness_easy_3')!;
+
+    const partial = evaluateDiaryTaskEligibility(task, unlocked({
+      regions: REGION_GROUPS.Wilderness.slice(0, -1),
+    }));
+    expect(partial.blockers).toContainEqual({ kind: 'region', label: 'Wilderness' });
+
+    const complete = evaluateDiaryTaskEligibility(task, unlocked({
+      regions: [...REGION_GROUPS.Wilderness],
+    }));
+    expect(complete).toMatchObject({
+      machineEligible: true,
+      eligible: true,
+      blockers: [],
+    });
+  });
+
   it('requires 32 canonical Quest Points for the Champions Guild task', () => {
     const task = ALL_DIARY_TASKS.find(({ id }) => id === 'var_med_2')!;
     const low = evaluateDiaryTaskEligibility(task, unlocked({

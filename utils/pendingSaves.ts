@@ -1,4 +1,5 @@
 import type { SaveWriteAuthorization } from './profileWriterLease';
+import { isQuotaExceededError, removeDisposableCaches } from './storageRecovery';
 
 export type SaveStatus = 'saved' | 'saving' | 'failed';
 
@@ -38,7 +39,7 @@ export const stagePendingSave = (storageKey: string, data: string): void => {
 };
 
 export const flushPendingSave = (
-  storage: Pick<Storage, 'setItem'>,
+  storage: Pick<Storage, 'setItem'> & Partial<Pick<Storage, 'removeItem'>>,
   storageKey: string,
   authorizeWrite: () => SaveWriteAuthorization,
 ): PendingSaveFlushResult => {
@@ -56,7 +57,18 @@ export const flushPendingSave = (
     entries.delete(storageKey);
     emit();
     return { ok: true };
-  } catch {
+  } catch (error) {
+    if (isQuotaExceededError(error) && storage.removeItem) {
+      removeDisposableCaches(storage as Pick<Storage, 'removeItem'>);
+      try {
+        storage.setItem(storageKey, entry.data);
+        entries.delete(storageKey);
+        emit();
+        return { ok: true };
+      } catch {
+        // Fall through to the existing failed-save state below.
+      }
+    }
     entries.set(storageKey, {
       ...entry,
       status: 'failed',
