@@ -8,17 +8,24 @@ globalThis.fetch = async (input, init) => {
   const text = await response.text();
   const data = JSON.parse(text.replace(/^\uFEFF/, ''));
   const mergedQuestTasks = {};
-  const contributingCategories = [];
+  const contributingPaths = new Map();
+  const stack = [{ value: data, path: [] }];
 
-  for (const [category, bucket] of Object.entries(data?.challenges || {})) {
-    if (!bucket || typeof bucket !== 'object' || Array.isArray(bucket)) continue;
-    let matched = 0;
-    for (const [taskKey, task] of Object.entries(bucket)) {
-      if (!task || typeof task !== 'object' || !task.BaseQuest) continue;
-      if (!Object.hasOwn(mergedQuestTasks, taskKey)) mergedQuestTasks[taskKey] = task;
-      matched++;
+  while (stack.length) {
+    const { value, path } = stack.pop();
+    if (!value || typeof value !== 'object' || Array.isArray(value)) continue;
+
+    if (typeof value.BaseQuest === 'string' && path.length) {
+      const taskKey = String(path.at(-1));
+      if (!Object.hasOwn(mergedQuestTasks, taskKey)) mergedQuestTasks[taskKey] = value;
+      const parentPath = path.slice(0, -1).join('.') || '(root)';
+      contributingPaths.set(parentPath, (contributingPaths.get(parentPath) || 0) + 1);
+      continue;
     }
-    if (matched) contributingCategories.push(`${category}:${matched}`);
+
+    for (const [key, child] of Object.entries(value)) {
+      if (child && typeof child === 'object') stack.push({ value: child, path: [...path, key] });
+    }
   }
 
   data.challenges = {
@@ -26,9 +33,12 @@ globalThis.fetch = async (input, init) => {
     Quest: mergedQuestTasks,
   };
 
-  console.log(
-    `Normalised ${Object.keys(mergedQuestTasks).length} Chunk Picker quest tasks from ${contributingCategories.join(', ')}`,
-  );
+  const pathSummary = [...contributingPaths.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 12)
+    .map(([path, count]) => `${path}:${count}`)
+    .join(', ');
+  console.log(`Normalised ${Object.keys(mergedQuestTasks).length} Chunk Picker quest tasks from ${pathSummary}`);
 
   return new Response(JSON.stringify(data), {
     status: response.status,
