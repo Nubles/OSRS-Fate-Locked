@@ -124,6 +124,16 @@ type FlushOutcome = {
   journal: RecoveryWriteResult;
   primaryVerified: boolean;
   mirrorMetadataVerified: boolean;
+  stale?: boolean;
+};
+
+type PreparedFlush =
+  | { ok: true; validation: Extract<SaveValidationResult, { ok: true }>; checksum: string }
+  | { ok: false; result: RecoveryWriteResult };
+
+type ValidationHashTask = {
+  promise: Promise<PreparedFlush>;
+  settledBeforeYield: () => boolean;
 };
 
 export interface SaveCoordinator {
@@ -244,37 +254,88 @@ export const createSaveCoordinator = (
     };
   };
 
-  const validateAndHash = async (
-    data: string,
-  ): Promise<
-    | { ok: true; validation: Extract<SaveValidationResult, { ok: true }>; checksum: string }
-    | { ok: false; result: RecoveryWriteResult }
-  > => {
+  const beginValidateAndHash = (data: string): ValidationHashTask => {
     let validation: SaveValidationResult;
     try {
       validation = options.validate(data);
     } catch {
-      return { ok: false, result: unavailableWrite() };
+      return {
+        promise: Promise.resolve({ ok: false, result: unavailableWrite() }),
+        settledBeforeYield: () => true,
+      };
     }
     if (!isValidationSuccess(validation)) {
-      return { ok: false, result: unavailableWrite() };
+      return {
+        promise: Promise.resolve({ ok: false, result: unavailableWrite() }),
+        settledBeforeYield: () => true,
+      };
     }
 
+    let checksumPromise: Promise<string>;
     try {
-      const checksum = await options.checksum(data);
-      return { ok: true, validation, checksum };
+      checksumPromise = options.checksum(data);
     } catch {
-      return { ok: false, result: unavailableWrite() };
+      return {
+        promise: Promise.resolve({ ok: false, result: unavailableWrite() }),
+        settledBeforeYield: () => true,
+      };
     }
+
+    let settled = false;
+    const promise = checksumPromise
+      .then(
+        checksum => {
+          settled = true;
+          return { ok: true, validation, checksum } as const;
+        },
+        () => {
+          settled = true;
+          return { ok: false, result: unavailableWrite() } as const;
+        },
+      );
+    return {
+      promise,
+      settledBeforeYield: () => settled,
+    };
   };
 
   const runFlush = async (candidate: StagedSnapshot): Promise<FlushOutcome> => {
-    const prepared = await validateAndHash(candidate.data);
+    const validationHash = beginValidateAndHash(candidate.data);
+    // An immediately settled checksum permits a synchronous stage that lands
+    // before this continuation to remain part of the current journal flight;
+    // a genuinely deferred checksum must reject a superseded candidate after
+    // it resolves.
+    await Promise.resolve();
+    const checksumWasImmediate = validationHash.settledBeforeYield();
+    const prepared = await validationHash.promise;
     if (prepared.ok === false) {
       return {
         journal: prepared.result,
         primaryVerified: false,
         mirrorMetadataVerified: false,
+      };
+    }
+
+    const checksumToken = changeToken;
+    const unchangedSinceChecksum = (): boolean => (
+      changeToken === checksumToken
+      && (checksumWasImmediate || pending?.token === candidate.token)
+    );
+
+    // The checksum is an asynchronous boundary. If a newer snapshot arrived
+    // while a genuinely deferred checksum was in flight, do not allocate a
+    // revision or publish the old bytes to the journal. An immediately settled
+    // checksum may be followed by a synchronous stage before the journal
+    // transaction begins; that stage is coalesced behind this flight.
+    if (
+      !checksumWasImmediate
+      && (checksumToken !== candidate.token || pending?.token !== candidate.token)
+    ) {
+      return {
+        journal: unavailableWrite(),
+        primaryVerified: false,
+        mirrorMetadataVerified: false,
+        stale: true,
       };
     }
 
@@ -287,9 +348,27 @@ export const createSaveCoordinator = (
       };
     }
 
+    if (!unchangedSinceChecksum()) {
+      return {
+        journal: unavailableWrite(),
+        primaryVerified: false,
+        mirrorMetadataVerified: false,
+        stale: true,
+      };
+    }
+
+    const capturedAt = options.now();
+    if (!unchangedSinceChecksum()) {
+      return {
+        journal: unavailableWrite(),
+        primaryVerified: false,
+        mirrorMetadataVerified: false,
+        stale: true,
+      };
+    }
+
     const persistenceRevision = nextRevision(revision);
     revision = persistenceRevision;
-    const capturedAt = options.now();
     const record: RecoveryHead = {
       profileId: options.profileId,
       persistenceRevision,
@@ -299,6 +378,15 @@ export const createSaveCoordinator = (
       checksum: prepared.checksum,
       data: candidate.data,
     };
+
+    if (!unchangedSinceChecksum()) {
+      return {
+        journal: unavailableWrite(),
+        primaryVerified: false,
+        mirrorMetadataVerified: false,
+        stale: true,
+      };
+    }
 
     let journal: RecoveryWriteResult;
     try {
@@ -334,14 +422,33 @@ export const createSaveCoordinator = (
     const newerStateIsPending = pending !== null
       && (pending.token !== candidate.token || changeToken !== candidate.token);
 
+    if (outcome.stale) {
+      if (newerStateIsPending) {
+        setSnapshot({
+          primary: 'saving',
+          recovery: 'checking',
+          savedAt: snapshot.savedAt,
+        });
+      }
+      return;
+    }
+
     if (primarySaved) {
+      if (newerStateIsPending) {
+        setSnapshot({
+          primary: 'saving',
+          recovery: 'checking',
+          savedAt: snapshot.savedAt,
+        });
+        return;
+      }
       const savedAt = options.now();
-      if (!newerStateIsPending && pending?.token === candidate.token) {
+      if (pending?.token === candidate.token) {
         pending = null;
       }
       setSnapshot({
-        primary: newerStateIsPending ? 'saving' : 'saved',
-        recovery: newerStateIsPending ? 'checking' : recoveryProtected ? 'protected' : 'degraded',
+        primary: 'saved',
+        recovery: recoveryProtected ? 'protected' : 'degraded',
         savedAt,
       });
       return;
@@ -483,7 +590,7 @@ export const createSaveCoordinator = (
     if (disposed || data.length === 0) return { stored: false, reason: 'empty' };
     await whenIdle();
 
-    const prepared = await validateAndHash(data);
+    const prepared = await beginValidateAndHash(data).promise;
     if (!prepared.ok) return { stored: false, reason: 'storage_unavailable' };
     const authorization = options.authorizeWrite();
     if (isWriteFailure(authorization)) return checkpointFailure(saveAuthorizationResult(authorization));

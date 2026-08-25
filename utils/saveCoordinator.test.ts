@@ -41,7 +41,10 @@ const stateFor = (data: string): GameState => ({
 type HarnessOptions = {
   events?: string[];
   journalGate?: Deferred<void>;
+  journalGates?: Deferred<void>[];
   journalResult?: RecoveryWriteResult;
+  journalResults?: RecoveryWriteResult[];
+  journalResultFor?: (record: RecoveryHead) => RecoveryWriteResult;
   mirrorResult?: 'success' | 'failure';
   metadataResult?: RecoveryWriteResult;
   initialPersistenceRevision?: number;
@@ -50,6 +53,7 @@ type HarnessOptions = {
   authorize?: () => SaveWriteAuthorization;
   checksum?: (data: string) => Promise<string>;
   validate?: (data: string) => SaveValidationResult;
+  now?: () => number;
 };
 
 type Harness = {
@@ -57,6 +61,7 @@ type Harness = {
   storage: SaveStorage;
   events: string[];
   writtenNotes: () => string[];
+  journalRevisions: () => number[];
   checkpointRecords: () => RecoveryCheckpoint[];
   setJournalResult: (result: RecoveryWriteResult) => void;
   setMirrorResult: (result: 'success' | 'failure') => void;
@@ -66,8 +71,11 @@ const harness = (options: HarnessOptions = {}): Harness => {
   const events = options.events ?? [];
   const values = new Map<string, string>();
   const journalWrites: string[] = [];
+  const journalRecords: RecoveryHead[] = [];
   const checkpointWrites: RecoveryCheckpoint[] = [];
   let journalResult = options.journalResult ?? { stored: true };
+  const journalResults = [...(options.journalResults ?? [])];
+  const journalGates = [...(options.journalGates ?? [])];
   let mirrorResult = options.mirrorResult ?? 'success';
   let metadataResult = options.metadataResult ?? { stored: true };
 
@@ -88,10 +96,14 @@ const harness = (options: HarnessOptions = {}): Harness => {
   const repository: RecoveryRepository = {
     getHead: async () => options.initialHead ?? null,
     putHead: async record => {
+      journalRecords.push(record);
       journalWrites.push(noteFromData(record.data));
       events.push(`journal:${noteFromData(record.data)}`);
-      if (options.journalGate) await options.journalGate.promise;
-      return journalResult;
+      const gate = journalGates.shift() ?? options.journalGate;
+      if (gate) await gate.promise;
+      return options.journalResultFor?.(record)
+        ?? journalResults.shift()
+        ?? journalResult;
     },
     listCheckpoints: async () => [],
     putCheckpoint: async record => {
@@ -118,7 +130,7 @@ const harness = (options: HarnessOptions = {}): Harness => {
     events.push(`hash:${noteFromData(data)}`);
     return `checksum-${noteFromData(data)}`;
   });
-  const now = () => 1_700_000_000_000;
+  const now = options.now ?? (() => 1_700_000_000_000);
 
   const coordinator = createSaveCoordinator({
     profileId: 'alpha',
@@ -137,6 +149,7 @@ const harness = (options: HarnessOptions = {}): Harness => {
     storage,
     events,
     writtenNotes: () => [...journalWrites],
+    journalRevisions: () => journalRecords.map(record => record.persistenceRevision),
     checkpointRecords: () => [...checkpointWrites],
     setJournalResult: result => { journalResult = result; },
     setMirrorResult: result => { mirrorResult = result; },
@@ -174,6 +187,73 @@ describe('coalescing journal-first save coordinator', () => {
     await testHarness.coordinator.whenIdle();
 
     expect(testHarness.writtenNotes()).toEqual(['first', 'third']);
+  });
+
+  it('does not journal a candidate superseded while its checksum is pending', async () => {
+    const checksumGate = deferred<void>();
+    let firstChecksum = true;
+    const testHarness = harness({
+      checksum: async data => {
+        if (firstChecksum) {
+          firstChecksum = false;
+          await checksumGate.promise;
+        }
+        return `checksum-${noteFromData(data)}`;
+      },
+    });
+
+    testHarness.coordinator.stage(save('old'));
+    const flushing = testHarness.coordinator.flush();
+    testHarness.coordinator.stage(save('new'));
+    checksumGate.resolve();
+
+    await flushing;
+    await testHarness.coordinator.whenIdle();
+
+    expect(testHarness.writtenNotes()).toEqual(['new']);
+    expect(testHarness.journalRevisions()).toEqual([1]);
+  });
+
+  it('does not publish a stale saved timestamp while the newer candidate fails', async () => {
+    let clock = 0;
+    const priorJournal = deferred<void>();
+    priorJournal.resolve();
+    const candidateJournal = deferred<void>();
+    const testHarness = harness({
+      now: () => ++clock,
+      journalGates: [priorJournal, candidateJournal],
+      journalResultFor: record => noteFromData(record.data) === 'candidate-b'
+        ? { stored: false, reason: 'storage_unavailable' }
+        : { stored: true },
+      mirrorResult: 'failure',
+    });
+
+    testHarness.coordinator.stage(save('prior'));
+    await testHarness.coordinator.flush();
+    expect(testHarness.coordinator.getSnapshot().savedAt).toBe(2);
+
+    testHarness.coordinator.stage(save('candidate-a'));
+    const flushing = testHarness.coordinator.flush();
+    testHarness.coordinator.stage(save('candidate-b'));
+    candidateJournal.resolve();
+
+    await flushing;
+    await testHarness.coordinator.whenIdle();
+
+    expect(testHarness.coordinator.getSnapshot()).toEqual({
+      primary: 'failed',
+      recovery: 'degraded',
+      savedAt: 2,
+    });
+  });
+
+  it('starts at the revision immediately after the verified initial revision', async () => {
+    const testHarness = harness({ initialPersistenceRevision: 9 });
+    testHarness.coordinator.stage(save('revision-ten'));
+
+    await testHarness.coordinator.flush();
+
+    expect(testHarness.journalRevisions()).toEqual([10]);
   });
 
   it('does not write after ownership is lost following the checksum boundary', async () => {
