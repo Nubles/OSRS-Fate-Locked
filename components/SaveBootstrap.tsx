@@ -501,22 +501,23 @@ export interface SaveBootstrapProps {
 const SaveRecoveryLeaseGate: React.FC<{
   storageKey: string;
   leaseOptions?: ProfileWriterLeaseOptions;
-  children: (authorizeWrite: () => SaveWriteAuthorization) => ReactNode;
+  children: (
+    authorizeWrite: () => SaveWriteAuthorization,
+    recoveryActionsEnabled: boolean,
+    recoveryStatusMessage: string | null,
+  ) => ReactNode;
 }> = ({ storageKey, leaseOptions, children }) => {
   const lease = useProfileWriterLease(storageKey, leaseOptions);
   useEffect(() => () => {
     lease.release();
   }, [lease.release]);
-  if (lease.status !== 'owner') {
-    return (
-      <div role="status" aria-live="polite">
-        {lease.status === 'blocked'
-          ? 'Another browser tab owns this save.'
-          : 'Checking save write ownership…'}
-      </div>
-    );
-  }
-  return <>{children(lease.authorizeWrite)}</>;
+  const recoveryActionsEnabled = lease.status === 'owner';
+  const recoveryStatusMessage = recoveryActionsEnabled
+    ? null
+    : lease.status === 'blocked'
+      ? 'Another browser tab owns this save. Recovery changes are disabled; export remains available.'
+      : 'Checking save write ownership. Recovery changes are disabled until ownership is confirmed; export remains available.';
+  return <>{children(lease.authorizeWrite, recoveryActionsEnabled, recoveryStatusMessage)}</>;
 };
 
 /**
@@ -620,10 +621,12 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
     const exportRecovery = dependencies.exportRecovery ?? productionExportRecovery;
     return (
       <SaveRecoveryLeaseGate storageKey={storageKey} leaseOptions={dependencies.leaseOptions}>
-        {authorizeWrite => (
+        {(authorizeWrite, recoveryActionsEnabled, recoveryStatusMessage) => (
           <SaveRecoveryScreen
             decision={activeView.decision}
             authorizeWrite={authorizeWrite}
+            recoveryActionsEnabled={recoveryActionsEnabled}
+            recoveryStatusMessage={recoveryStatusMessage}
             archiveCorruptEvidence={async () => {
               if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
               const beforeArchive = checkWriteAuthorization(authorizeWrite);

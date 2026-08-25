@@ -262,6 +262,69 @@ describe('SaveBootstrap', () => {
     expect(replaceSave).toHaveBeenCalledOnce();
   });
 
+  it('keeps read-only export available in a non-owner tab while blocking mutations', async () => {
+    const leaseValues = new Map<string, string>([
+      ['FATE_PROFILE_alpha__writer', JSON.stringify({
+        version: 1,
+        ownerId: 'other-tab',
+        expiresAt: Date.now() + 30_000,
+      })],
+    ]);
+    const archiveCorruptEvidence = vi.fn(async () => ({ ok: true as const }));
+    const replaceSave = vi.fn(async () => ({ ok: true as const }));
+    const exportRecovery = vi.fn(async () => ({ ok: true as const }));
+    const decision: Extract<SaveRecoveryDecision, { kind: 'recovery_required' }> = {
+      kind: 'recovery_required',
+      primaryRaw: '{"broken":true}',
+      candidates: [{
+        source: 'checkpoint',
+        data: 'safe-checkpoint',
+        state: { ...initialState, runId: 'safe-run' },
+        persistenceRevision: 3,
+        runId: 'safe-run',
+        runRevision: 3,
+        capturedAt: 123,
+        checksum: 'a'.repeat(64),
+      }],
+      cause: 'corrupt_primary',
+    };
+    const deps = dependencies({
+      leaseOptions: {
+        ownerId: 'local-tab',
+        arbitrationMs: 0,
+        renewMs: 60_000,
+        storage: {
+          getItem: key => leaseValues.get(key) ?? null,
+          setItem: (key, value) => { leaseValues.set(key, value); },
+          removeItem: key => { leaseValues.delete(key); },
+        },
+      },
+      resolveSaveRecovery: vi.fn(async () => decision),
+      archiveCorruptEvidence,
+      replaceSave,
+      exportRecovery,
+    });
+    const user = userEvent.setup();
+
+    render(
+      <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {() => <div>game mounted</div>}
+      </SaveBootstrap>,
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Saved progress needs recovery' })).toBeTruthy();
+    expect((await screen.findByRole('status')).textContent).toContain('Another browser tab owns this save.');
+    expect((screen.getByRole('button', { name: 'Recover latest safe save' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Start a new run' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Export recovery file' }) as HTMLButtonElement).disabled).toBe(false);
+
+    await user.click(screen.getByRole('button', { name: 'Export recovery file' }));
+
+    expect(exportRecovery).toHaveBeenCalledOnce();
+    expect(archiveCorruptEvidence).not.toHaveBeenCalled();
+    expect(replaceSave).not.toHaveBeenCalled();
+  });
+
   it('keeps the blocking screen when archival fails', async () => {
     const archiveCorruptEvidence = vi.fn(async () => ({
       ok: false as const,

@@ -25,6 +25,8 @@ export interface SaveRecoveryScreenProps {
   archiveCorruptEvidence?: RecoveryAction;
   archiveCorrupt?: RecoveryAction;
   authorizeWrite?: () => SaveWriteAuthorization;
+  recoveryActionsEnabled?: boolean;
+  recoveryStatusMessage?: string | null;
   /** Test/integration seam: the screen never writes this directly. */
   writePrimary?: RecoveryAction;
 }
@@ -123,6 +125,8 @@ export const SaveRecoveryScreen: FC<SaveRecoveryScreenProps> = ({
   archiveCorruptEvidence,
   archiveCorrupt,
   authorizeWrite,
+  recoveryActionsEnabled = true,
+  recoveryStatusMessage = null,
 }) => {
   const candidates = useMemo(
     () => decision.kind === 'recovery_required' ? orderedCandidates(decision.candidates) : [],
@@ -144,7 +148,7 @@ export const SaveRecoveryScreen: FC<SaveRecoveryScreenProps> = ({
   const archiveAction = archiveCorruptEvidence ?? archiveCorrupt;
 
   const runRecovery = async () => {
-    if (busy || selected === null || !onRecover) return;
+    if (!recoveryActionsEnabled || busy || selected === null || !onRecover) return;
     setBusy(true);
     setError(null);
     const initialAuthorization = authorizationResult(authorizeWrite);
@@ -183,7 +187,7 @@ export const SaveRecoveryScreen: FC<SaveRecoveryScreenProps> = ({
   };
 
   const runFresh = async () => {
-    if (busy || !freshAction) return;
+    if (!recoveryActionsEnabled || busy || !freshAction) return;
     setBusy(true);
     setError(null);
     const initialAuthorization = authorizationResult(authorizeWrite);
@@ -249,6 +253,11 @@ export const SaveRecoveryScreen: FC<SaveRecoveryScreenProps> = ({
         </header>
 
         <div className="space-y-5 p-5 sm:p-6">
+          {recoveryStatusMessage !== null && (
+            <p role="status" aria-live="polite" className="rounded-md border border-amber-300/30 bg-amber-950/30 px-3 py-2 text-sm text-amber-100">
+              {recoveryStatusMessage}
+            </p>
+          )}
           {decision.kind === 'recovery_required' && (
             <>
               {selected !== null ? (
@@ -308,7 +317,7 @@ export const SaveRecoveryScreen: FC<SaveRecoveryScreenProps> = ({
                 <button
                   type="button"
                   onClick={() => { void runRecovery(); }}
-                  disabled={busy || selected === null || !onRecover}
+                  disabled={!recoveryActionsEnabled || busy || selected === null || !onRecover}
                   className={classNames.primary}
                 >
                   <CheckCircle2 size={16} aria-hidden="true" />
@@ -333,7 +342,7 @@ export const SaveRecoveryScreen: FC<SaveRecoveryScreenProps> = ({
                     freshReturnFocusRef.current = freshTriggerRef.current;
                     setConfirmingFresh(true);
                   }}
-                  disabled={busy || confirmingFresh}
+                  disabled={!recoveryActionsEnabled || busy || confirmingFresh}
                   aria-hidden={confirmingFresh}
                   className={confirmingFresh ? 'sr-only' : classNames.destructive}
                 >
@@ -355,7 +364,7 @@ export const SaveRecoveryScreen: FC<SaveRecoveryScreenProps> = ({
                       <button
                         type="button"
                         onClick={() => { void runFresh(); }}
-                  disabled={busy || !freshAction}
+                        disabled={!recoveryActionsEnabled || busy || !freshAction}
                         className={classNames.destructive}
                       >
                         {busy ? 'Starting…' : 'Confirm start a new run'}
