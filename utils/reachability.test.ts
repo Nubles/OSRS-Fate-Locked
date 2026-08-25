@@ -76,6 +76,23 @@ describe('isAreaReachable', () => {
     )).toBe(true);
   });
 
+  it.each(Object.entries(REGION_GROUPS))(
+    'applies the same partial/full completion rule to %s',
+    (continent, children) => {
+      expect(children.length).toBeGreaterThan(1);
+      expect(isAreaReachable(
+        continent,
+        { ...baseUnlocks, regions: children.slice(0, -1) },
+        'vanilla',
+      )).toBe(false);
+      expect(isAreaReachable(
+        continent,
+        { ...baseUnlocks, regions: [...children] },
+        'vanilla',
+      )).toBe(true);
+    },
+  );
+
   it('chunked mode: reachable via overlapping start chunk with empty unlocks.chunks', () => {
     expect(isAreaReachable('Lumbridge', { ...baseUnlocks, chunks: [] }, 'chunked')).toBe(true);
   });

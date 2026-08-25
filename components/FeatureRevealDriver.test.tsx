@@ -32,4 +32,17 @@ describe('FeatureRevealDriver storage recovery', () => {
 
     expect(() => render(<FeatureRevealDriver />)).not.toThrow();
   });
+
+  it('keeps the app mounted when feature storage is completely unavailable', () => {
+    vi.stubGlobal('localStorage', {
+      getItem: () => {
+        throw new DOMException('blocked', 'SecurityError');
+      },
+      setItem: () => {
+        throw new DOMException('blocked', 'SecurityError');
+      },
+    });
+
+    expect(() => render(<FeatureRevealDriver />)).not.toThrow();
+  });
 });
