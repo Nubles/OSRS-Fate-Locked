@@ -45,7 +45,8 @@ const newest = (records: readonly RecoveryCheckpoint[], limit: number): Recovery
  * The caller supplies checkpoints only; the replaceable journal head is not a
  * checkpoint and is therefore never selected as a deletion candidate. A
  * defensive `isHead` marker is also ignored when a repository adapter includes
- * a mixed head/checkpoint list.
+ * a mixed head/checkpoint list. The legacy-import limit applies to the final
+ * union, including legacy records selected by another bucket.
  */
 export const selectRetainedCheckpointKeys = (
   records: readonly RecoveryCheckpoint[],
@@ -75,6 +76,23 @@ export const selectRetainedCheckpointKeys = (
     checkpoints.filter(record => record.reason === 'legacy-import'),
     LEGACY_IMPORT_LIMIT,
   ));
+
+  const legacyByKey = new Map<string, RecoveryCheckpoint>();
+  for (const record of checkpoints) {
+    if (record.reason !== 'legacy-import') continue;
+    const key = stableKey(record);
+    const current = legacyByKey.get(key);
+    if (current === undefined || compareNewest(record, current) < 0) {
+      legacyByKey.set(key, record);
+    }
+  }
+
+  const retainedLegacyKeys = [...retained]
+    .filter(key => legacyByKey.has(key))
+    .sort((a, b) => compareNewest(legacyByKey.get(a)!, legacyByKey.get(b)!));
+  for (const key of retainedLegacyKeys.slice(LEGACY_IMPORT_LIMIT)) {
+    retained.delete(key);
+  }
 
   return retained;
 };

@@ -82,4 +82,29 @@ describe('recovery retention', () => {
     expect([...retained].filter(key => key.startsWith('alpha:1')).length).toBe(8);
     expect(retained.has('alpha:99')).toBe(false);
   });
+
+  it('enforces the eight-import cap across legacy records selected by daily retention', () => {
+    const records: RecoveryCheckpoint[] = [
+      checkpoint(200, localDay(0, 11), 'legacy-import'),
+      checkpoint(199, localDay(0, 10), 'legacy-import'),
+      checkpoint(198, localDay(0, 9), 'legacy-import'),
+      checkpoint(197, localDay(0, 8), 'legacy-import'),
+      checkpoint(196, localDay(0, 7), 'legacy-import'),
+      checkpoint(195, localDay(0, 6), 'legacy-import'),
+      checkpoint(194, localDay(0, 5), 'legacy-import'),
+      checkpoint(193, localDay(0, 4), 'legacy-import'),
+      checkpoint(120, localDay(-1, 23), 'legacy-import'),
+      checkpoint(119, localDay(-2, 23), 'legacy-import'),
+      checkpoint(118, localDay(-3, 23), 'legacy-import'),
+      checkpoint(117, localDay(-4, 23), 'legacy-import'),
+      checkpoint(116, localDay(-5, 23), 'legacy-import'),
+      checkpoint(115, localDay(-6, 23), 'legacy-import'),
+      checkpoint(114, localDay(-7, 23), 'legacy-import'),
+    ];
+
+    expect(selectRetainedCheckpointKeys(records, NOW)).toEqual(new Set([
+      'alpha:200', 'alpha:199', 'alpha:198', 'alpha:197',
+      'alpha:196', 'alpha:195', 'alpha:194', 'alpha:193',
+    ]));
+  });
 });
