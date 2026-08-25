@@ -6,6 +6,7 @@ import {
   type SaveWarning,
 } from './saveSchema';
 import type { SaveWriteAuthorizationReason } from './profileWriterLease';
+import type { RecoveryCheckpointReason, SaveDurabilitySnapshot } from './recoveryTypes';
 
 export type ImportErrorCode = SaveErrorCode | 'storage_unavailable' | 'ownership_conflict';
 
@@ -112,6 +113,19 @@ type ReplacementOptions = ReplacementCallbacks & {
   defaults: GameState;
 };
 
+type AsyncReplacementCallbacks = {
+  current: GameState & { lastEvent?: unknown };
+  createCheckpoint: (
+    data: string,
+    reason: RecoveryCheckpointReason,
+  ) => Promise<BackupWriteResult>;
+  writeReplacement: (
+    data: string,
+    reason: string,
+  ) => Promise<SaveDurabilitySnapshot>;
+  replace: (state: GameState) => void;
+};
+
 const STORAGE_WARNING: SaveWarning = {
   code: 'storage_warning',
   message: 'The current run could not be saved as a protective backup.',
@@ -151,6 +165,53 @@ export const applyValidatedReplacement = (
     }
     return replacementStorageFailure();
   }
+  options.replace(prepared.state);
+
+  const warnings = [...prepared.warnings];
+  if (
+    backup.stored === false
+    && backup.reason === 'storage_unavailable'
+    && !warnings.some(warning => warning.code === 'storage_warning')
+  ) {
+    warnings.push(STORAGE_WARNING);
+  }
+  return { ok: true, warnings };
+};
+
+/**
+ * Apply a validated replacement through the crash-safe coordinator. The
+ * current state is checkpointed first, and in-memory state changes only after
+ * the coordinator reports at least one verified durable store.
+ */
+export const applyValidatedReplacementAsync = async (
+  prepared: SaveValidationResult,
+  options: AsyncReplacementCallbacks,
+): Promise<ImportResult> => {
+  if (prepared.ok === false) return prepared;
+
+  let backup: BackupWriteResult;
+  try {
+    backup = await options.createCheckpoint(
+      serializeCurrent(options.current),
+      'pre-replacement',
+    );
+  } catch {
+    backup = { stored: false, reason: 'storage_unavailable' };
+  }
+  let durability: SaveDurabilitySnapshot;
+  try {
+    durability = await options.writeReplacement(
+      serializeCurrent(prepared.state),
+      'replacement',
+    );
+  } catch (error) {
+    if (error instanceof SaveAuthorizationError) {
+      return saveAuthorizationFailureResult(error.code);
+    }
+    return replacementStorageFailure();
+  }
+
+  if (durability.primary !== 'saved') return replacementStorageFailure();
   options.replace(prepared.state);
 
   const warnings = [...prepared.warnings];

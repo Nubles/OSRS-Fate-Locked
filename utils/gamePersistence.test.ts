@@ -5,6 +5,7 @@ import { getBackupData, listBackups, pushBackup } from './backups';
 import {
   ACCEPTED_WARNING_CLOSE_DELAY_MS,
   applyPreparedReplacement,
+  applyValidatedReplacementAsync,
   applyValidatedReplacement,
   candidateMatchesSource,
   importUiDecision,
@@ -117,6 +118,67 @@ describe('async import request guards', () => {
 });
 
 describe('transactional replacement', () => {
+  it('checkpoints the current run and waits for durable replacement before replacing memory', async () => {
+    const events: string[] = [];
+    const result = await applyValidatedReplacementAsync(
+      prepareReplacement(cloneState({ keys: 9 }), cloneState({ keys: 3 }), initialState),
+      {
+        current: cloneState({ keys: 3 }),
+        createCheckpoint: async (data: string, reason: string) => {
+          events.push(`checkpoint:${JSON.parse(data).keys}:${reason}`);
+          return { stored: true };
+        },
+        writeReplacement: async (data: string, reason: string) => {
+          events.push(`persist:${JSON.parse(data).keys}:${reason}`);
+          return { primary: 'saved', recovery: 'protected', savedAt: 1 };
+        },
+        replace: (state: GameState) => { events.push(`replace:${state.keys}`); },
+      },
+    );
+
+    expect(result).toEqual({ ok: true, warnings: [] });
+    expect(events).toEqual([
+      'checkpoint:3:pre-replacement',
+      'persist:9:replacement',
+      'replace:9',
+    ]);
+  });
+
+  it('does not replace memory when the coordinator reports dual durable failure', async () => {
+    const events: string[] = [];
+    const result = await applyValidatedReplacementAsync(
+      prepareReplacement(cloneState({ keys: 9 }), cloneState({ keys: 3 }), initialState),
+      {
+        current: cloneState({ keys: 3 }),
+        createCheckpoint: async () => ({ stored: true }),
+        writeReplacement: async () => ({ primary: 'failed', recovery: 'degraded', savedAt: null }),
+        replace: () => { events.push('replace'); },
+      },
+    );
+
+    expect(result).toMatchObject({ ok: false, code: 'storage_unavailable' });
+    expect(events).toEqual([]);
+  });
+
+  it('keeps the accepted replacement and warns when only the checkpoint fails', async () => {
+    const events: string[] = [];
+    const result = await applyValidatedReplacementAsync(
+      prepareReplacement(cloneState({ keys: 9 }), cloneState({ keys: 3 }), initialState),
+      {
+        current: cloneState({ keys: 3 }),
+        createCheckpoint: async () => ({ stored: false, reason: 'storage_unavailable' }),
+        writeReplacement: async () => ({ primary: 'saved', recovery: 'degraded', savedAt: 1 }),
+        replace: state => { events.push(`replace:${state.keys}`); },
+      },
+    );
+
+    expect(result).toEqual({ ok: true, warnings: [{
+      code: 'storage_warning',
+      message: 'The current run could not be saved as a protective backup.',
+    }] });
+    expect(events).toEqual(['replace:9']);
+  });
+
   it('rejects invalid input before backup or replacement callbacks run', () => {
     const events: string[] = [];
     const result = applyPreparedReplacement({ ...cloneState(), keys: -1 }, {

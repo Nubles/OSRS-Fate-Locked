@@ -1,10 +1,13 @@
 // @vitest-environment jsdom
 
+import React from 'react';
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ProfileWriterLeaseOptions } from '../hooks/useProfileWriterLease';
 import type { GameState } from '../types';
 import type { SaveBootstrapResult } from '../components/SaveBootstrap';
+import type { SaveCoordinator } from '../utils/saveCoordinator';
+import type { SaveDurabilitySnapshot } from '../utils/recoveryTypes';
 import { serializeCurrent, type ImportResult } from '../utils/gamePersistence';
 import {
   discardPendingSave,
@@ -29,9 +32,76 @@ import {
   subscribeToPendingSaveChanges,
   useGame,
 } from './GameContext';
+import { SaveRecoveryGuard } from '../components/SaveRecoveryGuard';
 
 
 type Game = ReturnType<typeof useGame>;
+
+const coordinatorSnapshot = (
+  overrides: Partial<SaveDurabilitySnapshot> = {},
+): SaveDurabilitySnapshot => ({
+  primary: 'saved',
+  recovery: 'checking',
+  savedAt: null,
+  ...overrides,
+});
+
+const fakeCoordinator = (
+  events: string[],
+  options: { fail?: boolean; journalOnly?: boolean } = {},
+): SaveCoordinator => {
+  let staged = '';
+  let snapshot = coordinatorSnapshot();
+  const listeners = new Set<() => void>();
+  const notify = () => listeners.forEach(listener => listener());
+  const noteFromData = (data: string) => JSON.parse(data).userNotes?.goal ?? '';
+  const durable = (data: string): SaveDurabilitySnapshot => {
+    if (options.fail) {
+      snapshot = coordinatorSnapshot({ primary: 'failed', recovery: 'degraded' });
+      notify();
+      return snapshot;
+    }
+    const note = noteFromData(data);
+    events.push(`journal:${note}`);
+    if (!options.journalOnly) events.push(`mirror:${note}`);
+    snapshot = coordinatorSnapshot({
+      primary: 'saved',
+      recovery: options.journalOnly ? 'degraded' : 'protected',
+      savedAt: Date.now(),
+    });
+    notify();
+    return snapshot;
+  };
+  return {
+    stage: data => { staged = data; },
+    flush: async () => durable(staged),
+    retry: async () => durable(staged),
+    mirrorLifecycle: data => {
+      staged = data;
+      if (options.fail) {
+        snapshot = coordinatorSnapshot({ primary: 'failed', recovery: 'degraded' });
+        notify();
+        return false;
+      }
+      durable(data);
+      return true;
+    },
+    writeReplacement: async data => durable(data),
+    createCheckpoint: async (_data, reason) => {
+      events.push(`checkpoint:${reason}`);
+      return options.fail
+        ? { stored: false, reason: 'storage_unavailable' }
+        : { stored: true };
+    },
+    getSnapshot: () => ({ ...snapshot }),
+    subscribe: listener => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    whenIdle: async () => undefined,
+    dispose: () => undefined,
+  };
+};
 
 const GameCapture = ({ onGame }: { onGame: (game: Game) => void }) => {
   onGame(useGame());
@@ -103,6 +173,27 @@ describe('ordinary save recovery', () => {
     };
   };
 
+  const renderCoordinatorGame = (
+    injected: SaveCoordinator,
+    leaseOptions: ProfileWriterLeaseOptions = { ownerId: 'test-tab' },
+  ) => {
+    let current: Game | undefined;
+    const rendered = render(
+      React.createElement(
+        GameProvider,
+        { storageKey: 'profile', leaseOptions, coordinator: injected } as never,
+        React.createElement(GameCapture, { onGame: game => { current = game; } }),
+      ),
+    );
+    return {
+      ...rendered,
+      current: () => {
+        if (!current) throw new Error('Game provider did not initialize');
+        return current;
+      },
+    };
+  };
+
   const settleOwnership = async () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(WRITER_LEASE_ARBITRATION_MS);
@@ -159,6 +250,177 @@ describe('ordinary save recovery', () => {
 
     expect(JSON.parse(storage.values.get('profile')!).userNotes.goal).toBe('newest');
     expect(game.current().saveStatus).toBe('saved');
+  });
+
+  it('journals a state change before mirroring it through the coordinator', async () => {
+    const events: string[] = [];
+    const coordinator = fakeCoordinator(events);
+    let current: Game | undefined;
+    render(
+      React.createElement(
+        GameProvider,
+        {
+          storageKey: 'profile',
+          leaseOptions: { ownerId: 'test-tab' },
+          coordinator,
+        } as never,
+        React.createElement(GameCapture, { onGame: game => { current = game; } }),
+      ),
+    );
+    await settleOwnership();
+
+    act(() => current!.saveNote('goal', 'newest'));
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+    await coordinator.whenIdle();
+
+    expect(events.indexOf('journal:newest')).toBeGreaterThanOrEqual(0);
+    expect(events.indexOf('journal:newest')).toBeLessThan(events.indexOf('mirror:newest'));
+  });
+
+  it('keeps unload protection after both coordinator writes fail', async () => {
+    const coordinator = fakeCoordinator([], { fail: true });
+    let current: Game | undefined;
+    render(
+      React.createElement(
+        GameProvider,
+        {
+          storageKey: 'profile',
+          leaseOptions: { ownerId: 'test-tab' },
+          coordinator,
+        } as never,
+        React.createElement(GameCapture, { onGame: game => { current = game; } }),
+      ),
+    );
+    await settleOwnership();
+
+    act(() => current!.saveNote('goal', 'memory only'));
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+    await coordinator.whenIdle();
+
+    expect(current!.saveDurability.primary).toBe('failed');
+    expect(current!.hasPendingChanges).toBe(true);
+  });
+
+  it('mirrors the newest same-batch pagehide state before releasing coordinator ownership', async () => {
+    const events: string[] = [];
+    const coordinator = fakeCoordinator(events);
+    const game = renderCoordinatorGame(coordinator, { ownerId: 'tab-a' });
+    await settleOwnership();
+
+    act(() => {
+      game.current().saveNote('goal', 'same-batch coordinator pagehide');
+      window.dispatchEvent(new Event('pagehide'));
+    });
+
+    expect(events).toContain('mirror:same-batch coordinator pagehide');
+    expect(storage.values.get(writerLeaseKey('profile'))).toBeUndefined();
+  });
+
+  it('clears unload protection after a durable coordinator journal-only save', async () => {
+    const coordinator = fakeCoordinator([], { journalOnly: true });
+    render(<SaveRecoveryGuard />);
+    const game = renderCoordinatorGame(coordinator);
+    await settleOwnership();
+    storage.failWrites();
+    act(() => game.current().saveNote('goal', 'journal only'));
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+
+    const unload = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(unload);
+    expect(unload.defaultPrevented).toBe(false);
+    expect(game.current().saveDurability.recovery).toBe('degraded');
+  });
+
+  it('does not replace in-memory state until an imported snapshot is durable', async () => {
+    const events: string[] = [];
+    const coordinator = fakeCoordinator(events);
+    const game = renderCoordinatorGame(coordinator);
+    await settleOwnership();
+    const candidate = JSON.parse(game.current().getExportData()) as GameState;
+    candidate.userNotes = { imported: 'yes' };
+
+    let result: ImportResult | undefined;
+    await act(async () => {
+      result = await (game.current().importSave(candidate) as unknown as Promise<ImportResult>);
+    });
+
+    expect(result).toEqual({ ok: true, warnings: [] });
+    expect(game.current().userNotes.imported).toBe('yes');
+    expect(events).toContain('checkpoint:pre-replacement');
+  });
+
+  it('writes a reset replacement through the coordinator before changing memory', async () => {
+    const events: string[] = [];
+    const coordinator = fakeCoordinator(events);
+    const game = renderCoordinatorGame(coordinator);
+    await settleOwnership();
+    act(() => game.current().saveNote('goal', 'before reset'));
+    const reset = game.current().resetGame() as unknown as Promise<void>;
+    await act(async () => { await reset; });
+
+    expect(game.current().userNotes.goal).toBeUndefined();
+    expect(events).toContain('checkpoint:pre-replacement');
+  });
+
+  it('does not flush an ordinary coordinator save while another tab owns the profile', async () => {
+    seedForeignWriterLease('profile', 'tab-a');
+    const events: string[] = [];
+    const game = renderCoordinatorGame(fakeCoordinator(events, { fail: true }), { ownerId: 'tab-b' });
+    await settleOwnership();
+
+    act(() => game.current().saveNote('goal', 'foreign owner'));
+    const retried = await (game.current().retrySave() as unknown as Promise<boolean>);
+
+    expect(retried).toBe(false);
+    expect(events).not.toContain('journal:foreign owner');
+    expect(getPendingSave('profile')).toMatchObject({ reason: 'ownership_conflict' });
+  });
+
+  it('takes over and flushes the newest blocked coordinator state', async () => {
+    seedForeignWriterLease('profile', 'tab-a');
+    const events: string[] = [];
+    const game = renderCoordinatorGame(fakeCoordinator(events), { ownerId: 'tab-b' });
+    await settleOwnership();
+    act(() => game.current().saveNote('goal', 'takeover newest'));
+
+    let takeover: Promise<boolean>;
+    await act(async () => {
+      takeover = game.current().takeOverSaveOwnership();
+      await vi.advanceTimersByTimeAsync(WRITER_LEASE_ARBITRATION_MS);
+      expect(await takeover).toBe(true);
+    });
+
+    expect(events).toContain('journal:takeover newest');
+    expect(getPendingSave('profile')).toBeNull();
+  });
+
+  it('imports the arbitrated bootstrap bytes into the journal after ownership settles', async () => {
+    const events: string[] = [];
+    const coordinator = fakeCoordinator(events);
+    const bootstrapState = { ...structuredClone(initialState), userNotes: { goal: 'bootstrap' } };
+    const bootstrap: SaveBootstrapResult = {
+      initialState: bootstrapState,
+      initialData: serializeCurrent(bootstrapState),
+      persistenceRevision: 12,
+      source: 'mirror',
+      needsJournalImport: true,
+    };
+    storage.values.set('profile', JSON.stringify({ ...initialState, userNotes: { goal: 'primary' } }));
+    const getItem = vi.spyOn(localStorage, 'getItem');
+    let current: Game | undefined;
+    render(
+      React.createElement(
+        GameProvider,
+        { storageKey: 'profile', leaseOptions: { ownerId: 'test-tab' }, bootstrap, coordinator } as never,
+        React.createElement(GameCapture, { onGame: game => { current = game; } }),
+      ),
+    );
+    await settleOwnership();
+    await coordinator.whenIdle();
+
+    expect(current?.userNotes.goal).toBe('bootstrap');
+    expect(events).toContain('journal:bootstrap');
+    expect(getItem).not.toHaveBeenCalledWith('profile');
   });
 
   it('initializes from the arbitrated bootstrap without rereading the primary save', () => {
@@ -451,7 +713,7 @@ describe('ordinary save recovery', () => {
     });
     expect(game.current().saveOwnershipStatus).toBe('checking');
 
-    let retryDuringArbitration = true;
+    let retryDuringArbitration: boolean | Promise<boolean> = true;
     let backupDuringArbitration: ReturnType<Game['createBackup']> | undefined;
     act(() => {
       retryDuringArbitration = game.current().retrySave();
@@ -482,7 +744,7 @@ describe('ordinary save recovery', () => {
     const candidate = game.current().getExportData();
 
     let takeover: Promise<boolean> | undefined;
-    let retryDuringArbitration = true;
+    let retryDuringArbitration: boolean | Promise<boolean> = true;
     let backupDuringArbitration: ReturnType<Game['createBackup']> | undefined;
     let importDuringArbitration: ImportResult | undefined;
     act(() => {

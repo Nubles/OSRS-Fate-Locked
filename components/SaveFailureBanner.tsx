@@ -13,7 +13,7 @@ import { showToast } from '../utils/toast';
 interface SaveFailureBannerViewProps {
   saveStatus: SaveStatus;
   ownershipBlockReason: SaveOwnershipBlockReason;
-  retrySave: () => boolean;
+  retrySave: () => boolean | Promise<boolean>;
   exportBackup: () => FateSaveDownloadResult;
 }
 
@@ -31,7 +31,7 @@ export const SaveFailureBannerView: FC<SaveFailureBannerViewProps> = ({
     setRetrying(true);
     await Promise.resolve();
     try {
-      showToast(retrySave()
+      showToast((await retrySave())
         ? 'Progress saved'
         : 'Still unable to save progress in this browser');
     } finally {
