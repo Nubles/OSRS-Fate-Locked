@@ -29,6 +29,9 @@ jobs:
       - name: Run full quest audit
         run: node scripts/run-full-quest-operational-audit.mjs
 
+      - name: Resolve equipped-item slots and skill requirements
+        run: python3 scripts/run-resolve-quest-equipment.py
+
       - name: Upload audit evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -38,5 +41,7 @@ jobs:
             audit-output/
             scripts/full-quest-operational-audit.mjs
             scripts/run-full-quest-operational-audit.mjs
+            scripts/resolve-quest-equipment.py
+            scripts/run-resolve-quest-equipment.py
           if-no-files-found: warn
           retention-days: 7
