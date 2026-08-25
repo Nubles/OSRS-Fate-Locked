@@ -69,3 +69,10 @@ fs.writeFileSync(
     quests: Object.fromEntries(Object.entries(sourceTaskGroups).sort(([left], [right]) => left.localeCompare(right))),
   }, null, 2),
 );
+
+const questHelperSource = '/tmp/quest-helper/src/main/java/com/questhelper/helpers';
+const questHelperOutput = path.join(outputDirectory, 'quest-helper-helpers');
+fs.cpSync(questHelperSource, questHelperOutput, {
+  recursive: true,
+  filter: (source) => fs.statSync(source).isDirectory() || source.endsWith('.java'),
+});
