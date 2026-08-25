@@ -89,6 +89,70 @@ describe('SaveBootstrap', () => {
     });
   });
 
+  it('closes a repository that opens after unmount without starting stale reads', async () => {
+    const opening = deferred<RecoveryRepository>();
+    const opened = repository();
+    const resolveSaveRecovery = vi.fn(async () => ({ kind: 'empty' as const }));
+    const deps = dependencies({
+      openRepository: vi.fn(() => opening.promise),
+      resolveSaveRecovery,
+    });
+    const view = render(
+      <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {() => <div>game mounted</div>}
+      </SaveBootstrap>,
+    );
+
+    view.unmount();
+    await act(async () => {
+      opening.resolve(opened);
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+
+    expect((opened.close as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(1);
+    expect(opened.getHead).not.toHaveBeenCalled();
+    expect(opened.listCheckpoints).not.toHaveBeenCalled();
+    expect(resolveSaveRecovery).not.toHaveBeenCalled();
+  });
+
+  it('closes a stale delayed-open repository before a profile switch can read it', async () => {
+    const firstOpening = deferred<RecoveryRepository>();
+    const secondOpening = deferred<RecoveryRepository>();
+    const firstRepository = repository();
+    const secondRepository = repository();
+    let openCount = 0;
+    const resolveSaveRecovery = vi.fn(async () => readyDecision('mirror'));
+    const deps = dependencies({
+      openRepository: vi.fn(() => {
+        openCount += 1;
+        return openCount === 1 ? firstOpening.promise : secondOpening.promise;
+      }),
+      resolveSaveRecovery,
+    });
+    const view = render(<ProfileHarness dependencies={deps} />);
+
+    await act(async () => {
+      view.rerender(<ProfileHarness dependencies={deps} profileId="beta" />);
+    });
+    await act(async () => {
+      firstOpening.resolve(firstRepository);
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+
+    expect((firstRepository.close as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(1);
+    expect(firstRepository.getHead).not.toHaveBeenCalled();
+    expect(firstRepository.listCheckpoints).not.toHaveBeenCalled();
+    expect(resolveSaveRecovery).not.toHaveBeenCalled();
+
+    await act(async () => {
+      secondOpening.resolve(secondRepository);
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+
+    expect(await screen.findByTestId('profile-result')).toBeTruthy();
+    expect((secondRepository.close as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(1);
+  });
+
   it.each([
     ['pending', readyDecision('pending')],
     ['mirror', readyDecision('mirror')],

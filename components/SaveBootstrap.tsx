@@ -177,6 +177,10 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
         };
 
         repository = await dependencies.openRepository(profileId);
+        if (!isCurrent()) {
+          closeRepository();
+          return;
+        }
         const [head, checkpoints] = await Promise.all([
           repository.getHead(profileId),
           repository.listCheckpoints(profileId),
