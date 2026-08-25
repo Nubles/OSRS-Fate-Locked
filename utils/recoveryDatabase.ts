@@ -37,6 +37,7 @@ export type RecoveryDatabaseOperation =
   | 'get-head'
   | 'put-head'
   | 'list-checkpoints'
+  | 'get-checkpoint'
   | 'put-checkpoint'
   | 'delete-checkpoint'
   | 'get-metadata'
@@ -132,6 +133,19 @@ const abortTransaction = async (
 
 const keyForCheckpoint = (profileId: string, persistenceRevision: number): string =>
   `${profileId}:${persistenceRevision}`;
+
+const checkpointRecordsEqual = (
+  a: RecoveryCheckpoint,
+  b: RecoveryCheckpoint,
+): boolean => {
+  const aRecord = a as unknown as Record<string, unknown>;
+  const bRecord = b as unknown as Record<string, unknown>;
+  const keys = new Set([...Object.keys(aRecord), ...Object.keys(bRecord)]);
+  for (const key of keys) {
+    if (!Object.is(aRecord[key], bRecord[key])) return false;
+  }
+  return true;
+};
 
 const isWriteFailure = (
   authorization: SaveWriteAuthorization,
@@ -430,11 +444,21 @@ class IndexedDbRecoveryRepository implements RecoveryRepository {
         authorizeWrite,
         'put-checkpoint',
         async (tx, authorize) => {
+          const store = tx.objectStore(CHECKPOINTS_STORE);
+          const existing = await requestDone(this.request(
+            'get-checkpoint',
+            CHECKPOINTS_STORE,
+            () => store.get([record.profileId, record.persistenceRevision]),
+          )) as RecoveryCheckpoint | undefined;
+          if (existing !== undefined) {
+            return checkpointRecordsEqual(existing, record)
+              ? { stored: true } as const
+              : { stored: false, reason: 'stale_revision' } as const;
+          }
           const writeAuthorization = authorize();
           if (isWriteFailure(writeAuthorization)) {
             throw new OwnershipAbort({ stored: false, reason: writeAuthorization.reason });
           }
-          const store = tx.objectStore(CHECKPOINTS_STORE);
           await requestDone(this.request(
             'put-checkpoint',
             CHECKPOINTS_STORE,

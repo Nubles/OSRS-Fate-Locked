@@ -128,6 +128,37 @@ describe('transactional recovery database', () => {
     await expect(repository.listCheckpoints('alpha')).resolves.toEqual([newer]);
   });
 
+  it('treats an identical checkpoint retry as an idempotent success without rewriting', async () => {
+    let checkpointWrites = 0;
+    const repository = await openRecoveryDatabase({
+      databaseName: uniqueDbName(),
+      transactionAdapter: {
+        beforeRequest: (operation) => {
+          if (operation === 'put-checkpoint') checkpointWrites += 1;
+        },
+      },
+    });
+    openedRepositories.push(repository);
+    const record = checkpoint(7);
+
+    await expect(repository.putCheckpoint(record, allowWrite)).resolves.toEqual({ stored: true });
+    await expect(repository.putCheckpoint({ ...record }, allowWrite))
+      .resolves.toEqual({ stored: true });
+    expect(checkpointWrites).toBe(1);
+    await expect(repository.listCheckpoints('alpha')).resolves.toEqual([record]);
+  });
+
+  it('rejects a conflicting duplicate checkpoint and preserves the original record', async () => {
+    const repository = await openRepository();
+    const original = checkpoint(8);
+    const conflicting = { ...original, data: JSON.stringify({ revision: 800 }) };
+
+    await expect(repository.putCheckpoint(original, allowWrite)).resolves.toEqual({ stored: true });
+    await expect(repository.putCheckpoint(conflicting, allowWrite))
+      .resolves.toEqual({ stored: false, reason: 'stale_revision' });
+    await expect(repository.listCheckpoints('alpha')).resolves.toEqual([original]);
+  });
+
   it('aborts checkpoint, metadata, and deletion transactions when reauthorization fails', async () => {
     const repository = await openRepository();
     const existing = checkpoint(2);
