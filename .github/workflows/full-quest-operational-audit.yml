@@ -1,6 +1,9 @@
 name: Full quest operational audit
 
 on:
+  push:
+    branches:
+      - audit/full-quest-operational-2026-08-25
   workflow_dispatch:
 
 jobs:
