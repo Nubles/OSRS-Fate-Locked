@@ -5,6 +5,11 @@ import {
   getPendingSave,
   type PendingSaveEntry,
 } from '../utils/pendingSaves';
+import {
+  archiveCorruptSave,
+  buildCorruptSaveArchive,
+  type CorruptSaveEvidence,
+} from '../utils/profileStorage';
 import { profileMirrorMetadataKey } from '../utils/storageRecovery';
 import {
   openRecoveryDatabase,
@@ -12,11 +17,17 @@ import {
 import type {
   RecoveryRepository,
 } from '../utils/recoveryTypes';
+import { checksumSave } from '../utils/saveIntegrity';
 import {
   resolveSaveRecovery,
   type SaveRecoveryDecision,
   type SaveRecoveryInput,
+  type ValidatedRecoveryCandidate,
 } from '../utils/saveRecovery';
+import {
+  SaveRecoveryScreen,
+  type RecoveryActionResult,
+} from './SaveRecoveryScreen';
 
 export interface SaveBootstrapResult {
   initialState: GameState;
@@ -24,6 +35,16 @@ export interface SaveBootstrapResult {
   persistenceRevision: number;
   source: 'empty' | 'pending' | 'mirror' | 'journal' | 'recovery';
   needsJournalImport: boolean;
+}
+
+export interface SaveBootstrapReplacement {
+  profileId: string;
+  storageKey: string;
+  data: string;
+  state: GameState;
+  persistenceRevision: number;
+  capturedAt: number | null;
+  checksum: string | null;
 }
 
 export interface SaveBootstrapDependencies {
@@ -35,6 +56,17 @@ export interface SaveBootstrapDependencies {
   resolveSaveRecovery: (
     input: SaveRecoveryInput,
   ) => SaveRecoveryDecision | PromiseLike<SaveRecoveryDecision>;
+  archiveCorruptEvidence?: (
+    storageKey: string,
+    evidence: CorruptSaveEvidence,
+  ) => RecoveryActionResult | Promise<RecoveryActionResult>;
+  replaceSave?: (
+    replacement: SaveBootstrapReplacement,
+  ) => RecoveryActionResult | Promise<RecoveryActionResult>;
+  exportRecovery?: (
+    storageKey: string,
+    decision: Exclude<SaveRecoveryDecision, ReadyDecision | { kind: 'empty' }>,
+  ) => RecoveryActionResult | Promise<RecoveryActionResult>;
 }
 
 type ReadyDecision = Extract<SaveRecoveryDecision, { kind: 'ready' }>;
@@ -52,6 +84,85 @@ const unavailableRecoveryRepository: RecoveryRepository = {
 
 const readStorage = (key: string): string | null => {
   return window.localStorage.getItem(key);
+};
+
+const writeStorageVerified = (key: string, data: string): boolean => {
+  try {
+    window.localStorage.setItem(key, data);
+    return window.localStorage.getItem(key) === data;
+  } catch {
+    return false;
+  }
+};
+
+const productionArchiveCorruptEvidence = async (
+  storageKey: string,
+  evidence: CorruptSaveEvidence,
+): Promise<RecoveryActionResult> => archiveCorruptSave(window.localStorage, storageKey, evidence);
+
+const productionReplaceSave = async (
+  replacement: SaveBootstrapReplacement,
+): Promise<RecoveryActionResult> => {
+  if (!writeStorageVerified(replacement.storageKey, replacement.data)) {
+    return { ok: false, message: 'The replacement save could not be written.' };
+  }
+
+  try {
+    const checksum = replacement.checksum ?? await checksumSave(replacement.data);
+    const metadata = JSON.stringify({
+      version: 1,
+      persistenceRevision: replacement.persistenceRevision,
+      capturedAt: replacement.capturedAt ?? Date.now(),
+      checksum,
+    });
+    const metadataKey = profileMirrorMetadataKey(replacement.storageKey);
+    window.localStorage.setItem(metadataKey, metadata);
+    if (window.localStorage.getItem(metadataKey) !== metadata) {
+      return { ok: false, message: 'The replacement save metadata could not be verified.' };
+    }
+  } catch {
+    return { ok: false, message: 'The replacement save metadata could not be verified.' };
+  }
+  return { ok: true };
+};
+
+const productionExportRecovery = async (
+  storageKey: string,
+  decision: Exclude<SaveRecoveryDecision, ReadyDecision | { kind: 'empty' }>,
+): Promise<RecoveryActionResult> => {
+  if (typeof document === 'undefined' || typeof URL === 'undefined' || typeof Blob === 'undefined') {
+    return { ok: false, message: 'Recovery export is unavailable in this browser.' };
+  }
+  try {
+    const primary = decision.kind === 'recovery_required' ? decision.primaryRaw : null;
+    const mirrorMetadata = readStorage(profileMirrorMetadataKey(storageKey));
+    const bounded = await buildCorruptSaveArchive({ primary, mirrorMetadata });
+    const candidates = decision.kind === 'recovery_required'
+      ? decision.candidates.map(candidate => ({
+        source: candidate.source,
+        persistenceRevision: candidate.persistenceRevision,
+        capturedAt: candidate.capturedAt,
+        runId: candidate.runId,
+        runRevision: candidate.runRevision,
+        data: candidate.data,
+      }))
+      : [];
+    const payload = JSON.stringify({
+      version: 1,
+      capturedAt: Date.now(),
+      evidence: bounded,
+      candidates,
+    });
+    const url = URL.createObjectURL(new Blob([payload], { type: 'application/json' }));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `fate_locked_recovery_${Date.now()}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    return { ok: true };
+  } catch {
+    return { ok: false, message: 'Recovery export failed.' };
+  }
 };
 
 const pendingData = (entry: PendingSaveEntry | null): string | null => entry?.data ?? null;
@@ -72,6 +183,9 @@ export const productionSaveBootstrapDependencies: SaveBootstrapDependencies = {
   readMirrorMetadata: storageKey => readStorage(profileMirrorMetadataKey(storageKey)),
   openRepository: _profileId => openProductionRepository(),
   resolveSaveRecovery,
+  archiveCorruptEvidence: productionArchiveCorruptEvidence,
+  replaceSave: productionReplaceSave,
+  exportRecovery: productionExportRecovery,
 };
 
 /** Alias kept deliberately descriptive for callers that construct a boundary explicitly. */
@@ -115,7 +229,13 @@ export const saveBootstrapResultFromDecision = (
 type BootstrapView =
   | { identity: string; phase: 'loading' }
   | { identity: string; phase: 'ready'; result: SaveBootstrapResult }
-  | { identity: string; phase: 'blocked'; decision: Exclude<SaveRecoveryDecision, ReadyDecision | { kind: 'empty' }> }
+  | {
+    identity: string;
+    phase: 'blocked';
+    request: number;
+    decision: Exclude<SaveRecoveryDecision, ReadyDecision | { kind: 'empty' }>;
+    mirrorMetadataRaw: string | null;
+  }
   | { identity: string; phase: 'error' };
 
 export interface SaveBootstrapProps {
@@ -124,12 +244,6 @@ export interface SaveBootstrapProps {
   dependencies?: SaveBootstrapDependencies;
   children: (result: SaveBootstrapResult) => ReactNode;
 }
-
-const decisionMessage = (
-  decision: Exclude<SaveRecoveryDecision, ReadyDecision | { kind: 'empty' }>,
-): string => decision.kind === 'unsupported'
-  ? 'A newer save format needs review before the game can open.'
-  : 'Saved progress needs review before the game can open.';
 
 /**
  * Resolves all durable save candidates before rendering the GameProvider.
@@ -196,7 +310,13 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
         if (result !== null) {
           setView({ identity, phase: 'ready', result });
         } else if (decision.kind === 'recovery_required' || decision.kind === 'unsupported') {
-          setView({ identity, phase: 'blocked', decision });
+          setView({
+            identity,
+            phase: 'blocked',
+            request,
+            decision,
+            mirrorMetadataRaw: input.mirrorMetadataRaw,
+          });
         }
       } catch {
         closeRepository();
@@ -219,11 +339,85 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
     return <div role="status">Checking saved progress…</div>;
   }
   if (activeView.phase === 'blocked') {
+    const isCurrentRequest = () => requestRef.current === activeView.request;
+    const archiveCorruptEvidence = dependencies.archiveCorruptEvidence ?? productionArchiveCorruptEvidence;
+    const replaceSave = dependencies.replaceSave ?? productionReplaceSave;
+    const exportRecovery = dependencies.exportRecovery ?? productionExportRecovery;
     return (
-      <div role="status" aria-live="polite">
-        <p>{decisionMessage(activeView.decision)}</p>
-        <p>The game remains closed until this save decision is resolved.</p>
-      </div>
+      <SaveRecoveryScreen
+        decision={activeView.decision}
+        archiveCorruptEvidence={async () => {
+          if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
+          const result = await archiveCorruptEvidence(
+            storageKey,
+            {
+              primary: activeView.decision.kind === 'recovery_required'
+                ? activeView.decision.primaryRaw
+                : null,
+              mirrorMetadata: activeView.mirrorMetadataRaw,
+            },
+          );
+          return isCurrentRequest()
+            ? result
+            : { ok: false, message: 'This profile is no longer active.' };
+        }}
+        onExportRecovery={() => exportRecovery(storageKey, activeView.decision)}
+        onRecover={async (candidate: ValidatedRecoveryCandidate) => {
+          if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
+          const replacement: SaveBootstrapReplacement = {
+            profileId,
+            storageKey,
+            data: candidate.data,
+            state: candidate.state,
+            persistenceRevision: candidate.persistenceRevision,
+            capturedAt: candidate.capturedAt,
+            checksum: candidate.checksum,
+          };
+          const result = await replaceSave(replacement);
+          if (result && 'ok' in result && result.ok === false) return result;
+          if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
+          setView({
+            identity,
+            phase: 'ready',
+            result: {
+              initialState: candidate.state,
+              initialData: candidate.data,
+              persistenceRevision: candidate.persistenceRevision,
+              source: 'recovery',
+              needsJournalImport: true,
+            },
+          });
+          return { ok: true };
+        }}
+        onStartFresh={async () => {
+          if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
+          const state = dependencies.createFreshState();
+          const data = JSON.stringify(state);
+          const result = await replaceSave({
+            profileId,
+            storageKey,
+            data,
+            state,
+            persistenceRevision: 0,
+            capturedAt: null,
+            checksum: null,
+          });
+          if (result && 'ok' in result && result.ok === false) return result;
+          if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
+          setView({
+            identity,
+            phase: 'ready',
+            result: {
+              initialState: state,
+              initialData: data,
+              persistenceRevision: 0,
+              source: 'empty',
+              needsJournalImport: false,
+            },
+          });
+          return { ok: true };
+        }}
+      />
     );
   }
   if (activeView.phase === 'error') {

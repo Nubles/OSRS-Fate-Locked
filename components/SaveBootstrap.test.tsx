@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { act, cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { initialState } from '../context/GameContext';
 import type { RecoveryRepository } from '../utils/recoveryTypes';
@@ -201,6 +202,82 @@ describe('SaveBootstrap', () => {
     );
 
     expect(await screen.findByRole('status')).toBeTruthy();
+    expect(screen.queryByText('game mounted')).toBeNull();
+  });
+
+  it('renders blocking recovery actions without replacing the save before confirmation', async () => {
+    const archiveCorruptEvidence = vi.fn(async () => ({ ok: true as const }));
+    const replaceSave = vi.fn(async () => ({ ok: true as const }));
+    const decision: Extract<SaveRecoveryDecision, { kind: 'recovery_required' }> = {
+      kind: 'recovery_required',
+      primaryRaw: '{"broken":true}',
+      candidates: [{
+        source: 'checkpoint',
+        data: 'safe-checkpoint',
+        state: { ...initialState, runId: 'safe-run' },
+        persistenceRevision: 3,
+        runId: 'safe-run',
+        runRevision: 3,
+        capturedAt: 123,
+        checksum: 'a'.repeat(64),
+      }],
+      cause: 'corrupt_primary',
+    };
+    const deps = dependencies({
+      resolveSaveRecovery: vi.fn(async () => decision),
+      archiveCorruptEvidence,
+      replaceSave,
+    });
+    const user = userEvent.setup();
+
+    render(
+      <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {() => <div>game mounted</div>}
+      </SaveBootstrap>,
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Saved progress needs recovery' })).toBeTruthy();
+    expect(replaceSave).not.toHaveBeenCalled();
+    expect(screen.queryByText('game mounted')).toBeNull();
+
+    await user.click(screen.getByRole('button', { name: 'Recover latest safe save' }));
+
+    expect(archiveCorruptEvidence).toHaveBeenCalledOnce();
+    expect(replaceSave).toHaveBeenCalledOnce();
+  });
+
+  it('keeps the blocking screen when archival fails', async () => {
+    const archiveCorruptEvidence = vi.fn(async () => ({
+      ok: false as const,
+      message: 'Corrupt save evidence could not be archived.',
+    }));
+    const replaceSave = vi.fn(async () => ({ ok: true as const }));
+    const decision: Extract<SaveRecoveryDecision, { kind: 'recovery_required' }> = {
+      kind: 'recovery_required',
+      primaryRaw: '{"broken":true}',
+      candidates: [],
+      cause: 'corrupt_primary',
+    };
+    const deps = dependencies({
+      resolveSaveRecovery: vi.fn(async () => decision),
+      archiveCorruptEvidence,
+      replaceSave,
+    });
+    const user = userEvent.setup();
+
+    render(
+      <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {() => <div>game mounted</div>}
+      </SaveBootstrap>,
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Saved progress needs recovery' })).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Start a new run' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm start a new run' }));
+
+    expect(archiveCorruptEvidence).toHaveBeenCalledOnce();
+    expect(replaceSave).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert').textContent).toContain('could not be archived');
     expect(screen.queryByText('game mounted')).toBeNull();
   });
 
