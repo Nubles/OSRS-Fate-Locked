@@ -1,4 +1,8 @@
 import { writerLeaseKey } from './profileWriterLease';
+import {
+  profileCorruptArchiveKey,
+  profileMirrorMetadataKey,
+} from './storageRecovery';
 
 export const profileBaseKey = (profileId: string): string =>
   `FATE_PROFILE_${profileId}`;
@@ -28,6 +32,8 @@ export const profileOwnedKeys = (profileId: string): readonly string[] => {
     profileDiscordCursorKey(storageKey),
     profileFeatureSeenKey(profileId),
     writerLeaseKey(storageKey),
+    profileMirrorMetadataKey(storageKey),
+    profileCorruptArchiveKey(storageKey),
   ];
 };
 

@@ -1,4 +1,5 @@
 import type { SaveWriteAuthorization } from './profileWriterLease';
+import { isQuotaExceededError, removeDisposableCaches } from './storageRecovery';
 
 export type SaveStatus = 'saved' | 'saving' | 'failed';
 
@@ -13,6 +14,9 @@ export type PendingSaveEntry = {
 export type PendingSaveFlushResult =
   | { ok: true }
   | { ok: false; reason: PendingSaveReason };
+
+export type SaveStorage = Pick<Storage, 'getItem' | 'setItem'>
+  & Partial<Pick<Storage, 'removeItem'>>;
 
 const entries = new Map<string, PendingSaveEntry>();
 const listeners = new Set<() => void>();
@@ -38,7 +42,7 @@ export const stagePendingSave = (storageKey: string, data: string): void => {
 };
 
 export const flushPendingSave = (
-  storage: Pick<Storage, 'setItem'>,
+  storage: SaveStorage,
   storageKey: string,
   authorizeWrite: () => SaveWriteAuthorization,
 ): PendingSaveFlushResult => {
@@ -53,10 +57,27 @@ export const flushPendingSave = (
 
   try {
     storage.setItem(storageKey, entry.data);
+    if (storage.getItem(storageKey) !== entry.data) {
+      throw new Error('storage readback mismatch');
+    }
     entries.delete(storageKey);
     emit();
     return { ok: true };
-  } catch {
+  } catch (error) {
+    if (isQuotaExceededError(error) && storage.removeItem) {
+      removeDisposableCaches(storage as Pick<Storage, 'removeItem'>);
+      try {
+        storage.setItem(storageKey, entry.data);
+        if (storage.getItem(storageKey) !== entry.data) {
+          throw new Error('storage readback mismatch');
+        }
+        entries.delete(storageKey);
+        emit();
+        return { ok: true };
+      } catch {
+        // Fall through to the existing failed-save state below.
+      }
+    }
     entries.set(storageKey, {
       ...entry,
       status: 'failed',

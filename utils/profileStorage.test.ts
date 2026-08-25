@@ -14,12 +14,21 @@ const expectedKeys = (profileId: string): string[] => {
     `${base}__discordCursor`,
     `fate_features_seen_v1_${profileId}`,
     `${base}__writer`,
+    `${base}__mirrorMeta`,
+    `${base}__corruptArchive`,
   ];
 };
 
 describe('profile-owned storage registry', () => {
-  it('lists the exact seven owned keys in stable order', () => {
+  it('lists the exact nine owned keys in stable order', () => {
     expect(profileOwnedKeys('target')).toEqual(expectedKeys('target'));
+  });
+
+  it('owns mirror metadata and corrupt evidence with the profile', () => {
+    expect(profileOwnedKeys('alpha')).toEqual(expect.arrayContaining([
+      'FATE_PROFILE_alpha__mirrorMeta',
+      'FATE_PROFILE_alpha__corruptArchive',
+    ]));
   });
 
   it('removes only the exact registered keys for the selected profile', () => {
