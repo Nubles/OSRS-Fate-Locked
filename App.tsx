@@ -29,6 +29,7 @@ import { SaveConflictBanner } from './components/SaveConflictBanner';
 import { SaveFailureBanner } from './components/SaveFailureBanner';
 import { ProfileRecoveryBanner } from './components/ProfileRecoveryBanner';
 import { SaveRecoveryGuard } from './components/SaveRecoveryGuard';
+import { SaveBootstrap } from './components/SaveBootstrap';
 import { DiscordSyncDriver } from './components/DiscordSyncDriver';
 import { downloadFateSave } from './utils/fateSaveFile';
 import { useFeatureGates } from './hooks/useFeatureGates';
@@ -1113,10 +1114,18 @@ const ProfileEvictionBridge: React.FC<{ profileId: string }> = ({ profileId }) =
 const GameProviderBridge: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { activeProfileId, storageKeyForActiveProfile } = useProfiles();
   return (
-    <GameProvider key={activeProfileId} storageKey={storageKeyForActiveProfile}>
-      <ProfileEvictionBridge profileId={activeProfileId} />
-      {children}
-    </GameProvider>
+    <SaveBootstrap profileId={activeProfileId} storageKey={storageKeyForActiveProfile}>
+      {bootstrap => (
+        <GameProvider
+          key={activeProfileId}
+          storageKey={storageKeyForActiveProfile}
+          bootstrap={bootstrap}
+        >
+          <ProfileEvictionBridge profileId={activeProfileId} />
+          {children}
+        </GameProvider>
+      )}
+    </SaveBootstrap>
   );
 };
 

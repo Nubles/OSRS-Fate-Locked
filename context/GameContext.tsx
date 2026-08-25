@@ -74,6 +74,7 @@ import type {
   SaveOwnershipStatus,
   SaveWriteAuthorization,
 } from '../utils/profileWriterLease';
+import type { SaveBootstrapResult } from '../components/SaveBootstrap';
 
 
 // --- Types ---
@@ -279,7 +280,7 @@ export const initialState: GameState = {
   loadout: {},
 };
 
-const createFreshState = (): GameState => ({
+export const createFreshState = (): GameState => ({
   ...initialState,
   unlocks: getInitialUnlocks(),
   history: [],
@@ -1368,9 +1369,15 @@ type GameProviderProps = {
   children: React.ReactNode;
   storageKey: string;
   leaseOptions?: ProfileWriterLeaseOptions;
+  bootstrap?: SaveBootstrapResult;
 };
 
-export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey, leaseOptions }) => {
+export const GameProvider: React.FC<GameProviderProps> = ({
+  children,
+  storageKey,
+  leaseOptions,
+  bootstrap,
+}) => {
   const initialLoadWarningRef = useRef<string | null>(null);
   const persistedSnapshotRef = useRef<string | null>(null);
   const {
@@ -1386,8 +1393,13 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, storageKey
   saveOwnershipBlockReasonRef.current = saveOwnershipBlockReason;
   const [state, dispatch] = useReducer(
     gameReducer,
-    storageKey,
-    (key): GameState & { lastEvent: GameEvent | null } => {
+    bootstrap ?? storageKey,
+    (source): GameState & { lastEvent: GameEvent | null } => {
+      if (typeof source !== 'string') {
+        persistedSnapshotRef.current = source.initialData;
+        return { ...source.initialState, lastEvent: null };
+      }
+      const key = source;
       let saved: string | null = null;
       let durableReadFailed = false;
       try {

@@ -98,6 +98,13 @@ afterEach(() => {
 });
 
 describe('App changelog lifecycle', () => {
+  it('checks saved progress before mounting the game', async () => {
+    render(<App />);
+
+    expect(await screen.findByText('Checking saved progress…')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Settings & save tools' })).toBeNull();
+  });
+
   it('shows the official Discord invite without replacing Discord notifications', async () => {
     const readyState = JSON.parse(seedOnboardingRun());
     readyState.hasSeenOnboarding = true;

@@ -4,6 +4,7 @@ import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ProfileWriterLeaseOptions } from '../hooks/useProfileWriterLease';
 import type { GameState } from '../types';
+import type { SaveBootstrapResult } from '../components/SaveBootstrap';
 import { serializeCurrent, type ImportResult } from '../utils/gamePersistence';
 import {
   discardPendingSave,
@@ -158,6 +159,35 @@ describe('ordinary save recovery', () => {
 
     expect(JSON.parse(storage.values.get('profile')!).userNotes.goal).toBe('newest');
     expect(game.current().saveStatus).toBe('saved');
+  });
+
+  it('initializes from the arbitrated bootstrap without rereading the primary save', () => {
+    const bootstrapState = {
+      ...initialState,
+      runId: 'bootstrap-run',
+      userNotes: { source: 'bootstrap' },
+    };
+    const bootstrap: SaveBootstrapResult = {
+      initialState: bootstrapState,
+      initialData: serializeCurrent(bootstrapState),
+      persistenceRevision: 4,
+      source: 'mirror',
+      needsJournalImport: false,
+    };
+    storage.values.set('profile', JSON.stringify({ ...initialState, runId: 'primary-run' }));
+    const getItem = vi.spyOn(localStorage, 'getItem');
+    let current: Game | undefined;
+
+    render(
+      <GameProvider storageKey="profile" bootstrap={bootstrap} leaseOptions={{ ownerId: 'test-tab' }}>
+        <GameCapture onGame={game => { current = game; }} />
+      </GameProvider>,
+    );
+
+    expect(current?.runId).toBe('bootstrap-run');
+    expect(current?.userNotes.source).toBe('bootstrap');
+    expect(getItem).not.toHaveBeenCalledWith('profile');
+    expect(getPendingSave('profile')).toBeNull();
   });
 
   it('shows storage failure after initial lease access fails on an unchanged durable save', async () => {
