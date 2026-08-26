@@ -1507,6 +1507,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   saveOwnershipStatusRef.current = saveOwnershipStatus;
   const saveOwnershipBlockReasonRef = useRef(saveOwnershipBlockReason);
   saveOwnershipBlockReasonRef.current = saveOwnershipBlockReason;
+  const readOnlyRef = useRef(readOnly);
+  readOnlyRef.current = readOnly;
+  const authorizeOwnershipRef = useRef(authorizeOwnership);
+  authorizeOwnershipRef.current = authorizeOwnership;
   const [state, dispatch] = useReducer(
     gameReducer,
     bootstrap ?? storageKey,
@@ -1608,7 +1612,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     if (profileEvictedRef.current) {
       return { ok: false, reason: 'ownership_conflict' };
     }
-    if (readOnly) {
+    if (readOnlyRef.current) {
       return { ok: false, reason: 'ownership_conflict' };
     }
     if (
@@ -1622,8 +1626,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
           : 'ownership_conflict',
       };
     }
-    return authorizeOwnership();
-  }, [authorizeOwnership, readOnly]);
+    return authorizeOwnershipRef.current();
+  }, []);
 
   const coordinatorRef = useRef<SaveCoordinator | null>(suppliedCoordinator ?? null);
   const recoveryRepositoryRef = useRef<RecoveryRepository | null>(null);

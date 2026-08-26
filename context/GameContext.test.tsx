@@ -2,6 +2,7 @@
 
 import 'fake-indexeddb/auto';
 import React from 'react';
+import { IDBObjectStore } from 'fake-indexeddb';
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ProfileWriterLeaseOptions } from '../hooks/useProfileWriterLease';
@@ -17,6 +18,7 @@ import {
   stagePendingSave,
 } from '../utils/pendingSaves';
 import { profileBackupKey } from '../utils/profileStorage';
+import { profileMirrorMetadataKey } from '../utils/storageRecovery';
 import { parseAndMigrateSave } from '../utils/saveSchema';
 import {
   writerLeaseKey,
@@ -1138,6 +1140,102 @@ describe('ordinary save recovery', () => {
     expect(current?.userNotes.source).toBe('bootstrap');
     expect(getItem).not.toHaveBeenCalledWith('profile');
     expect(getPendingSave('profile')).toBeNull();
+  });
+
+  it('rejects every held coordinator write after a same-profile read-only transition while preserving recovery reads', async () => {
+    vi.useRealTimers();
+    const storageKey = 'runtime-read-only-coordinator';
+    const bootstrap: SaveBootstrapResult = {
+      initialState,
+      initialData: serializeCurrent(initialState),
+      persistenceRevision: 0,
+      maxDurablePersistenceRevision: 0,
+      source: 'journal',
+      needsJournalImport: false,
+    };
+    const idbPut = vi.spyOn(IDBObjectStore.prototype, 'put');
+    const storageSet = vi.spyOn(localStorage, 'setItem');
+    let current: Game | undefined;
+    const rendered = render(
+      <GameProvider
+        storageKey={storageKey}
+        leaseOptions={{ ownerId: 'runtime-read-only-tab' }}
+        bootstrap={bootstrap}
+        readOnly={false}
+      >
+        <GameCapture onGame={game => { current = game; }} />
+      </GameProvider>,
+    );
+
+    await new Promise(resolve => setTimeout(resolve, WRITER_LEASE_ARBITRATION_MS + 10));
+    act(() => current!.saveNote('goal', 'writable baseline'));
+    await act(async () => { await current!.retrySave(); });
+    let checkpoint: BackupWriteResult | Promise<BackupWriteResult>;
+    act(() => { checkpoint = current!.createBackup('writable checkpoint'); });
+    await act(async () => { await checkpoint; });
+
+    expect(idbPut.mock.instances.map(store => (store as IDBObjectStore).name)).toEqual(
+      expect.arrayContaining(['heads', 'checkpoints']),
+    );
+    expect(storageSet.mock.calls.map(([key]) => key)).toEqual(
+      expect.arrayContaining([
+        storageKey,
+        profileMirrorMetadataKey(storageKey),
+        profileBackupKey(storageKey),
+      ]),
+    );
+    // Leave only the journal checkpoint so the read assertion proves the
+    // recovery repository remains readable, rather than finding the ring.
+    storage.values.delete(profileBackupKey(storageKey));
+    const recoveryBeforeTransition = await current!.listBackups();
+    expect(recoveryBeforeTransition).toEqual(
+      expect.arrayContaining([expect.objectContaining({ source: 'checkpoint' })]),
+    );
+
+    idbPut.mockClear();
+    storageSet.mockClear();
+    rendered.rerender(
+      <GameProvider
+        storageKey={storageKey}
+        leaseOptions={{ ownerId: 'runtime-read-only-tab' }}
+        bootstrap={bootstrap}
+        readOnly
+      >
+        <GameCapture onGame={game => { current = game; }} />
+      </GameProvider>,
+    );
+
+    // A metadata compatibility transition must not tear down the active
+    // writer lease; the held coordinator needs to observe the new policy.
+    expect(storage.values.get(writerLeaseKey(storageKey))).toBeDefined();
+    expect(current!.userNotes.goal).toBe('writable baseline');
+    act(() => current!.saveNote('goal', 'must not persist'));
+    let rejected: SaveRetryResult | undefined;
+    await act(async () => { rejected = await current!.retrySave(); });
+    let rejectedCheckpoint: BackupWriteResult | undefined;
+    await act(async () => {
+      rejectedCheckpoint = await current!.createBackup('blocked checkpoint');
+    });
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 550));
+    });
+
+    expect(rejected).toMatchObject({ primary: 'failed' });
+    expect(rejectedCheckpoint).toMatchObject({ stored: false });
+    expect(idbPut.mock.instances.map(store => (store as IDBObjectStore).name)).not.toEqual(
+      expect.arrayContaining(['heads', 'checkpoints', 'metadata']),
+    );
+    expect(storageSet.mock.calls.map(([key]) => key)).not.toEqual(
+      expect.arrayContaining([
+        storageKey,
+        profileMirrorMetadataKey(storageKey),
+        profileBackupKey(storageKey),
+      ]),
+    );
+    const recoveryAfterTransition = await current!.listBackups();
+    expect(recoveryAfterTransition).toEqual(recoveryBeforeTransition);
+
+    rendered.unmount();
   });
 
   it('shows storage failure after initial lease access fails on an unchanged durable save', async () => {
