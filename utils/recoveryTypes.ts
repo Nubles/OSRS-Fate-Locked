@@ -37,6 +37,9 @@ export interface SaveDurabilitySnapshot {
   failureReason?: 'storage_unavailable' | 'ownership_conflict';
 }
 
+/** Result returned by an explicit save retry. Legacy callers may still return a boolean. */
+export type SaveRetryResult = SaveDurabilitySnapshot | boolean;
+
 export type RecoveryMaintenanceFailureReason =
   | 'ownership_conflict'
   | 'storage_unavailable'

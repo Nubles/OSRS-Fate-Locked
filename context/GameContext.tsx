@@ -44,6 +44,7 @@ import type {
   RecoveryCheckpointReason,
   RecoveryRepository,
   SaveDurabilitySnapshot,
+  SaveRetryResult,
 } from '../utils/recoveryTypes';
 import { createSaveCoordinator, type SaveCoordinator } from '../utils/saveCoordinator';
 import { migrateLegacyBackupRing } from '../utils/legacyBackupMigration';
@@ -175,7 +176,7 @@ interface GameContextType extends GameState {
   saveOwnershipBlockReason: SaveOwnershipBlockReason;
   hasPendingChanges: boolean;
   saveDurability: SaveDurabilitySnapshot;
-  retrySave: () => Promise<boolean>;
+  retrySave: () => SaveRetryResult | Promise<SaveRetryResult>;
   stageForProfileEviction: () => void;
   takeOverSaveOwnership: () => Promise<boolean>;
   reloadLatestSave: () => ImportResult;
@@ -1675,7 +1676,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     (): SaveDurabilitySnapshot => coordinatorSnapshotRef.current,
     [],
   );
-  const saveDurability = useSyncExternalStore(
+  const coordinatorDurability = useSyncExternalStore(
     subscribeToCoordinator,
     getCoordinatorSnapshot,
     getCoordinatorSnapshot,
@@ -1685,7 +1686,33 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     : saveOwnershipBlockReason === 'storage_unavailable'
       || saveOwnershipStatus === 'blocked'
       ? 'failed'
-      : saveDurability.primary;
+      : coordinatorDurability.primary;
+  const saveDurability: SaveDurabilitySnapshot = coordinator === null
+    ? {
+      primary: legacySaveStatus,
+      recovery: legacySaveStatus === 'failed' ? 'degraded' : 'checking',
+      savedAt: null,
+      ...(legacySaveStatus === 'failed'
+        ? {
+          failureReason: saveOwnershipBlockReason === 'foreign_owner'
+            ? 'ownership_conflict' as const
+            : 'storage_unavailable' as const,
+        }
+        : {}),
+    }
+    : saveStatus === 'failed' && coordinatorDurability.primary === 'saved'
+      ? {
+        ...coordinatorDurability,
+        primary: 'failed',
+        recovery: coordinatorDurability.recovery === 'checking'
+          ? 'degraded'
+          : coordinatorDurability.recovery,
+        failureReason: coordinatorDurability.failureReason
+          ?? (saveOwnershipBlockReason === 'foreign_owner'
+            ? 'ownership_conflict'
+            : 'storage_unavailable'),
+      }
+      : coordinatorDurability;
 
   const liveCoordinatorFailureReason = useCallback((): 'storage_unavailable' | 'ownership_conflict' => {
     if (profileEvictedRef.current) return 'ownership_conflict';
@@ -2064,17 +2091,17 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     storageKey,
   ]);
 
-  const retrySave = useCallback((): Promise<boolean> => {
+  const retrySave = useCallback((): SaveRetryResult | Promise<SaveRetryResult> => {
     const staged = serializeCurrent();
     if (coordinator !== null) {
       stageCoordinatedSnapshot(staged);
-      return settleCoordinatedFlush().then(result => result.primary === 'saved');
+      return settleCoordinatedFlush();
     }
     stagePendingSave(storageKey, staged);
     setSaveStatus(getSaveStatus(storageKey));
     // Keep the Task 1 compatibility path synchronous. The coordinator-backed
     // path is genuinely async, while callers can safely await either result.
-    return flushCurrentSave() as unknown as Promise<boolean>;
+    return flushCurrentSave();
   }, [coordinator, flushCurrentSave, serializeCurrent, settleCoordinatedFlush, stageCoordinatedSnapshot, storageKey]);
 
   const takeOverSaveOwnership = useCallback(async (): Promise<boolean> => {

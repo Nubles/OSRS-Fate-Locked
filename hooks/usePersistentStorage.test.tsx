@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { act, cleanup, renderHook } from '@testing-library/react';
+import { StrictMode, type ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { usePersistentStorage } from './usePersistentStorage';
 
@@ -58,6 +59,22 @@ describe('usePersistentStorage', () => {
     });
 
     expect(hook.result.current.status).toBe('granted');
+  });
+
+  it('restores mounted state after StrictMode effect replay before an explicit request', async () => {
+    const persist = vi.fn().mockResolvedValue(true);
+    setStorageManager({ persist });
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <StrictMode>{children}</StrictMode>
+    );
+    const hook = renderHook(() => usePersistentStorage(), { wrapper });
+
+    await act(async () => {
+      await expect(hook.result.current.requestPersistence()).resolves.toBe('granted');
+    });
+
+    expect(hook.result.current.status).toBe('granted');
+    expect(persist).toHaveBeenCalledOnce();
   });
 
   it('reports unsupported without attempting a request when Storage Manager is absent', async () => {

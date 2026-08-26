@@ -60,19 +60,19 @@ export const BackupNagBanner: React.FC = () => {
   }, [persistentStorageStatus, requestPersistence, requestingPersistence]);
 
   const persistenceCopy: Record<PersistentStorageStatus, string> = {
-    unknown: 'Persistent site storage reduces automatic eviction but does not survive cleared data or device loss.',
-    granted: 'Persistent site storage is enabled. It reduces automatic eviction but does not survive cleared data or device loss.',
-    denied: 'Persistent site storage was not enabled. It reduces automatic eviction but does not survive cleared data or device loss.',
-    unsupported: 'Persistent site storage is unavailable in this browser. A .fate file is still the safest backup.',
+    unknown: 'Persistent site storage can reduce automatic eviction, but it does not survive cleared data or device loss.',
+    granted: 'Persistent site storage is enabled and reduces automatic eviction, but it does not survive cleared data or device loss.',
+    denied: 'Persistent site storage was not enabled; automatic eviction may still occur. It does not survive cleared data or device loss.',
+    unsupported: 'Persistent site storage is unavailable in this browser; automatic eviction may occur. It does not survive cleared data or device loss. A .fate file is still the safest backup.',
   };
 
   if (!visible) return null;
 
   return (
     <div className="max-w-[1600px] mx-auto px-4 pt-3">
-      <div className="flex items-center gap-3 bg-amber-950/40 border border-amber-500/30 rounded-lg px-3 py-2 text-[12px] text-amber-200/90 animate-in fade-in slide-in-from-top-1">
+      <div className="flex flex-wrap items-start gap-3 bg-amber-950/40 border border-amber-500/30 rounded-lg px-3 py-2 text-[12px] text-amber-200/90 animate-in fade-in slide-in-from-top-1 sm:items-center">
         <HardDriveDownload size={14} className="text-amber-400 shrink-0" />
-        <span className="flex-1">
+        <span className="min-w-0 flex-1 basis-full sm:basis-auto">
           Your run only lives in this browser — clearing site data would erase it.
           Last backup file: <b>{lastExportLabel(storageKey)}</b>.
           <span className="mt-1 block text-amber-100/75" aria-live="polite">

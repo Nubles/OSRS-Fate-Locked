@@ -61,8 +61,13 @@ export const usePersistentStorage = (
   const requestStartedRef = useRef(false);
   const mountedRef = useRef(true);
 
-  useEffect(() => () => {
-    mountedRef.current = false;
+  useEffect(() => {
+    // StrictMode replays effect setup after cleanup. Restore the mounted
+    // marker during setup so a real request is not treated as stale there.
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   useEffect(() => {

@@ -1,16 +1,64 @@
 import { AlertTriangle, CheckCircle2, Download, Loader2, RefreshCw, ShieldAlert } from 'lucide-react';
 import { useEffect, useRef, useState, type FC } from 'react';
-import type { SaveDurabilitySnapshot } from '../utils/recoveryTypes';
+import type { SaveDurabilitySnapshot, SaveRetryResult } from '../utils/recoveryTypes';
 import type { FateSaveDownloadResult } from '../utils/fateSaveFile';
+import type { SaveStatus } from '../utils/pendingSaves';
 import { showToast } from '../utils/toast';
+
+const CLOCK_UPDATE_INTERVAL_MS = 30_000;
 
 export interface SaveDurabilityStatusProps {
   snapshot: SaveDurabilitySnapshot;
   /** Injectable clock for deterministic tests; defaults to the browser clock. */
   now?: number;
-  retrySave?: () => boolean | Promise<boolean>;
+  retrySave?: () => SaveRetryResult | Promise<SaveRetryResult>;
   exportBackup?: () => FateSaveDownloadResult | void;
 }
+
+/**
+ * Reconcile the legacy save status with the coordinator snapshot. The
+ * coordinator starts at saved/checking before ownership has been verified;
+ * that placeholder must not hide an already-known failed save status.
+ */
+export const effectiveSaveDurability = (
+  snapshot: SaveDurabilitySnapshot | undefined,
+  saveStatus: SaveStatus | undefined,
+  failureReason?: SaveDurabilitySnapshot['failureReason'],
+): SaveDurabilitySnapshot => {
+  const fallback: SaveDurabilitySnapshot = {
+    primary: saveStatus === 'failed' ? 'failed' : saveStatus === 'saving' ? 'saving' : 'saved',
+    recovery: saveStatus === 'failed' ? 'degraded' : 'checking',
+    savedAt: null,
+    ...(saveStatus === 'failed'
+      ? { failureReason: failureReason ?? 'storage_unavailable' }
+      : {}),
+  };
+  if (snapshot === undefined) return fallback;
+  if (snapshot.primary === 'failed' && snapshot.failureReason === undefined && failureReason !== undefined) {
+    return { ...snapshot, failureReason };
+  }
+  if (saveStatus !== 'failed' || snapshot.primary !== 'saved') return snapshot;
+  return {
+    ...snapshot,
+    primary: 'failed',
+    recovery: snapshot.recovery === 'checking' ? 'degraded' : snapshot.recovery,
+    failureReason: snapshot.failureReason ?? failureReason ?? 'storage_unavailable',
+  };
+};
+
+export const saveRetryMessage = (result: SaveRetryResult): string => {
+  if (typeof result === 'boolean') {
+    return result ? 'Progress saved' : 'Still unable to save progress in this browser';
+  }
+  if (result.primary !== 'saved') {
+    return result.failureReason === 'ownership_conflict'
+      ? 'Saving is paused because another tab owns this profile'
+      : 'Still unable to save progress in this browser';
+  }
+  if (result.recovery === 'protected') return 'Progress saved; backup protection restored';
+  if (result.recovery === 'degraded') return 'Progress saved, but backup protection remains unavailable';
+  return 'Progress saved; backup protection is still being checked';
+};
 
 const relativeSavedTime = (savedAt: number, now: number): string => {
   const seconds = Math.max(0, Math.round((now - savedAt) / 1000));
@@ -28,6 +76,9 @@ export const saveDurabilityLabel = (
   now = Date.now(),
 ): string => {
   if (snapshot.primary === 'saving') return 'Saving…';
+  if (snapshot.primary === 'failed' && snapshot.failureReason === 'ownership_conflict') {
+    return 'Saving is paused in another tab';
+  }
   if (snapshot.primary === 'failed') return "Progress isn't being saved";
   if (snapshot.recovery === 'degraded') return 'Saved, backup protection unavailable';
   if (snapshot.savedAt === null) return 'Saved';
@@ -36,6 +87,9 @@ export const saveDurabilityLabel = (
 
 const announcementFor = (snapshot: SaveDurabilitySnapshot): string => {
   if (snapshot.primary === 'saving') return 'Saving progress.';
+  if (snapshot.primary === 'failed' && snapshot.failureReason === 'ownership_conflict') {
+    return 'Saving is paused because another tab owns this profile.';
+  }
   if (snapshot.primary === 'failed') return "Progress isn't being saved.";
   if (snapshot.recovery === 'degraded') return 'Progress saved, but backup protection is unavailable.';
   if (snapshot.recovery === 'checking') return 'Progress saved; checking backup protection.';
@@ -48,12 +102,20 @@ const toneFor = (snapshot: SaveDurabilitySnapshot): {
   text: string;
   subtext: string;
 } => {
-  if (snapshot.primary === 'failed') {
+  if (snapshot.primary === 'failed' && snapshot.failureReason !== 'ownership_conflict') {
     return {
       border: 'border-red-400/40',
       background: 'bg-red-950/70',
       text: 'text-red-50',
       subtext: 'text-red-100/80',
+    };
+  }
+  if (snapshot.primary === 'failed') {
+    return {
+      border: 'border-amber-400/40',
+      background: 'bg-amber-950/60',
+      text: 'text-amber-50',
+      subtext: 'text-amber-100/80',
     };
   }
   if (snapshot.recovery === 'degraded' || snapshot.primary === 'saving') {
@@ -74,14 +136,33 @@ const toneFor = (snapshot: SaveDurabilitySnapshot): {
 
 export const SaveDurabilityStatus: FC<SaveDurabilityStatusProps> = ({
   snapshot,
-  now = Date.now(),
+  now,
   retrySave,
   exportBackup,
 }) => {
   const [retrying, setRetrying] = useState(false);
+  const [clockNow, setClockNow] = useState(() => Date.now());
+  const mountedRef = useRef(true);
+  const retryAttemptRef = useRef(0);
   const stateKey = `${snapshot.primary}:${snapshot.recovery}`;
   const previousStateKeyRef = useRef(stateKey);
   const [announcement, setAnnouncement] = useState(() => announcementFor(snapshot));
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      retryAttemptRef.current += 1;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (now !== undefined || typeof window === 'undefined') return;
+    const timer = window.setInterval(() => {
+      setClockNow(Date.now());
+    }, CLOCK_UPDATE_INTERVAL_MS);
+    return () => window.clearInterval(timer);
+  }, [now]);
 
   // Keep the live region stable while the visible relative timestamp ages.
   // Screen readers should hear meaningful durability transitions, not a timer.
@@ -91,23 +172,28 @@ export const SaveDurabilityStatus: FC<SaveDurabilityStatusProps> = ({
     setAnnouncement(announcementFor(snapshot));
   }, [snapshot, stateKey]);
 
-  const label = saveDurabilityLabel(snapshot, now);
+  const label = saveDurabilityLabel(snapshot, now ?? clockNow);
   const savedTime = snapshot.savedAt === null
     ? null
-    : relativeSavedTime(snapshot.savedAt, now);
+    : relativeSavedTime(snapshot.savedAt, now ?? clockNow);
   const tone = toneFor(snapshot);
   const degraded = snapshot.primary === 'saved' && snapshot.recovery === 'degraded';
 
   const handleRetry = async (): Promise<void> => {
     if (!retrySave || retrying) return;
+    const attempt = ++retryAttemptRef.current;
     setRetrying(true);
     try {
-      const saved = await retrySave();
-      showToast(saved ? 'Backup protection restored' : 'Backup protection is still unavailable');
+      const result = await retrySave();
+      if (mountedRef.current && retryAttemptRef.current === attempt) {
+        showToast(saveRetryMessage(result));
+      }
     } catch {
-      showToast('Backup protection is still unavailable');
+      if (mountedRef.current && retryAttemptRef.current === attempt) {
+        showToast('Backup protection is still unavailable');
+      }
     } finally {
-      setRetrying(false);
+      if (mountedRef.current && retryAttemptRef.current === attempt) setRetrying(false);
     }
   };
 

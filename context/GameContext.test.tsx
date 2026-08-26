@@ -8,7 +8,7 @@ import type { ProfileWriterLeaseOptions } from '../hooks/useProfileWriterLease';
 import type { GameState } from '../types';
 import type { SaveBootstrapResult } from '../components/SaveBootstrap';
 import type { SaveCoordinator } from '../utils/saveCoordinator';
-import type { SaveDurabilitySnapshot } from '../utils/recoveryTypes';
+import type { SaveDurabilitySnapshot, SaveRetryResult } from '../utils/recoveryTypes';
 import { serializeCurrent, type BackupWriteResult, type ImportResult } from '../utils/gamePersistence';
 import {
   discardPendingSave,
@@ -310,6 +310,25 @@ describe('ordinary save recovery', () => {
     expect(game.current().saveStatus).toBe('saved');
   });
 
+  it('returns the full coordinator durability snapshot from an async retry', async () => {
+    const coordinator = fakeCoordinator([], { journalOnly: true });
+    const game = renderCoordinatorGame(coordinator);
+    await settleOwnership();
+
+    act(() => game.current().saveNote('goal', 'journal only'));
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+
+    let retried: unknown;
+    await act(async () => {
+      retried = await game.current().retrySave();
+    });
+
+    expect(retried).toMatchObject({
+      primary: 'saved',
+      recovery: 'degraded',
+    });
+  });
+
   it('journals a state change before mirroring it through the coordinator', async () => {
     const events: string[] = [];
     const coordinator = fakeCoordinator(events);
@@ -372,6 +391,8 @@ describe('ordinary save recovery', () => {
 
     expect(game.current().saveOwnershipBlockReason).toBe('storage_unavailable');
     expect(game.current().saveStatus).toBe('failed');
+    expect(game.current().saveDurability.primary).toBe('failed');
+    expect(game.current().saveDurability.recovery).toBe('degraded');
   });
 
   it('records a coordinator dual-store failure as storage-unavailable while still owner', async () => {
@@ -1026,9 +1047,12 @@ describe('ordinary save recovery', () => {
     await settleOwnership();
 
     act(() => game.current().saveNote('goal', 'foreign owner'));
-    const retried = await (game.current().retrySave() as unknown as Promise<boolean>);
+    const retried = await game.current().retrySave();
 
-    expect(retried).toBe(false);
+    expect(retried).toMatchObject({
+      primary: 'failed',
+      recovery: 'degraded',
+    });
     expect(events).not.toContain('journal:foreign owner');
     expect(getPendingSave('profile')).toMatchObject({ reason: 'ownership_conflict' });
   });
@@ -1372,7 +1396,7 @@ describe('ordinary save recovery', () => {
     });
     expect(game.current().saveOwnershipStatus).toBe('checking');
 
-    let retryDuringArbitration: boolean | Promise<boolean> = true;
+    let retryDuringArbitration: SaveRetryResult | Promise<SaveRetryResult> = true;
     let backupDuringArbitration: ReturnType<Game['createBackup']> | undefined;
     act(() => {
       retryDuringArbitration = game.current().retrySave();
@@ -1403,7 +1427,7 @@ describe('ordinary save recovery', () => {
     const candidate = game.current().getExportData();
 
     let takeover: Promise<boolean> | undefined;
-    let retryDuringArbitration: boolean | Promise<boolean> = true;
+    let retryDuringArbitration: SaveRetryResult | Promise<SaveRetryResult> = true;
     let backupDuringArbitration: ReturnType<Game['createBackup']> | undefined;
     let importDuringArbitration: ImportResult | undefined;
     await act(async () => {

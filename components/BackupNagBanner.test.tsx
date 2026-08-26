@@ -3,6 +3,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { PersistentStorageStatus } from '../hooks/usePersistentStorage';
 import { BackupNagBanner } from './BackupNagBanner';
 
 const backupNag = vi.hoisted(() => ({
@@ -18,7 +19,7 @@ const profiles = vi.hoisted(() => ({
   storageKeyForActiveProfile: 'FATE_PROFILE_alpha',
 }));
 const persistent = vi.hoisted(() => ({
-  status: 'unknown' as const,
+  status: 'unknown' as PersistentStorageStatus,
   requestPersistence: vi.fn().mockResolvedValue('granted'),
 }));
 
@@ -36,6 +37,9 @@ vi.mock('../utils/toast', () => ({ showToast: vi.fn() }));
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  game.history.length = 1;
+  backupNag.shouldNag.mockReturnValue(true);
+  persistent.status = 'unknown';
 });
 
 describe('BackupNagBanner', () => {
@@ -44,7 +48,7 @@ describe('BackupNagBanner', () => {
     render(<BackupNagBanner />);
 
     expect(persistent.requestPersistence).not.toHaveBeenCalled();
-    expect(screen.getByText(/reduces automatic eviction/i)).toBeTruthy();
+    expect(screen.getByText(/reduce\w* automatic eviction/i)).toBeTruthy();
     expect(screen.getByText(/does not survive cleared data or device loss/i)).toBeTruthy();
 
     await user.click(screen.getByRole('button', { name: 'Enable persistent storage' }));
@@ -60,5 +64,27 @@ describe('BackupNagBanner', () => {
 
     expect(screen.queryByRole('button', { name: 'Enable persistent storage' })).toBeNull();
     expect(persistent.requestPersistence).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['unknown', /can reduce automatic eviction/i],
+    ['granted', /is enabled and reduces automatic eviction/i],
+    ['denied', /was not enabled.*automatic eviction may still occur/i],
+    ['unsupported', /unavailable.*automatic eviction may occur/i],
+  ] as const)('explains %s persistence without overstating protection', (status, specificCopy) => {
+    persistent.status = status;
+    render(<BackupNagBanner />);
+
+    const copy = screen.getByText(/does not survive cleared data or device loss/i);
+    expect(copy.textContent).toMatch(specificCopy);
+  });
+
+  it('wraps backup controls and copy on narrow screens', () => {
+    render(<BackupNagBanner />);
+
+    const copy = screen.getByText(/Your run only lives in this browser/i);
+    const layout = copy.parentElement;
+    expect(layout?.className).toContain('flex-wrap');
+    expect(layout?.querySelector(':scope > span')?.className).toContain('min-w-0');
   });
 });

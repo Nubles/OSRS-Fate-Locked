@@ -27,7 +27,7 @@ import { FeatureRevealDriver } from './components/FeatureRevealDriver';
 import { BackupNagBanner } from './components/BackupNagBanner';
 import { SaveConflictBanner } from './components/SaveConflictBanner';
 import { SaveFailureBanner } from './components/SaveFailureBanner';
-import { SaveDurabilityStatus } from './components/SaveDurabilityStatus';
+import { effectiveSaveDurability, SaveDurabilityStatus } from './components/SaveDurabilityStatus';
 import { ProfileRecoveryBanner } from './components/ProfileRecoveryBanner';
 import { SaveRecoveryGuard } from './components/SaveRecoveryGuard';
 import { SaveBootstrap } from './components/SaveBootstrap';
@@ -664,7 +664,8 @@ const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = f
 const GameLayout = () => {
   const {
     lastEvent, animationsEnabled, hasSeenOnboarding, history, linkedAccount,
-    fateCompensation, resolveFateCompensation, saveDurability, retrySave,
+    fateCompensation, resolveFateCompensation, saveDurability, saveStatus,
+    saveOwnershipBlockReason, retrySave,
     getExportData,
   } = useGame();
   const {
@@ -678,6 +679,16 @@ const GameLayout = () => {
     () => downloadFateSave(getExportData(), storageKeyForActiveProfile),
     [getExportData, storageKeyForActiveProfile],
   );
+  const failureReason = saveDurability.failureReason
+    ?? (saveOwnershipBlockReason === 'foreign_owner'
+      ? 'ownership_conflict'
+      : saveOwnershipBlockReason === 'storage_unavailable'
+        ? 'storage_unavailable'
+        : undefined);
+  const effectiveDurability = effectiveSaveDurability(saveDurability, saveStatus, failureReason);
+  const dualStorageFailure = effectiveDurability.primary === 'failed'
+    && effectiveDurability.recovery === 'degraded'
+    && effectiveDurability.failureReason !== 'ownership_conflict';
 
   const directGuideRequested = typeof window !== 'undefined'
     && hasRuneliteGuideQuery(window.location.search);
@@ -1023,9 +1034,9 @@ const GameLayout = () => {
       <SaveConflictBanner />
 
       {/* Compact durability status for ordinary saves and degraded recovery. */}
-      {saveDurability.primary !== 'failed' && (
+      {!dualStorageFailure && (
         <SaveDurabilityStatus
-          snapshot={saveDurability}
+          snapshot={effectiveDurability}
           retrySave={retrySave}
           exportBackup={exportBackup}
         />
