@@ -783,7 +783,7 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
               if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
               const afterReplace = checkWriteAuthorization(authorizeWrite);
               if (afterReplace !== null) return afterReplace;
-              const persistenceRevision = result && 'ok' in result
+              const persistenceRevision = result && 'ok' in result && result.ok === true
                 ? result.persistenceRevision ?? candidate.persistenceRevision
                 : candidate.persistenceRevision;
               setView({
