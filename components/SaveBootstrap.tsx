@@ -42,7 +42,7 @@ export interface SaveBootstrapResult {
   initialData: string | null;
   persistenceRevision: number;
   /** Highest verified durable journal/mirror/checkpoint revision at startup. */
-  maxDurablePersistenceRevision?: number;
+  maxDurablePersistenceRevision: number;
   source: 'empty' | 'pending' | 'mirror' | 'journal' | 'recovery';
   needsJournalImport: boolean;
 }
@@ -462,7 +462,7 @@ const decisionResult = (
       initialState: makeFreshState(),
       initialData: null,
       persistenceRevision: 0,
-      maxDurablePersistenceRevision: 0,
+      maxDurablePersistenceRevision: decision.maxDurablePersistenceRevision,
       source: 'empty',
       needsJournalImport: false,
     };
@@ -472,8 +472,7 @@ const decisionResult = (
     initialState: decision.state,
     initialData: decision.data,
     persistenceRevision: decision.persistenceRevision,
-    maxDurablePersistenceRevision: decision.maxDurablePersistenceRevision
-      ?? decision.persistenceRevision,
+    maxDurablePersistenceRevision: decision.maxDurablePersistenceRevision,
     source: decision.source,
     needsJournalImport: decision.needsJournalImport,
   };
@@ -624,6 +623,9 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
     const replaceSave = dependencies.replaceSave ?? productionReplaceSave;
     const resetRecovery = dependencies.resetRecovery;
     const exportRecovery = dependencies.exportRecovery ?? productionExportRecovery;
+    const maxDurablePersistenceRevision = activeView.decision.kind === 'recovery_required'
+      ? activeView.decision.maxDurablePersistenceRevision
+      : 0;
     return (
       <SaveRecoveryLeaseGate storageKey={storageKey} leaseOptions={dependencies.leaseOptions}>
         {(authorizeWrite, recoveryActionsEnabled, recoveryStatusMessage) => (
@@ -682,6 +684,7 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
                   initialState: candidate.state,
                   initialData: candidate.data,
                   persistenceRevision: candidate.persistenceRevision,
+                  maxDurablePersistenceRevision,
                   source: 'recovery',
                   needsJournalImport: true,
                 },
@@ -722,6 +725,7 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
                   initialState: state,
                   initialData: data,
                   persistenceRevision: 0,
+                  maxDurablePersistenceRevision,
                   source: 'empty',
                   needsJournalImport: false,
                 },

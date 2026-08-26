@@ -121,6 +121,7 @@ describe('pure startup save recovery arbitration', () => {
       kind: 'recovery_required',
       cause: 'corrupt_primary',
       primaryRaw: '{bad',
+      maxDurablePersistenceRevision: 3,
       candidates: [expect.objectContaining({
         source: 'checkpoint',
         persistenceRevision: 3,
@@ -166,6 +167,7 @@ describe('pure startup save recovery arbitration', () => {
       persistenceRevision: 6,
       needsJournalImport: true,
       data: mirror.data,
+      maxDurablePersistenceRevision: 6,
     });
   });
 
@@ -372,7 +374,10 @@ describe('pure startup save recovery arbitration', () => {
   });
 
   it('returns an empty decision when no evidence exists', async () => {
-    await expect(resolveSaveRecovery(fixture())).resolves.toEqual({ kind: 'empty' });
+    await expect(resolveSaveRecovery(fixture())).resolves.toEqual({
+      kind: 'empty',
+      maxDurablePersistenceRevision: 0,
+    });
   });
 
   it('requires recovery when only a checkpoint remains and the primary is absent', async () => {

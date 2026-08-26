@@ -66,6 +66,7 @@ const fakeCoordinator = (
     lifecycleInFlight?: boolean;
     loseOwnershipOnFlush?: () => void;
     replacementGate?: Promise<void>;
+    stageEvents?: string[];
   } = {},
 ): SaveCoordinator => {
   let staged = '';
@@ -91,7 +92,10 @@ const fakeCoordinator = (
     return snapshot;
   };
   return {
-    stage: data => { staged = data; },
+    stage: data => {
+      staged = data;
+      options.stageEvents?.push(`stage:${noteFromData(data)}`);
+    },
     flush: async () => {
       options.loseOwnershipOnFlush?.();
       if (options.flushGate !== undefined) await options.flushGate;
@@ -119,6 +123,7 @@ const fakeCoordinator = (
       return true;
     },
     writeReplacement: async data => {
+      options.loseOwnershipOnFlush?.();
       if (options.replacementGate !== undefined) await options.replacementGate;
       return durable(data);
     },
@@ -496,6 +501,78 @@ describe('ordinary save recovery', () => {
     expect(game.current().saveStatus).toBe('failed');
   });
 
+  it('returns an ownership conflict when an imported replacement loses its lease', async () => {
+    const coordinator = fakeCoordinator([], {
+      fail: true,
+      loseOwnershipOnFlush: () => {
+        storage.values.set(writerLeaseKey('profile'), JSON.stringify({
+          version: 1,
+          ownerId: 'foreign-tab',
+          expiresAt: Date.now() + WRITER_LEASE_TTL_MS,
+        }));
+      },
+    });
+    const game = renderCoordinatorGame(coordinator, { ownerId: 'tab-a' });
+    await settleOwnership();
+    const candidate = JSON.parse(game.current().getExportData()) as GameState;
+    candidate.userNotes = { imported: 'lost owner' };
+
+    const result = await game.current().importSave(candidate);
+
+    expect(result).toMatchObject({ ok: false, code: 'ownership_conflict' });
+    expect(game.current().userNotes.imported).toBeUndefined();
+  });
+
+  it('cancels the active save debounce before beginning a replacement', async () => {
+    const stageEvents: string[] = [];
+    const gate = deferred();
+    const coordinator = fakeCoordinator([], { replacementGate: gate.promise, stageEvents });
+    const game = renderCoordinatorGame(coordinator);
+    await settleOwnership();
+
+    act(() => game.current().saveNote('goal', 'old debounce'));
+    const oldStagesBeforeReplacement = stageEvents.filter(event => event === 'stage:old debounce').length;
+    const candidate = JSON.parse(game.current().getExportData()) as GameState;
+    candidate.userNotes = { imported: 'replacement' };
+    const importing = game.current().importSave(candidate);
+
+    await act(async () => { vi.advanceTimersByTime(500); });
+    expect(stageEvents.filter(event => event === 'stage:old debounce')).toHaveLength(oldStagesBeforeReplacement);
+
+    gate.resolve();
+    await act(async () => { await importing; });
+  });
+
+  it('invalidates an in-flight replacement when profile eviction begins', async () => {
+    const gate = deferred();
+    const coordinator = fakeCoordinator([], { replacementGate: gate.promise });
+    const game = renderCoordinatorGame(coordinator);
+    await settleOwnership();
+    const candidate = JSON.parse(game.current().getExportData()) as GameState;
+    candidate.userNotes = { imported: 'evicted' };
+
+    const importing = game.current().importSave(candidate);
+    act(() => game.current().stageForProfileEviction());
+    gate.resolve();
+    const result = await importing;
+
+    expect(result).toMatchObject({ ok: false, code: 'stale_replacement' });
+    expect(game.current().userNotes.imported).toBeUndefined();
+  });
+
+  it('does not create lifecycle pending protection when the baseline is unchanged', async () => {
+    seedCanonicalSave('profile');
+    const coordinator = fakeCoordinator([], { fail: true });
+    const game = renderCoordinatorGame(coordinator, { ownerId: 'tab-a' });
+    await settleOwnership();
+
+    act(() => window.dispatchEvent(new Event('pagehide')));
+    await act(async () => { await Promise.resolve(); });
+
+    expect(getPendingSave('profile')).toBeNull();
+    expect(game.current().saveDurability.primary).toBe('failed');
+  });
+
   it('writes a reset replacement through the coordinator before changing memory', async () => {
     const events: string[] = [];
     const coordinator = fakeCoordinator(events);
@@ -549,6 +626,7 @@ describe('ordinary save recovery', () => {
       initialState: bootstrapState,
       initialData: serializeCurrent(bootstrapState),
       persistenceRevision: 12,
+      maxDurablePersistenceRevision: 12,
       source: 'mirror',
       needsJournalImport: true,
     };
@@ -580,6 +658,7 @@ describe('ordinary save recovery', () => {
       initialState: bootstrapState,
       initialData: serializeCurrent(bootstrapState),
       persistenceRevision: 4,
+      maxDurablePersistenceRevision: 4,
       source: 'mirror',
       needsJournalImport: false,
     };

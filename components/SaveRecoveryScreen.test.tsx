@@ -51,6 +51,7 @@ const corruptDecision = (
   candidates: [candidate(4), candidate(2)],
   cause: 'corrupt_primary',
   ...overrides,
+  maxDurablePersistenceRevision: overrides.maxDurablePersistenceRevision ?? 4,
 });
 
 const actions = () => ({

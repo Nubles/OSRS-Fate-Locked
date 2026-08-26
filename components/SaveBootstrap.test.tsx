@@ -50,6 +50,9 @@ const readyDecision = (
   persistenceRevision: source === 'journal' ? 8 : source === 'mirror' ? 7 : 0,
   needsJournalImport: source === 'journal',
   ...overrides,
+  maxDurablePersistenceRevision: overrides.maxDurablePersistenceRevision
+    ?? overrides.persistenceRevision
+    ?? (source === 'journal' ? 8 : source === 'mirror' ? 7 : 0),
 });
 
 const dependencies = (
@@ -73,7 +76,10 @@ const dependencies = (
     readPrimary: () => null,
     readMirrorMetadata: () => null,
     openRepository: vi.fn(async () => repo),
-    resolveSaveRecovery: vi.fn(async () => ({ kind: 'empty' as const })),
+    resolveSaveRecovery: vi.fn(async () => ({
+      kind: 'empty' as const,
+      maxDurablePersistenceRevision: 0,
+    })),
     ...overrides,
   };
 };
@@ -109,7 +115,10 @@ describe('SaveBootstrap', () => {
   it('closes a repository that opens after unmount without starting stale reads', async () => {
     const opening = deferred<RecoveryRepository>();
     const opened = repository();
-    const resolveSaveRecovery = vi.fn(async () => ({ kind: 'empty' as const }));
+    const resolveSaveRecovery = vi.fn(async () => ({
+      kind: 'empty' as const,
+      maxDurablePersistenceRevision: 0,
+    }));
     const deps = dependencies({
       openRepository: vi.fn(() => opening.promise),
       resolveSaveRecovery,
@@ -204,7 +213,13 @@ describe('SaveBootstrap', () => {
   });
 
   it.each([
-    ['recovery', { kind: 'recovery_required', primaryRaw: '{bad', candidates: [], cause: 'corrupt_primary' }],
+    ['recovery', {
+      kind: 'recovery_required',
+      primaryRaw: '{bad',
+      candidates: [],
+      cause: 'corrupt_primary',
+      maxDurablePersistenceRevision: 0,
+    }],
     ['unsupported', { kind: 'unsupported', rawCandidates: ['{"version":999}'] }],
   ] as const)('does not mount the game for a %s decision', async (_label, decision) => {
     render(
@@ -238,6 +253,7 @@ describe('SaveBootstrap', () => {
         checksum: 'a'.repeat(64),
       }],
       cause: 'corrupt_primary',
+      maxDurablePersistenceRevision: 3,
     };
     const deps = dependencies({
       resolveSaveRecovery: vi.fn(async () => decision),
@@ -260,6 +276,50 @@ describe('SaveBootstrap', () => {
 
     expect(archiveCorruptEvidence).toHaveBeenCalledOnce();
     expect(replaceSave).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    ['recovery', 'Recover latest safe save'],
+    ['fresh', 'Start a new run'],
+  ] as const)('retains the maximum durable revision after %s selection', async (kind, actionLabel) => {
+    const archiveCorruptEvidence = vi.fn(async () => ({ ok: true as const }));
+    const replaceSave = vi.fn(async () => ({ ok: true as const }));
+    const decision: Extract<SaveRecoveryDecision, { kind: 'recovery_required' }> = {
+      kind: 'recovery_required',
+      primaryRaw: '{bad',
+      maxDurablePersistenceRevision: 7,
+      candidates: kind === 'recovery' ? [{
+        source: 'checkpoint',
+        data: 'safe-checkpoint',
+        state: { ...initialState, runId: 'safe-run' },
+        persistenceRevision: 3,
+        runId: 'safe-run',
+        runRevision: 3,
+        capturedAt: 123,
+        checksum: 'a'.repeat(64),
+      }] : [],
+      cause: 'corrupt_primary',
+    };
+    const deps = dependencies({
+      resolveSaveRecovery: vi.fn(async () => decision),
+      archiveCorruptEvidence,
+      replaceSave,
+    });
+    const user = userEvent.setup();
+
+    render(
+      <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {result => <div data-testid="bootstrap-result">{result.maxDurablePersistenceRevision}</div>}
+      </SaveBootstrap>,
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Saved progress needs recovery' })).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: actionLabel }));
+    if (kind === 'fresh') {
+      await user.click(screen.getByRole('button', { name: 'Confirm start a new run' }));
+    }
+
+    expect((await screen.findByTestId('bootstrap-result')).textContent).toBe('7');
   });
 
   it('keeps read-only export available in a non-owner tab while blocking mutations', async () => {
@@ -287,6 +347,7 @@ describe('SaveBootstrap', () => {
         checksum: 'a'.repeat(64),
       }],
       cause: 'corrupt_primary',
+      maxDurablePersistenceRevision: 3,
     };
     const deps = dependencies({
       leaseOptions: {
@@ -336,6 +397,7 @@ describe('SaveBootstrap', () => {
       primaryRaw: '{"broken":true}',
       candidates: [],
       cause: 'corrupt_primary',
+      maxDurablePersistenceRevision: 0,
     };
     const deps = dependencies({
       resolveSaveRecovery: vi.fn(async () => decision),
@@ -425,9 +487,12 @@ describe('SaveBootstrap', () => {
       primaryRaw: '{"broken":true}',
       candidates: [],
       cause: 'conflicting_runs',
+      maxDurablePersistenceRevision: 0,
     };
     const deps = dependencies({
-      resolveSaveRecovery: vi.fn(async () => journalConflicting ? decision : { kind: 'empty' as const }),
+      resolveSaveRecovery: vi.fn(async () => journalConflicting
+        ? decision
+        : { kind: 'empty' as const, maxDurablePersistenceRevision: 0 }),
       archiveCorruptEvidence,
       resetRecovery,
       replaceSave,

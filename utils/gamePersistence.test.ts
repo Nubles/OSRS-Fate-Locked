@@ -15,6 +15,7 @@ import {
   serializeCurrent,
 } from './gamePersistence';
 import { parseAndMigrateSave } from './saveSchema';
+import type { SaveDurabilitySnapshot } from './recoveryTypes';
 
 const cloneState = (overrides: Partial<GameState> = {}): GameState => ({
   ...structuredClone(initialState),
@@ -158,6 +159,25 @@ describe('transactional replacement', () => {
 
     expect(result).toMatchObject({ ok: false, code: 'storage_unavailable' });
     expect(events).toEqual([]);
+  });
+
+  it('preserves a live ownership conflict from coordinator replacement', async () => {
+    const result = await applyValidatedReplacementAsync(
+      prepareReplacement(cloneState({ keys: 9 }), cloneState({ keys: 3 }), initialState),
+      {
+        current: cloneState({ keys: 3 }),
+        createCheckpoint: async () => ({ stored: true }),
+        writeReplacement: async () => ({
+          primary: 'failed',
+          recovery: 'degraded',
+          savedAt: null,
+          failureReason: 'ownership_conflict',
+        } as SaveDurabilitySnapshot & { failureReason: 'ownership_conflict' }),
+        replace: () => undefined,
+      },
+    );
+
+    expect(result).toMatchObject({ ok: false, code: 'ownership_conflict' });
   });
 
   it('does not replace memory when a newer replacement wins after the durable write', async () => {

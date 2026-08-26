@@ -1620,9 +1620,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       validate: data => parseAndMigrateSave(data, createFreshState()),
       checksum: checksumSave,
       now: Date.now,
-      initialPersistenceRevision: bootstrap?.maxDurablePersistenceRevision
-        ?? bootstrap?.persistenceRevision
-        ?? 0,
+      initialPersistenceRevision: bootstrap === undefined
+        ? 0
+        : bootstrap.maxDurablePersistenceRevision,
     });
   }
   const coordinator = coordinatorRef.current;
@@ -1709,6 +1709,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({
 
   const stageForProfileEviction = useCallback((): void => {
     profileEvictedRef.current = true;
+    // Invalidate replacements that are already crossing an async boundary
+    // before preserving the last snapshot for the old profile.
+    replacementGenerationRef.current += 1;
+    stateMutationRef.current += 1;
     if (saveTimeoutRef.current !== null) {
       window.clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = null;
@@ -1800,8 +1804,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       || takeoverRequestedRef.current
     ) return;
 
+    const scheduledReplacementGeneration = replacementGenerationRef.current;
     saveTimeoutRef.current = window.setTimeout(() => {
       saveTimeoutRef.current = null;
+      if (replacementGenerationRef.current !== scheduledReplacementGeneration) return;
       if (coordinator === null) {
         flushCurrentSave();
         return;
@@ -1854,10 +1860,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       const mirrored = coordinator.mirrorLifecycle(snapshot);
       const durability = coordinator.getSnapshot();
       coordinatorSnapshotRef.current = durability;
+      const pending = getPendingSave(storageKey);
       if (mirrored && durability.primary === 'saved') {
         persistedSnapshotRef.current = snapshot;
         discardPendingSave(storageKey);
-      } else {
+      } else if (pending !== null || snapshot !== persistedSnapshotRef.current) {
         stagePendingSave(storageKey, snapshot);
       }
       if (mirrored) releaseOwnership();
@@ -2166,7 +2173,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     const generation = ++replacementGenerationRef.current;
     const mutation = stateMutationRef.current;
     const expectedCurrent = serializeCurrent();
+    if (saveTimeoutRef.current !== null) {
+      window.clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
     return () => mountedRef.current
+      && !profileEvictedRef.current
       && replacementGenerationRef.current === generation
       && stateMutationRef.current === mutation
       && serializeCurrent() === expectedCurrent;
@@ -2202,7 +2214,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       persistedSnapshotRef.current = data;
       discardPendingSave(storageKey);
     } else {
-      blockPendingSave(storageKey, liveCoordinatorFailureReason());
+      const failureReason = liveCoordinatorFailureReason();
+      blockPendingSave(storageKey, failureReason);
+      return { ...settled, failureReason };
     }
     return settled;
   }, [coordinator, liveCoordinatorFailureReason, stageCoordinatedSnapshot, storageKey, writeReplacement]);

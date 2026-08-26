@@ -50,7 +50,7 @@ export type SaveRecoveryDecision =
       state: GameState;
       persistenceRevision: number;
       /** Highest verified durable journal/mirror/checkpoint revision at startup. */
-      maxDurablePersistenceRevision?: number;
+      maxDurablePersistenceRevision: number;
       needsJournalImport: boolean;
     }
   | {
@@ -58,12 +58,14 @@ export type SaveRecoveryDecision =
       primaryRaw: string | null;
       candidates: readonly ValidatedRecoveryCandidate[];
       cause: 'corrupt_primary' | 'conflicting_runs' | 'unsequenced_primary';
+      /** Highest verified durable journal/mirror/checkpoint revision at startup. */
+      maxDurablePersistenceRevision: number;
     }
   | {
       kind: 'unsupported';
       rawCandidates: readonly string[];
     }
-  | { kind: 'empty' };
+  | { kind: 'empty'; maxDurablePersistenceRevision: number };
 
 type ValidatedResult = {
   candidate: ValidatedRecoveryCandidate;
@@ -254,7 +256,7 @@ const readyDecision = (
   candidate: ValidatedRecoveryCandidate,
   reason: 'normal' | 'interrupted_mirror' | 'lifecycle_mirror' | 'legacy',
   needsJournalImport: boolean,
-  maxDurablePersistenceRevision?: number,
+  maxDurablePersistenceRevision: number,
 ): SaveRecoveryDecision => ({
   kind: 'ready',
   source: candidate.source === 'checkpoint' ? 'journal' : candidate.source,
@@ -262,9 +264,7 @@ const readyDecision = (
   data: candidate.data,
   state: candidate.state,
   persistenceRevision: candidate.persistenceRevision,
-  ...(maxDurablePersistenceRevision === undefined
-    ? {}
-    : { maxDurablePersistenceRevision }),
+  maxDurablePersistenceRevision,
   needsJournalImport,
 });
 
@@ -272,11 +272,13 @@ const recoveryRequired = (
   input: SaveRecoveryInput,
   candidates: readonly ValidatedRecoveryCandidate[],
   cause: 'corrupt_primary' | 'conflicting_runs' | 'unsequenced_primary',
+  maxDurablePersistenceRevision: number,
 ): SaveRecoveryDecision => ({
   kind: 'recovery_required',
   primaryRaw: input.primaryRaw,
   candidates: sortedCandidates(candidates),
   cause,
+  maxDurablePersistenceRevision,
 });
 
 const hasSameBytes = (
@@ -368,15 +370,22 @@ export const resolveSaveRecovery = async (
   // is ignored, but a checksum-verified future head must remain visible.
   if (unsupported.length > 0) return { kind: 'unsupported', rawCandidates: unsupported };
 
-  const candidates = sortedCandidates(validCandidates);
-  const runIds = new Set(candidates.map(candidate => candidate.runId));
-  if (runIds.size > 1) return recoveryRequired(input, candidates, 'conflicting_runs');
-
   const maxDurablePersistenceRevision = Math.max(
     head?.persistenceRevision ?? 0,
     primary?.persistenceRevision ?? 0,
     ...checkpoints.map(candidate => candidate.persistenceRevision),
   );
+
+  const candidates = sortedCandidates(validCandidates);
+  const runIds = new Set(candidates.map(candidate => candidate.runId));
+  if (runIds.size > 1) {
+    return recoveryRequired(
+      input,
+      candidates,
+      'conflicting_runs',
+      maxDurablePersistenceRevision,
+    );
+  }
 
   // A current-lifetime staged write is the only candidate allowed to outrank
   // a durable revision without a persistence sequence.
@@ -392,11 +401,23 @@ export const resolveSaveRecovery = async (
   const durableCandidates = candidates.filter(candidate => candidate.source !== 'pending');
   if (primary === null) {
     if (input.primaryRaw !== null) {
-      return recoveryRequired(input, durableCandidates, 'corrupt_primary');
+      return recoveryRequired(
+        input,
+        durableCandidates,
+        'corrupt_primary',
+        maxDurablePersistenceRevision,
+      );
     }
-    if (head !== null) return readyDecision(head, 'normal', false);
-    if (checkpoints.length > 0) return recoveryRequired(input, checkpoints, 'corrupt_primary');
-    return { kind: 'empty' };
+    if (head !== null) return readyDecision(head, 'normal', false, maxDurablePersistenceRevision);
+    if (checkpoints.length > 0) {
+      return recoveryRequired(
+        input,
+        checkpoints,
+        'corrupt_primary',
+        maxDurablePersistenceRevision,
+      );
+    }
+    return { kind: 'empty', maxDurablePersistenceRevision };
   }
 
   const sortedCheckpoints = sortedCandidates(checkpoints);
@@ -408,14 +429,14 @@ export const resolveSaveRecovery = async (
     if (hasSameBytes(primary, head)) {
       if (sidecarMatchesPrimary) {
         if (primary.persistenceRevision > head.persistenceRevision) {
-          return readyDecision(primary, 'lifecycle_mirror', true);
+          return readyDecision(primary, 'lifecycle_mirror', true, maxDurablePersistenceRevision);
         }
         if (primary.persistenceRevision < head.persistenceRevision) {
-          return readyDecision(head, 'interrupted_mirror', false);
+          return readyDecision(head, 'interrupted_mirror', false, maxDurablePersistenceRevision);
         }
-        return readyDecision(primary, 'normal', false);
+        return readyDecision(primary, 'normal', false, maxDurablePersistenceRevision);
       }
-      return readyDecision(head, 'normal', false);
+      return readyDecision(head, 'normal', false, maxDurablePersistenceRevision);
     }
 
     const sidecarMatchesHead = mirrorMetadata !== null
@@ -434,24 +455,34 @@ export const resolveSaveRecovery = async (
         capturedAt: head.capturedAt,
         checksum: null,
       };
-      return readyDecision(lifecycle, 'lifecycle_mirror', true);
+      return readyDecision(lifecycle, 'lifecycle_mirror', true, maxDurablePersistenceRevision);
     }
 
     if (sidecarMatchesPrimary) {
       if (primary.persistenceRevision > head.persistenceRevision) {
-        return readyDecision(primary, 'lifecycle_mirror', true);
+        return readyDecision(primary, 'lifecycle_mirror', true, maxDurablePersistenceRevision);
       }
       if (primary.persistenceRevision < head.persistenceRevision) {
-        return readyDecision(head, 'interrupted_mirror', false);
+        return readyDecision(head, 'interrupted_mirror', false, maxDurablePersistenceRevision);
       }
       // Two different byte strings at one verified persistence revision are
       // contradictory evidence. CapturedAt is not a safe tie-breaker here.
-      return recoveryRequired(input, [primary, head, ...sortedCheckpoints], 'unsequenced_primary');
+      return recoveryRequired(
+        input,
+        [primary, head, ...sortedCheckpoints],
+        'unsequenced_primary',
+        maxDurablePersistenceRevision,
+      );
     }
 
     // No verified sidecar means that a differing primary cannot be ordered
     // against the head. In particular, do not use capturedAt as a guess.
-    return recoveryRequired(input, [primary, head, ...sortedCheckpoints], 'unsequenced_primary');
+    return recoveryRequired(
+      input,
+      [primary, head, ...sortedCheckpoints],
+      'unsequenced_primary',
+      maxDurablePersistenceRevision,
+    );
   }
 
   if (latestCheckpoint !== null) {
@@ -461,33 +492,40 @@ export const resolveSaveRecovery = async (
     if (matchingCheckpoint !== null) {
       if (sidecarMatchesPrimary) {
         if (primary.persistenceRevision > matchingCheckpoint.persistenceRevision) {
-          return readyDecision(primary, 'lifecycle_mirror', true);
+          return readyDecision(primary, 'lifecycle_mirror', true, maxDurablePersistenceRevision);
         }
         if (primary.persistenceRevision === matchingCheckpoint.persistenceRevision) {
-          return readyDecision(primary, 'normal', false);
+          return readyDecision(primary, 'normal', false, maxDurablePersistenceRevision);
         }
       }
       const sequencedPrimary = cloneWithSequence(primary, matchingCheckpoint);
-      return readyDecision(sequencedPrimary, 'normal', true);
+      return readyDecision(sequencedPrimary, 'normal', true, maxDurablePersistenceRevision);
     }
 
     if (sidecarMatchesPrimary) {
       if (primary.persistenceRevision > latestCheckpoint.persistenceRevision) {
-        return readyDecision(primary, 'lifecycle_mirror', true);
+        return readyDecision(primary, 'lifecycle_mirror', true, maxDurablePersistenceRevision);
       }
       return recoveryRequired(
         input,
         [primary, ...sortedCheckpoints],
         'unsequenced_primary',
+        maxDurablePersistenceRevision,
       );
     }
 
-    return recoveryRequired(input, [primary, ...sortedCheckpoints], 'unsequenced_primary');
+    return recoveryRequired(
+      input,
+      [primary, ...sortedCheckpoints],
+      'unsequenced_primary',
+      maxDurablePersistenceRevision,
+    );
   }
 
   return readyDecision(
     primary,
     sidecarMatchesPrimary ? 'normal' : 'legacy',
     true,
+    maxDurablePersistenceRevision,
   );
 };

@@ -33,6 +33,8 @@ export interface SaveDurabilitySnapshot {
   primary: 'saved' | 'saving' | 'failed';
   recovery: RecoveryProtectionStatus;
   savedAt: number | null;
+  /** Live write authorization reason when the primary could not be saved. */
+  failureReason?: 'storage_unavailable' | 'ownership_conflict';
 }
 
 export type RecoveryWriteResult =

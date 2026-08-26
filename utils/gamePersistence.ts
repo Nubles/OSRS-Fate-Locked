@@ -240,7 +240,11 @@ export const applyValidatedReplacementAsync = async (
   }
 
   if (!isCurrent()) return replacementStaleResult();
-  if (durability.primary !== 'saved') return replacementStorageFailure();
+  if (durability.primary !== 'saved') {
+    return durability.failureReason === undefined
+      ? replacementStorageFailure()
+      : saveAuthorizationFailureResult(durability.failureReason);
+  }
   options.replace(prepared.state);
 
   const warnings = [...prepared.warnings];
