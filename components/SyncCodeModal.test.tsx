@@ -135,6 +135,7 @@ describe('SyncCodeModal backup browser', () => {
 
     game.restoreBackup = vi.fn(async () => ({ ok: true as const, warnings: [] }));
     rendered.rerender(<SyncCodeModal onClose={onClose} />);
+    expect((screen.getByRole('button', { name: 'Restore' }) as HTMLButtonElement).disabled).toBe(false);
     pending.resolve({ ok: true, warnings: [] });
     await Promise.resolve();
 

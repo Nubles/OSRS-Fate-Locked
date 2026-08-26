@@ -47,6 +47,7 @@ type HarnessOptions = {
   journalResultFor?: (record: RecoveryHead) => RecoveryWriteResult;
   mirrorResult?: 'success' | 'failure';
   metadataResult?: RecoveryWriteResult;
+  checkpointResult?: RecoveryWriteResult;
   initialPersistenceRevision?: number;
   initialHead?: RecoveryHead | null;
   initialMetadata?: MirrorMetadata | null;
@@ -78,6 +79,7 @@ const harness = (options: HarnessOptions = {}): Harness => {
   const journalGates = [...(options.journalGates ?? [])];
   let mirrorResult = options.mirrorResult ?? 'success';
   let metadataResult = options.metadataResult ?? { stored: true };
+  const checkpointResult = options.checkpointResult ?? { stored: true };
 
   const storage: SaveStorage = {
     getItem: key => values.get(key) ?? null,
@@ -108,7 +110,7 @@ const harness = (options: HarnessOptions = {}): Harness => {
     listCheckpoints: async () => [],
     putCheckpoint: async record => {
       checkpointWrites.push(record);
-      return { stored: true };
+      return checkpointResult;
     },
     deleteCheckpoints: async () => ({ stored: true }),
     getMetadata: async <T>() => (options.initialMetadata ?? null) as T | null,
@@ -435,6 +437,40 @@ describe('coalescing journal-first save coordinator', () => {
       reason: 'interval',
       data: save('checkpoint'),
     });
+  });
+
+  it('does not write a checkpoint whose staged snapshot changed while hashing', async () => {
+    const checksumGate = deferred<void>();
+    const testHarness = harness({
+      checksum: async data => {
+        await checksumGate.promise;
+        return `checksum-${noteFromData(data)}`;
+      },
+    });
+    testHarness.coordinator.stage(save('checkpoint-before-edit'));
+    const checkpoint = testHarness.coordinator.createCheckpoint(
+      save('checkpoint-before-edit'),
+      'interval',
+    );
+
+    await Promise.resolve();
+    testHarness.coordinator.stage(save('checkpoint-newer-edit'));
+    checksumGate.resolve();
+
+    await expect(checkpoint).resolves.toEqual({
+      stored: false,
+      reason: 'storage_unavailable',
+    });
+    expect(testHarness.checkpointRecords()).toHaveLength(0);
+  });
+
+  it('preserves checkpoint prune maintenance failures for callers', async () => {
+    const testHarness = harness({
+      checkpointResult: { stored: true, pruneFailure: 'quota' },
+    });
+
+    await expect(testHarness.coordinator.createCheckpoint(save('checkpoint'), 'interval'))
+      .resolves.toEqual({ stored: true, pruneFailure: 'quota' });
   });
 
   it('mirrors lifecycle bytes synchronously without waiting for the journal', () => {

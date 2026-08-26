@@ -1974,6 +1974,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   const sessionBackupFinishedRef = useRef(false);
   const sessionBackupInFlightRef = useRef(false);
   const sessionCheckpointReadyRef = useRef<Promise<boolean>>(Promise.resolve(true));
+  const [sessionCheckpointRetryTick, setSessionCheckpointRetryTick] = useState(0);
   useEffect(() => {
     if (
       coordinator === null
@@ -2054,7 +2055,14 @@ export const GameProvider: React.FC<GameProviderProps> = ({
         legacyMigrationRunningRef.current = false;
       }
     };
-  }, [authorizeOwnedWrite, coordinator, profileId, saveOwnershipStatus, storageKey]);
+  }, [
+    authorizeOwnedWrite,
+    coordinator,
+    profileId,
+    saveOwnershipStatus,
+    sessionCheckpointRetryTick,
+    storageKey,
+  ]);
 
   const retrySave = useCallback((): Promise<boolean> => {
     const staged = serializeCurrent();
@@ -2118,7 +2126,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       return;
     }
 
+    const mutationAtStart = stateMutationRef.current;
     sessionBackupInFlightRef.current = true;
+    let checkpointSucceeded = false;
     const attempt = (async (): Promise<boolean> => {
       let checkpoint: BackupWriteResult;
       try {
@@ -2139,12 +2149,40 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       // The compatibility copy follows the verified journal checkpoint.
       pushOwnedBackup(sessionStartSnapshot.data, 'Session start');
       sessionBackupFinishedRef.current = true;
+      checkpointSucceeded = true;
       return true;
     })().finally(() => {
       sessionBackupInFlightRef.current = false;
+      // A state change while this attempt was awaiting storage can rerender
+      // only while the in-flight guard is set. Schedule one fresh effect pass
+      // after a failed attempt so that edit does not strand the session
+      // checkpoint forever. The state-mutation comparison prevents a retry
+      // loop for an unchanged snapshot or a persistent storage outage.
+      if (
+        !checkpointSucceeded
+        && mountedRef.current
+        && !profileEvictedRef.current
+        && saveOwnershipStatusRef.current === 'owner'
+        && stateMutationRef.current !== mutationAtStart
+      ) {
+        queueMicrotask(() => {
+          if (
+            mountedRef.current
+            && !profileEvictedRef.current
+            && !sessionBackupFinishedRef.current
+          ) setSessionCheckpointRetryTick(current => current + 1);
+        });
+      }
     });
     sessionCheckpointReadyRef.current = attempt.then(result => result, () => false);
-  }, [authorizeOwnedWrite, coordinator, pushOwnedBackup, saveOwnershipStatus, state]);
+  }, [
+    authorizeOwnedWrite,
+    coordinator,
+    pushOwnedBackup,
+    saveOwnershipStatus,
+    sessionCheckpointRetryTick,
+    state,
+  ]);
 
   // --- Actions ---
 

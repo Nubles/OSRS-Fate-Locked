@@ -849,6 +849,49 @@ describe('ordinary save recovery', () => {
     expect(events.filter(event => event === 'checkpoint:session-start')).toHaveLength(2);
   });
 
+  it('retries a failed in-flight session checkpoint after a state change', async () => {
+    const historical = gameReducerForTest(
+      { ...structuredClone(initialState), lastEvent: null },
+      {
+        type: 'ROLL_RESULT',
+        payload: {
+          success: false,
+          omni: false,
+          pity: false,
+          roll: 99,
+          baseThreshold: 50,
+          threshold: 50,
+          source: 'Session in-flight retry fixture',
+          failureFate: 1,
+        },
+      },
+    );
+    storage.values.set('profile', serializeCurrent(historical));
+    const gate = deferred();
+    const events: string[] = [];
+    const coordinator = fakeCoordinator(events, {
+      checkpointGates: [gate.promise],
+      checkpointResults: [
+        { stored: false, reason: 'storage_unavailable' },
+        { stored: true },
+      ],
+    });
+    const game = renderCoordinatorGame(coordinator, { ownerId: 'tab-a' });
+    await settleOwnership();
+    await act(async () => Promise.resolve());
+    expect(events.filter(event => event === 'checkpoint:session-start')).toHaveLength(1);
+
+    act(() => game.current().saveNote('goal', 'changed while checkpoint was in flight'));
+    gate.resolve();
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(events.filter(event => event === 'checkpoint:session-start')).toHaveLength(2);
+  });
+
   it('does not complete a session checkpoint after ownership changes while it is in flight', async () => {
     const historical = gameReducerForTest(
       { ...structuredClone(initialState), lastEvent: null },

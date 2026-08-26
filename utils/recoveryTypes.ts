@@ -37,8 +37,14 @@ export interface SaveDurabilitySnapshot {
   failureReason?: 'storage_unavailable' | 'ownership_conflict';
 }
 
+export type RecoveryMaintenanceFailureReason =
+  | 'ownership_conflict'
+  | 'storage_unavailable'
+  | 'quota'
+  | 'stale_revision';
+
 export type RecoveryWriteResult =
-  | { stored: true }
+  | { stored: true; pruneFailure?: RecoveryMaintenanceFailureReason }
   | {
       stored: false;
       reason: 'ownership_conflict' | 'storage_unavailable' | 'quota' | 'stale_revision';

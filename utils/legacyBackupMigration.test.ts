@@ -176,6 +176,37 @@ describe('legacy backup migration', () => {
     expect(harness.checkpoints).toHaveLength(1);
   });
 
+  it('uses one stable run id for every missing-runId entry across a restart', async () => {
+    const harness = repositoryHarness();
+    const first = JSON.parse(legacy(2, 1_700_000_000_002).data) as Record<string, unknown>;
+    const second = JSON.parse(legacy(1, 1_700_000_000_001).data) as Record<string, unknown>;
+    delete first.runId;
+    delete second.runId;
+    const rawRing = JSON.stringify([
+      { ...legacy(2, 1_700_000_000_002), data: JSON.stringify(first) },
+      { ...legacy(1, 1_700_000_000_001), data: JSON.stringify(second) },
+    ]);
+    const input = {
+      profileId: 'alpha',
+      rawRing,
+      repository: harness.repository,
+      authorizeWrite: allowWrite,
+      defaults: { ...initialState, runId: 'restart-one' },
+    };
+
+    await expect(migrateLegacyBackupRing(input)).resolves.toMatchObject({ imported: 2 });
+    expect(new Set(harness.checkpoints.map(record => record.runId)).size).toBe(1);
+    expect(harness.checkpoints.map(record => JSON.parse(record.data).runId))
+      .toEqual(harness.checkpoints.map(record => record.runId));
+
+    harness.clearMetadata();
+    await expect(migrateLegacyBackupRing({
+      ...input,
+      defaults: { ...initialState, runId: 'restart-two' },
+    })).resolves.toMatchObject({ imported: 0 });
+    expect(harness.checkpoints).toHaveLength(2);
+  });
+
   it('imports at most eight legacy entries even when the compatibility ring is oversized', async () => {
     const harness = repositoryHarness();
     const rawRing = JSON.stringify(Array.from({ length: 12 }, (_, index) => (

@@ -322,6 +322,15 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
   const [restoreBusy, setRestoreBusy] = useState(false);
   const restoreBusyRef = useRef(false);
   useEffect(() => {
+    // A profile/context switch invalidates any pending action. Clear the
+    // visible locks for the new context even though the old promise may still
+    // be settling; its generation check below keeps that stale result hidden.
+    importBusyRef.current = false;
+    restoreBusyRef.current = false;
+    setImportBusy(false);
+    setRestoreBusy(false);
+  }, [importSave, restoreBackup]);
+  useEffect(() => {
     if (tab !== 'BACKUPS') return undefined;
     let active = true;
     setBackupsLoading(true);

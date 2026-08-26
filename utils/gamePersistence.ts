@@ -6,7 +6,11 @@ import {
   type SaveWarning,
 } from './saveSchema';
 import type { SaveWriteAuthorizationReason } from './profileWriterLease';
-import type { RecoveryCheckpointReason, SaveDurabilitySnapshot } from './recoveryTypes';
+import type {
+  RecoveryCheckpointReason,
+  RecoveryMaintenanceFailureReason,
+  SaveDurabilitySnapshot,
+} from './recoveryTypes';
 
 export type ImportErrorCode = SaveErrorCode
   | 'storage_unavailable'
@@ -73,7 +77,7 @@ export const candidateMatchesSource = <T>(
 ): candidate is SourceBoundCandidate<T> => candidate?.source === currentSource;
 
 export type BackupWriteResult =
-  | { stored: true }
+  | { stored: true; pruneFailure?: RecoveryMaintenanceFailureReason }
   | { stored: false; reason: 'empty' | 'duplicate' | 'storage_unavailable' | 'ownership_conflict' };
 
 export class SaveAuthorizationError extends Error {

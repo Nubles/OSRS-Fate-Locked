@@ -239,6 +239,21 @@ describe('transactional recovery database', () => {
     expect(remaining.map(record => record.persistenceRevision)).not.toContain(1);
   });
 
+  it('surfaces a prune failure without losing the stored checkpoint', async () => {
+    const repository = await openRepository();
+    let authorizationCalls = 0;
+    const ownershipExpiresDuringPrune = () => {
+      authorizationCalls += 1;
+      return authorizationCalls <= 2
+        ? { ok: true as const }
+        : { ok: false as const, reason: 'ownership_conflict' as const };
+    };
+
+    await expect(repository.putCheckpoint(checkpoint(4), ownershipExpiresDuringPrune))
+      .resolves.toEqual({ stored: true, pruneFailure: 'ownership_conflict' });
+    await expect(repository.listCheckpoints('alpha')).resolves.toEqual([checkpoint(4)]);
+  });
+
   it('returns a quota failure after one retry and leaves the prior head intact', async () => {
     const databaseName = uniqueDbName();
     const initialRepository = await openRecoveryDatabase({ databaseName });

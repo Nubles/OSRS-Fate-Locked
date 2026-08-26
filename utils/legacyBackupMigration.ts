@@ -87,26 +87,30 @@ const parseLegacyEntry = (value: unknown): LegacyBackupEntry | null => {
   };
 };
 
-const stableLegacyRunId = (data: string): string => {
+const stableLegacyRunId = (ring: string): string => {
   // Very old saves may not contain a runId. The normal parser fills that gap
   // from its defaults, which are intentionally a fresh random run on every
-  // process. Derive a deterministic UUID-shaped identity from the raw bytes
-  // instead, so a restart produces the same checkpoint metadata and checksum.
+  // process. Derive one deterministic UUID-shaped identity from the complete
+  // ring instead, so every snapshot in that run shares an identity and a
+  // restart produces the same checkpoint metadata and checksum.
   const seed = [0, 1, 2, 3]
-    .map(index => simpleHash(`${data}|legacy-run-id|${index}`))
+    .map(index => simpleHash(`${ring}|legacy-run-id|${index}`))
     .join('');
   const variant = '89ab'[Number.parseInt(seed[16], 16) % 4];
   return `${seed.slice(0, 8)}-${seed.slice(8, 12)}-4${seed.slice(13, 16)}-${variant}${seed.slice(17, 20)}-${seed.slice(20, 32)}`;
 };
 
-const normalizeLegacyInput = (data: string): { data: string; runId: string | null } => {
+const normalizeLegacyInput = (
+  data: string,
+  legacyRunId: string | null,
+): { data: string; runId: string | null } => {
   try {
     const parsed: unknown = JSON.parse(data);
     if (!isRecord(parsed) || Object.prototype.hasOwnProperty.call(parsed, 'runId')) {
       return { data, runId: null };
     }
-    const runId = stableLegacyRunId(data);
-    return { data: JSON.stringify({ ...parsed, runId }), runId };
+    if (legacyRunId === null) return { data, runId: null };
+    return { data: JSON.stringify({ ...parsed, runId: legacyRunId }), runId: legacyRunId };
   } catch {
     return { data, runId: null };
   }
@@ -272,6 +276,7 @@ export const migrateLegacyBackupRing = async (
   }
 
   const parsedRing = parseLegacyRing(input.rawRing);
+  const legacyRunId = input.rawRing === null ? null : stableLegacyRunId(input.rawRing);
   const { headRevision, headChecksum, hasHead, checkpoints } = await readExistingRecords(input);
   const existingChecksums = new Set(
     checkpoints
@@ -285,7 +290,7 @@ export const migrateLegacyBackupRing = async (
   let skipped = parsedRing.skipped;
 
   for (const [ringIndex, entry] of parsedRing.entries.entries()) {
-    const normalizedInput = normalizeLegacyInput(entry.data);
+    const normalizedInput = normalizeLegacyInput(entry.data, legacyRunId);
     let validation: SaveValidationResult;
     try {
       validation = input.validate

@@ -6,6 +6,7 @@ import type {
   RecoveryCheckpoint,
   RecoveryCheckpointReason,
   RecoveryHead,
+  RecoveryMaintenanceFailureReason,
   RecoveryRepository,
   RecoveryWriteResult,
   SaveDurabilitySnapshot,
@@ -35,10 +36,23 @@ const unavailableWrite = (): RecoveryWriteResult => ({
   reason: 'storage_unavailable',
 });
 
+const isMaintenanceFailureReason = (
+  value: unknown,
+): value is RecoveryMaintenanceFailureReason => (
+  value === 'ownership_conflict'
+  || value === 'storage_unavailable'
+  || value === 'quota'
+  || value === 'stale_revision'
+);
+
 const writeResult = (value: unknown): RecoveryWriteResult => {
   if (typeof value === 'object' && value !== null && 'stored' in value) {
     const result = value as RecoveryWriteResult;
-    if (result.stored === true) return { stored: true };
+    if (result.stored === true) {
+      return isMaintenanceFailureReason(result.pruneFailure)
+        ? { stored: true, pruneFailure: result.pruneFailure }
+        : { stored: true };
+    }
     if (
       result.stored === false
       && 'reason' in result
@@ -660,9 +674,18 @@ export const createSaveCoordinator = (
   ): Promise<BackupWriteResult> => {
     if (disposed || data.length === 0) return { stored: false, reason: 'empty' };
     await whenIdle();
+    const checkpointChangeToken = changeToken;
+    const checkpointStaged = pending;
 
     const prepared = await beginValidateAndHash(data).promise;
     if (!prepared.ok) return { stored: false, reason: 'storage_unavailable' };
+    // Hashing is asynchronous. Do not allocate a revision for bytes that a
+    // newer staged snapshot has already superseded while the hash was away.
+    if (
+      disposed
+      || changeToken !== checkpointChangeToken
+      || pending !== checkpointStaged
+    ) return { stored: false, reason: 'storage_unavailable' };
     const authorization = options.authorizeWrite();
     if (isWriteFailure(authorization)) return checkpointFailure(saveAuthorizationResult(authorization));
 
@@ -684,7 +707,11 @@ export const createSaveCoordinator = (
     } catch {
       result = unavailableWrite();
     }
-    return result.stored ? { stored: true } : checkpointFailure(result);
+    return result.stored
+      ? result.pruneFailure === undefined
+        ? { stored: true }
+        : { stored: true, pruneFailure: result.pruneFailure }
+      : checkpointFailure(result);
   };
 
   const getSnapshot = (): SaveDurabilitySnapshot => ({ ...snapshot });

@@ -471,7 +471,14 @@ class IndexedDbRecoveryRepository implements RecoveryRepository {
       if (write.stored) {
         // Checkpoint writes are ordinary recovery writes too. Keep retention
         // enforced even when no journal-head quota retry happens to follow.
-        await this.prune(record.profileId, authorizeWrite);
+        const prune = await this.prune(record.profileId, authorizeWrite);
+        if (prune.stored === false) {
+          // The checkpoint transaction has already committed. Preserve that
+          // durability result while exposing maintenance failure to callers;
+          // reporting a plain failure would invite them to overwrite a valid
+          // checkpoint unnecessarily.
+          return { stored: true, pruneFailure: prune.reason };
+        }
       }
       return write;
     } catch (error) {
