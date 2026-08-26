@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import 'fake-indexeddb/auto';
 import React from 'react';
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -8,7 +9,7 @@ import type { GameState } from '../types';
 import type { SaveBootstrapResult } from '../components/SaveBootstrap';
 import type { SaveCoordinator } from '../utils/saveCoordinator';
 import type { SaveDurabilitySnapshot } from '../utils/recoveryTypes';
-import { serializeCurrent, type ImportResult } from '../utils/gamePersistence';
+import { serializeCurrent, type BackupWriteResult, type ImportResult } from '../utils/gamePersistence';
 import {
   discardPendingSave,
   getPendingSave,
@@ -70,6 +71,9 @@ const fakeCoordinator = (
     replacementSnapshot?: SaveDurabilitySnapshot;
     restoreOwnershipAfterReplacement?: () => void;
     stageEvents?: string[];
+    checkpointGates?: Promise<void>[];
+    checkpointResults?: BackupWriteResult[];
+    checkpointThrows?: boolean[];
   } = {},
 ): SaveCoordinator => {
   let staged = '';
@@ -138,6 +142,11 @@ const fakeCoordinator = (
     },
     createCheckpoint: async (_data, reason) => {
       events.push(`checkpoint:${reason}`);
+      const gate = options.checkpointGates?.shift();
+      if (gate !== undefined) await gate;
+      if (options.checkpointThrows?.shift()) throw new Error('checkpoint failed');
+      const configured = options.checkpointResults?.shift();
+      if (configured !== undefined) return configured;
       return options.fail
         ? { stored: false, reason: 'storage_unavailable' }
         : { stored: true };
@@ -660,6 +669,45 @@ describe('ordinary save recovery', () => {
     expect(events.filter(event => event === 'checkpoint:interval')).toHaveLength(2);
   });
 
+  it('does not create an interval checkpoint when the persisted bytes are unchanged', async () => {
+    seedCanonicalSave('profile');
+    const events: string[] = [];
+    const game = renderCoordinatorGame(fakeCoordinator(events), { ownerId: 'tab-a' });
+    await settleOwnership();
+
+    await act(async () => vi.advanceTimersByTimeAsync(300_000));
+    await act(async () => { await game.current().retrySave(); });
+
+    expect(events.filter(event => event === 'checkpoint:interval')).toHaveLength(0);
+  });
+
+  it('serializes interval checkpoint creation across different snapshots', async () => {
+    vi.setSystemTime(0);
+    const firstCheckpoint = deferred();
+    const secondCheckpoint = deferred();
+    const events: string[] = [];
+    const game = renderCoordinatorGame(fakeCoordinator(events, {
+      checkpointGates: [firstCheckpoint.promise, secondCheckpoint.promise],
+    }), { ownerId: 'tab-a' });
+    await settleOwnership();
+    await act(async () => vi.advanceTimersByTimeAsync(299_500));
+
+    act(() => game.current().saveNote('goal', 'first interval'));
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+    expect(events.filter(event => event === 'checkpoint:interval')).toHaveLength(1);
+
+    await act(async () => vi.advanceTimersByTimeAsync(300_000));
+    act(() => game.current().saveNote('goal', 'second interval'));
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+    expect(events.filter(event => event === 'checkpoint:interval')).toHaveLength(1);
+
+    firstCheckpoint.resolve();
+    await act(async () => Promise.resolve());
+    expect(events.filter(event => event === 'checkpoint:interval')).toHaveLength(2);
+    secondCheckpoint.resolve();
+    await act(async () => Promise.resolve());
+  });
+
   it('records the captured session start in both recovery stores', async () => {
     const historical = gameReducerForTest(
       { ...structuredClone(initialState), lastEvent: null },
@@ -687,6 +735,245 @@ describe('ordinary save recovery', () => {
     expect(JSON.parse(storage.values.get(profileBackupKey('profile')) ?? '[]'))
       .toEqual(expect.arrayContaining([expect.objectContaining({ reason: 'Session start' })]));
     expect(game.current().userNotes.goal).toBeUndefined();
+  });
+
+  it('writes the session journal checkpoint before its compatibility-ring copy', async () => {
+    const historical = gameReducerForTest(
+      { ...structuredClone(initialState), lastEvent: null },
+      {
+        type: 'ROLL_RESULT',
+        payload: {
+          success: false,
+          omni: false,
+          pity: false,
+          roll: 99,
+          baseThreshold: 50,
+          threshold: 50,
+          source: 'Session ordering fixture',
+          failureFate: 1,
+        },
+      },
+    );
+    storage.values.set('profile', serializeCurrent(historical));
+    const events: string[] = [];
+    const ringWrite = vi.spyOn(localStorage, 'setItem').mockImplementation((key, value) => {
+      if (key === profileBackupKey('profile')) events.push('ring');
+      storage.values.set(key, value);
+    });
+    const game = renderCoordinatorGame(fakeCoordinator(events), { ownerId: 'tab-a' });
+    await settleOwnership();
+    await act(async () => Promise.resolve());
+
+    expect(events.indexOf('checkpoint:session-start')).toBeGreaterThanOrEqual(0);
+    expect(events.indexOf('checkpoint:session-start')).toBeLessThan(events.indexOf('ring'));
+    ringWrite.mockRestore();
+    expect(game.current().userNotes.goal).toBeUndefined();
+  });
+
+  it('retries a transient session journal failure and only completes after success', async () => {
+    const historical = gameReducerForTest(
+      { ...structuredClone(initialState), lastEvent: null },
+      {
+        type: 'ROLL_RESULT',
+        payload: {
+          success: false,
+          omni: false,
+          pity: false,
+          roll: 99,
+          baseThreshold: 50,
+          threshold: 50,
+          source: 'Session retry fixture',
+          failureFate: 1,
+        },
+      },
+    );
+    storage.values.set('profile', serializeCurrent(historical));
+    const events: string[] = [];
+    const coordinator = fakeCoordinator(events, {
+      checkpointResults: [
+        { stored: false, reason: 'storage_unavailable' },
+        { stored: true },
+      ],
+    });
+    renderCoordinatorGame(coordinator, { ownerId: 'tab-a' });
+    await settleOwnership();
+    await act(async () => Promise.resolve());
+    expect(events.filter(event => event === 'checkpoint:session-start')).toHaveLength(1);
+
+    storage.values.set(writerLeaseKey('profile'), JSON.stringify({
+      version: 1,
+      ownerId: 'foreign-tab',
+      expiresAt: Date.now() + WRITER_LEASE_TTL_MS,
+    }));
+    act(() => window.dispatchEvent(new StorageEvent('storage', { key: writerLeaseKey('profile') })));
+    storage.values.delete(writerLeaseKey('profile'));
+    act(() => window.dispatchEvent(new StorageEvent('storage', { key: writerLeaseKey('profile') })));
+    await settleOwnership();
+    await act(async () => Promise.resolve());
+
+    expect(events.filter(event => event === 'checkpoint:session-start')).toHaveLength(2);
+  });
+
+  it('retries a failed session checkpoint on the next state change while still owner', async () => {
+    const historical = gameReducerForTest(
+      { ...structuredClone(initialState), lastEvent: null },
+      {
+        type: 'ROLL_RESULT',
+        payload: {
+          success: false,
+          omni: false,
+          pity: false,
+          roll: 99,
+          baseThreshold: 50,
+          threshold: 50,
+          source: 'Session state retry fixture',
+          failureFate: 1,
+        },
+      },
+    );
+    storage.values.set('profile', serializeCurrent(historical));
+    const events: string[] = [];
+    const coordinator = fakeCoordinator(events, {
+      checkpointResults: [
+        { stored: false, reason: 'storage_unavailable' },
+        { stored: true },
+      ],
+    });
+    const game = renderCoordinatorGame(coordinator, { ownerId: 'tab-a' });
+    await settleOwnership();
+    await act(async () => Promise.resolve());
+    expect(events.filter(event => event === 'checkpoint:session-start')).toHaveLength(1);
+
+    act(() => game.current().saveNote('goal', 'retry session checkpoint'));
+    await act(async () => Promise.resolve());
+    expect(events.filter(event => event === 'checkpoint:session-start')).toHaveLength(2);
+  });
+
+  it('does not complete a session checkpoint after ownership changes while it is in flight', async () => {
+    const historical = gameReducerForTest(
+      { ...structuredClone(initialState), lastEvent: null },
+      {
+        type: 'ROLL_RESULT',
+        payload: {
+          success: false,
+          omni: false,
+          pity: false,
+          roll: 99,
+          baseThreshold: 50,
+          threshold: 50,
+          source: 'Session ownership fixture',
+          failureFate: 1,
+        },
+      },
+    );
+    storage.values.set('profile', serializeCurrent(historical));
+    const gate = deferred();
+    const events: string[] = [];
+    const coordinator = fakeCoordinator(events, { checkpointGates: [gate.promise] });
+    renderCoordinatorGame(coordinator, { ownerId: 'tab-a' });
+    await settleOwnership();
+    await act(async () => Promise.resolve());
+    expect(events.filter(event => event === 'checkpoint:session-start')).toHaveLength(1);
+
+    storage.values.set(writerLeaseKey('profile'), JSON.stringify({
+      version: 1,
+      ownerId: 'foreign-tab',
+      expiresAt: Date.now() + WRITER_LEASE_TTL_MS,
+    }));
+    act(() => window.dispatchEvent(new StorageEvent('storage', { key: writerLeaseKey('profile') })));
+    gate.resolve();
+    await act(async () => Promise.resolve());
+    expect(JSON.parse(storage.values.get(profileBackupKey('profile')) ?? '[]'))
+      .not.toEqual(expect.arrayContaining([expect.objectContaining({ reason: 'Session start' })]));
+
+    storage.values.delete(writerLeaseKey('profile'));
+    act(() => window.dispatchEvent(new StorageEvent('storage', { key: writerLeaseKey('profile') })));
+    await settleOwnership();
+    await act(async () => Promise.resolve());
+    expect(events.filter(event => event === 'checkpoint:session-start')).toHaveLength(2);
+  });
+
+  it('waits for a durable manual checkpoint before copying the compatibility backup', async () => {
+    const checkpointGate = deferred();
+    const events: string[] = [];
+    const ringWrite = vi.spyOn(localStorage, 'setItem').mockImplementation((key, value) => {
+      if (key === profileBackupKey('profile')) events.push('ring');
+      storage.values.set(key, value);
+    });
+    const game = renderCoordinatorGame(fakeCoordinator(events, {
+      checkpointGates: [checkpointGate.promise],
+    }), { ownerId: 'tab-a' });
+    await settleOwnership();
+
+    let result: BackupWriteResult | Promise<BackupWriteResult> | undefined;
+    act(() => { result = game.current().createBackup('manual'); });
+    expect(result).toBeInstanceOf(Promise);
+    expect(events).toContain('checkpoint:pre-replacement');
+    expect(events).not.toContain('ring');
+
+    checkpointGate.resolve();
+    await act(async () => { await result; });
+    expect(events.indexOf('checkpoint:pre-replacement')).toBeLessThan(events.indexOf('ring'));
+    ringWrite.mockRestore();
+  });
+
+  it('keeps the compatibility backup when a manual journal checkpoint rejects', async () => {
+    const events: string[] = [];
+    const game = renderCoordinatorGame(fakeCoordinator(events, {
+      checkpointThrows: [true],
+    }), { ownerId: 'tab-a' });
+    await settleOwnership();
+
+    let result: BackupWriteResult | Promise<BackupWriteResult> | undefined;
+    act(() => { result = game.current().createBackup('manual failure'); });
+    let settled: BackupWriteResult | undefined;
+    await act(async () => { settled = await result; });
+
+    expect(settled).toMatchObject({ stored: false, reason: 'storage_unavailable' });
+    expect(JSON.parse(storage.values.get(profileBackupKey('profile')) ?? '[]'))
+      .toEqual(expect.arrayContaining([expect.objectContaining({ reason: 'manual failure' })]));
+  });
+
+  it('closes the deferred recovery repository when the provider unmounts', async () => {
+    vi.useRealTimers();
+    expect(typeof indexedDB).toBe('object');
+    const probe = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open(`recovery-close-probe-${Date.now()}`);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const close = vi.spyOn(Object.getPrototypeOf(probe), 'close');
+    probe.close();
+    close.mockClear();
+    const bootstrap: SaveBootstrapResult = {
+      initialState,
+      initialData: serializeCurrent(initialState),
+      persistenceRevision: 0,
+      maxDurablePersistenceRevision: 0,
+      source: 'journal',
+      needsJournalImport: false,
+    };
+    const rendered = render(
+      <GameProvider
+        storageKey="repository-close"
+        leaseOptions={{ ownerId: 'tab-a' }}
+        bootstrap={bootstrap}
+      >
+        <GameCapture onGame={() => undefined} />
+      </GameProvider>,
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    rendered.unmount();
+    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(close).toHaveBeenCalled();
+    close.mockRestore();
   });
 
   it('does not flush an ordinary coordinator save while another tab owns the profile', async () => {

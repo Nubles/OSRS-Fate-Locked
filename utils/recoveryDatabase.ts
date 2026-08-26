@@ -467,7 +467,13 @@ class IndexedDbRecoveryRepository implements RecoveryRepository {
           return { stored: true } as const;
         },
       );
-      return result as RecoveryWriteResult;
+      const write = result as RecoveryWriteResult;
+      if (write.stored) {
+        // Checkpoint writes are ordinary recovery writes too. Keep retention
+        // enforced even when no journal-head quota retry happens to follow.
+        await this.prune(record.profileId, authorizeWrite);
+      }
+      return write;
     } catch (error) {
       return writeFailureForError(error);
     }

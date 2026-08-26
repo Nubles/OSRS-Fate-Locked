@@ -219,7 +219,7 @@ interface GameContextType extends GameState {
   importSave: (data: unknown) => Promise<ImportResult>;
   resetGame: () => Promise<void>;
   /** Snapshot the current run before something overwrites it. */
-  createBackup: (reason: string) => BackupWriteResult;
+  createBackup: (reason: string) => BackupWriteResult | Promise<BackupWriteResult>;
   /** Backups for the active profile, newest first. */
   listBackups: () => Promise<BackupMeta[]>;
   /** Restore a backup by stable id (snapshots the current run first). */
@@ -1563,6 +1563,14 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   const mountedRef = useRef(false);
   const replacementGenerationRef = useRef(0);
   const stateMutationRef = useRef(0);
+  const profileIdentityRef = useRef(storageKey);
+  if (profileIdentityRef.current !== storageKey) {
+    // A profile switch can reuse the provider instance. Invalidate callbacks
+    // that are still awaiting the old profile before accepting the new one.
+    profileIdentityRef.current = storageKey;
+    replacementGenerationRef.current += 1;
+    profileEvictedRef.current = false;
+  }
   const [legacySaveStatus, setSaveStatus] = useState<SaveStatus>(() => getSaveStatus(storageKey));
   useSyncExternalStore(
     subscribeToPendingSaveChanges,
@@ -1696,30 +1704,41 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     pushBackup(storageKey, data, reason, authorizeOwnedWrite), [authorizeOwnedWrite, storageKey]);
 
   const intervalCheckpointRef = useRef<{ data: string; capturedAt: number } | null>(null);
-  const intervalCheckpointInFlightRef = useRef<string | null>(null);
+  const intervalCheckpointBaselineRef = useRef<string | null>(
+    persistedSnapshotRef.current === null ? null : serializeGameState(state),
+  );
+  const intervalCheckpointQueueRef = useRef<Promise<void>>(Promise.resolve());
   const sessionStartCapturedAtRef = useRef(Date.now());
-  const maybeCreateIntervalCheckpoint = useCallback(async (data: string): Promise<void> => {
-    if (coordinator === null || data.length === 0) return;
-    const now = Date.now();
-    const previous = intervalCheckpointRef.current;
-    const elapsed = now - (previous?.capturedAt ?? sessionStartCapturedAtRef.current);
-    if (elapsed < RECOVERY_CHECKPOINT_INTERVAL_MS || previous?.data === data) return;
-    if (intervalCheckpointInFlightRef.current === data) return;
+  const maybeCreateIntervalCheckpoint = useCallback((data: string): Promise<void> => {
+    if (coordinator === null || data.length === 0) return Promise.resolve();
+    const create = async (): Promise<void> => {
+      const now = Date.now();
+      const previous = intervalCheckpointRef.current;
+      const elapsed = now - (previous?.capturedAt ?? sessionStartCapturedAtRef.current);
+      // A durable head save alone is not a checkpoint. Only capture after the
+      // bytes differ from the last persisted/checkpoint baseline.
+      if (
+        elapsed < RECOVERY_CHECKPOINT_INTERVAL_MS
+        || intervalCheckpointBaselineRef.current === data
+      ) return;
 
-    intervalCheckpointInFlightRef.current = data;
-    try {
-      const result = await coordinator.createCheckpoint(data, 'interval');
+      let result: BackupWriteResult;
+      try {
+        result = await coordinator.createCheckpoint(data, 'interval');
+      } catch {
+        result = { stored: false, reason: 'storage_unavailable' };
+      }
       // The old ring remains a best-effort compatibility path. Do not let a
       // ring write make a failed journal checkpoint look durable.
       pushOwnedBackup(data, 'Interval checkpoint');
       if (result.stored === true) {
         intervalCheckpointRef.current = { data, capturedAt: now };
+        intervalCheckpointBaselineRef.current = data;
       }
-    } finally {
-      if (intervalCheckpointInFlightRef.current === data) {
-        intervalCheckpointInFlightRef.current = null;
-      }
-    }
+    };
+    const queued = intervalCheckpointQueueRef.current.then(create, create);
+    intervalCheckpointQueueRef.current = queued.catch(() => undefined);
+    return queued;
   }, [coordinator, pushOwnedBackup]);
 
   const settleCoordinatedFlush = useCallback(async (): Promise<SaveDurabilitySnapshot> => {
@@ -1943,10 +1962,18 @@ export const GameProvider: React.FC<GameProviderProps> = ({
 
   useEffect(() => {
     if (coordinator === null) return;
-    return () => coordinator.dispose();
+    return () => {
+      coordinator.dispose();
+      const repository = recoveryRepositoryRef.current;
+      recoveryRepositoryRef.current = null;
+      repository?.close();
+    };
   }, [coordinator]);
 
   const journalImportRequestedRef = useRef(false);
+  const sessionBackupFinishedRef = useRef(false);
+  const sessionBackupInFlightRef = useRef(false);
+  const sessionCheckpointReadyRef = useRef<Promise<boolean>>(Promise.resolve(true));
   useEffect(() => {
     if (
       coordinator === null
@@ -1972,6 +1999,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   ]);
 
   const legacyMigrationRunningRef = useRef(false);
+  const legacyMigrationGenerationRef = useRef(0);
   useEffect(() => {
     const repository = recoveryRepositoryRef.current;
     if (
@@ -1981,11 +2009,25 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       || legacyMigrationRunningRef.current
     ) return;
     legacyMigrationRunningRef.current = true;
+    const generation = ++legacyMigrationGenerationRef.current;
     let active = true;
+    const authorizeMigrationWrite = (): SaveWriteAuthorization => (
+      active
+      && generation === legacyMigrationGenerationRef.current
+      && mountedRef.current
+        ? authorizeOwnedWrite()
+        : { ok: false, reason: 'ownership_conflict' }
+    );
     void (async () => {
       try {
+        // The session checkpoint is the first journal observation for this
+        // mount. Wait for its complete attempt (including its ring copy) so a
+        // legacy import cannot race it and claim the next recovery sequence.
+        await Promise.resolve();
+        const sessionCheckpointReady = await sessionCheckpointReadyRef.current;
+        if (!sessionCheckpointReady || !active || generation !== legacyMigrationGenerationRef.current) return;
         await coordinator.whenIdle();
-        if (!active || profileEvictedRef.current) return;
+        if (!active || generation !== legacyMigrationGenerationRef.current || profileEvictedRef.current) return;
         let rawRing: string | null = null;
         try {
           rawRing = localStorage.getItem(profileBackupKey(storageKey));
@@ -1993,19 +2035,25 @@ export const GameProvider: React.FC<GameProviderProps> = ({
           // IndexedDB migration remains safe when the compatibility ring is
           // unavailable; no marker is written for missing bytes.
         }
-        if (!active || rawRing === null) return;
+        if (!active || generation !== legacyMigrationGenerationRef.current || rawRing === null) return;
         await migrateLegacyBackupRing({
           profileId,
           rawRing,
           repository,
-          authorizeWrite: authorizeOwnedWrite,
+          authorizeWrite: authorizeMigrationWrite,
           defaults: createFreshState(),
         });
       } finally {
-        legacyMigrationRunningRef.current = false;
+        if (generation === legacyMigrationGenerationRef.current) legacyMigrationRunningRef.current = false;
       }
     })();
-    return () => { active = false; };
+    return () => {
+      active = false;
+      if (generation === legacyMigrationGenerationRef.current) {
+        legacyMigrationGenerationRef.current += 1;
+        legacyMigrationRunningRef.current = false;
+      }
+    };
   }, [authorizeOwnedWrite, coordinator, profileId, saveOwnershipStatus, storageKey]);
 
   const retrySave = useCallback((): Promise<boolean> => {
@@ -2050,43 +2098,53 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   // fine yesterday" is always recoverable from the ring — not just the
   // pre-import/pre-reset moments. pushBackup no-ops when nothing changed
   // since the newest entry, so idle reloads don't churn the ring.
-  const sessionBackupFinishedRef = useRef(false);
   useEffect(() => {
-    if (saveOwnershipStatus !== 'owner' || sessionBackupFinishedRef.current) return;
+    if (
+      saveOwnershipStatus !== 'owner'
+      || sessionBackupFinishedRef.current
+      || sessionBackupInFlightRef.current
+    ) return;
     const sessionStartSnapshot = sessionStartSnapshotRef.current!;
     if (!sessionStartSnapshot.hasHistory) {
       sessionBackupFinishedRef.current = true;
+      sessionCheckpointReadyRef.current = Promise.resolve(true);
       return;
     }
-    const result = pushOwnedBackup(sessionStartSnapshot.data, 'Session start');
     if (coordinator === null) {
-      if (result.stored === true || result.reason !== 'ownership_conflict') {
-        sessionBackupFinishedRef.current = true;
-      }
+      const result = pushOwnedBackup(sessionStartSnapshot.data, 'Session start');
+      const complete = result.stored === true || result.reason !== 'ownership_conflict';
+      if (complete) sessionBackupFinishedRef.current = true;
+      sessionCheckpointReadyRef.current = Promise.resolve(complete);
       return;
     }
 
-    let active = true;
-    void coordinator.createCheckpoint(sessionStartSnapshot.data, 'session-start')
-      .then(checkpoint => {
-        if (!active) return;
-        if (
-          checkpoint.stored === true
-          || checkpoint.reason !== 'ownership_conflict'
-          || result.stored === true
-          || result.reason !== 'ownership_conflict'
-        ) {
-          sessionBackupFinishedRef.current = true;
-        }
-      })
-      .catch(() => {
-        if (!active && result.stored === false && result.reason === 'ownership_conflict') return;
-        if (result.stored === true || result.reason !== 'ownership_conflict') {
-          sessionBackupFinishedRef.current = true;
-        }
-      });
-    return () => { active = false; };
-  }, [coordinator, pushOwnedBackup, saveOwnershipStatus]);
+    sessionBackupInFlightRef.current = true;
+    const attempt = (async (): Promise<boolean> => {
+      let checkpoint: BackupWriteResult;
+      try {
+        checkpoint = await coordinator.createCheckpoint(sessionStartSnapshot.data, 'session-start');
+      } catch {
+        checkpoint = { stored: false, reason: 'storage_unavailable' };
+      }
+      if (!mountedRef.current || profileEvictedRef.current) return false;
+      // The lease may have changed while IndexedDB was awaiting its commit.
+      // A successful old-tab transaction must not complete this mount's
+      // session bookkeeping or publish a compatibility copy afterward.
+      if (!authorizeOwnedWrite().ok || checkpoint.stored !== true) return false;
+      intervalCheckpointBaselineRef.current = sessionStartSnapshot.data;
+      intervalCheckpointRef.current = {
+        data: sessionStartSnapshot.data,
+        capturedAt: Date.now(),
+      };
+      // The compatibility copy follows the verified journal checkpoint.
+      pushOwnedBackup(sessionStartSnapshot.data, 'Session start');
+      sessionBackupFinishedRef.current = true;
+      return true;
+    })().finally(() => {
+      sessionBackupInFlightRef.current = false;
+    });
+    sessionCheckpointReadyRef.current = attempt.then(result => result, () => false);
+  }, [authorizeOwnedWrite, coordinator, pushOwnedBackup, saveOwnershipStatus, state]);
 
   // --- Actions ---
 
@@ -2336,10 +2394,16 @@ export const GameProvider: React.FC<GameProviderProps> = ({
           ? 'Legacy import'
           : 'Interval checkpoint';
     if (coordinator === null) return pushOwnedBackup(data, compatibilityReason);
+    const expectedGeneration = replacementGenerationRef.current;
     const checkpoint = await coordinator.createCheckpoint(data, reason);
     // Keep the old eight-entry ring as a best-effort rollback path, while
     // preserving the journal result as the source of durability truth.
-    pushOwnedBackup(data, compatibilityReason);
+    if (checkpoint.stored === true) intervalCheckpointBaselineRef.current = data;
+    if (
+      mountedRef.current
+      && !profileEvictedRef.current
+      && replacementGenerationRef.current === expectedGeneration
+    ) pushOwnedBackup(data, compatibilityReason);
     return checkpoint;
   }, [coordinator, pushOwnedBackup]);
 
@@ -2370,8 +2434,31 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     return isCurrent() ? result : replacementStaleResult();
   }, [authorizeOwnedWrite, beginReplacement, coordinator, createCoordinatedCheckpoint, pushOwnedBackup, replaceState, writeCoordinatedReplacement, writeReplacement]);
 
-  const createBackup = useCallback((reason: string): BackupWriteResult =>
-    pushOwnedBackup(serializeCurrent(), reason), [pushOwnedBackup, serializeCurrent]);
+  const createBackup = useCallback((reason: string): BackupWriteResult | Promise<BackupWriteResult> => {
+    const data = serializeCurrent();
+    if (coordinator === null) return pushOwnedBackup(data, reason);
+
+    const expectedProfile = profileIdentityRef.current;
+    const expectedGeneration = replacementGenerationRef.current;
+    const copyCompatibilityBackup = () => {
+      if (
+        mountedRef.current
+        && !profileEvictedRef.current
+        && profileIdentityRef.current === expectedProfile
+        && replacementGenerationRef.current === expectedGeneration
+      ) pushOwnedBackup(data, reason);
+    };
+    return coordinator.createCheckpoint(data, 'pre-replacement')
+      .then(result => {
+        if (result.stored === true) intervalCheckpointBaselineRef.current = data;
+        copyCompatibilityBackup();
+        return result;
+      })
+      .catch(() => {
+        copyCompatibilityBackup();
+        return { stored: false, reason: 'storage_unavailable' as const };
+      });
+  }, [coordinator, pushOwnedBackup, serializeCurrent]);
 
   const listBackups = useCallback(async (): Promise<BackupMeta[]> => {
     const repository = recoveryRepositoryRef.current;
@@ -2382,11 +2469,14 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   const restoreBackup = useCallback(async (id: string | number): Promise<ImportResult> => {
     const authorization = authorizeOwnedWrite();
     if (authorization.ok === false) return saveAuthorizationFailureResult(authorization.reason);
+    const isCurrent = beginReplacement();
     let data: string | null = await getBackupDataById(storageKey, id);
+    if (!isCurrent()) return replacementStaleResult();
     const repository = recoveryRepositoryRef.current;
     if (data === null && typeof id === 'string' && repository !== null) {
       try {
         const checkpoints = await repository.listCheckpoints(profileId);
+        if (!isCurrent()) return replacementStaleResult();
         data = checkpoints.find(checkpoint => (
           `checkpoint:${profileId}:${checkpoint.persistenceRevision}` === id
         ))?.data ?? null;
@@ -2397,7 +2487,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     if (data === null) {
       return { ok: false, code: 'invalid_json', message: 'Backup was not found.' };
     }
-    const isCurrent = beginReplacement();
     if (coordinator !== null) {
       return applyValidatedReplacementAsync(
         parseAndMigrateSave(data, createFreshState()),

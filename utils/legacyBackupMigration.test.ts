@@ -9,6 +9,8 @@ import type {
 } from './recoveryTypes';
 import type { SaveWriteAuthorization } from './profileWriterLease';
 import { migrateLegacyBackupRing, type LegacyBackupEntry } from './legacyBackupMigration';
+import { checksumSave } from './saveIntegrity';
+import { resolveSaveRecovery } from './saveRecovery';
 
 const allowWrite = (): SaveWriteAuthorization => ({ ok: true });
 
@@ -47,7 +49,13 @@ const repositoryHarness = () => {
     },
     close: () => undefined,
   };
-  return { repository, checkpoints, getMetadata: () => metadata };
+  return {
+    repository,
+    checkpoints,
+    getMetadata: () => metadata,
+    clearMetadata: () => { metadata = null; },
+    setHead: (next: RecoveryHead | null) => { head = next; },
+  };
 };
 
 describe('legacy backup migration', () => {
@@ -138,5 +146,200 @@ describe('legacy backup migration', () => {
     expect(harness.checkpoints).toHaveLength(0);
     expect(harness.getMetadata()).toBeNull();
     expect(authorize).toHaveBeenCalled();
+  });
+
+  it('normalizes missing run metadata before storing and can deduplicate after a restart', async () => {
+    const harness = repositoryHarness();
+    const rawState = JSON.parse(legacy(7, 1_700_000_000_007).data) as Record<string, unknown>;
+    delete rawState.runId;
+    const raw = JSON.stringify(rawState);
+    const firstDefaults = { ...initialState, runId: '11111111-1111-4111-8111-111111111111' };
+    const restartDefaults = { ...initialState, runId: '22222222-2222-4222-8222-222222222222' };
+    const input = {
+      profileId: 'alpha',
+      rawRing: JSON.stringify([{ ...legacy(7, 1_700_000_000_007), data: raw }]),
+      repository: harness.repository,
+      authorizeWrite: allowWrite,
+      defaults: firstDefaults,
+    };
+
+    await expect(migrateLegacyBackupRing(input)).resolves.toMatchObject({ imported: 1 });
+    const first = harness.checkpoints[0];
+    expect(JSON.parse(first.data).runId).toBe(first.runId);
+    expect(first.data).not.toBe(raw);
+
+    // Simulate a process restart after the checkpoint transaction but before
+    // the migration marker became visible.
+    harness.clearMetadata();
+    await expect(migrateLegacyBackupRing({ ...input, defaults: restartDefaults }))
+      .resolves.toMatchObject({ imported: 0 });
+    expect(harness.checkpoints).toHaveLength(1);
+  });
+
+  it('imports at most eight legacy entries even when the compatibility ring is oversized', async () => {
+    const harness = repositoryHarness();
+    const rawRing = JSON.stringify(Array.from({ length: 12 }, (_, index) => (
+      legacy(index + 1, 1_700_000_000_100 - index)
+    )));
+
+    await expect(migrateLegacyBackupRing({
+      profileId: 'alpha',
+      rawRing,
+      repository: harness.repository,
+      authorizeWrite: allowWrite,
+      defaults: initialState,
+    })).resolves.toMatchObject({ imported: 8, skipped: 4 });
+    expect(harness.checkpoints).toHaveLength(8);
+  });
+
+  it('keeps imported chronology below the current durable head for recovery arbitration', async () => {
+    const harness = repositoryHarness();
+    const current = legacy(99, 1_700_000_000_500).data;
+    const currentHead: RecoveryHead = {
+      profileId: 'alpha',
+      persistenceRevision: 4,
+      runId: initialState.runId,
+      runRevision: 99,
+      capturedAt: 1_700_000_000_500,
+      checksum: await checksumSave(current),
+      data: current,
+    };
+    harness.setHead(currentHead);
+
+    await migrateLegacyBackupRing({
+      profileId: 'alpha',
+      rawRing: JSON.stringify([
+        legacy(3, 1_700_000_000_300),
+        legacy(2, 1_700_000_000_200),
+        legacy(1, 1_700_000_000_100),
+      ]),
+      repository: harness.repository,
+      authorizeWrite: allowWrite,
+      defaults: initialState,
+    });
+
+    const chronological = [...harness.checkpoints].sort(
+      (a, b) => a.persistenceRevision - b.persistenceRevision,
+    );
+    expect(chronological.map(record => record.capturedAt)).toEqual([
+      1_700_000_000_100,
+      1_700_000_000_200,
+      1_700_000_000_300,
+    ]);
+    expect(Math.max(...chronological.map(record => record.persistenceRevision))).toBeLessThanOrEqual(4);
+
+    const decision = await resolveSaveRecovery({
+      profileId: 'alpha',
+      pendingRaw: null,
+      primaryRaw: current,
+      mirrorMetadataRaw: null,
+      head: currentHead,
+      checkpoints: harness.checkpoints,
+      defaults: initialState,
+    });
+    expect(decision.kind).toBe('ready');
+    expect(decision.kind === 'ready' ? decision.maxDurablePersistenceRevision : null).toBe(4);
+  });
+
+  it('does not let an existing checkpoint revision move legacy history past the head', async () => {
+    const harness = repositoryHarness();
+    const current = legacy(99, 1_700_000_000_500).data;
+    harness.setHead({
+      profileId: 'alpha',
+      persistenceRevision: 4,
+      runId: initialState.runId,
+      runRevision: 99,
+      capturedAt: 1_700_000_000_500,
+      checksum: await checksumSave(current),
+      data: current,
+    });
+    const priorCheckpoint = legacy(88, 1_700_000_000_050);
+    harness.checkpoints.push({
+      profileId: 'alpha',
+      persistenceRevision: 20,
+      runId: initialState.runId,
+      runRevision: 88,
+      capturedAt: priorCheckpoint.ts,
+      reason: 'interval',
+      checksum: await checksumSave(priorCheckpoint.data),
+      data: priorCheckpoint.data,
+    });
+
+    await migrateLegacyBackupRing({
+      profileId: 'alpha',
+      rawRing: JSON.stringify([
+        legacy(3, 1_700_000_000_300),
+        legacy(2, 1_700_000_000_200),
+        legacy(1, 1_700_000_000_100),
+      ]),
+      repository: harness.repository,
+      authorizeWrite: allowWrite,
+      defaults: initialState,
+    });
+
+    const imported = harness.checkpoints.filter(record => record.reason === 'legacy-import');
+    expect(imported).toHaveLength(3);
+    expect(Math.max(...imported.map(record => record.persistenceRevision))).toBeLessThanOrEqual(4);
+  });
+
+  it('skips legacy entries when no revision at or below the head is available', async () => {
+    const harness = repositoryHarness();
+    const current = legacy(99, 1_700_000_000_500).data;
+    harness.setHead({
+      profileId: 'alpha',
+      persistenceRevision: 0,
+      runId: initialState.runId,
+      runRevision: 99,
+      capturedAt: 1_700_000_000_500,
+      checksum: await checksumSave(current),
+      data: current,
+    });
+
+    const result = await migrateLegacyBackupRing({
+      profileId: 'alpha',
+      rawRing: JSON.stringify([
+        legacy(3, 1_700_000_000_300),
+        legacy(2, 1_700_000_000_200),
+        legacy(1, 1_700_000_000_100),
+      ]),
+      repository: harness.repository,
+      authorizeWrite: allowWrite,
+      defaults: initialState,
+    });
+
+    const imported = harness.checkpoints.filter(record => record.reason === 'legacy-import');
+    expect(result).toMatchObject({ imported: 1, skipped: 2 });
+    expect(imported).toHaveLength(1);
+    expect(imported[0].persistenceRevision).toBe(0);
+  });
+
+  it('keeps legacy history below existing checkpoints when the head is absent', async () => {
+    const harness = repositoryHarness();
+    const prior = legacy(88, 1_700_000_000_050);
+    harness.checkpoints.push({
+      profileId: 'alpha',
+      persistenceRevision: 3,
+      runId: initialState.runId,
+      runRevision: 88,
+      capturedAt: prior.ts,
+      reason: 'interval',
+      checksum: await checksumSave(prior.data),
+      data: prior.data,
+    });
+
+    await migrateLegacyBackupRing({
+      profileId: 'alpha',
+      rawRing: JSON.stringify([
+        legacy(2, 1_700_000_000_200),
+        legacy(1, 1_700_000_000_100),
+      ]),
+      repository: harness.repository,
+      authorizeWrite: allowWrite,
+      defaults: initialState,
+    });
+
+    const imported = harness.checkpoints.filter(record => record.reason === 'legacy-import');
+    expect(imported).toHaveLength(2);
+    expect(Math.max(...imported.map(record => record.persistenceRevision))).toBeLessThan(3);
   });
 });

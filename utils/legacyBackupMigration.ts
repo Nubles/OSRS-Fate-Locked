@@ -10,8 +10,11 @@ import {
   type SaveValidationResult,
 } from './saveSchema';
 import { checksumSave } from './saveIntegrity';
+import { serializeCurrent } from './gamePersistence';
+import { simpleHash } from './integrity';
 
 export const LEGACY_BACKUP_MIGRATION_VERSION = 1;
+export const MAX_LEGACY_IMPORTS = 8;
 
 export const legacyBackupMigrationKey = (profileId: string): string =>
   `legacy-backups:${profileId}`;
@@ -52,7 +55,9 @@ export interface LegacyBackupMigrationResult {
 type ParsedLegacyEntry = {
   entry: LegacyBackupEntry;
   state: GameState;
+  data: string;
   checksum: string;
+  ringIndex: number;
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> => (
@@ -82,6 +87,31 @@ const parseLegacyEntry = (value: unknown): LegacyBackupEntry | null => {
   };
 };
 
+const stableLegacyRunId = (data: string): string => {
+  // Very old saves may not contain a runId. The normal parser fills that gap
+  // from its defaults, which are intentionally a fresh random run on every
+  // process. Derive a deterministic UUID-shaped identity from the raw bytes
+  // instead, so a restart produces the same checkpoint metadata and checksum.
+  const seed = [0, 1, 2, 3]
+    .map(index => simpleHash(`${data}|legacy-run-id|${index}`))
+    .join('');
+  const variant = '89ab'[Number.parseInt(seed[16], 16) % 4];
+  return `${seed.slice(0, 8)}-${seed.slice(8, 12)}-4${seed.slice(13, 16)}-${variant}${seed.slice(17, 20)}-${seed.slice(20, 32)}`;
+};
+
+const normalizeLegacyInput = (data: string): { data: string; runId: string | null } => {
+  try {
+    const parsed: unknown = JSON.parse(data);
+    if (!isRecord(parsed) || Object.prototype.hasOwnProperty.call(parsed, 'runId')) {
+      return { data, runId: null };
+    }
+    const runId = stableLegacyRunId(data);
+    return { data: JSON.stringify({ ...parsed, runId }), runId };
+  } catch {
+    return { data, runId: null };
+  }
+};
+
 const parseLegacyRing = (rawRing: string | null): {
   entries: LegacyBackupEntry[];
   skipped: number;
@@ -97,15 +127,15 @@ const parseLegacyRing = (rawRing: string | null): {
       if (entry === null) skipped += 1;
       else entries.push(entry);
     }
-    return { entries, skipped };
+    const overflow = Math.max(0, entries.length - MAX_LEGACY_IMPORTS);
+    return {
+      entries: entries.slice(0, MAX_LEGACY_IMPORTS),
+      skipped: skipped + overflow,
+    };
   } catch {
     return { entries: [], skipped: 1 };
   }
 };
-
-const nextRevision = (value: number): number => (
-  value >= Number.MAX_SAFE_INTEGER ? value : value + 1
-);
 
 const writeSucceeded = (result: RecoveryWriteResult): boolean => result.stored === true;
 
@@ -130,14 +160,17 @@ const readExistingRecords = async (
 ): Promise<{
   headRevision: number;
   headChecksum: string | null;
+  hasHead: boolean;
   checkpoints: RecoveryCheckpoint[];
 }> => {
   let headRevision = 0;
   let headChecksum: string | null = null;
+  let hasHead = false;
   let checkpoints: RecoveryCheckpoint[] = [];
   try {
     const head = await input.repository.getHead(input.profileId);
     if (head !== null && Number.isSafeInteger(head.persistenceRevision)) {
+      hasHead = true;
       headRevision = Math.max(0, head.persistenceRevision);
     }
     if (head !== null && typeof head.checksum === 'string') {
@@ -152,12 +185,63 @@ const readExistingRecords = async (
   } catch {
     checkpoints = [];
   }
-  for (const checkpoint of checkpoints) {
-    if (Number.isSafeInteger(checkpoint.persistenceRevision)) {
-      headRevision = Math.max(headRevision, checkpoint.persistenceRevision);
+  if (!hasHead) {
+    for (const checkpoint of checkpoints) {
+      if (Number.isSafeInteger(checkpoint.persistenceRevision)) {
+        headRevision = Math.max(headRevision, checkpoint.persistenceRevision);
+      }
     }
   }
-  return { headRevision, headChecksum, checkpoints };
+  return { headRevision, headChecksum, hasHead, checkpoints };
+};
+
+const legacyRevisions = (
+  headRevision: number,
+  hasHead: boolean,
+  checkpoints: readonly RecoveryCheckpoint[],
+  count: number,
+): number[] => {
+  const used = new Set(checkpoints.map(checkpoint => checkpoint.persistenceRevision));
+  const revisions: number[] = [];
+  if (!hasHead) {
+    const existingRevisions = checkpoints
+      .map(checkpoint => checkpoint.persistenceRevision)
+      .filter(revision => Number.isSafeInteger(revision) && revision >= 0);
+    if (existingRevisions.length > 0) {
+      // A checkpoint can be the only durable evidence when its replaceable
+      // head was lost. Keep imported legacy history strictly older than that
+      // evidence rather than assigning it a larger sequence by default.
+      const oldestExisting = Math.min(...existingRevisions);
+      for (let next = oldestExisting - 1; next >= 0 && revisions.length < count; next -= 1) {
+        if (!used.has(next)) revisions.unshift(next);
+      }
+      return revisions;
+    }
+    let next = Math.max(1, headRevision + 1);
+    while (revisions.length < count) {
+      if (!used.has(next)) revisions.push(next);
+      if (next >= Number.MAX_SAFE_INTEGER) {
+        // There is no higher safe sequence number. Use the nearest available
+        // lower slots rather than spinning forever on a saturated revision.
+        for (let fallback = Math.min(Number.MAX_SAFE_INTEGER - 1, next - 1);
+          fallback >= 0 && revisions.length < count;
+          fallback -= 1) {
+          if (!used.has(fallback) && !revisions.includes(fallback)) revisions.unshift(fallback);
+        }
+        break;
+      }
+      next += 1;
+    }
+    return revisions;
+  }
+
+  // Legacy entries describe history that predates the current journal head.
+  // Use the available sequence immediately before the head first, so importing
+  // old bytes cannot make them look newer than the current durable run.
+  for (let next = headRevision; next >= 0 && revisions.length < count; next -= 1) {
+    if (!used.has(next)) revisions.unshift(next);
+  }
+  return revisions;
 };
 
 /**
@@ -188,7 +272,7 @@ export const migrateLegacyBackupRing = async (
   }
 
   const parsedRing = parseLegacyRing(input.rawRing);
-  const { headRevision, headChecksum, checkpoints } = await readExistingRecords(input);
+  const { headRevision, headChecksum, hasHead, checkpoints } = await readExistingRecords(input);
   const existingChecksums = new Set(
     checkpoints
       .map(checkpoint => checkpoint.checksum)
@@ -200,12 +284,13 @@ export const migrateLegacyBackupRing = async (
   const seenChecksums = new Set(existingChecksums);
   let skipped = parsedRing.skipped;
 
-  for (const entry of parsedRing.entries) {
+  for (const [ringIndex, entry] of parsedRing.entries.entries()) {
+    const normalizedInput = normalizeLegacyInput(entry.data);
     let validation: SaveValidationResult;
     try {
       validation = input.validate
-        ? input.validate(entry.data)
-        : await defaultValidation(entry.data, input.defaults);
+        ? input.validate(normalizedInput.data)
+        : await defaultValidation(normalizedInput.data, input.defaults);
     } catch {
       skipped += 1;
       continue;
@@ -215,8 +300,12 @@ export const migrateLegacyBackupRing = async (
       continue;
     }
     let entryChecksum: string;
+    const state = normalizedInput.runId === null
+      ? validation.state
+      : { ...validation.state, runId: normalizedInput.runId };
+    const normalizedData = serializeCurrent(state);
     try {
-      entryChecksum = await checksum(entry.data);
+      entryChecksum = await checksum(normalizedData);
     } catch {
       skipped += 1;
       continue;
@@ -228,19 +317,24 @@ export const migrateLegacyBackupRing = async (
     seenChecksums.add(entryChecksum);
     parsed.push({
       entry,
-      state: validation.state,
+      state,
+      data: normalizedData,
       checksum: entryChecksum,
+      ringIndex,
     });
   }
 
-  let persistenceRevision = headRevision;
+  parsed.sort((a, b) => a.entry.ts - b.entry.ts || a.ringIndex - b.ringIndex);
+  const revisions = legacyRevisions(headRevision, hasHead, checkpoints, parsed.length);
+  const importable = parsed.slice(0, revisions.length);
+  skipped += parsed.length - importable.length;
   let imported = 0;
-  for (const item of parsed) {
+  for (const [index, item] of importable.entries()) {
     // Reauthorize immediately before each durable mutation. The repository
     // repeats this check inside its transaction, closing the race after this
     // synchronous guard.
     if (!authorized(input.authorizeWrite)) break;
-    persistenceRevision = nextRevision(persistenceRevision);
+    const persistenceRevision = revisions[index];
     const record: RecoveryCheckpoint = {
       profileId: input.profileId,
       persistenceRevision,
@@ -248,7 +342,7 @@ export const migrateLegacyBackupRing = async (
       runRevision: item.state.runRevision,
       capturedAt: item.entry.ts,
       checksum: item.checksum,
-      data: item.entry.data,
+      data: item.data,
       reason: 'legacy-import',
     };
     let result: RecoveryWriteResult;
@@ -272,7 +366,7 @@ export const migrateLegacyBackupRing = async (
   };
   // Do not claim completion after a lost lease or a failed checkpoint write.
   // A retry can then inspect the existing checkpoint checksums safely.
-  if (imported === parsed.length && authorized(input.authorizeWrite)) {
+  if (imported === importable.length && authorized(input.authorizeWrite)) {
     try {
       const result = await input.repository.putMetadata(
         legacyBackupMigrationKey(input.profileId),

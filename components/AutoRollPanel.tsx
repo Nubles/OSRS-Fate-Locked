@@ -155,9 +155,9 @@ export function AutoRollPanel() {
   // the 2% chaos-key chance and the omni chance — so the run earns exactly the
   // keys those levels would have. Runs in batches for a responsive slot-machine
   // feel; tallies the keys/omni/chaos earned at the end.
-  const autoRoll = useCallback(() => {
+  const autoRoll = useCallback(async () => {
     if (!fetched || gains.length === 0 || skillRolling) return;
-    createBackup?.('Before Auto-Roll skill sync');
+    await createBackup?.('Before Auto-Roll skill sync');
     const before = { ...countsRef.current };
 
     // One queue entry per level still to gain, plus per-skill reveal boundaries.

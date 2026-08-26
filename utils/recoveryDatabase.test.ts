@@ -219,6 +219,26 @@ describe('transactional recovery database', () => {
     );
   });
 
+  it('prunes interval checkpoints after an ordinary checkpoint write', async () => {
+    const now = new Date(2026, 7, 25, 12, 0, 0, 0).getTime();
+    const repository = await openRecoveryDatabase({
+      databaseName: uniqueDbName(),
+      now: () => now,
+    });
+    openedRepositories.push(repository);
+
+    for (let revision = 1; revision <= 7; revision += 1) {
+      await expect(repository.putCheckpoint(
+        checkpoint(revision, now + revision),
+        allowWrite,
+      )).resolves.toEqual({ stored: true });
+    }
+
+    const remaining = await repository.listCheckpoints('alpha');
+    expect(remaining).toHaveLength(6);
+    expect(remaining.map(record => record.persistenceRevision)).not.toContain(1);
+  });
+
   it('returns a quota failure after one retry and leaves the prior head intact', async () => {
     const databaseName = uniqueDbName();
     const initialRepository = await openRecoveryDatabase({ databaseName });
