@@ -263,7 +263,10 @@ export const productionResetRecovery = async (
       const afterDelete = checkWriteAuthorization(authorizeWrite);
       if (afterDelete !== null) return afterDelete;
     }
-    return { ok: true };
+    return {
+      ok: true,
+      persistenceRevision: freshHead.persistenceRevision,
+    };
   } catch {
     return { ok: false, message: 'The recovery journal could not be reset.' };
   } finally {
@@ -704,6 +707,8 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
                 capturedAt: null,
                 checksum: null,
               };
+              let replacementToWrite = replacement;
+              let postResetPersistenceRevision: number | undefined;
               const beforeReset = checkWriteAuthorization(authorizeWrite);
               if (beforeReset !== null) return beforeReset;
               if (resetRecovery !== undefined) {
@@ -712,8 +717,16 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
                 if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
                 const afterReset = checkWriteAuthorization(authorizeWrite);
                 if (afterReset !== null) return afterReset;
+                if (reset && 'ok' in reset && reset.ok === true
+                  && reset.persistenceRevision !== undefined) {
+                  postResetPersistenceRevision = reset.persistenceRevision;
+                  replacementToWrite = {
+                    ...replacement,
+                    persistenceRevision: postResetPersistenceRevision,
+                  };
+                }
               }
-              const result = await replaceSave(replacement, authorizeWrite);
+              const result = await replaceSave(replacementToWrite, authorizeWrite);
               if (result && 'ok' in result && result.ok === false) return result;
               if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
               const afterReplace = checkWriteAuthorization(authorizeWrite);
@@ -725,7 +738,8 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
                   initialState: state,
                   initialData: data,
                   persistenceRevision: 0,
-                  maxDurablePersistenceRevision,
+                  maxDurablePersistenceRevision: postResetPersistenceRevision
+                    ?? maxDurablePersistenceRevision,
                   source: 'empty',
                   needsJournalImport: false,
                 },

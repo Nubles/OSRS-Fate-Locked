@@ -7,7 +7,7 @@ import type { ValidatedRecoveryCandidate, SaveRecoveryDecision } from '../utils/
 
 export type RecoveryActionResult =
   | void
-  | { ok: true }
+  | { ok: true; persistenceRevision?: number }
   | { ok: false; message: string };
 
 export type RecoveryAction = () => RecoveryActionResult | Promise<RecoveryActionResult>;

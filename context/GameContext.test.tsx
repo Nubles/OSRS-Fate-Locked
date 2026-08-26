@@ -66,6 +66,9 @@ const fakeCoordinator = (
     lifecycleInFlight?: boolean;
     loseOwnershipOnFlush?: () => void;
     replacementGate?: Promise<void>;
+    replacementResult?: SaveDurabilitySnapshot;
+    replacementSnapshot?: SaveDurabilitySnapshot;
+    restoreOwnershipAfterReplacement?: () => void;
     stageEvents?: string[];
   } = {},
 ): SaveCoordinator => {
@@ -125,6 +128,12 @@ const fakeCoordinator = (
     writeReplacement: async data => {
       options.loseOwnershipOnFlush?.();
       if (options.replacementGate !== undefined) await options.replacementGate;
+      if (options.replacementResult !== undefined) {
+        snapshot = coordinatorSnapshot(options.replacementSnapshot ?? options.replacementResult);
+        notify();
+        options.restoreOwnershipAfterReplacement?.();
+        return options.replacementResult;
+      }
       return durable(data);
     },
     createCheckpoint: async (_data, reason) => {
@@ -516,6 +525,45 @@ describe('ordinary save recovery', () => {
     await settleOwnership();
     const candidate = JSON.parse(game.current().getExportData()) as GameState;
     candidate.userNotes = { imported: 'lost owner' };
+
+    const result = await game.current().importSave(candidate);
+
+    expect(result).toMatchObject({ ok: false, code: 'ownership_conflict' });
+    expect(game.current().userNotes.imported).toBeUndefined();
+  });
+
+  it('preserves a replacement ownership conflict after the lease is restored', async () => {
+    const coordinator = fakeCoordinator([], {
+      replacementResult: {
+        primary: 'failed',
+        recovery: 'degraded',
+        savedAt: null,
+        failureReason: 'ownership_conflict',
+      },
+      replacementSnapshot: {
+        primary: 'failed',
+        recovery: 'degraded',
+        savedAt: null,
+      },
+      loseOwnershipOnFlush: () => {
+        storage.values.set(writerLeaseKey('profile'), JSON.stringify({
+          version: 1,
+          ownerId: 'foreign-tab',
+          expiresAt: Date.now() + WRITER_LEASE_TTL_MS,
+        }));
+      },
+      restoreOwnershipAfterReplacement: () => {
+        storage.values.set(writerLeaseKey('profile'), JSON.stringify({
+          version: 1,
+          ownerId: 'tab-a',
+          expiresAt: Date.now() + WRITER_LEASE_TTL_MS,
+        }));
+      },
+    });
+    const game = renderCoordinatorGame(coordinator, { ownerId: 'tab-a' });
+    await settleOwnership();
+    const candidate = JSON.parse(game.current().getExportData()) as GameState;
+    candidate.userNotes = { imported: 'transient owner loss' };
 
     const result = await game.current().importSave(candidate);
 

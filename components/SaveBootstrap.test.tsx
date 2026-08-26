@@ -4,15 +4,19 @@ import { act, cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { initialState } from '../context/GameContext';
-import type { RecoveryRepository } from '../utils/recoveryTypes';
+import type { RecoveryHead, RecoveryRepository } from '../utils/recoveryTypes';
 import type { SaveRecoveryDecision } from '../utils/saveRecovery';
 import { resolveSaveRecovery } from '../utils/saveRecovery';
 import { checksumSave } from '../utils/saveIntegrity';
+import { createSaveCoordinator } from '../utils/saveCoordinator';
+import { parseAndMigrateSave } from '../utils/saveSchema';
+import { profileMirrorMetadataKey } from '../utils/storageRecovery';
 import {
   SaveBootstrap,
   productionResetRecovery,
   productionExportRecovery,
   type SaveBootstrapDependencies,
+  type SaveBootstrapReplacement,
   type SaveBootstrapResult,
 } from './SaveBootstrap';
 import { MAX_SAVE_BYTES } from '../utils/saveSchema';
@@ -568,7 +572,7 @@ describe('SaveBootstrap', () => {
       { openRepository: async () => journal, now: () => 100 },
     );
 
-    expect(reset).toEqual({ ok: true });
+    expect(reset).toEqual({ ok: true, persistenceRevision: 5 });
     expect(head.runId).toBe('00000000-0000-4000-8000-000000000001');
     expect(head.persistenceRevision).toBe(5);
     expect(checkpoints).toEqual([]);
@@ -588,6 +592,124 @@ describe('SaveBootstrap', () => {
     });
     expect(reloadDecision.kind).toBe('ready');
     expect(reloadDecision.kind === 'ready' ? reloadDecision.state.runId : null).toBe('00000000-0000-4000-8000-000000000001');
+  });
+
+  it('hands the post-reset revision to the first mirror-only save', async () => {
+    const oldState = { ...initialState, runId: 'old-run' };
+    const oldData = JSON.stringify(oldState);
+    const oldChecksum = await checksumSave(oldData);
+    const freshState = {
+      ...initialState,
+      runId: '00000000-0000-4000-8000-000000000002',
+    };
+    const freshData = JSON.stringify(freshState);
+    const freshChecksum = await checksumSave(freshData);
+    let head: RecoveryHead = {
+      profileId: 'alpha',
+      persistenceRevision: 4,
+      runId: oldState.runId,
+      runRevision: oldState.runRevision,
+      capturedAt: 10,
+      checksum: oldChecksum,
+      data: oldData,
+    };
+    const journal = repository();
+    journal.getHead = vi.fn(async () => head);
+    journal.listCheckpoints = vi.fn(async () => []);
+    journal.putHead = vi.fn(async record => {
+      head = record;
+      return { stored: true as const };
+    });
+
+    let replacementWritten: SaveBootstrapReplacement | null = null;
+    let bootstrapResult: SaveBootstrapResult | null = null;
+    const decision: Extract<SaveRecoveryDecision, { kind: 'recovery_required' }> = {
+      kind: 'recovery_required',
+      primaryRaw: '{bad',
+      candidates: [],
+      cause: 'conflicting_runs',
+      maxDurablePersistenceRevision: 4,
+    };
+    const deps = dependencies({
+      createFreshState: () => freshState,
+      resolveSaveRecovery: vi.fn(async () => decision),
+      archiveCorruptEvidence: vi.fn(async () => ({ ok: true as const })),
+      resetRecovery: vi.fn(async (replacement, authorizeWrite) => productionResetRecovery(
+        replacement,
+        authorizeWrite,
+        { openRepository: async () => journal, now: () => 100 },
+      )),
+      replaceSave: vi.fn(async replacement => {
+        replacementWritten = replacement;
+        return { ok: true as const };
+      }),
+    });
+    const user = userEvent.setup();
+
+    render(
+      <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {result => {
+          bootstrapResult = result;
+          return <div data-testid="bootstrap-result">{result.maxDurablePersistenceRevision}</div>;
+        }}
+      </SaveBootstrap>,
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Start a new run' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm start a new run' }));
+
+    expect(await screen.findByTestId('bootstrap-result')).toBeTruthy();
+    expect(bootstrapResult?.maxDurablePersistenceRevision).toBe(5);
+    expect(replacementWritten?.persistenceRevision).toBe(5);
+
+    const values = new Map<string, string>([
+      ['FATE_PROFILE_alpha', replacementWritten!.data],
+      [profileMirrorMetadataKey('FATE_PROFILE_alpha'), JSON.stringify({
+        version: 1,
+        persistenceRevision: replacementWritten!.persistenceRevision,
+        capturedAt: 100,
+        checksum: freshChecksum,
+      })],
+    ]);
+    const storage = {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => { values.set(key, value); },
+      removeItem: (key: string) => { values.delete(key); },
+    };
+    const journalFailure: RecoveryRepository = {
+      ...journal,
+      putHead: vi.fn(async () => ({
+        stored: false as const,
+        reason: 'storage_unavailable' as const,
+      })),
+    };
+    const coordinator = createSaveCoordinator({
+      profileId: 'alpha',
+      storageKey: 'FATE_PROFILE_alpha',
+      storage,
+      repository: journalFailure,
+      authorizeWrite: () => ({ ok: true as const }),
+      validate: data => parseAndMigrateSave(data, initialState),
+      checksum: checksumSave,
+      now: () => 200,
+      initialPersistenceRevision: bootstrapResult!.maxDurablePersistenceRevision,
+    });
+    const firstSave = JSON.stringify({ ...freshState, userNotes: { first: 'save' } });
+    coordinator.stage(firstSave);
+    await coordinator.flush();
+    await coordinator.whenIdle();
+
+    const reloadDecision = await resolveSaveRecovery({
+      profileId: 'alpha',
+      pendingRaw: null,
+      primaryRaw: values.get('FATE_PROFILE_alpha') ?? null,
+      mirrorMetadataRaw: values.get(profileMirrorMetadataKey('FATE_PROFILE_alpha')) ?? null,
+      defaults: initialState,
+      head,
+      checkpoints: [],
+    });
+    expect(reloadDecision.kind).toBe('ready');
+    expect(reloadDecision.kind === 'ready' ? reloadDecision.persistenceRevision : null).toBe(6);
   });
 
   it('cancels the previous profile bootstrap and ignores its late result', async () => {

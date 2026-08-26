@@ -2207,14 +2207,17 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     stageCoordinatedSnapshot(data);
     const result = await coordinator.writeReplacement(data, reason);
     await coordinator.whenIdle();
-    coordinatorSnapshotRef.current = coordinator.getSnapshot();
-    const settled = coordinatorSnapshotRef.current;
+    const coordinatorSnapshot = coordinator.getSnapshot();
+    const settled = result.failureReason === undefined
+      ? coordinatorSnapshot
+      : { ...coordinatorSnapshot, failureReason: result.failureReason };
+    coordinatorSnapshotRef.current = settled;
     if (!isCurrent()) return failed(settled.savedAt);
     if (settled.primary === 'saved') {
       persistedSnapshotRef.current = data;
       discardPendingSave(storageKey);
     } else {
-      const failureReason = liveCoordinatorFailureReason();
+      const failureReason = settled.failureReason ?? liveCoordinatorFailureReason();
       blockPendingSave(storageKey, failureReason);
       return { ...settled, failureReason };
     }
