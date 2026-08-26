@@ -237,4 +237,29 @@ describe('backup ring', () => {
     ]);
     expect(JSON.parse(localStorage.getItem('FATE_PROFILE_test__backups')!)).toHaveLength(1);
   });
+
+  it('does not present a valid-JSON checkpoint whose stored checksum mismatches its bytes', async () => {
+    const original = save({ keys: 12 });
+    const tampered = save({ keys: 99 });
+    const checkpoint: RecoveryCheckpoint = {
+      profileId: 'test',
+      persistenceRevision: 10,
+      runId: 'run-test',
+      runRevision: 3,
+      capturedAt: 400,
+      checksum: await checksumSave(original),
+      data: tampered,
+      reason: 'interval',
+    };
+    const repository = {
+      listCheckpoints: vi.fn(async () => [checkpoint]),
+    } as unknown as RecoveryRepository;
+
+    const list = await listCombinedBackups(KEY, {
+      profileId: 'test',
+      repository,
+    });
+
+    expect(list).toEqual([]);
+  });
 });

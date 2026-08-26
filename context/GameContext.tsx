@@ -2551,9 +2551,21 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       try {
         const checkpoints = await repository.listCheckpoints(profileId);
         if (!isCurrent()) return replacementStaleResult();
-        data = checkpoints.find(checkpoint => (
-          `checkpoint:${profileId}:${checkpoint.persistenceRevision}` === id
-        ))?.data ?? null;
+        const checkpoint = checkpoints.find(candidate => (
+          `checkpoint:${profileId}:${candidate.persistenceRevision}` === id
+        ));
+        if (checkpoint !== undefined) {
+          const checksum = await checksumSave(checkpoint.data);
+          if (!isCurrent()) return replacementStaleResult();
+          if (checksum !== checkpoint.checksum) {
+            return {
+              ok: false,
+              code: 'invalid_json',
+              message: 'This backup failed its integrity check and was not restored.',
+            };
+          }
+          data = checkpoint.data;
+        }
       } catch {
         data = null;
       }

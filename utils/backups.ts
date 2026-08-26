@@ -174,6 +174,11 @@ export const listCombinedBackups = async (
   }
   for (const checkpoint of checkpoints) {
     if (typeof checkpoint.data !== 'string' || typeof checkpoint.checksum !== 'string') continue;
+    try {
+      if (await checksum(checkpoint.data) !== checkpoint.checksum) continue;
+    } catch {
+      continue;
+    }
     const item = { meta: checkpointMeta(options.profileId, checkpoint), data: checkpoint.data };
     const existing = combined.get(checkpoint.checksum);
     if (existing !== undefined) {

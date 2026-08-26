@@ -9,7 +9,7 @@ import type { ProfileWriterLeaseOptions } from '../hooks/useProfileWriterLease';
 import type { GameState } from '../types';
 import type { SaveBootstrapResult } from '../components/SaveBootstrap';
 import type { SaveCoordinator } from '../utils/saveCoordinator';
-import type { SaveDurabilitySnapshot, SaveRetryResult } from '../utils/recoveryTypes';
+import type { RecoveryCheckpoint, SaveDurabilitySnapshot, SaveRetryResult } from '../utils/recoveryTypes';
 import { serializeCurrent, type BackupWriteResult, type ImportResult } from '../utils/gamePersistence';
 import {
   discardPendingSave,
@@ -19,6 +19,8 @@ import {
 } from '../utils/pendingSaves';
 import { profileBackupKey } from '../utils/profileStorage';
 import { profileMirrorMetadataKey } from '../utils/storageRecovery';
+import { openRecoveryDatabase } from '../utils/recoveryDatabase';
+import { checksumSave } from '../utils/saveIntegrity';
 import { parseAndMigrateSave } from '../utils/saveSchema';
 import {
   writerLeaseKey,
@@ -1318,6 +1320,71 @@ describe('ordinary save recovery', () => {
     expect(setItem).not.toHaveBeenCalled();
     expect(game.current().saveStatus).toBe('failed');
     expect(game.current().saveOwnershipBlockReason).toBe('storage_unavailable');
+  });
+
+  it('rejects a valid-JSON checkpoint whose bytes no longer match its checksum', async () => {
+    vi.useRealTimers();
+    const profileId = 'manual-integrity-restore';
+    const storageKey = `FATE_PROFILE_${profileId}`;
+    const baselineState = {
+      ...structuredClone(initialState),
+      userNotes: { goal: 'keep current run' },
+    };
+    const baselineData = serializeCurrent(baselineState);
+    const originalCheckpointData = serializeCurrent({
+      ...baselineState,
+      userNotes: { goal: 'original checkpoint' },
+    });
+    const tamperedCheckpointData = serializeCurrent({
+      ...baselineState,
+      userNotes: { goal: 'tampered but valid JSON' },
+    });
+    const checkpoint: RecoveryCheckpoint = {
+      profileId,
+      persistenceRevision: 9,
+      runId: baselineState.runId,
+      runRevision: baselineState.runRevision,
+      capturedAt: 900,
+      checksum: await checksumSave(originalCheckpointData),
+      data: tamperedCheckpointData,
+      reason: 'interval',
+    };
+    const seedRepository = await openRecoveryDatabase();
+    await seedRepository.putCheckpoint(checkpoint, () => ({ ok: true }));
+    seedRepository.close();
+    const bootstrap: SaveBootstrapResult = {
+      initialState: baselineState,
+      initialData: baselineData,
+      persistenceRevision: 1,
+      maxDurablePersistenceRevision: 9,
+      source: 'mirror',
+      needsJournalImport: false,
+    };
+    let current: Game | undefined;
+    render(
+      <GameProvider
+        storageKey={storageKey}
+        bootstrap={bootstrap}
+        leaseOptions={{ ownerId: 'integrity-test-tab' }}
+      >
+        <GameCapture onGame={game => { current = game; }} />
+      </GameProvider>,
+    );
+    await new Promise(resolve => setTimeout(resolve, WRITER_LEASE_ARBITRATION_MS + 10));
+
+    const listed = await current!.listBackups();
+    expect(listed.some(item => item.id === `checkpoint:${profileId}:9`)).toBe(false);
+    let result: ImportResult | undefined;
+    await act(async () => {
+      result = await current!.restoreBackup(`checkpoint:${profileId}:9`);
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      code: 'invalid_json',
+      message: 'This backup failed its integrity check and was not restored.',
+    });
+    expect(current!.userNotes.goal).toBe('keep current run');
   });
 
   it('rejects a manual backup as storage unavailable before backup access', async () => {
