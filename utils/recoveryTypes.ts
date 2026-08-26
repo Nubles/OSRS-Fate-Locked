@@ -53,6 +53,22 @@ export type RecoveryWriteResult =
       reason: 'ownership_conflict' | 'storage_unavailable' | 'quota' | 'stale_revision';
     };
 
+export interface RecoveryProfileMetadataEntry {
+  key: string;
+  value: unknown;
+}
+
+export interface RecoveryProfileSnapshot {
+  profileId: string;
+  head: RecoveryHead | null;
+  checkpoints: RecoveryCheckpoint[];
+  metadata: RecoveryProfileMetadataEntry[];
+}
+
+export type RecoveryProfileDeleteResult =
+  | { stored: true; snapshot: RecoveryProfileSnapshot }
+  | { stored: false; reason: RecoveryMaintenanceFailureReason };
+
 export interface RecoveryRepository {
   getHead(profileId: string): Promise<RecoveryHead | null>;
   putHead(
@@ -73,6 +89,14 @@ export interface RecoveryRepository {
   putMetadata<T>(
     key: string,
     value: T,
+    authorizeWrite: () => SaveWriteAuthorization,
+  ): Promise<RecoveryWriteResult>;
+  deleteProfileData?(
+    profileId: string,
+    authorizeWrite: () => SaveWriteAuthorization,
+  ): Promise<RecoveryProfileDeleteResult>;
+  restoreProfileData?(
+    snapshot: RecoveryProfileSnapshot,
     authorizeWrite: () => SaveWriteAuthorization,
   ): Promise<RecoveryWriteResult>;
   close(): void;

@@ -28,6 +28,7 @@ import {
   type ProfileTransactionResult,
 } from '../utils/profileMetadataTransaction';
 import { initialState } from './GameContext';
+import { openRecoveryDatabase } from '../utils/recoveryDatabase';
 
 export type ProfilePendingAction =
   | 'initializing'
@@ -100,6 +101,9 @@ const createDependencies = (
   validateGameSave: raw => parseAndMigrateSave(raw, initialState).ok,
   createProfileId: generateId,
   shouldAbort,
+  ...(typeof indexedDB === 'undefined'
+    ? {}
+    : { openRecoveryRepository: () => openRecoveryDatabase() }),
 });
 
 const createMemoryStorage = (): ProfileTransactionDependencies['storage'] => {

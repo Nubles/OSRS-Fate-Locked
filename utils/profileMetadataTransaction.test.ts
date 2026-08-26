@@ -1167,6 +1167,22 @@ describe('coordinated profile deletion', () => {
     const databaseName = `task11-profile-delete-${Date.now()}-${Math.random()}`;
     const repository = await openRecoveryDatabase({ databaseName, now: () => 1_000 });
     const authorize = () => ({ ok: true as const });
+    const alphaHead: RecoveryHead = {
+      profileId: 'alpha',
+      persistenceRevision: 10,
+      runId: 'alpha-run',
+      runRevision: 3,
+      capturedAt: 900,
+      checksum: 'alpha-head-checksum',
+      data: 'alpha-head-data',
+    };
+    const alphaCheckpoint: RecoveryCheckpoint = {
+      ...alphaHead,
+      persistenceRevision: 9,
+      checksum: 'alpha-checkpoint-checksum',
+      data: 'alpha-checkpoint-data',
+      reason: 'interval',
+    };
     const betaHead: RecoveryHead = {
       profileId: 'beta',
       persistenceRevision: 12,
@@ -1185,6 +1201,13 @@ describe('coordinated profile deletion', () => {
     };
 
     try {
+      await expect(repository.putHead(alphaHead, authorize)).resolves.toEqual({ stored: true });
+      await expect(repository.putCheckpoint(alphaCheckpoint, authorize)).resolves.toEqual({ stored: true });
+      await expect(repository.putMetadata(
+        'profile-alpha-marker',
+        { profileId: 'alpha', marker: 'delete-with-profile' },
+        authorize,
+      )).resolves.toEqual({ stored: true });
       await expect(repository.putHead(betaHead, authorize)).resolves.toEqual({ stored: true });
       await expect(repository.putCheckpoint(betaCheckpoint, authorize)).resolves.toEqual({ stored: true });
       await expect(repository.putMetadata(
@@ -1193,7 +1216,10 @@ describe('coordinated profile deletion', () => {
         authorize,
       )).resolves.toEqual({ stored: true });
 
-      await expect(mutateProfileMetadata(createDependencies(storage), {
+      const dependencies = Object.assign(createDependencies(storage), {
+        openRecoveryRepository: () => openRecoveryDatabase({ databaseName, now: () => 1_000 }),
+      });
+      await expect(mutateProfileMetadata(dependencies, {
         type: 'delete',
         profileId: 'alpha',
       })).resolves.toEqual({
@@ -1209,6 +1235,9 @@ describe('coordinated profile deletion', () => {
 
       for (const key of expectedOwnedKeys) expect(storage.values.has(key)).toBe(false);
       for (const [key, value] of unrelatedEntries) expect(storage.values.get(key)).toBe(value);
+      await expect(repository.getHead('alpha')).resolves.toBeNull();
+      await expect(repository.listCheckpoints('alpha')).resolves.toEqual([]);
+      await expect(repository.getMetadata('profile-alpha-marker')).resolves.toBeNull();
       await expect(repository.getHead('beta')).resolves.toEqual(betaHead);
       await expect(repository.listCheckpoints('beta')).resolves.toEqual([betaCheckpoint]);
       await expect(repository.getMetadata('profile-beta-marker')).resolves.toEqual({
@@ -1218,6 +1247,92 @@ describe('coordinated profile deletion', () => {
     } finally {
       repository.close();
     }
+  });
+
+  it('restores removed local data when IndexedDB profile cleanup fails', async () => {
+    const current = deletableMetadata();
+    const ownedEntries = alphaOwnedKeys.map(key => [key, `secret:${key}`] as const);
+    const storage = createStorage([
+      [PROFILES_KEY, JSON.stringify(current)],
+      ...ownedEntries,
+    ]);
+    const deleteProfileData = vi.fn(async () => ({
+      stored: false as const,
+      reason: 'storage_unavailable' as const,
+    }));
+    const recoveryRepository = {
+      deleteProfileData,
+      close: vi.fn(),
+    };
+    const dependencies = Object.assign(createDependencies(storage), {
+      openRecoveryRepository: vi.fn(async () => recoveryRepository),
+    });
+
+    const result = await mutateProfileMetadata(dependencies, {
+      type: 'delete',
+      profileId: 'alpha',
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      reason: 'storage_unavailable',
+      metadata: current,
+      notice: null,
+      deleteDetails: { removedEntries: 7, removalFailures: 0, rollbackFailures: 0 },
+    });
+    expect(deleteProfileData).toHaveBeenCalledWith('alpha', expect.any(Function));
+    for (const [key, value] of ownedEntries) expect(storage.values.get(key)).toBe(value);
+    expect(storage.values.get(PROFILES_KEY)).toBe(JSON.stringify(current));
+  });
+
+  it('restores deleted IndexedDB records when the registry commit fails', async () => {
+    const current = deletableMetadata();
+    const ownedEntries = alphaOwnedKeys.map(key => [key, `secret:${key}`] as const);
+    const storage = createStorage([
+      [PROFILES_KEY, JSON.stringify(current)],
+      ...ownedEntries,
+    ]);
+    const setItem = storage.setItem;
+    storage.setItem = (key, value) => {
+      if (key === PROFILES_KEY) {
+        storage.calls.push(`set:${key}`);
+        throw new DOMException('full', 'QuotaExceededError');
+      }
+      setItem(key, value);
+    };
+    const recoverySnapshot = {
+      profileId: 'alpha',
+      head: null,
+      checkpoints: [],
+      metadata: [{ key: 'profile-alpha-marker', value: { profileId: 'alpha' } }],
+    };
+    const restoreProfileData = vi.fn(async () => ({ stored: true as const }));
+    const recoveryRepository = {
+      deleteProfileData: vi.fn(async () => ({
+        stored: true as const,
+        snapshot: recoverySnapshot,
+      })),
+      restoreProfileData,
+      close: vi.fn(),
+    };
+    const dependencies = Object.assign(createDependencies(storage), {
+      openRecoveryRepository: vi.fn(async () => recoveryRepository),
+    });
+
+    const result = await mutateProfileMetadata(dependencies, {
+      type: 'delete',
+      profileId: 'alpha',
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      reason: 'verification_failed',
+      metadata: current,
+      notice: null,
+      deleteDetails: { removedEntries: 7, removalFailures: 0, rollbackFailures: 0 },
+    });
+    expect(restoreProfileData).toHaveBeenCalledWith(recoverySnapshot, expect.any(Function));
+    for (const [key, value] of ownedEntries) expect(storage.values.get(key)).toBe(value);
   });
 
   it.each([
