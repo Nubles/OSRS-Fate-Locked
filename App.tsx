@@ -27,6 +27,7 @@ import { FeatureRevealDriver } from './components/FeatureRevealDriver';
 import { BackupNagBanner } from './components/BackupNagBanner';
 import { SaveConflictBanner } from './components/SaveConflictBanner';
 import { SaveFailureBanner } from './components/SaveFailureBanner';
+import { SaveDurabilityStatus } from './components/SaveDurabilityStatus';
 import { ProfileRecoveryBanner } from './components/ProfileRecoveryBanner';
 import { SaveRecoveryGuard } from './components/SaveRecoveryGuard';
 import { SaveBootstrap } from './components/SaveBootstrap';
@@ -663,9 +664,20 @@ const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = f
 const GameLayout = () => {
   const {
     lastEvent, animationsEnabled, hasSeenOnboarding, history, linkedAccount,
-    fateCompensation, resolveFateCompensation,
+    fateCompensation, resolveFateCompensation, saveDurability, retrySave,
+    getExportData,
   } = useGame();
-  const { recentlyCreatedId, activeProfileId, activeProfileName, clearRecentlyCreated } = useProfiles();
+  const {
+    recentlyCreatedId,
+    activeProfileId,
+    activeProfileName,
+    storageKeyForActiveProfile,
+    clearRecentlyCreated,
+  } = useProfiles();
+  const exportBackup = React.useCallback(
+    () => downloadFateSave(getExportData(), storageKeyForActiveProfile),
+    [getExportData, storageKeyForActiveProfile],
+  );
 
   const directGuideRequested = typeof window !== 'undefined'
     && hasRuneliteGuideQuery(window.location.search);
@@ -1009,6 +1021,15 @@ const GameLayout = () => {
       <ProfileRecoveryBanner />
 
       <SaveConflictBanner />
+
+      {/* Compact durability status for ordinary saves and degraded recovery. */}
+      {saveDurability.primary !== 'failed' && (
+        <SaveDurabilityStatus
+          snapshot={saveDurability}
+          retrySave={retrySave}
+          exportBackup={exportBackup}
+        />
+      )}
 
       <SaveFailureBanner />
 

@@ -3,19 +3,26 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { SaveDurabilitySnapshot } from '../utils/recoveryTypes';
 import { SaveFailureBannerView } from './SaveFailureBanner';
 
 afterEach(cleanup);
 
 describe('SaveFailureBannerView', () => {
+  const failedSnapshot: SaveDurabilitySnapshot = {
+    primary: 'failed',
+    recovery: 'degraded',
+    savedAt: null,
+  };
+
   it('keeps recovery actions visible after a failed retry', async () => {
-    const retrySave = vi.fn().mockReturnValue(false);
+    const retrySave = vi.fn().mockResolvedValue(false);
     const exportBackup = vi.fn().mockReturnValue({ ok: true });
     const user = userEvent.setup();
 
     render(
       <SaveFailureBannerView
-        saveStatus="failed"
+        saveDurability={failedSnapshot}
         ownershipBlockReason={null}
         retrySave={retrySave}
         exportBackup={exportBackup}
@@ -39,7 +46,7 @@ describe('SaveFailureBannerView', () => {
 
     render(
       <SaveFailureBannerView
-        saveStatus="failed"
+        saveDurability={failedSnapshot}
         ownershipBlockReason={null}
         retrySave={() => false}
         exportBackup={exportBackup}
@@ -55,7 +62,7 @@ describe('SaveFailureBannerView', () => {
   it('renders nothing after browser storage recovers', () => {
     const { rerender } = render(
       <SaveFailureBannerView
-        saveStatus="failed"
+        saveDurability={failedSnapshot}
         ownershipBlockReason={null}
         retrySave={() => false}
         exportBackup={() => ({ ok: true })}
@@ -65,7 +72,7 @@ describe('SaveFailureBannerView', () => {
 
     rerender(
       <SaveFailureBannerView
-        saveStatus="saved"
+        saveDurability={{ primary: 'saved', recovery: 'protected', savedAt: 1 }}
         ownershipBlockReason={null}
         retrySave={() => true}
         exportBackup={() => ({ ok: true })}
@@ -78,7 +85,7 @@ describe('SaveFailureBannerView', () => {
   it('suppresses the storage warning for a foreign owner conflict', () => {
     render(
       <SaveFailureBannerView
-        saveStatus="failed"
+        saveDurability={failedSnapshot}
         ownershipBlockReason="foreign_owner"
         retrySave={() => false}
         exportBackup={() => ({ ok: true })}
@@ -91,7 +98,7 @@ describe('SaveFailureBannerView', () => {
   it('keeps the storage warning for unavailable ownership storage', () => {
     render(
       <SaveFailureBannerView
-        saveStatus="failed"
+        saveDurability={failedSnapshot}
         ownershipBlockReason="storage_unavailable"
         retrySave={() => false}
         exportBackup={() => ({ ok: true })}
@@ -100,5 +107,18 @@ describe('SaveFailureBannerView', () => {
 
     expect(screen.getByRole('alert').textContent).toContain("Progress isn't being saved");
     expect(screen.getByRole('alert').textContent).not.toContain('another tab');
+  });
+
+  it('does not use the red failure banner for a saved but degraded backup', () => {
+    render(
+      <SaveFailureBannerView
+        saveDurability={{ primary: 'saved', recovery: 'degraded', savedAt: 1 }}
+        ownershipBlockReason={null}
+        retrySave={async () => true}
+        exportBackup={() => ({ ok: true })}
+      />,
+    );
+
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 });

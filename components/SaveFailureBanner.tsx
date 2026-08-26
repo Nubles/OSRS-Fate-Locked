@@ -3,6 +3,7 @@ import { AlertTriangle, Download, RefreshCw } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { useProfiles } from '../context/ProfileContext';
 import type { SaveStatus } from '../utils/pendingSaves';
+import type { SaveDurabilitySnapshot } from '../utils/recoveryTypes';
 import {
   downloadFateSave,
   type FateSaveDownloadResult,
@@ -11,13 +12,16 @@ import type { SaveOwnershipBlockReason } from '../utils/profileWriterLease';
 import { showToast } from '../utils/toast';
 
 interface SaveFailureBannerViewProps {
-  saveStatus: SaveStatus;
+  /** New coordinator snapshot. The legacy status remains accepted for old embedders. */
+  saveDurability?: SaveDurabilitySnapshot;
+  saveStatus?: SaveStatus;
   ownershipBlockReason: SaveOwnershipBlockReason;
   retrySave: () => boolean | Promise<boolean>;
   exportBackup: () => FateSaveDownloadResult;
 }
 
 export const SaveFailureBannerView: FC<SaveFailureBannerViewProps> = ({
+  saveDurability,
   saveStatus,
   ownershipBlockReason,
   retrySave,
@@ -25,7 +29,19 @@ export const SaveFailureBannerView: FC<SaveFailureBannerViewProps> = ({
 }) => {
   const [retrying, setRetrying] = useState(false);
 
-  if (saveStatus !== 'failed' || ownershipBlockReason === 'foreign_owner') return null;
+  const durability = saveDurability ?? {
+    primary: saveStatus === 'failed' ? 'failed' : saveStatus === 'saving' ? 'saving' : 'saved',
+    recovery: saveStatus === 'failed' ? 'degraded' : 'checking',
+    savedAt: null,
+  } satisfies SaveDurabilitySnapshot;
+
+  // A red banner is reserved for the dual-failure state. A saved primary with
+  // degraded recovery is surfaced by SaveDurabilityStatus in amber instead.
+  if (
+    durability.primary !== 'failed'
+    || durability.recovery !== 'degraded'
+    || ownershipBlockReason === 'foreign_owner'
+  ) return null;
 
   const handleRetry = async () => {
     setRetrying(true);
@@ -89,6 +105,7 @@ export const SaveFailureBannerView: FC<SaveFailureBannerViewProps> = ({
 export const SaveFailureBanner: FC = () => {
   const {
     saveStatus,
+    saveDurability,
     saveOwnershipBlockReason,
     retrySave,
     getExportData,
@@ -101,6 +118,7 @@ export const SaveFailureBanner: FC = () => {
 
   return (
     <SaveFailureBannerView
+      saveDurability={saveDurability}
       saveStatus={saveStatus}
       ownershipBlockReason={saveOwnershipBlockReason}
       retrySave={retrySave}
