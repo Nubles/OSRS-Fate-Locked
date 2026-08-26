@@ -712,6 +712,79 @@ describe('SaveBootstrap', () => {
     expect(reloadDecision.kind === 'ready' ? reloadDecision.persistenceRevision : null).toBe(6);
   });
 
+  it('uses the higher verified mirror revision when resetting a fresh run', async () => {
+    const oldState = { ...initialState, runId: '00000000-0000-4000-8000-000000000010' };
+    const oldData = JSON.stringify(oldState);
+    const oldChecksum = await checksumSave(oldData);
+    const mirrorState = { ...initialState, runId: '00000000-0000-4000-8000-000000000011' };
+    const mirrorData = JSON.stringify(mirrorState);
+    const mirrorChecksum = await checksumSave(mirrorData);
+    const freshState = { ...initialState, runId: '00000000-0000-4000-8000-000000000012' };
+    let head: RecoveryHead = {
+      profileId: 'alpha',
+      persistenceRevision: 4,
+      runId: oldState.runId,
+      runRevision: oldState.runRevision,
+      capturedAt: 10,
+      checksum: oldChecksum,
+      data: oldData,
+    };
+    const journal = repository();
+    journal.getHead = vi.fn(async () => head);
+    journal.listCheckpoints = vi.fn(async () => []);
+    journal.putHead = vi.fn(async record => {
+      head = record;
+      return { stored: true as const };
+    });
+
+    let arbitration: SaveRecoveryDecision | null = null;
+    let replacementWritten: SaveBootstrapReplacement | null = null;
+    const deps = dependencies({
+      createFreshState: () => freshState,
+      readPrimary: () => mirrorData,
+      readMirrorMetadata: () => JSON.stringify({
+        version: 1,
+        persistenceRevision: 9,
+        capturedAt: 20,
+        checksum: mirrorChecksum,
+      }),
+      openRepository: vi.fn(async () => journal),
+      resolveSaveRecovery: vi.fn(async input => {
+        const decision = await resolveSaveRecovery(input);
+        arbitration = decision;
+        return decision;
+      }),
+      archiveCorruptEvidence: vi.fn(async () => ({ ok: true as const })),
+      resetRecovery: vi.fn(async (replacement, authorizeWrite) => productionResetRecovery(
+        replacement,
+        authorizeWrite,
+        { openRepository: async () => journal, now: () => 100 },
+      )),
+      replaceSave: vi.fn(async replacement => {
+        replacementWritten = replacement;
+        return { ok: true as const };
+      }),
+    });
+    const user = userEvent.setup();
+
+    render(
+      <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {result => <div data-testid="bootstrap-result">{result.maxDurablePersistenceRevision}</div>}
+      </SaveBootstrap>,
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Saved progress needs recovery' })).toBeTruthy();
+    expect(arbitration?.kind).toBe('recovery_required');
+    expect(arbitration?.kind === 'recovery_required' ? arbitration.maxDurablePersistenceRevision : null).toBe(9);
+
+    await user.click(screen.getByRole('button', { name: 'Start a new run' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm start a new run' }));
+
+    expect(await screen.findByTestId('bootstrap-result')).toBeTruthy();
+    expect(head.persistenceRevision).toBe(10);
+    expect(replacementWritten?.persistenceRevision).toBe(10);
+  });
+
   it('cancels the previous profile bootstrap and ignores its late result', async () => {
     const first = deferred<SaveRecoveryDecision>();
     const second = deferred<SaveRecoveryDecision>();

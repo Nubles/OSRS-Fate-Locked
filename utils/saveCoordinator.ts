@@ -59,6 +59,17 @@ const saveAuthorizationResult = (
   ? { stored: false, reason: authorization.reason }
   : { stored: true };
 
+type SaveFailureReason = NonNullable<SaveDurabilitySnapshot['failureReason']>;
+
+const failureReasonFromWrite = (
+  result: RecoveryWriteResult,
+): SaveFailureReason | undefined => {
+  if (result.stored === true) return undefined;
+  return result.reason === 'ownership_conflict'
+    ? 'ownership_conflict'
+    : 'storage_unavailable';
+};
+
 const checkpointFailure = (result: RecoveryWriteResult): BackupWriteResult => ({
   stored: false,
   reason: result.stored === false && result.reason === 'ownership_conflict'
@@ -124,7 +135,14 @@ type FlushOutcome = {
   journal: RecoveryWriteResult;
   primaryVerified: boolean;
   mirrorMetadataVerified: boolean;
+  failureReason?: SaveFailureReason;
   stale?: boolean;
+};
+
+type MirrorOutcome = {
+  primaryVerified: boolean;
+  mirrorMetadataVerified: boolean;
+  failureReason?: SaveFailureReason;
 };
 
 type PreparedFlush =
@@ -198,6 +216,7 @@ export const createSaveCoordinator = (
       snapshot.primary === next.primary
       && snapshot.recovery === next.recovery
       && snapshot.savedAt === next.savedAt
+      && snapshot.failureReason === next.failureReason
     ) return;
     snapshot = next;
     notify();
@@ -220,14 +239,18 @@ export const createSaveCoordinator = (
     capturedAt: number,
     checksum: string,
     candidate: StagedSnapshot | null,
-  ): { primaryVerified: boolean; mirrorMetadataVerified: boolean } => {
+  ): MirrorOutcome => {
     if (candidate !== null && !isCurrent(candidate)) {
       return { primaryVerified: false, mirrorMetadataVerified: false };
     }
 
     const authorization = options.authorizeWrite();
     if (isWriteFailure(authorization)) {
-      return { primaryVerified: false, mirrorMetadataVerified: false };
+      return {
+        primaryVerified: false,
+        mirrorMetadataVerified: false,
+        failureReason: authorization.reason,
+      };
     }
 
     const primary = writeAndVerify(options.storage, options.storageKey, data);
@@ -241,7 +264,11 @@ export const createSaveCoordinator = (
 
     const metadataAuthorization = options.authorizeWrite();
     if (isWriteFailure(metadataAuthorization)) {
-      return { primaryVerified: true, mirrorMetadataVerified: false };
+      return {
+        primaryVerified: true,
+        mirrorMetadataVerified: false,
+        failureReason: metadataAuthorization.reason,
+      };
     }
 
     const metadata: MirrorMetadata = {
@@ -324,10 +351,12 @@ export const createSaveCoordinator = (
       };
     }
     if (prepared.ok === false) {
+      const failureReason = failureReasonFromWrite(prepared.result);
       return {
         journal: prepared.result,
         primaryVerified: false,
         mirrorMetadataVerified: false,
+        ...(failureReason === undefined ? {} : { failureReason }),
       };
     }
 
@@ -360,6 +389,7 @@ export const createSaveCoordinator = (
         journal: saveAuthorizationResult(authorization),
         primaryVerified: false,
         mirrorMetadataVerified: false,
+        failureReason: authorization.reason,
       };
     }
 
@@ -426,10 +456,12 @@ export const createSaveCoordinator = (
       prepared.checksum,
       candidate,
     );
+    const failureReason = failureReasonFromWrite(journal) ?? mirrored.failureReason;
     return {
       journal,
       primaryVerified: mirrored.primaryVerified,
       mirrorMetadataVerified: mirrored.mirrorMetadataVerified,
+      ...(failureReason === undefined ? {} : { failureReason }),
     };
   };
 
@@ -474,6 +506,7 @@ export const createSaveCoordinator = (
         primary: 'saved',
         recovery: recoveryProtected ? 'protected' : 'degraded',
         savedAt,
+        ...(outcome.failureReason === undefined ? {} : { failureReason: outcome.failureReason }),
       });
       return;
     }
@@ -482,6 +515,7 @@ export const createSaveCoordinator = (
       primary: newerStateIsPending ? 'saving' : 'failed',
       recovery: 'degraded',
       savedAt: snapshot.savedAt,
+      ...(outcome.failureReason === undefined ? {} : { failureReason: outcome.failureReason }),
     });
   };
 

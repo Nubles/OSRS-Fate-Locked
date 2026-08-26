@@ -53,6 +53,8 @@ export interface SaveBootstrapReplacement {
   data: string;
   state: GameState;
   persistenceRevision: number;
+  /** Highest verified durable revision observed during startup arbitration. */
+  maxDurablePersistenceRevision?: number;
   capturedAt: number | null;
   checksum: string | null;
 }
@@ -201,10 +203,16 @@ const recoveryJournalFailure = (result: { stored: false; reason: string }): Reco
 const nextJournalRevision = (
   head: RecoveryHead | null,
   checkpoints: readonly RecoveryCheckpoint[],
+  maxDurablePersistenceRevision?: number,
 ): number => {
   let highest = head?.persistenceRevision ?? -1;
   for (const checkpoint of checkpoints) {
     if (checkpoint.persistenceRevision > highest) highest = checkpoint.persistenceRevision;
+  }
+  if (Number.isSafeInteger(maxDurablePersistenceRevision)
+    && maxDurablePersistenceRevision >= 0
+    && maxDurablePersistenceRevision > highest) {
+    highest = maxDurablePersistenceRevision;
   }
   return highest + 1;
 };
@@ -241,7 +249,11 @@ export const productionResetRecovery = async (
     if (afterChecksum !== null) return afterChecksum;
     const freshHead: RecoveryHead = {
       profileId: replacement.profileId,
-      persistenceRevision: nextJournalRevision(head, checkpoints),
+      persistenceRevision: nextJournalRevision(
+        head,
+        checkpoints,
+        replacement.maxDurablePersistenceRevision,
+      ),
       runId: replacement.state.runId,
       runRevision: replacement.state.runRevision,
       capturedAt: replacement.capturedAt ?? options.now?.() ?? Date.now(),
@@ -704,6 +716,7 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
                 data,
                 state,
                 persistenceRevision: 0,
+                maxDurablePersistenceRevision,
                 capturedAt: null,
                 checksum: null,
               };

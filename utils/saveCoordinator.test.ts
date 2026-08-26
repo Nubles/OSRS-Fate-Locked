@@ -244,6 +244,7 @@ describe('coalescing journal-first save coordinator', () => {
       primary: 'failed',
       recovery: 'degraded',
       savedAt: 2,
+      failureReason: 'storage_unavailable',
     });
   });
 
@@ -274,8 +275,43 @@ describe('coalescing journal-first save coordinator', () => {
     testHarness.coordinator.stage(save('blocked'));
     const snapshot = await testHarness.coordinator.flush();
 
-    expect(snapshot).toEqual({ primary: 'failed', recovery: 'degraded', savedAt: null });
+    expect(snapshot).toEqual({
+      primary: 'failed',
+      recovery: 'degraded',
+      savedAt: null,
+      failureReason: 'ownership_conflict',
+    });
     expect(testHarness.events).toEqual(['validate:blocked', 'hash:blocked']);
+  });
+
+  it('preserves a journal ownership failure after the lease is restored before classification', async () => {
+    let ownsWrite = true;
+    const authorize = () => ownsWrite
+      ? { ok: true as const }
+      : { ok: false as const, reason: 'ownership_conflict' as const };
+    const testHarness = harness({
+      mirrorResult: 'failure',
+      authorize,
+      journalResultFor: () => {
+        ownsWrite = false;
+        const result = authorize();
+        ownsWrite = true;
+        return result.ok
+          ? { stored: true as const }
+          : { stored: false as const, reason: result.reason };
+      },
+    });
+
+    const result = await testHarness.coordinator.writeReplacement(save('ownership-reason'), 'replacement');
+
+    expect(result).toEqual({
+      primary: 'failed',
+      recovery: 'degraded',
+      savedAt: null,
+      failureReason: 'ownership_conflict',
+    });
+    expect(testHarness.coordinator.getSnapshot()).toEqual(result);
+    expect(ownsWrite).toBe(true);
   });
 
   it('reports a journal-only success as a saved but degraded primary', async () => {
@@ -297,6 +333,7 @@ describe('coalescing journal-first save coordinator', () => {
       primary: 'saved',
       recovery: 'degraded',
       savedAt: 1_700_000_000_000,
+      failureReason: 'storage_unavailable',
     });
   });
 
@@ -311,6 +348,7 @@ describe('coalescing journal-first save coordinator', () => {
       primary: 'failed',
       recovery: 'degraded',
       savedAt: null,
+      failureReason: 'storage_unavailable',
     });
     testHarness.setJournalResult({ stored: true });
     testHarness.setMirrorResult('success');
