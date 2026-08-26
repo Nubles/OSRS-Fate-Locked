@@ -37,7 +37,7 @@ export const effectiveSaveDurability = (
   if (snapshot.primary === 'failed' && snapshot.failureReason === undefined && failureReason !== undefined) {
     return { ...snapshot, failureReason };
   }
-  if (saveStatus !== 'failed' || snapshot.primary !== 'saved') return snapshot;
+  if (saveStatus !== 'failed' || snapshot.primary === 'failed') return snapshot;
   return {
     ...snapshot,
     primary: 'failed',

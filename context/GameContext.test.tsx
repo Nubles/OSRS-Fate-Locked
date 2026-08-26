@@ -71,6 +71,7 @@ const fakeCoordinator = (
     replacementSnapshot?: SaveDurabilitySnapshot;
     restoreOwnershipAfterReplacement?: () => void;
     stageEvents?: string[];
+    stageToSaving?: boolean;
     checkpointGates?: Promise<void>[];
     checkpointResults?: BackupWriteResult[];
     checkpointThrows?: boolean[];
@@ -102,6 +103,10 @@ const fakeCoordinator = (
     stage: data => {
       staged = data;
       options.stageEvents?.push(`stage:${noteFromData(data)}`);
+      if (options.stageToSaving) {
+        snapshot = coordinatorSnapshot({ primary: 'saving', recovery: 'checking' });
+        notify();
+      }
     },
     flush: async () => {
       options.loseOwnershipOnFlush?.();
@@ -1339,6 +1344,27 @@ describe('ordinary save recovery', () => {
     expect(game.current().hasPendingChanges).toBe(true);
     expect(getPendingSave('profile')?.data).toContain('newest');
     expect(readStoredNote('profile', 'goal')).not.toBe('newest');
+  });
+
+  it('does not let a blocked edit staged as saving mask its failed save status', async () => {
+    seedForeignWriterLease('profile', 'tab-a');
+    const game = renderCoordinatorGame(
+      fakeCoordinator([], { stageToSaving: true }),
+      { ownerId: 'tab-b' },
+    );
+    await settleOwnership();
+    expect(game.current().saveOwnershipStatus).toBe('blocked');
+
+    act(() => game.current().saveNote('goal', 'blocked but staged'));
+    await act(async () => Promise.resolve());
+
+    expect(game.current().saveStatus).toBe('failed');
+    expect(game.current().saveDurability).toMatchObject({
+      primary: 'failed',
+      recovery: 'degraded',
+      failureReason: 'ownership_conflict',
+    });
+    expect(game.current().saveDurability.primary).not.toBe('saving');
   });
 
   it('stops a queued save after ownership changes before the debounce', async () => {

@@ -130,6 +130,22 @@ describe('SaveFailureBannerView', () => {
     expect(screen.getByRole('alert').textContent).toContain("Progress isn't being saved");
   });
 
+  it('keeps an actionable failure banner when a blocked edit is still staged as saving', () => {
+    render(
+      <SaveFailureBannerView
+        saveDurability={{ primary: 'saving', recovery: 'checking', savedAt: null }}
+        saveStatus="failed"
+        ownershipBlockReason="storage_unavailable"
+        retrySave={() => false}
+        exportBackup={() => ({ ok: true })}
+      />,
+    );
+
+    expect(screen.getByRole('alert').textContent).toContain("Progress isn't being saved");
+    expect(screen.getByRole('button', { name: 'Retry save' })).toBeTruthy();
+    expect(screen.queryByText('Saving…')).toBeNull();
+  });
+
   it('uses the durability failure reason when ownership state is stale', () => {
     const { rerender } = render(
       <SaveFailureBannerView

@@ -1700,7 +1700,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
         }
         : {}),
     }
-    : saveStatus === 'failed' && coordinatorDurability.primary === 'saved'
+    : saveStatus === 'failed' && coordinatorDurability.primary !== 'failed'
       ? {
         ...coordinatorDurability,
         primary: 'failed',
