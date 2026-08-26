@@ -3,7 +3,7 @@
 import 'fake-indexeddb/auto';
 import React from 'react';
 import { IDBObjectStore } from 'fake-indexeddb';
-import { act, cleanup, render } from '@testing-library/react';
+import { act, cleanup, render, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ProfileWriterLeaseOptions } from '../hooks/useProfileWriterLease';
 import type { GameState } from '../types';
@@ -1040,8 +1040,7 @@ describe('ordinary save recovery', () => {
       await Promise.resolve();
     });
     rendered.unmount();
-    await new Promise(resolve => setTimeout(resolve, 0));
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await waitFor(() => expect(close).toHaveBeenCalled(), { timeout: 1000 });
 
     expect(close).toHaveBeenCalled();
     close.mockRestore();
