@@ -4,6 +4,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DISCORD_INVITE_URL } from './constants';
+import { initialState } from './context/GameContext';
+import { checksumSave } from './utils/saveIntegrity';
+import { resolveSaveRecovery, type SaveRecoveryInput } from './utils/saveRecovery';
+import type { MirrorMetadata, RecoveryCheckpoint, RecoveryHead } from './utils/recoveryTypes';
 import {
   getPendingSave,
   resetPendingSavesForTest,
@@ -541,4 +545,158 @@ describe('App changelog lifecycle', () => {
     window.dispatchEvent(safeUnload);
     expect(safeUnload.defaultPrevented).toBe(false);
   }, 15_000);
+
+  it('arbitrates the startup compatibility matrix across legacy, journal, and corrupt evidence', async () => {
+    const profileId = 'startup-matrix-profile';
+    const runId = '123e4567-e89b-42d3-a456-426614174000';
+    const capturedAt = 1_752_000_000_000;
+    const defaults = {
+      ...structuredClone(initialState),
+      runId,
+      runRevision: 0,
+    };
+    const rawSave = ({
+      runRevision,
+      version = 4,
+      note,
+    }: {
+      runRevision: number;
+      version?: number;
+      note: string;
+    }): string => {
+      const state = {
+        ...structuredClone(initialState),
+        runId,
+        runRevision,
+        version,
+        userNotes: { recovery: note },
+      };
+      return JSON.stringify(state);
+    };
+    const record = async ({
+      persistenceRevision,
+      runRevision = persistenceRevision,
+      note,
+      checksum,
+    }: {
+      persistenceRevision: number;
+      runRevision?: number;
+      note: string;
+      checksum?: string;
+    }): Promise<RecoveryHead> => {
+      const data = rawSave({ runRevision, note });
+      return {
+        profileId,
+        persistenceRevision,
+        runId,
+        runRevision,
+        capturedAt,
+        checksum: checksum ?? await checksumSave(data),
+        data,
+      };
+    };
+    const mirrorMetadata = async (entry: RecoveryHead): Promise<string> => JSON.stringify({
+      version: 1,
+      persistenceRevision: entry.persistenceRevision,
+      capturedAt: entry.capturedAt,
+      checksum: await checksumSave(entry.data),
+    } satisfies MirrorMetadata);
+    const fixture = (overrides: Partial<SaveRecoveryInput> = {}): SaveRecoveryInput => ({
+      profileId,
+      pendingRaw: null,
+      primaryRaw: null,
+      mirrorMetadataRaw: null,
+      head: null,
+      checkpoints: [],
+      defaults,
+      ...overrides,
+    });
+
+    const legacy = rawSave({ runRevision: 1, note: 'legacy' });
+    await expect(resolveSaveRecovery(fixture({ primaryRaw: legacy }))).resolves.toMatchObject({
+      kind: 'ready',
+      source: 'mirror',
+      reason: 'legacy',
+      persistenceRevision: 0,
+      needsJournalImport: true,
+      maxDurablePersistenceRevision: 0,
+    });
+
+    const sidecarPrimary = await record({ persistenceRevision: 2, note: 'sidecar' });
+    await expect(resolveSaveRecovery(fixture({
+      primaryRaw: sidecarPrimary.data,
+      mirrorMetadataRaw: await mirrorMetadata(sidecarPrimary),
+    }))).resolves.toMatchObject({
+      kind: 'ready',
+      source: 'mirror',
+      reason: 'normal',
+      persistenceRevision: 2,
+      needsJournalImport: true,
+      maxDurablePersistenceRevision: 2,
+    });
+
+    const olderMirror = await record({ persistenceRevision: 2, note: 'older mirror' });
+    const newerHead = await record({ persistenceRevision: 4, note: 'newer head' });
+    await expect(resolveSaveRecovery(fixture({
+      primaryRaw: olderMirror.data,
+      mirrorMetadataRaw: await mirrorMetadata(olderMirror),
+      head: newerHead,
+    }))).resolves.toMatchObject({
+      kind: 'ready',
+      source: 'journal',
+      reason: 'interrupted_mirror',
+      persistenceRevision: 4,
+      needsJournalImport: false,
+      maxDurablePersistenceRevision: 4,
+    });
+
+    const newerMirror = await record({ persistenceRevision: 6, note: 'lifecycle mirror' });
+    const olderHead = await record({ persistenceRevision: 4, note: 'older head' });
+    await expect(resolveSaveRecovery(fixture({
+      primaryRaw: newerMirror.data,
+      mirrorMetadataRaw: await mirrorMetadata(newerMirror),
+      head: olderHead,
+    }))).resolves.toMatchObject({
+      kind: 'ready',
+      source: 'mirror',
+      reason: 'lifecycle_mirror',
+      persistenceRevision: 6,
+      needsJournalImport: true,
+      maxDurablePersistenceRevision: 6,
+    });
+
+    const safeCheckpoint: RecoveryCheckpoint = {
+      ...(await record({ persistenceRevision: 3, note: 'safe checkpoint' })),
+      reason: 'interval',
+    };
+    const corruptHead = await record({
+      persistenceRevision: 5,
+      note: 'corrupt head',
+      checksum: '0'.repeat(64),
+    });
+    await expect(resolveSaveRecovery(fixture({
+      primaryRaw: '{bad',
+      head: corruptHead,
+      checkpoints: [safeCheckpoint],
+    }))).resolves.toMatchObject({
+      kind: 'recovery_required',
+      cause: 'corrupt_primary',
+      maxDurablePersistenceRevision: 3,
+      candidates: [expect.objectContaining({
+        source: 'checkpoint',
+        persistenceRevision: 3,
+      })],
+    });
+
+    await expect(resolveSaveRecovery(fixture())).resolves.toEqual({
+      kind: 'empty',
+      maxDurablePersistenceRevision: 0,
+    });
+
+    const future = rawSave({ runRevision: 9, version: 99, note: 'future' });
+    await expect(resolveSaveRecovery(fixture({ primaryRaw: future }))).resolves.toEqual({
+      kind: 'unsupported',
+      rawCandidates: [future],
+    });
+  });
 });

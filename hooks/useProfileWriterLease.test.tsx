@@ -201,6 +201,39 @@ describe('useProfileWriterLease', () => {
     expect(lease.result.current.blockedReason).toBe('storage_unavailable');
   });
 
+  it('authorizes only the current owner after a second tab takes over', async () => {
+    const firstTab = renderHook(() => useProfileWriterLease('profile', {
+      storage,
+      ownerId: 'tab-a',
+      now: () => nowRef.current,
+    }));
+    await act(async () => vi.advanceTimersByTimeAsync(WRITER_LEASE_ARBITRATION_MS));
+    expect(firstTab.result.current.status).toBe('owner');
+
+    const secondTab = renderHook(() => useProfileWriterLease('profile', {
+      storage,
+      ownerId: 'tab-b',
+      now: () => nowRef.current,
+    }));
+    await act(async () => vi.advanceTimersByTimeAsync(WRITER_LEASE_ARBITRATION_MS));
+    expect(secondTab.result.current.status).toBe('blocked');
+
+    let tookOver!: boolean;
+    await act(async () => {
+      const takeover = secondTab.result.current.takeOver();
+      await vi.advanceTimersByTimeAsync(WRITER_LEASE_ARBITRATION_MS);
+      tookOver = await takeover;
+    });
+
+    expect(tookOver).toBe(true);
+    expect(secondTab.result.current.authorizeWrite()).toEqual({ ok: true });
+    expect(firstTab.result.current.authorizeWrite()).toEqual({
+      ok: false,
+      reason: 'ownership_conflict',
+    });
+    expect(firstTab.result.current.verify()).toBe(false);
+  });
+
   it('invalidates a pending takeover when a newer ownership check wins', async () => {
     const key = writerLeaseKey('profile');
     values.set(key, JSON.stringify({

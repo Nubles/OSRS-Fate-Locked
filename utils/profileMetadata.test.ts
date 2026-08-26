@@ -191,6 +191,8 @@ describe('profile metadata recovery planning', () => {
       ['FATE_PROFILE_alpha', 'valid:alpha'],
       ['FATE_PROFILE_zulu', 'valid:zulu'],
       ['FATE_PROFILE_alpha__backups', 'sidecar'],
+      ['FATE_PROFILE_alpha__mirrorMeta', 'sidecar'],
+      ['FATE_PROFILE_alpha__corruptArchive', 'sidecar'],
       ['FATE_PROFILE_alpha__writer', 'sidecar'],
       ['FATE_PROFILE_alpha__discord', 'sidecar'],
       ['FATE_PROFILE_alpha_misleading', 'not-a-profile'],
@@ -199,6 +201,31 @@ describe('profile metadata recovery planning', () => {
     ]);
 
     expect(discoverProfileSaveIds(storage)).toEqual(['alpha', 'zulu']);
+  });
+
+  it('never reconstructs recovery sidecars as base profiles', () => {
+    const result = resolveProfileMetadata(recoveryInput({
+      primary: null,
+      storage: recoveryStorage([
+        ['FATE_PROFILE_alpha__mirrorMeta', 'valid:mirror'],
+        ['FATE_PROFILE_alpha__corruptArchive', 'valid:archive'],
+        ['FATE_PROFILE_alpha', 'valid:alpha'],
+      ]),
+    }));
+
+    expect(result).toMatchObject({
+      mode: 'repair',
+      metadata: {
+        profiles: [{ id: 'alpha', name: 'Recovered Profile 1', createdAt: 1234 }],
+        activeProfileId: 'alpha',
+      },
+      repair: { cause: 'reconstructed' },
+      notice: { recoveredProfiles: 1, unreadableSaves: 0 },
+    });
+    expect(result.metadata.profiles.map(({ id }) => id)).not.toEqual(expect.arrayContaining([
+      'alpha__mirrorMeta',
+      'alpha__corruptArchive',
+    ]));
   });
 
   it('uses a valid primary without requesting a write', () => {

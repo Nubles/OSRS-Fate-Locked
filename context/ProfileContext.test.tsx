@@ -111,6 +111,31 @@ describe('ProfileProvider pending-save cleanup', () => {
     expect(current().profiles.map(profile => profile.id)).toEqual(['other']);
   });
 
+  it('deletes recovery sidecars with their profile and preserves other profile records', async () => {
+    const targetKey = profileBaseKey('target');
+    const otherKey = profileBaseKey('other');
+    values.set(`${targetKey}__mirrorMeta`, 'target-mirror');
+    values.set(`${targetKey}__corruptArchive`, 'target-archive');
+    values.set(`${otherKey}__mirrorMeta`, 'other-mirror');
+    values.set(`${otherKey}__corruptArchive`, 'other-archive');
+    values.set('recovery-journal:other:head', 'other-journal');
+    const current = await renderProfiles();
+
+    let deletion!: Promise<ProfileTransactionResult>;
+    act(() => { deletion = current().deleteProfile('target'); });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100);
+      await deletion;
+    });
+
+    expect(values.has(`${targetKey}__mirrorMeta`)).toBe(false);
+    expect(values.has(`${targetKey}__corruptArchive`)).toBe(false);
+    expect(values.get(`${otherKey}__mirrorMeta`)).toBe('other-mirror');
+    expect(values.get(`${otherKey}__corruptArchive`)).toBe('other-archive');
+    expect(values.get('recovery-journal:other:head')).toBe('other-journal');
+    expect(current().profiles.map(profile => profile.id)).toEqual(['other']);
+  });
+
   it('retains pending data when profile metadata cannot be saved', async () => {
     const targetKey = profileBaseKey('target');
     stagePendingSave(targetKey, 'newest');

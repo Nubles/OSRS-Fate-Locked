@@ -19,6 +19,20 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-08-25-crash-safe-saves',
+    title: 'Crash-Safe Saves',
+    date: '2026-08-25',
+    sections: {
+      added: [
+        'Progress now keeps a transactional local recovery journal with timed restore points.',
+      ],
+      fixed: [
+        'Corrupt or interrupted browser saves now stop for recovery instead of silently starting over.',
+        'Full browser storage now clears disposable caches and retries profile saves safely.',
+      ],
+    },
+  },
+  {
     id: '2026-08-22-runeproof-wave-one',
     title: 'RuneProof Begins',
     date: '2026-08-22',
