@@ -1146,12 +1146,17 @@ const ProfileEvictionBridge: React.FC<{ profileId: string }> = ({ profileId }) =
 /** Bridge reads profile context and passes storageKey to GameProvider.
  *  key={activeProfileId} forces a clean remount when switching profiles. */
 const GameProviderBridge: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { activeProfileId, storageKeyForActiveProfile } = useProfiles();
+  const {
+    activeProfileId,
+    metadataReadOnly,
+    storageKeyForActiveProfile,
+  } = useProfiles();
   return (
     <SaveBootstrap profileId={activeProfileId} storageKey={storageKeyForActiveProfile}>
       {bootstrap => (
         <GameProvider
           key={activeProfileId}
+          readOnly={metadataReadOnly}
           storageKey={storageKeyForActiveProfile}
           bootstrap={bootstrap}
         >

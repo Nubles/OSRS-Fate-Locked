@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { initialState } from '../context/GameContext';
 import type { RecoveryHead, RecoveryRepository } from '../utils/recoveryTypes';
+import type { SaveWriteAuthorization } from '../utils/profileWriterLease';
 import type { SaveRecoveryDecision } from '../utils/saveRecovery';
 import { resolveSaveRecovery } from '../utils/saveRecovery';
 import { checksumSave } from '../utils/saveIntegrity';
@@ -280,6 +281,67 @@ describe('SaveBootstrap', () => {
 
     expect(archiveCorruptEvidence).toHaveBeenCalledOnce();
     expect(replaceSave).toHaveBeenCalledOnce();
+  });
+
+  it('does not let a blocked recovery completion mutate after switching profiles', async () => {
+    const replacement = deferred<void>();
+    const writes: SaveBootstrapReplacement[] = [];
+    const recoveryDecision: Extract<SaveRecoveryDecision, { kind: 'recovery_required' }> = {
+      kind: 'recovery_required',
+      primaryRaw: '{"broken":true}',
+      candidates: [{
+        source: 'checkpoint',
+        data: 'alpha-recovery',
+        state: { ...initialState, runId: 'alpha-recovery' },
+        persistenceRevision: 3,
+        runId: 'alpha-recovery',
+        runRevision: 3,
+        capturedAt: 123,
+        checksum: 'a'.repeat(64),
+      }],
+      cause: 'corrupt_primary',
+      maxDurablePersistenceRevision: 3,
+    };
+    const resolveSaveRecovery = vi.fn(async ({ profileId }: { profileId: string }) => (
+      profileId === 'alpha'
+        ? recoveryDecision
+        : readyDecision('mirror', {
+          data: 'beta-ready',
+          state: { ...initialState, runId: 'beta-ready' },
+        })
+    ));
+    const replaceSave = vi.fn(async (
+      saveReplacement: SaveBootstrapReplacement,
+      authorizeWrite?: () => SaveWriteAuthorization,
+    ) => {
+      await replacement.promise;
+      if (authorizeWrite?.().ok) writes.push(saveReplacement);
+      return { ok: true as const };
+    });
+    const deps = dependencies({
+      resolveSaveRecovery,
+      archiveCorruptEvidence: vi.fn(async () => ({ ok: true as const })),
+      replaceSave,
+    });
+    const user = userEvent.setup();
+    const view = render(<ProfileHarness dependencies={deps} />);
+
+    expect(await screen.findByRole('heading', { name: 'Saved progress needs recovery' })).toBeTruthy();
+    const click = user.click(screen.getByRole('button', { name: 'Recover latest safe save' }));
+    await waitFor(() => expect(replaceSave).toHaveBeenCalledOnce());
+
+    await act(async () => {
+      view.rerender(<ProfileHarness dependencies={deps} profileId="beta" />);
+    });
+    expect((await screen.findByTestId('profile-result')).textContent).toContain('mirror');
+
+    replacement.resolve();
+    await act(async () => { await click; });
+
+    expect(writes).toEqual([]);
+    expect(replaceSave).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('heading', { name: 'Saved progress needs recovery' })).toBeNull();
+    expect(screen.getByTestId('profile-result').textContent).toContain('beta-ready');
   });
 
   it.each([

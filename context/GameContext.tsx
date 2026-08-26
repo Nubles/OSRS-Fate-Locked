@@ -1392,6 +1392,7 @@ type GameProviderProps = {
   leaseOptions?: ProfileWriterLeaseOptions;
   bootstrap?: SaveBootstrapResult;
   coordinator?: SaveCoordinator;
+  readOnly?: boolean;
 };
 
 const unavailableRecoveryRepository: RecoveryRepository = {
@@ -1491,6 +1492,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   leaseOptions,
   bootstrap,
   coordinator: suppliedCoordinator,
+  readOnly = false,
 }) => {
   const initialLoadWarningRef = useRef<string | null>(null);
   const persistedSnapshotRef = useRef<string | null>(null);
@@ -1606,6 +1608,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     if (profileEvictedRef.current) {
       return { ok: false, reason: 'ownership_conflict' };
     }
+    if (readOnly) {
+      return { ok: false, reason: 'ownership_conflict' };
+    }
     if (
       !takeoverFlushAuthorizedRef.current
       && (takeoverRequestedRef.current || saveOwnershipStatusRef.current !== 'owner')
@@ -1618,7 +1623,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       };
     }
     return authorizeOwnership();
-  }, [authorizeOwnership]);
+  }, [authorizeOwnership, readOnly]);
 
   const coordinatorRef = useRef<SaveCoordinator | null>(suppliedCoordinator ?? null);
   const recoveryRepositoryRef = useRef<RecoveryRepository | null>(null);

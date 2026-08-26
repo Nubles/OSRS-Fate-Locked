@@ -1,6 +1,11 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  IDBKeyRange as FakeIDBKeyRange,
+  IDBObjectStore,
+  indexedDB as fakeIndexedDB,
+} from 'fake-indexeddb';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DISCORD_INVITE_URL } from './constants';
@@ -205,6 +210,13 @@ describe('App changelog lifecycle', () => {
     storage.setItem(profileBaseKey(recoveredId), JSON.stringify(recoveredState));
     storage.setItem(`${profileBaseKey(recoveredId)}__discord`, JSON.stringify(recoveredState));
     storage.setItem(changelogStorageKey, latestChangelogId);
+    vi.stubGlobal('indexedDB', fakeIndexedDB);
+    vi.stubGlobal('IDBKeyRange', FakeIDBKeyRange);
+    const headCheckpointMetadataWrites = [
+      vi.spyOn(IDBObjectStore.prototype, 'put'),
+      vi.spyOn(IDBObjectStore.prototype, 'delete'),
+      vi.spyOn(IDBObjectStore.prototype, 'clear'),
+    ];
 
     render(<App />);
 
@@ -216,6 +228,8 @@ describe('App changelog lifecycle', () => {
     })).toBeTruthy();
     expect(screen.queryByText('Something went wrong')).toBeNull();
     expect(storage.getItem('FATE_PROFILES')).toBe(futureRaw);
+    await new Promise(resolve => setTimeout(resolve, 0));
+    for (const write of headCheckpointMetadataWrites) expect(write).not.toHaveBeenCalled();
   }, 15_000);
 
   it('uses the production eviction bridge before switching after a newer registry removes the active profile', async () => {

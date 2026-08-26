@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import 'fake-indexeddb/auto';
 import type { Profile, ProfileMetadata } from '../types';
 import {
   acquireProfileMetadataLock,
@@ -21,7 +22,8 @@ import {
   PROFILES_KEY,
   parseProfileMetadata,
 } from './profileMetadata';
-import { profileOwnedKeys } from './profileStorage';
+import { openRecoveryDatabase } from './recoveryDatabase';
+import type { RecoveryCheckpoint, RecoveryHead } from './recoveryTypes';
 
 type TestStorage = ProfileTransactionDependencies['storage'] & {
   values: Map<string, string>;
@@ -1131,19 +1133,28 @@ const profileOwnedRemovalCalls = (storage: TestStorage): string[] =>
   storage.calls.filter(call => alphaOwnedKeys.some(key => call === `remove:${key}`));
 
 describe('coordinated profile deletion', () => {
-  it('removes recovery sidecars only with their owning profile', async () => {
+  it('removes hard-coded recovery sidecars while preserving another profile\'s IndexedDB records', async () => {
     const current = deletableMetadata();
-    const ownedKeys = profileOwnedKeys('alpha');
+    const expectedOwnedKeys = [
+      'FATE_PROFILE_alpha',
+      'FATE_PROFILE_alpha__backups',
+      'FATE_PROFILE_alpha__exportNag',
+      'FATE_PROFILE_alpha__discord',
+      'FATE_PROFILE_alpha__discordCursor',
+      'fate_features_seen_v1_alpha',
+      'FATE_PROFILE_alpha__writer',
+      'FATE_PROFILE_alpha__mirrorMeta',
+      'FATE_PROFILE_alpha__corruptArchive',
+    ] as const;
     const unrelatedEntries = [
       ['FATE_PROFILE_beta', 'beta-save'],
       ['FATE_PROFILE_beta__mirrorMeta', 'beta-mirror'],
       ['FATE_PROFILE_beta__corruptArchive', 'beta-archive'],
       ['FATE_PROFILE_beta__backups', 'beta-backups'],
-      ['recovery-journal:beta:head', 'beta-journal-head'],
     ] as const;
     const storage = createStorage([
       [PROFILES_KEY, JSON.stringify(current)],
-      ...ownedKeys.map(key => [key, `alpha:${key}`] as const),
+      ...expectedOwnedKeys.map(key => [key, `alpha:${key}`] as const),
       ...unrelatedEntries,
     ]);
     const expected: ProfileMetadata = {
@@ -1153,22 +1164,60 @@ describe('coordinated profile deletion', () => {
       activeProfileId: 'beta',
     };
 
-    await expect(mutateProfileMetadata(createDependencies(storage), {
-      type: 'delete',
-      profileId: 'alpha',
-    })).resolves.toEqual({
-      ok: true,
-      metadata: expected,
-      notice: null,
-      deleteDetails: {
-        removedEntries: ownedKeys.length,
-        removalFailures: 0,
-        rollbackFailures: 0,
-      },
-    });
+    const databaseName = `task11-profile-delete-${Date.now()}-${Math.random()}`;
+    const repository = await openRecoveryDatabase({ databaseName, now: () => 1_000 });
+    const authorize = () => ({ ok: true as const });
+    const betaHead: RecoveryHead = {
+      profileId: 'beta',
+      persistenceRevision: 12,
+      runId: 'beta-run',
+      runRevision: 4,
+      capturedAt: 1_000,
+      checksum: 'beta-head-checksum',
+      data: 'beta-head-data',
+    };
+    const betaCheckpoint: RecoveryCheckpoint = {
+      ...betaHead,
+      persistenceRevision: 11,
+      checksum: 'beta-checkpoint-checksum',
+      data: 'beta-checkpoint-data',
+      reason: 'interval',
+    };
 
-    for (const key of ownedKeys) expect(storage.values.has(key)).toBe(false);
-    for (const [key, value] of unrelatedEntries) expect(storage.values.get(key)).toBe(value);
+    try {
+      await expect(repository.putHead(betaHead, authorize)).resolves.toEqual({ stored: true });
+      await expect(repository.putCheckpoint(betaCheckpoint, authorize)).resolves.toEqual({ stored: true });
+      await expect(repository.putMetadata(
+        'profile-beta-marker',
+        { profileId: 'beta', marker: 'survive-delete' },
+        authorize,
+      )).resolves.toEqual({ stored: true });
+
+      await expect(mutateProfileMetadata(createDependencies(storage), {
+        type: 'delete',
+        profileId: 'alpha',
+      })).resolves.toEqual({
+        ok: true,
+        metadata: expected,
+        notice: null,
+        deleteDetails: {
+          removedEntries: expectedOwnedKeys.length,
+          removalFailures: 0,
+          rollbackFailures: 0,
+        },
+      });
+
+      for (const key of expectedOwnedKeys) expect(storage.values.has(key)).toBe(false);
+      for (const [key, value] of unrelatedEntries) expect(storage.values.get(key)).toBe(value);
+      await expect(repository.getHead('beta')).resolves.toEqual(betaHead);
+      await expect(repository.listCheckpoints('beta')).resolves.toEqual([betaCheckpoint]);
+      await expect(repository.getMetadata('profile-beta-marker')).resolves.toEqual({
+        profileId: 'beta',
+        marker: 'survive-delete',
+      });
+    } finally {
+      repository.close();
+    }
   });
 
   it.each([
