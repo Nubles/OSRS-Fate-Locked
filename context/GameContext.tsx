@@ -18,7 +18,12 @@ import { UNLOCK_COST } from '../utils/gameEngine';
 import { canonicalAreaName, canonicalizeAreaUnlocks, visibleAreaUnlocks } from '../data/areaMapPolicy';
 import { drawFloat } from '../utils/seededRng';
 import { hashEntry, ensureChain } from '../utils/integrity';
-import { pushBackup, listBackups as readBackups, getBackupData, BackupMeta } from '../utils/backups';
+import {
+  getBackupDataById,
+  listBackups as readBackups,
+  pushBackup,
+  type BackupMeta,
+} from '../utils/backups';
 import {
   applyPreparedReplacement,
   applyValidatedReplacementAsync,
@@ -41,6 +46,8 @@ import type {
   SaveDurabilitySnapshot,
 } from '../utils/recoveryTypes';
 import { createSaveCoordinator, type SaveCoordinator } from '../utils/saveCoordinator';
+import { migrateLegacyBackupRing } from '../utils/legacyBackupMigration';
+import { profileBackupKey } from '../utils/profileStorage';
 import { showToast } from '../utils/toast';
 import { LEGACY_FATE_COMPENSATION_ID } from '../utils/fateCompensation';
 import { normalizeAccountName } from '../services/fateEventProtocol';
@@ -90,6 +97,7 @@ import type { SaveBootstrapResult } from '../components/SaveBootstrap';
 
 // --- Types ---
 const SAVE_DEBOUNCE_MS = 500;
+const RECOVERY_CHECKPOINT_INTERVAL_MS = 5 * 60 * 1000;
 
 export const writeReplacementNow = (
   storage: Pick<Storage, 'setItem'>,
@@ -213,9 +221,9 @@ interface GameContextType extends GameState {
   /** Snapshot the current run before something overwrites it. */
   createBackup: (reason: string) => BackupWriteResult;
   /** Backups for the active profile, newest first. */
-  listBackups: () => BackupMeta[];
-  /** Restore a backup by timestamp (snapshots the current run first). */
-  restoreBackup: (ts: number) => Promise<ImportResult>;
+  listBackups: () => Promise<BackupMeta[]>;
+  /** Restore a backup by stable id (snapshots the current run first). */
+  restoreBackup: (id: string | number) => Promise<ImportResult>;
   togglePin: (id: string) => void;
   saveNote: (id: string, text: string) => void;
   completeQuest: (id: string, x?: number, y?: number, attestation?: CompletionAttestation) => CompletionResult;
@@ -1604,6 +1612,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   }, [authorizeOwnership]);
 
   const coordinatorRef = useRef<SaveCoordinator | null>(suppliedCoordinator ?? null);
+  const recoveryRepositoryRef = useRef<RecoveryRepository | null>(null);
+  const profileId = profileIdFromStorageKey(storageKey);
   if (
     coordinatorRef.current === null
     && (suppliedCoordinator !== undefined || bootstrap !== undefined)
@@ -1611,8 +1621,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     const repository = typeof indexedDB === 'undefined'
       ? unavailableRecoveryRepository
       : createDeferredRecoveryRepository(() => openRecoveryDatabase());
+    recoveryRepositoryRef.current = repository;
     coordinatorRef.current = suppliedCoordinator ?? createSaveCoordinator({
-      profileId: profileIdFromStorageKey(storageKey),
+      profileId,
       storageKey,
       storage: coordinatorStorage(),
       repository,
@@ -1681,6 +1692,36 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     coordinator?.stage(data);
   }, [coordinator, storageKey]);
 
+  const pushOwnedBackup = useCallback((data: string, reason: string): BackupWriteResult =>
+    pushBackup(storageKey, data, reason, authorizeOwnedWrite), [authorizeOwnedWrite, storageKey]);
+
+  const intervalCheckpointRef = useRef<{ data: string; capturedAt: number } | null>(null);
+  const intervalCheckpointInFlightRef = useRef<string | null>(null);
+  const sessionStartCapturedAtRef = useRef(Date.now());
+  const maybeCreateIntervalCheckpoint = useCallback(async (data: string): Promise<void> => {
+    if (coordinator === null || data.length === 0) return;
+    const now = Date.now();
+    const previous = intervalCheckpointRef.current;
+    const elapsed = now - (previous?.capturedAt ?? sessionStartCapturedAtRef.current);
+    if (elapsed < RECOVERY_CHECKPOINT_INTERVAL_MS || previous?.data === data) return;
+    if (intervalCheckpointInFlightRef.current === data) return;
+
+    intervalCheckpointInFlightRef.current = data;
+    try {
+      const result = await coordinator.createCheckpoint(data, 'interval');
+      // The old ring remains a best-effort compatibility path. Do not let a
+      // ring write make a failed journal checkpoint look durable.
+      pushOwnedBackup(data, 'Interval checkpoint');
+      if (result.stored === true) {
+        intervalCheckpointRef.current = { data, capturedAt: now };
+      }
+    } finally {
+      if (intervalCheckpointInFlightRef.current === data) {
+        intervalCheckpointInFlightRef.current = null;
+      }
+    }
+  }, [coordinator, pushOwnedBackup]);
+
   const settleCoordinatedFlush = useCallback(async (): Promise<SaveDurabilitySnapshot> => {
     if (coordinator === null) {
       return {
@@ -1698,6 +1739,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     if (result.primary === 'saved' && (pending === null || pending.data === current)) {
       persistedSnapshotRef.current = pending?.data ?? current;
       discardPendingSave(storageKey);
+      await maybeCreateIntervalCheckpoint(current);
     } else if (result.primary === 'failed') {
       blockPendingSave(
         storageKey,
@@ -1705,7 +1747,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       );
     }
     return result;
-  }, [coordinator, legacySaveStatus, liveCoordinatorFailureReason, serializeCurrent, storageKey]);
+  }, [coordinator, legacySaveStatus, liveCoordinatorFailureReason, maybeCreateIntervalCheckpoint, serializeCurrent, storageKey]);
 
   const stageForProfileEviction = useCallback((): void => {
     profileEvictedRef.current = true;
@@ -1929,6 +1971,43 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     stageCoordinatedSnapshot,
   ]);
 
+  const legacyMigrationRunningRef = useRef(false);
+  useEffect(() => {
+    const repository = recoveryRepositoryRef.current;
+    if (
+      coordinator === null
+      || repository === null
+      || saveOwnershipStatus !== 'owner'
+      || legacyMigrationRunningRef.current
+    ) return;
+    legacyMigrationRunningRef.current = true;
+    let active = true;
+    void (async () => {
+      try {
+        await coordinator.whenIdle();
+        if (!active || profileEvictedRef.current) return;
+        let rawRing: string | null = null;
+        try {
+          rawRing = localStorage.getItem(profileBackupKey(storageKey));
+        } catch {
+          // IndexedDB migration remains safe when the compatibility ring is
+          // unavailable; no marker is written for missing bytes.
+        }
+        if (!active || rawRing === null) return;
+        await migrateLegacyBackupRing({
+          profileId,
+          rawRing,
+          repository,
+          authorizeWrite: authorizeOwnedWrite,
+          defaults: createFreshState(),
+        });
+      } finally {
+        legacyMigrationRunningRef.current = false;
+      }
+    })();
+    return () => { active = false; };
+  }, [authorizeOwnedWrite, coordinator, profileId, saveOwnershipStatus, storageKey]);
+
   const retrySave = useCallback((): Promise<boolean> => {
     const staged = serializeCurrent();
     if (coordinator !== null) {
@@ -1967,9 +2046,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     }
   }, [coordinator, flushCurrentSave, serializeCurrent, settleCoordinatedFlush, stageCoordinatedSnapshot, storageKey, takeOverOwnership]);
 
-  const pushOwnedBackup = useCallback((data: string, reason: string): BackupWriteResult =>
-    pushBackup(storageKey, data, reason, authorizeOwnedWrite), [authorizeOwnedWrite, storageKey]);
-
   // One automatic snapshot per session (per profile mount), so "the run was
   // fine yesterday" is always recoverable from the ring — not just the
   // pre-import/pre-reset moments. pushBackup no-ops when nothing changed
@@ -1983,10 +2059,34 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       return;
     }
     const result = pushOwnedBackup(sessionStartSnapshot.data, 'Session start');
-    if (result.stored === true || result.reason !== 'ownership_conflict') {
-      sessionBackupFinishedRef.current = true;
+    if (coordinator === null) {
+      if (result.stored === true || result.reason !== 'ownership_conflict') {
+        sessionBackupFinishedRef.current = true;
+      }
+      return;
     }
-  }, [pushOwnedBackup, saveOwnershipStatus]);
+
+    let active = true;
+    void coordinator.createCheckpoint(sessionStartSnapshot.data, 'session-start')
+      .then(checkpoint => {
+        if (!active) return;
+        if (
+          checkpoint.stored === true
+          || checkpoint.reason !== 'ownership_conflict'
+          || result.stored === true
+          || result.reason !== 'ownership_conflict'
+        ) {
+          sessionBackupFinishedRef.current = true;
+        }
+      })
+      .catch(() => {
+        if (!active && result.stored === false && result.reason === 'ownership_conflict') return;
+        if (result.stored === true || result.reason !== 'ownership_conflict') {
+          sessionBackupFinishedRef.current = true;
+        }
+      });
+    return () => { active = false; };
+  }, [coordinator, pushOwnedBackup, saveOwnershipStatus]);
 
   // --- Actions ---
 
@@ -2228,8 +2328,19 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     data: string,
     reason: RecoveryCheckpointReason,
   ): Promise<BackupWriteResult> => {
-    if (coordinator === null) return pushOwnedBackup(data, reason);
-    return coordinator.createCheckpoint(data, reason);
+    const compatibilityReason = reason === 'session-start'
+      ? 'Session start'
+      : reason === 'pre-replacement'
+        ? 'Before replacement'
+        : reason === 'legacy-import'
+          ? 'Legacy import'
+          : 'Interval checkpoint';
+    if (coordinator === null) return pushOwnedBackup(data, compatibilityReason);
+    const checkpoint = await coordinator.createCheckpoint(data, reason);
+    // Keep the old eight-entry ring as a best-effort rollback path, while
+    // preserving the journal result as the source of durability truth.
+    pushOwnedBackup(data, compatibilityReason);
+    return checkpoint;
   }, [coordinator, pushOwnedBackup]);
 
   const importSave = useCallback(async (data: unknown): Promise<ImportResult> => {
@@ -2262,12 +2373,27 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   const createBackup = useCallback((reason: string): BackupWriteResult =>
     pushOwnedBackup(serializeCurrent(), reason), [pushOwnedBackup, serializeCurrent]);
 
-  const listBackups = useCallback(() => readBackups(storageKey), [storageKey]);
+  const listBackups = useCallback(async (): Promise<BackupMeta[]> => {
+    const repository = recoveryRepositoryRef.current;
+    if (repository === null) return readBackups(storageKey);
+    return readBackups(storageKey, { profileId, repository });
+  }, [profileId, storageKey]);
 
-  const restoreBackup = useCallback(async (ts: number): Promise<ImportResult> => {
+  const restoreBackup = useCallback(async (id: string | number): Promise<ImportResult> => {
     const authorization = authorizeOwnedWrite();
     if (authorization.ok === false) return saveAuthorizationFailureResult(authorization.reason);
-    const data = getBackupData(storageKey, ts);
+    let data: string | null = await getBackupDataById(storageKey, id);
+    const repository = recoveryRepositoryRef.current;
+    if (data === null && typeof id === 'string' && repository !== null) {
+      try {
+        const checkpoints = await repository.listCheckpoints(profileId);
+        data = checkpoints.find(checkpoint => (
+          `checkpoint:${profileId}:${checkpoint.persistenceRevision}` === id
+        ))?.data ?? null;
+      } catch {
+        data = null;
+      }
+    }
     if (data === null) {
       return { ok: false, code: 'invalid_json', message: 'Backup was not found.' };
     }
@@ -2292,7 +2418,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       replace: replaceState,
     });
     return isCurrent() ? result : replacementStaleResult();
-  }, [authorizeOwnedWrite, beginReplacement, coordinator, createCoordinatedCheckpoint, pushOwnedBackup, replaceState, storageKey, writeCoordinatedReplacement, writeReplacement]);
+  }, [authorizeOwnedWrite, beginReplacement, coordinator, createCoordinatedCheckpoint, profileId, replaceState, storageKey, writeCoordinatedReplacement, writeReplacement]);
 
   const resetGame = useCallback(async (): Promise<void> => {
     // Auto-snapshot so an accidental reset is recoverable.

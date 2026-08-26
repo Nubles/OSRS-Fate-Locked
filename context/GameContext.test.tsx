@@ -634,6 +634,61 @@ describe('ordinary save recovery', () => {
     expect(events).toContain('checkpoint:pre-replacement');
   });
 
+  it('creates changed interval checkpoints only after five minutes of durable head saves', async () => {
+    vi.setSystemTime(0);
+    const events: string[] = [];
+    const coordinator = fakeCoordinator(events);
+    const game = renderCoordinatorGame(coordinator, { ownerId: 'tab-a' });
+    await settleOwnership();
+
+    act(() => game.current().saveNote('goal', 'first'));
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+    expect(events.filter(event => event === 'checkpoint:interval')).toHaveLength(0);
+
+    await act(async () => vi.advanceTimersByTimeAsync(300_000));
+    act(() => game.current().saveNote('goal', 'second'));
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+    expect(events.filter(event => event === 'checkpoint:interval')).toHaveLength(1);
+
+    await act(async () => vi.advanceTimersByTimeAsync(300_000));
+    await act(async () => { await game.current().retrySave(); });
+    expect(events.filter(event => event === 'checkpoint:interval')).toHaveLength(1);
+
+    await act(async () => vi.advanceTimersByTimeAsync(300_000));
+    act(() => game.current().saveNote('goal', 'third'));
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+    expect(events.filter(event => event === 'checkpoint:interval')).toHaveLength(2);
+  });
+
+  it('records the captured session start in both recovery stores', async () => {
+    const historical = gameReducerForTest(
+      { ...structuredClone(initialState), lastEvent: null },
+      {
+        type: 'ROLL_RESULT',
+        payload: {
+          success: false,
+          omni: false,
+          pity: false,
+          roll: 99,
+          baseThreshold: 50,
+          threshold: 50,
+          source: 'Session-start fixture',
+          failureFate: 1,
+        },
+      },
+    );
+    storage.values.set('profile', serializeCurrent(historical));
+    const events: string[] = [];
+    const game = renderCoordinatorGame(fakeCoordinator(events), { ownerId: 'tab-a' });
+    await settleOwnership();
+    await act(async () => { await Promise.resolve(); });
+
+    expect(events).toContain('checkpoint:session-start');
+    expect(JSON.parse(storage.values.get(profileBackupKey('profile')) ?? '[]'))
+      .toEqual(expect.arrayContaining([expect.objectContaining({ reason: 'Session start' })]));
+    expect(game.current().userNotes.goal).toBeUndefined();
+  });
+
   it('does not flush an ordinary coordinator save while another tab owns the profile', async () => {
     seedForeignWriterLease('profile', 'tab-a');
     const events: string[] = [];

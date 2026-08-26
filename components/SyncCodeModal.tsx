@@ -93,11 +93,13 @@ const VERDICT_UI: Record<RunVerdict, { label: string; sub: string; cls: string; 
 export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) => {
   const { getExportData, importSave, listBackups, restoreBackup } = useGame();
   const closeTimerRef = useRef<number | null>(null);
+  const closedRef = useRef(false);
   const closeModal = useCallback(() => {
     if (closeTimerRef.current !== null) {
       window.clearTimeout(closeTimerRef.current);
       closeTimerRef.current = null;
     }
+    closedRef.current = true;
     onClose();
   }, [onClose]);
   useEffect(() => () => {
@@ -189,6 +191,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
     if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
     closeTimerRef.current = window.setTimeout(() => {
       closeTimerRef.current = null;
+      closedRef.current = true;
       onClose();
     }, delayMs);
   }, [closeModal, onClose]);
@@ -286,9 +289,26 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
 
   // ── Backups ───────────────────────────────────────────────────────────────
   const [backups, setBackups] = useState<BackupMeta[]>([]);
+  const [backupsLoading, setBackupsLoading] = useState(false);
   const [backupError, setBackupError] = useState<string | null>(null);
   useEffect(() => {
-    if (tab === 'BACKUPS') setBackups(listBackups());
+    if (tab !== 'BACKUPS') return undefined;
+    let active = true;
+    setBackupsLoading(true);
+    setBackupError(null);
+    void listBackups()
+      .then(result => {
+        if (!active || closedRef.current) return;
+        setBackups(result);
+        setBackupsLoading(false);
+      })
+      .catch(() => {
+        if (!active || closedRef.current) return;
+        setBackups([]);
+        setBackupsLoading(false);
+        setBackupError('Backups could not be loaded.');
+      });
+    return () => { active = false; };
   }, [tab, listBackups]);
 
   const handleRestore = useCallback(async (b: BackupMeta) => {
@@ -297,7 +317,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
       return;
     }
 
-    const decision = importUiDecision(await restoreBackup(b.ts));
+    const decision = importUiDecision(await restoreBackup(b.id));
     if (acceptedRef.current) return;
     setBackupError(decision.error);
     if (decision.success) {
@@ -548,7 +568,12 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
                   <p className="text-[11px] leading-relaxed">{status}</p>
                 </div>
               )}
-              {backups.length === 0 ? (
+              {backupsLoading ? (
+                <div role="status" className="rounded-lg border border-white/5 bg-[#1a1a1a] p-6 text-center">
+                  <Loader2 size={20} className="mx-auto text-cyan-400 mb-2 animate-spin" />
+                  <p className="text-[11px] text-gray-500">Loading backups…</p>
+                </div>
+              ) : backups.length === 0 ? (
                 <div className="rounded-lg border border-white/5 bg-[#1a1a1a] p-6 text-center">
                   <History size={20} className="mx-auto text-gray-600 mb-2" />
                   <p className="text-[11px] text-gray-500">No backups yet.</p>
@@ -560,7 +585,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
                 <div className="space-y-2">
                   {backups.map((b) => (
                     <div
-                      key={b.ts}
+                      key={b.id}
                       className="flex items-center gap-3 rounded-lg border border-white/5 bg-[#1a1a1a] px-3 py-2.5"
                     >
                       <div className="flex-1 min-w-0">
