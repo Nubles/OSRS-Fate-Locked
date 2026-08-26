@@ -222,6 +222,92 @@ export interface RecoveryResetOptions {
   now?: () => number;
 }
 
+export interface RecoveryCommitOptions extends RecoveryResetOptions {
+  replaceSave?: (
+    replacement: SaveBootstrapReplacement,
+    authorizeWrite?: () => SaveWriteAuthorization,
+  ) => RecoveryActionResult | Promise<RecoveryActionResult>;
+  isCurrentRequest?: () => boolean;
+}
+
+export const productionRecoverSave = async (
+  replacement: SaveBootstrapReplacement,
+  authorizeWrite?: () => SaveWriteAuthorization,
+  options: RecoveryCommitOptions = {},
+): Promise<RecoveryActionResult> => {
+  if (authorizeWrite === undefined) {
+    return { ok: false, message: 'Recovery writer ownership could not be verified.' };
+  }
+  const isCurrentRequest = options.isCurrentRequest ?? (() => true);
+  const staleRequest = (): RecoveryActionResult => ({
+    ok: false,
+    message: 'This profile is no longer active.',
+  });
+  let repository: RecoveryRepository | null = null;
+  try {
+    if (!isCurrentRequest()) return staleRequest();
+    const beforeOpen = checkWriteAuthorization(authorizeWrite);
+    if (beforeOpen !== null) return beforeOpen;
+    repository = await (options.openRepository?.() ?? openProductionRepository());
+    if (!isCurrentRequest()) return staleRequest();
+    const afterOpen = checkWriteAuthorization(authorizeWrite);
+    if (afterOpen !== null) return afterOpen;
+    const [head, checkpoints] = await Promise.all([
+      repository.getHead(replacement.profileId),
+      repository.listCheckpoints(replacement.profileId),
+    ]);
+    if (!isCurrentRequest()) return staleRequest();
+    const afterRead = checkWriteAuthorization(authorizeWrite);
+    if (afterRead !== null) return afterRead;
+    const checksum = replacement.checksum ?? await checksumSave(replacement.data);
+    if (!isCurrentRequest()) return staleRequest();
+    const afterChecksum = checkWriteAuthorization(authorizeWrite);
+    if (afterChecksum !== null) return afterChecksum;
+    const capturedAt = replacement.capturedAt ?? options.now?.() ?? Date.now();
+    const persistenceRevision = nextJournalRevision(
+      head,
+      checkpoints,
+      replacement.maxDurablePersistenceRevision,
+    );
+    const recoveredHead: RecoveryHead = {
+      profileId: replacement.profileId,
+      persistenceRevision,
+      runId: replacement.state.runId,
+      runRevision: replacement.state.runRevision,
+      capturedAt,
+      checksum,
+      data: replacement.data,
+    };
+    const headResult = await repository.putHead(recoveredHead, authorizeWrite);
+    if (headResult.stored === false) return recoveryJournalFailure(headResult);
+    if (!isCurrentRequest()) return staleRequest();
+    const afterHead = checkWriteAuthorization(authorizeWrite);
+    if (afterHead !== null) return afterHead;
+    const mirrorResult = await (options.replaceSave ?? productionReplaceSave)(
+      {
+        ...replacement,
+        persistenceRevision,
+        capturedAt,
+        checksum,
+      },
+      authorizeWrite,
+    );
+    if (mirrorResult && 'ok' in mirrorResult && mirrorResult.ok === false) return mirrorResult;
+    if (!isCurrentRequest()) return staleRequest();
+    const afterMirror = checkWriteAuthorization(authorizeWrite);
+    if (afterMirror !== null) return afterMirror;
+    return { ok: true, persistenceRevision };
+  } catch {
+    return { ok: false, message: 'The recovered save could not be committed.' };
+  } finally {
+    try {
+      repository?.close();
+    } catch {
+      // Closing an already-aborted recovery connection is harmless at startup.
+    }
+  }
+};
+
 export const productionResetRecovery = async (
   replacement: SaveBootstrapReplacement,
   authorizeWrite?: () => SaveWriteAuthorization,
@@ -682,26 +768,37 @@ export const SaveBootstrap: React.FC<SaveBootstrapProps> = ({
                 data: candidate.data,
                 state: candidate.state,
                 persistenceRevision: candidate.persistenceRevision,
+                maxDurablePersistenceRevision,
                 capturedAt: candidate.capturedAt,
                 checksum: candidate.checksum,
               };
               const beforeReplace = checkWriteAuthorization(authorizeWrite);
               if (beforeReplace !== null) return beforeReplace;
-              const result = await replaceSave(replacement, authorizeWrite);
+              const result = await productionRecoverSave(replacement, authorizeWrite, {
+                openRepository: () => dependencies.openRepository(profileId),
+                replaceSave,
+                isCurrentRequest,
+              });
               if (result && 'ok' in result && result.ok === false) return result;
               if (!isCurrentRequest()) return { ok: false, message: 'This profile is no longer active.' };
               const afterReplace = checkWriteAuthorization(authorizeWrite);
               if (afterReplace !== null) return afterReplace;
+              const persistenceRevision = result && 'ok' in result
+                ? result.persistenceRevision ?? candidate.persistenceRevision
+                : candidate.persistenceRevision;
               setView({
                 identity,
                 phase: 'ready',
                 result: {
                   initialState: candidate.state,
                   initialData: candidate.data,
-                  persistenceRevision: candidate.persistenceRevision,
-                  maxDurablePersistenceRevision,
+                  persistenceRevision,
+                  maxDurablePersistenceRevision: Math.max(
+                    maxDurablePersistenceRevision,
+                    persistenceRevision,
+                  ),
                   source: 'recovery',
-                  needsJournalImport: true,
+                  needsJournalImport: false,
                 },
               });
               return { ok: true };

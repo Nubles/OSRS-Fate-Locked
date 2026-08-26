@@ -283,6 +283,97 @@ describe('SaveBootstrap', () => {
     expect(replaceSave).toHaveBeenCalledOnce();
   });
 
+  it('keeps a confirmed older checkpoint after immediate termination and reload', async () => {
+    const recoveredState = {
+      ...initialState,
+      userNotes: { recovery: 'confirmed older checkpoint' },
+    };
+    const recoveredData = JSON.stringify(recoveredState);
+    const recoveredChecksum = await checksumSave(recoveredData);
+    const formerNewerState = {
+      ...initialState,
+      userNotes: { recovery: 'former newer head' },
+    };
+    const formerNewerData = JSON.stringify(formerNewerState);
+    const formerNewerChecksum = await checksumSave(formerNewerData);
+    let head: RecoveryHead = {
+      profileId: 'alpha',
+      persistenceRevision: 8,
+      runId: formerNewerState.runId,
+      runRevision: formerNewerState.runRevision,
+      capturedAt: 80,
+      checksum: formerNewerChecksum,
+      data: formerNewerData,
+    };
+    const journal = repository();
+    journal.getHead = vi.fn(async () => head);
+    journal.putHead = vi.fn(async record => {
+      head = record;
+      return { stored: true as const };
+    });
+    journal.listCheckpoints = vi.fn(async () => []);
+    const values = new Map<string, string>();
+    const recoveryDecision: Extract<SaveRecoveryDecision, { kind: 'recovery_required' }> = {
+      kind: 'recovery_required',
+      primaryRaw: '{bad',
+      candidates: [{
+        source: 'checkpoint',
+        data: recoveredData,
+        state: recoveredState,
+        persistenceRevision: 3,
+        runId: recoveredState.runId,
+        runRevision: recoveredState.runRevision,
+        capturedAt: 30,
+        checksum: recoveredChecksum,
+      }],
+      cause: 'corrupt_primary',
+      maxDurablePersistenceRevision: 8,
+    };
+    let arbitrationCount = 0;
+    const deps = dependencies({
+      readPrimary: storageKey => values.get(storageKey) ?? null,
+      readMirrorMetadata: storageKey => values.get(profileMirrorMetadataKey(storageKey)) ?? null,
+      openRepository: vi.fn(async () => journal),
+      resolveSaveRecovery: vi.fn(async input => {
+        arbitrationCount += 1;
+        return arbitrationCount === 1
+          ? recoveryDecision
+          : resolveSaveRecovery(input);
+      }),
+      archiveCorruptEvidence: vi.fn(async () => ({ ok: true as const })),
+      replaceSave: vi.fn(async replacement => {
+        values.set(replacement.storageKey, replacement.data);
+        values.set(profileMirrorMetadataKey(replacement.storageKey), JSON.stringify({
+          version: 1,
+          persistenceRevision: replacement.persistenceRevision,
+          capturedAt: replacement.capturedAt,
+          checksum: replacement.checksum,
+        }));
+        return { ok: true as const };
+      }),
+    });
+    const user = userEvent.setup();
+
+    render(
+      <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {result => <div data-testid="bootstrap-result">{result.initialData}</div>}
+      </SaveBootstrap>,
+    );
+    await user.click(await screen.findByRole('button', { name: 'Recover latest safe save' }));
+    expect((await screen.findByTestId('bootstrap-result')).textContent).toBe(recoveredData);
+
+    cleanup();
+    render(
+      <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {result => <div data-testid="bootstrap-result">{result.initialData}</div>}
+      </SaveBootstrap>,
+    );
+
+    expect((await screen.findByTestId('bootstrap-result')).textContent).toBe(recoveredData);
+    expect(head.persistenceRevision).toBe(9);
+    expect(head.data).toBe(recoveredData);
+  });
+
   it('does not let a blocked recovery completion mutate after switching profiles', async () => {
     const replacement = deferred<void>();
     const writes: SaveBootstrapReplacement[] = [];
@@ -345,9 +436,9 @@ describe('SaveBootstrap', () => {
   });
 
   it.each([
-    ['recovery', 'Recover latest safe save'],
-    ['fresh', 'Start a new run'],
-  ] as const)('retains the maximum durable revision after %s selection', async (kind, actionLabel) => {
+    ['recovery', 'Recover latest safe save', '8'],
+    ['fresh', 'Start a new run', '7'],
+  ] as const)('retains the maximum durable revision after %s selection', async (kind, actionLabel, expectedRevision) => {
     const archiveCorruptEvidence = vi.fn(async () => ({ ok: true as const }));
     const replaceSave = vi.fn(async () => ({ ok: true as const }));
     const decision: Extract<SaveRecoveryDecision, { kind: 'recovery_required' }> = {
@@ -385,7 +476,7 @@ describe('SaveBootstrap', () => {
       await user.click(screen.getByRole('button', { name: 'Confirm start a new run' }));
     }
 
-    expect((await screen.findByTestId('bootstrap-result')).textContent).toBe('7');
+    expect((await screen.findByTestId('bootstrap-result')).textContent).toBe(expectedRevision);
   });
 
   it('keeps read-only export available in a non-owner tab while blocking mutations', async () => {
