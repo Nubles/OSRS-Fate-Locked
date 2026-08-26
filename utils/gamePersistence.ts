@@ -8,7 +8,10 @@ import {
 import type { SaveWriteAuthorizationReason } from './profileWriterLease';
 import type { RecoveryCheckpointReason, SaveDurabilitySnapshot } from './recoveryTypes';
 
-export type ImportErrorCode = SaveErrorCode | 'storage_unavailable' | 'ownership_conflict';
+export type ImportErrorCode = SaveErrorCode
+  | 'storage_unavailable'
+  | 'ownership_conflict'
+  | 'stale_replacement';
 
 export type ImportResult =
   | { ok: true; warnings: SaveWarning[] }
@@ -124,6 +127,8 @@ type AsyncReplacementCallbacks = {
     reason: string,
   ) => Promise<SaveDurabilitySnapshot>;
   replace: (state: GameState) => void;
+  /** Return false when a newer edit, replacement, profile, or unmount won. */
+  isCurrent?: () => boolean;
 };
 
 const STORAGE_WARNING: SaveWarning = {
@@ -135,6 +140,12 @@ const replacementStorageFailure = (): ImportResult => ({
   ok: false,
   code: 'storage_unavailable',
   message: 'The replacement run could not be saved. Your current run is unchanged.',
+});
+
+export const replacementStaleResult = (): ImportResult => ({
+  ok: false,
+  code: 'stale_replacement',
+  message: 'The replacement was superseded by a newer change. Your current run is unchanged.',
 });
 
 export const saveAuthorizationFailureResult = (
@@ -189,19 +200,36 @@ export const applyValidatedReplacementAsync = async (
 ): Promise<ImportResult> => {
   if (prepared.ok === false) return prepared;
 
+  const isCurrent = (): boolean => {
+    try {
+      return options.isCurrent?.() ?? true;
+    } catch {
+      return false;
+    }
+  };
+  if (!isCurrent()) return replacementStaleResult();
+
+  // Capture exact bytes before crossing an async boundary. The guard supplied
+  // by the provider also checks that these bytes still describe the active
+  // profile and mounted component when the durable replacement settles.
+  const currentData = serializeCurrent(options.current);
+  const replacementData = serializeCurrent(prepared.state);
+  if (!isCurrent()) return replacementStaleResult();
+
   let backup: BackupWriteResult;
   try {
     backup = await options.createCheckpoint(
-      serializeCurrent(options.current),
+      currentData,
       'pre-replacement',
     );
   } catch {
     backup = { stored: false, reason: 'storage_unavailable' };
   }
+  if (!isCurrent()) return replacementStaleResult();
   let durability: SaveDurabilitySnapshot;
   try {
     durability = await options.writeReplacement(
-      serializeCurrent(prepared.state),
+      replacementData,
       'replacement',
     );
   } catch (error) {
@@ -211,6 +239,7 @@ export const applyValidatedReplacementAsync = async (
     return replacementStorageFailure();
   }
 
+  if (!isCurrent()) return replacementStaleResult();
   if (durability.primary !== 'saved') return replacementStorageFailure();
   options.replace(prepared.state);
 

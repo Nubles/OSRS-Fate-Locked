@@ -49,6 +49,8 @@ export type SaveRecoveryDecision =
       data: string;
       state: GameState;
       persistenceRevision: number;
+      /** Highest verified durable journal/mirror/checkpoint revision at startup. */
+      maxDurablePersistenceRevision?: number;
       needsJournalImport: boolean;
     }
   | {
@@ -252,6 +254,7 @@ const readyDecision = (
   candidate: ValidatedRecoveryCandidate,
   reason: 'normal' | 'interrupted_mirror' | 'lifecycle_mirror' | 'legacy',
   needsJournalImport: boolean,
+  maxDurablePersistenceRevision?: number,
 ): SaveRecoveryDecision => ({
   kind: 'ready',
   source: candidate.source === 'checkpoint' ? 'journal' : candidate.source,
@@ -259,6 +262,9 @@ const readyDecision = (
   data: candidate.data,
   state: candidate.state,
   persistenceRevision: candidate.persistenceRevision,
+  ...(maxDurablePersistenceRevision === undefined
+    ? {}
+    : { maxDurablePersistenceRevision }),
   needsJournalImport,
 });
 
@@ -366,9 +372,22 @@ export const resolveSaveRecovery = async (
   const runIds = new Set(candidates.map(candidate => candidate.runId));
   if (runIds.size > 1) return recoveryRequired(input, candidates, 'conflicting_runs');
 
+  const maxDurablePersistenceRevision = Math.max(
+    head?.persistenceRevision ?? 0,
+    primary?.persistenceRevision ?? 0,
+    ...checkpoints.map(candidate => candidate.persistenceRevision),
+  );
+
   // A current-lifetime staged write is the only candidate allowed to outrank
   // a durable revision without a persistence sequence.
-  if (pending !== null) return readyDecision(pending, 'normal', true);
+  if (pending !== null) {
+    return readyDecision(
+      pending,
+      'normal',
+      true,
+      maxDurablePersistenceRevision,
+    );
+  }
 
   const durableCandidates = candidates.filter(candidate => candidate.source !== 'pending');
   if (primary === null) {

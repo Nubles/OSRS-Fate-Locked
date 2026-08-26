@@ -160,6 +160,27 @@ describe('transactional replacement', () => {
     expect(events).toEqual([]);
   });
 
+  it('does not replace memory when a newer replacement wins after the durable write', async () => {
+    let current = true;
+    const replace = vi.fn();
+    const result = await applyValidatedReplacementAsync(
+      prepareReplacement(cloneState({ keys: 9 }), cloneState({ keys: 3 }), initialState),
+      {
+        current: cloneState({ keys: 3 }),
+        createCheckpoint: async () => ({ stored: true }),
+        writeReplacement: async () => {
+          current = false;
+          return { primary: 'saved', recovery: 'protected', savedAt: 1 };
+        },
+        replace,
+        isCurrent: () => current,
+      },
+    );
+
+    expect(result).toMatchObject({ ok: false, code: 'stale_replacement' });
+    expect(replace).not.toHaveBeenCalled();
+  });
+
   it('keeps the accepted replacement and warns when only the checkpoint fails', async () => {
     const events: string[] = [];
     const result = await applyValidatedReplacementAsync(

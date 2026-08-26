@@ -329,7 +329,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
       if (activeFileReaderRef.current === reader) activeFileReaderRef.current = null;
     };
 
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       if (!isCurrent()) {
         release();
         clearInput();
@@ -349,7 +349,9 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
         }
         if (!isCurrent()) return;
 
-        const decision = importUiDecision(importSave(decoded.value));
+        const result = await importSave(decoded.value);
+        if (!isCurrent()) return;
+        const decision = importUiDecision(result);
         if (decision.error) {
           showToast(decision.error);
           return;
@@ -565,7 +567,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                            <Radio size={13} /> Discord notifications
                         </button>
                         <div className="my-1 border-t border-white/10" />
-                        <button onClick={() => { setShowUtilMenu(false); if(window.confirm("Are you sure you want to reset ALL progress? This cannot be undone.")) resetGame(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-red-300/90 hover:bg-red-900/20 hover:text-red-200">
+                        <button onClick={() => { setShowUtilMenu(false); if(window.confirm("Are you sure you want to reset ALL progress? This cannot be undone.")) void resetGame(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-red-300/90 hover:bg-red-900/20 hover:text-red-200">
                            <RotateCcw size={13} /> Reset all progress
                         </button>
                      </div>

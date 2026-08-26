@@ -145,6 +145,7 @@ describe('pure startup save recovery arbitration', () => {
       reason: 'normal',
       data: pending,
       needsJournalImport: true,
+      maxDurablePersistenceRevision: 4,
     });
   });
 

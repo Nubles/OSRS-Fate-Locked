@@ -172,6 +172,7 @@ export const createSaveCoordinator = (
   let pending: StagedSnapshot | null = null;
   let lastAttemptData: string | null = null;
   let changeToken = 0;
+  let replacementToken = 0;
   let inFlight: Promise<SaveDurabilitySnapshot> | null = null;
   let disposed = false;
   let snapshot: SaveDurabilitySnapshot = {
@@ -201,6 +202,12 @@ export const createSaveCoordinator = (
     snapshot = next;
     notify();
   };
+
+  const failedSnapshot = (): SaveDurabilitySnapshot => ({
+    primary: 'failed',
+    recovery: 'degraded',
+    savedAt: snapshot.savedAt,
+  });
 
   const isCurrent = (candidate: StagedSnapshot): boolean => (
     changeToken === candidate.token
@@ -308,6 +315,14 @@ export const createSaveCoordinator = (
     await Promise.resolve();
     const checksumWasImmediate = validationHash.settledBeforeYield();
     const prepared = await validationHash.promise;
+    if (disposed) {
+      return {
+        journal: unavailableWrite(),
+        primaryVerified: false,
+        mirrorMetadataVerified: false,
+        stale: true,
+      };
+    }
     if (prepared.ok === false) {
       return {
         journal: prepared.result,
@@ -395,6 +410,15 @@ export const createSaveCoordinator = (
       journal = unavailableWrite();
     }
 
+    if (disposed) {
+      return {
+        journal,
+        primaryVerified: false,
+        mirrorMetadataVerified: false,
+        stale: true,
+      };
+    }
+
     const mirrored = mirror(
       candidate.data,
       persistenceRevision,
@@ -477,10 +501,12 @@ export const createSaveCoordinator = (
     let operation!: Promise<SaveDurabilitySnapshot>;
     operation = runFlush(candidate)
       .then(outcome => {
+        if (disposed) return failedSnapshot();
         applyOutcome(candidate, outcome);
         return { ...snapshot };
       })
       .catch(() => {
+        if (disposed) return failedSnapshot();
         applyOutcome(candidate, {
           journal: unavailableWrite(),
           primaryVerified: false,
@@ -515,17 +541,18 @@ export const createSaveCoordinator = (
   };
 
   const flush = (): Promise<SaveDurabilitySnapshot> => {
-    if (disposed) return Promise.resolve({ ...snapshot });
+    if (disposed) return Promise.resolve(failedSnapshot());
     if (inFlight !== null) return inFlight;
     if (pending === null) return Promise.resolve({ ...snapshot });
     return startFlush() ?? Promise.resolve({ ...snapshot });
   };
 
   const retry = async (): Promise<SaveDurabilitySnapshot> => {
-    if (disposed) return { ...snapshot };
+    if (disposed) return failedSnapshot();
     if (inFlight !== null) {
       await inFlight;
       await whenIdle();
+      if (disposed) return failedSnapshot();
       return { ...snapshot };
     }
     if (pending === null) {
@@ -577,9 +604,19 @@ export const createSaveCoordinator = (
     data: string,
     _reason: string,
   ): Promise<SaveDurabilitySnapshot> => {
+    if (disposed) return failedSnapshot();
+    const token = ++replacementToken;
     stage(data);
+    const stagedChangeToken = changeToken;
     await flush();
     await whenIdle();
+    if (
+      disposed
+      || replacementToken !== token
+      || changeToken !== stagedChangeToken
+      || lastAttemptData !== data
+      || (pending !== null && pending.data !== data)
+    ) return failedSnapshot();
     return { ...snapshot };
   };
 
@@ -630,6 +667,8 @@ export const createSaveCoordinator = (
 
   const dispose = (): void => {
     disposed = true;
+    changeToken += 1;
+    replacementToken += 1;
     listeners.clear();
     if (inFlight === null) settleIdle();
   };

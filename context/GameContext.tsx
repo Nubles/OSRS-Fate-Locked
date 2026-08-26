@@ -24,6 +24,7 @@ import {
   applyValidatedReplacementAsync,
   applyValidatedReplacement,
   prepareReplacement,
+  replacementStaleResult,
   serializeCurrent as serializeGameState,
   SaveAuthorizationError,
   SaveOwnershipConflictError,
@@ -207,14 +208,14 @@ interface GameContextType extends GameState {
    * Visual-only randomness (particles, animation jitter) is exempt.
    */
   nextFloat: (purpose: string, index?: number) => number;
-  importSave: (data: unknown) => ImportResult;
-  resetGame: () => void;
+  importSave: (data: unknown) => Promise<ImportResult>;
+  resetGame: () => Promise<void>;
   /** Snapshot the current run before something overwrites it. */
   createBackup: (reason: string) => BackupWriteResult;
   /** Backups for the active profile, newest first. */
   listBackups: () => BackupMeta[];
   /** Restore a backup by timestamp (snapshots the current run first). */
-  restoreBackup: (ts: number) => ImportResult;
+  restoreBackup: (ts: number) => Promise<ImportResult>;
   togglePin: (id: string) => void;
   saveNote: (id: string, text: string) => void;
   completeQuest: (id: string, x?: number, y?: number, attestation?: CompletionAttestation) => CompletionResult;
@@ -1552,6 +1553,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   const takeoverFlushAuthorizedRef = useRef(false);
   const profileEvictedRef = useRef(false);
   const mountedRef = useRef(false);
+  const replacementGenerationRef = useRef(0);
+  const stateMutationRef = useRef(0);
   const [legacySaveStatus, setSaveStatus] = useState<SaveStatus>(() => getSaveStatus(storageKey));
   useSyncExternalStore(
     subscribeToPendingSaveChanges,
@@ -1617,7 +1620,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       validate: data => parseAndMigrateSave(data, createFreshState()),
       checksum: checksumSave,
       now: Date.now,
-      initialPersistenceRevision: bootstrap?.persistenceRevision ?? 0,
+      initialPersistenceRevision: bootstrap?.maxDurablePersistenceRevision
+        ?? bootstrap?.persistenceRevision
+        ?? 0,
     });
   }
   const coordinator = coordinatorRef.current;
@@ -1658,7 +1663,18 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   );
   const saveStatus: SaveStatus = coordinator === null
     ? legacySaveStatus
-    : saveDurability.primary;
+    : saveOwnershipBlockReason === 'storage_unavailable'
+      || saveOwnershipStatus === 'blocked'
+      ? 'failed'
+      : saveDurability.primary;
+
+  const liveCoordinatorFailureReason = useCallback((): 'storage_unavailable' | 'ownership_conflict' => {
+    if (profileEvictedRef.current) return 'ownership_conflict';
+    // Re-read the lease at the point of failure. The render snapshot can be
+    // one tick behind a pagehide/storage event that changed the owner.
+    const authorization = authorizeOwnership();
+    return authorization.ok === false ? authorization.reason : 'storage_unavailable';
+  }, [authorizeOwnership]);
 
   const stageCoordinatedSnapshot = useCallback((data: string): void => {
     stagePendingSave(storageKey, data);
@@ -1683,17 +1699,13 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       persistedSnapshotRef.current = pending?.data ?? current;
       discardPendingSave(storageKey);
     } else if (result.primary === 'failed') {
-      const pendingReason = saveOwnershipBlockReasonRef.current === 'storage_unavailable'
-        || saveOwnershipStatusRef.current === 'owner'
-        ? 'storage_unavailable'
-        : 'ownership_conflict';
       blockPendingSave(
         storageKey,
-        pendingReason,
+        liveCoordinatorFailureReason(),
       );
     }
     return result;
-  }, [coordinator, legacySaveStatus, serializeCurrent, storageKey]);
+  }, [coordinator, legacySaveStatus, liveCoordinatorFailureReason, serializeCurrent, storageKey]);
 
   const stageForProfileEviction = useCallback((): void => {
     profileEvictedRef.current = true;
@@ -1845,10 +1857,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       if (mirrored && durability.primary === 'saved') {
         persistedSnapshotRef.current = snapshot;
         discardPendingSave(storageKey);
-        releaseOwnership();
       } else {
         stagePendingSave(storageKey, snapshot);
       }
+      if (mirrored) releaseOwnership();
       return;
     }
     const flushed = getPendingSave(storageKey) !== null
@@ -1973,6 +1985,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
 
   const commitAction = useCallback((action: TransitionAction) => {
     const transition = prepareGameTransition(stateRef.current, action);
+    stateMutationRef.current += 1;
     stateRef.current = transition.state;
     dispatch(transition.commit);
     return transition.state;
@@ -2102,6 +2115,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   const toggleAdvisors = useCallback(() => commitAction({ type: 'TOGGLE_ADVISORS' }), [commitAction]);
   const toggleRevealAll = useCallback(() => commitAction({ type: 'TOGGLE_REVEAL_ALL' }), [commitAction]);
   const replaceState = useCallback((replacement: GameState) => {
+    stateMutationRef.current += 1;
     stateRef.current = { ...replacement, lastEvent: null };
     dispatch({ type: 'LOAD_SAVE', payload: replacement });
   }, []);
@@ -2148,12 +2162,30 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     setSaveStatus('saved');
   }, [authorizeOwnedWrite, storageKey]);
 
+  const beginReplacement = useCallback((): (() => boolean) => {
+    const generation = ++replacementGenerationRef.current;
+    const mutation = stateMutationRef.current;
+    const expectedCurrent = serializeCurrent();
+    return () => mountedRef.current
+      && replacementGenerationRef.current === generation
+      && stateMutationRef.current === mutation
+      && serializeCurrent() === expectedCurrent;
+  }, [serializeCurrent]);
+
   const writeCoordinatedReplacement = useCallback(async (
     data: string,
     reason: string,
+    isCurrent: () => boolean = () => true,
   ): Promise<SaveDurabilitySnapshot> => {
+    const failed = (savedAt: number | null = null): SaveDurabilitySnapshot => ({
+      primary: 'failed',
+      recovery: 'degraded',
+      savedAt,
+    });
+    if (!isCurrent()) return failed();
     if (coordinator === null) {
       writeReplacement(data);
+      if (!isCurrent()) return failed(Date.now());
       return {
         primary: 'saved',
         recovery: 'degraded',
@@ -2165,14 +2197,15 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     await coordinator.whenIdle();
     coordinatorSnapshotRef.current = coordinator.getSnapshot();
     const settled = coordinatorSnapshotRef.current;
+    if (!isCurrent()) return failed(settled.savedAt);
     if (settled.primary === 'saved') {
       persistedSnapshotRef.current = data;
       discardPendingSave(storageKey);
     } else {
-      blockPendingSave(storageKey, 'storage_unavailable');
+      blockPendingSave(storageKey, liveCoordinatorFailureReason());
     }
     return settled;
-  }, [coordinator, stageCoordinatedSnapshot, storageKey, writeReplacement]);
+  }, [coordinator, liveCoordinatorFailureReason, stageCoordinatedSnapshot, storageKey, writeReplacement]);
 
   const createCoordinatedCheckpoint = useCallback(async (
     data: string,
@@ -2182,87 +2215,96 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     return coordinator.createCheckpoint(data, reason);
   }, [coordinator, pushOwnedBackup]);
 
-  const importSave = useCallback((data: unknown): ImportResult => {
+  const importSave = useCallback(async (data: unknown): Promise<ImportResult> => {
     const authorization = authorizeOwnedWrite();
     if (authorization.ok === false) return saveAuthorizationFailureResult(authorization.reason);
+    const isCurrent = beginReplacement();
     if (coordinator !== null) {
-      const result = applyValidatedReplacementAsync(
+      return applyValidatedReplacementAsync(
         prepareReplacement(data, stateRef.current, createFreshState()),
         {
           current: stateRef.current,
           createCheckpoint: createCoordinatedCheckpoint,
-          writeReplacement: writeCoordinatedReplacement,
+          writeReplacement: (replacementData, reason) =>
+            writeCoordinatedReplacement(replacementData, reason, isCurrent),
           replace: replaceState,
+          isCurrent,
         },
       );
-      return result as unknown as ImportResult;
     }
-    return applyPreparedReplacement(data, {
+    const result = applyPreparedReplacement(data, {
       current: stateRef.current,
       defaults: createFreshState(),
       writeBackup: current => pushOwnedBackup(current, 'Before import'),
       writeReplacement,
       replace: replaceState,
     });
-  }, [authorizeOwnedWrite, coordinator, createCoordinatedCheckpoint, pushOwnedBackup, replaceState, writeCoordinatedReplacement, writeReplacement]);
+    return isCurrent() ? result : replacementStaleResult();
+  }, [authorizeOwnedWrite, beginReplacement, coordinator, createCoordinatedCheckpoint, pushOwnedBackup, replaceState, writeCoordinatedReplacement, writeReplacement]);
 
   const createBackup = useCallback((reason: string): BackupWriteResult =>
     pushOwnedBackup(serializeCurrent(), reason), [pushOwnedBackup, serializeCurrent]);
 
   const listBackups = useCallback(() => readBackups(storageKey), [storageKey]);
 
-  const restoreBackup = useCallback((ts: number): ImportResult => {
+  const restoreBackup = useCallback(async (ts: number): Promise<ImportResult> => {
     const authorization = authorizeOwnedWrite();
     if (authorization.ok === false) return saveAuthorizationFailureResult(authorization.reason);
     const data = getBackupData(storageKey, ts);
     if (data === null) {
       return { ok: false, code: 'invalid_json', message: 'Backup was not found.' };
     }
+    const isCurrent = beginReplacement();
     if (coordinator !== null) {
-      const result = applyValidatedReplacementAsync(
+      return applyValidatedReplacementAsync(
         parseAndMigrateSave(data, createFreshState()),
         {
           current: stateRef.current,
           createCheckpoint: createCoordinatedCheckpoint,
-          writeReplacement: writeCoordinatedReplacement,
+          writeReplacement: (replacementData, reason) =>
+            writeCoordinatedReplacement(replacementData, reason, isCurrent),
           replace: replaceState,
+          isCurrent,
         },
       );
-      return result as unknown as ImportResult;
     }
-    return applyValidatedReplacement(parseAndMigrateSave(data, createFreshState()), {
+    const result = applyValidatedReplacement(parseAndMigrateSave(data, createFreshState()), {
       current: stateRef.current,
       writeBackup: current => pushOwnedBackup(current, 'Before restore'),
       writeReplacement,
       replace: replaceState,
     });
-  }, [authorizeOwnedWrite, coordinator, createCoordinatedCheckpoint, pushOwnedBackup, replaceState, storageKey, writeCoordinatedReplacement, writeReplacement]);
+    return isCurrent() ? result : replacementStaleResult();
+  }, [authorizeOwnedWrite, beginReplacement, coordinator, createCoordinatedCheckpoint, pushOwnedBackup, replaceState, storageKey, writeCoordinatedReplacement, writeReplacement]);
 
-  const resetGame = useCallback(() => {
+  const resetGame = useCallback(async (): Promise<void> => {
     // Auto-snapshot so an accidental reset is recoverable.
+    const isCurrent = beginReplacement();
     if (coordinator !== null) {
       const replacement = createFreshState();
-      return (async () => {
-        const backup = await createCoordinatedCheckpoint(
-          serializeCurrent(),
-          'pre-replacement',
-        );
-        const durability = await writeCoordinatedReplacement(
-          serializeGameState(replacement),
-          'reset',
-        );
-        if (durability.primary === 'saved') replaceState(replacement);
-        if (
-          backup.stored === false
-          && backup.reason === 'storage_unavailable'
-          && durability.primary === 'saved'
-        ) setSaveStatus('saved');
-      })();
+      const backup = await createCoordinatedCheckpoint(
+        serializeCurrent(),
+        'pre-replacement',
+      );
+      if (!isCurrent()) return;
+      const durability = await writeCoordinatedReplacement(
+        serializeGameState(replacement),
+        'reset',
+        isCurrent,
+      );
+      if (!isCurrent()) return;
+      if (durability.primary === 'saved') replaceState(replacement);
+      if (
+        backup.stored === false
+        && backup.reason === 'storage_unavailable'
+        && durability.primary === 'saved'
+      ) setSaveStatus('saved');
       return;
     }
+    if (!isCurrent()) return;
     pushOwnedBackup(serializeCurrent(), 'Before reset');
     commitAction({ type: 'RESET' });
-  }, [coordinator, createCoordinatedCheckpoint, pushOwnedBackup, replaceState, serializeCurrent, setSaveStatus, writeCoordinatedReplacement]);
+  }, [beginReplacement, commitAction, coordinator, createCoordinatedCheckpoint, pushOwnedBackup, replaceState, serializeCurrent, setSaveStatus, writeCoordinatedReplacement]);
   const togglePin = useCallback((id: string) => commitAction({ type: 'TOGGLE_PIN', payload: id }), [commitAction]);
   const saveNote = useCallback((id: string, text: string) =>
     commitAction({ type: 'UPDATE_NOTE', payload: { id, text } }), [commitAction]);

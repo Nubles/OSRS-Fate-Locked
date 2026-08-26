@@ -417,4 +417,40 @@ describe('coalescing journal-first save coordinator', () => {
       savedAt: null,
     });
   });
+
+  it('does not report an in-flight replacement as saved after disposal', async () => {
+    const gate = deferred<void>();
+    const testHarness = harness({ journalGate: gate });
+    testHarness.coordinator.stage(save('before-dispose'));
+    const firstFlush = testHarness.coordinator.flush();
+    const replacement = testHarness.coordinator.writeReplacement(save('replacement'), 'reset');
+
+    testHarness.coordinator.dispose();
+    gate.resolve();
+
+    await firstFlush;
+    await expect(replacement).resolves.toMatchObject({
+      primary: 'failed',
+      recovery: 'degraded',
+    });
+  });
+
+  it('does not claim a replacement durable after a newer staged edit wins', async () => {
+    const gate = deferred<void>();
+    const testHarness = harness({ journalGate: gate });
+    testHarness.coordinator.stage(save('before-replacement'));
+    const firstFlush = testHarness.coordinator.flush();
+    const replacement = testHarness.coordinator.writeReplacement(save('replacement'), 'import');
+
+    testHarness.coordinator.stage(save('newer-edit'));
+    gate.resolve();
+
+    await firstFlush;
+    await expect(replacement).resolves.toMatchObject({
+      primary: 'failed',
+      recovery: 'degraded',
+    });
+    await testHarness.coordinator.whenIdle();
+    expect(testHarness.writtenNotes()).toEqual(['before-replacement', 'newer-edit']);
+  });
 });

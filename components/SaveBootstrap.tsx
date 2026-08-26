@@ -41,6 +41,8 @@ export interface SaveBootstrapResult {
   initialState: GameState;
   initialData: string | null;
   persistenceRevision: number;
+  /** Highest verified durable journal/mirror/checkpoint revision at startup. */
+  maxDurablePersistenceRevision?: number;
   source: 'empty' | 'pending' | 'mirror' | 'journal' | 'recovery';
   needsJournalImport: boolean;
 }
@@ -460,6 +462,7 @@ const decisionResult = (
       initialState: makeFreshState(),
       initialData: null,
       persistenceRevision: 0,
+      maxDurablePersistenceRevision: 0,
       source: 'empty',
       needsJournalImport: false,
     };
@@ -469,6 +472,8 @@ const decisionResult = (
     initialState: decision.state,
     initialData: decision.data,
     persistenceRevision: decision.persistenceRevision,
+    maxDurablePersistenceRevision: decision.maxDurablePersistenceRevision
+      ?? decision.persistenceRevision,
     source: decision.source,
     needsJournalImport: decision.needsJournalImport,
   };

@@ -235,7 +235,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialImportCode]);
 
-  const handleImport = useCallback(() => {
+  const handleImport = useCallback(async () => {
     if (acceptedRef.current) return;
     if (!candidateMatchesSource(decoded, inputRef.current)) {
       verifyRequestRef.current += 1;
@@ -256,7 +256,12 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
       return;
     }
 
-    const decision = importUiDecision(importSave(decoded.value));
+    const result = await importSave(decoded.value);
+    if (
+      acceptedRef.current
+      || !candidateMatchesSource(decoded, inputRef.current)
+    ) return;
+    const decision = importUiDecision(result);
     setError(decision.error);
     if (decision.success) {
       const acceptedMessage = decision.warning
@@ -286,13 +291,14 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
     if (tab === 'BACKUPS') setBackups(listBackups());
   }, [tab, listBackups]);
 
-  const handleRestore = useCallback((b: BackupMeta) => {
+  const handleRestore = useCallback(async (b: BackupMeta) => {
     if (acceptedRef.current) return;
     if (!window.confirm(`Restore this backup (${b.summary})? It will OVERWRITE the current profile's save.`)) {
       return;
     }
 
-    const decision = importUiDecision(restoreBackup(b.ts));
+    const decision = importUiDecision(await restoreBackup(b.ts));
+    if (acceptedRef.current) return;
     setBackupError(decision.error);
     if (decision.success) {
       const acceptedMessage = decision.warning

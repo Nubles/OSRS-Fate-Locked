@@ -75,7 +75,7 @@ export const TestSuiteRunner: React.FC<TestSuiteRunnerProps> = ({ onComplete }) 
 
         case 1: // Reset Game
           addLog("Wiping Timeline (Reset)...");
-          game.resetGame();
+          await game.resetGame();
           timeout = window.setTimeout(() => setStep(2), 600);
           break;
 
@@ -90,7 +90,7 @@ export const TestSuiteRunner: React.FC<TestSuiteRunnerProps> = ({ onComplete }) 
               addLog('State Injection Failed: current state is unavailable.', 'error');
               break;
             }
-            const imported = game.importSave({
+            const imported = await game.importSave({
               ...currentState,
               keys: 10,
               fatePoints: 49,
@@ -165,7 +165,7 @@ export const TestSuiteRunner: React.FC<TestSuiteRunnerProps> = ({ onComplete }) 
               addLog("Injecting Fate for Rituals...");
               const currentState = readVisibleState();
               const imported = currentState
-                ? game.importSave({ ...currentState, fatePoints: 50 })
+                ? await game.importSave({ ...currentState, fatePoints: 50 })
                 : { ok: false as const, message: 'Current state is unavailable.' };
               if (imported.ok === false) {
                 updateLastLog('error');
@@ -196,9 +196,9 @@ export const TestSuiteRunner: React.FC<TestSuiteRunnerProps> = ({ onComplete }) 
                updateLastLog('success');
                addLog("Ritual Effects Confirmed.");
                
-               addLog("Restoring User Timeline...");
-               const restored = backupRef.current
-                 ? game.importSave(backupRef.current)
+              addLog("Restoring User Timeline...");
+              const restored = backupRef.current
+                 ? await game.importSave(backupRef.current)
                  : { ok: false as const, message: 'Diagnostic backup is unavailable.' };
                if (restored.ok === false) {
                  updateLastLog('error');
