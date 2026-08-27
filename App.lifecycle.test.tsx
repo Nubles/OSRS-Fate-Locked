@@ -292,10 +292,22 @@ describe('App changelog lifecycle', () => {
     expect(screen.queryByText('Something went wrong')).toBeNull();
   }, 15_000);
 
-  it('opens a supported recovered run read-only without rewriting future metadata', async () => {
+  it('opens a supported recovered run read-only without deleting owned keys or writing IndexedDB', async () => {
     const recoveredId = 'future-run';
     const futureDeletedId = 'future-deleted-run';
     const futureDeletedKey = profileBaseKey(futureDeletedId);
+    const { profileOwnedKeys } = await import('./utils/profileStorage');
+    const futureOwnedValues = new Map(profileOwnedKeys(futureDeletedId).map(
+      (key, index) => [key, index === 0
+        ? 'future-owned-bytes-must-survive'
+        : `future-owned-sidecar-${index}`],
+    ));
+    const removeItemCalls: string[] = [];
+    const originalRemoveItem = storage.removeItem;
+    vi.spyOn(storage, 'removeItem').mockImplementation(key => {
+      removeItemCalls.push(key);
+      originalRemoveItem(key);
+    });
     const recoveredState = JSON.parse(seedOnboardingRun());
     recoveredState.hasSeenOnboarding = true;
     const futureRaw = JSON.stringify({
@@ -316,7 +328,7 @@ describe('App changelog lifecycle', () => {
     storage.setItem('FATE_PROFILES', futureRaw);
     storage.setItem(profileBaseKey(recoveredId), JSON.stringify(recoveredState));
     storage.setItem(`${profileBaseKey(recoveredId)}__discord`, JSON.stringify(recoveredState));
-    storage.setItem(futureDeletedKey, 'future-owned-bytes-must-survive');
+    for (const [key, value] of futureOwnedValues) storage.setItem(key, value);
     storage.setItem(changelogStorageKey, latestChangelogId);
     vi.stubGlobal('indexedDB', fakeIndexedDB);
     vi.stubGlobal('IDBKeyRange', FakeIDBKeyRange);
@@ -337,6 +349,10 @@ describe('App changelog lifecycle', () => {
     expect(screen.queryByText('Something went wrong')).toBeNull();
     expect(storage.getItem('FATE_PROFILES')).toBe(futureRaw);
     expect(storage.getItem(futureDeletedKey)).toBe('future-owned-bytes-must-survive');
+    expect(removeItemCalls).toEqual([]);
+    for (const [key, value] of futureOwnedValues) {
+      expect(storage.getItem(key)).toBe(value);
+    }
     await new Promise(resolve => setTimeout(resolve, 0));
     for (const write of headCheckpointMetadataWrites) expect(write).not.toHaveBeenCalled();
   }, 15_000);
@@ -740,7 +756,7 @@ describe('App changelog lifecycle', () => {
     })).toBeNull();
   }, 15_000);
 
-  it('keeps a same-tab tombstone hidden and unwritable across a reload before IndexedDB cleanup commits', async () => {
+  it('rolls back an executed IndexedDB delete when final authorization is lost before commit, then resumes after reload', async () => {
     const targetId = 'crash-before-indexeddb';
     const targetName = 'Crash before journal cleanup';
     const factory = new IDBFactory();
@@ -748,13 +764,25 @@ describe('App changelog lifecycle', () => {
     vi.stubGlobal('IDBKeyRange', FakeIDBKeyRange);
     const { targetKey, targetRaw } = seedDeletableProfile(targetId, targetName);
     await seedRecoveryHead(factory, targetId, targetRaw);
+    const targetWriterLeaseKey = writerLeaseKey(targetKey);
+    let headDeleteRequests = 0;
+    let headDeleteSucceeded = false;
     const originalDelete = IDBObjectStore.prototype.delete;
     const deleteSpy = vi.spyOn(IDBObjectStore.prototype, 'delete')
       .mockImplementation(function (this: IDBObjectStore, query: IDBValidKey | IDBKeyRange) {
+        const request = originalDelete.call(this, query);
         if (this.name === 'heads' && query === targetId) {
-          throw new DOMException('crash before IndexedDB commit', 'AbortError');
+          headDeleteRequests += 1;
+          request.addEventListener('success', () => {
+            headDeleteSucceeded = true;
+            storage.setItem(targetWriterLeaseKey, JSON.stringify({
+              version: 1,
+              ownerId: 'foreign-after-delete-request',
+              expiresAt: Date.now() + 30_000,
+            }));
+          }, { once: true });
         }
-        return originalDelete.call(this, query);
+        return request;
       });
     const user = userEvent.setup();
     const firstMount = render(<App />);
@@ -774,12 +802,15 @@ describe('App changelog lifecycle', () => {
     expect(committed.profiles.map(profile => profile.id)).toEqual([PROFILE_ID]);
     expect(committed.deletions).toEqual([expect.objectContaining({ profileId: targetId })]);
     expect(storage.getItem(targetKey)).toBe(targetRaw);
+    expect(headDeleteRequests).toBe(1);
+    expect(headDeleteSucceeded).toBe(true);
     expect(await readRecoveryHead(factory, targetId)).not.toBeNull();
 
     const { claimWriterLease } = await import('./utils/profileWriterLease');
+    storage.removeItem(targetWriterLeaseKey);
     expect(claimWriterLease(storage, targetKey, 'late-normal-tab', Date.now()).status).toBe('blocked');
     expect(claimWriterLease(storage, targetKey, 'late-forced-tab', Date.now(), true).status).toBe('blocked');
-    expect(storage.getItem(writerLeaseKey(targetKey))).toBeNull();
+    expect(storage.getItem(targetWriterLeaseKey)).toBeNull();
 
     await user.click(screen.getByRole('button', {
       name: 'Switch profile. Current profile: Lifecycle test',
