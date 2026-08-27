@@ -2,6 +2,7 @@
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  IDBFactory,
   IDBKeyRange as FakeIDBKeyRange,
   IDBObjectStore,
   indexedDB as fakeIndexedDB,
@@ -26,12 +27,21 @@ import {
 const PROFILE_ID = 'changelog-lifecycle-profile';
 const values = new Map<string, string>();
 let failedWriteKey: string | null = null;
+let failedRemoveKey: string | null = null;
+let lockAfterRemove: { key: string; raw: string } | null = null;
 const storage: Pick<Storage, 'clear' | 'length' | 'key' | 'getItem' | 'removeItem' | 'setItem'> = {
   clear: () => values.clear(),
   get length() { return values.size; },
   key: index => [...values.keys()][index] ?? null,
   getItem: key => values.get(key) ?? null,
-  removeItem: key => { values.delete(key); },
+  removeItem: key => {
+    if (key === failedRemoveKey) throw new DOMException('unavailable', 'SecurityError');
+    values.delete(key);
+    if (lockAfterRemove?.key === key) {
+      values.set('FATE_PROFILES__lock', lockAfterRemove.raw);
+      lockAfterRemove = null;
+    }
+  },
   setItem: (key, value) => {
     if (key === failedWriteKey) throw new DOMException('full', 'QuotaExceededError');
     values.set(key, String(value));
@@ -62,10 +72,76 @@ const emptyRepository = (): RecoveryRepository => ({
   close: vi.fn(),
 });
 
+const seedRecoveryHead = async (
+  factory: IDBFactory,
+  profileId: string,
+  data: string,
+): Promise<void> => {
+  const { openRecoveryDatabase } = await import('./utils/recoveryDatabase');
+  const parsed = JSON.parse(data) as { runId?: unknown; runRevision?: unknown };
+  const repository = await openRecoveryDatabase({ indexedDB: factory });
+  try {
+    const result = await repository.putHead({
+      profileId,
+      persistenceRevision: 1,
+      runId: typeof parsed.runId === 'string' ? parsed.runId : `run-${profileId}`,
+      runRevision: typeof parsed.runRevision === 'number' ? parsed.runRevision : 0,
+      capturedAt: 1_752_000_000_000,
+      checksum: await checksumSave(data),
+      data,
+    }, () => ({ ok: true }));
+    if (!result.stored) throw new Error(`Could not seed recovery head for ${profileId}.`);
+  } finally {
+    repository.close();
+  }
+};
+
+const readRecoveryHead = async (
+  factory: IDBFactory,
+  profileId: string,
+): Promise<RecoveryHead | null> => {
+  const { openRecoveryDatabase } = await import('./utils/recoveryDatabase');
+  const repository = await openRecoveryDatabase({ indexedDB: factory });
+  try {
+    return await repository.getHead(profileId);
+  } finally {
+    repository.close();
+  }
+};
+
+const seedDeletableProfile = (targetId: string, targetName: string): {
+  activeRaw: string;
+  targetKey: string;
+  targetRaw: string;
+} => {
+  const readyState = JSON.parse(seedOnboardingRun()) as { hasSeenOnboarding: boolean };
+  readyState.hasSeenOnboarding = true;
+  const activeRaw = JSON.stringify(readyState);
+  const targetRaw = JSON.stringify({ ...readyState, userNotes: { deletion: targetId } });
+  const targetKey = profileBaseKey(targetId);
+  values.clear();
+  storage.setItem('FATE_PROFILES', JSON.stringify({
+    version: 2,
+    revision: 0,
+    profiles: [
+      { id: PROFILE_ID, name: 'Lifecycle test', createdAt: 1 },
+      { id: targetId, name: targetName, createdAt: 2 },
+    ],
+    activeProfileId: PROFILE_ID,
+    deletions: [],
+  }));
+  storage.setItem(profileBaseKey(PROFILE_ID), activeRaw);
+  storage.setItem(targetKey, targetRaw);
+  storage.setItem(changelogStorageKey, latestChangelogId);
+  return { activeRaw, targetKey, targetRaw };
+};
+
 beforeEach(async () => {
   values.clear();
   resetPendingSavesForTest();
   failedWriteKey = null;
+  failedRemoveKey = null;
+  lockAfterRemove = null;
   vi.stubGlobal('localStorage', storage);
   vi.spyOn(globalThis.crypto, 'randomUUID')
     .mockReturnValue('00000000-0000-4000-8000-000000000001');
@@ -218,6 +294,8 @@ describe('App changelog lifecycle', () => {
 
   it('opens a supported recovered run read-only without rewriting future metadata', async () => {
     const recoveredId = 'future-run';
+    const futureDeletedId = 'future-deleted-run';
+    const futureDeletedKey = profileBaseKey(futureDeletedId);
     const recoveredState = JSON.parse(seedOnboardingRun());
     recoveredState.hasSeenOnboarding = true;
     const futureRaw = JSON.stringify({
@@ -225,13 +303,20 @@ describe('App changelog lifecycle', () => {
       revision: 19,
       profiles: [{ id: 'future-only', name: 'Future only', createdAt: 1 }],
       activeProfileId: 'future-only',
-      deletions: [],
+      deletions: [{
+        version: 1,
+        deletionId: 'future-delete-opaque-1',
+        profileId: futureDeletedId,
+        requestedAt: 10,
+        phase: 'pending_cleanup',
+      }],
       opaque: { mustSurvive: true },
     });
     values.clear();
     storage.setItem('FATE_PROFILES', futureRaw);
     storage.setItem(profileBaseKey(recoveredId), JSON.stringify(recoveredState));
     storage.setItem(`${profileBaseKey(recoveredId)}__discord`, JSON.stringify(recoveredState));
+    storage.setItem(futureDeletedKey, 'future-owned-bytes-must-survive');
     storage.setItem(changelogStorageKey, latestChangelogId);
     vi.stubGlobal('indexedDB', fakeIndexedDB);
     vi.stubGlobal('IDBKeyRange', FakeIDBKeyRange);
@@ -251,6 +336,7 @@ describe('App changelog lifecycle', () => {
     })).toBeTruthy();
     expect(screen.queryByText('Something went wrong')).toBeNull();
     expect(storage.getItem('FATE_PROFILES')).toBe(futureRaw);
+    expect(storage.getItem(futureDeletedKey)).toBe('future-owned-bytes-must-survive');
     await new Promise(resolve => setTimeout(resolve, 0));
     for (const write of headCheckpointMetadataWrites) expect(write).not.toHaveBeenCalled();
   }, 15_000);
@@ -652,6 +738,225 @@ describe('App changelog lifecycle', () => {
     expect(screen.queryByRole('button', {
       name: 'Switch profile. Current profile: Lifecycle test',
     })).toBeNull();
+  }, 15_000);
+
+  it('keeps a same-tab tombstone hidden and unwritable across a reload before IndexedDB cleanup commits', async () => {
+    const targetId = 'crash-before-indexeddb';
+    const targetName = 'Crash before journal cleanup';
+    const factory = new IDBFactory();
+    vi.stubGlobal('indexedDB', factory);
+    vi.stubGlobal('IDBKeyRange', FakeIDBKeyRange);
+    const { targetKey, targetRaw } = seedDeletableProfile(targetId, targetName);
+    await seedRecoveryHead(factory, targetId, targetRaw);
+    const originalDelete = IDBObjectStore.prototype.delete;
+    const deleteSpy = vi.spyOn(IDBObjectStore.prototype, 'delete')
+      .mockImplementation(function (this: IDBObjectStore, query: IDBValidKey | IDBKeyRange) {
+        if (this.name === 'heads' && query === targetId) {
+          throw new DOMException('crash before IndexedDB commit', 'AbortError');
+        }
+        return originalDelete.call(this, query);
+      });
+    const user = userEvent.setup();
+    const firstMount = render(<App />);
+
+    await user.click(await screen.findByRole('button', {
+      name: 'Switch profile. Current profile: Lifecycle test',
+    }));
+    await user.click(screen.getByRole('button', { name: `Delete ${targetName}` }));
+
+    const retry = await screen.findByRole('button', { name: 'Retry profile storage cleanup' });
+    await waitFor(() => expect(retry.hasAttribute('disabled')).toBe(false));
+    expect(screen.getByText('Profile removed; storage cleanup pending.')).toBeTruthy();
+    const committed = JSON.parse(storage.getItem('FATE_PROFILES')!) as {
+      profiles: Array<{ id: string }>;
+      deletions: Array<{ profileId: string }>;
+    };
+    expect(committed.profiles.map(profile => profile.id)).toEqual([PROFILE_ID]);
+    expect(committed.deletions).toEqual([expect.objectContaining({ profileId: targetId })]);
+    expect(storage.getItem(targetKey)).toBe(targetRaw);
+    expect(await readRecoveryHead(factory, targetId)).not.toBeNull();
+
+    const { claimWriterLease } = await import('./utils/profileWriterLease');
+    expect(claimWriterLease(storage, targetKey, 'late-normal-tab', Date.now()).status).toBe('blocked');
+    expect(claimWriterLease(storage, targetKey, 'late-forced-tab', Date.now(), true).status).toBe('blocked');
+    expect(storage.getItem(writerLeaseKey(targetKey))).toBeNull();
+
+    await user.click(screen.getByRole('button', {
+      name: 'Switch profile. Current profile: Lifecycle test',
+    }));
+    expect(screen.queryByText(targetName)).toBeNull();
+
+    firstMount.unmount();
+    deleteSpy.mockRestore();
+    render(<App />);
+
+    expect(await screen.findByRole('button', {
+      name: 'Switch profile. Current profile: Lifecycle test',
+    })).toBeTruthy();
+    await waitFor(() => {
+      const reloaded = JSON.parse(storage.getItem('FATE_PROFILES')!) as { deletions: unknown[] };
+      expect(reloaded.deletions).toEqual([]);
+    }, { timeout: 5_000 });
+    expect(storage.getItem(targetKey)).toBeNull();
+    expect(await readRecoveryHead(factory, targetId)).toBeNull();
+    expect(screen.queryByText('Profile removed; storage cleanup pending.')).toBeNull();
+  }, 15_000);
+
+  it('resumes local cleanup after reload when IndexedDB committed before the browser storage failure', async () => {
+    const targetId = 'crash-after-indexeddb';
+    const targetName = 'Crash after journal cleanup';
+    const factory = new IDBFactory();
+    vi.stubGlobal('indexedDB', factory);
+    vi.stubGlobal('IDBKeyRange', FakeIDBKeyRange);
+    const { targetKey, targetRaw } = seedDeletableProfile(targetId, targetName);
+    await seedRecoveryHead(factory, targetId, targetRaw);
+    failedRemoveKey = targetKey;
+    const user = userEvent.setup();
+    const firstMount = render(<App />);
+
+    await user.click(await screen.findByRole('button', {
+      name: 'Switch profile. Current profile: Lifecycle test',
+    }));
+    await user.click(screen.getByRole('button', { name: `Delete ${targetName}` }));
+
+    const retry = await screen.findByRole('button', { name: 'Retry profile storage cleanup' });
+    await waitFor(() => expect(retry.hasAttribute('disabled')).toBe(false));
+    expect(await readRecoveryHead(factory, targetId)).toBeNull();
+    expect(storage.getItem(targetKey)).toBe(targetRaw);
+    expect((JSON.parse(storage.getItem('FATE_PROFILES')!) as { deletions: unknown[] }).deletions)
+      .toHaveLength(1);
+
+    firstMount.unmount();
+    failedRemoveKey = null;
+    render(<App />);
+
+    await waitFor(() => {
+      const reloaded = JSON.parse(storage.getItem('FATE_PROFILES')!) as { deletions: unknown[] };
+      expect(reloaded.deletions).toEqual([]);
+    }, { timeout: 5_000 });
+    expect(storage.getItem(targetKey)).toBeNull();
+    expect(await readRecoveryHead(factory, targetId)).toBeNull();
+    expect(screen.queryByText(targetName)).toBeNull();
+  }, 15_000);
+
+  it('returns from continuous cleanup-lock contention and completes through the manual Retry action', async () => {
+    const targetId = 'cleanup-lock-contention';
+    const targetName = 'Cleanup contention target';
+    const factory = new IDBFactory();
+    vi.stubGlobal('indexedDB', factory);
+    vi.stubGlobal('IDBKeyRange', FakeIDBKeyRange);
+    const { targetKey } = seedDeletableProfile(targetId, targetName);
+    const { PROFILE_METADATA_BACKUP_KEY, PROFILE_METADATA_LOCK_KEY } = await import('./utils/profileMetadata');
+    const intent = {
+      version: 1 as const,
+      deletionId: 'delete-cleanup-contention-1',
+      profileId: targetId,
+      requestedAt: 10,
+      phase: 'pending_cleanup' as const,
+    };
+    const tombstone = {
+      version: 2 as const,
+      revision: 1,
+      profiles: [{ id: PROFILE_ID, name: 'Lifecycle test', createdAt: 1 }],
+      activeProfileId: PROFILE_ID,
+      deletions: [intent],
+    };
+    const tombstoneRaw = JSON.stringify(tombstone);
+    storage.setItem('FATE_PROFILES', tombstoneRaw);
+    storage.setItem(PROFILE_METADATA_BACKUP_KEY, tombstoneRaw);
+    lockAfterRemove = {
+      key: targetKey,
+      raw: JSON.stringify({
+        version: 1,
+        ownerId: 'continuous-foreign-cleaner',
+        expiresAt: Date.now() + 60_000,
+      }),
+    };
+    const user = userEvent.setup();
+    render(<App />);
+
+    const retry = await screen.findByRole('button', { name: 'Retry profile storage cleanup' });
+    await waitFor(() => {
+      expect(storage.getItem(targetKey)).toBeNull();
+      expect(storage.getItem(PROFILE_METADATA_LOCK_KEY)).not.toBeNull();
+    });
+    await new Promise(resolve => window.setTimeout(resolve, 1_700));
+    expect((JSON.parse(storage.getItem('FATE_PROFILES')!) as { deletions: unknown[] }).deletions)
+      .toHaveLength(1);
+    expect(screen.getByText('Profile removed; storage cleanup pending.')).toBeTruthy();
+
+    storage.removeItem(PROFILE_METADATA_LOCK_KEY);
+    await user.click(retry);
+
+    expect(await screen.findByText('Profile storage cleanup complete.')).toBeTruthy();
+    await waitFor(() => {
+      expect((JSON.parse(storage.getItem('FATE_PROFILES')!) as { deletions: unknown[] }).deletions)
+        .toEqual([]);
+    });
+    expect(screen.queryByText('Profile removed; storage cleanup pending.')).toBeNull();
+  }, 15_000);
+
+  it('lets two cleanup tabs race without resurrecting the profile or deleting another profile', async () => {
+    const targetId = 'two-tab-cleanup-target';
+    const targetName = 'Two-tab cleanup target';
+    const factory = new IDBFactory();
+    vi.stubGlobal('indexedDB', factory);
+    vi.stubGlobal('IDBKeyRange', FakeIDBKeyRange);
+    const { activeRaw, targetKey, targetRaw } = seedDeletableProfile(targetId, targetName);
+    const { PROFILE_METADATA_BACKUP_KEY } = await import('./utils/profileMetadata');
+    const { resumeProfileDeletion } = await import('./utils/profileMetadataTransaction');
+    const intent = {
+      version: 1 as const,
+      deletionId: 'delete-two-tab-race-1',
+      profileId: targetId,
+      requestedAt: 10,
+      phase: 'pending_cleanup' as const,
+    };
+    const tombstone = {
+      version: 2 as const,
+      revision: 1,
+      profiles: [{ id: PROFILE_ID, name: 'Lifecycle test', createdAt: 1 }],
+      activeProfileId: PROFILE_ID,
+      deletions: [intent],
+    };
+    const tombstoneRaw = JSON.stringify(tombstone);
+    storage.setItem('FATE_PROFILES', tombstoneRaw);
+    storage.setItem(PROFILE_METADATA_BACKUP_KEY, tombstoneRaw);
+    await seedRecoveryHead(factory, targetId, targetRaw);
+    await seedRecoveryHead(factory, PROFILE_ID, activeRaw);
+    const { claimWriterLease } = await import('./utils/profileWriterLease');
+    expect(claimWriterLease(storage, targetKey, 'normal-racer', Date.now()).status).toBe('blocked');
+    expect(claimWriterLease(storage, targetKey, 'forced-racer', Date.now(), true).status).toBe('blocked');
+
+    const { openRecoveryDatabase } = await import('./utils/recoveryDatabase');
+    const makeDependencies = (ownerId: string) => ({
+      storage,
+      ownerId,
+      now: Date.now,
+      wait: (milliseconds: number) => new Promise<void>(resolve => window.setTimeout(resolve, milliseconds)),
+      validateGameSave: () => true,
+      createProfileId: () => `unused-${ownerId}`,
+      openRecoveryRepository: () => openRecoveryDatabase({ indexedDB: factory }),
+    });
+    const [first, second] = await Promise.all([
+      resumeProfileDeletion(intent, makeDependencies('cleanup-tab-a')),
+      resumeProfileDeletion(intent, makeDependencies('cleanup-tab-b')),
+    ]);
+
+    expect(first).toMatchObject({ status: 'completed' });
+    expect(second).toMatchObject({ status: 'cleanup_pending', reason: 'profile_in_use' });
+    expect(await resumeProfileDeletion(intent, makeDependencies('cleanup-tab-b')))
+      .toMatchObject({ status: 'completed' });
+    const finalized = JSON.parse(storage.getItem('FATE_PROFILES')!) as {
+      profiles: Array<{ id: string }>;
+      deletions: unknown[];
+    };
+    expect(finalized.profiles.map(profile => profile.id)).toEqual([PROFILE_ID]);
+    expect(finalized.deletions).toEqual([]);
+    expect(storage.getItem(targetKey)).toBeNull();
+    expect(storage.getItem(profileBaseKey(PROFILE_ID))).toBe(activeRaw);
+    expect(await readRecoveryHead(factory, targetId)).toBeNull();
+    expect(await readRecoveryHead(factory, PROFILE_ID)).not.toBeNull();
   }, 15_000);
 
   it('arbitrates the startup compatibility matrix across legacy, journal, and corrupt evidence', async () => {

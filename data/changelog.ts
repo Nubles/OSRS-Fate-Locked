@@ -29,6 +29,7 @@ export const CHANGELOG_RELEASES = [
       fixed: [
         'Corrupt or interrupted browser saves now stop for recovery instead of silently starting over.',
         'Full browser storage now clears disposable caches and retries profile saves safely.',
+        'Interrupted profile cleanup now resumes after reload without restoring the deleted profile.',
       ],
     },
   },
