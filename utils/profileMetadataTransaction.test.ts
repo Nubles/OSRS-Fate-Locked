@@ -88,10 +88,11 @@ const createDependencies = (
 });
 
 const metadata = (revision: number, name = 'Alpha'): ProfileMetadata => ({
-  version: 1,
+  version: 2,
   revision,
   profiles: [{ id: 'alpha', name, createdAt: 1 }],
   activeProfileId: 'alpha',
+  deletions: [],
 });
 
 const lockRaw = (ownerId: string, expiresAt: number): string => JSON.stringify({
@@ -596,10 +597,11 @@ describe('profile metadata startup', () => {
     });
     const storage = createStorage([[PROFILES_KEY, legacyRaw]]);
     const normalized: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 0,
       profiles: [{ id: 'alpha', name: 'Alpha', createdAt: 1 }],
       activeProfileId: 'alpha',
+      deletions: [],
     };
     const durable = { ...normalized, revision: 1 };
 
@@ -651,6 +653,36 @@ describe('profile metadata startup', () => {
     expect(storage.values.get(PROFILES_KEY)).toBe(JSON.stringify(durable));
   });
 
+  it('round-trips deletion intents exactly while repairing from the registry backup', async () => {
+    const primaryRaw = '{broken';
+    const recovered = {
+      version: 2 as const,
+      revision: 3,
+      profiles: [{ id: 'alpha', name: 'Alpha', createdAt: 1 }],
+      activeProfileId: 'alpha',
+      deletions: [{
+        version: 1 as const,
+        deletionId: 'delete-beta-1',
+        profileId: 'beta',
+        requestedAt: 12,
+        phase: 'pending_cleanup' as const,
+      }],
+    };
+    const backupRaw = JSON.stringify(recovered);
+    const storage = createStorage([
+      [PROFILES_KEY, primaryRaw],
+      [PROFILE_METADATA_BACKUP_KEY, backupRaw],
+    ]);
+    const durable = { ...recovered, revision: 4 };
+
+    await expect(initializeProfileMetadata(createDependencies(storage))).resolves.toMatchObject({
+      ok: true,
+      metadata: durable,
+    });
+    expect(storage.values.get(PROFILE_METADATA_BACKUP_KEY)).toBe(backupRaw);
+    expect(storage.values.get(PROFILES_KEY)).toBe(JSON.stringify(durable));
+  });
+
   it('archives dual corruption before reconstructing an exact profile save', async () => {
     const primaryRaw = '{bad';
     const backupRaw = '{also-bad';
@@ -661,10 +693,11 @@ describe('profile metadata startup', () => {
       ['FATE_PROFILE_beta__backups', 'valid:not-a-base-save'],
     ]);
     const baseline: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 0,
       profiles: [{ id: 'beta', name: 'Recovered Profile 1', createdAt: 1_025 }],
       activeProfileId: 'beta',
+      deletions: [],
     };
     const durable = { ...baseline, revision: 1 };
 
@@ -695,10 +728,11 @@ describe('profile metadata startup', () => {
       return value;
     };
     const baseline: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 0,
       profiles: [{ id: 'tab-a-profile', name: 'Main Account', createdAt: 1_025 }],
       activeProfileId: 'tab-a-profile',
+      deletions: [],
     };
     const durable = { ...baseline, revision: 1 };
 
@@ -716,10 +750,11 @@ describe('profile metadata startup', () => {
   it('durably initializes a fresh registry without a recovery envelope', async () => {
     const storage = createStorage();
     const baseline: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 0,
       profiles: [{ id: 'tab-a-profile', name: 'Main Account', createdAt: 1_025 }],
       activeProfileId: 'tab-a-profile',
+      deletions: [],
     };
     const durable = { ...baseline, revision: 1 };
 
@@ -790,7 +825,7 @@ describe('unsupported profile metadata startup', () => {
   it('archives a future primary but never rewrites either registry copy', async () => {
     const supported = metadata(4, 'Supported');
     const supportedRaw = JSON.stringify(supported);
-    const futureRaw = JSON.stringify({ version: 2, revision: 9, futureField: true });
+    const futureRaw = JSON.stringify({ version: 3, revision: 9, futureField: true });
     const primaryRaw = futureRaw;
     const backupRaw = supportedRaw;
     const storage = createStorage([
@@ -829,7 +864,7 @@ describe('unsupported profile metadata startup', () => {
   it('uses a supported current primary without touching a future backup', async () => {
     const supported = metadata(4, 'Supported');
     const supportedRaw = JSON.stringify(supported);
-    const futureRaw = JSON.stringify({ version: 2, revision: 9, futureField: true });
+    const futureRaw = JSON.stringify({ version: 3, revision: 9, futureField: true });
     const storage = createStorage([
       [PROFILES_KEY, supportedRaw],
       [PROFILE_METADATA_BACKUP_KEY, futureRaw],
@@ -848,17 +883,18 @@ describe('unsupported profile metadata startup', () => {
   });
 
   it('recovers exact save keys in memory while keeping a future registry read-only', async () => {
-    const futureRaw = JSON.stringify({ version: 2, opaque: { value: 1 } });
+    const futureRaw = JSON.stringify({ version: 3, opaque: { value: 1 } });
     const storage = createStorage([
       [PROFILES_KEY, futureRaw],
       ['FATE_PROFILE_beta', 'valid:beta'],
       ['FATE_PROFILE_beta__backups', 'valid:not-a-base-save'],
     ]);
     const recovered: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 0,
       profiles: [{ id: 'beta', name: 'Recovered Profile 1', createdAt: 1_025 }],
       activeProfileId: 'beta',
+      deletions: [],
     };
 
     await expect(initializeProfileMetadata(createDependencies(storage))).resolves.toEqual({
@@ -884,7 +920,7 @@ describe('unsupported profile metadata startup', () => {
     async failure => {
       const supported = metadata(4, 'Supported backup');
       const backupRaw = JSON.stringify(supported);
-      const futureRaw = JSON.stringify({ version: 2, opaque: { value: 1 } });
+      const futureRaw = JSON.stringify({ version: 3, opaque: { value: 1 } });
       const storage = createStorage([
         [PROFILES_KEY, futureRaw],
         [PROFILE_METADATA_BACKUP_KEY, backupRaw],
@@ -915,13 +951,14 @@ describe('typed profile metadata mutations', () => {
   it('creates against the newest registry observed after lock arbitration', async () => {
     const stale = metadata(1, 'Stale alpha');
     const newer: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 4,
       profiles: [
         { id: 'alpha', name: 'Current alpha', createdAt: 1 },
         { id: 'beta', name: 'Interleaved beta', createdAt: 2 },
       ],
       activeProfileId: 'beta',
+      deletions: [],
     };
     const created: Profile = { id: 'gamma', name: 'Gamma', createdAt: 3 };
     const storage = createStorage([
@@ -929,10 +966,11 @@ describe('typed profile metadata mutations', () => {
       [PROFILE_METADATA_BACKUP_KEY, JSON.stringify(metadata(0, 'Old backup'))],
     ]);
     const expected: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 5,
       profiles: [...newer.profiles, created],
       activeProfileId: 'gamma',
+      deletions: [],
     };
 
     await expect(mutateProfileMetadata(
@@ -951,10 +989,11 @@ describe('typed profile metadata mutations', () => {
       createdAt: index,
     }));
     const newer: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 4,
       profiles,
       activeProfileId: 'profile-0',
+      deletions: [],
     };
     const originalBackup = JSON.stringify(metadata(0, 'Old backup'));
     const storage = createStorage([
@@ -979,10 +1018,11 @@ describe('typed profile metadata mutations', () => {
   it('treats an identical pre-generated create as an idempotent success', async () => {
     const created: Profile = { id: 'beta', name: 'Beta', createdAt: 2 };
     const newest: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 4,
       profiles: [{ id: 'alpha', name: 'Alpha', createdAt: 1 }, created],
       activeProfileId: 'alpha',
+      deletions: [],
     };
     const storage = createStorage([[PROFILES_KEY, JSON.stringify(newest)]]);
 
@@ -1037,13 +1077,14 @@ describe('typed profile metadata mutations', () => {
   it('renames against the newest registry without losing an interleaved create', async () => {
     const stale = metadata(1, 'Stale alpha');
     const newer: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 4,
       profiles: [
         { id: 'alpha', name: 'Current alpha', createdAt: 1 },
         { id: 'beta', name: 'Interleaved beta', createdAt: 2 },
       ],
       activeProfileId: 'beta',
+      deletions: [],
     };
     const storage = createStorage([[PROFILES_KEY, JSON.stringify(stale)]]);
     const expected: ProfileMetadata = {
@@ -1068,19 +1109,21 @@ describe('typed profile metadata mutations', () => {
     { label: 'select', mutation: { type: 'select', profileId: 'alpha' } as const },
   ])('returns not_found when $label targets an ID removed before lock acquisition', async ({ mutation }) => {
     const stale: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 1,
       profiles: [
         { id: 'alpha', name: 'Alpha', createdAt: 1 },
         { id: 'beta', name: 'Beta', createdAt: 2 },
       ],
       activeProfileId: 'alpha',
+      deletions: [],
     };
     const newer: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 4,
       profiles: [{ id: 'beta', name: 'Beta', createdAt: 2 }],
       activeProfileId: 'beta',
+      deletions: [],
     };
     const storage = createStorage([[PROFILES_KEY, JSON.stringify(stale)]]);
 
@@ -1099,13 +1142,14 @@ describe('typed profile metadata mutations', () => {
 
   it('selects a valid newest profile with exactly one verified revision increment', async () => {
     const newest: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 4,
       profiles: [
         { id: 'alpha', name: 'Alpha', createdAt: 1 },
         { id: 'beta', name: 'Beta', createdAt: 2 },
       ],
       activeProfileId: 'alpha',
+      deletions: [],
     };
     const storage = createStorage([[PROFILES_KEY, JSON.stringify(newest)]]);
     const expected: ProfileMetadata = { ...newest, revision: 5, activeProfileId: 'beta' };
@@ -1122,13 +1166,14 @@ describe('typed profile metadata mutations', () => {
 });
 
 const deletableMetadata = (activeProfileId: 'alpha' | 'beta' = 'alpha'): ProfileMetadata => ({
-  version: 1,
+  version: 2,
   revision: 7,
   profiles: [
     { id: 'alpha', name: 'Alpha', createdAt: 1 },
     { id: 'beta', name: 'Beta', createdAt: 2 },
   ],
   activeProfileId,
+  deletions: [],
 });
 
 const alphaOwnedKeys = [
@@ -1170,10 +1215,11 @@ describe('coordinated profile deletion', () => {
       ...unrelatedEntries,
     ]);
     const expected: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 8,
       profiles: [current.profiles[1]],
       activeProfileId: 'beta',
+      deletions: [],
     };
 
     const databaseName = `task11-profile-delete-${Date.now()}-${Math.random()}`;
@@ -1337,10 +1383,11 @@ describe('coordinated profile deletion', () => {
   it('finishes deletion without resurrection when cancellation arrives after IndexedDB commits', async () => {
     const current = deletableMetadata();
     const expected: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 8,
       profiles: [current.profiles[1]],
       activeProfileId: 'beta',
+      deletions: [],
     };
     const ownedEntries = alphaOwnedKeys
       .filter(key => key !== 'FATE_PROFILE_alpha__writer')
@@ -1398,10 +1445,11 @@ describe('coordinated profile deletion', () => {
   it('waits past one metadata-lock timeout to finish a committed IndexedDB deletion without orphans', async () => {
     const current = deletableMetadata();
     const expected: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 8,
       profiles: [current.profiles[1]],
       activeProfileId: 'beta',
+      deletions: [],
     };
     const ownedEntries = alphaOwnedKeys
       .filter(key => key !== 'FATE_PROFILE_alpha__writer')
@@ -1480,10 +1528,11 @@ describe('coordinated profile deletion', () => {
   it('does not resurrect data after another tab completes deletion during the post-cleanup boundary', async () => {
     const current = deletableMetadata();
     const expected: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 8,
       profiles: [current.profiles[1]],
       activeProfileId: 'beta',
+      deletions: [],
     };
     const ownedEntries = alphaOwnedKeys
       .filter(key => key !== 'FATE_PROFILE_alpha__writer')
@@ -1542,10 +1591,11 @@ describe('coordinated profile deletion', () => {
     async mode => {
       const current = deletableMetadata();
       const expected: ProfileMetadata = {
-        version: 1,
+        version: 2,
         revision: 8,
         profiles: [current.profiles[1]],
         activeProfileId: 'beta',
+        deletions: [],
       };
       const ownedEntries = alphaOwnedKeys
         .filter(key => key !== 'FATE_PROFILE_alpha__writer')
@@ -1859,10 +1909,11 @@ describe('coordinated profile deletion', () => {
       ['FATE_PROFILE_alpha__writer', leaseRaw],
     ]);
     const expected: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 8,
       profiles: [current.profiles[1]],
       activeProfileId: 'beta',
+      deletions: [],
     };
 
     await expect(mutateProfileMetadata(createDependencies(storage), {
@@ -1893,10 +1944,11 @@ describe('coordinated profile deletion', () => {
       ...unrelatedEntries,
     ]);
     const expected: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 8,
       profiles: [current.profiles[1]],
       activeProfileId: 'beta',
+      deletions: [],
     };
 
     await expect(mutateProfileMetadata(createDependencies(storage), {
@@ -2449,7 +2501,7 @@ describe('deterministic two-client profile transactions', () => {
 
   it('returns valid results for overlapping selects and persists a valid active ID', async () => {
     const initial: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 8,
       profiles: [
         { id: 'alpha', name: 'Alpha', createdAt: 1 },
@@ -2457,6 +2509,7 @@ describe('deterministic two-client profile transactions', () => {
         { id: 'gamma', name: 'Gamma', createdAt: 3 },
       ],
       activeProfileId: 'alpha',
+      deletions: [],
     };
     const harness = createTwoClientTransactionHarness([
       [PROFILES_KEY, JSON.stringify(initial)],
@@ -2487,7 +2540,7 @@ describe('deterministic two-client profile transactions', () => {
 
   it('does not resurrect a deleted profile when a rename overlaps it', async () => {
     const initial: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 2,
       profiles: [
         { id: 'alpha', name: 'Alpha', createdAt: 1 },
@@ -2495,6 +2548,7 @@ describe('deterministic two-client profile transactions', () => {
         { id: 'gamma', name: 'Gamma', createdAt: 3 },
       ],
       activeProfileId: 'alpha',
+      deletions: [],
     };
     const harness = createTwoClientTransactionHarness([
       [PROFILES_KEY, JSON.stringify(initial)],
@@ -2533,13 +2587,14 @@ describe('deterministic two-client profile transactions', () => {
 
   it('does not lose a create when deletion overlaps it', async () => {
     const initial: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 11,
       profiles: [
         { id: 'alpha', name: 'Alpha', createdAt: 1 },
         { id: 'beta', name: 'Beta', createdAt: 2 },
       ],
       activeProfileId: 'alpha',
+      deletions: [],
     };
     const harness = createTwoClientTransactionHarness([
       [PROFILES_KEY, JSON.stringify(initial)],
@@ -2602,7 +2657,7 @@ describe('deterministic two-client profile transactions', () => {
 
   it('reports verification_failed when a lock-ignoring client overwrites primary before readback', async () => {
     const initial = metadata(3);
-    const oldClientRegistry: ProfileMetadata = {
+    const oldClientRegistry = {
       version: 1,
       revision: 40,
       profiles: [
@@ -2632,7 +2687,10 @@ describe('deterministic two-client profile transactions', () => {
       metadata: initial,
       notice: null,
     });
-    expect(currentStoredRegistry(storage)).toEqual(oldClientRegistry);
+    expect(parseProfileMetadata(storage.values.get(PROFILES_KEY) ?? null)).toEqual({
+      status: 'legacy',
+      metadata: { ...oldClientRegistry, version: 2, deletions: [] },
+    });
     expect(storage.values.get(PROFILES_KEY)).toBe(JSON.stringify(oldClientRegistry));
   });
 });
@@ -2736,10 +2794,11 @@ describe('profile transaction ownership rechecks', () => {
   it('does not report an idempotent create success after lock ownership changes', async () => {
     const created = { id: 'beta', name: 'Beta', createdAt: 2 };
     const current: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 4,
       profiles: [{ id: 'alpha', name: 'Alpha', createdAt: 1 }, created],
       activeProfileId: 'beta',
+      deletions: [],
     };
     const raw = JSON.stringify(current);
     const foreignLock = lockRaw('tab-b', 9_000);
@@ -3053,10 +3112,11 @@ describe('profile transaction cancellation boundaries', () => {
     )).resolves.toEqual({
       ok: true,
       metadata: {
-        version: 1,
+        version: 2,
         revision: 8,
         profiles: [current.profiles[1]],
         activeProfileId: 'beta',
+        deletions: [],
       },
       notice: null,
       deleteDetails: { removedEntries: 7, removalFailures: 0, rollbackFailures: 0 },
@@ -3095,10 +3155,11 @@ describe('profile transaction cancellation boundaries', () => {
     )).resolves.toEqual({
       ok: true,
       metadata: {
-        version: 1,
+        version: 2,
         revision: 8,
         profiles: [current.profiles[1]],
         activeProfileId: 'beta',
+        deletions: [],
       },
       notice: null,
       deleteDetails: { removedEntries: 7, removalFailures: 0, rollbackFailures: 0 },

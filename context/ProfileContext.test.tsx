@@ -33,13 +33,14 @@ import { initialState } from './GameContext';
 type Profiles = ReturnType<typeof useProfiles>;
 
 const metadata: ProfileMetadata = {
-  version: 1,
+  version: 2,
   revision: 0,
   profiles: [
     { id: 'target', name: 'Target', createdAt: 1 },
     { id: 'other', name: 'Other', createdAt: 2 },
   ],
   activeProfileId: 'target',
+  deletions: [],
 };
 
 const ProfileCapture = ({ onProfiles }: { onProfiles: (profiles: Profiles) => void }) => {
@@ -283,7 +284,7 @@ describe('ProfileProvider validated async state', () => {
 
   it('opens unsupported metadata read-only without overwriting it', async () => {
     const future = JSON.stringify({
-      version: 2,
+      version: 3,
       revision: 9,
       profiles: metadata.profiles,
       activeProfileId: 'target',
@@ -599,7 +600,7 @@ describe('ProfileProvider validated async state', () => {
     {
       label: 'unsupported future',
       raw: JSON.stringify({
-        version: 2,
+        version: 3,
         revision: 5,
         profiles: metadata.profiles,
         activeProfileId: 'other',
@@ -654,7 +655,7 @@ describe('ProfileProvider validated async state', () => {
     let rename!: Promise<ProfileTransactionResult>;
     act(() => { rename = rendered.current().renameProfile('target', 'Earlier mutation'); });
     const futureRaw = JSON.stringify({
-      version: 2,
+      version: 3,
       revision: 9,
       profiles: metadata.profiles,
       activeProfileId: 'other',
@@ -708,10 +709,11 @@ describe('ProfileProvider validated async state', () => {
       expect(rendered.current().activeProfileId).toBe('target');
     });
     const incoming: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 2,
       profiles: [metadata.profiles[1]],
       activeProfileId: 'other',
+      deletions: [],
     };
 
     act(() => {
@@ -732,16 +734,18 @@ describe('ProfileProvider validated async state', () => {
     const rendered = renderTask6Profiles();
     await settleTask6Initialization();
     const staleRemoval: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 2,
       profiles: [{ ...metadata.profiles[1], name: 'Stale removal' }],
       activeProfileId: 'other',
+      deletions: [],
     };
     const newestRemoval: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 3,
       profiles: [{ ...metadata.profiles[1], name: 'Newest removal' }],
       activeProfileId: 'other',
+      deletions: [],
     };
 
     act(() => {
@@ -788,10 +792,11 @@ describe('ProfileProvider validated async state', () => {
     });
     unsubscribe();
     const incoming: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 2,
       profiles: [metadata.profiles[1]],
       activeProfileId: 'other',
+      deletions: [],
     };
 
     act(() => {
@@ -1018,7 +1023,7 @@ describe('ProfileProvider validated async state', () => {
     {
       label: 'unsupported future metadata',
       raw: JSON.stringify({
-        version: 2,
+        version: 3,
         revision: 9,
         profiles: metadata.profiles,
         activeProfileId: 'other',
@@ -1095,7 +1100,7 @@ describe('ProfileProvider validated async state', () => {
     {
       label: 'unsupported future metadata',
       raw: JSON.stringify({
-        version: 2,
+        version: 3,
         revision: 9,
         profiles: metadata.profiles,
         activeProfileId: 'other',
@@ -1127,7 +1132,7 @@ describe('ProfileProvider validated async state', () => {
     {
       label: 'unsupported future metadata',
       raw: JSON.stringify({
-        version: 2,
+        version: 3,
         revision: 9,
         profiles: metadata.profiles,
         activeProfileId: 'other',
@@ -1464,10 +1469,11 @@ describe('ProfileProvider validated async state', () => {
   it('refreshes a real not_found result from durable metadata while preserving local selection', async () => {
     const staleProfile = { id: 'stale', name: 'Stale', createdAt: 3 };
     const local: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 2,
       profiles: [...metadata.profiles, staleProfile],
       activeProfileId: 'target',
+      deletions: [],
     };
     storage.values.set(PROFILES_KEY, JSON.stringify(local));
     let current: Profiles | undefined;
@@ -1483,10 +1489,11 @@ describe('ProfileProvider validated async state', () => {
       return current;
     };
     const durable: ProfileMetadata = {
-      version: 1,
+      version: 2,
       revision: 5,
       profiles: metadata.profiles,
       activeProfileId: 'other',
+      deletions: [],
     };
     const durableRaw = JSON.stringify(durable);
     storage.values.set(PROFILES_KEY, durableRaw);
@@ -1524,10 +1531,11 @@ describe('ProfileProvider validated async state', () => {
       ok: false,
       reason: 'not_found',
       metadata: {
-        version: 1,
+        version: 2,
         revision,
         profiles: [metadata.profiles[0]],
         activeProfileId: 'target',
+        deletions: [],
       },
       notice: null,
     });
@@ -1555,7 +1563,7 @@ describe('ProfileProvider validated async state', () => {
     {
       label: 'unsupported future-shaped',
       returned: {
-        version: 2,
+        version: 3,
         revision: 20,
         profiles: [metadata.profiles[0]],
         activeProfileId: 'target',

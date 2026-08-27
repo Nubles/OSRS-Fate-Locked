@@ -20,13 +20,14 @@ vi.mock('../context/ProfileContext', () => ({
 }));
 
 const metadata: ProfileMetadata = {
-  version: 1,
+  version: 2,
   revision: 3,
   profiles: [
     { id: 'alpha', name: 'Alpha', createdAt: 1 },
     { id: 'beta', name: 'Beta', createdAt: 2 },
   ],
   activeProfileId: 'alpha',
+  deletions: [],
 };
 
 const success = (next: ProfileMetadata = metadata): ProfileTransactionResult => ({
