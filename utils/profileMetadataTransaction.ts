@@ -906,27 +906,54 @@ const executeProfileDelete = async (
       !latest.ok
       || latest.resolution.metadata.profiles.some(profile => profile.id === profileId)
     ) return null;
-    const removedEntries = [...snapshots.keys()].reduce((count, key) => (
-      deps.storage.getItem(key) === null ? count + 1 : count
-    ), 0);
+    let removedEntries = 0;
+    let removalFailures = 0;
     for (const key of profileOwnedKeys(profileId)) {
+      if (key === leaseKey) continue;
       try {
         deps.storage.removeItem(key);
       } catch {
-        // Another tab already committed deletion. Never restore stale profile data here.
+        // Readback below decides whether the privacy cleanup actually failed.
+      }
+      try {
+        if (deps.storage.getItem(key) === null) {
+          if (snapshots.has(key)) removedEntries += 1;
+        } else {
+          removalFailures += 1;
+        }
+      } catch {
+        removalFailures += 1;
       }
     }
+    releaseDeletionLease(false);
+    try {
+      if (deps.storage.getItem(leaseKey) === null) {
+        if (snapshots.has(leaseKey)) removedEntries += 1;
+      } else {
+        removalFailures += 1;
+      }
+    } catch {
+      removalFailures += 1;
+    }
     closeRecoveryRepository();
-    return {
-      ok: true,
-      metadata: latest.resolution.metadata,
-      notice: latest.resolution.notice,
-      deleteDetails: {
-        removedEntries,
-        removalFailures: 0,
-        rollbackFailures: 0,
-      },
+    const details: ProfileDeleteDetails = {
+      removedEntries,
+      removalFailures,
+      rollbackFailures: 0,
     };
+    return removalFailures === 0
+      ? {
+          ok: true,
+          metadata: latest.resolution.metadata,
+          notice: latest.resolution.notice,
+          deleteDetails: details,
+        }
+      : transactionFailure(
+          'storage_unavailable',
+          latest.resolution.metadata,
+          latest.resolution.notice,
+          details,
+        );
   };
 
   let postCleanupAuthorityFailure = deletionAuthorityFailure(false);
@@ -934,44 +961,82 @@ const executeProfileDelete = async (
     const completed = latestCompletedDeletion();
     if (completed !== null) return completed;
 
-    const reservation = verifyWriterLease(
-      deps.storage,
-      storageKey,
-      deletionLeaseOwnerId,
-      deps.now(),
-    );
-    if (reservation.status === 'owned' && postCleanupAuthorityFailure === 'busy') {
+    while (postCleanupAuthorityFailure === 'busy') {
+      const reservation = claimProfileDeletionLease(
+        deps.storage,
+        storageKey,
+        deletionLeaseOwnerId,
+        deps.now(),
+      );
+      if (reservation.status !== 'owned') {
+        postCleanupAuthorityFailure = reservation.status === 'unavailable'
+          ? 'storage_unavailable'
+          : 'profile_in_use';
+        break;
+      }
+
       const reacquired = await acquireProfileMetadataLock(deps);
-      if (reacquired.status === 'acquired') {
-        const latest = readNewestProfileMetadata(deps);
-        if (
-          latest.ok
-          && latest.resolution.mode !== 'read_only'
-          && latest.resolution.metadata.profiles.some(profile => profile.id === profileId)
-        ) {
-          previous = latest.resolution.metadata;
-          const refreshedCandidate = buildCandidate(previous);
-          if (refreshedCandidate !== null) {
-            candidate = refreshedCandidate;
-            if (!serializeTransaction()) {
-              const details = await rollbackAll();
-              closeRecoveryRepository();
-              return transactionFailure('invalid_metadata', previous, resolution.notice, details);
-            }
-            try {
-              deps.storage.setItem(PROFILE_METADATA_BACKUP_KEY, serializedPrevious);
-              if (deps.storage.getItem(PROFILE_METADATA_BACKUP_KEY) !== serializedPrevious) {
-                const details = await rollbackAll();
-                closeRecoveryRepository();
-                return transactionFailure('backup_failed', previous, resolution.notice, details);
-              }
-            } catch {
-              const details = await rollbackAll();
-              closeRecoveryRepository();
-              return transactionFailure('backup_failed', previous, resolution.notice, details);
-            }
-          }
+      if (reacquired.status === 'storage_unavailable') {
+        postCleanupAuthorityFailure = 'storage_unavailable';
+        break;
+      }
+      if (reacquired.status !== 'acquired') {
+        const waitForExpiry = Math.max(
+          PROFILE_METADATA_LOCK_RETRY_MS,
+          profileMetadataLockRetryDelay(deps),
+        );
+        await deps.wait(waitForExpiry);
+        const completed = latestCompletedDeletion();
+        if (completed !== null) return completed;
+        postCleanupAuthorityFailure = deletionAuthorityFailure(false);
+        continue;
+      }
+
+      const latest = readNewestProfileMetadata(deps);
+      if (!latest.ok) {
+        const details = await rollbackAll();
+        closeRecoveryRepository();
+        return transactionFailure('storage_unavailable', previous, resolution.notice, details);
+      }
+      if (!latest.resolution.metadata.profiles.some(profile => profile.id === profileId)) {
+        const completed = latestCompletedDeletion();
+        if (completed !== null) return completed;
+      }
+      if (latest.resolution.mode === 'read_only') {
+        const details = await rollbackAll();
+        closeRecoveryRepository();
+        return transactionFailure(
+          'unsupported_metadata',
+          latest.resolution.metadata,
+          latest.resolution.notice,
+          details,
+        );
+      }
+
+      previous = latest.resolution.metadata;
+      const refreshedCandidate = buildCandidate(previous);
+      if (refreshedCandidate === null) {
+        const details = await rollbackAll();
+        closeRecoveryRepository();
+        return transactionFailure('invalid_metadata', previous, resolution.notice, details);
+      }
+      candidate = refreshedCandidate;
+      if (!serializeTransaction()) {
+        const details = await rollbackAll();
+        closeRecoveryRepository();
+        return transactionFailure('invalid_metadata', previous, resolution.notice, details);
+      }
+      try {
+        deps.storage.setItem(PROFILE_METADATA_BACKUP_KEY, serializedPrevious);
+        if (deps.storage.getItem(PROFILE_METADATA_BACKUP_KEY) !== serializedPrevious) {
+          const details = await rollbackAll();
+          closeRecoveryRepository();
+          return transactionFailure('backup_failed', previous, resolution.notice, details);
         }
+      } catch {
+        const details = await rollbackAll();
+        closeRecoveryRepository();
+        return transactionFailure('backup_failed', previous, resolution.notice, details);
       }
       postCleanupAuthorityFailure = deletionAuthorityFailure(false);
     }
