@@ -1,4 +1,8 @@
-import { parseProfileMetadata, PROFILES_KEY } from './profileMetadata';
+import {
+  parseProfileMetadata,
+  PROFILE_METADATA_BACKUP_KEY,
+  PROFILES_KEY,
+} from './profileMetadata';
 
 export const WRITER_LEASE_VERSION = 1 as const;
 export const WRITER_LEASE_TTL_MS = 30_000;
@@ -80,31 +84,43 @@ const profileIdForStorageKey = (storageKey: string): string | null => {
   return SAFE_ID.test(profileId) ? profileId : null;
 };
 
-const pendingDeletionId = (
+type ProfileMetadataWriteProtection =
+  | { ok: false }
+  | { ok: true; status: 'read_only' }
+  | { ok: true; status: 'writable'; deletionId: string | null };
+
+const profileMetadataWriteProtection = (
   storage: WriterLeaseStorage,
   storageKey: string,
-): { ok: true; deletionId: string | null } | { ok: false; deletionId: null } => {
+): ProfileMetadataWriteProtection => {
   const profileId = profileIdForStorageKey(storageKey);
-  if (profileId === null) return { ok: true, deletionId: null };
-  let raw: string | null;
+  if (profileId === null) return { ok: true, status: 'writable', deletionId: null };
+  let primaryRaw: string | null;
+  let backupRaw: string | null;
   try {
-    raw = storage.getItem(PROFILES_KEY);
+    primaryRaw = storage.getItem(PROFILES_KEY);
+    backupRaw = storage.getItem(PROFILE_METADATA_BACKUP_KEY);
   } catch {
-    return { ok: false, deletionId: null };
+    return { ok: false };
   }
-  if (raw === null) return { ok: true, deletionId: null };
-  const parsed = parseProfileMetadata(raw);
-  if (parsed.status === 'unsupported') {
-    return { ok: true, deletionId: 'metadata-read-only' };
+  const copies = [parseProfileMetadata(primaryRaw), parseProfileMetadata(backupRaw)];
+  if (copies.some(copy => copy.status === 'unsupported')) {
+    return { ok: true, status: 'read_only' };
   }
-  if (parsed.status !== 'current' && parsed.status !== 'legacy') {
-    return { ok: true, deletionId: null };
+
+  const deletionIds = new Set<string>();
+  for (const copy of copies) {
+    if (copy.status !== 'current' && copy.status !== 'legacy') continue;
+    const deletionId = copy.metadata.deletions.find(
+      intent => intent.profileId === profileId,
+    )?.deletionId;
+    if (deletionId !== undefined) deletionIds.add(deletionId);
   }
+  if (deletionIds.size > 1) return { ok: true, status: 'read_only' };
   return {
     ok: true,
-    deletionId: parsed.metadata.deletions.find(
-      intent => intent.profileId === profileId,
-    )?.deletionId ?? null,
+    status: 'writable',
+    deletionId: deletionIds.values().next().value ?? null,
   };
 };
 
@@ -138,14 +154,17 @@ const claimWriterLeaseWithPurpose = (
   purpose?: ProfileWriterLease['purpose'],
   deletionId?: string,
 ): WriterLeaseOwnershipResult => {
-  const pending = pendingDeletionId(storage, storageKey);
-  if (!pending.ok) return { status: 'unavailable', lease: null };
+  const protection = profileMetadataWriteProtection(storage, storageKey);
+  if (!protection.ok) return { status: 'unavailable', lease: null };
   const current = readWriterLease(storage, storageKey);
   if (!current.ok) return { status: 'unavailable', lease: null };
-  if (purpose === undefined && pending.deletionId !== null) {
+  if (protection.status === 'read_only') return { status: 'blocked', lease: current.lease };
+  if (purpose === undefined && protection.deletionId !== null) {
     return { status: 'blocked', lease: current.lease };
   }
-  if (purpose === 'profile_delete' && pending.deletionId !== null && pending.deletionId !== deletionId) {
+  if (purpose === 'profile_delete'
+    && protection.deletionId !== null
+    && protection.deletionId !== deletionId) {
     return { status: 'blocked', lease: current.lease };
   }
 
@@ -215,15 +234,16 @@ export const verifyWriterLease = (
   ownerId: string,
   now: number,
 ): WriterLeaseOwnershipResult => {
-  const pending = pendingDeletionId(storage, storageKey);
-  if (!pending.ok) return { status: 'unavailable', lease: null };
+  const protection = profileMetadataWriteProtection(storage, storageKey);
+  if (!protection.ok) return { status: 'unavailable', lease: null };
   const current = readWriterLease(storage, storageKey);
   if (!current.ok) return { status: 'unavailable', lease: null };
+  if (protection.status === 'read_only') return { status: 'blocked', lease: current.lease };
   if (
     current.lease !== null
     && (current.lease.purpose === 'profile_delete'
-      ? pending.deletionId !== current.lease.deletionId
-      : pending.deletionId !== null)
+      ? protection.deletionId !== current.lease.deletionId
+      : protection.deletionId !== null)
   ) return { status: 'blocked', lease: current.lease };
   if (current.lease?.ownerId === ownerId && current.lease.expiresAt > now) {
     return { status: 'owned', lease: current.lease };
@@ -237,15 +257,16 @@ export const renewWriterLease = (
   ownerId: string,
   now: number,
 ): WriterLeaseOwnershipResult => {
-  const pending = pendingDeletionId(storage, storageKey);
-  if (!pending.ok) return { status: 'unavailable', lease: null };
+  const protection = profileMetadataWriteProtection(storage, storageKey);
+  if (!protection.ok) return { status: 'unavailable', lease: null };
   const current = readWriterLease(storage, storageKey);
   if (!current.ok) return { status: 'unavailable', lease: null };
+  if (protection.status === 'read_only') return { status: 'blocked', lease: current.lease };
   if (
     current.lease !== null
     && (current.lease.purpose === 'profile_delete'
-      ? pending.deletionId !== current.lease.deletionId
-      : pending.deletionId !== null)
+      ? protection.deletionId !== current.lease.deletionId
+      : protection.deletionId !== null)
   ) return { status: 'blocked', lease: current.lease };
   if (current.lease !== null && current.lease.ownerId !== ownerId && current.lease.expiresAt > now) {
     return { status: 'blocked', lease: current.lease };

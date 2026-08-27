@@ -678,63 +678,110 @@ export const resumeProfileDeletion = async (
     );
   }
 
+  const deletionLeaseKey = writerLeaseKey(storageKey);
+  const cleanDeletionLease = (
+    countSuccessfulRemoval: boolean,
+  ): { ok: true } | { ok: false; reason: 'profile_in_use' | 'storage_unavailable' } => {
+    let raw: string | null;
+    try {
+      raw = deps.storage.getItem(deletionLeaseKey);
+    } catch {
+      removalFailures += 1;
+      return { ok: false, reason: 'storage_unavailable' };
+    }
+    if (raw === null) return { ok: true };
+
+    const lease = readWriterLease(deps.storage, storageKey);
+    if (!lease.ok) {
+      removalFailures += 1;
+      return { ok: false, reason: 'storage_unavailable' };
+    }
+    if (
+      lease.lease?.ownerId !== leaseOwnerId
+      || lease.lease.purpose !== 'profile_delete'
+      || lease.lease.deletionId !== intent.deletionId
+    ) {
+      removalFailures += 1;
+      return { ok: false, reason: 'profile_in_use' };
+    }
+
+    const cleanup = deleteProfileStorage(
+      deps.storage,
+      intent.profileId,
+      [deletionLeaseKey],
+    );
+    if (countSuccessfulRemoval) removedEntries += cleanup.removed.length;
+    removalFailures += cleanup.failed.length;
+    return cleanup.failed.length === 0
+      ? { ok: true }
+      : { ok: false, reason: 'storage_unavailable' };
+  };
+  const finishPending = (
+    reason: Extract<ProfileDeletionCleanupResult, { status: 'cleanup_pending' }>['reason'],
+    metadata: ProfileMetadata | null,
+  ): ProfileDeletionCleanupResult => {
+    const leaseCleanup = cleanDeletionLease(false);
+    return pending('reason' in leaseCleanup ? leaseCleanup.reason : reason, metadata);
+  };
+  const finishCompleted = (metadata: ProfileMetadata): ProfileDeletionCleanupResult => {
+    const leaseCleanup = cleanDeletionLease(false);
+    return 'reason' in leaseCleanup
+      ? pending(leaseCleanup.reason, metadata)
+      : completed(metadata);
+  };
+
   let serializedTombstone: string;
   try {
     serializedTombstone = JSON.stringify(currentMetadata);
   } catch {
-    releaseWriterLease(deps.storage, storageKey, leaseOwnerId);
-    return pending('invalid_metadata', currentMetadata);
+    return finishPending('invalid_metadata', currentMetadata);
   }
   let backupVerified = false;
   try {
     backupVerified = deps.storage.getItem(PROFILE_METADATA_BACKUP_KEY) === serializedTombstone;
   } catch {
-    releaseWriterLease(deps.storage, storageKey, leaseOwnerId);
-    return pending('storage_unavailable', currentMetadata);
+    return finishPending('storage_unavailable', currentMetadata);
   }
   if (!backupVerified) {
     const lock = await acquireProfileMetadataLock(deps);
     if (lock.status !== 'acquired') {
-      releaseWriterLease(deps.storage, storageKey, leaseOwnerId);
-      return pending(lock.status, currentMetadata);
+      return finishPending(lock.status, currentMetadata);
     }
     try {
       const latest = readIntentMetadata();
       if (latest.status === 'completed') {
-        releaseWriterLease(deps.storage, storageKey, leaseOwnerId);
-        return completed(latest.metadata);
+        return finishCompleted(latest.metadata);
       }
       if (latest.status === 'failure') {
-        releaseWriterLease(deps.storage, storageKey, leaseOwnerId);
-        return pending(latest.reason, latest.metadata);
+        return finishPending(latest.reason, latest.metadata);
       }
       currentMetadata = latest.metadata;
       serializedTombstone = JSON.stringify(currentMetadata);
       const authorityFailure = currentOwnershipFailure(deps);
       if (authorityFailure !== null) {
-        releaseWriterLease(deps.storage, storageKey, leaseOwnerId);
-        return pending(authorityFailure, currentMetadata);
+        return finishPending(authorityFailure, currentMetadata);
       }
       try {
         deps.storage.setItem(PROFILE_METADATA_BACKUP_KEY, serializedTombstone);
         if (deps.storage.getItem(PROFILE_METADATA_BACKUP_KEY) !== serializedTombstone) {
-          releaseWriterLease(deps.storage, storageKey, leaseOwnerId);
-          return pending('storage_unavailable', currentMetadata);
+          return finishPending('storage_unavailable', currentMetadata);
         }
       } catch {
-        releaseWriterLease(deps.storage, storageKey, leaseOwnerId);
-        return pending('storage_unavailable', currentMetadata);
+        return finishPending('storage_unavailable', currentMetadata);
       }
 
       // This bounded attempt spent its single metadata-authority acquisition
       // repairing the durable tombstone backup. Stop before destructive cleanup
       // so a later worker can resume from two verified tombstone copies and use
       // its own one acquisition, if needed, only for finalization.
-      releaseWriterLease(deps.storage, storageKey, leaseOwnerId);
-      return pending('busy', currentMetadata);
+      return finishPending('busy', currentMetadata);
     } finally {
       releaseProfileMetadataLock(deps);
     }
+  }
+
+  if (deps.openRecoveryRepository === undefined) {
+    return finishPending('storage_unavailable', currentMetadata);
   }
 
   const deletionLeaseOwned = (): SaveWriteAuthorization => {
@@ -754,130 +801,116 @@ export const resumeProfileDeletion = async (
         : 'ownership_conflict' };
   };
 
-  const releaseDeletionLease = (): void => {
-    const lease = readWriterLease(deps.storage, storageKey);
-    if (
-      lease.ok
-      && lease.lease?.ownerId === leaseOwnerId
-      && lease.lease.purpose === 'profile_delete'
-      && lease.lease.deletionId === intent.deletionId
-    ) releaseWriterLease(deps.storage, storageKey, leaseOwnerId);
-  };
-
+  let repository: RecoveryRepository | null = null;
   try {
-    if (deps.openRecoveryRepository !== undefined) {
-      let repository: RecoveryRepository | null = null;
-      try {
-        repository = await deps.openRecoveryRepository();
-        if (repository.deleteProfileData === undefined) {
-          return pending('storage_unavailable', currentMetadata);
-        }
-        const deletion = await repository.deleteProfileData(
-          intent.profileId,
-          deletionLeaseOwned,
-        );
-        if ('reason' in deletion) {
-          if (deletion.reason === 'ownership_conflict') {
-            const latest = readIntentMetadata();
-            if (latest.status === 'completed') return completed(latest.metadata);
-            if (transactionAborted(deps)) return pending('busy', currentMetadata);
-            const lease = verifyWriterLease(deps.storage, storageKey, leaseOwnerId, deps.now());
-            return pending(
-              lease.status === 'unavailable' ? 'storage_unavailable' : 'profile_in_use',
-              latest.metadata,
-            );
-          }
-          return pending('storage_unavailable', currentMetadata);
-        }
-        removedEntries += deletion.removedEntries;
-      } catch {
-        return pending('storage_unavailable', currentMetadata);
-      } finally {
-        try { repository?.close(); } catch { /* safe to close an aborted connection */ }
-      }
+    repository = await deps.openRecoveryRepository();
+    if (repository.deleteProfileData === undefined) {
+      return finishPending('storage_unavailable', currentMetadata);
     }
-
-    if (transactionAborted(deps)) return pending('busy', currentMetadata);
-    const leaseAuthorization = deletionLeaseOwned();
-    if ('reason' in leaseAuthorization) {
-      return pending(
-        leaseAuthorization.reason === 'storage_unavailable'
-          ? 'storage_unavailable'
-          : 'profile_in_use',
-        currentMetadata,
-      );
-    }
-
-    const leaseKey = writerLeaseKey(storageKey);
-    const localResult = deleteProfileStorage(
-      deps.storage,
+    const deletion = await repository.deleteProfileData(
       intent.profileId,
-      profileOwnedKeys(intent.profileId).filter(key => key !== leaseKey),
+      deletionLeaseOwned,
     );
-    removedEntries += localResult.removed.length;
-    removalFailures += localResult.failed.length;
-    if (localResult.failed.length > 0) {
+    if ('reason' in deletion) {
+      if (deletion.reason === 'ownership_conflict') {
+        const latest = readIntentMetadata();
+        if (latest.status === 'completed') return finishCompleted(latest.metadata);
+        if (transactionAborted(deps)) return finishPending('busy', currentMetadata);
+        const lease = verifyWriterLease(deps.storage, storageKey, leaseOwnerId, deps.now());
+        return finishPending(
+          lease.status === 'unavailable' ? 'storage_unavailable' : 'profile_in_use',
+          latest.metadata,
+        );
+      }
+      return finishPending('storage_unavailable', currentMetadata);
+    }
+    removedEntries += deletion.removedEntries;
+  } catch {
+    return finishPending('storage_unavailable', currentMetadata);
+  } finally {
+    try { repository?.close(); } catch { /* safe to close an aborted connection */ }
+  }
+
+  if (transactionAborted(deps)) return finishPending('busy', currentMetadata);
+  const leaseAuthorization = deletionLeaseOwned();
+  if ('reason' in leaseAuthorization) {
+    return finishPending(
+      leaseAuthorization.reason === 'storage_unavailable'
+        ? 'storage_unavailable'
+        : 'profile_in_use',
+      currentMetadata,
+    );
+  }
+
+  const localResult = deleteProfileStorage(
+    deps.storage,
+    intent.profileId,
+    profileOwnedKeys(intent.profileId).filter(key => key !== deletionLeaseKey),
+  );
+  removedEntries += localResult.removed.length;
+  removalFailures += localResult.failed.length;
+  if (localResult.failed.length > 0) {
+    return finishPending('storage_unavailable', currentMetadata);
+  }
+  if (transactionAborted(deps)) return finishPending('busy', currentMetadata);
+
+  const leaseCleanup = cleanDeletionLease(true);
+  if ('reason' in leaseCleanup) return pending(leaseCleanup.reason, currentMetadata);
+
+  const lock = await acquireProfileMetadataLock(deps);
+  if (lock.status !== 'acquired') return pending(lock.status, currentMetadata);
+  try {
+    const latest = readIntentMetadata();
+    if (latest.status === 'completed') return completed(latest.metadata);
+    if (latest.status === 'failure') return pending(latest.reason, latest.metadata);
+    currentMetadata = latest.metadata;
+
+    const candidate = validateCandidate({
+      ...currentMetadata,
+      revision: currentMetadata.revision + 1,
+      deletions: currentMetadata.deletions.filter(
+        deletion => deletion.deletionId !== intent.deletionId,
+      ),
+    });
+    if (candidate === null) return pending('invalid_metadata', currentMetadata);
+    let serializedCandidate: string;
+    try {
+      serializedCandidate = JSON.stringify(candidate);
+    } catch {
+      return pending('invalid_metadata', currentMetadata);
+    }
+
+    const authorityFailure = currentOwnershipFailure(deps);
+    if (authorityFailure !== null) return pending(authorityFailure, currentMetadata);
+    try {
+      // Finalization writes the candidate backup first. If the primary write
+      // fails, the primary tombstone remains authoritative and resumable.
+      deps.storage.setItem(PROFILE_METADATA_BACKUP_KEY, serializedCandidate);
+      if (deps.storage.getItem(PROFILE_METADATA_BACKUP_KEY) !== serializedCandidate) {
+        return pending('storage_unavailable', currentMetadata);
+      }
+    } catch {
       return pending('storage_unavailable', currentMetadata);
     }
-    if (transactionAborted(deps)) return pending('busy', currentMetadata);
 
-    const lock = await acquireProfileMetadataLock(deps);
-    if (lock.status !== 'acquired') return pending(lock.status, currentMetadata);
+    const primaryAuthorityFailure = currentOwnershipFailure(deps);
+    if (primaryAuthorityFailure !== null) return pending(primaryAuthorityFailure, currentMetadata);
     try {
-      const latest = readIntentMetadata();
-      if (latest.status === 'completed') return completed(latest.metadata);
-      if (latest.status === 'failure') return pending(latest.reason, latest.metadata);
-      currentMetadata = latest.metadata;
-
-      const candidate = validateCandidate({
-        ...currentMetadata,
-        revision: currentMetadata.revision + 1,
-        deletions: currentMetadata.deletions.filter(
-          deletion => deletion.deletionId !== intent.deletionId,
-        ),
-      });
-      if (candidate === null) return pending('invalid_metadata', currentMetadata);
-      let serializedCandidate: string;
-      try {
-        serializedCandidate = JSON.stringify(candidate);
-      } catch {
-        return pending('invalid_metadata', currentMetadata);
-      }
-
-      const authorityFailure = currentOwnershipFailure(deps);
-      if (authorityFailure !== null) return pending(authorityFailure, currentMetadata);
-      try {
-        // Finalization writes the candidate backup first. If the primary write
-        // fails, the primary tombstone remains authoritative and resumable.
-        deps.storage.setItem(PROFILE_METADATA_BACKUP_KEY, serializedCandidate);
-        if (deps.storage.getItem(PROFILE_METADATA_BACKUP_KEY) !== serializedCandidate) {
-          return pending('storage_unavailable', currentMetadata);
-        }
-      } catch {
+      deps.storage.setItem(PROFILES_KEY, serializedCandidate);
+      if (deps.storage.getItem(PROFILES_KEY) !== serializedCandidate) {
         return pending('storage_unavailable', currentMetadata);
       }
-
-      const primaryAuthorityFailure = currentOwnershipFailure(deps);
-      if (primaryAuthorityFailure !== null) return pending(primaryAuthorityFailure, currentMetadata);
+    } catch {
       try {
-        deps.storage.setItem(PROFILES_KEY, serializedCandidate);
-        if (deps.storage.getItem(PROFILES_KEY) !== serializedCandidate) {
-          return pending('storage_unavailable', currentMetadata);
-        }
+        if (deps.storage.getItem(PROFILES_KEY) === serializedCandidate) return completed(candidate);
       } catch {
-        try {
-          if (deps.storage.getItem(PROFILES_KEY) === serializedCandidate) return completed(candidate);
-        } catch {
-          // The tombstone primary remains the conservative state when unknown.
-        }
-        return pending('storage_unavailable', currentMetadata);
+        // The tombstone primary remains the conservative state when unknown.
       }
-      return completed(candidate);
-    } finally {
-      releaseProfileMetadataLock(deps);
+      return pending('storage_unavailable', currentMetadata);
     }
+    return completed(candidate);
   } finally {
-    releaseDeletionLease();
+    releaseProfileMetadataLock(deps);
   }
 };
 

@@ -25,7 +25,7 @@ import {
 } from './profileMetadata';
 import { openRecoveryDatabase } from './recoveryDatabase';
 import type { RecoveryCheckpoint, RecoveryHead, RecoveryRepository } from './recoveryTypes';
-import { claimWriterLease, readWriterLease } from './profileWriterLease';
+import { claimWriterLease, readWriterLease, writerLeaseKey } from './profileWriterLease';
 import { profileOwnedKeys } from './profileStorage';
 
 type Deferred<T> = {
@@ -1810,6 +1810,11 @@ describe('durable profile deletion tombstones', () => {
     deletions: [intent],
   });
 
+  const emptyRecoveryRepository = (): (() => Promise<RecoveryRepository>) => {
+    const databaseName = `profile-delete-empty-${Date.now()}-${Math.random()}`;
+    return () => openRecoveryDatabase({ databaseName });
+  };
+
   it('commits the tombstone before cleanup and never rolls visibility back when cleanup fails', async () => {
     const previous: ProfileMetadata = {
       version: 2,
@@ -1933,6 +1938,75 @@ describe('durable profile deletion tombstones', () => {
     expect(lockWasHeldDuringCleanup).toBe(false);
   });
 
+  it('retains the committed tombstone when production dependencies provide no recovery repository', async () => {
+    const previous = deletableMetadata();
+    const storage = createStorage([
+      [PROFILES_KEY, JSON.stringify(previous)],
+      ['FATE_PROFILE_alpha', 'valid:alpha'],
+      ['FATE_PROFILE_beta', 'valid:beta'],
+    ]);
+
+    const result = await mutateProfileMetadata({
+      ...createDependencies(storage),
+      createDeletionId: () => 'delete-alpha-1',
+    }, { type: 'delete', profileId: 'alpha' });
+
+    expect(result).toEqual({
+      ok: true,
+      metadata: {
+        version: 2,
+        revision: 8,
+        profiles: [previous.profiles[1]],
+        activeProfileId: 'beta',
+        deletions: [{ ...intent, requestedAt: 1_025 }],
+      },
+      notice: null,
+      deleteDetails: {
+        removedEntries: 0,
+        removalFailures: 0,
+        rollbackFailures: 0,
+        cleanupPending: true,
+        deletionId: 'delete-alpha-1',
+      },
+    });
+    expect(storage.values.get('FATE_PROFILE_alpha')).toBe('valid:alpha');
+    expect(storage.values.get('FATE_PROFILE_beta')).toBe('valid:beta');
+    expect(storage.values.has('FATE_PROFILE_alpha__writer')).toBe(false);
+  });
+
+  it.each([
+    {
+      label: 'recovery database open failure',
+      openRecoveryRepository: () => Promise.reject(new Error('IndexedDB blocked')),
+    },
+    {
+      label: 'repository without profile deletion support',
+      openRecoveryRepository: async () => ({ close: vi.fn() } as unknown as RecoveryRepository),
+    },
+  ])('retains the intent after $label', async ({ openRecoveryRepository }) => {
+    const current = pendingMetadata();
+    const storage = createStorage([
+      [PROFILES_KEY, JSON.stringify(current)],
+      [PROFILE_METADATA_BACKUP_KEY, JSON.stringify(current)],
+      ['FATE_PROFILE_alpha', 'valid:alpha'],
+    ]);
+
+    await expect(resumeProfileDeletion(intent, {
+      ...createDependencies(storage, 'cleanup-tab'),
+      openRecoveryRepository,
+    })).resolves.toEqual({
+      status: 'cleanup_pending',
+      reason: 'storage_unavailable',
+      metadata: current,
+      removedEntries: 0,
+      removalFailures: 0,
+      rollbackFailures: 0,
+    });
+    expect(storage.values.get(PROFILES_KEY)).toBe(JSON.stringify(current));
+    expect(storage.values.get('FATE_PROFILE_alpha')).toBe('valid:alpha');
+    expect(storage.values.has('FATE_PROFILE_alpha__writer')).toBe(false);
+  });
+
   it('keeps the tombstone and releases its lease when cancellation arrives after commit', async () => {
     const previous = deletableMetadata();
     const storage = createStorage([
@@ -1986,6 +2060,7 @@ describe('durable profile deletion tombstones', () => {
     const result = await mutateProfileMetadata({
       ...createDependencies(storage),
       createDeletionId: () => 'delete-alpha-1',
+      openRecoveryRepository: emptyRecoveryRepository(),
     }, { type: 'delete', profileId: 'alpha' });
 
     expect(result).toEqual({
@@ -1999,7 +2074,7 @@ describe('durable profile deletion tombstones', () => {
       },
       notice: null,
       deleteDetails: {
-        removedEntries: 1,
+        removedEntries: 2,
         removalFailures: 0,
         rollbackFailures: 0,
         cleanupPending: false,
@@ -2019,13 +2094,16 @@ describe('durable profile deletion tombstones', () => {
     ]);
     const clock = createClock();
 
-    const result = await resumeProfileDeletion(intent, createDependencies(storage, 'cleanup-tab', clock));
+    const result = await resumeProfileDeletion(intent, {
+      ...createDependencies(storage, 'cleanup-tab', clock),
+      openRecoveryRepository: emptyRecoveryRepository(),
+    });
 
     expect(result).toEqual({
       status: 'cleanup_pending',
       reason: 'busy',
       metadata: current,
-      removedEntries: 0,
+      removedEntries: 1,
       removalFailures: 0,
       rollbackFailures: 0,
     });
@@ -2102,7 +2180,10 @@ describe('durable profile deletion tombstones', () => {
     expect(storage.values.has(PROFILE_METADATA_LOCK_KEY)).toBe(false);
     expect(storage.values.has('FATE_PROFILE_alpha__writer')).toBe(false);
 
-    const second = await resumeProfileDeletion(intent, createDependencies(storage, 'cleanup-worker'));
+    const second = await resumeProfileDeletion(intent, {
+      ...createDependencies(storage, 'cleanup-worker'),
+      openRecoveryRepository: emptyRecoveryRepository(),
+    });
 
     expect(second).toEqual({
       status: 'completed',
@@ -2111,7 +2192,7 @@ describe('durable profile deletion tombstones', () => {
         revision: 6,
         deletions: [],
       },
-      removedEntries: 1,
+      removedEntries: 2,
       removalFailures: 0,
       rollbackFailures: 0,
     });
@@ -2194,7 +2275,7 @@ describe('durable profile deletion tombstones', () => {
         revision: 6,
         deletions: [],
       },
-      removedEntries: 1,
+      removedEntries: 2,
       removalFailures: 0,
       rollbackFailures: 0,
     });
@@ -2217,7 +2298,10 @@ describe('durable profile deletion tombstones', () => {
       if (key === 'FATE_PROFILE_alpha') storage.values.set(key, 'late-writer-value');
     };
 
-    const result = await resumeProfileDeletion(intent, createDependencies(storage, 'cleanup-tab'));
+    const result = await resumeProfileDeletion(intent, {
+      ...createDependencies(storage, 'cleanup-tab'),
+      openRecoveryRepository: emptyRecoveryRepository(),
+    });
 
     expect(result).toEqual({
       status: 'cleanup_pending',
@@ -2231,6 +2315,92 @@ describe('durable profile deletion tombstones', () => {
     expect(storage.values.has('FATE_PROFILE_alpha__backups')).toBe(false);
     expect(storage.values.get(PROFILES_KEY)).toBe(JSON.stringify(current));
     expect(profileOwnedKeys('beta').some(key => storage.calls.includes(`remove:${key}`))).toBe(false);
+  });
+
+  it.each([
+    'remove_exception',
+    'readback_exception',
+    'reappearance',
+  ] as const)('retains the intent when deletion-lease cleanup has a $mode failure', async mode => {
+    const current = pendingMetadata();
+    const storage = createStorage([
+      [PROFILES_KEY, JSON.stringify(current)],
+      [PROFILE_METADATA_BACKUP_KEY, JSON.stringify(current)],
+      ['FATE_PROFILE_beta', 'valid:beta'],
+    ]);
+    const leaseKey = writerLeaseKey('FATE_PROFILE_alpha');
+    const getItem = storage.getItem;
+    const removeItem = storage.removeItem;
+    let leaseRemovalAttempted = false;
+    storage.getItem = key => {
+      if (key === leaseKey && leaseRemovalAttempted && mode === 'readback_exception') {
+        throw new DOMException('blocked', 'SecurityError');
+      }
+      return getItem(key);
+    };
+    storage.removeItem = key => {
+      if (key !== leaseKey) {
+        removeItem(key);
+        return;
+      }
+      leaseRemovalAttempted = true;
+      if (mode === 'remove_exception') {
+        throw new DOMException('blocked', 'SecurityError');
+      }
+      const raw = storage.values.get(key) ?? null;
+      removeItem(key);
+      if (mode === 'reappearance' && raw !== null) storage.values.set(key, raw);
+    };
+
+    const result = await resumeProfileDeletion(intent, {
+      ...createDependencies(storage, 'cleanup-tab'),
+      openRecoveryRepository: emptyRecoveryRepository(),
+    });
+
+    expect(result).toEqual({
+      status: 'cleanup_pending',
+      reason: 'storage_unavailable',
+      metadata: current,
+      removedEntries: 0,
+      removalFailures: 1,
+      rollbackFailures: 0,
+    });
+    expect(storage.values.get(PROFILES_KEY)).toBe(JSON.stringify(current));
+    expect(storage.values.get('FATE_PROFILE_beta')).toBe('valid:beta');
+  });
+
+  it('counts a deletion lease as removed when removeItem throws after deleting it', async () => {
+    const current = pendingMetadata();
+    const storage = createStorage([
+      [PROFILES_KEY, JSON.stringify(current)],
+      [PROFILE_METADATA_BACKUP_KEY, JSON.stringify(current)],
+      ['FATE_PROFILE_beta', 'valid:beta'],
+    ]);
+    const leaseKey = writerLeaseKey('FATE_PROFILE_alpha');
+    const removeItem = storage.removeItem;
+    storage.removeItem = key => {
+      removeItem(key);
+      if (key === leaseKey) throw new DOMException('late exception', 'SecurityError');
+    };
+
+    const result = await resumeProfileDeletion(intent, {
+      ...createDependencies(storage, 'cleanup-tab'),
+      openRecoveryRepository: emptyRecoveryRepository(),
+    });
+
+    expect(result).toEqual({
+      status: 'completed',
+      metadata: {
+        ...current,
+        revision: 6,
+        deletions: [],
+      },
+      removedEntries: 1,
+      removalFailures: 0,
+      rollbackFailures: 0,
+    });
+    expect(storage.values.has(leaseKey)).toBe(false);
+    expect(storage.values.get('FATE_PROFILE_beta')).toBe('valid:beta');
   });
 
   it('treats an already-finalized remote intent as an idempotent completion', async () => {

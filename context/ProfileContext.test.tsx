@@ -1,6 +1,10 @@
 // @vitest-environment jsdom
 
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  IDBKeyRange as FakeIDBKeyRange,
+  indexedDB as fakeIndexedDB,
+} from 'fake-indexeddb';
 import { useEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ProfileSwitcher } from '../components/ProfileSwitcher';
@@ -71,6 +75,8 @@ describe('ProfileProvider pending-save cleanup', () => {
       removeItem: (key: string) => { values.delete(key); },
       clear: () => values.clear(),
     });
+    vi.stubGlobal('indexedDB', fakeIndexedDB);
+    vi.stubGlobal('IDBKeyRange', FakeIDBKeyRange);
   });
 
   afterEach(() => {
