@@ -39,6 +39,9 @@ export const isAreaReachable = (name: string, unlocks: UnlockState, gameModeId?:
     return isNamedAreaReachableViaChunks(name, unlocks.chunks ?? []);
   }
   const canonical = canonicalAreaName(name);
+  if (canonical === 'Misthalin' || Object.hasOwn(REGION_GROUPS, canonical)) {
+    return isRegionUnlocked(canonical, unlocks.regions);
+  }
   return isFreeArea(canonical)
     || unlocks.regions.some((unlocked) => canonicalAreaName(unlocked) === canonical);
 };

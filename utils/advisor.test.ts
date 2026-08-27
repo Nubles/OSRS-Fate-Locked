@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SKILLS_LIST } from '../constants';
+import { REGION_GROUPS, SKILLS_LIST } from '../constants';
 import {
   computeUnlockImpact, prepareUnlockImpactContext, type UnlockImpactContext,
 } from './unlockImpact';
@@ -148,6 +148,31 @@ describe('rankLockedRegions', () => {
     const ranked = rankLockedRegions(maxedUnlocks({ regions: [someRegion] }));
     expect(ranked.find((r) => r.id === someRegion)).toBeUndefined();
     expect(ranked.length).toBe(UNLOCKABLE_REGIONS.length - 1);
+  });
+
+  it('excludes a region completed through all of its child areas', () => {
+    const ranked = rankLockedRegions(maxedUnlocks({
+      regions: [...REGION_GROUPS.Wilderness],
+    }));
+
+    expect(ranked.find((r) => r.id === 'Wilderness')).toBeUndefined();
+    expect(ranked.length).toBe(UNLOCKABLE_REGIONS.length - 1);
+  });
+
+  it('scores completing a continent through the child areas rolls can grant', () => {
+    const base = maxedUnlocks();
+    const ranked = rankLockedRegions(base).find((r) => r.id === 'Asgarnia')!;
+    const expected = computeUnlockImpact(base, {
+      ...base,
+      regions: [...REGION_GROUPS.Asgarnia],
+    });
+
+    expect(ranked.newQuestNames).toEqual(expected.directQuestNames);
+    expect(ranked.newDiaryIds).toEqual(expected.directDiaryIds);
+    expect(ranked.cascadeQuestNames).toEqual(expected.cascadeQuestNames);
+    expect(ranked.cascadeDiaryIds).toEqual(expected.cascadeDiaryIds);
+    expect(ranked.score).toBe(expected.directScore);
+    expect(ranked.cascadeScore).toBe(expected.cascadeScore);
   });
 
   it('a high-value region unlocks at least one quest in its cascade', () => {

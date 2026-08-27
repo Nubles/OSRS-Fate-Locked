@@ -343,7 +343,7 @@ const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectK
       const isMisthalin = region === 'Misthalin';
       const isUnlocked = isChunked
         ? isNamedAreaReachableViaChunks(region, chunkUnlocks)
-        : isFreeArea(region) || regionUnlocks.includes(region);
+        : isRegionUnlocked(region, regionUnlocks);
       const subRegions = isMisthalin ? MISTHALIN_AREAS : REGION_GROUPS[region] || [];
       return (
         <div

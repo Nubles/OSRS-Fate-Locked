@@ -26,12 +26,14 @@ export const FeatureRevealDriver: React.FC = () => {
 
   useEffect(() => {
     let seen: Set<string>;
+    let hadRecord = false;
     try {
-      seen = new Set(JSON.parse(localStorage.getItem(storageKey) ?? '[]') as string[]);
+      const raw = localStorage.getItem(storageKey);
+      hadRecord = raw !== null;
+      seen = new Set(JSON.parse(raw ?? '[]') as string[]);
     } catch {
       seen = new Set();
     }
-    const hadRecord = localStorage.getItem(storageKey) !== null;
     const isFreshMount = seededFor.current !== activeProfileId;
 
     const unseen = [...visible].filter((id) => !seen.has(id));
@@ -56,7 +58,12 @@ export const FeatureRevealDriver: React.FC = () => {
     }
 
     for (const id of unseen) seen.add(id);
-    localStorage.setItem(storageKey, JSON.stringify([...seen]));
+    try {
+      localStorage.setItem(storageKey, JSON.stringify([...seen]));
+    } catch {
+      // Best-effort UI state must never take down a recoverable profile when
+      // localStorage is full or unavailable.
+    }
     seededFor.current = activeProfileId;
   }, [visible, storageKey, activeProfileId]);
 

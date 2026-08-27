@@ -41,22 +41,39 @@ describe('authored changelog releases', () => {
   });
 
   it('announces the first public RuneProof quest pack accurately', () => {
-    const runeProofRelease = CHANGELOG_RELEASES.find(
+    const runeProofWaveOne = CHANGELOG_RELEASES.find(
       release => release.id === '2026-08-22-runeproof-wave-one',
     );
 
-    expect(runeProofRelease).toMatchObject({
+    expect(runeProofWaveOne).toMatchObject({
       id: '2026-08-22-runeproof-wave-one',
       title: 'RuneProof Begins',
       date: '2026-08-22',
     });
-    expect(runeProofRelease?.sections.added).toEqual(expect.arrayContaining([
+    expect(runeProofWaveOne?.sections.added).toEqual(expect.arrayContaining([
       expect.stringMatching(/five reviewed F2P quest guides/i),
       expect.stringMatching(/temporary maps/i),
     ]));
-    expect(runeProofRelease?.sections.changed).toEqual(expect.arrayContaining([
+    expect(runeProofWaveOne?.sections.changed).toEqual(expect.arrayContaining([
       expect.stringMatching(/reachable.*imp source/i),
       expect.stringMatching(/does not complete.*Journal/i),
+    ]));
+  });
+
+  it('announces consistent continent access and storage-full recovery', () => {
+    const regionStorageRecovery = CHANGELOG_RELEASES.find(
+      release => release.id === '2026-08-25-region-storage-recovery',
+    );
+
+    expect(regionStorageRecovery).toMatchObject({
+      id: '2026-08-25-region-storage-recovery',
+      title: 'Regions & Saves Recovered',
+      date: '2026-08-25',
+    });
+    expect(regionStorageRecovery?.sections.fixed).toEqual(expect.arrayContaining([
+      expect.stringMatching(/completed continents.*quests.*diaries/i),
+      expect.stringMatching(/browser storage.*reload/i),
+      expect.stringMatching(/disposable caches.*profile/i),
     ]));
   });
 

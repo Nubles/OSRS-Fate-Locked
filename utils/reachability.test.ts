@@ -7,6 +7,7 @@ import {
 } from './reachability';
 import { setStartArea, isFreeArea } from './freeAreas';
 import { UnlockState } from '../types';
+import { REGION_GROUPS } from '../data/items';
 
 const baseUnlocks: UnlockState = {
   equipment: {},
@@ -60,6 +61,38 @@ describe('isNamedAreaReachableViaChunks', () => {
 });
 
 describe('isAreaReachable', () => {
+  it('treats a continent as reachable only after every tracked child area is unlocked', () => {
+    const wildernessAreas = REGION_GROUPS.Wilderness;
+
+    expect(isAreaReachable(
+      'Wilderness',
+      { ...baseUnlocks, regions: wildernessAreas.slice(0, -1) },
+      'vanilla',
+    )).toBe(false);
+    expect(isAreaReachable(
+      'Wilderness',
+      { ...baseUnlocks, regions: [...wildernessAreas] },
+      'vanilla',
+    )).toBe(true);
+  });
+
+  it.each(Object.entries(REGION_GROUPS))(
+    'applies the same partial/full completion rule to %s',
+    (continent, children) => {
+      expect(children.length).toBeGreaterThan(1);
+      expect(isAreaReachable(
+        continent,
+        { ...baseUnlocks, regions: children.slice(0, -1) },
+        'vanilla',
+      )).toBe(false);
+      expect(isAreaReachable(
+        continent,
+        { ...baseUnlocks, regions: [...children] },
+        'vanilla',
+      )).toBe(true);
+    },
+  );
+
   it('chunked mode: reachable via overlapping start chunk with empty unlocks.chunks', () => {
     expect(isAreaReachable('Lumbridge', { ...baseUnlocks, chunks: [] }, 'chunked')).toBe(true);
   });

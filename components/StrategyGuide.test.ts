@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import * as guide from './StrategyGuide';
 import { TableType } from '../types';
+import { REGION_GROUPS } from '../constants';
 
 describe('StrategyGuide requirement analysis', () => {
   it('uses method-capped levels for diary blockers and prophecy scoring', () => {
@@ -65,5 +66,29 @@ describe('StrategyGuide requirement analysis', () => {
       'One of: Combat route: Combat level 100 or Slayer cape route: Slayer 99',
     );
     expect(html).toContain('text-red-400');
+  });
+
+  it('requires every child area before treating a continent as reachable', () => {
+    const requirement = {
+      id: 'Wilderness access', category: TableType.DIARIES,
+      regions: ['Wilderness'], skills: {}, quests: [],
+    };
+    const baseUnlocks = {
+      skills: {}, levels: {}, quests: [],
+      bosses: [], minigames: [], guilds: [], farming: [], mobility: [], arcana: [],
+      housing: [], storage: [], merchants: [],
+    };
+
+    const partial = (guide as any).analyzeRequirement(requirement, {
+      ...baseUnlocks,
+      regions: REGION_GROUPS.Wilderness.slice(0, -1),
+    });
+    const complete = (guide as any).analyzeRequirement(requirement, {
+      ...baseUnlocks,
+      regions: [...REGION_GROUPS.Wilderness],
+    });
+
+    expect(partial.missingRegions).toEqual(['Wilderness']);
+    expect(complete.missingRegions).toEqual([]);
   });
 });
