@@ -52,6 +52,7 @@ describe('profile-owned storage registry', () => {
     const attempted: string[] = [];
 
     const result = deleteProfileStorage({
+      getItem: key => store.get(key) ?? null,
       removeItem: (key) => {
         attempted.push(key);
         store.delete(key);
@@ -67,11 +68,14 @@ describe('profile-owned storage registry', () => {
     const targetKeys = expectedKeys('target');
     const failingKey = targetKeys[1];
     const attempted: string[] = [];
+    const store = new Map(targetKeys.map(key => [key, `value:${key}`]));
 
     const result = deleteProfileStorage({
+      getItem: key => store.get(key) ?? null,
       removeItem: (key) => {
         attempted.push(key);
         if (key === failingKey) throw new Error('storage unavailable');
+        store.delete(key);
       },
     }, 'target');
 
@@ -79,6 +83,42 @@ describe('profile-owned storage registry', () => {
     expect(result).toEqual({
       removed: targetKeys.filter((key) => key !== failingKey),
       failed: [failingKey],
+    });
+  });
+
+  it('uses readback as the source of truth when removal throws after deleting the value', () => {
+    const targetKeys = expectedKeys('target');
+    const store = new Map(targetKeys.map(key => [key, `value:${key}`]));
+    const throwAfterDelete = targetKeys[2];
+
+    const result = deleteProfileStorage({
+      getItem: key => store.get(key) ?? null,
+      removeItem: key => {
+        store.delete(key);
+        if (key === throwAfterDelete) throw new DOMException('blocked after delete', 'SecurityError');
+      },
+    }, 'target');
+
+    expect(result).toEqual({ removed: targetKeys, failed: [] });
+    expect(store.size).toBe(0);
+  });
+
+  it('reports a key that reappears before readback as a cleanup failure', () => {
+    const targetKeys = expectedKeys('target');
+    const reappearingKey = targetKeys[4];
+    const store = new Map(targetKeys.map(key => [key, `value:${key}`]));
+
+    const result = deleteProfileStorage({
+      getItem: key => store.get(key) ?? null,
+      removeItem: key => {
+        store.delete(key);
+        if (key === reappearingKey) store.set(key, 'late-writer-value');
+      },
+    }, 'target');
+
+    expect(result).toEqual({
+      removed: targetKeys.filter(key => key !== reappearingKey),
+      failed: [reappearingKey],
     });
   });
 });

@@ -1,4 +1,5 @@
 import type { SaveWriteAuthorization } from './profileWriterLease';
+import type { ProfileMetadata } from '../types';
 
 export type RecoveryCheckpointReason =
   | 'interval'
@@ -53,21 +54,33 @@ export type RecoveryWriteResult =
       reason: 'ownership_conflict' | 'storage_unavailable' | 'quota' | 'stale_revision';
     };
 
-export interface RecoveryProfileMetadataEntry {
-  key: string;
-  value: unknown;
-}
-
-export interface RecoveryProfileSnapshot {
-  profileId: string;
-  head: RecoveryHead | null;
-  checkpoints: RecoveryCheckpoint[];
-  metadata: RecoveryProfileMetadataEntry[];
-}
-
 export type RecoveryProfileDeleteResult =
-  | { stored: true; snapshot: RecoveryProfileSnapshot }
+  | { stored: true; removedEntries: number }
   | { stored: false; reason: RecoveryMaintenanceFailureReason };
+
+export type ProfileDeletionCleanupFailureReason =
+  | 'busy'
+  | 'profile_in_use'
+  | 'storage_unavailable'
+  | 'unsupported_metadata'
+  | 'invalid_metadata';
+
+export type ProfileDeletionCleanupResult =
+  | {
+      status: 'completed';
+      metadata: ProfileMetadata;
+      removedEntries: number;
+      removalFailures: number;
+      rollbackFailures: 0;
+    }
+  | {
+      status: 'cleanup_pending';
+      reason: ProfileDeletionCleanupFailureReason;
+      metadata: ProfileMetadata | null;
+      removedEntries: number;
+      removalFailures: number;
+      rollbackFailures: 0;
+    };
 
 export interface RecoveryRepository {
   getHead(profileId: string): Promise<RecoveryHead | null>;
@@ -95,9 +108,5 @@ export interface RecoveryRepository {
     profileId: string,
     authorizeWrite: () => SaveWriteAuthorization,
   ): Promise<RecoveryProfileDeleteResult>;
-  restoreProfileData?(
-    snapshot: RecoveryProfileSnapshot,
-    authorizeWrite: () => SaveWriteAuthorization,
-  ): Promise<RecoveryWriteResult>;
   close(): void;
 }

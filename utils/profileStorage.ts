@@ -160,14 +160,31 @@ export interface ProfileDeleteResult {
 }
 
 export const deleteProfileStorage = (
-  storage: Pick<Storage, 'removeItem'>,
+  storage: Pick<Storage, 'getItem' | 'removeItem'>,
   profileId: string,
+  keys: readonly string[] = profileOwnedKeys(profileId),
 ): ProfileDeleteResult => {
   const result: ProfileDeleteResult = { removed: [], failed: [] };
-  for (const key of profileOwnedKeys(profileId)) {
+  for (const key of keys) {
+    let existed = false;
+    try {
+      existed = storage.getItem(key) !== null;
+    } catch {
+      result.failed.push(key);
+      continue;
+    }
     try {
       storage.removeItem(key);
-      result.removed.push(key);
+    } catch {
+      // Readback is authoritative because some Storage implementations can
+      // remove the value and still throw.
+    }
+    try {
+      if (storage.getItem(key) !== null) {
+        result.failed.push(key);
+      } else if (existed) {
+        result.removed.push(key);
+      }
     } catch {
       result.failed.push(key);
     }

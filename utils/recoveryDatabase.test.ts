@@ -205,30 +205,43 @@ describe('transactional recovery database', () => {
     await expect(repository.getMetadata('profile-alpha-marker')).resolves.toEqual(existingMetadata);
   });
 
-  it('aborts profile compensation when ownership changes after the final restore request', async () => {
+  it('deletes only the target profile and reports idempotent committed removal counts', async () => {
     const repository = await openRepository();
-    const existingHead = head({ persistenceRevision: 5 });
-    const existingCheckpoint = checkpoint(4);
-    const existingMetadata = { profileId: 'alpha', marker: 'do-not-restore-after-takeover' };
-    await repository.putHead(existingHead, allowWrite);
-    await repository.putCheckpoint(existingCheckpoint, allowWrite);
-    await repository.putMetadata('profile-alpha-marker', existingMetadata, allowWrite);
-    const deletion = await repository.deleteProfileData?.('alpha', allowWrite);
-    if (deletion === undefined || !deletion.stored) throw new Error('Profile cleanup did not commit.');
-
-    let authorizationCalls = 0;
-    const losesOwnershipAfterRestores = () => {
-      authorizationCalls += 1;
-      return authorizationCalls <= 4
-        ? { ok: true as const }
-        : { ok: false as const, reason: 'ownership_conflict' as const };
+    const alphaHead = head({ profileId: 'alpha', persistenceRevision: 5 });
+    const betaHead = head({
+      profileId: 'beta',
+      persistenceRevision: 8,
+      runId: 'run-beta',
+      data: JSON.stringify({ revision: 8 }),
+    });
+    const alphaCheckpoint = checkpoint(4);
+    const betaCheckpoint = {
+      ...checkpoint(7),
+      profileId: 'beta',
+      runId: 'run-beta',
+      data: JSON.stringify({ revision: 7 }),
     };
+    await repository.putHead(alphaHead, allowWrite);
+    await repository.putHead(betaHead, allowWrite);
+    await repository.putCheckpoint(alphaCheckpoint, allowWrite);
+    await repository.putCheckpoint(betaCheckpoint, allowWrite);
+    await repository.putMetadata('profile-alpha-marker', { profileId: 'alpha', marker: 'remove' }, allowWrite);
+    await repository.putMetadata('profile-beta-marker', { profileId: 'beta', marker: 'keep' }, allowWrite);
+    await repository.putMetadata('shared-marker', { marker: 'keep' }, allowWrite);
 
-    await expect(repository.restoreProfileData?.(deletion.snapshot, losesOwnershipAfterRestores))
-      .resolves.toEqual({ stored: false, reason: 'ownership_conflict' });
+    await expect(repository.deleteProfileData?.('alpha', allowWrite))
+      .resolves.toEqual({ stored: true, removedEntries: 3 });
+    await expect(repository.deleteProfileData?.('alpha', allowWrite))
+      .resolves.toEqual({ stored: true, removedEntries: 0 });
+
     await expect(repository.getHead('alpha')).resolves.toBeNull();
     await expect(repository.listCheckpoints('alpha')).resolves.toEqual([]);
     await expect(repository.getMetadata('profile-alpha-marker')).resolves.toBeNull();
+    await expect(repository.getHead('beta')).resolves.toEqual(betaHead);
+    await expect(repository.listCheckpoints('beta')).resolves.toEqual([betaCheckpoint]);
+    await expect(repository.getMetadata('profile-beta-marker'))
+      .resolves.toEqual({ profileId: 'beta', marker: 'keep' });
+    await expect(repository.getMetadata('shared-marker')).resolves.toEqual({ marker: 'keep' });
   });
 
   it('prunes only checkpoints outside the retention keep set before one quota retry', async () => {

@@ -3,7 +3,6 @@ import type {
   RecoveryCheckpoint,
   RecoveryHead,
   RecoveryProfileDeleteResult,
-  RecoveryProfileSnapshot,
   RecoveryRepository,
   RecoveryWriteResult,
 } from './recoveryTypes';
@@ -46,10 +45,7 @@ export type RecoveryDatabaseOperation =
   | 'put-metadata'
   | 'list-metadata'
   | 'delete-head'
-  | 'delete-metadata'
-  | 'restore-head'
-  | 'restore-checkpoint'
-  | 'restore-metadata';
+  | 'delete-metadata';
 
 /**
  * A narrow adapter seam used by deterministic tests. The default path always
@@ -639,12 +635,7 @@ class IndexedDbRecoveryRepository implements RecoveryRepository {
             .filter(record => record.profileId === profileId);
           const profileMetadata = (metadataRecords as MetadataEnvelope[])
             .filter(record => metadataBelongsToProfile(record, profileId));
-          const snapshot: RecoveryProfileSnapshot = {
-            profileId,
-            head: (head as RecoveryHead | undefined) ?? null,
-            checkpoints: profileCheckpoints,
-            metadata: profileMetadata.map(record => ({ key: record.key, value: record.value })),
-          };
+          const profileHead = (head as RecoveryHead | undefined) ?? null;
           const deleteAuthorized = async (
             operation: RecoveryDatabaseOperation,
             storeName: string,
@@ -656,7 +647,7 @@ class IndexedDbRecoveryRepository implements RecoveryRepository {
             }
             await requestDone(this.request(operation, storeName, requestFactory));
           };
-          if (snapshot.head !== null) {
+          if (profileHead !== null) {
             await deleteAuthorized('delete-head', HEADS_STORE, () => heads.delete(profileId));
           }
           for (const checkpoint of profileCheckpoints) {
@@ -673,7 +664,12 @@ class IndexedDbRecoveryRepository implements RecoveryRepository {
           if (isWriteFailure(commitAuthorization)) {
             throw new OwnershipAbort({ stored: false, reason: commitAuthorization.reason });
           }
-          return { stored: true, snapshot } as const;
+          return {
+            stored: true,
+            removedEntries: (profileHead === null ? 0 : 1)
+              + profileCheckpoints.length
+              + profileMetadata.length,
+          } as const;
         },
       );
       return result as RecoveryProfileDeleteResult;
@@ -685,69 +681,6 @@ class IndexedDbRecoveryRepository implements RecoveryRepository {
     }
   }
 
-  async restoreProfileData(
-    snapshot: RecoveryProfileSnapshot,
-    authorizeWrite: () => SaveWriteAuthorization,
-  ): Promise<RecoveryWriteResult> {
-    if (
-      snapshot.head?.profileId !== undefined
-      && snapshot.head.profileId !== snapshot.profileId
-    ) return { stored: false, reason: 'storage_unavailable' };
-    if (snapshot.checkpoints.some(record => record.profileId !== snapshot.profileId)) {
-      return { stored: false, reason: 'storage_unavailable' };
-    }
-    if (snapshot.metadata.some(entry => !metadataBelongsToProfile(entry, snapshot.profileId))) {
-      return { stored: false, reason: 'storage_unavailable' };
-    }
-    try {
-      const result = await this.transactionWithOwnership(
-        [HEADS_STORE, CHECKPOINTS_STORE, METADATA_STORE],
-        authorizeWrite,
-        'restore-head',
-        async (tx, authorize) => {
-          const putAuthorized = async <T,>(
-            operation: RecoveryDatabaseOperation,
-            storeName: string,
-            requestFactory: () => IDBRequest<T>,
-          ): Promise<void> => {
-            const authorization = authorize();
-            if (isWriteFailure(authorization)) {
-              throw new OwnershipAbort({ stored: false, reason: authorization.reason });
-            }
-            await requestDone(this.request(operation, storeName, requestFactory));
-          };
-          if (snapshot.head !== null) {
-            const store = tx.objectStore(HEADS_STORE);
-            await putAuthorized('restore-head', HEADS_STORE, () => store.put(snapshot.head));
-          }
-          const checkpoints = tx.objectStore(CHECKPOINTS_STORE);
-          for (const checkpoint of snapshot.checkpoints) {
-            await putAuthorized(
-              'restore-checkpoint',
-              CHECKPOINTS_STORE,
-              () => checkpoints.put(checkpoint),
-            );
-          }
-          const metadata = tx.objectStore(METADATA_STORE);
-          for (const entry of snapshot.metadata) {
-            await putAuthorized(
-              'restore-metadata',
-              METADATA_STORE,
-              () => metadata.put({ key: entry.key, value: entry.value }),
-            );
-          }
-          const commitAuthorization = authorize();
-          if (isWriteFailure(commitAuthorization)) {
-            throw new OwnershipAbort({ stored: false, reason: commitAuthorization.reason });
-          }
-          return { stored: true } as const;
-        },
-      );
-      return result as RecoveryWriteResult;
-    } catch (error) {
-      return writeFailureForError(error);
-    }
-  }
 }
 
 export const openRecoveryDatabase = async (
