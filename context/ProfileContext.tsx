@@ -12,9 +12,12 @@ import { parseAndMigrateSave } from '../utils/saveSchema';
 import { profileBaseKey } from '../utils/profileStorage';
 import { discardPendingSave } from '../utils/pendingSaves';
 import {
+  LEGACY_SAVE_KEY,
+  PROFILE_METADATA_BACKUP_KEY,
   PROFILE_METADATA_LOCK_KEY,
   PROFILES_KEY,
   parseProfileMetadata,
+  resolveProfileMetadata,
   sanitizeProfileName,
   type ProfileRecoveryNotice,
 } from '../utils/profileMetadata';
@@ -22,11 +25,14 @@ import {
   initializeProfileMetadata,
   mutateProfileMetadata,
   profileMetadataLockRetryDelay,
+  resumeProfileDeletion,
   type ProfileMutation,
   type ProfileMutationFailure,
   type ProfileTransactionDependencies,
   type ProfileTransactionResult,
 } from '../utils/profileMetadataTransaction';
+import type { ProfileDeletionCleanupFailureReason } from '../utils/recoveryTypes';
+import { writerLeaseKey } from '../utils/profileWriterLease';
 import { initialState } from './GameContext';
 import { openRecoveryDatabase } from '../utils/recoveryDatabase';
 
@@ -51,6 +57,8 @@ export interface ProfileContextType {
   mutationFailure: ProfileMutationFailure | null;
   recoveryNotice: ProfileRecoveryNotice | null;
   metadataReadOnly: boolean;
+  pendingDeletionCount: number;
+  retryProfileDeletionCleanup(): Promise<void>;
   createProfile(name: string): Promise<ProfileTransactionResult>;
   switchProfile(id: string): Promise<ProfileTransactionResult>;
   renameProfile(id: string, newName: string): Promise<ProfileTransactionResult>;
@@ -60,6 +68,21 @@ export interface ProfileContextType {
   clearRecentlyCreated(): void;
   registerProfileEvictionHandler(handler: (profileId: string) => void): () => void;
 }
+
+export class ProfileDeletionCleanupRetryError extends Error {
+  readonly reason: ProfileDeletionCleanupFailureReason;
+
+  constructor(reason: ProfileDeletionCleanupFailureReason) {
+    super('Profile storage cleanup is still pending.');
+    this.name = 'ProfileDeletionCleanupRetryError';
+    this.reason = reason;
+  }
+}
+
+type CleanupWorkerSummary = {
+  pendingCount: number;
+  reason: ProfileDeletionCleanupFailureReason | null;
+};
 
 const generateId = (): string => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -146,6 +169,31 @@ const initializeMemoryFallback = async (
 const initializeWithStorageFallback = async (
   deps: ProfileTransactionDependencies,
 ): Promise<ProfileTransactionResult> => {
+  try {
+    const primary = deps.storage.getItem(PROFILES_KEY);
+    const backup = deps.storage.getItem(PROFILE_METADATA_BACKUP_KEY);
+    if (
+      parseProfileMetadata(primary).status === 'unsupported'
+      || parseProfileMetadata(backup).status === 'unsupported'
+    ) {
+      const resolution = resolveProfileMetadata({
+        primary,
+        backup,
+        legacySave: deps.storage.getItem(LEGACY_SAVE_KEY),
+        storage: deps.storage,
+        now: deps.now(),
+        validateGameSave: deps.validateGameSave,
+        createProfileId: deps.createProfileId,
+      });
+      return failedResult(
+        'unsupported_metadata',
+        resolution.metadata,
+        resolution.notice,
+      );
+    }
+  } catch {
+    // The normal initializer owns storage-unavailable fallback behavior.
+  }
   const result = await initializeProfileMetadata(deps);
   if (
     result.metadata === null
@@ -192,6 +240,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const busyRereadArmedRef = useRef(false);
   const busyRereadTimerRef = useRef<number | null>(null);
   const busyRereadCallbackRef = useRef<() => void>(() => undefined);
+  const cleanupRequestedRef = useRef(false);
+  const cleanupWorkerRef = useRef<Promise<CleanupWorkerSummary> | null>(null);
 
   const clearBusyRereadTimer = useCallback(() => {
     if (busyRereadTimerRef.current === null) return;
@@ -276,28 +326,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     scheduleStartupBusyReread,
   ]);
 
-  useEffect(() => {
-    mountedRef.current = true;
-    let cancelled = false;
-
-    const initialize = async () => {
-      operationAbortedRef.current = false;
-      const result = await initializeWithStorageFallback(dependencies);
-      if (cancelled || !mountedRef.current) return;
-      applyInitializationResult(result);
-      setPending(null);
-    };
-
-    void initialize();
-    return () => {
-      cancelled = true;
-      mountedRef.current = false;
-      operationAbortedRef.current = true;
-      busyRereadArmedRef.current = false;
-      clearBusyRereadTimer();
-    };
-  }, [applyInitializationResult, clearBusyRereadTimer, dependencies, setPending]);
-
   const mergeIncomingMetadata = useCallback((
     incoming: ProfileMetadata,
     notice: ProfileRecoveryNotice | null,
@@ -336,6 +364,121 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     installMetadata({ ...incoming, activeProfileId: replacement });
     setRecoveryNotice(emptyNotice('remote_removal'));
   }, [installMetadata]);
+
+  const runCleanupPass = useCallback(async (): Promise<CleanupWorkerSummary> => {
+    const intents = [...(metadataRef.current?.deletions ?? [])];
+    let reason: ProfileDeletionCleanupFailureReason | null = null;
+    for (const intent of intents) {
+      if (!mountedRef.current || operationAbortedRef.current) break;
+      operationAbortedRef.current = false;
+      let result: Awaited<ReturnType<typeof resumeProfileDeletion>>;
+      try {
+        result = await resumeProfileDeletion(intent, dependencies);
+      } catch {
+        result = {
+          status: 'cleanup_pending',
+          reason: 'storage_unavailable',
+          metadata: metadataRef.current,
+          removedEntries: 0,
+          removalFailures: 0,
+          rollbackFailures: 0,
+        };
+      }
+      if (!mountedRef.current) {
+        return {
+          pendingCount: metadataRef.current?.deletions.length ?? 0,
+          reason: null,
+        };
+      }
+      if (
+        result.metadata !== null
+        && (
+          metadataRef.current === null
+          || result.metadata.revision > metadataRef.current.revision
+        )
+      ) mergeIncomingMetadata(result.metadata, null);
+      if (result.status === 'cleanup_pending') {
+        if (reason === null || result.reason === 'profile_in_use') reason = result.reason;
+      }
+    }
+
+    const pendingCount = metadataRef.current?.deletions.length ?? 0;
+    if (mountedRef.current) {
+      setMutationFailure(pendingCount === 0 ? null : reason);
+    }
+    return { pendingCount, reason };
+  }, [dependencies, mergeIncomingMetadata]);
+
+  const scheduleDeletionCleanup = useCallback((): Promise<CleanupWorkerSummary> => {
+    cleanupRequestedRef.current = true;
+    const activeWorker = cleanupWorkerRef.current;
+    if (activeWorker !== null) return activeWorker;
+
+    const worker = (async (): Promise<CleanupWorkerSummary> => {
+      let summary: CleanupWorkerSummary = {
+        pendingCount: metadataRef.current?.deletions.length ?? 0,
+        reason: null,
+      };
+      let remainingPasses = 2;
+      while (mountedRef.current && cleanupRequestedRef.current && remainingPasses > 0) {
+        if (pendingActionRef.current !== null) {
+          summary = {
+            pendingCount: metadataRef.current?.deletions.length ?? 0,
+            reason: 'busy',
+          };
+          break;
+        }
+        cleanupRequestedRef.current = false;
+        remainingPasses -= 1;
+        operationAbortedRef.current = false;
+        summary = await runCleanupPass();
+      }
+      cleanupRequestedRef.current = false;
+      return summary;
+    })();
+    cleanupWorkerRef.current = worker;
+    void worker.then(
+      () => {
+        if (cleanupWorkerRef.current === worker) cleanupWorkerRef.current = null;
+      },
+      () => {
+        if (cleanupWorkerRef.current === worker) cleanupWorkerRef.current = null;
+      },
+    );
+    return worker;
+  }, [runCleanupPass]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    let cancelled = false;
+
+    const initialize = async () => {
+      operationAbortedRef.current = false;
+      const result = await initializeWithStorageFallback(dependencies);
+      if (cancelled || !mountedRef.current) return;
+      applyInitializationResult(result);
+      setPending(null);
+      if (result.ok && result.metadata.deletions.length > 0) {
+        void scheduleDeletionCleanup();
+      }
+    };
+
+    void initialize();
+    return () => {
+      cancelled = true;
+      mountedRef.current = false;
+      operationAbortedRef.current = true;
+      cleanupRequestedRef.current = false;
+      busyRereadArmedRef.current = false;
+      clearBusyRereadTimer();
+    };
+  }, [
+    applyInitializationResult,
+    clearBusyRereadTimer,
+    dependencies,
+    scheduleDeletionCleanup,
+    setPending,
+  ]);
 
   const rereadAfterBusy = useCallback(async () => {
     if (
@@ -442,18 +585,33 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const current = metadataRef.current;
         if (current === null) {
           if (startupTerminalFailureRef.current === null) installMetadata(parsed.metadata);
+          if (parsed.metadata.deletions.length > 0) void scheduleDeletionCleanup();
           return;
         }
         const newestSeenRevision = Math.max(
           current.revision,
           deferredIncomingRef.current?.revision ?? -1,
         );
-        if (parsed.metadata.revision <= newestSeenRevision) return;
+        if (parsed.metadata.revision <= newestSeenRevision) {
+          if (parsed.metadata.deletions.length > 0) void scheduleDeletionCleanup();
+          return;
+        }
         mergeIncomingMetadata(parsed.metadata, null);
+        if (parsed.metadata.deletions.length > 0) void scheduleDeletionCleanup();
         return;
       }
       if (event.key === PROFILE_METADATA_LOCK_KEY && busyRereadArmedRef.current) {
         void rereadAfterBusy();
+      }
+      const pendingIntents = metadataRef.current?.deletions ?? [];
+      const cleanupRelevant = event.key === PROFILE_METADATA_LOCK_KEY
+        || event.key === PROFILE_METADATA_BACKUP_KEY
+        || pendingIntents.some(intent => (
+          event.key === writerLeaseKey(profileBaseKey(intent.profileId))
+        ));
+      if (pendingIntents.length > 0 && cleanupRelevant) {
+        operationAbortedRef.current = true;
+        void scheduleDeletionCleanup();
       }
     };
 
@@ -466,6 +624,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     installMetadata,
     mergeIncomingMetadata,
     rereadAfterBusy,
+    scheduleDeletionCleanup,
   ]);
 
   const runMutation = useCallback(async (
@@ -482,6 +641,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     setPending(action);
     setMutationFailure(null);
+    let scheduleCleanupAfterMutation = false;
     let result: ProfileTransactionResult;
     try {
       operationAbortedRef.current = false;
@@ -519,6 +679,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (action === 'delete' && mutation.type === 'delete') {
         discardPendingSave(profileBaseKey(mutation.profileId));
       }
+      scheduleCleanupAfterMutation = candidate.deletions.length > 0;
       if (result.notice !== null) setRecoveryNotice(result.notice);
       if (action === 'create' && mutation.type === 'create') {
         setRecentlyCreatedId(mutation.profile.id);
@@ -559,12 +720,14 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       busyRereadArmedRef.current = result.reason === 'busy';
     }
     setPending(null);
+    if (scheduleCleanupAfterMutation) void scheduleDeletionCleanup();
     return result;
   }, [
     dependencies,
     installMetadata,
     mergeIncomingMetadata,
     recoveryNotice,
+    scheduleDeletionCleanup,
     setPending,
   ]);
 
@@ -597,6 +760,21 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const deleteProfile = useCallback((id: string): Promise<ProfileTransactionResult> =>
     runMutation('delete', { type: 'delete', profileId: id }), [runMutation]);
 
+  const retryProfileDeletionCleanup = useCallback(async (): Promise<void> => {
+    if (metadataReadOnlyRef.current) {
+      throw new ProfileDeletionCleanupRetryError('unsupported_metadata');
+    }
+    const summary = await scheduleDeletionCleanup();
+    if (!mountedRef.current) return;
+    const pendingCount = metadataRef.current?.deletions.length ?? summary.pendingCount;
+    if (pendingCount > 0) {
+      const reason = summary.reason ?? 'storage_unavailable';
+      setMutationFailure(reason);
+      throw new ProfileDeletionCleanupRetryError(reason);
+    }
+    setMutationFailure(null);
+  }, [scheduleDeletionCleanup]);
+
   const dismissRecoveryNotice = useCallback(() => setRecoveryNotice(null), []);
   const clearRecentlyCreated = useCallback(() => setRecentlyCreatedId(null), []);
   const registerProfileEvictionHandler = useCallback((
@@ -609,12 +787,13 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       deferredIncomingRef.current = null;
       if (current !== null && deferred.revision > current.revision) {
         mergeIncomingMetadata(deferred, null);
+        if (deferred.deletions.length > 0) void scheduleDeletionCleanup();
       }
     }
     return () => {
       if (evictionHandlerRef.current === handler) evictionHandlerRef.current = null;
     };
-  }, [mergeIncomingMetadata]);
+  }, [mergeIncomingMetadata, scheduleDeletionCleanup]);
 
   const value = useMemo<ProfileContextType | null>(() => {
     if (metadata === null) return null;
@@ -628,6 +807,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       mutationFailure,
       recoveryNotice,
       metadataReadOnly,
+      pendingDeletionCount: metadata.deletions.length,
+      retryProfileDeletionCleanup,
       createProfile,
       switchProfile,
       renameProfile,
@@ -643,6 +824,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     mutationFailure,
     recoveryNotice,
     metadataReadOnly,
+    retryProfileDeletionCleanup,
     createProfile,
     switchProfile,
     renameProfile,

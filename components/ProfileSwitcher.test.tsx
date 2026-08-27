@@ -58,6 +58,8 @@ const context = (overrides: Partial<ProfileContextType> = {}): ProfileContextTyp
   mutationFailure: null,
   recoveryNotice: null,
   metadataReadOnly: false,
+  pendingDeletionCount: 0,
+  retryProfileDeletionCleanup: vi.fn().mockResolvedValue(undefined),
   createProfile: vi.fn().mockResolvedValue(success()),
   switchProfile: vi.fn().mockResolvedValue(success()),
   renameProfile: vi.fn().mockResolvedValue(success()),
@@ -106,6 +108,121 @@ describe('profileMutationMessage', () => {
 });
 
 describe('ProfileSwitcher', () => {
+  it('keeps an accessible cleanup warning and exposes exactly one Retry action', () => {
+    profileContext.current = context({ pendingDeletionCount: 1 });
+
+    render(<ProfileSwitcher />);
+
+    const warning = screen.getByRole('alert');
+    expect(warning.textContent).toContain('Profile removed; storage cleanup pending.');
+    expect(screen.getAllByRole('button', { name: 'Retry profile storage cleanup' })).toHaveLength(1);
+  });
+
+  it('disables cleanup retry while a profile mutation is in flight', () => {
+    profileContext.current = context({ pendingDeletionCount: 1, pendingAction: 'rename' });
+
+    render(<ProfileSwitcher />);
+
+    expect((screen.getByRole('button', {
+      name: 'Retry profile storage cleanup',
+    }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('locks duplicate cleanup retries and reports verified completion', async () => {
+    const pending = deferred<void>();
+    const retryProfileDeletionCleanup = vi.fn(() => pending.promise);
+    profileContext.current = context({ pendingDeletionCount: 1, retryProfileDeletionCleanup });
+    render(<ProfileSwitcher />);
+    const retry = screen.getByRole('button', { name: 'Retry profile storage cleanup' });
+
+    fireEvent.click(retry);
+    fireEvent.click(retry);
+
+    expect(retryProfileDeletionCleanup).toHaveBeenCalledOnce();
+    expect((retry as HTMLButtonElement).disabled).toBe(true);
+
+    await act(async () => { pending.resolve(); });
+
+    expect(screen.getByRole('status').textContent).toBe('Profile storage cleanup complete.');
+  });
+
+  it.each([
+    [
+      'profile_in_use',
+      "Another tab is using this profile's storage. Switch away from it there, then retry cleanup.",
+    ],
+    [
+      'storage_unavailable',
+      'Browser storage is unavailable. Cleanup is still pending.',
+    ],
+  ] as const)('reports %s cleanup failures truthfully', async (reason, message) => {
+    const error = Object.assign(new Error('internal cleanup failure'), {
+      name: 'ProfileDeletionCleanupRetryError',
+      reason,
+    });
+    profileContext.current = context({
+      pendingDeletionCount: 1,
+      retryProfileDeletionCleanup: vi.fn().mockRejectedValue(error),
+    });
+    render(<ProfileSwitcher />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Retry profile storage cleanup' }));
+
+    expect(screen.getByRole('alert').textContent).toContain(message);
+  });
+
+  it('never renders raw cleanup errors or stored profile bytes', async () => {
+    const raw = 'RAW_PROFILE_SAVE_BYTES:{"inventory":[12345]}';
+    profileContext.current = context({
+      pendingDeletionCount: 1,
+      retryProfileDeletionCleanup: vi.fn().mockRejectedValue(new Error(raw)),
+    });
+    render(<ProfileSwitcher />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Retry profile storage cleanup' }));
+
+    expect(document.body.textContent).not.toContain(raw);
+    expect(screen.getByRole('alert').textContent).toContain(
+      'Storage cleanup could not be completed. Try again.',
+    );
+  });
+
+  it('suppresses a retry completion from a replaced profile context', async () => {
+    const stale = deferred<void>();
+    const firstRetry = vi.fn(() => stale.promise);
+    profileContext.current = context({
+      pendingDeletionCount: 1,
+      retryProfileDeletionCleanup: firstRetry,
+    });
+    const rendered = render(<ProfileSwitcher />);
+    fireEvent.click(screen.getByRole('button', { name: 'Retry profile storage cleanup' }));
+
+    profileContext.current = context({
+      pendingDeletionCount: 1,
+      retryProfileDeletionCleanup: vi.fn().mockResolvedValue(undefined),
+    });
+    rendered.rerender(<ProfileSwitcher />);
+    await act(async () => { stale.resolve(); });
+
+    expect(screen.queryByText('Profile storage cleanup complete.')).toBeNull();
+    expect((screen.getByRole('button', {
+      name: 'Retry profile storage cleanup',
+    }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('suppresses cleanup completion after unmount', async () => {
+    const stale = deferred<void>();
+    profileContext.current = context({
+      pendingDeletionCount: 1,
+      retryProfileDeletionCleanup: vi.fn(() => stale.promise),
+    });
+    const rendered = render(<ProfileSwitcher />);
+    fireEvent.click(screen.getByRole('button', { name: 'Retry profile storage cleanup' }));
+    rendered.unmount();
+
+    await act(async () => { stale.resolve(); });
+  });
+
   it('disables create controls immediately and starts only one transaction for duplicate submits', async () => {
     const pending = deferred<ProfileTransactionResult>();
     const createProfile = vi.fn(() => pending.promise);

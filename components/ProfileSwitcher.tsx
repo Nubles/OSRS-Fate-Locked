@@ -19,6 +19,30 @@ const PROFILE_MUTATION_MESSAGES: Record<ProfileMutationFailure, string> = {
 export const profileMutationMessage = (reason: ProfileMutationFailure): string =>
   PROFILE_MUTATION_MESSAGES[reason];
 
+type CleanupFailureReason = Extract<
+  ProfileMutationFailure,
+  'busy' | 'profile_in_use' | 'storage_unavailable' | 'unsupported_metadata' | 'invalid_metadata'
+>;
+
+const CLEANUP_FAILURE_MESSAGES: Record<CleanupFailureReason, string> = {
+  busy: 'Another tab is cleaning up profile storage. Try again in a moment.',
+  profile_in_use: "Another tab is using this profile's storage. Switch away from it there, then retry cleanup.",
+  storage_unavailable: 'Browser storage is unavailable. Cleanup is still pending.',
+  unsupported_metadata: 'Profile cleanup is read-only until this app supports the stored profile version.',
+  invalid_metadata: 'Profile cleanup metadata could not be validated. Cleanup is still pending.',
+};
+
+const cleanupFailureReason = (error: unknown): CleanupFailureReason | null => {
+  if (typeof error !== 'object' || error === null) return null;
+  const record = error as { name?: unknown; reason?: unknown };
+  if (record.name !== 'ProfileDeletionCleanupRetryError' || typeof record.reason !== 'string') {
+    return null;
+  }
+  return Object.prototype.hasOwnProperty.call(CLEANUP_FAILURE_MESSAGES, record.reason)
+    ? record.reason as CleanupFailureReason
+    : null;
+};
+
 export const ProfileSwitcher: React.FC = () => {
   const {
     profiles,
@@ -26,6 +50,8 @@ export const ProfileSwitcher: React.FC = () => {
     activeProfileName,
     pendingAction,
     metadataReadOnly,
+    pendingDeletionCount,
+    retryProfileDeletionCleanup,
     createProfile,
     switchProfile,
     renameProfile,
@@ -38,12 +64,50 @@ export const ProfileSwitcher: React.FC = () => {
   const [newName, setNewName] = useState('');
   const [localPending, setLocalPending] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [cleanupPending, setCleanupPending] = useState(false);
+  const [cleanupFeedback, setCleanupFeedback] = useState<{
+    kind: 'success' | 'failure';
+    message: string;
+  } | null>(null);
   const actionGuardRef = useRef(false);
+  const cleanupGuardRef = useRef(false);
+  const cleanupAttemptRef = useRef(0);
+  const mountedRef = useRef(false);
+  const retryFunctionRef = useRef(retryProfileDeletionCleanup);
+  const previousDeletionCountRef = useRef(pendingDeletionCount);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const editInputRef = useRef<HTMLInputElement>(null);
   const createInputRef = useRef<HTMLInputElement>(null);
   const isPending = pendingAction !== null || localPending;
-  const mutationsDisabled = isPending || metadataReadOnly;
+  const mutationsDisabled = isPending || cleanupPending || metadataReadOnly;
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      cleanupAttemptRef.current += 1;
+      cleanupGuardRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (retryFunctionRef.current === retryProfileDeletionCleanup) return;
+    retryFunctionRef.current = retryProfileDeletionCleanup;
+    cleanupAttemptRef.current += 1;
+    cleanupGuardRef.current = false;
+    setCleanupPending(false);
+    setCleanupFeedback(null);
+  }, [retryProfileDeletionCleanup]);
+
+  useEffect(() => {
+    const previous = previousDeletionCountRef.current;
+    previousDeletionCountRef.current = pendingDeletionCount;
+    if (previous <= 0 || pendingDeletionCount !== 0) return;
+    cleanupAttemptRef.current += 1;
+    cleanupGuardRef.current = false;
+    setCleanupPending(false);
+    setCleanupFeedback({ kind: 'success', message: 'Profile storage cleanup complete.' });
+  }, [pendingDeletionCount]);
 
   // Close on outside click unless an in-flight action needs to retain its UI.
   useEffect(() => {
@@ -70,7 +134,12 @@ export const ProfileSwitcher: React.FC = () => {
   const runAction = async (
     action: () => Promise<ProfileTransactionResult>,
   ): Promise<ProfileTransactionResult | null> => {
-    if (actionGuardRef.current || pendingAction !== null || metadataReadOnly) return null;
+    if (
+      actionGuardRef.current
+      || cleanupGuardRef.current
+      || pendingAction !== null
+      || metadataReadOnly
+    ) return null;
     actionGuardRef.current = true;
     setLocalPending(true);
     setFeedback(null);
@@ -124,10 +193,75 @@ export const ProfileSwitcher: React.FC = () => {
     setOpen(false);
   };
 
+  const handleCleanupRetry = async () => {
+    if (
+      cleanupGuardRef.current
+      || actionGuardRef.current
+      || isPending
+      || pendingDeletionCount <= 0
+      || metadataReadOnly
+    ) return;
+    cleanupGuardRef.current = true;
+    const attempt = cleanupAttemptRef.current + 1;
+    cleanupAttemptRef.current = attempt;
+    setCleanupPending(true);
+    setCleanupFeedback(null);
+    try {
+      await retryProfileDeletionCleanup();
+      if (!mountedRef.current || cleanupAttemptRef.current !== attempt) return;
+      setCleanupFeedback({ kind: 'success', message: 'Profile storage cleanup complete.' });
+    } catch (error) {
+      if (!mountedRef.current || cleanupAttemptRef.current !== attempt) return;
+      const reason = cleanupFailureReason(error);
+      setCleanupFeedback({
+        kind: 'failure',
+        message: reason === null
+          ? 'Storage cleanup could not be completed. Try again.'
+          : CLEANUP_FAILURE_MESSAGES[reason],
+      });
+    } finally {
+      if (!mountedRef.current || cleanupAttemptRef.current !== attempt) return;
+      cleanupGuardRef.current = false;
+      setCleanupPending(false);
+    }
+  };
+
   const handleTriggerClick = () => {
     if (actionGuardRef.current || pendingAction !== null) return;
     setOpen(current => !current);
   };
+
+  const cleanupNotice = pendingDeletionCount > 0 ? (
+    <div
+      role="alert"
+      aria-live="assertive"
+      className="border-b border-amber-400/30 bg-amber-950/95 px-3 py-2 text-[11px] leading-relaxed text-amber-100"
+    >
+      <p>Profile removed; storage cleanup pending.</p>
+      {cleanupFeedback !== null && (
+        <p role={cleanupFeedback.kind === 'success' ? 'status' : undefined} className="mt-1 text-amber-200">
+          {cleanupFeedback.message}
+        </p>
+      )}
+      <button
+        type="button"
+        aria-label="Retry profile storage cleanup"
+        onClick={() => { void handleCleanupRetry(); }}
+        disabled={cleanupPending || isPending || metadataReadOnly}
+        className="mt-1.5 rounded border border-amber-300/30 px-2 py-1 font-bold text-amber-100 hover:bg-amber-300/10 disabled:cursor-wait disabled:opacity-50"
+      >
+        {cleanupPending ? 'Retrying…' : 'Retry'}
+      </button>
+    </div>
+  ) : cleanupFeedback?.kind === 'success' ? (
+    <p
+      role="status"
+      aria-live="polite"
+      className="border border-emerald-400/30 bg-emerald-950/95 px-3 py-2 text-[11px] text-emerald-100"
+    >
+      {cleanupFeedback.message}
+    </p>
+  ) : null;
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -143,11 +277,19 @@ export const ProfileSwitcher: React.FC = () => {
         <ChevronDown size={12} className={`shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
+      {!open && cleanupNotice !== null && (
+        <div className="absolute right-0 top-full z-[101] mt-1 w-64 overflow-hidden rounded-lg border border-white/10 shadow-2xl">
+          {cleanupNotice}
+        </div>
+      )}
+
       {open && (
         <div className="absolute top-full mt-1 right-0 w-64 bg-[#252525] border border-white/10 rounded-lg shadow-2xl z-[100] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
           <div className="px-3 py-2 border-b border-white/5">
             <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Profiles</span>
           </div>
+
+          {cleanupNotice}
 
           {feedback !== null && (
             <p role="alert" aria-live="assertive" className="border-b border-red-400/20 bg-red-950/40 px-3 py-2 text-[11px] leading-relaxed text-red-200">

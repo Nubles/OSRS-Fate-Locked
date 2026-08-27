@@ -166,6 +166,23 @@ const task6Metadata = (overrides: Partial<ProfileMetadata> = {}): ProfileMetadat
   ...overrides,
 });
 
+const pendingCleanupMetadata = (
+  overrides: Partial<ProfileMetadata> = {},
+): ProfileMetadata => ({
+  version: 2,
+  revision: 7,
+  profiles: [{ id: 'other', name: 'Other', createdAt: 2 }],
+  activeProfileId: 'other',
+  deletions: [{
+    version: 1,
+    deletionId: 'delete-target-1',
+    profileId: 'target',
+    requestedAt: 900,
+    phase: 'pending_cleanup',
+  }],
+  ...overrides,
+});
+
 const Task6ProfileCapture = ({ onProfiles }: { onProfiles: (profiles: Profiles) => void }) => {
   onProfiles(useProfiles());
   return <div>Profile children</div>;
@@ -237,6 +254,396 @@ describe('ProfileProvider validated async state', () => {
       await vi.advanceTimersByTimeAsync(100);
     });
   };
+
+  it('installs tombstone metadata before cleanup settles and never exposes the deleted ID', async () => {
+    const tombstone = pendingCleanupMetadata();
+    const cleanupAttempt = task6Deferred<Awaited<ReturnType<typeof ProfileTransactions.resumeProfileDeletion>>>();
+    storage.values.set(PROFILES_KEY, JSON.stringify(tombstone));
+    storage.values.set(PROFILE_METADATA_BACKUP_KEY, JSON.stringify(tombstone));
+    const resume = vi.spyOn(ProfileTransactions, 'resumeProfileDeletion')
+      .mockReturnValueOnce(cleanupAttempt.promise);
+
+    const rendered = renderTask6Profiles();
+    await settleTask6Initialization();
+
+    expect(screen.getByText('Profile children')).toBeTruthy();
+    expect(rendered.current().profiles.map(profile => profile.id)).toEqual(['other']);
+    expect(rendered.current().activeProfileId).toBe('other');
+    expect(rendered.current().pendingDeletionCount).toBe(1);
+    expect(resume).toHaveBeenCalledOnce();
+
+    cleanupAttempt.resolve({
+      status: 'cleanup_pending',
+      reason: 'storage_unavailable',
+      metadata: tombstone,
+      removedEntries: 0,
+      removalFailures: 0,
+      rollbackFailures: 0,
+    });
+    await act(async () => { await cleanupAttempt.promise; });
+  });
+
+  it('serializes intents and queues one relevant storage-event retry behind the active worker', async () => {
+    const tombstone = pendingCleanupMetadata({
+      deletions: [
+        pendingCleanupMetadata().deletions[0],
+        {
+          version: 1,
+          deletionId: 'delete-retired-1',
+          profileId: 'retired',
+          requestedAt: 901,
+          phase: 'pending_cleanup',
+        },
+      ],
+    });
+    const first = task6Deferred<Awaited<ReturnType<typeof ProfileTransactions.resumeProfileDeletion>>>();
+    const resume = vi.spyOn(ProfileTransactions, 'resumeProfileDeletion')
+      .mockImplementationOnce(() => first.promise)
+      .mockResolvedValue({
+        status: 'cleanup_pending',
+        reason: 'profile_in_use',
+        metadata: tombstone,
+        removedEntries: 0,
+        removalFailures: 0,
+        rollbackFailures: 0,
+      });
+    storage.values.set(PROFILES_KEY, JSON.stringify(tombstone));
+    storage.values.set(PROFILE_METADATA_BACKUP_KEY, JSON.stringify(tombstone));
+    renderTask6Profiles();
+    await settleTask6Initialization();
+
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: PROFILE_METADATA_LOCK_KEY,
+        newValue: null,
+      }));
+    });
+    expect(resume).toHaveBeenCalledOnce();
+
+    first.resolve({
+      status: 'cleanup_pending',
+      reason: 'profile_in_use',
+      metadata: tombstone,
+      removedEntries: 0,
+      removalFailures: 0,
+      rollbackFailures: 0,
+    });
+    await act(async () => {
+      await first.promise;
+      await Promise.resolve();
+    });
+
+    expect(resume.mock.calls.map(([intent]) => intent.deletionId)).toEqual([
+      'delete-target-1',
+      'delete-target-1',
+      'delete-retired-1',
+    ]);
+  });
+
+  it('bounds continuous storage-event noise to one queued cleanup pass', async () => {
+    const tombstone = pendingCleanupMetadata();
+    const first = task6Deferred<Awaited<ReturnType<typeof ProfileTransactions.resumeProfileDeletion>>>();
+    const second = task6Deferred<Awaited<ReturnType<typeof ProfileTransactions.resumeProfileDeletion>>>();
+    const resume = vi.spyOn(ProfileTransactions, 'resumeProfileDeletion')
+      .mockReturnValueOnce(first.promise)
+      .mockReturnValueOnce(second.promise)
+      .mockResolvedValue({
+        status: 'cleanup_pending',
+        reason: 'busy',
+        metadata: tombstone,
+        removedEntries: 0,
+        removalFailures: 0,
+        rollbackFailures: 0,
+      });
+    storage.values.set(PROFILES_KEY, JSON.stringify(tombstone));
+    storage.values.set(PROFILE_METADATA_BACKUP_KEY, JSON.stringify(tombstone));
+    renderTask6Profiles();
+    await settleTask6Initialization();
+
+    act(() => {
+      for (let index = 0; index < 5; index += 1) {
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: PROFILE_METADATA_LOCK_KEY,
+          newValue: null,
+        }));
+      }
+    });
+    expect(resume).toHaveBeenCalledOnce();
+    first.resolve({
+      status: 'cleanup_pending',
+      reason: 'busy',
+      metadata: tombstone,
+      removedEntries: 0,
+      removalFailures: 0,
+      rollbackFailures: 0,
+    });
+    await act(async () => {
+      await first.promise;
+      await Promise.resolve();
+    });
+    expect(resume).toHaveBeenCalledTimes(2);
+
+    act(() => {
+      for (let index = 0; index < 5; index += 1) {
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: PROFILE_METADATA_LOCK_KEY,
+          newValue: null,
+        }));
+      }
+    });
+    second.resolve({
+      status: 'cleanup_pending',
+      reason: 'busy',
+      metadata: tombstone,
+      removedEntries: 0,
+      removalFailures: 0,
+      rollbackFailures: 0,
+    });
+    await act(async () => {
+      await second.promise;
+      await Promise.resolve();
+    });
+
+    expect(resume).toHaveBeenCalledTimes(2);
+  });
+
+  it('defers event-triggered cleanup until an active profile mutation settles', async () => {
+    const tombstone = pendingCleanupMetadata();
+    storage.values.set(PROFILES_KEY, JSON.stringify(tombstone));
+    storage.values.set(PROFILE_METADATA_BACKUP_KEY, JSON.stringify(tombstone));
+    const resume = vi.spyOn(ProfileTransactions, 'resumeProfileDeletion').mockResolvedValue({
+      status: 'cleanup_pending',
+      reason: 'busy',
+      metadata: tombstone,
+      removedEntries: 0,
+      removalFailures: 0,
+      rollbackFailures: 0,
+    });
+    const rendered = renderTask6Profiles();
+    await settleTask6Initialization();
+    expect(resume).toHaveBeenCalledOnce();
+
+    const mutation = task6Deferred<ProfileTransactionResult>();
+    vi.spyOn(ProfileTransactions, 'mutateProfileMetadata').mockReturnValueOnce(mutation.promise);
+    let rename!: Promise<ProfileTransactionResult>;
+    act(() => { rename = rendered.current().renameProfile('other', 'Renamed safely'); });
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: PROFILE_METADATA_LOCK_KEY,
+        newValue: null,
+      }));
+    });
+    await act(async () => { await Promise.resolve(); });
+
+    expect(resume).toHaveBeenCalledOnce();
+
+    mutation.resolve({
+      ok: true,
+      metadata: { ...tombstone, revision: 8 },
+      notice: null,
+    });
+    await act(async () => {
+      await rename;
+      await Promise.resolve();
+    });
+
+    expect(resume).toHaveBeenCalledTimes(2);
+  });
+
+  it('starts cleanup when deferred remote tombstone metadata is installed at eviction registration', async () => {
+    const rendered = renderTask6Profiles();
+    await settleTask6Initialization();
+    const remoteTombstone = pendingCleanupMetadata({ revision: 9 });
+    storage.values.set(PROFILES_KEY, JSON.stringify(remoteTombstone));
+    storage.values.set(PROFILE_METADATA_BACKUP_KEY, JSON.stringify(remoteTombstone));
+    const resume = vi.spyOn(ProfileTransactions, 'resumeProfileDeletion').mockResolvedValue({
+      status: 'cleanup_pending',
+      reason: 'storage_unavailable',
+      metadata: remoteTombstone,
+      removedEntries: 0,
+      removalFailures: 0,
+      rollbackFailures: 0,
+    });
+
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: PROFILES_KEY,
+        newValue: JSON.stringify(remoteTombstone),
+      }));
+    });
+    await act(async () => { await Promise.resolve(); });
+    expect(resume).not.toHaveBeenCalled();
+    expect(rendered.current().activeProfileId).toBe('target');
+
+    act(() => {
+      rendered.current().registerProfileEvictionHandler(() => undefined);
+    });
+    await act(async () => { await Promise.resolve(); });
+
+    expect(rendered.current().profiles.map(profile => profile.id)).toEqual(['other']);
+    expect(rendered.current().activeProfileId).toBe('other');
+    expect(rendered.current().pendingDeletionCount).toBe(1);
+    expect(resume).toHaveBeenCalledOnce();
+  });
+
+  it('retries pending cleanup manually and installs only the completed metadata', async () => {
+    const tombstone = pendingCleanupMetadata();
+    const finalized = { ...tombstone, revision: 8, deletions: [] };
+    storage.values.set(PROFILES_KEY, JSON.stringify(tombstone));
+    storage.values.set(PROFILE_METADATA_BACKUP_KEY, JSON.stringify(tombstone));
+    vi.spyOn(ProfileTransactions, 'resumeProfileDeletion')
+      .mockResolvedValueOnce({
+        status: 'cleanup_pending',
+        reason: 'profile_in_use',
+        metadata: tombstone,
+        removedEntries: 0,
+        removalFailures: 0,
+        rollbackFailures: 0,
+      })
+      .mockResolvedValueOnce({
+        status: 'completed',
+        metadata: finalized,
+        removedEntries: 4,
+        removalFailures: 0,
+        rollbackFailures: 0,
+      });
+    const rendered = renderTask6Profiles();
+    await settleTask6Initialization();
+
+    expect(rendered.current().pendingDeletionCount).toBe(1);
+    await act(async () => { await rendered.current().retryProfileDeletionCleanup(); });
+
+    expect(rendered.current().pendingDeletionCount).toBe(0);
+    expect(rendered.current().profiles.map(profile => profile.id)).toEqual(['other']);
+    expect(rendered.current().mutationFailure).toBeNull();
+  });
+
+  it('classifies a manual cleanup ownership failure without exposing deletion data', async () => {
+    const tombstone = pendingCleanupMetadata();
+    storage.values.set(PROFILES_KEY, JSON.stringify(tombstone));
+    storage.values.set(PROFILE_METADATA_BACKUP_KEY, JSON.stringify(tombstone));
+    vi.spyOn(ProfileTransactions, 'resumeProfileDeletion').mockResolvedValue({
+      status: 'cleanup_pending',
+      reason: 'profile_in_use',
+      metadata: tombstone,
+      removedEntries: 0,
+      removalFailures: 0,
+      rollbackFailures: 0,
+    });
+    const rendered = renderTask6Profiles();
+    await settleTask6Initialization();
+
+    let caught: unknown;
+    await act(async () => {
+      try {
+        await rendered.current().retryProfileDeletionCleanup();
+      } catch (error) {
+        caught = error;
+      }
+    });
+
+    expect(caught).toMatchObject({
+      name: 'ProfileDeletionCleanupRetryError',
+      reason: 'profile_in_use',
+    });
+    expect(String(caught)).not.toContain('delete-target-1');
+    expect(rendered.current().mutationFailure).toBe('profile_in_use');
+  });
+
+  it('ignores stale cleanup completion after a newer profile registry arrives', async () => {
+    const tombstone = pendingCleanupMetadata();
+    const cleanupAttempt = task6Deferred<Awaited<ReturnType<typeof ProfileTransactions.resumeProfileDeletion>>>();
+    storage.values.set(PROFILES_KEY, JSON.stringify(tombstone));
+    storage.values.set(PROFILE_METADATA_BACKUP_KEY, JSON.stringify(tombstone));
+    vi.spyOn(ProfileTransactions, 'resumeProfileDeletion').mockReturnValueOnce(cleanupAttempt.promise);
+    const rendered = renderTask6Profiles();
+    await settleTask6Initialization();
+    const remote: ProfileMetadata = {
+      version: 2,
+      revision: 10,
+      profiles: [
+        { id: 'other', name: 'Remote Other', createdAt: 2 },
+        { id: 'newest', name: 'Newest', createdAt: 3 },
+      ],
+      activeProfileId: 'other',
+      deletions: [],
+    };
+    storage.values.set(PROFILES_KEY, JSON.stringify(remote));
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: PROFILES_KEY,
+        newValue: JSON.stringify(remote),
+      }));
+    });
+
+    cleanupAttempt.resolve({
+      status: 'completed',
+      metadata: { ...tombstone, revision: 8, deletions: [] },
+      removedEntries: 3,
+      removalFailures: 0,
+      rollbackFailures: 0,
+    });
+    await act(async () => { await cleanupAttempt.promise; });
+
+    expect(rendered.current().profiles).toEqual(remote.profiles);
+    expect(rendered.current().pendingDeletionCount).toBe(0);
+  });
+
+  it('cancels stale cleanup UI completion on unmount and resumes the durable intent after reload', async () => {
+    const tombstone = pendingCleanupMetadata();
+    const first = task6Deferred<Awaited<ReturnType<typeof ProfileTransactions.resumeProfileDeletion>>>();
+    storage.values.set(PROFILES_KEY, JSON.stringify(tombstone));
+    storage.values.set(PROFILE_METADATA_BACKUP_KEY, JSON.stringify(tombstone));
+    const resume = vi.spyOn(ProfileTransactions, 'resumeProfileDeletion')
+      .mockReturnValueOnce(first.promise)
+      .mockResolvedValue({
+        status: 'cleanup_pending',
+        reason: 'storage_unavailable',
+        metadata: tombstone,
+        removedEntries: 0,
+        removalFailures: 0,
+        rollbackFailures: 0,
+      });
+    let captureCount = 0;
+    const firstRender = render(
+      <ProfileProvider>
+        <ProfileCapture onProfiles={() => { captureCount += 1; }} />
+      </ProfileProvider>,
+    );
+    await settleTask6Initialization();
+    const beforeUnmount = captureCount;
+    firstRender.unmount();
+    first.resolve({
+      status: 'completed',
+      metadata: { ...tombstone, revision: 8, deletions: [] },
+      removedEntries: 3,
+      removalFailures: 0,
+      rollbackFailures: 0,
+    });
+    await act(async () => { await first.promise; });
+
+    expect(captureCount).toBe(beforeUnmount);
+    expect(storage.values.get(PROFILES_KEY)).toBe(JSON.stringify(tombstone));
+
+    renderTask6Profiles();
+    await settleTask6Initialization();
+    expect(resume).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not start cleanup or write when future metadata is read-only', async () => {
+    const futureRaw = JSON.stringify({ version: 3, opaque: { deletion: 'private' } });
+    storage.values.set(PROFILES_KEY, futureRaw);
+    const before = [...storage.values];
+    const resume = vi.spyOn(ProfileTransactions, 'resumeProfileDeletion');
+
+    const rendered = renderTask6Profiles();
+    await settleTask6Initialization();
+
+    expect(rendered.current().metadataReadOnly).toBe(true);
+    expect(rendered.current().pendingDeletionCount).toBe(0);
+    expect(resume).not.toHaveBeenCalled();
+    expect([...storage.values].filter(([key]) => key !== PROFILE_METADATA_LOCK_KEY)).toEqual(before);
+  });
 
   it('renders an accessible loading boundary without rendering children before initialization settles', async () => {
     const initialization = task6Deferred<ProfileTransactionResult>();

@@ -576,6 +576,75 @@ describe('profile metadata recovery planning', () => {
   });
 });
 describe('profile metadata recovery regressions', () => {
+  it('preserves valid tombstones and excludes their profile saves during reconstruction', () => {
+    const deletion = {
+      version: 1 as const,
+      deletionId: 'delete-retired-1',
+      profileId: 'retired',
+      requestedAt: 1200,
+      phase: 'pending_cleanup' as const,
+    };
+    const result = resolveProfileMetadata(recoveryInput({
+      primary: JSON.stringify({
+        version: 2,
+        revision: 8,
+        profiles: 'corrupt',
+        activeProfileId: 'retired',
+        deletions: [deletion],
+      }),
+      storage: recoveryStorage([
+        ['FATE_PROFILE_retired', 'valid:private-retired-save'],
+        ['FATE_PROFILE_safe', 'valid:safe'],
+      ]),
+    }));
+
+    expect(result).toMatchObject({
+      mode: 'repair',
+      metadata: {
+        profiles: [{ id: 'safe' }],
+        activeProfileId: 'safe',
+        deletions: [deletion],
+      },
+      repair: { cause: 'reconstructed', candidate: { deletions: [deletion] } },
+      notice: { recoveredProfiles: 1, unreadableSaves: 0 },
+    });
+    expect(result.metadata.profiles.some(profile => profile.id === 'retired')).toBe(false);
+  });
+
+  it('never partially trusts a malformed deletion-intent array during reconstruction', () => {
+    const result = resolveProfileMetadata(recoveryInput({
+      primary: JSON.stringify({
+        version: 2,
+        revision: 8,
+        profiles: 'corrupt',
+        activeProfileId: 'safe',
+        deletions: [
+          {
+            version: 1,
+            deletionId: 'delete-retired-1',
+            profileId: 'retired',
+            requestedAt: 1200,
+            phase: 'pending_cleanup',
+          },
+          {
+            version: 1,
+            deletionId: 'delete-broken-1',
+            profileId: 'broken',
+            requestedAt: -1,
+            phase: 'pending_cleanup',
+          },
+        ],
+      }),
+      storage: recoveryStorage([
+        ['FATE_PROFILE_retired', 'valid:retired'],
+        ['FATE_PROFILE_safe', 'valid:safe'],
+      ]),
+    }));
+
+    expect(result.metadata.profiles.map(profile => profile.id)).toEqual(['retired', 'safe']);
+    expect(result.metadata.deletions).toEqual([]);
+  });
+
   it('reports unreadable exact saves when creating a fresh profile', () => {
     const result = resolveProfileMetadata(recoveryInput({
       primary: null,

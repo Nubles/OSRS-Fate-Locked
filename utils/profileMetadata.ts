@@ -434,11 +434,14 @@ const recoveryArchive = (
 
 const reconstructProfiles = (input: ResolveProfileMetadataInput): ReconstructedProfiles => {
   const hints = mergedRecoveryHints(input.primary, input.backup);
+  const deletions = mergedRecoveryDeletions(input.primary, input.backup);
+  const tombstonedProfileIds = new Set(deletions.map(intent => intent.profileId));
   const accepted: Array<{ id: string; hint: RecoveryProfileHint | undefined }> = [];
   let unreadableSaves = 0;
   let overflowSaves = 0;
 
   for (const id of discoverProfileSaveIds(input.storage)) {
+    if (tombstonedProfileIds.has(id)) continue;
     const raw = input.storage.getItem(`FATE_PROFILE_${id}`);
     if (raw === null || !input.validateGameSave(raw)) {
       unreadableSaves += 1;
@@ -481,7 +484,7 @@ const reconstructProfiles = (input: ResolveProfileMetadataInput): ReconstructedP
       revision: 0,
       profiles,
       activeProfileId,
-      deletions: [],
+      deletions,
     },
     recoveredProfiles: profiles.length,
     generatedNames,
@@ -491,14 +494,61 @@ const reconstructProfiles = (input: ResolveProfileMetadataInput): ReconstructedP
 };
 
 const freshMetadata = (input: ResolveProfileMetadataInput): ProfileMetadata => {
-  const id = input.createProfileId();
+  const deletions = mergedRecoveryDeletions(input.primary, input.backup);
+  const tombstonedProfileIds = new Set(deletions.map(intent => intent.profileId));
+  let id = input.createProfileId();
+  if (tombstonedProfileIds.has(id)) {
+    let suffix = 0;
+    do {
+      id = `recovered-${input.now}-${suffix}`;
+      suffix += 1;
+    } while (tombstonedProfileIds.has(id));
+  }
   return {
     version: PROFILE_METADATA_VERSION,
     revision: 0,
     profiles: [{ id, name: 'Main Account', createdAt: input.now }],
     activeProfileId: id,
-    deletions: [],
+    deletions,
   };
+};
+
+const recoverableDeletionIntents = (raw: string | null): ProfileDeletionIntentV1[] => {
+  if (raw === null) return [];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return [];
+  }
+  if (!isPlainRecord(parsed)) return [];
+  const version = Object.getOwnPropertyDescriptor(parsed, 'version');
+  if (!version?.enumerable || !('value' in version) || version.value !== PROFILE_METADATA_VERSION) {
+    return [];
+  }
+  const deletions = Object.getOwnPropertyDescriptor(parsed, 'deletions');
+  if (!deletions?.enumerable || !('value' in deletions)) return [];
+  const inspected = inspectDeletions(deletions.value, new Set());
+  return isInvalid(inspected) ? [] : inspected;
+};
+
+const mergedRecoveryDeletions = (
+  primary: string | null,
+  backup: string | null,
+): ProfileDeletionIntentV1[] => {
+  const deletions: ProfileDeletionIntentV1[] = [];
+  const deletionIds = new Set<string>();
+  const profileIds = new Set<string>();
+  for (const intent of [
+    ...recoverableDeletionIntents(primary),
+    ...recoverableDeletionIntents(backup),
+  ]) {
+    if (deletionIds.has(intent.deletionId) || profileIds.has(intent.profileId)) continue;
+    deletionIds.add(intent.deletionId);
+    profileIds.add(intent.profileId);
+    deletions.push(intent);
+  }
+  return deletions;
 };
 
 const readOnlyMetadata = (
