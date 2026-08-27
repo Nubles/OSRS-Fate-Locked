@@ -43,6 +43,8 @@ const contextWithNotice = (
   mutationFailure: null,
   recoveryNotice,
   metadataReadOnly: false,
+  pendingDeletionCount: 0,
+  retryProfileDeletionCleanup: vi.fn().mockResolvedValue(undefined),
   createProfile: vi.fn(async () => { throw new Error('Not used by this test'); }),
   switchProfile: vi.fn(async () => { throw new Error('Not used by this test'); }),
   renameProfile: vi.fn(async () => { throw new Error('Not used by this test'); }),

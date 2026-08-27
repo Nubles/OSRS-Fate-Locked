@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  claimProfileDeletionLease,
   claimWriterLease,
   readWriterLease,
   releaseWriterLease,
@@ -8,6 +9,7 @@ import {
   writerLeaseKey,
   WRITER_LEASE_TTL_MS,
 } from './profileWriterLease';
+import { PROFILE_METADATA_BACKUP_KEY, PROFILES_KEY } from './profileMetadata';
 
 const PROFILE = 'FATE_PROFILE_test';
 
@@ -82,6 +84,194 @@ describe('profile writer leases', () => {
       status: 'owned',
       lease: { ownerId: 'tab-b' },
     });
+  });
+
+  it('does not let forced takeover replace an active profile-deletion reservation', () => {
+    values.set(writerLeaseKey(PROFILE), JSON.stringify({
+      version: 1,
+      ownerId: 'deleting-tab',
+      expiresAt: 31_000,
+      purpose: 'profile_delete',
+      deletionId: 'delete-test-1',
+    }));
+
+    expect(claimWriterLease(storage, PROFILE, 'game-tab', 1_001, true).status).toBe('blocked');
+    expect(readWriterLease(storage, PROFILE)).toMatchObject({
+      ok: true,
+      lease: { ownerId: 'deleting-tab', purpose: 'profile_delete', deletionId: 'delete-test-1' },
+    });
+  });
+
+  it('denies normal verification, renewal, and forced takeover while a tombstone exists', () => {
+    values.set(PROFILES_KEY, JSON.stringify({
+      version: 2,
+      revision: 9,
+      profiles: [{ id: 'beta', name: 'Beta', createdAt: 2 }],
+      activeProfileId: 'beta',
+      deletions: [{
+        version: 1,
+        deletionId: 'delete-alpha-1',
+        profileId: 'test',
+        requestedAt: 1,
+        phase: 'pending_cleanup',
+      }],
+    }));
+    values.set(writerLeaseKey(PROFILE), JSON.stringify({
+      version: 1,
+      ownerId: 'stale-game-tab',
+      expiresAt: 31_000,
+    }));
+
+    expect(verifyWriterLease(storage, PROFILE, 'stale-game-tab', 1_000).status).toBe('blocked');
+    expect(renewWriterLease(storage, PROFILE, 'stale-game-tab', 1_000).status).toBe('blocked');
+    expect(claimWriterLease(storage, PROFILE, 'new-game-tab', 1_000).status).toBe('blocked');
+    expect(claimWriterLease(storage, PROFILE, 'forced-game-tab', 100_000, true).status).toBe('blocked');
+
+    expect(claimProfileDeletionLease(
+      storage,
+      PROFILE,
+      'cleanup-tab',
+      100_000,
+      'delete-alpha-1',
+    )).toMatchObject({
+      status: 'owned',
+      lease: {
+        ownerId: 'cleanup-tab',
+        purpose: 'profile_delete',
+        deletionId: 'delete-alpha-1',
+      },
+    });
+    expect(claimProfileDeletionLease(
+      storage,
+      PROFILE,
+      'wrong-cleanup-tab',
+      200_000,
+      'delete-alpha-2',
+    ).status).toBe('blocked');
+  });
+
+  it.each([
+    { label: 'missing primary', primary: null },
+    { label: 'corrupt primary', primary: '{bad' },
+  ])('uses a valid backup tombstone when the primary is $label', ({ primary }) => {
+    if (primary !== null) values.set(PROFILES_KEY, primary);
+    values.set(PROFILE_METADATA_BACKUP_KEY, JSON.stringify({
+      version: 2,
+      revision: 9,
+      profiles: [{ id: 'beta', name: 'Beta', createdAt: 2 }],
+      activeProfileId: 'beta',
+      deletions: [{
+        version: 1,
+        deletionId: 'delete-test-1',
+        profileId: 'test',
+        requestedAt: 1,
+        phase: 'pending_cleanup',
+      }],
+    }));
+    values.set(writerLeaseKey(PROFILE), JSON.stringify({
+      version: 1,
+      ownerId: 'game-tab',
+      expiresAt: 31_000,
+    }));
+
+    expect(verifyWriterLease(storage, PROFILE, 'game-tab', 1_000).status).toBe('blocked');
+    expect(renewWriterLease(storage, PROFILE, 'game-tab', 1_000).status).toBe('blocked');
+    expect(claimWriterLease(storage, PROFILE, 'game-tab', 1_000).status).toBe('blocked');
+    expect(claimWriterLease(storage, PROFILE, 'forced-tab', 100_000, true).status).toBe('blocked');
+    expect(readWriterLease(storage, PROFILE)).toMatchObject({
+      ok: true,
+      lease: { ownerId: 'game-tab' },
+    });
+  });
+
+  it.each([
+    { label: 'primary', futureKey: PROFILES_KEY, currentKey: PROFILE_METADATA_BACKUP_KEY },
+    { label: 'backup', futureKey: PROFILE_METADATA_BACKUP_KEY, currentKey: PROFILES_KEY },
+  ])('keeps writers read-only when the $label copy has a future version', ({ futureKey, currentKey }) => {
+    values.set(currentKey, JSON.stringify({
+      version: 2,
+      revision: 9,
+      profiles: [{ id: 'test', name: 'Current', createdAt: 1 }],
+      activeProfileId: 'test',
+      deletions: [],
+    }));
+    values.set(futureKey, JSON.stringify({
+      version: 3,
+      revision: 10,
+      profiles: [{ id: 'test', name: 'Future', createdAt: 1 }],
+      activeProfileId: 'test',
+      deletions: [],
+    }));
+    values.set(writerLeaseKey(PROFILE), JSON.stringify({
+      version: 1,
+      ownerId: 'game-tab',
+      expiresAt: 31_000,
+    }));
+
+    expect(verifyWriterLease(storage, PROFILE, 'game-tab', 1_000).status).toBe('blocked');
+    expect(renewWriterLease(storage, PROFILE, 'game-tab', 1_000).status).toBe('blocked');
+    expect(claimWriterLease(storage, PROFILE, 'game-tab', 1_000).status).toBe('blocked');
+    expect(claimWriterLease(storage, PROFILE, 'forced-tab', 100_000, true).status).toBe('blocked');
+  });
+
+  it('never confuses read-only metadata with a deletion ID of the same text', () => {
+    values.set(PROFILE_METADATA_BACKUP_KEY, JSON.stringify({
+      version: 3,
+      revision: 10,
+      profiles: [{ id: 'test', name: 'Future', createdAt: 1 }],
+      activeProfileId: 'test',
+      deletions: [],
+    }));
+    values.set(writerLeaseKey(PROFILE), JSON.stringify({
+      version: 1,
+      ownerId: 'cleanup-tab',
+      expiresAt: 31_000,
+      purpose: 'profile_delete',
+      deletionId: 'metadata-read-only',
+    }));
+
+    expect(verifyWriterLease(storage, PROFILE, 'cleanup-tab', 1_000).status).toBe('blocked');
+    expect(renewWriterLease(storage, PROFILE, 'cleanup-tab', 1_000).status).toBe('blocked');
+    expect(claimProfileDeletionLease(
+      storage,
+      PROFILE,
+      'cleanup-tab',
+      1_000,
+      'metadata-read-only',
+    ).status).toBe('blocked');
+  });
+
+  it('stops authorizing a deletion lease after its exact intent is remotely finalized', () => {
+    values.set(PROFILES_KEY, JSON.stringify({
+      version: 2,
+      revision: 10,
+      profiles: [{ id: 'beta', name: 'Beta', createdAt: 2 }],
+      activeProfileId: 'beta',
+      deletions: [],
+    }));
+    values.set(writerLeaseKey(PROFILE), JSON.stringify({
+      version: 1,
+      ownerId: 'late-cleanup-tab',
+      expiresAt: 31_000,
+      purpose: 'profile_delete',
+      deletionId: 'delete-alpha-1',
+    }));
+
+    expect(verifyWriterLease(storage, PROFILE, 'late-cleanup-tab', 1_000).status).toBe('blocked');
+    expect(renewWriterLease(storage, PROFILE, 'late-cleanup-tab', 1_000).status).toBe('blocked');
+  });
+
+  it('fails closed without writing a lease for future profile metadata', () => {
+    values.set(PROFILES_KEY, JSON.stringify({
+      version: 3,
+      revision: 1,
+      profiles: [{ id: 'test', name: 'Future', createdAt: 1 }],
+      activeProfileId: 'test',
+      deletions: [],
+    }));
+
+    expect(claimWriterLease(storage, PROFILE, 'game-tab', 1_000, true).status).toBe('blocked');
+    expect(values.has(writerLeaseKey(PROFILE))).toBe(false);
   });
 
   it('fails closed when storage cannot be read or written', () => {

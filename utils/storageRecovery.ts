@@ -28,3 +28,9 @@ export const removeDisposableCaches = (
     }
   }
 };
+
+export const profileMirrorMetadataKey = (storageKey: string): string =>
+  `${storageKey}__mirrorMeta`;
+
+export const profileCorruptArchiveKey = (storageKey: string): string =>
+  `${storageKey}__corruptArchive`;

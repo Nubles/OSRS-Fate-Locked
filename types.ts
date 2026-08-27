@@ -282,9 +282,18 @@ export interface Profile {
   createdAt: number;
 }
 
-export interface ProfileMetadata {
+export interface ProfileDeletionIntentV1 {
   version: 1;
+  deletionId: string;
+  profileId: string;
+  requestedAt: number;
+  phase: 'pending_cleanup';
+}
+
+export interface ProfileMetadata {
+  version: 2;
   revision: number;
   profiles: Profile[];
   activeProfileId: string;
+  deletions: ProfileDeletionIntentV1[];
 }

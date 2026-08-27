@@ -1,0 +1,1016 @@
+// @vitest-environment jsdom
+import React from 'react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { initialState } from '../context/GameContext';
+import type { RecoveryHead, RecoveryRepository } from '../utils/recoveryTypes';
+import type { SaveWriteAuthorization } from '../utils/profileWriterLease';
+import type { SaveRecoveryDecision } from '../utils/saveRecovery';
+import { resolveSaveRecovery } from '../utils/saveRecovery';
+import { checksumSave } from '../utils/saveIntegrity';
+import { createSaveCoordinator } from '../utils/saveCoordinator';
+import { parseAndMigrateSave } from '../utils/saveSchema';
+import { profileMirrorMetadataKey } from '../utils/storageRecovery';
+import {
+  SaveBootstrap,
+  productionResetRecovery,
+  productionExportRecovery,
+  type SaveBootstrapDependencies,
+  type SaveBootstrapReplacement,
+  type SaveBootstrapResult,
+} from './SaveBootstrap';
+import { MAX_SAVE_BYTES } from '../utils/saveSchema';
+
+const deferred = <T,>() => {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
+};
+
+const repository = (): RecoveryRepository => ({
+  getHead: vi.fn(async () => null),
+  putHead: vi.fn(async () => ({ stored: true as const })),
+  listCheckpoints: vi.fn(async () => []),
+  putCheckpoint: vi.fn(async () => ({ stored: true as const })),
+  deleteCheckpoints: vi.fn(async () => ({ stored: true as const })),
+  getMetadata: vi.fn(async () => null),
+  putMetadata: vi.fn(async () => ({ stored: true as const })),
+  close: vi.fn(),
+});
+
+const readyDecision = (
+  source: 'pending' | 'mirror' | 'journal',
+  overrides: Partial<Extract<SaveRecoveryDecision, { kind: 'ready' }>> = {},
+): Extract<SaveRecoveryDecision, { kind: 'ready' }> => ({
+  kind: 'ready',
+  source,
+  reason: source === 'journal' ? 'interrupted_mirror' : 'normal',
+  data: JSON.stringify({ ...initialState, userNotes: { source } }),
+  state: { ...initialState, userNotes: { source } },
+  persistenceRevision: source === 'journal' ? 8 : source === 'mirror' ? 7 : 0,
+  needsJournalImport: source === 'journal',
+  ...overrides,
+  maxDurablePersistenceRevision: overrides.maxDurablePersistenceRevision
+    ?? overrides.persistenceRevision
+    ?? (source === 'journal' ? 8 : source === 'mirror' ? 7 : 0),
+});
+
+const dependencies = (
+  overrides: Partial<SaveBootstrapDependencies> = {},
+): SaveBootstrapDependencies => {
+  const repo = repository();
+  const leaseValues = new Map<string, string>();
+  return {
+    leaseOptions: {
+      ownerId: 'save-bootstrap-test-owner',
+      arbitrationMs: 0,
+      renewMs: 60_000,
+      storage: {
+        getItem: key => leaseValues.get(key) ?? null,
+        setItem: (key, value) => { leaseValues.set(key, value); },
+        removeItem: key => { leaseValues.delete(key); },
+      },
+    },
+    createFreshState: () => ({ ...initialState }),
+    readPending: () => null,
+    readPrimary: () => null,
+    readMirrorMetadata: () => null,
+    openRepository: vi.fn(async () => repo),
+    resolveSaveRecovery: vi.fn(async () => ({
+      kind: 'empty' as const,
+      maxDurablePersistenceRevision: 0,
+    })),
+    ...overrides,
+  };
+};
+
+const resultLabel = (result: SaveBootstrapResult): string => (
+  `${result.source}:${result.persistenceRevision}:${result.initialData ?? 'none'}`
+);
+
+afterEach(() => cleanup());
+
+describe('SaveBootstrap', () => {
+  it('does not mount the game while durable candidates are unresolved', async () => {
+    const arbitration = deferred<SaveRecoveryDecision>();
+    render(
+      <SaveBootstrap
+        dependencies={dependencies({ resolveSaveRecovery: vi.fn(() => arbitration.promise) })}
+        profileId="alpha"
+        storageKey="FATE_PROFILE_alpha"
+      >
+        {() => <div>game mounted</div>}
+      </SaveBootstrap>,
+    );
+
+    expect(screen.queryByText('game mounted')).toBeNull();
+    expect(screen.getByText('Checking saved progress…')).toBeTruthy();
+
+    await act(async () => {
+      arbitration.resolve(readyDecision('mirror'));
+      await arbitration.promise;
+    });
+  });
+
+  it('closes a repository that opens after unmount without starting stale reads', async () => {
+    const opening = deferred<RecoveryRepository>();
+    const opened = repository();
+    const resolveSaveRecovery = vi.fn(async () => ({
+      kind: 'empty' as const,
+      maxDurablePersistenceRevision: 0,
+    }));
+    const deps = dependencies({
+      openRepository: vi.fn(() => opening.promise),
+      resolveSaveRecovery,
+    });
+    const view = render(
+      <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {() => <div>game mounted</div>}
+      </SaveBootstrap>,
+    );
+
+    view.unmount();
+    await act(async () => {
+      opening.resolve(opened);
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+
+    expect((opened.close as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(1);
+    expect(opened.getHead).not.toHaveBeenCalled();
+    expect(opened.listCheckpoints).not.toHaveBeenCalled();
+    expect(resolveSaveRecovery).not.toHaveBeenCalled();
+  });
+
+  it('closes a stale delayed-open repository before a profile switch can read it', async () => {
+    const firstOpening = deferred<RecoveryRepository>();
+    const secondOpening = deferred<RecoveryRepository>();
+    const firstRepository = repository();
+    const secondRepository = repository();
+    let openCount = 0;
+    const resolveSaveRecovery = vi.fn(async () => readyDecision('mirror'));
+    const deps = dependencies({
+      openRepository: vi.fn(() => {
+        openCount += 1;
+        return openCount === 1 ? firstOpening.promise : secondOpening.promise;
+      }),
+      resolveSaveRecovery,
+    });
+    const view = render(<ProfileHarness dependencies={deps} />);
+
+    await act(async () => {
+      view.rerender(<ProfileHarness dependencies={deps} profileId="beta" />);
+    });
+    await act(async () => {
+      firstOpening.resolve(firstRepository);
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+
+    expect((firstRepository.close as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(1);
+    expect(firstRepository.getHead).not.toHaveBeenCalled();
+    expect(firstRepository.listCheckpoints).not.toHaveBeenCalled();
+    expect(resolveSaveRecovery).not.toHaveBeenCalled();
+
+    await act(async () => {
+      secondOpening.resolve(secondRepository);
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+
+    expect(await screen.findByTestId('profile-result')).toBeTruthy();
+    expect((secondRepository.close as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(1);
+  });
+
+  it.each([
+    ['pending', readyDecision('pending')],
+    ['mirror', readyDecision('mirror')],
+    ['journal', readyDecision('journal')],
+  ] as const)('mounts from the arbitrated %s candidate', async (_source, decision) => {
+    const resolveSaveRecovery = vi.fn(async () => decision);
+    render(
+      <SaveBootstrap dependencies={dependencies({ resolveSaveRecovery })} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {result => <div data-testid="bootstrap-result">{resultLabel(result)}</div>}
+      </SaveBootstrap>,
+    );
+
+    expect((await screen.findByTestId('bootstrap-result')).textContent).toBe(
+      `${decision.source}:${decision.persistenceRevision}:${decision.data}`,
+    );
+    expect(resolveSaveRecovery).toHaveBeenCalledOnce();
+  });
+
+  it('mounts a fresh state for an empty profile without a durable baseline', async () => {
+    const fresh = { ...initialState, runId: 'fresh-run' };
+    render(
+      <SaveBootstrap
+        dependencies={dependencies({ createFreshState: () => fresh })}
+        profileId="alpha"
+        storageKey="FATE_PROFILE_alpha"
+      >
+        {result => <div data-testid="bootstrap-result">{resultLabel(result)}:{result.initialState.runId}</div>}
+      </SaveBootstrap>,
+    );
+
+    expect((await screen.findByTestId('bootstrap-result')).textContent).toBe('empty:0:none:fresh-run');
+  });
+
+  it.each([
+    ['recovery', {
+      kind: 'recovery_required',
+      primaryRaw: '{bad',
+      candidates: [],
+      cause: 'corrupt_primary',
+      maxDurablePersistenceRevision: 0,
+    }],
+    ['unsupported', { kind: 'unsupported', rawCandidates: ['{"version":999}'] }],
+  ] as const)('does not mount the game for a %s decision', async (_label, decision) => {
+    render(
+      <SaveBootstrap
+        dependencies={dependencies({ resolveSaveRecovery: vi.fn(async () => decision) })}
+        profileId="alpha"
+        storageKey="FATE_PROFILE_alpha"
+      >
+        {() => <div>game mounted</div>}
+      </SaveBootstrap>,
+    );
+
+    expect(await screen.findByRole('status')).toBeTruthy();
+    expect(screen.queryByText('game mounted')).toBeNull();
+  });
+
+  it('renders blocking recovery actions without replacing the save before confirmation', async () => {
+    const archiveCorruptEvidence = vi.fn(async () => ({ ok: true as const }));
+    const replaceSave = vi.fn(async () => ({ ok: true as const }));
+    const decision: Extract<SaveRecoveryDecision, { kind: 'recovery_required' }> = {
+      kind: 'recovery_required',
+      primaryRaw: '{"broken":true}',
+      candidates: [{
+        source: 'checkpoint',
+        data: 'safe-checkpoint',
+        state: { ...initialState, runId: 'safe-run' },
+        persistenceRevision: 3,
+        runId: 'safe-run',
+        runRevision: 3,
+        capturedAt: 123,
+        checksum: 'a'.repeat(64),
+      }],
+      cause: 'corrupt_primary',
+      maxDurablePersistenceRevision: 3,
+    };
+    const deps = dependencies({
+      resolveSaveRecovery: vi.fn(async () => decision),
+      archiveCorruptEvidence,
+      replaceSave,
+    });
+    const user = userEvent.setup();
+
+    render(
+      <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {() => <div>game mounted</div>}
+      </SaveBootstrap>,
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Saved progress needs recovery' })).toBeTruthy();
+    expect(replaceSave).not.toHaveBeenCalled();
+    expect(screen.queryByText('game mounted')).toBeNull();
+
+    await user.click(screen.getByRole('button', { name: 'Recover latest safe save' }));
+
+    expect(archiveCorruptEvidence).toHaveBeenCalledOnce();
+    expect(replaceSave).toHaveBeenCalledOnce();
+  });
+
+  it('keeps a confirmed older checkpoint after immediate termination and reload', async () => {
+    const recoveredState = {
+      ...initialState,
+      userNotes: { recovery: 'confirmed older checkpoint' },
+    };
+    const recoveredData = JSON.stringify(recoveredState);
+    const recoveredChecksum = await checksumSave(recoveredData);
+    const formerNewerState = {
+      ...initialState,
+      userNotes: { recovery: 'former newer head' },
+    };
+    const formerNewerData = JSON.stringify(formerNewerState);
+    const formerNewerChecksum = await checksumSave(formerNewerData);
+    let head: RecoveryHead = {
+      profileId: 'alpha',
+      persistenceRevision: 8,
+      runId: formerNewerState.runId,
+      runRevision: formerNewerState.runRevision,
+      capturedAt: 80,
+      checksum: formerNewerChecksum,
+      data: formerNewerData,
+    };
+    const journal = repository();
+    journal.getHead = vi.fn(async () => head);
+    journal.putHead = vi.fn(async record => {
+      head = record;
+      return { stored: true as const };
+    });
+    journal.listCheckpoints = vi.fn(async () => []);
+    const values = new Map<string, string>();
+    const recoveryDecision: Extract<SaveRecoveryDecision, { kind: 'recovery_required' }> = {
+      kind: 'recovery_required',
+      primaryRaw: '{bad',
+      candidates: [{
+        source: 'checkpoint',
+        data: recoveredData,
+        state: recoveredState,
+        persistenceRevision: 3,
+        runId: recoveredState.runId,
+        runRevision: recoveredState.runRevision,
+        capturedAt: 30,
+        checksum: recoveredChecksum,
+      }],
+      cause: 'corrupt_primary',
+      maxDurablePersistenceRevision: 8,
+    };
+    let arbitrationCount = 0;
+    const deps = dependencies({
+      readPrimary: storageKey => values.get(storageKey) ?? null,
+      readMirrorMetadata: storageKey => values.get(profileMirrorMetadataKey(storageKey)) ?? null,
+      openRepository: vi.fn(async () => journal),
+      resolveSaveRecovery: vi.fn(async input => {
+        arbitrationCount += 1;
+        return arbitrationCount === 1
+          ? recoveryDecision
+          : resolveSaveRecovery(input);
+      }),
+      archiveCorruptEvidence: vi.fn(async () => ({ ok: true as const })),
+      replaceSave: vi.fn(async replacement => {
+        values.set(replacement.storageKey, replacement.data);
+        values.set(profileMirrorMetadataKey(replacement.storageKey), JSON.stringify({
+          version: 1,
+          persistenceRevision: replacement.persistenceRevision,
+          capturedAt: replacement.capturedAt,
+          checksum: replacement.checksum,
+        }));
+        return { ok: true as const };
+      }),
+    });
+    const user = userEvent.setup();
+
+    render(
+      <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {result => <div data-testid="bootstrap-result">{result.initialData}</div>}
+      </SaveBootstrap>,
+    );
+    await user.click(await screen.findByRole('button', { name: 'Recover latest safe save' }));
+    expect((await screen.findByTestId('bootstrap-result')).textContent).toBe(recoveredData);
+
+    cleanup();
+    render(
+      <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {result => <div data-testid="bootstrap-result">{result.initialData}</div>}
+      </SaveBootstrap>,
+    );
+
+    expect((await screen.findByTestId('bootstrap-result')).textContent).toBe(recoveredData);
+    expect(head.persistenceRevision).toBe(9);
+    expect(head.data).toBe(recoveredData);
+  });
+
+  it('does not let a blocked recovery completion mutate after switching profiles', async () => {
+    const replacement = deferred<void>();
+    const writes: SaveBootstrapReplacement[] = [];
+    const recoveryDecision: Extract<SaveRecoveryDecision, { kind: 'recovery_required' }> = {
+      kind: 'recovery_required',
+      primaryRaw: '{"broken":true}',
+      candidates: [{
+        source: 'checkpoint',
+        data: 'alpha-recovery',
+        state: { ...initialState, runId: 'alpha-recovery' },
+        persistenceRevision: 3,
+        runId: 'alpha-recovery',
+        runRevision: 3,
+        capturedAt: 123,
+        checksum: 'a'.repeat(64),
+      }],
+      cause: 'corrupt_primary',
+      maxDurablePersistenceRevision: 3,
+    };
+    const resolveSaveRecovery = vi.fn(async ({ profileId }: { profileId: string }) => (
+      profileId === 'alpha'
+        ? recoveryDecision
+        : readyDecision('mirror', {
+          data: 'beta-ready',
+          state: { ...initialState, runId: 'beta-ready' },
+        })
+    ));
+    const replaceSave = vi.fn(async (
+      saveReplacement: SaveBootstrapReplacement,
+      authorizeWrite?: () => SaveWriteAuthorization,
+    ) => {
+      await replacement.promise;
+      if (authorizeWrite?.().ok) writes.push(saveReplacement);
+      return { ok: true as const };
+    });
+    const deps = dependencies({
+      resolveSaveRecovery,
+      archiveCorruptEvidence: vi.fn(async () => ({ ok: true as const })),
+      replaceSave,
+    });
+    const user = userEvent.setup();
+    const view = render(<ProfileHarness dependencies={deps} />);
+
+    expect(await screen.findByRole('heading', { name: 'Saved progress needs recovery' })).toBeTruthy();
+    const click = user.click(screen.getByRole('button', { name: 'Recover latest safe save' }));
+    await waitFor(() => expect(replaceSave).toHaveBeenCalledOnce());
+
+    await act(async () => {
+      view.rerender(<ProfileHarness dependencies={deps} profileId="beta" />);
+    });
+    expect((await screen.findByTestId('profile-result')).textContent).toContain('mirror');
+
+    replacement.resolve();
+    await act(async () => { await click; });
+
+    expect(writes).toEqual([]);
+    expect(replaceSave).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('heading', { name: 'Saved progress needs recovery' })).toBeNull();
+    expect(screen.getByTestId('profile-result').textContent).toContain('beta-ready');
+  });
+
+  it.each([
+    ['recovery', 'Recover latest safe save', '8'],
+    ['fresh', 'Start a new run', '7'],
+  ] as const)('retains the maximum durable revision after %s selection', async (kind, actionLabel, expectedRevision) => {
+    const archiveCorruptEvidence = vi.fn(async () => ({ ok: true as const }));
+    const replaceSave = vi.fn(async () => ({ ok: true as const }));
+    const decision: Extract<SaveRecoveryDecision, { kind: 'recovery_required' }> = {
+      kind: 'recovery_required',
+      primaryRaw: '{bad',
+      maxDurablePersistenceRevision: 7,
+      candidates: kind === 'recovery' ? [{
+        source: 'checkpoint',
+        data: 'safe-checkpoint',
+        state: { ...initialState, runId: 'safe-run' },
+        persistenceRevision: 3,
+        runId: 'safe-run',
+        runRevision: 3,
+        capturedAt: 123,
+        checksum: 'a'.repeat(64),
+      }] : [],
+      cause: 'corrupt_primary',
+    };
+    const deps = dependencies({
+      resolveSaveRecovery: vi.fn(async () => decision),
+      archiveCorruptEvidence,
+      replaceSave,
+    });
+    const user = userEvent.setup();
+
+    render(
+      <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {result => <div data-testid="bootstrap-result">{result.maxDurablePersistenceRevision}</div>}
+      </SaveBootstrap>,
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Saved progress needs recovery' })).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: actionLabel }));
+    if (kind === 'fresh') {
+      await user.click(screen.getByRole('button', { name: 'Confirm start a new run' }));
+    }
+
+    expect((await screen.findByTestId('bootstrap-result')).textContent).toBe(expectedRevision);
+  });
+
+  it('keeps read-only export available in a non-owner tab while blocking mutations', async () => {
+    const leaseValues = new Map<string, string>([
+      ['FATE_PROFILE_alpha__writer', JSON.stringify({
+        version: 1,
+        ownerId: 'other-tab',
+        expiresAt: Date.now() + 30_000,
+      })],
+    ]);
+    const archiveCorruptEvidence = vi.fn(async () => ({ ok: true as const }));
+    const replaceSave = vi.fn(async () => ({ ok: true as const }));
+    const exportRecovery = vi.fn(async () => ({ ok: true as const }));
+    const decision: Extract<SaveRecoveryDecision, { kind: 'recovery_required' }> = {
+      kind: 'recovery_required',
+      primaryRaw: '{"broken":true}',
+      candidates: [{
+        source: 'checkpoint',
+        data: 'safe-checkpoint',
+        state: { ...initialState, runId: 'safe-run' },
+        persistenceRevision: 3,
+        runId: 'safe-run',
+        runRevision: 3,
+        capturedAt: 123,
+        checksum: 'a'.repeat(64),
+      }],
+      cause: 'corrupt_primary',
+      maxDurablePersistenceRevision: 3,
+    };
+    const deps = dependencies({
+      leaseOptions: {
+        ownerId: 'local-tab',
+        arbitrationMs: 0,
+        renewMs: 60_000,
+        storage: {
+          getItem: key => leaseValues.get(key) ?? null,
+          setItem: (key, value) => { leaseValues.set(key, value); },
+          removeItem: key => { leaseValues.delete(key); },
+        },
+      },
+      resolveSaveRecovery: vi.fn(async () => decision),
+      archiveCorruptEvidence,
+      replaceSave,
+      exportRecovery,
+    });
+    const user = userEvent.setup();
+
+    render(
+      <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {() => <div>game mounted</div>}
+      </SaveBootstrap>,
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Saved progress needs recovery' })).toBeTruthy();
+    expect((await screen.findByRole('status')).textContent).toContain('Another browser tab owns this save.');
+    expect((screen.getByRole('button', { name: 'Recover latest safe save' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Start a new run' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Export recovery file' }) as HTMLButtonElement).disabled).toBe(false);
+
+    await user.click(screen.getByRole('button', { name: 'Export recovery file' }));
+
+    expect(exportRecovery).toHaveBeenCalledOnce();
+    expect(archiveCorruptEvidence).not.toHaveBeenCalled();
+    expect(replaceSave).not.toHaveBeenCalled();
+  });
+
+  it('keeps the blocking screen when archival fails', async () => {
+    const archiveCorruptEvidence = vi.fn(async () => ({
+      ok: false as const,
+      message: 'Corrupt save evidence could not be archived.',
+    }));
+    const replaceSave = vi.fn(async () => ({ ok: true as const }));
+    const decision: Extract<SaveRecoveryDecision, { kind: 'recovery_required' }> = {
+      kind: 'recovery_required',
+      primaryRaw: '{"broken":true}',
+      candidates: [],
+      cause: 'corrupt_primary',
+      maxDurablePersistenceRevision: 0,
+    };
+    const deps = dependencies({
+      resolveSaveRecovery: vi.fn(async () => decision),
+      archiveCorruptEvidence,
+      replaceSave,
+    });
+    const user = userEvent.setup();
+
+    render(
+      <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {() => <div>game mounted</div>}
+      </SaveBootstrap>,
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Saved progress needs recovery' })).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Start a new run' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm start a new run' }));
+
+    expect(archiveCorruptEvidence).toHaveBeenCalledOnce();
+    expect(replaceSave).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert').textContent).toContain('could not be archived');
+    expect(screen.queryByText('game mounted')).toBeNull();
+  });
+
+  it('does not download an export after the bootstrap request becomes stale', async () => {
+    const decision: Extract<SaveRecoveryDecision, { kind: 'unsupported' }> = {
+      kind: 'unsupported',
+      rawCandidates: ['{"version":999,"future":true}'],
+    };
+    const download = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    let current = true;
+    const result = await productionExportRecovery('FATE_PROFILE_alpha', decision, {
+      isCurrentRequest: () => current,
+      buildArchive: async () => {
+        current = false;
+        return {
+          version: 1 as const,
+          capturedAt: 1,
+          primary: null,
+          mirrorMetadata: null,
+        };
+      },
+    });
+
+    expect(result).toEqual({ ok: false, message: 'This profile is no longer active.' });
+    expect(download).not.toHaveBeenCalled();
+    download.mockRestore();
+  });
+
+  it('keeps future-version evidence in a bounded exported Blob', async () => {
+    const blobs: Blob[] = [];
+    const createObjectUrl = vi.spyOn(URL, 'createObjectURL').mockImplementation((blob: Blob | MediaSource) => {
+      blobs.push(blob as Blob);
+      return 'blob:recovery-test';
+    });
+    const revokeObjectUrl = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    const download = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    const futureEvidence = '{"version":999,"future":"keep this evidence"}';
+    const result = await productionExportRecovery('FATE_PROFILE_alpha', {
+      kind: 'unsupported',
+      rawCandidates: [futureEvidence, 'x'.repeat(MAX_SAVE_BYTES * 2)],
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(blobs).toHaveLength(1);
+    const text = await blobs[0].text();
+    expect(new TextEncoder().encode(text).byteLength).toBeLessThanOrEqual(MAX_SAVE_BYTES);
+    const payload = JSON.parse(text) as { rawCandidates?: string[] };
+    expect(payload.rawCandidates).toContain(futureEvidence);
+    expect(download).toHaveBeenCalledOnce();
+    expect(revokeObjectUrl).toHaveBeenCalledOnce();
+    createObjectUrl.mockRestore();
+    revokeObjectUrl.mockRestore();
+    download.mockRestore();
+  });
+
+  it('resets the conflicting recovery journal before confirming a fresh run', async () => {
+    const archiveCorruptEvidence = vi.fn(async () => ({ ok: true as const }));
+    let journalConflicting = true;
+    const resetRecovery = vi.fn(async () => {
+      journalConflicting = false;
+      return { ok: true as const };
+    });
+    const replaceSave = vi.fn(async () => ({ ok: true as const }));
+    const decision: Extract<SaveRecoveryDecision, { kind: 'recovery_required' }> = {
+      kind: 'recovery_required',
+      primaryRaw: '{"broken":true}',
+      candidates: [],
+      cause: 'conflicting_runs',
+      maxDurablePersistenceRevision: 0,
+    };
+    const deps = dependencies({
+      resolveSaveRecovery: vi.fn(async () => journalConflicting
+        ? decision
+        : { kind: 'empty' as const, maxDurablePersistenceRevision: 0 }),
+      archiveCorruptEvidence,
+      resetRecovery,
+      replaceSave,
+    });
+    const user = userEvent.setup();
+
+    render(
+      <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {() => <div>game mounted</div>}
+      </SaveBootstrap>,
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Start a new run' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm start a new run' }));
+
+    expect(resetRecovery).toHaveBeenCalledOnce();
+    expect(replaceSave).toHaveBeenCalledOnce();
+    expect(resetRecovery.mock.invocationCallOrder[0]).toBeLessThan(replaceSave.mock.invocationCallOrder[0]);
+    expect(await screen.findByText('game mounted')).toBeTruthy();
+
+    const firstMount = screen.getByText('game mounted');
+    expect(firstMount).toBeTruthy();
+    cleanup();
+    render(
+      <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {() => <div>game mounted</div>}
+      </SaveBootstrap>,
+    );
+    expect(await screen.findByText('game mounted')).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Saved progress needs recovery' })).toBeNull();
+  });
+
+  it('writes a fresh journal head and removes old checkpoints so reload resolves cleanly', async () => {
+    const freshState = { ...initialState, runId: '00000000-0000-4000-8000-000000000001' };
+    const freshData = JSON.stringify(freshState);
+    const freshChecksum = await checksumSave(freshData);
+    let head = {
+      profileId: 'alpha',
+      persistenceRevision: 4,
+      runId: 'old-run',
+      runRevision: 4,
+      capturedAt: 10,
+      checksum: 'b'.repeat(64),
+      data: '{"old":true}',
+    };
+    let checkpoints = [{
+      ...head,
+      reason: 'interval' as const,
+    }];
+    const journal = repository();
+    journal.getHead = vi.fn(async () => head);
+    journal.listCheckpoints = vi.fn(async () => checkpoints);
+    journal.putHead = vi.fn(async record => {
+      head = record;
+      return { stored: true as const };
+    });
+    journal.deleteCheckpoints = vi.fn(async (_profileId, revisions) => {
+      checkpoints = checkpoints.filter(checkpoint => !revisions.includes(checkpoint.persistenceRevision));
+      return { stored: true as const };
+    });
+
+    const reset = await productionResetRecovery(
+      {
+        profileId: 'alpha',
+        storageKey: 'FATE_PROFILE_alpha',
+        data: freshData,
+        state: freshState,
+        persistenceRevision: 0,
+        capturedAt: null,
+        checksum: freshChecksum,
+      },
+      () => ({ ok: true as const }),
+      { openRepository: async () => journal, now: () => 100 },
+    );
+
+    expect(reset).toEqual({ ok: true, persistenceRevision: 5 });
+    expect(head.runId).toBe('00000000-0000-4000-8000-000000000001');
+    expect(head.persistenceRevision).toBe(5);
+    expect(checkpoints).toEqual([]);
+    const reloadDecision = await resolveSaveRecovery({
+      profileId: 'alpha',
+      pendingRaw: null,
+      primaryRaw: freshData,
+      mirrorMetadataRaw: JSON.stringify({
+        version: 1,
+        persistenceRevision: head.persistenceRevision,
+        capturedAt: head.capturedAt,
+        checksum: freshChecksum,
+      }),
+      defaults: initialState,
+      head,
+      checkpoints,
+    });
+    expect(reloadDecision.kind).toBe('ready');
+    expect(reloadDecision.kind === 'ready' ? reloadDecision.state.runId : null).toBe('00000000-0000-4000-8000-000000000001');
+  });
+
+  it('hands the post-reset revision to the first mirror-only save', async () => {
+    const oldState = { ...initialState, runId: 'old-run' };
+    const oldData = JSON.stringify(oldState);
+    const oldChecksum = await checksumSave(oldData);
+    const freshState = {
+      ...initialState,
+      runId: '00000000-0000-4000-8000-000000000002',
+    };
+    const freshData = JSON.stringify(freshState);
+    const freshChecksum = await checksumSave(freshData);
+    let head: RecoveryHead = {
+      profileId: 'alpha',
+      persistenceRevision: 4,
+      runId: oldState.runId,
+      runRevision: oldState.runRevision,
+      capturedAt: 10,
+      checksum: oldChecksum,
+      data: oldData,
+    };
+    const journal = repository();
+    journal.getHead = vi.fn(async () => head);
+    journal.listCheckpoints = vi.fn(async () => []);
+    journal.putHead = vi.fn(async record => {
+      head = record;
+      return { stored: true as const };
+    });
+
+    let replacementWritten: SaveBootstrapReplacement | null = null;
+    let bootstrapResult: SaveBootstrapResult | null = null;
+    const decision: Extract<SaveRecoveryDecision, { kind: 'recovery_required' }> = {
+      kind: 'recovery_required',
+      primaryRaw: '{bad',
+      candidates: [],
+      cause: 'conflicting_runs',
+      maxDurablePersistenceRevision: 4,
+    };
+    const deps = dependencies({
+      createFreshState: () => freshState,
+      resolveSaveRecovery: vi.fn(async () => decision),
+      archiveCorruptEvidence: vi.fn(async () => ({ ok: true as const })),
+      resetRecovery: vi.fn(async (replacement, authorizeWrite) => productionResetRecovery(
+        replacement,
+        authorizeWrite,
+        { openRepository: async () => journal, now: () => 100 },
+      )),
+      replaceSave: vi.fn(async replacement => {
+        replacementWritten = replacement;
+        return { ok: true as const };
+      }),
+    });
+    const user = userEvent.setup();
+
+    render(
+      <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {result => {
+          bootstrapResult = result;
+          return <div data-testid="bootstrap-result">{result.maxDurablePersistenceRevision}</div>;
+        }}
+      </SaveBootstrap>,
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Start a new run' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm start a new run' }));
+
+    expect(await screen.findByTestId('bootstrap-result')).toBeTruthy();
+    expect(bootstrapResult?.maxDurablePersistenceRevision).toBe(5);
+    expect(replacementWritten?.persistenceRevision).toBe(5);
+
+    const values = new Map<string, string>([
+      ['FATE_PROFILE_alpha', replacementWritten!.data],
+      [profileMirrorMetadataKey('FATE_PROFILE_alpha'), JSON.stringify({
+        version: 1,
+        persistenceRevision: replacementWritten!.persistenceRevision,
+        capturedAt: 100,
+        checksum: freshChecksum,
+      })],
+    ]);
+    const storage = {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => { values.set(key, value); },
+      removeItem: (key: string) => { values.delete(key); },
+    };
+    const journalFailure: RecoveryRepository = {
+      ...journal,
+      putHead: vi.fn(async () => ({
+        stored: false as const,
+        reason: 'storage_unavailable' as const,
+      })),
+    };
+    const coordinator = createSaveCoordinator({
+      profileId: 'alpha',
+      storageKey: 'FATE_PROFILE_alpha',
+      storage,
+      repository: journalFailure,
+      authorizeWrite: () => ({ ok: true as const }),
+      validate: data => parseAndMigrateSave(data, initialState),
+      checksum: checksumSave,
+      now: () => 200,
+      initialPersistenceRevision: bootstrapResult!.maxDurablePersistenceRevision,
+    });
+    const firstSave = JSON.stringify({ ...freshState, userNotes: { first: 'save' } });
+    coordinator.stage(firstSave);
+    await coordinator.flush();
+    await coordinator.whenIdle();
+
+    const reloadDecision = await resolveSaveRecovery({
+      profileId: 'alpha',
+      pendingRaw: null,
+      primaryRaw: values.get('FATE_PROFILE_alpha') ?? null,
+      mirrorMetadataRaw: values.get(profileMirrorMetadataKey('FATE_PROFILE_alpha')) ?? null,
+      defaults: initialState,
+      head,
+      checkpoints: [],
+    });
+    expect(reloadDecision.kind).toBe('ready');
+    expect(reloadDecision.kind === 'ready' ? reloadDecision.persistenceRevision : null).toBe(6);
+  });
+
+  it('uses the higher verified mirror revision when resetting a fresh run', async () => {
+    const oldState = { ...initialState, runId: '00000000-0000-4000-8000-000000000010' };
+    const oldData = JSON.stringify(oldState);
+    const oldChecksum = await checksumSave(oldData);
+    const mirrorState = { ...initialState, runId: '00000000-0000-4000-8000-000000000011' };
+    const mirrorData = JSON.stringify(mirrorState);
+    const mirrorChecksum = await checksumSave(mirrorData);
+    const freshState = { ...initialState, runId: '00000000-0000-4000-8000-000000000012' };
+    let head: RecoveryHead = {
+      profileId: 'alpha',
+      persistenceRevision: 4,
+      runId: oldState.runId,
+      runRevision: oldState.runRevision,
+      capturedAt: 10,
+      checksum: oldChecksum,
+      data: oldData,
+    };
+    const journal = repository();
+    journal.getHead = vi.fn(async () => head);
+    journal.listCheckpoints = vi.fn(async () => []);
+    journal.putHead = vi.fn(async record => {
+      head = record;
+      return { stored: true as const };
+    });
+
+    let arbitration: SaveRecoveryDecision | null = null;
+    let replacementWritten: SaveBootstrapReplacement | null = null;
+    const deps = dependencies({
+      createFreshState: () => freshState,
+      readPrimary: () => mirrorData,
+      readMirrorMetadata: () => JSON.stringify({
+        version: 1,
+        persistenceRevision: 9,
+        capturedAt: 20,
+        checksum: mirrorChecksum,
+      }),
+      openRepository: vi.fn(async () => journal),
+      resolveSaveRecovery: vi.fn(async input => {
+        const decision = await resolveSaveRecovery(input);
+        arbitration = decision;
+        return decision;
+      }),
+      archiveCorruptEvidence: vi.fn(async () => ({ ok: true as const })),
+      resetRecovery: vi.fn(async (replacement, authorizeWrite) => productionResetRecovery(
+        replacement,
+        authorizeWrite,
+        { openRepository: async () => journal, now: () => 100 },
+      )),
+      replaceSave: vi.fn(async replacement => {
+        replacementWritten = replacement;
+        return { ok: true as const };
+      }),
+    });
+    const user = userEvent.setup();
+
+    render(
+      <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+        {result => <div data-testid="bootstrap-result">{result.maxDurablePersistenceRevision}</div>}
+      </SaveBootstrap>,
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Saved progress needs recovery' })).toBeTruthy();
+    expect(arbitration?.kind).toBe('recovery_required');
+    expect(arbitration?.kind === 'recovery_required' ? arbitration.maxDurablePersistenceRevision : null).toBe(9);
+
+    await user.click(screen.getByRole('button', { name: 'Start a new run' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm start a new run' }));
+
+    expect(await screen.findByTestId('bootstrap-result')).toBeTruthy();
+    expect(head.persistenceRevision).toBe(10);
+    expect(replacementWritten?.persistenceRevision).toBe(10);
+  });
+
+  it('cancels the previous profile bootstrap and ignores its late result', async () => {
+    const first = deferred<SaveRecoveryDecision>();
+    const second = deferred<SaveRecoveryDecision>();
+    const firstRepository = repository();
+    const secondRepository = repository();
+    let request = 0;
+    let opened = 0;
+    const resolveSaveRecovery = vi.fn(() => {
+      request += 1;
+      return request === 1 ? first.promise : second.promise;
+    });
+    const deps = dependencies({
+      openRepository: vi.fn(async () => {
+        opened += 1;
+        return opened === 1 ? firstRepository : secondRepository;
+      }),
+      resolveSaveRecovery,
+    });
+    const view = render(
+      <ProfileHarness dependencies={deps} />,
+    );
+
+    expect(screen.getByText('Checking saved progress…')).toBeTruthy();
+    await act(async () => {
+      view.rerender(<ProfileHarness dependencies={deps} profileId="beta" />);
+    });
+    first.resolve(readyDecision('mirror', { data: 'stale', state: { ...initialState, runId: 'stale' } }));
+    await act(async () => { await Promise.resolve(); });
+    expect(screen.queryByText(/stale/)).toBeNull();
+    expect((firstRepository.close as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(1);
+
+    await act(async () => {
+      second.resolve(readyDecision('journal'));
+      await second.promise;
+    });
+    expect((await screen.findByTestId('profile-result')).textContent).toContain('journal');
+    expect((secondRepository.close as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(1);
+  });
+
+  it('swallows a rejected stale promise after the profile changes', async () => {
+    const first = deferred<SaveRecoveryDecision>();
+    const second = deferred<SaveRecoveryDecision>();
+    let request = 0;
+    const resolveSaveRecovery = vi.fn(() => {
+      request += 1;
+      return request === 1 ? first.promise : second.promise;
+    });
+    const view = render(
+      <ProfileHarness dependencies={dependencies({ resolveSaveRecovery })} />,
+    );
+
+    await act(async () => {
+      view.rerender(<ProfileHarness dependencies={dependencies({ resolveSaveRecovery })} profileId="beta" />);
+      first.reject(new Error('stale profile failure'));
+      second.resolve(readyDecision('pending'));
+      await Promise.allSettled([first.promise, second.promise]);
+    });
+
+    expect((await screen.findByTestId('profile-result')).textContent).toContain('pending');
+    expect(screen.queryByText('stale profile failure')).toBeNull();
+  });
+});
+
+const ProfileHarness = ({
+  dependencies,
+  profileId = 'alpha',
+}: {
+  dependencies: SaveBootstrapDependencies;
+  profileId?: string;
+}) => {
+  return (
+    <SaveBootstrap profileId={profileId} storageKey={`FATE_PROFILE_${profileId}`} dependencies={dependencies}>
+      {result => <div data-testid="profile-result">{resultLabel(result)}</div>}
+    </SaveBootstrap>
+  );
+};

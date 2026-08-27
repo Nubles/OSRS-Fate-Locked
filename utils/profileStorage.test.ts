@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  archiveCorruptSave,
   deleteProfileStorage,
+  buildCorruptSaveArchive,
   profileOwnedKeys,
 } from './profileStorage';
 
@@ -14,12 +16,21 @@ const expectedKeys = (profileId: string): string[] => {
     `${base}__discordCursor`,
     `fate_features_seen_v1_${profileId}`,
     `${base}__writer`,
+    `${base}__mirrorMeta`,
+    `${base}__corruptArchive`,
   ];
 };
 
 describe('profile-owned storage registry', () => {
-  it('lists the exact seven owned keys in stable order', () => {
+  it('lists the exact nine owned keys in stable order', () => {
     expect(profileOwnedKeys('target')).toEqual(expectedKeys('target'));
+  });
+
+  it('owns mirror metadata and corrupt evidence with the profile', () => {
+    expect(profileOwnedKeys('alpha')).toEqual(expect.arrayContaining([
+      'FATE_PROFILE_alpha__mirrorMeta',
+      'FATE_PROFILE_alpha__corruptArchive',
+    ]));
   });
 
   it('removes only the exact registered keys for the selected profile', () => {
@@ -41,6 +52,7 @@ describe('profile-owned storage registry', () => {
     const attempted: string[] = [];
 
     const result = deleteProfileStorage({
+      getItem: key => store.get(key) ?? null,
       removeItem: (key) => {
         attempted.push(key);
         store.delete(key);
@@ -56,11 +68,14 @@ describe('profile-owned storage registry', () => {
     const targetKeys = expectedKeys('target');
     const failingKey = targetKeys[1];
     const attempted: string[] = [];
+    const store = new Map(targetKeys.map(key => [key, `value:${key}`]));
 
     const result = deleteProfileStorage({
+      getItem: key => store.get(key) ?? null,
       removeItem: (key) => {
         attempted.push(key);
         if (key === failingKey) throw new Error('storage unavailable');
+        store.delete(key);
       },
     }, 'target');
 
@@ -69,5 +84,134 @@ describe('profile-owned storage registry', () => {
       removed: targetKeys.filter((key) => key !== failingKey),
       failed: [failingKey],
     });
+  });
+
+  it('uses readback as the source of truth when removal throws after deleting the value', () => {
+    const targetKeys = expectedKeys('target');
+    const store = new Map(targetKeys.map(key => [key, `value:${key}`]));
+    const throwAfterDelete = targetKeys[2];
+
+    const result = deleteProfileStorage({
+      getItem: key => store.get(key) ?? null,
+      removeItem: key => {
+        store.delete(key);
+        if (key === throwAfterDelete) throw new DOMException('blocked after delete', 'SecurityError');
+      },
+    }, 'target');
+
+    expect(result).toEqual({ removed: targetKeys, failed: [] });
+    expect(store.size).toBe(0);
+  });
+
+  it('reports a key that reappears before readback as a cleanup failure', () => {
+    const targetKeys = expectedKeys('target');
+    const reappearingKey = targetKeys[4];
+    const store = new Map(targetKeys.map(key => [key, `value:${key}`]));
+
+    const result = deleteProfileStorage({
+      getItem: key => store.get(key) ?? null,
+      removeItem: key => {
+        store.delete(key);
+        if (key === reappearingKey) store.set(key, 'late-writer-value');
+      },
+    }, 'target');
+
+    expect(result).toEqual({
+      removed: targetKeys.filter(key => key !== reappearingKey),
+      failed: [reappearingKey],
+    });
+  });
+});
+
+describe('corrupt-save archive', () => {
+  it('writes a bounded evidence envelope and verifies exact readback', async () => {
+    const values = new Map<string, string>();
+    const result = await archiveCorruptSave(
+      {
+        getItem: key => values.get(key) ?? null,
+        setItem: (key, value) => { values.set(key, value); },
+      },
+      'FATE_PROFILE_alpha',
+      {
+        primary: '{"version":4,"bad":true}',
+        mirrorMetadata: '{"version":1,"persistenceRevision":8}',
+      },
+      { now: () => 1234 },
+    );
+
+    expect(result).toEqual({ ok: true });
+    expect(JSON.parse(values.get('FATE_PROFILE_alpha__corruptArchive') ?? '')).toEqual({
+      version: 1,
+      capturedAt: 1234,
+      primary: '{"version":4,"bad":true}',
+      mirrorMetadata: '{"version":1,"persistenceRevision":8}',
+    });
+  });
+
+  it('stores hashes and UTF-8 byte lengths instead of oversized raw evidence', async () => {
+    const oversized = 'abc';
+    const archive = await buildCorruptSaveArchive(
+      {
+        primary: oversized,
+        mirrorMetadata: 'x',
+      },
+      { now: () => 55, maxBytes: 2 },
+    );
+
+    expect(archive.primary).toBeNull();
+    expect(archive.primaryBytes).toBe(new TextEncoder().encode(oversized).byteLength);
+    expect(archive.primaryHash).toBe('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+    expect(archive.mirrorMetadata).toBe('x');
+  });
+
+  it('blocks replacement when the archive cannot be written or read back', async () => {
+    const result = await archiveCorruptSave(
+      {
+        getItem: () => 'different bytes',
+        setItem: () => undefined,
+      },
+      'FATE_PROFILE_alpha',
+      { primary: 'bad', mirrorMetadata: null },
+      { now: () => 1 },
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      message: 'Corrupt save evidence could not be archived.',
+    });
+  });
+
+  it('reauthorizes after asynchronous archive construction before writing evidence', async () => {
+    const values = new Map<string, string>();
+    let checks = 0;
+    const authorizeWrite = () => {
+      checks += 1;
+      return checks === 1
+        ? { ok: true as const }
+        : { ok: false as const, reason: 'ownership_conflict' as const };
+    };
+
+    const result = await archiveCorruptSave(
+      {
+        getItem: key => values.get(key) ?? null,
+        setItem: (key, value) => { values.set(key, value); },
+      },
+      'FATE_PROFILE_alpha',
+      { primary: '{"broken":true}', mirrorMetadata: null },
+      {
+        checksum: async value => {
+          await Promise.resolve();
+          return value;
+        },
+        authorizeWrite,
+      },
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      message: 'Save ownership changed before recovery evidence could be archived.',
+    });
+    expect(values).toEqual(new Map());
+    expect(checks).toBe(2);
   });
 });

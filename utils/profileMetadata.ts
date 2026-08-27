@@ -1,6 +1,6 @@
-import type { Profile, ProfileMetadata } from '../types';
+import type { Profile, ProfileDeletionIntentV1, ProfileMetadata } from '../types';
 
-export const PROFILE_METADATA_VERSION = 1 as const;
+export const PROFILE_METADATA_VERSION = 2 as const;
 export const MAX_PROFILES = 10;
 export const MAX_RECOVERED_PROFILES = 100;
 export const MAX_PROFILE_NAME_LENGTH = 30;
@@ -17,6 +17,8 @@ export type ProfileMetadataInvalidReason =
   | 'invalid_version'
   | 'invalid_revision'
   | 'invalid_profiles'
+  | 'invalid_deletions'
+  | 'invalid_deletion'
   | 'duplicate_id'
   | 'invalid_profile'
   | 'invalid_active_profile'
@@ -29,9 +31,11 @@ export type ProfileMetadataParseResult =
   | { status: 'invalid'; reason: ProfileMetadataInvalidReason };
 
 const DANGEROUS_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
-const CURRENT_ROOT_KEYS = new Set(['version', 'revision', 'profiles', 'activeProfileId']);
+const VERSION_ONE_ROOT_KEYS = new Set(['version', 'revision', 'profiles', 'activeProfileId']);
+const CURRENT_ROOT_KEYS = new Set(['version', 'revision', 'profiles', 'activeProfileId', 'deletions']);
 const LEGACY_ROOT_KEYS = new Set(['profiles', 'activeProfileId']);
 const PROFILE_KEYS = new Set(['id', 'name', 'createdAt']);
+const DELETION_KEYS = new Set(['version', 'deletionId', 'profileId', 'requestedAt', 'phase']);
 const STORAGE_SAFE_PROFILE_ID = /^[A-Za-z0-9-]{1,128}$/;
 
 const own = (record: object, key: PropertyKey): boolean =>
@@ -110,6 +114,56 @@ const inspectProfiles = (value: unknown): Profile[] | ProfileMetadataParseResult
   return profiles;
 };
 
+const inspectDeletions = (
+  value: unknown,
+  visibleProfileIds: ReadonlySet<string>,
+): ProfileDeletionIntentV1[] | ProfileMetadataParseResult => {
+  if (!Array.isArray(value) || value.length > MAX_RECOVERED_PROFILES) {
+    return invalid('invalid_deletions');
+  }
+  if (Object.getOwnPropertySymbols(value).length > 0) return invalid('invalid_deletions');
+  for (const key of Object.getOwnPropertyNames(value)) {
+    if (key === 'length') continue;
+    if (DANGEROUS_KEYS.has(key) || !/^(0|[1-9]\d*)$/.test(key) || Number(key) >= value.length) {
+      return invalid('invalid_deletions');
+    }
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    if (!descriptor?.enumerable || !('value' in descriptor)) return invalid('invalid_deletions');
+  }
+
+  const deletions: ProfileDeletionIntentV1[] = [];
+  const deletionIds = new Set<string>();
+  const deletedProfileIds = new Set<string>();
+  for (let index = 0; index < value.length; index += 1) {
+    if (!own(value, index)) return invalid('invalid_deletions');
+    const entry = inspectRecord(value[index], DELETION_KEYS, 'invalid_deletion');
+    if (isInvalid(entry)) return entry;
+    if (!own(entry, 'version') || !own(entry, 'deletionId') || !own(entry, 'profileId')
+      || !own(entry, 'requestedAt') || !own(entry, 'phase')) {
+      return invalid('invalid_deletion');
+    }
+    const version = readOwn(entry, 'version');
+    const deletionId = readOwn(entry, 'deletionId');
+    const profileId = readOwn(entry, 'profileId');
+    const requestedAt = readOwn(entry, 'requestedAt');
+    const phase = readOwn(entry, 'phase');
+    if (version !== 1
+      || typeof deletionId !== 'string' || !isStorageSafeProfileId(deletionId)
+      || typeof profileId !== 'string' || !isStorageSafeProfileId(profileId)
+      || typeof requestedAt !== 'number' || !Number.isSafeInteger(requestedAt) || requestedAt < 0
+      || phase !== 'pending_cleanup') {
+      return invalid('invalid_deletion');
+    }
+    if (deletionIds.has(deletionId) || deletedProfileIds.has(profileId) || visibleProfileIds.has(profileId)) {
+      return invalid('duplicate_id');
+    }
+    deletionIds.add(deletionId);
+    deletedProfileIds.add(profileId);
+    deletions.push({ version, deletionId, profileId, requestedAt, phase });
+  }
+  return deletions;
+};
+
 export const sanitizeProfileName = (name: string): string =>
   name.trim().slice(0, MAX_PROFILE_NAME_LENGTH) || 'Unnamed Profile';
 
@@ -135,9 +189,14 @@ export const parseProfileMetadata = (raw: string | null): ProfileMetadataParseRe
   }
 
   const currentCandidate = own(parsed, 'version') || own(parsed, 'revision');
+  const candidateVersion = versionDescriptor && 'value' in versionDescriptor
+    ? versionDescriptor.value
+    : undefined;
   const root = inspectRecord(
     parsed,
-    currentCandidate ? CURRENT_ROOT_KEYS : LEGACY_ROOT_KEYS,
+    currentCandidate
+      ? candidateVersion === 1 ? VERSION_ONE_ROOT_KEYS : CURRENT_ROOT_KEYS
+      : LEGACY_ROOT_KEYS,
     'invalid_root',
   );
   if (isInvalid(root)) return root;
@@ -148,7 +207,7 @@ export const parseProfileMetadata = (raw: string | null): ProfileMetadataParseRe
     if (typeof version !== 'number' || !Number.isSafeInteger(version)) {
       return invalid('invalid_version');
     }
-    if (version < PROFILE_METADATA_VERSION) {
+    if (version < 1) {
       return invalid('invalid_version');
     }
     if (version > PROFILE_METADATA_VERSION) return { status: 'unsupported', version };
@@ -165,9 +224,33 @@ export const parseProfileMetadata = (raw: string | null): ProfileMetadataParseRe
     if (typeof activeProfileId !== 'string' || !profiles.some(profile => profile.id === activeProfileId)) {
       return invalid('invalid_active_profile');
     }
+    if (version === 1) {
+      return {
+        status: 'legacy',
+        metadata: {
+          version: PROFILE_METADATA_VERSION,
+          revision,
+          profiles,
+          activeProfileId,
+          deletions: [],
+        },
+      };
+    }
+    if (!own(root, 'deletions')) return invalid('invalid_deletions');
+    const deletions = inspectDeletions(
+      readOwn(root, 'deletions'),
+      new Set(profiles.map(profile => profile.id)),
+    );
+    if (isInvalid(deletions)) return deletions;
     return {
       status: 'current',
-      metadata: { version: PROFILE_METADATA_VERSION, revision, profiles, activeProfileId },
+      metadata: {
+        version: PROFILE_METADATA_VERSION,
+        revision,
+        profiles,
+        activeProfileId,
+        deletions,
+      },
     };
   }
 
@@ -181,9 +264,19 @@ export const parseProfileMetadata = (raw: string | null): ProfileMetadataParseRe
   }
   return {
     status: 'legacy',
-    metadata: { version: PROFILE_METADATA_VERSION, revision: 0, profiles, activeProfileId },
+    metadata: {
+      version: PROFILE_METADATA_VERSION,
+      revision: 0,
+      profiles,
+      activeProfileId,
+      deletions: [],
+    },
   };
 };
+
+export const isProfileDeletionPending = (metadata: ProfileMetadata, profileId: string): boolean =>
+  metadata.deletions.some(deletion => deletion.profileId === profileId);
+
 export interface ProfileRecoveryEnvelopeV1 {
   version: 1;
   capturedAt: number;
@@ -242,10 +335,17 @@ type RecoveryHints = {
 
 type ReconstructedProfiles = {
   metadata: ProfileMetadata;
+  deletionRecoveryUnsafe: boolean;
   recoveredProfiles: number;
   generatedNames: number;
   unreadableSaves: number;
   overflowSaves: number;
+};
+
+type RecoveryDeletions = {
+  deletions: ProfileDeletionIntentV1[];
+  protectedProfileIds: Set<string>;
+  unsafe: boolean;
 };
 
 const PROFILE_SAVE_KEY = /^FATE_PROFILE_([A-Za-z0-9-]{1,128})$/;
@@ -339,13 +439,17 @@ const recoveryArchive = (
     : { version: 1, capturedAt: now, primary, backup }
 );
 
-const reconstructProfiles = (input: ResolveProfileMetadataInput): ReconstructedProfiles => {
+const reconstructProfiles = (
+  input: ResolveProfileMetadataInput,
+  recoveredDeletions = mergedRecoveryDeletions(input.primary, input.backup),
+): ReconstructedProfiles => {
   const hints = mergedRecoveryHints(input.primary, input.backup);
   const accepted: Array<{ id: string; hint: RecoveryProfileHint | undefined }> = [];
   let unreadableSaves = 0;
   let overflowSaves = 0;
 
   for (const id of discoverProfileSaveIds(input.storage)) {
+    if (recoveredDeletions.protectedProfileIds.has(id)) continue;
     const raw = input.storage.getItem(`FATE_PROFILE_${id}`);
     if (raw === null || !input.validateGameSave(raw)) {
       unreadableSaves += 1;
@@ -388,7 +492,9 @@ const reconstructProfiles = (input: ResolveProfileMetadataInput): ReconstructedP
       revision: 0,
       profiles,
       activeProfileId,
+      deletions: recoveredDeletions.deletions,
     },
+    deletionRecoveryUnsafe: recoveredDeletions.unsafe,
     recoveredProfiles: profiles.length,
     generatedNames,
     unreadableSaves,
@@ -396,14 +502,79 @@ const reconstructProfiles = (input: ResolveProfileMetadataInput): ReconstructedP
   };
 };
 
-const freshMetadata = (input: ResolveProfileMetadataInput): ProfileMetadata => {
-  const id = input.createProfileId();
+const freshMetadata = (
+  input: ResolveProfileMetadataInput,
+  recoveredDeletions = mergedRecoveryDeletions(input.primary, input.backup),
+): ProfileMetadata => {
+  let id = input.createProfileId();
+  if (recoveredDeletions.protectedProfileIds.has(id)) {
+    let suffix = 0;
+    do {
+      id = `recovered-${input.now}-${suffix}`;
+      suffix += 1;
+    } while (recoveredDeletions.protectedProfileIds.has(id));
+  }
   return {
     version: PROFILE_METADATA_VERSION,
     revision: 0,
     profiles: [{ id, name: 'Main Account', createdAt: input.now }],
     activeProfileId: id,
+    deletions: recoveredDeletions.deletions,
   };
+};
+
+const recoverableDeletionIntents = (raw: string | null): ProfileDeletionIntentV1[] => {
+  if (raw === null) return [];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return [];
+  }
+  if (!isPlainRecord(parsed)) return [];
+  const version = Object.getOwnPropertyDescriptor(parsed, 'version');
+  if (!version?.enumerable || !('value' in version) || version.value !== PROFILE_METADATA_VERSION) {
+    return [];
+  }
+  const deletions = Object.getOwnPropertyDescriptor(parsed, 'deletions');
+  if (!deletions?.enumerable || !('value' in deletions)) return [];
+  const inspected = inspectDeletions(deletions.value, new Set());
+  return isInvalid(inspected) ? [] : inspected;
+};
+
+const mergedRecoveryDeletions = (
+  primary: string | null,
+  backup: string | null,
+): RecoveryDeletions => {
+  const deletions: ProfileDeletionIntentV1[] = [];
+  const deletionIds = new Set<string>();
+  const profileIds = new Set<string>();
+  const protectedProfileIds = new Set<string>();
+  let unsafe = false;
+  for (const intent of [
+    ...recoverableDeletionIntents(primary),
+    ...recoverableDeletionIntents(backup),
+  ]) {
+    protectedProfileIds.add(intent.profileId);
+    if (deletionIds.has(intent.deletionId) || profileIds.has(intent.profileId)) {
+      const duplicate = deletions.some(existing => (
+        existing.deletionId === intent.deletionId
+        && existing.profileId === intent.profileId
+        && existing.requestedAt === intent.requestedAt
+        && existing.phase === intent.phase
+      ));
+      if (!duplicate) unsafe = true;
+      continue;
+    }
+    deletionIds.add(intent.deletionId);
+    profileIds.add(intent.profileId);
+    if (deletions.length >= MAX_RECOVERED_PROFILES) {
+      unsafe = true;
+      continue;
+    }
+    deletions.push(intent);
+  }
+  return { deletions, protectedProfileIds, unsafe };
 };
 
 const readOnlyMetadata = (
@@ -418,8 +589,11 @@ const readOnlyMetadata = (
     return { metadata: backupResult.metadata, notice: recoveryNotice('unsupported') };
   }
 
-  const recovered = reconstructProfiles(input);
-  const metadata = recovered.recoveredProfiles > 0 ? recovered.metadata : freshMetadata(input);
+  const recoveredDeletions = mergedRecoveryDeletions(input.primary, input.backup);
+  const recovered = reconstructProfiles(input, recoveredDeletions);
+  const metadata = recovered.recoveredProfiles > 0
+    ? recovered.metadata
+    : freshMetadata(input, recoveredDeletions);
   return {
     metadata,
     notice: recoveryNotice(
@@ -436,6 +610,12 @@ export const resolveProfileMetadata = (
   input: ResolveProfileMetadataInput,
 ): ProfileMetadataResolution => {
   const primaryResult = parseProfileMetadata(input.primary);
+  const backupResult = parseProfileMetadata(input.backup);
+
+  if (primaryResult.status === 'unsupported' || backupResult.status === 'unsupported') {
+    const readOnly = readOnlyMetadata(input, primaryResult, backupResult);
+    return { mode: 'read_only', metadata: readOnly.metadata, repair: null, notice: readOnly.notice };
+  }
 
   if (primaryResult.status === 'current') {
     return { mode: 'durable', metadata: primaryResult.metadata, repair: null, notice: null };
@@ -449,13 +629,6 @@ export const resolveProfileMetadata = (
       legacyCopy: null,
     };
     return { mode: 'repair', metadata: repair.candidate, repair, notice: null };
-  }
-
-  const backupResult = parseProfileMetadata(input.backup);
-
-  if (primaryResult.status === 'unsupported' || backupResult.status === 'unsupported') {
-    const readOnly = readOnlyMetadata(input, primaryResult, backupResult);
-    return { mode: 'read_only', metadata: readOnly.metadata, repair: null, notice: readOnly.notice };
   }
 
   if (backupResult.status === 'current' || backupResult.status === 'legacy') {
@@ -473,7 +646,25 @@ export const resolveProfileMetadata = (
     };
   }
 
-  const recovered = reconstructProfiles(input);
+  const recoveredDeletions = mergedRecoveryDeletions(input.primary, input.backup);
+  const recovered = reconstructProfiles(input, recoveredDeletions);
+  if (recovered.deletionRecoveryUnsafe) {
+    const metadata = recovered.recoveredProfiles > 0
+      ? recovered.metadata
+      : freshMetadata(input, recoveredDeletions);
+    return {
+      mode: 'read_only',
+      metadata,
+      repair: null,
+      notice: recoveryNotice(
+        'read_only',
+        recovered.recoveredProfiles,
+        recovered.generatedNames,
+        recovered.unreadableSaves,
+        recovered.overflowSaves,
+      ),
+    };
+  }
   if (recovered.recoveredProfiles > 0) {
     const repair: ProfileRepairPlan = {
       cause: 'reconstructed',
@@ -496,7 +687,7 @@ export const resolveProfileMetadata = (
     };
   }
 
-  const metadata = freshMetadata(input);
+  const metadata = freshMetadata(input, recoveredDeletions);
   const repair: ProfileRepairPlan = {
     cause: 'fresh',
     candidate: metadata,

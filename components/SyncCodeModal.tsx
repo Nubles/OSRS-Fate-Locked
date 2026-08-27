@@ -93,15 +93,29 @@ const VERDICT_UI: Record<RunVerdict, { label: string; sub: string; cls: string; 
 export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) => {
   const { getExportData, importSave, listBackups, restoreBackup } = useGame();
   const closeTimerRef = useRef<number | null>(null);
+  const closedRef = useRef(false);
+  const operationGenerationRef = useRef(0);
+  const importSaveRef = useRef(importSave);
+  const restoreBackupRef = useRef(restoreBackup);
+  if (importSaveRef.current !== importSave || restoreBackupRef.current !== restoreBackup) {
+    importSaveRef.current = importSave;
+    restoreBackupRef.current = restoreBackup;
+    operationGenerationRef.current += 1;
+  }
   const closeModal = useCallback(() => {
+    if (closedRef.current) return;
     if (closeTimerRef.current !== null) {
       window.clearTimeout(closeTimerRef.current);
       closeTimerRef.current = null;
     }
+    closedRef.current = true;
+    operationGenerationRef.current += 1;
     onClose();
   }, [onClose]);
   useEffect(() => () => {
     if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
+    closedRef.current = true;
+    operationGenerationRef.current += 1;
   }, []);
   useEscapeKey(closeModal, true);
 
@@ -159,6 +173,8 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
   const [status, setStatus] = useState<string | null>(null);
   const [accepted, setAccepted] = useState(false);
   const acceptedRef = useRef(false);
+  const [importBusy, setImportBusy] = useState(false);
+  const importBusyRef = useRef(false);
   const [decoded, setDecoded] = useState<SourceBoundCandidate<GameState> | null>(null);
 
   useEffect(() => () => {
@@ -189,6 +205,8 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
     if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
     closeTimerRef.current = window.setTimeout(() => {
       closeTimerRef.current = null;
+      closedRef.current = true;
+      operationGenerationRef.current += 1;
       onClose();
     }, delayMs);
   }, [closeModal, onClose]);
@@ -235,8 +253,8 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialImportCode]);
 
-  const handleImport = useCallback(() => {
-    if (acceptedRef.current) return;
+  const handleImport = useCallback(async () => {
+    if (acceptedRef.current || importBusyRef.current) return;
     if (!candidateMatchesSource(decoded, inputRef.current)) {
       verifyRequestRef.current += 1;
       setDecoded(null);
@@ -256,61 +274,124 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
       return;
     }
 
-    const decision = importUiDecision(importSave(decoded.value));
-    setError(decision.error);
-    if (decision.success) {
-      const acceptedMessage = decision.warning
-        ? `${decision.success}. ${decision.warning}`
-        : decision.success;
-      acceptedRef.current = true;
-      setAccepted(true);
-      setStatus(acceptedMessage);
-      showToast(acceptedMessage);
-    } else {
-      setStatus(null);
-    }
-    if (decision.close) {
-      inputRef.current = '';
-      verifyRequestRef.current += 1;
-      setInput('');
-      setDecoding(false);
-      setDecoded(null);
-      scheduleAcceptedClose(decision.closeDelayMs ?? 0);
+    const operation = operationGenerationRef.current;
+    importBusyRef.current = true;
+    setImportBusy(true);
+    try {
+      const result = await importSave(decoded.value);
+      if (
+        closedRef.current
+        || operation !== operationGenerationRef.current
+        || importSaveRef.current !== importSave
+        || acceptedRef.current
+        || !candidateMatchesSource(decoded, inputRef.current)
+      ) return;
+      const decision = importUiDecision(result);
+      setError(decision.error);
+      if (decision.success) {
+        const acceptedMessage = decision.warning
+          ? `${decision.success}. ${decision.warning}`
+          : decision.success;
+        acceptedRef.current = true;
+        setAccepted(true);
+        setStatus(acceptedMessage);
+        showToast(acceptedMessage);
+      } else {
+        setStatus(null);
+      }
+      if (decision.close) {
+        inputRef.current = '';
+        verifyRequestRef.current += 1;
+        setInput('');
+        setDecoding(false);
+        setDecoded(null);
+        scheduleAcceptedClose(decision.closeDelayMs ?? 0);
+      }
+    } finally {
+      if (!closedRef.current && operation === operationGenerationRef.current) {
+        importBusyRef.current = false;
+        setImportBusy(false);
+      }
     }
   }, [decoded, audit, importSave, scheduleAcceptedClose]);
 
   // ── Backups ───────────────────────────────────────────────────────────────
   const [backups, setBackups] = useState<BackupMeta[]>([]);
+  const [backupsLoading, setBackupsLoading] = useState(false);
   const [backupError, setBackupError] = useState<string | null>(null);
+  const [restoreBusy, setRestoreBusy] = useState(false);
+  const restoreBusyRef = useRef(false);
   useEffect(() => {
-    if (tab === 'BACKUPS') setBackups(listBackups());
+    // A profile/context switch invalidates any pending action. Clear the
+    // visible locks for the new context even though the old promise may still
+    // be settling; its generation check below keeps that stale result hidden.
+    importBusyRef.current = false;
+    restoreBusyRef.current = false;
+    setImportBusy(false);
+    setRestoreBusy(false);
+  }, [importSave, restoreBackup]);
+  useEffect(() => {
+    if (tab !== 'BACKUPS') return undefined;
+    let active = true;
+    setBackupsLoading(true);
+    setBackupError(null);
+    void listBackups()
+      .then(result => {
+        if (!active || closedRef.current) return;
+        setBackups(result);
+        setBackupsLoading(false);
+      })
+      .catch(() => {
+        if (!active || closedRef.current) return;
+        setBackups([]);
+        setBackupsLoading(false);
+        setBackupError('Backups could not be loaded.');
+      });
+    return () => { active = false; };
   }, [tab, listBackups]);
 
-  const handleRestore = useCallback((b: BackupMeta) => {
-    if (acceptedRef.current) return;
+  const handleRestore = useCallback(async (b: BackupMeta) => {
+    if (acceptedRef.current || restoreBusyRef.current) return;
     if (!window.confirm(`Restore this backup (${b.summary})? It will OVERWRITE the current profile's save.`)) {
       return;
     }
 
-    const decision = importUiDecision(restoreBackup(b.ts));
-    setBackupError(decision.error);
-    if (decision.success) {
-      const acceptedMessage = decision.warning
-        ? `${decision.success}. ${decision.warning}`
-        : decision.success;
-      acceptedRef.current = true;
-      setAccepted(true);
-      setStatus(acceptedMessage);
-      showToast(acceptedMessage);
-    } else {
-      setStatus(null);
+    const operation = operationGenerationRef.current;
+    restoreBusyRef.current = true;
+    setRestoreBusy(true);
+    try {
+      const result = await restoreBackup(b.id);
+      if (
+        closedRef.current
+        || operation !== operationGenerationRef.current
+        || restoreBackupRef.current !== restoreBackup
+        || acceptedRef.current
+      ) return;
+      const decision = importUiDecision(result);
+      setBackupError(decision.error);
+      if (decision.success) {
+        const acceptedMessage = decision.warning
+          ? `${decision.success}. ${decision.warning}`
+          : decision.success;
+        acceptedRef.current = true;
+        setAccepted(true);
+        setStatus(acceptedMessage);
+        showToast(acceptedMessage);
+      } else {
+        setStatus(null);
+      }
+      if (decision.close) scheduleAcceptedClose(decision.closeDelayMs ?? 0);
+    } finally {
+      if (!closedRef.current && operation === operationGenerationRef.current) {
+        restoreBusyRef.current = false;
+        setRestoreBusy(false);
+      }
     }
-    if (decision.close) scheduleAcceptedClose(decision.closeDelayMs ?? 0);
   }, [restoreBackup, scheduleAcceptedClose]);
 
   const TabBtn: React.FC<{ id: Tab; label: string; Icon: typeof Link2 }> = ({ id, label, Icon }) => (
     <button
-      disabled={accepted}
+      disabled={accepted || importBusy || restoreBusy}
       onClick={() => {
         setTab(id);
         setStatus(null);
@@ -443,7 +524,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
               <div className="relative">
                 <textarea
                   value={input}
-                  disabled={accepted}
+                  disabled={accepted || importBusy}
                   onChange={(e) => invalidateSource(e.target.value)}
                   placeholder="FLSYNC.g1.…"
                   className="w-full h-28 resize-none rounded-lg bg-black/40 border border-white/10 p-3 font-mono text-[11px] text-gray-200 leading-relaxed break-all focus:outline-none focus:border-cyan-500/40 placeholder:text-gray-700"
@@ -452,14 +533,14 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
               <div className="flex items-center gap-2">
                 <button
                   onClick={handlePaste}
-                  disabled={accepted}
+                  disabled={accepted || importBusy || restoreBusy}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#252525] border border-white/10 hover:bg-[#2d2d2d] text-gray-300 text-[11px] font-medium transition-colors"
                 >
                   <ClipboardPaste size={13} /> Paste
                 </button>
                 <button
                   onClick={() => handleVerify()}
-                  disabled={!input.trim() || decoding || accepted}
+                  disabled={!input.trim() || decoding || accepted || importBusy || restoreBusy}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-[11px] font-bold transition-colors"
                 >
                   {decoding ? <><Loader2 size={13} className="animate-spin" /> Verifying…</> : <><ShieldCheck size={13} /> Verify code</>}
@@ -513,7 +594,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
 
                     <button
                       onClick={handleImport}
-                      disabled={accepted}
+                      disabled={accepted || importBusy || restoreBusy}
                       className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-[12px] font-bold transition-colors"
                     >
                       <ArrowDownToLine size={14} /> Import &amp; overwrite this profile
@@ -542,7 +623,12 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
                   <p className="text-[11px] leading-relaxed">{status}</p>
                 </div>
               )}
-              {backups.length === 0 ? (
+              {backupsLoading ? (
+                <div role="status" className="rounded-lg border border-white/5 bg-[#1a1a1a] p-6 text-center">
+                  <Loader2 size={20} className="mx-auto text-cyan-400 mb-2 animate-spin" />
+                  <p className="text-[11px] text-gray-500">Loading backups…</p>
+                </div>
+              ) : backups.length === 0 ? (
                 <div className="rounded-lg border border-white/5 bg-[#1a1a1a] p-6 text-center">
                   <History size={20} className="mx-auto text-gray-600 mb-2" />
                   <p className="text-[11px] text-gray-500">No backups yet.</p>
@@ -554,7 +640,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
                 <div className="space-y-2">
                   {backups.map((b) => (
                     <div
-                      key={b.ts}
+                      key={b.id}
                       className="flex items-center gap-3 rounded-lg border border-white/5 bg-[#1a1a1a] px-3 py-2.5"
                     >
                       <div className="flex-1 min-w-0">
@@ -566,7 +652,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
                       </div>
                       <button
                         onClick={() => handleRestore(b)}
-                        disabled={accepted}
+                        disabled={accepted || importBusy || restoreBusy}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#252525] border border-white/10 hover:border-cyan-500/40 hover:text-cyan-300 text-gray-300 text-[11px] font-bold transition-colors shrink-0"
                       >
                         <RotateCcw size={12} /> Restore

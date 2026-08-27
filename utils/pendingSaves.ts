@@ -15,6 +15,9 @@ export type PendingSaveFlushResult =
   | { ok: true }
   | { ok: false; reason: PendingSaveReason };
 
+export type SaveStorage = Pick<Storage, 'getItem' | 'setItem'>
+  & Partial<Pick<Storage, 'removeItem'>>;
+
 const entries = new Map<string, PendingSaveEntry>();
 const listeners = new Set<() => void>();
 let revision = 0;
@@ -39,7 +42,7 @@ export const stagePendingSave = (storageKey: string, data: string): void => {
 };
 
 export const flushPendingSave = (
-  storage: Pick<Storage, 'setItem'> & Partial<Pick<Storage, 'removeItem'>>,
+  storage: SaveStorage,
   storageKey: string,
   authorizeWrite: () => SaveWriteAuthorization,
 ): PendingSaveFlushResult => {
@@ -54,6 +57,9 @@ export const flushPendingSave = (
 
   try {
     storage.setItem(storageKey, entry.data);
+    if (storage.getItem(storageKey) !== entry.data) {
+      throw new Error('storage readback mismatch');
+    }
     entries.delete(storageKey);
     emit();
     return { ok: true };
@@ -62,6 +68,9 @@ export const flushPendingSave = (
       removeDisposableCaches(storage as Pick<Storage, 'removeItem'>);
       try {
         storage.setItem(storageKey, entry.data);
+        if (storage.getItem(storageKey) !== entry.data) {
+          throw new Error('storage readback mismatch');
+        }
         entries.delete(storageKey);
         emit();
         return { ok: true };

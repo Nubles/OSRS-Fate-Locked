@@ -6,8 +6,16 @@ import {
   type SaveWarning,
 } from './saveSchema';
 import type { SaveWriteAuthorizationReason } from './profileWriterLease';
+import type {
+  RecoveryCheckpointReason,
+  RecoveryMaintenanceFailureReason,
+  SaveDurabilitySnapshot,
+} from './recoveryTypes';
 
-export type ImportErrorCode = SaveErrorCode | 'storage_unavailable' | 'ownership_conflict';
+export type ImportErrorCode = SaveErrorCode
+  | 'storage_unavailable'
+  | 'ownership_conflict'
+  | 'stale_replacement';
 
 export type ImportResult =
   | { ok: true; warnings: SaveWarning[] }
@@ -69,7 +77,7 @@ export const candidateMatchesSource = <T>(
 ): candidate is SourceBoundCandidate<T> => candidate?.source === currentSource;
 
 export type BackupWriteResult =
-  | { stored: true }
+  | { stored: true; pruneFailure?: RecoveryMaintenanceFailureReason }
   | { stored: false; reason: 'empty' | 'duplicate' | 'storage_unavailable' | 'ownership_conflict' };
 
 export class SaveAuthorizationError extends Error {
@@ -112,6 +120,21 @@ type ReplacementOptions = ReplacementCallbacks & {
   defaults: GameState;
 };
 
+type AsyncReplacementCallbacks = {
+  current: GameState & { lastEvent?: unknown };
+  createCheckpoint: (
+    data: string,
+    reason: RecoveryCheckpointReason,
+  ) => Promise<BackupWriteResult>;
+  writeReplacement: (
+    data: string,
+    reason: string,
+  ) => Promise<SaveDurabilitySnapshot>;
+  replace: (state: GameState) => void;
+  /** Return false when a newer edit, replacement, profile, or unmount won. */
+  isCurrent?: () => boolean;
+};
+
 const STORAGE_WARNING: SaveWarning = {
   code: 'storage_warning',
   message: 'The current run could not be saved as a protective backup.',
@@ -121,6 +144,12 @@ const replacementStorageFailure = (): ImportResult => ({
   ok: false,
   code: 'storage_unavailable',
   message: 'The replacement run could not be saved. Your current run is unchanged.',
+});
+
+export const replacementStaleResult = (): ImportResult => ({
+  ok: false,
+  code: 'stale_replacement',
+  message: 'The replacement was superseded by a newer change. Your current run is unchanged.',
 });
 
 export const saveAuthorizationFailureResult = (
@@ -150,6 +179,75 @@ export const applyValidatedReplacement = (
       return saveAuthorizationFailureResult(error.code);
     }
     return replacementStorageFailure();
+  }
+  options.replace(prepared.state);
+
+  const warnings = [...prepared.warnings];
+  if (
+    backup.stored === false
+    && backup.reason === 'storage_unavailable'
+    && !warnings.some(warning => warning.code === 'storage_warning')
+  ) {
+    warnings.push(STORAGE_WARNING);
+  }
+  return { ok: true, warnings };
+};
+
+/**
+ * Apply a validated replacement through the crash-safe coordinator. The
+ * current state is checkpointed first, and in-memory state changes only after
+ * the coordinator reports at least one verified durable store.
+ */
+export const applyValidatedReplacementAsync = async (
+  prepared: SaveValidationResult,
+  options: AsyncReplacementCallbacks,
+): Promise<ImportResult> => {
+  if (prepared.ok === false) return prepared;
+
+  const isCurrent = (): boolean => {
+    try {
+      return options.isCurrent?.() ?? true;
+    } catch {
+      return false;
+    }
+  };
+  if (!isCurrent()) return replacementStaleResult();
+
+  // Capture exact bytes before crossing an async boundary. The guard supplied
+  // by the provider also checks that these bytes still describe the active
+  // profile and mounted component when the durable replacement settles.
+  const currentData = serializeCurrent(options.current);
+  const replacementData = serializeCurrent(prepared.state);
+  if (!isCurrent()) return replacementStaleResult();
+
+  let backup: BackupWriteResult;
+  try {
+    backup = await options.createCheckpoint(
+      currentData,
+      'pre-replacement',
+    );
+  } catch {
+    backup = { stored: false, reason: 'storage_unavailable' };
+  }
+  if (!isCurrent()) return replacementStaleResult();
+  let durability: SaveDurabilitySnapshot;
+  try {
+    durability = await options.writeReplacement(
+      replacementData,
+      'replacement',
+    );
+  } catch (error) {
+    if (error instanceof SaveAuthorizationError) {
+      return saveAuthorizationFailureResult(error.code);
+    }
+    return replacementStorageFailure();
+  }
+
+  if (!isCurrent()) return replacementStaleResult();
+  if (durability.primary !== 'saved') {
+    return durability.failureReason === undefined
+      ? replacementStorageFailure()
+      : saveAuthorizationFailureResult(durability.failureReason);
   }
   options.replace(prepared.state);
 

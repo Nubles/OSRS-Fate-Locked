@@ -1,8 +1,10 @@
-import { useCallback, useState, type FC } from 'react';
+import { useCallback, useEffect, useRef, useState, type FC } from 'react';
 import { AlertTriangle, Download, RefreshCw } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { useProfiles } from '../context/ProfileContext';
 import type { SaveStatus } from '../utils/pendingSaves';
+import type { SaveDurabilitySnapshot, SaveRetryResult } from '../utils/recoveryTypes';
+import { effectiveSaveDurability, saveRetryMessage } from './SaveDurabilityStatus';
 import {
   downloadFateSave,
   type FateSaveDownloadResult,
@@ -11,31 +13,64 @@ import type { SaveOwnershipBlockReason } from '../utils/profileWriterLease';
 import { showToast } from '../utils/toast';
 
 interface SaveFailureBannerViewProps {
-  saveStatus: SaveStatus;
+  /** New coordinator snapshot. The legacy status remains accepted for old embedders. */
+  saveDurability?: SaveDurabilitySnapshot;
+  saveStatus?: SaveStatus;
   ownershipBlockReason: SaveOwnershipBlockReason;
-  retrySave: () => boolean;
+  retrySave: () => SaveRetryResult | Promise<SaveRetryResult>;
   exportBackup: () => FateSaveDownloadResult;
 }
 
 export const SaveFailureBannerView: FC<SaveFailureBannerViewProps> = ({
+  saveDurability,
   saveStatus,
   ownershipBlockReason,
   retrySave,
   exportBackup,
 }) => {
   const [retrying, setRetrying] = useState(false);
+  const mountedRef = useRef(true);
+  const retryAttemptRef = useRef(0);
 
-  if (saveStatus !== 'failed' || ownershipBlockReason === 'foreign_owner') return null;
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      retryAttemptRef.current += 1;
+    };
+  }, []);
+
+  const failureReason = saveDurability?.failureReason
+    ?? (ownershipBlockReason === 'foreign_owner'
+      ? 'ownership_conflict'
+      : ownershipBlockReason === 'storage_unavailable'
+        ? 'storage_unavailable'
+        : undefined);
+  const durability = effectiveSaveDurability(saveDurability, saveStatus, failureReason);
+
+  // A red banner is reserved for the dual-failure state. A saved primary with
+  // degraded recovery is surfaced by SaveDurabilityStatus in amber instead.
+  if (
+    durability.primary !== 'failed'
+    || durability.recovery !== 'degraded'
+    || durability.failureReason === 'ownership_conflict'
+  ) return null;
 
   const handleRetry = async () => {
+    const attempt = ++retryAttemptRef.current;
     setRetrying(true);
     await Promise.resolve();
     try {
-      showToast(retrySave()
-        ? 'Progress saved'
-        : 'Still unable to save progress in this browser');
+      const result = await retrySave();
+      if (mountedRef.current && retryAttemptRef.current === attempt) {
+        showToast(saveRetryMessage(result));
+      }
+    } catch {
+      if (mountedRef.current && retryAttemptRef.current === attempt) {
+        showToast('Unable to save progress in this browser');
+      }
     } finally {
-      setRetrying(false);
+      if (mountedRef.current && retryAttemptRef.current === attempt) setRetrying(false);
     }
   };
 
@@ -89,6 +124,7 @@ export const SaveFailureBannerView: FC<SaveFailureBannerViewProps> = ({
 export const SaveFailureBanner: FC = () => {
   const {
     saveStatus,
+    saveDurability,
     saveOwnershipBlockReason,
     retrySave,
     getExportData,
@@ -101,6 +137,7 @@ export const SaveFailureBanner: FC = () => {
 
   return (
     <SaveFailureBannerView
+      saveDurability={saveDurability}
       saveStatus={saveStatus}
       ownershipBlockReason={saveOwnershipBlockReason}
       retrySave={retrySave}

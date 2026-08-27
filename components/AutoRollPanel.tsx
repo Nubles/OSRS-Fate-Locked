@@ -104,7 +104,12 @@ export function AutoRollPanel() {
   const [rolledTo, setRolledTo] = useState(0); // how many skills the roll animation has revealed
   const [applied, setApplied] = useState(false);
   const [skillRolling, setSkillRolling] = useState(false);
+  const skillRollingRef = useRef(false);
   const [skillKeysGained, setSkillKeysGained] = useState<{ keys: number; special: number; chaos: number } | null>(null);
+  const setSkillRollingState = useCallback((value: boolean) => {
+    skillRollingRef.current = value;
+    setSkillRolling(value);
+  }, []);
 
   const currentLevels: Record<string, number> = unlocks?.levels ?? {};
   const unlockedSkills: Record<string, number> = unlocks?.skills ?? {};
@@ -133,7 +138,7 @@ export function AutoRollPanel() {
     const query = (linkedAccount ?? name).trim();
     if (!query) return;
     setStatus('loading'); setError(''); setFetched(null); setRolledTo(0); setApplied(false);
-    setSkillRolling(false); setSkillKeysGained(null);
+    setSkillRollingState(false); setSkillKeysGained(null);
     if (skillTimer.current) window.clearInterval(skillTimer.current);
     try {
       const data = await fetchPlayer(query);
@@ -145,7 +150,7 @@ export function AutoRollPanel() {
       setError(e?.message ?? 'Failed to reach the hiscores API.');
       setStatus('error');
     }
-  }, [name, linkedAccount, setLinkedAccount]);
+  }, [name, linkedAccount, setLinkedAccount, setSkillRollingState]);
 
   // If the run is already bound, pull that account's hiscores on open.
   useEffect(() => { if (linkedAccount) onFetch(); /* eslint-disable-line react-hooks/exhaustive-deps */ }, []);
@@ -155,9 +160,17 @@ export function AutoRollPanel() {
   // the 2% chaos-key chance and the omni chance — so the run earns exactly the
   // keys those levels would have. Runs in batches for a responsive slot-machine
   // feel; tallies the keys/omni/chaos earned at the end.
-  const autoRoll = useCallback(() => {
-    if (!fetched || gains.length === 0 || skillRolling) return;
-    createBackup?.('Before Auto-Roll skill sync');
+  const autoRoll = useCallback(async () => {
+    if (!fetched || gains.length === 0 || skillRollingRef.current) return;
+    // Lock before awaiting the protective backup. Otherwise the button stays
+    // live during the async gap and a double click can start overlapping rolls.
+    setSkillRollingState(true);
+    try {
+      await createBackup?.('Before Auto-Roll skill sync');
+    } catch {
+      setSkillRollingState(false);
+      return;
+    }
     const before = { ...countsRef.current };
 
     // One queue entry per level still to gain, plus per-skill reveal boundaries.
@@ -168,9 +181,12 @@ export function AutoRollPanel() {
       bounds.push(queue.length);
     }
     const total = queue.length;
-    if (total === 0) return;
+    if (total === 0) {
+      setSkillRollingState(false);
+      return;
+    }
 
-    setRolledTo(0); setApplied(false); setSkillRolling(true); setSkillKeysGained(null);
+    setRolledTo(0); setApplied(false); setSkillKeysGained(null);
     const BATCH = Math.min(25, Math.max(1, Math.ceil(total / 50)));
     let i = 0;
     if (skillTimer.current) window.clearInterval(skillTimer.current);
@@ -182,7 +198,7 @@ export function AutoRollPanel() {
       setRolledTo(revealed);
       if (i >= total) {
         if (skillTimer.current) window.clearInterval(skillTimer.current);
-        setSkillRolling(false);
+        setSkillRollingState(false);
         window.setTimeout(() => {
           const a = countsRef.current;
           setSkillKeysGained({ keys: a.keys - before.keys, special: a.specialKeys - before.specialKeys, chaos: a.chaosKeys - before.chaosKeys });
@@ -190,7 +206,7 @@ export function AutoRollPanel() {
         }, 250);
       }
     }, 70);
-  }, [fetched, gains, skillRolling, createBackup]);
+  }, [fetched, gains, createBackup, setSkillRollingState]);
 
   const totalGain = gains.reduce((a, s) => a + (s.level - s.current), 0);
 

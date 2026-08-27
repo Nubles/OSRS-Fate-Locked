@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { discoverProfileSaveIds, parseProfileMetadata, resolveProfileMetadata } from './profileMetadata';
+import {
+  discoverProfileSaveIds,
+  isProfileDeletionPending,
+  parseProfileMetadata,
+  resolveProfileMetadata,
+} from './profileMetadata';
 
 const profile = {
   id: 'alpha',
@@ -8,8 +13,16 @@ const profile = {
 };
 
 const current = () => ({
-  version: 1 as const,
+  version: 2 as const,
   revision: 0,
+  profiles: [profile],
+  activeProfileId: 'alpha',
+  deletions: [],
+});
+
+const versionOne = (revision = 4) => ({
+  version: 1 as const,
+  revision,
   profiles: [profile],
   activeProfileId: 'alpha',
 });
@@ -37,7 +50,20 @@ describe('parseProfileMetadata', () => {
   it('normalizes the exact legacy schema to revision zero', () => {
     expect(parseProfileMetadata(JSON.stringify(legacy()))).toEqual({
       status: 'legacy',
-      metadata: { version: 1, revision: 0, ...legacy() },
+      metadata: { version: 2, revision: 0, ...legacy(), deletions: [] },
+    });
+  });
+
+  it('migrates a version-one registry without losing its revision or profiles', () => {
+    expect(parseProfileMetadata(JSON.stringify(versionOne()))).toEqual({
+      status: 'legacy',
+      metadata: {
+        version: 2,
+        revision: 4,
+        profiles: [profile],
+        activeProfileId: 'alpha',
+        deletions: [],
+      },
     });
   });
 
@@ -55,21 +81,176 @@ describe('parseProfileMetadata', () => {
 
   it('distinguishes a future schema from corruption', () => {
     expect(parseProfileMetadata(JSON.stringify({
-      version: 2,
+      version: 3,
       revision: 9,
       profiles: legacy().profiles,
       activeProfileId: 'alpha',
-    }))).toEqual({ status: 'unsupported', version: 2 });
+    }))).toEqual({ status: 'unsupported', version: 3 });
   });
 
   it('preserves a future schema with fields unknown to this version', () => {
     expect(parseProfileMetadata(JSON.stringify({
-      version: 2,
+      version: 3,
       revision: 9,
       profiles: legacy().profiles,
       activeProfileId: 'alpha',
       futureField: { preserved: true },
-    }))).toEqual({ status: 'unsupported', version: 2 });
+    }))).toEqual({ status: 'unsupported', version: 3 });
+  });
+
+  it('classifies version three without inspecting or mutating its unknown fields', () => {
+    const getter = vi.fn(() => []);
+    const future = { version: 3 };
+    Object.defineProperty(future, 'deletions', { enumerable: true, get: getter });
+
+    expect(parseObject(future)).toEqual({ status: 'unsupported', version: 3 });
+    expect(getter).not.toHaveBeenCalled();
+    expect(Object.getOwnPropertyDescriptor(future, 'deletions')?.get).toBe(getter);
+  });
+
+  it('accepts strict version-two deletion intents', () => {
+    expect(parseProfileMetadata(JSON.stringify({
+      ...current(),
+      deletions: [{
+        version: 1,
+        deletionId: 'delete-beta-1',
+        profileId: 'beta',
+        requestedAt: 12,
+        phase: 'pending_cleanup',
+      }],
+    }))).toEqual({
+      status: 'current',
+      metadata: {
+        ...current(),
+        deletions: [{
+          version: 1,
+          deletionId: 'delete-beta-1',
+          profileId: 'beta',
+          requestedAt: 12,
+          phase: 'pending_cleanup',
+        }],
+      },
+    });
+  });
+
+  it.each([
+    {
+      label: 'duplicate deletion IDs',
+      deletions: [
+        { version: 1, deletionId: 'delete-1', profileId: 'beta', requestedAt: 1, phase: 'pending_cleanup' },
+        { version: 1, deletionId: 'delete-1', profileId: 'gamma', requestedAt: 2, phase: 'pending_cleanup' },
+      ],
+    },
+    {
+      label: 'duplicate tombstoned profile IDs',
+      deletions: [
+        { version: 1, deletionId: 'delete-1', profileId: 'beta', requestedAt: 1, phase: 'pending_cleanup' },
+        { version: 1, deletionId: 'delete-2', profileId: 'beta', requestedAt: 2, phase: 'pending_cleanup' },
+      ],
+    },
+    {
+      label: 'a profile present in both arrays',
+      deletions: [
+        { version: 1, deletionId: 'delete-1', profileId: 'alpha', requestedAt: 1, phase: 'pending_cleanup' },
+      ],
+    },
+  ])('rejects $label', ({ deletions }) => {
+    expect(parseProfileMetadata(JSON.stringify({ ...current(), deletions }))).toEqual({
+      status: 'invalid',
+      reason: 'duplicate_id',
+    });
+  });
+
+  it.each([
+    { deletionId: 'delete_bad', profileId: 'beta' },
+    { deletionId: 'delete-1', profileId: 'beta/bad' },
+  ])('rejects unsafe deletion IDs: $deletionId / $profileId', ({ deletionId, profileId }) => {
+    expect(parseProfileMetadata(JSON.stringify({
+      ...current(),
+      deletions: [{ version: 1, deletionId, profileId, requestedAt: 1, phase: 'pending_cleanup' }],
+    }))).toEqual({ status: 'invalid', reason: 'invalid_deletion' });
+  });
+
+  it.each([
+    { field: 'version', value: 2 },
+    { field: 'requestedAt', value: -1 },
+    { field: 'requestedAt', value: 1.5 },
+    { field: 'requestedAt', value: Number.MAX_SAFE_INTEGER + 1 },
+    { field: 'phase', value: 'complete' },
+  ])('rejects an invalid deletion $field', ({ field, value }) => {
+    expect(parseProfileMetadata(JSON.stringify({
+      ...current(),
+      deletions: [{
+        version: 1,
+        deletionId: 'delete-1',
+        profileId: 'beta',
+        requestedAt: 1,
+        phase: 'pending_cleanup',
+        [field]: value,
+      }],
+    }))).toEqual({ status: 'invalid', reason: 'invalid_deletion' });
+  });
+
+  it('rejects unknown root and deletion-entry fields', () => {
+    expect(parseProfileMetadata(JSON.stringify({ ...current(), future: true }))).toEqual({
+      status: 'invalid', reason: 'unknown_field',
+    });
+    expect(parseProfileMetadata(JSON.stringify({
+      ...current(),
+      deletions: [{
+        version: 1,
+        deletionId: 'delete-1',
+        profileId: 'beta',
+        requestedAt: 1,
+        phase: 'pending_cleanup',
+        future: true,
+      }],
+    }))).toEqual({ status: 'invalid', reason: 'unknown_field' });
+  });
+
+  it('rejects an active profile ID protected only by a tombstone', () => {
+    expect(parseProfileMetadata(JSON.stringify({
+      ...current(),
+      activeProfileId: 'beta',
+      deletions: [{
+        version: 1,
+        deletionId: 'delete-1',
+        profileId: 'beta',
+        requestedAt: 1,
+        phase: 'pending_cleanup',
+      }],
+    }))).toEqual({ status: 'invalid', reason: 'invalid_active_profile' });
+  });
+
+  it('bounds the deletion-intent array to the recovery ceiling', () => {
+    const deletions = Array.from({ length: 101 }, (_, index) => ({
+      version: 1,
+      deletionId: `delete-${index}`,
+      profileId: `deleted-${index}`,
+      requestedAt: index,
+      phase: 'pending_cleanup',
+    }));
+
+    expect(parseProfileMetadata(JSON.stringify({ ...current(), deletions }))).toEqual({
+      status: 'invalid',
+      reason: 'invalid_deletions',
+    });
+  });
+
+  it('reports whether a profile has durable cleanup pending', () => {
+    const withDeletion = {
+      ...current(),
+      deletions: [{
+        version: 1 as const,
+        deletionId: 'delete-beta-1',
+        profileId: 'beta',
+        requestedAt: 12,
+        phase: 'pending_cleanup' as const,
+      }],
+    };
+
+    expect(isProfileDeletionPending(withDeletion, 'beta')).toBe(true);
+    expect(isProfileDeletionPending(withDeletion, 'alpha')).toBe(false);
   });
 
   it.each(['alpha_beta', 'alpha/beta', 'alpha beta', 'a'.repeat(129)])(
@@ -191,6 +372,8 @@ describe('profile metadata recovery planning', () => {
       ['FATE_PROFILE_alpha', 'valid:alpha'],
       ['FATE_PROFILE_zulu', 'valid:zulu'],
       ['FATE_PROFILE_alpha__backups', 'sidecar'],
+      ['FATE_PROFILE_alpha__mirrorMeta', 'sidecar'],
+      ['FATE_PROFILE_alpha__corruptArchive', 'sidecar'],
       ['FATE_PROFILE_alpha__writer', 'sidecar'],
       ['FATE_PROFILE_alpha__discord', 'sidecar'],
       ['FATE_PROFILE_alpha_misleading', 'not-a-profile'],
@@ -201,24 +384,51 @@ describe('profile metadata recovery planning', () => {
     expect(discoverProfileSaveIds(storage)).toEqual(['alpha', 'zulu']);
   });
 
-  it('uses a valid primary without requesting a write', () => {
-    const result = resolveProfileMetadata(recoveryInput());
+  it('never reconstructs recovery sidecars as base profiles', () => {
+    const result = resolveProfileMetadata(recoveryInput({
+      primary: null,
+      storage: recoveryStorage([
+        ['FATE_PROFILE_alpha__mirrorMeta', 'valid:mirror'],
+        ['FATE_PROFILE_alpha__corruptArchive', 'valid:archive'],
+        ['FATE_PROFILE_alpha', 'valid:alpha'],
+      ]),
+    }));
+
+    expect(result).toMatchObject({
+      mode: 'repair',
+      metadata: {
+        profiles: [{ id: 'alpha', name: 'Recovered Profile 1', createdAt: 1234 }],
+        activeProfileId: 'alpha',
+      },
+      repair: { cause: 'reconstructed' },
+      notice: { recoveredProfiles: 1, unreadableSaves: 0 },
+    });
+    expect(result.metadata.profiles.map(({ id }) => id)).not.toEqual(expect.arrayContaining([
+      'alpha__mirrorMeta',
+      'alpha__corruptArchive',
+    ]));
+  });
+
+  it('uses a valid primary without requesting a write when the backup is invalid but not future-versioned', () => {
+    const result = resolveProfileMetadata(recoveryInput({ backup: '{bad' }));
 
     expect(result.mode).toBe('durable');
     expect(result.repair).toBeNull();
   });
 
-  it('uses a valid current primary when the backup has a future version', () => {
+  it.each([
+    { label: 'version-one', primary: JSON.stringify(versionOne()) },
+    { label: 'version-two', primary: JSON.stringify(current()) },
+  ])('keeps a $label primary read-only when the backup has a future version', ({ primary }) => {
     const result = resolveProfileMetadata(recoveryInput({
-      primary: JSON.stringify(current()),
-      backup: JSON.stringify({ ...current(), version: 2 }),
+      primary,
+      backup: JSON.stringify({ version: 3, opaque: { preserved: true } }),
     }));
 
-    expect(result).toEqual({
-      mode: 'durable',
-      metadata: current(),
+    expect(result).toMatchObject({
+      mode: 'read_only',
       repair: null,
-      notice: null,
+      notice: { kind: 'unsupported' },
     });
   });
 
@@ -230,7 +440,7 @@ describe('profile metadata recovery planning', () => {
 
     expect(result).toMatchObject({
       mode: 'repair',
-      repair: { cause: 'legacy', candidate: { version: 1, revision: 0 }, archive: null },
+      repair: { cause: 'legacy', candidate: { version: 2, revision: 0, deletions: [] }, archive: null },
     });
   });
 
@@ -250,8 +460,8 @@ describe('profile metadata recovery planning', () => {
   });
 
   it.each([
-    { primary: JSON.stringify({ ...current(), version: 2 }), backup: JSON.stringify(current()) },
-    { primary: '{bad', backup: JSON.stringify({ ...current(), version: 2 }) },
+    { primary: JSON.stringify({ ...current(), version: 3 }), backup: JSON.stringify(current()) },
+    { primary: '{bad', backup: JSON.stringify({ ...current(), version: 3 }) },
   ])('keeps unsupported metadata read-only', sources => {
     const result = resolveProfileMetadata(recoveryInput(sources));
 
@@ -366,6 +576,115 @@ describe('profile metadata recovery planning', () => {
   });
 });
 describe('profile metadata recovery regressions', () => {
+  it('preserves valid tombstones and excludes their profile saves during reconstruction', () => {
+    const deletion = {
+      version: 1 as const,
+      deletionId: 'delete-retired-1',
+      profileId: 'retired',
+      requestedAt: 1200,
+      phase: 'pending_cleanup' as const,
+    };
+    const result = resolveProfileMetadata(recoveryInput({
+      primary: JSON.stringify({
+        version: 2,
+        revision: 8,
+        profiles: 'corrupt',
+        activeProfileId: 'retired',
+        deletions: [deletion],
+      }),
+      storage: recoveryStorage([
+        ['FATE_PROFILE_retired', 'valid:private-retired-save'],
+        ['FATE_PROFILE_safe', 'valid:safe'],
+      ]),
+    }));
+
+    expect(result).toMatchObject({
+      mode: 'repair',
+      metadata: {
+        profiles: [{ id: 'safe' }],
+        activeProfileId: 'safe',
+        deletions: [deletion],
+      },
+      repair: { cause: 'reconstructed', candidate: { deletions: [deletion] } },
+      notice: { recoveredProfiles: 1, unreadableSaves: 0 },
+    });
+    expect(result.metadata.profiles.some(profile => profile.id === 'retired')).toBe(false);
+  });
+
+  it('fails closed when two recoverable copies contain 200 unique deletion intents', () => {
+    const deletion = (index: number) => ({
+      version: 1 as const,
+      deletionId: `delete-retired-${index}`,
+      profileId: `retired-${index}`,
+      requestedAt: 1200 + index,
+      phase: 'pending_cleanup' as const,
+    });
+    const raw = (start: number) => JSON.stringify({
+      version: 2,
+      revision: start,
+      profiles: 'corrupt',
+      activeProfileId: `retired-${start}`,
+      deletions: Array.from({ length: 100 }, (_, offset) => deletion(start + offset)),
+    });
+    const result = resolveProfileMetadata(recoveryInput({
+      primary: raw(0),
+      backup: raw(100),
+      storage: recoveryStorage([
+        ['FATE_PROFILE_retired-0', 'valid:private-primary'],
+        ['FATE_PROFILE_retired-199', 'valid:private-backup'],
+        ['FATE_PROFILE_safe', 'valid:safe'],
+      ]),
+    }));
+
+    expect(result).toMatchObject({
+      mode: 'read_only',
+      metadata: {
+        profiles: [{ id: 'safe' }],
+        activeProfileId: 'safe',
+      },
+      repair: null,
+      notice: { kind: 'read_only' },
+    });
+    expect(result.metadata.deletions).toHaveLength(100);
+    expect(result.metadata.profiles.map(profile => profile.id)).not.toContain('retired-0');
+    expect(result.metadata.profiles.map(profile => profile.id)).not.toContain('retired-199');
+    expect(parseProfileMetadata(JSON.stringify(result.metadata))).toMatchObject({ status: 'current' });
+  });
+
+  it('never partially trusts a malformed deletion-intent array during reconstruction', () => {
+    const result = resolveProfileMetadata(recoveryInput({
+      primary: JSON.stringify({
+        version: 2,
+        revision: 8,
+        profiles: 'corrupt',
+        activeProfileId: 'safe',
+        deletions: [
+          {
+            version: 1,
+            deletionId: 'delete-retired-1',
+            profileId: 'retired',
+            requestedAt: 1200,
+            phase: 'pending_cleanup',
+          },
+          {
+            version: 1,
+            deletionId: 'delete-broken-1',
+            profileId: 'broken',
+            requestedAt: -1,
+            phase: 'pending_cleanup',
+          },
+        ],
+      }),
+      storage: recoveryStorage([
+        ['FATE_PROFILE_retired', 'valid:retired'],
+        ['FATE_PROFILE_safe', 'valid:safe'],
+      ]),
+    }));
+
+    expect(result.metadata.profiles.map(profile => profile.id)).toEqual(['retired', 'safe']);
+    expect(result.metadata.deletions).toEqual([]);
+  });
+
   it('reports unreadable exact saves when creating a fresh profile', () => {
     const result = resolveProfileMetadata(recoveryInput({
       primary: null,

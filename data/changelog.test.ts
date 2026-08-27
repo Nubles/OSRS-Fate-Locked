@@ -19,7 +19,25 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-08-25-region-storage-recovery');
+    expect(LATEST_CHANGELOG.id).toBe('2026-08-25-crash-safe-saves');
+  });
+
+  it('announces the crash-safe save recovery release exactly', () => {
+    expect(LATEST_CHANGELOG).toEqual({
+      id: '2026-08-25-crash-safe-saves',
+      title: 'Crash-Safe Saves',
+      date: '2026-08-25',
+      sections: {
+        added: [
+          'Progress now keeps a transactional local recovery journal with timed restore points.',
+        ],
+        fixed: [
+          'Corrupt or interrupted browser saves now stop for recovery instead of silently starting over.',
+          'Full browser storage now clears disposable caches and retries profile saves safely.',
+          'Interrupted profile cleanup now resumes after reload without restoring the deleted profile.',
+        ],
+      },
+    });
   });
 
   it('announces the first public RuneProof quest pack accurately', () => {
@@ -43,12 +61,16 @@ describe('authored changelog releases', () => {
   });
 
   it('announces consistent continent access and storage-full recovery', () => {
-    expect(LATEST_CHANGELOG).toMatchObject({
+    const regionStorageRecovery = CHANGELOG_RELEASES.find(
+      release => release.id === '2026-08-25-region-storage-recovery',
+    );
+
+    expect(regionStorageRecovery).toMatchObject({
       id: '2026-08-25-region-storage-recovery',
       title: 'Regions & Saves Recovered',
       date: '2026-08-25',
     });
-    expect(LATEST_CHANGELOG.sections.fixed).toEqual(expect.arrayContaining([
+    expect(regionStorageRecovery?.sections.fixed).toEqual(expect.arrayContaining([
       expect.stringMatching(/completed continents.*quests.*diaries/i),
       expect.stringMatching(/browser storage.*reload/i),
       expect.stringMatching(/disposable caches.*profile/i),

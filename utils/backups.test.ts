@@ -1,5 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { pushBackup, listBackups, getBackupData, summarizeSave } from './backups';
+import {
+  getBackupData,
+  listBackups,
+  listCombinedBackups,
+  pushBackup,
+  summarizeSave,
+} from './backups';
+import { checksumSave } from './saveIntegrity';
+import type { RecoveryCheckpoint, RecoveryRepository } from './recoveryTypes';
 
 beforeEach(() => {
   const store = new Map<string, string>();
@@ -149,5 +157,109 @@ describe('backup ring', () => {
     expect(getItem).toHaveBeenCalledTimes(1);
     expect(setItem).toHaveBeenCalledTimes(1);
     expect(canWrite).toHaveBeenCalledTimes(3);
+  });
+
+  it('lists journal checkpoints and legacy entries once by checksum, newest first', async () => {
+    const older = save({ keys: 10 });
+    const newer = save({ keys: 11 });
+    const oldChecksum = await checksumSave(older);
+    const newChecksum = await checksumSave(newer);
+    (globalThis as any).localStorage.setItem(
+      'FATE_PROFILE_test__backups',
+      JSON.stringify([
+        { ts: 100, reason: 'Before import', summary: 'legacy summary', data: older },
+      ]),
+    );
+    const checkpoint: RecoveryCheckpoint = {
+      profileId: 'test',
+      persistenceRevision: 9,
+      runId: 'run-test',
+      runRevision: 2,
+      capturedAt: 200,
+      checksum: newChecksum,
+      data: newer,
+      reason: 'interval',
+    };
+    const duplicate: RecoveryCheckpoint = {
+      ...checkpoint,
+      persistenceRevision: 8,
+      capturedAt: 99,
+      checksum: oldChecksum,
+      data: older,
+      reason: 'legacy-import',
+    };
+    const repository: RecoveryRepository = {
+      getHead: async () => null,
+      putHead: async () => ({ stored: true }),
+      listCheckpoints: async () => [checkpoint, duplicate],
+      putCheckpoint: async () => ({ stored: true }),
+      deleteCheckpoints: async () => ({ stored: true }),
+      getMetadata: async () => null,
+      putMetadata: async () => ({ stored: true }),
+      close: () => undefined,
+    };
+
+    const list = await listCombinedBackups(KEY, {
+      profileId: 'test',
+      repository,
+    });
+
+    expect(list).toHaveLength(2);
+    expect(list[0]).toMatchObject({
+      reason: 'interval',
+      summary: '11 keys · 1 regions · 1 events',
+      id: 'checkpoint:test:9',
+      checksum: newChecksum,
+    });
+    expect(list[1]).toMatchObject({
+      reason: 'Before import',
+      summary: 'legacy summary',
+      checksum: oldChecksum,
+    });
+    expect(new Set(list.map(item => item.id)).size).toBe(2);
+  });
+
+  it('falls back to the unchanged legacy ring when the journal is unavailable', async () => {
+    const data = save({ keys: 12 });
+    (globalThis as any).localStorage.setItem(
+      'FATE_PROFILE_test__backups',
+      JSON.stringify([{ ts: 300, reason: 'legacy', summary: 'legacy only', data }]),
+    );
+    const repository = {
+      listCheckpoints: vi.fn(async () => { throw new Error('IndexedDB unavailable'); }),
+    } as unknown as RecoveryRepository;
+
+    await expect(listCombinedBackups(KEY, {
+      profileId: 'test',
+      repository,
+    })).resolves.toMatchObject([
+      { reason: 'legacy', summary: 'legacy only', ts: 300 },
+    ]);
+    expect(JSON.parse(localStorage.getItem('FATE_PROFILE_test__backups')!)).toHaveLength(1);
+  });
+
+  it('does not present a valid-JSON checkpoint whose stored checksum mismatches its bytes', async () => {
+    const original = save({ keys: 12 });
+    const tampered = save({ keys: 99 });
+    const checkpoint: RecoveryCheckpoint = {
+      profileId: 'test',
+      persistenceRevision: 10,
+      runId: 'run-test',
+      runRevision: 3,
+      capturedAt: 400,
+      checksum: await checksumSave(original),
+      data: tampered,
+      reason: 'interval',
+    };
+    const repository = {
+      listCheckpoints: vi.fn(async () => [checkpoint]),
+    } as unknown as RecoveryRepository;
+
+    const list = await listCombinedBackups(KEY, {
+      profileId: 'test',
+      repository,
+    });
+
+    expect(list).toEqual([]);
   });
 });

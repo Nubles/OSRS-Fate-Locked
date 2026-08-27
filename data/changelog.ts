@@ -19,6 +19,21 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-08-25-crash-safe-saves',
+    title: 'Crash-Safe Saves',
+    date: '2026-08-25',
+    sections: {
+      added: [
+        'Progress now keeps a transactional local recovery journal with timed restore points.',
+      ],
+      fixed: [
+        'Corrupt or interrupted browser saves now stop for recovery instead of silently starting over.',
+        'Full browser storage now clears disposable caches and retries profile saves safely.',
+        'Interrupted profile cleanup now resumes after reload without restoring the deleted profile.',
+      ],
+    },
+  },
+  {
     id: '2026-08-25-region-storage-recovery',
     title: 'Regions & Saves Recovered',
     date: '2026-08-25',
