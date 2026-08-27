@@ -531,6 +531,12 @@ export const resolveProfileMetadata = (
   input: ResolveProfileMetadataInput,
 ): ProfileMetadataResolution => {
   const primaryResult = parseProfileMetadata(input.primary);
+  const backupResult = parseProfileMetadata(input.backup);
+
+  if (primaryResult.status === 'unsupported' || backupResult.status === 'unsupported') {
+    const readOnly = readOnlyMetadata(input, primaryResult, backupResult);
+    return { mode: 'read_only', metadata: readOnly.metadata, repair: null, notice: readOnly.notice };
+  }
 
   if (primaryResult.status === 'current') {
     return { mode: 'durable', metadata: primaryResult.metadata, repair: null, notice: null };
@@ -544,13 +550,6 @@ export const resolveProfileMetadata = (
       legacyCopy: null,
     };
     return { mode: 'repair', metadata: repair.candidate, repair, notice: null };
-  }
-
-  const backupResult = parseProfileMetadata(input.backup);
-
-  if (primaryResult.status === 'unsupported' || backupResult.status === 'unsupported') {
-    const readOnly = readOnlyMetadata(input, primaryResult, backupResult);
-    return { mode: 'read_only', metadata: readOnly.metadata, repair: null, notice: readOnly.notice };
   }
 
   if (backupResult.status === 'current' || backupResult.status === 'legacy') {

@@ -521,6 +521,11 @@ const registryDurabilityCalls = (storage: TestStorage): string[] => {
 const registryWrites = (storage: TestStorage): string[] =>
   storage.calls.filter(call => call.startsWith('set:') && registryKeys.has(call.slice(4)));
 
+const profileMetadataCopyWrites = (storage: TestStorage): string[] =>
+  storage.calls.filter(call => (
+    call === `set:${PROFILES_KEY}` || call === `set:${PROFILE_METADATA_BACKUP_KEY}`
+  ));
+
 const recoverySequence = [
   `set:${PROFILE_METADATA_RECOVERY_KEY}`,
   `get:${PROFILE_METADATA_RECOVERY_KEY}`,
@@ -861,24 +866,65 @@ describe('unsupported profile metadata startup', () => {
     expect(storage.values.has(PROFILE_METADATA_LOCK_KEY)).toBe(false);
   });
 
-  it('uses a supported current primary without touching a future backup', async () => {
-    const supported = metadata(4, 'Supported');
-    const supportedRaw = JSON.stringify(supported);
-    const futureRaw = JSON.stringify({ version: 3, revision: 9, futureField: true });
+  it.each([
+    {
+      label: 'version-one primary',
+      primaryRaw: JSON.stringify({
+        version: 1,
+        revision: 4,
+        profiles: [{ id: 'alpha', name: 'Supported', createdAt: 1 }],
+        activeProfileId: 'alpha',
+      }),
+    },
+    { label: 'version-two primary', primaryRaw: JSON.stringify(metadata(4, 'Supported')) },
+  ])('keeps $label read-only when the backup is future-versioned', async ({ primaryRaw }) => {
+    const futureRaw = JSON.stringify({ version: 3, opaque: { preserved: true } });
     const storage = createStorage([
-      [PROFILES_KEY, supportedRaw],
+      [PROFILES_KEY, primaryRaw],
       [PROFILE_METADATA_BACKUP_KEY, futureRaw],
     ]);
 
-    await expect(initializeProfileMetadata(createDependencies(storage))).resolves.toEqual({
-      ok: true,
-      metadata: supported,
-      notice: null,
+    await expect(initializeProfileMetadata(createDependencies(storage))).resolves.toMatchObject({
+      ok: false,
+      reason: 'unsupported_metadata',
+      notice: { kind: 'unsupported' },
     });
-    expect(registryDurabilityCalls(storage)).toEqual([]);
-    expect(storage.values.get(PROFILES_KEY)).toBe(supportedRaw);
+    expect(profileMetadataCopyWrites(storage)).toEqual([]);
+    expect(storage.values.get(PROFILES_KEY)).toBe(primaryRaw);
     expect(storage.values.get(PROFILE_METADATA_BACKUP_KEY)).toBe(futureRaw);
-    expect(storage.values.has(PROFILE_METADATA_RECOVERY_KEY)).toBe(false);
+    expect(storage.values.has(PROFILE_METADATA_LOCK_KEY)).toBe(false);
+  });
+
+  it.each([
+    {
+      label: 'version-one primary',
+      primaryRaw: JSON.stringify({
+        version: 1,
+        revision: 4,
+        profiles: [{ id: 'alpha', name: 'Supported', createdAt: 1 }],
+        activeProfileId: 'alpha',
+      }),
+    },
+    { label: 'version-two primary', primaryRaw: JSON.stringify(metadata(4, 'Supported')) },
+  ])('refuses mutation against $label when the backup is future-versioned', async ({ primaryRaw }) => {
+    const futureRaw = JSON.stringify({ version: 3, opaque: { preserved: true } });
+    const storage = createStorage([
+      [PROFILES_KEY, primaryRaw],
+      [PROFILE_METADATA_BACKUP_KEY, futureRaw],
+    ]);
+
+    await expect(mutateProfileMetadata(createDependencies(storage), {
+      type: 'rename',
+      profileId: 'alpha',
+      name: 'Must not persist',
+    })).resolves.toMatchObject({
+      ok: false,
+      reason: 'unsupported_metadata',
+      notice: { kind: 'unsupported' },
+    });
+    expect(profileMetadataCopyWrites(storage)).toEqual([]);
+    expect(storage.values.get(PROFILES_KEY)).toBe(primaryRaw);
+    expect(storage.values.get(PROFILE_METADATA_BACKUP_KEY)).toBe(futureRaw);
     expect(storage.values.has(PROFILE_METADATA_LOCK_KEY)).toBe(false);
   });
 

@@ -409,24 +409,26 @@ describe('profile metadata recovery planning', () => {
     ]));
   });
 
-  it('uses a valid primary without requesting a write', () => {
-    const result = resolveProfileMetadata(recoveryInput());
+  it('uses a valid primary without requesting a write when the backup is invalid but not future-versioned', () => {
+    const result = resolveProfileMetadata(recoveryInput({ backup: '{bad' }));
 
     expect(result.mode).toBe('durable');
     expect(result.repair).toBeNull();
   });
 
-  it('uses a valid current primary when the backup has a future version', () => {
+  it.each([
+    { label: 'version-one', primary: JSON.stringify(versionOne()) },
+    { label: 'version-two', primary: JSON.stringify(current()) },
+  ])('keeps a $label primary read-only when the backup has a future version', ({ primary }) => {
     const result = resolveProfileMetadata(recoveryInput({
-      primary: JSON.stringify(current()),
-      backup: JSON.stringify({ ...current(), version: 3 }),
+      primary,
+      backup: JSON.stringify({ version: 3, opaque: { preserved: true } }),
     }));
 
-    expect(result).toEqual({
-      mode: 'durable',
-      metadata: current(),
+    expect(result).toMatchObject({
+      mode: 'read_only',
       repair: null,
-      notice: null,
+      notice: { kind: 'unsupported' },
     });
   });
 
