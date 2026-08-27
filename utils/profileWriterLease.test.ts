@@ -84,6 +84,21 @@ describe('profile writer leases', () => {
     });
   });
 
+  it('does not let forced takeover replace an active profile-deletion reservation', () => {
+    values.set(writerLeaseKey(PROFILE), JSON.stringify({
+      version: 1,
+      ownerId: 'deleting-tab',
+      expiresAt: 31_000,
+      purpose: 'profile_delete',
+    }));
+
+    expect(claimWriterLease(storage, PROFILE, 'game-tab', 1_001, true).status).toBe('blocked');
+    expect(readWriterLease(storage, PROFILE)).toMatchObject({
+      ok: true,
+      lease: { ownerId: 'deleting-tab', purpose: 'profile_delete' },
+    });
+  });
+
   it('fails closed when storage cannot be read or written', () => {
     expect(claimWriterLease({
       getItem: () => { throw new DOMException('blocked', 'SecurityError'); },

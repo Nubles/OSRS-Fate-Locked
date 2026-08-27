@@ -669,6 +669,10 @@ class IndexedDbRecoveryRepository implements RecoveryRepository {
           for (const entry of profileMetadata) {
             await deleteAuthorized('delete-metadata', METADATA_STORE, () => metadata.delete(entry.key));
           }
+          const commitAuthorization = authorize();
+          if (isWriteFailure(commitAuthorization)) {
+            throw new OwnershipAbort({ stored: false, reason: commitAuthorization.reason });
+          }
           return { stored: true, snapshot } as const;
         },
       );
@@ -731,6 +735,10 @@ class IndexedDbRecoveryRepository implements RecoveryRepository {
               METADATA_STORE,
               () => metadata.put({ key: entry.key, value: entry.value }),
             );
+          }
+          const commitAuthorization = authorize();
+          if (isWriteFailure(commitAuthorization)) {
+            throw new OwnershipAbort({ stored: false, reason: commitAuthorization.reason });
           }
           return { stored: true } as const;
         },

@@ -13,8 +13,14 @@ import {
   type ProfileRecoveryEnvelopeV1,
   type ProfileRecoveryNotice,
 } from './profileMetadata';
-import { deleteProfileStorage, profileBaseKey, profileOwnedKeys } from './profileStorage';
-import { readWriterLease } from './profileWriterLease';
+import { profileBaseKey, profileOwnedKeys } from './profileStorage';
+import {
+  claimProfileDeletionLease,
+  readWriterLease,
+  releaseWriterLease,
+  verifyWriterLease,
+  writerLeaseKey,
+} from './profileWriterLease';
 import type {
   RecoveryProfileSnapshot,
   RecoveryRepository,
@@ -332,13 +338,21 @@ const readOnlyNotice = (notice: ProfileRecoveryNotice | null): ProfileRecoveryNo
   rollbackFailures: notice?.rollbackFailures ?? 0,
 });
 
+const currentMetadataAuthorityFailure = (
+  deps: ProfileTransactionDependencies,
+): Extract<ProfileMutationFailure, 'busy' | 'storage_unavailable'> | null => {
+  const current = readLock(deps);
+  if (!current.ok) return 'storage_unavailable';
+  if (!isOwnedAndUnexpired(current.lock, deps)) return 'busy';
+  return null;
+};
+
 const currentOwnershipFailure = (
   deps: ProfileTransactionDependencies,
 ): Extract<ProfileMutationFailure, 'busy' | 'storage_unavailable'> | null => {
   if (transactionAborted(deps)) return 'busy';
-  const current = readLock(deps);
-  if (!current.ok) return 'storage_unavailable';
-  if (!isOwnedAndUnexpired(current.lock, deps)) return 'busy';
+  const authorityFailure = currentMetadataAuthorityFailure(deps);
+  if (authorityFailure !== null) return authorityFailure;
   return transactionAborted(deps) ? 'busy' : null;
 };
 
@@ -577,7 +591,7 @@ const executeProfileDelete = async (
   resolution: WritableProfileMetadataResolution,
   profileId: string,
 ): Promise<ProfileTransactionResult> => {
-  const previous = resolution.metadata;
+  let previous = resolution.metadata;
   const profileIndex = previous.profiles.findIndex(profile => profile.id === profileId);
   if (profileIndex < 0) {
     return transactionFailure('not_found', previous, resolution.notice);
@@ -591,25 +605,35 @@ const executeProfileDelete = async (
     return transactionFailure(initialWriterLeaseFailure, previous, resolution.notice);
   }
 
-  const profiles = previous.profiles.filter(profile => profile.id !== profileId);
-  const candidate = validateCandidate({
-    ...previous,
-    revision: previous.revision + 1,
-    profiles,
-    activeProfileId: previous.activeProfileId === profileId
-      ? profiles[0].id
-      : previous.activeProfileId,
-  });
+  const buildCandidate = (metadata: ProfileMetadata): ProfileMetadata | null => {
+    const profiles = metadata.profiles.filter(profile => profile.id !== profileId);
+    if (profiles.length === metadata.profiles.length || profiles.length === 0) return null;
+    return validateCandidate({
+      ...metadata,
+      revision: metadata.revision + 1,
+      profiles,
+      activeProfileId: metadata.activeProfileId === profileId
+        ? profiles[0].id
+        : metadata.activeProfileId,
+    });
+  };
+  let candidate = buildCandidate(previous);
   if (candidate === null) {
     return transactionFailure('invalid_metadata', previous, resolution.notice);
   }
 
   let serializedPrevious: string;
   let serializedCandidate: string;
-  try {
-    serializedPrevious = JSON.stringify(previous);
-    serializedCandidate = JSON.stringify(candidate);
-  } catch {
+  const serializeTransaction = (): boolean => {
+    try {
+      serializedPrevious = JSON.stringify(previous);
+      serializedCandidate = JSON.stringify(candidate);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  if (!serializeTransaction()) {
     return transactionFailure('invalid_metadata', previous, resolution.notice);
   }
 
@@ -644,10 +668,10 @@ const executeProfileDelete = async (
     return transactionFailure('backup_failed', previous, resolution.notice, emptyDeleteDetails());
   }
 
-  const removalOwnershipFailure = currentOwnershipFailure(deps);
-  if (removalOwnershipFailure !== null) {
+  const reservationOwnershipFailure = currentOwnershipFailure(deps);
+  if (reservationOwnershipFailure !== null) {
     return transactionFailure(
-      removalOwnershipFailure,
+      reservationOwnershipFailure,
       previous,
       resolution.notice,
       emptyDeleteDetails(),
@@ -667,51 +691,92 @@ const executeProfileDelete = async (
     return transactionFailure('busy', previous, resolution.notice, emptyDeleteDetails());
   }
 
-  const deletion = deleteProfileStorage(deps.storage, profileId);
-  const removalThrows = new Set(deletion.failed.filter(key => snapshots.has(key)));
-  const failedRemovalKeys = new Set<string>();
-  const rollbackKeys = new Set<string>();
-  const verifiedRemovedKeys = new Set<string>();
-  for (const key of snapshots.keys()) {
-    let removed: boolean;
-    try {
-      removed = deps.storage.getItem(key) === null;
-    } catch {
-      failedRemovalKeys.add(key);
-      rollbackKeys.add(key);
-      continue;
-    }
-    if (removed) {
-      verifiedRemovedKeys.add(key);
-      rollbackKeys.add(key);
-    }
-    if (removalThrows.has(key) || !removed) failedRemovalKeys.add(key);
+  const storageKey = profileBaseKey(profileId);
+  const leaseKey = writerLeaseKey(storageKey);
+  const deletionLeaseOwnerId = `${deps.ownerId}:profile-delete:${profileId}`;
+  const originalWriterLease = snapshots.get(leaseKey) ?? null;
+  const leaseClaim = claimProfileDeletionLease(
+    deps.storage,
+    storageKey,
+    deletionLeaseOwnerId,
+    deps.now(),
+  );
+  if (leaseClaim.status !== 'owned') {
+    return transactionFailure(
+      leaseClaim.status === 'unavailable' ? 'storage_unavailable' : 'profile_in_use',
+      previous,
+      resolution.notice,
+      emptyDeleteDetails(),
+    );
   }
 
-  const baseDetails: ProfileDeleteDetails = {
-    removedEntries: verifiedRemovedKeys.size,
-    removalFailures: failedRemovalKeys.size,
-    rollbackFailures: 0,
+  const deletionAuthorityFailure = (
+    respectCancellation: boolean,
+  ): Extract<ProfileMutationFailure, 'busy' | 'storage_unavailable' | 'profile_in_use'> | null => {
+    if (respectCancellation && transactionAborted(deps)) return 'busy';
+    const ownershipFailure = currentMetadataAuthorityFailure(deps);
+    if (ownershipFailure !== null) return ownershipFailure;
+    const lease = verifyWriterLease(
+      deps.storage,
+      storageKey,
+      deletionLeaseOwnerId,
+      deps.now(),
+    );
+    if (lease.status === 'unavailable') return 'storage_unavailable';
+    if (lease.status !== 'owned') return 'profile_in_use';
+    return respectCancellation && transactionAborted(deps) ? 'busy' : null;
   };
 
-  const rollback = (): ProfileDeleteDetails => {
-    let rollbackFailures = 0;
+  const releaseDeletionLease = (restoreOriginal: boolean): number => {
+    const lease = verifyWriterLease(
+      deps.storage,
+      storageKey,
+      deletionLeaseOwnerId,
+      deps.now(),
+    );
+    if (lease.status === 'unavailable') return 1;
+    if (lease.status !== 'owned') return 0;
+    if (
+      restoreOriginal
+      && originalWriterLease !== null
+      && !transactionAborted(deps)
+      && currentMetadataAuthorityFailure(deps) === null
+    ) {
+      try {
+        deps.storage.setItem(leaseKey, originalWriterLease);
+        return deps.storage.getItem(leaseKey) === originalWriterLease ? 0 : 1;
+      } catch {
+        return 1;
+      }
+    }
+    return releaseWriterLease(deps.storage, storageKey, deletionLeaseOwnerId) === 'unavailable'
+      ? 1
+      : 0;
+  };
+
+  let baseDetails = emptyDeleteDetails();
+  const rollbackKeys = new Set<string>();
+  const rollbackLocal = (details: ProfileDeleteDetails): ProfileDeleteDetails => {
+    let rollbackFailures = details.rollbackFailures;
     for (const [key, value] of snapshots) {
-      if (!rollbackKeys.has(key)) continue;
+      if (key === leaseKey || !rollbackKeys.has(key)) continue;
+      if (deletionAuthorityFailure(false) !== null) {
+        rollbackFailures += 1;
+        continue;
+      }
       try {
         deps.storage.setItem(key, value);
-        if (deps.storage.getItem(key) !== value) {
-          rollbackFailures += 1;
-        }
+        if (deps.storage.getItem(key) !== value) rollbackFailures += 1;
       } catch {
         rollbackFailures += 1;
       }
     }
-    return { ...baseDetails, rollbackFailures };
+    return { ...details, rollbackFailures };
   };
 
   let recoveryRepository: RecoveryRepository | null = null;
   let recoverySnapshot: RecoveryProfileSnapshot | null = null;
+  let recoveryDeletionCommitted = false;
   const closeRecoveryRepository = () => {
     try {
       recoveryRepository?.close();
@@ -720,26 +785,18 @@ const executeProfileDelete = async (
     }
     recoveryRepository = null;
   };
-  const authorizeRecoveryWrite = (): SaveWriteAuthorization => {
-    const ownershipFailure = currentOwnershipFailure(deps);
-    if (ownershipFailure !== null) {
-      return {
-        ok: false,
-        reason: ownershipFailure === 'storage_unavailable'
-          ? 'storage_unavailable'
-          : 'ownership_conflict',
-      };
-    }
-    const writerLeaseFailure = currentWriterLeaseFailure(deps, profileId);
-    if (writerLeaseFailure !== null) {
-      return {
-        ok: false,
-        reason: writerLeaseFailure === 'storage_unavailable'
-          ? 'storage_unavailable'
-          : 'ownership_conflict',
-      };
-    }
-    return { ok: true };
+  const authorizeRecoveryWrite = (
+    respectCancellation: boolean,
+  ): SaveWriteAuthorization => {
+    const failure = deletionAuthorityFailure(respectCancellation);
+    return failure === null
+      ? { ok: true }
+      : {
+          ok: false,
+          reason: failure === 'storage_unavailable'
+            ? 'storage_unavailable'
+            : 'ownership_conflict',
+        };
   };
   const rollbackRecovery = async (
     details: ProfileDeleteDetails,
@@ -751,7 +808,11 @@ const executeProfileDelete = async (
     }
     let result: RecoveryWriteResult;
     try {
-      result = await restore.call(recoveryRepository, recoverySnapshot, authorizeRecoveryWrite);
+      result = await restore.call(
+        recoveryRepository,
+        recoverySnapshot,
+        () => authorizeRecoveryWrite(false),
+      );
     } catch {
       result = { stored: false, reason: 'storage_unavailable' };
     }
@@ -759,18 +820,30 @@ const executeProfileDelete = async (
       ? details
       : { ...details, rollbackFailures: details.rollbackFailures + 1 };
   };
-  const rollbackAll = async (): Promise<ProfileDeleteDetails> => (
-    rollbackRecovery(rollback())
-  );
+  const rollbackAll = async (): Promise<ProfileDeleteDetails> => {
+    let details = rollbackLocal(baseDetails);
+    details = await rollbackRecovery(details);
+    return {
+      ...details,
+      rollbackFailures: details.rollbackFailures + releaseDeletionLease(true),
+    };
+  };
 
-  if (failedRemovalKeys.size > 0) {
-    return transactionFailure(
-      'storage_unavailable',
-      previous,
-      resolution.notice,
-      rollback(),
+  const recoveryOwnershipFailure = (): Extract<
+    ProfileMutationFailure,
+    'busy' | 'storage_unavailable' | 'profile_in_use'
+  > => {
+    const lease = verifyWriterLease(
+      deps.storage,
+      storageKey,
+      deletionLeaseOwnerId,
+      deps.now(),
     );
-  }
+    if (lease.status === 'unavailable') return 'storage_unavailable';
+    if (lease.status !== 'owned') return 'profile_in_use';
+    const ownershipFailure = currentMetadataAuthorityFailure(deps);
+    return ownershipFailure ?? 'busy';
+  };
 
   if (deps.openRecoveryRepository !== undefined) {
     try {
@@ -778,66 +851,203 @@ const executeProfileDelete = async (
       const deleteProfileData = recoveryRepository.deleteProfileData;
       if (deleteProfileData === undefined) {
         closeRecoveryRepository();
+        const rollbackFailures = releaseDeletionLease(true);
         return transactionFailure(
           'storage_unavailable',
           previous,
           resolution.notice,
-          rollback(),
+          { ...emptyDeleteDetails(), rollbackFailures },
         );
       }
       const recoveryDeletion = await deleteProfileData.call(
         recoveryRepository,
         profileId,
-        authorizeRecoveryWrite,
+        () => authorizeRecoveryWrite(true),
       );
       if (recoveryDeletion.stored === false) {
+        const reason = recoveryDeletion.reason === 'ownership_conflict'
+          ? recoveryOwnershipFailure()
+          : 'storage_unavailable';
         closeRecoveryRepository();
+        const rollbackFailures = releaseDeletionLease(true);
         return transactionFailure(
-          'storage_unavailable',
+          reason,
           previous,
           resolution.notice,
-          rollback(),
+          { ...emptyDeleteDetails(), rollbackFailures },
         );
       }
       recoverySnapshot = recoveryDeletion.snapshot;
+      recoveryDeletionCommitted = true;
     } catch {
       closeRecoveryRepository();
+      const rollbackFailures = releaseDeletionLease(true);
       return transactionFailure(
         'storage_unavailable',
         previous,
         resolution.notice,
-        rollback(),
+        { ...emptyDeleteDetails(), rollbackFailures },
       );
     }
   }
 
-  if (transactionAborted(deps)) {
+  if (!recoveryDeletionCommitted && transactionAborted(deps)) {
+    closeRecoveryRepository();
+    const rollbackFailures = releaseDeletionLease(true);
+    return transactionFailure('busy', previous, resolution.notice, {
+      ...emptyDeleteDetails(),
+      rollbackFailures,
+    });
+  }
+
+  const latestCompletedDeletion = (): ProfileTransactionResult | null => {
+    const latest = readNewestProfileMetadata(deps);
+    if (
+      !latest.ok
+      || latest.resolution.metadata.profiles.some(profile => profile.id === profileId)
+    ) return null;
+    const removedEntries = [...snapshots.keys()].reduce((count, key) => (
+      deps.storage.getItem(key) === null ? count + 1 : count
+    ), 0);
+    for (const key of profileOwnedKeys(profileId)) {
+      try {
+        deps.storage.removeItem(key);
+      } catch {
+        // Another tab already committed deletion. Never restore stale profile data here.
+      }
+    }
+    closeRecoveryRepository();
+    return {
+      ok: true,
+      metadata: latest.resolution.metadata,
+      notice: latest.resolution.notice,
+      deleteDetails: {
+        removedEntries,
+        removalFailures: 0,
+        rollbackFailures: 0,
+      },
+    };
+  };
+
+  let postCleanupAuthorityFailure = deletionAuthorityFailure(false);
+  if (postCleanupAuthorityFailure !== null) {
+    const completed = latestCompletedDeletion();
+    if (completed !== null) return completed;
+
+    const reservation = verifyWriterLease(
+      deps.storage,
+      storageKey,
+      deletionLeaseOwnerId,
+      deps.now(),
+    );
+    if (reservation.status === 'owned' && postCleanupAuthorityFailure === 'busy') {
+      const reacquired = await acquireProfileMetadataLock(deps);
+      if (reacquired.status === 'acquired') {
+        const latest = readNewestProfileMetadata(deps);
+        if (
+          latest.ok
+          && latest.resolution.mode !== 'read_only'
+          && latest.resolution.metadata.profiles.some(profile => profile.id === profileId)
+        ) {
+          previous = latest.resolution.metadata;
+          const refreshedCandidate = buildCandidate(previous);
+          if (refreshedCandidate !== null) {
+            candidate = refreshedCandidate;
+            if (!serializeTransaction()) {
+              const details = await rollbackAll();
+              closeRecoveryRepository();
+              return transactionFailure('invalid_metadata', previous, resolution.notice, details);
+            }
+            try {
+              deps.storage.setItem(PROFILE_METADATA_BACKUP_KEY, serializedPrevious);
+              if (deps.storage.getItem(PROFILE_METADATA_BACKUP_KEY) !== serializedPrevious) {
+                const details = await rollbackAll();
+                closeRecoveryRepository();
+                return transactionFailure('backup_failed', previous, resolution.notice, details);
+              }
+            } catch {
+              const details = await rollbackAll();
+              closeRecoveryRepository();
+              return transactionFailure('backup_failed', previous, resolution.notice, details);
+            }
+          }
+        }
+      }
+      postCleanupAuthorityFailure = deletionAuthorityFailure(false);
+    }
+    if (postCleanupAuthorityFailure !== null) {
+      const completed = latestCompletedDeletion();
+      if (completed !== null) return completed;
+      closeRecoveryRepository();
+      return transactionFailure(
+        postCleanupAuthorityFailure,
+        previous,
+        resolution.notice,
+        { ...emptyDeleteDetails(), rollbackFailures: recoveryDeletionCommitted ? 1 : 0 },
+      );
+    }
+  }
+
+  const failedRemovalKeys = new Set<string>();
+  const verifiedRemovedKeys = new Set<string>();
+  const writerWasStored = snapshots.has(leaseKey);
+  baseDetails = {
+    ...baseDetails,
+    removedEntries: writerWasStored ? 1 : 0,
+  };
+  for (const key of profileOwnedKeys(profileId)) {
+    if (key === leaseKey) continue;
+    const authorityFailure = deletionAuthorityFailure(false);
+    if (authorityFailure !== null) {
+      if (snapshots.has(key)) failedRemovalKeys.add(key);
+      continue;
+    }
+    let removalThrew = false;
+    try {
+      deps.storage.removeItem(key);
+    } catch {
+      removalThrew = true;
+    }
+    if (!snapshots.has(key)) continue;
+    let removed = false;
+    try {
+      removed = deps.storage.getItem(key) === null;
+    } catch {
+      failedRemovalKeys.add(key);
+      rollbackKeys.add(key);
+      continue;
+    }
+    if (removed) {
+      verifiedRemovedKeys.add(key);
+      rollbackKeys.add(key);
+    }
+    if (removalThrew || !removed) failedRemovalKeys.add(key);
+  }
+  baseDetails = {
+    removedEntries: verifiedRemovedKeys.size + (writerWasStored ? 1 : 0),
+    removalFailures: failedRemovalKeys.size,
+    rollbackFailures: 0,
+  };
+
+  if (failedRemovalKeys.size > 0) {
     const details = await rollbackAll();
     closeRecoveryRepository();
     return transactionFailure(
-      'busy',
+      'storage_unavailable',
       previous,
       resolution.notice,
       details,
     );
   }
 
-  const primaryOwnershipFailure = currentOwnershipFailure(deps);
-  if (primaryOwnershipFailure !== null) {
+  const primaryAuthorityFailure = deletionAuthorityFailure(false);
+  if (primaryAuthorityFailure !== null) {
+    const completed = latestCompletedDeletion();
+    if (completed !== null) return completed;
     const details = await rollbackAll();
     closeRecoveryRepository();
     return transactionFailure(
-      primaryOwnershipFailure,
-      previous,
-      resolution.notice,
-      details,
-    );
-  }
-  if (transactionAborted(deps)) {
-    const details = await rollbackAll();
-    closeRecoveryRepository();
-    return transactionFailure(
-      'busy',
+      primaryAuthorityFailure,
       previous,
       resolution.notice,
       details,
@@ -867,12 +1077,17 @@ const executeProfileDelete = async (
     );
   }
 
+  const writerRemovalFailure = releaseDeletionLease(false);
+  const finalDetails: ProfileDeleteDetails = {
+    ...baseDetails,
+    removalFailures: baseDetails.removalFailures + writerRemovalFailure,
+  };
   closeRecoveryRepository();
   return {
     ok: true,
     metadata: candidate,
     notice: resolution.notice,
-    deleteDetails: baseDetails,
+    deleteDetails: finalDetails,
   };
 };
 

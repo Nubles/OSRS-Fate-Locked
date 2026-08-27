@@ -179,6 +179,58 @@ describe('transactional recovery database', () => {
     await expect(repository.getMetadata('mirror')).resolves.toBeNull();
   });
 
+  it('aborts profile cleanup when ownership changes after the final delete request', async () => {
+    const repository = await openRepository();
+    const existingHead = head({ persistenceRevision: 5 });
+    const existingCheckpoint = checkpoint(4);
+    const existingMetadata = { profileId: 'alpha', marker: 'keep-on-takeover' };
+    await expect(repository.putHead(existingHead, allowWrite)).resolves.toEqual({ stored: true });
+    await expect(repository.putCheckpoint(existingCheckpoint, allowWrite))
+      .resolves.toEqual({ stored: true });
+    await expect(repository.putMetadata('profile-alpha-marker', existingMetadata, allowWrite))
+      .resolves.toEqual({ stored: true });
+
+    let authorizationCalls = 0;
+    const losesOwnershipAfterDeletes = () => {
+      authorizationCalls += 1;
+      return authorizationCalls <= 4
+        ? { ok: true as const }
+        : { ok: false as const, reason: 'ownership_conflict' as const };
+    };
+
+    await expect(repository.deleteProfileData?.('alpha', losesOwnershipAfterDeletes))
+      .resolves.toEqual({ stored: false, reason: 'ownership_conflict' });
+    await expect(repository.getHead('alpha')).resolves.toEqual(existingHead);
+    await expect(repository.listCheckpoints('alpha')).resolves.toEqual([existingCheckpoint]);
+    await expect(repository.getMetadata('profile-alpha-marker')).resolves.toEqual(existingMetadata);
+  });
+
+  it('aborts profile compensation when ownership changes after the final restore request', async () => {
+    const repository = await openRepository();
+    const existingHead = head({ persistenceRevision: 5 });
+    const existingCheckpoint = checkpoint(4);
+    const existingMetadata = { profileId: 'alpha', marker: 'do-not-restore-after-takeover' };
+    await repository.putHead(existingHead, allowWrite);
+    await repository.putCheckpoint(existingCheckpoint, allowWrite);
+    await repository.putMetadata('profile-alpha-marker', existingMetadata, allowWrite);
+    const deletion = await repository.deleteProfileData?.('alpha', allowWrite);
+    if (deletion === undefined || !deletion.stored) throw new Error('Profile cleanup did not commit.');
+
+    let authorizationCalls = 0;
+    const losesOwnershipAfterRestores = () => {
+      authorizationCalls += 1;
+      return authorizationCalls <= 4
+        ? { ok: true as const }
+        : { ok: false as const, reason: 'ownership_conflict' as const };
+    };
+
+    await expect(repository.restoreProfileData?.(deletion.snapshot, losesOwnershipAfterRestores))
+      .resolves.toEqual({ stored: false, reason: 'ownership_conflict' });
+    await expect(repository.getHead('alpha')).resolves.toBeNull();
+    await expect(repository.listCheckpoints('alpha')).resolves.toEqual([]);
+    await expect(repository.getMetadata('profile-alpha-marker')).resolves.toBeNull();
+  });
+
   it('prunes only checkpoints outside the retention keep set before one quota retry', async () => {
     const now = new Date(2026, 7, 25, 12, 0, 0, 0).getTime();
     let headWrites = 0;

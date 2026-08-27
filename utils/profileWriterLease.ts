@@ -13,6 +13,7 @@ export type ProfileWriterLease = {
   version: typeof WRITER_LEASE_VERSION;
   ownerId: string;
   expiresAt: number;
+  purpose?: 'profile_delete';
 };
 export type WriterLeaseStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 export type WriterLeaseReadResult =
@@ -43,6 +44,7 @@ const parseWriterLease = (value: string | null): ProfileWriterLease | null => {
       || typeof parsed.expiresAt !== 'number'
       || !Number.isFinite(parsed.expiresAt)
       || parsed.expiresAt <= 0
+      || ('purpose' in parsed && parsed.purpose !== 'profile_delete')
     ) return null;
     return parsed as ProfileWriterLease;
   } catch {
@@ -66,12 +68,14 @@ const writeWriterLease = (
   storageKey: string,
   ownerId: string,
   now: number,
+  purpose?: ProfileWriterLease['purpose'],
 ): WriterLeaseOwnershipResult | null => {
   try {
     storage.setItem(writerLeaseKey(storageKey), JSON.stringify({
       version: WRITER_LEASE_VERSION,
       ownerId,
       expiresAt: now + WRITER_LEASE_TTL_MS,
+      ...(purpose === undefined ? {} : { purpose }),
     }));
   } catch {
     return { status: 'unavailable', lease: null };
@@ -80,23 +84,24 @@ const writeWriterLease = (
   return null;
 };
 
-export const claimWriterLease = (
+const claimWriterLeaseWithPurpose = (
   storage: WriterLeaseStorage,
   storageKey: string,
   ownerId: string,
   now: number,
-  force = false,
+  force: boolean,
+  purpose?: ProfileWriterLease['purpose'],
 ): WriterLeaseOwnershipResult => {
   const current = readWriterLease(storage, storageKey);
   if (!current.ok) return { status: 'unavailable', lease: null };
   if (
-    !force
-    && current.lease !== null
+    current.lease !== null
     && current.lease.ownerId !== ownerId
     && current.lease.expiresAt > now
+    && (!force || current.lease.purpose === 'profile_delete')
   ) return { status: 'blocked', lease: current.lease };
 
-  const writeFailure = writeWriterLease(storage, storageKey, ownerId, now);
+  const writeFailure = writeWriterLease(storage, storageKey, ownerId, now, purpose);
   if (writeFailure !== null) return writeFailure;
 
   const readback = readWriterLease(storage, storageKey);
@@ -104,6 +109,34 @@ export const claimWriterLease = (
   if (readback.lease?.ownerId === ownerId) return { status: 'owned', lease: readback.lease };
   return { status: 'blocked', lease: readback.lease };
 };
+
+export const claimWriterLease = (
+  storage: WriterLeaseStorage,
+  storageKey: string,
+  ownerId: string,
+  now: number,
+  force = false,
+): WriterLeaseOwnershipResult => claimWriterLeaseWithPurpose(
+  storage,
+  storageKey,
+  ownerId,
+  now,
+  force,
+);
+
+export const claimProfileDeletionLease = (
+  storage: WriterLeaseStorage,
+  storageKey: string,
+  ownerId: string,
+  now: number,
+): WriterLeaseOwnershipResult => claimWriterLeaseWithPurpose(
+  storage,
+  storageKey,
+  ownerId,
+  now,
+  false,
+  'profile_delete',
+);
 
 export const verifyWriterLease = (
   storage: WriterLeaseStorage,

@@ -24,6 +24,18 @@ import {
 } from './profileMetadata';
 import { openRecoveryDatabase } from './recoveryDatabase';
 import type { RecoveryCheckpoint, RecoveryHead } from './recoveryTypes';
+import { claimWriterLease, readWriterLease } from './profileWriterLease';
+
+type Deferred<T> = {
+  promise: Promise<T>;
+  resolve: (value: T | PromiseLike<T>) => void;
+};
+
+const deferred = <T,>(): Deferred<T> => {
+  let resolve!: Deferred<T>['resolve'];
+  const promise = new Promise<T>(complete => { resolve = complete; });
+  return { promise, resolve };
+};
 
 type TestStorage = ProfileTransactionDependencies['storage'] & {
   values: Map<string, string>;
@@ -1249,7 +1261,265 @@ describe('coordinated profile deletion', () => {
     }
   });
 
-  it('restores removed local data when IndexedDB profile cleanup fails', async () => {
+  it('keeps local and IndexedDB data intact when the metadata lock expires during deferred cleanup', async () => {
+    const current = deletableMetadata();
+    const ownedEntries = alphaOwnedKeys
+      .filter(key => key !== 'FATE_PROFILE_alpha__writer')
+      .map(key => [key, `secret:${key}`] as const);
+    const storage = createStorage([
+      [PROFILES_KEY, JSON.stringify(current)],
+      ...ownedEntries,
+    ]);
+    const clock = createClock();
+    const databaseName = `profile-delete-expiry-${Date.now()}-${Math.random()}`;
+    const seed = await openRecoveryDatabase({ databaseName, now: clock.now });
+    const existingHead: RecoveryHead = {
+      profileId: 'alpha',
+      persistenceRevision: 10,
+      runId: 'alpha-run',
+      runRevision: 3,
+      capturedAt: 900,
+      checksum: 'alpha-head-checksum',
+      data: 'alpha-head-data',
+    };
+    const existingCheckpoint: RecoveryCheckpoint = {
+      ...existingHead,
+      persistenceRevision: 9,
+      reason: 'interval',
+    };
+    await seed.putHead(existingHead, () => ({ ok: true }));
+    await seed.putCheckpoint(existingCheckpoint, () => ({ ok: true }));
+    seed.close();
+    const observer = await openRecoveryDatabase({ databaseName, now: clock.now });
+    const cleanupStarted = deferred<void>();
+    const releaseCleanup = deferred<void>();
+    const dependencies = Object.assign(createDependencies(storage, 'tab-a', clock), {
+      openRecoveryRepository: async () => {
+        const repository = await openRecoveryDatabase({ databaseName, now: clock.now });
+        const deleteProfileData = repository.deleteProfileData?.bind(repository);
+        if (deleteProfileData === undefined) throw new Error('Profile cleanup is unavailable.');
+        repository.deleteProfileData = async (...args) => {
+          cleanupStarted.resolve();
+          await releaseCleanup.promise;
+          return deleteProfileData(...args);
+        };
+        return repository;
+      },
+    });
+
+    try {
+      const mutation = mutateProfileMetadata(dependencies, { type: 'delete', profileId: 'alpha' });
+      await cleanupStarted.promise;
+      for (const [key, value] of ownedEntries) expect(storage.values.get(key)).toBe(value);
+      expect(claimWriterLease(storage, 'FATE_PROFILE_alpha', 'game-tab', clock.now()).status)
+        .toBe('blocked');
+      expect(claimWriterLease(storage, 'FATE_PROFILE_alpha', 'game-tab', clock.now(), true).status)
+        .toBe('blocked');
+
+      clock.set(1_000 + PROFILE_METADATA_LOCK_TTL_MS);
+      releaseCleanup.resolve();
+      await expect(mutation).resolves.toEqual({
+        ok: false,
+        reason: 'busy',
+        metadata: current,
+        notice: null,
+        deleteDetails: { removedEntries: 0, removalFailures: 0, rollbackFailures: 0 },
+      });
+      for (const [key, value] of ownedEntries) expect(storage.values.get(key)).toBe(value);
+      expect(readWriterLease(storage, 'FATE_PROFILE_alpha').lease).toBeNull();
+      await expect(observer.getHead('alpha')).resolves.toEqual(existingHead);
+      await expect(observer.listCheckpoints('alpha')).resolves.toEqual([existingCheckpoint]);
+    } finally {
+      observer.close();
+    }
+  });
+
+  it('finishes deletion without resurrection when cancellation arrives after IndexedDB commits', async () => {
+    const current = deletableMetadata();
+    const expected: ProfileMetadata = {
+      version: 1,
+      revision: 8,
+      profiles: [current.profiles[1]],
+      activeProfileId: 'beta',
+    };
+    const ownedEntries = alphaOwnedKeys
+      .filter(key => key !== 'FATE_PROFILE_alpha__writer')
+      .map(key => [key, `secret:${key}`] as const);
+    const storage = createStorage([[PROFILES_KEY, JSON.stringify(current)], ...ownedEntries]);
+    const databaseName = `profile-delete-cancel-after-idb-${Date.now()}-${Math.random()}`;
+    const seed = await openRecoveryDatabase({ databaseName });
+    const existingHead: RecoveryHead = {
+      profileId: 'alpha',
+      persistenceRevision: 10,
+      runId: 'alpha-run',
+      runRevision: 3,
+      capturedAt: 900,
+      checksum: 'alpha-head-checksum',
+      data: 'alpha-head-data',
+    };
+    await seed.putHead(existingHead, () => ({ ok: true }));
+    seed.close();
+    const observer = await openRecoveryDatabase({ databaseName });
+    let aborted = false;
+    const dependencies = Object.assign(createDependencies(storage), {
+      shouldAbort: () => aborted,
+      openRecoveryRepository: async () => {
+        const repository = await openRecoveryDatabase({ databaseName });
+        const deleteProfileData = repository.deleteProfileData?.bind(repository);
+        if (deleteProfileData === undefined) throw new Error('Profile cleanup is unavailable.');
+        repository.deleteProfileData = async (...args) => {
+          const result = await deleteProfileData(...args);
+          if (result.stored) aborted = true;
+          return result;
+        };
+        return repository;
+      },
+    });
+
+    try {
+      await expect(mutateProfileMetadata(dependencies, {
+        type: 'delete',
+        profileId: 'alpha',
+      })).resolves.toEqual({
+        ok: true,
+        metadata: expected,
+        notice: null,
+        deleteDetails: { removedEntries: ownedEntries.length, removalFailures: 0, rollbackFailures: 0 },
+      });
+      for (const [key] of ownedEntries) expect(storage.values.has(key)).toBe(false);
+      expect(storage.values.has('FATE_PROFILE_alpha__writer')).toBe(false);
+      expect(storage.values.get(PROFILES_KEY)).toBe(JSON.stringify(expected));
+      await expect(observer.getHead('alpha')).resolves.toBeNull();
+    } finally {
+      observer.close();
+    }
+  });
+
+  it('does not resurrect data after another tab completes deletion during the post-cleanup boundary', async () => {
+    const current = deletableMetadata();
+    const expected: ProfileMetadata = {
+      version: 1,
+      revision: 8,
+      profiles: [current.profiles[1]],
+      activeProfileId: 'beta',
+    };
+    const ownedEntries = alphaOwnedKeys
+      .filter(key => key !== 'FATE_PROFILE_alpha__writer')
+      .map(key => [key, `secret:${key}`] as const);
+    const storage = createStorage([[PROFILES_KEY, JSON.stringify(current)], ...ownedEntries]);
+    const databaseName = `profile-delete-remote-complete-${Date.now()}-${Math.random()}`;
+    const seed = await openRecoveryDatabase({ databaseName });
+    await seed.putHead({
+      profileId: 'alpha',
+      persistenceRevision: 10,
+      runId: 'alpha-run',
+      runRevision: 3,
+      capturedAt: 900,
+      checksum: 'alpha-head-checksum',
+      data: 'alpha-head-data',
+    }, () => ({ ok: true }));
+    seed.close();
+    const observer = await openRecoveryDatabase({ databaseName });
+    const dependencies = Object.assign(createDependencies(storage), {
+      openRecoveryRepository: async () => {
+        const repository = await openRecoveryDatabase({ databaseName });
+        const deleteProfileData = repository.deleteProfileData?.bind(repository);
+        if (deleteProfileData === undefined) throw new Error('Profile cleanup is unavailable.');
+        repository.deleteProfileData = async (...args) => {
+          const result = await deleteProfileData(...args);
+          if (result.stored) {
+            storage.values.set(PROFILES_KEY, JSON.stringify(expected));
+            for (const key of alphaOwnedKeys) storage.values.delete(key);
+            storage.values.set(PROFILE_METADATA_LOCK_KEY, lockRaw('tab-b', 9_000));
+          }
+          return result;
+        };
+        return repository;
+      },
+    });
+
+    try {
+      await expect(mutateProfileMetadata(dependencies, {
+        type: 'delete',
+        profileId: 'alpha',
+      })).resolves.toEqual({
+        ok: true,
+        metadata: expected,
+        notice: null,
+        deleteDetails: { removedEntries: ownedEntries.length, removalFailures: 0, rollbackFailures: 0 },
+      });
+      for (const [key] of ownedEntries) expect(storage.values.has(key)).toBe(false);
+      await expect(observer.getHead('alpha')).resolves.toBeNull();
+    } finally {
+      observer.close();
+    }
+  });
+
+  it('reports a late writer takeover as profile in use and atomically preserves recovery data', async () => {
+    const current = deletableMetadata();
+    const ownedEntries = alphaOwnedKeys
+      .filter(key => key !== 'FATE_PROFILE_alpha__writer')
+      .map(key => [key, `secret:${key}`] as const);
+    const storage = createStorage([[PROFILES_KEY, JSON.stringify(current)], ...ownedEntries]);
+    const databaseName = `profile-delete-writer-takeover-${Date.now()}-${Math.random()}`;
+    const existingHead: RecoveryHead = {
+      profileId: 'alpha',
+      persistenceRevision: 10,
+      runId: 'alpha-run',
+      runRevision: 3,
+      capturedAt: 900,
+      checksum: 'alpha-head-checksum',
+      data: 'alpha-head-data',
+    };
+    const seed = await openRecoveryDatabase({ databaseName });
+    await seed.putHead(existingHead, () => ({ ok: true }));
+    await seed.putMetadata(
+      'profile-alpha-marker',
+      { profileId: 'alpha', marker: 'survives-takeover' },
+      () => ({ ok: true }),
+    );
+    seed.close();
+    const observer = await openRecoveryDatabase({ databaseName });
+    const dependencies = Object.assign(createDependencies(storage), {
+      openRecoveryRepository: () => openRecoveryDatabase({
+        databaseName,
+        transactionAdapter: {
+          beforeRequest: (operation: string) => {
+            if (operation === 'delete-metadata') {
+              storage.values.set('FATE_PROFILE_alpha__writer', JSON.stringify({
+                version: 1,
+                ownerId: 'game-tab',
+                expiresAt: 9_000,
+              }));
+            }
+          },
+        },
+      }),
+    });
+
+    try {
+      await expect(mutateProfileMetadata(dependencies, {
+        type: 'delete',
+        profileId: 'alpha',
+      })).resolves.toEqual({
+        ok: false,
+        reason: 'profile_in_use',
+        metadata: current,
+        notice: null,
+        deleteDetails: { removedEntries: 0, removalFailures: 0, rollbackFailures: 0 },
+      });
+      for (const [key, value] of ownedEntries) expect(storage.values.get(key)).toBe(value);
+      await expect(observer.getHead('alpha')).resolves.toEqual(existingHead);
+      await expect(observer.getMetadata('profile-alpha-marker')).resolves.toEqual({
+        profileId: 'alpha',
+        marker: 'survives-takeover',
+      });
+    } finally {
+      observer.close();
+    }
+  });
+
+  it('leaves local data untouched when IndexedDB profile cleanup fails', async () => {
     const current = deletableMetadata();
     const ownedEntries = alphaOwnedKeys.map(key => [key, `secret:${key}`] as const);
     const storage = createStorage([
@@ -1278,7 +1548,7 @@ describe('coordinated profile deletion', () => {
       reason: 'storage_unavailable',
       metadata: current,
       notice: null,
-      deleteDetails: { removedEntries: 7, removalFailures: 0, rollbackFailures: 0 },
+      deleteDetails: { removedEntries: 0, removalFailures: 0, rollbackFailures: 0 },
     });
     expect(deleteProfileData).toHaveBeenCalledWith('alpha', expect.any(Function));
     for (const [key, value] of ownedEntries) expect(storage.values.get(key)).toBe(value);
@@ -1300,39 +1570,50 @@ describe('coordinated profile deletion', () => {
       }
       setItem(key, value);
     };
-    const recoverySnapshot = {
+    const databaseName = `profile-delete-real-restore-${Date.now()}-${Math.random()}`;
+    const existingHead: RecoveryHead = {
       profileId: 'alpha',
-      head: null,
-      checkpoints: [],
-      metadata: [{ key: 'profile-alpha-marker', value: { profileId: 'alpha' } }],
+      persistenceRevision: 10,
+      runId: 'alpha-run',
+      runRevision: 3,
+      capturedAt: 900,
+      checksum: 'alpha-head-checksum',
+      data: 'alpha-head-data',
     };
-    const restoreProfileData = vi.fn(async () => ({ stored: true as const }));
-    const recoveryRepository = {
-      deleteProfileData: vi.fn(async () => ({
-        stored: true as const,
-        snapshot: recoverySnapshot,
-      })),
-      restoreProfileData,
-      close: vi.fn(),
+    const existingCheckpoint: RecoveryCheckpoint = {
+      ...existingHead,
+      persistenceRevision: 9,
+      reason: 'interval',
     };
+    const existingMetadata = { profileId: 'alpha', marker: 'restore-on-registry-failure' };
+    const seed = await openRecoveryDatabase({ databaseName });
+    await seed.putHead(existingHead, () => ({ ok: true }));
+    await seed.putCheckpoint(existingCheckpoint, () => ({ ok: true }));
+    await seed.putMetadata('profile-alpha-marker', existingMetadata, () => ({ ok: true }));
+    seed.close();
+    const observer = await openRecoveryDatabase({ databaseName });
     const dependencies = Object.assign(createDependencies(storage), {
-      openRecoveryRepository: vi.fn(async () => recoveryRepository),
+      openRecoveryRepository: () => openRecoveryDatabase({ databaseName }),
     });
 
-    const result = await mutateProfileMetadata(dependencies, {
-      type: 'delete',
-      profileId: 'alpha',
-    });
-
-    expect(result).toEqual({
-      ok: false,
-      reason: 'verification_failed',
-      metadata: current,
-      notice: null,
-      deleteDetails: { removedEntries: 7, removalFailures: 0, rollbackFailures: 0 },
-    });
-    expect(restoreProfileData).toHaveBeenCalledWith(recoverySnapshot, expect.any(Function));
-    for (const [key, value] of ownedEntries) expect(storage.values.get(key)).toBe(value);
+    try {
+      await expect(mutateProfileMetadata(dependencies, {
+        type: 'delete',
+        profileId: 'alpha',
+      })).resolves.toEqual({
+        ok: false,
+        reason: 'verification_failed',
+        metadata: current,
+        notice: null,
+        deleteDetails: { removedEntries: 7, removalFailures: 0, rollbackFailures: 0 },
+      });
+      for (const [key, value] of ownedEntries) expect(storage.values.get(key)).toBe(value);
+      await expect(observer.getHead('alpha')).resolves.toEqual(existingHead);
+      await expect(observer.listCheckpoints('alpha')).resolves.toEqual([existingCheckpoint]);
+      await expect(observer.getMetadata('profile-alpha-marker')).resolves.toEqual(existingMetadata);
+    } finally {
+      observer.close();
+    }
   });
 
   it.each([
@@ -1709,7 +1990,8 @@ describe('coordinated profile deletion', () => {
       metadata: current,
       deleteDetails: { removedEntries: 2, removalFailures: 1, rollbackFailures: 0 },
     });
-    expect(rollbackWrites).toEqual(storedAndRemoved);
+    expect(rollbackWrites.filter(key => key !== 'FATE_PROFILE_alpha__writer'))
+      .toEqual(storedAndRemoved);
     expect(storage.values.get(removalFailure)).toBe(`secret:${removalFailure}`);
   });
 
@@ -2572,7 +2854,7 @@ describe('profile transaction cancellation boundaries', () => {
     expect(storage.values.get(PROFILES_KEY)).toBe(raw);
   });
 
-  it('rolls back all removed values when cancellation is observed before delete primary commit', async () => {
+  it('finishes forward once cancellation is observed after local deletion starts', async () => {
     const current = deletableMetadata();
     const raw = JSON.stringify(current);
     const storage = createStorage([
@@ -2591,17 +2873,21 @@ describe('profile transaction cancellation boundaries', () => {
       abortableDependencies(storage, () => aborted),
       { type: 'delete', profileId: 'alpha' },
     )).resolves.toEqual({
-      ok: false,
-      reason: 'busy',
-      metadata: current,
+      ok: true,
+      metadata: {
+        version: 1,
+        revision: 8,
+        profiles: [current.profiles[1]],
+        activeProfileId: 'beta',
+      },
       notice: null,
       deleteDetails: { removedEntries: 7, removalFailures: 0, rollbackFailures: 0 },
     });
-    for (const key of alphaOwnedKeys) expect(storage.values.get(key)).toBe(`secret:${key}`);
-    expect(storage.values.get(PROFILES_KEY)).toBe(raw);
+    for (const key of alphaOwnedKeys) expect(storage.values.has(key)).toBe(false);
+    expect(storage.values.get(PROFILES_KEY)).not.toBe(raw);
   });
 
-  it('counts rollback failures when cancellation follows delete removals', async () => {
+  it('does not attempt stale rollback writes when cancellation follows delete removals', async () => {
     const current = deletableMetadata();
     const raw = JSON.stringify(current);
     const rollbackFailureKey = alphaOwnedKeys[0];
@@ -2629,16 +2915,18 @@ describe('profile transaction cancellation boundaries', () => {
       abortableDependencies(storage, () => aborted),
       { type: 'delete', profileId: 'alpha' },
     )).resolves.toEqual({
-      ok: false,
-      reason: 'busy',
-      metadata: current,
+      ok: true,
+      metadata: {
+        version: 1,
+        revision: 8,
+        profiles: [current.profiles[1]],
+        activeProfileId: 'beta',
+      },
       notice: null,
-      deleteDetails: { removedEntries: 7, removalFailures: 0, rollbackFailures: 1 },
+      deleteDetails: { removedEntries: 7, removalFailures: 0, rollbackFailures: 0 },
     });
-    expect(storage.values.has(rollbackFailureKey)).toBe(false);
-    for (const key of alphaOwnedKeys.slice(1)) {
-      expect(storage.values.get(key)).toBe(`secret:${key}`);
-    }
-    expect(storage.values.get(PROFILES_KEY)).toBe(raw);
+    for (const key of alphaOwnedKeys) expect(storage.values.has(key)).toBe(false);
+    expect(storage.calls.filter(call => call === `set:${rollbackFailureKey}`)).toHaveLength(0);
+    expect(storage.values.get(PROFILES_KEY)).not.toBe(raw);
   });
 });
