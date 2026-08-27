@@ -10,6 +10,7 @@ const openedRepositories: Array<{ close: () => void }> = [];
 
 afterEach(() => {
   for (const repository of openedRepositories.splice(0)) repository.close();
+  vi.restoreAllMocks();
 });
 
 const uniqueDbName = (): string => `recovery-test-${Date.now()}-${Math.random()}`;
@@ -46,6 +47,82 @@ const openRawDatabase = (databaseName: string): Promise<IDBDatabase> => new Prom
   request.onsuccess = () => resolve(request.result);
   request.onerror = () => reject(request.error);
 });
+
+type ObservedRequestMethod = 'get' | 'put' | 'delete';
+
+const observeRequestSuccesses = (
+  labelRequest: (
+    method: ObservedRequestMethod,
+    storeName: string,
+    input: unknown,
+  ) => string | null,
+) => {
+  const successes: string[] = [];
+  const nativeGet = IDBObjectStore.prototype.get;
+  const nativePut = IDBObjectStore.prototype.put;
+  const nativeDelete = IDBObjectStore.prototype.delete;
+  const observe = <T,>(request: IDBRequest<T>, label: string | null): IDBRequest<T> => {
+    if (label !== null) {
+      request.addEventListener('success', () => { successes.push(label); }, { once: true });
+    }
+    return request;
+  };
+  const spies = [
+    vi.spyOn(IDBObjectStore.prototype, 'get').mockImplementation(function (
+      this: IDBObjectStore,
+      query: IDBValidKey | IDBKeyRange,
+    ) {
+      return observe(nativeGet.call(this, query), labelRequest('get', this.name, query));
+    }),
+    vi.spyOn(IDBObjectStore.prototype, 'put').mockImplementation(function (
+      this: IDBObjectStore,
+      value: unknown,
+      key?: IDBValidKey,
+    ) {
+      const request = key === undefined
+        ? nativePut.call(this, value)
+        : nativePut.call(this, value, key);
+      return observe(request, labelRequest('put', this.name, value));
+    }),
+    vi.spyOn(IDBObjectStore.prototype, 'delete').mockImplementation(function (
+      this: IDBObjectStore,
+      query: IDBValidKey | IDBKeyRange,
+    ) {
+      return observe(nativeDelete.call(this, query), labelRequest('delete', this.name, query));
+    }),
+  ];
+  return {
+    successes,
+    restore: () => { for (const spy of spies) spy.mockRestore(); },
+  };
+};
+
+const denyAfterSuccesses = (
+  successes: readonly string[],
+  required: readonly string[],
+) => () => required.every(label => successes.includes(label))
+  ? { ok: false as const, reason: 'ownership_conflict' as const }
+  : { ok: true as const };
+
+type HeadReadbackFault = {
+  label: string;
+  replacement: (candidate: RecoveryHead) => RecoveryHead | null;
+};
+
+const HEAD_READBACK_FAULTS: readonly HeadReadbackFault[] = [
+  { label: 'missing', replacement: () => null },
+  { label: 'stale', replacement: candidate => ({ ...candidate, persistenceRevision: 2 }) },
+  { label: 'profileId mismatch', replacement: candidate => ({ ...candidate, profileId: 'beta' }) },
+  {
+    label: 'persistenceRevision mismatch',
+    replacement: candidate => ({ ...candidate, persistenceRevision: 5 }),
+  },
+  { label: 'runId mismatch', replacement: candidate => ({ ...candidate, runId: 'run-other' }) },
+  { label: 'runRevision mismatch', replacement: candidate => ({ ...candidate, runRevision: 2 }) },
+  { label: 'capturedAt mismatch', replacement: candidate => ({ ...candidate, capturedAt: 1_800_000_000_000 }) },
+  { label: 'checksum mismatch', replacement: candidate => ({ ...candidate, checksum: 'b'.repeat(64) }) },
+  { label: 'data mismatch', replacement: candidate => ({ ...candidate, data: '{"revision":999}' }) },
+];
 
 describe('transactional recovery database', () => {
   it('opens the version-one schema with the required keys and checkpoint index', async () => {
@@ -91,9 +168,9 @@ describe('transactional recovery database', () => {
     );
   });
 
-  it.each(['missing', 'stale', 'mismatched'] as const)(
-    'does not report a %s post-put head readback as stored and rolls the write back',
-    async (readback) => {
+  it.each(HEAD_READBACK_FAULTS)(
+    'does not report a $label post-put head readback as stored and rolls the write back',
+    async ({ replacement }) => {
       const repository = await openRepository();
       const prior = head({ persistenceRevision: 3 });
       const candidate = head({ persistenceRevision: 4 });
@@ -101,18 +178,35 @@ describe('transactional recovery database', () => {
 
       const nativePut = IDBObjectStore.prototype.put;
       const nativeDelete = IDBObjectStore.prototype.delete;
+      let injectedRequestSucceeded = false;
       const putSpy = vi.spyOn(IDBObjectStore.prototype, 'put').mockImplementation(function (
         this: IDBObjectStore,
         value: unknown,
       ) {
         const attempted = value as RecoveryHead;
-        if (readback === 'missing') {
-          return nativeDelete.call(this, attempted.profileId) as unknown as IDBRequest<IDBValidKey>;
+        const request = nativePut.call(this, attempted);
+        if (this.name !== 'heads' || attempted.persistenceRevision !== candidate.persistenceRevision) {
+          return request;
         }
-        const replacement = readback === 'stale'
-          ? { ...attempted, persistenceRevision: prior.persistenceRevision }
-          : { ...attempted, checksum: 'b'.repeat(64) };
-        return nativePut.call(this, replacement);
+        request.addEventListener('success', () => {
+          const corrupted = replacement(candidate);
+          const injected = corrupted === null
+            ? [nativeDelete.call(this, candidate.profileId)]
+            : corrupted.profileId === candidate.profileId
+              ? [nativePut.call(this, corrupted)]
+              : [
+                  nativeDelete.call(this, candidate.profileId),
+                  nativePut.call(this, corrupted),
+                ];
+          let completed = 0;
+          for (const injectedRequest of injected) {
+            injectedRequest.addEventListener('success', () => {
+              completed += 1;
+              injectedRequestSucceeded = completed === injected.length;
+            }, { once: true });
+          }
+        }, { once: true });
+        return request;
       });
 
       let result;
@@ -122,8 +216,10 @@ describe('transactional recovery database', () => {
         putSpy.mockRestore();
       }
 
+      expect(injectedRequestSucceeded).toBe(true);
       expect(result).toEqual({ stored: false, reason: 'storage_unavailable' });
       await expect(repository.getHead('alpha')).resolves.toEqual(prior);
+      await expect(repository.getHead('beta')).resolves.toBeNull();
     },
   );
 
@@ -148,30 +244,34 @@ describe('transactional recovery database', () => {
   });
 
   it('rolls back a successful head put when ownership is lost before commit', async () => {
-    let headPutCompleted = false;
-    let headPutRequests = 0;
-    const repository = await openRecoveryDatabase({
-      databaseName: uniqueDbName(),
-      transactionAdapter: {
-        beforeRequest: (operation) => {
-          if (operation !== 'put-head') return;
-          headPutRequests += 1;
-          headPutCompleted = true;
-        },
-      },
-    });
-    openedRepositories.push(repository);
+    const repository = await openRepository();
     const prior = head({ persistenceRevision: 3 });
+    const candidate = head({ persistenceRevision: 4 });
     await expect(repository.putHead(prior, allowWrite)).resolves.toEqual({ stored: true });
-    headPutCompleted = false;
-    headPutRequests = 0;
-    const authorizeWrite = () => headPutCompleted
-      ? { ok: false as const, reason: 'ownership_conflict' as const }
-      : { ok: true as const };
+    let headGets = 0;
+    const requests = observeRequestSuccesses((method, storeName, input) => {
+      if (storeName !== 'heads') return null;
+      if (method === 'put'
+        && (input as Partial<RecoveryHead>).persistenceRevision === candidate.persistenceRevision) {
+        return 'head-put';
+      }
+      if (method === 'get' && input === candidate.profileId) {
+        headGets += 1;
+        return headGets === 2 ? 'head-readback' : null;
+      }
+      return null;
+    });
 
-    await expect(repository.putHead(head({ persistenceRevision: 4 }), authorizeWrite))
-      .resolves.toEqual({ stored: false, reason: 'ownership_conflict' });
-    expect(headPutRequests).toBe(1);
+    try {
+      await expect(repository.putHead(
+        candidate,
+        denyAfterSuccesses(requests.successes, ['head-put', 'head-readback']),
+      )).resolves.toEqual({ stored: false, reason: 'ownership_conflict' });
+    } finally {
+      requests.restore();
+    }
+
+    expect(requests.successes).toEqual(['head-put', 'head-readback']);
     await expect(repository.getHead('alpha')).resolves.toEqual(prior);
   });
 
@@ -245,80 +345,80 @@ describe('transactional recovery database', () => {
   });
 
   it('rolls back a successful checkpoint put when ownership is lost before commit', async () => {
-    let checkpointPutCompleted = false;
-    let checkpointPutRequests = 0;
-    const repository = await openRecoveryDatabase({
-      databaseName: uniqueDbName(),
-      transactionAdapter: {
-        beforeRequest: (operation) => {
-          if (operation !== 'put-checkpoint') return;
-          checkpointPutRequests += 1;
-          checkpointPutCompleted = true;
-        },
-      },
-    });
-    openedRepositories.push(repository);
+    const repository = await openRepository();
     const existing = checkpoint(2);
+    const candidate = checkpoint(3);
     await expect(repository.putCheckpoint(existing, allowWrite)).resolves.toEqual({ stored: true });
-    checkpointPutCompleted = false;
-    checkpointPutRequests = 0;
-    const authorizeWrite = () => checkpointPutCompleted
-      ? { ok: false as const, reason: 'ownership_conflict' as const }
-      : { ok: true as const };
+    const requests = observeRequestSuccesses((method, storeName, input) => (
+      method === 'put'
+      && storeName === 'checkpoints'
+      && (input as Partial<RecoveryCheckpoint>).persistenceRevision === candidate.persistenceRevision
+        ? 'checkpoint-put'
+        : null
+    ));
 
-    await expect(repository.putCheckpoint(checkpoint(3), authorizeWrite))
-      .resolves.toEqual({ stored: false, reason: 'ownership_conflict' });
-    expect(checkpointPutRequests).toBe(1);
+    try {
+      await expect(repository.putCheckpoint(
+        candidate,
+        denyAfterSuccesses(requests.successes, ['checkpoint-put']),
+      )).resolves.toEqual({ stored: false, reason: 'ownership_conflict' });
+    } finally {
+      requests.restore();
+    }
+
+    expect(requests.successes).toEqual(['checkpoint-put']);
     await expect(repository.listCheckpoints('alpha')).resolves.toEqual([existing]);
   });
 
   it('rolls back a successful metadata put when ownership is lost before commit', async () => {
-    let metadataPutCompleted = false;
-    let metadataPutRequests = 0;
-    const repository = await openRecoveryDatabase({
-      databaseName: uniqueDbName(),
-      transactionAdapter: {
-        beforeRequest: (operation) => {
-          if (operation !== 'put-metadata') return;
-          metadataPutRequests += 1;
-          metadataPutCompleted = true;
-        },
-      },
-    });
-    openedRepositories.push(repository);
-    const authorizeWrite = () => metadataPutCompleted
-      ? { ok: false as const, reason: 'ownership_conflict' as const }
-      : { ok: true as const };
+    const repository = await openRepository();
+    const requests = observeRequestSuccesses((method, storeName, input) => (
+      method === 'put'
+      && storeName === 'metadata'
+      && (input as { key?: unknown }).key === 'mirror'
+        ? 'metadata-put'
+        : null
+    ));
 
-    await expect(repository.putMetadata('mirror', { value: 8 }, authorizeWrite))
-      .resolves.toEqual({ stored: false, reason: 'ownership_conflict' });
-    expect(metadataPutRequests).toBe(1);
+    try {
+      await expect(repository.putMetadata(
+        'mirror',
+        { value: 8 },
+        denyAfterSuccesses(requests.successes, ['metadata-put']),
+      )).resolves.toEqual({ stored: false, reason: 'ownership_conflict' });
+    } finally {
+      requests.restore();
+    }
+
+    expect(requests.successes).toEqual(['metadata-put']);
     await expect(repository.getMetadata('mirror')).resolves.toBeNull();
   });
 
   it('rolls back a successful checkpoint deletion when ownership is lost before commit', async () => {
-    let checkpointDeleteCompleted = false;
-    let checkpointDeleteRequests = 0;
-    const repository = await openRecoveryDatabase({
-      databaseName: uniqueDbName(),
-      transactionAdapter: {
-        beforeRequest: (operation) => {
-          if (operation !== 'delete-checkpoint') return;
-          checkpointDeleteRequests += 1;
-          checkpointDeleteCompleted = true;
-        },
-      },
-    });
-    openedRepositories.push(repository);
+    const repository = await openRepository();
     const existing = checkpoint(2);
     await expect(repository.putCheckpoint(existing, allowWrite)).resolves.toEqual({ stored: true });
-    const authorizeWrite = () => checkpointDeleteCompleted
-      ? { ok: false as const, reason: 'ownership_conflict' as const }
-      : { ok: true as const };
+    const requests = observeRequestSuccesses((method, storeName, input) => (
+      method === 'delete'
+      && storeName === 'checkpoints'
+      && Array.isArray(input)
+      && input[0] === 'alpha'
+      && input[1] === 2
+        ? 'checkpoint-delete'
+        : null
+    ));
 
-    await expect(repository.deleteCheckpoints('alpha', [2], authorizeWrite))
-      .resolves.toEqual({ stored: false, reason: 'ownership_conflict' });
-    expect(checkpointDeleteRequests).toBe(1);
+    try {
+      await expect(repository.deleteCheckpoints(
+        'alpha',
+        [2],
+        denyAfterSuccesses(requests.successes, ['checkpoint-delete']),
+      )).resolves.toEqual({ stored: false, reason: 'ownership_conflict' });
+    } finally {
+      requests.restore();
+    }
+
+    expect(requests.successes).toEqual(['checkpoint-delete']);
     await expect(repository.listCheckpoints('alpha')).resolves.toEqual([existing]);
   });
 
@@ -333,16 +433,36 @@ describe('transactional recovery database', () => {
     await expect(repository.putMetadata('profile-alpha-marker', existingMetadata, allowWrite))
       .resolves.toEqual({ stored: true });
 
-    let authorizationCalls = 0;
-    const losesOwnershipAfterDeletes = () => {
-      authorizationCalls += 1;
-      return authorizationCalls <= 4
-        ? { ok: true as const }
-        : { ok: false as const, reason: 'ownership_conflict' as const };
-    };
+    const requests = observeRequestSuccesses((method, storeName, input) => {
+      if (method !== 'delete') return null;
+      if (storeName === 'heads' && input === 'alpha') return 'profile-head-delete';
+      if (storeName === 'checkpoints'
+        && Array.isArray(input)
+        && input[0] === 'alpha'
+        && input[1] === existingCheckpoint.persistenceRevision) {
+        return 'profile-checkpoint-delete';
+      }
+      if (storeName === 'metadata' && input === 'profile-alpha-marker') {
+        return 'profile-metadata-delete';
+      }
+      return null;
+    });
+    const expectedSuccesses = [
+      'profile-head-delete',
+      'profile-checkpoint-delete',
+      'profile-metadata-delete',
+    ];
 
-    await expect(repository.deleteProfileData?.('alpha', losesOwnershipAfterDeletes))
-      .resolves.toEqual({ stored: false, reason: 'ownership_conflict' });
+    try {
+      await expect(repository.deleteProfileData?.(
+        'alpha',
+        denyAfterSuccesses(requests.successes, expectedSuccesses),
+      )).resolves.toEqual({ stored: false, reason: 'ownership_conflict' });
+    } finally {
+      requests.restore();
+    }
+
+    expect(requests.successes).toEqual(expectedSuccesses);
     await expect(repository.getHead('alpha')).resolves.toEqual(existingHead);
     await expect(repository.listCheckpoints('alpha')).resolves.toEqual([existingCheckpoint]);
     await expect(repository.getMetadata('profile-alpha-marker')).resolves.toEqual(existingMetadata);
@@ -449,31 +569,35 @@ describe('transactional recovery database', () => {
 
   it('rolls back a completed retention prune when ownership is lost before commit', async () => {
     const now = new Date(2026, 7, 25, 12, 0, 0, 0).getTime();
-    let checkpointDeleteCompleted = false;
-    let checkpointDeleteRequests = 0;
     const repository = await openRecoveryDatabase({
       databaseName: uniqueDbName(),
       now: () => now,
-      transactionAdapter: {
-        beforeRequest: (operation) => {
-          if (operation !== 'delete-checkpoint') return;
-          checkpointDeleteRequests += 1;
-          checkpointDeleteCompleted = true;
-        },
-      },
     });
     openedRepositories.push(repository);
     for (let revision = 1; revision <= 6; revision += 1) {
       await expect(repository.putCheckpoint(checkpoint(revision, now + revision), allowWrite))
         .resolves.toEqual({ stored: true });
     }
-    const authorizeWrite = () => checkpointDeleteCompleted
-      ? { ok: false as const, reason: 'ownership_conflict' as const }
-      : { ok: true as const };
+    const requests = observeRequestSuccesses((method, storeName, input) => (
+      method === 'delete'
+      && storeName === 'checkpoints'
+      && Array.isArray(input)
+      && input[0] === 'alpha'
+      && input[1] === 1
+        ? 'prune-checkpoint-delete'
+        : null
+    ));
 
-    await expect(repository.putCheckpoint(checkpoint(7, now + 7), authorizeWrite))
-      .resolves.toEqual({ stored: true, pruneFailure: 'ownership_conflict' });
-    expect(checkpointDeleteRequests).toBe(1);
+    try {
+      await expect(repository.putCheckpoint(
+        checkpoint(7, now + 7),
+        denyAfterSuccesses(requests.successes, ['prune-checkpoint-delete']),
+      )).resolves.toEqual({ stored: true, pruneFailure: 'ownership_conflict' });
+    } finally {
+      requests.restore();
+    }
+
+    expect(requests.successes).toEqual(['prune-checkpoint-delete']);
     await expect(repository.listCheckpoints('alpha')).resolves.toEqual(
       Array.from({ length: 7 }, (_, index) => checkpoint(7 - index, now + 7 - index)),
     );

@@ -144,3 +144,122 @@ Tracked implementation/test scope is limited to:
 
 No push, pull request, merge to `main`, deployment, or release was performed.
 The existing `codex/crash-safe-save-recovery` worktree and branch are preserved.
+
+---
+
+## Final Review Fix Round 2 — Deterministic Post-Success Regressions
+
+Starting HEAD: `0186a6fb75b7619620072a6db0c94e0ba0906a4b`.
+
+### Reviewer finding
+
+The round-1 rollback regressions changed their ownership state from
+`transactionAdapter.beforeRequest`. That proved a request was about to be
+issued, but the test names called the request completed without observing its
+actual `success` event. The head-readback matrix also covered only missing,
+stale-revision, and checksum mismatch cases.
+
+### Test correction
+
+The round-2 harness wraps the standard `IDBObjectStore.get`, `put`, and
+`delete` methods only long enough to attach standard `IDBRequest` `success`
+listeners. Authorization remains allowed until every operation-specific
+success label has actually fired. Only then does the next authorization check
+return `ownership_conflict`.
+
+The deterministic boundaries now cover:
+
+- head `put` success followed by exact head-readback `get` success;
+- checkpoint `put` success;
+- metadata `put` success;
+- explicit checkpoint `delete` success;
+- retention-prune checkpoint `delete` success;
+- profile head, checkpoint, and metadata `delete` successes, all observed
+  before final denial.
+
+Each test asserts the complete success-label sequence as well as the typed
+failure and durable rollback state. The tests no longer infer post-request
+timing from authorization call counts or `beforeRequest`.
+
+The exact head-readback matrix now independently corrupts or removes the
+stored record after the original head `put` emits success. It covers:
+
+- missing readback;
+- stale readback;
+- `profileId`;
+- `persistenceRevision`;
+- `runId`;
+- `runRevision`;
+- `capturedAt`;
+- `checksum`;
+- `data`.
+
+The `profileId` case uses real key-path behavior: after the candidate `put`
+succeeds, it deletes the candidate key and writes the mismatched profile key
+before readback. The transaction must abort, preserve the prior `alpha` head,
+and leave no `beta` head.
+
+### Mutation-test RED evidence
+
+After writing the strengthened tests, the round-1 production guards were
+temporarily removed from the working tree: exact head readback plus final
+authorization for head, checkpoint, metadata, checkpoint deletion/prune, and
+profile deletion. No temporary production mutation was committed.
+
+```text
+npx vitest run utils/recoveryDatabase.test.ts
+Test Files  1 failed (1)
+Tests       15 failed | 20 passed (35)
+```
+
+All intended mutations were caught:
+
+- nine missing/stale/per-field head-readback failures;
+- head post-success ownership loss;
+- checkpoint post-success ownership loss;
+- metadata post-success ownership loss;
+- explicit checkpoint-delete post-success ownership loss;
+- retention-prune delete post-success ownership loss;
+- profile head/checkpoint/metadata delete success followed by ownership loss.
+
+The production file was then restored exactly. `git diff --exit-code --
+utils/recoveryDatabase.ts` returned exit 0.
+
+### GREEN and gate evidence
+
+```text
+npx vitest run utils/recoveryDatabase.test.ts
+Test Files  1 passed (1)
+Tests       35 passed (35)
+
+npx vitest run utils/recoveryDatabase.test.ts utils/profileMetadata.test.ts utils/profileMetadataTransaction.test.ts utils/profileStorage.test.ts utils/profileWriterLease.test.ts utils/saveCoordinator.test.ts utils/saveIntegrity.test.ts utils/saveRecovery.test.ts utils/saveRecoveryIntegration.test.ts utils/saveSchema.test.ts
+Test Files  10 passed (10)
+Tests       363 passed (363)
+
+npm run typecheck
+exit 0
+
+npm run release:verify
+exit 0
+What's New: 27 player-facing files verified
+Main suite: 250 files, 3,167 tests passed
+Quest requirements: 1 file, 27 tests passed
+Quest routes: 1 file, 7 tests passed
+Content baseline/consistency/migrations/CA: 4 files, 62 tests passed
+Combined release-gate Vitest total: 256 files, 3,263 tests passed
+Diary source: 492 official rows, 485 classified existing rows, 0 unresolved
+Quest source: 191 quests, 19 miniquests, 210 unique IDs/revisions
+Walkthrough source: 8 reviewed source quest records
+Production build: 2,693 modules transformed
+Model manifest: 59 models, generated file unchanged
+
+npm run build
+exit 0
+2,693 modules transformed
+59-model manifest generated with no tracked diff
+```
+
+Round 2 changes only `utils/recoveryDatabase.test.ts` and this report. No
+production file remains modified. The known non-failing repository warnings
+listed above were unchanged. No push, pull request, merge, deployment, or
+release was performed.
