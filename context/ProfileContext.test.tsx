@@ -283,6 +283,30 @@ describe('ProfileProvider validated async state', () => {
     await act(async () => { await cleanupAttempt.promise; });
   });
 
+  it('installs a same-tab committed tombstone before delete cleanup settles', async () => {
+    const cleanupAttempt = task6Deferred<ProfileTransactionResult>();
+    const tombstone = pendingCleanupMetadata({ revision: 1 });
+    const finalized = { ...tombstone, revision: 2, deletions: [] };
+    vi.spyOn(ProfileTransactions, 'mutateProfileMetadata').mockImplementationOnce(async (deps) => {
+      deps.onProfileDeletionCommitted?.(tombstone);
+      return cleanupAttempt.promise;
+    });
+    const rendered = renderTask6Profiles();
+    await settleTask6Initialization();
+
+    let deletion!: Promise<ProfileTransactionResult>;
+    act(() => { deletion = rendered.current().deleteProfile('target'); });
+    await act(async () => { await Promise.resolve(); });
+
+    expect(rendered.current().profiles.map(profile => profile.id)).toEqual(['other']);
+    expect(rendered.current().pendingDeletionCount).toBe(1);
+
+    cleanupAttempt.resolve({ ok: true, metadata: finalized, notice: null });
+    await act(async () => { await deletion; });
+    expect(rendered.current().profiles.map(profile => profile.id)).toEqual(['other']);
+    expect(rendered.current().pendingDeletionCount).toBe(0);
+  });
+
   it('serializes intents and queues one relevant storage-event retry behind the active worker', async () => {
     const tombstone = pendingCleanupMetadata({
       deletions: [
@@ -340,7 +364,7 @@ describe('ProfileProvider validated async state', () => {
     ]);
   });
 
-  it('bounds continuous storage-event noise to one queued cleanup pass', async () => {
+  it('durably queues storage-event noise received during pass two without a tight loop', async () => {
     const tombstone = pendingCleanupMetadata();
     const first = task6Deferred<Awaited<ReturnType<typeof ProfileTransactions.resumeProfileDeletion>>>();
     const second = task6Deferred<Awaited<ReturnType<typeof ProfileTransactions.resumeProfileDeletion>>>();
@@ -405,6 +429,12 @@ describe('ProfileProvider validated async state', () => {
     });
 
     expect(resume).toHaveBeenCalledTimes(2);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+
+    expect(resume).toHaveBeenCalledTimes(3);
   });
 
   it('defers event-triggered cleanup until an active profile mutation settles', async () => {
@@ -450,7 +480,48 @@ describe('ProfileProvider validated async state', () => {
     expect(resume).toHaveBeenCalledTimes(2);
   });
 
-  it('starts cleanup when deferred remote tombstone metadata is installed at eviction registration', async () => {
+  it('resumes queued cleanup after a profile mutation fails while intents remain', async () => {
+    const tombstone = pendingCleanupMetadata();
+    storage.values.set(PROFILES_KEY, JSON.stringify(tombstone));
+    storage.values.set(PROFILE_METADATA_BACKUP_KEY, JSON.stringify(tombstone));
+    const resume = vi.spyOn(ProfileTransactions, 'resumeProfileDeletion').mockResolvedValue({
+      status: 'cleanup_pending',
+      reason: 'busy',
+      metadata: tombstone,
+      removedEntries: 0,
+      removalFailures: 0,
+      rollbackFailures: 0,
+    });
+    const rendered = renderTask6Profiles();
+    await settleTask6Initialization();
+    const mutation = task6Deferred<ProfileTransactionResult>();
+    vi.spyOn(ProfileTransactions, 'mutateProfileMetadata').mockReturnValueOnce(mutation.promise);
+    let rename!: Promise<ProfileTransactionResult>;
+    act(() => { rename = rendered.current().renameProfile('other', 'Still pending'); });
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: PROFILE_METADATA_LOCK_KEY,
+        newValue: null,
+      }));
+    });
+    await act(async () => { await Promise.resolve(); });
+    expect(resume).toHaveBeenCalledOnce();
+
+    mutation.resolve({
+      ok: false,
+      reason: 'storage_unavailable',
+      metadata: tombstone,
+      notice: null,
+    });
+    await act(async () => {
+      await rename;
+      await Promise.resolve();
+    });
+
+    expect(resume).toHaveBeenCalledTimes(2);
+  });
+
+  it('installs a remote tombstone immediately and queues teardown until eviction registration', async () => {
     const rendered = renderTask6Profiles();
     await settleTask6Initialization();
     const remoteTombstone = pendingCleanupMetadata({ revision: 9 });
@@ -472,14 +543,18 @@ describe('ProfileProvider validated async state', () => {
       }));
     });
     await act(async () => { await Promise.resolve(); });
-    expect(resume).not.toHaveBeenCalled();
-    expect(rendered.current().activeProfileId).toBe('target');
+    expect(rendered.current().profiles.map(profile => profile.id)).toEqual(['other']);
+    expect(rendered.current().activeProfileId).toBe('other');
+    expect(rendered.current().pendingDeletionCount).toBe(1);
+    expect(resume).toHaveBeenCalledOnce();
 
+    const evictions: string[] = [];
     act(() => {
-      rendered.current().registerProfileEvictionHandler(() => undefined);
+      rendered.current().registerProfileEvictionHandler(profileId => { evictions.push(profileId); });
     });
     await act(async () => { await Promise.resolve(); });
 
+    expect(evictions).toEqual(['target']);
     expect(rendered.current().profiles.map(profile => profile.id)).toEqual(['other']);
     expect(rendered.current().activeProfileId).toBe('other');
     expect(rendered.current().pendingDeletionCount).toBe(1);
@@ -1143,7 +1218,7 @@ describe('ProfileProvider validated async state', () => {
     unsubscribe();
   });
 
-  it('defers remote removal until registration and applies only the newest deferred revision', async () => {
+  it('installs remote removal without a mounted bridge and later delivers the queued eviction', async () => {
     const rendered = renderTask6Profiles();
     await settleTask6Initialization();
     const staleRemoval: ProfileMetadata = {
@@ -1172,8 +1247,8 @@ describe('ProfileProvider validated async state', () => {
       }));
     });
 
-    expect(rendered.current().activeProfileId).toBe('target');
-    expect(rendered.current().profiles).toEqual(metadata.profiles);
+    expect(rendered.current().activeProfileId).toBe('other');
+    expect(rendered.current().profiles).toEqual(newestRemoval.profiles);
 
     const calls: Array<{ profileId: string; activeDuringEviction: string }> = [];
     let unsubscribe!: () => void;
@@ -1188,7 +1263,7 @@ describe('ProfileProvider validated async state', () => {
 
     expect(calls).toEqual([{
       profileId: 'target',
-      activeDuringEviction: 'target',
+      activeDuringEviction: 'other',
     }]);
     expect(rendered.current().activeProfileId).toBe('other');
     expect(rendered.current().profiles).toEqual(newestRemoval.profiles);
@@ -1196,7 +1271,7 @@ describe('ProfileProvider validated async state', () => {
     unsubscribe();
   });
 
-  it('returns to deferring removals after the registered eviction handler unsubscribes', async () => {
+  it('keeps remote removals hidden after the registered eviction handler unsubscribes', async () => {
     const rendered = renderTask6Profiles();
     await settleTask6Initialization();
     const calls: string[] = [];
@@ -1220,8 +1295,8 @@ describe('ProfileProvider validated async state', () => {
     });
 
     expect(calls).toEqual([]);
-    expect(rendered.current().activeProfileId).toBe('target');
-    expect(rendered.current().profiles).toEqual(metadata.profiles);
+    expect(rendered.current().activeProfileId).toBe('other');
+    expect(rendered.current().profiles).toEqual(incoming.profiles);
   });
 
   it('does not let an older mutation completion overwrite a newer validated event', async () => {

@@ -49,6 +49,7 @@ export interface ProfileTransactionDependencies {
   validateGameSave: GameSaveValidator;
   createProfileId: () => string;
   createDeletionId?: () => string;
+  onProfileDeletionCommitted?: (metadata: ProfileMetadata) => void;
   shouldAbort?: () => boolean;
   openRecoveryRepository?: () => Promise<RecoveryRepository>;
 }
@@ -1152,6 +1153,11 @@ export const mutateProfileMetadata = async (
   if (mutation.type === 'delete') {
     const committed = await commitProfileDeletionTombstone(mutation.profileId, deps);
     if (!committed.ok) return committed;
+    try {
+      deps.onProfileDeletionCommitted?.(committed.metadata);
+    } catch {
+      // A consumer notification cannot roll back or stall a durable tombstone.
+    }
     const committedDetails = committed.deleteDetails;
     if (committedDetails === undefined
       || !('deletionId' in committedDetails)

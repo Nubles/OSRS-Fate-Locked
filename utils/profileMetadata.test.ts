@@ -611,6 +611,46 @@ describe('profile metadata recovery regressions', () => {
     expect(result.metadata.profiles.some(profile => profile.id === 'retired')).toBe(false);
   });
 
+  it('fails closed when two recoverable copies contain 200 unique deletion intents', () => {
+    const deletion = (index: number) => ({
+      version: 1 as const,
+      deletionId: `delete-retired-${index}`,
+      profileId: `retired-${index}`,
+      requestedAt: 1200 + index,
+      phase: 'pending_cleanup' as const,
+    });
+    const raw = (start: number) => JSON.stringify({
+      version: 2,
+      revision: start,
+      profiles: 'corrupt',
+      activeProfileId: `retired-${start}`,
+      deletions: Array.from({ length: 100 }, (_, offset) => deletion(start + offset)),
+    });
+    const result = resolveProfileMetadata(recoveryInput({
+      primary: raw(0),
+      backup: raw(100),
+      storage: recoveryStorage([
+        ['FATE_PROFILE_retired-0', 'valid:private-primary'],
+        ['FATE_PROFILE_retired-199', 'valid:private-backup'],
+        ['FATE_PROFILE_safe', 'valid:safe'],
+      ]),
+    }));
+
+    expect(result).toMatchObject({
+      mode: 'read_only',
+      metadata: {
+        profiles: [{ id: 'safe' }],
+        activeProfileId: 'safe',
+      },
+      repair: null,
+      notice: { kind: 'read_only' },
+    });
+    expect(result.metadata.deletions).toHaveLength(100);
+    expect(result.metadata.profiles.map(profile => profile.id)).not.toContain('retired-0');
+    expect(result.metadata.profiles.map(profile => profile.id)).not.toContain('retired-199');
+    expect(parseProfileMetadata(JSON.stringify(result.metadata))).toMatchObject({ status: 'current' });
+  });
+
   it('never partially trusts a malformed deletion-intent array during reconstruction', () => {
     const result = resolveProfileMetadata(recoveryInput({
       primary: JSON.stringify({

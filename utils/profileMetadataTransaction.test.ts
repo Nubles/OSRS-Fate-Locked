@@ -1878,6 +1878,37 @@ describe('durable profile deletion tombstones', () => {
     expect(storage.values.get('FATE_PROFILE_beta')).toBe('valid:beta');
   });
 
+  it('notifies the caller immediately after the tombstone commit while cleanup is still pending', async () => {
+    const previous = deletableMetadata();
+    const storage = createStorage([[PROFILES_KEY, JSON.stringify(previous)]]);
+    const repository = deferred<RecoveryRepository>();
+    const observed: ProfileMetadata[] = [];
+    let settled = false;
+    const deletion = mutateProfileMetadata({
+      ...createDependencies(storage),
+      createDeletionId: () => 'delete-alpha-1',
+      onProfileDeletionCommitted: committed => {
+        observed.push(committed);
+        expect(JSON.parse(storage.values.get(PROFILES_KEY) ?? 'null')).toEqual(committed);
+      },
+      openRecoveryRepository: () => repository.promise,
+    }, { type: 'delete', profileId: 'alpha' }).finally(() => { settled = true; });
+
+    await vi.waitFor(() => expect(observed).toHaveLength(1));
+
+    expect(settled).toBe(false);
+    expect(observed[0].profiles.map(profile => profile.id)).toEqual(['beta']);
+    expect(observed[0].deletions).toEqual([
+      expect.objectContaining({ profileId: 'alpha', phase: 'pending_cleanup' }),
+    ]);
+
+    repository.resolve({
+      deleteProfileData: vi.fn(async () => ({ stored: false, reason: 'storage_unavailable' })),
+      close: vi.fn(),
+    } as unknown as RecoveryRepository);
+    await deletion;
+  });
+
   it('changes no profile-owned or IndexedDB data when the tombstone primary cannot be verified', async () => {
     const previous = deletableMetadata();
     const raw = JSON.stringify(previous);
@@ -1892,10 +1923,12 @@ describe('durable profile deletion tombstones', () => {
       setItem(key, value);
     };
     const openRecoveryRepository = vi.fn();
+    const onProfileDeletionCommitted = vi.fn();
 
     await expect(mutateProfileMetadata({
       ...createDependencies(storage),
       createDeletionId: () => 'delete-alpha-1',
+      onProfileDeletionCommitted,
       openRecoveryRepository,
     }, { type: 'delete', profileId: 'alpha' })).resolves.toMatchObject({
       ok: false,
@@ -1909,6 +1942,7 @@ describe('durable profile deletion tombstones', () => {
         deletionId: null,
       },
     });
+    expect(onProfileDeletionCommitted).not.toHaveBeenCalled();
     expect(openRecoveryRepository).not.toHaveBeenCalled();
     expect(storage.values.get(PROFILES_KEY)).toBe(raw);
     expect(storage.values.get('FATE_PROFILE_alpha')).toBe('valid:alpha');

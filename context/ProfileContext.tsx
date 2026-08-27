@@ -84,6 +84,11 @@ type CleanupWorkerSummary = {
   reason: ProfileDeletionCleanupFailureReason | null;
 };
 
+type CleanupWaiter = {
+  generation: number;
+  resolve: (summary: CleanupWorkerSummary) => void;
+};
+
 const generateId = (): string => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
@@ -116,6 +121,7 @@ const browserStorage = (): ProfileTransactionDependencies['storage'] => {
 
 const createDependencies = (
   shouldAbort: () => boolean,
+  onProfileDeletionCommitted: (metadata: ProfileMetadata) => void,
 ): ProfileTransactionDependencies => ({
   storage: browserStorage(),
   ownerId: getPageOwnerId(),
@@ -123,6 +129,7 @@ const createDependencies = (
   wait: milliseconds => new Promise(resolve => window.setTimeout(resolve, milliseconds)),
   validateGameSave: raw => parseAndMigrateSave(raw, initialState).ok,
   createProfileId: generateId,
+  onProfileDeletionCommitted,
   shouldAbort,
   ...(typeof indexedDB === 'undefined'
     ? {}
@@ -218,8 +225,14 @@ const ProfileContext = createContext<ProfileContextType | null>(null);
 
 export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const operationAbortedRef = useRef(false);
+  const committedDeletionCallbackRef = useRef<(metadata: ProfileMetadata) => void>(() => undefined);
   const dependenciesRef = useRef<ProfileTransactionDependencies | null>(null);
-  if (dependenciesRef.current === null) dependenciesRef.current = createDependencies(() => operationAbortedRef.current);
+  if (dependenciesRef.current === null) {
+    dependenciesRef.current = createDependencies(
+      () => operationAbortedRef.current,
+      committed => committedDeletionCallbackRef.current(committed),
+    );
+  }
   const dependencies = dependenciesRef.current;
 
   const [metadata, setMetadata] = useState<ProfileMetadata | null>(null);
@@ -235,13 +248,17 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const readOnlyReasonRef = useRef<ProfileMutationFailure>('unsupported_metadata');
   const [recentlyCreatedId, setRecentlyCreatedId] = useState<string | null>(null);
   const evictionHandlerRef = useRef<((profileId: string) => void) | null>(null);
-  const deferredIncomingRef = useRef<ProfileMetadata | null>(null);
+  const queuedEvictionIdsRef = useRef<string[]>([]);
   const mountedRef = useRef(false);
   const busyRereadArmedRef = useRef(false);
   const busyRereadTimerRef = useRef<number | null>(null);
   const busyRereadCallbackRef = useRef<() => void>(() => undefined);
-  const cleanupRequestedRef = useRef(false);
+  const cleanupRequestedGenerationRef = useRef(0);
+  const cleanupProcessedGenerationRef = useRef(0);
+  const cleanupWaitersRef = useRef<CleanupWaiter[]>([]);
   const cleanupWorkerRef = useRef<Promise<CleanupWorkerSummary> | null>(null);
+  const cleanupRescheduleTimerRef = useRef<number | null>(null);
+  const cleanupWorkerStarterRef = useRef<() => void>(() => undefined);
 
   const clearBusyRereadTimer = useCallback(() => {
     if (busyRereadTimerRef.current === null) return;
@@ -271,6 +288,40 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return true;
   }, []);
 
+  const queueOrRunEviction = useCallback((profileId: string) => {
+    const evictionHandler = evictionHandlerRef.current;
+    if (evictionHandler !== null) {
+      evictionHandler(profileId);
+      return;
+    }
+    if (!queuedEvictionIdsRef.current.includes(profileId)) {
+      queuedEvictionIdsRef.current.push(profileId);
+    }
+  }, []);
+
+  committedDeletionCallbackRef.current = committed => {
+    if (
+      !mountedRef.current
+      || startupTerminalFailureRef.current !== null
+      || metadataReadOnlyRef.current
+    ) return;
+    const current = metadataRef.current;
+    if (current === null || committed.revision < current.revision) return;
+    const keepsLocalSelection = committed.profiles.some(
+      profile => profile.id === current.activeProfileId,
+    );
+    if (!keepsLocalSelection) queueOrRunEviction(current.activeProfileId);
+    const candidate = {
+      ...committed,
+      activeProfileId: keepsLocalSelection ? current.activeProfileId : committed.activeProfileId,
+    };
+    if (installMetadata(candidate)) {
+      for (const intent of committed.deletions) {
+        discardPendingSave(profileBaseKey(intent.profileId));
+      }
+    }
+  };
+
   const enterStartupTerminal = useCallback((
     reason: ProfileStartupTerminalFailure,
     noticeKind: Extract<ProfileRecoveryNotice['kind'], 'read_only' | 'unsupported'>,
@@ -279,7 +330,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setStartupTerminalFailure(reason);
     busyRereadArmedRef.current = false;
     clearBusyRereadTimer();
-    deferredIncomingRef.current = null;
+    queuedEvictionIdsRef.current = [];
     metadataReadOnlyRef.current = true;
     readOnlyReasonRef.current = reason;
     setMetadataReadOnly(true);
@@ -332,7 +383,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   ) => {
     const current = metadataRef.current;
     if (current === null) {
-      deferredIncomingRef.current = null;
       installMetadata(incoming);
       if (notice !== null) setRecoveryNotice(notice);
       return;
@@ -341,29 +391,18 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (incoming.revision < current.revision) return;
 
     if (incoming.profiles.some(profile => profile.id === current.activeProfileId)) {
-      deferredIncomingRef.current = null;
       installMetadata({ ...incoming, activeProfileId: current.activeProfileId });
       if (notice !== null) setRecoveryNotice(notice);
       return;
     }
 
-    const evictionHandler = evictionHandlerRef.current;
-    if (evictionHandler === null) {
-      if (
-        deferredIncomingRef.current === null
-        || incoming.revision > deferredIncomingRef.current.revision
-      ) deferredIncomingRef.current = incoming;
-      return;
-    }
-
-    deferredIncomingRef.current = null;
-    evictionHandler(current.activeProfileId);
+    queueOrRunEviction(current.activeProfileId);
     const replacement = incoming.profiles.some(profile => profile.id === incoming.activeProfileId)
       ? incoming.activeProfileId
       : incoming.profiles[0].id;
     installMetadata({ ...incoming, activeProfileId: replacement });
     setRecoveryNotice(emptyNotice('remote_removal'));
-  }, [installMetadata]);
+  }, [installMetadata, queueOrRunEviction]);
 
   const runCleanupPass = useCallback(async (): Promise<CleanupWorkerSummary> => {
     const intents = [...(metadataRef.current?.deletions ?? [])];
@@ -409,10 +448,26 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return { pendingCount, reason };
   }, [dependencies, mergeIncomingMetadata]);
 
-  const scheduleDeletionCleanup = useCallback((): Promise<CleanupWorkerSummary> => {
-    cleanupRequestedRef.current = true;
-    const activeWorker = cleanupWorkerRef.current;
-    if (activeWorker !== null) return activeWorker;
+  const settleCleanupWaiters = useCallback((summary: CleanupWorkerSummary) => {
+    const pending: CleanupWaiter[] = [];
+    for (const waiter of cleanupWaitersRef.current) {
+      if (waiter.generation <= cleanupProcessedGenerationRef.current) waiter.resolve(summary);
+      else pending.push(waiter);
+    }
+    cleanupWaitersRef.current = pending;
+  }, []);
+
+  const ensureCleanupWorker = useCallback(() => {
+    if (
+      !mountedRef.current
+      || cleanupWorkerRef.current !== null
+      || cleanupProcessedGenerationRef.current >= cleanupRequestedGenerationRef.current
+      || pendingActionRef.current !== null
+    ) return;
+    if (cleanupRescheduleTimerRef.current !== null) {
+      window.clearTimeout(cleanupRescheduleTimerRef.current);
+      cleanupRescheduleTimerRef.current = null;
+    }
 
     const worker = (async (): Promise<CleanupWorkerSummary> => {
       let summary: CleanupWorkerSummary = {
@@ -420,33 +475,59 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
         reason: null,
       };
       let remainingPasses = 2;
-      while (mountedRef.current && cleanupRequestedRef.current && remainingPasses > 0) {
-        if (pendingActionRef.current !== null) {
-          summary = {
-            pendingCount: metadataRef.current?.deletions.length ?? 0,
-            reason: 'busy',
-          };
-          break;
-        }
-        cleanupRequestedRef.current = false;
+      while (
+        mountedRef.current
+        && pendingActionRef.current === null
+        && cleanupProcessedGenerationRef.current < cleanupRequestedGenerationRef.current
+        && remainingPasses > 0
+      ) {
+        const attemptedGeneration = cleanupRequestedGenerationRef.current;
         remainingPasses -= 1;
         operationAbortedRef.current = false;
         summary = await runCleanupPass();
+        if (!mountedRef.current) break;
+        cleanupProcessedGenerationRef.current = Math.max(
+          cleanupProcessedGenerationRef.current,
+          attemptedGeneration,
+        );
+        settleCleanupWaiters(summary);
       }
-      cleanupRequestedRef.current = false;
       return summary;
     })();
     cleanupWorkerRef.current = worker;
-    void worker.then(
-      () => {
-        if (cleanupWorkerRef.current === worker) cleanupWorkerRef.current = null;
-      },
-      () => {
-        if (cleanupWorkerRef.current === worker) cleanupWorkerRef.current = null;
-      },
-    );
-    return worker;
-  }, [runCleanupPass]);
+    const finish = (summary: CleanupWorkerSummary) => {
+      if (cleanupWorkerRef.current !== worker) return;
+      cleanupWorkerRef.current = null;
+      if (
+        mountedRef.current
+        && pendingActionRef.current === null
+        && cleanupProcessedGenerationRef.current < cleanupRequestedGenerationRef.current
+        && cleanupRescheduleTimerRef.current === null
+      ) {
+        cleanupRescheduleTimerRef.current = window.setTimeout(() => {
+          cleanupRescheduleTimerRef.current = null;
+          cleanupWorkerStarterRef.current();
+        }, 0);
+      }
+      settleCleanupWaiters(summary);
+    };
+    void worker.then(finish, () => finish({
+      pendingCount: metadataRef.current?.deletions.length ?? 0,
+      reason: 'storage_unavailable',
+    }));
+  }, [runCleanupPass, settleCleanupWaiters]);
+
+  cleanupWorkerStarterRef.current = ensureCleanupWorker;
+
+  const scheduleDeletionCleanup = useCallback((): Promise<CleanupWorkerSummary> => {
+    const generation = cleanupRequestedGenerationRef.current + 1;
+    cleanupRequestedGenerationRef.current = generation;
+    const completion = new Promise<CleanupWorkerSummary>(resolve => {
+      cleanupWaitersRef.current.push({ generation, resolve });
+    });
+    cleanupWorkerStarterRef.current();
+    return completion;
+  }, []);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -468,7 +549,18 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       cancelled = true;
       mountedRef.current = false;
       operationAbortedRef.current = true;
-      cleanupRequestedRef.current = false;
+      if (cleanupRescheduleTimerRef.current !== null) {
+        window.clearTimeout(cleanupRescheduleTimerRef.current);
+        cleanupRescheduleTimerRef.current = null;
+      }
+      cleanupProcessedGenerationRef.current = cleanupRequestedGenerationRef.current;
+      const summary = {
+        pendingCount: metadataRef.current?.deletions.length ?? 0,
+        reason: null,
+      };
+      for (const waiter of cleanupWaitersRef.current) waiter.resolve(summary);
+      cleanupWaitersRef.current = [];
+      queuedEvictionIdsRef.current = [];
       busyRereadArmedRef.current = false;
       clearBusyRereadTimer();
     };
@@ -561,7 +653,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
     busyRereadArmedRef.current = false;
     clearBusyRereadTimer();
-    deferredIncomingRef.current = null;
+    queuedEvictionIdsRef.current = [];
     metadataReadOnlyRef.current = true;
     readOnlyReasonRef.current = reason;
     setMetadataReadOnly(true);
@@ -588,11 +680,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
           if (parsed.metadata.deletions.length > 0) void scheduleDeletionCleanup();
           return;
         }
-        const newestSeenRevision = Math.max(
-          current.revision,
-          deferredIncomingRef.current?.revision ?? -1,
-        );
-        if (parsed.metadata.revision <= newestSeenRevision) {
+        if (parsed.metadata.revision <= current.revision) {
           if (parsed.metadata.deletions.length > 0) void scheduleDeletionCleanup();
           return;
         }
@@ -641,7 +729,15 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     setPending(action);
     setMutationFailure(null);
-    let scheduleCleanupAfterMutation = false;
+    const finishCleanupScheduling = () => {
+      setPending(null);
+      if (metadataReadOnlyRef.current) return;
+      if ((metadataRef.current?.deletions.length ?? 0) > 0) {
+        void scheduleDeletionCleanup();
+      } else {
+        cleanupWorkerStarterRef.current();
+      }
+    };
     let result: ProfileTransactionResult;
     try {
       operationAbortedRef.current = false;
@@ -673,13 +769,12 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const candidate = { ...result.metadata, activeProfileId };
       if (!installMetadata(candidate)) {
         setMutationFailure('busy');
-        setPending(null);
+        finishCleanupScheduling();
         return failedResult('busy', metadataRef.current, recoveryNotice);
       }
       if (action === 'delete' && mutation.type === 'delete') {
         discardPendingSave(profileBaseKey(mutation.profileId));
       }
-      scheduleCleanupAfterMutation = candidate.deletions.length > 0;
       if (result.notice !== null) setRecoveryNotice(result.notice);
       if (action === 'create' && mutation.type === 'create') {
         setRecentlyCreatedId(mutation.profile.id);
@@ -719,8 +814,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (failureNotice !== null) setRecoveryNotice(failureNotice);
       busyRereadArmedRef.current = result.reason === 'busy';
     }
-    setPending(null);
-    if (scheduleCleanupAfterMutation) void scheduleDeletionCleanup();
+    finishCleanupScheduling();
     return result;
   }, [
     dependencies,
@@ -781,19 +875,13 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     handler: (profileId: string) => void,
   ): (() => void) => {
     evictionHandlerRef.current = handler;
-    const deferred = deferredIncomingRef.current;
-    const current = metadataRef.current;
-    if (deferred !== null) {
-      deferredIncomingRef.current = null;
-      if (current !== null && deferred.revision > current.revision) {
-        mergeIncomingMetadata(deferred, null);
-        if (deferred.deletions.length > 0) void scheduleDeletionCleanup();
-      }
-    }
+    const queued = queuedEvictionIdsRef.current;
+    queuedEvictionIdsRef.current = [];
+    for (const profileId of queued) handler(profileId);
     return () => {
       if (evictionHandlerRef.current === handler) evictionHandlerRef.current = null;
     };
-  }, [mergeIncomingMetadata, scheduleDeletionCleanup]);
+  }, []);
 
   const value = useMemo<ProfileContextType | null>(() => {
     if (metadata === null) return null;

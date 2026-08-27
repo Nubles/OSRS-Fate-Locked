@@ -12,7 +12,12 @@ import { DISCORD_INVITE_URL } from './constants';
 import { initialState } from './context/GameContext';
 import { checksumSave } from './utils/saveIntegrity';
 import { resolveSaveRecovery, type SaveRecoveryInput } from './utils/saveRecovery';
-import type { MirrorMetadata, RecoveryCheckpoint, RecoveryHead } from './utils/recoveryTypes';
+import type {
+  MirrorMetadata,
+  RecoveryCheckpoint,
+  RecoveryHead,
+  RecoveryRepository,
+} from './utils/recoveryTypes';
 import {
   getPendingSave,
   resetPendingSavesForTest,
@@ -39,6 +44,23 @@ let profileBaseKey: (profileId: string) => string;
 let writerLeaseKey: (storageKey: string) => string;
 let changelogStorageKey: string;
 let latestChangelogId: string;
+
+const deferred = <T,>() => {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>(settle => { resolve = settle; });
+  return { promise, resolve };
+};
+
+const emptyRepository = (): RecoveryRepository => ({
+  getHead: vi.fn(async () => null),
+  putHead: vi.fn(async () => ({ stored: true as const })),
+  listCheckpoints: vi.fn(async () => []),
+  putCheckpoint: vi.fn(async () => ({ stored: true as const })),
+  deleteCheckpoints: vi.fn(async () => ({ stored: true as const })),
+  getMetadata: vi.fn(async () => null),
+  putMetadata: vi.fn(async () => ({ stored: true as const })),
+  close: vi.fn(),
+});
 
 beforeEach(async () => {
   values.clear();
@@ -561,6 +583,75 @@ describe('App changelog lifecycle', () => {
     const safeUnload = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(safeUnload);
     expect(safeUnload.defaultPrevented).toBe(false);
+  }, 15_000);
+
+  it('hides a remote tombstone while the old SaveBootstrap is delayed and its bridge never mounts', async () => {
+    const replacementId = 'delayed-bootstrap-replacement';
+    const targetKey = profileBaseKey(PROFILE_ID);
+    const replacementKey = profileBaseKey(replacementId);
+    const readyState = JSON.parse(seedOnboardingRun());
+    readyState.hasSeenOnboarding = true;
+    const initialRegistry = {
+      version: 2,
+      revision: 0,
+      profiles: [
+        { id: PROFILE_ID, name: 'Lifecycle test', createdAt: 1 },
+        { id: replacementId, name: 'Replacement', createdAt: 2 },
+      ],
+      activeProfileId: PROFILE_ID,
+      deletions: [],
+    };
+    values.clear();
+    storage.setItem('FATE_PROFILES', JSON.stringify(initialRegistry));
+    storage.setItem(targetKey, JSON.stringify(readyState));
+    storage.setItem(replacementKey, JSON.stringify(readyState));
+    storage.setItem(changelogStorageKey, latestChangelogId);
+    const targetRepository = deferred<RecoveryRepository>();
+    const replacementRepository = deferred<RecoveryRepository>();
+    const { productionSaveBootstrapDependencies } = await import('./components/SaveBootstrap');
+    const openRepository = vi.spyOn(productionSaveBootstrapDependencies, 'openRepository')
+      .mockImplementation(profileId => (
+        profileId === PROFILE_ID ? targetRepository.promise : replacementRepository.promise
+      ));
+    render(<App />);
+
+    await screen.findByText('Checking saved progress…');
+    await waitFor(() => expect(openRepository).toHaveBeenCalledWith(PROFILE_ID));
+
+    const incoming = {
+      version: 2,
+      revision: 1,
+      profiles: [{ id: replacementId, name: 'Replacement', createdAt: 2 }],
+      activeProfileId: replacementId,
+      deletions: [{
+        version: 1,
+        deletionId: 'delete-delayed-bootstrap-1',
+        profileId: PROFILE_ID,
+        requestedAt: 10,
+        phase: 'pending_cleanup',
+      }],
+    };
+    const incomingRaw = JSON.stringify(incoming);
+    storage.setItem('FATE_PROFILES', incomingRaw);
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'FATE_PROFILES',
+        oldValue: JSON.stringify(initialRegistry),
+        newValue: incomingRaw,
+      }));
+    });
+
+    await waitFor(() => expect(openRepository).toHaveBeenCalledWith(replacementId));
+    expect(storage.getItem('FATE_PROFILES')).toBe(incomingRaw);
+    expect(storage.getItem(targetKey)).toBe(JSON.stringify(readyState));
+
+    replacementRepository.resolve(emptyRepository());
+    expect(await screen.findByRole('button', {
+      name: 'Switch profile. Current profile: Replacement',
+    })).toBeTruthy();
+    expect(screen.queryByRole('button', {
+      name: 'Switch profile. Current profile: Lifecycle test',
+    })).toBeNull();
   }, 15_000);
 
   it('arbitrates the startup compatibility matrix across legacy, journal, and corrupt evidence', async () => {

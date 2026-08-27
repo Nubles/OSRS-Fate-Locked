@@ -335,10 +335,17 @@ type RecoveryHints = {
 
 type ReconstructedProfiles = {
   metadata: ProfileMetadata;
+  deletionRecoveryUnsafe: boolean;
   recoveredProfiles: number;
   generatedNames: number;
   unreadableSaves: number;
   overflowSaves: number;
+};
+
+type RecoveryDeletions = {
+  deletions: ProfileDeletionIntentV1[];
+  protectedProfileIds: Set<string>;
+  unsafe: boolean;
 };
 
 const PROFILE_SAVE_KEY = /^FATE_PROFILE_([A-Za-z0-9-]{1,128})$/;
@@ -432,16 +439,17 @@ const recoveryArchive = (
     : { version: 1, capturedAt: now, primary, backup }
 );
 
-const reconstructProfiles = (input: ResolveProfileMetadataInput): ReconstructedProfiles => {
+const reconstructProfiles = (
+  input: ResolveProfileMetadataInput,
+  recoveredDeletions = mergedRecoveryDeletions(input.primary, input.backup),
+): ReconstructedProfiles => {
   const hints = mergedRecoveryHints(input.primary, input.backup);
-  const deletions = mergedRecoveryDeletions(input.primary, input.backup);
-  const tombstonedProfileIds = new Set(deletions.map(intent => intent.profileId));
   const accepted: Array<{ id: string; hint: RecoveryProfileHint | undefined }> = [];
   let unreadableSaves = 0;
   let overflowSaves = 0;
 
   for (const id of discoverProfileSaveIds(input.storage)) {
-    if (tombstonedProfileIds.has(id)) continue;
+    if (recoveredDeletions.protectedProfileIds.has(id)) continue;
     const raw = input.storage.getItem(`FATE_PROFILE_${id}`);
     if (raw === null || !input.validateGameSave(raw)) {
       unreadableSaves += 1;
@@ -484,8 +492,9 @@ const reconstructProfiles = (input: ResolveProfileMetadataInput): ReconstructedP
       revision: 0,
       profiles,
       activeProfileId,
-      deletions,
+      deletions: recoveredDeletions.deletions,
     },
+    deletionRecoveryUnsafe: recoveredDeletions.unsafe,
     recoveredProfiles: profiles.length,
     generatedNames,
     unreadableSaves,
@@ -493,23 +502,24 @@ const reconstructProfiles = (input: ResolveProfileMetadataInput): ReconstructedP
   };
 };
 
-const freshMetadata = (input: ResolveProfileMetadataInput): ProfileMetadata => {
-  const deletions = mergedRecoveryDeletions(input.primary, input.backup);
-  const tombstonedProfileIds = new Set(deletions.map(intent => intent.profileId));
+const freshMetadata = (
+  input: ResolveProfileMetadataInput,
+  recoveredDeletions = mergedRecoveryDeletions(input.primary, input.backup),
+): ProfileMetadata => {
   let id = input.createProfileId();
-  if (tombstonedProfileIds.has(id)) {
+  if (recoveredDeletions.protectedProfileIds.has(id)) {
     let suffix = 0;
     do {
       id = `recovered-${input.now}-${suffix}`;
       suffix += 1;
-    } while (tombstonedProfileIds.has(id));
+    } while (recoveredDeletions.protectedProfileIds.has(id));
   }
   return {
     version: PROFILE_METADATA_VERSION,
     revision: 0,
     profiles: [{ id, name: 'Main Account', createdAt: input.now }],
     activeProfileId: id,
-    deletions,
+    deletions: recoveredDeletions.deletions,
   };
 };
 
@@ -535,20 +545,36 @@ const recoverableDeletionIntents = (raw: string | null): ProfileDeletionIntentV1
 const mergedRecoveryDeletions = (
   primary: string | null,
   backup: string | null,
-): ProfileDeletionIntentV1[] => {
+): RecoveryDeletions => {
   const deletions: ProfileDeletionIntentV1[] = [];
   const deletionIds = new Set<string>();
   const profileIds = new Set<string>();
+  const protectedProfileIds = new Set<string>();
+  let unsafe = false;
   for (const intent of [
     ...recoverableDeletionIntents(primary),
     ...recoverableDeletionIntents(backup),
   ]) {
-    if (deletionIds.has(intent.deletionId) || profileIds.has(intent.profileId)) continue;
+    protectedProfileIds.add(intent.profileId);
+    if (deletionIds.has(intent.deletionId) || profileIds.has(intent.profileId)) {
+      const duplicate = deletions.some(existing => (
+        existing.deletionId === intent.deletionId
+        && existing.profileId === intent.profileId
+        && existing.requestedAt === intent.requestedAt
+        && existing.phase === intent.phase
+      ));
+      if (!duplicate) unsafe = true;
+      continue;
+    }
     deletionIds.add(intent.deletionId);
     profileIds.add(intent.profileId);
+    if (deletions.length >= MAX_RECOVERED_PROFILES) {
+      unsafe = true;
+      continue;
+    }
     deletions.push(intent);
   }
-  return deletions;
+  return { deletions, protectedProfileIds, unsafe };
 };
 
 const readOnlyMetadata = (
@@ -563,8 +589,11 @@ const readOnlyMetadata = (
     return { metadata: backupResult.metadata, notice: recoveryNotice('unsupported') };
   }
 
-  const recovered = reconstructProfiles(input);
-  const metadata = recovered.recoveredProfiles > 0 ? recovered.metadata : freshMetadata(input);
+  const recoveredDeletions = mergedRecoveryDeletions(input.primary, input.backup);
+  const recovered = reconstructProfiles(input, recoveredDeletions);
+  const metadata = recovered.recoveredProfiles > 0
+    ? recovered.metadata
+    : freshMetadata(input, recoveredDeletions);
   return {
     metadata,
     notice: recoveryNotice(
@@ -617,7 +646,25 @@ export const resolveProfileMetadata = (
     };
   }
 
-  const recovered = reconstructProfiles(input);
+  const recoveredDeletions = mergedRecoveryDeletions(input.primary, input.backup);
+  const recovered = reconstructProfiles(input, recoveredDeletions);
+  if (recovered.deletionRecoveryUnsafe) {
+    const metadata = recovered.recoveredProfiles > 0
+      ? recovered.metadata
+      : freshMetadata(input, recoveredDeletions);
+    return {
+      mode: 'read_only',
+      metadata,
+      repair: null,
+      notice: recoveryNotice(
+        'read_only',
+        recovered.recoveredProfiles,
+        recovered.generatedNames,
+        recovered.unreadableSaves,
+        recovered.overflowSaves,
+      ),
+    };
+  }
   if (recovered.recoveredProfiles > 0) {
     const repair: ProfileRepairPlan = {
       cause: 'reconstructed',
@@ -640,7 +687,7 @@ export const resolveProfileMetadata = (
     };
   }
 
-  const metadata = freshMetadata(input);
+  const metadata = freshMetadata(input, recoveredDeletions);
   const repair: ProfileRepairPlan = {
     cause: 'fresh',
     candidate: metadata,
