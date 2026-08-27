@@ -163,6 +163,19 @@ const checkpointRecordsEqual = (
   return true;
 };
 
+const headRecordsEqual = (
+  a: RecoveryHead,
+  b: RecoveryHead,
+): boolean => {
+  const aRecord = a as unknown as Record<string, unknown>;
+  const bRecord = b as unknown as Record<string, unknown>;
+  const keys = new Set([...Object.keys(aRecord), ...Object.keys(bRecord)]);
+  for (const key of keys) {
+    if (!Object.is(aRecord[key], bRecord[key])) return false;
+  }
+  return true;
+};
+
 const isWriteFailure = (
   authorization: SaveWriteAuthorization,
 ): authorization is { ok: false; reason: 'ownership_conflict' | 'storage_unavailable' } =>
@@ -409,6 +422,21 @@ class IndexedDbRecoveryRepository implements RecoveryRepository {
             HEADS_STORE,
             () => store.put(record),
           ));
+          const stored = await requestDone(this.request(
+            'get-head',
+            HEADS_STORE,
+            () => store.get(record.profileId),
+          )) as RecoveryHead | undefined;
+          if (stored === undefined || !headRecordsEqual(stored, record)) {
+            throw new RecoveryDatabaseError(
+              'unknown',
+              'IndexedDB journal head verification failed.',
+            );
+          }
+          const commitAuthorization = authorize();
+          if (isWriteFailure(commitAuthorization)) {
+            throw new OwnershipAbort({ stored: false, reason: commitAuthorization.reason });
+          }
           return { stored: true } as const;
         },
       );
@@ -480,6 +508,10 @@ class IndexedDbRecoveryRepository implements RecoveryRepository {
             CHECKPOINTS_STORE,
             () => store.put(record),
           ));
+          const commitAuthorization = authorize();
+          if (isWriteFailure(commitAuthorization)) {
+            throw new OwnershipAbort({ stored: false, reason: commitAuthorization.reason });
+          }
           return { stored: true } as const;
         },
       );
@@ -514,6 +546,7 @@ class IndexedDbRecoveryRepository implements RecoveryRepository {
         'delete-checkpoint',
         async (tx, authorize) => {
           const store = tx.objectStore(CHECKPOINTS_STORE);
+          let deleteRequests = 0;
           for (const [keyProfileId, revision] of keys) {
             if (keyProfileId !== profileId) continue;
             const writeAuthorization = authorize();
@@ -525,6 +558,13 @@ class IndexedDbRecoveryRepository implements RecoveryRepository {
               CHECKPOINTS_STORE,
               () => store.delete([profileId, revision]),
             ));
+            deleteRequests += 1;
+          }
+          if (deleteRequests > 0) {
+            const commitAuthorization = authorize();
+            if (isWriteFailure(commitAuthorization)) {
+              throw new OwnershipAbort({ stored: false, reason: commitAuthorization.reason });
+            }
           }
           return { stored: true } as const;
         },
@@ -596,6 +636,10 @@ class IndexedDbRecoveryRepository implements RecoveryRepository {
             METADATA_STORE,
             () => store.put({ key, value }),
           ));
+          const commitAuthorization = authorize();
+          if (isWriteFailure(commitAuthorization)) {
+            throw new OwnershipAbort({ stored: false, reason: commitAuthorization.reason });
+          }
           return { stored: true } as const;
         },
       );

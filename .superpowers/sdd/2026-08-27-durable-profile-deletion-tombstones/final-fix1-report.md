@@ -1,0 +1,146 @@
+# Final Audit Fix Round 1 — Recovery Mutation Commit Authorization
+
+## Outcome
+
+Addressed the final-review P1 from exact starting HEAD
+`d81bebc55ffd82796577ff1c531266a47031e964`.
+
+Every ordinary authorized IndexedDB mutation in `utils/recoveryDatabase.ts`
+now performs a final authorization check after its last mutating request has
+succeeded and before transaction completion can be reported. Ownership loss
+aborts and rolls back head writes, checkpoint writes, explicit checkpoint
+deletions, retention pruning, metadata writes, and profile-data deletion.
+`deleteProfileData` already had the correct final check and remains covered by
+its existing post-delete rollback regression.
+
+`putHead` additionally reads the head back inside the same read/write
+transaction and compares every own field exactly before it can return
+`stored: true`. Missing, stale, or otherwise mismatched readback aborts the
+transaction, returns `storage_unavailable`, and preserves the prior head.
+
+## Root cause and implementation
+
+The repository checked authorization initially and immediately before each
+mutation request, but head, checkpoint, metadata, and checkpoint-deletion
+transactions returned their success result as soon as the request promise
+resolved. A lease takeover during that request therefore had no final gate
+before commit.
+
+The scoped correction:
+
+- reauthorizes after successful head `put` plus exact in-transaction readback;
+- reauthorizes after successful checkpoint `put`;
+- reauthorizes after the final issued checkpoint `delete`, covering both the
+  public deletion API and automatic retention pruning;
+- reauthorizes after successful metadata `put`;
+- preserves the existing final authorization in `deleteProfileData`;
+- leaves read-only transactions, stale/no-op branches, and schema upgrade
+  setup unchanged.
+
+The transaction-wrapper audit found no additional masking defect. Both wrapper
+paths install their completion handlers before work starts, await the request
+body and transaction completion before returning, abort and drain completion
+on body failure, and only convert an `OwnershipAbort` to its typed result after
+the abort path has run. A transaction completion rejection is therefore not
+replaced by a successful body result. The version-upgrade transaction is the
+only mutation outside the authorized repository methods; it runs before a
+repository exists and already aborts when store/index creation fails.
+
+## TDD evidence
+
+RED, tests only:
+
+```text
+npx vitest run utils/recoveryDatabase.test.ts
+Test Files  1 failed (1)
+Tests       8 failed | 21 passed (29)
+```
+
+The eight expected failures were:
+
+- missing post-put head readback reported `{ stored: true }`;
+- stale post-put head readback reported `{ stored: true }`;
+- field-mismatched post-put head readback reported `{ stored: true }`;
+- ownership loss after a successful head put still committed;
+- ownership loss after a successful checkpoint put committed and was
+  misreported as a later prune failure;
+- ownership loss after a successful metadata put still committed;
+- ownership loss after a successful explicit checkpoint delete still
+  committed;
+- ownership loss after the retention delete request still committed the prune.
+
+GREEN, implementation applied:
+
+```text
+npx vitest run utils/recoveryDatabase.test.ts
+Test Files  1 passed (1)
+Tests       29 passed (29)
+```
+
+## Verification
+
+Focused recovery/profile/save boundary:
+
+```text
+npx vitest run utils/recoveryDatabase.test.ts utils/profileMetadata.test.ts utils/profileMetadataTransaction.test.ts utils/profileStorage.test.ts utils/profileWriterLease.test.ts utils/saveCoordinator.test.ts utils/saveIntegrity.test.ts utils/saveRecovery.test.ts utils/saveRecoveryIntegration.test.ts utils/saveSchema.test.ts
+Test Files  10 passed (10)
+Tests       357 passed (357)
+```
+
+Typecheck:
+
+```text
+npm run typecheck
+exit 0
+```
+
+Full release gate:
+
+```text
+npm run release:verify
+exit 0
+What's New: 27 player-facing files verified
+Main suite: 250 files, 3,161 tests passed
+Quest requirements: 1 file, 27 tests passed
+Quest routes: 1 file, 7 tests passed
+Content baseline/consistency/migrations/CA: 4 files, 62 tests passed
+Combined release-gate Vitest total: 256 files, 3,257 tests passed
+Diary source: 492 official rows, 485 classified existing rows, 0 unresolved
+Quest source: 191 quests, 19 miniquests, 210 unique IDs/revisions
+Walkthrough source: 8 reviewed source quest records
+Production build: 2,693 modules transformed
+Model manifest: 59 models, generated file unchanged
+```
+
+Separate production build:
+
+```text
+npm run build
+exit 0
+2,693 modules transformed
+59-model manifest generated with no tracked diff
+```
+
+Diff checks:
+
+```text
+git diff --check
+exit 0 (repository line-ending warnings only)
+git diff --exit-code -- data/modelManifest.ts
+exit 0
+```
+
+The full suite/build retained known non-failing Vite deprecation and chunk-size
+warnings, Node `--localstorage-file` warnings, and intentional Goal Planner
+negative-path console traces. No warning originated from this fix.
+
+## Scope and release status
+
+Tracked implementation/test scope is limited to:
+
+- `utils/recoveryDatabase.ts`
+- `utils/recoveryDatabase.test.ts`
+- this report
+
+No push, pull request, merge to `main`, deployment, or release was performed.
+The existing `codex/crash-safe-save-recovery` worktree and branch are preserved.
