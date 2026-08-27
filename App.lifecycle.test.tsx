@@ -199,10 +199,11 @@ describe('App changelog lifecycle', () => {
     const recoveredState = JSON.parse(seedOnboardingRun());
     recoveredState.hasSeenOnboarding = true;
     const futureRaw = JSON.stringify({
-      version: 2,
+      version: 3,
       revision: 19,
       profiles: [{ id: 'future-only', name: 'Future only', createdAt: 1 }],
       activeProfileId: 'future-only',
+      deletions: [],
       opaque: { mustSurvive: true },
     });
     values.clear();
@@ -238,13 +239,14 @@ describe('App changelog lifecycle', () => {
     const readyState = JSON.parse(seedOnboardingRun());
     readyState.hasSeenOnboarding = true;
     const initialRegistry = {
-      version: 1,
+      version: 2,
       revision: 0,
       profiles: [
         { id: PROFILE_ID, name: 'Lifecycle test', createdAt: 1 },
         { id: replacementId, name: 'Replacement', createdAt: 2 },
       ],
       activeProfileId: PROFILE_ID,
+      deletions: [],
     };
     values.clear();
     storage.setItem('FATE_PROFILES', JSON.stringify(initialRegistry));
@@ -264,10 +266,11 @@ describe('App changelog lifecycle', () => {
     expect(animations.getAttribute('aria-pressed')).toBe(String(expectedAnimations));
 
     const incoming = {
-      version: 1,
+      version: 2,
       revision: 1,
       profiles: [{ id: replacementId, name: 'Replacement', createdAt: 2 }],
       activeProfileId: replacementId,
+      deletions: [],
     };
     const incomingRaw = JSON.stringify(incoming);
     storage.setItem('FATE_PROFILES', incomingRaw);
