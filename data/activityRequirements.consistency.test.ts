@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { ACTIVITY_REQUIREMENTS } from './activityRequirements';
+import { ACTIVITY_REQUIREMENTS, getActivityReq } from './activityRequirements';
+import { ACTIVITY_ACCESS_AREAS } from './activityAccess';
 import { ACTIVITY_REGIONS } from './activityRegions';
 import {
   BOSSES_LIST, MINIGAMES_LIST, GUILDS_LIST, MOBILITY_LIST, ARCANA_LIST,
@@ -26,6 +27,26 @@ describe('activity requirements + regions consistency', () => {
     expect(ACTIVITY_REQUIREMENTS['The Mad Angel']).toEqual({
       quests: ['Fallen From Grace'],
       requiredAreas: ['Wyrmscraig'],
+    });
+  });
+
+  it('shares every canonical boss and minigame access area with readiness', () => {
+    for (const [item, areas] of Object.entries(ACTIVITY_ACCESS_AREAS)) {
+      expect(getActivityReq(item)?.requiredAreas, item).toEqual(areas);
+    }
+  });
+
+  it('pins Bounty Hunter and Soul Wars hard entry gates', () => {
+    expect(getActivityReq('Bounty Hunter')).toMatchObject({
+      requiredAreas: ['Ferox Enclave'],
+      combatLevel: 32,
+      manualRequirements: ['At least 12 hours of account play time'],
+    });
+    expect(getActivityReq('Soul Wars')).toMatchObject({
+      requiredAreas: ['Isle of Souls'],
+      combatLevel: 40,
+      totalLevel: 500,
+      manualRequirements: ['Completed the Soul Wars tutorial once'],
     });
   });
 

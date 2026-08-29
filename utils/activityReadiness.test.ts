@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { UnlockState } from '../types';
 import { getActivityReq } from '../data/activityRequirements';
+import { SKILLS_LIST } from '../data/items';
 import { evaluateActivityReadiness } from './activityReadiness';
 
 const unlocked = (over: Partial<UnlockState> = {}): UnlockState => ({
@@ -85,17 +86,84 @@ describe('evaluateActivityReadiness', () => {
     )).toEqual({ status: 'READY' });
   });
 
-  it('enforces Soul Wars combat 40 using the real account combat level', () => {
+  it('enforces Soul Wars combat 40, total level 500, and tutorial confirmation', () => {
     const req = getActivityReq('Soul Wars');
 
     expect(evaluateActivityReadiness(true, req, unlocked())).toEqual({
       status: 'NOT_READY',
-      blockers: [{ kind: 'combat', label: 'Combat level 40' }],
+      blockers: [
+        { kind: 'area', label: 'Isle of Souls' },
+        { kind: 'combat', label: 'Combat level 40' },
+        { kind: 'total', label: 'Total level 500' },
+      ],
     });
     expect(evaluateActivityReadiness(
       true,
       req,
-      unlocked(combatReady),
+      unlocked({ ...combatReady, regions: ['Isle of Souls'] }),
+    )).toEqual({
+      status: 'NOT_READY',
+      blockers: [{ kind: 'total', label: 'Total level 500' }],
+    });
+
+    const readyLevels = Object.fromEntries(SKILLS_LIST.map(skill => [skill, 40]));
+    const readySkills = Object.fromEntries(SKILLS_LIST.map(skill => [skill, 1]));
+    expect(evaluateActivityReadiness(
+      true,
+      req,
+      unlocked({
+        skills: readySkills,
+        levels: readyLevels,
+        regions: ['Isle of Souls'],
+      }),
+    )).toEqual({
+      status: 'NEEDS_CONFIRMATION',
+      checks: ['Completed the Soul Wars tutorial once'],
+    });
+  });
+
+  it('enforces Bounty Hunter combat, location, and account-time confirmation', () => {
+    const req = getActivityReq('Bounty Hunter');
+
+    expect(evaluateActivityReadiness(true, req, unlocked({
+      regions: ['Ferox Enclave'],
+    }))).toEqual({
+      status: 'NOT_READY',
+      blockers: [{ kind: 'combat', label: 'Combat level 32' }],
+    });
+    expect(evaluateActivityReadiness(true, req, unlocked(combatReady))).toEqual({
+      status: 'NOT_READY',
+      blockers: [{ kind: 'area', label: 'Ferox Enclave' }],
+    });
+    expect(evaluateActivityReadiness(true, req, unlocked({
+      ...combatReady,
+      regions: ['Ferox Enclave'],
+    }))).toEqual({
+      status: 'NEEDS_CONFIRMATION',
+      checks: ['At least 12 hours of account play time'],
+    });
+  });
+
+  it('uses the canonical activity-access areas as alternative readiness routes', () => {
+    expect(evaluateActivityReadiness(
+      true,
+      getActivityReq('Giant Mole'),
+      unlocked(),
+      'vanilla',
+    )).toEqual({
+      status: 'NOT_READY',
+      blockers: [{ kind: 'area', label: 'Falador' }],
+    });
+
+    const templeTrekking = getActivityReq('Temple Trekking');
+    expect(evaluateActivityReadiness(
+      true,
+      templeTrekking,
+      unlocked({
+        regions: ['Paterdomus'],
+        quests: ['In Aid of the Myreque'],
+      }),
+      'vanilla',
     )).toEqual({ status: 'READY' });
   });
 

@@ -19,11 +19,31 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-08-29-combat-level-eligibility');
+    expect(LATEST_CHANGELOG.id).toBe('2026-08-30-requirement-readiness');
   });
 
-  it('announces the combat eligibility fixes exactly', () => {
+  it('announces the synchronized requirement fixes exactly', () => {
     expect(LATEST_CHANGELOG).toEqual({
+      id: '2026-08-30-requirement-readiness',
+      title: 'Requirements Stay in Sync',
+      date: '2026-08-30',
+      sections: {
+        fixed: [
+          'Boss and minigame readiness now uses the same location requirements as the activity access map.',
+          'Bounty Hunter now requires combat level 32 and confirmation of at least 12 hours of account play time.',
+          'Soul Wars now requires combat level 40, total level 500, and confirmation that its tutorial is complete.',
+          'Goal routes that depend on Dream Mentor now include its combat level 85 requirement.',
+        ],
+      },
+    });
+  });
+
+  it('retains the previous combat eligibility release', () => {
+    const combatEligibility = CHANGELOG_RELEASES.find(
+      release => release.id === '2026-08-29-combat-level-eligibility',
+    );
+
+    expect(combatEligibility).toEqual({
       id: '2026-08-29-combat-level-eligibility',
       title: 'Combat Levels Count Correctly',
       date: '2026-08-29',

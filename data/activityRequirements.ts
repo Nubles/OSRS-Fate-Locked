@@ -9,6 +9,8 @@
 // `note` carries gates that aren't a plain skill/quest (Quest Points,
 // Slayer-task-only, item unlocks, kill-count, etc.).
 
+import { ACTIVITY_ACCESS_AREAS } from './activityAccess';
+
 export interface ActivityReq {
   /** Hard skill-level gates, e.g. { Slayer: 91 }. */
   skills?: Record<string, number>;
@@ -18,6 +20,8 @@ export interface ActivityReq {
   requiredAreas?: string[];
   /** Minimum real OSRS combat level. */
   combatLevel?: number;
+  /** Minimum real OSRS total level. */
+  totalLevel?: number;
   /** External progress a player must explicitly confirm after machine gates pass. */
   manualRequirements?: string[];
   /** Any gate that isn't a skill/quest. */
@@ -113,8 +117,16 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
     note: 'Novice boat.',
   },
   'Barbarian Assault': { requiredAreas: ['Barbarian Outpost'] },
+  'Bounty Hunter': {
+    combatLevel: 32,
+    manualRequirements: ['At least 12 hours of account play time'],
+  },
   'Castle Wars': { requiredAreas: ['Castle Wars'] },
-  'Soul Wars': { combatLevel: 40 },
+  'Soul Wars': {
+    combatLevel: 40,
+    totalLevel: 500,
+    manualRequirements: ['Completed the Soul Wars tutorial once'],
+  },
   'Mage Arena': { skills: { Magic: 60 } },
   'Guardians of the Rift': { skills: { Runecraft: 27 }, quests: ['Temple of the Eye'] },
   'Tithe Farm': { skills: { Farming: 34 }, note: '100% Hosidius favour.' },
@@ -271,5 +283,17 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Master STASH': { note: 'Clue STASH unit (Construction).' },
 };
 
-export const getActivityReq = (item: string): ActivityReq | undefined =>
-  ACTIVITY_REQUIREMENTS[item];
+/**
+ * Resolve readiness from the curated non-geographic gates plus the canonical
+ * boss/minigame access map. Keeping the area source in one place prevents an
+ * Omni-unlocked activity from appearing ready while its location is blocked.
+ */
+export const getActivityReq = (item: string): ActivityReq | undefined => {
+  const requirement = ACTIVITY_REQUIREMENTS[item];
+  const requiredAreas = ACTIVITY_ACCESS_AREAS[item];
+  if (!requirement && !requiredAreas) return undefined;
+  return {
+    ...requirement,
+    ...(requiredAreas ? { requiredAreas: [...requiredAreas] } : {}),
+  };
+};

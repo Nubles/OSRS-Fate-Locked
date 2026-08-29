@@ -355,6 +355,12 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
     const q = QUEST_DATA[id];
     if (!q) continue;
     addSkills(q.skills);
+    if (q.combatLevel !== undefined) {
+      skillNeed.set(
+        'Combat level',
+        Math.max(skillNeed.get('Combat level') ?? 0, q.combatLevel),
+      );
+    }
     for (const r of q.regions) regionSet.add(canonicalAreaName(r));
   }
 
@@ -367,12 +373,15 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
   const skills: RouteSkill[] = [...skillNeed.entries()]
     .sort((a, b) => b[1] - a[1])
     .map(([skill, need]) => {
-      const have = effectiveSkillLevel(unlocks, skill);
-      const tierHave = unlocks.skills[skill] ?? 0;
-      const unlocked = tierHave > 0;
+      const isCombat = skill === 'Combat level';
+      const have = isCombat
+        ? actualCombatLevel(unlocks)
+        : effectiveSkillLevel(unlocks, skill);
+      const tierHave = isCombat ? 0 : (unlocks.skills[skill] ?? 0);
+      const unlocked = isCombat || tierHave > 0;
       return {
         skill, needLevel: need, haveLevel: have, unlocked,
-        tierNeeded: tierForLevel(need), tierHave,
+        tierNeeded: isCombat ? 0 : tierForLevel(need), tierHave,
         met: unlocked && have >= need,
       };
     });
@@ -421,7 +430,9 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
     }
   }
   for (const s of skills) {
-    if (!s.met) dependencies.push({ table: TableType.SKILLS, id: s.skill });
+    if (!s.met && s.skill !== 'Combat level') {
+      dependencies.push({ table: TableType.SKILLS, id: s.skill });
+    }
   }
   dependencies.push(...tableDependenciesForSteps(
     canonicalQuestPlan?.alternativeSteps.flatMap(step => step.routes.flatMap(route => route.blockers)) ?? [],
