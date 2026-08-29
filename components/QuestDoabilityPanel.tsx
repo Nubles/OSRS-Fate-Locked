@@ -10,7 +10,7 @@ import { questChunkStatus, doabilityBucket, DoabilityBucket, entryBlockedGate, h
 import {
   evaluateQuestEligibility, questRequirementOptionLabel,
 } from '../utils/journalStatus';
-import { effectiveCombatLevel } from '../utils/slayerReach';
+import { actualCombatLevel } from '../utils/slayerReach';
 import { WIKI_OVERRIDES } from '../constants';
 import { UnlockState } from '../types';
 
@@ -94,7 +94,7 @@ export const evaluateQuestDoability = (
     missingSkills.push({
       skill: 'Combat level',
       lvl: quest.combatLevel,
-      have: effectiveCombatLevel(unlocks),
+      have: actualCombatLevel(unlocks),
     });
   }
 

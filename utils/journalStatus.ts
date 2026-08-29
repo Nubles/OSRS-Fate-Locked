@@ -14,7 +14,7 @@ import { DiaryTier } from '../data/diaryData';
 import { UnlockState } from '../types';
 import { chunkKey, isChunkUnlocked } from './chunkAdjacency';
 import { isAreaReachable } from './reachability';
-import { effectiveCombatLevel, effectiveSkillLevel } from './slayerReach';
+import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
 
 export type QuestStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
 export type DiaryStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
@@ -200,7 +200,7 @@ export function evaluateQuestEligibility(
     }
   }
   if (quest.combatLevel !== undefined) {
-    if (effectiveCombatLevel(unlocks) >= quest.combatLevel) evidence.push('Combat level ' + quest.combatLevel);
+    if (actualCombatLevel(unlocks) >= quest.combatLevel) evidence.push('Combat level ' + quest.combatLevel);
     else blockers.push({ kind: 'combat', label: 'Combat level ' + quest.combatLevel });
   }
   for (const prereq of quest.prereqs) {
@@ -320,7 +320,7 @@ const evaluateDiaryRequirement = (
   }
   if (requirement.combatLevel !== undefined) {
     const label = 'Combat level ' + requirement.combatLevel;
-    if (effectiveCombatLevel(unlocks) >= requirement.combatLevel) evidence.push(label);
+    if (actualCombatLevel(unlocks) >= requirement.combatLevel) evidence.push(label);
     else blockers.push({ kind: 'combat', label });
   }
   if (requirement.allQuests) {

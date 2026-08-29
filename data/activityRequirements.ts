@@ -16,7 +16,7 @@ export interface ActivityReq {
   quests?: string[];
   /** Named areas that must be reachable in the selected game mode. */
   requiredAreas?: string[];
-  /** Minimum effective combat level. */
+  /** Minimum real OSRS combat level. */
   combatLevel?: number;
   /** External progress a player must explicitly confirm after machine gates pass. */
   manualRequirements?: string[];
@@ -114,7 +114,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   },
   'Barbarian Assault': { requiredAreas: ['Barbarian Outpost'] },
   'Castle Wars': { requiredAreas: ['Castle Wars'] },
-  'Soul Wars': { note: 'Combat level 40+.' },
+  'Soul Wars': { combatLevel: 40 },
   'Mage Arena': { skills: { Magic: 60 } },
   'Guardians of the Rift': { skills: { Runecraft: 27 }, quests: ['Temple of the Eye'] },
   'Tithe Farm': { skills: { Farming: 34 }, note: '100% Hosidius favour.' },

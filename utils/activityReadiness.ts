@@ -2,7 +2,7 @@ import type { ActivityReq } from '../data/activityRequirements';
 import type { UnlockState } from '../types';
 import { meetsSkillRequirement } from './journalStatus';
 import { isAreaReachable } from './reachability';
-import { effectiveCombatLevel } from './slayerReach';
+import { actualCombatLevel } from './slayerReach';
 
 export type ActivityBlocker =
   | { kind: 'area'; label: string }
@@ -42,7 +42,7 @@ export function evaluateActivityReadiness(
   }
   if (
     requirement?.combatLevel !== undefined
-    && effectiveCombatLevel(unlocks) < requirement.combatLevel
+    && actualCombatLevel(unlocks) < requirement.combatLevel
   ) {
     blockers.push({
       kind: 'combat',

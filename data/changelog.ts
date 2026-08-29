@@ -19,6 +19,18 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-08-29-combat-level-eligibility',
+    title: 'Combat Levels Count Correctly',
+    date: '2026-08-29',
+    sections: {
+      fixed: [
+        'Combat requirements now use your real OSRS combat level instead of reducing it to unlocked skill-method tiers.',
+        'Slayer-master readiness now includes each master\'s location, quest, combat, Slayer, and Slayer-cape access routes.',
+        'Soul Wars now correctly requires combat level 40 in activity readiness.',
+      ],
+    },
+  },
+  {
     id: '2026-08-25-crash-safe-saves',
     title: 'Crash-Safe Saves',
     date: '2026-08-25',

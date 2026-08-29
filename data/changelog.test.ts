@@ -19,22 +19,19 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-08-25-crash-safe-saves');
+    expect(LATEST_CHANGELOG.id).toBe('2026-08-29-combat-level-eligibility');
   });
 
-  it('announces the crash-safe save recovery release exactly', () => {
+  it('announces the combat eligibility fixes exactly', () => {
     expect(LATEST_CHANGELOG).toEqual({
-      id: '2026-08-25-crash-safe-saves',
-      title: 'Crash-Safe Saves',
-      date: '2026-08-25',
+      id: '2026-08-29-combat-level-eligibility',
+      title: 'Combat Levels Count Correctly',
+      date: '2026-08-29',
       sections: {
-        added: [
-          'Progress now keeps a transactional local recovery journal with timed restore points.',
-        ],
         fixed: [
-          'Corrupt or interrupted browser saves now stop for recovery instead of silently starting over.',
-          'Full browser storage now clears disposable caches and retries profile saves safely.',
-          'Interrupted profile cleanup now resumes after reload without restoring the deleted profile.',
+          'Combat requirements now use your real OSRS combat level instead of reducing it to unlocked skill-method tiers.',
+          'Slayer-master readiness now includes each master\'s location, quest, combat, Slayer, and Slayer-cape access routes.',
+          'Soul Wars now correctly requires combat level 40 in activity readiness.',
         ],
       },
     });

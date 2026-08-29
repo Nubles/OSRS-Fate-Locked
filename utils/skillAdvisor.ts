@@ -19,7 +19,7 @@ import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { computeUnlockImpact, prepareUnlockImpactContext } from './unlockImpact';
 import { EligibilityBlocker, evaluateDiaryTierEligibility, getDiaryStatus } from './journalStatus';
-import { effectiveCombatLevel, effectiveSkillLevel } from './slayerReach';
+import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
 
 export interface RankedSkill {
   id: string;          // skill name
@@ -98,18 +98,17 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
   }
 
   for (const requiredCombatLevel of combatRequirements) {
-    if (effectiveCombatLevel(unlocks) >= requiredCombatLevel) continue;
+    if (actualCombatLevel(unlocks) >= requiredCombatLevel) continue;
     for (const skill of combatSkillNames) {
       const current = unlocks.levels[skill] ?? (skill === 'Hitpoints' ? 10 : 1);
       const candidateTier = Math.max(unlocks.skills[skill] ?? 0, 1);
-      const methodCap = Math.min(99, candidateTier * 10);
-      for (let level = current + 1; level <= methodCap; level += 1) {
+      for (let level = current + 1; level <= 99; level += 1) {
         const simulated = {
           ...unlocks,
           levels: { ...unlocks.levels, [skill]: level },
           skills: { ...unlocks.skills, [skill]: candidateTier },
         };
-        if (effectiveCombatLevel(simulated) >= requiredCombatLevel) {
+        if (actualCombatLevel(simulated) >= requiredCombatLevel) {
           addThreshold(skill, level);
           break;
         }

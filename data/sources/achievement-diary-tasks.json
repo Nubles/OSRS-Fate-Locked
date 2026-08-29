@@ -6057,7 +6057,17 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Lost City 70 Combat level Dramen or Lunar staff to enter Zanaris",
-      "combatLevel": 70
+      "oneOf": [
+        {
+          "combatLevel": 70
+        },
+        {
+          "label": "Slayer cape",
+          "skills": {
+            "Slayer": 99
+          }
+        }
+      ]
     },
     {
       "id": "lum_med_11",
@@ -6491,14 +6501,26 @@
       "ordinal": 3,
       "description": "Get a slayer task from the Slayer Master in Canifis.",
       "skills": {},
-      "quests": [],
+      "quests": [
+        "Priest in Peril"
+      ],
       "regions": [
         "Canifis"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "20 Combat level",
-      "combatLevel": 20
+      "oneOf": [
+        {
+          "combatLevel": 20
+        },
+        {
+          "label": "Slayer cape",
+          "skills": {
+            "Slayer": 99
+          }
+        }
+      ]
     },
     {
       "id": "mor_easy_4",
@@ -7611,7 +7633,17 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "40 Combat level",
-      "combatLevel": 40
+      "oneOf": [
+        {
+          "combatLevel": 40
+        },
+        {
+          "label": "Slayer cape",
+          "skills": {
+            "Slayer": 99
+          }
+        }
+      ]
     },
     {
       "id": "var_med_10",
