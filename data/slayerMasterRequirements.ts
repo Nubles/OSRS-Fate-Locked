@@ -16,6 +16,61 @@ export interface SlayerMasterRequirement {
 }
 
 export const SLAYER_MASTER_REQUIREMENTS: Record<string, SlayerMasterRequirement> = {
+  Turael: {
+    areas: ['Burthorpe'],
+  },
+  Spria: {
+    areas: ['Draynor Village'],
+    quests: ['A Porcine of Interest'],
+  },
+  Krystilia: {
+    areas: ['Edgeville'],
+  },
+  Mazchna: {
+    areas: ['Canifis'],
+    quests: ['Priest in Peril'],
+    oneOf: [
+      { label: 'Slayer cape', skills: { Slayer: 99 } },
+      { label: 'Combat level 20', combatLevel: 20 },
+    ],
+  },
+  Vannaka: {
+    areas: ['Edgeville'],
+    oneOf: [
+      { label: 'Slayer cape', skills: { Slayer: 99 } },
+      { label: 'Combat level 40', combatLevel: 40 },
+    ],
+  },
+  Chaeldar: {
+    areas: ['Zanaris'],
+    quests: ['Lost City'],
+    oneOf: [
+      { label: 'Slayer cape', skills: { Slayer: 99 } },
+      { label: 'Combat level 70', combatLevel: 70 },
+    ],
+  },
+  'Konar quo Maten': {
+    areas: ['Mount Karuulm'],
+    oneOf: [
+      { label: 'Slayer cape', skills: { Slayer: 99 } },
+      { label: 'Combat level 75', combatLevel: 75 },
+    ],
+  },
+  Nieve: {
+    areas: ['Tree Gnome Stronghold'],
+    oneOf: [
+      { label: 'Slayer cape', skills: { Slayer: 99 } },
+      { label: 'Combat level 85', combatLevel: 85 },
+    ],
+  },
+  Duradel: {
+    areas: ['Shilo Village'],
+    quests: ['Shilo Village'],
+    oneOf: [
+      { label: 'Slayer cape', skills: { Slayer: 99 } },
+      { label: 'Slayer 50 + Combat level 100', skills: { Slayer: 50 }, combatLevel: 100 },
+    ],
+  },
   Mortimer: {
     areas: ['Wyrmscraig'],
     quests: ['Fallen From Grace'],

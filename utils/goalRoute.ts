@@ -11,7 +11,7 @@ import { getPoolAndStateKey, isValidUnlock } from './gameEngine';
 import { tierForLevel } from './skillTiers';
 import { planForTarget, type PlanStep } from './goalPlanner';
 import { evaluateDiaryTierEligibility } from './journalStatus';
-import { effectiveCombatLevel, effectiveSkillLevel } from './slayerReach';
+import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
 
 /**
  * Route to goal — the planning brain behind a pinned goal.
@@ -179,7 +179,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       const needLevel = Number(step.detail?.match(/\d+/)?.[0] ?? 1);
       const isCombat = step.id === 'Combat level';
       const haveLevel = isCombat
-        ? effectiveCombatLevel(unlocks)
+        ? actualCombatLevel(unlocks)
         : effectiveSkillLevel(unlocks, step.id);
       const tierHave = isCombat ? 0 : (unlocks.skills[step.id] ?? 0);
       return {
@@ -248,7 +248,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       const needLevel = Number(step.detail?.match(/\d+/)?.[0] ?? 1);
       const isCombat = step.id === 'Combat level';
       const haveLevel = isCombat
-        ? effectiveCombatLevel(unlocks)
+        ? actualCombatLevel(unlocks)
         : effectiveSkillLevel(unlocks, step.id);
       const tierHave = isCombat ? 0 : (unlocks.skills[step.id] ?? 0);
       return {

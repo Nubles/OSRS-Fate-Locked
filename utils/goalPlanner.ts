@@ -23,7 +23,7 @@ import {
   evaluateDiaryTaskEligibility, questRequirementOptionLabel, DirectEligibilityBlocker,
 } from './journalStatus';
 import { isAreaReachable } from './reachability';
-import { effectiveCombatLevel, effectiveSkillLevel } from './slayerReach';
+import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
 
 export type GoalKind = 'quest' | 'diary' | 'region';
 
@@ -153,7 +153,7 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
     const required = Number(blocker.label.match(/\d+/)?.[0] ?? 1);
     return {
       kind: 'skill', id: 'Combat level', label: 'Combat level',
-      detail: 'Level ' + required + ' (have ' + effectiveCombatLevel(unlocks) + ')', done: false,
+      detail: 'Level ' + required + ' (have ' + actualCombatLevel(unlocks) + ')', done: false,
     };
   }
 
@@ -313,7 +313,7 @@ function buildPlanFromRequirements(
     .map(([skill, lvl]): PlanStep => {
       const done = false;
       const rawLevel = skill === 'Combat level'
-        ? effectiveCombatLevel(unlocks)
+        ? actualCombatLevel(unlocks)
         : (unlocks.levels[skill] ?? 1);
       const have = skill === 'Combat level'
         ? rawLevel

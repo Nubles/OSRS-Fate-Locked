@@ -11,7 +11,7 @@ const unlocked = (over: Partial<UnlockState> = {}): UnlockState => ({
 });
 
 const combatReady = {
-  skills: { Attack: 4, Strength: 4, Defence: 4, Hitpoints: 4, Prayer: 4 },
+  skills: { Attack: 1, Strength: 1, Defence: 1, Hitpoints: 1, Prayer: 1 },
   levels: { Attack: 40, Strength: 40, Defence: 40, Hitpoints: 40, Prayer: 40 },
 };
 
@@ -82,6 +82,20 @@ describe('evaluateActivityReadiness', () => {
       req,
       unlocked({ chunks: ['39,55'] }),
       'chunked',
+    )).toEqual({ status: 'READY' });
+  });
+
+  it('enforces Soul Wars combat 40 using the real account combat level', () => {
+    const req = getActivityReq('Soul Wars');
+
+    expect(evaluateActivityReadiness(true, req, unlocked())).toEqual({
+      status: 'NOT_READY',
+      blockers: [{ kind: 'combat', label: 'Combat level 40' }],
+    });
+    expect(evaluateActivityReadiness(
+      true,
+      req,
+      unlocked(combatReady),
     )).toEqual({ status: 'READY' });
   });
 

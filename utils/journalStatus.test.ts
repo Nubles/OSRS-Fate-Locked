@@ -627,16 +627,63 @@ describe('manual diary task requirements', () => {
     expect(evaluateDiaryTaskEligibility(task as any, high).eligible).toBe(true);
   });
 
-  it('caps every combat component by its unlocked method tier', () => {
+  it('uses real combat levels even when combat method tiers are lower', () => {
     const combatSkills = ['Attack', 'Strength', 'Defence', 'Hitpoints', 'Prayer', 'Ranged', 'Magic'];
-    const capped = unlocked({
+    const combat51 = unlocked({
       skills: Object.fromEntries(combatSkills.map(skill => [skill, 1])),
-      levels: Object.fromEntries(combatSkills.map(skill => [skill, 99])),
+      levels: Object.fromEntries(combatSkills.map(skill => [skill, 40])),
+      regions: ['Edgeville'],
     });
+    const vannaka = ALL_DIARY_TASKS.find(task => task.id === 'var_med_9')!;
 
-    expect(combatLevel(capped.levels)).toBeGreaterThan(70);
-    expect(evaluateDiaryTaskEligibility({ id: 'combat-task', combatLevel: 70 }, capped).blockers)
-      .toContainEqual({ kind: 'combat', label: 'Combat level 70' });
+    expect(combatLevel(combat51.levels)).toBe(51);
+    expect(evaluateDiaryTaskEligibility(vannaka, combat51)).toMatchObject({
+      machineEligible: true,
+      eligible: true,
+    });
+  });
+
+  it.each([
+    ['mor_easy_3', ['Priest in Peril'], ['Canifis']],
+    ['var_med_9', [], ['Edgeville']],
+    ['lum_med_10', ['Lost City'], ['Zanaris']],
+  ] as const)('accepts the Slayer cape route for %s', (id, quests, regions) => {
+    const task = ALL_DIARY_TASKS.find(candidate => candidate.id === id)!;
+    const result = evaluateDiaryTaskEligibility(task, unlocked({
+      skills: { Slayer: 10 },
+      levels: { Slayer: 99 },
+      quests: [...quests],
+      regions: [...regions],
+    }));
+
+    expect(result).toMatchObject({ machineEligible: true, eligible: true });
+  });
+
+  it('requires Priest in Peril for both Mazchna combat and Slayer cape routes', () => {
+    const task = ALL_DIARY_TASKS.find(candidate => candidate.id === 'mor_easy_3')!;
+    const combatSkills = ['Attack', 'Strength', 'Defence', 'Hitpoints', 'Prayer', 'Ranged', 'Magic'];
+    const combatRoute = {
+      skills: Object.fromEntries(combatSkills.map(skill => [skill, 1])),
+      levels: {
+        ...Object.fromEntries(combatSkills.map(skill => [skill, 20])),
+        Slayer: 1,
+      },
+      regions: ['Canifis'],
+    };
+    const capeRoute = {
+      skills: { Slayer: 10 },
+      levels: { Slayer: 99 },
+      regions: ['Canifis'],
+    };
+
+    for (const route of [combatRoute, capeRoute]) {
+      expect(evaluateDiaryTaskEligibility(task, unlocked(route)).blockers)
+        .toContainEqual({ kind: 'quest', label: 'Priest in Peril' });
+      expect(evaluateDiaryTaskEligibility(task, unlocked({
+        ...route,
+        quests: ['Priest in Peril'],
+      }))).toMatchObject({ machineEligible: true, eligible: true });
+    }
   });
 
   it('checks all-quests and any-skill routes without pseudo quest ids', () => {

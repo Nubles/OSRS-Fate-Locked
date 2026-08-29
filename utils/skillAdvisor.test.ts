@@ -167,7 +167,7 @@ describe('rankSkillBottlenecks', () => {
       levels: {
         ...Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])),
         Attack: 13, Strength: 40, Defence: 1, Hitpoints: 10,
-        Prayer: 1, Ranged: 1, Magic: 1,
+        Prayer: 1, Ranged: 1, Magic: 1, Slayer: 98,
       },
       regions: ['Canifis'],
       quests: Object.keys(QUEST_DATA),

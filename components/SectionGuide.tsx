@@ -104,7 +104,7 @@ export const GUIDES: Record<string, Guide> = {
     title: 'Skills',
     blurb: 'Your 23 skills — each unlocked and levelled through fate.',
     bullets: [
-      'Spend an Omni-key on a locked skill to unlock it, then upgrade its tier (caps your trainable level).',
+      'Spend an Omni-key on a locked skill to unlock it, then upgrade its tier to open higher-level methods and content.',
       'Level unlocked skills toward 99 as you train them in-game.',
       'The Skill Advisor ranks which skill to train next by how much quest + diary content it unlocks.',
     ],

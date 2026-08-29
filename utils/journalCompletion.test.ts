@@ -162,6 +162,18 @@ describe('journal completion decisions', () => {
     }), 'vanilla').ok).toBe(true);
   });
 
+  it('allows a real combat-51 account to complete the Vannaka diary task', () => {
+    const task = ALL_DIARY_TASKS.find(candidate => candidate.id === 'var_med_9')!;
+    const combatSkills = ['Attack', 'Strength', 'Defence', 'Hitpoints', 'Prayer', 'Ranged', 'Magic'];
+    const result = diaryTaskCompletionDecision(task, unlocked({
+      skills: Object.fromEntries(combatSkills.map(skill => [skill, 1])),
+      levels: Object.fromEntries(combatSkills.map(skill => [skill, 40])),
+      regions: ['Edgeville'],
+    }), 'vanilla');
+
+    expect(result).toEqual({ ok: true });
+  });
+
   it('requires and accepts an explicit quest manual attestation', () => {
     const task = QUEST_DATA['Prying Times'];
     const ready = unlocksReadyForPryingTimes();
