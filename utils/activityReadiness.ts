@@ -8,7 +8,8 @@ export type ActivityBlocker =
   | { kind: 'area'; label: string }
   | { kind: 'quest'; label: string }
   | { kind: 'skill'; label: string }
-  | { kind: 'combat'; label: string };
+  | { kind: 'combat'; label: string }
+  | { kind: 'total'; label: string };
 
 export type ActivityReadiness =
   | { status: 'LOCKED'; blockers: [] }
@@ -25,10 +26,12 @@ export function evaluateActivityReadiness(
   if (!isOwned) return { status: 'LOCKED', blockers: [] };
 
   const blockers: ActivityBlocker[] = [];
-  for (const area of requirement?.requiredAreas ?? []) {
-    if (!isAreaReachable(area, unlocks, gameModeId)) {
-      blockers.push({ kind: 'area', label: area });
-    }
+  const requiredAreas = requirement?.requiredAreas ?? [];
+  if (
+    requiredAreas.length > 0
+    && !requiredAreas.some(area => isAreaReachable(area, unlocks, gameModeId))
+  ) {
+    blockers.push({ kind: 'area', label: requiredAreas.join(' or ') });
   }
   for (const quest of requirement?.quests ?? []) {
     if (!unlocks.quests.includes(quest)) {
@@ -48,6 +51,18 @@ export function evaluateActivityReadiness(
       kind: 'combat',
       label: `Combat level ${requirement.combatLevel}`,
     });
+  }
+  if (requirement?.totalLevel !== undefined) {
+    const totalLevel = Object.values(unlocks.levels ?? {}).reduce(
+      (sum, level) => sum + level,
+      0,
+    );
+    if (totalLevel < requirement.totalLevel) {
+      blockers.push({
+        kind: 'total',
+        label: `Total level ${requirement.totalLevel}`,
+      });
+    }
   }
   if (blockers.length > 0) return { status: 'NOT_READY', blockers };
 

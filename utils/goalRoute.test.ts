@@ -142,6 +142,32 @@ describe('buildGoalRoute — quest and engine-item goals', () => {
     ]));
   });
 
+  it.each([
+    'Dragon Slayer II',
+    'While Guthix Sleeps',
+    "Myths' Guild Bank",
+    "Myth's Guild Green Dragons",
+    "Myth's Guild Blue Dragons",
+    'Plank Make',
+    'Ferocious Gloves',
+  ])('inherits Dream Mentor combat 85 for the %s strategy route', (goalId) => {
+    const route = buildGoalRoute(goalId, stateWith())!;
+
+    expect(route.quests).toContainEqual(expect.objectContaining({
+      name: 'Dream Mentor',
+    }));
+    expect(route.skills).toContainEqual(expect.objectContaining({
+      skill: 'Combat level',
+      needLevel: 85,
+      haveLevel: 3,
+      unlocked: true,
+      tierNeeded: 0,
+      tierHave: 0,
+      met: false,
+    }));
+    expect(route.tables.flatMap(table => table.needed)).not.toContain('Combat level');
+  });
+
   it('routes Resource Engine items through their sources', () => {
     const route = buildGoalRoute('Ranarr Weed', stateWith())!;
     expect(route.kind).toBe('engine-item');
