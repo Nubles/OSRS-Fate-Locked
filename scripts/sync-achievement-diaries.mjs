@@ -202,6 +202,9 @@ const renderRequirementProperties = (requirement) => {
   if (requirement.regions?.length > 0) {
     properties.push('regions: ' + renderStringArray(requirement.regions));
   }
+  if (requirement.anyOfRegions?.length > 0) {
+    properties.push('anyOfRegions: ' + renderStringArray(requirement.anyOfRegions));
+  }
   if (requirement.questPoints) properties.push('questPoints: ' + requirement.questPoints);
   if (requirement.manualRequirements?.length > 0) {
     properties.push(
@@ -253,7 +256,7 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
   if (!requirement || typeof requirement !== 'object' || Array.isArray(requirement)) {
     throw new Error('Invalid Diary requirement route: ' + context);
   }
-  for (const field of ['items', 'quests', 'cas', 'regions', 'manualRequirements']) {
+  for (const field of ['items', 'quests', 'cas', 'regions', 'anyOfRegions', 'manualRequirements']) {
     if (requirement[field] !== undefined && !Array.isArray(requirement[field])) {
       throw new Error('Invalid Diary requirement ' + field + ': ' + context);
     }
@@ -295,6 +298,7 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
     || requirement.quests?.length
     || requirement.cas?.length
     || requirement.regions?.length
+    || requirement.anyOfRegions?.length
     || requirement.questPoints
     || requirement.manualRequirements?.length
     || requirement.combatLevel
@@ -336,11 +340,22 @@ export function validateSnapshot(snapshot) {
       throw new Error('Invalid Diary task ordinal: ' + task.id);
     }
     validateRequirementShape(task, task.id);
+    if (task.anyOfRegions !== undefined) {
+      if (task.anyOfRegions.length < 2) {
+        throw new Error('Diary any-of region list must contain at least two areas: ' + task.id);
+      }
+      if (new Set(task.anyOfRegions).size !== task.anyOfRegions.length) {
+        throw new Error('Diary any-of region list contains duplicates: ' + task.id);
+      }
+    }
     if (task.oneOf !== undefined) {
       if (!Array.isArray(task.oneOf) || task.oneOf.length < 2) {
         throw new Error('Diary alternative route list must contain at least two options: ' + task.id);
       }
       task.oneOf.forEach((option, index) => {
+        if (option.anyOfRegions !== undefined) {
+          throw new Error('Diary any-of regions are only supported on tasks: ' + task.id);
+        }
         validateRequirementShape(option, task.id + ' option ' + (index + 1), false);
       });
     }
@@ -392,6 +407,7 @@ export function renderDiaryTasks(snapshot) {
     '  quests?: string[];',
     '  cas?: string[];',
     '  regions?: string[];',
+    '  anyOfRegions?: string[];',
     '  questPoints?: number;',
     '  manualRequirements?: string[];',
     '  combatLevel?: number;',
@@ -609,6 +625,9 @@ const findUnknownReferences = (snapshot, projectRoot) => {
       }
       for (const region of requirement.regions ?? []) {
         if (!catalog.regions.has(region)) unknown.push(task.id + ' region ' + region);
+      }
+      for (const region of requirement.anyOfRegions ?? []) {
+        if (!catalog.regions.has(region)) unknown.push(task.id + ' any-of region ' + region);
       }
     }
   }

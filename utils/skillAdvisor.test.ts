@@ -120,7 +120,9 @@ describe('rankSkillBottlenecks', () => {
     const base = lowSkills({
       skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Smithing' ? 1 : 10])),
       levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Agility' ? 1 : 99])),
-      regions: [...new Set(ALL_DIARY_TASKS.flatMap(task => task.regions ?? []))],
+      regions: [...new Set(ALL_DIARY_TASKS.flatMap(task => [
+        ...(task.regions ?? []), ...(task.anyOfRegions ?? []),
+      ]))],
       quests: Object.keys(QUEST_DATA),
     });
     const capable = {
@@ -149,7 +151,9 @@ describe('rankSkillBottlenecks', () => {
     const ranked = rankSkillBottlenecks(lowSkills({
       skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10])),
       levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Ranged' ? 20 : 99])),
-      regions: [...new Set(ALL_DIARY_TASKS.flatMap(task => task.regions ?? []))],
+      regions: [...new Set(ALL_DIARY_TASKS.flatMap(task => [
+        ...(task.regions ?? []), ...(task.anyOfRegions ?? []),
+      ]))],
       quests: Object.keys(QUEST_DATA),
       diaries: Object.keys(DIARY_DATA).filter(diary => diary !== 'Ardougne Medium'),
       completedTasks: ALL_DIARY_TASKS

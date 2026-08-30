@@ -24,6 +24,24 @@ export const AREA_ALIAS_POLICIES = {
   'Resource Area': {
     kind: 'surface-overlap', canonical: 'Mage Arena', chunks: [{ cx: 49, cy: 61 }],
   },
+  'Combat Training Camp': {
+    kind: 'surface-overlap', canonical: 'East Ardougne', chunks: [{ cx: 39, cy: 52 }],
+  },
+  'Chaos Temple (Asgarnia)': {
+    kind: 'surface-overlap', canonical: 'Taverley', chunks: [{ cx: 45, cy: 54 }],
+  },
+  'Ancient Cavern': {
+    kind: 'surface-overlap', canonical: 'Baxtorian Falls', chunks: [{ cx: 39, cy: 54 }],
+  },
+  'Gandius': {
+    kind: 'surface-overlap', canonical: 'Ship Yard', chunks: [{ cx: 46, cy: 46 }],
+  },
+  'Wilderness Agility Course': {
+    kind: 'surface-overlap', canonical: 'Mage Arena', chunks: [{ cx: 46, cy: 61 }],
+  },
+  "Emir's Arena": {
+    kind: 'surface-overlap', canonical: 'Duel Arena / PvP Arena', chunks: [{ cx: 52, cy: 51 }],
+  },
 } as const satisfies Readonly<Record<string, AreaAliasPolicy>>;
 export const AREA_ALIASES = Object.fromEntries(
   Object.entries(AREA_ALIAS_POLICIES).map(([alias, policy]) => [alias, policy.canonical]),
@@ -111,6 +129,7 @@ const DISPLAY_ALIASES_BY_CANONICAL = Object.entries(AREA_ALIAS_POLICIES)
   }, {});
 export const displayAreaName = (name: string): string => {
   const canonical = canonicalAreaName(name);
+  if (canonical !== name) return `${canonical} \u00b7 ${name}`;
   return [canonical, ...(DISPLAY_ALIASES_BY_CANONICAL[canonical] ?? [])].join(' \u00b7 ');
 };
 

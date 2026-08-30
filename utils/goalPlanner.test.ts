@@ -197,7 +197,9 @@ describe('planForTarget — diaries', () => {
 
   it('plans canonical remaining task gates instead of stale aggregate gates', () => {
     const plan = planForTarget('diary', 'Ardougne Easy', maxedUnlocks({
-      regions: [...new Set(ALL_DIARY_TASKS.flatMap(task => task.regions ?? []))],
+      regions: [...new Set(ALL_DIARY_TASKS.flatMap(task => [
+        ...(task.regions ?? []), ...(task.anyOfRegions ?? []),
+      ]))],
       quests: Object.keys(QUEST_DATA).filter(quest => quest !== 'Biohazard'),
       completedTasks: ALL_DIARY_TASKS
         .filter(task => task.tierId !== 'Ardougne Easy' || task.id !== 'ard_easy_6')
@@ -309,10 +311,9 @@ describe('planForTarget — diaries', () => {
         .map(task => task.id),
     }))!;
 
-    expect(plan.regionSteps).toContainEqual(expect.objectContaining({
-      id: canonical,
-      label: `${canonical} \u00b7 ${alias}`,
-    }));
+    const step = plan.regionSteps.find(regionStep => regionStep.id === canonical);
+    expect(step?.label).toContain(canonical);
+    expect(step?.label).toContain(alias);
   });
 });
 

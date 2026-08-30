@@ -39,22 +39,32 @@ const unlocksReadyForPryingTimes = (): UnlockState => unlocked({
 });
 
 describe('manual journal readiness', () => {
-  it('allows a Wilderness diary task after every Wilderness child area is unlocked', () => {
-    const task = ALL_DIARY_TASKS.find(({ id }) => id === 'wilderness_easy_3')!;
+  it('allows a broad Wilderness task with any one Wilderness child area', () => {
+    const task = ALL_DIARY_TASKS.find(({ id }) => id === 'wild_easy_8')!;
 
-    const partial = evaluateDiaryTaskEligibility(task, unlocked({
-      regions: REGION_GROUPS.Wilderness.slice(0, -1),
+    const blocked = evaluateDiaryTaskEligibility(task, unlocked());
+    expect(blocked.blockers).toContainEqual(expect.objectContaining({
+      kind: 'alternative',
+      blockerKinds: ['region'],
     }));
-    expect(partial.blockers).toContainEqual({ kind: 'region', label: 'Wilderness' });
 
-    const complete = evaluateDiaryTaskEligibility(task, unlocked({
-      regions: [...REGION_GROUPS.Wilderness],
+    const reachable = evaluateDiaryTaskEligibility(task, unlocked({
+      regions: [REGION_GROUPS.Wilderness[0]],
     }));
-    expect(complete).toMatchObject({
+    expect(reachable).toMatchObject({
       machineEligible: true,
       eligible: true,
       blockers: [],
     });
+  });
+
+  it("gates Sarah's farm shop on Falador rather than Port Sarim", () => {
+    const task = ALL_DIARY_TASKS.find(({ id }) => id === 'fal_easy_3')!;
+
+    expect(evaluateDiaryTaskEligibility(task, unlocked({ regions: ['Port Sarim'] })).blockers)
+      .toContainEqual({ kind: 'region', label: 'Falador' });
+    expect(evaluateDiaryTaskEligibility(task, unlocked({ regions: ['Falador'] })).eligible)
+      .toBe(true);
   });
 
   it('requires 32 canonical Quest Points for the Champions Guild task', () => {
@@ -726,6 +736,7 @@ describe('canonical diary tier eligibility', () => {
     ]);
     const regions = [
       ...ALL_DIARY_TASKS.flatMap(task => task.regions ?? []),
+      ...ALL_DIARY_TASKS.flatMap(task => task.anyOfRegions ?? []),
       ...Object.values(DIARY_DATA).flatMap(diary => [diary.region, ...diary.requiredRegions]),
     ];
     const quests = [

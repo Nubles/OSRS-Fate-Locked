@@ -189,12 +189,12 @@
       "quests": [
         "Biohazard"
       ],
-      "regions": [
-        "West Ardougne"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Biohazard"
+      "sourceRequirements": "Completion of Biohazard",
+      "regions": [
+        "Combat Training Camp"
+      ]
     },
     {
       "id": "ard_easy_7",
@@ -349,13 +349,13 @@
       "quests": [
         "Enlightened Journey"
       ],
-      "regions": [
-        "Kandarin"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Travel to Castle Wars by Hot Air Balloon.",
-      "sourceRequirements": "Completion of Enlightened Journey 50 Firemaking Yew log If the route has not been unlocked yet, 11 total yew logs are required to unlock it before flying again to Castle Wars to complete this task. Upon unlocking the route, you may use 1 normal log to depart to Taverley before returning to Castle Wars for the task completion."
+      "sourceRequirements": "Completion of Enlightened Journey 50 Firemaking Yew log If the route has not been unlocked yet, 11 total yew logs are required to unlock it before flying again to Castle Wars to complete this task. Upon unlocking the route, you may use 1 normal log to depart to Taverley before returning to Castle Wars for the task completion.",
+      "regions": [
+        "Castle Wars"
+      ]
     },
     {
       "id": "ard_med_6",
@@ -595,12 +595,12 @@
         "Hunter": 59
       },
       "quests": [],
-      "regions": [
-        "West Ardougne"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "59 Hunter Rope and small fishing net"
+      "sourceRequirements": "59 Hunter Rope and small fishing net",
+      "regions": [
+        "Ourania Altar"
+      ]
     },
     {
       "id": "ard_hard_7",
@@ -613,12 +613,12 @@
         "Farming": 68
       },
       "quests": [],
-      "regions": [
-        "Kandarin"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "68 Farming Palm sapling, spade and a rake 15 Papaya fruit recommended to pay the gardener"
+      "sourceRequirements": "68 Farming Palm sapling, spade and a rake 15 Papaya fruit recommended to pay the gardener",
+      "regions": [
+        "Observatory"
+      ]
     },
     {
       "id": "ard_hard_8",
@@ -649,12 +649,14 @@
         "Smithing": 68
       },
       "quests": [],
-      "regions": [
-        "West Ardougne"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "68 Smithing 5 mithril bars and a hammer"
+      "sourceRequirements": "68 Smithing 5 mithril bars and a hammer",
+      "anyOfRegions": [
+        "Port Khazard",
+        "Yanille",
+        "West Ardougne"
+      ]
     },
     {
       "id": "ard_hard_10",
@@ -782,12 +784,13 @@
         "Smithing": 91
       },
       "quests": [],
-      "regions": [
-        "Witchaven"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "10 Crafting, 91 Smithing and 69 Fletching Yew logs, runite bar, hammer, knife, and sinew or a tree root"
+      "sourceRequirements": "10 Crafting, 91 Smithing and 69 Fletching Yew logs, runite bar, hammer, knife, and sinew or a tree root",
+      "regions": [
+        "Witchaven",
+        "Yanille"
+      ]
     },
     {
       "id": "ard_elite_5",
@@ -857,12 +860,12 @@
       "quests": [
         "Desert Treasure I"
       ],
-      "regions": [
-        "Kandarin"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Desert Treasure I 94 Magic Means to cast Ice Barrage ( or a Blighted ancient ice sack for every cast)"
+      "sourceRequirements": "Completion of Desert Treasure I 94 Magic Means to cast Ice Barrage ( or a Blighted ancient ice sack for every cast)",
+      "regions": [
+        "Castle Wars"
+      ]
     },
     {
       "id": "des_easy_1",
@@ -1188,12 +1191,26 @@
         "Herblore": 36
       },
       "quests": [],
-      "regions": [
-        "Nardah"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "36 Herblore Harralander potion (unf) and goat horn dust"
+      "sourceRequirements": "36 Herblore Harralander potion (unf) and goat horn dust",
+      "anyOfRegions": [
+        "Al Kharid",
+        "Duel Arena / PvP Arena",
+        "Shantay Pass",
+        "Pollnivneach",
+        "Nardah",
+        "Sophanem",
+        "Menaphos",
+        "Bandit Camp",
+        "Bedabin Camp",
+        "Ruins of Uzer",
+        "Mage Training Arena",
+        "Agility Pyramid",
+        "Giants' Plateau",
+        "Kalphite Lair",
+        "Ruins of Unkah"
+      ]
     },
     {
       "id": "des_med_9",
@@ -1318,12 +1335,26 @@
       "quests": [
         "Dream Mentor"
       ],
-      "regions": [
-        "Pollnivneach"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Dream Mentor 68 Magic Lunar spellbook selected Waterskin that isn't full and means to cast Humidify ( )"
+      "sourceRequirements": "Completion of Dream Mentor 68 Magic Lunar spellbook selected Waterskin that isn't full and means to cast Humidify ( )",
+      "anyOfRegions": [
+        "Al Kharid",
+        "Duel Arena / PvP Arena",
+        "Shantay Pass",
+        "Pollnivneach",
+        "Nardah",
+        "Sophanem",
+        "Menaphos",
+        "Bandit Camp",
+        "Bedabin Camp",
+        "Ruins of Uzer",
+        "Mage Training Arena",
+        "Agility Pyramid",
+        "Giants' Plateau",
+        "Kalphite Lair",
+        "Ruins of Unkah"
+      ]
     },
     {
       "id": "des_hard_4",
@@ -1487,13 +1518,27 @@
       "quests": [
         "Desert Treasure I"
       ],
-      "regions": [
-        "Bandit Camp"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Cast Ice Barrage against a foe in the Desert.",
-      "sourceRequirements": "Completion of Desert Treasure I 94 Magic Means to cast Ice Barrage ( )"
+      "sourceRequirements": "Completion of Desert Treasure I 94 Magic Means to cast Ice Barrage ( )",
+      "anyOfRegions": [
+        "Al Kharid",
+        "Duel Arena / PvP Arena",
+        "Shantay Pass",
+        "Pollnivneach",
+        "Nardah",
+        "Sophanem",
+        "Menaphos",
+        "Bandit Camp",
+        "Bedabin Camp",
+        "Ruins of Uzer",
+        "Mage Training Arena",
+        "Agility Pyramid",
+        "Giants' Plateau",
+        "Kalphite Lair",
+        "Ruins of Unkah"
+      ]
     },
     {
       "id": "des_elite_3",
@@ -1525,9 +1570,6 @@
       },
       "quests": [
         "Priest in Peril"
-      ],
-      "regions": [
-        "Pollnivneach"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -1619,12 +1661,12 @@
       "description": "Browse Sarah's farm shop.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Port Sarim"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "None"
+      "sourceRequirements": "None",
+      "regions": [
+        "Falador"
+      ]
     },
     {
       "id": "fal_easy_4",
@@ -1753,12 +1795,12 @@
         "The Knight's Sword",
         "Doric's Quest"
       ],
-      "regions": [
-        "Dwarven Mine"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of The Knight's Sword and Doric's Quest 10 Mining and 13 Smithing Hammer and a Blurite bar"
+      "sourceRequirements": "Completion of The Knight's Sword and Doric's Quest 10 Mining and 13 Smithing Hammer and a Blurite bar",
+      "regions": [
+        "Falador"
+      ]
     },
     {
       "id": "fal_med_1",
@@ -1789,13 +1831,13 @@
         "Magic": 33
       },
       "quests": [],
-      "regions": [
-        "Goblin Village"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Telegrab some Wine of Zamorak at the Chaos Temple.",
-      "sourceRequirements": "33 Magic Means to cast Telegrab ( )"
+      "sourceRequirements": "33 Magic Means to cast Telegrab ( )",
+      "regions": [
+        "Chaos Temple (Asgarnia)"
+      ]
     },
     {
       "id": "fal_med_3",
@@ -1824,9 +1866,6 @@
         "Farming": 23
       },
       "quests": [],
-      "regions": [
-        "Port Sarim"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "23 Farming ( Ironman accounts require 47 Farming or the ability to kill gryphons ) Bronze spear, watermelon, and a hay sack (you can fill an empty sack with hay at the hay bale in the chicken coop nearby.)",
@@ -1840,6 +1879,9 @@
         {
           "label": "Obtain a watermelon from gryphons"
         }
+      ],
+      "regions": [
+        "Falador"
       ]
     },
     {
@@ -2007,12 +2049,12 @@
         "Farming": 30
       },
       "quests": [],
-      "regions": [
-        "Port Sarim"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "36 Crafting (and 30 Farming for Ironman accounts ) 6 Willow branches"
+      "sourceRequirements": "36 Crafting (and 30 Farming for Ironman accounts ) 6 Willow branches",
+      "regions": [
+        "Falador"
+      ]
     },
     {
       "id": "fal_med_14",
@@ -2277,9 +2319,6 @@
       "description": "Craft 252 Air Runes simultaneously from Essence without the use of Extracts.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Port Sarim"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 252 Air Runes simultaneously.",
@@ -2318,6 +2357,9 @@
             "4 Raiments of the Eye pieces"
           ]
         }
+      ],
+      "regions": [
+        "Falador"
       ]
     },
     {
@@ -2612,12 +2654,22 @@
         "Woodcutting": 15
       },
       "quests": [],
-      "regions": [
-        "Rellekka"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "15 Woodcutting and 15 Firemaking Any axe (can be found north of the Rellekka mine ) and a tinderbox"
+      "sourceRequirements": "15 Woodcutting and 15 Firemaking Any axe (can be found north of the Rellekka mine ) and a tinderbox",
+      "anyOfRegions": [
+        "Rellekka",
+        "Neitiznot",
+        "Jatizso",
+        "Miscellania & Etceteria",
+        "Waterbirth Island",
+        "Lunar Isle",
+        "Mountain Camp",
+        "Lighthouse",
+        "Keldagrim",
+        "Weiss",
+        "Pirates' Cove"
+      ]
     },
     {
       "id": "frem_med_1",
@@ -2869,12 +2921,22 @@
         "Herblore": 66
       },
       "quests": [],
-      "regions": [
-        "Rellekka"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "66 Herblore Cadantine potion (unf) and white berries"
+      "sourceRequirements": "66 Herblore Cadantine potion (unf) and white berries",
+      "anyOfRegions": [
+        "Rellekka",
+        "Neitiznot",
+        "Jatizso",
+        "Miscellania & Etceteria",
+        "Waterbirth Island",
+        "Lunar Isle",
+        "Mountain Camp",
+        "Lighthouse",
+        "Keldagrim",
+        "Weiss",
+        "Pirates' Cove"
+      ]
     },
     {
       "id": "frem_hard_4",
@@ -3358,13 +3420,14 @@
         "Herblore": 48
       },
       "quests": [],
-      "regions": [
-        "Seers' Village"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Create a Super Antipoison potion from scratch in the Seers/Catherby Area.",
-      "sourceRequirements": "48 Herblore Vial of water, irit leaf, unicorn horn dust"
+      "sourceRequirements": "48 Herblore Vial of water, irit leaf, unicorn horn dust",
+      "anyOfRegions": [
+        "Seers' Village",
+        "Catherby"
+      ]
     },
     {
       "id": "kan_med_3",
@@ -3606,12 +3669,12 @@
         "Strength": 45
       },
       "quests": [],
-      "regions": [
-        "Barbarian Outpost"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Access to Barbarian Fishing 70 Fishing, 45 Agility, and 45 Strength Barbarian rod and suitable bait ( fishing bait, feathers, fish offcuts, roe, or caviar )"
+      "sourceRequirements": "Access to Barbarian Fishing 70 Fishing, 45 Agility, and 45 Strength Barbarian rod and suitable bait ( fishing bait, feathers, fish offcuts, roe, or caviar )",
+      "regions": [
+        "Otto's Grotto"
+      ]
     },
     {
       "id": "kan_hard_2",
@@ -3746,12 +3809,12 @@
       "description": "Kill a Mithril Dragon.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Barbarian Outpost"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Access to Barbarian Firemaking Weaponry and protection from dragonfire"
+      "sourceRequirements": "Access to Barbarian Firemaking Weaponry and protection from dragonfire",
+      "regions": [
+        "Ancient Cavern"
+      ]
     },
     {
       "id": "kan_hard_9",
@@ -4100,12 +4163,19 @@
       "description": "Collect 5 seaweed from anywhere on Karamja.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Musa Point"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Seaweed (can be found near Jiminua's Jungle Store )"
+      "sourceRequirements": "Seaweed (can be found near Jiminua's Jungle Store )",
+      "anyOfRegions": [
+        "Musa Point",
+        "Brimhaven",
+        "Tai Bwo Wannai",
+        "Shilo Village",
+        "Kharazi Jungle",
+        "Mor Ul Rek (TzHaar City)",
+        "Crandor",
+        "Ship Yard"
+      ]
     },
     {
       "id": "kar_easy_9",
@@ -4422,12 +4492,12 @@
       "quests": [
         "The Grand Tree"
       ],
-      "regions": [
-        "Brimhaven"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of The Grand Tree"
+      "sourceRequirements": "Completion of The Grand Tree",
+      "regions": [
+        "Gandius"
+      ]
     },
     {
       "id": "kar_med_13",
@@ -4531,12 +4601,12 @@
       "quests": [
         "The Grand Tree"
       ],
-      "regions": [
-        "Musa Point"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of The Grand Tree Enough coins to pay the fare for a charter ship."
+      "sourceRequirements": "Partial completion of The Grand Tree Enough coins to pay the fare for a charter ship.",
+      "regions": [
+        "Ship Yard"
+      ]
     },
     {
       "id": "kar_med_19",
@@ -4826,13 +4896,13 @@
       "description": "Equip a Fire Cape or Infernal Cape in Mor Ul Rek.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Karamja"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Defeat TzTok-Jad in the Fight Caves.",
-      "sourceRequirements": "See the strategy guide for the TzHaar Fight Cave Fire cape or infernal cape"
+      "sourceRequirements": "See the strategy guide for the TzHaar Fight Cave Fire cape or infernal cape",
+      "regions": [
+        "Mor Ul Rek (TzHaar City)"
+      ]
     },
     {
       "id": "kar_elite_2",
@@ -4863,12 +4933,12 @@
         "Herblore": 87
       },
       "quests": [],
-      "regions": [
-        "Karamja"
-      ],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "87 Herblore Antidote++ and 5-20 Zulrah's scales (5 per dose)"
+      "sourceRequirements": "87 Herblore Antidote++ and 5-20 Zulrah's scales (5 per dose)",
+      "regions": [
+        "Brimhaven"
+      ]
     },
     {
       "id": "karamja_elite_5",
@@ -4881,12 +4951,12 @@
         "Farming": 72
       },
       "quests": [],
-      "regions": [
-        "Karamja"
-      ],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "72 Farming Calquat sapling, spade and rake 8 poison ivy berries recommended to pay the gardener"
+      "sourceRequirements": "72 Farming Calquat sapling, spade and rake 8 poison ivy berries recommended to pay the gardener",
+      "regions": [
+        "Tai Bwo Wannai"
+      ]
     },
     {
       "id": "kou_easy_1",
@@ -5143,12 +5213,16 @@
         "The Forsaken Tower",
         "The Ascent of Arceuus"
       ],
-      "regions": [
-        "Kourend Castle"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of The Depths of Despair, The Queen of Thieves, Tale of the Righteous, The Forsaken Tower and The Ascent of Arceuus Kharedst's memoirs or the book of the dead"
+      "sourceRequirements": "Completion of The Depths of Despair, The Queen of Thieves, Tale of the Righteous, The Forsaken Tower and The Ascent of Arceuus Kharedst's memoirs or the book of the dead",
+      "regions": [
+        "Arceuus",
+        "Hosidius",
+        "Lovakengj",
+        "Piscarilius",
+        "Shayzien"
+      ]
     },
     {
       "id": "kou_med_4",
@@ -6283,12 +6357,12 @@
         "Prayer": 52
       },
       "quests": [],
-      "regions": [
-        "Al Kharid"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "52 Prayer"
+      "sourceRequirements": "52 Prayer",
+      "regions": [
+        "Emir's Arena"
+      ]
     },
     {
       "id": "lum_hard_11",
@@ -6458,12 +6532,29 @@
         "Crafting": 15
       },
       "quests": [],
-      "regions": [
-        "Canifis"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "15 Crafting Chisel Any blamish shell"
+      "sourceRequirements": "15 Crafting Chisel Any blamish shell",
+      "anyOfRegions": [
+        "Canifis",
+        "Port Phasmatys",
+        "Mort'ton",
+        "Barrows",
+        "Burgh de Rott",
+        "Meiyerditch",
+        "Darkmeyer",
+        "Slepe",
+        "Ver Sinhaza",
+        "Fenkenstrain's Castle",
+        "Slayer Tower",
+        "Haunted Mine",
+        "Haunted Woods",
+        "Harmony Island",
+        "Mos Le'Harmless",
+        "Braindeath Island",
+        "Dragontooth Island",
+        "Icyene Graveyard"
+      ]
     },
     {
       "id": "mor_easy_2",
@@ -6581,12 +6672,12 @@
       "description": "Kill a Ghoul.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Canifis"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Weaponry"
+      "sourceRequirements": "Weaponry",
+      "regions": [
+        "Paterdomus"
+      ]
     },
     {
       "id": "mor_easy_8",
@@ -6866,12 +6957,30 @@
       "quests": [
         "In Aid of the Myreque"
       ],
-      "regions": [
-        "Canifis"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Partial completion of In Aid of the Myreque 22 Herblore Restore potion, garlic, and silver dust (made by using a silver bar on the Ectofuntus bone grinder )"
+      "sourceRequirements": "Partial completion of In Aid of the Myreque 22 Herblore Restore potion, garlic, and silver dust (made by using a silver bar on the Ectofuntus bone grinder )",
+      "anyOfRegions": [
+        "Canifis",
+        "Port Phasmatys",
+        "Mort'ton",
+        "Barrows",
+        "Burgh de Rott",
+        "Meiyerditch",
+        "Darkmeyer",
+        "Slepe",
+        "Ver Sinhaza",
+        "Fenkenstrain's Castle",
+        "Slayer Tower",
+        "Mort Myre Swamp",
+        "Haunted Mine",
+        "Haunted Woods",
+        "Harmony Island",
+        "Mos Le'Harmless",
+        "Braindeath Island",
+        "Dragontooth Island",
+        "Icyene Graveyard"
+      ]
     },
     {
       "id": "mor_hard_1",
@@ -7043,12 +7152,12 @@
         "Agility": 65
       },
       "quests": [],
-      "regions": [
-        "Mort Myre Swamp"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "65 Agility"
+      "sourceRequirements": "65 Agility",
+      "regions": [
+        "Paterdomus"
+      ]
     },
     {
       "id": "mor_hard_10",
@@ -8059,12 +8168,12 @@
         "Hunter": 9
       },
       "quests": [],
-      "regions": [
-        "Feldip Hills"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "9 Hunter Bird snare"
+      "sourceRequirements": "9 Hunter Bird snare",
+      "regions": [
+        "Piscatoris Fishing Colony"
+      ]
     },
     {
       "id": "west_easy_2",
@@ -8110,12 +8219,12 @@
       "description": "Complete a lap of the Gnome agility course.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Kandarin"
-      ],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "None"
+      "sourceRequirements": "None",
+      "regions": [
+        "Tree Gnome Stronghold"
+      ]
     },
     {
       "id": "western_easy_5",
@@ -8126,12 +8235,12 @@
       "description": "Score a goal in a Gnomeball match.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Kandarin"
-      ],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "None"
+      "sourceRequirements": "None",
+      "regions": [
+        "Tree Gnome Stronghold"
+      ]
     },
     {
       "id": "west_easy_4",
@@ -8313,13 +8422,13 @@
       "quests": [
         "Monkey Madness I"
       ],
-      "regions": [
-        "Kandarin"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Fish some Bass.",
-      "sourceRequirements": "Partial completion of Monkey Madness I 46 Fishing Big fishing net"
+      "sourceRequirements": "Partial completion of Monkey Madness I 46 Fishing Big fishing net",
+      "regions": [
+        "Ape Atoll"
+      ]
     },
     {
       "id": "west_med_5",
@@ -8335,13 +8444,13 @@
       "quests": [
         "Monkey Madness I"
       ],
-      "regions": [
-        "Kandarin"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Chop some Teak logs.",
-      "sourceRequirements": "Partial completion of Monkey Madness I 35 Woodcutting and 35 Firemaking Any axe and tinderbox"
+      "sourceRequirements": "Partial completion of Monkey Madness I 35 Woodcutting and 35 Firemaking Any axe and tinderbox",
+      "regions": [
+        "Ape Atoll"
+      ]
     },
     {
       "id": "western_med_6",
@@ -8352,13 +8461,13 @@
       "description": "Complete an intermediate game of Pest Control.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Kandarin"
-      ],
       "aliases": [],
       "classification": "new-canonical",
       "sourceRequirements": "70 Combat level",
-      "combatLevel": 70
+      "combatLevel": 70,
+      "regions": [
+        "Void Knights' Outpost"
+      ]
     },
     {
       "id": "western_med_7",
@@ -8372,12 +8481,12 @@
         "The Grand Tree",
         "One Small Favour"
       ],
-      "regions": [
-        "Kandarin"
-      ],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "Completion of The Grand Tree and partial completion of One Small Favour"
+      "sourceRequirements": "Completion of The Grand Tree and partial completion of One Small Favour",
+      "regions": [
+        "Feldip Hills"
+      ]
     },
     {
       "id": "western_med_8",
@@ -8390,12 +8499,12 @@
       "quests": [
         "Big Chompy Bird Hunting"
       ],
-      "regions": [
-        "Kandarin"
-      ],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "Completion of Big Chompy Bird Hunting Ogre bellows, ( comp ) ogre bow, and ogre or brutal arrows 125 chompy or jubbly bird kills"
+      "sourceRequirements": "Completion of Big Chompy Bird Hunting Ogre bellows, ( comp ) ogre bow, and ogre or brutal arrows 125 chompy or jubbly bird kills",
+      "regions": [
+        "Feldip Hills"
+      ]
     },
     {
       "id": "western_med_9",
@@ -8408,12 +8517,13 @@
       "quests": [
         "Eagles' Peak"
       ],
-      "regions": [
-        "Kandarin"
-      ],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "Completion of Eagles' Peak Rope"
+      "sourceRequirements": "Completion of Eagles' Peak Rope",
+      "regions": [
+        "Eagles' Peak",
+        "Feldip Hills"
+      ]
     },
     {
       "id": "west_med_8",
@@ -8464,12 +8574,12 @@
       "quests": [
         "The Eyes of Glouphrie"
       ],
-      "regions": [
-        "Kandarin"
-      ],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "Completion of The Eyes of Glouphrie Crystal saw seed"
+      "sourceRequirements": "Completion of The Eyes of Glouphrie Crystal saw seed",
+      "regions": [
+        "Tree Gnome Stronghold"
+      ]
     },
     {
       "id": "western_med_13",
@@ -8484,12 +8594,12 @@
       "quests": [
         "The Grand Tree"
       ],
-      "regions": [
-        "Kandarin"
-      ],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "Completion of The Grand Tree 40 Mining Any pickaxe"
+      "sourceRequirements": "Completion of The Grand Tree 40 Mining Any pickaxe",
+      "regions": [
+        "Tree Gnome Stronghold"
+      ]
     },
     {
       "id": "west_hard_1",
@@ -8679,9 +8789,6 @@
       "quests": [
         "Roving Elves"
       ],
-      "regions": [
-        "Yanille"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Completion of Roving Elves 65 Construction 3 mahogany planks, saw, and hammer Isafdar painting (bought from Sir Renitee for 2,000 coins ) 25,000 coins to construct a Quest Hall if you haven't already"
@@ -8755,12 +8862,20 @@
       "quests": [
         "Regicide"
       ],
-      "regions": [
-        "Tirannwn"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Started Regicide 85 Fletching Magic longbow (u) and a bow string"
+      "sourceRequirements": "Started Regicide 85 Fletching Magic longbow (u) and a bow string",
+      "anyOfRegions": [
+        "Prifddinas",
+        "Lletya",
+        "Tyras Camp",
+        "Isafdar",
+        "Zul-Andra",
+        "Arandar",
+        "Gwenith",
+        "Iorwerth Camp",
+        "Poison Waste"
+      ]
     },
     {
       "id": "west_elite_2",
@@ -8773,12 +8888,12 @@
         "Slayer": 93
       },
       "quests": [],
-      "regions": [
-        "Tree Gnome Stronghold"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "93 Slayer See the strategy guide"
+      "sourceRequirements": "93 Slayer See the strategy guide",
+      "regions": [
+        "Castle Wars"
+      ]
     },
     {
       "id": "west_elite_3",
@@ -8811,12 +8926,12 @@
       "quests": [
         "Underground Pass"
       ],
-      "regions": [
-        "Isafdar"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Underground Pass 85 Agility"
+      "sourceRequirements": "Completion of Underground Pass 85 Agility",
+      "regions": [
+        "Arandar"
+      ]
     },
     {
       "id": "west_elite_5",
@@ -8908,12 +9023,13 @@
       "description": "Enter the Wilderness from the Ardougne or Edgeville lever.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Wilderness"
-      ],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "None"
+      "sourceRequirements": "None",
+      "anyOfRegions": [
+        "East Ardougne",
+        "Edgeville"
+      ]
     },
     {
       "id": "wilderness_easy_3",
@@ -8924,12 +9040,12 @@
       "description": "Pray at the Chaos Altar in the Western Wilderness.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Wilderness"
-      ],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "None"
+      "sourceRequirements": "None",
+      "regions": [
+        "Chaos Temple"
+      ]
     },
     {
       "id": "wilderness_easy_4",
@@ -8940,12 +9056,13 @@
       "description": "Enter the Chaos Runecrafting temple.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Wilderness"
-      ],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "Access to the Chaos Altar ( chaos talisman / tiara, catalytic talisman / tiara, or the Abyss )"
+      "sourceRequirements": "Access to the Chaos Altar ( chaos talisman / tiara, catalytic talisman / tiara, or the Abyss )",
+      "anyOfRegions": [
+        "Chaos Temple",
+        "Edgeville"
+      ]
     },
     {
       "id": "wild_easy_3",
@@ -9009,12 +9126,12 @@
       "description": "Enter the King Black Dragon's lair.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Wilderness"
-      ],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "None"
+      "sourceRequirements": "None",
+      "regions": [
+        "Lava Maze"
+      ]
     },
     {
       "id": "wilderness_easy_9",
@@ -9025,12 +9142,12 @@
       "description": "Collect 5 Red spiders' eggs from the Wilderness",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Wilderness"
-      ],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "None"
+      "sourceRequirements": "None",
+      "regions": [
+        "Edgeville"
+      ]
     },
     {
       "id": "wild_easy_10",
@@ -9043,13 +9160,26 @@
         "Mining": 15
       },
       "quests": [],
-      "regions": [
-        "Wilderness"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Mine some Iron Ore in the Wilderness.",
-      "sourceRequirements": "15 Mining Any pickaxe"
+      "sourceRequirements": "15 Mining Any pickaxe",
+      "anyOfRegions": [
+        "Ferox Enclave",
+        "Wilderness Volcano",
+        "Chaos Temple",
+        "Rogues' Castle",
+        "Lava Maze",
+        "Wilderness Bandit Camp",
+        "Dark Warriors' Fortress",
+        "Graveyard of Shadows",
+        "Forgotten Cemetery",
+        "Mage Arena",
+        "Scorpia's Cave",
+        "Fountain of Rune",
+        "Wilderness God Wars Dungeon",
+        "Daimon's Crater"
+      ]
     },
     {
       "id": "wilderness_easy_11",
@@ -9062,12 +9192,12 @@
       "quests": [
         "Enter the Abyss"
       ],
-      "regions": [
-        "Wilderness"
-      ],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "Completion of Enter the Abyss"
+      "sourceRequirements": "Completion of Enter the Abyss",
+      "regions": [
+        "Edgeville"
+      ]
     },
     {
       "id": "wild_easy_8",
@@ -9078,13 +9208,26 @@
       "description": "Equip any team cape in the Wilderness.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Wilderness"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Equip a Team Cape.",
-      "sourceRequirements": "Any team cape"
+      "sourceRequirements": "Any team cape",
+      "anyOfRegions": [
+        "Ferox Enclave",
+        "Wilderness Volcano",
+        "Chaos Temple",
+        "Rogues' Castle",
+        "Lava Maze",
+        "Wilderness Bandit Camp",
+        "Dark Warriors' Fortress",
+        "Graveyard of Shadows",
+        "Forgotten Cemetery",
+        "Mage Arena",
+        "Scorpia's Cave",
+        "Fountain of Rune",
+        "Wilderness God Wars Dungeon",
+        "Daimon's Crater"
+      ]
     },
     {
       "id": "wilderness_med_1",
@@ -9097,12 +9240,25 @@
         "Mining": 55
       },
       "quests": [],
-      "regions": [
-        "Wilderness"
-      ],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "55 Mining Any pickaxe"
+      "sourceRequirements": "55 Mining Any pickaxe",
+      "anyOfRegions": [
+        "Ferox Enclave",
+        "Wilderness Volcano",
+        "Chaos Temple",
+        "Rogues' Castle",
+        "Lava Maze",
+        "Wilderness Bandit Camp",
+        "Dark Warriors' Fortress",
+        "Graveyard of Shadows",
+        "Forgotten Cemetery",
+        "Mage Arena",
+        "Scorpia's Cave",
+        "Fountain of Rune",
+        "Wilderness God Wars Dungeon",
+        "Daimon's Crater"
+      ]
     },
     {
       "id": "wilderness_med_2",
@@ -9115,12 +9271,25 @@
         "Woodcutting": 61
       },
       "quests": [],
-      "regions": [
-        "Wilderness"
-      ],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "61 Woodcutting Any axe and weaponry"
+      "sourceRequirements": "61 Woodcutting Any axe and weaponry",
+      "anyOfRegions": [
+        "Ferox Enclave",
+        "Wilderness Volcano",
+        "Chaos Temple",
+        "Rogues' Castle",
+        "Lava Maze",
+        "Wilderness Bandit Camp",
+        "Dark Warriors' Fortress",
+        "Graveyard of Shadows",
+        "Forgotten Cemetery",
+        "Mage Arena",
+        "Scorpia's Cave",
+        "Fountain of Rune",
+        "Wilderness God Wars Dungeon",
+        "Daimon's Crater"
+      ]
     },
     {
       "id": "wild_easy_2",
@@ -9162,13 +9331,13 @@
         "Agility": 52
       },
       "quests": [],
-      "regions": [
-        "Wilderness"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Complete the Wilderness Agility Course.",
-      "sourceRequirements": "52 Agility"
+      "sourceRequirements": "52 Agility",
+      "regions": [
+        "Wilderness Agility Course"
+      ]
     },
     {
       "id": "wild_med_2",
@@ -9179,12 +9348,25 @@
       "description": "Kill a Green Dragon.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Wilderness"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Protection from dragonfire recommended if not safe spotting and weaponry to slay it"
+      "sourceRequirements": "Protection from dragonfire recommended if not safe spotting and weaponry to slay it",
+      "anyOfRegions": [
+        "Ferox Enclave",
+        "Wilderness Volcano",
+        "Chaos Temple",
+        "Rogues' Castle",
+        "Lava Maze",
+        "Wilderness Bandit Camp",
+        "Dark Warriors' Fortress",
+        "Graveyard of Shadows",
+        "Forgotten Cemetery",
+        "Mage Arena",
+        "Scorpia's Cave",
+        "Fountain of Rune",
+        "Wilderness God Wars Dungeon",
+        "Daimon's Crater"
+      ]
     },
     {
       "id": "wilderness_med_6",
@@ -9195,12 +9377,12 @@
       "description": "Kill an Ankou in the Wilderness.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Wilderness"
-      ],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "Weaponry"
+      "sourceRequirements": "Weaponry",
+      "regions": [
+        "Forgotten Cemetery"
+      ]
     },
     {
       "id": "wild_med_5",
@@ -9213,12 +9395,12 @@
         "Magic": 60
       },
       "quests": [],
-      "regions": [
-        "Wilderness"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "60 Magic Unpowered orb and means to cast Charge Earth Orb ( )"
+      "sourceRequirements": "60 Magic Unpowered orb and means to cast Charge Earth Orb ( )",
+      "regions": [
+        "Edgeville"
+      ]
     },
     {
       "id": "wild_med_3",
@@ -9260,12 +9442,12 @@
       "description": "Talk to the Emblem Trader in Edgeville about emblems. (He's just north of the bank)",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Wilderness"
-      ],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "None"
+      "sourceRequirements": "None",
+      "regions": [
+        "Edgeville"
+      ]
     },
     {
       "id": "wilderness_med_10",
@@ -9280,12 +9462,12 @@
       "quests": [
         "Between a Rock..."
       ],
-      "regions": [
-        "Wilderness"
-      ],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "Partial completion of Between a Rock... 50 Smithing 7500 coins, 3 gold bars, and a hammer"
+      "sourceRequirements": "Partial completion of Between a Rock... 50 Smithing 7500 coins, 3 gold bars, and a hammer",
+      "regions": [
+        "Resource Area"
+      ]
     },
     {
       "id": "wild_med_7",
@@ -9352,12 +9534,12 @@
         "Magic": 66
       },
       "quests": [],
-      "regions": [
-        "Wilderness"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "66 Magic Unpowered orb and means to cast Charge Air Orb ( )"
+      "sourceRequirements": "66 Magic Unpowered orb and means to cast Charge Air Orb ( )",
+      "regions": [
+        "Edgeville"
+      ]
     },
     {
       "id": "wild_hard_3",
@@ -9370,12 +9552,12 @@
         "Hunter": 67
       },
       "quests": [],
-      "regions": [
-        "Wilderness"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "67 Hunter Small fishing net and a rope"
+      "sourceRequirements": "67 Hunter Small fishing net and a rope",
+      "regions": [
+        "Chaos Temple"
+      ]
     },
     {
       "id": "wild_hard_4",
@@ -9436,13 +9618,15 @@
       "description": "Kill the Crazy Arc., Chaos Fanatic & Scorpia.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Wilderness"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Kill the Crazy Archaeologist, Chaos Fanatic & Scorpia.",
-      "sourceRequirements": "See the individual strategy guides for the Crazy archaeologist, Chaos Fanatic, and Scorpia"
+      "sourceRequirements": "See the individual strategy guides for the Crazy archaeologist, Chaos Fanatic, and Scorpia",
+      "regions": [
+        "Forgotten Cemetery",
+        "Chaos Temple",
+        "Scorpia's Cave"
+      ]
     },
     {
       "id": "wild_hard_8",
@@ -9455,9 +9639,6 @@
         "Agility": 64
       },
       "quests": [],
-      "regions": [
-        "Wilderness"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "64 Agility Partial completion of Troll Stronghold, or completion of the Easy Combat Achievements for Ghommal's hilt 1",
@@ -9472,6 +9653,9 @@
             "Easy"
           ]
         }
+      ],
+      "regions": [
+        "Wilderness God Wars Dungeon"
       ]
     },
     {
@@ -9533,12 +9717,25 @@
       "description": "Kill Callisto, Venenatis & Vet'ion.",
       "skills": {},
       "quests": [],
-      "regions": [
-        "Wilderness"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of the Medium Wilderness diary is required to kill the greater versions, and completion of the Hard Wilderness diary is required to kill the lesser versions See the individual strategy guides for Callisto, Venenatis, and Vet'ion, or those for the weaker bosses Artio, Spindel, and Calvar'ion"
+      "sourceRequirements": "Completion of the Medium Wilderness diary is required to kill the greater versions, and completion of the Hard Wilderness diary is required to kill the lesser versions See the individual strategy guides for Callisto, Venenatis, and Vet'ion, or those for the weaker bosses Artio, Spindel, and Calvar'ion",
+      "anyOfRegions": [
+        "Ferox Enclave",
+        "Wilderness Volcano",
+        "Chaos Temple",
+        "Rogues' Castle",
+        "Lava Maze",
+        "Wilderness Bandit Camp",
+        "Dark Warriors' Fortress",
+        "Graveyard of Shadows",
+        "Forgotten Cemetery",
+        "Mage Arena",
+        "Scorpia's Cave",
+        "Fountain of Rune",
+        "Wilderness God Wars Dungeon",
+        "Daimon's Crater"
+      ]
     },
     {
       "id": "wild_elite_2",
@@ -9553,12 +9750,12 @@
       "quests": [
         "Desert Treasure I"
       ],
-      "regions": [
-        "Wilderness"
-      ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Desert Treasure I 96 Magic Ancient Magicks selected Means to cast Ghorrock Teleport ( )"
+      "sourceRequirements": "Completion of Desert Treasure I 96 Magic Ancient Magicks selected Means to cast Ghorrock Teleport ( )",
+      "regions": [
+        "Lava Maze"
+      ]
     },
     {
       "id": "wild_elite_3",

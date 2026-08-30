@@ -341,9 +341,13 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                           const alternativeLabel = task.oneOf?.length
                             ? task.oneOf.map(diaryRequirementOptionLabel).join(' or ')
                             : undefined;
+                          const anyRegionAlternativeLabel = task.anyOfRegions?.length
+                            ? task.anyOfRegions.join(' or ')
+                            : undefined;
                           const hasReqs = Boolean(
                             Object.keys(task.skills ?? {}).length || task.items?.length || task.quests?.length
-                            || task.regions?.length || task.oneOf?.length || task.combatLevel
+                            || task.regions?.length || task.anyOfRegions?.length
+                            || task.oneOf?.length || task.combatLevel
                             || task.allQuests || task.anySkillLevel || task.questPoints !== undefined
                             || task.manualRequirements?.length,
                           );
@@ -351,7 +355,10 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                           const unmetSkillRequirements = skillRequirements.filter(([skill, level]) =>
                             !meetsSkillRequirement(unlocks, skill, level as number),
                           );
-                          const regionRequirements = (task.regions ?? []).map((region) => ({
+                          const regionRequirements = [
+                            ...(task.regions ?? []),
+                            ...(task.anyOfRegions ?? []),
+                          ].map((region) => ({
                             region,
                             chunk: chunkForPlace(region),
                           }));
@@ -411,8 +418,13 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                         </span>
                                       ))}
                                       {alternativeLabel && (
-                                        <span className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${taskEligibility.blockers.some(blocker => blocker.kind === 'alternative') ? 'border-red-500/30 text-red-400 bg-red-900/10' : 'border-white/5 text-gray-500 bg-black/30'}`}>
+                                        <span className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${taskEligibility.blockers.some(blocker => blocker.kind === 'alternative' && blocker.label === alternativeLabel) ? 'border-red-500/30 text-red-400 bg-red-900/10' : 'border-white/5 text-gray-500 bg-black/30'}`}>
                                           <BookOpen size={8} /> One of: {alternativeLabel}
+                                        </span>
+                                      )}
+                                      {anyRegionAlternativeLabel && (
+                                        <span className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${taskEligibility.blockers.some(blocker => blocker.kind === 'alternative' && blocker.label === anyRegionAlternativeLabel) ? 'border-red-500/30 text-red-400 bg-red-900/10' : 'border-white/5 text-gray-500 bg-black/30'}`}>
+                                          <MapPin size={8} /> Any area: {anyRegionAlternativeLabel}
                                         </span>
                                       )}
                                       {[task.combatLevel ? `Combat level ${task.combatLevel}` : undefined, task.allQuests ? 'All quests' : undefined, task.anySkillLevel ? `Any skill ${task.anySkillLevel}` : undefined].filter((label): label is string => Boolean(label)).map(label => {
