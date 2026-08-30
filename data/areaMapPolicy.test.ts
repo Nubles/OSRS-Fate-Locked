@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { REGION_CHUNKS } from './regionChunks';
 import { SUB_AREA_CHUNKS } from './subAreaChunks';
-import { REGIONS_LIST } from './items';
+import { REGION_GROUPS, REGIONS_LIST } from './items';
 import {
   AREA_ALIAS_POLICIES,
   AREA_ALIASES,
@@ -46,11 +46,17 @@ describe('area map policy', () => {
   it('pins the exact legacy alias mapping', () => {
     expect(AREA_ALIASES).toEqual({
       'Elf Camp': 'Iorwerth Camp',
+      'Ancient Cavern': 'Baxtorian Falls',
+      'Chaos Temple (Asgarnia)': 'Taverley',
+      'Combat Training Camp': 'East Ardougne',
+      "Emir's Arena": 'Duel Arena / PvP Arena',
+      'Gandius': 'Ship Yard',
       "Heroes' Guild": 'Taverley',
       'Ice Mountain': 'Goblin Village',
       'Ranging Guild': 'Hemenster',
       "Otto's Grotto": 'Baxtorian Falls',
       'Resource Area': 'Mage Arena',
+      'Wilderness Agility Course': 'Mage Arena',
     });
   });
 
@@ -65,18 +71,23 @@ describe('area map policy', () => {
     expect(sorted(surface)).toEqual(["Giants' Plateau"]);
     expect(sorted(entrance)).toEqual(EXPECTED_ENTRANCE_REFERENCE_NAMES);
   });
-  it('maps every surface overlap onto chunks owned by its canonical area', () => {
+  it('maps every surface overlap within the canonical area parent region', () => {
     for (const [alias, policy] of Object.entries(AREA_ALIAS_POLICIES)) {
       if (policy.kind !== 'surface-overlap') continue;
+      const parent = Object.entries(REGION_GROUPS)
+        .find(([, areas]) => areas.includes(policy.canonical))?.[0];
       const owned = new Set(
-        (SUB_AREA_CHUNKS[policy.canonical] ?? []).map(({ cx, cy }) => `${cx},${cy}`),
+        (REGION_CHUNKS[parent ?? policy.canonical] ?? [])
+          .map(({ cx, cy }) => `${cx},${cy}`),
       );
       expect(policy.chunks.every(({ cx, cy }) => owned.has(`${cx},${cy}`)), alias).toBe(true);
     }
   });
   it('uses canonical surface-overlap display names', () => {
     expect(displayAreaName("Otto's Grotto")).toBe("Baxtorian Falls \u00b7 Otto's Grotto");
-    expect(displayAreaName('Baxtorian Falls')).toBe("Baxtorian Falls \u00b7 Otto's Grotto");
+    expect(displayAreaName('Baxtorian Falls')).toBe(
+      "Baxtorian Falls \u00b7 Otto's Grotto \u00b7 Ancient Cavern",
+    );
     expect(displayAreaName('Iorwerth Camp')).toBe('Iorwerth Camp');
   });
 

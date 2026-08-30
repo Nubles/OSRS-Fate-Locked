@@ -199,7 +199,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   "Phosani's Nightmare": { note: 'Sleeping Giants miniquest; must have defeated The Nightmare.' },
   'Fortis Colosseum': { note: 'Varlamore — high-level combat (Sol Heredit).' },
   'The Hueycoatl': { note: 'Varlamore.' },
-  'The Royal Titans': { note: 'Varlamore.' },
+  'The Royal Titans': { note: 'Asgarnian Ice Dungeon.' },
   'TzHaar Fight Cave': { note: 'Mor Ul Rek — high-level combat.' },
 
   // ---- Minigames with a gate -------------------------------------------------

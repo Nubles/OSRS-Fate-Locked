@@ -19,20 +19,20 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-08-30-requirement-readiness');
+    expect(LATEST_CHANGELOG.id).toBe('2026-08-30-diary-geography');
   });
 
-  it('announces the synchronized requirement fixes exactly', () => {
+  it('announces the diary geography corrections exactly', () => {
     expect(LATEST_CHANGELOG).toEqual({
-      id: '2026-08-30-requirement-readiness',
-      title: 'Requirements Stay in Sync',
+      id: '2026-08-30-diary-geography',
+      title: 'Achievement Diary Locations Corrected',
       date: '2026-08-30',
       sections: {
         fixed: [
-          'Boss and minigame readiness now uses the same location requirements as the activity access map.',
-          'Bounty Hunter now requires combat level 32 and confirmation of at least 12 hours of account play time.',
-          'Soul Wars now requires combat level 40, total level 500, and confirmation that its tutorial is complete.',
-          'Goal routes that depend on Dream Mentor now include its combat level 85 requirement.',
+          'Achievement Diary tasks now use their actual local areas instead of requiring an entire parent region.',
+          "Sarah's Farm shop, Falador Farm tasks, the Combat Training Camp, Ancient Cavern, Gandius, Emir's Arena, and other misplaced tasks now use their correct unlocks.",
+          'Tasks valid in several areas now accept any valid location, while player-owned-house tasks no longer require an unrelated overworld area.',
+          'The Royal Titans requirement note now points to the Asgarnian Ice Dungeon.',
         ],
       },
     });

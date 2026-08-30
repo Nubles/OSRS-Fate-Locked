@@ -238,6 +238,7 @@ export interface DoableTask {
   items?: string[];
   quests?: string[];
   regions?: string[];
+  anyOfRegions?: string[];
   cas?: string[];
   questPoints?: number;
   manualRequirements?: string[];
@@ -289,7 +290,7 @@ const evaluateDiaryRequirement = (
   unlocks: UnlockState,
   gameModeId?: string,
 ): DiaryTaskEligibility => {
-  const blockers: DirectEligibilityBlocker[] = [];
+  const blockers: EligibilityBlocker[] = [];
   const evidence: string[] = [...(requirement.items ?? [])];
 
   for (const [skill, required] of Object.entries(requirement.skills ?? {})) {
@@ -317,6 +318,24 @@ const evaluateDiaryRequirement = (
   for (const region of requirement.regions ?? []) {
     if (isAreaReachable(region, unlocks, gameModeId)) evidence.push(region);
     else blockers.push({ kind: 'region', label: region });
+  }
+  if (requirement.anyOfRegions?.length) {
+    const reachableRegion = requirement.anyOfRegions.find(region => (
+      isAreaReachable(region, unlocks, gameModeId)
+    ));
+    if (reachableRegion) {
+      evidence.push(reachableRegion);
+    } else {
+      blockers.push({
+        kind: 'alternative',
+        label: requirement.anyOfRegions.join(' or '),
+        blockerKinds: ['region'],
+        routes: requirement.anyOfRegions.map(region => ({
+          label: region,
+          blockers: [{ kind: 'region', label: region }],
+        })),
+      });
+    }
   }
   if (requirement.combatLevel !== undefined) {
     const label = 'Combat level ' + requirement.combatLevel;

@@ -153,6 +153,7 @@ describe('Achievement Diary source parser', () => {
     ];
     snapshot.tasks[0].combatLevel = 70;
     snapshot.tasks[0].allQuests = true;
+    snapshot.tasks[0].anyOfRegions = ['Falador', 'Port Sarim'];
     snapshot.tasks[0].questPoints = 32;
     snapshot.tasks[0].manualRequirements = ['Confirm external progress'];
     const first = renderDiaryTasks(snapshot);
@@ -163,6 +164,7 @@ describe('Achievement Diary source parser', () => {
     expect(first.indexOf("id: 'fal_easy_1'")).toBeLessThan(first.indexOf("id: 'fal_med_1'"));
     expect(first).toContain('export interface DiaryTaskRequirementOption {');
     expect(first).toContain('oneOf?: DiaryTaskRequirementOption[];');
+    expect(first).toContain('anyOfRegions?: string[];');
     expect(first).toContain('questPoints?: number;');
     expect(first).toContain('manualRequirements?: string[];');
     expect(first).toContain(
@@ -172,6 +174,7 @@ describe('Achievement Diary source parser', () => {
     expect(first).toContain(
       "questPoints: 32, manualRequirements: ['Confirm external progress']",
     );
+    expect(first).toContain("anyOfRegions: ['Falador', 'Port Sarim']");
     expect(first.indexOf("id: 'fal_med_1'")).toBeLessThan(first.indexOf("id: 'fal_med_3'"));
     expect(first).toContain("description: 'Smith some blurite limbs on Doric\\'s anvil'");
   });
@@ -220,6 +223,13 @@ describe('offline generated Diary verification', () => {
     const badManual: any = structuredClone(SIX_TASK_SNAPSHOT);
     badManual.tasks[0].manualRequirements = [''];
     expect(() => renderDiaryTasks(badManual)).toThrow(/manualRequirements.*non-empty string/i);
+
+    const nestedAnyRegions: any = structuredClone(SIX_TASK_SNAPSHOT);
+    nestedAnyRegions.tasks[0].oneOf = [
+      { anyOfRegions: ['Falador', 'Port Sarim'] },
+      { label: 'Other route' },
+    ];
+    expect(() => renderDiaryTasks(nestedAnyRegions)).toThrow(/any-of regions.*only supported on tasks/i);
   });
 
   it('reports generated output drift without rewriting the supplied output', () => {

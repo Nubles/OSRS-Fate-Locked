@@ -137,11 +137,27 @@ describe('Diary task list references resolve', () => {
   it('every region tag is a known area', () => {
     const bad: string[] = [];
     for (const t of ALL_DIARY_TASKS as any[]) {
-      for (const r of t.regions || []) {
-        if (!VALID_REGION.has(r)) bad.push(`${t.id} -> "${r}"`);
+      for (const requirement of [t, ...(t.oneOf ?? [])]) {
+        for (const r of [
+          ...(requirement.regions ?? []),
+          ...(requirement.anyOfRegions ?? []),
+        ]) {
+          if (!VALID_REGION.has(r)) bad.push(`${t.id} -> "${r}"`);
+        }
       }
     }
     expect(bad, 'diary tasks with unknown region tags').toEqual([]);
+  });
+
+  it('uses leaf areas instead of parent-region completion gates', () => {
+    const parents = new Set(['Misthalin', ...Object.keys(REGION_GROUPS)]);
+    const bad = ALL_DIARY_TASKS.flatMap(task => [
+      ...(task.regions ?? []),
+      ...(task.anyOfRegions ?? []),
+      ...(task.oneOf ?? []).flatMap(option => option.regions ?? []),
+    ].filter(region => parents.has(region)).map(region => `${task.id} -> "${region}"`));
+
+    expect(bad, 'diary tasks gated by a whole parent region').toEqual([]);
   });
 });
 

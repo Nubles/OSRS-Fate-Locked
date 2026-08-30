@@ -52,9 +52,11 @@ describe('placeOf', () => {
     expect(placeOf(39, 54)).toMatchObject({
       subArea: 'Baxtorian Falls',
       region: 'Kandarin',
-      label: "Baxtorian Falls \u00b7 Otto's Grotto \u00b7 Kandarin",
+      label: "Baxtorian Falls \u00b7 Otto's Grotto \u00b7 Ancient Cavern \u00b7 Kandarin",
     });
-    expect(placeOf(45, 54).label).toBe("Taverley \u00b7 Heroes' Guild \u00b7 Asgarnia");
+    expect(placeOf(45, 54).label).toBe(
+      "Taverley \u00b7 Heroes' Guild \u00b7 Chaos Temple (Asgarnia) \u00b7 Asgarnia",
+    );
   });
 });
 

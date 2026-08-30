@@ -22,7 +22,9 @@ describe('Journal next-best diary readiness', () => {
       equipment: {},
       skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10])),
       levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])),
-      regions: [...new Set(ALL_DIARY_TASKS.flatMap(task => task.regions ?? []))],
+      regions: [...new Set(ALL_DIARY_TASKS.flatMap(task => [
+        ...(task.regions ?? []), ...(task.anyOfRegions ?? []),
+      ]))],
       mobility: [], arcana: [], housing: [], merchants: [], minigames: [],
       bosses: [], storage: [], guilds: [], farming: [], slayerUnlocks: [],
       quests: Object.keys(QUEST_DATA).filter(quest => quest !== 'Biohazard'),

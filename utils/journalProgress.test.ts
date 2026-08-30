@@ -84,7 +84,9 @@ describe('diaryUnmet', () => {
     const unlocks = u({
       skills: Object.fromEntries(taskSkills.map(skill => [skill, 10])),
       levels: Object.fromEntries(taskSkills.map(skill => [skill, 99])),
-      regions: [...new Set(ALL_DIARY_TASKS.flatMap(task => task.regions ?? []))],
+      regions: [...new Set(ALL_DIARY_TASKS.flatMap(task => [
+        ...(task.regions ?? []), ...(task.anyOfRegions ?? []),
+      ]))],
       quests: Object.keys(QUEST_DATA).filter(quest => quest !== 'Biohazard'),
       cas: ['Easy', 'Medium', 'Hard', 'Elite', 'Master', 'Grandmaster'],
       completedTasks: ALL_DIARY_TASKS

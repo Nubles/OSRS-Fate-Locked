@@ -241,7 +241,7 @@ describe('buildGoalRoute — geographic area aliases', () => {
     }))!;
 
     expect(route.regions).toContainEqual(expect.objectContaining({
-      name: 'Mage Arena · Resource Area',
+      name: 'Mage Arena · Resource Area · Wilderness Agility Course',
       met: false,
     }));
     expect(route.tables).toContainEqual(expect.objectContaining({

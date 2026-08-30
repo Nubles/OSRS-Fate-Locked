@@ -46,7 +46,9 @@ const placeFor = (a: JournalNextBestAction, unlocks: any): { cx: number; cy: num
     return p ? { cx: p.cx, cy: p.cy } : null;
   }
   const tasks = ALL_DIARY_TASKS.filter(t => t.tierId === a.id);
-  const region = tasks.find(t => t.regions?.length)?.regions?.[0] ?? DIARY_DATA[a.id]?.region;
+  const region = tasks.find(t => t.regions?.length)?.regions?.[0]
+    ?? tasks.find(t => t.anyOfRegions?.length)?.anyOfRegions?.[0]
+    ?? DIARY_DATA[a.id]?.region;
   return region ? chunkForPlace(region) : null;
 };
 

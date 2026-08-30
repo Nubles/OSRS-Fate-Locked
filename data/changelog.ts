@@ -19,6 +19,19 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-08-30-diary-geography',
+    title: 'Achievement Diary Locations Corrected',
+    date: '2026-08-30',
+    sections: {
+      fixed: [
+        'Achievement Diary tasks now use their actual local areas instead of requiring an entire parent region.',
+        "Sarah's Farm shop, Falador Farm tasks, the Combat Training Camp, Ancient Cavern, Gandius, Emir's Arena, and other misplaced tasks now use their correct unlocks.",
+        'Tasks valid in several areas now accept any valid location, while player-owned-house tasks no longer require an unrelated overworld area.',
+        'The Royal Titans requirement note now points to the Asgarnian Ice Dungeon.',
+      ],
+    },
+  },
+  {
     id: '2026-08-30-requirement-readiness',
     title: 'Requirements Stay in Sync',
     date: '2026-08-30',

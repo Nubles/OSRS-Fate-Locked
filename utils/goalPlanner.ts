@@ -131,7 +131,7 @@ function currentQuestPoints(unlocks: any): number {
 
 function areaPlanStep(name: string): PlanStep {
   const canonical = canonicalAreaName(name);
-  return { kind: 'region', id: canonical, label: displayAreaName(canonical), unlockTable: TableType.REGIONS, done: false };
+  return { kind: 'region', id: canonical, label: displayAreaName(name), unlockTable: TableType.REGIONS, done: false };
 }
 
 function requirementOptionPlanSteps(option: any): PlanStep[] {
