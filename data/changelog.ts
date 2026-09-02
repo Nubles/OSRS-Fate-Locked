@@ -19,6 +19,17 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-09-02-shop-category-accuracy',
+    title: 'Shops Stay in Their Lane',
+    date: '2026-09-02',
+    sections: {
+      fixed: [
+        'Shop unlocks now follow each store\'s actual stock and speciality, including Scavvo\'s rune armour, ore merchants, pubs, cape sellers, and reward exchanges.',
+        'Every placed shop and stock-bearing item source now receives a consistent merchant category instead of silently bypassing its unlock.',
+      ],
+    },
+  },
+  {
     id: '2026-08-30-diary-geography',
     title: 'Achievement Diary Locations Corrected',
     date: '2026-08-30',

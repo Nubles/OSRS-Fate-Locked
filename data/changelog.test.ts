@@ -19,11 +19,29 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-08-30-diary-geography');
+    expect(LATEST_CHANGELOG.id).toBe('2026-09-02-shop-category-accuracy');
   });
 
-  it('announces the diary geography corrections exactly', () => {
+  it('announces the shop category fixes exactly', () => {
     expect(LATEST_CHANGELOG).toEqual({
+      id: '2026-09-02-shop-category-accuracy',
+      title: 'Shops Stay in Their Lane',
+      date: '2026-09-02',
+      sections: {
+        fixed: [
+          'Shop unlocks now follow each store\'s actual stock and speciality, including Scavvo\'s rune armour, ore merchants, pubs, cape sellers, and reward exchanges.',
+          'Every placed shop and stock-bearing item source now receives a consistent merchant category instead of silently bypassing its unlock.',
+        ],
+      },
+    });
+  });
+
+  it('retains the diary geography corrections', () => {
+    const diaryGeography = CHANGELOG_RELEASES.find(
+      release => release.id === '2026-08-30-diary-geography',
+    );
+
+    expect(diaryGeography).toEqual({
       id: '2026-08-30-diary-geography',
       title: 'Achievement Diary Locations Corrected',
       date: '2026-08-30',
@@ -33,6 +51,26 @@ describe('authored changelog releases', () => {
           "Sarah's Farm shop, Falador Farm tasks, the Combat Training Camp, Ancient Cavern, Gandius, Emir's Arena, and other misplaced tasks now use their correct unlocks.",
           'Tasks valid in several areas now accept any valid location, while player-owned-house tasks no longer require an unrelated overworld area.',
           'The Royal Titans requirement note now points to the Asgarnian Ice Dungeon.',
+        ],
+      },
+    });
+  });
+
+  it('retains the synchronized requirement fixes', () => {
+    const requirementReadiness = CHANGELOG_RELEASES.find(
+      release => release.id === '2026-08-30-requirement-readiness',
+    );
+
+    expect(requirementReadiness).toEqual({
+      id: '2026-08-30-requirement-readiness',
+      title: 'Requirements Stay in Sync',
+      date: '2026-08-30',
+      sections: {
+        fixed: [
+          'Boss and minigame readiness now uses the same location requirements as the activity access map.',
+          'Bounty Hunter now requires combat level 32 and confirmation of at least 12 hours of account play time.',
+          'Soul Wars now requires combat level 40, total level 500, and confirmation that its tutorial is complete.',
+          'Goal routes that depend on Dream Mentor now include its combat level 85 requirement.',
         ],
       },
     });

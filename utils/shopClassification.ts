@@ -5,9 +5,105 @@
  * can show which concrete shops a category unlock actually grants — and
  * where they are.
  *
- * Ordered keyword rules; first match wins (specific before generic, e.g.
- * pickaxe→Mining before axe→Axe, crossbow before archery).
+ * Exact overrides cover shops whose names are misleading or too vague to
+ * classify safely. Ordered keyword rules then handle the ordinary cases
+ * (specific before generic, e.g. pickaxe→Mining before axe→Axe).
  */
+const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
+  // Armour shops whose names do not reveal their actual speciality.
+  'armour shop (jatizso)': 'Chainbody Shops',
+  "scavvo's rune store": 'Chainbody Shops',
+  "sir tiffy cashien (recruitment drive)": 'Platebody Shops',
+  "sir tiffy cashien (the slug menace)": 'Platebody Shops',
+  "valaine's shop of champions": 'Platebody Shops',
+
+  // Specific equipment shops hidden behind generic or misleading names.
+  'armoury': 'Archery Shops',
+  "ava's odds and ends": 'Archery Shops',
+  "brian's battleaxe bazaar": 'Axe Shops',
+  "fairy fixit's fairy enchantment": 'Magic Shops',
+  "filamina's wares": 'Staff Shops',
+  "gaius' two handed shop": 'Sword Shops',
+  'gulluck and sons': 'Weapon Shops',
+  "happy heroes' h'emporium": 'Weapon Shops',
+  "imia's supplies": 'Hunter Shops',
+  "iorwerth's arms": 'Weapon Shops',
+  'irksol (shop)': 'Gem Shops',
+  "iwan's maces": 'Mace Shops',
+  'jukat (shop)': 'Sword Shops',
+  'magic guild store (runes and staves)': 'Magic Shops',
+  "miltog's lamps": 'Candle Shops',
+  "neitiznot supplies": 'Crafting Shops',
+  "perry's chop-chop shop": 'Axe Shops',
+  "skulgrimen's battle gear": 'Helmet Shops',
+  "spike's spikes": 'Mace Shops',
+  "thirus urkar's fine dynamite store": 'Mining Shops',
+  "thyria's wares": 'Magic Shops',
+  'warrior guild armoury': 'Weapon Shops',
+  "~ uglug's stuffsies ~": 'Archery Shops',
+
+  // Ore-only sellers use the dedicated Ore Merchants unlock; tool and
+  // dynamite sellers remain Mining Shops.
+  'deepfin point ore exchange': 'Ore Merchants',
+  'ore store': 'Ore Merchants',
+  "petrified pete's ore shop": 'Ore Merchants',
+  'port roberts ore stall': 'Ore Merchants',
+
+  // Food, fishing, and service shops with non-descriptive proper names.
+  "construction supplies": 'Sawmill Operators',
+  "henderson's catch of the day": 'Fishing Shops',
+  "keepa kettilon's store": 'Food Shops',
+  "keldagrim's best bread": 'Food Shops',
+  "kenelme's wares": 'Food Shops',
+  "lovecraft's tackle": 'Fishing Shops',
+  "mairin's market": 'Fishing Shops',
+  "seddu's adventurer's store": 'Platelegs Shops',
+  'shop of distaste': 'Vegetable Shops',
+  'the shrimp and parrot': 'Food Shops',
+  "yarnio's baked goods": 'Food Shops',
+
+  // These are pubs despite words such as Ore, Arrow, Sanctum, or Arms.
+  'beach cocktails': 'Bars & Inns',
+  'falador party room': 'Bars & Inns',
+  'garlic cocktail supply': 'Bars & Inns',
+  "myreque's rest": 'Bars & Inns',
+  'stick your ore inn': 'Bars & Inns',
+  "sunlight's sanctum": 'Bars & Inns',
+  'the crypt': 'Bars & Inns',
+  'the deeper lode': 'Bars & Inns',
+  "the esoterican arms": 'Bars & Inns',
+  'the flaming arrow': 'Bars & Inns',
+  "the haymaker's arms": 'Bars & Inns',
+
+  // Currency/reward exchanges and ordinary clothing shops must not be
+  // inferred from words such as Hunter, Stuff, Wares, or Cape.
+  'bounty hunter store': 'Reward Shops',
+  'forestry shop': 'Reward Shops',
+  "honest jimmy's house of stuff": 'Reward Shops',
+  'mysterious hallowed goods': 'Reward Shops',
+  "prospector percy's nugget shop": 'Reward Shops',
+  "worm tounge's wares": 'Reward Shops',
+  'beach kit': 'Clothes Shops',
+  "darren's wilderness cape shop": 'Clothes Shops',
+  "edmond's wilderness cape shop": 'Clothes Shops',
+  "edward's wilderness cape shop": 'Clothes Shops',
+  "ian's wilderness cape shop": 'Clothes Shops',
+  "larry's wilderness cape shop": 'Clothes Shops',
+  'mythical cape store': 'Clothes Shops',
+  "neil's wilderness cape shop": 'Clothes Shops',
+  "richard's wilderness cape shop": 'Clothes Shops',
+  "sam's wilderness cape shop": 'Clothes Shops',
+  "simon's wilderness cape shop": 'Clothes Shops',
+  "trader sven's black-market goods": 'Clothes Shops',
+  "where wyrmscraig's wear wares were": 'Clothes Shops',
+  "william's wilderness cape shop": 'Clothes Shops',
+  "yrsa's accoutrements": 'Clothes Shops',
+
+  // The Culinaromancer's Chest has stock snapshots for each RFD stage.
+  "culinaromancer's chest": 'Cooking Shops',
+  "culinaromancer's chest#food": 'Food Shops',
+};
+
 const RULES: [RegExp, string][] = [
   // ── Reward / minigame shops (check first; "… Cape Shop"/"… Store" would
   //    otherwise fall through to generic rules) ─────────────────────────────
@@ -73,6 +169,12 @@ const RULES: [RegExp, string][] = [
 ];
 
 export const classifyShop = (shopName: string): string | null => {
+  const normalizedName = shopName.trim().toLowerCase();
+  const normalizedVariant = normalizedName.replace(/\.$/, '');
+  const normalizedBase = normalizedName.replace(/#.*$/, '').replace(/\.$/, '');
+  const override = SHOP_CATEGORY_OVERRIDES[normalizedVariant]
+    ?? SHOP_CATEGORY_OVERRIDES[normalizedBase];
+  if (override) return override;
   for (const [re, category] of RULES) {
     if (re.test(shopName)) return category;
   }
