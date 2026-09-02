@@ -45,21 +45,29 @@ const RollVisual: React.FC = () => {
   const [phase, setPhase] = useState<'idle' | 'hover' | 'click' | 'rolling' | 'result'>('idle');
 
   useEffect(() => {
+    let cancelled = false;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    const wait = (delay: number) => new Promise<boolean>(resolve => {
+      timeout = setTimeout(() => resolve(!cancelled), delay);
+    });
     const sequence = async () => {
       setPhase('idle');
-      await new Promise(r => setTimeout(r, 1000));
+      if (!(await wait(1000))) return;
       setPhase('hover');
-      await new Promise(r => setTimeout(r, 800));
+      if (!(await wait(800))) return;
       setPhase('click');
-      await new Promise(r => setTimeout(r, 200));
+      if (!(await wait(200))) return;
       setPhase('rolling');
-      await new Promise(r => setTimeout(r, 1500));
+      if (!(await wait(1500))) return;
       setPhase('result');
-      await new Promise(r => setTimeout(r, 2000));
-      // Loop
-      sequence();
+      if (!(await wait(2000))) return;
+      void sequence();
     };
-    sequence();
+    void sequence();
+    return () => {
+      cancelled = true;
+      if (timeout) clearTimeout(timeout);
+    };
   }, []);
 
   return (
@@ -124,20 +132,27 @@ const FateVisual: React.FC = () => {
   const [pityTrigger, setPityTrigger] = useState(false);
 
   useEffect(() => {
+    let resetTimer: ReturnType<typeof setTimeout> | undefined;
     const timer = setInterval(() => {
       setFate(prev => {
         if (prev >= 50) {
-          setPityTrigger(true);
-          setTimeout(() => {
-             setPityTrigger(false);
-             setFate(0);
-          }, 2000);
+          if (!resetTimer) {
+            setPityTrigger(true);
+            resetTimer = setTimeout(() => {
+              resetTimer = undefined;
+              setPityTrigger(false);
+              setFate(0);
+            }, 2000);
+          }
           return 50;
         }
         return prev + 2;
       });
     }, 100);
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      if (resetTimer) clearTimeout(resetTimer);
+    };
   }, []);
 
   return (
@@ -174,16 +189,25 @@ const UnlockVisual: React.FC = () => {
   const [state, setState] = useState<'locked' | 'click' | 'reveal'>('locked');
 
   useEffect(() => {
+    let cancelled = false;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    const wait = (delay: number) => new Promise<boolean>(resolve => {
+      timeout = setTimeout(() => resolve(!cancelled), delay);
+    });
     const loop = async () => {
       setState('locked');
-      await new Promise(r => setTimeout(r, 1500));
+      if (!(await wait(1500))) return;
       setState('click');
-      await new Promise(r => setTimeout(r, 500));
+      if (!(await wait(500))) return;
       setState('reveal');
-      await new Promise(r => setTimeout(r, 2500));
-      loop();
+      if (!(await wait(2500))) return;
+      void loop();
     };
-    loop();
+    void loop();
+    return () => {
+      cancelled = true;
+      if (timeout) clearTimeout(timeout);
+    };
   }, []);
 
   return (
@@ -247,14 +271,23 @@ const AltarVisual: React.FC = () => {
   const [active, setActive] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    const wait = (delay: number) => new Promise<boolean>(resolve => {
+      timeout = setTimeout(() => resolve(!cancelled), delay);
+    });
     const loop = async () => {
       setActive(false);
-      await new Promise(r => setTimeout(r, 1500));
+      if (!(await wait(1500))) return;
       setActive(true);
-      await new Promise(r => setTimeout(r, 2000));
-      loop();
+      if (!(await wait(2000))) return;
+      void loop();
     };
-    loop();
+    void loop();
+    return () => {
+      cancelled = true;
+      if (timeout) clearTimeout(timeout);
+    };
   }, []);
 
   return (
