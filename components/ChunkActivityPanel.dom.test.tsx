@@ -716,7 +716,7 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(within(row as HTMLElement).queryByText('Area')).toBeNull();
   });
 
-  it('shows source requirements for an unclassified shop without inventing a merchant gate', async () => {
+  it('shows source requirements alongside the reviewed merchant gate', async () => {
     mocks.state.content = { ...emptyContent(), shops: ['The Crypt'] };
     mocks.service.taskRequirements.mockImplementation(
       (name: string, kind: string, cx: number, cy: number) =>
@@ -734,7 +734,7 @@ describe('ChunkActivityPanel activity accordions', () => {
       />,
     );
 
-    const disclosure = screen.getByRole('button', { name: 'Shops, 1 item' });
+    const disclosure = screen.getByRole('button', { name: 'Shops, 1 locked' });
     if (disclosure.getAttribute('aria-expanded') === 'false') {
       await userEvent.click(disclosure);
     }
@@ -742,10 +742,10 @@ describe('ChunkActivityPanel activity accordions', () => {
     const row = screen.getByText('The Crypt').closest('div');
     expect(row).toBeTruthy();
     expect(within(row as HTMLElement).getByTitle('Access requirement: Sins of the Father')).toBeTruthy();
-    expect(within(row as HTMLElement).getByText('No merchant gate')).toBeTruthy();
-    expect(within(row as HTMLElement).queryByText('No unlock gate')).toBeNull();
+    expect(within(row as HTMLElement).getByText('Needs Bars & Inns')).toBeTruthy();
+    expect(within(row as HTMLElement).queryByText('No merchant gate')).toBeNull();
     expect(screen.getByText('Available now').previousElementSibling?.textContent).toBe('0');
-    expect(screen.getByText('Needs unlocks').previousElementSibling?.textContent).toBe('0');
+    expect(screen.getByText('Needs unlocks').previousElementSibling?.textContent).toBe('1');
   });
 });
 describe('ChunkActivityPanel summary hierarchy', () => {

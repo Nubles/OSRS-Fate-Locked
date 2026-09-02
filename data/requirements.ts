@@ -2281,12 +2281,11 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Sells up to Adamant Pickaxe.'
   },
   'Scavvo\'s Rune Store': {
-    id: 'Platebody Shops',
+    id: 'Chainbody Shops',
     category: TableType.MERCHANTS,
     regions: ['Misthalin'], // Champions Guild
     skills: {},
-    quests: ['Dragon Slayer I'], // 32 QP
-    description: 'Rune Platelegs/Skirt/Chainbody/Green D\'hide.'
+    description: 'Champions\' Guild access requires 32 Quest Points. Sells rune chainbody, platelegs, plateskirt, weapons, and green d\'hide armour.'
   },
   'Fancy Clothes Store': {
     id: 'Clothes Shops',
@@ -2310,7 +2309,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Shayzien armor (Anti-poison/Lizardman).'
   },
   'Mount Karuulm Weapon Shop': {
-    id: 'Sword Shops',
+    id: 'Weapon Shops',
     category: TableType.MERCHANTS,
     regions: ['Kourend & Kebos'],
     skills: {},
