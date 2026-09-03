@@ -19,6 +19,18 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-09-03-wilderness-quest-access',
+    title: 'Wilderness Quest Access Corrected',
+    date: '2026-09-03',
+    sections: {
+      fixed: [
+        'Enter the Abyss can now be completed from the default Misthalin area without unlocking the entire Wilderness.',
+        'Heroes\' Quest, Devious Minds, Curse of the Empty Lord, and both Mage Arena miniquests now check their actual Wilderness locations or route instead of requiring every Wilderness subarea.',
+        'The Slug Menace now describes the Edgeville Abyss route accurately.',
+      ],
+    },
+  },
+  {
     id: '2026-09-02-shop-category-accuracy',
     title: 'Shops Stay in Their Lane',
     date: '2026-09-02',

@@ -163,7 +163,7 @@ describe('manual journal readiness', () => {
       eligible: false,
       confirmable: true,
       manualChecks: [
-        'Access to all required elemental altars through one route: surface altars with Misthalin and Kharidian Desert; the Abyss with Wilderness and Enter the Abyss completed; or Guardians of the Rift with Misthalin and Temple of the Eye completed',
+        'Access to all required elemental altars through one route: surface altars with Misthalin and Kharidian Desert; the Abyss through Edgeville with Enter the Abyss completed; or Guardians of the Rift with Misthalin and Temple of the Eye completed',
       ],
     });
   });

@@ -56,6 +56,9 @@ export const questAccessPolicyStructureErrors = (
 };
 
 const LOCATIONS = {
+  edgevilleDitch: { id: 'edgeville-ditch', label: 'Edgeville ditch', standardAreas: ['Edgeville'], chunkOptions: [{ cx: 48, cy: 55 }] },
+  varrockSouthGate: { id: 'varrock-south-gate', label: 'Varrock south gate', standardAreas: ['Varrock'], chunkOptions: [{ cx: 50, cy: 52 }] },
+  lavaMazeEntrance: { id: 'lava-maze-entrance', label: 'Lava Maze entrance', standardAreas: ['Lava Maze'], chunkOptions: [{ cx: 47, cy: 59 }] },
   draynorVillage: { id: 'draynor-village', label: 'Draynor Village', standardAreas: ['Draynor Village'], chunkOptions: [{ cx: 48, cy: 50 }] },
   southFaladorFarm: { id: 'south-falador-farm', label: 'South Falador Farm', standardAreas: ['Falador'], chunkOptions: [{ cx: 47, cy: 51 }] },
   civitas: { id: 'civitas-illa-fortis', label: 'Civitas illa Fortis', standardAreas: ['Civitas illa Fortis'], chunkOptions: [{ cx: 26, cy: 48 }] },
@@ -339,9 +342,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Heroes\' Quest': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'regions-and-locations',
     id: 'Heroes\' Quest', name: 'Heroes\' Quest',
-    regions: ['Asgarnia', 'Misthalin', 'Kandarin', 'Karamja', 'Wilderness', 'Islands & Others'],
+    regions: ['Asgarnia', 'Misthalin', 'Kandarin', 'Karamja', 'Islands & Others'],
+    locations: [LOCATIONS.lavaMazeEntrance],
     skills: { 'Quest Points': 55, 'Cooking': 53, 'Fishing': 53, 'Herblore': 25, 'Mining': 50 }, prereqs: ['Shield of Arrav', 'Lost City', 'Merlin\'s Crystal', 'Dragon Slayer I'], points: 1,
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -918,9 +922,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Devious Minds': {
-    kind: 'quest', accessPolicy: 'regions',
+    kind: 'quest', accessPolicy: 'regions-and-locations',
     id: 'Devious Minds', name: 'Devious Minds',
-    regions: ["Misthalin","Asgarnia","Wilderness"],
+    regions: ["Misthalin","Asgarnia"],
+    locations: [LOCATIONS.edgevilleDitch],
     skills: { 'Smithing': 65, 'Runecraft': 50, 'Fletching': 50 }, prereqs: ['Wanted!', 'Troll Stronghold', 'Doric\'s Quest'], points: 1, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -1117,7 +1122,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Slug Menace', name: 'The Slug Menace',
     regions: ['Kandarin', 'Asgarnia'],
-    manualRequirements: ['Access to all required elemental altars through one route: surface altars with Misthalin and Kharidian Desert; the Abyss with Wilderness and Enter the Abyss completed; or Guardians of the Rift with Misthalin and Temple of the Eye completed'],
+    manualRequirements: ['Access to all required elemental altars through one route: surface altars with Misthalin and Kharidian Desert; the Abyss through Edgeville with Enter the Abyss completed; or Guardians of the Rift with Misthalin and Temple of the Eye completed'],
     skills: { 'Crafting': 30, 'Runecraft': 30, 'Slayer': 30, 'Thieving': 30 }, prereqs: ['Sea Slug', 'Wanted!'], points: 1, series: 'Temple Knight',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -1695,7 +1700,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Curse of the Empty Lord': {
     kind: 'miniquest', accessPolicy: 'regions',
     id: 'Curse of the Empty Lord', name: 'Curse of the Empty Lord',
-    regions: ['Asgarnia', 'Kandarin', 'Wilderness'],
+    regions: ['Asgarnia', 'Kandarin'],
+    oneOf: [
+      { regions: ['Wilderness Agility Course', 'Chaos Temple', "Rogues' Castle"] },
+      { regions: ['Wilderness Bandit Camp', 'Graveyard of Shadows', 'Slayer Tower'] },
+      { regions: ['Bandit Camp', 'Lava Maze'] },
+    ],
     skills: { 'Thieving': 53 }, prereqs: [],
     manualRequirements: ['Started Desert Treasure I', 'Started The Restless Ghost'],
     points: 0, series: 'Mahjarrat',
@@ -1717,9 +1727,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Enter the Abyss': {
-    kind: 'miniquest', accessPolicy: 'regions',
+    kind: 'miniquest', accessPolicy: 'locations',
     id: 'Enter the Abyss', name: 'Enter the Abyss',
     regions: ['Misthalin', 'Wilderness'],
+    locations: [LOCATIONS.edgevilleDitch, LOCATIONS.varrockSouthGate],
     oneOf: [
       { regions: ['East Ardougne'] },
       { regions: ['Tree Gnome Stronghold'] },
@@ -1794,17 +1805,18 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Mage Arena I': {
     kind: 'miniquest', accessPolicy: 'regions',
     id: 'Mage Arena I', name: 'Mage Arena I',
-    regions: ['Wilderness'],
+    regions: ['Mage Arena'],
     skills: { 'Magic': 60 }, prereqs: [], points: 0,
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Mage Arena II': {
     kind: 'miniquest', accessPolicy: 'regions',
     id: 'Mage Arena II', name: 'Mage Arena II',
-    regions: ['Wilderness'],
+    regions: ['Mage Arena'],
     skills: { 'Magic': 75 }, prereqs: ['Mage Arena I'],
     manualRequirements: [
       'Cast Claws of Guthix, Flames of Zamorak, and Saradomin Strike 100 times each inside the Mage Arena',
+      'Access to all three assigned demonic follower locations in the Wilderness',
     ],
     points: 0,
     difficulty: DropSource.QUEST_MASTER

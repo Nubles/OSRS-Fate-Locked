@@ -1268,7 +1268,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Asgarnia\",\"Kandarin\",\"Wilderness\"],\"skills\":{\"Thieving\":53},\"prereqs\":[],\"manualRequirements\":[\"Started Desert Treasure I\",\"Started The Restless Ghost\"],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Asgarnia\",\"Kandarin\"],\"skills\":{\"Thieving\":53},\"prereqs\":[],\"oneOf\":[{\"regions\":[\"Wilderness Agility Course\",\"Chaos Temple\",\"Rogues' Castle\"]},{\"regions\":[\"Wilderness Bandit Camp\",\"Graveyard of Shadows\",\"Slayer Tower\"]},{\"regions\":[\"Bandit Camp\",\"Lava Maze\"]}],\"manualRequirements\":[\"Started Desert Treasure I\",\"Started The Restless Ghost\"],\"points\":0}",
       "chunkEvidence": [
         {
           "chunkId": "39,53",
@@ -1281,7 +1281,7 @@
           "A ring of visibility and a ghostspeak item are required; item possession is not machine-enforced."
         ],
         "travel": [
-          "The three randomized sequences all require Glarial's Tomb in Kandarin, Wilderness travel, and an Asgarnia stop. Route-only Desert, Morytania, Misthalin, and Tree Gnome stops are not universal. The picker records only Glarial's Tomb (39,53)."
+          "The three randomized sequences all require Glarial's Tomb in Kandarin and an Asgarnia stop. Their distinct Wilderness and route-only stops are represented as three alternatives instead of requiring every Wilderness subarea. The picker records only Glarial's Tomb (39,53)."
         ],
         "instances": [],
         "partialCompletion": [
@@ -1734,8 +1734,8 @@
         "revisionTimestamp": "2026-07-17T11:12:13Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Misthalin\",\"Asgarnia\",\"Wilderness\"],\"skills\":{\"Fletching\":50,\"Runecraft\":50,\"Smithing\":65},\"prereqs\":[\"Wanted!\",\"Troll Stronghold\",\"Doric's Quest\"],\"points\":1}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Misthalin\",\"Asgarnia\"],\"locations\":[{\"chunkOptions\":[{\"cx\":48,\"cy\":55}],\"id\":\"edgeville-ditch\",\"label\":\"Edgeville ditch\",\"standardAreas\":[\"Edgeville\"]}],\"skills\":{\"Fletching\":50,\"Runecraft\":50,\"Smithing\":65},\"prereqs\":[\"Wanted!\",\"Troll Stronghold\",\"Doric's Quest\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "44,52",
@@ -1768,7 +1768,7 @@
           "The pinned Wiki item requirements for Devious Minds were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
         ],
         "travel": [
-          "The fixed route crosses Misthalin, Asgarnia, and the Wilderness."
+          "The fixed route crosses Misthalin and Asgarnia, entering the Wilderness only at the Edgeville ditch; the exact ditch replaces the over-broad parent Wilderness gate."
         ],
         "instances": [],
         "partialCompletion": []
@@ -2330,8 +2330,8 @@
         "revisionTimestamp": "2026-04-06T15:46:41Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Misthalin\",\"Wilderness\"],\"skills\":{},\"prereqs\":[\"Rune Mysteries\"],\"oneOf\":[{\"regions\":[\"East Ardougne\"]},{\"regions\":[\"Tree Gnome Stronghold\"]},{\"guilds\":[\"Wizards' Guild\"]}],\"points\":0}",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\",\"Wilderness\"],\"locations\":[{\"chunkOptions\":[{\"cx\":48,\"cy\":55}],\"id\":\"edgeville-ditch\",\"label\":\"Edgeville ditch\",\"standardAreas\":[\"Edgeville\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":52}],\"id\":\"varrock-south-gate\",\"label\":\"Varrock south gate\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{},\"prereqs\":[\"Rune Mysteries\"],\"oneOf\":[{\"regions\":[\"East Ardougne\"]},{\"regions\":[\"Tree Gnome Stronghold\"]},{\"guilds\":[\"Wizards' Guild\"]}],\"points\":0}",
       "chunkEvidence": [
         {
           "chunkId": "48,55",
@@ -2349,7 +2349,7 @@
           "The scrying orb is supplied during the miniquest; no item-possession gate is added."
         ],
         "travel": [
-          "The Wilderness Mage of Zamorak and Varrock chaos temple are unavoidable. Three of five rune-essence mine transports are required; Misthalin supplies two and the existing one-of route supplies the third."
+          "The Mage of Zamorak north of the Edgeville ditch and Varrock chaos temple are unavoidable. Both sit in the default Misthalin area in Standard mode; three of five rune-essence mine transports are required, with the existing one-of route supplying the third."
         ],
         "instances": [
           "The rune essence mine is visited three times from distinct transport NPCs."
@@ -3126,8 +3126,8 @@
         "revisionTimestamp": "2026-06-29T14:14:00Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Asgarnia\",\"Misthalin\",\"Kandarin\",\"Karamja\",\"Wilderness\",\"Islands & Others\"],\"skills\":{\"Cooking\":53,\"Fishing\":53,\"Herblore\":25,\"Mining\":50,\"Quest Points\":55},\"prereqs\":[\"Shield of Arrav\",\"Lost City\",\"Merlin's Crystal\",\"Dragon Slayer I\"],\"points\":1}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Asgarnia\",\"Misthalin\",\"Kandarin\",\"Karamja\",\"Islands & Others\"],\"locations\":[{\"chunkOptions\":[{\"cx\":47,\"cy\":59}],\"id\":\"lava-maze-entrance\",\"label\":\"Lava Maze entrance\",\"standardAreas\":[\"Lava Maze\"]}],\"skills\":{\"Cooking\":53,\"Fishing\":53,\"Herblore\":25,\"Mining\":50,\"Quest Points\":55},\"prereqs\":[\"Shield of Arrav\",\"Lost City\",\"Merlin's Crystal\",\"Dragon Slayer I\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "43,49",
@@ -3180,7 +3180,7 @@
           "The pinned Wiki item requirements for Heroes' Quest were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
         ],
         "travel": [
-          "The fixed guild route crosses Asgarnia, Misthalin, Kandarin, Karamja, the Wilderness Lava Maze, and Entrana."
+          "The fixed guild route crosses Asgarnia, Misthalin, Kandarin, Karamja, Entrana, and the exact Lava Maze entrance; the Lava Maze leaf replaces the over-broad parent Wilderness gate."
         ],
         "instances": [],
         "partialCompletion": []
@@ -3934,14 +3934,14 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Wilderness\"],\"skills\":{\"Magic\":60},\"prereqs\":[],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Mage Arena\"],\"skills\":{\"Magic\":60},\"prereqs\":[],\"points\":0}",
       "chunkEvidence": [],
       "notes": {
         "items": [
           "Runes or a powered staff and a web-cutting item are required but not machine-enforced."
         ],
         "travel": [
-          "All unavoidable travel is in the deep Wilderness and Mage Arena; there is no pinned Chunk Picker first/step row."
+          "All unavoidable travel is in the deep Wilderness at the Mage Arena; the Mage Arena leaf replaces the over-broad parent Wilderness gate. There is no pinned Chunk Picker first/step row."
         ],
         "instances": [
           "Kolodion is fought through five forms in the Mage Arena combat space."
@@ -3961,7 +3961,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Wilderness\"],\"skills\":{\"Magic\":75},\"prereqs\":[\"Mage Arena I\"],\"manualRequirements\":[\"Cast Claws of Guthix, Flames of Zamorak, and Saradomin Strike 100 times each inside the Mage Arena\"],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Mage Arena\"],\"skills\":{\"Magic\":75},\"prereqs\":[\"Mage Arena I\"],\"manualRequirements\":[\"Cast Claws of Guthix, Flames of Zamorak, and Saradomin Strike 100 times each inside the Mage Arena\",\"Access to all three assigned demonic follower locations in the Wilderness\"],\"points\":0}",
       "chunkEvidence": [],
       "notes": {
         "items": [
@@ -3974,7 +3974,8 @@
           "The safe Mage Arena bank cave is used between Wilderness tracking trips."
         ],
         "partialCompletion": [
-          "Casting each god spell 100 times in the Mage Arena is an unavoidable pre-start state represented as a manual requirement."
+          "Casting each god spell 100 times in the Mage Arena is an unavoidable pre-start state represented as a manual requirement.",
+          "The three demonic follower locations are randomized per player, so their actual leaf-area access is represented as a manual confirmation instead of requiring every Wilderness subarea."
         ]
       }
     },
@@ -8272,7 +8273,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Kandarin\",\"Asgarnia\"],\"skills\":{\"Crafting\":30,\"Runecraft\":30,\"Slayer\":30,\"Thieving\":30},\"prereqs\":[\"Sea Slug\",\"Wanted!\"],\"manualRequirements\":[\"Access to all required elemental altars through one route: surface altars with Misthalin and Kharidian Desert; the Abyss with Wilderness and Enter the Abyss completed; or Guardians of the Rift with Misthalin and Temple of the Eye completed\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Kandarin\",\"Asgarnia\"],\"skills\":{\"Crafting\":30,\"Runecraft\":30,\"Slayer\":30,\"Thieving\":30},\"prereqs\":[\"Sea Slug\",\"Wanted!\"],\"manualRequirements\":[\"Access to all required elemental altars through one route: surface altars with Misthalin and Kharidian Desert; the Abyss through Edgeville with Enter the Abyss completed; or Guardians of the Rift with Misthalin and Temple of the Eye completed\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "38,52",

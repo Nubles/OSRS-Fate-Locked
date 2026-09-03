@@ -1075,13 +1075,26 @@ describe('audited current quest requirements', () => {
           },
           "Devious Minds": {
                 "kind": "quest",
-                "accessPolicy": "regions",
+                "accessPolicy": "regions-and-locations",
                 "regions": [
                       "Misthalin",
-                      "Asgarnia",
-                      "Wilderness"
+                      "Asgarnia"
                 ],
-                "locations": null,
+                "locations": [
+                      {
+                            "chunkOptions": [
+                                  {
+                                        "cx": 48,
+                                        "cy": 55
+                                  }
+                            ],
+                            "id": "edgeville-ditch",
+                            "label": "Edgeville ditch",
+                            "standardAreas": [
+                                  "Edgeville"
+                            ]
+                      }
+                ],
                 "skills": {
                       "Smithing": 65,
                       "Runecraft": 50,
@@ -2074,8 +2087,7 @@ describe('audited current quest requirements', () => {
         "accessPolicy": "regions",
         "regions": [
           "Asgarnia",
-          "Kandarin",
-          "Wilderness"
+          "Kandarin"
         ],
         "locations": null,
         "skills": {
@@ -2083,7 +2095,28 @@ describe('audited current quest requirements', () => {
         },
         "combatLevel": null,
         "prereqs": [],
-        "oneOf": null,
+        "oneOf": [
+          {
+            "regions": [
+              "Wilderness Agility Course",
+              "Chaos Temple",
+              "Rogues' Castle"
+            ]
+          },
+          {
+            "regions": [
+              "Wilderness Bandit Camp",
+              "Graveyard of Shadows",
+              "Slayer Tower"
+            ]
+          },
+          {
+            "regions": [
+              "Bandit Camp",
+              "Lava Maze"
+            ]
+          }
+        ],
         "manualRequirements": [
           "Started Desert Treasure I",
           "Started The Restless Ghost"
@@ -2170,12 +2203,39 @@ describe('audited current quest requirements', () => {
       },
       "Enter the Abyss": {
         "kind": "miniquest",
-        "accessPolicy": "regions",
+        "accessPolicy": "locations",
         "regions": [
           "Misthalin",
           "Wilderness"
         ],
-        "locations": null,
+        "locations": [
+          {
+            "chunkOptions": [
+              {
+                "cx": 48,
+                "cy": 55
+              }
+            ],
+            "id": "edgeville-ditch",
+            "label": "Edgeville ditch",
+            "standardAreas": [
+              "Edgeville"
+            ]
+          },
+          {
+            "chunkOptions": [
+              {
+                "cx": 50,
+                "cy": 52
+              }
+            ],
+            "id": "varrock-south-gate",
+            "label": "Varrock south gate",
+            "standardAreas": [
+              "Varrock"
+            ]
+          }
+        ],
         "skills": {},
         "combatLevel": null,
         "prereqs": [
@@ -2441,7 +2501,7 @@ describe('audited current quest requirements', () => {
         "kind": "miniquest",
         "accessPolicy": "regions",
         "regions": [
-          "Wilderness"
+          "Mage Arena"
         ],
         "locations": null,
         "skills": {
@@ -2458,7 +2518,7 @@ describe('audited current quest requirements', () => {
         "kind": "miniquest",
         "accessPolicy": "regions",
         "regions": [
-          "Wilderness"
+          "Mage Arena"
         ],
         "locations": null,
         "skills": {
@@ -2470,7 +2530,8 @@ describe('audited current quest requirements', () => {
         ],
         "oneOf": null,
         "manualRequirements": [
-          "Cast Claws of Guthix, Flames of Zamorak, and Saradomin Strike 100 times each inside the Mage Arena"
+          "Cast Claws of Guthix, Flames of Zamorak, and Saradomin Strike 100 times each inside the Mage Arena",
+          "Access to all three assigned demonic follower locations in the Wilderness"
         ],
         "points": 0,
         "difficulty": "Quest (Master)"
@@ -2789,16 +2850,29 @@ describe('audited current quest requirements', () => {
   },
   "Heroes' Quest": {
     "kind": "quest",
-    "accessPolicy": "regions",
+    "accessPolicy": "regions-and-locations",
     "regions": [
       "Asgarnia",
       "Misthalin",
       "Kandarin",
       "Karamja",
-      "Wilderness",
       "Islands & Others"
     ],
-    "locations": null,
+    "locations": [
+      {
+        "chunkOptions": [
+          {
+            "cx": 47,
+            "cy": 59
+          }
+        ],
+        "id": "lava-maze-entrance",
+        "label": "Lava Maze entrance",
+        "standardAreas": [
+          "Lava Maze"
+        ]
+      }
+    ],
     "skills": {
       "Quest Points": 55,
       "Cooking": 53,
@@ -5631,7 +5705,7 @@ describe('audited current quest requirements', () => {
         ],
         "oneOf": null,
         "manualRequirements": [
-          "Access to all required elemental altars through one route: surface altars with Misthalin and Kharidian Desert; the Abyss with Wilderness and Enter the Abyss completed; or Guardians of the Rift with Misthalin and Temple of the Eye completed"
+          "Access to all required elemental altars through one route: surface altars with Misthalin and Kharidian Desert; the Abyss through Edgeville with Enter the Abyss completed; or Guardians of the Rift with Misthalin and Temple of the Eye completed"
         ],
         "points": 1,
         "difficulty": "Quest (Intermediate)"

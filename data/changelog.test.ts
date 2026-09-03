@@ -19,18 +19,19 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-09-02-shop-category-accuracy');
+    expect(LATEST_CHANGELOG.id).toBe('2026-09-03-wilderness-quest-access');
   });
 
-  it('announces the shop category fixes exactly', () => {
+  it('announces the Wilderness quest access fixes exactly', () => {
     expect(LATEST_CHANGELOG).toEqual({
-      id: '2026-09-02-shop-category-accuracy',
-      title: 'Shops Stay in Their Lane',
-      date: '2026-09-02',
+      id: '2026-09-03-wilderness-quest-access',
+      title: 'Wilderness Quest Access Corrected',
+      date: '2026-09-03',
       sections: {
         fixed: [
-          'Shop unlocks now follow each store\'s actual stock and speciality, including Scavvo\'s rune armour, ore merchants, pubs, cape sellers, and reward exchanges.',
-          'Every placed shop and stock-bearing item source now receives a consistent merchant category instead of silently bypassing its unlock.',
+          'Enter the Abyss can now be completed from the default Misthalin area without unlocking the entire Wilderness.',
+          'Heroes\' Quest, Devious Minds, Curse of the Empty Lord, and both Mage Arena miniquests now check their actual Wilderness locations or route instead of requiring every Wilderness subarea.',
+          'The Slug Menace now describes the Edgeville Abyss route accurately.',
         ],
       },
     });
