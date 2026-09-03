@@ -11,6 +11,7 @@ import { calculateEngineItemProgress } from '../utils/supplyChain';
 import { evaluateDiaryTierEligibility } from '../utils/journalStatus';
 import { Pin, Trash2, CheckCircle2, AlertCircle, Route } from 'lucide-react';
 import { GoalRouteView } from './GoalRouteView';
+import { enforcedQuestAreas } from '../utils/questGeographyDisplay';
 
 export const GoalTracker: React.FC = () => {
   const gameState = useGame();
@@ -40,7 +41,7 @@ export const GoalTracker: React.FC = () => {
                  req = {
                      id: quest.name,
                      category: TableType.QUESTS,
-                     regions: quest.regions,
+                     regions: enforcedQuestAreas(quest),
                      skills: quest.skills,
                      quests: quest.prereqs,
                      description: `Series: ${quest.series || 'None'}`

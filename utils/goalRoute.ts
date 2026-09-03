@@ -12,6 +12,7 @@ import { tierForLevel } from './skillTiers';
 import { planForTarget, type PlanStep } from './goalPlanner';
 import { evaluateDiaryTierEligibility } from './journalStatus';
 import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
+import { enforcedQuestAreas } from './questGeographyDisplay';
 
 /**
  * Route to goal — the planning brain behind a pinned goal.
@@ -116,7 +117,7 @@ function resolveRequirement(goalId: string): { req: ContentRequirement | null; k
     return {
       kind: 'quest',
       req: {
-        id: quest.name, category: TableType.QUESTS, regions: quest.regions,
+        id: quest.name, category: TableType.QUESTS, regions: enforcedQuestAreas(quest),
         skills: quest.skills, quests: quest.prereqs,
         description: quest.series ? `Series: ${quest.series}` : undefined,
       },
@@ -361,7 +362,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
         Math.max(skillNeed.get('Combat level') ?? 0, q.combatLevel),
       );
     }
-    for (const r of q.regions) regionSet.add(canonicalAreaName(r));
+    for (const r of enforcedQuestAreas(q)) regionSet.add(canonicalAreaName(r));
   }
 
   const regions: RouteItem[] = [...regionSet].sort().map(r => ({

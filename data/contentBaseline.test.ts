@@ -178,17 +178,17 @@ describe('cross-surface quest eligibility contract', () => {
       label: 'Mountain Daughter before either alternative route',
       id: 'Mountain Daughter',
       gameModeId: undefined,
-      unlocks: maxedQuestUnlocks('Mountain Daughter', { regions: ['Fremennik'] }),
+      unlocks: maxedQuestUnlocks('Mountain Daughter', { regions: ['Mountain Camp'] }),
       expectedStatus: 'LOCKED_REGION',
       expectedReadiness: 'BLOCKED',
-      firstBlocker: 'Asgarnia or Kandarin',
+      firstBlocker: 'Taverley or Catherby',
     },
     {
-      label: 'Mountain Daughter after the Asgarnia alternative route',
+      label: 'Mountain Daughter after the Taverley alternative route',
       id: 'Mountain Daughter',
       gameModeId: undefined,
       unlocks: maxedQuestUnlocks('Mountain Daughter', {
-        regions: ['Fremennik', 'Asgarnia'],
+        regions: ['Mountain Camp', 'Taverley'],
       }),
       expectedStatus: 'AVAILABLE',
       expectedReadiness: 'READY',
@@ -199,7 +199,7 @@ describe('cross-surface quest eligibility contract', () => {
       id: 'The Frozen Door',
       gameModeId: undefined,
       unlocks: maxedQuestUnlocks('The Frozen Door', {
-        regions: ['Asgarnia'],
+        regions: ['Burthorpe'],
         quests: Object.keys(QUEST_DATA).filter(
           id => id !== 'The Frozen Door' && id !== 'Desert Treasure I',
         ),
@@ -212,7 +212,7 @@ describe('cross-surface quest eligibility contract', () => {
       label: 'The Frozen Door after its prerequisite',
       id: 'The Frozen Door',
       gameModeId: undefined,
-      unlocks: maxedQuestUnlocks('The Frozen Door', { regions: ['Asgarnia'] }),
+      unlocks: maxedQuestUnlocks('The Frozen Door', { regions: ['Burthorpe'] }),
       expectedStatus: 'AVAILABLE',
       expectedReadiness: 'READY',
       firstBlocker: undefined,
@@ -236,7 +236,7 @@ describe('cross-surface quest eligibility contract', () => {
 
   it('keeps a machine-ready manual quest pending on every completion surface', () => {
     const unlocks = maxedQuestUnlocks('The Slug Menace', {
-      regions: ['Kandarin', 'Asgarnia'],
+      regions: ['Observatory', 'Witchaven', 'Falador'],
     });
     const actual = crossSurfaceReadiness('The Slug Menace', unlocks);
 
@@ -422,7 +422,7 @@ describe('deterministic current content baseline', () => {
       manualRequirements: undefined,
     });
     expect(questRequirementFields('Dream Mentor')).toEqual({
-      regions: ['Fremennik'], locations: undefined, skills: {}, combatLevel: 85,
+      regions: ['Lunar Isle'], locations: undefined, skills: {}, combatLevel: 85,
       prereqs: ['Lunar Diplomacy', "Eadgar's Ruse"], oneOf: undefined,
       manualRequirements: undefined,
     });
@@ -434,7 +434,7 @@ describe('deterministic current content baseline', () => {
       manualRequirements: undefined,
     });
     expect(questRequirementFields('The Curse of Arrav')).toEqual({
-      regions: ['Misthalin', 'Kharidian Desert', 'Fremennik'], locations: undefined,
+      regions: ['Varrock', 'Ruins of Uzer', 'Mountain Camp'], locations: undefined,
       skills: {
         Agility: 61, Ranged: 62, Strength: 58, Thieving: 62, Mining: 64,
         Slayer: 37,
@@ -443,13 +443,13 @@ describe('deterministic current content baseline', () => {
       oneOf: undefined, manualRequirements: undefined,
     });
     expect(questRequirementFields('The Final Dawn')).toEqual({
-      regions: ['Varlamore'], locations: undefined,
+      regions: ['Tlati Rainforest', 'Civitas illa Fortis', 'Ralos\' Rise'], locations: undefined,
       skills: { Thieving: 66, Fletching: 52, Runecraft: 52 },
       combatLevel: undefined, prereqs: ['The Heart of Darkness', 'Perilous Moons'],
       oneOf: undefined, manualRequirements: undefined,
     });
     expect(questRequirementFields('Shadows of Custodia')).toEqual({
-      regions: ['Varlamore'], locations: undefined,
+      regions: ['Auburnvale'], locations: undefined,
       skills: { Slayer: 54, Fishing: 45, Construction: 41, Hunter: 36 },
       combatLevel: undefined, prereqs: ['Children of the Sun'],
       oneOf: undefined, manualRequirements: undefined,
@@ -471,12 +471,12 @@ describe('deterministic current content baseline', () => {
       manualRequirements: ['One open Sailing task slot'],
     });
     expect(questRequirementFields('Current Affairs')).toEqual({
-      regions: ['The Open Seas', 'Kandarin'], locations: undefined,
+      regions: ['Catherby'], locations: undefined,
       skills: { Sailing: 22, Fishing: 10 }, combatLevel: undefined,
       prereqs: ['Pandemonium'], oneOf: undefined, manualRequirements: undefined,
     });
     expect(questRequirementFields('Troubled Tortugans')).toEqual({
-      regions: ['The Open Seas'], locations: undefined,
+      regions: ['Remote Island', 'The Summer Shore', 'The Great Conch', 'The Little Pearl'], locations: undefined,
       skills: {
         Slayer: 51, Construction: 48, Sailing: 45, Hunter: 45,
         Woodcutting: 40, Crafting: 34,

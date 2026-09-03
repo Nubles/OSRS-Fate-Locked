@@ -2111,7 +2111,7 @@ describe('quest completion integration', () => {
   it('completes a valid miniquest with exactly one roll and makes its repeat a full-state no-op', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.999);
     const current = renderStoredGame('valid-miniquest-completion', {
-      unlocks: { regions: ['Kourend & Kebos'] },
+      unlocks: { regions: ['Hosidius', 'Arceuus'] },
     });
     const before = providerSnapshot(current());
     let first: ReturnType<Game['completeQuest']> | undefined;

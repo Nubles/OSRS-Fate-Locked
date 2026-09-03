@@ -10,6 +10,23 @@ export interface QuestGeographyDisplay {
   knownSteps: QuestPlace[];
 }
 
+/**
+ * Exact standard-mode areas that the quest eligibility engine enforces.
+ *
+ * Location-policy quests retain broad `regions` as descriptive source
+ * metadata, so consumers must not treat those labels as machine gates.
+ */
+export function enforcedQuestAreas(
+  quest: Pick<QuestData, 'accessPolicy' | 'regions' | 'locations'>,
+): string[] {
+  const regions = quest.accessPolicy === 'locations' ? [] : quest.regions;
+  const locationAreas = quest.accessPolicy === 'regions'
+    ? []
+    : (quest.locations ?? []).flatMap(location => location.standardAreas);
+
+  return uniqueByLast([...regions, ...locationAreas], area => area);
+}
+
 const uniqueByLast = <T>(
   values: readonly T[],
   keyOf: (value: T) => string,

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { QUEST_DATA } from '../data/questData';
 import {
+  enforcedQuestAreas,
   selectQuestGeography,
   type QuestGeographyDisplay,
 } from './questGeographyDisplay';
@@ -11,6 +12,14 @@ const place = (cx: number, cy: number, label: string) => ({
 });
 
 describe('selectQuestGeography', () => {
+  it('never turns descriptive parent metadata into a location-policy gate', () => {
+    expect(QUEST_DATA['Plague City'].regions).toEqual(['Kandarin']);
+    expect(enforcedQuestAreas(QUEST_DATA['Plague City'])).toEqual([
+      'East Ardougne',
+      'West Ardougne',
+    ]);
+  });
+
   it('shows only canonical locations for an exact location quest', () => {
     const result = selectQuestGeography(
       QUEST_DATA['A Porcine of Interest'],

@@ -4,7 +4,7 @@ vi.mock('./journalStatus', async () => {
   const actual = await vi.importActual<typeof import('./journalStatus')>('./journalStatus');
   return { ...actual, getDiaryStatus: vi.fn(actual.getDiaryStatus) };
 });
-import { SKILLS_LIST } from '../constants';
+import { MISTHALIN_AREAS, REGIONS_LIST, SKILLS_LIST } from '../constants';
 import { QUEST_DATA } from '../data/questData';
 import { rankSkillBottlenecks } from './skillAdvisor';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
@@ -33,11 +33,8 @@ function lowSkills(over: Record<string, any> = {}) {
 // All regions + all quests done, but skills at level 1 — isolates skill gates.
 function regionsAndQuestsDone(over: Record<string, any> = {}) {
   return lowSkills({
-    regions: [
-      'Asgarnia', 'Kandarin', 'Karamja', 'Kharidian Desert', 'Morytania',
-      'Fremennik', 'Tirannwn', 'Wilderness', 'Kourend & Kebos', 'Varlamore',
-      'Islands & Others', 'The Open Seas',
-    ],
+    regions: [...MISTHALIN_AREAS, ...REGIONS_LIST],
+    quests: Object.keys(QUEST_DATA),
     ...over,
   });
 }
@@ -94,24 +91,21 @@ describe('rankSkillBottlenecks', () => {
   });
 
   it('threads Chunked mode through quest impact simulations', () => {
-    // Darkness of Hallowvale keeps Mining ranked at 20 in both snapshots;
-    // only the exact Seers' Village chunk should add Elemental Workshop I.
+    // Only the exact Seers' Village chunk lets Mining 20 unlock
+    // Elemental Workshop I.
     const base = lowSkills({
       skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Mining' ? 2 : 99])),
       levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Mining' ? 19 : 99])),
-      regions: ['Kandarin', "Seers' Village"],
-      quests: ['In Aid of the Myreque'],
-      chunks: ['41,54', '54,54'],
+      chunks: ['41,54'],
     });
-    const exact = { ...base, chunks: ['42,54', '54,54'] };
+    const exact = { ...base, chunks: ['42,54'] };
 
     const before = rankSkillBottlenecks(base, 'chunked')
-      .find(candidate => candidate.id === 'Mining')!;
+      .find(candidate => candidate.id === 'Mining');
     const after = rankSkillBottlenecks(exact, 'chunked')
       .find(candidate => candidate.id === 'Mining')!;
 
-    expect(before.targetLevel).toBe(20);
-    expect(before.newQuestNames).not.toContain('Elemental Workshop I');
+    expect(before).toBeUndefined();
     expect(after.targetLevel).toBe(20);
     expect(after.newQuestNames).toContain('Elemental Workshop I');
   });
@@ -141,10 +135,14 @@ describe('rankSkillBottlenecks', () => {
   });
 
   it('surfaces diary unlocks when regions + quests are already done', () => {
-    const ranked = rankSkillBottlenecks(regionsAndQuestsDone());
-    // At least one skill should now bring a diary tier within reach via skills,
-    // OR quests — the advisor should still produce results.
-    expect(ranked.length).toBeGreaterThan(0);
+    const ranked = rankSkillBottlenecks(regionsAndQuestsDone({
+      levels: Object.fromEntries(SKILLS_LIST.map(skill => [
+        skill,
+        skill === 'Agility' ? 1 : 99,
+      ])),
+    }));
+
+    expect(ranked.find(candidate => candidate.id === 'Agility')).toBeDefined();
   });
 
   it('discovers skill thresholds from canonical diary tasks, not stale aggregates', () => {
