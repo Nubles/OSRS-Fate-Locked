@@ -50,7 +50,7 @@ describe('questUnmet', () => {
 
   it('maps calculated combat blockers into the existing unmet shape', () => {
     expect(questUnmet(QUEST_DATA['Dream Mentor'], u({
-      regions: ['Fremennik'],
+      regions: ['Lunar Isle'],
       quests: ['Lunar Diplomacy', "Eadgar's Ruse"],
       levels: {
         Attack: 60, Strength: 60, Defence: 60, Hitpoints: 60,

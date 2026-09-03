@@ -255,9 +255,9 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Asgarnia",
-                      "Misthalin",
-                      "Kharidian Desert"
+                      "Burthorpe",
+                      "Varrock",
+                      "Sophanem"
                 ],
                 "locations": null,
                 "skills": {},
@@ -274,9 +274,9 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Misthalin",
-                      "Asgarnia",
-                      "Morytania"
+                      "Draynor Village",
+                      "Burthorpe",
+                      "Fenkenstrain's Castle"
                 ],
                 "locations": null,
                 "skills": {
@@ -300,8 +300,8 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Misthalin",
-                      "Asgarnia"
+                      "Lumbridge",
+                      "Goblin Village"
                 ],
                 "locations": null,
                 "skills": {
@@ -323,7 +323,7 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Varlamore"
+                      "Hunter's Guild"
                 ],
                 "locations": null,
                 "skills": {
@@ -442,9 +442,9 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Fremennik",
-                      "Asgarnia",
-                      "Kandarin"
+                      "Keldagrim",
+                      "Dwarven Mine",
+                      "Taverley"
                 ],
                 "locations": null,
                 "skills": {
@@ -466,9 +466,10 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Kandarin",
-                      "Asgarnia",
-                      "Misthalin"
+                      "East Ardougne",
+                      "West Ardougne",
+                      "Rimmington",
+                      "Varrock"
                 ],
                 "locations": null,
                 "skills": {},
@@ -529,10 +530,10 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Misthalin",
-                      "Islands & Others",
-                      "Asgarnia",
-                      "Kourend & Kebos"
+                      "Varrock",
+                      "Fossil Island",
+                      "Port Sarim",
+                      "Woodcutting Guild"
                 ],
                 "locations": null,
                 "skills": {},
@@ -551,8 +552,8 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Islands & Others",
-                      "Morytania"
+                      "Port Phasmatys",
+                      "Mos Le'Harmless"
                 ],
                 "locations": null,
                 "skills": {
@@ -617,7 +618,11 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Kourend & Kebos"
+                      "Shayzien",
+                      "Lovakengj",
+                      "Arceuus",
+                      "Hosidius",
+                      "Piscarilius"
                 ],
                 "locations": null,
                 "skills": {},
@@ -634,9 +639,9 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Fremennik",
-                      "Kandarin",
-                      "Misthalin"
+                      "Rellekka",
+                      "East Ardougne",
+                      "Lumbridge"
                 ],
                 "locations": null,
                 "skills": {
@@ -733,7 +738,9 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Morytania"
+                      "Canifis",
+                      "Fenkenstrain's Castle",
+                      "Haunted Woods"
                 ],
                 "locations": null,
                 "skills": {
@@ -755,8 +762,7 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "The Open Seas",
-                      "Kandarin"
+                      "Catherby"
                 ],
                 "locations": null,
                 "skills": {
@@ -776,8 +782,11 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Morytania",
-                      "Misthalin"
+                      "Burgh de Rott",
+                      "Darkmeyer",
+                      "Meiyerditch",
+                      "Varrock",
+                      "Paterdomus"
                 ],
                 "locations": null,
                 "skills": {
@@ -917,8 +926,8 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Misthalin",
-                      "Asgarnia"
+                      "Varrock",
+                      "Goblin Village"
                 ],
                 "locations": null,
                 "skills": {
@@ -1013,11 +1022,14 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Kharidian Desert",
-                      "Asgarnia",
-                      "Kandarin",
-                      "Morytania",
-                      "Misthalin"
+                      "Bandit Camp",
+                      "Bedabin Camp",
+                      "Pollnivneach",
+                      "Entrana",
+                      "Burthorpe",
+                      "Baxtorian Falls",
+                      "Canifis",
+                      "Mort Myre Swamp"
                 ],
                 "locations": null,
                 "skills": {
@@ -1044,11 +1056,11 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Kharidian Desert",
-                      "Asgarnia",
-                      "Fremennik",
-                      "Kourend & Kebos",
-                      "Misthalin"
+                      "Nardah",
+                      "Goblin Village",
+                      "Weiss",
+                      "The Stranglewood",
+                      "Digsite"
                 ],
                 "locations": null,
                 "skills": {
@@ -1077,8 +1089,9 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions-and-locations",
                 "regions": [
-                      "Misthalin",
-                      "Asgarnia"
+                      "Paterdomus",
+                      "Entrana",
+                      "Falador"
                 ],
                 "locations": [
                       {
@@ -1144,9 +1157,13 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Misthalin",
-                      "Asgarnia",
-                      "Karamja"
+                      "Varrock",
+                      "Edgeville",
+                      "Draynor Village",
+                      "Lumbridge",
+                      "Rimmington",
+                      "Port Sarim",
+                      "Crandor"
                 ],
                 "locations": null,
                 "skills": {
@@ -1163,15 +1180,21 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Misthalin",
-                      "Asgarnia",
-                      "Kandarin",
-                      "Fremennik",
-                      "Kourend & Kebos",
-                      "Karamja",
-                      "Kharidian Desert",
-                      "Morytania",
-                      "Islands & Others"
+                      "Draynor Village",
+                      "Varrock",
+                      "Falador",
+                      "Baxtorian Falls",
+                      "Corsair Cove",
+                      "Lunar Isle",
+                      "Rellekka",
+                      "Shayzien",
+                      "Crandor",
+                      "Kharazi Jungle",
+                      "Musa Point",
+                      "Sophanem",
+                      "Port Phasmatys",
+                      "Fossil Island",
+                      "Lithkren"
                 ],
                 "locations": null,
                 "skills": {
@@ -1304,8 +1327,8 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Kandarin",
-                      "Misthalin"
+                      "Eagles' Peak",
+                      "Varrock"
                 ],
                 "locations": null,
                 "skills": {
@@ -1355,8 +1378,8 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Kandarin",
-                      "Misthalin"
+                      "Seers' Village",
+                      "Varrock"
                 ],
                 "locations": null,
                 "skills": {
@@ -1578,10 +1601,10 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Misthalin",
-                      "Asgarnia",
-                      "Morytania",
-                      "Islands & Others"
+                      "Draynor Village",
+                      "Falador",
+                      "Mort Myre Swamp",
+                      "Zanaris"
                 ],
                 "locations": null,
                 "skills": {},
@@ -1791,7 +1814,7 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Kandarin"
+                      "Hemenster"
                 ],
                 "locations": null,
                 "skills": {
@@ -1808,9 +1831,8 @@ describe('audited current quest requirements', () => {
                 "kind": "quest",
                 "accessPolicy": "regions",
                 "regions": [
-                      "Fremennik",
-                      "Asgarnia",
-                      "Kandarin"
+                      "Keldagrim",
+                      "Taverley"
                 ],
                 "locations": null,
                 "skills": {
@@ -2044,7 +2066,7 @@ describe('audited current quest requirements', () => {
         "kind": "miniquest",
         "accessPolicy": "regions",
         "regions": [
-          "Kandarin"
+              "Baxtorian Falls"
         ],
         "locations": null,
         "skills": {
@@ -2070,8 +2092,8 @@ describe('audited current quest requirements', () => {
         "kind": "miniquest",
         "accessPolicy": "regions",
         "regions": [
-          "Kourend & Kebos",
-          "Asgarnia"
+              "Arceuus",
+              "Taverley"
         ],
         "locations": null,
         "skills": {},
@@ -2086,8 +2108,7 @@ describe('audited current quest requirements', () => {
         "kind": "miniquest",
         "accessPolicy": "regions",
         "regions": [
-          "Asgarnia",
-          "Kandarin"
+              "Baxtorian Falls"
         ],
         "locations": null,
         "skills": {
@@ -2096,26 +2117,43 @@ describe('audited current quest requirements', () => {
         "combatLevel": null,
         "prereqs": [],
         "oneOf": [
-          {
-            "regions": [
-              "Wilderness Agility Course",
-              "Chaos Temple",
-              "Rogues' Castle"
-            ]
-          },
-          {
-            "regions": [
-              "Wilderness Bandit Camp",
-              "Graveyard of Shadows",
-              "Slayer Tower"
-            ]
-          },
-          {
-            "regions": [
-              "Bandit Camp",
-              "Lava Maze"
-            ]
-          }
+
+              {
+
+                    "regions": [
+                          "Wilderness Agility Course",
+                          "Chaos Temple",
+                          "Rogues' Castle",
+                          "Entrana",
+                          "Wizards' Tower"
+                    ]
+
+              },
+
+              {
+
+                    "regions": [
+                          "Wilderness Bandit Camp",
+                          "Graveyard of Shadows",
+                          "Port Sarim",
+                          "Edgeville",
+                          "Slayer Tower"
+                    ]
+
+              },
+
+              {
+
+                    "regions": [
+                          "Bandit Camp",
+                          "Lava Maze",
+                          "Tree Gnome Stronghold",
+                          "Falador",
+                          "Edgeville"
+                    ]
+
+              }
+
         ],
         "manualRequirements": [
           "Started Desert Treasure I",
@@ -2183,12 +2221,16 @@ describe('audited current quest requirements', () => {
         "kind": "miniquest",
         "accessPolicy": "regions",
         "regions": [
-          "Fremennik",
-          "Kandarin",
-          "Tirannwn",
-          "Asgarnia",
-          "Misthalin",
-          "Kharidian Desert"
+              "Rellekka",
+              "Observatory",
+              "Tree Gnome Stronghold",
+              "East Ardougne",
+              "Arandar",
+              "Port Sarim",
+              "Falador",
+              "Lumbridge",
+              "Varrock",
+              "Al Kharid"
         ],
         "locations": null,
         "skills": {},
@@ -2338,7 +2380,7 @@ describe('audited current quest requirements', () => {
         "kind": "miniquest",
         "accessPolicy": "regions",
         "regions": [
-          "Asgarnia"
+              "Burthorpe"
         ],
         "locations": null,
         "skills": {
@@ -2360,11 +2402,13 @@ describe('audited current quest requirements', () => {
         "kind": "miniquest",
         "accessPolicy": "regions",
         "regions": [
-          "Fremennik",
-          "Kandarin",
-          "Karamja",
-          "Asgarnia",
-          "Kharidian Desert"
+              "Rellekka",
+              "Observatory",
+              "Seers' Village",
+              "Tree Gnome Stronghold",
+              "Tai Bwo Wannai",
+              "Falador",
+              "Shantay Pass"
         ],
         "locations": null,
         "skills": {},
@@ -2413,7 +2457,7 @@ describe('audited current quest requirements', () => {
         "kind": "miniquest",
         "accessPolicy": "regions",
         "regions": [
-          "Kandarin"
+              "Hemenster"
         ],
         "locations": null,
         "skills": {
@@ -2436,7 +2480,8 @@ describe('audited current quest requirements', () => {
         "kind": "miniquest",
         "accessPolicy": "regions",
         "regions": [
-          "Kourend & Kebos"
+              "Hosidius",
+              "Arceuus"
         ],
         "locations": null,
         "skills": {},
@@ -2482,7 +2527,7 @@ describe('audited current quest requirements', () => {
         "kind": "miniquest",
         "accessPolicy": "regions",
         "regions": [
-          "Morytania"
+              "Haunted Mine"
         ],
         "locations": null,
         "skills": {
@@ -2571,7 +2616,7 @@ describe('audited current quest requirements', () => {
         "kind": "miniquest",
         "accessPolicy": "regions",
         "regions": [
-          "Varlamore"
+              "Auburnvale"
         ],
         "locations": null,
         "skills": {
@@ -2636,10 +2681,14 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Misthalin",
-      "Asgarnia",
-      "Kandarin",
-      "Morytania"
+          "Varrock",
+          "Draynor Village",
+          "Edgeville",
+          "Falador",
+          "Burthorpe",
+          "East Ardougne",
+          "Catherby",
+          "Port Phasmatys"
     ],
     "locations": null,
     "skills": {
@@ -2713,7 +2762,8 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Kourend & Kebos"
+          "Kebos Lowlands",
+          "Molch"
     ],
     "locations": null,
     "skills": {
@@ -2731,7 +2781,8 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Morytania"
+          "Port Phasmatys",
+          "Fenkenstrain's Castle"
     ],
     "locations": null,
     "skills": {
@@ -2781,7 +2832,8 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Asgarnia"
+          "Taverley",
+          "Goblin Village"
     ],
     "locations": null,
     "skills": {
@@ -2837,7 +2889,7 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Kandarin"
+          "East Ardougne"
     ],
     "locations": null,
     "skills": {},
@@ -2852,11 +2904,11 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions-and-locations",
     "regions": [
-      "Asgarnia",
-      "Misthalin",
-      "Kandarin",
-      "Karamja",
-      "Islands & Others"
+          "Taverley",
+          "Port Sarim",
+          "Entrana",
+          "Varrock",
+          "Brimhaven"
     ],
     "locations": [
       {
@@ -2896,11 +2948,12 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Kandarin",
-      "Islands & Others",
-      "Asgarnia",
-      "Misthalin",
-      "Karamja"
+          "Camelot",
+          "Seers' Village",
+          "Entrana",
+          "Goblin Village",
+          "Draynor Village",
+          "Brimhaven"
     ],
     "locations": null,
     "skills": {
@@ -2919,7 +2972,7 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Fremennik"
+          "Lighthouse"
     ],
     "locations": null,
     "skills": {
@@ -2938,7 +2991,7 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Kharidian Desert"
+          "Sophanem"
     ],
     "locations": null,
     "skills": {},
@@ -2984,7 +3037,7 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Morytania"
+          "Burgh de Rott"
     ],
     "locations": null,
     "skills": {
@@ -3006,7 +3059,9 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Morytania"
+          "Canifis",
+          "Mort Myre Swamp",
+          "Barrows"
     ],
     "locations": null,
     "skills": {
@@ -3025,7 +3080,7 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Karamja"
+          "Tai Bwo Wannai"
     ],
     "locations": null,
     "skills": {
@@ -3044,8 +3099,10 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Kandarin",
-      "Asgarnia"
+          "East Ardougne",
+          "Seers' Village",
+          "Camelot",
+          "Edgeville"
     ],
     "locations": null,
     "skills": {
@@ -3068,9 +3125,10 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Kandarin",
-      "Misthalin",
-      "Asgarnia"
+          "Hemenster",
+          "Lumbridge",
+          "Crafting Guild",
+          "Goblin Village"
     ],
     "locations": null,
     "skills": {
@@ -3093,8 +3151,9 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Kandarin",
-      "Karamja"
+          "Legends' Guild",
+          "Kharazi Jungle",
+          "Tai Bwo Wannai"
     ],
     "locations": null,
     "skills": {
@@ -3127,9 +3186,9 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Misthalin",
-      "Islands & Others",
-      "Asgarnia"
+          "Lumbridge",
+          "Zanaris",
+          "Entrana"
     ],
     "locations": null,
     "skills": {
@@ -3147,7 +3206,9 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Fremennik"
+          "Lunar Isle",
+          "Pirates' Cove",
+          "Rellekka"
     ],
     "locations": null,
     "skills": {
@@ -3175,9 +3236,11 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Asgarnia",
-      "Fremennik",
-      "Misthalin"
+          "Burthorpe",
+          "Rellekka",
+          "Weiss",
+          "Draynor Village",
+          "Varrock"
     ],
     "locations": null,
     "skills": {
@@ -3202,9 +3265,10 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Kandarin",
-      "Fremennik",
-      "Morytania"
+          "Observatory",
+          "East Ardougne",
+          "Rellekka",
+          "Port Phasmatys"
     ],
     "locations": null,
     "skills": {},
@@ -3222,7 +3286,7 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Varlamore"
+          "Civitas illa Fortis"
     ],
     "locations": null,
     "skills": {},
@@ -3239,9 +3303,12 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Kandarin",
-      "Asgarnia",
-      "Misthalin"
+          "Camelot",
+          "Seers' Village",
+          "Catherby",
+          "Taverley",
+          "Port Sarim",
+          "Varrock"
     ],
     "locations": null,
     "skills": {},
@@ -3314,9 +3381,9 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Kandarin",
-      "Karamja",
-      "Islands & Others"
+          "Tree Gnome Stronghold",
+          "Ship Yard",
+          "Ape Atoll"
     ],
     "locations": null,
     "skills": {},
@@ -3334,9 +3401,10 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Islands & Others",
-      "Kandarin",
-      "Asgarnia"
+          "Ape Atoll",
+          "Tree Gnome Stronghold",
+          "Entrana",
+          "Burthorpe"
     ],
     "locations": null,
     "skills": {
@@ -3367,7 +3435,7 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Fremennik"
+          "Mountain Camp"
     ],
     "locations": null,
     "skills": {
@@ -3376,16 +3444,23 @@ describe('audited current quest requirements', () => {
     "combatLevel": null,
     "prereqs": [],
     "oneOf": [
-      {
-        "regions": [
-          "Asgarnia"
-        ]
-      },
-      {
-        "regions": [
-          "Kandarin"
-        ]
-      }
+
+          {
+
+                "regions": [
+                      "Taverley"
+                ]
+
+          },
+
+          {
+
+                "regions": [
+                      "Catherby"
+                ]
+
+          }
+
     ],
     "manualRequirements": null,
     "points": 2,
@@ -3395,8 +3470,11 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Tirannwn",
-      "Kandarin"
+          "Lletya",
+          "Tyras Camp",
+          "Isafdar",
+          "Arandar",
+          "West Ardougne"
     ],
     "locations": null,
     "skills": {
@@ -3418,8 +3496,8 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Tirannwn",
-      "Kandarin"
+          "Lletya",
+          "West Ardougne"
     ],
     "locations": null,
     "skills": {
@@ -3480,9 +3558,9 @@ describe('audited current quest requirements', () => {
     "kind": "quest",
     "accessPolicy": "regions",
     "regions": [
-      "Asgarnia",
-      "Kandarin",
-      "Karamja"
+          "Burthorpe",
+          "East Ardougne",
+          "Tai Bwo Wannai"
     ],
     "locations": null,
     "skills": {
@@ -3631,7 +3709,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Misthalin"
+              "Lumbridge"
         ],
         "locations": null,
         "skills": {},
@@ -3646,7 +3724,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Misthalin"
+              "Varrock"
         ],
         "locations": null,
         "skills": {},
@@ -3706,9 +3784,10 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Asgarnia",
-          "Misthalin",
-          "Karamja"
+              "Port Sarim",
+              "Falador",
+              "Varrock",
+              "Musa Point"
         ],
         "locations": null,
         "skills": {},
@@ -3778,8 +3857,10 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kandarin",
-          "Asgarnia"
+              "Barbarian Outpost",
+              "Seers' Village",
+              "Taverley",
+              "Edgeville"
         ],
         "locations": null,
         "skills": {
@@ -3798,7 +3879,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kandarin"
+              "East Ardougne"
         ],
         "locations": null,
         "skills": {},
@@ -3899,7 +3980,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Karamja"
+              "Shilo Village",
+              "Tai Bwo Wannai"
         ],
         "locations": null,
         "skills": {
@@ -4036,8 +4118,12 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Tirannwn",
-          "Kandarin"
+              "Tyras Camp",
+              "Iorwerth Camp",
+              "Isafdar",
+              "Arandar",
+              "East Ardougne",
+              "West Ardougne"
         ],
         "locations": null,
         "skills": {
@@ -4092,8 +4178,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Tirannwn",
-          "Kandarin"
+              "Tyras Camp",
+              "Isafdar",
+              "Baxtorian Falls"
         ],
         "locations": null,
         "skills": {},
@@ -4111,10 +4198,19 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kandarin",
-          "Karamja",
-          "Asgarnia",
-          "Misthalin"
+              "Feldip Hills",
+              "Port Khazard",
+              "East Ardougne",
+              "Seers' Village",
+              "Catherby",
+              "Kharazi Jungle",
+              "Shilo Village",
+              "Taverley",
+              "Port Sarim",
+              "Falador",
+              "Draynor Village",
+              "Lumbridge",
+              "Varrock"
         ],
         "locations": null,
         "skills": {
@@ -4169,8 +4265,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Morytania",
-          "Islands & Others"
+              "Port Phasmatys",
+              "Braindeath Island"
         ],
         "locations": null,
         "skills": {
@@ -4194,7 +4290,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kharidian Desert"
+              "Al Kharid",
+              "Ruins of Uzer"
         ],
         "locations": null,
         "skills": {
@@ -4214,11 +4311,11 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Misthalin",
-          "Kandarin",
-          "Kharidian Desert",
-          "Fremennik",
-          "Asgarnia"
+              "Varrock",
+              "East Ardougne",
+              "Pollnivneach",
+              "Keldagrim",
+              "Port Sarim"
         ],
         "locations": null,
         "skills": {},
@@ -4237,7 +4334,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kharidian Desert"
+              "Nardah"
         ],
         "locations": null,
         "skills": {
@@ -4257,7 +4354,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Misthalin"
+              "Lumbridge"
         ],
         "locations": null,
         "skills": {
@@ -4276,7 +4373,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Asgarnia"
+              "Taverley",
+              "Falador"
         ],
         "locations": null,
         "skills": {},
@@ -4293,7 +4391,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Asgarnia"
+              "Goblin Village"
         ],
         "locations": null,
         "skills": {},
@@ -4310,9 +4408,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Misthalin",
-          "Asgarnia",
-          "Islands & Others"
+              "Port Khazard"
         ],
         "locations": null,
         "skills": {
@@ -4329,7 +4425,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Misthalin"
+              "Wizards' Tower"
         ],
         "locations": null,
         "skills": {
@@ -4355,7 +4451,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Misthalin"
+              "Edgeville"
         ],
         "locations": null,
         "skills": {
@@ -4375,7 +4471,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kandarin"
+              "Feldip Hills",
+              "Tai Bwo Wannai"
         ],
         "locations": null,
         "skills": {
@@ -4395,10 +4492,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Asgarnia",
-          "Karamja",
-          "Misthalin",
-          "Islands & Others"
+              "Kharazi Jungle",
+              "Draynor Village",
+              "Zanaris"
         ],
         "locations": null,
         "skills": {
@@ -4417,8 +4513,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Islands & Others",
-          "Kandarin"
+              "Ape Atoll"
         ],
         "locations": null,
         "skills": {
@@ -4438,7 +4533,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Misthalin"
+              "Lumbridge"
         ],
         "locations": null,
         "skills": {
@@ -4465,7 +4560,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Misthalin"
+              "Draynor Village"
         ],
         "locations": null,
         "skills": {},
@@ -4480,9 +4575,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kandarin",
-          "Misthalin",
-          "Asgarnia"
+              "Piscatoris Fishing Colony",
+              "Yanille",
+              "Draynor Village"
         ],
         "locations": null,
         "skills": {
@@ -4602,12 +4697,17 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Misthalin",
-          "Asgarnia",
-          "Kandarin",
-          "Kharidian Desert",
-          "Fremennik",
-          "Morytania"
+              "Silvarea",
+              "Draynor Village",
+              "Taverley",
+              "Tree Gnome Stronghold",
+              "Feldip Hills",
+              "Nardah",
+              "Rellekka",
+              "Canifis",
+              "Haunted Woods",
+              "Fenkenstrain's Castle",
+              "Slayer Tower"
         ],
         "locations": null,
         "skills": {
@@ -4631,8 +4731,16 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Tirannwn",
-          "Kandarin"
+              "Lletya",
+              "Zul-Andra",
+              "Poison Waste",
+              "Iorwerth Camp",
+              "Isafdar",
+              "Prifddinas",
+              "Arandar",
+              "East Ardougne",
+              "West Ardougne",
+              "Baxtorian Falls"
         ],
         "locations": null,
         "skills": {
@@ -4660,7 +4768,11 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Morytania"
+              "Paterdomus",
+              "Burgh de Rott",
+              "Meiyerditch",
+              "Darkmeyer",
+              "Slepe"
         ],
         "locations": null,
         "skills": {
@@ -4717,8 +4829,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kandarin",
-          "Fremennik"
+              "East Ardougne",
+              "Weiss"
         ],
         "locations": null,
         "skills": {
@@ -4778,7 +4890,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Varlamore"
+              "Auburnvale"
         ],
         "locations": null,
         "skills": {
@@ -5038,7 +5150,10 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Karamja"
+              "Tai Bwo Wannai",
+              "Shilo Village",
+              "Brimhaven",
+              "Musa Point"
         ],
         "locations": null,
         "skills": {
@@ -5059,7 +5174,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kourend & Kebos"
+              "Mount Quidamortem",
+              "Shayzien",
+              "Arceuus"
         ],
         "locations": null,
         "skills": {
@@ -5117,7 +5234,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kandarin"
+              "Hemenster"
         ],
         "locations": null,
         "skills": {
@@ -5134,8 +5251,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kharidian Desert",
-          "Misthalin"
+              "Al Kharid",
+              "Wizards' Tower",
+              "Varrock"
         ],
         "locations": null,
         "skills": {
@@ -5154,7 +5272,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kourend & Kebos"
+              "Arceuus"
         ],
         "locations": null,
         "skills": {
@@ -5173,8 +5291,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Asgarnia",
-          "Kandarin"
+              "Rimmington",
+              "Falador",
+              "Corsair Cove"
         ],
         "locations": null,
         "skills": {},
@@ -5189,9 +5308,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Misthalin",
-          "Kharidian Desert",
-          "Fremennik"
+              "Varrock",
+              "Ruins of Uzer",
+              "Mountain Camp"
         ],
         "locations": null,
         "skills": {
@@ -5216,7 +5335,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kourend & Kebos"
+              "Hosidius",
+              "Arceuus"
         ],
         "locations": null,
         "skills": {
@@ -5235,7 +5355,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Misthalin"
+              "Varrock",
+              "Digsite"
         ],
         "locations": null,
         "skills": {
@@ -5254,7 +5375,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kandarin"
+              "Tree Gnome Stronghold",
+              "Observatory",
+              "Feldip Hills"
         ],
         "locations": null,
         "skills": {
@@ -5274,7 +5397,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kharidian Desert"
+              "Al Kharid",
+              "Pollnivneach"
         ],
         "locations": null,
         "skills": {
@@ -5291,7 +5415,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Varlamore"
+              "Tlati Rainforest",
+              "Civitas illa Fortis",
+              "Ralos' Rise"
         ],
         "locations": null,
         "skills": {
@@ -5313,7 +5439,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kourend & Kebos"
+              "Lovakengj"
         ],
         "locations": null,
         "skills": {},
@@ -5330,7 +5456,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Fremennik"
+              "Rellekka",
+              "Lunar Isle"
         ],
         "locations": null,
         "skills": {
@@ -5356,7 +5483,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Fremennik"
+              "Rellekka",
+              "Neitiznot",
+              "Jatizso"
         ],
         "locations": null,
         "skills": {
@@ -5375,7 +5504,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Fremennik"
+              "Rellekka"
         ],
         "locations": null,
         "skills": {},
@@ -5390,7 +5519,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kourend & Kebos"
+              "Molch"
         ],
         "locations": null,
         "skills": {
@@ -5407,9 +5536,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Fremennik",
-          "Misthalin",
-          "Asgarnia"
+              "Keldagrim",
+              "Varrock",
+              "Port Sarim"
         ],
         "locations": null,
         "skills": {
@@ -5429,8 +5558,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kharidian Desert",
-          "Misthalin"
+              "Ruins of Uzer",
+              "Varrock"
         ],
         "locations": null,
         "skills": {
@@ -5448,8 +5577,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kandarin",
-          "Karamja"
+              "Tree Gnome Stronghold",
+              "Feldip Hills",
+              "Ship Yard"
         ],
         "locations": null,
         "skills": {
@@ -5466,8 +5596,10 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Morytania",
-          "Asgarnia"
+              "Canifis",
+              "Mos Le'Harmless",
+              "Harmony Island",
+              "Edgeville"
         ],
         "locations": null,
         "skills": {
@@ -5492,9 +5624,10 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kandarin",
-          "Karamja",
-          "Asgarnia"
+              "Yanille",
+              "Brimhaven",
+              "Entrana",
+              "Port Sarim"
         ],
         "locations": null,
         "skills": {
@@ -5512,7 +5645,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Varlamore"
+              "Ralos' Rise",
+              "Civitas illa Fortis"
         ],
         "locations": null,
         "skills": {
@@ -5534,7 +5668,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Misthalin"
+              "Lumbridge"
         ],
         "locations": null,
         "skills": {},
@@ -5549,8 +5683,10 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Asgarnia",
-          "Misthalin"
+              "Falador",
+              "Port Sarim",
+              "Asgarnian Ice Dungeon",
+              "Varrock"
         ],
         "locations": null,
         "skills": {
@@ -5567,8 +5703,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Misthalin",
-          "Asgarnia"
+              "Lumbridge",
+              "Varrock",
+              "Goblin Village"
         ],
         "locations": null,
         "skills": {
@@ -5590,7 +5727,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kandarin"
+              "Gnome Village",
+              "Feldip Hills"
         ],
         "locations": null,
         "skills": {
@@ -5615,7 +5753,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kourend & Kebos"
+              "Hosidius",
+              "Piscarilius"
         ],
         "locations": null,
         "skills": {
@@ -5634,7 +5773,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "The Open Seas"
+              "Last Light"
         ],
         "locations": null,
         "skills": {
@@ -5654,7 +5793,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Misthalin"
+              "Lumbridge"
         ],
         "locations": null,
         "skills": {},
@@ -5669,7 +5808,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Varlamore"
+              "Avium Savannah"
         ],
         "locations": null,
         "skills": {
@@ -5688,8 +5827,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kandarin",
-          "Asgarnia",
+              "Observatory",
+              "Witchaven",
+              "Falador"
         ],
         "locations": null,
         "skills": {
@@ -5714,7 +5854,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kharidian Desert"
+              "Bedabin Camp",
+              "Shantay Pass"
         ],
         "locations": null,
         "skills": {
@@ -5732,7 +5873,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Fremennik"
+              "Miscellania & Etceteria"
         ],
         "locations": null,
         "skills": {},
@@ -5750,7 +5891,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kandarin"
+              "East Ardougne"
         ],
         "locations": null,
         "skills": {
@@ -5767,7 +5908,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kandarin"
+              "Gnome Village"
         ],
         "locations": null,
         "skills": {},
@@ -5782,8 +5923,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Karamja",
-          "Kandarin"
+              "Brimhaven",
+              "East Ardougne"
         ],
         "locations": null,
         "skills": {
@@ -5800,7 +5941,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Asgarnia"
+              "Burthorpe",
+              "Warriors' Guild"
         ],
         "locations": null,
         "skills": {
@@ -5819,7 +5961,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Asgarnia"
+              "Burthorpe"
         ],
         "locations": null,
         "skills": {
@@ -5838,7 +5980,10 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "The Open Seas"
+              "Remote Island",
+              "The Summer Shore",
+              "The Great Conch",
+              "The Little Pearl"
         ],
         "locations": null,
         "skills": {
@@ -5862,7 +6007,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Varlamore"
+              "Ralos' Rise",
+              "Civitas illa Fortis"
         ],
         "locations": null,
         "skills": {},
@@ -5879,8 +6025,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kandarin",
-          "Tirannwn"
+              "East Ardougne",
+              "West Ardougne"
         ],
         "locations": null,
         "skills": {
@@ -5899,7 +6045,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Misthalin"
+              "Draynor Village",
+              "Varrock"
         ],
         "locations": null,
         "skills": {},
@@ -5914,9 +6061,10 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Asgarnia",
-          "Misthalin",
-          "Morytania"
+              "Falador",
+              "Taverley",
+              "Varrock",
+              "Canifis"
         ],
         "locations": null,
         "skills": {
@@ -5938,7 +6086,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kandarin"
+              "Yanille"
         ],
         "locations": null,
         "skills": {
@@ -5959,7 +6107,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kandarin"
+              "Gnome Village",
+              "Baxtorian Falls"
         ],
         "locations": null,
         "skills": {},
@@ -5974,7 +6123,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Misthalin"
+              "Edgeville",
+              "Varrock"
         ],
         "locations": null,
         "skills": {
@@ -5993,9 +6143,12 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Misthalin",
-          "Asgarnia",
-          "Kandarin"
+              "Edgeville",
+              "Draynor Village",
+              "Warriors' Guild",
+              "Taverley",
+              "Falador",
+              "Port Sarim"
         ],
         "locations": null,
         "skills": {
@@ -6031,7 +6184,7 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Asgarnia"
+              "Taverley"
         ],
         "locations": null,
         "skills": {},
@@ -6075,8 +6228,9 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Misthalin",
-          "Asgarnia"
+              "Lumbridge",
+              "Draynor Village",
+              "Port Sarim"
         ],
         "locations": null,
         "skills": {},
@@ -6091,7 +6245,8 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Kandarin"
+              "Feldip Hills",
+              "Yanille"
         ],
         "locations": null,
         "skills": {
@@ -6126,7 +6281,14 @@ describe('audited current quest requirements', () => {
         "kind": "quest",
         "accessPolicy": "regions",
         "regions": [
-          "Morytania"
+              "Paterdomus",
+              "Icyene Graveyard",
+              "Meiyerditch",
+              "Darkmeyer",
+              "Slepe",
+              "Ver Sinhaza",
+              "Burgh de Rott",
+              "Barrows"
         ],
         "locations": null,
         "skills": {

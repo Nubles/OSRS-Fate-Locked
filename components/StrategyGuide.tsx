@@ -15,6 +15,7 @@ import {
 import { CheckCircle, XCircle, Lock, Map, BookOpen, AlertCircle, Compass, Target, Search, ScrollText, Filter, Pin, SlidersHorizontal, Check, ArrowUpRight, TrendingUp, Sparkles, BrainCircuit } from 'lucide-react';
 import { evaluateDiaryTierEligibility, meetsSkillRequirement } from '../utils/journalStatus';
 import { effectiveSkillLevel } from '../utils/slayerReach';
+import { enforcedQuestAreas } from '../utils/questGeographyDisplay';
 
 const ROOT_UNLOCKS = {
     [TableType.EQUIPMENT]: new Set(EQUIPMENT_SLOTS),
@@ -130,7 +131,7 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
             database[q.name] = {
                 id: q.name,
                 category: TableType.QUESTS,
-                regions: q.regions,
+                regions: enforcedQuestAreas(q),
                 skills: q.skills,
                 quests: q.prereqs,
                 description: `Series: ${q.series || 'None'} | Difficulty: ${q.difficulty.replace('Quest (', '').replace(')', '')}`

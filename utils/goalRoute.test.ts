@@ -69,8 +69,9 @@ describe('buildGoalRoute — strategy goal (Recipe for Disaster ≈ Barrows Glov
     expect(cooking.tierNeeded).toBe(tierForLevel(cooking.needLevel));
     expect(cooking.met).toBe(false);
 
-    // regions aggregated from the chain (Desert Treasure pulls in the desert)
-    expect(route.regions.some(r => r.name === 'Kharidian Desert')).toBe(true);
+    // Quest requirements contribute exact areas, not a whole parent region.
+    expect(route.regions.some(r => r.name === 'Bedabin Camp')).toBe(true);
+    expect(route.regions.some(r => r.name === 'Kharidian Desert')).toBe(false);
 
     // table suggestions exist and point at the Regions/Skills tables
     expect(route.tables.length).toBeGreaterThan(0);
@@ -86,17 +87,17 @@ describe('buildGoalRoute — strategy goal (Recipe for Disaster ≈ Barrows Glov
   it('marks met requirements as the run progresses', () => {
     const route = buildGoalRoute('Recipe for Disaster', stateWith({
       quests: ['Desert Treasure I'],
-      regions: [...REGION_GROUPS['Kharidian Desert']],
+      regions: [...QUEST_DATA['Desert Treasure I'].regions],
       skills: { Cooking: 7 },
       levels: { Cooking: 70 },
     }))!;
     expect(route.quests.find(q => q.name === 'Desert Treasure I')!.met).toBe(true);
-    expect(route.regions.find(r => r.name === 'Kharidian Desert')!.met).toBe(true);
+    expect(route.regions.find(r => r.name === 'Bedabin Camp')!.met).toBe(true);
     expect(route.skills.find(s => s.skill === 'Cooking')!.met).toBe(true);
     // an unlocked region is no longer "needed" by any table suggestion
     for (const t of route.tables) {
-      for (const child of REGION_GROUPS['Kharidian Desert']) {
-        expect(t.needed).not.toContain(child);
+      for (const area of QUEST_DATA['Desert Treasure I'].regions) {
+        expect(t.needed).not.toContain(area);
       }
     }
   });

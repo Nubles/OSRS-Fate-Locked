@@ -304,7 +304,7 @@ describe('journal completion decisions', () => {
     };
     const machineBlocked = unlocked({
       ...shared,
-      regions: ['Kandarin'],
+      regions: ['Observatory', 'Witchaven'],
     });
 
     expect(questCompletionDecision(
@@ -312,11 +312,11 @@ describe('journal completion decisions', () => {
       machineBlocked,
       'vanilla',
       { manualConfirmed: true },
-    )).toEqual({ ok: false, reason: 'Requires: Asgarnia' });
+    )).toEqual({ ok: false, reason: 'Requires: Falador' });
 
     const machineReady = unlocked({
       ...shared,
-      regions: ['Kandarin', 'Asgarnia'],
+      regions: ['Observatory', 'Witchaven', 'Falador'],
     });
     expect(questCompletionDecision(quest, machineReady, 'vanilla')).toEqual({
       ok: false,

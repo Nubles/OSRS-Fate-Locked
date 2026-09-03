@@ -150,7 +150,7 @@ describe('manual journal readiness', () => {
     const result = evaluateQuestEligibility(
       QUEST_DATA['The Slug Menace'],
       unlocked({
-        regions: ['Kandarin', 'Asgarnia'],
+        regions: ['Observatory', 'Witchaven', 'Falador'],
         quests: ['Sea Slug', 'Wanted!'],
         skills: { Crafting: 30, Runecraft: 30, Slayer: 30, Thieving: 30 },
         levels: { Crafting: 30, Runecraft: 30, Slayer: 30, Thieving: 30 },
@@ -342,7 +342,7 @@ describe('reported quest access', () => {
   it('calculates Dream Mentor combat instead of reading a pseudo-skill', () => {
     const q = QUEST_DATA['Dream Mentor'];
     const base = {
-      regions: ['Fremennik'], quests: ['Lunar Diplomacy', "Eadgar's Ruse"],
+      regions: ['Lunar Isle'], quests: ['Lunar Diplomacy', "Eadgar's Ruse"],
       skills: { Attack: 10, Strength: 10, Defence: 10, Hitpoints: 10, Prayer: 10, Ranged: 10, Magic: 10 },
     };
     const lowLevels = { Attack: 60, Strength: 60, Defence: 60, Hitpoints: 60, Prayer: 60, Ranged: 60, Magic: 60 };

@@ -80,12 +80,12 @@ describe('quest Wilderness access', () => {
   });
 
   it.each([
-    ['sequence 1', ['Wilderness Agility Course', 'Chaos Temple', "Rogues' Castle"]],
-    ['sequence 2', ['Wilderness Bandit Camp', 'Graveyard of Shadows', 'Slayer Tower']],
-    ['sequence 3', ['Bandit Camp', 'Lava Maze']],
+    ['sequence 1', ['Wilderness Agility Course', 'Chaos Temple', "Rogues' Castle", 'Entrana', "Wizards' Tower"]],
+    ['sequence 2', ['Wilderness Bandit Camp', 'Graveyard of Shadows', 'Port Sarim', 'Edgeville', 'Slayer Tower']],
+    ['sequence 3', ['Bandit Camp', 'Lava Maze', 'Tree Gnome Stronghold', 'Falador', 'Edgeville']],
   ])('allows Curse of the Empty Lord through %s without the full Wilderness', (_name, route) => {
     const result = evaluateQuestEligibility(QUEST_DATA['Curse of the Empty Lord'], unlocked({
-      regions: ['Asgarnia', 'Kandarin', ...route],
+      regions: ['Baxtorian Falls', ...route],
       skills: { Thieving: 6 },
       levels: { Thieving: 53 },
     }), 'vanilla');

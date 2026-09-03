@@ -19,13 +19,14 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-09-03-wilderness-quest-access',
-    title: 'Wilderness Quest Access Corrected',
+    id: '2026-09-03-quest-area-access',
+    title: 'Quest Area Access Corrected',
     date: '2026-09-03',
     sections: {
       fixed: [
         'Enter the Abyss can now be completed from the default Misthalin area without unlocking the entire Wilderness.',
-        'Heroes\' Quest, Devious Minds, Curse of the Empty Lord, and both Mage Arena miniquests now check their actual Wilderness locations or route instead of requiring every Wilderness subarea.',
+        'Clock Tower, Hazeel Cult, Sheep Herder, and Tower of Life now correctly accept East Ardougne instead of requiring every Kandarin subarea.',
+        'The complete 210-entry quest and miniquest catalogue now checks exact tracked areas instead of requiring entire parent regions.',
         'The Slug Menace now describes the Edgeville Abyss route accurately.',
       ],
     },
