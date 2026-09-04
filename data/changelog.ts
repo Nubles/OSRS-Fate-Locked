@@ -19,6 +19,17 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-09-04-runelite-relay-reliability',
+    title: 'RuneLite Relay Reliability',
+    date: '2026-09-04',
+    sections: {
+      fixed: [
+        'Connecting RuneLite no longer leaves the tracker polling retired event routes in the background.',
+        'The stream overlay now checks for updates less aggressively, reducing relay outages during long sessions.',
+      ],
+    },
+  },
+  {
     id: '2026-09-03-quest-area-access',
     title: 'Quest Area Access Corrected',
     date: '2026-09-03',

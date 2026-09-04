@@ -17,7 +17,10 @@ import React, { useEffect, useRef, useState } from 'react';
  */
 
 const DEFAULT_BASE = 'https://fate-relay.fatelocked.workers.dev';
-const POLL_MS = 5000;
+// The overlay is informational rather than latency-critical. A 30-second
+// cadence keeps it useful on stream without consuming an entire free Worker
+// allowance when it is left open for long sessions.
+const POLL_MS = 30_000;
 
 interface OverlayState {
   keys: number;
