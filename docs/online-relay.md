@@ -27,6 +27,11 @@ RuneLite performs only the fixed `GET` request, with optional ETag caching. A
 valid response replaces its imported snapshot. A malformed or unsupported
 response is rejected without replacing the last valid snapshot.
 
+After the initial pairing check, RuneLite revalidates a connected profile no
+more than once per minute and backs off transient failures and rate limits. The
+optional stream overlay checks every 30 seconds. The tracker does not poll the
+legacy event resources.
+
 The plugin does **not** upload gameplay, account names, detected events,
 acknowledgements, suggestions, heartbeats, telemetry, or any other state.
 Supported gameplay detections stay in RuneLite's local event history.

@@ -19,20 +19,18 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-09-03-quest-area-access');
+    expect(LATEST_CHANGELOG.id).toBe('2026-09-04-runelite-relay-reliability');
   });
 
-  it('announces the catalogue-wide quest area access fixes exactly', () => {
+  it('announces the RuneLite relay reliability fixes exactly', () => {
     expect(LATEST_CHANGELOG).toEqual({
-      id: '2026-09-03-quest-area-access',
-      title: 'Quest Area Access Corrected',
-      date: '2026-09-03',
+      id: '2026-09-04-runelite-relay-reliability',
+      title: 'RuneLite Relay Reliability',
+      date: '2026-09-04',
       sections: {
         fixed: [
-          'Enter the Abyss can now be completed from the default Misthalin area without unlocking the entire Wilderness.',
-          'Clock Tower, Hazeel Cult, Sheep Herder, and Tower of Life now correctly accept East Ardougne instead of requiring every Kandarin subarea.',
-          'The complete 210-entry quest and miniquest catalogue now checks exact tracked areas instead of requiring entire parent regions.',
-          'The Slug Menace now describes the Edgeville Abyss route accurately.',
+          'Connecting RuneLite no longer leaves the tracker polling retired event routes in the background.',
+          'The stream overlay now checks for updates less aggressively, reducing relay outages during long sessions.',
         ],
       },
     });
