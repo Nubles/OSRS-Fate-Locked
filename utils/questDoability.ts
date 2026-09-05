@@ -28,7 +28,7 @@ export function entryBlockedGate(
   return (chunkId: string) => {
     const reqs = questSections[chunkId];
     if (!reqs) return false;
-    return reqs.some(r => knownQuests.has(r) && !completedQuests.has(r));
+    return reqs.some(r => !knownQuests.has(r) || !completedQuests.has(r));
   };
 }
 

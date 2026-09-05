@@ -55,9 +55,9 @@ describe('entryBlockedGate', () => {
     const gate = entryBlockedGate(qs, new Set(['Pandemonium', 'Dragon Slayer I']), known);
     expect(gate('100')).toBe(false);
   });
-  it('ignores non-quest / unknown requirements (errs toward reachable)', () => {
+  it('blocks non-quest and unknown requirements pending classification', () => {
     const gate = entryBlockedGate(qs, new Set<string>(), known);
-    expect(gate('200')).toBe(false); // "Access the fishing guild" isn't a known quest
+    expect(gate('200')).toBe(true); // "Access the fishing guild" isn't a known quest
     expect(gate('999')).toBe(false); // ungated chunk
   });
 });

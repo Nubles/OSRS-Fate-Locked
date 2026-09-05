@@ -978,7 +978,7 @@ describe('RuneProof Goal Planner integration', () => {
     expect(current.getByText('Unlock chunk 49,51 to use Mill Lane Mill.')).toBeTruthy();
   });
 
-  it('contains coach projection failures and keeps the objective picker usable', async () => {
+  it('rejects nullable analysis before rendering and keeps the objective picker usable', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const contentService = loadedContent();
     render(
@@ -994,15 +994,13 @@ describe('RuneProof Goal Planner integration', () => {
       />,
     );
 
-    expect((await screen.findByRole('status')).textContent).toContain(
-      'RuneProof is temporarily unavailable. Choose another reviewed RuneProof quest.',
-    );
+    expect(await screen.findByText('Analysis unavailable')).toBeTruthy();
     const recommendations = screen.getByRole('region', { name: 'Recommended RuneProof quests' });
     expect(within(recommendations).queryByRole('button', { name: /Daddy's Home/ })).toBeNull();
     await userEvent.click(within(recommendations).getByRole('button', { name: /Sheep Shearer/ }));
 
-    expect((await screen.findByRole('status')).textContent).toContain('RuneProof is temporarily unavailable.');
-    expect(consoleError).toHaveBeenCalled();
+    expect(await screen.findByText('Analysis unavailable')).toBeTruthy();
+    expect(consoleError).not.toHaveBeenCalled();
   });
 
   it('keeps unsupported targets in Goal Planner but replaces them in RuneProof', async () => {

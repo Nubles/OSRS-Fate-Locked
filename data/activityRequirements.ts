@@ -14,6 +14,7 @@ import { ACTIVITY_ACCESS_AREAS } from './activityAccess';
 
 export interface ActivityReq {
   predicates?: RequirementPredicate[];
+  noteIsInformational?: true;
   /** Hard skill-level gates, e.g. { Slayer: 91 }. */
   skills?: Record<string, number>;
   /** Required quests (canonical OSRS names; match QUEST_DATA where possible). */
@@ -114,7 +115,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   // ===== Minigames (hard gates only; many minigames have no requirement) =====
   'Pest Control': {
     combatLevel: 40,
-    note: 'Novice boat.',
+    noteIsInformational: true, note: 'Novice boat.',
   },
   'Barbarian Assault': { },
   'Bounty Hunter': {

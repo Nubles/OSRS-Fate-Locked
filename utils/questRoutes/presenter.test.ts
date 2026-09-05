@@ -372,3 +372,11 @@ describe('presentQuestAnalysis', () => {
     expect(presented.items[0].routes[0].steps[0].chunk).toBe('19,57');
   });
 });
+
+
+it('normalizes nullable item arrays to an incomplete presentation', () => {
+  const analysis = { questId: 'test', status: 'READY_NOW', items: null } as unknown as QuestRouteAnalysis;
+  const presented = presentQuestAnalysis(analysis);
+  expect(presented.items).toEqual([]);
+  expect(presented.heading).toBe('Analysis incomplete');
+});

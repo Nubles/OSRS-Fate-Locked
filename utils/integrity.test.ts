@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  simpleHash, hashEntry, ensureChain, verifyChain,
+  auditHistory, simpleHash, hashEntry, ensureChain, verifyChain,
   replayInvariants, computeRunId, buildVerifiedBundle, sha256Hex,
 } from './integrity';
 import { LogEntry } from '../types';
@@ -487,5 +487,27 @@ describe('buildVerifiedBundle', () => {
     const tampered = chained.map((e, i) => i === 1 ? { ...e, message: 'EDITED' } : e);
     const bundle = await buildVerifiedBundle(tampered);
     expect(bundle.chainReport.ok).toBe(false);
+  });
+});
+
+
+describe('malformed integrity links', () => {
+  it.each([
+    { hash: 'deadbeef' }, { prevHash: 'GENESIS' },
+    { hash: '', prevHash: 'GENESIS' }, { hash: null, prevHash: 'GENESIS' },
+  ])('does not repair partial fields: %j', fields => {
+    const history = [fail(fields as any)];
+    expect(ensureChain(history)).toBe(history);
+    expect(verifyChain(history).ok).toBe(false);
+    expect(auditHistory(history).verdict).toBe('tampered');
+  });
+  it('rejects a legacy entry inserted into an existing chain', () => {
+    const history = [...ensureChain([fail()]), fail()];
+    expect(ensureChain(history)).toBe(history);
+    expect(auditHistory(history).verdict).toBe('tampered');
+  });
+  it('does not verify unhashed history without explicit legacy initialization', () => {
+    expect(verifyChain([fail()]).ok).toBe(false);
+    expect(verifyChain(ensureChain([fail()])).ok).toBe(true);
   });
 });

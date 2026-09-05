@@ -48,6 +48,7 @@ export default defineConfig(({ mode }) => {
     base: process.env.VITE_BASE || '/',
     ...{
       test: {
+        setupFiles: ['./testSetup.ts'],
         exclude: [...configDefaults.exclude, '**/.worktrees/**'],
       },
     },

@@ -118,6 +118,7 @@ export const evaluateRouteGates = (
       case 'UNLOCK':
         if (!unlocks[gate.category].includes(gate.id)) blockers.push(gate);
         break;
+      default:
       case 'UNRESOLVED':
         hasDataGap = true;
         blockers.push(gate);

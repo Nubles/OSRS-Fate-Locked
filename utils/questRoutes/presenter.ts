@@ -1,3 +1,4 @@
+import { isQuestAnalysisUsable } from './analysisValidation';
 import type {
   DeepReadonly,
   QuestItemRouteAnalysis,
@@ -215,6 +216,6 @@ export const presentQuestAnalysis = (
   analysis: QuestRouteAnalysis,
 ): PresentedQuestAnalysis => ({
   questId: analysis.questId,
-  heading: QUEST_STATUS_TEXT[analysis.status],
-  items: analysis.items.map(presentItem),
+  heading: QUEST_STATUS_TEXT[isQuestAnalysisUsable(analysis) ? analysis.status : 'ANALYSIS_INCOMPLETE'],
+  items: isQuestAnalysisUsable(analysis) ? analysis.items.map(presentItem) : [],
 });

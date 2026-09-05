@@ -153,6 +153,7 @@ const validateRouteGate = (gate: RouteGate): RouteGate => {
     case 'UNRESOLVED':
       assertNonBlank(gate.raw, 'raw requirement');
       break;
+    default: throw new Error('Unknown route gate type');
   }
 
   return gate;

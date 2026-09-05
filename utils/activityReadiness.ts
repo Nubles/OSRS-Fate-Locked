@@ -68,7 +68,7 @@ export function evaluateActivityReadiness(
   }
   if (blockers.length > 0) return { status: 'NOT_READY', blockers };
 
-  const evaluated = evaluatePredicate({ kind: 'all', of: requirement?.predicates ?? [] }, { unlocks, gameModeId });
+  const evaluated = evaluatePredicate({ kind: 'all', of: requirement?.predicates ?? (requirement?.note && !requirement.noteIsInformational ? [{ kind: 'unknown', key: 'unclassified-note', label: requirement.note }] : []) }, { unlocks, gameModeId });
   if (evaluated.status === 'LOCKED') return { status: 'NOT_READY', blockers: evaluated.checks.map(label => ({ kind: 'quest', label })) };
   if (evaluated.status === 'UNKNOWN') return { status: 'UNKNOWN', checks: evaluated.checks };
   const checks = [...new Set([...(requirement?.manualRequirements ?? []), ...evaluated.checks])];

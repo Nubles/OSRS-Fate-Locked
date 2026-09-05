@@ -19,6 +19,7 @@ import { SectionGuide } from './SectionGuide';
 import { UnlockState } from '../types';
 import { QuestRoutePanel } from './questRoutes/QuestRoutePanel';
 import { RuneProofErrorBoundary } from './questRoutes/RuneProofErrorBoundary';
+import { isQuestAnalysisUsable } from '../utils/questRoutes/analysisValidation';
 import { analyzeQuest } from '../utils/questRoutes/analyzeQuest';
 import { reviewedQuestRequirements } from '../data/questItemRequirements';
 import {
@@ -653,6 +654,7 @@ export const GoalPlannerModal: React.FC<Props> = ({
           walkthrough,
         );
         const analysis = runeProofIntegration.analyze(request.questId, snapshot, walkthrough);
+        if (!isQuestAnalysisUsable(analysis)) { showUnavailable(); return; }
         const connectGraph = Object.fromEntries(
           Object.entries(snapshot.connectGraph).map(([from, destinations]) => (
             [from, [...destinations]]

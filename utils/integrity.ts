@@ -46,32 +46,17 @@ export const hashEntry = (entry: LogEntry, prevHash: string): string => {
   return simpleHash(prevHash + '|' + canonicalize(entry));
 };
 
-// Lazily fills in prevHash/hash for any entry missing them, without
-// mutating inputs. Preserves any existing chain links so re-running is
-// idempotent. Existing broken links are left as-is so verifyChain can
-// flag them.
+// Only wholly legacy histories may be initialized. Preserve mixed/partial
+// links verbatim so malformed imports cannot be silently repaired into validity.
 export const ensureChain = (history: LogEntry[]): LogEntry[] => {
-  let needsRebuild = false;
-  for (const e of history) {
-    if (!e.hash) { needsRebuild = true; break; }
-  }
-  if (!needsRebuild) return history;
-
-  const out: LogEntry[] = [];
+  if (history.some(e => e.hash !== undefined || e.prevHash !== undefined)) return history;
   let prev = GENESIS;
-  for (const e of history) {
-    if (e.hash && e.prevHash) {
-      out.push(e);
-      prev = e.hash;
-      continue;
-    }
-    const prevHash = e.prevHash ?? prev;
-    const hash = e.hash ?? hashEntry(e, prevHash);
-    const filled = { ...e, prevHash, hash };
-    out.push(filled);
+  return history.map(e => {
+    const prevHash = prev;
+    const hash = hashEntry(e, prevHash);
     prev = hash;
-  }
-  return out;
+    return { ...e, prevHash, hash };
+  });
 };
 
 export interface ChainReport {
@@ -85,7 +70,10 @@ export const verifyChain = (history: LogEntry[]): ChainReport => {
   let prev = GENESIS;
   for (let i = 0; i < history.length; i++) {
     const e = history[i];
-    if (!e.hash || !e.prevHash) continue;
+    if (typeof e.hash !== 'string' || !e.hash || typeof e.prevHash !== 'string' || !e.prevHash) {
+      brokenAt.push(i);
+      continue;
+    }
     if (e.prevHash !== prev) brokenAt.push(i);
     else if (hashEntry(e, e.prevHash) !== e.hash) brokenAt.push(i);
     prev = e.hash ?? prev;
