@@ -3,9 +3,11 @@ import { evaluatePredicate, type RequirementPredicate } from './requirementPredi
 import { evaluateDiaryTaskEligibility, evaluateDiaryTierEligibility, meetsSkillRequirement } from './journalStatus';
 import { evaluateActivityReadiness } from './activityReadiness';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
+import { QUEST_DATA } from '../data/questData';
 import { slayerReachability } from './slayerReach';
 import { actualSkillLevel, usableMethodLevel } from './skillLevels';
 import type { UnlockState } from '../types';
+import { diaryTaskCompletionDecision } from './journalCompletion';
 
 const unlocks: UnlockState = {
   equipment: {}, skills: { Defence: 1, Slayer: 1 }, levels: { Defence: 70, Slayer: 70 },
@@ -14,6 +16,52 @@ const unlocks: UnlockState = {
 };
 const unknown: RequirementPredicate = { kind: 'unknown', key: 'new-rule', label: 'Unclassified entry rule' };
 describe('shared requirement semantics', () => {
+  it('does not allow manual attestation to satisfy unknown diary conditions', () => {
+    const task = { id: 'unknown', tierId: 'test', description: 'Test', predicates: [unknown] };
+    expect(evaluateDiaryTaskEligibility(task, unlocks)).toMatchObject({ eligible: false, machineEligible: false, confirmable: false });
+    expect(diaryTaskCompletionDecision(task, unlocks, undefined, { manualConfirmed: true }).ok).toBe(false);
+    expect(evaluateDiaryTaskEligibility({ id: 'label', oneOf: [{ label: 'Exemption' }] }, unlocks).confirmable).toBe(false);
+  });
+  it('only asks for checks from a viable OR route', () => {
+    const result = evaluatePredicate({ kind: 'any', of: [
+      { kind: 'all', of: [{ kind: 'skill', skill: 'Defence', level: 99 }, { kind: 'manual', key: 'blocked', label: 'Impossible route check' }] },
+      { kind: 'manual', key: 'viable', label: 'Viable route check' },
+    ] }, { unlocks });
+    expect(result).toEqual({ status: 'NEEDS_CONFIRMATION', checks: ['Viable route check'] });
+  });
+  it.each([
+    { kind: 'method', skill: 'Fake', tier: 0 },
+    { kind: 'method', skill: 'Defence', tier: 1.5 },
+    { kind: 'equipment', slot: 'Fake', tier: 1 },
+    { kind: 'area', id: 'Fake' },
+    { kind: 'skill', skill: 'Defence', level: -1 },
+    { kind: 'questPoints', count: -1 },
+    { kind: 'item', id: 'cape', label: 'Cape', usage: 'bogus' },
+    { kind: 'bossKill', id: 'boss', label: 'Boss', count: 0 },
+  ])('rejects malformed predicate %j', predicate => {
+    expect(evaluatePredicate(predicate as RequirementPredicate, { unlocks }).status).toBe('UNKNOWN');
+  });
+  it('rejects truthy nonboolean confirmation data', () => {
+    expect(evaluatePredicate({ kind: 'manual', key: 'test', label: 'Test' }, {
+      unlocks, confirmations: { test: 'yes' } as unknown as Record<string, boolean>,
+    }).status).toBe('UNKNOWN');
+  });
+  it('counts each completed quest only once toward quest points', () => {
+    const quest = Object.values(QUEST_DATA).find(q => q.kind === 'quest' && q.points > 0)!;
+    const state = { ...unlocks, quests: [quest.id, quest.id] };
+    const count = quest.points + 1;
+    expect(evaluatePredicate({ kind: 'questPoints', count }, { unlocks: state }).status).toBe('LOCKED');
+    expect(evaluateDiaryTaskEligibility({ id: 'qp', questPoints: count }, state).eligible).toBe(false);
+  });
+  it('preserves unknown status on the tier and excludes it from attestation', () => {
+    const task = { id: 'unknown-fixture', tierId: 'Unknown fixture tier', description: 'Test', predicates: [unknown] };
+    ALL_DIARY_TASKS.push(task);
+    try {
+      expect(evaluateDiaryTierEligibility({ id: task.tierId }, unlocks)).toMatchObject({ status: 'UNKNOWN', eligible: false, unverifiedTaskIds: [task.id] });
+    } finally {
+      ALL_DIARY_TASKS.splice(ALL_DIARY_TASKS.indexOf(task), 1);
+    }
+  });
   it('uses attained levels across journal, activity and Slayer without opening methods', () => {
     expect(actualSkillLevel(unlocks, 'Defence')).toBe(70);
     expect(usableMethodLevel(unlocks, 'Defence')).toBe(10);

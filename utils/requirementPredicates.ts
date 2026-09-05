@@ -1,5 +1,7 @@
 import type { UnlockState } from '../types';
-import { SKILLS_LIST } from '../data/items';
+import { SKILLS_LIST, EQUIPMENT_SLOTS } from '../data/items';
+import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
+import { AREA_ALIAS_POLICIES } from '../data/areaMapPolicy';
 import { QUEST_DATA } from '../data/questData';
 import { isAreaReachable } from './reachability';
 import { actualSkillLevel, unlockedEquipmentTier, unlockedMethodTier } from './skillLevels';
@@ -28,15 +30,21 @@ export interface PredicateContext {
   accountMode?: string;
 }
 
+const knownAreas = new Set(['Misthalin', ...MISTHALIN_AREAS, ...Object.keys(REGION_GROUPS), ...Object.values(REGION_GROUPS).flat(), ...Object.keys(AREA_ALIAS_POLICIES)]);
+
 export function evaluatePredicate(predicate: RequirementPredicate, context: PredicateContext): PredicateResult {
   const result = (status: RequirementCertainty, label: string): PredicateResult => ({ status, checks: status === 'READY' ? [] : [label] });
   const check = (met: boolean, label: string) => result(met ? 'READY' : 'LOCKED', label);
   const external = (key: string, label: string) => {
     const confirmed = context.confirmations?.[key];
-    return confirmed === undefined ? result('NEEDS_CONFIRMATION', label) : check(confirmed, label);
+    return confirmed === undefined ? result('NEEDS_CONFIRMATION', label)
+      : typeof confirmed === 'boolean' ? check(confirmed, label) : result('UNKNOWN', `Invalid confirmation: ${label}`);
   };
   const u = context.unlocks;
   if (!predicate || typeof predicate !== 'object') return result('UNKNOWN', 'Unclassified requirement');
+  const text = (value: unknown): value is string => typeof value === 'string' && value.trim().length > 0;
+  const positiveInt = (value: number, max = Number.MAX_SAFE_INTEGER) => Number.isSafeInteger(value) && value > 0 && value <= max;
+  const invalid = () => result('UNKNOWN', 'Invalid requirement');
   switch (predicate.kind) {
     case 'all':
     case 'any': {
@@ -47,20 +55,23 @@ export function evaluatePredicate(predicate: RequirementPredicate, context: Pred
       const order: RequirementCertainty[] = predicate.kind === 'all'
         ? ['LOCKED', 'UNKNOWN', 'NEEDS_CONFIRMATION', 'READY']
         : ['NEEDS_CONFIRMATION', 'UNKNOWN', 'LOCKED'];
-      return { status: order.find(status => results.some(r => r.status === status))!, checks: [...new Set(results.flatMap(r => r.checks))] };
+      const status = order.find(status => results.some(r => r.status === status))!;
+      // Confirm one viable route, without demanding checks from incompatible alternatives.
+      if (predicate.kind === 'any') return results.find(r => r.status === status)!;
+      return { status, checks: [...new Set(results.flatMap(r => r.checks))] };
     }
-    case 'skill': if (!SKILLS_LIST.includes(predicate.skill)) return result('UNKNOWN', predicate.skill); return check(actualSkillLevel(u, predicate.skill) >= predicate.level, `${predicate.skill} ${predicate.level}`);
-    case 'method': return check(unlockedMethodTier(u, predicate.skill) >= predicate.tier, `${predicate.skill} method tier ${predicate.tier}`);
-    case 'equipment': return check(unlockedEquipmentTier(u, predicate.slot) >= predicate.tier, `${predicate.slot} equipment tier ${predicate.tier}`);
-    case 'quest': return QUEST_DATA[predicate.id] ? check(u.quests.includes(predicate.id), predicate.id) : result('UNKNOWN', predicate.id);
-    case 'area': return check(isAreaReachable(predicate.id, u, context.gameModeId), predicate.id);
-    case 'questPoints': return check(u.quests.reduce((sum, id) => sum + (QUEST_DATA[id]?.kind === 'quest' ? QUEST_DATA[id].points : 0), 0) >= predicate.count, `${predicate.count} Quest Points`);
-    case 'item': return external(`item:${predicate.id}:${predicate.usage}`, `${predicate.label}: available and legal to ${predicate.usage}`);
-    case 'bossKill': return external(`bossKill:${predicate.id}:${predicate.count}`, predicate.label);
-    case 'slayerTask': return external(`slayerTask:${predicate.id}`, predicate.label);
-    case 'accountMode': return context.accountMode === undefined ? result('NEEDS_CONFIRMATION', predicate.label) : check(context.accountMode === predicate.id, predicate.label);
-    case 'manual': return external(predicate.key, predicate.label);
-    case 'unknown': return result('UNKNOWN', predicate.label);
+    case 'skill': if (!SKILLS_LIST.includes(predicate.skill) || !positiveInt(predicate.level, 99)) return invalid(); return check(actualSkillLevel(u, predicate.skill) >= predicate.level, `${predicate.skill} ${predicate.level}`);
+    case 'method': if (!SKILLS_LIST.includes(predicate.skill) || !positiveInt(predicate.tier, 10)) return invalid(); return check(unlockedMethodTier(u, predicate.skill) >= predicate.tier, `${predicate.skill} method tier ${predicate.tier}`);
+    case 'equipment': if (!EQUIPMENT_SLOTS.includes(predicate.slot) || !positiveInt(predicate.tier, 10)) return invalid(); return check(unlockedEquipmentTier(u, predicate.slot) >= predicate.tier, `${predicate.slot} equipment tier ${predicate.tier}`);
+    case 'quest': if (!text(predicate.id)) return invalid(); return Object.hasOwn(QUEST_DATA, predicate.id) ? check(u.quests.includes(predicate.id), predicate.id) : result('UNKNOWN', predicate.id);
+    case 'area': if (!knownAreas.has(predicate.id)) return invalid(); return check(isAreaReachable(predicate.id, u, context.gameModeId), predicate.id);
+    case 'questPoints': if (!positiveInt(predicate.count)) return invalid(); return check([...new Set(u.quests)].reduce((sum, id) => sum + (QUEST_DATA[id]?.kind === 'quest' ? QUEST_DATA[id].points : 0), 0) >= predicate.count, `${predicate.count} Quest Points`);
+    case 'item': if (!text(predicate.id) || !text(predicate.label) || !['hold', 'consume', 'equip'].includes(predicate.usage)) return invalid(); return external(`item:${predicate.id}:${predicate.usage}`, `${predicate.label}: available and legal to ${predicate.usage}`);
+    case 'bossKill': if (!text(predicate.id) || !text(predicate.label) || !positiveInt(predicate.count)) return invalid(); return external(`bossKill:${predicate.id}:${predicate.count}`, predicate.label);
+    case 'slayerTask': if (!text(predicate.id) || !text(predicate.label)) return invalid(); return external(`slayerTask:${predicate.id}`, predicate.label);
+    case 'accountMode': if (!text(predicate.id) || !text(predicate.label)) return invalid(); return context.accountMode === undefined ? result('NEEDS_CONFIRMATION', predicate.label) : check(context.accountMode === predicate.id, predicate.label);
+    case 'manual': if (!text(predicate.key) || !text(predicate.label)) return invalid(); return external(predicate.key, predicate.label);
+    case 'unknown': return result('UNKNOWN', text(predicate.label) ? predicate.label : 'Unclassified requirement');
     default: return result('UNKNOWN', 'Unclassified requirement');
   }
 }

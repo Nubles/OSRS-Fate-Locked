@@ -13,7 +13,22 @@ import {
   renderTaskIdMigrations,
   runDiaryMain,
   validateAudit,
+  validateSnapshot,
 } from './sync-achievement-diaries.mjs';
+
+it.each([
+  null,
+  { kind: 'new-unsupported-gate' },
+  { kind: 'method', skill: 'Fishing', tier: 0 },
+  { kind: 'skill', skill: 'Fishing', level: 1.5 },
+  { kind: 'item', id: 'cape', label: 'Cape', usage: 'other' },
+  { kind: 'any', of: [{ kind: 'questPoints', count: -1 }] },
+  { kind: 'all', of: [] },
+])('rejects malformed typed diary predicate %j before generating content', predicate => {
+  const snapshot = structuredClone(SIX_TASK_SNAPSHOT);
+  Object.assign(snapshot.tasks[0], { predicates: [predicate] });
+  expect(() => validateSnapshot(snapshot)).toThrow('Invalid Diary predicate');
+});
 
 const SIX_ROW_HTML = [
   '<table class="wikitable"><tbody>',
@@ -443,6 +458,12 @@ describe('Achievement Diary id-classification audit', () => {
     snapshot.tasks[0].skills.NotASkill = 1;
 
     expect(() => validateAudit(snapshot)).toThrow(/unknown.*NotASkill/i);
+  });
+
+  it('rejects unknown canonical names in nested typed predicates', () => {
+    const snapshot = loadSnapshot();
+    snapshot.tasks[0].predicates = [{ kind: 'any', of: [{ kind: 'equipment', slot: 'NotASlot', tier: 1 }] }];
+    expect(() => validateAudit(snapshot)).toThrow(/unknown.*NotASlot/i);
   });
 
   it('rejects unknown references nested inside an alternative route', () => {

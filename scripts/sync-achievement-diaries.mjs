@@ -253,9 +253,40 @@ const renderTask = (task) => {
   return '  { ' + properties.join(', ') + ' },';
 };
 
+const validatePredicateShape = (predicate, context) => {
+  const fail = () => { throw new Error('Invalid Diary predicate: ' + context); };
+  const text = value => typeof value === 'string' && value.trim().length > 0;
+  const positiveInt = (value, max = Number.MAX_SAFE_INTEGER) => Number.isSafeInteger(value) && value > 0 && value <= max;
+  if (!predicate || typeof predicate !== 'object' || Array.isArray(predicate)) return fail();
+  switch (predicate.kind) {
+    case 'all':
+    case 'any':
+      if (!Array.isArray(predicate.of) || predicate.of.length === 0) return fail();
+      predicate.of.forEach((child, index) => validatePredicateShape(child, context + ' child ' + index));
+      return;
+    case 'skill': if (text(predicate.skill) && positiveInt(predicate.level, 99)) return; break;
+    case 'method': if (text(predicate.skill) && positiveInt(predicate.tier, 10)) return; break;
+    case 'equipment': if (text(predicate.slot) && positiveInt(predicate.tier, 10)) return; break;
+    case 'quest':
+    case 'area': if (text(predicate.id)) return; break;
+    case 'questPoints': if (positiveInt(predicate.count)) return; break;
+    case 'item': if (text(predicate.id) && text(predicate.label) && ['hold', 'consume', 'equip'].includes(predicate.usage)) return; break;
+    case 'bossKill': if (text(predicate.id) && text(predicate.label) && positiveInt(predicate.count)) return; break;
+    case 'slayerTask':
+    case 'accountMode': if (text(predicate.id) && text(predicate.label)) return; break;
+    case 'manual':
+    case 'unknown': if (text(predicate.key) && text(predicate.label)) return; break;
+  }
+  return fail();
+};
+
 const validateRequirementShape = (requirement, context, allowEmpty = true) => {
   if (!requirement || typeof requirement !== 'object' || Array.isArray(requirement)) {
     throw new Error('Invalid Diary requirement route: ' + context);
+  }
+  if (requirement.predicates !== undefined) {
+    if (!Array.isArray(requirement.predicates)) throw new Error('Invalid Diary predicates: ' + context);
+    requirement.predicates.forEach((predicate, index) => validatePredicateShape(predicate, context + ' predicate ' + index));
   }
   for (const field of ['items', 'quests', 'cas', 'regions', 'anyOfRegions', 'manualRequirements']) {
     if (requirement[field] !== undefined && !Array.isArray(requirement[field])) {
@@ -604,6 +635,7 @@ const loadReferenceCatalog = (projectRoot) => {
 
   const catalog = {
     skills,
+    equipment: new Set(stringArrayOf(initializerOf(itemsSource, 'EQUIPMENT_SLOTS'))),
     quests,
     regions,
     cas: new Set(['Easy', 'Medium', 'Hard', 'Elite', 'Master', 'Grandmaster']),
@@ -615,8 +647,20 @@ const loadReferenceCatalog = (projectRoot) => {
 const findUnknownReferences = (snapshot, projectRoot) => {
   const catalog = loadReferenceCatalog(projectRoot);
   const unknown = [];
+  const checkPredicateReferences = (predicate, taskId) => {
+    if (predicate.kind === 'all' || predicate.kind === 'any') {
+      predicate.of.forEach(child => checkPredicateReferences(child, taskId));
+      return;
+    }
+    const reference = predicate.kind === 'skill' || predicate.kind === 'method' ? ['skills', predicate.skill]
+      : predicate.kind === 'equipment' ? ['equipment', predicate.slot]
+        : predicate.kind === 'quest' ? ['quests', predicate.id]
+          : predicate.kind === 'area' ? ['regions', predicate.id] : null;
+    if (reference && !catalog[reference[0]].has(reference[1])) unknown.push(taskId + ' predicate ' + reference.join(' '));
+  };
   for (const task of snapshot.tasks) {
     for (const requirement of [task, ...(task.oneOf ?? [])]) {
+      (requirement.predicates ?? []).forEach(predicate => checkPredicateReferences(predicate, task.id));
       const referencedSkills = [
         ...Object.keys(requirement.skills ?? {}),
         ...(requirement.combinedSkillLevel?.skills ?? []),
