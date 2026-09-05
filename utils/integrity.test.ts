@@ -522,3 +522,24 @@ describe('malformed integrity links', () => {
     expect(verifyChain(ensureChain([fail()])).ok).toBe(true);
   });
 });
+
+
+describe('mode-aware and incomplete replay', () => {
+  const rules = { pityEnabled: true, pityThreshold: 100, ritualCostMultiplier: 1, omniChanceBase: 2, regionModifiers: false };
+  it('does not need a future Pity event to recognize a custom cap', () => {
+    expect(replayInvariants(Array.from({ length: 60 }, () => fail()), 3, rules).violations).toEqual([]);
+  });
+  it('does not enforce a Fate cap when Pity is disabled', () => {
+    expect(replayInvariants(Array.from({ length: 130 }, () => fail()), 3, { ...rules, pityEnabled: false }).violations).toEqual([]);
+  });
+  it('keeps legacy ritual uncertainty without falsely accusing negative balances', async () => {
+    const history = [...Array.from({ length: 8 }, () => fail()), mk({ type: 'ALTAR', message: 'Ritual of Clarity' })];
+    const replay = replayInvariants(history, 3, rules);
+    expect(replay.uncertainAt).toEqual([8]);
+    expect(replay.violations).toEqual([]);
+    expect(auditHistory(history, rules).verdict).toBe('warning');
+    const bundle = await buildVerifiedBundle(history, { id: 'custom', rules });
+    expect(bundle.replayUncertainAt).toEqual([8]);
+    expect(bundle.verdict).toBe('warning');
+  });
+});

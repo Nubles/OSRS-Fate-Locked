@@ -273,6 +273,10 @@ const validatePredicateShape = (predicate, context) => {
     case 'quest':
     case 'diary':
     case 'area': if (text(predicate.id)) return; break;
+    case 'location': if (text(predicate.label)
+      && Array.isArray(predicate.areas) && predicate.areas.length && predicate.areas.every(text)
+      && Array.isArray(predicate.chunks) && predicate.chunks.length
+      && predicate.chunks.every(key => typeof key === 'string' && /^\d+,\d+$/.test(key))) return; break;
     case 'questPoints': if (positiveInt(predicate.count)) return; break;
     case 'item': if (text(predicate.id) && text(predicate.label) && ['hold', 'consume', 'equip'].includes(predicate.usage)) return; break;
     case 'bossKill': if (text(predicate.id) && text(predicate.label) && positiveInt(predicate.count)) return; break;

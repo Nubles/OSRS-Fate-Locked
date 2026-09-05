@@ -1336,12 +1336,33 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 
 export const gameReducer = (state: GameState & { lastEvent: GameEvent | null }, action: Action): GameState & { lastEvent: GameEvent | null } => {
   if (action.type === 'COMMIT_STATE') return action.payload;
-  const rawNext = rawReducer(state, action);
+  let rawNext = rawReducer(state, action);
   if (rawNext === state) return state;
+  // Replacement histories are evidence from another save, not events created
+  // by this dispatch. Preserve every link (or missing link) verbatim so legacy
+  // imports retain uncertainty and mixed chains cannot be silently repaired.
+  if (action.type === 'LOAD_SAVE' || action.type === 'RESET') return rawNext;
+  if (action.type.startsWith('RITUAL_') && rawNext.history.length === state.history.length + 1) {
+    const entry = rawNext.history[rawNext.history.length - 1];
+    // Record effects before hashing: replay must not guess historical prices
+    // from display text or apply today's economy to an older run.
+    if (entry.type === 'ALTAR') rawNext = {
+      ...rawNext,
+      history: [...rawNext.history.slice(0, -1), { ...entry, meta: {
+        ...entry.meta,
+        ritualDelta: {
+          keys: rawNext.keys - state.keys,
+          specialKeys: rawNext.specialKeys - state.specialKeys,
+          chaosKeys: rawNext.chaosKeys - state.chaosKeys,
+          fatePoints: rawNext.fatePoints - state.fatePoints,
+          unlocks: (rawNext.unlocks.chunks?.length ?? 0) - (state.unlocks.chunks?.length ?? 0),
+        },
+      } }],
+    };
+  }
   const next = rawNext.history === state.history
     ? rawNext
     : { ...rawNext, history: chainAppendedHistory(state.history, rawNext.history) };
-  if (action.type === 'LOAD_SAVE' || action.type === 'RESET') return next;
   return { ...next, runRevision: state.runRevision + 1 };
 };
 

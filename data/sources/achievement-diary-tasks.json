@@ -14726,21 +14726,29 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Protection from dragonfire recommended if not safe spotting and weaponry to slay it",
-      "anyOfRegions": [
-        "Ferox Enclave",
-        "Wilderness Volcano",
-        "Chaos Temple",
-        "Rogues' Castle",
-        "Lava Maze",
-        "Wilderness Bandit Camp",
-        "Dark Warriors' Fortress",
-        "Graveyard of Shadows",
-        "Forgotten Cemetery",
-        "Mage Arena",
-        "Scorpia's Cave",
-        "Fountain of Rune",
-        "Wilderness God Wars Dungeon",
-        "Daimon's Crater"
+      "predicates": [
+        {
+          "kind": "location",
+          "label": "A Wilderness green-dragon location",
+          "areas": [
+            "Graveyard of Shadows",
+            "Chaos Temple",
+            "Wilderness"
+          ],
+          "chunks": [
+            "46,56",
+            "48,59",
+            "49,57",
+            "52,57",
+            "50,57",
+            "51,58"
+          ]
+        },
+        {
+          "kind": "manual",
+          "key": "wild_med_2:combat",
+          "label": "A legal route to the green dragon (including the dragon room when using a Wilderness Slayer Cave entrance), combat method and any required equipment; dragonfire protection is optional when safely avoiding dragonfire"
+        }
       ]
     },
     {

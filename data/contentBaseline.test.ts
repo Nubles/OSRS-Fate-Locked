@@ -72,8 +72,8 @@ const crossSurfaceReadiness = (
   const quest = QUEST_DATA[id];
   const questLog = questLogEligibility(quest, unlocks, gameModeId);
   const impact = prepareUnlockImpactContext(unlocks, gameModeId);
-  const advisorAvailable = rankAvailableQuests(unlocks, gameModeId)
-    .some(candidate => candidate.id === quest.id);
+  const advisorCandidate = rankAvailableQuests(unlocks, gameModeId)
+    .find(candidate => candidate.id === quest.id);
   const plan = planForTarget('quest', quest.id, unlocks, gameModeId)!;
   const nextBest = journalNextBestQuestAction(quest, unlocks, gameModeId)!;
   const completion = questCompletionDecision(quest, unlocks, gameModeId);
@@ -86,12 +86,13 @@ const crossSurfaceReadiness = (
     ],
     finalReadiness: [
       label(questLog.eligible),
-      label(advisorAvailable),
       label(plan.alreadyReachable),
       label(nextBest.unmet === 0),
       label(completion.ok),
       label(impact.baseAvailableIds.has(quest.id)),
     ],
+    advisorCandidate,
+    manualChecks: questLog.manualChecks,
     firstBlocker: nextBest.firstBlocker,
   };
 };
@@ -228,8 +229,16 @@ describe('cross-surface quest eligibility contract', () => {
         Array(2).fill(expectedStatus),
       );
       expect(actual.finalReadiness).toEqual(
-        Array(6).fill(expectedReadiness),
+        Array(5).fill(expectedReadiness),
       );
+      // Planning membership means known gates are met, not that completion is ready.
+      if (expectedStatus === 'NEEDS_CONFIRMATION') {
+        expect(actual.advisorCandidate).toBeDefined();
+        expect(actual.advisorCandidate!.pendingChecks).toEqual(actual.manualChecks);
+        expect(actual.advisorCandidate!.pendingChecks!.length).toBeGreaterThan(0);
+      } else {
+        expect(actual.advisorCandidate).toBeUndefined();
+      }
       if (firstBlocker === 'operational') expect(actual.firstBlocker).toMatch(/^Confirm:/);
       else expect(actual.firstBlocker).toBe(firstBlocker);
     },
@@ -242,7 +251,9 @@ describe('cross-surface quest eligibility contract', () => {
     const actual = crossSurfaceReadiness('The Slug Menace', unlocks);
 
     expect(actual.machineStatuses).toEqual(['NEEDS_CONFIRMATION', 'NEEDS_CONFIRMATION']);
-    expect(actual.finalReadiness).toEqual(Array(6).fill('BLOCKED'));
+    expect(actual.finalReadiness).toEqual(Array(5).fill('BLOCKED'));
+    expect(actual.advisorCandidate?.pendingChecks).toEqual(actual.manualChecks);
+    expect(actual.advisorCandidate?.pendingChecks?.length).toBeGreaterThan(0);
     expect(actual.firstBlocker).toMatch(/^Confirm: Access to all required elemental altars/);
   });
 

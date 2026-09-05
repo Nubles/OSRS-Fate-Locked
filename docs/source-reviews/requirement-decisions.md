@@ -22,3 +22,9 @@ The note-word check catches wholly unclassified notes. It cannot prove that a ty
 ## Same-day upstream change detected and reviewed
 
 The live freshness check caught Giants' Foundry changing from revision 15331459 to 15331483 during this work. A read-only content comparison showed strategy edits about sweet-spot bonuses and difficulty, with no entry or material requirement change. The reviewed baseline was advanced only after this comparison; no game rule was rewritten automatically. This supplies an actual source-change detection example in addition to unit tests.
+
+## Green-dragon diary geography — second audit follow-up
+
+The blanket Wilderness OR list for wild_med_2 was unsound: Mage Arena ownership did not imply a dragon spawn. The task now uses a typed location predicate with separate Standard area and Chunked coordinates, plus confirmation of legal combat. The reviewed surface spawns are 46,56; 48,59; 49,57; 52,57 in CHUNK_CONTENT_LITE. Only 49,57 is assigned a named child area (Graveyard of Shadows); the other surface terrain uses Wilderness parent ownership under the existing map policy. In Chunked mode the exact spawn chunk is required. A nearby named landmark is not ownership of adjacent unassigned terrain.
+
+[OSRS Wiki green-dragon locations](https://oldschool.runescape.wiki/w/Green_dragon#Locations) corroborate west of Dark Warriors' Fortress, north of Graveyard of Shadows, south of Lava Maze and east of Boneyard Hunter area. Dragonfire protection is recommended, not a mandatory hard gate. The committed chunk-content entrance records 12857 (50,57, Chaos Temple) and 13114 (51,58, Wilderness parent) connect to Wilderness Slayer Cave, whose source lists six green dragons. These entrance options are also supported with explicit confirmation of a legal route to the dragon room; owning a surface entrance does not automatically attest to every internal movement.

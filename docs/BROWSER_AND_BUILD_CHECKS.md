@@ -16,7 +16,9 @@ Coverage includes onboarding and a first random skill unlock, persisted reload,
 sync export/import, backup restore, a version-3 migration with attained levels
 above method tiers, a manual diary requirement, mobile navigation, RuneProof
 rendering, localStorage quota exhaustion with IndexedDB fallback, and retrying
-backup protection. The mobile cold-load measurement uses a 390x844 viewport,
+backup protection. A further import flow verifies conditional quest advice exposes
+pending checks and imported legacy history stays marked for review in Timelapse.
+The mobile cold-load measurement uses a 390x844 viewport,
 4x CPU slowdown, 1.6 Mbps download and 150ms latency, with cache disabled. Its
 JSON measurement is attached to the test report. This is a repeatable simulated
 mobile profile, not a physical-device performance claim.

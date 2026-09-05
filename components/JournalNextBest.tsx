@@ -63,6 +63,7 @@ const ActionMenu: React.FC<{ a: JournalNextBestAction; onPick: (s: SubTab) => vo
       unlocks,
       { ...unlocks, quests: [...unlocks.quests, a.id] },
       gameModeId,
+      { includeConditional: true },
     );
     return { quests: imp.directQuestNames, diaries: imp.directDiaryIds };
   }, [a, unlocks, gameModeId]);
@@ -102,7 +103,7 @@ const ActionMenu: React.FC<{ a: JournalNextBestAction; onPick: (s: SubTab) => vo
         {a.kind === 'quest' && unlocks_ && (unlocks_.quests.length > 0 || unlocks_.diaries.length > 0) && (
           <div className="border-t border-white/5 mt-1">
             <button onClick={() => setShowUnlocks(s => !s)} className="w-full flex items-center gap-2 px-2.5 py-1.5 text-left text-[11px] text-gray-200 hover:bg-white/10 rounded">
-              <Gift size={12} className="text-amber-300/80 shrink-0" /> What it unlocks
+              <Gift size={12} className="text-amber-300/80 shrink-0" /> Potential unlocks (checks still apply)
               <span className="ml-auto text-[9px] text-gray-500">{unlocks_.quests.length}q · {unlocks_.diaries.length}d</span>
             </button>
             {showUnlocks && (

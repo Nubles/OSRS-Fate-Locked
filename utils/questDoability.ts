@@ -1,4 +1,5 @@
 import { QuestData } from '../data/questData';
+import { catalogQuest } from '../data/questCatalog';
 /**
  * Quest *chunk-access* doability.
  *
@@ -25,23 +26,34 @@ export function entryBlockedGate(
   completedQuests: Set<string>,
   knownQuests: Set<string>,
 ): (chunkId: string) => boolean {
+  const completed = canonicalEntryQuests(completedQuests);
+  const known = canonicalEntryQuests(knownQuests);
   return (chunkId: string) => {
-    return evaluateChunkEntryRequirements(questSections, chunkId, completedQuests, knownQuests).status !== 'READY';
+    return evaluateCanonicalChunkEntryRequirements(questSections, chunkId, completed, known).status !== 'READY';
   };
 }
 
 export type ChunkEntryRequirement = { kind: 'quest'; id: string } | { kind: 'unknown'; label: string };
 export type ChunkEntryVerdict = { status: 'READY' | 'LOCKED' | 'UNKNOWN'; requirements: ChunkEntryRequirement[] };
 
+const canonicalEntryQuest = (reference: string): string => catalogQuest(reference)?.data.id ?? reference;
+const canonicalEntryQuests = (references: Set<string>): Set<string> => new Set([...references].map(canonicalEntryQuest));
+
 /** Ingestion boundary for the legacy chunk source. A new phrase is data review, never permission. */
 export function evaluateChunkEntryRequirements(
+  sections: Record<string, string[]>, chunkId: string, completed: Set<string>, known: Set<string>,
+): ChunkEntryVerdict {
+  return evaluateCanonicalChunkEntryRequirements(sections, chunkId, canonicalEntryQuests(completed), canonicalEntryQuests(known));
+}
+
+function evaluateCanonicalChunkEntryRequirements(
   sections: Record<string, string[]>, chunkId: string, completed: Set<string>, known: Set<string>,
 ): ChunkEntryVerdict {
   if (!Object.hasOwn(sections, chunkId)) return { status: 'READY', requirements: [] };
   const raw: unknown = sections[chunkId];
   if (!Array.isArray(raw)) return { status: 'UNKNOWN', requirements: [{ kind: 'unknown', label: 'Malformed chunk entry requirements' }] };
-  const requirements: ChunkEntryRequirement[] = raw.map(value => typeof value === 'string' && known.has(value)
-    ? { kind: 'quest', id: value }
+  const requirements: ChunkEntryRequirement[] = raw.map(value => typeof value === 'string' && known.has(canonicalEntryQuest(value))
+    ? { kind: 'quest', id: canonicalEntryQuest(value) }
     : { kind: 'unknown', label: typeof value === 'string' ? value : 'Malformed chunk entry requirement' });
   return {
     status: requirements.some(value => value.kind === 'unknown') ? 'UNKNOWN'

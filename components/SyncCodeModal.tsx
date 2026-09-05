@@ -8,6 +8,7 @@ import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SectionGuide } from './SectionGuide';
 import { encodeSyncCode, decodeAndValidateSyncCode } from '../utils/syncCode';
 import { makeQrSvg } from '../utils/qr';
+import { resolveModeRules } from '../config/gameModes';
 import { auditHistory, RunVerdict } from '../utils/integrity';
 import { BackupMeta } from '../utils/backups';
 import type { GameState } from '../types';
@@ -184,7 +185,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode }) =
   const decodedState = decoded?.value ?? null;
   const preview = useMemo(() => (decodedState ? previewOf(decodedState) : null), [decodedState]);
   const audit = useMemo(() => decodedState
-    ? auditHistory(decodedState.history)
+    ? auditHistory(decodedState.history, resolveModeRules(decodedState.gameModeId, decodedState.customMode))
     : null, [decodedState]);
 
   const invalidateSource = useCallback((next: string) => {

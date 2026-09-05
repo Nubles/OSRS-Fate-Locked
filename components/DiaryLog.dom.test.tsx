@@ -4,12 +4,13 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { DiaryLog } from './DiaryLog';
+import { questId } from '../data/questCatalog';
 
 const state = vi.hoisted(() => ({
   unlocks: {
     equipment: {}, skills: {}, levels: { Slayer: 7 }, regions: ['Lumbridge'], mobility: [], arcana: [],
     housing: [], merchants: [], minigames: [], bosses: [], storage: [], guilds: [],
-    farming: [], slayerUnlocks: [], quests: [], diaries: [], cas: [], completedTasks: [], collectionLog: {},
+    farming: [], slayerUnlocks: [], quests: [] as string[], diaries: [], cas: [], completedTasks: [], collectionLog: {},
   },
   complete: vi.fn(),
 }));
@@ -19,7 +20,7 @@ vi.mock('./JournalFilterBar', () => ({ JournalFilterBar: () => null }));
 vi.mock('./DiaryHeatmap', () => ({ DiaryHeatmap: () => null }));
 vi.mock('./JournalInsights', () => ({ DiaryInsights: () => null }));
 vi.mock('./SkillTrainingPopover', () => ({ SkillTrainingPopover: () => null }));
-afterEach(() => { cleanup(); vi.restoreAllMocks(); state.complete.mockClear(); state.unlocks.levels.Slayer = 7; });
+afterEach(() => { cleanup(); vi.restoreAllMocks(); state.complete.mockClear(); state.unlocks.levels.Slayer = 7; state.unlocks.quests = []; });
 const task = ALL_DIARY_TASKS.find(task => task.id === 'lum_easy_2')!;
 const renderTask = () => {
   const view = render(<DiaryLog searchTerm="Slay a Cave bug" />);
@@ -27,6 +28,14 @@ const renderTask = () => {
 };
 
 describe('Diary task canonical readiness details', () => {
+  it('styles quest prerequisites as completed when a save uses the canonical ID', () => {
+    const quest = 'In Aid of the Myreque';
+    state.unlocks.quests = [questId(quest)!];
+    const view = render(<DiaryLog searchTerm="shark" />);
+    const badges = [...view.container.querySelectorAll('span')].filter(span => span.textContent?.trim() === quest);
+    expect(badges.length).toBeGreaterThan(0);
+    expect(badges.every(badge => !badge.className.includes('text-red-400'))).toBe(true);
+  });
   it('shows light-source and cave-entry checks and retains explicit completion attestation', () => {
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
     const row = renderTask();

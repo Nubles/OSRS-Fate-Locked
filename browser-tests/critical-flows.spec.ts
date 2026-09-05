@@ -186,3 +186,23 @@ test('mobile cold load under throttled CPU and network', async ({ page }, testIn
   await page.getByRole('button', { name: 'Next', exact: true }).click();
   await expect(page.getByText('Step 2 / 5', { exact: true })).toBeVisible();
 });
+
+test('conditional quest advice and legacy timelapse remain honest after import', async ({ page }) => {
+  await start(page);
+  const state = await readSave(page);
+  state.advisorsEnabled = true;
+  state.animationsEnabled = false;
+  state.history = [{ id: 'legacy-audit', timestamp: 1, type: 'ROLL_FAIL', message: 'No Key.' }];
+  await sync(page);
+  await importCode(page, encodeSyncCode(state));
+  await page.reload();
+  await page.getByRole('button', { name: 'Journal', exact: true }).click();
+  await page.getByTitle('Switch to High Impact (by unlock count)').click();
+  await expect(page.getByText(/Needs confirmation: \d+ checks? - open quest details/).first()).toBeVisible();
+  await expect(page.getByText('No available quests to rank — complete some prerequisites first.', { exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'History', exact: true }).click();
+  await page.getByRole('button', { name: 'Timelapse', exact: true }).click();
+  await expect(page.getByText('LOCAL CONSISTENCY: NEEDS REVIEW', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Export History Bundle', exact: true })).toBeVisible();
+  await expect(page.getByText('INTEGRITY: OK', { exact: true })).toHaveCount(0);
+});

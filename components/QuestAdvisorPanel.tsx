@@ -18,6 +18,7 @@ interface Props {
 export const QuestAdvisorPanel: React.FC<Props> = ({ ranked, onItemClick }) => {
   const items: AdvisorItem[] = ranked.map((q) => ({
     id: q.id,
+    pendingChecks: q.pendingChecks,
     title: q.name,
     meta: q.points > 0 ? `${q.points} QP` : undefined,
     directQuests: q.newQuestNames,
@@ -33,9 +34,10 @@ export const QuestAdvisorPanel: React.FC<Props> = ({ ranked, onItemClick }) => {
       items={items}
       accent="violet"
       heading="High Impact"
-      caption="ranked by unlock chain"
+      caption="ranked by potential progress"
+      subheading="Planning estimates. Each quest and downstream step still needs its listed checks confirmed."
       icon={<TrendingUp size={11} />}
-      emptyLabel="No available quests to rank — complete some prerequisites first."
+      emptyLabel="No candidates with known gates met. Review quest requirements and unknown checks."
       onItemClick={onItemClick}
       variant="strip"
     />

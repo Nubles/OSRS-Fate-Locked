@@ -4,6 +4,7 @@ import { catalogQuest, completedQuestIds } from '../data/questCatalog';
 import { areaId } from '../data/areaCatalog';
 import { DIARY_DATA } from '../data/diaryData';
 import { isAreaReachable } from './reachability';
+import { isChunkUnlocked } from './chunkAdjacency';
 import { actualSkillLevel, unlockedEquipmentTier, unlockedMethodTier } from './skillLevels';
 
 const unlockCatalog = { arcana: ARCANA_LIST, mobility: MOBILITY_LIST, housing: POH_LIST, guilds: GUILDS_LIST, farming: FARMING_PATCH_LIST, storage: STORAGE_LIST, bosses: BOSSES_LIST, minigames: MINIGAMES_LIST };
@@ -18,6 +19,7 @@ export type RequirementPredicate =
   | { kind: 'quest'; id: string }
   | { kind: 'diary'; id: string }
   | { kind: 'area'; id: string }
+  | { kind: 'location'; label: string; areas: string[]; chunks: string[] }
   | { kind: 'questPoints'; count: number }
   | { kind: 'item'; id: string; label: string; usage: 'hold' | 'consume' | 'equip' }
   | { kind: 'bossKill'; id: string; count: number; label: string }
@@ -82,6 +84,15 @@ export function evaluatePredicate(predicate: RequirementPredicate, context: Pred
     }
     case 'diary': if (!text(predicate.id) || !Object.hasOwn(DIARY_DATA, predicate.id)) return invalid(); return check(u.diaries.includes(predicate.id), predicate.id);
     case 'area': if (!areaId(predicate.id)) return invalid(); return check(isAreaReachable(predicate.id, u, context.gameModeId), predicate.id);
+    case 'location': {
+      if (!text(predicate.label) || !Array.isArray(predicate.areas) || !predicate.areas.length
+        || !predicate.areas.every(id => typeof id === 'string' && areaId(id))
+        || !Array.isArray(predicate.chunks) || !predicate.chunks.length
+        || !predicate.chunks.every(key => typeof key === 'string' && /^\d+,\d+$/.test(key))) return invalid();
+      return check(context.gameModeId === 'chunked'
+        ? predicate.chunks.some(key => isChunkUnlocked(key, u.chunks ?? []))
+        : predicate.areas.some(id => isAreaReachable(id, u, context.gameModeId)), predicate.label);
+    }
     case 'questPoints': if (!positiveInt(predicate.count)) return invalid(); return check([...completedQuestIds(u.quests)].reduce((sum, id) => { const quest = catalogQuest(id)!.data; return sum + (quest.kind === 'quest' ? quest.points : 0); }, 0) >= predicate.count, `${predicate.count} Quest Points`);
     case 'item': if (!text(predicate.id) || !text(predicate.label) || !['hold', 'consume', 'equip'].includes(predicate.usage)) return invalid(); return external(`item:${predicate.id}:${predicate.usage}`, `${predicate.label}: available and legal to ${predicate.usage}`);
     case 'bossKill': if (!text(predicate.id) || !text(predicate.label) || !positiveInt(predicate.count)) return invalid(); return external(`bossKill:${predicate.id}:${predicate.count}`, predicate.label);

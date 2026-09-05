@@ -1,7 +1,7 @@
 /**
  * Quest Impact Advisor
  *
- * For every AVAILABLE quest, computes how many currently-locked quests + diary
+ * For every quest with known gates met, computes how many currently-locked quests + diary
  * tiers completing it would open up — both DIRECTLY (one step) and across the
  * full downstream CASCADE (the whole prereq chain it unblocks). Quests are
  * ranked by cascade score so the highest long-term-value targets rise to the
@@ -10,6 +10,7 @@
  * Pure function — no side-effects, no React, safe to call inside useMemo.
  */
 
+import { canonicalQuestUnlocks } from '../data/questCatalog';
 import { QUEST_DATA } from '../data/questData';
 import { evaluateQuestEligibility } from './journalStatus';
 import { computeUnlockImpact } from './unlockImpact';
@@ -18,6 +19,8 @@ export interface RankedQuest {
   id: string;
   name: string;
   points: number;
+  /** Explicit conditions still pending on this candidate. */
+  pendingChecks?: string[];
   /** Quests that go LOCKED → AVAILABLE immediately. */
   newQuestNames: string[];
   /** Diary tier IDs that go LOCKED → AVAILABLE immediately. */
@@ -33,28 +36,30 @@ export interface RankedQuest {
 }
 
 /**
- * Returns all AVAILABLE quests ranked by cascade impact (highest first).
+ * Returns all known-gate-eligible quest candidates ranked by cascade impact (highest first).
  * Ties broken by direct score, then alphabetically.
  *
  * @param unlocks  Current unlocks snapshot (same shape as GameContext unlocks)
  * @param gameModeId  Active mode used by canonical quest access checks
  */
 export function rankAvailableQuests(unlocks: any, gameModeId?: string): RankedQuest[] {
+  unlocks = canonicalQuestUnlocks(unlocks);
   const allQuests = Object.values(QUEST_DATA);
   const available = allQuests.filter(
     quest => !unlocks.quests.includes(quest.id)
-      && evaluateQuestEligibility(quest, unlocks, gameModeId).eligible,
+      && evaluateQuestEligibility(quest, unlocks, gameModeId).machineEligible,
   );
 
   return available
     .map((candidate): RankedQuest => {
       const simulated = { ...unlocks, quests: [...unlocks.quests, candidate.id] };
-      const impact = computeUnlockImpact(unlocks, simulated, gameModeId);
+      const impact = computeUnlockImpact(unlocks, simulated, gameModeId, { includeConditional: true });
 
       return {
         id: candidate.id,
         name: candidate.name,
         points: candidate.points,
+        pendingChecks: evaluateQuestEligibility(candidate, unlocks, gameModeId).manualChecks,
         newQuestNames: impact.directQuestNames,
         newDiaryIds: impact.directDiaryIds,
         cascadeQuestNames: impact.cascadeQuestNames,

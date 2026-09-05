@@ -16,6 +16,14 @@ const unlocks: UnlockState = {
 };
 const unknown: RequirementPredicate = { kind: 'unknown', key: 'new-rule', label: 'Unclassified entry rule' };
 describe('shared requirement semantics', () => {
+  it('rejects incomplete location contracts rather than accepting malformed coordinates', () => {
+    for (const predicate of [
+      { kind: 'location', label: 'Spawn', areas: [], chunks: ['49,57'] },
+      { kind: 'location', label: 'Spawn', areas: ['Invented'], chunks: ['49,57'] },
+      { kind: 'location', label: 'Spawn', areas: ['Wilderness'], chunks: ['not-a-chunk'] },
+      { kind: 'location', label: 'Spawn', areas: ['Wilderness'], chunks: [] },
+    ]) expect(evaluatePredicate(predicate as RequirementPredicate, { unlocks }).status).toBe('UNKNOWN');
+  });
   it('never permits manual attestation to bypass a tracked Arcana unlock', () => {
     const predicate: RequirementPredicate = { kind: 'unlock', field: 'arcana', id: 'Piety' };
     expect(evaluatePredicate(predicate, { unlocks }).status).toBe('LOCKED');

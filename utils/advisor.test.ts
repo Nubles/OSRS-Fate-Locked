@@ -121,11 +121,11 @@ describe('rankAvailableQuests', () => {
     }
   });
 
-  it('only ranks currently-AVAILABLE quests', () => {
+  it('only ranks quests with known gates met', () => {
     const base = maxedUnlocks();
     const ranked = rankAvailableQuests(base);
     for (const r of ranked) {
-      expect(getQuestStatus(QUEST_DATA[r.id], base)).toBe('AVAILABLE');
+      expect(['AVAILABLE', 'NEEDS_CONFIRMATION']).toContain(getQuestStatus(QUEST_DATA[r.id], base));
     }
   });
 
@@ -171,7 +171,7 @@ describe('rankLockedRegions', () => {
     const expected = computeUnlockImpact(base, {
       ...base,
       regions: [...REGION_GROUPS.Asgarnia],
-    });
+    }, undefined, { includeConditional: true });
 
     expect(ranked.newQuestNames).toEqual(expected.directQuestNames);
     expect(ranked.newDiaryIds).toEqual(expected.directDiaryIds);

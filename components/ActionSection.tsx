@@ -4,6 +4,7 @@ import { DropSource } from '../types';
 import { DROP_RATES, BOSSES_LIST } from '../constants';
 import { bossTier, TIER_SOURCE, TIER_LABEL, TIER_ORDER, BossTier } from '../data/bossKeyTiers';
 import { useGame } from '../context/GameContext';
+import { completedQuestIds, questId } from '../data/questCatalog';
 import { BookOpen, ScrollText, Crosshair, Dices } from 'lucide-react';
 import { wikiService } from '../services/WikiService';
 import { resolveModeRules } from '../config/gameModes';
@@ -403,8 +404,9 @@ export const ActionSection: React.FC = () => {
   const clueKeysAwarded = clueStandardKeysAwarded ?? 0;
 
   const slayers = useMemo(() => {
-    const isWGSComplete = unlocks.quests.includes('While Guthix Sleeps');
-    const isMM2Complete = unlocks.quests.includes('Monkey Madness II');
+    const completed = completedQuestIds(unlocks.quests);
+    const isWGSComplete = completed.has(questId('While Guthix Sleeps')!);
+    const isMM2Complete = completed.has(questId('Monkey Madness II')!);
 
     return [
       {

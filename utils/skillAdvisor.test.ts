@@ -172,7 +172,7 @@ describe('rankSkillBottlenecks', () => {
     expect(ranked.find(candidate => candidate.id === 'Agility')).toBeDefined();
   });
 
-  it('does not promise diary completion when a reached skill threshold still needs item confirmation', () => {
+  it('ranks potential diary progress when remaining item checks need confirmation', () => {
     const ranked = rankSkillBottlenecks(lowSkills({
       skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10])),
       levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Ranged' ? 20 : 99])),
@@ -187,7 +187,7 @@ describe('rankSkillBottlenecks', () => {
     }));
     const ranged = ranked.find(candidate => candidate.id === 'Ranged');
 
-    expect(ranged).toBeUndefined();
+    expect(ranged?.newDiaryIds).toContain('Ardougne Medium');
   });
   it('indexes the nearest skill level that crosses a combat-only diary gate', () => {
     const ranked = rankSkillBottlenecks(lowSkills({

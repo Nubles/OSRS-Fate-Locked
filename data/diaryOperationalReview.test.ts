@@ -87,3 +87,36 @@ describe('Lumbridge Easy operational requirements', () => {
     expect(evaluateDiaryTaskEligibility(task(10), unlocked).machineEligible).toBe(true);
   });
 });
+
+// Explicit target locations must not inherit every child of a broad continent.
+describe('Wilderness green-dragon diary geography', () => {
+  const dragon = ALL_DIARY_TASKS.find(task => task.id === 'wild_med_2')!;
+  it.each(['Mage Arena', 'Ferox Enclave', 'Fountain of Rune'])(
+    'does not let %s ownership or manual confirmation substitute for a dragon location', region => {
+      const u = { ...state(), regions: [region] };
+      expect(evaluateDiaryTaskEligibility(dragon, u).machineEligible).toBe(false);
+      expect(diaryTaskCompletionDecision(dragon, u, undefined, { manualConfirmed: true }).ok).toBe(false);
+    });
+  it('accepts the mapped Graveyard spawn but retains the legal-combat check', () => {
+    const u = { ...state(), regions: ['Graveyard of Shadows'] };
+    expect(evaluateDiaryTaskEligibility(dragon, u).machineEligible).toBe(true);
+    expect(evaluateDiaryTaskEligibility(dragon, u).eligible).toBe(false);
+    expect(diaryTaskCompletionDecision(dragon, u, undefined, { manualConfirmed: true }).ok).toBe(true);
+  });
+  it.each(['46,56', '48,59', '49,57', '52,57', '50,57', '51,58'])(
+    'accepts the actual spawn or reviewed cave entrance chunk %s independently of area unlocks', chunk => {
+      const u = { ...state(), regions: [], chunks: [chunk] };
+      expect(evaluateDiaryTaskEligibility(dragon, u, 'chunked').machineEligible).toBe(true);
+    });
+  it('rejects Mage Arena chunks despite Wilderness ownership', () => {
+    const u = { ...state(), regions: ['Wilderness'], chunks: ['48,61', '49,61'] };
+    expect(diaryTaskCompletionDecision(dragon, u, 'chunked', { manualConfirmed: true }).ok).toBe(false);
+  });
+  it('offers the cave route via Chaos Temple with explicit legal-route confirmation', () => {
+    const u = { ...state(), regions: ['Chaos Temple'] };
+    const result = evaluateDiaryTaskEligibility(dragon, u);
+    expect(result.machineEligible).toBe(true);
+    expect(result.manualChecks.join(' ')).toContain('dragon room');
+    expect(result.eligible).toBe(false);
+  });
+});

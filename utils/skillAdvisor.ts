@@ -48,7 +48,7 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
     evaluateDiaryTierEligibility(diary, unlocks, gameModeId),
   ]));
   const isOpen = (status: string | undefined) => (
-    status === 'AVAILABLE' || status === 'COMPLETED'
+    status === 'AVAILABLE' || status === 'COMPLETED' || status === 'NEEDS_CONFIRMATION'
   );
 
   const combatSkillNames = [
@@ -182,6 +182,7 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
       // tiers this skill can affect (and broadened only when new quests cascade).
       const impact = computeUnlockImpact(unlocks, simulated, gameModeId, {
         context: impactContext,
+        includeConditional: true,
         diaryIds: [],
       });
 

@@ -8,6 +8,7 @@ import { chunkForPlace, showChunkOnMap } from '../utils/chunkLocations';
 import { diaryUnmet, isAlmostThere } from '../utils/journalProgress';
 import { isAreaReachable } from '../utils/reachability';
 import { actualSkillLevel } from '../utils/skillLevels';
+import { completedQuestIds, questId } from '../data/questCatalog';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SkillTrainingPopover, SkillPopoverState } from './SkillTrainingPopover';
@@ -29,6 +30,7 @@ interface DiaryLogProps {
 
 export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch = '', suspendModals = false }) => {
   const { unlocks, completeDiaryTask, completeDiaryTier, advisorsEnabled, gameModeId } = useGame();
+  const completedQuests = useMemo(() => completedQuestIds(unlocks.quests), [unlocks.quests]);
   // Filter state persisted across sessions.
   const [filterRegion, setFilterRegion] = useLocalStorage<string>('jrnl:diary:region', 'ALL');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -411,7 +413,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                         </span>
                                       ))}
                                       {task.quests?.map(q => {
-                                        const met = unlocks.quests.includes(q);
+                                        const met = completedQuests.has(questId(q)!);
                                         return (
                                           <span key={q} className={`text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 ${met ? 'border-white/5 text-gray-500 bg-black/30' : 'border-red-500/30 text-red-400 bg-red-900/10'}`}>
                                             <BookOpen size={8} /> {q}
