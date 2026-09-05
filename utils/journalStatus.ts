@@ -14,7 +14,8 @@ import { DiaryTier } from '../data/diaryData';
 import { UnlockState } from '../types';
 import { chunkKey, isChunkUnlocked } from './chunkAdjacency';
 import { isAreaReachable } from './reachability';
-import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
+import { actualCombatLevel } from './slayerReach';
+import { actualSkillLevel } from './skillLevels';
 
 export type QuestStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
 export type DiaryStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
@@ -83,8 +84,7 @@ export const meetsSkillRequirement = (
   skill: string,
   required: number,
 ): boolean => {
-  const tier = unlocks.skills[skill] ?? 0;
-  return tier > 0 && effectiveSkillLevel(unlocks, skill) >= required;
+  return actualSkillLevel(unlocks, skill) >= required;
 };
 
 export const countMetSkillRequirements = (
@@ -362,7 +362,7 @@ const evaluateDiaryRequirement = (
     const { skills, level } = requirement.combinedSkillLevel;
     const label = skills.join(' + ') + ' combined ' + level;
     const total = skills.reduce(
-      (sum, skill) => sum + effectiveSkillLevel(unlocks, skill), 0,
+      (sum, skill) => sum + actualSkillLevel(unlocks, skill), 0,
     );
     if (total >= level) evidence.push(label);
     else blockers.push({

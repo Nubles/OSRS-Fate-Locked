@@ -19,7 +19,8 @@ import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { computeUnlockImpact, prepareUnlockImpactContext } from './unlockImpact';
 import { EligibilityBlocker, evaluateDiaryTierEligibility, getDiaryStatus } from './journalStatus';
-import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
+import { actualCombatLevel } from './slayerReach';
+import { actualSkillLevel } from './skillLevels';
 
 export interface RankedSkill {
   id: string;          // skill name
@@ -87,7 +88,7 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
         for (const skill of requirement.combinedSkillLevel.skills) {
           const otherLevels = requirement.combinedSkillLevel.skills
             .filter(candidate => candidate !== skill)
-            .reduce((sum, candidate) => sum + effectiveSkillLevel(unlocks, candidate), 0);
+            .reduce((sum, candidate) => sum + actualSkillLevel(unlocks, candidate), 0);
           addThreshold(skill, requirement.combinedSkillLevel.level - otherLevels);
         }
       }

@@ -106,21 +106,15 @@ describe('planForTarget — quests', () => {
     expect(plan.regionSteps.length).toBeGreaterThan(0);
     for (const r of plan.regionSteps) expect(r.done).toBe(false);
   });
-  it('does not mark a cap-blocked skill requirement complete', () => {
+  it('does not invent a level shortfall from a lower method tier', () => {
     const plan = planForTarget('quest', 'Elemental Workshop I', maxedUnlocks({
       regions: ["Seers' Village"],
       skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Mining' ? 1 : 10])),
       levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Mining' ? 20 : 99])),
     }))!;
 
-    expect(plan.skillSteps).toEqual([
-      expect.objectContaining({
-        id: 'Mining',
-        done: false,
-        detail: expect.stringContaining('method cap 10'),
-      }),
-    ]);
-    expect(plan.alreadyReachable).toBe(false);
+    expect(plan.skillSteps).toEqual([]);
+    expect(plan.alreadyReachable).toBe(true);
   });
 
   it('includes a Quest Point step for a quest requirement', () => {

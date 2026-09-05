@@ -11,7 +11,8 @@ import { getPoolAndStateKey, isValidUnlock } from './gameEngine';
 import { tierForLevel } from './skillTiers';
 import { planForTarget, type PlanStep } from './goalPlanner';
 import { evaluateDiaryTierEligibility } from './journalStatus';
-import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
+import { actualCombatLevel } from './slayerReach';
+import { actualSkillLevel } from './skillLevels';
 import { enforcedQuestAreas } from './questGeographyDisplay';
 
 /**
@@ -181,7 +182,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       const isCombat = step.id === 'Combat level';
       const haveLevel = isCombat
         ? actualCombatLevel(unlocks)
-        : effectiveSkillLevel(unlocks, step.id);
+        : actualSkillLevel(unlocks, step.id);
       const tierHave = isCombat ? 0 : (unlocks.skills[step.id] ?? 0);
       return {
         skill: step.id,
@@ -250,7 +251,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       const isCombat = step.id === 'Combat level';
       const haveLevel = isCombat
         ? actualCombatLevel(unlocks)
-        : effectiveSkillLevel(unlocks, step.id);
+        : actualSkillLevel(unlocks, step.id);
       const tierHave = isCombat ? 0 : (unlocks.skills[step.id] ?? 0);
       return {
         skill: step.id,
@@ -377,7 +378,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       const isCombat = skill === 'Combat level';
       const have = isCombat
         ? actualCombatLevel(unlocks)
-        : effectiveSkillLevel(unlocks, skill);
+        : actualSkillLevel(unlocks, skill);
       const tierHave = isCombat ? 0 : (unlocks.skills[skill] ?? 0);
       const unlocked = isCombat || tierHave > 0;
       return {

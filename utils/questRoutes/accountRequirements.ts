@@ -7,7 +7,7 @@ import {
   SKILLS_LIST,
   SLAYER_UNLOCKS_LIST,
 } from '../../data/items';
-import { meetsSkillRequirement } from '../journalStatus';
+import { usableMethodLevel } from '../skillLevels';
 import type { ExactItemSource, RawRouteRequirement, RouteGate } from './model';
 
 export interface GateEvaluation {
@@ -113,7 +113,7 @@ export const evaluateRouteGates = (
         if (!unlocks.quests.includes(gate.questId)) blockers.push(gate);
         break;
       case 'SKILL':
-        if (!meetsSkillRequirement(unlocks, gate.skill, gate.level)) blockers.push(gate);
+        if (usableMethodLevel(unlocks, gate.skill) < gate.level) blockers.push(gate);
         break;
       case 'UNLOCK':
         if (!unlocks[gate.category].includes(gate.id)) blockers.push(gate);

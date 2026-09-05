@@ -23,7 +23,8 @@ import {
   evaluateDiaryTaskEligibility, questRequirementOptionLabel, DirectEligibilityBlocker,
 } from './journalStatus';
 import { isAreaReachable } from './reachability';
-import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
+import { actualCombatLevel } from './slayerReach';
+import { actualSkillLevel } from './skillLevels';
 
 export type GoalKind = 'quest' | 'diary' | 'region';
 
@@ -160,7 +161,7 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
   const requirement = blocker.requirement;
   if (requirement?.type === 'combined') {
     const levels = requirement.skills.map(skill => [
-      skill, effectiveSkillLevel(unlocks, skill),
+      skill, actualSkillLevel(unlocks, skill),
     ] as const);
     const have = levels.reduce((sum, [, level]) => sum + level, 0);
     return {
@@ -181,7 +182,7 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
       unlockTable: TableType.SKILLS,
       detail: 'Lv ' + requirement.level + ' in either (have '
         + requirement.skills.map(skill => (
-          skill + ' ' + effectiveSkillLevel(unlocks, skill)
+          skill + ' ' + actualSkillLevel(unlocks, skill)
         )).join(', ') + ')',
       done: false,
     };
@@ -202,7 +203,7 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
     : Number(match?.[2] ?? 1);
   return {
     kind: 'skill', id: skill, label: skill, relatedIds: [skill], unlockTable: TableType.SKILLS,
-    detail: 'Lv ' + required + ' (have ' + effectiveSkillLevel(unlocks, skill) + ')', done: false,
+    detail: 'Lv ' + required + ' (have ' + actualSkillLevel(unlocks, skill) + ')', done: false,
   };
 }
 
@@ -317,7 +318,7 @@ function buildPlanFromRequirements(
         : (unlocks.levels[skill] ?? 1);
       const have = skill === 'Combat level'
         ? rawLevel
-        : effectiveSkillLevel(unlocks, skill);
+        : actualSkillLevel(unlocks, skill);
       const tier = unlocks.skills[skill] ?? 0;
       const unlocked = tier > 0;
       const methodCap = Math.min(99, tier * 10);

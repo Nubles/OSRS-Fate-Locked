@@ -110,7 +110,7 @@ describe('rankSkillBottlenecks', () => {
     expect(after.newQuestNames).toContain('Elemental Workshop I');
   });
 
-  it('does not credit a diary while another skill is blocked by its method cap', () => {
+  it('does not invent a skill shortfall from a lower method tier', () => {
     const base = lowSkills({
       skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Smithing' ? 1 : 10])),
       levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Agility' ? 1 : 99])),
@@ -129,7 +129,7 @@ describe('rankSkillBottlenecks', () => {
     const unblocked = rankSkillBottlenecks(capable)
       .find(candidate => candidate.id === 'Agility')!;
 
-    expect(blocked.newDiaryIds).not.toContain('Falador Easy');
+    expect(blocked.newDiaryIds).toContain('Falador Easy');
     expect(unblocked.targetLevel).toBe(5);
     expect(unblocked.newDiaryIds).toContain('Falador Easy');
   });

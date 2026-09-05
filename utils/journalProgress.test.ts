@@ -35,10 +35,10 @@ describe('questUnmet', () => {
       label: '12 QP',
     });
   });
-  it('reports method-cap and alternative-access blockers', () => {
+  it('keeps level and alternative-access blockers independent', () => {
     expect(questUnmet(quest({ skills: { Woodcutting: 15 } }), u({
       skills: { Woodcutting: 1 }, levels: { Woodcutting: 15 },
-    }))).toEqual([{ kind: 'skill', label: 'Woodcutting 15' }]);
+    }))).toEqual([]);
 
     expect(questUnmet(quest({ oneOf: [
       { regions: ['East Ardougne'] },

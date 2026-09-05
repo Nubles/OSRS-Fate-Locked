@@ -144,16 +144,11 @@ describe('slayerReachability', () => {
     expect(r.masters[0].rows.map(row => row.status)).toEqual(['quest-locked', 'quest-locked']);
   });
 
-  it('uses the effective Slayer cap for Mortimer before low-level assignments', () => {
-    const r = mortimerReach(mortimerUnlocks({ skills: { ...COMBAT_TIERS, Slayer: 6 } }));
-
-    expect(r.masters[0]).toMatchObject({
-      masterBlocker: {
-        status: 'slayer-locked',
-        label: 'Master: Slayer 99 or Slayer 70 + Combat 100',
-      },
-    });
-    expect(r.masters[0].rows.map(row => row.status)).toEqual(['slayer-locked', 'slayer-locked']);
+  it('uses attained Slayer levels for Mortimer despite lower method tiers', () => {
+    const r = mortimerReach(mortimerUnlocks({ skills: { ...COMBAT_TIERS, Slayer: 1 } }));
+    expect(r.slayerLevel).toBe(99);
+    expect(r.masters[0].masterBlocker).toBeUndefined();
+    expect(r.masters[0].rows.every(row => row.status === 'ready')).toBe(true);
   });
 
   it('uses real combat levels for Mortimer after effective Slayer 70 is met', () => {

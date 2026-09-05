@@ -104,7 +104,7 @@ describe('evaluateQuestDoability', () => {
     expect(row.lockedAreas).toEqual([]);
   });
 
-  it('keeps a level requirement blocked when the skill-method cap is too low', () => {
+  it('accepts an attained level despite a lower method tier', () => {
     const quest: QuestData = {
       id: 'Method cap quest',
       name: 'Method cap quest',
@@ -126,14 +126,9 @@ describe('evaluateQuestDoability', () => {
       reachableChunk,
     );
 
-    expect(row.bucket).toBe('REQS');
-    expect(row.reqsMet).toBe(false);
-    expect(row.missingSkills).toEqual([
-      { skill: 'Woodcutting', lvl: 15, have: 15, methodCap: 10 },
-    ]);
-    expect(questDoabilitySkillBlockerLabel(row.missingSkills[0])).toBe(
-      'Woodcutting 15 (method cap 10)',
-    );
+    expect(row.bucket).toBe('DOABLE');
+    expect(row.reqsMet).toBe(true);
+    expect(row.missingSkills).toEqual([]);
   });
 
   it('shows Quest Points requirements as a skill blocker instead of a prerequisite', () => {

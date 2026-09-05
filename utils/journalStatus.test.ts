@@ -407,7 +407,7 @@ describe('reported quest access', () => {
   });
 });
 
-describe('skill-method caps', () => {
+describe('actual skill level requirements', () => {
   const quest: QuestData = {
     id: 'cap', name: 'cap', kind: 'quest', accessPolicy: 'regions',
     regions: ['Misthalin'],
@@ -415,7 +415,7 @@ describe('skill-method caps', () => {
     difficulty: DropSource.QUEST_NOVICE,
   };
 
-  it('requires level and method cap', () => {
+  it('requires actual levels independently of method tier', () => {
     const tier1 = unlocked({
       skills: { Woodcutting: 1 }, levels: { Woodcutting: 15 },
     });
@@ -425,25 +425,25 @@ describe('skill-method caps', () => {
     const tier2 = unlocked({
       skills: { Woodcutting: 2 }, levels: { Woodcutting: 15 },
     });
-    expect(meetsSkillRequirement(tier1, 'Woodcutting', 15)).toBe(false);
-    expect(getQuestStatus(quest, tier1)).toBe('LOCKED_SKILL');
+    expect(meetsSkillRequirement(tier1, 'Woodcutting', 15)).toBe(true);
+    expect(getQuestStatus(quest, tier1)).toBe('AVAILABLE');
     expect(meetsSkillRequirement(tier2LowLevel, 'Woodcutting', 15)).toBe(false);
     expect(getQuestStatus(quest, tier2LowLevel)).toBe('LOCKED_SKILL');
     expect(meetsSkillRequirement(tier2, 'Woodcutting', 15)).toBe(true);
     expect(getQuestStatus(quest, tier2)).toBe('AVAILABLE');
   });
 
-  it('applies the same cap to diary tasks', () => {
+  it('uses actual levels for diary level gates', () => {
     const tasks = [{ id: 'wc15', skills: { Woodcutting: 15 } }];
     expect(countDoableTasks(tasks, unlocked({
       skills: { Woodcutting: 1 }, levels: { Woodcutting: 15 },
-    }))).toBe(0);
+    }))).toBe(1);
     expect(countDoableTasks(tasks, unlocked({
       skills: { Woodcutting: 2 }, levels: { Woodcutting: 15 },
     }))).toBe(1);
   });
 
-  it('blocks lum_easy_7 at cap 10 and permits level 15 in the next method band', () => {
+  it('keeps attained diary levels independent of method bands', () => {
     const task = ALL_DIARY_TASKS.find(({ id }) => id === 'lum_easy_7')!;
     const common = {
       regions: ['Lumbridge'],
@@ -454,8 +454,8 @@ describe('skill-method caps', () => {
       ...common,
       skills: { Woodcutting: 1, Firemaking: 1 },
     }))).toMatchObject({
-      machineEligible: false,
-      eligible: false,
+      machineEligible: true,
+      eligible: true,
     });
 
     expect(evaluateDiaryTaskEligibility(task, unlocked({
@@ -467,7 +467,7 @@ describe('skill-method caps', () => {
     });
   });
 
-  it('applies method caps to diary consumer counts', () => {
+  it('uses actual levels in diary consumer counts', () => {
     const tasks = [{
       id: 'wc15', tierId: 'Test Diary',
       skills: { Woodcutting: 15 },
@@ -479,8 +479,8 @@ describe('skill-method caps', () => {
       skills: { Woodcutting: 2 }, levels: { Woodcutting: 15 },
     });
 
-    expect(countDoableDiaryTasks(tasks, tier1)).toBe(0);
-    expect(countMetSkillRequirements(tasks[0].skills, tier1)).toBe(0);
+    expect(countDoableDiaryTasks(tasks, tier1)).toBe(1);
+    expect(countMetSkillRequirements(tasks[0].skills, tier1)).toBe(1);
     expect(countDoableDiaryTasks(tasks, tier2)).toBe(1);
     expect(countMetSkillRequirements(tasks[0].skills, tier2)).toBe(1);
   });

@@ -6,7 +6,7 @@ import { TableType } from '../types';
 import { REGION_GROUPS } from '../constants';
 
 describe('StrategyGuide requirement analysis', () => {
-  it('uses method-capped levels for diary blockers and prophecy scoring', () => {
+  it('uses actual levels for diary blockers and prophecy scoring', () => {
     const unlocks = {
       equipment: {},
       skills: { Smithing: 1 },
@@ -25,11 +25,8 @@ describe('StrategyGuide requirement analysis', () => {
     };
 
     const analysis = (guide as any).analyzeRequirement(requirement, unlocks);
-    expect(analysis.missingSkills).toContainEqual(
-      expect.objectContaining({ skill: 'Smithing', currentLevel: 10, reqLevel: 13 }),
-    );
-    expect((guide as any).calculateProphecyScore(requirement, analysis))
-      .toBeGreaterThanOrEqual(3);
+    expect(analysis.missingSkills).toEqual([]);
+    expect((guide as any).calculateProphecyScore(requirement, analysis)).toBe(0);
   });
 
   it('keeps structured alternatives out of the missing-quest bucket', () => {

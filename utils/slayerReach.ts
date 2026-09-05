@@ -54,16 +54,9 @@ export interface SlayerReach {
 /** Resolve a task name to a representative chunk (best-effort, may be null). */
 export type LocateFn = (taskName: string) => { cx: number; cy: number; unlocked: boolean } | null;
 
-/** Effective usable level after applying the currently unlocked method tier. */
-export const effectiveSkillLevel = (
-  unlocks: Pick<UnlockState, 'skills' | 'levels'>,
-  skill: string,
-  fallback = 1,
-): number => {
-  const raw = Math.max(unlocks.levels?.[skill] ?? fallback, fallback);
-  const tier = unlocks.skills?.[skill] ?? 0;
-  return Math.min(raw, Math.min(99, tier * 10));
-};
+/** Compatibility export for callers evaluating method permission. */
+export { usableMethodLevel as effectiveSkillLevel } from './skillLevels';
+import { actualSkillLevel } from './skillLevels';
 export const combatLevel = (levels: Record<string, number>): number => {
   const L = (k: string, d = 1) => Math.max(levels[k] ?? d, d);
   const base = 0.25 * (L('Defence') + L('Hitpoints', 10) + Math.floor(L('Prayer') / 2));
@@ -107,7 +100,7 @@ const masterBlocker = (
 
   const optionSkillsMet = (option: SlayerMasterRequirementOption): boolean =>
     Object.entries(option.skills ?? {}).every(([skill, level]) =>
-      effectiveSkillLevel(unlocks, skill) >= level);
+      actualSkillLevel(unlocks, skill) >= level);
   const optionMet = (option: SlayerMasterRequirementOption): boolean =>
     optionSkillsMet(option) && (option.combatLevel == null || combat >= option.combatLevel);
 
@@ -128,7 +121,7 @@ export function slayerReachability(
   locate: LocateFn,
   gameModeId?: string,
 ): SlayerReach {
-  const slayerLevel = effectiveSkillLevel(unlocks, 'Slayer');
+  const slayerLevel = actualSkillLevel(unlocks, 'Slayer');
   const slayerUnlocked = (unlocks.skills?.['Slayer'] ?? 0) > 0;
   const combat = actualCombatLevel(unlocks);
   const questSet = new Set(unlocks.quests ?? []);
