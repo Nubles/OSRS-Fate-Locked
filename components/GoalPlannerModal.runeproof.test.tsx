@@ -978,7 +978,7 @@ describe('RuneProof Goal Planner integration', () => {
     expect(current.getByText('Unlock chunk 49,51 to use Mill Lane Mill.')).toBeTruthy();
   });
 
-  it('rejects nullable analysis before rendering and keeps the objective picker usable', async () => {
+  it.each(['nullable items', 'malformed nested route'])('rejects %s before rendering and keeps the objective picker usable', async (malformation) => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const contentService = loadedContent();
     render(
@@ -988,7 +988,11 @@ describe('RuneProof Goal Planner integration', () => {
         runeProof={runeProof(contentService, {
           analyze: (questId: string, snapshot: QuestRouteAnalysisSnapshot) => ({
             ...analyzeQuest(questId, snapshot),
-            items: null,
+            items: malformation === 'nullable items' ? null : [{
+              requirement: { item: { key: 'egg', name: 'Egg' }, quantity: 1, supplyPolicy: 'PLAYER_OBTAINED' },
+              state: 'OBTAINABLE_NOW', currentRoutes: [{ steps: null }],
+              missingChunkRoutes: [], missingChunkOptions: [], dataNotes: [],
+            }],
           }),
         })}
       />,
