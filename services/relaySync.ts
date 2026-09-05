@@ -30,6 +30,7 @@ function randomToken(): string {
 
 export class RelaySyncService {
   private session: Session | null = null;
+  private pendingPush: Promise<void> | null = null;
   private listeners = new Set<() => void>();
 
   status: RelayStatus = 'off';
@@ -117,9 +118,21 @@ export class RelaySyncService {
   }
 
   /** Push a (compressed) bundle payload to the relay. No-op when disabled. */
-  async push(payload: string): Promise<boolean> {
+  push(payload: string, isCurrent: () => boolean = () => true): Promise<boolean> {
     const session = this.session;
-    if (!session) return false;
+    if (!session) return Promise.resolve(false);
+    // An older POST must settle before a newer profile replaces it. Re-check
+    // queued work at dispatch, since a profile can change while it waits.
+    const publish = () => this.publish(payload, session, isCurrent);
+    const result = this.pendingPush ? this.pendingPush.then(publish, publish) : publish();
+    const settled = result.then(() => {}, () => {});
+    this.pendingPush = settled;
+    void settled.then(() => { if (this.pendingPush === settled) this.pendingPush = null; });
+    return result;
+  }
+
+  private async publish(payload: string, session: Session, isCurrent: () => boolean): Promise<boolean> {
+    if (this.session !== session || !isCurrent()) return false;
     this.status = 'syncing';
     this.lastError = null;
     this.emit();
@@ -130,14 +143,14 @@ export class RelaySyncService {
         body: JSON.stringify({ token: session.token, payload }),
       });
       if (!res.ok) throw new Error(`relay ${res.status}`);
-      if (this.session !== session) return false;
+      if (this.session !== session || !isCurrent()) return false;
       this.status = 'synced';
       this.lastSyncAt = Date.now();
       this.lastError = null;
       this.emit();
       return true;
     } catch (e: any) {
-      if (this.session !== session) return false;
+      if (this.session !== session || !isCurrent()) return false;
       this.status = 'error';
       this.lastError = e?.message ?? 'push failed';
       this.emit();

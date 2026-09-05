@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { resolveModeRules } from '../config/gameModes';
 
 import 'fake-indexeddb/auto';
 import React from 'react';
@@ -300,6 +301,15 @@ describe('ordinary save recovery', () => {
     storage.values.set(storageKey, durable);
     return durable;
   };
+
+  it('uses the displayed custom minimum when performing Gambit', async () => {
+    storage.values.set('profile', serializeCurrent({ ...initialState, gameModeId: 'custom', customMode: { ...resolveModeRules('vanilla'), ritualCostMultiplier: 0.25 }, fatePoints: 10 }));
+    const game = renderGame('profile');
+    await settleOwnership();
+    act(() => game.current().performGambit());
+    expect(game.current().fatePoints).toBe(0);
+    expect(game.current().history.at(-1)?.type).toBe('ALTAR');
+  });
 
   it('contains a failed write and retries the newest in-memory state', async () => {
     const game = renderGame('profile');

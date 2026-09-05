@@ -45,6 +45,8 @@ describe('OnlineSyncDriver', () => {
   let fetchMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
+    stableGameState.runId = 'run-current';
+    stableGameState.runRevision = 9;
     vi.useFakeTimers();
     for (const key of Object.keys(storage)) delete storage[key];
     vi.stubGlobal('localStorage', {
@@ -99,6 +101,33 @@ describe('OnlineSyncDriver', () => {
     expect(fetchMock.mock.calls[1]?.[0]).toBe(
       `https://relay.test/r/${codeB}`,
     );
+  });
+
+  it('discards an older profile build that finishes after the current profile on the same pairing code', async () => {
+    const old = deferred<{ json: string; compressed: string }>();
+    buildBundlePayloadMock.mockReturnValueOnce(old.promise);
+    relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+    const view = render(<OnlineSyncDriver />);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+    stableGameState.runId = 'new-profile';
+    buildBundlePayloadMock.mockResolvedValue({ json: '{}', compressed: 'new-profile' });
+    view.rerender(<OnlineSyncDriver />);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+    await act(async () => { old.resolve({ json: '{}', compressed: 'old-profile' }); });
+    expect(fetchMock.mock.calls.map(([, options]) => JSON.parse(options.body).payload)).toEqual(['new-profile']);
+  });
+
+  it('ignores a stale same-profile revision failure', async () => {
+    const old = deferred<{ json: string; compressed: string }>();
+    buildBundlePayloadMock.mockReturnValueOnce(old.promise);
+    relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+    const report = vi.spyOn(relaySync, 'reportPushFailure');
+    const view = render(<OnlineSyncDriver />);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+    stableGameState.runRevision++;
+    view.rerender(<OnlineSyncDriver />);
+    await act(async () => { old.reject(new Error('obsolete revision')); });
+    expect(report).not.toHaveBeenCalled();
   });
 
   it('reports current build failures but ignores stale-code failures', async () => {

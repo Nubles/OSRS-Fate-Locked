@@ -499,7 +499,7 @@ export function prepareKeyRollAction(
     else if (source === DropSource.BOSS_HIGH) omniChance = Math.max(omniChance, 10);
 
     if (nextDice(rollPurpose, 2) <= omniChance) omni = true;
-  } else if (mode.pityEnabled && state.fatePoints + failureFate >= mode.pityThreshold) {
+  } else if (mode.pityEnabled && state.fatePoints + failureFate + greedFailureRefund(state) >= mode.pityThreshold) {
     pity = true;
   }
 
@@ -689,8 +689,63 @@ const chainAppendedHistory = (prev: GameState['history'], next: GameState['histo
 // Fate cost of a ritual after the run's mode multiplier. Costs live in
 // config/economy.ts (RITUALS) — the single source the Codex and Void Altar
 // also read, so the three can never disagree.
-const ritualFateCost = (id: 'LUCK' | 'GREED' | 'CHAOS' | 'CARTOGRAPHER', mult: number): number =>
+const ritualFateCost = (id: 'LUCK' | 'GREED' | 'CHAOS' | 'CARTOGRAPHER' | 'GAMBIT', mult: number): number =>
   Math.round((getRitual(id).fateCost ?? 0) * mult);
+
+// Shared by manual and detected level progress; claim counters prevent repeat awards.
+const starterMilestones = (state: GameState, levels: Record<string, number>, now: number) => {
+ const totalLevel = Object.values(levels).reduce((a, b) => a + b, 0);
+ const logs: LogEntry[] = [];
+      // Xtreme Start anti-softlock insurance — see XTREME_MILESTONE_INTERVAL in
+      // config/economy.ts. Deterministic, not RNG, and only accrues while the
+      // run is still stuck at just the start area.
+      let keys = state.keys;
+      let xtremeMilestoneClaimed = state.xtremeMilestoneClaimed ?? 0;
+      if (state.gameModeId === 'xtreme' && visibleAreaUnlocks(state.unlocks.regions).length === 0) {
+        const eligible = Math.floor(totalLevel / XTREME_MILESTONE_INTERVAL);
+        if (eligible > xtremeMilestoneClaimed) {
+          const gained = eligible - xtremeMilestoneClaimed;
+          keys += gained;
+          xtremeMilestoneClaimed = eligible;
+          logs.push({
+            id: generateId(),
+            timestamp: now,
+            type: 'XTREME_MILESTONE',
+            message: `Xtreme milestone: Total Level ${eligible * XTREME_MILESTONE_INTERVAL} — ${gained === 1 ? 'a Key' : `${gained} Keys`} guaranteed.`,
+            details: `Stuck at the start area with nothing else to roll — Fate steps in every ${XTREME_MILESTONE_INTERVAL} total levels.`,
+            meta: { totalLevel, gained }
+          });
+        }
+      }
+
+      // Same insurance for Chunked mode — see CHUNKED_MILESTONE_INTERVAL.
+      // Tighter interval than Xtreme's since a single starting chunk is a
+      // much smaller training footprint than all of Lumbridge.
+      let chunkedMilestoneClaimed = state.chunkedMilestoneClaimed ?? 0;
+      if (state.gameModeId === 'chunked' && (state.unlocks.chunks ?? []).length === 0) {
+        const eligible = Math.floor(totalLevel / CHUNKED_MILESTONE_INTERVAL);
+        if (eligible > chunkedMilestoneClaimed) {
+          const gained = eligible - chunkedMilestoneClaimed;
+          keys += gained;
+          chunkedMilestoneClaimed = eligible;
+          logs.push({
+            id: generateId(),
+            timestamp: now,
+            type: 'XTREME_MILESTONE',
+            message: `Chunked milestone: Total Level ${eligible * CHUNKED_MILESTONE_INTERVAL} — ${gained === 1 ? 'a Key' : `${gained} Keys`} guaranteed.`,
+            details: `Stuck in the start chunk with nothing else to roll — Fate steps in every ${CHUNKED_MILESTONE_INTERVAL} total levels.`,
+            meta: { totalLevel, gained }
+          });
+        }
+      }
+
+
+ return { keys, xtremeMilestoneClaimed, chunkedMilestoneClaimed, logs };
+};
+
+const greedFailureRefund = (state: GameState): number => state.activeBuff === 'GREED'
+  ? Math.ceil(ritualFateCost('GREED', resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier) * GREED_REFUND_FRACTION)
+  : 0;
 
 const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: Action): GameState & { lastEvent: GameEvent | null } => {
   const now = Date.now();
@@ -769,13 +824,11 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     case 'ACCEPT_DETECTED_EVENT': {
       if (!detectedEventIdentityMatches(state, action.payload.expected)) return state;
       const progress = action.payload.progress;
-      const guaranteedChaosAwarded = progress.kind === 'SKILL_LEVEL'
-        && progress.level > (state.unlocks.levels[progress.skill] ?? 1)
-        && isSkillChaosMilestone(progress.level);
       const progressed = rawReducer(state, {
         type: 'SYNC_DETECTED_PROGRESS',
         payload: progress,
       });
+      if (progress.kind !== 'NONE' && progressed === state) return state;
       const rewarded = action.payload.skillChaos && progressed !== state
         ? { ...progressed, chaosKeys: progressed.chaosKeys + action.payload.skillChaos.chaosKeysAwarded }
         : progressed;
@@ -790,7 +843,9 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       if (progress.kind === 'SKILL_LEVEL') {
         const current = state.unlocks.levels[progress.skill] ?? 1;
         if (progress.level <= current) return state;
-        return { ...state, unlocks: { ...state.unlocks, levels: { ...state.unlocks.levels, [progress.skill]: progress.level } } };
+        const levels = { ...state.unlocks.levels, [progress.skill]: progress.level };
+        const { logs, ...milestones } = starterMilestones(state, levels, now);
+        return { ...state, ...milestones, history: [...state.history, ...logs], unlocks: { ...state.unlocks, levels } };
       }
       if (progress.kind === 'QUEST') {
         if (state.unlocks.quests.includes(progress.questId)) return state;
@@ -967,14 +1022,15 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         const pityThreshold = resolveModeRules(
           state.gameModeId, state.customMode,
         ).pityThreshold;
-        newState.fatePoints = state.fatePoints + failureFate - pityThreshold;
+        const totalFateAward = failureFate + greedFailureRefund(state);
+        newState.fatePoints = state.fatePoints + totalFateAward - pityThreshold;
         newHistory.push({
             id: generateId(),
             timestamp: now,
             type: 'PITY',
             message: 'MAX FATE REACHED! Pity Key granted.',
             details: `Rolled ${rollText} at ${inlineChanceText}, but Fate intervened.`,
-            meta: { ...entryMeta(failureFate), pityThreshold },
+            meta: { ...entryMeta(totalFateAward), pityThreshold },
             result: 'SUCCESS',
             source,
             rollValue: roll,
@@ -986,12 +1042,8 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         newState.fatePoints += failureFate;
         // Greed's consolation: half the (scaled) ritual cost flows back,
         // so it's double-or-something rather than double-or-nothing.
-        let greedRefund = 0;
-        if (isGreed) {
-          const mult = resolveModeRules(state.gameModeId, state.customMode).ritualCostMultiplier;
-          greedRefund = Math.ceil(ritualFateCost('GREED', mult) * GREED_REFUND_FRACTION);
-          newState.fatePoints += greedRefund;
-        }
+        const greedRefund = greedFailureRefund(state);
+        newState.fatePoints += greedRefund;
         newHistory.push({
             id: generateId(),
             timestamp: now,
@@ -1181,48 +1233,9 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         });
       }
 
-      // Xtreme Start anti-softlock insurance — see XTREME_MILESTONE_INTERVAL in
-      // config/economy.ts. Deterministic, not RNG, and only accrues while the
-      // run is still stuck at just the start area.
-      let keys = state.keys;
-      let xtremeMilestoneClaimed = state.xtremeMilestoneClaimed ?? 0;
-      if (state.gameModeId === 'xtreme' && visibleAreaUnlocks(state.unlocks.regions).length === 0) {
-        const eligible = Math.floor(totalLevel / XTREME_MILESTONE_INTERVAL);
-        if (eligible > xtremeMilestoneClaimed) {
-          const gained = eligible - xtremeMilestoneClaimed;
-          keys += gained;
-          xtremeMilestoneClaimed = eligible;
-          logs.push({
-            id: generateId(),
-            timestamp: now,
-            type: 'XTREME_MILESTONE',
-            message: `Xtreme milestone: Total Level ${eligible * XTREME_MILESTONE_INTERVAL} — ${gained === 1 ? 'a Key' : `${gained} Keys`} guaranteed.`,
-            details: `Stuck at the start area with nothing else to roll — Fate steps in every ${XTREME_MILESTONE_INTERVAL} total levels.`,
-            meta: { totalLevel, gained }
-          });
-        }
-      }
-
-      // Same insurance for Chunked mode — see CHUNKED_MILESTONE_INTERVAL.
-      // Tighter interval than Xtreme's since a single starting chunk is a
-      // much smaller training footprint than all of Lumbridge.
-      let chunkedMilestoneClaimed = state.chunkedMilestoneClaimed ?? 0;
-      if (state.gameModeId === 'chunked' && (state.unlocks.chunks ?? []).length === 0) {
-        const eligible = Math.floor(totalLevel / CHUNKED_MILESTONE_INTERVAL);
-        if (eligible > chunkedMilestoneClaimed) {
-          const gained = eligible - chunkedMilestoneClaimed;
-          keys += gained;
-          chunkedMilestoneClaimed = eligible;
-          logs.push({
-            id: generateId(),
-            timestamp: now,
-            type: 'XTREME_MILESTONE',
-            message: `Chunked milestone: Total Level ${eligible * CHUNKED_MILESTONE_INTERVAL} — ${gained === 1 ? 'a Key' : `${gained} Keys`} guaranteed.`,
-            details: `Stuck in the start chunk with nothing else to roll — Fate steps in every ${CHUNKED_MILESTONE_INTERVAL} total levels.`,
-            meta: { totalLevel, gained }
-          });
-        }
-      }
+      const milestones = starterMilestones(state, newLevels, now);
+      const { keys, xtremeMilestoneClaimed, chunkedMilestoneClaimed } = milestones;
+      logs.push(...milestones.logs);
 
       const eventMeta: LevelUpEventMeta = { skill, level: newLevel, totalLevel, chaosKeysAwarded, chaosKeyAwarded };
 
@@ -2296,7 +2309,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   /** Void Gambit: stake ALL fate on a coin flip (RNG here — reducer stays pure). */
   const performGambit = useCallback(() => {
     const stake = stateRef.current.fatePoints;
-    const min = getRitual('GAMBIT').fateCost ?? 15;
+    const min = ritualFateCost('GAMBIT', resolveModeRules(stateRef.current.gameModeId, stateRef.current.customMode).ritualCostMultiplier);
     if (stake < min) return;
     const won = nextFloat('gambit') < 0.5;
     const keysWon = Math.max(1, Math.floor(stake / GAMBIT_KEYS_PER));

@@ -18,20 +18,22 @@ export function OnlineSyncDriver() {
 
   useEffect(() => {
     if (!enabled || !sessionCode) return;
+    let current = true;
+    const isCurrent = () => current && relaySync.code === sessionCode;
     if (timer.current) window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => {
       buildBundlePayload(unlocks, { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId: gameModeId ?? 'vanilla', customMode })
         .then(({ compressed }) => {
-          if (relaySync.code !== sessionCode) return false;
-          return relaySync.push(compressed);
+          if (!isCurrent()) return false;
+          return relaySync.push(compressed, isCurrent);
         })
         .catch((error) => {
-          if (relaySync.code === sessionCode) {
+          if (isCurrent()) {
             relaySync.reportPushFailure(error);
           }
         });
     }, 1500);
-    return () => { if (timer.current) window.clearTimeout(timer.current); };
+    return () => { current = false; if (timer.current) window.clearTimeout(timer.current); };
   }, [
     enabled, sessionCode, pushRequestRevision, unlocks, runId,
     runRevision, keys, specialKeys, chaosKeys, fatePoints,

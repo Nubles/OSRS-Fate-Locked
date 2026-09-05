@@ -9,12 +9,11 @@
  * the same physical drop, so summing would double-count it.
  */
 
-/** retired id -> surviving id */
-export const CLOG_ID_MIGRATIONS: Record<number, number> = {
-  // "Araxyte venom sac(k)" rename duplicate on the Araxxor page (July 2026):
-  // 104011 was minted for the new spelling while 104002 kept the old one.
-  104011: 104002,
-};
+import migrations from '../data/clogIdMigrations.json';
+
+/** Retired id -> surviving id. Also reserves retired identities in both allocators.
+ * Araxxor's July 2026 sac(k) duplicate 104011 folds into original 104002. */
+export const CLOG_ID_MIGRATIONS: Record<number, number> = migrations;
 
 export function migrateClogIds(clog: Record<number, number>): Record<number, number> {
   let touched = false;

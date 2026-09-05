@@ -11,7 +11,7 @@ import { GearItem, GearBonuses, hasNoBonuses } from '../utils/gearStats';
 import { canonicalTierFromName, buildTierAnchors, anchoredTier } from '../utils/gearTiers';
 
 const DATA_URL = 'https://raw.githubusercontent.com/weirdgloop/osrs-dps-calc/main/cdn/json/equipment.json';
-const CACHE_KEY = 'fate_osrs_gear_v1';
+const CACHE_KEY = 'fate_osrs_gear_v2';
 const CACHE_TTL = 1000 * 60 * 60 * 24 * 30; // 30 days
 
 // Dataset slot names → our 11 EQUIPMENT_SLOTS.
@@ -28,6 +28,7 @@ interface RawItem {
   image: string;
   speed?: number;
   isTwoHanded?: boolean;
+  category?: string;
   bonuses?: { str?: number; ranged_str?: number; magic_str?: number; prayer?: number };
   offensive?: { stab?: number; slash?: number; crush?: number; magic?: number; ranged?: number };
   defensive?: { stab?: number; slash?: number; crush?: number; magic?: number; ranged?: number };
@@ -125,6 +126,7 @@ class GearService {
         imageFile: r.image,
         speed: r.speed || 0,
         twoHanded: !!r.isTwoHanded,
+        category: r.category,
         bonuses,
       };
       const existing = byName.get(r.name);

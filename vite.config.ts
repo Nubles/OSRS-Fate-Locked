@@ -53,6 +53,8 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
+      // Keep the existing browser target while updating the build tool's security fixes.
+      target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14'],
       outDir: 'dist',
       assetsDir: 'assets',
       rollupOptions: {

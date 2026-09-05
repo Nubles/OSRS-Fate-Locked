@@ -10,7 +10,7 @@ import { SectionGuide } from './SectionGuide';
 import { gearService } from '../services/GearService';
 import { monsterService, MonsterStats } from '../services/MonsterService';
 import { sumBonuses, GearItem, ZERO_BONUSES } from '../utils/gearStats';
-import { planBoss, BossPlan, BOSS_ALIASES, PlayerCombat, Readiness, Danger } from '../utils/bossPlanner';
+import { planBoss, bossLoadoutIssue, BossPlan, BOSS_ALIASES, PlayerCombat, Readiness, Danger } from '../utils/bossPlanner';
 import { EntityModel } from './EntityModel';
 import { modelFor, orientationFor } from '../data/entityModels';
 import { WikiLink } from './WikiLink';
@@ -47,7 +47,10 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
   useEscapeKey(onClose, true);
 
   const [status, setStatus] = useState<Status>(gearService.ready && monsterService.ready ? 'ready' : 'loading');
-  const [boostsOn, setBoostsOn] = useState(true);
+  const [boostsOn, setBoostsOn] = useState(false);
+  const [confirmedLoadout, setConfirmedLoadout] = useState<typeof rawLoadout | null>(null);
+  // Confirmation belongs to this exact immutable snapshot, never a later loadout.
+  const rangedSuppliesConfirmed = rawLoadout != null && confirmedLoadout === rawLoadout;
   const [selected, setSelected] = useState<string | null>(null);
 
   useEffect(() => {
@@ -63,7 +66,7 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
     const items = EQUIPMENT_SLOTS.map((s) => gearService.byId(loadout[s])).filter((x): x is GearItem => !!x);
     const b = items.length ? sumBonuses(items) : { ...ZERO_BONUSES };
     const weapon = gearService.byId(loadout['Weapon']);
-    return { bonuses: b, speedTicks: weapon?.speed || 4, count: items.length, weaponName: weapon?.name };
+    return { bonuses: b, speedTicks: weapon?.speed || 4, count: items.length, weaponName: weapon?.name, weaponCategory: EQUIPMENT_SLOTS.some(s => loadout[s] != null && !gearService.byId(loadout[s])) ? undefined : loadout['Weapon'] == null ? 'Unarmed' : weapon?.category };
   }, [loadout, status]);
 
   const player: PlayerCombat = useMemo(() => {
@@ -72,18 +75,21 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
       levels: { attack: L.Attack || 1, strength: L.Strength || 1, ranged: L.Ranged || 1, magic: L.Magic || 1, hitpoints: L.Hitpoints || 10 },
       gear: { bonuses: gear.bonuses, speedTicks: gear.speedTicks },
       boostsOn,
+      weaponCategory: gear.weaponCategory,
+      rangedSuppliesConfirmed,
     };
-  }, [unlocks.levels, gear, boostsOn]);
+  }, [unlocks.levels, gear, boostsOn, rangedSuppliesConfirmed]);
 
   // Resolve unlocked bosses → monster + plan; split matched vs. encounters.
   const { ranked, encounters } = useMemo(() => {
     const matched: { boss: string; monster: MonsterStats; plan: BossPlan }[] = [];
-    const enc: string[] = [];
+    const enc: { boss: string; reason: string }[] = [];
     if (status === 'ready') {
       for (const boss of unlocks.bosses || []) {
         const m = monsterService.byName(BOSS_ALIASES[boss] ?? boss);
-        if (m) matched.push({ boss, monster: m, plan: planBoss(player, m) });
-        else enc.push(boss);
+        const plan = m ? planBoss(player, m) : null;
+        if (m && plan) matched.push({ boss, monster: m, plan });
+        else enc.push({ boss, reason: m ? bossLoadoutIssue(player)! : 'No single-target encounter model' });
       }
     }
     matched.sort((a, b) => READY_ORDER.indexOf(a.plan.readiness) - READY_ORDER.indexOf(b.plan.readiness) || b.plan.dps - a.plan.dps);
@@ -95,6 +101,12 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={onClose} role="dialog" aria-modal="true" aria-label="Boss Kill Planner">
       <div className="bg-[#161616] border border-white/10 rounded-xl shadow-2xl w-full max-w-3xl h-[82vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        {['Bow', 'Crossbow', 'Thrown'].includes(gear.weaponCategory ?? '') && (
+          <label className="p-3 text-xs text-amber-200 flex items-center gap-2">
+            <input type="checkbox" checked={rangedSuppliesConfirmed} onChange={e => setConfirmedLoadout(e.target.checked ? rawLoadout : null)} />
+            I confirmed compatible ammunition or charges for this weapon and its legal use.
+          </label>
+        )}
         {/* Header */}
         <div className="flex items-center gap-3 p-4 border-b border-white/10 bg-[#1b1b1b] shrink-0">
           <div className="p-2 bg-red-900/20 rounded-lg border border-red-500/30 text-red-300"><Skull size={18} /></div>
@@ -147,10 +159,10 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
               })}
               {encounters.length > 0 && (
                 <div className="pt-2 mt-1 border-t border-white/5">
-                  <div className="text-[9px] uppercase tracking-widest text-gray-600 px-1 mb-1">Encounters (no single-target DPS)</div>
-                  {encounters.map((b) => (
+                  <div className="text-[9px] uppercase tracking-widest text-gray-600 px-1 mb-1">No verified damage estimate</div>
+                  {encounters.map(({ boss: b, reason }) => (
                     <div key={b} className="flex items-center gap-2 px-2.5 py-1.5 text-[11px] text-gray-500">
-                      <Skull size={11} className="text-gray-700 shrink-0" /> <span className="truncate">{b}</span>
+                      <Skull size={11} className="text-gray-700 shrink-0" /> <span>{b}: {reason}</span>
                     </div>
                   ))}
                 </div>

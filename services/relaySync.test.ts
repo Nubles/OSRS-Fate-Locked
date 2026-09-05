@@ -175,6 +175,40 @@ describe('RelaySyncService', () => {
     expect(service.status).toBe('off');
     expect(removeItem).toHaveBeenCalledWith(SESSION_KEY);
   });
+
+  it('serializes same-session writes and drops queued work invalidated by a newer profile', async () => {
+    const { RelaySyncService } = await import('./relaySync');
+    const service = new RelaySyncService();
+    service.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+    const first = deferred<{ ok: boolean }>();
+    const fetchMock = vi.fn().mockReturnValueOnce(first.promise).mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+    let queuedCurrent = true;
+    const old = service.push('old');
+    const obsolete = service.push('obsolete', () => queuedCurrent);
+    const latest = service.push('latest');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    queuedCurrent = false;
+    first.resolve({ ok: true });
+    expect(await old).toBe(true);
+    expect(await obsolete).toBe(false);
+    expect(await latest).toBe(true);
+    expect(fetchMock.mock.calls.map(([, options]) => JSON.parse(options.body).payload)).toEqual(['old', 'latest']);
+  });
+
+  it('continues the publish queue after a failed older request', async () => {
+    const { RelaySyncService } = await import('./relaySync');
+    const service = new RelaySyncService();
+    service.enable();
+    const first = deferred<{ ok: boolean }>();
+    vi.stubGlobal('fetch', vi.fn().mockReturnValueOnce(first.promise).mockResolvedValue({ ok: true }));
+    const old = service.push('old');
+    const latest = service.push('latest');
+    first.reject(new Error('offline'));
+    expect(await old).toBe(false);
+    expect(await latest).toBe(true);
+    expect(service.status).toBe('synced');
+  });
 });
 
 describe('current RuneLite connection source boundary', () => {

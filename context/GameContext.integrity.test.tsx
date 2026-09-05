@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
-import { initialState, gameReducerForTest } from './GameContext';
+import { initialState, gameReducerForTest, prepareDetectedEventAcceptanceAction, prepareKeyRollAction } from './GameContext';
 import { auditHistory, hashEntry, replayInvariants, verifyChain } from '../utils/integrity';
 import { resolveModeRules } from '../config/gameModes';
 import type { LogEntry } from '../types';
@@ -54,4 +54,32 @@ describe('replacement history preserves imported evidence', () => {
     expect(next.history).toBe(imported.history);
     expect(auditHistory(next.history).verdict).toBe('tampered');
   });
+});
+
+
+describe('consistent detected and manual progression', () => {
+ it.each([['chunked',25],['xtreme',50]] as const)('grants and records starter keys once in %s', (mode, interval) => {
+  const levels=Object.fromEntries(Object.keys(initialState.unlocks.levels).map(k=>[k,1]));
+  const target=interval-(Object.keys(levels).length-1); levels.Attack=target-1;
+  const state={...structuredClone(initialState),gameModeId:mode,runId:'test',runRevision:1,linkedAccount:'Tester',history:[],lastEvent:null,unlocks:{...structuredClone(initialState.unlocks),levels,regions:[],chunks:[]}};
+  const manual=gameReducerForTest(state,{type:'LEVEL_UP',payload:{skill:'Attack',chaosRoll:1}});
+  const prepare=(s: typeof state | ReturnType<typeof gameReducerForTest>)=>prepareDetectedEventAcceptanceAction(s,{kind:'SKILL_LEVEL',skill:'Attack',level:target},{source:'Attack Level '+target,target:'Attack',threshold:1,failureFate:1},(_p,_i,max=100)=>max,{fateEventId:'x',detectorId:'skill-level-v1',detectorVersion:1},{runId:s.runId,runRevision:s.runRevision,account:'Tester'});
+  const detected=gameReducerForTest(state,prepare(state));
+  expect(detected.keys).toBe(manual.keys); expect(detected.keys).toBe(state.keys+1);
+  expect(replayInvariants(detected.history).final.keys).toBe(detected.keys);
+  expect(verifyChain(detected.history).ok).toBe(true);
+  expect(gameReducerForTest(detected,prepare(detected))).toBe(detected);
+  expect(gameReducerForTest(manual,prepare(manual))).toBe(manual);
+ });
+ it('resolves Pity using the Greed refund and records the full award',()=>{
+  let state: ReturnType<typeof gameReducerForTest> = {...structuredClone(initialState),gameModeId:'custom',customMode:{...resolveModeRules('vanilla'),pityThreshold:10,ritualCostMultiplier:0.25},fatePoints:0,lastEvent:null};
+  for (let i = 0; i < 9; i++) state = gameReducerForTest(state, prepareKeyRollAction(state,'Training',1,1,(_p,_i,max=100)=>max));
+  const buffed=gameReducerForTest(state,{type:'RITUAL_GREED'});
+  const next=gameReducerForTest(buffed,prepareKeyRollAction(buffed,'Quest (Grandmaster)',1,3,(_p,_i,max=100)=>max));
+  expect(next.fatePoints).toBe(0); expect(next.keys).toBe(state.keys+1);
+  expect(next.history.at(-1)).toMatchObject({type:'PITY',meta:{fatePointsEarned:5,pityThreshold:10}});
+  const replay = replayInvariants(next.history, 3, next.customMode);
+  expect(replay.violations).toEqual([]); expect(replay.final.fatePoints).toBe(next.fatePoints); expect(replay.final.keys).toBe(next.keys);
+  expect(verifyChain(next.history).ok).toBe(true);
+ });
 });

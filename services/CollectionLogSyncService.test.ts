@@ -1,6 +1,8 @@
-import { describe, it, expect } from 'vitest';
-import { computeSync } from './CollectionLogSyncService';
+import { describe, it, expect, vi } from 'vitest';
+import { computeSync, collectionLogSync } from './CollectionLogSyncService';
 import type { CollectionLogTab } from '../data/collectionLogData';
+import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
+import { migrateClogIds } from '../utils/clogIdMigrations';
 
 // Minimal app dataset standing in for COLLECTION_LOG_DATA.
 const appData: Record<string, CollectionLogTab> = {
@@ -34,6 +36,32 @@ const wiki = [
 ];
 
 describe('collection log runtime sync diff', () => {
+  it('recomputes a stale cached addition that reused a retired identity', async () => {
+    const page = COLLECTION_LOG_DATA.Bosses.pages.Araxxor;
+    const original = [...page.items];
+    vi.stubGlobal('localStorage', {
+      getItem: () => JSON.stringify({ timestamp: Date.now(), data: { additions: [{ tab: 'Bosses', page: 'Araxxor', id: 104011, name: 'Future Araxxor drop' }], newSources: [] } }),
+      setItem: vi.fn(),
+    });
+    const fetchMock = vi.fn(async (url: string) => ({ ok: true, json: async () => ({ query: { pages: { 1: { revisions: [{ slots: { main: { '*': url.includes('data.json')
+      ? JSON.stringify([{ id: 999999, name: 'Future Araxxor drop', tabs: ['Araxxor'] }])
+      : '[1] = { name = "Unused override" }' } } }] } } } }) }));
+    vi.stubGlobal('fetch', fetchMock);
+    try {
+      await collectionLogSync.init();
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(page.items.find(item => item.name === 'Future Araxxor drop')?.id).toBe(104012);
+      expect(page.items.some(item => item.id === 104011)).toBe(false);
+    } finally {
+      page.items.splice(0, page.items.length, ...original);
+      vi.unstubAllGlobals();
+    }
+  });
+  it('reserves the retired Araxxor ID so a new drop survives save migration unchanged', () => {
+    const result = computeSync([{ id: 999999, name: 'Future Araxxor drop', tabs: ['Araxxor'] }], COLLECTION_LOG_DATA);
+    expect(result.additions).toEqual([{ tab: 'Bosses', page: 'Araxxor', id: 104012, name: 'Future Araxxor drop' }]);
+    expect(migrateClogIds({ [result.additions[0].id]: 1 })).toEqual({ 104012: 1 });
+  });
   const { additions, newSources } = computeSync(wiki, appData);
 
   it('appends only genuinely-new items to existing pages', () => {
