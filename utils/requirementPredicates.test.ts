@@ -56,3 +56,15 @@ describe('shared requirement semantics', () => {
     expect(result.masters[0].ready).toBe(0);
   });
 });
+
+
+it('keeps unreviewed activity metadata unknown', () => {
+  expect(evaluateActivityReadiness(true, undefined, unlocks).status).toBe('UNKNOWN');
+  expect(evaluateActivityReadiness(true, { note: 'A new hard entry condition' }, unlocks).status).toBe('UNKNOWN');
+});
+
+it('preserves the Ardougne Elite alternative geography', () => {
+  const task = ALL_DIARY_TASKS.find(t => t.description.includes('Witchaven or Yanille'))!;
+  expect(task.regions).toBeUndefined();
+  expect(task.anyOfRegions).toEqual(['Witchaven', 'Yanille']);
+});

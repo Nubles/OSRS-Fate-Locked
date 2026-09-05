@@ -5923,7 +5923,19 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "15 Woodcutting and 15 Firemaking Any axe and tinderbox"
+      "sourceRequirements": "15 Woodcutting and 15 Firemaking Any axe and tinderbox",
+      "predicates": [
+        {
+          "kind": "method",
+          "skill": "Woodcutting",
+          "tier": 2
+        },
+        {
+          "kind": "method",
+          "skill": "Firemaking",
+          "tier": 2
+        }
+      ]
     },
     {
       "id": "lum_easy_8",

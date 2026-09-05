@@ -7,6 +7,7 @@
  * monster lives in a chunk you've unlocked.
  */
 
+import { QUEST_DATA } from '../data/questData';
 import { UnlockState } from '../types';
 import { SlayerMasters } from '../services/ChunkContentService';
 import { SLAYER_MASTER_REQUIREMENTS, type SlayerMasterRequirementOption } from '../data/slayerMasterRequirements';
@@ -80,7 +81,7 @@ export const actualCombatLevel = (
 /** A req string like "Priest in Peril Complete the quest" → quest name. */
 const questFromReq = (req: string): string | null => {
   const m = req.match(/^(.*?) Complete the quest$/);
-  return m ? m[1].trim() : null;
+  return m && QUEST_DATA[m[1].trim()] ? m[1].trim() : null;
 };
 
 const masterBlocker = (

@@ -18,7 +18,7 @@ import { actualCombatLevel } from './slayerReach';
 import { evaluatePredicate, type RequirementPredicate } from './requirementPredicates';
 import { actualSkillLevel } from './skillLevels';
 
-export type QuestStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
+export type QuestStatus = 'NEEDS_CONFIRMATION' | 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
 export type DiaryStatus = 'NEEDS_CONFIRMATION' | 'UNKNOWN' | 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
 
 export type DiaryStatusUnlocks =
@@ -212,7 +212,7 @@ export function evaluateQuestEligibility(
   const status: QuestStatus = blockers.some(x => x.kind === 'region') ? 'LOCKED_REGION'
     : blockers.some(x => x.kind === 'skill' || x.kind === 'combat') ? 'LOCKED_SKILL'
     : blockers.some(x => x.kind === 'quest') ? 'LOCKED_QUEST'
-    : 'AVAILABLE';
+    : quest.manualRequirements?.length ? 'NEEDS_CONFIRMATION' : 'AVAILABLE';
   const manual = readinessFields(blockers, quest.manualRequirements ?? []);
   return { ...manual, status, blockers, evidence };
 }

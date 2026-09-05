@@ -341,6 +341,9 @@ export function validateSnapshot(snapshot) {
       throw new Error('Invalid Diary task ordinal: ' + task.id);
     }
     validateRequirementShape(task, task.id);
+    if (task.regions?.length > 1 && task.description.toLowerCase().includes(task.regions.join(' or ').toLowerCase())) {
+      throw new Error('Explicit OR geography must use anyOfRegions: ' + task.id);
+    }
     if (task.anyOfRegions !== undefined) {
       if (task.anyOfRegions.length < 2) {
         throw new Error('Diary any-of region list must contain at least two areas: ' + task.id);

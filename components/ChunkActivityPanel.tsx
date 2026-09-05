@@ -193,6 +193,7 @@ interface Props {
 }
 
 const QUEST_BADGE: Record<QuestStatus, { cls: string; label: string }> = {
+  NEEDS_CONFIRMATION: { cls: 'text-cyan-300', label: 'needs confirmation' },
   COMPLETED: { cls: 'text-green-400', label: 'completed' },
   AVAILABLE: { cls: 'text-amber-300', label: 'requirements met — can do now' },
   LOCKED_REGION: { cls: 'text-gray-500', label: 'locked: region not unlocked' },
@@ -303,7 +304,7 @@ export const chunkQuestPresentation = (
 ): { kind: 'completed' | 'available' | 'confirmation' | 'locked' | 'untracked'; title: string } => {
   if (row.status === 'COMPLETED') return { kind: 'completed', title: 'Completed' };
   if (!row.status) return { kind: 'untracked', title: 'miniquest / not tracked' };
-  if (row.status === 'AVAILABLE' && row.eligibility && !row.eligibility.eligible) {
+  if ((row.status === 'AVAILABLE' || row.status === 'NEEDS_CONFIRMATION') && row.eligibility && !row.eligibility.eligible) {
     return {
       kind: 'confirmation',
       title: row.eligibility.manualChecks.map(check => `Confirm: ${check}`).join(' · '),

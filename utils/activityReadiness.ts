@@ -27,6 +27,7 @@ export function evaluateActivityReadiness(
 ): ActivityReadiness {
   if (!isOwned) return { status: 'LOCKED', blockers: [] };
 
+  if (!requirement) return { status: 'UNKNOWN', checks: ['Access requirements have not been reviewed'] };
   const blockers: ActivityBlocker[] = [];
   const requiredAreas = requirement?.requiredAreas ?? [];
   if (

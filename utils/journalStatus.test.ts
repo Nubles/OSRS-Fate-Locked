@@ -158,7 +158,7 @@ describe('manual journal readiness', () => {
     );
 
     expect(result).toMatchObject({
-      status: 'AVAILABLE',
+      status: 'NEEDS_CONFIRMATION',
       machineEligible: true,
       eligible: false,
       confirmable: true,
@@ -443,7 +443,7 @@ describe('actual skill level requirements', () => {
     }))).toBe(1);
   });
 
-  it('keeps attained diary levels independent of method bands', () => {
+  it('enforces explicit cut-and-burn method predicates separately from attained levels', () => {
     const task = ALL_DIARY_TASKS.find(({ id }) => id === 'lum_easy_7')!;
     const common = {
       regions: ['Lumbridge'],
@@ -454,8 +454,8 @@ describe('actual skill level requirements', () => {
       ...common,
       skills: { Woodcutting: 1, Firemaking: 1 },
     }))).toMatchObject({
-      machineEligible: true,
-      eligible: true,
+      machineEligible: false,
+      eligible: false,
     });
 
     expect(evaluateDiaryTaskEligibility(task, unlocked({

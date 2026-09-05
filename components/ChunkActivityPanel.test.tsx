@@ -45,7 +45,7 @@ const rowForPryingTimes = (): ChunkQuestRow => {
 describe('chunk activity quest row helpers', () => {
   it('puts a machine-available manual-pending quest in Locked with its reason', () => {
     const row = rowForPryingTimes();
-    expect(row.status).toBe('AVAILABLE');
+    expect(row.status).toBe('NEEDS_CONFIRMATION');
     expect(chunkQuestOverviewItem(row, true)).toEqual({
       can: false,
       label: `Prying Times \u2014 Confirm: One open Sailing task slot`,
@@ -63,6 +63,7 @@ describe('chunk activity quest row helpers', () => {
     const manual = rowForPryingTimes();
     const automatic: ChunkQuestRow = {
       ...manual,
+      status: 'AVAILABLE',
       eligibility: {
         ...(manual.eligibility as NonNullable<ChunkQuestRow['eligibility']>),
         eligible: true,

@@ -334,7 +334,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'lum_easy_4', tierId: 'Lumbridge Easy', description: 'Craft some water runes from Essence.', skills: { 'Runecraft': 5 }, regions: ['Lumbridge'] },
   { id: 'lum_easy_5', tierId: 'Lumbridge Easy', description: 'Learn your age from Hans in Lumbridge.', regions: ['Lumbridge'] },
   { id: 'lum_easy_6', tierId: 'Lumbridge Easy', description: 'Pickpocket a man or woman in Lumbridge.', regions: ['Lumbridge'] },
-  { id: 'lum_easy_7', tierId: 'Lumbridge Easy', description: 'Chop and burn some oak logs in Lumbridge.', skills: { 'Firemaking': 15, 'Woodcutting': 15 }, regions: ['Lumbridge'] },
+  { id: 'lum_easy_7', tierId: 'Lumbridge Easy', description: 'Chop and burn some oak logs in Lumbridge.', predicates: [{"kind":"method","skill":"Woodcutting","tier":2},{"kind":"method","skill":"Firemaking","tier":2}], skills: { 'Firemaking': 15, 'Woodcutting': 15 }, regions: ['Lumbridge'] },
   { id: 'lum_easy_8', tierId: 'Lumbridge Easy', description: 'Kill a Zombie in Draynor Sewers.', regions: ['Draynor Village'] },
   { id: 'lum_easy_9', tierId: 'Lumbridge Easy', description: 'Catch some Anchovies in Al Kharid.', skills: { 'Fishing': 15 }, regions: ['Al Kharid'] },
   { id: 'lum_easy_10', tierId: 'Lumbridge Easy', description: 'Bake some Bread on the Lumbridge kitchen range.', quests: ['Cook\'s Assistant'], regions: ['Lumbridge'] },

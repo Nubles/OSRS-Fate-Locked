@@ -1,4 +1,5 @@
 import type { UnlockState } from '../types';
+import { SKILLS_LIST } from '../data/items';
 import { QUEST_DATA } from '../data/questData';
 import { isAreaReachable } from './reachability';
 import { actualSkillLevel, unlockedEquipmentTier, unlockedMethodTier } from './skillLevels';
@@ -48,7 +49,7 @@ export function evaluatePredicate(predicate: RequirementPredicate, context: Pred
         : ['NEEDS_CONFIRMATION', 'UNKNOWN', 'LOCKED'];
       return { status: order.find(status => results.some(r => r.status === status))!, checks: [...new Set(results.flatMap(r => r.checks))] };
     }
-    case 'skill': return check(actualSkillLevel(u, predicate.skill) >= predicate.level, `${predicate.skill} ${predicate.level}`);
+    case 'skill': if (!SKILLS_LIST.includes(predicate.skill)) return result('UNKNOWN', predicate.skill); return check(actualSkillLevel(u, predicate.skill) >= predicate.level, `${predicate.skill} ${predicate.level}`);
     case 'method': return check(unlockedMethodTier(u, predicate.skill) >= predicate.tier, `${predicate.skill} method tier ${predicate.tier}`);
     case 'equipment': return check(unlockedEquipmentTier(u, predicate.slot) >= predicate.tier, `${predicate.slot} equipment tier ${predicate.tier}`);
     case 'quest': return QUEST_DATA[predicate.id] ? check(u.quests.includes(predicate.id), predicate.id) : result('UNKNOWN', predicate.id);

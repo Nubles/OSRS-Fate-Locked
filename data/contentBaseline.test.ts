@@ -240,7 +240,7 @@ describe('cross-surface quest eligibility contract', () => {
     });
     const actual = crossSurfaceReadiness('The Slug Menace', unlocks);
 
-    expect(actual.machineStatuses).toEqual(['AVAILABLE', 'AVAILABLE']);
+    expect(actual.machineStatuses).toEqual(['NEEDS_CONFIRMATION', 'NEEDS_CONFIRMATION']);
     expect(actual.finalReadiness).toEqual(Array(6).fill('BLOCKED'));
     expect(actual.firstBlocker).toMatch(/^Confirm: Access to all required elemental altars/);
   });
