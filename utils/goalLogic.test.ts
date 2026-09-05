@@ -39,7 +39,9 @@ describe('canonical pinned goal readiness', () => {
   it('uses canonical quest requirements and attained levels instead of legacy summaries', () => {
     const progress = calculateGoalProgress({ id: 'Cook\'s Assistant', category: TableType.QUESTS,
       regions: ['Unknown legacy area'], skills: { Cooking: 99 } }, unlocks(['Lumbridge']));
-    expect(progress.percentage).toBe(100);
+    expect(progress.percentage).toBeLessThan(100);
+    expect(progress.missing.join(' ')).not.toContain('legacy');
+    expect(progress.missing.join(' ')).toContain('Egg');
   });
 });
 

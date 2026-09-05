@@ -12,6 +12,28 @@ const state = (over: Partial<UnlockState> = {}): UnlockState => ({
 const predicates = (name: string, confirmations: Record<string, boolean> = {}, over: Partial<UnlockState> = {}) =>
   evaluatePredicate({ kind: 'all', of: ACTIVITY_REQUIREMENTS[name].predicates ?? [] }, { unlocks: state(over), confirmations });
 describe('activity use and acquisition are separate', () => {
+  it('does not restore Volcanic Mine Kudos or fossil reward claims removed in May 2024', () => {
+    const mine = ACTIVITY_REQUIREMENTS['Volcanic Mine'];
+    expect(JSON.stringify(mine)).not.toMatch(/kudos|fossil rewards|museum camp|150/i);
+    expect(mine.skills).toEqual({ Mining: 50 });
+    expect(predicates('Volcanic Mine').status).toBe('NEEDS_CONFIRMATION');
+    expect(predicates('Volcanic Mine', { 'volcanic-mine-access': true }).status).toBe('READY');
+  });
+  it('does not treat completing introductory access quests as all operational evidence', () => {
+    expect(ACTIVITY_REQUIREMENTS['Moons of Peril'].quests).toEqual(['Perilous Moons']);
+    for (const name of ['Abyssal Sire', 'Alchemical Hydra', 'Cerberus', 'Kraken', 'Tears of Guthix', 'Tithe Farm', 'Mastering Mixology', 'Quetzal Network']) {
+      expect(predicates(name).status, name).toBe('NEEDS_CONFIRMATION');
+    }
+    expect(predicates('Alchemical Hydra', { 'slayerTask:hydra-valid-task': true }).status).toBe('NEEDS_CONFIRMATION');
+    expect(predicates('Alchemical Hydra', { 'slayerTask:hydra-valid-task': true, 'hydra-heat-protection': true }).status).toBe('READY');
+  });
+  it('keeps partial-progress travel usable only after the selected route is confirmed', () => {
+    for (const [name, key] of [['Balloon Transport', 'balloon-route'], ['Mine Carts', 'minecart-route'], ['Rat Pits', 'rat-pits-access']]) {
+      expect(ACTIVITY_REQUIREMENTS[name].quests).toBeUndefined();
+      expect(predicates(name).status).toBe('NEEDS_CONFIRMATION');
+      expect(predicates(name, { [key]: true }).status).toBe('READY');
+    }
+  });
   it('does not accept inherited object properties as reviewed activities', () => {
     for (const key of ['constructor', '__proto__', 'toString', 'hasOwnProperty']) expect(getActivityReq(key)).toBeUndefined();
   });

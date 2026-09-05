@@ -2,11 +2,23 @@ import { describe, it, expect } from 'vitest';
 import { DropSource } from '../types';
 import { QuestData } from '../data/questData';
 import {
-  questChunkStatus, doabilityBucket, entryBlockedGate, hasCanonicalQuestLocationEvidence,
+  questChunkStatus, doabilityBucket, entryBlockedGate, evaluateChunkEntryRequirements, hasCanonicalQuestLocationEvidence,
 } from './questDoability';
 
 const reach = (...ids: number[]) => new Set(ids.map(String));
 const allUnlocked = () => true;
+
+describe('typed chunk entry ingestion', () => {
+  it('retains unknown requirements even beside completed quests', () => {
+    expect(evaluateChunkEntryRequirements({ '1': ['Known', 'Pay the fee'] }, '1', new Set(['Known']), new Set(['Known'])))
+      .toEqual({ status: 'UNKNOWN', requirements: [{ kind: 'quest', id: 'Known' }, { kind: 'unknown', label: 'Pay the fee' }] });
+  });
+  it('does not crash or pass malformed imported entry lists', () => {
+    const malformed = { '1': null } as unknown as Record<string, string[]>;
+    expect(evaluateChunkEntryRequirements(malformed, '1', new Set(), new Set()).status).toBe('UNKNOWN');
+    expect(entryBlockedGate(malformed, new Set(), new Set())('1')).toBe(true);
+  });
+});
 
 describe('questChunkStatus', () => {
   it('all chunks reachable → REACHABLE, no blockers', () => {

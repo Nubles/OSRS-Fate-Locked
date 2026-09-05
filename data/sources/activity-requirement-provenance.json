@@ -1,0 +1,3110 @@
+{
+  "schemaVersion": 1,
+  "maxReviewAgeDays": 90,
+  "entries": {
+    "Tombs of Amascut": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Tombs_of_Amascut",
+          "revisionId": 15318422
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "The Gauntlet": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/The_Gauntlet",
+          "revisionId": 15315020
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Nex": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Nex",
+          "revisionId": 15325291
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "General Graardor": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/General_Graardor",
+          "revisionId": 15298421
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Commander Zilyana": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Commander_Zilyana",
+          "revisionId": 15298455
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Kree'arra": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Kree'arra",
+          "revisionId": 15304672
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "K'ril Tsutsaroth": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/K'ril_Tsutsaroth",
+          "revisionId": 15298476
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Abyssal Sire": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Abyssal_Sire",
+          "revisionId": 15330755
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Alchemical Hydra": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Alchemical_Hydra",
+          "revisionId": 15310351
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Cerberus": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Cerberus",
+          "revisionId": 15316568
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Grotesque Guardians": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Grotesque_Guardians",
+          "revisionId": 15325387
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Kraken": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Kraken",
+          "revisionId": 15313825
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Thermonuclear Smoke Devil": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Thermonuclear_smoke_devil",
+          "revisionId": 15310378
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Araxxor": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Araxxor",
+          "revisionId": 15326066
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Skotizo": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Skotizo",
+          "revisionId": 15310354
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Vorkath": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Vorkath",
+          "revisionId": 15310356
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Galvek": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Galvek",
+          "revisionId": 15272224
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Moons of Peril": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Moons_of_Peril",
+          "revisionId": 15292456
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Duke Sucellus": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Duke_Sucellus",
+          "revisionId": 15313977
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "The Leviathan": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/The_Leviathan",
+          "revisionId": 15315060
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "The Whisperer": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/The_Whisperer",
+          "revisionId": 15317122
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Vardorvis": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Vardorvis",
+          "revisionId": 15313978
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Barrows Brothers": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Barrows",
+          "revisionId": 15322237
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Deranged Archaeologist": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Deranged_archaeologist",
+          "revisionId": 15303525
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Hespori": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Hespori",
+          "revisionId": 15309992
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Coral Nursery": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Coral_nursery_(patch)",
+          "revisionId": 15330948
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Phantom Muspah": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Phantom_Muspah",
+          "revisionId": 15319938
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Zulrah": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Zulrah",
+          "revisionId": 15324466
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Wintertodt": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Wintertodt",
+          "revisionId": 15317763
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Tempoross": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Tempoross",
+          "revisionId": 15312507
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Zalcano": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Zalcano",
+          "revisionId": 15314360
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Tormented Demons": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Tormented_Demon",
+          "revisionId": 15325377
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Amoxliatl": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Amoxliatl",
+          "revisionId": 15315544
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Yama": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Yama",
+          "revisionId": 15317828
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Doom of Mokhaiotl": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Doom_of_Mokhaiotl",
+          "revisionId": 15325464
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Gemstone Crab": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Gemstone_Crab",
+          "revisionId": 15319360
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Shellbane Gryphon": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Shellbane_gryphon",
+          "revisionId": 15318109
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "The Mad Angel": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Mad_Angel",
+          "revisionId": 15320733
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Mimic": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Mimic",
+          "revisionId": 15303530
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Obor": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Obor",
+          "revisionId": 15327844
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Bryophyta": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Bryophyta",
+          "revisionId": 15319604
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Chambers of Xeric": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Chambers_of_Xeric",
+          "revisionId": 15320384
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Theatre of Blood": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Theatre_of_Blood",
+          "revisionId": 15331054
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "The Nightmare": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/The_Nightmare",
+          "revisionId": 15310364
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Corporeal Beast": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Corporeal_Beast",
+          "revisionId": 15310384
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Calvar'ion": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Calvar'ion",
+          "revisionId": 15309944
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Crazy Archaeologist": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Crazy_archaeologist",
+          "revisionId": 15267737
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Scorpia": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Scorpia",
+          "revisionId": 15303772
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Dagannoth Kings": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Dagannoth_Kings",
+          "revisionId": 15327825
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Giant Mole": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Giant_Mole",
+          "revisionId": 15297924
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Kalphite Queen": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Kalphite_Queen",
+          "revisionId": 15310375
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "King Black Dragon": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/King_Black_Dragon",
+          "revisionId": 15298583
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Sarachnis": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Sarachnis",
+          "revisionId": 15310368
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Scurrius": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Scurrius",
+          "revisionId": 15201009
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "TzHaar-Ket-Rak's Challenges": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/TzHaar-Ket-Rak's_Challenges",
+          "revisionId": 15300386
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Clan Wars": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Clan_Wars",
+          "revisionId": 15324493
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Emir's Arena": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Emir's_Arena",
+          "revisionId": 15322640
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Intelligence Gathering": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Intelligence_Gathering",
+          "revisionId": 15323142
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Last Man Standing": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Last_Man_Standing",
+          "revisionId": 15321063
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Archery Competition": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Ranging_Guild",
+          "revisionId": 14922764
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Champions' Guild": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Champions'_Guild",
+          "revisionId": 15279256
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Cooks' Guild": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Cooks'_Guild",
+          "revisionId": 14998923
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Crafting Guild": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Crafting_Guild",
+          "revisionId": 15181890
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Mining Guild": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Mining_Guild",
+          "revisionId": 15255470
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Prayer Guild": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Edgeville_Monastery",
+          "revisionId": 15321393
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Farming Guild": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Farming_Guild",
+          "revisionId": 15274002
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Fishing Guild": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Fishing_Guild",
+          "revisionId": 15211810
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Heroes' Guild": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Heroes'_Guild",
+          "revisionId": 15216794
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Hunter Guild": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Hunter_Guild",
+          "revisionId": 15166362
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Legends' Guild": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Legends'_Guild",
+          "revisionId": 15318268
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Myths' Guild": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Myths'_Guild",
+          "revisionId": 15239262
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Ranging Guild": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Ranging_Guild",
+          "revisionId": 14922764
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Rogues' Den": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Rogues'_Den",
+          "revisionId": 15319525
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Servants' Guild": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Servants'_Guild",
+          "revisionId": 14968891
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Warriors' Guild": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Warriors'_Guild",
+          "revisionId": 15264647
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Wizards' Guild": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Wizards'_Guild",
+          "revisionId": 15212747
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Woodcutting Guild": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Woodcutting_Guild",
+          "revisionId": 15216700
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Ancient Magicks": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Ancient_Magicks",
+          "revisionId": 15299490
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Lunar Spellbook": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Lunar_spellbook",
+          "revisionId": 15279811
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Arceuus Spellbook": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Arceuus_spellbook",
+          "revisionId": 15322953
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Piety": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Piety",
+          "revisionId": 15273846
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Rigour": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Rigour",
+          "revisionId": 14954629
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Augury": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Augury",
+          "revisionId": 14932194
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Preserve": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Preserve",
+          "revisionId": 15227349
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Bones to Peaches": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Bones_to_Peaches",
+          "revisionId": 15252658
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Dwarf Cannon": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Dwarf_multicannon",
+          "revisionId": 15300990
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Chivalry": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Chivalry",
+          "revisionId": 15293964
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "God Spells": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/God_spells",
+          "revisionId": 15299838
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Mage Arena II": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Mage_Arena_II",
+          "revisionId": 15299152
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Pest Control": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Pest_Control",
+          "revisionId": 15264098
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Barbarian Assault": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Barbarian_Assault",
+          "revisionId": 15325309
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Bounty Hunter": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Bounty_Hunter",
+          "revisionId": 15327839
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Castle Wars": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Castle_Wars",
+          "revisionId": 15328783
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Soul Wars": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Soul_Wars",
+          "revisionId": 15267916
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Mage Arena": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Mage_Arena",
+          "revisionId": 15326168
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Guardians of the Rift": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Guardians_of_the_Rift",
+          "revisionId": 15325297
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Tithe Farm": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Tithe_Farm",
+          "revisionId": 15325544
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Hallowed Sepulchre": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Hallowed_Sepulchre",
+          "revisionId": 15322138
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Giants' Foundry": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Giants'_Foundry",
+          "revisionId": 15331483
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Mastering Mixology": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Mastering_Mixology",
+          "revisionId": 15319356
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Volcanic Mine": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Volcanic_Mine",
+          "revisionId": 15329062
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ],
+      "gameUpdateDate": "2024-05-08"
+    },
+    "Pyramid Plunder": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Pyramid_Plunder",
+          "revisionId": 15323189
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Trouble Brewing": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Trouble_Brewing",
+          "revisionId": 15329020
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Tai Bwo Wannai Cleanup": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Tai_Bwo_Wannai_Cleanup",
+          "revisionId": 15330951
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Shades of Mort'ton": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Shades_of_Mort'ton_(minigame)",
+          "revisionId": 15323130
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Temple Trekking": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Temple_Trekking",
+          "revisionId": 15317361
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Impetuous Impulses": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Impetuous_Impulses",
+          "revisionId": 15169162
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Rat Pits": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Rat_Pits",
+          "revisionId": 15324330
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Vale Totems": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Vale_Totems",
+          "revisionId": 15262757
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Barracuda Trials": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Barracuda_Trials",
+          "revisionId": 15315994
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Blast Furnace": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Blast_Furnace",
+          "revisionId": 15323318
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Nightmare Zone": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Nightmare_Zone",
+          "revisionId": 15309331
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Sorceress's Garden": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Sorceress's_Garden",
+          "revisionId": 15226829
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Stealing Artefacts": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Stealing_artefacts",
+          "revisionId": 15317549
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Mess": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Mess",
+          "revisionId": 15327843
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Kitchen": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Kitchen",
+          "revisionId": 14983037
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Menagerie": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Menagerie",
+          "revisionId": 15314490
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Costume Room": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Costume_room",
+          "revisionId": 15035574
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Chapel Altar": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Chapel",
+          "revisionId": 15176744
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Portal Chamber": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Portal_chamber",
+          "revisionId": 15223409
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Throne Room": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Throne_room",
+          "revisionId": 14953383
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Dungeon": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Dungeon_(Construction)",
+          "revisionId": 15015111
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Portal Nexus": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Portal_nexus",
+          "revisionId": 15323064
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Mounted Coins": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Mounted_coins",
+          "revisionId": 15285597
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Mounted Glory": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Amulet_of_Glory_(mounted)",
+          "revisionId": 14913382
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Spirit Tree (POH)": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Spirit_tree_(Construction)",
+          "revisionId": 15274143
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Wilderness Obelisk": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Obelisk_(Construction)",
+          "revisionId": 15273586
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Fairy Ring (POH)": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Fairy_ring_(Construction)",
+          "revisionId": 15274142
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Spirit Trees": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Spirit_tree",
+          "revisionId": 15331149
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Fairy Rings": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Fairy_rings",
+          "revisionId": 15318013
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Gnome Gliders": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Gnome_glider",
+          "revisionId": 15320406
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Balloon Transport": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Balloon_transport_system",
+          "revisionId": 15267219
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Mine Carts": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Keldagrim_minecart_system",
+          "revisionId": 15323246
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Magic Carpets": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Rug_Merchant",
+          "revisionId": 15315272
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Quetzal Network": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Quetzal_Transport_System",
+          "revisionId": 15308283
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Mycelium Transport": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Mycelium_Transportation_System",
+          "revisionId": 15096307
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Eagle Transport": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Eagle_transport_system",
+          "revisionId": 15212928
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Ectophial": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Ectophial",
+          "revisionId": 15195604
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Enchanted Lyre": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Enchanted_lyre",
+          "revisionId": 15308713
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Digsite Pendant": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Digsite_pendant",
+          "revisionId": 15302156
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Camulet": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Camulet",
+          "revisionId": 15276620
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Kharedst's Memoirs": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Kharedst's_memoirs",
+          "revisionId": 15316631
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Ring of the Elements": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Ring_of_the_elements",
+          "revisionId": 15321585
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Colossal Pouch": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Colossal_pouch",
+          "revisionId": 15305749
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Gricoller's Can": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Gricoller's_can",
+          "revisionId": 15187202
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Dizana's Quiver": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Dizana's_quiver",
+          "revisionId": 15329079
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Forestry Kit": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Forestry_kit",
+          "revisionId": 15191359
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Drakan's Medallion": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Drakan's_medallion",
+          "revisionId": 15304192
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Royal Seed Pod": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Royal_seed_pod",
+          "revisionId": 15323014
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Pharaoh's Sceptre": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Pharaoh's_sceptre",
+          "revisionId": 15322386
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Crystal Teleport Seed": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Crystal_teleport_seed",
+          "revisionId": 15240677
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Inferno": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Inferno",
+          "revisionId": 15317006
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Phosani's Nightmare": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Phosani's_Nightmare",
+          "revisionId": 15310363
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Fortis Colosseum": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Fortis_Colosseum",
+          "revisionId": 15324521
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "The Hueycoatl": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/The_Hueycoatl",
+          "revisionId": 15310851
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "The Royal Titans": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Royal_Titans",
+          "revisionId": 15325397
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "TzHaar Fight Cave": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/TzHaar_Fight_Cave",
+          "revisionId": 15322579
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Fishing Trawler": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Fishing_Trawler",
+          "revisionId": 15321991
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Gnome Ball": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Gnome_Ball",
+          "revisionId": 14930243
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Gnome Restaurant": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Gnome_Restaurant",
+          "revisionId": 15319044
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "TzHaar Fight Pit": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/TzHaar_Fight_Pit",
+          "revisionId": 15316993
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Burthorpe Games Room": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Burthorpe_Games_Room",
+          "revisionId": 15328564
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Mage Training Arena": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Mage_Training_Arena",
+          "revisionId": 15330257
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Mahogany Homes": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Mahogany_Homes",
+          "revisionId": 15329307
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Forestry": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Forestry",
+          "revisionId": 15290442
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Tears of Guthix": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Tears_of_Guthix_(minigame)",
+          "revisionId": 15233614
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Brimhaven Agility Arena": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Brimhaven_Agility_Arena",
+          "revisionId": 15293118
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Hardwood Tree": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Special_patches",
+          "revisionId": 14786927
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Seaweed": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Special_patches",
+          "revisionId": 14786927
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Spirit Tree": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Spirit_Tree_(Farming)",
+          "revisionId": 15287148
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Celastrus": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Celastrus",
+          "revisionId": 8420458
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Redwood": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Redwood_tree_(Farming)",
+          "revisionId": 15287168
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Crystal Tree": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Crystal_tree",
+          "revisionId": 15287164
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Hespori Patch": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Hespori",
+          "revisionId": 15309992
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Anima": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Special_patches",
+          "revisionId": 14786927
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Vinery": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Vinery",
+          "revisionId": 15321966
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Canoes": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Canoe",
+          "revisionId": 15272954
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Slayer Ring": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Slayer_ring",
+          "revisionId": 15286008
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Xeric's Talisman": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Xeric's_talisman",
+          "revisionId": 15267197
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Restoration Pools": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Pool_space",
+          "revisionId": 15153236
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Jewellery Box": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Achievement_gallery",
+          "revisionId": 15083650
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Lectern": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Lectern_space",
+          "revisionId": 15328658
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Workshop Tools": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Tool_store",
+          "revisionId": 14475473
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Combat Dummy": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Combat_dummy_space",
+          "revisionId": 14665888
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Mounted Mythical Cape": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Mythical_cape_(mounted)",
+          "revisionId": 14913609
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Mounted Xeric's Talisman": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Mounted_xeric's_talisman",
+          "revisionId": 14913608
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Mounted Digsite Pendant": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Mounted_digsite_pendant",
+          "revisionId": 15324929
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Spellbook Altars": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Altar_space",
+          "revisionId": 14829310
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Armour Case": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Armour_case_space",
+          "revisionId": 15312026
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Magic Wardrobe": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Magic_wardrobe_space",
+          "revisionId": 15328768
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Cape Rack": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Cape_rack_space",
+          "revisionId": 15296595
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Treasure Chest (Clues)": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Treasure_chest_space",
+          "revisionId": 15309171
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Toy Box": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Toy_box_space",
+          "revisionId": 15310029
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Armour Repair Stand": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Armour_stand",
+          "revisionId": 15110666
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Telescope": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Telescope",
+          "revisionId": 15146924
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Aquarium": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "unresolved-catalog-entry",
+      "sources": [],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ],
+      "unresolved": true
+    },
+    "Bedroom (Servant)": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Bedroom",
+          "revisionId": 15176746
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Servant's Moneybag": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Servant's_money_bag",
+          "revisionId": 15108524
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Achievement Cape Hanger": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Cape_hanger",
+          "revisionId": 15303256
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Dining Table": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Dining_room",
+          "revisionId": 14953381
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Boss Lair": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Boss_lair_display",
+          "revisionId": 15325267
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Garden Theme": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Superior_garden",
+          "revisionId": 15283605
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Flamtaer Bag": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Flamtaer_bag",
+          "revisionId": 15215030
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Seed Vault": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Seed_vault",
+          "revisionId": 15328494
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Fossil Storage": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Fossil_Storage",
+          "revisionId": 15201256
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Plank Sack": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Plank_sack",
+          "revisionId": 15215027
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Huntsman's Kit": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Huntsman's_kit",
+          "revisionId": 15311003
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Meat Pouch": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Meat_pouch",
+          "revisionId": 15137670
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Essence Pouches": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Essence_pouch",
+          "revisionId": 15316458
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Seed Box": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Seed_box",
+          "revisionId": 15316558
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Herb Sack": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Herb_sack",
+          "revisionId": 15242261
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Gem Bag": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Gem_bag",
+          "revisionId": 15215028
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Coal Bag": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Coal_bag",
+          "revisionId": 15215029
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Fish Barrel": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Fish_barrel",
+          "revisionId": 15326999
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Tackle Box": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Tackle_box",
+          "revisionId": 15326998
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Log Basket": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/Log_basket",
+          "revisionId": 15267239
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Beginner STASH": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/STASH",
+          "revisionId": 15319948
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Easy STASH": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/STASH",
+          "revisionId": 15319948
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Medium STASH": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/STASH",
+          "revisionId": 15319948
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Hard STASH": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/STASH",
+          "revisionId": 15319948
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Elite STASH": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/STASH",
+          "revisionId": 15319948
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    },
+    "Master STASH": {
+      "reviewedAt": "2026-09-05",
+      "evidence": "revision-source-review",
+      "reviewScope": "Access/use requirements and source identity; selected variants and untracked operational facts still require confirmation",
+      "sources": [
+        {
+          "url": "https://oldschool.runescape.wiki/w/STASH",
+          "revisionId": 15319948
+        }
+      ],
+      "reviewRecords": [
+        "docs/source-reviews/requirement-decisions.md"
+      ]
+    }
+  }
+}

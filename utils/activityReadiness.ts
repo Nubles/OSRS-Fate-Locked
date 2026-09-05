@@ -6,6 +6,7 @@ import { evaluatePredicate } from './requirementPredicates';
 import { actualCombatLevel } from './slayerReach';
 import { actualSkillLevel } from './skillLevels';
 import { SKILLS_LIST } from '../data/items';
+import { canonicalQuestUnlocks } from '../data/questCatalog';
 
 export type ActivityBlocker =
   | { kind: 'area'; label: string }
@@ -27,6 +28,7 @@ export function evaluateActivityReadiness(
   unlocks: UnlockState,
   gameModeId?: string,
 ): ActivityReadiness {
+  unlocks = canonicalQuestUnlocks(unlocks);
   if (!isOwned) return { status: 'LOCKED', blockers: [] };
 
   if (!requirement) return { status: 'UNKNOWN', checks: ['Access requirements have not been reviewed'] };

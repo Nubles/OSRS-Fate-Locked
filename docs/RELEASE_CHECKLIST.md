@@ -33,7 +33,9 @@ separate operation.
    npx tsc --noEmit
    npm run content:verify
    $env:VITE_BASE='/OSRS-Fate-Locked/'
-   npm run build
+   npm run build:verify
+   npx playwright install chromium
+   npm run test:browser
    ```
 
 7. Review whitespace, generated data, scope, and secrets before pushing:

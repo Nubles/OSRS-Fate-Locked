@@ -53,7 +53,7 @@ describe('buildChunkPermissionSnapshot', () => {
     );
 
     expect(locked.categories.QUESTS?.[0].status).toBe('LOCKED');
-    expect(available.categories.QUESTS?.[0].status).toBe('ALLOWED');
+    expect(available.categories.QUESTS?.[0].status).toBe('NOT_READY');
   });
   it('uses compact category-specific rows', () => {
     const view = buildChunkPermissionSnapshot(
@@ -81,7 +81,7 @@ describe('buildChunkPermissionSnapshot', () => {
     ]);
     expect(view.categories.QUESTS?.[0]).toMatchObject({
       name: "Cook's Assistant",
-      status: 'ALLOWED',
+      status: 'NOT_READY',
     });
     expect(view.categories.COMBAT?.[0]).toMatchObject({
       name: 'Goblin',

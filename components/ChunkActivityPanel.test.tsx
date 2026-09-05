@@ -48,14 +48,14 @@ describe('chunk activity quest row helpers', () => {
     expect(row.status).toBe('NEEDS_CONFIRMATION');
     expect(chunkQuestOverviewItem(row, true)).toEqual({
       can: false,
-      label: `Prying Times \u2014 Confirm: One open Sailing task slot`,
+      label: expect.stringMatching(/Prying Times.*Confirm: One open Sailing task slot.*quest actions/),
     });
   });
 
   it('gives manual-pending catalogue rows a distinct confirmation indicator', () => {
     expect(chunkQuestPresentation(rowForPryingTimes())).toEqual({
       kind: 'confirmation',
-      title: 'Confirm: One open Sailing task slot',
+      title: expect.stringMatching(/^Confirm: One open Sailing task slot.*quest actions/),
     });
   });
 
@@ -67,6 +67,7 @@ describe('chunk activity quest row helpers', () => {
       eligibility: {
         ...(manual.eligibility as NonNullable<ChunkQuestRow['eligibility']>),
         eligible: true,
+        status: 'AVAILABLE',
         machineEligible: true,
         confirmable: true,
         manualChecks: [],
@@ -79,7 +80,9 @@ describe('chunk activity quest row helpers', () => {
       eligibility: {
         ...automatic.eligibility!,
         eligible: false,
+        status: 'LOCKED_REGION',
         machineEligible: false,
+        confirmable: false,
       },
     };
     const untracked: ChunkQuestRow = {

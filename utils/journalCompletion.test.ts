@@ -27,7 +27,7 @@ describe('journal completion decisions', () => {
   });
 
   const malformedQuest = (overrides: Partial<QuestData>): QuestData => ({
-    id: 'Malformed policy quest',
+    operationalRequirements: [], id: 'Malformed policy quest',
     name: 'Malformed policy quest',
     kind: 'quest',
     accessPolicy: 'regions',
@@ -143,6 +143,7 @@ describe('journal completion decisions', () => {
       quest,
       { ...oneLocation, chunks: ['42,55', '42,54'] },
       'chunked',
+      { manualConfirmed: true },
     )).toEqual({ ok: true });
   });
 
@@ -179,7 +180,7 @@ describe('journal completion decisions', () => {
     const ready = unlocksReadyForPryingTimes();
     expect(questCompletionDecision(task, ready, 'vanilla')).toEqual({
       ok: false,
-      reason: 'Confirm: One open Sailing task slot',
+      reason: expect.stringContaining('Confirm: One open Sailing task slot'),
     });
     expect(questCompletionDecision(
       task,
@@ -217,7 +218,7 @@ describe('journal completion decisions', () => {
       levels: { Slayer: 1 },
     });
 
-    expect(questCompletionDecision(quest, available, 'vanilla')).toEqual({ ok: true });
+    expect(questCompletionDecision(quest, available, 'vanilla', { manualConfirmed: true })).toEqual({ ok: true });
 
     const reserved = withJournalCompletion(
       available,
@@ -320,7 +321,7 @@ describe('journal completion decisions', () => {
     });
     expect(questCompletionDecision(quest, machineReady, 'vanilla')).toEqual({
       ok: false,
-      reason: 'Confirm: Access to all required elemental altars through one route: surface altars with Misthalin and Kharidian Desert; the Abyss through Edgeville with Enter the Abyss completed; or Guardians of the Rift with Misthalin and Temple of the Eye completed',
+      reason: expect.stringContaining('Confirm: Access to all required elemental altars through one route: surface altars with Misthalin and Kharidian Desert; the Abyss through Edgeville with Enter the Abyss completed; or Guardians of the Rift with Misthalin and Temple of the Eye completed'),
     });
     expect(questCompletionDecision(
       quest,

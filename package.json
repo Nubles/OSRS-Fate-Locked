@@ -19,7 +19,7 @@
     "chunks:source-check": "node scripts/chunk-source.mjs --check-upstream",
     "chunks:source-verify": "vitest run scripts/chunk-source.test.ts",
     "content:sync": "node scripts/sync-collection-log.mjs && node scripts/sync-combat-achievements.mjs && node scripts/check-content-sync.mjs",
-    "content:verify": "npm run diary:verify && npm run chunks:verify && npm run quests:verify && npm run quest-routes:verify && npm run walkthroughs:verify && vitest run data/contentBaseline.test.ts data/tasksConsistency.test.ts utils/taskIdMigrations.test.ts utils/caProgress.test.ts",
+    "content:verify": "npm run requirements:verify && npm run diary:verify && npm run chunks:verify && npm run quests:verify && npm run quest-routes:verify && npm run walkthroughs:verify && vitest run data/areaCatalog.test.ts data/questCatalog.test.ts data/activityCatalog.test.ts data/serviceCatalog.test.ts data/questOperationalSources.test.ts data/questOperationalRequirements.test.ts data/slayerRequirementPredicates.test.ts data/contentBaseline.test.ts data/tasksConsistency.test.ts utils/taskIdMigrations.test.ts utils/caProgress.test.ts",
     "dev": "node scripts/gen-model-manifest.mjs && vite",
     "build": "node scripts/gen-model-manifest.mjs && vite build",
     "build:runeproof-preview": "node scripts/gen-model-manifest.mjs && vite build --mode runeproof-preview --outDir dist-runeproof-preview",
@@ -28,12 +28,15 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "release:verify": "npm run changelog:verify && npm test && npm run typecheck && npm run content:verify && npm run build",
+    "release:verify": "npm run changelog:verify && npm test && npm run typecheck && npm run content:verify && npm run build:verify && npm run test:browser",
     "quests:source-refresh": "node scripts/sync-quest-sources.mjs --refresh",
     "quests:verify": "node scripts/sync-quest-sources.mjs --check && vitest run data/questRequirementAudit.test.ts",
     "quest-routes:verify": "node scripts/check-quest-route-data.mjs",
     "walkthroughs:refresh": "node scripts/sync-quest-walkthroughs.mjs",
-    "walkthroughs:verify": "node scripts/sync-quest-walkthroughs.mjs --check"
+    "walkthroughs:verify": "node scripts/sync-quest-walkthroughs.mjs --check",
+    "test:browser": "playwright test",
+    "build:verify": "node scripts/gen-model-manifest.mjs && node scripts/verify-build.mjs",
+    "requirements:verify": "node scripts/check-requirement-freshness.mjs && node scripts/compile-quest-operations.mjs --check"
   },
   "dependencies": {
     "@google/model-viewer": "^4.3.0",
@@ -47,6 +50,7 @@
     "recharts": "^2.12.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/react": "^18.2.15",

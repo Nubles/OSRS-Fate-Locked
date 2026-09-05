@@ -17,8 +17,10 @@ import { isAreaReachable } from './reachability';
 import { actualCombatLevel } from './slayerReach';
 import { evaluatePredicate, type RequirementPredicate } from './requirementPredicates';
 import { actualSkillLevel } from './skillLevels';
+import { questOperationalRequirements } from '../data/questOperationalRequirements';
+import { canonicalQuestUnlocks, questPointsForReferences } from '../data/questCatalog';
 
-export type QuestStatus = 'NEEDS_CONFIRMATION' | 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
+export type QuestStatus = 'UNKNOWN' | 'NEEDS_CONFIRMATION' | 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
 export type DiaryStatus = 'NEEDS_CONFIRMATION' | 'UNKNOWN' | 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
 
 export type DiaryStatusUnlocks =
@@ -50,11 +52,11 @@ export type EligibilityBlocker = DirectEligibilityBlocker | {
   routes: AlternativeEligibilityRoute[];
 };
 
-export interface ManualEligibility {
-  machineEligible: boolean;
-  manualChecks: string[];
-  confirmable: boolean;
-}
+/** Compatibility fields are constrained together so callers cannot invent contradictory readiness. */
+export type ManualEligibility =
+  | { eligible: true; machineEligible: true; confirmable: true; manualChecks: [] }
+  | { eligible: false; machineEligible: true; confirmable: true; manualChecks: string[] }
+  | { eligible: false; machineEligible: false; confirmable: false; manualChecks: string[] };
 
 const uniqueStrings = (values: readonly string[]): string[] => [
   ...new Set(values),
@@ -63,23 +65,28 @@ const uniqueStrings = (values: readonly string[]): string[] => [
 const readinessFields = (
   blockers: readonly EligibilityBlocker[],
   manualChecks: readonly string[],
-): ManualEligibility & { eligible: boolean } => {
-  const machineEligible = blockers.length === 0;
+): ManualEligibility => {
   const checks = uniqueStrings(manualChecks);
-  return {
-    machineEligible,
-    manualChecks: checks,
-    confirmable: machineEligible,
-    eligible: machineEligible && checks.length === 0,
-  };
+  if (blockers.length) return { eligible: false, machineEligible: false, confirmable: false, manualChecks: checks };
+  if (checks.length) return { eligible: false, machineEligible: true, confirmable: true, manualChecks: checks };
+  return { eligible: true, machineEligible: true, confirmable: true, manualChecks: [] };
 };
 
-export interface QuestEligibility extends ManualEligibility {
-  eligible: boolean;
-  status: QuestStatus;
+export type QuestEligibility = ManualEligibility & {
   blockers: EligibilityBlocker[];
   evidence: string[];
-}
+} & (
+  | { eligible: true; status: 'AVAILABLE' | 'COMPLETED' }
+  | { eligible: false; status: Exclude<QuestStatus, 'AVAILABLE' | 'COMPLETED'> }
+);
+
+const questEligibility = (
+  status: QuestStatus, blockers: EligibilityBlocker[], evidence: string[], manualChecks: string[],
+): QuestEligibility => {
+  const readiness = readinessFields(blockers, manualChecks);
+  if (readiness.eligible === true) return { ...readiness, status: status === 'COMPLETED' ? 'COMPLETED' : 'AVAILABLE', blockers, evidence };
+  return { ...readiness, status: status === 'AVAILABLE' || status === 'COMPLETED' ? 'NEEDS_CONFIRMATION' : status, blockers, evidence };
+};
 
 export const meetsSkillRequirement = (
   unlocks: Pick<UnlockState, 'skills' | 'levels'>,
@@ -136,23 +143,16 @@ export const questRequirementOptionLabel = (
 ].join(' + ');
 
 const currentQuestPoints = (unlocks: UnlockState): number =>
-  [...new Set(unlocks.quests)].reduce(
-    (total, id) => total + (
-      QUEST_DATA[id]?.kind === 'quest' ? QUEST_DATA[id].points : 0
-    ), 0);
+  questPointsForReferences(unlocks.quests);
 
 export function evaluateQuestEligibility(
   quest: QuestData,
   unlocks: UnlockState,
   gameModeId?: string,
 ): QuestEligibility {
+  unlocks = canonicalQuestUnlocks(unlocks);
   if (unlocks.quests.includes(quest.id)) {
-    return {
-      ...readinessFields([], []),
-      status: 'COMPLETED',
-      blockers: [],
-      evidence: ['Completed'],
-    };
+    return questEligibility('COMPLETED', [], ['Completed'], []);
   }
   const configurationErrors = questAccessPolicyStructureErrors(quest);
   if (configurationErrors.length) {
@@ -160,12 +160,7 @@ export function evaluateQuestEligibility(
       kind: 'quest',
       label: `Invalid quest access configuration: ${configurationErrors.join('; ')}`,
     };
-    return {
-      ...readinessFields([blocker], quest.manualRequirements ?? []),
-      status: 'LOCKED_QUEST',
-      blockers: [blocker],
-      evidence: [],
-    };
+    return questEligibility('LOCKED_QUEST', [blocker], [], quest.manualRequirements ?? []);
   }
   const blockers: EligibilityBlocker[] = [];
   const evidence: string[] = [];
@@ -209,12 +204,14 @@ export function evaluateQuestEligibility(
     if (unlocks.quests.includes(prereq)) evidence.push(prereq);
     else blockers.push({ kind: 'quest', label: prereq });
   }
-  const status: QuestStatus = blockers.some(x => x.kind === 'region') ? 'LOCKED_REGION'
+  const operations = evaluatePredicate({ kind: 'all', of: questOperationalRequirements(quest) }, { unlocks, gameModeId });
+  const manualChecks = [...(quest.manualRequirements ?? []), ...(operations.status === 'NEEDS_CONFIRMATION' ? operations.checks : [])];
+  if (operations.status === 'LOCKED' || operations.status === 'UNKNOWN') blockers.push(...operations.checks.map(label => ({ kind: 'requirement' as const, label })));
+  const status: QuestStatus = operations.status === 'UNKNOWN' ? 'UNKNOWN' : blockers.some(x => x.kind === 'region') ? 'LOCKED_REGION'
     : blockers.some(x => x.kind === 'skill' || x.kind === 'combat') ? 'LOCKED_SKILL'
-    : blockers.some(x => x.kind === 'quest') ? 'LOCKED_QUEST'
-    : quest.manualRequirements?.length ? 'NEEDS_CONFIRMATION' : 'AVAILABLE';
-  const manual = readinessFields(blockers, quest.manualRequirements ?? []);
-  return { ...manual, status, blockers, evidence };
+    : blockers.some(x => x.kind === 'quest' || x.kind === 'requirement') ? 'LOCKED_QUEST'
+    : manualChecks.length ? 'NEEDS_CONFIRMATION' : 'AVAILABLE';
+  return questEligibility(status, blockers, evidence, manualChecks);
 }
 
 export function getQuestStatus(
@@ -257,12 +254,11 @@ export interface DoableDiaryTask extends DoableTask {
   tierId: string;
 }
 
-export interface DiaryTaskEligibility extends ManualEligibility {
+export type DiaryTaskEligibility = ManualEligibility & {
   unknownChecks: string[];
-  eligible: boolean;
   blockers: EligibilityBlocker[];
   evidence: string[];
-}
+};
 
 const requirementOptionParts = (option: DiaryTaskRequirementOption): string[] => [
   ...Object.entries(option.skills ?? {}).map(([skill, level]) => skill + ' ' + level),
@@ -294,6 +290,7 @@ const evaluateDiaryRequirement = (
   unlocks: UnlockState,
   gameModeId?: string,
 ): DiaryTaskEligibility => {
+  unlocks = canonicalQuestUnlocks(unlocks);
   const blockers: EligibilityBlocker[] = [];
   const evidence: string[] = [];
   const evaluated = evaluatePredicate({ kind: 'all', of: [
@@ -451,14 +448,15 @@ export function taskEligibilityBlockers(
   return evaluateDiaryTaskEligibility(task, unlocks, gameModeId).blockers;
 }
 
-export interface DiaryTierEligibility {
+export type DiaryTierEligibility = {
   manualChecks: string[];
   unverifiedTaskIds: string[];
-  eligible: boolean;
-  status: DiaryStatus;
   blockers: EligibilityBlocker[];
   evidence: string[];
-}
+} & (
+  | { eligible: true; status: 'AVAILABLE' | 'COMPLETED' }
+  | { eligible: false; status: Exclude<DiaryStatus, 'AVAILABLE' | 'COMPLETED'> }
+);
 
 const uniqueBlockers = (blockers: EligibilityBlocker[]): EligibilityBlocker[] => {
   const seen = new Set<string>();
@@ -513,7 +511,9 @@ export function evaluateDiaryTierEligibility(
         ? 'LOCKED_QUEST'
         : manualChecks.length > 0 ? 'NEEDS_CONFIRMATION' : 'AVAILABLE';
 
-  return { eligible: status === 'AVAILABLE', status, blockers, evidence, manualChecks, unverifiedTaskIds };
+  return status === 'AVAILABLE'
+    ? { eligible: true, status, blockers, evidence, manualChecks, unverifiedTaskIds }
+    : { eligible: false, status, blockers, evidence, manualChecks, unverifiedTaskIds };
 }
 
 export function getDiaryStatus(

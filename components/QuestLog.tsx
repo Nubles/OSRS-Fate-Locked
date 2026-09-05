@@ -1,3 +1,4 @@
+import { catalogQuest, completedQuestIds, questPointsForReferences } from '../data/questCatalog';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
@@ -138,8 +139,9 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
       (blocker: { kind: string; label: string }) =>
         blocker.kind === 'region' && blocker.label === alternativeLabel,
     );
+    const operationalBlockers = eligibility.blockers.filter(blocker => blocker.kind === 'requirement');
     const totalReqs = regionReqs.length + locationReqs.length + skillReqs.length +
-      combatReqs.length + prereqReqs.length + (hasAlternative ? 1 : 0);
+      combatReqs.length + prereqReqs.length + (hasAlternative ? 1 : 0) + eligibility.manualChecks.length + operationalBlockers.length;
     const totalMet = metRegions.length + metLocations.length + metSkills.length +
       metCombat.length + metPrereqs.length + (hasAlternative && alternativeMet ? 1 : 0);
     const reqPct = totalReqs === 0 ? 100 : Math.round((totalMet / totalReqs) * 100);
@@ -209,11 +211,16 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
                               </span>
                           );
                       })}
-                      {(quest.manualRequirements ?? []).map((requirement: string) => (
+                      {eligibility.manualChecks.map((requirement: string) => (
                           <span key={'manual:' + requirement}
                             className="text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1 border bg-cyan-900/10 text-cyan-300/80 border-cyan-500/20"
-                            title="Manual requirement — shown for reference and not checked automatically">
+                            title="Needs confirmation before completion">
                               <Bookmark size={8} /> {requirement}
+                          </span>
+                      ))}
+                      {operationalBlockers.map(blocker => (
+                          <span key={'operation:' + blocker.label} className="text-[10px] px-1.5 py-0.5 rounded border bg-red-900/10 text-red-400 border-red-500/20">
+                              {blocker.label}
                           </span>
                       ))}
                       {hasAlternative && (
@@ -270,7 +277,7 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
                           ones are amber + clickable so the player can jump straight to
                           that quest in the list without manually searching. */}
                       {prereqReqs.map((qid: string) => {
-                          const met = isCompleted || unlocks.quests.includes(qid);
+                          const met = isCompleted || eligibility.evidence.includes(qid);
                           if (met) {
                               return (
                                   <span key={qid} className="text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1 border bg-black/30 text-gray-500 border-white/5">
@@ -490,11 +497,9 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
   const allEntriesByKind = splitJournalEntriesByKind(Object.values(QUEST_DATA));
   const totalQuests = allEntriesByKind.quests.length;
   const totalMinis = allEntriesByKind.miniquests.length;
-  const completedMain = [...new Set(unlocks.quests)].filter(id => QUEST_DATA[id]?.kind === 'quest').length;
-  const completedMinis = [...new Set(unlocks.quests)].filter(id => QUEST_DATA[id]?.kind === 'miniquest').length;
-  const currentQP = [...new Set(unlocks.quests)].reduce((acc, qid) => acc + (
-    QUEST_DATA[qid]?.kind === 'quest' ? QUEST_DATA[qid].points : 0
-  ), 0);
+  const completedMain = [...completedQuestIds(unlocks.quests)].filter(id => catalogQuest(id)?.data.kind === 'quest').length;
+  const completedMinis = [...completedQuestIds(unlocks.quests)].filter(id => catalogQuest(id)?.data.kind === 'miniquest').length;
+  const currentQP = questPointsForReferences(unlocks.quests);
 
   return (
     <div className="bg-[#121212] flex flex-col h-full rounded-lg border border-white/10 overflow-hidden">

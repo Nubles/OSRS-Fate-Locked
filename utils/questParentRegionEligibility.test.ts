@@ -46,7 +46,8 @@ describe('quest parent-region eligibility', () => {
       ...extras,
     }), 'vanilla');
 
-    expect(result.status).toBe('AVAILABLE');
+    expect(result.status).toBe('NEEDS_CONFIRMATION');
+    expect(result.machineEligible).toBe(true);
     expect(result.blockers).toEqual([]);
   });
 });

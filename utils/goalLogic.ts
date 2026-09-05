@@ -3,11 +3,11 @@ import { ContentRequirement } from '../data/requirements';
 import { UnlockState, TableType } from '../types';
 import { isAreaReachable } from './reachability';
 import { actualSkillLevel } from './skillLevels';
-import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { evaluateQuestEligibility, evaluateDiaryTierEligibility } from './journalStatus';
 import { getActivityReq } from '../data/activityRequirements';
 import { evaluateActivityReadiness } from './activityReadiness';
+import { canonicalQuestUnlocks, catalogQuest } from '../data/questCatalog';
 
 export interface GoalProgress {
   percentage: number;
@@ -17,8 +17,10 @@ export interface GoalProgress {
 }
 
 export const calculateGoalProgress = (req: ContentRequirement, unlocks: UnlockState, gameModeId?: string): GoalProgress => {
-  const journal = req.category === TableType.QUESTS && QUEST_DATA[req.id]
-    ? evaluateQuestEligibility(QUEST_DATA[req.id], unlocks, gameModeId)
+  unlocks = canonicalQuestUnlocks(unlocks);
+  const quest = req.category === TableType.QUESTS ? catalogQuest(req.id)?.data : undefined;
+  const journal = quest
+    ? evaluateQuestEligibility(quest, unlocks, gameModeId)
     : req.category === TableType.DIARIES && DIARY_DATA[req.id]
       ? evaluateDiaryTierEligibility(DIARY_DATA[req.id], unlocks, gameModeId) : undefined;
   if (journal) {

@@ -1,4 +1,4 @@
-import { QUEST_DATA } from '../../data/questData';
+import { catalogQuest, completedQuestIds } from '../../data/questCatalog';
 import {
   GUILDS_LIST,
   MERCHANTS_LIST,
@@ -29,7 +29,6 @@ export interface RouteGateAccountState {
 type UnlockCategory = Extract<RouteGate, { type: 'UNLOCK' }>['category'];
 
 const normalise = (value: string): string => value.trim().replace(/\s+/g, ' ').toLocaleLowerCase('en-GB');
-const questIds = new Map(Object.keys(QUEST_DATA).map((id) => [normalise(id), id]));
 const skills = new Map(SKILLS_LIST.map((skill) => [normalise(skill), skill]));
 
 const unlockAliases: readonly [UnlockCategory, readonly string[], readonly string[]][] = [
@@ -53,8 +52,8 @@ const parseQuest = (requirement: RawRouteRequirement): RouteGate | null => {
   const complete = requirement.raw.match(/^(.+?)\s+complete the quest$/i);
   const candidate = complete?.[1];
   const questId = candidate
-    ? questIds.get(normalise(candidate))
-    : requirement.origin === 'CHUNK_ENTRY' ? questIds.get(normalise(requirement.raw)) : undefined;
+    ? catalogQuest(candidate)?.data.id
+    : requirement.origin === 'CHUNK_ENTRY' ? catalogQuest(requirement.raw)?.data.id : undefined;
   return questId ? questGate(questId) : null;
 };
 
@@ -107,6 +106,7 @@ export const evaluateRouteGates = (
 ): GateEvaluation => {
   const blockers: RouteGate[] = [];
   let hasDataGap = false;
+  const completed = completedQuestIds(unlocks.quests);
 
   for (const gate of gates) {
     if (!isRouteGateUsable(gate)) {
@@ -115,10 +115,12 @@ export const evaluateRouteGates = (
       continue;
     }
     switch (gate.type) {
-      case 'QUEST':
-        if (!Object.hasOwn(QUEST_DATA, gate.questId)) hasDataGap = true;
-        if (!Object.hasOwn(QUEST_DATA, gate.questId) || !unlocks.quests.includes(gate.questId)) blockers.push(gate);
+      case 'QUEST': {
+        const quest = catalogQuest(gate.questId);
+        if (!quest) hasDataGap = true;
+        if (!quest || !completed.has(quest.id)) blockers.push(gate);
         break;
+      }
       case 'SKILL':
         if ((gate.semantics === 'actual' ? actualSkillLevel(unlocks, gate.skill) : usableMethodLevel(unlocks, gate.skill)) < gate.level) blockers.push(gate);
         break;

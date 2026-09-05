@@ -54,7 +54,7 @@ describe('getUnlockRevealTransition', () => {
       .not.toContain('Varrock Hard');
   });
 
-  it('still announces automatically eligible quest and diary transitions', () => {
+  it('withholds manual-pending quest reveals but announces automatically eligible diaries', () => {
     const questPrevious = unlocks();
     const asgarnia = { ...questPrevious, regions: ['Asgarnia'] };
     expect(getUnlockRevealTransition(questPrevious, asgarnia)?.newQuestsAvailable)
@@ -62,7 +62,7 @@ describe('getUnlockRevealTransition', () => {
 
     const rimmington = { ...asgarnia, regions: ['Asgarnia', 'Rimmington'] };
     expect(getUnlockRevealTransition(asgarnia, rimmington)?.newQuestsAvailable)
-      .toContainEqual({ id: "Witch's Potion", name: "Witch's Potion" });
+      .not.toContainEqual({ id: "Witch's Potion", name: "Witch's Potion" });
 
     const completedTasks = completedTierTasksExcept('Ardougne Easy', 'ard_easy_4');
     const diaryPrevious = unlocks({ completedTasks });

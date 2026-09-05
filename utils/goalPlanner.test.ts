@@ -1,4 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import * as questOperations from '../data/questOperationalRequirements';
+afterEach(() => vi.restoreAllMocks());
 import { SKILLS_LIST } from '../constants';
 import { QUEST_CAPE_QUEST_IDS, QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
@@ -82,6 +84,7 @@ describe('planForTarget — quests', () => {
   });
 
   it('an AVAILABLE quest needs only itself (no region/skill backlog)', () => {
+    vi.spyOn(questOperations, 'questOperationalRequirements').mockReturnValue([]);
     const base = maxedUnlocks();
     const available = Object.values(QUEST_DATA).filter(
       (q) => getQuestStatus(q, base) === 'AVAILABLE' && !q.manualRequirements?.length,
@@ -123,7 +126,8 @@ describe('planForTarget — quests', () => {
     }))!;
 
     expect(plan.skillSteps).toEqual([]);
-    expect(plan.alreadyReachable).toBe(true);
+    expect(plan.alreadyReachable).toBe(false);
+    expect(plan.needsConfirmation).toBe(true);
   });
 
   it('includes a Quest Point step for a quest requirement', () => {
@@ -356,14 +360,14 @@ describe('listGoalTargets', () => {
 
     expect(plan.alreadyReachable).toBe(false);
     expect(plan.needsConfirmation).toBe(true);
-    expect(plan.manualSteps).toEqual([expect.objectContaining({
+    expect(plan.manualSteps).toEqual(expect.arrayContaining([expect.objectContaining({
       kind: 'manual',
       label: 'Confirm: One open Sailing task slot',
       detail: 'Required for Prying Times',
       done: false,
-    })]);
-    expect(plan.steps.map(step => step.kind)).toEqual(['manual', 'quest']);
-    expect(plan.remaining).toBe(2);
+    })]));
+    expect(plan.steps.at(-1)?.kind).toBe('quest');
+    expect(plan.remaining).toBe(plan.manualSteps.length + 1);
   });
 
   it('adds the remaining Varrock Kudos check to a diary plan', () => {

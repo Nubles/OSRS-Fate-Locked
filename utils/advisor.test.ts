@@ -1,4 +1,10 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import * as questOperations from '../data/questOperationalRequirements';
+
+// Isolate cascade/ranking mathematics with explicitly reviewed supplies. Real unconfirmed
+// supply behavior is covered by contentBaseline and questOperationalRequirements tests.
+beforeEach(() => vi.spyOn(questOperations, 'questOperationalRequirements').mockReturnValue([]));
+afterEach(() => vi.restoreAllMocks());
 import { REGION_GROUPS, SKILLS_LIST } from '../constants';
 import {
   computeUnlockImpact, prepareUnlockImpactContext, type UnlockImpactContext,

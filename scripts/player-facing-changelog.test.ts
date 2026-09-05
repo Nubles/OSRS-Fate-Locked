@@ -205,11 +205,11 @@ describe('quest and chunk audit release contracts', () => {
     const contentVerify = packageJson.scripts['content:verify'];
 
     expect(contentVerify).toBe(
-      'npm run diary:verify && npm run chunks:verify && npm run quests:verify && npm run quest-routes:verify && npm run walkthroughs:verify && vitest run data/contentBaseline.test.ts data/tasksConsistency.test.ts utils/taskIdMigrations.test.ts utils/caProgress.test.ts',
+      'npm run requirements:verify && npm run diary:verify && npm run chunks:verify && npm run quests:verify && npm run quest-routes:verify && npm run walkthroughs:verify && vitest run data/areaCatalog.test.ts data/questCatalog.test.ts data/activityCatalog.test.ts data/serviceCatalog.test.ts data/questOperationalSources.test.ts data/questOperationalRequirements.test.ts data/slayerRequirementPredicates.test.ts data/contentBaseline.test.ts data/tasksConsistency.test.ts utils/taskIdMigrations.test.ts utils/caProgress.test.ts',
     );
     expect(contentVerify).not.toContain('data/questRequirementAudit.test.ts');
     expect(packageJson.scripts['release:verify']).toBe(
-      'npm run changelog:verify && npm test && npm run typecheck && npm run content:verify && npm run build',
+      'npm run changelog:verify && npm test && npm run typecheck && npm run content:verify && npm run build:verify && npm run test:browser',
     );
   });
 });

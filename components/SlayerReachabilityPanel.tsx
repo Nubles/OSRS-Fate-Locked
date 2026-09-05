@@ -4,6 +4,7 @@ import { useGame } from '../context/GameContext';
 import { chunkContentService } from '../services/ChunkContentService';
 import { chunkUnlocked, showChunkOnMap } from '../utils/chunkLocations';
 import { slayerReachability, SlayerStatus, SlayerTaskRow } from '../utils/slayerReach';
+import { slayerRequirementPredicate } from '../data/slayerRequirementPredicates';
 
 const STATUS_META: Record<SlayerStatus, { label: string; cls: string }> = {
   'needs-confirmation': { label: 'Needs confirmation', cls: 'text-amber-300' },
@@ -18,6 +19,10 @@ const STATUS_META: Record<SlayerStatus, { label: string; cls: string }> = {
 
 const Row: React.FC<{ r: SlayerTaskRow }> = ({ r }) => {
   const meta = STATUS_META[r.status];
+  const requirementDetails = r.req?.map(clause => {
+    const predicate = slayerRequirementPredicate(clause);
+    return predicate.kind === 'manual' || predicate.kind === 'unknown' ? predicate.label : clause;
+  }).join('; ');
   const badge =
     r.masterBlocker?.label ??
     (r.status === 'slayer-locked' && r.slayer ? `Slayer ${r.slayer}` :
@@ -35,7 +40,7 @@ const Row: React.FC<{ r: SlayerTaskRow }> = ({ r }) => {
           <MapPin size={11} />
         </button>
       )}
-      <span className={`shrink-0 text-[9px] px-1.5 py-0.5 rounded border ${meta.cls}`}>{badge}</span>
+      <span title={r.masterBlocker?.label ?? requirementDetails} className={`shrink-0 text-[9px] px-1.5 py-0.5 rounded border ${meta.cls}`}>{badge}</span>
     </div>
   );
 };

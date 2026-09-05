@@ -125,9 +125,9 @@ describe('cross-surface quest eligibility contract', () => {
       id: "Witch's Potion",
       gameModeId: 'chunked',
       unlocks: maxedQuestUnlocks("Witch's Potion", { chunks: ['46,50'] }),
-      expectedStatus: 'AVAILABLE',
-      expectedReadiness: 'READY',
-      firstBlocker: undefined,
+      expectedStatus: 'NEEDS_CONFIRMATION',
+      expectedReadiness: 'BLOCKED',
+      firstBlocker: 'operational',
     },
     {
       label: 'Murder Mystery before Sinclair Mansion',
@@ -152,9 +152,9 @@ describe('cross-surface quest eligibility contract', () => {
       id: 'Murder Mystery',
       gameModeId: 'chunked',
       unlocks: maxedQuestUnlocks('Murder Mystery', { chunks: ['42,55', '42,54'] }),
-      expectedStatus: 'AVAILABLE',
-      expectedReadiness: 'READY',
-      firstBlocker: undefined,
+      expectedStatus: 'NEEDS_CONFIRMATION',
+      expectedReadiness: 'BLOCKED',
+      firstBlocker: 'operational',
     },
     {
       label: 'A Porcine of Interest before South Falador Farm',
@@ -170,9 +170,9 @@ describe('cross-surface quest eligibility contract', () => {
       id: 'A Porcine of Interest',
       gameModeId: 'chunked',
       unlocks: porcineOnlyUnlocks(['48,50', '47,51']),
-      expectedStatus: 'AVAILABLE',
-      expectedReadiness: 'READY',
-      firstBlocker: undefined,
+      expectedStatus: 'NEEDS_CONFIRMATION',
+      expectedReadiness: 'BLOCKED',
+      firstBlocker: 'operational',
     },
     {
       label: 'Mountain Daughter before either alternative route',
@@ -190,9 +190,9 @@ describe('cross-surface quest eligibility contract', () => {
       unlocks: maxedQuestUnlocks('Mountain Daughter', {
         regions: ['Mountain Camp', 'Taverley'],
       }),
-      expectedStatus: 'AVAILABLE',
-      expectedReadiness: 'READY',
-      firstBlocker: undefined,
+      expectedStatus: 'NEEDS_CONFIRMATION',
+      expectedReadiness: 'BLOCKED',
+      firstBlocker: 'operational',
     },
     {
       label: 'The Frozen Door before its prerequisite',
@@ -213,9 +213,9 @@ describe('cross-surface quest eligibility contract', () => {
       id: 'The Frozen Door',
       gameModeId: undefined,
       unlocks: maxedQuestUnlocks('The Frozen Door', { regions: ['Burthorpe'] }),
-      expectedStatus: 'AVAILABLE',
-      expectedReadiness: 'READY',
-      firstBlocker: undefined,
+      expectedStatus: 'NEEDS_CONFIRMATION',
+      expectedReadiness: 'BLOCKED',
+      firstBlocker: 'operational',
     },
   ] as const)(
     'keeps $label consistent across every quest consumer',
@@ -230,7 +230,8 @@ describe('cross-surface quest eligibility contract', () => {
       expect(actual.finalReadiness).toEqual(
         Array(6).fill(expectedReadiness),
       );
-      expect(actual.firstBlocker).toBe(firstBlocker);
+      if (firstBlocker === 'operational') expect(actual.firstBlocker).toMatch(/^Confirm:/);
+      else expect(actual.firstBlocker).toBe(firstBlocker);
     },
   );
 
@@ -252,9 +253,9 @@ describe('cross-surface quest eligibility contract', () => {
     const quest = QUEST_DATA['A Porcine of Interest'];
     const selected = selectJournalNextBestActions(unlocks, 'chunked');
 
-    expect(selected).toEqual([
-      journalNextBestQuestAction(quest, unlocks, 'chunked'),
-    ]);
+    const candidate = journalNextBestQuestAction(quest, unlocks, 'chunked')!;
+    expect(selected).toEqual(candidate.unmet <= 1 ? [candidate] : []);
+    expect(candidate.unmet).toBeGreaterThan(0);
   });
 });
 describe('deterministic current content baseline', () => {

@@ -49,7 +49,7 @@ export default defineConfig(({ mode }) => {
     ...{
       test: {
         setupFiles: ['./testSetup.ts'],
-        exclude: [...configDefaults.exclude, '**/.worktrees/**'],
+        exclude: [...configDefaults.exclude, '**/.worktrees/**', 'browser-tests/**'],
       },
     },
     build: {

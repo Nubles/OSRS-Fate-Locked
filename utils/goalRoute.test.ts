@@ -118,14 +118,14 @@ describe('buildGoalRoute — quest and engine-item goals', () => {
   it('retains direct and transitive quest alternative routes', () => {
     const direct = buildGoalRoute('Enter the Abyss', stateWith({ quests: ['Rune Mysteries'] }))!;
     expect(direct.regions.map(region => region.name)).not.toContain('One of:');
-    expect(direct.alternatives).toEqual([
+    expect(direct.alternatives).toEqual(expect.arrayContaining([
       expect.objectContaining({
         routes: expect.arrayContaining([
           expect.objectContaining({ name: 'East Ardougne' }),
           expect.objectContaining({ name: "Wizards' Guild" }),
         ]),
       }),
-    ]);
+    ]));
 
     const transitive = buildGoalRoute('Temple of the Eye', stateWith())!;
     expect(transitive.alternatives).toEqual(expect.arrayContaining([

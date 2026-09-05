@@ -19,6 +19,20 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-09-05-requirement-reliability',
+    title: 'Requirements and Save Checks',
+    date: '2026-09-05',
+    sections: {
+      fixed: [
+        'Quest, diary, activity and Slayer checks now use your attained levels separately from unlocked training and equipment tiers.',
+        'Missing items, partial quest progress and other untracked conditions ask for confirmation; unknown requirements remain visible instead of appearing ready.',
+        'Alternative diary routes, shared area access and RuneProof requirement checks now stay consistent across planning screens.',
+        'Save history checks identify incomplete or migrated history without presenting it as independently verified gameplay.',
+        'Older imports can reach their compensation choices, and onboarding controls fit small mobile screens.',
+      ],
+    },
+  },
+  {
     id: '2026-09-04-runelite-relay-reliability',
     title: 'RuneLite Relay Reliability',
     date: '2026-09-04',

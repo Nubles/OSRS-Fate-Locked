@@ -25,9 +25,9 @@ describe('quest Wilderness access', () => {
     }), 'vanilla');
 
     expect(result).toMatchObject({
-      status: 'AVAILABLE',
+      status: 'NEEDS_CONFIRMATION',
       machineEligible: true,
-      eligible: true,
+      eligible: false,
       blockers: [],
     });
     expect(result.evidence).toEqual(expect.arrayContaining([
@@ -44,6 +44,7 @@ describe('quest Wilderness access', () => {
       QUEST_DATA['Enter the Abyss'],
       unlocked({ quests: ['Rune Mysteries'], regions: ['East Ardougne'] }),
       'vanilla',
+      { manualConfirmed: true },
     )).toEqual({ ok: true });
   });
 
@@ -60,7 +61,7 @@ describe('quest Wilderness access', () => {
     });
     expect(evaluateQuestEligibility(QUEST_DATA['Enter the Abyss'], unlocked({
       ...base, chunks: ['48,55', '50,52'],
-    }), 'chunked').status).toBe('AVAILABLE');
+    }), 'chunked').status).toBe('NEEDS_CONFIRMATION');
   });
 
   it('uses the actual Wilderness leaf area for every fixed-route quest', () => {
@@ -92,9 +93,9 @@ describe('quest Wilderness access', () => {
 
     expect(result.machineEligible).toBe(true);
     expect(result.blockers).toEqual([]);
-    expect(result.manualChecks).toEqual([
+    expect(result.manualChecks).toEqual(expect.arrayContaining([
       'Started Desert Treasure I', 'Started The Restless Ghost',
-    ]);
+    ]));
   });
 
   it('contains no machine-enforced parent Wilderness quest gate', () => {

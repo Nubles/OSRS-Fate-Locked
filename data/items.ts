@@ -1,3 +1,5 @@
+import { SERVICE_CATALOG } from './serviceCatalog';
+import { AREA_CATALOG } from './areaCatalog';
 
 
 export const SKILLS_LIST = [
@@ -15,15 +17,7 @@ export const EQUIPMENT_SLOTS = [
   'Head', 'Cape', 'Neck', 'Ammo', 'Weapon', 'Body', 'Shield', 'Legs', 'Gloves', 'Boots', 'Ring'
 ];
 
-export const MOBILITY_LIST = [
-  'Spirit Trees', 'Fairy Rings', 'Gnome Gliders', 'Charter Ships', 'Teleport Tablets', 
-  'Jewelry Teleports', 'Canoes', 'Balloon Transport', 'Mine Carts', 'Magic Carpets', 
-  'Wilderness Obelisks', 'Minigame Teleports', 'Quetzal Network',
-  'Mycelium Transport', 'Eagle Transport', 'Slayer Ring', 'Xeric\'s Talisman',
-  'Drakan\'s Medallion', 'Pharaoh\'s Sceptre', 'Crystal Teleport Seed', 'Royal Seed Pod',
-  'Ectophial', 'Kharedst\'s Memoirs', 'Enchanted Lyre', 'Ring of the Elements',
-  'Digsite Pendant', 'Camulet'
-];
+export const MOBILITY_LIST = SERVICE_CATALOG.filter(row => row.category === 'mobility').map(row => row.name);
 
 export const ARCANA_LIST = [
   'Ancient Magicks', 'Lunar Spellbook', 'Arceuus Spellbook', 
@@ -43,20 +37,7 @@ export const POH_LIST = [
   'Mounted Coins'
 ];
 
-export const MERCHANTS_LIST = [
-  'General Stores', 'Magic Shops', 'Archery Shops', 'Sword Shops', 'Food Shops', 
-  'Fishing Shops', 'Clothes Shops', 'Farming Shops', 'Crafting Shops', 'Mining Shops', 
-  'Gem Shops', 'Herblore Shops', 'Dye Shops', 'Axe Shops', 'Platebody Shops', 
-  'Bars & Inns', 'Cooking Shops', 'Shield Shops', 'Scimitar Shops', 'Helmet Shops', 
-  'Platelegs Shops', 'Plateskirt Shops', 'Chainbody Shops', 'Mace Shops', 
-  'Staff Shops', 'Crossbow Shops', 'Hunter Shops', 'Candle Shops', 'Fur Traders', 
-  'Jewellery Shops', 'Kebab Sellers', 'Silk Shops', 'Silver Shops', 'Spice Shops', 
-  'Vegetable Shops', 'Wine Traders', 'Amulet Shops',
-  'Slayer Equipment', 'Stonemasons', 'Sawmill Operators', 'Ore Merchants',
-  'Real Estate Agents', 'Tanners', 'Taxidermists', 'Decanters', 'Lost Property',
-  'Warhammer Shops', 'Claw Shops', 'Halberd Shops', 'Pet Shops',
-  'Weapon Shops', 'Reward Shops'
-];
+export const MERCHANTS_LIST = SERVICE_CATALOG.filter(row => row.category === 'merchants').map(row => row.name);
 
 export const STORAGE_LIST = [
   'Looting Bag', 'Rune Pouch', 'Seed Box', 'Herb Sack', 'Gem Bag', 'Coal Bag', 'Fish Barrel', 
@@ -146,80 +127,12 @@ export const MINIGAMES_LIST = [
   'Brimhaven Agility Arena', 'Hallowed Sepulchre', 'Barracuda Trials'
 ];
 
-export const MISTHALIN_AREAS = [
-  'Varrock', 'Lumbridge', 'Draynor Village', 'Wizards\' Tower', 'Edgeville', 
-  'Barbarian Village', 'Digsite', 'Silvarea', 'Paterdomus'
-];
-
-export const REGION_GROUPS: Record<string, string[]> = {
-  'Asgarnia': [
-    'Falador', 'Port Sarim', 'Rimmington', 'Taverley', 'Burthorpe', "Warriors' Guild",
-    'Crafting Guild', 'Dwarven Mine', 'Asgarnian Ice Dungeon', 'Motherlode Mine',
-    'Goblin Village', 'Mudskipper Point', "Void Knights' Outpost", 'Entrana',
-  ],
-  'Kandarin': [
-    'East Ardougne', 'West Ardougne', 'Catherby', "Seers' Village", 'Camelot', 'Yanille',
-    'Port Khazard', 'Hemenster', 'Fishing Guild', "Legends' Guild",
-    'Tree Gnome Stronghold', 'Gnome Village', 'Witchaven', 'Piscatoris Fishing Colony',
-    'Feldip Hills', 'Baxtorian Falls', 'Barbarian Outpost', 'Fight Arena',
-    'Castle Wars', 'Corsair Cove', "Eagles' Peak", 'Observatory', 'Ourania Altar',
-  ],
-  'Karamja': [
-    'Musa Point', 'Brimhaven', 'Tai Bwo Wannai', 'Shilo Village', 'Kharazi Jungle', 
-    'Mor Ul Rek (TzHaar City)', 'Crandor'
-  , 'Ship Yard'
-  ],
-  'Kharidian Desert': [
-    'Al Kharid', 'Duel Arena / PvP Arena', 'Shantay Pass', 'Pollnivneach', 'Nardah', 
-    'Sophanem', 'Menaphos', 'Bandit Camp', 'Bedabin Camp', 'Ruins of Uzer', 
-    'Mage Training Arena', 'Agility Pyramid', 'Giants\' Plateau', 'Kalphite Lair'
-  , 'Ruins of Unkah'
-  ],
-  'Morytania': [
-    'Canifis', 'Port Phasmatys', 'Mort\'ton', 'Barrows', 'Burgh de Rott', 'Meiyerditch', 
-    'Darkmeyer', 'Slepe', 'Ver Sinhaza', 'Fenkenstrain\'s Castle', 'Slayer Tower', 
-    'Mort Myre Swamp', 'Haunted Mine', 'Haunted Woods', 'Harmony Island', 
-    'Mos Le\'Harmless', 'Braindeath Island', 'Dragontooth Island'
-  , 'Icyene Graveyard'
-  ],
-  'Fremennik': [
-    'Rellekka', 'Neitiznot', 'Jatizso', 'Miscellania & Etceteria', 'Waterbirth Island', 
-    'Lunar Isle', 'Mountain Camp', 'Lighthouse', 'Keldagrim'
-  , 'Weiss', 'Pirates\' Cove'
-  ],
-  'Tirannwn': [
-    'Prifddinas', 'Lletya', 'Tyras Camp', 'Isafdar', 'Zul-Andra',
-    'Arandar', 'Gwenith', 'Iorwerth Camp', 'Poison Waste'
-  ],
-  'Wilderness': [
-    'Ferox Enclave', 'Wilderness Volcano', 'Chaos Temple', "Rogues' Castle", 'Lava Maze',
-    "Wilderness Bandit Camp", "Dark Warriors' Fortress", 'Graveyard of Shadows',
-    'Forgotten Cemetery', 'Mage Arena', "Scorpia's Cave", 'Fountain of Rune',
-    'Wilderness God Wars Dungeon', "Daimon's Crater",
-  ],
-  'Kourend & Kebos': [
-    'Kourend Castle', 'Hosidius', 'Piscarilius', 'Shayzien', 'Lovakengj', 'Arceuus', 
-    'Kebos Lowlands', 'Molch', 'Farming Guild', 'Woodcutting Guild', 'Mount Quidamortem', 
-    'Mount Karuulm', 'Catacombs of Kourend', 'Land\'s End', 'Wintertodt Camp'
-  ],
-  'Varlamore': [
-    'Civitas illa Fortis', 'Avium Savannah', 'Cam Torum', 'Ralos\' Rise', 'Darkfrost', 
-    'Hunter\'s Guild', 'Aldarin', 'The Stranglewood'
-  , 'Tlati Rainforest', 'Auburnvale', 'Mistrock', 'Sunset Coast'
-  ],
-  'Islands & Others': [
-    'Fossil Island', 'Ape Atoll', 'Zanaris', 'Tutorial Island'
-  , 'Isle of Souls', 'Lithkren'
-  ],
-  'The Open Seas': [
-    'The Pandemonium', 'Dognose Island', 'Chinchompa Island', 'Remote Island', 'The Great Conch',
-    'The Little Pearl', 'Vatrachos Island', 'The Onyx Crest', 'Shimmering Atoll', 'Port Roberts',
-    'Anglers\' Retreat', 'Minotaurs\' Rest', 'Isle of Bones', 'Laguna Aurorae', 'Charred Island',
-    'Tear of the Soul', 'Wintumber Island', 'The Crown Jewel', 'Lledrith Island', 'Deepfin Point',
-    'Rainbow\'s End', 'Sunbleak Island', 'Ynysdail', 'Buccaneers\' Haven', 'Drumstick Isle',
-    'Brittle Isle', 'Grimstone', 'Wyrmscraig'
-  , 'Red Rock', 'Last Light', 'The Summer Shore'
-  ]
-};
+// Labels remain the legacy save/UI boundary; identity and hierarchy live in the catalogue.
+export const MISTHALIN_AREAS = AREA_CATALOG.filter(area => area.parentId === 'area:0001').map(area => area.name);
+export const REGION_GROUPS: Record<string, string[]> = Object.fromEntries(
+  AREA_CATALOG.filter(area => !area.parentId && area.id !== 'area:0001').map(parent => [
+    parent.name, AREA_CATALOG.filter(area => area.parentId === parent.id).map(area => area.name),
+  ]),
+);
 
 export const REGIONS_LIST = Object.values(REGION_GROUPS).flat();

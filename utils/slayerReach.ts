@@ -7,11 +7,12 @@
  * monster lives in a chunk you've unlocked.
  */
 
-import { QUEST_DATA } from '../data/questData';
 import { UnlockState } from '../types';
 import { SlayerMasters } from '../services/ChunkContentService';
 import { SLAYER_MASTER_REQUIREMENTS, type SlayerMasterRequirementOption } from '../data/slayerMasterRequirements';
 import { isAreaReachable } from './reachability';
+import { slayerRequirementPredicate } from '../data/slayerRequirementPredicates';
+import { canonicalQuestUnlocks } from '../data/questCatalog';
 
 export type SlayerStatus =
   | 'needs-confirmation'
@@ -79,11 +80,6 @@ export const combatLevel = (levels: Record<string, number>): number => {
 export const actualCombatLevel = (
   unlocks: Pick<UnlockState, 'levels'>,
 ): number => combatLevel(unlocks.levels ?? {});
-/** A req string like "Priest in Peril Complete the quest" → quest name. */
-const questFromReq = (req: string): string | null => {
-  const m = req.match(/^(.*?) Complete the quest$/);
-  return m && Object.hasOwn(QUEST_DATA, m[1].trim()) ? m[1].trim() : null;
-};
 
 const masterBlocker = (
   master: string,
@@ -127,6 +123,7 @@ export function slayerReachability(
   locate: LocateFn,
   gameModeId?: string,
 ): SlayerReach {
+  unlocks = canonicalQuestUnlocks(unlocks);
   const slayerLevel = actualSkillLevel(unlocks, 'Slayer');
   const slayerUnlocked = (unlocks.skills?.['Slayer'] ?? 0) > 0;
   const combat = actualCombatLevel(unlocks);
@@ -135,8 +132,8 @@ export function slayerReachability(
   const reqMet = (req?: string[]): boolean => {
     if (!req || req.length === 0) return true;
     return req.every(r => {
-      const q = questFromReq(r);
-      return q !== null && questSet.has(q);
+      const predicate = slayerRequirementPredicate(r);
+      return predicate.kind !== 'quest' || questSet.has(predicate.id);
     });
   };
 
@@ -160,11 +157,12 @@ export function slayerReachability(
         || (info.combat != null && (!Number.isInteger(info.combat) || info.combat < 1 || info.combat > 126))
         || (info.req != null && (!Array.isArray(info.req) || info.req.some(r => typeof r !== 'string')))) status = 'unknown';
       else if (info.slayer != null && slayerLevel < info.slayer) status = 'slayer-locked';
-      else if (info.req?.some(r => questFromReq(r) === null)) status = 'unknown';
+      else if (info.req?.some(r => slayerRequirementPredicate(r).kind === 'unknown')) status = 'unknown';
       else if (!reqMet(info.req)) status = 'quest-locked';
       else if (info.combat != null && combat < info.combat) status = 'combat-locked';
       else if (!loc) status = 'no-location';
       else if (!loc.unlocked) status = 'area-locked';
+      else if (info.req?.some(r => slayerRequirementPredicate(r).kind === 'manual')) status = 'needs-confirmation';
       else status = 'ready';
 
       rows.push({

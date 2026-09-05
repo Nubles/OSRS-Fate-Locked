@@ -1,8 +1,7 @@
 import type { UnlockState } from '../types';
 import { SKILLS_LIST, EQUIPMENT_SLOTS, ARCANA_LIST, MOBILITY_LIST, POH_LIST, GUILDS_LIST, FARMING_PATCH_LIST, STORAGE_LIST, BOSSES_LIST, MINIGAMES_LIST } from '../data/items';
-import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
-import { AREA_ALIAS_POLICIES } from '../data/areaMapPolicy';
-import { QUEST_DATA } from '../data/questData';
+import { catalogQuest, completedQuestIds } from '../data/questCatalog';
+import { areaId } from '../data/areaCatalog';
 import { DIARY_DATA } from '../data/diaryData';
 import { isAreaReachable } from './reachability';
 import { actualSkillLevel, unlockedEquipmentTier, unlockedMethodTier } from './skillLevels';
@@ -35,8 +34,6 @@ export interface PredicateContext {
   confirmations?: Readonly<Record<string, boolean>>;
   accountMode?: string;
 }
-
-const knownAreas = new Set(['Misthalin', ...MISTHALIN_AREAS, ...Object.keys(REGION_GROUPS), ...Object.values(REGION_GROUPS).flat(), ...Object.keys(AREA_ALIAS_POLICIES)]);
 
 export function evaluatePredicate(predicate: RequirementPredicate, context: PredicateContext): PredicateResult {
   const result = (status: RequirementCertainty, label: string): PredicateResult => ({ status, checks: status === 'READY' ? [] : [label] });
@@ -78,10 +75,14 @@ export function evaluatePredicate(predicate: RequirementPredicate, context: Pred
     }
     case 'method': if (!SKILLS_LIST.includes(predicate.skill) || !positiveInt(predicate.tier, 10)) return invalid(); return check(unlockedMethodTier(u, predicate.skill) >= predicate.tier, `${predicate.skill} method tier ${predicate.tier}`);
     case 'equipment': if (!EQUIPMENT_SLOTS.includes(predicate.slot) || !positiveInt(predicate.tier, 10)) return invalid(); return check(unlockedEquipmentTier(u, predicate.slot) >= predicate.tier, `${predicate.slot} equipment tier ${predicate.tier}`);
-    case 'quest': if (!text(predicate.id)) return invalid(); return Object.hasOwn(QUEST_DATA, predicate.id) ? check(u.quests.includes(predicate.id), predicate.id) : result('UNKNOWN', predicate.id);
+    case 'quest': {
+      if (!text(predicate.id)) return invalid();
+      const quest = catalogQuest(predicate.id);
+      return quest ? check(completedQuestIds(u.quests).has(quest.id), quest.data.name) : result('UNKNOWN', predicate.id);
+    }
     case 'diary': if (!text(predicate.id) || !Object.hasOwn(DIARY_DATA, predicate.id)) return invalid(); return check(u.diaries.includes(predicate.id), predicate.id);
-    case 'area': if (!knownAreas.has(predicate.id)) return invalid(); return check(isAreaReachable(predicate.id, u, context.gameModeId), predicate.id);
-    case 'questPoints': if (!positiveInt(predicate.count)) return invalid(); return check([...new Set(u.quests)].reduce((sum, id) => sum + (QUEST_DATA[id]?.kind === 'quest' ? QUEST_DATA[id].points : 0), 0) >= predicate.count, `${predicate.count} Quest Points`);
+    case 'area': if (!areaId(predicate.id)) return invalid(); return check(isAreaReachable(predicate.id, u, context.gameModeId), predicate.id);
+    case 'questPoints': if (!positiveInt(predicate.count)) return invalid(); return check([...completedQuestIds(u.quests)].reduce((sum, id) => { const quest = catalogQuest(id)!.data; return sum + (quest.kind === 'quest' ? quest.points : 0); }, 0) >= predicate.count, `${predicate.count} Quest Points`);
     case 'item': if (!text(predicate.id) || !text(predicate.label) || !['hold', 'consume', 'equip'].includes(predicate.usage)) return invalid(); return external(`item:${predicate.id}:${predicate.usage}`, `${predicate.label}: available and legal to ${predicate.usage}`);
     case 'bossKill': if (!text(predicate.id) || !text(predicate.label) || !positiveInt(predicate.count)) return invalid(); return external(`bossKill:${predicate.id}:${predicate.count}`, predicate.label);
     case 'slayerTask': if (!text(predicate.id) || !text(predicate.label)) return invalid(); return external(`slayerTask:${predicate.id}`, predicate.label);

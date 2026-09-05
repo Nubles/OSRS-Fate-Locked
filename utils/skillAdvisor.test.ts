@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+import * as questOperations from '../data/questOperationalRequirements';
 
 vi.mock('./journalStatus', async () => {
   const actual = await vi.importActual<typeof import('./journalStatus')>('./journalStatus');
@@ -111,6 +112,8 @@ describe('rankSkillBottlenecks', () => {
   });
 
   it('threads Chunked mode through quest impact simulations', () => {
+    const supplies = vi.spyOn(questOperations, 'questOperationalRequirements').mockReturnValue([]);
+    try {
     // Only the exact Seers' Village chunk lets Mining 20 unlock
     // Elemental Workshop I.
     const base = lowSkills({
@@ -128,6 +131,7 @@ describe('rankSkillBottlenecks', () => {
     expect(before).toBeUndefined();
     expect(after.targetLevel).toBe(20);
     expect(after.newQuestNames).toContain('Elemental Workshop I');
+    } finally { supplies.mockRestore(); }
   });
 
   it('does not invent a skill shortfall from a lower method tier', () => {

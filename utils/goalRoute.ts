@@ -1,6 +1,7 @@
 import { GameState, TableType, UnlockState } from '../types';
 import { STRATEGY_DATABASE, ContentRequirement } from '../data/requirements';
 import { QUEST_DATA } from '../data/questData';
+import { canonicalQuestUnlocks, catalogQuest } from '../data/questCatalog';
 import { DIARY_DATA } from '../data/diaryData';
 import { RESOURCE_MAP } from '../data/resourceData';
 import { REGION_GROUPS } from '../constants';
@@ -153,7 +154,8 @@ export function expandQuestChain(seeds: string[]): string[] {
 }
 
 export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute | null {
-  const unlocks = gameState.unlocks;
+  const unlocks = canonicalQuestUnlocks(gameState.unlocks);
+  goalId = catalogQuest(goalId)?.data.id ?? goalId;
   const gameModeId = gameState.gameModeId;
   const diary = DIARY_DATA[goalId];
   if (diary) {

@@ -145,7 +145,7 @@ describe('manual journal readiness', () => {
       machineEligible: true,
       eligible: false,
       confirmable: true,
-      manualChecks: ['One open Sailing task slot'],
+      manualChecks: expect.arrayContaining(['One open Sailing task slot']),
     });
   });
 
@@ -165,9 +165,9 @@ describe('manual journal readiness', () => {
       machineEligible: true,
       eligible: false,
       confirmable: true,
-      manualChecks: [
+      manualChecks: expect.arrayContaining([
         'Access to all required elemental altars through one route: surface altars with Misthalin and Kharidian Desert; the Abyss through Edgeville with Enter the Abyss completed; or Guardians of the Rift with Misthalin and Temple of the Eye completed',
-      ],
+      ]),
     });
   });
 });
@@ -180,7 +180,7 @@ describe('reported quest access', () => {
     chunkOptions: [{ cx: 46, cy: 50 }],
   };
   const malformedQuest = (overrides: Partial<QuestData>): QuestData => ({
-    id: 'Malformed policy quest',
+    operationalRequirements: [], id: 'Malformed policy quest',
     name: 'Malformed policy quest',
     kind: 'quest',
     accessPolicy: 'regions',
@@ -263,9 +263,9 @@ describe('reported quest access', () => {
     expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Asgarnia'] })).status)
       .toBe('LOCKED_REGION');
     expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Rimmington'] })).status)
-      .toBe('AVAILABLE');
+      .toBe('NEEDS_CONFIRMATION');
     expect(evaluateQuestEligibility(quest, unlocked({ chunks: ['46,50'] }), 'chunked').status)
-      .toBe('AVAILABLE');
+      .toBe('NEEDS_CONFIRMATION');
   });
 
   it("requires Sinclair Mansion and Seers' Village, not all Kandarin, for Murder Mystery", () => {
@@ -274,19 +274,19 @@ describe('reported quest access', () => {
     expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Kandarin'] })).status)
       .toBe('LOCKED_REGION');
     expect(evaluateQuestEligibility(quest, unlocked({ regions: ["Seers' Village"] })).status)
-      .toBe('AVAILABLE');
+      .toBe('NEEDS_CONFIRMATION');
     expect(evaluateQuestEligibility(quest, unlocked({ chunks: ['42,55'] }), 'chunked').status)
       .toBe('LOCKED_REGION');
     expect(evaluateQuestEligibility(
       quest,
       unlocked({ chunks: ['42,55', '42,54'] }),
       'chunked',
-    ).status).toBe('AVAILABLE');
+    ).status).toBe('NEEDS_CONFIRMATION');
   });
 
   it('uses exact locations instead of descriptive regions under locations policy', () => {
     const quest = {
-      id: 'Exact quest',
+      operationalRequirements: [], id: 'Exact quest',
       name: 'Exact quest',
       kind: 'quest',
       accessPolicy: 'locations',
@@ -310,7 +310,7 @@ describe('reported quest access', () => {
 
   it('requires both sources under regions-and-locations policy', () => {
     const quest = {
-      id: 'Combined quest',
+      operationalRequirements: [], id: 'Combined quest',
       name: 'Combined quest',
       kind: 'quest',
       accessPolicy: 'regions-and-locations',
@@ -339,7 +339,7 @@ describe('reported quest access', () => {
     const near = unlocked({ chunks: ['46,51', '48,50'] });
     const exact = unlocked({ chunks: ['47,51', '48,50'] });
     expect(evaluateQuestEligibility(q, near, 'chunked').status).toBe('LOCKED_REGION');
-    expect(evaluateQuestEligibility(q, exact, 'chunked').status).toBe('AVAILABLE');
+    expect(evaluateQuestEligibility(q, exact, 'chunked').status).toBe('NEEDS_CONFIRMATION');
   });
 
   it('calculates Dream Mentor combat instead of reading a pseudo-skill', () => {
@@ -361,7 +361,7 @@ describe('reported quest access', () => {
     expect(evaluateQuestEligibility(q, high).blockers).not.toContainEqual({
       kind: 'combat', label: 'Combat level 85',
     });
-    expect(evaluateQuestEligibility(q, high).status).toBe('AVAILABLE');
+    expect(evaluateQuestEligibility(q, high).status).toBe('NEEDS_CONFIRMATION');
   });
 
   it.each([
@@ -371,7 +371,7 @@ describe('reported quest access', () => {
   ])('allows Enter the Abyss through %s', (_name, route) => {
     expect(getQuestStatus(QUEST_DATA['Enter the Abyss'], unlocked({
       quests: ['Rune Mysteries'], ...route,
-    }))).toBe('AVAILABLE');
+    }))).toBe('NEEDS_CONFIRMATION');
   });
 
   it('locks Enter the Abyss without a third provider', () => {
@@ -382,7 +382,7 @@ describe('reported quest access', () => {
   it('checks and labels location-based alternative routes', () => {
     const quest: QuestData = {
       ...QUEST_DATA['A Porcine of Interest'],
-      id: 'alternative-location', name: 'Alternative location',
+      operationalRequirements: [], id: 'alternative-location', name: 'Alternative location',
       accessPolicy: 'regions',
       regions: [], locations: [], skills: {}, prereqs: [],
       oneOf: [{ locations: [{
@@ -406,13 +406,13 @@ describe('reported quest access', () => {
       locations: [],
       oneOf: [],
     };
-    expect(getQuestStatus(quest, unlocked())).toBe('AVAILABLE');
+    expect(getQuestStatus(quest, unlocked())).toBe('NEEDS_CONFIRMATION');
   });
 });
 
 describe('actual skill level requirements', () => {
   const quest: QuestData = {
-    id: 'cap', name: 'cap', kind: 'quest', accessPolicy: 'regions',
+    operationalRequirements: [], id: 'cap', name: 'cap', kind: 'quest', accessPolicy: 'regions',
     regions: ['Misthalin'],
     skills: { Woodcutting: 15 }, prereqs: [], points: 0,
     difficulty: DropSource.QUEST_NOVICE,

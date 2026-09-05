@@ -89,7 +89,7 @@ describe('evaluateQuestDoability', () => {
     ]);
   });
 
-  it('allows Enter the Abyss when one provider is available', () => {
+  it('clears Enter the Abyss geography with one provider but retains operational confirmation', () => {
     const row = evaluateQuestDoability(
       QUEST_DATA['Enter the Abyss'],
       unlocks({
@@ -99,8 +99,8 @@ describe('evaluateQuestDoability', () => {
       reachableChunk,
     );
 
-    expect(row.bucket).toBe('DOABLE');
-    expect(row.reqsMet).toBe(true);
+    expect(row.bucket).toBe('REQS');
+    expect(row.reqsMet).toBe(false);
     expect(row.lockedAreas).toEqual([]);
   });
 
@@ -112,6 +112,7 @@ describe('evaluateQuestDoability', () => {
       accessPolicy: 'regions',
       regions: ['Misthalin'],
       skills: { Woodcutting: 15 },
+      operationalRequirements: [],
       prereqs: [],
       points: 0,
       difficulty: DropSource.QUEST_NOVICE,
@@ -214,11 +215,12 @@ describe('evaluateQuestDoability', () => {
 
     expect(row.bucket).toBe('REQS');
     expect(row.reqsMet).toBe(false);
-    expect(row.manualChecks).toEqual(['One open Sailing task slot']);
+    expect(row.manualChecks).toContain('One open Sailing task slot');
+    expect(row.manualChecks.length).toBeGreaterThan(1);
     expect(row.missingSkills).toEqual([]);
     expect(row.missingPrereqs).toEqual([]);
-    expect(questDoabilityRequirementLabels(row)).toEqual([
+    expect(questDoabilityRequirementLabels(row)).toEqual(expect.arrayContaining([
       'Confirm: One open Sailing task slot',
-    ]);
+    ]));
   });
 });

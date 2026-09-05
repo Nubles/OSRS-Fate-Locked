@@ -1,3 +1,4 @@
+import { catalogQuest } from '../../data/questCatalog';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { UnlockState } from '../../types';
 import {
@@ -165,4 +166,12 @@ it('uses source context for entity method requirements while preserving chunk ac
   expect(gates).toMatchObject([{ semantics: 'method' }, { semantics: 'actual' }]);
   expect(evaluateRouteGates(gates, unlocks({ levels: { Fishing: 70, Strength: 70 } })).blockers)
     .toEqual([gates[0]]);
+});
+
+it('joins route quest gates by immutable identity across saved labels and ID references', () => {
+  const id = catalogQuest('Priest in Peril')!.id;
+  expect(evaluateRouteGates([{ type: 'QUEST', questId: id, label: 'Priest in Peril' }], unlocks({ quests: ['Priest in Peril'] })))
+    .toEqual({ blockers: [], hasDataGap: false });
+  expect(evaluateRouteGates([{ type: 'QUEST', questId: 'Priest in Peril', label: 'Priest in Peril' }], unlocks({ quests: [id] })))
+    .toEqual({ blockers: [], hasDataGap: false });
 });

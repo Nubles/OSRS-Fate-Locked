@@ -1,3 +1,4 @@
+import { activityId, indexActivityRecords } from './activityCatalog';
 // Access requirements (skill levels + quests) for Activities & Utility content.
 //
 // Surfaced on activity cards next to the region tag so a player can see, at a
@@ -84,9 +85,9 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Commander Zilyana': godWarsGeneralRequirements('Agility', 'Saradomin', 'Both Saradomin ropes permanently installed, or two legal ropes available for first entry'),
   "Kree'arra": godWarsGeneralRequirements('Ranged', 'Armadyl', 'A legal crossbow and mithril grapple to cross into Armadyl\'s Eyrie'),
   "K'ril Tsutsaroth": godWarsGeneralRequirements('Hitpoints', 'Zamorak', 'Enough current Hitpoints to survive the crossing into Zamorak\'s Fortress'),
-  'Abyssal Sire': { skills: { Slayer: 85 }, predicates: [{ kind: 'slayerTask', id: 'Abyssal demon Slayer task.', label: 'Abyssal demon Slayer task.' }], note: 'Abyssal demon Slayer task.' },
-  'Alchemical Hydra': { skills: { Slayer: 95 }, predicates: [{ kind: 'slayerTask', id: 'Hydra Slayer task; Karuulm Slayer Dungeon.', label: 'Hydra Slayer task; Karuulm Slayer Dungeon.' }], note: 'Hydra Slayer task; Karuulm Slayer Dungeon.' },
-  'Cerberus': { skills: { Slayer: 91 }, predicates: [{ kind: 'slayerTask', id: 'Hellhound Slayer task.', label: 'Hellhound Slayer task.' }], note: 'Hellhound Slayer task.' },
+  'Abyssal Sire': { skills: { Slayer: 85 }, predicates: [{ kind: 'manual', key: 'sire-abyss-access', label: 'The Abyss has been visited through the Mage of Zamorak or fairy rings' }, { kind: 'slayerTask', id: 'sire-valid-task', label: 'Abyssal demon task valid here (not a Wilderness assignment), or an Abyssal Sire boss task' }] },
+  'Alchemical Hydra': { skills: { Slayer: 95 }, predicates: [{ kind: 'slayerTask', id: 'hydra-valid-task', label: 'Hydra task valid for this location from Konar or Mortimer, or a Konar Alchemical Hydra boss task' }, { kind: 'manual', key: 'hydra-heat-protection', label: 'Legal boots of stone, brimstone or granite are worn, or elite Kourend & Kebos Diary heat protection is unlocked' }] },
+  'Cerberus': { skills: { Slayer: 91 }, predicates: [{ kind: 'slayerTask', id: 'cerberus-valid-task', label: 'Hellhound Slayer task valid here, or a Cerberus boss task' }] },
   'Grotesque Guardians': { skills: { Slayer: 75 }, quests: ['Priest in Peril'], predicates: [
     { kind: 'manual', key: 'guardians-rooftop-unlocked', label: 'Slayer Tower rooftop permanently unlocked with a brittle key' },
     { kind: 'any', of: [
@@ -95,7 +96,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
     ] },
     { kind: 'manual', key: 'guardians-finisher', label: 'A legal rock hammer, rock thrownhammer, or granite hammer to finish the Guardians' },
   ] },
-  'Kraken': { skills: { Slayer: 87 }, predicates: [{ kind: 'slayerTask', id: 'Cave kraken Slayer task.', label: 'Cave kraken Slayer task.' }], note: 'Cave kraken Slayer task.' },
+  'Kraken': { skills: { Slayer: 87 }, predicates: [{ kind: 'slayerTask', id: 'kraken-valid-task', label: 'Cave kraken Slayer task valid here, or a Kraken boss task' }] },
   'Thermonuclear Smoke Devil': { skills: { Slayer: 93 }, predicates: [{ kind: 'any', of: [
     { kind: 'slayerTask', id: 'smoke-devils-or-thermy', label: 'Smoke devil or Thermonuclear Smoke Devil boss task valid here' },
     { kind: 'manual', key: 'thermy-first-diary-kill', label: 'Western Provinces Diary started and its first off-task Thermonuclear Smoke Devil kill still available' },
@@ -111,7 +112,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
     { kind: 'all', of: [{ kind: 'quest', id: 'Dragon Slayer II' }, { kind: 'manual', key: 'galvek-replay-access', label: 'A legal reachable route to the Pool of Dreams in the Myths\' Guild is available for replay' }] },
     { kind: 'manual', key: 'galvek-quest-stage', label: 'Dragon Slayer II progressed to the Galvek battle and its quest instance is legally reachable' },
   ] }], noteIsInformational: true, note: 'Quest battle, or replay at the Pool of Dreams after Dragon Slayer II.' },
-  'Moons of Peril': { skills: { Slayer: 48 }, quests: ["Twilight's Promise"] },
+  'Moons of Peril': { quests: ['Perilous Moons'], noteIsInformational: true, note: 'Repeat boss encounters after the introductory quest.' },
   'Duke Sucellus': { quests: ['Desert Treasure II'] },
   'The Leviathan': { quests: ['Desert Treasure II'] },
   'The Whisperer': { quests: ['Desert Treasure II'] },
@@ -130,10 +131,10 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Zalcano': { quests: ['Song of the Elves'] },
   'Tormented Demons': { quests: ['While Guthix Sleeps'] },
   'Amoxliatl': { quests: ['The Heart of Darkness'] },
-  'Yama': { quests: ['A Kingdom Divided'] },
+  'Yama': { quests: ['A Kingdom Divided'], predicates: [{ kind: 'manual', key: 'yama-contract', label: 'Spoken to the Voice of Yama and accepted the contract allowing the Yama challenge' }] },
   'Doom of Mokhaiotl': { quests: ['The Final Dawn'] },
   'Gemstone Crab': { quests: ['Children of the Sun'] },
-  'Shellbane Gryphon': { skills: { Slayer: 51 }, quests: ['Troubled Tortugans'], predicates: [{ kind: 'slayerTask', id: 'Gryphon Slayer task.', label: 'Gryphon Slayer task.' }], note: 'Gryphon Slayer task.' },
+  'Shellbane Gryphon': { skills: { Slayer: 51 }, quests: ['Troubled Tortugans'], predicates: [{ kind: 'slayerTask', id: 'shellbane-valid-task', label: 'Gryphon Slayer task valid here, or a Shellbane Gryphon boss task' }] },
   'The Mad Angel': { quests: ['Fallen From Grace'] },
   'Mimic': { predicates: [{ kind: 'item', id: 'mimic-casket', label: 'An active Mimic casket with a fight attempt remaining', usage: 'hold' }], noteIsInformational: true, note: 'Enable Mimics at the strange casket in Watson\'s house; elite or master reward caskets can become Mimics.' },
   'Obor': { predicates: [{ kind: 'any', of: [
@@ -222,18 +223,18 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   },
   'Mage Arena': { skills: { Magic: 60 } },
   'Guardians of the Rift': { skills: { Runecraft: 27 }, quests: ['Temple of the Eye'] },
-  'Tithe Farm': { skills: { Farming: 34 } },
+  'Tithe Farm': { skills: { Farming: 34 }, predicates: [{ kind: 'manual', key: 'tithe-tools', label: 'Selected Tithe seeds, permitted Farming method, filled watering cans and seed dibber (or bare-handed planting) available' }] },
   'Hallowed Sepulchre': { skills: { Agility: 52 }, quests: ['Sins of the Father'] },
   "Giants' Foundry": { skills: { Smithing: 15 }, quests: ['Sleeping Giants'] },
-  'Mastering Mixology': { skills: { Herblore: 60 } },
-  'Volcanic Mine': { skills: { Mining: 50 }, quests: ['Bone Voyage'], predicates: [{ kind: 'manual', key: 'volcanic-mine-access', label: 'At least 150 Kudos earned, Museum Camp fully built and its fossil rewards claimed from Peter; current entry fee and legal pickaxe available' }] },
+  'Mastering Mixology': { skills: { Herblore: 60 }, quests: ['Children of the Sun'], predicates: [{ kind: 'manual', key: 'mixology-materials', label: 'Required clean herbs, unfinished potions or paste and inventory space available; selected Herblore method permitted' }] },
+  'Volcanic Mine': { skills: { Mining: 50 }, quests: ['Bone Voyage'], predicates: [{ kind: 'manual', key: 'volcanic-mine-access', label: '30 numulite entry fee paid (or 3,000 numulite permanent access purchased) and a legal pickaxe available' }] },
   'Pyramid Plunder': { skills: { Thieving: 21 }, predicates: [{ kind: 'any', of: [{ kind: 'quest', id: "Icthlarin's Little Helper" }, { kind: 'manual', key: 'sophanem-access', label: 'Icthlarin Little Helper progressed far enough to enter Sophanem, or a legal available alternate route reaches the Guardian mummy' }] }], noteIsInformational: true, note: 'Room levels are unboostable: 21, 31, 41, 51, 61, 71, 81 and 91.' },
   'Trouble Brewing': { skills: { Cooking: 40 }, quests: ['Cabin Fever'] },
   'Tai Bwo Wannai Cleanup': { quests: ['Jungle Potion'] },
   "Shades of Mort'ton": { quests: ["Shades of Mort'ton"] },
   'Temple Trekking': { quests: ['In Aid of the Myreque'] },
   'Impetuous Impulses': { skills: { Hunter: 17 }, predicates: [{ kind: 'manual', key: 'puro-route', label: 'A legal crop-circle route to Puro-Puro is available, via Zanaris or an overworld field; impling jars and selected catching method available' }] },
-  'Rat Pits': { quests: ['Ratcatchers'] },
+  'Rat Pits': { predicates: [{ kind: 'manual', key: 'rat-pits-access', label: 'Selected pit unlocked through Ratcatchers progress, permitted non-Ironman account, suitable cat, opponent and matching wager available' }] },
   'Vale Totems': { skills: { Fletching: 20 }, quests: ['Children of the Sun'], predicates: [{ kind: 'manual', key: 'vale-totems-tutorial', label: 'Completed the Vale Totems miniquest' }, { kind: 'manual', key: 'vale-totems-materials', label: 'Legal knife or fletching knife and suitable logs (or axe to obtain them) available; selected totem method permitted' }] },
   'Barracuda Trials': { skills: { Sailing: 30 }, predicates: [{ kind: 'manual', key: 'barracuda-boat', label: 'A permitted seaworthy boat with the selected trial equipment and level: Tempor Tantrum needs iron helm, oak mast and linen sails or better; higher trials have separate requirements' }] },
   'Blast Furnace': { predicates: [{ kind: 'manual', key: 'keldagrim-started', label: 'The Giant Dwarf started to enter Keldagrim' }, { kind: 'any', of: [{ kind: 'skill', skill: 'Smithing', level: 60 }, { kind: 'manual', key: 'blast-furnace-fee', label: 'Current foreman fee paid (2500 coins, or 1250 through ring of charos dialogue)' }] }, { kind: 'manual', key: 'blast-furnace-operation', label: 'Dwarf-worker coffer funded on a Blast Furnace world, or manual operation arranged; legal ores and selected smelting method available' }] },
@@ -261,12 +262,12 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Spirit Trees': { quests: ['Tree Gnome Village'] },
   'Fairy Rings': { predicates: [{ kind: 'manual', key: 'fairy-ring-progress', label: 'Fairytale II progressed far enough to use fairy rings' }] },
   'Gnome Gliders': { quests: ['The Grand Tree'] },
-  'Balloon Transport': { quests: ['Enlightened Journey'] },
-  'Mine Carts': { quests: ['The Giant Dwarf'] },
+  'Balloon Transport': { predicates: [{ kind: 'manual', key: 'balloon-route', label: 'Enlightened Journey progressed to the selected route, destination unlocked, required fuel logs available and Entrana equipment restrictions met where applicable' }] },
+  'Mine Carts': { predicates: [{ kind: 'manual', key: 'minecart-route', label: 'The Giant Dwarf started for Keldagrim access; selected route unlocks and fare available (Grand Exchange route free)' }] },
   'Magic Carpets': { predicates: [{ kind: 'manual', key: 'carpet-route', label: 'Selected legal carpet route available and fare paid, discounted, or exempt through Hard Desert Diary' }] },
-  'Quetzal Network': { quests: ['Children of the Sun'] },
-  'Mycelium Transport': { quests: ['Bone Voyage'] },
-  'Eagle Transport': { quests: ["Eagles' Peak"] },
+  'Quetzal Network': { quests: ['Children of the Sun'], predicates: [{ kind: 'manual', key: 'quetzal-route', label: 'Renu unlocked through Twilight Promise progress or a usable quetzal whistle available; selected landing site built and legal' }] },
+  'Mycelium Transport': { quests: ['Bone Voyage'], predicates: [{ kind: 'manual', key: 'mycelium-route', label: 'Selected Magic Mushtree destinations discovered and unlocked, with a legal route to the network' }] },
+  'Eagle Transport': { quests: ["Eagles' Peak"], predicates: [{ kind: 'manual', key: 'eagle-route', label: 'A legal rope is available and selected eagle eyries are unlocked and reachable' }] },
   'Ectophial': { quests: ['Ghosts Ahoy'], predicates: [{ kind: 'item', id: 'ectophial', label: 'A filled ectophial', usage: 'hold' }] },
   'Enchanted Lyre': { quests: ['The Fremennik Trials'], predicates: [{ kind: 'item', id: 'enchanted-lyre', label: 'A charged or imbued enchanted lyre with chosen destination unlocked', usage: 'hold' }] },
   'Digsite Pendant': { quests: ['The Dig Site'], predicates: [{ kind: 'item', id: 'digsite-pendant', label: 'A charged digsite pendant', usage: 'hold' }, { kind: 'manual', key: 'digsite-enchantment-known', label: 'Digsite pendant enchantment learned from the museum archaeologist; chosen destination unlocked and legal' }], noteIsInformational: true, note: 'Bone Voyage unlocks the optional Fossil Island destination, not the basic Digsite teleport.' },
@@ -302,7 +303,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Mage Training Arena': { },
   'Mahogany Homes': { predicates: [{ kind: 'manual', key: 'mahogany-contract', label: 'Own a house and have an assigned, legally reachable contract; selected tier level and method, hammer, saw, planks and any steel bars are available' }] },
   'Forestry': { predicates: [{ kind: 'manual', key: 'forestry-method', label: 'A legally reachable eligible tree, legal axe, and its Woodcutting level and method permission are available; selected Forestry event requirements met' }] },
-  'Tears of Guthix': { quests: ['Tears of Guthix'] },
+  'Tears of Guthix': { quests: ['Tears of Guthix'], predicates: [{ kind: 'manual', key: 'tears-current-eligibility', label: 'First visit, or seven days elapsed and 100,000 total XP or one quest point gained since last visit; both hands free for the bowl' }] },
   'Brimhaven Agility Arena': { predicates: [{ kind: 'manual', key: 'brimhaven-entry', label: '200-coin entry fee paid or an earned fee exemption applies; selected Agility obstacles permitted by method unlocks' }] },
 
   // ---- Farming patches (access/level-gated; basic patches need nothing) ------
@@ -374,9 +375,13 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
  * boss/minigame access map. Keeping the area source in one place prevents an
  * Omni-unlocked activity from appearing ready while its location is blocked.
  */
+const REQUIREMENTS_BY_ID = indexActivityRecords(ACTIVITY_REQUIREMENTS);
+const ACCESS_BY_ID = indexActivityRecords(ACTIVITY_ACCESS_AREAS);
+
 export const getActivityReq = (item: string): ActivityReq | undefined => {
-  const requirement = Object.hasOwn(ACTIVITY_REQUIREMENTS, item) ? ACTIVITY_REQUIREMENTS[item] : undefined;
-  const requiredAreas = Object.hasOwn(ACTIVITY_ACCESS_AREAS, item) ? ACTIVITY_ACCESS_AREAS[item] : undefined;
+  const id = activityId(item);
+  const requirement = id ? REQUIREMENTS_BY_ID.get(id) : undefined;
+  const requiredAreas = id ? ACCESS_BY_ID.get(id) : undefined;
   if (!requirement && !requiredAreas) return undefined;
   return {
     ...(requirement ?? { predicates: [{ kind: 'unknown' as const, key: 'unreviewed-access', label: 'Non-geographic access requirements have not been reviewed' }] }),

@@ -16,8 +16,8 @@ import { QuestData } from '../data/questData';
 /**
  * Build a chunk-entry gate from the picker's per-chunk quest requirements
  * (questSections). A chunk is blocked when any of its required quests is a
- * *known* quest the player hasn't completed — unknown/non-quest requirements
- * are ignored so we never falsely mark a chunk unreachable. Pass the result to
+ * known quest the player hasn't completed. Unknown/non-quest requirements
+ * retain an UNKNOWN verdict and block travel. Pass the compatibility result to
  * chunkReachability(connect, unlocks, home, gate).
  */
 export function entryBlockedGate(
@@ -26,9 +26,27 @@ export function entryBlockedGate(
   knownQuests: Set<string>,
 ): (chunkId: string) => boolean {
   return (chunkId: string) => {
-    const reqs = questSections[chunkId];
-    if (!reqs) return false;
-    return reqs.some(r => !knownQuests.has(r) || !completedQuests.has(r));
+    return evaluateChunkEntryRequirements(questSections, chunkId, completedQuests, knownQuests).status !== 'READY';
+  };
+}
+
+export type ChunkEntryRequirement = { kind: 'quest'; id: string } | { kind: 'unknown'; label: string };
+export type ChunkEntryVerdict = { status: 'READY' | 'LOCKED' | 'UNKNOWN'; requirements: ChunkEntryRequirement[] };
+
+/** Ingestion boundary for the legacy chunk source. A new phrase is data review, never permission. */
+export function evaluateChunkEntryRequirements(
+  sections: Record<string, string[]>, chunkId: string, completed: Set<string>, known: Set<string>,
+): ChunkEntryVerdict {
+  if (!Object.hasOwn(sections, chunkId)) return { status: 'READY', requirements: [] };
+  const raw: unknown = sections[chunkId];
+  if (!Array.isArray(raw)) return { status: 'UNKNOWN', requirements: [{ kind: 'unknown', label: 'Malformed chunk entry requirements' }] };
+  const requirements: ChunkEntryRequirement[] = raw.map(value => typeof value === 'string' && known.has(value)
+    ? { kind: 'quest', id: value }
+    : { kind: 'unknown', label: typeof value === 'string' ? value : 'Malformed chunk entry requirement' });
+  return {
+    status: requirements.some(value => value.kind === 'unknown') ? 'UNKNOWN'
+      : requirements.some(value => value.kind === 'quest' && !completed.has(value.id)) ? 'LOCKED' : 'READY',
+    requirements,
   };
 }
 

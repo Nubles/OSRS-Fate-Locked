@@ -1,5 +1,6 @@
 
 import { DropSource } from '../types';
+import type { RequirementPredicate } from '../utils/requirementPredicates';
 
 export interface QuestLocationRequirement {
   id: string;
@@ -27,6 +28,7 @@ export interface QuestData {
   skills: Record<string, number>;
   combatLevel?: number;
   manualRequirements?: string[];
+  operationalRequirements?: RequirementPredicate[];
   prereqs: string[];
   points: number;
   series?: string;

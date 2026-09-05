@@ -13,6 +13,7 @@
  */
 
 import { QUEST_CAPE_QUEST_IDS, QUEST_DATA, QuestData } from '../data/questData';
+import { canonicalQuestUnlocks, catalogQuest } from '../data/questCatalog';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { REGION_GROUPS } from '../data/items';
@@ -418,7 +419,9 @@ function buildPlanFromRequirements(
  * @param unlocks  current unlocks snapshot
  */
 export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameModeId?: string): GoalPlan | null {
+  unlocks = canonicalQuestUnlocks(unlocks);
   if (kind === 'quest') {
+    id = catalogQuest(id)?.data.id ?? id;
     const q: QuestData | undefined = QUEST_DATA[id];
     if (!q) return null;
     const eligibility = evaluateQuestEligibility(q, unlocks, gameModeId);

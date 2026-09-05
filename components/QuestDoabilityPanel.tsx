@@ -1,3 +1,4 @@
+import { questPointsForReferences } from '../data/questCatalog';
 import React, { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, Lock, Route, MapPin, ChevronDown, ChevronRight, ExternalLink, AlertTriangle, HelpCircle } from 'lucide-react';
 import { useGame } from '../context/GameContext';
@@ -57,10 +58,7 @@ export const evaluateQuestDoability = (
 ): QuestDoabilityEvaluation => {
   const eligibility = evaluateQuestEligibility(quest, unlocks, gameModeId);
   const completed = eligibility.status === 'COMPLETED';
-  const currentQP = [...new Set(unlocks.quests)].reduce(
-    (total, qid) => total + (QUEST_DATA[qid]?.points ?? 0),
-    0,
-  );
+  const currentQP = questPointsForReferences(unlocks.quests);
   const skillBlockers = new Set(
     eligibility.blockers
       .filter(blocker => blocker.kind === 'skill')

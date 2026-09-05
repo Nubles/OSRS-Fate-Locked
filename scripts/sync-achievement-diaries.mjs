@@ -599,19 +599,8 @@ const loadReferenceCatalog = (projectRoot) => {
   const areaMapPolicySource = parseProjectFile('data/areaMapPolicy.ts');
 
   const skills = new Set(stringArrayOf(initializerOf(itemsSource, 'SKILLS_LIST')));
-  const regions = new Set([
-    'Misthalin',
-    ...stringArrayOf(initializerOf(itemsSource, 'MISTHALIN_AREAS')),
-  ]);
-  const regionGroups = initializerOf(itemsSource, 'REGION_GROUPS');
-  if (!ts.isObjectLiteralExpression(regionGroups)) {
-    throw new Error('REGION_GROUPS must remain an object literal');
-  }
-  for (const property of regionGroups.properties) {
-    if (!ts.isPropertyAssignment(property)) continue;
-    regions.add(propertyNameOf(property));
-    for (const region of stringArrayOf(property.initializer)) regions.add(region);
-  }
+  const areaCatalog = JSON.parse(readFileSync(resolve(projectRoot, 'data/areaCatalog.json'), 'utf8'));
+  const regions = new Set(areaCatalog.map(area => area.name));
   const areaAliases = initializerOf(areaMapPolicySource, 'AREA_ALIAS_POLICIES');
   if (!ts.isObjectLiteralExpression(areaAliases)) {
     throw new Error('AREA_ALIAS_POLICIES must remain an object literal');
@@ -638,8 +627,9 @@ const loadReferenceCatalog = (projectRoot) => {
     if (nameProperty) quests.add(stringLiteralOf(nameProperty.initializer));
   }
 
+  const serviceCatalog = JSON.parse(readFileSync(resolve(projectRoot, 'data/serviceCatalog.json'), 'utf8'));
   const catalog = {
-    unlocks: Object.fromEntries(Object.entries({ arcana: 'ARCANA_LIST', mobility: 'MOBILITY_LIST', housing: 'POH_LIST', guilds: 'GUILDS_LIST', farming: 'FARMING_PATCH_LIST', storage: 'STORAGE_LIST', bosses: 'BOSSES_LIST', minigames: 'MINIGAMES_LIST' }).map(([field, name]) => [field, new Set(stringArrayOf(initializerOf(itemsSource, name)))])),
+    unlocks: Object.fromEntries(Object.entries({ arcana: 'ARCANA_LIST', mobility: 'MOBILITY_LIST', housing: 'POH_LIST', guilds: 'GUILDS_LIST', farming: 'FARMING_PATCH_LIST', storage: 'STORAGE_LIST', bosses: 'BOSSES_LIST', minigames: 'MINIGAMES_LIST' }).map(([field, name]) => [field, new Set(field === 'mobility' ? serviceCatalog.filter(row => row.category === 'mobility').map(row => row.name) : stringArrayOf(initializerOf(itemsSource, name)))])),
     diaries: new Set(initializerOf(diarySource, 'DIARY_DATA').properties.filter(ts.isPropertyAssignment).map(propertyNameOf)),
     skills,
     equipment: new Set(stringArrayOf(initializerOf(itemsSource, 'EQUIPMENT_SLOTS'))),

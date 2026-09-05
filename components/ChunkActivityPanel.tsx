@@ -1,3 +1,4 @@
+import { ownsService } from '../data/serviceCatalog';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Lock,
@@ -193,6 +194,7 @@ interface Props {
 }
 
 const QUEST_BADGE: Record<QuestStatus, { cls: string; label: string }> = {
+  UNKNOWN: { cls: 'text-gray-400', label: 'requirements unknown' },
   NEEDS_CONFIRMATION: { cls: 'text-cyan-300', label: 'needs confirmation' },
   COMPLETED: { cls: 'text-green-400', label: 'completed' },
   AVAILABLE: { cls: 'text-amber-300', label: 'requirements met — can do now' },
@@ -450,7 +452,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     // Shops → merchant category gate.
     const shops = content.shops.map(name => {
       const category = classifyShop(name);
-      const catUnlocked = category != null && unlocks.merchants.includes(category);
+      const catUnlocked = category != null && ownsService('merchants', unlocks.merchants, category);
       return { name, category, usable: catUnlocked, requirements: requirementsFor(name, 'shop') };
     });
 
@@ -479,7 +481,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
       const req = resourceReqFor(name);
       const requirements = requirementsFor(name, 'object');
       if (network && MOBILITY_LIST.includes(network)) {
-        transport.push({ name, count, network, usable: unlocks.mobility.includes(network), requirements });
+        transport.push({ name, count, network, usable: ownsService('mobility', unlocks.mobility, network), requirements });
       } else if (patch && FARMING_PATCH_LIST.includes(patch)) {
         farming.push({ name, count, patch, usable: unlocks.farming.includes(patch), requirements });
       } else if (req) {

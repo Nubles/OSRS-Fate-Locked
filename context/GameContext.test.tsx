@@ -2088,7 +2088,7 @@ describe('quest completion integration', () => {
     const before = providerSnapshot(current());
     let first: ReturnType<Game['completeQuest']> | undefined;
 
-    act(() => { first = current().completeQuest("Witch's Potion"); });
+    act(() => { first = current().completeQuest("Witch's Potion", undefined, undefined, { manualConfirmed: true }); });
 
     const afterFirst = providerSnapshot(current());
     expect(first).toEqual({ ok: true });
@@ -2116,7 +2116,7 @@ describe('quest completion integration', () => {
     const before = providerSnapshot(current());
     let first: ReturnType<Game['completeQuest']> | undefined;
 
-    act(() => { first = current().completeQuest('In Search of Knowledge'); });
+    act(() => { first = current().completeQuest('In Search of Knowledge', undefined, undefined, { manualConfirmed: true }); });
 
     const afterFirst = providerSnapshot(current());
     expect(first).toEqual({ ok: true });
