@@ -463,7 +463,8 @@ describe('actual skill level requirements', () => {
       skills: { Woodcutting: 2, Firemaking: 2 },
     }))).toMatchObject({
       machineEligible: true,
-      eligible: true,
+      eligible: false,
+      confirmable: true,
     });
   });
 

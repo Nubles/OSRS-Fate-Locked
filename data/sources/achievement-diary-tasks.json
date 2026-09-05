@@ -5818,7 +5818,14 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "None"
+      "sourceRequirements": "None",
+      "predicates": [
+        {
+          "kind": "method",
+          "skill": "Agility",
+          "tier": 1
+        }
+      ]
     },
     {
       "id": "lum_easy_2",
@@ -5836,7 +5843,20 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "7 Slayer Light source Rope if the caves haven't been entered yet"
+      "sourceRequirements": "7 Slayer Light source Rope if the caves haven't been entered yet",
+      "predicates": [
+        {
+          "kind": "item",
+          "id": "light-source",
+          "label": "A usable light source",
+          "usage": "hold"
+        },
+        {
+          "kind": "manual",
+          "key": "lumbridge-swamp-cave-entry",
+          "label": "Lumbridge Swamp Caves entrance already opened, or a rope available for the first descent"
+        }
+      ]
     },
     {
       "id": "lum_easy_3",
@@ -5872,7 +5892,25 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "5 Runecraft Pure, daeyalt, or rune essence Access to the Water Altar ( water talisman / tiara, elemental talisman / tiara, or the Abyss )"
+      "sourceRequirements": "5 Runecraft Pure, daeyalt, or rune essence Access to the Water Altar ( water talisman / tiara, elemental talisman / tiara, or the Abyss )",
+      "predicates": [
+        {
+          "kind": "method",
+          "skill": "Runecraft",
+          "tier": 1
+        },
+        {
+          "kind": "item",
+          "id": "water-rune-essence",
+          "label": "Suitable essence for crafting water runes",
+          "usage": "consume"
+        },
+        {
+          "kind": "manual",
+          "key": "water-altar-access",
+          "label": "A legal Water Altar access route is available (accepted talisman, tiara or Abyss route)"
+        }
+      ]
     },
     {
       "id": "lum_easy_5",
@@ -5904,7 +5942,14 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "None"
+      "sourceRequirements": "None",
+      "predicates": [
+        {
+          "kind": "method",
+          "skill": "Thieving",
+          "tier": 1
+        }
+      ]
     },
     {
       "id": "lum_easy_7",
@@ -5934,6 +5979,18 @@
           "kind": "method",
           "skill": "Firemaking",
           "tier": 2
+        },
+        {
+          "kind": "item",
+          "id": "axe",
+          "label": "An axe permitted for chopping under current equipment unlocks",
+          "usage": "hold"
+        },
+        {
+          "kind": "item",
+          "id": "tinderbox",
+          "label": "Tinderbox",
+          "usage": "hold"
         }
       ]
     },
@@ -5969,7 +6026,20 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "15 Fishing Small fishing net"
+      "sourceRequirements": "15 Fishing Small fishing net",
+      "predicates": [
+        {
+          "kind": "method",
+          "skill": "Fishing",
+          "tier": 2
+        },
+        {
+          "kind": "item",
+          "id": "small-fishing-net",
+          "label": "Small fishing net",
+          "usage": "hold"
+        }
+      ]
     },
     {
       "id": "lum_easy_10",
@@ -5987,7 +6057,20 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Cook's Assistant Bread dough, multiple recommended in case of burning one (always successful at 34 Cooking )"
+      "sourceRequirements": "Completion of Cook's Assistant Bread dough, multiple recommended in case of burning one (always successful at 34 Cooking )",
+      "predicates": [
+        {
+          "kind": "method",
+          "skill": "Cooking",
+          "tier": 1
+        },
+        {
+          "kind": "item",
+          "id": "bread-dough",
+          "label": "Bread dough",
+          "usage": "consume"
+        }
+      ]
     },
     {
       "id": "lum_easy_11",
@@ -6005,7 +6088,20 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "15 Mining Any pickaxe"
+      "sourceRequirements": "15 Mining Any pickaxe",
+      "predicates": [
+        {
+          "kind": "method",
+          "skill": "Mining",
+          "tier": 2
+        },
+        {
+          "kind": "item",
+          "id": "pickaxe",
+          "label": "A pickaxe permitted for mining under current equipment unlocks",
+          "usage": "hold"
+        }
+      ]
     },
     {
       "id": "lum_easy_12",

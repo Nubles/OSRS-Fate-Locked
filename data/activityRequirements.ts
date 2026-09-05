@@ -31,6 +31,31 @@ export interface ActivityReq {
   note?: string;
 }
 
+// God Wars entry has quest-progress, travel, permanent-rope and key alternatives.
+// These external facts remain confirmation checks until the account tracks them.
+const godWarsGeneralRequirements = (skill: string, faction: string, equipment: string): ActivityReq => ({
+  predicates: [
+    skill === 'Hitpoints'
+      ? { kind: 'any', of: [{ kind: 'skill', skill, level: 70 }, { kind: 'manual', key: 'gwd-boosted-hitpoints', label: 'At least 70 current Hitpoints, including a permitted boost, to cross the Zamorak river' }] }
+      : { kind: 'skill', skill, level: 70 },
+    { kind: 'any', of: [
+      { kind: 'skill', skill: 'Strength', level: 60 },
+      { kind: 'skill', skill: 'Agility', level: 60 },
+      { kind: 'manual', key: 'gwd-entrance-boost', label: 'A permitted Strength boost reaches 60 for the entrance boulder' },
+    ] },
+    { kind: 'any', of: [
+      { kind: 'manual', key: 'gwd-troll-route', label: 'Troll Stronghold progressed past Dad and a legal route to the dungeon (climbing boots or Trollheim teleport) is available' },
+      { kind: 'item', id: 'ghommals-hilt', label: 'Ghommal\'s hilt with its God Wars Dungeon teleport available and legal', usage: 'hold' },
+    ] },
+    { kind: 'manual', key: 'gwd-entrance-rope', label: 'Entrance rope already installed, or a legal rope available for first entry; dungeon reachable under this run\'s map rules' },
+    { kind: 'manual', key: `gwd-${faction}-equipment`, label: equipment },
+    { kind: 'any', of: [
+      { kind: 'manual', key: `gwd-${faction}-essence`, label: `Enough current ${faction} essence: 40 normally, or the reduced amount earned through Combat Achievements` },
+      { kind: 'item', id: 'ecumenical-key', label: 'An ecumenical key to bypass the chamber kill count', usage: 'consume' },
+    ] },
+  ],
+});
+
 export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   // ===== Bosses & Raids =====================================================
   'Tombs of Amascut': { quests: ['Beneath Cursed Sands'] },
@@ -40,20 +65,37 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
       'A complete Frozen key from all four God Wars Dungeon generals',
     ],
   },
-  'General Graardor': { predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'God Wars Dungeon — 40 kill-count to enter the Bandos chamber.' }], note: 'God Wars Dungeon — 40 kill-count to enter the Bandos chamber.' },
-  'Commander Zilyana': { predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'God Wars Dungeon — 40 kill-count to enter the Saradomin chamber.' }], note: 'God Wars Dungeon — 40 kill-count to enter the Saradomin chamber.' },
-  "Kree'arra": { predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'God Wars Dungeon — 40 kill-count to enter the Armadyl chamber.' }], note: 'God Wars Dungeon — 40 kill-count to enter the Armadyl chamber.' },
-  "K'ril Tsutsaroth": { predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'God Wars Dungeon — 40 kill-count to enter the Zamorak chamber.' }], note: 'God Wars Dungeon — 40 kill-count to enter the Zamorak chamber.' },
+  'General Graardor': godWarsGeneralRequirements('Strength', 'Bandos', 'A legal hammer, warhammer, elder maul, or Imcando hammer to open the Bandos door'),
+  'Commander Zilyana': godWarsGeneralRequirements('Agility', 'Saradomin', 'Both Saradomin ropes permanently installed, or two legal ropes available for first entry'),
+  "Kree'arra": godWarsGeneralRequirements('Ranged', 'Armadyl', 'A legal crossbow and mithril grapple to cross into Armadyl\'s Eyrie'),
+  "K'ril Tsutsaroth": godWarsGeneralRequirements('Hitpoints', 'Zamorak', 'Enough current Hitpoints to survive the crossing into Zamorak\'s Fortress'),
   'Abyssal Sire': { skills: { Slayer: 85 }, predicates: [{ kind: 'slayerTask', id: 'Abyssal demon Slayer task.', label: 'Abyssal demon Slayer task.' }], note: 'Abyssal demon Slayer task.' },
   'Alchemical Hydra': { skills: { Slayer: 95 }, predicates: [{ kind: 'slayerTask', id: 'Hydra Slayer task; Karuulm Slayer Dungeon.', label: 'Hydra Slayer task; Karuulm Slayer Dungeon.' }], note: 'Hydra Slayer task; Karuulm Slayer Dungeon.' },
   'Cerberus': { skills: { Slayer: 91 }, predicates: [{ kind: 'slayerTask', id: 'Hellhound Slayer task.', label: 'Hellhound Slayer task.' }], note: 'Hellhound Slayer task.' },
-  'Grotesque Guardians': { skills: { Slayer: 75 }, predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Slayer Tower roof; needs a Brittle key.' }], note: 'Slayer Tower roof; needs a Brittle key.' },
+  'Grotesque Guardians': { skills: { Slayer: 75 }, quests: ['Priest in Peril'], predicates: [
+    { kind: 'manual', key: 'guardians-rooftop-unlocked', label: 'Slayer Tower rooftop permanently unlocked with a brittle key' },
+    { kind: 'any', of: [
+      { kind: 'slayerTask', id: 'gargoyles', label: 'Gargoyle Slayer task valid for the Slayer Tower' },
+      { kind: 'slayerTask', id: 'grotesque-guardians', label: 'Grotesque Guardians boss task' },
+    ] },
+    { kind: 'manual', key: 'guardians-finisher', label: 'A legal rock hammer, rock thrownhammer, or granite hammer to finish the Guardians' },
+  ] },
   'Kraken': { skills: { Slayer: 87 }, predicates: [{ kind: 'slayerTask', id: 'Cave kraken Slayer task.', label: 'Cave kraken Slayer task.' }], note: 'Cave kraken Slayer task.' },
-  'Thermonuclear Smoke Devil': { skills: { Slayer: 93 }, predicates: [{ kind: 'slayerTask', id: 'Smoke devil Slayer task.', label: 'Smoke devil Slayer task.' }], note: 'Smoke devil Slayer task.' },
-  'Araxxor': { skills: { Slayer: 92 }, quests: ['Priest in Peril'], predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Araxyte/spider Slayer task or boss task.' }], note: 'Araxyte/spider Slayer task or boss task.' },
-  'Skotizo': { predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Summoned with a Dark totem in the Catacombs of Kourend.' }], note: 'Summoned with a Dark totem in the Catacombs of Kourend.' },
+  'Thermonuclear Smoke Devil': { skills: { Slayer: 93 }, predicates: [{ kind: 'any', of: [
+    { kind: 'slayerTask', id: 'smoke-devils-or-thermy', label: 'Smoke devil or Thermonuclear Smoke Devil boss task valid here' },
+    { kind: 'manual', key: 'thermy-first-diary-kill', label: 'Western Provinces Diary started and its first off-task Thermonuclear Smoke Devil kill still available' },
+  ] }] },
+  'Araxxor': { skills: { Slayer: 92 }, quests: ['Priest in Peril'], predicates: [{ kind: 'any', of: [
+    { kind: 'slayerTask', id: 'araxytes', label: 'Araxyte Slayer task valid for Araxxor' },
+    { kind: 'slayerTask', id: 'spiders', label: 'Spider Slayer task valid for Araxxor' },
+    { kind: 'slayerTask', id: 'araxxor', label: 'Araxxor boss task' },
+  ] }] },
+  'Skotizo': { predicates: [{ kind: 'item', id: 'dark-totem', label: 'A dark totem for this entry', usage: 'consume' }] },
   'Vorkath': { quests: ['Dragon Slayer II'] },
-  'Galvek': { quests: ['Dragon Slayer II'], predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Fought during Dragon Slayer II.' }], note: 'Fought during Dragon Slayer II.' },
+  'Galvek': { predicates: [{ kind: 'any', of: [
+    { kind: 'all', of: [{ kind: 'quest', id: 'Dragon Slayer II' }, { kind: 'manual', key: 'galvek-replay-access', label: 'A legal reachable route to the Pool of Dreams in the Myths\' Guild is available for replay' }] },
+    { kind: 'manual', key: 'galvek-quest-stage', label: 'Dragon Slayer II progressed to the Galvek battle and its quest instance is legally reachable' },
+  ] }], noteIsInformational: true, note: 'Quest battle, or replay at the Pool of Dreams after Dragon Slayer II.' },
   'Moons of Peril': { skills: { Slayer: 48 }, quests: ["Twilight's Promise"] },
   'Duke Sucellus': { quests: ['Desert Treasure II'] },
   'The Leviathan': { quests: ['Desert Treasure II'] },
@@ -64,7 +106,10 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Hespori': { skills: { Farming: 65 }, predicates: [{ kind: 'manual', key: 'hespori-grown', label: 'Hespori seed planted and fully grown' }] },
   'Coral Nursery': { predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Complete Troubled Tortugans; requires diving apparatus + fishbowl helmet, or a Medallion of the deep.' }], note: 'Complete Troubled Tortugans; requires diving apparatus + fishbowl helmet, or a Medallion of the deep.' },
   'Phantom Muspah': { quests: ['Secrets of the North'] },
-  'Zulrah': { quests: ['Regicide'] },
+  'Zulrah': { predicates: [
+    { kind: 'any', of: [{ kind: 'quest', id: 'Regicide' }, { kind: 'manual', key: 'regicide-port-tyras', label: 'Regicide progressed to reaching Port Tyras' }] },
+    { kind: 'manual', key: 'zulrah-sacrifice-permission', label: 'High Priestess Zul-Harcinqa has accepted you as the sacrifice' },
+  ] },
   'Wintertodt': { skills: { Firemaking: 50 } },
   'Tempoross': { skills: { Fishing: 35 } },
   'Zalcano': { quests: ['Song of the Elves'] },
@@ -75,25 +120,36 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Gemstone Crab': { quests: ['Children of the Sun'] },
   'Shellbane Gryphon': { skills: { Slayer: 51 }, quests: ['Troubled Tortugans'], predicates: [{ kind: 'slayerTask', id: 'Gryphon Slayer task.', label: 'Gryphon Slayer task.' }], note: 'Gryphon Slayer task.' },
   'The Mad Angel': { quests: ['Fallen From Grace'] },
-  'Mimic': { predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'From a Strange/Mysterious casket (Hard+ clue scrolls).' }], note: 'From a Strange/Mysterious casket (Hard+ clue scrolls).' },
+  'Mimic': { predicates: [{ kind: 'item', id: 'mimic-casket', label: 'An active Mimic casket with a fight attempt remaining', usage: 'hold' }], noteIsInformational: true, note: 'Enable Mimics at the strange casket in Watson\'s house; elite or master reward caskets can become Mimics.' },
+  'Obor': { predicates: [{ kind: 'any', of: [
+    { kind: 'manual', key: 'obor-gate-unlocked', label: 'Obor\'s gate permanently unlocked' },
+    { kind: 'item', id: 'giant-key', label: 'A giant key for the first gate unlock (not consumed)', usage: 'hold' },
+  ] }] },
+  'Bryophyta': { predicates: [
+    { kind: 'any', of: [
+      { kind: 'manual', key: 'bryophyta-gate-unlocked', label: 'Bryophyta\'s gate permanently unlocked' },
+      { kind: 'item', id: 'mossy-key', label: 'A mossy key for the first gate unlock (not consumed)', usage: 'hold' },
+    ] },
+    { kind: 'manual', key: 'bryophyta-growthlings', label: 'A legal axe or secateurs to finish Bryophyta\'s growthlings' },
+  ] },
 
   // ===== Guilds =============================================================
   "Champions' Guild": { predicates: [{ kind: 'questPoints', count: 32 }] },
-  "Cooks' Guild": { skills: { Cooking: 32 } },
-  'Crafting Guild': { skills: { Crafting: 40 } },
+  "Cooks' Guild": { skills: { Cooking: 32 }, predicates: [{ kind: 'manual', key: 'cooks-guild-attire', label: 'Wearing an accepted Cooks\' Guild entry item, such as a chef\'s hat or Cooking cape, legally under your equipment unlocks' }] },
+  'Crafting Guild': { skills: { Crafting: 40 }, predicates: [{ kind: 'manual', key: 'crafting-guild-attire', label: 'Wearing a brown apron, golden apron, Crafting cape or max cape, legally under your equipment unlocks' }] },
   'Mining Guild': { skills: { Mining: 60 } },
-  'Prayer Guild': { skills: { Prayer: 31 }, predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Edgeville Monastery chapel.' }], note: 'Edgeville Monastery chapel.' },
+  'Prayer Guild': { skills: { Prayer: 31 }, noteIsInformational: true, note: 'Access to the upper floor of Edgeville Monastery.' },
   'Farming Guild': { skills: { Farming: 45 }, noteIsInformational: true, note: 'Entry at 45 Farming; intermediate and advanced sections need 65 and 85.' },
   'Fishing Guild': { skills: { Fishing: 68 } },
   "Heroes' Guild": { quests: ["Heroes' Quest"] },
-  'Hunter Guild': { quests: ['Children of the Sun'] },
+  'Hunter Guild': { skills: { Hunter: 46 }, quests: ['Children of the Sun'], noteIsInformational: true, note: '46 Hunter is required to use the guild amenities.' },
   "Legends' Guild": { quests: ["Legends' Quest"] },
   "Myths' Guild": { quests: ['Dragon Slayer II'] },
   'Ranging Guild': { skills: { Ranged: 40 } },
-  "Rogues' Den": { predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Free entry; the safecracking maze needs 50 Thieving & 50 Agility.' }], note: 'Free entry; the safecracking maze needs 50 Thieving & 50 Agility.' },
-  "Servants' Guild": { predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Hire household servants (Construction).' }], note: 'Hire household servants (Construction).' },
+  "Rogues' Den": { noteIsInformational: true, note: 'Area entry only; the optional maze requires 50 Thieving and 50 Agility.' },
+  "Servants' Guild": { predicates: [{ kind: 'manual', key: 'servant-hiring', label: 'For hiring: meet the chosen servant\'s Construction level, have two bedrooms with beds, no current servant, and the hiring fee' }] },
   "Warriors' Guild": {
-    predicates: [{ kind: 'unknown', key: 'legacy-note', label: '99 Attack or Strength, or 130 combined.' }], note: '99 Attack or Strength, or 130 combined.',
+    predicates: [{ kind: 'any', of: [{ kind: 'skill', skill: 'Attack', level: 99 }, { kind: 'skill', skill: 'Strength', level: 99 }, { kind: 'manual', key: 'warriors-combined-level', label: 'Unboosted Attack and Strength levels total at least 130' }] }],
   },
   "Wizards' Guild": { skills: { Magic: 66 } },
   'Woodcutting Guild': { skills: { Woodcutting: 60 } },
@@ -101,16 +157,16 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   // ===== Arcana (spellbooks & prayers) ======================================
   'Ancient Magicks': { quests: ['Desert Treasure I'] },
   'Lunar Spellbook': { quests: ['Lunar Diplomacy'] },
-  'Arceuus Spellbook': { predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Swap at the bookcase in Arceuus, Kourend & Kebos.' }], note: 'Swap at the bookcase in Arceuus, Kourend & Kebos.' },
-  'Piety': { skills: { Prayer: 70, Defence: 70 }, quests: ["King's Ransom"], predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Knight Waves training grounds.' }], note: 'Knight Waves training grounds.' },
+  'Arceuus Spellbook': { predicates: [{ kind: 'manual', key: 'arceuus-switch-access', label: 'Arceuus spellbook already active, or a legal reachable spellbook-switching route is available' }], noteIsInformational: true, note: 'Speak to Tyss near the Dark Altar to switch spellbooks; individual spells have their own requirements.' },
+  'Piety': { skills: { Prayer: 70, Defence: 70 }, quests: ["King's Ransom"], predicates: [{ kind: 'manual', key: 'knight-waves-completed', label: 'Completed the Knight Waves training grounds' }] },
   'Rigour': { skills: { Prayer: 74, Defence: 70 }, predicates: [{ kind: 'manual', key: 'rigour-learned', label: 'Rigour learned by reading a dexterous prayer scroll' }] },
   'Augury': { skills: { Prayer: 77, Defence: 70 }, predicates: [{ kind: 'manual', key: 'augury-learned', label: 'Augury learned by reading an arcane prayer scroll' }] },
   'Preserve': { skills: { Prayer: 55 }, predicates: [{ kind: 'manual', key: 'preserve-learned', label: 'Preserve learned by reading a torn prayer scroll' }] },
-  'Bones to Peaches': { predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Mage Training Arena reward shop.' }], note: 'Mage Training Arena reward shop.' },
+  'Bones to Peaches': { skills: { Magic: 60 }, predicates: [{ kind: 'manual', key: 'bones-to-peaches-learned', label: 'Purchased the Bones to Peaches spell unlock from the Mage Training Arena reward shop' }] },
   'Dwarf Cannon': { quests: ['Dwarf Cannon'] },
-  'Chivalry': { skills: { Prayer: 60, Defence: 65 }, quests: ["King's Ransom"], predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Knight Waves training grounds.' }], note: 'Knight Waves training grounds.' },
-  'God Spells': { skills: { Magic: 60 }, predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Mage Arena: Saradomin Strike / Claws of Guthix / Flames of Zamorak.' }], note: 'Mage Arena: Saradomin Strike / Claws of Guthix / Flames of Zamorak.' },
-  'Mage Arena II': { skills: { Magic: 75 }, predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Imbued god capes & stronger god spells.' }], note: 'Imbued god capes & stronger god spells.' },
+  'Chivalry': { skills: { Prayer: 60, Defence: 65 }, quests: ["King's Ransom"], predicates: [{ kind: 'manual', key: 'knight-waves-completed', label: 'Completed the Knight Waves training grounds' }] },
+  'God Spells': { skills: { Magic: 60 }, quests: ['Mage Arena I'], predicates: [{ kind: 'manual', key: 'god-spell-learned', label: 'Cast the chosen god spell 100 times inside the arena to unlock outside use; have its required staff legally available' }] },
+  'Mage Arena II': { skills: { Magic: 75 }, quests: ['Mage Arena II'], noteIsInformational: true, note: 'Imbued god cape access after miniquest completion; equipping the cape still needs its equipment permission.' },
 
   // ===== Minigames (hard gates only; many minigames have no requirement) =====
   'Pest Control': {
@@ -197,10 +253,10 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   // ---- Bosses with an access gate (most others have no hard requirement) -----
   'Inferno': { predicates: [{ kind: 'manual', key: 'inferno-access', label: 'Fire cape sacrificed to unlock Inferno access' }] },
   "Phosani's Nightmare": { predicates: [{ kind: 'bossKill', id: 'nightmare', count: 1, label: 'At least one ordinary Nightmare kill' }] },
-  'Fortis Colosseum': { predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Varlamore — high-level combat (Sol Heredit).' }], note: 'Varlamore — high-level combat (Sol Heredit).' },
-  'The Hueycoatl': { predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Varlamore.' }], note: 'Varlamore.' },
-  'The Royal Titans': { predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Asgarnian Ice Dungeon.' }], note: 'Asgarnian Ice Dungeon.' },
-  'TzHaar Fight Cave': { predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Mor Ul Rek — high-level combat.' }], note: 'Mor Ul Rek — high-level combat.' },
+  'Fortis Colosseum': { quests: ['Children of the Sun'], noteIsInformational: true, note: 'Combat recommendations are not entry requirements.' },
+  'The Hueycoatl': { quests: ['Children of the Sun'] },
+  'The Royal Titans': { noteIsInformational: true, note: 'No additional entry requirements; combat levels are recommendations.' },
+  'TzHaar Fight Cave': { noteIsInformational: true, note: 'No strict combat level requirement to enter.' },
 
   // ---- Minigames with a gate -------------------------------------------------
   'Fishing Trawler': {
