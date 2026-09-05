@@ -15,10 +15,11 @@ import { UnlockState } from '../types';
 import { chunkKey, isChunkUnlocked } from './chunkAdjacency';
 import { isAreaReachable } from './reachability';
 import { actualCombatLevel } from './slayerReach';
+import { evaluatePredicate, type RequirementPredicate } from './requirementPredicates';
 import { actualSkillLevel } from './skillLevels';
 
 export type QuestStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
-export type DiaryStatus = 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
+export type DiaryStatus = 'NEEDS_CONFIRMATION' | 'UNKNOWN' | 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
 
 export type DiaryStatusUnlocks =
   Omit<UnlockState, 'cas' | 'completedTasks'>
@@ -31,6 +32,7 @@ export type SkillEligibilityRequirement =
   | { type: 'anyOf'; skills: string[]; level: number };
 
 export type DirectEligibilityBlocker =
+  | { kind: 'requirement'; label: string }
   | { kind: 'region'; label: string }
   | { kind: 'skill'; label: string; requirement?: SkillEligibilityRequirement }
   | { kind: 'combat'; label: string }
@@ -233,6 +235,7 @@ export function getQuestStatus(
  * with few-but-blocked tasks never outranks one the player can finish today.
  */
 export interface DoableTask {
+  predicates?: RequirementPredicate[];
   id: string;
   skills?: Record<string, number>;
   items?: string[];
@@ -291,7 +294,13 @@ const evaluateDiaryRequirement = (
   gameModeId?: string,
 ): DiaryTaskEligibility => {
   const blockers: EligibilityBlocker[] = [];
-  const evidence: string[] = [...(requirement.items ?? [])];
+  const evidence: string[] = [];
+  const evaluated = evaluatePredicate({ kind: 'all', of: [
+    ...(requirement.predicates ?? []),
+    ...(requirement.items ?? []).map(label => ({ kind: 'item' as const, id: label, label, usage: 'hold' as const })),
+  ] }, { unlocks, gameModeId });
+  if (evaluated.status === 'LOCKED') blockers.push(...evaluated.checks.map(label => ({ kind: 'requirement' as const, label })));
+  const externalChecks = evaluated.status === 'NEEDS_CONFIRMATION' || evaluated.status === 'UNKNOWN' ? evaluated.checks : [];
 
   for (const [skill, required] of Object.entries(requirement.skills ?? {})) {
     const label = skill + ' ' + required;
@@ -380,7 +389,7 @@ const evaluateDiaryRequirement = (
     });
   }
 
-  const manual = readinessFields(blockers, requirement.manualRequirements ?? []);
+  const manual = readinessFields(blockers, [...(requirement.manualRequirements ?? []), ...externalChecks]);
   return { ...manual, blockers, evidence };
 };
 
@@ -392,9 +401,10 @@ export function evaluateDiaryTaskEligibility(
   const shared = evaluateDiaryRequirement(task, unlocks, gameModeId);
   if (!task.oneOf?.length) return shared;
 
-  const routeResults = task.oneOf.map(option => (
-    evaluateDiaryRequirement(option, unlocks, gameModeId)
-  ));
+  const routeResults = task.oneOf.map(option => {
+    const hasGate = Object.entries(option).some(([key, value]) => key !== 'label' && (Array.isArray(value) ? value.length > 0 : value && (typeof value !== 'object' || Object.keys(value).length > 0)));
+    return evaluateDiaryRequirement(hasGate ? option : { manualRequirements: [option.label ?? 'Unclassified alternative'] }, unlocks, gameModeId);
+  });
   const eligibleRouteIndex = routeResults.findIndex(result => result.eligible);
   const confirmableRouteIndex = routeResults.findIndex(result => result.confirmable);
   const selectedRouteIndex = eligibleRouteIndex >= 0
@@ -440,6 +450,8 @@ export function taskEligibilityBlockers(
 }
 
 export interface DiaryTierEligibility {
+  manualChecks: string[];
+  unverifiedTaskIds: string[];
   eligible: boolean;
   status: DiaryStatus;
   blockers: EligibilityBlocker[];
@@ -462,7 +474,7 @@ export function evaluateDiaryTierEligibility(
   gameModeId?: string,
 ): DiaryTierEligibility {
   if (unlocks.diaries.includes(diary.id)) {
-    return { eligible: true, status: 'COMPLETED', blockers: [], evidence: ['Completed'] };
+    return { eligible: true, status: 'COMPLETED', blockers: [], evidence: ['Completed'], manualChecks: [], unverifiedTaskIds: [] };
   }
 
   const normalizedUnlocks: UnlockState = {
@@ -470,9 +482,10 @@ export function evaluateDiaryTierEligibility(
     cas: unlocks.cas ?? [],
     completedTasks: unlocks.completedTasks ?? [],
   };
-  const taskResults = ALL_DIARY_TASKS
-    .filter(task => task.tierId === diary.id && !normalizedUnlocks.completedTasks.includes(task.id))
-    .map(task => evaluateDiaryTaskEligibility(task, normalizedUnlocks, gameModeId));
+  const pendingTasks = ALL_DIARY_TASKS.filter(task => task.tierId === diary.id && !normalizedUnlocks.completedTasks.includes(task.id));
+  const taskResults = pendingTasks.map(task => evaluateDiaryTaskEligibility(task, normalizedUnlocks, gameModeId));
+  const manualChecks = uniqueStrings(taskResults.flatMap(result => result.manualChecks));
+  const unverifiedTaskIds = pendingTasks.filter((_, index) => taskResults[index].manualChecks.length > 0).map(task => task.id);
   const blockers = uniqueBlockers(taskResults.flatMap(result => result.blockers));
   const evidence = [...new Set(taskResults.flatMap(result => result.evidence))];
   const alternatives = blockers.filter(
@@ -494,11 +507,11 @@ export function evaluateDiaryTierEligibility(
     : blockers.some(blocker => blocker.kind === 'skill' || blocker.kind === 'combat')
       || alternativeHasSkillRoute
       ? 'LOCKED_SKILL'
-      : blockers.some(blocker => blocker.kind === 'quest' || blocker.kind === 'alternative')
+      : blockers.some(blocker => blocker.kind === 'quest' || blocker.kind === 'alternative' || blocker.kind === 'requirement')
         ? 'LOCKED_QUEST'
-        : 'AVAILABLE';
+        : manualChecks.length > 0 ? 'NEEDS_CONFIRMATION' : 'AVAILABLE';
 
-  return { eligible: status === 'AVAILABLE', status, blockers, evidence };
+  return { eligible: status === 'AVAILABLE', status, blockers, evidence, manualChecks, unverifiedTaskIds };
 }
 
 export function getDiaryStatus(

@@ -6,6 +6,7 @@ import { chunkUnlocked, showChunkOnMap } from '../utils/chunkLocations';
 import { slayerReachability, SlayerStatus, SlayerTaskRow } from '../utils/slayerReach';
 
 const STATUS_META: Record<SlayerStatus, { label: string; cls: string }> = {
+  unknown: { label: 'Unknown requirement', cls: 'text-amber-300' },
   'ready':         { label: 'ready',      cls: 'bg-emerald-900/30 border-emerald-500/40 text-emerald-200' },
   'area-locked':   { label: 'area locked',cls: 'bg-amber-900/25 border-amber-500/40 text-amber-200' },
   'slayer-locked': { label: 'Slayer',     cls: 'bg-rose-900/25 border-rose-500/40 text-rose-200' },

@@ -374,7 +374,14 @@
       "sourceRequirements": "Completion of The Hand in the Sand (unless playing as Ultimate Ironman ) Bucket",
       "oneOf": [
         {
-          "label": "Ultimate Ironman exemption"
+          "label": "Ultimate Ironman exemption",
+          "predicates": [
+            {
+              "kind": "accountMode",
+              "id": "ultimate-ironman",
+              "label": "Ultimate Ironman exemption"
+            }
+          ]
         },
         {
           "quests": [
@@ -787,7 +794,7 @@
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "10 Crafting, 91 Smithing and 69 Fletching Yew logs, runite bar, hammer, knife, and sinew or a tree root",
-      "regions": [
+      "anyOfRegions": [
         "Witchaven",
         "Yanille"
       ]
@@ -1877,7 +1884,14 @@
           }
         },
         {
-          "label": "Obtain a watermelon from gryphons"
+          "label": "Obtain a watermelon from gryphons",
+          "predicates": [
+            {
+              "kind": "unknown",
+              "key": "fal_med_4:alternative",
+              "label": "Obtain a watermelon from gryphons"
+            }
+          ]
         }
       ],
       "regions": [
@@ -2569,7 +2583,14 @@
       "sourceRequirements": "Waterbirth teleport tablet to directly access the island, or either 1000 coins or quest completion of The Fremennik Trials to travel via Jarvald",
       "oneOf": [
         {
-          "label": "Waterbirth teleport or coins"
+          "label": "Waterbirth teleport or coins",
+          "predicates": [
+            {
+              "kind": "unknown",
+              "key": "frem_easy_6:alternative",
+              "label": "Waterbirth teleport or coins"
+            }
+          ]
         },
         {
           "quests": [
@@ -2842,7 +2863,14 @@
       "sourceRequirements": "Completion of Horror from the Deep Food and 43 Prayer for protection prayers recommended Way of getting past the two-man doors at the dungeon entrance (help from another player, pet rock and rune thrownaxes, or 85 Agility for the rock shortcut )",
       "oneOf": [
         {
-          "label": "Two-player door route"
+          "label": "Two-player door route",
+          "predicates": [
+            {
+              "kind": "unknown",
+              "key": "frem_med_8:alternative",
+              "label": "Two-player door route"
+            }
+          ]
         },
         {
           "skills": {
@@ -3074,7 +3102,14 @@
       "sourceRequirements": "Way of getting past the two-player doors at the dungeon entrance (help from another player, pet rock and rune thrownaxes, or 85 Agility for the rock shortcut ) See the strategy guide",
       "oneOf": [
         {
-          "label": "Two-player door route"
+          "label": "Two-player door route",
+          "predicates": [
+            {
+              "kind": "unknown",
+              "key": "frem_elite_1:alternative",
+              "label": "Two-player door route"
+            }
+          ]
         },
         {
           "skills": {
@@ -3468,7 +3503,14 @@
       "sourceRequirements": "36 Agility, 22 Strength, and 39 Ranged Mith grapple and any crossbow Dusty key or 70 Agility Protection from dragonfire recommended",
       "oneOf": [
         {
-          "label": "Dusty key"
+          "label": "Dusty key",
+          "predicates": [
+            {
+              "kind": "unknown",
+              "key": "kan_med_4:alternative",
+              "label": "Dusty key"
+            }
+          ]
         },
         {
           "skills": {
@@ -3753,7 +3795,14 @@
       "sourceRequirements": "56 Magic Dusty key or 70 Agility Unpowered orb and means to cast Charge Water Orb ( ) Protection from dragonfire recommended",
       "oneOf": [
         {
-          "label": "Dusty key"
+          "label": "Dusty key",
+          "predicates": [
+            {
+              "kind": "unknown",
+              "key": "kan_hard_5:alternative",
+              "label": "Dusty key"
+            }
+          ]
         },
         {
           "skills": {
@@ -4145,7 +4194,14 @@
       "sourceRequirements": "Harpoon (or bare-handed fishing ), lobster pot, small fishing net, or a fishing rod with bait, depending on the spot you fish at",
       "oneOf": [
         {
-          "label": "Fishing equipment"
+          "label": "Fishing equipment",
+          "predicates": [
+            {
+              "kind": "unknown",
+              "key": "kar_easy_7:alternative",
+              "label": "Fishing equipment"
+            }
+          ]
         },
         {
           "quests": [
@@ -4810,7 +4866,14 @@
       "sourceRequirements": "Partial completion of Legends' Quest Any axe and machete, or 79 Agility for the vine shortcut",
       "oneOf": [
         {
-          "label": "Axe and machete"
+          "label": "Axe and machete",
+          "predicates": [
+            {
+              "kind": "unknown",
+              "key": "kar_hard_8:alternative",
+              "label": "Axe and machete"
+            }
+          ]
         },
         {
           "skills": {
@@ -6580,7 +6643,14 @@
           ]
         },
         {
-          "label": "Ecto-tokens or charter ship"
+          "label": "Ecto-tokens or charter ship",
+          "predicates": [
+            {
+              "kind": "unknown",
+              "key": "mor_easy_2:alternative",
+              "label": "Ecto-tokens or charter ship"
+            }
+          ]
         }
       ]
     },
@@ -6704,7 +6774,14 @@
           }
         },
         {
-          "label": "Obtain a watermelon from gryphons"
+          "label": "Obtain a watermelon from gryphons",
+          "predicates": [
+            {
+              "kind": "unknown",
+              "key": "mor_easy_8:alternative",
+              "label": "Obtain a watermelon from gryphons"
+            }
+          ]
         }
       ]
     },

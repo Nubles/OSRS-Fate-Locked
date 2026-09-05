@@ -147,7 +147,7 @@ describe('Achievement Diary source parser', () => {
   it('renders frozen ids deterministically in Diary tier and ordinal order', () => {
     const snapshot: any = structuredClone(SIX_TASK_SNAPSHOT);
     snapshot.tasks[0].oneOf = [
-      { label: 'Dusty key' },
+      { label: 'Dusty key', items: ['Dusty key'] },
       { skills: { Agility: 70 }, combatLevel: 100, allQuests: true, anySkillLevel: 99 },
       { quests: ['Ratcatchers'], cas: ['Easy'], regions: ['Asgarnia'] },
     ];
@@ -168,7 +168,7 @@ describe('Achievement Diary source parser', () => {
     expect(first).toContain('questPoints?: number;');
     expect(first).toContain('manualRequirements?: string[];');
     expect(first).toContain(
-      "oneOf: [{ label: 'Dusty key' }, { skills: { 'Agility': 70 }, combatLevel: 100, allQuests: true, anySkillLevel: 99 }, "
+      "oneOf: [{ label: 'Dusty key', items: ['Dusty key'] }, { skills: { 'Agility': 70 }, combatLevel: 100, allQuests: true, anySkillLevel: 99 }, "
       + "{ quests: ['Ratcatchers'], cas: ['Easy'], regions: ['Asgarnia'] }], combatLevel: 70, allQuests: true",
     );
     expect(first).toContain(

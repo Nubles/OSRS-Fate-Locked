@@ -212,6 +212,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
         {sortedDiaries.map(diary => {
           const isCompleted = diary.status === 'COMPLETED';
           const isAvailable = diary.status === 'AVAILABLE';
+          const needsConfirmation = diary.status === 'NEEDS_CONFIRMATION' || diary.status === 'UNKNOWN';
           const isSearching = searchTerm.length > 0;
           const isExpanded = expandedId === diary.id || isSearching;
           const color = diary.tier === 'Elite' ? 'text-purple-400' : diary.tier === 'Hard' ? 'text-red-400' : diary.tier === 'Medium' ? 'text-blue-400' : 'text-green-400';
@@ -278,6 +279,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                   {/* Locked summary: req progress bar + missing quest chips.
                       Replaces the old plain-text "Region/Skill/Quest Locked" labels
                       with an at-a-glance % bar and clickable prereq chips. */}
+                  {needsConfirmation && <div className="text-xs text-cyan-300">Needs confirmation: inventory, account mode, or manual task conditions</div>}
                   {!isCompleted && !isAvailable && !isExpanded && dTotalReqs > 0 && (
                     <div className="mt-1.5 space-y-1.5">
                       <div className="flex items-center gap-2">

@@ -1,4 +1,7 @@
+import type { RequirementPredicate } from '../utils/requirementPredicates';
+
 export interface DiaryTaskRequirementOption {
+  predicates?: RequirementPredicate[];
   label?: string;
   skills?: Record<string, number>;
   items?: string[];
@@ -15,6 +18,7 @@ export interface DiaryTaskRequirementOption {
 }
 
 export interface DiaryTask {
+  predicates?: RequirementPredicate[];
   id: string;
   tierId: string;
   description: string;
@@ -52,7 +56,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'ard_med_3', tierId: 'Ardougne Medium', description: 'Harvest some strawberries from the Ardougne farming patch.', skills: { 'Farming': 31 }, regions: ['East Ardougne'] },
   { id: 'ard_med_4', tierId: 'Ardougne Medium', description: 'Cast the Ardougne Teleport spell.', skills: { 'Magic': 51 }, quests: ['Plague City'], regions: ['East Ardougne'] },
   { id: 'ard_med_5', tierId: 'Ardougne Medium', description: 'Travel to Castlewars by Hot Air Balloon.', skills: { 'Firemaking': 50 }, quests: ['Enlightened Journey'], regions: ['Castle Wars'] },
-  { id: 'ard_med_6', tierId: 'Ardougne Medium', description: 'Claim buckets of sand from Bert in Yanille.', regions: ['Yanille'], oneOf: [{ label: 'Ultimate Ironman exemption' }, { quests: ['The Hand in the Sand'] }] },
+  { id: 'ard_med_6', tierId: 'Ardougne Medium', description: 'Claim buckets of sand from Bert in Yanille.', regions: ['Yanille'], oneOf: [{ predicates: [{"kind":"accountMode","id":"ultimate-ironman","label":"Ultimate Ironman exemption"}], label: 'Ultimate Ironman exemption' }, { quests: ['The Hand in the Sand'] }] },
   { id: 'ard_med_7', tierId: 'Ardougne Medium', description: 'Catch any fish on the Fishing Platform.', quests: ['Sea Slug'], regions: ['Witchaven'] },
   { id: 'ard_med_8', tierId: 'Ardougne Medium', description: 'Pickpocket the master farmer north of Ardougne.', skills: { 'Thieving': 38 }, regions: ['East Ardougne'] },
   { id: 'ard_med_9', tierId: 'Ardougne Medium', description: 'Collect some Nightshade from the Skavid Caves.', quests: ['Watchtower'], regions: ['Yanille'] },
@@ -74,7 +78,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'ard_elite_1', tierId: 'Ardougne Elite', description: 'Catch a Manta ray in the Fishing Trawler and cook it in Port Khazard.', skills: { 'Cooking': 91, 'Fishing': 81 }, regions: ['Port Khazard'] },
   { id: 'ard_elite_2', tierId: 'Ardougne Elite', description: 'Picklock the door to the basement of Yanille Agility Dungeon.', skills: { 'Thieving': 82 }, regions: ['Yanille'] },
   { id: 'ard_elite_3', tierId: 'Ardougne Elite', description: 'Pickpocket a Hero.', skills: { 'Thieving': 80 }, regions: ['East Ardougne'] },
-  { id: 'ard_elite_4', tierId: 'Ardougne Elite', description: 'Make a rune crossbow yourself from scratch within Witchaven or Yanille.', skills: { 'Crafting': 10, 'Fletching': 69, 'Smithing': 91 }, regions: ['Witchaven', 'Yanille'] },
+  { id: 'ard_elite_4', tierId: 'Ardougne Elite', description: 'Make a rune crossbow yourself from scratch within Witchaven or Yanille.', skills: { 'Crafting': 10, 'Fletching': 69, 'Smithing': 91 }, anyOfRegions: ['Witchaven', 'Yanille'] },
   { id: 'ard_elite_5', tierId: 'Ardougne Elite', description: 'Imbue a Salve amulet at Nightmare Zone, or equip a Salve amulet that was imbued there.', quests: ['Haunted Mine'], regions: ['Yanille'] },
   { id: 'ard_elite_6', tierId: 'Ardougne Elite', description: 'Pick some Torstol from the patch north of Ardougne.', skills: { 'Farming': 85 }, regions: ['East Ardougne'] },
   { id: 'ard_elite_7', tierId: 'Ardougne Elite', description: 'Complete a lap of Ardougne\'s rooftop agility course.', skills: { 'Agility': 90 }, regions: ['East Ardougne'] },
@@ -132,7 +136,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'fal_med_1', tierId: 'Falador Medium', description: 'Light a Bullseye lantern at the Chemist\'s in Rimmington.', skills: { 'Firemaking': 49 }, regions: ['Rimmington'] },
   { id: 'fal_med_2', tierId: 'Falador Medium', description: 'Telegrab some Wine of Zamorak at the Chaos Temple by the Wilderness.', skills: { 'Magic': 33 }, regions: ['Chaos Temple (Asgarnia)'] },
   { id: 'fal_med_3', tierId: 'Falador Medium', description: 'Unlock the Crystal chest in Taverley.', regions: ['Taverley'] },
-  { id: 'fal_med_4', tierId: 'Falador Medium', description: 'Place a Scarecrow in the Falador farm flower patch.', skills: { 'Farming': 23 }, regions: ['Falador'], oneOf: [{ label: 'Grow watermelons', skills: { 'Farming': 47 } }, { label: 'Obtain a watermelon from gryphons' }] },
+  { id: 'fal_med_4', tierId: 'Falador Medium', description: 'Place a Scarecrow in the Falador farm flower patch.', skills: { 'Farming': 23 }, regions: ['Falador'], oneOf: [{ label: 'Grow watermelons', skills: { 'Farming': 47 } }, { predicates: [{"kind":"unknown","key":"fal_med_4:alternative","label":"Obtain a watermelon from gryphons"}], label: 'Obtain a watermelon from gryphons' }] },
   { id: 'fal_med_5', tierId: 'Falador Medium', description: 'Kill a Mogre at Mudskipper Point.', skills: { 'Slayer': 32 }, quests: ['Skippy and the Mogres'], regions: ['Mudskipper Point'] },
   { id: 'fal_med_6', tierId: 'Falador Medium', description: 'Visit the Port Sarim Rat Pits.', quests: ['Ratcatchers'], regions: ['Port Sarim'] },
   { id: 'fal_med_7', tierId: 'Falador Medium', description: 'Grapple up and then jump off the north Falador wall.', skills: { 'Agility': 11, 'Ranged': 19, 'Strength': 37 }, regions: ['Falador'] },
@@ -165,7 +169,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'frem_easy_3', tierId: 'Fremennik Easy', description: 'Kill 5 Rock crabs.', regions: ['Rellekka'] },
   { id: 'frem_easy_4', tierId: 'Fremennik Easy', description: 'Craft a tiara from scratch in Rellekka.', skills: { 'Crafting': 23, 'Mining': 20, 'Smithing': 20 }, quests: ['The Fremennik Trials'], regions: ['Rellekka'] },
   { id: 'frem_easy_5', tierId: 'Fremennik Easy', description: 'Browse the Stonemasons shop.', quests: ['The Giant Dwarf'], regions: ['Keldagrim'] },
-  { id: 'frem_easy_6', tierId: 'Fremennik Easy', description: 'Collect 5 Snape grass on Waterbirth Island.', regions: ['Waterbirth Island'], oneOf: [{ label: 'Waterbirth teleport or coins' }, { quests: ['The Fremennik Trials'] }] },
+  { id: 'frem_easy_6', tierId: 'Fremennik Easy', description: 'Collect 5 Snape grass on Waterbirth Island.', regions: ['Waterbirth Island'], oneOf: [{ predicates: [{"kind":"unknown","key":"frem_easy_6:alternative","label":"Waterbirth teleport or coins"}], label: 'Waterbirth teleport or coins' }, { quests: ['The Fremennik Trials'] }] },
   { id: 'frem_easy_7', tierId: 'Fremennik Easy', description: 'Steal from the Keldagrim crafting or baker\'s stall.', skills: { 'Thieving': 5 }, quests: ['The Giant Dwarf'], regions: ['Keldagrim'] },
   { id: 'frem_easy_8', tierId: 'Fremennik Easy', description: 'Fill a bucket with water at the Rellekka well.', regions: ['Rellekka'] },
   { id: 'frem_easy_9', tierId: 'Fremennik Easy', description: 'Enter the Troll Stronghold.', regions: ['Burthorpe'], oneOf: [{ quests: ['Troll Stronghold'] }, { cas: ['Easy'] }] },
@@ -177,7 +181,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'frem_med_5', tierId: 'Fremennik Medium', description: 'Travel to Miscellania by Fairy ring.', quests: ['The Fremennik Trials', 'Fairytale II - Cure a Queen'], regions: ['Miscellania & Etceteria'] },
   { id: 'frem_med_6', tierId: 'Fremennik Medium', description: 'Catch a Snowy knight.', regions: ['Rellekka'], oneOf: [{ label: 'Bare-handed', skills: { 'Hunter': 45 } }, { label: 'Butterfly net', skills: { 'Hunter': 35 }, items: ['Butterfly net', 'Butterfly jar'] }] },
   { id: 'frem_med_7', tierId: 'Fremennik Medium', description: 'Pick up your Pet Rock from your POH Menagerie.', skills: { 'Construction': 37 }, quests: ['The Fremennik Trials'], regions: ['Rellekka'] },
-  { id: 'frem_med_8', tierId: 'Fremennik Medium', description: 'Visit the Lighthouse from Waterbirth island.', quests: ['Horror from the Deep'], regions: ['Lighthouse'], oneOf: [{ label: 'Two-player door route' }, { skills: { 'Agility': 85 } }] },
+  { id: 'frem_med_8', tierId: 'Fremennik Medium', description: 'Visit the Lighthouse from Waterbirth island.', quests: ['Horror from the Deep'], regions: ['Lighthouse'], oneOf: [{ predicates: [{"kind":"unknown","key":"frem_med_8:alternative","label":"Two-player door route"}], label: 'Two-player door route' }, { skills: { 'Agility': 85 } }] },
   { id: 'frem_med_9', tierId: 'Fremennik Medium', description: 'Mine some gold at the Arzinian mine.', skills: { 'Defence': 30, 'Mining': 40 }, quests: ['Between a Rock...'], regions: ['Keldagrim'] },
   { id: 'frem_hard_1', tierId: 'Fremennik Hard', description: 'Teleport to Trollheim.', skills: { 'Magic': 61 }, quests: ['Eadgar\'s Ruse'], regions: ['Burthorpe'] },
   { id: 'frem_hard_2', tierId: 'Fremennik Hard', description: 'Catch a Sabre-toothed Kyatt.', skills: { 'Hunter': 55 }, regions: ['Rellekka'] },
@@ -188,7 +192,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'frem_hard_7', tierId: 'Fremennik Hard', description: 'Obtain 100% support from your kingdom subjects.', quests: ['Throne of Miscellania'], regions: ['Miscellania & Etceteria'] },
   { id: 'frem_hard_8', tierId: 'Fremennik Hard', description: 'Teleport to Waterbirth Island.', skills: { 'Magic': 72 }, quests: ['Lunar Diplomacy'], regions: ['Waterbirth Island'] },
   { id: 'frem_hard_9', tierId: 'Fremennik Hard', description: 'Obtain the Blast Furnace Foremans permission to use the Blast Furnace for free.', skills: { 'Smithing': 60 }, quests: ['The Giant Dwarf'], regions: ['Keldagrim'] },
-  { id: 'frem_elite_1', tierId: 'Fremennik Elite', description: 'Kill each of the Dagannoth Kings.', regions: ['Waterbirth Island'], oneOf: [{ label: 'Two-player door route' }, { skills: { 'Agility': 85 } }] },
+  { id: 'frem_elite_1', tierId: 'Fremennik Elite', description: 'Kill each of the Dagannoth Kings.', regions: ['Waterbirth Island'], oneOf: [{ predicates: [{"kind":"unknown","key":"frem_elite_1:alternative","label":"Two-player door route"}], label: 'Two-player door route' }, { skills: { 'Agility': 85 } }] },
   { id: 'frem_elite_2', tierId: 'Fremennik Elite', description: 'Craft 56 astral runes simultaneously from Essence without the use of Extracts.', skills: { 'Runecraft': 82 }, quests: ['Lunar Diplomacy'], regions: ['Lunar Isle'] },
   { id: 'frem_elite_3', tierId: 'Fremennik Elite', description: 'Create a dragonstone amulet in the Neitiznot furnace.', skills: { 'Crafting': 80 }, quests: ['The Fremennik Isles'], regions: ['Neitiznot'] },
   { id: 'frem_elite_4', tierId: 'Fremennik Elite', description: 'Complete a lap of the Rellekka agility course.', skills: { 'Agility': 80 }, regions: ['Rellekka'] },
@@ -208,7 +212,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'kan_med_1', tierId: 'Kandarin Medium', description: 'Complete a lap of the Barbarian agility course.', skills: { 'Agility': 35 }, quests: ['Alfred Grimhand\'s Barcrawl'], regions: ['Barbarian Outpost'] },
   { id: 'kan_med_2', tierId: 'Kandarin Medium', description: 'Create a Super Antipoison potion from scratch in the Seers / Catherby Area.', skills: { 'Herblore': 48 }, anyOfRegions: ['Seers\' Village', 'Catherby'] },
   { id: 'kan_med_3', tierId: 'Kandarin Medium', description: 'Enter the Ranging guild.', skills: { 'Ranged': 40 }, regions: ['Ranging Guild'] },
-  { id: 'kan_med_4', tierId: 'Kandarin Medium', description: 'Use the grapple shortcut to get from the water obelisk to Catherby shore.', skills: { 'Agility': 36, 'Ranged': 39, 'Strength': 22 }, regions: ['Catherby'], oneOf: [{ label: 'Dusty key' }, { skills: { 'Agility': 70 } }] },
+  { id: 'kan_med_4', tierId: 'Kandarin Medium', description: 'Use the grapple shortcut to get from the water obelisk to Catherby shore.', skills: { 'Agility': 36, 'Ranged': 39, 'Strength': 22 }, regions: ['Catherby'], oneOf: [{ predicates: [{"kind":"unknown","key":"kan_med_4:alternative","label":"Dusty key"}], label: 'Dusty key' }, { skills: { 'Agility': 70 } }] },
   { id: 'kan_med_5', tierId: 'Kandarin Medium', description: 'Catch and cook a Bass in Catherby.', skills: { 'Cooking': 43, 'Fishing': 46 }, regions: ['Catherby'] },
   { id: 'kan_med_6', tierId: 'Kandarin Medium', description: 'Teleport to Camelot.', skills: { 'Magic': 45 }, regions: ['Camelot'] },
   { id: 'kan_med_7', tierId: 'Kandarin Medium', description: 'String a Maple shortbow in Seers\' Village bank.', skills: { 'Fletching': 50 }, regions: ['Seers\' Village'] },
@@ -223,7 +227,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'kan_hard_2', tierId: 'Kandarin Hard', description: 'Complete a lap of the Seers\' Village agility course.', skills: { 'Agility': 60 }, regions: ['Seers\' Village'] },
   { id: 'kan_hard_3', tierId: 'Kandarin Hard', description: 'Create a Yew Longbow from scratch around Seers\' Village.', skills: { 'Fletching': 70, 'Woodcutting': 60 }, regions: ['Seers\' Village'] },
   { id: 'kan_hard_4', tierId: 'Kandarin Hard', description: 'Enter the Seers\' Village courthouse with piety turned on.', skills: { 'Defence': 70, 'Prayer': 70 }, quests: ['King\'s Ransom'], regions: ['Seers\' Village'] },
-  { id: 'kan_hard_5', tierId: 'Kandarin Hard', description: 'Charge a Water Orb.', skills: { 'Magic': 56 }, regions: ['Catherby'], oneOf: [{ label: 'Dusty key' }, { skills: { 'Agility': 70 } }] },
+  { id: 'kan_hard_5', tierId: 'Kandarin Hard', description: 'Charge a Water Orb.', skills: { 'Magic': 56 }, regions: ['Catherby'], oneOf: [{ predicates: [{"kind":"unknown","key":"kan_hard_5:alternative","label":"Dusty key"}], label: 'Dusty key' }, { skills: { 'Agility': 70 } }] },
   { id: 'kan_hard_6', tierId: 'Kandarin Hard', description: 'Burn some Maple logs with a bow in Seers\' Village.', skills: { 'Firemaking': 65 }, regions: ['Seers\' Village'] },
   { id: 'kan_hard_7', tierId: 'Kandarin Hard', description: 'Kill a Shadow Hound in the Shadow dungeon.', skills: { 'Thieving': 53 }, quests: ['Desert Treasure I'], regions: ['Legends\' Guild'] },
   { id: 'kan_hard_8', tierId: 'Kandarin Hard', description: 'Kill a Mithril Dragon.', regions: ['Ancient Cavern'] },
@@ -243,7 +247,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'kar_easy_4', tierId: 'Karamja Easy', description: 'Travel to Port Sarim via the dock, east of Musa Point.', regions: ['Musa Point'] },
   { id: 'kar_easy_5', tierId: 'Karamja Easy', description: 'Travel to Ardougne via the port near Brimhaven.', regions: ['Brimhaven'] },
   { id: 'kar_easy_6', tierId: 'Karamja Easy', description: 'Explore Cairn Island to the west of Karamja.', skills: { 'Agility': 15 }, regions: ['Tai Bwo Wannai'] },
-  { id: 'kar_easy_7', tierId: 'Karamja Easy', description: 'Use the Fishing spots north of the banana plantation.', regions: ['Musa Point'], oneOf: [{ label: 'Fishing equipment' }, { quests: ['Barbarian Training'] }] },
+  { id: 'kar_easy_7', tierId: 'Karamja Easy', description: 'Use the Fishing spots north of the banana plantation.', regions: ['Musa Point'], oneOf: [{ predicates: [{"kind":"unknown","key":"kar_easy_7:alternative","label":"Fishing equipment"}], label: 'Fishing equipment' }, { quests: ['Barbarian Training'] }] },
   { id: 'kar_easy_8', tierId: 'Karamja Easy', description: 'Collect 5 seaweed from anywhere on Karamja.', anyOfRegions: ['Musa Point', 'Brimhaven', 'Tai Bwo Wannai', 'Shilo Village', 'Kharazi Jungle', 'Mor Ul Rek (TzHaar City)', 'Crandor', 'Ship Yard'] },
   { id: 'kar_easy_9', tierId: 'Karamja Easy', description: 'Attempt the TzHaar Fight Pits or Fight Cave.', regions: ['Mor Ul Rek (TzHaar City)'] },
   { id: 'kar_easy_10', tierId: 'Karamja Easy', description: 'Kill a jogre in the Pothole dungeon.', regions: ['Tai Bwo Wannai'] },
@@ -273,7 +277,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'kar_hard_5', tierId: 'Karamja Hard', description: 'Cook a karambwan thoroughly.', skills: { 'Cooking': 30 }, quests: ['Tai Bwo Wannai Trio'], regions: ['Tai Bwo Wannai'] },
   { id: 'kar_hard_6', tierId: 'Karamja Hard', description: 'Kill a deathwing in the dungeon under the Kharazi Jungle.', skills: { 'Agility': 50, 'Mining': 52, 'Strength': 50, 'Thieving': 50 }, quests: ['Legends\' Quest'], regions: ['Kharazi Jungle'] },
   { id: 'kar_hard_7', tierId: 'Karamja Hard', description: 'Use the crossbow shortcut south of the volcano.', skills: { 'Agility': 53, 'Ranged': 42, 'Strength': 21 }, regions: ['Musa Point'] },
-  { id: 'kar_hard_8', tierId: 'Karamja Hard', description: 'Collect 5 palm leaves.', quests: ['Legends\' Quest'], regions: ['Kharazi Jungle'], oneOf: [{ label: 'Axe and machete' }, { skills: { 'Agility': 79 } }] },
+  { id: 'kar_hard_8', tierId: 'Karamja Hard', description: 'Collect 5 palm leaves.', quests: ['Legends\' Quest'], regions: ['Kharazi Jungle'], oneOf: [{ predicates: [{"kind":"unknown","key":"kar_hard_8:alternative","label":"Axe and machete"}], label: 'Axe and machete' }, { skills: { 'Agility': 79 } }] },
   { id: 'kar_hard_9', tierId: 'Karamja Hard', description: 'Be assigned a Slayer task by the Slayer Master in Shilo Village.', skills: { 'Slayer': 50 }, quests: ['Shilo Village'], regions: ['Shilo Village'], oneOf: [{ combatLevel: 100 }, { label: 'Slayer cape', skills: { 'Slayer': 99 } }] },
   { id: 'kar_hard_10', tierId: 'Karamja Hard', description: 'Kill a metal dragon in Brimhaven Dungeon.', skills: { 'Woodcutting': 10 }, regions: ['Brimhaven'] },
   { id: 'kar_elite_1', tierId: 'Karamja Elite', description: 'Craft 56 Nature runes simultaneously from Essence without the use of Extracts.', skills: { 'Runecraft': 91 }, regions: ['Tai Bwo Wannai'] },
@@ -366,13 +370,13 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'lum_elite_5', tierId: 'Lumbridge Elite', description: 'Craft 140 or more Water runes simultaneously from Essence without the use of Extracts.', regions: ['Lumbridge'], oneOf: [{ label: 'No Raiments', skills: { 'Runecraft': 76 } }, { label: '3 Raiments of the Eye pieces', skills: { 'Runecraft': 57 }, items: ['3 Raiments of the Eye pieces'] }, { label: '4 Raiments of the Eye pieces', skills: { 'Runecraft': 38 }, items: ['4 Raiments of the Eye pieces (random chance)'] }] },
   { id: 'lum_elite_6', tierId: 'Lumbridge Elite', description: 'Perform the Quest cape emote in the Wise Old Man\'s house.', regions: ['Draynor Village'], allQuests: true },
   { id: 'mor_easy_1', tierId: 'Morytania Easy', description: 'Craft any Snelm from scratch in Morytania.', skills: { 'Crafting': 15 }, anyOfRegions: ['Canifis', 'Port Phasmatys', 'Mort\'ton', 'Barrows', 'Burgh de Rott', 'Meiyerditch', 'Darkmeyer', 'Slepe', 'Ver Sinhaza', 'Fenkenstrain\'s Castle', 'Slayer Tower', 'Haunted Mine', 'Haunted Woods', 'Harmony Island', 'Mos Le\'Harmless', 'Braindeath Island', 'Dragontooth Island', 'Icyene Graveyard'] },
-  { id: 'mor_easy_2', tierId: 'Morytania Easy', description: 'Cook a thin Snail on the Port Phasmatys range.', skills: { 'Cooking': 12 }, regions: ['Port Phasmatys'], oneOf: [{ quests: ['Ghosts Ahoy'] }, { label: 'Ecto-tokens or charter ship' }] },
+  { id: 'mor_easy_2', tierId: 'Morytania Easy', description: 'Cook a thin Snail on the Port Phasmatys range.', skills: { 'Cooking': 12 }, regions: ['Port Phasmatys'], oneOf: [{ quests: ['Ghosts Ahoy'] }, { predicates: [{"kind":"unknown","key":"mor_easy_2:alternative","label":"Ecto-tokens or charter ship"}], label: 'Ecto-tokens or charter ship' }] },
   { id: 'mor_easy_3', tierId: 'Morytania Easy', description: 'Get a slayer task from the Slayer Master in Canifis.', quests: ['Priest in Peril'], regions: ['Canifis'], oneOf: [{ combatLevel: 20 }, { label: 'Slayer cape', skills: { 'Slayer': 99 } }] },
   { id: 'mor_easy_4', tierId: 'Morytania Easy', description: 'Kill a Banshee in the Slayer Tower.', skills: { 'Slayer': 15 }, regions: ['Slayer Tower'] },
   { id: 'mor_easy_5', tierId: 'Morytania Easy', description: 'Have Sbott in Canifis tan something for you.', regions: ['Canifis'] },
   { id: 'mor_easy_6', tierId: 'Morytania Easy', description: 'Enter Mort Myre Swamp.', regions: ['Mort Myre Swamp'] },
   { id: 'mor_easy_7', tierId: 'Morytania Easy', description: 'Kill a Ghoul.', regions: ['Paterdomus'] },
-  { id: 'mor_easy_8', tierId: 'Morytania Easy', description: 'Place a Scarecrow in the Morytania flower patch.', skills: { 'Farming': 23 }, regions: ['Port Phasmatys'], oneOf: [{ label: 'Grow watermelons', skills: { 'Farming': 47 } }, { label: 'Obtain a watermelon from gryphons' }] },
+  { id: 'mor_easy_8', tierId: 'Morytania Easy', description: 'Place a Scarecrow in the Morytania flower patch.', skills: { 'Farming': 23 }, regions: ['Port Phasmatys'], oneOf: [{ label: 'Grow watermelons', skills: { 'Farming': 47 } }, { predicates: [{"kind":"unknown","key":"mor_easy_8:alternative","label":"Obtain a watermelon from gryphons"}], label: 'Obtain a watermelon from gryphons' }] },
   { id: 'mor_easy_9', tierId: 'Morytania Easy', description: 'Offer some bonemeal at the Ectofuntus.', regions: ['Port Phasmatys'] },
   { id: 'mor_easy_10', tierId: 'Morytania Easy', description: 'Kill a werewolf in its human form using the Wolfbane Dagger.', regions: ['Canifis'] },
   { id: 'mor_easy_11', tierId: 'Morytania Easy', description: 'Restore your prayer points at the nature altar.', quests: ['Nature Spirit'], regions: ['Mort Myre Swamp'] },

@@ -133,7 +133,7 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
       return newQuestIds.has(blocker.label)
         || (blocker.label === 'All quests' && completesQuestCape);
     }
-    if (blocker.kind === 'region') return false;
+    if (blocker.kind === 'region' || blocker.kind === 'requirement') return false;
     return blocker.routes.some(route => route.blockers.every(routeBlocker => (
       blockerCanChange(routeBlocker, skill, newQuestIds, completesQuestCape)
     )));

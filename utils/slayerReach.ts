@@ -13,6 +13,7 @@ import { SLAYER_MASTER_REQUIREMENTS, type SlayerMasterRequirementOption } from '
 import { isAreaReachable } from './reachability';
 
 export type SlayerStatus =
+  | 'unknown'
   | 'ready'         // assignable and reachable right now
   | 'slayer-locked' // Slayer skill/level too low
   | 'quest-locked'  // a quest unlock is missing
@@ -144,6 +145,7 @@ export function slayerReachability(
       let status: SlayerStatus;
       if (masterGate) status = masterGate.status;
       else if (!slayerUnlocked || (info.slayer != null && slayerLevel < info.slayer)) status = 'slayer-locked';
+      else if (info.req?.some(r => questFromReq(r) === null)) status = 'unknown';
       else if (!reqMet(info.req)) status = 'quest-locked';
       else if (info.combat != null && combat < info.combat) status = 'combat-locked';
       else if (!loc) status = 'no-location';

@@ -190,6 +190,7 @@ const renderSkills = (skills) => '{ ' + Object.entries(skills)
 
 const renderRequirementProperties = (requirement) => {
   const properties = [];
+  if (requirement.predicates?.length) properties.push('predicates: ' + JSON.stringify(requirement.predicates));
   if (requirement.label) properties.push('label: ' + quote(requirement.label));
   if (requirement.skills && Object.keys(requirement.skills).length > 0) {
     properties.push('skills: ' + renderSkills(requirement.skills));
@@ -292,7 +293,7 @@ const validateRequirementShape = (requirement, context, allowEmpty = true) => {
     }
   }
   const hasRequirement = Boolean(
-    requirement.label
+    requirement.predicates?.length
     || requirement.items?.length
     || Object.keys(requirement.skills ?? {}).length
     || requirement.quests?.length
@@ -382,7 +383,10 @@ export function renderDiaryTasks(snapshot) {
     || left.id.localeCompare(right.id)
   ));
   const lines = [
+    "import type { RequirementPredicate } from '../utils/requirementPredicates';",
+    '',
     'export interface DiaryTaskRequirementOption {',
+    '  predicates?: RequirementPredicate[];',
     '  label?: string;',
     '  skills?: Record<string, number>;',
     '  items?: string[];',
@@ -399,6 +403,7 @@ export function renderDiaryTasks(snapshot) {
     '}',
     '',
     'export interface DiaryTask {',
+    '  predicates?: RequirementPredicate[];',
     '  id: string;',
     '  tierId: string;',
     '  description: string;',

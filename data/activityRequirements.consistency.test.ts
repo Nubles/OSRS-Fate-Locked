@@ -26,8 +26,11 @@ describe('activity requirements + regions consistency', () => {
     expect(ACTIVITY_REGIONS['The Mad Angel']).toBe('The Open Seas');
     expect(ACTIVITY_REQUIREMENTS['The Mad Angel']).toEqual({
       quests: ['Fallen From Grace'],
-      requiredAreas: ['Wyrmscraig'],
     });
+  });
+
+  it('does not duplicate canonical geography in raw requirements', () => {
+    for (const req of Object.values(ACTIVITY_REQUIREMENTS)) expect(req.requiredAreas).toBeUndefined();
   });
 
   it('shares every canonical boss and minigame access area with readiness', () => {
