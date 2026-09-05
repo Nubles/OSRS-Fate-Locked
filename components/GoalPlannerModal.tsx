@@ -222,6 +222,7 @@ const STEP_ICON: Record<PlanStep['kind'], React.ReactNode> = {
   qp: <Star size={12} />,
   quest: <BookOpen size={12} />,
   manual: <Compass size={12} />,
+  requirement: <Compass size={12} />,
 };
 
 /** OSRS Wiki article for a step. Region display labels can contain surface
@@ -232,7 +233,7 @@ export const goalPlannerStepWikiHref = (step: PlanStep): string =>
   wikiUrlFor(step.kind === 'qp' ? 'Quest points' : step.kind === 'region' ? step.id : step.label);
 
 export const goalPlannerStepHasWikiLink = (step: PlanStep): boolean =>
-  step.kind !== 'manual' && !step.id.startsWith('alternative:');
+  step.kind !== 'manual' && step.kind !== 'requirement' && !step.id.startsWith('alternative:');
 
 const StepRow: React.FC<{ step: PlanStep; index?: number }> = ({ step, index }) => (
   <div
@@ -953,7 +954,7 @@ export const GoalPlannerModal: React.FC<Props> = ({
                       <PlanSection title="Quest points" icon={<Star size={12} />} steps={[plan.qpStep]} />
                     )}
                     <PlanSection
-                      title="Confirm manually"
+                      title="Additional requirements"
                       icon={<Compass size={12} />}
                       steps={plan.manualSteps}
                     />

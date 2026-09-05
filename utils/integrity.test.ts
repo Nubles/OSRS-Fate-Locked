@@ -492,6 +492,17 @@ describe('buildVerifiedBundle', () => {
 
 
 describe('malformed integrity links', () => {
+  it('retains legacy uncertainty across initialization and export', async () => {
+    const history = [fail()];
+    expect(auditHistory(history).verdict).toBe('warning');
+    const migrated = ensureChain(history);
+    expect(verifyChain(migrated).ok).toBe(true);
+    expect(auditHistory(migrated).verdict).toBe('warning');
+    const bundle = await buildVerifiedBundle(migrated);
+    expect(auditHistory(bundle.history).verdict).toBe('warning');
+    const strippedMarker = migrated.map(entry => ({ ...entry, meta: {} }));
+    expect(verifyChain(strippedMarker).ok).toBe(false);
+  });
   it.each([
     { hash: 'deadbeef' }, { prevHash: 'GENESIS' },
     { hash: '', prevHash: 'GENESIS' }, { hash: null, prevHash: 'GENESIS' },

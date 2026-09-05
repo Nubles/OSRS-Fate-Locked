@@ -51,11 +51,12 @@ export const hashEntry = (entry: LogEntry, prevHash: string): string => {
 export const ensureChain = (history: LogEntry[]): LogEntry[] => {
   if (history.some(e => e.hash !== undefined || e.prevHash !== undefined)) return history;
   let prev = GENESIS;
-  return history.map(e => {
+  return history.map((e, index) => {
+    const entry = index === 0 ? { ...e, meta: { ...e.meta, integrityLegacyChain: true } } : e;
     const prevHash = prev;
-    const hash = hashEntry(e, prevHash);
+    const hash = hashEntry(entry, prevHash);
     prev = hash;
-    return { ...e, prevHash, hash };
+    return { ...entry, prevHash, hash };
   });
 };
 
@@ -267,8 +268,8 @@ export interface RunAudit {
 /**
  * Classify a run's history for display at import time. Combines the hash-chain
  * check with the invariant replay into a single traffic-light verdict.
- * A history with no hash links at all (very old saves) chains cleanly from
- * GENESIS and reads as intact — we only flag links that are actually broken.
+ * Legacy initialization preserves chain consistency but cannot establish
+ * pre-migration integrity. Keep that distinction after migration and export.
  */
 export const auditHistory = (history: LogEntry[]): RunAudit => {
   const chained = ensureChain(history);
@@ -276,7 +277,7 @@ export const auditHistory = (history: LogEntry[]): RunAudit => {
   const { violations, final } = replayInvariants(chained);
   let verdict: RunVerdict = 'verified';
   if (!chain.ok) verdict = 'tampered';
-  else if (violations.length > 0) verdict = 'warning';
+  else if (violations.length > 0 || chained.some(entry => entry.meta?.integrityLegacyChain === true)) verdict = 'warning';
   return { verdict, chain, violations, final };
 };
 

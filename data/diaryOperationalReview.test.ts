@@ -4,6 +4,8 @@ import { SKILLS_LIST } from './items';
 import { evaluateDiaryTaskEligibility } from '../utils/journalStatus';
 import { diaryTaskCompletionDecision } from '../utils/journalCompletion';
 import type { UnlockState } from '../types';
+import { QUEST_DATA } from './questData';
+import { ARCANA_LIST, GUILDS_LIST, MOBILITY_LIST, MINIGAMES_LIST, BOSSES_LIST, FARMING_PATCH_LIST } from './items';
 
 const state = (skills: Record<string, number> = {}): UnlockState => ({
   skills, levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])), equipment: {},
@@ -11,6 +13,45 @@ const state = (skills: Record<string, number> = {}): UnlockState => ({
   quests: ['Rune Mysteries', "Cook's Assistant"], diaries: [], cas: [], completedTasks: [],
   collectionLog: {}, mobility: [], arcana: [], housing: [], merchants: [], minigames: [],
   bosses: [], storage: [], guilds: [], farming: [], slayerUnlocks: [],
+});
+
+describe('complete diary inventory operational semantics', () => {
+  const ready = (): UnlockState => ({
+    ...state(Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10]))),
+    quests: Object.keys(QUEST_DATA), arcana: [...ARCANA_LIST], guilds: [...GUILDS_LIST],
+    mobility: [...MOBILITY_LIST], minigames: [...MINIGAMES_LIST], bosses: [...BOSSES_LIST], farming: [...FARMING_PATCH_LIST],
+    regions: [...new Set(ALL_DIARY_TASKS.flatMap(task => [...(task.regions ?? []), ...(task.anyOfRegions ?? []), ...(task.oneOf ?? []).flatMap(route => route.regions ?? [])]))],
+  });
+  const byId = (id: string) => ALL_DIARY_TASKS.find(task => task.id === id)!;
+  it.each([['fal_hard_1', 56, 1], ['fal_elite_1', 88, 1], ['lum_hard_3', 59, 3], ['frem_elite_2', 82, 4], ['kar_elite_1', 91, 5]])(
+    'does not turn the multiplied rune output level into a method tier for %s', (id, level, tier) => {
+      const u = ready(); u.levels.Runecraft = Number(level); u.skills.Runecraft = Number(tier);
+      expect(evaluateDiaryTaskEligibility(byId(String(id)), u).machineEligible).toBe(true);
+      u.skills.Runecraft = Number(tier) - 1;
+      expect(evaluateDiaryTaskEligibility(byId(String(id)), u).machineEligible).toBe(false);
+    },
+  );
+  it('blocks missing tracked spellbook permission even after manual attestation', () => {
+    const u = ready(); u.arcana = [];
+    expect(diaryTaskCompletionDecision(byId('mor_elite_3'), u, undefined, { manualConfirmed: true }).ok).toBe(false);
+  });
+  it('permits confirmed quest progress without demanding full completion', () => {
+    const u = ready(); u.quests = u.quests.filter(q => q !== 'Sea Slug');
+    const result = evaluateDiaryTaskEligibility(byId('ard_med_7'), u);
+    expect(result.machineEligible).toBe(true);
+    expect(result.manualChecks.join(' ')).toContain('Sea Slug progressed');
+    expect(diaryTaskCompletionDecision(byId('ard_med_7'), u).ok).toBe(false);
+  });
+  it('does not require gathering levels for legally pre-owned task materials', () => {
+    const u = ready(); u.levels.Farming = 1;
+    expect(evaluateDiaryTaskEligibility(byId('fal_med_13'), u).machineEligible).toBe(true);
+  });
+  it('enforces Wilderness diary ownership separately from boss-entry confirmations', () => {
+    const u = ready();
+    expect(diaryTaskCompletionDecision(byId('wild_elite_1'), u, undefined, { manualConfirmed: true }).ok).toBe(false);
+    u.diaries = ['Wilderness Medium'];
+    expect(evaluateDiaryTaskEligibility(byId('wild_elite_1'), u).machineEligible).toBe(true);
+  });
 });
 const task = (ordinal: number) => ALL_DIARY_TASKS.find(t => t.id === `lum_easy_${ordinal}`)!;
 

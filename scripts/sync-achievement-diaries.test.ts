@@ -24,6 +24,7 @@ it.each([
   { kind: 'item', id: 'cape', label: 'Cape', usage: 'other' },
   { kind: 'any', of: [{ kind: 'questPoints', count: -1 }] },
   { kind: 'all', of: [] },
+  { kind: 'combinedSkills', skills: ['Attack', 'Attack'], level: 130 },
 ])('rejects malformed typed diary predicate %j before generating content', predicate => {
   const snapshot = structuredClone(SIX_TASK_SNAPSHOT);
   Object.assign(snapshot.tasks[0], { predicates: [predicate] });
@@ -486,6 +487,7 @@ describe('Achievement Diary id-classification audit', () => {
 
     expect(alternativeIds).toEqual([
       'ard_med_6',
+      'des_elite_4',
       'fal_elite_1',
       'fal_elite_4',
       'fal_hard_1',
@@ -497,6 +499,7 @@ describe('Achievement Diary id-classification audit', () => {
       'frem_elite_5',
       'frem_elite_6',
       'frem_med_6',
+      'frem_med_7',
       'frem_med_8',
       'kan_elite_3',
       'kan_hard_5',
@@ -515,6 +518,7 @@ describe('Achievement Diary id-classification audit', () => {
       'mor_easy_3',
       'mor_easy_8',
       'mor_elite_6',
+      'mor_hard_1',
       'var_elite_5',
       'var_hard_1',
       'var_hard_5',
@@ -537,7 +541,7 @@ describe('Achievement Diary id-classification audit', () => {
     expect(byId.get('frem_easy_9')).toMatchObject({
       quests: [],
       oneOf: [
-        { quests: ['Troll Stronghold'] },
+        { predicates: [{ kind: 'any', of: [{ kind: 'quest', id: 'Troll Stronghold' }, expect.objectContaining({ kind: 'manual' })] }] },
         { cas: ['Easy'] },
       ],
     });
@@ -600,11 +604,11 @@ describe('Achievement Diary id-classification audit', () => {
         { label: 'Hardwood Grove', regions: ['Tai Bwo Wannai'] },
         {
           label: 'Kharazi Jungle (machete)', regions: ['Kharazi Jungle'],
-          items: ['Machete', "Started Legends' Quest"],
+          predicates: expect.arrayContaining([expect.objectContaining({ kind: 'manual', label: 'For this route, have and legally use: Machete' }), expect.objectContaining({ kind: 'manual', label: "For this route, have and legally use: Started Legends' Quest" })]),
         },
         {
           label: 'Kharazi Jungle (vine shortcut)', regions: ['Kharazi Jungle'],
-          items: ["Started Legends' Quest"], skills: { Agility: 79 },
+          predicates: expect.arrayContaining([expect.objectContaining({ kind: 'manual', label: "For this route, have and legally use: Started Legends' Quest" })]), skills: { Agility: 79 },
         },
       ],
     });
@@ -614,11 +618,11 @@ describe('Achievement Diary id-classification audit', () => {
         expect.objectContaining({ label: 'Hardwood Grove', regions: ['Tai Bwo Wannai'] }),
         expect.objectContaining({
           label: 'Kharazi Jungle (machete)',
-          items: ['Machete', "Started Legends' Quest"],
+          predicates: expect.arrayContaining([expect.objectContaining({ kind: 'manual', label: 'For this route, have and legally use: Machete' })]),
         }),
         expect.objectContaining({
           label: 'Kharazi Jungle (vine shortcut)',
-          items: ["Started Legends' Quest"], skills: { Agility: 79 },
+          predicates: expect.arrayContaining([expect.objectContaining({ kind: 'manual', label: "For this route, have and legally use: Started Legends' Quest" })]), skills: { Agility: 79 },
         }),
       ]),
     });
@@ -642,14 +646,14 @@ describe('Achievement Diary id-classification audit', () => {
         expect.objectContaining({
           label: 'Bare-handed fishing',
           skills: { Fishing: 96, Strength: 76 },
-          items: ['Access to Barbarian Fishing'],
+          predicates: expect.arrayContaining([expect.objectContaining({ kind: 'manual', label: 'For this route, have and legally use: Access to Barbarian Fishing' })]),
         }),
       ],
     });
     expect(byId.get('wild_med_7')).toMatchObject({
       items: ['Muddy key'],
       oneOf: [
-        expect.objectContaining({ label: 'Slashing route', items: ['Knife or slashing weapon'] }),
+        expect.objectContaining({ label: 'Slashing route', predicates: expect.arrayContaining([expect.objectContaining({ kind: 'manual', label: 'For this route, have and legally use: Knife or slashing weapon' })]) }),
         { label: 'Stepping Stone shortcut', skills: { Agility: 82 } },
       ],
     });
@@ -662,7 +666,7 @@ describe('Achievement Diary id-classification audit', () => {
     expect(byId.get('kar_hard_3')).toMatchObject({
       skills: {}, regions: [],
       oneOf: [
-        { label: 'Pre-cooked', items: ['Cooked oomlie wrap'] },
+        { label: 'Pre-cooked', predicates: expect.arrayContaining([expect.objectContaining({ kind: 'manual', label: 'For this route, have and legally use: Cooked oomlie wrap' })]) },
         expect.objectContaining({ label: 'Cook it yourself', skills: { Cooking: 50 } }),
       ],
     });

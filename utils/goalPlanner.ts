@@ -30,7 +30,7 @@ export type GoalKind = 'quest' | 'diary' | 'region';
 
 export interface PlanStep {
   /** What kind of thing this step is. */
-  kind: 'quest' | 'region' | 'skill' | 'qp' | 'manual';
+  kind: 'quest' | 'region' | 'skill' | 'qp' | 'manual' | 'requirement';
   /** Stable id: quest id, region name, skill name, or 'Quest Points'. */
   id: string;
   /** Display label. */
@@ -124,7 +124,7 @@ function questPointsFor(questId: string): number {
 
 /** Total quest points the player currently has. */
 function currentQuestPoints(unlocks: any): number {
-  return (unlocks.quests as string[]).reduce(
+  return [...new Set(unlocks.quests as string[])].reduce(
     (acc, qid) => acc + questPointsFor(qid),
     0,
   );
@@ -146,7 +146,7 @@ function requirementOptionPlanSteps(option: any): PlanStep[] {
 }
 
 function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): PlanStep {
-  if (blocker.kind === 'requirement') return { kind: 'manual', id: blocker.label, label: blocker.label, done: false };
+  if (blocker.kind === 'requirement') return { kind: 'requirement', id: blocker.label, label: blocker.label, done: false };
   if (blocker.kind === 'region') return areaPlanStep(blocker.label);
   if (blocker.kind === 'quest') {
     return { kind: 'quest', id: blocker.label, label: blocker.label, unlockTable: TableType.QUESTS, done: false };
@@ -487,6 +487,12 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
         }
         const blockers = eligibility.blockers;
         for (const blocker of blockers) {
+          if (blocker.kind === 'requirement') {
+            merged.manualSteps.set('requirement:' + blocker.label, {
+              kind: 'requirement', id: `requirement:${task.id}:${blocker.label}`,
+              label: blocker.label, detail: `Required for ${task.description}`, done: false,
+            });
+          }
           if (blocker.kind === 'region') merged.regions.add(canonicalAreaName(blocker.label));
           if (blocker.kind === 'alternative') {
             const label = 'One of: ' + blocker.label;

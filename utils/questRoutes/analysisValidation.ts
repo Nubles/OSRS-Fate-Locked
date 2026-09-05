@@ -1,3 +1,4 @@
+import { isRouteGateUsable } from './model';
 import type { QuestPreparationRouteAnalysis } from './analyzeQuest';
 
 const record = (value: unknown): value is Record<string, unknown> =>
@@ -12,16 +13,7 @@ const list = (value: unknown, check: (value: unknown) => boolean): boolean => Ar
 const chunk = (value: unknown): boolean => typeof value === 'string' && /^-?\d+,-?\d+$/.test(value);
 const sourceKind = (value: unknown): boolean => ['SPAWN', 'SHOP', 'DROP', 'GATHER', 'RECIPE'].includes(value as string);
 const itemRef = (value: unknown): boolean => record(value) && text(value.key) && text(value.name);
-const gate = (value: unknown): boolean => {
-  if (!record(value) || !text(value.label)) return false;
-  switch (value.type) {
-    case 'QUEST': return text(value.questId);
-    case 'SKILL': return text(value.skill) && positive(value.level);
-    case 'UNLOCK': return text(value.id) && ['guilds', 'merchants', 'minigames', 'mobility', 'slayerUnlocks'].includes(value.category as string);
-    case 'UNRESOLVED': return text(value.raw);
-    default: return false;
-  }
-};
+const gate = isRouteGateUsable;
 const step = (value: unknown): boolean => record(value)
   && text(value.id) && text(value.label) && optional(value.chunk, chunk)
   && list(value.gates, gate) && optional(value.blockers, gates => list(gates, gate))

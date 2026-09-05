@@ -57,7 +57,7 @@ export const evaluateQuestDoability = (
 ): QuestDoabilityEvaluation => {
   const eligibility = evaluateQuestEligibility(quest, unlocks, gameModeId);
   const completed = eligibility.status === 'COMPLETED';
-  const currentQP = unlocks.quests.reduce(
+  const currentQP = [...new Set(unlocks.quests)].reduce(
     (total, qid) => total + (QUEST_DATA[qid]?.points ?? 0),
     0,
   );

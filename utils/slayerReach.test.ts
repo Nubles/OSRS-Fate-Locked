@@ -4,7 +4,7 @@ import { SlayerMasters } from '../services/ChunkContentService';
 import { UnlockState } from '../types';
 
 const base = (over: Partial<UnlockState> = {}): UnlockState => ({
-  equipment: {}, skills: {}, levels: {}, regions: [], mobility: [], arcana: [],
+  equipment: {}, skills: {}, levels: {}, regions: ['Edgeville'], mobility: [], arcana: [],
   housing: [], merchants: [], minigames: [], bosses: [], storage: [], guilds: [],
   farming: [], slayerUnlocks: [], quests: [], diaries: [], cas: [],
   completedTasks: [], collectionLog: {},
@@ -12,7 +12,7 @@ const base = (over: Partial<UnlockState> = {}): UnlockState => ({
 });
 
 const MASTERS: SlayerMasters = {
-  'Test Master': {
+  Krystilia: {
     Crawling: { weight: 8, slayer: 5 },                         // low slayer
     Banshees: { weight: 8, slayer: 15, req: ['Priest in Peril Complete the quest'] },
     Bigfella: { weight: 5, combat: 80 },                         // combat gate
@@ -80,15 +80,35 @@ const standardMasterReach = (
 }, unlocks, locate, gameModeId);
 
 describe('slayerReachability', () => {
+  it('keeps malformed assignment rows and prototype quest names unknown', () => {
+    const state = base({ quests: ['constructor'] });
+    for (const info of [null, { weight: 1, req: ['constructor Complete the quest'] }]) {
+      const masters = { Krystilia: { Crawling: info } } as unknown as SlayerMasters;
+      expect(statusOf(slayerReachability(masters, state, locate), 'Crawling')).toBe('unknown');
+    }
+    const tables = { Krystilia: null } as unknown as SlayerMasters;
+    expect(slayerReachability(tables, state, locate).masters[0].masterBlocker?.status).toBe('unknown');
+  });
+  it.each(['Unreviewed Master', 'toString'])('does not infer access to %s', master => {
+    expect(standardMasterReach(master, base()).masters[0].masterBlocker?.status).toBe('unknown');
+  });
+  it.each([NaN, Infinity, '99', 50.5])('keeps malformed combat input finite: %s', level => {
+    expect(Number.isFinite(combatLevel({ Attack: level as number }))).toBe(true);
+    expect(combatLevel({ Attack: level as number })).toBeLessThan(20);
+  });
+  it.each([{ combat: NaN }, { slayer: Infinity }, { req: [null] }])('keeps malformed assignment gates unknown: %j', data => {
+    const masters = { Krystilia: { Crawling: { weight: 1, ...data } } } as unknown as SlayerMasters;
+    expect(statusOf(slayerReachability(masters, base(), locate), 'Crawling')).toBe('unknown');
+  });
   it('combat level uses the standard formula', () => {
     expect(combatLevel({ Attack: 1, Strength: 1, Defence: 1, Hitpoints: 10 })).toBe(3);
     expect(combatLevel({ Attack: 99, Strength: 99, Defence: 99, Hitpoints: 99, Prayer: 99, Ranged: 99, Magic: 99 })).toBe(126);
   });
 
-  it('gates on Slayer skill being unlocked at all', () => {
+  it('does not erase attained Slayer levels when methods are locked', () => {
     const r = slayerReachability(MASTERS, base({ levels: { Slayer: 50 } }), locate);
-    // Slayer skill tier 0 → everything slayer-locked
-    expect(statusOf(r, 'Crawling')).toBe('slayer-locked');
+    // Fighting a level-gated monster uses attained levels.
+    expect(statusOf(r, 'Crawling')).toBe('ready');
   });
 
   it('classifies each task by its binding requirement', () => {
@@ -240,8 +260,8 @@ describe('slayerReachability', () => {
         skills: { Slayer: 10 },
         levels: { Slayer: 99 },
       }));
-      expect(cape.masters[0]).not.toHaveProperty('masterBlocker');
-      expect(cape.masters[0].rows[0].status).toBe('ready');
+      expect(cape.masters[0].masterBlocker?.status).toBe('needs-confirmation');
+      expect(cape.masters[0].rows[0].status).toBe('needs-confirmation');
     },
   );
 

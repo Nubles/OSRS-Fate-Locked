@@ -35,6 +35,13 @@ const ROOT_UNLOCKS = {
 };
 
 export const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameModeId?: string) => {
+    const canonicalActivity = ROOT_UNLOCKS[req.category]?.has(req.id) ? getActivityReq(req.id) : undefined;
+    if (canonicalActivity) {
+        req = { ...req, regions: [], skills: canonicalActivity.skills ?? {},
+            quests: canonicalActivity.quests ?? [], diaries: [], items: [], alternatives: [],
+            requirementsReviewed: undefined };
+    }
+
     const missingRegions = req.regions.filter(r => {
         return !isAreaReachable(r, unlocks, gameModeId);
     });

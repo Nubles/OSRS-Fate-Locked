@@ -64,7 +64,7 @@ describe('getUnlockRevealTransition', () => {
     expect(getUnlockRevealTransition(asgarnia, rimmington)?.newQuestsAvailable)
       .toContainEqual({ id: "Witch's Potion", name: "Witch's Potion" });
 
-    const completedTasks = completedTierTasksExcept('Ardougne Easy', 'ard_easy_3');
+    const completedTasks = completedTierTasksExcept('Ardougne Easy', 'ard_easy_4');
     const diaryPrevious = unlocks({ completedTasks });
     const diaryCurrent = { ...diaryPrevious, regions: ['East Ardougne'] };
     expect(getUnlockRevealTransition(diaryPrevious, diaryCurrent)?.newDiaryTiersAvailable)

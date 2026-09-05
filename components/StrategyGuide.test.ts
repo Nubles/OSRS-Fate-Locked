@@ -137,3 +137,20 @@ it('keeps legacy strategy content with incomplete coverage out of available cont
   expect(analysis.isFullyPlayable).toBe(false);
   expect(analysis.missingChecks).toContain('Additional item, method and activity requirements need review');
 });
+
+
+it('uses canonical facility access rather than obsolete house-building gates', () => {
+  const state = {
+    equipment: {}, skills: {}, levels: {}, regions: [], quests: [], diaries: [],
+    mobility: [], arcana: [], housing: ['Kitchen'], merchants: [], minigames: [],
+    bosses: [], storage: [], guilds: [], farming: [], slayerUnlocks: [],
+    cas: [], completedTasks: [], collectionLog: {},
+  };
+  const analysis = guide.analyzeRequirement({ id: 'Kitchen', category: TableType.POH,
+    regions: ['Obsolete location'], skills: { Construction: 99 }, quests: ['Obsolete quest'] }, state);
+  expect(analysis.missingSkills).toEqual([]);
+  expect(analysis.missingRegions).toEqual([]);
+  expect(analysis.missingQuests).toEqual([]);
+  expect(analysis.isFullyPlayable).toBe(false);
+  expect(analysis.missingChecks.join(' ')).toContain('built and usable');
+});

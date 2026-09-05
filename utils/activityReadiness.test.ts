@@ -83,7 +83,7 @@ describe('evaluateActivityReadiness', () => {
       req,
       unlocked({ chunks: ['39,55'] }),
       'chunked',
-    )).toEqual({ status: 'READY' });
+    )).toEqual({ status: 'NEEDS_CONFIRMATION', checks: ['Barbarian Assault tutorial completed and a team formed for the selected role and wave'] });
   });
 
   it('enforces Soul Wars combat 40, total level 500, and tutorial confirmation', () => {
@@ -175,7 +175,10 @@ describe('evaluateActivityReadiness', () => {
       unlocked(),
     )).toEqual({
       status: 'NEEDS_CONFIRMATION',
-      checks: ['A complete Frozen key from all four God Wars Dungeon generals'],
+      checks: expect.arrayContaining([
+        'The Frozen Door has been permanently opened with the assembled frozen key',
+        'A legal route into God Wars Dungeon and the Ancient Prison is available',
+      ]),
     });
   });
 

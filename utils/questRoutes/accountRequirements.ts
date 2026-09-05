@@ -7,8 +7,8 @@ import {
   SKILLS_LIST,
   SLAYER_UNLOCKS_LIST,
 } from '../../data/items';
-import { usableMethodLevel } from '../skillLevels';
-import type { ExactItemSource, RawRouteRequirement, RouteGate } from './model';
+import { actualSkillLevel, usableMethodLevel } from '../skillLevels';
+import { isRouteGateUsable, type SourceKind, type ExactItemSource, type RawRouteRequirement, type RouteGate } from './model';
 
 export interface GateEvaluation {
   blockers: RouteGate[];
@@ -58,12 +58,12 @@ const parseQuest = (requirement: RawRouteRequirement): RouteGate | null => {
   return questId ? questGate(questId) : null;
 };
 
-const parseSkill = (raw: string): RouteGate | null => {
+const parseSkill = (raw: string, semantics?: 'actual' | 'method'): RouteGate | null => {
   const match = raw.match(/^(.+?)\s+level\s+(\d+)$/i);
   if (!match) return null;
   const skill = skills.get(normalise(match[1]));
   const level = Number(match[2]);
-  return skill && level > 0 ? { type: 'SKILL', skill, level, label: `${skill} level ${level}` } : null;
+  return semantics && skill && Number.isSafeInteger(level) && level > 0 && level <= 99 ? { type: 'SKILL', skill, level, label: `${skill} level ${level}`, semantics } : null;
 };
 
 const parseUnlock = (raw: string): RouteGate | null => {
@@ -87,17 +87,18 @@ const parseUnlock = (raw: string): RouteGate | null => {
 };
 
 /** Converts only reviewed source wording into account gates; all other wording remains evidence. */
-export const compileRawRequirements = (rawRequirements: readonly RawRouteRequirement[]): RouteGate[] => rawRequirements.map((evidence) => {
+export const compileRawRequirements = (rawRequirements: readonly RawRouteRequirement[], sourceKind?: SourceKind): RouteGate[] => rawRequirements.map((evidence) => {
+  if (!evidence || typeof evidence.raw !== 'string' || !['ENTITY', 'CHUNK_ENTRY'].includes(evidence.origin)) return unresolved('Invalid source requirement');
   const requirement = evidence.raw.trim();
   const normalisedEvidence = { ...evidence, raw: requirement };
-  return parseQuest(normalisedEvidence) ?? parseSkill(requirement) ?? parseUnlock(requirement) ?? unresolved(evidence.raw);
+  return parseQuest(normalisedEvidence) ?? parseSkill(requirement, evidence.origin === 'CHUNK_ENTRY' ? 'actual' : sourceKind === 'GATHER' || sourceKind === 'RECIPE' ? 'method' : undefined) ?? parseUnlock(requirement) ?? unresolved(evidence.raw);
 });
 
 /** Appends compiled gates while preserving the original structured source evidence. */
 export const compileSourceRequirements = (source: ExactItemSource): ExactItemSource => ({
   ...source,
   rawRequirements: source.rawRequirements.map(requirement => ({ ...requirement })),
-  gates: [...source.gates, ...compileRawRequirements(source.rawRequirements)],
+  gates: [...source.gates, ...compileRawRequirements(source.rawRequirements, source.kind)],
 });
 
 export const evaluateRouteGates = (
@@ -108,15 +109,22 @@ export const evaluateRouteGates = (
   let hasDataGap = false;
 
   for (const gate of gates) {
+    if (!isRouteGateUsable(gate)) {
+      hasDataGap = true;
+      blockers.push({ type: 'UNRESOLVED', raw: 'Invalid route gate', label: 'Invalid route gate' });
+      continue;
+    }
     switch (gate.type) {
       case 'QUEST':
-        if (!unlocks.quests.includes(gate.questId)) blockers.push(gate);
+        if (!Object.hasOwn(QUEST_DATA, gate.questId)) hasDataGap = true;
+        if (!Object.hasOwn(QUEST_DATA, gate.questId) || !unlocks.quests.includes(gate.questId)) blockers.push(gate);
         break;
       case 'SKILL':
-        if (usableMethodLevel(unlocks, gate.skill) < gate.level) blockers.push(gate);
+        if ((gate.semantics === 'actual' ? actualSkillLevel(unlocks, gate.skill) : usableMethodLevel(unlocks, gate.skill)) < gate.level) blockers.push(gate);
         break;
       case 'UNLOCK':
-        if (!unlocks[gate.category].includes(gate.id)) blockers.push(gate);
+        if (!unlockAliases.find(([category]) => category === gate.category)?.[1].includes(gate.id)) hasDataGap = true;
+        if (!unlockAliases.find(([category]) => category === gate.category)?.[1].includes(gate.id) || !Array.isArray(unlocks[gate.category]) || !unlocks[gate.category].includes(gate.id)) blockers.push(gate);
         break;
       default:
       case 'UNRESOLVED':

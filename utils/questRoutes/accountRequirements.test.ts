@@ -41,14 +41,14 @@ describe('account requirements', () => {
   });
 
   it('reports a missing skill without hiding the route', () => {
-    const gates = compileRawRequirements([entity('Woodcutting level 15')]);
+    const gates = compileRawRequirements([entity('Woodcutting level 15')], 'GATHER');
     expect(evaluateRouteGates(gates, unlocks({ levels: { Woodcutting: 1 } }))).toEqual({
       blockers: [expect.objectContaining({ type: 'SKILL', skill: 'Woodcutting', level: 15 })], hasDataGap: false,
     });
   });
 
   it('requires both an unlocked skill tier and enough method-capped level', () => {
-    const gates = compileRawRequirements([entity('Mining level 30')]);
+    const gates = compileRawRequirements([entity('Mining level 30')], 'RECIPE');
 
     expect(evaluateRouteGates(gates, unlocks({
       skills: {},
@@ -132,4 +132,37 @@ describe('account requirements', () => {
       evaluateRouteGates(gates, account),
     );
   });
+});
+
+
+it('separates actual access levels from method tiers and keeps ambiguous entity gates unknown', () => {
+  const account = unlocks({ levels: { Strength: 70, Cooking: 70 }, skills: {} });
+  const access = compileRawRequirements([chunkEntry('Strength level 70')]);
+  expect(access[0]).toMatchObject({ semantics: 'actual' });
+  expect(evaluateRouteGates(access, account)).toEqual({ blockers: [], hasDataGap: false });
+  const method = compileRawRequirements([entity('Cooking level 70')], 'RECIPE');
+  expect(method[0]).toMatchObject({ semantics: 'method' });
+  expect(evaluateRouteGates(method, account).blockers).toEqual(method);
+  const ambiguous = compileRawRequirements([entity('Cooking level 70')], 'SPAWN');
+  expect(evaluateRouteGates(ambiguous, account).hasDataGap).toBe(true);
+});
+it.each([
+  null, { type: 'SKILL', skill: 'Cooking', level: NaN, label: 'bad' },
+  { type: 'SKILL', skill: 'Made up skill', level: 1, label: 'bad' },
+  { type: 'SKILL', skill: 'Cooking', level: 100, label: 'bad' },
+  { type: 'SKILL', skill: 'Cooking', level: 1, semantics: 'invalid', label: 'bad' },
+  { type: 'UNLOCK', category: 'constructor', id: 'bad', label: 'bad' },
+])('keeps malformed gate input fail closed without crashing: %j', gate => {
+  expect(evaluateRouteGates([gate] as any, unlocks()).hasDataGap).toBe(true);
+  expect(evaluateRouteGates([gate] as any, unlocks()).blockers).toHaveLength(1);
+});
+
+it('uses source context for entity method requirements while preserving chunk access semantics', () => {
+  const base: ExactItemSource = { id: 'gather', output: { key: 'fish', name: 'Fish' }, outputQuantity: 1,
+    kind: 'GATHER', label: 'Fish', chunk: '1,2', deterministic: true, coverage: 'COMPLETE', gates: [],
+    rawRequirements: [entity('Fishing level 70'), chunkEntry('Strength level 70')] };
+  const gates = compileSourceRequirements(base).gates;
+  expect(gates).toMatchObject([{ semantics: 'method' }, { semantics: 'actual' }]);
+  expect(evaluateRouteGates(gates, unlocks({ levels: { Fishing: 70, Strength: 70 } })).blockers)
+    .toEqual([gates[0]]);
 });

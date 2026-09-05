@@ -40,6 +40,26 @@ function regionsAndQuestsDone(over: Record<string, any> = {}) {
 }
 
 describe('rankSkillBottlenecks', () => {
+  it('indexes typed level gates while preserving locked method permissions', () => {
+    const index = ALL_DIARY_TASKS.findIndex(task => task.id === 'fal_easy_2');
+    const original = ALL_DIARY_TASKS[index];
+    ALL_DIARY_TASKS[index] = { ...original, skills: {}, predicates: [
+      { kind: 'skill', skill: 'Agility', level: 7 }, { kind: 'method', skill: 'Agility', tier: 1 },
+    ] };
+    try {
+      const base = regionsAndQuestsDone({
+        skills: {},
+        completedTasks: ALL_DIARY_TASKS.filter(task => task.id !== original.id).map(task => task.id),
+      });
+      expect(rankSkillBottlenecks(base).find(candidate => candidate.id === 'Agility')).toBeUndefined();
+      const permitted = rankSkillBottlenecks({ ...base, skills: { Agility: 1 } }).find(candidate => candidate.id === 'Agility');
+      expect(permitted?.targetLevel).toBe(7);
+      expect(permitted?.newDiaryIds).toContain('Falador Easy');
+      expect(base.skills).toEqual({});
+    } finally {
+      ALL_DIARY_TASKS[index] = original;
+    }
+  });
   it('is sorted by cascade score (descending)', () => {
     const ranked = rankSkillBottlenecks(lowSkills());
     for (let i = 1; i < ranked.length; i++) {
@@ -118,6 +138,8 @@ describe('rankSkillBottlenecks', () => {
         ...(task.regions ?? []), ...(task.anyOfRegions ?? []),
       ]))],
       quests: Object.keys(QUEST_DATA),
+      diaries: Object.keys(DIARY_DATA).filter(id => id !== 'Falador Easy'),
+      completedTasks: ALL_DIARY_TASKS.filter(task => task.id !== 'fal_easy_2').map(task => task.id),
     });
     const capable = {
       ...base,
@@ -140,12 +162,13 @@ describe('rankSkillBottlenecks', () => {
         skill,
         skill === 'Agility' ? 1 : 99,
       ])),
+      completedTasks: ALL_DIARY_TASKS.filter(task => task.id !== 'fal_easy_2').map(task => task.id),
     }));
 
     expect(ranked.find(candidate => candidate.id === 'Agility')).toBeDefined();
   });
 
-  it('discovers skill thresholds from canonical diary tasks, not stale aggregates', () => {
+  it('does not promise diary completion when a reached skill threshold still needs item confirmation', () => {
     const ranked = rankSkillBottlenecks(lowSkills({
       skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10])),
       levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Ranged' ? 20 : 99])),
@@ -160,8 +183,7 @@ describe('rankSkillBottlenecks', () => {
     }));
     const ranged = ranked.find(candidate => candidate.id === 'Ranged');
 
-    expect(ranged?.targetLevel).toBe(21);
-    expect(ranged?.newDiaryIds).toContain('Ardougne Medium');
+    expect(ranged).toBeUndefined();
   });
   it('indexes the nearest skill level that crosses a combat-only diary gate', () => {
     const ranked = rankSkillBottlenecks(lowSkills({
@@ -190,7 +212,9 @@ describe('rankSkillBottlenecks', () => {
 
     // Every regional and quest gate is open, so diary candidates survive the
     // cheap blocker prefilter and exercise the actual status-check cache.
-    rankSkillBottlenecks(regionsAndQuestsDone());
+    rankSkillBottlenecks(regionsAndQuestsDone({
+      completedTasks: ALL_DIARY_TASKS.filter(task => task.id !== 'fal_easy_2').map(task => task.id),
+    }));
 
     expect(statusSpy.mock.calls.length).toBeGreaterThan(0);
     expect(statusSpy.mock.calls.length).toBeLessThanOrEqual(60);

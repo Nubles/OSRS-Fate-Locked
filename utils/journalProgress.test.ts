@@ -111,6 +111,7 @@ describe('diaryUnmet', () => {
 
     expect(diaryUnmet(DIARY_DATA['Varrock Medium'], u({
       regions: ['Varrock'],
+      guilds: ["Champions' Guild"],
       completedTasks,
     }))).toEqual([{ kind: 'qp', label: '32 QP' }]);
   });

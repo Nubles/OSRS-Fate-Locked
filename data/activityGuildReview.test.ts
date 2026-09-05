@@ -27,7 +27,7 @@ describe('reviewed guild and arcana gates', () => {
   it('allows a proven Warrior mastery route without confirming another route', () => {
     expect(readiness("Warriors' Guild", { levels: { Attack: 99 } }).status).toBe('READY');
     expect(readiness("Warriors' Guild", { levels: { Strength: 99 } }).status).toBe('READY');
-    expect(readiness("Warriors' Guild", { levels: { Attack: 65, Strength: 65 } }).status).toBe('NEEDS_CONFIRMATION');
+    expect(readiness("Warriors' Guild", { levels: { Attack: 65, Strength: 65 } }).status).toBe('READY');
   });
   it('keeps post-quest training and learned spells explicit', () => {
     expect(readiness('Piety', { quests: ["King's Ransom"], levels: { Prayer: 70, Defence: 70 } }).status).toBe('NEEDS_CONFIRMATION');

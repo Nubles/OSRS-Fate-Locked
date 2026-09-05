@@ -3,7 +3,7 @@ import { QUEST_DATA, QuestData } from '../data/questData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { DIARY_DATA } from '../data/diaryData';
 import { DropSource, UnlockState } from '../types';
-import { REGION_GROUPS } from '../data/items';
+import { REGION_GROUPS, ARCANA_LIST, MOBILITY_LIST, GUILDS_LIST, MINIGAMES_LIST, BOSSES_LIST, FARMING_PATCH_LIST } from '../data/items';
 import { combatLevel } from './slayerReach';
 import {
   countDoableDiaryTasks, countDoableTasks, countMetSkillRequirements,
@@ -53,9 +53,11 @@ describe('manual journal readiness', () => {
     }));
     expect(reachable).toMatchObject({
       machineEligible: true,
-      eligible: true,
+      eligible: false,
+      confirmable: true,
       blockers: [],
     });
+    expect(reachable.manualChecks.join(' ')).toContain('team cape');
   });
 
   it("gates Sarah's farm shop on Falador rather than Port Sarim", () => {
@@ -82,6 +84,7 @@ describe('manual journal readiness', () => {
     const enough = evaluateDiaryTaskEligibility(task, unlocked({
       quests: questIdsWorthAtLeast(32),
       regions: ['Varrock'],
+      guilds: ["Champions' Guild"],
     }));
     expect(enough).toMatchObject({
       machineEligible: true,
@@ -667,7 +670,8 @@ describe('manual diary task requirements', () => {
       regions: [...regions],
     }));
 
-    expect(result).toMatchObject({ machineEligible: true, eligible: true });
+    expect(result).toMatchObject({ machineEligible: true, eligible: false, confirmable: true });
+    expect(result.manualChecks.join(' ')).toContain('Slayer cape');
   });
 
   it('requires Priest in Peril for both Mazchna combat and Slayer cape routes', () => {
@@ -690,10 +694,12 @@ describe('manual diary task requirements', () => {
     for (const route of [combatRoute, capeRoute]) {
       expect(evaluateDiaryTaskEligibility(task, unlocked(route)).blockers)
         .toContainEqual({ kind: 'quest', label: 'Priest in Peril' });
-      expect(evaluateDiaryTaskEligibility(task, unlocked({
+      const ready = evaluateDiaryTaskEligibility(task, unlocked({
         ...route,
         quests: ['Priest in Peril'],
-      }))).toMatchObject({ machineEligible: true, eligible: true });
+      }));
+      expect(ready.machineEligible).toBe(true);
+      expect(ready.eligible).toBe(route === combatRoute);
     }
   });
 
@@ -752,6 +758,9 @@ describe('canonical diary tier eligibility', () => {
       regions: [...new Set(regions)],
       quests: [...new Set(quests)],
       cas: ['Easy', 'Medium', 'Hard', 'Elite', 'Master', 'Grandmaster'],
+      diaries: ['Wilderness Medium'],
+      arcana: [...ARCANA_LIST], mobility: [...MOBILITY_LIST], guilds: [...GUILDS_LIST],
+      minigames: [...MINIGAMES_LIST], bosses: [...BOSSES_LIST], farming: [...FARMING_PATCH_LIST],
     });
   };
 
@@ -760,7 +769,7 @@ describe('canonical diary tier eligibility', () => {
     void completedTasks;
 
     expect(getDiaryStatus(DIARY_DATA['Ardougne Easy'], partialUnlocks))
-      .toBe('AVAILABLE');
+      .toBe('NEEDS_CONFIRMATION');
   });
 
   it('treats an omitted CA tier list as no completed tiers in a status snapshot', () => {
@@ -770,7 +779,7 @@ describe('canonical diary tier eligibility', () => {
     expect(getDiaryStatus(DIARY_DATA['Fremennik Easy'], {
       ...partialUnlocks,
       quests: partialUnlocks.quests.filter(quest => quest !== 'Troll Stronghold'),
-    })).toBe('LOCKED_QUEST');
+    })).toBe('NEEDS_CONFIRMATION');
   });
 
   it('ignores all 48 stale aggregate requirement payloads', () => {
@@ -778,7 +787,7 @@ describe('canonical diary tier eligibility', () => {
 
     for (const diary of Object.values(DIARY_DATA)) {
       const expected = getDiaryStatus(diary, unlocks);
-      expect(['AVAILABLE', 'NEEDS_CONFIRMATION']).toContain(expected);
+      expect(['AVAILABLE', 'NEEDS_CONFIRMATION', 'COMPLETED']).toContain(expected);
       expect(getDiaryStatus({
         ...diary,
         region: 'Impossible aggregate region',
@@ -930,10 +939,12 @@ describe('audited diary route eligibility', () => {
   it('accepts each Warriors Guild skill route', () => {
     expect(evaluateDiaryTaskEligibility(task('fal_hard_10'), unlocked({
       regions: ["Warriors' Guild"],
+      guilds: ["Warriors' Guild"],
       skills: { Attack: 7, Strength: 7 }, levels: { Attack: 65, Strength: 65 },
     })).machineEligible).toBe(true);
     expect(evaluateDiaryTaskEligibility(task('fal_hard_10'), unlocked({
       regions: ["Warriors' Guild"],
+      guilds: ["Warriors' Guild"],
       skills: { Attack: 10, Strength: 1 }, levels: { Attack: 99, Strength: 1 },
     })).machineEligible).toBe(true);
   });

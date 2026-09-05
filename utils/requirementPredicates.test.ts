@@ -11,11 +11,33 @@ import { diaryTaskCompletionDecision } from './journalCompletion';
 
 const unlocks: UnlockState = {
   equipment: {}, skills: { Defence: 1, Slayer: 1 }, levels: { Defence: 70, Slayer: 70 },
-  regions: [], quests: [], diaries: [], cas: [], completedTasks: [], collectionLog: {},
+  regions: ['Edgeville'], quests: [], diaries: [], cas: [], completedTasks: [], collectionLog: {},
   mobility: [], arcana: [], housing: [], merchants: [], minigames: [], bosses: [], storage: [], guilds: [], farming: [], slayerUnlocks: [],
 };
 const unknown: RequirementPredicate = { kind: 'unknown', key: 'new-rule', label: 'Unclassified entry rule' };
 describe('shared requirement semantics', () => {
+  it('never permits manual attestation to bypass a tracked Arcana unlock', () => {
+    const predicate: RequirementPredicate = { kind: 'unlock', field: 'arcana', id: 'Piety' };
+    expect(evaluatePredicate(predicate, { unlocks }).status).toBe('LOCKED');
+    expect(evaluatePredicate(predicate, { unlocks: { ...unlocks, arcana: ['Piety'] } }).status).toBe('READY');
+    expect(diaryTaskCompletionDecision({ id: 'piety', tierId: 'test', description: 'Use Piety', predicates: [predicate] }, unlocks, undefined, { manualConfirmed: true }).ok).toBe(false);
+    expect(evaluatePredicate({ kind: 'unlock', field: 'arcana', id: 'Invented' }, { unlocks }).status).toBe('UNKNOWN');
+  });
+  it('requires the recorded canonical diary tier, rejecting unknown IDs', () => {
+    const predicate: RequirementPredicate = { kind: 'diary', id: 'Wilderness Medium' };
+    expect(evaluatePredicate(predicate, { unlocks }).status).toBe('LOCKED');
+    expect(evaluatePredicate(predicate, { unlocks: { ...unlocks, diaries: ['Wilderness Medium'] } }).status).toBe('READY');
+    expect(evaluatePredicate({ kind: 'diary', id: 'Invented' }, { unlocks }).status).toBe('UNKNOWN');
+  });
+  it('computes combined attained levels without method caps or duplicate skills', () => {
+    const predicate: RequirementPredicate = { kind: 'combinedSkills', skills: ['Attack', 'Strength'], level: 130 };
+    const state = { ...unlocks, levels: { Attack: 65, Strength: 65 }, skills: {} };
+    expect(evaluatePredicate(predicate, { unlocks: state }).status).toBe('READY');
+    expect(evaluatePredicate(predicate, { unlocks: { ...state, levels: { Attack: 64, Strength: 65 } } }).status).toBe('LOCKED');
+    for (const skills of [[], ['Attack', 'Attack'], ['Invented']]) {
+      expect(evaluatePredicate({ ...predicate, skills }, { unlocks: state }).status).toBe('UNKNOWN');
+    }
+  });
   it('does not allow manual attestation to satisfy unknown diary conditions', () => {
     const task = { id: 'unknown', tierId: 'test', description: 'Test', predicates: [unknown] };
     expect(evaluateDiaryTaskEligibility(task, unlocks)).toMatchObject({ eligible: false, machineEligible: false, confirmable: false });
@@ -68,7 +90,7 @@ describe('shared requirement semantics', () => {
     expect(meetsSkillRequirement(unlocks, 'Defence', 70)).toBe(true);
     expect(evaluateDiaryTaskEligibility({ id: 'level', skills: { Defence: 70 } }, unlocks).eligible).toBe(true);
     expect(evaluateActivityReadiness(true, { skills: { Defence: 70 } }, unlocks).status).toBe('READY');
-    expect(slayerReachability({ Test: { Monster: { slayer: 70, weight: 1 } } }, unlocks, () => ({ cx: 1, cy: 1, unlocked: true })).masters[0].ready).toBe(1);
+    expect(slayerReachability({ Krystilia: { Monster: { slayer: 70, weight: 1 } } }, unlocks, () => ({ cx: 1, cy: 1, unlocked: true })).masters[0].ready).toBe(1);
     expect(evaluatePredicate({ kind: 'method', skill: 'Defence', tier: 7 }, { unlocks }).status).toBe('LOCKED');
   });
   it('never promotes unknown requirements or empty alternatives to ready', () => {
@@ -99,7 +121,7 @@ describe('shared requirement semantics', () => {
     expect(tier.manualChecks.length).toBeGreaterThan(0);
   });
   it('does not silently pass unknown Slayer requirements', () => {
-    const result = slayerReachability({ Test: { Monster: { weight: 1, req: ['new external gate'] } } }, unlocks, () => ({ cx: 1, cy: 1, unlocked: true }));
+    const result = slayerReachability({ Krystilia: { Monster: { weight: 1, req: ['new external gate'] } } }, unlocks, () => ({ cx: 1, cy: 1, unlocked: true }));
     expect(result.masters[0].rows[0].status).toBe('unknown');
     expect(result.masters[0].ready).toBe(0);
   });

@@ -259,15 +259,19 @@ const validatePredicateShape = (predicate, context) => {
   const positiveInt = (value, max = Number.MAX_SAFE_INTEGER) => Number.isSafeInteger(value) && value > 0 && value <= max;
   if (!predicate || typeof predicate !== 'object' || Array.isArray(predicate)) return fail();
   switch (predicate.kind) {
+    case 'unlock': if (['arcana', 'mobility', 'housing', 'guilds', 'farming', 'storage', 'bosses', 'minigames'].includes(predicate.field) && text(predicate.id)) return; break;
     case 'all':
     case 'any':
       if (!Array.isArray(predicate.of) || predicate.of.length === 0) return fail();
       predicate.of.forEach((child, index) => validatePredicateShape(child, context + ' child ' + index));
       return;
     case 'skill': if (text(predicate.skill) && positiveInt(predicate.level, 99)) return; break;
+    case 'combinedSkills': if (Array.isArray(predicate.skills) && predicate.skills.length > 0 && predicate.skills.every(text)
+      && new Set(predicate.skills).size === predicate.skills.length && positiveInt(predicate.level, predicate.skills.length * 99)) return; break;
     case 'method': if (text(predicate.skill) && positiveInt(predicate.tier, 10)) return; break;
     case 'equipment': if (text(predicate.slot) && positiveInt(predicate.tier, 10)) return; break;
     case 'quest':
+    case 'diary':
     case 'area': if (text(predicate.id)) return; break;
     case 'questPoints': if (positiveInt(predicate.count)) return; break;
     case 'item': if (text(predicate.id) && text(predicate.label) && ['hold', 'consume', 'equip'].includes(predicate.usage)) return; break;
@@ -591,6 +595,7 @@ const loadReferenceCatalog = (projectRoot) => {
   };
   const itemsSource = parseProjectFile('data/items.ts');
   const questSource = parseProjectFile('data/questData.ts');
+  const diarySource = parseProjectFile('data/diaryData.ts');
   const areaMapPolicySource = parseProjectFile('data/areaMapPolicy.ts');
 
   const skills = new Set(stringArrayOf(initializerOf(itemsSource, 'SKILLS_LIST')));
@@ -634,6 +639,8 @@ const loadReferenceCatalog = (projectRoot) => {
   }
 
   const catalog = {
+    unlocks: Object.fromEntries(Object.entries({ arcana: 'ARCANA_LIST', mobility: 'MOBILITY_LIST', housing: 'POH_LIST', guilds: 'GUILDS_LIST', farming: 'FARMING_PATCH_LIST', storage: 'STORAGE_LIST', bosses: 'BOSSES_LIST', minigames: 'MINIGAMES_LIST' }).map(([field, name]) => [field, new Set(stringArrayOf(initializerOf(itemsSource, name)))])),
+    diaries: new Set(initializerOf(diarySource, 'DIARY_DATA').properties.filter(ts.isPropertyAssignment).map(propertyNameOf)),
     skills,
     equipment: new Set(stringArrayOf(initializerOf(itemsSource, 'EQUIPMENT_SLOTS'))),
     quests,
@@ -648,6 +655,14 @@ const findUnknownReferences = (snapshot, projectRoot) => {
   const catalog = loadReferenceCatalog(projectRoot);
   const unknown = [];
   const checkPredicateReferences = (predicate, taskId) => {
+    if (predicate.kind === 'unlock') {
+      if (!catalog.unlocks[predicate.field]?.has(predicate.id)) unknown.push(taskId + ' predicate unlock ' + predicate.field + ' ' + predicate.id);
+      return;
+    }
+    if (predicate.kind === 'combinedSkills') {
+      predicate.skills.forEach(skill => { if (!catalog.skills.has(skill)) unknown.push(taskId + ' predicate skills ' + skill); });
+      return;
+    }
     if (predicate.kind === 'all' || predicate.kind === 'any') {
       predicate.of.forEach(child => checkPredicateReferences(child, taskId));
       return;
@@ -655,6 +670,7 @@ const findUnknownReferences = (snapshot, projectRoot) => {
     const reference = predicate.kind === 'skill' || predicate.kind === 'method' ? ['skills', predicate.skill]
       : predicate.kind === 'equipment' ? ['equipment', predicate.slot]
         : predicate.kind === 'quest' ? ['quests', predicate.id]
+          : predicate.kind === 'diary' ? ['diaries', predicate.id]
           : predicate.kind === 'area' ? ['regions', predicate.id] : null;
     if (reference && !catalog[reference[0]].has(reference[1])) unknown.push(taskId + ' predicate ' + reference.join(' '));
   };

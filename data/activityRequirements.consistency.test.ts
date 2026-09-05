@@ -86,9 +86,14 @@ describe('activity requirements + regions consistency', () => {
 
 
 it('keeps unreviewed non-geographic gates unknown when an area is known', () => {
-  const unreviewed = Object.keys(ACTIVITY_ACCESS_AREAS).filter(id => !ACTIVITY_REQUIREMENTS[id]);
-  expect(unreviewed.length).toBeGreaterThan(0);
-  for (const id of unreviewed) expect(getActivityReq(id)?.predicates).toEqual([
-    { kind: 'unknown', key: 'unreviewed-access', label: 'Non-geographic access requirements have not been reviewed' },
-  ]);
+  const id = '__test_unreviewed_activity__';
+  const testAreas = ACTIVITY_ACCESS_AREAS as Record<string, readonly string[]>;
+  testAreas[id] = ['Lumbridge'];
+  try {
+    expect(getActivityReq(id)?.predicates).toEqual([
+      { kind: 'unknown', key: 'unreviewed-access', label: 'Non-geographic access requirements have not been reviewed' },
+    ]);
+  } finally {
+    delete testAreas[id];
+  }
 });

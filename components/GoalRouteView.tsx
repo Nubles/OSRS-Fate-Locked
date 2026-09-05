@@ -78,10 +78,10 @@ export const GoalRouteView: React.FC<{ goalId: string }> = ({ goalId }) => {
 
         {route.alternatives.length > 0 && (
           <div className="md:col-span-2">
-            <Head icon={<Route size={11} />} label="Alternative routes" done={met(route.alternatives)} total={route.alternatives.length} />
+            <Head icon={<Route size={11} />} label="Access requirements" done={met(route.alternatives)} total={route.alternatives.length} />
             {route.alternatives.map(alternative => (
               <div key={alternative.name} className="mb-1.5">
-                <div className="text-[10px] text-gray-300 font-semibold">Choose one:</div>
+                <div className="text-[10px] text-gray-300 font-semibold">{alternative.routes.length > 1 ? 'Choose one:' : 'Required:'}</div>
                 {alternative.routes.map(route => (
                   <div key={route.name} className="flex items-start gap-1.5 py-px ml-2">
                     <Tick met={route.met} />
@@ -96,16 +96,13 @@ export const GoalRouteView: React.FC<{ goalId: string }> = ({ goalId }) => {
 
         {route.skills.length > 0 && (
           <div>
-            <Head icon={<Swords size={11} />} label="Skill tiers" done={met(route.skills)} total={route.skills.length} />
+            <Head icon={<Swords size={11} />} label="Skill levels" done={met(route.skills)} total={route.skills.length} />
             {route.skills.map(s => (
               <div key={s.skill} className="flex items-center gap-1.5 py-px">
                 <Tick met={s.met} />
                 <span className={s.met ? 'text-green-300/80' : 'text-gray-300'}>{s.skill}</span>
                 <span className="ml-auto font-mono text-[9px] text-gray-500">
-                  {!s.unlocked ? 'locked' : `${s.haveLevel}/${s.needLevel}`}
-                  <span className={`ml-1.5 px-1 rounded ${s.tierHave >= s.tierNeeded ? 'bg-green-900/50 text-green-300' : 'bg-purple-950/60 text-purple-300'}`}>
-                    T{s.tierNeeded}
-                  </span>
+                  {`${s.haveLevel}/${s.needLevel}`}
                 </span>
               </div>
             ))}

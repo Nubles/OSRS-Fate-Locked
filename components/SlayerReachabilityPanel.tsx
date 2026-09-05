@@ -6,6 +6,7 @@ import { chunkUnlocked, showChunkOnMap } from '../utils/chunkLocations';
 import { slayerReachability, SlayerStatus, SlayerTaskRow } from '../utils/slayerReach';
 
 const STATUS_META: Record<SlayerStatus, { label: string; cls: string }> = {
+  'needs-confirmation': { label: 'Needs confirmation', cls: 'text-amber-300' },
   unknown: { label: 'Unknown requirement', cls: 'text-amber-300' },
   'ready':         { label: 'ready',      cls: 'bg-emerald-900/30 border-emerald-500/40 text-emerald-200' },
   'area-locked':   { label: 'area locked',cls: 'bg-amber-900/25 border-amber-500/40 text-amber-200' },
@@ -80,7 +81,7 @@ export const SlayerReachabilityPanel: React.FC = () => {
         <span className="text-[11px] font-bold uppercase tracking-wide text-rose-200">Slayer Task Reachability</span>
         <span className="ml-auto flex items-center gap-3 text-[10px] font-mono text-gray-400">
           <span className="flex items-center gap-1"><Sword size={10} /> CB {reach.combatLevel}</span>
-          <span>Slayer {reach.slayerUnlocked ? reach.slayerLevel : '🔒'}</span>
+          <span>Slayer {reach.slayerLevel}</span>
           <span className="text-emerald-300">{totalReady} ready</span>
         </span>
       </div>

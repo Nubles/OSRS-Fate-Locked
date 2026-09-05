@@ -17,7 +17,7 @@ import {
   questRequirementOptionLabel,
 } from '../utils/journalStatus';
 import { requestManualAttestation } from '../utils/manualAttestation';
-import { effectiveSkillLevel } from '../utils/slayerReach';
+import { actualSkillLevel } from '../utils/skillLevels';
 import { DropSource, UnlockState } from '../types';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { QuestAdvisorPanel } from './QuestAdvisorPanel';
@@ -234,7 +234,7 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
                               met = currentQP >= reqLevel;
                               currentLevel = currentQP;
                           } else {
-                              currentLevel = effectiveSkillLevel(unlocks, skill);
+                              currentLevel = actualSkillLevel(unlocks, skill);
                               const skillUnlocked = (unlocks.skills[skill] || 0) > 0;
                               isLocked = !skillUnlocked;
                               met = meetsSkillRequirement(unlocks, skill, reqLevel);
@@ -490,9 +490,9 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
   const allEntriesByKind = splitJournalEntriesByKind(Object.values(QUEST_DATA));
   const totalQuests = allEntriesByKind.quests.length;
   const totalMinis = allEntriesByKind.miniquests.length;
-  const completedMain = unlocks.quests.filter(id => QUEST_DATA[id]?.kind === 'quest').length;
-  const completedMinis = unlocks.quests.filter(id => QUEST_DATA[id]?.kind === 'miniquest').length;
-  const currentQP = unlocks.quests.reduce((acc, qid) => acc + (
+  const completedMain = [...new Set(unlocks.quests)].filter(id => QUEST_DATA[id]?.kind === 'quest').length;
+  const completedMinis = [...new Set(unlocks.quests)].filter(id => QUEST_DATA[id]?.kind === 'miniquest').length;
+  const currentQP = [...new Set(unlocks.quests)].reduce((acc, qid) => acc + (
     QUEST_DATA[qid]?.kind === 'quest' ? QUEST_DATA[qid].points : 0
   ), 0);
 

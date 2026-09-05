@@ -7,7 +7,7 @@ import { Map, CheckCircle2, Lock, Sparkles, BookOpen, ChevronDown, CheckSquare, 
 import { chunkForPlace, showChunkOnMap } from '../utils/chunkLocations';
 import { diaryUnmet, isAlmostThere } from '../utils/journalProgress';
 import { isAreaReachable } from '../utils/reachability';
-import { effectiveSkillLevel } from '../utils/slayerReach';
+import { actualSkillLevel } from '../utils/skillLevels';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SkillTrainingPopover, SkillPopoverState } from './SkillTrainingPopover';
@@ -452,7 +452,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                               {hasRequirementActions && !isTaskDone && (
                                 <div className="basis-full flex flex-wrap gap-1.5">
                                   {unmetSkillRequirements.map(([skill, level]) => {
-                                    const current = effectiveSkillLevel(unlocks, skill);
+                                    const current = actualSkillLevel(unlocks, skill);
                                     return (
                                       <button
                                         key={skill}

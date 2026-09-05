@@ -21,6 +21,7 @@ import { computeUnlockImpact, prepareUnlockImpactContext } from './unlockImpact'
 import { EligibilityBlocker, evaluateDiaryTierEligibility, getDiaryStatus } from './journalStatus';
 import { actualCombatLevel } from './slayerReach';
 import { actualSkillLevel } from './skillLevels';
+import type { RequirementPredicate } from './requirementPredicates';
 
 export interface RankedSkill {
   id: string;          // skill name
@@ -65,12 +66,29 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
     const current = unlocks.levels[skill] ?? (skill === 'Hitpoints' ? 10 : 1);
     if (level > current && level <= 99) thresholdsBySkill.get(skill)?.add(level);
   };
+  const typedSkillsByTier = new Map<string, Set<string>>();
+  const indexPredicate = (predicate: RequirementPredicate, tierId: string) => {
+    if (predicate.kind === 'all' || predicate.kind === 'any') {
+      predicate.of.forEach(child => indexPredicate(child, tierId));
+    } else if (predicate.kind === 'skill' || predicate.kind === 'combinedSkills') {
+      const skills = predicate.kind === 'skill' ? [predicate.skill] : predicate.skills;
+      const dependencies = typedSkillsByTier.get(tierId) ?? new Set<string>();
+      for (const skill of skills) {
+        dependencies.add(skill);
+        const otherLevels = predicate.kind === 'combinedSkills'
+          ? skills.filter(other => other !== skill).reduce((sum, other) => sum + actualSkillLevel(unlocks, other), 0) : 0;
+        addThreshold(skill, predicate.level - otherLevels);
+      }
+      typedSkillsByTier.set(tierId, dependencies);
+    }
+  };
   for (const quest of Object.values(QUEST_DATA)) {
     for (const [skill, level] of Object.entries(quest.skills)) addThreshold(skill, level);
     if (quest.combatLevel !== undefined) combatRequirements.add(quest.combatLevel);
   }
   for (const task of ALL_DIARY_TASKS) {
     for (const requirement of [task, ...(task.oneOf ?? [])]) {
+      requirement.predicates?.forEach(predicate => indexPredicate(predicate, task.tierId));
       for (const [skill, level] of Object.entries(requirement.skills ?? {})) {
         addThreshold(skill, level);
       }
@@ -102,12 +120,10 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
     if (actualCombatLevel(unlocks) >= requiredCombatLevel) continue;
     for (const skill of combatSkillNames) {
       const current = unlocks.levels[skill] ?? (skill === 'Hitpoints' ? 10 : 1);
-      const candidateTier = Math.max(unlocks.skills[skill] ?? 0, 1);
       for (let level = current + 1; level <= 99; level += 1) {
         const simulated = {
           ...unlocks,
           levels: { ...unlocks.levels, [skill]: level },
-          skills: { ...unlocks.skills, [skill]: candidateTier },
         };
         if (actualCombatLevel(simulated) >= requiredCombatLevel) {
           addThreshold(skill, level);
@@ -121,6 +137,7 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
     skill: string,
     newQuestIds: Set<string>,
     completesQuestCape: boolean,
+    typedSkillCanChange: boolean,
   ): boolean => {
     if (blocker.kind === 'skill') {
       return blocker.label.startsWith('Any skill ')
@@ -133,9 +150,10 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
       return newQuestIds.has(blocker.label)
         || (blocker.label === 'All quests' && completesQuestCape);
     }
-    if (blocker.kind === 'region' || blocker.kind === 'requirement') return false;
+    if (blocker.kind === 'requirement') return typedSkillCanChange;
+    if (blocker.kind === 'region') return false;
     return blocker.routes.some(route => route.blockers.every(routeBlocker => (
-      blockerCanChange(routeBlocker, skill, newQuestIds, completesQuestCape)
+      blockerCanChange(routeBlocker, skill, newQuestIds, completesQuestCape, typedSkillCanChange)
     )));
   };
   const candidateDiaryIds = (
@@ -145,7 +163,7 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
   ): string[] => allDiaries
     .filter(diary => !isOpen(impactContext.baseDiaryStatus.get(diary.id)))
     .filter(diary => baseDiaryEligibility.get(diary.id)!.blockers.every(blocker => (
-      blockerCanChange(blocker, skill, newQuestIds, completesQuestCape)
+      blockerCanChange(blocker, skill, newQuestIds, completesQuestCape, typedSkillsByTier.get(diary.id)?.has(skill) ?? false)
     )))
     .map(diary => diary.id);
 
@@ -159,7 +177,6 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
       const simulated = {
         ...unlocks,
         levels: { ...unlocks.levels, [skill]: target },
-        skills: { ...unlocks.skills, [skill]: Math.max(unlocks.skills[skill] ?? 0, 1) },
       };
       // Quest cascade work is shared, while diary checks are limited below to
       // tiers this skill can affect (and broadened only when new quests cascade).

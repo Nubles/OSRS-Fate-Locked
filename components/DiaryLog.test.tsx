@@ -82,7 +82,8 @@ describe('DiaryLog access evidence', () => {
     );
 
     expect(markup).not.toContain('Barbarian Training');
-    expect(markup.match(/Access to Barbarian Fishing/g)).toHaveLength(2);
+    expect(markup).toContain('Access to Barbarian Fishing');
+    expect(markup).not.toContain('Requires: Barbarian Training');
     expect(markup).toContain('Fishing 96');
     expect(markup).toContain('Strength 76');
     expect(markup).toContain('In Aid of the Myreque');

@@ -7,7 +7,7 @@ import {
   MAP_IMAGE, MAP_BOUNDS, CHUNK_TILES,
   tileToPixel, ChunkCoord,
 } from '../utils/mapCoords';
-import { ensureChain, verifyChain, computeRunId, replayInvariants } from '../utils/integrity';
+import { ensureChain, auditHistory, computeRunId, replayInvariants } from '../utils/integrity';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { getGameMode } from '../config/gameModes';
 import { chunkKey, isChunkUnlocked, ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
@@ -267,7 +267,7 @@ const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
                 }}
               />
               <span style={{ verticalAlign: 'middle' }}>
-                {integrityOk ? 'VERIFIED' : 'UNVERIFIED'}
+                {integrityOk ? 'CHECKS PASSED' : 'UNVERIFIED'}
               </span>
             </span>
           </div>
@@ -406,7 +406,8 @@ export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }>
   const [captured, setCaptured] = useState<string | null>(null);
 
   const chained = React.useMemo(() => ensureChain(history), [history]);
-  const chainReport = React.useMemo(() => verifyChain(chained), [chained]);
+  const audit = React.useMemo(() => auditHistory(chained), [chained]);
+  const chainReport = audit.chain;
   const replayData = React.useMemo(() => replayInvariants(chained), [chained]);
   const runId = React.useMemo(() => computeRunId(chained), [chained]);
   const firstTs = chained[0]?.timestamp ?? Date.now();
@@ -434,7 +435,7 @@ export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }>
     fatePoints,
     firstTs,
     runId,
-    integrityOk: chainReport.ok,
+    integrityOk: audit.verdict === 'verified',
     modeName: getGameMode(gameModeId).name,
   };
 
@@ -518,7 +519,7 @@ export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }>
         </div>
 
         <div className="text-[10px] font-mono text-gray-600 text-center">
-          {runId ?? '—'} · {chainReport.ok ? '✓ chain verified' : `⚠ ${chainReport.brokenAt.length} broken links`}
+          {runId ?? '—'} · {audit.verdict === 'verified' ? '✓ local history checks passed' : chainReport.ok ? '⚠ legacy or replay uncertainty' : `⚠ ${chainReport.brokenAt.length} broken links`}
         </div>
       </div>
 

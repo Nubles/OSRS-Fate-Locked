@@ -27,6 +27,15 @@ function maxedUnlocks(over: Record<string, any> = {}) {
 }
 
 describe('Goal Planner quest-point classification', () => {
+  it('does not satisfy a Quest Point gate by repeating the same completed quest', () => {
+    const one = maxedUnlocks({ quests: ["Cook's Assistant"] });
+    const repeated = maxedUnlocks({ quests: Array(20).fill("Cook's Assistant") });
+    const singlePlan = planForTarget('quest', "Black Knights' Fortress", one)!;
+    const repeatedPlan = planForTarget('quest', "Black Knights' Fortress", repeated)!;
+    expect(repeatedPlan.qpStep).toEqual(singlePlan.qpStep);
+    expect(repeatedPlan.qpStep?.done).toBe(false);
+  });
+
   it('awards no Quest Points for a nonzero-point miniquest record', () => {
     expect(questPointsForEntry({ kind: 'miniquest', points: 7 })).toBe(0);
   });
@@ -284,7 +293,8 @@ describe('planForTarget — diaries', () => {
         .map(task => task.id),
     }))!;
 
-    expect(plan.alreadyReachable).toBe(true);
+    expect(plan.alreadyReachable).toBe(false);
+    expect(plan.needsConfirmation).toBe(true);
     expect(plan.questSteps).toEqual([]);
   });
 
@@ -424,3 +434,17 @@ describe('listGoalTargets', () => {
       ALL_DIARY_TASKS.length = syntheticLength;
     }
   });
+
+
+describe('typed diary blockers in planning', () => {
+  it('keeps method gates visible as requirements, not manual attestations', () => {
+    const plan = planForTarget('diary', 'Lumbridge Easy', maxedUnlocks({
+      skills: {}, regions: ['Lumbridge', 'Draynor Village', 'Al Kharid', 'Wizards\' Tower'],
+      quests: ['Rune Mysteries', "Cook's Assistant"],
+      completedTasks: ALL_DIARY_TASKS.filter(task => task.id !== 'lum_easy_1').map(task => task.id),
+    }))!;
+    expect(plan.alreadyReachable).toBe(false);
+    expect(plan.needsConfirmation).toBe(false);
+    expect(plan.steps.some(step => step.kind === 'requirement' && step.label.includes('Agility'))).toBe(true);
+  });
+});

@@ -668,7 +668,7 @@ describe('analyzeQuest', () => {
   });
 
   it('does not reuse a cached analysis after skill levels change', () => {
-    const records = cookSources([{ raw: 'Mining level 50', origin: 'ENTITY' }]);
+    const records = cookSources([{ raw: 'Mining level 50', origin: 'CHUNK_ENTRY' }]);
     expect(questRouteStatusForItems(analyzeQuest("Cook's Assistant", fixture({
       records,
       account: unlocks({ skills: { Mining: 5 }, levels: { Mining: 49 } }),
@@ -681,16 +681,23 @@ describe('analyzeQuest', () => {
   });
 
   it('does not reuse a cached analysis after skill tiers change', () => {
-    const records = cookSources([{ raw: 'Mining level 30', origin: 'ENTITY' }]);
+    const records = cookSources().filter(record => record.itemName !== 'Egg');
+    const recipes = [recipe('Egg', { gates: [{ type: 'SKILL', skill: 'Mining', level: 30, label: 'Mining level 30' }] })];
     expect(questRouteStatusForItems(analyzeQuest("Cook's Assistant", fixture({
-      records,
-      account: unlocks({ skills: { Mining: 2 }, levels: { Mining: 30 } }),
+      records, recipes, entityHits: [{ name: 'Egg station', kind: 'object', locations: [{ cx: 1, cy: 2 }] }], account: unlocks({ skills: { Mining: 2 }, levels: { Mining: 30 } }),
     })).items)).toBe('CANNOT_COMPLETE_YET');
-
     expect(questRouteStatusForItems(analyzeQuest("Cook's Assistant", fixture({
-      records,
-      account: unlocks({ skills: { Mining: 3 }, levels: { Mining: 30 } }),
+      records, recipes, entityHits: [{ name: 'Egg station', kind: 'object', locations: [{ cx: 1, cy: 2 }] }], account: unlocks({ skills: { Mining: 3 }, levels: { Mining: 30 } }),
     })).items)).toBe('READY_NOW');
+  });
+  it('does not reuse analysis when the same skill gate changes from method to actual semantics', () => {
+    const records = cookSources().filter(record => record.itemName !== 'Egg');
+    const snapshot = (semantics: 'actual' | 'method') => fixture({ records, entityHits: [{ name: 'Egg station', kind: 'object', locations: [{ cx: 1, cy: 2 }] }],
+      account: unlocks({ levels: { Cooking: 70 } }),
+      recipes: [recipe('Egg', { gates: [{ type: 'SKILL', skill: 'Cooking', level: 70, label: 'Cooking 70', semantics }] })],
+    });
+    expect(questRouteStatusForItems(analyzeQuest("Cook's Assistant", snapshot('method')).items)).toBe('CANNOT_COMPLETE_YET');
+    expect(questRouteStatusForItems(analyzeQuest("Cook's Assistant", snapshot('actual')).items)).toBe('READY_NOW');
   });
 
   it('does not reuse a cached analysis after completed quests change', () => {

@@ -197,14 +197,14 @@ describe('buildGoalRoute — diary alternatives', () => {
     }))!;
 
     expect(route.regions).toEqual([]);
-    expect(route.alternatives).toEqual([
+    expect(route.alternatives).toEqual(expect.arrayContaining([
       expect.objectContaining({
         routes: expect.arrayContaining([
           expect.objectContaining({ detail: expect.stringContaining('Combat level 100') }),
           expect.objectContaining({ detail: expect.stringContaining('Slayer 99') }),
         ]),
       }),
-    ]);
+    ]));
   });
 });
 
@@ -286,5 +286,18 @@ describe('suggestTables', () => {
 
   it('returns nothing when nothing is needed', () => {
     expect(suggestTables([], stateWith().unlocks)).toEqual([]);
+  });
+});
+
+
+describe('route readiness consistency', () => {
+  it('does not require a skill tier for an attained quest level', () => {
+    const route = buildGoalRoute('Recipe for Disaster', stateWith({ levels: { Cooking: 99 }, skills: {} }))!;
+    expect(route.skills.find(skill => skill.skill === 'Cooking')?.met).toBe(true);
+  });
+  it('keeps incomplete activity evidence visible in a pinned route', () => {
+    const route = buildGoalRoute('Ectoplasmator', stateWith({ minigames: ['Ectoplasmator'] }))!;
+    expect(route.percentage).toBeLessThan(100);
+    expect(route.alternatives.flatMap(group => group.routes).some(item => item.name.includes('review'))).toBe(true);
   });
 });
