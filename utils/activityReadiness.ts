@@ -4,6 +4,8 @@ import { meetsSkillRequirement } from './journalStatus';
 import { isAreaReachable } from './reachability';
 import { evaluatePredicate } from './requirementPredicates';
 import { actualCombatLevel } from './slayerReach';
+import { actualSkillLevel } from './skillLevels';
+import { SKILLS_LIST } from '../data/items';
 
 export type ActivityBlocker =
   | { kind: 'area'; label: string }
@@ -56,8 +58,8 @@ export function evaluateActivityReadiness(
     });
   }
   if (requirement?.totalLevel !== undefined) {
-    const totalLevel = Object.values(unlocks.levels ?? {}).reduce(
-      (sum, level) => sum + level,
+    const totalLevel = SKILLS_LIST.reduce(
+      (sum, skill) => sum + actualSkillLevel(unlocks, skill),
       0,
     );
     if (totalLevel < requirement.totalLevel) {

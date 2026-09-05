@@ -83,7 +83,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Crafting Guild': { skills: { Crafting: 40 } },
   'Mining Guild': { skills: { Mining: 60 } },
   'Prayer Guild': { skills: { Prayer: 31 }, predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Edgeville Monastery chapel.' }], note: 'Edgeville Monastery chapel.' },
-  'Farming Guild': { skills: { Farming: 45 }, predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Tiered access: 45 / 65 / 85 Farming.' }], note: 'Tiered access: 45 / 65 / 85 Farming.' },
+  'Farming Guild': { skills: { Farming: 45 }, noteIsInformational: true, note: 'Entry at 45 Farming; intermediate and advanced sections need 65 and 85.' },
   'Fishing Guild': { skills: { Fishing: 68 } },
   "Heroes' Guild": { quests: ["Heroes' Quest"] },
   'Hunter Guild': { quests: ['Children of the Sun'] },
@@ -103,9 +103,9 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Lunar Spellbook': { quests: ['Lunar Diplomacy'] },
   'Arceuus Spellbook': { predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Swap at the bookcase in Arceuus, Kourend & Kebos.' }], note: 'Swap at the bookcase in Arceuus, Kourend & Kebos.' },
   'Piety': { skills: { Prayer: 70, Defence: 70 }, quests: ["King's Ransom"], predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Knight Waves training grounds.' }], note: 'Knight Waves training grounds.' },
-  'Rigour': { skills: { Prayer: 74 }, predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Dexterous prayer scroll (Chambers of Xeric).' }], note: 'Dexterous prayer scroll (Chambers of Xeric).' },
-  'Augury': { skills: { Prayer: 77 }, predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Arcane prayer scroll (Chambers of Xeric).' }], note: 'Arcane prayer scroll (Chambers of Xeric).' },
-  'Preserve': { skills: { Prayer: 55 } },
+  'Rigour': { skills: { Prayer: 74, Defence: 70 }, predicates: [{ kind: 'manual', key: 'rigour-learned', label: 'Rigour learned by reading a dexterous prayer scroll' }] },
+  'Augury': { skills: { Prayer: 77, Defence: 70 }, predicates: [{ kind: 'manual', key: 'augury-learned', label: 'Augury learned by reading an arcane prayer scroll' }] },
+  'Preserve': { skills: { Prayer: 55 }, predicates: [{ kind: 'manual', key: 'preserve-learned', label: 'Preserve learned by reading a torn prayer scroll' }] },
   'Bones to Peaches': { predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Mage Training Arena reward shop.' }], note: 'Mage Training Arena reward shop.' },
   'Dwarf Cannon': { quests: ['Dwarf Cannon'] },
   'Chivalry': { skills: { Prayer: 60, Defence: 65 }, quests: ["King's Ransom"], predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Knight Waves training grounds.' }], note: 'Knight Waves training grounds.' },
@@ -230,7 +230,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
 
   // ---- Mobility (gated teleport items) ---------------------------------------
   'Canoes': { predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Woodcutting (stations at 12 / 27 / 42 / 57).' }], note: 'Woodcutting (stations at 12 / 27 / 42 / 57).' },
-  'Slayer Ring': { skills: { Slayer: 75 }, predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Craft after reaching 75 Slayer.' }], note: 'Craft after reaching 75 Slayer.' },
+  'Slayer Ring': { predicates: [{ kind: 'item', id: 'slayer-ring', label: 'A charged Slayer ring', usage: 'hold' }], noteIsInformational: true, note: 'Rings may be bought with Slayer points; crafting requires 75 Crafting and the Ring Bling unlock.' },
   "Xeric's Talisman": { predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Great Kourend (Architectural Alliance miniquest).' }], note: 'Great Kourend (Architectural Alliance miniquest).' },
 
   // ---- Player-owned house facilities (Construction) --------------------------
@@ -260,7 +260,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
 
   // ---- Storage (quest/level gated, or notable source) ------------------------
   'Flamtaer Bag': { quests: ["Shades of Mort'ton"] },
-  'Seed Vault': { quests: ['Bone Voyage'], predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Fossil Island.' }], note: 'Fossil Island.' },
+  'Seed Vault': { skills: { Farming: 45 }, predicates: [{ kind: 'area', id: 'Farming Guild' }, { kind: 'manual', key: 'seed-vault-account', label: 'Account mode permits seed vault storage (unavailable to Ultimate Ironmen)' }] },
   'Fossil Storage': { quests: ['Bone Voyage'], predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Fossil Island museum.' }], note: 'Fossil Island museum.' },
   'Plank Sack': { predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Mahogany Homes reward.' }], note: 'Mahogany Homes reward.' },
   "Huntsman's Kit": { predicates: [{ kind: 'unknown', key: 'legacy-note', label: 'Varlamore (Hunter Guild).' }], note: 'Varlamore (Hunter Guild).' },
@@ -291,7 +291,7 @@ export const getActivityReq = (item: string): ActivityReq | undefined => {
   const requiredAreas = ACTIVITY_ACCESS_AREAS[item];
   if (!requirement && !requiredAreas) return undefined;
   return {
-    ...requirement,
+    ...(requirement ?? { predicates: [{ kind: 'unknown' as const, key: 'unreviewed-access', label: 'Non-geographic access requirements have not been reviewed' }] }),
     ...(requiredAreas ? { requiredAreas: [...requiredAreas] } : {}),
   };
 };

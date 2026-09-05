@@ -17,7 +17,7 @@ describe('StrategyGuide requirement analysis', () => {
       quests: [], diaries: [], cas: [], completedTasks: [], collectionLog: {},
     };
     const requirement = {
-      id: 'Falador Easy',
+      id: 'Synthetic skill gate',
       category: TableType.DIARIES,
       skills: { Smithing: 13 },
       regions: [],
@@ -31,7 +31,7 @@ describe('StrategyGuide requirement analysis', () => {
 
   it('keeps structured alternatives out of the missing-quest bucket', () => {
     const analysis = (guide as any).analyzeRequirement({
-      id: 'Karamja Hard', category: TableType.DIARIES,
+      id: 'Synthetic alternative', category: TableType.DIARIES,
       regions: [], skills: {}, quests: [],
       alternatives: [{
         label: 'Combat level 100 or Slayer 99',
@@ -88,4 +88,52 @@ describe('StrategyGuide requirement analysis', () => {
     expect(partial.missingRegions).toEqual(['Wilderness']);
     expect(complete.missingRegions).toEqual([]);
   });
+});
+
+
+describe('StrategyGuide shared readiness regressions', () => {
+  const unlocks = {
+    equipment: {}, skills: { Smithing: 1 }, levels: { Smithing: 70 }, regions: [],
+    mobility: [], arcana: [], housing: [], merchants: [], minigames: [], bosses: [],
+    storage: [], guilds: [], farming: [], slayerUnlocks: [], quests: [], diaries: [],
+    cas: [], completedTasks: [], collectionLog: {},
+  };
+  it('reports attained levels when a level gate is still unmet', () => {
+    const req = { id: 'Synthetic', category: TableType.QUESTS, regions: [], skills: { Smithing: 80 } };
+    const analysis = guide.analyzeRequirement(req, unlocks);
+    expect(analysis.missingSkills[0].currentLevel).toBe(70);
+    expect(guide.calculateProphecyScore(req, analysis)).toBe(10);
+  });
+  it('does not discard inventory and diary prerequisites', () => {
+    const req = { id: 'Synthetic', category: TableType.QUESTS, regions: [], skills: {}, items: ['Spade'], diaries: ['Falador Easy'] };
+    const analysis = guide.analyzeRequirement(req, unlocks);
+    expect(analysis.isFullyPlayable).toBe(false);
+    expect(analysis.missingChecks).toEqual(['Confirm available and legal: Spade', 'Complete Falador Easy']);
+  });
+  it('does not let a partial strategy entry bypass the canonical quest gates', () => {
+    const analysis = guide.analyzeRequirement({ id: 'Dragon Slayer II', category: TableType.QUESTS, regions: [], skills: {} }, unlocks);
+    expect(analysis.isFullyPlayable).toBe(false);
+    expect(analysis.missingChecks.length).toBeGreaterThan(0);
+  });
+  it('keeps an owned activity with unknown access out of playable content', () => {
+    const analysis = guide.analyzeRequirement({ id: 'General Graardor', category: TableType.BOSSES, regions: [], skills: {} }, { ...unlocks, bosses: ['General Graardor'], regions: ['God Wars Dungeon'] });
+    expect(analysis.isFullyPlayable).toBe(false);
+    expect(analysis.missingChecks.length).toBeGreaterThan(0);
+  });
+});
+
+
+it('retains strategy-specific item gates when canonical quest gates are already satisfied', () => {
+  const analysis = guide.analyzeRequirement({ id: "Cook's Assistant", category: TableType.QUESTS, regions: [], skills: {}, items: ['Spade'] }, {
+    quests: ["Cook's Assistant"], skills: {}, levels: {},
+  });
+  expect(analysis.isFullyPlayable).toBe(false);
+  expect(analysis.completionPercent).toBeLessThan(100);
+});
+
+
+it('keeps legacy strategy content with incomplete coverage out of available content', () => {
+  const analysis = guide.analyzeRequirement({ id: 'Ectoplasmator', category: TableType.MINIGAMES, regions: [], skills: {}, requirementsReviewed: false }, { skills: {}, levels: {}, quests: [] });
+  expect(analysis.isFullyPlayable).toBe(false);
+  expect(analysis.missingChecks).toContain('Additional item, method and activity requirements need review');
 });
