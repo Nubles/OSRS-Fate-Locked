@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { beforeAll, describe, it, expect, vi } from 'vitest';
 import * as questOperations from '../data/questOperationalRequirements';
 
 vi.mock('./journalStatus', async () => {
@@ -41,6 +41,11 @@ function regionsAndQuestsDone(over: Record<string, any> = {}) {
 }
 
 describe('rankSkillBottlenecks', () => {
+  let baseline: ReturnType<typeof rankSkillBottlenecks>;
+  // Four assertions share the same full-catalogue simulation. Compute it once;
+  // hosted runners need more than five seconds under concurrent test load.
+  beforeAll(() => { baseline = rankSkillBottlenecks(lowSkills()); }, 20_000);
+
   it('indexes typed level gates while preserving locked method permissions', () => {
     const index = ALL_DIARY_TASKS.findIndex(task => task.id === 'fal_easy_2');
     const original = ALL_DIARY_TASKS[index];
@@ -62,14 +67,14 @@ describe('rankSkillBottlenecks', () => {
     }
   });
   it('is sorted by cascade score (descending)', () => {
-    const ranked = rankSkillBottlenecks(lowSkills());
+    const ranked = baseline;
     for (let i = 1; i < ranked.length; i++) {
       expect(ranked[i - 1].cascadeScore).toBeGreaterThanOrEqual(ranked[i].cascadeScore);
     }
   });
 
   it('every ranked skill has a target above its current level and unlocks something', () => {
-    const ranked = rankSkillBottlenecks(lowSkills());
+    const ranked = baseline;
     for (const r of ranked) {
       expect(r.targetLevel).toBeGreaterThan(r.currentLevel);
       const unlocks =
@@ -82,7 +87,7 @@ describe('rankSkillBottlenecks', () => {
   });
 
   it('targets the NEAREST gating threshold for a skill', () => {
-    const ranked = rankSkillBottlenecks(lowSkills());
+    const ranked = baseline;
     for (const r of ranked) {
       // No quest requiring this skill at a level strictly between current and
       // target should have been skipped if it would have unlocked something —
@@ -98,7 +103,7 @@ describe('rankSkillBottlenecks', () => {
   });
 
   it('cascade score is at least the direct score', () => {
-    const ranked = rankSkillBottlenecks(lowSkills());
+    const ranked = baseline;
     for (const r of ranked) {
       expect(r.cascadeScore).toBeGreaterThanOrEqual(r.score);
     }
