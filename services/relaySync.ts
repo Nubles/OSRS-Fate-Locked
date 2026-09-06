@@ -31,6 +31,13 @@ function randomToken(): string {
 export class RelaySyncService {
   private session: Session | null = null;
   private pendingPush: Promise<void> | null = null;
+  private activeRequest: AbortController | null = null;
+
+  private resetQueue() {
+    this.activeRequest?.abort();
+    this.activeRequest = null;
+    this.pendingPush = null;
+  }
   private listeners = new Set<() => void>();
 
   status: RelayStatus = 'off';
@@ -67,6 +74,7 @@ export class RelaySyncService {
     } catch {
       return false;
     }
+    this.resetQueue();
     this.session = nextSession;
     this.status = 'syncing';
     this.lastError = null;
@@ -78,6 +86,7 @@ export class RelaySyncService {
 
   /** Start a new session: fresh code + private write-token. */
   enable(): string {
+    this.resetQueue();
     this.session = { code: randomCode(), token: randomToken() };
     try { localStorage.setItem(SESSION_KEY, JSON.stringify(this.session)); } catch { /* ignore */ }
     this.status = 'syncing';
@@ -89,6 +98,7 @@ export class RelaySyncService {
   }
 
   disable() {
+    this.resetQueue();
     this.session = null;
     try { localStorage.removeItem(SESSION_KEY); } catch { /* ignore */ }
     this.status = 'off';
@@ -136,12 +146,19 @@ export class RelaySyncService {
     this.status = 'syncing';
     this.lastError = null;
     this.emit();
+    const request = new AbortController();
+    this.activeRequest = request;
+    const timeout = setTimeout(() => request.abort(), 20_000);
+    const cancelled = new Promise<never>((_, reject) => {
+      request.signal.addEventListener('abort', () => reject(new Error('Sync request cancelled or timed out. Try again.')), { once: true });
+    });
     try {
-      const res = await fetch(`${this.base()}/r/${session.code}`, {
+      const res = await Promise.race([fetch(`${this.base()}/r/${session.code}`, {
+        signal: request.signal,
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: session.token, payload }),
-      });
+      }), cancelled]);
       if (!res.ok) throw new Error(`relay ${res.status}`);
       if (this.session !== session || !isCurrent()) return false;
       this.status = 'synced';
@@ -155,6 +172,9 @@ export class RelaySyncService {
       this.lastError = e?.message ?? 'push failed';
       this.emit();
       return false;
+    } finally {
+      clearTimeout(timeout);
+      if (this.activeRequest === request) this.activeRequest = null;
     }
   }
 

@@ -53,14 +53,34 @@ export function classifyQuestItems(wikitext) {
   if (plain === null) return { status: 'unknown', reason: 'Required-item field contains unsupported source markup', raw, checks: [] };
   if (!plain || /^none[.!]?$/i.test(plain)) return { status: 'none', raw, checks: [] };
   const groups = [];
+  let sectionAvailable = false;
+  let sectionOptional = false;
+  let hasAvailabilityHeading = false;
   for (const line of plain.split('\n').map(line => line.trim()).filter(Boolean)) {
+    if (/^(?:required|items required|mandatory)(?: items)?\s*:?$/i.test(line)) { sectionAvailable = false; sectionOptional = false; continue; }
+    if (/^optional(?: items)?\s*:?$/i.test(line)) { sectionOptional = true; continue; }
+    if (/^(?:all (?:required )?items (?:are )?)?(?:obtained|obtainable|provided) (?:during|in) (?:the )?quest\s*:?$/i.test(line)) {
+      sectionAvailable = true;
+      sectionOptional = false;
+      hasAvailabilityHeading = true;
+      continue;
+    }
     // Nested bullets remain with their parent so alternatives and acquisition conditions are not ANDed.
-    if (/^\*\s*[^*]/.test(line) || !groups.length) groups.push(line.replace(/^\*+\s*/, ''));
-    else groups[groups.length - 1] += '; ' + line.replace(/^\*+\s*/, '');
+    if (/^\*\s*[^*]/.test(line) || !groups.length) {
+      const label = line.replace(/^\*+\s*/, '');
+      groups.push({ label, sectionAvailable, ownAvailable: /provided|obtained during|obtainable during|obtained in|obtained on/i.test(label), optional: sectionOptional || /^optional\b/i.test(label) || /\(optional\)[.!]?\s*$/i.test(label) });
+    }
+    else groups[groups.length - 1].label += '; ' + line.replace(/^\*+\s*/, '');
   }
   const allAvailable = /all (?:required )?items (?:are )?(?:obtained|obtainable|provided) (?:during|in)|(?:none|no items)[^\n]*(?:obtained|obtainable|provided)/i.test(plain);
-  const mandatory = groups.filter(label => !/\(optional\)[.!]?\s*$/i.test(label));
-  return { status: !mandatory.length ? 'none' : allAvailable ? 'quest-provided' : 'required', raw, checks: mandatory.map(label => ({ label, supply: allAvailable || /provided|obtained during|obtainable during|obtained in|obtained on/i.test(label) ? 'quest-available' : 'required' })) };
+  const mandatory = groups.filter(({ optional }) => !optional);
+  const checks = mandatory.map(({ label, sectionAvailable, ownAvailable }) => ({
+    // Runtime labels must retain the scope of an acquisition heading because
+    // the compact catalogue intentionally omits source-only supply metadata.
+    label: sectionAvailable && !ownAvailable ? `${label} (obtainable during the quest)` : label,
+    supply: (!hasAvailabilityHeading && allAvailable) || sectionAvailable || ownAvailable ? 'quest-available' : 'required',
+  }));
+  return { status: !checks.length ? 'none' : allAvailable && checks.every(check => check.supply === 'quest-available') ? 'quest-provided' : 'required', raw, checks };
 }
 
 async function main() {

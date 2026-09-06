@@ -7,7 +7,6 @@ import { WIKI_OVERRIDES } from '../constants';
 import { CheckCircle2, Lock, BookOpen, Sparkles, Scroll, Bookmark, Layers, List, ExternalLink, ArrowUpRight, TrendingUp } from 'lucide-react';
 import { chunkContentService } from '../services/ChunkContentService';
 import { questLocations } from '../utils/questLocations';
-import { showChunkOnMap } from '../utils/chunkLocations';
 import { selectQuestGeography } from '../utils/questGeographyDisplay';
 import { isAlmostThere } from '../utils/journalProgress';
 import {
@@ -107,12 +106,12 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
 
     // "Almost there" — locked by exactly one canonical requirement (a quick win).
     const unmet = !isCompleted && !isAvailable ? eligibility.blockers : [];
-    const almost = isAlmostThere(unmet);
+    const almost = !unmet.some(blocker => blocker.kind === 'requirement' && blocker.internalOnly) && isAlmostThere(unmet);
 
     // Chunk-derived locations remain informational map links only. Canonical
     // access is entirely determined by evaluateQuestEligibility.
     const loc = questLocations(quest.name, unlocks, gameModeId);
-    const geography = selectQuestGeography(quest, loc.knownStepPlaces);
+    const geography = selectQuestGeography(quest, loc.knownStepPlaces, gameModeId);
 
     // Req-met accounting — drives the progress bar shown on LOCKED cards so
     // players can see at a glance how close they are without counting chips.
@@ -131,7 +130,7 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
     const prereqReqs: string[] = quest.prereqs || [];
     const metPrereqs = prereqReqs.filter((qid: string) =>
       eligibility.evidence.includes(qid));
-    const hasAlternative = Boolean(quest.oneOf?.length);
+    const hasAlternative = Boolean(quest.oneOf?.length) && !(gameModeId === 'chunked' && quest.chunkedGeography);
     const alternativeLabel = hasAlternative
       ? quest.oneOf.map(questRequirementOptionLabel).join(' or ')
       : '';
@@ -139,11 +138,13 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
       (blocker: { kind: string; label: string }) =>
         blocker.kind === 'region' && blocker.label === alternativeLabel,
     );
-    const operationalBlockers = eligibility.blockers.filter(blocker => blocker.kind === 'requirement');
+    const operationalBlockers = eligibility.blockers.filter(blocker => blocker.kind === 'requirement' && !blocker.internalOnly);
+    const routeGroups = geography.routeGroups ?? [];
+    const metRouteGroups = routeGroups.filter(group => eligibility.evidence.includes(group.label));
     const totalReqs = regionReqs.length + locationReqs.length + skillReqs.length +
-      combatReqs.length + prereqReqs.length + (hasAlternative ? 1 : 0) + eligibility.manualChecks.length + operationalBlockers.length;
+      combatReqs.length + prereqReqs.length + (hasAlternative ? 1 : 0) + operationalBlockers.length + routeGroups.length;
     const totalMet = metRegions.length + metLocations.length + metSkills.length +
-      metCombat.length + metPrereqs.length + (hasAlternative && alternativeMet ? 1 : 0);
+      metCombat.length + metPrereqs.length + (hasAlternative && alternativeMet ? 1 : 0) + metRouteGroups.length;
     const reqPct = totalReqs === 0 ? 100 : Math.round((totalMet / totalReqs) * 100);
 
     return (
@@ -198,7 +199,6 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
                         display={geography}
                         completed={isCompleted}
                         evidence={eligibility.evidence}
-                        onShowChunk={showChunkOnMap}
                       />
                       {combatReqs.map((level: number) => {
                           const met = isCompleted || eligibility.evidence.includes('Combat level ' + level);
@@ -211,13 +211,7 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
                               </span>
                           );
                       })}
-                      {eligibility.manualChecks.map((requirement: string) => (
-                          <span key={'manual:' + requirement}
-                            className="text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1 border bg-cyan-900/10 text-cyan-300/80 border-cyan-500/20"
-                            title="Needs confirmation before completion">
-                              <Bookmark size={8} /> {requirement}
-                          </span>
-                      ))}
+                      {/* Manual requirement evidence is retained for RuneProof, not shown on quest cards. */}
                       {operationalBlockers.map(blocker => (
                           <span key={'operation:' + blocker.label} className="text-[10px] px-1.5 py-0.5 rounded border bg-red-900/10 text-red-400 border-red-500/20">
                               {blocker.label}

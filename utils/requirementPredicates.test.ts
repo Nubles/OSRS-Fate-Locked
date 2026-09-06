@@ -16,6 +16,11 @@ const unlocks: UnlockState = {
 };
 const unknown: RequirementPredicate = { kind: 'unknown', key: 'new-rule', label: 'Unclassified entry rule' };
 describe('shared requirement semantics', () => {
+  it('validates merchant categories and requires their actual unlock', () => {
+    expect(evaluatePredicate({ kind: 'unlock', field: 'merchants', id: 'Wine Traders' }, { unlocks }).status).toBe('LOCKED');
+    expect(evaluatePredicate({ kind: 'unlock', field: 'merchants', id: 'Wine Traders' }, { unlocks: { ...unlocks, merchants: ['Wine Traders'] } }).status).toBe('READY');
+    expect(evaluatePredicate({ kind: 'unlock', field: 'merchants', id: 'Invented shop' }, { unlocks }).status).toBe('UNKNOWN');
+  });
   it('rejects incomplete location contracts rather than accepting malformed coordinates', () => {
     for (const predicate of [
       { kind: 'location', label: 'Spawn', areas: [], chunks: ['49,57'] },
@@ -145,4 +150,12 @@ it('preserves the Ardougne Elite alternative geography', () => {
   const task = ALL_DIARY_TASKS.find(t => t.description.includes('Witchaven or Yanille'))!;
   expect(task.regions).toBeUndefined();
   expect(task.anyOfRegions).toEqual(['Witchaven', 'Yanille']);
+});
+
+it('does not infer item impossibility from a non-exhaustive source index', () => {
+  const predicate: RequirementPredicate = { kind: 'itemSource', name: 'Egg', label: 'Egg' };
+  const itemSources = { ready: true, itemSourceRecords: () => [{ itemName: 'Egg', kind: 'spawn' as const, hostName: 'Egg', cx: 50, cy: 54, rawRequirements: [] }] };
+  expect(evaluatePredicate(predicate, { unlocks, gameModeId: 'chunked', itemSources }).status).toBe('UNKNOWN');
+  expect(evaluatePredicate(predicate, { unlocks: { ...unlocks, chunks: ['50,54'] }, gameModeId: 'chunked', itemSources }).status).toBe('READY');
+  expect(evaluatePredicate(predicate, { unlocks, itemSources: { ...itemSources, ready: false } }).status).toBe('UNKNOWN');
 });

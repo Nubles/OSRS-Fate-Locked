@@ -20,6 +20,8 @@ const mocks = vi.hoisted(() => {
       chunkEntryRequirements: vi.fn(() => []),
       hasBank: vi.fn(() => false),
       shopStock: vi.fn(() => []),
+      // Prepared supplies isolate quest-row presentation from source loading.
+      itemSourceRecords: vi.fn((itemName: string) => [{ itemName, kind: 'spawn', hostName: 'Test prepared supplies', cx: 50, cy: 50, rawRequirements: [] }]),
     },
   };
 });
@@ -366,17 +368,17 @@ describe('ChunkActivityPanel activity accordions', () => {
   it('shows locked and confirmation-pending quest state in text and in the Wiki link name', () => {
     mocks.state.content = {
       ...emptyContent(),
-      quests: { "Doric's Quest": 'first' },
+      quests: { "Witch's Potion": 'first' },
     };
 
     const { unmount } = render(<ChunkActivityPanel {...baseProps} />);
-    const lockedLink = screen.getByRole('link', { name: /Doric's Quest.*Locked/ });
+    const lockedLink = screen.getByRole('link', { name: /Witch's Potion.*Locked/ });
     expect(within(lockedLink.closest('[data-quest-row]') as HTMLElement).getByText('Locked')).toBeTruthy();
     unmount();
 
-    mocks.state.regions = ['Falador'];
+    mocks.state.regions = ['Rimmington'];
     render(<ChunkActivityPanel {...baseProps} />);
-    const readyLink = screen.getByRole('link', { name: /Doric's Quest.*Confirm/ });
+    const readyLink = screen.getByRole('link', { name: /Witch's Potion.*Confirm/ });
     expect(within(readyLink.closest('[data-quest-row]') as HTMLElement).getByText('Confirm')).toBeTruthy();
   });
   it('shows a manual-confirmation reason visibly and in the quest link name', () => {

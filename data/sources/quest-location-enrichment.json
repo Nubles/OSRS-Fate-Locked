@@ -1,0 +1,161 @@
+{
+  "reviewedAt": "2026-09-05",
+  "sourceRepository": "https://github.com/Zoinkwiz/quest-helper",
+  "sourceCommit": "633ab56e2eb3eb363f21da3fd75f6f2bc0fa073a",
+  "entries": {
+    "Getting Ahead": [
+      [
+        "river-molch-homestead",
+        "River Molch homestead",
+        "Molch",
+        19,
+        57
+      ],
+      [
+        "getting-ahead-cave",
+        "Kebos cave entrance",
+        "Kebos Lowlands",
+        18,
+        56
+      ]
+    ],
+    "Tale of the Righteous": [
+      [
+        "phileas-house",
+        "Phileas house",
+        "Shayzien",
+        24,
+        55
+      ],
+      [
+        "arceuus-archive-entry",
+        "Arceuus Library",
+        "Arceuus",
+        25,
+        59
+      ],
+      [
+        "shayzien-war-tent",
+        "Shayzien War Tent",
+        "Shayzien",
+        23,
+        56
+      ],
+      [
+        "historian-duffy",
+        "Historian Duffy",
+        "Mount Quidamortem",
+        19,
+        55
+      ],
+      [
+        "quidamortem-crevice",
+        "Quidamortem crevice",
+        "Mount Quidamortem",
+        18,
+        55
+      ]
+    ],
+    "Sheep Shearer": [
+      [
+        "fred-farm",
+        "Fred the Farmer",
+        "Lumbridge",
+        49,
+        51
+      ]
+    ],
+    "The Restless Ghost": [
+      [
+        "lumbridge-church",
+        "Lumbridge church",
+        "Lumbridge",
+        50,
+        50
+      ],
+      [
+        "urhney-hut",
+        "Father Urhney hut",
+        "Lumbridge",
+        49,
+        49
+      ],
+      [
+        "lumbridge-graveyard",
+        "Lumbridge graveyard",
+        "Lumbridge",
+        50,
+        49
+      ],
+      [
+        "ghost-skull-entry",
+        "Wizards' Tower basement entrance",
+        "Wizards' Tower",
+        48,
+        49
+      ]
+    ],
+    "Vampyre Slayer": [
+      [
+        "morgan-house",
+        "Morgan house",
+        "Draynor Village",
+        48,
+        51
+      ],
+      [
+        "harlow-inn",
+        "Blue Moon Inn",
+        "Varrock",
+        50,
+        53
+      ],
+      [
+        "vampyre-manor",
+        "Draynor Manor entrance",
+        "Draynor Village",
+        48,
+        52
+      ]
+    ],
+    "Pirate's Treasure": [
+      [
+        "port-sarim-rum",
+        "Port Sarim docks and shop",
+        "Port Sarim",
+        47,
+        50
+      ],
+      [
+        "musa-rum-crate",
+        "Musa Point rum shop and crate",
+        "Musa Point",
+        45,
+        49
+      ],
+      [
+        "pirate-chest",
+        "Blue Moon Inn",
+        "Varrock",
+        50,
+        53
+      ],
+      [
+        "falador-treasure",
+        "Falador Park",
+        "Falador",
+        46,
+        52
+      ]
+    ]
+  },
+  "notes": {
+    "Cook's Assistant": "Reviewed unchanged: only Lumbridge Castle is mandatory with pre-obtained ingredients.",
+    "Getting Ahead": "Cave entrance WorldPoint(1212,3647,0); homestead WorldPoint(1248,3686,0). Clay gathering in 18,57 is optional with pre-obtained supplies. Wiki refresh blocked; retained existing pinned item review and inspected full Helper step definitions.",
+    "Tale of the Righteous": "Five mandatory surface destinations corroborated by cached Wiki oldid14718811. Instance steps use library/crevice entrances. Unexplained indexed chunk24,61 remains unresolved, not a new mandatory gate.",
+    "Sheep Shearer": "Pinned Helper SheepShearer.java start/turn-in (3190,3273). Wiki Sheep_searer corroborates pre-supplied balls of wool; sheep pen and castle spinning wheel are optional.",
+    "The Restless Ghost": "Pinned Helper TheRestlessGhost.java loadSteps stages 0/1 require Aereck/Urhney; ghost coffin (3250,3193); skull retrieval enters tower at (3104,3162). Interior coordinates are not surface unlocks. Wiki live quick-guide refresh unavailable; existing pinned audit retained.",
+    "Vampyre Slayer": "Pinned Helper VampyreSlayer.java Morgan (3098,3268), Harlow (3222,3399), manor entry (3108,3353). Wiki quick-guide cached corroboration. Garlic/beer supply routes do not add mandatory chunks.",
+    "Pirate's Treasure": "Pinned Quest Helper PiratesTreasure.java and transport substeps reviewed: mandatory rum purchase/shipping/retrieval, Blue Moon Inn chest and Falador Park dig. Return boat/customs chunk46,49 is optional; no mandatory supply-route chunks. Wiki unavailable; no independent fresh Wiki confirmation claimed."
+  }
+}

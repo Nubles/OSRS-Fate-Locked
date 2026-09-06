@@ -167,10 +167,19 @@ describe('cross-surface quest eligibility contract', () => {
       firstBlocker: 'South Falador Farm',
     },
     {
-      label: 'A Porcine of Interest after both audited locations',
+      label: 'A Porcine of Interest still needs its cave and Spria after the two original locations',
       id: 'A Porcine of Interest',
       gameModeId: 'chunked',
       unlocks: porcineOnlyUnlocks(['48,50', '47,51']),
+      expectedStatus: 'LOCKED_REGION',
+      expectedReadiness: 'BLOCKED',
+      firstBlocker: 'Sourhog cave entrance east of Draynor Manor',
+    },
+    {
+      label: 'A Porcine of Interest after all four audited locations',
+      id: 'A Porcine of Interest',
+      gameModeId: 'chunked',
+      unlocks: porcineOnlyUnlocks(['48,50', '47,51', '49,52', '48,51']),
       expectedStatus: 'NEEDS_CONFIRMATION',
       expectedReadiness: 'BLOCKED',
       firstBlocker: 'operational',
@@ -434,7 +443,7 @@ describe('deterministic current content baseline', () => {
       manualRequirements: undefined,
     });
     expect(questRequirementFields('Dream Mentor')).toEqual({
-      regions: ['Lunar Isle'], locations: undefined, skills: {}, combatLevel: 85,
+      regions: ['Lunar Isle'], locations: ['lunar-mine-entrance', 'lunar-town', 'oneiromancer'], skills: {}, combatLevel: 85,
       prereqs: ['Lunar Diplomacy', "Eadgar's Ruse"], oneOf: undefined,
       manualRequirements: undefined,
     });
@@ -455,13 +464,13 @@ describe('deterministic current content baseline', () => {
       oneOf: undefined, manualRequirements: undefined,
     });
     expect(questRequirementFields('The Final Dawn')).toEqual({
-      regions: ['Tlati Rainforest', 'Civitas illa Fortis', 'Ralos\' Rise'], locations: undefined,
+      regions: ['Tlati Rainforest', 'Civitas illa Fortis', 'Ralos\' Rise'], locations: ["location-1","location-2","location-3","location-4","location-5","location-6"],
       skills: { Thieving: 66, Fletching: 52, Runecraft: 52 },
       combatLevel: undefined, prereqs: ['The Heart of Darkness', 'Perilous Moons'],
       oneOf: undefined, manualRequirements: undefined,
     });
     expect(questRequirementFields('Shadows of Custodia')).toEqual({
-      regions: ['Auburnvale'], locations: undefined,
+      regions: ['Auburnvale'], locations: ["auburnvale","custodia-cave-entrance","ictus-in-east-auburnvale"],
       skills: { Slayer: 54, Fishing: 45, Construction: 41, Hunter: 36 },
       combatLevel: undefined, prereqs: ['Children of the Sun'],
       oneOf: undefined, manualRequirements: undefined,
@@ -488,7 +497,7 @@ describe('deterministic current content baseline', () => {
       prereqs: ['Pandemonium'], oneOf: undefined, manualRequirements: undefined,
     });
     expect(questRequirementFields('Troubled Tortugans')).toEqual({
-      regions: ['Remote Island', 'The Summer Shore', 'The Great Conch', 'The Little Pearl'], locations: undefined,
+      regions: ['Remote Island', 'The Summer Shore', 'The Great Conch', 'The Little Pearl'], locations: ["remote-island","summer-shore-docks","west-summer-shore","great-conch-western-trail","great-conch-grove","little-pearl"],
       skills: {
         Slayer: 51, Construction: 48, Sailing: 45, Hunter: 45,
         Woodcutting: 40, Crafting: 34,
@@ -773,3 +782,15 @@ describe('independent generated-content contract', () => {
     ]);
   });
 });
+
+// This suite isolates destination/skill/manual behavior with known legal supplies.
+// Acquisition availability itself is covered by itemAcquisition and source tests.
+import { beforeEach as beforeSupplyTest, afterEach as afterSupplyTest, vi as supplySpy } from 'vitest';
+import { chunkContentService as suppliedItemsFixture } from '../services/ChunkContentService';
+let restoreSupplyFixture: (() => void)[] = [];
+beforeSupplyTest(() => {
+  const ready = supplySpy.spyOn(suppliedItemsFixture, 'ready', 'get').mockReturnValue(true);
+  const records = supplySpy.spyOn(suppliedItemsFixture, 'itemSourceRecords').mockImplementation(itemName => [{ itemName, kind: 'spawn', hostName: 'Test prepared supplies', cx: 50, cy: 50, rawRequirements: [] }]);
+  restoreSupplyFixture = [() => ready.mockRestore(), () => records.mockRestore()];
+});
+afterSupplyTest(() => restoreSupplyFixture.forEach(restore => restore()));

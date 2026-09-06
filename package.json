@@ -19,7 +19,7 @@
     "chunks:source-check": "node scripts/chunk-source.mjs --check-upstream",
     "chunks:source-verify": "vitest run scripts/chunk-source.test.ts",
     "content:sync": "node scripts/sync-collection-log.mjs && node scripts/sync-combat-achievements.mjs && node scripts/check-content-sync.mjs",
-    "content:verify": "npm run requirements:verify && npm run diary:verify && npm run chunks:verify && npm run quests:verify && npm run quest-routes:verify && npm run walkthroughs:verify && vitest run data/areaCatalog.test.ts data/questCatalog.test.ts data/activityCatalog.test.ts data/serviceCatalog.test.ts data/questOperationalSources.test.ts data/questOperationalRequirements.test.ts data/slayerRequirementPredicates.test.ts data/contentBaseline.test.ts data/tasksConsistency.test.ts utils/taskIdMigrations.test.ts utils/caProgress.test.ts",
+    "content:verify": "npm run requirements:verify && npm run diary:verify && npm run chunks:verify && npm run quests:verify && npm run quest-routes:verify && npm run walkthroughs:verify && vitest run data/areaCatalog.test.ts data/questLocationReview.test.ts data/questAuthoredGeography.test.ts data/questChunkRoutes.test.ts features/runeproof/questAccess.test.ts features/runeproof/itemSourceEvidence.test.ts features/runeproof/sourceClauses.test.ts features/runeproof/QuestItemSources.test.tsx features/runeproof/packs.test.ts features/runeproof/packs/opening-expansion.test.ts features/runeproof/packs/opening-expansion-two.test.ts scripts/runeproof-artwork.test.ts scripts/runeproof-source-guides.test.ts data/questCatalog.test.ts data/activityCatalog.test.ts data/serviceCatalog.test.ts data/questOperationalSources.test.ts data/questOperationalRequirements.test.ts data/slayerRequirementPredicates.test.ts data/contentBaseline.test.ts data/tasksConsistency.test.ts utils/taskIdMigrations.test.ts utils/caProgress.test.ts",
     "dev": "node scripts/gen-model-manifest.mjs && vite",
     "build": "node scripts/gen-model-manifest.mjs && vite build",
     "build:runeproof-preview": "node scripts/gen-model-manifest.mjs && vite build --mode runeproof-preview --outDir dist-runeproof-preview",
@@ -36,7 +36,7 @@
     "walkthroughs:verify": "node scripts/sync-quest-walkthroughs.mjs --check",
     "test:browser": "playwright test",
     "build:verify": "node scripts/gen-model-manifest.mjs && node scripts/verify-build.mjs",
-    "requirements:verify": "node scripts/check-requirement-freshness.mjs && node scripts/compile-quest-operations.mjs --check"
+    "requirements:verify": "node scripts/check-requirement-freshness.mjs && node scripts/compile-quest-operations.mjs --check && node scripts/compile-runeproof-item-clauses.mjs --check"
   },
   "dependencies": {
     "@google/model-viewer": "^4.3.0",

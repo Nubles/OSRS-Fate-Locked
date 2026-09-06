@@ -1,3 +1,4 @@
+import { privateRuneProofAssets } from './scripts/runeproof-public-assets.mjs';
 
 import { defineConfig, normalizePath, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -37,6 +38,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       runeProofPreviewBoundaryPlugin(includeRuneProofPreview),
+      privateRuneProofAssets(includeRuneProofPreview),
       {
         name: 'emit-version-json',
         generateBundle() {

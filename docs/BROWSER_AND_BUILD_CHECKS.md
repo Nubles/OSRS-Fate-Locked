@@ -45,9 +45,59 @@ correctness data raises the initial limit from 405 to 430 KB and the app limit
 from 240 to 265 KB. A separate 25 KB gzip artifact limit protects that allowance;
 the original 441 KB raw-source regression still fails the revised gate.
 
+The September 5 exact-location review adds fixed destination requirements for
+99 further quests. Audit explanations remain in the offline source manifest,
+not production imports. The measured build is 427,730 bytes initial gzip and
+103,810 bytes game-data gzip. The initial 430,000-byte limit remains unchanged;
+the game-data limit increases from 100,000 to 105,000 bytes for this reviewed
+catalogue expansion. No other chunk limit or warning exception changes.
+
 The two existing mixed static/dynamic import warnings for GameContext and
 AchievementsModal, and the existing 500 KB uncompressed chunk warning, are
 explicitly recorded. A new or repeated build warning fails verification. These
 accepted warnings remain performance debt; they are not silently removed or
 claimed fixed. Changing a limit or accepted warning requires reviewing the
 resulting build output and the user-visible performance tradeoff.
+
+The remaining 48 quest models add 249 fixed destinations, 13 route groups, and
+compact uncertainty labels. Source explanations stay offline. The measured
+initial gzip is 435,436 bytes (7,706 above the 99-quest phase), with game-data at
+110,725 bytes. The corresponding limits are 438,000 and 112,000 bytes. This
+reviewed data expansion adds roughly 1.8% to the initial compressed download;
+all other limits, lazy-module checks, and warning checks remain unchanged.
+
+The follow-up RuneProof reconciliation adds 27 corrected or expanded Chunked
+models, including typed route permissions. Measured initial gzip is 438,478
+bytes (3,042 bytes above the previous phase); game-data is 113,621 bytes. The
+reviewed limits become 440,000 and 114,000 bytes. The complete item-clause
+interpretations load only with QuestAccessPanel (93,532 bytes gzip); that module
+now has its own 105,000-byte limit and must remain lazy. Candidate source lists
+are expanded on demand and shown in batches of twelve. This retains the small
+startup increase while allowing all 210 quests to expose their source evidence.
+
+
+2026-09-06: Shared automatic item-source predicates and compact acquisition routes add about 9 KB compressed to initial loading (measured 447,994 bytes total). Initial limit is 450,000 bytes; per-chunk and lazy-loading limits are unchanged. Source interpretations and maps remain lazy.
+
+
+### Private RuneProof redesign boundary (September 6)
+
+The standard production build uses Goal Planner for dashboard, command-palette,
+and journal goal actions. The unfinished RuneProof workspace is only included in
+explicit `runeproof-preview` builds (and unit-test mode). An inherited
+`VITE_RUNEPROOF_PREVIEW` environment variable does not enable it in production.
+Production output excludes the entire `public/runeproof` payload; the source
+files and shared quest requirement predicates are retained.
+
+Run `npm run build` and `npm run test:browser` for public release checks.
+`npx vitest run scripts/runeproof-public-bundle.test.ts` builds both variants and
+checks the emitted workspace and private assets, including an inherited-flag case.
+For private UI checks, run `npm run build:runeproof-preview`, then in PowerShell:
+
+```powershell
+$env:RUNEPROOF_BROWSER_PREVIEW = '1'
+npx playwright test browser-tests/runeproof-source.spec.ts
+Remove-Item Env:RUNEPROOF_BROWSER_PREVIEW
+```
+
+Private preview browser tests serve `dist-runeproof-preview`; default browser
+checks serve `dist` and exclude RuneProof-only scenarios.

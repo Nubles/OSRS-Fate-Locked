@@ -59,7 +59,7 @@ const godWarsGeneralRequirements = (skill: string, faction: string, equipment: s
 
 const houseFeature = (name: string): ActivityReq => ({
   predicates: [{ kind: 'manual', key: `house-feature:${name}`, label: `${name} is built and usable in a legally reachable house permitted by your account mode; the selected upgrade and any destination are unlocked` }],
-  noteIsInformational: true, note: 'Construction levels apply when building; access permission alone does not prove the feature has been built.',
+  noteIsInformational: true, note: 'Construction levels apply when building.',
 });
 const stashFeature = (tier: string, buildLevel: number): ActivityReq => ({
   predicates: [{ kind: 'manual', key: `stash:${tier}`, label: `The selected ${tier} STASH unit is built and legally reachable, with the required matching item set and inventory space available` }],

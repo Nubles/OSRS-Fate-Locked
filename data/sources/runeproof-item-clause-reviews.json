@@ -1,0 +1,834 @@
+{
+  "schemaVersion": 1,
+  "reviews": [
+    {
+      "questId": "Tower of Life",
+      "clauseIndex": 0,
+      "label": "Hammer (or Imcando hammer)",
+      "revisionId": 15292366,
+      "structure": "choice",
+      "routes": [
+        {
+          "id": "reviewed-route-0",
+          "label": "Hammer",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Hammer",
+              "quantity": 1,
+              "availability": "required",
+              "sourceText": "Hammer"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-1",
+          "label": "Imcando hammer",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Imcando hammer",
+              "quantity": 1,
+              "availability": "required",
+              "sourceText": "Imcando hammer"
+            }
+          ]
+        }
+      ],
+      "reason": "Pinned source explicitly names these substitutable items. Conditional acquisition notes and legal use remain separate checks."
+    },
+    {
+      "questId": "Tower of Life",
+      "clauseIndex": 1,
+      "label": "Saw (or crystal saw)",
+      "revisionId": 15292366,
+      "structure": "choice",
+      "routes": [
+        {
+          "id": "reviewed-route-0",
+          "label": "Saw",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Saw",
+              "quantity": 1,
+              "availability": "required",
+              "sourceText": "Saw"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-1",
+          "label": "Crystal saw",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Crystal saw",
+              "quantity": 1,
+              "availability": "required",
+              "sourceText": "Crystal saw"
+            }
+          ]
+        }
+      ],
+      "reason": "Pinned source explicitly names these substitutable items. Conditional acquisition notes and legal use remain separate checks."
+    },
+    {
+      "questId": "Scrambled!",
+      "clauseIndex": 3,
+      "label": "Saw (spawn in range shop) or Amy's saw (obtainable during the quest)",
+      "revisionId": 15323000,
+      "structure": "choice",
+      "routes": [
+        {
+          "id": "reviewed-route-0",
+          "label": "Saw",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Saw",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Saw"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-1",
+          "label": "Amy's saw",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Amy's saw",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Amy's saw"
+            }
+          ]
+        }
+      ],
+      "reason": "Pinned source explicitly names these substitutable items. Conditional acquisition notes and legal use remain separate checks."
+    },
+    {
+      "questId": "Scrambled!",
+      "clauseIndex": 4,
+      "label": "Hammer (spawn in furnace house) or Imcando hammer (obtainable during the quest)",
+      "revisionId": 15323000,
+      "structure": "choice",
+      "routes": [
+        {
+          "id": "reviewed-route-0",
+          "label": "Hammer",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Hammer",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Hammer"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-1",
+          "label": "Imcando hammer",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Imcando hammer",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Imcando hammer"
+            }
+          ]
+        }
+      ],
+      "reason": "Pinned source explicitly names these substitutable items. Conditional acquisition notes and legal use remain separate checks."
+    },
+    {
+      "questId": "Sleeping Giants",
+      "clauseIndex": 3,
+      "label": "Hammer or Imcando hammer (Other types of hammers will not work)",
+      "revisionId": 15241064,
+      "structure": "choice",
+      "routes": [
+        {
+          "id": "reviewed-route-0",
+          "label": "Hammer",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Hammer",
+              "quantity": 1,
+              "availability": "required",
+              "sourceText": "Hammer"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-1",
+          "label": "Imcando hammer",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Imcando hammer",
+              "quantity": 1,
+              "availability": "required",
+              "sourceText": "Imcando hammer"
+            }
+          ]
+        }
+      ],
+      "reason": "Pinned source explicitly names these substitutable items. Conditional acquisition notes and legal use remain separate checks."
+    },
+    {
+      "questId": "Sleeping Giants",
+      "clauseIndex": 5,
+      "label": "1 bucket of water (Obtainable during quest) or ice gloves",
+      "revisionId": 15241064,
+      "structure": "choice",
+      "routes": [
+        {
+          "id": "reviewed-route-0",
+          "label": "Bucket of water",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Bucket of water",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Bucket of water"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-1",
+          "label": "Ice gloves",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Ice gloves",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Ice gloves"
+            }
+          ]
+        }
+      ],
+      "reason": "Pinned source explicitly names these substitutable items. Conditional acquisition notes and legal use remain separate checks."
+    },
+    {
+      "questId": "Heroes' Quest",
+      "clauseIndex": 0,
+      "label": "Ice gloves (obtainable during the quest) or Smiths gloves (i)",
+      "revisionId": 15327634,
+      "structure": "choice",
+      "routes": [
+        {
+          "id": "reviewed-route-0",
+          "label": "Ice gloves",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Ice gloves",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Ice gloves"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-1",
+          "label": "Smiths gloves (i)",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Smiths gloves (i)",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Smiths gloves (i)"
+            }
+          ]
+        }
+      ],
+      "reason": "Pinned source explicitly names these substitutable items. Conditional acquisition notes and legal use remain separate checks."
+    },
+    {
+      "questId": "The Fremennik Exiles",
+      "clauseIndex": 8,
+      "label": "Ice gloves or Smiths gloves (i)",
+      "revisionId": 15315220,
+      "structure": "choice",
+      "routes": [
+        {
+          "id": "reviewed-route-0",
+          "label": "Ice gloves",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Ice gloves",
+              "quantity": 1,
+              "availability": "required",
+              "sourceText": "Ice gloves"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-1",
+          "label": "Smiths gloves (i)",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Smiths gloves (i)",
+              "quantity": 1,
+              "availability": "required",
+              "sourceText": "Smiths gloves (i)"
+            }
+          ]
+        }
+      ],
+      "reason": "Pinned source explicitly names these substitutable items. Conditional acquisition notes and legal use remain separate checks."
+    },
+    {
+      "questId": "The Fremennik Exiles",
+      "clauseIndex": 6,
+      "label": "Fishing rod, fly fishing rod, or barbarian fishing rod",
+      "revisionId": 15315220,
+      "structure": "choice",
+      "routes": [
+        {
+          "id": "reviewed-route-0",
+          "label": "Fishing rod",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Fishing rod",
+              "quantity": 1,
+              "availability": "required",
+              "sourceText": "Fishing rod"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-1",
+          "label": "Fly fishing rod",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Fly fishing rod",
+              "quantity": 1,
+              "availability": "required",
+              "sourceText": "Fly fishing rod"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-2",
+          "label": "Barbarian fishing rod",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Barbarian fishing rod",
+              "quantity": 1,
+              "availability": "required",
+              "sourceText": "Barbarian fishing rod"
+            }
+          ]
+        }
+      ],
+      "reason": "Pinned source explicitly names these substitutable items. Conditional acquisition notes and legal use remain separate checks."
+    },
+    {
+      "questId": "Below Ice Mountain",
+      "clauseIndex": 3,
+      "label": "Beer (obtainable during the quest); Alternatively Asgarnian ale, Dwarven stout, or a Wizard's mind bomb",
+      "revisionId": 15240942,
+      "structure": "choice",
+      "routes": [
+        {
+          "id": "reviewed-route-0",
+          "label": "Beer",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Beer",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Beer"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-1",
+          "label": "Asgarnian ale",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Asgarnian ale",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Asgarnian ale"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-2",
+          "label": "Dwarven stout",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Dwarven stout",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Dwarven stout"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-3",
+          "label": "Wizard's mind bomb",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Wizard's mind bomb",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Wizard's mind bomb"
+            }
+          ]
+        }
+      ],
+      "reason": "Pinned source explicitly names these substitutable items. Conditional acquisition notes and legal use remain separate checks."
+    },
+    {
+      "questId": "Clock Tower",
+      "clauseIndex": 0,
+      "label": "Bucket of water (obtainable during quest); Alternatively, a Jug of water, Ice gloves, or Smiths gloves (i)",
+      "revisionId": 15166584,
+      "structure": "choice",
+      "routes": [
+        {
+          "id": "reviewed-route-0",
+          "label": "Bucket of water",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Bucket of water",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Bucket of water"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-1",
+          "label": "Jug of water",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Jug of water",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Jug of water"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-2",
+          "label": "Ice gloves",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Ice gloves",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Ice gloves"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-3",
+          "label": "Smiths gloves (i)",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Smiths gloves (i)",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Smiths gloves (i)"
+            }
+          ]
+        }
+      ],
+      "reason": "Pinned source explicitly names these substitutable items. Conditional acquisition notes and legal use remain separate checks."
+    },
+    {
+      "questId": "At First Light",
+      "clauseIndex": 0,
+      "label": "Needle or costume needle (one needle spawns in Pellem's Fur Store nearby)",
+      "revisionId": 15271675,
+      "structure": "choice",
+      "routes": [
+        {
+          "id": "reviewed-route-0",
+          "label": "Needle",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Needle",
+              "quantity": 1,
+              "availability": "required",
+              "sourceText": "Needle"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-1",
+          "label": "Costume needle",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Costume needle",
+              "quantity": 1,
+              "availability": "required",
+              "sourceText": "Costume needle"
+            }
+          ]
+        }
+      ],
+      "reason": "Pinned source explicitly names these substitutable items. Conditional acquisition notes and legal use remain separate checks."
+    },
+    {
+      "questId": "At First Light",
+      "clauseIndex": 1,
+      "label": "Hammer (obtainable during quest) or Imcando hammer",
+      "revisionId": 15271675,
+      "structure": "choice",
+      "routes": [
+        {
+          "id": "reviewed-route-0",
+          "label": "Hammer",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Hammer",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Hammer"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-1",
+          "label": "Imcando hammer",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Imcando hammer",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Imcando hammer"
+            }
+          ]
+        }
+      ],
+      "reason": "Pinned source explicitly names these substitutable items. Conditional acquisition notes and legal use remain separate checks."
+    },
+    {
+      "questId": "Troubled Tortugans",
+      "clauseIndex": 1,
+      "label": "Hammer (obtainable during the quest) or Imcando hammer",
+      "revisionId": 15273864,
+      "structure": "choice",
+      "routes": [
+        {
+          "id": "reviewed-route-0",
+          "label": "Hammer",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Hammer",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Hammer"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-1",
+          "label": "Imcando hammer",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Imcando hammer",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Imcando hammer"
+            }
+          ]
+        }
+      ],
+      "reason": "Pinned source explicitly names these substitutable items. Conditional acquisition notes and legal use remain separate checks."
+    },
+    {
+      "questId": "Troubled Tortugans",
+      "clauseIndex": 2,
+      "label": "Saw (obtainable during the quest) or Amy's saw",
+      "revisionId": 15273864,
+      "structure": "choice",
+      "routes": [
+        {
+          "id": "reviewed-route-0",
+          "label": "Saw",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Saw",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Saw"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-1",
+          "label": "Amy's saw",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Amy's saw",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Amy's saw"
+            }
+          ]
+        }
+      ],
+      "reason": "Pinned source explicitly names these substitutable items. Conditional acquisition notes and legal use remain separate checks."
+    },
+    {
+      "questId": "Between a Rock...",
+      "clauseIndex": 3,
+      "label": "An ammo mould (can be bought for 5 coins during the quest) or a double ammo mould",
+      "revisionId": 15315213,
+      "structure": "choice",
+      "routes": [
+        {
+          "id": "reviewed-route-0",
+          "label": "Ammo mould",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Ammo mould",
+              "quantity": 1,
+              "availability": "required",
+              "sourceText": "Ammo mould"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-1",
+          "label": "Double ammo mould",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Double ammo mould",
+              "quantity": 1,
+              "availability": "required",
+              "sourceText": "Double ammo mould"
+            }
+          ]
+        }
+      ],
+      "reason": "Pinned source explicitly names these substitutable items. Conditional acquisition notes and legal use remain separate checks."
+    },
+    {
+      "questId": "A Tail of Two Cats",
+      "clauseIndex": 12,
+      "label": "Desert shirt (obtainable during quest) or druid's robe top (the desert outfit does not work)",
+      "revisionId": 15315440,
+      "structure": "choice",
+      "routes": [
+        {
+          "id": "reviewed-route-0",
+          "label": "Desert shirt",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Desert shirt",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Desert shirt"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-1",
+          "label": "Druid's robe top",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Druid's robe top",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Druid's robe top"
+            }
+          ]
+        }
+      ],
+      "reason": "Pinned source explicitly names these substitutable items. Conditional acquisition notes and legal use remain separate checks."
+    },
+    {
+      "questId": "A Tail of Two Cats",
+      "clauseIndex": 13,
+      "label": "Desert robe (obtainable during quest) or druid's robe (the desert outfit does not work)",
+      "revisionId": 15315440,
+      "structure": "choice",
+      "routes": [
+        {
+          "id": "reviewed-route-0",
+          "label": "Desert robe",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Desert robe",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Desert robe"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-1",
+          "label": "Druid's robe",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Druid's robe",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Druid's robe"
+            }
+          ]
+        }
+      ],
+      "reason": "Pinned source explicitly names these substitutable items. Conditional acquisition notes and legal use remain separate checks."
+    },
+    {
+      "questId": "Cold War",
+      "clauseIndex": 7,
+      "label": "Raw cod or the Ring of Charos(a)",
+      "revisionId": 15315223,
+      "structure": "choice",
+      "routes": [
+        {
+          "id": "reviewed-route-0",
+          "label": "Raw cod",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Raw cod",
+              "quantity": 1,
+              "availability": "required",
+              "sourceText": "Raw cod"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-1",
+          "label": "Ring of Charos(a)",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Ring of Charos(a)",
+              "quantity": 1,
+              "availability": "required",
+              "sourceText": "Ring of Charos(a)"
+            }
+          ]
+        }
+      ],
+      "reason": "Pinned source explicitly names these substitutable items. Conditional acquisition notes and legal use remain separate checks."
+    },
+    {
+      "questId": "One Small Favour",
+      "clauseIndex": 4,
+      "label": "Hammer (obtainable during the quest) or Imcando hammer",
+      "revisionId": 15292287,
+      "structure": "choice",
+      "routes": [
+        {
+          "id": "reviewed-route-0",
+          "label": "Hammer",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Hammer",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Hammer"
+            }
+          ]
+        },
+        {
+          "id": "reviewed-route-1",
+          "label": "Imcando hammer",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Imcando hammer",
+              "quantity": 1,
+              "availability": "quest-available",
+              "sourceText": "Imcando hammer"
+            }
+          ]
+        }
+      ],
+      "reason": "Pinned source explicitly names these substitutable items. Conditional acquisition notes and legal use remain separate checks."
+    },
+    {
+      "questId": "One Small Favour",
+      "clauseIndex": 3,
+      "label": "The ingredients required to make a Guthix rest:; 2 Guam leaves; Marrentill; Harralander; Cup of hot water (obtainable during the quest)",
+      "revisionId": 15292287,
+      "structure": "bundle",
+      "routes": [
+        {
+          "id": "reviewed-route-0",
+          "label": "2 Guam leaf + 1 Marrentill + 1 Harralander + 1 Cup of hot water",
+          "items": [
+            {
+              "kind": "item",
+              "name": "Guam leaf",
+              "quantity": 2,
+              "availability": "required",
+              "sourceText": "Guam leaf"
+            },
+            {
+              "kind": "item",
+              "name": "Marrentill",
+              "quantity": 1,
+              "availability": "required",
+              "sourceText": "Marrentill"
+            },
+            {
+              "kind": "item",
+              "name": "Harralander",
+              "quantity": 1,
+              "availability": "required",
+              "sourceText": "Harralander"
+            },
+            {
+              "kind": "item",
+              "name": "Cup of hot water",
+              "quantity": 1,
+              "availability": "required",
+              "sourceText": "Cup of hot water"
+            }
+          ]
+        }
+      ],
+      "reason": "Pinned source explicitly lists this ingredient bundle. Preparation and legal use remain separate checks."
+    }
+  ]
+}

@@ -1,5 +1,9 @@
+import { questOperationalRequirements } from '../data/questOperationalRequirements';
+import { evaluatePredicate, type RequirementPredicate } from './requirementPredicates';
 import { QuestData } from '../data/questData';
+import type { UnlockState } from '../types';
 import { catalogQuest } from '../data/questCatalog';
+import { chooseChunkQuestLocations } from './questChunkGeography';
 /**
  * Quest *chunk-access* doability.
  *
@@ -124,6 +128,28 @@ export function questChunkStatus(
 }
 
 export type DoabilityBucket = 'DONE' | 'DOABLE' | 'REQS' | 'STRANDED' | 'LOCKED' | 'NO_DATA';
+
+/** Use one reachable entrance per authored destination; alternative entrances are OR. */
+export function authoredQuestChunkStatus(
+  quest: QuestData,
+  reachable: Set<string>,
+  isUnlocked: (cx: number, cy: number) => boolean,
+  gameModeId?: string,
+  routeUnlocks?: UnlockState,
+): QuestChunkStatus {
+  if (gameModeId === 'chunked' && quest.chunkedGeography) {
+    return questChunkStatus(chooseChunkQuestLocations(quest.chunkedGeography, reachable, isUnlocked, routeUnlocks), reachable, isUnlocked);
+  }
+  const destinations = (quest.locations ?? []).flatMap(location => {
+    const options = location.chunkOptions;
+    const selected = options.find(point => reachable.has(idOf(point.cx, point.cy)))
+      ?? options.find(point => isUnlocked(point.cx, point.cy))
+      ?? options[0];
+    return selected ? [selected] : [];
+  });
+  return questChunkStatus(destinations, reachable, isUnlocked);
+}
+
 export const hasCanonicalQuestLocationEvidence = (quest: QuestData): boolean =>
   quest.regions.length > 0
   || (quest.locations?.length ?? 0) > 0
@@ -153,4 +179,20 @@ export function doabilityBucket(
   if (chunk.access === 'LOCKED') return 'LOCKED';
   if (chunk.access === 'STRANDED') return 'STRANDED';
   return reqsMet ? 'DOABLE' : 'REQS'; // all chunks reachable — only reqs can block now
+}
+
+/** Only tracked hard gates belong in the compact player requirements summary. */
+export function questOperationalBlockerLabels(quest: QuestData, unlocks: UnlockState, gameModeId?: string): string[] {
+  const labels = (predicate: RequirementPredicate): string[] => {
+    if (predicate.kind === 'all') return predicate.of.flatMap(labels);
+    const evaluated = evaluatePredicate(predicate, { unlocks, gameModeId });
+    if (evaluated.status !== 'LOCKED') return [];
+    if (predicate.kind === 'any') {
+      const alternatives = predicate.of.map(option => labels(option).join(' + '));
+      return alternatives.every(Boolean) ? [alternatives.join(' or ')] : [];
+    }
+    if (['manual', 'unknown', 'item', 'itemSource', 'bossKill', 'slayerTask', 'accountMode'].includes(predicate.kind)) return [];
+    return predicate.kind === 'equipment' && predicate.label ? [predicate.label] : evaluated.checks;
+  };
+  return [...new Set(questOperationalRequirements(quest).flatMap(labels))];
 }

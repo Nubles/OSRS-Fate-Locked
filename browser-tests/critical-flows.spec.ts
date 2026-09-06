@@ -93,14 +93,23 @@ test('fresh onboarding, durable save and sync export/import', async ({ page }) =
   await expect(page.getByText('Progress saved.', { exact: true })).toBeVisible();
 });
 
-test('mobile navigation and RuneProof render without an error boundary', async ({ page }) => {
+test('mobile navigation and goal planner render without an error boundary', async ({ page }) => {
   await start(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: 'Journal', exact: true }).click();
   await page.getByRole('button', { name: 'Diaries', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Lumbridge Easy diary: locked', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'RuneProof', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'RuneProof', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Goal Planner', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Goal Planner', exact: true })).toBeVisible();
   await expect(page.getByText("Cook's Assistant", { exact: true }).first()).toBeVisible();
+  const planner = page.getByRole('dialog', { name: 'Goal Planner', exact: true });
+  await planner.getByRole('button', { name: /Cook's Assistant/ }).click();
+  await expect(planner.getByText(/Needs confirmation:|Confirm:/)).toHaveCount(0);
+  await expect(planner.getByText(/satisfy the applicable required route legally/)).toHaveCount(0);
+  await planner.getByRole('button', { name: /The Restless Ghost/ }).click();
+  await expect(planner.getByText('Neck equipment tier 1', { exact: true })).toBeVisible();
+  await expect(planner.getByText(/satisfy the applicable required route legally|quest actions and equipment use/)).toHaveCount(0);
 });
 
 test('migrated profile preserves attained levels above method tiers and manual diary gates', async ({ page }) => {
@@ -188,6 +197,9 @@ test('mobile cold load under throttled CPU and network', async ({ page }, testIn
 });
 
 test('conditional quest advice and legacy timelapse remain honest after import', async ({ page }) => {
+  // This complete import/reload/advice/history journey can take over 40 seconds
+  // with trace recording. Cold-load performance has its own separate test.
+  test.setTimeout(60_000);
   await start(page);
   const state = await readSave(page);
   state.advisorsEnabled = true;

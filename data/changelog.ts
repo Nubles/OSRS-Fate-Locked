@@ -25,8 +25,10 @@ export const CHANGELOG_RELEASES = [
     sections: {
       fixed: [
         'Quest, diary, activity and Slayer checks now use your attained levels separately from unlocked training and equipment tiers.',
-        'Missing items, partial quest progress and other untracked conditions ask for confirmation; unknown requirements remain visible instead of appearing ready.',
-        'Alternative diary routes, shared area access and RuneProof requirement checks now stay consistent across planning screens.',
+        'Quest checks keep unverified items and actions separate from confirmed unlock requirements.',
+        'Alternative diary routes and shared area access now stay consistent across planning screens.',
+        'Quest locations include reviewed chunk requirements, and required equipment slots and methods appear alongside level checks.',
+        'Boss location labels now show when an area still needs unlocking.',
         'Save history checks identify incomplete or migrated history without presenting it as independently verified gameplay.',
         'Older imports can reach their compensation choices, and onboarding controls fit small mobile screens.',
         'Quest advice now includes clearly labelled conditional paths, and travel checks recognize equivalent quest references.',

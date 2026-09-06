@@ -26,4 +26,34 @@ describe('quest required-item source extraction', () => {
   it('never interprets a truncated nested field as complete evidence', () => {
     expect(questDetailFields('{{Quest details|items={{plink|Hammer}}')).toBeNull();
   });
+  it('preserves acquisition section scope without attaching headings to an unrelated item', () => {
+    const result = classifyQuestItems("{{Quest details|items=* [[Law rune]]\n'''Obtainable during quest:'''\n* [[Hammer]]\n* [[Saw]] or [[Amy's saw]]}}");
+    expect(result.checks).toEqual([
+      { label: 'Law rune', supply: 'required' },
+      { label: 'Hammer (obtainable during the quest)', supply: 'quest-available' },
+      { label: "Saw or Amy's saw (obtainable during the quest)", supply: 'quest-available' },
+    ]);
+    expect(result.status).toBe('required');
+  });
+  it('does not emit all-obtainable headings or explicitly optional equipment as mandatory supplies', () => {
+    const result = classifyQuestItems('{{Quest details|items=All items obtainable during quest:\n* [[Hammer]]\n* Optional to give to Ivan:\n** [[Steel platelegs]]}}');
+    expect(result.checks).toEqual([{ label: 'Hammer (obtainable during the quest)', supply: 'quest-available' }]);
+    expect(result.status).toBe('quest-provided');
+  });
+  it('does not let an optional nested note discard its mandatory parent', () => {
+    expect(classifyQuestItems('{{Quest details|items=* Rope\n** Knife (optional)}}').checks).toEqual([{ label: 'Rope; Knife (optional)', supply: 'required' }]);
+  });
+  it('resets acquisition and optional headings when a required section begins', () => {
+    expect(classifyQuestItems('{{Quest details|items=Obtained during quest:\n* Key\nRequired:\n* Rope\nOptional:\n* Hammer\nRequired:\n* Spade}}').checks).toEqual([
+      { label: 'Key (obtainable during the quest)', supply: 'quest-available' }, { label: 'Rope', supply: 'required' }, { label: 'Spade', supply: 'required' },
+    ]);
+  });
+  it('limits an all-items acquisition heading to its own section', () => {
+    const result = classifyQuestItems('{{Quest details|items=All items obtainable during quest:\n* Key\nRequired:\n* Rope}}');
+    expect(result.status).toBe('required');
+    expect(result.checks).toEqual([{ label: 'Key (obtainable during the quest)', supply: 'quest-available' }, { label: 'Rope', supply: 'required' }]);
+  });
+  it('does not apply a nested acquisition note to the mandatory parent item', () => {
+    expect(classifyQuestItems('{{Quest details|items=* Rope\n** Knife (obtained during quest)}}').checks).toEqual([{ label: 'Rope; Knife (obtained during quest)', supply: 'required' }]);
+  });
 });

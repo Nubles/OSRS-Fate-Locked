@@ -350,7 +350,7 @@
         },
         {
           "label": "Herblore:; A normal attack potion (2 doses); Roe (can be obtained during Barbarian Fishing); A knife for roe or caviar",
-          "supply": "quest-available"
+          "supply": "required"
         }
       ]
     },
@@ -1506,7 +1506,7 @@
         },
         {
           "label": "2 Elemental metals (3 elemental metals if you wish to smith the Mind shield), or:; 2 Elemental ore (obtainable during quest) (3 if you wish to smith the mind shield); 8 Coal (12 if you wish to smith the mind shield)",
-          "supply": "quest-available"
+          "supply": "required"
         },
         {
           "label": "The battered key from Elemental Workshop I",
@@ -1604,7 +1604,7 @@
       "checks": [
         {
           "label": "TRIP 1 (starting the quest):; 3 unnoted papyrus; 1 ball of wool; A full sack of potatoes (item is called Potatoes(10)) (there are potatoes growing in Entrana in the house east of Auguste, bring another empty sack if picking here); 8 empty sacks – bring 9 sacks if planning to fill one with potatoes on Entrana.; 1 unlit candle or black candle (can be obtained during quest by stealing candles in Entrana church); Yellow dye; Red dye; 10 unnoted silk; A bowl (obtainable during quest)",
-          "supply": "quest-available"
+          "supply": "required"
         },
         {
           "label": "TRIP 2 (building the third balloon); At least 10 normal logs; A tinderbox; 12 unnoted willow branches (buy from the Grand Exchange, or plant a willow sapling and wait 4 hours.); Note: The player receives a willow sapling during the quest, although planting one beforehand may be faster. You will also receive a basket of apples to pay to protect the tree.; Secateurs (only if planting the tree) (can also be exchanged from a Tool Leprechaun if placed there before); A rake (only if planting the tree) (can also be exchanged from a Tool Leprechaun if placed there before); A spade (only if planting the tree) (can also be exchanged from a Tool Leprechaun if placed there before)",
@@ -1985,7 +1985,7 @@
         },
         {
           "label": "Seasoned sardine (Bought from the Grand Exchange) or alternatively:; Raw sardine (can be bought from Gerrant's Fishy Business.); Doogle leaves (obtainable during the quest)",
-          "supply": "quest-available"
+          "supply": "required"
         }
       ]
     },
@@ -2099,7 +2099,7 @@
         },
         {
           "label": "Nettle tea (prepared ahead of time, within a bowl of water) or items to make nettle tea:; A tinderbox and a log of which you have the Firemaking level to light. Tinderbox can be purchased from the general store during quest; Gloves (must be closed fingered - Slayer gloves, Ranger gloves, Infinity gloves, Moonclan gloves, Granite gloves, Lunar gloves and Beekeeper's gloves won't work); Nettles (obtainable during the quest); Bowl of water (empty bowl can be purchased during quest -- the gold bowl won't work)",
-          "supply": "quest-available"
+          "supply": "required"
         }
       ]
     },
@@ -2450,7 +2450,7 @@
       "checks": [
         {
           "label": "A method to damage vampyres, either:; Efaritay's aid equipped in combination with any weapon OR; Silver weaponry, which includes:; Wolfbane dagger; A blessed or regular silver sickle; A blessed axe (obtained during Animal Magnetism); Silverlight (obtained during Demon Slayer), Darklight (obtained during Shadow of the Storm), Arclight, or Emberlight",
-          "supply": "quest-available"
+          "supply": "required"
         },
         {
           "label": "1 piece of any food to enter Burgh de Rott for the first time",
@@ -2526,10 +2526,6 @@
         },
         {
           "label": "On the standard spellbook for Lvl-1 Enchant:; A cosmic rune; A water rune",
-          "supply": "required"
-        },
-        {
-          "label": "Optional to give to Ivan Strom (Strongly recommended if you don't have a high combat level 85+, you will not get the items back):; A steel med helm; A steel chainbody; Steel platelegs; A silver sickle; 15 stew (highest healing), salmon, snails, or slimy eels",
           "supply": "required"
         }
       ]
@@ -3463,7 +3459,7 @@
         },
         {
           "label": "The ingredients required to make a Guthix rest:; 2 Guam leaves; Marrentill; Harralander; Cup of hot water (obtainable during the quest)",
-          "supply": "quest-available"
+          "supply": "required"
         },
         {
           "label": "Hammer (obtainable during the quest) or Imcando hammer",
@@ -4408,27 +4404,23 @@
       "raw": "All items obtainable during quest:\n* [[Bowl of water]] (two spawn in town, fountain next to bank)\n* 2 [[planks]] (south of the town near the water)\n* 6 [[nails]] (more recommended as they can bend, 20 nails may be found on the workbench)\n* [[Saw]] (spawn in range shop) or [[Amy's saw]]\n* [[Hammer]] (spawn in furnace house) or [[Imcando hammer]]",
       "checks": [
         {
-          "label": "All items obtainable during quest:",
+          "label": "Bowl of water (two spawn in town, fountain next to bank) (obtainable during the quest)",
           "supply": "quest-available"
         },
         {
-          "label": "Bowl of water (two spawn in town, fountain next to bank)",
+          "label": "2 planks (south of the town near the water) (obtainable during the quest)",
           "supply": "quest-available"
         },
         {
-          "label": "2 planks (south of the town near the water)",
+          "label": "6 nails (more recommended as they can bend, 20 nails may be found on the workbench) (obtainable during the quest)",
           "supply": "quest-available"
         },
         {
-          "label": "6 nails (more recommended as they can bend, 20 nails may be found on the workbench)",
+          "label": "Saw (spawn in range shop) or Amy's saw (obtainable during the quest)",
           "supply": "quest-available"
         },
         {
-          "label": "Saw (spawn in range shop) or Amy's saw",
-          "supply": "quest-available"
-        },
-        {
-          "label": "Hammer (spawn in furnace house) or Imcando hammer",
+          "label": "Hammer (spawn in furnace house) or Imcando hammer (obtainable during the quest)",
           "supply": "quest-available"
         }
       ]
@@ -4594,7 +4586,7 @@
       "checks": [
         {
           "label": "20 balls of wool (unnoted); Shears if obtaining wool to spin into balls of wool (obtained during the quest)",
-          "supply": "quest-available"
+          "supply": "required"
         }
       ]
     },
@@ -4706,7 +4698,7 @@
         },
         {
           "label": "Nettle tea; Nettle-water; Bowl of water; Nettles (more than one with low Cooking level, as it can fail due to over boiling); Gloves to pick the nettles (leather gloves are obtainable during the quest)",
-          "supply": "quest-available"
+          "supply": "required"
         },
         {
           "label": "Hangover cure or the ingredients to make one:; Chocolate dust; Chocolate bar; Knife or pestle and mortar; Bucket of milk; Snape grass",
@@ -4950,11 +4942,11 @@
         },
         {
           "label": "5 iron bars, or; a pickaxe (obtainable during the quest) if mining your own iron during quest",
-          "supply": "quest-available"
+          "supply": "required"
         },
         {
           "label": "1 set of logs of any kind, or; an axe (obtainable during quest) if chopping your own logs during quest",
-          "supply": "quest-available"
+          "supply": "required"
         },
         {
           "label": "A tinderbox (obtainable during the quest)",
@@ -5110,7 +5102,7 @@
         },
         {
           "label": "A method of reducing your weight to at least -1kg temporarily:; Boots of lightness (can be obtained during the quest with a light source and slash weapon, such as a lit candle and knife); Other forms of weight-reducing clothing such as the graceful outfit",
-          "supply": "quest-available"
+          "supply": "required"
         }
       ]
     },
@@ -5594,7 +5586,7 @@
         },
         {
           "label": "Lyre, obtainable as a drop from Lanzig, Borrokar, Lensa, or Freidir, or the skills and materials to make one:; 25 Fletching, 40 Woodcutting, and 40 Crafting (all boostable); Woodcutting axe; Knife; Potato (obtainable during quest); Onion (obtainable during quest); Cabbage (obtainable during quest)",
-          "supply": "quest-available"
+          "supply": "required"
         }
       ]
     },
@@ -5779,7 +5771,7 @@
         },
         {
           "label": "10 wooden cats – partial completion of The Great Brain Robbery is required to make these yourself, however they are tradeable and available at the Grand Exchange; 4 oak planks, a hammer, and a saw (if you are building your own crafting table and do not already have one; build in the Clockmaking space of the Workshop); 10 planks (if making your own wooden cats); 10 pieces of fur: fur, bear fur, or grey wolf fur (if making your own wooden cats) (wolf fur can be obtained during quest by killing Canifis townsfolk. Baraek sells them for 20 gold each. Furs from Hunter monsters will not work)",
-          "supply": "quest-available"
+          "supply": "required"
         },
         {
           "label": "A hammer (Note: Imcando hammer does not work)",
@@ -6408,7 +6400,7 @@
         },
         {
           "label": "Guam potion (unf); Guam leaf and vial of water if making your own potion (vial obtainable during the quest)",
-          "supply": "quest-available"
+          "supply": "required"
         },
         {
           "label": "Any light source (obtainable during the quest)",
@@ -6532,36 +6524,36 @@
           "supply": "required"
         },
         {
-          "label": "Runes for the following spells: multiple casts of all four elemental spells, Snare/Entangle, Weaken/Enfeeble, Telekinetic Grab, and Low/High Level Alchemy; (Air, Water, Earth, Fire, Body/Soul, Nature, Law, and the highest of Mind/Chaos/Death/Blood/Wrath that you can use to cast all four elemental spells); Obtainable during quest:",
+          "label": "Runes for the following spells: multiple casts of all four elemental spells, Snare/Entangle, Weaken/Enfeeble, Telekinetic Grab, and Low/High Level Alchemy; (Air, Water, Earth, Fire, Body/Soul, Nature, Law, and the highest of Mind/Chaos/Death/Blood/Wrath that you can use to cast all four elemental spells)",
+          "supply": "required"
+        },
+        {
+          "label": "Mort myre fungus (obtainable during the quest)",
           "supply": "quest-available"
         },
         {
-          "label": "Mort myre fungus",
-          "supply": "required"
+          "label": "1 log of any type except redwood (you can obtain one using a bronze axe next to the Hunting Expert, but you must not already have an axe in your inventory (a Zombie axe counts, even though it can not be used to cut down trees) (obtainable during the quest)",
+          "supply": "quest-available"
         },
         {
-          "label": "1 log of any type except redwood (you can obtain one using a bronze axe next to the Hunting Expert, but you must not already have an axe in your inventory (a Zombie axe counts, even though it can not be used to cut down trees)",
-          "supply": "required"
+          "label": "Pink dye (or 20 coins) (obtainable during the quest)",
+          "supply": "quest-available"
         },
         {
-          "label": "Pink dye (or 20 coins)",
-          "supply": "required"
+          "label": "Snapdragon seed (obtainable during the quest)",
+          "supply": "quest-available"
         },
         {
-          "label": "Snapdragon seed",
-          "supply": "required"
+          "label": "Papyrus and charcoal (obtainable during the quest)",
+          "supply": "quest-available"
         },
         {
-          "label": "Papyrus and charcoal",
-          "supply": "required"
+          "label": "Restore potion (obtainable during the quest)",
+          "supply": "quest-available"
         },
         {
-          "label": "Restore potion",
-          "supply": "required"
-        },
-        {
-          "label": "One of each of the following runes: air, water, earth, fire, mind, law, death",
-          "supply": "required"
+          "label": "One of each of the following runes: air, water, earth, fire, mind, law, death (obtainable during the quest)",
+          "supply": "quest-available"
         }
       ]
     },

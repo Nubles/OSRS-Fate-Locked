@@ -334,12 +334,49 @@ describe('reported quest access', () => {
     ).status).toBe('AVAILABLE');
   });
 
+  it.each([
+    ['Sheep Shearer', ['49,51']],
+    ['The Restless Ghost', ['50,50', '49,49', '50,49', '48,49']],
+    ['Vampyre Slayer', ['48,51', '50,53', '48,52']],
+    ["Pirate's Treasure", ['47,50', '45,49', '50,53', '46,52']],
+  ] as const)('checks every required chunk for %s without optional supply routes', (id, required) => {
+    const quest = QUEST_DATA[id];
+    expect(evaluateQuestEligibility(quest, unlocked({ chunks: [...required] }), 'chunked').status).not.toBe('LOCKED_REGION');
+    for (const missing of required) {
+      const status = evaluateQuestEligibility(quest, unlocked({ chunks: required.filter(chunk => chunk !== missing) }), 'chunked').status;
+      // Lumbridge's starting chunk is always granted by the game mode.
+      if (missing === '50,50') expect(status).not.toBe('LOCKED_REGION');
+      else expect(status).toBe('LOCKED_REGION');
+    }
+  });
+
+  it('requires the reviewed Getting Ahead cave entrance instead of optional clay gathering', () => {
+    const q = QUEST_DATA['Getting Ahead'];
+    const base = { skills: { Construction: 3, Crafting: 3 }, levels: { Construction: 26, Crafting: 30 } };
+    expect(evaluateQuestEligibility(q, unlocked({ ...base, chunks: ['19,57', '18,57'] }), 'chunked').status).toBe('LOCKED_REGION');
+    expect(evaluateQuestEligibility(q, unlocked({ ...base, chunks: ['19,57', '18,56'] }), 'chunked').status).not.toBe('LOCKED_REGION');
+  });
+
+  it('requires each reviewed Tale destination but not the unexplained tower chunk', () => {
+    const q = QUEST_DATA['Tale of the Righteous'];
+    const chunks = ['24,55', '25,59', '23,56', '19,55', '18,55'];
+    const base = { skills: { Strength: 2, Mining: 1 }, levels: { Strength: 16, Mining: 10 }, quests: ['Client of Kourend'] };
+    expect(evaluateQuestEligibility(q, unlocked({ ...base, chunks }), 'chunked').status).not.toBe('LOCKED_REGION');
+    for (const missing of chunks) {
+      expect(evaluateQuestEligibility(q, unlocked({ ...base, chunks: chunks.filter(c => c !== missing) }), 'chunked').status).toBe('LOCKED_REGION');
+    }
+  });
+
   it('requires the exact South Falador Farm chunk in Chunked mode', () => {
     const q = QUEST_DATA['A Porcine of Interest'];
-    const near = unlocked({ chunks: ['46,51', '48,50'] });
-    const exact = unlocked({ chunks: ['47,51', '48,50'] });
+    const near = unlocked({ chunks: ['46,51', '48,50', '49,52', '48,51'] });
+    const exact = unlocked({ chunks: ['47,51', '48,50', '49,52', '48,51'] });
     expect(evaluateQuestEligibility(q, near, 'chunked').status).toBe('LOCKED_REGION');
     expect(evaluateQuestEligibility(q, exact, 'chunked').status).toBe('NEEDS_CONFIRMATION');
+    // The farm alone no longer proves access to the cave or Spria.
+    for (const missing of ['49,52', '48,51']) {
+      expect(evaluateQuestEligibility(q, unlocked({ chunks: exact.chunks!.filter(chunk => chunk !== missing) }), 'chunked').status).toBe('LOCKED_REGION');
+    }
   });
 
   it('calculates Dream Mentor combat instead of reading a pseudo-skill', () => {
@@ -383,6 +420,7 @@ describe('reported quest access', () => {
     const quest: QuestData = {
       ...QUEST_DATA['A Porcine of Interest'],
       operationalRequirements: [], id: 'alternative-location', name: 'Alternative location',
+      chunkedGeography: undefined, // Exercise the legacy location-alternative policy explicitly.
       accessPolicy: 'regions',
       regions: [], locations: [], skills: {}, prereqs: [],
       oneOf: [{ locations: [{
@@ -962,4 +1000,26 @@ describe('audited diary route eligibility', () => {
       })).machineEligible, id).toBe(true);
     }
   });
+});
+
+// This suite isolates destination/skill/manual behavior with known legal supplies.
+// Acquisition availability itself is covered by itemAcquisition and source tests.
+import { beforeEach as beforeSupplyTest, afterEach as afterSupplyTest, vi as supplySpy } from 'vitest';
+import { chunkContentService as suppliedItemsFixture } from '../services/ChunkContentService';
+let restoreSupplyFixture: (() => void)[] = [];
+beforeSupplyTest(() => {
+  const ready = supplySpy.spyOn(suppliedItemsFixture, 'ready', 'get').mockReturnValue(true);
+  const records = supplySpy.spyOn(suppliedItemsFixture, 'itemSourceRecords').mockImplementation(itemName => [{ itemName, kind: 'spawn', hostName: 'Test prepared supplies', cx: 50, cy: 50, rawRequirements: [] }]);
+  restoreSupplyFixture = [() => ready.mockRestore(), () => records.mockRestore()];
+});
+afterSupplyTest(() => restoreSupplyFixture.forEach(restore => restore()));
+
+
+it('keeps mixed quest notes internal while exposing the required neck unlock', () => {
+  const result = evaluateQuestEligibility(QUEST_DATA['The Restless Ghost'], unlocked({ regions: ['Misthalin'] }));
+  const requirements = result.blockers.filter(blocker => blocker.kind === 'requirement');
+  expect(result.eligible).toBe(false);
+  expect(requirements.some(blocker => !blocker.internalOnly && /Neck equipment tier 1/.test(blocker.label))).toBe(true);
+  expect(requirements.some(blocker => blocker.internalOnly)).toBe(true);
+  expect(requirements.filter(blocker => !blocker.internalOnly).every(blocker => !/satisfy the applicable|quest actions and equipment use/.test(blocker.label))).toBe(true);
 });

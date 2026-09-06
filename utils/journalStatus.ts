@@ -19,6 +19,7 @@ import { evaluatePredicate, type RequirementPredicate } from './requirementPredi
 import { actualSkillLevel } from './skillLevels';
 import { questOperationalRequirements } from '../data/questOperationalRequirements';
 import { canonicalQuestUnlocks, questPointsForReferences } from '../data/questCatalog';
+import { evaluateChunkQuestGeography } from './questChunkGeography';
 
 export type QuestStatus = 'UNKNOWN' | 'NEEDS_CONFIRMATION' | 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
 export type DiaryStatus = 'NEEDS_CONFIRMATION' | 'UNKNOWN' | 'COMPLETED' | 'AVAILABLE' | 'LOCKED_REGION' | 'LOCKED_SKILL' | 'LOCKED_QUEST';
@@ -34,7 +35,7 @@ export type SkillEligibilityRequirement =
   | { type: 'anyOf'; skills: string[]; level: number };
 
 export type DirectEligibilityBlocker =
-  | { kind: 'requirement'; label: string }
+  | { kind: 'requirement'; label: string; internalOnly?: boolean }
   | { kind: 'region'; label: string }
   | { kind: 'skill'; label: string; requirement?: SkillEligibilityRequirement }
   | { kind: 'combat'; label: string }
@@ -164,12 +165,19 @@ export function evaluateQuestEligibility(
   }
   const blockers: EligibilityBlocker[] = [];
   const evidence: string[] = [];
+  const chunkGeography = gameModeId === 'chunked' ? quest.chunkedGeography : undefined;
+  const chunkResult = chunkGeography ? evaluateChunkQuestGeography(chunkGeography, unlocks, unlocks) : undefined;
+  if (chunkResult) {
+    evidence.push(...chunkResult.evidence);
+    blockers.push(...chunkResult.blockers.map(label => ({kind: 'region' as const, label})));
+    blockers.push(...chunkResult.unknowns.map(label => ({kind: 'requirement' as const, label, internalOnly: true})));
+  }
   const enforceRegions =
-    quest.accessPolicy === 'regions' ||
-    quest.accessPolicy === 'regions-and-locations';
+    !chunkGeography && (quest.accessPolicy === 'regions' ||
+    quest.accessPolicy === 'regions-and-locations');
   const enforceLocations =
-    quest.accessPolicy === 'locations' ||
-    quest.accessPolicy === 'regions-and-locations';
+    !chunkGeography && (quest.accessPolicy === 'locations' ||
+    quest.accessPolicy === 'regions-and-locations');
   for (const region of enforceRegions ? quest.regions : []) {
     if (isAreaReachable(region, unlocks, gameModeId)) evidence.push(region);
     else blockers.push({ kind: 'region', label: region });
@@ -178,7 +186,7 @@ export function evaluateQuestEligibility(
     if (locationRequirementMet(location, unlocks, gameModeId)) evidence.push(location.label);
     else blockers.push({ kind: 'region', label: location.label });
   }
-  if (!questAlternativesMet(quest, unlocks, gameModeId)) {
+  if (!chunkGeography && !questAlternativesMet(quest, unlocks, gameModeId)) {
     blockers.push({ kind: 'region', label: quest.oneOf!.map(questRequirementOptionLabel).join(' or ') });
   }
   const qp = currentQuestPoints(unlocks);
@@ -204,12 +212,24 @@ export function evaluateQuestEligibility(
     if (unlocks.quests.includes(prereq)) evidence.push(prereq);
     else blockers.push({ kind: 'quest', label: prereq });
   }
-  const operations = evaluatePredicate({ kind: 'all', of: questOperationalRequirements(quest) }, { unlocks, gameModeId });
+  const operationPredicates = questOperationalRequirements(quest);
+  const operations = evaluatePredicate({ kind: 'all', of: operationPredicates }, { unlocks, gameModeId });
+  // Group checks also contain unresolved notes. Only proven hard gates belong
+  // in player-facing blocker rows; retain every other check as internal evidence.
+  const hardChecks = (predicate: RequirementPredicate): string[] => {
+    const evaluated = evaluatePredicate(predicate, { unlocks, gameModeId });
+    if (evaluated.status !== 'LOCKED') return [];
+    if (predicate.kind === 'all' || predicate.kind === 'any') return predicate.of.flatMap(hardChecks);
+    return evaluated.checks;
+  };
+  const visibleOperationChecks = new Set(operationPredicates.flatMap(hardChecks));
   const manualChecks = [...(quest.manualRequirements ?? []), ...(operations.status === 'NEEDS_CONFIRMATION' ? operations.checks : [])];
-  if (operations.status === 'LOCKED' || operations.status === 'UNKNOWN') blockers.push(...operations.checks.map(label => ({ kind: 'requirement' as const, label })));
-  const status: QuestStatus = operations.status === 'UNKNOWN' ? 'UNKNOWN' : blockers.some(x => x.kind === 'region') ? 'LOCKED_REGION'
+  if (operations.status === 'LOCKED' || operations.status === 'UNKNOWN') blockers.push(...operations.checks.map(label => ({ kind: 'requirement' as const, label, ...(!visibleOperationChecks.has(label) ? { internalOnly: true } : {}) })));
+  const status: QuestStatus = blockers.some(x => x.kind === 'region') ? 'LOCKED_REGION'
     : blockers.some(x => x.kind === 'skill' || x.kind === 'combat') ? 'LOCKED_SKILL'
-    : blockers.some(x => x.kind === 'quest' || x.kind === 'requirement') ? 'LOCKED_QUEST'
+    : blockers.some(x => x.kind === 'quest') || operations.status === 'LOCKED' ? 'LOCKED_QUEST'
+    : operations.status === 'UNKNOWN' || chunkResult?.unknowns.length ? 'UNKNOWN'
+    : blockers.some(x => x.kind === 'requirement') ? 'LOCKED_QUEST'
     : manualChecks.length ? 'NEEDS_CONFIRMATION' : 'AVAILABLE';
   return questEligibility(status, blockers, evidence, manualChecks);
 }

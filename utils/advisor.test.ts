@@ -130,8 +130,8 @@ describe('rankAvailableQuests', () => {
   });
 
   it('threads Chunked-mode access through quest ranking and impact', () => {
-    const before = maxedUnlocks({ chunks: ['48,50'] });
-    const after = maxedUnlocks({ chunks: ['48,50', '47,51'] });
+    const before = maxedUnlocks({ chunks: ['48,50', '49,52', '48,51'] });
+    const after = maxedUnlocks({ chunks: ['48,50', '49,52', '48,51', '47,51'] });
 
     expect(rankAvailableQuests(before, 'chunked').map(q => q.id))
       .not.toContain('A Porcine of Interest');

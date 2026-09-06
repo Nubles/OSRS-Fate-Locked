@@ -178,8 +178,8 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       routes: step.routes.map(route => ({
         name: route.label,
         met: route.blockers.length === 0,
-        detail: route.label + (route.blockers.length > 0
-          ? ': ' + route.blockers.map(blocker => (
+        detail: route.label + (route.blockers.some(blocker => !blocker.internalOnly)
+          ? ': ' + route.blockers.filter(blocker => !blocker.internalOnly).map(blocker => (
             blocker.label + (blocker.detail ? ' ' + blocker.detail : '')
           )).join(' + ')
           : ''),
@@ -251,8 +251,8 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       routes: step.routes.map(route => ({
         name: route.label,
         met: route.blockers.length === 0,
-        detail: route.label + (route.blockers.length > 0
-          ? ': ' + route.blockers.map(blocker => (
+        detail: route.label + (route.blockers.some(blocker => !blocker.internalOnly)
+          ? ': ' + route.blockers.filter(blocker => !blocker.internalOnly).map(blocker => (
             blocker.label + (blocker.detail ? ' ' + blocker.detail : '')
           )).join(' + ')
           : ''),
@@ -286,6 +286,8 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       (total, id) => total + (QUEST_DATA[id]?.points ?? 0), 0,
     );
     const canonicalProgress = calculateGoalProgress({ id: goalId, category: TableType.QUESTS, regions: [], skills: {} }, unlocks, gameModeId);
+    const hasInternalUncertainty = plan.manualSteps.some(step => step.internalOnly && !step.done)
+      || plan.alternativeSteps.some(step => !step.done && step.routes.some(route => route.blockers.some(blocker => blocker.internalOnly)));
     for (const label of evaluateQuestEligibility(quest, unlocks, gameModeId).manualChecks) {
       if (!plan.steps.some(step => step.label === label)) {
         alternatives.push({ name: label, met: false, routes: [{ name: label, met: false }] });
@@ -309,7 +311,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       tables: suggestTables(dependencies, unlocks),
       totalSteps,
       completedSteps,
-      percentage: canonicalProgress.percentage === 100 ? 100 : Math.min(99, Math.round((completedSteps / totalSteps) * 100)),
+      percentage: canonicalProgress.percentage === 100 && !hasInternalUncertainty ? 100 : Math.min(99, Math.round((completedSteps / totalSteps) * 100)),
     };
   }
 
@@ -424,8 +426,8 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
       routes: step.routes.map(route => ({
         name: route.label,
         met: route.blockers.length === 0,
-        detail: route.label + (route.blockers.length > 0
-          ? ': ' + route.blockers.map(blocker => (
+        detail: route.label + (route.blockers.some(blocker => !blocker.internalOnly)
+          ? ': ' + route.blockers.filter(blocker => !blocker.internalOnly).map(blocker => (
             blocker.label + (blocker.detail ? ' ' + blocker.detail : '')
           )).join(' + ')
           : ''),

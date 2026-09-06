@@ -45,3 +45,4 @@ main_file_cache.*
 # Browser test artifacts
 playwright-report/
 test-results/
+test-results-access/

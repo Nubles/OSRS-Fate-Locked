@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
+import { authoredQuestChunkStatus } from '../utils/questDoability';
+import { chunkReachability } from '../utils/chunkReach';
+import { chunkUnlocked } from '../utils/chunkLocations';
+import { evaluateQuestEligibility } from '../utils/journalStatus';
 import { QuestData, QUEST_DATA } from '../data/questData';
 import { DropSource, UnlockState } from '../types';
 import { QuestChunkStatus } from '../utils/questDoability';
 import {
   evaluateQuestDoability,
+  questDoabilityHome,
   questDoabilityRequirementLabels,
   questDoabilitySkillBlockerLabel,
 } from './QuestDoabilityPanel';
@@ -219,8 +224,140 @@ describe('evaluateQuestDoability', () => {
     expect(row.manualChecks.length).toBeGreaterThan(1);
     expect(row.missingSkills).toEqual([]);
     expect(row.missingPrereqs).toEqual([]);
-    expect(questDoabilityRequirementLabels(row)).toEqual(expect.arrayContaining([
-      'Confirm: One open Sailing task slot',
-    ]));
+    expect(questDoabilityRequirementLabels(row)).toEqual([]);
   });
+});
+
+
+describe('reviewed quest destination reachability', () => {
+  it('uses the new geography only in Chunked while keeping Standard area permissions', () => {
+    const quest: QuestData = {
+      id: 'Mode-specific geography', name: 'Mode-specific geography', kind: 'quest',
+      accessPolicy: 'regions', regions: ['Lumbridge'], skills: {}, prereqs: [], points: 0,
+      operationalRequirements: [], difficulty: DropSource.QUEST_NOVICE,
+      chunkedGeography: {
+        locations: [{ id: 'island', label: 'Island', chunkOptions: [{ cx: 38, cy: 62 }] }],
+        groups: [], unknowns: [],
+      },
+    };
+    const state = unlocks();
+    const reachable = new Set([String(50 * 256 + 50)]);
+    const standardChunks = authoredQuestChunkStatus(quest, reachable, () => false, 'standard');
+    expect(standardChunks.chunkCount).toBe(0);
+    expect(evaluateQuestDoability(quest, state, standardChunks, [], 'standard').bucket).toBe('DOABLE');
+    const chunkedChunks = authoredQuestChunkStatus(quest, reachable,
+      (cx, cy) => chunkUnlocked(cx, cy, state, 'chunked'), 'chunked');
+    expect(chunkedChunks.access).toBe('LOCKED');
+    expect(evaluateQuestDoability(quest, state, chunkedChunks, [], 'chunked').lockedAreas).toEqual(['Island']);
+  });
+
+  it('keeps an unknown teleport alternative unavailable without exposing its source uncertainty in requirement labels', () => {
+    const quest: QuestData = {
+      id: 'Unverified transport geography', name: 'Unverified transport geography', kind: 'quest',
+      accessPolicy: 'regions', regions: ['Lumbridge'], skills: {}, prereqs: [], points: 0,
+      operationalRequirements: [], difficulty: DropSource.QUEST_NOVICE,
+      chunkedGeography: {
+        locations: [{ id: 'start', label: 'Start', chunkOptions: [{ cx: 50, cy: 50 }] }],
+        groups: [{ id: 'transport', label: 'Transport', routes: [
+          { id: 'boat', label: 'Boat', locations: [{ id: 'dock', label: 'Dock', chunkOptions: [{ cx: 40, cy: 50 }] }] },
+          { id: 'teleport', label: 'Teleport', locations: [], unknowns: ['Unreviewed teleport permission'] },
+        ] }], unknowns: [],
+      },
+    };
+    const state = unlocks();
+    const eligibility = evaluateQuestEligibility(quest, state, 'chunked');
+    expect(eligibility.status).toBe('UNKNOWN');
+    expect(eligibility.blockers).toContainEqual({ kind: 'requirement', label: 'Unreviewed teleport permission', internalOnly: true });
+    const chunks = authoredQuestChunkStatus(quest, new Set([String(50 * 256 + 50)]),
+      (cx, cy) => chunkUnlocked(cx, cy, state, 'chunked'), 'chunked');
+    const row = evaluateQuestDoability(quest, state, chunks, [], 'chunked');
+    expect(row.bucket).toBe('REQS');
+    expect(row.reqsMet).toBe(false);
+    expect(questDoabilityRequirementLabels(row)).toEqual([]);
+  });
+
+  it('uses Standard logical destination permissions despite a locked surface entrance owner', () => {
+    const quest = QUEST_DATA['The Giant Dwarf'];
+    const state = unlocks({
+      regions: [...new Set(quest.locations!.flatMap(location => location.standardAreas))],
+      skills: Object.fromEntries(Object.keys(quest.skills).map(skill => [skill, 10])),
+      levels: { ...quest.skills },
+      quests: [...quest.prereqs],
+    });
+    expect(state.regions).not.toContain('Rellekka');
+    const chunks = authoredQuestChunkStatus(quest, new Set(), (cx, cy) => chunkUnlocked(cx, cy, state));
+    expect(chunks.access).toBe('LOCKED');
+    const row = evaluateQuestDoability(quest, state, chunks, ['Rellekka']);
+    expect(row.bucket).not.toBe('LOCKED');
+    expect(row.bucket).not.toBe('STRANDED');
+    expect(row.lockedAreas).toEqual([]);
+    const missingDestination = evaluateQuestDoability(quest, { ...state, regions: [] }, chunks);
+    expect(missingDestination.bucket).toBe('LOCKED');
+  });
+
+  it('starts a fresh Chunked route at its free castle chunk and cannot walk across unowned neighbours', () => {
+    const state = unlocks({ chunks: ['48,52'] });
+    const reach = chunkReachability({}, state, questDoabilityHome('chunked'), undefined, 'chunked');
+    expect(reach.reachable.has(String(50 * 256 + 50))).toBe(true);
+    expect(reach.reachable.has(String(49 * 256 + 50))).toBe(false);
+    expect(reach.reachable.has(String(48 * 256 + 52))).toBe(false);
+    const quest: QuestData = {
+      ...QUEST_DATA["Cook's Assistant"],
+      locations: [{ id: 'manor', label: 'Manor', standardAreas: ['Draynor Village'], chunkOptions: [{ cx: 48, cy: 52 }] }],
+    };
+    expect(authoredQuestChunkStatus(quest, reach.reachable,
+      (cx, cy) => chunkUnlocked(cx, cy, state, 'chunked')).access).toBe('STRANDED');
+  });
+
+  it('agrees with Getting Ahead eligibility without the optional clay gathering chunk', () => {
+    const quest = QUEST_DATA['Getting Ahead'];
+    const state = unlocks({ chunks: ['19,57', '18,56'], skills: { Construction: 3, Crafting: 3 }, levels: { Construction: 26, Crafting: 30 } });
+    const reachable = new Set([String(19 * 256 + 57), String(18 * 256 + 56)]);
+    const chunks = authoredQuestChunkStatus(quest, reachable, (cx, cy) => state.chunks!.includes(`${cx},${cy}`));
+    expect(chunks.access).toBe('REACHABLE');
+    expect(chunks.chunkCount).toBe(2);
+    expect(evaluateQuestDoability(quest, state, chunks, [], 'chunked').bucket).not.toBe('LOCKED');
+  });
+
+  it('accepts one reachable alternative entrance and still detects stranded destinations', () => {
+    const quest: QuestData = { ...QUEST_DATA["Cook's Assistant"], locations: [{ id: 'entrance', label: 'Entrance', standardAreas: ['Lumbridge'], chunkOptions: [{ cx: 49, cy: 50 }, { cx: 50, cy: 50 }] }] };
+    const available = authoredQuestChunkStatus(quest, new Set([String(50 * 256 + 50)]), () => false);
+    expect(available.access).toBe('REACHABLE');
+    expect(available.chunkCount).toBe(1);
+    expect(authoredQuestChunkStatus(quest, new Set(), () => true).access).toBe('STRANDED');
+    expect(authoredQuestChunkStatus(quest, new Set(), () => false).access).toBe('LOCKED');
+  });
+});
+
+// This suite isolates destination/skill/manual behavior with known legal supplies.
+// Acquisition availability itself is covered by itemAcquisition and source tests.
+import { beforeEach as beforeSupplyTest, afterEach as afterSupplyTest, vi as supplySpy } from 'vitest';
+import { chunkContentService as suppliedItemsFixture } from '../services/ChunkContentService';
+let restoreSupplyFixture: (() => void)[] = [];
+beforeSupplyTest(() => {
+  const ready = supplySpy.spyOn(suppliedItemsFixture, 'ready', 'get').mockReturnValue(true);
+  const records = supplySpy.spyOn(suppliedItemsFixture, 'itemSourceRecords').mockImplementation(itemName => [{ itemName, kind: 'spawn', hostName: 'Test prepared supplies', cx: 50, cy: 50, rawRequirements: [] }]);
+  restoreSupplyFixture = [() => ready.mockRestore(), () => records.mockRestore()];
+});
+afterSupplyTest(() => restoreSupplyFixture.forEach(restore => restore()));
+
+it('shows the Restless Ghost necklace permission without internal review notes', () => {
+  const row = evaluateQuestDoability(QUEST_DATA['The Restless Ghost'], unlocks({ regions: ['Lumbridge', 'Lumbridge Swamp'] }), null);
+  expect(questDoabilityRequirementLabels(row)).toContain('Necklace slot T1: wear the ghostspeak amulet');
+  expect(questDoabilityRequirementLabels(row).join(' ')).not.toMatch(/review|classified|confirm/i);
+  const permitted = evaluateQuestDoability(QUEST_DATA['The Restless Ghost'], unlocks({ equipment: { Neck: 1 } }), null);
+  expect(questDoabilityRequirementLabels(permitted)).not.toContain('Necklace slot T1: wear the ghostspeak amulet');
+});
+it('keeps equipment alternatives as OR and hides unresolved manual wording', () => {
+  const quest = { ...QUEST_DATA['The Restless Ghost'], operationalRequirements: [
+    { kind: 'any' as const, of: [{ kind: 'equipment' as const, slot: 'Neck', tier: 1 }, { kind: 'equipment' as const, slot: 'Legs', tier: 1 }] },
+    { kind: 'method' as const, skill: 'Woodcutting', tier: 3 },
+    { kind: 'manual' as const, key: 'review', label: 'Internal review note' },
+  ] };
+  const labels = questDoabilityRequirementLabels(evaluateQuestDoability(quest, unlocks(), null));
+  expect(labels).toContain('Neck equipment tier 1 or Legs equipment tier 1');
+  expect(labels).toContain('Woodcutting method tier 3');
+  expect(labels).not.toContain('Internal review note');
+  const permitted = questDoabilityRequirementLabels(evaluateQuestDoability(quest, unlocks({ equipment: { Legs: 1 } }), null));
+  expect(permitted.join(' ')).not.toContain('Neck equipment');
 });

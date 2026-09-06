@@ -452,3 +452,53 @@ describe('typed diary blockers in planning', () => {
     expect(plan.steps.some(step => step.kind === 'requirement' && step.label.includes('Agility'))).toBe(true);
   });
 });
+
+describe('mode-specific quest geography planning', () => {
+  it('uses Mountain Daughter coordinates and leaves Standard permissions unchanged', () => {
+    const q = QUEST_DATA['Mountain Daughter'];
+    const base = maxedUnlocks({ quests: Object.keys(QUEST_DATA).filter(id => id !== q.id), chunks: [] });
+    const standard = planForTarget('quest', q.id, base, 'standard')!;
+    const chunked = planForTarget('quest', q.id, base, 'chunked')!;
+    expect(q.chunkedGeography).toBeDefined();
+    expect(chunked.regionSteps).toEqual([]);
+    expect(chunked.alternativeSteps.flatMap(step => step.routes.flatMap(route => route.blockers)))
+      .toEqual(expect.arrayContaining([expect.objectContaining({ unlockTable: 'Chunks', id: '43,57' })]));
+    expect(standard.regionSteps.length + standard.alternativeSteps.length).toBeGreaterThan(0);
+    const owned = maxedUnlocks({ ...base, chunks: q.chunkedGeography!.locations.flatMap(location => location.chunkOptions.map(p => `${p.cx},${p.cy}`)) });
+    expect(planForTarget('quest', q.id, owned, 'chunked')!.alreadyReachable).toBe(getQuestStatus(q, owned, 'chunked') === 'AVAILABLE');
+    expect(planForTarget('quest', q.id, owned, 'standard')!.regionSteps).toEqual(standard.regionSteps);
+  });
+
+  it('keeps complete elf routes together and agrees with canonical eligibility', () => {
+    const q = QUEST_DATA['Roving Elves'];
+    expect(q).toBeDefined();
+    const geo = q.chunkedGeography!;
+    const base = maxedUnlocks({ quests: Object.keys(QUEST_DATA).filter(id => id !== q.id), chunks: [] });
+    const plan = planForTarget('quest', q.id, base, 'chunked')!;
+    for (const group of geo.groups) {
+      expect(plan.alternativeSteps.find(step => step.id === `chunk-route:${q.id}:${group.id}`)?.routes).toHaveLength(group.routes.length);
+    }
+    expect(plan.regionSteps).toEqual([]);
+    const owned = maxedUnlocks({ ...base, chunks: [...geo.locations, ...geo.groups.flatMap(g => g.routes[0].locations)].flatMap(l => l.chunkOptions.map(p => `${p.cx},${p.cy}`)) });
+    expect(planForTarget('quest', q.id, owned, 'chunked')!.alreadyReachable).toBe(getQuestStatus(q, owned, 'chunked') === 'AVAILABLE');
+  });
+});
+
+// This suite isolates destination/skill/manual behavior with known legal supplies.
+// Acquisition availability itself is covered by itemAcquisition and source tests.
+import { beforeEach as beforeSupplyTest, afterEach as afterSupplyTest, vi as supplySpy } from 'vitest';
+import { chunkContentService as suppliedItemsFixture } from '../services/ChunkContentService';
+let restoreSupplyFixture: (() => void)[] = [];
+beforeSupplyTest(() => {
+  const ready = supplySpy.spyOn(suppliedItemsFixture, 'ready', 'get').mockReturnValue(true);
+  const records = supplySpy.spyOn(suppliedItemsFixture, 'itemSourceRecords').mockImplementation(itemName => [{ itemName, kind: 'spawn', hostName: 'Test prepared supplies', cx: 50, cy: 50, rawRequirements: [] }]);
+  restoreSupplyFixture = [() => ready.mockRestore(), () => records.mockRestore()];
+});
+afterSupplyTest(() => restoreSupplyFixture.forEach(restore => restore()));
+
+
+it.each(['vanilla', 'chunked'])('retains the Restless Ghost neck gate in %s plans', mode => {
+  const plan = planForTarget('quest', 'The Restless Ghost', maxedUnlocks({ regions: ['Misthalin'], chunks: ['50,50', '50,49'] }), mode)!;
+  expect(plan.manualSteps).toContainEqual(expect.objectContaining({ kind: 'requirement', label: 'Neck equipment tier 1', done: false }));
+  expect(plan.alreadyReachable).toBe(false);
+});

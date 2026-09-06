@@ -5,9 +5,10 @@ import { useGame } from '../context/GameContext';
 import { QuestData, QUEST_DATA } from '../data/questData';
 import { chunkContentService } from '../services/ChunkContentService';
 import { chunkReachability } from '../utils/chunkReach';
+import { CHUNKED_START } from '../utils/chunkAdjacency';
 import { chunkForPlace, chunkUnlocked, placeOf, showChunkOnMap } from '../utils/chunkLocations';
 import { questLocations } from '../utils/questLocations';
-import { questChunkStatus, doabilityBucket, DoabilityBucket, entryBlockedGate, hasCanonicalQuestLocationEvidence, QuestChunkStatus } from '../utils/questDoability';
+import { questOperationalBlockerLabels, authoredQuestChunkStatus, questChunkStatus, doabilityBucket, DoabilityBucket, entryBlockedGate, hasCanonicalQuestLocationEvidence, QuestChunkStatus } from '../utils/questDoability';
 import {
   evaluateQuestEligibility, questRequirementOptionLabel,
 } from '../utils/journalStatus';
@@ -41,6 +42,7 @@ export interface QuestDoabilityEvaluation {
     skill: string; lvl: number; have: number; methodCap?: number;
   }[];
   missingPrereqs: string[];
+  missingRequirements?: string[];
   lockedAreas: string[];
   manualChecks: string[];
 }
@@ -49,6 +51,9 @@ interface Row extends QuestDoabilityEvaluation {
   strandedChunk: { cx: number; cy: number; label: string } | null;
 }
 
+export const questDoabilityHome = (gameModeId?: string) =>
+  gameModeId === 'chunked' ? CHUNKED_START : chunkForPlace('Lumbridge');
+
 export const evaluateQuestDoability = (
   quest: QuestData,
   unlocks: UnlockState,
@@ -56,6 +61,12 @@ export const evaluateQuestDoability = (
   chunkLockedAreas: string[] = [],
   gameModeId?: string,
 ): QuestDoabilityEvaluation => {
+  // Reviewed entrance coordinates are Chunked gates; Standard uses the authored
+  // logical destination permissions, which can differ from the surface owner.
+  if (gameModeId !== 'chunked' && quest.accessPolicy === 'locations' && !quest.oneOf?.length) {
+    chunk = null;
+    chunkLockedAreas = [];
+  }
   const eligibility = evaluateQuestEligibility(quest, unlocks, gameModeId);
   const completed = eligibility.status === 'COMPLETED';
   const currentQP = questPointsForReferences(unlocks.quests);
@@ -134,6 +145,7 @@ export const evaluateQuestDoability = (
     reqsMet,
     missingSkills,
     missingPrereqs,
+    missingRequirements: completed ? [] : questOperationalBlockerLabels(quest, unlocks, gameModeId),
     lockedAreas,
     manualChecks,
   };
@@ -153,9 +165,10 @@ export const questDoabilitySkillBlockerLabel = (
 export const questDoabilityRequirementLabels = (
   row: QuestDoabilityEvaluation,
 ): string[] => [
+  ...(row.missingRequirements ?? []),
   ...row.missingSkills.map(questDoabilitySkillBlockerLabel),
   ...row.missingPrereqs.map(prereq => `\u2726 ${prereq}`),
-  ...row.manualChecks.map(check => `Confirm: ${check}`),
+  // Manual checks remain on the evaluation for RuneProof; omit them from player labels.
 ];
 export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
   const { unlocks, gameModeId } = useGame();
@@ -170,13 +183,20 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
     const completed = new Set<string>(unlocks.quests as string[]);
     const known = new Set<string>(Object.keys(QUEST_DATA));
     const gate = entryBlockedGate(chunkContentService.questSections(), completed, known);
-    const reach = chunkReachability(chunkContentService.connectGraph(), unlocks, chunkForPlace('Lumbridge'), gate, gameModeId);
+    const reach = chunkReachability(chunkContentService.connectGraph(), unlocks, questDoabilityHome(gameModeId), gate, gameModeId);
     const isUnlocked = (cx: number, cy: number) => chunkUnlocked(cx, cy, unlocks, gameModeId);
     return Object.values(QUEST_DATA).map((q) => {
       const hit = chunkContentService.entityLocations(q.id, ['quest']);
-      const chunk = hit ? questChunkStatus(hit.locations, reach.reachable, isUnlocked) : null;
+      // Reviewed fixed destinations supersede incomplete source markers, which can
+      // include optional supply stops. Branching legacy routes retain their data.
+      const useAuthored = (gameModeId === 'chunked' && !!q.chunkedGeography) || (q.accessPolicy === 'locations' && !q.oneOf?.length);
+      const chunk = useAuthored
+        ? authoredQuestChunkStatus(q, reach.reachable, isUnlocked, gameModeId, unlocks)
+        : hit ? questChunkStatus(hit.locations, reach.reachable, isUnlocked) : null;
       const chunkLockedAreas = chunk?.access === 'LOCKED'
-        ? questLocations(q.id, unlocks, gameModeId).lockedPlaces.map(place => place.label)
+        ? useAuthored
+          ? chunk.blockers.map(point => placeOf(point.cx, point.cy).label)
+          : questLocations(q.id, unlocks, gameModeId).lockedPlaces.map(place => place.label)
         : [];
       const evaluation = evaluateQuestDoability(
         q, unlocks, chunk, chunkLockedAreas, gameModeId,

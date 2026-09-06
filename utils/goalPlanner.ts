@@ -26,6 +26,8 @@ import {
 import { isAreaReachable } from './reachability';
 import { actualCombatLevel } from './slayerReach';
 import { actualSkillLevel } from './skillLevels';
+import { evaluateChunkQuestGeography, evaluateChunkRouteRequirements, type ChunkQuestLocation } from './questChunkGeography';
+import { chunkKey, isChunkUnlocked } from './chunkAdjacency';
 
 export type GoalKind = 'quest' | 'diary' | 'region';
 
@@ -44,6 +46,7 @@ export interface PlanStep {
   relatedIds?: string[];
   /** Already satisfied in the current unlocks snapshot. */
   done: boolean;
+  internalOnly?: boolean;
 }
 
 export interface AlternativePlanRoute {
@@ -233,6 +236,45 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
 
     const eligibility = evaluateQuestEligibility(q, unlocks, gameModeId);
     if (eligibility.status === 'COMPLETED') return;
+    const geography = gameModeId === 'chunked' ? q.chunkedGeography : undefined;
+    if (geography) {
+      const locationRoutes = (location: ChunkQuestLocation): AlternativePlanRoute[] => location.chunkOptions.map(point => ({
+        label: `${location.label} (${chunkKey(point)})`,
+        blockers: isChunkUnlocked(chunkKey(point), unlocks.chunks ?? []) ? [] : [{
+          kind: 'region', id: chunkKey(point), label: `${location.label} (${chunkKey(point)})`,
+          unlockTable: TableType.CHUNKS, done: false,
+        }],
+      }));
+      for (const location of geography.locations) {
+        const assessment = evaluateChunkQuestGeography({ locations: [location], groups: [], unknowns: [] }, unlocks, unlocks);
+        if (!assessment.blockers.length) continue;
+        const id = `chunk:${qid}:${location.id}`;
+        alternatives.set(id, { kind: 'alternative', id, label: location.label, done: false, routes: locationRoutes(location) });
+      }
+      for (const group of geography.groups) {
+        const assessment = evaluateChunkQuestGeography({ locations: [], groups: [group], unknowns: [] }, unlocks, unlocks);
+        if (!assessment.blockers.length && !assessment.unknowns.length) continue;
+        const id = `chunk-route:${qid}:${group.id}`;
+        alternatives.set(id, {
+          kind: 'alternative', id, label: group.label, done: false,
+          routes: group.routes.map(route => ({
+            label: route.label,
+            blockers: [
+              ...route.locations.flatMap(location => {
+                const options = locationRoutes(location);
+                if (options.some(option => !option.blockers.length)) return [];
+                // Coordinate alternatives belong to one destination, not separate mandatory chunks.
+                if (options.length === 1) return options[0].blockers;
+                return [{ kind: 'requirement' as const, id: `${id}:${location.id}`, label: options.map(option => option.label).join(' or ') || 'Unverified location', done: false }];
+              }),
+              ...evaluateChunkRouteRequirements(route, unlocks).checks.map(label => ({ kind: 'requirement' as const, id: `${id}:permission:${label}`, label, done: false, internalOnly: true })),
+              ...(route.unknowns ?? []).map(label => ({ kind: 'requirement' as const, id: `${id}:${label}`, label, done: false, internalOnly: true })),
+              ...(!route.locations.length && !route.unknowns?.length && !route.requirements?.length ? [{ kind: 'requirement' as const, id: `${id}:empty`, label: 'Unverified route', done: false, internalOnly: true }] : []),
+            ],
+          })),
+        });
+      }
+    }
 
     const questPointRequirement = q.skills['Quest Points'];
     if (questPointRequirement !== undefined) {
@@ -254,7 +296,12 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
       .join(' or ');
 
     for (const blocker of eligibility.blockers) {
+      if (blocker.kind === 'requirement') {
+        manualSteps.set(`requirement:${qid}:${blocker.label}`, { kind: 'requirement', id: `requirement:${qid}:${blocker.label}`, label: blocker.label, done: false, internalOnly: blocker.internalOnly });
+        continue;
+      }
       if (blocker.kind === 'region') {
+        if (geography) continue;
         if (alternativeLabel && blocker.label === alternativeLabel) {
           const label = 'One of: ' + blocker.label;
           alternatives.set(label, {

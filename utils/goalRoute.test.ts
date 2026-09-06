@@ -301,3 +301,23 @@ describe('route readiness consistency', () => {
     expect(route.alternatives.flatMap(group => group.routes).some(item => item.name.includes('review'))).toBe(true);
   });
 });
+
+describe('Chunked route uncertainty', () => {
+  it('does not turn hidden geography evidence into a ready route or a region unlock', () => {
+    const q = QUEST_DATA['Mountain Daughter'];
+    const previous = q.chunkedGeography;
+    try {
+      q.chunkedGeography = {
+        locations: [{ id: 'camp', label: 'Mountain Camp', chunkOptions: [{ cx: 43, cy: 57 }] }],
+        groups: [], unknowns: ['Internal randomized target evidence'],
+      };
+      const state = stateWith({ chunks: ['43,57'], quests: Object.keys(QUEST_DATA).filter(id => id !== q.id),
+        levels: { Agility: 99, Prayer: 99 }, skills: { Agility: 10, Prayer: 10 } });
+      state.gameModeId = 'chunked';
+      const route = buildGoalRoute(q.id, state)!;
+      expect(route.percentage).toBeLessThan(100);
+      expect(route.regions).toEqual([]);
+      expect(JSON.stringify(route)).not.toContain('Internal randomized target evidence');
+    } finally { q.chunkedGeography = previous; }
+  });
+});
