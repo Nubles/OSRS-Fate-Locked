@@ -82,8 +82,7 @@ describe('DiaryLog access evidence', () => {
     );
 
     expect(markup).not.toContain('Barbarian Training');
-    expect(markup).toContain('Access to Barbarian Fishing');
-    expect(markup).not.toContain('Requires: Barbarian Training');
+    expect(markup.match(/Access to Barbarian Fishing/g)).toHaveLength(2);
     expect(markup).toContain('Fishing 96');
     expect(markup).toContain('Strength 76');
     expect(markup).toContain('In Aid of the Myreque');
@@ -135,8 +134,13 @@ describe('DiaryLog access evidence', () => {
       <DiaryLog searchTerm="153 Kudos" suspendModals />,
     );
     const row = elementMarkup(markup, '<div data-diary-task-row="var_hard_2"');
-    expect(row).toContain('Confirm: 153 Varrock Museum Kudos');
-    expect(row).toContain('text-cyan-300');
+    const completion = elementMarkup(
+      row,
+      '<button aria-label="Complete diary task: Speak to Orlando Smith when you have achieved 153 Kudos."',
+    );
+
+    expect(completion).toContain('Confirm: 153 Varrock Museum Kudos');
+    expect(completion).toContain('border-cyan-500/30');
   });
   it.each([
     ['mind tiara', 'Ice Mountain'],
@@ -157,4 +161,3 @@ describe('DiaryLog access evidence', () => {
     expect(markup).toContain(`aria-label="Show ${escapedPlace} on the map"`);
   });
 });
-

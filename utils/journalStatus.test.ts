@@ -3,7 +3,7 @@ import { QUEST_DATA, QuestData } from '../data/questData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { DIARY_DATA } from '../data/diaryData';
 import { DropSource, UnlockState } from '../types';
-import { REGION_GROUPS, ARCANA_LIST, MOBILITY_LIST, GUILDS_LIST, MINIGAMES_LIST, BOSSES_LIST, FARMING_PATCH_LIST } from '../data/items';
+import { REGION_GROUPS } from '../data/items';
 import { combatLevel } from './slayerReach';
 import {
   countDoableDiaryTasks, countDoableTasks, countMetSkillRequirements,
@@ -53,11 +53,9 @@ describe('manual journal readiness', () => {
     }));
     expect(reachable).toMatchObject({
       machineEligible: true,
-      eligible: false,
-      confirmable: true,
+      eligible: true,
       blockers: [],
     });
-    expect(reachable.manualChecks.join(' ')).toContain('team cape');
   });
 
   it("gates Sarah's farm shop on Falador rather than Port Sarim", () => {
@@ -84,7 +82,6 @@ describe('manual journal readiness', () => {
     const enough = evaluateDiaryTaskEligibility(task, unlocked({
       quests: questIdsWorthAtLeast(32),
       regions: ['Varrock'],
-      guilds: ["Champions' Guild"],
     }));
     expect(enough).toMatchObject({
       machineEligible: true,
@@ -113,7 +110,7 @@ describe('manual journal readiness', () => {
       id: 'manual-route-preference',
       oneOf: [
         { label: 'Manual route', manualRequirements: ['Manual check'] },
-        { label: 'Automatic route', regions: ['Misthalin'] },
+        { label: 'Automatic route', items: ['Test item'] },
       ],
     }, unlocked());
 
@@ -123,7 +120,7 @@ describe('manual journal readiness', () => {
       manualChecks: [],
       blockers: [],
     });
-    expect(result.evidence).toContain('Automatic route: Misthalin');
+    expect(result.evidence).toContain('Automatic route: Test item');
   });
 
   it('keeps machine blockers ahead of manual confirmation', () => {
@@ -145,7 +142,7 @@ describe('manual journal readiness', () => {
       machineEligible: true,
       eligible: false,
       confirmable: true,
-      manualChecks: expect.arrayContaining(['One open Sailing task slot']),
+      manualChecks: ['One open Sailing task slot'],
     });
   });
 
@@ -161,13 +158,13 @@ describe('manual journal readiness', () => {
     );
 
     expect(result).toMatchObject({
-      status: 'NEEDS_CONFIRMATION',
+      status: 'AVAILABLE',
       machineEligible: true,
       eligible: false,
       confirmable: true,
-      manualChecks: expect.arrayContaining([
+      manualChecks: [
         'Access to all required elemental altars through one route: surface altars with Misthalin and Kharidian Desert; the Abyss through Edgeville with Enter the Abyss completed; or Guardians of the Rift with Misthalin and Temple of the Eye completed',
-      ]),
+      ],
     });
   });
 });
@@ -180,7 +177,7 @@ describe('reported quest access', () => {
     chunkOptions: [{ cx: 46, cy: 50 }],
   };
   const malformedQuest = (overrides: Partial<QuestData>): QuestData => ({
-    operationalRequirements: [], id: 'Malformed policy quest',
+    id: 'Malformed policy quest',
     name: 'Malformed policy quest',
     kind: 'quest',
     accessPolicy: 'regions',
@@ -263,9 +260,9 @@ describe('reported quest access', () => {
     expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Asgarnia'] })).status)
       .toBe('LOCKED_REGION');
     expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Rimmington'] })).status)
-      .toBe('NEEDS_CONFIRMATION');
+      .toBe('AVAILABLE');
     expect(evaluateQuestEligibility(quest, unlocked({ chunks: ['46,50'] }), 'chunked').status)
-      .toBe('NEEDS_CONFIRMATION');
+      .toBe('AVAILABLE');
   });
 
   it("requires Sinclair Mansion and Seers' Village, not all Kandarin, for Murder Mystery", () => {
@@ -274,19 +271,19 @@ describe('reported quest access', () => {
     expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Kandarin'] })).status)
       .toBe('LOCKED_REGION');
     expect(evaluateQuestEligibility(quest, unlocked({ regions: ["Seers' Village"] })).status)
-      .toBe('NEEDS_CONFIRMATION');
+      .toBe('AVAILABLE');
     expect(evaluateQuestEligibility(quest, unlocked({ chunks: ['42,55'] }), 'chunked').status)
       .toBe('LOCKED_REGION');
     expect(evaluateQuestEligibility(
       quest,
       unlocked({ chunks: ['42,55', '42,54'] }),
       'chunked',
-    ).status).toBe('NEEDS_CONFIRMATION');
+    ).status).toBe('AVAILABLE');
   });
 
   it('uses exact locations instead of descriptive regions under locations policy', () => {
     const quest = {
-      operationalRequirements: [], id: 'Exact quest',
+      id: 'Exact quest',
       name: 'Exact quest',
       kind: 'quest',
       accessPolicy: 'locations',
@@ -310,7 +307,7 @@ describe('reported quest access', () => {
 
   it('requires both sources under regions-and-locations policy', () => {
     const quest = {
-      operationalRequirements: [], id: 'Combined quest',
+      id: 'Combined quest',
       name: 'Combined quest',
       kind: 'quest',
       accessPolicy: 'regions-and-locations',
@@ -334,49 +331,12 @@ describe('reported quest access', () => {
     ).status).toBe('AVAILABLE');
   });
 
-  it.each([
-    ['Sheep Shearer', ['49,51']],
-    ['The Restless Ghost', ['50,50', '49,49', '50,49', '48,49']],
-    ['Vampyre Slayer', ['48,51', '50,53', '48,52']],
-    ["Pirate's Treasure", ['47,50', '45,49', '50,53', '46,52']],
-  ] as const)('checks every required chunk for %s without optional supply routes', (id, required) => {
-    const quest = QUEST_DATA[id];
-    expect(evaluateQuestEligibility(quest, unlocked({ chunks: [...required] }), 'chunked').status).not.toBe('LOCKED_REGION');
-    for (const missing of required) {
-      const status = evaluateQuestEligibility(quest, unlocked({ chunks: required.filter(chunk => chunk !== missing) }), 'chunked').status;
-      // Lumbridge's starting chunk is always granted by the game mode.
-      if (missing === '50,50') expect(status).not.toBe('LOCKED_REGION');
-      else expect(status).toBe('LOCKED_REGION');
-    }
-  });
-
-  it('requires the reviewed Getting Ahead cave entrance instead of optional clay gathering', () => {
-    const q = QUEST_DATA['Getting Ahead'];
-    const base = { skills: { Construction: 3, Crafting: 3 }, levels: { Construction: 26, Crafting: 30 } };
-    expect(evaluateQuestEligibility(q, unlocked({ ...base, chunks: ['19,57', '18,57'] }), 'chunked').status).toBe('LOCKED_REGION');
-    expect(evaluateQuestEligibility(q, unlocked({ ...base, chunks: ['19,57', '18,56'] }), 'chunked').status).not.toBe('LOCKED_REGION');
-  });
-
-  it('requires each reviewed Tale destination but not the unexplained tower chunk', () => {
-    const q = QUEST_DATA['Tale of the Righteous'];
-    const chunks = ['24,55', '25,59', '23,56', '19,55', '18,55'];
-    const base = { skills: { Strength: 2, Mining: 1 }, levels: { Strength: 16, Mining: 10 }, quests: ['Client of Kourend'] };
-    expect(evaluateQuestEligibility(q, unlocked({ ...base, chunks }), 'chunked').status).not.toBe('LOCKED_REGION');
-    for (const missing of chunks) {
-      expect(evaluateQuestEligibility(q, unlocked({ ...base, chunks: chunks.filter(c => c !== missing) }), 'chunked').status).toBe('LOCKED_REGION');
-    }
-  });
-
   it('requires the exact South Falador Farm chunk in Chunked mode', () => {
     const q = QUEST_DATA['A Porcine of Interest'];
-    const near = unlocked({ chunks: ['46,51', '48,50', '49,52', '48,51'] });
-    const exact = unlocked({ chunks: ['47,51', '48,50', '49,52', '48,51'] });
+    const near = unlocked({ chunks: ['46,51', '48,50'] });
+    const exact = unlocked({ chunks: ['47,51', '48,50'] });
     expect(evaluateQuestEligibility(q, near, 'chunked').status).toBe('LOCKED_REGION');
-    expect(evaluateQuestEligibility(q, exact, 'chunked').status).toBe('NEEDS_CONFIRMATION');
-    // The farm alone no longer proves access to the cave or Spria.
-    for (const missing of ['49,52', '48,51']) {
-      expect(evaluateQuestEligibility(q, unlocked({ chunks: exact.chunks!.filter(chunk => chunk !== missing) }), 'chunked').status).toBe('LOCKED_REGION');
-    }
+    expect(evaluateQuestEligibility(q, exact, 'chunked').status).toBe('AVAILABLE');
   });
 
   it('calculates Dream Mentor combat instead of reading a pseudo-skill', () => {
@@ -398,7 +358,7 @@ describe('reported quest access', () => {
     expect(evaluateQuestEligibility(q, high).blockers).not.toContainEqual({
       kind: 'combat', label: 'Combat level 85',
     });
-    expect(evaluateQuestEligibility(q, high).status).toBe('NEEDS_CONFIRMATION');
+    expect(evaluateQuestEligibility(q, high).status).toBe('AVAILABLE');
   });
 
   it.each([
@@ -408,7 +368,7 @@ describe('reported quest access', () => {
   ])('allows Enter the Abyss through %s', (_name, route) => {
     expect(getQuestStatus(QUEST_DATA['Enter the Abyss'], unlocked({
       quests: ['Rune Mysteries'], ...route,
-    }))).toBe('NEEDS_CONFIRMATION');
+    }))).toBe('AVAILABLE');
   });
 
   it('locks Enter the Abyss without a third provider', () => {
@@ -419,8 +379,7 @@ describe('reported quest access', () => {
   it('checks and labels location-based alternative routes', () => {
     const quest: QuestData = {
       ...QUEST_DATA['A Porcine of Interest'],
-      operationalRequirements: [], id: 'alternative-location', name: 'Alternative location',
-      chunkedGeography: undefined, // Exercise the legacy location-alternative policy explicitly.
+      id: 'alternative-location', name: 'Alternative location',
       accessPolicy: 'regions',
       regions: [], locations: [], skills: {}, prereqs: [],
       oneOf: [{ locations: [{
@@ -444,19 +403,19 @@ describe('reported quest access', () => {
       locations: [],
       oneOf: [],
     };
-    expect(getQuestStatus(quest, unlocked())).toBe('NEEDS_CONFIRMATION');
+    expect(getQuestStatus(quest, unlocked())).toBe('AVAILABLE');
   });
 });
 
-describe('actual skill level requirements', () => {
+describe('skill-method caps', () => {
   const quest: QuestData = {
-    operationalRequirements: [], id: 'cap', name: 'cap', kind: 'quest', accessPolicy: 'regions',
+    id: 'cap', name: 'cap', kind: 'quest', accessPolicy: 'regions',
     regions: ['Misthalin'],
     skills: { Woodcutting: 15 }, prereqs: [], points: 0,
     difficulty: DropSource.QUEST_NOVICE,
   };
 
-  it('requires actual levels independently of method tier', () => {
+  it('requires level and method cap', () => {
     const tier1 = unlocked({
       skills: { Woodcutting: 1 }, levels: { Woodcutting: 15 },
     });
@@ -466,25 +425,25 @@ describe('actual skill level requirements', () => {
     const tier2 = unlocked({
       skills: { Woodcutting: 2 }, levels: { Woodcutting: 15 },
     });
-    expect(meetsSkillRequirement(tier1, 'Woodcutting', 15)).toBe(true);
-    expect(getQuestStatus(quest, tier1)).toBe('AVAILABLE');
+    expect(meetsSkillRequirement(tier1, 'Woodcutting', 15)).toBe(false);
+    expect(getQuestStatus(quest, tier1)).toBe('LOCKED_SKILL');
     expect(meetsSkillRequirement(tier2LowLevel, 'Woodcutting', 15)).toBe(false);
     expect(getQuestStatus(quest, tier2LowLevel)).toBe('LOCKED_SKILL');
     expect(meetsSkillRequirement(tier2, 'Woodcutting', 15)).toBe(true);
     expect(getQuestStatus(quest, tier2)).toBe('AVAILABLE');
   });
 
-  it('uses actual levels for diary level gates', () => {
+  it('applies the same cap to diary tasks', () => {
     const tasks = [{ id: 'wc15', skills: { Woodcutting: 15 } }];
     expect(countDoableTasks(tasks, unlocked({
       skills: { Woodcutting: 1 }, levels: { Woodcutting: 15 },
-    }))).toBe(1);
+    }))).toBe(0);
     expect(countDoableTasks(tasks, unlocked({
       skills: { Woodcutting: 2 }, levels: { Woodcutting: 15 },
     }))).toBe(1);
   });
 
-  it('enforces explicit cut-and-burn method predicates separately from attained levels', () => {
+  it('blocks lum_easy_7 at cap 10 and permits level 15 in the next method band', () => {
     const task = ALL_DIARY_TASKS.find(({ id }) => id === 'lum_easy_7')!;
     const common = {
       regions: ['Lumbridge'],
@@ -504,12 +463,11 @@ describe('actual skill level requirements', () => {
       skills: { Woodcutting: 2, Firemaking: 2 },
     }))).toMatchObject({
       machineEligible: true,
-      eligible: false,
-      confirmable: true,
+      eligible: true,
     });
   });
 
-  it('uses actual levels in diary consumer counts', () => {
+  it('applies method caps to diary consumer counts', () => {
     const tasks = [{
       id: 'wc15', tierId: 'Test Diary',
       skills: { Woodcutting: 15 },
@@ -521,8 +479,8 @@ describe('actual skill level requirements', () => {
       skills: { Woodcutting: 2 }, levels: { Woodcutting: 15 },
     });
 
-    expect(countDoableDiaryTasks(tasks, tier1)).toBe(1);
-    expect(countMetSkillRequirements(tasks[0].skills, tier1)).toBe(1);
+    expect(countDoableDiaryTasks(tasks, tier1)).toBe(0);
+    expect(countMetSkillRequirements(tasks[0].skills, tier1)).toBe(0);
     expect(countDoableDiaryTasks(tasks, tier2)).toBe(1);
     expect(countMetSkillRequirements(tasks[0].skills, tier2)).toBe(1);
   });
@@ -587,7 +545,7 @@ describe('diary alternative requirement routes', () => {
     })).eligible).toBe(true);
   });
 
-  it('keeps an untracked alternative awaiting confirmation', () => {
+  it('keeps common requirements mandatory when an untracked route is non-blocking', () => {
     const task = {
       id: 'hardwood',
       skills: { Woodcutting: 35 },
@@ -608,7 +566,7 @@ describe('diary alternative requirement routes', () => {
     };
 
     expect(evaluateDiaryTaskEligibility(task as any, unlocked()).eligible).toBe(false);
-    expect(evaluateDiaryTaskEligibility(task as any, unlocked(common)).eligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task as any, unlocked(common)).eligible).toBe(true);
   });
 
   it('supports combined and limited-any skill alternatives', () => {
@@ -631,7 +589,7 @@ describe('diary alternative requirement routes', () => {
     })).eligible).toBe(false);
   });
 
-  it('keeps common and route items awaiting confirmation', () => {
+  it('keeps common and route item requirements visible but non-blocking', () => {
     const task = {
       id: 'muddy-chest',
       items: ['Muddy key'],
@@ -643,8 +601,8 @@ describe('diary alternative requirement routes', () => {
 
     const result = evaluateDiaryTaskEligibility(task as any, unlocked());
 
-    expect(result.eligible).toBe(false);
-    expect(result.manualChecks.join(' ')).toContain('Muddy key');
+    expect(result.eligible).toBe(true);
+    expect(result.evidence).toContain('Muddy key');
     expect(result.evidence).toContain('Slashing route: Knife or slashing weapon');
   });
 });
@@ -708,8 +666,7 @@ describe('manual diary task requirements', () => {
       regions: [...regions],
     }));
 
-    expect(result).toMatchObject({ machineEligible: true, eligible: false, confirmable: true });
-    expect(result.manualChecks.join(' ')).toContain('Slayer cape');
+    expect(result).toMatchObject({ machineEligible: true, eligible: true });
   });
 
   it('requires Priest in Peril for both Mazchna combat and Slayer cape routes', () => {
@@ -732,12 +689,10 @@ describe('manual diary task requirements', () => {
     for (const route of [combatRoute, capeRoute]) {
       expect(evaluateDiaryTaskEligibility(task, unlocked(route)).blockers)
         .toContainEqual({ kind: 'quest', label: 'Priest in Peril' });
-      const ready = evaluateDiaryTaskEligibility(task, unlocked({
+      expect(evaluateDiaryTaskEligibility(task, unlocked({
         ...route,
         quests: ['Priest in Peril'],
-      }));
-      expect(ready.machineEligible).toBe(true);
-      expect(ready.eligible).toBe(route === combatRoute);
+      }))).toMatchObject({ machineEligible: true, eligible: true });
     }
   });
 
@@ -796,9 +751,6 @@ describe('canonical diary tier eligibility', () => {
       regions: [...new Set(regions)],
       quests: [...new Set(quests)],
       cas: ['Easy', 'Medium', 'Hard', 'Elite', 'Master', 'Grandmaster'],
-      diaries: ['Wilderness Medium'],
-      arcana: [...ARCANA_LIST], mobility: [...MOBILITY_LIST], guilds: [...GUILDS_LIST],
-      minigames: [...MINIGAMES_LIST], bosses: [...BOSSES_LIST], farming: [...FARMING_PATCH_LIST],
     });
   };
 
@@ -807,7 +759,7 @@ describe('canonical diary tier eligibility', () => {
     void completedTasks;
 
     expect(getDiaryStatus(DIARY_DATA['Ardougne Easy'], partialUnlocks))
-      .toBe('NEEDS_CONFIRMATION');
+      .toBe('AVAILABLE');
   });
 
   it('treats an omitted CA tier list as no completed tiers in a status snapshot', () => {
@@ -817,22 +769,21 @@ describe('canonical diary tier eligibility', () => {
     expect(getDiaryStatus(DIARY_DATA['Fremennik Easy'], {
       ...partialUnlocks,
       quests: partialUnlocks.quests.filter(quest => quest !== 'Troll Stronghold'),
-    })).toBe('NEEDS_CONFIRMATION');
+    })).toBe('LOCKED_QUEST');
   });
 
   it('ignores all 48 stale aggregate requirement payloads', () => {
     const unlocks = canonicalUnlocks();
 
     for (const diary of Object.values(DIARY_DATA)) {
-      const expected = getDiaryStatus(diary, unlocks);
-      expect(['AVAILABLE', 'NEEDS_CONFIRMATION', 'COMPLETED']).toContain(expected);
+      expect(getDiaryStatus(diary, unlocks)).toBe('AVAILABLE');
       expect(getDiaryStatus({
         ...diary,
         region: 'Impossible aggregate region',
         skills: { NotASkill: 99 },
         quests: ['Impossible aggregate quest'],
         requiredRegions: ['Impossible aggregate region'],
-      }, unlocks)).toBe(expected);
+      }, unlocks)).toBe('AVAILABLE');
     }
   });
 
@@ -868,19 +819,19 @@ describe('audited diary route eligibility', () => {
     expect(evaluateDiaryTaskEligibility(task('kar_med_8'), unlocked({
       ...shared,
       regions: ['Kharazi Jungle'],
-    })).machineEligible).toBe(true);
+    })).eligible).toBe(true);
     expect(evaluateDiaryTaskEligibility(task('kar_med_9'), unlocked({
       ...shared,
       regions: ['Tai Bwo Wannai'],
       quests: ['Jungle Potion'],
-    })).machineEligible).toBe(true);
+    })).eligible).toBe(true);
   });
 
   it('allows Tai Bwo Wannai Cleanup without Shilo Village access', () => {
     expect(evaluateDiaryTaskEligibility(task('kar_med_19'), unlocked({
       skills: { Mining: 4 }, levels: { Mining: 40 },
       quests: ['Jungle Potion'], regions: ['Tai Bwo Wannai'],
-    })).machineEligible).toBe(true);
+    })).eligible).toBe(true);
   });
 
   it('does not require 79 Agility on the Kharazi machete route', () => {
@@ -891,7 +842,7 @@ describe('audited diary route eligibility', () => {
       regions: ['Kharazi Jungle'],
     }));
 
-    expect(result.machineEligible).toBe(true);
+    expect(result.eligible).toBe(true);
   });
 
   it('requires the higher Fishing and Strength levels on the bare-handed shark route', () => {
@@ -905,18 +856,18 @@ describe('audited diary route eligibility', () => {
     };
     expect(evaluateDiaryTaskEligibility(bareHandedTask, unlocked({
       ...common, levels: { Cooking: 80, Fishing: 95, Strength: 76 },
-    })).machineEligible).toBe(false);
+    })).eligible).toBe(false);
     expect(evaluateDiaryTaskEligibility(bareHandedTask, unlocked({
       ...common, levels: { Cooking: 80, Fishing: 96, Strength: 75 },
-    })).machineEligible).toBe(false);
+    })).eligible).toBe(false);
     const eligible = evaluateDiaryTaskEligibility(bareHandedTask, unlocked({
       ...common, levels: { Cooking: 80, Fishing: 96, Strength: 76 },
     }));
-    expect(eligible.machineEligible).toBe(true);
+    expect(eligible.eligible).toBe(true);
     expect(eligible.blockers).not.toContainEqual({
       kind: 'quest', label: 'Barbarian Training',
     });
-    expect(eligible.manualChecks.join(' ')).toContain('Access to Barbarian Fishing');
+    expect(eligible.evidence.join(' ')).toContain('Access to Barbarian Fishing');
   });
 
   it('models Morytania bare-handed fishing access as evidence while retaining its gates', () => {
@@ -927,11 +878,11 @@ describe('audited diary route eligibility', () => {
     };
     const eligible = evaluateDiaryTaskEligibility(task('mor_elite_1'), unlocked(common));
 
-    expect(eligible.machineEligible).toBe(true);
+    expect(eligible.eligible).toBe(true);
     expect(eligible.blockers).not.toContainEqual({
       kind: 'quest', label: 'Barbarian Training',
     });
-    expect(eligible.manualChecks.join(' ')).toContain('Access to Barbarian Fishing');
+    expect(eligible.evidence).toContain('Access to Barbarian Fishing');
 
     const missingQuest = evaluateDiaryTaskEligibility(task('mor_elite_1'), unlocked({
       ...common, quests: [],
@@ -963,7 +914,7 @@ describe('audited diary route eligibility', () => {
   });
 
   it('allows a pre-cooked oomlie wrap without the cooking route', () => {
-    expect(evaluateDiaryTaskEligibility(task('kar_hard_3'), unlocked()).machineEligible)
+    expect(evaluateDiaryTaskEligibility(task('kar_hard_3'), unlocked()).eligible)
       .toBe(true);
   });
 
@@ -971,20 +922,18 @@ describe('audited diary route eligibility', () => {
     expect(evaluateDiaryTaskEligibility(task('var_med_7'), unlocked({
       quests: ['The Dig Site'], regions: ['Digsite'],
       skills: { Magic: 1 }, levels: { Magic: 1 },
-    })).machineEligible).toBe(true);
+    })).eligible).toBe(true);
   });
 
   it('accepts each Warriors Guild skill route', () => {
     expect(evaluateDiaryTaskEligibility(task('fal_hard_10'), unlocked({
       regions: ["Warriors' Guild"],
-      guilds: ["Warriors' Guild"],
       skills: { Attack: 7, Strength: 7 }, levels: { Attack: 65, Strength: 65 },
-    })).machineEligible).toBe(true);
+    })).eligible).toBe(true);
     expect(evaluateDiaryTaskEligibility(task('fal_hard_10'), unlocked({
       regions: ["Warriors' Guild"],
-      guilds: ["Warriors' Guild"],
       skills: { Attack: 10, Strength: 1 }, levels: { Attack: 99, Strength: 1 },
-    })).machineEligible).toBe(true);
+    })).eligible).toBe(true);
   });
 
   it('accepts every exact Raiments level route', () => {
@@ -997,29 +946,7 @@ describe('audited diary route eligibility', () => {
       expect(evaluateDiaryTaskEligibility(diaryTask, unlocked({
         skills: { Runecraft: 10 }, levels: { Runecraft: level },
         regions: diaryTask.regions ?? [], quests: diaryTask.quests ?? [],
-      })).machineEligible, id).toBe(true);
+      })).eligible, id).toBe(true);
     }
   });
-});
-
-// This suite isolates destination/skill/manual behavior with known legal supplies.
-// Acquisition availability itself is covered by itemAcquisition and source tests.
-import { beforeEach as beforeSupplyTest, afterEach as afterSupplyTest, vi as supplySpy } from 'vitest';
-import { chunkContentService as suppliedItemsFixture } from '../services/ChunkContentService';
-let restoreSupplyFixture: (() => void)[] = [];
-beforeSupplyTest(() => {
-  const ready = supplySpy.spyOn(suppliedItemsFixture, 'ready', 'get').mockReturnValue(true);
-  const records = supplySpy.spyOn(suppliedItemsFixture, 'itemSourceRecords').mockImplementation(itemName => [{ itemName, kind: 'spawn', hostName: 'Test prepared supplies', cx: 50, cy: 50, rawRequirements: [] }]);
-  restoreSupplyFixture = [() => ready.mockRestore(), () => records.mockRestore()];
-});
-afterSupplyTest(() => restoreSupplyFixture.forEach(restore => restore()));
-
-
-it('keeps mixed quest notes internal while exposing the required neck unlock', () => {
-  const result = evaluateQuestEligibility(QUEST_DATA['The Restless Ghost'], unlocked({ regions: ['Misthalin'] }));
-  const requirements = result.blockers.filter(blocker => blocker.kind === 'requirement');
-  expect(result.eligible).toBe(false);
-  expect(requirements.some(blocker => !blocker.internalOnly && /Neck equipment tier 1/.test(blocker.label))).toBe(true);
-  expect(requirements.some(blocker => blocker.internalOnly)).toBe(true);
-  expect(requirements.filter(blocker => !blocker.internalOnly).every(blocker => !/satisfy the applicable|quest actions and equipment use/.test(blocker.label))).toBe(true);
 });

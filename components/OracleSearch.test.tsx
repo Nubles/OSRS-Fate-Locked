@@ -3,7 +3,6 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { ALL_CA_TASKS } from '../data/caTasks';
 import { OracleSearch } from './OracleSearch';
-import { questId } from '../data/questCatalog';
 
 const mockQuery = vi.hoisted(() => ({ current: 'Easy Tier' }));
 const mockGame = vi.hoisted(() => ({
@@ -13,7 +12,6 @@ const mockGame = vi.hoisted(() => ({
       cas: [] as string[],
       regions: [] as string[],
       chunks: [] as string[],
-      quests: [] as string[],
     },
     gameModeId: 'standard',
   },
@@ -43,15 +41,6 @@ vi.mock('./SectionGuide', () => ({
 }));
 
 describe('OracleSearch Combat Achievement status', () => {
-  it('shows canonical and normalized quest completions as completed', () => {
-    mockQuery.current = 'Priest in Peril';
-    for (const reference of [questId('Priest in Peril')!, ' PRIEST IN PERIL ']) {
-      mockGame.current.unlocks.quests = [reference];
-      const markup = renderToStaticMarkup(<OracleSearch onClose={vi.fn()} />);
-      expect(markup).toContain('Completed');
-      expect(markup).not.toContain('Not Started');
-    }
-  });
   it('shows a tier earned from current cumulative points as completed without a stored marker', () => {
     mockQuery.current = 'Easy Tier';
     mockGame.current.unlocks.completedTasks = ALL_CA_TASKS

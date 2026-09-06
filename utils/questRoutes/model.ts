@@ -1,4 +1,3 @@
-import { SKILLS_LIST } from '../../data/items';
 export type ChunkKey = `${number},${number}`;
 export type SupplyPolicy = 'PLAYER_OBTAINED' | 'QUEST_PROVIDED';
 export type Coverage = 'COMPLETE' | 'PARTIAL';
@@ -21,7 +20,7 @@ export interface RawRouteRequirement {
 
 export type RouteGate =
   | { type: 'QUEST'; questId: string; label: string }
-  | { type: 'SKILL'; skill: string; level: number; label: string; semantics?: 'actual' | 'method' }
+  | { type: 'SKILL'; skill: string; level: number; label: string }
   | { type: 'UNLOCK'; category: 'guilds' | 'merchants' | 'minigames' | 'mobility' | 'slayerUnlocks'; id: string; label: string }
   | { type: 'UNRESOLVED'; label: string; raw: string };
 
@@ -137,24 +136,25 @@ const validateProbability = (probability: number | undefined): void => {
   }
 };
 
-/** Missing semantics on authored gates retains the reviewed method behavior. */
-export const isRouteGateUsable = (value: unknown): value is RouteGate => {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-  const gate = value as Record<string, unknown>;
-  const text = (value: unknown) => typeof value === 'string' && value.trim().length > 0;
-  if (!text(gate.label)) return false;
-  switch (gate.type) {
-    case 'QUEST': return text(gate.questId);
-    case 'SKILL': return typeof gate.skill === 'string' && SKILLS_LIST.includes(gate.skill)
-      && typeof gate.level === 'number' && Number.isSafeInteger(gate.level) && gate.level >= 1 && gate.level <= 99
-      && (gate.semantics === undefined || gate.semantics === 'actual' || gate.semantics === 'method');
-    case 'UNLOCK': return ['guilds', 'merchants', 'minigames', 'mobility', 'slayerUnlocks'].includes(gate.category as string) && text(gate.id);
-    case 'UNRESOLVED': return text(gate.raw);
-    default: return false;
-  }
-};
 const validateRouteGate = (gate: RouteGate): RouteGate => {
-  if (!isRouteGateUsable(gate)) throw new Error('Invalid route gate');
+  assertNonBlank(gate.label, 'gate label');
+
+  switch (gate.type) {
+    case 'QUEST':
+      assertNonBlank(gate.questId, 'quest id');
+      break;
+    case 'SKILL':
+      assertNonBlank(gate.skill, 'skill');
+      assertPositiveFinite(gate.level, 'skill level');
+      break;
+    case 'UNLOCK':
+      assertNonBlank(gate.id, 'unlock id');
+      break;
+    case 'UNRESOLVED':
+      assertNonBlank(gate.raw, 'raw requirement');
+      break;
+  }
+
   return gate;
 };
 

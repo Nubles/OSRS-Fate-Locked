@@ -79,7 +79,7 @@ export function rankFrontierChunks(
         .filter((n): n is string => !!n && !isNamedAreaReachableViaChunks(n, chunks));
 
       const impact = newAreas.length > 0
-        ? computeUnlockImpact(unlocks, { ...unlocks, chunks: [...chunks, key] }, gameModeId, { includeConditional: true })
+        ? computeUnlockImpact(unlocks, { ...unlocks, chunks: [...chunks, key] }, gameModeId)
         : null;
 
       const raw = contentFor?.(c.cx, c.cy) ?? null;

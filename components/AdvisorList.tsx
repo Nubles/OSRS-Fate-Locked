@@ -20,7 +20,6 @@ export interface AdvisorItem {
   title: string;
   /** Optional secondary label, e.g. "5 QP". */
   meta?: string;
-  pendingChecks?: string[];
   directQuests: string[];
   directDiaries: string[];
   cascadeQuests: string[];
@@ -106,9 +105,9 @@ export const AdvisorList: React.FC<Props> = ({
           const previewNames = item.cascadeQuests.slice(0, maxNames);
 
           const aria = hasDirect
-            ? `${item.title}: potential progress, ${item.directQuests.length} quests and ${item.directDiaries.length} diary tiers after this step; requirements still need confirmation` +
+            ? `${item.title}: unlocks ${item.directQuests.length} quests and ${item.directDiaries.length} diary tiers directly` +
               (hasChain ? `, ${item.cascadeQuests.length} quests and ${item.cascadeDiaries.length} tiers across the full chain` : '')
-            : `${item.title}: planning candidate; confirm requirements before completing; no new unlocks`;
+            : `${item.title}: available to complete, no new unlocks`;
 
           return (
             <button
@@ -135,7 +134,6 @@ export const AdvisorList: React.FC<Props> = ({
                   )}
                 </div>
 
-                {!!item.pendingChecks?.length && <p className="text-[10px] text-cyan-300 mb-1" title={item.pendingChecks.join('\n')}>Needs confirmation: {item.pendingChecks.length} check{item.pendingChecks.length === 1 ? '' : 's'} - open quest details</p>}
                 {hasDirect ? (
                   <>
                     {/* Impact bar (relative to top scorer) */}
@@ -188,7 +186,7 @@ export const AdvisorList: React.FC<Props> = ({
                   </>
                 ) : (
                   <p className="text-[9px] text-gray-700 italic">
-                    No new unlocks; review requirements before completing
+                    No new unlocks — but available to complete
                   </p>
                 )}
               </div>

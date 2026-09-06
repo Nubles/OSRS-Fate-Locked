@@ -25,9 +25,9 @@ describe('quest Wilderness access', () => {
     }), 'vanilla');
 
     expect(result).toMatchObject({
-      status: 'NEEDS_CONFIRMATION',
+      status: 'AVAILABLE',
       machineEligible: true,
-      eligible: false,
+      eligible: true,
       blockers: [],
     });
     expect(result.evidence).toEqual(expect.arrayContaining([
@@ -44,11 +44,10 @@ describe('quest Wilderness access', () => {
       QUEST_DATA['Enter the Abyss'],
       unlocked({ quests: ['Rune Mysteries'], regions: ['East Ardougne'] }),
       'vanilla',
-      { manualConfirmed: true },
     )).toEqual({ ok: true });
   });
 
-  it('requires both fixed Enter the Abyss chunks and a three-mage route in Chunked mode', () => {
+  it('requires both pinned Enter the Abyss chunks in Chunked mode', () => {
     const base = {
       quests: ['Rune Mysteries'],
       guilds: ["Wizards' Guild"],
@@ -61,10 +60,7 @@ describe('quest Wilderness access', () => {
     });
     expect(evaluateQuestEligibility(QUEST_DATA['Enter the Abyss'], unlocked({
       ...base, chunks: ['48,55', '50,52'],
-    }), 'chunked').status).toBe('UNKNOWN');
-    expect(evaluateQuestEligibility(QUEST_DATA['Enter the Abyss'], unlocked({
-      ...base, chunks: ['48,55', '50,52', '50,53', '48,49', '41,51'],
-    }), 'chunked').status).toBe('NEEDS_CONFIRMATION');
+    }), 'chunked').status).toBe('AVAILABLE');
   });
 
   it('uses the actual Wilderness leaf area for every fixed-route quest', () => {
@@ -96,9 +92,9 @@ describe('quest Wilderness access', () => {
 
     expect(result.machineEligible).toBe(true);
     expect(result.blockers).toEqual([]);
-    expect(result.manualChecks).toEqual(expect.arrayContaining([
+    expect(result.manualChecks).toEqual([
       'Started Desert Treasure I', 'Started The Restless Ghost',
-    ]));
+    ]);
   });
 
   it('contains no machine-enforced parent Wilderness quest gate', () => {
@@ -115,15 +111,3 @@ describe('quest Wilderness access', () => {
       .not.toContain('with Wilderness');
   });
 });
-
-// This suite isolates destination/skill/manual behavior with known legal supplies.
-// Acquisition availability itself is covered by itemAcquisition and source tests.
-import { beforeEach as beforeSupplyTest, afterEach as afterSupplyTest, vi as supplySpy } from 'vitest';
-import { chunkContentService as suppliedItemsFixture } from '../services/ChunkContentService';
-let restoreSupplyFixture: (() => void)[] = [];
-beforeSupplyTest(() => {
-  const ready = supplySpy.spyOn(suppliedItemsFixture, 'ready', 'get').mockReturnValue(true);
-  const records = supplySpy.spyOn(suppliedItemsFixture, 'itemSourceRecords').mockImplementation(itemName => [{ itemName, kind: 'spawn', hostName: 'Test prepared supplies', cx: 50, cy: 50, rawRequirements: [] }]);
-  restoreSupplyFixture = [() => ready.mockRestore(), () => records.mockRestore()];
-});
-afterSupplyTest(() => restoreSupplyFixture.forEach(restore => restore()));

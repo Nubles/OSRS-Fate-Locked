@@ -70,7 +70,6 @@ function questRequirementFingerprint(quest) {
     oneOf: canonicalValue(quest.oneOf),
     manualRequirements: canonicalValue(quest.manualRequirements),
     points: quest.points,
-    chunkedGeography: canonicalValue(quest.chunkedGeography),
   });
 }
 

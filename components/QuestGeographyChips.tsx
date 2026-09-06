@@ -1,5 +1,4 @@
 import React from 'react';
-import { showChunkOnMap } from '../utils/chunkLocations';
 import { Map, MapPin } from 'lucide-react';
 import type { QuestGeographyDisplay } from '../utils/questGeographyDisplay';
 
@@ -7,6 +6,7 @@ interface QuestGeographyChipsProps {
   display: QuestGeographyDisplay;
   completed: boolean;
   evidence: readonly string[];
+  onShowChunk: (cx: number, cy: number) => void;
 }
 
 const requirementClass = (met: boolean) =>
@@ -16,7 +16,7 @@ const requirementClass = (met: boolean) =>
     : 'bg-red-900/10 text-red-400 border-red-500/20');
 
 export const QuestGeographyChips: React.FC<QuestGeographyChipsProps> = ({
-  display, completed, evidence,
+  display, completed, evidence, onShowChunk,
 }) => (
   <>
     {display.regions.map(region => (
@@ -35,39 +35,38 @@ export const QuestGeographyChips: React.FC<QuestGeographyChipsProps> = ({
         )}
       >
         <MapPin size={8} /> {location.label}
-        {location.chunkOptions.map((coord, index) => (
-          <React.Fragment key={`${coord.cx},${coord.cy}`}>
-            {index > 0 && <span>or</span>}
-            <button type="button" onClick={event => { event.stopPropagation(); showChunkOnMap(coord.cx, coord.cy); }}
-              className="underline decoration-dotted" title={`Show chunk (${coord.cx}, ${coord.cy}) on map`}>
-              ({coord.cx}, {coord.cy})
-            </button>
-          </React.Fragment>
-        ))}
       </span>
     ))}
-    {display.routeGroups?.map(group => (
-      <details key={`route:${group.id}`} className={requirementClass(completed || evidence.includes(group.label))}>
-        <summary className="cursor-pointer">{group.label} · One complete route</summary>
-        {group.routes.map(route => (
-          <div key={route.id} className="py-1">
-            <span>{route.label}: </span>
-            {route.locations.length ? route.locations.map((location, index) => (
-              <React.Fragment key={location.id}>
-                {index > 0 && <span> + </span>}{location.label}{' '}
-                {location.chunkOptions.map((coord, optionIndex) => (
-                  <React.Fragment key={`${coord.cx},${coord.cy}`}>
-                    {optionIndex > 0 && <span> or </span>}
-                    <button type="button" onClick={event => {event.stopPropagation(); showChunkOnMap(coord.cx, coord.cy);}}
-                      className="underline decoration-dotted" title={`Show chunk (${coord.cx}, ${coord.cy}) on map`}>({coord.cx}, {coord.cy})</button>
-                  </React.Fragment>
-                ))}
-              </React.Fragment>
-            )) : <span>Direct access</span>}
-          </div>
+    {display.knownSteps.length > 0 && (
+      <div className="contents" data-quest-known-steps>
+        <span className="text-[9px] uppercase tracking-wide text-cyan-300/70">
+          Known steps
+        </span>
+        {display.knownSteps.slice(0, 4).map(step => (
+          <button
+            key={`${step.cx},${step.cy}`}
+            onClick={event => {
+              event.stopPropagation();
+              onShowChunk(step.cx, step.cy);
+            }}
+            className={`text-[10px] px-1.5 rounded flex items-center gap-1 border ${
+              step.unlocked
+                ? 'bg-emerald-900/10 text-emerald-400/80 border-emerald-500/20'
+                : 'bg-red-900/10 text-red-400 border-red-500/30'
+            }`}
+            title={`${step.label} — ${step.unlocked ? 'unlocked' : 'locked'} (show on map)`}
+          >
+            <MapPin size={8} />
+            {step.subArea ?? step.region ?? step.label}
+            {step.role === 'first' && <span className="text-cyan-300/80">★</span>}
+          </button>
         ))}
-      </details>
-    ))}
-    {/* Partial route evidence remains in the geography model for RuneProof. */}
+        {display.knownSteps.length > 4 && (
+          <span className="text-[10px] px-1 text-gray-600">
+            +{display.knownSteps.length - 4}
+          </span>
+        )}
+      </div>
+    )}
   </>
 );

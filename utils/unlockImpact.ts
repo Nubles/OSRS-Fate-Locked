@@ -19,7 +19,6 @@
 
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
-import { canonicalQuestUnlocks } from '../data/questCatalog';
 import { evaluateQuestEligibility, getDiaryStatus } from './journalStatus';
 
 export interface UnlockImpact {
@@ -97,8 +96,6 @@ export function prepareUnlockImpactContext(
 
 export interface UnlockImpactOptions {
   context?: UnlockImpactContext;
-  /** Planning only: count paths that still require explicit confirmation. Never changes readiness. */
-  includeConditional?: boolean;
   /** Restrict diary evaluation; an empty list skips diary work entirely. */
   diaryIds?: readonly string[];
 }
@@ -115,17 +112,10 @@ export function computeUnlockImpact(
   gameModeId?: string,
   options: UnlockImpactOptions = {},
 ): UnlockImpact {
-  baseUnlocks = canonicalQuestUnlocks(baseUnlocks);
-  simulatedUnlocks = canonicalQuestUnlocks(simulatedUnlocks);
-  const isPlanningOpen = (status: string | undefined) => isOpen(status)
-    || (options.includeConditional === true && status === 'NEEDS_CONFIRMATION');
   const context = options.context ?? prepareUnlockImpactContext(baseUnlocks, gameModeId);
   const {
     allQuests, baseCompletedQuestIds, baseDiaryStatus, baseAvailableIds,
   } = context;
-  const baseCandidateIds = options.includeConditional
-    ? new Set([...context.baseQuestStatus].filter(([, status]) => isPlanningOpen(status)).map(([id]) => id))
-    : baseAvailableIds;
   const selectedDiaryIds = options.diaryIds === undefined
     ? null
     : new Set(options.diaryIds);
@@ -135,23 +125,23 @@ export function computeUnlockImpact(
 
   const directQuestNames = allQuests
     .filter(q => {
-      if (baseCompletedQuestIds.has(q.id) || baseCandidateIds.has(q.id)) return false;
+      if (baseCompletedQuestIds.has(q.id) || baseAvailableIds.has(q.id)) return false;
       const eligibility = evaluateQuestEligibility(q, simulatedUnlocks, gameModeId);
-      return eligibility.status !== 'COMPLETED' && (eligibility.eligible || (options.includeConditional === true && eligibility.machineEligible));
+      return eligibility.status === 'AVAILABLE' && eligibility.eligible;
     })
     .map((q) => q.name);
 
   const directDiaryIds = allDiaries
     .filter(
       (d) =>
-        !isPlanningOpen(baseDiaryStatus.get(d.id)) &&
-        isPlanningOpen(getDiaryStatus(d, simulatedUnlocks, gameModeId)),
+        !isOpen(baseDiaryStatus.get(d.id)) &&
+        getDiaryStatus(d, simulatedUnlocks, gameModeId) === 'AVAILABLE',
     )
     .map((d) => d.id);
 
   // ── CASCADE (fixpoint) ───────────────────────────────────────────────────
   // Seed the completed set with whatever the simulation already "did".
-  // Simulate a potential chain. Conditional paths assume their checks will later be met; no saved completion is changed.
+  // Greedily complete only quests the canonical eligibility evaluator says are automatic.
   const initialCompletedQuestIds = new Set<string>(simulatedUnlocks.quests);
   const completed = new Set(initialCompletedQuestIds);
   let changed = true;
@@ -161,9 +151,9 @@ export function computeUnlockImpact(
     for (const q of allQuests) {
       if (completed.has(q.id)) continue;
       if (baseCompletedQuestIds.has(q.id)) continue;
-      if (baseCandidateIds.has(q.id)) continue; // don't claim the existing automatic backlog
+      if (baseAvailableIds.has(q.id)) continue; // don't claim the existing automatic backlog
       const eligibility = evaluateQuestEligibility(q, snap, gameModeId);
-      if (eligibility.status !== 'COMPLETED' && (eligibility.eligible || (options.includeConditional === true && eligibility.machineEligible))) {
+      if (eligibility.status === 'AVAILABLE' && eligibility.eligible) {
         completed.add(q.id);
         changed = true;
       }
@@ -174,7 +164,7 @@ export function computeUnlockImpact(
   const cascadeQuestNames = allQuests
     .filter((q) => (
       !baseCompletedQuestIds.has(q.id) &&
-      !baseCandidateIds.has(q.id) &&
+      !baseAvailableIds.has(q.id) &&
       !initialCompletedQuestIds.has(q.id) &&
       completed.has(q.id)
     ))
@@ -183,8 +173,8 @@ export function computeUnlockImpact(
   const cascadeDiaryIds = allDiaries
     .filter(
       (d) =>
-        !isPlanningOpen(baseDiaryStatus.get(d.id)) &&
-        isPlanningOpen(getDiaryStatus(d, finalSnap, gameModeId)),
+        !isOpen(baseDiaryStatus.get(d.id)) &&
+        getDiaryStatus(d, finalSnap, gameModeId) === 'AVAILABLE',
     )
     .map((d) => d.id);
 

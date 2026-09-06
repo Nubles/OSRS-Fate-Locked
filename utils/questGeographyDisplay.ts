@@ -8,7 +8,6 @@ export interface QuestGeographyDisplay {
   regions: string[];
   locations: QuestLocationRequirement[];
   knownSteps: QuestPlace[];
-  routeGroups?: NonNullable<QuestData['chunkedGeography']>['groups'];
 }
 
 /**
@@ -18,10 +17,8 @@ export interface QuestGeographyDisplay {
  * metadata, so consumers must not treat those labels as machine gates.
  */
 export function enforcedQuestAreas(
-  quest: Pick<QuestData, 'accessPolicy' | 'regions' | 'locations' | 'chunkedGeography'>,
-  gameModeId?: string,
+  quest: Pick<QuestData, 'accessPolicy' | 'regions' | 'locations'>,
 ): string[] {
-  if (gameModeId === 'chunked' && quest.chunkedGeography) return [];
   const regions = quest.accessPolicy === 'locations' ? [] : quest.regions;
   const locationAreas = quest.accessPolicy === 'regions'
     ? []
@@ -53,14 +50,9 @@ const uniqueByFirst = <T>(
 };
 
 export function selectQuestGeography(
-  quest: Pick<QuestData, 'accessPolicy' | 'regions' | 'locations' | 'chunkedGeography'>,
+  quest: Pick<QuestData, 'accessPolicy' | 'regions' | 'locations'>,
   places: readonly QuestPlace[],
-  gameModeId?: string,
 ): QuestGeographyDisplay {
-  if (gameModeId === 'chunked' && quest.chunkedGeography) return {
-    regions: [], locations: quest.chunkedGeography.locations.map(location => ({...location, standardAreas: []})),
-    knownSteps: [], routeGroups: quest.chunkedGeography.groups,
-  };
   const regions = quest.accessPolicy === 'locations'
     ? []
     : uniqueByLast(quest.regions, region => region);

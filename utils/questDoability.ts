@@ -1,9 +1,4 @@
-import { questOperationalRequirements } from '../data/questOperationalRequirements';
-import { evaluatePredicate, type RequirementPredicate } from './requirementPredicates';
 import { QuestData } from '../data/questData';
-import type { UnlockState } from '../types';
-import { catalogQuest } from '../data/questCatalog';
-import { chooseChunkQuestLocations } from './questChunkGeography';
 /**
  * Quest *chunk-access* doability.
  *
@@ -21,8 +16,8 @@ import { chooseChunkQuestLocations } from './questChunkGeography';
 /**
  * Build a chunk-entry gate from the picker's per-chunk quest requirements
  * (questSections). A chunk is blocked when any of its required quests is a
- * known quest the player hasn't completed. Unknown/non-quest requirements
- * retain an UNKNOWN verdict and block travel. Pass the compatibility result to
+ * *known* quest the player hasn't completed — unknown/non-quest requirements
+ * are ignored so we never falsely mark a chunk unreachable. Pass the result to
  * chunkReachability(connect, unlocks, home, gate).
  */
 export function entryBlockedGate(
@@ -30,39 +25,10 @@ export function entryBlockedGate(
   completedQuests: Set<string>,
   knownQuests: Set<string>,
 ): (chunkId: string) => boolean {
-  const completed = canonicalEntryQuests(completedQuests);
-  const known = canonicalEntryQuests(knownQuests);
   return (chunkId: string) => {
-    return evaluateCanonicalChunkEntryRequirements(questSections, chunkId, completed, known).status !== 'READY';
-  };
-}
-
-export type ChunkEntryRequirement = { kind: 'quest'; id: string } | { kind: 'unknown'; label: string };
-export type ChunkEntryVerdict = { status: 'READY' | 'LOCKED' | 'UNKNOWN'; requirements: ChunkEntryRequirement[] };
-
-const canonicalEntryQuest = (reference: string): string => catalogQuest(reference)?.data.id ?? reference;
-const canonicalEntryQuests = (references: Set<string>): Set<string> => new Set([...references].map(canonicalEntryQuest));
-
-/** Ingestion boundary for the legacy chunk source. A new phrase is data review, never permission. */
-export function evaluateChunkEntryRequirements(
-  sections: Record<string, string[]>, chunkId: string, completed: Set<string>, known: Set<string>,
-): ChunkEntryVerdict {
-  return evaluateCanonicalChunkEntryRequirements(sections, chunkId, canonicalEntryQuests(completed), canonicalEntryQuests(known));
-}
-
-function evaluateCanonicalChunkEntryRequirements(
-  sections: Record<string, string[]>, chunkId: string, completed: Set<string>, known: Set<string>,
-): ChunkEntryVerdict {
-  if (!Object.hasOwn(sections, chunkId)) return { status: 'READY', requirements: [] };
-  const raw: unknown = sections[chunkId];
-  if (!Array.isArray(raw)) return { status: 'UNKNOWN', requirements: [{ kind: 'unknown', label: 'Malformed chunk entry requirements' }] };
-  const requirements: ChunkEntryRequirement[] = raw.map(value => typeof value === 'string' && known.has(canonicalEntryQuest(value))
-    ? { kind: 'quest', id: canonicalEntryQuest(value) }
-    : { kind: 'unknown', label: typeof value === 'string' ? value : 'Malformed chunk entry requirement' });
-  return {
-    status: requirements.some(value => value.kind === 'unknown') ? 'UNKNOWN'
-      : requirements.some(value => value.kind === 'quest' && !completed.has(value.id)) ? 'LOCKED' : 'READY',
-    requirements,
+    const reqs = questSections[chunkId];
+    if (!reqs) return false;
+    return reqs.some(r => knownQuests.has(r) && !completedQuests.has(r));
   };
 }
 
@@ -128,28 +94,6 @@ export function questChunkStatus(
 }
 
 export type DoabilityBucket = 'DONE' | 'DOABLE' | 'REQS' | 'STRANDED' | 'LOCKED' | 'NO_DATA';
-
-/** Use one reachable entrance per authored destination; alternative entrances are OR. */
-export function authoredQuestChunkStatus(
-  quest: QuestData,
-  reachable: Set<string>,
-  isUnlocked: (cx: number, cy: number) => boolean,
-  gameModeId?: string,
-  routeUnlocks?: UnlockState,
-): QuestChunkStatus {
-  if (gameModeId === 'chunked' && quest.chunkedGeography) {
-    return questChunkStatus(chooseChunkQuestLocations(quest.chunkedGeography, reachable, isUnlocked, routeUnlocks), reachable, isUnlocked);
-  }
-  const destinations = (quest.locations ?? []).flatMap(location => {
-    const options = location.chunkOptions;
-    const selected = options.find(point => reachable.has(idOf(point.cx, point.cy)))
-      ?? options.find(point => isUnlocked(point.cx, point.cy))
-      ?? options[0];
-    return selected ? [selected] : [];
-  });
-  return questChunkStatus(destinations, reachable, isUnlocked);
-}
-
 export const hasCanonicalQuestLocationEvidence = (quest: QuestData): boolean =>
   quest.regions.length > 0
   || (quest.locations?.length ?? 0) > 0
@@ -179,20 +123,4 @@ export function doabilityBucket(
   if (chunk.access === 'LOCKED') return 'LOCKED';
   if (chunk.access === 'STRANDED') return 'STRANDED';
   return reqsMet ? 'DOABLE' : 'REQS'; // all chunks reachable — only reqs can block now
-}
-
-/** Only tracked hard gates belong in the compact player requirements summary. */
-export function questOperationalBlockerLabels(quest: QuestData, unlocks: UnlockState, gameModeId?: string): string[] {
-  const labels = (predicate: RequirementPredicate): string[] => {
-    if (predicate.kind === 'all') return predicate.of.flatMap(labels);
-    const evaluated = evaluatePredicate(predicate, { unlocks, gameModeId });
-    if (evaluated.status !== 'LOCKED') return [];
-    if (predicate.kind === 'any') {
-      const alternatives = predicate.of.map(option => labels(option).join(' + '));
-      return alternatives.every(Boolean) ? [alternatives.join(' or ')] : [];
-    }
-    if (['manual', 'unknown', 'item', 'itemSource', 'bossKill', 'slayerTask', 'accountMode'].includes(predicate.kind)) return [];
-    return predicate.kind === 'equipment' && predicate.label ? [predicate.label] : evaluated.checks;
-  };
-  return [...new Set(questOperationalRequirements(quest).flatMap(labels))];
 }

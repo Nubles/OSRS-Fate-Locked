@@ -166,7 +166,7 @@ describe('buildRuneliteBundle — unlockedChunks presence', () => {
     } finally {
       vi.unstubAllGlobals();
     }
-  }, 20_000); // Full dataset compression is an integration check, not a 5-second performance assertion.
+  });
   it('fits the complete rules snapshot inside the relay limit', async () => {
     vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
@@ -196,7 +196,7 @@ describe('buildRuneliteBundle — unlockedChunks presence', () => {
     } finally {
       vi.unstubAllGlobals();
     }
-  }, 20_000);
+  });
 });
 
 describe('buildRuneliteBundle - canonical area names', () => {

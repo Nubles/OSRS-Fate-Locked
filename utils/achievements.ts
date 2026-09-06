@@ -1,4 +1,3 @@
-import { completedQuestIds, questPointsForReferences } from '../data/questCatalog';
 /**
  * Achievements & milestones engine.
  *
@@ -59,9 +58,9 @@ const TOTAL_EQUIP_SLOTS = EQUIPMENT_SLOTS.length;
 const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0);
 
 // ── Metric helpers ─────────────────────────────────────────────────────────
-const questsDone = (u: UnlockState) => completedQuestIds(u.quests).size;
+const questsDone = (u: UnlockState) => u.quests.length;
 const questPoints = (u: UnlockState) =>
-  questPointsForReferences(u.quests);
+  u.quests.reduce((acc, qid) => acc + (QUEST_DATA[qid]?.points ?? 0), 0);
 const skillsStarted = (u: UnlockState) =>
   Object.values(u.skills).filter((t) => t > 0).length;
 const skillTiers = (u: UnlockState) => sum(Object.values(u.skills));

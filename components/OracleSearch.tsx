@@ -10,7 +10,6 @@ import {
   STORAGE_LIST, GUILDS_LIST, SLAYER_UNLOCKS_LIST, MISTHALIN_AREAS, wikiUrlFor
 } from '../constants';
 import { QUEST_DATA } from '../data/questData';
-import { completedQuestIds, questId } from '../data/questCatalog';
 import { DIARY_DATA } from '../data/diaryData';
 import { CA_DATA } from '../data/caData';
 import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
@@ -59,7 +58,6 @@ const getWikiUrl = wikiUrlFor;
 
 export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
   const { unlocks, gameModeId } = useGame();
-  const completedQuests = useMemo(() => completedQuestIds(unlocks.quests ?? []), [unlocks.quests]);
   const [query, setQuery] = useState('');
   const [isRunningTest, setIsRunningTest] = useState(false);
   // World-entity search (monsters / objects / NPCs / spawns / shops / quest
@@ -260,7 +258,7 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
         isUnlocked = unlocks.slayerUnlocks.includes(item.name);
         break;
       case TableType.QUESTS:
-        isUnlocked = completedQuests.has(questId(item.id as string)!);
+        isUnlocked = unlocks.quests.includes(item.id as string);
         detail = isUnlocked ? "Completed" : "Not Started";
         break;
       case TableType.DIARIES:

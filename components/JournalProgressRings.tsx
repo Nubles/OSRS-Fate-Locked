@@ -1,4 +1,3 @@
-import { completedQuestIds, questPointsForReferences } from '../data/questCatalog';
 import React, { useMemo } from 'react';
 import { useGame } from '../context/GameContext';
 import { QUEST_DATA } from '../data/questData';
@@ -34,10 +33,10 @@ export const JournalProgressRings: React.FC = () => {
   const { unlocks } = useGame();
   const stats = useMemo(() => {
     const questTotal = Object.keys(QUEST_DATA).length;
-    const questDone = completedQuestIds(unlocks.quests).size;
-    const qp = questPointsForReferences(unlocks.quests);
+    const questDone = unlocks.quests.length;
+    const qp = unlocks.quests.reduce((a, id) => a + (QUEST_DATA[id]?.points ?? 0), 0);
     const diaryTotal = Object.keys(DIARY_DATA).length;
-    const diaryDone = [...new Set(unlocks.diaries)].filter(id => Object.hasOwn(DIARY_DATA, id)).length;
+    const diaryDone = unlocks.diaries.length;
     const caTotal = ALL_CA_TASKS.length;
     const caDone = ALL_CA_TASKS.filter(t => unlocks.completedTasks.includes(t.id)).length;
     return { questTotal, questDone, qp, diaryTotal, diaryDone, caTotal, caDone };

@@ -100,47 +100,6 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({
 
         <div className="overflow-y-auto custom-scrollbar p-3 sm:p-4">
           <div className="space-y-2">
-            {compensation?.status === 'pending' && (
-              <div className="rounded-lg border border-violet-400/30 bg-violet-950/20 p-3">
-                <h4 className="text-sm font-bold text-violet-200">Your compensation options</h4>
-                <div className="mt-2 space-y-1 text-sm text-gray-300">
-                  <p>
-                    {compensation.chaosKeys} missed Chaos Key{compensation.chaosKeys === 1 ? '' : 's'}
-                  </p>
-                  <p>
-                    {compensation.pityKeys} missed Standard Pity Key{compensation.pityKeys === 1 ? '' : 's'}
-                  </p>
-                  <p>Resulting Fate balance: {compensation.fatePoints}</p>
-                </div>
-                <p className="mt-2 text-xs text-gray-400">
-                  This choice is permanent and cannot be changed later.
-                </p>
-                <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                  <button
-                    type="button"
-                    onClick={() => onResolveCompensation?.('none')}
-                    className="rounded-md border border-white/15 px-3 py-2 text-xs font-semibold text-gray-200 hover:bg-white/5"
-                  >
-                    Continue without compensation
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onResolveCompensation?.('chaos')}
-                    className="rounded-md border border-cyan-400/30 bg-cyan-950/30 px-3 py-2 text-xs font-semibold text-cyan-200 hover:bg-cyan-900/30"
-                  >
-                    Claim Chaos Keys only
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onResolveCompensation?.('full')}
-                    className="rounded-md bg-violet-500 px-3 py-2 text-xs font-bold text-white hover:bg-violet-400"
-                  >
-                    Claim full compensation
-                  </button>
-                </div>
-              </div>
-            )}
-
             {releases.map((release) => {
               const expanded = expandedReleaseIds.has(release.id);
               const panelId = panelIdFor(release.id);
@@ -179,6 +138,47 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({
                   >
                     {expanded && (
                       <div className="space-y-4">
+                        {compensation?.status === 'pending'
+                          && release.id === compensation.releaseId && (
+                          <div className="rounded-lg border border-violet-400/30 bg-violet-950/20 p-3">
+                            <h4 className="text-sm font-bold text-violet-200">Your compensation options</h4>
+                            <div className="mt-2 space-y-1 text-sm text-gray-300">
+                              <p>
+                                {compensation.chaosKeys} missed Chaos Key{compensation.chaosKeys === 1 ? '' : 's'}
+                              </p>
+                              <p>
+                                {compensation.pityKeys} missed Standard Pity Key{compensation.pityKeys === 1 ? '' : 's'}
+                              </p>
+                              <p>Resulting Fate balance: {compensation.fatePoints}</p>
+                            </div>
+                            <p className="mt-2 text-xs text-gray-400">
+                              This choice is permanent and cannot be changed later.
+                            </p>
+                            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                              <button
+                                type="button"
+                                onClick={() => onResolveCompensation?.('none')}
+                                className="rounded-md border border-white/15 px-3 py-2 text-xs font-semibold text-gray-200 hover:bg-white/5"
+                              >
+                                Continue without compensation
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => onResolveCompensation?.('chaos')}
+                                className="rounded-md border border-cyan-400/30 bg-cyan-950/30 px-3 py-2 text-xs font-semibold text-cyan-200 hover:bg-cyan-900/30"
+                              >
+                                Claim Chaos Keys only
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => onResolveCompensation?.('full')}
+                                className="rounded-md bg-violet-500 px-3 py-2 text-xs font-bold text-white hover:bg-violet-400"
+                              >
+                                Claim full compensation
+                              </button>
+                            </div>
+                          </div>
+                        )}
                         {SECTION_META.map(({ key, label, icon: Icon, color }) => {
                           const notes = release.sections[key];
                           if (!notes?.length) return null;

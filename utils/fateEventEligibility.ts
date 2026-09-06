@@ -261,11 +261,10 @@ export function classifyFateEvent(
     return { state: 'BLOCKED', reason: 'Account does not match this run.' };
   }
   if (event.runRevision !== state.runRevision) {
-    const older = event.runRevision < state.runRevision;
-    const current = older ? classifyFateEvent({ ...event, runRevision: state.runRevision }, state) : null;
     return needsConfirmation(
-      older ? 'The run changed after this event was detected.' : 'The event was detected against a newer run state.',
-      (current?.state === 'READY' || current?.state === 'NEEDS_CONFIRMATION' && Boolean(current.candidates?.length)) ? [{ label: 'Recheck against current progress', target: '__recheck__' }] : undefined,
+      event.runRevision < state.runRevision
+        ? 'The run changed after this event was detected.'
+        : 'The event was detected against a newer run state.',
     );
   }
   if (event.rulesVersion !== RULES_VERSION || event.contentVersion !== CONTENT_VERSION) {
@@ -387,28 +386,4 @@ export function classifyFateEventCandidate(
     );
   }
   return needsConfirmation('This event does not support candidate review.');
-}
-
-
-/** A review is bound to one revision; later edits require fresh confirmation. */
-export function classifyReviewedInboxEvent(event: FateEventEnvelope, state: GameState, reason?: string): EventClassification {
-  const match = /^reviewed-revision:(\d+):(.*)$/.exec(reason ?? '');
-  if (match) {
-    const revision = Number(match[1]);
-    if (revision !== state.runRevision || event.runRevision > revision) return classifyFateEvent(event, state);
-    const currentEvent = { ...event, runRevision: revision };
-    const result = match[2] ? classifyFateEventCandidate(currentEvent, state, match[2]) : classifyFateEvent(currentEvent, state);
-    if (result.state === 'READY') {
-      const p = result.progress;
-      const completed = p.kind === 'SKILL_LEVEL' ? (state.unlocks.levels[p.skill] ?? 1) >= p.level
-        : p.kind === 'QUEST' ? state.unlocks.quests.includes(p.questId)
-        : p.kind === 'CA_TASK' || p.kind === 'DIARY_TASK' ? state.unlocks.completedTasks.includes(p.taskId)
-        : p.kind === 'COLLECTION_ITEM' ? (state.unlocks.collectionLog[p.itemId] ?? 0) >= 1 : false;
-      if (completed) return { state: 'DUPLICATE', reason: 'This progress is already recorded in the run.' };
-    }
-    return result;
-  }
-  return reason?.startsWith('candidate:')
-    ? classifyFateEventCandidate(event, state, reason.slice('candidate:'.length))
-    : classifyFateEvent(event, state);
 }

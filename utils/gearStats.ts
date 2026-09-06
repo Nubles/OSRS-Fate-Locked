@@ -35,8 +35,6 @@ export interface GearItem {
   imageFile: string;
   speed: number;
   twoHanded: boolean;
-  /** Upstream combat-style category. Missing cached data must not imply capabilities. */
-  category?: string;
   bonuses: GearBonuses;
 }
 

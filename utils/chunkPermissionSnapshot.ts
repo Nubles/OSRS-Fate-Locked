@@ -1,8 +1,7 @@
-import { ownsService } from '../data/serviceCatalog';
 import type { GameModeRules } from '../config/gameModes';
 import { BANK_BY_ID } from '../data/banks';
 import { BOSSES_LIST, MINIGAMES_LIST } from '../data/items';
-import { catalogQuest } from '../data/questCatalog';
+import { QUEST_DATA } from '../data/questData';
 import type {
   ChunkContent,
   Shortcut,
@@ -79,12 +78,12 @@ function questStatus(
   name: string,
   context: ChunkPermissionContext,
 ): PermissionStatus {
-  const quest = catalogQuest(name)?.data;
+  const quest = QUEST_DATA[name]
+    ?? Object.values(QUEST_DATA).find((candidate) => candidate.name === name);
   if (!quest) return 'UNKNOWN';
   const status = getQuestStatus(quest, context.unlocks, context.gameModeId);
   if (status === 'COMPLETED' || status === 'AVAILABLE') return 'ALLOWED';
   if (status === 'LOCKED_REGION') return 'LOCKED';
-  if (status === 'UNKNOWN') return 'UNKNOWN';
   return 'NOT_READY';
 }
 
@@ -139,7 +138,7 @@ export function buildChunkPermissionSnapshot(
     const category = classifyShop(name);
     const status: PermissionStatus = category == null
       ? 'UNKNOWN'
-      : ownsService('merchants', context.unlocks.merchants, category) ? 'ALLOWED' : 'LOCKED';
+      : context.unlocks.merchants.includes(category) ? 'ALLOWED' : 'LOCKED';
     add('SHOPS', {
       key: `shop:${name.toLowerCase()}`,
       name,

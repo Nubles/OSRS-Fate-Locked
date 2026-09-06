@@ -56,7 +56,7 @@ export function rankLockedRegions(unlocks: any, gameModeId?: string): RankedRegi
         ...unlocks,
         regions: [...new Set([...visibleRegions, ...REGION_GROUPS[region]])],
       };
-      const impact = computeUnlockImpact(unlocks, simulated, gameModeId, { includeConditional: true });
+      const impact = computeUnlockImpact(unlocks, simulated);
 
       return {
         id: region,

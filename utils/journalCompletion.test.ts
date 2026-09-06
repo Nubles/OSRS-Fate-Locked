@@ -27,7 +27,7 @@ describe('journal completion decisions', () => {
   });
 
   const malformedQuest = (overrides: Partial<QuestData>): QuestData => ({
-    operationalRequirements: [], id: 'Malformed policy quest',
+    id: 'Malformed policy quest',
     name: 'Malformed policy quest',
     kind: 'quest',
     accessPolicy: 'regions',
@@ -143,7 +143,6 @@ describe('journal completion decisions', () => {
       quest,
       { ...oneLocation, chunks: ['42,55', '42,54'] },
       'chunked',
-      { manualConfirmed: true },
     )).toEqual({ ok: true });
   });
 
@@ -180,7 +179,7 @@ describe('journal completion decisions', () => {
     const ready = unlocksReadyForPryingTimes();
     expect(questCompletionDecision(task, ready, 'vanilla')).toEqual({
       ok: false,
-      reason: expect.stringContaining('Confirm: One open Sailing task slot'),
+      reason: 'Confirm: One open Sailing task slot',
     });
     expect(questCompletionDecision(
       task,
@@ -218,7 +217,7 @@ describe('journal completion decisions', () => {
       levels: { Slayer: 1 },
     });
 
-    expect(questCompletionDecision(quest, available, 'vanilla', { manualConfirmed: true })).toEqual({ ok: true });
+    expect(questCompletionDecision(quest, available, 'vanilla')).toEqual({ ok: true });
 
     const reserved = withJournalCompletion(
       available,
@@ -321,7 +320,7 @@ describe('journal completion decisions', () => {
     });
     expect(questCompletionDecision(quest, machineReady, 'vanilla')).toEqual({
       ok: false,
-      reason: expect.stringContaining('Confirm: Access to all required elemental altars through one route: surface altars with Misthalin and Kharidian Desert; the Abyss through Edgeville with Enter the Abyss completed; or Guardians of the Rift with Misthalin and Temple of the Eye completed'),
+      reason: 'Confirm: Access to all required elemental altars through one route: surface altars with Misthalin and Kharidian Desert; the Abyss through Edgeville with Enter the Abyss completed; or Guardians of the Rift with Misthalin and Temple of the Eye completed',
     });
     expect(questCompletionDecision(
       quest,
@@ -346,15 +345,3 @@ describe('journal completion decisions', () => {
     )).toEqual({ ok: true });
   });
 });
-
-// This suite isolates destination/skill/manual behavior with known legal supplies.
-// Acquisition availability itself is covered by itemAcquisition and source tests.
-import { beforeEach as beforeSupplyTest, afterEach as afterSupplyTest, vi as supplySpy } from 'vitest';
-import { chunkContentService as suppliedItemsFixture } from '../services/ChunkContentService';
-let restoreSupplyFixture: (() => void)[] = [];
-beforeSupplyTest(() => {
-  const ready = supplySpy.spyOn(suppliedItemsFixture, 'ready', 'get').mockReturnValue(true);
-  const records = supplySpy.spyOn(suppliedItemsFixture, 'itemSourceRecords').mockImplementation(itemName => [{ itemName, kind: 'spawn', hostName: 'Test prepared supplies', cx: 50, cy: 50, rawRequirements: [] }]);
-  restoreSupplyFixture = [() => ready.mockRestore(), () => records.mockRestore()];
-});
-afterSupplyTest(() => restoreSupplyFixture.forEach(restore => restore()));

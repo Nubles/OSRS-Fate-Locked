@@ -13,10 +13,8 @@ import {
     GUILDS_LIST, FARMING_PATCH_LIST, MISTHALIN_AREAS
 } from '../constants';
 import { CheckCircle, XCircle, Lock, Map, BookOpen, AlertCircle, Compass, Target, Search, ScrollText, Filter, Pin, SlidersHorizontal, Check, ArrowUpRight, TrendingUp, Sparkles, BrainCircuit } from 'lucide-react';
-import { evaluateDiaryTierEligibility, evaluateQuestEligibility, meetsSkillRequirement } from '../utils/journalStatus';
-import { actualSkillLevel } from '../utils/skillLevels';
-import { getActivityReq } from '../data/activityRequirements';
-import { evaluateActivityReadiness } from '../utils/activityReadiness';
+import { evaluateDiaryTierEligibility, meetsSkillRequirement } from '../utils/journalStatus';
+import { effectiveSkillLevel } from '../utils/slayerReach';
 import { enforcedQuestAreas } from '../utils/questGeographyDisplay';
 
 const ROOT_UNLOCKS = {
@@ -35,13 +33,6 @@ const ROOT_UNLOCKS = {
 };
 
 export const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameModeId?: string) => {
-    const canonicalActivity = ROOT_UNLOCKS[req.category]?.has(req.id) ? getActivityReq(req.id) : undefined;
-    if (canonicalActivity) {
-        req = { ...req, regions: [], skills: canonicalActivity.skills ?? {},
-            quests: canonicalActivity.quests ?? [], diaries: [], items: [], alternatives: [],
-            requirementsReviewed: undefined };
-    }
-
     const missingRegions = req.regions.filter(r => {
         return !isAreaReachable(r, unlocks, gameModeId);
     });
@@ -49,7 +40,7 @@ export const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameMo
     const missingSkills = Object.entries(req.skills).filter(([skill, level]) => {
         return !meetsSkillRequirement(unlocks, skill, level as number);
     }).map(([skill, level]) => {
-        const currentLevel = actualSkillLevel(unlocks, skill);
+        const currentLevel = effectiveSkillLevel(unlocks, skill);
         const isUnlocked = (unlocks.skills[skill] || 0) > 0;
         return { skill, reqLevel: level as number, currentLevel, isUnlocked };
     });
@@ -76,51 +67,22 @@ export const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameMo
         }
     })();
 
-    // Keep the planner tied to the same complete gates as journal/activity views.
-    const journal = req.category === TableType.QUESTS && QUEST_DATA[req.id]
-        ? evaluateQuestEligibility(QUEST_DATA[req.id], unlocks, gameModeId)
-        : req.category === TableType.DIARIES && DIARY_DATA[req.id]
-            ? evaluateDiaryTierEligibility(DIARY_DATA[req.id], unlocks, gameModeId)
-            : undefined;
-    const activity = ROOT_UNLOCKS[req.category]?.has(req.id)
-        ? evaluateActivityReadiness(isCategoryUnlocked, getActivityReq(req.id), unlocks, gameModeId)
-        : undefined;
-    const extraChecks = [
-        ...(req.requirementsReviewed === false ? ['Additional item, method and activity requirements need review'] : []),
-        ...(req.items ?? []).map(item => `Confirm available and legal: ${item}`),
-        ...(req.diaries ?? []).filter(id => !unlocks.diaries?.includes(id)).map(id => `Complete ${id}`),
-    ];
-    const missingChecks = [...new Set([
-        ...extraChecks,
-        ...(journal?.blockers.map(blocker => blocker.label).filter(label =>
-            !missingRegions.includes(label) && !missingQuests.includes(label)
-            && !missingSkills.some(skill => `${skill.skill} ${skill.reqLevel}` === label)
-            && !missingAlternatives.some(alternative => alternative.label === label)) ?? []),
-        ...(journal?.manualChecks ?? []),
-        ...(journal && !journal.eligible && !journal.blockers.length && !journal.manualChecks.length
-            ? ['Requirements remain unverified'] : []),
-        ...(activity && 'checks' in activity ? activity.checks : []),
-        ...(activity?.status === 'NOT_READY' ? activity.blockers.map(blocker => blocker.label) : []),
-    ])];
-
     const totalReqs = req.regions.length + Object.keys(req.skills).length
-        + (req.quests?.length || 0) + (req.alternatives?.length || 0) + missingChecks.length + 1;
+        + (req.quests?.length || 0) + (req.alternatives?.length || 0) + 1;
     const metReqs = (req.regions.length - missingRegions.length) + 
                     (Object.keys(req.skills).length - missingSkills.length) + 
                     ((req.quests?.length || 0) - missingQuests.length) +
                     (isCategoryUnlocked ? 1 : 0);
                     
-    const completionPercent = journal?.eligible && !extraChecks.length ? 100 : totalReqs === 0 ? 100 : Math.round((metReqs / totalReqs) * 100);
+    const completionPercent = totalReqs === 0 ? 100 : Math.round((metReqs / totalReqs) * 100);
 
     return {
-        isFullyPlayable: journal ? journal.eligible && !extraChecks.length : missingRegions.length === 0 && missingSkills.length === 0
-            && missingQuests.length === 0 && missingAlternatives.length === 0 && missingChecks.length === 0
-            && (!activity || activity.status === 'READY') && isCategoryUnlocked,
+        isFullyPlayable: missingRegions.length === 0 && missingSkills.length === 0
+            && missingQuests.length === 0 && missingAlternatives.length === 0 && isCategoryUnlocked,
         missingRegions,
         missingSkills,
         missingQuests,
         missingAlternatives,
-        missingChecks,
         isCategoryUnlocked,
         completionPercent
     };
@@ -150,7 +112,6 @@ export const calculateProphecyScore = (req: ContentRequirement, analysis: any) =
     });
     score += analysis.missingQuests.length * 20;
     score += analysis.missingAlternatives.length * 20;
-    score += analysis.missingChecks.length * 20;
     if (!analysis.isCategoryUnlocked) score += 30;
     return score;
 };
@@ -166,12 +127,12 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
     const allContent = useMemo<Record<string, ContentRequirement>>(() => {
         const database: Record<string, ContentRequirement> = {};
         Object.values(QUEST_DATA).forEach(q => {
-            if (unlocks.quests.includes(q.id)) return;
-            database[q.id] = {
-                id: q.id,
+            if (unlocks.quests.includes(q.name)) return;
+            database[q.name] = {
+                id: q.name,
                 category: TableType.QUESTS,
                 regions: enforcedQuestAreas(q),
-                skills: Object.fromEntries(Object.entries(q.skills).filter(([skill]) => SKILLS_LIST.includes(skill))),
+                skills: q.skills,
                 quests: q.prereqs,
                 description: `Series: ${q.series || 'None'} | Difficulty: ${q.difficulty.replace('Quest (', '').replace(')', '')}`
             };
@@ -179,9 +140,12 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
         Object.values(DIARY_DATA).forEach(d => {
             if (unlocks.diaries.includes(d.id)) return;
             const eligibility = evaluateDiaryTierEligibility(d, unlocks, gameModeId);
-            const skills = Object.fromEntries(eligibility.blockers.flatMap(blocker =>
-                blocker.kind === 'skill' && blocker.requirement?.type === 'single'
-                    ? [[blocker.requirement.skill, blocker.requirement.level]] : []));
+            const skills = Object.fromEntries(eligibility.blockers
+                .filter(blocker => blocker.kind === 'skill' || blocker.kind === 'combat')
+                .map(blocker => {
+                    const parsed = blocker.label.match(/^(.*) (\d+)$/);
+                    return parsed ? [parsed[1], Number(parsed[2])] : [blocker.label, 1];
+                }));
             database[d.id] = {
                 id: d.id,
                 category: TableType.DIARIES,
@@ -209,12 +173,7 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
         });
         Object.entries(STRATEGY_DATABASE).forEach(([key, val]) => {
             if (val.category === TableType.QUESTS && unlocks.quests.includes(val.id)) return;
-            // Curated strategy descriptions must not overwrite canonical gates.
-            if (database[key]) return;
-            database[key] = {
-                ...val,
-                requirementsReviewed: ROOT_UNLOCKS[val.category]?.has(val.id) ? undefined : false,
-            };
+            database[key] = { ...val, id: key };
         });
         return database;
     }, [unlocks, gameModeId]);
@@ -391,7 +350,7 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                                     </div>
                                 ) : (
                                     filteredPlanner.map(content => {
-                                        const { missingRegions, missingSkills, missingQuests, missingAlternatives, missingChecks, isCategoryUnlocked, completionPercent } = content.analysis;
+                                        const { missingRegions, missingSkills, missingQuests, missingAlternatives, isCategoryUnlocked, completionPercent } = content.analysis;
                                         const isPinned = pinnedGoals.includes(content.uniqueId);
                                         const progressColor = completionPercent > 75 ? 'bg-green-500' : completionPercent > 40 ? 'bg-yellow-500' : 'bg-red-500';
                                         
@@ -434,9 +393,6 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                                                             const isMissing = missingQuests.includes(q);
                                                             return <div key={q} className={`flex items-center gap-1.5 px-2 py-1.5 rounded border text-xs font-mono transition-colors ${isMissing ? 'bg-red-900/20 border-red-500/30 text-red-400' : 'bg-green-900/10 border-green-500/20 text-green-500/70'}`}><ScrollText size={12} />{q}{isMissing ? <Lock size={10} /> : <Check size={10} />}</div>
                                                         })}
-                                                        {missingChecks.map(check => (
-                                                            <div key={check} className="flex items-center gap-1.5 px-2 py-1.5 rounded border text-xs text-amber-300 border-amber-500/30"><AlertCircle size={12} />{check}</div>
-                                                        ))}
                                                         {(content.alternatives ?? []).map(alternative => (
                                                             <AlternativeRequirementChip
                                                                 key={alternative.label}

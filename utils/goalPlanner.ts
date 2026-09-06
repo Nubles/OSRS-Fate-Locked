@@ -13,7 +13,6 @@
  */
 
 import { QUEST_CAPE_QUEST_IDS, QUEST_DATA, QuestData } from '../data/questData';
-import { canonicalQuestUnlocks, catalogQuest } from '../data/questCatalog';
 import { DIARY_DATA, DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { REGION_GROUPS } from '../data/items';
@@ -24,16 +23,13 @@ import {
   evaluateDiaryTaskEligibility, questRequirementOptionLabel, DirectEligibilityBlocker,
 } from './journalStatus';
 import { isAreaReachable } from './reachability';
-import { actualCombatLevel } from './slayerReach';
-import { actualSkillLevel } from './skillLevels';
-import { evaluateChunkQuestGeography, evaluateChunkRouteRequirements, type ChunkQuestLocation } from './questChunkGeography';
-import { chunkKey, isChunkUnlocked } from './chunkAdjacency';
+import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
 
 export type GoalKind = 'quest' | 'diary' | 'region';
 
 export interface PlanStep {
   /** What kind of thing this step is. */
-  kind: 'quest' | 'region' | 'skill' | 'qp' | 'manual' | 'requirement';
+  kind: 'quest' | 'region' | 'skill' | 'qp' | 'manual';
   /** Stable id: quest id, region name, skill name, or 'Quest Points'. */
   id: string;
   /** Display label. */
@@ -46,7 +42,6 @@ export interface PlanStep {
   relatedIds?: string[];
   /** Already satisfied in the current unlocks snapshot. */
   done: boolean;
-  internalOnly?: boolean;
 }
 
 export interface AlternativePlanRoute {
@@ -128,7 +123,7 @@ function questPointsFor(questId: string): number {
 
 /** Total quest points the player currently has. */
 function currentQuestPoints(unlocks: any): number {
-  return [...new Set(unlocks.quests as string[])].reduce(
+  return (unlocks.quests as string[]).reduce(
     (acc, qid) => acc + questPointsFor(qid),
     0,
   );
@@ -150,7 +145,6 @@ function requirementOptionPlanSteps(option: any): PlanStep[] {
 }
 
 function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): PlanStep {
-  if (blocker.kind === 'requirement') return { kind: 'requirement', id: blocker.label, label: blocker.label, done: false };
   if (blocker.kind === 'region') return areaPlanStep(blocker.label);
   if (blocker.kind === 'quest') {
     return { kind: 'quest', id: blocker.label, label: blocker.label, unlockTable: TableType.QUESTS, done: false };
@@ -166,7 +160,7 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
   const requirement = blocker.requirement;
   if (requirement?.type === 'combined') {
     const levels = requirement.skills.map(skill => [
-      skill, actualSkillLevel(unlocks, skill),
+      skill, effectiveSkillLevel(unlocks, skill),
     ] as const);
     const have = levels.reduce((sum, [, level]) => sum + level, 0);
     return {
@@ -187,7 +181,7 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
       unlockTable: TableType.SKILLS,
       detail: 'Lv ' + requirement.level + ' in either (have '
         + requirement.skills.map(skill => (
-          skill + ' ' + actualSkillLevel(unlocks, skill)
+          skill + ' ' + effectiveSkillLevel(unlocks, skill)
         )).join(', ') + ')',
       done: false,
     };
@@ -208,7 +202,7 @@ function planStepForBlocker(blocker: DirectEligibilityBlocker, unlocks: any): Pl
     : Number(match?.[2] ?? 1);
   return {
     kind: 'skill', id: skill, label: skill, relatedIds: [skill], unlockTable: TableType.SKILLS,
-    detail: 'Lv ' + required + ' (have ' + actualSkillLevel(unlocks, skill) + ')', done: false,
+    detail: 'Lv ' + required + ' (have ' + effectiveSkillLevel(unlocks, skill) + ')', done: false,
   };
 }
 
@@ -236,45 +230,6 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
 
     const eligibility = evaluateQuestEligibility(q, unlocks, gameModeId);
     if (eligibility.status === 'COMPLETED') return;
-    const geography = gameModeId === 'chunked' ? q.chunkedGeography : undefined;
-    if (geography) {
-      const locationRoutes = (location: ChunkQuestLocation): AlternativePlanRoute[] => location.chunkOptions.map(point => ({
-        label: `${location.label} (${chunkKey(point)})`,
-        blockers: isChunkUnlocked(chunkKey(point), unlocks.chunks ?? []) ? [] : [{
-          kind: 'region', id: chunkKey(point), label: `${location.label} (${chunkKey(point)})`,
-          unlockTable: TableType.CHUNKS, done: false,
-        }],
-      }));
-      for (const location of geography.locations) {
-        const assessment = evaluateChunkQuestGeography({ locations: [location], groups: [], unknowns: [] }, unlocks, unlocks);
-        if (!assessment.blockers.length) continue;
-        const id = `chunk:${qid}:${location.id}`;
-        alternatives.set(id, { kind: 'alternative', id, label: location.label, done: false, routes: locationRoutes(location) });
-      }
-      for (const group of geography.groups) {
-        const assessment = evaluateChunkQuestGeography({ locations: [], groups: [group], unknowns: [] }, unlocks, unlocks);
-        if (!assessment.blockers.length && !assessment.unknowns.length) continue;
-        const id = `chunk-route:${qid}:${group.id}`;
-        alternatives.set(id, {
-          kind: 'alternative', id, label: group.label, done: false,
-          routes: group.routes.map(route => ({
-            label: route.label,
-            blockers: [
-              ...route.locations.flatMap(location => {
-                const options = locationRoutes(location);
-                if (options.some(option => !option.blockers.length)) return [];
-                // Coordinate alternatives belong to one destination, not separate mandatory chunks.
-                if (options.length === 1) return options[0].blockers;
-                return [{ kind: 'requirement' as const, id: `${id}:${location.id}`, label: options.map(option => option.label).join(' or ') || 'Unverified location', done: false }];
-              }),
-              ...evaluateChunkRouteRequirements(route, unlocks).checks.map(label => ({ kind: 'requirement' as const, id: `${id}:permission:${label}`, label, done: false, internalOnly: true })),
-              ...(route.unknowns ?? []).map(label => ({ kind: 'requirement' as const, id: `${id}:${label}`, label, done: false, internalOnly: true })),
-              ...(!route.locations.length && !route.unknowns?.length && !route.requirements?.length ? [{ kind: 'requirement' as const, id: `${id}:empty`, label: 'Unverified route', done: false, internalOnly: true }] : []),
-            ],
-          })),
-        });
-      }
-    }
 
     const questPointRequirement = q.skills['Quest Points'];
     if (questPointRequirement !== undefined) {
@@ -296,12 +251,7 @@ function collectQuestChain(rootQuestId: string, unlocks: any, gameModeId?: strin
       .join(' or ');
 
     for (const blocker of eligibility.blockers) {
-      if (blocker.kind === 'requirement') {
-        manualSteps.set(`requirement:${qid}:${blocker.label}`, { kind: 'requirement', id: `requirement:${qid}:${blocker.label}`, label: blocker.label, done: false, internalOnly: blocker.internalOnly });
-        continue;
-      }
       if (blocker.kind === 'region') {
-        if (geography) continue;
         if (alternativeLabel && blocker.label === alternativeLabel) {
           const label = 'One of: ' + blocker.label;
           alternatives.set(label, {
@@ -367,7 +317,7 @@ function buildPlanFromRequirements(
         : (unlocks.levels[skill] ?? 1);
       const have = skill === 'Combat level'
         ? rawLevel
-        : actualSkillLevel(unlocks, skill);
+        : effectiveSkillLevel(unlocks, skill);
       const tier = unlocks.skills[skill] ?? 0;
       const unlocked = tier > 0;
       const methodCap = Math.min(99, tier * 10);
@@ -466,9 +416,7 @@ function buildPlanFromRequirements(
  * @param unlocks  current unlocks snapshot
  */
 export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameModeId?: string): GoalPlan | null {
-  unlocks = canonicalQuestUnlocks(unlocks);
   if (kind === 'quest') {
-    id = catalogQuest(id)?.data.id ?? id;
     const q: QuestData | undefined = QUEST_DATA[id];
     if (!q) return null;
     const eligibility = evaluateQuestEligibility(q, unlocks, gameModeId);
@@ -537,12 +485,6 @@ export function planForTarget(kind: GoalKind, id: string, unlocks: any, gameMode
         }
         const blockers = eligibility.blockers;
         for (const blocker of blockers) {
-          if (blocker.kind === 'requirement') {
-            merged.manualSteps.set('requirement:' + blocker.label, {
-              kind: 'requirement', id: `requirement:${task.id}:${blocker.label}`,
-              label: blocker.label, detail: `Required for ${task.description}`, done: false,
-            });
-          }
           if (blocker.kind === 'region') merged.regions.add(canonicalAreaName(blocker.label));
           if (blocker.kind === 'alternative') {
             const label = 'One of: ' + blocker.label;

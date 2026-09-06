@@ -2,7 +2,6 @@ import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 import { REGION_GROUPS, MISTHALIN_AREAS } from '../constants';
 import { isAreaReachable } from './reachability';
-import { chunkKey, isChunkUnlocked } from './chunkAdjacency';
 import { UnlockState } from '../types';
 import type { ChunkCoord } from './mapCoords';
 import {
@@ -81,7 +80,6 @@ const nameUnlocked = (name: string, unlocks: UnlockState, gameModeId?: string): 
 
 /** Sub-area-first unlock check, matching the world map's colouring. */
 export const chunkUnlocked = (cx: number, cy: number, unlocks: UnlockState, gameModeId?: string): boolean => {
-  if (gameModeId === 'chunked') return isChunkUnlocked(chunkKey({ cx, cy }), unlocks.chunks ?? []);
   const k = key(cx, cy);
   const sub = CHUNK_SUB[k];
   if (sub) return nameUnlocked(sub, unlocks, gameModeId);

@@ -42,20 +42,12 @@ jobs:
       - name: Build
         # VITE_BASE makes the bundle's asset paths match the GitHub Pages
         # project URL (/<repo-name>/) — works no matter what the repo is named.
-        run: npm run build:verify
+        run: npm run build
         env:
           VITE_BASE: /${{ github.event.repository.name }}/
           # Stamps the bundle + version.json so an open tab can detect this
           # deploy and offer a reload (see components/UpdateBanner.tsx).
           BUILD_ID: ${{ github.sha }}
-
-      - name: Install browser runtime
-        run: npx playwright install --with-deps chromium
-
-      - name: Browser critical flows
-        run: npm run test:browser
-        env:
-          VITE_BASE: /${{ github.event.repository.name }}/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

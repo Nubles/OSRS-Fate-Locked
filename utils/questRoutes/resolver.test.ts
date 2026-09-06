@@ -1441,7 +1441,7 @@ describe('recursive recipe boundary composition', () => {
     const analysis = resolveItemRequirement(requirement('Gated output'), recursiveFixture({
       records: [
         itemSource('Gated ingredient', {
-          rawRequirements: [{ raw: 'Crafting level 20', origin: 'CHUNK_ENTRY' }],
+          rawRequirements: [{ raw: 'Crafting level 20', origin: 'ENTITY' }],
         }),
         itemSource('Gated tool', {
           rawRequirements: [{ raw: 'Dragon Slayer I Complete the quest', origin: 'ENTITY' }],
@@ -1483,7 +1483,7 @@ describe('recursive recipe boundary composition', () => {
     ]));
     expect(analysis.currentRoutes[0]).toMatchObject({
       consumedIngredientCost: 1,
-      skillUnlockCost: 1,
+      skillUnlockCost: 2,
       skillLevelCost: 35,
     });
   });
@@ -1495,7 +1495,7 @@ describe('recursive recipe boundary composition', () => {
     });
     const analysis = resolveItemRequirement(requirement('Repeated skill output'), recursiveFixture({
       records: [itemSource('Repeated skill input', {
-        rawRequirements: [{ raw: 'Mining level 30', origin: 'CHUNK_ENTRY' }],
+        rawRequirements: [{ raw: 'Mining level 30', origin: 'ENTITY' }],
       })],
       recipes: [repeatedSkill],
     }));

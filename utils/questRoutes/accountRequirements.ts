@@ -1,4 +1,4 @@
-import { catalogQuest, completedQuestIds } from '../../data/questCatalog';
+import { QUEST_DATA } from '../../data/questData';
 import {
   GUILDS_LIST,
   MERCHANTS_LIST,
@@ -7,8 +7,8 @@ import {
   SKILLS_LIST,
   SLAYER_UNLOCKS_LIST,
 } from '../../data/items';
-import { actualSkillLevel, usableMethodLevel } from '../skillLevels';
-import { isRouteGateUsable, type SourceKind, type ExactItemSource, type RawRouteRequirement, type RouteGate } from './model';
+import { meetsSkillRequirement } from '../journalStatus';
+import type { ExactItemSource, RawRouteRequirement, RouteGate } from './model';
 
 export interface GateEvaluation {
   blockers: RouteGate[];
@@ -29,6 +29,7 @@ export interface RouteGateAccountState {
 type UnlockCategory = Extract<RouteGate, { type: 'UNLOCK' }>['category'];
 
 const normalise = (value: string): string => value.trim().replace(/\s+/g, ' ').toLocaleLowerCase('en-GB');
+const questIds = new Map(Object.keys(QUEST_DATA).map((id) => [normalise(id), id]));
 const skills = new Map(SKILLS_LIST.map((skill) => [normalise(skill), skill]));
 
 const unlockAliases: readonly [UnlockCategory, readonly string[], readonly string[]][] = [
@@ -52,17 +53,17 @@ const parseQuest = (requirement: RawRouteRequirement): RouteGate | null => {
   const complete = requirement.raw.match(/^(.+?)\s+complete the quest$/i);
   const candidate = complete?.[1];
   const questId = candidate
-    ? catalogQuest(candidate)?.data.id
-    : requirement.origin === 'CHUNK_ENTRY' ? catalogQuest(requirement.raw)?.data.id : undefined;
+    ? questIds.get(normalise(candidate))
+    : requirement.origin === 'CHUNK_ENTRY' ? questIds.get(normalise(requirement.raw)) : undefined;
   return questId ? questGate(questId) : null;
 };
 
-const parseSkill = (raw: string, semantics?: 'actual' | 'method'): RouteGate | null => {
+const parseSkill = (raw: string): RouteGate | null => {
   const match = raw.match(/^(.+?)\s+level\s+(\d+)$/i);
   if (!match) return null;
   const skill = skills.get(normalise(match[1]));
   const level = Number(match[2]);
-  return semantics && skill && Number.isSafeInteger(level) && level > 0 && level <= 99 ? { type: 'SKILL', skill, level, label: `${skill} level ${level}`, semantics } : null;
+  return skill && level > 0 ? { type: 'SKILL', skill, level, label: `${skill} level ${level}` } : null;
 };
 
 const parseUnlock = (raw: string): RouteGate | null => {
@@ -86,18 +87,17 @@ const parseUnlock = (raw: string): RouteGate | null => {
 };
 
 /** Converts only reviewed source wording into account gates; all other wording remains evidence. */
-export const compileRawRequirements = (rawRequirements: readonly RawRouteRequirement[], sourceKind?: SourceKind): RouteGate[] => rawRequirements.map((evidence) => {
-  if (!evidence || typeof evidence.raw !== 'string' || !['ENTITY', 'CHUNK_ENTRY'].includes(evidence.origin)) return unresolved('Invalid source requirement');
+export const compileRawRequirements = (rawRequirements: readonly RawRouteRequirement[]): RouteGate[] => rawRequirements.map((evidence) => {
   const requirement = evidence.raw.trim();
   const normalisedEvidence = { ...evidence, raw: requirement };
-  return parseQuest(normalisedEvidence) ?? parseSkill(requirement, evidence.origin === 'CHUNK_ENTRY' ? 'actual' : sourceKind === 'GATHER' || sourceKind === 'RECIPE' ? 'method' : undefined) ?? parseUnlock(requirement) ?? unresolved(evidence.raw);
+  return parseQuest(normalisedEvidence) ?? parseSkill(requirement) ?? parseUnlock(requirement) ?? unresolved(evidence.raw);
 });
 
 /** Appends compiled gates while preserving the original structured source evidence. */
 export const compileSourceRequirements = (source: ExactItemSource): ExactItemSource => ({
   ...source,
   rawRequirements: source.rawRequirements.map(requirement => ({ ...requirement })),
-  gates: [...source.gates, ...compileRawRequirements(source.rawRequirements, source.kind)],
+  gates: [...source.gates, ...compileRawRequirements(source.rawRequirements)],
 });
 
 export const evaluateRouteGates = (
@@ -106,29 +106,18 @@ export const evaluateRouteGates = (
 ): GateEvaluation => {
   const blockers: RouteGate[] = [];
   let hasDataGap = false;
-  const completed = completedQuestIds(unlocks.quests);
 
   for (const gate of gates) {
-    if (!isRouteGateUsable(gate)) {
-      hasDataGap = true;
-      blockers.push({ type: 'UNRESOLVED', raw: 'Invalid route gate', label: 'Invalid route gate' });
-      continue;
-    }
     switch (gate.type) {
-      case 'QUEST': {
-        const quest = catalogQuest(gate.questId);
-        if (!quest) hasDataGap = true;
-        if (!quest || !completed.has(quest.id)) blockers.push(gate);
+      case 'QUEST':
+        if (!unlocks.quests.includes(gate.questId)) blockers.push(gate);
         break;
-      }
       case 'SKILL':
-        if ((gate.semantics === 'actual' ? actualSkillLevel(unlocks, gate.skill) : usableMethodLevel(unlocks, gate.skill)) < gate.level) blockers.push(gate);
+        if (!meetsSkillRequirement(unlocks, gate.skill, gate.level)) blockers.push(gate);
         break;
       case 'UNLOCK':
-        if (!unlockAliases.find(([category]) => category === gate.category)?.[1].includes(gate.id)) hasDataGap = true;
-        if (!unlockAliases.find(([category]) => category === gate.category)?.[1].includes(gate.id) || !Array.isArray(unlocks[gate.category]) || !unlocks[gate.category].includes(gate.id)) blockers.push(gate);
+        if (!unlocks[gate.category].includes(gate.id)) blockers.push(gate);
         break;
-      default:
       case 'UNRESOLVED':
         hasDataGap = true;
         blockers.push(gate);

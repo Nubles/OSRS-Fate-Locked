@@ -23,7 +23,7 @@ describe('QuestCard geography integration', () => {
     const eligibility: QuestEligibility = {
       eligible: false,
       machineEligible: false,
-      manualChecks: ['Internal manual requirement evidence'],
+      manualChecks: [],
       confirmable: false,
       status: 'LOCKED_REGION',
       evidence: [],
@@ -51,11 +51,9 @@ describe('QuestCard geography integration', () => {
     expect(html).not.toContain('Misthalin');
     expect(html).not.toContain('Asgarnia');
     expect(html).toContain('0/2 reqs');
-    expect(html).not.toContain('Internal manual requirement evidence');
-    expect(html).not.toContain('Needs confirmation before completion');
   });
 
-  it('does not expose partial known-step evidence on quest cards', () => {
+  it('renders distinct same-label Known-step coordinates once each', () => {
     vi.spyOn(chunkContentService, 'entityLocations').mockReturnValue({
       name: 'Tale of the Righteous',
       kind: 'quest',
@@ -84,8 +82,7 @@ describe('QuestCard geography integration', () => {
       }),
     );
 
-    expect(html).not.toContain('show on map');
-    expect(html).not.toContain('Known steps');
+    expect(html.match(/show on map/g)).toHaveLength(2);
   });
 });
 

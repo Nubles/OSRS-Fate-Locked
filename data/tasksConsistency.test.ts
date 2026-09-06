@@ -14,7 +14,6 @@ import { ALL_CHUNK_KEYS, chunkKey } from '../utils/chunkAdjacency';
 import { REGION_CHUNKS } from './regionChunks';
 import { SUB_AREA_CHUNKS } from './subAreaChunks';
 import { AREA_ALIAS_POLICIES, AREA_REFERENCES } from './areaMapPolicy';
-import locationReview from './sources/quest-location-review.json';
 
 /**
  * Integrity guards for the per-task lists that drive CALog / DiaryLog.
@@ -269,17 +268,7 @@ describe('Quest data integrity', () => {
               ...(AREA_REFERENCES[area]?.chunks ?? []),
             ].some(candidate => chunkKey(candidate) === key)
           ));
-          if (!ownsCoordinate) {
-            // Standard permissions describe named places; Chunked permissions describe
-            // surface tiles. A sourced entrance/boundary may legitimately differ.
-            const reviewed = locationReview.entries.find(entry => entry.id === questId && entry.status === 'reviewed');
-            const sourceLocation = reviewed?.locations.find(candidate => candidate.id === location.id);
-            const mapping = sourceLocation && 'standardAreaMapping' in sourceLocation ? sourceLocation.standardAreaMapping : undefined;
-            const supportedMapping = mapping?.kind === 'logical-area'
-              && mapping.reason.trim().length > 30
-              && reviewed?.evidence.some(evidence => evidence.locationId === location.id);
-            if (!supportedMapping) mismatch.push(questId + ' -> ' + location.id + ' -> ' + key);
-          }
+          if (!ownsCoordinate) mismatch.push(questId + ' -> ' + location.id + ' -> ' + key);
         }
       }
     }

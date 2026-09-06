@@ -8,12 +8,10 @@ export function ActivityReadinessBadge({
   const label = readiness.status === 'LOCKED' ? 'Not owned'
     : readiness.status === 'NOT_READY' ? 'Not ready'
     : readiness.status === 'NEEDS_CONFIRMATION' ? 'Check required'
-    : readiness.status === 'UNKNOWN' ? 'Unknown'
     : 'Ready';
 
   const summary = readiness.status === 'NOT_READY'
     ? readiness.blockers.map(blocker => blocker.label).join(', ')
-    : readiness.status === 'UNKNOWN' ? readiness.checks.join(', ')
     : readiness.status === 'NEEDS_CONFIRMATION'
       ? 'Confirm: ' + readiness.checks.join(', ')
       : '';
@@ -22,7 +20,7 @@ export function ActivityReadinessBadge({
     ? 'border-gray-500/20 bg-gray-500/10 text-gray-400'
     : readiness.status === 'NOT_READY'
       ? 'border-red-500/20 bg-red-900/20 text-red-300'
-      : readiness.status === 'NEEDS_CONFIRMATION' || readiness.status === 'UNKNOWN'
+      : readiness.status === 'NEEDS_CONFIRMATION'
         ? 'border-cyan-500/20 bg-cyan-900/20 text-cyan-300'
         : 'border-emerald-500/20 bg-emerald-900/20 text-emerald-300';
 

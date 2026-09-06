@@ -1,4 +1,3 @@
-import { privateRuneProofAssets } from './scripts/runeproof-public-assets.mjs';
 
 import { defineConfig, normalizePath, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -38,7 +37,6 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       runeProofPreviewBoundaryPlugin(includeRuneProofPreview),
-      privateRuneProofAssets(includeRuneProofPreview),
       {
         name: 'emit-version-json',
         generateBundle() {
@@ -50,13 +48,10 @@ export default defineConfig(({ mode }) => {
     base: process.env.VITE_BASE || '/',
     ...{
       test: {
-        setupFiles: ['./testSetup.ts'],
-        exclude: [...configDefaults.exclude, '**/.worktrees/**', 'browser-tests/**'],
+        exclude: [...configDefaults.exclude, '**/.worktrees/**'],
       },
     },
     build: {
-      // Keep the existing browser target while updating the build tool's security fixes.
-      target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14'],
       outDir: 'dist',
       assetsDir: 'assets',
       rollupOptions: {

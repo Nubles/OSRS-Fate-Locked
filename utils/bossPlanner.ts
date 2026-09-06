@@ -26,10 +26,6 @@ export interface PlayerCombat {
   gear: { bonuses: GearBonuses; speedTicks: number };
   /** Prayers (Piety/Rigour) + potions (super/ranging) applied. */
   boostsOn: boolean;
-  /** Explicit Unarmed when no weapon; undefined means equipment data is unavailable. */
-  weaponCategory?: string;
-  /** Ranged ammo compatibility, quantity or internal charges are not tracked by loadouts. */
-  rangedSuppliesConfirmed?: boolean;
 }
 
 export type Readiness = 'excellent' | 'good' | 'workable' | 'slow' | 'undergeared';
@@ -61,44 +57,22 @@ export const BOSS_ALIASES: Record<string, string> = {
   'Barrows Brothers': 'Ahrim the Blighted',
 };
 
-interface Combo { style: Style; attackType: AttackType; stanceId: string }
-const melee = (attackType: AttackType, stanceId = 'aggressive'): Combo => ({ style: 'melee', attackType, stanceId });
-// Reviewed against weirdgloop/osrs-dps-calc src/utils.ts getCombatStylesForCategory, 2026-09-05.
-// Only supported baseline melee/ranged categories are listed. Unknown and magic weapons stay unmodelled.
-const slashCrush = [melee('slash', 'accurate'), melee('slash'), melee('crush')];
-const stabSlash = [melee('stab', 'accurate'), melee('stab'), melee('slash')];
-const crush = [melee('crush', 'accurate'), melee('crush')];
-const RANGED = ['Bow', 'Crossbow', 'Thrown'];
-const CATEGORY_COMBOS: Record<string, Combo[]> = {
-  Unarmed: crush, Whip: [melee('slash', 'accurate'), melee('slash', 'controlled')],
-  '2h Sword': slashCrush, Axe: slashCrush, Scythe: slashCrush,
-  'Slash Sword': [melee('slash', 'accurate'), melee('slash'), melee('stab', 'controlled')],
-  'Stab Sword': stabSlash, Flail: [melee('slash', 'accurate'), melee('slash')],
-  Spear: ['stab', 'slash', 'crush'].map(t => melee(t as AttackType, 'controlled')),
-  Pickaxe: [melee('stab', 'accurate'), melee('stab'), melee('crush')],
-  Partisan: [melee('stab', 'accurate'), melee('stab'), melee('crush')],
-  'Multi-Melee': [melee('stab', 'accurate'), melee('slash'), melee('crush')],
-  Polearm: [melee('stab', 'controlled'), melee('slash')],
-  Blunt: crush, Bludgeon: [melee('crush')], Bulwark: [melee('crush', 'accurate')],
-  Bow: [{ style: 'ranged', attackType: 'ranged', stanceId: 'accurate' }, { style: 'ranged', attackType: 'ranged', stanceId: 'rapid' }],
-  Crossbow: [{ style: 'ranged', attackType: 'ranged', stanceId: 'accurate' }, { style: 'ranged', attackType: 'ranged', stanceId: 'rapid' }],
-  Thrown: [{ style: 'ranged', attackType: 'ranged', stanceId: 'accurate' }, { style: 'ranged', attackType: 'ranged', stanceId: 'rapid' }],
-};
-export const bossLoadoutIssue = (player: PlayerCombat): string | null => {
-  if (!player.weaponCategory || !Object.hasOwn(CATEGORY_COMBOS, player.weaponCategory)) return 'Weapon attack styles are not modelled; use the DPS tab with a verified setup.';
-  if (RANGED.includes(player.weaponCategory) && !player.rangedSuppliesConfirmed) return 'Confirm compatible ammunition or internal charges before estimating ranged damage.';
-  return null;
-};
+const COMBOS: { style: Style; attackType: AttackType }[] = [
+  { style: 'melee', attackType: 'stab' },
+  { style: 'melee', attackType: 'slash' },
+  { style: 'melee', attackType: 'crush' },
+  { style: 'ranged', attackType: 'ranged' },
+];
 
 const accuracyFor = (b: GearBonuses, t: AttackType): number =>
   t === 'stab' ? b.stab : t === 'slash' ? b.slash : t === 'crush' ? b.crush : t === 'ranged' ? b.ranged : b.magic;
 const monDefFor = (m: MonsterLite, t: AttackType): number =>
   t === 'stab' ? m.def.stab : t === 'slash' ? m.def.slash : t === 'crush' ? m.def.crush : t === 'ranged' ? m.def.ranged : m.def.magic;
 
-const runCombo = (p: PlayerCombat, m: MonsterLite, style: Style, attackType: AttackType, stanceId = style === 'ranged' ? 'rapid' : 'aggressive') =>
+const runCombo = (p: PlayerCombat, m: MonsterLite, style: Style, attackType: AttackType) =>
   computeDps({
     style, attackType,
-    stanceId,
+    stanceId: style === 'ranged' ? 'rapid' : 'aggressive',
     prayerId: p.boostsOn ? (style === 'ranged' ? 'rigour' : 'piety') : 'none',
     potionId: p.boostsOn ? (style === 'ranged' ? 'ranging' : 'super') : 'none',
     baseSpellMax: 0,
@@ -140,13 +114,11 @@ const dangerOf = (maxHit: number, hp: number): Danger => {
 };
 
 /** Compute the best plan for a boss. */
-export const planBoss = (player: PlayerCombat, monster: MonsterLite): BossPlan | null => {
-  if (bossLoadoutIssue(player)) return null;
-  const combos = CATEGORY_COMBOS[player.weaponCategory!];
-  let best = runCombo(player, monster, combos[0].style, combos[0].attackType, combos[0].stanceId);
-  let bestCombo = combos[0];
-  for (const c of combos.slice(1)) {
-    const r = runCombo(player, monster, c.style, c.attackType, c.stanceId);
+export const planBoss = (player: PlayerCombat, monster: MonsterLite): BossPlan => {
+  let best = runCombo(player, monster, COMBOS[0].style, COMBOS[0].attackType);
+  let bestCombo = COMBOS[0];
+  for (const c of COMBOS.slice(1)) {
+    const r = runCombo(player, monster, c.style, c.attackType);
     if (r.dps > best.dps) { best = r; bestCombo = c; }
   }
 

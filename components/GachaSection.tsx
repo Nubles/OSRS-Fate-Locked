@@ -316,7 +316,7 @@ export const GachaSection: React.FC = () => {
     Object.values(rec ?? {}).filter((v) => (v as number) > 0).length;
   const SPEND_CATEGORIES: { type: TableType; label: string; subLabel: string; iconSrc?: string; icon?: any; unlocked: number; total: number; can: boolean }[] = [
     { type: TableType.EQUIPMENT, label: 'Equipment', subLabel: 'Upgrade Gear', iconSrc: OSRS_GACHA_ICONS.EQUIPMENT, unlocked: tierCount(unlocks.equipment), total: EQUIPMENT_SLOTS.length, can: canUnlock.equipment },
-    { type: TableType.SKILLS, label: 'Skills', subLabel: '+10 Method Levels', iconSrc: OSRS_GACHA_ICONS.SKILLS, unlocked: tierCount(unlocks.skills), total: SKILLS_LIST.length, can: canUnlock.skills },
+    { type: TableType.SKILLS, label: 'Skills', subLabel: '+10 Level Cap', iconSrc: OSRS_GACHA_ICONS.SKILLS, unlocked: tierCount(unlocks.skills), total: SKILLS_LIST.length, can: canUnlock.skills },
     isChunked
       ? { type: TableType.CHUNKS, label: 'Chunks', subLabel: 'Adjacent Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: (unlocks.chunks ?? []).length, total: ALL_CHUNK_KEYS.length, can: canUnlock.chunks }
       : { type: TableType.REGIONS, label: 'Areas', subLabel: 'New Territory', iconSrc: OSRS_GACHA_ICONS.REGIONS, unlocked: canonicalizeAreaUnlocks(unlocks.regions ?? []).regions.length, total: REGIONS_LIST.length, can: canUnlock.regions },

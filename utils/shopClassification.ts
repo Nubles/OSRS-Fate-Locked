@@ -172,8 +172,8 @@ export const classifyShop = (shopName: string): string | null => {
   const normalizedName = shopName.trim().toLowerCase();
   const normalizedVariant = normalizedName.replace(/\.$/, '');
   const normalizedBase = normalizedName.replace(/#.*$/, '').replace(/\.$/, '');
-  const override = (Object.hasOwn(SHOP_CATEGORY_OVERRIDES, normalizedVariant) ? SHOP_CATEGORY_OVERRIDES[normalizedVariant] : undefined)
-    ?? (Object.hasOwn(SHOP_CATEGORY_OVERRIDES, normalizedBase) ? SHOP_CATEGORY_OVERRIDES[normalizedBase] : undefined);
+  const override = SHOP_CATEGORY_OVERRIDES[normalizedVariant]
+    ?? SHOP_CATEGORY_OVERRIDES[normalizedBase];
   if (override) return override;
   for (const [re, category] of RULES) {
     if (re.test(shopName)) return category;

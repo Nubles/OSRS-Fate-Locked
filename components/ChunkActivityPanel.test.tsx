@@ -45,17 +45,17 @@ const rowForPryingTimes = (): ChunkQuestRow => {
 describe('chunk activity quest row helpers', () => {
   it('puts a machine-available manual-pending quest in Locked with its reason', () => {
     const row = rowForPryingTimes();
-    expect(row.status).toBe('NEEDS_CONFIRMATION');
+    expect(row.status).toBe('AVAILABLE');
     expect(chunkQuestOverviewItem(row, true)).toEqual({
       can: false,
-      label: expect.stringMatching(/Prying Times.*Confirm: One open Sailing task slot.*quest actions/),
+      label: `Prying Times \u2014 Confirm: One open Sailing task slot`,
     });
   });
 
   it('gives manual-pending catalogue rows a distinct confirmation indicator', () => {
     expect(chunkQuestPresentation(rowForPryingTimes())).toEqual({
       kind: 'confirmation',
-      title: expect.stringMatching(/^Confirm: One open Sailing task slot.*quest actions/),
+      title: 'Confirm: One open Sailing task slot',
     });
   });
 
@@ -63,11 +63,9 @@ describe('chunk activity quest row helpers', () => {
     const manual = rowForPryingTimes();
     const automatic: ChunkQuestRow = {
       ...manual,
-      status: 'AVAILABLE',
       eligibility: {
         ...(manual.eligibility as NonNullable<ChunkQuestRow['eligibility']>),
         eligible: true,
-        status: 'AVAILABLE',
         machineEligible: true,
         confirmable: true,
         manualChecks: [],
@@ -80,9 +78,7 @@ describe('chunk activity quest row helpers', () => {
       eligibility: {
         ...automatic.eligibility!,
         eligible: false,
-        status: 'LOCKED_REGION',
         machineEligible: false,
-        confirmable: false,
       },
     };
     const untracked: ChunkQuestRow = {
@@ -129,15 +125,3 @@ describe('chunk activity quest row helpers', () => {
     expect(chunkQuestStatusLabel('locked', 'locked')).toBe('Locked');
   });
 });
-
-// This suite isolates destination/skill/manual behavior with known legal supplies.
-// Acquisition availability itself is covered by itemAcquisition and source tests.
-import { beforeEach as beforeSupplyTest, afterEach as afterSupplyTest, vi as supplySpy } from 'vitest';
-import { chunkContentService as suppliedItemsFixture } from '../services/ChunkContentService';
-let restoreSupplyFixture: (() => void)[] = [];
-beforeSupplyTest(() => {
-  const ready = supplySpy.spyOn(suppliedItemsFixture, 'ready', 'get').mockReturnValue(true);
-  const records = supplySpy.spyOn(suppliedItemsFixture, 'itemSourceRecords').mockImplementation(itemName => [{ itemName, kind: 'spawn', hostName: 'Test prepared supplies', cx: 50, cy: 50, rawRequirements: [] }]);
-  restoreSupplyFixture = [() => ready.mockRestore(), () => records.mockRestore()];
-});
-afterSupplyTest(() => restoreSupplyFixture.forEach(restore => restore()));

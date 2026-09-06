@@ -46,27 +46,18 @@ describe('Journal next-best diary readiness', () => {
     );
   });
 
-  it('surfaces Prying Times Sailing and source requirements as confirmation blockers', () => {
+  it('classifies Prying Times as close while its Sailing task needs confirmation', () => {
     const prying = journalNextBestQuestAction(
       QUEST_DATA['Prying Times'], pryingTimesUnlocks());
 
     expect(prying).toEqual(expect.objectContaining({
+      unmet: 1,
       firstBlocker: 'Confirm: One open Sailing task slot',
     }));
-    expect(prying!.unmet).toBeGreaterThan(1);
   });
 
   it('caps the ready-or-close feed at eight actions', () => {
-    const ids = Array.from({ length: 10 }, (_, index) => `Synthetic ready quest ${index}`);
-    try {
-      for (const id of ids) QUEST_DATA[id] = {
-        ...QUEST_DATA['Prying Times'], id, name: id, regions: [], prereqs: [], skills: {},
-        manualRequirements: [], operationalRequirements: [],
-      };
-      expect(selectJournalNextBestActions(pryingTimesUnlocks())).toHaveLength(8);
-    } finally {
-      for (const id of ids) delete QUEST_DATA[id];
-    }
+    expect(selectJournalNextBestActions(pryingTimesUnlocks())).toHaveLength(8);
   });
 
   it('shows Varrock Hard as close while Kudos needs confirmation', () => {
@@ -88,15 +79,3 @@ describe('Journal next-best diary readiness', () => {
     ]);
   });
 });
-
-// This suite isolates destination/skill/manual behavior with known legal supplies.
-// Acquisition availability itself is covered by itemAcquisition and source tests.
-import { beforeEach as beforeSupplyTest, afterEach as afterSupplyTest, vi as supplySpy } from 'vitest';
-import { chunkContentService as suppliedItemsFixture } from '../services/ChunkContentService';
-let restoreSupplyFixture: (() => void)[] = [];
-beforeSupplyTest(() => {
-  const ready = supplySpy.spyOn(suppliedItemsFixture, 'ready', 'get').mockReturnValue(true);
-  const records = supplySpy.spyOn(suppliedItemsFixture, 'itemSourceRecords').mockImplementation(itemName => [{ itemName, kind: 'spawn', hostName: 'Test prepared supplies', cx: 50, cy: 50, rawRequirements: [] }]);
-  restoreSupplyFixture = [() => ready.mockRestore(), () => records.mockRestore()];
-});
-afterSupplyTest(() => restoreSupplyFixture.forEach(restore => restore()));

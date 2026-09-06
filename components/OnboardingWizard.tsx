@@ -394,10 +394,10 @@ export const OnboardingWizard: React.FC = () => {
          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10"></div>
       </div>
 
-      <div className="relative w-full max-w-4xl max-h-[calc(100dvh-2rem)] md:h-[600px] bg-[#161616] border border-white/10 rounded-2xl shadow-2xl flex overflow-y-auto md:overflow-hidden">
+      <div className="relative w-full max-w-4xl h-[600px] bg-[#161616] border border-white/10 rounded-2xl shadow-2xl flex overflow-hidden">
         
         {/* Left: Interactive Visual */}
-        <div className="hidden md:flex w-1/2 bg-[#0a0a0a] border-r border-white/5 relative flex-col items-center justify-center p-8 overflow-hidden">
+        <div className="w-1/2 bg-[#0a0a0a] border-r border-white/5 relative flex flex-col items-center justify-center p-8 overflow-hidden">
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
             
             <div key={step} className="relative z-10 w-full flex items-center justify-center animate-in zoom-in slide-in-from-bottom-4 duration-500">
@@ -416,20 +416,20 @@ export const OnboardingWizard: React.FC = () => {
         </div>
 
         {/* Right: Content & Controls */}
-        <div className="w-full md:w-1/2 p-6 md:p-12 flex flex-col justify-center relative z-10">
+        <div className="w-1/2 p-12 flex flex-col justify-center relative z-10">
             <div className="mb-auto">
                 <span className={`text-xs font-bold uppercase tracking-[0.2em] ${currentStep.color} mb-2 block`}>
                     Step {step + 1} / {STEPS.length}
                 </span>
                 
-                <h1 className="text-3xl md:text-4xl font-black text-white mb-2 tracking-tight">
+                <h1 className="text-4xl font-black text-white mb-2 tracking-tight">
                     {currentStep.title}
                 </h1>
                 <h2 className="text-xl text-gray-500 font-light mb-6">
                     {currentStep.subtitle}
                 </h2>
                 
-                <p className="text-gray-300 text-base md:text-lg leading-relaxed border-l-2 border-white/10 pl-4 md:pl-6">
+                <p className="text-gray-300 text-lg leading-relaxed border-l-2 border-white/10 pl-6">
                     {currentStep.desc}
                 </p>
             </div>

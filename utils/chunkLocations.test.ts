@@ -61,15 +61,6 @@ describe('placeOf', () => {
 });
 
 describe('chunkUnlocked', () => {
-  it('checks exact owned chunks in Chunked instead of expanding a named area', () => {
-    const state = { ...unlocksWith(['Falador']), chunks: ['48,52'] };
-    expect(chunkUnlocked(50, 50, state, 'chunked')).toBe(true);
-    expect(chunkUnlocked(49, 50, state, 'chunked')).toBe(false);
-    expect(chunkUnlocked(48, 52, state, 'chunked')).toBe(true);
-    expect(chunkUnlocked(48, 51, state, 'chunked')).toBe(false);
-    expect(chunkUnlocked(46, 52, state, 'chunked')).toBe(false);
-  });
-
   it('Misthalin sub-areas are always free', () => {
     // 50,50 = Lumbridge
     expect(chunkUnlocked(50, 50, unlocksWith([]))).toBe(true);

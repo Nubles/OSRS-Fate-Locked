@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { X, Play, Pause, SkipBack, SkipForward, FastForward, ShieldCheck, ShieldAlert, Download, ChevronsRight } from 'lucide-react';
 import { LogEntry } from '../types';
-import { auditHistory, replayInvariants, buildVerifiedBundle, computeRunId, ensureChain } from '../utils/integrity';
+import { verifyChain, replayInvariants, buildVerifiedBundle, computeRunId, ensureChain } from '../utils/integrity';
 import { narrate, detectMilestones, toRunDay } from '../utils/timelapseNarration';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
@@ -31,10 +31,8 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
   useFocusTrap(dialogRef);
   const { gameModeId, customMode } = useGame();
   const chained = useMemo(() => ensureChain(history), [history]);
-  const rules = useMemo(() => resolveModeRules(gameModeId, customMode), [gameModeId, customMode]);
-  const audit = useMemo(() => auditHistory(chained, rules), [chained, rules]);
-  const chainReport = audit.chain;
-  const replay = useMemo(() => replayInvariants(chained, 3, rules), [chained, rules]);
+  const chainReport = useMemo(() => verifyChain(chained), [chained]);
+  const replay = useMemo(() => replayInvariants(chained), [chained]);
   const milestones = useMemo(() => detectMilestones(chained), [chained]);
   const runId = useMemo(() => computeRunId(chained), [chained]);
   const firstTs = chained[0]?.timestamp ?? Date.now();
@@ -76,7 +74,7 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
   const trail = chained.slice(Math.max(0, idx - 4), idx);
 
   // Running stats up to and including `idx` — replay once per index change.
-  const statsAtIdx = useMemo(() => replayInvariants(chained.slice(0, idx + 1), 3, rules), [chained, idx, rules]);
+  const statsAtIdx = useMemo(() => replayInvariants(chained.slice(0, idx + 1)).final, [chained, idx]);
 
   const currentMilestone = milestones.find(m => m.index === idx);
   const jumpNextMilestone = () => {
@@ -127,14 +125,14 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
   return (
     <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Run timelapse" tabIndex={-1} className="fixed inset-0 z-[100] bg-black/95 flex flex-col">
       {/* Top banner — integrity status */}
-      <div className={`shrink-0 px-6 py-3 flex items-center justify-between border-b ${audit.verdict === 'verified' ? 'border-emerald-500/40 bg-emerald-950/40' : 'border-red-500/50 bg-red-950/40'}`}>
+      <div className={`shrink-0 px-6 py-3 flex items-center justify-between border-b ${totalIssues === 0 ? 'border-emerald-500/40 bg-emerald-950/40' : 'border-red-500/50 bg-red-950/40'}`}>
         <div className="flex items-center gap-3">
-          {audit.verdict === 'verified'
+          {totalIssues === 0
             ? <ShieldCheck size={22} className="text-emerald-400" />
             : <ShieldAlert size={22} className="text-red-400" />}
           <div>
-            <div className={`text-sm font-bold ${audit.verdict === 'verified' ? 'text-emerald-300' : 'text-red-300'}`}>
-              {audit.verdict === 'verified' ? 'LOCAL CONSISTENCY: OK' : audit.verdict === 'warning' ? 'LOCAL CONSISTENCY: NEEDS REVIEW' : `LOCAL CONSISTENCY: BROKEN — ${totalIssues} issue${totalIssues === 1 ? '' : 's'}`}
+            <div className={`text-sm font-bold ${totalIssues === 0 ? 'text-emerald-300' : 'text-red-300'}`}>
+              {totalIssues === 0 ? 'INTEGRITY: OK' : `INTEGRITY: BROKEN — ${totalIssues} issue${totalIssues === 1 ? '' : 's'}`}
             </div>
             <div className="text-[10px] font-mono text-gray-400 tracking-wide">
               runId: <span className="text-gray-200">{runId ?? '—'}</span>
@@ -148,28 +146,27 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
             onClick={exportBundle}
             disabled={bundleBusy}
             className="px-3 py-1.5 rounded text-xs bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10 flex items-center gap-1.5 disabled:opacity-50"
-            title="Export local history and its checksum; this does not authenticate gameplay"
+            title="Export verified bundle (JSON) with SHA-256 commitment"
           >
             <Download size={13} />
-            {bundleBusy ? 'Preparing…' : 'Export History Bundle'}
+            {bundleBusy ? 'Signing…' : 'Export Verified Bundle'}
           </button>
           <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-white"><X size={20} /></button>
         </div>
       </div>
 
-      <p className="px-6 py-2 text-xs text-gray-400">Local checks cannot independently authenticate gameplay. Legacy histories or missing ritual details require review.</p>
       {/* Live stats strip */}
       <div className="shrink-0 px-6 py-3 flex items-center gap-6 border-b border-white/10 bg-black/40 text-xs">
         <Stat label="Day" value={day} />
-        <Stat label="Rolls" value={statsAtIdx.final.rolls} />
-        <Stat label="Success" value={statsAtIdx.final.rolls === 0 ? '—' : `${Math.round((statsAtIdx.final.successes / statsAtIdx.final.rolls) * 100)}%`} />
-        <Stat label="Omnis" value={statsAtIdx.final.omnis} accent="text-amber-300" />
-        <Stat label="Pities" value={statsAtIdx.final.pities} accent="text-sky-300" />
-        <Stat label="Unlocks" value={statsAtIdx.final.unlocks} accent="text-purple-300" />
-        <Stat label="Keys" value={statsAtIdx.uncertainAt.length ? 'Unknown' : statsAtIdx.final.keys} />
-        <Stat label="Omni-Keys" value={statsAtIdx.uncertainAt.length ? 'Unknown' : statsAtIdx.final.specialKeys} accent="text-amber-300" />
-        <Stat label="Chaos" value={statsAtIdx.uncertainAt.length ? 'Unknown' : statsAtIdx.final.chaosKeys} accent="text-rose-300" />
-        <Stat label="Fate" value={statsAtIdx.uncertainAt.length ? 'Unknown' : `${statsAtIdx.final.fatePoints}${rules.pityEnabled ? `/${rules.pityThreshold}` : ''}`} />
+        <Stat label="Rolls" value={statsAtIdx.rolls} />
+        <Stat label="Success" value={statsAtIdx.rolls === 0 ? '—' : `${Math.round((statsAtIdx.successes / statsAtIdx.rolls) * 100)}%`} />
+        <Stat label="Omnis" value={statsAtIdx.omnis} accent="text-amber-300" />
+        <Stat label="Pities" value={statsAtIdx.pities} accent="text-sky-300" />
+        <Stat label="Unlocks" value={statsAtIdx.unlocks} accent="text-purple-300" />
+        <Stat label="Keys" value={statsAtIdx.keys} />
+        <Stat label="Omni-Keys" value={statsAtIdx.specialKeys} accent="text-amber-300" />
+        <Stat label="Chaos" value={statsAtIdx.chaosKeys} accent="text-rose-300" />
+        <Stat label="Fate" value={`${statsAtIdx.fatePoints}/50`} />
         <div className="ml-auto text-gray-400 font-mono text-[10px]">{idx + 1} / {chained.length}</div>
       </div>
 

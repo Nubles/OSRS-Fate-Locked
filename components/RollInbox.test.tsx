@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { initialState } from '../context/GameContext';
@@ -253,39 +253,4 @@ describe('RollInbox', () => {
     expect(store.list()[0].state).toBe('RECEIVED');
     expect(acknowledge).not.toHaveBeenCalled();
   });
-  it('explicitly revalidates a stale event and rolls against the reviewed revision', async () => {
-    const user = userEvent.setup();
-    const { store, acceptDetectedEvent } = setup(event(), gameState({ runRevision: 8 }));
-    expect(screen.queryByRole('button', { name: /^Roll$/ })).toBeNull();
-    await user.click(screen.getByRole('button', { name: /^Review$/ }));
-    expect(store.list()[0].event.runRevision).toBe(7);
-    expect(classifyRollInboxDriverRow(store.list()[0], gameState({ runRevision: 8 })).state).toBe('READY');
-    await user.click(screen.getByRole('button', { name: /^Roll$/ }));
-    expect(acceptDetectedEvent).toHaveBeenCalledWith(expect.anything(), expect.anything(), expect.anything(), expect.objectContaining({runRevision:8}));
-  });
-  it('requires another review after changes and does not reaward recorded progress', async () => {
-    const user = userEvent.setup();
-    const { store } = setup(event(), gameState({ runRevision: 8 }));
-    await user.click(screen.getByRole('button', { name: /^Review$/ }));
-    expect(classifyRollInboxDriverRow(store.list()[0], gameState({ runRevision:9 })).state).toBe('NEEDS_CONFIRMATION');
-    expect(classifyRollInboxDriverRow(store.list()[0], gameState({ runRevision:8, unlocks:{...initialState.unlocks,quests:['Dragon Slayer I']} })).state).toBe('DUPLICATE');
-    expect(classifyRollInboxDriverRow(store.list()[0], gameState({ runRevision:8,linkedAccount:'Other' })).state).toBe('BLOCKED');
-  });
-
-  it('preserves revised context while a stale event still needs a candidate choice', async () => {
-    const user = userEvent.setup();
-    const { store, acceptDetectedEvent } = setup(event('SLAYER_TASK','Slayer task',{detectorId:'slayer-task-v1'}), gameState({runRevision:8}));
-    await user.click(screen.getByRole('button',{name:/^Review$/}));
-    const row = store.list()[0];
-    const reviewed = classifyRollInboxDriverRow(row,gameState({runRevision:8}));
-    expect(reviewed.state).toBe('NEEDS_CONFIRMATION');
-    act(() => { store.transition(row.event.eventId,'NEEDS_CONFIRMATION',row.reason); });
-    await user.click(screen.getByRole('button',{name:/^Review$/}));
-    expect(store.list()[0].reason).toContain('Slayer');
-    expect(classifyRollInboxDriverRow(store.list()[0],gameState({runRevision:8})).state).toBe('READY');
-    await user.click(screen.getByRole('button',{name:/^Roll$/}));
-    expect(acceptDetectedEvent).toHaveBeenCalledOnce();
-    expect(store.list()[0].event.runRevision).toBe(7);
-  });
-
 });

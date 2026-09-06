@@ -15,8 +15,7 @@ const PRIVATE_RELEASE_MARKERS = [
   '5307348d9dab40a1801d78b06660af566112223a339dfa017f4a43306149bd5f',
   '0f50a69f17989b9b244ba0f47f1461c65d720eece2b9603ad14158850ad53cdd',
 ] as const;
-const WORKSPACE_MARKER = 'Close RuneProof';
-const LEGACY_MARKER = 'Independently authored quest steps and F2P chunk locations.';
+const PUBLIC_MARKER = 'Independently authored quest steps and F2P chunk locations.';
 const outputs: string[] = [];
 
 const emittedFiles = async (directory: string): Promise<string[]> => {
@@ -38,7 +37,7 @@ describe('RuneProof production bundle boundary', () => {
     await Promise.all(outputs.splice(0).map(path => rm(path, { recursive: true, force: true })));
   });
 
-  it('ships the workspace and its assets only in the explicit private preview', async () => {
+  it('separates the private preview payload from the normal production bundle', async () => {
     const normal = await mkdtemp(join(tmpdir(), 'runeproof-normal-'));
     const preview = await mkdtemp(join(tmpdir(), 'runeproof-preview-'));
     outputs.push(normal, preview);
@@ -58,16 +57,10 @@ describe('RuneProof production bundle boundary', () => {
     expect(await bundleContains(normal, PRIVATE_MARKER)).toBe(false);
     await expect(Promise.all(PRIVATE_RELEASE_MARKERS.map(marker => bundleContains(normal, marker))))
       .resolves.toEqual(PRIVATE_RELEASE_MARKERS.map(() => false));
-    expect(await bundleContains(normal, WORKSPACE_MARKER)).toBe(false);
-    expect((await emittedFiles(normal)).some(path => /[\\/]runeproof[\\/]/.test(path))).toBe(false);
-    expect((await emittedFiles(normal)).some(path => /RuneProofWorkspace/.test(path))).toBe(false);
-    expect(await bundleContains(preview, PRIVATE_MARKER)).toBe(false);
-    expect(await bundleContains(preview, WORKSPACE_MARKER)).toBe(true);
-    expect((await emittedFiles(preview)).some(path => /[\\/]runeproof[\\/]chunk-instructions[\\/]/.test(path))).toBe(true);
-    expect(await bundleContains(normal, LEGACY_MARKER)).toBe(false);
-    expect(await bundleContains(preview, LEGACY_MARKER)).toBe(false);
+    expect(await bundleContains(normal, PUBLIC_MARKER)).toBe(true);
+    expect(await bundleContains(preview, PRIVATE_MARKER)).toBe(true);
     await expect(Promise.all(PRIVATE_RELEASE_MARKERS.map(marker => bundleContains(preview, marker))))
-      .resolves.toEqual(PRIVATE_RELEASE_MARKERS.map(() => false));
+      .resolves.toEqual(PRIVATE_RELEASE_MARKERS.map(() => true));
   }, 120_000);
 
   it('keeps the private preview payload out of production with an inherited preview flag', async () => {
@@ -84,8 +77,6 @@ describe('RuneProof production bundle boundary', () => {
     expect(await bundleContains(normal, PRIVATE_MARKER)).toBe(false);
     await expect(Promise.all(PRIVATE_RELEASE_MARKERS.map(marker => bundleContains(normal, marker))))
       .resolves.toEqual(PRIVATE_RELEASE_MARKERS.map(() => false));
-    expect(await bundleContains(normal, WORKSPACE_MARKER)).toBe(false);
-    expect((await emittedFiles(normal)).some(path => /[\\/]runeproof[\\/]/.test(path))).toBe(false);
-    expect((await emittedFiles(normal)).some(path => /RuneProofWorkspace/.test(path))).toBe(false);
+    expect(await bundleContains(normal, PUBLIC_MARKER)).toBe(true);
   }, 120_000);
 });

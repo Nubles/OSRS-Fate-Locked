@@ -7,9 +7,9 @@ import {
   MAP_IMAGE, MAP_BOUNDS, CHUNK_TILES,
   tileToPixel, ChunkCoord,
 } from '../utils/mapCoords';
-import { ensureChain, auditHistory, computeRunId, replayInvariants } from '../utils/integrity';
+import { ensureChain, verifyChain, computeRunId, replayInvariants } from '../utils/integrity';
 import { useFocusTrap } from '../hooks/useFocusTrap';
-import { getGameMode, resolveModeRules } from '../config/gameModes';
+import { getGameMode } from '../config/gameModes';
 import { chunkKey, isChunkUnlocked, ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 import { visibleAreaUnlocks } from '../data/areaMapPolicy';
 
@@ -267,7 +267,7 @@ const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
                 }}
               />
               <span style={{ verticalAlign: 'middle' }}>
-                {integrityOk ? 'CHECKS PASSED' : 'UNVERIFIED'}
+                {integrityOk ? 'VERIFIED' : 'UNVERIFIED'}
               </span>
             </span>
           </div>
@@ -397,7 +397,7 @@ const KeyChip: React.FC<{ label: string; count: number; color: 'amber' | 'purple
 // ---- modal / trigger --------------------------------------------------------
 
 export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }> = ({ onClose, embedded }) => {
-  const { history, unlocks, keys, specialKeys, chaosKeys, fatePoints, gameModeId, customMode } = useGame();
+  const { history, unlocks, keys, specialKeys, chaosKeys, fatePoints, gameModeId } = useGame();
   const { activeProfileName } = useProfiles();
   const cardRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -406,9 +406,8 @@ export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }>
   const [captured, setCaptured] = useState<string | null>(null);
 
   const chained = React.useMemo(() => ensureChain(history), [history]);
-  const audit = React.useMemo(() => auditHistory(chained, resolveModeRules(gameModeId, customMode)), [chained, gameModeId, customMode]);
-  const chainReport = audit.chain;
-  const replayData = React.useMemo(() => replayInvariants(chained, 3, resolveModeRules(gameModeId, customMode)), [chained, gameModeId, customMode]);
+  const chainReport = React.useMemo(() => verifyChain(chained), [chained]);
+  const replayData = React.useMemo(() => replayInvariants(chained), [chained]);
   const runId = React.useMemo(() => computeRunId(chained), [chained]);
   const firstTs = chained[0]?.timestamp ?? Date.now();
 
@@ -435,7 +434,7 @@ export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }>
     fatePoints,
     firstTs,
     runId,
-    integrityOk: audit.verdict === 'verified',
+    integrityOk: chainReport.ok,
     modeName: getGameMode(gameModeId).name,
   };
 
@@ -519,7 +518,7 @@ export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }>
         </div>
 
         <div className="text-[10px] font-mono text-gray-600 text-center">
-          {runId ?? '—'} · {audit.verdict === 'verified' ? '✓ local history checks passed' : chainReport.ok ? '⚠ legacy or replay uncertainty' : `⚠ ${chainReport.brokenAt.length} broken links`}
+          {runId ?? '—'} · {chainReport.ok ? '✓ chain verified' : `⚠ ${chainReport.brokenAt.length} broken links`}
         </div>
       </div>
 

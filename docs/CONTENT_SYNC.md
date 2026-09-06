@@ -1,27 +1,5 @@
 # Keeping the app up to date with new OSRS content
 
-## Exact quest destination review
-
-`data/sources/quest-location-review.json` accounts for all 148 quests that still
-used region-only access after the initial location batches: 99 promoted fixed
-destination sets and 49 unresolved route/source/model gaps. Evidence points to
-Quest Helper commit `633ab56e2eb3eb363f21da3fd75f6f2bc0fa073a`, with source files
-and line numbers. Unresolved candidates are evidence only; their existing
-region policies remain in effect.
-
-Standard area names are permissions; Chunked coordinates are exact chunks.
-Source-backed logical-area boundary explanations live only in this manifest,
-so an entrance crossing a coarse map boundary does not invent another Standard
-unlock. Location sets are AND, chunk options are OR, and Standard areas within
-one location are AND. Alternative routes must be authored explicitly before
-promotion. Do not infer complete routes from markers alone or replace an
-unmapped named destination with a whole-continent gate.
-
-`data/questLocationReview.test.ts`, audit fingerprints, accuracy snapshots and
-task consistency guards run offline through `content:verify`. Refresh runtime
-requirements, evidence and unresolved reasons together. Helper source and the
-review manifest stay out of the player bundle.
-
 > *"Can the app self-update — when a new quest / collection-log item / boss is
 > released, does it add itself?"*
 
@@ -284,25 +262,3 @@ writing `data/caTasks.ts`. It aborts before writing on any drift. The generated
 module is never hand-edited. `content:check` uses the network to detect upstream
 drift but never rewrites the snapshot. To refresh, fetch the official API data,
 review and update the snapshot, then run `npm run ca:sync`.
-
-## Remaining quest chunk routes (September 5)
-
-`data/sources/quest-chunk-route-review.json` records the follow-up review of all
-49 outstanding quests against Quest Helper commit
-`633ab56e2eb3eb363f21da3fd75f6f2bc0fa073a`. Forty-eight have mode-specific
-`chunkedGeography` models: 249 fixed destinations and 13 alternative groups.
-Learning the Ropes retains its existing tutorial exemption.
-
-Fixed destinations are all required. A location can offer alternative chunks;
-a route group requires one complete route, never a mixture of different routes.
-Unobserved assignments and unsupported transport requirements remain unknown.
-They prevent readiness internally without exposing source-review notes in quest
-cards, Doable, or planner detail. An unknown alternative does not make a known,
-satisfied route fail. Standard geography remains unchanged and is regression
-checked against the pre-import baseline. This does not implement the proposed
-rulebook or a general instance/travel exception.
-
-The manifest retains source evidence, unresolved conditions, and the Standard
-baseline. `data/questChunkRoutes.test.ts` checks runtime/manifest agreement,
-canonical coordinates, mode isolation, and unknown-route behavior; it is part of
-`content:verify`. Re-review source changes before modifying this authored data.

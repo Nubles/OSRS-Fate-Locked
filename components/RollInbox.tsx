@@ -26,7 +26,8 @@ import type {
   GameState,
 } from '../types';
 import {
-  classifyReviewedInboxEvent,
+  classifyFateEvent,
+  classifyFateEventCandidate,
 } from '../utils/fateEventEligibility';
 
 export interface RollInboxGame {
@@ -47,6 +48,7 @@ interface RollInboxViewProps {
 }
 
 const TERMINAL = new Set(['COMPLETED', 'DISMISSED', 'DUPLICATE']);
+const CONFIRMED_PREFIX = 'candidate:';
 
 type ClassifiedRow = { row: RollInboxRow; classification: EventClassification };
 type ClassificationState = EventClassification['state'];
@@ -61,7 +63,15 @@ function classificationFor(
   row: RollInboxRow,
   state: GameState,
 ): EventClassification {
-  return classifyReviewedInboxEvent(row.event, state, row.state === 'READY' || row.reason?.startsWith('reviewed-revision:') ? row.reason : undefined);
+  const event = row.event;
+  if (row.state === 'READY' && row.reason?.startsWith(CONFIRMED_PREFIX)) {
+    return classifyFateEventCandidate(
+      event,
+      state,
+      row.reason.slice(CONFIRMED_PREFIX.length),
+    );
+  }
+  return classifyFateEvent(event, state);
 }
 
 const timeLabel = (timestamp: number): string =>
@@ -130,7 +140,7 @@ export function RollInboxView({
       {
         runId: row.event.runId,
         account: row.event.account,
-        runRevision: game.state.runRevision,
+        runRevision: row.event.runRevision,
       },
     );
     if (!accepted) {
@@ -143,10 +153,6 @@ export function RollInboxView({
 
   const review = (row: RollInboxRow, classification: EventClassification) => {
     if (classification.state !== 'NEEDS_CONFIRMATION') return;
-    if (classification.reason === 'The run changed after this event was detected.' && classification.candidates?.some(candidate => candidate.target === '__recheck__')) {
-      store.transition(row.event.eventId, 'READY', 'reviewed-revision:' + game.state.runRevision + ':', 'CONFIRMED_UNCHANGED');
-      return;
-    }
     const target = selection[row.event.eventId]
       ?? classification.candidates?.[0]?.target;
     if (!target) return;
@@ -154,7 +160,7 @@ export function RollInboxView({
     store.transition(
       row.event.eventId,
       'READY',
-      row.reason?.startsWith('reviewed-revision:') ? 'reviewed-revision:' + game.state.runRevision + ':' + target : 'candidate:' + target,
+      `${CONFIRMED_PREFIX}${target}`,
       target === originalTarget ? 'CONFIRMED_UNCHANGED' : 'CORRECTED',
     );
   };

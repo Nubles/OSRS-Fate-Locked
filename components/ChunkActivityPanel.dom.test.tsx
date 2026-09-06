@@ -20,8 +20,6 @@ const mocks = vi.hoisted(() => {
       chunkEntryRequirements: vi.fn(() => []),
       hasBank: vi.fn(() => false),
       shopStock: vi.fn(() => []),
-      // Prepared supplies isolate quest-row presentation from source loading.
-      itemSourceRecords: vi.fn((itemName: string) => [{ itemName, kind: 'spawn', hostName: 'Test prepared supplies', cx: 50, cy: 50, rawRequirements: [] }]),
     },
   };
 });
@@ -365,21 +363,21 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(screen.getByText('Yew tree').parentElement?.parentElement?.className).toContain('text-gray-400');
   });
 
-  it('shows locked and confirmation-pending quest state in text and in the Wiki link name', () => {
+  it('shows locked and ready quest state in text and in the Wiki link name', () => {
     mocks.state.content = {
       ...emptyContent(),
-      quests: { "Witch's Potion": 'first' },
+      quests: { "Doric's Quest": 'first' },
     };
 
     const { unmount } = render(<ChunkActivityPanel {...baseProps} />);
-    const lockedLink = screen.getByRole('link', { name: /Witch's Potion.*Locked/ });
+    const lockedLink = screen.getByRole('link', { name: /Doric's Quest.*Locked/ });
     expect(within(lockedLink.closest('[data-quest-row]') as HTMLElement).getByText('Locked')).toBeTruthy();
     unmount();
 
-    mocks.state.regions = ['Rimmington'];
+    mocks.state.regions = ['Falador'];
     render(<ChunkActivityPanel {...baseProps} />);
-    const readyLink = screen.getByRole('link', { name: /Witch's Potion.*Confirm/ });
-    expect(within(readyLink.closest('[data-quest-row]') as HTMLElement).getByText('Confirm')).toBeTruthy();
+    const readyLink = screen.getByRole('link', { name: /Doric's Quest.*Ready/ });
+    expect(within(readyLink.closest('[data-quest-row]') as HTMLElement).getByText('Ready')).toBeTruthy();
   });
   it('shows a manual-confirmation reason visibly and in the quest link name', () => {
     mocks.state.content = {
@@ -399,10 +397,10 @@ describe('ChunkActivityPanel activity accordions', () => {
     const questRow = questLink.closest('[data-quest-row]');
     expect(questRow).toBeTruthy();
     expect(within(questRow as HTMLElement).getByText('Confirm')).toBeTruthy();
-    expect(within(questRow as HTMLElement).getByText(/^Confirm: One open Sailing task slot.*Hammer or Imcando hammer/)).toBeTruthy();
+    expect(within(questRow as HTMLElement).getByText('Confirm: One open Sailing task slot')).toBeTruthy();
   });
 
-  it('preserves required confirmations in mixed scope and keeps untracked explicit', async () => {
+  it('uses Varies for a ready quest in mixed scope and keeps untracked explicit', async () => {
     mocks.state.content = {
       ...emptyContent(),
       quests: { 'Sheep Shearer': 'first', Miniquest: 'step' },
@@ -412,8 +410,8 @@ describe('ChunkActivityPanel activity accordions', () => {
     render(<ChunkActivityPanel {...baseProps} wholeAreaOwnershipMixed />);
     await userEvent.click(screen.getByRole('button', { name: 'Whole area' }));
 
-    const mixedLink = screen.getByRole('link', { name: /Sheep Shearer.*Confirm/ });
-    expect(within(mixedLink.closest('[data-quest-row]') as HTMLElement).getByText('Confirm')).toBeTruthy();
+    const mixedLink = screen.getByRole('link', { name: /Sheep Shearer.*Varies/ });
+    expect(within(mixedLink.closest('[data-quest-row]') as HTMLElement).getByText('Varies')).toBeTruthy();
     const untrackedLink = screen.getByRole('link', { name: /Miniquest.*Untracked/ });
     expect(within(untrackedLink.closest('[data-quest-row]') as HTMLElement).getByText('Untracked')).toBeTruthy();
   });
@@ -435,7 +433,7 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(screen.getByText('Herb patch').closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
     expect(screen.getByText('Yew tree').closest('div')?.getAttribute('title')).toBe('Availability varies across this area');
     expect(screen.getByText('Needs King Black Dragon')).toBeTruthy();
-    expect(screen.getByText('Sheep Shearer').closest('[data-quest-row]')?.getAttribute('title')).toContain('Confirm: 20 balls of wool (unnoted)');
+    expect(screen.getByText('Sheep Shearer').closest('[data-quest-row]')?.getAttribute('title')).toBe('Availability varies across this area');
 
   });
   it('retains known boss, guild, and minigame gates in mixed Whole area scope', async () => {

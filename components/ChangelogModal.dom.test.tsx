@@ -316,22 +316,3 @@ describe('ChangelogModal DOM focus restoration', () => {
     expect(document.activeElement).not.toBe(utilityGear);
   });
 });
-  it.each(['collapsed', 'absent', 'empty'] as const)('keeps legacy compensation choices visible when its release is %s', async (state) => {
-    const archived = { ...releases[0], id: 'older-compensation-release', title: 'Older release' };
-    const onResolve = vi.fn();
-    const { host } = await mount(
-      <ChangelogModal
-        releases={state === 'collapsed' ? [...releases, archived] : state === 'empty' ? [] : releases}
-        onClose={vi.fn()}
-        compensation={{ ...pendingCompensation, releaseId: archived.id }}
-        onResolveCompensation={onResolve}
-      />,
-    );
-    const claim = Array.from(host.querySelectorAll('button')).find(button => button.textContent === 'Claim full compensation')!;
-    expect(claim).toBeDefined();
-    expect(claim.closest('[hidden]')).toBeNull();
-    expect(claim.disabled).toBe(false);
-    expect(findCloseButton(host).disabled).toBe(true);
-    await click(claim);
-    expect(onResolve).toHaveBeenCalledExactlyOnceWith('full');
-  });

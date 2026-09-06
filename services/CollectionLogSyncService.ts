@@ -20,8 +20,6 @@
  * Mirrors the fetch/cache pattern of services/GearService.ts.
  */
 import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
-import { createClogIdAllocator } from '../utils/clogIdAllocation.mjs';
-import { CLOG_ID_MIGRATIONS } from '../utils/clogIdMigrations';
 
 const API = 'https://oldschool.runescape.wiki/api.php';
 const DATA_TITLE = 'Module:Collection_log/data.json';
@@ -74,8 +72,6 @@ export function computeSync(wiki: WikiItem[], data: LogData, overrides: Record<n
 
   const additions: Addition[] = [];
   const newSources: NewSource[] = [];
-  const allocatePage = createClogIdAllocator(Object.values(data).flatMap(tab =>
-    Object.values(tab.pages).flatMap(page => page.items.map(item => item.id))));
 
   for (const [wikiName, items] of wikiPages) {
     const aliasTarget = Object.entries(PAGE_ALIAS).find(([, w]) => w === wikiName)?.[0];
@@ -85,11 +81,15 @@ export function computeSync(wiki: WikiItem[], data: LogData, overrides: Record<n
       continue;
     }
     const have = new Set(match.page.items.map(i => norm(i.name)));
-    const mint = allocatePage(match.page.items.map(i => i.id));
+    const P = Math.floor(match.page.items[0].id / 1000) * 1000;
+    const used = new Set(match.page.items.map(i => i.id - P));
+    let next = Math.max(...match.page.items.map(i => i.id - P)) + 1;
     for (const name of items) {
       if (have.has(norm(name))) continue;
       have.add(norm(name));
-      additions.push({ tab: match.tab, page: match.page.name, id: mint(), name });
+      while (used.has(next)) next++;
+      used.add(next);
+      additions.push({ tab: match.tab, page: match.page.name, id: P + next, name });
     }
   }
   return { additions, newSources };
@@ -202,13 +202,6 @@ class CollectionLogSyncService {
       if (!saved) return null;
       const { timestamp, data } = JSON.parse(saved);
       if (Date.now() - timestamp > CACHE_TTL || !data || !Array.isArray(data.additions)) return null;
-      // Older clients may have allocated a now-retired ID, or a newer bundle
-      // may own the cached ID under a different name. Recompute instead of
-      // attaching a cached drop to another item's saved progress.
-      const liveItems = Object.values(COLLECTION_LOG_DATA).flatMap(tab => Object.values(tab.pages).flatMap(page => page.items));
-      if (data.additions.some((addition: Addition) => !Number.isSafeInteger(addition.id)
-        || Object.hasOwn(CLOG_ID_MIGRATIONS, addition.id)
-        || liveItems.some(item => item.id === addition.id && norm(item.name) !== norm(addition.name)))) return null;
       return data as SyncResult;
     } catch { return null; }
   }

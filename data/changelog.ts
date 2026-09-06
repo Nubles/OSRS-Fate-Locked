@@ -19,29 +19,6 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-09-05-requirement-reliability',
-    title: 'Requirements and Save Checks',
-    date: '2026-09-05',
-    sections: {
-      fixed: [
-        'Quest, diary, activity and Slayer checks now use your attained levels separately from unlocked training and equipment tiers.',
-        'Quest checks keep unverified items and actions separate from confirmed unlock requirements.',
-        'Alternative diary routes and shared area access now stay consistent across planning screens.',
-        'Quest locations include reviewed chunk requirements, and required equipment slots and methods appear alongside level checks.',
-        'Boss location labels now show when an area still needs unlocking.',
-        'Save history checks identify incomplete or migrated history without presenting it as independently verified gameplay.',
-        'Older imports can reach their compensation choices, and onboarding controls fit small mobile screens.',
-        'Quest advice now includes clearly labelled conditional paths, and travel checks recognize equivalent quest references.',
-        'Ritual history uses actual costs and custom Fate limits; older incomplete records stay marked for review.',
-        'The green-dragon diary task checks dragon locations instead of accepting any Wilderness area.',
-        'Online sync keeps newer progress ahead of older exports, and new collection-log items retain safe identities across updates.',
-        'Detected levels receive the same starter milestones as manual levels; older inbox events can be reviewed against current progress.',
-        'Custom Gambit costs and Greed refunds now agree with the displayed Fate rules.',
-        'Combat estimates respect supported weapon attacks and apply each skill boost and Magic prayer correctly.',
-      ],
-    },
-  },
-  {
     id: '2026-09-04-runelite-relay-reliability',
     title: 'RuneLite Relay Reliability',
     date: '2026-09-04',

@@ -52,53 +52,14 @@ it('gives Prying Times a distinct confirmation state', () => {
   expect(goalPlannerTargetState(target, unlocks)).toBe('confirm');
 });
 
-it('keeps outstanding confirmations stored without rendering them or ready copy', () => {
+it('renders the outstanding Prying Times confirmation instead of ready copy', () => {
   const plan = planForTarget('quest', 'Prying Times', pryingTimesUnlocks())!;
   const markup = renderToStaticMarkup(<GoalPlanReadiness plan={plan} />);
 
-  expect(markup).not.toContain('Confirm:');
-  expect(plan.manualSteps.length).toBeGreaterThan(0);
-  expect(markup).not.toContain('Available right now');
-});
-
-it('omits both internal evidence and confirmation prose from readiness', () => {
-  const plan = planForTarget('quest', 'Prying Times', pryingTimesUnlocks())!;
-  plan.manualSteps = [
-    { kind: 'requirement', id: 'private-route', label: 'Unverified teleport source route', done: false, internalOnly: true },
-    { kind: 'manual', id: 'public-task-slot', label: 'Confirm: One open Sailing task slot', done: false },
-  ];
-  const markup = renderToStaticMarkup(<GoalPlanReadiness plan={plan} />);
-  expect(markup).not.toContain('Confirm:');
-  expect(plan.manualSteps.length).toBeGreaterThan(0);
-  expect(markup).not.toContain('Unverified teleport source route');
-  expect(markup).not.toContain('Available right now');
-});
-
-it('does not show internal-only requirements or ready copy when no public confirmations remain', () => {
-  const plan = planForTarget('quest', 'Prying Times', pryingTimesUnlocks())!;
-  plan.manualSteps = [
-    { kind: 'requirement', id: 'private-route', label: 'Unverified teleport source route', done: false, internalOnly: true },
-  ];
-  plan.needsConfirmation = true;
-  plan.alreadyReachable = false;
-  const markup = renderToStaticMarkup(<GoalPlanReadiness plan={plan} />);
-  expect(markup).not.toContain('Unverified teleport source route');
-  expect(markup).not.toContain('Needs confirmation');
+  expect(markup).toContain('Confirm: One open Sailing task slot');
   expect(markup).not.toContain('Available right now');
 });
 
 it('does not invent a wiki article for a manual confirmation', () => {
   expect(goalPlannerStepHasWikiLink({ ...step('manual:prying', 'Confirm: One open Sailing task slot'), kind: 'manual' })).toBe(false);
 });
-
-// This suite isolates destination/skill/manual behavior with known legal supplies.
-// Acquisition availability itself is covered by itemAcquisition and source tests.
-import { beforeEach as beforeSupplyTest, afterEach as afterSupplyTest, vi as supplySpy } from 'vitest';
-import { chunkContentService as suppliedItemsFixture } from '../services/ChunkContentService';
-let restoreSupplyFixture: (() => void)[] = [];
-beforeSupplyTest(() => {
-  const ready = supplySpy.spyOn(suppliedItemsFixture, 'ready', 'get').mockReturnValue(true);
-  const records = supplySpy.spyOn(suppliedItemsFixture, 'itemSourceRecords').mockImplementation(itemName => [{ itemName, kind: 'spawn', hostName: 'Test prepared supplies', cx: 50, cy: 50, rawRequirements: [] }]);
-  restoreSupplyFixture = [() => ready.mockRestore(), () => records.mockRestore()];
-});
-afterSupplyTest(() => restoreSupplyFixture.forEach(restore => restore()));

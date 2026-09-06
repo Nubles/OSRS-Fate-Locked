@@ -46,14 +46,6 @@ jobs:
         run: npm run content:verify
 
       - name: Build
-        run: npm run build:verify
-        env:
-          VITE_BASE: /${{ github.event.repository.name }}/
-
-      - name: Install browser runtime
-        run: npx playwright install --with-deps chromium
-
-      - name: Browser critical flows
-        run: npm run test:browser
+        run: npm run build
         env:
           VITE_BASE: /${{ github.event.repository.name }}/

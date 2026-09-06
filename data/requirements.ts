@@ -9,8 +9,6 @@ export interface ContentAlternativeRequirement {
 }
 
 export interface ContentRequirement {
-  /** False when a legacy strategy entry has no complete shared access model. */
-  requirementsReviewed?: boolean;
   id: string;
   category: TableType;
   regions: string[];

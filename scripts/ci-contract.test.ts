@@ -12,9 +12,7 @@ const verificationCommands = [
   'npm test',
   'npx tsc --noEmit',
   'npm run content:verify',
-  'npm run build:verify',
-  'npx playwright install --with-deps chromium',
-  'npm run test:browser',
+  'npm run build',
 ];
 
 const pullRequestCommandOrder = [
@@ -328,7 +326,7 @@ describe('CI workflow contract', () => {
     expect(commands).toEqual(pullRequestCommandOrder);
     expectNoNpmInstall(commands);
     expect(qualityJob).toMatch(
-      /- name: Build\n\s+run: npm run build:verify\n\s+env:\n\s+VITE_BASE: \/\$\{\{ github\.event\.repository\.name \}\}\//,
+      /- name: Build\n\s+run: npm run build\n\s+env:\n\s+VITE_BASE: \/\$\{\{ github\.event\.repository\.name \}\}\//,
     );
   });
 
@@ -491,7 +489,7 @@ describe('Pages deployment workflow contract', () => {
       'actions/upload-pages-artifact@v3',
     ]);
     expect(buildJob).toMatch(
-      /- name: Build\n\s+run: npm run build:verify\n\s+env:\n\s+VITE_BASE: \/\$\{\{ github\.event\.repository\.name \}\}\/\n\s+BUILD_ID: \$\{\{ github\.sha \}\}/,
+      /- name: Build\n\s+run: npm run build\n\s+env:\n\s+VITE_BASE: \/\$\{\{ github\.event\.repository\.name \}\}\/\n\s+BUILD_ID: \$\{\{ github\.sha \}\}/,
     );
     expect(buildJob).toMatch(
       /uses: actions\/upload-pages-artifact@v3\n\s+with:\n\s+path: \.\/dist/,
@@ -522,7 +520,7 @@ describe('local release command contract', () => {
       'node scripts/verify-player-facing-changelog.mjs',
     );
     expect(packageJson.scripts?.['release:verify']).toBe(
-      'npm run changelog:verify && npm test && npm run typecheck && npm run content:verify && npm run build:verify && npm run test:browser',
+      'npm run changelog:verify && npm test && npm run typecheck && npm run content:verify && npm run build',
     );
     expect(packageJson.scripts?.typecheck).toBe('tsc --noEmit');
   });
@@ -539,9 +537,7 @@ describe('release documentation contract', () => {
       'npm test',
       'npx tsc --noEmit',
       'npm run content:verify',
-      'npm run build:verify',
-      'npx playwright install chromium',
-      'npm run test:browser',
+      'npm run build',
     ]);
     expect(checklist).toContain('CI / quality');
     expect(checklist).toMatch(

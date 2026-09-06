@@ -50,13 +50,6 @@ function maxedUnlocks(): UnlockState {
 }
 
 describe('achievements engine', () => {
-  it('does not award quest or point milestones for repeated copies of one quest', () => {
-    const state = emptyUnlocks({ quests: Array(150).fill("Cook's Assistant") });
-    for (const achievement of evaluateAchievements(state)) {
-      if (achievement.id.startsWith('qp')) expect(achievement.earned).toBe(false);
-      if (achievement.id.startsWith('quests') && achievement.target > 1) expect(achievement.earned).toBe(false);
-    }
-  });
   it('every achievement has a unique id and a positive target', () => {
     const ids = new Set<string>();
     for (const a of ACHIEVEMENTS) {

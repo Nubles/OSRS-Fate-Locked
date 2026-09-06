@@ -243,7 +243,7 @@ export const LogViewer: React.FC = () => {
             <button
               onClick={() => setShowTimelapse(true)}
               className="text-[10px] flex items-center gap-1.5 text-amber-300 hover:text-amber-200 bg-amber-950/40 hover:bg-amber-900/50 px-2 py-1.5 rounded border border-amber-500/40 transition-all"
-              title="Play back local history with consistency checks"
+              title="Play back history as a verified timelapse"
             >
               <Film size={12} />
               Timelapse

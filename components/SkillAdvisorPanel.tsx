@@ -42,7 +42,7 @@ export const SkillAdvisorPanel: React.FC = () => {
       items={items}
       accent="cyan"
       heading="Skill Advisor"
-      subheading="Potential progress after this change. Quest and diary checks still need confirmation."
+      subheading="Train these next to clear the most content gates"
       caption="by unlock chain"
       icon={<Dumbbell size={13} />}
       maxShown={4}

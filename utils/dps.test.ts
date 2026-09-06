@@ -11,23 +11,6 @@ describe('dps formulas', () => {
     expect(effectiveLevel(99, 1.23, 0, 3)).toBe(132);       // piety str: floor(121.77)=121 +3 +8
   });
 
-  it('boosts unequal melee stats independently', () => {
-    const input = baseInput();
-    const lowAttack = computeDps({ ...input, potionId: 'super', levels: { ...input.levels, attack: 1 } });
-    expect(lowAttack.effAtk).toBe(14);
-    expect(lowAttack.effStr).toBe(129);
-    const lowStrength = computeDps({ ...input, potionId: 'super', levels: { ...input.levels, strength: 1 } });
-    expect(lowStrength.effAtk).toBe(126);
-    expect(lowStrength.effStr).toBe(17);
-  });
-  it('adds prayer magic damage to equipment damage before flooring', () => {
-    const input = { ...baseInput(), style: 'magic' as const, attackType: 'magic' as const, stanceId: 'standard', baseSpellMax: 30 };
-    expect(computeDps({ ...input, prayerId: 'none' }).maxHit).toBe(30);
-    expect(computeDps({ ...input, prayerId: 'augury' }).maxHit).toBe(31);
-    expect(computeDps({ ...input, prayerId: 'mystic', baseSpellMax: 50 }).maxHit).toBe(51);
-    expect(computeDps({ ...input, prayerId: 'augury', gear: { ...input.gear, magicDmgPct: 10 } }).maxHit).toBe(34);
-  });
-
   it('potion boost = flat + floor(pct*level)', () => {
     const superCombat = POTIONS.melee.find((p) => p.id === 'super')!;
     expect(potionBoost(99, superCombat)).toBe(19);          // 5 + floor(0.15*99)=14

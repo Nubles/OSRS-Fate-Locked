@@ -1,4 +1,3 @@
-import { isQuestAnalysisUsable } from './analysisValidation';
 import type {
   DeepReadonly,
   QuestItemRouteAnalysis,
@@ -213,11 +212,9 @@ const presentItem = (
 
 /** Converts route analysis into compact player-facing text without mutating it. */
 export const presentQuestAnalysis = (
-  analysis: QuestRouteAnalysis | null | undefined,
-): PresentedQuestAnalysis => {
-  const questId = typeof analysis?.questId === 'string' ? analysis.questId : '';
-  if (!isQuestAnalysisUsable(analysis)) {
-    return { questId, heading: QUEST_STATUS_TEXT.ANALYSIS_INCOMPLETE, items: [] };
-  }
-  return { questId: analysis.questId, heading: QUEST_STATUS_TEXT[analysis.status], items: analysis.items.map(presentItem) };
-};
+  analysis: QuestRouteAnalysis,
+): PresentedQuestAnalysis => ({
+  questId: analysis.questId,
+  heading: QUEST_STATUS_TEXT[analysis.status],
+  items: analysis.items.map(presentItem),
+});

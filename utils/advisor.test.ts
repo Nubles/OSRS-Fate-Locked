@@ -1,10 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import * as questOperations from '../data/questOperationalRequirements';
-
-// Isolate cascade/ranking mathematics with explicitly reviewed supplies. Real unconfirmed
-// supply behavior is covered by contentBaseline and questOperationalRequirements tests.
-beforeEach(() => vi.spyOn(questOperations, 'questOperationalRequirements').mockReturnValue([]));
-afterEach(() => vi.restoreAllMocks());
+import { describe, it, expect } from 'vitest';
 import { REGION_GROUPS, SKILLS_LIST } from '../constants';
 import {
   computeUnlockImpact, prepareUnlockImpactContext, type UnlockImpactContext,
@@ -121,17 +115,17 @@ describe('rankAvailableQuests', () => {
     }
   });
 
-  it('only ranks quests with known gates met', () => {
+  it('only ranks currently-AVAILABLE quests', () => {
     const base = maxedUnlocks();
     const ranked = rankAvailableQuests(base);
     for (const r of ranked) {
-      expect(['AVAILABLE', 'NEEDS_CONFIRMATION']).toContain(getQuestStatus(QUEST_DATA[r.id], base));
+      expect(getQuestStatus(QUEST_DATA[r.id], base)).toBe('AVAILABLE');
     }
   });
 
   it('threads Chunked-mode access through quest ranking and impact', () => {
-    const before = maxedUnlocks({ chunks: ['48,50', '49,52', '48,51'] });
-    const after = maxedUnlocks({ chunks: ['48,50', '49,52', '48,51', '47,51'] });
+    const before = maxedUnlocks({ chunks: ['48,50'] });
+    const after = maxedUnlocks({ chunks: ['48,50', '47,51'] });
 
     expect(rankAvailableQuests(before, 'chunked').map(q => q.id))
       .not.toContain('A Porcine of Interest');
@@ -171,7 +165,7 @@ describe('rankLockedRegions', () => {
     const expected = computeUnlockImpact(base, {
       ...base,
       regions: [...REGION_GROUPS.Asgarnia],
-    }, undefined, { includeConditional: true });
+    });
 
     expect(ranked.newQuestNames).toEqual(expected.directQuestNames);
     expect(ranked.newDiaryIds).toEqual(expected.directDiaryIds);

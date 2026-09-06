@@ -4,13 +4,23 @@ import { getRollInboxStore } from '../services/rollInboxRuntime';
 import type { RollInboxRow } from '../services/rollInboxStore';
 import type { EventClassification, GameState } from '../types';
 import {
-  classifyReviewedInboxEvent,
+  classifyFateEvent,
+  classifyFateEventCandidate,
 } from '../utils/fateEventEligibility';
 
 const TERMINAL = new Set(['COMPLETED', 'DISMISSED', 'DUPLICATE']);
+const CONFIRMED_PREFIX = 'candidate:';
 
 export function classifyRollInboxDriverRow(row: RollInboxRow, state: GameState): EventClassification {
-  return classifyReviewedInboxEvent(row.event, state, row.state === 'READY' || row.reason?.startsWith('reviewed-revision:') ? row.reason : undefined);
+  const event = row.event;
+  if (row.state === 'READY' && row.reason?.startsWith(CONFIRMED_PREFIX)) {
+    return classifyFateEventCandidate(
+      event,
+      state,
+      row.reason.slice(CONFIRMED_PREFIX.length),
+    );
+  }
+  return classifyFateEvent(event, state);
 }
 
 export function RollInboxDriver() {
@@ -31,7 +41,7 @@ export function RollInboxDriver() {
       if (classification.state === 'READY') {
         store.transition(row.event.eventId, 'READY', row.reason);
       } else {
-        store.transition(row.event.eventId, classification.state, row.reason?.startsWith('reviewed-revision:') ? row.reason : classification.reason);
+        store.transition(row.event.eventId, classification.state, classification.reason);
       }
     }
   }, [game.runRevision, game.linkedAccount, store]);

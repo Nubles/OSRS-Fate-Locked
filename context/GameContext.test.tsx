@@ -1,5 +1,4 @@
 // @vitest-environment jsdom
-import { resolveModeRules } from '../config/gameModes';
 
 import 'fake-indexeddb/auto';
 import React from 'react';
@@ -301,15 +300,6 @@ describe('ordinary save recovery', () => {
     storage.values.set(storageKey, durable);
     return durable;
   };
-
-  it('uses the displayed custom minimum when performing Gambit', async () => {
-    storage.values.set('profile', serializeCurrent({ ...initialState, gameModeId: 'custom', customMode: { ...resolveModeRules('vanilla'), ritualCostMultiplier: 0.25 }, fatePoints: 10 }));
-    const game = renderGame('profile');
-    await settleOwnership();
-    act(() => game.current().performGambit());
-    expect(game.current().fatePoints).toBe(0);
-    expect(game.current().history.at(-1)?.type).toBe('ALTAR');
-  });
 
   it('contains a failed write and retries the newest in-memory state', async () => {
     const game = renderGame('profile');
@@ -2098,7 +2088,7 @@ describe('quest completion integration', () => {
     const before = providerSnapshot(current());
     let first: ReturnType<Game['completeQuest']> | undefined;
 
-    act(() => { first = current().completeQuest("Witch's Potion", undefined, undefined, { manualConfirmed: true }); });
+    act(() => { first = current().completeQuest("Witch's Potion"); });
 
     const afterFirst = providerSnapshot(current());
     expect(first).toEqual({ ok: true });
@@ -2126,7 +2116,7 @@ describe('quest completion integration', () => {
     const before = providerSnapshot(current());
     let first: ReturnType<Game['completeQuest']> | undefined;
 
-    act(() => { first = current().completeQuest('In Search of Knowledge', undefined, undefined, { manualConfirmed: true }); });
+    act(() => { first = current().completeQuest('In Search of Knowledge'); });
 
     const afterFirst = providerSnapshot(current());
     expect(first).toEqual({ ok: true });
@@ -2368,15 +2358,3 @@ describe('detected progress reconciliation', () => {
     expect(next.unlocks.diaries).not.toContain('Ardougne Easy:0');
   });
 });
-
-// This suite isolates destination/skill/manual behavior with known legal supplies.
-// Acquisition availability itself is covered by itemAcquisition and source tests.
-import { beforeEach as beforeSupplyTest, afterEach as afterSupplyTest, vi as supplySpy } from 'vitest';
-import { chunkContentService as suppliedItemsFixture } from '../services/ChunkContentService';
-let restoreSupplyFixture: (() => void)[] = [];
-beforeSupplyTest(() => {
-  const ready = supplySpy.spyOn(suppliedItemsFixture, 'ready', 'get').mockReturnValue(true);
-  const records = supplySpy.spyOn(suppliedItemsFixture, 'itemSourceRecords').mockImplementation(itemName => [{ itemName, kind: 'spawn', hostName: 'Test prepared supplies', cx: 50, cy: 50, rawRequirements: [] }]);
-  restoreSupplyFixture = [() => ready.mockRestore(), () => records.mockRestore()];
-});
-afterSupplyTest(() => restoreSupplyFixture.forEach(restore => restore()));
